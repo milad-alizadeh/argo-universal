@@ -1,8 +1,11 @@
 import { encodedIcon } from '../registry-icons.mocks';
 import type { AgentListItemProps } from './agent-list-item';
 
-// A story supplies Install and Remove; a fixture is the Registry's row for one Agent.
-type AgentListItemFixture = Omit<AgentListItemProps, 'onInstall' | 'onRemove'>;
+// A story supplies the callbacks; a fixture is the Registry's row for one Agent.
+type AgentListItemFixture = Omit<
+  AgentListItemProps,
+  'onInstall' | 'onRemove' | 'onConfigure'
+>;
 
 // The Registry's own entry, with both of the links the card draws.
 const registryAgent = {

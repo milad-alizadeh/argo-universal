@@ -8,10 +8,11 @@ import {
   type ViewInstance,
 } from 'react-native';
 import { OutsideColumn } from '../../../content-column/content-column';
+import { cn } from '../../../utils';
 import { useBoardEnd } from './list-board-end';
 import { DragScrollView } from './list-drag-scroll-view';
 import { ListHeader } from './list-header';
-import { useLaneDrag } from './list-lane-drag';
+import { useLaneDrag, useLaneRefuses } from './list-lane-drag';
 import { LaneRows, type LaneScroll } from './list-lane-rows';
 import { sectionKey } from './list-move-model';
 import { ListEnd } from './list-scroll-props';
@@ -48,16 +49,20 @@ function LaneBody({ lane, laneRef, scroll }: LaneBodyProps): ReactElement {
 const namedGroup = (title: string | undefined) =>
   ({ role: 'group', accessibilityLabel: title }) as const;
 
+// A lane that refuses the dragged card fades, and says it is unavailable, until the drag ends.
+const laneLook = (title: string | undefined, refuses: boolean) =>
+  ({
+    ...namedGroup(title),
+    'aria-disabled': refuses || undefined,
+    className: cn('w-72 shrink-0 pb-4', refuses && 'opacity-40'),
+  }) as const;
+
 function BoardLane({ lane, scroll }: LaneProps): ReactElement {
   const laneRef = useRef<ViewInstance>(null);
+  const refuses = useLaneRefuses(sectionKey(lane.key));
 
   return (
-    <View
-      ref={laneRef}
-      collapsable={false}
-      {...namedGroup(lane.title)}
-      className="w-72 shrink-0 pb-4"
-    >
+    <View ref={laneRef} collapsable={false} {...laneLook(lane.title, refuses)}>
       {lane.header}
       <LaneBody lane={lane} laneRef={laneRef} scroll={scroll} />
       {lane.footer}

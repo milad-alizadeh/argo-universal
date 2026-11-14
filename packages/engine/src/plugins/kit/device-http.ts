@@ -1,6 +1,6 @@
 import type { DeviceFlowArgo } from '@repo/contracts/plugins/device-flow-api';
 import { z } from 'zod';
-import { form } from './form-body';
+import { formPost } from './form-body';
 
 // What a device endpoint may answer; every field is optional, so an answer that is not JSON reads as one with none.
 export const CodeAnswer = z.object({
@@ -26,8 +26,11 @@ export const CompleteCode = z.object({
   interval: z.number().nonnegative().default(defaultIntervalSeconds),
 });
 
+// RFC 6749 section 5.1; a service with expiring tokens adds the refresh token and the access token's lifetime.
 export const TokenAnswer = z.object({
   access_token: z.string().min(1).optional(),
+  refresh_token: z.string().min(1).optional(),
+  expires_in: z.number().nonnegative().optional(),
   error: z.string().optional(),
   error_description: z.string().optional(),
 });
@@ -46,14 +49,7 @@ export async function postForm<Answer>(
   target: { url: string; fields: Record<string, string> },
   schema: z.ZodType<Answer>,
 ): Promise<Answer> {
-  const response = await fetch(target.url, {
-    method: 'POST',
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/x-www-form-urlencoded',
-    },
-    body: form(target.fields),
-  });
+  const response = await fetch(target.url, formPost(target.fields));
 
   return parsed(schema, response ? await response.text() : '');
 }

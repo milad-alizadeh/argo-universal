@@ -167,8 +167,7 @@ const registrations = [
 ];
 
 export const serveScript = (app: AgentApp, script: Script): AgentApp =>
-  registrations
-    .reduce((registered, register) => register(registered, script), app)
-    .onRequest('session/prompt', (context) =>
-      script.player.dispatchPrompt(context),
-    );
+  registrations.reduce(
+    (registered, register) => register(registered, script),
+    app,
+  );

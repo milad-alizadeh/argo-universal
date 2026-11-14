@@ -58,6 +58,11 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     paddingTop?: SizeClassValue<SpacingStep>;
     getSelectionId?: (item: Item) => string | undefined;
     getSectionKey?: (item: Item) => string | undefined;
+    /*
+     * Kit-only: the List is a board, as the Board draws it. Its lanes draw at every width, and each row, by id, moves
+     * only to another Section whose id it names; a row it does not name moves nowhere.
+     */
+    moveTargets?: ReadonlyMap<string, readonly string[]>;
   };
 
 // Only a List of children in a column or lanes moves its rows: an `items` List's rows have no ids, and a grid or shelf flows its rows where no drag measures them.

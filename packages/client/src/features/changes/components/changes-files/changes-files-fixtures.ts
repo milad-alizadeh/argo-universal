@@ -48,6 +48,30 @@ export const binaryFile = {
   diffs: { 'assets/logo.png': { pages: [[]] } },
 } satisfies ChangesViewProps;
 
+// Git counts no lines for either, so only the operation says they are gone.
+export const deletedFiles = {
+  ...base,
+  files: [
+    {
+      path: '.playwright-mcp/page.yml',
+      operation: 'delete',
+      added: 0,
+      removed: 0,
+    },
+    {
+      path: '.playwright-mcp/page.png',
+      operation: 'delete',
+      added: 0,
+      removed: 0,
+      binary: true,
+    },
+  ],
+  diffs: {
+    '.playwright-mcp/page.yml': { pages: [[]] },
+    '.playwright-mcp/page.png': { pages: [[]] },
+  },
+} satisfies ChangesViewProps;
+
 // Diffs still on their way: their files show as headers alone, over one spinner at the end of the list.
 export const loadingDiffs = {
   ...base,
@@ -62,4 +86,29 @@ export const loadingDiffs = {
     'src/list.ts': { pages: [], loading: true },
     'src/row.ts': { pages: [], loading: true },
   },
+} satisfies ChangesViewProps;
+
+const manyPaths = ['src/app.ts', 'src/list.ts', 'src/row.ts', 'src/cell.ts'];
+
+const changedLines = Array.from({ length: 8 }, (_, index) => ({
+  kind: 'added' as const,
+  number: index + 1,
+  text: `export const value${index + 1} = ${index + 1};`,
+}));
+
+// Enough files and lines to scroll, so each header sticks and then gives way to the next.
+export const manyFiles = {
+  ...base,
+  files: manyPaths.map((path) => ({
+    path,
+    operation: 'modify' as const,
+    added: changedLines.length,
+    removed: 0,
+  })),
+  diffs: Object.fromEntries(
+    manyPaths.map((path) => [
+      path,
+      { pages: [[{ header: '@@ -0,0 +1,8 @@', lines: changedLines }]] },
+    ]),
+  ),
 } satisfies ChangesViewProps;

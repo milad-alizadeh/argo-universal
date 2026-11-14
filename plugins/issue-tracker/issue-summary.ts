@@ -23,6 +23,10 @@ export type IssueSummaries = {
   answer: (target: Target) => Promise<IssueSummary | null>;
   // The Issue's state changed, so the next ask loads it again whatever its age.
   stale: (number: number) => void;
+  refresh: (
+    targets: readonly Target[],
+    read: Source['readQuery'],
+  ) => Promise<void>;
 };
 
 type Loads = {
@@ -59,8 +63,23 @@ export function createIssueSummaries(
     cached,
     answer: (target) => answering(loads, first, target),
     stale: (number) => forget(loadedAt, number),
+    refresh: refreshSummaries(first),
   };
 }
+
+const refreshSummaries =
+  ({ source, cached, changed }: First): IssueSummaries['refresh'] =>
+  async (targets, readQuery) => {
+    const refreshed = await Promise.all(
+      targets.map((target) =>
+        readAndStore({ ...source, readQuery }, cached, target)
+          .then(({ differs }) => differs)
+          .catch(() => false),
+      ),
+    );
+
+    if (refreshed.includes(true)) changed();
+  };
 
 type First = {
   source: Source;

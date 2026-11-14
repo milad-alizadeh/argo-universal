@@ -34,3 +34,28 @@ export const renamedChanges: MemoryCatalog = {
   ],
   mainBranch: 'main',
 };
+
+export const deletedTextPath = '/repo/.playwright-mcp/page.yml';
+
+export const deletedBinaryPath = '/repo/.playwright-mcp/page.png';
+
+export const deletedChanges: MemoryCatalog = {
+  files: () => [
+    {
+      path: deletedTextPath,
+      operation: 'delete',
+      added: 0,
+      removed: 0,
+      hunks: [],
+    },
+    {
+      path: deletedBinaryPath,
+      operation: 'delete',
+      added: 0,
+      removed: 0,
+      hunks: [],
+      binary: true,
+    },
+  ],
+  mainBranch: 'main',
+};

@@ -27,6 +27,19 @@ describe('dragging a row on a board', () => {
     expect(rig.move).toHaveBeenCalledWith(toDone);
   });
 
+  it('aims nowhere, and drops nothing, over a lane the row may not land in', async () => {
+    const rig = boardRig((_id, key) => key !== doneKey);
+    const drag = await lifted(rig, 'login', fromLogin);
+
+    drag.follow({ x: 500, y: 100 });
+
+    expect(placeIn(drag)).toBeUndefined();
+
+    drag.finish();
+
+    expect(rig.move).not.toHaveBeenCalled();
+  });
+
   it('draws the lifted row in the layer where the pointer holds it', async () => {
     const rig = boardRig();
     const drag = await lifted(rig, 'login', fromLogin);

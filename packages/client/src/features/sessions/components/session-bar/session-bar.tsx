@@ -1,4 +1,5 @@
 import type { SystemSymbolSource } from '@repo/contracts/kit-symbols';
+import type { SessionBarItem } from '@repo/contracts/plugins/session-bar-item';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
@@ -12,6 +13,8 @@ export interface SessionBarEntry {
   pluginName: string;
   icon?: SystemSymbolSource;
   text: string;
+  // The tone the line's icon and text are drawn in, such as an Issue's state.
+  tone?: SessionBarItem['tone'];
   // The Plugin page the line opens, when it has one.
   path?: string;
 }
@@ -19,7 +22,7 @@ export interface SessionBarEntry {
 export interface SessionBarProps {
   // The first Plugin's line in Slot order.
   shown: SessionBarEntry;
-  // The other Plugins' lines, behind "+N".
+  // The remaining lines, behind "+N" on a phone and grouped by Plugin in the Workbench.
   hidden: readonly SessionBarEntry[];
   // Opens a line's Plugin page; a line without one never calls it.
   onOpen: (entry: SessionBarEntry) => void;
@@ -33,7 +36,7 @@ export interface SessionBarProps {
 export function SessionBar(props: SessionBarProps): React.JSX.Element {
   return (
     <View className="flex-row items-center gap-2">
-      <LineContent entry={props.shown} />
+      <SessionBarLine entry={props.shown} />
       <HiddenLines hidden={props.hidden} onOpen={props.onOpen} />
       <OpenButton entry={props.shown} onOpen={props.onOpen} />
     </View>
@@ -42,11 +45,16 @@ export function SessionBar(props: SessionBarProps): React.JSX.Element {
 
 type LineProps = Pick<SessionBarProps, 'onOpen'> & { entry: SessionBarEntry };
 
-function LineContent({ entry }: { entry: SessionBarEntry }): React.JSX.Element {
+// A line's icon and text, in its tone when it has one, on the bar's strip and in its Workbench card alike.
+export function SessionBarLine({
+  entry,
+}: {
+  entry: SessionBarEntry;
+}): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1 flex-row items-center gap-2">
-      {entry.icon && <Icon name={entry.icon} tone="muted" />}
-      <Text role="secondary" numberOfLines={1}>
+      {entry.icon && <Icon name={entry.icon} tone={entry.tone ?? 'muted'} />}
+      <Text role="secondary" tone={entry.tone} numberOfLines={1}>
         {entry.text}
       </Text>
     </View>

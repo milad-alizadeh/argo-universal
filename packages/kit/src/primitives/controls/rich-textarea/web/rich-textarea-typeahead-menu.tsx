@@ -8,6 +8,7 @@ import {
   SuggestionMenu,
   type SuggestionMenuProps,
 } from '../rich-textarea-suggestion-menu';
+import { useGatedHighlight } from './rich-textarea-typeahead-hover';
 import type { TypeaheadOption } from './rich-textarea-typeahead-option';
 import { useMenuMaxHeight } from './rich-textarea-typeahead-viewport';
 
@@ -38,18 +39,25 @@ function useKeepFocus(menu: RefObject<HTMLDivElement | null>): void {
   }, [menu]);
 }
 
+const chooser =
+  (props: MenuProps) =>
+  (index: number): void => {
+    const option = props.options[index];
+
+    if (option) props.selectOptionAndCleanUp(option);
+  };
+
 // Lexical's options as the menu takes them: rows highlighted from the field and chosen through Lexical.
-function menuContent(props: MenuProps): Omit<SuggestionMenuProps, 'maxHeight'> {
+function menuContent(
+  props: MenuProps,
+  onHighlight: (index: number) => void,
+): Omit<SuggestionMenuProps, 'maxHeight'> {
   return {
     rows: props.options.map((option) => option.display),
-    onChoose: (index) => {
-      const option = props.options[index];
-
-      if (option) props.selectOptionAndCleanUp(option);
-    },
+    onChoose: chooser(props),
     listbox: {
       highlighted: props.selectedIndex,
-      onHighlight: props.setHighlightedIndex,
+      onHighlight,
     },
   };
 }
@@ -62,9 +70,12 @@ function useMenuSurface(anchor: HTMLElement): MenuSurface {
   return { menu, maxHeight: useMenuMaxHeight(anchor, menu) };
 }
 
+const useHighlight = (props: MenuProps): ((index: number) => void) =>
+  useGatedHighlight(props.options, props.setHighlightedIndex);
+
 function TypeaheadMenu(props: TypeaheadMenuProps): React.JSX.Element {
   const { menu, maxHeight } = useMenuSurface(props.anchor);
-  const content = menuContent(props);
+  const content = menuContent(props, useHighlight(props));
 
   return (
     <div

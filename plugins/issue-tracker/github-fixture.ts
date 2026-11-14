@@ -33,6 +33,7 @@ export type GitHubFixture = FixtureServices & {
   // Every token GitHub accepts; empty means every call is a 401.
   accepted: Set<string>;
   graphqlCalls: () => FixtureRequest[];
+  closeIssue: (number: number) => void;
 };
 
 const sleep = (ms: number): Promise<void> =>
@@ -59,12 +60,15 @@ const userAnswer = (request: FixtureRequest): FixtureAnswer =>
     }),
   );
 
-function api(request: FixtureRequest): FixtureAnswer | Promise<FixtureAnswer> {
+function api(
+  request: FixtureRequest,
+  closedIssues: ReadonlySet<number>,
+): FixtureAnswer | Promise<FixtureAnswer> {
   if (request.path === '/user') return userAnswer(request);
 
   if (request.method === 'PATCH') return patch(request);
 
-  return answer(graphqlAnswer(request));
+  return answer(graphqlAnswer(request, closedIssues));
 }
 
 type State = { replies: PollReply[]; polled: number };
@@ -91,30 +95,33 @@ function tokenPoll(state: State): FixtureAnswer {
 const githubCom = (state: State, request: FixtureRequest): FixtureAnswer =>
   request.path === '/login/device/code' ? deviceCode() : tokenPoll(state);
 
+const missingUserAgent = (): FixtureAnswer =>
+  answer(
+    JSON.stringify({
+      message: 'Please make sure your request has a User-Agent header',
+    }),
+    forbidden,
+  );
+
 const apiWithToken = (
   accepted: Set<string>,
   request: FixtureRequest,
+  closedIssues: ReadonlySet<number>,
 ): FixtureAnswer | Promise<FixtureAnswer> => {
   // GitHub's API refuses a request with no User-Agent before it looks at the token.
-  if (!request.headers['user-agent'])
-    return answer(
-      JSON.stringify({
-        message: 'Please make sure your request has a User-Agent header',
-      }),
-      forbidden,
-    );
+  if (!request.headers['user-agent']) return missingUserAgent();
 
   return accepted.has(tokenOf(request))
-    ? api(request)
+    ? api(request, closedIssues)
     : answer(JSON.stringify({ message: 'Bad credentials' }), unauthorized);
 };
 
 const handle =
-  (state: State, accepted: Set<string>) =>
+  (state: State, accepted: Set<string>, closedIssues: ReadonlySet<number>) =>
   (request: FixtureRequest): FixtureAnswer | Promise<FixtureAnswer> =>
     request.host === 'github.com'
       ? githubCom(state, request)
-      : apiWithToken(accepted, request);
+      : apiWithToken(accepted, request, closedIssues);
 
 /*
  * GitHub as the tracker meets it: the device-flow endpoints on `github.com`, and the user, GraphQL and Issue endpoints
@@ -123,16 +130,38 @@ const handle =
 export async function githubFixture(): Promise<GitHubFixture> {
   const state: State = { replies: [{ access_token: 'token-1' }], polled: 0 };
   const accepted = new Set(['token-1', 'token-2']);
-  const services = await fixtureServices(handle(state, accepted));
+  const closedIssues = new Set<number>();
+  const services = await fixtureServices(handle(state, accepted, closedIssues));
 
+  return fixtureControls({ services, state, accepted, closedIssues });
+}
+
+type FixtureState = {
+  services: FixtureServices;
+  state: State;
+  accepted: Set<string>;
+  closedIssues: Set<number>;
+};
+
+function fixtureControls({
+  services,
+  state,
+  accepted,
+  closedIssues,
+}: FixtureState): GitHubFixture {
   return {
     ...services,
-    script: (...next) => {
-      state.replies = next;
-      state.polled = 0;
-    },
+    script: scripted(state),
     accepted,
+    closeIssue: (number) => void closedIssues.add(number),
     graphqlCalls: () =>
       services.requests.filter(({ path }) => path === '/graphql'),
   };
 }
+
+const scripted =
+  (state: State): GitHubFixture['script'] =>
+  (...next) => {
+    state.replies = next;
+    state.polled = 0;
+  };

@@ -6,6 +6,8 @@ import type {
 } from '@repo/contracts/plugins/device-flow-api';
 import type { z } from 'zod';
 import { postForm, TokenAnswer } from './device-http';
+import { tokenFromAnswer } from './device-token';
+import type { KeptToken } from './kept-token';
 
 const deviceGrant = 'urn:ietf:params:oauth:grant-type:device_code';
 
@@ -23,12 +25,22 @@ const messages = (name: string): Record<DeviceFlowEnd, string> => ({
   failed: `${name} refused the sign-in.`,
 });
 
+// The service gave a token but did not say whose it is.
+export const unnamed = (
+  { name }: DeviceFlowOptions,
+  status: number | null,
+): DeviceFlowState =>
+  ended(
+    'failed',
+    `${name} answered ${status ?? 'nothing'} and did not say who signed in.`,
+  );
+
 export const expired = ({ name }: DeviceFlowOptions): DeviceFlowState =>
   ended('expired', messages(name).expired);
 
 // What one poll found: the token, a reason to wait longer, or the end of the sign-in.
 export type Polled =
-  | { kind: 'token'; token: string }
+  | { kind: 'token'; token: KeptToken }
   | { kind: 'wait'; slower: boolean }
   | { kind: 'ended'; state: DeviceFlowState };
 
@@ -74,9 +86,16 @@ export async function pollOnce(
     fields: tokenFields(options, device),
   };
 
-  const reply = await postForm(fetch, target, TokenAnswer);
+  return polledOf(options, await postForm(fetch, target, TokenAnswer));
+}
 
-  if (reply.access_token) return { kind: 'token', token: reply.access_token };
+function polledOf(
+  options: DeviceFlowOptions,
+  reply: z.infer<typeof TokenAnswer>,
+): Polled {
+  const token = tokenFromAnswer(reply);
+
+  if (token) return { kind: 'token', token };
 
   return waits.has(String(reply.error))
     ? { kind: 'wait', slower: reply.error === 'slow_down' }

@@ -6,6 +6,9 @@ import { expect, screen, within } from 'storybook/test';
 import {
   binaryChanges,
   binaryPath,
+  deletedBinaryPath,
+  deletedChanges,
+  deletedTextPath,
   movedFrom,
   movedTo,
   renamedChanges,
@@ -37,6 +40,10 @@ const nothingChanged = 'No changes';
 const noLines = 'No lines to show';
 
 const cantPreview = /can't be previewed/;
+
+const emptyDeleted = 'Empty file deleted';
+
+const binaryDeleted = 'Binary file deleted';
 
 const loadErrorTitle = "Couldn't load changes";
 
@@ -117,6 +124,32 @@ function renamedFile(width: number): Story {
 export const RenamedFilePhone = renamedFile(layoutWidths.phone);
 
 export const RenamedFileWide = renamedFile(layoutWidths.wide);
+
+// A deleted file is marked Deleted in its header, and its body says it was deleted rather than that it has no lines.
+function deletedFiles(width: number): Story {
+  return {
+    args: { catalog: deletedChanges },
+    beforeEach: (): Promise<void> => settleLayout(width),
+    play: async () => {
+      for (const path of [deletedTextPath, deletedBinaryPath])
+        await expect(
+          await screen.findByRole('button', {
+            name: `Diff for ${path}, deleted`,
+          }),
+        ).toBeVisible();
+
+      await expect(screen.getAllByText('Deleted')).toHaveLength(2);
+      await expect(await screen.findByText(emptyDeleted)).toBeVisible();
+      await expect(await screen.findByText(binaryDeleted)).toBeVisible();
+      await expect(screen.queryByText(noLines)).toBeNull();
+      await expect(screen.queryByText(cantPreview)).toBeNull();
+    },
+  };
+}
+
+export const DeletedFilesPhone = deletedFiles(layoutWidths.phone);
+
+export const DeletedFilesWide = deletedFiles(layoutWidths.wide);
 
 export const LoadingShowsSpinner: Story = {
   args: { catalog: loadingChanges },

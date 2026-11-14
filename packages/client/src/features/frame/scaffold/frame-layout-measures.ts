@@ -1,8 +1,21 @@
 import type { FrameLayoutInput, FrameMeasures } from './frame-layout-types';
 
-// The narrowest the content column gets: the Composer and a gutter on each side.
-export const contentFloor = (measures: FrameMeasures): number =>
+// The narrowest a drag of the Inspector leaves the page; past it the Inspector expands.
+export const contentMinimum = 200;
+
+// The content's floor before a drag lowers it: the Composer and a gutter on each side.
+const defaultContentFloor = (measures: FrameMeasures): number =>
   measures.composerWidth + measures.contentGutter * 2;
+
+const draggedFloor = (input: FrameLayoutInput, floor: number): number =>
+  Math.min(floor, Math.max(contentMinimum, input.draggedContentFloor ?? floor));
+
+// The narrowest the layout makes the content column: the Composer and a gutter on each side, or less while an Inspector a drag made wider than that stays open.
+export function contentFloor(input: FrameLayoutInput): number {
+  const floor = defaultContentFloor(input.measures);
+
+  return input.inspectorState === 'closed' ? floor : draggedFloor(input, floor);
+}
 
 // A region that is drawn takes its gap beside it too.
 export const occupied = (width: number, gap: number): number =>

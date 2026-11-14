@@ -25,6 +25,19 @@ export const toolRecordingSteps: ScriptedScenario['steps'] = [
       ],
     },
   },
+  // A command the Agent has started but not yet sent any output for.
+  {
+    type: 'update',
+    update: {
+      sessionUpdate: 'tool_call',
+      toolCallId: 'execute-pending',
+      kind: 'execute',
+      title: 'Verify the build',
+      status: 'in_progress',
+      rawInput: { command: 'pnpm verify', timeout: 900000 },
+      content: [],
+    },
+  },
   {
     type: 'update',
     update: {

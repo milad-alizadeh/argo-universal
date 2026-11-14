@@ -85,7 +85,7 @@ export const MainContentUsesAvailableWidth: ScaffoldStory = {
     await waitForAllow(canvas);
     await expectSessionLabel(canvas);
     await controlled.render({ inspectorState: 'open' });
-    // The list folds first, and the Inspector resize limit then protects the column floor.
+    // The list folds first; only a drag of the Inspector then takes the column under its floor.
     await waitUntilWide(content);
     await expectSessionLabel(canvas);
     await expect(canvas.getByTestId('desktop-list')).toHaveAttribute(
@@ -93,14 +93,17 @@ export const MainContentUsesAvailableWidth: ScaffoldStory = {
       'true',
     );
     canvas.getByRole('separator', { name: resizeInspectorLabel }).focus();
-    await userEvent.keyboard('{ArrowLeft}'.repeat(40));
-    await waitUntilWide(content);
-    await expectSessionLabel(canvas);
+    await userEvent.keyboard('{ArrowLeft}'.repeat(30));
+    await waitFor(() =>
+      expect(content.getBoundingClientRect().width).toBeLessThan(
+        contentWideMin(),
+      ),
+    );
     await waitForAllow(canvas);
     await expect(
       allow(canvas).getBoundingClientRect().right,
     ).toBeLessThanOrEqual(content.getBoundingClientRect().right);
-    await userEvent.keyboard('{ArrowRight}'.repeat(40));
+    await userEvent.keyboard('{ArrowRight}'.repeat(30));
     await waitUntilWide(content);
     await waitForAllow(canvas);
     await expectSessionLabel(canvas);

@@ -28,11 +28,15 @@ export interface PreparedChildren {
   looseKey: string;
 }
 
-// Lanes are drawn only where a tree is: on a wide desktop or web window, outside a menu. Elsewhere the Sections stack as a List's do.
+/*
+ * Lanes are drawn only where a tree is: on a wide desktop or web window, outside a menu. Elsewhere the Sections stack as
+ * a List's do. A board's lanes draw at every width, and scroll sideways on a phone.
+ */
 const drawsLanes = (
-  layout: ChildrenOptions['layout'],
+  { layout, moveTargets }: Pick<ChildrenOptions, 'layout' | 'moveTargets'>,
   look: Pick<ListLook, 'treeDrawn'>,
-): boolean => layout === 'lanes' && look.treeDrawn;
+): boolean =>
+  layout === 'lanes' && (look.treeDrawn || moveTargets !== undefined);
 
 // How the List draws the blocks it read: in one column, on shelves, or in lanes, decided here once.
 export function usePrepared(
@@ -42,7 +46,7 @@ export function usePrepared(
 ): PreparedChildren {
   const look = useListLook();
   const shelves = hasShelves(props, blocks);
-  const lanes = drawsLanes(props.layout, look) && hasSections(blocks);
+  const lanes = drawsLanes(props, look) && hasSections(blocks);
 
   const items = useMemo(
     () => (shelves || lanes ? [] : shownEntries(look, blocks)),

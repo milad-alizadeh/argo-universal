@@ -85,6 +85,26 @@ pnpm test
 
 `argo-plugin <validate|types|test> <dir>` accepts an absolute or relative Plugin directory. The CLI's `argo plugin <validate|types|test> <dir>` runs the same command.
 
+## Boards
+
+A `Board` draws columns of cards that a person moves between columns: by drag, or from a card's menu, which offers the same moves for touch and keyboard. The Plugin writes no drag logic. Each `Board.Column` has an `id`, a `title` and an optional `count`, which defaults to the cards it shows. Each `Board.Card` has an `id`, a `title`, an optional `subtitle` and `meta`, and `movesTo`, the ids of the columns it may move to; only those accept its drop, the others fade while it is dragged, and a card without `movesTo` does not move. A card's `onPress` opens it, as a row's does; a card that moves but opens nothing is still a focus stop, whose context-menu key offers its moves.
+
+A move reports the card's `id` and the `column` it lands in, which fill an Operation call:
+
+```tsx
+<Board accessibilityLabel="Issues" onMove={to.run('transition', { issue: to.payload('id'), status: to.payload('column') })}>
+  {columns.map((column) => (
+    <Board.Column key={column.id} id={column.id} title={column.name}>
+      {issuesIn(column).map((issue) => (
+        <Board.Card key={issue.key} id={issue.key} title={issue.summary} subtitle={issue.key} movesTo={issue.transitions} />
+      ))}
+    </Board.Column>
+  ))}
+</Board>
+```
+
+The move shows at once: the App sets the card's `column` and `pending` as optimistic props, so it draws in its new column with a spinner until the Operation answers, and goes back with an error toast when it fails. A move to a column the card does not name, or to the one it is in, is refused before any call is made; a page test sees that refusal from `page.act(board, 'onMove', { id, column })`. The board scrolls sideways when its columns do not fit, at every width, and never narrows a column.
+
 ## Source validation
 
 `argo-plugin validate <dir>` uses the manifest reader and bundler that the Plugin loader uses.
@@ -330,7 +350,7 @@ argo.slots.register('argo/session/bar/v1', ({ contexts }) =>
 );
 ```
 
-An item is `{ icon?, text, action? }`: `text` is at most 80 characters, and `action.path` opens one of the Plugin's own pages. A tone, a tooltip, a kit tree or a second item fails the Slot's schema, and that Plugin is left out alone.
+An item is `{ icon?, text, tone?, action? }`: `text` is at most 80 characters, `tone` is a kit tone the icon and text are drawn in, and `action.path` opens one of the Plugin's own pages. A tooltip, a kit tree or a second item fails the Slot's schema, and that Plugin is left out alone.
 The bar shows the first Plugin in Slot order that answers, after Argo's own banners, on phones and wide windows alike. The other Plugins' lines wait behind "+N", each named with its Plugin. A user can turn a Plugin off for the bar under Settings › Plugins › Session bar on that Device; the next Plugin in order then takes the line. With no answer, the Session draws no bar.
 
 ## Session header actions
@@ -506,7 +526,9 @@ await argo.accounts.provide(
 The handler receives the Account metadata and returns a current token or `null`.
 Argo wakes the provider when another Plugin borrows its Account.
 The whole provider call has a three-second deadline, including activation.
-A failed, disabled, stopped, or slow provider makes the borrow return `null`.
+A failed, disabled, stopped, or slow provider rejects the borrow with a temporary Account-unavailable error.
+Use the page’s existing load-error handling and refresh interval to retry without asking the person to sign in again.
+A missing Account, refused Grant, or provider that returns no credential still makes the borrow return `null`.
 
 After sign-in, create the Account and store its token under the returned id:
 

@@ -13,6 +13,12 @@ export const runningGroup = {
   now: toolCallGroupMock.now,
 } satisfies ToolCallGroupFixture;
 
+// Opened while running: the command runs behind the read it followed, as a row of its own (#2044).
+export const runningExpandedGroup = {
+  ...runningGroup,
+  initialOpen: true,
+} satisfies ToolCallGroupFixture;
+
 // Parallel calls: the earlier command still runs, so the later read stays in the list.
 export const parallelGroup = {
   group: toolCallGroupMock.parallel,

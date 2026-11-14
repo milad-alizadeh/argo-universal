@@ -3,14 +3,10 @@ import { actionSlot, defineKitComponent } from '../define-kit-component';
 import { echoes } from '../kit-component-props';
 import { acknowledgedEvent, acknowledgedPayload } from '../kit-event-props';
 import { listExpansion } from '../list-expansion';
-import {
-  contentListProps,
-  listItemProps,
-  listSectionProps,
-  rowPress,
-} from '../list-kit-props';
+import { contentListProps, listItemProps, rowPress } from '../list-kit-props';
 import { listMediaComponents } from '../list-media-components';
 import { listMoveProps } from '../list-move-props';
+import { listSectionProps } from '../list-section-props';
 import {
   tableCellProps,
   tableProps,

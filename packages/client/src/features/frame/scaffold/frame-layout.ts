@@ -23,7 +23,7 @@ import type {
 } from './frame-layout-types';
 import { pageWidthForGutter } from './frame-layout-workbench';
 
-export { resizeOutcome } from './frame-layout-handles';
+export { resizeOutcome, widthBeside } from './frame-layout-handles';
 
 export { workbenchDrawn } from './frame-layout-workbench';
 
@@ -35,7 +35,7 @@ function budgetThresholds(input: FrameLayoutInput): FrameLayout['thresholds'] {
   const list = preferredListWidth(input);
 
   return {
-    listFold: base + contentFloor(input.measures) + list,
+    listFold: base + contentFloor(input) + list,
     workbenchGutter:
       base + (input.sidebarShown ? list : 0) + pageWidthForGutter(input),
   };

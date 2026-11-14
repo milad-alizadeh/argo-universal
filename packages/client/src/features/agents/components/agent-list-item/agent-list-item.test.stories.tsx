@@ -14,7 +14,7 @@ const agent = { ...agentRow, icon: encodedIcon };
 const meta = {
   title: 'Tests/Agents/AgentListItem',
   component: AgentListItem,
-  args: { agent, onInstall: fn(), onRemove: fn() },
+  args: { agent, onInstall: fn(), onRemove: fn(), onConfigure: fn() },
 } satisfies Meta<typeof AgentListItem>;
 
 export default meta;

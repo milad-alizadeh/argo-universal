@@ -9,6 +9,7 @@ import {
   type ResizeOutcome,
   resizeOutcome,
 } from './frame-layout';
+import { floorLeftBy } from './frame-layout-handles';
 import { inspectorOffered, moveInspector } from './inspector-column';
 import type { PartReads, ScaffoldLayout } from './use-scaffold-layout';
 
@@ -19,7 +20,11 @@ type ListHandleReads = PartReads<
 
 type InspectorHandleReads = PartReads<
   'inspectorState' | 'onInspectorStateChange' | 'band' | 'inspectorAvailable',
-  'handles' | 'inspector' | 'setPreferredInspectorWidth' | 'setResizing'
+  | 'handles'
+  | 'inspector'
+  | 'setPreferredInspectorWidth'
+  | 'setDraggedContentFloor'
+  | 'setResizing'
 >;
 
 // The list never expands, so any outcome other than a width closes it.
@@ -39,12 +44,18 @@ function resizeList(
   if (!sidebarShown) onSidebarShownChange(true);
 }
 
+// A width the drag keeps is the Inspector's, and what it leaves the page is the content's floor from then on.
 function resizeInspector(
   outcome: ResizeOutcome,
   scaffold: InspectorHandleReads['scaffold'],
-  { setPreferredInspectorWidth }: InspectorHandleReads['layout'],
+  layout: InspectorHandleReads['layout'],
 ): void {
-  if (typeof outcome === 'number') setPreferredInspectorWidth(outcome);
+  if (typeof outcome === 'number') {
+    layout.setPreferredInspectorWidth(outcome);
+    layout.setDraggedContentFloor(
+      floorLeftBy(layout.handles.inspector, outcome),
+    );
+  }
 
   moveInspector(scaffold, { dragged: outcome });
 }

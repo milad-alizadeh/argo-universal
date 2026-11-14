@@ -5,7 +5,9 @@ import type {
 } from '@repo/contracts/plugins/oauth-flow-api';
 import { z } from 'zod';
 import { oneLine } from '../runtime/render-fallback';
-import { form } from './form-body';
+import { form, formPost } from './form-body';
+import { secretOf, type KeptToken } from './kept-token';
+import { keptIn, parsed } from './oauth-token';
 
 // What Argo's redirect answered when it started listening, with the client ID the sign-in read.
 export type Waiting = NonNullable<
@@ -51,20 +53,20 @@ export async function signedIn(
   if (exchanged.problem !== undefined) return failed(exchanged.problem);
 
   const { token } = exchanged;
-  const label = await options.label(token);
+  const label = await options.label(token.access);
 
   if (!label) return failed('The service did not say who signed in.');
 
   const id = await argo.accounts.add(options.host, { label });
 
-  await argo.secrets.set(id, token);
+  await argo.secrets.set(id, secretOf(token));
 
   return { kind: 'signed-in', label };
 }
 
 // The token the service gave, or why it gave none.
 type Exchanged =
-  | { token: string; problem?: never }
+  | { token: KeptToken; problem?: never }
   | { token?: never; problem: string };
 
 // The Plugin exchanges the code itself, as a public client with its PKCE verifier (RFC 6749, RFC 7636).
@@ -85,44 +87,21 @@ async function answered(
   path: OAuthFlowOptions['tokenPath'],
 ): Promise<Exchanged> {
   const text = await response.text();
-  const token = response.ok ? tokenIn(text, path) : null;
+  const token = response.ok ? keptIn(text, path) : null;
 
   return token === null
     ? { problem: refusal(response.status, text) }
     : { token };
 }
 
-const tokenRequest = (grant: Grant): TokenRequest => ({
-  method: 'POST',
-  headers: {
-    accept: 'application/json',
-    'content-type': 'application/x-www-form-urlencoded',
-  },
-  body: form({
+const tokenRequest = (grant: Grant): TokenRequest =>
+  formPost({
     grant_type: 'authorization_code',
     client_id: grant.clientId,
     code: grant.code,
     code_verifier: grant.verifier,
     redirect_uri: grant.redirectUri,
-  }),
-});
-
-// The token at `path` in the endpoint's JSON answer, or null for anything else, an answer that is not JSON too.
-function tokenIn(
-  text: string,
-  path: readonly string[] = ['access_token'],
-): string | null {
-  const token = path.reduceRight<z.ZodType<string>>(
-    (inner, key) =>
-      z
-        .object({ [key]: inner })
-        .transform((at) => at[key])
-        .pipe(z.string()),
-    z.string().min(1),
-  );
-
-  return token.safeParse(parsed(text)).data ?? null;
-}
+  });
 
 const maxReason = 200;
 
@@ -154,13 +133,3 @@ const ServiceError = z.object({
   error: z.string().optional(),
   error_description: z.string().optional(),
 });
-
-const AnswerJson = z.json();
-
-const parsed = (text: string): z.infer<typeof AnswerJson> => {
-  try {
-    return AnswerJson.parse(JSON.parse(text));
-  } catch {
-    return null;
-  }
-};

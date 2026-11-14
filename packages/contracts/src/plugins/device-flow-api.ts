@@ -17,6 +17,9 @@ export type DeviceFlowArgo = Pick<Argo, 'fetch' | 'changed'> & {
  * - `label` names whose Account the token opens: the `field` of the JSON `url` answers when it is called with
  *   the token. The kit makes that call, so Plugin code never holds a token.
  * - `header` is how a borrower's request carries the token, `Authorization: Bearer` by default.
+ *
+ * A service whose token answer adds `refresh_token` and `expires_in`, as GitHub's does for expiring tokens, has the
+ * token refreshed at `tokenUrl` when a borrow finds it run out, so the person stays signed in.
  */
 export type DeviceFlowOptions = Readonly<{
   host: string;

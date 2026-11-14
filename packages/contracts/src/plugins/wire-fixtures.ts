@@ -103,3 +103,5 @@ export {
 } from './list-wire-fixtures';
 
 export { runTableRoot } from './table-wire-fixtures';
+
+export { issueBoardRoot, emptyBoardRoot } from './board-wire-fixtures';

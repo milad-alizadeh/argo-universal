@@ -1,5 +1,6 @@
 import { cp, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { argoInstructions } from '@repo/contracts/agents/argo-instructions';
 import {
   createRuntimePlugins,
   shippedFolder,
@@ -11,6 +12,12 @@ import { startCliHost } from '../mocks/operations-cli';
 const discoveryLine =
   'Discover: call operation_list with a task-specific filter. ' +
   'Read the matching params schema and availability before calling operation_run.';
+
+// What every Session gets before any Plugin's prose: the discovery line, then each Argo instruction under its name.
+const head = [
+  discoveryLine,
+  ...argoInstructions.map(({ name, text }) => `## ${name}\n\n${text}`),
+].join('\n\n');
 
 type Shipped = { id: string; name: string; instructions: string };
 
@@ -36,20 +43,20 @@ async function instructionsWith(
   return (await connectMcp(host.home)).getInstructions();
 }
 
-it('sends exactly the discovery line when no Plugin has instructions', async () => {
+it('sends the discovery line and Argo instructions when no Plugin has instructions', async () => {
   const home = await createRuntimePlugins([
     { id: 'quiet', fixture: 'healthy' },
   ]);
 
   const host = await startCliHost({ home });
 
-  expect((await connectMcp(host.home)).getInstructions()).toBe(discoveryLine);
+  expect((await connectMcp(host.home)).getInstructions()).toBe(head);
 }, 30_000);
 
-it('follows the discovery line with a Plugin prose under its name', async () => {
+it('follows the Argo instructions with a Plugin prose under its name', async () => {
   expect(
     await instructionsWith([shipped('tracker', 'Issue tracker', 'Attach it.')]),
-  ).toBe(`${discoveryLine}\n\n## Issue tracker\n\nAttach it.`);
+  ).toBe(`${head}\n\n## Issue tracker\n\nAttach it.`);
 }, 30_000);
 
 it('orders Plugin prose by Plugin id', async () => {
@@ -58,7 +65,7 @@ it('orders Plugin prose by Plugin id', async () => {
       shipped('zeta', 'Alpha', 'Last.'),
       shipped('alpha', 'Zulu', 'First.'),
     ]),
-  ).toBe(`${discoveryLine}\n\n## Zulu\n\nFirst.\n\n## Alpha\n\nLast.`);
+  ).toBe(`${head}\n\n## Zulu\n\nFirst.\n\n## Alpha\n\nLast.`);
 }, 30_000);
 
 it('leaves a disabled Plugin out', async () => {
@@ -67,12 +74,12 @@ it('leaves a disabled Plugin out', async () => {
       [shipped('off', 'Off', 'Hidden.'), shipped('on', 'On', 'Shown.')],
       ['off'],
     ),
-  ).toBe(`${discoveryLine}\n\n## On\n\nShown.`);
+  ).toBe(`${head}\n\n## On\n\nShown.`);
 }, 30_000);
 
 it('leaves out a Plugin whose instructions are only whitespace', async () => {
   expect(await instructionsWith([shipped('blank', 'Blank', '  \n\n')])).toBe(
-    discoveryLine,
+    head,
   );
 }, 30_000);
 
@@ -94,11 +101,11 @@ it('carries the shipped Issue tracker prose under its name', async () => {
   const host = await startCliHost({ home, version: '0.0.0' });
 
   expect((await connectMcp(host.home)).getInstructions()).toBe(
-    `${discoveryLine}\n\n## Issue tracker\n\n${text.trim()}`,
+    `${head}\n\n## Issue tracker\n\n${text.trim()}`,
   );
 }, 30_000);
 
-it('keeps the discovery line when a bad token cannot read Plugin instructions', async () => {
+it('keeps the discovery line and Argo instructions when a bad token cannot read Plugin instructions', async () => {
   const home = await createRuntimePlugins([
     { id: 'tracker', name: 'Tracker', fixture: 'healthy', instructions: 'Hi.' },
   ]);
@@ -106,7 +113,7 @@ it('keeps the discovery line when a bad token cannot read Plugin instructions', 
   const host = await startCliHost({ home });
   const client = await connectMcp(host.home, 'revoked-session-token');
 
-  expect(client.getInstructions()).toBe(discoveryLine);
+  expect(client.getInstructions()).toBe(head);
   await vi.waitFor(() =>
     expect(mcpStderr(client)).toContain('Plugin instructions are unavailable'),
   );

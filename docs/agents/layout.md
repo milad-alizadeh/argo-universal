@@ -56,9 +56,11 @@ Two regions compete with the content column for width: the Sessions list and the
 
 **The content moves aside only as far as the cards need.** From a page of `800 + 2 × (312 + 16 + 8) = 1472` (1856 with the list shown, 2224 with the Inspector open too) the trailing gutter alone holds the cards and the content stays centred. Below that the Feed and the Composer move together towards the page's leading edge, just far enough to keep the 16px gap from the cards, and return to the centre when the Workbench hides. The move slides with the Workbench; a resize moves it at once. The Feed's scroll view still runs the page's width, so its scrollbar rests at the page's trailing edge either way.
 
+**Opening another Session moves nothing.** A Session switch is a new page, not a pane toggle: the content column, the Workbench, the Inspector and the Sessions list take the new Session's places at once, as a resize does, including the changes its page makes as it mounts. Only the person's own toggles within a Session animate.
+
 **The Sessions list folds below 1440 with the Inspector open, and below 1072 without it.** Closing the Inspector frees 368px: its 352px panel and 16px gap. Opening the Inspector can auto-hide the Workbench; closing it restores the Workbench when enough room returns. Explicit Show or Hide intent survives these changes.
 
-The content floor is 688px: the Composer's 640px width and a 24px gutter on each side. Pane preferences change these thresholds. The sidebar and Inspector take priority over the Workbench.
+The content floor is 688px: the Composer's 640px width and a 24px gutter on each side, unless a drag of the Inspector lowered it (see [The content column](#the-content-column)). Pane preferences change these thresholds. The sidebar and Inspector take priority over the Workbench.
 
 The Workbench has four effective states. One toggle drives the person’s Show or Hide intent without rewriting it during a resize. Showing or hiding it never narrows the Feed or Composer, and never covers them where the gutters hold it.
 
@@ -76,7 +78,8 @@ The Workbench has four effective states. One toggle drives the person’s Show o
 - **A card is drawn only when the Session has one.** A section with nothing in it is not drawn at all, so an empty Workbench is an empty column, not three headers over nothing (same board). A Session with no Agents has no Agents card, as its header has no Agents button.
 - **A card is the kit's collapsible `Card`, and its title line holds the title, the disclosure chevron after it and, where it can be moved, the drag handle.** No icon and no summary sits on that line; a summary belongs in the body. The column only places, stacks and reorders the cards it is given. A List or an EmptyState in a card's body draws as the card's rows: plain rows with no card of their own, no hairlines, their text on the card's own edge, and no end gap under the last row. A Sheet or a Dialog opened from a card is a page again.
 - **Cards are kit components, and their Inspector tabs use the kit's `List`** ([ADR-0032](../adr/0032-one-list-and-one-list-item-drawn-by-argo-everywhere.md)). Agent and Background Task lists use `FieldGroup.Link` rows on native platforms; web and Electron wide lists use `ListItem`.
-- **Issues open on their own pages.** The Issue tracker contributes no Workbench card, header action or Inspector tab. Session Issue links remain on the Session row and bar.
+- **Issues open on their own pages.** The Issue tracker declares no Workbench card, header action or Inspector tab. A Session's Issue shows on its row, and its Session bar line is a Workbench card (#2012), and on a phone the line sits under the header.
+- **Each Plugin's Session bar lines share one card** after Argo's cards and the Plugins' declared cards, titled with the Plugin's name. Pressing a line opens its Plugin page; it has no Inspector tab. It hides with the Workbench like every other card; only a phone, with no Workbench column, keeps the line on its strip under the header.
 - **Plugins contribute cards into the named Slot, add-only** ([ADR-0035](../adr/0035-plugins-add-to-named-slots-and-never-edit-core-screens.md)). The Plugin draws inside its own card; Argo decides where the card goes, in what order and how much fits. A Plugin never moves, hides, reorders or restyles Argo's cards or another Plugin's. A Plugin's `header` action may open its card.
 - **Each card uses glass and its own shadow.** The owner selected [WorkbenchGlass / Agents](https://app.paper.design/file/01M4RJWCAC00EA21V8BKY91FEV/p-4-0/21BX-0) on 2026-10-21. Use `--color-glass`, `--shadow-glass` and the sidebar's blur. The scroll viewport leaves room for each card's shadow without shrinking its content width.
 
@@ -93,7 +96,8 @@ The Workbench has four effective states. One toggle drives the person’s Show o
 ## The content column
 
 - `--container-column` is 800. The Feed viewport and the Composer take the same column: `max-width` 848 at a 24 gutter on each side, centred in the page, or moved aside together for a Workbench the trailing gutter alone does not hold.
-- The region caps at 848, including its two 24px gutters. Its protected floor is 688: the 640px Composer plus those gutters. Manual Inspector resizing respects that floor.
+- The region caps at 848, including its two 24px gutters. Its protected floor is 688: the 640px Composer plus those gutters. A window resize or a pane opening never takes the page below it.
+- Dragging the Inspector's divider is the one way under that floor. The page keeps narrowing with the drag down to 200, and a drag past that expands the Inspector over the page. The list does not fold during the drag. The width the drag left is the content's floor until the Inspector closes, so a narrower window then folds the list before the page gives more, and expanding the Inspector keeps the list; closing the Inspector restores 688 and keeps its width, so it reopens where it was. The Sessions list keeps its dragged width across a close the same way. A divider moved while the Inspector is at its default width lowers nothing.
 - The Workbench and the Inspector sit outside the cap. The Inspector is its own region of the window; the Workbench is drawn over the page's gutter.
 - On a wide web or desktop window the Feed's scrollbar stays drawn while the Feed can scroll, at the page's trailing edge, which is the window's edge unless the Inspector is open. Its gutter is kept on both sides, so the Feed's column stays over the Composer's.
 

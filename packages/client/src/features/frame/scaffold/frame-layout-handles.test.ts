@@ -3,7 +3,9 @@ import {
   frameLayout,
   type FrameLayoutInput,
   resizeOutcome,
+  widthBeside,
 } from './frame-layout';
+import { floorLeftBy } from './frame-layout-handles';
 import { input } from './frame-layout.mocks';
 
 describe('resize handles', () => {
@@ -48,13 +50,14 @@ describe('the Inspector handle agrees with the layout', () => {
   });
 
   it.each(cases)(
-    'a drag past its limit at $width stops at the handle maximum',
+    'a drag past its limit at $width expands the Inspector',
     (state) => {
-      const { handles } = frameLayout(openAt(state));
+      const { inspector } = frameLayout(openAt(state)).handles;
 
-      expect(
-        resizeOutcome(handles.inspector, handles.inspector.maximum + 100),
-      ).toBe(handles.inspector.maximum);
+      expect(resizeOutcome(inspector, inspector.maximum)).toBe(
+        inspector.maximum,
+      );
+      expect(resizeOutcome(inspector, inspector.maximum + 1)).toBe('expanded');
     },
   );
 
@@ -63,26 +66,84 @@ describe('the Inspector handle agrees with the layout', () => {
     (state) => {
       const { handles } = frameLayout(openAt(state));
 
+      const { maximum } = handles.inspector;
+
       const resized = frameLayout({
         ...openAt(state),
-        preferredInspectorWidth: handles.inspector.maximum,
+        preferredInspectorWidth: maximum,
+        draggedContentFloor: widthBeside(handles.inspector, maximum),
       });
 
-      expect(resized.inspector.width).toBe(handles.inspector.maximum);
-      expect(resized.page.width).toBeGreaterThanOrEqual(688);
+      expect(resized.inspector.width).toBe(maximum);
+      expect(resized.page.width).toBe(200);
+      expect(resized.list.folded).toBe(!state.sidebarShown);
     },
   );
 
   it.each([
     { width: 100, outcome: 'closed' },
     { width: 176, outcome: 352 },
-    { width: 500, outcome: 352 },
-    { width: 712, outcome: 352 },
-    { width: 713, outcome: 'expanded' },
+    { width: 500, outcome: 500 },
+    { width: 840, outcome: 840 },
+    { width: 841, outcome: 'expanded' },
   ])('a drag to $width at 1440 gives $outcome', ({ width, outcome }) => {
     const { handles } = frameLayout({ ...input, inspectorState: 'open' });
 
     expect(resizeOutcome(handles.inspector, width)).toBe(outcome);
+  });
+
+  it('keeps the content at its floor until a drag lowers it', () => {
+    const untouched = frameLayout({
+      ...input,
+      inspectorState: 'open',
+      preferredInspectorWidth: 600,
+    });
+
+    expect(untouched.list.folded).toBe(true);
+    expect(untouched.page.width).toBeGreaterThanOrEqual(688);
+  });
+
+  it('folds the list before the content a drag narrowed gives more', () => {
+    const dragged = {
+      ...input,
+      inspectorState: 'open' as const,
+      preferredInspectorWidth: 600,
+      draggedContentFloor: 440,
+    };
+
+    expect(frameLayout(dragged).page.width).toBe(440);
+    expect(frameLayout({ ...dragged, width: 1439 }).list.folded).toBe(true);
+  });
+
+  it('keeps the list when a drag past the minimum expands the Inspector', () => {
+    const open = frameLayout({ ...input, inspectorState: 'open' });
+    const { maximum } = open.handles.inspector;
+
+    const expanded = frameLayout({
+      ...input,
+      inspectorState: 'expanded',
+      preferredInspectorWidth: maximum,
+      draggedContentFloor: widthBeside(open.handles.inspector, maximum),
+    });
+
+    expect(expanded.list.folded).toBe(false);
+    expect(resizeOutcome(expanded.handles.inspector, maximum + 1)).toBe(
+      'expanded',
+    );
+  });
+
+  it('lowers no floor for an Inspector left at its default width', () => {
+    const narrow = { ...input, width: 1100, inspectorState: 'open' as const };
+    const { inspector } = frameLayout(narrow).handles;
+
+    expect(frameLayout(narrow).page.width).toBeLessThan(688);
+    expect(floorLeftBy(inspector, inspector.minimum)).toBeUndefined();
+  });
+
+  it('gives the content its floor back once the Inspector closes', () => {
+    const closed = frameLayout({ ...input, draggedContentFloor: 200 });
+
+    expect(closed.thresholds.listFold).toBe(1072);
   });
 
   it('reaches across the whole page area', () => {

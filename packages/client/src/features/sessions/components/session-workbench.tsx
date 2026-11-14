@@ -13,6 +13,8 @@ export interface WorkbenchSection {
   onOpen?: () => void;
   // A Plugin's own content, not rows: it has no row inset to give back.
   noRows?: boolean;
+  // What pressing the body is spoken as, where it opens something other than the Section's overview.
+  openLabel?: string;
 }
 
 // What a Session gives its Workbench: the cards its Sections draw, in order, and the band's button that opens the Inspector.
@@ -80,10 +82,13 @@ function SectionCard(props: SectionCardProps): ReactElement {
  */
 const ignoreLongPress = (): void => {};
 
-const openProps = (title: string, onOpen: () => void) =>
+const openProps = (
+  { title, openLabel }: WorkbenchSection,
+  onOpen: () => void,
+) =>
   ({
     role: 'button',
-    accessibilityLabel: `Open ${title} overview`,
+    accessibilityLabel: openLabel ?? `Open ${title} overview`,
     onPress: onOpen,
     onLongPress: ignoreLongPress,
   }) as const;
@@ -96,8 +101,6 @@ function SectionBody({
   if (!section.onOpen) return summary;
 
   return (
-    <Pressable {...openProps(section.title, section.onOpen)}>
-      {summary}
-    </Pressable>
+    <Pressable {...openProps(section, section.onOpen)}>{summary}</Pressable>
   );
 }

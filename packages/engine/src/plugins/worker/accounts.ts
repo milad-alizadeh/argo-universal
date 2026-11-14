@@ -1,4 +1,7 @@
-import { AccountInvocation } from '@repo/contracts/plugins/account-calls';
+import {
+  AccountInvocation,
+  type AccountTokenResult,
+} from '@repo/contracts/plugins/account-calls';
 import { PluginAccount } from '@repo/contracts/plugins/accounts';
 import type { Argo } from '@repo/contracts/plugins/argo-api';
 import type { PluginRequest } from '../protocol/runtime';
@@ -44,19 +47,20 @@ async function answer(
 ): Promise<void> {
   const { id, account: value } = AccountInvocation.parse(JSON.parse(json));
   const account = PluginAccount.parse(value);
-  const token = await tokenOf(handlers, account);
-  await call({ api: 'accounts', call: { action: 'provided', id, token } });
+  const result = await tokenOf(handlers, account);
+  await call({ api: 'accounts', call: { action: 'provided', id, result } });
 }
 
 async function tokenOf(
   handlers: Handlers,
   account: PluginAccount,
-): Promise<string | null> {
+): Promise<AccountTokenResult> {
   const handler = handlers.get(account.host);
 
-  if (!handler) return null;
+  if (!handler) return { kind: 'unavailable' };
 
   return Promise.resolve()
     .then(() => handler(account))
-    .catch(() => null);
+    .then((token): AccountTokenResult => ({ kind: 'token', token }))
+    .catch((): AccountTokenResult => ({ kind: 'unavailable' }));
 }

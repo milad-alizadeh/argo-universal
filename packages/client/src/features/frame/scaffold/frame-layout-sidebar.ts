@@ -8,7 +8,7 @@ import type { FrameLayout, FrameLayoutInput } from './frame-layout-types';
 type Thresholds = FrameLayout['thresholds'];
 
 const listContentFloor = (input: FrameLayoutInput): number =>
-  input.inspectorState === 'expanded' ? 0 : contentFloor(input.measures);
+  input.inspectorState === 'expanded' ? 0 : contentFloor(input);
 
 const minimumInspectorRegion = (input: FrameLayoutInput): number =>
   input.inspectorState === 'closed'

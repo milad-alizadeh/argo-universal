@@ -27,7 +27,7 @@ export const filterPattern = `${projectPattern}/filters/:filter`;
 
 export const issuePattern = `${projectPattern}/issues/:number`;
 
-export const projectPath = (projectId: string): string =>
+const projectPath = (projectId: string): string =>
   `/projects/${pathSegment(projectId)}`;
 
 export const filterPath = (projectId: string, filter: IssueFilter): string =>

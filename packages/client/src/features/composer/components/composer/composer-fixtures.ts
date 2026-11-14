@@ -89,6 +89,13 @@ export const startedSessionComposer = {
   sessionStarted: true,
 } satisfies ComposerFixture;
 
+// A Session in a worktree named for its id: the name gives up its width in a narrow column.
+export const longWorktreeComposer = {
+  draft: emptyDraft,
+  sessionStarted: true,
+  worktree: '7c0d39dc-c95b-4506-a8b3-3f29c3beaa53',
+} satisfies ComposerFixture;
+
 // A Session with no Plan: the tray above the card goes.
 export const planlessSessionComposer = {
   draft: emptyDraft,
@@ -101,6 +108,14 @@ export const slashSuggestionsComposer = {
   slashCommands: [
     { name: 'inspect', description: 'Review changes' },
     { name: 'review', description: 'Review a file' },
+  ],
+} satisfies ComposerFixture;
+
+export const skillSuggestionsComposer = {
+  draft: emptyDraft,
+  slashCommands: [
+    { name: '$to-spec', description: 'Write a spec', hint: 'idea' },
+    { name: 'to-spec', description: 'Ordinary command' },
   ],
 } satisfies ComposerFixture;
 

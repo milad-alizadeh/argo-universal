@@ -9,6 +9,12 @@ import type * as React from 'react';
 import { SettingsLoading } from '#features/settings';
 import { settingFieldSection } from './plugin-setting-field-row';
 
+interface PluginSignInRow {
+  host: string;
+  page: string;
+  account?: { id: string; label: string };
+}
+
 export type PluginLoad =
   | { status: 'loading' }
   | { status: 'missing' }
@@ -17,6 +23,7 @@ export type PluginLoad =
       enabled: boolean;
       fields: readonly PluginSettingField[];
       settings: PluginSettings;
+      accounts: readonly PluginSignInRow[];
     };
 
 export interface PluginSettingsDetailViewProps {
@@ -26,6 +33,8 @@ export interface PluginSettingsDetailViewProps {
   onEnabledChange: (enabled: boolean) => void;
   onSettingChange: (key: string, value: PluginSettingValue) => void;
   onBack?: () => void;
+  onOpenSignIn: (page: string) => void;
+  onOpenAccount: (id: string) => void;
 }
 
 export const enabledLabel = 'Enabled';
@@ -64,6 +73,7 @@ function pluginSections(
   return (
     <>
       {enabledSection(plugin, props.onEnabledChange)}
+      {accountSections(plugin.accounts, props)}
       {settingSections(plugin, props.onSettingChange)}
     </>
   );
@@ -104,3 +114,35 @@ const settingSections = (
       onChange: (value) => onSettingChange(field.key, value),
     }),
   );
+
+type AccountLinks = Pick<BodyProps, 'onOpenAccount' | 'onOpenSignIn'>;
+
+const accountSections = (
+  accounts: readonly PluginSignInRow[],
+  links: AccountLinks,
+): React.JSX.Element | null =>
+  accounts.length === 0 ? null : (
+    <FieldGroup.Section>
+      {accounts.map((row) => accountRow(row, links))}
+    </FieldGroup.Section>
+  );
+
+const accountRow = (
+  { host, page, account }: PluginSignInRow,
+  links: AccountLinks,
+): React.JSX.Element => (
+  <FieldGroup.Link
+    key={account ? account.id : host}
+    title={host}
+    value={account ? `Signed in as ${account.label}` : 'Sign in'}
+    onPress={() => openAccountRow({ host, page, account }, links)}
+  />
+);
+
+function openAccountRow(
+  { page, account }: PluginSignInRow,
+  links: AccountLinks,
+): void {
+  if (account) links.onOpenAccount(account.id);
+  else links.onOpenSignIn(page);
+}

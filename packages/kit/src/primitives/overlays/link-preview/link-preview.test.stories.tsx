@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
+import { cdp } from 'vitest/browser';
 import { settleLayout } from '#mocks/story-layout';
 import { Link } from '#primitives/content/link';
 import { Text } from '#primitives/content/text';
@@ -206,7 +207,17 @@ function RefreshingMark(): ReactElement {
   );
 }
 
+// The page's mouse outlives a story; one left over the link would hover it as it draws and load before `open` is read.
+const pointerToCorner = async (): Promise<void> => {
+  await cdp().send('Input.dispatchMouseEvent', {
+    type: 'mouseMoved',
+    x: 0,
+    y: 0,
+  });
+};
+
 export const HoverRefreshesMarkWide: Story = {
+  beforeEach: pointerToCorner,
   render: () => <RefreshingMark />,
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');

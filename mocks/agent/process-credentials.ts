@@ -59,6 +59,7 @@ function withCredentials(
   return {
     ...scenario,
     authentication: {
+      ...authentication,
       credentials: storedCredentials(path, authentication.credentials),
     },
   };

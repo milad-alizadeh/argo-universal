@@ -4,6 +4,7 @@ import { kitArgTypes } from '#kit/kit-arg-types';
 import { List } from './list';
 import {
   cardsList,
+  collapsibleList,
   compactList,
   groupedItemsList,
   groupedList,
@@ -38,6 +39,12 @@ export const GroupedItems: Story = {
 // Each row one line on a wide window; phones draw regular rows.
 export const Compact: Story = {
   args: compactList,
+  parameters: { screenPreview: true },
+};
+
+// Sections that fold their rows under their titles, as the Sessions list's Projects do.
+export const Collapsible: Story = {
+  args: collapsibleList,
   parameters: { screenPreview: true },
 };
 

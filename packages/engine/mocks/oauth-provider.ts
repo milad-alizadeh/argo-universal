@@ -27,6 +27,8 @@ export type FakeProvider = {
   seen: Seen;
   browser: PromiseWithResolvers<Callback>;
   failStart: (error: Error) => void;
+  // What the provider the flow registered answers a borrow of the Account; nothing until it registered.
+  borrow: (id: string) => Promise<string | null>;
 };
 
 // The token endpoint's answer, with its JSON body as text.
@@ -76,27 +78,45 @@ const emptySeen = (): Seen => ({
  * A fake provider behind the Plugin calls an OAuth flow makes: Argo's redirect, whose browser the test
  * finishes, the service's token endpoint, and the Accounts and secrets Argo keeps.
  */
-export function fakeProvider(
-  token: Reply = tokenReply(true, '{"access_token":"token-1"}'),
-): FakeProvider {
+export function fakeProvider(...tokens: Reply[]): FakeProvider {
   const browser = Promise.withResolvers<Callback>();
   const seen = emptySeen();
   const opening: Opening = { start: () => Promise.resolve(started) };
+  const replies = tokens.length > 0 ? tokens : [defaultToken];
 
   return {
-    argo: fakeArgo({ seen, browser, token, opening }),
+    argo: fakeArgo({ seen, browser, replies, opening }),
     seen,
     browser,
     failStart: (error) => {
       opening.start = (): Promise<never> => Promise.reject(error);
     },
+    borrow: (id) => borrowed(seen, id),
   };
 }
+
+const defaultToken = tokenReply(true, '{"access_token":"token-1"}');
+
+// Borrows through the provider the flow registered, as Argo would for any borrowing Plugin.
+async function borrowed(seen: Seen, id: string): Promise<string | null> {
+  const account = {
+    id,
+    host: linear.host,
+    label: 'Milad',
+    providedBy: 'linear',
+  };
+
+  return (await seen.handler?.(account)) ?? null;
+}
+
+// The token endpoint answers each call with the next scripted reply; the last one repeats.
+const nextReply = (replies: Reply[]): Reply =>
+  (replies.length > 1 ? replies.shift() : replies[0]) ?? null;
 
 type Fake = {
   seen: Seen;
   browser: PromiseWithResolvers<Callback>;
-  token: Reply;
+  replies: Reply[];
   opening: Opening;
 };
 
@@ -104,7 +124,7 @@ const fakeOAuth = ({
   seen,
   browser,
   opening,
-}: Omit<Fake, 'token'>): OAuthFlowArgo['oauth'] => ({
+}: Omit<Fake, 'replies'>): OAuthFlowArgo['oauth'] => ({
   start: () => opening.start(),
   await: (_state, url) => {
     seen.authorize.push(url);
@@ -113,12 +133,12 @@ const fakeOAuth = ({
   },
 });
 
-const fakeArgo = ({ token, ...fake }: Fake): OAuthFlowArgo => ({
+const fakeArgo = ({ replies, ...fake }: Fake): OAuthFlowArgo => ({
   oauth: fakeOAuth(fake),
   fetch: (_url, init) => {
     fake.seen.tokenBodies.push(init?.body);
 
-    return Promise.resolve(token);
+    return Promise.resolve(nextReply(replies));
   },
   accounts: fakeAccounts(fake.seen),
   secrets: fakeSecrets(fake.seen),

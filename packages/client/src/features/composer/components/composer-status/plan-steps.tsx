@@ -58,7 +58,7 @@ function StepText({ entry }: StepProps): JSX.Element {
 // A wide window marks the running step with a tint.
 function PlanStep({ entry }: StepProps): JSX.Element {
   const className = cn(
-    'flex-row items-start px-4 wide:pl-1 wide:pr-0.5 py-2 gap-2.5 wide:gap-1.5',
+    'flex-row items-start px-4 wide:pl-3 wide:pr-0.5 py-2 gap-2.5 wide:gap-1.5',
     entry.status === 'in_progress' && 'wide:rounded-md wide:bg-foreground/5',
   );
 

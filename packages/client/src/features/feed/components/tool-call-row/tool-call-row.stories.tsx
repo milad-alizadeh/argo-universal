@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { ToolCallRow } from './tool-call-row';
-import { completedToolCall, runningToolCall } from './tool-call-row-fixtures';
+import {
+  commandWithoutOutput,
+  completedToolCall,
+  runningToolCall,
+} from './tool-call-row-fixtures';
 
 const meta = {
   title: 'Feed/ToolCallRow',
@@ -27,3 +31,8 @@ export const Running: Story = { args: runningToolCall };
 
 // Settled: the title reads in the past and the row opens on its output.
 export const Completed: Story = { args: completedToolCall };
+
+// A command the Agent has not yet sent output for: its command line, not its raw input.
+export const RunningCommand: Story = {
+  args: { ...commandWithoutOutput, initialOpen: true },
+};

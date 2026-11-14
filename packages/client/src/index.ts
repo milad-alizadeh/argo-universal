@@ -36,6 +36,8 @@ export { AccountDetailScreen } from './screens/settings/accounts/$id/account-det
 
 export { AgentListScreen } from './screens/settings/agents/agent-list-screen';
 
+export { AgentDetailScreen } from './screens/settings/agents/$id/agent-detail-screen';
+
 export { useRestoredThemeChoice } from '#features/settings';
 
 export { ConnectionDetailScreen } from './screens/settings/connection/connection-detail-screen';
@@ -141,3 +143,5 @@ export {
 } from './lib/product/navigation/sections';
 
 export { AgentAccessDetailScreen } from './screens/settings/agent-access/agent-access-detail-screen';
+
+export { PluginSignInDetailScreen } from './screens/settings/plugins/sign-in/$id/plugin-sign-in-detail-screen';

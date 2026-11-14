@@ -9,6 +9,7 @@ import {
   onePlugin,
   plainLine,
   threePlugins,
+  tonedLine,
 } from './session-bar-fixtures';
 
 const meta = {
@@ -40,6 +41,9 @@ export const OnePlugin: Story = {};
 
 // The first Plugin in Slot order shows; the other two wait behind "+2".
 export const ThreePlugins: Story = { args: threePlugins };
+
+// A line with a tone draws its icon and text in it, as the Session row's item does.
+export const TonedLine: Story = { args: tonedLine };
 
 // A line with no page has no Open.
 export const PlainLine: Story = { args: plainLine };

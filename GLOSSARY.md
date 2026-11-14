@@ -122,6 +122,10 @@ _Avoid_: Idle Session, live Session (for this)
 A folder the Server loads that adds nav items, pages, Settings sections or Slot content to Argo. Argo's own Issue tracker and Atlas are Plugins.
 _Avoid_: Extension, add-on, mod
 
+**Argo instructions**:
+Prose core gives every Session's Agent, once per Session, through Argo's MCP server, before any Plugin instructions. It tells the Agent how to work in Argo, such as keeping a Plan.
+_Avoid_: Core prompt, system prompt
+
 **Plugin instructions**:
 Prose a Plugin gives every Session's Agent, once per Session, through Argo's MCP server. A Plugin declares it in `contributes.instructions`, a Markdown file beside `plugin.json`, and it tells the Agent when the Plugin's Operations apply.
 _Avoid_: Plugin prompt, system prompt
@@ -189,6 +193,10 @@ _Avoid_: Local state, `useState`, params (for what the App keeps)
 **Component event**:
 A named handler prop on a kit component, such as `onPress`. In a Plugin tree it holds a value, never a function: a navigation, a Page state change, or an Operation with its arguments.
 _Avoid_: Interaction, action (Action is a kit component), handler
+
+**Board**:
+A kit component of columns of cards that a person moves between columns, by drag or from a card's menu. Each card names the columns it may move to, and a move fills an Operation call with the card and its new column. The kit draws a Board's columns as a List's lanes, so "lane" is the kit's word inside and "column" the Plugin's.
+_Avoid_: Kanban, lanes (for the Plugin's columns)
 
 **Capability**:
 Something a Plugin's manifest says it needs, such as running `gh` or reaching `api.github.com`. Without any, a Plugin's calls to the machine can only read Projects and use the Plugin's own data.
@@ -339,6 +347,10 @@ _Avoid_: Session Registry (the Engine's live Sessions are its open Sessions), ca
 **Installed Agent**:
 A Registry Agent the user installed on a Server, stored in `agent_servers` and downloaded on first launch.
 _Avoid_: Saved Agent, configured Agent, catalog
+
+**Launch environment**:
+The environment variables an Installed Agent starts with, saved with it on the Server and edited on the Agent's page in Settings. Installing an Agent seeds it; a change applies from the Agent's next Session.
+_Avoid_: Agent settings, env config
 
 **Stop reason**:
 Why a Turn ended: `end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `cancelled`, `error`, or `auth_required`.

@@ -49,7 +49,7 @@ function sharedGeometry(width: number): Story {
     play: async ({ canvas }) => {
       for (const name of names)
         await expectControlGeometry(canvas.getByRole('button', { name }));
-      await expectMaterialPolicy(canvas);
+      await expectMaterialPolicy(canvas, width === 390);
 
       if (width !== 390) {
         const usage = canvas.getByRole('button', { name: 'Usage' });
@@ -113,17 +113,30 @@ export const ModelRetainsItsConfigurationOverlay: Story = {
   },
 };
 
+const glassControls = ['Agents: 2', 'Background Tasks: 1'];
+
+const plainControls = [modelLabel, 'Mode', 'Context window'];
+
+// A phone floats the Plan above the card as glass; a wide window draws it as the tray's own row, never a pill.
+const materialGroups = (compact: boolean): [string[], string[]] =>
+  compact
+    ? [[...glassControls, 'Plan'], plainControls]
+    : [glassControls, [...plainControls, 'Plan']];
+
 async function expectMaterialPolicy(
   canvas: ReturnType<typeof within>,
+  compact: boolean,
 ): Promise<void> {
-  for (const name of ['Plan', 'Agents: 2', 'Background Tasks: 1'])
+  const [glass, plain] = materialGroups(compact);
+
+  for (const name of glass)
     await expect(
       await within(canvas.getByRole('button', { name })).findByRole('group', {
         name: nativeMaterialLabel,
       }),
     ).toBeVisible();
 
-  for (const name of [modelLabel, 'Mode', 'Context window'])
+  for (const name of plain)
     await expect(
       within(canvas.getByRole('button', { name })).queryByRole('group'),
     ).toBeNull();

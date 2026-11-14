@@ -11,7 +11,13 @@ import {
   type PreparedChildren,
 } from './list-children';
 import type { ChildrenOptions } from './list-children-options';
-import { MoveOrder, shownSections, type MoveAnswer } from './list-move-order';
+import { rowId, sectionId } from './list-move-model';
+import {
+  MoveOrder,
+  shownSections,
+  type MoveAnswer,
+  type MoveTargets,
+} from './list-move-order';
 import { nextFrame } from './list-next-frame';
 import { useListRequest } from './list-request';
 import { readList, type ListReading } from './list-section-model';
@@ -55,6 +61,22 @@ function useShownReading(
   );
 }
 
+// A board's targets, by the branded ids its moves name.
+const targetsOf = (
+  raw: ChildrenOptions['moveTargets'],
+): MoveTargets | undefined =>
+  raw &&
+  new Map(
+    [...raw].map(([id, sections]) => [
+      rowId(id),
+      new Set(sections.map(sectionId)),
+    ]),
+  );
+
+const useTargets = (
+  raw: ChildrenOptions['moveTargets'],
+): MoveTargets | undefined => useMemo(() => targetsOf(raw), [raw]);
+
 /*
  * A List with `onMove` reads its children in the order it shows: its owner's, or a held move's while the owner answers.
  * Its owner's order, and what the owner last drew, reach its MoveOrder before the List paints.
@@ -68,9 +90,10 @@ export function useMovableReading(
   const reading = useShownReading(options, reader, order);
   const { blocks, sections: base, titles } = reading;
   const prepared = usePrepared(options, blocks, reader.prefix);
+  const targets = useTargets(options.moveTargets);
   const { lanes } = prepared;
 
-  useLayoutEffect(() => order.own({ base, onMove, lanes, titles }));
+  useLayoutEffect(() => order.own({ base, onMove, lanes, titles, targets }));
 
   return { prepared, order };
 }

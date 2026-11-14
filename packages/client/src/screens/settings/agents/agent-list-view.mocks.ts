@@ -55,5 +55,6 @@ export const agentListArgs = (): AgentListViewProps => ({
   agents: pageRows(),
   onInstall: fn(),
   onRemove: fn(),
+  onConfigure: fn(),
   onRetry: fn(),
 });

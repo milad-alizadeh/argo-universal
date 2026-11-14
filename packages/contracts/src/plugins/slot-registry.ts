@@ -25,9 +25,11 @@ export const messageSlotId = 'argo/feed/message/v1';
 
 /*
  * How many items a Slot shows before "+N": on a phone (iOS, Android) and on a desktop (macOS, web).
- * `perPlugin` caps what one Plugin may send for one context, shown or not.
+ * `perPlugin` caps what one Plugin may send for one context, shown or not; null keeps every item.
  */
-export type SlotLimit = { phone: number; desktop: number; perPlugin: number };
+type ItemCap = number | null;
+
+export type SlotLimit = { phone: number; desktop: number; perPlugin: ItemCap };
 
 /*
  * Items of a fixed shape, asked for once per list in one batched call keyed by `key` (ADR-0035). Argo
@@ -56,7 +58,6 @@ export const slotItemsListLimit = 500;
 type Strict<Fields extends { readonly [field: string]: z.core.$ZodType }> =
   z.ZodObject<Fields, z.core.$strict>;
 
-// One item as Argo serves it: the Plugin that sent it, and the item.
 export type AttributedItem<Item extends z.ZodObject> = Strict<{
   pluginId: z.ZodString;
   item: Item;
@@ -193,11 +194,11 @@ export const addOnlySlots = [
     limit: { phone: 1, desktop: 1, perPlugin: 1 },
     owners: 'one',
   }),
-  // One line under the Session header: the first Plugin in Slot order shows, the rest wait behind "+N" (ADR-0035).
+  // One Plugin card holds its lines on desktop; the phone strip keeps the rest behind "+N" (ADR-0035).
   itemsSlotEntry(sessionBarSlotId, SessionRowContext, {
     key: 'sessionId',
     item: SessionBarItem,
-    limit: { phone: 1, desktop: 1, perPlugin: 1 },
+    limit: { phone: 1, desktop: 1, perPlugin: null },
   }),
   // A Session's Changes, such as the PRs a Plugin attached (ADR-0052); Argo's Changes card and Inspector draw them.
   itemsSlotEntry(sessionChangesSlotId, SessionRowContext, {

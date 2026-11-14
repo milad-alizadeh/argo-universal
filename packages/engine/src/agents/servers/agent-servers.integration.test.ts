@@ -5,6 +5,7 @@ import {
 } from '@repo/mocks/registry/identities';
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
+import { seededEnvironment } from '../vendor';
 
 const exampleAgentId = 'example-agent';
 
@@ -34,7 +35,7 @@ it('lists Registry entries with their launch support', async () => {
 });
 
 it.each(registryIdentities)(
-  'saves $name using its Registry id and name without downloading it',
+  'saves $name using its Registry id, name and seeded launch environment without downloading it',
   async ({ id, name }) => {
     const host = await startEngineTestHost({
       fixtureAgents: [],
@@ -50,7 +51,7 @@ it.each(registryIdentities)(
         name,
         version: '1.2.3',
         icon: identityRegistry.agents[0]?.icon,
-        env: {},
+        env: seededEnvironment(id),
       },
     ]);
     expect((await host.caller.registry.get()).agents).toContainEqual({
@@ -61,6 +62,38 @@ it.each(registryIdentities)(
     expect(await host.caller.agent.list()).toEqual([]);
   },
 );
+
+it('replaces an Installed Agent’s launch environment whole', async () => {
+  const host = await startPublishedHost();
+
+  await host.caller.agent.install({ id: exampleAgentId });
+  await host.caller.agent.setEnvironment({
+    id: exampleAgentId,
+    env: { FIRST: '1', SECOND: '2' },
+  });
+  await host.caller.agent.setEnvironment({
+    id: exampleAgentId,
+    env: { SECOND: 'two' },
+  });
+
+  expect(await host.caller.agent.list()).toEqual([
+    expect.objectContaining({ id: exampleAgentId, env: { SECOND: 'two' } }),
+  ]);
+});
+
+it('keeps no launch environment for an Agent that is not installed', async () => {
+  const host = await startPublishedHost();
+
+  await host.caller.agent.setEnvironment({
+    id: exampleAgentId,
+    env: { FIRST: '1' },
+  });
+  await host.caller.agent.install({ id: exampleAgentId });
+
+  expect(await host.caller.agent.list()).toEqual([
+    expect.objectContaining({ id: exampleAgentId, env: {} }),
+  ]);
+});
 
 it('hides a saved Agent once the Registry drops it', async () => {
   let entries = publishedRegistry.agents;
