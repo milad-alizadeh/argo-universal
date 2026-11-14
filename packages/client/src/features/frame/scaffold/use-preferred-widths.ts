@@ -2,7 +2,6 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import type { FrameMeasures } from './frame-layout';
-import { widthAtContentFloor } from './frame-layout-handles';
 import { listWidthForText } from './frame-layout-measures';
 
 export interface PreferredWidths {
@@ -24,16 +23,11 @@ type InspectorWidths = Pick<
 
 type State<Value> = [Value, React.Dispatch<React.SetStateAction<Value>>];
 
-// A closed Inspector gives the content its floor back, and gives up the width its drag took under that floor.
-function restoreContentFloor(
-  measures: FrameMeasures,
-  [, setWidth]: State<number>,
-  [floor, setFloor]: State<number | undefined>,
-): void {
-  if (floor === undefined) return;
-
-  setWidth((width) => widthAtContentFloor(measures, width, floor));
-  setFloor(undefined);
+// A closed Inspector gives the content its floor back, but keeps the width it had, so it reopens where it was.
+function restoreContentFloor([floor, setFloor]: State<
+  number | undefined
+>): void {
+  if (floor !== undefined) setFloor(undefined);
 }
 
 // The Inspector's dragged width, and the page's width that drag left, which it keeps only while it stays open.
@@ -44,7 +38,7 @@ function useInspectorWidths(
   const width = useState(measures.inspectorWidth);
   const floor = useState<number>();
 
-  if (closed) restoreContentFloor(measures, width, floor);
+  if (closed) restoreContentFloor(floor);
 
   return {
     preferredInspectorWidth: width[0],
