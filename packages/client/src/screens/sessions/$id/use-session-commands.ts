@@ -10,8 +10,9 @@ import {
   type SessionConfigChange,
   useSessionConfigChange,
 } from '#features/sessions';
+import { useQueueCommand, type QueueCommandSender } from './use-prompt-queue';
 
-type SessionMutation<Name extends 'prompt' | 'cancel'> = ServerMutation<
+type SessionMutation<Name extends 'submit' | 'cancel'> = ServerMutation<
   TRPC['session'][Name]
 >;
 
@@ -21,10 +22,11 @@ export type SessionCommands = Omit<
   AttachmentDraft,
   'clearDraft' | 'uploadDraftAsPrompt'
 > & {
-  promptSession: SessionMutation<'prompt'>;
+  promptSession: SessionMutation<'submit'>;
   cancelTurn: SessionMutation<'cancel'>;
   setConfigOption: SessionConfigChange['setConfigOption'];
   changeConfig: SessionConfigChange['change'];
+  queueCommand: QueueCommandSender;
   sendDraft: (sent: ComposerDraft) => Promise<void>;
   // Sends a stopped Turn's prompt again and leaves the draft as it is.
   retryPrompt: (prompt: ContentBlock[]) => void;
@@ -38,7 +40,7 @@ interface SessionCommandTarget {
 
 type DraftCommands = Omit<
   SessionCommands,
-  'cancelTurn' | 'setConfigOption' | 'changeConfig'
+  'cancelTurn' | 'setConfigOption' | 'changeConfig' | 'queueCommand'
 >;
 
 interface PromptFollowUp {
@@ -52,6 +54,7 @@ export function useSessionCommands(
 ): SessionCommands {
   return {
     ...useDraftCommands(target),
+    queueCommand: useQueueCommand(target),
     cancelTurn: useCancelTurn(target.resumeAfterCommand),
     ...useConfigCommands(target),
   };
@@ -91,7 +94,7 @@ function useDraftCommands({
 function usePromptSession({
   clearDraft,
   resumeAfterCommand,
-}: PromptFollowUp): SessionMutation<'prompt'> {
+}: PromptFollowUp): SessionMutation<'submit'> {
   const trpc = useTRPC();
 
   const onSuccess = (): void => {
@@ -99,7 +102,7 @@ function usePromptSession({
     resumeAfterCommand();
   };
 
-  return useMutation(trpc.session.prompt.mutationOptions({ onSuccess }));
+  return useMutation(trpc.session.submit.mutationOptions({ onSuccess }));
 }
 
 const retryFailed: ErrorToast = {
@@ -129,7 +132,7 @@ function useCancelTurn(onSuccess: () => void): SessionMutation<'cancel'> {
 
 function draftSender(
   sessionId: string,
-  promptSession: SessionMutation<'prompt'>,
+  promptSession: SessionMutation<'submit'>,
   uploadDraftAsPrompt: AttachmentDraft['uploadDraftAsPrompt'],
 ): (sent: ComposerDraft) => Promise<void> {
   return async (sent) => {

@@ -7,6 +7,7 @@ import {
   type SessionDirectory,
   type SessionOperationCall,
 } from '../sessions';
+import { requireAppQueueCaller } from './app-queue-access';
 import {
   answer,
   type CallerImplementations,
@@ -83,6 +84,8 @@ export class OperationRunner {
   public run<Id extends OperationId>(
     run: AppRun<Id> | UserRun | SessionRun,
   ): Promise<OperationResult<Id> | OperationRunResult> {
+    requireAppQueueCaller(run);
+
     if (run.kind === 'app') return this.runApp(run);
 
     return run.kind === 'user' ? this.runUser(run) : this.runSession(run);

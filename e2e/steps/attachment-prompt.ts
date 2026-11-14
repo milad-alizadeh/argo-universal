@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
 import { expect } from '../fixtures';
+import { requests } from './agent-requests';
 import { readFeed } from './feed';
 import { When, Then } from './fixtures';
 
@@ -98,7 +99,11 @@ Then(
   async ({ page, server }, text: string, name: string): Promise<void> => {
     const attachment = attachmentNamed(name);
     const { blob } = await storedFile(attachment);
-    const [prompt] = await readFeed(page, server.httpUrl);
+
+    const prompt = (await readFeed(page, server.httpUrl)).find((row) =>
+      row.content?.some((block) => block.text === text),
+    );
+
     expect(prompt).toMatchObject({
       sessionUpdate: 'user_message',
       content: [{ type: 'text', text }, attachment.block(blob)],
@@ -117,5 +122,20 @@ Then(
     );
 
     expect(Buffer.from(await stored.body())).toEqual(bytes);
+  },
+);
+
+Then(
+  'the queued image reaches the Agent with its original bytes',
+  async ({ app }): Promise<void> => {
+    const { bytes } = await storedFile(attachmentNamed('red square image'));
+    const [, queued] = requests(app.requestLogPath, 'session/prompt');
+    expect(queued?.params?.prompt).toContainEqual(
+      expect.objectContaining({
+        type: 'image',
+        mimeType: 'image/png',
+        data: bytes.toString('base64'),
+      }),
+    );
   },
 );

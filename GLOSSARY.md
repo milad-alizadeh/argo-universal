@@ -316,6 +316,10 @@ _Avoid_: Mention, issue link, tag
 What is sent to a Session's Agent to start a Turn. It comes from the user, from another Session or from a Plugin, and the Feed shows which; only the user's is the user's own message.
 _Avoid_: Message (alone), input, instruction
 
+**Queued Prompt**:
+A user Prompt waiting in a Session’s ordered queue for a Turn of its own. It is future work, outside the Feed until it starts.
+_Avoid_: Pending message, draft Prompt
+
 **Turn**:
 A stretch of Agent work started by a Prompt or by the Agent, ending with a stop reason when the Agent finishes or the Session ends it.
 _Avoid_: Run, request, exchange

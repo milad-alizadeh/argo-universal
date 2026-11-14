@@ -5,6 +5,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { ElicitationSheet, PermissionRequest } from '#features/requests';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
+import { PromptQueue } from '../prompt-queue/prompt-queue';
 import { ComposerControls } from './composer-card';
 import { oversizedAttachmentIds, sendButtonState } from './composer-conditions';
 import { useComposerLayout } from './composer-layout';
@@ -23,6 +24,7 @@ export function Composer(props: ComposerProps): React.JSX.Element {
 
   return (
     <View nativeID={layout.composerId} className={useComposerClass()}>
+      {props.promptQueue && <PromptQueue {...props.promptQueue} />}
       <ComposerTopTray {...layout} />
       <ComposerRequest {...layout} />
       <ComposerControls {...layout} />

@@ -5,6 +5,7 @@ import {
 import { agentScenarioSteps, agentStep } from './agent-steps';
 import { signInScenarios } from './sign-in-agents';
 import { slashCommandScenarios } from './slash-command-scenarios';
+import { turnAgentSteps } from './turn-agent-steps';
 
 export function agentId(ordinal: number): string {
   const id = appFixtureAgentIds[ordinal - 1];
@@ -91,11 +92,7 @@ const namedScenarioSteps = [
       [agentStep(`offers the "${name}" Slash command`), scenario] as const,
   ),
   [agentStep('asks permission to run a command'), 'permission-command'],
-  [
-    agentStep('asks permission before its command details arrive'),
-    'permission-command-late',
-  ],
-  [agentStep('holds its first Turn until released'), 'held-until-released'],
+  ...turnAgentSteps,
   [
     agentStep('names its Session after a question'),
     'agent-title-after-question',

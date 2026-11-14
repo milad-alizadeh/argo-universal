@@ -1,5 +1,7 @@
 import type {
   ContextUsage,
+  PromptQueue,
+  QueueCommand,
   PendingElicitation,
   PendingPermission,
   SessionConfigOption,
@@ -84,6 +86,11 @@ export type SessionCommand =
       applied?: PromiseWithResolvers<SessionConfigOption[]>;
       held?: boolean;
     }
+  | {
+      type: 'session.queue';
+      command: QueueCommand;
+      committed: PromiseWithResolvers<void>;
+    }
   | { type: 'session.archive' }
   | { type: 'session.unarchive' }
   | { type: 'session.cancel' }
@@ -102,6 +109,10 @@ export type SessionEvent =
 
 export interface SessionContext extends SessionData {
   input: SessionMachineInput;
+  promptQueue: PromptQueue;
+  queueHolds: Record<string, string>;
+  queueCommitted: Promise<void>;
+  dispatchingQueueId: string | null;
   archiveRequested: boolean;
   activeTurnId: string | null;
   // When the running Turn started, in epoch milliseconds.

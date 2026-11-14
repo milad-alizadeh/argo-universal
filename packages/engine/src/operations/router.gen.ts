@@ -118,6 +118,18 @@ export function generatedOperations(runner: OperationRunner) {
             params: input,
           }),
         ),
+      submit: publicProcedure
+        .input(operations['session.submit'].params)
+        .output(operations['session.submit'].result)
+        .mutation(({ input }) =>
+          runner.run({ kind: 'app', id: 'session.submit', params: input }),
+        ),
+      queue: publicProcedure
+        .input(operations['session.queue'].params)
+        .output(operations['session.queue'].result)
+        .mutation(({ input }) =>
+          runner.run({ kind: 'app', id: 'session.queue', params: input }),
+        ),
       new: publicProcedure
         .input(operations['session.new'].params)
         .output(operations['session.new'].result)

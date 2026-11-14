@@ -129,10 +129,10 @@ export function sessionComposerProps(open: OpenSession): ComposerProps {
 
   return {
     ...draftProps(commands),
+    ...queueProps(open),
     slashCommands: slashCommandsOf(open),
     onStop: () => commands.cancelTurn.mutate({ sessionId }),
-    sending: isSending(open),
-    sendable: isSendable(open),
+    ...sendingProps(open),
     ...sendError(commands),
     permissionRequest: open.permission,
     writtenPlan: writtenPlan(view.plan),
@@ -148,4 +148,24 @@ function composerOptions({
   if (!options) return { configOptions: snapshot.configOptions };
 
   return { configOptions: options.configOptions, opening: options.loading };
+}
+
+function queueProps({
+  snapshot,
+  commands,
+}: OpenSession): Pick<ComposerProps, 'queueWhileRunning' | 'promptQueue'> {
+  return {
+    queueWhileRunning: true,
+    promptQueue: {
+      queue: snapshot.promptQueue,
+      holds: snapshot.queueHolds,
+      command: commands.queueCommand,
+    },
+  };
+}
+
+function sendingProps(
+  open: OpenSession,
+): Pick<ComposerProps, 'sending' | 'sendable'> {
+  return { sending: isSending(open), sendable: isSendable(open) };
 }

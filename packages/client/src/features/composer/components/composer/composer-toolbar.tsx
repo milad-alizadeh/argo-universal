@@ -86,6 +86,7 @@ function ComposerRightControls(layout: RightControlsLayout): React.JSX.Element {
   return (
     <View className="pointer-events-box-none max-w-full shrink-0 flex-row items-center gap-2.5">
       <ComposerConfigurationActions {...layout} />
+      <SeparateStopButton {...layout} />
       <View className="shrink-0">
         <ComposerSendButton {...layout} />
       </View>
@@ -151,3 +152,21 @@ const filledSendProps = {
   size: 'sm',
   control: true,
 } as const;
+
+function SeparateStopButton(
+  layout: RightControlsLayout,
+): React.JSX.Element | null {
+  if (!layout.props.queueWhileRunning) return null;
+
+  return <RunningStopButton {...layout} />;
+}
+
+function RunningStopButton(
+  layout: RightControlsLayout,
+): React.JSX.Element | null {
+  const show = Boolean(layout.props.configuration?.turnRunning);
+
+  return show ? (
+    <IconButton {...stopButtonAction(layout)} size="sm" control />
+  ) : null;
+}

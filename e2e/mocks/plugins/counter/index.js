@@ -1,5 +1,6 @@
 import { Button, Stack, Text } from '@argo/plugin-kit';
 import { Item } from './item.js';
+import { registerQueueHook } from './queue-hook.js';
 
 const sessionDraft = '#7 Keep %2F in paths\nhttps://example.com/fixture/7';
 
@@ -94,6 +95,7 @@ function defineCard(argo) {
 }
 
 export function register(argo) {
+  registerQueueHook(argo);
   defineCounter(argo);
   defineCard(argo);
   argo.slots.register('argo/project/details/v1', projectRows);

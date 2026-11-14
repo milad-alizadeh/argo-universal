@@ -4,6 +4,7 @@ import { PermissionOptionKind } from '../feed/tool-call';
 import { ChangesSummary } from './changes';
 import { PendingElicitation } from './elicitation';
 import { SessionInfo } from './list';
+import { PromptQueue, emptyPromptQueue } from './prompt-queue';
 import { SessionConfigOption } from './set-config-option';
 import { Shell } from './shells';
 import { Subagent } from './subagent';
@@ -99,6 +100,8 @@ export const SessionSnapshot = z.strictObject({
     checkout: true,
   }).shape,
   startedBySessionId: sessionColumns.shape.startedBySessionId.default(null),
+  promptQueue: PromptQueue.default(emptyPromptQueue),
+  queueHolds: z.array(z.string()).default([]),
   state: SessionState,
   liveHeader: LiveHeader.nullable(),
   activeTurnId: turnColumns.shape.id.nullable(),

@@ -17,6 +17,14 @@ import {
  * A second App on this computer: the Engine's own channel client, which opens a real socket to the Server's real address and runs the shipped handshake.
  * The first App is the page the scenario already has; this one is what a phone is to it, a Device that is paired and then reads through the channel only (ADR-0045).
  */
+type PromptQueue = Awaited<
+  ReturnType<TestDevice['caller']['session']['get']['query']>
+>['promptQueue'];
+
+type QueueCommand = Parameters<
+  TestDevice['caller']['session']['queue']['mutate']
+>[0]['command'];
+
 export class SecondApp {
   readonly name = 'Second App';
 
@@ -57,6 +65,30 @@ export class SecondApp {
     ).caller.session.list.query({ archived: false });
 
     return sessions.map((session) => session.title);
+  }
+
+  async promptQueue(sessionId: string): Promise<PromptQueue> {
+    const snapshot = await (this.device ?? noDevice()).caller.session.get.query(
+      { sessionId },
+    );
+
+    return snapshot.promptQueue;
+  }
+
+  async changeQueue(sessionId: string, command: QueueCommand): Promise<void> {
+    await (this.device ?? noDevice()).caller.session.queue.mutate({
+      sessionId,
+      command,
+    });
+  }
+
+  async completedTurns(sessionId: string): Promise<number> {
+    const { rows } = await (this.device ?? noDevice()).caller.feed.page.query({
+      sessionId,
+      direction: 'tail',
+    });
+
+    return rows.filter((row) => row._meta?.argo?.turnEnd).length;
   }
 
   async pairedDeviceNames(): Promise<string[]> {

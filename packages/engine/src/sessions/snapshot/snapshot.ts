@@ -11,6 +11,7 @@ export type FeedSnapshot = Pick<
 
 export type StoredSnapshot = Pick<
   SessionSnapshot,
+  | 'promptQueue'
   | 'projectId'
   | 'startedBySessionId'
   | 'agent'
@@ -63,11 +64,11 @@ export function toSessionSnapshot(
 ): SessionSnapshot {
   return {
     ...storedFields(stored),
+    ...queueFields(session, stored),
     ...sessionFields(session),
     ...activeTurnFields(session, feed),
     changes: feed.changes ?? emptyChangesSummary,
-    maxRevision: feed.maxRevision,
-    epoch: feed.epoch,
+    ...revisionFields(feed),
     shells: session ? liveShells(session) : stored.shells,
   };
 }
@@ -122,4 +123,22 @@ function liveShells(session: SessionState): SessionSnapshot['shells'] {
       terminalAvailable: session.context.shellRuntime.canStop(record.id),
     }),
   );
+}
+
+function queueFields(
+  session: SessionState | null,
+  stored: StoredSnapshot,
+): Pick<SessionSnapshot, 'promptQueue' | 'queueHolds'> {
+  return session
+    ? {
+        promptQueue: session.context.promptQueue,
+        queueHolds: Object.keys(session.context.queueHolds),
+      }
+    : { promptQueue: stored.promptQueue, queueHolds: [] };
+}
+
+function revisionFields(
+  feed: FeedSnapshot,
+): Pick<SessionSnapshot, 'maxRevision' | 'epoch'> {
+  return { maxRevision: feed.maxRevision, epoch: feed.epoch };
 }

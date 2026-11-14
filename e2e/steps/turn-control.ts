@@ -18,6 +18,8 @@ import { expectMessage, messageLabel } from './new-session';
 
 const promptMethod = 'session/prompt';
 
+const feedScroll = 'feed-scroll';
+
 type PromptPair = { held: LoggedRequest; next: LoggedRequest };
 
 // The held first prompt and the prompt sent after it.
@@ -99,7 +101,7 @@ Then(
   'the Agent receives the next prompt only after answering the held one',
   async ({ page, app }): Promise<void> => {
     await expect(
-      page.getByTestId('feed-scroll').getByText(sharedReply, { exact: true }),
+      page.getByTestId(feedScroll).getByText(sharedReply, { exact: true }),
     ).toBeVisible();
 
     await expectMessage(page, '');
@@ -138,9 +140,48 @@ Then(
   'the Agent switches to model {string} before the next prompt',
   async ({ page, app }, model: string): Promise<void> => {
     await expect(
-      page.getByTestId('feed-scroll').getByText(sharedReply, { exact: true }),
+      page.getByTestId(feedScroll).getByText(sharedReply, { exact: true }),
     ).toBeVisible();
 
     expectModelSwitch(loggedMessages(app.requestLogPath), model);
+  },
+);
+
+Then(
+  '{string} is queued above the Composer',
+  async ({ page }, prompt: string): Promise<void> => {
+    await expect(
+      page.getByTestId('prompt-queue').getByText(prompt, { exact: true }),
+    ).toBeVisible();
+    await expectMessage(page, '');
+    await expect(stopButton(page)).toBeVisible();
+    await expect(
+      page.getByTestId(feedScroll).getByText(prompt, { exact: true }),
+    ).toHaveCount(0);
+  },
+);
+
+Then(
+  'the Agent has received only the first Prompt',
+  async ({ app }): Promise<void> => {
+    expect(requests(app.requestLogPath, promptMethod)).toHaveLength(1);
+  },
+);
+
+Then(
+  'the queued Prompt starts a separate completed Turn',
+  async ({ page, server, app }): Promise<void> => {
+    await expect(
+      page.getByTestId(feedScroll).getByText(sharedReply, { exact: true }),
+    ).toBeVisible();
+    const rows = await readFeed(page, server.httpUrl);
+    const prompts = rows.filter((row) => row.sessionUpdate === 'user_message');
+    expect(prompts.map((row) => row.content)).toEqual([
+      [{ type: 'text', text: 'First prompt' }],
+      [{ type: 'text', text: 'Second prompt' }],
+    ]);
+    expect(new Set(prompts.map((row) => row.turnId)).size).toBe(2);
+    expect(requests(app.requestLogPath, promptMethod)).toHaveLength(2);
+    await expect(page.getByTestId('prompt-queue')).toHaveCount(0);
   },
 );

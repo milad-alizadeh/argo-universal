@@ -1,4 +1,5 @@
 import {
+  PromptQueue,
   type SessionCheckout,
   SessionInfo,
   type SessionRecord,
@@ -19,6 +20,7 @@ const sessionSnapshotFields = SessionInfo.pick({
   startedBySessionId: true,
 }).extend(
   SessionSnapshot.pick({
+    promptQueue: true,
     epoch: true,
     maxRevision: true,
     checkout: true,
@@ -54,7 +56,7 @@ export type SessionFieldsRow = Pick<
   | 'maxRevision'
   | 'checkoutPath'
   | 'checkoutBranch'
->;
+> & { promptQueue: unknown };
 
 const unrecognisedSession = (): TRPCError =>
   new TRPCError({
@@ -95,6 +97,7 @@ function snapshotFields(stored: SessionFieldsRow): SessionSnapshotFields {
     agent: stored.agent,
     parentSessionId: stored.parentSessionId,
     startedBySessionId: stored.startedBySessionId,
+    promptQueue: PromptQueue.parse(stored.promptQueue),
     epoch: stored.epoch,
     maxRevision: stored.maxRevision,
     checkout: toSessionCheckout(stored),

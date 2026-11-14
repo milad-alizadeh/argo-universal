@@ -1,3 +1,4 @@
+import { PromptQueue } from '@repo/contracts';
 import { runningToolCallStatuses } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
@@ -122,6 +123,7 @@ const settlement = (
 });
 
 function repairTransaction(transaction: StorageTransaction): void {
+  recoverPromptQueues(transaction);
   const endedAt = Date.now();
   const ended = endRunningTurns(transaction, endedAt);
   const revisions = recoverRows(transaction, readRecoveryRows(transaction));
@@ -136,4 +138,20 @@ function repairTransaction(transaction: StorageTransaction): void {
 // Repairs the database before the Engine serves; any failure rolls back the whole repair.
 export function recoverAfterRestart(database: Database): void {
   database.transaction(repairTransaction);
+}
+
+function recoverPromptQueues(transaction: StorageTransaction): void {
+  for (const row of transaction
+    .select({ id: session.id, promptQueue: session.promptQueue })
+    .from(session)
+    .all()) {
+    const queue = PromptQueue.parse(row.promptQueue);
+
+    if (queue.items.length)
+      transaction
+        .update(session)
+        .set({ promptQueue: { ...queue, pauseReason: 'Server restarted' } })
+        .where(eq(session.id, row.id))
+        .run();
+  }
 }

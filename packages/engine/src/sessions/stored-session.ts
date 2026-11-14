@@ -7,6 +7,7 @@ export const storedSessionColumns = {
   ...getTableColumns(session),
   vendorRef: sql<unknown>`${session.vendorRef}`,
   configValues: sql<unknown>`${session.configValues}`,
+  promptQueue: sql<unknown>`${session.promptQueue}`,
   heldConfig: sql<unknown>`${session.heldConfig}`,
 };
 
@@ -29,6 +30,7 @@ export function decodeStoredSession(
         ? null
         : JSON.parse(z.string().parse(row.vendorRef)),
     configValues: JSON.parse(String(row.configValues)),
+    promptQueue: JSON.parse(String(row.promptQueue)),
     heldConfig: JSON.parse(String(row.heldConfig)),
   };
 }
