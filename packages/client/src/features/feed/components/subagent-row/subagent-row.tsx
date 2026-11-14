@@ -4,6 +4,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import {
+  type AgentIdentity,
   subagentMarkLabel,
   subagentRoleMark,
 } from '../../../../lib/product/subagents/subagent-role';
@@ -17,11 +18,11 @@ export interface SubagentRowProps {
 }
 
 // Every action leads with the Agent's role mark, the one its Inspector and Workbench rows draw, sized to the line.
-function SubagentLead({ role }: Pick<FeedSubagent, 'role'>): React.JSX.Element {
+function SubagentLead({ agent }: { agent: AgentIdentity }): React.JSX.Element {
   return (
     <TintedAvatar
-      {...subagentRoleMark(role)}
-      accessibilityLabel={subagentMarkLabel(role)}
+      {...subagentRoleMark(agent)}
+      accessibilityLabel={subagentMarkLabel(agent)}
       size="inline"
     />
   );
@@ -36,7 +37,7 @@ interface RowBodyProps {
 function RowBody({ item, opens }: RowBodyProps): React.JSX.Element {
   return (
     <View className="flex-row items-center gap-1.5">
-      <SubagentLead role={item.role} />
+      <SubagentLead agent={item} />
       <SubagentLine item={item} opens={opens} />
     </View>
   );

@@ -40,7 +40,7 @@ export function WorkbenchMoreAgents({
 
   const icons = subagents
     .filter((agent) => !isWorking(agent))
-    .map((agent) => subagentRoleMark(agent.role));
+    .map(subagentRoleMark);
 
   return <WorkbenchShowMore {...{ more, done, icons, onOpen }} />;
 }
