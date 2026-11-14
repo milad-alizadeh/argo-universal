@@ -1,4 +1,5 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
+import { Markdown } from '@repo/kit/primitives/content/markdown';
 import { Text } from '@repo/kit/primitives/content/text';
 import type { IconName } from '@repo/kit/symbols/icon-names';
 import type * as React from 'react';
@@ -28,8 +29,8 @@ export interface NoticeMessageProps {
   severity: string;
   title: string;
   description?: string;
-  // Turn-end reasons follow the title and wrap with it on narrow windows.
-  inlineDescription?: boolean;
+  // The description is Agent-provided Markdown: drawn below the title, selectable.
+  markdownDescription?: boolean;
   excerpt?: string;
   // Replaces the severity's icon, for status rows such as Compaction.
   icon?: IconName;
@@ -60,38 +61,32 @@ function NoticeIcon({ icon, color }: Appearance): React.JSX.Element {
   );
 }
 
-type NoticeTitleProps = Pick<
-  NoticeMessageProps,
-  'title' | 'live' | 'description' | 'inlineDescription'
-> & {
+type NoticeTitleProps = Pick<NoticeMessageProps, 'title' | 'live'> & {
   color: string;
 };
-
-function InlineDescription(props: NoticeTitleProps): React.JSX.Element | null {
-  if (!props.inlineDescription || !props.description) return null;
-
-  return <Text tone="muted">{` · ${props.description}`}</Text>;
-}
 
 function NoticeTitle(props: NoticeTitleProps): React.JSX.Element {
   if (props.live)
     return <ShimmerText text={props.title} className="type-body" />;
 
   return (
-    <Text
-      numberOfLines={props.inlineDescription ? undefined : 1}
-      className={props.color}
-    >
+    <Text numberOfLines={1} className={props.color}>
       {props.title}
-      <InlineDescription {...props} />
     </Text>
   );
 }
 
 function NoticeDescription({
   description,
-}: Pick<NoticeMessageProps, 'description'>): React.JSX.Element | null {
+  markdownDescription,
+}: Pick<
+  NoticeMessageProps,
+  'description' | 'markdownDescription'
+>): React.JSX.Element | null {
   if (!description) return null;
+
+  if (markdownDescription)
+    return <Markdown text={description} tone="muted" selectable />;
 
   return <Text className="text-muted-foreground">{description}</Text>;
 }
@@ -113,19 +108,25 @@ function NoticeExcerpt({
   );
 }
 
+function NoticeBody(
+  props: NoticeMessageProps & { color: string },
+): React.JSX.Element {
+  return (
+    <View className="min-w-0 shrink gap-0.5">
+      <NoticeTitle {...props} />
+      <NoticeDescription {...props} />
+      <NoticeExcerpt excerpt={props.excerpt} />
+    </View>
+  );
+}
+
 export function NoticeMessage(props: NoticeMessageProps): React.JSX.Element {
   const appearance = appearanceOf(props);
 
   return (
     <View {...noticeRowProps(props)}>
       <NoticeIcon {...appearance} />
-      <View className="min-w-0 shrink gap-0.5">
-        <NoticeTitle {...props} color={appearance.color} />
-        {!props.inlineDescription && (
-          <NoticeDescription description={props.description} />
-        )}
-        <NoticeExcerpt excerpt={props.excerpt} />
-      </View>
+      <NoticeBody {...props} color={appearance.color} />
     </View>
   );
 }
