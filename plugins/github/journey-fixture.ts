@@ -40,6 +40,8 @@ export const foreignSessionId = 'foreign-session';
 
 export const changesSlot = 'argo/session/changes/v1';
 
+export const rowSlot = 'argo/session/row/v1';
+
 export type Journey = {
   test: PluginTest;
   // What the Engine says of each Session; a test moves a Session to another branch by changing its `branch`.

@@ -4,6 +4,7 @@ import {
   caller,
   changesSlot,
   project,
+  rowSlot,
   sessionId,
   type Caller,
   type Journey,
@@ -60,13 +61,14 @@ type Answer =
 async function firstAnswer(
   { test }: Journey,
   session: Caller,
+  slotId: string,
 ): Promise<Answer | undefined> {
   const controller = new AbortController();
 
   onTestFinished(() => controller.abort());
 
   const answers = test.slotItems(
-    { slotId: changesSlot, contexts: [session] },
+    { slotId, contexts: [session] },
     { signal: controller.signal },
   );
 
@@ -75,17 +77,29 @@ async function firstAnswer(
 
 type Attributed = { pluginId: string; item: object };
 
-// What the Slot answers for one Session: each Change with the Plugin that sent it, in Slot order.
-export async function attributedChangesOf(
+async function attributedOf(
   run: Journey,
-  session: Caller = caller,
+  session: Caller,
+  slotId: string,
 ): Promise<Attributed[]> {
-  const answer = await firstAnswer(run, session);
+  const answer = await firstAnswer(run, session, slotId);
 
   return Object.values(answer ?? {}).flatMap(({ items }) =>
     items.map(({ pluginId, item }) => ({ pluginId, item })),
   );
 }
+
+// What the Changes Slot answers for one Session: each Change with the Plugin that sent it, in Slot order.
+export const attributedChangesOf = (
+  run: Journey,
+  session: Caller = caller,
+): Promise<Attributed[]> => attributedOf(run, session, changesSlot);
+
+// What the Session row's Slot answers for one Session: each item with the Plugin that sent it, in Slot order.
+export const attributedRowItemsOf = (
+  run: Journey,
+  session: Caller = caller,
+): Promise<Attributed[]> => attributedOf(run, session, rowSlot);
 
 // The Changes Argo would draw for one Session.
 export async function changesOf(

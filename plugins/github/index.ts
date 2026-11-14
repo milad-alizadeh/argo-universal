@@ -16,6 +16,7 @@ import {
   type Scope,
 } from './pull-operations';
 import { definePullReads } from './pull-reads';
+import { rowItemsBySession } from './pull-row-items';
 import { createPullStore } from './pull-store';
 import { sessionCaller, type SessionCaller } from './session-caller';
 
@@ -64,6 +65,18 @@ function registerChanges(argo: Argo, source: ChangesSource): void {
           source,
           contexts.map(({ sessionId }) => sessionId),
         ),
+      ),
+    ),
+  );
+}
+
+function registerRowItems(argo: Argo, source: ChangesSource): void {
+  // The pull requests of a Session on its row, before the Issues (ADR-0035); a failed read never drops a number.
+  argo.slots.register('argo/session/row/v1', async ({ contexts }) =>
+    rowItemsBySession(
+      await readLinks(
+        source,
+        contexts.map(({ sessionId }) => sessionId),
       ),
     ),
   );
@@ -144,4 +157,5 @@ export function register(argo: Argo): void {
   registerReads(argo, source);
   registerFiles(argo, source);
   registerChanges(argo, source);
+  registerRowItems(argo, source);
 }

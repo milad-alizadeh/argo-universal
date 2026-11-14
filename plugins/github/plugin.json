@@ -12,7 +12,7 @@
   },
   "contributes": {
     "nav": [],
-    "slots": ["argo/session/changes/v1"],
+    "slots": ["argo/session/changes/v1", "argo/session/row/v1"],
     "instructions": "instructions.md",
     "operations": [
       {
