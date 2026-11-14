@@ -40,8 +40,13 @@ When(
     await page.evaluate(
       'window.open = (url) => { window.recordOpened(String(url)); return null; }',
     );
-    // The row's own text presses the row; its Checks part opens the list of Checks instead.
-    await workbench(page).getByText(fourth.title, { exact: true }).click();
+    // The row's press layer opens GitHub; its Checks part opens the list of Checks instead.
+    await workbench(page)
+      .getByRole('button', {
+        name: `Open Change #${fourth.number} on GitHub`,
+        exact: true,
+      })
+      .click();
   },
 );
 

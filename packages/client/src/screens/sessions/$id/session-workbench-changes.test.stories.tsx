@@ -63,7 +63,7 @@ type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
 const workbench = (canvas: Canvas): ReturnType<typeof within> =>
   within(canvas.getByTestId('session-workbench'));
 
-const { title: firstTitle, checks: firstPullRequestChecks } =
+const { number: firstNumber, checks: firstPullRequestChecks } =
   pullRequestMocks.checksRunning;
 
 const firstChecks = firstPullRequestChecks.details;
@@ -173,7 +173,9 @@ export const DisclosureKeepsInspectorClosed: Story = {
 // A row opens its own pull request on GitHub, and nothing in the Inspector.
 export const RowPressOpensGitHub: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(await canvas.findByText(firstTitle));
+    await userEvent.click(
+      await canvas.findByRole('button', rowOf(firstNumber)),
+    );
     await waitFor(() => expect(opened).toHaveBeenCalledTimes(1));
     await expect(opened.mock.calls[0]?.[0]).toBe(
       'https://github.com/owner/app/pull/45',
