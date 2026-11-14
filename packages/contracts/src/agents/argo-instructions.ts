@@ -14,3 +14,9 @@ const plan: ArgoInstruction = {
 };
 
 export const argoInstructions: readonly ArgoInstruction[] = [plan];
+
+// Each Argo instruction under its name, as one block of Markdown.
+export const argoInstructionsMarkdown = (): string =>
+  argoInstructions
+    .map(({ name, text }) => `## ${name}\n\n${text}`)
+    .join('\n\n');

@@ -1,4 +1,5 @@
 import type { SessionStatus, TextContent, Turn } from '@repo/contracts';
+import { requestTexts } from '../../live-header/header';
 import {
   type PendingInputRequest,
   pendingInputRequest,
@@ -60,9 +61,7 @@ export class SessionInfoActivity {
 }
 
 function requestText(pending: PendingInputRequest): string {
-  return pending.kind === 'permission'
-    ? pending.request.title
-    : 'Waiting for your answer';
+  return requestTexts[pending.kind];
 }
 
 function interrupted(turn: Turn | undefined): boolean {

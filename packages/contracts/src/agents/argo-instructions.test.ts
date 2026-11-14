@@ -1,5 +1,5 @@
-import { pluginInstructionsLimit } from '@repo/contracts/plugins/manifest-fields';
 import { expect, it } from 'vitest';
+import { pluginInstructionsLimit } from '../plugins/manifest-fields';
 import { argoInstructions } from './argo-instructions';
 
 it('keeps each Argo instruction within the Plugin instructions limit', () => {
