@@ -23,7 +23,7 @@ it(
 
     setFiles(run.github, reference, [
       fileOf(changed),
-      fileOf('src/new.ts', { status: 'added', deletions: 0 }),
+      fileOf(added, { status: 'added', deletions: 0 }),
       fileOf('src/gone.ts', { status: 'removed', additions: 0 }),
       fileOf('src/moved.ts', {
         status: 'renamed',
@@ -65,7 +65,7 @@ it(
 
     setFiles(run.github, reference, [
       fileOf(changed),
-      fileOf('src/new.ts', { status: 'added', patch: '@@ -0,0 +1 @@\n+hello' }),
+      fileOf(added, { status: 'added', patch: '@@ -0,0 +1 @@\n+hello' }),
     ]);
     await attach(run, reference);
 
