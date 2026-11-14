@@ -17,6 +17,7 @@ import type { OpenSessions } from './open-sessions';
 import { managePromptQueue, submitAppPrompt } from './queue-commands';
 import { createSessionAgentReader, listSessionBranches } from './readers';
 import { cancelSession, closeSession } from './session-closure';
+import { declareSubagentRole } from './session-declare-subagent-role';
 import { createPlugin } from './session-new-plugin';
 import { renameSession } from './session-rename';
 import { saveSessionPlan } from './session-save-plan';
@@ -67,7 +68,15 @@ const actImplementations = (
   'session.close': ({ sessionId }) => closeSession(sources.open, sessionId),
   'session.setConfigOption': (input) => configureSession(sources.open, input),
   'session.rename': (input) => renameSession(sources.open, input),
+  ...agentRoleImplementations(sources),
   'shell.stop': async (input) => stopShell(sources, input),
+});
+
+const agentRoleImplementations = (
+  sources: SessionHandlerSources,
+): Pick<SessionOperationImplementations, 'session.declareSubagentRole'> => ({
+  'session.declareSubagentRole': (input) =>
+    declareSubagentRole(sources.open, input),
 });
 
 function feedReads(

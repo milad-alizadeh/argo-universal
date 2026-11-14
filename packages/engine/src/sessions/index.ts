@@ -22,6 +22,7 @@ export {
 
 export {
   flushSubagents,
+  declareSubagentRole,
   noSubagents,
   ownsSubagentUpdate,
   routeSubagentUpdate,

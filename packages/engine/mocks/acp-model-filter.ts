@@ -43,6 +43,7 @@ const invoking = new Map(
 const userEvents = new Set([
   'session.archive',
   'session.unarchive',
+  'session.declareSubagentRole',
   'session.shutdown',
   'session.prompt',
   'session.cancel',
@@ -93,6 +94,7 @@ type UserEvent = Extract<
     type:
       | 'session.archive'
       | 'session.unarchive'
+      | 'session.declareSubagentRole'
       | 'session.shutdown'
       | 'session.prompt'
       | 'session.cancel'

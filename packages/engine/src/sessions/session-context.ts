@@ -9,6 +9,7 @@ import type {
   SlashCommand,
   SessionOpenError,
   ShellRecord,
+  SubagentRole,
 } from '@repo/contracts';
 import type { CoreHooks } from '@repo/contracts/plugins';
 import type { createRejectionCounter } from '@repo/machine-log';
@@ -100,6 +101,7 @@ export type SessionCommand =
   | { type: 'session.archive' }
   | { type: 'session.unarchive' }
   | { type: 'session.cancel' }
+  | { type: 'session.declareSubagentRole'; role: SubagentRole }
   | { type: 'session.close' };
 
 export type SessionEvent =

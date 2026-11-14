@@ -14,6 +14,7 @@ import {
 } from './messages';
 import { createFeedMetadataSchema } from './metadata';
 import { Plan } from './plan';
+import { SubagentRole } from './subagent-role';
 import {
   CommandAction,
   PermissionOutcome,
@@ -90,6 +91,8 @@ export const SubagentState = z.enum(['running', 'idle', 'requires_action']);
 
 export type SubagentState = z.infer<typeof SubagentState>;
 
+export { SubagentRole } from './subagent-role';
+
 // ACP has no `wait` or `close`, so neither is an action (#930).
 export const SubagentAction = z.enum(['spawn', 'message']);
 
@@ -110,6 +113,8 @@ export const SubagentUpdate = z.strictObject({
     z.strictObject({
       action: SubagentAction.optional(),
       role: z.string().optional(),
+      // The role the Session declared before the spawn; it outranks any role the Agent reports.
+      declaredRole: SubagentRole.optional(),
       prompt: z.array(ContentBlock).optional(),
       result: z.array(ContentBlock).optional(),
       childPosition: z.number().int().nonnegative().optional(),

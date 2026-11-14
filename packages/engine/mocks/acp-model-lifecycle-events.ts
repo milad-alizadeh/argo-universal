@@ -19,6 +19,7 @@ export const modelLifecycleEvents = [
   },
   { type: 'session.archive' },
   { type: 'session.unarchive' },
+  { type: 'session.declareSubagentRole', role: 'review' },
   { type: 'session.shutdown' },
   {
     type: 'xstate.done.actor.saveArchive',
