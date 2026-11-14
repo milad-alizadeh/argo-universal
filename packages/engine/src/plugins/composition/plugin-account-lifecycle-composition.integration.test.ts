@@ -148,7 +148,7 @@ it.each(['clean', 'third-party'])(
 );
 
 it(
-  'returns nothing when the providing Plugin is disabled',
+  'reports an unavailable provider when the providing Plugin is disabled',
   async () => {
     const run = await borrow(fetchAccount, async (engine) => {
       await engine.caller.plugin.setEnabled({
@@ -157,7 +157,9 @@ it(
       });
     });
 
-    expect(run.result).toEqual({ result: { value: null } });
+    expect(run.result).toEqual({
+      result: { error: 'Account is temporarily unavailable. Try again.' },
+    });
     expect(run.received).toEqual([]);
   },
   journeyMs,

@@ -522,7 +522,9 @@ await argo.accounts.provide(
 The handler receives the Account metadata and returns a current token or `null`.
 Argo wakes the provider when another Plugin borrows its Account.
 The whole provider call has a three-second deadline, including activation.
-A failed, disabled, stopped, or slow provider makes the borrow return `null`.
+A failed, disabled, stopped, or slow provider rejects the borrow with a temporary Account-unavailable error.
+Use the page’s existing load-error handling and refresh interval to retry without asking the person to sign in again.
+A missing Account, refused Grant, or provider that returns no credential still makes the borrow return `null`.
 
 After sign-in, create the Account and store its token under the returned id:
 

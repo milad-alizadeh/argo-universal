@@ -18,6 +18,14 @@ export const AccountProvider = AccountHostField.extend({
   prefix: z.string().refine((value) => !/[\r\n]/.test(value)),
 });
 
+// A provider either answered with its credential (or none), or could not answer yet.
+export const AccountTokenResult = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('token'), token: z.string().nullable() }),
+  z.object({ kind: z.literal('unavailable') }),
+]);
+
+export type AccountTokenResult = z.infer<typeof AccountTokenResult>;
+
 export const AccountCall = z.discriminatedUnion('action', [
   AccountAdd.extend({ action: z.literal('add') }),
   AccountHostField.extend({ action: z.literal('get') }),
@@ -25,7 +33,7 @@ export const AccountCall = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('provided'),
     id: z.number(),
-    token: z.string().nullable(),
+    result: AccountTokenResult,
   }),
 ]);
 
