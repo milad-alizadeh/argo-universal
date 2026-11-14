@@ -15,11 +15,7 @@ export interface ChangeRowProps {
   onOpen: () => void;
 }
 
-const rowClassName = 'relative flex-row items-start gap-2 px-1 py-2';
-
-// The whole row opens the Change: a layer over the row rather than a wrapper, so the Checks' own button is never nested in it.
-const pressLayerClassName =
-  'absolute inset-0 rounded-xl web:hover:bg-hover web:focus-visible:bg-hover';
+const rowClassName = 'flex-row items-start gap-2 px-1 py-2';
 
 const stageCell = (change: SessionPullRequest): ReactElement => (
   <View className="w-7 shrink-0 items-center pt-0.5">
@@ -31,43 +27,47 @@ export function ChangeRow(props: ChangeRowProps): ReactElement {
   return (
     <View className={rowClassName}>
       {stageCell(props.change)}
-      <ChangeText {...props} />
-      <Pressable
-        role="button"
-        accessibilityLabel={`Open Change #${props.change.number} on GitHub`}
-        onPress={props.onOpen}
-        className={pressLayerClassName}
-      />
-    </View>
-  );
-}
-
-// Above the press layer so the Checks' own button takes the pointer; the rest of the text lets it through to the layer.
-function ChangeText({ change, onOpen }: ChangeRowProps): ReactElement {
-  return (
-    <View className="pointer-events-none z-10 min-w-0 flex-1 gap-0.5">
-      <View className="flex-row items-center gap-1.5">
-        <Text tone="muted">#{change.number}</Text>
-        <View className="min-w-0 flex-1">
-          <Text numberOfLines={1}>{change.title}</Text>
-        </View>
+      <View className="min-w-0 flex-1 gap-0.5">
+        <ChangeTitle {...props} />
+        <ChangeMeta {...props} />
       </View>
-      <ChangeMeta change={change} onOpen={onOpen} />
     </View>
   );
 }
 
-// The checks list each check on the web; every other part of the row opens the Change.
+// The title is the link to the Change; a pointer over it underlines it (the decoration reaches the Text from its parent), the rest of the row stays still.
+function ChangeTitle({ change, onOpen }: ChangeRowProps): ReactElement {
+  return (
+    <Pressable
+      role="button"
+      accessibilityLabel={`Open Change #${change.number} on GitHub`}
+      onPress={onOpen}
+      className="max-w-full self-start web:hover:underline"
+    >
+      <Text numberOfLines={1}>{change.title}</Text>
+    </Pressable>
+  );
+}
+
+const checksPart = (
+  checks: NonNullable<SessionPullRequest['checks']>,
+  onOpen: () => void,
+): ReactElement => (
+  <View className="ml-auto">
+    <ChangeChecks checks={checks} onOpen={onOpen} />
+  </View>
+);
+
+// The number and the diff total, with the checks at the trailing edge; the checks list each check on the web, and on a phone open the Change.
 function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
   return (
     <View className="min-h-6 flex-row flex-wrap items-center gap-2">
+      <Text role="secondary" tone="muted">
+        #{change.number}
+      </Text>
       {change.summary && <ChangeDiffTotal {...change.summary} icon />}
-      {change.checks && (
-        <View className="pointer-events-auto ml-0.5">
-          <ChangeChecks checks={change.checks} onOpen={onOpen} />
-        </View>
-      )}
       <ChangeStageModifier {...change} />
+      {change.checks && checksPart(change.checks, onOpen)}
     </View>
   );
 }
