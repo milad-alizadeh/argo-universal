@@ -8,7 +8,7 @@ import { issueBoardRoot } from '@repo/contracts/plugins/wire-fixtures';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { dismissToasts, showToast } from '@repo/kit/primitives/overlays/toast';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { useRef, useState, type ReactElement } from 'react';
+import { useState, useSyncExternalStore, type ReactElement } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { findToast } from '../../../../../kit/mocks/find-toast';
 import { PluginTree } from './plugin-registry';
@@ -31,31 +31,49 @@ const run = fn<(run: ScopedRun) => Promise<void>>();
 
 const refused = 'The tracker refused the move';
 
+const failed = (error: Error): void =>
+  showToast({
+    title: 'That did not work',
+    message: error.message,
+    tone: 'danger',
+  });
+
+// The tree the page shows, kept outside React so PageCalls reads the tree drawn now; the page draws it as it changes.
+class ShownTree {
+  private readonly listeners = new Set<() => void>();
+
+  public constructor(public root: WireNode) {}
+
+  public readonly subscribe = (listener: () => void): (() => void) => {
+    this.listeners.add(listener);
+
+    return () => this.listeners.delete(listener);
+  };
+
+  public readonly patch = (patch: (root: WireNode) => WireNode): void => {
+    this.root = patch(this.root);
+
+    for (const listener of this.listeners) listener();
+  };
+}
+
+const portsOf = (tree: ShownTree): PageCallsPorts => ({
+  scope: {},
+  shown: () => tree.root,
+  patch: async (patch) => tree.patch(patch),
+  unpatch: tree.patch,
+  run,
+  failed,
+});
+
 /*
  * A Loader page's tree as the App keeps it: a move's call runs through PageCalls, which shows the card's
  * optimistic props at once and takes them back when `run` fails, saying why in a toast.
  */
 function BoardPage(): ReactElement {
-  const [root, setRoot] = useState(board);
-  const shown = useRef(root);
-  const draw = (next: WireNode): void => {
-    shown.current = next;
-    setRoot(next);
-  };
-  const ports: PageCallsPorts = {
-    scope: {},
-    shown: () => shown.current,
-    patch: async (patch) => draw(patch(shown.current)),
-    unpatch: (patch) => draw(patch(shown.current)),
-    run,
-    failed: (error) =>
-      showToast({
-        title: 'That did not work',
-        message: error.message,
-        tone: 'danger',
-      }),
-  };
-  const [calls] = useState(() => new PageCalls(ports));
+  const [tree] = useState(() => new ShownTree(board));
+  const [calls] = useState(() => new PageCalls(portsOf(tree)));
+  const root = useSyncExternalStore(tree.subscribe, () => tree.root);
 
   return (
     <PluginTree
@@ -65,7 +83,11 @@ function BoardPage(): ReactElement {
   );
 }
 
-const cardIn = (canvasElement: HTMLElement, lane: string, title: string) =>
+const cardIn = (
+  canvasElement: HTMLElement,
+  lane: string,
+  title: string,
+): HTMLElement | null =>
   within(within(canvasElement).getByRole('group', { name: lane })).queryByRole(
     'button',
     { name: new RegExp(`^${title}`) },
@@ -75,7 +97,7 @@ const cardIn = (canvasElement: HTMLElement, lane: string, title: string) =>
 async function moveFixLogin(
   canvasElement: HTMLElement,
   user: Parameters<Play>[0]['userEvent'],
-) {
+): Promise<void> {
   const card = within(canvasElement).getByRole('button', {
     name: /^Fix login/,
   });

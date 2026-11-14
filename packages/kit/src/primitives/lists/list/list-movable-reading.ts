@@ -73,6 +73,10 @@ const targetsOf = (
     ]),
   );
 
+const useTargets = (
+  raw: ChildrenOptions['moveTargets'],
+): MoveTargets | undefined => useMemo(() => targetsOf(raw), [raw]);
+
 /*
  * A List with `onMove` reads its children in the order it shows: its owner's, or a held move's while the owner answers.
  * Its owner's order, and what the owner last drew, reach its MoveOrder before the List paints.
@@ -86,11 +90,8 @@ export function useMovableReading(
   const reading = useShownReading(options, reader, order);
   const { blocks, sections: base, titles } = reading;
   const prepared = usePrepared(options, blocks, reader.prefix);
+  const targets = useTargets(options.moveTargets);
   const { lanes } = prepared;
-  const targets = useMemo(
-    () => targetsOf(options.moveTargets),
-    [options.moveTargets],
-  );
 
   useLayoutEffect(() => order.own({ base, onMove, lanes, titles, targets }));
 

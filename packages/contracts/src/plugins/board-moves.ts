@@ -5,32 +5,54 @@ import type { PageCall, WireJson, WireNode } from './wire';
 // A card where the board shows it: in the column its `column` names, else in the column it is written in.
 interface PlacedCard {
   card: WireNode;
-  column: WireNode | undefined;
+  columnId: string;
 }
+
+const textOf = (value: WireJson | undefined, fallback: string): string =>
+  typeof value === 'string' ? value : fallback;
 
 const columnsOf = (board: WireNode): WireNode[] =>
   board.children.filter((child) => child.type === 'Board.Column');
 
-const columnById = (board: WireNode, id: unknown): WireNode | undefined =>
+const columnById = (board: WireNode, id: string): WireNode | undefined =>
   columnsOf(board).find((column) => column.props.id === id);
 
-function placedCard(board: WireNode, id: string): PlacedCard | undefined {
-  for (const written of columnsOf(board))
-    for (const card of written.children)
-      if (card.type === 'Board.Card' && card.props.id === id)
-        return {
-          card,
-          column: columnById(board, card.props.column ?? written.props.id),
-        };
+const cardsIn = (written: WireNode): PlacedCard[] =>
+  written.children.map((card) => ({
+    card,
+    columnId: textOf(card.props.column, textOf(written.props.id, '')),
+  }));
 
-  return undefined;
-}
+const placedCard = (board: WireNode, id: string): PlacedCard | undefined =>
+  columnsOf(board)
+    .flatMap(cardsIn)
+    .find(({ card }) => card.props.id === id);
 
 const titleOf = (node: WireNode | undefined, fallback: string): string =>
-  typeof node?.props.title === 'string' ? node.props.title : fallback;
+  textOf(node?.props.title, fallback);
 
-const movesTo = (card: WireNode): readonly unknown[] =>
-  Array.isArray(card.props.movesTo) ? card.props.movesTo : [];
+const namesColumn = (card: WireNode, column: string): boolean =>
+  Array.isArray(card.props.movesTo) && card.props.movesTo.includes(column);
+
+// A card may land in a column the board has and the card names.
+const mayLand = (board: WireNode, card: WireNode, column: string): boolean =>
+  columnById(board, column) !== undefined && namesColumn(card, column);
+
+// Why the board refuses a move of a card it holds, or nothing when the card may make it.
+function refusal(
+  board: WireNode,
+  placed: PlacedCard,
+  column: string,
+): string | undefined {
+  const cardTitle = titleOf(placed.card, textOf(placed.card.props.id, ''));
+  const named = titleOf(columnById(board, column), column);
+
+  if (placed.columnId === column) return `${cardTitle} is already in ${named}`;
+
+  return mayLand(board, placed.card, column)
+    ? undefined
+    : `${cardTitle} can't move to ${named}`;
+}
 
 // The card a move takes, when it may make it: a card the board holds, to another column it names.
 function movedCard(board: WireNode, { id, column }: BoardMove): WireNode {
@@ -38,17 +60,34 @@ function movedCard(board: WireNode, { id, column }: BoardMove): WireNode {
 
   if (!placed) throw new Error(`The board holds no card ${id}`);
 
-  const { card } = placed;
-  const cardTitle = titleOf(card, id);
-  const target = titleOf(columnById(board, column), column);
+  const refused = refusal(board, placed, column);
 
-  if (placed.column?.props.id === column)
-    throw new Error(`${cardTitle} is already in ${target}`);
+  if (refused) throw new Error(refused);
 
-  if (!movesTo(card).includes(column) || !columnById(board, column))
-    throw new Error(`${cardTitle} can't move to ${target}`);
+  return placed.card;
+}
 
-  return card;
+// The card shows in its new column, pending, until the Operation answers.
+const shownMoved = (
+  made: MadePageCall,
+  card: WireNode,
+  column: string,
+): MadePageCall =>
+  'operation' in made
+    ? {
+        ...made,
+        optimistic: [
+          { key: card.key, props: { column, pending: true } },
+          ...(made.optimistic ?? []),
+        ],
+      }
+    : made;
+
+// A Component event on a node: the event's name, the call its node holds for it, and the payload it reports.
+export interface NodeEvent {
+  name: string;
+  call: PageCall;
+  payload: WireJson | undefined;
 }
 
 /*
@@ -58,34 +97,22 @@ function movedCard(board: WireNode, { id, column }: BoardMove): WireNode {
  */
 export function boardEventCall(
   board: WireNode,
-  call: PageCall,
-  payload: WireJson | undefined,
+  { call, payload }: NodeEvent,
 ): MadePageCall {
   const move = boardMoveProps.parse(payload);
   const card = movedCard(board, move);
-  const made = madePageCall(call, payload);
 
-  if (!('operation' in made)) return made;
-
-  const shown = {
-    key: card.key,
-    props: { column: move.column, pending: true },
-  };
-
-  return { ...made, optimistic: [shown, ...(made.optimistic ?? [])] };
+  return shownMoved(madePageCall(call, payload), card, move.column);
 }
 
 /*
  * The call a Component event makes on `node`. A Board's move is checked against the board and shows at once; every
  * other event's payload only fills its call.
  */
-export function nodeEventCall(
+export const nodeEventCall = (
   node: WireNode,
-  event: string,
-  call: PageCall,
-  payload: WireJson | undefined,
-): MadePageCall {
-  return node.type === 'Board' && event === 'onMove'
-    ? boardEventCall(node, call, payload)
-    : madePageCall(call, payload);
-}
+  event: NodeEvent,
+): MadePageCall =>
+  node.type === 'Board' && event.name === 'onMove'
+    ? boardEventCall(node, event)
+    : madePageCall(event.call, event.payload);

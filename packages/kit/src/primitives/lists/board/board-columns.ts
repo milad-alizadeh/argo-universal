@@ -35,9 +35,13 @@ const cardOf = (child: ReactElement<BoardCardProps>): BoardCard => ({
   key: String(child.key ?? child.props.id),
 });
 
-const written = (
-  child: ReactElement<BoardColumnProps>,
-): { column: BoardColumn; cards: BoardCard[] } => {
+// A column as it is written: the column, still empty, and the cards written in it.
+interface WrittenColumn {
+  column: BoardColumn;
+  cards: BoardCard[];
+}
+
+const written = (child: ReactElement<BoardColumnProps>): WrittenColumn => {
   const { id, title, count, children } = child.props;
 
   return {
@@ -46,6 +50,17 @@ const written = (
   };
 };
 
+// Each written card goes to the column it shows in.
+function placeCards(read: readonly WrittenColumn[]): void {
+  const byId = new Map(read.map(({ column }) => [column.id, column]));
+
+  const shownIn = (card: BoardCard, column: BoardColumn): BoardColumn =>
+    byId.get(card.column ?? column.id) ?? column;
+
+  for (const { column, cards } of read)
+    for (const card of cards) shownIn(card, column).cards.push(card);
+}
+
 /*
  * The Board's columns, each with the cards it shows: a card shows in the column its `column` names, as a move shows
  * it while its Operation runs, else in the column it is written in. A card naming no column the board has stays where
@@ -53,11 +68,8 @@ const written = (
  */
 export function boardColumns(children: ReactNode): BoardColumn[] {
   const read = flattenedChildren(children).filter(isColumn).map(written);
-  const byId = new Map(read.map(({ column }) => [column.id, column]));
 
-  for (const { column, cards } of read)
-    for (const card of cards)
-      (byId.get(card.column ?? column.id) ?? column).cards.push(card);
+  placeCards(read);
 
   return read.map(({ column }) => column);
 }

@@ -5,7 +5,7 @@ import { legendScroller } from './list-column-scroll';
 import type { ListDrag } from './list-drag-controller';
 import type { MeasureZone } from './list-drag-measure';
 import { measureView } from './list-geometry';
-import { useListMoves } from './list-move-context';
+import { useListMoves, type ListMoves } from './list-move-context';
 import type { SectionKey } from './list-move-model';
 import { useMoveOrder } from './list-move-order';
 
@@ -63,10 +63,13 @@ const unsubscribed = (): (() => void) => () => {};
 // While a board's card is dragged, whether lane `key` refuses it, so the lane draws as unavailable.
 export function useLaneRefuses(key: SectionKey): boolean {
   const moves = useListMoves();
+  const read = (): boolean => (moves ? refusedNow(moves, key) : false);
 
-  return useSyncExternalStore(moves?.drag.subscribe ?? unsubscribed, () => {
-    const lifted = moves?.drag.current()?.id;
+  return useSyncExternalStore(moves?.drag.subscribe ?? unsubscribed, read);
+}
 
-    return lifted !== undefined && moves?.order.refuses(lifted, key) === true;
-  });
+function refusedNow({ drag, order }: ListMoves, key: SectionKey): boolean {
+  const lifted = drag.current()?.id;
+
+  return lifted !== undefined && order.refuses(lifted, key);
 }

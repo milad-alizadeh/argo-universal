@@ -9,6 +9,7 @@ import {
 import {
   MoveOrder,
   type MoveAnswer,
+  type MoveEffects,
   type MoveTargets,
 } from './list-move-order';
 import { moveSection } from './list-move-sections.mocks';
@@ -35,10 +36,16 @@ const targets: MoveTargets = new Map([
   [rowId('search'), new Set([sectionId('todo'), sectionId('done')])],
 ]);
 
+// Every answer settles at once, and every frame runs at once.
+const settled: MoveEffects = {
+  report: async (answer): Promise<void> => answer(),
+  frame: (step): void => step(),
+};
+
 function boardOrder(onMove: MoveAnswer): MoveOrder {
   return new MoveOrder(
     { base: columns, onMove, lanes: true, titles: new Map(), targets },
-    { report: async (answer) => answer(), frame: (step) => step() },
+    settled,
   );
 }
 
@@ -112,8 +119,13 @@ describe('MoveOrder on a board', () => {
 describe('MoveOrder on a List', () => {
   it('lets a row land in any Section', () => {
     const order = new MoveOrder(
-      { base: columns, onMove: vi.fn(), lanes: false, titles: new Map() },
-      { report: async (answer) => answer(), frame: (step) => step() },
+      {
+        base: columns,
+        onMove: vi.fn<MoveAnswer>(),
+        lanes: false,
+        titles: new Map(),
+      },
+      settled,
     );
 
     expect(order.allows(rowId('login'), sectionKey('a'))).toBe(true);

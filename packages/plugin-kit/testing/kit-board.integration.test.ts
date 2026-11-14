@@ -1,53 +1,68 @@
-import type { WireNode } from '@repo/contracts/plugins/wire';
+import type { WireJson, WireNode } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import { kitBoardSource, transition } from '../mocks/kit-board-source';
 import { startKit } from '../mocks/kit-page-helpers';
+import type { OpenPage } from './open-page';
 
-const openBoard = async () => {
+const board = 'Issue board';
+
+const fixLogin = 'Fix login';
+
+const writeDocs = 'Write docs';
+
+async function openBoard(): Promise<OpenPage> {
   const kit = await startKit(kitBoardSource, [], { operations: [transition] });
 
   return kit.pages.open({ path: '/board' });
-};
+}
 
-// The column a card shows in: the one its `column` names, else the one it is written in.
-const columnOf = (board: WireNode, title: string): unknown => {
-  for (const column of board.children) {
-    const card = column.children.find((each) => each.props.title === title);
+const textOf = (value: WireJson | undefined): string | undefined =>
+  typeof value === 'string' ? value : undefined;
 
-    if (card) return card.props.column ?? column.props.id;
-  }
+const cardIn = (column: WireNode, title: string): WireNode | undefined =>
+  column.children.find((card) => card.props.title === title);
 
-  return undefined;
-};
+// Where a written column shows its card: in the column the card's `column` names, else in itself.
+const shownIn = (written: WireNode, title: string): string | undefined =>
+  textOf(cardIn(written, title)?.props.column) ?? textOf(written.props.id);
+
+// The column a card shows in.
+function columnOf(page: OpenPage, title: string): string | undefined {
+  const written = page
+    .find(board)
+    .children.find((column) => cardIn(column, title));
+
+  return written && shownIn(written, title);
+}
 
 it('moves a card to another column through the Operation the move fills in', async () => {
   const page = await openBoard();
 
-  expect(page.find('Fix login').type).toBe('Board.Card');
-  expect(columnOf(page.find('Issue board'), 'Fix login')).toBe('todo');
+  expect(page.find(fixLogin).type).toBe('Board.Card');
+  expect(columnOf(page, fixLogin)).toBe('todo');
 
-  await page.act('Issue board', 'onMove', { id: 'login', column: 'doing' });
+  await page.act(board, 'onMove', { id: 'login', column: 'doing' });
 
-  expect(columnOf(page.find('Issue board'), 'Fix login')).toBe('doing');
-  expect(page.find('Fix login').props.pending).toBeUndefined();
-  expect(columnOf(page.find('Issue board'), 'Write docs')).toBe('todo');
+  expect(columnOf(page, fixLogin)).toBe('doing');
+  expect(page.find(fixLogin).props.pending).toBeUndefined();
+  expect(columnOf(page, writeDocs)).toBe('todo');
 });
 
 it('refuses a drop on a column the card does not name', async () => {
   const page = await openBoard();
 
   await expect(
-    page.act('Issue board', 'onMove', { id: 'login', column: 'done' }),
+    page.act(board, 'onMove', { id: 'login', column: 'done' }),
   ).rejects.toThrow("Fix login can't move to Done");
-  expect(columnOf(page.find('Issue board'), 'Fix login')).toBe('todo');
+  expect(columnOf(page, fixLogin)).toBe('todo');
 });
 
 it('puts the card back when its Operation fails', async () => {
   const page = await openBoard();
 
   await expect(
-    page.act('Issue board', 'onMove', { id: 'docs', column: 'done' }),
+    page.act(board, 'onMove', { id: 'docs', column: 'done' }),
   ).rejects.toThrow('Write docs has no reviewer');
-  expect(columnOf(page.find('Issue board'), 'Write docs')).toBe('todo');
-  expect(page.find('Write docs').props).not.toHaveProperty('pending');
+  expect(columnOf(page, writeDocs)).toBe('todo');
+  expect(page.find(writeDocs).props).not.toHaveProperty('pending');
 });

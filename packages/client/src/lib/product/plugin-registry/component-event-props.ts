@@ -141,7 +141,7 @@ async function runInApp(
   const from = { key: input.context.key, name, schema, payload: checked };
 
   return pageCallOf(input)(
-    nodeEventCall(input.node, name, handler, checked),
+    nodeEventCall(input.node, { name, call: handler, payload: checked }),
     from,
   );
 }

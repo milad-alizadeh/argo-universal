@@ -1,7 +1,15 @@
-import { applyListMove, type ListMove } from '@repo/contracts/kit-moves';
+import type { ListMove } from '@repo/contracts/kit-moves';
 import { useSyncExternalStore } from 'react';
 import { listenerSet } from '../../../listener-set';
+import {
+  boardAllows,
+  boardRefuses,
+  menuKeyOf,
+  type MenuKey,
+  type MoveTargets,
+} from './list-board-rules';
 import { RowFocus, type FocusRow, type MoveNotice } from './list-move-feedback';
+import { shownSections, type HeldMove } from './list-move-held';
 import {
   placeOf,
   resolveMove,
@@ -10,15 +18,15 @@ import {
   type ResolvedMove,
   type RowId,
   type RowMove,
-  type SectionId,
   type SectionKey,
 } from './list-move-model';
 
 // A Plugin's `onMove` answers once its dispatch settles; an App owner's answers at once.
 export type MoveAnswer = (move: ListMove) => void | Promise<void>;
 
-// A board's cards and the columns each may move to; a card it does not name moves nowhere.
-export type MoveTargets = ReadonlyMap<RowId, ReadonlySet<SectionId>>;
+export type { MenuKey, MenuSteps, MoveTargets } from './list-board-rules';
+
+export { shownSections, type HeldMove } from './list-move-held';
 
 /*
  * What the List's owner last drew: its order, its answer to a move, whether its Sections draw as lanes, and each
@@ -32,53 +40,10 @@ export interface MoveOwner {
   targets?: MoveTargets;
 }
 
-// Which steps a row's Move menu offers: up, down, both or neither. Its Move to… entry is always there.
-export type MenuSteps = 'up' | 'down' | 'both' | 'none';
-
-// What a row's Move menu offers: its steps, or on a board the Section it is in, whose moves it lists.
-export type MenuKey = MenuSteps | `in ${string}`;
-
-const withUp = (down: boolean): MenuSteps => (down ? 'both' : 'up');
-
-const withoutUp = (down: boolean): MenuSteps => (down ? 'down' : 'none');
-
-const stepsOf = (index: number, length: number): MenuSteps =>
-  (index > 0 ? withUp : withoutUp)(index < length - 1);
-
 export interface MoveEffects {
   // Runs the owner's answer, and reports a refusal with one error toast.
   report: (answer: () => void | Promise<void>) => Promise<void>;
   frame: (step: () => void) => void;
-}
-
-// A move the List shows before its owner answers it, and the owner's order it was made on.
-export interface HeldMove {
-  move: RowMove;
-  base: readonly MoveSection[];
-}
-
-const sameRows = (a: readonly RowId[], b: readonly RowId[]): boolean =>
-  a.length === b.length && a.every((id, index) => id === b[index]);
-
-const sameSection = (a: MoveSection, b: MoveSection | undefined): boolean =>
-  b !== undefined && a.key === b.key && sameRows(a.rows, b.rows);
-
-// The owner has not drawn another order: the same Sections, holding the same rows in the same order.
-const sameOrder = (
-  a: readonly MoveSection[],
-  b: readonly MoveSection[],
-): boolean =>
-  a.length === b.length &&
-  a.every((section, index) => sameSection(section, b[index]));
-
-// The order the List shows over its owner's: the held move's, until the owner draws another order.
-export function shownSections(
-  held: HeldMove | null,
-  base: readonly MoveSection[],
-): readonly MoveSection[] {
-  if (!held || !sameOrder(held.base, base)) return base;
-
-  return applyListMove(base, held.move);
 }
 
 const nextNotice = (last: MoveNotice | null, text: string): MoveNotice => ({
@@ -192,20 +157,19 @@ export class MoveOrder {
   public allows(id: RowId, sectionKey: SectionKey): boolean {
     const { targets } = this.owner;
 
-    if (!targets) return true;
-
-    const section = this.shown.find((each) => each.key === sectionKey);
-    const named = section?.id !== undefined && targets.get(id)?.has(section.id);
-
-    return named === true && placeOf(this.shown, id)?.sectionKey !== sectionKey;
+    return (
+      !targets ||
+      boardAllows({ sections: this.shown, targets }, { id, sectionKey })
+    );
   }
 
   // On a board, a lane that would refuse row `id` while it is dragged: neither its own column nor one it names.
   public refuses(id: RowId, sectionKey: SectionKey): boolean {
+    const { targets } = this.owner;
+
     return (
-      this.board &&
-      !this.allows(id, sectionKey) &&
-      placeOf(this.shown, id)?.sectionKey !== sectionKey
+      targets !== undefined &&
+      boardRefuses({ sections: this.shown, targets }, { id, sectionKey })
     );
   }
 
@@ -213,11 +177,7 @@ export class MoveOrder {
   public menuOf(id: RowId | undefined): MenuKey | undefined {
     const place = id === undefined ? undefined : placeOf(this.shown, id);
 
-    if (!place) return undefined;
-
-    return this.board
-      ? `in ${place.sectionKey}`
-      : stepsOf(place.index, place.own.rows.length);
+    return place && menuKeyOf(place, this.board);
   }
 
   // Lets go of a move once its answer settles, unless a later move has replaced it.

@@ -46,6 +46,9 @@ const boardMove =
     if (section !== undefined) onMove({ id, column: section });
   };
 
+// A board draws its columns as a List's lanes of cards.
+const lanes = { layout: 'lanes', appearance: 'cards' } as const;
+
 /*
  * Lists / Board: columns of cards, side by side, scrolling sideways when they do not fit, at every width. A card moves
  * by drag or from its menu, only to the columns its `movesTo` names; the others fade while it is dragged. The Board
@@ -53,21 +56,16 @@ const boardMove =
  * through its card's `column`.
  */
 export function Board({
-  accessibilityLabel,
   onMove,
   children,
+  ...board
 }: BoardProps): ReactElement {
   const columns = useMemo(() => boardColumns(children), [children]);
   const targets = useMemo(() => boardTargets(columns), [columns]);
+  const moved = onMove && boardMove(onMove);
 
   return (
-    <List
-      layout="lanes"
-      appearance="cards"
-      accessibilityLabel={accessibilityLabel}
-      moveTargets={targets}
-      onMove={onMove && boardMove(onMove)}
-    >
+    <List {...board} {...lanes} moveTargets={targets} onMove={moved}>
       {columns.map(columnLane)}
     </List>
   );

@@ -122,6 +122,7 @@ const slidesFor = (
 // Where the row would land, unless that Section refuses it, as a board's column the card does not name does.
 function aimFor(input: FrameInput): DropAim | undefined {
   const { measured, order, point, lift } = input;
+
   const aim = aimAt({
     ...measured,
     sections: order.sections,

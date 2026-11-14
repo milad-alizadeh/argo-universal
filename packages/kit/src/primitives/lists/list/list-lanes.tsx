@@ -50,18 +50,19 @@ const namedGroup = (title: string | undefined) =>
   ({ role: 'group', accessibilityLabel: title }) as const;
 
 // A lane that refuses the dragged card fades, and says it is unavailable, until the drag ends.
+const laneLook = (title: string | undefined, refuses: boolean) =>
+  ({
+    ...namedGroup(title),
+    'aria-disabled': refuses || undefined,
+    className: cn('w-72 shrink-0 pb-4', refuses && 'opacity-40'),
+  }) as const;
+
 function BoardLane({ lane, scroll }: LaneProps): ReactElement {
   const laneRef = useRef<ViewInstance>(null);
   const refuses = useLaneRefuses(sectionKey(lane.key));
 
   return (
-    <View
-      ref={laneRef}
-      collapsable={false}
-      {...namedGroup(lane.title)}
-      aria-disabled={refuses || undefined}
-      className={cn('w-72 shrink-0 pb-4', refuses && 'opacity-40')}
-    >
+    <View ref={laneRef} collapsable={false} {...laneLook(lane.title, refuses)}>
       {lane.header}
       <LaneBody lane={lane} laneRef={laneRef} scroll={scroll} />
       {lane.footer}

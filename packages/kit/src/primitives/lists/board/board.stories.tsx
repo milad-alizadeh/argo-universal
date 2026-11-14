@@ -34,6 +34,12 @@ export const PopulatedOnAPhone: Story = {
   globals: { viewport: { value: 'phone' } },
 };
 
+// Where the pointer goes, as a mouse event places it.
+const at = (x: number, y: number): MouseEventInit => ({
+  clientX: x,
+  clientY: y,
+});
+
 /*
  * A card held over a column it does not name: the columns it cannot land in fade, and dropping it there moves
  * nothing. The play holds the card until the story is left.
@@ -46,7 +52,6 @@ export const DisallowedDrop: Story = {
     const done = canvas.getByRole('group', { name: 'Done' });
     const from = card.getBoundingClientRect();
     const over = done.getBoundingClientRect();
-    const at = (x: number, y: number) => ({ clientX: x, clientY: y });
 
     await userEvent.pointer([
       {

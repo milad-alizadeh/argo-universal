@@ -1,12 +1,21 @@
+import { nodeEventCall } from '@repo/contracts/plugins/board-moves';
 import { kitComponent } from '@repo/contracts/plugins/kit';
+import {
+  madePageCall,
+  type MadePageCall,
+} from '@repo/contracts/plugins/page-call-payload';
 import type { PageEvent } from '@repo/contracts/plugins/page-calls';
 import {
   Handler,
   componentEventPayload,
+  type PageCall,
   type WireJson,
   type WireNode,
 } from '@repo/contracts/plugins/wire';
-import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
+import {
+  findWireNode,
+  findWireNodeEntry,
+} from '@repo/contracts/plugins/wire-node-key';
 import { z } from 'zod';
 
 export type FoundNode = NonNullable<ReturnType<typeof findWireNodeEntry>>;
@@ -89,4 +98,17 @@ function reportedSchema(type: string, name: string): PageEvent['schema'] {
   if (!schema) throw new Error(`${type} reports no ${name}`);
 
   return schema;
+}
+
+// The call an event on the tree's node makes, its payload filled in and, for a Board's move, checked against the board.
+export function madeEventCall(
+  tree: WireNode,
+  call: PageCall,
+  { key, name, payload }: PageEvent,
+): MadePageCall {
+  const node = findWireNode(tree, key);
+
+  return node
+    ? nodeEventCall(node, { name, call, payload })
+    : madePageCall(call, payload);
 }

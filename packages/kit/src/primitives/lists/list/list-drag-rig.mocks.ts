@@ -1,13 +1,14 @@
 import type { ListMove } from '@repo/contracts/kit-moves';
 import { vi, type Mock } from 'vitest';
 import { ListDrag } from './list-drag-controller';
-import type { DragFrame } from './list-drag-frame';
+import type { DragDrawing, DragFrame } from './list-drag-frame';
 import type { Point, Rect } from './list-geometry';
 import {
   rowId,
   sectionKey,
   type DropPlace,
   type MoveSection,
+  type ResolvedMove,
   type SectionKey,
 } from './list-move-model';
 import { moveSection } from './list-move-sections.mocks';
@@ -54,6 +55,13 @@ export type Allows = (id: string, sectionKey: SectionKey) => boolean;
 
 const anywhere: Allows = () => true;
 
+// Records where the lifted copy goes, and queues each frame.
+const drawingFor = (ghost: Point[], frames: (() => void)[]): DragDrawing => ({
+  ghostAt: (point): number => ghost.push(point),
+  slides: true,
+  schedule: queued(frames),
+});
+
 export function rigFor(
   sections: readonly MoveSection[],
   lanes: boolean,
@@ -62,21 +70,11 @@ export function rigFor(
   const ghost: Point[] = [];
   const frames: (() => void)[] = [];
   const move = vi.fn<(move: ListMove) => void>();
+  const report = (resolved: ResolvedMove): void => move(resolved.move);
+  const order = { sections, lanes, allows, move: report };
 
-  const drag = new ListDrag(
-    async () => layer,
-    {
-      sections,
-      lanes,
-      allows,
-      move: (resolved): void => move(resolved.move),
-    },
-    {
-      ghostAt: (point): number => ghost.push(point),
-      slides: true,
-      schedule: queued(frames),
-    },
-  );
+  const drawing = drawingFor(ghost, frames);
+  const drag = new ListDrag(async () => layer, order, drawing);
 
   return { drag, move, ghost, frames };
 }

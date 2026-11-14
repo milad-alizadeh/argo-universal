@@ -34,6 +34,11 @@ if (sketch?.column !== 'doing' || sketch.movesTo.join() !== 'backlog,review')
     'Recorded catalog needs Sketch the layout In progress, moving to Backlog or In review',
   );
 
+const sketchTitle = 'Sketch the layout';
+
+// A lane says it is unavailable while it refuses the held card.
+const unavailable = 'aria-disabled';
+
 const columnTitle = (id: string): string =>
   boardColumns.find((column) => column.id === id)?.title ?? id;
 
@@ -64,7 +69,7 @@ async function hold(
 }
 
 const menuMoves: Play = async ({ canvasElement, userEvent }) => {
-  const card = rowNamed(canvasElement, 'Sketch the layout');
+  const card = rowNamed(canvasElement, sketchTitle);
   const menu = await openRowMenu(userEvent, card);
 
   await expect(itemNames(menu)).toEqual(
@@ -79,7 +84,7 @@ const menuMoves: Play = async ({ canvasElement, userEvent }) => {
   await waitFor(() =>
     expect(
       within(laneNamed(canvasElement, 'In review')).getByRole('button', {
-        name: 'Sketch the layout',
+        name: sketchTitle,
       }),
     ).toBeVisible(),
   );
@@ -93,11 +98,11 @@ export const MenuMovesToANamedColumnOnAPhone = at('phone', menuMoves);
 export const DragLandsOnANamedColumn = at(
   'wide',
   async ({ canvasElement, userEvent }) => {
-    const card = rowNamed(canvasElement, 'Sketch the layout');
+    const card = rowNamed(canvasElement, sketchTitle);
     const backlog = laneNamed(canvasElement, 'Backlog');
 
     await hold(userEvent, card, backlog);
-    await waitFor(() => expect(backlog).not.toHaveAttribute('aria-disabled'));
+    await waitFor(() => expect(backlog).not.toHaveAttribute(unavailable));
     await userEvent.pointer({ target: card, keys: '[/MouseLeft]' });
 
     await expect(onMove).toHaveBeenCalledWith({ id: 'c', column: 'backlog' });
@@ -108,23 +113,23 @@ export const DragLandsOnANamedColumn = at(
 export const DragRefusesAnotherColumn = at(
   'wide',
   async ({ canvasElement, userEvent }) => {
-    const card = rowNamed(canvasElement, 'Sketch the layout');
+    const card = rowNamed(canvasElement, sketchTitle);
     const done = laneNamed(canvasElement, 'Done');
 
     await hold(userEvent, card, done);
 
-    await waitFor(() => expect(done).toHaveAttribute('aria-disabled', 'true'));
+    await waitFor(() => expect(done).toHaveAttribute(unavailable, 'true'));
     await expect(laneNamed(canvasElement, 'In review')).not.toHaveAttribute(
-      'aria-disabled',
+      unavailable,
     );
     await expect(laneNamed(canvasElement, 'In progress')).not.toHaveAttribute(
-      'aria-disabled',
+      unavailable,
     );
 
     await userEvent.pointer({ target: card, keys: '[/MouseLeft]' });
 
     await expect(onMove).not.toHaveBeenCalled();
-    await waitFor(() => expect(done).not.toHaveAttribute('aria-disabled'));
+    await waitFor(() => expect(done).not.toHaveAttribute(unavailable));
   },
 );
 
@@ -135,7 +140,9 @@ export const ColumnsScrollSidewaysOnAPhone = at(
     const lanes = boardColumns.map(({ title }) =>
       laneNamed(canvasElement, title),
     );
+
     const widths = lanes.map((lane) => lane.getBoundingClientRect().width);
+
     const board = within(canvasElement).getByLabelText('Tasks');
 
     await expect(new Set(widths).size).toBe(1);
