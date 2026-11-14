@@ -22,9 +22,7 @@ export async function keepDeviceApp(device: TestDevice): Promise<DeviceApp> {
 type DeviceConnection = { caller: TRPCClient<AppRouter>; close: () => void };
 
 // Unlike a handshake-per-request probe, an App keeps its authenticated Connection while it edits or subscribes.
-export async function channelApp(
-  input: ChannelInput,
-): Promise<DeviceConnection> {
+async function channelApp(input: ChannelInput): Promise<DeviceConnection> {
   const { socket } = await connectChannel(input);
 
   const client = createWSClient({

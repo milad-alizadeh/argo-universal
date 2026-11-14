@@ -97,7 +97,7 @@ export function withQueuePause(
   return pausedQueueStep(step, context.sessionId, promptQueue);
 }
 
-export function endQueueReason(ended: EndTurnParameters): string | null {
+function endQueueReason(ended: EndTurnParameters): string | null {
   if (ended.stopReason === 'end_turn') return null;
 
   return ended.stopReason === 'cancelled'
