@@ -8,6 +8,7 @@ import {
   SuggestionMenu,
   type SuggestionMenuProps,
 } from '../rich-textarea-suggestion-menu';
+import { useGatedHighlight } from './rich-textarea-typeahead-hover';
 import type { TypeaheadOption } from './rich-textarea-typeahead-option';
 import { useMenuMaxHeight } from './rich-textarea-typeahead-viewport';
 
@@ -38,42 +39,6 @@ function useKeepFocus(menu: RefObject<HTMLDivElement | null>): void {
   }, [menu]);
 }
 
-type Pointer = { moved: boolean; position: string | null };
-
-// A move to a new spot, not the repeat a layout change makes at the same one.
-function trackMove(pointer: Pointer, event: MouseEvent): void {
-  const next = `${event.clientX},${event.clientY}`;
-
-  if (pointer.position !== null && pointer.position !== next) {
-    pointer.moved = true;
-  }
-
-  pointer.position = next;
-}
-
-/*
- * Whether the pointer has moved since the options last changed. A menu that opens or refilters under a resting
- * pointer reports a hover on the row beneath it, which must not take the highlight from the first option.
- */
-function usePointerMoved(options: MenuProps['options']): RefObject<Pointer> {
-  const pointer = useRef<Pointer>({ moved: false, position: null });
-
-  useEffect(() => {
-    pointer.current.moved = false;
-  }, [options]);
-
-  useEffect(() => {
-    const track = (event: MouseEvent): void =>
-      trackMove(pointer.current, event);
-
-    window.addEventListener('mousemove', track, true);
-
-    return (): void => window.removeEventListener('mousemove', track, true);
-  }, []);
-
-  return pointer;
-}
-
 const chooser =
   (props: MenuProps) =>
   (index: number): void => {
@@ -85,16 +50,14 @@ const chooser =
 // Lexical's options as the menu takes them: rows highlighted from the field and chosen through Lexical.
 function menuContent(
   props: MenuProps,
-  pointer: RefObject<Pointer>,
+  onHighlight: (index: number) => void,
 ): Omit<SuggestionMenuProps, 'maxHeight'> {
   return {
     rows: props.options.map((option) => option.display),
     onChoose: chooser(props),
     listbox: {
       highlighted: props.selectedIndex,
-      onHighlight: (index) => {
-        if (pointer.current.moved) props.setHighlightedIndex(index);
-      },
+      onHighlight,
     },
   };
 }
@@ -107,9 +70,12 @@ function useMenuSurface(anchor: HTMLElement): MenuSurface {
   return { menu, maxHeight: useMenuMaxHeight(anchor, menu) };
 }
 
+const useHighlight = (props: MenuProps): ((index: number) => void) =>
+  useGatedHighlight(props.options, props.setHighlightedIndex);
+
 function TypeaheadMenu(props: TypeaheadMenuProps): React.JSX.Element {
   const { menu, maxHeight } = useMenuSurface(props.anchor);
-  const content = menuContent(props, usePointerMoved(props.options));
+  const content = menuContent(props, useHighlight(props));
 
   return (
     <div
