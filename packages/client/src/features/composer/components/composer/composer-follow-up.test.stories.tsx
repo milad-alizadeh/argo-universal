@@ -68,6 +68,9 @@ export const TapAcceptsOnAPhone: Story = {
         attachments: [],
       }),
     );
+    const field = canvas.getByRole('textbox', { name: 'Message' });
+    await expect(field).toHaveFocus();
+    await expect(shownText(field)).toBe(predictedPrompt);
     await expect(args.onSend).not.toHaveBeenCalled();
     await expect(
       canvas.queryByRole('button', { name: useSuggestionLabel }),
