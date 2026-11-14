@@ -91,13 +91,20 @@ export async function prepareServer(
   await writeInstallation(paths.installationPath);
   await initTestRepository(paths.projectPath, false);
   await installPlugins(paths.home);
-
-  if (initial.githubPulls) {
-    await writeGitHubFixture(paths.githubPath);
-    await installGitHubPlugins(paths.home);
-  }
+  await prepareGitHub(paths, initial);
 
   return paths;
+}
+
+// A scenario tagged @github-pulls gets the real GitHub Plugin over a fixture GitHub.
+async function prepareGitHub(
+  paths: ServerPaths,
+  { githubPulls }: InitialServerOptions,
+): Promise<void> {
+  if (!githubPulls) return;
+
+  await writeGitHubFixture(paths.githubPath);
+  await installGitHubPlugins(paths.home);
 }
 
 async function installPlugins(home: string): Promise<void> {

@@ -25,6 +25,9 @@ const heading = (
   </Text>
 );
 
+const reasonOf = (change: SessionPullRequest, message: string): string =>
+  `The files of ${changeName(change)} could not be loaded: ${message}`;
+
 const notInstead =
   "This Session's Checkout is a different comparison, so its files are not shown instead.";
 
@@ -40,9 +43,7 @@ export function SessionChangeFilesUnavailable({
   return (
     <Stack direction="column" gap={3}>
       {heading}
-      {muted(
-        `The files of ${changeName(change)} could not be loaded: ${message}`,
-      )}
+      {muted(reasonOf(change, message))}
       {muted(notInstead)}
       <Button size="sm" label="Try again" onPress={onRetry} />
     </Stack>

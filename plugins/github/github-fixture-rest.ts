@@ -36,13 +36,21 @@ export const filesPath =
   /^\/repos\/([^/]+\/[^/]+)\/pulls\/(\d+)\/files(?:\?(.*))?$/;
 
 // GitHub's pages of a pull request's files; `per_page` and `page` choose the slice, and no files are an empty page.
+const defaultPageSize = 30;
+
+const intParam = (
+  params: URLSearchParams,
+  key: string,
+  fallback: number,
+): number => Number(params.get(key) ?? fallback);
+
 function filesAnswer(
   { files }: Held,
   [, repository, number, query]: RegExpExecArray,
 ): FixtureAnswer {
-  const params = new URLSearchParams(query ?? '');
-  const size = Number(params.get('per_page') ?? 30);
-  const page = Number(params.get('page') ?? 1);
+  const params = new URLSearchParams(query);
+  const size = intParam(params, 'per_page', defaultPageSize);
+  const page = intParam(params, 'page', 1);
   const all = files.get(`${repository}#${number}`) ?? [];
 
   return { json: all.slice((page - 1) * size, page * size) };
@@ -120,18 +128,25 @@ function repoAnswer(held: Held, repository: string): FixtureAnswer {
 const pullOrChecks = (held: Held, path: string): FixtureAnswer =>
   checksPath.test(path) ? checksAnswer(held, path) : pullAnswer(held, path);
 
+type Route = [RegExp, (held: Held, match: RegExpExecArray) => FixtureAnswer];
+
+const routes: Route[] = [
+  [filesPath, filesAnswer],
+  [
+    listPath,
+    (held, match) => listAnswer(held, String(match[1]), String(match[2])),
+  ],
+  [repoPath, (held, match) => repoAnswer(held, String(match[1]))],
+];
+
 function route(held: Held, path: string): FixtureAnswer {
-  const filed = filesPath.exec(path);
+  for (const [pattern, answer] of routes) {
+    const match = pattern.exec(path);
 
-  if (filed) return filesAnswer(held, filed);
+    if (match) return answer(held, match);
+  }
 
-  const listed = listPath.exec(path);
-
-  if (listed) return listAnswer(held, String(listed[1]), String(listed[2]));
-
-  const repo = repoPath.exec(path);
-
-  return repo ? repoAnswer(held, String(repo[1])) : pullOrChecks(held, path);
+  return pullOrChecks(held, path);
 }
 
 // The repository endpoints of `api.github.com`; while `failWith` is set, each one fails with that status.

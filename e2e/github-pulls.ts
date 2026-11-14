@@ -54,6 +54,13 @@ type Spec = Pick<FixturePullRequest, 'number' | 'title' | 'checks'> & {
   files: string[];
 };
 
+const countsOf = (
+  files: string[],
+): Pick<FixturePullRequest, 'additions' | 'deletions'> => ({
+  additions: files.length * 2,
+  deletions: files.length,
+});
+
 const pullRequestOf = ({
   number,
   title,
@@ -66,8 +73,7 @@ const pullRequestOf = ({
   branch: `feature-${number}`,
   head: headOf(String(number % 10)),
   base: 'main',
-  additions: files.length * 2,
-  deletions: files.length,
+  ...countsOf(files),
   files: files.map(fileOf),
   checks,
 });

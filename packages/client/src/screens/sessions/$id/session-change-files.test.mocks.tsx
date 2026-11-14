@@ -93,7 +93,9 @@ const sourceFor = (recovery: Recovery): ChangeFilesSource => {
   };
 };
 
-const holdRecovery = (): { recovery: Recovery; source: ChangeFilesSource } => {
+type Held = { recovery: Recovery; source: ChangeFilesSource };
+
+const holdRecovery = (): Held => {
   const recovery = new Recovery();
 
   return { recovery, source: sourceFor(recovery) };

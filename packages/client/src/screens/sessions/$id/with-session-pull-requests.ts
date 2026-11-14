@@ -20,12 +20,17 @@ const unchanged = (
   changeActions: ChangeActions | undefined,
 ): boolean => header === before && !changeActions;
 
+// What the Plugins give the Changes beside the Changes themselves: what a person can do to them, and where a Change's files come from.
+export type PluginSources = {
+  changeActions?: ChangeActions;
+  changeFiles?: ChangeFilesSource;
+};
+
 // An open Session with the Changes the Plugins supplied; a Session that is not open has nowhere to show them.
 export function withSessionPullRequests(
   props: SessionDetailViewProps,
   pullRequests: SessionPullRequest[],
-  changeActions?: ChangeActions,
-  changeFiles?: ChangeFilesSource,
+  { changeActions, changeFiles }: PluginSources = {},
 ): SessionDetailViewProps {
   if (props.state !== 'open') return props;
 

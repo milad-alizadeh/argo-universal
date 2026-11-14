@@ -45,12 +45,13 @@ const stateOf = (change: Change): ChangeState => {
 const branchesOf = ({
   branch,
   base,
-  head,
-}: Change): Pick<SessionPullRequest, 'branch' | 'base' | 'head'> => ({
+}: Change): Pick<SessionPullRequest, 'branch' | 'base'> => ({
   ...(branch && { branch }),
   ...(base && { base }),
-  ...(head && { head }),
 });
+
+const headOf = ({ head }: Change): Pick<SessionPullRequest, 'head'> =>
+  head ? { head } : {};
 
 const detailOf = ({ name, state }: Check): CheckDetail => ({
   name,
@@ -85,6 +86,7 @@ const staleOf = ({ stale }: Change): Pick<SessionPullRequest, 'stale'> =>
 const pullRequestOf = (change: PullRequestChange): SessionPullRequest => ({
   ...stateOf(change),
   ...branchesOf(change),
+  ...headOf(change),
   id: change.id,
   repository: change.repository,
   url: change.pullRequest.url,

@@ -26,7 +26,11 @@ export const setFiles = (
 
 type Asked = { reference: string; cursor?: number; path?: string; as?: Caller };
 
-const paramsOf = ({ reference, cursor, path }: Asked) => ({
+const paramsOf = ({
+  reference,
+  cursor,
+  path,
+}: Asked): Pick<Asked, 'reference' | 'cursor' | 'path'> => ({
   reference,
   ...(cursor !== undefined && { cursor }),
   ...(path !== undefined && { path }),

@@ -40,7 +40,9 @@ type Pull = z.infer<typeof Pull>;
 // What the fixture GitHub knows: pull requests with their files and Checks.
 const Fixture = z.object({ pulls: z.array(Pull) });
 
-type Answer = { status: number; json: object };
+type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
+
+type Answer = { status: number; json: Json };
 
 const okStatus = 200;
 
@@ -51,7 +53,7 @@ const unauthorized: Answer = {
   json: { message: 'Bad credentials' },
 };
 
-const ok = (json: object): Answer => ({ status: okStatus, json });
+const ok = (json: Json): Answer => ({ status: okStatus, json });
 
 const named = (
   pulls: readonly Pull[],

@@ -10,6 +10,8 @@ const reference = 'owner/repository#12';
 
 const forkReference = 'fork-owner/repository#12';
 
+const owner = 'owner/repository';
+
 const changed = 'src/a.ts';
 
 const added = 'src/new.ts';
@@ -37,7 +39,7 @@ it(
     expect(await filesOfPull(run, { reference })).toEqual({
       mainBranch: null,
       summary: { files: 3, additions: 10, deletions: 2 },
-      comparison: { repository: 'owner/repository', base: 'main', head: sha },
+      comparison: { repository: owner, base: 'main', head: sha },
       files: [
         { ...modified, path: changed },
         { operation: 'add', path: added, additions: 1, deletions: 0 },
@@ -142,7 +144,7 @@ it(
     const run = await journey();
     const total = 120;
 
-    const [key, pull] = pullOf('owner/repository', 12, {
+    const [key, pull] = pullOf(owner, 12, {
       changed_files: total,
     });
 

@@ -115,9 +115,10 @@ export async function filesOf(
   params: { reference: string; cursor?: number },
   caller: Caller,
 ): Promise<FilesPage> {
-  const { pull, projectId } = await readPull(source, params.reference, caller);
+  const read = await readPull(source, params.reference, caller);
+  const { pull } = read;
   const page = params.cursor ?? 1;
-  const files = await readPage(source, { pull, projectId }, page);
+  const files = await readPage(source, read, page);
 
   return {
     mainBranch: null,

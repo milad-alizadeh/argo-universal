@@ -30,13 +30,11 @@ async function run(
   runner: OperationRunner,
   { operation, scope, reference }: Association,
 ): Promise<Answer | undefined> {
-  const args = argsOf(reference);
-
   try {
     return await runner.run({
       pluginId: changesPluginId,
       operation,
-      args,
+      args: argsOf(reference),
       ...scope,
     });
   } catch (cause) {

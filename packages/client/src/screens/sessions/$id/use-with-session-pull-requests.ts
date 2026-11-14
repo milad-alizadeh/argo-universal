@@ -25,10 +25,8 @@ export function useWithSessionPullRequests(
 ): SessionDetailViewProps {
   const context = changesContext(sessionId, feed);
 
-  return withSessionPullRequests(
-    props,
-    useSessionPullRequests(context),
-    useChangeAssociations(context),
-    useChangeFiles(context),
-  );
+  return withSessionPullRequests(props, useSessionPullRequests(context), {
+    changeActions: useChangeAssociations(context),
+    changeFiles: useChangeFiles(context),
+  });
 }

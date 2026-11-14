@@ -47,7 +47,7 @@ function registerFiles(argo: Argo, source: ChangesSource): void {
   );
 }
 
-function registerOperations(argo: Argo, source: ChangesSource): void {
+function registerAssociations(argo: Argo, source: ChangesSource): void {
   argo.operations.register('attach', async (params, caller) => ({
     attached: true,
     change: await attach(
@@ -56,12 +56,6 @@ function registerOperations(argo: Argo, source: ChangesSource): void {
       await sessionCaller(argo, params, caller),
     ),
   }));
-  argo.operations.register('discover', async (params, caller) =>
-    discoverFor(
-      { ...argo, store: source.store },
-      await sessionCaller(argo, params, caller),
-    ),
-  );
   argo.operations.register('detach', async (params, caller) => ({
     detached: true,
     ...(await detach(
@@ -70,6 +64,16 @@ function registerOperations(argo: Argo, source: ChangesSource): void {
       await sessionCaller(argo, params, caller),
     )),
   }));
+}
+
+function registerOperations(argo: Argo, source: ChangesSource): void {
+  registerAssociations(argo, source);
+  argo.operations.register('discover', async (params, caller) =>
+    discoverFor(
+      { ...argo, store: source.store },
+      await sessionCaller(argo, params, caller),
+    ),
+  );
 }
 
 // What the Session's pull requests look like now, and the retry that asks GitHub again.
