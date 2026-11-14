@@ -5,7 +5,7 @@ import { nativeSections } from './list-native-sections';
 import type { ListProps } from './list-props';
 
 // A grouped List draws natively when every row it holds is a FieldGroup row; ListItem rows stay on LegendList.
-export function holdsNativeRows(children: ReactNode): boolean {
+function holdsNativeRows(children: ReactNode): boolean {
   const rows = nativeSections(children).flatMap((section) => section.rows);
 
   return rows.length > 0 && rows.every((row) => isNativeRow(row.render()));
@@ -28,7 +28,7 @@ type NativeCandidate = Pick<
   'children' | (typeof unhonouredProps)[number]
 > & { items?: readonly unknown[] };
 
-export const asksNothingNativeLacks = (props: NativeCandidate): boolean =>
+const asksNothingNativeLacks = (props: NativeCandidate): boolean =>
   unhonouredProps.every((name) => props[name] === undefined);
 
 // Decide before loading decorates a React Native list with a RefreshControl.
