@@ -9,6 +9,7 @@ it('starts a Turn: active, kept, and stored as running with the current model', 
 
   expect(step.change).toEqual({
     activeTurnId: turnId,
+    followUpSuggestion: null,
     activeTurnStartedAt: 100,
     turnEnding: { kind: 'completion' },
     kept: true,

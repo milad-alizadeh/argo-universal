@@ -4,7 +4,11 @@ import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useInstalledAgents } from '#features/agents';
 import { useConnectionState } from '#features/connection';
-import { useProjects, useThemeChoice } from '#features/settings';
+import {
+  useProjects,
+  useThemeChoice,
+  useFollowUpSuggestionsPreference,
+} from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { type ServerScope, useServerScope } from '#lib/product/server-scope';
 import { sections } from '../../lib/product/navigation/sections';
@@ -52,6 +56,7 @@ function useSettingsList(query?: string): SettingsListViewProps {
     status: connectionStatus(useConnectionState()),
     theme: theme.choice,
     onThemeChange: theme.choose,
+    ...useComposerPreference(),
     ...lookedAtServer(useServerScope()),
   };
 }
@@ -91,4 +96,16 @@ export function SettingsListScreen(
       <SettingsListView {...useSettingsList(props.query)} />
     </Screen>
   );
+}
+
+function useComposerPreference(): Pick<
+  SettingsListViewProps,
+  'followUpSuggestions' | 'onFollowUpSuggestionsChange'
+> {
+  const preference = useFollowUpSuggestionsPreference();
+
+  return {
+    followUpSuggestions: preference.enabled,
+    onFollowUpSuggestionsChange: preference.choose,
+  };
 }

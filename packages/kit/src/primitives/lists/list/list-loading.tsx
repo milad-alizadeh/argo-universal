@@ -1,6 +1,8 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Spinner } from '#primitives/status/spinner';
+import { useListLook } from '../../../list-look-context';
+import { drawsNativeGroupedList } from './list-native-rows';
 import type { ListProps } from './list-props';
 import { useListRefresh } from './list-refresh';
 import { useListRequest, type ListRequest } from './list-request';
@@ -84,7 +86,8 @@ function endPagination<Item>(
 
 export function useListLoading<Item>(props: ListProps<Item>): ListProps<Item> {
   const page = useListRequest(failure);
-  const refreshControl = useListRefresh(props.onRefresh);
+  const native = drawsNativeGroupedList(useListLook(), props);
+  const refreshControl = useListRefresh(native ? undefined : props.onRefresh);
 
   return {
     ...props,

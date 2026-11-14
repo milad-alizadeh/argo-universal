@@ -16,13 +16,14 @@ type ToolCallDisclosureProps = Omit<FeedDisclosureProps, 'denied'> & {
 export function toolCallDisclosureProps(
   row: ToolCallUpdate,
   awaitingApproval = false,
+  showCommand?: boolean,
 ): Pick<
   ToolCallDisclosureProps,
   'label' | 'paths' | 'awaitingApproval' | 'permissionOutcome'
 > {
   return {
-    label: toolCallTitle(row, awaitingApproval),
-    paths: toolCallTitlePaths(row, awaitingApproval),
+    label: toolCallTitle(row, awaitingApproval, showCommand),
+    paths: toolCallTitlePaths(row, awaitingApproval, showCommand),
     awaitingApproval,
     permissionOutcome: toolCallFacts(row).permissionOutcome,
   };
@@ -44,7 +45,7 @@ export function ToolCallDisclosure({
   ...props
 }: ToolCallDisclosureProps): React.JSX.Element {
   return (
-    <View className="gap-1">
+    <View className="max-w-full gap-1">
       <FeedDisclosure {...props} denied={isRejected(permissionOutcome)} />
       <ToolCallPermissionOutcome outcome={permissionOutcome} />
     </View>

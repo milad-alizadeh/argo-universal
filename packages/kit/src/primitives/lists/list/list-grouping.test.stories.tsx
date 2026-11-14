@@ -5,8 +5,8 @@ import { expect } from 'storybook/test';
 import { renderCounter } from '#mocks/render-counts';
 import { settleLayout, type LayoutName } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
+import { List } from '../list';
 import { ListItem } from '../list-item';
-import { List } from './list';
 import { Recycling } from './list-recycling.stories';
 
 const meta = {

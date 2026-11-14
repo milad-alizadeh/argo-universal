@@ -24,26 +24,15 @@ import {
 } from './web/rich-textarea-field-plugins';
 import { FormatBarPlugin } from './web/rich-textarea-format-bar-plugin';
 import { HandlePlugin } from './web/rich-textarea-handle-plugin';
+import { InlineSuggestionPlugin } from './web/rich-textarea-inline-suggestion';
 import { LinkPlugins } from './web/rich-textarea-link-plugins';
 import {
   $importMarkdown,
   richTextareaNodes,
 } from './web/rich-textarea-markdown';
+import { Placeholder } from './web/rich-textarea-placeholder';
 import { TokenProviders } from './web/rich-textarea-token-providers';
 import { TypeaheadPlugin } from './web/rich-textarea-typeahead-plugin';
-
-const placeholderClassName =
-  'pointer-events-none absolute inset-x-0 top-0 truncate type-control text-muted-foreground/70 dark:text-muted-foreground';
-
-function Placeholder({
-  text,
-  className,
-}: {
-  text: string;
-  className?: string;
-}): React.JSX.Element {
-  return <div className={cn(placeholderClassName, className)}>{text}</div>;
-}
 
 type MessageFieldProps = Pick<
   RichTextareaProps,
@@ -124,10 +113,22 @@ function EditorTypeahead({
   return <TypeaheadPlugin {...props} onChooseSuggestion={choose} />;
 }
 
+function SuggestedField(props: EditorParts): React.JSX.Element {
+  return (
+    <>
+      <MessageField
+        {...props}
+        placeholder={props.inlineSuggestion?.text ?? props.placeholder}
+      />
+      <InlineSuggestionPlugin inlineSuggestion={props.inlineSuggestion} />
+    </>
+  );
+}
+
 function EditorParts({ references, ...props }: EditorParts): React.JSX.Element {
   return (
     <>
-      <MessageField {...props} />
+      <SuggestedField {...props} references={references} />
       <EditorTypeahead {...props} references={references} />
       <EditingPlugins />
       <KeyboardPlugin />

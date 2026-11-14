@@ -3,8 +3,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement, ReactNode } from 'react';
 import { Text } from 'react-native';
 import { expect } from 'storybook/test';
+import { List } from '../list';
 import { ListItem } from '../list-item';
-import { List } from './list';
 import type { ListChild } from './list-children';
 import {
   listTree,

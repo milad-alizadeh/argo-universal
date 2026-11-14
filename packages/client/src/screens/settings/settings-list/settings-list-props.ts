@@ -25,6 +25,8 @@ export interface SettingsListViewProps {
   // This Device's theme, chosen in place from the Theme group's Appearance row.
   theme?: ThemeChoice;
   onThemeChange: (theme: ThemeChoice) => void;
+  followUpSuggestions?: boolean;
+  onFollowUpSuggestionsChange?: (enabled: boolean) => void;
   notificationsState?: string;
   status?: 'ready' | 'loading' | 'disconnected';
   // The sidebar's search: only pages whose title matches show.

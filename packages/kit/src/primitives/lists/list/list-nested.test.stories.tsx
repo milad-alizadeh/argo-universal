@@ -4,7 +4,7 @@ import { expect, fn } from 'storybook/test';
 import { pressTarget } from '#mocks/press-target';
 import { settleLayout } from '#mocks/story-layout';
 import { ListItem } from '#primitives/lists/list-item';
-import { List } from './list';
+import { List } from '../list';
 import { nestedList, nestedRegularList } from './list-nested-fixtures';
 
 const meta = {

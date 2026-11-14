@@ -1,6 +1,5 @@
 import type { TerminalOutputResponse } from '@agentclientprotocol/sdk';
-import type { ToolCallUpdate } from '@repo/contracts';
-import { assert, vi } from 'vitest';
+import type { ToolCallUpdate, FeedSubscribeOutput } from '@repo/contracts';
 import type { EngineInput } from '../src/engine/machine';
 import type { OperationWaitClock } from '../src/operations';
 import { startAcpEngine } from './acp-engine';
@@ -63,23 +62,33 @@ export async function beginHeldTurn(
   );
 }
 
-export function pendingOperation(
+export async function pendingOperation(
   host: Host,
   sessionId: string,
 ): Promise<ToolCallUpdate> {
-  return vi.waitFor(async () => {
-    const page = await host.caller.feed.page({ sessionId, direction: 'tail' });
+  const updates = await host.caller.feed.subscribe({ sessionId, after: null });
 
-    const row = page.rows.find(isProjectListUpdate);
+  for await (const update of updates) {
+    const row = pendingProjectList(update);
 
-    assert(row?.sessionUpdate === 'tool_call_update');
-    assert(row.status === 'in_progress');
+    if (row) return row;
+  }
 
-    return row;
-  });
+  throw new Error('The Feed closed before the pending project.list Operation');
 }
 
-const isProjectListUpdate = (
+function pendingProjectList(
+  update: FeedSubscribeOutput,
+): ToolCallUpdate | undefined {
+  if (update.type !== 'row.upsert') return undefined;
+
+  return isPendingProjectListUpdate(update.row) ? update.row : undefined;
+}
+
+function isPendingProjectListUpdate(
   item: Awaited<ReturnType<Host['caller']['feed']['page']>>['rows'][number],
-): boolean =>
-  item.sessionUpdate === 'tool_call_update' && item.name === 'project.list';
+): item is ToolCallUpdate {
+  if (item.sessionUpdate !== 'tool_call_update') return false;
+
+  return item.name === 'project.list' && item.status === 'in_progress';
+}

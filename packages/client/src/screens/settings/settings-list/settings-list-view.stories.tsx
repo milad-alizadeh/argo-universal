@@ -18,6 +18,7 @@ import {
 const meta = {
   title: 'Screens/Settings/Settings',
   component: SettingsListView,
+  render: (args): React.JSX.Element => <SettingsWithPreference {...args} />,
   parameters: { screenPreview: true },
   argTypes: {
     status: {
@@ -29,12 +30,30 @@ const meta = {
     ...readySettings,
     onSelect: action('select Settings page'),
     onThemeChange: action('choose theme'),
+    onFollowUpSuggestionsChange: action('choose Follow-up suggestions'),
   },
 } satisfies Meta<typeof SettingsListView>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+function SettingsWithPreference(
+  args: SettingsListViewProps,
+): React.JSX.Element {
+  const [enabled, setEnabled] = useState(args.followUpSuggestions);
+
+  return (
+    <SettingsListView
+      {...args}
+      followUpSuggestions={enabled}
+      onFollowUpSuggestionsChange={(next) => {
+        setEnabled(next);
+        args.onFollowUpSuggestionsChange?.(next);
+      }}
+    />
+  );
+}
 
 function SettingsHeading(): React.JSX.Element {
   return (
@@ -66,7 +85,7 @@ function SettingsPreview(args: SettingsListViewProps): React.JSX.Element {
   return (
     <View className="w-full bg-content wide:w-frame-list" style={{ flex: 1 }}>
       <SettingsHeading />
-      <SettingsListView {...args} {...selection} />
+      <SettingsWithPreference {...args} {...selection} />
     </View>
   );
 }

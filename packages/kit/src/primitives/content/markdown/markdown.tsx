@@ -5,24 +5,34 @@ import { lexMarkdown } from '#kit/lex-markdown';
 import { Blocks } from './block-tokens';
 import { MarkdownClamp } from './markdown-clamp';
 import type { MarkdownProps } from './markdown-props';
-import { MarkdownTone } from './markdown-tone';
+import { MarkdownSelectable, MarkdownTone } from './markdown-tone';
 
 // Foundations / Markdown: one prose drawing wherever the kit is used.
 export const Markdown = memo(function Markdown({
-  text,
-  streaming = false,
   tone,
-  numberOfLines,
-  onOverflowChange,
+  selectable = false,
+  ...rest
 }: MarkdownProps) {
   return (
     <MarkdownTone value={tone}>
-      <MarkdownClamp lines={numberOfLines} onOverflowChange={onOverflowChange}>
-        <MarkdownContent text={text} streaming={streaming} />
-      </MarkdownClamp>
+      <MarkdownSelectable value={selectable}>
+        <ClampedContent {...rest} />
+      </MarkdownSelectable>
     </MarkdownTone>
   );
 });
+
+function ClampedContent({
+  numberOfLines,
+  onOverflowChange,
+  ...content
+}: MarkdownProps): React.JSX.Element {
+  return (
+    <MarkdownClamp lines={numberOfLines} onOverflowChange={onOverflowChange}>
+      <MarkdownContent {...content} />
+    </MarkdownClamp>
+  );
+}
 
 function MarkdownContent({
   text,

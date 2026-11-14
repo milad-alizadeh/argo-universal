@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, fn } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
+import { List, PluginList } from '../list';
 import { ListItem } from '../list-item';
-import { List, PluginList } from './list';
 import { boardLanes, type BoardLane } from './list-moves-fixtures';
 import type { ListProps } from './list-props';
 

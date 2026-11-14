@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { Text } from 'react-native';
 import { expect } from 'storybook/test';
-import { List } from './list';
+import { List } from '../list';
 import type { MoveSection } from './list-move-model';
 import { moveSection } from './list-move-sections.mocks';
 import {
