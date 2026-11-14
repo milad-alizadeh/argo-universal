@@ -13,8 +13,14 @@ const stickyCells = (node: Element): HTMLElement[] =>
 const pushOf = (cell: HTMLElement): number =>
   Number(cell.dataset.stickyPush ?? 0);
 
+/*
+ * Closer than this to the last push is the same push. At a fractional pixel ratio a moved cell's measured top wobbles in
+ * its last digits, so an exact match would never come (#2092).
+ */
+const samePushWithin = 0.01;
+
 function setPush(cell: HTMLElement, push: number): void {
-  if (pushOf(cell) === push) return;
+  if (Math.abs(pushOf(cell) - push) < samePushWithin) return;
 
   cell.dataset.stickyPush = String(push);
   cell.style.transform = push ? `translateY(${push}px)` : '';
@@ -52,16 +58,25 @@ function pushStuckHeader(node: Element): void {
   setPush(stuck, Math.min(0, pushOf(stuck) + room - stuck.offsetHeight));
 }
 
-// Watches one list node: each scroll, and each style Legend List writes as it swaps the stuck header or moves rows.
-function watchNode(node: Element): () => void {
-  const push = (): void => pushStuckHeader(node);
-  const observer = new MutationObserver(push);
+const styleChanges: MutationObserverInit = {
+  subtree: true,
+  attributes: true,
+  attributeFilter: ['style'],
+};
 
-  observer.observe(node, {
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['style'],
-  });
+/*
+ * Watches one list node: each scroll, and each style Legend List writes as it swaps the stuck header or moves rows. The
+ * styles a push writes itself are dropped, so they never call for another push (#2092).
+ */
+function watchNode(node: Element): () => void {
+  const observer = new MutationObserver(() => push());
+
+  const push = (): void => {
+    pushStuckHeader(node);
+    observer.takeRecords();
+  };
+
+  observer.observe(node, styleChanges);
   node.addEventListener('scroll', push, { passive: true });
   push();
 

@@ -2,6 +2,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, screen, waitFor } from 'storybook/test';
+import { cdp } from 'vitest/browser';
 import { recordedFile } from '../../../../mocks/feed-edit-mock';
 import {
   fileHeader,
@@ -252,5 +253,106 @@ export const NextHeaderPushesTheStuckOne: Story = {
     const scroller = scrollerOf(changedFiles());
 
     await expect(await overlapsDown(scroller)).toEqual([]);
+  },
+};
+
+// More observer callbacks than one task ever needs: past this, an observer is answering its own writes.
+const callbacksPerTask = 500;
+
+interface Runaway {
+  tripped: boolean;
+  restore: () => void;
+}
+
+/*
+ * Counts each task's MutationObserver callbacks and stops delivering them past the cap, so an observer that answers its
+ * own writes fails the story instead of hanging the page it runs in.
+ */
+function capObservers(): Runaway {
+  const Native = window.MutationObserver;
+
+  const runaway: Runaway = {
+    tripped: false,
+    restore: () => {
+      window.MutationObserver = Native;
+    },
+  };
+
+  let calls = 0;
+  let resetting = false;
+
+  const counted =
+    (callback: MutationCallback): MutationCallback =>
+    (records, observer) => {
+      if (!resetting) {
+        resetting = true;
+        setTimeout(() => {
+          calls = 0;
+          resetting = false;
+        });
+      }
+
+      calls += 1;
+
+      if (calls > callbacksPerTask) runaway.tripped = true;
+      else callback(records, observer);
+    };
+
+  window.MutationObserver = class extends Native {
+    constructor(callback: MutationCallback) {
+      super(counted(callback));
+    }
+  };
+
+  return runaway;
+}
+
+let runaway: Runaway | undefined;
+
+// A Retina display zoomed to 110%: a device pixel ratio of 2.19, where a moved box's measured top wobbles in its last digits.
+async function zoomTo110(): Promise<() => Promise<void>> {
+  await cdp().send('Emulation.setDeviceMetricsOverride', {
+    width: window.innerWidth,
+    height: window.innerHeight,
+    deviceScaleFactor: 2,
+    mobile: false,
+  });
+  document.documentElement.style.zoom = '1.0957514267596702';
+
+  return async () => {
+    document.documentElement.style.zoom = '';
+    await cdp().send('Emulation.clearDeviceMetricsOverride');
+  };
+}
+
+// Steps that leave the list at fractional offsets, as a trackpad does.
+const trackpadStep = 37.3;
+
+const trackpadSteps = 300;
+
+async function trackpadDown(scroller: HTMLElement): Promise<void> {
+  for (let step = 0; step < trackpadSteps && !atEnd(scroller); step++) {
+    scroller.scrollTop += trackpadStep;
+    await nextFrames();
+  }
+}
+
+// At a fractional pixel ratio a stuck header settles where it is pushed, rather than chasing its own measurement (#2092).
+export const StuckHeaderSettlesWhenZoomed: Story = {
+  args: { catalog: manyChanges },
+  beforeEach: async () => {
+    runaway = capObservers();
+    const unzoom = await zoomTo110();
+
+    return async () => {
+      runaway?.restore();
+      await unzoom();
+    };
+  },
+  play: async () => {
+    await findFileHeader('/repo/src/module-1/index.ts');
+    await trackpadDown(scrollerOf(changedFiles()));
+
+    await expect(runaway?.tripped).toBe(false);
   },
 };
