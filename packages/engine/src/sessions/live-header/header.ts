@@ -31,7 +31,7 @@ function requestLabel(session: LiveHeaderInput): HeaderLabel | null {
   return text ? { text, source: { type: 'request' } } : null;
 }
 
-const requestTexts = {
+export const requestTexts = {
   permission: 'Awaiting approval',
   elicitation: 'Waiting for your answer',
 } as const;
