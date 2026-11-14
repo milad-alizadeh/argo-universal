@@ -61,7 +61,7 @@ async function expectRunning(page: Page): Promise<void> {
   ).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Send', exact: true }),
-  ).toHaveCount(0);
+  ).toBeVisible();
 }
 
 Then(
