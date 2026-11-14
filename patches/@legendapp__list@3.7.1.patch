@@ -1,0 +1,78 @@
+diff --git a/react-native.js b/react-native.js
+index eeb3fb0715a0955c178fb9947ecfd35382e71ec2..a81c398a261beb195bda09f5df4bcf0468ccff85 100644
+--- a/react-native.js
++++ b/react-native.js
+@@ -2019,7 +2019,7 @@ function updateScroll(ctx, newScroll, forceUpdate, options) {
+   const allowedEdge = isUserScrollEvent ? beginReachedEdgeUserScroll(ctx, newScroll - prevScroll) : void 0;
+   const didResolvePendingNativeMVCPAdjust = resolvePendingNativeMVCPAdjust(ctx, newScroll);
+   const scrollLength = state.scrollLength;
+-  const isLargeUserScrollJump = scrollLength > 0 && scrollingTo === void 0 && scrollDelta > scrollLength && !state.pendingNativeMVCPAdjust;
++  const isLargeUserScrollJump = isUserScrollEvent && scrollLength > 0 && scrollingTo === void 0 && scrollDelta > scrollLength && !state.pendingNativeMVCPAdjust;
+   const scrollVelocity = getScrollVelocity(state);
+   updateAdaptiveRender(ctx, scrollVelocity, { forceLight: isLargeUserScrollJump });
+   const lastCalculated = state.scrollLastCalculate;
+diff --git a/react-native.mjs b/react-native.mjs
+index fe5f4154bcd66eef84c13f2dc07ba2520a3a5d39..0774fbdb88e0a6a9f538903801818cc3598651f1 100644
+--- a/react-native.mjs
++++ b/react-native.mjs
+@@ -1998,7 +1998,7 @@ function updateScroll(ctx, newScroll, forceUpdate, options) {
+   const allowedEdge = isUserScrollEvent ? beginReachedEdgeUserScroll(ctx, newScroll - prevScroll) : void 0;
+   const didResolvePendingNativeMVCPAdjust = resolvePendingNativeMVCPAdjust(ctx, newScroll);
+   const scrollLength = state.scrollLength;
+-  const isLargeUserScrollJump = scrollLength > 0 && scrollingTo === void 0 && scrollDelta > scrollLength && !state.pendingNativeMVCPAdjust;
++  const isLargeUserScrollJump = isUserScrollEvent && scrollLength > 0 && scrollingTo === void 0 && scrollDelta > scrollLength && !state.pendingNativeMVCPAdjust;
+   const scrollVelocity = getScrollVelocity(state);
+   updateAdaptiveRender(ctx, scrollVelocity, { forceLight: isLargeUserScrollJump });
+   const lastCalculated = state.scrollLastCalculate;
+diff --git a/react-native.web.js b/react-native.web.js
+index 4500177b44094138489d1581f6ece97e719dc4de..5178103189b2eef230486dac5b9cfec8a542b81a 100644
+--- a/react-native.web.js
++++ b/react-native.web.js
+@@ -1915,7 +1915,7 @@ function updateScroll(ctx, newScroll, forceUpdate, options) {
+   const allowedEdge = isUserScrollEvent ? beginReachedEdgeUserScroll(ctx, newScroll - prevScroll) : void 0;
+   const didResolvePendingNativeMVCPAdjust = resolvePendingNativeMVCPAdjust(ctx, newScroll);
+   const scrollLength = state.scrollLength;
+-  const isLargeUserScrollJump = scrollLength > 0 && scrollingTo === void 0 && scrollDelta > scrollLength && !state.pendingNativeMVCPAdjust;
++  const isLargeUserScrollJump = isUserScrollEvent && scrollLength > 0 && scrollingTo === void 0 && scrollDelta > scrollLength && !state.pendingNativeMVCPAdjust;
+   const scrollVelocity = getScrollVelocity(state);
+   updateAdaptiveRender(ctx, scrollVelocity, { forceLight: isLargeUserScrollJump });
+   const lastCalculated = state.scrollLastCalculate;
+diff --git a/react-native.web.mjs b/react-native.web.mjs
+index 1dab5e5a279a58ba07deb490aa87231415d37210..466d8fbd8927eba21caa01a77d8c36a9f8f9aa4a 100644
+--- a/react-native.web.mjs
++++ b/react-native.web.mjs
+@@ -1894,7 +1894,7 @@ function updateScroll(ctx, newScroll, forceUpdate, options) {
+   const allowedEdge = isUserScrollEvent ? beginReachedEdgeUserScroll(ctx, newScroll - prevScroll) : void 0;
+   const didResolvePendingNativeMVCPAdjust = resolvePendingNativeMVCPAdjust(ctx, newScroll);
+   const scrollLength = state.scrollLength;
+-  const isLargeUserScrollJump = scrollLength > 0 && scrollingTo === void 0 && scrollDelta > scrollLength && !state.pendingNativeMVCPAdjust;
++  const isLargeUserScrollJump = isUserScrollEvent && scrollLength > 0 && scrollingTo === void 0 && scrollDelta > scrollLength && !state.pendingNativeMVCPAdjust;
+   const scrollVelocity = getScrollVelocity(state);
+   updateAdaptiveRender(ctx, scrollVelocity, { forceLight: isLargeUserScrollJump });
+   const lastCalculated = state.scrollLastCalculate;
+diff --git a/react.js b/react.js
+index 4500177b44094138489d1581f6ece97e719dc4de..5178103189b2eef230486dac5b9cfec8a542b81a 100644
+--- a/react.js
++++ b/react.js
+@@ -1915,7 +1915,7 @@ function updateScroll(ctx, newScroll, forceUpdate, options) {
+   const allowedEdge = isUserScrollEvent ? beginReachedEdgeUserScroll(ctx, newScroll - prevScroll) : void 0;
+   const didResolvePendingNativeMVCPAdjust = resolvePendingNativeMVCPAdjust(ctx, newScroll);
+   const scrollLength = state.scrollLength;
+-  const isLargeUserScrollJump = scrollLength > 0 && scrollingTo === void 0 && scrollDelta > scrollLength && !state.pendingNativeMVCPAdjust;
++  const isLargeUserScrollJump = isUserScrollEvent && scrollLength > 0 && scrollingTo === void 0 && scrollDelta > scrollLength && !state.pendingNativeMVCPAdjust;
+   const scrollVelocity = getScrollVelocity(state);
+   updateAdaptiveRender(ctx, scrollVelocity, { forceLight: isLargeUserScrollJump });
+   const lastCalculated = state.scrollLastCalculate;
+diff --git a/react.mjs b/react.mjs
+index 1dab5e5a279a58ba07deb490aa87231415d37210..466d8fbd8927eba21caa01a77d8c36a9f8f9aa4a 100644
+--- a/react.mjs
++++ b/react.mjs
+@@ -1894,7 +1894,7 @@ function updateScroll(ctx, newScroll, forceUpdate, options) {
+   const allowedEdge = isUserScrollEvent ? beginReachedEdgeUserScroll(ctx, newScroll - prevScroll) : void 0;
+   const didResolvePendingNativeMVCPAdjust = resolvePendingNativeMVCPAdjust(ctx, newScroll);
+   const scrollLength = state.scrollLength;
+-  const isLargeUserScrollJump = scrollLength > 0 && scrollingTo === void 0 && scrollDelta > scrollLength && !state.pendingNativeMVCPAdjust;
++  const isLargeUserScrollJump = isUserScrollEvent && scrollLength > 0 && scrollingTo === void 0 && scrollDelta > scrollLength && !state.pendingNativeMVCPAdjust;
+   const scrollVelocity = getScrollVelocity(state);
+   updateAdaptiveRender(ctx, scrollVelocity, { forceLight: isLargeUserScrollJump });
+   const lastCalculated = state.scrollLastCalculate;
