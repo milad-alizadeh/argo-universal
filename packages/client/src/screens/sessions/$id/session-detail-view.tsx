@@ -3,6 +3,7 @@ import {
   useErrorToast,
 } from '@repo/kit/primitives/overlays/toast';
 import type * as React from 'react';
+import { ChangesPill, hasChanges } from '#features/changes';
 import type { ComposerProps } from '#features/composer';
 import { Feed, type FeedProps } from '#features/feed';
 import type { ElicitationFormProps } from '#features/requests';
@@ -20,9 +21,11 @@ import {
   TerminalSignIn,
   type TerminalSignInProps,
 } from '#features/sessions';
+import { ComposerPillLayer } from '#lib/product/composer-pill-layer';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { SessionLayout } from '#lib/product/session-layout';
 import { BlankSession } from './blank-session';
+import { summaryOf } from './sections/changes-facts';
 import { sessionWorkbench } from './sections/session-sections';
 import { SessionComposer } from './session-composer';
 import {
@@ -142,11 +145,35 @@ const sessionParts = (
 ): React.ComponentProps<typeof SessionLayout> => ({
   header: bandClaim(props, panels),
   bar: sessionBar(props),
-  feed: <Feed {...props.feed} />,
+  feed: sessionFeed(props, panels),
   composer: sessionBottom(props),
   panel: props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />,
   onDropFiles: hasDraft(props) ? props.onDropFiles : undefined,
 });
+
+// The Feed, with the Composer's Changes pill laid over its end: it opens the Inspector's Changes tab, or on a phone the Changes sheet.
+const sessionFeed = (
+  props: OpenSessionViewProps,
+  panels: SessionPanels,
+): React.JSX.Element => (
+  <ComposerPillLayer pill={changesPill(props, panels)}>
+    <Feed {...props.feed} />
+  </ComposerPillLayer>
+);
+
+// Nothing in a preview, which has no Composer, or while the Checkout has no changes.
+const changesPill = (
+  props: OpenSessionViewProps,
+  panels: SessionPanels,
+): React.ReactNode => {
+  const summary = summaryOf(props);
+
+  if (props.preview || props.archived || !hasChanges(summary)) return null;
+
+  return (
+    <ChangesPill summary={summary} onPress={() => panels.select('changes')} />
+  );
+};
 
 const bandClaim = (
   props: OpenSessionViewProps,

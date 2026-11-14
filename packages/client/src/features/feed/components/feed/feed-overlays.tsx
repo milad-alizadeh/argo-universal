@@ -10,6 +10,7 @@ import type { RefObject } from 'react';
 import type { ViewStyle } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
+import { useComposerPillLift } from '#lib/product/composer-pill-layer';
 import { SessionColumn } from '#lib/product/session-column';
 
 // How far Jump to latest sits above the Composer's top, on every device.
@@ -32,11 +33,13 @@ const jumpToLatestStyle = (composerTop: number): ViewStyle => ({
 // Shown while the reader is away from the end; the dot marks rows that arrived since. It sits in the Composer's column, so it stays centred over the Composer.
 function JumpToLatest(props: JumpToLatestButtonProps): React.JSX.Element {
   const { composerTop } = useFeedEndClearance();
+  // Above a pill laid over the Composer, when there is one.
+  const lift = useComposerPillLift();
 
   return (
     <Animated.View
       {...jumpToLatestMotion}
-      style={jumpToLatestStyle(composerTop)}
+      style={jumpToLatestStyle(composerTop + lift)}
     >
       <SessionColumn className="pointer-events-box-none items-center">
         <JumpToLatestButton {...props} />

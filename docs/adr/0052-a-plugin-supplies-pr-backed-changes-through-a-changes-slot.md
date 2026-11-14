@@ -29,6 +29,7 @@ Decided by the owner on 2026-11-13, replacing the provisional Changes UI that #2
 - **Workbench rows open GitHub.** The Changes card keeps its PR rows (stage, number, title, totals, Draft/Conflict, Checks). Pressing a row opens the PR's `url` through the App's external-link opener. The row has no menu. The card shows up to three PRs, then Show more for all of them and Show less to go back to three.
 - **The PR Operations stay for Agents:** `attach`, `detach`, `discover`, `list`, `refresh`, `files` and `diff`, with `files` and `diff` Agent-only. The Plugin, the Slot, the refresh lifecycle, the Checks data, and the `stale` and `onCheckout` data stay. The client's `remoteChanges`, change selection, association, discovery and unread hooks and outcome parsers are removed.
 - **The Checkout's totals are never added to a PR's and never shown as a PR's.**
+- **The Composer's Changes pill is the entry to the Inspector Changes tab.** It shows the Checkout's files and line totals above the Composer, never a PR's, and is hidden while the Checkout has no changes. Pressing it opens the Changes tab in the Inspector, or the Changes sheet on a phone.
 
 ## Reconciling #1300
 
