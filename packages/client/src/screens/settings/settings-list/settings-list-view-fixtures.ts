@@ -11,6 +11,7 @@ const base = {
   projectsNeedAttention: true,
   accountState: 'GitHub',
   deviceCount: 2,
+  followUpSuggestions: true,
   selectedPath: '/settings/accounts',
 } satisfies SettingsListViewState;
 

@@ -46,6 +46,7 @@ function textFieldProps({
   references: _references,
   suggestions: _suggestions,
   onResourcesChange: _onResourcesChange,
+  inlineSuggestion: _inlineSuggestion,
   ref: _ref,
   ...field
 }: RichTextareaProps): TextInputProps {
@@ -93,14 +94,17 @@ function PlainField({
   fieldProps,
 }: PlainFieldProps): React.JSX.Element {
   return (
-    <TextInput
-      ref={inputRef}
-      {...plainFieldProps(props)}
-      {...fieldProps}
-      {...useFieldLook()}
-      className={fieldClassName(props)}
-    />
+    <TextInput ref={inputRef} {...usePlainFieldProps(props)} {...fieldProps} />
   );
+}
+
+function usePlainFieldProps(props: RichTextareaProps): TextInputProps {
+  return {
+    ...plainFieldProps(props),
+    ...useFieldLook(),
+    placeholder: props.inlineSuggestion?.text ?? props.placeholder,
+    className: fieldClassName(props),
+  };
 }
 
 // The handle's `insertWord`, which focuses the field before writing into it.

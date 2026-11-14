@@ -1,15 +1,17 @@
 import type { ContentBlock } from '@repo/contracts';
-import {
-  type ErrorToast,
-  useErrorToast,
-} from '@repo/kit/primitives/overlays/toast';
 import { useMutation } from '@tanstack/react-query';
-import { type ComposerDraft, useAttachmentDraft } from '#features/composer';
+import {
+  type ComposerDraft,
+  useAttachmentDraft,
+  useFollowUpDismissal,
+} from '#features/composer';
 import { type ServerMutation, type TRPC, useTRPC } from '#features/connection';
 import {
   type SessionConfigChange,
   useSessionConfigChange,
 } from '#features/sessions';
+import { useFollowUpSuggestionsPreference } from '#features/settings';
+import { useRetryPrompt } from './use-retry-prompt';
 
 type SessionMutation<Name extends 'prompt' | 'cancel'> = ServerMutation<
   TRPC['session'][Name]
@@ -21,6 +23,9 @@ export type SessionCommands = Omit<
   AttachmentDraft,
   'clearDraft' | 'uploadDraftAsPrompt'
 > & {
+  followUpSuggestions?: boolean;
+  dismissedFollowUpTurnId?: string;
+  dismissFollowUp?: (turnId: string) => void;
   promptSession: SessionMutation<'prompt'>;
   cancelTurn: SessionMutation<'cancel'>;
   setConfigOption: SessionConfigChange['setConfigOption'];
@@ -72,20 +77,51 @@ function useConfigCommands({
   return { setConfigOption, changeConfig: change };
 }
 
-function useDraftCommands({
-  sessionId,
-  resumeAfterCommand,
-}: SessionCommandTarget): DraftCommands {
+function useDraftCommands(target: SessionCommandTarget): DraftCommands {
+  const followUp = useFollowUpCommands(target.sessionId);
+  const draft = usePromptDraft(target, followUp.followUpSuggestions === true);
+
+  const retryPrompt = useRetryPrompt(
+    target.sessionId,
+    target.resumeAfterCommand,
+  );
+
+  return { ...draft, ...followUp, retryPrompt };
+}
+
+function useFollowUpCommands(
+  sessionId: string,
+): Pick<
+  SessionCommands,
+  'followUpSuggestions' | 'dismissedFollowUpTurnId' | 'dismissFollowUp'
+> {
+  const dismissal = useFollowUpDismissal(sessionId);
+  const { enabled: followUpSuggestions } = useFollowUpSuggestionsPreference();
+
+  return {
+    followUpSuggestions,
+    dismissedFollowUpTurnId: dismissal.turnId,
+    dismissFollowUp: dismissal.dismiss,
+  };
+}
+
+function usePromptDraft(
+  target: SessionCommandTarget,
+  followUpSuggestions: boolean,
+): Omit<DraftCommands, 'retryPrompt'> {
   const { clearDraft, uploadDraftAsPrompt, ...draft } = useAttachmentDraft({
     type: 'session',
-    sessionId,
+    sessionId: target.sessionId,
   });
 
-  const promptSession = usePromptSession({ clearDraft, resumeAfterCommand });
-  const sendDraft = draftSender(sessionId, promptSession, uploadDraftAsPrompt);
-  const retryPrompt = useRetryPrompt(sessionId, resumeAfterCommand);
+  const promptSession = usePromptSession({ ...target, clearDraft });
 
-  return { ...draft, promptSession, sendDraft, retryPrompt };
+  const sendDraft = draftSender(
+    { sessionId: target.sessionId, promptSession, followUpSuggestions },
+    uploadDraftAsPrompt,
+  );
+
+  return { ...draft, promptSession, sendDraft };
 }
 
 function usePromptSession({
@@ -102,40 +138,27 @@ function usePromptSession({
   return useMutation(trpc.session.prompt.mutationOptions({ onSuccess }));
 }
 
-const retryFailed: ErrorToast = {
-  title: "Couldn't retry",
-  message: 'Check the Connection, then try again.',
-};
-
-function useRetryPrompt(
-  sessionId: string,
-  onSuccess: () => void,
-): SessionCommands['retryPrompt'] {
-  const trpc = useTRPC();
-  const retry = useMutation(trpc.session.prompt.mutationOptions({ onSuccess }));
-
-  useErrorToast(retry.isError ? retryFailed : undefined);
-
-  return (prompt) => {
-    if (!retry.isPending) retry.mutate({ sessionId, prompt });
-  };
-}
-
 function useCancelTurn(onSuccess: () => void): SessionMutation<'cancel'> {
   const trpc = useTRPC();
 
   return useMutation(trpc.session.cancel.mutationOptions({ onSuccess }));
 }
 
+type DraftSendTarget = {
+  sessionId: string;
+  promptSession: SessionMutation<'prompt'>;
+  followUpSuggestions: boolean;
+};
+
 function draftSender(
-  sessionId: string,
-  promptSession: SessionMutation<'prompt'>,
+  { sessionId, promptSession, followUpSuggestions }: DraftSendTarget,
   uploadDraftAsPrompt: AttachmentDraft['uploadDraftAsPrompt'],
 ): (sent: ComposerDraft) => Promise<void> {
   return async (sent) => {
     promptSession.reset();
     const prompt = await uploadDraftAsPrompt(sent);
 
-    if (prompt?.length) promptSession.mutate({ sessionId, prompt });
+    if (prompt?.length)
+      promptSession.mutate({ sessionId, prompt, followUpSuggestions });
   };
 }

@@ -6,6 +6,7 @@ import {
   type StartingFeed,
   startingFeed,
 } from '#features/sessions';
+import { useFollowUpSuggestionsPreference } from '#features/settings';
 import { type EmptySession, useEmptySession } from './use-empty-session';
 import type { NewSessionData } from './use-new-session-data';
 
@@ -106,7 +107,7 @@ export function useSessionOpening(
   const forgetSent = useRef<(() => void) | null>(null);
 
   const session = useEmptySession(
-    { input: toNewSessionInput(data.choices), connected },
+    { input: useStartingInput(data), connected },
     {
       clearDraft: attachmentDraft.clearDraft,
       forgetSentDraft: () => forgetSent.current?.(),
@@ -114,4 +115,15 @@ export function useSessionOpening(
   );
 
   return { session, ...useFirstPrompt(attachmentDraft, session, forgetSent) };
+}
+
+function useStartingInput(
+  data: NewSessionData,
+): ReturnType<typeof toNewSessionInput> {
+  const { enabled } = useFollowUpSuggestionsPreference();
+  const initial = toNewSessionInput(data.choices);
+
+  return initial
+    ? { ...initial, followUpSuggestions: enabled === true }
+    : undefined;
 }

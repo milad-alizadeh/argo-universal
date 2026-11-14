@@ -14,3 +14,5 @@ export { useAttachmentDraft } from './hooks/use-attachment-draft';
 export type { AttachmentError } from './utils/attachment-upload';
 
 export { ComposerStack } from './components/composer-stack/composer-stack';
+
+export { useFollowUpDismissal } from './stores/follow-up-dismissal';
