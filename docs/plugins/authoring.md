@@ -465,6 +465,18 @@ A page may call `argo.nav.badge(id, count)` to set the nav badge for a nav id it
 A background `load` runs once per Project, but the badge belongs to the whole Plugin: each pass replaces what the one before it set. Count per Project in your own storage and set the total you want the item to show.
 Nav badges are in memory and clear when the Plugin stops or reloads. Background pages cannot raise Notifications.
 
+## Watches
+
+Declare `contributes.watch: { path, interval }` in `plugin.json` and give that path a function with `argo.watch.define` (ADR-0055). Argo runs it once per Project each interval, whether or not an App is open, with a Background pass's budget: a run that goes past 60 seconds is stopped and logged, and the next one still runs. The interval is clamped to one minute or more. A Watch stops when its Plugin is turned off or crashes, and runs again when the Plugin is turned on or starts again.
+
+Unlike a Loader, a Watch may act. Its input has the Project (`context.projectId`), `read(query)` for Queries, and `run(name, params)`, which runs one of the Plugin's own registered Operations for that Project. A Loader's input has no `run`, and Background passes stay read-only.
+
+```ts
+argo.watch.define('/', async ({ context: { projectId }, run }) => {
+  await run('sync', { reason: 'tick' });
+});
+```
+
 A drawing throw closes only the failed page. Other pages, Slots, Hooks, and background passes continue.
 The failure subscription records one non-fatal drawing failure per Plugin.
 
