@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { fn } from 'storybook/test';
+import { fn, screen } from 'storybook/test';
 import { severalPullRequests } from '../../../features/sessions/components/session-pull-request.mocks';
 import { ChangesSheet, changedFiles } from './session-changes-sheet.mocks';
 import { withPullRequests } from './session-detail-view-pull-request.mocks';
@@ -40,8 +40,8 @@ export const PullRequestMenuOpen: Story = {
       })),
     ).header,
   },
-  play: async ({ canvas, userEvent }) => {
-    const [first] = await canvas.findAllByRole('button', {
+  play: async ({ userEvent }) => {
+    const [first] = await screen.findAllByRole('button', {
       name: /^Actions for Change #/,
     });
 
