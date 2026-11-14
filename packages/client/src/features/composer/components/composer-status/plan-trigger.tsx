@@ -65,7 +65,7 @@ const planPillProps = (
 });
 
 const planRowClass =
-  'group w-full min-h-8 flex-row items-center gap-1.5 px-3 rounded-t-2xl web:outline-none web:hover:bg-hover web:focus-visible:ring-2 web:focus-visible:ring-focus';
+  'group w-full min-h-8 flex-row items-center gap-1.5 pl-4 pr-3 rounded-t-2xl web:outline-none web:hover:bg-hover web:focus-visible:ring-2 web:focus-visible:ring-focus';
 
 const planRowPress = (
   props: PlanTriggerProps,

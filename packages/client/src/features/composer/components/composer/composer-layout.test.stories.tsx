@@ -14,7 +14,10 @@ import { responsiveLayout } from '../../../../../mocks/composer/responsive-layou
 import { composerCard } from '../../../../../mocks/composer/responsive-menu.test.mocks';
 import { workStatusCounts } from '../../../../../mocks/composer/work-status.test.mocks';
 import { Composer } from './composer';
-import { longWorktreeComposer } from './composer-fixtures';
+import {
+  longWorktreeComposer,
+  startedSessionComposer,
+} from './composer-fixtures';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer/Layout' };
 
@@ -126,6 +129,25 @@ export const LongCheckoutTruncatesInTray: Story = {
     await expect(context.getBoundingClientRect().right).toBeLessThan(
       name.getBoundingClientRect().left,
     );
+  },
+};
+
+const leftOf = (element: HTMLElement): number =>
+  element.getBoundingClientRect().left;
+
+// The Plan's row, its steps and the status tray start their words on one edge, so the trays read as one column.
+export const TrayWordsShareAnEdge: Story = {
+  args: startedSessionComposer,
+  render: (args) => <Composer {...composerProps(args)} />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout(layoutWidths.wide);
+    await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
+    const edge = leftOf(canvas.getByText('Plan 1/3'));
+
+    await expect(leftOf(canvas.getByText('Inspect the Composer layout'))).toBe(
+      edge,
+    );
+    await expect(leftOf(canvas.getByText('Usage'))).toBe(edge);
   },
 };
 
