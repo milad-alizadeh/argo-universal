@@ -15,7 +15,7 @@ const pillSurface = {
 } as const;
 
 const pillClassName =
-  'h-8 flex-row items-center gap-2 rounded-full border border-border pr-3.5 pl-3 active:opacity-70';
+  'h-8 flex-row items-center gap-2 rounded-full pr-3.5 pl-3 active:opacity-70';
 
 const count = (value: number): string => value.toLocaleString('en-US');
 
