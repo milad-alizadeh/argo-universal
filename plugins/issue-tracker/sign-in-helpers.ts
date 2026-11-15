@@ -1,4 +1,4 @@
-import type { FixtureRequest } from '@argo/plugin-kit/testing';
+import { clockUntilShown, type FixtureRequest } from '@argo/plugin-kit/testing';
 import { expect } from 'vitest';
 import type { GitHubFixture } from './github-fixture';
 import type { OpenPage, Tracked } from './journey-fixture';
@@ -23,10 +23,7 @@ export async function until(
   page: OpenPage,
   text: string,
 ): Promise<void> {
-  for (let step = 0; step < stepLimit && !page.findText(text); step += 1) {
-    await test.clock.advance(stepMs);
-    await page.draw();
-  }
+  await clockUntilShown(test, page, { text, stepMs, steps: stepLimit });
 
   expect(page.findText(text)).toBeDefined();
 }
