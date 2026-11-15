@@ -32,7 +32,7 @@ function PillLayer({ pill }: { pill: ReactNode }): React.JSX.Element {
 
   return (
     <View pointerEvents="box-none" style={layerStyle(composerTop)}>
-      <SessionColumn className="pointer-events-box-none items-center">
+      <SessionColumn pointerEvents="box-none" className="items-center">
         {pill}
       </SessionColumn>
     </View>

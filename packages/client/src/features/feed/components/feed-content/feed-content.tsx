@@ -93,6 +93,7 @@ const markdown = (
   <Markdown
     text={text}
     streaming={streaming}
+    selectable
     tone={textVariant === 'summary' ? 'muted' : undefined}
   />
 );

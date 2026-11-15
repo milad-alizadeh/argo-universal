@@ -52,7 +52,7 @@ export function SessionBarLine({
   entry: SessionBarEntry;
 }): React.JSX.Element {
   return (
-    <View className="min-w-0 flex-1 flex-row items-center gap-2">
+    <View className="min-h-6 wide-type:min-h-5 min-w-0 flex-1 flex-row items-center gap-2">
       {entry.icon && <Icon name={entry.icon} tone={entry.tone ?? 'muted'} />}
       <Text role="secondary" tone={entry.tone} numberOfLines={1}>
         {entry.text}

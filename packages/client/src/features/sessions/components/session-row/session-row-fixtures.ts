@@ -7,7 +7,7 @@ import type { SessionRowPluginItem } from './session-row-props';
  * Session and a finished Plan. A story adds only onSelect, so a parent can pass a fixture
  * straight through its own prop.
  */
-type SessionRowFixture = Omit<
+export type SessionRowFixture = Omit<
   SessionRowProps,
   'onSelect' | 'onRename' | 'onArchive'
 >;

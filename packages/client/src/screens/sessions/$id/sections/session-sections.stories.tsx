@@ -2,7 +2,11 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
-import { SessionWorkbenchColumn, useSessionPanels } from '#features/sessions';
+import {
+  type SessionBarProps,
+  SessionWorkbenchColumn,
+  useSessionPanels,
+} from '#features/sessions';
 import { severalPullRequests } from '../../../../features/sessions/components/session-pull-request.mocks';
 import {
   sessionShells,
@@ -16,6 +20,7 @@ import type { SessionInspectorContent } from '../session-inspector-content';
 import { coverageCard, issueTrackerCard } from './plugin-card.mocks';
 import { itemsOf } from './session-section';
 import { offeredSections, sessionWorkbench } from './session-sections';
+import { summaryLines } from './session-sections-fixtures';
 
 const everySection = {
   header: {
@@ -35,8 +40,10 @@ const everySection = {
 
 function SectionsWorkbench({
   content,
+  bar,
 }: {
   content: SessionInspectorContent;
+  bar?: SessionBarProps;
 }): ReactElement {
   const panels = useSessionPanels(
     offeredSections(itemsOf(content), content.pluginCards),
@@ -45,7 +52,7 @@ function SectionsWorkbench({
   return (
     <View className="m-4 w-frame-list">
       <SessionWorkbenchColumn
-        sections={sessionWorkbench(content, panels).sections}
+        sections={sessionWorkbench(content, panels, bar).sections}
       />
     </View>
   );
@@ -60,6 +67,11 @@ const meta = {
       control: false,
       description:
         'What the Session has: its pull requests and changed files, its Agents and its Shells.',
+    },
+    bar: {
+      control: false,
+      description:
+        "The Plugins' Session bar lines, each drawn as its own card.",
     },
   },
   args: { content: everySection },
@@ -76,5 +88,16 @@ export const AllSections: Story = {};
 export const PluginCards: Story = {
   args: {
     content: { ...everySection, pluginCards: [issueTrackerCard, coverageCard] },
+  },
+};
+
+// One-line cards: a diff total, finished Agents and an Issue's line each draw one summary line, at one height.
+export const SummaryLines: Story = {
+  args: {
+    content: {
+      header: { ...everySection.header, pullRequests: [] },
+      subagents: { subagents: subagentStates.allFinished, now: subagentNow },
+    },
+    bar: { shown: summaryLines, hidden: [], onOpen: fn() },
   },
 };

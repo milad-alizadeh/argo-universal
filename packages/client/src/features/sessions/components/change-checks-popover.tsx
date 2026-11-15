@@ -6,22 +6,27 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from '@repo/kit/primitives/overlays/popover';
-import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import type { ReactElement } from 'react';
 import { Platform } from 'react-native';
 import { ChangePart } from './change-part';
 import {
   type CheckDetail,
+  ChecksDot,
   type ChecksState,
   PullRequestChecks,
+  checksState,
   type PullRequestChecksProps,
 } from './pull-request-checks';
 
-const stateTone = {
-  failing: 'danger',
-  running: 'warning',
-  passed: 'success',
-} as const satisfies Record<ChecksState, string>;
+// What needs you comes first: failing checks, then running, then passed.
+const stateOrder = {
+  failing: 0,
+  running: 1,
+  passed: 2,
+} as const satisfies Record<ChecksState, number>;
+
+const byState = (details: readonly CheckDetail[]): CheckDetail[] =>
+  [...details].sort((a, b) => stateOrder[a.state] - stateOrder[b.state]);
 
 const stateLabel = {
   failing: 'Failing',
@@ -35,7 +40,7 @@ interface ChangeChecksProps {
   onOpen: () => void;
 }
 
-// The checks part of a Change row: the web lists each check by name in a popover, a phone opens the Change.
+// The checks part of a Change row: on the web a pointer over it lists each check by name in a popover; a phone opens the Change.
 export function ChangeChecks(props: ChangeChecksProps): ReactElement {
   const { details } = props.checks;
 
@@ -48,7 +53,7 @@ export function ChangeChecks(props: ChangeChecksProps): ReactElement {
 
 function ChecksPress({ checks, onOpen }: ChangeChecksProps): ReactElement {
   return (
-    <ChangePart onPress={onOpen}>
+    <ChangePart tone={checksState(checks)} onPress={onOpen}>
       <PullRequestChecks {...checks} compact />
     </ChangePart>
   );
@@ -58,9 +63,9 @@ type PopoverProps = ChangeChecksProps & { details: readonly CheckDetail[] };
 
 function ChecksPopover({ checks, details }: PopoverProps): ReactElement {
   return (
-    <Popover>
+    <Popover openOnHover>
       <PopoverTrigger>
-        <ChangePart aria-haspopup="dialog">
+        <ChangePart tone={checksState(checks)} aria-haspopup="dialog">
           <PullRequestChecks {...checks} compact />
         </ChangePart>
       </PopoverTrigger>
@@ -86,7 +91,7 @@ function ChecksList(props: ChecksListProps): ReactElement {
   return (
     <List appearance="plain" fit>
       <ListSection>
-        {props.details.map((check) => (
+        {byState(props.details).map((check) => (
           <CheckRow key={check.name} {...check} />
         ))}
       </ListSection>
@@ -99,7 +104,7 @@ function CheckRow({ name, state }: CheckDetail): ReactElement {
     <ListItem
       title={name}
       value={stateLabel[state]}
-      leading={<StatusDot tone={stateTone[state]} />}
+      leading={<ChecksDot state={state} />}
     />
   );
 }

@@ -1,11 +1,10 @@
 import { z } from 'zod';
-import { tones } from '#kit-tokens';
-import { PluginIcon, PluginPath } from '#plugin-manifest-fields';
 import {
   ProjectDetailsItem,
   projectDetailsRowLimit,
 } from '#plugin-project-details-item';
 import { SessionBarItem } from '#plugin-session-bar-item';
+import { SessionRowItem, sessionRowTextLimit } from '#plugin-session-row-item';
 import { Change, sessionChangesSlot } from '#session-change';
 
 // A Slot id is versioned, so a later context shape gets a new id instead of breaking Plugins (Grafana's extension points).
@@ -134,23 +133,6 @@ const replaceable = <Id extends string>(id: Id): ReplaceableSlot<Id> => ({
   id,
   kind: 'replaceable',
 });
-
-// A Session row's meta text stays one short label beside Argo's own items; its tooltip, a sentence.
-export const sessionRowTextLimit = 40;
-
-export const sessionRowTooltipLimit = 200;
-
-// One item on a Session row's meta line. Argo draws it; a Plugin never sends a kit tree here.
-export const SessionRowItem = z.strictObject({
-  icon: PluginIcon.optional(),
-  text: z.string().trim().min(1).max(sessionRowTextLimit),
-  tone: z.enum(tones).optional(),
-  tooltip: z.string().trim().min(1).max(sessionRowTooltipLimit).optional(),
-  // Opens this Plugin page when the item is pressed.
-  action: z.strictObject({ path: PluginPath }).optional(),
-});
-
-export type SessionRowItem = z.infer<typeof SessionRowItem>;
 
 // A Session row's Activity line as one Plugin writes it: one short line of text in place of Argo's.
 export const SessionActivityItem = z.strictObject({

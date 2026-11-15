@@ -12,6 +12,7 @@ export type Held = Pick<
   | 'accepted'
   | 'parents'
   | 'failWith'
+  | 'stall'
   | 'checks'
   | 'checksFailWith'
 >;

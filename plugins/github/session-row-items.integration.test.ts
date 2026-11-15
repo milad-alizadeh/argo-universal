@@ -38,6 +38,7 @@ it(
           text: '#2',
           tone: 'done',
           tooltip: 'Merged one · Merged',
+          change: { stage: 'merged' },
         },
       },
       {
@@ -47,6 +48,7 @@ it(
           text: '#1',
           tone: 'success',
           tooltip: 'Open one · Open',
+          change: { stage: 'open' },
         },
       },
       {
@@ -56,6 +58,7 @@ it(
           text: '#3',
           tone: 'danger',
           tooltip: 'Closed one · Closed',
+          change: { stage: 'closed' },
         },
       },
     ]);
