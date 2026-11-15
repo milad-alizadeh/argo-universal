@@ -21,3 +21,6 @@ export const createLifetimeDestination = (
   requestPermission: requests.requestPermission(send),
   createElicitation: requests.createElicitation(send),
 });
+
+export const isWithdrawn = (cause: unknown): boolean =>
+  cause instanceof Error && cause.name === 'AbortError';

@@ -8,8 +8,9 @@ import {
   type PluginTest,
   type PluginTestOptions,
 } from '@argo/plugin-kit/testing';
-import { expect, onTestFinished } from 'vitest';
+import { onTestFinished } from 'vitest';
 import { githubFixture, pullOf, type GitHubFixture } from './github-fixture';
+import { provider, signIn } from './journey-sign-in-fixture';
 
 export const project = {
   id: 'project-1',
@@ -61,28 +62,6 @@ const defaultPulls = [
     title: 'Same number elsewhere',
   }),
 ];
-
-const pollMs = 1000;
-
-// A busy runner can still be answering one poll when the next comes due, so the clock moves until the Account lands.
-const pollLimit = 30;
-
-const provider = 'issue-tracker';
-
-// Signs in through the Issue tracker, the Plugin that provides the GitHub Account this Plugin only borrows.
-async function signIn(test: PluginTest): Promise<void> {
-  await test.operations.run({ name: 'signIn', pluginId: provider });
-
-  for (
-    let poll = 0;
-    poll < pollLimit && test.accounts.list().length === 0;
-    poll += 1
-  ) {
-    await test.clock.advance(pollMs);
-  }
-
-  expect(test.accounts.list()).toHaveLength(1);
-}
 
 // Both first-party Plugins, side by side as the Server finds them: this one borrows what the other provides.
 async function pluginsFolder(): Promise<string> {

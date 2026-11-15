@@ -56,11 +56,11 @@ it(
       .poll(() => rowOf(run), { timeout: wait })
       .toEqual([
         {
-          change: { stage: 'open' },
           icon,
           text: '#7',
           tone: 'success',
           tooltip: 'Slow one · Open',
+          change: { stage: 'open' },
         },
       ]);
   },
