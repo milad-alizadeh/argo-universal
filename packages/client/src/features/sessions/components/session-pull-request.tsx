@@ -24,4 +24,7 @@ export type SessionPullRequest = ChangeState & {
   onCheckout?: true;
   summary?: ChangesSummary;
   mergeable: boolean;
+  // What the row's … menu does besides open the PR; a row without a handler leaves that item out.
+  onCopyLink?: () => void;
+  onDetach?: () => void;
 };

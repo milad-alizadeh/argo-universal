@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { fn, screen } from 'storybook/test';
 import { severalPullRequests } from '../../../features/sessions/components/session-pull-request.mocks';
 import { ChangesSheet, changedFiles } from './session-changes-sheet.mocks';
 import { withPullRequests } from './session-detail-view-pull-request.mocks';
@@ -24,5 +25,26 @@ export const FilesOnly: Story = {};
 export const PullRequestsAndFiles: Story = {
   args: {
     header: withPullRequests(idleSession, severalPullRequests).header,
+  },
+};
+
+// A row's … on a phone: the same menu as the wide card's, drawn over the sheet.
+export const PullRequestMenuOpen: Story = {
+  args: {
+    header: withPullRequests(
+      idleSession,
+      severalPullRequests.map((change) => ({
+        ...change,
+        onCopyLink: fn(),
+        onDetach: fn(),
+      })),
+    ).header,
+  },
+  play: async ({ userEvent }) => {
+    const [first] = await screen.findAllByRole('button', {
+      name: /^Actions for Change #/,
+    });
+
+    if (first) await userEvent.click(first);
   },
 };
