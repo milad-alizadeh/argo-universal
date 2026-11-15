@@ -4,7 +4,7 @@ import {
   settleLayout,
 } from '@repo/kit/mocks/story-layout';
 import { View } from 'react-native';
-import { expect, within } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import { ContentLayout } from '#lib/product/content-layout';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
@@ -13,6 +13,7 @@ import { agentModelLabel } from '../../../../../mocks/composer/composer-test-con
 import { responsiveLayout } from '../../../../../mocks/composer/responsive-layout.test.mocks';
 import { composerCard } from '../../../../../mocks/composer/responsive-menu.test.mocks';
 import { workStatusCounts } from '../../../../../mocks/composer/work-status.test.mocks';
+import { pausedPrompts } from '../prompt-queue/prompt-queue-fixtures';
 import { Composer } from './composer';
 import {
   longWorktreeComposer,
@@ -48,11 +49,34 @@ export const NarrowDesktopKeepsSend: Story = {
   },
 };
 
+const trayId = 'composer-tray';
+
 function parentOf(element: HTMLElement): HTMLElement {
-  if (!element.parentElement) throw new Error('The callout needs its tray.');
+  if (!element.parentElement) throw new Error('The tray needs its Composer.');
 
   return element.parentElement;
 }
+
+/*
+ * A wide window has one tray above the card. The Queued Prompts and the callout are sections of it, so a
+ * second tray never stacks on the first.
+ */
+export const QueueAndCalloutShareOneTray: Story = {
+  ...ResponsiveLayoutWide,
+  args: {
+    ...ResponsiveLayoutWide.args,
+    callout: <View role="alert" />,
+    promptQueue: { ...pausedPrompts, command: fn() },
+  },
+  play: async ({ canvas }) => {
+    await settleLayout(layoutWidths.wide);
+    const tray = canvas.getByTestId(trayId);
+
+    await expect(canvas.getAllByTestId(trayId)).toHaveLength(1);
+    await expect(tray).toContainElement(canvas.getByTestId('prompt-queue'));
+    await expect(tray).toContainElement(canvas.getByRole('alert'));
+  },
+};
 
 // The tray's side margins come out of the Composer's width, so it sits centred behind the card rather than running past it.
 export const RequestTrayStaysCentred: Story = {
@@ -60,7 +84,7 @@ export const RequestTrayStaysCentred: Story = {
   args: { ...ResponsiveLayoutWide.args, callout: <View role="alert" /> },
   play: async ({ canvas }) => {
     await settleLayout(layoutWidths.wide);
-    const tray = parentOf(canvas.getByRole('alert'));
+    const tray = canvas.getByTestId(trayId);
     const inner = tray.getBoundingClientRect();
     const outer = parentOf(tray).getBoundingClientRect();
 
@@ -98,7 +122,7 @@ export const TraysClearCardCorners: Story = {
     if (!statusTray)
       throw new Error('The wide Composer needs its status tray.');
     await expectTrayClearsCorners(card, statusTray);
-    await expectTrayClearsCorners(card, parentOf(canvas.getByRole('alert')));
+    await expectTrayClearsCorners(card, canvas.getByTestId(trayId));
   },
 };
 

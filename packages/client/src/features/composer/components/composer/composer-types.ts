@@ -25,6 +25,7 @@ export interface ComposerDraft {
 export interface ComposerProps {
   draft: ComposerDraft;
   promptQueue?: PromptQueueProps;
+  queueEdit?: { id: string; cancel: () => void };
   queueWhileRunning?: boolean;
   followUpSuggestion?: {
     sessionId: string;

@@ -1,3 +1,4 @@
+import { satisfies } from 'semver';
 import type { AgentLaunch } from './agent-launch';
 
 export const vendorRegistryIds = {
@@ -45,3 +46,20 @@ export const terminalSuccessPatterns = (
   launch: Pick<AgentLaunch, 'agentId'>,
   methodId: string,
 ): readonly string[] => terminalSuccess.get(launch.agentId)?.[methodId] ?? [];
+
+const steeringVersions = new Map([
+  ['@agentclientprotocol/codex-acp', '>=2.4.0'],
+  ['codex-acp', '>=2.4.0'],
+  ['@agentclientprotocol/claude-agent-acp', '>=0.97.0'],
+  ['claude-agent-acp', '>=0.97.0'],
+]);
+
+export function supportsOwnedSteering(
+  info: { name: string; version: string } | null | undefined,
+): boolean {
+  if (!info) return false;
+
+  const range = steeringVersions.get(info.name);
+
+  return range ? satisfies(info.version, range) : false;
+}

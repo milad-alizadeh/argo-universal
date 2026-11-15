@@ -15,6 +15,7 @@ import type {
   ScriptedResponses,
   ScriptedNotifications,
 } from './scripted-responses.ts';
+import type { ScriptedSteering } from './scripted-steering.ts';
 
 type SessionElicitation =
   | Omit<
@@ -84,6 +85,7 @@ export type ScriptedScenario = {
    */
   authentication?: { credentials: ScriptedCredentials; turns?: string };
   initialize?: InitializeResponse;
+  steering?: ScriptedSteering;
   configOptions?: readonly SessionConfigOption[];
   steps: readonly ScriptedStep[];
   // Sent for a new Session once its response has gone out, as an Agent sends its Slash commands.
