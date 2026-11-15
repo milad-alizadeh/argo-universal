@@ -4,6 +4,8 @@ import type { CheckInfo } from './pull-checks';
 import type { PullInfo } from './pull-info';
 import { failureMessage, known, type Known } from './pull-known';
 import { mergeOf, offerOf, type AutoMergeInfo, type AutomationReads, type MergeSettings } from './pull-automation';
+import { fixOf } from './pull-fix';
+import type { FixRecord } from './pull-fix-store';
 import type { PullReads } from './pull-reads';
 import type { PullLink, PullStore } from './pull-store';
 
@@ -22,6 +24,8 @@ export type LinkRead = {
   // Read only for an Open pull request, which is the only one that can auto-merge.
   autoMerge?: Known<AutoMergeInfo>;
   settings?: Known<MergeSettings>;
+  // What Auto-fix keeps for this pull request, if the person ever touched it.
+  fix?: FixRecord;
 };
 
 // Two Sessions attaching the same pull request ask the same question, so they share one entry.
@@ -99,14 +103,30 @@ async function readLink(
   return { link, pull, checks, ...automation };
 }
 
+const sameLink = (record: FixRecord, link: PullLink): boolean =>
+  record.sessionId === link.sessionId &&
+  record.projectId === link.projectId &&
+  record.number === link.number &&
+  record.repository.toLowerCase() === link.repository.toLowerCase();
+
 // Every association of these Sessions with what is known of its pull request, read through the named Queries that Slots and Operations share. Each is read alone.
 export async function readLinks(
   source: ChangesSource,
   sessionIds: readonly string[],
 ): Promise<LinkRead[]> {
-  const links = await source.store.forSessions(sessionIds);
+  const [links, fixes] = await Promise.all([
+    source.store.forSessions(sessionIds),
+    source.store.fix.forSessions(sessionIds),
+  ]);
 
-  return Promise.all(links.map((link) => readLink(source, link)));
+  return Promise.all(
+    links.map(async (link) => {
+      const read = await readLink(source, link);
+      const fix = fixes.find((record) => sameLink(record, link));
+
+      return fix ? { ...read, fix } : read;
+    }),
+  );
 }
 
 const failureOfRead = ({ pull, checks }: LinkRead): Known<unknown> =>
@@ -126,6 +146,7 @@ const automationOf = ({
   pull,
   autoMerge,
   settings,
+  fix,
 }: LinkRead): Pick<Refresh, 'automation'> =>
   pull.data
     ? {
@@ -134,6 +155,7 @@ const automationOf = ({
             autoMerge: autoMerge?.data,
             settings: settings?.data,
           }),
+          fixOf(fix, pull.data),
         ),
       }
     : {};

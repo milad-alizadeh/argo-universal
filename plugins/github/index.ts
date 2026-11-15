@@ -15,6 +15,7 @@ import {
   list,
   type Scope,
 } from './pull-operations';
+import { autoFix } from './pull-fix';
 import { defineAutomationReads } from './pull-automation';
 import { setAutomation } from './pull-automation-set';
 import { definePullReads } from './pull-reads';
@@ -163,6 +164,13 @@ function registerReads(argo: Argo, source: ChangesSource): void {
   });
 }
 
+// The Watch runs on Argo's clock for each Project with no App open (ADR-0055); each automation takes its turn in it.
+function registerWatch(argo: Argo, source: ChangesSource): void {
+  argo.watch.define('/', async ({ context: { projectId } }) => {
+    if (projectId) await autoFix(argo, source, projectId);
+  });
+}
+
 export function register(argo: Argo): void {
   const source = sourceOf(argo);
 
@@ -171,4 +179,5 @@ export function register(argo: Argo): void {
   registerFiles(argo, source);
   registerChanges(argo, source);
   registerRowItems(argo, source);
+  registerWatch(argo, source);
 }

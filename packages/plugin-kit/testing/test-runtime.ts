@@ -30,6 +30,7 @@ export function runtimeFor(
   return createPluginRuntime(home, {
     ...parts,
     clockStart: options.clockStart,
+    promptSession: options.promptSession,
     network: options.network,
     oauth: oauthOf(options),
     settings: settingsOf(options, parts.secretStore),

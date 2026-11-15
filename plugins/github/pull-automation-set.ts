@@ -9,7 +9,8 @@ import {
 } from './pull-automation';
 import { requireAttached } from './pull-file-operations';
 import { namedOf, type Scope } from './pull-operations';
-import { fetchPull } from './pull-reads';
+import { fetchChecks, fetchPull } from './pull-reads';
+import { failedOf } from './pull-fix';
 import type { SessionCaller } from './session-caller';
 
 export type AutomationParams = {
@@ -29,12 +30,20 @@ export async function setAutomation(
 ): Promise<{ kind: AutomationParams['kind']; on: boolean }> {
   const { kind, on } = params;
 
-  if (kind !== 'merge')
+  if (kind !== 'merge' && kind !== 'fix')
     throw new Error(`Auto-${kind} is not available for this pull request.`);
 
   const named = await namedOf(scope, params.reference, caller);
 
   await requireAttached(scope, named, caller);
+
+  if (kind === 'fix') {
+    await setFix(scope, { ...named, ...caller }, on);
+    scope.changed();
+
+    return { kind, on };
+  }
+
   await apply(scope, { ...named, projectId: caller.projectId }, on);
   scope.changed();
 
@@ -73,4 +82,32 @@ async function apply(
     ...target,
     method: methodOf(settings),
   });
+}
+
+type FixTarget = Target & { sessionId: string };
+
+/*
+ * Auto-fix is the Plugin's own: turning it on reads the head's Checks first, so a failure already there is not
+ * prompted, and a read that fails refuses turning it on rather than guessing. Turning it on when it is on changes nothing.
+ */
+async function setFix(
+  { fetch, store }: Pick<Scope, 'fetch' | 'store'>,
+  target: FixTarget,
+  on: boolean,
+): Promise<void> {
+  const link = { ...target, repository: target.repository.toLowerCase() };
+
+  if (!on) return store.fix.disable(link);
+
+  const [record] = (await store.fix.forSessions([target.sessionId])).filter(
+    ({ repository, number }) =>
+      repository === link.repository && number === link.number,
+  );
+
+  if (record?.enabled) return;
+
+  const { head } = await fetchPull(fetch, target);
+  const checks = await fetchChecks(fetch, { ...target, head });
+
+  await store.fix.enable(link, head, failedOf(checks));
 }
