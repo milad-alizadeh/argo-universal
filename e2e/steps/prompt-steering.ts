@@ -1,7 +1,7 @@
 import { expect } from '../fixtures';
 import { expectListedAgent } from './agents';
 import { requests } from './conversation-requests';
-import { readFeed } from './feed';
+import { readFeed, type FeedRows } from './feed';
 import { Given, Then, When } from './fixtures';
 import { queueSnapshot, textOf } from './queue-observations';
 
@@ -23,20 +23,21 @@ Then(
   async ({ page, server, app }): Promise<void> => {
     const snapshot = await queueSnapshot(page, server.httpUrl);
     const rows = await readFeed(page, server.httpUrl);
-    const prompts = rows.filter((row) => row.sessionUpdate === 'user_message');
-
     expect(snapshot.activeTurnId).not.toBeNull();
     expect(snapshot.promptQueue.items).toEqual([]);
-    expect(prompts.map((row) => textOf(row.content ?? []))).toEqual([
-      'First prompt',
-      'Second prompt',
-    ]);
-    expect(prompts.map((row) => row.turnId)).toEqual([
-      snapshot.activeTurnId,
-      snapshot.activeTurnId,
-    ]);
+    expectSteeredMessages(rows, snapshot.activeTurnId);
     expect(requests(app.requestLogPath, 'session/prompt')).toHaveLength(1);
     expect(requests(app.requestLogPath, '_session/steering')).toHaveLength(1);
     expect(requests(app.requestLogPath, 'session/cancel')).toHaveLength(0);
   },
 );
+
+function expectSteeredMessages(rows: FeedRows, turnId: string | null): void {
+  const prompts = rows.filter((row) => row.sessionUpdate === 'user_message');
+
+  expect(prompts.map((row) => textOf(row.content ?? []))).toEqual([
+    'First prompt',
+    'Second prompt',
+  ]);
+  expect(prompts.map((row) => row.turnId)).toEqual([turnId, turnId]);
+}

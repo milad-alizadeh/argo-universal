@@ -1,7 +1,6 @@
 import type {
   ContextUsage,
   PromptQueue,
-  QueueCommand,
   FollowUpSuggestion,
   PendingElicitation,
   PendingPermission,
@@ -35,14 +34,12 @@ import type {
   NativePermissions,
 } from './native-permissions';
 import type { PermissionHooked } from './permission-hooks';
+import type { QueueSessionCommand } from './queue-command-types';
 import type {
   QueueHoldConnections,
   QueueEditDisconnected,
 } from './queue-hold-connections';
-import type {
-  QueueSteering,
-  QueueSteeringCommand,
-} from './queue-steering-types';
+import type { QueueSteering } from './queue-steering-types';
 import type { SessionData, SessionInput } from './session-data';
 import type { Shells } from './shells';
 import type { Subagents } from './subagents';
@@ -78,7 +75,7 @@ export type SessionMachineInput = SessionInput & {
 };
 
 export type SessionCommand =
-  | QueueSteeringCommand
+  | QueueSessionCommand
   | ({ type: 'session.prompt' } & LocalSubmission)
   | {
       type: 'session.answerPermission';
@@ -97,12 +94,6 @@ export type SessionCommand =
       value: string | boolean;
       applied?: PromiseWithResolvers<SessionConfigOption[]>;
       held?: boolean;
-    }
-  | {
-      type: 'session.queue';
-      connectionSignal?: AbortSignal;
-      command: Exclude<QueueCommand, { action: 'steer' }>;
-      committed: PromiseWithResolvers<void>;
     }
   | { type: 'session.archive' }
   | { type: 'session.unarchive' }

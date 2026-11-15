@@ -503,6 +503,10 @@ export class AcpConnection {
   }
   private async lease(opening: LeaseOpening): Promise<AcpConnectionLease> {
     await this.releaseAbandoned(opening);
+
+    return this.registeredLease(opening);
+  }
+  private registeredLease(opening: LeaseOpening): AcpConnectionLease {
     this.requireRegistered(opening);
     const { connection, initialization, launch } = this.requireReady();
 

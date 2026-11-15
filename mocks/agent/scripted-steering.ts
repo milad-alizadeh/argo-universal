@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 export interface ScriptedSteering {
   received?: { resolve: (request: ScriptedSteeringRequest) => void };
-  result: unknown | Promise<unknown>;
+  result: unknown;
 }
 
 const steeringRequest = z.object({

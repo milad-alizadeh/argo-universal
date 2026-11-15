@@ -16,6 +16,8 @@ const editLabel = 'Edit Queued Prompt';
 
 const promptMethod = 'session/prompt';
 
+const cancelLabel = 'Cancel queue edit';
+
 function rowNamed(page: Page, text: string): Locator {
   return page
     .getByTestId(queueId)
@@ -44,9 +46,7 @@ When(
     await page
       .getByRole('textbox', { name: 'Message', exact: true })
       .fill(after);
-    await page
-      .getByRole('button', { name: 'Cancel queue edit', exact: true })
-      .click();
+    await page.getByRole('button', { name: cancelLabel, exact: true }).click();
     await expect(row.getByText(before, { exact: true })).toBeVisible();
   },
 );
@@ -57,7 +57,7 @@ When(
     const row = rowNamed(page, text);
     await row.getByRole('button', { name: editLabel }).click();
     await expect(
-      page.getByRole('button', { name: 'Cancel queue edit', exact: true }),
+      page.getByRole('button', { name: cancelLabel, exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole('textbox', { name: 'Message', exact: true }),
@@ -66,9 +66,7 @@ When(
 );
 
 When('I cancel the queue edit', async ({ page }): Promise<void> => {
-  await page
-    .getByRole('button', { name: 'Cancel queue edit', exact: true })
-    .click();
+  await page.getByRole('button', { name: cancelLabel, exact: true }).click();
 });
 
 When(
