@@ -25,7 +25,7 @@ type Finish = Extract<
   { type: 'session.finishQueueSteering' }
 >;
 
-export function canSteerQueue(context: Context): boolean {
+function canSteerQueue(context: Context): boolean {
   return [
     context.acpLease?.steering === true,
     context.activeTurnId !== null,
