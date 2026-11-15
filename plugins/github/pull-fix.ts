@@ -10,7 +10,7 @@ import { shortHead } from './pull-reads';
 import { takeTurns } from './pull-turns';
 
 // Prompts Auto-fix sends on one head commit, with no new push, before it gives up (ADR-0055).
-export const fixTries = 3;
+const fixTries = 3;
 
 const short = (head: string): string => head.slice(0, shortHead);
 
