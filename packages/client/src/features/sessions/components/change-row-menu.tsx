@@ -1,12 +1,13 @@
+import type { ChangeAutomationKind } from '@repo/contracts';
 import {
   ContextMenu,
   type ContextMenuItem,
+  type ContextMenuTriggerProps,
   Menu,
   type MenuAction,
   MenuTrigger,
 } from '@repo/kit/primitives/overlays/menu';
 import { contextMenuGroup } from '@repo/kit/primitives/overlays/menu';
-import type { ChangeAutomationKind } from '@repo/contracts';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import type { ChangeRowProps } from './change-row';
@@ -50,7 +51,8 @@ function automationItems({
 
     if (!available && !reason) return [];
 
-    const subtitle = reason ?? ('subtitle' in fixed ? fixed.subtitle : undefined);
+    const subtitle =
+      reason ?? ('subtitle' in fixed ? fixed.subtitle : undefined);
 
     return [
       {
@@ -80,15 +82,17 @@ function groupsOf(props: MenuProps): ContextMenuItem[][] {
 // The Menu's entries are the same groups as one list, each later group starting a section.
 const actionsOf = (groups: ContextMenuItem[][]): MenuAction[] =>
   groups.flatMap((group, index) =>
-    group.map(({ label, onPress, id, selected, disabled, subtitle }, place) => ({
-      label,
-      onPress,
-      ...(id && { id }),
-      ...(selected !== undefined && { selected }),
-      ...(disabled && { disabled }),
-      ...(subtitle && { subtitle }),
-      ...(index > 0 && place === 0 && { section: {} }),
-    })),
+    group.map(
+      ({ label, onPress, id, selected, disabled, subtitle }, place) => ({
+        label,
+        onPress,
+        ...(id && { id }),
+        ...(selected !== undefined && { selected }),
+        ...(disabled && { disabled }),
+        ...(subtitle && { subtitle }),
+        ...(index > 0 && place === 0 && { section: {} }),
+      }),
+    ),
   );
 
 // The row's …, which sits above its press layer.
@@ -107,7 +111,7 @@ export function ChangeMenu(props: MenuProps): ReactElement {
 
 // A long press on the row opens the same menu where the system draws it.
 export function ChangeContextMenu(
-  props: MenuProps & { children: ReactElement },
+  props: MenuProps & { children: ReactElement<ContextMenuTriggerProps> },
 ): ReactElement {
   return <ContextMenu groups={groupsOf(props)}>{props.children}</ContextMenu>;
 }

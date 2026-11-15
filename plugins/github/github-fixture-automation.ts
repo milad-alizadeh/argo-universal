@@ -88,7 +88,9 @@ export function graphqlAnswer(
 
   const body = bodyOf(request);
 
-  return body.query.includes('mutation') ? mutate(held, body) : read(held, body);
+  return body.query.includes('mutation')
+    ? mutate(held, body)
+    : read(held, body);
 }
 
 // A repository's merge settings as the REST repository answer carries them.

@@ -1,7 +1,7 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
-import { githubHost, bodyOf, call, type PullTarget } from './pull-reads';
 import { valueAt, type Json } from './json';
 import type { PullInfo } from './pull-info';
+import { githubHost, bodyOf, call, type PullTarget } from './pull-reads';
 
 // The merge methods GitHub names, in the order Auto-merge prefers them: squash, merge, rebase (ADR-0052).
 export const mergeMethods = ['SQUASH', 'MERGE', 'REBASE'] as const;
@@ -217,12 +217,20 @@ export const methodOf = ({ methods }: MergeSettings): MergeMethod => {
 
 export async function enableAutoMerge(
   fetch: Fetch,
-  { nodeId, method, projectId }: { nodeId: string; method: MergeMethod; projectId: string },
+  {
+    nodeId,
+    method,
+    projectId,
+  }: { nodeId: string; method: MergeMethod; projectId: string },
 ): Promise<void> {
   dataOf(
     await bodyOf(
       fetch,
-      graphql(enableMutation, { pullRequestId: nodeId, mergeMethod: method }, projectId),
+      graphql(
+        enableMutation,
+        { pullRequestId: nodeId, mergeMethod: method },
+        projectId,
+      ),
       'Auto-merge',
     ),
     invalidAutoMerge,

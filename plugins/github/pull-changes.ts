@@ -1,9 +1,15 @@
 import type { Argo } from '@argo/plugin-kit';
+import {
+  mergeOf,
+  offerOf,
+  type AutoMergeInfo,
+  type AutomationReads,
+  type MergeSettings,
+} from './pull-automation';
 import { changeOf, type ChangeItem, type Refresh } from './pull-change';
 import type { CheckInfo } from './pull-checks';
 import type { PullInfo } from './pull-info';
 import { failureMessage, known, type Known } from './pull-known';
-import { mergeOf, offerOf, type AutoMergeInfo, type AutomationReads, type MergeSettings } from './pull-automation';
 import type { PullReads } from './pull-reads';
 import type { PullLink, PullStore } from './pull-store';
 

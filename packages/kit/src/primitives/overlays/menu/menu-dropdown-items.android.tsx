@@ -13,7 +13,11 @@ import type { MenuDropdownItemsProps } from './menu-dropdown-items-props';
 import { MenuDropdownShell } from './menu-dropdown-shell.android';
 import { useItemColors } from './menu-item-colors.android';
 import { ItemLeadingIcon } from './menu-item-icon.android';
-import { dividedItems, nativeTitle, type NativeMenuItem } from './menu-native-items';
+import {
+  dividedItems,
+  nativeTitle,
+  type NativeMenuItem,
+} from './menu-native-items';
 import { SubmenuRow } from './menu-submenu-row.android';
 
 // The rows of a Compose DropdownMenu, shared by the Menu and the SplitButton's chevron.

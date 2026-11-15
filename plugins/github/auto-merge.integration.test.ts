@@ -18,7 +18,10 @@ const repository = 'owner/repository';
 
 const reference = `${repository}#12`;
 
-type Automation = Record<string, { on: boolean; available: boolean; reason?: string }>;
+type Automation = Record<
+  string,
+  { on: boolean; available: boolean; reason?: string }
+>;
 
 // The automation the Changes Slot offers for the Session's one pull request.
 async function automationOf(run: Journey): Promise<Automation | undefined> {
@@ -105,7 +108,7 @@ it(
 
     await restart(run);
 
-    expect((await automationOf(run))?.merge.on).toBe(true);
+    expect((await automationOf(run))?.merge?.on).toBe(true);
   },
   slow,
 );
@@ -122,7 +125,7 @@ it(
       'enable',
       'disable',
     ]);
-    expect((await automationOf(run))?.merge.on).toBe(false);
+    expect((await automationOf(run))?.merge?.on).toBe(false);
   },
   slow,
 );
@@ -138,7 +141,10 @@ it(
     for (const [settings, method] of methods) {
       const run = await attached();
 
-      run.github.repositories.set(repository, { ...openRepository, ...settings });
+      run.github.repositories.set(repository, {
+        ...openRepository,
+        ...settings,
+      });
       await tap(run, { kind: 'merge', on: true });
 
       expect(run.github.autoMergeCalls()[0]?.mergeMethod).toBe(method);
@@ -155,13 +161,13 @@ it(
     pullOf12(run).auto_merge = { merge_method: 'merge' };
     await refresh(run);
 
-    expect((await automationOf(run))?.merge.on).toBe(true);
+    expect((await automationOf(run))?.merge?.on).toBe(true);
     expect(run.github.autoMergeCalls()).toEqual([]);
 
     pullOf12(run).auto_merge = null;
     await refresh(run);
 
-    expect((await automationOf(run))?.merge.on).toBe(false);
+    expect((await automationOf(run))?.merge?.on).toBe(false);
   },
   slow,
 );
@@ -191,7 +197,10 @@ it(
       reason: "Draft pull requests can't auto-merge",
     });
 
-    for (const state of [{ merged: true, state: 'closed' as const }, { state: 'closed' as const }]) {
+    for (const state of [
+      { merged: true, state: 'closed' as const },
+      { state: 'closed' as const },
+    ]) {
       const finished = await attached();
 
       Object.assign(pullOf12(finished), state);
@@ -239,11 +248,11 @@ it(
     const known = await attached();
 
     await tap(known, { kind: 'merge', on: true });
-    expect((await automationOf(known))?.merge.on).toBe(true);
+    expect((await automationOf(known))?.merge?.on).toBe(true);
     known.github.graphqlFailWith.status = 500;
     await refresh(known);
 
-    expect((await automationOf(known))?.merge.on).toBe(true);
+    expect((await automationOf(known))?.merge?.on).toBe(true);
   },
   slow,
 );
@@ -253,9 +262,9 @@ it(
   async () => {
     const run = await journey();
 
-    await expect(
-      set(run, { kind: 'merge', on: true }),
-    ).rejects.toThrow('is not attached to this Session');
+    await expect(set(run, { kind: 'merge', on: true })).rejects.toThrow(
+      'is not attached to this Session',
+    );
 
     await attach(run, reference);
 

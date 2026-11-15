@@ -53,7 +53,6 @@ const openMenu = async (userEvent: User): Promise<void> => {
 const labels = async (): Promise<(string | null)[]> =>
   (await screen.findAllByRole('menuitem')).map((row) => row.textContent);
 
-
 // The automation group sits between the links and Detach, as ticked or unticked items.
 function sitsBetweenLinksAndDetach(width: number): Story {
   return {
@@ -137,7 +136,9 @@ export const UnavailableAutoMergeSaysWhyAndIsDisabled: Story = {
     });
 
     await expect(item).toHaveAttribute('aria-disabled', 'true');
-    await expect(item).toHaveTextContent("Draft pull requests can't auto-merge");
+    await expect(item).toHaveTextContent(
+      "Draft pull requests can't auto-merge",
+    );
     item.click();
     await expect(args.onSetAutomation).not.toHaveBeenCalled();
   },
@@ -159,4 +160,3 @@ export const DrawsNoAutomationWhenNoneIsOffered: Story = {
     await expect(screen.queryByText('Auto-archive')).not.toBeInTheDocument();
   },
 };
-

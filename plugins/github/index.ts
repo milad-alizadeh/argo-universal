@@ -1,4 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
+import { defineAutomationReads } from './pull-automation';
+import { setAutomation } from './pull-automation-set';
 import type { ChangeItem } from './pull-change';
 import {
   changesBySession,
@@ -15,8 +17,6 @@ import {
   list,
   type Scope,
 } from './pull-operations';
-import { defineAutomationReads } from './pull-automation';
-import { setAutomation } from './pull-automation-set';
 import { definePullReads } from './pull-reads';
 import { rowItemsBySession } from './pull-row-items';
 import { rowReads } from './pull-row-reads';

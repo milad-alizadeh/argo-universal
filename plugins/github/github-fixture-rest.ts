@@ -1,10 +1,10 @@
 import type { FixtureAnswer } from '@argo/plugin-kit/testing';
-import { settingsOf } from './github-fixture-automation';
 import type {
   FixtureCheck,
   FixturePull,
   GitHubFixture,
 } from './github-fixture';
+import { settingsOf } from './github-fixture-automation';
 
 export type Held = Pick<
   GitHubFixture,

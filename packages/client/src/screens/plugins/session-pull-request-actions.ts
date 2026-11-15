@@ -1,4 +1,5 @@
-import type { PageScope, ScopedRun } from '@repo/contracts/plugins/page-calls';
+import type { PageScope } from '@repo/contracts/plugins/page-address';
+import type { ScopedRun } from '@repo/contracts/plugins/page-calls';
 import type { SessionPullRequest } from '#features/sessions';
 
 // The one Plugin whose PR rows these are: Detach is its Operation, and Core keeps no PR model (ADR-0052).
@@ -9,7 +10,7 @@ export interface RowActionPorts {
   // The App's one run of an Operation, which rejects with why it failed.
   run: (run: ScopedRun & { pluginId: string }) => Promise<unknown>;
   failed: (error: Error) => void;
-  copy: (text: string) => Promise<void>;
+  copy: (text: string) => Promise<unknown>;
 }
 
 const referenceOf = ({
