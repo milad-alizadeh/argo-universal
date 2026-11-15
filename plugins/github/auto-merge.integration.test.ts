@@ -249,7 +249,7 @@ it(
 );
 
 it(
-  'refuses a pull request that is not attached to the Session, and an automation this Plugin does not offer yet',
+  'refuses a pull request that is not attached to the Session, and Auto-archive, which this Plugin does not offer yet',
   async () => {
     const run = await journey();
 
@@ -259,8 +259,7 @@ it(
 
     await attach(run, reference);
 
-    for (const kind of ['fix', 'archive'])
-      await expect(set(run, { kind, on: true })).rejects.toThrow();
+    await expect(set(run, { kind: 'archive', on: true })).rejects.toThrow();
 
     expect(run.github.autoMergeCalls()).toEqual([]);
   },
