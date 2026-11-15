@@ -14,9 +14,17 @@ const maximumOutputLength = 4096;
 
 const rejections = createRejectionCounter('Follow-up suggestion');
 
+// Some Agents print a banner (e.g. "pi v1.5.2") before the JSON object.
+function jsonObject(text: string): string {
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+
+  return start === -1 || end < start ? text : text.slice(start, end + 1);
+}
+
 function predictionText(text: string): string | null {
   try {
-    return Prediction.parse(JSON.parse(text)).suggestion;
+    return Prediction.parse(JSON.parse(jsonObject(text))).suggestion;
   } catch (error) {
     rejections.report('Rejected malformed prediction', error);
 
