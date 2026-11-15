@@ -3,15 +3,13 @@ import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { ElicitationSheet, PermissionRequest } from '#features/requests';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
-import { PromptQueue } from '../prompt-queue/prompt-queue';
 import { ComposerControls } from './composer-card';
 import { oversizedAttachmentIds, sendButtonState } from './composer-conditions';
 import { useComposerLayout } from './composer-layout';
-import { composerTrayClass } from './composer-tray-class';
-import { ComposerTopTray } from './composer-trays';
-import type { ComposerLayout, ComposerProps } from './composer-types';
+import { ComposerTray } from './composer-tray';
+import { ComposerPhoneTray } from './composer-trays';
+import type { ComposerProps } from './composer-types';
 
 export type { ComposerDraft, ComposerProps } from './composer-types';
 
@@ -24,24 +22,9 @@ export function Composer(props: ComposerProps): React.JSX.Element {
 
   return (
     <View nativeID={layout.composerId} className={useComposerClass()}>
-      <ComposerTopTray {...layout} />
-      <ComposerQueue queue={props.promptQueue} />
-      <ComposerRequest {...layout} />
+      <ComposerPhoneTray {...layout} />
+      <ComposerTray {...layout} />
       <ComposerControls {...layout} />
-    </View>
-  );
-}
-
-function ComposerQueue({
-  queue,
-}: {
-  queue: ComposerProps['promptQueue'];
-}): React.JSX.Element | null {
-  if (!queue?.queue.items.length) return null;
-
-  return (
-    <View className={requestTrayClass}>
-      <PromptQueue {...queue} />
     </View>
   );
 }
@@ -54,14 +37,6 @@ function useComposerClass(): string {
   );
 }
 
-const requestTrayClass = cn(
-  composerTrayClass,
-  '-mb-3 pb-3 rounded-t-2xl overflow-hidden',
-);
-
-const requestClass = (wide: boolean, filled: boolean): string =>
-  cn(wide ? requestTrayClass : 'w-full', filled && filledClass);
-
 const attachmentLimitMessage = `Attachment exceeds ${maxBlobUploadMebibytes} MB.`;
 
 function useComposerToasts(props: ComposerProps): void {
@@ -69,39 +44,4 @@ function useComposerToasts(props: ComposerProps): void {
   const key = oversizedAttachmentIds(props).sort().join('\n');
   useErrorToast(error ? { title: error, key: errorKey } : undefined);
   useErrorToast(key ? { title: attachmentLimitMessage, key } : undefined);
-}
-
-function ComposerRequest(layout: ComposerLayout): React.JSX.Element | null {
-  const filled = useSessionFill().filled;
-
-  if (!hasComposerRequest(layout)) return null;
-
-  return (
-    <View className={requestClass(layout.wide, filled)}>
-      <ComposerRequestSurface {...layout} />
-    </View>
-  );
-}
-
-function composerRequestContent({ props }: ComposerLayout): React.ReactNode {
-  if (props.permissionRequest)
-    return <PermissionRequest {...props.permissionRequest} />;
-
-  if (props.elicitation)
-    return (
-      <ElicitationSheet
-        key={props.elicitation.request.requestId}
-        {...props.elicitation}
-      />
-    );
-
-  return props.callout;
-}
-
-function hasComposerRequest({ props }: ComposerLayout): boolean {
-  return Boolean(props.permissionRequest || props.elicitation || props.callout);
-}
-
-function ComposerRequestSurface(layout: ComposerLayout): React.ReactNode {
-  return composerRequestContent(layout);
 }
