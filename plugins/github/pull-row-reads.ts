@@ -2,9 +2,9 @@ import { readLink, type ChangesSource, type LinkRead } from './pull-link-reads';
 import type { PullLink } from './pull-store';
 
 /*
- * How long the Session row waits for GitHub before it answers with what it already knows. It stays under
- * Argo's own limit for an items Slot answer: an answer past that is left out, and the row is not asked again
- * until the Plugin says it changed, so a cold start would empty every row.
+ * How long a Slot waits for GitHub before it answers with what it already knows. It stays under Argo's own
+ * limit for an items Slot answer: an answer past that is left out, and the Slot is not asked again until the
+ * Plugin says it changed, so a cold start would empty every row and a slow read would empty the Changes.
  */
 export const rowWaitMs = 1000;
 
@@ -34,9 +34,16 @@ const inTime = <Value>(
   return Promise.race([work, late]).finally(() => clearTimeout(timer));
 };
 
+// What a Slot draws of one read, as text: two reads that draw the same never ask the Slot again.
+type Drawn = (read: LinkRead) => string;
+
 // What the row draws of a pull request: its title and stage, so a read that adds only Checks changes nothing there.
-const drawn = ({ pull }: LinkRead): string =>
+const rowDrawn: Drawn = ({ pull }) =>
   JSON.stringify(pull.data ? [pull.data.title, pull.data.stage] : null);
+
+// What the Changes draw of a pull request: all that is known of it and its Checks, a failed read included.
+const changeDrawn: Drawn = ({ pull, checks }) =>
+  JSON.stringify([pull, checks ?? null]);
 
 // Reads every link, keeping each one GitHub answered as the last known for when a later read is slow.
 const readAll = (
@@ -54,11 +61,13 @@ const readAll = (
     }),
   );
 
-// Once the late reads land, the row is asked again only if it would draw them differently.
+type Asking = { changed: () => void; drawn: Drawn };
+
+// Once the late reads land, the Slot is asked again only if it would draw them differently.
 function askAgainWhenLanded(
   reads: Promise<LinkRead[]>,
   shown: readonly LinkRead[],
-  changed: () => void,
+  { changed, drawn }: Asking,
 ): void {
   void reads.then((landed) => {
     const differs = landed.some(
@@ -70,11 +79,11 @@ function askAgainWhenLanded(
 }
 
 /*
- * The Session row's pull requests: every stored association, each with GitHub's answer when it comes in time,
- * else the last one this worker read, else just its number. A read that fails draws nothing new, so a GitHub
- * that stays down never asks the row again and again.
+ * A Slot's pull requests: every stored association, each with GitHub's answer when it comes in time, else the
+ * last one this worker read, else nothing but the association. A read that fails draws nothing new, so a
+ * GitHub that stays down never asks the Slot again and again.
  */
-export function rowReads(source: ChangesSource, changed: () => void): RowReads {
+function timedReads(source: ChangesSource, asking: Asking): RowReads {
   const last: Last = new Map();
 
   return async (sessionIds) => {
@@ -88,8 +97,20 @@ export function rowReads(source: ChangesSource, changed: () => void): RowReads {
       (link) => last.get(keyOf(link)) ?? { link, pull: {} },
     );
 
-    askAgainWhenLanded(reads, shown, changed);
+    askAgainWhenLanded(reads, shown, asking);
 
     return shown;
   };
 }
+
+// The Session row's pull requests: one that was never read in time is drawn as just its number.
+export const rowReads = (
+  source: ChangesSource,
+  changed: () => void,
+): RowReads => timedReads(source, { changed, drawn: rowDrawn });
+
+// The Changes' pull requests: one that was never read in time is left out until GitHub answers.
+export const changeReads = (
+  source: ChangesSource,
+  changed: () => void,
+): RowReads => timedReads(source, { changed, drawn: changeDrawn });

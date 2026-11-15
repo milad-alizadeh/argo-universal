@@ -6,11 +6,12 @@ import { TRPCError } from '@trpc/server';
 import { sendSessionCommand } from '../session-command';
 import type { SessionActorRef } from '../session-machine';
 import type { HandlerSources } from '../session-sources';
+import { closeBorrowers } from './archive-borrowers';
 import { settleWithin, type Snapshot } from './archive-settle';
 
 type ArchiveSources = HandlerSources<
-  'readSession',
-  'admit' | 'session' | 'open'
+  'readSession' | 'database' | 'findWriter',
+  'admit' | 'session' | 'open' | 'live' | 'queued' | 'context'
 >;
 
 /*
@@ -37,8 +38,6 @@ function startArchive(
   sources: ArchiveSources,
   sessionId: string,
 ): SessionActorRef {
-  requireArchivable(sources, sessionId);
-
   const live = sources.open.session(sessionId);
 
   if (!live) return openArchiving(sources, sessionId);
@@ -58,6 +57,18 @@ const openArchiving = (
     agent: sources.readSession(sessionId).agent,
   });
 
+// The checks and the borrowers' closing come before the Session's own archive starts.
+async function prepareArchive(
+  sources: ArchiveSources,
+  sessionId: string,
+): Promise<SessionActorRef> {
+  sources.open.admit();
+  requireArchivable(sources, sessionId);
+  await closeBorrowers(sources, sessionId);
+
+  return startArchive(sources, sessionId);
+}
+
 function requireArchived(outcome: Snapshot): void {
   if (!outcome.hasTag('archived'))
     throw new TRPCError({
@@ -71,10 +82,8 @@ export async function archiveSession(
   sessionId: string,
   limitMs: number = archiveSettleLimitMs,
 ): Promise<SessionArchiveOutput> {
-  sources.open.admit();
-
   const outcome = await settleWithin(
-    startArchive(sources, sessionId),
+    await prepareArchive(sources, sessionId),
     (snapshot) => snapshot.hasTag('archived') || snapshot.status !== 'active',
     limitMs,
   );

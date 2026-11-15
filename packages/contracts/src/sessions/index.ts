@@ -40,6 +40,8 @@ export * from './record';
 
 export * from './rename';
 
+export * from './restart';
+
 export * from './save-plan';
 
 export * from './session-configuration';

@@ -1,6 +1,7 @@
 import { mkdir, realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { TerminalOutputResponse } from '@agentclientprotocol/sdk';
+import type { SessionNewInput } from '@repo/contracts';
 import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { z } from 'zod';
@@ -51,10 +52,20 @@ export async function openAccessSession(
   text: string,
   projectId = emptySessionInput.projectId,
 ): Promise<AccessSession> {
+  return openAccessSessionIn(
+    { host, outputs },
+    { projectId, prompt: [{ type: 'text', text }] },
+  );
+}
+
+// The same Session, opened where the test says: another Project, or a Checkout other than main.
+export async function openAccessSessionIn(
+  { host, outputs }: AccessHost,
+  where: Partial<SessionNewInput>,
+): Promise<AccessSession> {
   const created = await host.caller.session.new({
     ...emptySessionInput,
-    projectId,
-    prompt: [{ type: 'text', text }],
+    ...where,
   });
 
   await waitForAcpSessionIdle(host, created.sessionId);

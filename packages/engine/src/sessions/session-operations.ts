@@ -16,6 +16,7 @@ import type { SessionList } from './list/session-list';
 import type { OpenSessions } from './open-sessions';
 import { managePromptQueue, submitAppPrompt } from './queue-commands';
 import { createSessionAgentReader, listSessionBranches } from './readers';
+import { restartSession } from './restart/restart-session';
 import { cancelSession, closeSession } from './session-closure';
 import { declareSubagentRole } from './session-declare-subagent-role';
 import { createPlugin } from './session-new-plugin';
@@ -65,10 +66,22 @@ const actImplementations = (
   'session.unarchive': ({ sessionId }) => unarchiveSession(sources, sessionId),
   'session.savePlan': (input) => saveSessionPlan(sources.open, input),
   'plugin.new': (input) => createPlugin(sources.open, input),
-  'session.close': ({ sessionId }) => closeSession(sources.open, sessionId),
   'session.setConfigOption': (input) => configureSession(sources.open, input),
   'session.rename': (input) => renameSession(sources.open, input),
+  ...agentSessionImplementations(sources),
   ...agentRoleImplementations(sources),
+});
+
+// What closes a Session's Agent session, and what then opens one again.
+const agentSessionImplementations = (
+  sources: SessionHandlerSources,
+): Pick<
+  SessionOperationImplementations,
+  'session.close' | 'session.reload' | 'session.clear'
+> => ({
+  'session.close': ({ sessionId }) => closeSession(sources.open, sessionId),
+  'session.reload': (input) => restartSession(sources.open, input, 'reload'),
+  'session.clear': (input) => restartSession(sources.open, input, 'clear'),
 });
 
 const agentRoleImplementations = (

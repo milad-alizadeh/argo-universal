@@ -65,7 +65,7 @@ function recordedCheckout({
 }: SessionSnapshot): RecordedConfiguration['checkout'] {
   return {
     branch: checkout.branch ?? '',
-    newWorktree: checkout.type === 'worktree',
+    newWorktree: checkout.type !== 'main',
     path: checkout.path,
   };
 }

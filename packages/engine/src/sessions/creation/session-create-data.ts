@@ -1,5 +1,6 @@
-import type { session } from '@repo/db/schema';
+import { session } from '@repo/db/schema';
 import { createCheckout, type Checkout } from '@repo/git';
+import { eq } from 'drizzle-orm';
 import { titleFromPrompt } from '../../feed';
 import type { NewSessionInput, SessionData } from '../session-data';
 import { SessionInsertJob } from '../session-storage';
@@ -36,24 +37,46 @@ const dataForCheckout = (
   activityAt: Date.now(),
 });
 
+type OwnCheckout = Exclude<NewSessionInput['checkout'], { type: 'starter' }>;
+
 const checkoutInput = (
   input: NewSessionInput,
+  choice: OwnCheckout,
 ): Parameters<typeof createCheckout>[0] => ({
   projectPath: input.projectPath,
   projectId: input.projectId,
   sessionId: input.sessionId,
-  choice: input.checkout,
+  choice,
   runtimeDirectory: input.runtimeDirectory,
 });
+
+// The Checkout of the Session that started this one, which it borrows and never owns (ADR-0008).
+function readStarterCheckout(input: NewSessionInput): Checkout {
+  const starter = input.database
+    .select({ path: session.checkoutPath, branch: session.checkoutBranch })
+    .from(session)
+    .where(eq(session.id, input.startedBySessionId ?? ''))
+    .get();
+
+  if (!starter) throw new Error('The starting Session has no Checkout');
+
+  return starter;
+}
+
+const sessionCheckout = (
+  input: NewSessionInput,
+  signal?: AbortSignal,
+): Checkout | Promise<Checkout> =>
+  input.checkout.type === 'starter'
+    ? readStarterCheckout(input)
+    : createCheckout(checkoutInput(input, input.checkout), signal);
 
 // The Session row waits until its Agent is ready.
 export async function createSessionCheckout(
   input: NewSessionInput,
   signal?: AbortSignal,
 ): Promise<SessionData> {
-  const checkout = await createCheckout(checkoutInput(input), signal);
-
-  return dataForCheckout(input, checkout);
+  return dataForCheckout(input, await sessionCheckout(input, signal));
 }
 
 type InsertData = Pick<
@@ -95,6 +118,8 @@ export function toSessionInsert(
       titleSource: 'prompt',
       startedBySessionId: input.startedBySessionId ?? null,
     },
-    checkoutChoice: input.checkout,
+    // The Project remembers where the person starts Sessions, never a borrowed Checkout.
+    checkoutChoice:
+      input.checkout.type === 'starter' ? undefined : input.checkout,
   });
 }

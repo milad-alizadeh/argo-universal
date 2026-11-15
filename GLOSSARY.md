@@ -273,7 +273,7 @@ What an Agent (the second sense) is for: Explore, Plan, Implement, Review, Test 
 _Avoid_: Agent type, subagent type
 
 **Started Session**:
-A Session that another Session started through an Operation, such as `session.create`. It is a full Session: the person, its starter or any other Session can prompt it. It is listed nested under its starter in the Sessions list, and it is not one of the starter's Agents, so it is never in the Workbench or Inspector. The code calls the link `startedBySessionId`.
+A Session that another Session started through an Operation, such as `session.create`. It is a full Session: the person, its starter or any other Session can prompt it. It is listed nested under its starter in the Sessions list, and it is not one of the starter's Agents, so it is never in the Workbench or Inspector. The code calls the link `startedBySessionId`. It runs in a new worktree, in the main checkout, or, when its starter passes the `starter` Checkout, in its starter's own Checkout, which it borrows and never owns (ADR-0008).
 _Avoid_: Agent, Subagent, child Session, delegated Session
 
 **Background Task**:
@@ -333,7 +333,7 @@ A Session configuration choice made while a Turn runs, held and sent to the Agen
 _Avoid_: Pending option, queued config
 
 **Slash command**:
-A command or skill the Agent offers, named in a prompt as `/name` with optional arguments.
+A command or skill the Agent offers, named in a prompt as `/name` with optional arguments. Argo has two of its own, `/clear` and `/reload`, which act on the Session's Agent session and never reach the Agent; the Agent's own wins a name both have.
 _Avoid_: Command (alone), shortcut, action
 
 **Composer suggestion**:

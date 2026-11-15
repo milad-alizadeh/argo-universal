@@ -307,6 +307,28 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      reload: publicProcedure
+        .input(operations['session.reload'].params)
+        .output(operations['session.reload'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.reload',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      clear: publicProcedure
+        .input(operations['session.clear'].params)
+        .output(operations['session.clear'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.clear',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       rename: publicProcedure
         .input(operations['session.rename'].params)
         .output(operations['session.rename'].result)

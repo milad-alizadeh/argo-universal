@@ -10,6 +10,11 @@ import {
   type MessageRejectedEvent,
 } from './rejected-message';
 import {
+  sessionRestartedEvent,
+  sessionRestartedNotice,
+  type SessionRestartedEvent,
+} from './session-restarted';
+import {
   endingFeedChanges,
   permissionSelectedEvent,
   permissionsCancelledEvent,
@@ -24,7 +29,8 @@ export type SessionRowEvent =
   | NativePermissionOutcomeEvent
   | TurnEndingEvent
   | PermissionSelectedEvent
-  | MessageRejectedEvent;
+  | MessageRejectedEvent
+  | SessionRestartedEvent;
 
 export const sessionRowEvents: readonly SessionRowEvent['type'][] = [
   turnEndingEvent,
@@ -32,6 +38,7 @@ export const sessionRowEvents: readonly SessionRowEvent['type'][] = [
   permissionsCancelledEvent,
   permissionSelectedEvent,
   messageRejectedEvent,
+  sessionRestartedEvent,
 ];
 
 const writeSessionRows = { actions: 'writeSessionRows' } as const;
@@ -43,6 +50,7 @@ export const sessionRowTransitions = {
   [permissionsCancelledEvent]: writeSessionRows,
   [permissionSelectedEvent]: writeSessionRows,
   [messageRejectedEvent]: writeSessionRows,
+  [sessionRestartedEvent]: writeSessionRows,
 } satisfies Record<SessionRowEvent['type'], typeof writeSessionRows>;
 
 type RowSource = { sessionId: string; createId: () => string };
@@ -53,9 +61,14 @@ type SessionRowChange = {
   change: FeedChange;
 };
 
-const eventFeedChanges = (
+type TurnRowEvent = Exclude<
+  SessionRowEvent,
+  NativePermissionOutcomeEvent | SessionRestartedEvent
+>;
+
+const turnFeedChanges = (
   feed: RowSource,
-  event: Exclude<SessionRowEvent, NativePermissionOutcomeEvent>,
+  event: TurnRowEvent,
 ): FeedChange[] => {
   switch (event.type) {
     case permissionSelectedEvent:
@@ -66,6 +79,14 @@ const eventFeedChanges = (
       return endingFeedChanges(feed.sessionId, event);
   }
 };
+
+const eventFeedChanges = (
+  feed: RowSource,
+  event: Exclude<SessionRowEvent, NativePermissionOutcomeEvent>,
+): FeedChange[] =>
+  event.type === sessionRestartedEvent
+    ? [sessionRestartedNotice(feed.createId(), event.restart)]
+    : turnFeedChanges(feed, event);
 
 export const sessionRowChanges = (
   feed: RowSource,
