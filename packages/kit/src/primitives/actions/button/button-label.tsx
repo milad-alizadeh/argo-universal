@@ -1,6 +1,6 @@
 import { Row, Text } from '@expo/ui';
 import { buttonDefaults } from '@repo/contracts/kit-tokens';
-import type { ReactElement } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import type { ColorValue } from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
 import { useTextStyle } from '#primitives/content/text';
@@ -51,7 +51,8 @@ function useButtonTextStyle(
   const body = useTextStyle('body');
   const color = useNativeTheme().colors[labelColor(props)];
 
-  if (props.control) return { ...body, color };
+  if (props.control)
+    return { fontSize: body.fontSize, lineHeight: body.lineHeight, color };
 
   return { color };
 }
