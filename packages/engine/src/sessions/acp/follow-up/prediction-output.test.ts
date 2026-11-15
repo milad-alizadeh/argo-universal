@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PredictionOutput } from './prediction-output';
 
 function read(...chunks: string[]): string | null {
@@ -20,6 +20,10 @@ const piBanner =
   'pi v1.5.2\n---\n\n## Skills\n- /Users/me/.agents/skills/find-skills/SKILL.md\n\n## Extensions\n- /Users/me/.pi/agent/extensions/trust.ts\n';
 
 describe('PredictionOutput', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('reads bare JSON, as Claude and Codex reply', () => {
     expect(read('{"suggestion":"Run the tests"}')).toBe('Run the tests');
   });
@@ -63,5 +67,28 @@ describe('PredictionOutput', () => {
     '{"other":"Run it"}',
   ])('discards unusable output: %s', (text) => {
     expect(read(text)).toBeNull();
+  });
+
+  it.each([
+    ['an empty suggestion', '{"suggestion":"  "}'],
+    ['an over-long suggestion', `{"suggestion":"${'a'.repeat(1001)}"}`],
+  ])('reads %s as none, not as malformed', (_, text) => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(read(text)).toBeNull();
+    expect(log).not.toHaveBeenCalled();
+  });
+
+  it('logs the length and start of a reply it rejects', () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const reply = `I think the user will ask to ship it. ${'x'.repeat(300)}`;
+
+    read(reply);
+
+    const [line] = log.mock.calls.at(-1) ?? [];
+
+    expect(line).toContain(`(${reply.length} characters)`);
+    expect(line).toContain(JSON.stringify(reply.slice(0, 200)));
+    expect(line).not.toContain(reply.slice(0, 201));
   });
 });

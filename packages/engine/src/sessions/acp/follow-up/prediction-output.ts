@@ -8,9 +8,21 @@ import { z } from 'zod';
 import { jsonCodec } from '../../../lib/json-codec';
 import { jsonObjects } from './prediction-json';
 
+const SuggestionText = FollowUpSuggestion.shape.text.unwrap().trim().min(1);
+
+// A prediction object whose suggestion is blank or too long to show is still a prediction: it offers none.
 const Prediction = z.object({
-  suggestion: FollowUpSuggestion.shape.text.unwrap().trim().min(1).nullable(),
+  suggestion: z
+    .string()
+    .nullable()
+    .transform((text) => SuggestionText.safeParse(text).data ?? null),
 });
+
+// Enough of a rejected reply to see what the Agent said instead.
+const replyExcerptLength = 200;
+
+const replyExcerpt = (text: string): string =>
+  `(${text.length} characters) ${JSON.stringify(text.slice(0, replyExcerptLength))}`;
 
 // Room for an Agent's startup banner before the prediction; pi lists every installed skill and extension.
 const maximumOutputLength = 32_768;
@@ -28,7 +40,7 @@ function predictionText(text: string): string | null {
   }
 
   rejections.report(
-    'Rejected malformed prediction',
+    `Rejected malformed prediction ${replyExcerpt(text)}`,
     new Error('No prediction object in the reply'),
   );
 
