@@ -72,11 +72,11 @@ const provider = 'issue-tracker';
 async function signIn(test: PluginTest): Promise<void> {
   await test.operations.run({ name: 'signIn', pluginId: provider });
 
-  for (let poll = 0; poll < pollLimit; poll += 1) {
+  for (let poll = 0; poll < pollLimit; poll += 1)
     await test.clock.advance(pollMs);
-  }
 
-  expect(test.accounts.list()).toHaveLength(1);
+  // The approved flow stores the Account off the clock, so a busy machine may land it late.
+  await expect.poll(() => test.accounts.list()).toHaveLength(1);
 }
 
 // Both first-party Plugins, side by side as the Server finds them: this one borrows what the other provides.

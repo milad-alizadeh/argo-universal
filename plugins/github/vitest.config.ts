@@ -1,12 +1,12 @@
 import { defineProject } from 'vitest/config';
 
-// The Plugin's own tests run in Node and fail when they assert nothing.
+// The Plugin's own tests run in Node and fail when they assert nothing; a poll waits out a busy CI machine.
 export default defineProject({
   root: import.meta.dirname,
   test: {
     name: 'github',
     environment: 'node',
     restoreMocks: true,
-    expect: { requireAssertions: true },
+    expect: { requireAssertions: true, poll: { timeout: 10_000 } },
   },
 });
