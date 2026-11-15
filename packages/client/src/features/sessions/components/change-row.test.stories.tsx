@@ -4,7 +4,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, screen, waitFor } from 'storybook/test';
 import { ChangeRow } from './change-row';
-import { checksRunningChangeRow } from './change-row-fixtures';
+import { checksRunningChangeRow, spokenText } from './change-row-fixtures';
 
 const { number } = checksRunningChangeRow.change;
 
@@ -73,7 +73,7 @@ function listsItems(width: number): Story {
       await openMenu(userEvent);
       const rows = await screen.findAllByRole('menuitem');
 
-      await expect(rows.map((row) => row.textContent)).toEqual(itemNames);
+      await expect(rows.map(spokenText)).toEqual(itemNames);
     },
   };
 }
@@ -137,7 +137,7 @@ export const LeavesOutItemsWithNoHandler: Story = {
     await settleLayout('wide');
     await openMenu(userEvent);
     await expect(
-      (await screen.findAllByRole('menuitem')).map((row) => row.textContent),
+      (await screen.findAllByRole('menuitem')).map(spokenText),
     ).toEqual([openName]);
   },
 };

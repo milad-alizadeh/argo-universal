@@ -9,7 +9,7 @@ import {
   autoMergeOnChangeRow,
   autoMergeUnavailableChangeRow,
 } from './change-row-automation-fixtures';
-import { checksRunningChangeRow } from './change-row-fixtures';
+import { checksRunningChangeRow, spokenText } from './change-row-fixtures';
 
 const { number } = autoMergeOffChangeRow.change;
 
@@ -52,8 +52,8 @@ const openMenu = async (userEvent: User): Promise<void> => {
 
 const mergeName = 'Auto-merge';
 
-const labels = async (): Promise<(string | null)[]> =>
-  (await screen.findAllByRole('menuitem')).map((row) => row.textContent);
+const labels = async (): Promise<string[]> =>
+  (await screen.findAllByRole('menuitem')).map(spokenText);
 
 // The automation group sits between the links and Detach, as ticked or unticked items.
 function sitsBetweenLinksAndDetach(width: number): Story {
@@ -64,7 +64,7 @@ function sitsBetweenLinksAndDetach(width: number): Story {
 
       const names = [
         ...screen.getByRole('menu').querySelectorAll('[role^="menuitem"]'),
-      ].map((row) => row.textContent);
+      ].map(spokenText);
 
       await expect(names).toEqual([
         'Open on GitHub',

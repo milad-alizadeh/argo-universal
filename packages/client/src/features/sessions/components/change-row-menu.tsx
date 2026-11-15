@@ -23,19 +23,31 @@ const copyLabel = 'Copy link';
 
 const detachLabel = 'Detach from Session';
 
+const openItem = (onPress: () => void): ContextMenuItem => ({
+  label: openLabel,
+  icon: 'external-link',
+  onPress,
+});
+
 type Automation = NonNullable<MenuProps['change']['automation']>;
 
 type AutomationEntry = {
   kind: ChangeAutomationKind;
   label: string;
+  icon: NonNullable<ContextMenuItem['icon']>;
   subtitle?: string;
 };
 
 // The automations in the order the design draws them, with the words core gives each.
 const automations: readonly AutomationEntry[] = [
-  { kind: 'fix', label: 'Auto-fix' },
-  { kind: 'merge', label: 'Auto-merge' },
-  { kind: 'archive', label: 'Auto-archive', subtitle: 'On merge or close' },
+  { kind: 'fix', label: 'Auto-fix', icon: 'tool' },
+  { kind: 'merge', label: 'Auto-merge', icon: 'merged' },
+  {
+    kind: 'archive',
+    label: 'Auto-archive',
+    icon: 'archive',
+    subtitle: 'On merge or close',
+  },
 ];
 
 // One the Plugin offers works, or says why it does not; any other is left out.
@@ -44,19 +56,21 @@ const isOffered = ({
   reason,
 }: Automation[ChangeAutomationKind]): boolean => available || Boolean(reason);
 
+const subtitled = (subtitle?: string): Pick<ContextMenuItem, 'subtitle'> =>
+  subtitle ? { subtitle } : {};
+
 function automationItem(
-  { kind, label, subtitle: fixed }: AutomationEntry,
+  { kind, label, icon, subtitle: fixed }: AutomationEntry,
   { on, available, reason }: Automation[ChangeAutomationKind],
   onSetAutomation: NonNullable<MenuProps['onSetAutomation']>,
 ): ContextMenuItem {
-  const subtitle = reason ?? fixed;
-
   return {
     id: `automation-${kind}`,
     label,
+    icon,
     selected: on,
     disabled: !available,
-    ...(subtitle && { subtitle }),
+    ...subtitled(reason ?? fixed),
     onPress: () => onSetAutomation(kind, !on),
   };
 }
@@ -82,11 +96,11 @@ function automationItems({
 function groupsOf(props: MenuProps): ContextMenuItem[][] {
   return [
     [
-      { label: openLabel, onPress: props.onOpen },
-      ...contextMenuGroup({ label: copyLabel }, props.onCopyLink),
+      openItem(props.onOpen),
+      ...contextMenuGroup({ label: copyLabel, icon: 'copy' }, props.onCopyLink),
     ],
     automationItems(props),
-    contextMenuGroup({ label: detachLabel }, props.onDetach),
+    contextMenuGroup({ label: detachLabel, icon: 'close' }, props.onDetach),
   ].filter((group) => group.length > 0);
 }
 
@@ -97,6 +111,9 @@ const labelsOf = ({
   ...(id && { id }),
   ...(subtitle && { subtitle }),
 });
+
+const iconOf = ({ icon }: ContextMenuItem): Pick<MenuAction, 'icon'> =>
+  icon ? { icon } : {};
 
 const flagsOf = ({
   selected,
@@ -113,6 +130,7 @@ const actionOf = (
   label: item.label,
   onPress: item.onPress,
   ...labelsOf(item),
+  ...iconOf(item),
   ...flagsOf(item),
   ...(startsSection && { section: {} }),
 });
