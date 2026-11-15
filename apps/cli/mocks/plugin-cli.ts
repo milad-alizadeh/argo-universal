@@ -10,7 +10,7 @@ export const manifestFile = 'plugin.json';
 
 // The shipped example a fixture is scaffolded from, and the real Plugin the example-run tests use.
 export const githubSignIn = fileURLToPath(
-  new URL('../../../plugins/examples/github-sign-in/', import.meta.url),
+  new URL('../../../templates/plugins/github-sign-in/', import.meta.url),
 );
 
 const testFile = /\.test\.[jt]s$/;

@@ -3,7 +3,7 @@ export const pluginBlueprint = `# Build an Argo Plugin
 
 A Plugin is a folder: \`plugin.json\` and a TypeScript entry that draws Argo's kit components. Argo runs it on the Server and draws it on every platform. This guide holds the choices. "Kit components" at the end indexes every component; run \`plugin.guide\` with \`{ "components": ["Screen", "List"] }\` for the props of those you use. Everything every Plugin needs is kit code: copy the file named beside your choice, never write sign-in, polling, caching or token handling yourself.
 
-The Issue tracker (\`plugins/issue-tracker\`) is the reference Plugin. \`plugins/examples/github-sign-in\` is the smallest sign-in. \`docs/plugins/authoring.md\` holds the full API.
+The Issue tracker (\`plugins/issue-tracker\`) is the reference Plugin. \`templates/plugins/github-sign-in\` is the smallest sign-in. \`docs/plugins/authoring.md\` holds the full API.
 
 Plugins live in Argo's own repository for now: the kit is unpublished, so a Plugin in another Project cannot resolve it.
 
@@ -26,7 +26,7 @@ A page is \`{ state, load, render }\`. \`load\` reads and may be slow. \`render\
 | A canvas, a chat | \`Screen width="bleed"\`, \`footer\` for an input | \`docs/plugins/authoring.md\`, "Page frames" |
 | Data from a URL or a command | a Query: \`read({ api: 'fetch', url })\`, with the \`fetch\` or \`process:exec\` Capability in \`plugin.json\` | \`docs/plugins/authoring.md\`, "Declared data" |
 | Data two pages or a Slot share | a named read: \`argo.queries.define\`, \`projectOf\`, then \`argo.queries.read\` and \`seed\` | \`plugins/issue-tracker/github-reads.ts\` |
-| A person's login at a service | \`deviceFlow\` + \`provideSignIn\` + \`signInGate\`; read as that person with \`accountFetch(argo, host)(url)\`, which throws \`SignInRequired\` for the gate to draw | \`plugins/examples/github-sign-in\`, \`plugins/issue-tracker/github-account.ts\` |
+| A person's login at a service | \`deviceFlow\` + \`provideSignIn\` + \`signInGate\`; read as that person with \`accountFetch(argo, host)(url)\`, which throws \`SignInRequired\` for the gate to draw | \`templates/plugins/github-sign-in\`, \`plugins/issue-tracker/github-account.ts\` |
 | Text a person types | \`TextArea\` or the Screen's \`search\` with \`onChangeText={to.bind('key')}\`; the text lands in Page state \`key\`, read as \`input.state.key\` |
 | A change | an Operation declared in \`plugin.json\`, run with \`to.run\`, then \`argo.changed()\` | the scaffold's \`notes.ts\` |
 | A change that must show now | \`to.run(name, args, { optimistic })\` patches nodes by \`key\` until the Operation answers | \`plugins/issue-tracker/issue-detail.tsx\` |
