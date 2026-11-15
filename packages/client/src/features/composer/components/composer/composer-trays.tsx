@@ -11,7 +11,11 @@ import type {
   CheckoutLayout,
 } from './composer-tray-types';
 
-export { ComposerTopTray } from './composer-top-tray';
+export {
+  ComposerPhoneTray,
+  ComposerPlans,
+  hasTrayPlan,
+} from './composer-top-tray';
 
 export function ComposerBottomTray(
   layout: BottomTrayLayout,
