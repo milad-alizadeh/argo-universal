@@ -130,13 +130,6 @@ export const LongPluginItemsCompact: Story = {
   args: { ...longPluginItemsCompactSession, onOpenPluginPage: openPluginPage },
 };
 
-// The pointer over a row tints it; Regular keeps its hairline. Wide layouts only.
-const hover: Story['play'] = async ({ canvas, userEvent }) => {
-  await userEvent.hover(canvas.getByRole('button'));
-};
-
-export const Hovered: Story = { args: runningSession, play: hover };
-
 // A checkpoint every 1.5 seconds: the fill springs from 1 to 2 to 3 of 4 done, then starts over.
 const checkpointMilliseconds = 1500;
 
