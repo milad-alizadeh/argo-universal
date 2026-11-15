@@ -5,6 +5,7 @@ import { openDepsClient, type Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 import { filterById, type IssueFilter } from './issue-filters';
 import { pathText } from './issue-paths';
+import { sessionCounts, type SessionCounts } from './issue-session-counts';
 import type { Overview } from './overview';
 
 // What the search field holds, which narrows the filter's Issues.
@@ -12,11 +13,12 @@ export type FilterState = { query: string };
 
 export const filterState: FilterState = { query: '' };
 
-// The Project and filter the Page path names, and the Project's overview when it could be read.
+// The Project and filter the Page path names, the Project's overview when it could be read, and the Issues its Sessions are attached to.
 type Chosen = {
   project: Project;
   filter: IssueFilter;
   overview: Overview | null;
+  sessions: SessionCounts;
 };
 
 /*
@@ -129,12 +131,26 @@ export async function loadFilter(
 
   const { project, filter } = named;
 
-  const [overview, tracker] = await Promise.all([
-    overviewOf(deps, read, project),
+  const [tracker, own] = await Promise.all([
     named.opened,
+    projectReads(deps, read, project),
   ]);
 
-  return withTracker({ projects, project, filter, overview }, tracker);
+  return withTracker({ projects, project, filter, ...own }, tracker);
+}
+
+// What the page reads of the Project itself, at once.
+async function projectReads(
+  deps: IssueDeps,
+  read: Read,
+  project: Project,
+): Promise<Pick<Chosen, 'overview' | 'sessions'>> {
+  const [overview, sessions] = await Promise.all([
+    overviewOf(deps, read, project),
+    sessionCounts(deps, project.id),
+  ]);
+
+  return { overview, sessions };
 }
 
 // The overview when it could be read; a rejected sign-in is the page's to answer, any other failure leaves none.

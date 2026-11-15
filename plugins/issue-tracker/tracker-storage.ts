@@ -28,6 +28,8 @@ export type TrackerStorage = {
   projectIssues: (
     projectId: string,
   ) => Promise<{ projectId: string; number: number }[]>;
+  // Every attachment in one Project.
+  projectLinks: (projectId: string) => Promise<IssueLink[]>;
 };
 
 type Store = {
