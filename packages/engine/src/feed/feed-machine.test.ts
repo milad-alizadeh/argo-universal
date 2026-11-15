@@ -13,6 +13,7 @@ import {
   type FeedMachineEvent,
 } from '#mocks/feed-model';
 import { messageRejectedEvent } from './rejected-message';
+import { sessionRestartedEvent } from './session-restarted';
 import {
   turnEndingEvent,
   permissionsCancelledEvent,
@@ -35,6 +36,7 @@ const excludedOrderingEvents = new Set<string>([
   permissionsCancelledEvent,
   permissionSelectedEvent,
   messageRejectedEvent,
+  sessionRestartedEvent,
 ]);
 
 // The machine sends the first two itself; the structural model has never sent the rest.

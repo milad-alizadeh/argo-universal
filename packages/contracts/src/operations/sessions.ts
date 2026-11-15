@@ -25,6 +25,7 @@ import {
 } from '../sessions/shells';
 import type { OperationDefinition } from './index';
 import { sessionAgentOperations } from './session-agent-operations';
+import { sessionRestartOperations } from './session-restart-operations';
 
 export const sessionOperations = {
   'session.submit': {
@@ -134,6 +135,7 @@ export const sessionOperations = {
     keywords: ['plan', 'markdown', 'file'],
   },
   ...sessionAgentOperations,
+  ...sessionRestartOperations,
   'session.rename': {
     id: 'session.rename',
     label: 'Rename Session',

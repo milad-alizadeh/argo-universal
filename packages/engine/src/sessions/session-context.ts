@@ -8,6 +8,7 @@ import type {
   SessionConfigOption,
   SlashCommand,
   SessionOpenError,
+  SessionRestart,
   ShellRecord,
   SubagentRole,
 } from '@repo/contracts';
@@ -103,7 +104,9 @@ export type SessionCommand =
   | { type: 'session.unarchive' }
   | { type: 'session.cancel' }
   | { type: 'session.declareSubagentRole'; role: SubagentRole }
-  | { type: 'session.close' };
+  | { type: 'session.close' }
+  // Closes an idle Session so its Agent session opens again: the same one, or for a clear a new one.
+  | { type: 'session.restart'; restart: SessionRestart };
 
 export type SessionEvent =
   | SuggestionEvent
