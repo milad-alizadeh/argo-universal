@@ -1,4 +1,5 @@
 import type { CommentInfo } from './pull-comments';
+import { checkKey, commentKey, conflictKey } from './pull-fix-rows';
 import type { PullInfo } from './pull-info';
 import { shortHead } from './pull-reads';
 
@@ -11,18 +12,6 @@ export type FixFacts = {
   failed: readonly string[];
   comments: readonly CommentInfo[];
 };
-
-/*
- * A failed Check and a conflict belong to the head commit they were seen on; the table keys them with it. A review
- * comment is keyed by its id alone and is seen on every head, so a push never prompts it again.
- */
-const checkKey = (check: string): string => `check:${check}`;
-
-export const commentPrefix = 'comment:';
-
-const commentKey = ({ id }: CommentInfo): string => `${commentPrefix}${id}`;
-
-const conflictKey = 'conflict';
 
 const nameOf = ({ repository, number }: PullInfo): string =>
   `${repository}#${number}`;
@@ -56,7 +45,7 @@ export const eventsOf = ({ pull, failed, comments }: FixFacts): FixEvent[] => [
   })),
   ...conflictOf(pull),
   ...comments.map((comment) => ({
-    key: commentKey(comment),
+    key: commentKey(comment.id),
     text: commentPrompt(pull, comment),
   })),
 ];

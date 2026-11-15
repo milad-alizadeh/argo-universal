@@ -1,6 +1,6 @@
-import { commentPrefix } from './pull-fix-prompts';
 import {
   all,
+  commentPrefix,
   isCountRow,
   isNameRow,
   keyOf,

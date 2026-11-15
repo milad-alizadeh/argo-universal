@@ -67,7 +67,7 @@ const commentsIn = (
  * What is known now of one pull request, its head's Checks and its review comments. A read that failed leaves nothing
  * to act on: a failed comments read is never taken for no comments, and holds back the Checks' Prompts too.
  */
-const withChecks = (
+const factsOf = (
   { pull, checks }: LinkRead,
   comments: CommentInfo[],
 ): FixFacts | undefined => {
@@ -80,7 +80,7 @@ const withChecks = (
 const checkedOf = (read: LinkRead): FixFacts | undefined => {
   const comments = commentsIn(read.comments);
 
-  return comments && withChecks(read, comments);
+  return comments && factsOf(read, comments);
 };
 
 async function freshRead(

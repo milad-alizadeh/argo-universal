@@ -48,6 +48,18 @@ export const columns =
 export const where =
   'project_id = ? AND session_id = ? AND repository = ? AND number = ?';
 
+/*
+ * An event's key in the events table. A failed Check and a conflict belong to the head commit they were seen on; a
+ * review comment is keyed by its id alone and is seen on every head, so a push never prompts it again.
+ */
+export const checkKey = (check: string): string => `check:${check}`;
+
+export const commentPrefix = 'comment:';
+
+export const commentKey = (id: number): string => `${commentPrefix}${id}`;
+
+export const conflictKey = 'conflict';
+
 export const keyOf = (link: Link): Param[] => [
   link.projectId,
   link.sessionId,
