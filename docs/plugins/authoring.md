@@ -506,7 +506,7 @@ Turning a Plugin off releases its worker and pending rebuild.
 
 ## Accounts and OAuth
 
-`templates/plugins/github-sign-in` is a complete reference: GitHub's sign-in through the kit's device flow, with its sign-in page drawn by the kit. Copy it for a new service. GitHub's web flow needs a client secret, which the kit's flows do not send, so the example uses the device flow GitHub offers instead.
+`templates/plugins/github-sign-in` is a complete reference: GitHub's sign-in through the kit's device flow, with its sign-in page drawn by the kit. Copy it for a new service. It uses the device flow GitHub offers, which needs no client secret.
 
 Declare each provided Account as `{ host, page }` in `contributes.accounts`.
 Define that page with `argo.pages.define` before registration completes; an Account's page is a Loader page.
@@ -561,7 +561,7 @@ First-party Plugins receive unset Grants silently until consent screens exist. A
 
 ### The OAuth flow
 
-`oauthFlow(argo, options)` from `@argo/plugin-kit` is the whole sign-in for a service that takes OAuth's authorization code grant with PKCE from a public client, with no client secret, such as Linear or GitLab. GitHub's web flow needs its client secret even with PKCE, so GitHub uses `deviceFlow`. Give it the service's URLs:
+`oauthFlow(argo, options)` from `@argo/plugin-kit` is the whole sign-in for a service that takes OAuth's authorization code grant with PKCE: from a public client, with no client secret, such as Linear or GitLab, or with a client secret the person supplies, such as Atlassian or Google. Give it the service's URLs:
 
 ```tsx
 import { oauthFlow } from '@argo/plugin-kit';
@@ -591,6 +591,7 @@ await signIn.provide();
 
 - `host` is the Account's API host. Declare it in `contributes.accounts` and as a `fetch` Capability; `tokenUrl`'s host needs a `fetch` Capability too.
 - `clientId` is the OAuth app's public client ID, or a function the flow calls when a sign-in starts.
+- `clientSecret` is for a service that requires the app's client secret on every code exchange and refresh. Argo ships no secret: declare a `secret` Setting the person fills in, and give a function that reads it with `argo.settings.get`. The flow sends it to `tokenUrl` only, never in the browser, and a sign-in started before it is set fails, saying so. Leave it out for a public client.
 - `label` turns a token into the name of whose Account it opens, such as the login the service answers; `null` fails the sign-in.
 - `tokenPath` says where the token sits in the token endpoint's JSON when it is not `access_token`, such as `['authed_user', 'access_token']`.
 - `header` is how a borrower's request carries the token, `{ header: 'Authorization', prefix: 'Bearer' }` unless you say otherwise.
@@ -599,11 +600,13 @@ await signIn.provide();
 
 `start()` answers as soon as the browser opens, normally with `waiting`, so the Operation that calls it returns at once. The flow then waits up to five minutes for the person, exchanges the code, adds the Account and keeps its token under the Account's id. `cancel()` ends the wait; a callback from the browser tab still open is ignored. `provide()` registers the provider handler that hands borrowers the kept token.
 
+A token whose answer carried `refresh_token` and `expires_in` is refreshed at `tokenUrl`, with the client secret when there is one, the first time a borrow finds it within a minute of running out. A service that rotates refresh tokens, as Atlassian does, gets each new pair kept before its access token is lent, so a Server that stops mid-refresh wakes holding the token it has not spent. Borrows that find one Account due share one refresh, so a refresh token is never spent twice. A refresh the service refuses, because the refresh token expired or was revoked or the client is no longer accepted, forgets the token and lends nothing: the read finds the person signed out and `signInGate` draws the sign-in until they sign in again. Any other failed refresh lends the kept token.
+
 Declare `signIn` and `cancelSignIn` in `contributes.operations` with tier `act`. Start a sign-in only on the Server Device: the page's Loader reads `context.serverDevice` and offers the button there, and says to continue on the Server Device elsewhere. In the test harness, `kit.pages.draw` and `kit.pages.run` draw and run as a paired Device's App; `serverDevice: true` asks as the App on the Server Device.
 
 ### The sign-in pattern
 
-The kit has two flows and one page that draws either, and the token paste below: `deviceFlow` (RFC 8628: the page shows a code, the person enters it on any device, and the Plugin polls) and `oauthFlow` above (redirect with PKCE, on the Server Device). Neither sends a client secret. A Plugin never writes polling, token storage or a sign-in page, and never holds a token:
+The kit has two flows and one page that draws either, and the token paste below: `deviceFlow` (RFC 8628: the page shows a code, the person enters it on any device, and the Plugin polls) and `oauthFlow` above (redirect with PKCE, on the Server Device). Only `oauthFlow` given a `clientSecret` sends one. A Plugin never writes polling, token storage or a sign-in page, and never holds a token:
 
 ```tsx
 import { deviceFlow, provideSignIn, signInGate, SignInRequired, type Argo } from '@argo/plugin-kit';
