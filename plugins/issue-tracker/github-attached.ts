@@ -15,7 +15,7 @@ const aliased = (number: number): string[] =>
     : [];
 
 // Several Issues in one call, each under its own alias.
-export const issuesQuery = (
+const issuesQuery = (
   repository: string,
   numbers: readonly number[],
 ): GitHubRequest => {
@@ -30,7 +30,7 @@ export const issuesQuery = (
 };
 
 // The Issues GitHub found of those asked for: one that is gone answers null under its alias and is left out.
-export function mapIssues(data: Json): Issue[] {
+function mapIssues(data: Json): Issue[] {
   const repository = at(data, 'repository');
 
   if (!isObject(repository))
