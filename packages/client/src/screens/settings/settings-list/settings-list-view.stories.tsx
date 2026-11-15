@@ -31,6 +31,7 @@ const meta = {
     onSelect: action('select Settings page'),
     onThemeChange: action('choose theme'),
     onFollowUpSuggestionsChange: action('choose Follow-up suggestions'),
+    onSuggestionModelChange: action('choose suggestion model'),
   },
 } satisfies Meta<typeof SettingsListView>;
 
@@ -42,6 +43,7 @@ function SettingsWithPreference(
   args: SettingsListViewProps,
 ): React.JSX.Element {
   const [enabled, setEnabled] = useState(args.followUpSuggestions);
+  const [models, setModels] = useState(args.suggestionModels);
 
   return (
     <SettingsListView
@@ -50,6 +52,15 @@ function SettingsWithPreference(
       onFollowUpSuggestionsChange={(next) => {
         setEnabled(next);
         args.onFollowUpSuggestionsChange?.(next);
+      }}
+      suggestionModels={models}
+      onSuggestionModelChange={(id, choice) => {
+        setModels((current) =>
+          current?.map((agent) =>
+            agent.id === id ? { ...agent, choice } : agent,
+          ),
+        );
+        args.onSuggestionModelChange?.(id, choice);
       }}
     />
   );
