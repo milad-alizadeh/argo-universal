@@ -100,6 +100,7 @@ import {
   rememberHookedPermission,
   withdrawRequest,
 } from './request-queues';
+import { restartStep } from './restart/restart-step';
 import {
   acpUpdateEvent,
   setConfigEvent,
@@ -906,6 +907,12 @@ const sessionSetup = setup({
       );
     },
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
+    restartAgentSession: enqueueActions(({ context, event, enqueue }): void => {
+      assertEvent(event, 'session.restart');
+      const { notice, ...step } = restartStep(context, event.restart);
+      enqueueChangeAndWrites(enqueue, context, step);
+      enqueue.sendTo('feed', notice);
+    }),
   },
   guards: {
     isArchiving: ({ context }) => context.archiveRequested,
@@ -960,6 +967,8 @@ const sessionSetup = setup({
       ]),
     ]),
     isNew: ({ context }): boolean => context.input.kind === 'new',
+    // A Session no prompt reached is discarded when it closes, so it has nothing to open again.
+    isKept: ({ context }): boolean => context.kept,
     isUnstored: ({ context }): boolean => !context.stored,
     closesBy: ({ context }, step: ClosureStep): boolean =>
       nextClosureStep(context) === step,
@@ -1341,6 +1350,11 @@ export const sessionMachine = sessionSetup.createMachine({
               on: {
                 'acp.failed': { target: 'closing', actions: 'recordCrash' },
                 'session.close': { target: 'closing' },
+                'session.restart': {
+                  guard: 'isKept',
+                  target: 'closing',
+                  actions: 'restartAgentSession',
+                },
                 'session.prompt': {
                   guard: ({ context }): boolean =>
                     context.queueSteering === null,

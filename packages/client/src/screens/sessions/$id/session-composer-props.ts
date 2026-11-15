@@ -1,4 +1,9 @@
-import type { Plan, SessionSnapshot, SlashCommand } from '@repo/contracts';
+import {
+  type Plan,
+  type SessionSnapshot,
+  type SlashCommand,
+  withArgoSlashCommands,
+} from '@repo/contracts';
 import { type InstalledAgents, loadedAgents } from '#features/agents';
 import type {
   ComposerConfigurationProps,
@@ -89,7 +94,8 @@ const checkoutProps = (
   checkout: SessionSnapshot['checkout'],
 ): ComposerConfigurationProps['checkout'] => ({
   branch: checkout.branch ?? '',
-  newWorktree: checkout.type === 'worktree',
+  // A borrowed Checkout is a worktree too, drawn as the one its starter owns.
+  newWorktree: checkout.type !== 'main',
   path: checkout.path,
 });
 
@@ -122,8 +128,9 @@ const draftProps = (commands: SessionCommands): DraftProps => ({
   onSend: (sent) => void commands.sendDraft(sent),
 });
 
+// An open Session always offers Argo's Slash commands, whether or not its Agent has reported any.
 const slashCommandsOf = (open: OpenSession): ComposerProps['slashCommands'] =>
-  open.options?.commands ?? undefined;
+  withArgoSlashCommands(open.options?.commands);
 
 // The Composer of an open Session: its draft, its commands and its configuration.
 export function sessionComposerProps(open: OpenSession): ComposerProps {

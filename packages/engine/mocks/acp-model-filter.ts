@@ -52,6 +52,7 @@ const userEvents = new Set([
   'session.serverStopping',
   'session.answerPermission',
   'session.answerElicitation',
+  'session.restart',
 ]);
 
 export const canApplyLifecycleEvent = (
@@ -102,7 +103,8 @@ type UserEvent = Extract<
       | 'session.storageFailing'
       | 'session.serverStopping'
       | 'session.answerPermission'
-      | 'session.answerElicitation';
+      | 'session.answerElicitation'
+      | 'session.restart';
   }
 >;
 

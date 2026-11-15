@@ -50,6 +50,8 @@ export {
 
 export { messageRejectedEvent } from './rejected-message';
 
+export { sessionRestartedEvent } from './session-restarted';
+
 export { readUnaddressedPlan } from './unaddressed-plan';
 
 export { createFeedRouter } from './router';

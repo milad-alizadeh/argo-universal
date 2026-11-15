@@ -111,12 +111,12 @@ const bySession = (
     ),
   );
 
-// Nothing could be read at all: that is a failure, never an answer of no Changes.
+// Nothing could be read at all: that is a failure, never an answer of no Changes. A read still awaited is no failure.
 function refuseUnread(
   reads: readonly LinkRead[],
   shown: readonly ChangeRead[],
 ): void {
-  const unread = reads.find(({ pull }) => !pull.data);
+  const unread = reads.find(({ pull }) => !pull.data && pull.failure);
 
   if (shown.length === 0 && unread)
     throw new Error(failureMessage(unread.pull));
@@ -125,7 +125,8 @@ function refuseUnread(
 /*
  * Each pull request is answered alone: one that could not be read, and was never read before, is left out while the
  * others show, and one read before keeps its last known data marked stale. Only when nothing could be read at all is
- * the failure thrown: Argo then keeps the Plugin's contribution out and says why.
+ * the failure thrown: Argo then keeps the Plugin's contribution out and says why. One GitHub is slow to answer is
+ * no failure: it shows as last read, or not yet (see `pull-row-reads.ts`).
  */
 export function changesBySession(
   reads: readonly LinkRead[],

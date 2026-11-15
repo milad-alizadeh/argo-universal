@@ -61,6 +61,7 @@ export const modelRequestEvents = [
   { type: 'session.storageFailing' },
   { type: 'session.serverStopping' },
   { type: 'session.close' },
+  { type: 'session.restart', restart: 'clear' },
   { type: 'acp.failed', error: new Error('connection failed') },
 ] satisfies AcpModelEvent[];
 

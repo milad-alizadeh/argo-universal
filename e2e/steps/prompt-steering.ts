@@ -13,6 +13,7 @@ When(
     const row = page.getByTestId('queued-prompt-row').filter({
       has: page.getByRole('group', { name: text, exact: true }),
     });
+
     await row.getByRole('button', { name: 'Steer', exact: true }).click();
     await expect(row).toHaveCount(0);
   },

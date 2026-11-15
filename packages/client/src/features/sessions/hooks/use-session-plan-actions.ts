@@ -19,12 +19,12 @@ interface SessionPlan {
   snapshot: SessionSnapshot | null | undefined;
 }
 
-// A new Session works where this one does: a new worktree from this one's branch, else the main checkout.
+// A new Session works where this one does: a new worktree from this one's branch, its own or borrowed, else the main checkout.
 const sameCheckout = ({
   type,
   branch,
 }: SessionSnapshot['checkout']): SessionCheckoutChoice =>
-  type === 'worktree' && branch
+  type !== 'main' && branch
     ? { type: 'worktree', baseBranch: branch }
     : { type: 'main' };
 

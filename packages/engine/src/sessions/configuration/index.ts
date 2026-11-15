@@ -19,3 +19,5 @@ export { currentModel } from './option-values';
 export { withHeldConfiguration } from './held-options';
 
 export { agentOptionsUpdates } from './agent-options';
+
+export { savedAgentOptions } from './agent-options-input';

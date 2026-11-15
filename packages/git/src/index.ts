@@ -4,7 +4,11 @@ export { createCheckout } from './checkout';
 
 export { discardCheckout, removeCheckout } from './checkout-removal';
 
-export { isSessionBranch, sessionBranch } from './session-branch';
+export {
+  isSessionBranch,
+  sessionBranch,
+  sessionBranchOwner,
+} from './session-branch';
 
 export {
   listBranches,

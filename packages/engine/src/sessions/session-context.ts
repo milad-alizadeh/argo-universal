@@ -40,6 +40,7 @@ import type {
   QueueEditDisconnected,
 } from './queue-hold-connections';
 import type { QueueSteering } from './queue-steering-types';
+import type { ClosingCommand } from './restart/restart-command';
 import type { SessionData, SessionInput } from './session-data';
 import type { Shells } from './shells';
 import type { Subagents } from './subagents';
@@ -99,7 +100,7 @@ export type SessionCommand =
   | { type: 'session.unarchive' }
   | { type: 'session.cancel' }
   | { type: 'session.declareSubagentRole'; role: SubagentRole }
-  | { type: 'session.close' };
+  | ClosingCommand;
 
 export type SessionEvent =
   | SuggestionEvent

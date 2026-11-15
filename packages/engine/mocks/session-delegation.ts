@@ -2,19 +2,21 @@ import type {
   TerminalOutputResponse,
   PromptRequest,
 } from '@agentclientprotocol/sdk';
-import { SessionNewOutput } from '@repo/contracts';
+import { SessionNewOutput, type SessionNewInput } from '@repo/contracts';
 import { OperationExecution } from '@repo/contracts/operations';
 import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
 import { waitForAcpSessionIdle } from './acp-feed';
 import { operationCaller, runOperation } from './operations';
 import {
-  openAccessSession,
+  openAccessSessionIn,
   readAgentIdentity,
   sessionIdentityStep,
 } from './session-access';
 
 type DelegationOptions = {
+  // Where the calling Session runs; the main checkout by default.
+  checkout?: SessionNewInput['checkout'];
   requests?: PromptRequest[];
   installPlugins?: NonNullable<
     Parameters<typeof startAcpEngine>[0]
@@ -31,10 +33,20 @@ export async function delegationJourney(
     delegationScenario(options, firstTurnSteps),
   );
 
-  const caller = await openAccessSession({ host, outputs }, 'Caller');
+  const caller = await openAccessSessionIn(
+    { host, outputs },
+    callerStart(options),
+  );
 
   return { host, outputs, caller, firstTurnSteps };
 }
+
+const callerStart = ({
+  checkout = emptySessionInput.checkout,
+}: DelegationOptions): Partial<SessionNewInput> => ({
+  checkout,
+  prompt: [{ type: 'text', text: 'Caller' }],
+});
 
 const delegationScenario = (
   options: DelegationOptions,
@@ -53,15 +65,16 @@ const delegationScenario = (
 export type DelegationJourney = {
   host: Awaited<ReturnType<typeof startAcpEngine>>;
   outputs: TerminalOutputResponse[];
-  caller: Awaited<ReturnType<typeof openAccessSession>>;
+  caller: Awaited<ReturnType<typeof openAccessSessionIn>>;
   firstTurnSteps: ScriptedStep[];
 };
 
 export async function startDelegated(
   journey: DelegationJourney,
   caller = journey.caller,
+  checkout: SessionNewInput['checkout'] = emptySessionInput.checkout,
 ): Promise<DelegationJourney['caller']> {
-  const created = await startDelegatedSession(caller);
+  const created = await startDelegatedSession(caller, checkout);
 
   await waitForAcpSessionIdle(journey.host, created.sessionId);
   const identity = readAgentIdentity(journey.outputs);
@@ -73,18 +86,29 @@ export async function startDelegated(
   };
 }
 
+type DelegatedParams = Omit<typeof emptySessionInput, 'checkout' | 'prompt'> & {
+  checkout: SessionNewInput['checkout'];
+  prompt: { type: 'text'; text: string }[];
+};
+
+const delegatedParams = (
+  checkout: SessionNewInput['checkout'],
+): DelegatedParams => ({
+  ...emptySessionInput,
+  checkout,
+  prompt: [{ type: 'text', text: 'Delegated work' }],
+});
+
 const startDelegatedSession = async (
   caller: DelegationJourney['caller'],
+  checkout: SessionNewInput['checkout'],
 ): Promise<ReturnType<typeof SessionNewOutput.parse>> =>
   SessionNewOutput.parse(
     OperationExecution.parse(
       await runOperation(caller.caller.operations, {
         wait: true,
         id: 'session.new',
-        params: {
-          ...emptySessionInput,
-          prompt: [{ type: 'text', text: 'Delegated work' }],
-        },
+        params: delegatedParams(checkout),
       }),
     ).result,
   );
