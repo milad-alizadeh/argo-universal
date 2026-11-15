@@ -36,7 +36,7 @@ export {
   type SectionLists,
 } from './section-lists';
 
-export interface FrameOptions extends FrameSections {
+interface FrameOptions extends FrameSections {
   sizeClass: SizeClass;
 }
 
