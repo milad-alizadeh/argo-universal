@@ -3,6 +3,7 @@ import { expect, it } from 'vitest';
 import { toSessionCheckout } from './session-fields';
 
 const id = 'e03c46d8-ed50-4766-9ef2-68a2bab11c32';
+
 const name = worktreeName(id);
 
 it.each([

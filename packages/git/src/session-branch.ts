@@ -58,6 +58,8 @@ const fnvPrime = 16_777_619;
 
 const tailLength = 6;
 
+const base36 = 36;
+
 // FNV-1a, so the same id always names the same worktree.
 const hash = (text: string): number => {
   let value = 2_166_136_261;
@@ -77,7 +79,7 @@ export const worktreeName = (id: string): string => {
     id
       .replaceAll(/[^a-zA-Z0-9]/g, '')
       .slice(-tailLength)
-      .toLowerCase() || seed.toString(36).slice(0, tailLength);
+      .toLowerCase() || seed.toString(base36).slice(0, tailLength);
 
   return [
     adjectives[seed % adjectives.length],
