@@ -21,6 +21,7 @@ import type {
   AcpSessionDependencies,
   AcpSessionLifetime,
 } from './acp/acp-lifetime';
+import type { SuggestionEvent } from './acp/follow-up/background-suggestions';
 import type { AcpTurnOutcome } from './acp/prompts/prompt-outcome';
 import type { AcpPromptRequest as PromptRequest } from './acp/prompts/prompt-types';
 import type { LocalSubmission } from './acp/prompts/submission';
@@ -105,6 +106,7 @@ export type SessionCommand =
   | { type: 'session.close' };
 
 export type SessionEvent =
+  | SuggestionEvent
   | SessionCommand
   | QueueEditDisconnected
   | AcpLifetimeEvent
@@ -150,7 +152,6 @@ export interface SessionContext extends SessionData {
   pendingSubmission: LocalSubmission | null;
   acpPrompt: PromptRequest | null;
   acpResponseReaders: ReturnType<typeof createAcpResponseReaders>;
-  acpSuggestionRejections: ReturnType<typeof createRejectionCounter>;
   acpConfigurationRejections: ReturnType<typeof createRejectionCounter>;
   acpTurnOutcome: AcpTurnOutcome | null;
   turnEnding: FeedTurnEnding;

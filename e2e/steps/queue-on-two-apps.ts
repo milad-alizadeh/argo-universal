@@ -1,6 +1,6 @@
 import { expect } from '../fixtures';
 import type { SecondApp } from '../second-app';
-import { requests } from './agent-requests';
+import { requests } from './conversation-requests';
 import { readFeed } from './feed';
 import { sessionId } from './feed';
 import { Then, When } from './fixtures';
