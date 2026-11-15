@@ -31,11 +31,11 @@ const createAppProcedures = routerFactory((deps: AppRouterDeps) =>
   }),
 );
 
-// The Plugins' Session acts run through the same Session procedures as a client's calls.
+// The Plugins' Session acts run through the Session procedures a client calls; a Plugin's archive adds the uncommitted-files refusal.
 function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
   deps.plugins.sessionActs.attach({
     archive: async (sessionId) => {
-      await sessions.implementations['session.archive']({ sessionId });
+      await sessions.archiveFromPlugin(sessionId);
     },
     prompt: async (sessionId, text, { pluginId, title }) => ({
       status: await sessions.promptFromPlugin(

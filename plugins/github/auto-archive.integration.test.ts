@@ -7,7 +7,11 @@ import {
 } from './auto-archive-fixture';
 import { watch } from './auto-fix-fixture';
 import { attached, reference, slow } from './auto-merge-fixture';
-import { archivedSessions, setTurn } from './journey-archive-fixture';
+import {
+  archivedSessions,
+  setTurn,
+  setUncommitted,
+} from './journey-archive-fixture';
 import { attach, detach } from './journey-calls-fixture';
 import { restart, sessionId } from './journey-fixture';
 import { attached as attachedAll } from './journey-watch-fixture';
@@ -97,6 +101,25 @@ it(
     expect((await archiveOffer(run)).on).toBe(true);
 
     setTurn(run, sessionId, false);
+    await watch(run);
+    expect(archivedSessions(run)).toEqual([sessionId]);
+  },
+  slow,
+);
+
+it(
+  'waits while the Checkout has uncommitted files, then archives on a later Watch',
+  async () => {
+    const run = await attached();
+
+    await tapArchive(run, true);
+    end(run, 12, 'merged');
+    setUncommitted(run, sessionId, true);
+    await watch(run);
+    expect(archivedSessions(run)).toEqual([]);
+    expect((await archiveOffer(run)).on).toBe(true);
+
+    setUncommitted(run, sessionId, false);
     await watch(run);
     expect(archivedSessions(run)).toEqual([sessionId]);
   },

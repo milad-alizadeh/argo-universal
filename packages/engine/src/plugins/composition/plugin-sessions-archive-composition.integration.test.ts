@@ -1,79 +1,15 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import type { PromptRequest } from '@agentclientprotocol/sdk';
-import type { PluginCapability } from '@repo/contracts/plugins';
-import { session } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
 import { expect, it } from 'vitest';
-import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { emptySessionInput } from '#mocks/acp-engine';
 import { promptedArchiveSession } from '#mocks/archive';
 import { insertSession } from '#mocks/database';
-import { shippedFolder, writePlugin } from '#mocks/runtime-plugins';
-
-const archive = {
-  name: 'archive',
-  label: 'Archive',
-  description: 'Archives a Session through the Plugin API.',
-  tier: 'act' as const,
-  params: {
-    sessionId: {
-      type: 'string' as const,
-      description: 'The Session',
-      required: true,
-    },
-  },
-};
-
-const source = `export function register(argo) {
-  argo.operations.register('archive', async ({ sessionId }) => {
-    await argo.sessions.archive(sessionId);
-    return { archived: sessionId };
-  });
-}`;
-
-const canArchive: PluginCapability[] = [{ kind: 'sessions:archive' }];
-
-type Host = Awaited<ReturnType<typeof startAcpEngine>>;
-
-// A first-party Plugin whose one Operation archives the Session it is handed.
-const startWith = (
-  capabilities: PluginCapability[],
-  scenario: Parameters<typeof startAcpEngine>[0] = { steps: [] },
-): Promise<Host> =>
-  startAcpEngine({
-    ...scenario,
-    installPlugins: async (home) => {
-      await writePlugin(home, {
-        id: 'tidy',
-        fixture: 'healthy',
-        capabilities,
-        operations: [archive],
-      });
-      await writeFile(join(home, shippedFolder, 'tidy', 'index.mjs'), source);
-    },
-  });
-
-const archiveFor = async (
-  host: Host,
-  sessionId: string,
-  projectId = emptySessionInput.projectId,
-): ReturnType<Host['caller']['plugins']['run']> => {
-  await host.caller.plugin.activate({ pluginId: 'tidy' });
-
-  return host.caller.plugins.run({
-    pluginId: 'tidy',
-    operation: 'archive',
-    args: { sessionId },
-    projectId,
-  });
-};
-
-const archivedAt = (host: Host, sessionId: string): number | null | undefined =>
-  host.database.select().from(session).where(eq(session.id, sessionId)).get()
-    ?.archivedAt;
-
-const pluginLog = (host: Host): Promise<string> =>
-  readFile(join(host.home, 'logs/plugins.log'), 'utf8');
+import {
+  archiveFor,
+  archivedAt,
+  canArchive,
+  pluginLog,
+  startWith,
+} from '#mocks/plugin-archive-host';
 
 it('archives an idle top-level Session and its child Sessions, as the App does', async () => {
   const host = await startWith(canArchive);

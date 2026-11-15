@@ -2,7 +2,11 @@ import type { PluginTestOptions } from '@argo/plugin-kit/testing';
 import type { GitHubFixture } from './github-fixture';
 import type { Journey } from './journey-fixture';
 
-type Archiving = { archived: string[]; running: Set<string> };
+type Archiving = {
+  archived: string[];
+  running: Set<string>;
+  uncommitted: Set<string>;
+};
 
 const archivingBy = new WeakMap<GitHubFixture, Archiving>();
 
@@ -10,6 +14,7 @@ function archivingOf(github: GitHubFixture): Archiving {
   const found = archivingBy.get(github) ?? {
     archived: [],
     running: new Set<string>(),
+    uncommitted: new Set<string>(),
   };
 
   archivingBy.set(github, found);
@@ -17,15 +22,18 @@ function archivingOf(github: GitHubFixture): Archiving {
   return found;
 }
 
-// The App's archive as the Plugin meets it: refused, as core does, while a Turn runs on the Session.
+// A Plugin's archive as it meets core: refused while a Turn runs on the Session or its Checkout has uncommitted files.
 export function archiveRecorder(
   github: GitHubFixture,
 ): NonNullable<PluginTestOptions['archiveSession']> {
-  const { archived, running } = archivingOf(github);
+  const { archived, running, uncommitted } = archivingOf(github);
 
   return async (sessionId) => {
     if (running.has(sessionId))
       throw new Error(`Session ${sessionId} cannot accept session.archive`);
+
+    if (uncommitted.has(sessionId))
+      throw new Error(`Session ${sessionId} has uncommitted files`);
 
     archived.push(sessionId);
   };
@@ -46,4 +54,16 @@ export function setTurn(
 
   if (running) turns.add(sessionId);
   else turns.delete(sessionId);
+}
+
+// The Session's Checkout gains or loses uncommitted files.
+export function setUncommitted(
+  { github }: Pick<Journey, 'github'>,
+  sessionId: string,
+  has: boolean,
+): void {
+  const { uncommitted } = archivingOf(github);
+
+  if (has) uncommitted.add(sessionId);
+  else uncommitted.delete(sessionId);
 }

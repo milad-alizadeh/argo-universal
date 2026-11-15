@@ -63,7 +63,7 @@ export interface PluginTestOptions {
     text: string,
     sender: { pluginId: string; title: string },
   ) => Promise<{ status: 'started' | 'queued' }>;
-  // Stands in for the App's archive: what `argo.sessions.archive` reaches; it rejects as core does for a Turn that runs. A Plugin without it cannot archive.
+  // Stands in for the App's archive: what `argo.sessions.archive` reaches; it rejects as core does for a Turn that runs or a Checkout with uncommitted files. A Plugin without it cannot archive.
   archiveSession?: (sessionId: string) => Promise<void>;
 }
 

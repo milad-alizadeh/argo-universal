@@ -40,7 +40,7 @@ async function settled(source: Reads, link: PullLink): Promise<boolean> {
   return isOver(await readPull(source, link)) && othersOver(source, link);
 }
 
-// A refused archive, as core does for a Turn that runs, waits for a later Watch.
+// A refused archive, as core does for a Turn that runs or a Checkout with uncommitted files, waits for a later Watch.
 async function archived(
   argo: Acting,
   { sessionId }: PullLink,
@@ -70,8 +70,7 @@ async function archiveOne(
 
 /*
  * The Watch's Auto-archive step for one Project: a Session is archived once the pull request with Auto-archive on is
- * Merged or Closed and no other attached pull request is Open. Uncommitted files are not looked at: core tells a Plugin
- * nothing of a Checkout.
+ * Merged or Closed and no other attached pull request is Open.
  */
 export async function autoArchive(
   argo: Acting,

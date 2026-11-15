@@ -25,7 +25,7 @@ export const SessionGet = z.object({
   sessionId: z.string().min(1),
 });
 
-// `argo.sessions.archive`; needs `sessions:archive` and a Session of the Project the call runs for (ADR-0055).
+// `argo.sessions.archive`; needs `sessions:archive` and a Session of the Project the call runs for, and is refused while a Turn runs or the Checkout has uncommitted files (ADR-0055).
 export const SessionArchive = z.object({
   api: z.literal('sessions'),
   action: z.literal('archive'),

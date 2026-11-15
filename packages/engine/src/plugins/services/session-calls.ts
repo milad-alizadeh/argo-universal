@@ -30,7 +30,7 @@ async function readSession(
 
 /*
  * `argo.sessions.archive` archives as the App does, with no confirm tier (ADR-0055). The Session must be one of
- * the Project the call runs for; the App's own archive then refuses a Turn that runs and a child Session.
+ * the Project the call runs for; core then refuses a Turn that runs, a child Session and a Checkout with uncommitted files.
  */
 async function archiveSession(
   call: PluginCall,
