@@ -48,7 +48,7 @@ const readChecks = (
     readState(reads.checks({ projectId, repository, head }), { projectId }),
   );
 
-async function readLink(
+export async function readLink(
   source: ChangesSource,
   link: PullLink,
 ): Promise<LinkRead> {

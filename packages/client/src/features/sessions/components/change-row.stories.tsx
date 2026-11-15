@@ -12,7 +12,7 @@ import {
   mergedChangeRow,
 } from './change-row-fixtures';
 
-// Paper 24GB-0: Components / ChangeRow, including the checks donut states.
+// Paper 24GB-0: Components / ChangeRow, including the checks StatusDot states.
 const meta = {
   title: 'Sessions/ChangeRow',
   component: ChangeRow,

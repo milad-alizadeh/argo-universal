@@ -12,6 +12,8 @@ import {
 
 export type ChangeStageProps = ChangeState & {
   number?: number;
+  // Caption in place of the stage name or `#number`, for a Plugin that names the Change itself.
+  text?: string;
   form?: 'bare' | 'disc';
   testID?: string;
 };
@@ -25,6 +27,8 @@ export function ChangeStageIcon(props: GlyphProps): ReactElement {
 }
 
 function stageLabel(props: ChangeStageProps): string {
+  if (props.text !== undefined) return props.text;
+
   return props.number === undefined
     ? resolveChangeStage(props).label
     : `#${props.number}`;
