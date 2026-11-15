@@ -5,7 +5,7 @@ import { useCallback, useState } from 'react';
 const gitItemPath = /^\/[\w-]+\/[\w.-]+\/(pull|issues)\/\d+\/?$/;
 
 // The path alone decides, so a link to a comment (`#issuecomment-…`) or with a query still gets its mark.
-export function isGitItemLink(href: string): boolean {
+function isGitItemLink(href: string): boolean {
   const url = URL.parse(href);
 
   return url?.hostname === 'github.com' && gitItemPath.test(url.pathname);

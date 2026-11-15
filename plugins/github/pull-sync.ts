@@ -3,7 +3,7 @@ import type { CheckInfo } from './pull-checks';
 import type { PullKey } from './pull-store';
 
 // What one Slot answers for the pull requests it names: what is known now, with GitHub asked behind it.
-export type Shown = <Link extends PullKey>(
+type Shown = <Link extends PullKey>(
   links: readonly Link[],
 ) => Promise<LinkRead<Link>[]>;
 
