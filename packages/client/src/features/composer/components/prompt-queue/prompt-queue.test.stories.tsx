@@ -137,3 +137,47 @@ export const FailedSaveKeepsComposerEdit: Story = {
 async function refuseSave(command: QueueCommand): Promise<void> {
   if (command.action === 'save') throw new Error('Save rejected');
 }
+
+export const SteerSendsTheSelectedItem: Story = {
+  args: { canSteer: true },
+  play: async ({ canvas, userEvent, args }) => {
+    const [button] = await canvas.findAllByRole('button', { name: 'Steer' });
+
+    if (!button) throw new Error('Expected a Steer action');
+
+    await userEvent.click(button);
+    await expect(args.command).toHaveBeenCalledWith({
+      action: 'steer',
+      id: 'first',
+      revision: 0,
+    });
+    await expect(canvas.queryByRole('group', { name: firstPrompt })).toBeNull();
+    await expect(canvas.getAllByRole('group')).toHaveLength(1);
+  },
+};
+
+export const UnsupportedAgentHasNoSteer: Story = {
+  play: async ({ canvas }) => {
+    await canvas.findByText(firstPrompt);
+    await expect(canvas.queryByRole('button', { name: 'Steer' })).toBeNull();
+  },
+};
+
+export const FailedSteerKeepsTheItem: Story = {
+  args: {
+    canSteer: true,
+    command: fn(async () => {
+      throw new Error('The Turn ended');
+    }),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const [button] = await canvas.findAllByRole('button', { name: 'Steer' });
+
+    if (!button) throw new Error('Expected a Steer action');
+
+    await userEvent.click(button);
+    await canvas.findByText('The Turn ended');
+    await expect(canvas.getAllByRole('group')).toHaveLength(2);
+    await expect(button).toBeEnabled();
+  },
+};

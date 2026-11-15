@@ -39,6 +39,10 @@ import type {
   QueueHoldConnections,
   QueueEditDisconnected,
 } from './queue-hold-connections';
+import type {
+  QueueSteering,
+  QueueSteeringCommand,
+} from './queue-steering-types';
 import type { SessionData, SessionInput } from './session-data';
 import type { Shells } from './shells';
 import type { Subagents } from './subagents';
@@ -74,6 +78,7 @@ export type SessionMachineInput = SessionInput & {
 };
 
 export type SessionCommand =
+  | QueueSteeringCommand
   | ({ type: 'session.prompt' } & LocalSubmission)
   | {
       type: 'session.answerPermission';
@@ -96,7 +101,7 @@ export type SessionCommand =
   | {
       type: 'session.queue';
       connectionSignal?: AbortSignal;
-      command: QueueCommand;
+      command: Exclude<QueueCommand, { action: 'steer' }>;
       committed: PromiseWithResolvers<void>;
     }
   | { type: 'session.archive' }
@@ -122,6 +127,7 @@ export interface SessionContext extends SessionData {
   input: SessionMachineInput;
   promptQueue: PromptQueue;
   queueHolds: Record<string, string>;
+  queueSteering: QueueSteering | null;
   queueHoldConnections: QueueHoldConnections;
   queueCommitted: Promise<void>;
   dispatchingQueueId: string | null;

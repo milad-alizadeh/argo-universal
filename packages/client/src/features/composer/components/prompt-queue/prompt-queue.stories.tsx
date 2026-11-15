@@ -5,6 +5,7 @@ import { PromptQueue } from './prompt-queue';
 import {
   queuedPrompts,
   singlePrompt,
+  steerablePrompts,
   pausedPrompts,
   editingElsewhere,
 } from './prompt-queue-fixtures';
@@ -24,6 +25,11 @@ const meta = {
       description: 'Queued Prompts held for editing in an App.',
     },
     command: { control: false },
+    canSteer: {
+      control: 'boolean',
+      description:
+        'An active Turn whose adapter supports acknowledged steering.',
+    },
   },
   args: { ...queuedPrompts, command: fn(async (): Promise<void> => {}) },
 } satisfies Meta<typeof PromptQueue>;
@@ -33,6 +39,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Queued: Story = {};
+
+export const Steerable: Story = { args: steerablePrompts };
 
 export const SingleQueued: Story = { args: singlePrompt };
 

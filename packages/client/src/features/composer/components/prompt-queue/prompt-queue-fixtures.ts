@@ -39,3 +39,8 @@ export const singlePrompt: Omit<PromptQueueProps, 'command'> = {
   ...queuedPrompts,
   queue: { ...queuedPrompts.queue, items: [first] },
 };
+
+export const steerablePrompts: Omit<PromptQueueProps, 'command'> = {
+  ...queuedPrompts,
+  canSteer: true,
+};

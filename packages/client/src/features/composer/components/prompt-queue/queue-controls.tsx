@@ -1,3 +1,4 @@
+import { Button } from '@repo/kit/primitives/actions/button';
 import {
   IconButton,
   type IconButtonProps,
@@ -13,6 +14,7 @@ type QueueIconProps = Omit<IconButtonProps, 'accessibilityLabel'> & {
 export function EditControls(row: Row): ReactElement {
   return (
     <>
+      <SteerControl {...row} />
       <QueueIcon {...editProps(row)} />
       <QueueIcon {...deleteProps(row)} />
     </>
@@ -58,4 +60,20 @@ function QueueIcon({ label, ...props }: QueueIconProps): ReactElement {
       />
     </Tooltip>
   );
+}
+
+function SteerControl(row: Row): ReactElement | null {
+  return row.canSteer ? (
+    <Button
+      label="Steer"
+      icon="steer"
+      variant="text"
+      size="sm"
+      control
+      disabled={controlsDisabled(row)}
+      onPress={() =>
+        row.run({ action: 'steer', id: row.row.id, revision: row.row.revision })
+      }
+    />
+  ) : null;
 }

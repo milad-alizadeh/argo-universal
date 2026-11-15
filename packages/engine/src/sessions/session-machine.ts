@@ -81,6 +81,10 @@ import {
   stopQueueHolds,
 } from './queue-hold-connections';
 import {
+  reserveQueueSteering,
+  finishQueueSteering,
+} from './queue-steering-state';
+import {
   selectQueuedPrompt,
   removeQueuedPrompt,
   startQueuedTurn,
@@ -388,6 +392,16 @@ const sessionSetup = setup({
     feed: feedMachine,
   },
   actions: {
+    reserveQueueSteering: assign(({ context, event }) => {
+      assertEvent(event, 'session.reserveQueueSteering');
+
+      return reserveQueueSteering(context, event);
+    }),
+    finishQueueSteering: enqueueActions(({ context, event, enqueue }) => {
+      assertEvent(event, 'session.finishQueueSteering');
+
+      enqueueTurnStep(enqueue, context, finishQueueSteering(context, event));
+    }),
     changePromptQueue: enqueueActions(({ context, event, enqueue, self }) => {
       assertEvent(event, 'session.queue');
       enqueueTurnStep(
@@ -1133,6 +1147,8 @@ export const sessionMachine = sessionSetup.createMachine({
       exit: 'stopQueueHolds',
       on: {
         'session.queue': { actions: 'changePromptQueue' },
+        'session.reserveQueueSteering': { actions: 'reserveQueueSteering' },
+        'session.finishQueueSteering': { actions: 'finishQueueSteering' },
         'session.queueEditDisconnected': {
           actions: 'releaseDisconnectedQueueHold',
         },
@@ -1326,6 +1342,8 @@ export const sessionMachine = sessionSetup.createMachine({
                 'acp.failed': { target: 'closing', actions: 'recordCrash' },
                 'session.close': { target: 'closing' },
                 'session.prompt': {
+                  guard: ({ context }): boolean =>
+                    context.queueSteering === null,
                   actions: ['rememberSubmission', 'releaseHeldConfig'],
                 },
               },

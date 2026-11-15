@@ -34,6 +34,10 @@ function listLayout(press: PressDrawing): PressLayout {
 function compactLayout(press: PressDrawing): PressLayout {
   if (press.look.place === 'tray') return 'tray';
 
+  return sidebarCompactLayout(press);
+}
+
+function sidebarCompactLayout(press: PressDrawing): PressLayout {
   return press.sidebar || press.look.sidebar ? 'sidebar-compact' : 'compact';
 }
 

@@ -3,6 +3,7 @@ import type {
   SessionPromptInput,
   SessionQueueInput,
 } from '@repo/contracts';
+import { steerQueuedPrompt } from './queue-steering';
 import { sendSessionCommand } from './session-command';
 import type { SessionActorRef } from './session-machine';
 import type { SessionHandlerSources } from './session-sources';
@@ -11,7 +12,7 @@ const queueEvent = 'session.queue';
 
 function commandQueue(
   session: SessionActorRef,
-  command: QueueCommand,
+  command: Exclude<QueueCommand, { action: 'steer' }>,
   connectionSignal?: AbortSignal,
 ): Promise<void> {
   const committed = Promise.withResolvers<void>();
@@ -32,7 +33,10 @@ export async function managePromptQueue(
 ): Promise<Record<string, never>> {
   const session = await sources.open.ready(input.sessionId, queueEvent);
   sources.open.admit();
-  await commandQueue(session, input.command, connectionSignal);
+
+  await (input.command.action === 'steer'
+    ? steerQueuedPrompt(session, input.command)
+    : commandQueue(session, input.command, connectionSignal));
 
   return {};
 }

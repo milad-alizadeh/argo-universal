@@ -57,6 +57,9 @@ When(
     const row = rowNamed(page, text);
     await row.getByRole('button', { name: editLabel }).click();
     await expect(
+      page.getByRole('button', { name: 'Cancel queue edit', exact: true }),
+    ).toBeVisible();
+    await expect(
       page.getByRole('textbox', { name: 'Message', exact: true }),
     ).toBeEditable();
   },

@@ -59,6 +59,7 @@ export const initialSessionContext = (
 type InitialQueueState = Pick<
   SessionContext,
   | 'promptQueue'
+  | 'queueSteering'
   | 'queueHolds'
   | 'queueCommitted'
   | 'dispatchingQueueId'
@@ -69,6 +70,7 @@ function initialQueueState(): InitialQueueState {
   return {
     promptQueue: emptyPromptQueue(),
     queueHolds: {},
+    queueSteering: null,
     queueHoldConnections: {},
     queueCommitted: Promise.resolve(),
     dispatchingQueueId: null,
