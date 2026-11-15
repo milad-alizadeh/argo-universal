@@ -7,6 +7,7 @@ import {
   permissionsCancelledEvent,
   permissionSelectedEvent,
   messageRejectedEvent,
+  sessionRestartedEvent,
 } from '../src/feed';
 
 export const acpUpdateEventType = 'feed.acpUpdate';
@@ -143,6 +144,7 @@ export const fixtures = [
     turnId: 'turn-1',
     reason: 'model reason',
   },
+  { type: sessionRestartedEvent, turnId: null, restart: 'clear' },
   { type: 'feed.flush' },
 ] satisfies ModelFixture<typeof machine>[];
 

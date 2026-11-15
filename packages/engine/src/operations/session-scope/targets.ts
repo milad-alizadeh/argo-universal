@@ -119,6 +119,8 @@ const targetRules = {
   'session.savePlan': sessionParam,
   'session.declareSubagentRole': callerSessionParam,
   'session.close': openingSessionParam,
+  'session.reload': sessionParam,
+  'session.clear': sessionParam,
   'shell.stop': sessionParam,
   'session.archive': sessionParam,
   'session.unarchive': sessionParam,

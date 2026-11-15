@@ -3,6 +3,8 @@ import type {
   SessionPromptInput,
   SessionQueueInput,
 } from '@repo/contracts';
+import { restartSession } from './restart/restart-session';
+import { submittedRestart } from './restart/submitted-restart';
 import { sendSessionCommand } from './session-command';
 import type { SessionActorRef } from './session-machine';
 import type { SessionHandlerSources } from './session-sources';
@@ -41,6 +43,11 @@ export async function submitAppPrompt(
   sources: SessionHandlerSources,
   input: SessionPromptInput,
 ): Promise<Record<string, never>> {
+  const restart = submittedRestart(sources, input);
+
+  // An Argo Slash command acts on the Session: it joins no queue and starts no Turn.
+  if (restart) return restartSession(sources.open, input, restart);
+
   return managePromptQueue(sources, {
     sessionId: input.sessionId,
     command: {

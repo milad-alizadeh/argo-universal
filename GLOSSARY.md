@@ -317,7 +317,7 @@ A Session configuration choice made while a Turn runs, held and sent to the Agen
 _Avoid_: Pending option, queued config
 
 **Slash command**:
-A command or skill the Agent offers, named in a prompt as `/name` with optional arguments.
+A command or skill the Agent offers, named in a prompt as `/name` with optional arguments. Argo has two of its own, `/clear` and `/reload`, which act on the Session's Agent session and never reach the Agent; the Agent's own wins a name both have.
 _Avoid_: Command (alone), shortcut, action
 
 **Composer suggestion**:
