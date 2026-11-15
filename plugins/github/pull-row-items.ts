@@ -35,10 +35,28 @@ function details({
   };
 }
 
+const flagsOf = ({
+  draft,
+  conflict,
+}: PullInfo): Pick<
+  NonNullable<SessionRowItem['change']>,
+  'draft' | 'conflict'
+> => ({
+  ...(draft && { draft: true }),
+  ...(conflict && { conflict: true }),
+});
+
+// The stage Argo draws its own mark for; an association never read has none, so it keeps the Plugin's icon.
+const changeOf = ({ pull }: LinkRead): Pick<SessionRowItem, 'change'> =>
+  pull.data
+    ? { change: { stage: pull.data.stage, ...flagsOf(pull.data) } }
+    : {};
+
 const rowItem = (read: LinkRead): SessionRowItem => ({
   icon: pullIcon,
   text: `#${read.link.number}`,
   ...details(read),
+  ...changeOf(read),
 });
 
 // One item per pull request attached to each Session, in the order the Changes Slot lists them; a Session without one has no key.

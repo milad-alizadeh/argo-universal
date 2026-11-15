@@ -20,6 +20,7 @@ import {
   selectedSession,
   unreadSession,
 } from './session-row-fixtures';
+import { pullRequestItemsSession } from './session-row-pull-request-fixtures';
 
 const meta = {
   title: 'Sessions/SessionRow',
@@ -110,6 +111,9 @@ const openPluginPage = action('open Plugin page');
 export const PluginItems: Story = {
   args: { ...pluginItemsSession, onOpenPluginPage: openPluginPage },
 };
+
+// A pull request item draws the Change stage mark and tone the Workbench draws, not its Plugin's glyph.
+export const PullRequestItems: Story = { args: pullRequestItemsSession };
 
 // The chosen Plugin writes the Activity line in place of Argo's.
 export const PluginActivity: Story = { args: pluginActivitySession };
