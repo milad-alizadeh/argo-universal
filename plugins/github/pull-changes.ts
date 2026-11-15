@@ -83,7 +83,7 @@ async function automationReads(
   return { autoMerge, settings };
 }
 
-async function readLink(
+export async function readLink(
   source: ChangesSource,
   link: PullLink,
 ): Promise<LinkRead> {

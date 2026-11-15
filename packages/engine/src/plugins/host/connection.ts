@@ -142,8 +142,10 @@ export class HostConnection {
     this.lifecycle.send({ type: 'host.exited', reason });
   }
 
-  private readonly sendError = (error: Error | null): void => {
-    if (error) this.callbacks.log(`Plugin host IPC: ${error.message}`);
+  // EPIPE is a host that exited after `tell` checked it; its exit is reported on its own.
+  private readonly sendError = (error: NodeJS.ErrnoException | null): void => {
+    if (error && error.code !== 'EPIPE')
+      this.callbacks.log(`Plugin host IPC: ${error.message}`);
   };
 }
 

@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { Platform } from 'react-native';
 import { action } from 'storybook/actions';
+import { fn } from 'storybook/test';
 import { ContentLayout } from '#lib/product/content-layout';
 import { SessionColumn } from '#lib/product/session-column';
 import { SessionLayout } from '#lib/product/session-layout';
@@ -11,6 +12,8 @@ import {
   type ComposerMockProps,
 } from '../../../../../mocks/composer-mock';
 import { attachmentSelectionFailureMessage } from '../../utils/attachment-draft';
+import { queuedPrompts } from '../prompt-queue/prompt-queue-fixtures';
+import { useQueueExample } from '../prompt-queue/queue-example.mocks';
 import { Composer } from './composer';
 import {
   attachedImageComposer,
@@ -146,6 +149,24 @@ export const Disabled: Story = { args: disabledComposer };
 export const TurnRunning: Story = { args: runningTurnComposer };
 
 export const QueueReady: Story = { args: queueReadyComposer };
+
+export const Queued: Story = {
+  args: queueReadyComposer,
+  render: (args) => <QueuedComposer {...args} />,
+};
+
+function QueuedComposer(args: ComposerMockProps): React.JSX.Element {
+  const queue = useQueueExample({
+    ...queuedPrompts,
+    command: fn(async () => {}),
+  });
+
+  return (
+    <SessionColumn>
+      <Composer {...composerProps(args)} promptQueue={queue} />
+    </SessionColumn>
+  );
+}
 
 // An attachment grows a row of tiles above the field.
 export const Attachments: Story = { args: attachedImageComposer };

@@ -26,6 +26,9 @@ export class TestControl {
   private readonly requests: TestRequests;
   private readonly running: () => string[];
   private activity = 0;
+  // Plugin calls the runtime is still answering, and what waits for there to be none.
+  private inFlight = 0;
+  private drained: Array<() => void> = [];
 
   public constructor({ clock = realClock, tell, running }: TestControlInput) {
     this.clock = clock;
@@ -40,12 +43,41 @@ export class TestControl {
   // Marks each Plugin call's start and end, so the clock drains the IPC it causes before moving on.
   public async during<T>(call: () => Promise<T>): Promise<T> {
     this.activity += 1;
+    this.inFlight += 1;
 
     try {
       return await call();
     } finally {
       this.activity += 1;
+      this.inFlight -= 1;
+
+      if (this.inFlight === 0) this.wake();
     }
+  }
+
+  /*
+   * Waits until no Plugin call is in flight and no worker starts another. `advanceClock` does not: a timer it fires
+   * can start a call that is still being answered when it returns, and a test may hold a call open on purpose while
+   * it moves the clock. A call that never finishes keeps this waiting.
+   */
+  public async idle(): Promise<void> {
+    this.requireClock(0);
+
+    for (;;) {
+      await this.settledClocks();
+
+      if (this.inFlight === 0) return;
+
+      await new Promise<void>((resolve) => this.drained.push(resolve));
+    }
+  }
+
+  private wake(): void {
+    const waiting = this.drained;
+
+    this.drained = [];
+
+    for (const resolve of waiting) resolve();
   }
 
   public settle(reply: TestReply): void {

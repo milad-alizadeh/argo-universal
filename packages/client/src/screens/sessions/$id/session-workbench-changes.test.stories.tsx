@@ -214,3 +214,40 @@ export const ChecksPopoverListsEachCheck: Story = {
     await expect(opened).not.toHaveBeenCalled();
   },
 };
+
+// The running checks are listed above the ones that passed, whatever order GitHub sent them in.
+const runningFirst = [
+  ...firstChecks.filter(({ state }) => state === 'running'),
+  ...firstChecks.filter(({ state }) => state === 'passed'),
+].map(({ name }) => name);
+
+if (
+  firstChecks[0]?.state !== 'passed' ||
+  runningFirst[0] === firstChecks[0].name
+)
+  throw new Error(
+    'Recorded catalog needs a passed check listed before a running one',
+  );
+
+export const ChecksPopoverOpensOnHover: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.hover(
+      await canvas.findByRole('button', { name: /CI Checks 3\/5/ }),
+    );
+
+    const popover = await screen.findByRole('dialog', { name: 'CI Checks' });
+
+    await waitFor(() =>
+      expect(
+        runningFirst.filter((name) => within(popover).queryByText(name)),
+      ).toEqual(runningFirst),
+    );
+
+    const listed = within(popover)
+      .getAllByText(new RegExp(`^(${runningFirst.join('|')})$`))
+      .map((row) => row.textContent);
+
+    await expect(listed).toEqual(runningFirst);
+    await expect(opened).not.toHaveBeenCalled();
+  },
+};

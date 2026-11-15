@@ -29,6 +29,13 @@ Light mode uses palette shades 100 through 900. Dark mode reverses that order, s
 Without `intensity`, a drawing uses its existing semantic tone token.
 Plugins cannot set colours or add tokens.
 
+## Hue tones
+
+Owner amendment, 2026-11-14 (#2122): two tones are named by hue, `teal` and `pink`, because they carry no meaning. They exist to tell one mark from another once the tones that name a meaning are spent: the six Agent roles each draw a mark in a colour of their own, with Implement in teal and General in pink, so no role mark is grey.
+Each has the nine shade tokens, `--color-tone-<tone>-100` through `-900`, reversed in dark mode as the others are.
+Only marks take them: the tinted avatar, the tone mark and the leading mark of `FieldGroup.Link`, which the phone's Agents list draws through. A Plugin can therefore choose either hue for a leading mark, as it chooses any other tone there. Canvas `intensity`, `Text` and `Icon` do not take them.
+Orange was rejected as too close to amber, and red stays `danger`.
+
 ## States
 
 Every interactive component draws the same five states from shared tokens: `hover`, `pressed`, `selected` (flat tints), `focus` (today `ring`) and `disabled`.

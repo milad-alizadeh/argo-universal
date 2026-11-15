@@ -269,7 +269,7 @@ A Session that another Session's Agent started over ACP to do delegated work. On
 _Avoid_: Subagent, child agent, task agent
 
 **Agent role**:
-What an Agent (the second sense) is for: Explore, Plan, Review, Test or General. Its parent's Agent declares it through `session.declareSubagentRole` before the spawn, since most Agents' spawn tools cannot carry one; a role the Agent itself reports counts only when none was declared, and an Agent with neither is General. Argo draws each role with its own mark in the Feed and the Agents list.
+What an Agent (the second sense) is for: Explore, Plan, Implement, Review, Test or General. Its parent's Agent declares it through `session.declareSubagentRole` before the spawn, since most Agents' spawn tools cannot carry one; a role the Agent itself reports counts only when none was declared, and an Agent with neither is General. Argo draws each role with its own mark, in its own colour, in the Feed and the Agents list.
 _Avoid_: Agent type, subagent type
 
 **Started Session**:

@@ -3,7 +3,17 @@ import { stockIcon } from '../kit-symbols/stock-icon-schema';
 
 export const fieldLinkMark = z.object({
   icon: stockIcon,
-  tone: z.enum(['neutral', 'info', 'done', 'warning', 'success', 'danger']),
+  // `teal` and `pink` carry no meaning: they tell one mark from another (ADR-0026, #2122).
+  tone: z.enum([
+    'neutral',
+    'info',
+    'done',
+    'warning',
+    'success',
+    'danger',
+    'teal',
+    'pink',
+  ]),
   label: z.string(),
   dimmed: z.boolean().optional(),
   status: z

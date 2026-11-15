@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { expect, onTestFinished } from 'vitest';
+import { clockUntilShown } from './clock-until';
 import {
   fixtureServices,
   type FixtureAnswer,
@@ -104,10 +105,11 @@ export async function clockUntil(
   page: OpenPage,
   text: string,
 ): Promise<void> {
-  for (let step = 0; step < stepLimit && !page.findText(text); step += 1) {
-    await test.clock.advance(clockStep);
-    await page.draw();
-  }
+  await clockUntilShown(test, page, {
+    text,
+    stepMs: clockStep,
+    steps: stepLimit,
+  });
 
   expect(page.findText(text)).toBeDefined();
 }

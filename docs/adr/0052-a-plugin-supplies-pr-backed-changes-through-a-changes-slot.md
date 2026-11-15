@@ -1,6 +1,6 @@
 # A Plugin supplies PR-backed Changes through a Changes Slot
 
-This amends [ADR-0037](0037-plugins-declare-the-data-they-need.md) and builds on [ADR-0035](0035-plugins-add-to-named-slots-and-never-edit-core-screens.md), [ADR-0036](0036-plugins-own-sign-in-and-argo-brokers-their-accounts.md) and [ADR-0039](0039-the-workbench-summarises-sections-and-the-inspector-shows-them-in-full.md) (owner, 2026-11-13, #2025, spec #2024; amended for refresh and failure by #2028; amended by the owner on 2026-11-13, see "The Inspector holds no pull requests"; amended by the owner on 2026-11-14, see "PR automation and the row menu"). ADR-0037 said the Session Slot context carries no PR or check and that `SessionInfo.pullRequest` stays null, so core models neither. That line held while nothing supplied pull requests. The Workbench and Inspector already draw several Changes, and a Session can produce several PRs over time, so the data now needs a typed way in that keeps GitHub out of core.
+This amends [ADR-0037](0037-plugins-declare-the-data-they-need.md) and builds on [ADR-0035](0035-plugins-add-to-named-slots-and-never-edit-core-screens.md), [ADR-0036](0036-plugins-own-sign-in-and-argo-brokers-their-accounts.md) and [ADR-0039](0039-the-workbench-summarises-sections-and-the-inspector-shows-them-in-full.md) (owner, 2026-11-13, #2025, spec #2024; amended for refresh and failure by #2028; amended by the owner on 2026-11-13, see "The Inspector holds no pull requests" and "Discovery runs at Turn end"; amended by the owner on 2026-11-14, see "PR automation and the row menu"). ADR-0037 said the Session Slot context carries no PR or check and that `SessionInfo.pullRequest` stays null, so core models neither. That line held while nothing supplied pull requests. The Workbench and Inspector already draw several Changes, and a Session can produce several PRs over time, so the data now needs a typed way in that keeps GitHub out of core.
 
 ## Decision
 
@@ -44,6 +44,16 @@ Decided by the owner on 2026-11-14, for spec #2093, after a grilling and the Pap
   - **Auto-archive** archives the Session once its PR is Merged or Closed and the Session has no other Open Change and no uncommitted files.
 - **Auto-merge is GitHub's own and is the one GitHub write.** "No Operation changes a PR on GitHub" no longer holds for Auto-merge alone. `github.automation.set` with `kind: 'merge'` enables or disables GitHub's auto-merge through `api.github.com/graphql`, choosing the first method the repository allows in the order squash, merge, rebase. The Plugin stores nothing: `on` is read back from the pull request, so auto-merge turned on in GitHub shows as on. It is unavailable, with a reason, when the repository does not allow auto-merge, the PR is a draft, or the PR is not Open. Every other GitHub write stays out of scope.
 - **New reads.** The Plugin reads each attached PR's review comments, its auto-merge state and the repository's merge settings, through named reads as above.
+
+## Discovery runs at Turn end
+
+Proposed for owner approval, 2026-11-14, spec #2107. Where this section conflicts with "Discovery is an `act` Operation too" above, this section holds.
+
+- **The Engine runs `github.discover` when a Turn ends, for a Session with no attached PR.** Until now only an Agent ran it, so a PR opened from a Session stayed unattached until someone asked. A Session with any attached PR is skipped, so the run happens once per Turn end until a PR is found.
+- **It stays a read.** It adds associations and never removes any. `no-match`, `branchless`, `not-github` and `unavailable` are data, not errors, and draw nothing.
+- **Still no timer, watcher or service.** The trigger is the Turn's end, which the Engine already knows. A PR opened in a Turn is attached by the end of that Turn, or the next at the latest. An Agent may still run `github.discover` itself.
+
+Considered and rejected: running it on a branch push or `gh pr create`, which needs a watcher on the Checkout or on shell commands.
 
 ## Reconciling #1300
 

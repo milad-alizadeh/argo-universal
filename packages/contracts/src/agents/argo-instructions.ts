@@ -19,7 +19,7 @@ const agents: ArgoInstruction = {
   text:
     'Before you spawn a subagent, run the Argo Operation session.declareSubagentRole with its role, through the operation_run tool of the Argo MCP server: ' +
     'explore to search or read code, plan to design an approach, review to check work against a spec or standards, ' +
-    'test to write or run tests, or general for anything else. ' +
+    'test to write or run tests, implement to write or change code, or general for anything else. ' +
     'Declare one role per subagent, in the order you spawn them; leave sessionId out. ' +
     'Argo draws that role for the Agent in the Feed and the Agents list.',
 };

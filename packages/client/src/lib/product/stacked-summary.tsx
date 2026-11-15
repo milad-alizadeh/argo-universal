@@ -16,16 +16,16 @@ export interface StackedSummaryProps {
   texts: readonly string[];
 }
 
-// Paper's group entry: distinct decorative icons and their summary.
+// Paper's group entry: distinct decorative icons and their summary, one card title line tall.
 export function StackedSummary({
   icons,
   texts,
 }: StackedSummaryProps): ReactElement {
   return (
-    <View className="flex-row items-center gap-2 px-1 py-2">
+    <View className="min-h-6 wide-type:min-h-5 flex-row items-center gap-2 px-1">
       <SummaryIcons icons={icons} />
       <View className="min-w-0 flex-1">
-        <Text role="body" tone="muted">
+        <Text role="secondary" tone="muted">
           {texts.join(', ')}
         </Text>
       </View>
@@ -33,11 +33,12 @@ export function StackedSummary({
   );
 }
 
+// A disc is 2px wider than its glyph on each side; it overhangs by that, so the first glyph sits where a bare one would.
 const markStackProps = {
   'aria-hidden': true,
   accessibilityElementsHidden: true,
   importantForAccessibility: 'no-hide-descendants',
-  className: 'min-w-7 shrink-0 flex-row items-center pl-1',
+  className: '-mx-0.5 shrink-0 flex-row items-center',
 } as const;
 
 function SummaryIcons({

@@ -10,15 +10,6 @@ type QueueIconProps = Omit<IconButtonProps, 'accessibilityLabel'> & {
   label: string;
 };
 
-export function OrderControls(row: Row): ReactElement {
-  return (
-    <>
-      <QueueIcon {...moveUpProps(row)} />
-      <QueueIcon {...moveDownProps(row)} />
-    </>
-  );
-}
-
 export function EditControls(row: Row): ReactElement {
   return (
     <>
@@ -30,34 +21,6 @@ export function EditControls(row: Row): ReactElement {
 
 const controlsDisabled = (row: Row): boolean =>
   row.pending || row.holds.includes(row.row.id);
-
-function moveUpProps(row: Row): QueueIconProps {
-  return {
-    label: 'Move Prompt up',
-    icon: 'arrow-up',
-    disabled: controlsDisabled(row) || row.index === 0,
-    onPress: () => move(row, row.index - 1),
-  };
-}
-
-function moveDownProps(row: Row): QueueIconProps {
-  return {
-    label: 'Move Prompt down',
-    icon: 'arrow-down',
-    disabled: controlsDisabled(row) || row.index === row.queue.items.length - 1,
-    onPress: () => move(row, row.index + 2),
-  };
-}
-
-function move(row: Row, before: number): void {
-  const beforeId = row.queue.items[before]?.id ?? null;
-  row.run({
-    action: 'move',
-    id: row.row.id,
-    revision: row.row.revision,
-    beforeId,
-  });
-}
 
 function editProps(row: Row): QueueIconProps {
   return {
@@ -84,7 +47,13 @@ function remove(row: Row): void {
 function QueueIcon({ label, ...props }: QueueIconProps): ReactElement {
   return (
     <Tooltip label={label}>
-      <IconButton {...props} accessibilityLabel={label} size="sm" />
+      <IconButton
+        {...props}
+        accessibilityLabel={label}
+        size="sm"
+        variant="ghost"
+        muted
+      />
     </Tooltip>
   );
 }

@@ -16,9 +16,20 @@ import type { AuthChanges } from '../../auth/auth-changes';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
 import type { TerminalRequests } from '../connection/terminal-requests';
 
+// ACP's `systemPrompt` on session/new, resume and load, which the SDK this Engine builds on does not type yet.
+export type AcpSystemPrompt = {
+  mode: 'append';
+  content: [{ type: 'text'; text: string }];
+};
+
+type WithSystemPrompt = { systemPrompt?: AcpSystemPrompt };
+
 export type AcpSessionOpening =
-  | { method: 'session/new'; params: NewSessionRequest }
-  | { method: 'session/resume'; params: ResumeSessionRequest };
+  | { method: 'session/new'; params: NewSessionRequest & WithSystemPrompt }
+  | {
+      method: 'session/resume';
+      params: ResumeSessionRequest & WithSystemPrompt;
+    };
 
 export type AcpSessionDestination = {
   registrationFinished?: Promise<void>;

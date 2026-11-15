@@ -1,7 +1,8 @@
 import type { Page, Locator } from '@playwright/test';
 import { expect } from '../fixtures';
-import { requests } from './agent-requests';
+import { dragPromptUp } from '../queue-drag';
 import { expectListedAgent } from './agents';
+import { requests } from './conversation-requests';
 import { Given, Then, When } from './fixtures';
 import {
   queueSnapshot,
@@ -18,7 +19,8 @@ const promptMethod = 'session/prompt';
 function rowNamed(page: Page, text: string): Locator {
   return page
     .getByTestId(queueId)
-    .getByRole('group', { name: text, exact: true });
+    .getByTestId('queued-prompt-row')
+    .filter({ has: page.getByRole('group', { name: text, exact: true }) });
 }
 
 When(
@@ -71,11 +73,9 @@ When(
 );
 
 When(
-  'I move Queued Prompt {string} up',
+  'I drag Queued Prompt {string} up',
   async ({ page }, text: string): Promise<void> => {
-    await rowNamed(page, text)
-      .getByRole('button', { name: 'Move Prompt up' })
-      .click();
+    await dragPromptUp(page, rowNamed(page, text));
   },
 );
 

@@ -72,6 +72,25 @@
   --color-tone-done-700: var(--color-violet-700);
   --color-tone-done-800: var(--color-violet-800);
   --color-tone-done-900: var(--color-violet-900);
+  /* Hues with no meaning, for telling marks apart: ADR-0026, 2026-11-14 (#2122). */
+  --color-tone-teal-100: var(--color-teal-100);
+  --color-tone-teal-200: var(--color-teal-200);
+  --color-tone-teal-300: var(--color-teal-300);
+  --color-tone-teal-400: var(--color-teal-400);
+  --color-tone-teal-500: var(--color-teal-500);
+  --color-tone-teal-600: var(--color-teal-600);
+  --color-tone-teal-700: var(--color-teal-700);
+  --color-tone-teal-800: var(--color-teal-800);
+  --color-tone-teal-900: var(--color-teal-900);
+  --color-tone-pink-100: var(--color-pink-100);
+  --color-tone-pink-200: var(--color-pink-200);
+  --color-tone-pink-300: var(--color-pink-300);
+  --color-tone-pink-400: var(--color-pink-400);
+  --color-tone-pink-500: var(--color-pink-500);
+  --color-tone-pink-600: var(--color-pink-600);
+  --color-tone-pink-700: var(--color-pink-700);
+  --color-tone-pink-800: var(--color-pink-800);
+  --color-tone-pink-900: var(--color-pink-900);
 
   /* A modal backdrop in both themes, the overlay setting its opacity; and the
      letterbox behind a video. */
@@ -360,6 +379,25 @@
       --color-tone-done-700: var(--color-violet-700);
       --color-tone-done-800: var(--color-violet-800);
       --color-tone-done-900: var(--color-violet-900);
+      /* Hues with no meaning, for telling marks apart: ADR-0026, 2026-11-14 (#2122). */
+      --color-tone-teal-100: var(--color-teal-100);
+      --color-tone-teal-200: var(--color-teal-200);
+      --color-tone-teal-300: var(--color-teal-300);
+      --color-tone-teal-400: var(--color-teal-400);
+      --color-tone-teal-500: var(--color-teal-500);
+      --color-tone-teal-600: var(--color-teal-600);
+      --color-tone-teal-700: var(--color-teal-700);
+      --color-tone-teal-800: var(--color-teal-800);
+      --color-tone-teal-900: var(--color-teal-900);
+      --color-tone-pink-100: var(--color-pink-100);
+      --color-tone-pink-200: var(--color-pink-200);
+      --color-tone-pink-300: var(--color-pink-300);
+      --color-tone-pink-400: var(--color-pink-400);
+      --color-tone-pink-500: var(--color-pink-500);
+      --color-tone-pink-600: var(--color-pink-600);
+      --color-tone-pink-700: var(--color-pink-700);
+      --color-tone-pink-800: var(--color-pink-800);
+      --color-tone-pink-900: var(--color-pink-900);
 
       /* Every colour is a Tailwind palette shade: the nearest one, measured in OKLab. */
       --color-foreground: var(--color-neutral-950);
@@ -520,6 +558,25 @@
       --color-tone-done-700: var(--color-violet-300);
       --color-tone-done-800: var(--color-violet-200);
       --color-tone-done-900: var(--color-violet-100);
+      /* Hues with no meaning, for telling marks apart: ADR-0026, 2026-11-14 (#2122). */
+      --color-tone-teal-100: var(--color-teal-900);
+      --color-tone-teal-200: var(--color-teal-800);
+      --color-tone-teal-300: var(--color-teal-700);
+      --color-tone-teal-400: var(--color-teal-600);
+      --color-tone-teal-500: var(--color-teal-500);
+      --color-tone-teal-600: var(--color-teal-400);
+      --color-tone-teal-700: var(--color-teal-300);
+      --color-tone-teal-800: var(--color-teal-200);
+      --color-tone-teal-900: var(--color-teal-100);
+      --color-tone-pink-100: var(--color-pink-900);
+      --color-tone-pink-200: var(--color-pink-800);
+      --color-tone-pink-300: var(--color-pink-700);
+      --color-tone-pink-400: var(--color-pink-600);
+      --color-tone-pink-500: var(--color-pink-500);
+      --color-tone-pink-600: var(--color-pink-400);
+      --color-tone-pink-700: var(--color-pink-300);
+      --color-tone-pink-800: var(--color-pink-200);
+      --color-tone-pink-900: var(--color-pink-100);
       /* Graphite: a true neutral near-black. Each surface is one lightness
          step up the neutral ramp, so elevation needs no shadow; text is
          neutral-200, never white; tints and edges are white alphas. */

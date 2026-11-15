@@ -77,7 +77,7 @@ Feature: Turns
     And I cancel editing Queued Prompt "Second prompt" after writing "Discarded edit"
     Then the Message box shows "Separate draft"
     When I edit Queued Prompt "Second prompt" to "Edited prompt" and save
-    And I move Queued Prompt "Third prompt" up
+    And I drag Queued Prompt "Third prompt" up
     And I delete Queued Prompt "Obsolete prompt"
     Then the queued Prompts read "Third prompt|Edited prompt"
     And the Message box shows "Separate draft"

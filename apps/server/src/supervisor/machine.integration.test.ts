@@ -114,6 +114,29 @@ describe('supervisor', (): void => {
     expect(readdirSync(home)).toEqual(['server.json']);
   });
 
+  // A crowded Mac stretched startup recovery to 40 seconds, and a 15-second limit restarted it until the Server failed.
+  it('waits out an Engine that takes 40 seconds to report ready', (): void => {
+    startSupervisor();
+    vi.advanceTimersByTime(40_000);
+
+    latestEngine().send({ type: readyEngineEvent, port: 7337 });
+
+    expect(engines).toHaveLength(1);
+    expect(supervisor.getSnapshot().value).toBe('running');
+  });
+
+  // A busy event loop holds heartbeats for seconds; the Engine that recovers keeps running.
+  it('keeps an Engine whose heartbeat is 10 seconds late', (): void => {
+    startSupervisor();
+    latestEngine().send({ type: readyEngineEvent, port: 7337 });
+    vi.advanceTimersByTime(10_000);
+
+    latestEngine().send({ type: heartbeatEngineEvent });
+
+    expect(engines).toHaveLength(1);
+    expect(supervisor.getSnapshot().value).toBe('running');
+  });
+
   it('removes its own server.json when asked to stop', (): void => {
     startSupervisor();
     latestEngine().send({ type: readyEngineEvent, port: 7337 });

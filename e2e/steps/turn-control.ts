@@ -8,9 +8,8 @@ import {
   loggedMessages,
   receivedAt,
   releaseAgent,
-  requests,
-  requestsIn,
 } from './agent-requests';
+import { requests, requestsIn } from './conversation-requests';
 import { readFeed } from './feed';
 import { When, Then } from './fixtures';
 import { expectMessage, messageLabel } from './new-session';

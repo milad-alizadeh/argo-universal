@@ -522,7 +522,7 @@ Turning a Plugin off releases its worker and pending rebuild.
 
 ## Accounts and OAuth
 
-`plugins/examples/github-sign-in` is a complete reference: GitHub's sign-in through the kit's device flow, with its sign-in page drawn by the kit. Copy it for a new service. GitHub's web flow needs a client secret, which the kit's flows do not send, so the example uses the device flow GitHub offers instead.
+`templates/plugins/github-sign-in` is a complete reference: GitHub's sign-in through the kit's device flow, with its sign-in page drawn by the kit. Copy it for a new service. GitHub's web flow needs a client secret, which the kit's flows do not send, so the example uses the device flow GitHub offers instead.
 
 Declare each provided Account as `{ host, page }` in `contributes.accounts`.
 Define that page with `argo.pages.define` before registration completes; an Account's page is a Loader page.

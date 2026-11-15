@@ -37,6 +37,17 @@ const palettes = {
     disc: 'bg-tone-danger-100',
     ink: 'text-tone-danger-700',
   },
+  // Hues with no meaning, for telling one mark from another (ADR-0026, #2122).
+  teal: {
+    bare: 'text-tone-teal-600',
+    disc: 'bg-tone-teal-100',
+    ink: 'text-tone-teal-700',
+  },
+  pink: {
+    bare: 'text-tone-pink-600',
+    disc: 'bg-tone-pink-100',
+    ink: 'text-tone-pink-700',
+  },
 };
 
 type MarkTone = keyof typeof palettes;

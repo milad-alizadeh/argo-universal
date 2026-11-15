@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { SubagentRole } from '../feed/subagent-role';
 import { pluginInstructionsLimit } from '../plugins/manifest-fields';
 import { argoInstructions } from './argo-instructions';
 
@@ -19,6 +20,14 @@ it('asks the Agent to declare the role of each Agent it spawns, naming the tool 
 
   expect(agents).toContain('session.declareSubagentRole');
   expect(agents).toContain('operation_run');
+});
+
+it('names every Agent role the Agent can declare', () => {
+  const agents = argoInstructions.find(({ name }) => name === 'Agents')?.text;
+
+  expect(SubagentRole.options).toContain('implement');
+
+  for (const role of SubagentRole.options) expect(agents).toContain(role);
 });
 
 // Claude Code defers its task tools behind ToolSearch, and an unnamed tool went unused.

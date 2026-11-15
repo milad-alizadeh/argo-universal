@@ -20,6 +20,7 @@ import {
   selectedSession,
   unreadSession,
 } from './session-row-fixtures';
+import { pullRequestItemsSession } from './session-row-pull-request-fixtures';
 
 const meta = {
   title: 'Sessions/SessionRow',
@@ -111,6 +112,9 @@ export const PluginItems: Story = {
   args: { ...pluginItemsSession, onOpenPluginPage: openPluginPage },
 };
 
+// A pull request item draws the Change stage mark and tone the Workbench draws, not its Plugin's glyph.
+export const PullRequestItems: Story = { args: pullRequestItemsSession };
+
 // The chosen Plugin writes the Activity line in place of Argo's.
 export const PluginActivity: Story = { args: pluginActivitySession };
 
@@ -125,13 +129,6 @@ export const LongPluginItemsCompact: Story = {
   ...Compact,
   args: { ...longPluginItemsCompactSession, onOpenPluginPage: openPluginPage },
 };
-
-// The pointer over a row tints it; Regular keeps its hairline. Wide layouts only.
-const hover: Story['play'] = async ({ canvas, userEvent }) => {
-  await userEvent.hover(canvas.getByRole('button'));
-};
-
-export const Hovered: Story = { args: runningSession, play: hover };
 
 // A checkpoint every 1.5 seconds: the fill springs from 1 to 2 to 3 of 4 done, then starts over.
 const checkpointMilliseconds = 1500;
