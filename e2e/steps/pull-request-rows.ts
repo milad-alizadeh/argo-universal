@@ -40,7 +40,7 @@ When(
     await page.evaluate(
       'window.open = (url) => { window.recordOpened(String(url)); return null; }',
     );
-    // The row's press layer opens GitHub; its Checks part opens the list of Checks instead.
+    // The row's title opens GitHub; its Checks part opens the list of Checks instead.
     await workbench(page)
       .getByRole('button', {
         name: `Open Change #${fourth.number} on GitHub`,

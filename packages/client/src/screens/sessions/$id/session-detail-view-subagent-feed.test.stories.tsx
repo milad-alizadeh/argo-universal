@@ -1,4 +1,5 @@
 import type { Subagent } from '@repo/contracts';
+import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
@@ -92,6 +93,7 @@ function feedRowOpens(width: number): Story {
         name: new RegExp(`^Started ${runningSubagent.title}`),
       });
 
+      await settleOverlays(started);
       await userEvent.click(started);
 
       await assertOpened(canvas, width === workbenchWide);

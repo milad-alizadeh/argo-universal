@@ -11,6 +11,8 @@ export {
   projectDetailsRowLimit,
 } from '#plugin-project-details-item';
 
+export { SessionRowItem } from '#plugin-session-row-item';
+
 export {
   addOnlySlots,
   itemsSlotEntry,
@@ -23,7 +25,6 @@ export {
   sessionBarSlotId,
   sessionChangesSlotId,
   sessionRowSlotId,
-  SessionRowItem,
   slotItemsListLimit,
   toolCallSlotId,
   type ItemsSlot,

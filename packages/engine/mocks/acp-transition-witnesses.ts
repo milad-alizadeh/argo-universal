@@ -159,6 +159,7 @@ export function extraTransitionWitnesses(
   const states = pathStates(paths);
 
   return [
+    { state: initial, event: suggestion },
     ...creationWitnesses(states),
     ...openingWitnesses(states),
     ...permissionWitnesses(states),
@@ -167,3 +168,8 @@ export function extraTransitionWitnesses(
     ...queueTransitionWitnesses(initial),
   ];
 }
+
+const suggestion: SessionEvent = {
+  type: 'acp.suggestion',
+  suggestion: { turnId: 'ended-turn', text: null },
+};

@@ -9,10 +9,12 @@ import { requireInstalledAgent } from '../../agents';
 import type { SessionData } from '../session-data';
 import type { Shells } from '../shells';
 import {
+  isWithdrawn,
   createLifetimeDestination,
   type AcpLifetimeEvent,
 } from './acp-session-destination';
 import { selectSessionOpening } from './acp-session-opening';
+import { BackgroundSuggestions } from './follow-up/background-suggestions';
 import { AcpSessionRequests } from './requests/acp-session-requests';
 
 export type { AcpLifetimeEvent } from './acp-session-destination';
@@ -22,12 +24,10 @@ export type AcpSessionDependencies = {
   installedAgents: InstalledAgents;
 };
 
-const isWithdrawn = (cause: unknown): boolean =>
-  cause instanceof Error && cause.name === 'AbortError';
-
 type SendLifetimeEvent = (event: AcpLifetimeEvent) => void;
 
 export class AcpSessionLifetime {
+  private readonly suggestions = new BackgroundSuggestions();
   private readonly bound = Promise.withResolvers<SendLifetimeEvent>();
   private readonly controller = new AbortController();
   private readonly registration = Promise.withResolvers<void>();
@@ -55,11 +55,12 @@ export class AcpSessionLifetime {
   private createSessionDestination(
     sendBack: SendLifetimeEvent,
   ): AcpSessionDestination {
-    const destination = {
-      ...createLifetimeDestination(this.requests, (event) => {
-        if (this.attached) sendBack(event);
-      }),
-    };
+    const destination = createLifetimeDestination(this.requests, (event) => {
+      if (event.type === 'acp.update')
+        this.suggestions.observe(event.notification);
+
+      if (this.attached) sendBack(event);
+    });
 
     return this.attachShells({
       ...destination,
@@ -71,6 +72,7 @@ export class AcpSessionLifetime {
   ): AcpSessionDestination {
     return this.shells ? this.shells.attach(destination) : destination;
   }
+  public followUpSuggestions = (): BackgroundSuggestions => this.suggestions;
   public get signal(): AbortSignal {
     return this.controller.signal;
   }
@@ -137,6 +139,7 @@ export class AcpSessionLifetime {
   public close(status: 'lost' | 'stopped' = 'lost'): Promise<void> {
     this.finishRegistration();
     this.requests.cancelAll();
+    this.suggestions.cancel();
     this.controller.abort();
     this.closing ??= this.closeOwned(status);
 
