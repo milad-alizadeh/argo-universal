@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { trayClassName } from '#kit/tray-surface';
 import { cn } from '#kit/utils';
 import { Text } from '#primitives/content/text';
+import type { SyntaxRun } from '../../../code-text/syntax-run';
 import { CodeBlockBody } from './code-block-body';
 import { codeBlockBarClassName } from './code-block-header';
 import { CopyButton, codeBlockGroup } from './copy-button';
@@ -12,6 +13,8 @@ export interface CodeSection {
   title: string;
   code: string;
   language?: string;
+  // The code already split into coloured runs, for a section that is not one language throughout.
+  runs?: SyntaxRun[];
 }
 
 export interface CodeSectionsProps {
@@ -34,7 +37,11 @@ function Section(section: CodeSection): ReactElement {
   return (
     <View className={codeBlockGroup}>
       <SectionBar {...section} />
-      <CodeBlockBody code={section.code} language={section.language} />
+      <CodeBlockBody
+        code={section.code}
+        language={section.language}
+        runs={section.runs}
+      />
     </View>
   );
 }

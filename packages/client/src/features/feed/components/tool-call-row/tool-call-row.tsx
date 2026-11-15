@@ -9,12 +9,13 @@ import { use } from 'react';
 import { View } from 'react-native';
 import { toolCallFacts } from '../../view/feed-row-facts';
 import { fileName } from '../../view/file-edit-label';
+import { shellRuns } from '../shell-runs';
 import {
   ToolCallDisclosure,
   toolCallDisclosureProps,
 } from '../tool-call-disclosure';
+import { GroupChild } from '../tool-call-group/group-child';
 import { GroupLiveId } from '../tool-call-group/group-live-id';
-import { SettledGroup } from '../tool-call-group/settled-group';
 import { toolCallIcon } from '../tool-call-icon';
 import { ToolOutput } from '../tool-output';
 
@@ -61,11 +62,18 @@ const rawText = (
   return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
 };
 
+// The command line coloured as bash, as a Shell block draws it.
+const shellSection = (command: string): CodeSection => ({
+  title: 'Shell',
+  code: `$ ${command}`,
+  runs: shellRuns(command),
+});
+
 // A command shows its command line, not its raw input.
 function rawInputSection(row: ToolCallUpdate): CodeSection | undefined {
   const command = toolCallFacts(row).command;
 
-  if (command !== undefined) return { title: 'Shell', code: `$ ${command}` };
+  if (command !== undefined) return shellSection(command);
 
   const input = rawText(row, 'rawInput');
 
@@ -118,11 +126,11 @@ function ToolCallRowOutput({
 
 function ToolCallRowDisclosure(props: ToolCallRowProps): React.JSX.Element {
   const { row } = props;
-  const settledGroup = use(SettledGroup);
+  const groupChild = use(GroupChild);
 
   return (
     <ToolCallDisclosure
-      {...toolCallDisclosureProps(row, props.awaitingApproval, settledGroup)}
+      {...toolCallDisclosureProps(row, props.awaitingApproval, groupChild)}
       icon={toolCallIcon(row)}
       running={isToolCallRunning(row)}
       failed={row.status === 'failed'}
