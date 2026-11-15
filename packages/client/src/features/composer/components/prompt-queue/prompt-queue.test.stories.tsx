@@ -181,3 +181,14 @@ export const FailedSteerKeepsTheItem: Story = {
     await expect(button).toBeEnabled();
   },
 };
+
+export const PromptUsesComposerBodySize: Story = {
+  play: async ({ canvas }) => {
+    const prompt = await canvas.findByText(firstPrompt);
+    const composer = canvas.getByRole('textbox', { name: 'Message' });
+
+    await expect(getComputedStyle(prompt).fontSize).toBe(
+      getComputedStyle(composer).fontSize,
+    );
+  },
+};

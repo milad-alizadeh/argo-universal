@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
+import { useListLook } from '../../../list-look-context';
 import { cn } from '../../../utils';
 import { LineEnd } from './list-item-line-end';
 import { CompactMeta, hasMeta, Meta } from './list-item-meta';
@@ -73,7 +74,7 @@ const lineLimit = (multiline?: boolean): number | undefined =>
 function Title(props: ListItemProps & { inLine?: boolean }): ReactElement {
   return (
     <Text
-      role="row"
+      role={useListLook().place === 'tray' ? 'body' : 'row'}
       tone={props.finished ? 'muted' : props.tone}
       numberOfLines={lineLimit(props.multiline)}
       className={cn(props.inLine && 'min-w-0 flex-1', titleWeight(props))}
@@ -144,7 +145,7 @@ function InlineSubtitle(props: PlacedContentProps): ReactNode {
 
   return (
     <Text
-      role="row"
+      role={useListLook().place === 'tray' ? 'body' : 'row'}
       tone={props.subtitleTone ?? 'muted'}
       dimmed={props.subtitleDimmed}
       numberOfLines={1}
