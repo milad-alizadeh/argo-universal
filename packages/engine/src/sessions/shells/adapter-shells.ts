@@ -87,12 +87,13 @@ export class AdapterShells {
     return this.end(update);
   }
   private start({ toolCallId: id, rawInput }: Update): void {
-    if (!rawInput || this.shells.has(id)) return;
-
-    if (rawInput.run_in_background) this.open(id, rawInput);
-    else this.foreground.set(id, rawInput);
+    if (rawInput && !this.shells.has(id)) this.take(id, rawInput);
   }
-  private open(id: string, { command, description }: Command): void {
+  private take(id: string, command: Command): void {
+    if (command.run_in_background) this.open(id, command);
+    else this.foreground.set(id, command);
+  }
+  private open(id: string, { command, description }: Command): AdapterShell {
     const shell = new AdapterShell({
       ...this.input,
       id,
@@ -104,6 +105,8 @@ export class AdapterShells {
     });
 
     this.shells.set(id, shell);
+
+    return shell;
   }
   private follow(update: Update): void {
     const output = outputOf(update);
@@ -115,11 +118,11 @@ export class AdapterShells {
   private followMoved(id: string, path: string | undefined): void {
     const command = this.foreground.get(id);
 
-    if (!path || !command) return;
-
+    if (path && command) this.move(id, command, path);
+  }
+  private move(id: string, command: Command, path: string): void {
     this.foreground.delete(id);
-    this.open(id, command);
-    this.shells.get(id)?.follow(path);
+    this.open(id, command).follow(path);
   }
   private settle(update: Update): void {
     if (settled(update)) this.foreground.delete(update.toolCallId);
