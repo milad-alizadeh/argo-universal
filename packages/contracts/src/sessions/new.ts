@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { sessionColumns } from '../columns';
 import { ImageContent, ResourceLink, TextContent } from '../feed/content-block';
 
-// Where a Session runs (ADR-0008).
-export const CheckoutChoice = z.enum(['worktree', 'main']);
+// Where a Session runs (ADR-0008): its own worktree, the main checkout, or the worktree its starter owns.
+export const CheckoutChoice = z.enum(['worktree', 'main', 'starter']);
 
 export type CheckoutChoice = z.infer<typeof CheckoutChoice>;
 
@@ -16,6 +16,14 @@ export const SessionCheckoutChoice = z.discriminatedUnion('type', [
 ]);
 
 export type SessionCheckoutChoice = z.infer<typeof SessionCheckoutChoice>;
+
+// Only a Session may ask for `starter`: the Session it starts runs in the caller's own Checkout (ADR-0008).
+export const NewSessionCheckout = z.discriminatedUnion('type', [
+  ...SessionCheckoutChoice.options,
+  z.strictObject({ type: z.literal('starter') }),
+]);
+
+export type NewSessionCheckout = z.infer<typeof NewSessionCheckout>;
 
 export const InitialConfigOption = z.strictObject({
   // Cached defaults may disappear when the selected model changes.
@@ -30,7 +38,7 @@ export type InitialConfigOption = z.infer<typeof InitialConfigOption>;
 export const SessionNewInput = z.strictObject({
   projectId: sessionColumns.shape.projectId,
   agent: sessionColumns.shape.agent,
-  checkout: SessionCheckoutChoice,
+  checkout: NewSessionCheckout,
   configOptions: z.array(InitialConfigOption),
   followUpSuggestions: z.boolean().optional(),
   prompt: z

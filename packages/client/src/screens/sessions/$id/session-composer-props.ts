@@ -94,7 +94,8 @@ const checkoutProps = (
   checkout: SessionSnapshot['checkout'],
 ): ComposerConfigurationProps['checkout'] => ({
   branch: checkout.branch ?? '',
-  newWorktree: checkout.type === 'worktree',
+  // A borrowed Checkout is a worktree too, drawn as the one its starter owns.
+  newWorktree: checkout.type !== 'main',
   path: checkout.path,
 });
 

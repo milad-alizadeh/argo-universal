@@ -5,15 +5,15 @@ import { promptedArchiveSession } from '#mocks/archive';
 import { insertSession } from '#mocks/database';
 import { sessionSources } from '#mocks/session-sources';
 import { OpenSessions } from '../open-sessions';
-import { createSessionReader } from '../session-record';
 import { archiveSession, unarchiveSession } from './archive-commands';
 
 type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 
-const archiveSources = (host: Host): Parameters<typeof archiveSession>[0] => ({
-  readSession: createSessionReader(host.database),
-  open: new OpenSessions(sessionSources(host.openSessions)),
-});
+function archiveSources(host: Host): Parameters<typeof archiveSession>[0] {
+  const sources = sessionSources(host.openSessions);
+
+  return { ...sources, open: new OpenSessions(sources) };
+}
 
 it('refuses to archive a child Session', async () => {
   const host = await startAcpEngine({ steps: [] });

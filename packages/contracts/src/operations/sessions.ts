@@ -51,11 +51,11 @@ export const sessionOperations = {
     id: 'session.new',
     label: 'Start Session',
     description:
-      'Start a Session with an Agent, Checkout and optional first prompt.',
+      'Start a Session with an Agent, Checkout and optional first prompt. A Session may pass the `starter` Checkout to run the new Session in its own working tree, uncommitted changes included.',
     params: SessionNewInput,
     result: SessionNewOutput,
     tier: 'act',
-    keywords: ['create', 'delegate', 'agent', 'parallel'],
+    keywords: ['create', 'delegate', 'agent', 'parallel', 'subagent'],
   },
   'session.prompt': {
     id: 'session.prompt',
