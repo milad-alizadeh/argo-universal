@@ -590,6 +590,7 @@ await signIn.provide();
 ```
 
 - `host` is the Account's API host. Declare it in `contributes.accounts` and as a `fetch` Capability; `tokenUrl`'s host needs a `fetch` Capability too.
+- `authorizeUrl` keeps any query it carries, so a service that wants fields of its own on every authorize URL names them there, as Atlassian's `https://auth.atlassian.com/authorize?audience=api.atlassian.com&prompt=consent`.
 - `clientId` is the OAuth app's public client ID, or a function the flow calls when a sign-in starts.
 - `clientSecret` is for a service that requires the app's client secret on every code exchange and refresh. Argo ships no secret: declare a `secret` Setting the person fills in, and give a function that reads it with `argo.settings.get`. The flow sends it to `tokenUrl` only, never in the browser, and a sign-in started before it is set fails, saying so. Leave it out for a public client.
 - `label` turns a token into the name of whose Account it opens, such as the login the service answers; `null` fails the sign-in.
@@ -600,9 +601,11 @@ await signIn.provide();
 
 `start()` answers as soon as the browser opens, normally with `waiting`, so the Operation that calls it returns at once. The flow then waits up to five minutes for the person, exchanges the code, adds the Account and keeps its token under the Account's id. `cancel()` ends the wait; a callback from the browser tab still open is ignored. `provide()` registers the provider handler that hands borrowers the kept token.
 
-A token whose answer carried `refresh_token` and `expires_in` is refreshed at `tokenUrl`, with the client secret when there is one, the first time a borrow finds it within a minute of running out. A service that rotates refresh tokens, as Atlassian does, gets each new pair kept before its access token is lent, so a Server that stops mid-refresh wakes holding the token it has not spent. Borrows that find one Account due share one refresh, so a refresh token is never spent twice. A refresh the service refuses, because the refresh token expired or was revoked or the client is no longer accepted, forgets the token and lends nothing: the read finds the person signed out and `signInGate` draws the sign-in until they sign in again. Any other failed refresh lends the kept token.
+A token whose answer carried `refresh_token` and `expires_in` is refreshed at `tokenUrl`, with the client secret when there is one, the first time a borrow finds it within a minute of running out. A service that rotates refresh tokens, as Atlassian does, gets each new pair kept before its access token is lent, so a Server that stops mid-refresh wakes holding the token it has not spent. Borrows that find one Account due share one refresh, so a refresh token is never spent twice. A refresh the service refuses, because the refresh token expired or was revoked or the client is no longer accepted, forgets the token and lends nothing. A refusal is a 400 or a 401, or any answer naming `invalid_grant`, `invalid_client` or `unauthorized_client`, as Atlassian's 403 for a spent refresh token does. Then the read finds the person signed out and `signInGate` draws the sign-in until they sign in again. Any other failed refresh lends the kept token.
 
 Declare `signIn` and `cancelSignIn` in `contributes.operations` with tier `act`. Start a sign-in only on the Server Device: the page's Loader reads `context.serverDevice` and offers the button there, and says to continue on the Server Device elsewhere. In the test harness, `kit.pages.draw` and `kit.pages.run` draw and run as a paired Device's App; `serverDevice: true` asks as the App on the Server Device.
+
+A test that signs in through the browser binds Argo's fixed callback port, so call `serialiseOnOAuthPort()` from `@argo/plugin-kit/testing/oauth-port` once at the top of its file; files that do take turns. Give `startPluginTest` an `openBrowser` that plays the browser: it reads the authorize URL's `redirect_uri` and `state` and fetches the redirect with a `code`. `plugins/jira/mocks/atlassian-journey.ts` is a worked example.
 
 ### The sign-in pattern
 

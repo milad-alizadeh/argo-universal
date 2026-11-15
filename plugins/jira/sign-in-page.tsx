@@ -10,6 +10,11 @@ import {
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { tokenPageUrl, tokenScopes } from './atlassian';
+import { oauthReady, type SignIns } from './atlassian-sign-in';
+import {
+  atlassianSection,
+  type AtlassianOffer,
+} from './atlassian-sign-in-section';
 import type { JiraSignIn } from './jira-sign-in';
 
 // The page `contributes.accounts` names.
@@ -18,7 +23,11 @@ export const signInPath = '/sign-in';
 // The email and site are not secret, so they wait in Page state for the paste that sends them with the token.
 type SignInState = { email: string; site: string };
 
-type SignInData = { state: TokenPasteState; error: string | null };
+type SignInData = {
+  state: TokenPasteState;
+  error: string | null;
+  atlassian: AtlassianOffer;
+};
 
 const errorOf = (signIn: JiraSignIn): string | null => {
   const state = signIn.flow.state();
@@ -113,17 +122,45 @@ const signInForm = (
         {tokenSection(state, data.error, to)}
         {tokenLink()}
       </FieldGroup>
+      {atlassianSection(data.atlassian, {
+        start: to.run('signInWithAtlassian', {}),
+        cancel: to.run('cancelSignInWithAtlassian', {}),
+      })}
     </Stack>
   </Screen>
 );
 
-// A token is pasted on any Device, a paired phone included; the kit keeps it and adds the Account.
-export function defineSignInPage(argo: Argo, signIn: JiraSignIn): void {
+// "Sign in with Atlassian" needs the person's OAuth app, and the Server Device's browser and callback port.
+async function atlassianOffer(
+  argo: Pick<Argo, 'settings'>,
+  { atlassian }: SignIns,
+  serverDevice: boolean,
+): Promise<AtlassianOffer> {
+  if (!(await oauthReady(argo))) return { kind: 'needs-app' };
+
+  return serverDevice
+    ? { kind: 'here', state: atlassian.flow.state() }
+    : { kind: 'elsewhere' };
+}
+
+// Signed in either way, the one the person used last in this run says so.
+function signInState({ paste, atlassian }: SignIns): TokenPasteState {
+  const oauth = atlassian.flow.state();
+
+  return oauth.kind === 'signed-in' ? oauth : paste.flow.state();
+}
+
+/*
+ * A token is pasted on any Device, a paired phone included; the kit keeps it and adds the Account. "Sign in with
+ * Atlassian" is offered under it once the person has set up their OAuth app.
+ */
+export function defineSignInPage(argo: Argo, signIns: SignIns): void {
   argo.pages.define(signInPath, {
     state: { email: '', site: '' },
-    load: (): SignInData => ({
-      state: signIn.flow.state(),
-      error: errorOf(signIn),
+    load: async ({ context }): Promise<SignInData> => ({
+      state: signInState(signIns),
+      error: errorOf(signIns.paste),
+      atlassian: await atlassianOffer(argo, signIns, context.serverDevice),
     }),
     render: (data, to, { state }) =>
       data.state.kind === 'signed-in'

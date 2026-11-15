@@ -159,18 +159,34 @@ const badRequest = 400;
 
 const unauthorized = 401;
 
+// RFC 6749 section 5.2's errors that say this refresh token, or this client, will not be accepted again.
+const refusedErrors: ReadonlySet<string> = new Set([
+  'invalid_grant',
+  'invalid_client',
+  'unauthorized_client',
+]);
+
+const RefusalJson = z.object({ error: z.string() });
+
 /*
  * RFC 6749 section 5.2: a refresh token that expired or was revoked is refused with `invalid_grant`, a 400, and a
- * client the service no longer accepts with a 401. Signing in again is the way on from either. Any other failure,
- * no answer at all among them, gives no token, and the kept one is tried.
+ * client the service no longer accepts with a 401. Atlassian refuses a spent or expired rotating refresh token with a
+ * 403 and `unauthorized_client`, so the error the answer names counts too. Signing in again is the way on from any of
+ * them. Any other failure, no answer at all among them, gives no token, and the kept one is tried.
  */
-const refused = (status: number): boolean =>
-  status === badRequest || status === unauthorized;
+function refused(status: number, text: string): boolean {
+  if (status === badRequest || status === unauthorized) return true;
+
+  const error = RefusalJson.safeParse(parsed(text)).data?.error;
+
+  return error !== undefined && refusedErrors.has(error);
+}
 
 type Reply = Awaited<ReturnType<OAuthFlowArgo['fetch']>>;
 
-const refusal = (status: number): Refreshed =>
-  refused(status) ? 'refused' : null;
+async function refusal(reply: NonNullable<Reply>): Promise<Refreshed> {
+  return refused(reply.status, await reply.text()) ? 'refused' : null;
+}
 
 async function refreshedBy(
   reply: Reply,
@@ -178,5 +194,5 @@ async function refreshedBy(
 ): Promise<Refreshed> {
   if (!reply) return null;
 
-  return reply.ok ? keptIn(await reply.text(), path) : refusal(reply.status);
+  return reply.ok ? keptIn(await reply.text(), path) : refusal(reply);
 }

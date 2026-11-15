@@ -4,6 +4,7 @@ import {
   type FixtureRequest,
   type FixtureServices,
 } from '@argo/plugin-kit/testing';
+import type { AtlassianOAuth } from './atlassian-oauth';
 import {
   jiraData,
   type FixtureIssue,
@@ -14,8 +15,9 @@ import {
 
 /*
  * Jira Cloud as the Plugin meets it, for its tests: Atlassian's gateway at `api.atlassian.com/ex/jira/<cloudId>`, which
- * takes a scoped token as Basic auth, each site's own API at `<site>.atlassian.net`, which takes only an unscoped one,
- * and the site's public tenant info. Every call the Plugin makes reaches one handler over a certificate the test trusts.
+ * takes a scoped token as Basic auth and an OAuth token as Bearer, each site's own API at `<site>.atlassian.net`, which
+ * takes only an unscoped token, the site's public tenant info, and, given `oauth`, Atlassian's OAuth endpoints. Every
+ * call the Plugin makes reaches one handler over a certificate the test trusts.
  *
  * Extend it by adding a route: a name, a method, a pattern over the path after `/rest/api/3`, and an answer. A test
  * can make any named route fail with `fail(name, answer)`.
@@ -143,11 +145,15 @@ export const jiraRoutes: JiraRoute[] = [
 const decoded = (header: string | string[] | undefined): string =>
   Buffer.from(String(header).replace(/^Basic /, ''), 'base64').toString();
 
-// Whose token a request carries, if it is one Atlassian issued.
+// Whose token a request carries, if it is one Atlassian issued: an API token as Basic, or an OAuth token as Bearer.
 function tokenOf(
-  data: JiraData,
+  { data, oauth }: Pick<Service, 'data' | 'oauth'>,
   request: FixtureRequest,
 ): FixtureToken | undefined {
+  const header = String(request.headers.authorization);
+
+  if (header.startsWith('Bearer ')) return oauth?.who(header.slice(7));
+
   const credential = decoded(request.headers.authorization);
 
   return data.tokens.find(
@@ -196,6 +202,7 @@ type Service = {
   data: JiraData;
   routes: JiraRoute[];
   failing: Map<string, FixtureAnswer>;
+  oauth: AtlassianOAuth | undefined;
 };
 
 function tenantInfo(data: JiraData, host: string): FixtureAnswer {
@@ -212,7 +219,7 @@ function routed(
 
   if (!located) return notFound('Site');
 
-  const who = tokenOf(service.data, request);
+  const who = tokenOf(service, request);
 
   if (!who || who.scoped !== located.scoped) return unauthorized;
 
@@ -241,6 +248,10 @@ function routed(
 const routeNames = new WeakMap<FixtureRequest, string>();
 
 function answer(service: Service, request: FixtureRequest): FixtureAnswer {
+  const signingIn = service.oauth?.answer(request);
+
+  if (signingIn) return signingIn;
+
   if (request.path === '/_edge/tenant_info') {
     routeNames.set(request, 'tenant');
 
@@ -261,12 +272,17 @@ function answer(service: Service, request: FixtureRequest): FixtureAnswer {
 }
 
 export async function jiraService(
-  options: { data?: JiraData; routes?: JiraRoute[] } = {},
+  options: {
+    data?: JiraData;
+    routes?: JiraRoute[];
+    oauth?: AtlassianOAuth;
+  } = {},
 ): Promise<JiraService> {
   const service: Service = {
     data: options.data ?? jiraData(),
     routes: [...(options.routes ?? []), ...jiraRoutes],
     failing: new Map(),
+    oauth: options.oauth,
   };
 
   const { network, requests } = await fixtureServices((request) =>

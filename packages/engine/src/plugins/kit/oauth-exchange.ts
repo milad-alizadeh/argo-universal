@@ -25,13 +25,18 @@ export const failed = (message: string): OAuthFlowState => ({
   message,
 });
 
+/*
+ * The authorize URL with the sign-in's fields added. A service that needs fields of its own on every authorize URL,
+ * as Atlassian's `audience` and `prompt`, names them in `authorizeUrl`'s query, which is kept.
+ */
 export function authorizeLocation(
   options: OAuthFlowOptions,
   start: Waiting,
 ): string {
   const scope = options.scopes?.join(' ');
+  const joiner = options.authorizeUrl.includes('?') ? '&' : '?';
 
-  return `${options.authorizeUrl}?${form({
+  return `${options.authorizeUrl}${joiner}${form({
     response_type: 'code',
     client_id: start.client.client_id,
     redirect_uri: start.redirectUri,
