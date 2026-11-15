@@ -5,7 +5,7 @@ import { SubagentRole } from '../feed/session-update';
 // Input of `session.declareSubagentRole`: the role of the next Agent the Session spawns (#2075).
 export const SessionDeclareSubagentRoleInput = z.strictObject({
   role: SubagentRole.describe(
-    'explore searches or reads code; plan designs an approach; review checks work against a spec or standards; test writes or runs tests; general does anything else.',
+    'explore searches or reads code; plan designs an approach; review checks work against a spec or standards; test writes or runs tests; implement writes or changes code; general does anything else.',
   ),
   sessionId: sessionColumns.shape.id
     .optional()

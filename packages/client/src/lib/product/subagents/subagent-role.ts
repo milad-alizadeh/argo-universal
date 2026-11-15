@@ -3,13 +3,17 @@ import type { IconName } from '@repo/kit/symbols/icon-names';
 
 export interface SubagentRoleMark {
   icon: IconName;
-  tone: 'info' | 'neutral' | 'done' | 'warning' | 'success';
+  tone: 'info' | 'done' | 'warning' | 'success' | 'teal' | 'pink';
 }
 
-// The role avatars the owner approved (2026-10-20): the Subagents list and the Feed draw the same mark.
+/*
+ * The role avatars the owner approved (2026-10-20): the Subagents list and the Feed draw the same mark.
+ * Implement joined them, and General took a colour, on 2026-11-14 (#2122). Each role keeps a tone of its own.
+ */
 const roles = {
   explore: { icon: 'binoculars', tone: 'info' },
-  general: { icon: 'sparkle', tone: 'neutral' },
+  general: { icon: 'sparkle', tone: 'pink' },
+  implement: { icon: 'code', tone: 'teal' },
   plan: { icon: 'plan-mode', tone: 'done' },
   review: { icon: 'search', tone: 'warning' },
   test: { icon: 'flask', tone: 'success' },

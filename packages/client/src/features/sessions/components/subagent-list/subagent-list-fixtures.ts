@@ -20,6 +20,12 @@ export const allFinishedSubagents = {
   now: subagentNow,
 } satisfies SubagentListFixture;
 
+// One running Agent per Agent role: every role mark, side by side.
+export const everyRoleSubagents = {
+  subagents: subagentStates.everyRole,
+  now: subagentNow,
+} satisfies SubagentListFixture;
+
 export const noSubagents = {
   subagents: subagentStates.none,
   now: subagentNow,
