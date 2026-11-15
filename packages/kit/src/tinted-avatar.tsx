@@ -11,6 +11,8 @@ const palettes = {
   done: { fill: 'bg-tone-done-100', ink: 'text-tone-done-700' },
   warning: { fill: 'bg-tone-warning-100', ink: 'text-tone-warning-700' },
   success: { fill: 'bg-tone-success-100', ink: 'text-tone-success-700' },
+  teal: { fill: 'bg-tone-teal-100', ink: 'text-tone-teal-700' },
+  pink: { fill: 'bg-tone-pink-100', ink: 'text-tone-pink-700' },
 };
 
 // A leading avatar stands beside a row of its own; an inline one sits on the line of text beside it.

@@ -58,11 +58,28 @@ const cancelled: Subagent = {
   tokens: 1_300,
 };
 
+// One running Agent per Agent role, in the order the roles are declared.
+const everyRole: Subagent[] = [
+  { role: 'Explore', title: 'Find every Feed reader' },
+  { role: 'General', title: 'Migrate tokens to kit roles' },
+  { role: 'Implement', title: 'Build the Plan sheet' },
+  { role: 'Plan', title: 'Draft the Plan schema' },
+  { role: 'Review', title: 'Check the Plan against its spec' },
+  { role: 'Test', title: 'Port the mock CLIs' },
+].map(({ role, title }) => ({
+  ...runningSubagent,
+  sessionId: `subagent-role-${role}`,
+  toolCallId: `tool-role-${role}`,
+  role,
+  title,
+}));
+
 export const subagentStates = {
   none: [] satisfies Subagent[],
   oneRunning: [runningSubagent],
   severalMixed: [runningSubagent, requiresAction, finished, cancelled],
   allFinished: [finished, cancelled],
+  everyRole,
 };
 
 export const interleavedSubagents = [

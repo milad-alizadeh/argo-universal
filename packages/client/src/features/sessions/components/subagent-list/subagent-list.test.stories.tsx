@@ -98,6 +98,25 @@ export const AllFinished: Story = {
     }),
 };
 
+// The six Agent roles each draw a mark of their own, named for assistive technology.
+export const EveryRole: Story = {
+  args: { subagents: subagentStates.everyRole },
+  play: async ({ canvas }) =>
+    eachLayout(async () => {
+      for (const role of [
+        'Explore',
+        'General',
+        'Implement',
+        'Plan',
+        'Review',
+        'Test',
+      ])
+        await expect(
+          canvas.getByLabelText(new RegExp(`^${role} Agent`, 'u')),
+        ).toBeVisible();
+    }),
+};
+
 // Running work comes first; spawn order remains stable within each section.
 export const SectionOrder: Story = {
   args: {

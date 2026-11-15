@@ -4,6 +4,7 @@ import { z } from 'zod';
 export const SubagentRole = z.enum([
   'explore',
   'general',
+  'implement',
   'plan',
   'review',
   'test',

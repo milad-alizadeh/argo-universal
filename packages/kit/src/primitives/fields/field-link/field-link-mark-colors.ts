@@ -13,6 +13,8 @@ const colors = {
   warning: ['bg-tone-warning-100', 'text-tone-warning-700'],
   success: ['bg-tone-success-100', 'text-tone-success-700'],
   danger: ['bg-tone-neutral-100', 'text-danger'],
+  teal: ['bg-tone-teal-100', 'text-tone-teal-700'],
+  pink: ['bg-tone-pink-100', 'text-tone-pink-700'],
 } as const;
 
 type MarkColors = {

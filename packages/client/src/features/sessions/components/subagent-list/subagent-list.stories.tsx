@@ -5,6 +5,7 @@ import { action } from 'storybook/actions';
 import { SubagentList } from './subagent-list';
 import {
   allFinishedSubagents,
+  everyRoleSubagents,
   noSubagents,
   oneRunningSubagent,
   severalMixedSubagents,
@@ -50,6 +51,9 @@ export const SeveralMixed: Story = { args: severalMixedSubagents };
 export const OneRunning: Story = { args: oneRunningSubagent };
 
 export const AllFinished: Story = { args: allFinishedSubagents };
+
+// Each Agent role draws its own mark, in its own colour.
+export const EveryRole: Story = { args: everyRoleSubagents };
 
 // With no Subagents the list returns null, so this story draws nothing.
 export const None: Story = { args: noSubagents };
