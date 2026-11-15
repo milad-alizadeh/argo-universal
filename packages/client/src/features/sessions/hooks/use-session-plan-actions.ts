@@ -7,7 +7,8 @@ import { showToast } from '@repo/kit/primitives/overlays/toast';
 import { useMutation } from '@tanstack/react-query';
 import { type ClientError, useTRPC } from '#features/connection';
 import type { PermissionRequestProps } from '#features/requests';
-import { sessionHref, useNavigate } from '#lib/product/navigation/navigation';
+import { sessionHref } from '#lib/product/navigation/navigation';
+import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
 
 type PlanActions = Pick<
   PermissionRequestProps,
@@ -59,7 +60,7 @@ function useSavePlan(): (input: { sessionId: string; plan: string }) => void {
 
 function useStartSession(): (input: SessionNewInput) => void {
   const trpc = useTRPC();
-  const navigate = useNavigate();
+  const navigate = useNavigateFromShown();
 
   return useMutation(
     trpc.session.new.mutationOptions({
