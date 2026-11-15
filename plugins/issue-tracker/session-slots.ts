@@ -115,16 +115,17 @@ async function answerSessions(
   );
 }
 
-const withSummaries = (
+const withSummaries = async (
   summaries: IssueSummaries,
   links: IssueLink[],
-): Promise<Linked[]> =>
-  Promise.all(
-    links.map(async (link) => ({
-      link,
-      summary: await summaries.answer(link),
-    })),
-  );
+): Promise<Linked[]> => {
+  const answered = await summaries.answer(links);
+
+  return links.map((link, index) => ({
+    link,
+    summary: answered[index] ?? null,
+  }));
+};
 
 function groupBySession(entries: Linked[]): Map<string, Linked[]> {
   const grouped = new Map<string, Linked[]>();

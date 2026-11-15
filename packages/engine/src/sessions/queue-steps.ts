@@ -110,10 +110,10 @@ function endQueueReason(ended: EndTurnParameters): string | null {
 export function hasQueuedPrompt(
   context: Pick<
     SessionContext,
-    'pendingSubmission' | 'promptQueue' | 'queueHolds'
+    'pendingSubmission' | 'promptQueue' | 'queueHolds' | 'queueSteering'
   >,
 ): boolean {
-  return context.pendingSubmission === null && canDispatchQueue(context);
+  return queueUnreserved(context) && canDispatchQueue(context);
 }
 
 function canDispatchQueue(
@@ -145,4 +145,10 @@ function pausedQueueStep(
     change: { ...step.change, promptQueue },
     writes: [...step.writes, { job: queueWrite(sessionId, promptQueue) }],
   };
+}
+
+function queueUnreserved(
+  context: Pick<SessionContext, 'pendingSubmission' | 'queueSteering'>,
+): boolean {
+  return context.pendingSubmission === null && context.queueSteering === null;
 }

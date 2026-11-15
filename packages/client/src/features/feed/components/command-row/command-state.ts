@@ -97,9 +97,3 @@ export function commandState(input: CommandStateInput): CommandState {
     },
   };
 }
-
-export function commandCode({ command, output }: ToolCallTerminal): string {
-  const shown = output.replaceAll('\r\n', '\n').replace(/\n$/, '');
-
-  return shown ? `$ ${command}\n${shown}` : `$ ${command}`;
-}

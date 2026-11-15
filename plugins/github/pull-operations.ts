@@ -64,6 +64,28 @@ export async function discoverFor(
   return discover(scope, await checkoutOf(scope, caller), caller);
 }
 
+// Argo's Turn-end run: it looks only while the Session has no pull request, and otherwise does not ask GitHub.
+export async function discoverUnlessAttached(
+  scope: Scope,
+  caller: SessionCaller,
+): Promise<Discovered> {
+  if (await isAttached(scope, caller)) return { result: 'attached' };
+
+  return discoverFor(scope, caller);
+}
+
+// Whether the Session already has a pull request; Argo's Turn-end run looks only while it has none.
+async function isAttached(
+  scope: Scope,
+  caller: SessionCaller,
+): Promise<boolean> {
+  await sessionInProject(scope, caller);
+
+  const links = await scope.store.forSessions([caller.sessionId]);
+
+  return links.some((link) => link.projectId === caller.projectId);
+}
+
 export type Attached = ReturnType<typeof changeOf>;
 
 /*

@@ -40,22 +40,16 @@ function running(width: number): Story {
       await expect(row).toBeVisible();
       await expect(row).toHaveTextContent('short git status 23s');
       await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
-      await expect(
-        canvas.queryByText(shellCommand, {
-          exact: false,
-        }),
-      ).not.toBeInTheDocument();
+      await expect(canvas.queryByTestId('code-text')).not.toBeInTheDocument();
       await expect(row).not.toHaveTextContent(
         'cat hello.txt && git status --short',
       );
       await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
       await userEvent.click(row);
       await expect(canvas.getByText('Shell')).toBeVisible();
-      await expect(
-        canvas.getByText(shellCommand, {
-          exact: false,
-        }),
-      ).toBeVisible();
+      await expect(canvas.getByTestId('code-text')).toHaveTextContent(
+        shellCommand,
+      );
       await expect(canvas.queryByText('Completed')).not.toBeInTheDocument();
       await expect(canvas.getByText('Running')).toBeVisible();
       await userEvent.click(row);

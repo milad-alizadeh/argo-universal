@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { trayClassName } from '#kit/tray-surface';
 import { cn } from '#kit/utils';
+import type { SyntaxRun } from '../../../code-text/syntax-run';
 import { CodeBlockBody } from './code-block-body';
 import { CodeBlockHeader, codeBlockBarClassName } from './code-block-header';
 import {
@@ -14,6 +15,8 @@ import { codeBlockGroup } from './copy-button';
 export type ResourceCodeProps = {
   // What the fence is written in, which decides the highlighting; the header shows it when nothing else names the block.
   language?: string;
+  // The code already split into coloured runs, for a block that is not one language throughout, such as a command and its output.
+  runs?: SyntaxRun[];
   // A heading of Argo's own, such as a command's "Shell" or a file's name, for a block that is not a plain fence.
   title?: string;
   // A line under the code, such as a command's exit status, in a bar that matches the header.
@@ -61,6 +64,7 @@ export function ResourceCode(props: ResourceCodeProps): ReactElement {
         code={props.code}
         description={props.description}
         language={props.language}
+        runs={props.runs}
         textClassName={props.textClassName}
       />
       <CodeBlockFooter footer={props.footer} />
