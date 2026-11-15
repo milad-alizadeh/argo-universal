@@ -20,7 +20,7 @@ export function PromptQueue(props: PromptQueueProps): ReactElement | null {
 
 function QueueSurface(props: PromptQueueProps): ReactElement {
   return (
-    <View testID="prompt-queue" className="w-full px-3 py-2">
+    <View testID="prompt-queue" className="w-full">
       {props.queue.pauseReason && <QueueHeading {...props} />}
       <QueueRows {...props} />
     </View>
@@ -29,7 +29,7 @@ function QueueSurface(props: PromptQueueProps): ReactElement {
 
 function QueueHeading({ queue, command }: PromptQueueProps): ReactElement {
   return (
-    <View className="flex-row flex-wrap items-center justify-between gap-2">
+    <View className="flex-row flex-wrap items-center justify-between gap-2 px-4 pt-2 pb-1 wide:px-2.5">
       <Text tone="muted">{queue.pauseReason}</Text>
       <ResumeQueue command={command} />
     </View>

@@ -4,13 +4,15 @@ import type { ReactElement } from 'react';
 import { QueueRow } from './queue-row';
 import type { PromptQueueProps } from './queue-types';
 
+const queueInsets = { padding: 0, paddingTop: 0, paddingBottom: 0 } as const;
+
 export function QueueRows(props: PromptQueueProps): ReactElement {
   return (
     <List
       appearance="plain"
       density="compact"
       fitHeight={240}
-      padding={0}
+      {...queueInsets}
       onMove={(move) => movePrompt(props, move)}
     >
       {props.queue.items.map((row, index) => (
