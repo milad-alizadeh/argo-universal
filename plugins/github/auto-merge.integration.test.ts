@@ -36,6 +36,8 @@ const set = (
     name: 'automationSet',
     params: { reference, ...params },
     caller: as,
+    // An Agent's call asks the person first; this one says yes.
+    confirm: () => Promise.resolve(),
   });
 
 // A person's tap in the App: a person in the Project, naming the Session.

@@ -118,7 +118,8 @@
             "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
           }
         },
-        "caller": ["project"]
+        "caller": ["project"],
+        "confirmAgent": true
       },
       {
         "name": "list",
