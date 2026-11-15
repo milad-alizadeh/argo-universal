@@ -21,10 +21,10 @@ const changesMemory = new SessionMemory(initialChangesState);
 
 type ChangesHeader = NonNullable<SessionHeaderProps['changes']>;
 
-// What tells the Changes the Checkout may have moved: the Feed's snapshot and revision.
+// What tells the Changes the Checkout may have moved: the Feed's snapshot, and the newest revision of the Agent's work.
 type CheckoutSignals = {
   snapshot: SessionSnapshot | null;
-  revision: number;
+  workRevision: number;
 };
 
 // A Session page and what its Changes are read from.
@@ -46,12 +46,15 @@ const changesHeader = (
   summary: source.snapshot?.changes,
 });
 
-// A Feed revision reloads patches even when an edit keeps the same line totals; a new snapshot reloads them too.
+/*
+ * A new revision of the Agent's work reloads patches even when an edit keeps the same line totals; a new snapshot
+ * reloads them too. The Agent's streamed text moves neither, so it reloads nothing.
+ */
 const useCheckoutRevision = ({
   snapshot,
-  revision,
+  workRevision,
 }: CheckoutSignals): ChangesRevision =>
-  useMemo(() => ({ snapshot, revision }), [snapshot, revision]);
+  useMemo(() => ({ snapshot, workRevision }), [snapshot, workRevision]);
 
 interface OpenChanges {
   header: ChangesHeader;
