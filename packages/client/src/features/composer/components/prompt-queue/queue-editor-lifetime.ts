@@ -13,6 +13,7 @@ export type EditTarget = {
 type Command = (command: QueueCommand) => Promise<void>;
 
 export interface EditorLifetime {
+  updateCommand: (command: Command) => void;
   open: () => void;
   close: () => void;
   active: () => boolean;
@@ -21,19 +22,18 @@ export interface EditorLifetime {
 }
 
 export function editorLifetime(command: Command): EditorLifetime {
-  const state = { active: true };
+  const state = { active: true, command };
   const claims = new Map<string, EditTarget>();
 
   return {
-    open: () => {
-      state.active = true;
-    },
+    updateCommand: (next) => setCommand(state, next),
+    open: () => openLifetime(state),
     active: () => state.active,
-    claim: (target) => claims.set(target.id, target),
+    claim: (target) => claimEdit(claims, target),
     forget: (id) => {
       claims.delete(id);
     },
-    close: () => closeLifetime(state, claims, command),
+    close: () => closeLifetime(state, claims, state.command),
   };
 }
 
@@ -58,4 +58,31 @@ function closeLifetime(
 ): void {
   state.active = false;
   releaseClaims(command, claims);
+}
+
+function claimEdit(claims: Map<string, EditTarget>, target: EditTarget): void {
+  if (claims.size > 0) throw new Error('Finish the current queue edit first');
+  claims.set(target.id, target);
+}
+
+export async function holdEdit(
+  command: Command,
+  lifetime: EditorLifetime,
+  target: EditTarget,
+): Promise<void> {
+  try {
+    await command({ action: 'hold', ...target });
+  } catch (error) {
+    lifetime.forget(target.id);
+    releaseEdit(command, target);
+    throw error;
+  }
+}
+
+function setCommand(state: { command: Command }, command: Command): void {
+  state.command = command;
+}
+
+function openLifetime(state: { active: boolean }): void {
+  state.active = true;
 }

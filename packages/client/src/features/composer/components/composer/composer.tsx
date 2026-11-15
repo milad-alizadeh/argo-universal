@@ -4,6 +4,11 @@ import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
+import { QueueEditorsProvider } from '../prompt-queue/queue-editors';
+import {
+  queueCommand,
+  useQueueComposer,
+} from '../prompt-queue/use-queue-composer';
 import { ComposerControls } from './composer-card';
 import { oversizedAttachmentIds, sendButtonState } from './composer-conditions';
 import { useComposerLayout } from './composer-layout';
@@ -16,6 +21,15 @@ export type { ComposerDraft, ComposerProps } from './composer-types';
 export type { ComposerAttachment } from '../composer-attachment-card/composer-attachment-card';
 
 export function Composer(props: ComposerProps): React.JSX.Element {
+  return (
+    <QueueEditorsProvider command={queueCommand(props.promptQueue)}>
+      <ComposerBody {...props} />
+    </QueueEditorsProvider>
+  );
+}
+
+function ComposerBody(input: ComposerProps): React.JSX.Element {
+  const props = useQueueComposer(input);
   const sendState = sendButtonState(props);
   const layout = useComposerLayout(props, sendState);
   useComposerToasts(props);
@@ -24,7 +38,7 @@ export function Composer(props: ComposerProps): React.JSX.Element {
     <View nativeID={layout.composerId} className={useComposerClass()}>
       <ComposerPhoneTray {...layout} />
       <ComposerTray {...layout} />
-      <ComposerControls {...layout} />
+      <ComposerControls key={props.queueEdit?.id ?? 'draft'} {...layout} />
     </View>
   );
 }

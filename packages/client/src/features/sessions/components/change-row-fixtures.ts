@@ -35,3 +35,21 @@ export const mergedChangeRow = {
 export const closedChangeRow = {
   change: { ...pullRequestMocks.closed, ...closedChange },
 } satisfies ChangeRowFixture;
+
+const overflowChecks = Array.from({ length: 24 }, (_, index) => ({
+  name: `Workflow ${index + 1}`,
+  state: 'passed' as const,
+}));
+
+export const checksOverflowChangeRow = {
+  change: {
+    ...checksPassedChangeRow.change,
+    checks: {
+      passed: 24,
+      failing: 0,
+      running: 0,
+      total: 24,
+      details: overflowChecks,
+    },
+  },
+} satisfies ChangeRowFixture;

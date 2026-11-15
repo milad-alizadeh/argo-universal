@@ -8,6 +8,7 @@ import {
 import type { ViewInstance } from 'react-native';
 import { useLiftedRowMark } from '../../../row-highlights';
 import { cn } from '../../../utils';
+import { useListDragHandles } from './list-drag-handles';
 import { useDragValue } from './list-drag-layer';
 import { measureView } from './list-geometry';
 import { useListMoves, type ListMoves } from './list-move-context';
@@ -42,6 +43,7 @@ interface RowPose {
  * grabs at rest, and shows grabbing while any row is dragged.
  */
 function useRowPose({ drag, look }: ListMoves, id: RowId): RowPose {
+  const resting = useRestingCursor(look.grab);
   const offset = useDragValue(drag, (frame) => slideOf(frame?.rowSlides, id));
   const lifted = useDragValue(drag, (frame) => frame?.id === id);
   const dragging = useDragValue(drag, (frame) => frame !== undefined);
@@ -50,7 +52,7 @@ function useRowPose({ drag, look }: ListMoves, id: RowId): RowPose {
 
   return {
     offset,
-    className: cn(dragging ? look.grabbing : look.grab, lifted && look.lifted),
+    className: cn(dragging ? look.grabbing : resting, lifted && look.lifted),
   };
 }
 
@@ -101,4 +103,8 @@ export function MovableRow({
       {children}
     </DraggedRow>
   );
+}
+
+function useRestingCursor(grab: string): string {
+  return useListDragHandles() ? '' : grab;
 }

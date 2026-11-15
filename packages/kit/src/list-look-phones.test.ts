@@ -44,6 +44,14 @@ describe('compact rows', () => {
     expect(look({ ...compact, wide: false }).compact).toBe(false);
   });
 
+  it('keeps a web tray compact in a narrow window', () => {
+    expect(look({ ...compact, wide: false, place: 'tray' }).compact).toBe(true);
+  });
+
+  it.each(phones)('keeps native tray touch targets on %s', (platform) => {
+    expect(look({ ...compact, place: 'tray', platform }).compact).toBe(false);
+  });
+
   it('keep a sidebar List compact at every width', () => {
     expect(look({ ...compact, wide: false, place: 'sidebar' }).compact).toBe(
       true,
