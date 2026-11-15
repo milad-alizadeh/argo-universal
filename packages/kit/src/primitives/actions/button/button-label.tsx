@@ -51,5 +51,7 @@ function useButtonTextStyle(
   const body = useTextStyle('body');
   const color = useNativeTheme().colors[labelColor(props)];
 
-  return { ...(props.control ? body : {}), color };
+  if (props.control) return { ...body, color };
+
+  return { color };
 }

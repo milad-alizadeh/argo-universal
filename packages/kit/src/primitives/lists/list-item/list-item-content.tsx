@@ -2,7 +2,6 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
-import { useListLook } from '../../../list-look-context';
 import { cn } from '../../../utils';
 import { LineEnd } from './list-item-line-end';
 import { CompactMeta, hasMeta, Meta } from './list-item-meta';
@@ -13,6 +12,7 @@ import {
 } from './list-item-pass-through';
 import type { PlacedContentProps } from './list-item-placement';
 import type { ListItemProps } from './list-item-props';
+import { RowText } from './list-item-row-text';
 import { TreeLane } from './list-item-tree';
 
 type SubtitleProps = Pick<
@@ -73,14 +73,13 @@ const lineLimit = (multiline?: boolean): number | undefined =>
 
 function Title(props: ListItemProps & { inLine?: boolean }): ReactElement {
   return (
-    <Text
-      role={useListLook().place === 'tray' ? 'body' : 'row'}
+    <RowText
       tone={props.finished ? 'muted' : props.tone}
       numberOfLines={lineLimit(props.multiline)}
       className={cn(props.inLine && 'min-w-0 flex-1', titleWeight(props))}
     >
       {props.title}
-    </Text>
+    </RowText>
   );
 }
 
@@ -144,15 +143,14 @@ function InlineSubtitle(props: PlacedContentProps): ReactNode {
   if (props.subtitle === undefined) return null;
 
   return (
-    <Text
-      role={useListLook().place === 'tray' ? 'body' : 'row'}
+    <RowText
       tone={props.subtitleTone ?? 'muted'}
       dimmed={props.subtitleDimmed}
       numberOfLines={1}
       className="max-w-1/2 shrink-0"
     >
       {props.subtitle}
-    </Text>
+    </RowText>
   );
 }
 

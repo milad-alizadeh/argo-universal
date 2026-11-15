@@ -9,6 +9,7 @@ import type { QueueRow as Row } from './use-queue-row';
 
 type QueueIconProps = Omit<IconButtonProps, 'accessibilityLabel'> & {
   label: string;
+  tooltip: string;
 };
 
 export function EditControls(row: Row): ReactElement {
@@ -29,6 +30,7 @@ const controlsDisabled = (row: Row): boolean =>
 function editProps(row: Row): QueueIconProps {
   return {
     label: 'Edit Queued Prompt',
+    tooltip: 'Edit',
     icon: 'edit',
     disabled: controlsDisabled(row),
     onPress: row.begin,
@@ -38,6 +40,7 @@ function editProps(row: Row): QueueIconProps {
 function deleteProps(row: Row): QueueIconProps {
   return {
     label: 'Delete Queued Prompt',
+    tooltip: 'Delete',
     icon: 'delete',
     disabled: controlsDisabled(row),
     onPress: () => remove(row),
@@ -48,9 +51,9 @@ function remove(row: Row): void {
   row.run({ action: 'delete', id: row.row.id, revision: row.row.revision });
 }
 
-function QueueIcon({ label, ...props }: QueueIconProps): ReactElement {
+function QueueIcon({ label, tooltip, ...props }: QueueIconProps): ReactElement {
   return (
-    <Tooltip label={label}>
+    <Tooltip label={tooltip}>
       <IconButton
         {...props}
         accessibilityLabel={label}
