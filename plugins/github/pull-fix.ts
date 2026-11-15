@@ -2,7 +2,8 @@ import type { Argo } from '@argo/plugin-kit';
 import type { AutomationState } from './pull-automation';
 import type { LinkRead } from './pull-changes';
 import type { CheckInfo } from './pull-checks';
-import { eventKey } from './pull-fix-rows';
+import type { CommentInfo } from './pull-comments';
+import { eventsOf, type FixEvent, type FixFacts } from './pull-fix-prompts';
 import type { FixRecord, FixStore } from './pull-fix-store';
 import { freshOf, type Watching } from './pull-fresh';
 import type { PullInfo } from './pull-info';
@@ -37,9 +38,6 @@ export function fixOf(
   return stoppedOn(record, head) ? stoppedOf(head) : idle;
 }
 
-const promptOf = (pull: PullInfo, check: string): string =>
-  `Check \`${check}\` failed on ${pull.repository}#${pull.number} at ${short(pull.head)}. Read it, fix it, and push.`;
-
 type Acting = Pick<Argo, 'sessions'> & { changed: () => void };
 
 export const failedOf = (checks: readonly CheckInfo[]): string[] =>
@@ -55,26 +53,40 @@ const openOf = (pull: Known<PullInfo>): PullInfo | undefined => {
   return data?.stage === 'open' ? data : undefined;
 };
 
-type Fresh = { pull: PullInfo; failed: string[] };
-
 const failedIn = (checks?: Known<CheckInfo[]>): string[] | undefined => {
   const reported = checks && dataOf(checks);
 
   return reported && failedOf(reported);
 };
 
-// What is known now of one pull request and its head's Checks; a read that failed leaves nothing to act on.
-const checkedOf = ({ pull, checks }: LinkRead): Fresh | undefined => {
+const commentsIn = (
+  comments?: Known<CommentInfo[]>,
+): CommentInfo[] | undefined => comments && dataOf(comments);
+
+/*
+ * What is known now of one pull request, its head's Checks and its review comments. A read that failed leaves nothing
+ * to act on: a failed comments read is never taken for no comments, and holds back the Checks' Prompts too.
+ */
+const withChecks = (
+  { pull, checks }: LinkRead,
+  comments: CommentInfo[],
+): FixFacts | undefined => {
   const open = openOf(pull);
   const failed = failedIn(checks);
 
-  return open && failed && { pull: open, failed };
+  return open && failed && { pull: open, failed, comments };
+};
+
+const checkedOf = (read: LinkRead): FixFacts | undefined => {
+  const comments = commentsIn(read.comments);
+
+  return comments && withChecks(read, comments);
 };
 
 async function freshRead(
   watching: Watching,
   record: FixRecord,
-): Promise<Fresh | undefined> {
+): Promise<FixFacts | undefined> {
   const read = await freshOf(watching, record);
 
   return read && checkedOf(read);
@@ -86,15 +98,15 @@ type Step = { argo: Acting; fix: FixStore; record: FixRecord };
 // A Prompt that could not be sent is not remembered, so the next Watch sends it.
 async function prompt(
   { argo, fix, record }: Step,
-  pull: PullInfo,
-  check: string,
+  head: string,
+  { key, text }: FixEvent,
 ): Promise<void> {
-  await fix.record(record, pull.head, check);
+  await fix.record(record, head, key);
 
   try {
-    await argo.sessions.prompt(record.sessionId, promptOf(pull, check));
+    await argo.sessions.prompt(record.sessionId, text);
   } catch (error) {
-    await fix.unrecord(record, pull.head, check);
+    await fix.unrecord(record, head, key);
     throw error;
   }
 }
@@ -111,29 +123,29 @@ async function stopIfSpent(
   return true;
 }
 
-// The failed Checks of this head that Auto-fix has not seen, no more than the tries the head has left.
+// The events of this head that Auto-fix has not seen, no more than the tries the head has left.
 async function unseenOf(
   { fix, record }: Step,
-  { pull, failed }: Fresh,
+  facts: FixFacts,
   sent: number,
-): Promise<string[]> {
-  const seen = await fix.seen(record, pull.head);
+): Promise<FixEvent[]> {
+  const seen = await fix.seen(record, facts.pull.head);
 
-  return failed
-    .filter((name) => !seen.has(eventKey(name)))
+  return eventsOf(facts)
+    .filter(({ key }) => !seen.has(key))
     .slice(0, Math.max(fixTries - sent, 0));
 }
 
 /*
- * One pull request's turn: a Prompt for each failed Check of the head commit that Auto-fix has not seen, never twice for
- * the same commit and Check, and never past the tries a head gets.
+ * One pull request's turn: a Prompt for each failed Check, conflict and review comment Auto-fix has not seen, never
+ * twice for the same event, and never past the tries a head gets.
  */
-async function turnOf(step: Step, fresh: Fresh): Promise<boolean> {
+async function turnOf(step: Step, fresh: FixFacts): Promise<boolean> {
   const { head } = fresh.pull;
   const sent = await step.fix.sent(step.record, head);
   const unseen = await unseenOf(step, fresh, sent);
 
-  for (const check of unseen) await prompt(step, fresh.pull, check);
+  for (const event of unseen) await prompt(step, head, event);
 
   const stopped = await stopIfSpent(step, { head, sent: sent + unseen.length });
 

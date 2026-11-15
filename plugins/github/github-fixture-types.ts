@@ -42,3 +42,12 @@ export type FixtureCheck = {
     | 'cancelled'
     | null;
 };
+
+// One review comment on a pull request's diff as GitHub's REST API answers it; `line` is null once the line is outdated.
+export type FixtureComment = {
+  id: number;
+  path: string;
+  line: number | null;
+  body: string;
+  user: { login: string };
+};

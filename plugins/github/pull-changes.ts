@@ -10,6 +10,7 @@ import {
 import type { AutomationReads } from './pull-automation-reads';
 import { changeOf, type ChangeItem, type Refresh } from './pull-change';
 import type { CheckInfo } from './pull-checks';
+import type { CommentInfo, CommentsReads } from './pull-comments';
 import { fixOf } from './pull-fix';
 import type { PullInfo } from './pull-info';
 import type { Attached } from './pull-kept';
@@ -22,7 +23,7 @@ import type { PullKey, PullLink, PullStore } from './pull-store';
 export type ChangesSource = {
   store: PullStore;
   records: PullRecords;
-  reads: PullReads & AutomationReads;
+  reads: PullReads & AutomationReads & CommentsReads;
   readState: Argo['queries']['readState'];
 };
 
@@ -35,6 +36,8 @@ export type LinkRead<Link extends PullKey = PullLink> = {
   // Read only for an Open pull request, which is the only one that can auto-merge.
   autoMerge?: Known<AutoMergeInfo>;
   settings?: Known<MergeSettings>;
+  // Read only for an Open pull request, the only one Auto-fix prompts about.
+  comments?: Known<CommentInfo[]>;
 } & Attached;
 
 // Two Sessions attaching the same pull request ask the same question, so they share one entry.

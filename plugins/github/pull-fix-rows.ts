@@ -17,29 +17,25 @@ export type FixStore = {
   forSessions: (sessionIds: readonly string[]) => Promise<FixRecord[]>;
   // Every pull request of a Project that has Auto-fix on.
   enabledIn: (projectId: string) => Promise<FixRecord[]>;
-  // Turns it on at once: clears the reason, starts the count again on this head, and notes the failures already there.
-  enable: (
-    link: Link,
-    head: string,
-    failed: readonly string[],
-  ) => Promise<void>;
+  // Turns it on at once: clears the reason, starts the count again on this head, and notes the events already there.
+  enable: (link: Link, head: string, keys: readonly string[]) => Promise<void>;
   disable: (link: Link) => Promise<void>;
   // Turns it off and remembers the commit it gave up on.
   stop: (link: Link, head: string) => Promise<void>;
-  // The Checks already seen failing on this head, and how many Prompts Auto-fix has sent on it.
+  // The event keys already seen on this head, review comments seen on any head included, and how many Prompts Auto-fix has sent on it.
   seen: (link: Link, head: string) => Promise<ReadonlySet<string>>;
   sent: (link: Link, head: string) => Promise<number>;
-  record: (link: Link, head: string, check: string) => Promise<void>;
-  unrecord: (link: Link, head: string, check: string) => Promise<void>;
+  record: (link: Link, head: string, key: string) => Promise<void>;
+  unrecord: (link: Link, head: string, key: string) => Promise<void>;
   // Everything kept for a detached pull request.
   forget: (link: Link) => Promise<void>;
 };
 
 /*
  * One row per Session per pull request the person has turned Auto-fix on for. `stop_head` is the head commit it gave up
- * on, so the reason is told only while that commit is still the head. The events table holds each Check failure
- * (`check:<name>`) per head commit: `sent` is 1 for a Prompt Auto-fix sent and 0 for a failure already there when it was
- * turned on, which is never prompted and never counted.
+ * on, so the reason is told only while that commit is still the head. The events table holds each event per head commit
+ * it was seen on (`check:<name>`, `conflict` or `comment:<id>`, see `pull-fix-prompts.ts`): `sent` is 1 for a Prompt
+ * Auto-fix sent and 0 for an event already there when it was turned on, which is never prompted and never counted.
  */
 export const tables = [
   'CREATE TABLE IF NOT EXISTS pull_auto_fix (project_id TEXT NOT NULL, session_id TEXT NOT NULL, repository TEXT NOT NULL, number INTEGER NOT NULL, enabled INTEGER NOT NULL, stop_head TEXT, PRIMARY KEY (project_id, session_id, repository, number))',
@@ -51,8 +47,6 @@ export const columns =
 
 export const where =
   'project_id = ? AND session_id = ? AND repository = ? AND number = ?';
-
-export const eventKey = (check: string): string => `check:${check}`;
 
 export const keyOf = (link: Link): Param[] => [
   link.projectId,

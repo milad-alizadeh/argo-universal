@@ -3,6 +3,7 @@ import { defineAutomationReads } from './pull-automation-reads';
 import type { ChangeItem } from './pull-change';
 import { changesBySession, type ChangesSource } from './pull-changes';
 import { checkoutIdentity, markCheckout } from './pull-checkout';
+import { defineCommentsReads } from './pull-comments';
 import { keptShown } from './pull-kept';
 import { linkMarks, markedLinks } from './pull-link-marks';
 import { definePullReads } from './pull-reads';
@@ -23,7 +24,11 @@ function sourceOf(argo: Argo): ChangesSource {
   return {
     store: createPullStore(argo),
     records: createPullRecords(argo),
-    reads: { ...definePullReads(argo), ...defineAutomationReads(argo) },
+    reads: {
+      ...definePullReads(argo),
+      ...defineAutomationReads(argo),
+      ...defineCommentsReads(argo),
+    },
     readState: argo.queries.readState,
   };
 }

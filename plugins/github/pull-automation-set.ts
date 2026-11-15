@@ -7,8 +7,10 @@ import {
 } from './pull-automation';
 import { fetchAutoMerge, fetchMergeSettings } from './pull-automation-reads';
 import { disableAutoMerge, enableAutoMerge } from './pull-automation-writes';
+import { fetchComments } from './pull-comments';
 import { requireAttached } from './pull-file-operations';
 import { failedOf } from './pull-fix';
+import { eventsOf } from './pull-fix-prompts';
 import type { PullInfo } from './pull-info';
 import { namedOf, type Scope } from './pull-operations';
 import { fetchChecks, fetchPull } from './pull-reads';
@@ -134,20 +136,36 @@ const isOn = async (
       record.enabled,
   );
 
+// The head commit, and the keys of every event Auto-fix could prompt about on it now.
+async function eventsNow(
+  fetch: Fetch,
+  target: FixTarget,
+): Promise<{ head: string; keys: string[] }> {
+  const pull = await fetchPull(fetch, target);
+
+  const [checks, comments] = await Promise.all([
+    fetchChecks(fetch, { ...target, head: pull.head }),
+    fetchComments(fetch, target),
+  ]);
+
+  const events = eventsOf({ pull, failed: failedOf(checks), comments });
+
+  return { head: pull.head, keys: events.map(({ key }) => key) };
+}
+
 async function enableFix(
   { fetch, store }: Pick<Scope, 'fetch' | 'store'>,
   target: FixTarget,
   link: FixTarget,
 ): Promise<void> {
-  const { head } = await fetchPull(fetch, target);
-  const checks = await fetchChecks(fetch, { ...target, head });
+  const { head, keys } = await eventsNow(fetch, target);
 
-  await store.fix.enable(link, head, failedOf(checks));
+  await store.fix.enable(link, head, keys);
 }
 
 /*
- * Auto-fix is the Plugin's own: turning it on reads the head's Checks first, so a failure already there is not
- * prompted, and a read that fails refuses turning it on rather than guessing. Turning it on when it is on changes nothing.
+ * Auto-fix is the Plugin's own: turning it on reads the head's Checks, the review comments and the conflict first, so
+ * one already there is not prompted, and a read that fails refuses turning it on rather than guessing. Turning it on when it is on changes nothing.
  */
 async function setFix(
   scope: Pick<Scope, 'fetch' | 'store'>,

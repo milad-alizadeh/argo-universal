@@ -1,6 +1,6 @@
+import { commentPrefix } from './pull-fix-prompts';
 import {
   all,
-  eventKey,
   isCountRow,
   isNameRow,
   keyOf,
@@ -18,8 +18,8 @@ export const seenOf =
   async (link, head) => {
     const { rows } = await execute(
       all(
-        `SELECT event_key FROM pull_auto_fix_events WHERE ${where} AND head = ?`,
-        [...keyOf(link), head],
+        `SELECT event_key FROM pull_auto_fix_events WHERE ${where} AND (head = ? OR event_key LIKE ?)`,
+        [...keyOf(link), head, `${commentPrefix}%`],
       ),
     );
 
@@ -41,17 +41,17 @@ export const sentOf =
 
 export const recordedBy =
   (execute: Execute): FixStore['record'] =>
-  async (link, head, check) => {
-    await execute(run(insertEvent(1), [...keyOf(link), head, eventKey(check)]));
+  async (link, head, key) => {
+    await execute(run(insertEvent(1), [...keyOf(link), head, key]));
   };
 
 export const unrecordedBy =
   (execute: Execute): FixStore['unrecord'] =>
-  async (link, head, check) => {
+  async (link, head, key) => {
     await execute(
       run(
         `DELETE FROM pull_auto_fix_events WHERE ${where} AND head = ? AND event_key = ?`,
-        [...keyOf(link), head, eventKey(check)],
+        [...keyOf(link), head, key],
       ),
     );
   };
