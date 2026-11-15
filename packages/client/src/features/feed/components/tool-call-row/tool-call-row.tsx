@@ -1,5 +1,8 @@
 import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
-import { ResourceCode } from '@repo/kit/primitives/content/code';
+import {
+  type CodeSection,
+  CodeSections,
+} from '@repo/kit/primitives/content/code';
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { use } from 'react';
@@ -58,31 +61,38 @@ const rawText = (
   return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
 };
 
-function RawInput({ row }: { row: ToolCallUpdate }): React.JSX.Element | null {
+// A command shows its command line, not its raw input.
+function rawInputSection(row: ToolCallUpdate): CodeSection | undefined {
   const command = toolCallFacts(row).command;
 
-  if (command !== undefined)
-    return <ResourceCode code={`$ ${command}`} title="Shell" />;
+  if (command !== undefined) return { title: 'Shell', code: `$ ${command}` };
 
   const input = rawText(row, 'rawInput');
 
-  return input === undefined ? null : (
-    <ResourceCode code={input} title="Input" language="json" />
-  );
+  return input === undefined
+    ? undefined
+    : { title: 'Input', code: input, language: 'json' };
+}
+
+function rawOutputSection(row: ToolCallUpdate): CodeSection | undefined {
+  const output = rawText(row, 'rawOutput');
+
+  return output === undefined
+    ? undefined
+    : { title: 'Output', code: output, language: 'json' };
 }
 
 // An MCP or Operation call reports its input and result only raw, with no content blocks; so does a command before its output.
-function RawToolOutput({ row }: { row: ToolCallUpdate }): React.JSX.Element {
-  const output = rawText(row, 'rawOutput');
-
-  return (
-    <View className="gap-2">
-      <RawInput row={row} />
-      {output !== undefined && (
-        <ResourceCode code={output} title="Output" language="json" />
-      )}
-    </View>
+function RawToolOutput({
+  row,
+}: {
+  row: ToolCallUpdate;
+}): React.JSX.Element | null {
+  const sections = [rawInputSection(row), rawOutputSection(row)].filter(
+    (section): section is CodeSection => section !== undefined,
   );
+
+  return sections.length > 0 ? <CodeSections sections={sections} /> : null;
 }
 
 function ToolCallBody({ row }: { row: ToolCallUpdate }): React.JSX.Element {
