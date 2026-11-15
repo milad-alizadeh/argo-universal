@@ -9,7 +9,6 @@ import {
 } from '#features/sessions';
 import { severalPullRequests } from '../../../../features/sessions/components/session-pull-request.mocks';
 import {
-  endedShells,
   sessionShells,
   shellNow,
 } from '../../../../features/sessions/components/shell-list/shell-list.mocks';
@@ -21,7 +20,7 @@ import type { SessionInspectorContent } from '../session-inspector-content';
 import { coverageCard, issueTrackerCard } from './plugin-card.mocks';
 import { itemsOf } from './session-section';
 import { offeredSections, sessionWorkbench } from './session-sections';
-import { summaryLines } from './session-sections-fixtures';
+import { onlyDoneSections, summaryLines } from './session-sections-fixtures';
 
 const everySection = {
   header: {
@@ -119,8 +118,7 @@ export const OnlyDone: Story = {
   args: {
     content: {
       header: { ...everySection.header, pullRequests: [] },
-      subagents: { subagents: subagentStates.allFinished, now: subagentNow },
-      shells: { shells: endedShells, now: shellNow, onStop: fn() },
+      ...onlyDoneSections,
     },
   },
 };
