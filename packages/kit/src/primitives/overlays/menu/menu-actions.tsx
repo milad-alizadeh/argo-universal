@@ -9,6 +9,11 @@ import { Text, TextClassContext } from '#primitives/content/text';
 import { Chevron } from '#primitives/status/chevron';
 import { SelectedCheck } from '#primitives/status/selected-check';
 import { MenuActionLabel } from './menu-action-label';
+import {
+  ChoiceGutterContext,
+  hasChoice,
+  useChoiceGutter,
+} from './menu-choice-gutter';
 import type { KeyboardFocus } from './menu-choices';
 import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';
@@ -34,9 +39,11 @@ export function MenuActions(props: MenuActionsProps): React.JSX.Element {
     <TextClassContext.Provider value="text-foreground">
       {/* Radix's popper wrapper copies the content's z-index, so the content keeps it above other overlays. */}
       <RadixMenu.Content {...actionContentProps(props)}>
-        <View className={actionContentClassName}>
-          {props.loading ? <MenuLoadingRow /> : props.actions.map(actionItem)}
-        </View>
+        <ChoiceGutterContext.Provider value={hasChoice(props.actions)}>
+          <View className={actionContentClassName}>
+            {props.loading ? <MenuLoadingRow /> : props.actions.map(actionItem)}
+          </View>
+        </ChoiceGutterContext.Provider>
       </RadixMenu.Content>
     </TextClassContext.Provider>
   );
@@ -105,6 +112,7 @@ function SubmenuTrigger({ submenu }: SubmenuProps): React.JSX.Element {
   return (
     <RadixMenu.SubTrigger asChild aria-label={label}>
       <View className={menuRowClass()}>
+        <ChoiceCheck />
         <MenuActionLabel {...submenu} />
         <SubmenuCount count={submenu.count} />
         <Chevron direction="right" />
@@ -151,11 +159,13 @@ export function choiceRole(
   return { role: 'menuitemradio', 'aria-checked': selected };
 }
 
-// The leading check on the selected action, as every popover row (owner, 2026-10-20); the others keep its place, so labels line up.
+// The leading check on the selected action, as every popover row (owner, 2026-10-20); in a menu with a row that can be ticked, the others keep its place, so icons and labels line up.
 export function ChoiceCheck({
   selected,
 }: Pick<MenuAction, 'selected'>): React.JSX.Element | null {
-  if (selected === undefined) return null;
+  const kept = useChoiceGutter();
+
+  if (selected === undefined && !kept) return null;
 
   return (
     <IconSlot>

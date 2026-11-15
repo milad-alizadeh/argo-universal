@@ -7,6 +7,7 @@ import { TextClassContext } from '#primitives/content/text';
 import type { ContextMenuItem, ContextMenuProps } from './context-menu-props';
 import { MenuActionLabel } from './menu-action-label';
 import { ChoiceCheck, choiceRole } from './menu-actions';
+import { ChoiceGutterContext, hasChoice } from './menu-choice-gutter';
 import { MenuSection } from './menu-section';
 import {
   menuContentClassName,
@@ -96,7 +97,9 @@ function ContextMenuContent(props: ContentProps): ReactElement {
         className="z-50"
         onCloseAutoFocus={props.chosen.onCloseAutoFocus}
       >
-        <View className={contentClassName}>{menuRows(props)}</View>
+        <ChoiceGutterContext.Provider value={hasChoice(props.groups.flat())}>
+          <View className={contentClassName}>{menuRows(props)}</View>
+        </ChoiceGutterContext.Provider>
       </RadixContextMenu.Content>
     </TextClassContext.Provider>
   );
