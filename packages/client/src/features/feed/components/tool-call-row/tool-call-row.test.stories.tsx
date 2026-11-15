@@ -100,7 +100,9 @@ export const CommandWithoutOutput: Story = {
       canvas.getByRole('button', { name: /^Verify the build/ }),
     );
     await expect(canvas.getByText('Shell')).toBeVisible();
-    await expect(canvas.getByText(/\$ pnpm verify/)).toBeVisible();
+    await expect(canvas.getByTestId('code-text')).toHaveTextContent(
+      '$ pnpm verify',
+    );
     await expect(canvas.queryByText('Input')).not.toBeInTheDocument();
     await expect(canvas.queryByText(/timeout/)).not.toBeInTheDocument();
   },
