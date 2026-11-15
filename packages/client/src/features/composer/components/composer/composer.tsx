@@ -6,6 +6,11 @@ import { View } from 'react-native';
 import { ElicitationSheet, PermissionRequest } from '#features/requests';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { PromptQueue } from '../prompt-queue/prompt-queue';
+import { QueueEditorsProvider } from '../prompt-queue/queue-editors';
+import {
+  queueCommand,
+  useQueueComposer,
+} from '../prompt-queue/use-queue-composer';
 import { ComposerControls } from './composer-card';
 import { oversizedAttachmentIds, sendButtonState } from './composer-conditions';
 import { useComposerLayout } from './composer-layout';
@@ -18,6 +23,15 @@ export type { ComposerDraft, ComposerProps } from './composer-types';
 export type { ComposerAttachment } from '../composer-attachment-card/composer-attachment-card';
 
 export function Composer(props: ComposerProps): React.JSX.Element {
+  return (
+    <QueueEditorsProvider command={queueCommand(props.promptQueue)}>
+      <ComposerBody {...props} />
+    </QueueEditorsProvider>
+  );
+}
+
+function ComposerBody(input: ComposerProps): React.JSX.Element {
+  const props = useQueueComposer(input);
   const sendState = sendButtonState(props);
   const layout = useComposerLayout(props, sendState);
   useComposerToasts(props);
@@ -27,7 +41,7 @@ export function Composer(props: ComposerProps): React.JSX.Element {
       <ComposerTopTray {...layout} />
       <ComposerQueue queue={props.promptQueue} />
       <ComposerRequest {...layout} />
-      <ComposerControls {...layout} />
+      <ComposerControls key={props.queueEdit?.id ?? 'draft'} {...layout} />
     </View>
   );
 }

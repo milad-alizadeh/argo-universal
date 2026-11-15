@@ -1,6 +1,4 @@
-import { Button } from '@repo/kit/primitives/actions/button';
 import { Icon } from '@repo/kit/primitives/content/icon';
-import { TextArea } from '@repo/kit/primitives/controls/text-area';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
@@ -32,7 +30,6 @@ function QueuedRowContent(row: Row): ReactElement {
       role="group"
       leading={queueGrip}
       trailingAccessories={row.editing ? undefined : <EditControls {...row} />}
-      control={row.editing ? <QueueEditor {...row} /> : undefined}
     />
   );
 }
@@ -44,53 +41,8 @@ function queueSubtitle(row: Row): string | undefined {
 }
 
 function heldSubtitle(row: Row): string | undefined {
-  if (row.holds.includes(row.row.id)) return 'Editing…';
+  if ([row.editing, row.holds.includes(row.row.id)].some(Boolean))
+    return 'Editing…';
 
   return attachmentLabels(row.row.prompt) || undefined;
-}
-
-function QueueEditor(row: Row): ReactElement {
-  return (
-    <>
-      <TextArea
-        label="Edit Queued Prompt"
-        value={row.text}
-        onChangeText={row.changeText}
-        disabled={row.pending}
-      />
-      <EditorActions {...row} />
-    </>
-  );
-}
-
-function EditorActions(row: Row): ReactElement {
-  return (
-    <View className="flex-row gap-2">
-      <SaveEdit {...row} />
-      <CancelEdit {...row} />
-    </View>
-  );
-}
-
-function SaveEdit(row: Row): ReactElement {
-  return (
-    <Button
-      label="Save"
-      size="sm"
-      disabled={row.pending || !row.text.trim()}
-      onPress={row.save}
-    />
-  );
-}
-
-function CancelEdit(row: Row): ReactElement {
-  return (
-    <Button
-      label="Cancel"
-      size="sm"
-      variant="text"
-      disabled={row.pending}
-      onPress={row.cancel}
-    />
-  );
 }

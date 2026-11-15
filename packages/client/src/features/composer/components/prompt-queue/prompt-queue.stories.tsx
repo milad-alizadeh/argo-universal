@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type { ReactElement } from 'react';
 import { fn } from 'storybook/test';
 import { PromptQueue } from './prompt-queue';
 import {
@@ -6,10 +7,12 @@ import {
   pausedPrompts,
   editingElsewhere,
 } from './prompt-queue-fixtures';
+import { QueueComposerExample } from './queue-composer.mocks';
 
 const meta = {
   title: 'Composer/PromptQueue',
   component: PromptQueue,
+  render: (args): ReactElement => <QueueComposerExample {...args} />,
   argTypes: {
     queue: {
       control: false,

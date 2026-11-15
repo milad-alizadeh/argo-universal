@@ -20,7 +20,9 @@ export function EditControls(row: Row): ReactElement {
 }
 
 const controlsDisabled = (row: Row): boolean =>
-  row.pending || row.holds.includes(row.row.id);
+  [row.pending, row.editing, row.holds.length > 0, row.editorBusy].some(
+    Boolean,
+  );
 
 function editProps(row: Row): QueueIconProps {
   return {
