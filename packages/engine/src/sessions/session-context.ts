@@ -34,11 +34,12 @@ import type {
   NativePermissions,
 } from './native-permissions';
 import type { PermissionHooked } from './permission-hooks';
+import type { QueueSessionCommand } from './queue-command-types';
 import type {
   QueueHoldConnections,
   QueueEditDisconnected,
 } from './queue-hold-connections';
-import type { QueueSessionCommand } from './queue-session-command';
+import type { QueueSteering } from './queue-steering-types';
 import type { ClosingCommand } from './restart/restart-command';
 import type { SessionData, SessionInput } from './session-data';
 import type { Shells } from './shells';
@@ -75,6 +76,7 @@ export type SessionMachineInput = SessionInput & {
 };
 
 export type SessionCommand =
+  | QueueSessionCommand
   | ({ type: 'session.prompt' } & LocalSubmission)
   | {
       type: 'session.answerPermission';
@@ -94,7 +96,6 @@ export type SessionCommand =
       applied?: PromiseWithResolvers<SessionConfigOption[]>;
       held?: boolean;
     }
-  | QueueSessionCommand
   | { type: 'session.archive' }
   | { type: 'session.unarchive' }
   | { type: 'session.cancel' }
@@ -118,6 +119,7 @@ export interface SessionContext extends SessionData {
   input: SessionMachineInput;
   promptQueue: PromptQueue;
   queueHolds: Record<string, string>;
+  queueSteering: QueueSteering | null;
   queueHoldConnections: QueueHoldConnections;
   queueCommitted: Promise<void>;
   dispatchingQueueId: string | null;

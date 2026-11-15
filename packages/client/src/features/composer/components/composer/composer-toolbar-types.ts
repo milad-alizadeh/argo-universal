@@ -6,6 +6,7 @@ export type AttachLayout = Pick<
 > & {
   props: Pick<
     ComposerProps,
+    | 'queueEdit'
     | 'onAttachImages'
     | 'onAttachCamera'
     | 'onAttachFiles'

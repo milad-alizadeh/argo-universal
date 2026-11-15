@@ -69,6 +69,11 @@ export const QueueCommand = z.discriminatedUnion('action', [
     beforeId: QueuedPromptId.nullable(),
   }),
   z.strictObject({ action: z.literal('resume') }),
+  z.strictObject({
+    action: z.literal('steer'),
+    id: QueuedPromptId,
+    revision: z.int(),
+  }),
 ]);
 
 export type QueueCommand = z.infer<typeof QueueCommand>;

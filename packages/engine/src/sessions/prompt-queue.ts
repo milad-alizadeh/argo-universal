@@ -19,7 +19,9 @@ type QueueChange = Pick<SessionContext, 'promptQueue' | 'queueHolds'>;
 
 type QueueContext = QueueChange & Pick<SessionContext, 'dispatchingQueueId'>;
 
-type RowCommand = Exclude<QueueCommand, { action: 'append' | 'resume' }>;
+type QueueChangeCommand = Exclude<QueueCommand, { action: 'steer' }>;
+
+type RowCommand = Exclude<QueueChangeCommand, { action: 'append' | 'resume' }>;
 
 type EditingCommand = Extract<QueueCommand, { action: 'save' | 'release' }>;
 
@@ -31,7 +33,7 @@ const conflict = (message: string): never => {
 
 export function changePromptQueue(
   context: QueueContext,
-  command: QueueCommand & { sender?: NonUserPromptSender },
+  command: QueueChangeCommand & { sender?: NonUserPromptSender },
   createId: () => string,
 ): QueueChange {
   if (command.action === 'append')

@@ -5,6 +5,7 @@ import { fn } from 'storybook/test';
 import { ChangeRow } from './change-row';
 import {
   checksFailingChangeRow,
+  checksOverflowChangeRow,
   checksPassedChangeRow,
   checksRunningChangeRow,
   closedChangeRow,
@@ -63,6 +64,15 @@ export const MenuOpen: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       canvas.getByRole('button', { name: /^Actions for Change #/ }),
+    );
+  },
+};
+
+export const ChecksOverflow: Story = {
+  args: checksOverflowChangeRow,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: /CI Checks 24\/24/ }),
     );
   },
 };
