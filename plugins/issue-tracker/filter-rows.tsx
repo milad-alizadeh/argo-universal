@@ -11,6 +11,7 @@ import type { FilterState } from './filter-loader';
 import type { Issue } from './github-issues';
 import type { Project } from './issue-client';
 import { issuePath } from './issue-paths';
+import type { SessionCounts } from './issue-session-counts';
 import { statusMark } from './issue-status-mark';
 import { statuses } from './issue-status-view';
 import type { IssueNode } from './issue-tree';
@@ -19,6 +20,8 @@ import { labelPills } from './label-pills';
 export type RowSource = {
   project: Project;
   to: PageTo<FilterState>;
+  // The Sessions attached to each of the Project's Issues.
+  sessions: SessionCounts;
 };
 
 // A keyed ListItem itself, as a List draws its children; its sub-Issues nest inside.
@@ -39,18 +42,22 @@ type RowProps = Pick<
   'id' | 'leading' | 'title' | 'subtitle' | 'finished' | 'onPress' | 'meta'
 >;
 
-const rowProps = ({ project, to }: RowSource, issue: Issue): RowProps => ({
+const rowProps = (
+  { project, to, sessions }: RowSource,
+  issue: Issue,
+): RowProps => ({
   id: String(issue.number),
   leading: statusMark(issue, `mark-${issue.number}`),
   title: issue.title,
   subtitle: `#${issue.number}`,
   finished: issue.status !== 'open',
   onPress: to.go(issuePath(project.id, issue.number)),
-  meta: rowMeta(issue),
+  meta: rowMeta(issue, sessions[issue.number] ?? 0),
 });
 
-// What the row says about the Issue's relations before its labels.
-const rowMeta = (issue: Issue): JSX.Element[] => [
+// What the row says about the work on the Issue and its relations, before its labels.
+const rowMeta = (issue: Issue, attached: number): JSX.Element[] => [
+  ...sessionMark(attached),
   ...blockedMark(issue),
   ...progressMark(issue),
   ...labelPills(issue.labels),
@@ -107,6 +114,26 @@ function markProps(status: Issue['status']): Patch['props'] {
 
   return { name, tone, size, filled };
 }
+
+/*
+ * An Issue a Session is attached to says so first: an Agent is on it. The Agent's mark, since a speech
+ * bubble on an Issue's row reads as its comments.
+ */
+function sessionMark(attached: number): JSX.Element[] {
+  if (attached === 0) return [];
+
+  return [
+    <Label
+      key="sessions"
+      icon="agent"
+      text={sessionText(attached)}
+      accessibilityLabel={`Attached to ${sessionText(attached, '1 Session')}`}
+    />,
+  ];
+}
+
+const sessionText = (attached: number, one = 'In Session'): string =>
+  attached === 1 ? one : `${attached} Sessions`;
 
 function blockedMark(issue: Issue): JSX.Element[] {
   const open = (issue.blockedBy ?? []).filter(

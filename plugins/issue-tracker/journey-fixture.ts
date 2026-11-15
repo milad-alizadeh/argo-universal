@@ -57,7 +57,7 @@ const issueTracker = {
 // The tracker over a fixture GitHub, not signed in; its Plugin clock only moves when the test moves it.
 export async function trackedGitHub(
   projects = [project],
-  options: Pick<PluginTestOptions, 'secretStore'> = {},
+  options: Pick<PluginTestOptions, 'secretStore' | 'sessions'> = {},
 ): Promise<Tracked> {
   const github = await githubFixture();
 

@@ -162,9 +162,7 @@ function FilterDetail(props: DetailProps): JSX.Element {
   return (
     <Screen {...filterScreenProps(props)}>
       <List appearance="plain" density="compact" {...listProps(props)}>
-        {issueTree(list.items).map((node) =>
-          issueRow({ project: data.project, to }, node),
-        )}
+        {issueTree(list.items).map((node) => issueRow({ ...data, to }, node))}
       </List>
     </Screen>
   );
