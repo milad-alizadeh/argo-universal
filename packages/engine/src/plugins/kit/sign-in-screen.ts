@@ -1,6 +1,7 @@
 import type { SignInData } from '@repo/contracts/plugins/sign-in-api';
 import type { ReactElement } from 'react';
 import { jsx } from './jsx-runtime';
+import { failureOf, tokenField } from './sign-in-paste';
 import { stepOf, type Step } from './sign-in-step';
 
 type Pressed = Parameters<typeof jsx>[1][string];
@@ -89,8 +90,11 @@ const signedInStep = (
     'Manage this Account in Settings › Accounts.',
   );
 
+const invitation = (parts: SignInParts): string =>
+  parts.data.rejected ?? `Sign in to use ${parts.name} in Argo.`;
+
 const idleStep = (parts: SignInParts): ReactElement[] => [
-  ...lines(parts.data.rejected ?? `Sign in to use ${parts.name} in Argo.`),
+  ...lines(invitation(parts)),
   ...start(parts, `Sign in to ${parts.name}`),
 ];
 
@@ -102,35 +106,6 @@ function plainStep(parts: SignInParts, step: Plain): ReactElement[] {
   return step.kind === 'idle' ? idleStep(parts) : waitingStep(parts, step);
 }
 
-// The field a token is pasted into, with why the last one was not kept beneath it.
-function tokenField(
-  parts: SignInParts,
-  error: string | undefined,
-): ReactElement {
-  const field = jsx(
-    'FieldGroup.SecretField',
-    {
-      title: 'API token',
-      value: '',
-      placeholder: `Paste a ${parts.name} API token`,
-      onChangeText: parts.paste,
-      ...(error && { error }),
-    },
-    'token',
-  );
-
-  return jsx(
-    'FieldGroup',
-    {
-      children: jsx('FieldGroup.Section', {
-        ...(error && { footer: error }),
-        children: field,
-      }),
-    },
-    'paste',
-  );
-}
-
 // A token paste draws its field until it is signed in; a refused token's reason stays beside it.
 function pasteBody(parts: SignInParts): ReactElement[] {
   const state = parts.data.flow;
@@ -139,22 +114,23 @@ function pasteBody(parts: SignInParts): ReactElement[] {
 
   return [
     ...lines(
-      parts.data.rejected ?? `Sign in to use ${parts.name} in Argo.`,
+      invitation(parts),
       `Paste an API token you made at ${parts.name}. Argo keeps it in your computer’s secret store.`,
     ),
-    tokenField(parts, state.kind === 'failed' ? state.message : undefined),
+    tokenField(parts, failureOf(state)),
   ];
 }
 
-function body(parts: SignInParts): ReactElement[] {
-  if (parts.data.pastesToken) return pasteBody(parts);
-
+function flowBody(parts: SignInParts): ReactElement[] {
   const step = stepOf(parts.data.flow);
 
   if (step.kind === 'code') return codeStep(parts, step);
 
   return step.kind === 'ended' ? endStep(parts, step) : plainStep(parts, step);
 }
+
+const body = (parts: SignInParts): ReactElement[] =>
+  parts.data.pastesToken ? pasteBody(parts) : flowBody(parts);
 
 // The sign-in page, drawn from kit components: every step of each flow, and the way back after a refusal.
 export const signInScreen = (parts: SignInParts): ReactElement =>

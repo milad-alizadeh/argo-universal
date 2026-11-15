@@ -44,6 +44,7 @@ it('signs in again with a new token once the service refuses the kept one, and k
     'token-1': 'person',
     'token-2': 'person',
   });
+
   const test = await start(service);
   const page = await test.pages.open({ path: '/', projectId: 'one' });
 

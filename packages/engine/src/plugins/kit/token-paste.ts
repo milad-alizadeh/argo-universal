@@ -37,17 +37,22 @@ export const tokenPaste: TokenPastePattern = (argo, options) => {
     pastesToken: true,
     state: () => held.state,
     start: (token: string) => pasted(held, { argo, options }, token.trim()),
-    cancel: () => {
-      held.paste = null;
-
-      return settle(held, argo, idle);
-    },
-    provide: () =>
-      argo.accounts.provide(options.host, options.header, (account) =>
-        argo.secrets.get(account.id),
-      ),
+    cancel: () => forget(held, argo),
+    provide: () => provide({ argo, options }),
   });
 };
+
+function forget(held: Held, argo: TokenPasteArgo): TokenPasteState {
+  held.paste = null;
+
+  return settle(held, argo, idle);
+}
+
+// A borrower's request gets the kept token in the header the Plugin names; Argo sets it.
+const provide = ({ argo, options }: Given): Promise<void> =>
+  argo.accounts.provide(options.host, options.header, (account) =>
+    argo.secrets.get(account.id),
+  );
 
 function settle(
   held: Held,

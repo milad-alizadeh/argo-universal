@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url';
+import type { WireNode } from '@repo/contracts/plugins/wire';
 import { onTestFinished } from 'vitest';
 import {
   fixtureServices,
@@ -24,21 +25,23 @@ export type TokenService = Pick<PluginTestOptions, 'network'> & {
 const bearerOf = ({ headers }: Pick<FixtureRequest, 'headers'>): string =>
   String(headers.authorization).replace('Bearer ', '');
 
-export async function tokenService(
-  tokens: Record<string, string>,
-): Promise<TokenService> {
-  const accepted = new Map(Object.entries(tokens));
-
-  const answer = (request: FixtureRequest): FixtureAnswer => {
+// The service's answer: `/me` names whose token it is, as text, `/items` reads; a token it does not accept is refused.
+const answerWith =
+  (accepted: Map<string, string>) =>
+  (request: FixtureRequest): FixtureAnswer => {
     const login = accepted.get(bearerOf(request));
 
     if (login === undefined)
       return { status: unauthorized, json: { message: 'Bad token' } };
 
-    return request.path === '/me' ? { json: { login } } : { text: itemsText };
+    return request.path === '/me' ? { text: login } : { text: itemsText };
   };
 
-  const { network, requests } = await fixtureServices(answer);
+export async function tokenService(
+  tokens: Record<string, string>,
+): Promise<TokenService> {
+  const accepted = new Map(Object.entries(tokens));
+  const { network, requests } = await fixtureServices(answerWith(accepted));
 
   return {
     network,
@@ -85,5 +88,5 @@ export async function paste(
   await test.clock.advance(typingPauseMs);
 }
 
-export const secretFieldOf = (page: OpenPage): unknown =>
+export const secretFieldOf = (page: OpenPage): WireNode =>
   page.find(isSecretField);

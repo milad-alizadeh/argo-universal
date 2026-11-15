@@ -29,20 +29,14 @@ const itemsPage = (argo: Argo): GatedPage<PageState, string> => ({
 async function login(argo: Argo, token: string): Promise<string | null> {
   const headers = { Authorization: `Bearer ${token}` };
   const reply = await argo.fetch(`https://${host}/me`, { headers });
-  const body: unknown = reply?.ok ? await reply.json() : null;
 
-  return body && typeof body === 'object' && 'login' in body
-    ? String(body.login)
-    : null;
+  return reply?.ok ? reply.text() : null;
 }
 
 export async function register(argo: Argo): Promise<void> {
   const header = { header: 'Authorization', prefix: 'Bearer' };
-  const flow = tokenPaste(argo, {
-    host,
-    header,
-    label: (token) => login(argo, token),
-  });
+  const label = (token: string): Promise<string | null> => login(argo, token);
+  const flow = tokenPaste(argo, { host, header, label });
 
   await provideSignIn(argo, flow, service);
   argo.pages.define('/', signInGate(flow, service, itemsPage(argo)));

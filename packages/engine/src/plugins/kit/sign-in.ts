@@ -3,6 +3,10 @@ import type {
   LoaderInput,
   PageTo,
 } from '@repo/contracts/plugins/loader-page-api';
+import type {
+  OperationDeclaration,
+  OperationParams,
+} from '@repo/contracts/plugins/operations-api';
 import type { PageState } from '@repo/contracts/plugins/page-address';
 import type {
   AccountFetchPattern,
@@ -13,6 +17,7 @@ import type {
   SignInOptions,
 } from '@repo/contracts/plugins/sign-in-api';
 import type { ReactElement } from 'react';
+import { z } from 'zod';
 import { signInScreen, type SignInParts } from './sign-in-screen';
 
 // How long an answer is fresh unless the page says: a sign-out or a rejected token is noticed within it (ADR-0037).
@@ -103,8 +108,10 @@ const signInPage = (flow: SignInFlow, { name }: SignInOptions): SignInPage => ({
 });
 
 // A token paste's `signIn` carries the pasted token; the other flows' carries nothing.
-const tokenIn = (params: Readonly<Record<string, unknown>>): string =>
-  typeof params.token === 'string' ? params.token : '';
+const PastedToken = z.object({ token: z.string() });
+
+const tokenIn = (params: OperationParams<OperationDeclaration>): string =>
+  PastedToken.safeParse(params).data?.token ?? '';
 
 export const provideSignIn: ProvideSignInPattern = async (
   argo,
