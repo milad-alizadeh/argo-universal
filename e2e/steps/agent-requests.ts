@@ -5,12 +5,12 @@ import { z } from 'zod';
 const LoggedRequest = z.object({
   agent: z.number(),
   method: z.string(),
-  mainSession: z.boolean().optional(),
   id: MessageId.optional(),
   params: z
     .object({
       prompt: z.unknown().optional(),
       cwd: z.string().optional(),
+      mcpServers: z.array(z.object({ name: z.string() })).optional(),
       configId: z.string().optional(),
       value: z.unknown().optional(),
     })

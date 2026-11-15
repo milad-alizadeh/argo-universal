@@ -5,12 +5,27 @@ import {
   type LoggedRequest,
 } from './agent-requests';
 
+function hasSessionAccess(request: LoggedRequest): boolean {
+  return (request.params?.mcpServers ?? []).length > 0;
+}
+
+function isConversationOpening(message: LoggedMessage): boolean {
+  return 'method' in message && hasSessionAccess(message);
+}
+
 export function requestsIn(
   messages: LoggedMessage[],
   method: string,
 ): LoggedRequest[] {
-  return loggedRequestsIn(messages, method).filter(
-    (request) => request.mainSession === true,
+  const conversations = new Set(
+    messages
+      .values()
+      .filter(isConversationOpening)
+      .map((message) => message.agent),
+  );
+
+  return loggedRequestsIn(messages, method).filter((request) =>
+    conversations.has(request.agent),
   );
 }
 

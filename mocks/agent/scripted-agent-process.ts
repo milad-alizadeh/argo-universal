@@ -73,13 +73,7 @@ function markFailedOpening(
 const received = logFrames(({ method, id, params, result }) => {
   if (method) {
     trackOpening(method, id);
-    log({
-      agent: process.pid,
-      mainSession: Boolean(process.env.ARGO_TOKEN),
-      method,
-      id,
-      params,
-    });
+    log({ agent: process.pid, method, id, params });
   } else if (id !== undefined) log({ agent: process.pid, replied: id, result });
 });
 
