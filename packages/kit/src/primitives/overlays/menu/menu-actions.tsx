@@ -143,7 +143,7 @@ function actionItemProps(action: MenuAction): RadixMenu.DropdownMenuItemProps {
 }
 
 // An action that can be the selected one is a radio row, as the native menus check it.
-function choiceRole(
+export function choiceRole(
   selected: boolean | undefined,
 ): Pick<RadixMenu.DropdownMenuItemProps, 'role' | 'aria-checked'> {
   if (selected === undefined) return {};
@@ -152,7 +152,7 @@ function choiceRole(
 }
 
 // The leading check on the selected action, as every popover row (owner, 2026-10-20); the others keep its place, so labels line up.
-function ChoiceCheck({
+export function ChoiceCheck({
   selected,
 }: Pick<MenuAction, 'selected'>): React.JSX.Element | null {
   if (selected === undefined) return null;

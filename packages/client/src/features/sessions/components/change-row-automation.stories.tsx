@@ -1,0 +1,67 @@
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
+import { View } from 'react-native';
+import { fn } from 'storybook/test';
+import { ChangeRow } from './change-row';
+import {
+  autoMergeOffChangeRow,
+  autoMergeOnChangeRow,
+  autoMergeUnavailableChangeRow,
+} from './change-row-automation-fixtures';
+
+// Paper WRB-0: PR automation menu, Option A. The … menu holds the automation items between the links and Detach.
+const meta = {
+  title: 'Sessions/ChangeRow/Automation',
+  component: ChangeRow,
+  decorators: [
+    (Story): React.JSX.Element => (
+      <View className="w-full">
+        <View className="w-frame-list">
+          <Story />
+        </View>
+      </View>
+    ),
+  ],
+  argTypes: {
+    change: { control: false },
+    onOpen: { control: false },
+    onCopyLink: { control: false },
+    onDetach: { control: false },
+    onSetAutomation: { control: false },
+  },
+  args: {
+    ...autoMergeOffChangeRow,
+    onOpen: fn(),
+    onCopyLink: fn(),
+    onDetach: fn(),
+    onSetAutomation: fn(),
+  },
+} satisfies Meta<typeof ChangeRow>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+const openMenu: Story['play'] = async ({ canvas, userEvent }) => {
+  await userEvent.click(
+    canvas.getByRole('button', { name: /^Actions for Change #/ }),
+  );
+};
+
+// Auto-merge is on offer and unticked.
+export const AutoMergeOff: Story = {
+  args: autoMergeOffChangeRow,
+  play: openMenu,
+};
+
+// GitHub reports auto-merge on, so the item is ticked.
+export const AutoMergeOn: Story = {
+  args: autoMergeOnChangeRow,
+  play: openMenu,
+};
+
+// Disabled, with the reason under the label.
+export const AutoMergeUnavailable: Story = {
+  args: autoMergeUnavailableChangeRow,
+  play: openMenu,
+};

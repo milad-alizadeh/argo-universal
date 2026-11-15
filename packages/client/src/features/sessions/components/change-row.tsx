@@ -17,6 +17,8 @@ export interface ChangeRowProps {
   // Copy the Change's link, and take it off the Session; the menu leaves out an item with no handler.
   onCopyLink?: () => void;
   onDetach?: () => void;
+  // Ticks or unticks an automation the Change offers; the menu leaves the automation items out without it.
+  onSetAutomation?: SessionPullRequest['onSetAutomation'];
 }
 
 const rowClassName = 'relative flex-row items-start gap-2 px-1 py-2';

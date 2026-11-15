@@ -1,4 +1,9 @@
-import type { ChangesSummary, ChangeStaleReason } from '@repo/contracts';
+import type {
+  Change,
+  ChangeAutomationKind,
+  ChangesSummary,
+  ChangeStaleReason,
+} from '@repo/contracts';
 import type { ChangeState } from './change-stage/change-stage-model';
 import type { PullRequestChecksProps } from './pull-request-checks';
 
@@ -27,4 +32,8 @@ export type SessionPullRequest = ChangeState & {
   // What the row's … menu does besides open the PR; a row without a handler leaves that item out.
   onCopyLink?: () => void;
   onDetach?: () => void;
+  // What the Plugin offers to turn on for this PR; the menu draws an item for each that works or says why it does not.
+  automation?: Change['automation'];
+  // Ticks or unticks one of them; the menu leaves the automation items out without it.
+  onSetAutomation?: (kind: ChangeAutomationKind, on: boolean) => void;
 };

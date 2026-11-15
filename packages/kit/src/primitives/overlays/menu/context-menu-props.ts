@@ -11,6 +11,10 @@ export interface ContextMenuItem {
   icon?: IconSymbol;
   onPress: () => void;
   disabled?: boolean;
+  // A checkmark item: ticked or unticked. Absent for an item that is not a choice.
+  selected?: boolean;
+  // A line under the label, such as why the item is disabled.
+  subtitle?: string;
   tone?: 'danger';
   shortcut?: ActionShortcut;
 }

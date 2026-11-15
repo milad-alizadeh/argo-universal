@@ -16,6 +16,8 @@ export type MenuAction = Actions['actions'][number] & {
   section?: { title?: string };
   shortcut?: ActionShortcut;
   tone?: 'danger';
+  // A line under the label, such as why the action is disabled.
+  subtitle?: string;
 };
 
 // Kit-only: a row that opens a nested menu of its own rows, as a submenu Action does in a header's overflow menu.
