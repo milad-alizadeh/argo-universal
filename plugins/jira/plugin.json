@@ -1,0 +1,137 @@
+{
+  "id": "jira",
+  "name": "Jira",
+  "version": "0.0.1",
+  "engines": {
+    "argo": ">=0.0.0 <1.0.0"
+  },
+  "main": "index.tsx",
+  "icon": {
+    "sf": "ticket",
+    "material": "confirmation_number"
+  },
+  "contributes": {
+    "nav": [
+      {
+        "id": "issues",
+        "title": "Jira",
+        "path": "/"
+      }
+    ],
+    "accounts": [
+      {
+        "host": "api.atlassian.com",
+        "page": "/sign-in"
+      }
+    ],
+    "operations": [
+      {
+        "name": "signIn",
+        "label": "Sign in to Jira",
+        "description": "Checks a pasted scoped Atlassian API token with the email and site it belongs to, and signs in to Jira with it.",
+        "tier": "act",
+        "keywords": ["jira", "atlassian", "account", "sign in", "token"],
+        "params": {
+          "email": {
+            "type": "string",
+            "description": "The email of the Atlassian account the token belongs to.",
+            "required": true
+          },
+          "site": {
+            "type": "string",
+            "description": "The Atlassian site, such as your-team.atlassian.net.",
+            "required": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The pasted scoped API token.",
+            "required": true,
+            "secret": true
+          }
+        }
+      },
+      {
+        "name": "addSite",
+        "label": "Add a Jira site",
+        "description": "Finds an Atlassian site by its address and uses it for the Project.",
+        "tier": "act",
+        "keywords": ["jira", "site", "atlassian"],
+        "params": {
+          "site": {
+            "type": "string",
+            "description": "The Atlassian site, such as your-team.atlassian.net.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "chooseSite",
+        "label": "Choose a Project's Jira site",
+        "description": "Choose which Atlassian site a Project's Jira issues come from.",
+        "tier": "act",
+        "keywords": ["jira", "site", "project"],
+        "params": {
+          "cloudId": {
+            "type": "string",
+            "description": "The site's Atlassian cloud id.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "chooseProject",
+        "label": "Choose a Project's Jira project",
+        "description": "Choose which Jira project a Project shows the issues of.",
+        "tier": "act",
+        "keywords": ["jira", "project"],
+        "params": {
+          "cloudId": {
+            "type": "string",
+            "description": "The cloud id of the Atlassian site the Jira project is on.",
+            "required": true
+          },
+          "key": {
+            "type": "string",
+            "description": "The Jira project's key, such as ARGO.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "forgetProject",
+        "label": "Choose another Jira project",
+        "description": "Forget a Project's Jira project, so the page asks which one to show again.",
+        "tier": "act",
+        "keywords": ["jira", "project", "site"],
+        "caller": ["project"]
+      },
+      {
+        "name": "checkAgain",
+        "label": "Read Jira again",
+        "description": "Make the Jira pages read Jira again.",
+        "tier": "read",
+        "keywords": ["jira", "refresh", "retry"]
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "fetch",
+      "host": "api.atlassian.com",
+      "reason": "Reads and changes Jira issues as the signed-in person."
+    },
+    {
+      "kind": "fetch",
+      "host": "auth.atlassian.com",
+      "reason": "Signs in with Atlassian."
+    },
+    {
+      "kind": "fetch",
+      "host": "*",
+      "reason": "Finds your Atlassian site's cloud id at <site>.atlassian.net, and tells an unscoped API token from a wrong one. The Plugin calls only *.atlassian.net hosts this way."
+    }
+  ]
+}
