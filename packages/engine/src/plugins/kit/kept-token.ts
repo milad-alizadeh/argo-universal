@@ -60,7 +60,7 @@ const runOut = (expiresAtMs: number | undefined): boolean =>
 const dueRefresh = ({ refresh, expiresAtMs }: KeptToken): string | null =>
   refresh !== undefined && runOut(expiresAtMs) ? refresh : null;
 
-type Secrets = Pick<Argo['secrets'], 'get' | 'set'>;
+type Secrets = Pick<Argo['secrets'], 'get' | 'set' | 'delete'>;
 
 // The Account's secret and how its service refreshes.
 type Lending = { secrets: Secrets; refresh: Refresh };
@@ -78,7 +78,8 @@ const keepingRefresh = (fresh: KeptToken, spent: string): KeptToken => ({
 });
 
 /*
- * A refused refresh lends nothing, so the borrow finds the person signed out and the sign-in page draws. An unanswered
+ * A refused refresh forgets the token and lends nothing, so the borrow finds the person signed out and the sign-in
+ * page draws until they sign in again, which keeps a new token under the same Account. An unanswered
  * or failed one lends the old token; the service's 401 then does the same. A service that keeps its refresh token
  * answers without one, so the old one is kept.
  *
@@ -99,6 +100,13 @@ async function renewed(
   return lent(lending.secrets, id, { kept, spent, fresh });
 }
 
+// A refresh token the service refused is not spent again, with the client secret, on each later borrow.
+async function forgotten(secrets: Secrets, id: string): Promise<null> {
+  await secrets.delete(id);
+
+  return null;
+}
+
 type Renewal = { kept: KeptToken; spent: string; fresh: Refreshed };
 
 async function lent(
@@ -106,7 +114,7 @@ async function lent(
   id: string,
   { kept, spent, fresh }: Renewal,
 ): Promise<string | null> {
-  if (fresh === 'refused') return null;
+  if (fresh === 'refused') return forgotten(secrets, id);
 
   if (!fresh) return kept.access;
   await secrets.set(id, secretOf(keepingRefresh(fresh, spent)));

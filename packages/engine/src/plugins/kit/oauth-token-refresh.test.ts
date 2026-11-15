@@ -18,6 +18,10 @@ afterEach(() => {
 });
 
 // A client ID the Plugin keeps in its Settings, read when it is needed.
+const clientSecret = 'secret-from-settings';
+
+const secretSetting = 'client-secret';
+
 const clientIdFromSettings = (): Promise<string> =>
   Promise.resolve('client-from-settings');
 
@@ -101,18 +105,27 @@ it('keeps the old refresh token when the refresh answer gives none', async () =>
   expect(keptSecret(provider)).toMatchObject({ refresh: 'refresh-1' });
 });
 
-it('lends nothing when the service refuses the refresh token, so the read finds the person signed out', async () => {
-  const provider = await signedIn(
-    fakeProvider(
-      answered(expiring('token-1', 'refresh-1')),
-      tokenReply(false, '{"error":"invalid_grant"}'),
-    ),
-  );
+it.each([
+  ['an expired or revoked refresh token', 400, 'invalid_grant'],
+  ['a client the service no longer accepts', 401, 'invalid_client'],
+])(
+  'forgets the token and lends nothing when the service refuses %s, so the read finds the person signed out',
+  async (_case, status, error) => {
+    const provider = await signedIn(
+      fakeProvider(
+        answered(expiring('token-1', 'refresh-1')),
+        tokenReply(false, JSON.stringify({ error }), status),
+      ),
+    );
 
-  afterOneHour();
+    afterOneHour();
 
-  expect(await provider.borrow('account-1')).toBeNull();
-});
+    expect(await provider.borrow('account-1')).toBeNull();
+    expect(await provider.borrow('account-1')).toBeNull();
+    expect(refreshBodies(provider)).toHaveLength(1);
+    expect(provider.seen.secrets.has('account-1')).toBe(false);
+  },
+);
 
 it('lends the old token when the refresh fails for another reason, so a passing outage signs no one out', async () => {
   const provider = await signedIn(
@@ -130,7 +143,7 @@ it('lends the old token when the refresh fails for another reason, so a passing 
 it('sends the client secret the Plugin keeps in a secret Setting with each refresh', async () => {
   const provider = await signedIn(rotating(), {
     ...linear,
-    clientSecret: () => Promise.resolve('secret-from-settings'),
+    clientSecret: () => Promise.resolve(clientSecret),
   });
 
   afterOneHour();
@@ -140,8 +153,23 @@ it('sends the client secret the Plugin keeps in a secret Setting with each refre
     {
       grant_type: 'refresh_token',
       client_id: 'client-1',
-      client_secret: 'secret-from-settings',
+      client_secret: clientSecret,
       refresh_token: 'refresh-1',
     },
   ]);
+});
+
+it('lends the old token when the client secret is cleared from Settings before a refresh', async () => {
+  const settings = new Map([[secretSetting, clientSecret]]);
+
+  const provider = await signedIn(rotating(), {
+    ...linear,
+    clientSecret: () => settings.get(secretSetting) ?? null,
+  });
+
+  settings.delete(secretSetting);
+  afterOneHour();
+
+  expect(await provider.borrow('account-1')).toBe('token-1');
+  expect(refreshBodies(provider)).toEqual([]);
 });

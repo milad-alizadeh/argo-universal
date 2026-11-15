@@ -62,7 +62,7 @@ export type OAuthFlowState =
  *   access token at `tokenPath`, is refreshed at `tokenUrl`, with the client secret when there is one, when a
  *   borrow finds it run out, so the person stays signed in. Each rotated refresh token is kept before the new
  *   access token is lent, and one Account refreshes once at a time. A refresh the service refuses, because the
- *   refresh token expired or was revoked, lends nothing, so the read finds the person signed out.
+ *   refresh token expired or was revoked, forgets the token and lends nothing, so the read finds the person signed out.
  */
 export type OAuthFlow = Readonly<{
   // The browser and Argo's callback port are the Server Device's, so only it starts this sign-in.

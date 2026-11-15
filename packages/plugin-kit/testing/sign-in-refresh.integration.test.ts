@@ -125,6 +125,7 @@ it('stays signed in when the Server stops between keeping a rotated refresh toke
   await expect(readItems(before)).rejects.toThrow(
     'Account is temporarily unavailable',
   );
+  expect(service.reads().at(-1)).toBe('Bearer token-1');
   await before.close();
 
   const after = await start('confidential', {
@@ -156,6 +157,33 @@ it('draws the sign-in when the service refuses an expired or revoked refresh tok
   });
 
   expect(page.findText(signInLabel)).toBeDefined();
+  await page.draw();
   expect(service.reads()).toHaveLength(readsSignedIn);
+  // The refused token is forgotten, so the next read does not spend it, and the client secret, again.
+  expect(service.refreshes()).toHaveLength(1);
   expect(test.accounts.list()).toMatchObject([{ label: 'person' }]);
+}, 30_000);
+
+it('never repeats a client secret the service quotes back when it refuses the sign-in', async () => {
+  const service = await rotatingService();
+  const wrong = 'fixture-wrong-secret-77c2';
+
+  const test = await start('confidential', {
+    network: service.network,
+    openBrowser: approving(),
+    settings: new Map([['client-secret', wrong]]),
+  });
+
+  const page = await test.pages.open({ path: '/sign-in', serverDevice: true });
+
+  await page.press(signInLabel);
+  await clockUntil(test, page, 'Couldn’t sign in');
+
+  expect(
+    page.findText(
+      'The service refused the sign-in (401): invalid_client, Unknown secret [secret]',
+    ),
+  ).toBeDefined();
+  expect(JSON.stringify(page.tree)).not.toContain(wrong);
+  expect(await test.log()).not.toContain(wrong);
 }, 30_000);

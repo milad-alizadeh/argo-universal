@@ -46,10 +46,14 @@ function issue(ledger: Ledger): FixtureAnswer {
   };
 }
 
-const invalidClient: FixtureAnswer = {
+// A careless service that quotes the secret it was sent, so the test can see Argo never repeats it.
+const invalidClient = (form: URLSearchParams): FixtureAnswer => ({
   status: 401,
-  json: { error: 'invalid_client' },
-};
+  json: {
+    error: 'invalid_client',
+    error_description: `Unknown secret ${form.get('client_secret')}`,
+  },
+});
 
 const invalidGrant: FixtureAnswer = {
   status: 400,
@@ -61,7 +65,7 @@ const spendable = (ledger: Ledger, form: URLSearchParams): boolean =>
   form.get('refresh_token') === ledger.live?.refresh;
 
 function token(ledger: Ledger, form: URLSearchParams): FixtureAnswer {
-  if (form.get('client_secret') !== clientSecret) return invalidClient;
+  if (form.get('client_secret') !== clientSecret) return invalidClient(form);
 
   return spendable(ledger, form) ? issue(ledger) : invalidGrant;
 }
