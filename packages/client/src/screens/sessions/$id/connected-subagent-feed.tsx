@@ -32,7 +32,7 @@ function ConnectedSubagentFeed(
 interface SubagentSources {
   source: Source;
   reports: ReturnType<typeof useSubagentReports>;
-  imageUrl: SubagentFeedProps['feed']['imageUrl'];
+  imageUrl: ChildFeed['imageUrl'];
 }
 
 function drawSubagent(
@@ -77,16 +77,21 @@ function reportControls(
 
 type Source = ReturnType<typeof useSessionFeed>;
 
-const childItems = (source: Source): SubagentFeedProps['feed']['items'] =>
-  source.view?.items ?? [];
+type ChildFeed = NonNullable<SubagentFeedProps['feed']>;
 
-const childHeader = (source: Source): SubagentFeedProps['feed']['liveHeader'] =>
-  source.snapshot?.liveHeader ?? null;
+type LoadedSource = Source & {
+  view: NonNullable<Source['view']>;
+  snapshot: NonNullable<Source['snapshot']>;
+};
+
+// Until the child's first page and snapshot arrive, there are no rows to draw yet, not an empty Feed.
+const loaded = (source: Source): source is LoadedSource =>
+  source.ready && source.view !== null && source.snapshot !== null;
 
 function childPaging(
   source: Source,
 ): Pick<
-  SubagentFeedProps['feed'],
+  ChildFeed,
   'loadingOlder' | 'hasOlder' | 'historyCursor' | 'onStartReached'
 > {
   return {
@@ -100,11 +105,13 @@ function childPaging(
 function childFeed(
   source: Source,
   reports: ReturnType<typeof useSubagentReports>['items'],
-  imageUrl: SubagentFeedProps['feed']['imageUrl'],
+  imageUrl: ChildFeed['imageUrl'],
 ): SubagentFeedProps['feed'] {
+  if (!loaded(source)) return undefined;
+
   return {
-    items: withParentResults(childItems(source), reports),
-    liveHeader: childHeader(source),
+    items: withParentResults(source.view.items, reports),
+    liveHeader: source.snapshot.liveHeader,
     liveToolCall: source.liveToolCall,
     ...childPaging(source),
     imageUrl,
