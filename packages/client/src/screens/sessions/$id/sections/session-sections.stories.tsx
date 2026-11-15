@@ -101,3 +101,14 @@ export const SummaryLines: Story = {
     bar: { shown: summaryLines, hidden: [], onOpen: fn() },
   },
 };
+
+// A pull request row, finished Agents and an Issue's line: their leading marks share one slot, so their text starts on one edge.
+export const LeadingMarks: Story = {
+  args: {
+    content: {
+      header: everySection.header,
+      subagents: { subagents: subagentStates.allFinished, now: subagentNow },
+    },
+    bar: { shown: summaryLines, hidden: [], onOpen: fn() },
+  },
+};

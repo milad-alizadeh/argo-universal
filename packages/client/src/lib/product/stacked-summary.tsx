@@ -33,11 +33,12 @@ export function StackedSummary({
   );
 }
 
+// A disc is 2px wider than its glyph on each side; it overhangs by that, so the first glyph sits where a bare one would.
 const markStackProps = {
   'aria-hidden': true,
   accessibilityElementsHidden: true,
   importantForAccessibility: 'no-hide-descendants',
-  className: 'shrink-0 flex-row items-center',
+  className: '-mx-0.5 shrink-0 flex-row items-center',
 } as const;
 
 function SummaryIcons({
