@@ -23,9 +23,11 @@ it('signs a throwaway Plugin in with a pasted token, from a paired Device, and r
   const test = await start(service);
   const page = await test.pages.open({ path: '/', projectId: 'one' });
 
+  expect(secretFieldOf(page)).toBeDefined();
+  expect(page.findText('Continue on the Server Device')).toBeUndefined();
+
   await paste(test, page, token);
 
-  expect(page.findText('Continue on the Server Device')).toBeUndefined();
   expect(page.findText(itemsText)).toBeDefined();
   expect(service.readTokens()).toEqual([token]);
   expect(test.accounts.list()).toMatchObject([{ label: 'person' }]);

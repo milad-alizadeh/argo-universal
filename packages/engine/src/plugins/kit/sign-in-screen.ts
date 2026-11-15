@@ -106,13 +106,11 @@ function plainStep(parts: SignInParts, step: Plain): ReactElement[] {
   return step.kind === 'idle' ? idleStep(parts) : waitingStep(parts, step);
 }
 
-// A token paste draws its field until it is signed in, on any Device it is offered to; a refused token's reason stays beside it.
+// A token paste draws its field until it is signed in, on every Device, never handing over; a refused token's reason stays beside it.
 function pasteBody(parts: SignInParts): ReactElement[] {
   const state = parts.data.flow;
 
   if (state.kind === 'signed-in') return signedInStep(state);
-
-  if (!canStart(parts)) return handOver(parts.name);
 
   return [
     ...lines(
