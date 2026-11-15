@@ -1,11 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import { changeOf, type ChangeItem } from './pull-change';
-import {
-  readLinks,
-  refreshOf,
-  type ChangesSource,
-  type LinkRead,
-} from './pull-changes';
+import { refreshOf, type ChangesSource, type LinkRead } from './pull-changes';
 import {
   checkoutIdentity,
   markedOf,
@@ -15,12 +10,14 @@ import { discover, type Checkout, type Discovered } from './pull-discovery';
 import { failureMessage } from './pull-known';
 import { fetchPull } from './pull-reads';
 import { parseReference, type PullReference } from './pull-reference';
+import type { Pulls } from './pull-sync';
 import { sessionInProject, type SessionCaller } from './session-caller';
 
 type ProjectInfo = Awaited<ReturnType<Argo['projects']['list']>>[number];
 
 export type Scope = Pick<Argo, 'projects' | 'sessions' | 'fetch' | 'changed'> &
-  Pick<ChangesSource, 'store'>;
+  Pick<ChangesSource, 'store' | 'records'> &
+  Pick<Pulls, 'sync'>;
 
 async function projectOf(
   { projects }: Scope,
@@ -104,11 +101,11 @@ export async function attach(
   const named = await namedOf(scope, reference, caller);
   const pull = await fetchPull(scope.fetch, { ...named, ...caller });
 
-  await scope.store.attach({
-    ...caller,
-    repository: pull.repository,
-    number: pull.number,
-  });
+  const link = { ...caller, repository: pull.repository, number: pull.number };
+
+  await scope.store.attach(link);
+  // The pull request and its Checks are kept before the answer, so every surface shows it at once.
+  await scope.sync([caller.sessionId]);
   scope.changed();
 
   return changeOf(pull);
@@ -127,6 +124,7 @@ export async function detach(
   const named = await namedOf(scope, reference, caller);
 
   await scope.store.detach({ ...named, ...caller });
+  await scope.records.forget({ ...named, ...caller });
   scope.changed();
 
   return named;
@@ -150,16 +148,19 @@ const described = (read: LinkRead): Listed =>
       };
 
 /*
- * The Session's pull requests: each as GitHub reports it, one that could not be refreshed marked stale with what was
- * last known, and one never read with why, never silently left out.
+ * The Session's pull requests, read from GitHub now and then from the record every surface reads: each as GitHub
+ * reports it, one that could not be refreshed marked stale with what was last known, and one never read with why,
+ * never silently left out.
  */
 export async function list(
-  source: ChangesSource,
+  pulls: Pulls,
   scope: Pick<Scope, 'projects' | 'sessions'>,
   caller: SessionCaller,
 ): Promise<{ changes: Listed[] }> {
   const checkout = await checkoutIdentity(scope, caller);
-  const reads = await readLinks(source, [caller.sessionId]);
+  await pulls.sync([caller.sessionId]);
+
+  const reads = await pulls.known([caller.sessionId]);
 
   return {
     changes: reads.map(described).map((entry) => markedListed(entry, checkout)),

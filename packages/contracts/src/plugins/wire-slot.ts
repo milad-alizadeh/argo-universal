@@ -11,6 +11,8 @@ export {
   projectDetailsRowLimit,
 } from '#plugin-project-details-item';
 
+export { LinkMarkItem } from '#plugin-link-mark-item';
+
 export { SessionRowItem } from '#plugin-session-row-item';
 
 export {
@@ -25,6 +27,7 @@ export {
   sessionBarSlotId,
   sessionChangesSlotId,
   sessionRowSlotId,
+  linkMarkSlotId,
   slotItemsListLimit,
   toolCallSlotId,
   type ItemsSlot,

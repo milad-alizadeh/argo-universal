@@ -6,6 +6,7 @@ import type * as React from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
 import { ConnectedReplaceableSlots } from '../../plugins/connected-replaceable-slot';
+import { LinkMarksProvider } from '../../plugins/link-marks-provider';
 import { sessionsInDrawOrder, retainSession } from './retained-sessions';
 import {
   SessionDetailView,
@@ -126,7 +127,9 @@ function ConnectedSession({
 
   return (
     <ConnectedReplaceableSlots session={opened.session}>
-      <SessionPageBody {...body} />
+      <LinkMarksProvider projectId={opened.session.projectId}>
+        <SessionPageBody {...body} />
+      </LinkMarksProvider>
       {opened.cards.held}
     </ConnectedReplaceableSlots>
   );
