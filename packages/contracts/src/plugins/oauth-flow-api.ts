@@ -15,6 +15,9 @@ type Given<Value> = Value | (() => Value | null | Promise<Value | null>);
  * `tokenUrl` are the service's, and `tokenUrl`'s host needs a `fetch` Capability too.
  *
  * - `clientId` is the OAuth app's public client ID, or a function that reads it when a sign-in starts.
+ * - `clientSecret` is the OAuth app's client secret, for a service that requires one on every code exchange and
+ *   refresh, as Atlassian and Google do. Argo ships no secret: give a function that reads the secret Setting the
+ *   person filled in. Left out, the flow is a public client and sends none.
  * - `scopes` go in the authorize URL's `scope`, joined by spaces.
  * - `label` names whose Account the token opens, such as the login the service answers for it; null fails
  *   the sign-in.
@@ -27,6 +30,7 @@ export type OAuthFlowOptions = Readonly<{
   authorizeUrl: string;
   tokenUrl: string;
   clientId: Given<string>;
+  clientSecret?: Given<string>;
   scopes?: readonly string[];
   label: (token: string) => Promise<string | null>;
   tokenPath?: readonly string[];
@@ -55,8 +59,10 @@ export type OAuthFlowState =
  * - `cancel()` stops waiting and answers `idle`. The browser tab stays open; a callback from it is ignored.
  * - `provide()` registers the Account's provider, which hands a borrower's request the kept token. Call it
  *   once as the Plugin registers. A token whose answer carried `refresh_token` and `expires_in`, beside the
- *   access token at `tokenPath`, is refreshed at `tokenUrl` with the client ID alone when a borrow finds it run
- *   out, so the person stays signed in.
+ *   access token at `tokenPath`, is refreshed at `tokenUrl`, with the client secret when there is one, when a
+ *   borrow finds it run out, so the person stays signed in. Each rotated refresh token is kept before the new
+ *   access token is lent, and one Account refreshes once at a time. A refresh the service refuses, because the
+ *   refresh token expired or was revoked, forgets the token and lends nothing, so the read finds the person signed out.
  */
 export type OAuthFlow = Readonly<{
   // The browser and Argo's callback port are the Server Device's, so only it starts this sign-in.

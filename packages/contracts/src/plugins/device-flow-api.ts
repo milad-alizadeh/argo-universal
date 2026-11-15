@@ -4,7 +4,7 @@ import type { OAuthFlow, OAuthFlowState } from './oauth-flow-api';
 // What a device flow calls: the service, the Account it adds, the token it keeps, and the page it redraws.
 export type DeviceFlowArgo = Pick<Argo, 'fetch' | 'changed'> & {
   accounts: Pick<Argo['accounts'], 'add' | 'provide'>;
-  secrets: Pick<Argo['secrets'], 'set' | 'get'>;
+  secrets: Pick<Argo['secrets'], 'set' | 'get' | 'delete'>;
 };
 
 /*

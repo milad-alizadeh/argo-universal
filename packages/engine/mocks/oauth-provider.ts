@@ -31,10 +31,14 @@ export type FakeProvider = {
   borrow: (id: string) => Promise<string | null>;
 };
 
-// The token endpoint's answer, with its JSON body as text.
-export const tokenReply = (ok: boolean, body: string): Reply => ({
+// The token endpoint's answer, with its JSON body as text; a refusal is a 401 unless it says otherwise.
+export const tokenReply = (
+  ok: boolean,
+  body: string,
+  status = ok ? 200 : 401,
+): Reply => ({
   ok,
-  status: ok ? 200 : 401,
+  status,
   statusText: '',
   headers: {},
   body,
