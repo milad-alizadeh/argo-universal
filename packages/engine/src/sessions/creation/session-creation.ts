@@ -8,7 +8,10 @@ import {
   observeSessionCreation,
   type AcceptedSessionStart,
 } from './creation-receipt';
-import { requireCheckoutProjectPath } from './session-creation-checkout';
+import {
+  requireCheckoutProjectPath,
+  requireStarter,
+} from './session-creation-checkout';
 import { startSession } from './session-creation-start';
 import {
   waitForSessionInsertCommitted,
@@ -87,6 +90,7 @@ export async function startSessionCreation(
 ): Promise<SessionCreation> {
   // The open Sessions machine checks again as the last word (ADR-0003); this check gives the typed failure.
   requireInstalledAgent(sources.installedAgents, newSession.agent);
+  requireStarter(newSession, origin.startedBySessionId);
 
   const projectPath = await requireCheckoutProjectPath(
     sources.database,

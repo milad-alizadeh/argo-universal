@@ -9,9 +9,37 @@ import {
 } from '../../storage';
 import type { SessionData } from '../session-data';
 import type { SessionContext } from '../session-machine';
+import { readBorrowerIds } from './archive-borrowers';
 import { SessionArchiveJob } from './archive-storage';
 
-const archivedSessionIds = (context: SessionContext): string[] => [
+const storedArchivedAt = (context: SessionContext): number | null =>
+  context.input.database
+    .select({ archivedAt: session.archivedAt })
+    .from(session)
+    .where(eq(session.id, context.sessionId))
+    .get()?.archivedAt ?? null;
+
+const takenBorrowerIds = (context: SessionContext): string[] => {
+  const taken = storedArchivedAt(context);
+
+  return taken === null
+    ? []
+    : readBorrowerIds(context.input.database, context.sessionId, taken);
+};
+
+// An archive takes the open borrowers of the Session's worktree; its Undo restores the ones it took.
+const borrowerIds = (
+  context: SessionContext,
+  archivedAt: number | null,
+): string[] =>
+  archivedAt === null
+    ? takenBorrowerIds(context)
+    : readBorrowerIds(context.input.database, context.sessionId, null);
+
+const archivedSessionIds = (
+  context: SessionContext,
+  archivedAt: number | null,
+): string[] => [
   context.sessionId,
   ...context.input.database
     .select({ id: session.id })
@@ -19,6 +47,7 @@ const archivedSessionIds = (context: SessionContext): string[] => [
     .where(eq(session.parentSessionId, context.sessionId))
     .all()
     .map(({ id }) => id),
+  ...borrowerIds(context, archivedAt),
 ];
 
 // Whether this archive keeps the worktree is settled now, so changing the Project's setting later never removes it.
@@ -34,7 +63,7 @@ const archiveJob = (
   archivedAt: number | null,
 ): SessionArchiveJob =>
   new SessionArchiveJob(
-    archivedSessionIds(context),
+    archivedSessionIds(context, archivedAt),
     archivedAt,
     archivedAt !== null && keepsCheckout(context),
   );

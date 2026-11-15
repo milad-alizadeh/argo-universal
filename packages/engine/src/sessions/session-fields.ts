@@ -1,3 +1,4 @@
+import { basename } from 'node:path';
 import {
   PromptQueue,
   type SessionCheckout,
@@ -5,7 +6,7 @@ import {
   type SessionRecord,
   SessionSnapshot,
 } from '@repo/contracts';
-import { isSessionBranch } from '@repo/git';
+import { isSessionBranch, sessionBranchOwner } from '@repo/git';
 import { createRejectionCounter } from '@repo/machine-log';
 import { TRPCError } from '@trpc/server';
 import { ZodError, type infer as Infer } from 'zod';
@@ -29,14 +30,26 @@ const sessionSnapshotFields = SessionInfo.pick({
 
 export type SessionSnapshotFields = Infer<typeof sessionSnapshotFields>;
 
-// A worktree Session runs on its own Session branch; any other branch is the main checkout.
-export function toSessionCheckout(row: {
+type CheckoutRow = {
   id: string;
   checkoutPath: SessionCheckout['path'];
   checkoutBranch: SessionCheckout['branch'];
-}): SessionCheckout {
+};
+
+// A worktree is made in a folder named for the Session that owns it, on that Session's branch.
+const isBorrowedWorktree = (row: CheckoutRow): boolean =>
+  basename(row.checkoutPath) === sessionBranchOwner(row.checkoutBranch);
+
+function checkoutType(row: CheckoutRow): SessionCheckout['type'] {
+  if (isSessionBranch(row.checkoutBranch, row.id)) return 'worktree';
+
+  return isBorrowedWorktree(row) ? 'starter' : 'main';
+}
+
+// A worktree Session runs on its own Session branch, a borrower in another Session's worktree; anything else is the main checkout.
+export function toSessionCheckout(row: CheckoutRow): SessionCheckout {
   return {
-    type: isSessionBranch(row.checkoutBranch, row.id) ? 'worktree' : 'main',
+    type: checkoutType(row),
     path: row.checkoutPath,
     branch: row.checkoutBranch,
   };

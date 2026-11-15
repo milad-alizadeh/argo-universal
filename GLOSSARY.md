@@ -269,7 +269,7 @@ What an Agent (the second sense) is for: Explore, Plan, Review, Test or General.
 _Avoid_: Agent type, subagent type
 
 **Started Session**:
-A Session that another Session started through an Operation, such as `session.create`. It is a full Session: the person, its starter or any other Session can prompt it. It is listed nested under its starter in the Sessions list, and it is not one of the starter's Agents, so it is never in the Workbench or Inspector. The code calls the link `startedBySessionId`.
+A Session that another Session started through an Operation, such as `session.create`. It is a full Session: the person, its starter or any other Session can prompt it. It is listed nested under its starter in the Sessions list, and it is not one of the starter's Agents, so it is never in the Workbench or Inspector. The code calls the link `startedBySessionId`. It runs in a new worktree, in the main checkout, or, when its starter passes the `starter` Checkout, in its starter's own Checkout, which it borrows and never owns (ADR-0008).
 _Avoid_: Agent, Subagent, child Session, delegated Session
 
 **Background Task**:
