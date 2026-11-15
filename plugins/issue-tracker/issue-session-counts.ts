@@ -17,13 +17,13 @@ export async function sessionCounts(
   projectId: string,
 ): Promise<SessionCounts> {
   const links = await deps.storage.projectLinks(projectId).catch(() => []);
-  const kept = await existing(deps.getSession, links);
+  const existing = await existingSessionIds(deps.getSession, links);
 
-  return countByIssue(links.filter((link) => kept.has(link.sessionId)));
+  return countByIssue(links.filter((link) => existing.has(link.sessionId)));
 }
 
 // Each Session is asked for once, however many Issues it is attached to.
-async function existing(
+async function existingSessionIds(
   getSession: IssueDeps['getSession'],
   links: IssueLink[],
 ): Promise<Set<string>> {
@@ -41,7 +41,7 @@ const exists = async (
   sessionId: string,
 ): Promise<boolean> => (await getSession(sessionId).catch(() => null)) !== null;
 
-function countByIssue(links: IssueLink[]): SessionCounts {
+function countByIssue(links: Pick<IssueLink, 'number'>[]): SessionCounts {
   const counts = new Map<number, number>();
 
   for (const { number } of links)

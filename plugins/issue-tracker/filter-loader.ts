@@ -131,12 +131,12 @@ export async function loadFilter(
 
   const { project, filter } = named;
 
-  const [tracker, own] = await Promise.all([
+  const [tracker, projectData] = await Promise.all([
     named.opened,
     projectReads(deps, read, project),
   ]);
 
-  return withTracker({ projects, project, filter, ...own }, tracker);
+  return withTracker({ projects, project, filter, ...projectData }, tracker);
 }
 
 // What the page reads of the Project itself, at once.

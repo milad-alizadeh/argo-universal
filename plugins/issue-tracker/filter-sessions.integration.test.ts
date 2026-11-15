@@ -1,8 +1,9 @@
-import type { OpenPage } from '@argo/plugin-kit/testing';
+import type { OpenPage, PluginTest } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
 import {
   chooseGithub,
   project,
+  refusedTitle,
   signIn,
   trackedGitHub,
   trackerPage,
@@ -13,38 +14,68 @@ const mark = 'In Session';
 
 const session = { projectId: project.id, branch: null, title: 'Fix it' };
 
-// The open Issues' list after an Agent attached `session-1` to Issue 42, with the Sessions Argo still has.
-async function openList(sessions: Record<string, typeof session>): Promise<{
-  list: OpenPage;
-  detach: () => Promise<void>;
-}> {
+const first = 'session-1';
+
+const second = 'session-2';
+
+// The tracker with GitHub chosen, where Argo still has the Sessions named.
+async function trackerWith(sessionIds: string[]): Promise<PluginTest> {
+  const sessions = Object.fromEntries(sessionIds.map((id) => [id, session]));
   const tracked = await trackedGitHub([project], { sessions });
 
   await signIn(tracked);
   await chooseGithub(await trackerPage(tracked.test));
-  await attach(tracked.test, 'attach');
 
-  const root = await tracked.test.pages.open({ path: '/' });
-
-  return {
-    list: await root.press('Open'),
-    detach: () => attach(tracked.test, 'detach'),
-  };
+  return tracked.test;
 }
 
-it('marks the row of an Issue a Session is attached to, until it is detached', async () => {
-  const { list, detach } = await openList({ 'session-1': session });
+// A Session other than the fixture's own attaches itself to Issue 42, as its Agent would.
+const attachAs = (test: PluginTest, sessionId: string): Promise<unknown> =>
+  test.operations.run({
+    name: 'attach',
+    params: { number: 42 },
+    caller: { sessionId, projectId: project.id },
+  });
 
-  expect(list.findText(mark)?.node.props.icon).toBe('agent');
+const openList = async (test: PluginTest): Promise<OpenPage> =>
+  (await test.pages.open({ path: '/' })).press('Open');
 
-  await detach();
+it('marks only the row of the Issue a Session is attached to', async () => {
+  const test = await trackerWith([first]);
+  await attach(test, 'attach');
+
+  const list = await openList(test);
+
+  expect(list.find(mark).props.icon).toBe('agent');
+  expect(JSON.stringify(list.find(refusedTitle))).not.toContain(mark);
+}, 20_000);
+
+it('counts the Sessions on a row with more than one', async () => {
+  const test = await trackerWith([first, second]);
+  await attach(test, 'attach');
+  await attachAs(test, second);
+
+  const list = await openList(test);
+
+  expect(list.findText('2 Sessions')).toBeDefined();
+}, 20_000);
+
+it('drops the mark once the Session is detached', async () => {
+  const test = await trackerWith([first]);
+  await attach(test, 'attach');
+  const list = await openList(test);
+
+  await attach(test, 'detach');
   await list.draw();
 
   expect(list.findText(mark)).toBeUndefined();
 }, 20_000);
 
 it('leaves the row unmarked when the attached Session has gone', async () => {
-  const { list } = await openList({});
+  const test = await trackerWith([]);
+  await attach(test, 'attach');
+
+  const list = await openList(test);
 
   expect(list.findText(mark)).toBeUndefined();
 }, 20_000);
