@@ -1,10 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { ChangeItem } from './pull-change';
-import {
-  changesBySession,
-  readLinks,
-  type ChangesSource,
-} from './pull-changes';
+import { changesBySession, type ChangesSource } from './pull-changes';
 import { checkoutIdentity, markCheckout } from './pull-checkout';
 import { diffOf, filesOf, type FileSource } from './pull-file-operations';
 import { defineFilesReads } from './pull-files';
@@ -17,7 +13,7 @@ import {
 } from './pull-operations';
 import { definePullReads } from './pull-reads';
 import { rowItemsBySession } from './pull-row-items';
-import { rowReads } from './pull-row-reads';
+import { changeReads, rowReads } from './pull-row-reads';
 import { createPullStore } from './pull-store';
 import { sessionCaller, type SessionCaller } from './session-caller';
 
@@ -56,17 +52,14 @@ async function markedBySession(
 }
 
 function registerChanges(argo: Argo, source: ChangesSource): void {
-  // A Session's Changes: its attached pull requests as GitHub reports them (ADR-0052).
+  const reads = changeReads(source, () => argo.changed());
+
+  // A Session's Changes: its attached pull requests as GitHub reports them (ADR-0052); a slow read keeps what was last read.
   argo.slots.register('argo/session/changes/v1', async ({ contexts }) =>
     markedBySession(
       argo,
       contexts,
-      changesBySession(
-        await readLinks(
-          source,
-          contexts.map(({ sessionId }) => sessionId),
-        ),
-      ),
+      changesBySession(await reads(contexts.map(({ sessionId }) => sessionId))),
     ),
   );
 }
