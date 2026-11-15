@@ -32,12 +32,11 @@ describe('Change stage', () => {
   });
 });
 
-it('keeps draft and conflicted Changes Open and describes each modifier separately', () => {
+it('gives a draft Change its own mark and writes a conflict beside an Open one', () => {
   expect(resolveChangeStage({ stage: 'open', modifier: 'draft' })).toEqual({
-    label: 'Open',
-    icon: 'pr-open',
-    tone: 'success',
-    modifier: { label: 'Draft', tone: 'muted' },
+    label: 'Draft',
+    icon: 'pr-draft',
+    tone: 'neutral',
   });
   expect(resolveChangeStage({ stage: 'open', modifier: 'conflict' })).toEqual({
     label: 'Open',
@@ -47,12 +46,10 @@ it('keeps draft and conflicted Changes Open and describes each modifier separate
   });
 });
 
-it('describes a draft Change that also conflicts by both facts', () => {
+it('marks a draft Change that also conflicts as a draft and writes the conflict beside it', () => {
   const both = { stage: 'open', modifiers: ['conflict', 'draft'] } as const;
 
-  expect(changeModifiers(both).map(({ label }) => label)).toEqual([
-    'Draft',
-    'Conflict',
-  ]);
-  expect(changeDescription(both)).toBe('Open, Draft, Conflict');
+  expect(resolveChangeStage(both)).toMatchObject({ icon: 'pr-draft' });
+  expect(changeModifiers(both).map(({ label }) => label)).toEqual(['Conflict']);
+  expect(changeDescription(both)).toBe('Draft, Conflict');
 });
