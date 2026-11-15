@@ -484,6 +484,13 @@ export class AcpConnection {
   private supportsLoad(): boolean {
     return !!this.requireReady().initialization.agentCapabilities?.loadSession;
   }
+  // ACP `sessionCapabilities.systemPrompt`: the Agent appends a Client's text to its system prompt when a Session opens.
+  public takesSystemPrompt(): boolean {
+    const capabilities =
+      sessionCapabilities(this.requireReady().initialization) ?? {};
+
+    return 'systemPrompt' in capabilities && capabilities.systemPrompt != null;
+  }
   private supportsResume(): boolean {
     return !!sessionCapabilities(this.requireReady().initialization)?.resume;
   }

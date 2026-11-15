@@ -9,6 +9,8 @@ export type { PageOpening } from './page-server';
 
 export type { OpenPage } from './open-page';
 
+export { clockUntilShown } from './clock-until';
+
 export { test, collectPluginTests, type PluginTestCase } from './test-cases';
 
 // What a Plugin's own tests read in the trees and Slot items the harness hands back.

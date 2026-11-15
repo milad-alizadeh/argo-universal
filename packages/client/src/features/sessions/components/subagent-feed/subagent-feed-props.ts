@@ -4,8 +4,8 @@ import type { FeedProps } from '#features/feed';
 // One Subagent's own Feed, opened from the Subagents list. It is read-only: no Composer and no Stop.
 export interface SubagentFeedProps {
   subagent: Subagent;
-  // The child Session's rows, through `toSubagentFeedView`.
-  feed: FeedProps;
+  // The child Session's rows, through `toSubagentFeedView`; undefined until they load, when the Feed stays blank as an opening Session's page does.
+  feed: FeedProps | undefined;
   // Back to the Subagents list, in the Inspector and in the Sheet.
   onBack: () => void;
   // Earlier pages of the parent Feed may hold more reports.

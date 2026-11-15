@@ -38,11 +38,10 @@ it('keeps no Grants for a Plugin once it is released', async () => {
 
   services.release('probe');
 
+  // A call still in flight as the Plugin stops is refused as stopped, not told to declare what it declared.
   expect(await services.handle('probe', 1, echo)).toEqual({
     ok: false,
-    error: expect.stringContaining(
-      'Refused: echo hi is not a declared command. Add { "kind": "process:exec", "command": "echo"',
-    ),
+    error: 'Refused: Plugin is stopped',
     refused: true,
   });
   services.close();

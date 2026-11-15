@@ -64,7 +64,6 @@ type AcpState = Pick<
   | 'subagents'
   | 'acpPrompt'
   | 'acpResponseReaders'
-  | 'acpSuggestionRejections'
   | 'acpConfigurationRejections'
   | 'acpTurnOutcome'
   | 'turnEnding'
@@ -75,17 +74,12 @@ type AcpState = Pick<
 
 type AcpReaders = Pick<
   AcpState,
-  | 'acpResponseReaders'
-  | 'acpConfigurationRejections'
-  | 'acpSuggestionRejections'
+  'acpResponseReaders' | 'acpConfigurationRejections'
 >;
 
 const acpReaders = (input: SessionMachineInput): AcpReaders => ({
   acpResponseReaders: createAcpResponseReaders(
     createRejectionCounter(`ACP Session ${input.sessionId}`),
-  ),
-  acpSuggestionRejections: createRejectionCounter(
-    `ACP suggestions ${input.sessionId}`,
   ),
   acpConfigurationRejections: createRejectionCounter(
     `ACP configuration ${input.sessionId}`,

@@ -111,6 +111,22 @@ const isLinkRow = (row: unknown): row is LinkRow =>
     typeof row[2] === 'string',
   ].every(Boolean);
 
+// Every attachment in one Project, for the Issues its lists mark as being worked on.
+async function projectLinks(
+  store: SessionStore,
+  projectId: string,
+): Promise<IssueLink[]> {
+  await store.ensureTables();
+
+  const result = await store.argo.storage.execute({
+    sql: 'SELECT project_id, issue_number, session_id FROM issue_sessions WHERE project_id = ?',
+    params: [projectId],
+    method: 'all',
+  });
+
+  return result.rows.flatMap((row) => (isLinkRow(row) ? [linkOf(row)] : []));
+}
+
 // The attachments as the Plugin's storage hands them out, each bound to the store.
 type SessionMethods = {
   projectIssues: (
@@ -122,6 +138,7 @@ type SessionMethods = {
     issue: Omit<IssueLink, 'sessionId'>,
   ) => Promise<IssueSession[]>;
   sessionLinks: (sessionIds: readonly string[]) => Promise<IssueLink[]>;
+  projectLinks: (projectId: string) => Promise<IssueLink[]>;
 };
 
 const projectIssues =
@@ -150,4 +167,5 @@ export const sessionMethods = (store: SessionStore): SessionMethods => ({
     issueSessions(store, issue),
   sessionLinks: (sessionIds: readonly string[]) =>
     sessionLinks(store, sessionIds),
+  projectLinks: (projectId: string) => projectLinks(store, projectId),
 });

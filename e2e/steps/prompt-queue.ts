@@ -1,7 +1,7 @@
 import type { Page, Locator } from '@playwright/test';
 import { expect } from '../fixtures';
-import { requests } from './agent-requests';
 import { expectListedAgent } from './agents';
+import { requests } from './conversation-requests';
 import { Given, Then, When } from './fixtures';
 import {
   queueSnapshot,

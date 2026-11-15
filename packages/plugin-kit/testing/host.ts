@@ -12,6 +12,7 @@ import {
   PluginStorage,
   type PluginRuntime,
 } from '@repo/engine/plugins';
+import { steppedClock } from './clock-until';
 import { PageClock } from './page-clock';
 import { itemsConnection, testConnection } from './test-connection';
 import { testOperations, testPages } from './test-operations';
@@ -69,14 +70,15 @@ class HostedPlugin implements PluginTest {
    * The open pages' edit pauses always move; the Plugin's timers move with them when the test started its clock
    * with `clockStart`.
    */
-  readonly clock = {
+  readonly clock = steppedClock({
     advance: async (ms: number): Promise<void> => {
       if (this.options.clockStart !== undefined)
         await this.runtime.testControl.advanceClock(ms);
 
       await this.pageClock.advance(ms);
     },
-  };
+    idle: () => this.runtime.testControl.idle(),
+  });
   readonly plugins: PluginTest['plugins'] = {
     setEnabled: (pluginId, enabled) =>
       this.service.setEnabled(pluginId, enabled),

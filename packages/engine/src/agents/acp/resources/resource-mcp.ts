@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import type { McpServer } from '@agentclientprotocol/sdk';
+import { argoInstructionsMarkdown } from '@repo/contracts/agents/argo-instructions';
 import {
   productName,
   productCompatibility,
@@ -11,6 +12,7 @@ import type {
   AcpSessionOpening,
   SessionProcessAccess,
   AcpSessionLease,
+  AcpSystemPrompt,
 } from './resource-types';
 
 export async function openResourceSession(
@@ -18,21 +20,39 @@ export async function openResourceSession(
   input: AcpOpenInput,
   entry: EntryKind,
 ): Promise<AcpSessionLease> {
-  const lease = await connection.open(withSessionMcp(input, entry));
+  const lease = await connection.open(
+    withSessionMcp(input, entry, connection.takesSystemPrompt()),
+  );
 
   return { ...lease, connectionKind: entry.kind };
 }
 
-function withSessionMcp(input: AcpOpenInput, entry: EntryKind): AcpOpenInput {
+// A Session with Agent access gets its Argo MCP server and, when the Agent takes one, the Argo instructions as its system prompt (ADR-0053).
+function withSessionMcp(
+  input: AcpOpenInput,
+  entry: EntryKind,
+  takesSystemPrompt: boolean,
+): AcpOpenInput {
   if (entry.kind === 'shared') return input;
+
+  const opening = appendServer(
+    input.opening,
+    sessionServer(entry.access.environment, sessionId(input)),
+  );
 
   return {
     ...input,
-    opening: appendServer(
-      input.opening,
-      sessionServer(entry.access.environment, sessionId(input)),
-    ),
+    opening: takesSystemPrompt ? withArgoInstructions(opening) : opening,
   };
+}
+
+function withArgoInstructions(opening: AcpSessionOpening): AcpSessionOpening {
+  const systemPrompt: AcpSystemPrompt = {
+    mode: 'append',
+    content: [{ type: 'text', text: argoInstructionsMarkdown() }],
+  };
+
+  return withParams(opening, { systemPrompt });
 }
 
 function sessionId(input: AcpOpenInput): string {
@@ -50,12 +70,19 @@ function appendServer(
     server,
   ];
 
+  return withParams(opening, { mcpServers });
+}
+
+function withParams(
+  opening: AcpSessionOpening,
+  params: { mcpServers?: McpServer[]; systemPrompt?: AcpSystemPrompt },
+): AcpSessionOpening {
   if (opening.method === 'session/new')
-    return { method: 'session/new', params: { ...opening.params, mcpServers } };
+    return { method: 'session/new', params: { ...opening.params, ...params } };
 
   return {
     method: 'session/resume',
-    params: { ...opening.params, mcpServers },
+    params: { ...opening.params, ...params },
   };
 }
 

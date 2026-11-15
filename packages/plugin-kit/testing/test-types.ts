@@ -137,7 +137,18 @@ export interface PluginTest {
   };
   close: () => Promise<void>;
   emit: (name: HookEventName, event: JsonObject) => Promise<Json>;
-  clock: { advance: (ms: number) => Promise<void> };
+  clock: {
+    advance: (ms: number) => Promise<void>;
+    /*
+     * Moves the clock `stepMs` at a time, at most `steps` times, until `done` holds, and says whether it did. Before
+     * each look it waits for the Plugin calls the last step set off to finish, as a sign-in's last poll adds the
+     * Account. Needs `clockStart`; a call held open keeps it waiting.
+     */
+    until: (
+      done: () => boolean | Promise<boolean>,
+      pace: { stepMs: number; steps: number },
+    ) => Promise<boolean>;
+  };
   // Turns a Plugin off or on as the Plugin settings do: off stops its worker, on starts it when next asked for.
   plugins: {
     setEnabled: (pluginId: string, enabled: boolean) => Promise<void>;
