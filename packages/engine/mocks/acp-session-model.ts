@@ -38,6 +38,7 @@ type ModelEntry = 'new' | 'existing' | 'opened';
 
 // The extra assertions send these to a state the paths reach, each on its own.
 const checkedApart = [
+  'acp.suggestion',
   'session.creationSettled',
   'session.permissionHooked',
   'session.permissionRequested',
