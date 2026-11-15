@@ -7,8 +7,12 @@ import { windowEdgeInset } from '#kit/menu-surface';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { Chevron } from '#primitives/status/chevron';
 import { MenuActionLabel } from './menu-action-label';
-import { ChoiceCheck, choiceRole } from './menu-choice-check';
-import { ChoiceGutterContext, hasChoice } from './menu-choice-gutter';
+import {
+  ChoiceCheck,
+  ChoiceGutterContext,
+  choiceRole,
+  hasChoice,
+} from './menu-choice-check';
 import type { KeyboardFocus } from './menu-choices';
 import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';
