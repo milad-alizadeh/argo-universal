@@ -30,6 +30,17 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// The Session's pull requests lead the sheet, above the Checkout's files.
+export const ListsPullRequests: Story = {
+  play: async () => {
+    const rows = await screen.findAllByRole('button', {
+      name: /^Open Change #\d+ on GitHub$/,
+    });
+
+    await expect(rows).toHaveLength(severalPullRequests.length);
+  },
+};
+
 // A row's … on a phone opens the same menu as the wide card's, over the sheet.
 export const PullRequestMenuOpens: Story = {
   play: async ({ userEvent }) => {
