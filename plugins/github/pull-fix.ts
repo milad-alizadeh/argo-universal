@@ -7,6 +7,7 @@ import type { PullInfo } from './pull-info';
 import type { Known } from './pull-known';
 import { readChecks, readPull, type ChangesSource } from './pull-link-reads';
 import { shortHead } from './pull-reads';
+import { takeTurns } from './pull-turns';
 
 // Prompts Auto-fix sends on one head commit, with no new push, before it gives up (ADR-0055).
 export const fixTries = 3;
@@ -147,54 +148,16 @@ async function fixOne(
   return fresh ? turnOf({ argo, fix: reads.store.fix, record }, fresh) : false;
 }
 
-type Turn = PromiseSettledResult<boolean>;
-
-// Each pull request takes its turn in order; one failing does not stop the others.
-async function inTurn(
-  argo: Acting,
-  reads: Reads,
-  records: readonly FixRecord[],
-): Promise<Turn[]> {
-  const turns: Turn[] = [];
-
-  for (const record of records)
-    turns.push(...(await Promise.allSettled([fixOne(argo, reads, record)])));
-
-  return turns;
-}
-
-const acted = (turn: Turn): boolean =>
-  turn.status === 'fulfilled' && turn.value;
-
-const isFailure = (turn: Turn): turn is PromiseRejectedResult =>
-  turn.status === 'rejected';
-
-async function takeTurns(
-  argo: Acting,
-  reads: Reads,
-  records: readonly FixRecord[],
-): Promise<void> {
-  argo.changed();
-
-  const turns = await inTurn(argo, reads, records);
-
-  if (turns.some(acted)) argo.changed();
-
-  const failed = turns.find(isFailure);
-
-  if (failed) throw failed.reason;
-}
-
 /*
  * The Watch's Auto-fix step for one Project: each pull request with Auto-fix on is read fresh and given its Prompts. One
- * pull request failing does not stop the others; the first failure is thrown after all have had their turn.
+ * pull request failing does not stop the others.
  */
 export async function autoFix(
   argo: Acting,
   reads: Reads,
   projectId: string,
 ): Promise<void> {
-  const records = await reads.store.fix.enabledIn(projectId);
-
-  if (records.length > 0) await takeTurns(argo, reads, records);
+  await takeTurns(argo, await reads.store.fix.enabledIn(projectId), (record) =>
+    fixOne(argo, reads, record),
+  );
 }

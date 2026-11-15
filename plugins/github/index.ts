@@ -6,7 +6,6 @@ import { changesBySession } from './pull-changes';
 import { checkoutIdentity, markCheckout } from './pull-checkout';
 import { diffOf, filesOf, type FileSource } from './pull-file-operations';
 import { defineFilesReads } from './pull-files';
-import { autoFix } from './pull-fix';
 import type { ChangesSource } from './pull-link-reads';
 import {
   attach,
@@ -19,6 +18,7 @@ import { definePullReads } from './pull-reads';
 import { rowItemsBySession } from './pull-row-items';
 import { changeReads, rowReads } from './pull-row-reads';
 import { createPullStore } from './pull-store';
+import { watchProject } from './pull-watch';
 import { sessionCaller, type SessionCaller } from './session-caller';
 
 function sourceOf(argo: Argo): ChangesSource {
@@ -159,7 +159,7 @@ function registerReads(argo: Argo, source: ChangesSource): void {
 // The Watch runs on Argo's clock for each Project with no App open (ADR-0055); each automation takes its turn in it.
 function registerWatch(argo: Argo, source: ChangesSource): void {
   argo.watch.define('/', async ({ context: { projectId } }) => {
-    if (projectId) await autoFix(argo, source, projectId);
+    if (projectId) await watchProject(argo, source, projectId);
   });
 }
 

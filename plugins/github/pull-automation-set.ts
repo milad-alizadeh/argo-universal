@@ -20,31 +20,29 @@ export type AutomationParams = {
   on: boolean;
 };
 
-const requireOffered = (kind: AutomationParams['kind']): void => {
-  if (kind === 'archive')
-    throw new Error(`Auto-${kind} is not available for this pull request.`);
-};
-
-const turn = (
+async function turn(
   scope: Scope,
   { kind, on }: AutomationParams,
   { sessionId, ...target }: FixTarget,
-): Promise<void> =>
-  kind === 'fix'
+): Promise<void> {
+  if (kind === 'archive')
+    return setArchive(scope.store, { ...target, sessionId }, on);
+
+  return kind === 'fix'
     ? setFix(scope, { ...target, sessionId }, on)
     : apply(scope, target, on);
+}
 
 /*
  * Sets one automation on one pull request attached to the calling Session. Auto-merge is GitHub's own, so GitHub is
- * asked fresh and nothing is stored: the Change reads `on` back from GitHub afterwards. Auto-fix is the Plugin's own.
+ * asked fresh and nothing is stored: the Change reads `on` back from GitHub afterwards. Auto-fix and Auto-archive are
+ * the Plugin's own.
  */
 export async function setAutomation(
   scope: Scope,
   params: AutomationParams,
   caller: SessionCaller,
 ): Promise<{ kind: AutomationParams['kind']; on: boolean }> {
-  requireOffered(params.kind);
-
   const named = await namedOf(scope, params.reference, caller);
 
   await requireAttached(scope, named, caller);
@@ -151,4 +149,15 @@ async function setFix(
   if (!on) return scope.store.fix.disable(link);
 
   if (!(await isOn(scope, link))) await enableFix(scope, target, link);
+}
+
+// Auto-archive is a record per pull request, kept until it is turned off, spent or detached; it asks GitHub nothing.
+function setArchive(
+  { archive }: Pick<Scope['store'], 'archive'>,
+  target: FixTarget,
+  on: boolean,
+): Promise<void> {
+  const link = { ...target, repository: target.repository.toLowerCase() };
+
+  return on ? archive.enable(link) : archive.disable(link);
 }

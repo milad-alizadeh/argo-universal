@@ -1,4 +1,4 @@
-import type { Argo } from '@argo/plugin-kit';
+import { executingOver, type Storage } from './pull-execute';
 import {
   insertEvent,
   recordedBy,
@@ -21,9 +21,6 @@ import {
 } from './pull-fix-rows';
 
 export type { FixRecord, FixStore } from './pull-fix-rows';
-
-// The Plugin's own storage, as the Auto-fix records use it.
-type Storage = Pick<Argo, 'storage'>;
 
 type SetRecord = (
   link: Link,
@@ -87,18 +84,6 @@ const forgetOf =
     );
   };
 
-// Each statement waits for both tables, then runs.
-function executing({ storage }: Storage): Execute {
-  let ready: Promise<unknown> | undefined;
-
-  return async (statement) => {
-    ready ??= Promise.all(tables.map((sql) => storage.execute(run(sql, []))));
-    await ready;
-
-    return storage.execute(statement);
-  };
-}
-
 const readingOf = (
   execute: Execute,
 ): Pick<FixStore, 'forSessions' | 'enabledIn' | 'seen' | 'sent'> => ({
@@ -124,7 +109,7 @@ const writingOf = (
 };
 
 export function createFixStore(argo: Storage): FixStore {
-  const execute = executing(argo);
+  const execute = executingOver(argo, tables);
 
   return { ...readingOf(execute), ...writingOf(execute) };
 }

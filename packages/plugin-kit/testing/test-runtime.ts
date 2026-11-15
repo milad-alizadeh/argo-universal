@@ -25,11 +25,12 @@ export type RuntimeParts = {
 const hostOf = ({
   clockStart,
   promptSession,
+  archiveSession,
   network,
 }: ConfiguredTest): Pick<
   ConfiguredTest,
-  'clockStart' | 'promptSession' | 'network'
-> => ({ clockStart, promptSession, network });
+  'clockStart' | 'promptSession' | 'archiveSession' | 'network'
+> => ({ clockStart, promptSession, archiveSession, network });
 
 export function runtimeFor(
   home: string,

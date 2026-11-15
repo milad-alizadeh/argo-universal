@@ -1,3 +1,4 @@
+import { archiveOf } from './pull-archive';
 import { mergeOf, offerOf, type Reads } from './pull-automation';
 import { changeOf, type ChangeItem, type Refresh } from './pull-change';
 import { fixOf } from './pull-fix';
@@ -28,6 +29,7 @@ const automationOf = (read: LinkRead): Pick<Refresh, 'automation'> =>
         automation: offerOf(
           mergeOf(read.pull.data, readsOf(read)),
           fixOf(read.fix, read.pull.data),
+          archiveOf(read.archive),
         ),
       }
     : {};

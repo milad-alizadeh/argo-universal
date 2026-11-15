@@ -75,17 +75,12 @@ export function mergeOf(
   return known ? knownMerge(pull, known) : { on: false, available: false };
 }
 
-const unoffered: AutomationState = { on: false, available: false };
-
-// Auto-archive arrives with its own ticket, so the menu draws only what works.
+// The three automations of a Change, as the menu draws them.
 export const offerOf = (
   merge: AutomationState,
-  fix: AutomationState = unoffered,
-): AutomationOffer => ({
-  fix,
-  merge,
-  archive: unoffered,
-});
+  fix: AutomationState,
+  archive: AutomationState,
+): AutomationOffer => ({ fix, merge, archive });
 
 // The first method the repository allows, in the order squash, merge, rebase.
 export const methodOf = ({ methods }: MergeSettings): MergeMethod => {

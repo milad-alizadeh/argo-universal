@@ -1,10 +1,5 @@
-import type { FixRecord } from './pull-fix-store';
-import {
-  attachFix,
-  readLink,
-  type ChangesSource,
-  type LinkRead,
-} from './pull-link-reads';
+import { attachKept, keptOf, type Kept } from './pull-kept';
+import { readLink, type ChangesSource, type LinkRead } from './pull-link-reads';
 import type { PullLink } from './pull-store';
 
 /*
@@ -47,30 +42,30 @@ type Drawn = (read: LinkRead) => string;
 const rowDrawn: Drawn = ({ pull }) =>
   JSON.stringify(pull.data ? [pull.data.title, pull.data.stage] : null);
 
-// What the Changes draw of a pull request: all that is known of it, its Checks and its Auto-fix, a failed read included.
-const changeDrawn: Drawn = ({ pull, checks, fix }) =>
-  JSON.stringify([pull, checks ?? null, fix ?? null]);
+// What the Changes draw of a pull request: all that is known of it, its Checks and its automations, a failed read included.
+const changeDrawn: Drawn = ({ pull, checks, fix, archive }) =>
+  JSON.stringify([pull, checks, fix, archive]);
 
-type Stored = { links: readonly PullLink[]; fixes: readonly FixRecord[] };
+type Stored = Kept & { links: readonly PullLink[] };
 
-// What the Plugin keeps of these Sessions: their associations, and what Auto-fix keeps beside them.
+// What the Plugin keeps of these Sessions: their associations, and what the automations keep beside them.
 async function storedOf(
   { store }: ChangesSource,
   sessionIds: readonly string[],
 ): Promise<Stored> {
-  const [links, fixes] = await Promise.all([
+  const [links, kept] = await Promise.all([
     store.forSessions(sessionIds),
-    store.fix.forSessions(sessionIds),
+    keptOf(store, sessionIds),
   ]);
 
-  return { links, fixes };
+  return { links, ...kept };
 }
 
 // Reads every link, keeping each one GitHub answered as the last known for when a later read is slow.
 const readAll = (
   source: ChangesSource,
   last: Last,
-  { links, fixes }: Stored,
+  { links, ...kept }: Stored,
 ): Promise<LinkRead[]> =>
   Promise.all(
     links.map(async (link) => {
@@ -78,7 +73,7 @@ const readAll = (
 
       if (read.pull.data) last.set(keyOf(link), read);
 
-      return attachFix(read, fixes);
+      return attachKept(read, kept);
     }),
   );
 
@@ -115,7 +110,7 @@ function timedReads(source: ChangesSource, asking: Asking): RowReads {
     if (answered) return answered;
 
     const shown = stored.links.map((link) =>
-      attachFix(last.get(keyOf(link)) ?? { link, pull: {} }, stored.fixes),
+      attachKept(last.get(keyOf(link)) ?? { link, pull: {} }, stored),
     );
 
     askAgainWhenLanded(reads, shown, asking);

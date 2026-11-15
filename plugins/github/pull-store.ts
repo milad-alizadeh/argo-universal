@@ -1,4 +1,5 @@
 import type { Argo, StorageResult } from '@argo/plugin-kit';
+import { createArchiveStore, type ArchiveStore } from './pull-archive-store';
 import { createFixStore, type FixStore } from './pull-fix-store';
 import type { PullReference } from './pull-reference';
 
@@ -19,6 +20,8 @@ const table =
 export type PullStore = {
   // What Auto-fix keeps beside the associations; detaching a pull request removes it too.
   fix: FixStore;
+  // What Auto-archive keeps beside them; detaching a pull request removes it too.
+  archive: ArchiveStore;
   // Attaching twice is the same association, so the first time stands.
   attach: (link: PullLink) => Promise<void>;
   // Removes only this association; one that is not there is already detached.
@@ -102,10 +105,11 @@ type Ready = () => Promise<StorageResult>;
 type Write = ReturnType<typeof writing>;
 
 const detaching =
-  (write: Write, fix: FixStore) =>
+  (write: Write, { fix, archive }: Pick<PullStore, 'fix' | 'archive'>) =>
   async (link: PullLink): Promise<void> => {
     await write(deleteOf(link));
     await fix.forget(link);
+    await archive.disable(link);
   };
 
 const reading =
@@ -120,11 +124,13 @@ export function createPullStore(argo: Storage): PullStore {
   const ready = readyTables(argo);
   const write = writing(argo, ready);
   const fix = createFixStore(argo);
+  const archive = createArchiveStore(argo);
 
   return {
     fix,
+    archive,
     attach: (link) => write(insertOf(link)),
-    detach: detaching(write, fix),
+    detach: detaching(write, { fix, archive }),
     forSessions: reading(argo, ready),
   };
 }

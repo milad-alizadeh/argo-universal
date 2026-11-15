@@ -21,6 +21,6 @@ export const openChange = {
   automation: {
     fix: { on: false, available: true },
     merge: { on: false, available: true },
-    archive: { on: false, available: false },
+    archive: { on: false, available: true },
   },
 };

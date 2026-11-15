@@ -5,6 +5,8 @@ import { View } from 'react-native';
 import { expect, fn, screen, waitFor } from 'storybook/test';
 import { ChangeRow } from './change-row';
 import {
+  autoArchiveOffChangeRow,
+  autoArchiveOnChangeRow,
   autoFixStoppedChangeRow,
   autoMergeOffChangeRow,
   autoMergeOnChangeRow,
@@ -53,6 +55,12 @@ const openMenu = async (userEvent: User): Promise<void> => {
 
 const mergeName = 'Auto-merge';
 
+const openName = 'Open on GitHub';
+
+const copyName = 'Copy link';
+
+const detachName = 'Detach from Session';
+
 const ariaChecked = 'aria-checked';
 
 const checkItem = (name: string | RegExp): Promise<HTMLElement> =>
@@ -72,12 +80,7 @@ function sitsBetweenLinksAndDetach(width: number): Story {
         ...screen.getByRole('menu').querySelectorAll('[role^="menuitem"]'),
       ].map(spokenText);
 
-      await expect(names).toEqual([
-        'Open on GitHub',
-        'Copy link',
-        mergeName,
-        'Detach from Session',
-      ]);
+      await expect(names).toEqual([openName, copyName, mergeName, detachName]);
     },
   };
 }
@@ -156,11 +159,7 @@ export const DrawsNoAutomationWhenNoneIsOffered: Story = {
   play: async ({ userEvent }) => {
     await settleLayout('wide');
     await openMenu(userEvent);
-    await expect(await labels()).toEqual([
-      'Open on GitHub',
-      'Copy link',
-      'Detach from Session',
-    ]);
+    await expect(await labels()).toEqual([openName, copyName, detachName]);
     await expect(screen.queryByText(mergeName)).not.toBeInTheDocument();
     await expect(screen.queryByText('Auto-fix')).not.toBeInTheDocument();
     await expect(screen.queryByText('Auto-archive')).not.toBeInTheDocument();
@@ -186,3 +185,79 @@ export const StoppedAutoFixSaysWhyAndCanBeTurnedBackOn: Story = {
     );
   },
 };
+
+const archiveName = /^Auto-archive/;
+
+const archiveSubtitle = 'On merge or close';
+
+// Auto-archive sits between the links and Detach with its line under it, ticked or not.
+function archiveBetweenLinksAndDetach(width: number): Story {
+  return {
+    args: autoArchiveOffChangeRow,
+    play: async ({ userEvent }) => {
+      await settleLayout(width);
+      await openMenu(userEvent);
+
+      const item = await checkItem(archiveName);
+
+      await expect(
+        [
+          ...screen.getByRole('menu').querySelectorAll('[role^="menuitem"]'),
+        ].map(spokenText),
+      ).toEqual([
+        openName,
+        copyName,
+        `Auto-archive${archiveSubtitle}`,
+        detachName,
+      ]);
+      await expect(item).toHaveTextContent(archiveSubtitle);
+    },
+  };
+}
+
+export const AutoArchiveBetweenLinksAndDetachWide =
+  archiveBetweenLinksAndDetach(layoutWidths.wide);
+
+export const AutoArchiveBetweenLinksAndDetachPhone =
+  archiveBetweenLinksAndDetach(layoutWidths.phone);
+
+// Unticked is drawn unchecked and a tick asks for it on; ticked is drawn checked and a tick asks for it off.
+function togglingArchive(width: number, on: boolean): Story {
+  return {
+    args: on ? autoArchiveOnChangeRow : autoArchiveOffChangeRow,
+    play: async ({ userEvent, args }) => {
+      await settleLayout(width);
+      await openMenu(userEvent);
+
+      const item = await checkItem(archiveName);
+
+      await expect(item).toHaveAttribute(ariaChecked, String(on));
+      await expect(item).toHaveTextContent(archiveSubtitle);
+      await settleOverlays(item);
+      await userEvent.click(item);
+      await waitFor(() =>
+        expect(args.onSetAutomation).toHaveBeenCalledWith('archive', !on),
+      );
+    },
+  };
+}
+
+export const TickingAutoArchiveAsksForItOnWide = togglingArchive(
+  layoutWidths.wide,
+  false,
+);
+
+export const TickingAutoArchiveAsksForItOnPhone = togglingArchive(
+  layoutWidths.phone,
+  false,
+);
+
+export const UntickingAutoArchiveAsksForItOffWide = togglingArchive(
+  layoutWidths.wide,
+  true,
+);
+
+export const UntickingAutoArchiveAsksForItOffPhone = togglingArchive(
+  layoutWidths.phone,
+  true,
+);

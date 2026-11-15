@@ -2,8 +2,8 @@ import type { Argo } from '@argo/plugin-kit';
 import type { AutoMergeInfo, MergeSettings } from './pull-automation';
 import type { AutomationReads } from './pull-automation-reads';
 import type { CheckInfo } from './pull-checks';
-import type { FixRecord } from './pull-fix-store';
 import type { PullInfo } from './pull-info';
+import { attachKept, keptOf, type Attached } from './pull-kept';
 import { known, type Known } from './pull-known';
 import type { PullReads } from './pull-reads';
 import type { PullLink, PullStore } from './pull-store';
@@ -23,9 +23,7 @@ export type LinkRead = {
   // Read only for an Open pull request, which is the only one that can auto-merge.
   autoMerge?: Known<AutoMergeInfo>;
   settings?: Known<MergeSettings>;
-  // What Auto-fix keeps for this pull request, if the person ever touched it.
-  fix?: FixRecord;
-};
+} & Attached;
 
 // Two Sessions attaching the same pull request ask the same question, so they share one entry.
 const targetOf = ({
@@ -102,39 +100,17 @@ export async function readLink(
   return { link, pull, checks, ...automation };
 }
 
-// One association as the fix records name it, whatever the case of its repository.
-const identityOf = ({
-  projectId,
-  sessionId,
-  repository,
-  number,
-}: PullLink): string =>
-  JSON.stringify([projectId, sessionId, repository.toLowerCase(), number]);
-
-const sameLink = (record: FixRecord, link: PullLink): boolean =>
-  identityOf(record) === identityOf(link);
-
-// The read with what Auto-fix keeps for its pull request, which is the Plugin's own and never stale.
-export function attachFix(
-  read: LinkRead,
-  fixes: readonly FixRecord[],
-): LinkRead {
-  const fix = fixes.find((record) => sameLink(record, read.link));
-
-  return fix ? { ...read, fix } : read;
-}
-
 // Every association of these Sessions with what is known of its pull request, read through the named Queries that Slots and Operations share. Each is read alone.
 export async function readLinks(
   source: ChangesSource,
   sessionIds: readonly string[],
 ): Promise<LinkRead[]> {
-  const [links, fixes] = await Promise.all([
+  const [links, kept] = await Promise.all([
     source.store.forSessions(sessionIds),
-    source.store.fix.forSessions(sessionIds),
+    keptOf(source.store, sessionIds),
   ]);
 
   return Promise.all(
-    links.map(async (link) => attachFix(await readLink(source, link), fixes)),
+    links.map(async (link) => attachKept(await readLink(source, link), kept)),
   );
 }

@@ -3,7 +3,6 @@ import {
   attached,
   mergeOf,
   pullOf12,
-  reference,
   refresh,
   repository,
   set,
@@ -11,7 +10,7 @@ import {
   tap,
 } from './auto-merge-fixture';
 import { openRepository } from './github-fixture-automation';
-import { attach, listed } from './journey-calls-fixture';
+import { listed } from './journey-calls-fixture';
 import { journey } from './journey-fixture';
 
 it(
@@ -121,19 +120,14 @@ it(
 );
 
 it(
-  'refuses a pull request that is not attached to the Session, and Auto-archive, which this Plugin does not offer yet',
+  'refuses a pull request that is not attached to the Session, for any automation',
   async () => {
     const run = await journey();
 
-    await expect(set(run, { kind: 'merge', on: true })).rejects.toThrow(
-      'is not attached to this Session',
-    );
-
-    await attach(run, reference);
-
-    await expect(set(run, { kind: 'archive', on: true })).rejects.toThrow(
-      'Auto-archive is not available',
-    );
+    for (const kind of ['merge', 'fix', 'archive'])
+      await expect(set(run, { kind, on: true })).rejects.toThrow(
+        'is not attached to this Session',
+      );
 
     expect(run.github.autoMergeCalls()).toEqual([]);
   },

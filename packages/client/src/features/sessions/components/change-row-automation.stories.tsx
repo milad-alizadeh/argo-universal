@@ -4,6 +4,8 @@ import { View } from 'react-native';
 import { fn } from 'storybook/test';
 import { ChangeRow } from './change-row';
 import {
+  autoArchiveOffChangeRow,
+  autoArchiveOnChangeRow,
   autoFixStoppedChangeRow,
   autoMergeOffChangeRow,
   autoMergeOnChangeRow,
@@ -70,5 +72,17 @@ export const AutoMergeUnavailable: Story = {
 // Auto-fix gave up after three tries on one commit: unticked, enabled, with the reason under it in the warning tone.
 export const AutoFixStopped: Story = {
   args: autoFixStoppedChangeRow,
+  play: openMenu,
+};
+
+// Auto-archive on offer and unticked, with "On merge or close" under it.
+export const AutoArchiveOff: Story = {
+  args: autoArchiveOffChangeRow,
+  play: openMenu,
+};
+
+// The person ticked Auto-archive, so the item is ticked.
+export const AutoArchiveOn: Story = {
+  args: autoArchiveOnChangeRow,
   play: openMenu,
 };

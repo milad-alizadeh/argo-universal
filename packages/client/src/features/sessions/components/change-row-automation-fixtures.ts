@@ -3,7 +3,7 @@ import { checksPassedChangeRow } from './change-row-fixtures';
 
 type Fixture = Omit<ChangeRowProps, 'onOpen' | 'onSetAutomation'>;
 
-// Only Auto-merge is on offer for now; Auto-fix and Auto-archive are unavailable with no reason, so the menu draws neither.
+// A Change that offers one automation: the others are unavailable with no reason, so the menu draws only that one.
 const withoutOthers = {
   fix: { on: false, available: false },
   archive: { on: false, available: false },
@@ -52,6 +52,29 @@ export const autoFixStoppedChangeRow = {
         reason: 'Stopped after 3 tries on a1b2c3d',
       },
       merge: { on: false, available: true },
+    },
+  },
+} satisfies Fixture;
+
+// Auto-archive is the only item on offer, unticked, with core's own line under it.
+export const autoArchiveOffChangeRow = {
+  change: {
+    ...checksPassedChangeRow.change,
+    automation: {
+      fix: { on: false, available: false },
+      merge: { on: false, available: false },
+      archive: { on: false, available: true },
+    },
+  },
+} satisfies Fixture;
+
+// The person ticked Auto-archive, so the Plugin offers it on.
+export const autoArchiveOnChangeRow = {
+  change: {
+    ...checksPassedChangeRow.change,
+    automation: {
+      ...autoArchiveOffChangeRow.change.automation,
+      archive: { on: true, available: true },
     },
   },
 } satisfies Fixture;
