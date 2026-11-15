@@ -26,8 +26,11 @@ declare global {
 type PluginInbox = (json: string) => void;
 
 export type PluginRealmExports = {
-  // A manifest's `background` path and each Account path are Loader pages.
-  validate: { page: Kit['requireLoaderPage'] };
+  /*
+   * A manifest's `background` path and each Account path are Loader pages; a `watch` path, when it names one,
+   * must have been defined by `argo.watch.define`.
+   */
+  validate: { page: Kit['requireLoaderPage']; watch: Kit['requireWatch'] };
   inboxes: { pages: PluginInbox; hooks: PluginInbox; accounts: PluginInbox };
   modules: Pick<Kit, 'exports' | 'jsxRuntime'>;
 };
@@ -156,6 +159,7 @@ const pluginApi: Argo = frozen({
   }),
   pages: frozen({ ...kit.loaderPages.api }),
   slots: frozen(kit.slots),
+  watch: frozen({ define: kit.watches.define }),
   changed: kit.changed,
   on: hooks.on,
 });
@@ -163,7 +167,7 @@ const pluginApi: Argo = frozen({
 Object.assign(globalThis, {
   argo: pluginApi,
   __argoRealm: {
-    validate: { page: kit.requireLoaderPage },
+    validate: { page: kit.requireLoaderPage, watch: kit.requireWatch },
     inboxes: { pages: kit.inbox, hooks: hooks.inbox, accounts: accounts.inbox },
     modules: { exports: kit.exports, jsxRuntime: kit.jsxRuntime },
   } satisfies PluginRealmExports,

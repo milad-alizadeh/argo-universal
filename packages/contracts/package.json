@@ -64,6 +64,7 @@
     "./plugins/page-draw": "./src/plugins/page-draw.ts",
     "./plugins/page-live": "./src/plugins/page-live.ts",
     "./plugins/loader-page-api": "./src/plugins/loader-page-api.ts",
+    "./plugins/watch-api": "./src/plugins/watch-api.ts",
     "./plugins/operations-api": "./src/plugins/operations-api.ts",
     "./plugins/plugin-operation-types": "./src/plugins/plugin-operation-types.ts",
     "./plugins/oauth-flow-api": "./src/plugins/oauth-flow-api.ts",
