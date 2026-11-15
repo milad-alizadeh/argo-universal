@@ -40,8 +40,7 @@ export const argoSlashCommands = [
   },
   {
     name: 'reload',
-    description:
-      'Start the Agent again to pick up new skills, extensions and settings',
+    description: 'Restart the Agent to load new skills and settings',
   },
 ] as const satisfies readonly (SlashCommand & { name: SessionRestart })[];
 

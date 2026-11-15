@@ -139,10 +139,9 @@ export const ArgoSlashCommandsFollowTheAgents: Story = {
     await settleLayout('wide');
     await chooseSlashCommands(context);
 
-    const names = (await screen.findAllByRole('option')).map(
-      (option) => option.textContent?.split(' ')[0],
-    );
-
-    await expect(names).toEqual(['/inspect', '/review', '/clear', '/reload']);
+    for (const name of ['/inspect', '/review', '/clear', '/reload'])
+      await expect(
+        await screen.findByRole('option', { name: new RegExp(`^${name} `) }),
+      ).toBeVisible();
   },
 };

@@ -1,3 +1,4 @@
+import { withArgoSlashCommands } from '@repo/contracts';
 import { newSessionCatalogs } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
@@ -189,8 +190,14 @@ export const ImageSelectionFailed: Story = {
   ),
 };
 
+// An open Session's menu: the Agent's Slash commands, then Argo's own.
 export const Suggestions: Story = {
-  args: slashSuggestionsComposer,
+  args: {
+    ...slashSuggestionsComposer,
+    slashCommands: withArgoSlashCommands(
+      slashSuggestionsComposer.slashCommands,
+    ),
+  },
   parameters: { screenPreview: true },
   render: (args) => (
     <SessionLayout
