@@ -10,8 +10,11 @@ it.each([
   { branch: `argo/${id}`, path: `/w/p/${id}`, type: 'worktree' },
 ])('reads a Session on its own branch as a worktree ($branch)', (row) => {
   expect(
-    toSessionCheckout({ id, checkoutPath: row.path, checkoutBranch: row.branch })
-      .type,
+    toSessionCheckout({
+      id,
+      checkoutPath: row.path,
+      checkoutBranch: row.branch,
+    }).type,
   ).toBe(row.type);
 });
 

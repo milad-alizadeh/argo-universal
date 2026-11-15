@@ -42,7 +42,11 @@ function checkoutExpectations(
     : {
         branch: sessionBranch(newSessionId),
         commit: 'Feature',
-        path: join(directory, '.argo/worktrees/project-1', worktreeName(newSessionId)),
+        path: join(
+          directory,
+          '.argo/worktrees/project-1',
+          worktreeName(newSessionId),
+        ),
       };
 }
 

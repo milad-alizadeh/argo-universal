@@ -89,8 +89,7 @@ export const worktreeName = (id: string): string => {
 // The prefix is stored data and must survive a product rename.
 const prefixed = (name: string): string => `${sessionBranchPrefix}${name}`;
 
-export const sessionBranch = (id: string): string =>
-  prefixed(worktreeName(id));
+export const sessionBranch = (id: string): string => prefixed(worktreeName(id));
 
 // A worktree made before it had a readable name is on `argo/<id>`.
 export const isSessionBranch = (branch: string | null, id: string): boolean =>
