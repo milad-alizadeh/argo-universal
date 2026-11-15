@@ -149,7 +149,7 @@ export const engineMachine = engineSetup.createMachine({
             },
           },
         },
-        // The Supervisor restarts an Engine that misses its heartbeat for 15 seconds.
+        // The Supervisor restarts an Engine whose heartbeat stops for longer than its limit.
         running: {
           after: {
             heartbeatInterval: {
