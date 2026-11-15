@@ -1,8 +1,6 @@
 import type {
   ContextUsage,
-  NonUserPromptSender,
   PromptQueue,
-  QueueCommand,
   FollowUpSuggestion,
   PendingElicitation,
   PendingPermission,
@@ -40,6 +38,7 @@ import type {
   QueueHoldConnections,
   QueueEditDisconnected,
 } from './queue-hold-connections';
+import type { QueueSessionCommand } from './queue-session-command';
 import type { SessionData, SessionInput } from './session-data';
 import type { Shells } from './shells';
 import type { Subagents } from './subagents';
@@ -94,14 +93,7 @@ export type SessionCommand =
       applied?: PromiseWithResolvers<SessionConfigOption[]>;
       held?: boolean;
     }
-  | {
-      type: 'session.queue';
-      connectionSignal?: AbortSignal;
-      command: QueueCommand;
-      // Set by the Server for a Plugin's Prompt; an App's command never carries one (ADR-0055).
-      sender?: NonUserPromptSender;
-      committed: PromiseWithResolvers<void>;
-    }
+  | QueueSessionCommand
   | { type: 'session.archive' }
   | { type: 'session.unarchive' }
   | { type: 'session.cancel' }

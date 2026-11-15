@@ -4,8 +4,10 @@
   "exclude": [
     "**/*.test.ts",
     "**/node_modules",
+    "auto-merge-fixture.ts",
     "github-fixture-automation.ts",
     "github-fixture-rest.ts",
+    "github-fixture-types.ts",
     "github-fixture.ts",
     "journey-calls-fixture.ts",
     "journey-files-fixture.ts",

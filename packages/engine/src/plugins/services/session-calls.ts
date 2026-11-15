@@ -1,6 +1,7 @@
 import { CapabilityRefusal } from '../access/capability-refusal';
 import type { PluginValue, PluginRequest } from '../protocol/runtime';
 import type { PluginCall } from './plugin-calls';
+import type { PluginPromptSender } from './plugin-service-options';
 
 type SessionRequest = Extract<PluginRequest, { api: 'sessions' }>;
 
@@ -21,7 +22,7 @@ async function readSession(
   call: PluginCall,
   sessionId: string,
 ): Promise<PluginValue> {
-  call.access().checkSessionsRead();
+  call.access().checkSessions('sessions:read');
   call.logCall();
 
   return (await call.options.sessionInfo?.(sessionId)) ?? null;
@@ -35,17 +36,10 @@ async function archiveSession(
   call: PluginCall,
   sessionId: string,
 ): Promise<PluginValue> {
-  call.access().checkSessionsArchive();
+  call.access().checkSessions('sessions:archive');
   call.logCall();
-
-  const info = await call.options.sessionInfo?.(sessionId);
-
-  requireProjectSession(call, sessionId, info);
-
-  if (!call.options.archiveSession)
-    throw new Error('Archiving Sessions is not available');
-
-  await call.options.archiveSession(sessionId);
+  await requireProjectSession(call, sessionId);
+  await available(call.options.archiveSession, 'Archiving')(sessionId);
 
   return null;
 }
@@ -59,29 +53,42 @@ async function promptSession(
   sessionId: string,
   text: string,
 ): Promise<PluginValue> {
-  call.access().checkSessionsPrompt();
+  call.access().checkSessions('sessions:prompt');
   call.logCall();
-  requireProjectSession(
-    call,
+  await requireProjectSession(call, sessionId);
+
+  return available(call.options.promptSession, 'Prompting')(
     sessionId,
-    await call.options.sessionInfo?.(sessionId),
+    text,
+    pluginSender(call),
   );
-
-  if (!call.options.promptSession)
-    throw new Error('Prompting Sessions is not available');
-
-  return call.options.promptSession(sessionId, text, {
-    pluginId: call.pluginId,
-    title: call.activated()?.title || call.pluginId,
-  });
 }
 
-function requireProjectSession(
+// The Feed names a Plugin's Prompt by the Plugin's title.
+const pluginSender = (call: PluginCall): PluginPromptSender => ({
+  pluginId: call.pluginId,
+  title: call.activated()?.title || call.pluginId,
+});
+
+// An act the Engine has not attached is refused, as when no Sessions exist yet.
+function available<Act>(act: Act | undefined, verb: string): Act {
+  if (!act) throw new Error(`${verb} Sessions is not available`);
+
+  return act;
+}
+
+const inProject = (
+  call: PluginCall,
+  info: { projectId: string } | null | undefined,
+): boolean => Boolean(call.projectId) && info?.projectId === call.projectId;
+
+async function requireProjectSession(
   call: PluginCall,
   sessionId: string,
-  info: { projectId: string } | null | undefined,
-): void {
-  if (!call.projectId || info?.projectId !== call.projectId)
+): Promise<void> {
+  const info = await call.options.sessionInfo?.(sessionId);
+
+  if (!inProject(call, info))
     throw new CapabilityRefusal(
       `Session ${sessionId} is not in the Project this call runs for`,
     );

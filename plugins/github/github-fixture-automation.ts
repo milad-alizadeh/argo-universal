@@ -1,5 +1,5 @@
 import type { FixtureAnswer, FixtureRequest } from '@argo/plugin-kit/testing';
-import type { FixturePull } from './github-fixture';
+import type { FixturePull } from './github-fixture-types';
 
 // What GitHub says of a repository's merge settings; a repository nobody set is open to every method.
 export type FixtureRepository = {
@@ -32,13 +32,24 @@ export type AutoMergeCall = {
 
 export const graphqlPath = '/graphql';
 
-type Body = { query: string; variables: Record<string, unknown> };
+// What the Plugin sends GitHub's GraphQL endpoint: the read and the two mutations each fill their own variables.
+type Variables = {
+  pullRequestId?: string;
+  mergeMethod?: string;
+  owner?: string;
+  name?: string;
+  number?: number;
+};
+
+type Body = { query: string; variables: Variables };
 
 const bodyOf = ({ body }: Pick<FixtureRequest, 'body'>): Body =>
   JSON.parse(body);
 
-const byId = (pulls: Map<string, FixturePull>, id: unknown): FixturePull[] =>
-  [...pulls.values()].filter((pull) => pull.node_id === id);
+const byId = (
+  pulls: Map<string, FixturePull>,
+  id: string | undefined,
+): FixturePull[] => [...pulls.values()].filter((pull) => pull.node_id === id);
 
 function mutate(held: Automated, { query, variables }: Body): FixtureAnswer {
   const [pull] = byId(held.pulls, variables.pullRequestId);
@@ -53,23 +64,28 @@ function mutate(held: Automated, { query, variables }: Body): FixtureAnswer {
   return { json: { data: { pullRequest: { id: pull.node_id } } } };
 }
 
-function read(held: Automated, { variables }: Body): FixtureAnswer {
-  const { owner, name, number } = variables;
-  const pull = held.pulls.get(`${String(owner)}/${String(name)}#${number}`);
+const keyOf = ({ owner, name, number }: Variables): string =>
+  `${String(owner)}/${String(name)}#${String(number)}`;
 
-  if (!pull) return { json: { data: { repository: { pullRequest: null } } } };
+type PullAnswer = {
+  id: string;
+  autoMergeRequest: { mergeMethod: string } | null;
+};
+
+const pullAnswer = (pull: FixturePull): PullAnswer => ({
+  id: pull.node_id,
+  autoMergeRequest: pull.auto_merge
+    ? { mergeMethod: pull.auto_merge.merge_method }
+    : null,
+});
+
+function read(held: Automated, { variables }: Body): FixtureAnswer {
+  const pull = held.pulls.get(keyOf(variables));
 
   return {
     json: {
       data: {
-        repository: {
-          pullRequest: {
-            id: pull.node_id,
-            autoMergeRequest: pull.auto_merge
-              ? { mergeMethod: pull.auto_merge.merge_method }
-              : null,
-          },
-        },
+        repository: { pullRequest: pull ? pullAnswer(pull) : null },
       },
     },
   };
@@ -99,17 +115,22 @@ export const settingsOf = (
   repository: string,
 ): FixtureRepository => repositories.get(repository) ?? openRepository;
 
+const callOf = ({ query, variables }: Body): AutoMergeCall => ({
+  kind: query.includes('enablePullRequestAutoMerge') ? 'enable' : 'disable',
+  pullRequestId: String(variables.pullRequestId),
+  ...(variables.mergeMethod !== undefined && {
+    mergeMethod: variables.mergeMethod,
+  }),
+});
+
+function callsOf(request: FixtureRequest): AutoMergeCall[] {
+  if (request.path !== graphqlPath) return [];
+
+  const body = bodyOf(request);
+
+  return body.query.includes('mutation') ? [callOf(body)] : [];
+}
+
 export const autoMergeCalls = (
   requests: readonly FixtureRequest[],
-): AutoMergeCall[] =>
-  requests
-    .filter(({ path }) => path === graphqlPath)
-    .map(bodyOf)
-    .filter(({ query }) => query.includes('mutation'))
-    .map(({ query, variables }) => ({
-      kind: query.includes('enablePullRequestAutoMerge') ? 'enable' : 'disable',
-      pullRequestId: String(variables.pullRequestId),
-      ...(variables.mergeMethod !== undefined && {
-        mergeMethod: String(variables.mergeMethod),
-      }),
-    }));
+): AutoMergeCall[] => requests.flatMap(callsOf);

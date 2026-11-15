@@ -11,7 +11,7 @@ import {
 
 // Paper WRB-0: PR automation menu, Option A. The … menu holds the automation items between the links and Detach.
 const meta = {
-  title: 'Sessions/ChangeRow/Automation',
+  title: 'Sessions/ChangeRowAutomation',
   component: ChangeRow,
   decorators: [
     (Story): React.JSX.Element => (

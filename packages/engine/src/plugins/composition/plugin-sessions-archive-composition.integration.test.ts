@@ -57,7 +57,7 @@ const archiveFor = async (
   host: Host,
   sessionId: string,
   projectId = emptySessionInput.projectId,
-): Promise<unknown> => {
+): ReturnType<Host['caller']['plugins']['run']> => {
   await host.caller.plugin.activate({ pluginId: 'tidy' });
 
   return host.caller.plugins.run({

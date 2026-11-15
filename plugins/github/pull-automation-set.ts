@@ -1,13 +1,14 @@
 import type { Argo } from '@argo/plugin-kit';
 import {
-  disableAutoMerge,
-  enableAutoMerge,
-  fetchAutoMerge,
-  fetchMergeSettings,
   mergeOf,
   methodOf,
+  type AutoMergeInfo,
+  type MergeSettings,
 } from './pull-automation';
+import { fetchAutoMerge, fetchMergeSettings } from './pull-automation-reads';
+import { disableAutoMerge, enableAutoMerge } from './pull-automation-writes';
 import { requireAttached } from './pull-file-operations';
+import type { PullInfo } from './pull-info';
 import { namedOf, type Scope } from './pull-operations';
 import { fetchPull } from './pull-reads';
 import type { SessionCaller } from './session-caller';
@@ -43,28 +44,43 @@ export async function setAutomation(
 
 type Target = { repository: string; number: number; projectId: string };
 
-async function apply(
-  { fetch }: Pick<Argo, 'fetch'>,
-  target: Target,
-  on: boolean,
-): Promise<void> {
+type Fetch = Argo['fetch'];
+
+type Read = {
+  pull: PullInfo;
+  autoMerge: AutoMergeInfo;
+  settings: MergeSettings;
+};
+
+async function readAll(fetch: Fetch, target: Target): Promise<Read> {
   const [pull, autoMerge, settings] = await Promise.all([
     fetchPull(fetch, target),
     fetchAutoMerge(fetch, target),
     fetchMergeSettings(fetch, target),
   ]);
 
-  if (!on) {
-    if (autoMerge.on)
-      await disableAutoMerge(fetch, { ...autoMerge, ...target });
+  return { pull, autoMerge, settings };
+}
 
-    return;
-  }
+async function turnOff(
+  fetch: Fetch,
+  target: Target,
+  { autoMerge }: Read,
+): Promise<void> {
+  if (autoMerge.on) await disableAutoMerge(fetch, { ...autoMerge, ...target });
+}
 
+function requireAvailable({ pull, autoMerge, settings }: Read): void {
   const state = mergeOf(pull, { autoMerge, settings });
 
   if (!state.available)
     throw new Error(state.reason ?? 'Auto-merge is not available.');
+}
+
+async function turnOn(fetch: Fetch, target: Target, read: Read): Promise<void> {
+  const { autoMerge, settings } = read;
+
+  requireAvailable(read);
 
   if (autoMerge.on) return;
 
@@ -73,4 +89,14 @@ async function apply(
     ...target,
     method: methodOf(settings),
   });
+}
+
+async function apply(
+  { fetch }: Pick<Argo, 'fetch'>,
+  target: Target,
+  on: boolean,
+): Promise<void> {
+  const read = await readAll(fetch, target);
+
+  await (on ? turnOn : turnOff)(fetch, target, read);
 }

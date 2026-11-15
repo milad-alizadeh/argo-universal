@@ -63,10 +63,16 @@ const factsOf = (
   ...modifiersOf(pull),
 });
 
+// A field of the Refresh only when it was read, so an absent one stays absent.
+const present = <Key extends keyof Refresh>(
+  key: Key,
+  value: Refresh[Key],
+): Refresh => (value === undefined ? {} : { [key]: value });
+
 const refreshFields = ({ checks, stale, automation }: Refresh): Refresh => ({
-  ...(checks && { checks }),
-  ...(stale && { stale }),
-  ...(automation && { automation }),
+  ...present('checks', checks),
+  ...present('stale', stale),
+  ...present('automation', automation),
 });
 
 export const changeOf = (

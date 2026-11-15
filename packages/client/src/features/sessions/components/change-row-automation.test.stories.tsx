@@ -14,7 +14,7 @@ import { checksRunningChangeRow } from './change-row-fixtures';
 const { number } = autoMergeOffChangeRow.change;
 
 const meta = {
-  title: 'Tests/Sessions/ChangeRow/Automation',
+  title: 'Tests/Sessions/ChangeRowAutomation',
   component: ChangeRow,
   decorators: [
     (Story): React.JSX.Element => (
@@ -50,6 +50,8 @@ const openMenu = async (userEvent: User): Promise<void> => {
   await settleOverlays();
 };
 
+const mergeName = 'Auto-merge';
+
 const labels = async (): Promise<(string | null)[]> =>
   (await screen.findAllByRole('menuitem')).map((row) => row.textContent);
 
@@ -59,14 +61,15 @@ function sitsBetweenLinksAndDetach(width: number): Story {
     play: async ({ userEvent }) => {
       await settleLayout(width);
       await openMenu(userEvent);
-      const names = Array.from(
-        screen.getByRole('menu').querySelectorAll('[role^="menuitem"]'),
-      ).map((row) => row.textContent);
+
+      const names = [
+        ...screen.getByRole('menu').querySelectorAll('[role^="menuitem"]'),
+      ].map((row) => row.textContent);
 
       await expect(names).toEqual([
         'Open on GitHub',
         'Copy link',
-        'Auto-merge',
+        mergeName,
         'Detach from Session',
       ]);
     },
@@ -87,8 +90,9 @@ function ticking(width: number): Story {
     play: async ({ userEvent, args }) => {
       await settleLayout(width);
       await openMenu(userEvent);
+
       const item = await screen.findByRole('menuitemradio', {
-        name: 'Auto-merge',
+        name: mergeName,
       });
 
       await expect(item).toHaveAttribute('aria-checked', 'false');
@@ -112,8 +116,9 @@ export const UntickingAutoMergeAsksForItOff: Story = {
   play: async ({ userEvent, args }) => {
     await settleLayout('wide');
     await openMenu(userEvent);
+
     const item = await screen.findByRole('menuitemradio', {
-      name: 'Auto-merge',
+      name: mergeName,
     });
 
     await expect(item).toHaveAttribute('aria-checked', 'true');
@@ -131,8 +136,9 @@ export const UnavailableAutoMergeSaysWhyAndIsDisabled: Story = {
   play: async ({ userEvent, args }) => {
     await settleLayout('wide');
     await openMenu(userEvent);
+
     const item = await screen.findByRole('menuitemradio', {
-      name: 'Auto-merge',
+      name: mergeName,
     });
 
     await expect(item).toHaveAttribute('aria-disabled', 'true');
@@ -155,7 +161,7 @@ export const DrawsNoAutomationWhenNoneIsOffered: Story = {
       'Copy link',
       'Detach from Session',
     ]);
-    await expect(screen.queryByText('Auto-merge')).not.toBeInTheDocument();
+    await expect(screen.queryByText(mergeName)).not.toBeInTheDocument();
     await expect(screen.queryByText('Auto-fix')).not.toBeInTheDocument();
     await expect(screen.queryByText('Auto-archive')).not.toBeInTheDocument();
   },

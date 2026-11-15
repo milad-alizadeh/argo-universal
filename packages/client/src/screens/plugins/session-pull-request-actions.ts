@@ -1,6 +1,7 @@
 import type { PageScope } from '@repo/contracts/plugins/page-address';
 import type { ScopedRun } from '@repo/contracts/plugins/page-calls';
 import type { SessionPullRequest } from '#features/sessions';
+import type { OperationRunner } from './page-calls-ports';
 
 // The one Plugin whose PR rows these are: Detach is its Operation, and Core keeps no PR model (ADR-0052).
 const githubPluginId = 'github';
@@ -8,9 +9,9 @@ const githubPluginId = 'github';
 export interface RowActionPorts {
   scope: PageScope;
   // The App's one run of an Operation, which rejects with why it failed.
-  run: (run: ScopedRun & { pluginId: string }) => Promise<unknown>;
+  run: OperationRunner['run'];
   failed: (error: Error) => void;
-  copy: (text: string) => Promise<unknown>;
+  copy: (text: string) => Promise<boolean>;
 }
 
 const referenceOf = ({
@@ -19,8 +20,23 @@ const referenceOf = ({
 }: SessionPullRequest): string | undefined =>
   repository && `${repository}#${number}`;
 
-const toError = (reason: unknown): Error =>
-  reason instanceof Error ? reason : new Error(String(reason));
+const toError = (cause: unknown): Error =>
+  cause instanceof Error ? cause : new Error(String(cause));
+
+const failedWith =
+  (ports: RowActionPorts) =>
+  (cause: unknown): void =>
+    ports.failed(toError(cause));
+
+function runOperation(
+  ports: RowActionPorts,
+  operation: string,
+  args: ScopedRun['args'],
+): void {
+  ports
+    .run({ pluginId: githubPluginId, operation, args, ...ports.scope })
+    .catch(failedWith(ports));
+}
 
 function detachOf(
   change: SessionPullRequest,
@@ -30,18 +46,7 @@ function detachOf(
 
   if (!reference) return {};
 
-  return {
-    onDetach: () => {
-      ports
-        .run({
-          pluginId: githubPluginId,
-          operation: 'detach',
-          args: { reference },
-          ...ports.scope,
-        })
-        .catch((reason: unknown) => ports.failed(toError(reason)));
-    },
-  };
+  return { onDetach: () => runOperation(ports, 'detach', { reference }) };
 }
 
 function copyOf(
@@ -52,7 +57,7 @@ function copyOf(
 
   return {
     onCopyLink: () => {
-      ports.copy(url).catch((reason: unknown) => ports.failed(toError(reason)));
+      ports.copy(url).catch(failedWith(ports));
     },
   };
 }
@@ -66,16 +71,8 @@ function automationOf(
   if (!reference || !change.automation) return {};
 
   return {
-    onSetAutomation: (kind, on) => {
-      ports
-        .run({
-          pluginId: githubPluginId,
-          operation: 'automationSet',
-          args: { reference, kind, on },
-          ...ports.scope,
-        })
-        .catch((reason: unknown) => ports.failed(toError(reason)));
-    },
+    onSetAutomation: (kind, on) =>
+      runOperation(ports, 'automationSet', { reference, kind, on }),
   };
 }
 

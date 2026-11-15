@@ -2,11 +2,11 @@ import type { PromptSession } from './services/plugin-service-options';
 
 // What a Plugin's `argo.sessions` acts reach. Sessions are built after the Plugin runtime, so the Engine attaches them later (ADR-0055).
 export class SessionActs {
-  private archiver: ((sessionId: string) => Promise<unknown>) | null = null;
+  private archiver: ((sessionId: string) => Promise<void>) | null = null;
   private prompter: PromptSession | null = null;
 
   public attach(acts: {
-    archive: (sessionId: string) => Promise<unknown>;
+    archive: (sessionId: string) => Promise<void>;
     prompt: PromptSession;
   }): void {
     this.archiver = acts.archive;

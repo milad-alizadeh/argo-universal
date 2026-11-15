@@ -25,6 +25,8 @@
     "#plugin-query-normalisation": "./src/plugins/query-normalisation.ts",
     "#plugin-account-calls": "./src/plugins/account-calls.ts",
     "#plugin-capabilities": "./src/plugins/capabilities.ts",
+    "#plugin-fetch-capability": "./src/plugins/fetch-capability.ts",
+    "#plugin-argo-results": "./src/plugins/argo-results.ts",
     "#plugin-manifest-fields": "./src/plugins/manifest-fields.ts",
     "#plugin-sf-symbol-names": "./src/plugins/sf-symbol-names.gen.ts",
     "#plugin-material-symbol-names": "./src/plugins/material-symbol-names.gen.ts",

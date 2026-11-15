@@ -157,7 +157,10 @@ function deliver(parts: KitParts, event: PluginEvent): void {
 }
 
 // A draw that is a Watch's run goes to the function its path names; any other event is a Loader page's.
-function answerDraw(parts: KitParts, event: PluginEvent): void {
+function answerDraw(
+  parts: KitParts,
+  event: Exclude<PluginEvent, { type: 'slotItems' | 'operation' }>,
+): void {
   if (isWatch(event)) return parts.watches.answer(event);
 
   return parts.loaderPages.answer(event);

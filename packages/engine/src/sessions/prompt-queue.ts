@@ -1,4 +1,3 @@
-import { QueuedPromptId } from '@repo/contracts';
 import type {
   NonUserPromptSender,
   PromptQueue,
@@ -6,6 +5,7 @@ import type {
   QueueCommand,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
+import { appendedPrompt, type AppendCommand } from './queued-prompt-append';
 import type { SessionContext } from './session-context';
 import { SessionRowUpdateJob } from './session-storage';
 
@@ -153,20 +153,12 @@ function insertRow(
 
 function appendRow(
   context: QueueContext,
-  command: Extract<QueueCommand, { action: 'append' }> & {
-    sender?: NonUserPromptSender;
-  },
+  command: AppendCommand,
   id: string,
 ): QueueChange {
   return withItems(context, [
     ...context.promptQueue.items,
-    {
-      id: QueuedPromptId.parse(id),
-      prompt: command.prompt,
-      followUpSuggestions: command.followUpSuggestions,
-      ...(command.sender && { sender: command.sender }),
-      revision: 0,
-    },
+    appendedPrompt(command, id),
   ]);
 }
 

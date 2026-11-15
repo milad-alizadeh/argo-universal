@@ -1,8 +1,11 @@
 import type { Change } from '@repo/contracts';
 import { iconSymbols } from '@repo/kit/symbols/icon-names';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, type Mock, vi } from 'vitest';
 import type { SessionPullRequest } from '#features/sessions';
-import { withRowActions } from './session-pull-request-actions';
+import {
+  type RowActionPorts,
+  withRowActions,
+} from './session-pull-request-actions';
 import { sessionPullRequests } from './session-pull-requests';
 import type { SlotReading } from './slot-items';
 
@@ -45,7 +48,7 @@ describe('the automation a Change offers', () => {
   });
 
   it('leaves the row with none when the Plugin offers none', () => {
-    const { automation: _offered, ...bare } = change;
+    const bare: Change = { ...change, automation: undefined };
 
     expect(sessionPullRequests(reading(bare))[0]).not.toHaveProperty(
       'automation',
@@ -65,12 +68,19 @@ const row: SessionPullRequest = {
 
 const scope = { projectId: 'project-1', sessionId: 'session-1' };
 
-function ports(run: () => Promise<unknown> = () => Promise.resolve(null)) {
+type Run = RowActionPorts['run'];
+
+function ports(
+  run: Run = () => Promise.resolve({ result: null }),
+): RowActionPorts & {
+  run: Mock<Run>;
+  failed: Mock<RowActionPorts['failed']>;
+} {
   return {
     scope,
-    run: vi.fn(run),
-    failed: vi.fn(),
-    copy: vi.fn(() => Promise.resolve()),
+    run: vi.fn<Run>(run),
+    failed: vi.fn<RowActionPorts['failed']>(),
+    copy: vi.fn<RowActionPorts['copy']>(() => Promise.resolve(true)),
   };
 }
 

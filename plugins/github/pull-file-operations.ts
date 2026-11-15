@@ -1,7 +1,7 @@
 import type { Argo } from '@argo/plugin-kit';
-import type { ChangesSource } from './pull-changes';
 import { filesPerPage, type FilesReads, type PullFile } from './pull-files';
 import type { PullInfo } from './pull-info';
+import type { ChangesSource } from './pull-link-reads';
 import { namedOf, type Scope } from './pull-operations';
 import type { PullReference } from './pull-reference';
 import type { SessionCaller } from './session-caller';

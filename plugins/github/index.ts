@@ -1,15 +1,12 @@
 import type { Argo } from '@argo/plugin-kit';
-import { defineAutomationReads } from './pull-automation';
+import { defineAutomationReads } from './pull-automation-reads';
 import { setAutomation } from './pull-automation-set';
 import type { ChangeItem } from './pull-change';
-import {
-  changesBySession,
-  readLinks,
-  type ChangesSource,
-} from './pull-changes';
+import { changesBySession } from './pull-changes';
 import { checkoutIdentity, markCheckout } from './pull-checkout';
 import { diffOf, filesOf, type FileSource } from './pull-file-operations';
 import { defineFilesReads } from './pull-files';
+import { readLinks, type ChangesSource } from './pull-link-reads';
 import {
   attach,
   detach,

@@ -1,6 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, type Mock, vi } from 'vitest';
 import type { SessionPullRequest } from '#features/sessions';
-import { withRowActions } from './session-pull-request-actions';
+import {
+  type RowActionPorts,
+  withRowActions,
+} from './session-pull-request-actions';
 
 const change: SessionPullRequest = {
   stage: 'open',
@@ -13,12 +16,18 @@ const change: SessionPullRequest = {
 
 const scope = { projectId: 'project-1', sessionId: 'session-1' };
 
-function ports(overrides: { run?: () => Promise<unknown> } = {}) {
+type Run = RowActionPorts['run'];
+
+function ports(overrides: { run?: Run } = {}): RowActionPorts & {
+  run: Mock<Run>;
+  failed: Mock<RowActionPorts['failed']>;
+  copy: Mock<RowActionPorts['copy']>;
+} {
   return {
     scope,
-    run: vi.fn(overrides.run ?? (() => Promise.resolve({ result: null }))),
-    failed: vi.fn(),
-    copy: vi.fn(() => Promise.resolve()),
+    run: vi.fn<Run>(overrides.run ?? (() => Promise.resolve({ result: null }))),
+    failed: vi.fn<RowActionPorts['failed']>(),
+    copy: vi.fn<RowActionPorts['copy']>(() => Promise.resolve(true)),
   };
 }
 

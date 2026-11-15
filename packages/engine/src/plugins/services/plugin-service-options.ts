@@ -12,10 +12,13 @@ import type { PluginValue } from '../protocol/runtime';
 import type { HeldSecrets } from './held-secrets';
 import type { PluginNetwork } from './plugin-fetch';
 
+// The Plugin a Prompt is sent as; the Feed names it by `title`.
+export type PluginPromptSender = { pluginId: string; title: string };
+
 export type PromptSession = (
   sessionId: string,
   text: string,
-  sender: { pluginId: string; title: string },
+  sender: PluginPromptSender,
 ) => Promise<PluginPromptAnswer>;
 
 export type PluginServiceOptions = {

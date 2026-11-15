@@ -20,51 +20,11 @@ import {
   type Held,
   checksPath,
 } from './github-fixture-rest';
-
-// One pull request as GitHub's REST API answers it, with the fields the Plugin reads.
-export type FixturePull = {
-  number: number;
-  title: string;
-  state: 'open' | 'closed';
-  merged: boolean;
-  draft: boolean;
-  mergeable_state: string;
-  // GraphQL's id of the pull request, and its auto-merge when GitHub has it turned on.
-  node_id: string;
-  auto_merge: { merge_method: string } | null;
-  html_url: string;
-  // Numbers; a test may send anything else to see it refused.
-  additions: number | string;
-  deletions: number;
-  changed_files: number;
-  head: { ref: string; sha: string; repo: { full_name: string } };
-  base: { ref: string; repo: { full_name: string } };
-};
-
-// One changed file as GitHub lists a pull request's files; `patch` is absent for a binary or very large file.
-export type FixtureFile = {
-  filename: string;
-  // GitHub's statuses are added, removed, modified, renamed, copied, changed and unchanged; a test may send any other.
-  status: string;
-  // A number; a test may send anything else to see it refused.
-  additions: number | string;
-  deletions: number | string;
-  patch?: string;
-  previous_filename?: string;
-};
-
-// One Check run of a commit as GitHub's REST API answers it.
-export type FixtureCheck = {
-  name: string;
-  status: 'queued' | 'in_progress' | 'completed';
-  conclusion:
-    | 'success'
-    | 'failure'
-    | 'neutral'
-    | 'skipped'
-    | 'cancelled'
-    | null;
-};
+import type {
+  FixtureCheck,
+  FixtureFile,
+  FixturePull,
+} from './github-fixture-types';
 
 export type GitHubFixture = FixtureServices & {
   // The Check runs of a commit, by `owner/repository@sha`; a commit with none listed has none.
@@ -156,6 +116,9 @@ const deviceCode = (): FixtureAnswer => ({
 const bearerOf = ({ headers }: Pick<FixtureRequest, 'headers'>): string =>
   String(headers.authorization).replace(/^Bearer /, '');
 
+const restAnswer = (held: Held, path: string): FixtureAnswer =>
+  path === '/user' ? { json: { login: 'octocat' } } : rest(held, path);
+
 async function api(held: Held, call: FixtureRequest): Promise<FixtureAnswer> {
   await held.stall.until;
 
@@ -164,9 +127,7 @@ async function api(held: Held, call: FixtureRequest): Promise<FixtureAnswer> {
 
   if (call.path === graphqlPath) return graphqlAnswer(held, call);
 
-  return call.path === '/user'
-    ? { json: { login: 'octocat' } }
-    : rest(held, call.path);
+  return restAnswer(held, call.path);
 }
 
 const githubCom = (request: FixtureRequest): FixtureAnswer =>

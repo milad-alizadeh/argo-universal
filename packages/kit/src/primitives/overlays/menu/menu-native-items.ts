@@ -10,6 +10,7 @@ import {
   menuChoiceGroups,
   menuLoadingLabel,
 } from './menu-props';
+import { nothing, pressOf, subtitleOf } from './native-item-fields';
 
 // One row of a system menu, before iOS or Android draws it.
 export interface NativeMenuItem {
@@ -101,8 +102,6 @@ function sectionItems(
   return [{ ...first, divided: true }, ...rest];
 }
 
-const nothing = (): void => undefined;
-
 // The system menus have no place for a subtitle, so their one title carries it on a second line.
 export const nativeTitle = ({ title, subtitle }: NativeMenuItem): string =>
   subtitle ? `${title}\n${subtitle}` : title;
@@ -137,11 +136,11 @@ function actionItem(action: MenuAction): NativeMenuItem {
     id: action.id ?? action.label,
     title: action.label,
     checked: action.selected,
-    ...(action.subtitle && { subtitle: action.subtitle }),
+    ...subtitleOf(action),
     disabled: Boolean(action.disabled),
     icon: action.icon,
     tone: action.tone,
-    choose: action.disabled ? nothing : action.onPress,
+    choose: pressOf(action),
   };
 }
 

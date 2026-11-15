@@ -1,11 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import { changeOf, type ChangeItem } from './pull-change';
-import {
-  readLinks,
-  refreshOf,
-  type ChangesSource,
-  type LinkRead,
-} from './pull-changes';
+import { refreshOf } from './pull-changes';
 import {
   checkoutIdentity,
   markedOf,
@@ -13,6 +8,11 @@ import {
 } from './pull-checkout';
 import { discover, type Checkout, type Discovered } from './pull-discovery';
 import { failureMessage } from './pull-known';
+import {
+  readLinks,
+  type ChangesSource,
+  type LinkRead,
+} from './pull-link-reads';
 import { fetchPull } from './pull-reads';
 import { parseReference, type PullReference } from './pull-reference';
 import { sessionInProject, type SessionCaller } from './session-caller';

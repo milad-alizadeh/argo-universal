@@ -9,6 +9,7 @@ import { HookPort } from './hooks/hook-port';
 import { PluginListChanges } from './list-changes';
 import { pluginLocation, pluginManifest } from './located-plugins';
 import { projectPorts } from './project-ports';
+import { runtimePorts } from './runtime-ports';
 import { createPluginRuntime } from './runtime/create-runtime';
 import type { PluginLocation } from './runtime/plugin-location';
 import type { PluginRuntime } from './runtime/plugin-runtime';
@@ -109,21 +110,6 @@ function foundations(options: PluginsOptions): Foundations {
     hookPort: options.hookPort ?? new HookPort(),
     settings: settingsFor(options, parts),
     accounts: accountsFor(options, { secretStore, discovery }),
-  };
-}
-
-function runtimePorts(
-  options: PluginsOptions,
-): Pick<
-  Parameters<typeof createPluginRuntime>[1],
-  'network' | 'oauth' | 'clock' | 'archiveSession' | 'promptSession'
-> {
-  return {
-    archiveSession: options.sessionActs?.archive,
-    promptSession: options.sessionActs?.prompt,
-    network: options.pluginNetwork,
-    oauth: options.pluginOAuth,
-    clock: options.pluginClock,
   };
 }
 

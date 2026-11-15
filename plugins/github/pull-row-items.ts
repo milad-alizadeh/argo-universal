@@ -1,6 +1,6 @@
 import type { SessionRowItem } from '@argo/plugin-kit';
-import type { LinkRead } from './pull-changes';
 import type { PullInfo } from './pull-info';
+import type { LinkRead } from './pull-link-reads';
 
 // A Session row holds at most this many items from one Plugin (the Slot's own limit).
 const rowItemLimit = 8;

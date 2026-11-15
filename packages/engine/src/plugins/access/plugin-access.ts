@@ -1,7 +1,6 @@
 import { mkdir, realpath } from 'node:fs/promises';
 import { isAbsolute, resolve } from 'node:path';
 import {
-  isSpecialHost,
   sameHost,
   type FetchCapability,
   type PluginCapability,
@@ -20,7 +19,10 @@ import {
   type Subject,
 } from './plugin-access-rules';
 import { allowLiteral } from './plugin-addresses';
+import { anyHost, exactHost, type HostRule } from './plugin-host-rules';
 import { allowWrite } from './plugin-write-rules';
+
+export type { HostRule };
 
 // What the Server holds for an activated Plugin: its Grants, and its code folder, which `argo.fs` never writes.
 export type ActivatedPlugin = {
@@ -44,14 +46,16 @@ export type AccessScope = {
 
 export type FileAccess = 'read' | 'write';
 
+type SessionsCapabilityKind = Extract<
+  PluginCapability['kind'],
+  'sessions:read' | 'sessions:prompt' | 'sessions:archive'
+>;
+
 // What a command runs with once checked: its working directory resolved and its whole environment.
 export type CheckedCommand = ProcessCommand & {
   cwd: string;
   env: Record<string, string>;
 };
-
-// A fetch hop the Capabilities allow; `private` is true only for a raw address or `localhost` declared with a reason.
-export type HostRule = { private: boolean };
 
 /*
  * The one checker for a Plugin's `argo.fs`, `argo.process` and `argo.fetch` calls (ADR-0030).
@@ -113,27 +117,11 @@ export class PluginAccess {
     };
   }
 
-  // `argo.sessions.get` reads Session details only under a `sessions:read` Grant.
-  checkSessionsRead(): void {
-    if (!this.scope.grants.some(({ kind }) => kind === 'sessions:read'))
+  // Each `argo.sessions` call needs its Grant: `get` reads Session details, `prompt` starts Turns, and `archive` has no confirm tier (ADR-0055).
+  checkSessions(kind: SessionsCapabilityKind): void {
+    if (!this.scope.grants.some((grant) => grant.kind === kind))
       throw new CapabilityRefusal(
-        'sessions:read is not a declared Capability. Add { "kind": "sessions:read" } to capabilities in plugin.json.',
-      );
-  }
-
-  // `argo.sessions.prompt` starts Turns, so it needs a `sessions:prompt` Grant (ADR-0055).
-  checkSessionsPrompt(): void {
-    if (!this.scope.grants.some(({ kind }) => kind === 'sessions:prompt'))
-      throw new CapabilityRefusal(
-        'sessions:prompt is not a declared Capability. Add { "kind": "sessions:prompt" } to capabilities in plugin.json.',
-      );
-  }
-
-  // `argo.sessions.archive` needs a `sessions:archive` Grant; there is no confirm tier (ADR-0055).
-  checkSessionsArchive(): void {
-    if (!this.scope.grants.some(({ kind }) => kind === 'sessions:archive'))
-      throw new CapabilityRefusal(
-        'sessions:archive is not a declared Capability. Add { "kind": "sessions:archive" } to capabilities in plugin.json.',
+        `${kind} is not a declared Capability. Add { "kind": "${kind}" } to capabilities in plugin.json.`,
       );
   }
 
@@ -208,20 +196,4 @@ export class PluginAccess {
       (capability) => capability.kind === 'fetch',
     );
   }
-}
-
-/*
- * Only a raw address, `localhost` or `*.localhost`, declared with a reason, may reach a loopback or
- * private address. A named host never does, so its DNS answer can't rebind it onto this Mac.
- */
-const exactHost = ({ host, reason }: FetchCapability): HostRule => ({
-  private: Boolean(reason) && isSpecialHost(host),
-});
-
-function anyHost(capabilities: FetchCapability[], url: URL): HostRule {
-  if (capabilities.some(({ host }) => host === '*')) return { private: false };
-
-  throw new CapabilityRefusal(
-    `${url.host} is not a declared host. Add { "kind": "fetch", "host": "${url.host}" } to capabilities in plugin.json.`,
-  );
 }

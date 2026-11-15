@@ -1,4 +1,4 @@
-import { readLink, type ChangesSource, type LinkRead } from './pull-changes';
+import { readLink, type ChangesSource, type LinkRead } from './pull-link-reads';
 import type { PullLink } from './pull-store';
 
 /*

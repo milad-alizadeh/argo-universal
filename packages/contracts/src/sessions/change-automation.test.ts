@@ -30,9 +30,9 @@ it('accepts a Change with no automation, which offers none', () => {
 });
 
 it('refuses an automation that leaves one of the three out', () => {
-  const { archive: _archive, ...two } = automation;
+  const two = { fix: automation.fix, merge: automation.merge };
 
-  expect(() => Change.parse({ ...base, automation: two })).toThrow();
+  expect(() => Change.parse({ ...base, automation: two })).toThrow(/archive/);
 });
 
 it('refuses an automation with an unknown field', () => {
@@ -41,5 +41,5 @@ it('refuses an automation with an unknown field', () => {
       ...base,
       automation: { ...automation, review: { on: true, available: true } },
     }),
-  ).toThrow();
+  ).toThrow(/review/);
 });

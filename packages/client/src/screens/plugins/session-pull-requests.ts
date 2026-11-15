@@ -95,17 +95,33 @@ const automationOf = ({
 }: Change): Pick<SessionPullRequest, 'automation'> =>
   automation ? { automation } : {};
 
-const pullRequestOf = (change: PullRequestChange): SessionPullRequest => ({
-  ...stateOf(change),
-  ...branchesOf(change),
-  ...headOf(change),
+// The line totals the Plugin counted, when it counted any.
+const summaryOf = ({
+  totals,
+}: PullRequestChange): Pick<SessionPullRequest, 'summary'> =>
+  totals ? { summary: totals } : {};
+
+// Which PR this is, and what it says of itself.
+const identityOf = (
+  change: PullRequestChange,
+): Pick<
+  SessionPullRequest,
+  'id' | 'repository' | 'url' | 'number' | 'title' | 'mergeable'
+> => ({
   id: change.id,
   repository: change.repository,
   url: change.pullRequest.url,
   number: change.pullRequest.number,
   title: change.title,
   mergeable: !change.conflict,
-  ...(change.totals && { summary: change.totals }),
+});
+
+const pullRequestOf = (change: PullRequestChange): SessionPullRequest => ({
+  ...stateOf(change),
+  ...branchesOf(change),
+  ...headOf(change),
+  ...identityOf(change),
+  ...summaryOf(change),
   ...checksOf(change),
   ...staleOf(change),
   ...onCheckoutOf(change),

@@ -77,12 +77,11 @@ function acceptQueueCommand(
   disconnected: ConnectedChange['disconnected'],
 ): TurnStep {
   requireQueueConnection(event);
-  const command = event.command;
-  const createId = context.input.createId;
+
   const change = changePromptQueue(
     context,
-    { ...command, sender: event.sender },
-    createId,
+    { ...event.command, sender: event.sender },
+    context.input.createId,
   );
 
   event.committed.promise.catch(() => {});

@@ -23,48 +23,59 @@ const copyLabel = 'Copy link';
 
 const detachLabel = 'Detach from Session';
 
-// The automations in the order the design draws them, with the words core gives each.
-const automations = [
-  { kind: 'fix', label: 'Auto-fix' },
-  { kind: 'merge', label: 'Auto-merge' },
-  { kind: 'archive', label: 'Auto-archive', subtitle: 'On merge or close' },
-] as const satisfies readonly {
+type Automation = NonNullable<MenuProps['change']['automation']>;
+
+type AutomationEntry = {
   kind: ChangeAutomationKind;
   label: string;
   subtitle?: string;
-}[];
+};
+
+// The automations in the order the design draws them, with the words core gives each.
+const automations: readonly AutomationEntry[] = [
+  { kind: 'fix', label: 'Auto-fix' },
+  { kind: 'merge', label: 'Auto-merge' },
+  { kind: 'archive', label: 'Auto-archive', subtitle: 'On merge or close' },
+];
+
+// One the Plugin offers works, or says why it does not; any other is left out.
+const isOffered = ({
+  available,
+  reason,
+}: Automation[ChangeAutomationKind]): boolean => available || Boolean(reason);
+
+function automationItem(
+  { kind, label, subtitle: fixed }: AutomationEntry,
+  { on, available, reason }: Automation[ChangeAutomationKind],
+  onSetAutomation: NonNullable<MenuProps['onSetAutomation']>,
+): ContextMenuItem {
+  const subtitle = reason ?? fixed;
+
+  return {
+    id: `automation-${kind}`,
+    label,
+    selected: on,
+    disabled: !available,
+    ...(subtitle && { subtitle }),
+    onPress: () => onSetAutomation(kind, !on),
+  };
+}
 
 /*
  * The automation items: a checkmark item for each the Plugin offers that works, or that says why it does not. One it
  * offers neither way is left out, as is the whole group when the Change carries none or nothing can set them.
  */
 function automationItems({
-  change,
+  change: { automation },
   onSetAutomation,
 }: MenuProps): ContextMenuItem[] {
-  const { automation } = change;
-
   if (!automation || !onSetAutomation) return [];
 
-  return automations.flatMap(({ kind, label, ...fixed }) => {
-    const { on, available, reason } = automation[kind];
-
-    if (!available && !reason) return [];
-
-    const subtitle =
-      reason ?? ('subtitle' in fixed ? fixed.subtitle : undefined);
-
-    return [
-      {
-        id: `automation-${kind}`,
-        label,
-        selected: on,
-        disabled: !available,
-        ...(subtitle && { subtitle }),
-        onPress: () => onSetAutomation(kind, !on),
-      },
-    ];
-  });
+  return automations.flatMap((entry) =>
+    isOffered(automation[entry.kind])
+      ? [automationItem(entry, automation[entry.kind], onSetAutomation)]
+      : [],
+  );
 }
 
 // The groups of the row's menu: Open on GitHub and Copy link, the automations, then Detach from Session. An item with no handler is left out.
@@ -79,20 +90,37 @@ function groupsOf(props: MenuProps): ContextMenuItem[][] {
   ].filter((group) => group.length > 0);
 }
 
+const labelsOf = ({
+  id,
+  subtitle,
+}: ContextMenuItem): Pick<MenuAction, 'id' | 'subtitle'> => ({
+  ...(id && { id }),
+  ...(subtitle && { subtitle }),
+});
+
+const flagsOf = ({
+  selected,
+  disabled,
+}: ContextMenuItem): Pick<MenuAction, 'selected' | 'disabled'> => ({
+  ...(selected !== undefined && { selected }),
+  ...(disabled && { disabled }),
+});
+
+const actionOf = (
+  item: ContextMenuItem,
+  startsSection: boolean,
+): MenuAction => ({
+  label: item.label,
+  onPress: item.onPress,
+  ...labelsOf(item),
+  ...flagsOf(item),
+  ...(startsSection && { section: {} }),
+});
+
 // The Menu's entries are the same groups as one list, each later group starting a section.
 const actionsOf = (groups: ContextMenuItem[][]): MenuAction[] =>
   groups.flatMap((group, index) =>
-    group.map(
-      ({ label, onPress, id, selected, disabled, subtitle }, place) => ({
-        label,
-        onPress,
-        ...(id && { id }),
-        ...(selected !== undefined && { selected }),
-        ...(disabled && { disabled }),
-        ...(subtitle && { subtitle }),
-        ...(index > 0 && place === 0 && { section: {} }),
-      }),
-    ),
+    group.map((item, place) => actionOf(item, index > 0 && place === 0)),
   );
 
 // The row's …, which sits above its press layer.
