@@ -7,12 +7,12 @@ import { z } from 'zod';
 import { oneLine } from '../runtime/render-fallback';
 import { form, formPost } from './form-body';
 import { secretOf, type KeptToken } from './kept-token';
-import { keptIn, parsed } from './oauth-token';
+import { keptIn, parsed, type Client } from './oauth-token';
 
-// What Argo's redirect answered when it started listening, with the client ID the sign-in read.
+// What Argo's redirect answered when it started listening, with the client the sign-in read.
 export type Waiting = NonNullable<
   Awaited<ReturnType<OAuthFlowArgo['oauth']['start']>>
-> & { clientId: string };
+> & { client: Client };
 
 // A waiting sign-in once the browser answered with its code.
 export type Grant = Waiting & { code: string; verifier: string };
@@ -33,7 +33,7 @@ export function authorizeLocation(
 
   return `${options.authorizeUrl}?${form({
     response_type: 'code',
-    client_id: start.clientId,
+    client_id: start.client.client_id,
     redirect_uri: start.redirectUri,
     state: start.state,
     code_challenge: start.codeChallenge,
@@ -69,7 +69,7 @@ type Exchanged =
   | { token: KeptToken; problem?: never }
   | { token?: never; problem: string };
 
-// The Plugin exchanges the code itself, as a public client with its PKCE verifier (RFC 6749, RFC 7636).
+// The Plugin exchanges the code itself, with its PKCE verifier (RFC 6749, RFC 7636).
 async function exchange(
   argo: OAuthFlowArgo,
   options: OAuthFlowOptions,
@@ -78,26 +78,32 @@ async function exchange(
   const response = await argo.fetch(options.tokenUrl, tokenRequest(grant));
 
   return response
-    ? answered(response, options.tokenPath)
+    ? answered(response, options.tokenPath, grant.client)
     : { problem: 'The service did not answer.' };
 }
 
 async function answered(
   response: NonNullable<Awaited<ReturnType<OAuthFlowArgo['fetch']>>>,
   path: OAuthFlowOptions['tokenPath'],
+  client: Client,
 ): Promise<Exchanged> {
   const text = await response.text();
   const token = response.ok ? keptIn(text, path) : null;
 
   return token === null
-    ? { problem: refusal(response.status, text) }
+    ? { problem: withoutSecret(refusal(response.status, text), client) }
     : { token };
 }
 
+// The person reads a refusal and the log may keep it, so a service that repeats the client secret back is not repeated.
+const withoutSecret = (message: string, { client_secret }: Client): string =>
+  client_secret ? message.replaceAll(client_secret, '[secret]') : message;
+
+// A public client proves itself with its PKCE verifier alone (RFC 7636); a confidential one sends its secret too.
 const tokenRequest = (grant: Grant): TokenRequest =>
   formPost({
     grant_type: 'authorization_code',
-    client_id: grant.clientId,
+    ...grant.client,
     code: grant.code,
     code_verifier: grant.verifier,
     redirect_uri: grant.redirectUri,

@@ -101,7 +101,7 @@ it('keeps the old refresh token when the refresh answer gives none', async () =>
   expect(keptSecret(provider)).toMatchObject({ refresh: 'refresh-1' });
 });
 
-it('lends the old token when the service refuses the refresh, so the read finds the person signed out', async () => {
+it('lends nothing when the service refuses the refresh token, so the read finds the person signed out', async () => {
   const provider = await signedIn(
     fakeProvider(
       answered(expiring('token-1', 'refresh-1')),
@@ -111,5 +111,37 @@ it('lends the old token when the service refuses the refresh, so the read finds 
 
   afterOneHour();
 
+  expect(await provider.borrow('account-1')).toBeNull();
+});
+
+it('lends the old token when the refresh fails for another reason, so a passing outage signs no one out', async () => {
+  const provider = await signedIn(
+    fakeProvider(
+      answered(expiring('token-1', 'refresh-1')),
+      { ...tokenReply(false, 'Service Unavailable'), status: 503 },
+    ),
+  );
+
+  afterOneHour();
+
   expect(await provider.borrow('account-1')).toBe('token-1');
+});
+
+it('sends the client secret the Plugin keeps in a secret Setting with each refresh', async () => {
+  const provider = await signedIn(rotating(), {
+    ...linear,
+    clientSecret: () => Promise.resolve('secret-from-settings'),
+  });
+
+  afterOneHour();
+  await provider.borrow('account-1');
+
+  expect(refreshBodies(provider)).toEqual([
+    {
+      grant_type: 'refresh_token',
+      client_id: 'client-1',
+      client_secret: 'secret-from-settings',
+      refresh_token: 'refresh-1',
+    },
+  ]);
 });

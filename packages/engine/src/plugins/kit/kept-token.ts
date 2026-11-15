@@ -15,8 +15,13 @@ export const KeptToken = z.object({
 
 export type KeptToken = z.infer<typeof KeptToken>;
 
-// A service's refresh: the new token, or nothing when it refused.
-export type Refresh = (refresh: string) => Promise<KeptToken | null>;
+/*
+ * What a service's refresh gave: the new token; `refused` when the refresh token expired or was revoked, so only
+ * signing in again helps; or nothing, when it could not say.
+ */
+export type Refreshed = KeptToken | 'refused' | null;
+
+export type Refresh = (refresh: string) => Promise<Refreshed>;
 
 const msPerSecond = 1000;
 
@@ -73,19 +78,25 @@ const keepingRefresh = (fresh: KeptToken, spent: string): KeptToken => ({
 });
 
 /*
- * A refused, unanswered or failed refresh lends the old token; the service's 401 then draws the sign-in. A service
- * that keeps its refresh token answers without one, so the old one is kept.
+ * A refused refresh lends nothing, so the borrow finds the person signed out and the sign-in page draws. An unanswered
+ * or failed one lends the old token; the service's 401 then does the same. A service that keeps its refresh token
+ * answers without one, so the old one is kept.
+ *
+ * The new pair is kept before its access token is lent: a rotated refresh token works once, so a Server that stopped
+ * between the two would otherwise wake holding only the spent one.
  */
 async function renewed(
   { secrets, refresh }: Lending,
   id: string,
   kept: KeptToken,
-): Promise<string> {
+): Promise<string | null> {
   const spent = dueRefresh(kept);
 
   if (spent === null) return kept.access;
 
   const fresh = await refresh(spent).catch(() => null);
+
+  if (fresh === 'refused') return null;
 
   if (!fresh) return kept.access;
   await secrets.set(id, secretOf(keepingRefresh(fresh, spent)));

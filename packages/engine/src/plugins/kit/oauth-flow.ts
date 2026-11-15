@@ -11,7 +11,7 @@ import {
   signedIn,
   type Waiting,
 } from './oauth-exchange';
-import { clientIdOf, oauthRefresh } from './oauth-token';
+import { clientOf, oauthRefresh } from './oauth-token';
 
 // The one sign-in a flow holds, and the attempt whose answers still count.
 type Held = { state: OAuthFlowState; attempt: symbol | null };
@@ -84,10 +84,10 @@ async function start(held: Held, given: Given): Promise<OAuthFlowState> {
 
 // Once Argo listens, the flow waits for the browser on its own, past the call that started it.
 async function opened(attempt: Attempt): Promise<void> {
-  const clientId = await clientIdOf(attempt.options);
+  const client = await clientOf(attempt.options);
 
-  if (!clientId) {
-    attempt.settle(failed('This Plugin has no OAuth client ID yet.'));
+  if (typeof client === 'string') {
+    attempt.settle(failed(client));
 
     return;
   }
@@ -95,7 +95,7 @@ async function opened(attempt: Attempt): Promise<void> {
   const started = await attempt.argo.oauth.start();
 
   if (started)
-    void finished(attempt, { ...started, clientId }).then(
+    void finished(attempt, { ...started, client }).then(
       attempt.settle,
       (error: Error) => attempt.settle(refused(error)),
     );

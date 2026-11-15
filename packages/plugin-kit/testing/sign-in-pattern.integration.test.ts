@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { serialiseOnOAuthPort } from '../../engine/mocks/oauth-port-lock';
 import {
+  approving,
   clockUntil,
   itemsText,
   serviceFixture,
@@ -16,19 +17,6 @@ const challengeOf = (verifier: string): string =>
 
 const param = (url: URL, name: string): string =>
   url.searchParams.get(name) ?? '';
-
-// Plays the browser: the person approves at once, so the service sends them back to Argo with a code.
-const approving =
-  (opened: URL[]) =>
-  async (url: string): Promise<void> => {
-    const authorize = new URL(url);
-    const back = new URL(param(authorize, 'redirect_uri'));
-
-    opened.push(authorize);
-    back.searchParams.set('state', param(authorize, 'state'));
-    back.searchParams.set('code', 'fixture-code');
-    await fetch(back);
-  };
 
 it('signs a throwaway Plugin in with the device flow, from a paired Device, and reads as the person', async () => {
   const service = await serviceFixture();
