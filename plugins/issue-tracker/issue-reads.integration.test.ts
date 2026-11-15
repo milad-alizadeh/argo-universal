@@ -1,4 +1,8 @@
-import type { OpenPage, PluginTest } from '@argo/plugin-kit/testing';
+import {
+  clockUntilShown,
+  type OpenPage,
+  type PluginTest,
+} from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
 import type { GitHubFixture } from './github-fixture';
 import {
@@ -32,10 +36,7 @@ async function untilShown(
   page: OpenPage,
   text: string,
 ): Promise<void> {
-  for (let step = 0; step < 6 && !page.findText(text); step += 1) {
-    await test.clock.advance(1000);
-    await page.draw();
-  }
+  await clockUntilShown(test, page, { text, stepMs: 1000, steps: 6 });
 
   expect(page.findText(text)).toBeDefined();
 }
