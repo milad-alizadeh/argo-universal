@@ -3,7 +3,7 @@ import { ListDragHandle } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { attachmentLabels, promptText } from './queue-content';
+import { attachmentSummary, promptText } from './queue-content';
 import { EditControls } from './queue-controls';
 import type { QueueRowProps } from './queue-types';
 import { useQueueRow, type QueueRow as Row } from './use-queue-row';
@@ -47,5 +47,5 @@ function heldSubtitle(row: Row): string | undefined {
   if ([row.editing, row.holds.includes(row.row.id)].some(Boolean))
     return 'Editing…';
 
-  return attachmentLabels(row.row.prompt) || undefined;
+  return attachmentSummary(row.row.prompt) || undefined;
 }
