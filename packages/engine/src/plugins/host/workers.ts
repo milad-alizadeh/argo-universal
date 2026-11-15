@@ -12,7 +12,7 @@ import {
 } from '../protocol/runtime.ts';
 import type { TestReply } from '../protocol/test-control.ts';
 import { startWorker, type WorkerRecord } from './start-worker.ts';
-import { workerDeadline } from './worker-deadline.ts';
+import { workerDeadline, type WorkerPhase } from './worker-deadline.ts';
 
 const heartbeatIntervalMs = 1000;
 
@@ -147,15 +147,19 @@ export class HostWorkers {
     this.beat(pluginId, record);
   }
 
-  private arm(pluginId: string, record: WorkerRecord): void {
+  private arm(
+    pluginId: string,
+    record: WorkerRecord,
+    phase: Exclude<WorkerPhase, 'initializing'> = 'answering',
+  ): void {
     clearTimeout(record.deadline);
-    record.deadline = workerDeadline('answering', (error, hanging) =>
+    record.deadline = workerDeadline(phase, (error, hanging) =>
       this.crash(pluginId, error, hanging),
     );
   }
 
   private ping(pluginId: string, record: WorkerRecord): void {
-    this.arm(pluginId, record);
+    this.arm(pluginId, record, 'heartbeat');
     record.worker.postMessage('ping');
   }
 
