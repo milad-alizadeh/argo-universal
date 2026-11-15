@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
+import { z } from 'zod';
 import { expect } from '../fixtures';
-import { replies, releaseAgent } from './agent-requests';
+import { type LoggedReply, replies, releaseAgent } from './agent-requests';
 import { expectListedAgent } from './agents';
 import { Given, When, Then } from './fixtures';
 import { onPhone } from './frame';
@@ -86,12 +87,24 @@ When(
   },
 );
 
+const Cancelled = z.object({
+  outcome: z.object({ outcome: z.literal('cancelled') }),
+});
+
+const isCancelled = ({ result }: LoggedReply): boolean =>
+  Cancelled.safeParse(result).success;
+
 // The App replies with one of the Agent's own options, never free text (Spec 0009).
 Then(
   'the Agent receives the selected option {string}',
   async ({ app }, optionId: string): Promise<void> => {
+    // The Follow-up suggestion's background session cancels its own Permission requests, so those replies are not the App's answer.
     await expect
-      .poll(() => replies(app.requestLogPath).map(({ result }) => result))
+      .poll(() =>
+        replies(app.requestLogPath)
+          .filter((reply) => !isCancelled(reply))
+          .map(({ result }) => result),
+      )
       .toEqual([{ outcome: { outcome: 'selected', optionId } }]);
   },
 );
