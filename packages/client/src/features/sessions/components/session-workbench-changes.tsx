@@ -15,16 +15,14 @@ interface Props {
 const keyOf = (change: SessionPullRequest): string =>
   change.id ?? String(change.number);
 
-// "Show more" and "Show less" take the Feed's "Show more" look: plain muted text, pressed as a button.
+// "Show more" and "Show less" read in the card's row title type, pressed as a button.
 function Toggle(props: {
   expanded: boolean;
   onPress: () => void;
 }): ReactElement {
   return (
     <Pressable role="button" onPress={props.onPress} className="px-1 py-2">
-      <Text role="body" tone="muted">
-        {props.expanded ? 'Show less' : 'Show more'}
-      </Text>
+      <Text role="body">{props.expanded ? 'Show less' : 'Show more'}</Text>
     </Pressable>
   );
 }

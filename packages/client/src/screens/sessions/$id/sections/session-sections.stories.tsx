@@ -9,6 +9,7 @@ import {
 } from '#features/sessions';
 import { severalPullRequests } from '../../../../features/sessions/components/session-pull-request.mocks';
 import {
+  endedShells,
   sessionShells,
   shellNow,
 } from '../../../../features/sessions/components/shell-list/shell-list.mocks';
@@ -110,5 +111,16 @@ export const LeadingMarks: Story = {
       subagents: { subagents: subagentStates.allFinished, now: subagentNow },
     },
     bar: { shown: summaryLines, hidden: [], onOpen: fn() },
+  },
+};
+
+// Cards with nothing live: each "N done" line is a row of its card, at a row's avatar size, type and height.
+export const OnlyDone: Story = {
+  args: {
+    content: {
+      header: { ...everySection.header, pullRequests: [] },
+      subagents: { subagents: subagentStates.allFinished, now: subagentNow },
+      shells: { shells: endedShells, now: shellNow, onStop: fn() },
+    },
   },
 };
