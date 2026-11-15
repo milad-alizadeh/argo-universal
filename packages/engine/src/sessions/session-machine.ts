@@ -40,10 +40,6 @@ import {
 } from './acp-operations';
 import type { AcpLifetimeEvent, AcpSessionLifetime } from './acp/acp-lifetime';
 import {
-  parseFollowUpSuggestion,
-  supportsFollowUpSuggestions,
-} from './acp/prompts/follow-up-suggestions';
-import {
   deniedOutcome,
   endsStaleProcess,
   promptFailureOutcome,
@@ -531,20 +527,6 @@ const sessionSetup = setup({
         };
       },
     ),
-    rememberFollowUpSuggestion: assign(({ context, event }) => {
-      assertEvent(event, acpUpdateEvent);
-
-      if (!supportsFollowUpSuggestions(context.acpLease?.initialization))
-        return {};
-
-      return {
-        followUpSuggestion: parseFollowUpSuggestion(
-          context.followUpSuggestion,
-          event.notification.update,
-          context.acpSuggestionRejections,
-        ),
-      };
-    }),
     applyAcpTitle: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, acpUpdateEvent);
       const title = titleFrom(event.notification.update);
@@ -583,8 +565,10 @@ const sessionSetup = setup({
     rememberSubmission: assign(
       ({
         event,
+        context,
       }): Pick<SessionContext, 'pendingSubmission' | 'followUpSuggestion'> => {
         assertEvent(event, 'session.prompt');
+        context.acpLifetime.followUpSuggestions().begin(event);
 
         return { pendingSubmission: event, followUpSuggestion: null };
       },
@@ -594,7 +578,11 @@ const sessionSetup = setup({
         { context },
         prompt: PromptRequest,
       ): Pick<SessionContext, 'acpPrompt' | 'pendingSubmission'> => {
-        context.pendingSubmission?.committed?.resolve();
+        if (context.pendingSubmission)
+          context.acpLifetime
+            .followUpSuggestions()
+            .begin(context.pendingSubmission);
+        resolveSubmissionCommit(context.pendingSubmission);
 
         return {
           acpPrompt: prompt,
@@ -707,8 +695,12 @@ const sessionSetup = setup({
       },
     ),
     endTurn: enqueueActions(
-      ({ context, enqueue }, ended: EndTurnParameters): void =>
-        enqueueTurnStep(enqueue, context, endQueuedTurn(context, ended)),
+      ({ context, enqueue, self }, ended: EndTurnParameters): void => {
+        enqueueTurnStep(enqueue, context, endQueuedTurn(context, ended));
+        context.acpLifetime
+          .followUpSuggestions()
+          .finish(context, ended, (event) => self.send(event));
+      },
     ),
     queuePermission: assign(
       ({ context, event }): Pick<SessionContext, 'permissionQueue'> => {
@@ -1075,6 +1067,14 @@ export const sessionMachine = sessionSetup.createMachine({
   context: ({ input, self }): SessionContext =>
     initialSessionContext(input, (event) => self.send(event)),
   on: {
+    'acp.suggestion': {
+      actions: assign(({ context, event }) => {
+        if (context.followUpSuggestion?.turnId !== event.suggestion.turnId)
+          return {};
+
+        return { followUpSuggestion: event.suggestion };
+      }),
+    },
     [creationSettledEvent]: {
       guard: ({ context }) => context.input.kind === 'new',
       actions: 'rememberCreationReceipt',
@@ -1204,7 +1204,7 @@ export const sessionMachine = sessionSetup.createMachine({
               },
               {
                 guard: 'isTitleUpdate',
-                actions: ['applyAcpTitle', 'rememberFollowUpSuggestion'],
+                actions: 'applyAcpTitle',
               },
               { actions: 'forwardAcpUpdate' },
             ],
@@ -1625,10 +1625,7 @@ export const sessionMachine = sessionSetup.createMachine({
                       { guard: 'isCommandsUpdate', actions: 'reportAcpConfig' },
                       {
                         guard: 'isTitleUpdate',
-                        actions: [
-                          'applyAcpTitle',
-                          'rememberFollowUpSuggestion',
-                        ],
+                        actions: 'applyAcpTitle',
                       },
                       {},
                     ],
@@ -1851,12 +1848,11 @@ export const sessionMachine = sessionSetup.createMachine({
 export type SessionActorRef = ActorRefFrom<typeof sessionMachine>;
 
 function wantsFollowUpSuggestions(context: SessionContext): boolean {
-  return (
-    context.pendingSubmission?.followUpSuggestions === true &&
-    negotiatedSuggestions(context)
-  );
+  return context.pendingSubmission?.followUpSuggestions === true;
 }
 
-function negotiatedSuggestions(context: SessionContext): boolean {
-  return supportsFollowUpSuggestions(context.acpLease?.initialization);
+function resolveSubmissionCommit(
+  submission: SessionContext['pendingSubmission'],
+): void {
+  submission?.committed?.resolve();
 }
