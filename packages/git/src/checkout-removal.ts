@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
-import { realpath } from 'node:fs/promises';
+import { realpath, rm } from 'node:fs/promises';
+import { join } from 'node:path';
 import { git } from './git';
 import { listBranches, readMainCheckout, type Checkout } from './repository';
 
@@ -48,16 +49,41 @@ async function deleteBranch(
     await git(projectPath, ['branch', '-D', branch], signal);
 }
 
+const listWorktrees = (
+  projectPath: string,
+  signal?: AbortSignal,
+): Promise<string> =>
+  git(projectPath, ['worktree', 'list', '--porcelain', '-z'], signal);
+
 async function isMainCheckout(
   projectPath: string,
   checkout: Checkout,
   signal?: AbortSignal,
 ): Promise<boolean> {
-  const main = readMainCheckout(
-    await git(projectPath, ['worktree', 'list', '--porcelain', '-z'], signal),
-  );
+  const main = readMainCheckout(await listWorktrees(projectPath, signal));
 
   return (await realpath(main.path)) === (await realpath(checkout.path));
+}
+
+const isListed = (worktrees: string, path: string): boolean =>
+  worktrees.split('\0').includes(`worktree ${path}`);
+
+// An interrupted `git worktree remove` can leave files with no `.git` that Git no longer lists.
+const isRemovalLeftover = (worktrees: string, path: string): boolean =>
+  !isListed(worktrees, path) && !existsSync(join(path, '.git'));
+
+async function removeLinkedCheckout(
+  projectPath: string,
+  path: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  if (isRemovalLeftover(await listWorktrees(projectPath, signal), path)) {
+    await rm(path, { recursive: true, force: true });
+
+    return;
+  }
+
+  await git(projectPath, ['worktree', 'remove', '--force', path], signal);
 }
 
 // Archive keeps the branch, and Git's actual main Checkout is always protected.
@@ -69,9 +95,6 @@ export async function removeCheckout(
   if (!existsSync(checkout.path)) return;
 
   if (await isMainCheckout(projectPath, checkout, signal)) return;
-  await git(
-    projectPath,
-    ['worktree', 'remove', '--force', checkout.path],
-    signal,
-  );
+
+  await removeLinkedCheckout(projectPath, checkout.path, signal);
 }
