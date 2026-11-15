@@ -1,5 +1,6 @@
 import { readLink, type ChangesSource, type LinkRead } from './pull-changes';
 import type { CheckInfo } from './pull-checks';
+import { keptShown } from './pull-kept';
 import type { PullKey } from './pull-store';
 
 // What one Slot answers for the pull requests it names: what is known now, with GitHub asked behind it.
@@ -8,7 +9,7 @@ type Shown = <Link extends PullKey>(
 ) => Promise<LinkRead<Link>[]>;
 
 export type Pulls = {
-  // The Sessions' pull requests as they were last read: the stored record, never a wait on GitHub.
+  // The Sessions' pull requests as they were last read: the stored record with what the automations keep, never a wait on GitHub.
   known: (sessionIds: readonly string[]) => Promise<LinkRead[]>;
   // Asks GitHub for the Sessions' pull requests and keeps what it answers; the one place a read is stored.
   sync: (sessionIds: readonly string[]) => Promise<void>;
@@ -104,8 +105,7 @@ export function createPulls(source: ChangesSource, say: () => void): Pulls {
   const { store, records } = source;
 
   return {
-    known: async (sessionIds) =>
-      records.of(await store.forSessions(sessionIds)),
+    known: (sessionIds) => keptShown(store, sessionIds, records.of),
     changed: () => sayChanged(state),
     sync: async (sessionIds) =>
       syncLinks(state, await store.forSessions(sessionIds)),

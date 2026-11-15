@@ -31,12 +31,13 @@ export type DrawAt = Omit<
 export type Loaded = { ok: true } | Failure;
 
 // Where a background pass runs a Loader alone: its Page path and the Project it reads for.
-export type LoadAt = { path: string; projectId: string };
+export type LoadAt = { path: string; projectId: string; watch?: true };
 
 // A background pass's draw: the Loader alone, for its Project's first page, as no Connection asks.
-export const passAt = ({ path, projectId }: LoadAt): DrawAt => ({
+export const passAt = ({ path, projectId, watch }: LoadAt): DrawAt => ({
   path,
   projectId,
+  ...(watch && { watch }),
   pageState: {},
   pages: 1,
   serverDevice: false,

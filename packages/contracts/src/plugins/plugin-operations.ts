@@ -120,6 +120,8 @@ export const PluginOperationContribution = z.strictObject({
     )
     .optional(),
   keywords: z.array(z.string().trim().min(1)).optional(),
+  // A Session's run asks the user first, as a `confirm` tier Operation does; a person's own run applies at once.
+  confirmAgent: z.boolean().optional(),
 });
 
 export type PluginOperationContribution = z.infer<

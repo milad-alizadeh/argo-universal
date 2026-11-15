@@ -24,7 +24,7 @@ export function selectQueuedPrompt(
     pendingSubmission: {
       turnId: context.input.createId(),
       content: row.prompt,
-      sender: { type: 'user' },
+      sender: row.sender ?? { type: 'user' },
       followUpSuggestions: row.followUpSuggestions,
     },
   };

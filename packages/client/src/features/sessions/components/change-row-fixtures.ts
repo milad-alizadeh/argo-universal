@@ -53,3 +53,15 @@ export const checksOverflowChangeRow = {
     },
   },
 } satisfies ChangeRowFixture;
+
+const hiddenText = (row: Element): string[] =>
+  [...row.querySelectorAll('[aria-hidden="true"]')].map(
+    (node) => node.textContent,
+  );
+
+// A menu row's words as a screen reader hears them: its icon is hidden from one.
+export const spokenText = (row: Element): string =>
+  hiddenText(row).reduce(
+    (text, glyph) => text.replace(glyph, ''),
+    row.textContent,
+  );

@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
-import { headFrom, pullOf, type FixturePull } from './github-fixture';
+import { headFrom, pullOf } from './github-fixture';
+import type { FixturePull } from './github-fixture-types';
 import {
   attach,
   changesOf,
@@ -74,7 +75,10 @@ it(
     expect(
       run.github.requests
         .filter(({ host }) => host === 'api.github.com')
-        .every(({ method }) => method === 'GET'),
+        // GitHub's GraphQL answers its reads over POST; only a mutation would be a write.
+        .every(
+          ({ method, body }) => method === 'GET' || !body.includes('mutation'),
+        ),
     ).toBe(true);
     expect(run.github.listReads()[0]?.path).toContain('state=all');
   },

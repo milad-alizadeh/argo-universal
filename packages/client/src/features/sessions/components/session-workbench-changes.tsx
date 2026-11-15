@@ -36,8 +36,18 @@ const rowsOf = (
       key={keyOf(change)}
       change={change}
       onOpen={() => onOpenChange(change)}
+      onCopyLink={change.onCopyLink}
+      onDetach={change.onDetach}
+      onSetAutomation={change.onSetAutomation}
     />
   ));
+
+// Every Change as a row, with no limit: a phone's Changes sheet lists them all.
+export function ChangeRows(props: Props): ReactElement {
+  return (
+    <View className="px-3">{rowsOf(props.changes, props.onOpenChange)}</View>
+  );
+}
 
 // Up to three Changes, then Show more for all of them and Show less to go back.
 export function WorkbenchChangeRows(props: Props): ReactElement {

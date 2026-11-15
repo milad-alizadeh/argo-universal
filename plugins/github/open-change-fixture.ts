@@ -18,4 +18,9 @@ export const openChange = {
   onCheckout: true,
   totals: { files: 3, additions: 10, deletions: 2 },
   checks: [],
+  automation: {
+    fix: { on: false, available: true },
+    merge: { on: false, available: true },
+    archive: { on: false, available: true },
+  },
 };

@@ -6,6 +6,7 @@ import { PluginOperationService } from './operations';
 import { LoaderPages } from './pages';
 import type { PluginsRouterDeps } from './router';
 import type { PluginRuntime } from './runtime/plugin-runtime';
+import { SessionActs } from './session-acts';
 import { startBackgroundPlugins } from './start-background';
 import { discoverPullRequests } from './turn-end-discovery';
 
@@ -17,11 +18,12 @@ export class Plugins {
   private readonly unwatchTurns: () => void;
   private readonly unwatchTurnEnds: () => void;
   private readonly home: string;
+  private readonly sessionActs = new SessionActs();
   private backgroundStarted?: Promise<void>;
 
   constructor(options: PluginsOptions) {
     this.home = options.home;
-    this.parts = assemble(options);
+    this.parts = assemble({ ...options, sessionActs: this.sessionActs });
     this.hooks = this.parts.hookPort.hooks;
     this.router = this.routerDeps();
     this.attachHooks();
@@ -73,6 +75,7 @@ export class Plugins {
       listChanges,
       operations,
       pages: new LoaderPages(service, runtime, operations),
+      sessionActs: this.sessionActs,
     };
   }
 

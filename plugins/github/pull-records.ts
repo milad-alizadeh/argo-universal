@@ -1,13 +1,14 @@
 import type { Argo, StorageResult } from '@argo/plugin-kit';
 import type { LinkRead } from './pull-changes';
+import { openOf, type OpenKept } from './pull-record-open';
 import type { PullKey } from './pull-store';
 
 type Storage = Pick<Argo, 'storage'>;
 
 type Statement = Parameters<Argo['storage']['execute']>[0];
 
-// What is kept of one pull request: the last good read of it and of its Checks, and why the latest read failed.
-type Kept = Pick<Read, 'pull' | 'checks'>;
+// What is kept of one pull request: the last good read of it, of its Checks and of its auto-merge, and why the latest read failed.
+type Kept = Pick<Read, 'pull' | 'checks'> & OpenKept;
 
 type Read = LinkRead<PullKey>;
 
@@ -90,7 +91,11 @@ function checksOf(kept: Kept | undefined, read: Read): Kept['checks'] {
 function merged(kept: Kept | undefined, read: Read): Kept {
   const checks = checksOf(kept, read);
 
-  return { pull: pullOf(kept, read), ...(checks && { checks }) };
+  return {
+    pull: pullOf(kept, read),
+    ...(checks && { checks }),
+    ...openOf(kept, read),
+  };
 }
 
 const parsed = (text: string | undefined): Kept | undefined => {

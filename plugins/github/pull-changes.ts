@@ -1,8 +1,20 @@
 import type { Argo } from '@argo/plugin-kit';
+import { archiveOf } from './pull-archive';
+import {
+  mergeOf,
+  offerOf,
+  type AutoMergeInfo,
+  type MergeSettings,
+  type Reads,
+} from './pull-automation';
+import type { AutomationReads } from './pull-automation-reads';
 import { changeOf, type ChangeItem, type Refresh } from './pull-change';
 import type { CheckInfo } from './pull-checks';
+import { fixOf } from './pull-fix';
 import type { PullInfo } from './pull-info';
+import type { Attached } from './pull-kept';
 import { failureMessage, known, type Known } from './pull-known';
+import { readOpenOnly } from './pull-open-reads';
 import type { PullReads } from './pull-reads';
 import type { PullRecords } from './pull-records';
 import type { PullKey, PullLink, PullStore } from './pull-store';
@@ -10,7 +22,7 @@ import type { PullKey, PullLink, PullStore } from './pull-store';
 export type ChangesSource = {
   store: PullStore;
   records: PullRecords;
-  reads: PullReads;
+  reads: PullReads & AutomationReads;
   readState: Argo['queries']['readState'];
 };
 
@@ -20,7 +32,10 @@ export type LinkRead<Link extends PullKey = PullLink> = {
   pull: Known<PullInfo>;
   // Unknown until the pull request has said which commit is its head.
   checks?: Known<CheckInfo[]>;
-};
+  // Read only for an Open pull request, which is the only one that can auto-merge.
+  autoMerge?: Known<AutoMergeInfo>;
+  settings?: Known<MergeSettings>;
+} & Attached;
 
 // Two Sessions attaching the same pull request ask the same question, so they share one entry.
 const targetOf = ({ projectId, repository, number }: PullKey): PullKey => ({
@@ -55,7 +70,12 @@ export async function readLink<Link extends PullKey>(
 
   if (!pull.data) return { link, pull };
 
-  return { link, pull, checks: await readChecks(source, link, pull.data.head) };
+  const [checks, open] = await Promise.all([
+    readChecks(source, link, pull.data.head),
+    readOpenOnly(source, link, pull.data),
+  ]);
+
+  return { link, pull, checks, ...open };
 }
 
 const failureOfRead = ({ pull, checks }: LinkRead): Known<unknown> =>
@@ -70,10 +90,28 @@ const staleOf = (read: LinkRead): Pick<Refresh, 'stale'> => {
   return failure ? { stale: failure.reason } : {};
 };
 
+const readsOf = ({ autoMerge, settings }: LinkRead): Reads => ({
+  autoMerge: autoMerge?.data,
+  settings: settings?.data,
+});
+
+// What the Change offers to automate; GitHub's own answers, so one it could not give is never drawn as off.
+const automationOf = (read: LinkRead): Pick<Refresh, 'automation'> =>
+  read.pull.data
+    ? {
+        automation: offerOf(
+          mergeOf(read.pull.data, readsOf(read)),
+          fixOf(read.fix, read.pull.data),
+          archiveOf(read.archive),
+        ),
+      }
+    : {};
+
 // Stale when either read failed: the Change is what was last known, with why it could not be refreshed.
 export const refreshOf = (read: LinkRead): Refresh => ({
   ...checksOf(read),
   ...staleOf(read),
+  ...automationOf(read),
 });
 
 type ChangeRead = { sessionId: string; change: ChangeItem };

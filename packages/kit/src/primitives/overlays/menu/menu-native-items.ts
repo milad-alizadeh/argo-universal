@@ -10,6 +10,7 @@ import {
   menuChoiceGroups,
   menuLoadingLabel,
 } from './menu-props';
+import { nothing, pressOf, subtitleOf } from './native-item-fields';
 
 // One row of a system menu, before iOS or Android draws it.
 export interface NativeMenuItem {
@@ -24,6 +25,8 @@ export interface NativeMenuItem {
   divided?: boolean;
   icon?: IconSymbol;
   tone?: 'danger';
+  // A line under the title, such as why the row is disabled.
+  subtitle?: string;
   // A row that opens a nested menu: its own sections, and no `choose` of its own.
   submenu?: NativeMenuSection[];
   // A nested menu's count, shown after its title.
@@ -99,7 +102,9 @@ function sectionItems(
   return [{ ...first, divided: true }, ...rest];
 }
 
-const nothing = (): void => undefined;
+// The system menus have no place for a subtitle, so their one title carries it on a second line.
+export const nativeTitle = ({ title, subtitle }: NativeMenuItem): string =>
+  subtitle ? `${title}\n${subtitle}` : title;
 
 // The system menus draw no progress row, so a loading menu holds one disabled item that says so.
 const loadingItem: NativeMenuItem = {
@@ -131,10 +136,11 @@ function actionItem(action: MenuAction): NativeMenuItem {
     id: action.id ?? action.label,
     title: action.label,
     checked: action.selected,
+    ...subtitleOf(action),
     disabled: Boolean(action.disabled),
     icon: action.icon,
     tone: action.tone,
-    choose: action.disabled ? nothing : action.onPress,
+    choose: pressOf(action),
   };
 }
 
