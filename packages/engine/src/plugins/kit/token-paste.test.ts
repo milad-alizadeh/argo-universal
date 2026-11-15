@@ -1,20 +1,23 @@
 import type { TokenPasteArgo } from '@repo/contracts/plugins/token-paste-api';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { tokenPaste } from './token-paste';
 
 type Gate = PromiseWithResolvers<void>;
 
-// A Plugin's calls that keep what they were given, with a gate before an Account's add or a token's check answers.
-function fakeArgo(addGates: Map<string, Gate>): {
+// What the fake keeps: the labels of the Accounts added, and each Account's kept token.
+type Fake = {
   argo: TokenPasteArgo;
   added: string[];
   secrets: Map<string, string>;
-} {
+};
+
+// A Plugin's calls that keep what they were given, with a gate before an Account's add answers.
+function fakeArgo(addGates: Map<string, Gate>): Fake {
   const added: string[] = [];
   const secrets = new Map<string, string>();
 
   const argo: TokenPasteArgo = {
-    changed: () => undefined,
+    changed: vi.fn<() => void>(),
     accounts: {
       add: async (_host, { label }) => {
         added.push(label);
@@ -22,7 +25,7 @@ function fakeArgo(addGates: Map<string, Gate>): {
 
         return `account-${label}`;
       },
-      provide: async () => undefined,
+      provide: vi.fn<() => Promise<void>>(() => Promise.resolve()),
     },
     secrets: {
       get: async (id) => secrets.get(id) ?? null,
@@ -37,33 +40,39 @@ function fakeArgo(addGates: Map<string, Gate>): {
 
 const header = { header: 'Authorization', prefix: 'Bearer' };
 
-const people: Record<string, string> = {
-  'token-alice': 'alice',
-  'token-bob': 'bob',
-};
+const host = 'api.service.example';
+
+const alice = 'token-alice';
+
+const bob = 'token-bob';
+
+const people = new Map([
+  [alice, 'alice'],
+  [bob, 'bob'],
+]);
 
 it('adds no Account for a paste a newer one overtakes while its token is checked', async () => {
   const { argo, added, secrets } = fakeArgo(new Map());
   const checking = Promise.withResolvers<void>();
 
   const flow = tokenPaste(argo, {
-    host: 'api.service.example',
+    host,
     header,
     label: async (token) => {
-      if (token === 'token-alice') await checking.promise;
+      if (token === alice) await checking.promise;
 
-      return people[token] ?? null;
+      return people.get(token) ?? null;
     },
   });
 
-  const first = flow.start('token-alice');
+  const first = flow.start(alice);
 
-  await flow.start('token-bob');
+  await flow.start(bob);
   checking.resolve();
   await first;
 
   expect(added).toEqual(['bob']);
-  expect([...secrets]).toEqual([['account-bob', 'token-bob']]);
+  expect([...secrets]).toEqual([['account-bob', bob]]);
   expect(flow.state()).toEqual({ kind: 'signed-in', label: 'bob' });
 });
 
@@ -72,18 +81,18 @@ it('keeps no token for a paste a newer one overtakes while its Account is added'
   const { argo, added, secrets } = fakeArgo(new Map([['alice', adding]]));
 
   const flow = tokenPaste(argo, {
-    host: 'api.service.example',
+    host,
     header,
-    label: async (token) => people[token] ?? null,
+    label: async (token) => people.get(token) ?? null,
   });
 
-  const first = flow.start('token-alice');
+  const first = flow.start(alice);
 
   await expect.poll(() => added).toEqual(['alice']);
-  await flow.start('token-bob');
+  await flow.start(bob);
   adding.resolve();
   await first;
 
-  expect([...secrets]).toEqual([['account-bob', 'token-bob']]);
+  expect([...secrets]).toEqual([['account-bob', bob]]);
   expect(flow.state()).toEqual({ kind: 'signed-in', label: 'bob' });
 });

@@ -105,9 +105,15 @@ async function checked(
   if (typeof label !== 'string') return label;
 
   // A newer paste is being checked, so this one adds no Account.
-  if (!live()) return idle;
+  return live() ? kept({ argo, options }, { token, label }, live) : idle;
+}
 
-  // Argo mints the Account id and reuses the row of a person who signs in again; the token is kept under it.
+// Argo mints the Account id and reuses the row of a person who signs in again; the token is kept under it.
+async function kept(
+  { argo, options }: Given,
+  { token, label }: { token: string; label: string },
+  live: () => boolean,
+): Promise<TokenPasteState> {
   const id = await argo.accounts.add(options.host, { label });
 
   /*
