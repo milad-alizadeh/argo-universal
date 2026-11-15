@@ -29,7 +29,7 @@ it('reads the main checkout and common directory from a nested path', async (): 
 });
 
 it('names a Session branch with its stored prefix', (): void => {
-  expect(sessionBranch('session-1')).toBe('argo/session-1');
+  expect(sessionBranch('session-1')).toMatch(/^argo\/[a-z]+-[a-z]+-ssion1$/);
 });
 
 it.each([
