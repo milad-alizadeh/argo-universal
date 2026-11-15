@@ -83,6 +83,44 @@
         "caller": ["project"]
       },
       {
+        "name": "automationSet",
+        "label": "Turn an automation on or off for a pull request",
+        "description": "Turn Auto-merge on or off for one pull request attached to the calling Session. Auto-merge is GitHub's own: it merges when the pull request is ready, with the first method the repository allows (squash, merge, rebase), and shows whatever GitHub reports. An Agent's call asks the person first.",
+        "tier": "act",
+        "keywords": [
+          "github",
+          "pull request",
+          "pr",
+          "auto-merge",
+          "automation",
+          "merge",
+          "session"
+        ],
+        "params": {
+          "reference": {
+            "type": "string",
+            "description": "The pull request: owner/repo#123, its GitHub URL, or just its number for the Project's own repository.",
+            "required": true
+          },
+          "kind": {
+            "type": "string",
+            "description": "Which automation: merge is the only one offered so far.",
+            "required": true,
+            "choices": ["fix", "merge", "archive"]
+          },
+          "on": {
+            "type": "boolean",
+            "description": "True to turn it on, false to turn it off.",
+            "required": true
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          }
+        },
+        "caller": ["project"]
+      },
+      {
         "name": "list",
         "label": "List the Session's pull requests",
         "description": "Read the pull requests attached to the calling Session, with their title, stage, branch and totals as GitHub reports them.",

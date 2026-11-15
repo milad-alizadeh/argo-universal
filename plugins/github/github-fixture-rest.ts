@@ -1,4 +1,5 @@
 import type { FixtureAnswer } from '@argo/plugin-kit/testing';
+import { settingsOf } from './github-fixture-automation';
 import type {
   FixtureCheck,
   FixturePull,
@@ -14,6 +15,8 @@ export type Held = Pick<
   | 'failWith'
   | 'checks'
   | 'checksFailWith'
+  | 'repositories'
+  | 'graphqlFailWith'
 >;
 
 const notFound = 404;
@@ -119,6 +122,7 @@ function repoAnswer(held: Held, repository: string): FixtureAnswer {
 
   return {
     json: {
+      ...settingsOf(held, repository),
       full_name: repository,
       parent: parent ? { full_name: parent } : null,
     },

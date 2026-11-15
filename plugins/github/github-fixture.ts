@@ -5,6 +5,13 @@ import {
   type FixtureServices,
 } from '@argo/plugin-kit/testing';
 import {
+  autoMergeCalls,
+  graphqlAnswer,
+  graphqlPath,
+  type AutoMergeCall,
+  type FixtureRepository,
+} from './github-fixture-automation';
+import {
   filesPath,
   listPath,
   pullPath,
@@ -22,6 +29,9 @@ export type FixturePull = {
   merged: boolean;
   draft: boolean;
   mergeable_state: string;
+  // GraphQL's id of the pull request, and its auto-merge when GitHub has it turned on.
+  node_id: string;
+  auto_merge: { merge_method: string } | null;
   html_url: string;
   // Numbers; a test may send anything else to see it refused.
   additions: number | string;
@@ -71,6 +81,12 @@ export type GitHubFixture = FixtureServices & {
   failWith: { status: number | null };
   // The repository each fork was made from, by `owner/repository`.
   parents: Map<string, string>;
+  // The merge settings GitHub reports, by `owner/repository`; one not set allows every method.
+  repositories: Map<string, FixtureRepository>;
+  // Set to make every GraphQL call fail with this status, once signed in.
+  graphqlFailWith: { status: number | null };
+  // The auto-merge mutations GitHub received, in order.
+  autoMergeCalls: () => AutoMergeCall[];
   // Calls asking which pull requests a branch has.
   listReads: () => FixtureRequest[];
   pullReads: () => FixtureRequest[];
@@ -83,11 +99,12 @@ export const sha = '0123456789abcdef0123456789abcdef01234567';
 
 type Names = Pick<
   FixturePull,
-  'number' | 'title' | 'html_url' | 'head' | 'base'
+  'number' | 'title' | 'html_url' | 'head' | 'base' | 'node_id'
 >;
 
 const namesOf = (repository: string, number: number): Names => ({
   number,
+  node_id: `PR_${repository}#${number}`,
   title: `Pull request ${number}`,
   html_url: `https://github.com/${repository}/pull/${number}`,
   head: { ref: `feature-${number}`, sha, repo: { full_name: repository } },
@@ -99,6 +116,7 @@ const factsOf = (): Omit<FixturePull, keyof Names> => ({
   merged: false,
   draft: false,
   mergeable_state: 'clean',
+  auto_merge: null,
   additions: 10,
   deletions: 2,
   changed_files: 3,
@@ -140,6 +158,8 @@ function api(held: Held, request: FixtureRequest): FixtureAnswer {
   if (!held.accepted.has(bearerOf(request)))
     return refusal('Bad credentials', unauthorized);
 
+  if (request.path === graphqlPath) return graphqlAnswer(held, request);
+
   return request.path === '/user'
     ? { json: { login: 'octocat' } }
     : rest(held, request.path);
@@ -163,6 +183,8 @@ const heldOf = (): Held => ({
   failWith: { status: null },
   checks: new Map(),
   checksFailWith: new Map(),
+  repositories: new Map(),
+  graphqlFailWith: { status: null },
 });
 
 /*
@@ -183,5 +205,6 @@ export async function githubFixture(): Promise<GitHubFixture> {
     pullReads: reads(pullPath),
     fileReads: reads(filesPath),
     checkReads: reads(checksPath),
+    autoMergeCalls: () => autoMergeCalls(services.requests),
   };
 }
