@@ -1,3 +1,4 @@
+import { IconSlot } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
@@ -17,9 +18,12 @@ export interface ChangeRowProps {
 
 const rowClassName = 'flex-row items-start gap-2 px-1 py-2';
 
+// The mark takes its glyph's own width, as every Workbench card's leading mark does, centred on the title line.
 const stageCell = (change: SessionPullRequest): ReactElement => (
-  <View className="w-7 shrink-0 items-center pt-0.5">
-    <ChangeStageIcon {...change} />
+  <View className="mt-0.5 shrink-0">
+    <IconSlot>
+      <ChangeStageIcon {...change} />
+    </IconSlot>
   </View>
 );
 
