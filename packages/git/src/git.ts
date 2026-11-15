@@ -1,5 +1,5 @@
-import { SHARE_ENV, Worker } from 'node:worker_threads';
-import type { GitFailure, GitReply, GitRequest } from './git-thread';
+import { fork, type ChildProcess } from 'node:child_process';
+import { GitReply, type GitFailure, type GitRequest } from './git-messages';
 
 type Waiting = {
   resolve: (stdout: string) => void;
@@ -8,17 +8,27 @@ type Waiting = {
 
 const waiting = new Map<number, Waiting>();
 
-let thread: Worker | undefined;
+let runner: ChildProcess | undefined;
 
 let lastId = 0;
 
 const failed = (failure: GitFailure): Error =>
   Object.assign(new Error(failure.message), failure);
 
-// The thread keeps the process running only while a command waits on it, as the git process itself used to.
-const holdWhileWaiting = (worker: Worker): void => {
-  if (waiting.size > 0) worker.ref();
-  else worker.unref();
+const hold = (child: ChildProcess): void => {
+  child.ref();
+  child.channel?.ref();
+};
+
+const release = (child: ChildProcess): void => {
+  child.unref();
+  child.channel?.unref();
+};
+
+// The git process keeps this one running only while a command waits on it, as a git command started here would.
+const holdWhileWaiting = (child: ChildProcess): void => {
+  if (waiting.size > 0) hold(child);
+  else release(child);
 };
 
 const answer = (call: Waiting, message: GitReply): void => {
@@ -31,39 +41,56 @@ const settle = (message: GitReply): void => {
 
   waiting.delete(message.id);
 
-  if (thread) holdWhileWaiting(thread);
+  if (runner) holdWhileWaiting(runner);
 
   if (call) answer(call, message);
 };
 
-// A thread that ends takes its commands with it; the next command starts a new one.
-const threadEnded = (ended: Worker, error: Error): void => {
-  if (thread !== ended) return;
-  thread = undefined;
+// A git process that ends takes its commands with it; the next command starts a new one.
+const runnerEnded = (ended: ChildProcess, error: Error): void => {
+  if (runner !== ended) return;
+  runner = undefined;
 
   for (const call of waiting.values()) call.reject(error);
   waiting.clear();
 };
 
-const startThread = (): Worker => {
-  const worker = new Worker(new URL('./git-thread.ts', import.meta.url), {
-    env: SHARE_ENV,
-  });
+/*
+ * `node --watch` (the dev Server) sets WATCH_REPORT_DEPENDENCIES so every descendant reports each import to its parent over IPC as
+ * `watch:*` messages. This IPC carries git answers, so the git process must not inherit it.
+ */
+const runnerEnvironment = (): NodeJS.ProcessEnv => {
+  const env = { ...process.env };
 
-  worker.on('message', settle);
-  worker.on('error', (error): void => threadEnded(worker, error));
-  worker.on('exit', (): void =>
-    threadEnded(worker, new Error('The git thread stopped')),
-  );
+  delete env.NODE_OPTIONS;
+  delete env.WATCH_REPORT_DEPENDENCIES;
 
-  return worker;
+  return env;
 };
 
-const send = (request: GitRequest): Worker => {
-  thread ??= startThread();
-  thread.postMessage(request);
+const startRunner = (): ChildProcess => {
+  const child = fork(new URL('./git-runner.ts', import.meta.url), [], {
+    execArgv: [],
+    stdio: ['ignore', 'inherit', 'inherit', 'ipc'],
+    env: runnerEnvironment(),
+    serialization: 'advanced',
+  });
 
-  return thread;
+  child.on('message', (raw): void => settle(GitReply.parse(raw)));
+  child.on('error', (error): void => runnerEnded(child, error));
+  child.on('exit', (): void =>
+    runnerEnded(child, new Error('The git process stopped')),
+  );
+
+  return child;
+};
+
+// A request to a git process that has just ended is answered by its exit, not by this error.
+const send = (request: GitRequest): ChildProcess => {
+  runner ??= startRunner();
+  runner.send(request, (): void => {});
+
+  return runner;
 };
 
 const abortError = (signal: AbortSignal): Error =>
@@ -75,7 +102,10 @@ const abortError = (signal: AbortSignal): Error =>
 const run = (id: number, directory: string, args: string[]): Promise<string> =>
   new Promise<string>((resolve, reject): void => {
     waiting.set(id, { resolve, reject });
-    holdWhileWaiting(send({ type: 'run', id, directory, args }));
+    // No git command waits on a person: a remote that asks for a password fails instead of hanging.
+    const env = { ...process.env, GIT_TERMINAL_PROMPT: '0' };
+
+    holdWhileWaiting(send({ type: 'run', id, directory, args, env }));
   });
 
 const nextId = (): number => {
@@ -103,7 +133,10 @@ const runUntilAborted = async (
   }
 };
 
-// The one place git is spawned: in `directory`, with room for a large diff, stopped by `signal`. The spawn runs on its own thread, because starting a process blocks the thread that starts it.
+/*
+ * The one place git is run: in `directory`, with room for a large diff, stopped by `signal`.
+ * One long-lived git process starts every command, because starting a process blocks the thread that starts it. It is a process and not a thread: a command started from a second thread holds this process's open sockets until it has started, so a listener closed meanwhile cannot be opened again.
+ */
 export function git(
   directory: string,
   args: string[],

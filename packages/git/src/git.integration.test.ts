@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 import {
   existsSync,
+  readFileSync,
   mkdtempSync,
   realpathSync,
   rmSync,
@@ -36,30 +37,31 @@ it('reads git output', async (): Promise<void> => {
   );
 });
 
-// A git command that marks when it has started, then waits until it is stopped.
+// A git command that writes the pid of the process that started git, then waits until it is stopped.
 const waitingCommand = (marker: string): string[] => [
   '-c',
-  `alias.wait=!touch '${marker}'; exec sleep 30`,
+  `alias.wait=!ps -o ppid= -p $PPID > '${marker}.part' && mv '${marker}.part' '${marker}'; exec sleep 30`,
   'wait',
 ];
 
-async function started(marker: string): Promise<void> {
+async function started(marker: string): Promise<number> {
   while (!existsSync(marker)) await wait(10);
+
+  return Number(readFileSync(marker, 'utf8'));
 }
 
-it('starts no process on the calling thread while a git command runs', async (): Promise<void> => {
+it('starts git from the git process, never from the calling process', async (): Promise<void> => {
   const directory = testDirectory();
   const marker = join(directory, 'started');
   const controller = new AbortController();
   const reading = git(directory, waitingCommand(marker), controller.signal);
-
-  await started(marker);
-  const resources = process.getActiveResourcesInfo();
+  const startedBy = await started(marker);
 
   controller.abort();
 
   await expect(reading).rejects.toMatchObject({ name: 'AbortError' });
-  expect(resources).not.toContain('ProcessWrap');
+  expect(startedBy).toBeGreaterThan(0);
+  expect(startedBy).not.toBe(process.pid);
 });
 
 it('keeps a process that only waits on git running until git answers', async (): Promise<void> => {
@@ -73,7 +75,12 @@ console.log(await git(${JSON.stringify(directory)}, ['--version']));
 `,
   );
 
-  const { stdout } = await execute(process.execPath, [script]);
+  // tsx loads the package's TypeScript as the Engine does; it resolves from this package's folder.
+  const { stdout } = await execute(
+    process.execPath,
+    ['--import', 'tsx', script],
+    { cwd: import.meta.dirname },
+  );
 
   expect(stdout).toMatch(/^git version /u);
 });
