@@ -603,7 +603,7 @@ Declare `signIn` and `cancelSignIn` in `contributes.operations` with tier `act`.
 
 ### The sign-in pattern
 
-The kit has two flows and one page that draws either: `deviceFlow` (RFC 8628: the page shows a code, the person enters it on any device, and the Plugin polls) and `oauthFlow` above (redirect with PKCE, on the Server Device). Neither sends a client secret. A Plugin never writes polling, token storage or a sign-in page, and never holds a token:
+The kit has two flows and one page that draws either, and the token paste below: `deviceFlow` (RFC 8628: the page shows a code, the person enters it on any device, and the Plugin polls) and `oauthFlow` above (redirect with PKCE, on the Server Device). Neither sends a client secret. A Plugin never writes polling, token storage or a sign-in page, and never holds a token:
 
 ```tsx
 import { deviceFlow, provideSignIn, signInGate, SignInRequired, type Argo } from '@argo/plugin-kit';
@@ -626,6 +626,30 @@ argo.pages.define('/', signInGate(flow, { name: 'GitHub' }, { load, render }));
 - `deviceFlow`'s `label` names the person: the kit calls `url` with the token and reads `field`, so the Plugin never sees the token. A person who signs in again with the same label keeps one Account.
 - The sign-in page draws every step: asking for a code, the code with where to enter it and a countdown length, denied, expired and failed, and the redirect flow's wait for the browser. A redirect flow on a Device that is not the Server Device says to continue there; a device flow does not need it, and `argo.accounts.add` is not refused to a paired Device.
 - A read for a Project the page's path names, rather than the page's own, passes `projectId` to `argo.fetch`.
+
+### The token paste
+
+`tokenPaste(argo, options)` is the sign-in for a service that takes a personal API token the person makes there, such as a Jira or Linear token. The kit draws the field, checks the token, adds the Account, keeps the token as a Secret and provides it; the Plugin names three things:
+
+```tsx
+import { provideSignIn, signInGate, tokenPaste, type Argo } from '@argo/plugin-kit';
+
+const flow = tokenPaste(argo, {
+  host: 'api.linear.app',
+  header: { header: 'Authorization', prefix: '' },
+  label: (token) => linearLogin(argo, token),
+});
+
+await provideSignIn(argo, flow, { name: 'Linear' });
+argo.pages.define('/', signInGate(flow, { name: 'Linear' }, { load, render }));
+```
+
+- `host` is the Account's API host. Declare it in `contributes.accounts` and as a `fetch` Capability.
+- `header` is how a borrower's request carries the kept token.
+- `label(token)` checks a pasted token: call the service with it, as `argo.fetch(url, { headers })`, and answer whose Account it opens, or `null` when the service refuses it. It is the only Plugin code that sees the token, and only the one being pasted; never keep it.
+- Declare `signIn` in `contributes.operations`, tier `act`, with one param `token`: `{ "type": "string", "description": "The pasted API token.", "required": true, "secret": true }`. The sign-in page's `FieldGroup.SecretField` sends what is pasted to it, so the token is never logged, answered or kept in Page state (ADR-0051). A token paste needs no `cancelSignIn`.
+- A refused token is shown beside the field, which stays for the next paste. A token is pasted on any Device, a paired phone included. Signing in again with a token for the same label rewrites that Account's token, so a revoked token's gate takes a new one.
+- `flow.state()` is `idle`, `signed-in` with the Account's `label`, or `failed` with the `message` drawn beside the field. While one token is checked a newer paste replaces it, so typing a token by hand adds the Account only for the last edit.
 
 ### `argo.oauth`
 

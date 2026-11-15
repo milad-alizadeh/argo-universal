@@ -11,6 +11,7 @@ export type SignInParts = {
   data: SignInData;
   start: Pressed;
   cancel: Pressed;
+  paste: Pressed;
 };
 
 const msPerMinute = 60_000;
@@ -101,7 +102,53 @@ function plainStep(parts: SignInParts, step: Plain): ReactElement[] {
   return step.kind === 'idle' ? idleStep(parts) : waitingStep(parts, step);
 }
 
+// The field a token is pasted into, with why the last one was not kept beneath it.
+function tokenField(
+  parts: SignInParts,
+  error: string | undefined,
+): ReactElement {
+  const field = jsx(
+    'FieldGroup.SecretField',
+    {
+      title: 'API token',
+      value: '',
+      placeholder: `Paste a ${parts.name} API token`,
+      onChangeText: parts.paste,
+      ...(error && { error }),
+    },
+    'token',
+  );
+
+  return jsx(
+    'FieldGroup',
+    {
+      children: jsx('FieldGroup.Section', {
+        ...(error && { footer: error }),
+        children: field,
+      }),
+    },
+    'paste',
+  );
+}
+
+// A token paste draws its field until it is signed in; a refused token's reason stays beside it.
+function pasteBody(parts: SignInParts): ReactElement[] {
+  const state = parts.data.flow;
+
+  if (state.kind === 'signed-in') return signedInStep(state);
+
+  return [
+    ...lines(
+      parts.data.rejected ?? `Sign in to use ${parts.name} in Argo.`,
+      `Paste an API token you made at ${parts.name}. Argo keeps it in your computer’s secret store.`,
+    ),
+    tokenField(parts, state.kind === 'failed' ? state.message : undefined),
+  ];
+}
+
 function body(parts: SignInParts): ReactElement[] {
+  if (parts.data.pastesToken) return pasteBody(parts);
+
   const step = stepOf(parts.data.flow);
 
   if (step.kind === 'code') return codeStep(parts, step);
@@ -109,7 +156,7 @@ function body(parts: SignInParts): ReactElement[] {
   return step.kind === 'ended' ? endStep(parts, step) : plainStep(parts, step);
 }
 
-// The sign-in page, drawn from kit components: every step of either flow, and the way back after a refusal.
+// The sign-in page, drawn from kit components: every step of each flow, and the way back after a refusal.
 export const signInScreen = (parts: SignInParts): ReactElement =>
   jsx('Screen', {
     title: parts.name,

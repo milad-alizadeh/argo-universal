@@ -18,12 +18,14 @@ export type SignInOptions = Readonly<{ name: string }>;
 
 /*
  * What the sign-in page draws: the flow where it stands, why a token already in use was refused when it was,
- * and whether this Device has to hand over to the Server Device, which a redirect flow needs.
+ * whether this Device has to hand over to the Server Device, which a redirect flow needs, and whether the person
+ * pastes a token rather than starting a flow.
  */
 export type SignInData = Readonly<{
   flow: SignInState;
   rejected: string | null;
   needsServerDevice: boolean;
+  pastesToken: boolean;
 }>;
 
 // What a gated page loads: its own data, or the sign-in in its place.
@@ -64,7 +66,9 @@ export type ProvideSignInArgo = Pick<Argo, 'operations' | 'pages'>;
 /*
  * `provideSignIn(argo, flow, options)` wires a flow into the Plugin: the `signIn` and `cancelSignIn` Operations
  * the sign-in page's buttons run (declare both in `contributes.operations`), the sign-in page itself at `path`
- * (`/sign-in` unless said, the page `contributes.accounts` names), and the Account's provider.
+ * (`/sign-in` unless said, the page `contributes.accounts` names), and the Account's provider. A token paste's
+ * `signIn` takes the pasted token as its `token` param, which the manifest marks `"secret": true`; it needs no
+ * `cancelSignIn`.
  */
 export type ProvideSignInPattern = (
   argo: ProvideSignInArgo,

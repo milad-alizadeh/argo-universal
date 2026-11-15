@@ -50,6 +50,7 @@ const signInData = (
   flow: flowStateOf(flow, rejected),
   rejected,
   needsServerDevice: flow.serverDevice && !serverDevice,
+  pastesToken: 'pastesToken' in flow,
 });
 
 async function loaded<Data>(
@@ -66,11 +67,13 @@ async function loaded<Data>(
   }
 }
 
-type Runs = Pick<PageTo<PageState>, 'run'>;
+type Runs = Pick<PageTo<PageState>, 'run' | 'payload'>;
 
-const runsOf = (to: Runs): Pick<SignInParts, 'start' | 'cancel'> => ({
+// A pasted token goes only to `signIn`'s secret `token` param (ADR-0051).
+const runsOf = (to: Runs): Pick<SignInParts, 'start' | 'cancel' | 'paste'> => ({
   start: to.run('signIn', {}),
   cancel: to.run('cancelSignIn', {}),
+  paste: to.run('signIn', { token: to.payload() }),
 });
 
 /*
@@ -99,12 +102,18 @@ const signInPage = (flow: SignInFlow, { name }: SignInOptions): SignInPage => ({
   render: (data, to) => signInScreen({ name, data, ...runsOf(to) }),
 });
 
+// A token paste's `signIn` carries the pasted token; the other flows' carries nothing.
+const tokenIn = (params: Readonly<Record<string, unknown>>): string =>
+  typeof params.token === 'string' ? params.token : '';
+
 export const provideSignIn: ProvideSignInPattern = async (
   argo,
   flow,
   options,
 ) => {
-  argo.operations.register('signIn', async () => ({ ...(await flow.start()) }));
+  argo.operations.register('signIn', async (params) => ({
+    ...(await flow.start(tokenIn(params))),
+  }));
   argo.operations.register('cancelSignIn', () => ({ ...flow.cancel() }));
   argo.pages.define(options.path ?? '/sign-in', signInPage(flow, options));
 
