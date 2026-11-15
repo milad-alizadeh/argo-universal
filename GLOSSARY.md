@@ -328,6 +328,10 @@ _Avoid_: Slash command (for a Plugin result), autocomplete item
 A proposed next Prompt based on the conversation, offered in the Composer when what the user would naturally say next is clear. It becomes a draft only when the user accepts it.
 _Avoid_: Composer suggestion (for this), autocomplete, next step
 
+**Suggestion model**:
+The model an Installed Agent predicts Follow-up suggestions with: the Session's own, or one from the Agent's model list. Each Agent starts on its vendor default.
+_Avoid_: Prediction model, fast model
+
 **Issue reference**:
 An Issue named in a prompt as `#` and its number.
 _Avoid_: Mention, issue link, tag

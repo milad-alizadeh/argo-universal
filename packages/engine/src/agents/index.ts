@@ -42,12 +42,18 @@ export {
 
 export { readAgentServers } from './servers/agent-servers-sql';
 
+export {
+  readSuggestionModel,
+  readSuggestionModels,
+} from './servers/suggestion-models';
+
 export { readRegistry } from './registry/registry-cache';
 
 export {
   changeAgentServer,
   refreshRegistry,
   setAgentEnvironment,
+  setSuggestionModel,
   syncRegistry,
   type RegistryDeps,
 } from './registry/registry-operations';
