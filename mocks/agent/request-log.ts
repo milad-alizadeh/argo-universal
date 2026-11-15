@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const MessageId = z.union([z.string(), z.number(), z.null()]);
 
 // App E2E reads the ACP messages each scripted Agent process received and answered, and the replies the App sent to its own requests, from its request log; ids are unique only within one process, so each line names its process.
-export type LoggedMessage = { agent: number } & (
+export type LoggedMessage = { agent: number; mainSession?: boolean } & (
   | {
       method: string;
       id: z.infer<typeof MessageId> | undefined;

@@ -5,6 +5,7 @@ import { z } from 'zod';
 const LoggedRequest = z.object({
   agent: z.number(),
   method: z.string(),
+  mainSession: z.boolean().optional(),
   id: MessageId.optional(),
   params: z
     .object({
