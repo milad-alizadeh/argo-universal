@@ -5,7 +5,7 @@ import type {
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { ReactElement } from 'react';
 
-export const sessionModelLabel = 'Same as Session';
+const sessionModelLabel = 'Same as Session';
 
 export const suggestionModelsFooter =
   'The model each Agent uses to predict your next Prompt. A smaller one is faster and costs less.';

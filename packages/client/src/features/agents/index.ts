@@ -7,10 +7,7 @@ export {
 
 export { AgentLogo } from '@repo/kit/primitives/content/agent-logo';
 
-export {
-  useSuggestionModels,
-  type SuggestionModels,
-} from './hooks/use-suggestion-models';
+export { useSuggestionModels } from './hooks/use-suggestion-models';
 
 export { agentRows } from './components/agent-list-item/agent-list-item';
 
