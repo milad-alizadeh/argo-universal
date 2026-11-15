@@ -145,6 +145,26 @@ describe('supervisor', (): void => {
     expect(supervisor.getSnapshot().value).toBe('failed');
   });
 
+  it('keeps an Engine that sends no heartbeat for as long as an Engine takes to stop', (): void => {
+    startSupervisor();
+    latestEngine().send({ type: readyEngineEvent, port: 7337 });
+
+    vi.advanceTimersByTime(20_000);
+
+    expect(supervisor.getSnapshot().value).toBe('running');
+    expect(engines).toHaveLength(1);
+  });
+
+  it('keeps a starting Engine that takes 45 seconds to report ready', (): void => {
+    startSupervisor();
+
+    vi.advanceTimersByTime(45_000);
+    latestEngine().send({ type: readyEngineEvent, port: 7337 });
+
+    expect(supervisor.getSnapshot().value).toBe('running');
+    expect(engines).toHaveLength(1);
+  });
+
   it('leaves a server.json with another pid when it fails', (): void => {
     startSupervisor();
     writeOtherServerJson();

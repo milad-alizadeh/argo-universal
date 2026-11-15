@@ -40,9 +40,11 @@ export const backoffBaseMs = 500;
 
 const backoffCapMs = 30_000;
 
-export const heartbeatTimeoutMs = 5000;
+// Longer than an Engine takes to stop, so one that is busy, or stopping for a watch restart, is not taken for a hung one.
+export const heartbeatTimeoutMs = 30_000;
 
-export const readyTimeoutMs = 15_000;
+// An Engine on a loaded machine starts in seconds, not tenths of one.
+export const readyTimeoutMs = 60_000;
 
 // Remembers the port an Engine reports and publishes it in server.json.
 const rememberEngine = [
