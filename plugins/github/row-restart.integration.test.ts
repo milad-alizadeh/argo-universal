@@ -1,8 +1,8 @@
+import type { SessionRowItem } from '@argo/plugin-kit';
 import { expect, it } from 'vitest';
 import { pullOf } from './github-fixture';
 import { attach, attributedRowItemsOf } from './journey-calls-fixture';
 import { journey, restart, type Journey } from './journey-fixture';
-import { rowWaitMs } from './pull-row-reads';
 
 const slow = 30_000;
 
@@ -10,7 +10,7 @@ const wait = 10_000;
 
 const repository = 'owner/repository';
 
-const icon = { sf: 'arrow.triangle.pull', material: 'merge_type' };
+const icon = { sf: 'arrow.triangle.pull', material: 'merge_type' } as const;
 
 const rowOf = async (run: Journey): Promise<object[]> =>
   (await attributedRowItemsOf(run)).map(({ item }) => item);
@@ -27,8 +27,16 @@ function stallGitHub(run: Journey): () => void {
   };
 }
 
+const openRow = (title: string): SessionRowItem => ({
+  icon,
+  text: '#7',
+  tone: 'success',
+  tooltip: `${title} · Open`,
+  change: { stage: 'open' },
+});
+
 it(
-  'keeps the number on the row after a restart while GitHub is slow, then fills in the details once it answers',
+  'draws the row as it was last read straight after a restart while GitHub is slow, then what GitHub answers',
   async () => {
     const run = await journey();
 
@@ -37,32 +45,17 @@ it(
     await restart(run);
 
     const answer = stallGitHub(run);
-    const before = run.github.pullReads().length;
-    const asked = rowOf(run);
 
-    // The row waits once GitHub has been asked, so the clock moves only after the read began.
-    await expect
-      .poll(() => run.github.pullReads().length, { timeout: wait })
-      .toBe(before + 1);
-    await run.test.clock.advance(rowWaitMs);
+    run.github.pulls.set(...pullOf(repository, 7, { title: 'Renamed' }));
 
-    expect(await asked).toEqual([
-      { icon, text: '#7', tooltip: 'Pull request #7' },
-    ]);
+    // The record outlives the worker, so the row never waits on GitHub and never falls back to a bare number.
+    expect(await rowOf(run)).toEqual([openRow('Slow one')]);
 
     answer();
 
     await expect
       .poll(() => rowOf(run), { timeout: wait })
-      .toEqual([
-        {
-          icon,
-          text: '#7',
-          tone: 'success',
-          tooltip: 'Slow one · Open',
-          change: { stage: 'open' },
-        },
-      ]);
+      .toEqual([openRow('Renamed')]);
   },
   slow,
 );

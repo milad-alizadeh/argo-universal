@@ -1,3 +1,4 @@
+import type { AutomationOffer } from './pull-automation';
 import type { CheckInfo } from './pull-checks';
 import type { PullInfo } from './pull-info';
 import { changeId } from './pull-reference';
@@ -23,10 +24,12 @@ export type ChangeItem = {
   checks?: CheckInfo[];
   // Set when the latest read failed and the rest is what was last known.
   stale?: 'signIn' | 'failed';
+  // What the Plugin offers to turn on; absent where it was not read, as when a pull request has only just been attached.
+  automation?: AutomationOffer;
 };
 
 // What a pull request's Change carries beside what GitHub said of the pull request itself.
-export type Refresh = Pick<ChangeItem, 'checks' | 'stale'>;
+export type Refresh = Pick<ChangeItem, 'checks' | 'stale' | 'automation'>;
 
 const totalsOf = ({
   files,
@@ -60,9 +63,16 @@ const factsOf = (
   ...modifiersOf(pull),
 });
 
-const refreshFields = ({ checks, stale }: Refresh): Refresh => ({
-  ...(checks && { checks }),
-  ...(stale && { stale }),
+// A field of the Refresh only when it was read, so an absent one stays absent.
+const present = <Key extends keyof Refresh>(
+  key: Key,
+  value: Refresh[Key],
+): Refresh => (value === undefined ? {} : { [key]: value });
+
+const refreshFields = ({ checks, stale, automation }: Refresh): Refresh => ({
+  ...present('checks', checks),
+  ...present('stale', stale),
+  ...present('automation', automation),
 });
 
 export const changeOf = (

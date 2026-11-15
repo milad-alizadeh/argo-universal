@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { completedRead, readMocks } from '../tool-call.mocks';
 import { ToolCallRow } from './tool-call-row';
-import { commandWithoutOutput } from './tool-call-row-fixtures';
+import { commandWithoutOutput, rawToolCall } from './tool-call-row-fixtures';
 
 const meta = {
   title: 'Tests/Feed/ToolCallRow',
@@ -100,8 +100,24 @@ export const CommandWithoutOutput: Story = {
       canvas.getByRole('button', { name: /^Verify the build/ }),
     );
     await expect(canvas.getByText('Shell')).toBeVisible();
-    await expect(canvas.getByText(/\$ pnpm verify/)).toBeVisible();
+    await expect(canvas.getByTestId('code-text')).toHaveTextContent(
+      '$ pnpm verify',
+    );
     await expect(canvas.queryByText('Input')).not.toBeInTheDocument();
     await expect(canvas.queryByText(/timeout/)).not.toBeInTheDocument();
+  },
+};
+
+// An MCP call with no content blocks shows its raw input and output, each under its own caption.
+export const RawInputAndOutput: Story = {
+  args: rawToolCall,
+  play: async ({ canvas }) => {
+    await settleLayout(layoutWidths.wide);
+    await expect(canvas.getByText('Input')).toBeVisible();
+    await expect(canvas.getByText('Output')).toBeVisible();
+    const [input, output] = canvas.getAllByTestId('code-text');
+    await expect(input).toHaveTextContent('"issue": 1918');
+    await expect(output).toHaveTextContent('"title": "Live detail"');
+    await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
   },
 };

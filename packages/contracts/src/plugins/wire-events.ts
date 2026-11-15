@@ -77,6 +77,8 @@ export const PluginEvent = z.union([
     serverDevice: z.boolean().optional(),
     surface: PluginSurface.optional(),
     loadOnly: z.literal(true).optional(),
+    // A Watch's run (ADR-0055): the function `argo.watch.define` gave the path, rather than a page.
+    watch: z.literal(true).optional(),
     live: z.literal(true).optional(),
   }),
   // The App left a live page, so its Loader stops yielding; the draw `id` answers once it has.

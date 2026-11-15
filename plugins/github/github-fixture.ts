@@ -5,6 +5,13 @@ import {
   type FixtureServices,
 } from '@argo/plugin-kit/testing';
 import {
+  autoMergeCalls,
+  graphqlAnswer,
+  graphqlPath,
+  type AutoMergeCall,
+  type FixtureRepository,
+} from './github-fixture-automation';
+import {
   filesPath,
   listPath,
   pullPath,
@@ -13,48 +20,11 @@ import {
   type Held,
   checksPath,
 } from './github-fixture-rest';
-
-// One pull request as GitHub's REST API answers it, with the fields the Plugin reads.
-export type FixturePull = {
-  number: number;
-  title: string;
-  state: 'open' | 'closed';
-  merged: boolean;
-  draft: boolean;
-  mergeable_state: string;
-  html_url: string;
-  // Numbers; a test may send anything else to see it refused.
-  additions: number | string;
-  deletions: number;
-  changed_files: number;
-  head: { ref: string; sha: string; repo: { full_name: string } };
-  base: { ref: string; repo: { full_name: string } };
-};
-
-// One changed file as GitHub lists a pull request's files; `patch` is absent for a binary or very large file.
-export type FixtureFile = {
-  filename: string;
-  // GitHub's statuses are added, removed, modified, renamed, copied, changed and unchanged; a test may send any other.
-  status: string;
-  // A number; a test may send anything else to see it refused.
-  additions: number | string;
-  deletions: number | string;
-  patch?: string;
-  previous_filename?: string;
-};
-
-// One Check run of a commit as GitHub's REST API answers it.
-export type FixtureCheck = {
-  name: string;
-  status: 'queued' | 'in_progress' | 'completed';
-  conclusion:
-    | 'success'
-    | 'failure'
-    | 'neutral'
-    | 'skipped'
-    | 'cancelled'
-    | null;
-};
+import type {
+  FixtureCheck,
+  FixtureFile,
+  FixturePull,
+} from './github-fixture-types';
 
 export type GitHubFixture = FixtureServices & {
   // The Check runs of a commit, by `owner/repository@sha`; a commit with none listed has none.
@@ -73,6 +43,12 @@ export type GitHubFixture = FixtureServices & {
   stall: { until: Promise<void> | null };
   // The repository each fork was made from, by `owner/repository`.
   parents: Map<string, string>;
+  // The merge settings GitHub reports, by `owner/repository`; one not set allows every method.
+  repositories: Map<string, FixtureRepository>;
+  // Set to make every GraphQL call fail with this status, once signed in.
+  graphqlFailWith: { status: number | null };
+  // The auto-merge mutations GitHub received, in order.
+  autoMergeCalls: () => AutoMergeCall[];
   // Calls asking which pull requests a branch has.
   listReads: () => FixtureRequest[];
   pullReads: () => FixtureRequest[];
@@ -85,11 +61,12 @@ export const sha = '0123456789abcdef0123456789abcdef01234567';
 
 type Names = Pick<
   FixturePull,
-  'number' | 'title' | 'html_url' | 'head' | 'base'
+  'number' | 'title' | 'html_url' | 'head' | 'base' | 'node_id'
 >;
 
 const namesOf = (repository: string, number: number): Names => ({
   number,
+  node_id: `PR_${repository}#${number}`,
   title: `Pull request ${number}`,
   html_url: `https://github.com/${repository}/pull/${number}`,
   head: { ref: `feature-${number}`, sha, repo: { full_name: repository } },
@@ -101,6 +78,7 @@ const factsOf = (): Omit<FixturePull, keyof Names> => ({
   merged: false,
   draft: false,
   mergeable_state: 'clean',
+  auto_merge: null,
   additions: 10,
   deletions: 2,
   changed_files: 3,
@@ -138,15 +116,18 @@ const deviceCode = (): FixtureAnswer => ({
 const bearerOf = ({ headers }: Pick<FixtureRequest, 'headers'>): string =>
   String(headers.authorization).replace(/^Bearer /, '');
 
+const restAnswer = (held: Held, path: string): FixtureAnswer =>
+  path === '/user' ? { json: { login: 'octocat' } } : rest(held, path);
+
 async function api(held: Held, call: FixtureRequest): Promise<FixtureAnswer> {
   await held.stall.until;
 
   if (!held.accepted.has(bearerOf(call)))
     return refusal('Bad credentials', unauthorized);
 
-  return call.path === '/user'
-    ? { json: { login: 'octocat' } }
-    : rest(held, call.path);
+  if (call.path === graphqlPath) return graphqlAnswer(held, call);
+
+  return restAnswer(held, call.path);
 }
 
 const githubCom = (request: FixtureRequest): FixtureAnswer =>
@@ -168,6 +149,8 @@ const heldOf = (): Held => ({
   stall: { until: null },
   checks: new Map(),
   checksFailWith: new Map(),
+  repositories: new Map(),
+  graphqlFailWith: { status: null },
 });
 
 /*
@@ -188,5 +171,6 @@ export async function githubFixture(): Promise<GitHubFixture> {
     pullReads: reads(pullPath),
     fileReads: reads(filesPath),
     checkReads: reads(checksPath),
+    autoMergeCalls: () => autoMergeCalls(services.requests),
   };
 }

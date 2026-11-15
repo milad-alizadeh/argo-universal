@@ -139,6 +139,8 @@ A Plugin's own Operations are declared in `contributes.operations` (ADR-0044). E
 }
 ```
 
+An Operation that changes something an Agent should not change on its own sets `"confirmAgent": true`: a Session's run of it asks the person first, as a `confirm` tier Operation does, and a person's own run, such as a tap in the App, applies at once.
+
 `argo-plugin types .` writes `plugin.gen.d.ts` beside `plugin.json`; run it again after changing the Operations, and commit it. The handler then gets typed params and caller, and `to.run` in a Render or a `ui.render` Hook is checked against the manifest, so a misspelt name, a missing param or a value outside `choices` fails `check-types`:
 
 ```ts
@@ -320,7 +322,9 @@ export function register(argo: Argo): void {
 
 An item is `{ icon?, text, tone?, tooltip?, action? }`: `text` is at most 40 characters, `tone` is a kit tone, and `action.path` opens one of the Plugin's own pages. Anything else fails the Slot's schema.
 A Session id left out of the answer has no items. One Plugin sends at most 8 items for one row; more fails the schema.
-The row context carries ids only (ADR-0030). Read a Session's `branch` and `projectId` with `argo.sessions.get(sessionId)`, which needs the `{ "kind": "sessions:read" }` Capability and answers `null` for an unknown Session.
+The row context carries ids only (ADR-0030). Read a Session's `branch` and `projectId` with `argo.sessions.get(sessionId)`, which needs the `{ "kind": "sessions:read" }` Capability and answers `null` for an unknown Session. `argo.sessions.archive(sessionId)` archives a Session as the App's archive does (the branch is kept, the worktree removed) and needs the `{ "kind": "sessions:archive" }` Capability. It has no confirm tier: the person's earlier choice in the Plugin is the consent (ADR-0055). It is refused for a Session outside the Project the call runs for, while a Turn runs, while the Session's Checkout has uncommitted files, and for a Session that is not top level; the Plugin tries again on a later Watch. The App's own archive does not look at uncommitted files. Turning on the Plugin says it may archive Sessions in its Projects.
+
+`argo.sessions.prompt(sessionId, text)` needs the `{ "kind": "sessions:prompt" }` Capability and sends `text` to a Session of the Project the call runs for, with the Plugin as sender (ADR-0055). It answers `{ status: 'started' }` when an idle Session starts a Turn, or `{ status: 'queued' }` when the Session is busy or its queue is paused: the Prompt waits behind the queued work and starts when the queue reaches it. A Plugin only appends; it never resumes, moves, edits or deletes the queue. Turning on the Plugin says it may start Turns in its Projects.
 
 Argo keeps each answer per Plugin worker and Session until the Plugin calls `argo.changed()` or one of its Operations runs, so a Session's status changing asks the Plugin nothing. A restarted Plugin is asked again.
 Argo's own items come first, then each Plugin's in Slot order. A phone shows 1 item and a desktop or the web shows 3; the rest come with their Plugin id as overflow for "+N".
@@ -334,6 +338,8 @@ A Plugin can declare it with or without the row items Slot. Every Plugin that de
 ## Session Changes
 
 A Plugin that knows of a Session's pull requests answers `argo/session/changes/v1` (ADR-0052). It is asked like the row items, with `{ sessionId, projectId }` contexts and an answer keyed by Session id. Each item is a Change: `{ id, stage, title, repository?, branch?, base?, head?, pullRequest?: { number, url }, draft?, conflict?, totals?, checks?: { name, state: 'running' | 'passed' | 'failed' }[], stale?: 'signIn' | 'failed' }`. A pull request is identified by `repository` plus `pullRequest.number`, and `id` stays the same for the Change's life. Argo draws the Changes as rows in its Changes card, and a row opens the pull request at `pullRequest.url`; a Plugin sends data, not a card. A provider that throws leaves the Plugin's Changes out and the local Changes stay. Argo asks again every 30 seconds while an App has the Session's Changes open, after making the Plugin's named reads due, so keep the data in named reads and read them with `argo.queries.readState`, which answers `{ data?, error?, stale }`: a read that throws then keeps its last good `data` beside the `error`, and the Change can say `stale` instead of vanishing. Answer each item alone, so one failed item does not drop the others. Absent `checks` means not known and is never drawn as passed.
+
+A Plugin that knows the state of the thing a link points at answers `argo/link/mark/v1` (ADR-0052). It is asked with `{ href, projectId }` contexts, the links a Session page has drawn and the Project they are in, and answers keyed by `href` with at most one item, `{ kind: 'pullRequest' | 'issue', state: 'open' | 'closed' | 'merged' | 'draft' }`. Leave out a link that is not yours. Argo draws the mark and asks again every 30 seconds while the Session is open, so answer from what you have stored and read behind the answer.
 
 ## Session bar
 
@@ -464,6 +470,18 @@ An unavailable Borrow returns `null` from a direct `argo.fetch` call. A Query re
 A page may call `argo.nav.badge(id, count)` to set the nav badge for a nav id its own manifest declares. Zero clears the badge.
 A background `load` runs once per Project, but the badge belongs to the whole Plugin: each pass replaces what the one before it set. Count per Project in your own storage and set the total you want the item to show.
 Nav badges are in memory and clear when the Plugin stops or reloads. Background pages cannot raise Notifications.
+
+## Watches
+
+Declare `contributes.watch: { path, interval }` in `plugin.json` and give that path a function with `argo.watch.define` (ADR-0055). Argo runs it once per Project each interval, whether or not an App is open, with a Background pass's budget: a run that goes past 60 seconds is stopped and logged, and the next one still runs. The interval is clamped to one minute or more. A Watch stops when its Plugin is turned off or crashes, and runs again when the Plugin is turned on or starts again.
+
+Unlike a Loader, a Watch may act. Its input has the Project (`context.projectId`), `read(query)` for Queries, and `run(name, params)`, which runs one of the Plugin's own registered Operations for that Project. A Loader's input has no `run`, and Background passes stay read-only.
+
+```ts
+argo.watch.define('/', async ({ context: { projectId }, run }) => {
+  await run('sync', { reason: 'tick' });
+});
+```
 
 A drawing throw closes only the failed page. Other pages, Slots, Hooks, and background passes continue.
 The failure subscription records one non-fatal drawing failure per Plugin.

@@ -23,7 +23,11 @@ const changedFilesLabel = 'Changed files';
 
 const loadingMoreLabel = 'Loading more changes';
 
-type FileListProps = ChangesViewProps & { files: readonly ChangedFile[] };
+type FileListProps = ChangesViewProps & {
+  files: readonly ChangedFile[];
+  // Scrolls with the files, above the first.
+  header?: React.ReactNode;
+};
 
 const itemKey = (item: ChangesItem): string => item.key;
 
@@ -54,7 +58,14 @@ const identity = {
 export function FileList(props: FileListProps): React.JSX.Element {
   const rows = useRows(props);
 
-  return <List<ChangesItem> {...rows} {...identity} {...listEnd(props)} />;
+  return (
+    <List<ChangesItem>
+      {...rows}
+      {...identity}
+      {...listEnd(props)}
+      header={props.header}
+    />
+  );
 }
 
 interface Rows {

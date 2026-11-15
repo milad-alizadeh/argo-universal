@@ -108,6 +108,15 @@ export const backgroundResult = (id: string, path: string): Update[] => [
   { sessionUpdate: terminalUpdate, toolCallId: id, status: 'completed' },
 ];
 
+// Claude Code 2.x, as captured: a foreground command that outran its timeout, after the output it had printed.
+export const movedResult = (id: string, path: string): Update[] => [
+  chunk(
+    id,
+    `partial output\nCommand did not complete within its 600s timeout and was moved to the background (ID: b1). Output is being written to: ${path}. You will be notified when it completes.\nSession cwd remains /project; directory changes made by the backgrounded command do not apply to subsequent commands.`,
+  ),
+  { sessionUpdate: terminalUpdate, toolCallId: id, status: 'completed' },
+];
+
 // It can come long after the Tool call completed, carrying nothing else.
 export const reportedEnd = (id: string): Update => ({
   sessionUpdate: terminalUpdate,

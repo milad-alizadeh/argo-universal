@@ -34,3 +34,13 @@ export const editingElsewhere: Omit<PromptQueueProps, 'command'> = {
   ...queuedPrompts,
   holds: [first.id],
 };
+
+export const singlePrompt: Omit<PromptQueueProps, 'command'> = {
+  ...queuedPrompts,
+  queue: { ...queuedPrompts.queue, items: [first] },
+};
+
+export const steerablePrompts: Omit<PromptQueueProps, 'command'> = {
+  ...queuedPrompts,
+  canSteer: true,
+};

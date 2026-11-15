@@ -83,6 +83,28 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      getSuggestionModels: publicProcedure
+        .input(operations['agent.getSuggestionModels'].params)
+        .output(operations['agent.getSuggestionModels'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'agent.getSuggestionModels',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      setSuggestionModel: publicProcedure
+        .input(operations['agent.setSuggestionModel'].params)
+        .output(operations['agent.setSuggestionModel'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'agent.setSuggestionModel',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
     }),
     app: router({
       open: publicProcedure
