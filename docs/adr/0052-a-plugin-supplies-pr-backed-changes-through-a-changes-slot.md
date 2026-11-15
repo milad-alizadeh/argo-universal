@@ -35,7 +35,7 @@ Decided by the owner on 2026-11-13, replacing the provisional Changes UI that #2
 
 Proposed for owner approval, 2026-11-14, spec #2107. Where this section conflicts with "Discovery is an `act` Operation too" above, this section holds.
 
-- **The Engine runs `github.discover` when a Turn ends, for a Session with no attached PR.** Until now only an Agent ran it, so a PR opened from a Session stayed unattached until someone asked. A Session with any attached PR is skipped, so the run happens once per Turn end until a PR is found.
+- **The Engine runs `github.discover` when a Turn ends, for a Session with no attached PR.** Until now only an Agent ran it, so a PR opened from a Session stayed unattached until someone asked. The run passes `unlessAttached: true`, so a Session with any attached PR answers `attached` without asking GitHub, and the run happens once per Turn end until a PR is found. `attached` is a sixth answer, given only to that call.
 - **It stays a read.** It adds associations and never removes any. `no-match`, `branchless`, `not-github` and `unavailable` are data, not errors, and draw nothing.
 - **Still no timer, watcher or service.** The trigger is the Turn's end, which the Engine already knows. A PR opened in a Turn is attached by the end of that Turn, or the next at the latest. An Agent may still run `github.discover` itself.
 

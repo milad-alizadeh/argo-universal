@@ -53,6 +53,10 @@
           "sessionId": {
             "type": "string",
             "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          },
+          "unlessAttached": {
+            "type": "boolean",
+            "description": "Skip the look, and answer attached, when the Session already has a pull request. Argo sets it when a Turn ends."
           }
         }
       },
