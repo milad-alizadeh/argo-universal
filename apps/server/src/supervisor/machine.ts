@@ -40,9 +40,11 @@ export const backoffBaseMs = 500;
 
 const backoffCapMs = 30_000;
 
-export const heartbeatTimeoutMs = 5000;
+// A busy Mac can hold the Engine's event loop for seconds; a missed beat that short is load, not a hang.
+export const heartbeatTimeoutMs = 15_000;
 
-export const readyTimeoutMs = 15_000;
+// Startup repairs the database before serving, and a crowded Mac can stretch that past a minute; a restart only starts it over.
+export const readyTimeoutMs = 120_000;
 
 // Remembers the port an Engine reports and publishes it in server.json.
 const rememberEngine = [
