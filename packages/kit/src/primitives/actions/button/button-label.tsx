@@ -47,7 +47,7 @@ const labelColor = (props: ButtonProps): LabelColor =>
 
 function useButtonTextStyle(
   props: ButtonProps,
-): ReturnType<typeof useTextStyle> {
+): NonNullable<ComponentProps<typeof Text>['textStyle']> {
   const body = useTextStyle('body');
   const color = useNativeTheme().colors[labelColor(props)];
 
