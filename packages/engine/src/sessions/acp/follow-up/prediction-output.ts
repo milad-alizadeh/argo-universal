@@ -5,26 +5,20 @@ import type {
 import { FollowUpSuggestion } from '@repo/contracts';
 import { createRejectionCounter } from '@repo/machine-log';
 import { z } from 'zod';
+import { predictionJson } from './prediction-json';
 
 const Prediction = z.object({
   suggestion: FollowUpSuggestion.shape.text.unwrap().trim().min(1).nullable(),
 });
 
-const maximumOutputLength = 4096;
+// Room for an Agent's startup banner before the prediction; pi lists every installed skill and extension.
+const maximumOutputLength = 32_768;
 
 const rejections = createRejectionCounter('Follow-up suggestion');
 
-// Some Agents print a banner (e.g. "pi v1.5.2") before the JSON object.
-function jsonObject(text: string): string {
-  const start = text.indexOf('{');
-  const end = text.lastIndexOf('}');
-
-  return start === -1 || end < start ? text : text.slice(start, end + 1);
-}
-
 function predictionText(text: string): string | null {
   try {
-    return Prediction.parse(JSON.parse(jsonObject(text))).suggestion;
+    return Prediction.parse(predictionJson(text)).suggestion;
   } catch (error) {
     rejections.report('Rejected malformed prediction', error);
 
