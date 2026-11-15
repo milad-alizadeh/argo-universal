@@ -19,7 +19,7 @@ export const openChange = {
   totals: { files: 3, additions: 10, deletions: 2 },
   checks: [],
   automation: {
-    fix: { on: false, available: false },
+    fix: { on: false, available: true },
     merge: { on: false, available: true },
     archive: { on: false, available: false },
   },

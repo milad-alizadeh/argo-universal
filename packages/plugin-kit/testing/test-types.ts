@@ -57,6 +57,12 @@ export interface PluginTestOptions {
   secretStore?: SecretStore;
   // What `argo.sessions.get` answers, by Session id.
   sessions?: Record<string, PluginSessionInfo>;
+  // Stands in for the Server's prompt queue: what `argo.sessions.prompt` reaches. A Plugin without it cannot prompt.
+  promptSession?: (
+    sessionId: string,
+    text: string,
+    sender: { pluginId: string; title: string },
+  ) => Promise<{ status: 'started' | 'queued' }>;
 }
 
 // The App an items Slot list is asked from; it decides how many items show before "+N".

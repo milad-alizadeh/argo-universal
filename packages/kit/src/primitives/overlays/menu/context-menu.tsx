@@ -6,7 +6,7 @@ import { cn } from '#kit/utils';
 import { TextClassContext } from '#primitives/content/text';
 import type { ContextMenuItem, ContextMenuProps } from './context-menu-props';
 import { MenuActionLabel } from './menu-action-label';
-import { ChoiceCheck, choiceRole } from './menu-actions';
+import { ChoiceCheck, choiceRole } from './menu-choice-check';
 import { ChoiceGutterContext, hasChoice } from './menu-choice-gutter';
 import { MenuSection } from './menu-section';
 import {

@@ -77,9 +77,12 @@ export function mergeOf(
 
 const unoffered: AutomationState = { on: false, available: false };
 
-// Auto-fix and Auto-archive arrive with their own tickets, so the menu draws only what works.
-export const offerOf = (merge: AutomationState): AutomationOffer => ({
-  fix: unoffered,
+// Auto-archive arrives with its own ticket, so the menu draws only what works.
+export const offerOf = (
+  merge: AutomationState,
+  fix: AutomationState = unoffered,
+): AutomationOffer => ({
+  fix,
   merge,
   archive: unoffered,
 });

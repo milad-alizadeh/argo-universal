@@ -14,6 +14,7 @@
     "nav": [],
     "slots": ["argo/session/changes/v1", "argo/session/row/v1"],
     "instructions": "instructions.md",
+    "watch": { "path": "/", "interval": 60000 },
     "operations": [
       {
         "name": "attach",
@@ -85,13 +86,14 @@
       {
         "name": "automationSet",
         "label": "Turn an automation on or off for a pull request",
-        "description": "Turn Auto-merge on or off for one pull request attached to the calling Session. Auto-merge is GitHub's own: it merges when the pull request is ready, with the first method the repository allows (squash, merge, rebase), and shows whatever GitHub reports. An Agent's call asks the person first.",
+        "description": "Turn Auto-fix or Auto-merge on or off for one pull request attached to the calling Session. Auto-fix prompts the Session once for each failed Check of the pull request's head commit, and turns itself off after three Prompts on one commit with no new push. Auto-merge is GitHub's own: it merges when the pull request is ready, with the first method the repository allows (squash, merge, rebase), and shows whatever GitHub reports. An Agent's call asks the person first.",
         "tier": "act",
         "keywords": [
           "github",
           "pull request",
           "pr",
           "auto-merge",
+          "auto-fix",
           "automation",
           "merge",
           "session"
@@ -104,7 +106,7 @@
           },
           "kind": {
             "type": "string",
-            "description": "Which automation: merge is the only one offered so far.",
+            "description": "Which automation: fix (prompt the Session about each failed Check) or merge (GitHub's auto-merge).",
             "required": true,
             "choices": ["fix", "merge", "archive"]
           },
@@ -223,6 +225,9 @@
   "capabilities": [
     {
       "kind": "sessions:read"
+    },
+    {
+      "kind": "sessions:prompt"
     },
     {
       "kind": "fetch",

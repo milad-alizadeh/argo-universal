@@ -10,6 +10,7 @@ import {
 } from '@argo/plugin-kit/testing';
 import { onTestFinished } from 'vitest';
 import { githubFixture, pullOf, type GitHubFixture } from './github-fixture';
+import { promptRecorder } from './journey-prompts-fixture';
 import { provider, signIn } from './journey-sign-in-fixture';
 
 export const project = {
@@ -127,6 +128,7 @@ const baseOptions = (
   network: github.network,
   clockStart: 0,
   sessions,
+  promptSession: promptRecorder(github),
 });
 
 async function startOver(

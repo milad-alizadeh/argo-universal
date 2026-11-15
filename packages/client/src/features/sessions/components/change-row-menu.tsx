@@ -59,19 +59,35 @@ const isOffered = ({
 const subtitled = (subtitle?: string): Pick<ContextMenuItem, 'subtitle'> =>
   subtitle ? { subtitle } : {};
 
+// A reason on an item that can be used says it stopped itself, which the design draws in the warning tone.
+const toned = ({
+  available,
+  reason,
+}: Automation[ChangeAutomationKind]): Pick<ContextMenuItem, 'subtitleTone'> =>
+  available && reason ? { subtitleTone: 'warning' } : {};
+
+// An item is ticked while its automation is on, and cannot be pressed while it is unavailable.
+const markOf = ({
+  on,
+  available,
+}: Automation[ChangeAutomationKind]): Pick<
+  ContextMenuItem,
+  'selected' | 'disabled'
+> => ({ selected: on, disabled: !available });
+
 function automationItem(
   { kind, label, icon, subtitle: fixed }: AutomationEntry,
-  { on, available, reason }: Automation[ChangeAutomationKind],
+  state: Automation[ChangeAutomationKind],
   onSetAutomation: NonNullable<MenuProps['onSetAutomation']>,
 ): ContextMenuItem {
   return {
     id: `automation-${kind}`,
     label,
     icon,
-    selected: on,
-    disabled: !available,
-    ...subtitled(reason ?? fixed),
-    onPress: () => onSetAutomation(kind, !on),
+    ...markOf(state),
+    ...subtitled(state.reason ?? fixed),
+    ...toned(state),
+    onPress: () => onSetAutomation(kind, !state.on),
   };
 }
 
@@ -112,6 +128,11 @@ const labelsOf = ({
   ...(subtitle && { subtitle }),
 });
 
+const toneOf = ({
+  subtitleTone,
+}: ContextMenuItem): Pick<MenuAction, 'subtitleTone'> =>
+  subtitleTone ? { subtitleTone } : {};
+
 const iconOf = ({ icon }: ContextMenuItem): Pick<MenuAction, 'icon'> =>
   icon ? { icon } : {};
 
@@ -130,6 +151,7 @@ const actionOf = (
   label: item.label,
   onPress: item.onPress,
   ...labelsOf(item),
+  ...toneOf(item),
   ...iconOf(item),
   ...flagsOf(item),
   ...(startsSection && { section: {} }),

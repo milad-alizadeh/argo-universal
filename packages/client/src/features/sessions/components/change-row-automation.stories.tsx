@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { fn } from 'storybook/test';
 import { ChangeRow } from './change-row';
 import {
+  autoFixStoppedChangeRow,
   autoMergeOffChangeRow,
   autoMergeOnChangeRow,
   autoMergeUnavailableChangeRow,
@@ -63,5 +64,11 @@ export const AutoMergeOn: Story = {
 // Disabled, with the reason under the label.
 export const AutoMergeUnavailable: Story = {
   args: autoMergeUnavailableChangeRow,
+  play: openMenu,
+};
+
+// Auto-fix gave up after three tries on one commit: unticked, enabled, with the reason under it in the warning tone.
+export const AutoFixStopped: Story = {
+  args: autoFixStoppedChangeRow,
   play: openMenu,
 };

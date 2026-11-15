@@ -4,16 +4,11 @@ import type * as React from 'react';
 import { Fragment } from 'react';
 import { View } from 'react-native';
 import { windowEdgeInset } from '#kit/menu-surface';
-import { IconSlot } from '#primitives/content/icon';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { Chevron } from '#primitives/status/chevron';
-import { SelectedCheck } from '#primitives/status/selected-check';
 import { MenuActionLabel } from './menu-action-label';
-import {
-  ChoiceGutterContext,
-  hasChoice,
-  useChoiceGutter,
-} from './menu-choice-gutter';
+import { ChoiceCheck, choiceRole } from './menu-choice-check';
+import { ChoiceGutterContext, hasChoice } from './menu-choice-gutter';
 import type { KeyboardFocus } from './menu-choices';
 import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';
@@ -148,30 +143,6 @@ function actionItemProps(action: MenuAction): RadixMenu.DropdownMenuItemProps {
     onSelect: action.onPress,
     ...choiceRole(action.selected),
   };
-}
-
-// An action that can be the selected one is a radio row, as the native menus check it.
-export function choiceRole(
-  selected: boolean | undefined,
-): Pick<RadixMenu.DropdownMenuItemProps, 'role' | 'aria-checked'> {
-  if (selected === undefined) return {};
-
-  return { role: 'menuitemradio', 'aria-checked': selected };
-}
-
-// The leading check on the selected action, as every popover row (owner, 2026-10-20); in a menu with a row that can be ticked, the others keep its place, so icons and labels line up.
-export function ChoiceCheck({
-  selected,
-}: Pick<MenuAction, 'selected'>): React.JSX.Element | null {
-  const kept = useChoiceGutter();
-
-  if (selected === undefined && !kept) return null;
-
-  return (
-    <IconSlot>
-      {selected ? <SelectedCheck className="text-foreground" /> : null}
-    </IconSlot>
-  );
 }
 
 function actionRow(action: MenuAction): React.ComponentProps<typeof View> {

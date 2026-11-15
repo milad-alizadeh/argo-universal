@@ -4,6 +4,7 @@
   "exclude": [
     "**/*.test.ts",
     "**/node_modules",
+    "auto-fix-fixture.ts",
     "auto-merge-fixture.ts",
     "github-fixture-automation.ts",
     "github-fixture-rest.ts",
@@ -13,6 +14,7 @@
     "journey-files-fixture.ts",
     "journey-fixture.ts",
     "journey-sign-in-fixture.ts",
+    "journey-prompts-fixture.ts",
     "journey-watch-fixture.ts",
     "open-change-fixture.ts",
     "vitest.config.ts"

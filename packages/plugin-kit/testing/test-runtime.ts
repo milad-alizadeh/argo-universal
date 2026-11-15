@@ -22,6 +22,15 @@ export type RuntimeParts = {
   accounts: TestAccounts['accounts'];
 };
 
+const hostOf = ({
+  clockStart,
+  promptSession,
+  network,
+}: ConfiguredTest): Pick<
+  ConfiguredTest,
+  'clockStart' | 'promptSession' | 'network'
+> => ({ clockStart, promptSession, network });
+
 export function runtimeFor(
   home: string,
   options: ConfiguredTest,
@@ -29,8 +38,7 @@ export function runtimeFor(
 ): PluginRuntime {
   return createPluginRuntime(home, {
     ...parts,
-    clockStart: options.clockStart,
-    network: options.network,
+    ...hostOf(options),
     oauth: oauthOf(options),
     settings: settingsOf(options, parts.secretStore),
     ...projectOptions(options),

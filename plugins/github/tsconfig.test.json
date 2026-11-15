@@ -8,6 +8,7 @@
     "journey-files-fixture.ts",
     "journey-fixture.ts",
     "journey-sign-in-fixture.ts",
+    "journey-prompts-fixture.ts",
     "journey-watch-fixture.ts",
     "open-change-fixture.ts",
     "plugin.gen.d.ts",

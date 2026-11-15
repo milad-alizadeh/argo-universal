@@ -13,12 +13,12 @@ import { openRepository } from './github-fixture-automation';
 import { restart } from './journey-fixture';
 
 it(
-  'offers Auto-merge, off, on an open pull request, and offers no Auto-fix or Auto-archive yet',
+  'offers Auto-merge, off, on an open pull request, and Auto-fix, and offers no Auto-archive yet',
   async () => {
     const run = await attached();
 
     expect(await automationOf(run)).toEqual({
-      fix: { on: false, available: false },
+      fix: { on: false, available: true },
       merge: { on: false, available: true },
       archive: { on: false, available: false },
     });

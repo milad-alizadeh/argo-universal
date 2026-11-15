@@ -1,5 +1,6 @@
 import { mergeOf, offerOf, type Reads } from './pull-automation';
 import { changeOf, type ChangeItem, type Refresh } from './pull-change';
+import { fixOf } from './pull-fix';
 import { failureMessage, type Known } from './pull-known';
 import type { LinkRead } from './pull-link-reads';
 
@@ -23,7 +24,12 @@ const readsOf = ({ autoMerge, settings }: LinkRead): Reads => ({
 // What the Change offers to automate; GitHub's own answers, so one it could not give is never drawn as off.
 const automationOf = (read: LinkRead): Pick<Refresh, 'automation'> =>
   read.pull.data
-    ? { automation: offerOf(mergeOf(read.pull.data, readsOf(read))) }
+    ? {
+        automation: offerOf(
+          mergeOf(read.pull.data, readsOf(read)),
+          fixOf(read.fix, read.pull.data),
+        ),
+      }
     : {};
 
 // Stale when either read failed: the Change is what was last known, with why it could not be refreshed.

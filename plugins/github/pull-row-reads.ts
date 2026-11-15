@@ -1,4 +1,10 @@
-import { readLink, type ChangesSource, type LinkRead } from './pull-link-reads';
+import type { FixRecord } from './pull-fix-store';
+import {
+  attachFix,
+  readLink,
+  type ChangesSource,
+  type LinkRead,
+} from './pull-link-reads';
 import type { PullLink } from './pull-store';
 
 /*
@@ -41,15 +47,30 @@ type Drawn = (read: LinkRead) => string;
 const rowDrawn: Drawn = ({ pull }) =>
   JSON.stringify(pull.data ? [pull.data.title, pull.data.stage] : null);
 
-// What the Changes draw of a pull request: all that is known of it and its Checks, a failed read included.
-const changeDrawn: Drawn = ({ pull, checks }) =>
-  JSON.stringify([pull, checks ?? null]);
+// What the Changes draw of a pull request: all that is known of it, its Checks and its Auto-fix, a failed read included.
+const changeDrawn: Drawn = ({ pull, checks, fix }) =>
+  JSON.stringify([pull, checks ?? null, fix ?? null]);
+
+type Stored = { links: readonly PullLink[]; fixes: readonly FixRecord[] };
+
+// What the Plugin keeps of these Sessions: their associations, and what Auto-fix keeps beside them.
+async function storedOf(
+  { store }: ChangesSource,
+  sessionIds: readonly string[],
+): Promise<Stored> {
+  const [links, fixes] = await Promise.all([
+    store.forSessions(sessionIds),
+    store.fix.forSessions(sessionIds),
+  ]);
+
+  return { links, fixes };
+}
 
 // Reads every link, keeping each one GitHub answered as the last known for when a later read is slow.
 const readAll = (
   source: ChangesSource,
   last: Last,
-  links: readonly PullLink[],
+  { links, fixes }: Stored,
 ): Promise<LinkRead[]> =>
   Promise.all(
     links.map(async (link) => {
@@ -57,7 +78,7 @@ const readAll = (
 
       if (read.pull.data) last.set(keyOf(link), read);
 
-      return read;
+      return attachFix(read, fixes);
     }),
   );
 
@@ -87,14 +108,14 @@ function timedReads(source: ChangesSource, asking: Asking): RowReads {
   const last: Last = new Map();
 
   return async (sessionIds) => {
-    const links = await source.store.forSessions(sessionIds);
-    const reads = readAll(source, last, links);
+    const stored = await storedOf(source, sessionIds);
+    const reads = readAll(source, last, stored);
     const answered = await inTime(reads, rowWaitMs);
 
     if (answered) return answered;
 
-    const shown = links.map(
-      (link) => last.get(keyOf(link)) ?? { link, pull: {} },
+    const shown = stored.links.map((link) =>
+      attachFix(last.get(keyOf(link)) ?? { link, pull: {} }, stored.fixes),
     );
 
     askAgainWhenLanded(reads, shown, asking);

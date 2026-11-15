@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { expect, fn, screen, waitFor } from 'storybook/test';
 import { ChangeRow } from './change-row';
 import {
+  autoFixStoppedChangeRow,
   autoMergeOffChangeRow,
   autoMergeOnChangeRow,
   autoMergeUnavailableChangeRow,
@@ -52,6 +53,11 @@ const openMenu = async (userEvent: User): Promise<void> => {
 
 const mergeName = 'Auto-merge';
 
+const ariaChecked = 'aria-checked';
+
+const checkItem = (name: string | RegExp): Promise<HTMLElement> =>
+  screen.findByRole('menuitemradio', { name });
+
 const labels = async (): Promise<string[]> =>
   (await screen.findAllByRole('menuitem')).map(spokenText);
 
@@ -91,11 +97,9 @@ function ticking(width: number): Story {
       await settleLayout(width);
       await openMenu(userEvent);
 
-      const item = await screen.findByRole('menuitemradio', {
-        name: mergeName,
-      });
+      const item = await checkItem(mergeName);
 
-      await expect(item).toHaveAttribute('aria-checked', 'false');
+      await expect(item).toHaveAttribute(ariaChecked, 'false');
       await settleOverlays(item);
       await userEvent.click(item);
       await waitFor(() =>
@@ -117,11 +121,9 @@ export const UntickingAutoMergeAsksForItOff: Story = {
     await settleLayout('wide');
     await openMenu(userEvent);
 
-    const item = await screen.findByRole('menuitemradio', {
-      name: mergeName,
-    });
+    const item = await checkItem(mergeName);
 
-    await expect(item).toHaveAttribute('aria-checked', 'true');
+    await expect(item).toHaveAttribute(ariaChecked, 'true');
     await settleOverlays(item);
     await userEvent.click(item);
     await waitFor(() =>
@@ -137,9 +139,7 @@ export const UnavailableAutoMergeSaysWhyAndIsDisabled: Story = {
     await settleLayout('wide');
     await openMenu(userEvent);
 
-    const item = await screen.findByRole('menuitemradio', {
-      name: mergeName,
-    });
+    const item = await checkItem(mergeName);
 
     await expect(item).toHaveAttribute('aria-disabled', 'true');
     await expect(item).toHaveTextContent(
@@ -164,5 +164,25 @@ export const DrawsNoAutomationWhenNoneIsOffered: Story = {
     await expect(screen.queryByText(mergeName)).not.toBeInTheDocument();
     await expect(screen.queryByText('Auto-fix')).not.toBeInTheDocument();
     await expect(screen.queryByText('Auto-archive')).not.toBeInTheDocument();
+  },
+};
+
+// A stopped Auto-fix stays usable: its reason sits under it, and a tap turns it on again.
+export const StoppedAutoFixSaysWhyAndCanBeTurnedBackOn: Story = {
+  args: autoFixStoppedChangeRow,
+  play: async ({ userEvent, args }) => {
+    await settleLayout('wide');
+    await openMenu(userEvent);
+
+    const item = await checkItem(/^Auto-fix/);
+
+    await expect(item).toHaveAttribute(ariaChecked, 'false');
+    await expect(item).not.toHaveAttribute('aria-disabled', 'true');
+    await expect(item).toHaveTextContent('Stopped after 3 tries on a1b2c3d');
+    await settleOverlays(item);
+    await userEvent.click(item);
+    await waitFor(() =>
+      expect(args.onSetAutomation).toHaveBeenCalledWith('fix', true),
+    );
   },
 };

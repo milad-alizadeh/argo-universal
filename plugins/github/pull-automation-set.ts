@@ -8,9 +8,10 @@ import {
 import { fetchAutoMerge, fetchMergeSettings } from './pull-automation-reads';
 import { disableAutoMerge, enableAutoMerge } from './pull-automation-writes';
 import { requireAttached } from './pull-file-operations';
+import { failedOf } from './pull-fix';
 import type { PullInfo } from './pull-info';
 import { namedOf, type Scope } from './pull-operations';
-import { fetchPull } from './pull-reads';
+import { fetchChecks, fetchPull } from './pull-reads';
 import type { SessionCaller } from './session-caller';
 
 export type AutomationParams = {
@@ -19,27 +20,38 @@ export type AutomationParams = {
   on: boolean;
 };
 
+const requireOffered = (kind: AutomationParams['kind']): void => {
+  if (kind === 'archive')
+    throw new Error(`Auto-${kind} is not available for this pull request.`);
+};
+
+const turn = (
+  scope: Scope,
+  { kind, on }: AutomationParams,
+  { sessionId, ...target }: FixTarget,
+): Promise<void> =>
+  kind === 'fix'
+    ? setFix(scope, { ...target, sessionId }, on)
+    : apply(scope, target, on);
+
 /*
- * Sets one automation on one pull request attached to the calling Session. Only Auto-merge is offered for now; it is
- * GitHub's own, so GitHub is asked fresh, and nothing is stored: the Change reads `on` back from GitHub afterwards.
+ * Sets one automation on one pull request attached to the calling Session. Auto-merge is GitHub's own, so GitHub is
+ * asked fresh and nothing is stored: the Change reads `on` back from GitHub afterwards. Auto-fix is the Plugin's own.
  */
 export async function setAutomation(
   scope: Scope,
   params: AutomationParams,
   caller: SessionCaller,
 ): Promise<{ kind: AutomationParams['kind']; on: boolean }> {
-  const { kind, on } = params;
-
-  if (kind !== 'merge')
-    throw new Error(`Auto-${kind} is not available for this pull request.`);
+  requireOffered(params.kind);
 
   const named = await namedOf(scope, params.reference, caller);
 
   await requireAttached(scope, named, caller);
-  await apply(scope, { ...named, projectId: caller.projectId }, on);
+  await turn(scope, params, { ...named, ...caller });
   scope.changed();
 
-  return { kind, on };
+  return { kind: params.kind, on: params.on };
 }
 
 type Target = { repository: string; number: number; projectId: string };
@@ -99,4 +111,44 @@ async function apply(
   const read = await readAll(fetch, target);
 
   await (on ? turnOn : turnOff)(fetch, target, read);
+}
+
+type FixTarget = Target & { sessionId: string };
+
+const isOn = async (
+  { store }: Pick<Scope, 'store'>,
+  { sessionId, repository, number }: FixTarget,
+): Promise<boolean> =>
+  (await store.fix.forSessions([sessionId])).some(
+    (record) =>
+      record.repository === repository &&
+      record.number === number &&
+      record.enabled,
+  );
+
+async function enableFix(
+  { fetch, store }: Pick<Scope, 'fetch' | 'store'>,
+  target: FixTarget,
+  link: FixTarget,
+): Promise<void> {
+  const { head } = await fetchPull(fetch, target);
+  const checks = await fetchChecks(fetch, { ...target, head });
+
+  await store.fix.enable(link, head, failedOf(checks));
+}
+
+/*
+ * Auto-fix is the Plugin's own: turning it on reads the head's Checks first, so a failure already there is not
+ * prompted, and a read that fails refuses turning it on rather than guessing. Turning it on when it is on changes nothing.
+ */
+async function setFix(
+  scope: Pick<Scope, 'fetch' | 'store'>,
+  target: FixTarget,
+  on: boolean,
+): Promise<void> {
+  const link = { ...target, repository: target.repository.toLowerCase() };
+
+  if (!on) return scope.store.fix.disable(link);
+
+  if (!(await isOn(scope, link))) await enableFix(scope, target, link);
 }
