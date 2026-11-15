@@ -35,9 +35,10 @@ export type TokenPasteState =
  * A Plugin's token-paste sign-in for one service. It lives in the Plugin's module, so every page and every App sees
  * one sign-in, and each change of `state()` calls `argo.changed()`. A token is pasted on any Device.
  *
- * - `start(token)` checks the token with `label`; an accepted one adds the Account, or finds the one already signed in
- *   with that label, and keeps the token as its Secret. It answers the state then. A token pasted while an earlier
- *   one is being checked replaces it.
+ * - `start(token)` checks the token, without its surrounding spaces, with `label`; an accepted one adds the Account,
+ *   or finds the one already signed in with that label, and keeps the token as its Secret. It answers the state
+ *   then. Text shorter than 8 characters is no token: it is not checked, and leaves the paste `idle`. A token pasted
+ *   while an earlier one is being checked or kept replaces it, and the earlier one keeps nothing.
  * - `cancel()` forgets a failed paste and answers `idle`.
  * - `provide()` registers the Account's provider, which hands a borrower's request the kept token.
  */

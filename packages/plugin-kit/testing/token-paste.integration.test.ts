@@ -1,6 +1,9 @@
 import { expect, it } from 'vitest';
 import {
   borrowerId,
+  carelessId,
+  fieldSectionOf,
+  keeps,
   itemsText,
   paste,
   secretFieldOf,
@@ -8,71 +11,139 @@ import {
   tokenService,
 } from './token-paste-fixture';
 
+const notAccepted = 'This token wasn’t accepted. Check it and paste it again.';
+
 it('signs a throwaway Plugin in with a pasted token, from a paired Device, and reads as the person', async () => {
-  const service = await tokenService({ 'token-1': 'person' });
+  const service = await tokenService({ 'token-1-8f3a': 'person' });
   const test = await start(service);
   const page = await test.pages.open({ path: '/', projectId: 'one' });
 
-  await paste(test, page, 'token-1');
+  await paste(test, page, 'token-1-8f3a');
 
+  expect(page.findText('Continue on the Server Device')).toBeUndefined();
   expect(page.findText(itemsText)).toBeDefined();
-  expect(service.readTokens()).toEqual(['token-1']);
+  expect(service.readTokens()).toEqual(['token-1-8f3a']);
   expect(test.accounts.list()).toMatchObject([{ label: 'person' }]);
-  expect(await test.log()).not.toContain('token-1');
+  expect(await test.log()).not.toContain('token-1-8f3a');
 });
 
 it('shows a token the service refuses as an error beside the field, and adds no Account', async () => {
-  const service = await tokenService({ 'token-1': 'person' });
+  const service = await tokenService({ 'token-1-8f3a': 'person' });
   const test = await start(service);
   const page = await test.pages.open({ path: '/', projectId: 'one' });
 
   await paste(test, page, 'wrong-token');
 
-  expect(secretFieldOf(page)).toMatchObject({
-    props: { error: expect.stringContaining('wasn’t accepted') },
-  });
+  expect(fieldSectionOf(page).props.footer).toBe(notAccepted);
+  expect(secretFieldOf(page).props.error).toBe(notAccepted);
+  expect(keeps(page, 'wrong-token')).toBe(false);
   expect(page.findText(itemsText)).toBeUndefined();
   expect(test.accounts.list()).toEqual([]);
 
-  await paste(test, page, 'token-1');
+  await paste(test, page, 'token-1-8f3a');
 
   expect(page.findText(itemsText)).toBeDefined();
 });
 
 it('signs in again with a new token once the service refuses the kept one, and keeps one Account', async () => {
   const service = await tokenService({
-    'token-1': 'person',
-    'token-2': 'person',
+    'token-1-8f3a': 'person',
+    'token-2-c41d': 'person',
   });
 
   const test = await start(service);
   const page = await test.pages.open({ path: '/', projectId: 'one' });
 
-  await paste(test, page, 'token-1');
-  service.revoke('token-1');
+  await paste(test, page, 'token-1-8f3a');
+  service.revoke('token-1-8f3a');
   await page.draw();
 
   expect(
     page.findText('api.service.example no longer accepts this sign-in.'),
   ).toBeDefined();
 
-  await paste(test, page, 'token-2');
+  await paste(test, page, 'token-2-c41d');
 
   expect(page.findText(itemsText)).toBeDefined();
-  expect(service.readTokens()).toEqual(['token-1', 'token-1', 'token-2']);
+  expect(service.readTokens()).toEqual([
+    'token-1-8f3a',
+    'token-1-8f3a',
+    'token-2-c41d',
+  ]);
   expect(test.accounts.list()).toMatchObject([{ label: 'person' }]);
 });
 
 it('lends the pasted token to a second Plugin that borrows the Account, which never sees it', async () => {
-  const service = await tokenService({ 'token-1': 'person' });
+  const service = await tokenService({ 'token-1-8f3a': 'person' });
   const test = await start(service);
   const page = await test.pages.open({ path: '/', projectId: 'one' });
 
-  await paste(test, page, 'token-1');
+  await paste(test, page, 'token-1-8f3a');
 
   await expect(
     test.operations.run({ name: 'readItems', pluginId: borrowerId }),
   ).resolves.toBe(itemsText);
-  expect(service.readTokens()).toEqual(['token-1', 'token-1']);
-  expect(await test.log(borrowerId)).not.toContain('token-1');
+  expect(service.readTokens()).toEqual(['token-1-8f3a', 'token-1-8f3a']);
+  expect(await test.log(borrowerId)).not.toContain('token-1-8f3a');
+});
+
+it('answers a refused paste without the token, and keeps it out of the page', async () => {
+  const service = await tokenService({ 'token-1-8f3a': 'person' });
+  const test = await start(service);
+
+  const answer = await test.pages.run({
+    operation: 'signIn',
+    args: { token: 'wrong-token' },
+    projectId: 'one',
+  });
+
+  expect(answer).toEqual({
+    result: { kind: 'failed', reason: 'rejected', message: notAccepted },
+  });
+
+  const page = await test.pages.open({ path: '/sign-in', projectId: 'one' });
+
+  expect(fieldSectionOf(page).props.footer).toBe(notAccepted);
+  expect(keeps(page, 'wrong-token')).toBe(false);
+});
+
+it('shows a check that throws as a fixed message, never the Plugin’s error that names the token', async () => {
+  const service = await tokenService({});
+  const test = await start(service, carelessId);
+  const page = await test.pages.open({ path: '/', projectId: 'one' });
+
+  await paste(test, page, 'token-9-77ab');
+
+  expect(fieldSectionOf(page).props.footer).toBe(
+    'Couldn’t check the token. Check your connection and paste it again.',
+  );
+  expect(keeps(page, 'token-9-77ab')).toBe(false);
+  expect(test.accounts.list()).toEqual([]);
+});
+
+it('signs in with a pasted token whose surrounding spaces and newline are left out', async () => {
+  const service = await tokenService({ 'token-1-8f3a': 'person' });
+  const test = await start(service);
+  const page = await test.pages.open({ path: '/', projectId: 'one' });
+
+  await paste(test, page, '  token-1-8f3a\n');
+
+  expect(page.findText(itemsText)).toBeDefined();
+  expect(service.readTokens()).toEqual(['token-1-8f3a']);
+});
+
+it('asks the service nothing for text too short to be a token, and an emptied field clears the error', async () => {
+  const service = await tokenService({ 'token-1-8f3a': 'person' });
+  const test = await start(service);
+  const page = await test.pages.open({ path: '/', projectId: 'one' });
+
+  await paste(test, page, 'wrong-token');
+  expect(fieldSectionOf(page).props.footer).toBe(notAccepted);
+
+  await paste(test, page, 'tok');
+  await paste(test, page, '');
+
+  expect(service.checkedTokens()).toEqual(['wrong-token']);
+  expect(fieldSectionOf(page).props.footer).toBeUndefined();
+  expect(test.accounts.list()).toEqual([]);
 });

@@ -66,8 +66,14 @@ function settle(
 }
 
 /*
+ * Text shorter than this is no API token any service issues, so it is not sent to be checked: a person typing a token
+ * by hand does not spend the service's patience on its first characters, and an emptied field shows no error.
+ */
+const shortestToken = 8;
+
+/*
  * A newer paste replaces this one, whose check then changes nothing: a person typing a token sends each edit, and
- * only the last one counts. An empty field is no token at all.
+ * only the last one counts.
  */
 async function pasted(
   held: Held,
@@ -78,7 +84,7 @@ async function pasted(
 
   held.paste = mine;
 
-  if (!token) return settle(held, given.argo, idle);
+  if (token.length < shortestToken) return settle(held, given.argo, idle);
 
   const state = await checked(given, token, () => held.paste === mine);
 
@@ -103,6 +109,12 @@ async function checked(
 
   // Argo mints the Account id and reuses the row of a person who signs in again; the token is kept under it.
   const id = await argo.accounts.add(options.host, { label });
+
+  /*
+   * Overtaken while the Account was added: the newer paste keeps its own token, so this one keeps none. Argo has no
+   * call to take the row back; it is the same row unless the two tokens open different Accounts.
+   */
+  if (!live()) return idle;
 
   await argo.secrets.set(id, token);
 

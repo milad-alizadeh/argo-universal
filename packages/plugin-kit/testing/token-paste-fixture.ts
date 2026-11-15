@@ -18,8 +18,9 @@ const unauthorized = 401;
 export type TokenService = Pick<PluginTestOptions, 'network'> & {
   // Takes a token back, as revoking it in the service does.
   revoke: (token: string) => void;
-  // The bearer tokens of the reads that reached `/items`.
+  // The bearer tokens of the reads that reached `/items`, and of the checks that reached `/me`.
   readTokens: () => string[];
+  checkedTokens: () => string[];
 };
 
 const bearerOf = ({ headers }: Pick<FixtureRequest, 'headers'>): string =>
@@ -48,6 +49,8 @@ export async function tokenService(
     revoke: (token) => accepted.delete(token),
     readTokens: () =>
       requests.filter(({ path }) => path === '/items').map(bearerOf),
+    checkedTokens: () =>
+      requests.filter(({ path }) => path === '/me').map(bearerOf),
   };
 }
 
@@ -57,10 +60,16 @@ const directory = fileURLToPath(
 
 export const borrowerId = 'token-paste-borrower';
 
-export async function start(service: TokenService): Promise<PluginTest> {
+// A Plugin whose `label` check throws an error that names the token, as a careless one might.
+export const carelessId = 'token-paste-careless';
+
+export async function start(
+  service: TokenService,
+  pluginId = 'token-paste',
+): Promise<PluginTest> {
   const test = await startPluginTest({
     directory,
-    pluginId: 'token-paste',
+    pluginId,
     version: '0.0.0',
     clockStart: 0,
     projects: [{ id: 'one', name: 'One', originUrl: null }],
@@ -75,8 +84,8 @@ export async function start(service: TokenService): Promise<PluginTest> {
 const isSecretField = (node: { type: string }): boolean =>
   node.type === 'FieldGroup.SecretField';
 
-// How long typed text waits before it is sent, as the App coalesces it.
-const typingPauseMs = 300;
+// Typed text is sent once the typing pauses for 150 ms, as the App coalesces a text field's changes.
+const typingPauseMs = 150;
 
 // Pastes a token into the page's SecretField, as a person does, and waits for the run it sends.
 export async function paste(
@@ -90,3 +99,11 @@ export async function paste(
 
 export const secretFieldOf = (page: OpenPage): WireNode =>
   page.find(isSecretField);
+
+// The Section the field sits in, whose footer is the error a person reads.
+export const fieldSectionOf = (page: OpenPage): WireNode =>
+  page.find((node) => node.type === 'FieldGroup.Section');
+
+// Whether a text shows anywhere the App keeps of the page: its tree or its Page state.
+export const keeps = (page: OpenPage, text: string): boolean =>
+  JSON.stringify([page.tree, page.pageState]).includes(text);

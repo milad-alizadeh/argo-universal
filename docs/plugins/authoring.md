@@ -652,7 +652,9 @@ argo.pages.define('/', signInGate(flow, { name: 'Linear' }, { load, render }));
 - `label(token)` checks a pasted token: call the service with it, as `argo.fetch(url, { headers })`, and answer whose Account it opens, or `null` when the service refuses it. It is the only Plugin code that sees the token, and only the one being pasted; never keep it.
 - Declare `signIn` in `contributes.operations`, tier `act`, with one param `token`: `{ "type": "string", "description": "The pasted API token.", "required": true, "secret": true }`. The sign-in page's `FieldGroup.SecretField` sends what is pasted to it, so the token is never logged, answered or kept in Page state (ADR-0051). A token paste needs no `cancelSignIn`.
 - A refused token is shown beside the field, which stays for the next paste. A token is pasted on any Device, a paired phone included. Signing in again with a token for the same label rewrites that Account's token, so a revoked token's gate takes a new one.
-- `flow.state()` is `idle`, `signed-in` with the Account's `label`, or `failed` with the `message` drawn beside the field. While one token is checked a newer paste replaces it, so typing a token by hand adds the Account only for the last edit.
+- `flow.state()` is `idle`, `signed-in` with the Account's `label`, or `failed` with the `message` drawn beside the field. A `label` that throws shows a fixed message, never its error, which may name the token.
+- The field sends its text each time typing pauses for 150 ms, and each send is checked with `label`; a paste is one send. A token typed by hand is therefore checked at every pause, and "wasn't accepted" can show while the person is still typing; the field keeps their text. Text shorter than 8 characters is never sent to `label`, and an emptied field clears the error. The token is trimmed of surrounding spaces before it is checked.
+- A newer send replaces one still being checked or kept: the older one keeps no token, and adds no Account unless it was already being added.
 
 ### `argo.oauth`
 
