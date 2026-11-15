@@ -58,10 +58,10 @@ const field =
   (node: WireNode): boolean =>
     node.type === type && node.props.title === title;
 
-export const textField = (title: string): ((node: WireNode) => boolean) =>
+const textField = (title: string): ((node: WireNode) => boolean) =>
   field('FieldGroup.TextField', title);
 
-export const picker = (title: string): ((node: WireNode) => boolean) =>
+const picker = (title: string): ((node: WireNode) => boolean) =>
   field('FieldGroup.Picker', title);
 
 // Types into a field as a person does, and waits for the pause that lands it.
@@ -84,7 +84,7 @@ export function tokenError(page: OpenPage): string | undefined {
   return typeof error === 'string' ? error : undefined;
 }
 
-export async function pasteToken(
+async function pasteToken(
   { test }: Jira,
   page: OpenPage,
   token: string,

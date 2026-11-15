@@ -1,7 +1,7 @@
 import type { JiraRequest } from './jira-client';
 
 // The fields a list row shows; a detail page asks for more.
-export const rowFields = ['summary', 'status', 'assignee', 'priority'];
+const rowFields = ['summary', 'status', 'assignee', 'priority'];
 
 const pageSize = 50;
 

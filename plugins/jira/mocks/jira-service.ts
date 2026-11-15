@@ -8,8 +8,6 @@ import { jiraData, type JiraData } from './jira-data';
 import { notFound, routed, type Routed, type Routing } from './jira-gateway';
 import { jiraRoutes, type JiraRoute } from './jira-routes';
 
-export type { JiraCall, JiraRoute } from './jira-routes';
-
 /*
  * Jira Cloud as the Plugin meets it, for its tests: Atlassian's gateway at `api.atlassian.com/ex/jira/<cloudId>`, which
  * takes a scoped token as Basic auth, each site's own API at `<site>.atlassian.net`, which takes only an unscoped one,

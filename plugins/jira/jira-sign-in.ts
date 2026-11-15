@@ -25,7 +25,7 @@ import { notices } from './sign-in-notices';
  * empty and the Secret is the `Authorization` value, so another way to sign in can keep a Bearer token on the same
  * Account.
  */
-export type SignInInput = { email: string; site: string; token: string };
+type SignInInput = { email: string; site: string; token: string };
 
 export type JiraSignIn = Readonly<{
   flow: TokenPaste;

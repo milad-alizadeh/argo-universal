@@ -8,7 +8,7 @@ export type Routed = { name: string; answer: () => FixtureAnswer };
 
 export type Routing = { data: JiraData; routes: JiraRoute[] };
 
-export const unauthorized: FixtureAnswer = {
+const unauthorized: FixtureAnswer = {
   status: 401,
   json: {
     code: 401,

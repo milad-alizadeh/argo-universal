@@ -28,7 +28,7 @@ export type JiraReply = Readonly<{ status: number; body: string }> | null;
 
 type JiraHeaders = Readonly<{ Accept: string; 'Content-Type'?: string }>;
 
-export type JiraInit = { method: string; headers: JiraHeaders; body?: string };
+type JiraInit = { method: string; headers: JiraHeaders; body?: string };
 
 export type JiraSend = (url: string, init: JiraInit) => Promise<JiraReply>;
 
