@@ -296,6 +296,10 @@ _Avoid_: Status, state
 A Plugin's own record that a Session produced one pull request, named by its repository and number. It survives a branch switch and a Server restart until detached, and it makes the pull request a Change in that Session.
 _Avoid_: PR link, attachment
 
+**Pull request record**:
+What a Plugin last read of one pull request, kept in its own storage: the pull request, its Checks, and why the latest read failed. The Session row, the Changes and the Operations all read it, and only the Plugin's sync writes it.
+_Avoid_: PR cache, PR status, snapshot
+
 **Comparison**:
 What a Checkout's changed files are measured against: `main`, `uncommitted`, or another branch.
 _Avoid_: Base, diff target

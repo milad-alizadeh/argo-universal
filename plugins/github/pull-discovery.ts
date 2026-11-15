@@ -7,9 +7,11 @@ import {
 } from './discovery-reads';
 import { repositoryOfOrigin, type PullReference } from './pull-reference';
 import type { PullStore } from './pull-store';
+import type { Pulls } from './pull-sync';
 import type { SessionCaller } from './session-caller';
 
-type Scope = Pick<Argo, 'fetch' | 'changed'> & { store: PullStore };
+type Scope = Pick<Argo, 'fetch' | 'changed'> &
+  Pick<Pulls, 'sync'> & { store: PullStore };
 
 // What discovery found, or why it could not look; each is its own answer so an Agent never reads one as another.
 export type Discovered =
@@ -53,11 +55,13 @@ async function look(
 }
 
 async function remember(
-  { store, changed }: Scope,
+  { store, sync, changed }: Scope,
   found: readonly PullReference[],
   caller: SessionCaller,
 ): Promise<void> {
   await Promise.all(found.map((pull) => store.attach({ ...caller, ...pull })));
+  // Each one found is read and kept before the answer, so every surface shows it at once.
+  await sync([caller.sessionId]);
   changed();
 }
 
