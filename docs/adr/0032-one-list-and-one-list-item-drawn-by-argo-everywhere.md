@@ -72,6 +72,8 @@ What the native rows give that Argo's can't match is small:
 - **Settings disclosures.** Native disclosure inside a Form goes away with the Form; Collapsible stays Argo-drawn everywhere.
 - **The Plugin wire** has `List`, `List.Section`, `ListItem` and the five wrappers. Their Contracts schemas refuse controls in `trailing`, so a misplaced Switch fails in the author's editor. `GroupedList` and `VirtualList` become `List` with an appearance. The old names are gone, with no aliases: [ADR-0034](0034-plugin-apps-check-one-wire-version.md) removed lowering.
 
+A Composer queue tray is a compact web List at every window width (owner, 2026-11-14). It fits its rows without page insets or end spacing. Its dotted leading grip alone starts a mouse drag; edit and delete retain pointer cursors. Native rows keep their touch targets. Other content Lists keep the wide-window density rule.
+
 ## Consequences
 
 - ADR-0020's "Native grouped sections" and "Custom symbols in native rows" sections no longer apply to rows. Native rows were the only reason for them.

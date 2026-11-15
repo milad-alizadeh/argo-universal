@@ -1,4 +1,5 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
+import { ListDragHandle } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
@@ -18,7 +19,9 @@ export function QueueRow(props: QueueRowProps & { id: string }): ReactElement {
 }
 
 const queueGrip = (
-  <Icon name="reorder" size="sm" tone="muted" testID="queue-reorder-grip" />
+  <ListDragHandle>
+    <Icon name="grip" size="sm" tone="muted" testID="queue-reorder-grip" />
+  </ListDragHandle>
 );
 
 function QueuedRowContent(row: Row): ReactElement {

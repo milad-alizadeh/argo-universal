@@ -4,6 +4,7 @@ import { fn } from 'storybook/test';
 import { PromptQueue } from './prompt-queue';
 import {
   queuedPrompts,
+  singlePrompt,
   pausedPrompts,
   editingElsewhere,
 } from './prompt-queue-fixtures';
@@ -32,6 +33,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Queued: Story = {};
+
+export const SingleQueued: Story = { args: singlePrompt };
 
 export const Paused: Story = { args: pausedPrompts };
 
