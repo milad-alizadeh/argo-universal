@@ -6,3 +6,7 @@
  */
 export const composerTrayClass =
   'self-stretch mx-7 web:mx-4.5 bg-content/80 dark:bg-tray shadow-tray web:backdrop-blur-glass web:backdrop-saturate-180';
+
+// The line between a tray's sections: the tray ring's own width and colour, light and dark.
+export const composerTrayDividerClass =
+  'border-t border-shadow-subtle dark:border-hairline';

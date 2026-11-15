@@ -4,7 +4,10 @@ import { View } from 'react-native';
 import { ElicitationSheet, PermissionRequest } from '#features/requests';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { PromptQueue } from '../prompt-queue/prompt-queue';
-import { composerTrayClass } from './composer-tray-class';
+import {
+  composerTrayClass,
+  composerTrayDividerClass,
+} from './composer-tray-class';
 import { ComposerPlans, hasTrayPlan } from './composer-trays';
 import type { ComposerLayout } from './composer-types';
 
@@ -61,7 +64,7 @@ const sectionClass = (
   index: number,
   fillClass: string | undefined,
 ): string =>
-  cn(index > 0 && 'border-t border-border', section.fills && fillClass);
+  cn(index > 0 && composerTrayDividerClass, section.fills && fillClass);
 
 const traySections = (layout: ComposerLayout): TraySection[] =>
   [planSection(layout), queueSection(layout), requestSection(layout)].filter(
