@@ -118,7 +118,7 @@ it('lends the old token when the refresh fails for another reason, so a passing 
   const provider = await signedIn(
     fakeProvider(
       answered(expiring('token-1', 'refresh-1')),
-      { ...tokenReply(false, 'Service Unavailable'), status: 503 },
+      tokenReply(false, 'Service Unavailable', 503),
     ),
   );
 

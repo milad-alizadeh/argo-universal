@@ -77,17 +77,15 @@ const directory = fileURLToPath(
   new URL('../mocks/sign-in-plugins', import.meta.url),
 );
 
+// What a sign-in test may set: the services, the browser, the Settings, and what a restart keeps.
+export type StartOptions = Pick<
+  PluginTestOptions,
+  'network' | 'openBrowser' | 'settings' | 'secretStore' | 'clockStart' | 'home'
+>;
+
 export async function start(
   plugin: 'device' | 'redirect' | 'confidential',
-  options: Pick<
-    PluginTestOptions,
-    | 'network'
-    | 'openBrowser'
-    | 'settings'
-    | 'secretStore'
-    | 'clockStart'
-    | 'home'
-  >,
+  options: StartOptions,
 ): Promise<PluginTest> {
   const test = await startPluginTest({
     directory,

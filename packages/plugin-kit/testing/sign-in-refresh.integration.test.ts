@@ -1,105 +1,34 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { PageRunAnswer } from '@repo/contracts/plugins/page-address';
 import { MemorySecretStore } from '@repo/engine/mocks/secret-store';
 import { expect, it, onTestFinished } from 'vitest';
 import { serialiseOnOAuthPort } from '../../engine/mocks/oauth-port-lock';
-import {
-  fixtureServices,
-  type FixtureAnswer,
-  type FixtureRequest,
-} from './fixture-services';
 import {
   approving,
   clockUntil,
   itemsText,
   signInLabel,
   start,
+  type StartOptions,
 } from './sign-in-fixture';
+import {
+  clientSecret,
+  oneHourMs,
+  rotatingService,
+  type RotatingService,
+} from './sign-in-rotating-service';
 import type { PluginTest } from './test-types';
 
 serialiseOnOAuthPort();
 
-const clientSecret = 'fixture-client-secret-5e1d';
-
 const settings = new Map([['client-secret', clientSecret]]);
-
-const oneHourMs = 60 * 60 * 1000;
-
-type Issued = { access: string; refresh: string };
-
-/*
- * A service like Atlassian's: every exchange and refresh needs the client secret, each refresh rotates the refresh
- * token, and a refresh token already spent, or revoked, is refused with `invalid_grant`.
- */
-async function rotatingService() {
-  let issued = 0;
-  let live: Issued | null = null;
-
-  const issue = (): FixtureAnswer => {
-    issued += 1;
-    live = { access: `token-${issued}`, refresh: `refresh-${issued}` };
-
-    return {
-      json: {
-        access_token: live.access,
-        refresh_token: live.refresh,
-        expires_in: oneHourMs / 1000,
-        token_type: 'Bearer',
-      },
-    };
-  };
-
-  const token = (form: URLSearchParams): FixtureAnswer => {
-    if (form.get('client_secret') !== clientSecret)
-      return { status: 401, json: { error: 'invalid_client' } };
-
-    if (form.get('grant_type') === 'authorization_code') return issue();
-
-    return form.get('refresh_token') === live?.refresh
-      ? issue()
-      : { status: 400, json: { error: 'invalid_grant' } };
-  };
-
-  const read = ({ headers }: FixtureRequest): FixtureAnswer =>
-    headers.authorization === `Bearer ${live?.access}`
-      ? { text: itemsText }
-      : { status: 401, json: { message: 'Bad token' } };
-
-  const { network, requests } = await fixtureServices((request) =>
-    request.path === '/token'
-      ? token(new URLSearchParams(request.body))
-      : read(request),
-  );
-
-  const forms = (): URLSearchParams[] =>
-    requests
-      .filter(({ path }) => path === '/token')
-      .map(({ body }) => new URLSearchParams(body));
-
-  return {
-    network,
-    forms,
-    refreshes: () =>
-      forms().filter((form) => form.get('grant_type') === 'refresh_token'),
-    reads: () =>
-      requests
-        .filter(({ path }) => path === '/items')
-        .map(({ headers }) => headers.authorization),
-    revoke: () => {
-      if (live) live = { ...live, refresh: 'revoked' };
-    },
-  };
-}
-
-type Service = Awaited<ReturnType<typeof rotatingService>>;
-
-type Started = Parameters<typeof start>[1];
 
 // Signs in through the browser on the Server Device, with the client secret the person set in the Plugin's settings.
 async function signedIn(
-  service: Service,
-  options: Omit<Started, 'network'> = {},
+  service: RotatingService,
+  options: Omit<StartOptions, 'network'> = {},
 ): Promise<PluginTest> {
   const test = await start('confidential', {
     network: service.network,
@@ -120,7 +49,7 @@ async function signedIn(
   return test;
 }
 
-const readItems = (test: PluginTest): Promise<unknown> =>
+const readItems = (test: PluginTest): Promise<PageRunAnswer> =>
   test.pages.run({ operation: 'readItems', args: {}, projectId: 'one' });
 
 const items = { result: { items: itemsText } };
@@ -193,7 +122,9 @@ it('stays signed in when the Server stops between keeping a rotated refresh toke
   const before = await signedIn(service, { secretStore: store, home });
 
   await before.clock.advance(oneHourMs);
-  await expect(readItems(before)).rejects.toThrow();
+  await expect(readItems(before)).rejects.toThrow(
+    'Account is temporarily unavailable',
+  );
   await before.close();
 
   const after = await start('confidential', {
@@ -213,6 +144,8 @@ it('draws the sign-in when the service refuses an expired or revoked refresh tok
   const service = await rotatingService();
   const test = await signedIn(service);
 
+  const readsSignedIn = service.reads().length;
+
   service.revoke();
   await test.clock.advance(oneHourMs);
 
@@ -223,6 +156,6 @@ it('draws the sign-in when the service refuses an expired or revoked refresh tok
   });
 
   expect(page.findText(signInLabel)).toBeDefined();
-  expect(service.reads()).toHaveLength(1);
+  expect(service.reads()).toHaveLength(readsSignedIn);
   expect(test.accounts.list()).toMatchObject([{ label: 'person' }]);
 }, 30_000);

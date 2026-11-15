@@ -86,7 +86,7 @@ const keepingRefresh = (fresh: KeptToken, spent: string): KeptToken => ({
  * between the two would otherwise wake holding only the spent one.
  */
 async function renewed(
-  { secrets, refresh }: Lending,
+  lending: Lending,
   id: string,
   kept: KeptToken,
 ): Promise<string | null> {
@@ -94,8 +94,18 @@ async function renewed(
 
   if (spent === null) return kept.access;
 
-  const fresh = await refresh(spent).catch(() => null);
+  const fresh = await lending.refresh(spent).catch(() => null);
 
+  return lent(lending.secrets, id, { kept, spent, fresh });
+}
+
+type Renewal = { kept: KeptToken; spent: string; fresh: Refreshed };
+
+async function lent(
+  secrets: Secrets,
+  id: string,
+  { kept, spent, fresh }: Renewal,
+): Promise<string | null> {
   if (fresh === 'refused') return null;
 
   if (!fresh) return kept.access;

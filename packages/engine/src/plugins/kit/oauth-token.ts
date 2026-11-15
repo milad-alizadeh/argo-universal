@@ -99,6 +99,28 @@ async function read(given: Given): Promise<string | null> {
 // What a token request says of the client (RFC 6749 section 2.3.1): its ID, and its secret when the service needs one.
 export type Client = { client_id: string; client_secret?: string };
 
+const noClientId = 'This Plugin has no OAuth client ID yet.';
+
+const noClientSecret =
+  'This Plugin has no OAuth client secret yet. Set it in the Plugin’s settings.';
+
+// The secret a confidential client reads; nothing at all for a public client, which was given none to read.
+const secretOf = (
+  options: OAuthFlowOptions,
+): Promise<string | null> | undefined =>
+  options.clientSecret === undefined ? undefined : read(options.clientSecret);
+
+function withSecret(
+  clientId: string,
+  secret: string | null | undefined,
+): Client | string {
+  if (secret === undefined) return { client_id: clientId };
+
+  return secret === null
+    ? noClientSecret
+    : { client_id: clientId, client_secret: secret };
+}
+
 /*
  * The client a token request sends, or what the Plugin has not set yet. A flow given no `clientSecret` is a public
  * client; one given a `clientSecret` that reads nothing cannot sign in, since the service would refuse it.
@@ -108,15 +130,9 @@ export async function clientOf(
 ): Promise<Client | string> {
   const clientId = await read(options.clientId);
 
-  if (!clientId) return 'This Plugin has no OAuth client ID yet.';
+  if (!clientId) return noClientId;
 
-  if (options.clientSecret === undefined) return { client_id: clientId };
-
-  const secret = await read(options.clientSecret);
-
-  return secret
-    ? { client_id: clientId, client_secret: secret }
-    : 'This Plugin has no OAuth client secret yet. Set it in the Plugin’s settings.';
+  return withSecret(clientId, await secretOf(options));
 }
 
 // RFC 6749 section 6: the client, with its secret when it has one, and the refresh token.
@@ -151,13 +167,16 @@ const unauthorized = 401;
 const refused = (status: number): boolean =>
   status === badRequest || status === unauthorized;
 
+type Reply = Awaited<ReturnType<OAuthFlowArgo['fetch']>>;
+
+const refusal = (status: number): Refreshed =>
+  refused(status) ? 'refused' : null;
+
 async function refreshedBy(
-  reply: Awaited<ReturnType<OAuthFlowArgo['fetch']>>,
+  reply: Reply,
   path: OAuthFlowOptions['tokenPath'],
 ): Promise<Refreshed> {
   if (!reply) return null;
 
-  if (reply.ok) return keptIn(await reply.text(), path);
-
-  return refused(reply.status) ? 'refused' : null;
+  return reply.ok ? keptIn(await reply.text(), path) : refusal(reply.status);
 }
