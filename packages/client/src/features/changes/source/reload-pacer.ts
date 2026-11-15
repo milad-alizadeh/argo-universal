@@ -1,5 +1,5 @@
 // How long after a reload ends before the next may start.
-export const reloadQuietMs = 1000;
+const reloadQuietMs = 1000;
 
 type Reload = () => Promise<void>;
 
