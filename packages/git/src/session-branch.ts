@@ -72,10 +72,12 @@ const hash = (text: string): number => {
 export const worktreeName = (id: string): string => {
   const seed = hash(id);
 
-  const tail = id
-    .replaceAll(/[^a-zA-Z0-9]/g, '')
-    .slice(-tailLength)
-    .toLowerCase();
+  // An id with no letters or digits still gets a suffix, from the hash.
+  const tail =
+    id
+      .replaceAll(/[^a-zA-Z0-9]/g, '')
+      .slice(-tailLength)
+      .toLowerCase() || seed.toString(36).slice(0, tailLength);
 
   return [
     adjectives[seed % adjectives.length],
@@ -85,12 +87,14 @@ export const worktreeName = (id: string): string => {
 };
 
 // The prefix is stored data and must survive a product rename.
+const prefixed = (name: string): string => `${sessionBranchPrefix}${name}`;
+
 export const sessionBranch = (id: string): string =>
-  `${sessionBranchPrefix}${worktreeName(id)}`;
+  prefixed(worktreeName(id));
 
 // A worktree made before it had a readable name is on `argo/<id>`.
 export const isSessionBranch = (branch: string | null, id: string): boolean =>
-  branch === sessionBranch(id) || branch === `${sessionBranchPrefix}${id}`;
+  branch === sessionBranch(id) || branch === prefixed(id);
 
 // The name of the worktree a Session branch was made for, or null for any other branch.
 export const sessionBranchOwner = (branch: string | null): string | null =>

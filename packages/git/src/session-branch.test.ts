@@ -22,6 +22,12 @@ describe('worktreeName', () => {
   });
 });
 
+describe('worktreeName without letters or digits in the id', () => {
+  it('still ends in a suffix', () => {
+    expect(worktreeName('---')).toMatch(/^[a-z]+-[a-z]+-[0-9a-z]+$/);
+  });
+});
+
 describe('Session branch', () => {
   it('names the branch for the worktree', () => {
     expect(sessionBranch(id)).toBe(`argo/${worktreeName(id)}`);
