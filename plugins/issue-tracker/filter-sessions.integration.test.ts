@@ -30,12 +30,13 @@ async function trackerWith(sessionIds: string[]): Promise<PluginTest> {
 }
 
 // A Session other than the fixture's own attaches itself to Issue 42, as its Agent would.
-const attachAs = (test: PluginTest, sessionId: string): Promise<unknown> =>
-  test.operations.run({
+async function attachAs(test: PluginTest, sessionId: string): Promise<void> {
+  await test.operations.run({
     name: 'attach',
     params: { number: 42 },
     caller: { sessionId, projectId: project.id },
   });
+}
 
 const openList = async (test: PluginTest): Promise<OpenPage> =>
   (await test.pages.open({ path: '/' })).press('Open');
