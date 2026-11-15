@@ -8,6 +8,7 @@ import {
   attach,
   detach,
   discoverFor,
+  discoverUnlessAttached,
   list,
   type Scope,
 } from './pull-operations';
@@ -121,7 +122,7 @@ function registerOperations(argo: Argo, source: ChangesSource): void {
   registerAttach(argo, source);
   registerDetach(argo, source);
   argo.operations.register('discover', async (params, caller) =>
-    discoverFor(
+    (params.unlessAttached === true ? discoverUnlessAttached : discoverFor)(
       scopeOf(argo, source),
       await sessionCaller(argo, params, caller),
     ),
