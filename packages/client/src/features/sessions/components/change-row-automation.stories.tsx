@@ -10,6 +10,7 @@ import {
   autoMergeOffChangeRow,
   autoMergeOnChangeRow,
   autoMergeUnavailableChangeRow,
+  everyAutomationChangeRow,
 } from './change-row-automation-fixtures';
 
 // Paper WRB-0: PR automation menu, Option A. The … menu holds the automation items between the links and Detach.
@@ -84,5 +85,11 @@ export const AutoArchiveOff: Story = {
 // The person ticked Auto-archive, so the item is ticked.
 export const AutoArchiveOn: Story = {
   args: autoArchiveOnChangeRow,
+  play: openMenu,
+};
+
+// All three automations in their group, between the links and Detach.
+export const EveryAutomation: Story = {
+  args: everyAutomationChangeRow,
   play: openMenu,
 };

@@ -78,3 +78,15 @@ export const autoArchiveOnChangeRow = {
     },
   },
 } satisfies Fixture;
+
+// Every automation on offer: Auto-fix and Auto-archive ticked, Auto-merge not.
+export const everyAutomationChangeRow = {
+  change: {
+    ...checksPassedChangeRow.change,
+    automation: {
+      fix: { on: true, available: true },
+      merge: { on: false, available: true },
+      archive: { on: true, available: true },
+    },
+  },
+} satisfies Fixture;
