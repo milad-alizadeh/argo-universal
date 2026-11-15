@@ -10,6 +10,7 @@ const LoggedRequest = z.object({
     .object({
       prompt: z.unknown().optional(),
       cwd: z.string().optional(),
+      mcpServers: z.array(z.object({ name: z.string() })).optional(),
       configId: z.string().optional(),
       value: z.unknown().optional(),
     })

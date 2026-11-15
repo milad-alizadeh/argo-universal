@@ -8,6 +8,8 @@ import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { Pressable } from 'react-native';
 import { pluginSymbol } from '../../../../lib/product/plugin-symbol';
+import { ChangeStage } from '../change-stage/change-stage';
+import type { ChangeState } from '../change-stage/change-stage-model';
 import type {
   OpenPluginItemPage,
   SessionRowPluginItem,
@@ -129,9 +131,34 @@ export const pressTint =
 
 const itemPressClass = `${itemClass} ${pressTint}`;
 
+type RowChange = NonNullable<SessionRowPluginItem['item']['change']>;
+
+const modifiersOf = ({
+  draft,
+  conflict,
+}: RowChange): ('draft' | 'conflict')[] => [
+  ...(draft ? (['draft'] as const) : []),
+  ...(conflict ? (['conflict'] as const) : []),
+];
+
+// A conflict is what blocks a pull request, so it shows ahead of draft; both are kept.
+function openState(modifiers: ('draft' | 'conflict')[]): ChangeState {
+  const modifier = modifiers.includes('conflict') ? 'conflict' : modifiers[0];
+
+  return modifier ? { stage: 'open', modifier, modifiers } : { stage: 'open' };
+}
+
+const changeState = (change: RowChange): ChangeState =>
+  change.stage === 'open'
+    ? openState(modifiersOf(change))
+    : { stage: change.stage };
+
 function ItemLabel({
   plugin: { item },
 }: SessionRowItemProps): React.JSX.Element {
+  if (item.change)
+    return <ChangeStage {...changeState(item.change)} text={item.text} />;
+
   return (
     <Label
       icon={item.icon && pluginSymbol(item.icon)}

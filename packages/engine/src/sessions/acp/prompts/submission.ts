@@ -5,7 +5,6 @@ import type { AcpSessionLease } from '../../../agents';
 import type { AttachmentStorage } from '../../../blob';
 import { promptMessageChange, type FeedActorRef } from '../../../feed';
 import type { WriterCommit } from '../../../storage';
-import { followUpPromptMeta } from './follow-up-suggestions';
 import { readAcpPromptContent } from './prompt-content';
 
 export type LocalSubmission = {
@@ -120,6 +119,5 @@ export const commitLocalPrompt = async (
   return {
     sessionId: input.lease.sessionId,
     prompt,
-    ...followUpPromptMeta(input.lease.initialization, input.submission),
   };
 };
