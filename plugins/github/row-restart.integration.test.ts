@@ -55,7 +55,13 @@ it(
     await expect
       .poll(() => rowOf(run), { timeout: wait })
       .toEqual([
-        { icon, text: '#7', tone: 'success', tooltip: 'Slow one · Open' },
+        {
+          change: { stage: 'open' },
+          icon,
+          text: '#7',
+          tone: 'success',
+          tooltip: 'Slow one · Open',
+        },
       ]);
   },
   slow,

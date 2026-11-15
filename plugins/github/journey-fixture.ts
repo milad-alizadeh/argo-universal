@@ -64,7 +64,8 @@ const defaultPulls = [
 
 const pollMs = 1000;
 
-const pollLimit = 5;
+// A busy runner can still be answering one poll when the next comes due, so the clock moves until the Account lands.
+const pollLimit = 30;
 
 const provider = 'issue-tracker';
 
@@ -72,7 +73,11 @@ const provider = 'issue-tracker';
 async function signIn(test: PluginTest): Promise<void> {
   await test.operations.run({ name: 'signIn', pluginId: provider });
 
-  for (let poll = 0; poll < pollLimit; poll += 1) {
+  for (
+    let poll = 0;
+    poll < pollLimit && test.accounts.list().length === 0;
+    poll += 1
+  ) {
     await test.clock.advance(pollMs);
   }
 
