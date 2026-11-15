@@ -139,6 +139,8 @@ A Plugin's own Operations are declared in `contributes.operations` (ADR-0044). E
 }
 ```
 
+An Operation that changes something an Agent should not change on its own sets `"confirmAgent": true`: a Session's run of it asks the person first, as a `confirm` tier Operation does, and a person's own run, such as a tap in the App, applies at once.
+
 `argo-plugin types .` writes `plugin.gen.d.ts` beside `plugin.json`; run it again after changing the Operations, and commit it. The handler then gets typed params and caller, and `to.run` in a Render or a `ui.render` Hook is checked against the manifest, so a misspelt name, a missing param or a value outside `choices` fails `check-types`:
 
 ```ts
