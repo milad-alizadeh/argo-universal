@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect } from 'storybook/test';
+import { expect, spyOn } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { mediumBreakpoint, wideBreakpoint } from '#mocks/story-layout';
 import { SizeClassMock } from './use-size-class.mocks';
@@ -85,5 +85,27 @@ export const SlotsKeepTheirState: Story = {
     await expect(
       await canvas.findByText('Wide count 1', {}, layoutUpdate),
     ).toBeVisible();
+  },
+};
+
+// Every caller's render once read both breakpoint tokens from computed style, thousands of reads as a page opened.
+export const ReadsNoTokenOnALaterRender: Story = {
+  play: async ({ canvas }) => {
+    // Read before the spy: the story's own helpers read the tokens too.
+    const widths = { compact: mediumBreakpoint() - 1, wide: wideBreakpoint() };
+
+    await page.viewport(widths.compact, 900);
+    await canvas.findByText('compact layout', {}, layoutUpdate);
+    const read = spyOn(CSSStyleDeclaration.prototype, 'getPropertyValue');
+
+    await page.viewport(widths.wide, 900);
+    await canvas.findByText('wide layout', {}, layoutUpdate);
+
+    const tokens = read.mock.calls.filter(([name]) =>
+      name.startsWith('--breakpoint-'),
+    );
+
+    read.mockRestore();
+    await expect(tokens).toHaveLength(0);
   },
 };
