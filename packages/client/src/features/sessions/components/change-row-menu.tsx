@@ -59,6 +59,8 @@ function automationItems({
         selected: on,
         disabled: !available,
         ...(subtitle && { subtitle }),
+        // A reason on an item that can be used says it stopped itself, which the design draws in the warning tone.
+        ...(available && reason && { subtitleTone: 'warning' as const }),
         onPress: () => onSetAutomation(kind, !on),
       },
     ];
@@ -80,13 +82,14 @@ function groupsOf(props: MenuProps): ContextMenuItem[][] {
 // The Menu's entries are the same groups as one list, each later group starting a section.
 const actionsOf = (groups: ContextMenuItem[][]): MenuAction[] =>
   groups.flatMap((group, index) =>
-    group.map(({ label, onPress, id, selected, disabled, subtitle }, place) => ({
+    group.map(({ label, onPress, id, selected, disabled, subtitle, subtitleTone }, place) => ({
       label,
       onPress,
       ...(id && { id }),
       ...(selected !== undefined && { selected }),
       ...(disabled && { disabled }),
       ...(subtitle && { subtitle }),
+      ...(subtitleTone && { subtitleTone }),
       ...(index > 0 && place === 0 && { section: {} }),
     })),
   );

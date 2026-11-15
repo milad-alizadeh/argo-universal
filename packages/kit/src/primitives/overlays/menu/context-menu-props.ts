@@ -15,6 +15,8 @@ export interface ContextMenuItem {
   selected?: boolean;
   // A line under the label, such as why the item is disabled.
   subtitle?: string;
+  // The subtitle in the warning tone instead of the muted one; system menus draw it plain.
+  subtitleTone?: 'warning';
   tone?: 'danger';
   shortcut?: ActionShortcut;
 }

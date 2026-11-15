@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { expect, fn, screen, waitFor } from 'storybook/test';
 import { ChangeRow } from './change-row';
 import {
+  autoFixStoppedChangeRow,
   autoMergeOffChangeRow,
   autoMergeOnChangeRow,
   autoMergeUnavailableChangeRow,
@@ -160,3 +161,22 @@ export const DrawsNoAutomationWhenNoneIsOffered: Story = {
   },
 };
 
+
+// A stopped Auto-fix stays usable: its reason sits under it, and a tap turns it on again.
+export const StoppedAutoFixSaysWhyAndCanBeTurnedBackOn: Story = {
+  args: autoFixStoppedChangeRow,
+  play: async ({ userEvent, args }) => {
+    await settleLayout('wide');
+    await openMenu(userEvent);
+    const item = await screen.findByRole('menuitemradio', { name: /^Auto-fix/ });
+
+    await expect(item).toHaveAttribute('aria-checked', 'false');
+    await expect(item).not.toHaveAttribute('aria-disabled', 'true');
+    await expect(item).toHaveTextContent('Stopped after 3 tries on a1b2c3d');
+    await settleOverlays(item);
+    await userEvent.click(item);
+    await waitFor(() =>
+      expect(args.onSetAutomation).toHaveBeenCalledWith('fix', true),
+    );
+  },
+};

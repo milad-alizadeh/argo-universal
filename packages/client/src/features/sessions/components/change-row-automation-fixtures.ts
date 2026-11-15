@@ -39,3 +39,19 @@ export const autoMergeUnavailableChangeRow = {
     },
   },
 } satisfies Fixture;
+
+// Auto-fix turned itself off after three tries on one commit, and the reason sits under it, unticked and still usable.
+export const autoFixStoppedChangeRow = {
+  change: {
+    ...checksPassedChangeRow.change,
+    automation: {
+      ...withoutOthers,
+      fix: {
+        on: false,
+        available: true,
+        reason: 'Stopped after 3 tries on a1b2c3d',
+      },
+      merge: { on: false, available: true },
+    },
+  },
+} satisfies Fixture;
