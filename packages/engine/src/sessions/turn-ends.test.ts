@@ -1,33 +1,34 @@
 import { expect, it } from 'vitest';
 import { trackTurnEnds, type EndedTurn, type TurnView } from './turn-activity';
 
-// A source whose Sessions the test changes, and whose listeners it fires.
-function source(view: TurnView): {
-  watch: (ended: (turn: EndedTurn) => void) => () => void;
+type Ended = (turn: EndedTurn) => void;
+
+type Source = {
+  watch: (ended: Ended) => () => void;
   change: (activeTurnId: string | null) => void;
-} {
+};
+
+// A source whose one Session the test changes, firing the listeners each time.
+function source(view: TurnView): Source {
   const listeners = new Set<() => void>();
 
-  return {
-    watch: (ended) =>
-      trackTurnEnds(
-        {
-          views: () => [view],
-          subscribe: (listener) => {
-            listeners.add(listener);
+  const subscribe = (listener: () => void): (() => void) => {
+    listeners.add(listener);
 
-            return (): void => {
-              listeners.delete(listener);
-            };
-          },
-        },
-        ended,
-      ),
-    change: (activeTurnId) => {
-      view.activeTurnId = activeTurnId;
-      listeners.forEach((listener) => listener());
-    },
+    return (): void => {
+      listeners.delete(listener);
+    };
   };
+
+  const watch = (ended: Ended): (() => void) =>
+    trackTurnEnds({ views: () => [view], subscribe }, ended);
+
+  const change = (activeTurnId: string | null): void => {
+    view.activeTurnId = activeTurnId;
+    listeners.forEach((listener) => listener());
+  };
+
+  return { watch, change };
 }
 
 const idle = (): TurnView => ({

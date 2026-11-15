@@ -29,16 +29,19 @@ export class Plugins {
     this.unwatchTurns = watchTurnActivity(options.sessions, (active) => {
       this.parts.runtime.turnsChanged(active);
     });
-    this.unwatchTurnEnds = watchTurnEnds(options.sessions, (turn) => {
-      void discoverPullRequests(
-        { home: this.home, operations: this.router.operations },
-        turn,
-      );
-    });
+    this.unwatchTurnEnds = this.discoverAtTurnEnds(options.sessions);
   }
 
   readonly openAsset: PluginRuntime['openAsset'] = (reference) =>
     this.parts.runtime.openAsset(reference);
+
+  private discoverAtTurnEnds(sessions: PluginsOptions['sessions']): () => void {
+    const discovery = { home: this.home, operations: this.router.operations };
+
+    return watchTurnEnds(sessions, (turn) => {
+      void discoverPullRequests(discovery, turn);
+    });
+  }
 
   // Called after HTTP binds. Background work cannot delay readiness or start twice.
   listening(): void {

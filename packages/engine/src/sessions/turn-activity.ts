@@ -60,8 +60,19 @@ export function trackTurnEnds(
   const running = new Set<string>();
 
   return source.subscribe(() => {
-    for (const view of source.views()) noticeTurn(view, running, ended);
+    const views = source.views();
+
+    for (const view of views) noticeTurn(view, running, ended);
+    forgetClosed(views, running);
   });
+}
+
+// A Session that closed mid-Turn never ends one, so it stops being tracked.
+function forgetClosed(views: TurnView[], running: Set<string>): void {
+  const open = new Set(views.map(({ sessionId }) => sessionId));
+
+  for (const sessionId of running)
+    if (!open.has(sessionId)) running.delete(sessionId);
 }
 
 function noticeTurn(
@@ -78,23 +89,28 @@ function noticeTurn(
   if (running.delete(sessionId)) ended({ sessionId, projectId });
 }
 
+const viewsOf = (sessions: OpenSessionsActorRef): TurnView[] =>
+  Object.values(sessions.getSnapshot().context.sessions).map(
+    (session) => session.getSnapshot().context,
+  );
+
+function subscriberOf(sessions: OpenSessionsActorRef): TurnSource['subscribe'] {
+  return (listener): (() => void) => {
+    const subscription = sessions.subscribe(listener);
+
+    return (): void => subscription.unsubscribe();
+  };
+}
+
 // The open Sessions' own Turns ending, as Open Sessions forwards each Session's snapshot.
 export function watchTurnEnds(
   sessions: OpenSessionsActorRef,
   ended: (turn: EndedTurn) => void,
 ): () => void {
-  return trackTurnEnds(
-    {
-      views: () =>
-        Object.values(sessions.getSnapshot().context.sessions).map(
-          (session) => session.getSnapshot().context,
-        ),
-      subscribe: (listener) => {
-        const subscription = sessions.subscribe(listener);
+  const source = {
+    views: (): TurnView[] => viewsOf(sessions),
+    subscribe: subscriberOf(sessions),
+  };
 
-        return (): void => subscription.unsubscribe();
-      },
-    },
-    ended,
-  );
+  return trackTurnEnds(source, ended);
 }
