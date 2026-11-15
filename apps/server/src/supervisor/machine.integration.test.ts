@@ -126,10 +126,10 @@ describe('supervisor', (): void => {
   });
 
   // A busy event loop holds heartbeats for seconds; the Engine that recovers keeps running.
-  it('keeps an Engine whose heartbeat is 10 seconds late', (): void => {
+  it('keeps an Engine whose heartbeat is 20 seconds late', (): void => {
     startSupervisor();
     latestEngine().send({ type: readyEngineEvent, port: 7337 });
-    vi.advanceTimersByTime(10_000);
+    vi.advanceTimersByTime(20_000);
 
     latestEngine().send({ type: heartbeatEngineEvent });
 
@@ -166,16 +166,6 @@ describe('supervisor', (): void => {
     crashLatestEngine();
 
     expect(supervisor.getSnapshot().value).toBe('failed');
-  });
-
-  it('keeps an Engine that sends no heartbeat for as long as an Engine takes to stop', (): void => {
-    startSupervisor();
-    latestEngine().send({ type: readyEngineEvent, port: 7337 });
-
-    vi.advanceTimersByTime(20_000);
-
-    expect(supervisor.getSnapshot().value).toBe('running');
-    expect(engines).toHaveLength(1);
   });
 
   it('leaves a server.json with another pid when it fails', (): void => {

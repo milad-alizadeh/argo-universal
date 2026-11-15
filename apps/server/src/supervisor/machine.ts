@@ -40,7 +40,7 @@ export const backoffBaseMs = 500;
 
 const backoffCapMs = 30_000;
 
-// A busy Mac can hold the Engine's event loop for seconds, and an Engine stopping for a watch restart sends nothing for up to 20; neither is a hang.
+// A busy Mac can hold the Engine's event loop for seconds, and an Engine stopping for a watch restart sends nothing until it has stopped; neither is a hang.
 export const heartbeatTimeoutMs = 30_000;
 
 // Startup repairs the database before serving, and a crowded Mac can stretch that past a minute; a restart only starts it over.

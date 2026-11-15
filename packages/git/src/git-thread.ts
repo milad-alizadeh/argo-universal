@@ -16,6 +16,9 @@ const GitFailure = z.object({
   name: z.string(),
   message: z.string(),
   code: z.union([z.number(), z.string()]).nullish().default(null),
+  signal: z.string().nullish().default(null),
+  killed: z.boolean().default(false),
+  cmd: z.string().default(''),
   stdout: z.string().default(''),
   stderr: z.string().default(''),
 });
@@ -29,6 +32,10 @@ export type GitReply =
 const running = new Map<number, AbortController>();
 
 const reply = (message: GitReply): void => parentPort?.postMessage(message);
+
+// A thrown value that is not an Error still fails its own command, and only that one.
+const unreadable = (thrown: string): GitFailure =>
+  GitFailure.parse({ name: 'Error', message: thrown });
 
 const read = async (
   { directory, args }: GitRequest & { type: 'run' },
@@ -52,7 +59,12 @@ const run = async (request: GitRequest & { type: 'run' }): Promise<void> => {
   try {
     reply({ id: request.id, stdout: await read(request, controller.signal) });
   } catch (error) {
-    reply({ id: request.id, failure: GitFailure.parse(error) });
+    const failure = GitFailure.safeParse(error);
+
+    reply({
+      id: request.id,
+      failure: failure.success ? failure.data : unreadable(String(error)),
+    });
   } finally {
     running.delete(request.id);
   }

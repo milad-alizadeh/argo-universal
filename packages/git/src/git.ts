@@ -1,5 +1,5 @@
 import { SHARE_ENV, Worker } from 'node:worker_threads';
-import type { GitFailure, GitReply, GitRequest } from './git-thread.ts';
+import type { GitFailure, GitReply, GitRequest } from './git-thread';
 
 type Waiting = {
   resolve: (stdout: string) => void;
@@ -15,6 +15,12 @@ let lastId = 0;
 const failed = (failure: GitFailure): Error =>
   Object.assign(new Error(failure.message), failure);
 
+// The thread keeps the process running only while a command waits on it, as the git process itself used to.
+const holdWhileWaiting = (worker: Worker): void => {
+  if (waiting.size > 0) worker.ref();
+  else worker.unref();
+};
+
 const answer = (call: Waiting, message: GitReply): void => {
   if ('failure' in message) call.reject(failed(message.failure));
   else call.resolve(message.stdout);
@@ -24,6 +30,8 @@ const settle = (message: GitReply): void => {
   const call = waiting.get(message.id);
 
   waiting.delete(message.id);
+
+  if (thread) holdWhileWaiting(thread);
 
   if (call) answer(call, message);
 };
@@ -47,15 +55,15 @@ const startThread = (): Worker => {
   worker.on('exit', (): void =>
     threadEnded(worker, new Error('The git thread stopped')),
   );
-  // An idle git thread never keeps the process running.
-  worker.unref();
 
   return worker;
 };
 
-const send = (request: GitRequest): void => {
+const send = (request: GitRequest): Worker => {
   thread ??= startThread();
   thread.postMessage(request);
+
+  return thread;
 };
 
 const abortError = (signal: AbortSignal): Error =>
@@ -67,7 +75,7 @@ const abortError = (signal: AbortSignal): Error =>
 const run = (id: number, directory: string, args: string[]): Promise<string> =>
   new Promise<string>((resolve, reject): void => {
     waiting.set(id, { resolve, reject });
-    send({ type: 'run', id, directory, args });
+    holdWhileWaiting(send({ type: 'run', id, directory, args }));
   });
 
 const nextId = (): number => {
@@ -84,7 +92,7 @@ const runUntilAborted = async (
   if (signal.aborted) throw abortError(signal);
 
   const id = nextId();
-  const abort = (): void => send({ type: 'abort', id });
+  const abort = (): void => void send({ type: 'abort', id });
 
   signal.addEventListener('abort', abort, { once: true });
 
