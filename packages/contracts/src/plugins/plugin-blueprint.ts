@@ -26,6 +26,7 @@ A page is \`{ state, load, render }\`. \`load\` reads and may be slow. \`render\
 | A canvas, a chat | \`Screen width="bleed"\`, \`footer\` for an input | \`docs/plugins/authoring.md\`, "Page frames" |
 | Data from a URL or a command | a Query: \`read({ api: 'fetch', url })\`, with the \`fetch\` or \`process:exec\` Capability in \`plugin.json\` | \`docs/plugins/authoring.md\`, "Declared data" |
 | Data two pages or a Slot share | a named read: \`argo.queries.define\`, \`projectOf\`, then \`argo.queries.read\` and \`seed\` | \`plugins/issue-tracker/github-reads.ts\` |
+| A personal API token a person pastes | \`tokenPaste\` + \`provideSignIn\` + \`signInGate\`, with a \`signIn\` Operation whose \`token\` param is \`"secret": true\`; read with \`accountFetch\` | \`packages/plugin-kit/mocks/token-paste-plugins/token/index.tsx\`, \`docs/plugins/authoring.md\`, "The token paste" |
 | A person's login at a service | \`deviceFlow\` + \`provideSignIn\` + \`signInGate\`; read as that person with \`accountFetch(argo, host)(url)\`, which throws \`SignInRequired\` for the gate to draw | \`templates/plugins/github-sign-in\`, \`plugins/issue-tracker/github-account.ts\` |
 | Text a person types | \`TextArea\` or the Screen's \`search\` with \`onChangeText={to.bind('key')}\`; the text lands in Page state \`key\`, read as \`input.state.key\` |
 | A change | an Operation declared in \`plugin.json\`, run with \`to.run\`, then \`argo.changed()\` | the scaffold's \`notes.ts\` |

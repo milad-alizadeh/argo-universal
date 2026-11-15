@@ -32,6 +32,7 @@ import {
   type SlotProviders,
   type SlotSend,
 } from './slot-providers';
+import { tokenPaste } from './token-paste';
 import * as loader from './worker-pages';
 
 // A kit component with members is a component carrying them, as `List` carries `List.Section`; the rest are their wire type.
@@ -60,6 +61,7 @@ const exportsOf = {
   applyListMove,
   oauthFlow,
   deviceFlow,
+  tokenPaste,
   signInGate,
   provideSignIn,
   accountFetch,

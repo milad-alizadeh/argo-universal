@@ -1,6 +1,7 @@
 import type { SignInData } from '@repo/contracts/plugins/sign-in-api';
 import type { ReactElement } from 'react';
 import { jsx } from './jsx-runtime';
+import { failureOf, tokenField } from './sign-in-paste';
 import { stepOf, type Step } from './sign-in-step';
 
 type Pressed = Parameters<typeof jsx>[1][string];
@@ -11,6 +12,7 @@ export type SignInParts = {
   data: SignInData;
   start: Pressed;
   cancel: Pressed;
+  paste: Pressed;
 };
 
 const msPerMinute = 60_000;
@@ -88,8 +90,11 @@ const signedInStep = (
     'Manage this Account in Settings › Accounts.',
   );
 
+const invitation = (parts: SignInParts): string =>
+  parts.data.rejected ?? `Sign in to use ${parts.name} in Argo.`;
+
 const idleStep = (parts: SignInParts): ReactElement[] => [
-  ...lines(parts.data.rejected ?? `Sign in to use ${parts.name} in Argo.`),
+  ...lines(invitation(parts)),
   ...start(parts, `Sign in to ${parts.name}`),
 ];
 
@@ -101,7 +106,22 @@ function plainStep(parts: SignInParts, step: Plain): ReactElement[] {
   return step.kind === 'idle' ? idleStep(parts) : waitingStep(parts, step);
 }
 
-function body(parts: SignInParts): ReactElement[] {
+// A token paste draws its field until it is signed in, on every Device, never handing over; a refused token's reason stays beside it.
+function pasteBody(parts: SignInParts): ReactElement[] {
+  const state = parts.data.flow;
+
+  if (state.kind === 'signed-in') return signedInStep(state);
+
+  return [
+    ...lines(
+      invitation(parts),
+      `Paste an API token you made at ${parts.name}. Argo keeps it in your computer’s secret store.`,
+    ),
+    tokenField(parts, failureOf(state)),
+  ];
+}
+
+function flowBody(parts: SignInParts): ReactElement[] {
   const step = stepOf(parts.data.flow);
 
   if (step.kind === 'code') return codeStep(parts, step);
@@ -109,7 +129,10 @@ function body(parts: SignInParts): ReactElement[] {
   return step.kind === 'ended' ? endStep(parts, step) : plainStep(parts, step);
 }
 
-// The sign-in page, drawn from kit components: every step of either flow, and the way back after a refusal.
+const body = (parts: SignInParts): ReactElement[] =>
+  parts.data.pastesToken ? pasteBody(parts) : flowBody(parts);
+
+// The sign-in page, drawn from kit components: every step of each flow, and the way back after a refusal.
 export const signInScreen = (parts: SignInParts): ReactElement =>
   jsx('Screen', {
     title: parts.name,
