@@ -1,7 +1,7 @@
 import { Label, List, ListItem, Pill, type PageTo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { issueUrl } from './atlassian';
-import type { JiraIssue, StatusCategory } from './jira-client';
+import type { JiraIssue, StatusCategory } from './jira-readers';
 import type { JiraSite } from './jira-store';
 
 // Jira's status categories as Argo's tones: to do is plain, in progress is under way, done is finished.
@@ -15,6 +15,18 @@ const personIcon = { sf: 'person', material: 'person' } as const;
 
 const priorityIcon = { sf: 'flag', material: 'flag' } as const;
 
+const priorityLabels = ({ priority }: JiraIssue): JSX.Element[] =>
+  priority
+    ? [<Label key="priority" icon={priorityIcon} text={priority} />]
+    : [];
+
+const assigneeLabel = ({ assignee }: JiraIssue): JSX.Element =>
+  assignee ? (
+    <Label key="assignee" icon={personIcon} text={assignee.name} />
+  ) : (
+    <Label key="assignee" icon={personIcon} text="Unassigned" tone="muted" />
+  );
+
 // What a row says after its title: the status, then its priority and who it is assigned to.
 const rowMeta = (issue: JiraIssue): JSX.Element[] => [
   <Pill
@@ -22,15 +34,8 @@ const rowMeta = (issue: JiraIssue): JSX.Element[] => [
     text={issue.status.name}
     tone={categoryTones[issue.status.category]}
   />,
-  ...(issue.priority
-    ? [<Label key="priority" icon={priorityIcon} text={issue.priority} />]
-    : []),
-  <Label
-    key="assignee"
-    icon={personIcon}
-    text={issue.assignee?.name ?? 'Unassigned'}
-    tone={issue.assignee ? 'neutral' : 'muted'}
-  />,
+  ...priorityLabels(issue),
+  assigneeLabel(issue),
 ];
 
 // A keyed ListItem itself, as a List draws its children. It opens the issue in Jira until Argo has its own page.

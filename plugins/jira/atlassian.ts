@@ -23,12 +23,14 @@ const siteSuffix = '.atlassian.net';
 const siteName = /^[a-z0-9][a-z0-9-]*$/;
 
 // What a person typed for their site, as a bare host: `team`, `team.atlassian.net` or a URL of a page on it.
-const hostOf = (typed: string): string =>
-  typed
+function hostOf(typed: string): string {
+  const address = typed
     .trim()
     .toLowerCase()
-    .replace(/^[a-z]+:\/\//, '')
-    .split(/[/?#:]/)[0] ?? '';
+    .replace(/^[a-z]+:\/\//, '');
+
+  return address.split(/[/?#:]/).at(0) ?? '';
+}
 
 /*
  * The Jira Cloud site a person means, such as `team.atlassian.net`, or null when it is not one. Only Atlassian's own
@@ -36,6 +38,7 @@ const hostOf = (typed: string): string =>
  */
 export function siteHost(typed: string): string | null {
   const host = hostOf(typed);
+
   const name = host.endsWith(siteSuffix)
     ? host.slice(0, -siteSuffix.length)
     : host;
@@ -44,36 +47,61 @@ export function siteHost(typed: string): string | null {
 }
 
 // The `Authorization` value a scoped API token is sent with: Basic, over the email and token.
-export const basicCredential = (email: string, token: string): string =>
-  `Basic ${base64(`${email.trim()}:${token.trim()}`)}`;
+export function basicCredential(email: string, token: string): string {
+  const pair = `${email.trim()}:${token.trim()}`;
+
+  return `Basic ${base64(pair)}`;
+}
 
 const alphabet =
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
+const hexRadix = 16;
+
+const byteBits = 8;
+
+const sextetBits = 6;
+
+const sextetMask = 63;
+
+const groupBytes = 3;
+
+const groupSextets = 4;
+
 // A Plugin runs with no `btoa` or `TextEncoder`, so the UTF-8 bytes come from `encodeURIComponent`.
 const utf8 = (text: string): number[] =>
   [...encodeURIComponent(text).matchAll(/%([0-9A-F]{2})|./g)].map((match) =>
-    match[1] ? Number.parseInt(match[1], 16) : match[0].charCodeAt(0),
+    match[1] ? Number.parseInt(match[1], hexRadix) : match[0].charCodeAt(0),
   );
 
-const sextet = (bits: number, shift: number): string =>
-  alphabet[(bits >> shift) & 63] ?? '';
+const sextetAt = (bits: number, place: number): string =>
+  alphabet.charAt((bits >> (place * sextetBits)) & sextetMask);
+
+// Up to three bytes as four characters, padded with `=` where the bytes ran out.
+function group(bytes: number[]): string {
+  const bits = [...bytes, 0, 0]
+    .slice(0, groupBytes)
+    .reduce((all, byte) => (all << byteBits) | byte, 0);
+
+  const places = Array.from(
+    { length: groupSextets },
+    (_, index) => groupSextets - 1 - index,
+  );
+
+  return places
+    .slice(0, bytes.length + 1)
+    .map((place) => sextetAt(bits, place))
+    .join('')
+    .padEnd(groupSextets, '=');
+}
 
 function base64(text: string): string {
   const bytes = utf8(text);
-  let encoded = '';
+  const count = Math.ceil(bytes.length / groupBytes);
 
-  for (let index = 0; index < bytes.length; index += 3) {
-    const [a = 0, b = 0, c = 0] = bytes.slice(index, index + 3);
-    const bits = (a << 16) | (b << 8) | c;
-    const left = bytes.length - index;
-
-    encoded += sextet(bits, 18) + sextet(bits, 12);
-    encoded += left > 1 ? sextet(bits, 6) : '=';
-    encoded += left > 2 ? sextet(bits, 0) : '=';
-  }
-
-  return encoded;
+  return Array.from({ length: count }, (_, index) =>
+    group(bytes.slice(index * groupBytes, (index + 1) * groupBytes)),
+  ).join('');
 }
 
 // Atlassian's public answer to which cloud a site is; it needs no sign-in.

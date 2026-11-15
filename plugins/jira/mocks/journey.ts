@@ -37,6 +37,7 @@ export async function startJira(
   jira?: JiraService,
 ): Promise<Jira> {
   const service = jira ?? (await jiraService());
+
   const test = await startPluginTest({
     ...plugin,
     projects,
@@ -64,11 +65,11 @@ export const picker = (title: string): ((node: WireNode) => boolean) =>
   field('FieldGroup.Picker', title);
 
 // Types into a field as a person does, and waits for the pause that lands it.
+type Typing = { page: OpenPage; title: string; text: string };
+
 export async function type(
   { test }: Jira,
-  page: OpenPage,
-  title: string,
-  text: string,
+  { page, title, text }: Typing,
 ): Promise<void> {
   await page.act(textField(title), 'onChangeText', text);
   await test.clock.advance(editPauseMs);
@@ -77,8 +78,11 @@ export async function type(
 const secretField = field('FieldGroup.SecretField', 'API token');
 
 // Why the last pasted token was not used, as the field shows it.
-export const tokenError = (page: OpenPage): unknown =>
-  page.find(secretField).props.error;
+export function tokenError(page: OpenPage): string | undefined {
+  const { error } = page.find(secretField).props;
+
+  return typeof error === 'string' ? error : undefined;
+}
 
 export async function pasteToken(
   { test }: Jira,
@@ -105,8 +109,8 @@ export async function fillSignIn(
 ): Promise<OpenPage> {
   const signIn = page ?? (await jira.test.pages.open({ path: '/sign-in' }));
 
-  await type(jira, signIn, 'Email', credentials.email);
-  await type(jira, signIn, 'Site', credentials.site);
+  await type(jira, { page: signIn, title: 'Email', text: credentials.email });
+  await type(jira, { page: signIn, title: 'Site', text: credentials.site });
   await pasteToken(jira, signIn, credentials.token);
 
   return signIn;
