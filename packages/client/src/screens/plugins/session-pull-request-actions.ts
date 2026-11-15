@@ -56,7 +56,29 @@ function copyOf(
   };
 }
 
-// The rows with what their … menu does: copy the PR's address, and detach it from the Session.
+function automationOf(
+  change: SessionPullRequest,
+  ports: RowActionPorts,
+): Pick<SessionPullRequest, 'onSetAutomation'> {
+  const reference = referenceOf(change);
+
+  if (!reference || !change.automation) return {};
+
+  return {
+    onSetAutomation: (kind, on) => {
+      ports
+        .run({
+          pluginId: githubPluginId,
+          operation: 'automationSet',
+          args: { reference, kind, on },
+          ...ports.scope,
+        })
+        .catch((reason: unknown) => ports.failed(toError(reason)));
+    },
+  };
+}
+
+// The rows with what their … menu does: copy the PR's address, detach it from the Session, and tick an automation.
 export const withRowActions = (
   rows: readonly SessionPullRequest[],
   ports: RowActionPorts,
@@ -65,4 +87,5 @@ export const withRowActions = (
     ...change,
     ...copyOf(change, ports),
     ...detachOf(change, ports),
+    ...automationOf(change, ports),
   }));
