@@ -9,6 +9,7 @@
     "journey-calls-fixture.ts",
     "journey-files-fixture.ts",
     "journey-fixture.ts",
+    "journey-prompts-fixture.ts",
     "journey-watch-fixture.ts",
     "open-change-fixture.ts",
     "vitest.config.ts"
