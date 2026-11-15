@@ -89,6 +89,12 @@ const onCheckoutOf = ({
 }: Change): Pick<SessionPullRequest, 'onCheckout'> =>
   onCheckout ? { onCheckout } : {};
 
+// What the Plugin offers to turn on; absent means it offers none, and the menu draws none.
+const automationOf = ({
+  automation,
+}: Change): Pick<SessionPullRequest, 'automation'> =>
+  automation ? { automation } : {};
+
 const pullRequestOf = (change: PullRequestChange): SessionPullRequest => ({
   ...stateOf(change),
   ...branchesOf(change),
@@ -103,6 +109,7 @@ const pullRequestOf = (change: PullRequestChange): SessionPullRequest => ({
   ...checksOf(change),
   ...staleOf(change),
   ...onCheckoutOf(change),
+  ...automationOf(change),
 });
 
 /*

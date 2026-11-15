@@ -173,7 +173,7 @@ async function keepFolder(): Promise<Keep> {
 export async function signedOutJourney(): Promise<Journey> {
   const github = await githubFixture();
 
-  for (const [key, pull] of defaultPulls) github.pulls.set(key, pull);
+  for (const [key, pull] of defaultPulls) github.pulls.set(key, { ...pull });
 
   const keep = await keepFolder();
   const sessions = sessionsOf();

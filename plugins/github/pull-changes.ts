@@ -3,12 +3,13 @@ import { changeOf, type ChangeItem, type Refresh } from './pull-change';
 import type { CheckInfo } from './pull-checks';
 import type { PullInfo } from './pull-info';
 import { failureMessage, known, type Known } from './pull-known';
+import { mergeOf, offerOf, type AutoMergeInfo, type AutomationReads, type MergeSettings } from './pull-automation';
 import type { PullReads } from './pull-reads';
 import type { PullLink, PullStore } from './pull-store';
 
 export type ChangesSource = {
   store: PullStore;
-  reads: PullReads;
+  reads: PullReads & AutomationReads;
   readState: Argo['queries']['readState'];
 };
 
@@ -18,6 +19,9 @@ export type LinkRead = {
   pull: Known<PullInfo>;
   // Unknown until the pull request has said which commit is its head.
   checks?: Known<CheckInfo[]>;
+  // Read only for an Open pull request, which is the only one that can auto-merge.
+  autoMerge?: Known<AutoMergeInfo>;
+  settings?: Known<MergeSettings>;
 };
 
 // Two Sessions attaching the same pull request ask the same question, so they share one entry.
@@ -48,6 +52,37 @@ const readChecks = (
     readState(reads.checks({ projectId, repository, head }), { projectId }),
   );
 
+const readAutoMerge = (
+  { readState, reads }: ChangesSource,
+  link: PullLink,
+): Promise<Known<AutoMergeInfo>> =>
+  known(() =>
+    readState(reads.autoMerge(targetOf(link)), { projectId: link.projectId }),
+  );
+
+const readSettings = (
+  { readState, reads }: ChangesSource,
+  { projectId, repository }: PullLink,
+): Promise<Known<MergeSettings>> =>
+  known(() =>
+    readState(reads.mergeSettings({ projectId, repository }), { projectId }),
+  );
+
+async function automationReads(
+  source: ChangesSource,
+  link: PullLink,
+  pull: PullInfo,
+): Promise<Pick<LinkRead, 'autoMerge' | 'settings'>> {
+  if (pull.stage !== 'open') return {};
+
+  const [autoMerge, settings] = await Promise.all([
+    readAutoMerge(source, link),
+    readSettings(source, link),
+  ]);
+
+  return { autoMerge, settings };
+}
+
 async function readLink(
   source: ChangesSource,
   link: PullLink,
@@ -56,7 +91,12 @@ async function readLink(
 
   if (!pull.data) return { link, pull };
 
-  return { link, pull, checks: await readChecks(source, link, pull.data.head) };
+  const [checks, automation] = await Promise.all([
+    readChecks(source, link, pull.data.head),
+    automationReads(source, link, pull.data),
+  ]);
+
+  return { link, pull, checks, ...automation };
 }
 
 // Every association of these Sessions with what is known of its pull request, read through the named Queries that Slots and Operations share. Each is read alone.
@@ -81,10 +121,28 @@ const staleOf = (read: LinkRead): Pick<Refresh, 'stale'> => {
   return failure ? { stale: failure.reason } : {};
 };
 
+// What the Change offers to automate; GitHub's own answers, so one it could not give is never drawn as off.
+const automationOf = ({
+  pull,
+  autoMerge,
+  settings,
+}: LinkRead): Pick<Refresh, 'automation'> =>
+  pull.data
+    ? {
+        automation: offerOf(
+          mergeOf(pull.data, {
+            autoMerge: autoMerge?.data,
+            settings: settings?.data,
+          }),
+        ),
+      }
+    : {};
+
 // Stale when either read failed: the Change is what was last known, with why it could not be refreshed.
 export const refreshOf = (read: LinkRead): Refresh => ({
   ...checksOf(read),
   ...staleOf(read),
+  ...automationOf(read),
 });
 
 type ChangeRead = { sessionId: string; change: ChangeItem };

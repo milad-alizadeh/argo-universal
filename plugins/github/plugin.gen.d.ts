@@ -41,6 +41,33 @@ declare module '@argo/plugin-kit' {
         "project"
       ]
     };
+    automationSet: {
+      "params": {
+        "reference": {
+          "type": "string",
+          "required": true
+        },
+        "kind": {
+          "type": "string",
+          "required": true,
+          "choices": [
+            "fix",
+            "merge",
+            "archive"
+          ]
+        },
+        "on": {
+          "type": "boolean",
+          "required": true
+        },
+        "sessionId": {
+          "type": "string"
+        }
+      },
+      "caller": [
+        "project"
+      ]
+    };
     list: {
       "params": {
         "sessionId": {

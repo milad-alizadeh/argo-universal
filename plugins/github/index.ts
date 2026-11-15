@@ -15,6 +15,8 @@ import {
   list,
   type Scope,
 } from './pull-operations';
+import { defineAutomationReads } from './pull-automation';
+import { setAutomation } from './pull-automation-set';
 import { definePullReads } from './pull-reads';
 import { rowItemsBySession } from './pull-row-items';
 import { createPullStore } from './pull-store';
@@ -23,7 +25,7 @@ import { sessionCaller, type SessionCaller } from './session-caller';
 function sourceOf(argo: Argo): ChangesSource {
   return {
     store: createPullStore(argo),
-    reads: definePullReads(argo),
+    reads: { ...definePullReads(argo), ...defineAutomationReads(argo) },
     readState: argo.queries.readState,
   };
 }
@@ -126,8 +128,19 @@ function registerDetach(argo: Argo, source: ChangesSource): void {
   }));
 }
 
+function registerAutomation(argo: Argo, source: ChangesSource): void {
+  argo.operations.register('automationSet', async (params, caller) =>
+    setAutomation(
+      scopeOf(argo, source),
+      params,
+      await sessionCaller(argo, params, caller),
+    ),
+  );
+}
+
 function registerOperations(argo: Argo, source: ChangesSource): void {
   registerAttach(argo, source);
+  registerAutomation(argo, source);
   registerDetach(argo, source);
   argo.operations.register('discover', async (params, caller) =>
     discoverFor(

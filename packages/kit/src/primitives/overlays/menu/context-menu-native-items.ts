@@ -9,6 +9,8 @@ function contextMenuItem(item: ContextMenuItem): NativeMenuItem {
   return {
     id: item.id ?? item.label,
     title: item.label,
+    ...(item.selected !== undefined && { checked: item.selected }),
+    ...(item.subtitle && { subtitle: item.subtitle }),
     icon: item.icon,
     tone: item.tone,
     disabled,

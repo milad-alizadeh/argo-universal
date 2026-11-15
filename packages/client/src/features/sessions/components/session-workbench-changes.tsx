@@ -40,6 +40,7 @@ const rowsOf = (
       onOpen={() => onOpenChange(change)}
       onCopyLink={change.onCopyLink}
       onDetach={change.onDetach}
+      onSetAutomation={change.onSetAutomation}
     />
   ));
 
