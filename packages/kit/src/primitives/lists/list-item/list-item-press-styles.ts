@@ -32,6 +32,8 @@ function listLayout(press: PressDrawing): PressLayout {
 
 // A compact List's row is one line: a sidebar's keeps the sidebar's insets (Paper "SessionsList"), others Paper "Issue row"'s.
 function compactLayout(press: PressDrawing): PressLayout {
+  if (press.look.place === 'tray') return 'tray';
+
   return press.sidebar || press.look.sidebar ? 'sidebar-compact' : 'compact';
 }
 
