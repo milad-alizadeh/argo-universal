@@ -1,3 +1,4 @@
+import { withArgoSlashCommands } from '@repo/contracts';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import { userEvent } from 'vitest/browser';
@@ -123,5 +124,25 @@ export const SlashCommandsIsOffWithoutCommands: Story = {
         name: slashCommandsItem,
       }),
     ).toBeDisabled();
+  },
+};
+
+// An open Session's menu: the Agent's Slash commands, then Argo's own, which act on the Session.
+export const ArgoSlashCommandsFollowTheAgents: Story = {
+  args: {
+    slashCommands: withArgoSlashCommands(
+      slashSuggestionsComposer.slashCommands,
+    ),
+  },
+  render: (args) => <SuggestionComposer {...args} />,
+  play: async (context) => {
+    await settleLayout('wide');
+    await chooseSlashCommands(context);
+
+    const names = (await screen.findAllByRole('option')).map(
+      (option) => option.textContent?.split(' ')[0],
+    );
+
+    await expect(names).toEqual(['/inspect', '/review', '/clear', '/reload']);
   },
 };
