@@ -13,12 +13,24 @@ export function QueueRow(props: QueueRowProps & { id: string }): ReactElement {
   const row = useQueueRow(props);
 
   return (
+    <View testID="queued-prompt-row">
+      <QueuedRowContent {...row} />
+    </View>
+  );
+}
+
+const queueGrip = (
+  <Icon name="reorder" size="sm" tone="muted" testID="queue-reorder-grip" />
+);
+
+function QueuedRowContent(row: Row): ReactElement {
+  return (
     <ListItem
       id={row.row.id}
       title={promptText(row.row.prompt)}
       subtitle={queueSubtitle(row)}
       role="group"
-      leading={<Icon name="reorder" size="sm" tone="muted" />}
+      leading={queueGrip}
       trailingAccessories={row.editing ? undefined : <EditControls {...row} />}
       control={row.editing ? <QueueEditor {...row} /> : undefined}
     />

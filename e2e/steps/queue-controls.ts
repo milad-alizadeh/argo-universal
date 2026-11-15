@@ -4,16 +4,14 @@ import { Then } from './fixtures';
 Then('queue icons explain their actions', async ({ page }): Promise<void> => {
   const queue = page.getByTestId('prompt-queue');
 
-  for (const name of [
-    'Edit Queued Prompt',
-    'Delete Queued Prompt',
-    'Move Prompt down',
-  ]) {
+  for (const name of ['Edit Queued Prompt', 'Delete Queued Prompt']) {
     await queue.getByRole('button', { name, exact: true }).first().hover();
     await expect(
       page.getByRole('tooltip').getByText(name, { exact: true }),
     ).toBeVisible();
   }
+
+  await expect(queue.getByTestId('queue-reorder-grip').first()).toBeVisible();
 });
 
 Then(
