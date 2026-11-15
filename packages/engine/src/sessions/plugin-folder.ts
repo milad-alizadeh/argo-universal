@@ -45,7 +45,7 @@ export async function writePluginFolder(
   }
 }
 
-const workspaceFolders = ['packages', 'plugins', join('plugins', 'examples')];
+const workspaceFolders = ['packages', 'plugins', join('templates', 'plugins')];
 
 const isObject = (value: unknown): value is object =>
   typeof value === 'object' && value !== null;

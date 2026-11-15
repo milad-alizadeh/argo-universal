@@ -3,8 +3,8 @@ packages:
   - packages/*
   # Every Plugin folder, so a Plugin `plugin.new` writes resolves the kit after `pnpm install`.
   - plugins/*
-  - plugins/examples/*
-  - "!plugins/examples"
+  # Plugin templates to copy: built and tested, never loaded by the Server.
+  - templates/plugins/*
   - tooling/*
   # Playwright suite as its own package, as Turborepo's Playwright guide recommends (docs/research/playwright.md).
   - e2e
