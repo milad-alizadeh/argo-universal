@@ -1,26 +1,52 @@
 import { Button } from '@repo/kit/primitives/actions/button';
-import { Text } from '@repo/kit/primitives/content/text';
+import { Icon } from '@repo/kit/primitives/content/icon';
 import { TextArea } from '@repo/kit/primitives/controls/text-area';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { attachmentLabels, promptText } from './queue-content';
-import { EditControls, OrderControls } from './queue-controls';
+import { EditControls } from './queue-controls';
 import type { QueueRowProps } from './queue-types';
 import { useQueueRow, type QueueRow as Row } from './use-queue-row';
 
-export function QueueRow(props: QueueRowProps): ReactElement {
+export function QueueRow(props: QueueRowProps & { id: string }): ReactElement {
   const row = useQueueRow(props);
 
   return (
-    <View
-      role="group"
-      accessibilityLabel={promptText(row.row.prompt)}
-      className="py-2 gap-2 border-t border-border"
-    >
-      {row.editing ? <QueueEditor {...row} /> : <QueuedContent {...row} />}
-      {row.error && <Text tone="danger">{row.error}</Text>}
+    <View testID="queued-prompt-row">
+      <QueuedRowContent {...row} />
     </View>
   );
+}
+
+const queueGrip = (
+  <Icon name="reorder" size="sm" tone="muted" testID="queue-reorder-grip" />
+);
+
+function QueuedRowContent(row: Row): ReactElement {
+  return (
+    <ListItem
+      id={row.row.id}
+      title={promptText(row.row.prompt)}
+      subtitle={queueSubtitle(row)}
+      role="group"
+      leading={queueGrip}
+      trailingAccessories={row.editing ? undefined : <EditControls {...row} />}
+      control={row.editing ? <QueueEditor {...row} /> : undefined}
+    />
+  );
+}
+
+function queueSubtitle(row: Row): string | undefined {
+  if (row.error) return row.error;
+
+  return heldSubtitle(row);
+}
+
+function heldSubtitle(row: Row): string | undefined {
+  if (row.holds.includes(row.row.id)) return 'Editing…';
+
+  return attachmentLabels(row.row.prompt) || undefined;
 }
 
 function QueueEditor(row: Row): ReactElement {
@@ -33,30 +59,6 @@ function QueueEditor(row: Row): ReactElement {
         disabled={row.pending}
       />
       <EditorActions {...row} />
-    </>
-  );
-}
-
-function QueuedContent(row: Row): ReactElement {
-  return (
-    <View className="flex-row items-center gap-2">
-      <View className="flex-1 min-w-0">
-        <QueuePreview {...row} />
-      </View>
-      <View className="flex-row shrink-0">
-        <OrderControls {...row} />
-        <EditControls {...row} />
-      </View>
-    </View>
-  );
-}
-
-function QueuePreview({ row, holds }: Row): ReactElement {
-  return (
-    <>
-      <Text numberOfLines={3}>{promptText(row.prompt)}</Text>
-      <Text tone="muted">{attachmentLabels(row.prompt)}</Text>
-      {holds.includes(row.id) && <Text tone="muted">Editing…</Text>}
     </>
   );
 }

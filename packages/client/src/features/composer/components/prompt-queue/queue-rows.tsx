@@ -1,38 +1,56 @@
-import { LegendList, type LegendListProps } from '@legendapp/list/react-native';
-import type { QueuedPrompt } from '@repo/contracts';
-import { useState, type ReactElement } from 'react';
-import { Platform } from 'react-native';
+import type { ListMove } from '@repo/contracts/kit-moves';
+import { List } from '@repo/kit/primitives/lists/list';
+import type { ReactElement } from 'react';
 import { QueueRow } from './queue-row';
 import type { PromptQueueProps } from './queue-types';
 
-const maximumHeight = 240;
-
-// Web's list is a plain element, where React warns of the native-only prop.
-const keyboardProps = Platform.select({
-  native: { keyboardShouldPersistTaps: 'handled' },
-  default: {},
-} as const);
-
 export function QueueRows(props: PromptQueueProps): ReactElement {
-  const [height, setHeight] = useState(maximumHeight);
-
   return (
-    <LegendList {...queueListProps(props, setHeight)} style={{ height }} />
+    <List
+      appearance="plain"
+      density="compact"
+      fitHeight={240}
+      padding={0}
+      onMove={(move) => movePrompt(props, move)}
+    >
+      {props.queue.items.map((row, index) => (
+        <QueueRow key={row.id} id={row.id} {...props} row={row} index={index} />
+      ))}
+    </List>
   );
 }
 
-function queueListProps(
+async function movePrompt(
   props: PromptQueueProps,
-  setHeight: (height: number) => void,
-): LegendListProps<QueuedPrompt> {
-  return {
-    data: props.queue.items,
-    keyExtractor: (row) => row.id,
-    renderItem: ({ item, index }) => (
-      <QueueRow {...props} row={item} index={index} />
-    ),
-    onContentSizeChange: (_width, contentHeight) =>
-      setHeight(Math.min(maximumHeight, contentHeight)),
-    ...keyboardProps,
-  };
+  move: ListMove,
+): Promise<void> {
+  const row = props.queue.items.find((item) => item.id === move.id);
+
+  if (props.holds.length > 0)
+    throw new Error('Prompt cannot be moved while editing');
+
+  if (!row) return;
+
+  await sendMove(props, row, move.index);
+}
+
+async function sendMove(
+  props: PromptQueueProps,
+  row: PromptQueueProps['queue']['items'][number],
+  index: number,
+): Promise<void> {
+  const remaining = props.queue.items.filter((item) => item.id !== row.id);
+  await props.command({
+    action: 'move',
+    id: row.id,
+    revision: row.revision,
+    beforeId: beforeId(remaining, index),
+  });
+}
+
+function beforeId(
+  items: PromptQueueProps['queue']['items'],
+  index: number,
+): PromptQueueProps['queue']['items'][number]['id'] | null {
+  return items[index]?.id ?? null;
 }
