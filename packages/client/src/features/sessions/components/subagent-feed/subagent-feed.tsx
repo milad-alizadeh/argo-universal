@@ -11,7 +11,9 @@ export type { SubagentFeedProps } from './subagent-feed-props';
 /*
  * One Subagent's Feed, read-only. In the Inspector it carries its own header, with Back to the
  * Subagents list; in the phone Sheet the pushed page's header draws the title and Back instead. With no
- * Composer below it, its rows start at the top and it opens on the first, the task message.
+ * Composer below it, its rows start at the top and it opens on the first, the task message. Until
+ * its rows load it stays blank under the header, as an opening Session's page does: it always has a
+ * task message, so it never draws the empty Session's heading.
  */
 export function SubagentFeed(props: SubagentFeedProps): React.JSX.Element {
   return (
@@ -20,7 +22,7 @@ export function SubagentFeed(props: SubagentFeedProps): React.JSX.Element {
         <SubagentFeedHeader {...props} />
       </SizeClass>
       <ReportControls {...props} />
-      <Feed {...props.feed} opensAtStart />
+      {props.feed && <Feed {...props.feed} opensAtStart />}
     </View>
   );
 }

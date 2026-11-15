@@ -4,6 +4,7 @@ import { SubagentFeed } from './subagent-feed';
 import {
   emptySubagentFeed,
   finishedSubagentFeed,
+  loadingSubagentFeed,
   noIncomingMessageFeed,
   runningSubagentFeed,
 } from './subagent-feed-fixtures';
@@ -56,6 +57,9 @@ export const Empty: Story = { args: emptySubagentFeed };
 
 // The Agent reported no incoming message, so the Feed starts with the Subagent's own output.
 export const NoIncomingMessage: Story = { args: noIncomingMessageFeed };
+
+// Not loaded yet, such as while the Connection is down: blank under the header, as an opening Session is.
+export const Loading: Story = { args: loadingSubagentFeed };
 
 // Wide: the Inspector's Subagents tab, with the Feed's own header and Back to the list.
 export const InTheInspector: Story = {

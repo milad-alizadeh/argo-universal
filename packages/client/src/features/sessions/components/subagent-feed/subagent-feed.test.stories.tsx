@@ -105,6 +105,18 @@ export const NoIncomingMessage: Story = {
     }),
 };
 
+// Not loaded yet: the header names the Subagent, and the Feed draws neither rows nor the empty Session's heading.
+export const Loading: Story = {
+  args: { subagent: finishedSubagent, feed: undefined },
+  play: async ({ canvas }) =>
+    eachLayout(async (wide) => {
+      await expect(canvas.queryByRole('heading', { name: /build/ })).toBeNull();
+      await expect(canvas.queryByText(incomingMessage)).toBeNull();
+      await expect(canvas.queryByTestId('feed-scroll')).toBeNull();
+      await metaLine(canvas, wide, 'Finished · 1m 41s');
+    }),
+};
+
 export const BackToTheList: Story = {
   play: async ({ canvas, userEvent, args }) => {
     await settleLayout('wide');

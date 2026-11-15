@@ -37,3 +37,9 @@ export const noIncomingMessageFeed = {
   ...runningSubagentFeed,
   feed: noIncomingFeed,
 } satisfies SubagentFeedFixture;
+
+// The child's rows haven't loaded yet, such as while the Connection is down: the header alone.
+export const loadingSubagentFeed = {
+  ...finishedSubagentFeed,
+  feed: undefined,
+} satisfies SubagentFeedFixture;
