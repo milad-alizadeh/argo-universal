@@ -20,7 +20,7 @@ import type { SessionInspectorContent } from '../session-inspector-content';
 import { coverageCard, issueTrackerCard } from './plugin-card.mocks';
 import { itemsOf } from './session-section';
 import { offeredSections, sessionWorkbench } from './session-sections';
-import { summaryLines } from './session-sections-fixtures';
+import { onlyDoneSections, summaryLines } from './session-sections-fixtures';
 
 const everySection = {
   header: {
@@ -110,5 +110,15 @@ export const LeadingMarks: Story = {
       subagents: { subagents: subagentStates.allFinished, now: subagentNow },
     },
     bar: { shown: summaryLines, hidden: [], onOpen: fn() },
+  },
+};
+
+// Cards with nothing live: each "N done" line is a row of its card, at a row's avatar size, type and height.
+export const OnlyDone: Story = {
+  args: {
+    content: {
+      header: { ...everySection.header, pullRequests: [] },
+      ...onlyDoneSections,
+    },
   },
 };
