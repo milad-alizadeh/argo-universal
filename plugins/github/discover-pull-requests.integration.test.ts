@@ -9,9 +9,19 @@ import {
   untilChanges,
   watchChanges,
 } from './journey-calls-fixture';
-import { journey } from './journey-fixture';
+import { caller, journey, type Journey } from './journey-fixture';
 
 const slow = 30_000;
+
+// What Argo's own `github.discover` does when a Turn ends: it looks only while the Session has no pull request.
+const discoverUnlessAttached = ({
+  test,
+}: Journey): ReturnType<Journey['test']['operations']['run']> =>
+  test.operations.run({
+    name: 'discover',
+    params: { unlessAttached: true },
+    caller,
+  });
 
 const own = 'github:owner/repository#12';
 
@@ -132,6 +142,25 @@ it(
       { id: 'github:upstream/repository#7' },
       { id: 'github:upstream/repository#12' },
     ]);
+  },
+  slow,
+);
+
+it(
+  'looks at Turn end only while the Session has no pull request, and never reads GitHub once it has one',
+  async () => {
+    const run = await journey();
+
+    expect(await discoverUnlessAttached(run)).toEqual({
+      result: 'found',
+      pullRequests: [ownReference],
+    });
+
+    const reads = run.github.requests.length;
+
+    expect(await discoverUnlessAttached(run)).toEqual({ result: 'attached' });
+    expect(run.github.requests).toHaveLength(reads);
+    expect(await changesOf(run)).toMatchObject([{ id: own }]);
   },
   slow,
 );

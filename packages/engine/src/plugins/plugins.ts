@@ -1,5 +1,5 @@
 import { writeLog } from '@repo/machine-log';
-import { watchTurnActivity } from '../sessions';
+import { watchTurnActivity, watchTurnEnds } from '../sessions';
 import { assemble, type Assembled, type PluginsOptions } from './assemble';
 import type { HookPort } from './hooks/hook-port';
 import { PluginOperationService } from './operations';
@@ -8,6 +8,7 @@ import type { PluginsRouterDeps } from './router';
 import type { PluginRuntime } from './runtime/plugin-runtime';
 import { SessionActs } from './session-acts';
 import { startBackgroundPlugins } from './start-background';
+import { discoverPullRequests } from './turn-end-discovery';
 
 // Engine owns the lifetime. This module owns Plugin assembly and the ordering of its finite operations.
 export class Plugins {
@@ -15,6 +16,7 @@ export class Plugins {
   readonly router: PluginsRouterDeps;
   private readonly parts: Assembled;
   private readonly unwatchTurns: () => void;
+  private readonly unwatchTurnEnds: () => void;
   private readonly home: string;
   private readonly sessionActs = new SessionActs();
   private backgroundStarted?: Promise<void>;
@@ -29,10 +31,19 @@ export class Plugins {
     this.unwatchTurns = watchTurnActivity(options.sessions, (active) => {
       this.parts.runtime.turnsChanged(active);
     });
+    this.unwatchTurnEnds = this.discoverAtTurnEnds(options.sessions);
   }
 
   readonly openAsset: PluginRuntime['openAsset'] = (reference) =>
     this.parts.runtime.openAsset(reference);
+
+  private discoverAtTurnEnds(sessions: PluginsOptions['sessions']): () => void {
+    const discovery = { home: this.home, operations: this.router.operations };
+
+    return watchTurnEnds(sessions, (turn) => {
+      void discoverPullRequests(discovery, turn);
+    });
+  }
 
   // Called after HTTP binds. Background work cannot delay readiness or start twice.
   listening(): void {
@@ -45,6 +56,7 @@ export class Plugins {
   async close(): Promise<void> {
     await this.backgroundStarted;
     this.unwatchTurns();
+    this.unwatchTurnEnds();
     this.parts.hookPort.detach();
     this.parts.listChanges.close();
     this.router.pages.close();

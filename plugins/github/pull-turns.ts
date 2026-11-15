@@ -1,5 +1,3 @@
-import type { Argo } from '@argo/plugin-kit';
-
 type Turn = PromiseSettledResult<boolean>;
 
 type TurnOf<Item> = (item: Item) => Promise<boolean>;
@@ -24,7 +22,7 @@ const isFailure = (turn: Turn): turn is PromiseRejectedResult =>
   turn.status === 'rejected';
 
 async function runTurns<Item>(
-  argo: Pick<Argo, 'changed'>,
+  argo: { changed: () => void },
   items: readonly Item[],
   turnOf: TurnOf<Item>,
 ): Promise<void> {
@@ -45,7 +43,7 @@ async function runTurns<Item>(
  * after all have had their turn.
  */
 export async function takeTurns<Item>(
-  argo: Pick<Argo, 'changed'>,
+  argo: { changed: () => void },
   items: readonly Item[],
   turnOf: TurnOf<Item>,
 ): Promise<void> {

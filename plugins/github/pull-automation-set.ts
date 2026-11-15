@@ -33,10 +33,19 @@ async function turn(
     : apply(scope, target, on);
 }
 
+// Auto-merge is GitHub's own: its pull request record is read again so the Change shows what GitHub now says.
+async function readBack(
+  { sync }: Pick<Scope, 'sync'>,
+  { kind }: AutomationParams,
+  { sessionId }: FixTarget,
+): Promise<void> {
+  if (kind === 'merge') await sync([sessionId]);
+}
+
 /*
  * Sets one automation on one pull request attached to the calling Session. Auto-merge is GitHub's own, so GitHub is
- * asked fresh and nothing is stored: the Change reads `on` back from GitHub afterwards. Auto-fix and Auto-archive are
- * the Plugin's own.
+ * asked fresh and the Change reads `on` back from it afterwards. Auto-fix and Auto-archive are the Plugin's own, in
+ * its own tables, and the Change shows them at once.
  */
 export async function setAutomation(
   scope: Scope,
@@ -47,6 +56,7 @@ export async function setAutomation(
 
   await requireAttached(scope, named, caller);
   await turn(scope, params, { ...named, ...caller });
+  await readBack(scope, params, { ...named, ...caller });
   scope.changed();
 
   return { kind: params.kind, on: params.on };

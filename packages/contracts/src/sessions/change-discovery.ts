@@ -1,12 +1,13 @@
 import { z } from 'zod';
 
-// The five answers `github.discover` gives, each its own so an Agent or a person never reads one as another (ADR-0052).
+// The six answers `github.discover` gives, each its own so an Agent or a person never reads one as another (ADR-0052).
 export const changeDiscoveryResults = [
   'found',
   'no-match',
   'branchless',
   'not-github',
   'unavailable',
+  'attached',
 ] as const;
 
 export type ChangeDiscoveryResult = (typeof changeDiscoveryResults)[number];

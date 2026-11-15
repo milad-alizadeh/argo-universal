@@ -3,6 +3,7 @@ import { ToolCallRow } from './tool-call-row';
 import {
   commandWithoutOutput,
   completedToolCall,
+  rawToolCall,
   runningToolCall,
 } from './tool-call-row-fixtures';
 
@@ -36,3 +37,6 @@ export const Completed: Story = { args: completedToolCall };
 export const RunningCommand: Story = {
   args: { ...commandWithoutOutput, initialOpen: true },
 };
+
+// An MCP call with no content blocks: its raw input and output, in one tray.
+export const RawInputAndOutput: Story = { args: rawToolCall };

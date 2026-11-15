@@ -3,6 +3,7 @@ import {
   attached,
   mergeOf,
   pullOf12,
+  reference,
   refresh,
   repository,
   set,
@@ -10,7 +11,7 @@ import {
   tap,
 } from './auto-merge-fixture';
 import { openRepository } from './github-fixture-automation';
-import { listed } from './journey-calls-fixture';
+import { attach, listed } from './journey-calls-fixture';
 import { journey } from './journey-fixture';
 
 it(
@@ -22,6 +23,7 @@ it(
       ...openRepository,
       allow_auto_merge: false,
     });
+    await refresh(run);
 
     expect(await mergeOf(run)).toEqual({
       on: false,
@@ -90,9 +92,11 @@ it(
 it(
   'never shows Auto-merge as off when GitHub could not be read',
   async () => {
-    const run = await attached();
+    const run = await journey();
 
+    // The pull request's record keeps what was last read, so GitHub is down from the first read.
     run.github.graphqlFailWith.status = 500;
+    await attach(run, reference);
     await refresh(run);
 
     const merge = await mergeOf(run);

@@ -12,7 +12,11 @@
   },
   "contributes": {
     "nav": [],
-    "slots": ["argo/session/changes/v1", "argo/session/row/v1"],
+    "slots": [
+      "argo/session/changes/v1",
+      "argo/session/row/v1",
+      "argo/link/mark/v1"
+    ],
     "instructions": "instructions.md",
     "watch": { "path": "/", "interval": 60000 },
     "operations": [
@@ -54,6 +58,10 @@
           "sessionId": {
             "type": "string",
             "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          },
+          "unlessAttached": {
+            "type": "boolean",
+            "description": "Skip the look, and answer attached, when the Session already has a pull request. Argo sets it when a Turn ends."
           }
         }
       },

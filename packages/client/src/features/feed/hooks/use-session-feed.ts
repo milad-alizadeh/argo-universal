@@ -11,6 +11,7 @@ import {
   findPermissionToolCall,
 } from '../view/live-tool-call';
 import { toFeedView } from '../view/to-feed-view';
+import { newestWorkRevision } from '../view/work-revision';
 import type { SessionFeed } from './session-feed';
 import { useFeedHistory } from './use-feed-history';
 import { useSessionFeedStore } from './use-session-feed-store';
@@ -66,6 +67,7 @@ type FeedDisplay = Pick<
   SessionFeed,
   | 'view'
   | 'revision'
+  | 'workRevision'
   | 'liveToolCall'
   | 'permissionToolCall'
   | 'snapshot'
@@ -73,6 +75,13 @@ type FeedDisplay = Pick<
   | 'hasOlder'
   | 'historyCursor'
 >;
+
+const feedRevisions = (
+  feed: SessionFeedState['feed'],
+): Pick<SessionFeed, 'revision' | 'workRevision'> => ({
+  revision: feed.revision,
+  workRevision: newestWorkRevision(feed.rows),
+});
 
 function feedDisplay(
   { feed, view, snapshot }: SessionFeedState,
@@ -82,7 +91,7 @@ function feedDisplay(
     view,
     hasOlder: feed.epoch === null || feed.hasOlder,
     historyCursor: feed.startCursor,
-    revision: feed.revision,
+    ...feedRevisions(feed),
     liveToolCall: findLiveToolCall(feed.rows, snapshot),
     permissionToolCall: findPermissionToolCall(feed.rows, snapshot, sessionId),
     snapshot,

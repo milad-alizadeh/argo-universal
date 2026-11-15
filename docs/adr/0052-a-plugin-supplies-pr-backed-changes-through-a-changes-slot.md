@@ -1,6 +1,6 @@
 # A Plugin supplies PR-backed Changes through a Changes Slot
 
-This amends [ADR-0037](0037-plugins-declare-the-data-they-need.md) and builds on [ADR-0035](0035-plugins-add-to-named-slots-and-never-edit-core-screens.md), [ADR-0036](0036-plugins-own-sign-in-and-argo-brokers-their-accounts.md) and [ADR-0039](0039-the-workbench-summarises-sections-and-the-inspector-shows-them-in-full.md) (owner, 2026-11-13, #2025, spec #2024; amended for refresh and failure by #2028; amended by the owner on 2026-11-13, see "The Inspector holds no pull requests" and "Discovery runs at Turn end"; amended by the owner on 2026-11-14, see "PR automation and the row menu"). ADR-0037 said the Session Slot context carries no PR or check and that `SessionInfo.pullRequest` stays null, so core models neither. That line held while nothing supplied pull requests. The Workbench and Inspector already draw several Changes, and a Session can produce several PRs over time, so the data now needs a typed way in that keeps GitHub out of core.
+This amends [ADR-0037](0037-plugins-declare-the-data-they-need.md) and builds on [ADR-0035](0035-plugins-add-to-named-slots-and-never-edit-core-screens.md), [ADR-0036](0036-plugins-own-sign-in-and-argo-brokers-their-accounts.md) and [ADR-0039](0039-the-workbench-summarises-sections-and-the-inspector-shows-them-in-full.md) (owner, 2026-11-13, #2025, spec #2024; amended for refresh and failure by #2028; amended by the owner on 2026-11-13, see "The Inspector holds no pull requests" and "Discovery runs at Turn end"; amended by the owner on 2026-11-14, see "PR automation and the row menu" and "The Plugin stores each pull request's last read"). ADR-0037 said the Session Slot context carries no PR or check and that `SessionInfo.pullRequest` stays null, so core models neither. That line held while nothing supplied pull requests. The Workbench and Inspector already draw several Changes, and a Session can produce several PRs over time, so the data now needs a typed way in that keeps GitHub out of core.
 
 ## Decision
 
@@ -39,21 +39,48 @@ Decided by the owner on 2026-11-14, for spec #2093, after a grilling and the Pap
 - **Phones list PRs.** The phone Changes sheet shows the Session's PR rows, with the same menu, above the Checkout's files. The wide Inspector's Changes tab still holds no PRs.
 - **The Change carries its automation as typed data.** An optional `automation` field holds `fix`, `merge` and `archive`, each `{ on, available, reason? }`. `reason` explains an unavailable item or a stopped Auto-fix, and the App draws it as the item's subtitle. An absent field means the Plugin offers no automation and the menu shows none of the three.
 - **Toggles run one Operation.** `github.automation.set({ reference, kind, on })` (`act`, caller Project and Session) sets one toggle on one attached PR. A person's tap applies at once. An Agent may call it at the `confirm` tier.
-- **Auto-fix and Auto-archive are the Plugin's own data.** They are columns on the PR association row, off by default, and they act from the Plugin's Watch through `sessions:prompt` and `sessions:archive` ([ADR-0055](0055-plugins-prompt-and-archive-sessions-from-a-watch.md)).
+- **Auto-fix and Auto-archive are the Plugin's own data.** They are rows in the Plugin's own tables beside the PR association, off by default, and they act from the Plugin's Watch through `sessions:prompt` and `sessions:archive` ([ADR-0055](0055-plugins-prompt-and-archive-sessions-from-a-watch.md)).
   - **Auto-fix** prompts the Session once per new failed Check, review comment or merge conflict, naming the PR and what failed. After three Prompts on one head commit with no new push, it turns itself off and gives the reason "Stopped after 3 tries on `<sha>`".
   - **Auto-archive** archives the Session once its PR is Merged or Closed and the Session has no other Open Change and no uncommitted files.
-- **Auto-merge is GitHub's own and is the one GitHub write.** "No Operation changes a PR on GitHub" no longer holds for Auto-merge alone. `github.automation.set` with `kind: 'merge'` enables or disables GitHub's auto-merge through `api.github.com/graphql`, choosing the first method the repository allows in the order squash, merge, rebase. The Plugin stores nothing: `on` is read back from the pull request, so auto-merge turned on in GitHub shows as on. It is unavailable, with a reason, when the repository does not allow auto-merge, the PR is a draft, or the PR is not Open. Every other GitHub write stays out of scope.
-- **New reads.** The Plugin reads each attached PR's review comments, its auto-merge state and the repository's merge settings, through named reads as above.
+- **Auto-merge is GitHub's own and is the one GitHub write.** "No Operation changes a PR on GitHub" no longer holds for Auto-merge alone. `github.automation.set` with `kind: 'merge'` enables or disables GitHub's auto-merge through `api.github.com/graphql`, choosing the first method the repository allows in the order squash, merge, rebase. The Plugin keeps no choice of its own: `on` is read back from GitHub through the pull request record, so auto-merge turned on in GitHub shows as on. It is unavailable, with a reason, when the repository does not allow auto-merge, the PR is a draft, or the PR is not Open. Every other GitHub write stays out of scope.
+- **New reads.** The Plugin reads each attached PR's review comments, its auto-merge state and the repository's merge settings, through named reads as above, which `sync` keeps in the pull request record while the pull request is Open.
 
 ## Discovery runs at Turn end
 
 Proposed for owner approval, 2026-11-14, spec #2107. Where this section conflicts with "Discovery is an `act` Operation too" above, this section holds.
 
-- **The Engine runs `github.discover` when a Turn ends, for a Session with no attached PR.** Until now only an Agent ran it, so a PR opened from a Session stayed unattached until someone asked. A Session with any attached PR is skipped, so the run happens once per Turn end until a PR is found.
+- **The Engine runs `github.discover` when a Turn ends, for a Session with no attached PR.** Until now only an Agent ran it, so a PR opened from a Session stayed unattached until someone asked. The run passes `unlessAttached: true`, so a Session with any attached PR answers `attached` without asking GitHub, and the run happens once per Turn end until a PR is found. `attached` is a sixth answer, given only to that call.
 - **It stays a read.** It adds associations and never removes any. `no-match`, `branchless`, `not-github` and `unavailable` are data, not errors, and draw nothing.
 - **Still no timer, watcher or service.** The trigger is the Turn's end, which the Engine already knows. A PR opened in a Turn is attached by the end of that Turn, or the next at the latest. An Agent may still run `github.discover` itself.
 
 Considered and rejected: running it on a branch push or `gh pr create`, which needs a watcher on the Checkout or on shell commands.
+
+## The Plugin stores each pull request's last read
+
+Decided by the owner on 2026-11-14. The Session row and the Changes read the same pull request through two paths, each with its own in-memory last answer and its own rule for a slow or failed read, so the row could say Open while the Workbench drew nothing. Where this section conflicts with the decisions above, this section holds.
+
+- **One record per pull request.** The Plugin's storage gains `pull_records`, keyed `(project_id, repository, number)`: the last good read of the pull request, of its Checks and, while it is Open, of its auto-merge and its repository's merge settings, and why the latest read failed. Every Session associated with the pull request shares the row, and it survives a restart. This replaces "a Plugin has no second cache" for pull requests: the record is the one place they are read from, and the named Queries stay only as how `sync` reaches GitHub.
+- **One writer, `sync`.** It is the only code that asks GitHub for a pull request or its Checks and the only code that writes a record. It calls `argo.changed()` only when what is kept changed. `github.attach` and `github.discover` run it before they answer; `github.list` and `github.refresh` run it and then read the record. `argo.changed()` asks every Slot again and makes every named read due; a Slot asked again for that reason answers from the record and does not read GitHub a second time, so one change costs one read.
+- **A Slot answers from the record and never waits on GitHub.** The row Slot and the Changes Slot answer what is kept at once and run `sync` behind the answer, so neither can run late. The one-second wait, the per-Slot last answers and the two "drawn" comparisons are gone, and so is the row that falls back to a bare number after a restart.
+- **A failed read keeps the record.** The last good read stays beside the failure and is answered `stale`, now across a restart too: a pull request read once is never again left out or listed as only an `error`. That is left for one whose first read failed. Checks kept for one head commit are never answered for a later one.
+- **A settled pull request is not read again by a Slot.** A merged pull request whose Checks have all reported cannot change, so the sync behind a Slot skips it. `github.list` and `github.refresh` still read every one.
+- **Detaching the last association of a pull request in a Project drops its record.**
+
+Considered and rejected: a core table in the Server's database, which gives core a PR model and one vendor's fields (see "Core keeps no PR model"); and columns on `pull_associations`, which would keep one copy per Session of what is one pull request.
+
+## A link's mark comes from the Plugins' records
+
+Decided by the owner on 2026-11-14. The mark beside a link to a pull request or an Issue was read by core through the Server's `gh` sign-in, once when the link drew, so it could say other than the Session row and never moved while it was on screen.
+
+- **A versioned add-only items Slot, `argo/link/mark/v1`.** Its context is `{ href, projectId }`, keyed by `href`: the link, and the Project it is drawn in, whose Account a Plugin reads it with. An item is `{ kind: 'pullRequest' | 'issue', state: 'open' | 'closed' | 'merged' | 'draft' }`, one per Plugin. Argo draws the mark; a Plugin sends no icon. The Slot refreshes on Argo's clock, every 30 seconds while a Session that shows the link is open.
+- **The GitHub Plugin answers pull request links, attached to a Session or not,** from the pull request record, through the same `sync`. A link nobody attached gets a record with no association.
+- **The Issue tracker answers links to Issues of the Project's own repository,** from the summary the Session row and the Session bar read. A link to another repository's Issue has no mark, because the Tracker reads one repository.
+- **The App subscribes per Session page** with the links that page has drawn, so a mark changes when the record does. Core no longer reads GitHub for a mark. The hover card still does, through the Server's `gh` sign-in, for the author and avatar the records do not hold.
+- **A link drawn outside a Session has no mark,** since there is no Project to read it for.
+
+Considered and rejected: keeping the `gh` read for links no Plugin holds a record for, which keeps a second path that can disagree with the first.
+
+Not decided here: dropping the record of a pull request once no feed shows its link, and the hover card reading the record too.
 
 ## Reconciling #1300
 
@@ -64,7 +91,7 @@ Spec #1300 proposed a core Change module with a Forge port and a `gh` adapter, p
 - **A separate Pull Requests card or a Plugin-drawn Workbench card.** Rejected: it duplicates the Changes card and gives a Plugin control of core layout, against ADR-0035.
 - **A core GitHub client and a Forge port (#1300).** Rejected for now: it puts one vendor's transport in core and designs a port before a second vendor exists.
 - **A tree Slot for the Changes.** Rejected: ADR-0046 already removed tree Slots in favour of data Argo draws.
-- **A Plugin-owned poll, or a second cache for PR data.** Rejected: ADR-0037 keeps one cache and its stale marks, and the Issue tracker's private view cache is the pattern not to copy.
+- **A Plugin-owned poll.** Rejected: the clock is Argo's. A second cache for PR data was rejected here too, until the two Slots' separate memories disagreed; see "The Plugin stores each pull request's last read".
 - **A failure placeholder Change for a PR never read.** Rejected for now: it would need a stage and title Argo cannot know, and it is a new visible state.
 - **Putting pull requests into the Issue tracker Plugin.** Rejected: ADR-0036 makes a code host and an Issue tracker separate Plugins.
 - **A new core `SessionComparison` for a PR, read by core's own git.** Rejected: it needs the PR's head in the Checkout (a fetch or a switch), which inspecting a PR must never do, and a remote credential core does not hold.

@@ -1,7 +1,7 @@
 import type { Argo } from '@argo/plugin-kit';
 import { autoArchive } from './pull-archive';
 import { autoFix } from './pull-fix';
-import type { ChangesSource } from './pull-link-reads';
+import type { Watching } from './pull-fresh';
 
 const isFailure = (
   turn: PromiseSettledResult<void>,
@@ -12,13 +12,13 @@ const isFailure = (
  * is thrown after both have run.
  */
 export async function watchProject(
-  argo: Pick<Argo, 'sessions' | 'changed'>,
-  source: ChangesSource,
+  argo: Pick<Argo, 'sessions'> & { changed: () => void },
+  watching: Watching,
   projectId: string,
 ): Promise<void> {
   const turns = await Promise.allSettled([
-    autoFix(argo, source, projectId),
-    autoArchive(argo, source, projectId),
+    autoFix(argo, watching, projectId),
+    autoArchive(argo, watching, projectId),
   ]);
 
   const failed = turns.find(isFailure);

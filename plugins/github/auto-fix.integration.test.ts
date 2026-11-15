@@ -16,6 +16,9 @@ import type { AutomationState } from './pull-automation';
 
 const slow = 120_000;
 
+// How long a Change may take to show what GitHub now says, which a Slot reads behind its answer.
+const wait = 20_000;
+
 const tap = (run: Journey, on: boolean): ReturnType<typeof tapAutomation> =>
   tapAutomation(run, { kind: 'fix', on });
 
@@ -107,7 +110,9 @@ it(
     expect(promptsSent(run)).toHaveLength(3);
 
     changePull(run, 12, { head: pushed(12) });
-    expect(await fixOffer(run)).toEqual({ on: false, available: true });
+    await expect
+      .poll(() => fixOffer(run), { timeout: wait })
+      .toEqual({ on: false, available: true });
 
     changePull(run, 12, {});
     await tap(run, true);

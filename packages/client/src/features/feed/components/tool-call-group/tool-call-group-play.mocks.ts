@@ -6,7 +6,8 @@ export const commandAndFileSummary = 'Ran 1 command, Read 1 file';
 
 export const readFileTitle = 'Read /project/hello.txt';
 
-export const commandTitle = 'Show hello.txt and short git status';
+// A group's child is titled with its command line, running or settled.
+export const commandLine = 'cat hello.txt && git status --short';
 
 export const dark = { globals: { mode: 'dark' } };
 

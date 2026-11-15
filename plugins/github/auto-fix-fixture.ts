@@ -1,7 +1,7 @@
 import { expect } from 'vitest';
 import { reference, repository } from './auto-merge-fixture';
 import { sha } from './github-fixture';
-import type { Journey } from './journey-fixture';
+import { project, type Journey } from './journey-fixture';
 import { promptsSent } from './journey-prompts-fixture';
 import { shortHead } from './pull-reads';
 
@@ -23,10 +23,12 @@ export const failChecks = (
   run.github.checks.set(`${repository}@${head}`, failing(...names));
 };
 
+// The Watch's runs that finished for the journey's own Project; another Project's run says nothing of its turn.
 const completed = async (run: Journey): Promise<number> =>
   (await run.test.log())
     .split('\n')
-    .filter((line) => line.includes('watch completed')).length;
+    .filter((line) => line.includes(`watch completed (Project ${project.id})`))
+    .length;
 
 const watchIntervalMs = 60_000;
 

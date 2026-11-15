@@ -1,11 +1,12 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { AutomationState } from './pull-automation';
+import type { LinkRead } from './pull-changes';
 import type { CheckInfo } from './pull-checks';
 import { eventKey } from './pull-fix-rows';
 import type { FixRecord, FixStore } from './pull-fix-store';
+import { freshOf, type Watching } from './pull-fresh';
 import type { PullInfo } from './pull-info';
 import type { Known } from './pull-known';
-import { readChecks, readPull, type ChangesSource } from './pull-link-reads';
 import { shortHead } from './pull-reads';
 import { takeTurns } from './pull-turns';
 
@@ -39,9 +40,7 @@ export function fixOf(
 const promptOf = (pull: PullInfo, check: string): string =>
   `Check \`${check}\` failed on ${pull.repository}#${pull.number} at ${short(pull.head)}. Read it, fix it, and push.`;
 
-type Reads = Pick<ChangesSource, 'reads' | 'readState' | 'store'>;
-
-type Acting = Pick<Argo, 'sessions' | 'changed'>;
+type Acting = Pick<Argo, 'sessions'> & { changed: () => void };
 
 export const failedOf = (checks: readonly CheckInfo[]): string[] =>
   checks.flatMap(({ name, state }) => (state === 'failed' ? [name] : []));
@@ -58,24 +57,27 @@ const openOf = (pull: Known<PullInfo>): PullInfo | undefined => {
 
 type Fresh = { pull: PullInfo; failed: string[] };
 
-async function checkedOf(
-  source: Reads,
+const failedIn = (checks?: Known<CheckInfo[]>): string[] | undefined => {
+  const reported = checks && dataOf(checks);
+
+  return reported && failedOf(reported);
+};
+
+// What is known now of one pull request and its head's Checks; a read that failed leaves nothing to act on.
+const checkedOf = ({ pull, checks }: LinkRead): Fresh | undefined => {
+  const open = openOf(pull);
+  const failed = failedIn(checks);
+
+  return open && failed && { pull: open, failed };
+};
+
+async function freshRead(
+  watching: Watching,
   record: FixRecord,
-  pull: PullInfo,
 ): Promise<Fresh | undefined> {
-  const checks = dataOf(await readChecks(source, record, pull.head));
+  const read = await freshOf(watching, record);
 
-  return checks && { pull, failed: failedOf(checks) };
-}
-
-// What is known now of one pull request and its head's Checks.
-async function freshOf(
-  source: Reads,
-  record: FixRecord,
-): Promise<Fresh | undefined> {
-  const pull = openOf(await readPull(source, record));
-
-  return pull && checkedOf(source, record, pull);
+  return read && checkedOf(read);
 }
 
 // What one pull request's turn works with.
@@ -140,12 +142,14 @@ async function turnOf(step: Step, fresh: Fresh): Promise<boolean> {
 
 async function fixOne(
   argo: Acting,
-  reads: Reads,
+  watching: Watching,
   record: FixRecord,
 ): Promise<boolean> {
-  const fresh = await freshOf(reads, record);
+  const fresh = await freshRead(watching, record);
 
-  return fresh ? turnOf({ argo, fix: reads.store.fix, record }, fresh) : false;
+  return fresh
+    ? turnOf({ argo, fix: watching.store.fix, record }, fresh)
+    : false;
 }
 
 /*
@@ -154,10 +158,12 @@ async function fixOne(
  */
 export async function autoFix(
   argo: Acting,
-  reads: Reads,
+  watching: Watching,
   projectId: string,
 ): Promise<void> {
-  await takeTurns(argo, await reads.store.fix.enabledIn(projectId), (record) =>
-    fixOne(argo, reads, record),
+  await takeTurns(
+    argo,
+    await watching.store.fix.enabledIn(projectId),
+    (record) => fixOne(argo, watching, record),
   );
 }

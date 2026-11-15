@@ -305,12 +305,16 @@ A person's choice, per PR association, that the Session's Agent is prompted to f
 _Avoid_: Babysit, watch, auto-repair
 
 **Auto-merge**:
-The code host's own promise to merge an Open pull request once its required Checks and reviews pass. Argo turns it on or off and reads it back; it keeps no copy.
+The code host's own promise to merge an Open pull request once its required Checks and reviews pass. Argo turns it on or off and reads it back; it keeps no choice of its own.
 _Avoid_: Merge when ready (for the concept), auto-land
 
 **Auto-archive**:
 A person's choice, per PR association, that the Session is archived once that pull request is Merged or Closed and the Session has no other Open Change and no uncommitted files. It is off until turned on.
 _Avoid_: Auto-close, cleanup
+
+**Pull request record**:
+What a Plugin last read of one pull request, kept in its own storage: the pull request, its Checks, its auto-merge while it is Open, and why the latest read failed. The Session row, the Changes and the Operations all read it, and only the Plugin's sync writes it.
+_Avoid_: PR cache, PR status, snapshot
 
 **Comparison**:
 What a Checkout's changed files are measured against: `main`, `uncommitted`, or another branch.

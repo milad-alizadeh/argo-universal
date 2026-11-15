@@ -18,6 +18,8 @@ const token = 'token-1';
 
 const second = { sessionId: secondSessionId, projectId: project.id };
 
+const wait = 10_000;
+
 it(
   'keeps what was last known through lost access and a network failure, says why, and recovers on sign-in and on the explicit retry',
   async () => {
@@ -26,28 +28,30 @@ it(
     run.github.checks.set(`${repository}@${sha}`, [
       { name: 'build', status: 'completed', conclusion: 'success' },
     ]);
+    await refreshed(run);
 
-    const open = openChanges(run);
-
-    await open.next();
+    // An open list holds Argo's clock, which is what makes a read due.
+    await openChanges(run).next();
 
     // GitHub no longer accepts the token, and meanwhile the pull request was closed there.
     run.github.accepted.delete(token);
     changePull(run, 1, { state: 'closed' });
     await tick(run);
 
-    expect(await open.next()).toMatchObject([
-      {
-        stage: 'open',
-        stale: 'signIn',
-        checks: [{ name: 'build', state: 'passed' }],
-      },
-    ]);
+    await expect
+      .poll(() => changesOf(run), { timeout: wait })
+      .toMatchObject([
+        {
+          stage: 'open',
+          stale: 'signIn',
+          checks: [{ name: 'build', state: 'passed' }],
+        },
+      ]);
 
     run.github.accepted.add(token);
     await refreshed(run);
 
-    const [recovered] = await open.next();
+    const [recovered] = await changesOf(run);
 
     expect(recovered).toMatchObject({ stage: 'closed' });
     expect(recovered).not.toHaveProperty('stale');
@@ -56,9 +60,9 @@ it(
     changePull(run, 1, { title: 'Renamed' });
     await tick(run);
 
-    expect(await open.next()).toMatchObject([
-      { stage: 'closed', stale: 'failed' },
-    ]);
+    await expect
+      .poll(() => changesOf(run), { timeout: wait })
+      .toMatchObject([{ stage: 'closed', stale: 'failed' }]);
     expect(await listed(run)).toMatchObject({
       changes: [{ stage: 'closed', stale: 'failed' }],
     });
@@ -68,55 +72,58 @@ it(
     expect(await refreshed(run)).toMatchObject({
       changes: [{ title: 'Renamed' }],
     });
-    expect(await open.next()).toMatchObject([{ title: 'Renamed' }]);
+    expect(await changesOf(run)).toMatchObject([{ title: 'Renamed' }]);
   },
   slow,
 );
 
 it(
-  'leaves out only the pull request that cannot be read, tells a failed first read from an empty one, and shows it once it can be read again',
+  'keeps a pull request that cannot be read as it was last read, marked stale, through a restart, and clears the mark once it reads again',
   async () => {
     const run = await attached(1, 2, 3);
 
     await restart(run);
     run.github.pulls.delete(`${repository}#2`);
 
-    expect(await changesOf(run)).toMatchObject([
-      { id: idOf(1) },
-      { id: idOf(3) },
-    ]);
+    // The record outlives the worker, so nothing is left out while GitHub cannot be read.
     expect(await listed(run)).toMatchObject({
       changes: [
         { id: idOf(1) },
-        { repository, number: 2, error: expect.stringContaining('not found') },
+        { id: idOf(2), stale: 'failed' },
         { id: idOf(3) },
       ],
     });
+    expect(await changesOf(run)).toMatchObject([
+      { id: idOf(1) },
+      { id: idOf(2), stale: 'failed' },
+      { id: idOf(3) },
+    ]);
 
     changePull(run, 2, {});
     await refreshed(run);
 
-    expect(await changesOf(run)).toMatchObject([
-      { id: idOf(1) },
-      { id: idOf(2) },
-      { id: idOf(3) },
-    ]);
+    const [, mended] = await changesOf(run);
 
-    // Everything fails on a fresh start: that is an error, not an empty Session, and the associations stay.
+    expect(mended).toMatchObject({ id: idOf(2) });
+    expect(mended).not.toHaveProperty('stale');
+
+    // Everything fails on a fresh start: each is still listed as last read, and each says it is stale.
     await restart(run);
     run.github.failWith.status = 500;
 
-    expect(await changesOf(run)).toEqual([]);
     expect(await listed(run)).toMatchObject({
-      changes: [{ error: expect.any(String) }, {}, {}],
+      changes: [{ stale: 'failed' }, { stale: 'failed' }, { stale: 'failed' }],
     });
+    expect(await changesOf(run)).toHaveLength(3);
 
     // A Session with nothing attached is empty, not failed, however GitHub is doing.
     expect(await listed(run, second)).toEqual({ changes: [] });
 
     run.github.failWith.status = null;
-    await refreshed(run);
 
+    expect(await refreshed(run)).not.toMatchObject({
+      changes: [{ stale: 'failed' }, {}, {}],
+    });
     expect(await changesOf(run)).toHaveLength(3);
   },
   slow,

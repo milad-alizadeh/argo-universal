@@ -3,8 +3,11 @@ import { createArchiveStore, type ArchiveStore } from './pull-archive-store';
 import { createFixStore, type FixStore } from './pull-fix-store';
 import type { PullReference } from './pull-reference';
 
+// One pull request as a Project reads it: the key of what is kept of it.
+export type PullKey = PullReference & { projectId: string };
+
 // One Session's association with one pull request, in one Project: the Plugin's own record of what to read from GitHub.
-export type PullLink = PullReference & { projectId: string; sessionId: string };
+export type PullLink = PullKey & { sessionId: string };
 
 // The Plugin's own storage, which holds nothing but these associations (ADR-0052).
 type Storage = Pick<Argo, 'storage'>;

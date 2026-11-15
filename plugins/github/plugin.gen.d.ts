@@ -21,6 +21,9 @@ declare module '@argo/plugin-kit' {
       "params": {
         "sessionId": {
           "type": "string"
+        },
+        "unlessAttached": {
+          "type": "boolean"
         }
       },
       "caller": [
