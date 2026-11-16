@@ -10,25 +10,22 @@ import { valueParts, type ValuePart } from './property-value-parts';
 
 type Part<Kind extends ValuePart['kind']> = Extract<ValuePart, { kind: Kind }>;
 
-interface Drawn<Kind extends ValuePart['kind']> {
-  title: string;
-  part: Part<Kind>;
-}
-
-// Words a StatusDot leads are a status; any other words are a label, after their icon.
-function TextField({ title, part }: Drawn<'text'>): ReactElement {
+/*
+ * Words a StatusDot leads are a status; any other words are a label, after their icon. A function, not a component:
+ * the aside groups a field by the kind of element it is.
+ */
+function textField(title: string, part: Part<'text'>): ReactElement {
   const own = { title, accessibilityLabel: part.spoken, text: part.text };
 
   return part.lead.tone ? (
-    <PropertyStatus {...own} tone={part.lead.tone} />
+    <PropertyStatus key={part.key} {...own} tone={part.lead.tone} />
   ) : (
-    <PropertyLabel {...own} icon={part.lead.icon} />
+    <PropertyLabel key={part.key} {...own} icon={part.lead.icon} />
   );
 }
 
 function wordsField(title: string, part: Part<'text' | 'link'>): ReactElement {
-  if (part.kind === 'text')
-    return <TextField key={part.key} title={title} part={part} />;
+  if (part.kind === 'text') return textField(title, part);
 
   return (
     <PropertyLink
