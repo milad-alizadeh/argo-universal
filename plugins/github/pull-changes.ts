@@ -1,17 +1,15 @@
 import type { Argo } from '@argo/plugin-kit';
-import { archiveOf } from './pull-archive';
 import {
   mergeOf,
-  offerOf,
   type AutoMergeInfo,
   type MergeSettings,
   type Reads,
 } from './pull-automation';
 import type { AutomationReads } from './pull-automation-reads';
+import type { Automations } from './pull-automations';
 import { changeOf, type ChangeItem, type Refresh } from './pull-change';
 import type { CheckInfo } from './pull-checks';
 import type { CommentInfo, CommentsReads } from './pull-comments';
-import { fixOf } from './pull-fix';
 import type { PullInfo } from './pull-info';
 import type { Attached } from './pull-kept';
 import { failureMessage, known, type Known } from './pull-known';
@@ -22,6 +20,7 @@ import type { PullKey, PullLink, PullStore } from './pull-store';
 
 export type ChangesSource = {
   store: PullStore;
+  automations: Automations;
   records: PullRecords;
   reads: PullReads & AutomationReads & CommentsReads;
   readState: Argo['queries']['readState'];
@@ -99,16 +98,13 @@ const readsOf = ({ autoMerge, settings }: LinkRead): Reads => ({
 });
 
 // What the Change offers to automate; GitHub's own answers, so one it could not give is never drawn as off.
-const automationOf = (read: LinkRead): Pick<Refresh, 'automation'> =>
-  read.pull.data
-    ? {
-        automation: offerOf(
-          mergeOf(read.pull.data, readsOf(read)),
-          fixOf(read.fix, read.pull.data),
-          archiveOf(read.archive),
-        ),
-      }
+const automationOf = (read: LinkRead): Pick<Refresh, 'automation'> => {
+  const { pull, kept } = read;
+
+  return pull.data && kept
+    ? { automation: { ...kept, merge: mergeOf(pull.data, readsOf(read)) } }
     : {};
+};
 
 // Stale when either read failed: the Change is what was last known, with why it could not be refreshed.
 export const refreshOf = (read: LinkRead): Refresh => ({

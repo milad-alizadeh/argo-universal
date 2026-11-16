@@ -7,13 +7,11 @@ import {
 } from './pull-automation';
 import { fetchAutoMerge, fetchMergeSettings } from './pull-automation-reads';
 import { disableAutoMerge, enableAutoMerge } from './pull-automation-writes';
-import { fetchComments } from './pull-comments';
 import { requireAttached } from './pull-file-operations';
-import { failedOf } from './pull-fix';
-import { eventsOf } from './pull-fix-prompts';
 import type { PullInfo } from './pull-info';
 import { namedOf, type Scope } from './pull-operations';
-import { fetchChecks, fetchPull } from './pull-reads';
+import { fetchPull } from './pull-reads';
+import type { PullLink } from './pull-store';
 import type { SessionCaller } from './session-caller';
 
 export type AutomationParams = {
@@ -22,24 +20,22 @@ export type AutomationParams = {
   on: boolean;
 };
 
+// Auto-fix and Auto-archive are the Plugin's own, each behind its one interface; Auto-merge is GitHub's.
 async function turn(
   scope: Scope,
   { kind, on }: AutomationParams,
-  { sessionId, ...target }: FixTarget,
+  link: PullLink,
 ): Promise<void> {
-  if (kind === 'archive')
-    return setArchive(scope.store, { ...target, sessionId }, on);
+  if (kind === 'merge') return apply(scope, link, on);
 
-  return kind === 'fix'
-    ? setFix(scope, { ...target, sessionId }, on)
-    : apply(scope, target, on);
+  await scope.automations[kind].set(link, on);
 }
 
 // Auto-merge is GitHub's own: its pull request record is read again so the Change shows what GitHub now says.
 async function readBack(
   { sync }: Pick<Scope, 'sync'>,
   { kind }: AutomationParams,
-  { sessionId }: FixTarget,
+  { sessionId }: PullLink,
 ): Promise<void> {
   if (kind === 'merge') await sync([sessionId]);
 }
@@ -121,71 +117,4 @@ async function apply(
   const read = await readAll(fetch, target);
 
   await (on ? turnOn : turnOff)(fetch, target, read);
-}
-
-type FixTarget = Target & { sessionId: string };
-
-const isOn = async (
-  { store }: Pick<Scope, 'store'>,
-  { sessionId, repository, number }: FixTarget,
-): Promise<boolean> =>
-  (await store.fix.forSessions([sessionId])).some(
-    (record) =>
-      record.repository === repository &&
-      record.number === number &&
-      record.enabled,
-  );
-
-// The head commit, and the keys of every event Auto-fix could prompt about on it now.
-async function eventsNow(
-  fetch: Fetch,
-  target: FixTarget,
-): Promise<{ head: string; keys: string[] }> {
-  const pull = await fetchPull(fetch, target);
-
-  const [checks, comments] = await Promise.all([
-    fetchChecks(fetch, { ...target, head: pull.head }),
-    fetchComments(fetch, target),
-  ]);
-
-  const events = eventsOf({ pull, failed: failedOf(checks), comments });
-
-  return { head: pull.head, keys: events.map(({ key }) => key) };
-}
-
-async function enableFix(
-  { fetch, store }: Pick<Scope, 'fetch' | 'store'>,
-  target: FixTarget,
-  link: FixTarget,
-): Promise<void> {
-  const { head, keys } = await eventsNow(fetch, target);
-
-  await store.fix.enable(link, head, keys);
-}
-
-/*
- * Auto-fix is the Plugin's own: turning it on reads the head's Checks, the review comments and the conflict first, so
- * one already there is not prompted, and a read that fails refuses turning it on rather than guessing. Turning it on when it is on changes nothing.
- */
-async function setFix(
-  scope: Pick<Scope, 'fetch' | 'store'>,
-  target: FixTarget,
-  on: boolean,
-): Promise<void> {
-  const link = { ...target, repository: target.repository.toLowerCase() };
-
-  if (!on) return scope.store.fix.disable(link);
-
-  if (!(await isOn(scope, link))) await enableFix(scope, target, link);
-}
-
-// Auto-archive is a record per pull request, kept until it is turned off, spent or detached; it asks GitHub nothing.
-function setArchive(
-  { archive }: Pick<Scope['store'], 'archive'>,
-  target: FixTarget,
-  on: boolean,
-): Promise<void> {
-  const link = { ...target, repository: target.repository.toLowerCase() };
-
-  return on ? archive.enable(link) : archive.disable(link);
 }

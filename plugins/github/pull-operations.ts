@@ -16,7 +16,7 @@ import { sessionInProject, type SessionCaller } from './session-caller';
 type ProjectInfo = Awaited<ReturnType<Argo['projects']['list']>>[number];
 
 export type Scope = Pick<Argo, 'projects' | 'sessions' | 'fetch' | 'changed'> &
-  Pick<ChangesSource, 'store' | 'records'> &
+  Pick<ChangesSource, 'store' | 'records' | 'automations'> &
   Pick<Pulls, 'sync'>;
 
 async function projectOf(
@@ -123,7 +123,11 @@ export async function detach(
 ): Promise<{ repository: string; number: number }> {
   const named = await namedOf(scope, reference, caller);
 
-  await scope.store.detach({ ...named, ...caller });
+  const link = { ...named, ...caller };
+
+  await scope.store.detach(link);
+  await scope.automations.fix.forget(link);
+  await scope.automations.archive.forget(link);
   await scope.records.forget({ ...named, ...caller });
   scope.changed();
 

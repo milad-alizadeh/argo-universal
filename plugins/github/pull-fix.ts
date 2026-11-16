@@ -1,11 +1,12 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { AutomationState } from './pull-automation';
+import type { Fresh } from './pull-automations';
 import type { LinkRead } from './pull-changes';
 import type { CheckInfo } from './pull-checks';
 import type { CommentInfo } from './pull-comments';
 import { eventsOf, type FixEvent, type FixFacts } from './pull-fix-prompts';
 import type { FixRecord, FixStore } from './pull-fix-store';
-import { freshOf, type Watching } from './pull-fresh';
+import { freshOf } from './pull-fresh';
 import type { PullInfo } from './pull-info';
 import type { Known } from './pull-known';
 import { shortHead } from './pull-reads';
@@ -38,7 +39,7 @@ export function fixOf(
   return stoppedOn(record, head) ? stoppedOf(head) : idle;
 }
 
-type Acting = Pick<Argo, 'sessions'> & { changed: () => void };
+type Sessions = Pick<Argo['sessions'], 'prompt'>;
 
 export const failedOf = (checks: readonly CheckInfo[]): string[] =>
   checks.flatMap(({ name, state }) => (state === 'failed' ? [name] : []));
@@ -84,27 +85,27 @@ const checkedOf = (read: LinkRead): FixFacts | undefined => {
 };
 
 async function freshRead(
-  watching: Watching,
+  fresh: Fresh,
   record: FixRecord,
 ): Promise<FixFacts | undefined> {
-  const read = await freshOf(watching, record);
+  const read = await freshOf(fresh, record);
 
   return read && checkedOf(read);
 }
 
 // What one pull request's turn works with.
-type Step = { argo: Acting; fix: FixStore; record: FixRecord };
+type Step = { sessions: Sessions; fix: FixStore; record: FixRecord };
 
 // A Prompt that could not be sent is not remembered, so the next Watch sends it.
 async function prompt(
-  { argo, fix, record }: Step,
+  { sessions, fix, record }: Step,
   head: string,
   { key, text }: FixEvent,
 ): Promise<void> {
   await fix.record(record, head, key);
 
   try {
-    await argo.sessions.prompt(record.sessionId, text);
+    await sessions.prompt(record.sessionId, text);
   } catch (error) {
     await fix.unrecord(record, head, key);
     throw error;
@@ -152,16 +153,17 @@ async function turnOf(step: Step, fresh: FixFacts): Promise<boolean> {
   return stopped || unseen.length > 0;
 }
 
+// What Auto-fix's Watch turn works with: the Sessions it prompts, and the record of what it has seen and sent.
+export type Fixing = { sessions: Sessions; fix: FixStore };
+
 async function fixOne(
-  argo: Acting,
-  watching: Watching,
+  fixing: Fixing,
+  fresh: Fresh,
   record: FixRecord,
 ): Promise<boolean> {
-  const fresh = await freshRead(watching, record);
+  const facts = await freshRead(fresh, record);
 
-  return fresh
-    ? turnOf({ argo, fix: watching.store.fix, record }, fresh)
-    : false;
+  return facts ? turnOf({ ...fixing, record }, facts) : false;
 }
 
 /*
@@ -169,13 +171,11 @@ async function fixOne(
  * pull request failing does not stop the others.
  */
 export async function autoFix(
-  argo: Acting,
-  watching: Watching,
+  fixing: Fixing,
+  fresh: Fresh,
   projectId: string,
 ): Promise<void> {
-  await takeTurns(
-    argo,
-    await watching.store.fix.enabledIn(projectId),
-    (record) => fixOne(argo, watching, record),
+  await takeTurns(fresh, await fixing.fix.enabledIn(projectId), (record) =>
+    fixOne(fixing, fresh, record),
   );
 }
