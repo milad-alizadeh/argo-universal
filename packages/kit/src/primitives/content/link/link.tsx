@@ -1,6 +1,16 @@
 import { router, type Href } from 'expo-router';
-import type { AnchorHTMLAttributes, MouseEvent, ReactElement } from 'react';
-import { LinkPreview } from '#primitives/overlays/link-preview';
+import {
+  useContext,
+  type AnchorHTMLAttributes,
+  type MouseEvent,
+  type ReactElement,
+} from 'react';
+import { cn } from '#kit/utils';
+import {
+  LinkPreview,
+  LinkToneContext,
+} from '#primitives/overlays/link-preview';
+import { toneTextClass, type MarkTone } from '../../../tone-mark';
 import type { LinkProps } from './link-props';
 import { linkTarget, isRoute } from './link-target';
 
@@ -68,12 +78,21 @@ function FollowedLink(props: LinkProps & { target: string }): ReactElement {
   );
 }
 
+// A marked link's label is drawn in its mark's tone, and underlines only under the pointer, as ChangeStage's number.
+const markedClass = (tone: MarkTone): string =>
+  cn(
+    'rounded-sm no-underline underline-offset-2 hover:underline focus-visible:outline-3 focus-visible:outline-primary/35',
+    toneTextClass(tone),
+  );
+
 function LinkAnchor(props: LinkProps & { target: string }): ReactElement {
+  const tone = useContext(LinkToneContext);
+
   return (
     <a
       {...anchorProps(props)}
-      className={anchorClass}
-      style={{ color: 'inherit', font: 'inherit' }}
+      className={tone ? markedClass(tone) : anchorClass}
+      style={tone ? { font: 'inherit' } : { color: 'inherit', font: 'inherit' }}
     >
       {props.children}
     </a>

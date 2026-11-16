@@ -11,8 +11,8 @@ import {
   webLinkPreviewCard,
   webWithImageLinkPreviewCard,
 } from './link-preview-card-fixtures';
-import { LinkPreviewContext } from './link-preview-context';
-import { GitStateIcon } from './link-preview-git';
+import { LinkPreviewContext, type LinkMark } from './link-preview-context';
+import { gitStateMark } from './link-preview-git';
 
 const source = {
   load: async (): Promise<ReactNode> => (
@@ -59,17 +59,14 @@ const states = ['open', 'draft', 'merged', 'closed'] as const;
 // Each link's last digit picks its state.
 const markedSource = {
   load: async (): Promise<ReactNode> => null,
-  mark: async (href: string): Promise<ReactNode> => (
-    <GitStateIcon
-      data={{
-        kind: 'pullRequest',
-        state: states[Number(href.slice(-1))] ?? 'open',
-      }}
-    />
-  ),
+  mark: async (href: string): Promise<LinkMark> =>
+    gitStateMark({
+      kind: 'pullRequest',
+      state: states[Number(href.slice(-1))] ?? 'open',
+    }),
 };
 
-// A pull request link draws its state before the text, so it reads without a hover.
+// A pull request link draws its state before the text, and its label in the state's tone, so it reads without a hover.
 export const StateMark: Story = {
   render: (): ReactElement => (
     <WebOnly>
