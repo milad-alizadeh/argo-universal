@@ -86,11 +86,11 @@ it(
 );
 
 it(
-  'shows only the number of a pull request that was never read',
+  'keeps what attach read of a pull request GitHub no longer shows',
   async () => {
     const run = await journey();
 
-    run.github.pulls.set(...pullOf(repository, 6));
+    run.github.pulls.set(...pullOf(repository, 6, { title: 'Gone' }));
     await attach(run, '#6');
     run.github.pulls.delete(`${repository}#6`);
     await run.test.clock.advance(refreshMs);
@@ -98,7 +98,13 @@ it(
     const items = await attributedRowItemsOf(run);
 
     expect(items.map(({ item }) => item)).toEqual([
-      { icon, text: '#6', tooltip: 'Pull request #6' },
+      {
+        icon,
+        text: '#6',
+        tone: 'success',
+        tooltip: 'Gone · Open',
+        change: { stage: 'open' },
+      },
     ]);
   },
   slow,

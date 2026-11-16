@@ -1,5 +1,5 @@
 # Quality, Engine tests, the macOS secret store contract, story tests, the story render gates and web e2e on every push, and on a pull request when its changes need them; the Electron smoke e2e on main and release/*.
-# The jobs run in parallel and the Engine tests, story tests and web e2e are split into shards, so a run takes as long as its slowest job.
+# The jobs run in parallel and the Engine tests, the other packages' tests, story tests, render gates and web e2e are split into shards, so a run takes as long as its slowest job.
 name: CI
 
 on:
@@ -81,7 +81,8 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.quality == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Lint, dead code, generated artifacts and type checks run about 5 minutes; the packages' tests run in their own jobs below.
+    timeout-minutes: 20
     permissions:
       contents: read
       # The Vercel Remote Cache step trades GitHub's OIDC token for a short-lived Turborepo token.
@@ -94,10 +95,9 @@ jobs:
       - name: Fetch main for the waiver merge base
         run: git fetch origin main:refs/remotes/origin/main
 
-      # The desktop CSP test checks the policy in real Chromium; the story tests run in the stories job.
       - uses: ./.github/actions/setup
         with:
-          playwright: chromium
+          playwright: none
           turbo-team: ${{ vars.TURBO_TEAM }}
 
       - name: Lint
@@ -118,13 +118,53 @@ jobs:
       - name: Type checks
         run: pnpm exec turbo run check-types --continue=dependencies-successful
 
-      # The Engine's tests run in their own sharded job below.
+  # Every package's tests but the Engine's, in three groups of about seven minutes each; run serially in one job they took twenty.
+  # `rest` is everything the other groups and the Engine job leave, so a new package's tests run without an edit here.
+  unit-tests:
+    name: Unit tests (${{ matrix.group }})
+    needs: changes
+    if: ${{ needs.changes.outputs.quality == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: plugins
+            filter: --filter=./plugins/*
+            playwright: none
+          - group: kits
+            filter: --filter=@argo/plugin-kit --filter=@repo/client
+            playwright: none
+          # The desktop CSP test checks the policy in real Chromium.
+          - group: rest
+            filter: --filter=!@repo/engine --filter=!./plugins/* --filter=!@argo/plugin-kit --filter=!@repo/client
+            playwright: chromium
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Fetch main for the waiver merge base
+        run: git fetch origin main:refs/remotes/origin/main
+
+      - uses: ./.github/actions/setup
+        with:
+          playwright: ${{ matrix.playwright }}
+          turbo-team: ${{ vars.TURBO_TEAM }}
+
       - name: Tests
         env:
           # Each test runner uses the available cores; overlapping runners distort timing budgets.
           TURBO_CONCURRENCY: 1
           VITEST_MAX_WORKERS: 1
-        run: pnpm exec turbo run test --filter='!@repo/engine' --continue=dependencies-successful
+        # set -f keeps the shell from expanding the ./plugins/* filter against the checkout.
+        run: |
+          set -f
+          pnpm exec turbo run test ${{ matrix.filter }} --continue=dependencies-successful
 
   # The Engine's suite alone takes minutes with one worker, so it runs beside Quality in shards.
   engine-tests:
@@ -214,9 +254,9 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
-  # The render gates draw every story and compare the drawings, so they need the whole set in one run and cannot shard.
+  # The render gates draw every story and judge each file against itself, so a runner takes a share of the files and judges its own drawings.
   story-renders:
-    name: Story render gates
+    name: Story render gates (${{ matrix.shard }}/4)
     needs: changes
     if: ${{ needs.changes.outputs.stories == 'true' }}
     runs-on: ubuntu-latest
@@ -224,6 +264,10 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v7
 
@@ -232,7 +276,7 @@ jobs:
           turbo-team: ${{ vars.TURBO_TEAM }}
 
       - name: Story render gates
-        run: pnpm check:story-renders
+        run: pnpm check:story-renders --shard=${{ matrix.shard }}/4
 
   e2e-web:
     name: End-to-end tests (web ${{ matrix.shard }}/6)
@@ -351,6 +395,7 @@ jobs:
       [
         changes,
         quality,
+        unit-tests,
         engine-tests,
         secret-store,
         stories,

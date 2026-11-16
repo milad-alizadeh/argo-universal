@@ -17,7 +17,7 @@ export function MenuSection({
   );
 }
 
-// A later section sits 8px below the one before, with no line (Paper's Menu "Section line").
+// A hairline parts a later section from the one before.
 function SectionGap({
   divided,
 }: {

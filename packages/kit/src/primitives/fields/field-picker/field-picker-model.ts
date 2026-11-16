@@ -3,6 +3,8 @@ import type { FieldGroupKitProps } from '../../kit-props';
 export type FieldPickerProps = FieldGroupKitProps<'FieldGroup.Picker'> & {
   // What the page says when there are no options at all, such as "No Agents installed"; a search that leaves none says so itself. The App's own: a Plugin's wire has no such prop.
   emptyText?: string;
+  // Offers to create what the search typed when no option has that name; the App's own, set by a Metadata field.
+  create?: { label: string; onCreate: (text: string) => void };
 };
 
 /*

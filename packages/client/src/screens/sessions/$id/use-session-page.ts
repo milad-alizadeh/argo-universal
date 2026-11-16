@@ -2,7 +2,7 @@ import { useInstalledAgents } from '#features/agents';
 import { useBlobUrl, useConnectionState } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
 import { useConnectionDropped, useSessionWork } from '#features/sessions';
-import { useNavigate } from '#lib/product/navigation/navigation';
+import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
 import { renderSubagentFeed } from './connected-subagent-feed';
 import type { SessionPluginCard } from './sections/plugin-card-section';
 import type { SessionDetailViewProps } from './session-detail-view';
@@ -81,7 +81,7 @@ function useSessionSurroundings(
     ...useFeedRequests(sessionId, feed),
     ...useSessionWork(sessionId, feed.snapshot, offeredWith(cards)),
     agents: useInstalledAgents(),
-    navigate: useNavigate(),
+    navigate: useNavigateFromShown(),
     imageUrl: useBlobUrl(),
     connected: useConnectionState() === 'open',
     onAtEndChange: useMarkSeen(sessionId, feed.revision, preview),

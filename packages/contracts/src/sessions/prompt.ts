@@ -11,6 +11,12 @@ export const SessionPromptInput = z.strictObject({
 
 export type SessionPromptInput = z.infer<typeof SessionPromptInput>;
 
+export const SessionSubmitInput = SessionPromptInput.extend({
+  steer: z.boolean().optional(),
+});
+
+export type SessionSubmitInput = z.infer<typeof SessionSubmitInput>;
+
 // Local acknowledgement after saving the prompt; Agent completion arrives through the Session Feed.
 export const SessionPromptOutput = z.union([
   z.strictObject({ messageId: z.string() }),

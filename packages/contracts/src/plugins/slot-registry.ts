@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LinkMarkContext, LinkMarkItem } from '#plugin-link-mark-item';
 import {
   ProjectDetailsItem,
   projectDetailsRowLimit,
@@ -17,6 +18,8 @@ export const sessionActivitySlotId = 'argo/session/activity/v1';
 export const sessionBarSlotId = 'argo/session/bar/v1';
 
 export const sessionChangesSlotId = 'argo/session/changes/v1';
+
+export const linkMarkSlotId = 'argo/link/mark/v1';
 
 export const toolCallSlotId = 'argo/feed/tool-call/v1';
 
@@ -187,6 +190,13 @@ export const addOnlySlots = [
     key: 'sessionId',
     item: Change,
     ...sessionChangesSlot,
+  }),
+  // The state beside a link to a pull request or an Issue, from the record its Plugin keeps (ADR-0052); one Plugin answers a link.
+  itemsSlotEntry(linkMarkSlotId, LinkMarkContext, {
+    key: 'href',
+    item: LinkMarkItem,
+    limit: { phone: 1, desktop: 1, perPlugin: 1 },
+    refreshMs: sessionChangesSlot.refreshMs,
   }),
 ] as const;
 

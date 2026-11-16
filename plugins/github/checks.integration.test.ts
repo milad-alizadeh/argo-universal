@@ -8,6 +8,7 @@ import {
   newHead,
   openChanges,
   pushed,
+  refreshed,
   repository,
   tick,
 } from './journey-watch-fixture';
@@ -15,6 +16,8 @@ import {
 const slow = 60_000;
 
 const build = 'build';
+
+const wait = 10_000;
 
 const checksOf = (head: string): string => `${repository}@${head}`;
 
@@ -68,7 +71,6 @@ it(
   'tells Checks GitHub says are none (an empty list) from Checks that could not be read (none given), per pull request, keeping the last known through a failed refresh',
   async () => {
     const run = await attached(1, 2);
-    const open = openChanges(run);
 
     changePull(run, 2, {
       head: { ...headFrom('owner', 'feature-2'), sha: otherHead },
@@ -79,7 +81,10 @@ it(
     run.github.checks.set(checksOf(otherHead), [
       { name: 'lint', status: 'completed', conclusion: 'success' },
     ]);
-    await open.next();
+    await refreshed(run);
+
+    // An open list holds Argo's clock, which is what makes a read due.
+    await openChanges(run).next();
 
     // Only the first pull request's Checks cannot be read; the second keeps reading its own.
     run.github.checksFailWith.set(checksOf(sha), 500);
@@ -88,15 +93,15 @@ it(
     ]);
     await tick(run);
 
-    const [first, second] = await open.next();
+    await expect
+      .poll(() => changesOf(run), { timeout: wait })
+      .toMatchObject([
+        { stale: 'failed', checks: [{ name: build, state: 'passed' }] },
+        { checks: [{ name: 'lint', state: 'running' }] },
+      ]);
 
-    expect(first).toMatchObject({
-      stale: 'failed',
-      checks: [{ name: build, state: 'passed' }],
-    });
-    expect(second).toMatchObject({
-      checks: [{ name: 'lint', state: 'running' }],
-    });
+    const [, second] = await changesOf(run);
+
     expect(second).not.toHaveProperty('stale');
 
     // A push to a head whose Checks were never read leaves none to claim, never passing ones.
@@ -104,22 +109,26 @@ it(
     changePull(run, 1, { head: pushed(1) });
     await tick(run);
 
-    const [moved] = await open.next();
+    await expect
+      .poll(() => changesOf(run), { timeout: wait })
+      .toMatchObject([{ head: newHead, stale: 'failed' }, {}]);
 
-    expect(moved).toMatchObject({ head: newHead, stale: 'failed' });
+    const [moved] = await changesOf(run);
+
     expect(moved).not.toHaveProperty('checks');
 
-    // Nothing of the pull requests could be read after a restart, so there are no Checks to claim and no Change to claim them for.
+    // Nothing can be read after a restart: each is listed as it was last read and says so, and no Checks are made up.
     await restart(run);
     run.github.failWith.status = 502;
 
-    expect(await changesOf(run)).toEqual([]);
     expect(await listed(run)).toMatchObject({
-      changes: [
-        { number: 1, error: expect.any(String) },
-        { number: 2, error: expect.any(String) },
-      ],
+      changes: [{ head: newHead, stale: 'failed' }, { stale: 'failed' }],
     });
+
+    const [kept] = await changesOf(run);
+
+    expect(kept).toMatchObject({ head: newHead, stale: 'failed' });
+    expect(kept).not.toHaveProperty('checks');
   },
   slow,
 );

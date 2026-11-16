@@ -16,3 +16,8 @@ export const completedToolCall = {
 export const commandWithoutOutput = {
   row: recordedToolCall('execute-pending'),
 } satisfies ToolCallRowProps;
+
+export const rawToolCall = {
+  row: recordedToolCall('mcp-raw'),
+  initialOpen: true,
+} satisfies ToolCallRowProps;

@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
-import { headFrom, pullOf, type FixturePull } from './github-fixture';
+import { headFrom, pullOf } from './github-fixture';
+import type { FixturePull } from './github-fixture-types';
 import {
   attach,
   changesOf,
@@ -8,9 +9,19 @@ import {
   untilChanges,
   watchChanges,
 } from './journey-calls-fixture';
-import { journey } from './journey-fixture';
+import { caller, journey, type Journey } from './journey-fixture';
 
 const slow = 30_000;
+
+// What Argo's own `github.discover` does when a Turn ends: it looks only while the Session has no pull request.
+const discoverUnlessAttached = ({
+  test,
+}: Journey): ReturnType<Journey['test']['operations']['run']> =>
+  test.operations.run({
+    name: 'discover',
+    params: { unlessAttached: true },
+    caller,
+  });
 
 const own = 'github:owner/repository#12';
 
@@ -64,7 +75,10 @@ it(
     expect(
       run.github.requests
         .filter(({ host }) => host === 'api.github.com')
-        .every(({ method }) => method === 'GET'),
+        // GitHub's GraphQL answers its reads over POST; only a mutation would be a write.
+        .every(
+          ({ method, body }) => method === 'GET' || !body.includes('mutation'),
+        ),
     ).toBe(true);
     expect(run.github.listReads()[0]?.path).toContain('state=all');
   },
@@ -128,6 +142,25 @@ it(
       { id: 'github:upstream/repository#7' },
       { id: 'github:upstream/repository#12' },
     ]);
+  },
+  slow,
+);
+
+it(
+  'looks at Turn end only while the Session has no pull request, and never reads GitHub once it has one',
+  async () => {
+    const run = await journey();
+
+    expect(await discoverUnlessAttached(run)).toEqual({
+      result: 'found',
+      pullRequests: [ownReference],
+    });
+
+    const reads = run.github.requests.length;
+
+    expect(await discoverUnlessAttached(run)).toEqual({ result: 'attached' });
+    expect(run.github.requests).toHaveLength(reads);
+    expect(await changesOf(run)).toMatchObject([{ id: own }]);
   },
   slow,
 );

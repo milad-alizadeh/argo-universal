@@ -1,6 +1,7 @@
-import { router, usePathname } from 'expo-router';
+import { router } from 'expo-router';
 import { useCallback, useLayoutEffect, useRef } from 'react';
 import { sectionOf } from '../../lib/product/navigation/sections';
+import { pathShown } from '../../lib/product/navigation/shown-page';
 import {
   pageUnavailable,
   type OpenPluginPage,
@@ -52,10 +53,11 @@ export function usePluginOpener(): (
   opening?: PluginOpening,
 ) => OpenPluginPage {
   const sections = usePluginSections();
-  const current = sectionOf(usePathname());
 
+  // The section is read at the press: a page kept behind the shown one is not redrawn when the path changes.
   return (pluginId, opening = {}) =>
     (path) => {
+      const current = sectionOf(pathShown());
       const route = pluginPageRoute(sections, { pluginId, current }, path);
 
       if (route) pushPage(route, opening);

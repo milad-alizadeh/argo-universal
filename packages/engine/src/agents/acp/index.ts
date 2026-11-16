@@ -24,3 +24,5 @@ export {
 } from './connection/refusals';
 
 export type { ExitNotice } from './exit-notice';
+
+export { steerAcpSession } from './connection/steering';

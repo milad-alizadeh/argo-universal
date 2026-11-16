@@ -1,7 +1,7 @@
 import { secretParamNames } from '@repo/contracts/plugins/plugin-operations';
 import type { ActivatedPlugin } from '../access/plugin-access';
-import { PluginBackground } from '../data/plugin-background';
 import { PluginData } from '../data/plugin-data';
+import { PluginPasses } from '../data/plugin-passes';
 import type { QueryServices } from '../data/query-types';
 import { PluginOperations } from '../operations';
 import { PageChanges, PluginDraws } from '../pages';
@@ -20,7 +20,8 @@ export type RuntimeInput = QueryServices &
 
 export class RuntimeResources {
   readonly data;
-  readonly background;
+  // The Background passes and the Watches.
+  readonly passes;
   readonly items;
   readonly operations;
   readonly draws;
@@ -52,7 +53,7 @@ export class RuntimeResources {
     );
     this.changes = this.pageChanges();
     this.draws = this.pluginDraws(input);
-    this.background = this.backgroundPasses(input);
+    this.passes = this.backgroundPasses(input);
     this.unwatch = this.watch(input);
   }
 
@@ -83,8 +84,8 @@ export class RuntimeResources {
     });
   }
 
-  private backgroundPasses(input: QueryServices): PluginBackground {
-    return new PluginBackground({
+  private backgroundPasses(input: QueryServices): PluginPasses {
+    return new PluginPasses({
       ...input,
       draws: this.draws,
       projectRemoved: (projectId): void => this.projectRemoved(projectId),
@@ -151,7 +152,7 @@ export class RuntimeResources {
       this.input.services.projectInfo(),
       this.projectUpdates,
     ]).then(([projects]) =>
-      this.background.syncProjects(projects.map(({ id }) => id)),
+      this.passes.syncProjects(projects.map(({ id }) => id)),
     );
 
     this.projectUpdates = updated.catch(() => {});
@@ -167,7 +168,7 @@ export class RuntimeResources {
 
   close(): void {
     for (const unwatch of this.unwatch) unwatch();
-    this.background.close();
+    this.passes.close();
     this.failures.close();
     this.data.badges.close();
     this.workers.close();

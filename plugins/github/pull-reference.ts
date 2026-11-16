@@ -30,6 +30,17 @@ const referenceOf = (groups: Groups): PullReference => ({
   number: Number(groups.number),
 });
 
+const [, url] = written;
+
+const urlGroups = (href: string): Groups | undefined => url?.exec(href)?.groups;
+
+// The pull request a GitHub URL points at; none for any other link.
+export const urlReference = (href: string): PullReference | undefined => {
+  const groups = urlGroups(href);
+
+  return groups && referenceOf(groups);
+};
+
 const trimmed = (text: string | null): string => (text ?? '').trim();
 
 const bareGroups = (text: string): Groups | undefined =>

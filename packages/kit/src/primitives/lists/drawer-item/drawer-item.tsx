@@ -6,7 +6,7 @@ import { CountBadge } from '#primitives/status/count-badge';
 import { cn } from '../../../utils';
 import type { DrawerItemProps } from './drawer-item-props';
 
-// A destination in a navigation drawer: an icon and a label, tinted and filled when it is the current one.
+// A destination in a navigation drawer: an icon and a label, tinted when it is the current one; the icon stays outlined.
 export function DrawerItem(props: DrawerItemProps): React.JSX.Element {
   const { label, selected, onPress } = props;
 
@@ -45,7 +45,7 @@ function DrawerItemContent(props: DrawerItemProps): React.JSX.Element {
 
   return (
     <>
-      <Icon name={icon} size="lg" filled={selected} className={muted} />
+      <Icon name={icon} size="lg" className={muted} />
       <Text role="body" className={labelClass}>
         {label}
       </Text>

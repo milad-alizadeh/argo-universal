@@ -306,3 +306,18 @@ Feature: Turns
     Examples:
       | frame |
       | wide  |
+
+
+  Scenario Outline: Steer sends a Queued Prompt into the running Turn
+    Given a <frame> Frame
+    And Agent 1 accepts steering into its held Turn
+    And a New Session with Agent 1
+    When I send the prompt "First prompt"
+    And I send the prompt "Second prompt"
+    And I steer Queued Prompt "Second prompt"
+    Then the steered Prompt joins the running Turn
+
+    Examples:
+      | frame |
+      | wide  |
+      | phone |

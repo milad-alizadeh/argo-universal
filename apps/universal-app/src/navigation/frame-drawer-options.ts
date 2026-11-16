@@ -1,7 +1,6 @@
 import {
-  frameSidebarWidth,
+  useFrameSidebarWidth,
   usePhoneDrawerWidth,
-  type FrameParts,
   type SizeClass,
 } from '@repo/client';
 import type { DrawerNavigationOptions } from 'expo-router/drawer';
@@ -25,10 +24,10 @@ function useNarrowOptions(): DrawerNavigationOptions {
 }
 
 // The rail and the list stay beside the pages, on the window's own surface; the glass sidebar draws its own edge.
-function framedOptions(frame: FrameParts): DrawerNavigationOptions {
+function framedOptions(width: number): DrawerNavigationOptions {
   return {
     drawerStyle: {
-      width: frameSidebarWidth(frame),
+      width,
       backgroundColor: 'transparent',
       borderRightWidth: 0,
     },
@@ -38,10 +37,9 @@ function framedOptions(frame: FrameParts): DrawerNavigationOptions {
 
 export function useDrawerOptions(
   sizeClass: SizeClass,
-  frame: FrameParts,
 ): DrawerNavigationOptions {
   return composeDrawerOptions(sizeClass, {
     narrow: useNarrowOptions(),
-    framed: framedOptions(frame),
+    framed: framedOptions(useFrameSidebarWidth()),
   });
 }

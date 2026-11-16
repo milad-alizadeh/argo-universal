@@ -3,6 +3,7 @@ import {
   sessionWorkbenchSlotId,
 } from '@repo/contracts/plugins/declared-slots';
 import {
+  linkMarkSlotId,
   projectDetailsSlotId,
   sessionActivitySlotId,
   sessionBarSlotId,
@@ -28,6 +29,8 @@ const declared = {
   [sessionBarSlotId]: sessionBarSlot,
   // Argo's Changes card and Inspector draw these; there is nothing to choose.
   [sessionChangesSlotId]: null,
+  // Argo draws the mark beside the link; there is nothing to choose.
+  [linkMarkSlotId]: null,
   [sessionHeaderSlotId]: sessionHeaderSlot,
   [sessionWorkbenchSlotId]: sessionWorkbenchSlot,
 } satisfies Record<SlotDetailId, SlotDetail | null>;

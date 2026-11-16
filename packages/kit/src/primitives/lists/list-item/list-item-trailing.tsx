@@ -44,21 +44,23 @@ function useTrailingContent(props: TrailingProps): ReactNode {
 }
 
 // Trailing accessories follow the trailing items and give up their width before the title does.
-const trailingClass = (accessories: ReactNode): string =>
+const trailingClass = (accessories: ReactNode, tray: boolean): string =>
   cn(
-    'h-6 wide-type:h-5 flex-row items-center justify-end gap-1',
+    'flex-row items-center justify-end gap-1',
+    tray ? 'h-6' : 'h-6 wide-type:h-5',
     accessories === undefined ? 'shrink-0' : 'min-w-0 shrink',
   );
 
 export function Trailing(props: TrailingProps): ReactNode {
   const content = useTrailingContent(props);
   const open = useOpenLane();
+  const tray = useListLook().place === 'tray';
   const accessories = props.trailingAccessories;
 
   if (content === undefined && accessories === undefined) return null;
 
   return (
-    <View {...open} className={trailingClass(accessories)}>
+    <View {...open} className={trailingClass(accessories, tray)}>
       <InertLane className="shrink-0 flex-row items-center gap-1">
         {content}
       </InertLane>

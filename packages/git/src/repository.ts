@@ -118,6 +118,30 @@ export async function listBranches(
   return parseBranches(stdout, head);
 }
 
+// `HEAD` itself when detached; a path that is no Checkout fails instead, so it is never read as detached.
+const headRef = z
+  .string()
+  .trim()
+  .transform((ref): string | null => (ref === 'HEAD' ? null : ref))
+  .pipe(branchName.nullable());
+
+// The branch a Checkout is on now, or null when detached; a Session's stored branch is only the one it began on.
+export async function readCurrentBranch(
+  checkoutPath: string,
+): Promise<string | null> {
+  const head = await git(checkoutPath, [
+    'rev-parse',
+    '--symbolic-full-name',
+    'HEAD',
+  ]);
+
+  const current = headRef.safeParse(head);
+
+  if (!current.success) return rejectResponse('current branch');
+
+  return current.data;
+}
+
 type ProjectGit = (...args: string[]) => Promise<string>;
 
 function currentHead(inProject: ProjectGit): Promise<string | null> {
