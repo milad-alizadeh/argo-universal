@@ -190,6 +190,14 @@ _Avoid_: View (a view per Connection no longer exists), component, template
 What one open Plugin page must remember to draw differently, such as a tab, a range or a page size. The page declares it with defaults, the App keeps it, and it is part of the page's address.
 _Avoid_: Local state, `useState`, params (for what the App keeps)
 
+**Draft**:
+A Plugin page drawn from canned data so its author can review the design in the App before the page reads real data. It shows every state the page can be in and may carry Variants. A Draft never ships.
+_Avoid_: Preview, mockup, prototype, gallery
+
+**Variant**:
+One of several structurally different designs for a region of a Draft, which the author switches between in the App and picks from. Picks may mix regions from different Variants.
+_Avoid_: Option, alternative, theme
+
 **Component event**:
 A named handler prop on a kit component, such as `onPress`. In a Plugin tree it holds a value, never a function: a navigation, a Page state change, or an Operation with its arguments.
 _Avoid_: Interaction, action (Action is a kit component), handler
