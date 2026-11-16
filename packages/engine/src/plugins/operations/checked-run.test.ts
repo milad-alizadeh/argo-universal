@@ -111,3 +111,17 @@ it('reads no params at all as none given', () => {
     outside: false,
   });
 });
+
+it('does not treat a person viewing a Session as an Agent reaching into another Project', () => {
+  expect(
+    checkRun(
+      { ...operation, caller: ['project'] },
+      { number: 7, projectId: 'project-2' },
+      { person: true, sessionId: 'session-1' },
+    ),
+  ).toEqual({
+    params: { number: 7 },
+    caller: { person: true, sessionId: 'session-1', projectId: 'project-2' },
+    outside: false,
+  });
+});

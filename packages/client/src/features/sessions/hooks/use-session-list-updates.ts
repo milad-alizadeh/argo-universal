@@ -5,11 +5,9 @@ import { useSubscription } from '@trpc/tanstack-react-query';
 import { useMemo } from 'react';
 import type { ClientError } from '#features/connection';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
-import {
-  useResubscribeOnFocus,
-  createCoalescedRefetch,
-  refreshSessionList,
-} from '#features/sessions';
+import { createCoalescedRefetch } from '../api/coalesced-refetch';
+import { refreshSessionList } from '../api/refresh-session-list';
+import { useResubscribeOnFocus } from './use-resubscribe-on-focus';
 
 type SessionListSubscription = TRPCSubscriptionResult<
   SessionListUpdate,

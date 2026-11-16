@@ -4,18 +4,18 @@ import {
   type SlotContextOf,
   type SlotInputOf,
 } from '@repo/contracts/plugins/wire';
-import type { SessionBarProps } from '#features/sessions';
-import { type SlotVisibility, useSlotVisibility } from '#features/settings';
-import { sessionBarLines } from './session-bar-lines';
 import {
   itemsSlotEntry,
   readSlotItems,
   type SentItems,
   type SlotReading,
-} from './slot-items';
-import { usePluginLookup } from './use-plugin-names';
+  usePluginLookup,
+  useSlotItems,
+} from '#features/plugins';
+import type { SessionBarProps } from '#features/sessions';
+import { type SlotVisibility, useSlotVisibility } from '#features/settings';
+import { sessionBarLines } from './session-bar-lines';
 import { usePluginOpener } from './use-plugin-opener';
-import { useSlotItems } from './use-slot-items';
 import { useOperationRunner } from './use-tree-calls';
 
 export type SessionContext = SlotContextOf<typeof sessionBarSlotId>;

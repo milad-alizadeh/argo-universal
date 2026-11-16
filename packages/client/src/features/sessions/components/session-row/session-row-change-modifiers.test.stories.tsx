@@ -49,15 +49,15 @@ function modifiers(width: number, layout: 'regular' | 'compact'): Story {
         draft.queryByText('Draft', { exact: true }),
       ).not.toBeInTheDocument();
 
-      // A conflict is written beside the Open mark; it has no mark of its own.
+      // So does a conflict: its own mark in place of Open's, and no word beside it.
       const conflict = rowOf('Conflict');
 
+      await expect(conflict.getByTestId('icon-pr-conflict')).toBeVisible();
       await expect(
-        conflict.getByText('Conflict', { exact: true }),
-      ).toBeVisible();
-      await expect(conflict.getByTestId('icon-pr-open')).toBeVisible();
+        conflict.queryByTestId('icon-pr-open'),
+      ).not.toBeInTheDocument();
       await expect(
-        conflict.queryByTestId('icon-pr-conflict'),
+        conflict.queryByText('Conflict', { exact: true }),
       ).not.toBeInTheDocument();
     },
   };

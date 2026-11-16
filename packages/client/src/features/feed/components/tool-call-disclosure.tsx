@@ -5,7 +5,7 @@ import type {
 import type * as React from 'react';
 import { View } from 'react-native';
 import { toolCallFacts } from '../view/feed-row-facts';
-import { toolCallTitle, toolCallTitlePaths } from '../view/tool-call-title';
+import { toolCallTitle } from '../view/tool-call-title';
 import { FeedDisclosure, type FeedDisclosureProps } from './feed-disclosure';
 import { chosenPermissionKind, PermissionOutcome } from './permission-outcome';
 
@@ -19,11 +19,10 @@ export function toolCallDisclosureProps(
   showCommand?: boolean,
 ): Pick<
   ToolCallDisclosureProps,
-  'label' | 'paths' | 'awaitingApproval' | 'permissionOutcome'
+  'label' | 'awaitingApproval' | 'permissionOutcome'
 > {
   return {
     label: toolCallTitle(row, awaitingApproval, showCommand),
-    paths: toolCallTitlePaths(row, awaitingApproval, showCommand),
     awaitingApproval,
     permissionOutcome: toolCallFacts(row).permissionOutcome,
   };

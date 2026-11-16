@@ -5,10 +5,7 @@ import {
   type ListItemProps,
 } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
-import {
-  ChangeStageModifier,
-  SecondaryChangeStageIcon,
-} from '../change-stage/change-stage';
+import { SecondaryChangeStageIcon } from '../change-stage/change-stage';
 import { changeDescription } from '../change-stage/change-stage-model';
 import { endParts } from './session-row-ends';
 import { SessionMark } from './session-row-mark';
@@ -34,13 +31,7 @@ type CompactEndProps = Pick<
 
 // Its Change's glyph, without the number; with no Change, how long ago the Session was active.
 function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
-  if (pullRequest)
-    return (
-      <>
-        <SecondaryChangeStageIcon {...pullRequest} />
-        <ChangeStageModifier {...pullRequest} />
-      </>
-    );
+  if (pullRequest) return <SecondaryChangeStageIcon {...pullRequest} />;
 
   return age === undefined ? undefined : <Text role="row-detail">{age}</Text>;
 }

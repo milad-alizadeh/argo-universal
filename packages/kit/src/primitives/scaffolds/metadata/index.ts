@@ -7,4 +7,5 @@ export {
   type MetadataPillsProps,
   type MetadataStatusDotProps,
   type MetadataAvatarProps,
+  type MetadataPickerProps,
 } from './metadata-props';

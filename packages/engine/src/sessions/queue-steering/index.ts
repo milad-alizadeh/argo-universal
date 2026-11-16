@@ -1,10 +1,12 @@
-import { steerAcpSession, type AcpSessionLease } from '../agents';
-import { promptStorage } from './acp-operations';
-import { readAcpPromptContent } from './acp/prompts/prompt-content';
-import type { QueueSteering, SteerCommand } from './queue-steering-types';
-import { sendSessionCommand } from './session-command';
-import type { SessionContext } from './session-context';
-import type { SessionActorRef } from './session-machine';
+import { steerAcpSession, type AcpSessionLease } from '../../agents';
+import { promptStorage } from '../acp-operations';
+import { readAcpPromptContent } from '../acp/prompts/prompt-content';
+import { sendSessionCommand } from '../session-command';
+import type { SessionContext } from '../session-context';
+import type { SessionActorRef } from '../session-machine';
+import type { QueueSteering, SteerCommand } from './types';
+
+export { finishQueueSteering, reserveQueueSteering } from './state';
 
 export async function steerQueuedPrompt(
   session: SessionActorRef,

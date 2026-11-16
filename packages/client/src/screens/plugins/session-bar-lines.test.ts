@@ -1,8 +1,8 @@
 import type { SessionBarItem } from '@repo/contracts/plugins/session-bar-item';
 import { iconSymbols } from '@repo/kit/symbols/icon-names';
 import { describe, expect, it } from 'vitest';
+import type { ReadItem, SlotReading } from '#features/plugins';
 import { sessionBarLines } from './session-bar-lines';
-import type { ReadItem, SlotReading } from './slot-items';
 
 const previewReady = 'Preview ready';
 

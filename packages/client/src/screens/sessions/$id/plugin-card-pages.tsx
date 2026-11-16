@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useRef, useSyncExternalStore } from 'react';
+import { PluginSessionRowProvider } from '#features/plugins';
 import { closeSessionPanel } from '#features/sessions';
 import { BoundedPluginTree } from '../../../lib/product/plugin-registry';
 import type { PageOpening } from '../../plugins/page-addresses';
@@ -149,10 +150,12 @@ function DrawnPluginPage({ page, pluginId }: Drawn): ReactNode {
   if (!page?.root) return null;
 
   return (
-    <BoundedPluginTree
-      root={page.root}
-      onOpenPage={(opened) => openPage(pluginId, opened)}
-      onPageCall={page.onPageCall}
-    />
+    <PluginSessionRowProvider onOpenPluginPage={openPage}>
+      <BoundedPluginTree
+        root={page.root}
+        onOpenPage={(opened) => openPage(pluginId, opened)}
+        onPageCall={page.onPageCall}
+      />
+    </PluginSessionRowProvider>
   );
 }

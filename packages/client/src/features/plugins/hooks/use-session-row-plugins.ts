@@ -17,8 +17,8 @@ import {
   redrawnRows,
   type RowCache,
   type RowSnapshot,
-} from './session-row-cache';
-import { sentDrawing } from './session-row-drawing';
+} from '../utils/session-row-cache';
+import { sentDrawing } from '../utils/session-row-drawing';
 import { useDrawnSessions } from './use-drawn-sessions';
 import { usePluginLookup } from './use-plugin-names';
 import {

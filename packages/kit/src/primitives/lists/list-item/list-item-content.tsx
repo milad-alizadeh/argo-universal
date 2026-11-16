@@ -1,7 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
-import { Icon } from '#primitives/content/icon';
-import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
 import { LineEnd } from './list-item-line-end';
 import { CompactMeta, hasMeta, Meta } from './list-item-meta';
@@ -13,50 +11,8 @@ import {
 import type { PlacedContentProps } from './list-item-placement';
 import type { ListItemProps } from './list-item-props';
 import { RowText } from './list-item-row-text';
+import { Subtitle, type SubtitleProps } from './list-item-subtitle';
 import { TreeLane } from './list-item-tree';
-
-type SubtitleProps = Pick<
-  ListItemProps,
-  | 'subtitleTone'
-  | 'subtitleDimmed'
-  | 'subtitleLines'
-  | 'subtitleIcon'
-  | 'subtitleIconTone'
-> & {
-  text?: string;
-  multiline?: boolean;
-};
-
-const subtitleLines = (props: SubtitleProps): number | undefined =>
-  props.multiline ? undefined : (props.subtitleLines ?? 1);
-
-function Subtitle(props: SubtitleProps): ReactNode {
-  if (props.text === undefined) return null;
-
-  if (props.subtitleIcon === undefined) return <SubtitleText {...props} />;
-
-  return (
-    <View className="min-w-0 flex-row items-center gap-1">
-      <Icon name={props.subtitleIcon} tone={props.subtitleIconTone} />
-      <View className="min-w-0 flex-1">
-        <SubtitleText {...props} />
-      </View>
-    </View>
-  );
-}
-
-function SubtitleText(props: SubtitleProps): ReactElement {
-  return (
-    <Text
-      role="row-detail"
-      tone={props.subtitleTone}
-      dimmed={props.subtitleDimmed}
-      numberOfLines={subtitleLines(props)}
-    >
-      {props.text}
-    </Text>
-  );
-}
 
 // A sidebar row's title is medium, or semibold while it holds news for its reader.
 function titleWeight(

@@ -87,13 +87,7 @@ const isStatus = (node: WireNode): boolean =>
 
 // The Status the open Issue's Properties show.
 function shownStatus(tree: WireNode): string {
-  const entry = findWireNodeEntry(tree, isStatus);
-
-  return entry ? textOf(entry.node) : '';
-}
-
-function textOf(node: WireNode): string {
-  const { text } = node.props;
+  const text = findWireNodeEntry(tree, isStatus)?.node.props.text;
 
   return typeof text === 'string' ? text : '';
 }
@@ -107,6 +101,7 @@ it('closes an Issue at once, as an Operation the page shows the new status of un
     args: { number: 42, status: 'closed', projectId: project.id },
     optimistic: [
       { key: 'dot-42', props: { text: 'Closed', tone: 'done' } },
+      { key: 'picker-42', props: { value: 'closed' } },
       { key: 'status-42', props: { label: 'Reopen Issue', icon: 'issue' } },
     ],
   });
@@ -155,9 +150,9 @@ const isBlocker = (node: WireNode): boolean =>
 it('names an open blocker in the Properties beside the Issue', async () => {
   const page = await openIssue(refusedTitle);
 
-  const entry = findWireNodeEntry(page.tree, isBlocker);
+  const text = findWireNodeEntry(page.tree, isBlocker)?.node.props.text;
 
-  expect(entry && textOf(entry.node)).toBe('#42 Fixture issue from GitHub');
+  expect(text).toBe('#42 Fixture issue from GitHub');
 }, 20_000);
 
 it('marks a blocked row and a parent row’s progress in the list', async () => {
