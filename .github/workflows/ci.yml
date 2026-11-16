@@ -81,7 +81,8 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.quality == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # The Tests step alone runs about 25 minutes with one worker, after lint and type checks.
+    timeout-minutes: 45
     permissions:
       contents: read
       # The Vercel Remote Cache step trades GitHub's OIDC token for a short-lived Turborepo token.

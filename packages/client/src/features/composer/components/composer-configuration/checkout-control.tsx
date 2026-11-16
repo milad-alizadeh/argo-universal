@@ -107,10 +107,10 @@ const pathText = (
   'ellipsizeMode' | 'role' | 'tone'
 > =>
   checkout.newWorktree
-    ? { ellipsizeMode: 'middle', role: { compact: 'code', wide: 'body-code' } }
+    ? { ellipsizeMode: 'middle', role: 'body-code' }
     : {
         ellipsizeMode: 'tail',
-        role: { compact: 'secondary', wide: 'body' },
+        role: 'body',
         tone: 'muted',
       };
 

@@ -7,6 +7,7 @@ import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { iosSystemName } from '../../../symbols/ios-image';
 import {
   choosableItems,
+  nativeTitle,
   type NativeMenuItem,
   type NativeMenuSection,
 } from './menu-native-items';
@@ -51,7 +52,7 @@ export function menuAction(item: NativeMenuItem): NativeMenuAction {
 
   return {
     id: item.id,
-    title: item.title,
+    title: nativeTitle(item),
     ...checkState(item.checked),
     attributes: {
       disabled: item.disabled,

@@ -3,6 +3,7 @@ export { LinkPreview } from './link-preview';
 export {
   LinkPreviewContext,
   type LinkPreviewSource,
+  type LiveLinkMarks,
 } from './link-preview-context';
 
 export { LinkPreviewCard } from './link-preview-card';

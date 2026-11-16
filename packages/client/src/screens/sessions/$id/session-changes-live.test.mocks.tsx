@@ -117,7 +117,7 @@ if (!recorded)
 // The snapshot a running Turn leaves behind: its totals are the Checkout as the Turn found it, and they stay there.
 const staleFeed = {
   snapshot: { ...recorded.snapshot, changes: firstTotals },
-  revision: 1,
+  workRevision: 1,
 };
 
 /*

@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { discardWorktree } from './checkout-removal';
 import { git } from './git';
 import { listBranches, type Checkout, type CheckoutChoice } from './repository';
-import { sessionBranch } from './session-branch';
+import { sessionBranch, worktreeName } from './session-branch';
 
 export type CheckoutInput = {
   projectPath: string;
@@ -27,7 +27,7 @@ function checkoutPath(input: WorktreeInput): string {
     input.runtimeDirectory,
     'worktrees',
     input.projectId,
-    input.sessionId,
+    worktreeName(input.sessionId),
   );
 }
 

@@ -1,8 +1,9 @@
 import { Row, Text } from '@expo/ui';
 import { buttonDefaults } from '@repo/contracts/kit-tokens';
-import type { ReactElement } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import type { ColorValue } from 'react-native';
 import { useNativeTheme } from '#kit/native-theme';
+import { useTextStyle } from '#primitives/content/text';
 import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { NativeIcon } from '../../../symbols/native-icon';
 import type { ButtonProps } from './button';
@@ -14,14 +15,16 @@ import { sizes, variantOf, widthOf } from './button-layout';
  * Text draws in the foreground colour and Expo has no danger look.
  */
 export function ButtonLabel(props: ButtonProps): ReactElement {
-  const color = useNativeTheme().colors[labelColor(props)];
+  const textStyle = useButtonTextStyle(props);
   const width = widthOf(props);
 
   return (
     <Row spacing={6} alignment="center" modifiers={[...width.label]}>
       {width.edge}
-      {props.icon && <LeadingIcon {...props} icon={props.icon} color={color} />}
-      <Text textStyle={{ color }}>{props.label}</Text>
+      {props.icon && (
+        <LeadingIcon {...props} icon={props.icon} color={textStyle.color} />
+      )}
+      <Text textStyle={textStyle}>{props.label}</Text>
       {width.edge}
     </Row>
   );
@@ -41,3 +44,15 @@ function LeadingIcon(
 
 const labelColor = (props: ButtonProps): LabelColor =>
   labelColors[`${props.disabled ?? false}`][variantOf(props)];
+
+function useButtonTextStyle(
+  props: ButtonProps,
+): NonNullable<ComponentProps<typeof Text>['textStyle']> {
+  const body = useTextStyle('body');
+  const color = useNativeTheme().colors[labelColor(props)];
+
+  if (props.control)
+    return { fontSize: body.fontSize, lineHeight: body.lineHeight, color };
+
+  return { color };
+}

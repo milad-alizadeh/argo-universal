@@ -2,6 +2,11 @@ import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { ReactElement } from 'react';
 import { themeChoices } from '#features/settings';
 import type { SettingsListViewProps } from './settings-list-props';
+import {
+  suggestionModelRows,
+  suggestionModelsFooter,
+  type SuggestionModelRowsProps,
+} from './settings-list-suggestion-models';
 
 type ThemeProps = Pick<
   SettingsListViewProps,
@@ -38,13 +43,40 @@ function chooseTheme(props: ThemeProps, value: string): void {
   if (choice) props.onThemeChange(choice.value);
 }
 
-export const composerSection = (props: SettingsListViewProps): ReactElement => (
-  <FieldGroup.Section title="Composer">
-    <FieldGroup.Toggle
-      title="Follow-up suggestions"
-      value={props.followUpSuggestions === true}
-      disabled={props.followUpSuggestions === undefined}
-      onValueChange={(enabled) => props.onFollowUpSuggestionsChange?.(enabled)}
-    />
-  </FieldGroup.Section>
+const listedAgents = (
+  props: SettingsListViewProps,
+): SuggestionModelRowsProps['agents'] => props.suggestionModels ?? [];
+
+// The suggestion model rows once the Server has listed Installed Agents.
+const suggestionAgents = (
+  props: SettingsListViewProps,
+): SuggestionModelRowsProps | undefined => {
+  const agents = listedAgents(props);
+  const onChange = props.onSuggestionModelChange;
+
+  return onChange && agents.length > 0 ? { agents, onChange } : undefined;
+};
+
+const followUpToggle = (props: SettingsListViewProps): ReactElement => (
+  <FieldGroup.Toggle
+    title="Follow-up suggestions"
+    value={props.followUpSuggestions === true}
+    disabled={props.followUpSuggestions === undefined}
+    onValueChange={(enabled) => props.onFollowUpSuggestionsChange?.(enabled)}
+  />
 );
+
+// The Follow-up suggestions toggle, then the model each Installed Agent predicts with.
+export const composerSection = (props: SettingsListViewProps): ReactElement => {
+  const agents = suggestionAgents(props);
+
+  return (
+    <FieldGroup.Section
+      title="Composer"
+      footer={agents && suggestionModelsFooter}
+    >
+      {followUpToggle(props)}
+      {agents && suggestionModelRows(agents)}
+    </FieldGroup.Section>
+  );
+};

@@ -17,6 +17,7 @@ import {
   type ScriptedScenario,
 } from './scripted-scenario.ts';
 import { ScriptedSessions } from './scripted-sessions.ts';
+import { serveSteering } from './scripted-steering.ts';
 
 export type Script = {
   scenario: ScriptedScenario;
@@ -169,5 +170,5 @@ const registrations = [
 export const serveScript = (app: AgentApp, script: Script): AgentApp =>
   registrations.reduce(
     (registered, register) => register(registered, script),
-    app,
+    serveSteering(app, script.scenario.steering),
   );

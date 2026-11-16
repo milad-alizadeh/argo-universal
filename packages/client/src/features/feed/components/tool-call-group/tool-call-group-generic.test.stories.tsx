@@ -105,6 +105,9 @@ export const LiveMoveRaw: Story = {
 
 const verifyTitle = /^Verify the build/;
 
+// A group's child is titled with its command line; the group's own title keeps the Agent's description.
+const verifyCommand = /^pnpm verify/;
+
 // With other calls before it, the live call is a row of its own, so its detail opens under its own title (#2044).
 export const LiveCallAfterOthers: Story = {
   args: { group: genericGroup(pendingCall, priorCall) },
@@ -118,15 +121,25 @@ export const LiveCallAfterOthers: Story = {
     ).toBeVisible();
 
     const [liveRow, ...rest] = canvas.getAllByRole('button', {
-      name: verifyTitle,
+      name: verifyCommand,
     });
 
     await expect(rest).toHaveLength(0);
-    await expect(canvas.queryByText(/pnpm verify/)).not.toBeInTheDocument();
+    await expect(canvas.queryByTestId('code-text')).not.toBeInTheDocument();
     await userEvent.click(required(liveRow, 'the live call’s own row'));
-    await expect(canvas.getByText(/pnpm verify/)).toBeVisible();
+    await expect(canvas.getByTestId('code-text')).toHaveTextContent(
+      'pnpm verify',
+    );
   },
 };
+
+// The button that opens the group, and the one that names the live call.
+const headerNames = (
+  followsOthers: boolean,
+): { name: string | RegExp; call: RegExp } =>
+  followsOthers
+    ? { name: 'Ran 1 command, Called 1 tool', call: verifyCommand }
+    : { name: verifyTitle, call: verifyTitle };
 
 function headerOwnership(width: number, followsOthers: boolean): Story {
   return {
@@ -137,18 +150,18 @@ function headerOwnership(width: number, followsOthers: boolean): Story {
     },
     play: async ({ canvas, userEvent }) => {
       await settleLayout(width);
-      const name = followsOthers ? 'Ran 1 command, Called 1 tool' : verifyTitle;
+      const { name, call } = headerNames(followsOthers);
 
       await userEvent.click(canvas.getByRole('button', { name }));
-      await expect(
-        canvas.getAllByRole('button', { name: verifyTitle }),
-      ).toHaveLength(1);
+      await expect(canvas.getAllByRole('button', { name: call })).toHaveLength(
+        1,
+      );
 
       if (followsOthers)
-        await userEvent.click(
-          canvas.getByRole('button', { name: verifyTitle }),
-        );
-      await expect(canvas.getByText(/pnpm verify/)).toBeVisible();
+        await userEvent.click(canvas.getByRole('button', { name: call }));
+      await expect(canvas.getByTestId('code-text')).toHaveTextContent(
+        'pnpm verify',
+      );
     },
   };
 }

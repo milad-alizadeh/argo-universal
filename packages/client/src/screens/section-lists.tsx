@@ -41,11 +41,17 @@ function sessionsList(
   return { list, emptyPage: noSessionShown };
 }
 
+// The list takes only what it draws from, and is memoised on it: the Frame's other redraws pass it by.
 const sessionsListBody = (
-  sessions: SessionsViewState,
+  { query, onQueryChange, view }: SessionsViewState,
   path: string,
 ): React.JSX.Element => (
-  <LiveSessionList {...sessions} selectedSessionId={shownSessionId(path)} />
+  <LiveSessionList
+    query={query}
+    onQueryChange={onQueryChange}
+    view={view}
+    selectedSessionId={shownSessionId(path)}
+  />
 );
 
 const noSessionShown = {

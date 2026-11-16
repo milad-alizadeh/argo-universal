@@ -14,3 +14,5 @@ Git icons are small SVG components, one per icon, drawn the same on every platfo
 
 - Keep the Tabler pipeline for the git icons: one outlined path everywhere and an asset-catalog image for iOS menus and toolbars, but a Swift tool, a generated file and a plugin step for nine icons.
 - Map the nearest SF and Material names: rejected in ADR-0019, since each platform then draws a different, incomplete set.
+
+The Queued Prompt drag grip also uses this renderer (owner, 2026-11-14): six dots in two columns, matching the supplied reference on every platform. It is a content-lane icon, not a native menu or toolbar icon. The existing SF reorder arrows remain available for other reorder actions.

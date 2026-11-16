@@ -37,6 +37,12 @@ export const PluginPath = z
   .string()
   .regex(/^\/(?:[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*)?$/);
 
+// A Background pass or a Watch (ADR-0050, ADR-0055): the page or function at `path`, run for each Project every `interval` ms.
+export const PluginPass = z.strictObject({
+  path: PluginPath,
+  interval: z.number().finite().nonnegative(),
+});
+
 // The most characters a Plugin's instructions file may hold, so the prose every Session carries stays short.
 export const pluginInstructionsLimit = 1_000;
 

@@ -7,12 +7,16 @@ import {
 export function queueScenarios(
   scenario: (steps: ScriptedStep[]) => ScriptedScenario,
   reply: ScriptedStep,
-): Record<'queued-turn-fails' | 'queued-image-refused', ScriptedScenario> {
+): Record<
+  'queued-turn-fails' | 'queued-image-refused' | 'queued-steering',
+  ScriptedScenario
+> {
   const base = scenario([reply]);
 
   return {
     'queued-turn-fails': failedQueuedTurn(base),
     'queued-image-refused': refusedQueuedImage(base),
+    'queued-steering': steerableQueue(base),
   };
 }
 
@@ -46,5 +50,17 @@ function textOnlyInitialization(): NonNullable<ScriptedScenario['initialize']> {
       ...scriptedInitialization.agentCapabilities,
       promptCapabilities: { image: false },
     },
+  };
+}
+
+function steerableQueue(base: ScriptedScenario): ScriptedScenario {
+  return {
+    ...failedQueuedTurn(base),
+    initialize: {
+      ...scriptedInitialization,
+      agentInfo: { name: '@agentclientprotocol/codex-acp', version: '2.4.0' },
+      _meta: { steering: { supported: true } },
+    },
+    steering: { result: { outcome: 'injected' } },
   };
 }

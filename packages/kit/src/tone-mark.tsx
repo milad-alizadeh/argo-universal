@@ -57,7 +57,14 @@ interface ToneMarkProps {
   tone: MarkTone;
   form?: 'bare' | 'disc';
   size?: IconSizeValue;
+  // A disc sits on a line of text, or leads a row of its own at TintedAvatar's leading size.
+  disc?: keyof typeof discSizes;
 }
+
+const discSizes = {
+  inline: 'size-6 wide-type:size-5',
+  leading: 'size-9 wide-type:size-7',
+} as const;
 
 function glyph(props: ToneMarkProps): ReactElement {
   const palette = palettes[props.tone];
@@ -76,7 +83,7 @@ export function ToneMark(props: ToneMarkProps): ReactElement {
 
   return (
     <View
-      className={`size-6 wide-type:size-5 shrink-0 items-center justify-center rounded-full ${palettes[props.tone].disc}`}
+      className={`${discSizes[props.disc ?? 'inline']} shrink-0 items-center justify-center rounded-full ${palettes[props.tone].disc}`}
     >
       {glyph(props)}
     </View>

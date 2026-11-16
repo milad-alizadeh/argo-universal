@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import {
   type InstalledAgents,
   loadedAgents,
@@ -19,8 +19,8 @@ import {
   newSessionHref,
   projectHref,
   sessionHref,
-  useNavigate,
 } from '#lib/product/navigation/navigation';
+import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
 import { useOpenPluginPage } from '../plugins/use-plugin-opener';
 import { useSessionRowPlugins } from '../plugins/use-session-row-plugins';
 import {
@@ -84,14 +84,18 @@ function useSessionsNavigation(): Pick<
   SessionListViewProps,
   'onSelect' | 'onNewSession' | 'onNewSessionInProject' | 'onProjectSettings'
 > {
-  const navigate = useNavigate();
+  const navigate = useNavigateFromShown();
 
-  return {
-    onSelect: (id) => navigate(sessionHref(id)),
-    onNewSession: () => navigate(newSessionHref()),
-    onNewSessionInProject: (projectId) => navigate(newSessionHref(projectId)),
-    onProjectSettings: (name) => navigate(projectHref(name)),
-  };
+  // Each keeps one identity, so a row redraws only when its own Session changes.
+  return useMemo(
+    () => ({
+      onSelect: (id) => navigate(sessionHref(id)),
+      onNewSession: () => navigate(newSessionHref()),
+      onNewSessionInProject: (projectId) => navigate(newSessionHref(projectId)),
+      onProjectSettings: (name) => navigate(projectHref(name)),
+    }),
+    [navigate],
+  );
 }
 
 // What the Plugins add to the drawn rows, and the page an item opens.
@@ -127,7 +131,7 @@ function useSessionsViewProps(
 }
 
 // The Sessions list: its queries and live updates, passed to the view as props, the dialog that renames a row's Session, and the phones' alert before archiving one.
-export function LiveSessionList(
+export const LiveSessionList = memo(function LiveSessionList(
   props: LiveSessionListProps,
 ): React.JSX.Element {
   const listView = useSessionsViewProps(props);
@@ -142,7 +146,7 @@ export function LiveSessionList(
       <ArchiveSessionAlert {...archive.alert} />
     </>
   );
-}
+});
 
 function listActions(
   rename: ReturnType<typeof useRenameSession>,

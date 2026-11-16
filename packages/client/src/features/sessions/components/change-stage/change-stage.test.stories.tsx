@@ -23,7 +23,7 @@ function modifiers(width: number): Story {
     ),
     play: async ({ canvas }) => {
       await settleLayout(width);
-      await expect(canvas.getByLabelText('Open, Draft Change')).toBeVisible();
+      await expect(canvas.getByLabelText('Draft Change')).toBeVisible();
       await expect(
         canvas.getByLabelText('Open, Conflict Change'),
       ).toBeVisible();
