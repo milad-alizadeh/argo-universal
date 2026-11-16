@@ -78,23 +78,21 @@ export function MetadataPicker(props: MetadataPickerProps): ReactElement {
   );
 }
 
+// The value reads as the button by a tint on hover alone.
+const valueClass =
+  '-mx-2 min-w-0 self-stretch rounded-md px-2 web:hover:bg-hover';
+
 // The popover anchors to this button and presses it open, so what it hands down (ref, handlers, ARIA state) lands on the Pressable.
 type ValueButtonProps = ComponentProps<typeof Pressable> & { title: string };
 
-function ValueButton({
-  title,
-  children,
-  ...overlay
-}: ValueButtonProps): ReactElement {
+function ValueButton({ title, ...overlay }: ValueButtonProps): ReactElement {
   return (
     <Pressable
       {...overlay}
       role="button"
       aria-haspopup="dialog"
       accessibilityLabel={`Change ${title}`}
-      className="-mx-2 min-w-0 self-stretch rounded-md px-2 web:hover:bg-hover"
-    >
-      {children}
-    </Pressable>
+      className={valueClass}
+    />
   );
 }
