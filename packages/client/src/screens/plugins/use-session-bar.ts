@@ -16,7 +16,7 @@ import type { SessionBarProps } from '#features/sessions';
 import { type SlotVisibility, useSlotVisibility } from '#features/settings';
 import { sessionBarLines } from './session-bar-lines';
 import { usePluginOpener } from './use-plugin-opener';
-import { useOperationRunner } from './use-tree-calls';
+import { useFireOperation } from './use-tree-calls';
 
 export type SessionContext = SlotContextOf<typeof sessionBarSlotId>;
 
@@ -66,16 +66,14 @@ export function useSessionBar(
 function useDetachLine(
   session: SessionContext | undefined,
 ): SessionBarProps['onDetach'] {
-  const { run, failed } = useOperationRunner();
+  const fire = useFireOperation();
 
   if (!session) return undefined;
 
   return ({ pluginId, detach }) => {
     if (!detach) return;
 
-    run({ pluginId, ...detach, ...session }).catch((cause: unknown) =>
-      failed(cause instanceof Error ? cause : new Error(String(cause))),
-    );
+    fire({ pluginId, ...detach, ...session });
   };
 }
 
