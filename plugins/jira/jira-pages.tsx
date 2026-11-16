@@ -10,31 +10,18 @@ import {
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { projectScreen } from './issue-views';
 import { filtersOf, noFilters } from './jira-filters';
-import { pathText, projectPath, projectPattern } from './jira-paths';
+import { projectIdOf, projectPath, projectPattern } from './jira-paths';
 import type { JiraReads } from './jira-reads';
-import {
-  listIssues,
-  loadProjectView,
-  type ProjectView,
-  type Step,
-} from './jira-setup';
 import { storeQueries, storeReaders, type JiraSite } from './jira-store';
+import { projectLoader } from './project-loader';
 import { chooseProject, projectRows, type ArgoProject } from './project-rows';
 import { sitePicker } from './site-picker';
-import type {
-  Framing,
-  IssuesState,
-  ProjectState,
-  ProjectTo,
-} from './view-frame';
+import type { Framing, ProjectState, ProjectTo } from './view-frame';
 
 // How long Jira's answers are fresh while the page is open: a revoked token or a change made in Jira shows within it.
 const freshForMs = 60_000;
 
 type Input = Pick<LoaderInput<ProjectState>, 'params' | 'state'>;
-
-const projectIdOf = ({ params }: Pick<Input, 'params'>): string =>
-  pathText(params.project ?? '');
 
 const framingOf = (to: ProjectTo, input: Input): Framing => {
   const projectId = projectIdOf(input);
@@ -46,8 +33,6 @@ const framingOf = (to: ProjectTo, input: Input): Framing => {
     sitePath: `${projectPath(projectId)}/site`,
   };
 };
-
-type ProjectData = { projects: ArgoProject[]; view: ProjectView };
 
 type SiteData = { projects: ArgoProject[]; sites: JiraSite[]; chosen: string };
 
@@ -94,58 +79,12 @@ async function chosenSite({
   return { sites, chosen: choice.cloudId ?? onlyCloud(sites) ?? '' };
 }
 
-type IssuesInput = LoaderInput<IssuesState>;
-
-const stepOf = (reads: JiraReads, input: IssuesInput): Step => ({
-  read: input.read,
-  reads,
-  projectId: projectIdOf(input),
-  filters: filtersOf(input.state),
-});
-
-/*
- * A draw's Loader and paged list both need the step the Project is at, with the same input: it is worked out once per
- * draw, so the list's first page is the one the Loader read.
- */
-function projectViews(
-  reads: JiraReads,
-): (input: IssuesInput) => Promise<ProjectView> {
-  const views = new WeakMap<IssuesInput, Promise<ProjectView>>();
-
-  return (input) => {
-    const view = views.get(input) ?? loadProjectView(stepOf(reads, input));
-
-    views.set(input, view);
-
-    return view;
-  };
-}
-
-type ViewOf = ReturnType<typeof projectViews>;
-
-async function loadProject(
-  argo: Argo,
-  viewOf: ViewOf,
-  input: IssuesInput,
-): Promise<ProjectData> {
-  const [projects, view] = await Promise.all([
-    argo.projects.list(),
-    viewOf(input),
-  ]);
-
-  return { projects, view };
-}
-
 // The filters are Page state, so going back shows the same filtered view; the list is read a page at a time.
-function defineProjectPage(argo: Argo, reads: JiraReads): void {
-  const viewOf = projectViews(reads);
-
+const defineProjectPage = (argo: Argo, reads: JiraReads): void =>
   argo.pages.define(projectPattern, {
     state: { site: '', ...noFilters },
     every: freshForMs,
-    load: (input) => loadProject(argo, viewOf, input),
-    list: async (input, cursor) =>
-      listIssues(stepOf(reads, input), await viewOf(input), cursor),
+    ...projectLoader(argo, reads),
     render: ({ projects, view }, to, input) => {
       const framing = framingOf(to, input);
       const listing = { to, filters: filtersOf(input.state), list: input.list };
@@ -157,7 +96,6 @@ function defineProjectPage(argo: Argo, reads: JiraReads): void {
       );
     },
   });
-}
 
 const defineSitePage = (argo: Argo): void =>
   argo.pages.define(`${projectPattern}/site`, {

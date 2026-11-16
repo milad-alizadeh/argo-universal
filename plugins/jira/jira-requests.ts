@@ -1,5 +1,5 @@
 import type { JiraRequest } from './jira-client';
-import { filterClauses, noFilters, type IssueFilters } from './jira-filters';
+import { filterClauses, type IssueFilters } from './jira-filters';
 
 // The fields a list row shows; a detail page asks for more.
 const rowFields = ['summary', 'status', 'assignee', 'priority'];
@@ -12,11 +12,10 @@ const peopleLimit = 50;
 const quoted = (value: string): string =>
   `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
 
-export type IssuesPage = {
-  cursor?: string | null;
-  limit?: number;
-  filters?: IssueFilters;
-};
+export type IssuesPage = Readonly<{
+  cursor: string | null;
+  filters: IssueFilters;
+}>;
 
 // The project's issues the filters leave, the most recently updated first.
 const jqlOf = (projectKey: string, filters: IssueFilters): string =>
@@ -25,14 +24,17 @@ const jqlOf = (projectKey: string, filters: IssueFilters): string =>
     .concat(' ORDER BY updated DESC');
 
 // Jira's enhanced search body; a cursor goes in only when there is one.
-function searchBody(projectKey: string, page: IssuesPage): JiraRequest['body'] {
+function searchBody(
+  projectKey: string,
+  { cursor, filters }: IssuesPage,
+): JiraRequest['body'] {
   const body = {
-    jql: jqlOf(projectKey, page.filters ?? noFilters),
+    jql: jqlOf(projectKey, filters),
     fields: rowFields,
-    maxResults: page.limit ?? pageSize,
+    maxResults: pageSize,
   };
 
-  return page.cursor ? { ...body, nextPageToken: page.cursor } : body;
+  return cursor ? { ...body, nextPageToken: cursor } : body;
 }
 
 export const jiraRequests = {
@@ -41,7 +43,7 @@ export const jiraRequests = {
     path: '/project/search?maxResults=100&orderBy=name',
   }),
   // A project's issues the filters leave, paged by Jira's `nextPageToken`.
-  issues: (projectKey: string, page: IssuesPage = {}): JiraRequest => ({
+  issues: (projectKey: string, page: IssuesPage): JiraRequest => ({
     path: '/search/jql',
     method: 'POST',
     body: searchBody(projectKey, page),

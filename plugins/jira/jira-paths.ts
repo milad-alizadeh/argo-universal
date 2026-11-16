@@ -19,3 +19,10 @@ export const projectPattern = '/projects/:project';
 
 export const projectPath = (projectId: string): string =>
   `/projects/${pathSegment(projectId)}`;
+
+// The Argo Project a page's path names.
+export const projectIdOf = ({
+  params,
+}: {
+  params: Readonly<Record<string, string>>;
+}): string => pathText(params.project ?? '');

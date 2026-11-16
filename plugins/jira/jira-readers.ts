@@ -99,7 +99,8 @@ export const jiraReaders = {
   myself: myselfOf,
   projects: (json: Read): JiraProject[] =>
     list(at(json, 'values')).map(projectOf).filter(present),
-  people: (json: Read): JiraPerson[] => list(json).map(personOf).filter(present),
+  people: (json: Read): JiraPerson[] =>
+    list(json).map(personOf).filter(present),
   issues: (json: Read): IssuePage => ({
     issues: list(at(json, 'issues')).map(issueOf).filter(present),
     cursor: cursorOf(json),

@@ -166,21 +166,33 @@ const listPage = ({ issues, cursor }: IssuePage): ListPage<JiraIssue> => ({
   cursor,
 });
 
-/*
- * One page of the list the kit pages through. The first is the one the view read, so a draw asks Jira for it once;
- * each after it is read from the cursor Jira answered, and a refused one fails its read. A view with no list lists
- * nothing, and the page says why.
- */
-export async function listIssues(
+type IssuesView = Extract<ProjectView, { kind: 'issues' }>;
+
+// A page after the first, from the cursor Jira answered; a refused one fails its read, so it is never an answer here.
+async function laterPage(
   step: Step,
-  view: ProjectView,
-  cursor: string | null,
+  view: IssuesView,
+  cursor: string,
 ): Promise<ListPage<JiraIssue>> {
-  if (view.kind !== 'issues') return end;
-
-  if (cursor === null) return listPage(view.page);
-
   const answer = await step.read(issuesOf(step, view, cursor));
 
   return answer.ok ? listPage(answer.value) : end;
 }
+
+const pageFrom = (
+  step: Step,
+  view: IssuesView,
+  cursor: string | null,
+): ListPage<JiraIssue> | Promise<ListPage<JiraIssue>> =>
+  cursor === null ? listPage(view.page) : laterPage(step, view, cursor);
+
+/*
+ * One page of the list the kit pages through. The first is the one the view read, so a draw asks Jira for it once.
+ * A view with no list lists nothing, and the page says why.
+ */
+export const listIssues = (
+  step: Step,
+  view: ProjectView,
+  cursor: string | null,
+): ListPage<JiraIssue> | Promise<ListPage<JiraIssue>> =>
+  view.kind === 'issues' ? pageFrom(step, view, cursor) : end;

@@ -100,9 +100,22 @@ const reworded = [
   failure: JiraFailure;
 }[];
 
-const rewordedFor = (status: number, reason: string | null): JiraFailure | null =>
-  reworded.find((each) => each.status === status && each.says.test(reason ?? ''))
-    ?.failure ?? null;
+type Reply = NonNullable<JiraReply>;
+
+function rewordedFor({ status, body }: Reply): JiraFailure | undefined {
+  const reason = jiraReason(body) ?? '';
+
+  return reworded.find(
+    (each) => each.status === status && each.says.test(reason),
+  )?.failure;
+}
+
+// What Jira's reply means for the person, in Jira's words where they say it better.
+function meaningOf({ status, body }: Reply): JiraFailure {
+  const meaning = known.get(status) ?? otherFailure(status);
+
+  return { kind: meaning.kind, message: messageOf(meaning, jiraReason(body)) };
+}
 
 const signedOut: JiraFailure = {
   kind: 'signed-out',
@@ -118,13 +131,5 @@ export const unreachable: JiraFailure = {
 export function failureOf(reply: JiraReply): JiraFailure {
   if (!reply) return signedOut;
 
-  const reason = jiraReason(reply.body);
-  const meaning = known.get(reply.status) ?? otherFailure(reply.status);
-
-  return (
-    rewordedFor(reply.status, reason) ?? {
-      kind: meaning.kind,
-      message: messageOf(meaning, reason),
-    }
-  );
+  return rewordedFor(reply) ?? meaningOf(reply);
 }

@@ -7,12 +7,10 @@ import type { StatusCategory } from './jira-readers';
  */
 export type StatusFilter = 'all' | StatusCategory;
 
-// `anyone`, `me`, `none` for unassigned, or one person's Atlassian account id.
-export type AssigneeFilter = string;
-
+// The assignee is `anyone`, `me`, `none` for unassigned, or one person's Atlassian account id.
 export type IssueFilters = {
   status: StatusFilter;
-  assignee: AssigneeFilter;
+  assignee: string;
   text: string;
 };
 
@@ -22,90 +20,82 @@ export const noFilters: IssueFilters = {
   text: '',
 };
 
-export const statusChoices: readonly { value: StatusFilter; label: string }[] =
-  [
-    { value: 'all', label: 'Any status' },
-    { value: 'new', label: 'To Do' },
-    { value: 'indeterminate', label: 'In Progress' },
-    { value: 'done', label: 'Done' },
-  ];
+type Choice<Value extends string> = Readonly<{ value: Value; label: string }>;
 
-export const assigneeChoices: readonly {
-  value: AssigneeFilter;
-  label: string;
-}[] = [
+export const statusChoices: readonly Choice<StatusFilter>[] = [
+  { value: 'all', label: 'Any status' },
+  { value: 'new', label: 'To Do' },
+  { value: 'indeterminate', label: 'In Progress' },
+  { value: 'done', label: 'Done' },
+];
+
+export const assigneeChoices: readonly Choice<string>[] = [
   { value: 'anyone', label: 'Anyone' },
   { value: 'me', label: 'Me' },
   { value: 'none', label: 'Unassigned' },
 ];
 
-// JQL names status categories by their English names, whatever language the site shows them in.
-const categoryNames: Record<StatusCategory, string> = {
-  new: 'To Do',
-  indeterminate: 'In Progress',
-  done: 'Done',
-};
-
 const quoted = (value: string): string =>
   `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
+
+// JQL names status categories by their English names, whatever language the site shows them in.
+const statusClauses: Record<StatusFilter, string | null> = {
+  all: null,
+  new: 'statusCategory = "To Do"',
+  indeterminate: 'statusCategory = "In Progress"',
+  done: 'statusCategory = "Done"',
+};
+
+// Anyone adds no clause; any other value is one person's account id.
+const assigneeClauses = new Map<string, string | null>([
+  ['anyone', null],
+  ['me', 'assignee = currentUser()'],
+  ['none', 'assignee is EMPTY'],
+]);
+
+const assigneeClause = (assignee: string): string | null =>
+  assigneeClauses.has(assignee)
+    ? (assigneeClauses.get(assignee) ?? null)
+    : `assignee = ${quoted(assignee)}`;
 
 // Characters Jira's text search reads as operators; a person typing them means the words around them.
 const searchOperators = /[+\-&|!(){}[\]^~*?\\:"/]/gu;
 
 // The words a text filter searches for, or '' when it has none.
-export const searchText = (typed: string): string =>
+const searchText = (typed: string): string =>
   typed.replaceAll(searchOperators, ' ').replaceAll(/\s+/gu, ' ').trim();
 
-function assigneeClause(assignee: AssigneeFilter): string | null {
-  switch (assignee) {
-    case 'anyone':
-      return null;
-    case 'me':
-      return 'assignee = currentUser()';
-    case 'none':
-      return 'assignee is EMPTY';
-    default:
-      return `assignee = ${quoted(assignee)}`;
-  }
-}
+const textClause = (typed: string): string | null => {
+  const words = searchText(typed);
+
+  return words ? `text ~ ${quoted(words)}` : null;
+};
+
+const present = (clause: string | null): clause is string => clause !== null;
 
 // The JQL clauses the filters add to the project's search, in a fixed order so equal filters read the same Query.
-export function filterClauses(filters: IssueFilters): string[] {
-  const words = searchText(filters.text);
-  const status =
-    filters.status === 'all'
-      ? null
-      : `statusCategory = ${quoted(categoryNames[filters.status])}`;
-
-  return [
-    status,
+export const filterClauses = (filters: IssueFilters): string[] =>
+  [
+    statusClauses[filters.status],
     assigneeClause(filters.assignee),
-    words ? `text ~ ${quoted(words)}` : null,
-  ].filter((clause): clause is string => clause !== null);
-}
+    textClause(filters.text),
+  ].filter(present);
 
 // How many filters narrow the list, for the Filter menu's badge.
 export const activeFilters = (filters: IssueFilters): number =>
-  [
-    filters.status !== 'all',
-    filters.assignee !== 'anyone',
-    searchText(filters.text) !== '',
-  ].filter(Boolean).length;
+  filterClauses(filters).length;
 
-const statusFilters = new Set<string>(
-  statusChoices.map(({ value }) => value),
-);
+const statusFilters = new Set<string>(statusChoices.map(({ value }) => value));
 
 const isStatusFilter = (value: string): value is StatusFilter =>
   statusFilters.has(value);
 
-// The filters a Page state holds; an address an older Plugin made, or a person edited, reads as no filter there.
-export const filtersOf = (state: {
-  status: string;
-  assignee: string;
-  text: string;
-}): IssueFilters => ({
-  status: isStatusFilter(state.status) ? state.status : 'all',
+const statusOf = (value: string): StatusFilter =>
+  isStatusFilter(value) ? value : 'all';
+
+// The filters a Page state holds; a value no filter has, as in an edited address, reads as no filter there.
+export const filtersOf = (state: IssueFilters): IssueFilters => ({
+  status: statusOf(state.status),
   assignee: state.assignee || 'anyone',
   text: state.text,
 });

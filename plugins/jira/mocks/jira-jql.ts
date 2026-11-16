@@ -16,8 +16,11 @@ const categoryNames: Record<FixtureIssue['status']['category'], string> = {
 const unquoted = (value: string): string =>
   value.replaceAll('\\"', '"').replaceAll('\\\\', '\\');
 
+const groupIn = (pattern: RegExp, clause: string): string | undefined =>
+  pattern.exec(clause)?.groups?.value;
+
 const valueIn = (pattern: RegExp, clause: string): string | null => {
-  const found = pattern.exec(clause)?.groups?.value;
+  const found = groupIn(pattern, clause);
 
   return found === undefined ? null : unquoted(found);
 };
@@ -40,11 +43,15 @@ const summaryHolds =
       .split(' ')
       .every((word) => summary.toLowerCase().includes(word));
 
-const fixed: Record<string, Matches> = {
-  'assignee = currentUser()': ({ assignee }, who) =>
-    assignee?.accountId === who.accountId,
-  'assignee is EMPTY': ({ assignee }) => assignee === null,
-};
+const assignedToCaller: Matches = ({ assignee }, who) =>
+  assignee?.accountId === who.accountId;
+
+const unassigned: Matches = ({ assignee }) => assignee === null;
+
+const fixed = new Map<string, Matches>([
+  ['assignee = currentUser()', assignedToCaller],
+  ['assignee is EMPTY', unassigned],
+]);
 
 const valued: [RegExp, (value: string) => Matches][] = [
   [/^statusCategory = "(?<value>.*)"$/u, categoryIs],
@@ -54,15 +61,19 @@ const valued: [RegExp, (value: string) => Matches][] = [
 
 const everyIssue: Matches = () => true;
 
-function clauseMatch(clause: string): Matches {
-  for (const [pattern, matches] of valued) {
+const matchIn =
+  (clause: string) =>
+  ([pattern, matches]: (typeof valued)[number]): Matches | null => {
     const value = valueIn(pattern, clause);
 
-    if (value !== null) return matches(value);
-  }
+    return value === null ? null : matches(value);
+  };
 
-  return fixed[clause] ?? everyIssue;
-}
+const valuedMatch = (clause: string): Matches | null | undefined =>
+  valued.map(matchIn(clause)).find((matches) => matches !== null);
+
+const clauseMatch = (clause: string): Matches =>
+  valuedMatch(clause) ?? fixed.get(clause) ?? everyIssue;
 
 // What the filters after the project clause leave of its issues, for the person asking.
 export function filtered(

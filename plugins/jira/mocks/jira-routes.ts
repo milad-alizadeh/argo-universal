@@ -103,23 +103,25 @@ const personJson = ({ accountId, displayName }: Person): Json => ({
   accountType: 'atlassian',
 });
 
-// The people a project's issues can be assigned to: the caller, and everyone its issues are assigned to.
-function people({ site, request, who }: JiraCall): FixtureAnswer {
-  const key = new URL(request.path, 'https://jira.test').searchParams.get(
-    'project',
-  );
-  const project = projectIn(site, key ?? '');
-
-  if (!project) return noSuchProject(key ?? '');
-
-  const everyone = new Map(
+// Everyone a project's issues can be assigned to, once each: the caller, and everyone its issues are assigned to.
+const assignable = (who: Person, project: FixtureProject): Json[] => [
+  ...new Map(
     [who, ...assigneesOf(project)].map((person) => [
       person.accountId,
       personJson(person),
     ]),
-  );
+  ).values(),
+];
 
-  return { json: [...everyone.values()] };
+const projectParam = ({ path }: FixtureRequest): string =>
+  new URL(path, 'https://jira.test').searchParams.get('project') ?? '';
+
+// The people an issue in the project the query names can be assigned to.
+function people({ site, request, who }: JiraCall): FixtureAnswer {
+  const key = projectParam(request);
+  const project = projectIn(site, key);
+
+  return project ? { json: assignable(who, project) } : noSuchProject(key);
 }
 
 const myself = ({ who }: JiraCall): FixtureAnswer => ({

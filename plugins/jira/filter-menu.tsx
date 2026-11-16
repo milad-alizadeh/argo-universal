@@ -1,12 +1,12 @@
 import { Action } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { JiraPerson } from './jira-readers';
 import {
   activeFilters,
   assigneeChoices,
   statusChoices,
   type IssueFilters,
 } from './jira-filters';
+import type { JiraPerson } from './jira-readers';
 import type { Listing } from './view-frame';
 
 type Choice<Value extends string> = { value: Value; label: string };
@@ -41,31 +41,44 @@ const personChoice = ({ accountId, name }: JiraPerson): Choice<string> => ({
   label: name,
 });
 
-/*
- * The header's Filter menu: a status category, and who the issues are assigned to, with Me first and then the people
- * the project can assign to. Its badge counts the filters in use, the search's text among them.
- */
-export function filterMenu(
+const statusSection = (listing: Listing): JSX.Element => (
+  <Action.Section key="status" title="Status">
+    {statusChoices.map((each) => statusChoice(listing, each))}
+  </Action.Section>
+);
+
+// Me first, then the people the project can assign to.
+const assigneeSection = (
   people: JiraPerson[],
   listing: Listing,
-): JSX.Element {
-  const count = activeFilters(listing.filters);
+): JSX.Element => (
+  <Action.Section key="assignee" title="Assignee">
+    {[...assigneeChoices, ...people.map(personChoice)].map((each) =>
+      assigneeChoice(listing, each),
+    )}
+  </Action.Section>
+);
 
-  return (
-    <Action
-      key="filter"
-      label="Filter"
-      icon="filters"
-      badge={count > 0 ? { kind: 'count', count } : undefined}
-    >
-      <Action.Section key="status" title="Status">
-        {statusChoices.map((each) => statusChoice(listing, each))}
-      </Action.Section>
-      <Action.Section key="assignee" title="Assignee">
-        {[...assigneeChoices, ...people.map(personChoice)].map((each) =>
-          assigneeChoice(listing, each),
-        )}
-      </Action.Section>
-    </Action>
-  );
-}
+type Badge = { kind: 'count'; count: number } | undefined;
+
+const badgeOf = (count: number): Badge =>
+  count > 0 ? { kind: 'count', count } : undefined;
+
+/*
+ * The header's Filter menu: a status category, and who the issues are assigned to. Its badge counts the filters in
+ * use, the search's text among them.
+ */
+export const filterMenu = (
+  people: JiraPerson[],
+  listing: Listing,
+): JSX.Element => (
+  <Action
+    key="filter"
+    label="Filter"
+    icon="filters"
+    badge={badgeOf(activeFilters(listing.filters))}
+  >
+    {statusSection(listing)}
+    {assigneeSection(people, listing)}
+  </Action>
+);

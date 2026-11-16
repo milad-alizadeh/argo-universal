@@ -5,6 +5,7 @@ import {
   EmptyState,
   Screen,
   Stack,
+  type PluginProps,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { filterMenu } from './filter-menu';
@@ -96,27 +97,31 @@ const emptyList = (key: string, listing: Listing): JSX.Element =>
     ? noIssues(key)
     : noMatches(key, listing);
 
-/*
- * The project's issues the filters leave. The search narrows them once typing pauses and the Filter menu at once,
- * each reading Jira's first page again; load more reads the next one from Jira's cursor.
- */
+// The header searches the project's issues once typing pauses; the Filter menu narrows them at once.
+const issuesHeader = (
+  { project, site, people }: Issues,
+  framing: Framing,
+  listing: Listing,
+): Omit<PluginProps['Screen'], 'children'> => ({
+  title: project.name,
+  caption: `${project.key} · ${site.host}`,
+  width: 'full',
+  search: { label: `Search ${project.key}` },
+  value: listing.filters.text,
+  onChangeText: listing.to.bind('text'),
+  actions: [filterMenu(people, listing), ...projectActions(framing)],
+});
+
+// The project's issues the filters leave; load more reads the next page from Jira's cursor.
 const issues = (
-  { site, project, people }: Issues,
+  view: Issues,
   framing: Framing,
   listing: Listing,
 ): JSX.Element => (
-  <Screen
-    title={project.name}
-    caption={`${project.key} · ${site.host}`}
-    width="full"
-    search={{ label: `Search ${project.key}` }}
-    value={listing.filters.text}
-    onChangeText={listing.to.bind('text')}
-    actions={[filterMenu(people, listing), ...projectActions(framing)]}
-  >
+  <Screen {...issuesHeader(view, framing, listing)}>
     {listing.list.items.length === 0
-      ? emptyList(project.key, listing)
-      : issueList(site, listing.list, framing.to)}
+      ? emptyList(view.project.key, listing)
+      : issueList(view.site, listing.list, framing.to)}
   </Screen>
 );
 
