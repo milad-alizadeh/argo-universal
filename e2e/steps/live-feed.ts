@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { type App, expect } from '../fixtures';
 import { readAgent } from './agents';
+import { pressWithoutPaint } from './background-click';
 import { Given, When, Then } from './fixtures';
 
 const feedScroll = 'feed-scroll';
@@ -18,18 +19,14 @@ Given(
   },
 );
 
-// A hidden window paints no frames on Linux, so Playwright's stable check never ends; dispatch the click.
-async function clickGroup(group: Locator, hidden: boolean): Promise<void> {
-  await (hidden
-    ? group.evaluate<void, void, HTMLElement>((el) => el.click())
-    : group.click());
-}
-
-async function openGroup(feed: Locator, hidden = false): Promise<void> {
+async function openGroup(
+  feed: Locator,
+  press: (group: Locator) => Promise<void> = (group) => group.click(),
+): Promise<void> {
   const group = feed.getByRole('button', { name: groupTitle, exact: true });
 
   if ((await group.getAttribute('aria-expanded')) !== 'true')
-    await clickGroup(group, hidden);
+    await press(group);
 
   await expect(group).toHaveAttribute('aria-expanded', 'true');
 }
@@ -60,8 +57,8 @@ Then(
 
 // The unfinished command's Turn is running, its Stop shown.
 export async function expectRunningCommand(page: Page): Promise<void> {
-  // Callers may have hidden the desktop window.
-  await openGroup(page.getByTestId(feedScroll), true);
+  // This step never waits for paint.
+  await openGroup(page.getByTestId(feedScroll), pressWithoutPaint);
 
   await expect(
     page
