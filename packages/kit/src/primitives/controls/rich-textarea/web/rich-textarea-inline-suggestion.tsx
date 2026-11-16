@@ -8,6 +8,7 @@ import {
 } from 'lexical';
 import { useEffect } from 'react';
 import type { RichTextareaProps } from '../rich-textarea-props';
+import { $importMarkdown } from './rich-textarea-markdown';
 
 type Suggestion = NonNullable<RichTextareaProps['inlineSuggestion']>;
 
@@ -33,6 +34,8 @@ function acceptHandler(
     if (modified(event) || unavailable(editor)) return false;
 
     event.preventDefault();
+    $importMarkdown(suggestion.text);
+    $getRoot().selectEnd();
     suggestion.onAccept();
 
     return true;
