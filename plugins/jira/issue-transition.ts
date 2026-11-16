@@ -2,7 +2,8 @@ import type { JiraStatus, JiraTransition } from './issue-fields';
 import { issueReaders } from './issue-readers';
 import { issueRequests } from './issue-requests';
 import { call, located, same, type IssueCalls } from './issue-site';
-import { issueOf, type JiraIssue } from './jira-readers';
+import type { JiraIssue } from './jira-readers';
+import { issueIn } from './project-issue';
 
 /*
  * The `transition` Operation: moves an issue to a status Jira allows from its current one, as the issue's page and a
@@ -53,8 +54,7 @@ export async function transition(
   { issue: key, status, projectId }: TransitionParams,
 ): Promise<Moved> {
   const where = await located(argo, projectId);
-  const read = { request: issueRequests.issue(key), read: issueOf };
-  const issue = await call(where, read);
+  const issue = await issueIn(where, key);
   const chosen = transitionTo(issue.transitions, status);
 
   if (!chosen) return unmoved(issue, status);

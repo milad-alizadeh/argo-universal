@@ -41,8 +41,20 @@ const noMoves = ({ to }: Shown): JSX.Element => (
   />
 );
 
+const firstTo = (
+  transition: JiraTransition,
+  index: number,
+  all: JiraTransition[],
+): boolean => all.findIndex(({ to }) => to.id === transition.to.id) === index;
+
+/*
+ * One entry for each status the issue can move to: a looped transition back to its own status is no move, and of two
+ * transitions to one status the menu offers the first, which is the one `transition` runs for that status.
+ */
 const movesOf = ({ issue }: Shown): JiraTransition[] =>
-  issue.transitions.filter(({ to }) => to.id !== issue.status.id);
+  issue.transitions
+    .filter(({ to }) => to.id !== issue.status.id)
+    .filter(firstTo);
 
 export function statusMenu(shown: Shown): JSX.Element {
   const moves = movesOf(shown);

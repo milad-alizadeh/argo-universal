@@ -9,6 +9,7 @@ import {
 } from './issue-site';
 import { jiraReaders } from './jira-readers';
 import { jiraRequests } from './jira-requests';
+import { issueIn } from './project-issue';
 
 /*
  * The `setAssignee` and `setPriority` Operations, as the issue page's menus run them and an Agent runs them through
@@ -35,7 +36,12 @@ export async function setAssignee(
   { issue, assignee, projectId }: IssueAt & { assignee?: string },
 ): Promise<{ issue: string; assignee: string | null }> {
   const where = await located(argo, projectId);
-  const accountId = await accountIdOf(where, assignee);
+
+  const [accountId] = await Promise.all([
+    accountIdOf(where, assignee),
+    issueIn(where, issue),
+  ]);
+
   const request = issueRequests.assign(issue, accountId);
 
   await call(where, { request, read: issueReaders.done });
@@ -74,7 +80,12 @@ export async function setPriority(
   { issue, priority, projectId }: IssueAt & { priority: string },
 ): Promise<{ issue: string; priority: string }> {
   const where = await located(argo, projectId);
-  const chosen = await priorityOf(where, priority);
+
+  const [chosen] = await Promise.all([
+    priorityOf(where, priority),
+    issueIn(where, issue),
+  ]);
+
   const request = issueRequests.setPriority(issue, chosen.id);
 
   await call(where, { request, read: issueReaders.done });

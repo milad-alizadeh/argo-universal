@@ -1,14 +1,13 @@
 import type { FixtureAnswer, FixtureRequest } from '@argo/plugin-kit/testing';
-import { at, text, type Json } from '../json';
+import { at, list, present, text, type Json } from '../json';
 import type {
-  FixtureIssue,
   FixtureProject,
   FixtureSite,
   FixtureToken,
   JiraData,
 } from './jira-data';
+import { issueJson, type Asked } from './jira-issue-json';
 import { issueRoutes } from './jira-issue-routes';
-import { issueJson } from './jira-workflow';
 
 // One call that reached a site's Jira with a token it accepts: what a route answers from.
 export type JiraCall = {
@@ -31,26 +30,29 @@ export type JiraRoute = {
 
 const defaultLimit = 50;
 
-type Paging = { start: number; limit: number; expand: string };
+type Paging = { start: number; limit: number; asked: Asked };
 
-const expandOf = (body: Json | undefined): string =>
-  text(at(body, 'expand')) ?? '';
+// The fields and expansions a search names in its body.
+const askedOf = (body: Json | undefined): Asked => ({
+  fields: list(at(body, 'fields')).map(text).filter(present),
+  expand: text(at(body, 'expand')) ?? '',
+});
 
 const pagingOf = (body: Json | undefined): Paging => ({
   start: Number(at(body, 'nextPageToken') ?? 0),
   limit: Number(at(body, 'maxResults') ?? defaultLimit),
-  expand: expandOf(body),
+  asked: askedOf(body),
 });
 
 // One page of issues, with a `nextPageToken` while more are left.
 function pageOf(
-  issues: FixtureIssue[],
-  { start, limit, expand }: Paging,
+  { key, issues }: FixtureProject,
+  { start, limit, asked }: Paging,
 ): Json {
   const next = start + limit;
   const isLast = next >= issues.length;
   const shown = issues.slice(start, next);
-  const answered = shown.map((issue) => issueJson(issue, expand));
+  const answered = shown.map((issue) => issueJson(issue, key, asked));
   const page = { issues: answered, isLast };
 
   return isLast ? page : { ...page, nextPageToken: String(next) };
@@ -85,7 +87,7 @@ function search({ site, body }: JiraCall): FixtureAnswer {
   const project = projectIn(site, key);
 
   return project
-    ? { json: pageOf(project.issues, pagingOf(body)) }
+    ? { json: pageOf(project, pagingOf(body)) }
     : noSuchProject(key);
 }
 

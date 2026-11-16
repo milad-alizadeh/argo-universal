@@ -49,8 +49,20 @@ function heading(node: AdfNode): string {
   return `${'#'.repeat(depth)} ${inline(node)}`;
 }
 
-const codeBlock: Write = (node) =>
-  `\`\`\`${attr(node, 'language') ?? ''}\n${node.content.map((child) => child.text).join('')}\n\`\`\``;
+// A fence longer than any run of backticks in the code, so the code cannot close it early.
+const fenceFor = (code: string): string => {
+  const runs = code.match(/`+/gu) ?? [];
+  const longest = Math.max(2, ...runs.map((run) => run.length));
+
+  return '`'.repeat(longest + 1);
+};
+
+const codeBlock: Write = (node) => {
+  const code = node.content.map((child) => child.text).join('');
+  const fence = fenceFor(code);
+
+  return `${fence}${attr(node, 'language') ?? ''}\n${code}\n${fence}`;
+};
 
 const task: Write = (item) =>
   `- [${attr(item, 'state') === 'DONE' ? 'x' : ' '}] ${inline(item)}`;

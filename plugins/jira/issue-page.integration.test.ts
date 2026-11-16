@@ -10,6 +10,7 @@ import {
 } from './mocks/issue-journey';
 import { arenaSite, person } from './mocks/jira-data';
 import { argoThreeMarkdown } from './mocks/jira-descriptions';
+import { richMarkdown } from './mocks/jira-rich-description';
 import { firstProject, signIn, startJira } from './mocks/journey';
 
 const timeoutMs = 20_000;
@@ -43,6 +44,20 @@ it(
     });
     expect(page.find((node) => node.type === 'Detail').props.markdown).toBe(
       argoThreeMarkdown,
+    );
+  },
+  timeoutMs,
+);
+
+it(
+  'draws every kind of description Jira writes, from what the list asked for',
+  async () => {
+    const jira = await listed();
+    const page = await jira.list.press('Sign in with a scoped API token');
+
+    expect(jira.jira.calls('issue')).toEqual([]);
+    expect(page.find((node) => node.type === 'Detail').props.markdown).toBe(
+      richMarkdown,
     );
   },
   timeoutMs,

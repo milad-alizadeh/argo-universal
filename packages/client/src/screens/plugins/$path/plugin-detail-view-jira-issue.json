@@ -109,7 +109,7 @@
                     "children": [
                       {
                         "type": "Action",
-                        "key": "move-1",
+                        "key": "move-11",
                         "props": {
                           "label": "To Do",
                           "onPress": {
@@ -135,7 +135,7 @@
                       },
                       {
                         "type": "Action",
-                        "key": "move-4",
+                        "key": "move-31",
                         "props": {
                           "label": "In Review",
                           "onPress": {
@@ -161,7 +161,7 @@
                       },
                       {
                         "type": "Action",
-                        "key": "move-5",
+                        "key": "move-41",
                         "props": {
                           "label": "Done",
                           "onPress": {
@@ -848,7 +848,7 @@
                     "children": [
                       {
                         "type": "Action",
-                        "key": "move-1",
+                        "key": "move-11",
                         "props": {
                           "label": "To Do",
                           "onPress": {
@@ -874,7 +874,7 @@
                       },
                       {
                         "type": "Action",
-                        "key": "move-4",
+                        "key": "move-31",
                         "props": {
                           "label": "In Review",
                           "onPress": {
@@ -900,7 +900,7 @@
                       },
                       {
                         "type": "Action",
-                        "key": "move-5",
+                        "key": "move-41",
                         "props": {
                           "label": "Done",
                           "onPress": {
