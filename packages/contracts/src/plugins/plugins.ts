@@ -3,7 +3,12 @@ import { validateAccountCapabilities } from './account-manifest';
 import { AccountHost, PluginCapability } from './capabilities';
 import { DeclaredContributions } from './declared-slots';
 import { HookEventName } from './hooks';
-import { InstructionsFile, PluginIcon, PluginPath } from './manifest-fields';
+import {
+  InstructionsFile,
+  PluginIcon,
+  PluginPass,
+  PluginPath,
+} from './manifest-fields';
 import { PluginOperationContributions } from './plugin-operations';
 import { PluginIdentifier, PluginSettingsSchema } from './plugin-settings';
 import { PluginStatus } from './runtime';
@@ -90,12 +95,9 @@ export const PluginManifest = z
             'Nav ids must be unique',
           ),
         settings: PluginSettingsSchema.optional(),
-        background: z
-          .strictObject({
-            path: PluginPath,
-            interval: z.number().finite().nonnegative(),
-          })
-          .optional(),
+        background: PluginPass.optional(),
+        // A function that runs for each Project on Argo's clock with no App open, and may act (ADR-0055).
+        watch: PluginPass.optional(),
         // The add-only Slots the Plugin fills; core asks only these Plugins for a Slot's content.
         slots: uniqueIds(AddOnlySlotId, 'Slot ids must be unique').optional(),
         // What the Plugin adds to a declared Slot, such as Session header actions, by Slot id; the App draws it without starting the Plugin (ADR-0035).

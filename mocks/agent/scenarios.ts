@@ -29,6 +29,8 @@ import { titleScenarios } from './title-scenarios.ts';
 
 export const sharedReply = 'The shared fixture completed this Turn.';
 
+export const nextPrompt = 'Run the smoke suite';
+
 export const imageReply = 'The dominant color is red.';
 
 export const fileReply = 'The release notes list one change.';
@@ -98,6 +100,18 @@ export const scenarios = {
     },
   },
   ...queueScenarios(scenario, reply),
+  // Answers the background request that predicts the next Prompt with a grounded suggestion.
+  'follow-up-suggestion': {
+    ...scenario([reply]),
+    responses: {
+      'session/prompt': [
+        {
+          prompt: 'Predict the short Prompt',
+          steps: [message(JSON.stringify({ suggestion: nextPrompt }))],
+        },
+      ],
+    },
+  },
   ...exitScenarios,
   ...signInScenarios([reply]),
   'exit-with-stderr': {

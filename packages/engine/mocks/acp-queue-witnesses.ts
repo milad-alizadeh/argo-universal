@@ -94,5 +94,40 @@ export function queueTransitionWitnesses(initial: AcpModelSnapshot): Sent[] {
     ...preparedEvents(state),
     { state, event: appendEvent() },
     { state, event: disconnected },
+    ...steeringWitnesses(state),
   ];
+}
+
+function reserveSteeringEvent(): AcpModelEvent {
+  const reserved =
+    Promise.withResolvers<
+      NonNullable<AcpModelSnapshot['context']['queueSteering']>
+    >();
+
+  reserved.promise.catch(() => {});
+
+  return {
+    type: 'session.reserveQueueSteering',
+    command: { action: 'steer', id: row.id, revision: 0 },
+    reserved,
+  };
+}
+
+function finishSteeringEvent(): AcpModelEvent {
+  const committed = Promise.withResolvers<void>();
+  committed.promise.catch(() => {});
+
+  return {
+    type: 'session.finishQueueSteering',
+    token: 'model-steer',
+    injected: false,
+    committed,
+  };
+}
+
+function steeringWitnesses(state: AcpModelSnapshot): Sent[] {
+  return [reserveSteeringEvent(), finishSteeringEvent()].map((event) => ({
+    state,
+    event,
+  }));
 }

@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { ChangeChecks } from './change-checks-popover';
 import { ChangeDiffTotal } from './change-diff-total';
+import { ChangeContextMenu, ChangeMenu } from './change-row-menu';
 import {
   ChangeStageIcon,
   ChangeStageModifier,
@@ -14,6 +15,11 @@ export interface ChangeRowProps {
   change: SessionPullRequest;
   // Open the Change on its code host.
   onOpen: () => void;
+  // Copy the Change's link, and take it off the Session; the menu leaves out an item with no handler.
+  onCopyLink?: () => void;
+  onDetach?: () => void;
+  // Ticks or unticks an automation the Change offers; the menu leaves the automation items out without it.
+  onSetAutomation?: SessionPullRequest['onSetAutomation'];
 }
 
 const rowClassName = 'flex-row items-start gap-2 px-1 py-2';
@@ -29,13 +35,16 @@ const stageCell = (change: SessionPullRequest): ReactElement => (
 
 export function ChangeRow(props: ChangeRowProps): ReactElement {
   return (
-    <View className={rowClassName}>
-      {stageCell(props.change)}
-      <View className="min-w-0 flex-1 gap-0.5">
-        <ChangeTitle {...props} />
-        <ChangeMeta {...props} />
+    <ChangeContextMenu {...props}>
+      <View className={rowClassName}>
+        {stageCell(props.change)}
+        <View className="min-w-0 flex-1 gap-0.5">
+          <ChangeTitle {...props} />
+          <ChangeMeta {...props} />
+        </View>
+        <ChangeMenu {...props} />
       </View>
-    </View>
+    </ChangeContextMenu>
   );
 }
 

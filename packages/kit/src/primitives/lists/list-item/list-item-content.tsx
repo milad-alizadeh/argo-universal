@@ -12,6 +12,7 @@ import {
 import type { PlacedContentProps } from './list-item-placement';
 import type { ListItemProps } from './list-item-props';
 import { Subtitle, type SubtitleProps } from './list-item-subtitle';
+import { RowText } from './list-item-row-text';
 import { TreeLane } from './list-item-tree';
 
 // A sidebar row's title is medium, or semibold while it holds news for its reader.
@@ -29,14 +30,13 @@ const lineLimit = (multiline?: boolean): number | undefined =>
 
 function Title(props: ListItemProps & { inLine?: boolean }): ReactElement {
   return (
-    <Text
-      role="row"
+    <RowText
       tone={props.finished ? 'muted' : props.tone}
       numberOfLines={lineLimit(props.multiline)}
       className={cn(props.inLine && 'min-w-0 flex-1', titleWeight(props))}
     >
       {props.title}
-    </Text>
+    </RowText>
   );
 }
 
@@ -100,15 +100,14 @@ function InlineSubtitle(props: PlacedContentProps): ReactNode {
   if (props.subtitle === undefined) return null;
 
   return (
-    <Text
-      role="row"
+    <RowText
       tone={props.subtitleTone ?? 'muted'}
       dimmed={props.subtitleDimmed}
       numberOfLines={1}
       className="max-w-1/2 shrink-0"
     >
       {props.subtitle}
-    </Text>
+    </RowText>
   );
 }
 
