@@ -5,15 +5,15 @@ import { Text } from '#primitives/content/text';
 export interface CodeScannerProps {
   // The live camera, filling the frame; nothing where there is none, as in a browser or a preview.
   preview?: ReactNode;
-  // What the scanner is doing, on a chip at the frame's foot: looking, a code it read and refused, or a camera that did not start.
+  // What the scanner is doing, at the frame's foot: looking, a code it read and refused, or a camera that did not start.
   notice: string;
   // What to do, under the frame.
   title: string;
   // Where to find the code, under the title.
-  detail?: string;
+  detail: string;
 }
 
-// Each corner mark: 44 long, a 4 stroke, rounded 16. White in both appearances, as it is drawn over a camera picture.
+// White in both appearances, as the marks are drawn over a camera picture.
 const corner = 'absolute size-11 border-code-light';
 
 const corners = [
@@ -40,14 +40,16 @@ function Viewfinder(): ReactElement {
   );
 }
 
-// Small, on a dim chip that reads over any camera picture without covering it; a long refusal wraps, and a screen reader hears each change.
+/*
+ * Small white words on a dim backing that keeps them readable over a bright picture without covering it. A long
+ * refusal wraps in full, and a screen reader hears each change.
+ */
 function Notice({ text }: { text: string }): ReactElement {
   return (
-    <View className="max-w-full rounded-full bg-scrim/50 px-2.5 py-1">
+    <View className="max-w-full rounded-full bg-scrim/60 px-2.5 py-1">
       <Text
         role="badge"
         className="text-center text-code-light"
-        numberOfLines={3}
         accessibilityLiveRegion="polite"
       >
         {text}
@@ -56,7 +58,9 @@ function Notice({ text }: { text: string }): ReactElement {
   );
 }
 
-function Frame(props: CodeScannerProps): ReactElement {
+function Frame(
+  props: Pick<CodeScannerProps, 'preview' | 'notice'>,
+): ReactElement {
   return (
     <View className="aspect-square w-full max-w-sm self-center overflow-hidden rounded-2xl bg-scrim">
       {props.preview}
@@ -68,31 +72,31 @@ function Frame(props: CodeScannerProps): ReactElement {
   );
 }
 
-function Caption(props: CodeScannerProps): ReactElement {
+function Caption(
+  props: Pick<CodeScannerProps, 'title' | 'detail'>,
+): ReactElement {
   return (
     <View className="items-center gap-1">
       <Text role="heading" accessibilityRole="heading" aria-level={2}>
         {props.title}
       </Text>
-      {props.detail ? (
-        <Text role="secondary" tone="muted">
-          {props.detail}
-        </Text>
-      ) : null}
+      <Text role="secondary" tone="muted">
+        {props.detail}
+      </Text>
     </View>
   );
 }
 
 /*
  * A camera reading a code: the picture in a rounded dark frame, a square of corner marks to hold the code in, what it
- * is doing on a chip at the frame's foot, and what to do under it. The frame is square and at most 384 wide rather than filling the page,
+ * is doing at the frame's foot, and what to do under it. The frame is square and capped rather than filling the page,
  * so the words under it stay in sight on any phone.
  */
 export function CodeScanner(props: CodeScannerProps): ReactElement {
   return (
     <View className="gap-4">
-      <Frame {...props} />
-      <Caption {...props} />
+      <Frame preview={props.preview} notice={props.notice} />
+      <Caption title={props.title} detail={props.detail} />
     </View>
   );
 }

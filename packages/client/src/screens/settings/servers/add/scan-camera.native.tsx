@@ -8,9 +8,8 @@ import {
   afterRead,
   cameraFailed,
   looking,
-  noticeText,
   type ScanNotice,
-  scannerWords,
+  scannerProps,
 } from './scan-notice';
 
 export interface ScanCameraProps {
@@ -30,24 +29,26 @@ const qrOnly = { barcodeTypes: ['qr' as const] };
 export function ScanCamera(props: ScanCameraProps): React.JSX.Element {
   const [notice, setNotice] = useState<ScanNotice>(looking);
 
-  useSpokenNotice(noticeText(notice), notice.kind !== 'looking');
+  useSpokenNotice(notice);
 
   return (
     <CodeScanner
       preview={
         usePageFocused() ? <Preview {...props} setNotice={setNotice} /> : null
       }
-      notice={noticeText(notice)}
-      {...scannerWords}
+      {...scannerProps(notice)}
     />
   );
 }
 
 /*
- * Android reads a change on the chip from its live region; iOS has none, so VoiceOver is told each new refusal or
+ * Android reads a change in the notice from its live region; iOS has none, so VoiceOver is told each new refusal or
  * failure once. The same code read again sets the same words, which says nothing new.
  */
-function useSpokenNotice(text: string, worthSaying: boolean): void {
+function useSpokenNotice(notice: ScanNotice): void {
+  const text = scannerProps(notice).notice;
+  const worthSaying = notice.kind !== 'looking';
+
   useEffect(() => {
     if (worthSaying && Platform.OS === 'ios')
       AccessibilityInfo.announceForAccessibility(text);

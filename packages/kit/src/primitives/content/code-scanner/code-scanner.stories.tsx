@@ -15,5 +15,5 @@ type Story = StoryObj<typeof meta>;
 
 export const Waiting: Story = { args: waiting };
 
-// A long notice wraps on the chip instead of running off the frame.
+// A long notice wraps in full instead of running off the frame.
 export const CameraFailed: Story = { args: cameraFailed };
