@@ -94,12 +94,29 @@ describe('independent Workbench cards beside the content', () => {
     },
   );
 
-  it('leaves the content centred under an overlaid Workbench', () => {
+  it('moves the content clear of an overlaid Workbench', () => {
     const layout = frameLayout({ ...input, workbenchIntent: 'shown' });
 
     expect(layout.workbench.state).toBe('overlay');
-    expect(layout.contentShift).toBe(0);
-    expect(layout.content).toEqual({ offset: 488, width: 848 });
+    expect(layout.contentShift).toBe(156);
+    expect(layout.workbench.offset).toBeGreaterThanOrEqual(
+      layout.content.offset +
+        layout.content.width -
+        input.measures.contentGutter +
+        input.measures.paneGap,
+    );
+  });
+
+  it('narrows the content no further than the Composer under an overlaid Workbench', () => {
+    const layout = frameLayout({
+      ...input,
+      width: 1000,
+      workbenchIntent: 'shown',
+    });
+
+    expect(layout.content.width - input.measures.contentGutter * 2).toBe(
+      input.measures.composerWidth,
+    );
   });
 
   it('keeps the conversation axis when both wide gutters fit the cards', () => {

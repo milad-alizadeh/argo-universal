@@ -66,7 +66,7 @@ The Workbench has four effective states. One toggle drives the person’s Show o
 
 - **Gutter** — the page's two gutters together fit a card and its gaps, so the cards sit at the page's trailing edge and the content, moved aside where the trailing gutter alone is too narrow, never sits under them.
 - **Auto-hidden** — the gutters are too narrow and the toggle is unpressed: the Workbench is not drawn.
-- **Overlay** — the gutters are too narrow and the person pressed Show: the Workbench is drawn over the trailing edge of the content, left of the Inspector when it is open. The column has no backing, so the Feed shows faintly through the cards' glass and nothing clips them. The page stays mounted and interactive underneath; the same band toggle hides it.
+- **Overlay** — the gutters are too narrow and the person pressed Show: the Workbench is drawn over the trailing edge of the content, left of the Inspector when it is open. The column moves aside as in the gutter, keeping its 16px gap from the cards, and narrows as it goes, no further than the Composer's width, so the cards cover no text unless the page is narrower than both. The column has no backing, so the Feed shows faintly through the cards' glass and nothing clips them. The page stays mounted and interactive underneath; the same band toggle hides it.
 - **Hidden** — explicit Hide persists across resize. An expanded Inspector temporarily hides the Workbench without changing that intent.
 
 ## The Workbench
