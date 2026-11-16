@@ -21,13 +21,18 @@ type SignInState = { email: string; site: string };
 
 type To = PageTo<SignInState>;
 
-type SignInData = { state: TokenPasteState; error: string | null };
+// Who is signed in, or null while the page takes a token; and why the last token was not used, if it was not.
+type SignInData = { label: string | null; error: string | null };
 
 const flowError = (state: TokenPasteState): string | null =>
   state.kind === 'failed' ? state.message : null;
 
+// A sign-in a read found refused says so beside the field, until a new token is pasted.
+const staleSignIn = (signIn: JiraSignIn): string | null =>
+  signIn.flow.state().kind === 'signed-in' ? signIn.refusal() : null;
+
 const errorOf = (signIn: JiraSignIn): string | null =>
-  signIn.notice() ?? flowError(signIn.flow.state());
+  signIn.notice() ?? flowError(signIn.flow.state()) ?? staleSignIn(signIn);
 
 const signedIn = (label: string, to: To): JSX.Element => (
   <Screen title="Jira">
@@ -136,12 +141,12 @@ export function defineSignInPage(argo: Argo, signIn: JiraSignIn): void {
   argo.pages.define(signInPath, {
     state: { email: '', site: '' },
     load: (): SignInData => ({
-      state: signIn.flow.state(),
+      label: signIn.signedIn(),
       error: errorOf(signIn),
     }),
     render: (data, to, { state }) =>
-      data.state.kind === 'signed-in'
-        ? signedIn(data.state.label, to)
-        : signInForm(data, to, state),
+      data.label === null
+        ? signInForm(data, to, state)
+        : signedIn(data.label, to),
   });
 }

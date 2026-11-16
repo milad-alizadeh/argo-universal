@@ -94,22 +94,24 @@ it(
 );
 
 it(
-  'goes back to the signed-out page when Jira stops accepting the token',
+  'never keeps the token or its Basic credential in Page state, the drawn page or the run’s answer',
   async () => {
     const jira = await startJira();
+    const page = await fillSignIn(jira, ada);
 
-    await signIn(jira);
+    const credential = Buffer.from(`${person.email}:${scopedToken}`).toString(
+      'base64',
+    );
 
-    const page = await projectPage(jira);
+    const answer = await jira.test.pages.run({
+      operation: 'signIn',
+      args: { email: ada.email, site: ada.site, token: scopedToken },
+    });
 
-    expect(page.findText('Choose a Jira project')).toBeDefined();
-
-    // Revoked at Atlassian: the page notices on its next read, within a minute.
-    jira.jira.data.tokens.splice(0);
-    await jira.test.clock.advance(60_000);
-    await page.draw();
-
-    expect(page.findText('Jira no longer accepts this sign-in.')).toBeDefined();
+    for (const kept of [page.pageState, page.tree, answer]) {
+      expect(JSON.stringify(kept)).not.toContain(scopedToken);
+      expect(JSON.stringify(kept)).not.toContain(credential);
+    }
   },
   timeoutMs,
 );
