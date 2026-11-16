@@ -42,9 +42,17 @@ const statusOptions = [
 const statusEdit = (number: number, { to, projectId }: IssueEditing): Run =>
   to.run('setStatus', { number, status: to.payload(), projectId });
 
-export function IssueStatus({ issue, editing }: Editable): JSX.Element {
+// The status's dot and words, keyed so a status change repaints them at once.
+function statusValue(issue: Issue): JSX.Element[] {
   const { text, tone } = statuses[issue.status];
 
+  return [
+    <StatusDot key={statusDotKey(issue.number)} tone={tone} />,
+    <Label key={statusTextKey(issue.number)} text={text} />,
+  ];
+}
+
+export function IssueStatus({ issue, editing }: Editable): JSX.Element {
   return (
     <FieldGroup.Picker
       key={statusPickerKey(issue.number)}
@@ -54,8 +62,7 @@ export function IssueStatus({ issue, editing }: Editable): JSX.Element {
       options={statusOptions}
       onValueChange={statusEdit(issue.number, editing)}
     >
-      <StatusDot key={statusDotKey(issue.number)} tone={tone} />
-      <Label key={statusTextKey(issue.number)} text={text} />
+      {statusValue(issue)}
     </FieldGroup.Picker>
   );
 }

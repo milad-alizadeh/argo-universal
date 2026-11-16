@@ -15,12 +15,17 @@ const leaf = (
   slots: {},
 });
 
-const node = (
-  type: string,
+// A read-only FieldGroup row: its key names it, and its children are its value.
+const row = (
   key: string,
   props: WireNode['props'],
   children: WireNode[] = [],
-): WireNode => ({ ...leaf(type, key, props), children });
+): WireNode => ({ ...leaf('FieldGroup.Value', key, props), children });
+
+const holding = (node: WireNode, children: WireNode[]): WireNode => ({
+  ...node,
+  children,
+});
 
 const root = WireNode.parse({
   type: 'Screen',
@@ -39,31 +44,28 @@ const root = WireNode.parse({
   slots: {
     // The Screen's aside holds the Issue's properties, a read-only FieldGroup.
     aside: [
-      node('FieldGroup', 'fields', {}, [
-        node('FieldGroup.Section', 'section', {}, [
-          node(
-            'FieldGroup.Value',
-            'status',
-            { title: 'Status', value: 'In progress' },
-            [leaf('StatusDot', 'dot', { tone: 'info' })],
-          ),
-          node('FieldGroup.Value', 'assignee', { title: 'Assignee' }, [
+      holding(leaf('FieldGroup', 'fields', {}), [
+        holding(leaf('FieldGroup.Section', 'section', {}), [
+          row('status', { title: 'Status', value: 'In progress' }, [
+            leaf('StatusDot', 'dot', { tone: 'info' }),
+          ]),
+          row('assignee', { title: 'Assignee' }, [
             leaf('Avatar', 'ana', {
               name: 'Ana Ruiz',
               accessibilityLabel: 'Ana Ruiz',
             }),
           ]),
-          node('FieldGroup.Value', 'labels', { title: 'Labels' }, [
+          row('labels', { title: 'Labels' }, [
             leaf('Pill', 'bug', { text: 'bug' }),
             leaf('Pill', 'sync', { text: 'sync' }),
           ]),
-          node('FieldGroup.Value', 'milestone', { title: 'Milestone' }, [
+          row('milestone', { title: 'Milestone' }, [
             leaf('Link', 'link', {
               label: 'v1.2',
               href: 'https://example.com/milestone/2',
             }),
           ]),
-          node('FieldGroup.Value', 'source', {
+          row('source', {
             title: 'Source',
             value: 'GitHub',
           }),

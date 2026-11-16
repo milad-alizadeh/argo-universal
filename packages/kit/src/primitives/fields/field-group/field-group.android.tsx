@@ -23,10 +23,7 @@ import {
 } from './field-group-caption-insets';
 import { fieldGroupRowComponents } from './field-group-row-components';
 import { FieldGroupSection } from './field-group-section.android';
-import {
-  FieldGroupProperties,
-  useDrawsProperties,
-} from './properties/properties';
+import { PropertiesOrPage } from './properties/properties';
 
 export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
   children?: ReactNode;
@@ -36,14 +33,6 @@ export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
  * ADR-0042: the kit's own Android FieldGroup, a copy of Expo UI's (FieldGroup.android.tsx) whose Section draws
  * each row as itself. It goes when Expo fixes the headline wrapping (expo/expo#50086).
  */
-function FieldGroupRoot(props: FieldGroupProps): ReactNode {
-  return useDrawsProperties(props.children) ? (
-    <FieldGroupProperties>{props.children}</FieldGroupProperties>
-  ) : (
-    <PageFieldGroup {...props} />
-  );
-}
-
 function PageFieldGroup(props: FieldGroupProps): ReactElement {
   /*
    * Its cards keep Material's own inset, so the Screen adds no gutter beyond the column's own; its rows are outside the column.
@@ -136,6 +125,13 @@ const toSection = (run: ReactNode[]): ReactNode =>
       {run}
     </FieldGroupSection>
   );
+
+// A read-only FieldGroup draws its own rows (properties/); any other is the page's Compose FieldGroup.
+function FieldGroupRoot(props: FieldGroupProps): ReactNode {
+  const page = <PageFieldGroup {...props} />;
+
+  return <PropertiesOrPage page={page}>{props.children}</PropertiesOrPage>;
+}
 
 export const FieldGroup = Object.assign(FieldGroupRoot, {
   Section: FieldGroupSection,

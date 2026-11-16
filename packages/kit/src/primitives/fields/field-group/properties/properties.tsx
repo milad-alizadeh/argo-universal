@@ -32,19 +32,29 @@ const roots = {
  * A FieldGroup draws read-only, as the page's properties, in a Screen's aside, or where a row's value is kit
  * components, which SwiftUI's Form and a Compose tree cannot hold (ADR-0058).
  */
-export function useDrawsProperties(children: ReactNode): boolean {
+function useDrawsProperties(children: ReactNode): boolean {
   const place = use(AsidePlaceContext);
 
   return place !== null || holdsProperties(children);
+}
+
+// A FieldGroup's rows read-only where it draws read-only, else the page's own FieldGroup.
+export function PropertiesOrPage(props: {
+  children?: ReactNode;
+  page: ReactNode;
+}): ReactNode {
+  return useDrawsProperties(props.children) ? (
+    <FieldGroupProperties>{props.children}</FieldGroupProperties>
+  ) : (
+    props.page
+  );
 }
 
 /*
  * A read-only FieldGroup draws the root its drawing names (properties-drawing.ts) for each section and gives that
  * drawing to its fields. Inside a List, such as a Settings page, a section is one more section of it.
  */
-export function FieldGroupProperties(props: {
-  children?: ReactNode;
-}): ReactNode {
+function FieldGroupProperties(props: { children?: ReactNode }): ReactNode {
   const drawing = useResolvedPropertiesDrawing();
   const Root = roots[drawing.root];
 

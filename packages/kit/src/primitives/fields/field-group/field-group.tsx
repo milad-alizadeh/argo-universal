@@ -23,10 +23,7 @@ import {
   type FieldGroupSectionProps,
   sectionElement,
 } from './field-group-section';
-import {
-  FieldGroupProperties,
-  useDrawsProperties,
-} from './properties/properties';
+import { PropertiesOrPage } from './properties/properties';
 
 export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
   children?: ReactNode;
@@ -39,15 +36,12 @@ export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
  * draws its own (field-group.android.tsx). A read-only FieldGroup draws its own rows (properties/).
  */
 function FieldGroupRoot(props: FieldGroupProps): ReactNode {
-  const inMenu = useInMenu();
-  const properties = useDrawsProperties(props.children);
-
-  if (inMenu) return <MenuFieldGroup>{props.children}</MenuFieldGroup>;
-
-  return properties ? (
-    <FieldGroupProperties>{props.children}</FieldGroupProperties>
+  return useInMenu() ? (
+    <MenuFieldGroup>{props.children}</MenuFieldGroup>
   ) : (
-    <PageFieldGroup {...props} />
+    <PropertiesOrPage page={<PageFieldGroup {...props} />}>
+      {props.children}
+    </PropertiesOrPage>
   );
 }
 

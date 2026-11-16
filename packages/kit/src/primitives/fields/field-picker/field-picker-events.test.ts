@@ -3,7 +3,7 @@ import { createOf, reportToggle } from './field-picker-events';
 
 describe('a multiple pick on the Plugin wire', () => {
   it('reports the option it turned on', () => {
-    const onToggle = vi.fn();
+    const onToggle = vi.fn<(change: { value: string; on: boolean }) => void>();
 
     reportToggle({ onToggle }, ['bug'], ['bug', 'sync']);
 
@@ -11,7 +11,7 @@ describe('a multiple pick on the Plugin wire', () => {
   });
 
   it('reports the option it turned off', () => {
-    const onToggle = vi.fn();
+    const onToggle = vi.fn<(change: { value: string; on: boolean }) => void>();
 
     reportToggle({ onToggle }, ['bug', 'sync'], ['sync']);
 
@@ -19,7 +19,7 @@ describe('a multiple pick on the Plugin wire', () => {
   });
 
   it('reports nothing for a single choice', () => {
-    const onToggle = vi.fn();
+    const onToggle = vi.fn<(change: { value: string; on: boolean }) => void>();
 
     reportToggle({ onToggle }, ['open'], 'closed');
 
@@ -29,7 +29,7 @@ describe('a multiple pick on the Plugin wire', () => {
 
 describe('a Plugin’s create offer', () => {
   it('becomes the App’s create row', () => {
-    const onCreate = vi.fn();
+    const onCreate = vi.fn<(text: string) => void>();
 
     createOf({ createLabel: 'Create label', onCreate })?.onCreate('epsilon');
 

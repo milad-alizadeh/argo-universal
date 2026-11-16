@@ -120,6 +120,12 @@ function FileCount(props: { title: string; count: number }): JSX.Element {
   );
 }
 
+const fileCounts = (file: CodeFile): JSX.Element[] => [
+  <FileCount key="lines" title="Lines" count={file.lines} />,
+  <FileCount key="branches" title="Branching lines" count={file.branches} />,
+  <FileCount key="touches" title="Changes" count={file.touches} />,
+];
+
 function FileDetails({
   file,
 }: {
@@ -130,9 +136,7 @@ function FileDetails({
   return (
     <FieldGroup>
       <FieldGroup.Section title={file.path}>
-        <FileCount title="Lines" count={file.lines} />
-        <FileCount title="Branching lines" count={file.branches} />
-        <FileCount title="Changes" count={file.touches} />
+        {fileCounts(file)}
       </FieldGroup.Section>
     </FieldGroup>
   );
