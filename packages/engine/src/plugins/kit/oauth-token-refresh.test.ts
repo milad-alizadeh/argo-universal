@@ -108,6 +108,8 @@ it('keeps the old refresh token when the refresh answer gives none', async () =>
 it.each([
   ['an expired or revoked refresh token', 400, 'invalid_grant'],
   ['a client the service no longer accepts', 401, 'invalid_client'],
+  // Atlassian answers a spent, expired or revoked rotating refresh token so.
+  ['a refresh token, with a 403 as Atlassian does', 403, 'unauthorized_client'],
 ])(
   'forgets the token and lends nothing when the service refuses %s, so the read finds the person signed out',
   async (_case, status, error) => {
@@ -127,18 +129,24 @@ it.each([
   },
 );
 
-it('lends the old token when the refresh fails for another reason, so a passing outage signs no one out', async () => {
-  const provider = await signedIn(
-    fakeProvider(
-      answered(expiring('token-1', 'refresh-1')),
-      tokenReply(false, 'Service Unavailable', 503),
-    ),
-  );
+it.each([
+  ['an outage', 503, 'Service Unavailable'],
+  ['a 403 that names no OAuth error', 403, 'Forbidden'],
+])(
+  'lends the old token when the refresh fails for another reason, such as %s, so it signs no one out',
+  async (_case, status, body) => {
+    const provider = await signedIn(
+      fakeProvider(
+        answered(expiring('token-1', 'refresh-1')),
+        tokenReply(false, body, status),
+      ),
+    );
 
-  afterOneHour();
+    afterOneHour();
 
-  expect(await provider.borrow('account-1')).toBe('token-1');
-});
+    expect(await provider.borrow('account-1')).toBe('token-1');
+  },
+);
 
 it('sends the client secret the Plugin keeps in a secret Setting with each refresh', async () => {
   const provider = await signedIn(rotating(), {
