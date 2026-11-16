@@ -1,4 +1,5 @@
 import { productName } from '@repo/contracts/product-identity';
+import type { CodeScannerProps } from '@repo/kit/primitives/content/code-scanner';
 
 // What the scanner says it is doing, so a code that is seen and not taken, or a camera that did not start, shows its reason on screen.
 export type ScanNotice =
@@ -29,5 +30,12 @@ export function noticeText(notice: ScanNotice): string {
   if (notice.kind === 'camera-failed')
     return `The camera could not start: ${notice.reason}`;
 
-  return 'Point the camera at the code';
+  return 'Looking for a code…';
 }
+
+// Everything the scanner says: what it is doing, then what to do and where the code is.
+export const scannerProps = (notice: ScanNotice): CodeScannerProps => ({
+  notice: noticeText(notice),
+  title: 'Point the camera at the code',
+  detail: 'Settings › Devices › Pair a Device',
+});
