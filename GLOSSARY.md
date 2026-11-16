@@ -496,6 +496,10 @@ _Avoid_: Design system (for the code), component library
 One component of the UI kit, such as Button, List or Screen, drawn by Argo on every platform. A Plugin sends one by name and props; a Contracts schema defines its props, Slots and events once. A plain component is a function a Plugin author writes in JSX.
 _Avoid_: Part, UI kit component, primitive
 
+**SignIn**:
+The kit component a Plugin's sign-in draws, laid out as Settings is: the step beside the service's mark, then FieldGroup rows, a device flow's code among them. The mark is the service's logo when the Plugin ships one, and the Plugin's own icon otherwise. `provideSignIn` and `signInGate` draw it for every step of either OAuth flow.
+_Avoid_: OAuth window, sign-in card, login screen
+
 **FieldGroup**:
 A page's fixed rows of values and controls, such as Project details or Plugin settings, arranged in sections. Values save as they change, or a page that sends them puts one submit button below the FieldGroup.
 _Avoid_: Grouped list, settings list, Form

@@ -1,0 +1,351 @@
+{
+  "signedOut": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "Sign in to use Jira in Argo.",
+          "footer": "Opens your browser. The token stays on the Server Device."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.Link",
+            "key": "0",
+            "props": {
+              "title": "Sign in to Jira",
+              "action": true,
+              "onPress": {
+                "operation": "signIn",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "withLogo": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "Sign in to use Jira in Argo.",
+          "footer": "Opens your browser. The token stays on the Server Device."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.Link",
+            "key": "0",
+            "props": {
+              "title": "Sign in to Jira",
+              "action": true,
+              "onPress": {
+                "operation": "signIn",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {
+          "mark": [
+            {
+              "type": "Svg",
+              "key": "0",
+              "props": {
+                "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"#0052CC\" d=\"M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.005-1.005zm5.723-5.756H5.736a5.215 5.215 0 0 0 5.215 5.214h2.129v2.058a5.218 5.218 0 0 0 5.215 5.214V6.758a1.001 1.001 0 0 0-1.001-1.001zM23.013 0H11.455a5.215 5.215 0 0 0 5.215 5.215h2.129v2.057A5.215 5.215 0 0 0 24 12.483V1.005A1.001 1.001 0 0 0 23.013 0Z\"/></svg>",
+                "label": "Jira"
+              },
+              "children": [],
+              "slots": {}
+            }
+          ]
+        }
+      }
+    ],
+    "slots": {}
+  },
+  "refused": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "api.atlassian.com no longer accepts this sign-in.",
+          "footer": "Opens your browser. The token stays on the Server Device."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.Link",
+            "key": "0",
+            "props": {
+              "title": "Sign in to Jira",
+              "action": true,
+              "onPress": {
+                "operation": "signIn",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "requesting": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Asking Jira for a code…"
+        },
+        "children": [],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "waiting": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Finish in your browser",
+          "description": "Approve Argo on Jira. This page updates when you’re done."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.Link",
+            "key": "0",
+            "props": {
+              "title": "Cancel",
+              "action": true,
+              "destructive": true,
+              "onPress": {
+                "operation": "cancelSignIn",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "code": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Enter this code on Jira",
+          "description": "Jira asks for it after you continue.",
+          "footer": "Waiting for Jira… The code lasts 15 minutes."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.Value",
+            "key": "0",
+            "props": {
+              "title": "Code",
+              "value": "WDJB-MJHT"
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.Link",
+            "key": "1",
+            "props": {
+              "title": "Copy code and continue to Jira",
+              "action": true,
+              "onPress": {
+                "action": "openUrl",
+                "url": "https://example.com/login/device",
+                "copy": "WDJB-MJHT"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.Link",
+            "key": "2",
+            "props": {
+              "title": "Cancel",
+              "action": true,
+              "destructive": true,
+              "onPress": {
+                "operation": "cancelSignIn",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "signedIn": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connected",
+          "footer": "Sign out in Settings › Accounts, where every Plugin using this Account is listed.",
+          "signedIn": true
+        },
+        "children": [
+          {
+            "type": "FieldGroup.Value",
+            "key": "0",
+            "props": {
+              "title": "Account",
+              "value": "ada@example.com"
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.Link",
+            "key": "1",
+            "props": {
+              "title": "Sign out…",
+              "action": true,
+              "destructive": true,
+              "onPress": {
+                "action": "openAccount",
+                "accountId": "account-1"
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "ended": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "The code expired",
+          "description": "No approval came in time."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.Link",
+            "key": "0",
+            "props": {
+              "title": "Try again",
+              "action": true,
+              "onPress": {
+                "operation": "signIn",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "serverDevice": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Continue on the Server Device",
+          "description": "Open Jira in Argo on the Server Device to sign in. This device updates when you’re done."
+        },
+        "children": [],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  }
+}
