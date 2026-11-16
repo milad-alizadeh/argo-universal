@@ -4,6 +4,7 @@ import {
   type FixtureRequest,
   type FixtureServices,
 } from '@argo/plugin-kit/testing';
+import { boardRoutes } from './jira-board-routes';
 import {
   jiraData,
   type FixtureSite,
@@ -129,6 +130,7 @@ export const jiraRoutes: JiraRoute[] = [
   },
   { name: 'search', method: 'POST', path: /^\/search\/jql$/, answer: search },
   ...issueRoutes,
+  ...boardRoutes,
 ];
 
 const decoded = (header: string | string[] | undefined): string =>

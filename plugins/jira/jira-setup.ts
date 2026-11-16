@@ -1,5 +1,10 @@
 import type { LoaderInput } from '@argo/plugin-kit';
-import type { IssuePage, JiraFailure, JiraProject } from './jira-client';
+import type {
+  IssuePage,
+  JiraFailure,
+  JiraProject,
+  JiraStatus,
+} from './jira-client';
 import type { JiraReads } from './jira-reads';
 import {
   storeQueries,
@@ -17,7 +22,14 @@ export type ProjectView =
   | { kind: 'no-site'; sites: JiraSite[] }
   | { kind: 'no-project'; site: JiraSite; projects: JiraProject[] }
   | { kind: 'failed'; site: JiraSite; failure: JiraFailure }
-  | { kind: 'issues'; site: JiraSite; project: JiraProject; page: IssuePage };
+  | {
+      kind: 'issues';
+      site: JiraSite;
+      project: JiraProject;
+      page: IssuePage;
+      // The Jira project's statuses, read only while the issues show as a board.
+      statuses?: JiraStatus[];
+    };
 
 type Read = LoaderInput['read'];
 

@@ -12,6 +12,7 @@ import {
   type LoaderInput,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { withStatuses } from './board-view';
 import { issueScreen, type IssueView } from './issue-detail';
 import { loadIssueView } from './issue-view';
 import {
@@ -143,7 +144,7 @@ export function defineJiraPages(argo: Argo, reads: JiraReads): void {
   });
 
   argo.pages.define(projectPattern, {
-    state: { site: '' },
+    state: { site: '', view: 'list' },
     every: freshForMs,
     load: async (input): Promise<ProjectData> => {
       const projectId = projectIdOf(input);
@@ -152,11 +153,21 @@ export function defineJiraPages(argo: Argo, reads: JiraReads): void {
         loadProjectView({ read: input.read, reads, projectId }),
       ]);
 
-      return { projects, view };
+      return {
+        projects,
+        view:
+          input.state.view === 'board'
+            ? await withStatuses({ read: input.read, reads, projectId }, view)
+            : view,
+      };
     },
     render: (data, to, input) => {
       const projectId = projectIdOf(input);
-      const framing = framingOf(projectId, to, input.state);
+      const framing = {
+        ...framingOf(projectId, to, input.state),
+        to,
+        state: input.state,
+      };
 
       return (
         <ListDetail

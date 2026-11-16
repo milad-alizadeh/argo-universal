@@ -1,5 +1,6 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
 import { atlassianHost } from './atlassian';
+import { readStatuses, statusesRequest } from './board-columns';
 import {
   callJira,
   jiraReaders,
@@ -11,6 +12,7 @@ import {
   type JiraPriority,
   type JiraProject,
   type JiraSend,
+  type JiraStatus,
 } from './jira-client';
 
 /*
@@ -38,6 +40,8 @@ export type JiraReads = Readonly<{
   issue: (args: IssueTarget) => NamedQuery<JiraAnswer<JiraIssue>>;
   // A choice Jira cannot list now is left out, so the page still offers the others.
   choices: (args: IssuesTarget) => NamedQuery<EditChoices>;
+  // The Jira project's statuses, which the board draws as its columns.
+  statuses: (args: IssuesTarget) => NamedQuery<JiraAnswer<JiraStatus[]>>;
 }>;
 
 const byProject = { projectOf: ({ projectId }: Target): string => projectId };
@@ -121,6 +125,17 @@ export function defineReads(argo: Argo): JiraReads {
   return {
     issue,
     choices: choicesRead(argo),
+    statuses: argo.queries.define(
+      'statuses',
+      ({ projectId, cloudId, projectKey }: IssuesTarget) =>
+        callJira(
+          borrowing(argo, projectId),
+          cloudId,
+          statusesRequest(projectKey),
+          readStatuses,
+        ),
+      byProject,
+    ),
     account: argo.queries.define(
       'account',
       async (_args: Target) =>

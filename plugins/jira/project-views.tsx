@@ -10,6 +10,7 @@ import {
   type PageTo,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { issueBoard, viewSwitch, type IssuesView } from './issue-board';
 import { issueList } from './issue-rows';
 import type { JiraFailure, JiraProject } from './jira-client';
 import type { ProjectView } from './jira-setup';
@@ -19,7 +20,12 @@ import { signInPath } from './sign-in-page';
 // What a site picker types before it is added: Page state, as it is no secret.
 export type ProjectState = { site: string };
 
+// The issues page's Page state besides: whether they show as a list or a board.
+export type IssuesState = ProjectState & { view: string };
+
 export type ProjectTo = PageTo<ProjectState>;
+
+export type IssuesTo = PageTo<IssuesState>;
 
 // What every view of one Argo Project knows besides Jira's answer.
 export type Framing = {
@@ -28,6 +34,9 @@ export type Framing = {
   state: ProjectState;
   sitePath: string;
 };
+
+// The issues page's framing, whose Page state also holds the view.
+export type IssuesFraming = Framing & { to: IssuesTo; state: IssuesState };
 
 const swapIcon = {
   sf: 'arrow.left.arrow.right',
@@ -239,11 +248,36 @@ const projectActions = (framing: Framing): JSX.Element[] => [
   changeSite(framing),
 ];
 
-function issues(
+const viewOf = ({ view }: IssuesState): IssuesView =>
+  view === 'board' ? 'board' : 'list';
+
+function issuesBody(
   view: Extract<ProjectView, { kind: 'issues' }>,
-  framing: Framing,
+  shown: IssuesView,
+  { projectId, to }: IssuesFraming,
 ): JSX.Element {
   const { site, project, page } = view;
+
+  if (page.issues.length === 0)
+    return (
+      <EmptyState
+        key="empty"
+        title={`No issues in ${project.key}`}
+        description="Issues created in this Jira project show here."
+      />
+    );
+
+  return shown === 'board'
+    ? issueBoard({ projectId, to }, page.issues, view.statuses ?? [])
+    : issueList({ site, projectId, to }, page.issues);
+}
+
+function issues(
+  view: Extract<ProjectView, { kind: 'issues' }>,
+  framing: IssuesFraming,
+): JSX.Element {
+  const { site, project } = view;
+  const shown = viewOf(framing.state);
 
   return (
     <Screen
@@ -252,17 +286,8 @@ function issues(
       width="full"
       actions={projectActions(framing)}
     >
-      {page.issues.length === 0 ? (
-        <EmptyState
-          title={`No issues in ${project.key}`}
-          description="Issues created in this Jira project show here."
-        />
-      ) : (
-        issueList(
-          { site, projectId: framing.projectId, to: framing.to },
-          page.issues,
-        )
-      )}
+      {viewSwitch(shown, framing.to)}
+      {issuesBody(view, shown, framing)}
     </Screen>
   );
 }
@@ -270,7 +295,7 @@ function issues(
 // The page one Argo Project's Jira shows: the step it is at, saying what to do next.
 export function projectScreen(
   view: ProjectView,
-  framing: Framing,
+  framing: IssuesFraming,
 ): JSX.Element {
   switch (view.kind) {
     case 'signed-out':
