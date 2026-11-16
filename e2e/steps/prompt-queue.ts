@@ -87,19 +87,23 @@ When(
   },
 );
 
+// With nothing written, Send resumes a paused queue.
 When('I resume the queue', async ({ page }): Promise<void> => {
-  await page.getByRole('button', { name: 'Resume queue', exact: true }).click();
+  await page.getByRole('button', { name: 'Send', exact: true }).click();
 });
 
 Then(
   'the queue is paused because {string}',
-  async ({ page }, reason: string): Promise<void> => {
+  async ({ page, server }, reason: string): Promise<void> => {
+    await expect
+      .poll(
+        async () =>
+          (await queueSnapshot(page, server.httpUrl)).promptQueue.pauseReason,
+      )
+      .toBe(reason);
     await expect(
-      page.getByTestId(queueId).getByText(reason, { exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('button', { name: 'Resume queue', exact: true }),
-    ).toBeVisible();
+      page.getByRole('button', { name: 'Send', exact: true }),
+    ).toBeEnabled();
   },
 );
 

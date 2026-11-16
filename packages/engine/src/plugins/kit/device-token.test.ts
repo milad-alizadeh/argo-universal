@@ -51,7 +51,7 @@ async function signedIn(tokenReplies: Reply[]): Promise<FakeDevice> {
   await flow.provide();
   await flow.start();
   await vi.advanceTimersByTimeAsync(1000);
-  expect(flow.state()).toEqual({ kind: 'signed-in', label: 'octocat' });
+  expect(flow.state()).toMatchObject({ kind: 'signed-in', label: 'octocat' });
 
   return fake;
 }

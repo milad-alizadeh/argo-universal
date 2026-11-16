@@ -10,6 +10,7 @@ import {
   windowState,
 } from '../desktop/window-state';
 import { expect } from '../fixtures';
+import { pressWithoutPaint } from './background-click';
 import { sessionId } from './feed';
 import { Given, When, Then } from './fixtures';
 import { expectMessage, messageLabel, sessionOpenTimeout } from './new-session';
@@ -64,10 +65,9 @@ When(
     const application = desktopApplication(app);
     const background = await windowState(application);
     expect(await appForeground(page)).toBe(false);
-    // A hidden window paints no frames on Linux, so Playwright's stable check never ends; dispatch the click as the other background steps do.
-    await page
-      .getByRole('button', { name: 'Settings', exact: true })
-      .evaluate<void, void, HTMLElement>((button) => button.click());
+    await pressWithoutPaint(
+      page.getByRole('button', { name: 'Settings', exact: true }),
+    );
     await expect(page).toHaveURL(/\/settings\//);
     await expect.poll(() => windowState(application)).toEqual(background);
     await page.evaluate(() => globalThis.notificationProbe.click());
@@ -112,7 +112,7 @@ When(
   async ({ page }): Promise<void> => {
     const send = page.getByRole('button', { name: 'Send', exact: true });
     await expect(send).toBeEnabled();
-    await send.evaluate<void, void, HTMLElement>((button) => button.click());
+    await pressWithoutPaint(send);
     await expect(page).toHaveURL(
       /\/sessions\/(?!new)[^/]+$/,
       sessionOpenTimeout,
@@ -124,9 +124,9 @@ When(
 When(
   'I stop the desktop Turn without activating the window',
   async ({ page }): Promise<void> => {
-    await page
-      .getByRole('button', { name: 'Stop', exact: true })
-      .evaluate<void, void, HTMLElement>((button) => button.click());
+    await pressWithoutPaint(
+      page.getByRole('button', { name: 'Stop', exact: true }),
+    );
     await expect(
       page.getByRole('button', { name: 'Stop', exact: true }),
     ).toHaveCount(0);
@@ -145,10 +145,11 @@ Given('Agent 1 asks successive questions', async (): Promise<void> => {});
 When(
   'I decline the desktop Elicitation without activating the window',
   async ({ page }): Promise<void> => {
-    await page
-      .getByRole('region', { name: 'Elicitation questions' })
-      .getByRole('button', { name: 'Skip', exact: true })
-      .evaluate<void, void, HTMLElement>((button) => button.click());
+    await pressWithoutPaint(
+      page
+        .getByRole('region', { name: 'Elicitation questions' })
+        .getByRole('button', { name: 'Skip', exact: true }),
+    );
   },
 );
 

@@ -1,19 +1,10 @@
 import type { QueuedPrompt } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import {
-  reservePrompt,
-  requireSteeringSupport,
-} from './queue-steering-admission';
-import {
-  consumeQueueSteering,
-  releaseQueueSteering,
-} from './queue-steering-change';
-import type {
-  QueueSteering,
-  QueueSteeringCommand,
-} from './queue-steering-types';
-import type { SessionContext } from './session-context';
-import { turnStep, type TurnStep } from './turn';
+import type { SessionContext } from '../session-context';
+import { turnStep, type TurnStep } from '../turn';
+import { reservePrompt, requireSteeringSupport } from './admission';
+import { consumeQueueSteering, releaseQueueSteering } from './change';
+import type { QueueSteering, QueueSteeringCommand } from './types';
 
 type Reserve = Extract<
   QueueSteeringCommand,

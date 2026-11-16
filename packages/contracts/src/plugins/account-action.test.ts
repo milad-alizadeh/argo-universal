@@ -22,3 +22,28 @@ it.each(['https://github.com/milad', 'http://example.com/'])(
     ).toBe(true);
   },
 );
+
+it('lets openUrl carry text to copy first, and still refuses an unsafe URL with it', () => {
+  const copy = 'WDJB-MJHT';
+
+  expect(
+    Action.safeParse({
+      action: 'openUrl',
+      url: 'https://github.com/login/device',
+      copy,
+    }).success,
+  ).toBe(true);
+  expect(
+    Action.safeParse({ action: 'openUrl', url: 'javascript:alert(1)', copy })
+      .success,
+  ).toBe(false);
+});
+
+it('opens an Account by its id, and refuses one with none', () => {
+  expect(
+    Action.safeParse({ action: 'openAccount', accountId: 'account-1' }).success,
+  ).toBe(true);
+  expect(
+    Action.safeParse({ action: 'openAccount', accountId: '' }).success,
+  ).toBe(false);
+});

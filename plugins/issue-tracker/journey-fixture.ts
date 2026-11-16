@@ -88,13 +88,13 @@ export async function signIn({ test }: Tracked): Promise<void> {
   await page.press(signInLabel);
 
   for (let poll = 0; poll < pollLimit; poll += 1) {
-    if (page.findText('Signed in as octocat')) break;
+    if (page.findText('Connected')) break;
 
     await test.clock.advance(pollMs);
     await page.draw();
   }
 
-  expect(page.findText('Signed in as octocat')).toBeDefined();
+  expect(page.findText('Connected')).toBeDefined();
 }
 
 // The tracker with the person already signed in to the fixture GitHub.

@@ -7,7 +7,6 @@ import {
   queuedPrompts,
   singlePrompt,
   steerablePrompts,
-  pausedPrompts,
   editingElsewhere,
 } from './prompt-queue-fixtures';
 import { QueueComposerExample } from './queue-composer.mocks';
@@ -46,8 +45,6 @@ export const Attachment: Story = { args: attachmentOnly };
 export const Steerable: Story = { args: steerablePrompts };
 
 export const SingleQueued: Story = { args: singlePrompt };
-
-export const Paused: Story = { args: pausedPrompts };
 
 export const HeldInAnotherApp: Story = { args: editingElsewhere };
 
