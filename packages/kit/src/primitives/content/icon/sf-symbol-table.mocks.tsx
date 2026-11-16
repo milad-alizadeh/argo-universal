@@ -25,9 +25,11 @@ function SfAndMaterialHeader(): React.JSX.Element {
 function symbolNames(name: IconName): [string, string] {
   const symbol = drawnSymbol(iconSymbols[name]);
 
-  return symbol.kind === 'svg'
-    ? [`SVG ${symbol.svg}`, `SVG ${symbol.svg}`]
-    : [symbol.sf, symbol.material];
+  if (symbol.kind === 'system') return [symbol.sf, symbol.material];
+
+  const own = symbol.kind === 'svg' ? `SVG ${symbol.svg}` : 'Plugin markup';
+
+  return [own, own];
 }
 
 function SymbolNames({ name }: { name: IconName }): React.JSX.Element {

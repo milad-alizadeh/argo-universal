@@ -44,7 +44,16 @@ export const rejectedManifests = [
     patch: {},
     reason: 'main file index.js is missing',
   },
-  { folder: 'empty-icon', patch: { icon: {} }, reason: 'icon needs an sf' },
+  {
+    folder: 'empty-icon',
+    patch: { icon: {} },
+    reason: 'icon needs an svg file, an sf name or a material name',
+  },
+  {
+    folder: 'icon-outside-folder',
+    patch: { icon: { svg: '../icon.svg' } },
+    reason: "icon.svg must be an .svg file inside the Plugin's folder",
+  },
   {
     folder: 'argo-icon-name',
     patch: { icon: 'plug' },
