@@ -13,12 +13,12 @@ const noProjects = (
   />
 );
 
-// Each Argo Project's views of its Jira issues; the board joins the list here.
+// Each Argo Project's views of its Jira issues, in a folding section as the Issue tracker's sidebar has; the board joins the list here.
 const projectSection = (
   project: ArgoProject,
   selected: string | undefined,
 ): JSX.Element => (
-  <List.Section key={project.id} title={project.name}>
+  <List.Section key={project.id} title={project.name} collapsible>
     <ListItem
       key="issues"
       title="Issues"

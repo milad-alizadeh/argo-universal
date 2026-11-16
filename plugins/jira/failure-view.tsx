@@ -64,7 +64,8 @@ const failureCallout = (view: FailedView): JSX.Element => (
   />
 );
 
-const failureBody = (
+// The refusal and the ways on from it; the list draws it under its own header, the setup steps under theirs.
+export const failureBody = (
   view: FailedView,
   framing: Framing,
   listing: Listing,
