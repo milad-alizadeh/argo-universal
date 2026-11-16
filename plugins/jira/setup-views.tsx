@@ -4,8 +4,6 @@ import {
   EmptyState,
   FieldGroup,
   Screen,
-  Stack,
-  Text,
   type PluginProps,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
@@ -29,17 +27,9 @@ const signedOut = (message: string | null, { to }: Framing): JSX.Element => (
   </Screen>
 );
 
-const siteQuestion = (sites: JiraSite[]): string =>
-  sites.length > 0
-    ? 'Which Atlassian site holds this Project’s issues?'
-    : 'Add the Atlassian site that holds this Project’s issues.';
-
 const noSite = (sites: JiraSite[], framing: Framing): JSX.Element => (
   <Screen title="Choose a Jira site">
-    <Stack direction="column" gap={6}>
-      <Text role="secondary">{siteQuestion(sites)}</Text>
-      {sitePicker({ sites, chosen: '' }, framing)}
-    </Stack>
+    {sitePicker({ sites, chosen: '' }, framing)}
   </Screen>
 );
 
@@ -99,17 +89,6 @@ const projectPicker = (
   </FieldGroup>
 );
 
-const projectQuestion = (
-  site: JiraSite,
-  projects: JiraProject[],
-  framing: Framing,
-): JSX.Element => (
-  <Stack direction="column" gap={6}>
-    <Text role="secondary">Which Jira project does this Project show?</Text>
-    {projectPicker(site, projects, framing)}
-  </Stack>
-);
-
 type NoProject = Extract<ProjectView, { kind: 'no-project' }>;
 
 const noProject = (
@@ -123,7 +102,7 @@ const noProject = (
   >
     {projects.length === 0
       ? noProjects(site, framing)
-      : projectQuestion(site, projects, framing)}
+      : projectPicker(site, projects, framing)}
   </Screen>
 );
 
