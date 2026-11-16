@@ -1,4 +1,5 @@
 import { Button, type ButtonProps } from '@repo/kit/primitives/actions/button';
+import { CodeScanner } from '@repo/kit/primitives/content/code-scanner';
 import { PinnedFooter } from '@repo/kit/primitives/scaffolds/pinned-footer';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
@@ -9,7 +10,7 @@ import {
   type PairWay,
   pairCopy,
 } from './pair-copy';
-import { ScannerFrame } from './scanner-frame';
+import { looking, scannerProps } from './scan-notice';
 import { WaitingAlert } from './waiting-alert';
 
 export interface PairPageViewProps {
@@ -33,12 +34,12 @@ export function PairPageView(props: PairPageViewProps): React.JSX.Element {
   );
 }
 
-// The wait is a card over the scanner's dark frame; the camera itself is the scan page's, which this stands in for.
+// The wait is a card over the scanner as the scan page draws it, with its frame dark where the camera was.
 function WaitingScreen(props: PairPageViewProps): React.JSX.Element {
   return (
     <Screen title="Add a Server">
       <PinnedFooter footer={null}>
-        <ScannerFrame />
+        <CodeScanner {...scannerProps(looking)} />
       </PinnedFooter>
       <WaitingAlert {...props} />
     </Screen>

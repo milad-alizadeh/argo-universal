@@ -24,11 +24,11 @@ function modifiers(width: number): Story {
     play: async ({ canvas }) => {
       await settleLayout(width);
       await expect(canvas.getByLabelText('Draft Change')).toBeVisible();
-      await expect(
-        canvas.getByLabelText('Open, Conflict Change'),
-      ).toBeVisible();
+      await expect(canvas.getByLabelText('Conflict Change')).toBeVisible();
       await expect(canvas.getByText('Draft', { exact: true })).toBeVisible();
       await expect(canvas.getByText('Conflict', { exact: true })).toBeVisible();
+      await expect(canvas.getByTestId('icon-pr-conflict')).toBeVisible();
+      await expect(canvas.queryByText('Open')).not.toBeInTheDocument();
       await expect(
         canvas.queryByLabelText(/PR|pull request/i),
       ).not.toBeInTheDocument();

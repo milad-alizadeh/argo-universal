@@ -190,6 +190,14 @@ _Avoid_: View (a view per Connection no longer exists), component, template
 What one open Plugin page must remember to draw differently, such as a tab, a range or a page size. The page declares it with defaults, the App keeps it, and it is part of the page's address.
 _Avoid_: Local state, `useState`, params (for what the App keeps)
 
+**Draft**:
+A Plugin page drawn from canned data so its author can review the design in the App before the page reads real data. It shows every state the page can be in and may carry Variants. A Draft never ships.
+_Avoid_: Preview, mockup, prototype, gallery
+
+**Variant**:
+One of several structurally different designs for a region of a Draft, which the author switches between in the App and picks from. Picks may mix regions from different Variants.
+_Avoid_: Option, alternative, theme
+
 **Component event**:
 A named handler prop on a kit component, such as `onPress`. In a Plugin tree it holds a value, never a function: a navigation, a Page state change, or an Operation with its arguments.
 _Avoid_: Interaction, action (Action is a kit component), handler
@@ -549,7 +557,7 @@ A small coloured dot that shows an item's state.
 _Avoid_: Status indicator
 
 **Metadata**:
-Read-only label and value fields for a detail view, such as a Project's Device and Path. Each field is a named part: Label, Link, Pills, StatusDot or Avatar. On desktop and web, beside a Detail's content, it is headed "Properties" unless the Plugin names it; a Detail too narrow for that column draws it as one line of values under the title.
+Label and value fields for a detail view, such as a Project's Device and Path. Each field is a named part: Label, Link, Pills, StatusDot or Avatar. A Picker field wraps one of those: its value is the button, and pressing it opens the choices in a popover (a page on a phone), with search when it is searchable and a create row when it can make a new choice, as an Issue's Labels do. On desktop and web, beside a Detail's content, it is headed "Properties" unless the Plugin names it; a Detail too narrow for that column draws it as one line of values under the title.
 _Avoid_: key-value list
 
 **Screen**:

@@ -1,5 +1,6 @@
 import type { LoaderInput } from '@argo/plugin-kit';
 import { SignInRequired } from './github-api';
+import type { Choices } from './github-edits';
 import type { Issue } from './github-issues';
 import { unwrap } from './github-reads';
 import type { Project } from './issue-client';
@@ -11,8 +12,12 @@ export type AttachedSession = { sessionId: string };
 // The Issue, or the line the page shows instead when it cannot be read.
 type IssueRead = { ok: true; issue: Issue } | { ok: false; message: string };
 
-// What one Issue's page shows: the Issue or why not, and the Sessions attached to it (none when none are).
-export type IssueDetailData = IssueRead & { sessions: AttachedSession[] };
+// The labels and people to choose from, or why they could not be read: the Issue still shows without them.
+export type ChoicesRead = { choices: Choices | null; choicesError: string };
+
+// What one Issue's page shows: the Issue or why not, the labels and people to choose from, and the Sessions attached to it (none when none are).
+export type IssueDetailData = IssueRead &
+  ChoicesRead & { sessions: AttachedSession[] };
 
 export type DetailSource = {
   project: Project;
@@ -25,12 +30,13 @@ export type DetailSource = {
 export async function loadIssueDetail(
   source: DetailSource,
 ): Promise<IssueDetailData> {
-  const [read, sessions] = await Promise.all([
+  const [read, choices, sessions] = await Promise.all([
     readIssue(source),
+    readChoices(source),
     attachedSessions(source),
   ]);
 
-  return { ...read, sessions };
+  return { ...read, ...choices, sessions };
 }
 
 async function readIssue(source: DetailSource): Promise<IssueRead> {
@@ -45,6 +51,22 @@ async function readIssue(source: DetailSource): Promise<IssueRead> {
     if (cause instanceof SignInRequired) throw cause;
 
     return { ok: false, message: String(Object(cause).message) };
+  }
+}
+
+async function readChoices({
+  read,
+  deps,
+  project,
+}: DetailSource): Promise<ChoicesRead> {
+  try {
+    const query = deps.reads.choices({ projectId: project.id });
+
+    return { choices: unwrap(await read(query)), choicesError: '' };
+  } catch (cause) {
+    if (cause instanceof SignInRequired) throw cause;
+
+    return { choices: null, choicesError: String(Object(cause).message) };
   }
 }
 

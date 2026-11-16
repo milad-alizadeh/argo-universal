@@ -1,5 +1,6 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
 import { SignInRequired } from './github-api';
+import type { Choices } from './github-edits';
 import type { Issue } from './github-issues';
 import type { TrackerClient } from './github-tracker';
 import { openClient, projectById, type ClientSource } from './issue-client';
@@ -73,6 +74,8 @@ export type GitHubReads = {
   issue: (args: IssueTarget) => NamedQuery<Settled<Issue>>;
   // The Issues a Project's Sessions are attached to, in one GitHub call: the numbers GitHub still has.
   attached: (args: AttachedTarget) => NamedQuery<Settled<number[]>>;
+  // The labels and people an Issue in the Project can be given.
+  choices: (args: Target) => NamedQuery<Settled<Choices>>;
 };
 
 async function clientFor(
@@ -146,6 +149,14 @@ const overviewRead = (argo: Argo, source: Source): GitHubReads['overview'] =>
     byProject,
   );
 
+const choicesRead = (argo: Argo, source: Source): GitHubReads['choices'] =>
+  argo.queries.define(
+    'choices',
+    ({ projectId }: Target) =>
+      settle(async () => (await clientFor(source, projectId)).choices()),
+    byProject,
+  );
+
 const issuesRead = (
   argo: Argo,
   source: Source,
@@ -182,5 +193,6 @@ export function defineReads(argo: Argo, source: Source): GitHubReads {
     overview: overviewRead(argo, source),
     issues: issuesRead(argo, source, issue),
     attached: attachedRead(argo, source, issue),
+    choices: choicesRead(argo, source),
   };
 }
