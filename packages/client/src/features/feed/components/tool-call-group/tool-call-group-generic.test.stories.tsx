@@ -2,7 +2,6 @@ import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect } from 'storybook/test';
-import { required } from '../recorded-tool-calls.mocks';
 import { ToolCallRow } from '../tool-call-row/tool-call-row';
 import { ToolCallGroup } from './tool-call-group';
 import {
@@ -108,39 +107,28 @@ const verifyTitle = /^Verify the build/;
 // A group's child is titled with its command line; the group's own title keeps the Agent's description.
 const verifyCommand = /^pnpm verify/;
 
-// With other calls before it, the live call is a row of its own, so its detail opens under its own title (#2044).
+// With other calls before it, the live call still titles the group, and says its title once: its detail draws in its place, untitled.
 export const LiveCallAfterOthers: Story = {
   args: { group: genericGroup(pendingCall, priorCall) },
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Ran 1 command, Called 1 tool' }),
-    );
+    await expect(
+      canvas.queryByText('Ran 1 command, Called 1 tool'),
+    ).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: verifyTitle }));
     await expect(
       canvas.getByRole('button', { name: /^Read the issue/ }),
     ).toBeVisible();
-
-    const [liveRow, ...rest] = canvas.getAllByRole('button', {
-      name: verifyCommand,
-    });
-
-    await expect(rest).toHaveLength(0);
-    await expect(canvas.queryByTestId('code-text')).not.toBeInTheDocument();
-    await userEvent.click(required(liveRow, 'the live call’s own row'));
+    await expect(
+      canvas.queryByRole('button', { name: verifyCommand }),
+    ).not.toBeInTheDocument();
     await expect(canvas.getByTestId('code-text')).toHaveTextContent(
       'pnpm verify',
     );
   },
 };
 
-// The button that opens the group, and the one that names the live call.
-const headerNames = (
-  followsOthers: boolean,
-): { name: string | RegExp; call: RegExp } =>
-  followsOthers
-    ? { name: 'Ran 1 command, Called 1 tool', call: verifyCommand }
-    : { name: verifyTitle, call: verifyTitle };
-
+// Wherever the live call sits, the group's title names it once and its detail opens with the group.
 function headerOwnership(width: number, followsOthers: boolean): Story {
   return {
     args: {
@@ -150,15 +138,13 @@ function headerOwnership(width: number, followsOthers: boolean): Story {
     },
     play: async ({ canvas, userEvent }) => {
       await settleLayout(width);
-      const { name, call } = headerNames(followsOthers);
-
-      await userEvent.click(canvas.getByRole('button', { name }));
-      await expect(canvas.getAllByRole('button', { name: call })).toHaveLength(
-        1,
-      );
-
-      if (followsOthers)
-        await userEvent.click(canvas.getByRole('button', { name: call }));
+      await userEvent.click(canvas.getByRole('button', { name: verifyTitle }));
+      await expect(
+        canvas.getAllByRole('button', { name: verifyTitle }),
+      ).toHaveLength(1);
+      await expect(
+        canvas.queryByRole('button', { name: verifyCommand }),
+      ).not.toBeInTheDocument();
       await expect(canvas.getByTestId('code-text')).toHaveTextContent(
         'pnpm verify',
       );
