@@ -1,4 +1,10 @@
-import { EmptyState, Icon, List, ListItem } from '@argo/plugin-kit';
+import {
+  EmptyState,
+  Icon,
+  List,
+  ListItem,
+  type PluginProps,
+} from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { projectPath } from './jira-paths';
 
@@ -13,12 +19,12 @@ const noProjects = (
   />
 );
 
-// Each Argo Project's views of its Jira issues; the board joins the list here.
+// Each Argo Project's views of its Jira issues, in a folding section as the Issue tracker's sidebar has; the board joins the list here.
 const projectSection = (
   project: ArgoProject,
   selected: string | undefined,
 ): JSX.Element => (
-  <List.Section key={project.id} title={project.name}>
+  <List.Section key={project.id} title={project.name} collapsible>
     <ListItem
       key="issues"
       title="Issues"
@@ -29,12 +35,18 @@ const projectSection = (
   </List.Section>
 );
 
+type Sidebar = {
+  selected?: string;
+  // A pull draws the page again with its Queries read fresh, as the Issue tracker's sidebar does.
+  onRefresh: PluginProps['List']['onRefresh'];
+};
+
 // The section list, with the views of the Project the page is for selected.
 export const projectRows = (
   projects: ArgoProject[],
-  selected?: string,
+  { selected, onRefresh }: Sidebar,
 ): JSX.Element => (
-  <List accessibilityLabel="Projects" empty={noProjects}>
+  <List accessibilityLabel="Projects" empty={noProjects} onRefresh={onRefresh}>
     {projects.map((project) => projectSection(project, selected))}
   </List>
 );

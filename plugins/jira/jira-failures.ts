@@ -66,8 +66,56 @@ function jiraReason(body: string): string | null {
   return messages.at(0) ?? text(at(json, 'message'));
 }
 
-const messageOf = (meaning: Known, body: string): string =>
-  meaning.jiraSaysWhy ? (jiraReason(body) ?? meaning.says) : meaning.says;
+const messageOf = (meaning: Known, reason: string | null): string =>
+  meaning.jiraSaysWhy ? (reason ?? meaning.says) : meaning.says;
+
+const badRequest = 400;
+
+/*
+ * Refusals Jira words as something else: a search naming a project that is gone, or that the person can no longer
+ * see, is a 400 about its JQL; a scoped token without a scope the call needs is a 401, though the token is still good.
+ */
+const reworded = [
+  {
+    status: badRequest,
+    says: /does not exist for the field 'project'/u,
+    failure: {
+      kind: 'not-found',
+      message:
+        'This Jira project is gone, or your Atlassian account can no longer see it. Choose another Jira project.',
+    },
+  },
+  {
+    status: unauthorized,
+    says: /scope does not match/iu,
+    failure: {
+      kind: 'forbidden',
+      message:
+        'Your API token doesn’t have the scopes this needs. Create a token with the Jira scopes on the sign-in page, then sign in with it.',
+    },
+  },
+] as const satisfies readonly {
+  status: number;
+  says: RegExp;
+  failure: JiraFailure;
+}[];
+
+type Reply = NonNullable<JiraReply>;
+
+function rewordedFor({ status, body }: Reply): JiraFailure | undefined {
+  const reason = jiraReason(body) ?? '';
+
+  return reworded.find(
+    (each) => each.status === status && each.says.test(reason),
+  )?.failure;
+}
+
+// What Jira's reply means for the person, in Jira's words where they say it better.
+function meaningOf({ status, body }: Reply): JiraFailure {
+  const meaning = known.get(status) ?? otherFailure(status);
+
+  return { kind: meaning.kind, message: messageOf(meaning, jiraReason(body)) };
+}
 
 const signedOut: JiraFailure = {
   kind: 'signed-out',
@@ -83,7 +131,5 @@ export const unreachable: JiraFailure = {
 export function failureOf(reply: JiraReply): JiraFailure {
   if (!reply) return signedOut;
 
-  const meaning = known.get(reply.status) ?? otherFailure(reply.status);
-
-  return { kind: meaning.kind, message: messageOf(meaning, reply.body) };
+  return rewordedFor(reply) ?? meaningOf(reply);
 }

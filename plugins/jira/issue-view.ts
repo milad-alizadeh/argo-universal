@@ -1,6 +1,6 @@
 import type { LoaderInput } from '@argo/plugin-kit';
 import type { IssueView } from './issue-detail';
-import type { IssueTarget } from './issue-reads';
+import type { EditChoices, IssueTarget } from './issue-reads';
 import type { JiraIssue } from './jira-readers';
 import type { JiraReads } from './jira-reads';
 import { siteFor } from './jira-setup';
@@ -26,19 +26,33 @@ async function siteOf({ read, projectId }: Step): Promise<JiraSite | null> {
   return siteFor(storeReaders.sites(sites), storeReaders.choice(choice));
 }
 
+// The people the issue's Jira project can assign, as the list's assignee filter reads them, and the site's priorities.
+async function choicesFor(
+  { read, reads }: Step,
+  target: IssueTarget & { projectKey: string },
+): Promise<EditChoices> {
+  const { projectId, cloudId, projectKey } = target;
+
+  const [people, priorities] = await Promise.all([
+    read(reads.people({ projectId, cloudId, projectKey })),
+    read(reads.priorities({ projectId, cloudId })),
+  ]);
+
+  return { people: people.ok ? people.value : [], priorities };
+}
+
 // The issue first, which a list kept, then the choices for its own Jira project, which the list kept too.
 async function issueAt(
-  { read, reads }: Step,
+  step: Step,
   site: JiraSite,
   target: IssueTarget,
 ): Promise<IssueView> {
-  const { projectId, cloudId } = target;
-  const answer = await read(reads.issue(target));
+  const answer = await step.read(step.reads.issue(target));
 
   if (!answer.ok) return { kind: 'failed', failure: answer.failure };
 
   const projectKey = projectKeyOf(answer.value);
-  const choices = await read(reads.choices({ projectId, cloudId, projectKey }));
+  const choices = await choicesFor(step, { ...target, projectKey });
 
   return { kind: 'issue', site, issue: answer.value, choices };
 }

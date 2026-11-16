@@ -1,6 +1,7 @@
 import { issueUrl } from './atlassian';
 import type { StatusCategory } from './issue-fields';
 import { call, located, type IssueCalls } from './issue-site';
+import { noFilters } from './jira-filters';
 import { jiraReaders, type JiraIssue, type JiraPerson } from './jira-readers';
 import { jiraRequests } from './jira-requests';
 import type { JiraSite } from './jira-store';
@@ -61,6 +62,17 @@ const limitOf = (limit = listLimit.fallback): number =>
 
 type ListParams = { text?: string; limit?: number; projectId: string };
 
+// The first page of the project's issues whose text matches, the most recently updated first.
+const searchOf = (
+  project: string,
+  { text = '', limit }: Pick<ListParams, 'text' | 'limit'>,
+): ReturnType<typeof jiraRequests.issues> =>
+  jiraRequests.issues(project, {
+    cursor: null,
+    filters: { ...noFilters, text },
+    limit: limitOf(limit),
+  });
+
 type Listed = { project: string; issues: IssueRow[]; more: boolean };
 
 export async function listIssues(
@@ -71,7 +83,7 @@ export async function listIssues(
   const project = where.projectKey;
 
   const page = await call(where, {
-    request: jiraRequests.issues(project, { limit: limitOf(limit), text }),
+    request: searchOf(project, { text, limit }),
     read: jiraReaders.issues,
   });
 

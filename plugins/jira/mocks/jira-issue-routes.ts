@@ -1,5 +1,4 @@
-import type { FixtureAnswer } from '@argo/plugin-kit/testing';
-import { peopleOf, withIssue, type IssueAnswer } from './jira-issue-found';
+import { withIssue, type IssueAnswer } from './jira-issue-found';
 import { issueJson, transitionsJson, type Asked } from './jira-issue-json';
 import { assign, edit, transition } from './jira-issue-writes';
 import type { JiraCall, JiraRoute } from './jira-routes';
@@ -27,13 +26,6 @@ const shown: IssueAnswer = ({ issue, projectKey }, call) => ({
   json: issueJson(issue, projectKey, askedOf(call)),
 });
 
-const people = ({ site }: JiraCall): FixtureAnswer => ({
-  json: (peopleOf(site) ?? []).map((one) => ({
-    ...one,
-    accountType: 'atlassian',
-  })),
-});
-
 const key = '(?<key>[^/]+)';
 
 // A route as `<METHOD> <path>`, over the path after `/rest/api/3`.
@@ -58,5 +50,4 @@ export const issueRoutes: JiraRoute[] = [
   route('assign', `PUT /issue/${key}/assignee`, withIssue(assign)),
   route('edit', `PUT /issue/${key}`, withIssue(edit)),
   route('priorities', 'GET /priority', () => ({ json: priorities })),
-  route('assignable', 'GET /user/assignable/search', people),
 ];

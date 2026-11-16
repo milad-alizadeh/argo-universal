@@ -9,10 +9,11 @@ import {
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { defineIssuePage } from './issue-page';
 import { projectScreen } from './issue-views';
-import { pathText, projectPath, projectPattern } from './jira-paths';
-import type { JiraReads } from './jira-reads';
-import { loadProjectView, type ProjectView } from './jira-setup';
+import { filtersOf, noFilters } from './jira-filters';
+import { projectIdOf, projectPath, projectPattern } from './jira-paths';
+import type { JiraReads, Reading, Refused } from './jira-reads';
 import { storeQueries, storeReaders, type JiraSite } from './jira-store';
+import { projectLoader } from './project-loader';
 import { chooseProject, projectRows, type ArgoProject } from './project-rows';
 import { sitePicker } from './site-picker';
 import type { Framing, ProjectState, ProjectTo } from './view-frame';
@@ -21,9 +22,6 @@ import type { Framing, ProjectState, ProjectTo } from './view-frame';
 const freshForMs = 60_000;
 
 type Input = Pick<LoaderInput<ProjectState>, 'params' | 'state'>;
-
-const projectIdOf = ({ params }: Pick<Input, 'params'>): string =>
-  pathText(params.project ?? '');
 
 const framingOf = (to: ProjectTo, input: Input): Framing => {
   const projectId = projectIdOf(input);
@@ -36,8 +34,6 @@ const framingOf = (to: ProjectTo, input: Input): Framing => {
   };
 };
 
-type ProjectData = { projects: ArgoProject[]; view: ProjectView };
-
 type SiteData = { projects: ArgoProject[]; sites: JiraSite[]; chosen: string };
 
 const listDetail = (
@@ -47,7 +43,10 @@ const listDetail = (
 ): JSX.Element => (
   <ListDetail
     title="Jira"
-    list={projectRows(projects, framing.projectId)}
+    list={projectRows(projects, {
+      selected: framing.projectId,
+      onRefresh: framing.to.set({}),
+    })}
     detail={detail}
   />
 );
@@ -80,30 +79,21 @@ async function chosenSite({
   return { sites, chosen: choice.cloudId ?? onlyCloud(sites) ?? '' };
 }
 
-async function loadProject(
-  argo: Argo,
-  reads: JiraReads,
-  input: LoaderInput<ProjectState>,
-): Promise<ProjectData> {
-  const step = { read: input.read, reads, projectId: projectIdOf(input) };
-
-  const [projects, view] = await Promise.all([
-    argo.projects.list(),
-    loadProjectView(step),
-  ]);
-
-  return { projects, view };
-}
-
-const defineProjectPage = (argo: Argo, reads: JiraReads): void =>
-  argo.pages.define(projectPattern, {
-    state: { site: '' },
+// The filters are Page state, so going back shows the same filtered view; the list is read a page at a time.
+const defineProjectPage = (reading: Reading, reads: JiraReads): void =>
+  reading.argo.pages.define(projectPattern, {
+    state: { site: '', ...noFilters },
     every: freshForMs,
-    load: (input) => loadProject(argo, reads, input),
+    ...projectLoader(reading, reads),
     render: ({ projects, view }, to, input) => {
       const framing = framingOf(to, input);
+      const listing = { to, filters: filtersOf(input.state), list: input.list };
 
-      return listDetail(projects, framing, projectScreen(view, framing));
+      return listDetail(
+        projects,
+        framing,
+        projectScreen(view, framing, listing),
+      );
     },
   });
 
@@ -125,18 +115,24 @@ const defineSitePage = (argo: Argo): void =>
  * The Jira section's Loader pages (ADR-0050): the landing page lists each Project, a Project's page draws the step
  * its Jira is at, and its site page changes the site. A page path names its Project, so one pattern serves every one.
  */
-export function defineJiraPages(argo: Argo, reads: JiraReads): void {
+const defineLandingPage = (argo: Argo): void =>
   argo.pages.define('/', {
     load: () => argo.projects.list(),
-    render: (projects) => (
+    render: (projects, to) => (
       <ListDetail
         title="Jira"
-        list={projectRows(projects)}
+        list={projectRows(projects, { onRefresh: to.set({}) })}
         empty={chooseProject}
       />
     ),
   });
-  defineProjectPage(argo, reads);
+
+export function defineJiraPages(
+  argo: Argo,
+  { reads, refused }: { reads: JiraReads; refused: Refused },
+): void {
+  defineLandingPage(argo);
+  defineProjectPage({ argo, refused }, reads);
   defineSitePage(argo);
   defineIssuePage(argo, reads);
 }

@@ -1,9 +1,9 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
 import { atlassianHost } from './atlassian';
-import { defineIssueReads, seedIssues, type IssueReads } from './issue-reads';
+import { defineIssueReads, type IssueReads } from './issue-reads';
 import { callJira, type JiraAnswer, type JiraFailure } from './jira-client';
 import { allPages } from './jira-paging';
-import { jiraReaders, type IssuePage, type JiraProject } from './jira-readers';
+import { jiraReaders, type JiraPerson, type JiraProject } from './jira-readers';
 import { jiraRequests } from './jira-requests';
 import {
   borrowing,
@@ -21,12 +21,16 @@ import { notices } from './sign-in-notices';
  */
 export type { SiteTarget } from './read-scope';
 
+export { borrowing } from './read-scope';
+
+export type ProjectTarget = IssuesTarget;
+
 export type JiraReads = IssueReads &
   Readonly<{
     // The label of the Account the Project borrows, or null when it has none.
     account: (args: Target) => NamedQuery<string | null>;
     projects: (args: SiteTarget) => NamedQuery<JiraAnswer<JiraProject[]>>;
-    issues: (args: IssuesTarget) => NamedQuery<JiraAnswer<IssuePage>>;
+    people: (args: ProjectTarget) => NamedQuery<JiraAnswer<JiraPerson[]>>;
   }>;
 
 /*
@@ -35,12 +39,13 @@ export type JiraReads = IssueReads &
  */
 export type Refused = (message: string | null) => void;
 
-type Reading = { argo: Argo; refused: Refused };
+// The reads' Argo, and where they tell the sign-in page of a refused token.
+export type Reading = { argo: Argo; refused: Refused };
 
 const refusalOf = (failure: JiraFailure): string | undefined =>
   failure.kind === 'signed-out' ? failure.message : undefined;
 
-function noted<Value>(
+export function noted<Value>(
   refused: Refused,
   answer: JiraAnswer<Value>,
 ): JiraAnswer<Value> {
@@ -95,44 +100,29 @@ const projectsRead = ({ argo, refused }: Reading): JiraReads['projects'] =>
     byProject,
   );
 
-const issuesPage = (
-  argo: Argo,
-  { projectId, cloudId, projectKey }: IssuesTarget,
-): Promise<JiraAnswer<IssuePage>> =>
-  callJira({
-    send: borrowing(argo, projectId),
-    cloudId,
-    request: jiraRequests.issues(projectKey),
-    read: jiraReaders.issues,
-  });
-
-// A search answers each issue in full, so it seeds the entry each issue's page reads.
-const seededPage = async (
-  { argo, refused }: Reading,
-  seeds: IssueReads,
-  target: IssuesTarget,
-): Promise<JiraAnswer<IssuePage>> => {
-  const { projectId, cloudId } = target;
-  const answer = noted(refused, await issuesPage(argo, target));
-
-  return seedIssues(argo, seeds, { target: { projectId, cloudId }, answer });
-};
-
-const issuesRead = (reading: Reading, seeds: IssueReads): JiraReads['issues'] =>
-  reading.argo.queries.define(
-    'issues',
-    (target: IssuesTarget) => seededPage(reading, seeds, target),
+const peopleRead = ({ argo, refused }: Reading): JiraReads['people'] =>
+  argo.queries.define(
+    'people',
+    async ({ projectId, cloudId, projectKey }: ProjectTarget) =>
+      noted(
+        refused,
+        await callJira({
+          send: borrowing(argo, projectId),
+          cloudId,
+          request: jiraRequests.people(projectKey),
+          read: jiraReaders.people,
+        }),
+      ),
     byProject,
   );
 
 export function defineReads(argo: Argo, refused: Refused): JiraReads {
   const reading = { argo, refused };
-  const issueReads = defineIssueReads(argo);
 
   return {
-    ...issueReads,
+    ...defineIssueReads(argo),
     account: accountRead(reading),
     projects: projectsRead(reading),
-    issues: issuesRead(reading, issueReads),
+    people: peopleRead(reading),
   };
 }

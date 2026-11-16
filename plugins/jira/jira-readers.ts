@@ -86,6 +86,15 @@ function myselfOf(json: Read): JiraMyself | null {
   };
 }
 
+// Apps and integrations can be assignable too; the filter offers people.
+function personOf(json: Json): JiraPerson | null {
+  const accountId = text(at(json, 'accountId'));
+
+  if (!accountId || at(json, 'accountType') === 'app') return null;
+
+  return { accountId, name: textOr(at(json, 'displayName'), accountId) };
+}
+
 const numberOr = (value: Read, fallback: number): number =>
   typeof value === 'number' ? value : fallback;
 
@@ -107,6 +116,8 @@ export const jiraReaders = {
 
     return { items, next: nextStart(json, items.length) };
   },
+  people: (json: Read): JiraPerson[] =>
+    list(json).map(personOf).filter(present),
   issues: (json: Read): IssuePage => ({
     issues: list(at(json, 'issues')).map(issueOf).filter(present),
     cursor: cursorOf(json),
