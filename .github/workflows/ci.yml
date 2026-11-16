@@ -4,6 +4,7 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, closed]
   push:
     branches:
       - main
@@ -11,8 +12,9 @@ on:
       - "release/**"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # A merged PR's ref becomes main; its number keeps the closing event in the PR's group.
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/main' }}
 
 permissions:
   contents: read
@@ -21,6 +23,8 @@ jobs:
   # Skips the jobs a pull request's changes cannot affect; pushes run them all.
   changes:
     name: Choose the jobs
+    # Closing a PR cancels its old run without starting another set of jobs.
+    if: ${{ github.event.action != 'closed' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -303,7 +307,7 @@ jobs:
 
   e2e-electron:
     name: End-to-end tests (Electron)
-    if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/') }}
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -347,7 +351,7 @@ jobs:
   # A skipped job passes it; a failed choice fails it.
   ci:
     name: Quality and end-to-end tests
-    if: ${{ always() }}
+    if: ${{ always() && github.event.action != 'closed' }}
     needs:
       [
         changes,
