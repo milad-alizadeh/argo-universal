@@ -1,6 +1,6 @@
 /*
  * What the Changes Inspector compares the Checkout with (owner, 2026-10-19). Untracked files count in each:
- * - main: the main checkout's branch at the fork point, `git diff $(git merge-base <main> HEAD)`;
+ * - main: the main Checkout branch's upstream at the fork point, falling back to its local branch when unavailable;
  * - uncommitted: `git diff HEAD`;
  * - branch: another branch at the fork point, `git diff $(git merge-base <branch> HEAD)`.
  */
@@ -19,7 +19,7 @@ const unknownMainBranch = '…';
 const mainBranchName = (mainBranch: string | undefined): string =>
   mainBranch ?? unknownMainBranch;
 
-// "main" names the branch the main checkout has checked out, whatever it is called.
+// "main" names the default comparison branch, including its remote when it tracks one.
 export const allChangesLabel = (mainBranch: string | undefined): string =>
   `All Changes (vs ${mainBranchName(mainBranch)})`;
 
