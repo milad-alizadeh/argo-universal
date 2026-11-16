@@ -39,15 +39,35 @@ const column = (
 
 const markSize = 64;
 
+const markRadius = 18;
+
+const initialSize = 28;
+
+const initialBaseline = 42;
+
+const firstLetter = (name: string): string => {
+  const point = name.codePointAt(0);
+
+  return point === undefined ? '' : String.fromCodePoint(point);
+};
+
+// A name's first letter, as it can sit in markup: whole even when it is an emoji, and never markup itself.
+const initialOf = (name: string): string =>
+  firstLetter(name)
+    .toUpperCase()
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+
 // The Plugin's mark: its initial on a rounded tile, until a Plugin supplies its own artwork.
 const markXml = (initial: string): string =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="0.5" y="0.5" width="63" height="63" rx="18" fill="none" stroke="currentColor" stroke-opacity="0.25"/><text x="32" y="42" text-anchor="middle" font-size="28" font-weight="600" fill="currentColor">${initial}</text></svg>`;
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${markSize} ${markSize}"><rect x="0.5" y="0.5" width="${markSize - 1}" height="${markSize - 1}" rx="${markRadius}" fill="none" stroke="currentColor" stroke-opacity="0.25"/><text x="${markSize / 2}" y="${initialBaseline}" text-anchor="middle" font-size="${initialSize}" font-weight="600" fill="currentColor">${initial}</text></svg>`;
 
 const mark = (name: string, signedIn: boolean): ReactElement =>
   column(
     [
       jsx('Svg', {
-        xml: markXml(name.charAt(0).toUpperCase()),
+        xml: markXml(initialOf(name)),
         label: name,
         tone: signedIn ? 'success' : 'info',
         width: markSize,
