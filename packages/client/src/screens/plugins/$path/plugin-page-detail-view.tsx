@@ -19,8 +19,7 @@ type PageViewProps = PageOpening & {
 export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
   const { title, onOpenPage, onBack, ...opening } = props;
   const page = usePluginPage(opening);
-  const { onPageCall } = page;
-  const callbacks = { onOpenPage, onPageCall };
+  const callbacks = { onOpenPage, onPageCall: page.onPageCall };
 
   return (
     <PluginSessionRowProvider>

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { PluginTree } from './plugin-registry';
 import {
   attachedSessionsTree,
@@ -11,7 +12,7 @@ const meta = {
   parameters: { screenPreview: true },
   argTypes: { root: { control: false }, onPageCall: { control: false } },
   decorators: [
-    (Story) => (
+    (Story): React.JSX.Element => (
       <WithSessionRows>
         <Story />
       </WithSessionRows>

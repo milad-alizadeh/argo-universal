@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import {
@@ -9,15 +10,9 @@ import { ListItem } from '../list-item';
 import { SessionRow } from './session-row';
 
 // Stands in for the App's connected row, which reads the live Session.
-function PlaceholderRow(props: SessionRowDrawingProps): React.JSX.Element {
-  return (
-    <ListItem
-      title="Title"
-      subtitle={props.sessionId}
-      onPress={props.onPress}
-    />
-  );
-}
+const drawPlaceholder = (props: SessionRowDrawingProps): React.JSX.Element => (
+  <ListItem title="Title" subtitle={props.sessionId} onPress={props.onPress} />
+);
 
 const meta = {
   title: 'Design System/Primitives/Lists/SessionRow',
@@ -25,8 +20,8 @@ const meta = {
   args: { sessionId: 'session-1', onPress: fn() },
   argTypes: kitArgTypes('SessionRow'),
   decorators: [
-    (Story) => (
-      <SessionRowDrawingContext value={PlaceholderRow}>
+    (Story): React.JSX.Element => (
+      <SessionRowDrawingContext value={drawPlaceholder}>
         <Story />
       </SessionRowDrawingContext>
     ),

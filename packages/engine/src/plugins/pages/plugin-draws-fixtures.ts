@@ -1,13 +1,12 @@
 import { currentPluginSurface } from '@repo/contracts/plugins/kit';
 import type { DrawAnswer } from '@repo/contracts/plugins/page-draw';
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
-import type { SecretParams } from '@repo/contracts/plugins/secret-bindings';
 import type { WireJson } from '@repo/contracts/plugins/wire';
 import type { PluginClock } from '../clock';
 import type { PluginEvent } from '../protocol/runtime';
 import { PluginFailures } from '../runtime/failures';
 import { WorkerCalls } from '../runtime/worker-calls';
-import { noSecretParams } from './checked-tree';
+import { noRefusals, type Refusals } from './checked-tree';
 import type { Answered } from './draw-calls';
 import { PageChanges } from './page-changes';
 import { PluginDraws } from './plugin-draws';
@@ -44,8 +43,7 @@ export function draws(log: (line: string) => void = (): null => null): Draws {
     log,
     changes,
     drawings: failures,
-    secretParams: (): SecretParams => noSecretParams,
-    readsSessions: (): boolean => false,
+    refusals: (): Refusals => noRefusals,
   });
 
   return { pages, workers, sent, failures };

@@ -30,8 +30,7 @@ type TreeKind = 'page' | 'replacement';
 export function checkedTree(
   root: WireJson,
   kind: TreeKind,
-  secretParams: SecretParams,
-  readsSessions = false,
+  refusals: Refusals,
 ): Checked {
   const tooLarge = sizeReason(root, pluginMessageBytes, `${kind} message`);
 
@@ -40,14 +39,21 @@ export function checkedTree(
   const parsed = WireNode.safeParse(root);
 
   return parsed.success
-    ? sanitized(parsed.data, kind, { secretParams, readsSessions })
+    ? sanitized(parsed.data, kind, refusals)
     : failed(`The ${kind} drew an invalid Plugin tree`);
 }
 
-// A tree checked with no manifest knows no secret param, so it sends a secret nowhere.
-export const noSecretParams: SecretParams = () => new Set();
+/*
+ * What the Server refuses in one Plugin's trees: a SecretField bound anywhere but an Operation param its manifest marks
+ * secret, and a SessionRow without the `sessions:read` Capability.
+ */
+export type Refusals = { secretParams: SecretParams; readsSessions: boolean };
 
-type Refusals = { secretParams: SecretParams; readsSessions: boolean };
+// A tree checked with no manifest knows no secret param and holds no Capability: it sends a secret nowhere and draws no SessionRow.
+export const noRefusals: Refusals = {
+  secretParams: () => new Set(),
+  readsSessions: false,
+};
 
 // A SessionRow reads a Session as the App does, so it needs the `sessions:read` Capability like `argo.sessions.get`.
 const sessionRowReason = (
@@ -58,17 +64,18 @@ const sessionRowReason = (
     ? 'SessionRow needs the sessions:read Capability in plugin.json'
     : undefined;
 
+const refusedNode =
+  ({ secretParams, readsSessions }: Refusals) =>
+  (node: WireNode): string | undefined =>
+    secretBindingReason(node, secretParams) ??
+    sessionRowReason(node, readsSessions);
+
 function sanitized(
   tree: WireNode,
   kind: TreeKind,
-  { secretParams, readsSessions }: Refusals,
+  refusals: Refusals,
 ): Checked {
-  const { root, refused } = sanitizeTree(
-    tree,
-    (node) =>
-      secretBindingReason(node, secretParams) ??
-      sessionRowReason(node, readsSessions),
-  );
+  const { root, refused } = sanitizeTree(tree, refusedNode(refusals));
 
   const refusal = kindReason(kind, tree, refused);
 
@@ -101,18 +108,15 @@ type PageAt = {
   pluginId: string;
   path: string;
   log: (line: string) => void;
-  // The params each of the Plugin's Operations marks secret, the only place a SecretField's text may go.
-  secretParams: SecretParams;
-  // Whether the Plugin holds `sessions:read`, which a SessionRow needs.
-  readsSessions: boolean;
+  refusals: Refusals;
 };
 
 // A page draws without the nodes the Server refused, such as SVG the sanitiser refused, and the log says what was left out.
 export function checkedPage(
-  { pluginId, path, log, secretParams, readsSessions }: PageAt,
+  { pluginId, path, log, refusals }: PageAt,
   { root, pages, live }: DrawnTree,
 ): Drawn {
-  const tree = checkedTree(root, 'page', secretParams, readsSessions);
+  const tree = checkedTree(root, 'page', refusals);
 
   if (!tree.ok) return tree;
 

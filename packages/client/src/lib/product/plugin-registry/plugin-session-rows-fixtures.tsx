@@ -10,31 +10,38 @@ import {
   runningSession,
 } from '../../../features/sessions/components/session-row/session-row-fixtures';
 
-const node = (
-  type: string,
-  key: string,
-  props: WireNode['props'],
-  children: WireNode[] = [],
-): WireNode => ({ type, key, props, children, slots: {} });
+type NodeOf = Pick<WireNode, 'type' | 'key' | 'props'> &
+  Partial<Pick<WireNode, 'children'>>;
 
-// The Issue page's attached Sessions: each row is one SessionRow naming a Session.
-export const attachedSessionsTree = node(
-  'List',
-  'list',
-  { appearance: 'grouped' },
-  [
-    node('List.Section', 'sessions', { title: 'Sessions' }, [
-      node('SessionRow', runningSession.session.sessionId, {
-        sessionId: runningSession.session.sessionId,
-      }),
-      node('SessionRow', idleSession.session.sessionId, {
-        sessionId: idleSession.session.sessionId,
-      }),
-    ]),
-  ],
-);
+const node = ({ children = [], ...rest }: NodeOf): WireNode => ({
+  ...rest,
+  children,
+  slots: {},
+});
 
 const sessions = [runningSession, idleSession];
+
+const sessionRowNode = (sessionId: string): WireNode =>
+  node({ type: 'SessionRow', key: sessionId, props: { sessionId } });
+
+// The Issue page's attached Sessions: each row is one SessionRow naming a Session.
+export const attachedSessionsTree = node({
+  type: 'List',
+  key: 'list',
+  props: { appearance: 'grouped' },
+  children: [
+    node({
+      type: 'List.Section',
+      key: 'sessions',
+      props: { title: 'Sessions' },
+      children: sessions.map(({ session }) =>
+        sessionRowNode(session.sessionId),
+      ),
+    }),
+  ],
+});
+
+const ignore = (): void => undefined;
 
 // Stands in for the App's connected row with fixture Sessions, since a story reads no data.
 function FixtureSessionRow({
@@ -44,10 +51,12 @@ function FixtureSessionRow({
     ({ session }) => session.sessionId === sessionId,
   );
 
-  return fixture ? (
-    <SessionRow {...fixture} onSelect={() => undefined} />
-  ) : null;
+  return fixture ? <SessionRow {...fixture} onSelect={ignore} /> : null;
 }
+
+const drawFixtureRow = (props: SessionRowDrawingProps): React.JSX.Element => (
+  <FixtureSessionRow {...props} />
+);
 
 export function WithSessionRows({
   children,
@@ -55,7 +64,7 @@ export function WithSessionRows({
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <SessionRowDrawingContext value={FixtureSessionRow}>
+    <SessionRowDrawingContext value={drawFixtureRow}>
       {children}
     </SessionRowDrawingContext>
   );

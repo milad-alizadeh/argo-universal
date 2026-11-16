@@ -6,12 +6,11 @@ import {
   type TreeAnswer,
 } from '@repo/contracts/plugins/page-draw';
 import type { LiveAnswer } from '@repo/contracts/plugins/page-live';
-import type { SecretParams } from '@repo/contracts/plugins/secret-bindings';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { Failure } from '../protocol/runtime-status';
 import { failed } from '../protocol/runtime-status';
 import type { Caller, KindCalls, WorkerCalls } from '../runtime/worker-calls';
-import { checkedPage } from './checked-tree';
+import { checkedPage, type Refusals } from './checked-tree';
 import { DefinedPatterns } from './defined-patterns';
 import {
   answeredError,
@@ -47,10 +46,8 @@ type PluginDrawsDeps = {
   log: (line: string) => void;
   changes: PageChanges;
   drawings: Drawings;
-  // The params each of a Plugin's Operations marks secret, as its manifest declares them.
-  secretParams: (pluginId: string) => SecretParams;
-  // Whether a Plugin holds `sessions:read`, which a SessionRow in its tree needs.
-  readsSessions: (pluginId: string) => boolean;
+  // What the Server refuses in a Plugin's trees, from the manifest and Grants it was activated with.
+  refusals: (pluginId: string) => Refusals;
 };
 
 /*
@@ -153,8 +150,7 @@ export class PluginDraws {
       pluginId: page.pluginId,
       path: page.at.path,
       log: this.deps.log,
-      secretParams: this.deps.secretParams(page.pluginId),
-      readsSessions: this.deps.readsSessions(page.pluginId),
+      refusals: this.deps.refusals(page.pluginId),
     };
 
     return this.failures.checked(page, checkedPage(checking, answered));
