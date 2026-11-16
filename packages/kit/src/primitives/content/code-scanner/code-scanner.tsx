@@ -40,14 +40,14 @@ function Viewfinder(): ReactElement {
   );
 }
 
-// Small, on a dim chip that reads over any camera picture without covering it; a long refusal wraps to a second line, and a screen reader hears each change.
+// Small, on a dim chip that reads over any camera picture without covering it; a long refusal wraps, and a screen reader hears each change.
 function Notice({ text }: { text: string }): ReactElement {
   return (
     <View className="max-w-full rounded-full bg-scrim/50 px-2.5 py-1">
       <Text
         role="badge"
         className="text-center text-code-light"
-        numberOfLines={2}
+        numberOfLines={3}
         accessibilityLiveRegion="polite"
       >
         {text}
@@ -58,7 +58,7 @@ function Notice({ text }: { text: string }): ReactElement {
 
 function Frame(props: CodeScannerProps): ReactElement {
   return (
-    <View className="aspect-square w-full overflow-hidden rounded-2xl bg-scrim">
+    <View className="aspect-square w-full max-w-sm self-center overflow-hidden rounded-2xl bg-scrim">
       {props.preview}
       <Viewfinder />
       <View className="pointer-events-none absolute inset-x-0 bottom-5 items-center px-4">
@@ -85,7 +85,7 @@ function Caption(props: CodeScannerProps): ReactElement {
 
 /*
  * A camera reading a code: the picture in a rounded dark frame, a square of corner marks to hold the code in, what it
- * is doing on a chip at the frame's foot, and what to do under it. The frame is square rather than filling the page,
+ * is doing on a chip at the frame's foot, and what to do under it. The frame is square and at most 384 wide rather than filling the page,
  * so the words under it stay in sight on any phone.
  */
 export function CodeScanner(props: CodeScannerProps): ReactElement {

@@ -13,7 +13,7 @@ export function SessionBarStrip(props: {
 }
 
 /*
- * One tinted strip under a phone's Session header, moved down by a floating header's height, its line on the Session column's leading edge; nothing while there
+ * One tinted strip under a phone's Session header, its line on the Session column's leading edge; nothing while there
  * is none. A page with a Workbench has the lines as its cards instead, and they hide with it (#2012).
  */
 export function SessionBarRow(props: { children: ReactNode }): React.ReactNode {

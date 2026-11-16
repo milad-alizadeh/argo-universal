@@ -1,13 +1,13 @@
 import type { CodeScannerProps } from './code-scanner';
 
-export const looking = {
-  notice: 'Looking for a code…',
-  title: 'Point the camera at the code',
-  detail: 'Settings › Section › Item',
+export const waiting = {
+  notice: 'Notice text',
+  title: 'Scanner title',
+  detail: 'Section › Item › Action',
 } satisfies CodeScannerProps;
 
-export const refused = {
-  ...looking,
+export const cameraFailed = {
+  ...waiting,
   notice:
-    'Read a code, but it is not one this app takes: https://example.com/a-long-path',
+    'A longer notice that wraps onto a second line when the reason it gives runs past the width of the frame',
 } satisfies CodeScannerProps;

@@ -1,9 +1,9 @@
 import { CodeScanner } from '@repo/kit/primitives/content/code-scanner';
 import { usePageFocused } from '@repo/kit/use-shown-page';
 import { CameraView } from 'expo-camera';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type * as React from 'react';
-import { StyleSheet } from 'react-native';
+import { AccessibilityInfo, Platform, StyleSheet } from 'react-native';
 import {
   afterRead,
   cameraFailed,
@@ -30,6 +30,8 @@ const qrOnly = { barcodeTypes: ['qr' as const] };
 export function ScanCamera(props: ScanCameraProps): React.JSX.Element {
   const [notice, setNotice] = useState<ScanNotice>(looking);
 
+  useSpokenNotice(noticeText(notice), notice.kind !== 'looking');
+
   return (
     <CodeScanner
       preview={
@@ -39,6 +41,17 @@ export function ScanCamera(props: ScanCameraProps): React.JSX.Element {
       {...scannerWords}
     />
   );
+}
+
+/*
+ * Android reads a change on the chip from its live region; iOS has none, so VoiceOver is told each new refusal or
+ * failure once. The same code read again sets the same words, which says nothing new.
+ */
+function useSpokenNotice(text: string, worthSaying: boolean): void {
+  useEffect(() => {
+    if (worthSaying && Platform.OS === 'ios')
+      AccessibilityInfo.announceForAccessibility(text);
+  }, [text, worthSaying]);
 }
 
 function Preview(

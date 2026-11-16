@@ -52,7 +52,12 @@ const body = (props: ScanCodeViewProps): ReactNode =>
 
 const enterCodeButton = (props: ScanCodeViewProps): ReactNode =>
   props.onEnterCode ? (
-    <Button label="Enter code instead" fullWidth onPress={props.onEnterCode} />
+    <Button
+      label="Enter code instead"
+      variant={props.access === 'allowed' ? 'primary' : 'secondary'}
+      fullWidth
+      onPress={props.onEnterCode}
+    />
   ) : null;
 
 function Explanation(
