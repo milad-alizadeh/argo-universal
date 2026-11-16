@@ -5,11 +5,8 @@ import { defineProject } from 'vitest/config';
 // Above the largest waitFor budget (15 s), so a slow waitFor fails with its own message.
 const STORY_TEST_TIMEOUT_MS = 30_000;
 
-// One browser page per CI core; story tests are CPU-bound.
-const CI_WORKERS = 4;
-
-// On a loaded Mac a full local run took 237 s with 2 pages and 292 s with 4, using 1.2 GB less memory.
-const LOCAL_WORKERS = 2;
+// A loaded Mac took 237 s with 2 pages versus 292 s with 4, using 1.2 GB less memory; CI uses the same page budget.
+const BROWSER_WORKERS = 2;
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineProject({
@@ -26,7 +23,7 @@ export default defineProject({
   ],
   test: {
     name: 'storybook',
-    maxWorkers: process.env.CI ? CI_WORKERS : LOCAL_WORKERS,
+    maxWorkers: BROWSER_WORKERS,
     testTimeout: STORY_TEST_TIMEOUT_MS,
     // Zero retries: a flaky story fails like a flaky end-to-end test.
     retry: 0,

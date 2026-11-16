@@ -209,6 +209,13 @@ jobs:
       - name: Story tests
         run: pnpm exec turbo run test:stories -- --shard=${{ matrix.shard }}/3
 
+      - name: Report browser failure diagnostics
+        if: ${{ failure() }}
+        run: |
+          free -m
+          df -h /dev/shm
+          sudo dmesg --ctime | tail -80
+
       # apps/storybook/vitest.setup.ts saves a failed story's screenshot in __screenshots__/failures beside its test file.
       - name: Upload the story failure screenshots
         if: ${{ failure() }}
