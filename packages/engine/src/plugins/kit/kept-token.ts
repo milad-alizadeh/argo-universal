@@ -119,6 +119,26 @@ export function tokenLender(
   };
 }
 
+const bearer = { header: 'Authorization', prefix: 'Bearer' };
+
+// A borrower's request gets the kept token, refreshed when it has run out, in the header the flow names; Argo sets it.
+export function provideKept(
+  argo: { accounts: Pick<Argo['accounts'], 'provide'>; secrets: Secrets },
+  options: {
+    host: string;
+    header?: Readonly<{ header: string; prefix: string }>;
+  },
+  refresh: Refresh,
+): Promise<void> {
+  const lend = tokenLender(argo.secrets, refresh);
+
+  return argo.accounts.provide(
+    options.host,
+    options.header ?? bearer,
+    (account) => lend(account.id),
+  );
+}
+
 // What a kit sign-in adds and keeps with: the Account, under the host its token opens, and the token's secret.
 type Keeping = {
   accounts: Pick<Argo['accounts'], 'add'>;
