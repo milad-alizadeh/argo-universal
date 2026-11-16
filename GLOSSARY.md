@@ -206,6 +206,10 @@ _Avoid_: Interaction, action (Action is a kit component), handler
 A kit component of columns of cards that a person moves between columns, by drag or from a card's menu. Each card names the columns it may move to, and a move fills an Operation call with the card and its new column. The kit draws a Board's columns as a List's lanes, so "lane" is the kit's word inside and "column" the Plugin's.
 _Avoid_: Kanban, lanes (for the Plugin's columns)
 
+**SessionRow**:
+A kit component that draws one of the App's own Sessions as its row in the Sessions list, from the live Session. A Plugin sends only the Session's id, and needs `sessions:read`; it opens the Session when pressed. A Session the App does not list draws nothing. Not the Session row Slot, which adds items to the list's own rows.
+_Avoid_: Session card, attached Session row
+
 **Capability**:
 Something a Plugin's manifest says it needs, such as running `gh` or reaching `api.github.com`. Without any, a Plugin's calls to the machine can only read Projects and use the Plugin's own data.
 _Avoid_: Permission (that is the Agent's Permission request), scope, entitlement

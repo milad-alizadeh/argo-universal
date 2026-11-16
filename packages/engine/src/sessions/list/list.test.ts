@@ -11,6 +11,16 @@ it.each([
   expect(SessionListInput.parse(pagingInput)).toEqual(pagingInput);
 });
 
+it('lists only the Session a `sessionId` names, and none for one it does not list', (): void => {
+  expect(
+    ids(sessionListPage({ sessionId: 'session-07' }, readRows).sessions),
+  ).toEqual(['session-07']);
+
+  expect(sessionListPage({ sessionId: 'missing' }, readRows).sessions).toEqual(
+    [],
+  );
+});
+
 it.each([
   { direction: 'backward' },
   { unexpected: true },

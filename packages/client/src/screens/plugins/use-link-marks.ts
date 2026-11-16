@@ -8,10 +8,14 @@ import {
   type LinkMark,
 } from '@repo/kit/primitives/overlays/link-preview';
 import { useMemo } from 'react';
+import {
+  itemsSlotEntry,
+  readSlotItems,
+  type SlotReader,
+  usePluginLookup,
+  useSlotItems,
+} from '#features/plugins';
 import { useSlotVisibility } from '#features/settings';
-import { itemsSlotEntry, readSlotItems, type SlotReader } from './slot-items';
-import { usePluginLookup } from './use-plugin-names';
-import { useSlotItems } from './use-slot-items';
 
 const markSlot = itemsSlotEntry(linkMarkSlotId);
 

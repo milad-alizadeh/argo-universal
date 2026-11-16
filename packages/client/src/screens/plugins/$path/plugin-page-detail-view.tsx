@@ -1,8 +1,9 @@
 import type * as React from 'react';
+import { PluginSessionRowProvider, usePluginLookup } from '#features/plugins';
 import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
 import { PluginSymbolContext } from '../../../lib/product/plugin-registry';
 import type { PageOpening } from '../page-addresses';
-import { usePluginLookup } from '../use-plugin-names';
+import { useOpenPluginPage } from '../use-plugin-opener';
 import { usePluginPage } from '../use-plugin-page';
 import { PluginDetailView } from './plugin-detail-view';
 
@@ -23,25 +24,32 @@ export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
   const callbacks = { onOpenPage, onPageCall: page.onPageCall };
 
   return (
-    <PluginSymbol pluginId={opening.pluginId}>
+    <PluginPageContexts pluginId={opening.pluginId}>
       <PluginDetailView
         title={title}
         root={page.root}
         callbacks={callbacks}
         onBack={onBack}
       />
-    </PluginSymbol>
+    </PluginPageContexts>
   );
 }
 
-// The Plugin's own icon, for a sign-in on its page that sends no mark of its own.
-function PluginSymbol(props: {
+/*
+ * The Plugin's own icon, for a sign-in on its page that sends no mark of its own; and the App's Session row for a
+ * SessionRow in its tree.
+ */
+function PluginPageContexts(props: {
   pluginId: string;
   children: React.ReactNode;
 }): React.ReactNode {
   const symbol = usePluginLookup()(props.pluginId).icon;
 
   return (
-    <PluginSymbolContext value={symbol}>{props.children}</PluginSymbolContext>
+    <PluginSymbolContext value={symbol}>
+      <PluginSessionRowProvider onOpenPluginPage={useOpenPluginPage()}>
+        {props.children}
+      </PluginSessionRowProvider>
+    </PluginSymbolContext>
   );
 }

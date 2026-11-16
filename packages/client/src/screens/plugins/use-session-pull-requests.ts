@@ -3,12 +3,16 @@ import {
   type SlotContextOf,
   type SlotInputOf,
 } from '@repo/contracts/plugins/wire';
+import {
+  itemsSlotEntry,
+  readSlotItems,
+  type SentItems,
+  usePluginLookup,
+  useSlotItems,
+} from '#features/plugins';
 import type { SessionPullRequest } from '#features/sessions';
 import { useSlotVisibility } from '#features/settings';
 import { sessionPullRequests } from './session-pull-requests';
-import { itemsSlotEntry, readSlotItems, type SentItems } from './slot-items';
-import { usePluginLookup } from './use-plugin-names';
-import { useSlotItems } from './use-slot-items';
 
 export type ChangesContext = SlotContextOf<typeof sessionChangesSlotId>;
 
