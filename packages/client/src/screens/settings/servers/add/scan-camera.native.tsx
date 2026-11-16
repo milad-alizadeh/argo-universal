@@ -1,15 +1,15 @@
-import { Pill } from '@repo/kit/primitives/status/pill';
+import { CodeScanner } from '@repo/kit/primitives/content/code-scanner';
 import { usePageFocused } from '@repo/kit/use-shown-page';
 import { CameraView } from 'expo-camera';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type * as React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Platform, StyleSheet } from 'react-native';
 import {
   afterRead,
   cameraFailed,
   looking,
-  noticeText,
   type ScanNotice,
+  scannerProps,
 } from './scan-notice';
 
 export interface ScanCameraProps {
@@ -29,12 +29,30 @@ const qrOnly = { barcodeTypes: ['qr' as const] };
 export function ScanCamera(props: ScanCameraProps): React.JSX.Element {
   const [notice, setNotice] = useState<ScanNotice>(looking);
 
+  useSpokenNotice(notice);
+
   return (
-    <View className="flex-1 items-center justify-end">
-      {usePageFocused() ? <Preview {...props} setNotice={setNotice} /> : null}
-      <Pill text={noticeText(notice)} />
-    </View>
+    <CodeScanner
+      preview={
+        usePageFocused() ? <Preview {...props} setNotice={setNotice} /> : null
+      }
+      {...scannerProps(notice)}
+    />
   );
+}
+
+/*
+ * Android reads a change in the notice from its live region; iOS has none, so VoiceOver is told each new refusal or
+ * failure once. The same code read again sets the same words, which says nothing new.
+ */
+function useSpokenNotice(notice: ScanNotice): void {
+  const text = scannerProps(notice).notice;
+  const worthSaying = notice.kind !== 'looking';
+
+  useEffect(() => {
+    if (worthSaying && Platform.OS === 'ios')
+      AccessibilityInfo.announceForAccessibility(text);
+  }, [text, worthSaying]);
 }
 
 function Preview(

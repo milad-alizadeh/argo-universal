@@ -108,6 +108,7 @@ const drawings = {
   success: { ink: 'success', fill: 'bg-success/14' },
   done: { ink: 'done', fill: 'bg-done/14' },
   danger: { ink: 'danger', fill: 'bg-danger/14' },
+  warning: { ink: 'warning', fill: 'bg-warning/14' },
   neutral: { ink: 'muted', fill: 'bg-tint' },
 } as const;
 
@@ -117,11 +118,11 @@ type State = Pick<GitItemPreview, 'kind' | 'state'>;
 const issueMark = ({ state }: State): StageMark =>
   issueMarks[state === 'closed' ? 'closed' : 'open'];
 
-const markOf = (data: State): StageMark =>
+export const gitStateMark = (data: State): StageMark =>
   data.kind === 'issue' ? issueMark(data) : changeMarks[data.state ?? 'open'];
 
 function GitState({ data }: { data: GitItemPreview }): ReactElement {
-  const mark = markOf(data);
+  const mark = gitStateMark(data);
   const { ink, fill } = drawings[mark.tone];
 
   return (
@@ -134,9 +135,9 @@ function GitState({ data }: { data: GitItemPreview }): ReactElement {
   );
 }
 
-// The state's icon alone, drawn beside a link so its state reads without a hover.
-export function GitStateIcon({ data }: { data: State }): ReactElement {
-  const mark = markOf(data);
+// The state's icon alone, in the card's state badge.
+function GitStateIcon({ data }: { data: State }): ReactElement {
+  const mark = gitStateMark(data);
 
   return <Icon name={mark.icon} size="sm" tone={drawings[mark.tone].ink} />;
 }

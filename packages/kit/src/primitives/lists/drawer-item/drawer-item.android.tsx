@@ -11,14 +11,11 @@ import {
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
-import { View } from 'react-native';
 import { type CountBadge, countBadge } from '#kit/badge-count';
 import { Icon, IconSlot } from '#primitives/content/icon';
 import { NativeText } from '#primitives/content/native-text';
 import { Host } from '#primitives/native/host';
 import { useMaterialPalette } from '#primitives/native/material-palette';
-import type { IconSymbol } from '../../../symbols/icon-symbol';
-import { cn } from '../../../utils';
 import type { DrawerItemProps } from './drawer-item-props';
 
 // Material 3's navigation drawer item: a pill at least 56dp high, tinted when selected. It grows with its label, which an enlarged font size wraps onto more lines.
@@ -86,34 +83,19 @@ function tabModifiers(
   ];
 }
 
-// Both glyphs stay mounted, since swapping one in loads its image and leaves a blank frame.
+// The glyph stays outlined when selected, as a Plugin's own icon has no filled twin; only its tone changes.
 function DrawerItemIcon({
   icon,
   selected,
 }: DrawerItemProps): React.JSX.Element {
+  const tone = selected ? 'text-foreground' : 'text-muted-foreground';
+
   return (
     <RNHostView matchContents>
       <IconSlot size="lg" collapsable={false}>
-        <IconLayer icon={icon} filled shown={selected} />
-        <IconLayer icon={icon} filled={false} shown={!selected} />
+        <Icon name={icon} className={tone} />
       </IconSlot>
     </RNHostView>
-  );
-}
-
-interface IconLayerProps {
-  icon: IconSymbol;
-  filled: boolean;
-  shown: boolean;
-}
-
-function IconLayer({ icon, filled, shown }: IconLayerProps): React.JSX.Element {
-  const tone = filled ? 'text-foreground' : 'text-muted-foreground';
-
-  return (
-    <View className={cn('absolute', !shown && 'opacity-0')}>
-      <Icon name={icon} filled={filled} className={tone} />
-    </View>
   );
 }
 

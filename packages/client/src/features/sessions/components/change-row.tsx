@@ -1,14 +1,10 @@
-import { IconSlot } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { ChangeChecks } from './change-checks-popover';
 import { ChangeDiffTotal } from './change-diff-total';
 import { ChangeContextMenu, ChangeMenu } from './change-row-menu';
-import {
-  ChangeStageIcon,
-  ChangeStageModifier,
-} from './change-stage/change-stage';
+import { ChangeStageIcon } from './change-stage/change-stage';
 import type { SessionPullRequest } from './session-pull-request';
 
 export interface ChangeRowProps {
@@ -24,12 +20,10 @@ export interface ChangeRowProps {
 
 const rowClassName = 'flex-row items-start gap-2 px-1 py-2';
 
-// The mark takes its glyph's own width, as every Workbench card's leading mark does, centred on the title line.
+// The mark sits on a disc, the size of the title's line, so it leads the row on the title's edge.
 const stageCell = (change: SessionPullRequest): ReactElement => (
-  <View className="mt-0.5 shrink-0">
-    <IconSlot>
-      <ChangeStageIcon {...change} />
-    </IconSlot>
+  <View className="shrink-0">
+    <ChangeStageIcon {...change} form="disc" />
   </View>
 );
 
@@ -79,7 +73,6 @@ function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
         #{change.number}
       </Text>
       {change.summary && <ChangeDiffTotal {...change.summary} icon />}
-      <ChangeStageModifier {...change} />
       {change.checks && checksPart(change.checks, onOpen)}
     </View>
   );

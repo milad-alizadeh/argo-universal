@@ -143,3 +143,10 @@ export const ZeroPluginBadgeShowsNothing: Story = {
     await expect(canvas.queryByLabelText('0')).toBeNull();
   },
 };
+
+// The selected section is marked at the rail's edge, and only it: its icon stays outlined, as a Plugin's own icon has no filled twin.
+export const MarksTheSelectedSectionAtTheEdge: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.getAllByTestId('rail-selected-marker')).toHaveLength(1);
+  },
+};

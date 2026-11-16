@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { fn } from 'storybook/test';
 import { PromptQueue } from './prompt-queue';
 import {
+  attachmentOnly,
   queuedPrompts,
   singlePrompt,
   steerablePrompts,
@@ -38,6 +39,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Queued: Story = {};
+
+export const Attachment: Story = { args: attachmentOnly };
 
 export const Steerable: Story = { args: steerablePrompts };
 

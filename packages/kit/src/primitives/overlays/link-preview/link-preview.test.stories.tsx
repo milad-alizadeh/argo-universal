@@ -2,11 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 import { cdp } from 'vitest/browser';
+import { changeMarks } from '#kit/stage-marks';
 import { settleLayout } from '#mocks/story-layout';
 import { Link } from '#primitives/content/link';
 import { Text } from '#primitives/content/text';
 import { LinkPreviewCard } from './link-preview-card';
-import { LinkPreviewContext } from './link-preview-context';
+import { LinkPreviewContext, type LinkMark } from './link-preview-context';
 import { pullPreview, webPreview } from './link-preview.mocks';
 
 const href = 'https://example.com/guide';
@@ -158,10 +159,8 @@ const pullHref = 'https://github.com/example/app/pull/42';
 
 const marked = {
   load: async (): Promise<ReactNode> => <LinkPreviewCard data={pullPreview} />,
-  mark: (target: string): Promise<ReactNode> | null =>
-    target === pullHref
-      ? Promise.resolve(<Text role="secondary">merged</Text>)
-      : null,
+  mark: (target: string): Promise<LinkMark> | null =>
+    target === pullHref ? Promise.resolve(changeMarks.merged) : null,
 };
 
 export const MarkShowsBeforeHoverWide: Story = {
@@ -175,7 +174,16 @@ export const MarkShowsBeforeHoverWide: Story = {
   ),
   play: async ({ canvas }) => {
     await settleLayout('wide');
-    await expect(await canvas.findAllByText('merged')).toHaveLength(1);
+    await expect(await canvas.findAllByTestId('icon-pr-merged')).toHaveLength(
+      1,
+    );
+    // The marked label takes the mark's tone and drops its resting underline; the unmarked one keeps both.
+    await expect(
+      canvas.getByRole('link', { name: 'the pull request' }),
+    ).toHaveClass('text-tone-done-600', 'no-underline');
+    await expect(canvas.getByRole('link', { name: 'the guide' })).toHaveClass(
+      'underline',
+    );
     await expect(
       within(document.body).queryByRole('dialog'),
     ).not.toBeInTheDocument();
@@ -192,9 +200,7 @@ function RefreshingMark(): ReactElement {
 
         return <LinkPreviewCard data={{ ...pullPreview, state }} />;
       },
-      mark: async (): Promise<ReactNode> => (
-        <Text role="secondary">{state}</Text>
-      ),
+      mark: async (): Promise<LinkMark> => changeMarks[state],
     };
   });
 
@@ -221,8 +227,10 @@ export const HoverRefreshesMarkWide: Story = {
   render: () => <RefreshingMark />,
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
-    await expect(await canvas.findByText('open')).toBeInTheDocument();
+    await expect(await canvas.findByTestId('icon-pr-open')).toBeInTheDocument();
     await userEvent.hover(canvas.getByRole('link'));
-    await expect(await canvas.findByText('closed')).toBeInTheDocument();
+    await expect(
+      await canvas.findByTestId('icon-pr-closed'),
+    ).toBeInTheDocument();
   },
 };
