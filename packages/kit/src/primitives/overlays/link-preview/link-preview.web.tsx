@@ -54,7 +54,9 @@ function LinkMark({ mark }: { mark: ReactNode }): ReactElement | null {
   // The word joiner forbids a line break between the mark and the label that follows it.
   return (
     <span aria-hidden>
-      <span className="me-0.5 inline-flex align-middle">{mark}</span>
+      <span className="relative -top-0.5 me-0.5 inline-flex align-middle">
+        {mark}
+      </span>
       {'⁠'}
     </span>
   );
