@@ -55,6 +55,8 @@ export type AtlassianOAuth = {
   refreshes: () => URLSearchParams[];
   // Expires or revokes the refresh token, as 90 days unused or a revoked grant does.
   revoke: () => void;
+  // Revokes the app's grant: the access token, though not yet run out, opens nothing, and Jira answers 401.
+  revokeApp: () => void;
 };
 
 type Held = {
@@ -172,6 +174,11 @@ function revoked(held: Held): void {
   held.refresh = null;
 }
 
+function appRevoked(held: Held): void {
+  held.access = null;
+  held.refresh = null;
+}
+
 const freshHeld = (): Held => ({
   generation: 0,
   refresh: null,
@@ -195,5 +202,6 @@ export function atlassianOAuth({
     forms: () => held.forms,
     refreshes: () => refreshesIn(held),
     revoke: () => revoked(held),
+    revokeApp: () => appRevoked(held),
   };
 }
