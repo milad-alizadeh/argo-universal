@@ -32,7 +32,7 @@ export type SessionCommands = Omit<
   setConfigOption: SessionConfigChange['setConfigOption'];
   changeConfig: SessionConfigChange['change'];
   queueCommand: QueueCommandSender;
-  sendDraft: (sent: ComposerDraft) => Promise<void>;
+  sendDraft: (sent: ComposerDraft, steer?: boolean) => Promise<void>;
   // Sends a stopped Turn's prompt again and leaves the draft as it is.
   retryPrompt: (prompt: ContentBlock[]) => void;
 };
@@ -156,12 +156,12 @@ type DraftSendTarget = {
 function draftSender(
   { sessionId, promptSession, followUpSuggestions }: DraftSendTarget,
   uploadDraftAsPrompt: AttachmentDraft['uploadDraftAsPrompt'],
-): (sent: ComposerDraft) => Promise<void> {
-  return async (sent) => {
+): (sent: ComposerDraft, steer?: boolean) => Promise<void> {
+  return async (sent, steer) => {
     promptSession.reset();
     const prompt = await uploadDraftAsPrompt(sent);
 
     if (prompt?.length)
-      promptSession.mutate({ sessionId, prompt, followUpSuggestions });
+      promptSession.mutate({ sessionId, prompt, followUpSuggestions, steer });
   };
 }
