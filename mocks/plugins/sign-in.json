@@ -1,0 +1,872 @@
+{
+  "signedOut": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "direction": "column",
+          "align": "stretch",
+          "gap": 6
+        },
+        "children": [
+          {
+            "type": "Stack",
+            "key": "0",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 0
+            },
+            "children": [
+              {
+                "type": "Svg",
+                "key": "0",
+                "props": {
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "label": "Jira",
+                  "tone": "info",
+                  "width": 64,
+                  "aspectRatio": 1
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "1",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 2
+            },
+            "children": [
+              {
+                "type": "Text",
+                "key": "0",
+                "props": {
+                  "role": "title",
+                  "children": "Sign in to Jira"
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "Text",
+                "key": "1",
+                "props": {
+                  "role": "secondary",
+                  "tone": "muted",
+                  "children": "Use Jira in Argo with your account."
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "2",
+            "props": {
+              "direction": "column",
+              "align": "stretch",
+              "gap": 3
+            },
+            "children": [
+              {
+                "type": "Button",
+                "key": "0",
+                "props": {
+                  "label": "Continue with Jira",
+                  "onPress": {
+                    "operation": "signIn",
+                    "args": {}
+                  },
+                  "variant": "primary",
+                  "fullWidth": true
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "3",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 0
+            },
+            "children": [
+              {
+                "type": "Text",
+                "key": "0",
+                "props": {
+                  "role": "secondary",
+                  "tone": "muted",
+                  "children": "Opens your browser. The token stays on the Server Device."
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "refused": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "direction": "column",
+          "align": "stretch",
+          "gap": 6
+        },
+        "children": [
+          {
+            "type": "Stack",
+            "key": "0",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 0
+            },
+            "children": [
+              {
+                "type": "Svg",
+                "key": "0",
+                "props": {
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "label": "Jira",
+                  "tone": "info",
+                  "width": 64,
+                  "aspectRatio": 1
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "1",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 2
+            },
+            "children": [
+              {
+                "type": "Text",
+                "key": "0",
+                "props": {
+                  "role": "title",
+                  "children": "Sign in to Jira"
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "Text",
+                "key": "1",
+                "props": {
+                  "role": "secondary",
+                  "tone": "muted",
+                  "children": "api.atlassian.com no longer accepts this sign-in."
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "2",
+            "props": {
+              "direction": "column",
+              "align": "stretch",
+              "gap": 3
+            },
+            "children": [
+              {
+                "type": "Button",
+                "key": "0",
+                "props": {
+                  "label": "Continue with Jira",
+                  "onPress": {
+                    "operation": "signIn",
+                    "args": {}
+                  },
+                  "variant": "primary",
+                  "fullWidth": true
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "3",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 0
+            },
+            "children": [
+              {
+                "type": "Text",
+                "key": "0",
+                "props": {
+                  "role": "secondary",
+                  "tone": "muted",
+                  "children": "Opens your browser. The token stays on the Server Device."
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "requesting": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "direction": "column",
+          "align": "stretch",
+          "gap": 6
+        },
+        "children": [
+          {
+            "type": "Stack",
+            "key": "0",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 0
+            },
+            "children": [
+              {
+                "type": "Svg",
+                "key": "0",
+                "props": {
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "label": "Jira",
+                  "tone": "info",
+                  "width": 64,
+                  "aspectRatio": 1
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "1",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 2
+            },
+            "children": [
+              {
+                "type": "Text",
+                "key": "0",
+                "props": {
+                  "role": "title",
+                  "children": "Asking Jira for a code…"
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "waiting": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "direction": "column",
+          "align": "stretch",
+          "gap": 6
+        },
+        "children": [
+          {
+            "type": "Stack",
+            "key": "0",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 0
+            },
+            "children": [
+              {
+                "type": "Svg",
+                "key": "0",
+                "props": {
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "label": "Jira",
+                  "tone": "info",
+                  "width": 64,
+                  "aspectRatio": 1
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "1",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 2
+            },
+            "children": [
+              {
+                "type": "Text",
+                "key": "0",
+                "props": {
+                  "role": "title",
+                  "children": "Finish in your browser"
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "Text",
+                "key": "1",
+                "props": {
+                  "role": "secondary",
+                  "tone": "muted",
+                  "children": "Approve Argo on Jira. This page updates when you’re done."
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "2",
+            "props": {
+              "direction": "column",
+              "align": "stretch",
+              "gap": 3
+            },
+            "children": [
+              {
+                "type": "Button",
+                "key": "0",
+                "props": {
+                  "label": "Cancel",
+                  "onPress": {
+                    "operation": "cancelSignIn",
+                    "args": {}
+                  },
+                  "variant": "secondary",
+                  "fullWidth": true
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "code": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "direction": "column",
+          "align": "stretch",
+          "gap": 6
+        },
+        "children": [
+          {
+            "type": "Stack",
+            "key": "0",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 0
+            },
+            "children": [
+              {
+                "type": "Svg",
+                "key": "0",
+                "props": {
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "label": "Jira",
+                  "tone": "info",
+                  "width": 64,
+                  "aspectRatio": 1
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "1",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 2
+            },
+            "children": [
+              {
+                "type": "Text",
+                "key": "0",
+                "props": {
+                  "role": "title",
+                  "children": "Enter this code on Jira"
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "Text",
+                "key": "1",
+                "props": {
+                  "role": "secondary",
+                  "tone": "muted",
+                  "children": "Jira asks for it after you continue. The code lasts 15 minutes."
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Surface",
+            "key": "2",
+            "props": {
+              "kind": "card",
+              "padding": 4
+            },
+            "children": [
+              {
+                "type": "Stack",
+                "key": "0",
+                "props": {
+                  "direction": "column",
+                  "align": "center",
+                  "gap": 0
+                },
+                "children": [
+                  {
+                    "type": "Text",
+                    "key": "0",
+                    "props": {
+                      "role": "title-code",
+                      "children": "WDJB-MJHT"
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "3",
+            "props": {
+              "direction": "column",
+              "align": "stretch",
+              "gap": 3
+            },
+            "children": [
+              {
+                "type": "Button",
+                "key": "0",
+                "props": {
+                  "label": "Copy code and continue to Jira",
+                  "onPress": {
+                    "action": "openUrl",
+                    "url": "https://example.com/login/device",
+                    "copy": "WDJB-MJHT"
+                  },
+                  "variant": "primary",
+                  "fullWidth": true
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "Button",
+                "key": "1",
+                "props": {
+                  "label": "Cancel",
+                  "onPress": {
+                    "operation": "cancelSignIn",
+                    "args": {}
+                  },
+                  "variant": "text",
+                  "fullWidth": true
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "signedIn": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "direction": "column",
+          "align": "stretch",
+          "gap": 6
+        },
+        "children": [
+          {
+            "type": "Stack",
+            "key": "0",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 0
+            },
+            "children": [
+              {
+                "type": "Svg",
+                "key": "0",
+                "props": {
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "label": "Jira",
+                  "tone": "success",
+                  "width": 64,
+                  "aspectRatio": 1
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "1",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 2
+            },
+            "children": [
+              {
+                "type": "Text",
+                "key": "0",
+                "props": {
+                  "role": "title",
+                  "children": "Connected to Jira"
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "Text",
+                "key": "1",
+                "props": {
+                  "role": "secondary",
+                  "tone": "muted",
+                  "children": "Signed in as ada@example.com"
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "Text",
+                "key": "2",
+                "props": {
+                  "role": "secondary",
+                  "tone": "muted",
+                  "children": "Manage this Account in Settings › Accounts."
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "ended": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "direction": "column",
+          "align": "stretch",
+          "gap": 6
+        },
+        "children": [
+          {
+            "type": "Stack",
+            "key": "0",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 0
+            },
+            "children": [
+              {
+                "type": "Svg",
+                "key": "0",
+                "props": {
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "label": "Jira",
+                  "tone": "info",
+                  "width": 64,
+                  "aspectRatio": 1
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "1",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 2
+            },
+            "children": [
+              {
+                "type": "Text",
+                "key": "0",
+                "props": {
+                  "role": "title",
+                  "children": "The code expired"
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "Text",
+                "key": "1",
+                "props": {
+                  "role": "secondary",
+                  "tone": "muted",
+                  "children": "No approval came in time."
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "2",
+            "props": {
+              "direction": "column",
+              "align": "stretch",
+              "gap": 3
+            },
+            "children": [
+              {
+                "type": "Button",
+                "key": "0",
+                "props": {
+                  "label": "Try again",
+                  "onPress": {
+                    "operation": "signIn",
+                    "args": {}
+                  },
+                  "variant": "primary",
+                  "fullWidth": true
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "serverDevice": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "direction": "column",
+          "align": "stretch",
+          "gap": 6
+        },
+        "children": [
+          {
+            "type": "Stack",
+            "key": "0",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 0
+            },
+            "children": [
+              {
+                "type": "Svg",
+                "key": "0",
+                "props": {
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "label": "Jira",
+                  "tone": "info",
+                  "width": 64,
+                  "aspectRatio": 1
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          },
+          {
+            "type": "Stack",
+            "key": "1",
+            "props": {
+              "direction": "column",
+              "align": "center",
+              "gap": 2
+            },
+            "children": [
+              {
+                "type": "Text",
+                "key": "0",
+                "props": {
+                  "role": "title",
+                  "children": "Continue on the Server Device"
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "Text",
+                "key": "1",
+                "props": {
+                  "role": "secondary",
+                  "tone": "muted",
+                  "children": "Open Jira in Argo on the Server Device to sign in. This device updates when you’re done."
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  }
+}

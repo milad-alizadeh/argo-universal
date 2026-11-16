@@ -32,7 +32,9 @@ const runners: Runners = {
   newSession: ({ projectId, draft }) =>
     router.navigate(newSessionHref(projectId, draft, pageShown())),
   openSession: ({ sessionId }) => router.navigate(sessionHref(sessionId)),
-  openUrl: async ({ url }) => {
+  openUrl: async ({ url, copy }) => {
+    if (copy !== undefined) await setStringAsync(copy);
+
     await Linking.openURL(url);
   },
   copy: async ({ text }) => {

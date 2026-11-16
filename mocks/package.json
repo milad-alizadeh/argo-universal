@@ -14,6 +14,7 @@
     "./registry/*": "./registry/*.ts",
     "./plugins/controls.json": "./plugins/controls.json",
     "./plugins/overlays.json": "./plugins/overlays.json",
+    "./plugins/sign-in.json": "./plugins/sign-in.json",
     "./plugins/screen.json": "./plugins/screen.json",
     "./media/*": {
       "types": "./media/*.d.ts",

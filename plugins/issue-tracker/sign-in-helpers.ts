@@ -3,7 +3,7 @@ import { expect } from 'vitest';
 import type { GitHubFixture } from './github-fixture';
 import type { OpenPage, Tracked } from './journey-fixture';
 
-export const signInLabel = 'Sign in to GitHub';
+export const signInLabel = 'Continue with GitHub';
 
 // Every call to GitHub's API but the sign-in's own `/user`.
 export const apiCalls = (github: GitHubFixture): FixtureRequest[] =>

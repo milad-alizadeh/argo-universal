@@ -13,7 +13,7 @@ import type { PluginTest, PluginTestOptions } from './test-types';
 
 const projects = [{ id: 'one', name: 'One', originUrl: null }];
 
-export const signInLabel = 'Sign in to Service';
+export const signInLabel = 'Continue with Service';
 
 export const itemsText = 'the items';
 

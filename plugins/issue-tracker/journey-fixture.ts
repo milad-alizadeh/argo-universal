@@ -74,7 +74,7 @@ export async function trackedGitHub(
   return { test, github };
 }
 
-const signInLabel = 'Sign in to GitHub';
+const signInLabel = 'Continue with GitHub';
 
 // The fixture asks the Plugin to poll every second, and approves at once.
 const pollMs = 1000;

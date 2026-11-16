@@ -18,9 +18,12 @@ it('shows the code and where to enter it, then names the Account once approved, 
   const tracked = await trackedGitHub();
   const page = await showsCode(tracked);
 
-  expect(page.findText('Open GitHub')?.node.props.onPress).toEqual({
+  expect(
+    page.findText('Copy code and continue to GitHub')?.node.props.onPress,
+  ).toEqual({
     action: 'openUrl',
     url: 'https://github.com/login/device',
+    copy: 'WDJB-MJHT',
   });
   await until(tracked, page, signedInText);
   expect(tracked.github.requests.map(({ path }) => path)).toContain(

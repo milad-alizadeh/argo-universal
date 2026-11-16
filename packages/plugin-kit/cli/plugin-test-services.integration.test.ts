@@ -22,7 +22,7 @@ const services = ({ host, path }) => {
 test('after sign-in the items draw', async (kit, requests) => {
   const signIn = await kit.pages.open({ path: '/sign-in', projectId: kit.session.projectId });
 
-  await signIn.press('Sign in to Service');
+  await signIn.press('Continue with Service');
 
   for (let step = 0; step < 5; step += 1) {
     await kit.clock.advance(1000);

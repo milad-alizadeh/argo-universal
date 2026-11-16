@@ -7,7 +7,12 @@ export const Action = z.discriminatedUnion('action', [
   z.strictObject({ action: z.literal('toast'), message: z.string() }),
   // Opens the Plugin's own page at `path`, the one it defined with `argo.pages.define`; the App finds the route.
   z.strictObject({ action: z.literal('navigate'), path: z.string() }),
-  z.strictObject({ action: z.literal('openUrl'), url: WebUrl }),
+  // `copy` puts that text on the clipboard first, so one press can hand over a sign-in code and open the page that asks for it.
+  z.strictObject({
+    action: z.literal('openUrl'),
+    url: WebUrl,
+    copy: z.string().optional(),
+  }),
   z.strictObject({ action: z.literal('copy'), text: z.string() }),
   z.strictObject({
     action: z.literal('share'),
