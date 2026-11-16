@@ -359,6 +359,11 @@ export const PicksAChoice: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
     await userEvent.click(canvas.getByRole('button', { name: 'Change State' }));
+
+    // The popover opens beside its field, inside the window, not off the top of it.
+    const choices = await page.findByRole('dialog', { name: 'State' });
+
+    await expect(choices.getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
     await userEvent.click(await page.findByText('Closed'));
     await expect(canvas.getByText('Closed')).toBeVisible();
     await expect(canvas.queryByText('Open')).not.toBeInTheDocument();

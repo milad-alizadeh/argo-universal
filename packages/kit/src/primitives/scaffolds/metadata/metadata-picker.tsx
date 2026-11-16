@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
 import { FieldPickerDrill, narrowed } from '#primitives/fields/field-picker';
 import type { FieldPickerProps } from '#primitives/fields/field-picker';
@@ -78,24 +78,23 @@ export function MetadataPicker(props: MetadataPickerProps): ReactElement {
   );
 }
 
-type ValueButtonProps = {
-  title: string;
-  children: ReactNode;
-  onPress?: () => void;
-  disabled?: boolean;
-};
+// The popover anchors to this button and presses it open, so what it hands down (ref, handlers, ARIA state) lands on the Pressable.
+type ValueButtonProps = ComponentProps<typeof Pressable> & { title: string };
 
-function ValueButton(props: ValueButtonProps): ReactElement {
+function ValueButton({
+  title,
+  children,
+  ...overlay
+}: ValueButtonProps): ReactElement {
   return (
     <Pressable
+      {...overlay}
       role="button"
       aria-haspopup="dialog"
-      accessibilityLabel={`Change ${props.title}`}
-      disabled={props.disabled}
-      onPress={props.onPress}
+      accessibilityLabel={`Change ${title}`}
       className="-mx-2 min-w-0 self-stretch rounded-md px-2 web:hover:bg-hover"
     >
-      {props.children}
+      {children}
     </Pressable>
   );
 }
