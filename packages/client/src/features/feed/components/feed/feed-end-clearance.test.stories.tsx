@@ -2,25 +2,21 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { Text, View } from 'react-native';
-import { expect, waitFor } from 'storybook/test';
-import { Feed } from '../../features/feed/components/feed/feed';
-import {
-  feedScrollId,
-  scrollAwayFromEnd,
-  scrollToEnd,
-} from '../../features/feed/components/feed/feed-reader.mocks';
-import { longRows } from '../../features/feed/components/feed/feed.mocks';
-import {
-  feedArgs,
-  PagedFeed,
-} from '../../features/feed/components/feed/paged-feed.mocks';
+import { expect, waitFor, within } from 'storybook/test';
 import {
   GlassCoverProvider,
   useComposerFade,
   useReportComposerPills,
-} from './composer-cover';
-import { ComposerPillLayer } from './composer-pill-layer';
-
+} from '#lib/product/composer-cover';
+import { ComposerPillLayer } from '#lib/product/composer-pill-layer';
+import type { FeedProps } from './feed';
+import {
+  feedScrollId,
+  scrollAwayFromEnd,
+  scrollToEnd,
+} from './feed-reader.mocks';
+import { longRows } from './feed.mocks';
+import { feedArgs, PagedFeed } from './paged-feed.mocks';
 interface Scene {
   // Wraps the Feed in a glass Composer's cover of this many points.
   glassCover?: number;
@@ -65,32 +61,33 @@ function Covered(
   );
 }
 
-function Stage(
-  props: Scene & { args: React.ComponentProps<typeof Feed> },
-): React.JSX.Element {
+function Stage(props: Scene & { args: FeedProps }): React.JSX.Element {
   return (
-    <View className="relative h-[600px] w-full">
-      <Covered {...props}>
-        <ComposerPillLayer pill={props.pill ? <Pill /> : null}>
-          <PagedFeed
-            {...props.args}
-            rows={longRows}
-            opensAtStart={props.opensAtStart}
-          />
-          <FadeReading atEnd />
-          <FadeReading atEnd={false} />
-        </ComposerPillLayer>
-      </Covered>
+    <View className="w-full">
+      <View testID="baseline" className="relative h-[300px] w-full">
+        <PagedFeed {...props.args} rows={longRows} opensAtStart />
+      </View>
+      <View testID="scene" className="relative h-[500px] w-full">
+        <Covered {...props}>
+          <ComposerPillLayer pill={props.pill ? <Pill /> : null}>
+            <PagedFeed
+              {...props.args}
+              rows={longRows}
+              opensAtStart={props.opensAtStart}
+            />
+            <FadeReading atEnd />
+            <FadeReading atEnd={false} />
+          </ComposerPillLayer>
+        </Covered>
+      </View>
     </View>
   );
 }
 
 const meta = {
-  title: 'Tests/Design System/Patterns/ComposerCover',
-  component: Feed,
+  title: 'Tests/Feed/EndClearance',
   parameters: { screenPreview: true },
-  args: feedArgs,
-} satisfies Meta<typeof Feed>;
+} satisfies Meta;
 
 export default meta;
 
@@ -140,8 +137,24 @@ interface Expected {
   fadeAway: { inset: number; depth: number };
 }
 
-// What the last row's own padding adds to the gap below its lowest text, measured on a Feed with no Composer and no pill (cover 0, gap 24).
-const lastRowPadding = 49.25;
+// A Feed with no Composer and no pill clears only the Feed's own gap, so what its lowest text leaves below it beyond that is the last row's own padding.
+const feedEndGapPoints = 24;
+
+async function measureLastRowPadding(baseline: HTMLElement): Promise<number> {
+  const scroll = await within(baseline).findByTestId(feedScrollId);
+  let padding = 0;
+  // A Feed that opens at its start draws its end rows as the reader gets there, so it is read again until they are drawn.
+  await waitFor(
+    async () => {
+      await scrollToEnd(scroll);
+      padding = lastTextToEnd(scroll) - feedEndGapPoints;
+      await expect(padding).toBeGreaterThan(0);
+    },
+    { timeout: 15000, interval: 200 },
+  );
+
+  return padding;
+}
 
 const readFade = (
   canvas: { getByTestId: (id: string) => HTMLElement },
@@ -155,15 +168,18 @@ const readFade = (
 // Pins every number the Feed's end learns from the Composer's cover, the pill row and the pill lift.
 function pins(scene: Scene, expected: Expected): Story {
   return {
-    render: (args) => <Stage {...scene} args={args} />,
-    play: async ({ canvas }) => {
+    render: () => <Stage {...scene} args={feedArgs} />,
+    play: async ({ canvas: page }) => {
       await settleLayout('phone');
+      const baseline = await measureLastRowPadding(
+        await page.findByTestId('baseline'),
+      );
+      const canvas = within(await page.findByTestId('scene'));
       const scroll = await canvas.findByTestId(feedScrollId);
-      // A Feed that opens at its start draws its end rows as the reader gets there, so it is read again until they are drawn.
       await waitFor(
         async () => {
           await scrollToEnd(scroll);
-          await expect(lastTextToEnd(scroll) - lastRowPadding).toBeCloseTo(
+          await expect(lastTextToEnd(scroll) - baseline).toBeCloseTo(
             expected.endSpace,
             0,
           );

@@ -48,7 +48,7 @@ export function useGlassComposer(): boolean {
 export interface FeedEndClearance {
   // The space after the Feed's last row, so it rests above the Composer and the pill over it.
   endSpace: number;
-  // How far above the Feed's bottom edge the Composer's top lies, with its pills and trays, so anything laid over the Feed's end, such as Jump to latest, keeps one gap above it.
+  // How far above the Feed's bottom edge the Composer's top lies, with its pills and trays, which the Feed's fade ends at.
   composerTop: number;
   // The `bottom` of Jump to latest: one gap above the Composer's top and above the pill, when there is one.
   floatingBottom: number;
@@ -115,7 +115,7 @@ export interface ComposerFade {
 
 // Where the Feed fades out above the Composer. Over a glass Composer it starts at the pills' top and ends at the card's top, so nothing above the pills fades; with no pills, only a short fade above the card, at the Feed's end and away from it alike.
 export function useComposerFade(atEnd: boolean): ComposerFade {
-  const { composerTop } = useFeedEndClearance();
+  const composerTop = useContext(ComposerCover);
   const pills = useContext(ComposerPills);
   const depth = useComposerFadeDepth(atEnd);
   const shortDepth = useComposerFadeDepth(true);
