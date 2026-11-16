@@ -2,13 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { router } from 'expo-router';
 import { Component, type ReactNode } from 'react';
 import { View } from 'react-native';
-import { expect, spyOn, within } from 'storybook/test';
+import { expect, fn, spyOn, within } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
 import { Pill } from '#primitives/status/pill';
 import type { AsidePlace } from '../screen/screen-aside-place';
 import { Metadata } from './metadata';
 import { MetadataPlaceContext } from './metadata-drawing-context';
+import { startingTags, stateOptions } from './metadata-editable-fixtures';
 import { EditableMetadata } from './metadata-editable.mocks';
 import { fields } from './metadata.mocks';
 
@@ -354,6 +355,10 @@ export const AsideHeadsGroupsButNotGlyphs: Story = {
 
 const page = within(document.body);
 
+const tagsTitle = 'Tags';
+
+const changeTags = 'Change Tags';
+
 export const PicksAChoice: Story = {
   render: () => <EditableMetadata />,
   play: async ({ canvas, userEvent }) => {
@@ -374,7 +379,7 @@ export const CreatesATag: Story = {
   render: () => <EditableMetadata />,
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
-    await userEvent.click(canvas.getByRole('button', { name: 'Change Tags' }));
+    await userEvent.click(canvas.getByRole('button', { name: changeTags }));
     await userEvent.type(await page.findByLabelText('Search Tags'), 'epsilon');
     await expect(page.queryByText('beta')).not.toBeInTheDocument();
     await userEvent.click(await page.findByText('Create tag “epsilon”'));
@@ -387,7 +392,7 @@ export const TogglesATag: Story = {
   render: () => <EditableMetadata />,
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
-    await userEvent.click(canvas.getByRole('button', { name: 'Change Tags' }));
+    await userEvent.click(canvas.getByRole('button', { name: changeTags }));
 
     const choices = within(await page.findByRole('dialog', { name: 'Tags' }));
 
@@ -395,5 +400,55 @@ export const TogglesATag: Story = {
     await expect(canvas.getByText('beta')).toBeVisible();
     await userEvent.click(choices.getByText('beta'));
     await expect(canvas.queryByText('beta')).not.toBeInTheDocument();
+  },
+};
+
+const toggleSpy = fn();
+
+const valueSpy = fn();
+
+// The held value stays fixed, so each press is read against the same list: a tag not held reports on, a held one off.
+export const ReportsEachPick: Story = {
+  render: () => (
+    <Metadata>
+      <Metadata.Picker
+        title={tagsTitle}
+        multiple
+        value={['alpha']}
+        options={startingTags}
+        onToggle={toggleSpy}
+      >
+        <Metadata.Label title={tagsTitle} text="alpha" />
+      </Metadata.Picker>
+      <Metadata.Picker
+        title="State"
+        value="open"
+        options={stateOptions}
+        onValueChange={valueSpy}
+      >
+        <Metadata.Label title="State" text="Open" />
+      </Metadata.Picker>
+    </Metadata>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await userEvent.click(canvas.getByRole('button', { name: changeTags }));
+
+    const tags = within(await page.findByRole('dialog', { name: tagsTitle }));
+
+    await userEvent.click(tags.getByText('beta'));
+    await userEvent.click(tags.getByText('alpha'));
+    await expect(toggleSpy).toHaveBeenNthCalledWith(1, {
+      value: 'beta',
+      on: true,
+    });
+    await expect(toggleSpy).toHaveBeenNthCalledWith(2, {
+      value: 'alpha',
+      on: false,
+    });
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(canvas.getByRole('button', { name: 'Change State' }));
+    await userEvent.click(await page.findByText('Closed'));
+    await expect(valueSpy).toHaveBeenCalledWith('closed');
   },
 };

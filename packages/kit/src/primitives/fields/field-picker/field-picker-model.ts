@@ -79,7 +79,7 @@ const reporterOf =
     reportTo(caller, payload);
   };
 
-export const heldOf = (value: string | readonly string[]): readonly string[] =>
+const heldOf = (value: string | readonly string[]): readonly string[] =>
   typeof value === 'string' ? [value] : value;
 
 // A wide handler may be given either payload; a caller's own hears only its kind, a string or a list, and the other is dropped.
