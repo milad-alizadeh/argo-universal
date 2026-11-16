@@ -1,13 +1,13 @@
 import type { Change } from '@repo/contracts';
 import { iconSymbols } from '@repo/kit/symbols/icon-names';
 import { describe, expect, it, type Mock, vi } from 'vitest';
-import type { SlotReading } from '#features/plugins';
 import type { SessionPullRequest } from '#features/sessions';
 import {
   type RowActionPorts,
   withRowActions,
 } from './session-pull-request-actions';
 import { sessionPullRequests } from './session-pull-requests';
+import type { SlotReading } from './slot-items';
 
 const automation = {
   fix: { on: false, available: false },

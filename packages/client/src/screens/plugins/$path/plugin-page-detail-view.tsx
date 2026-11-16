@@ -1,10 +1,13 @@
 import type * as React from 'react';
-import { PluginSessionRowProvider, usePluginLookup } from '#features/plugins';
+import {
+  type PageOpening,
+  PluginSessionRowProvider,
+  useOpenPluginPage,
+  usePluginLookup,
+  usePluginPage,
+} from '#features/plugins';
 import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
 import { PluginSymbolContext } from '../../../lib/product/plugin-registry';
-import type { PageOpening } from '../page-addresses';
-import { useOpenPluginPage } from '../use-plugin-opener';
-import { usePluginPage } from '../use-plugin-page';
 import { PluginDetailView } from './plugin-detail-view';
 
 type PageViewProps = PageOpening & {
@@ -24,32 +27,27 @@ export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
   const callbacks = { onOpenPage, onPageCall: page.onPageCall };
 
   return (
-    <PluginPageContexts pluginId={opening.pluginId}>
+    <PluginSymbol pluginId={opening.pluginId}>
       <PluginDetailView
         title={title}
         root={page.root}
         callbacks={callbacks}
         onBack={onBack}
       />
-    </PluginPageContexts>
+    </PluginSymbol>
   );
 }
 
-/*
- * The Plugin's own icon, for a sign-in on its page that sends no mark of its own; and the App's Session row for a
- * SessionRow in its tree.
- */
-function PluginPageContexts(props: {
+// The Plugin's own icon, for a sign-in on its page that sends no mark of its own, and the page's kit Session rows.
+function PluginSymbol(props: {
   pluginId: string;
   children: React.ReactNode;
 }): React.ReactNode {
   const symbol = usePluginLookup()(props.pluginId).icon;
 
   return (
-    <PluginSymbolContext value={symbol}>
-      <PluginSessionRowProvider onOpenPluginPage={useOpenPluginPage()}>
-        {props.children}
-      </PluginSessionRowProvider>
-    </PluginSymbolContext>
+    <PluginSessionRowProvider onOpenPluginPage={useOpenPluginPage()}>
+      <PluginSymbolContext value={symbol}>{props.children}</PluginSymbolContext>
+    </PluginSessionRowProvider>
   );
 }

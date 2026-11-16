@@ -1,8 +1,8 @@
 import type { Change } from '@repo/contracts';
 import { iconSymbols } from '@repo/kit/symbols/icon-names';
 import { describe, expect, it } from 'vitest';
-import type { ReadItem, SlotReading } from '#features/plugins';
 import { sessionPullRequests } from './session-pull-requests';
+import type { ReadItem, SlotReading } from './slot-items';
 
 const ownedId = 'github:owner/repository#12';
 

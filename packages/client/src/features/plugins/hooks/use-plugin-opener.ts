@@ -1,47 +1,16 @@
-import { router } from 'expo-router';
 import { useCallback, useLayoutEffect, useRef } from 'react';
-import { sectionOf } from '../../lib/product/navigation/sections';
-import { pathShown } from '../../lib/product/navigation/shown-page';
+import {
+  type PluginOpening,
+  pushPluginPage,
+} from '../../../lib/product/navigation/plugin-page';
+import { sectionOf } from '../../../lib/product/navigation/sections';
+import { pathShown } from '../../../lib/product/navigation/shown-page';
 import {
   pageUnavailable,
   type OpenPluginPage,
-} from '../../lib/product/plugin-actions';
-import { pluginPageRoute } from './plugin-page-route';
+} from '../../../lib/product/plugin-actions';
+import { pluginPageRoute } from '../utils/plugin-page-route';
 import { usePluginSections } from './use-plugin-sections';
-
-/*
- * What a page opens for: the Session behind a Session header action, or the Project behind a Project details row
- * (ADR-0046). It rides in the route's params, so the page's view names it to the Plugin.
- */
-export interface PluginOpening {
-  sessionId?: string;
-  projectId?: string;
-}
-
-type RouteParams = {
-  path: string[];
-  sessionId?: string;
-  projectId?: string;
-};
-
-function routeParams(
-  route: string[],
-  { sessionId, projectId }: PluginOpening,
-): RouteParams {
-  const params: RouteParams = { path: route };
-
-  if (sessionId !== undefined) params.sessionId = sessionId;
-
-  if (projectId !== undefined) params.projectId = projectId;
-
-  return params;
-}
-
-const pushPage = (route: string[], opening: PluginOpening): void =>
-  router.push({
-    pathname: '/plugins/[...path]',
-    params: routeParams(route, opening),
-  });
 
 /*
  * Opens a Plugin's pages for the Plugin whose tree fired the event, from whatever the App is showing. A page opened
@@ -60,7 +29,7 @@ export function usePluginOpener(): (
       const current = sectionOf(pathShown());
       const route = pluginPageRoute(sections, { pluginId, current }, path);
 
-      if (route) pushPage(route, opening);
+      if (route) pushPluginPage(route, opening);
       else pageUnavailable(path);
     };
 }

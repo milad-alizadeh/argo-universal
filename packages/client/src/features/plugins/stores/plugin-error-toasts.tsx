@@ -4,7 +4,7 @@ import { useSubscription } from '@trpc/tanstack-react-query';
 import type * as React from 'react';
 import { useState } from 'react';
 import { useTRPC, useResubscribeOnReconnect } from '#features/connection';
-import { pluginFailureToast } from './plugin-failure-toast';
+import { pluginFailureToast } from '../utils/plugin-failure-toast';
 
 // One watcher in the Frame reports crashes even when a Plugin's page is closed.
 export function PluginErrorToasts(): React.ReactNode {

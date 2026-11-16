@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useMemo } from 'react';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
-import { refreshPluginList } from './refresh-plugin-list';
+import { refreshPluginList } from '../utils/refresh-plugin-list';
 
 /*
  * Keeps the App's copy of the connected Server's Plugin list true to the Server. A Plugin can be turned

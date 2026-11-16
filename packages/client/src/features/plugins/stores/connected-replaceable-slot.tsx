@@ -14,16 +14,16 @@ import {
   type OnPageCall,
   type ReplaceableState,
   type SlotReplacement,
-} from '../../lib/product/plugin-registry';
+} from '../../../lib/product/plugin-registry';
 import {
   ReplaceableSlotView,
   type ReplaceableSlotDrawing,
   type ReplaceableSlotProps,
   type ReplaceableSlotViewProps,
-} from '../../lib/product/plugin-registry/replaceable-slot';
-import { slotCallsPorts, type SlotSession } from './slot-calls-ports';
-import { usePluginOpener } from './use-plugin-opener';
-import { useOperationRunner, useTreeCalls } from './use-tree-calls';
+} from '../../../lib/product/plugin-registry/replaceable-slot';
+import { usePluginOpener } from '../hooks/use-plugin-opener';
+import { useOperationRunner, useTreeCalls } from '../hooks/use-tree-calls';
+import { slotCallsPorts, type SlotSession } from '../utils/slot-calls-ports';
 
 const noSlots: readonly ReplaceableSlotId[] = [];
 

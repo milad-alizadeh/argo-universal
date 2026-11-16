@@ -1,9 +1,8 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type * as React from 'react';
+import { usePluginOpener, useProjectDetailsItems } from '#features/plugins';
 import { useProjects } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
-import { usePluginOpener } from '../../../plugins/use-plugin-opener';
-import { useProjectDetailsItems } from '../../../plugins/use-project-details';
 import {
   type ProjectDetailViewProps,
   type ProjectLoad,

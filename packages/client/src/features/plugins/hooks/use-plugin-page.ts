@@ -3,9 +3,13 @@ import { pluginPageFallback } from '@repo/contracts/plugins/wire-limits';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
-import type { OnPageCall } from '../../lib/product/plugin-registry';
-import type { KeptPage, PageAddresses, PageOpening } from './page-addresses';
-import { pageCallsPorts } from './page-calls-ports';
+import type { OnPageCall } from '../../../lib/product/plugin-registry';
+import type {
+  KeptPage,
+  PageAddresses,
+  PageOpening,
+} from '../utils/page-addresses';
+import { pageCallsPorts } from '../utils/page-calls-ports';
 import { useLivePage } from './use-live-page';
 import { usePageAddresses } from './use-page-addresses';
 import { useOperationRunner, useTreeCalls } from './use-tree-calls';

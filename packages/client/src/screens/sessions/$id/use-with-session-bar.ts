@@ -1,8 +1,5 @@
 import type { useSessionFeed } from '#features/feed';
-import {
-  type SessionContext,
-  useSessionBar,
-} from '../../plugins/use-session-bar';
+import { type SessionContext, useSessionBar } from '#features/plugins';
 import type { SessionDetailViewProps } from './session-detail-view';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;

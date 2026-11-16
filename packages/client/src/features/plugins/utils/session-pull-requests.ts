@@ -1,10 +1,10 @@
 import type { Change } from '@repo/contracts';
-import type { SlotReading } from '#features/plugins';
 import type {
   ChangeState,
   CheckDetail,
   SessionPullRequest,
 } from '#features/sessions';
+import type { SlotReading } from './slot-items';
 
 type PullRequestChange = Change & {
   pullRequest: NonNullable<Change['pullRequest']>;

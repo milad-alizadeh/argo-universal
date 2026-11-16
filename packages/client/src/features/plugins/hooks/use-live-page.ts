@@ -2,8 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useReducer } from 'react';
 import { useConnectionState } from '#features/connection';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
-import type { KeptPage, PageAddresses, PageOpening } from './page-addresses';
-import { isLive } from './page-answer';
+import type {
+  KeptPage,
+  PageAddresses,
+  PageOpening,
+} from '../utils/page-addresses';
+import { isLive } from '../utils/page-answer';
 
 const counted = (round: number): number => round + 1;
 
