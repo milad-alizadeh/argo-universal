@@ -171,8 +171,16 @@ export const UnsupportedLinkStaysText: Story = {
   },
 };
 
+// In the aside a FieldGroup is read-only whatever it holds, so one with no rows draws nothing there.
 export const EmptyHasNoFields: Story = {
   args: { children: section([], 'Unused heading') },
+  render: function InTheAside(args) {
+    return (
+      <AsidePlaceContext value="aside">
+        <FieldGroup {...args} />
+      </AsidePlaceContext>
+    );
+  },
   play: async ({ canvas }) => {
     await expect(canvas.queryByText('Unused heading')).not.toBeInTheDocument();
     await expect(canvas.queryByRole('group')).not.toBeInTheDocument();
