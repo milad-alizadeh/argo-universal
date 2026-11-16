@@ -5,7 +5,8 @@ import type { LookupFunction } from 'node:net';
 import { CapabilityRefusal } from '../access/capability-refusal';
 import type { PluginAccess } from '../access/plugin-access';
 import { checkedLookup } from '../access/plugin-addresses';
-import type { FetchCall, PluginValue } from '../protocol/runtime';
+import type { FetchReply } from '@repo/contracts/plugins/argo-calls';
+import type { FetchCall } from '../protocol/runtime';
 import { redirected, responseValue, type Hop } from './plugin-fetch-response';
 
 // What the Server decides about TLS and name lookup; tests pass a fixture certificate authority and resolver.
@@ -59,7 +60,7 @@ export function allowAccountHeader(name: string): void {
 export async function fetchCall(
   hop: Hop,
   context: FetchContext,
-): Promise<PluginValue> {
+): Promise<FetchReply> {
   return responseValue(await fetchResponse(hop, context));
 }
 

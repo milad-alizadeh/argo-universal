@@ -12,7 +12,11 @@ export const shortHead = 7;
 
 const unauthorizedStatus = 401;
 
+const forbiddenStatus = 403;
+
 const notFoundStatus = 404;
+
+const tooManyStatus = 429;
 
 export type PullTarget = PullReference & { projectId: string };
 
@@ -34,8 +38,30 @@ const unavailable = 'Account is unavailable';
 export const needsSignIn = (message: string): boolean =>
   message.includes(signInMessage) || message.includes(unavailable);
 
-function refusalOf(status: number, subject: string): Error {
+// What a read refused for GitHub's rate limit says, so the Change can say why it stopped updating.
+const rateLimitMessage = 'GitHub rate limit reached.';
+
+export const rateLimited = (message: string): boolean =>
+  message.includes(rateLimitMessage);
+
+type Reply = NonNullable<Awaited<ReturnType<Fetch>>>;
+
+const headerOf = ({ headers }: Reply, name: string): string | undefined =>
+  Object.entries(headers).find(([key]) => key.toLowerCase() === name)?.[1];
+
+// GitHub refuses a spent limit with 429, or with 403 and the headers that say so; any other 403 is a refusal.
+const isRateLimit = (reply: Reply): boolean =>
+  reply.status === tooManyStatus ||
+  (reply.status === forbiddenStatus &&
+    (headerOf(reply, 'retry-after') !== undefined ||
+      headerOf(reply, 'x-ratelimit-remaining') === '0'));
+
+function refusalOf(reply: Reply, subject: string): Error {
+  const { status } = reply;
+
   if (status === unauthorizedStatus) return new Error(signInMessage);
+
+  if (isRateLimit(reply)) return new Error(rateLimitMessage);
 
   return new Error(
     status === notFoundStatus
@@ -64,7 +90,7 @@ export async function bodyOf(
 
   if (!reply) throw new Error(signInMessage);
 
-  if (reply.status !== okStatus) throw refusalOf(reply.status, subject);
+  if (reply.status !== okStatus) throw refusalOf(reply, subject);
 
   return reply.text();
 }

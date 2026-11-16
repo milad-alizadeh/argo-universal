@@ -6,7 +6,10 @@ import { View } from 'react-native';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import { page } from 'vitest/browser';
 import { ChangeRow } from './change-row';
-import { checksOverflowChangeRow } from './change-row-fixtures';
+import {
+  checksOverflowChangeRow,
+  rateLimitedChangeRow,
+} from './change-row-fixtures';
 
 const meta = {
   title: 'Tests/Sessions/ChangeRow/Checks',
@@ -51,6 +54,27 @@ function cappedChecks(height: number): Story {
 export const TallWindow = cappedChecks(800);
 
 export const ShortWindow = cappedChecks(400);
+
+// A rate-limited Change keeps its last checks out of sight: a dash holds their place and says why on hover.
+export const RateLimited: Story = {
+  args: rateLimitedChangeRow,
+  beforeEach: async () => {
+    await settleLayout(1280);
+  },
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.queryByRole('button', { name: /CI Checks \d/ })).toBeNull();
+    await expect(canvas.getByText('–')).toBeVisible();
+
+    await userEvent.hover(
+      canvas.getByRole('button', {
+        name: 'CI Checks unknown, GitHub rate limit reached',
+      }),
+    );
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'GitHub rate limit reached',
+    );
+  },
+};
 
 async function scrollToLastCheck(popover: HTMLElement): Promise<void> {
   const frame = within(popover).getByTestId('change-check-list');
