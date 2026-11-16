@@ -27,11 +27,15 @@ export type DiagramCheck =
     };
 
 // Lines that open, close or label a block draw nothing on their own, so they are not checked alone.
+const flowchartBlocks = /^\s*(?:subgraph|end|direction|class|click)\b/;
+
+const stateBlocks = /^\s*(?:state|note|end|direction|class|\}|--)/;
+
 const structural: Partial<Record<DiagramKeyword, RegExp>> = {
-  flowchart: /^\s*(?:subgraph|end|direction|class|click)\b/,
-  graph: /^\s*(?:subgraph|end|direction|class|click)\b/,
-  stateDiagram: /^\s*(?:state|note|end|direction|class|\}|--)/,
-  'stateDiagram-v2': /^\s*(?:state|note|end|direction|class|\}|--)/,
+  flowchart: flowchartBlocks,
+  graph: flowchartBlocks,
+  stateDiagram: stateBlocks,
+  'stateDiagram-v2': stateBlocks,
   sequenceDiagram:
     /^\s*(?:loop|alt|else|opt|par|and|critical|break|rect|end|box|autonumber|activate|deactivate|title)\b/,
 };

@@ -65,9 +65,20 @@ export function renderMarkup(markup: string): string {
   return renderMermaidSVG(markup, { transparent: true, font: 'system-ui' });
 }
 
+// The bare header's drawing, kept per header: the check compares every line against it.
+const bareDrawings = new Map<string, string>();
+
+function bareDrawing(input: MarkupInput): string {
+  const markup = lineMarkup(input);
+  const drawn = bareDrawings.get(markup) ?? renderMarkup(markup);
+  bareDrawings.set(markup, drawn);
+
+  return drawn;
+}
+
 // The renderer skips what it cannot read, so a fence of only such lines draws its bare header.
 export function drawsNothing(input: MarkupInput, svg: string): boolean {
-  return svg === renderMarkup(lineMarkup(input));
+  return svg === bareDrawing(input);
 }
 
 function renderedSvg(input: MarkupInput): string | undefined {
