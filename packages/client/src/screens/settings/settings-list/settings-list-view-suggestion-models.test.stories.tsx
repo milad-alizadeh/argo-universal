@@ -68,10 +68,11 @@ async function openPicker({
   );
   const body = within(canvasElement.ownerDocument.body);
   const row = await body.findByRole('option', { name: model.name });
-  await settleOverlays(row);
+  await settleOverlays();
   await expect(
     body.getByRole('option', { name: 'Same as Session' }),
   ).toBeVisible();
+  await settleOverlays(row);
 
   return row;
 }
