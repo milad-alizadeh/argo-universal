@@ -5,12 +5,8 @@ import { unwrap } from './github-reads';
 import type { Project } from './issue-client';
 import type { IssueDeps } from './issue-deps';
 
-// A Session an Agent attached to this Issue, named as the App names it.
-export type AttachedSession = {
-  sessionId: string;
-  title: string;
-  branch: string | null;
-};
+// A Session an Agent attached to this Issue; the App draws its row from the live Session.
+export type AttachedSession = { sessionId: string };
 
 // The Issue, or the line the page shows instead when it cannot be read.
 type IssueRead = { ok: true; issue: Issue } | { ok: false; message: string };
@@ -77,5 +73,5 @@ async function namedSession(
 
   if (!session) return [];
 
-  return [{ sessionId, title: session.title, branch: session.branch }];
+  return [{ sessionId }];
 }

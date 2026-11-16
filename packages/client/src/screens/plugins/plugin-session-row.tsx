@@ -19,7 +19,7 @@ import { useSentRowItems } from './use-session-row-answers';
 /*
  * A Session's row for a kit SessionRow in a Plugin's tree: the Sessions list's own row, read live from the Server and
  * drawn under this Device's Slot choices, so it never goes stale and shows what the list shows. A Session the Server
- * does not list, such as a child Session or a deleted one, draws nothing.
+ * does not list, such as an archived or deleted Session or a child Session, draws nothing.
  */
 export function PluginSessionRow({
   sessionId,
@@ -33,8 +33,9 @@ export function PluginSessionRow({
   const agents = loadedAgents(useInstalledAgents());
   const now = useClock(true);
 
-  const session = useQuery(trpc.session.list.queryOptions({ sessionId })).data
-    ?.sessions[0];
+  const session = useQuery(
+    trpc.session.list.queryOptions({ sessionId, archived: false }),
+  ).data?.sessions[0];
 
   const sent = useSentRowItems(session);
 
