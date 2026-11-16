@@ -20,7 +20,7 @@ interface CodeBlockHeaderProps {
   glyph?: IconName;
   // A short muted line beside the title, such as why a diagram shows as code.
   note?: string;
-  // Controls before Copy, such as a diagram's switch between its drawing and its code.
+  // Controls after Copy, at the bar's end, such as a diagram's switch between its drawing and its code. Copy hides until hover, so a control before it would float off the edge.
   actions?: ReactNode;
 }
 
@@ -98,8 +98,8 @@ export function CodeBlockHeader({
     <View className={headerClassName(header.resource !== undefined)}>
       <HeaderTitle {...header} />
       <HeaderNote note={header.note} />
-      {header.actions}
       <CopyButton value={copyValue} label={copyLabel} revealOnHover />
+      {header.actions}
     </View>
   );
 }
