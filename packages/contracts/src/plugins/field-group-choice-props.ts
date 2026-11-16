@@ -69,10 +69,7 @@ const fieldGroupPickerOption = z.object({
     ),
 });
 
-const pickerChoice = z.union([
-  z.string(),
-  z.array(z.string()).readonly(),
-]);
+const pickerChoice = z.union([z.string(), z.array(z.string()).readonly()]);
 
 export const fieldGroupPickerProps = fieldGroupRowProps.extend({
   value: pickerChoice.describe(
