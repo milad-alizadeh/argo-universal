@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   invalidatePluginState,
   refreshLivePluginState,
-} from './refresh-plugin-list';
+} from './plugin-state-refresh';
 
 const filters = {
   list: { queryKey: ['plugin', 'list'] },

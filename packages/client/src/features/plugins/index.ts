@@ -75,4 +75,4 @@ export {
   usePluginEntries,
 } from './hooks/use-plugin-entries';
 
-export { invalidatePluginState } from './utils/refresh-plugin-list';
+export { invalidatePluginState } from './utils/plugin-state-refresh';

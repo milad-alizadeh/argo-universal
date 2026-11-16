@@ -30,7 +30,10 @@ export async function refreshPluginList(
   );
 }
 
-// The live change: the Plugin list and the declared Slot items follow which Plugins the Server runs.
+/*
+ * The live change: the Plugin list and the declared Slot items follow which Plugins the Server runs.
+ * It deliberately skips getSettings and cancels in-flight fetches.
+ */
 export function refreshLivePluginState(
   client: QueryClient,
   trpc: Trpc,
@@ -41,7 +44,10 @@ export function refreshLivePluginState(
   ]);
 }
 
-// A Settings change: also each Plugin's settings, which only Settings changes. It joins fetches in flight, as it always has.
+/*
+ * A Settings change: also each Plugin's settings, which only Settings changes.
+ * It joins fetches in flight, as it always has.
+ */
 export async function invalidatePluginState(
   client: QueryClient,
   trpc: Trpc,
