@@ -9,7 +9,7 @@ type ItemsEntry = Extract<
   { content: { type: 'items' } }
 >;
 
-type ItemsSlotId = ItemsEntry['id'];
+export type ItemsSlotId = ItemsEntry['id'];
 
 /*
  * The registry's entry for one items Slot, with the item that Slot answers; a Slot's screen names its Slot and the
@@ -72,7 +72,7 @@ type KeptPage<Item> = {
 };
 
 // What the reader needs of an items Slot's registry entry: the schema it parses with, and who may own its line.
-type SlotEntry<Item> = {
+export type SlotEntry<Item> = {
   merged: z.ZodType<KeptPage<Item>>;
   content: { owners?: 'one' };
 };

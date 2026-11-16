@@ -52,10 +52,7 @@ export {
   useSessionBarReading,
 } from './hooks/use-session-bar';
 
-export {
-  type ChangesContext,
-  useSessionPullRequests,
-} from './hooks/use-session-pull-requests';
+export { useSessionPullRequests } from './hooks/use-session-pull-requests';
 
 export { useStaleMarks } from './hooks/use-stale-marks';
 

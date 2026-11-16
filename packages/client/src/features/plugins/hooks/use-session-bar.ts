@@ -7,44 +7,32 @@ import {
 import type { SessionBarProps } from '#features/sessions';
 import { type SlotVisibility, useSlotVisibility } from '#features/settings';
 import { sessionBarLines } from '../utils/session-bar-lines';
-import {
-  itemsSlotEntry,
-  readSlotItems,
-  type SentItems,
-  type SlotReading,
-} from '../utils/slot-items';
-import { usePluginLookup } from './use-plugin-names';
+import { itemsSlotEntry, type SlotReading } from '../utils/slot-items';
 import { usePluginOpener } from './use-plugin-opener';
-import { useSlotItems } from './use-slot-items';
+import { useSlotReading } from './use-slot-reading';
 import { useOperationRunner } from './use-tree-calls';
 
 export type SessionContext = SlotContextOf<typeof sessionBarSlotId>;
 
-const barSlot = itemsSlotEntry(sessionBarSlotId);
+const sessionBarSlot = itemsSlotEntry(sessionBarSlotId);
 
 const inputOf = (
   session: SessionContext | undefined,
 ): SlotInputOf<typeof sessionBarSlotId> | undefined =>
   session && { slotId: sessionBarSlotId, contexts: [session] };
 
-// What the Plugins answer for one Session's bar, as the Server sent it; none until the Session has loaded.
-function useSessionBarItems(session: SessionContext | undefined): SentItems {
-  const { items } = useSlotItems(inputOf(session));
-
-  return session && items[session.sessionId];
-}
-
 /*
  * One Session's bar as the reader reads it: the Session page passes this Device's choices, and the Slot's Settings
- * page the choices on the page.
+ * page the choices on the page. None until the Session has loaded.
  */
 export function useSessionBarReading(
   session: SessionContext | undefined,
   visibility: SlotVisibility,
 ): SlotReading<SessionBarItem> {
-  return readSlotItems(barSlot, useSessionBarItems(session), {
+  return useSlotReading(sessionBarSlot, {
+    input: inputOf(session),
+    key: session?.sessionId,
     visibility,
-    lookup: usePluginLookup(),
   });
 }
 

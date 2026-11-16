@@ -3,31 +3,17 @@ import {
   type ProjectDetailsItem,
   type SlotInputOf,
 } from '@repo/contracts/plugins/wire';
-import { useSlotVisibility } from '#features/settings';
-import {
-  itemsSlotEntry,
-  type ReadItem,
-  readSlotItems,
-  type SentItems,
-} from '../utils/slot-items';
-import { usePluginLookup } from './use-plugin-names';
-import { useSlotItems } from './use-slot-items';
-
-const detailsSlot = itemsSlotEntry(projectDetailsSlotId);
+import { itemsSlotEntry, type ReadItem } from '../utils/slot-items';
+import { useSlotReading } from './use-slot-reading';
 
 type DetailsInput = SlotInputOf<typeof projectDetailsSlotId>;
+
+const projectDetailsSlot = itemsSlotEntry(projectDetailsSlotId);
 
 const inputOf = (projectId: string | undefined): DetailsInput | undefined =>
   projectId === undefined
     ? undefined
     : { slotId: projectDetailsSlotId, contexts: [{ projectId }] };
-
-// What the Plugins answered for the Project, as the Server sent it; none until the Project has loaded.
-function useProjectItems(projectId: string | undefined): SentItems {
-  const { items } = useSlotItems(inputOf(projectId));
-
-  return projectId === undefined ? undefined : items[projectId];
-}
 
 /*
  * The rows the Plugins add to one Project's details, in Slot order, with each Plugin named. Project details has no
@@ -36,9 +22,9 @@ function useProjectItems(projectId: string | undefined): SentItems {
 export function useProjectDetailsItems(
   projectId: string | undefined,
 ): readonly ReadItem<ProjectDetailsItem>[] {
-  const reading = readSlotItems(detailsSlot, useProjectItems(projectId), {
-    visibility: useSlotVisibility(projectDetailsSlotId),
-    lookup: usePluginLookup(),
+  const reading = useSlotReading(projectDetailsSlot, {
+    input: inputOf(projectId),
+    key: projectId,
   });
 
   return [...reading.items, ...reading.overflow];
