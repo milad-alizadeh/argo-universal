@@ -1,4 +1,4 @@
-import type { StatusCategory } from './jira-client';
+import type { StatusCategory } from './jira-readers';
 
 /*
  * How a person narrows a project's issues (Spec 0027): by status category, by who it is assigned to, and by text. The

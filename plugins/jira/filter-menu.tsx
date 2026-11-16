@@ -1,13 +1,13 @@
 import { Action } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { JiraPerson } from './jira-client';
+import type { JiraPerson } from './jira-readers';
 import {
   activeFilters,
   assigneeChoices,
   statusChoices,
   type IssueFilters,
 } from './jira-filters';
-import type { Listing } from './project-views';
+import type { Listing } from './view-frame';
 
 type Choice<Value extends string> = { value: Value; label: string };
 

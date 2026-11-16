@@ -54,63 +54,67 @@ export const sideSite = { host: 'side.atlassian.net', cloudId: 'cloud-side' };
 
 const ada = { accountId: person.accountId, displayName: person.displayName };
 
-const argoIssues = (): FixtureIssue[] => [
-  {
-    key: 'ARGO-3',
-    summary: 'Show Jira issues in Argo',
-    status: { name: 'In Progress', category: 'indeterminate' },
-    assignee: ada,
-    priority: 'High',
-  },
-  {
-    key: 'ARGO-2',
-    summary: 'Sign in with a scoped API token',
-    status: { name: 'Done', category: 'done' },
-    assignee: ada,
-    priority: 'Medium',
-  },
-  {
-    key: 'ARGO-1',
-    summary: 'Pick a Jira project for each Argo Project',
-    status: { name: 'To Do', category: 'new' },
-    assignee: null,
-    priority: null,
-  },
+const inProgress = { name: 'In Progress', category: 'indeterminate' } as const;
+
+const done = { name: 'Done', category: 'done' } as const;
+
+const toDo = { name: 'To Do', category: 'new' } as const;
+
+// An issue as a row: key, summary, status, assignee and priority.
+type IssueRow = [
+  string,
+  string,
+  FixtureIssue['status'],
+  FixtureIssue['assignee'],
+  string | null,
 ];
 
-export function jiraData(): JiraData {
-  return {
-    sites: [
-      {
-        ...arenaSite,
-        projects: [
-          { id: '10000', key: 'ARGO', name: 'Argo', issues: argoIssues() },
-          { id: '10001', key: 'QUIET', name: 'Quiet project', issues: [] },
-        ],
-      },
-      {
-        ...sideSite,
-        projects: [
-          {
-            id: '20000',
-            key: 'SIDE',
-            name: 'Side project',
-            issues: [
-              {
-                key: 'SIDE-1',
-                summary: 'A side issue',
-                status: { name: 'To Do', category: 'new' },
-                assignee: null,
-                priority: 'Low',
-              },
-            ],
-          },
-        ],
-      },
-    ],
-    tokens: [
-      { ...person, token: scopedToken, scoped: true },
-      { ...person, token: unscopedToken, scoped: false },
-    ],
-  };
-}
+const issueOf = ([
+  key,
+  summary,
+  status,
+  assignee,
+  priority,
+]: IssueRow): FixtureIssue => ({
+  key,
+  summary,
+  status,
+  assignee,
+  priority,
+});
+
+const argoRows: IssueRow[] = [
+  ['ARGO-3', 'Show Jira issues in Argo', inProgress, ada, 'High'],
+  ['ARGO-2', 'Sign in with a scoped API token', done, ada, 'Medium'],
+  ['ARGO-1', 'Pick a Jira project for each Argo Project', toDo, null, null],
+];
+
+const sideRows: IssueRow[] = [['SIDE-1', 'A side issue', toDo, null, 'Low']];
+
+const arena = (): FixtureSite => ({
+  ...arenaSite,
+  projects: [
+    { id: '10000', key: 'ARGO', name: 'Argo', issues: argoRows.map(issueOf) },
+    { id: '10001', key: 'QUIET', name: 'Quiet project', issues: [] },
+  ],
+});
+
+const side = (): FixtureSite => ({
+  ...sideSite,
+  projects: [
+    {
+      id: '20000',
+      key: 'SIDE',
+      name: 'Side project',
+      issues: sideRows.map(issueOf),
+    },
+  ],
+});
+
+export const jiraData = (): JiraData => ({
+  sites: [arena(), side()],
+  tokens: [
+    { ...person, token: scopedToken, scoped: true },
+    { ...person, token: unscopedToken, scoped: false },
+  ],
+});

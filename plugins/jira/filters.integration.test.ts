@@ -275,7 +275,7 @@ const failures = [
     answer: { status: 429, text: 'Rate limit exceeded.' },
     title: 'Jira is busy',
     message:
-      'Jira is limiting how often Argo can ask right now. Try again in a minute.',
+      'Jira is limiting requests right now. Try again in a minute.',
   },
 ] as const;
 
@@ -316,7 +316,7 @@ it(
 
     // The App keeps the rows it shows and says why the draw failed.
     expect(page.error).toContain(
-      'Jira is limiting how often Argo can ask right now.',
+      'Jira is limiting requests right now.',
     );
 
     // The failed page kept no answer, so asking for it again reads Jira again.

@@ -1,16 +1,14 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
 import { atlassianHost } from './atlassian';
+import { callJira, type JiraAnswer, type JiraSend } from './jira-client';
+import type { IssueFilters } from './jira-filters';
 import {
-  callJira,
   jiraReaders,
-  jiraRequests,
   type IssuePage,
-  type JiraAnswer,
   type JiraPerson,
   type JiraProject,
-  type JiraSend,
-} from './jira-client';
-import type { IssueFilters } from './jira-filters';
+} from './jira-readers';
+import { jiraRequests } from './jira-requests';
 
 /*
  * The Jira reads the pages share, as named reads (ADR-0037): Argo keeps each answer for the Project its args name,
@@ -19,29 +17,22 @@ import type { IssueFilters } from './jira-filters';
  */
 type Target = { projectId: string };
 
-type SiteTarget = Target & { cloudId: string };
+export type SiteTarget = Target & { cloudId: string };
 
-type JiraProjectTarget = SiteTarget & { projectKey: string };
+export type ProjectTarget = SiteTarget & { projectKey: string };
 
 // One page of the filtered list: the first from a null cursor, each after it from the cursor the one before answered.
-type IssuesTarget = JiraProjectTarget & {
+export type IssuesTarget = ProjectTarget & {
   filters: IssueFilters;
   cursor: string | null;
 };
-
-/*
- * A page after the first that Jira refused. The first page's failure is an answer, which the page draws in the list's
- * place; a later page's has nowhere to be drawn but the load more that asked for it, so it fails that read, which keeps
- * no answer and is read again on the next load more.
- */
-export class MoreIssuesFailed extends Error {}
 
 export type JiraReads = Readonly<{
   // The label of the Account the Project borrows, or null when it has none.
   account: (args: Target) => NamedQuery<string | null>;
   projects: (args: SiteTarget) => NamedQuery<JiraAnswer<JiraProject[]>>;
   issues: (args: IssuesTarget) => NamedQuery<JiraAnswer<IssuePage>>;
-  people: (args: JiraProjectTarget) => NamedQuery<JiraAnswer<JiraPerson[]>>;
+  people: (args: ProjectTarget) => NamedQuery<JiraAnswer<JiraPerson[]>>;
 }>;
 
 const byProject = { projectOf: ({ projectId }: Target): string => projectId };
@@ -52,52 +43,73 @@ const borrowing =
   (url, init) =>
     argo.fetch(url, { ...init, account: atlassianHost, projectId });
 
-export function defineReads(argo: Argo): JiraReads {
-  return {
-    account: argo.queries.define(
-      'account',
-      async (_args: Target) =>
-        (await argo.accounts.get(atlassianHost))?.label ?? null,
-      byProject,
-    ),
-    projects: argo.queries.define(
-      'projects',
-      ({ projectId, cloudId }: SiteTarget) =>
-        callJira(
-          borrowing(argo, projectId),
-          cloudId,
-          jiraRequests.projects(),
-          jiraReaders.projects,
-        ),
-      byProject,
-    ),
-    issues: argo.queries.define(
-      'issues',
-      async ({ projectId, cloudId, projectKey, filters, cursor }: IssuesTarget) => {
-        const answer = await callJira(
-          borrowing(argo, projectId),
-          cloudId,
-          jiraRequests.issues(projectKey, { cursor, filters }),
-          jiraReaders.issues,
-        );
+const accountRead = (argo: Argo): JiraReads['account'] =>
+  argo.queries.define(
+    'account',
+    async (_args: Target) =>
+      (await argo.accounts.get(atlassianHost))?.label ?? null,
+    byProject,
+  );
 
-        if (cursor !== null && !answer.ok)
-          throw new MoreIssuesFailed(answer.failure.message);
+const projectsRead = (argo: Argo): JiraReads['projects'] =>
+  argo.queries.define(
+    'projects',
+    ({ projectId, cloudId }: SiteTarget) =>
+      callJira({
+        send: borrowing(argo, projectId),
+        cloudId,
+        request: jiraRequests.projects(),
+        read: jiraReaders.projects,
+      }),
+    byProject,
+  );
 
-        return answer;
-      },
-      byProject,
-    ),
-    people: argo.queries.define(
-      'people',
-      ({ projectId, cloudId, projectKey }: JiraProjectTarget) =>
-        callJira(
-          borrowing(argo, projectId),
-          cloudId,
-          jiraRequests.people(projectKey),
-          jiraReaders.people,
-        ),
-      byProject,
-    ),
-  };
+/*
+ * The first page's failure is an answer, which the page draws in the list's place. A later page's has nowhere to be
+ * drawn but the load more that asked for it, so it fails that read, which keeps no answer and is read again on the
+ * next load more.
+ */
+function laterPageRead(
+  { cursor }: IssuesTarget,
+  answer: JiraAnswer<IssuePage>,
+): JiraAnswer<IssuePage> {
+  if (cursor !== null && !answer.ok) throw new Error(answer.failure.message);
+
+  return answer;
 }
+
+const issuesRead = (argo: Argo): JiraReads['issues'] =>
+  argo.queries.define(
+    'issues',
+    async (target: IssuesTarget) =>
+      laterPageRead(
+        target,
+        await callJira({
+          send: borrowing(argo, target.projectId),
+          cloudId: target.cloudId,
+          request: jiraRequests.issues(target.projectKey, target),
+          read: jiraReaders.issues,
+        }),
+      ),
+    byProject,
+  );
+
+const peopleRead = (argo: Argo): JiraReads['people'] =>
+  argo.queries.define(
+    'people',
+    ({ projectId, cloudId, projectKey }: ProjectTarget) =>
+      callJira({
+        send: borrowing(argo, projectId),
+        cloudId,
+        request: jiraRequests.people(projectKey),
+        read: jiraReaders.people,
+      }),
+    byProject,
+  );
+
+export const defineReads = (argo: Argo): JiraReads => ({
+  account: accountRead(argo),
+  projects: projectsRead(argo),
+  issues: issuesRead(argo),
+  people: peopleRead(argo),
+});

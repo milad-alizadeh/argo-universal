@@ -5,7 +5,8 @@ import {
   Stack,
   Text,
   type Argo,
-  type LoaderPage,
+  type PageTo,
+  type PluginProps,
   type TokenPasteState,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
@@ -18,15 +19,17 @@ export const signInPath = '/sign-in';
 // The email and site are not secret, so they wait in Page state for the paste that sends them with the token.
 type SignInState = { email: string; site: string };
 
+type To = PageTo<SignInState>;
+
 type SignInData = { state: TokenPasteState; error: string | null };
 
-const errorOf = (signIn: JiraSignIn): string | null => {
-  const state = signIn.flow.state();
+const flowError = (state: TokenPasteState): string | null =>
+  state.kind === 'failed' ? state.message : null;
 
-  return signIn.notice() ?? (state.kind === 'failed' ? state.message : null);
-};
+const errorOf = (signIn: JiraSignIn): string | null =>
+  signIn.notice() ?? flowError(signIn.flow.state());
 
-const signedIn = (label: string, to: PageTo): JSX.Element => (
+const signedIn = (label: string, to: To): JSX.Element => (
   <Screen title="Jira">
     <Stack direction="column" gap={6}>
       <Text role="secondary">{`Signed in as ${label}`}</Text>
@@ -36,58 +39,60 @@ const signedIn = (label: string, to: PageTo): JSX.Element => (
   </Screen>
 );
 
-type PageTo = Parameters<LoaderPage<SignInState, SignInData>['render']>[1];
+type Field = PluginProps['FieldGroup.TextField'];
 
-const scopeText = `Choose “Create API token with scopes”, pick Jira, and select ${tokenScopes.join(', ')}.`;
+const emailField = (state: SignInState, to: To): Field => ({
+  title: 'Email',
+  value: state.email,
+  placeholder: 'you@example.com',
+  keyboardType: 'email-address',
+  onChangeText: to.bind('email'),
+});
 
-const accountSection = (state: SignInState, to: PageTo): JSX.Element => (
+const siteField = (state: SignInState, to: To): Field => ({
+  title: 'Site',
+  value: state.site,
+  placeholder: 'your-team.atlassian.net',
+  keyboardType: 'url',
+  onChangeText: to.bind('site'),
+});
+
+const accountSection = (state: SignInState, to: To): JSX.Element => (
   <FieldGroup.Section key="account" title="Your Atlassian account">
-    <FieldGroup.TextField
-      key="email"
-      title="Email"
-      value={state.email}
-      placeholder="you@example.com"
-      keyboardType="email-address"
-      onChangeText={to.bind('email')}
-    />
-    <FieldGroup.TextField
-      key="site"
-      title="Site"
-      value={state.site}
-      placeholder="your-team.atlassian.net"
-      keyboardType="url"
-      onChangeText={to.bind('site')}
-    />
+    <FieldGroup.TextField key="email" {...emailField(state, to)} />
+    <FieldGroup.TextField key="site" {...siteField(state, to)} />
   </FieldGroup.Section>
 );
 
+const errorProps = (error: string | null): { error?: string } =>
+  error ? { error } : {};
+
 // The pasted token goes only to `signIn`'s secret `token` param, with the email and site already typed.
+const tokenField = (state: SignInState, data: SignInData, to: To): Field => ({
+  title: 'API token',
+  value: '',
+  placeholder: 'Paste a scoped Atlassian API token',
+  onChangeText: to.run('signIn', { ...state, token: to.payload() }),
+  ...errorProps(data.error),
+});
+
 const tokenSection = (
   state: SignInState,
-  error: string | null,
-  to: PageTo,
+  data: SignInData,
+  to: To,
 ): JSX.Element => (
   <FieldGroup.Section
     key="token"
     title="API token"
-    {...(error ? { footer: error } : {})}
+    footer={data.error ?? undefined}
   >
-    <FieldGroup.SecretField
-      key="token"
-      title="API token"
-      value=""
-      placeholder="Paste a scoped Atlassian API token"
-      onChangeText={to.run('signIn', {
-        email: state.email,
-        site: state.site,
-        token: to.payload(),
-      })}
-      {...(error ? { error } : {})}
-    />
+    <FieldGroup.SecretField key="token" {...tokenField(state, data, to)} />
   </FieldGroup.Section>
 );
 
-const tokenLink = (): JSX.Element => (
+const scopeText = `Choose “Create API token with scopes”, pick Jira, and select ${tokenScopes.join(', ')}.`;
+
+const tokenLink = (
   <FieldGroup.Section key="make" title="Make a token" footer={scopeText}>
     <FieldGroup.Link
       key="token-page"
@@ -97,22 +102,30 @@ const tokenLink = (): JSX.Element => (
   </FieldGroup.Section>
 );
 
+const introduction =
+  'Paste a scoped Atlassian API token with the email and Jira site it belongs to. Argo keeps it in your computer’s secret store.';
+
+const signInFields = (
+  data: SignInData,
+  to: To,
+  state: SignInState,
+): JSX.Element => (
+  <FieldGroup>
+    {accountSection(state, to)}
+    {tokenSection(state, data, to)}
+    {tokenLink}
+  </FieldGroup>
+);
+
 const signInForm = (
   data: SignInData,
-  to: PageTo,
+  to: To,
   state: SignInState,
 ): JSX.Element => (
   <Screen title="Sign in to Jira">
     <Stack direction="column" gap={6}>
-      <Text role="secondary">
-        Paste a scoped Atlassian API token with the email and Jira site it
-        belongs to. Argo keeps it in your computer’s secret store.
-      </Text>
-      <FieldGroup>
-        {accountSection(state, to)}
-        {tokenSection(state, data.error, to)}
-        {tokenLink()}
-      </FieldGroup>
+      <Text role="secondary">{introduction}</Text>
+      {signInFields(data, to, state)}
     </Stack>
   </Screen>
 );

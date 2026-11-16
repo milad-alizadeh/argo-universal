@@ -16,7 +16,7 @@ export async function register(argo: Argo): Promise<void> {
 
   await createTables(argo);
   await signIn.flow.provide();
-  registerOperations(argo, { reads, signIn });
+  registerOperations({ argo, reads, signIn });
   defineSignInPage(argo, signIn);
   defineJiraPages(argo, reads);
 }
