@@ -11,3 +11,5 @@ export type MetadataPillsProps = KitProps<'Metadata.Pills'>;
 export type MetadataStatusDotProps = KitProps<'Metadata.StatusDot'>;
 
 export type MetadataAvatarProps = KitProps<'Metadata.Avatar'>;
+
+export type MetadataPickerProps = KitProps<'Metadata.Picker'>;

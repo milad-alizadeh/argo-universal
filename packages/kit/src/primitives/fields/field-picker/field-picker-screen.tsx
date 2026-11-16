@@ -15,6 +15,9 @@ export type FieldPickerScreenProps = PickerProps & {
   onClose?: () => void;
   // The options the search leaves, which the rows draw; a choice still counts every option, hidden ones included.
   shown?: PickerProps['options'];
+  // What the search holds, so a picker that can create offers the typed name.
+  query?: string;
+  onQueryChange?: (query: string) => void;
 };
 
 type ScreenState = FieldPickerScreenProps & {

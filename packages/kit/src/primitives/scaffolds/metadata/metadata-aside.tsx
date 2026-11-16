@@ -7,13 +7,18 @@ import {
   MetadataPillsField,
   MetadataStatus,
 } from './metadata-parts';
+import { MetadataPicker } from './metadata-picker';
 import type { MetadataProps } from './metadata-props';
 
-type FieldElement = ReactElement<{ title?: string; icon?: string }>;
+type FieldElement = ReactElement<{
+  title?: string;
+  icon?: string;
+  children?: ReactNode;
+}>;
 
 // Metadata's wire children are fields alone, each with its title and, for some, an icon.
 const isField = (node: ReactNode): node is FieldElement =>
-  isValidElement<{ title?: string; icon?: string }>(node);
+  isValidElement<FieldElement['props']>(node);
 
 interface Group {
   title: string;
@@ -30,7 +35,18 @@ const leadsWithIcon = (field: FieldElement): boolean =>
 
 // A field that leads with a glyph of its own: a status, a person, or a value with an icon.
 const hasGlyph = (field: FieldElement): boolean =>
-  glyphFields.has(field.type) || leadsWithIcon(field);
+  glyphFields.has(field.type) ||
+  leadsWithIcon(field) ||
+  pickerShowsGlyph(field);
+
+// An editable field is bare when the one field it shows is.
+function pickerShowsGlyph(field: FieldElement): boolean {
+  if (field.type !== MetadataPicker) return false;
+
+  const [shown] = flattenedChildren(field.props.children);
+
+  return isField(shown) && hasGlyph(shown);
+}
 
 /*
  * Consecutive fields that share a title are one group under one heading, as several blockers are. A lone field with a

@@ -95,7 +95,7 @@ async function expectThought(
       canvas.getByRole('status', { name: `${thoughtTitle} 18s` }),
     ).toBeVisible();
     await expect(canvas.queryByText(summaryTitle)).not.toBeInTheDocument();
-    await expect(canvas.getByTestId('icon-thinking')).toBeVisible();
+    await expect(canvas.getByRole('img', { name: 'Solving' })).toBeVisible();
   } else {
     await expect(
       canvas.getByRole('button', { name: commandRow.title }),

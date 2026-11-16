@@ -24,6 +24,10 @@ export const issueLinkPreviewCard = {
   data: issuePreview,
 } satisfies LinkPreviewCardProps;
 
+export const closedIssueLinkPreviewCard = {
+  data: { ...issuePreview, state: 'closed' },
+} satisfies LinkPreviewCardProps;
+
 export const pullRequestLinkPreviewCard = {
   data: pullPreview,
 } satisfies LinkPreviewCardProps;
