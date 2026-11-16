@@ -11,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it, onTestFinished } from 'vitest';
 import { createCheckout } from './index';
+import { sessionBranch, worktreeName } from './session-branch';
 import { initTestRepository } from './test-git.test.mocks';
 
 interface CheckoutResources {
@@ -40,7 +41,7 @@ it('aborts a blocked Checkout and removes its worktree and new branch', async ()
     'runtime',
     'worktrees',
     'project',
-    'blocked',
+    worktreeName('blocked'),
   );
 
   const marker = join(directory, 'hook-started');
@@ -79,6 +80,8 @@ it('aborts a blocked Checkout and removes its worktree and new branch', async ()
   controller.abort();
   await expect(creation).rejects.toMatchObject({ name: 'AbortError' });
   expect(existsSync(checkoutPath)).toBe(false);
-  expect((await git('branch', '--list', 'argo/blocked')).trim()).toBe('');
+  expect((await git('branch', '--list', sessionBranch('blocked'))).trim()).toBe(
+    '',
+  );
   expect(await git('worktree', 'list')).not.toContain(checkoutPath);
 });

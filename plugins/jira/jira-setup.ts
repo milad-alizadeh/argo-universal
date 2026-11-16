@@ -18,8 +18,20 @@ export type ProjectView =
   | { kind: 'signed-out'; message: string | null }
   | { kind: 'no-site'; sites: JiraSite[] }
   | { kind: 'no-project'; site: JiraSite; projects: JiraProject[] }
-  | { kind: 'failed'; site: JiraSite; failure: JiraFailure }
+  | FailedView
   | { kind: 'issues'; site: JiraSite; project: JiraProject; page: IssuePage };
+
+/*
+ * A read Jira refused: which read it was, so a 404 names the project or the site, and whether the Project chose its
+ * Jira project, so the page offers another only when there is a choice to undo.
+ */
+export type FailedView = {
+  kind: 'failed';
+  site: JiraSite;
+  failure: JiraFailure;
+  reading: 'projects' | 'issues';
+  chosen: boolean;
+};
 
 type Read = LoaderInput['read'];
 
@@ -40,10 +52,12 @@ export const siteFor = (
 ): JiraSite | null =>
   sites.find(({ cloudId }) => cloudId === choice.cloudId) ?? onlyOne(sites);
 
-const failedView = (site: JiraSite, failure: JiraFailure): ProjectView =>
+type Failing = Omit<FailedView, 'kind' | 'failure'>;
+
+const failedView = (failing: Failing, failure: JiraFailure): ProjectView =>
   failure.kind === 'signed-out'
     ? signedOutView(failure.message)
-    : { kind: 'failed', site, failure };
+    : { kind: 'failed', failure, ...failing };
 
 const chosenProject = (
   site: JiraSite,
@@ -66,7 +80,11 @@ async function listedProject(
 ): Promise<JiraProject | ProjectView> {
   const answer = await step.read(projectsOf(step, site));
 
-  if (!answer.ok) return failedView(site, answer.failure);
+  if (!answer.ok)
+    return failedView(
+      { site, reading: 'projects', chosen: false },
+      answer.failure,
+    );
 
   const projects = answer.value;
 
@@ -88,10 +106,11 @@ const choicesOf = (
 ): NamedQuery<EditChoices> =>
   reads.choices({ projectId, cloudId, projectKey: key });
 
+type Listing = { site: JiraSite; project: JiraProject; chosen: boolean };
+
 async function issuesFor(
   step: Step,
-  site: JiraSite,
-  project: JiraProject,
+  { site, project, chosen }: Listing,
 ): Promise<ProjectView> {
   const [answer] = await Promise.all([
     step.read(issuesOf(step, site, project)),
@@ -100,7 +119,7 @@ async function issuesFor(
 
   return answer.ok
     ? { kind: 'issues', site, project, page: answer.value }
-    : failedView(site, answer.failure);
+    : failedView({ site, reading: 'issues', chosen }, answer.failure);
 }
 
 const isView = (value: JiraProject | ProjectView): value is ProjectView =>
@@ -111,10 +130,12 @@ async function siteView(
   site: JiraSite,
   choice: ProjectChoice,
 ): Promise<ProjectView> {
-  const project =
-    chosenProject(site, choice) ?? (await listedProject(step, site));
+  const chosen = chosenProject(site, choice);
+  const project = chosen ?? (await listedProject(step, site));
 
-  return isView(project) ? project : issuesFor(step, site, project);
+  return isView(project)
+    ? project
+    : issuesFor(step, { site, project, chosen: chosen !== null });
 }
 
 async function chosenView(step: Step): Promise<ProjectView> {

@@ -10,6 +10,8 @@ export interface SessionFeed {
   view: FeedView | null;
   // The newest Feed revision held, which the reader has seen when the Feed's end is on screen.
   revision: number;
+  // The newest revision of a row that is not the Agent's streamed text: when it moves, the Checkout may have.
+  workRevision: number;
   liveToolCall: ToolCallUpdate | undefined;
   permissionToolCall: ToolCallUpdate | undefined;
   snapshot: SessionSnapshot | null;

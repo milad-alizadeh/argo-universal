@@ -7,7 +7,7 @@ import {
   ComposerModeControl,
 } from '../composer-configuration/composer-configuration';
 import { ComposerStatusControls } from '../composer-status/composer-status';
-import { ComposerAttachMenu } from './composer-attach-menu';
+import { ComposerAttachmentOrCancel } from './composer-queue-cancel';
 import type {
   ToolbarLayout,
   LeftControlsLayout,
@@ -50,7 +50,7 @@ function ComposerLeftControls(layout: LeftControlsLayout): React.JSX.Element {
   return (
     <View className={leftControlsClassName(layout.configurationInactive)}>
       <View className="shrink-0">
-        <ComposerAttachMenu {...layout} />
+        <ComposerAttachmentOrCancel {...layout} />
       </View>
       <ComposerAgentControl {...layout} />
       <ComposerPhoneStatus {...layout} />

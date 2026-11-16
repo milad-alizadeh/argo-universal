@@ -3,7 +3,9 @@ import { registryOperations } from '@repo/contracts/operations/registry';
 import {
   changeAgentServer,
   setAgentEnvironment,
+  setSuggestionModel,
   readAgentServers,
+  readSuggestionModels,
   readRegistry,
   refreshRegistry,
   syncRegistry,
@@ -28,8 +30,23 @@ export function createRegistryOperations(
     'agent.install': (input) => changeInstallation(deps, input, 'add'),
     'agent.remove': (input) => changeInstallation(deps, input, 'remove'),
     'agent.setEnvironment': (input) => changeEnvironment(deps, input),
+    ...suggestionModelOperations(deps),
   };
 }
+
+const suggestionModelOperations = (
+  deps: RegistryDeps,
+): Pick<
+  RegistryImplementations,
+  'agent.getSuggestionModels' | 'agent.setSuggestionModel'
+> => ({
+  'agent.getSuggestionModels': async () => readSuggestionModels(deps.database),
+  'agent.setSuggestionModel': async ({ id, choice }) => {
+    await setSuggestionModel(deps, id, choice);
+
+    return null;
+  },
+});
 
 async function changeEnvironment(
   deps: RegistryDeps,

@@ -1,7 +1,7 @@
 /*
  * Every desktop and web popover and menu, with or without drill-in, draws Paper's Configure popover (owner,
  * 2026-10-20): a card with no edge in light mode, plain rows 4px in from every side,
- * rows 2px apart and groups 8px apart with no line between them. Phone sheets keep their grouped list.
+ * rows 2px apart and a hairline between groups (owner, 2026-11-15). Phone sheets keep their grouped list.
  */
 export const menuSurfaceClassName =
   'bg-card rounded-2xl shadow-card dark:border dark:border-border';
@@ -19,8 +19,8 @@ export const menuRowClassName =
 // Rows sit 2px apart, so hovered, pressed and checked tiles never touch.
 export const menuRowsClassName = 'gap-0.5';
 
-// With the rows' 2px gap on each side, groups sit 8px apart.
-export const menuGroupGapClassName = 'h-1';
+// The line between two groups, inset to the rows' own text edge, with 6px above and below it.
+export const menuGroupGapClassName = 'mx-2 my-1 h-px bg-border';
 
 /*
  * How far a web or desktop popover or menu stays from the window's edge when it shifts to fit: the window frame's own

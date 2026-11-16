@@ -1,8 +1,10 @@
 import { expect, it } from 'vitest';
 import { arenaSite, person, sideSite } from './mocks/jira-data';
+import { jiraService } from './mocks/jira-service';
 import {
   choose,
   firstProject,
+  picker,
   projectPage,
   secondProject,
   signIn,
@@ -106,6 +108,53 @@ it(
     await choose(second, 'Site', arenaSite.cloudId);
 
     expect(second.findText('Choose a Jira project')).toBeDefined();
+  },
+  timeoutMs,
+);
+
+it(
+  'lists every Jira project on a site with more than one page of them',
+  async () => {
+    const service = await jiraService();
+    const [arena] = service.data.sites;
+
+    const many = Array.from({ length: 130 }, (_, index) => ({
+      id: String(30_000 + index),
+      key: `P${index}`,
+      name: `Project ${index}`,
+      issues: [],
+    }));
+
+    arena?.projects.push(...many);
+
+    const jira = await startJira([firstProject], service);
+
+    await signIn(jira);
+
+    const options = (await projectPage(jira)).find(picker(jiraProject)).props
+      .options;
+
+    expect(Array.isArray(options) && options.length).toBe(132);
+    expect(service.calls('projects')).toHaveLength(2);
+  },
+  timeoutMs,
+);
+
+it(
+  'names the site when its project list is gone, and offers no project to forget',
+  async () => {
+    const jira = await startJira();
+
+    await signIn(jira);
+    jira.jira.fail('projects', {
+      status: 404,
+      json: { errorMessages: ['Site gone.'] },
+    });
+
+    const page = await projectPage(jira);
+
+    expect(page.findText('Jira couldn’t find this site')).toBeDefined();
+    expect(page.findText('Choose another Jira project')).toBeUndefined();
   },
   timeoutMs,
 );

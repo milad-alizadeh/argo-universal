@@ -139,7 +139,8 @@ const canReuseSession = (place: Place, options: NavigateOptions): boolean =>
 const setSessionParams = (href: Exclude<Href, string>): void =>
   router.setParams(href.params ?? {});
 
-function go(href: Href, place: Place, options: NavigateOptions): void {
+// Exported for a caller that reads the page shown itself, at the press.
+export function go(href: Href, place: Place, options: NavigateOptions): void {
   if (canReuseSession(place, options) && isSessionHref(href))
     setSessionParams(href);
   else goToOtherPage(href, place, options);

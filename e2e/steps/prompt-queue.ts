@@ -16,6 +16,8 @@ const editLabel = 'Edit Queued Prompt';
 
 const promptMethod = 'session/prompt';
 
+const cancelLabel = 'Cancel queue edit';
+
 function rowNamed(page: Page, text: string): Locator {
   return page
     .getByTestId(queueId)
@@ -28,8 +30,10 @@ When(
   async ({ page }, before: string, after: string): Promise<void> => {
     const row = rowNamed(page, before);
     await row.getByRole('button', { name: editLabel }).click();
-    await row.getByRole('textbox', { name: editLabel }).fill(after);
-    await row.getByRole('button', { name: 'Save', exact: true }).click();
+    await page
+      .getByRole('textbox', { name: 'Message', exact: true })
+      .fill(after);
+    await page.getByRole('button', { name: 'Send', exact: true }).click();
     await expect(rowNamed(page, after)).toBeVisible();
   },
 );
@@ -39,8 +43,10 @@ When(
   async ({ page }, before: string, after: string): Promise<void> => {
     const row = rowNamed(page, before);
     await row.getByRole('button', { name: editLabel }).click();
-    await row.getByRole('textbox', { name: editLabel }).fill(after);
-    await row.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await page
+      .getByRole('textbox', { name: 'Message', exact: true })
+      .fill(after);
+    await page.getByRole('button', { name: cancelLabel, exact: true }).click();
     await expect(row.getByText(before, { exact: true })).toBeVisible();
   },
 );
@@ -50,15 +56,17 @@ When(
   async ({ page }, text: string): Promise<void> => {
     const row = rowNamed(page, text);
     await row.getByRole('button', { name: editLabel }).click();
-    await expect(row.getByRole('textbox', { name: editLabel })).toBeEditable();
+    await expect(
+      page.getByRole('button', { name: cancelLabel, exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('textbox', { name: 'Message', exact: true }),
+    ).toBeEditable();
   },
 );
 
 When('I cancel the queue edit', async ({ page }): Promise<void> => {
-  await page
-    .getByTestId(queueId)
-    .getByRole('button', { name: 'Cancel', exact: true })
-    .click();
+  await page.getByRole('button', { name: cancelLabel, exact: true }).click();
 });
 
 When(
@@ -129,7 +137,7 @@ Then(
       .toBeNull();
     expect(requests(app.requestLogPath, promptMethod)).toHaveLength(1);
     await expect(
-      page.getByTestId(queueId).getByRole('textbox', { name: editLabel }),
+      page.getByRole('textbox', { name: 'Message', exact: true }),
     ).toBeEditable();
   },
 );

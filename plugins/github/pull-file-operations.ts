@@ -43,8 +43,8 @@ const isLinkOf =
  * The pull request's files are only read for a pull request attached to the calling Session: an Operation never reads
  * another Session's, or an unattached one, through the Project's Account.
  */
-async function requireAttached(
-  { store }: FileSource,
+export async function requireAttached(
+  { store }: Pick<ChangesSource, 'store'>,
   named: PullReference,
   caller: SessionCaller,
 ): Promise<void> {

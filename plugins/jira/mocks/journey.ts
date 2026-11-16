@@ -61,7 +61,7 @@ const field =
 const textField = (title: string): ((node: WireNode) => boolean) =>
   field('FieldGroup.TextField', title);
 
-const picker = (title: string): ((node: WireNode) => boolean) =>
+export const picker = (title: string): ((node: WireNode) => boolean) =>
   field('FieldGroup.Picker', title);
 
 // Types into a field as a person does, and waits for the pause that lands it.

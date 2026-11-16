@@ -8,6 +8,7 @@ import gitPullRequestClosed from './assets/svg-drawings/git-pull-request-closed.
 import gitPullRequestConflict from './assets/svg-drawings/git-pull-request-conflict.xml';
 import gitPullRequestDraft from './assets/svg-drawings/git-pull-request-draft.xml';
 import gitPullRequest from './assets/svg-drawings/git-pull-request.xml';
+import grip from './assets/svg-drawings/grip.xml';
 import type { SvgSymbolName } from './svg-symbols';
 
 /*
@@ -17,6 +18,7 @@ import type { SvgSymbolName } from './svg-symbols';
  * strokes; `pnpm generate:svg-drawings` in the kit writes them and the parity test checks them.
  */
 const drawings = {
+  grip,
   'chevron-right': chevronRight,
   'file-diff': fileDiff,
   'git-branch': gitBranch,

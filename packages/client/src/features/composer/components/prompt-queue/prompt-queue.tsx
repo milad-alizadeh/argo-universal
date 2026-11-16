@@ -2,7 +2,6 @@ import { Button } from '@repo/kit/primitives/actions/button';
 import { Text } from '@repo/kit/primitives/content/text';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { QueueEditorsProvider } from './queue-editors';
 import { QueueRows } from './queue-rows';
 import type { PromptQueueProps } from './queue-types';
 
@@ -11,11 +10,7 @@ export type { PromptQueueProps } from './queue-types';
 export function PromptQueue(props: PromptQueueProps): ReactElement | null {
   if (!props.queue.items.length) return null;
 
-  return (
-    <QueueEditorsProvider command={props.command}>
-      <QueueSurface {...props} />
-    </QueueEditorsProvider>
-  );
+  return <QueueSurface {...props} />;
 }
 
 function QueueSurface(props: PromptQueueProps): ReactElement {

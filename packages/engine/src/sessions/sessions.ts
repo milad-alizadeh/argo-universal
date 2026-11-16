@@ -1,4 +1,9 @@
-import type { SessionNewInput, SessionPromptInput } from '@repo/contracts';
+import type {
+  NonUserPromptSender,
+  SessionNewInput,
+  SessionPromptInput,
+} from '@repo/contracts';
+import { archiveSessionFromPlugin } from './archive/plugin-archive';
 import { startSessionCreation } from './creation/session-creation';
 import { createSessionList } from './list/session-list';
 import { OpenSessions } from './open-sessions';
@@ -7,6 +12,7 @@ import {
   type CalledOperation,
   type SessionOperationCall,
 } from './operation-call';
+import { promptFromPlugin } from './plugin-prompt';
 import type { NativeStartRequest } from './prompt-sender';
 import { createSessionRouter } from './router';
 import {
@@ -58,6 +64,19 @@ export class Sessions {
     request: NativeStartRequest,
   ): ReturnType<typeof startSessionPrompt> {
     return startSessionPrompt(this.sources, input, request);
+  }
+  // A Plugin's Prompt: starts a Turn on an idle Session, else joins the end of its queue (ADR-0055).
+  public promptFromPlugin(
+    input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
+    sender: NonUserPromptSender,
+  ): ReturnType<typeof promptFromPlugin> {
+    return promptFromPlugin(this.sources, input, sender);
+  }
+  // A Plugin's archive: the App's, refused while the Checkout has uncommitted files (ADR-0055).
+  public archiveFromPlugin(
+    sessionId: string,
+  ): ReturnType<typeof archiveSessionFromPlugin> {
+    return archiveSessionFromPlugin(this.sources, sessionId);
   }
   // Begins the Tool call of an Operation that a Session calls.
   public call(

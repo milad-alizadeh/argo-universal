@@ -126,3 +126,19 @@ it('skips a search node that is no Issue, and rejects a node with some of an Iss
     'GitHub returned an invalid Issue.',
   );
 });
+
+it('reads several Issues in one call, each under its own alias, and leaves out one GitHub no longer has', async () => {
+  const { sent, tracker } = trackerAnswering(
+    reply(200, {
+      data: { repository: { issue8: issueNode(), issue9: null } },
+      errors: [{ message: 'Could not resolve to an Issue.' }],
+    }),
+  );
+
+  const issues = await tracker.getIssues([8, 9]);
+
+  expect(issues.map(({ number }) => number)).toEqual([8]);
+  expect(sent).toHaveLength(1);
+  expect(JSON.stringify(sent)).toContain('issue8: issue(number: 8)');
+  expect(JSON.stringify(sent)).toContain('issue9: issue(number: 9)');
+});
