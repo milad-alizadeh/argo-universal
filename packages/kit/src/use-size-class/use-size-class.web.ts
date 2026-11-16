@@ -31,14 +31,21 @@ function loadedBreakpoints(): Breakpoints | undefined {
   return breakpoints;
 }
 
+/*
+ * The tokens are empty until the stylesheet has loaded, so a store subscribed before then has no query to listen to, and a
+ * viewport that settles afterwards would leave it on the size class it first read. A resize reads the snapshot again, which
+ * loads the queries then, so it is listened to as well; the queries' own change events still say when a breakpoint is crossed.
+ */
 function subscribe(listener: () => void): () => void {
   const queries = loadedBreakpoints();
   queries?.medium.addEventListener('change', listener);
   queries?.wide.addEventListener('change', listener);
+  window.addEventListener('resize', listener);
 
   return (): void => {
     queries?.medium.removeEventListener('change', listener);
     queries?.wide.removeEventListener('change', listener);
+    window.removeEventListener('resize', listener);
   };
 }
 
