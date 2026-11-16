@@ -11,111 +11,103 @@
         "key": "0",
         "props": {
           "direction": "column",
-          "align": "stretch",
-          "gap": 6
+          "gap": 6,
+          "align": "stretch"
         },
         "children": [
           {
             "type": "Stack",
             "key": "0",
             "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 0
+              "direction": "row",
+              "gap": 4,
+              "align": "center"
             },
             "children": [
               {
                 "type": "Svg",
                 "key": "0",
                 "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
                   "label": "Jira",
                   "tone": "info",
-                  "width": 64,
+                  "width": 48,
                   "aspectRatio": 1
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          },
-          {
-            "type": "Stack",
-            "key": "1",
-            "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 2
-            },
-            "children": [
-              {
-                "type": "Text",
-                "key": "0",
-                "props": {
-                  "role": "title",
-                  "children": "Sign in to Jira"
                 },
                 "children": [],
                 "slots": {}
               },
               {
-                "type": "Text",
+                "type": "Stack",
                 "key": "1",
                 "props": {
-                  "role": "secondary",
-                  "tone": "muted",
-                  "children": "Use Jira in Argo with your account."
+                  "direction": "column",
+                  "gap": 0,
+                  "align": "start"
                 },
-                "children": [],
+                "children": [
+                  {
+                    "type": "Text",
+                    "key": "0",
+                    "props": {
+                      "role": "heading",
+                      "children": "Connect your account"
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Text",
+                    "key": "1",
+                    "props": {
+                      "role": "secondary",
+                      "tone": "muted",
+                      "children": "Sign in to use Jira in Argo."
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
                 "slots": {}
               }
             ],
             "slots": {}
-          },
+          }
+        ],
+        "slots": {}
+      },
+      {
+        "type": "FieldGroup",
+        "key": "1",
+        "props": {},
+        "children": [
           {
-            "type": "Stack",
-            "key": "2",
+            "type": "FieldGroup.Section",
+            "key": "0",
             "props": {
-              "direction": "column",
-              "align": "stretch",
-              "gap": 3
+              "footer": "Opens your browser. The token stays on the Server Device."
             },
             "children": [
               {
-                "type": "Button",
+                "type": "FieldGroup.Value",
                 "key": "0",
                 "props": {
-                  "label": "Continue with Jira",
+                  "title": "Account",
+                  "value": "Not signed in"
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "FieldGroup.Link",
+                "key": "1",
+                "props": {
+                  "title": "Sign in to Jira",
+                  "action": true,
                   "onPress": {
                     "operation": "signIn",
                     "args": {}
-                  },
-                  "variant": "primary",
-                  "fullWidth": true
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          },
-          {
-            "type": "Stack",
-            "key": "3",
-            "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 0
-            },
-            "children": [
-              {
-                "type": "Text",
-                "key": "0",
-                "props": {
-                  "role": "secondary",
-                  "tone": "muted",
-                  "children": "Opens your browser. The token stays on the Server Device."
+                  }
                 },
                 "children": [],
                 "slots": {}
@@ -141,111 +133,103 @@
         "key": "0",
         "props": {
           "direction": "column",
-          "align": "stretch",
-          "gap": 6
+          "gap": 6,
+          "align": "stretch"
         },
         "children": [
           {
             "type": "Stack",
             "key": "0",
             "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 0
+              "direction": "row",
+              "gap": 4,
+              "align": "center"
             },
             "children": [
               {
                 "type": "Svg",
                 "key": "0",
                 "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
                   "label": "Jira",
                   "tone": "info",
-                  "width": 64,
+                  "width": 48,
                   "aspectRatio": 1
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          },
-          {
-            "type": "Stack",
-            "key": "1",
-            "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 2
-            },
-            "children": [
-              {
-                "type": "Text",
-                "key": "0",
-                "props": {
-                  "role": "title",
-                  "children": "Sign in to Jira"
                 },
                 "children": [],
                 "slots": {}
               },
               {
-                "type": "Text",
+                "type": "Stack",
                 "key": "1",
                 "props": {
-                  "role": "secondary",
-                  "tone": "muted",
-                  "children": "api.atlassian.com no longer accepts this sign-in."
+                  "direction": "column",
+                  "gap": 0,
+                  "align": "start"
                 },
-                "children": [],
+                "children": [
+                  {
+                    "type": "Text",
+                    "key": "0",
+                    "props": {
+                      "role": "heading",
+                      "children": "Connect your account"
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Text",
+                    "key": "1",
+                    "props": {
+                      "role": "secondary",
+                      "tone": "muted",
+                      "children": "api.atlassian.com no longer accepts this sign-in."
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
                 "slots": {}
               }
             ],
             "slots": {}
-          },
+          }
+        ],
+        "slots": {}
+      },
+      {
+        "type": "FieldGroup",
+        "key": "1",
+        "props": {},
+        "children": [
           {
-            "type": "Stack",
-            "key": "2",
+            "type": "FieldGroup.Section",
+            "key": "0",
             "props": {
-              "direction": "column",
-              "align": "stretch",
-              "gap": 3
+              "footer": "Opens your browser. The token stays on the Server Device."
             },
             "children": [
               {
-                "type": "Button",
+                "type": "FieldGroup.Value",
                 "key": "0",
                 "props": {
-                  "label": "Continue with Jira",
+                  "title": "Account",
+                  "value": "Not signed in"
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "FieldGroup.Link",
+                "key": "1",
+                "props": {
+                  "title": "Sign in to Jira",
+                  "action": true,
                   "onPress": {
                     "operation": "signIn",
                     "args": {}
-                  },
-                  "variant": "primary",
-                  "fullWidth": true
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          },
-          {
-            "type": "Stack",
-            "key": "3",
-            "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 0
-            },
-            "children": [
-              {
-                "type": "Text",
-                "key": "0",
-                "props": {
-                  "role": "secondary",
-                  "tone": "muted",
-                  "children": "Opens your browser. The token stays on the Server Device."
+                  }
                 },
                 "children": [],
                 "slots": {}
@@ -271,52 +255,52 @@
         "key": "0",
         "props": {
           "direction": "column",
-          "align": "stretch",
-          "gap": 6
+          "gap": 6,
+          "align": "stretch"
         },
         "children": [
           {
             "type": "Stack",
             "key": "0",
             "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 0
+              "direction": "row",
+              "gap": 4,
+              "align": "center"
             },
             "children": [
               {
                 "type": "Svg",
                 "key": "0",
                 "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
                   "label": "Jira",
                   "tone": "info",
-                  "width": 64,
+                  "width": 48,
                   "aspectRatio": 1
                 },
                 "children": [],
                 "slots": {}
-              }
-            ],
-            "slots": {}
-          },
-          {
-            "type": "Stack",
-            "key": "1",
-            "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 2
-            },
-            "children": [
+              },
               {
-                "type": "Text",
-                "key": "0",
+                "type": "Stack",
+                "key": "1",
                 "props": {
-                  "role": "title",
-                  "children": "Asking Jira for a code…"
+                  "direction": "column",
+                  "gap": 0,
+                  "align": "start"
                 },
-                "children": [],
+                "children": [
+                  {
+                    "type": "Text",
+                    "key": "0",
+                    "props": {
+                      "role": "heading",
+                      "children": "Asking Jira for a code…"
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
                 "slots": {}
               }
             ],
@@ -340,88 +324,91 @@
         "key": "0",
         "props": {
           "direction": "column",
-          "align": "stretch",
-          "gap": 6
+          "gap": 6,
+          "align": "stretch"
         },
         "children": [
           {
             "type": "Stack",
             "key": "0",
             "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 0
+              "direction": "row",
+              "gap": 4,
+              "align": "center"
             },
             "children": [
               {
                 "type": "Svg",
                 "key": "0",
                 "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
                   "label": "Jira",
                   "tone": "info",
-                  "width": 64,
+                  "width": 48,
                   "aspectRatio": 1
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          },
-          {
-            "type": "Stack",
-            "key": "1",
-            "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 2
-            },
-            "children": [
-              {
-                "type": "Text",
-                "key": "0",
-                "props": {
-                  "role": "title",
-                  "children": "Finish in your browser"
                 },
                 "children": [],
                 "slots": {}
               },
               {
-                "type": "Text",
+                "type": "Stack",
                 "key": "1",
                 "props": {
-                  "role": "secondary",
-                  "tone": "muted",
-                  "children": "Approve Argo on Jira. This page updates when you’re done."
+                  "direction": "column",
+                  "gap": 0,
+                  "align": "start"
                 },
-                "children": [],
+                "children": [
+                  {
+                    "type": "Text",
+                    "key": "0",
+                    "props": {
+                      "role": "heading",
+                      "children": "Finish in your browser"
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Text",
+                    "key": "1",
+                    "props": {
+                      "role": "secondary",
+                      "tone": "muted",
+                      "children": "Approve Argo on Jira. This page updates when you’re done."
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
                 "slots": {}
               }
             ],
             "slots": {}
-          },
+          }
+        ],
+        "slots": {}
+      },
+      {
+        "type": "FieldGroup",
+        "key": "1",
+        "props": {},
+        "children": [
           {
-            "type": "Stack",
-            "key": "2",
-            "props": {
-              "direction": "column",
-              "align": "stretch",
-              "gap": 3
-            },
+            "type": "FieldGroup.Section",
+            "key": "0",
+            "props": {},
             "children": [
               {
-                "type": "Button",
+                "type": "FieldGroup.Link",
                 "key": "0",
                 "props": {
-                  "label": "Cancel",
+                  "title": "Cancel",
+                  "action": true,
                   "onPress": {
                     "operation": "cancelSignIn",
                     "args": {}
-                  },
-                  "variant": "secondary",
-                  "fullWidth": true
+                  }
                 },
                 "children": [],
                 "slots": {}
@@ -447,91 +434,58 @@
         "key": "0",
         "props": {
           "direction": "column",
-          "align": "stretch",
-          "gap": 6
+          "gap": 6,
+          "align": "stretch"
         },
         "children": [
           {
             "type": "Stack",
             "key": "0",
             "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 0
+              "direction": "row",
+              "gap": 4,
+              "align": "center"
             },
             "children": [
               {
                 "type": "Svg",
                 "key": "0",
                 "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
                   "label": "Jira",
                   "tone": "info",
-                  "width": 64,
+                  "width": 48,
                   "aspectRatio": 1
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          },
-          {
-            "type": "Stack",
-            "key": "1",
-            "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 2
-            },
-            "children": [
-              {
-                "type": "Text",
-                "key": "0",
-                "props": {
-                  "role": "title",
-                  "children": "Enter this code on Jira"
                 },
                 "children": [],
                 "slots": {}
               },
               {
-                "type": "Text",
+                "type": "Stack",
                 "key": "1",
                 "props": {
-                  "role": "secondary",
-                  "tone": "muted",
-                  "children": "Jira asks for it after you continue. The code lasts 15 minutes."
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          },
-          {
-            "type": "Surface",
-            "key": "2",
-            "props": {
-              "kind": "card",
-              "padding": 4
-            },
-            "children": [
-              {
-                "type": "Stack",
-                "key": "0",
-                "props": {
                   "direction": "column",
-                  "align": "center",
-                  "gap": 0
+                  "gap": 0,
+                  "align": "start"
                 },
                 "children": [
                   {
                     "type": "Text",
                     "key": "0",
                     "props": {
-                      "role": "title-code",
-                      "children": "WDJB-MJHT"
+                      "role": "heading",
+                      "children": "Enter this code on Jira"
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Text",
+                    "key": "1",
+                    "props": {
+                      "role": "secondary",
+                      "tone": "muted",
+                      "children": "Jira asks for it after you continue."
                     },
                     "children": [],
                     "slots": {}
@@ -543,41 +497,99 @@
             "slots": {}
           },
           {
-            "type": "Stack",
-            "key": "3",
+            "type": "Surface",
+            "key": "1",
             "props": {
-              "direction": "column",
-              "align": "stretch",
-              "gap": 3
+              "kind": "card",
+              "padding": 4
             },
             "children": [
               {
-                "type": "Button",
+                "type": "Stack",
                 "key": "0",
                 "props": {
-                  "label": "Copy code and continue to Jira",
+                  "direction": "row",
+                  "gap": 0,
+                  "align": "center"
+                },
+                "children": [
+                  {
+                    "type": "Text",
+                    "key": "0",
+                    "props": {
+                      "role": "title-code",
+                      "children": "WDJB-MJHT"
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Spacer",
+                    "key": "1",
+                    "props": {},
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Button",
+                    "key": "2",
+                    "props": {
+                      "label": "Copy",
+                      "variant": "text",
+                      "onPress": {
+                        "action": "copy",
+                        "text": "WDJB-MJHT"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      },
+      {
+        "type": "FieldGroup",
+        "key": "1",
+        "props": {},
+        "children": [
+          {
+            "type": "FieldGroup.Section",
+            "key": "0",
+            "props": {
+              "footer": "Waiting for Jira… The code lasts 15 minutes."
+            },
+            "children": [
+              {
+                "type": "FieldGroup.Link",
+                "key": "0",
+                "props": {
+                  "title": "Copy code and continue to Jira",
+                  "action": true,
                   "onPress": {
                     "action": "openUrl",
                     "url": "https://example.com/login/device",
                     "copy": "WDJB-MJHT"
-                  },
-                  "variant": "primary",
-                  "fullWidth": true
+                  }
                 },
                 "children": [],
                 "slots": {}
               },
               {
-                "type": "Button",
+                "type": "FieldGroup.Link",
                 "key": "1",
                 "props": {
-                  "label": "Cancel",
+                  "title": "Cancel",
+                  "action": true,
                   "onPress": {
                     "operation": "cancelSignIn",
                     "args": {}
-                  },
-                  "variant": "text",
-                  "fullWidth": true
+                  }
                 },
                 "children": [],
                 "slots": {}
@@ -603,77 +615,77 @@
         "key": "0",
         "props": {
           "direction": "column",
-          "align": "stretch",
-          "gap": 6
+          "gap": 6,
+          "align": "stretch"
         },
         "children": [
           {
             "type": "Stack",
             "key": "0",
             "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 0
+              "direction": "row",
+              "gap": 4,
+              "align": "center"
             },
             "children": [
               {
                 "type": "Svg",
                 "key": "0",
                 "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
                   "label": "Jira",
                   "tone": "success",
-                  "width": 64,
+                  "width": 48,
                   "aspectRatio": 1
                 },
                 "children": [],
+                "slots": {}
+              },
+              {
+                "type": "Stack",
+                "key": "1",
+                "props": {
+                  "direction": "column",
+                  "gap": 0,
+                  "align": "start"
+                },
+                "children": [
+                  {
+                    "type": "Text",
+                    "key": "0",
+                    "props": {
+                      "role": "heading",
+                      "children": "Connected"
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Text",
+                    "key": "1",
+                    "props": {
+                      "role": "secondary",
+                      "tone": "muted",
+                      "children": "Signed in as ada@example.com"
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
                 "slots": {}
               }
             ],
             "slots": {}
           },
           {
-            "type": "Stack",
+            "type": "Text",
             "key": "1",
             "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 2
+              "role": "secondary",
+              "tone": "muted",
+              "children": "Manage this Account in Settings › Accounts."
             },
-            "children": [
-              {
-                "type": "Text",
-                "key": "0",
-                "props": {
-                  "role": "title",
-                  "children": "Connected to Jira"
-                },
-                "children": [],
-                "slots": {}
-              },
-              {
-                "type": "Text",
-                "key": "1",
-                "props": {
-                  "role": "secondary",
-                  "tone": "muted",
-                  "children": "Signed in as ada@example.com"
-                },
-                "children": [],
-                "slots": {}
-              },
-              {
-                "type": "Text",
-                "key": "2",
-                "props": {
-                  "role": "secondary",
-                  "tone": "muted",
-                  "children": "Manage this Account in Settings › Accounts."
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
+            "children": [],
             "slots": {}
           }
         ],
@@ -694,88 +706,91 @@
         "key": "0",
         "props": {
           "direction": "column",
-          "align": "stretch",
-          "gap": 6
+          "gap": 6,
+          "align": "stretch"
         },
         "children": [
           {
             "type": "Stack",
             "key": "0",
             "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 0
+              "direction": "row",
+              "gap": 4,
+              "align": "center"
             },
             "children": [
               {
                 "type": "Svg",
                 "key": "0",
                 "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
                   "label": "Jira",
                   "tone": "info",
-                  "width": 64,
+                  "width": 48,
                   "aspectRatio": 1
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          },
-          {
-            "type": "Stack",
-            "key": "1",
-            "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 2
-            },
-            "children": [
-              {
-                "type": "Text",
-                "key": "0",
-                "props": {
-                  "role": "title",
-                  "children": "The code expired"
                 },
                 "children": [],
                 "slots": {}
               },
               {
-                "type": "Text",
+                "type": "Stack",
                 "key": "1",
                 "props": {
-                  "role": "secondary",
-                  "tone": "muted",
-                  "children": "No approval came in time."
+                  "direction": "column",
+                  "gap": 0,
+                  "align": "start"
                 },
-                "children": [],
+                "children": [
+                  {
+                    "type": "Text",
+                    "key": "0",
+                    "props": {
+                      "role": "heading",
+                      "children": "The code expired"
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Text",
+                    "key": "1",
+                    "props": {
+                      "role": "secondary",
+                      "tone": "muted",
+                      "children": "No approval came in time."
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
                 "slots": {}
               }
             ],
             "slots": {}
-          },
+          }
+        ],
+        "slots": {}
+      },
+      {
+        "type": "FieldGroup",
+        "key": "1",
+        "props": {},
+        "children": [
           {
-            "type": "Stack",
-            "key": "2",
-            "props": {
-              "direction": "column",
-              "align": "stretch",
-              "gap": 3
-            },
+            "type": "FieldGroup.Section",
+            "key": "0",
+            "props": {},
             "children": [
               {
-                "type": "Button",
+                "type": "FieldGroup.Link",
                 "key": "0",
                 "props": {
-                  "label": "Try again",
+                  "title": "Try again",
+                  "action": true,
                   "onPress": {
                     "operation": "signIn",
                     "args": {}
-                  },
-                  "variant": "primary",
-                  "fullWidth": true
+                  }
                 },
                 "children": [],
                 "slots": {}
@@ -801,63 +816,63 @@
         "key": "0",
         "props": {
           "direction": "column",
-          "align": "stretch",
-          "gap": 6
+          "gap": 6,
+          "align": "stretch"
         },
         "children": [
           {
             "type": "Stack",
             "key": "0",
             "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 0
+              "direction": "row",
+              "gap": 4,
+              "align": "center"
             },
             "children": [
               {
                 "type": "Svg",
                 "key": "0",
                 "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\"><rect x=\"0.5\" y=\"0.5\" width=\"63\" height=\"63\" rx=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"32\" y=\"42\" text-anchor=\"middle\" font-size=\"28\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
+                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
                   "label": "Jira",
                   "tone": "info",
-                  "width": 64,
+                  "width": 48,
                   "aspectRatio": 1
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          },
-          {
-            "type": "Stack",
-            "key": "1",
-            "props": {
-              "direction": "column",
-              "align": "center",
-              "gap": 2
-            },
-            "children": [
-              {
-                "type": "Text",
-                "key": "0",
-                "props": {
-                  "role": "title",
-                  "children": "Continue on the Server Device"
                 },
                 "children": [],
                 "slots": {}
               },
               {
-                "type": "Text",
+                "type": "Stack",
                 "key": "1",
                 "props": {
-                  "role": "secondary",
-                  "tone": "muted",
-                  "children": "Open Jira in Argo on the Server Device to sign in. This device updates when you’re done."
+                  "direction": "column",
+                  "gap": 0,
+                  "align": "start"
                 },
-                "children": [],
+                "children": [
+                  {
+                    "type": "Text",
+                    "key": "0",
+                    "props": {
+                      "role": "heading",
+                      "children": "Continue on the Server Device"
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Text",
+                    "key": "1",
+                    "props": {
+                      "role": "secondary",
+                      "tone": "muted",
+                      "children": "Open Jira in Argo on the Server Device to sign in. This device updates when you’re done."
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
                 "slots": {}
               }
             ],

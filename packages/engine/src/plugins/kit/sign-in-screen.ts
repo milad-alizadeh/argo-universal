@@ -1,10 +1,16 @@
 import type { SignInData } from '@repo/contracts/plugins/sign-in-api';
 import type { ReactElement } from 'react';
 import { jsx } from './jsx-runtime';
-import { button, card, type Card, type Pressed } from './sign-in-card';
+import {
+  actionRow,
+  cardParts,
+  valueRow,
+  type Card,
+  type Pressed,
+} from './sign-in-card';
 import { stepOf, type Step } from './sign-in-step';
 
-// What the screen draws and the Operations its buttons run, as values the App acts on (ADR-0050).
+// What the screen draws and the Operations its rows run, as values the App acts on (ADR-0050).
 export type SignInParts = {
   name: string;
   data: SignInData;
@@ -16,9 +22,7 @@ const msPerMinute = 60_000;
 
 const handOver = (name: string): Card => ({
   title: 'Continue on the Server Device',
-  lines: [
-    `Open ${name} in Argo on the Server Device to sign in. This device updates when you’re done.`,
-  ],
+  line: `Open ${name} in Argo on the Server Device to sign in. This device updates when you’re done.`,
 });
 
 const canStart = ({ data }: SignInParts): boolean => !data.needsServerDevice;
@@ -26,12 +30,13 @@ const canStart = ({ data }: SignInParts): boolean => !data.needsServerDevice;
 const idleStep = (parts: SignInParts): Card =>
   canStart(parts)
     ? {
-        title: `Sign in to ${parts.name}`,
-        lines: [
-          parts.data.rejected ?? `Use ${parts.name} in Argo with your account.`,
+        title: 'Connect your account',
+        line: parts.data.rejected ?? `Sign in to use ${parts.name} in Argo.`,
+        rows: [
+          valueRow('Account', 'Not signed in'),
+          actionRow(`Sign in to ${parts.name}`, parts.start),
         ],
-        actions: [button(`Continue with ${parts.name}`, parts.start)],
-        footnote: 'Opens your browser. The token stays on the Server Device.',
+        footer: 'Opens your browser. The token stays on the Server Device.',
       }
     : handOver(parts.name);
 
@@ -39,26 +44,25 @@ type Coded = Extract<Step, { kind: 'code' }>;
 
 const codeStep = (parts: SignInParts, step: Coded): Card => ({
   title: `Enter this code on ${parts.name}`,
-  lines: [
-    `${parts.name} asks for it after you continue. The code lasts ${Math.round(step.lifetimeMs / msPerMinute)} minutes.`,
-  ],
+  line: `${parts.name} asks for it after you continue.`,
   code: step.userCode,
-  actions: [
-    button(`Copy code and continue to ${parts.name}`, {
+  rows: [
+    actionRow(`Copy code and continue to ${parts.name}`, {
       action: 'openUrl',
       url: step.verificationUri,
       copy: step.userCode,
     }),
-    button('Cancel', parts.cancel, 'text'),
+    actionRow('Cancel', parts.cancel),
   ],
+  footer: `Waiting for ${parts.name}… The code lasts ${Math.round(step.lifetimeMs / msPerMinute)} minutes.`,
 });
 
 type Ended = Extract<Step, { kind: 'ended' }>;
 
 const endStep = (parts: SignInParts, step: Ended): Card => ({
   title: step.title,
-  lines: [step.message],
-  actions: canStart(parts) ? [button('Try again', parts.start)] : [],
+  line: step.message,
+  ...(canStart(parts) && { rows: [actionRow('Try again', parts.start)] }),
 });
 
 type Waiting = Extract<Step, { kind: 'requesting' | 'waiting' }>;
@@ -68,28 +72,21 @@ const waitingStep = (parts: SignInParts, step: Waiting): Card =>
     ? { title: `Asking ${parts.name} for a code…` }
     : {
         title: 'Finish in your browser',
-        lines: [
-          `Approve Argo on ${parts.name}. This page updates when you’re done.`,
-        ],
-        actions: [button('Cancel', parts.cancel, 'secondary')],
+        line: `Approve Argo on ${parts.name}. This page updates when you’re done.`,
+        rows: [actionRow('Cancel', parts.cancel)],
       };
 
-const signedInStep = (
-  parts: SignInParts,
-  step: Extract<Step, { kind: 'signed-in' }>,
-): Card => ({
-  title: `Connected to ${parts.name}`,
-  lines: [
-    `Signed in as ${step.label}`,
-    'Manage this Account in Settings › Accounts.',
-  ],
+const signedInStep = (step: Extract<Step, { kind: 'signed-in' }>): Card => ({
+  title: 'Connected',
+  line: `Signed in as ${step.label}`,
+  footer: 'Manage this Account in Settings › Accounts.',
   signedIn: true,
 });
 
 type Plain = Exclude<Step, Coded | Ended>;
 
 function plainStep(parts: SignInParts, step: Plain): Card {
-  if (step.kind === 'signed-in') return signedInStep(parts, step);
+  if (step.kind === 'signed-in') return signedInStep(step);
 
   return step.kind === 'idle' ? idleStep(parts) : waitingStep(parts, step);
 }
@@ -102,9 +99,9 @@ function stepCard(parts: SignInParts): Card {
   return step.kind === 'ended' ? endStep(parts, step) : plainStep(parts, step);
 }
 
-// The sign-in page, drawn from kit components: every step of either flow, and the way back after a refusal.
+// The sign-in page, laid out as Settings is: every step of either flow, and the way back after a refusal.
 export const signInScreen = (parts: SignInParts): ReactElement =>
   jsx('Screen', {
     title: parts.name,
-    children: card(parts.name, stepCard(parts)),
+    children: cardParts(parts.name, stepCard(parts)),
   });

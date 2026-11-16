@@ -63,6 +63,6 @@ it('copies the code, then opens the page that asks for it, from one press', () =
 });
 
 it('gives a Device that cannot start nothing to press', () => {
-  expect(JSON.stringify(steps.serverDevice)).not.toContain('"Button"');
-  expect(JSON.stringify(steps.ended)).toContain('"label":"Try again"');
+  expect(JSON.stringify(steps.serverDevice)).not.toContain('"FieldGroup');
+  expect(JSON.stringify(steps.ended)).toContain('"title":"Try again"');
 });

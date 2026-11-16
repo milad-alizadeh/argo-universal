@@ -28,7 +28,7 @@ const closeLabel = 'Close Issue';
 
 const startLabel = 'Start Session';
 
-const signInLabel = 'Continue with GitHub';
+const signInLabel = 'Sign in to GitHub';
 
 // The sign-in polls on the Plugin's clock; each step lets one poll through.
 async function untilShown(
