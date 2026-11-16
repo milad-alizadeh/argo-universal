@@ -6,9 +6,9 @@ import {
   type PluginSectionId,
   pluginSectionId,
   sectionOf,
-} from '../../lib/product/navigation/sections';
-import { pluginSymbol } from '../../lib/product/plugin-symbol';
-import { pluginRoute, segmentsOf } from './plugin-page-route';
+} from '../../../lib/product/navigation/sections';
+import { pluginSymbol } from '../../../lib/product/plugin-symbol';
+import { pluginRoute, segmentsOf } from '../utils/plugin-page-route';
 
 export interface PluginSection extends NavigationSection {
   id: PluginSectionId;

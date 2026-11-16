@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useTRPCClient } from '#features/connection';
-import { PageAddresses } from './page-addresses';
+import { PageAddresses } from '../utils/page-addresses';
 
 // The App's Page addresses on the connected Server, drawn through `plugins.draw` and followed live through `plugins.live`.
 export function usePageAddresses(): PageAddresses {

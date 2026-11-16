@@ -7,12 +7,12 @@ import {
   type PluginLookup,
   readSlotItems,
   type SentItems,
+  sessionBarLines,
   type SlotReading,
+  useSessionBarReading,
 } from '#features/plugins';
 import { SessionWorkbenchColumn, sessionBarCards } from '#features/sessions';
 import type { SlotVisibility } from '#features/settings';
-import { sessionBarLines } from '../../../../plugins/session-bar-lines';
-import { useSessionBarReading } from '../../../../plugins/use-session-bar';
 import { useLatestSession } from './session-row-preview';
 import type { SlotPreviewProps } from './slot-detail';
 

@@ -1,12 +1,12 @@
 import { iconSymbols } from '@repo/kit/symbols/icon-names';
 import { describe, expect, it } from 'vitest';
-import { pluginSectionId } from '../../lib/product/navigation/sections';
+import { pluginSectionId } from '../../../lib/product/navigation/sections';
+import type { PluginSection } from '../hooks/use-plugin-sections';
 import {
   pluginPagePath,
   pluginPageRoute,
   segmentsOf,
 } from './plugin-page-route';
-import type { PluginSection } from './use-plugin-sections';
 
 const nav = (pluginId: string, navId: string, path: string): PluginSection => ({
   id: pluginSectionId(pluginId, navId),

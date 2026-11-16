@@ -4,9 +4,9 @@ import {
 } from '@repo/contracts/plugins/page-calls';
 import { useEffect, useState } from 'react';
 import { useTRPCClient } from '#features/connection';
-import type { OnPageCall } from '../../lib/product/plugin-registry';
-import type { OperationRunner } from './page-calls-ports';
-import { sayOperationFailed } from './say-operation-failed';
+import type { OnPageCall } from '../../../lib/product/plugin-registry';
+import type { OperationRunner } from '../utils/page-calls-ports';
+import { sayOperationFailed } from '../utils/say-operation-failed';
 
 // One Plugin tree's calls, made as `PageCalls` says on the ports its latest render holds; its waiting edits go with it.
 export function useTreeCalls(ports: PageCallsPorts): OnPageCall {

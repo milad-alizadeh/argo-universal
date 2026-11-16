@@ -1,7 +1,7 @@
 import type { SessionBarItem } from '@repo/contracts/plugins/session-bar-item';
-import type { ReadItem, SlotReading } from '#features/plugins';
 import type { SessionBarEntry, SessionBarProps } from '#features/sessions';
-import { pluginSymbol } from '../../lib/product/plugin-symbol';
+import { pluginSymbol } from '../../../lib/product/plugin-symbol';
+import type { ReadItem, SlotReading } from './slot-items';
 
 type SessionBarLines = Pick<SessionBarProps, 'shown' | 'hidden'>;
 

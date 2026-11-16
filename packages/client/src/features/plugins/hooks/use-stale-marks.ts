@@ -2,7 +2,7 @@ import type { StaleMark } from '@repo/contracts/plugins/page-address';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
-import { staleSlotAnswers } from './slot-answers';
+import { staleSlotAnswers } from '../utils/slot-answers';
 import { usePageAddresses } from './use-page-addresses';
 
 /*

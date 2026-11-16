@@ -1,5 +1,5 @@
-import type { Section } from '../../lib/product/navigation/sections';
-import type { PluginSection } from './use-plugin-sections';
+import type { Section } from '../../../lib/product/navigation/sections';
+import type { PluginSection } from '../hooks/use-plugin-sections';
 
 // Who is opening a page: the Plugin whose tree fired the event, and the section the App is showing.
 export interface PluginPageOrigin {
