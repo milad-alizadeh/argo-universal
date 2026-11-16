@@ -1,13 +1,20 @@
-import { beforeEach } from 'vitest';
+import { afterAll, beforeEach } from 'vitest';
 import { cdp, page, server } from 'vitest/browser';
 import { installShardProbe } from './shard-probe';
 
 installShardProbe();
 
+const STORY_CLEANUP_TIMEOUT_MS = 90_000;
+
 /*
- * Chromium manages collection; forcing it after every file can exceed the hook budget under load.
+ * Release memory between story files. Collection can outlast assertions on a loaded runner,
+ * so it has a separate cleanup budget.
  * Stories may emulate touch or resize the page; each starts with a mouse and the configured viewport.
  */
+afterAll(async () => {
+  await cdp().send('HeapProfiler.collectGarbage');
+}, STORY_CLEANUP_TIMEOUT_MS);
+
 beforeEach(async ({ task, onTestFailed }) => {
   if (matchMedia('(pointer: coarse)').matches)
     await cdp().send('Emulation.setTouchEmulationEnabled', { enabled: false });
