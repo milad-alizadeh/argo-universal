@@ -8,6 +8,7 @@ import {
   sessionActivitySlotId,
   sessionBarSlotId,
   sessionChangesSlotId,
+  linkMarkSlotId,
   SessionRowItem,
   sessionRowSlotId,
   SlotId,
@@ -39,6 +40,7 @@ it('keeps every Slot id with its kind', () => {
     [sessionActivitySlotId, 'add-only'],
     [sessionBarSlotId, 'add-only'],
     [sessionChangesSlotId, 'add-only'],
+    [linkMarkSlotId, 'add-only'],
     [toolCallSlotId, 'replaceable'],
     [messageSlotId, 'replaceable'],
   ]);

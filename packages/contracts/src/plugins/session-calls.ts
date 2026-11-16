@@ -24,3 +24,31 @@ export const SessionGet = z.object({
   action: z.literal('get'),
   sessionId: z.string().min(1),
 });
+
+// `argo.sessions.archive`; needs `sessions:archive` and a Session of the Project the call runs for, and is refused while a Turn runs or the Checkout has uncommitted files (ADR-0055).
+export const SessionArchive = z.object({
+  api: z.literal('sessions'),
+  action: z.literal('archive'),
+  sessionId: z.string().min(1),
+});
+
+// `argo.sessions.prompt` sends the Plugin's text as a Prompt; needs `sessions:prompt` (ADR-0055).
+export const SessionPrompt = z.object({
+  api: z.literal('sessions'),
+  action: z.literal('prompt'),
+  sessionId: z.string().min(1),
+  text: z.string().min(1),
+});
+
+export const SessionCall = z.discriminatedUnion('action', [
+  SessionGet,
+  SessionArchive,
+  SessionPrompt,
+]);
+
+// Whether the Prompt started a Turn now, or waits in the Session's queue behind the work already there.
+export const PluginPromptAnswer = z.object({
+  status: z.enum(['started', 'queued']),
+});
+
+export type PluginPromptAnswer = z.infer<typeof PluginPromptAnswer>;

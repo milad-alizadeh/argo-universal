@@ -111,6 +111,7 @@ export const SessionSnapshot = z.strictObject({
   startedBySessionId: sessionColumns.shape.startedBySessionId.default(null),
   promptQueue: PromptQueue.default(emptyPromptQueue),
   queueHolds: z.array(z.string()).default([]),
+  canSteer: z.boolean().optional(),
   state: SessionState,
   liveHeader: LiveHeader.nullable(),
   activeTurnId: turnColumns.shape.id.nullable(),

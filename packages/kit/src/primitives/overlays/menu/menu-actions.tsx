@@ -4,11 +4,15 @@ import type * as React from 'react';
 import { Fragment } from 'react';
 import { View } from 'react-native';
 import { windowEdgeInset } from '#kit/menu-surface';
-import { IconSlot } from '#primitives/content/icon';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { Chevron } from '#primitives/status/chevron';
-import { SelectedCheck } from '#primitives/status/selected-check';
 import { MenuActionLabel } from './menu-action-label';
+import {
+  ChoiceCheck,
+  ChoiceGutterContext,
+  choiceRole,
+  hasChoice,
+} from './menu-choice-check';
 import type { KeyboardFocus } from './menu-choices';
 import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';
@@ -34,9 +38,11 @@ export function MenuActions(props: MenuActionsProps): React.JSX.Element {
     <TextClassContext.Provider value="text-foreground">
       {/* Radix's popper wrapper copies the content's z-index, so the content keeps it above other overlays. */}
       <RadixMenu.Content {...actionContentProps(props)}>
-        <View className={actionContentClassName}>
-          {props.loading ? <MenuLoadingRow /> : props.actions.map(actionItem)}
-        </View>
+        <ChoiceGutterContext.Provider value={hasChoice(props.actions)}>
+          <View className={actionContentClassName}>
+            {props.loading ? <MenuLoadingRow /> : props.actions.map(actionItem)}
+          </View>
+        </ChoiceGutterContext.Provider>
       </RadixMenu.Content>
     </TextClassContext.Provider>
   );
@@ -105,6 +111,7 @@ function SubmenuTrigger({ submenu }: SubmenuProps): React.JSX.Element {
   return (
     <RadixMenu.SubTrigger asChild aria-label={label}>
       <View className={menuRowClass()}>
+        <ChoiceCheck />
         <MenuActionLabel {...submenu} />
         <SubmenuCount count={submenu.count} />
         <Chevron direction="right" />
@@ -140,28 +147,6 @@ function actionItemProps(action: MenuAction): RadixMenu.DropdownMenuItemProps {
     onSelect: action.onPress,
     ...choiceRole(action.selected),
   };
-}
-
-// An action that can be the selected one is a radio row, as the native menus check it.
-function choiceRole(
-  selected: boolean | undefined,
-): Pick<RadixMenu.DropdownMenuItemProps, 'role' | 'aria-checked'> {
-  if (selected === undefined) return {};
-
-  return { role: 'menuitemradio', 'aria-checked': selected };
-}
-
-// The leading check on the selected action, as every popover row (owner, 2026-10-20); the others keep its place, so labels line up.
-function ChoiceCheck({
-  selected,
-}: Pick<MenuAction, 'selected'>): React.JSX.Element | null {
-  if (selected === undefined) return null;
-
-  return (
-    <IconSlot>
-      {selected ? <SelectedCheck className="text-foreground" /> : null}
-    </IconSlot>
-  );
 }
 
 function actionRow(action: MenuAction): React.ComponentProps<typeof View> {

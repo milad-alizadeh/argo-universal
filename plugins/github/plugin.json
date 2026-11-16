@@ -12,8 +12,13 @@
   },
   "contributes": {
     "nav": [],
-    "slots": ["argo/session/changes/v1", "argo/session/row/v1"],
+    "slots": [
+      "argo/session/changes/v1",
+      "argo/session/row/v1",
+      "argo/link/mark/v1"
+    ],
     "instructions": "instructions.md",
+    "watch": { "path": "/", "interval": 60000 },
     "operations": [
       {
         "name": "attach",
@@ -53,6 +58,10 @@
           "sessionId": {
             "type": "string",
             "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          },
+          "unlessAttached": {
+            "type": "boolean",
+            "description": "Skip the look, and answer attached, when the Session already has a pull request. Argo sets it when a Turn ends."
           }
         }
       },
@@ -81,6 +90,48 @@
           }
         },
         "caller": ["project"]
+      },
+      {
+        "name": "automationSet",
+        "label": "Turn an automation on or off for a pull request",
+        "description": "Turn Auto-fix, Auto-merge or Auto-archive on or off for one pull request attached to the calling Session. Auto-fix prompts the Session once for each failed Check of the pull request's head commit, and turns itself off after three Prompts on one commit with no new push. Auto-merge is GitHub's own: it merges when the pull request is ready, with the first method the repository allows (squash, merge, rebase), and shows whatever GitHub reports. Auto-archive archives the Session once the pull request is merged or closed and no other attached pull request is open, waiting while a Turn runs. An Agent's call asks the person first.",
+        "tier": "act",
+        "keywords": [
+          "github",
+          "pull request",
+          "pr",
+          "auto-merge",
+          "auto-fix",
+          "auto-archive",
+          "archive",
+          "automation",
+          "merge",
+          "session"
+        ],
+        "params": {
+          "reference": {
+            "type": "string",
+            "description": "The pull request: owner/repo#123, its GitHub URL, or just its number for the Project's own repository.",
+            "required": true
+          },
+          "kind": {
+            "type": "string",
+            "description": "Which automation: fix (prompt the Session about each failed Check), merge (GitHub's auto-merge) or archive (archive the Session once the pull request is merged or closed).",
+            "required": true,
+            "choices": ["fix", "merge", "archive"]
+          },
+          "on": {
+            "type": "boolean",
+            "description": "True to turn it on, false to turn it off.",
+            "required": true
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
+          }
+        },
+        "caller": ["project"],
+        "confirmAgent": true
       },
       {
         "name": "list",
@@ -184,6 +235,12 @@
   "capabilities": [
     {
       "kind": "sessions:read"
+    },
+    {
+      "kind": "sessions:prompt"
+    },
+    {
+      "kind": "sessions:archive"
     },
     {
       "kind": "fetch",

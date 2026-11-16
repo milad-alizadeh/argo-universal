@@ -83,7 +83,7 @@ function childHeights(
   if (props.fit === false || props.maxHeight !== undefined)
     return { maxHeight: props.maxHeight };
 
-  return { fitHeight: height };
+  return fittingHeight(props.fitHeight, height);
 }
 
 function PlainRows<Item>(props: ListProps<Item>): ReactElement {
@@ -151,4 +151,11 @@ const childDrawing: Pick<
 
 function childAnchor(anchor: ListProps<never>['anchor']): true | undefined {
   return anchor === 'end' ? true : undefined;
+}
+
+function fittingHeight(
+  height: ChildrenOptions['fitHeight'],
+  windowHeight: number,
+): Pick<ListProps<never>, 'fitHeight'> {
+  return { fitHeight: height ?? windowHeight };
 }

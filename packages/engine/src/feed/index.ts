@@ -1,4 +1,8 @@
-export { promptMessageChange, promptMessageId } from './feed-change';
+export {
+  promptMessageChange,
+  promptMessageId,
+  userMessageChange,
+} from './feed-change';
 
 export {
   type FeedActorRef,

@@ -15,16 +15,14 @@ interface Props {
 const keyOf = (change: SessionPullRequest): string =>
   change.id ?? String(change.number);
 
-// "Show more" and "Show less" take the Feed's "Show more" look: plain muted text, pressed as a button.
+// "Show more" and "Show less" read in the card's row title type, pressed as a button.
 function Toggle(props: {
   expanded: boolean;
   onPress: () => void;
 }): ReactElement {
   return (
     <Pressable role="button" onPress={props.onPress} className="px-1 py-2">
-      <Text role="body" tone="muted">
-        {props.expanded ? 'Show less' : 'Show more'}
-      </Text>
+      <Text role="body">{props.expanded ? 'Show less' : 'Show more'}</Text>
     </Pressable>
   );
 }
@@ -38,8 +36,18 @@ const rowsOf = (
       key={keyOf(change)}
       change={change}
       onOpen={() => onOpenChange(change)}
+      onCopyLink={change.onCopyLink}
+      onDetach={change.onDetach}
+      onSetAutomation={change.onSetAutomation}
     />
   ));
+
+// Every Change as a row, with no limit: a phone's Changes sheet lists them all.
+export function ChangeRows(props: Props): ReactElement {
+  return (
+    <View className="px-3">{rowsOf(props.changes, props.onOpenChange)}</View>
+  );
+}
 
 // Up to three Changes, then Show more for all of them and Show less to go back.
 export function WorkbenchChangeRows(props: Props): ReactElement {

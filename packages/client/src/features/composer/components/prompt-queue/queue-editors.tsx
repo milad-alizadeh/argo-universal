@@ -11,12 +11,13 @@ import {
 } from 'react';
 import { promptText, editedPrompt } from './queue-content';
 import {
-  editorLifetime,
+  holdEdit,
   releaseEdit,
   type EditTarget,
   type EditorLifetime,
 } from './queue-editor-lifetime';
 import type { PromptQueueProps } from './queue-types';
+import { useQueueEditorLifetime } from './use-queue-editor-lifetime';
 
 type Draft = EditTarget & { text: string };
 
@@ -43,7 +44,7 @@ export function QueueEditorsProvider({
   children,
 }: EditorOwner): ReactElement {
   const [drafts, setDrafts] = useState<Drafts>({});
-  const [lifetime] = useState(() => editorLifetime(command));
+  const lifetime = useQueueEditorLifetime(command);
   useEditorLifetime(lifetime);
   const binding = { command, drafts, setDrafts, lifetime };
 
@@ -94,7 +95,7 @@ async function beginEdit(binding: Binding, row: QueuedPrompt): Promise<void> {
   };
 
   binding.lifetime.claim(target);
-  await binding.command({ action: 'hold', ...target });
+  await holdEdit(binding.command, binding.lifetime, target);
 
   if (!binding.lifetime.active()) return releaseEdit(binding.command, target);
   binding.setDrafts((drafts) => ({
