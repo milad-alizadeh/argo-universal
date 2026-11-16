@@ -89,7 +89,7 @@ interface ChecksListProps {
 
 function ChecksList(props: ChecksListProps): ReactElement {
   return (
-    <List appearance="plain" fit>
+    <List appearance="plain" fitHeight={320} testID="change-check-list">
       <ListSection>
         {byState(props.details).map((check) => (
           <CheckRow key={check.name} {...check} />

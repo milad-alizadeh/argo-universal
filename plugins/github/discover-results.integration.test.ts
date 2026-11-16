@@ -99,7 +99,13 @@ it(
       signIn: true,
     });
     expect(await listed(run)).toMatchObject({
-      changes: [{ repository: 'owner/repository', number: 12 }],
+      changes: [
+        {
+          repository: 'owner/repository',
+          pullRequest: { number: 12 },
+          stale: 'signIn',
+        },
+      ],
     });
   },
   slow,

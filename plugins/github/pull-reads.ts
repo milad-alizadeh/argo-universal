@@ -8,7 +8,7 @@ export const githubHost = 'api.github.com';
 
 const okStatus = 200;
 
-const shortHead = 7;
+export const shortHead = 7;
 
 const unauthorizedStatus = 401;
 
@@ -84,7 +84,7 @@ export async function fetchPull(
 }
 
 // The Checks of one commit as the signed-in person sees them.
-async function fetchChecks(
+export async function fetchChecks(
   fetch: Fetch,
   { repository, head, projectId }: ChecksTarget,
 ): Promise<CheckInfo[]> {

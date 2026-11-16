@@ -33,22 +33,32 @@ function modifiers(width: number, layout: 'regular' | 'compact'): Story {
     play: async ({ canvas }) => {
       await settleLayout(width);
 
-      for (const label of ['Draft', 'Conflict']) {
-        const row = within(
+      const rowOf = (label: string): ReturnType<typeof within> =>
+        within(
           canvas.getByRole('button', {
             name: new RegExp(`^${label} Change, Running`),
           }),
         );
 
-        await expect(row.getByText(label, { exact: true })).toBeVisible();
-        await expect(row.getByTestId('icon-pr-open')).toBeVisible();
-        await expect(
-          row.queryByTestId('icon-pr-draft'),
-        ).not.toBeInTheDocument();
-        await expect(
-          row.queryByTestId('icon-pr-conflict'),
-        ).not.toBeInTheDocument();
-      }
+      // A draft has a mark of its own, so nothing is written beside it.
+      const draft = rowOf('Draft');
+
+      await expect(draft.getByTestId('icon-pr-draft')).toBeVisible();
+      await expect(draft.queryByTestId('icon-pr-open')).not.toBeInTheDocument();
+      await expect(
+        draft.queryByText('Draft', { exact: true }),
+      ).not.toBeInTheDocument();
+
+      // A conflict is written beside the Open mark; it has no mark of its own.
+      const conflict = rowOf('Conflict');
+
+      await expect(
+        conflict.getByText('Conflict', { exact: true }),
+      ).toBeVisible();
+      await expect(conflict.getByTestId('icon-pr-open')).toBeVisible();
+      await expect(
+        conflict.queryByTestId('icon-pr-conflict'),
+      ).not.toBeInTheDocument();
     },
   };
 }

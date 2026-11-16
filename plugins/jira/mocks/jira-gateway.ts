@@ -95,6 +95,7 @@ const callOf = (
   site: entry.located.site,
   data: routing.data,
   match,
+  query: new URLSearchParams(entry.request.path.split('?').at(1)),
   body: parseJson(entry.request.body),
 });
 

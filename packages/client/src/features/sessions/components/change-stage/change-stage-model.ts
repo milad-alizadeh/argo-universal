@@ -1,3 +1,5 @@
+import { changeMarks, type ChangeMarkName } from '@repo/kit/stage-marks';
+
 // The stages a Change moves through, in order; a picker reads its options from here.
 export const changeStageNames = [
   'working',
@@ -14,8 +16,8 @@ export const changeModifierNames = ['draft', 'conflict'] as const;
 type ChangeModifier = (typeof changeModifierNames)[number];
 
 /*
- * Draft and conflict describe an Open Change, without replacing its stage. `modifier` is the one a single mark draws;
- * `modifiers` holds every fact that holds, so a draft PR that also conflicts keeps both.
+ * Draft and conflict describe an Open Change, without replacing its stage. `modifiers` holds every fact that holds,
+ * so a draft PR that also conflicts keeps both: the draft is its mark, and the conflict is written beside it.
  */
 export type ChangeState =
   | {
@@ -29,40 +31,32 @@ export type ChangeState =
       modifiers?: never;
     };
 
-const stages = {
-  working: { label: 'Working', icon: 'pencil', tone: 'neutral' },
-  branch: { label: 'Branch', icon: 'branch', tone: 'neutral' },
-  open: { label: 'Open', icon: 'pr-open', tone: 'success' },
-  merged: { label: 'Merged', icon: 'pr-merged', tone: 'done' },
-  closed: { label: 'Closed', icon: 'pr-closed', tone: 'danger' },
-} as const;
+// What is written beside a mark: a conflict blocks an Open Change without changing where it has got to.
+const conflict = { label: 'Conflict', tone: 'warning' } as const;
 
-const modifiers = {
-  draft: { label: 'Draft', tone: 'muted' },
-  conflict: { label: 'Conflict', tone: 'warning' },
-} as const;
+type ModifierAppearance = typeof conflict;
 
-type ModifierAppearance = (typeof modifiers)[ChangeModifier];
-
-type StageAppearance = (typeof stages)[ChangeStageName] & {
-  // The first modifier that holds.
+type StageAppearance = (typeof changeMarks)[ChangeMarkName] & {
   modifier?: ModifierAppearance;
 };
 
-// Every modifier that holds, draft before conflict, whichever way the state names them.
-export function changeModifiers(state: ChangeState): ModifierAppearance[] {
-  const named = new Set([...(state.modifiers ?? []), state.modifier]);
+const named = (state: ChangeState): ReadonlySet<ChangeModifier | undefined> =>
+  new Set([...(state.modifiers ?? []), state.modifier]);
 
-  return changeModifierNames.flatMap((name) =>
-    named.has(name) ? [modifiers[name]] : [],
-  );
+// What is written beside the mark. A draft is not: it has a mark of its own.
+export function changeModifiers(state: ChangeState): ModifierAppearance[] {
+  return named(state).has('conflict') ? [conflict] : [];
 }
 
-// Shared by every drawing: a modifier never changes the Open stage's glyph or tone.
+const markName = (state: ChangeState): ChangeMarkName =>
+  named(state).has('draft') ? 'draft' : state.stage;
+
+// Shared by every drawing, from the one table every surface marks a Change from.
 export function resolveChangeStage(state: ChangeState): StageAppearance {
   const [modifier] = changeModifiers(state);
+  const mark = changeMarks[markName(state)];
 
-  return modifier ? { ...stages[state.stage], modifier } : stages[state.stage];
+  return modifier ? { ...mark, modifier } : mark;
 }
 
 export function changeDescription(state: ChangeState): string {

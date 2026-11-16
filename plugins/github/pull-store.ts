@@ -1,8 +1,13 @@
 import type { Argo, StorageResult } from '@argo/plugin-kit';
+import { createArchiveStore, type ArchiveStore } from './pull-archive-store';
+import { createFixStore, type FixStore } from './pull-fix-store';
 import type { PullReference } from './pull-reference';
 
+// One pull request as a Project reads it: the key of what is kept of it.
+export type PullKey = PullReference & { projectId: string };
+
 // One Session's association with one pull request, in one Project: the Plugin's own record of what to read from GitHub.
-export type PullLink = PullReference & { projectId: string; sessionId: string };
+export type PullLink = PullKey & { sessionId: string };
 
 // The Plugin's own storage, which holds nothing but these associations (ADR-0052).
 type Storage = Pick<Argo, 'storage'>;
@@ -16,6 +21,10 @@ const table =
   'CREATE TABLE IF NOT EXISTS pull_associations (project_id TEXT NOT NULL, session_id TEXT NOT NULL, repository TEXT NOT NULL, number INTEGER NOT NULL, attached_at TEXT NOT NULL, PRIMARY KEY (project_id, session_id, repository, number))';
 
 export type PullStore = {
+  // What Auto-fix keeps beside the associations; detaching a pull request removes it too.
+  fix: FixStore;
+  // What Auto-archive keeps beside them; detaching a pull request removes it too.
+  archive: ArchiveStore;
   // Attaching twice is the same association, so the first time stands.
   attach: (link: PullLink) => Promise<void>;
   // Removes only this association; one that is not there is already detached.
@@ -86,7 +95,7 @@ const deleteOf = (
 
 // Each statement waits for the table, then runs.
 const writing =
-  (argo: Storage, ready: () => Promise<StorageResult>) =>
+  (argo: Storage, ready: Ready) =>
   async (
     statement: Parameters<Argo['storage']['execute']>[0],
   ): Promise<void> => {
@@ -94,18 +103,38 @@ const writing =
     await argo.storage.execute(statement);
   };
 
+type Ready = () => Promise<StorageResult>;
+
+type Write = ReturnType<typeof writing>;
+
+const detaching =
+  (write: Write, { fix, archive }: Pick<PullStore, 'fix' | 'archive'>) =>
+  async (link: PullLink): Promise<void> => {
+    await write(deleteOf(link));
+    await fix.forget(link);
+    await archive.disable(link);
+  };
+
+const reading =
+  (argo: Storage, ready: Ready) =>
+  async (sessionIds: readonly string[]): Promise<PullLink[]> => {
+    await ready();
+
+    return linksOf(await argo.storage.execute(selectFor(sessionIds)));
+  };
+
 export function createPullStore(argo: Storage): PullStore {
   const ready = readyTables(argo);
   const write = writing(argo, ready);
+  const fix = createFixStore(argo);
+  const archive = createArchiveStore(argo);
 
   return {
+    fix,
+    archive,
     attach: (link) => write(insertOf(link)),
-    detach: (link) => write(deleteOf(link)),
-    forSessions: async (sessionIds) => {
-      await ready();
-
-      return linksOf(await argo.storage.execute(selectFor(sessionIds)));
-    },
+    detach: detaching(write, { fix, archive }),
+    forSessions: reading(argo, ready),
   };
 }
 

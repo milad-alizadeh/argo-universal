@@ -1,6 +1,7 @@
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { worktreeName } from '@repo/git';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { afterEach, expect, it } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
@@ -57,7 +58,11 @@ it.each([
     expect(created.checkout.path).toBe(
       checkout.type === 'main'
         ? directory
-        : join(directory, '.argo/worktrees/project-1/new-session'),
+        : join(
+            directory,
+            '.argo/worktrees/project-1',
+            worktreeName(newSessionId),
+          ),
     );
   },
 );

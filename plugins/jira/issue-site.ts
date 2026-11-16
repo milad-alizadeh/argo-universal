@@ -1,5 +1,8 @@
 import type { Argo } from '@argo/plugin-kit';
 import { callJira, type JiraAnswer, type JiraCall } from './jira-client';
+import { allPages } from './jira-paging';
+import { jiraReaders } from './jira-readers';
+import { jiraRequests } from './jira-requests';
 import { siteFor } from './jira-setup';
 import {
   storeQueries,
@@ -16,12 +19,14 @@ import { borrowing } from './read-scope';
  */
 export type IssueCalls = Pick<Argo, 'fetch' | 'storage' | 'changed'>;
 
-export type Located = Pick<JiraCall<never>, 'send' | 'cloudId'> & {
-  site: JiraSite;
-  projectKey: string | null;
-};
+type Sent = Pick<JiraCall<never>, 'send' | 'cloudId'>;
+
+export type Located = Sent & { site: JiraSite; projectKey: string };
 
 const noSite = 'Choose a Jira site for this Project first, on its Jira page.';
+
+const noProject =
+  'Choose a Jira project for this Project first, on its Jira page.';
 
 type Stored = { sites: JiraSite[]; choice: ProjectChoice };
 
@@ -48,6 +53,33 @@ function keyOn(
   return cloudId === site.cloudId && project ? project.key : null;
 }
 
+// The page shows the only Jira project the person can see without asking, so an Operation takes it too.
+async function onlyProjectKey(sent: Sent): Promise<string | null> {
+  const answer = await allPages((startAt) =>
+    callJira({
+      ...sent,
+      request: jiraRequests.projects(startAt),
+      read: jiraReaders.projects,
+    }),
+  );
+
+  const [only, ...others] = answered(answer);
+
+  return only && others.length === 0 ? only.key : null;
+}
+
+async function projectKeyOf(
+  sent: Sent,
+  site: JiraSite,
+  choice: ProjectChoice,
+): Promise<string> {
+  const key = keyOn(site, choice) ?? (await onlyProjectKey(sent));
+
+  if (!key) throw new Error(noProject);
+
+  return key;
+}
+
 export async function located(
   argo: IssueCalls,
   projectId: string,
@@ -57,9 +89,9 @@ export async function located(
 
   if (!site) throw new Error(noSite);
 
-  const send = borrowing(argo, projectId);
+  const sent = { send: borrowing(argo, projectId), cloudId: site.cloudId };
 
-  return { site, cloudId: site.cloudId, send, projectKey: keyOn(site, choice) };
+  return { ...sent, site, projectKey: await projectKeyOf(sent, site, choice) };
 }
 
 function answered<Value>(answer: JiraAnswer<Value>): Value {

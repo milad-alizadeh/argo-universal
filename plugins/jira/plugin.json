@@ -136,7 +136,7 @@
       {
         "name": "getIssue",
         "label": "Read a Jira issue",
-        "description": "Reads one Jira issue: its summary, description as Markdown, status, assignee, priority, labels, link, and the statuses Jira allows it to move to now.",
+        "description": "Reads one issue of the Jira project this Project shows: its summary, description as Markdown, status, assignee, priority, labels, link, and the statuses Jira allows it to move to now.",
         "tier": "read",
         "keywords": ["jira", "issue", "read", "detail"],
         "params": {
@@ -151,7 +151,7 @@
       {
         "name": "transition",
         "label": "Move a Jira issue to a status",
-        "description": "Moves a Jira issue to another status, as Jira's workflow allows from its current one. Fails with the statuses it can move to when Jira does not allow that move.",
+        "description": "Moves an issue of the Jira project this Project shows to another status, as Jira's workflow allows from its current one. Fails with the statuses it can move to when Jira does not allow that move.",
         "tier": "act",
         "keywords": ["jira", "issue", "status", "transition", "move"],
         "params": {
@@ -171,7 +171,7 @@
       {
         "name": "setAssignee",
         "label": "Assign a Jira issue",
-        "description": "Assigns a Jira issue to a person, to the signed-in person with me, or to nobody.",
+        "description": "Assigns an issue of the Jira project this Project shows to a person, to the signed-in person with me, or to nobody.",
         "tier": "act",
         "keywords": ["jira", "issue", "assignee", "assign"],
         "params": {
@@ -190,7 +190,7 @@
       {
         "name": "setPriority",
         "label": "Set a Jira issue's priority",
-        "description": "Sets a Jira issue's priority to one the Jira site has.",
+        "description": "Sets the priority of an issue of the Jira project this Project shows to one the Jira site has.",
         "tier": "act",
         "keywords": ["jira", "issue", "priority"],
         "params": {

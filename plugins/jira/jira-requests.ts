@@ -3,6 +3,8 @@ import type { JiraRequest } from './jira-client';
 
 const pageSize = 50;
 
+const projectPageSize = 100;
+
 const quoted = (value: string): string =>
   `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
 
@@ -26,8 +28,9 @@ function searchBody(projectKey: string, page: IssuesPage): JiraRequest['body'] {
 
 export const jiraRequests = {
   myself: (): JiraRequest => ({ path: '/myself' }),
-  projects: (): JiraRequest => ({
-    path: '/project/search?maxResults=100&orderBy=name',
+  // One page of the projects the person can see, by name, from `startAt`.
+  projects: (startAt = 0): JiraRequest => ({
+    path: `/project/search?startAt=${startAt}&maxResults=${projectPageSize}&orderBy=name`,
   }),
   // A project's issues, the most recently updated first, paged by Jira's `nextPageToken`.
   issues: (projectKey: string, page: IssuesPage = {}): JiraRequest => ({

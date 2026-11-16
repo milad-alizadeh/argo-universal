@@ -69,6 +69,7 @@ export function webStyle(props: ButtonProps, state: WebState): ViewStyle {
   return {
     ...sizes[props.size ?? buttonDefaults.size].style,
     ...webLook(props, state),
+    ...inlineControl(props),
   };
 }
 
@@ -102,4 +103,8 @@ function hoveredLook(name: keyof typeof looks, state: WebState): ViewStyle {
 
 function pressedLook(name: keyof typeof looks, state: WebState): ViewStyle {
   return state.pressed ? pressedLooks[name] : {};
+}
+
+function inlineControl(props: ButtonProps): ViewStyle {
+  return props.control ? { height: 24, paddingHorizontal: 4 } : {};
 }

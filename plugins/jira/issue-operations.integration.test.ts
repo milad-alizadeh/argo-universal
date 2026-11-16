@@ -106,3 +106,31 @@ it(
   },
   timeoutMs,
 );
+
+it(
+  'refuses an issue outside the Jira project this Project shows',
+  async () => {
+    const jira = await listed();
+    const quiet = jira.jira.data.sites[0]?.projects[1];
+
+    quiet?.issues.push({
+      key: 'QUIET-1',
+      summary: 'Another team’s issue',
+      status: { name: 'To Do', category: 'new' },
+      assignee: null,
+      priority: 'Low',
+    });
+
+    const refusal =
+      'QUIET-1 is in the Jira project QUIET, not ARGO, the one this Project shows.';
+
+    await expect(run(jira, 'getIssue', { issue: 'QUIET-1' })).rejects.toThrow(
+      refusal,
+    );
+    await expect(
+      run(jira, 'setPriority', { issue: 'QUIET-1', priority: 'High' }),
+    ).rejects.toThrow(refusal);
+    expect(jira.jira.calls('edit')).toEqual([]);
+  },
+  timeoutMs,
+);

@@ -1,6 +1,7 @@
 import type { LoaderInput } from '@argo/plugin-kit';
 import type { IssueView } from './issue-detail';
 import type { IssueTarget } from './issue-reads';
+import type { JiraIssue } from './jira-readers';
 import type { JiraReads } from './jira-reads';
 import { siteFor } from './jira-setup';
 import { storeQueries, storeReaders, type JiraSite } from './jira-store';
@@ -12,8 +13,9 @@ type Step = {
   key: string;
 };
 
-// An issue's key is its Jira project's key, a dash and its number.
-const projectKeyOf = (key: string): string => key.replace(/-\d+$/u, '');
+// The Jira project that holds the issue, as Jira names it, so a renamed project's old keys share the list's choices.
+const projectKeyOf = (issue: JiraIssue): string =>
+  issue.projectKey ?? issue.key.replace(/-\d+$/u, '');
 
 async function siteOf({ read, projectId }: Step): Promise<JiraSite | null> {
   const [sites, choice] = await Promise.all([
@@ -24,20 +26,19 @@ async function siteOf({ read, projectId }: Step): Promise<JiraSite | null> {
   return siteFor(storeReaders.sites(sites), storeReaders.choice(choice));
 }
 
+// The issue first, which a list kept, then the choices for its own Jira project, which the list kept too.
 async function issueAt(
   { read, reads }: Step,
   site: JiraSite,
   target: IssueTarget,
 ): Promise<IssueView> {
-  const { projectId, cloudId, key } = target;
-  const projectKey = projectKeyOf(key);
-
-  const [answer, choices] = await Promise.all([
-    read(reads.issue(target)),
-    read(reads.choices({ projectId, cloudId, projectKey })),
-  ]);
+  const { projectId, cloudId } = target;
+  const answer = await read(reads.issue(target));
 
   if (!answer.ok) return { kind: 'failed', failure: answer.failure };
+
+  const projectKey = projectKeyOf(answer.value);
+  const choices = await read(reads.choices({ projectId, cloudId, projectKey }));
 
   return { kind: 'issue', site, issue: answer.value, choices };
 }

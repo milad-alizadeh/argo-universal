@@ -1,61 +1,11 @@
-import {
-  Action,
-  Button,
-  Callout,
-  EmptyState,
-  Screen,
-  Stack,
-} from '@argo/plugin-kit';
+import { Action, EmptyState, Screen } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { failedScreen } from './failure-view';
 import { issueBoard, viewSwitch, type IssuesView } from './issue-board';
 import { issueList } from './issue-rows';
-import type { JiraFailure } from './jira-client';
 import type { ProjectView } from './jira-setup';
 import { changeSite, setupScreen } from './setup-views';
 import type { Framing, IssuesFraming, IssuesState } from './view-frame';
-
-const failureTitles: Record<JiraFailure['kind'], string> = {
-  'signed-out': 'Sign in to Jira',
-  forbidden: 'Jira refused this',
-  'not-found': 'Jira couldn’t find this project',
-  'rate-limited': 'Jira is busy',
-  failed: 'Couldn’t read Jira',
-};
-
-const anotherProject = {
-  label: 'Choose another Jira project',
-  variant: 'secondary',
-} as const;
-
-type Failed = Extract<ProjectView, { kind: 'failed' }>;
-
-const failureCallout = (failure: JiraFailure): JSX.Element => (
-  <Callout
-    tone="danger"
-    title={failureTitles[failure.kind]}
-    description={failure.message}
-  />
-);
-
-const failureBody = (
-  failure: JiraFailure,
-  { to, projectId }: Framing,
-): JSX.Element => (
-  <Stack direction="column" gap={6}>
-    {failureCallout(failure)}
-    <Button label="Try again" onPress={to.run('checkAgain', {})} />
-    <Button
-      {...anotherProject}
-      onPress={to.run('forgetProject', { projectId })}
-    />
-  </Stack>
-);
-
-const failed = ({ site, failure }: Failed, framing: Framing): JSX.Element => (
-  <Screen title="Jira" caption={site.host} actions={changeSite(framing)}>
-    {failureBody(failure, framing)}
-  </Screen>
-);
 
 const swapIcon = {
   sf: 'arrow.left.arrow.right',
@@ -127,6 +77,6 @@ export function projectScreen(
   if (view.kind === 'issues') return issues(view, framing);
 
   return view.kind === 'failed'
-    ? failed(view, framing)
+    ? failedScreen(view, framing)
     : setupScreen(view, framing);
 }

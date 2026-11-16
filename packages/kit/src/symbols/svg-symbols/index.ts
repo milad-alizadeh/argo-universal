@@ -8,6 +8,7 @@ import { GitPullRequestIcon } from './git-pull-request';
 import { GitPullRequestClosedIcon } from './git-pull-request-closed';
 import { GitPullRequestConflictIcon } from './git-pull-request-conflict';
 import { GitPullRequestDraftIcon } from './git-pull-request-draft';
+import { GripIcon } from './grip';
 import type { SvgSymbolProps } from './svg-symbol-frame';
 
 export type { SvgSymbolProps } from './svg-symbol-frame';
@@ -18,6 +19,7 @@ export type { SvgSymbolProps } from './svg-symbol-frame';
  * platform (ADR-0041). `git-symbols.ts` and `list-view-symbols.ts` map Argo icon names to these names.
  */
 export const svgSymbols = {
+  grip: GripIcon,
   'chevron-right': ChevronRightIcon,
   'file-diff': FileDiffIcon,
   'git-branch': GitBranchIcon,

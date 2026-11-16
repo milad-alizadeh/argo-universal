@@ -1,5 +1,6 @@
 import type { Json } from '../json';
 import { argoThreeDescription, argoThreeLabels } from './jira-descriptions';
+import { richDescription } from './jira-rich-description';
 
 /*
  * What the fixture Jira holds: two Atlassian sites, the people whose API tokens it accepts, and each site's projects
@@ -101,11 +102,16 @@ const issueOf = ([
   priority,
 });
 
-// ARGO-3's page shows a description, in Jira's ADF, and labels.
-const described = (issue: FixtureIssue): FixtureIssue =>
-  issue.key === 'ARGO-3'
-    ? { ...issue, description: argoThreeDescription, labels: argoThreeLabels }
-    : issue;
+// ARGO-3's page shows a description, in Jira's ADF, and labels; ARGO-2's every kind of ADF the page draws.
+const descriptions = new Map<string, Partial<FixtureIssue>>([
+  ['ARGO-3', { description: argoThreeDescription, labels: argoThreeLabels }],
+  ['ARGO-2', { description: richDescription }],
+]);
+
+const described = (issue: FixtureIssue): FixtureIssue => ({
+  ...issue,
+  ...descriptions.get(issue.key),
+});
 
 const argoRows: IssueRow[] = [
   ['ARGO-3', 'Show Jira issues in Argo', inProgress, ada, 'High'],

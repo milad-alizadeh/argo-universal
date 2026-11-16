@@ -1,0 +1,1 @@
+ALTER TABLE `agent_servers` ADD `suggestion_model` text;

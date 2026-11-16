@@ -8,6 +8,7 @@ export {
   isSessionBranch,
   sessionBranch,
   sessionBranchOwner,
+  worktreeName,
 } from './session-branch';
 
 export {

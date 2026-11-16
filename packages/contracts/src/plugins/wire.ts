@@ -21,6 +21,8 @@ export {
   sessionBarSlotId,
   sessionChangesSlotId,
   sessionRowSlotId,
+  linkMarkSlotId,
+  LinkMarkItem,
   slotItemsListLimit,
   slotRegistry,
   withContexts,

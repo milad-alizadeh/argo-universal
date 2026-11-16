@@ -72,6 +72,29 @@ const issueData = (
         },
       });
 
+const aliased = /issue\d+: issue\(number: (\d+)\)/g;
+
+// The numbers a batched read asks for, each under its own alias.
+const aliasedNumbers = (query: string): number[] =>
+  [...query.matchAll(aliased)].map(([, number]) => Number(number));
+
+// Every Issue asked for under its alias; one GitHub does not have is null there.
+const issuesData = (
+  numbers: number[],
+  token: string,
+  closedIssues: ReadonlySet<number>,
+): string =>
+  JSON.stringify({
+    repository: Object.fromEntries(
+      numbers.map((number) => [
+        `issue${number}`,
+        number === missingNumber
+          ? null
+          : titledFor(issueNode(number, closedIssues), token),
+      ]),
+    ),
+  });
+
 const searchData = (variables: JsonObject): string => {
   const closed = textOf(variables.query).includes('is:closed');
 
@@ -80,19 +103,32 @@ const searchData = (variables: JsonObject): string => {
   });
 };
 
+// One Issue, or several under their aliases, when the query asks for Issues by number.
+function issuesAnswer(
+  request: FixtureRequest,
+  closedIssues: ReadonlySet<number>,
+): string | null {
+  const body = parseJson(request.body);
+  const query = textOf(pick(body, 'query'));
+  const numbers = aliasedNumbers(query);
+
+  if (numbers.length > 0)
+    return issuesData(numbers, tokenOf(request), closedIssues);
+
+  return query.includes('issue(number:')
+    ? issueData(variablesOf(body), tokenOf(request), closedIssues)
+    : null;
+}
+
 function dataOf(
   request: FixtureRequest,
   closedIssues: ReadonlySet<number>,
 ): string {
-  const body = parseJson(request.body);
-  const variables = variablesOf(body);
+  const variables = variablesOf(parseJson(request.body));
 
   if ('count0' in variables) return overviewData(variables);
 
-  if (textOf(pick(body, 'query')).includes('issue(number:'))
-    return issueData(variables, tokenOf(request), closedIssues);
-
-  return searchData(variables);
+  return issuesAnswer(request, closedIssues) ?? searchData(variables);
 }
 
 export const tokenOf = (request: FixtureRequest): string =>
@@ -106,7 +142,7 @@ export function graphqlAnswer(
   closedIssues: ReadonlySet<number> = new Set(),
 ): string {
   const data = dataOf(request, closedIssues);
-  const missing = data.includes('"issue":null');
+  const missing = /"issue\d*":null/.test(data);
 
   return missing
     ? `{"data":${data},"errors":[{"message":"${missingIssue}"}]}`

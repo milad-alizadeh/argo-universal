@@ -8,6 +8,7 @@ export const issueFields = [
   'priority',
   'labels',
   'description',
+  'project',
 ];
 
 const issuePath = (key: string): string => `/issue/${encodeURIComponent(key)}`;

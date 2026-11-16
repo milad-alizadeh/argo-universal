@@ -1,15 +1,10 @@
 import { issueUrl } from './atlassian';
 import type { StatusCategory } from './issue-fields';
-import { issueRequests } from './issue-requests';
 import { call, located, type IssueCalls } from './issue-site';
-import {
-  issueOf,
-  jiraReaders,
-  type JiraIssue,
-  type JiraPerson,
-} from './jira-readers';
+import { jiraReaders, type JiraIssue, type JiraPerson } from './jira-readers';
 import { jiraRequests } from './jira-requests';
 import type { JiraSite } from './jira-store';
+import { issueIn } from './project-issue';
 
 /*
  * The read-only `getIssue` and `listIssues` Operations, for Agents (ADR-0044): an issue as its page shows it, and the
@@ -30,9 +25,6 @@ type IssueRow = {
 type IssueRead = IssueRow & { description: string };
 
 const listLimit = { fallback: 20, most: 100 };
-
-const noProject =
-  'Choose a Jira project for this Project first, on its Jira page.';
 
 // The statuses Jira allows a move to, without the one the issue is in, which a global transition still lists.
 const movesOf = ({ status, transitions }: JiraIssue): string[] => [
@@ -59,10 +51,7 @@ export async function getIssue(
 ): Promise<IssueRead> {
   const where = await located(argo, projectId);
 
-  const found = await call(where, {
-    request: issueRequests.issue(issue),
-    read: issueOf,
-  });
+  const found = await issueIn(where, issue);
 
   return { ...rowOf(where.site, found), description: found.description };
 }
@@ -80,8 +69,6 @@ export async function listIssues(
 ): Promise<Listed> {
   const where = await located(argo, projectId);
   const project = where.projectKey;
-
-  if (!project) throw new Error(noProject);
 
   const page = await call(where, {
     request: jiraRequests.issues(project, { limit: limitOf(limit), text }),

@@ -13,6 +13,8 @@ export type JiraStatus = { id: string; name: string; category: StatusCategory };
 export type JiraTransition = { id: string; name: string; to: JiraStatus };
 
 export type IssueExtras = {
+  // The key of the Jira project that holds the issue now, which a renamed project's old issue keys do not show.
+  projectKey: string | null;
   description: string;
   labels: string[];
   transitions: JiraTransition[];
@@ -51,6 +53,7 @@ const labelsOf = (labels: Read): string[] =>
 
 // The fields and transitions of one issue in a search's or a read's answer.
 export const issueExtras = (json: Read): IssueExtras => ({
+  projectKey: text(at(json, 'fields', 'project', 'key')),
   description: adfMarkdown(at(json, 'fields', 'description')),
   labels: labelsOf(at(json, 'fields', 'labels')),
   transitions: transitionsOf(at(json, 'transitions')),

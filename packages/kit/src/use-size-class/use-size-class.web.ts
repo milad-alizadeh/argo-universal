@@ -1,50 +1,63 @@
-import { useCallback, useMemo, useSyncExternalStore } from 'react';
-import { useCSSVariable } from 'uniwind';
+import { useSyncExternalStore } from 'react';
 import { type SizeClass, sizeClass } from './size-class';
 
-type Breakpoint = string | number | undefined;
-
-function cssLength(breakpoint: string | number): string {
-  return typeof breakpoint === 'number' ? `${breakpoint}px` : breakpoint;
+interface Breakpoints {
+  medium: MediaQueryList;
+  wide: MediaQueryList;
 }
 
-function minWidthQuery(breakpoint: Breakpoint): MediaQueryList | undefined {
-  if (typeof window === 'undefined' || breakpoint === undefined) return;
+// Read once and shared: the tokens never change, and a computed-style read in every caller's render adds up across a page.
+let breakpoints: Breakpoints | undefined;
 
-  return window.matchMedia(`(min-width: ${cssLength(breakpoint)})`);
+// A breakpoint token from tooling/uniwind/theme.css, which is empty until the stylesheet has loaded.
+const tokenLength = (token: string): string =>
+  getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+
+function readBreakpoints(): Breakpoints | undefined {
+  const medium = tokenLength('--breakpoint-medium');
+  const wide = tokenLength('--breakpoint-wide');
+
+  if (medium === '' || wide === '') return;
+
+  return {
+    medium: window.matchMedia(`(min-width: ${medium})`),
+    wide: window.matchMedia(`(min-width: ${wide})`),
+  };
 }
 
-function subscribeToChanges(
-  mediaQuery: MediaQueryList | undefined,
-  listener: () => void,
-): () => void {
-  mediaQuery?.addEventListener('change', listener);
+function loadedBreakpoints(): Breakpoints | undefined {
+  breakpoints ??= readBreakpoints();
 
-  return (): void => mediaQuery?.removeEventListener('change', listener);
+  return breakpoints;
 }
 
-// Whether the window reaches a breakpoint token from tooling/uniwind/theme.css.
-function useReaches(token: string): boolean {
-  const breakpoint = useCSSVariable(token);
-  const mediaQuery = useMemo(() => minWidthQuery(breakpoint), [breakpoint]);
+function subscribe(listener: () => void): () => void {
+  const queries = loadedBreakpoints();
+  queries?.medium.addEventListener('change', listener);
+  queries?.wide.addEventListener('change', listener);
 
-  const subscribe = useCallback(
-    (listener: () => void) => subscribeToChanges(mediaQuery, listener),
-    [mediaQuery],
-  );
-
-  return useSyncExternalStore(
-    subscribe,
-    () => mediaQuery?.matches ?? false,
-    () => false,
-  );
+  return (): void => {
+    queries?.medium.removeEventListener('change', listener);
+    queries?.wide.removeEventListener('change', listener);
+  };
 }
+
+const matches = (query: MediaQueryList | undefined): boolean =>
+  query?.matches === true;
 
 // The web is never a phone: a narrow browser window is compact by width alone.
-export function useSizeClass(): SizeClass {
+const windowSizeClass = (): SizeClass => {
+  const queries = loadedBreakpoints();
+
   return sizeClass({
-    medium: useReaches('--breakpoint-medium'),
-    wide: useReaches('--breakpoint-wide'),
+    medium: matches(queries?.medium),
+    wide: matches(queries?.wide),
     phone: false,
   });
+};
+
+const serverSizeClass = (): SizeClass => 'compact';
+
+export function useSizeClass(): SizeClass {
+  return useSyncExternalStore(subscribe, windowSizeClass, serverSizeClass);
 }
