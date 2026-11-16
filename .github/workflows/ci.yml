@@ -13,7 +13,7 @@ on:
 
 concurrency:
   # A merged PR's ref becomes main; its number keeps the closing event in the PR's group.
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/main' }}
 
 permissions:
