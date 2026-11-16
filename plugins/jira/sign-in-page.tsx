@@ -67,8 +67,15 @@ const siteField = (state: SignInState, to: To): Field => ({
   onChangeText: to.bind('site'),
 });
 
+const accountFooter =
+  'The email you sign in to Atlassian with, and the address you open Jira at.';
+
 const accountSection = (state: SignInState, to: To): JSX.Element => (
-  <FieldGroup.Section key="account" title="Your Atlassian account">
+  <FieldGroup.Section
+    key="account"
+    title="Your Atlassian account"
+    footer={accountFooter}
+  >
     <FieldGroup.TextField key="email" {...emailField(state, to)} />
     <FieldGroup.TextField key="site" {...siteField(state, to)} />
   </FieldGroup.Section>
@@ -86,6 +93,8 @@ const tokenField = (state: SignInState, data: SignInData, to: To): Field => ({
   ...errorProps(data.error),
 });
 
+const keptText = 'Argo keeps the token in your computer’s secret store.';
+
 const tokenSection = (
   state: SignInState,
   data: SignInData,
@@ -94,7 +103,7 @@ const tokenSection = (
   <FieldGroup.Section
     key="token"
     title="API token"
-    footer={data.error ?? undefined}
+    footer={data.error ?? keptText}
   >
     <FieldGroup.SecretField key="token" {...tokenField(state, data, to)} />
   </FieldGroup.Section>
@@ -112,8 +121,10 @@ const tokenLink = (
   </FieldGroup.Section>
 );
 
-const introduction =
-  'Paste a scoped Atlassian API token with the email and Jira site it belongs to. Argo keeps it in your computer’s secret store.';
+const atlassianRuns = (to: To): AtlassianRuns => ({
+  start: to.run('signInWithAtlassian', {}),
+  cancel: to.run('cancelSignInWithAtlassian', {}),
+});
 
 const signInFields = (
   data: SignInData,
@@ -124,26 +135,16 @@ const signInFields = (
     {accountSection(state, to)}
     {tokenSection(state, data, to)}
     {tokenLink}
+    {atlassianSection(data.atlassian, atlassianRuns(to))}
   </FieldGroup>
 );
-
-const atlassianRuns = (to: To): AtlassianRuns => ({
-  start: to.run('signInWithAtlassian', {}),
-  cancel: to.run('cancelSignInWithAtlassian', {}),
-});
 
 const signInForm = (
   data: SignInData,
   to: To,
   state: SignInState,
 ): JSX.Element => (
-  <Screen title="Sign in to Jira">
-    <Stack direction="column" gap={6}>
-      <Text role="secondary">{introduction}</Text>
-      {signInFields(data, to, state)}
-      {atlassianSection(data.atlassian, atlassianRuns(to))}
-    </Stack>
-  </Screen>
+  <Screen title="Sign in to Jira">{signInFields(data, to, state)}</Screen>
 );
 
 // Signed in either way, the one the person used last in this run says so.

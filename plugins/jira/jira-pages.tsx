@@ -3,7 +3,6 @@ import {
   ListDetail,
   Screen,
   Stack,
-  Text,
   type Argo,
   type LoaderInput,
 } from '@argo/plugin-kit';
@@ -56,9 +55,6 @@ const listDetail = (
 const siteScreen = (data: SiteData, framing: Framing): JSX.Element => (
   <Screen title="Jira site">
     <Stack direction="column" gap={6}>
-      <Text role="secondary">
-        Which Atlassian site holds this Project’s issues?
-      </Text>
       {sitePicker(data, framing)}
       <Button
         label="Show issues"

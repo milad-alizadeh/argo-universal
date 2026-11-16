@@ -2,6 +2,7 @@ import { serialiseOnOAuthPort } from '@argo/plugin-kit/testing/oauth-port';
 import { expect, it } from 'vitest';
 import { atlassianWords } from './atlassian-words';
 import {
+  atlassianFooter,
   firstAuthorize,
   issuesShown,
   lastCredential,
@@ -24,8 +25,8 @@ it(
     const onlyId = new Map([['oauth-client-id', oauthClient.id]]);
     const page = await signInPage(await startWithAtlassian(onlyId));
 
-    expect(page.findText(atlassianWords.needsApp)).toBeDefined();
-    expect(page.findText(atlassianWords.start)).toBeUndefined();
+    expect(atlassianFooter(page)).toBe(atlassianWords.needsApp);
+    expect(page.find(atlassianWords.start).props.disabled).toBe(true);
     expect(page.findText(tokenLink)).toBeDefined();
   },
   timeoutMs,
@@ -39,6 +40,7 @@ it(
 
     // The token paste stays the default, with "Sign in with Atlassian" offered under it.
     expect(page.findText(tokenLink)).toBeDefined();
+    expect(page.find(atlassianWords.start).props.disabled).toBe(false);
     await signInWithAtlassian(jira, page);
 
     const authorize = firstAuthorize(jira);
@@ -93,8 +95,8 @@ it(
     const jira = await startWithAtlassian();
     const phone = await signInPage(jira, false);
 
-    expect(phone.findText(atlassianWords.elsewhere)).toBeDefined();
-    expect(phone.findText(atlassianWords.start)).toBeUndefined();
+    expect(atlassianFooter(phone)).toBe(atlassianWords.elsewhere);
+    expect(phone.find(atlassianWords.start).props.disabled).toBe(true);
     expect(phone.findText(tokenLink)).toBeDefined();
 
     await expect(

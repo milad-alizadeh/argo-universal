@@ -5,6 +5,7 @@ import {
   type OpenPage,
   type PluginTest,
   type PluginTestOptions,
+  type WireNode,
 } from '@argo/plugin-kit/testing';
 import { expect, onTestFinished } from 'vitest';
 import { atlassianWords } from '../atlassian-words';
@@ -165,4 +166,15 @@ export async function readsAsBearer(jira: AtlassianJira): Promise<boolean> {
     },
     { stepMs: 1000, steps: 10 },
   );
+}
+
+// The footer the "Sign in with Atlassian" section shows, which says why its row holds still or what it does.
+const isAtlassianSection = (node: WireNode): boolean =>
+  node.type === 'FieldGroup.Section' &&
+  node.props.title === atlassianWords.section;
+
+export function atlassianFooter(page: OpenPage): string {
+  const { footer } = page.find(isAtlassianSection).props;
+
+  return typeof footer === 'string' ? footer : '';
 }

@@ -1,10 +1,4 @@
-import {
-  Button,
-  Stack,
-  Text,
-  type OAuthFlowState,
-  type PageTo,
-} from '@argo/plugin-kit';
+import { FieldGroup, type OAuthFlowState, type PageTo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { atlassianWords } from './atlassian-words';
 
@@ -18,68 +12,67 @@ export type AtlassianOffer =
   | { kind: 'elsewhere' }
   | { kind: 'here'; state: OAuthFlowState };
 
-// What the section's buttons do: the Operations the page runs.
+// What the section's rows do: the Operations the page runs.
 type Press = ReturnType<PageTo['run']>;
 
 export type AtlassianRuns = { start: Press; cancel: Press };
 
-const note = (words: string): JSX.Element => (
-  <Text key="note" role="secondary">
-    {words}
-  </Text>
-);
+type Row = { title: string; onPress: Press; disabled: boolean; footer: string };
 
-const waitingRows = (runs: AtlassianRuns): JSX.Element[] => [
-  note(atlassianWords.waiting),
-  <Button
-    key="cancel"
-    label="Cancel"
-    variant="secondary"
-    onPress={runs.cancel}
-  />,
-];
+// Why the last sign-in failed, such as the port in use or Atlassian refusing the client secret, or what it does.
+const footerOf = (state: OAuthFlowState): string =>
+  state.kind === 'failed' ? state.message : atlassianWords.offer;
 
-// Why the last sign-in failed, such as the port in use or Atlassian refusing the client secret.
-const failureRows = (state: OAuthFlowState): JSX.Element[] =>
-  state.kind === 'failed'
-    ? [
-        <Text key="failure" role="secondary" tone="danger">
-          {state.message}
-        </Text>,
-      ]
-    : [];
+function hereRow(state: OAuthFlowState, runs: AtlassianRuns): Row {
+  if (state.kind === 'waiting')
+    return {
+      title: atlassianWords.cancel,
+      onPress: runs.cancel,
+      disabled: false,
+      footer: atlassianWords.waiting,
+    };
 
-const offerRows = (
-  state: OAuthFlowState,
-  runs: AtlassianRuns,
-): JSX.Element[] => [
-  note(atlassianWords.offer),
-  ...failureRows(state),
-  <Button
-    key="start"
-    label={atlassianWords.start}
-    variant="secondary"
-    onPress={runs.start}
-  />,
-];
-
-const hereRows = (state: OAuthFlowState, runs: AtlassianRuns): JSX.Element[] =>
-  state.kind === 'waiting' ? waitingRows(runs) : offerRows(state, runs);
-
-function rowsOf(offer: AtlassianOffer, runs: AtlassianRuns): JSX.Element[] {
-  if (offer.kind === 'needs-app') return [note(atlassianWords.needsApp)];
-
-  return offer.kind === 'elsewhere'
-    ? [note(atlassianWords.elsewhere)]
-    : hereRows(offer.state, runs);
+  return {
+    title: atlassianWords.start,
+    onPress: runs.start,
+    disabled: false,
+    footer: footerOf(state),
+  };
 }
 
-// Drawn under the token paste, which stays the default way in.
-export const atlassianSection = (
+// Offered but not here: the row holds still, and the footer says what to do instead.
+const heldRow = (footer: string, runs: AtlassianRuns): Row => ({
+  title: atlassianWords.start,
+  onPress: runs.start,
+  disabled: true,
+  footer,
+});
+
+function rowOf(offer: AtlassianOffer, runs: AtlassianRuns): Row {
+  if (offer.kind === 'here') return hereRow(offer.state, runs);
+
+  return heldRow(
+    offer.kind === 'needs-app'
+      ? atlassianWords.needsApp
+      : atlassianWords.elsewhere,
+    runs,
+  );
+}
+
+// The last section of the sign-in form, under the token paste, which stays the default way in.
+export function atlassianSection(
   offer: AtlassianOffer,
   runs: AtlassianRuns,
-): JSX.Element => (
-  <Stack key="atlassian" direction="column" gap={3}>
-    {rowsOf(offer, runs)}
-  </Stack>
-);
+): JSX.Element {
+  const { footer, ...row } = rowOf(offer, runs);
+
+  return (
+    <FieldGroup.Section
+      key="atlassian"
+      title={atlassianWords.section}
+      footer={footer}
+    >
+      <FieldGroup.Link key="atlassian" {...row} />
+    </FieldGroup.Section>
+  );
+}
