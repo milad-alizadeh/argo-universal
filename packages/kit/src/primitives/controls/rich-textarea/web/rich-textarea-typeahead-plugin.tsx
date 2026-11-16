@@ -53,6 +53,7 @@ type MenuProps = TypeaheadQuery & {
   onSelectOption: SelectOption;
   onOpen: () => void;
   onClose: () => void;
+  menuRenderFn: ReturnType<typeof renderTypeaheadMenu>;
 };
 
 const noSuggestions: readonly SuggestionSource[] = [];
@@ -134,8 +135,8 @@ function useMenuLifetime(menu: TypeaheadInteraction, options: number): void {
 }
 
 function useTypeahead(props: Props): MenuProps {
-  const query = useTypeaheadQuery(useAdapters(props));
   const [menuOpen] = useState(() => new TypeaheadInteraction());
+  const query = useTypeaheadQuery(useAdapters(props), menuOpen);
   useTypeaheadKeyboard(menuOpen, props.onSubmit);
   useMenuLifetime(menuOpen, query.options.length);
 
@@ -144,6 +145,7 @@ function useTypeahead(props: Props): MenuProps {
     onSelectOption: useSelectOption(),
     onOpen: menuOpen.open,
     onClose: menuOpen.close,
+    menuRenderFn: renderTypeaheadMenu(menuOpen),
   };
 }
 
@@ -152,7 +154,6 @@ export function TypeaheadPlugin(props: Props): React.JSX.Element {
   return (
     <LexicalTypeaheadMenuPlugin
       {...useTypeahead(props)}
-      menuRenderFn={renderTypeaheadMenu}
       anchorClassName="z-50"
     />
   );
