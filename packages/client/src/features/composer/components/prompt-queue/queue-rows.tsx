@@ -1,5 +1,6 @@
 import type { ListMove } from '@repo/contracts/kit-moves';
-import { List } from '@repo/kit/primitives/lists/list';
+import { ListPlaceContext } from '@repo/kit/list-place';
+import { List, ListDragHandles } from '@repo/kit/primitives/lists/list';
 import type { ReactElement } from 'react';
 import { QueueRow } from './queue-row';
 import type { PromptQueueProps } from './queue-types';
@@ -7,6 +8,16 @@ import type { PromptQueueProps } from './queue-types';
 const queueInsets = { padding: 0, paddingTop: 0, paddingBottom: 0 } as const;
 
 export function QueueRows(props: PromptQueueProps): ReactElement {
+  return (
+    <ListPlaceContext value="tray">
+      <ListDragHandles>
+        <QueueContents {...props} />
+      </ListDragHandles>
+    </ListPlaceContext>
+  );
+}
+
+function QueueContents(props: PromptQueueProps): ReactElement {
   return (
     <List
       appearance="plain"

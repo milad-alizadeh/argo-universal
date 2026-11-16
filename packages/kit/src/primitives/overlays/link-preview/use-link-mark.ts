@@ -2,6 +2,7 @@ import { useContext, useEffect, useState, type ReactNode } from 'react';
 import {
   LinkPreviewContext,
   type LinkPreviewSource,
+  type LiveLinkMarks,
 } from './link-preview-context';
 
 // The mark is asked for once the link draws, so it shows without a hover, and again after each hover loads a fresher card.
@@ -11,7 +12,19 @@ export function useLinkMark(href: string, card: ReactNode): ReactNode {
 
   useEffect(() => requestMark(source, href, setMark), [source, href, card]);
 
-  return mark;
+  return useLiveMark(source?.marks, href) ?? mark;
+}
+
+// A mark the App keeps current: the link says it is drawn, and draws whatever the App holds for it now.
+function useLiveMark(
+  marks: LiveLinkMarks | undefined,
+  href: string,
+): ReactNode {
+  const track = marks?.track;
+
+  useEffect(() => track?.(href), [track, href]);
+
+  return marks?.of.get(href);
 }
 
 function requestMark(

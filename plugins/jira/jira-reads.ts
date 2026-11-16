@@ -1,8 +1,15 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
 import { atlassianHost } from './atlassian';
-import { callJira, type JiraAnswer, type JiraSend } from './jira-client';
+import {
+  callJira,
+  type JiraAnswer,
+  type JiraFailure,
+  type JiraSend,
+} from './jira-client';
+import { allPages } from './jira-paging';
 import { jiraReaders, type IssuePage, type JiraProject } from './jira-readers';
 import { jiraRequests } from './jira-requests';
+import { notices } from './sign-in-notices';
 
 /*
  * The Jira reads the pages share, as named reads (ADR-0037): Argo keeps each answer for the Project its args name,
@@ -30,42 +37,97 @@ const borrowing =
   (url, init) =>
     argo.fetch(url, { ...init, account: atlassianHost, projectId });
 
-const accountRead = (argo: Argo): JiraReads['account'] =>
-  argo.queries.define(
+/*
+ * What the reads tell the sign-in page: a read that finds no Account, or a token Jira refuses, needs a new token, and
+ * a read Jira answers means the sign-in holds again.
+ */
+export type Refused = (message: string | null) => void;
+
+type Reading = { argo: Argo; refused: Refused };
+
+const refusalOf = (failure: JiraFailure): string | undefined =>
+  failure.kind === 'signed-out' ? failure.message : undefined;
+
+function noted<Value>(
+  refused: Refused,
+  answer: JiraAnswer<Value>,
+): JiraAnswer<Value> {
+  const refusal = answer.ok ? null : refusalOf(answer.failure);
+
+  if (refusal !== undefined) refused(refusal);
+
+  return answer;
+}
+
+type Account = Awaited<ReturnType<Argo['accounts']['get']>>;
+
+const labelOfAccount = (account: Account): string | null =>
+  account?.label ?? null;
+
+async function accountLabel({
+  argo,
+  refused,
+}: Reading): Promise<string | null> {
+  const label = labelOfAccount(await argo.accounts.get(atlassianHost));
+
+  if (!label) refused(notices.gone);
+
+  return label;
+}
+
+const accountRead = (reading: Reading): JiraReads['account'] =>
+  reading.argo.queries.define(
     'account',
-    async (_args: Target) =>
-      (await argo.accounts.get(atlassianHost))?.label ?? null,
+    (_args: Target) => accountLabel(reading),
     byProject,
   );
 
-const projectsRead = (argo: Argo): JiraReads['projects'] =>
+const projectPages = (
+  argo: Argo,
+  { projectId, cloudId }: SiteTarget,
+): Promise<JiraAnswer<JiraProject[]>> =>
+  allPages((startAt) =>
+    callJira({
+      send: borrowing(argo, projectId),
+      cloudId,
+      request: jiraRequests.projects(startAt),
+      read: jiraReaders.projects,
+    }),
+  );
+
+const projectsRead = ({ argo, refused }: Reading): JiraReads['projects'] =>
   argo.queries.define(
     'projects',
-    ({ projectId, cloudId }: SiteTarget) =>
-      callJira({
-        send: borrowing(argo, projectId),
-        cloudId,
-        request: jiraRequests.projects(),
-        read: jiraReaders.projects,
-      }),
+    async (target: SiteTarget) =>
+      noted(refused, await projectPages(argo, target)),
     byProject,
   );
 
-const issuesRead = (argo: Argo): JiraReads['issues'] =>
+const issuesPage = (
+  argo: Argo,
+  { projectId, cloudId, projectKey }: IssuesTarget,
+): Promise<JiraAnswer<IssuePage>> =>
+  callJira({
+    send: borrowing(argo, projectId),
+    cloudId,
+    request: jiraRequests.issues(projectKey),
+    read: jiraReaders.issues,
+  });
+
+const issuesRead = ({ argo, refused }: Reading): JiraReads['issues'] =>
   argo.queries.define(
     'issues',
-    ({ projectId, cloudId, projectKey }: IssuesTarget) =>
-      callJira({
-        send: borrowing(argo, projectId),
-        cloudId,
-        request: jiraRequests.issues(projectKey),
-        read: jiraReaders.issues,
-      }),
+    async (target: IssuesTarget) =>
+      noted(refused, await issuesPage(argo, target)),
     byProject,
   );
 
-export const defineReads = (argo: Argo): JiraReads => ({
-  account: accountRead(argo),
-  projects: projectsRead(argo),
-  issues: issuesRead(argo),
-});
+export function defineReads(argo: Argo, refused: Refused): JiraReads {
+  const reading = { argo, refused };
+
+  return {
+    account: accountRead(reading),
+    projects: projectsRead(reading),
+    issues: issuesRead(reading),
+  };
+}

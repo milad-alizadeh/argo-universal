@@ -63,12 +63,16 @@ type IssuesTarget = Target & { search: string; limit: number };
 
 type IssueTarget = Target & { number: number };
 
+type AttachedTarget = Target & { numbers: number[] };
+
 export type GitHubReads = {
   // A Project's labels and counts: one GitHub call.
   overview: (args: Target) => NamedQuery<Settled<Overview>>;
   // One page of a Project's Issues for a search, newest first.
   issues: (args: IssuesTarget) => NamedQuery<Settled<Issue[]>>;
   issue: (args: IssueTarget) => NamedQuery<Settled<Issue>>;
+  // The Issues a Project's Sessions are attached to, in one GitHub call: the numbers GitHub still has.
+  attached: (args: AttachedTarget) => NamedQuery<Settled<number[]>>;
 };
 
 async function clientFor(
@@ -94,6 +98,20 @@ async function listed(
   await Promise.all(issues.map(seed));
 
   return issues;
+}
+
+// Read together and in full, so each seeds the entry its own page, or a Slot's summary, reads next.
+async function attachedNumbers(
+  source: Source,
+  seed: (issue: Issue) => Promise<void>,
+  { projectId, numbers }: AttachedTarget,
+): Promise<number[]> {
+  const client = await clientFor(source, projectId);
+  const issues = await client.getIssues(numbers);
+
+  await Promise.all(issues.map(seed));
+
+  return issues.map(({ number }) => number);
 }
 
 // Each read is kept for the Project its args name, so a page drawn for a Project and a Slot share its entry.
@@ -142,6 +160,20 @@ const issuesRead = (
     byProject,
   );
 
+const attachedRead = (
+  argo: Argo,
+  source: Source,
+  issue: GitHubReads['issue'],
+): GitHubReads['attached'] =>
+  argo.queries.define(
+    'attached',
+    (target: AttachedTarget) =>
+      settle(() =>
+        attachedNumbers(source, seeding(argo, issue, target.projectId), target),
+      ),
+    byProject,
+  );
+
 export function defineReads(argo: Argo, source: Source): GitHubReads {
   const issue = issueRead(argo, source);
 
@@ -149,5 +181,6 @@ export function defineReads(argo: Argo, source: Source): GitHubReads {
     issue,
     overview: overviewRead(argo, source),
     issues: issuesRead(argo, source, issue),
+    attached: attachedRead(argo, source, issue),
   };
 }

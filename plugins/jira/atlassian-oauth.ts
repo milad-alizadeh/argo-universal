@@ -94,23 +94,24 @@ async function whoIs(
   return { sites, myself: site ? await myselfOn(argo, { site, token }) : null };
 }
 
-const labelOf = ({ email, name }: JiraMyself): string => email || name;
+// Only the email names the same Account the token sign-in does; a display name would add a second one.
+const labelOf = (myself: JiraMyself | null): string | null =>
+  myself?.email || null;
 
 /*
  * The kit's `label` for an OAuth token: the email Jira's `myself` names, as the token sign-in labels its Account, so
  * both ways of signing in keep one Account. The sites the token reaches are kept for the site choice, as a token
- * sign-in keeps the one it was given. A token that reaches no Jira site, or whose `myself` cannot be read, signs in
- * nobody.
+ * sign-in keeps the one it was given. A token that reaches no Jira site, or whose `myself` cannot be read or hides
+ * the email, signs in nobody.
  */
 export async function oauthLabel(
   argo: Calls,
   token: string,
 ): Promise<string | null> {
   const { myself, sites } = await whoIs(argo, token);
+  const label = labelOf(myself);
 
-  if (!myself) return null;
+  if (label) for (const site of sites) await keepSite(argo, site);
 
-  for (const site of sites) await keepSite(argo, site);
-
-  return labelOf(myself);
+  return label;
 }

@@ -26,7 +26,7 @@ it(
     const page = await signInPage(await startWithAtlassian(onlyId));
 
     expect(atlassianFooter(page)).toBe(atlassianWords.needsApp);
-    expect(page.find(atlassianWords.start).props.disabled).toBe(true);
+    expect(page.findText(atlassianWords.start)).toBeUndefined();
     expect(page.findText(tokenLink)).toBeDefined();
   },
   timeoutMs,
@@ -40,7 +40,7 @@ it(
 
     // The token paste stays the default, with "Sign in with Atlassian" offered under it.
     expect(page.findText(tokenLink)).toBeDefined();
-    expect(page.find(atlassianWords.start).props.disabled).toBe(false);
+    expect(page.find(atlassianWords.start).type).toBe('FieldGroup.Link');
     await signInWithAtlassian(jira, page);
 
     const authorize = firstAuthorize(jira);
@@ -96,13 +96,35 @@ it(
     const phone = await signInPage(jira, false);
 
     expect(atlassianFooter(phone)).toBe(atlassianWords.elsewhere);
-    expect(phone.find(atlassianWords.start).props.disabled).toBe(true);
+    expect(phone.findText(atlassianWords.start)).toBeUndefined();
     expect(phone.findText(tokenLink)).toBeDefined();
 
     await expect(
       jira.test.pages.run({ operation: 'signInWithAtlassian', args: {} }),
     ).resolves.toMatchObject({ result: { state: 'failed' } });
     expect(jira.opened).toEqual([]);
+  },
+  timeoutMs,
+);
+
+it(
+  'signs in nobody when Jira hides the email, so it never adds a second Account under a display name',
+  async () => {
+    const jira = await startWithAtlassian(undefined, '');
+    const page = await signInPage(jira);
+
+    await page.press(atlassianWords.start);
+
+    const refused = async (): Promise<boolean> => {
+      await page.draw();
+
+      return atlassianFooter(page).includes('did not say who signed in');
+    };
+
+    expect(
+      await jira.test.clock.until(refused, { stepMs: 1000, steps: 10 }),
+    ).toBe(true);
+    expect(jira.test.accounts.list()).toEqual([]);
   },
   timeoutMs,
 );

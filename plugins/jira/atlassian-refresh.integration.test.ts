@@ -5,13 +5,10 @@ import {
   issuesShown,
   lastCredential,
   projectPage,
-  readsAsBearer,
   signInWithAtlassian,
   startWithAtlassian,
 } from './mocks/atlassian-journey';
 import { oauthClient, tokenLifetimeMs } from './mocks/atlassian-oauth';
-import { person, scopedToken } from './mocks/jira-data';
-import { ada, fillSignIn } from './mocks/journey';
 
 serialiseOnOAuthPort();
 
@@ -81,31 +78,6 @@ it(
     await page.draw();
     expect(page.findText(issueSummary)).toBeDefined();
     expect(jira.test.accounts.list()).toHaveLength(1);
-  },
-  timeoutMs,
-);
-
-it(
-  'rewrites the token-signed-in Account when the same person signs in with Atlassian',
-  async () => {
-    const jira = await startWithAtlassian();
-
-    await fillSignIn({ test: jira.test, jira: jira.jira }, ada);
-    await issuesShown(jira);
-    expect(lastCredential(jira)).toMatch(/^Basic /);
-
-    // The page shows the token sign-in now, so an Agent, or a later visit, starts Atlassian's.
-    await jira.test.pages.run({
-      operation: 'signInWithAtlassian',
-      args: {},
-      serverDevice: true,
-    });
-
-    expect(await readsAsBearer(jira)).toBe(true);
-    expect(jira.test.accounts.list()).toMatchObject([
-      { host: 'api.atlassian.com', label: person.email },
-    ]);
-    expect(await jira.test.log()).not.toContain(scopedToken);
   },
   timeoutMs,
 );

@@ -5,8 +5,6 @@ import { Given, When, Then } from './fixtures';
 
 const feedScroll = 'feed-scroll';
 
-const commandTitle = 'Check greeting';
-
 const commandLine = 'cat greeting.txt';
 
 const groupTitle = 'Ran 1 command, Edited 1 file';
@@ -60,7 +58,7 @@ export async function expectRunningCommand(page: Page): Promise<void> {
   await expect(
     page
       .getByTestId(feedScroll)
-      .getByRole('button', { name: commandTitle, exact: true }),
+      .getByRole('button', { name: commandLine, exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Stop', exact: true }),

@@ -22,6 +22,7 @@
     "./story-stack": "./src/story-stack/index.ts",
     "./story-stack/routes": "./src/story-stack/routes.tsx",
     "./tinted-avatar": "./src/tinted-avatar.tsx",
+    "./stage-marks": "./src/stage-marks.ts",
     "./tone-mark": "./src/tone-mark.tsx",
     "./primitives/*": {
       "types": "./src/primitives/*/index.ts",

@@ -1,9 +1,11 @@
 import { Action } from '@repo/kit/primitives/actions/action';
 import type { ListProps } from '@repo/kit/primitives/lists/list';
-import { useState, type ReactElement } from 'react';
+import { useCallback, useState, type ReactElement } from 'react';
 import type { SessionsListEntry } from '../sessions-list-entries';
 import type { SessionsListProps } from './sessions-list-props';
 import { sessionsListSelects } from './sessions-list-selects';
+
+const noneSelected: readonly string[] = [];
 
 type Selection = Pick<ListProps<SessionsListEntry>, 'selection' | 'actions'>;
 
@@ -23,7 +25,14 @@ function archiveSelection(
 }
 
 export function useSessionsSelection(props: SessionsListProps): Selection {
-  const [selected, onChange] = useState<readonly string[]>([]);
+  const [selected, setSelected] = useState(noneSelected);
+
+  // The List closes selection after every press; with nothing selected that changes nothing, and the rows stay drawn.
+  const onChange = useCallback(
+    (next: readonly string[]) =>
+      setSelected(next.length === 0 ? noneSelected : next),
+    [],
+  );
 
   if (!sessionsListSelects || !props.onArchiveMany) return {};
 

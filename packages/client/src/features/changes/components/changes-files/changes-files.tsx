@@ -8,8 +8,29 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { comparisonKey } from '../../state/changes-state';
 import { noChangesDescription } from '../../view/changes-comparison';
-import type { ChangesViewProps } from '../../view/changes-view-props';
+import type {
+  ChangedFile,
+  ChangesViewProps,
+} from '../../view/changes-view-props';
 import { FileList } from './changes-file-list';
+
+export type ChangesFilesProps = ChangesViewProps & {
+  // What leads the files and scrolls with them, as a phone's sheet leads with the Session's pull requests.
+  header?: React.ReactNode;
+};
+
+// Before the files load, the header still shows above the spinner.
+function Above(props: {
+  header: React.ReactNode;
+  children: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <View className="flex-1">
+      {props.header}
+      {props.children}
+    </View>
+  );
+}
 
 const loadingChangesLabel = 'Loading changes';
 
@@ -19,23 +40,30 @@ const loadErrorTitle = "Couldn't load changes";
  * The changed files for the comparison in force, each showing its diff in place and folded once marked Viewed. A
  * failed load is the standard error toast; a failed refresh keeps the files from the last load.
  */
-export function ChangesFiles(
-  props: ChangesViewProps,
-): React.JSX.Element | null {
+export function ChangesFiles({
+  header,
+  ...props
+}: ChangesFilesProps): React.JSX.Element {
   useErrorToast(loadErrorToast(props.loadError));
 
-  if (props.files === undefined) return <Pending {...props} />;
+  if (props.files === undefined)
+    return (
+      <Above header={header}>
+        <Pending {...props} />
+      </Above>
+    );
 
-  if (!props.files.length) return <NoChanges {...props} />;
+  return <Loaded {...props} files={props.files} header={header} />;
+}
+
+type LoadedProps = ChangesFilesProps & { files: readonly ChangedFile[] };
+
+// With a header, which has something to show, an empty Checkout adds no empty state under it.
+function Loaded(props: LoadedProps): React.ReactNode {
+  if (!props.files.length) return props.header ?? <NoChanges {...props} />;
 
   // Each comparison gets its own list, so its files start open again.
-  return (
-    <FileList
-      key={comparisonKey(props.comparison)}
-      {...props}
-      files={props.files}
-    />
-  );
+  return <FileList key={comparisonKey(props.comparison)} {...props} />;
 }
 
 const loadErrorToast = (message: string | undefined): ErrorToast | undefined =>

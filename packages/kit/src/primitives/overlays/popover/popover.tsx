@@ -70,7 +70,7 @@ function PopoverChildren(props: PopoverProps): React.JSX.Element {
 
 const contentClassName = cn(
   menuSurfaceClassName,
-  'outline-hidden z-50 w-72 p-4 popover-content cursor-auto',
+  'outline-hidden z-50 w-72 p-4 popover-content cursor-auto web:max-h-(--radix-popover-content-available-height) web:overflow-y-auto',
 );
 
 function contentPlacement({

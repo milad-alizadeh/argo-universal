@@ -33,8 +33,11 @@ type Calls = Pick<
 
 type Lend = Parameters<Argo['accounts']['provide']>[2];
 
-// The handler a flow's `provide()` would register, kept so one provider can answer for both ways of signing in.
-type Held = { lend: Lend };
+/*
+ * The handler a flow's `provide()` would register, kept so one provider can answer for both ways of signing in, and
+ * what to do each time the flow's state changes.
+ */
+type Held = { lend: Lend; onChange: () => void };
 
 /*
  * Argo takes one provider for each host, with one header and prefix. A token sign-in keeps the whole `Basic …`
@@ -44,6 +47,10 @@ type Held = { lend: Lend };
 function capturing(argo: Calls, held: Held): Calls {
   return {
     ...argo,
+    changed: () => {
+      held.onChange();
+      argo.changed();
+    },
     accounts: {
       ...argo.accounts,
       provide: async (_host, _header, handler) => {
@@ -72,10 +79,26 @@ const options = (argo: Calls): OAuthFlowOptions => ({
   label: (token) => oauthLabel(argo, token),
 });
 
-export function atlassianSignIn(argo: Calls): AtlassianSignIn {
-  const held: Held = { lend: () => null };
+/*
+ * Signing in with Atlassian replaces whatever the token paste last said: its token was overwritten on the one
+ * Account, and a refusal a read noted before belongs to the token gone.
+ */
+function replacesPaste(flow: OAuthFlow, paste: JiraSignIn): void {
+  if (flow.state().kind !== 'signed-in') return;
+
+  paste.refused(null);
+  paste.flow.cancel();
+}
+
+export function atlassianSignIn(
+  argo: Calls,
+  paste: JiraSignIn,
+): AtlassianSignIn {
+  const held: Held = { lend: () => null, onChange: () => {} };
 
   const flow = oauthFlow(capturing(argo, held), options(argo));
+
+  held.onChange = (): void => replacesPaste(flow, paste);
 
   return Object.freeze({
     flow,
@@ -161,6 +184,22 @@ export async function atlassianOffer(
     ? { kind: 'here', state: atlassian.flow.state() }
     : { kind: 'elsewhere' };
 }
+
+/*
+ * Who the sign-in page says is signed in: the token paste's, which already holds back a sign-in a read found refused,
+ * else Atlassian's under the same guard, since both lend the one Account. A paste after an OAuth sign-in names
+ * the token's person; an OAuth sign-in resets the paste.
+ */
+function atlassianLabel({ paste, atlassian }: SignIns): string | null {
+  const oauth = atlassian.flow.state();
+
+  if (oauth.kind !== 'signed-in') return null;
+
+  return paste.refusal() === null ? oauth.label : null;
+}
+
+export const whoIsSignedIn = (signIns: SignIns): string | null =>
+  signIns.paste.signedIn() ?? atlassianLabel(signIns);
 
 // The token sign-in and "Sign in with Atlassian", which keep one Account between them.
 export type SignIns = Readonly<{

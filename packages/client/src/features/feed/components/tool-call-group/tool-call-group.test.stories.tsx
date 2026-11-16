@@ -17,7 +17,7 @@ import {
 } from './tool-call-group-fixtures';
 import {
   commandAndFileSummary,
-  commandTitle,
+  commandLine,
   dark,
   readFileTitle,
 } from './tool-call-group-play.mocks';
@@ -56,9 +56,7 @@ function settled(width: number): Story {
         canvas.getByRole('button', { name: readFileTitle }),
       ).toBeVisible();
       await expect(
-        canvas.getAllByRole('button', {
-          name: 'cat hello.txt && git status --short',
-        }),
+        canvas.getAllByRole('button', { name: commandLine }),
       ).toHaveLength(1);
       await userEvent.click(group);
       await waitFor(() =>
@@ -97,7 +95,7 @@ function running(width: number): Story {
 
       // The running command is a row of its own behind the read, so its output opens under it (#2044).
       const [commandRow, ...rest] = canvas.getAllByRole('button', {
-        name: commandTitle,
+        name: commandLine,
       });
 
       await expect(rest).toHaveLength(0);
@@ -128,7 +126,7 @@ export const OpenCompletedHistory: Story = {
     );
     await expect(
       canvas.getAllByRole('button', {
-        name: commandTitle,
+        name: commandLine,
       }),
     ).toHaveLength(1);
   },

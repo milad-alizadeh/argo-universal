@@ -146,3 +146,22 @@ it('gives a Session with no Issue no row item and no bar line', async () => {
 
   expect([itemsOf(row.value), itemsOf(bar.value)]).toEqual([[], []]);
 }, 20_000);
+
+it('reads every attached Issue of a Project from GitHub in one call', async () => {
+  const { test, github } = await signedInRoot();
+  await attach(test, 'attach');
+  await attach(test, 'attach', 43);
+
+  const before = github.graphqlCalls().length;
+
+  await until(
+    watch(test, barSlot),
+    (answer) => JSON.stringify(itemsOf(answer)).match(/Open/g)?.length === 2,
+  );
+
+  const calls = github.graphqlCalls().slice(before);
+
+  expect(calls).toHaveLength(1);
+  expect(calls[0]?.body).toContain('issue42: issue(number: 42)');
+  expect(calls[0]?.body).toContain('issue43: issue(number: 43)');
+}, 20_000);

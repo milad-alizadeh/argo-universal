@@ -105,8 +105,16 @@ const knownClient = (form: URLSearchParams): boolean =>
   form.get('client_id') === oauthClient.id &&
   form.get('client_secret') === oauthClient.secret;
 
-const exchanged = (held: Held, form: URLSearchParams): FixtureAnswer =>
-  form.get('code') === grantedCode ? issued(held) : badCode;
+// The callback URL registered with the app; Atlassian refuses an exchange that names another.
+export const registeredCallback = 'http://127.0.0.1:51789/callback';
+
+const badRedirect = refused(403, 'invalid_grant', 'redirect_uri is invalid');
+
+function exchanged(held: Held, form: URLSearchParams): FixtureAnswer {
+  if (form.get('redirect_uri') !== registeredCallback) return badRedirect;
+
+  return form.get('code') === grantedCode ? issued(held) : badCode;
+}
 
 const refreshed = (held: Held, form: URLSearchParams): FixtureAnswer =>
   held.refresh !== null && form.get('refresh_token') === held.refresh
@@ -148,26 +156,44 @@ const resourcesPath = '/oauth/token/accessible-resources';
 const isTokenEndpoint = ({ host, path }: FixtureRequest): boolean =>
   host === 'auth.atlassian.com' && path === tokenPath;
 
+const isResources = ({ host, path }: FixtureRequest): boolean =>
+  host === 'api.atlassian.com' && path === resourcesPath;
+
 function answerOf(held: Held, request: FixtureRequest): FixtureAnswer | null {
   if (isTokenEndpoint(request)) return tokenEndpoint(held, request);
 
-  return request.path === resourcesPath ? resourcesOf(held, request) : null;
+  return isResources(request) ? resourcesOf(held, request) : null;
 }
 
 const refreshesIn = (held: Held): URLSearchParams[] =>
   held.forms.filter((form) => form.get('grant_type') === 'refresh_token');
 
-export function atlassianOAuth(): AtlassianOAuth {
-  const held: Held = { generation: 0, refresh: null, access: null, forms: [] };
+function revoked(held: Held): void {
+  held.refresh = null;
+}
+
+const freshHeld = (): Held => ({
+  generation: 0,
+  refresh: null,
+  access: null,
+  forms: [],
+});
+
+/*
+ * `email` is what Jira's `myself` answers for the person signed in; a profile that hides its email answers none.
+ */
+export function atlassianOAuth({
+  email = person.email,
+}: { email?: string } = {}): AtlassianOAuth {
+  const held = freshHeld();
+  const signedIn = { ...person, email, scoped: true };
 
   return {
     who: (token) =>
-      isIssued(held, token) ? { ...person, token, scoped: true } : undefined,
+      isIssued(held, token) ? { ...signedIn, token } : undefined,
     answer: (request) => answerOf(held, request),
     forms: () => held.forms,
     refreshes: () => refreshesIn(held),
-    revoke: () => {
-      held.refresh = null;
-    },
+    revoke: () => revoked(held),
   };
 }

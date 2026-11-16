@@ -54,6 +54,7 @@ export function queueComposerProps({
     promptQueue: {
       queue: snapshot.promptQueue,
       holds: snapshot.queueHolds,
+      canSteer: snapshot.canSteer,
       command: commands.queueCommand,
     },
   };

@@ -16,8 +16,8 @@ import { defineSignInPage } from './sign-in-page';
  */
 export async function register(argo: Argo): Promise<void> {
   const signIn = jiraSignIn(argo);
-  const atlassian = atlassianSignIn(argo);
-  const reads = defineReads(argo);
+  const atlassian = atlassianSignIn(argo, signIn);
+  const reads = defineReads(argo, signIn.refused);
 
   await createTables(argo);
   // One provider answers for both: a pasted token and "Sign in with Atlassian" keep one Account.

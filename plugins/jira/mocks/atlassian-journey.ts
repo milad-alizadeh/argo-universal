@@ -77,10 +77,12 @@ async function started(given: Started): Promise<PluginTest> {
   return test;
 }
 
+// `email` is what Jira's `myself` answers once signed in with Atlassian; empty for a profile that hides it.
 export async function startWithAtlassian(
   settings: Map<string, string> = oauthSettings,
+  email?: string,
 ): Promise<AtlassianJira> {
-  const oauth = atlassianOAuth();
+  const oauth = atlassianOAuth(email === undefined ? {} : { email });
   const jira = await jiraService({ oauth });
   const opened: URL[] = [];
 

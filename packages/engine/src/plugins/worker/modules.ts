@@ -154,6 +154,8 @@ function validatePaths(
   if (entry.backgroundPath !== undefined)
     validate.page(entry.backgroundPath, 'Background');
 
+  validate.watch(entry.watchPath);
+
   for (const path of accountPaths(entry)) validate.page(path, 'Account');
 }
 

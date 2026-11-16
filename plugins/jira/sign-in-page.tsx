@@ -11,7 +11,11 @@ import {
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { tokenPageUrl, tokenScopes } from './atlassian';
-import { atlassianOffer, type SignIns } from './atlassian-sign-in';
+import {
+  atlassianOffer,
+  whoIsSignedIn,
+  type SignIns,
+} from './atlassian-sign-in';
 import {
   atlassianSection,
   type AtlassianOffer,
@@ -27,8 +31,9 @@ type SignInState = { email: string; site: string };
 
 type To = PageTo<SignInState>;
 
+// Who is signed in, or null while the page takes a token; and why the last token was not used, if it was not.
 type SignInData = {
-  state: TokenPasteState;
+  label: string | null;
   error: string | null;
   atlassian: AtlassianOffer;
 };
@@ -36,8 +41,12 @@ type SignInData = {
 const flowError = (state: TokenPasteState): string | null =>
   state.kind === 'failed' ? state.message : null;
 
+// A sign-in a read found refused says so beside the field, until a new token is pasted.
+const staleSignIn = (signIn: JiraSignIn): string | null =>
+  signIn.flow.state().kind === 'signed-in' ? signIn.refusal() : null;
+
 const errorOf = (signIn: JiraSignIn): string | null =>
-  signIn.notice() ?? flowError(signIn.flow.state());
+  signIn.notice() ?? flowError(signIn.flow.state()) ?? staleSignIn(signIn);
 
 const signedIn = (label: string, to: To): JSX.Element => (
   <Screen title="Jira">
@@ -147,13 +156,6 @@ const signInForm = (
   <Screen title="Sign in to Jira">{signInFields(data, to, state)}</Screen>
 );
 
-// Signed in either way, the one the person used last in this run says so.
-function signInState({ paste, atlassian }: SignIns): TokenPasteState {
-  const oauth = atlassian.flow.state();
-
-  return oauth.kind === 'signed-in' ? oauth : paste.flow.state();
-}
-
 /*
  * A token is pasted on any Device, a paired phone included; the kit keeps it and adds the Account. "Sign in with
  * Atlassian" is offered under it once the person has set up their OAuth app.
@@ -162,13 +164,13 @@ export function defineSignInPage(argo: Argo, signIns: SignIns): void {
   argo.pages.define(signInPath, {
     state: { email: '', site: '' },
     load: async ({ context }): Promise<SignInData> => ({
-      state: signInState(signIns),
+      label: whoIsSignedIn(signIns),
       error: errorOf(signIns.paste),
       atlassian: await atlassianOffer(argo, signIns, context.serverDevice),
     }),
     render: (data, to, { state }) =>
-      data.state.kind === 'signed-in'
-        ? signedIn(data.state.label, to)
-        : signInForm(data, to, state),
+      data.label === null
+        ? signInForm(data, to, state)
+        : signedIn(data.label, to),
   });
 }

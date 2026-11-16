@@ -17,54 +17,50 @@ type Press = ReturnType<PageTo['run']>;
 
 export type AtlassianRuns = { start: Press; cancel: Press };
 
-type Row = { title: string; onPress: Press; disabled: boolean; footer: string };
+type Shown = { row: JSX.Element; footer: string };
+
+const link = (title: string, onPress: Press): JSX.Element => (
+  <FieldGroup.Link key="atlassian" title={title} onPress={onPress} />
+);
+
+// A row that only says why there is no button here; the footer says what to do instead.
+const explained = (title: string, value: string, footer: string): Shown => ({
+  row: <FieldGroup.Value key="atlassian" title={title} value={value} />,
+  footer,
+});
 
 // Why the last sign-in failed, such as the port in use or Atlassian refusing the client secret, or what it does.
 const footerOf = (state: OAuthFlowState): string =>
   state.kind === 'failed' ? state.message : atlassianWords.offer;
 
-function hereRow(state: OAuthFlowState, runs: AtlassianRuns): Row {
-  if (state.kind === 'waiting')
-    return {
-      title: atlassianWords.cancel,
-      onPress: runs.cancel,
-      disabled: false,
-      footer: atlassianWords.waiting,
-    };
+const hereShown = (state: OAuthFlowState, runs: AtlassianRuns): Shown =>
+  state.kind === 'waiting'
+    ? {
+        row: link(atlassianWords.cancel, runs.cancel),
+        footer: atlassianWords.waiting,
+      }
+    : { row: link(atlassianWords.start, runs.start), footer: footerOf(state) };
 
-  return {
-    title: atlassianWords.start,
-    onPress: runs.start,
-    disabled: false,
-    footer: footerOf(state),
-  };
+function shownFor(offer: AtlassianOffer, runs: AtlassianRuns): Shown {
+  if (offer.kind === 'here') return hereShown(offer.state, runs);
+
+  const { appTitle, appValue, needsApp } = atlassianWords;
+  const { deviceTitle, deviceValue, elsewhere } = atlassianWords;
+
+  return offer.kind === 'needs-app'
+    ? explained(appTitle, appValue, needsApp)
+    : explained(deviceTitle, deviceValue, elsewhere);
 }
 
-// Offered but not here: the row holds still, and the footer says what to do instead.
-const heldRow = (footer: string, runs: AtlassianRuns): Row => ({
-  title: atlassianWords.start,
-  onPress: runs.start,
-  disabled: true,
-  footer,
-});
-
-function rowOf(offer: AtlassianOffer, runs: AtlassianRuns): Row {
-  if (offer.kind === 'here') return hereRow(offer.state, runs);
-
-  return heldRow(
-    offer.kind === 'needs-app'
-      ? atlassianWords.needsApp
-      : atlassianWords.elsewhere,
-    runs,
-  );
-}
-
-// The last section of the sign-in form, under the token paste, which stays the default way in.
+/*
+ * The last section of the sign-in form, under the token paste, which stays the default way in. Its button is drawn
+ * only where it can work: the OAuth app is set up and this is the Server Device.
+ */
 export function atlassianSection(
   offer: AtlassianOffer,
   runs: AtlassianRuns,
 ): JSX.Element {
-  const { footer, ...row } = rowOf(offer, runs);
+  const { row, footer } = shownFor(offer, runs);
 
   return (
     <FieldGroup.Section
@@ -72,7 +68,7 @@ export function atlassianSection(
       title={atlassianWords.section}
       footer={footer}
     >
-      <FieldGroup.Link key="atlassian" {...row} />
+      {row}
     </FieldGroup.Section>
   );
 }
