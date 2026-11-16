@@ -11,6 +11,9 @@ type Kept = { validators: Record<string, string>; reply: FetchReply };
 // Enough for every pull request, Check list and page a Plugin reads at once; the oldest goes first past it.
 export const keptRepliesLimit = 500;
 
+// And at most this much body in all, since one reply may be as large as a fetch reads.
+export const keptBytesLimit = 32 * 1024 * 1024;
+
 // How long an origin stays closed when it said it was rate-limited but not until when.
 export const defaultBackoffMs = 60_000;
 
@@ -105,7 +108,7 @@ const rateLimited = (reply: FetchReply): boolean => {
 };
 
 // `retry-after` first, then the epoch second the limit resets at, then a minute.
-function closedUntil(reply: FetchReply, now: number): number {
+function reopensAt(reply: FetchReply, now: number): number {
   const headers = lower(reply.headers);
   const after = secondsAfter(headers['retry-after']);
 
@@ -137,6 +140,7 @@ const refusal = (until: number, now: number): FetchReply => ({
 export class PluginFetchCache {
   private readonly replies = new Map<string, Kept>();
   private readonly closed = new Map<string, number>();
+  private keptBytes = 0;
 
   constructor(private readonly clock: Pick<PluginClock, 'now'>) {}
 
@@ -149,7 +153,7 @@ export class PluginFetchCache {
     const reply = await this.sendKept(hop, send);
 
     if (rateLimited(reply))
-      this.closed.set(gate, closedUntil(reply, this.clock.now()));
+      this.closed.set(gate, reopensAt(reply, this.clock.now()));
 
     return reply;
   }
@@ -181,19 +185,31 @@ export class PluginFetchCache {
 
     if (keepable(reply))
       this.keep(key, { validators: validatorsOf(reply), reply });
-    else this.replies.delete(key);
+    else this.forget(key);
 
     return reply;
   }
 
   // Kept most recently used last, so the first one is the one to drop.
   private keep(key: string, kept: Kept): void {
-    this.replies.delete(key);
+    this.forget(key);
     this.replies.set(key, kept);
+    this.keptBytes += kept.reply.body.length;
 
     for (const oldest of this.replies.keys()) {
-      if (this.replies.size <= keptRepliesLimit) break;
-      this.replies.delete(oldest);
+      if (this.withinLimits()) break;
+      this.forget(oldest);
     }
+  }
+
+  private withinLimits(): boolean {
+    return (
+      this.replies.size <= keptRepliesLimit && this.keptBytes <= keptBytesLimit
+    );
+  }
+
+  private forget(key: string): void {
+    this.keptBytes -= this.replies.get(key)?.reply.body.length ?? 0;
+    this.replies.delete(key);
   }
 }

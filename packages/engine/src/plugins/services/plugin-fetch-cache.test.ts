@@ -2,6 +2,7 @@ import type { FetchReply } from '@repo/contracts/plugins/argo-calls';
 import { describe, expect, it } from 'vitest';
 import {
   defaultBackoffMs,
+  keptBytesLimit,
   keptRepliesLimit,
   PluginFetchCache,
 } from './plugin-fetch-cache';
@@ -146,6 +147,21 @@ describe('conditional GETs', () => {
     expect(
       github.sent.map(({ headers }) => headers['if-none-match']),
     ).toEqual([undefined, undefined, undefined]);
+  });
+
+  it('drops the oldest reply once the kept bodies pass their byte budget', async () => {
+    const github = service();
+    const half = 'x'.repeat(keptBytesLimit / 2 + 1);
+
+    github.answer(reply(200, { etag: '"a"' }, half));
+    await github.fetch(hopOf('/big/1'));
+    await github.fetch(hopOf('/big/2'));
+    await github.fetch(hopOf('/big/2'));
+    await github.fetch(hopOf('/big/1'));
+
+    expect(
+      github.sent.map(({ headers }) => headers['if-none-match']),
+    ).toEqual([undefined, undefined, '"a"', undefined]);
   });
 
   it('drops the least recently used reply past its limit', async () => {
