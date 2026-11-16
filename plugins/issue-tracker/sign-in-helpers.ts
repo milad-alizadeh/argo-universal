@@ -34,7 +34,7 @@ export async function showsCode(tracked: Tracked): Promise<OpenPage> {
 
   await page.press(signInLabel);
   await page.draw();
-  expect(JSON.stringify(page.tree)).toContain('"code":"WDJB-MJHT"');
+  expect(JSON.stringify(page.tree)).toContain('"value":"WDJB-MJHT"');
 
   return page;
 }

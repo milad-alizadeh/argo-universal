@@ -489,7 +489,7 @@ One component of the UI kit, such as Button, List or Screen, drawn by Argo on ev
 _Avoid_: Part, UI kit component, primitive
 
 **SignIn**:
-The kit component a Plugin's sign-in draws, laid out as Settings is: the step beside the service's mark, a device flow's code with Copy, and FieldGroup rows. The mark is the service's logo when the Plugin ships one, and the Plugin's own icon otherwise. `provideSignIn` and `signInGate` draw it for every step of either OAuth flow.
+The kit component a Plugin's sign-in draws, laid out as Settings is: the step beside the service's mark, then FieldGroup rows, a device flow's code among them. The mark is the service's logo when the Plugin ships one, and the Plugin's own icon otherwise. `provideSignIn` and `signInGate` draw it for every step of either OAuth flow.
 _Avoid_: OAuth window, sign-in card, login screen
 
 **FieldGroup**:

@@ -22,7 +22,7 @@ type Story = StoryObj<typeof meta>;
 
 export const SignedOut: Story = { args: signedOutSignIn };
 
-// A device flow's code sits in a card of its own, with Copy at its end.
+// A device flow's code is a row of its own, above the row that copies it and continues.
 export const Code: Story = { args: codeSignIn };
 
 // Signed in, the Account is a row of its own.

@@ -40,7 +40,7 @@ it('signs a throwaway Plugin in with the device flow, from a paired Device, and 
 
   await page.press(signInLabel);
   await page.draw();
-  expect(JSON.stringify(page.tree)).toContain('"code":"WDJB-MJHT"');
+  expect(JSON.stringify(page.tree)).toContain('"value":"WDJB-MJHT"');
   await clockUntil(test, page, itemsText);
 
   expect(service.readTokens().at(-1)).toBe('token-1');

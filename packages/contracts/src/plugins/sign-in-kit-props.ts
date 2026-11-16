@@ -15,12 +15,6 @@ export const signInProps = z.object({
     .string()
     .optional()
     .describe('One supporting line under the title.'),
-  code: z
-    .string()
-    .optional()
-    .describe(
-      'A device flow’s code, drawn large in a card of its own with Copy.',
-    ),
   footer: z.string().optional().describe('Supporting text under the rows.'),
   signedIn: z
     .boolean()

@@ -193,13 +193,22 @@
           "service": "Jira",
           "title": "Enter this code on Jira",
           "description": "Jira asks for it after you continue.",
-          "code": "WDJB-MJHT",
           "footer": "Waiting for Jira… The code lasts 15 minutes."
         },
         "children": [
           {
-            "type": "FieldGroup.Link",
+            "type": "FieldGroup.Value",
             "key": "0",
+            "props": {
+              "title": "Code",
+              "value": "WDJB-MJHT"
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.Link",
+            "key": "1",
             "props": {
               "title": "Copy code and continue to Jira",
               "action": true,
@@ -214,7 +223,7 @@
           },
           {
             "type": "FieldGroup.Link",
-            "key": "1",
+            "key": "2",
             "props": {
               "title": "Cancel",
               "action": true,

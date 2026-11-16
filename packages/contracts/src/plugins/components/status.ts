@@ -48,7 +48,7 @@ export const statusComponents = {
     },
   ),
   SignIn: defineKitComponent(
-    'A Plugin’s sign-in to one service: the step beside the service’s mark, an optional device code with Copy, and FieldGroup rows.',
+    'A Plugin’s sign-in to one service: the step beside the service’s mark, then FieldGroup rows.',
     signInProps,
     {
       group: 'status',
@@ -59,10 +59,9 @@ export const statusComponents = {
       accessibility: {
         label:
           'The `title` is a heading; `service` names the mark. Each row is a FieldGroup row with its own label.',
-        keyboard:
-          'Copy and each row take focus in order, as FieldGroup rows do.',
+        keyboard: 'Each row takes focus in order, as FieldGroup rows do.',
         voiceOver:
-          'Reads the title as a heading, the description, the code and Copy, then the rows and the footer.',
+          'Reads the title as a heading, the description, then the rows and the footer.',
       },
     },
   ),

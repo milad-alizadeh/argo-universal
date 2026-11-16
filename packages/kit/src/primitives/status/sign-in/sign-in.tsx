@@ -1,9 +1,6 @@
-import { setStringAsync } from 'expo-clipboard';
 import type * as React from 'react';
-import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { inColumn, useClaimColumn } from '#kit/content-column/content-column';
-import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { FieldGroup } from '#primitives/fields/field-group';
 import type { SignInProps } from './sign-in-props';
@@ -11,8 +8,8 @@ import type { SignInProps } from './sign-in-props';
 const headerStyle = { gap: 16, paddingBottom: 8 };
 
 /*
- * A Plugin's sign-in, laid out as Settings is. The header and the code keep to the column the Screen offers; the rows
- * are a FieldGroup, which claims the column itself.
+ * A Plugin's sign-in, laid out as Settings is. The header keeps to the column the Screen offers; the rows are a
+ * FieldGroup, which claims the column itself.
  */
 export function SignIn(props: SignInProps): React.JSX.Element {
   const column = useClaimColumn();
@@ -21,7 +18,6 @@ export function SignIn(props: SignInProps): React.JSX.Element {
     <View className="flex-1">
       <View style={inColumn(column, headerStyle)}>
         <SignInHeader {...props} />
-        <SignInCode code={props.code} />
         <LooseFooter {...props} />
       </View>
       <SignInRows {...props} />
@@ -111,50 +107,3 @@ const initialOf = (service: string): string => {
 
   return point === undefined ? '' : String.fromCodePoint(point).toUpperCase();
 };
-
-const copiedMilliseconds = 2000;
-
-// Copies the code and says so for two seconds.
-function useCopied(): [boolean, (code: string) => void] {
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!copied) return;
-    const timeout = setTimeout(() => setCopied(false), copiedMilliseconds);
-
-    return (): void => clearTimeout(timeout);
-  }, [copied]);
-
-  return [
-    copied,
-    (code) => void setStringAsync(code).then(() => setCopied(true)),
-  ];
-}
-
-function SignInCode({ code }: { code?: string }): React.ReactNode {
-  if (code === undefined) return null;
-
-  return (
-    <View className="flex-row items-center rounded-2xl bg-card py-2 pr-2 pl-4">
-      <View className="flex-1">
-        <Text role="title-code" selectable>
-          {code}
-        </Text>
-      </View>
-      <CopyCode code={code} />
-    </View>
-  );
-}
-
-function CopyCode({ code }: { code: string }): React.JSX.Element {
-  const [copied, copy] = useCopied();
-
-  return (
-    <Button
-      label={copied ? 'Copied' : 'Copy'}
-      variant="text"
-      size="sm"
-      onPress={() => copy(code)}
-    />
-  );
-}

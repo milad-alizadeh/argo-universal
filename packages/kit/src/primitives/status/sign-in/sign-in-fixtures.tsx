@@ -22,9 +22,9 @@ export const codeSignIn = {
   service: 'Service',
   title: 'Enter this code on Service',
   description: 'Service asks for it after you continue.',
-  code: 'WDJB-MJHT',
   footer: 'Waiting for Service… The code lasts 15 minutes.',
   children: [
+    <FieldGroup.Value key="code" title="Code" value="WDJB-MJHT" />,
     <FieldGroup.Link
       key="continue"
       title="Copy code and continue to Service"

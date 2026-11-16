@@ -47,8 +47,8 @@ type Coded = Extract<Step, { kind: 'code' }>;
 const codeStep = (parts: SignInParts, step: Coded): Card => ({
   title: `Enter this code on ${parts.name}`,
   description: `${parts.name} asks for it after you continue.`,
-  code: step.userCode,
   rows: [
+    valueRow('Code', step.userCode),
     actionRow(`Copy code and continue to ${parts.name}`, {
       action: 'openUrl',
       url: step.verificationUri,

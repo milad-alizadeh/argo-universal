@@ -4,11 +4,10 @@ import { jsx } from './jsx-runtime';
 
 export type Pressed = Parameters<typeof jsx>[1][string];
 
-// What one step of the sign-in says and does: its header, the device code, and its rows.
+// What one step of the sign-in says and does: its header and its rows.
 export type Card = {
   title: string;
   description?: string;
-  code?: string;
   rows?: ReactElement[];
   footer?: string;
   signedIn?: boolean;
