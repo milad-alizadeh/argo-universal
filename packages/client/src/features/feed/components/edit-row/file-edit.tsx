@@ -1,4 +1,4 @@
-import { Text } from '@repo/kit/primitives/content/text';
+import { Text, TextClassContext } from '@repo/kit/primitives/content/text';
 import {
   Collapsible,
   CollapsibleContent,
@@ -65,12 +65,14 @@ function LineCounts({ file }: FileEditProps): React.JSX.Element {
 
 function FileEditSummary({ file, nested }: FileEditProps): React.JSX.Element {
   return (
-    <View className="min-w-0 shrink flex-row items-center gap-1">
-      {!nested && <Text selectable={false}>{editVerbs[file.operation]}</Text>}
-      <FileName path={file.oldPath ?? file.path} />
-      <MoveTarget file={file} />
-      <LineCounts file={file} />
-    </View>
+    <TextClassContext value="font-sans text-muted-foreground">
+      <View className="min-w-0 shrink flex-row items-center gap-1">
+        {!nested && <Text selectable={false}>{editVerbs[file.operation]}</Text>}
+        <FileName path={file.oldPath ?? file.path} />
+        <MoveTarget file={file} />
+        <LineCounts file={file} />
+      </View>
+    </TextClassContext>
   );
 }
 

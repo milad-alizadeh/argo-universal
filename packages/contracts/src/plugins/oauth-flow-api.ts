@@ -41,7 +41,7 @@ export type OAuthFlowOptions = Readonly<{
 export type OAuthFlowState =
   | { kind: 'idle' }
   | { kind: 'waiting' }
-  | { kind: 'signed-in'; label: string }
+  | { kind: 'signed-in'; label: string; accountId: string }
   | { kind: 'failed'; reason: 'port-in-use' | 'failed'; message: string };
 
 /*

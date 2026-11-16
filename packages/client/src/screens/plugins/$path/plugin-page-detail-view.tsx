@@ -1,6 +1,8 @@
 import type * as React from 'react';
 import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
+import { PluginSymbolContext } from '../../../lib/product/plugin-registry';
 import type { PageOpening } from '../page-addresses';
+import { usePluginLookup } from '../use-plugin-names';
 import { usePluginPage } from '../use-plugin-page';
 import { PluginDetailView } from './plugin-detail-view';
 
@@ -18,15 +20,28 @@ type PageViewProps = PageOpening & {
 export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
   const { title, onOpenPage, onBack, ...opening } = props;
   const page = usePluginPage(opening);
-  const { onPageCall } = page;
-  const callbacks = { onOpenPage, onPageCall };
+  const callbacks = { onOpenPage, onPageCall: page.onPageCall };
 
   return (
-    <PluginDetailView
-      title={title}
-      root={page.root}
-      callbacks={callbacks}
-      onBack={onBack}
-    />
+    <PluginSymbol pluginId={opening.pluginId}>
+      <PluginDetailView
+        title={title}
+        root={page.root}
+        callbacks={callbacks}
+        onBack={onBack}
+      />
+    </PluginSymbol>
+  );
+}
+
+// The Plugin's own icon, for a sign-in on its page that sends no mark of its own.
+function PluginSymbol(props: {
+  pluginId: string;
+  children: React.ReactNode;
+}): React.ReactNode {
+  const symbol = usePluginLookup()(props.pluginId).icon;
+
+  return (
+    <PluginSymbolContext value={symbol}>{props.children}</PluginSymbolContext>
   );
 }

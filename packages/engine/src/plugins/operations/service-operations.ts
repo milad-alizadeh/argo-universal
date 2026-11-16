@@ -7,6 +7,7 @@ import {
   type PluginOperationContribution,
 } from '@repo/contracts/plugins/plugin-operations';
 import type { OperationCard } from '../../sessions';
+import { isAgentCaller } from './agent-caller';
 import { checkRun, type CheckedRun } from './checked-run';
 import {
   declaredOperations,
@@ -116,7 +117,7 @@ const agentRun = 'An Agent asks to run this Plugin Operation.';
 const byAgent = (
   { confirmAgent }: PluginOperationContribution,
   caller: OperationRun['caller'],
-): boolean => Boolean(confirmAgent) && caller.sessionId !== undefined;
+): boolean => Boolean(confirmAgent) && isAgentCaller(caller);
 
 // Why the user is asked before the run, when they are.
 const confirmReason = (

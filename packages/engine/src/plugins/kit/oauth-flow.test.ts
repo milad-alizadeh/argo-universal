@@ -10,7 +10,11 @@ import { oauthFlow } from './oauth-flow';
 
 const callback = { code: 'code-1', verifier: 'verifier-1' };
 
-const signedIn = { kind: 'signed-in', label: 'Milad' };
+const signedIn = {
+  kind: 'signed-in',
+  label: 'Milad',
+  accountId: expect.any(String),
+};
 
 it('answers waiting once the browser opens, then adds the Account and keeps its token', async () => {
   const provider = fakeProvider();

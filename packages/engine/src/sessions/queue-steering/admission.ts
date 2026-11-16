@@ -1,7 +1,7 @@
 import type { ContentBlock } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import type { QueueSteering } from './queue-steering-types';
-import type { SessionContext } from './session-context';
+import type { SessionContext } from '../session-context';
+import type { QueueSteering } from './types';
 
 type Context = Pick<
   SessionContext,
