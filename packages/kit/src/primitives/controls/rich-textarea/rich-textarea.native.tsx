@@ -31,6 +31,7 @@ const maximumVisibleLines = 6;
  */
 function useFieldMaxHeight(props: RichTextareaProps): number | undefined {
   const { fontScale } = useWindowDimensions();
+
   const { lineHeight } = useResolveClassNames(
     cn(plainFieldClassName, props.fieldClassName),
   );

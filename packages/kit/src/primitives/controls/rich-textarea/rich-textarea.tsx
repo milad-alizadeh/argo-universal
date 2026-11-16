@@ -42,7 +42,7 @@ type MessageFieldProps = Pick<
 // Ten lines at the field's active line height, plus the Composer's vertical padding.
 const editableClassName = cn(
   plainFieldClassName,
-  'max-h-[calc(10lh+1.25rem)] overflow-y-auto whitespace-pre-wrap break-words text-foreground outline-none',
+  'max-h-rich-textarea overflow-y-auto whitespace-pre-wrap break-words text-foreground outline-none',
 );
 
 function MessageEditable(props: MessageFieldProps): React.JSX.Element {
