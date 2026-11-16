@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { diagramTones } from '../diagram';
 import { SubagentRole } from '../feed/subagent-role';
 import { pluginInstructionsLimit } from '../plugins/manifest-fields';
 import { argoInstructions } from './argo-instructions';
@@ -36,4 +37,15 @@ it('names the checklist tool of each Agent the Plan reaches', () => {
 
   for (const tool of ['TaskCreate', 'TodoWrite', 'update_plan', 'ToolSearch'])
     expect(plan).toContain(tool);
+});
+
+it('asks the Agent to validate each diagram, naming the Operation and every tone it may mark a node with', () => {
+  const diagrams = argoInstructions.find(
+    ({ name }) => name === 'Diagrams',
+  )?.text;
+
+  expect(diagrams).toContain('diagram.validate');
+  expect(diagrams).toContain('operation_run');
+
+  for (const tone of diagramTones) expect(diagrams).toContain(tone);
 });
