@@ -31,7 +31,13 @@ export const codeSignIn = {
       action
       onPress={noop}
     />,
-    <FieldGroup.Link key="cancel" title="Cancel" action onPress={noop} />,
+    <FieldGroup.Link
+      key="cancel"
+      title="Cancel"
+      action
+      destructive
+      onPress={noop}
+    />,
   ],
 } satisfies SignInProps;
 

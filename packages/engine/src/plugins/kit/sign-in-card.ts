@@ -17,6 +17,15 @@ export type Card = {
 export const actionRow = (title: string, onPress: Pressed): ReactElement =>
   jsx('FieldGroup.Link', { title, action: true, onPress });
 
+// A row that ends the sign-in, in the destructive tone, as Settings draws Sign out.
+export const cancelRow = (onPress: Pressed): ReactElement =>
+  jsx('FieldGroup.Link', {
+    title: 'Cancel',
+    action: true,
+    destructive: true,
+    onPress,
+  });
+
 export const valueRow = (title: string, value: string): ReactElement =>
   jsx('FieldGroup.Value', { title, value });
 

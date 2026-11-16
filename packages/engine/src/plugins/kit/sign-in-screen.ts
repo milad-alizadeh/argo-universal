@@ -6,6 +6,7 @@ import type { ReactElement } from 'react';
 import { jsx } from './jsx-runtime';
 import {
   actionRow,
+  cancelRow,
   signIn,
   valueRow,
   type Card,
@@ -54,7 +55,7 @@ const codeStep = (parts: SignInParts, step: Coded): Card => ({
       url: step.verificationUri,
       copy: step.userCode,
     }),
-    actionRow('Cancel', parts.cancel),
+    cancelRow(parts.cancel),
   ],
   footer: `Waiting for ${parts.name}… The code lasts ${Math.round(step.lifetimeMs / msPerMinute)} minutes.`,
 });
@@ -75,7 +76,7 @@ const waitingStep = (parts: SignInParts, step: Waiting): Card =>
     : {
         title: 'Finish in your browser',
         description: `Approve Argo on ${parts.name}. This page updates when you’re done.`,
-        rows: [actionRow('Cancel', parts.cancel)],
+        rows: [cancelRow(parts.cancel)],
       };
 
 const signedInStep = (step: Extract<Step, { kind: 'signed-in' }>): Card => ({
