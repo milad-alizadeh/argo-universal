@@ -6,8 +6,8 @@ import type { QueryClient } from '@tanstack/react-query';
 import { PageAddresses } from './page-addresses';
 import type { DrawPage } from './tree-draws';
 
-// The part of the Connection's tRPC client the Page addresses use.
-export interface PageConnection {
+// The part of the Connection's tRPC client (not the Connection itself) the Page addresses use.
+export interface PagePluginsClient {
   plugins: {
     draw: { query: DrawPage };
     live: {
@@ -19,15 +19,19 @@ export interface PageConnection {
   };
 }
 
-// One PageAddresses per QueryClient and Connection, keyed by the tRPC client itself: its `plugins` proxies are not identity-stable.
+/*
+ * One PageAddresses per QueryClient and Connection, keyed by the tRPC client itself: its `plugins` proxies are not
+ * identity-stable, and `useTRPCClient()` returns the one the provider was given. Global per module, so the Page
+ * addresses outlive a test: a test that needs isolation builds `new PageAddresses` or a fresh QueryClient.
+ */
 const registry = new WeakMap<
   QueryClient,
-  WeakMap<PageConnection, PageAddresses>
+  WeakMap<PagePluginsClient, PageAddresses>
 >();
 
 function addressesOver(
   queryClient: QueryClient,
-  { plugins: { draw, live } }: PageConnection,
+  { plugins: { draw, live } }: PagePluginsClient,
 ): PageAddresses {
   return new PageAddresses(queryClient, draw.query, (request, onAnswer) => {
     const subscription = live.subscribe(request, { onData: onAnswer });
@@ -36,19 +40,33 @@ function addressesOver(
   });
 }
 
+function connectionsOf(
+  queryClient: QueryClient,
+): WeakMap<PagePluginsClient, PageAddresses> {
+  const known = registry.get(queryClient);
+
+  if (known) return known;
+
+  const created = new WeakMap<PagePluginsClient, PageAddresses>();
+
+  registry.set(queryClient, created);
+
+  return created;
+}
+
 // The App's one PageAddresses for the connected Server, so a stale mark reaches the draws every Page has in flight.
 export function pageAddressesFor(
   queryClient: QueryClient,
-  connection: PageConnection,
+  client: PagePluginsClient,
 ): PageAddresses {
-  const connections = registry.get(queryClient) ?? new WeakMap();
+  const connections = connectionsOf(queryClient);
+  const known = connections.get(client);
 
-  registry.set(queryClient, connections);
+  if (known) return known;
 
-  const addresses =
-    connections.get(connection) ?? addressesOver(queryClient, connection);
+  const created = addressesOver(queryClient, client);
 
-  connections.set(connection, addresses);
+  connections.set(client, created);
 
-  return addresses;
+  return created;
 }
