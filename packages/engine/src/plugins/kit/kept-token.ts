@@ -27,7 +27,7 @@ export const expiresAtMsOf = (
   expiresIn === undefined ? undefined : Date.now() + expiresIn * msPerSecond;
 
 // A token that never runs out is kept as the bare string, as it was before refresh tokens; anything more as JSON.
-export const secretOf = (token: KeptToken): string =>
+const secretOf = (token: KeptToken): string =>
   token.refresh === undefined && token.expiresAtMs === undefined
     ? token.access
     : JSON.stringify(token);
