@@ -24,11 +24,10 @@ function idleProps(props: ComposerProps): ComposerProps {
 
 function resumingProps(props: ComposerProps): ComposerProps {
   const command = queueCommand(props.promptQueue);
+  const resume = (): void => void command({ action: 'resume' }).catch(() => {});
 
-  return {
-    ...props,
-    onSend: () => void command({ action: 'resume' }).catch(() => {}),
-  };
+  // Cmd+Enter has no draft to steer with, so it resumes as Send does.
+  return { ...props, onSend: resume, onSteer: resume };
 }
 
 async function unavailable(): Promise<void> {

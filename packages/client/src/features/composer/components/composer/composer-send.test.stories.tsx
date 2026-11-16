@@ -92,6 +92,7 @@ export const SendResumesPausedQueue: Story = {
   args: {
     draft: { text: '', attachments: [] },
     promptQueue: { ...pausedPrompts, command: fn(async () => {}) },
+    onSteer: fn(),
   },
   play: async ({ canvas, args }) => {
     const send = canvas.getByRole('button', { name: 'Send' });
@@ -104,6 +105,7 @@ export const SendResumesPausedQueue: Story = {
       action: 'resume',
     });
     await expect(args.onSend).not.toHaveBeenCalled();
+    await expect(args.onSteer).not.toHaveBeenCalled();
   },
 };
 
