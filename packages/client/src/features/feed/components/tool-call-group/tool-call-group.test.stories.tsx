@@ -3,7 +3,6 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import type { FeedGroup } from '../../view/feed-view';
 import { FeedItem } from '../feed-item';
-import { required } from '../recorded-tool-calls.mocks';
 import { scriptedToolCall } from '../tool-call-description.mocks';
 import {
   failedCommand,
@@ -94,14 +93,10 @@ function running(width: number): Story {
         canvas.getByRole('button', { name: readFileTitle }),
       ).toBeVisible();
 
-      // The running command is a row of its own behind the read, so its output opens under it (#2044).
-      const [commandRow, ...rest] = canvas.getAllByRole('button', {
-        name: commandLine,
-      });
-
-      await expect(rest).toHaveLength(0);
-      await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
-      await userEvent.click(required(commandRow, 'the command’s own row'));
+      // The title names the running command once, as Codex does: its output draws in its place, untitled.
+      await expect(
+        canvas.queryByRole('button', { name: commandLine }),
+      ).not.toBeInTheDocument();
       await expect(canvas.getByText('Shell')).toBeVisible();
       await userEvent.click(group);
       await waitFor(() =>

@@ -11,7 +11,7 @@ import {
   liveHeaderOf,
   liveToolCall,
   showsDuration,
-  titledLiveCall,
+  headerLiveCall,
   visibleActivities,
 } from './group-activities';
 import { GroupChild } from './group-child';
@@ -69,7 +69,7 @@ function GroupActivities({
 // One component whether or not a live header titles the group, so the header coming and going keeps the open state.
 function GroupBody(props: ToolCallGroupProps): React.JSX.Element {
   const activities = useGroupActivities(props.group);
-  const live = titledLiveCall(props.group);
+  const live = headerLiveCall(props.group);
 
   return (
     <GroupLiveId value={live?.toolCall.id}>

@@ -172,14 +172,20 @@ export function titledLiveCall(group: FeedGroup): LiveToolCall {
 
 /*
  * The call an open group's disclosure is titled by: its newest running call, wherever it sits, as
- * Codex titles its active cell "Running …". Only a call that leads the group also gives up its row (#2044).
+ * Codex titles its active cell "Running …". A Live header that says something else, such as a
+ * thought, titles the group instead, and then only a call it names and that leads the group counts.
  */
-export const headerLiveCall = (group: FeedGroup): LiveToolCall =>
-  titledLiveCall(group) ?? openLive(group);
+export function headerLiveCall(group: FeedGroup): LiveToolCall {
+  const titled = titledLiveCall(group);
 
-// A live Tool call drawn in the group's title leaves the list, but for any detail it has.
+  if (liveHeaderOf(group)) return titled;
+
+  return titled ?? openLive(group);
+}
+
+// The call the group's title names says its title once: its row leaves the list but for any detail, which draws without a title.
 export function visibleActivities(group: FeedGroup): FeedActivity[] {
-  const live = titledLiveCall(group);
+  const live = headerLiveCall(group);
   const drawn = drawnActivities(group);
 
   if (!live) return drawn;
