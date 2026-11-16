@@ -39,9 +39,17 @@ function hasDraftContent({ draft }: ComposerProps): boolean {
 
 // With the queue paused and nothing written, Send resumes it, so its first Queued Prompt goes next.
 export function sendResumesQueue(props: ComposerProps): boolean {
-  const queue = props.promptQueue?.queue;
-  if (!queue?.pauseReason || !queue.items.length) return false;
+  return hasPausedQueue(props) && isEmptyDraft(props);
+}
 
+function hasPausedQueue({ promptQueue }: ComposerProps): boolean {
+  if (!promptQueue) return false;
+  const { pauseReason, items } = promptQueue.queue;
+
+  return Boolean(pauseReason && items.length);
+}
+
+function isEmptyDraft(props: ComposerProps): boolean {
   return !props.queueEdit && !hasDraftContent(props);
 }
 

@@ -13,10 +13,12 @@ export function useQueueComposer(props: ComposerProps): ComposerProps {
   const editors = useQueueEditors();
   const queue = props.promptQueue;
   const action = useQueueAction(queueCommand(queue));
-  const row = queue ? editedRow(queue.queue.items, editors) : undefined;
+  const row = editedRow(queue, editors);
 
-  if (row) return editingProps(props, { row, editors, action });
+  return row ? editingProps(props, { row, editors, action }) : idleProps(props);
+}
 
+function idleProps(props: ComposerProps): ComposerProps {
   return sendResumesQueue(props) ? resumingProps(props) : props;
 }
 
@@ -63,9 +65,11 @@ function cancel({ row, editors, action }: Edit): void {
 }
 
 function editedRow(
-  items: readonly QueuedPrompt[],
+  queue: PromptQueueProps | undefined,
   editors: QueueEditors,
 ): QueuedPrompt | undefined {
+  const items = queue?.queue.items ?? [];
+
   return items.find((item) => editors.drafts[item.id] !== undefined);
 }
 
