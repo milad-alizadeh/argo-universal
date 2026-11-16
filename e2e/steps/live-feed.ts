@@ -5,8 +5,6 @@ import { Given, When, Then } from './fixtures';
 
 const feedScroll = 'feed-scroll';
 
-const commandTitle = 'Check greeting';
-
 const commandLine = 'cat greeting.txt';
 
 const groupTitle = 'Ran 1 command, Edited 1 file';
@@ -20,11 +18,18 @@ Given(
   },
 );
 
-async function openGroup(feed: Locator): Promise<void> {
+// A hidden window paints no frames on Linux, so Playwright's stable check never ends; dispatch the click.
+async function clickGroup(group: Locator, hidden: boolean): Promise<void> {
+  await (hidden
+    ? group.evaluate<void, void, HTMLElement>((el) => el.click())
+    : group.click());
+}
+
+async function openGroup(feed: Locator, hidden = false): Promise<void> {
   const group = feed.getByRole('button', { name: groupTitle, exact: true });
 
   if ((await group.getAttribute('aria-expanded')) !== 'true')
-    await group.click();
+    await clickGroup(group, hidden);
 
   await expect(group).toHaveAttribute('aria-expanded', 'true');
 }
@@ -55,12 +60,13 @@ Then(
 
 // The unfinished command's Turn is running, its Stop shown.
 export async function expectRunningCommand(page: Page): Promise<void> {
-  await openGroup(page.getByTestId(feedScroll));
+  // Callers may have hidden the desktop window.
+  await openGroup(page.getByTestId(feedScroll), true);
 
   await expect(
     page
       .getByTestId(feedScroll)
-      .getByRole('button', { name: commandTitle, exact: true }),
+      .getByRole('button', { name: commandLine, exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Stop', exact: true }),

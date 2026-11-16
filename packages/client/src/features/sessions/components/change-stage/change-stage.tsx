@@ -1,11 +1,9 @@
 import { SecondaryGlyphs } from '@repo/kit/primitives/content/icon';
-import { Text } from '@repo/kit/primitives/content/text';
 import { ToneCaption, ToneMark } from '@repo/kit/tone-mark';
 import type { ReactElement } from 'react';
 import { View, type ViewProps } from 'react-native';
 import {
   changeDescription,
-  changeModifiers,
   resolveChangeStage,
   type ChangeState,
 } from './change-stage-model';
@@ -38,22 +36,6 @@ function stageAccessibilityLabel(props: ChangeStageProps): string {
   const number = props.number === undefined ? '' : ` #${props.number}`;
 
   return `${changeDescription(props)} Change${number}`;
-}
-
-export function ChangeStageModifier(props: ChangeState): ReactElement | null {
-  const modifiers = changeModifiers(props);
-
-  if (modifiers.length === 0) return null;
-
-  return (
-    <>
-      {modifiers.map(({ label, tone }) => (
-        <Text key={label} role="secondary" tone={tone}>
-          {label}
-        </Text>
-      ))}
-    </>
-  );
 }
 
 type StageContainerProps = Pick<
@@ -91,7 +73,6 @@ export function ChangeStage(props: ChangeStageProps): ReactElement {
     <View {...accessibility(props)}>
       <SecondaryChangeStageIcon {...props} />
       <ToneCaption tone={appearance.tone}>{stageLabel(props)}</ToneCaption>
-      <ChangeStageModifier {...props} />
     </View>
   );
 }

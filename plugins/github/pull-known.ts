@@ -18,7 +18,7 @@ const failureOf = (message: string): Failure => ({
 const messageOf = (cause: unknown): string =>
   cause instanceof Error ? cause.message : String(cause);
 
-const withData = <Value>(data: Value | undefined): { data?: Value } =>
+export const withData = <Value>(data: Value | undefined): { data?: Value } =>
   data === undefined ? {} : { data };
 
 const withFailure = (error: string | undefined): { failure?: Failure } =>

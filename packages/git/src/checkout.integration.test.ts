@@ -10,9 +10,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it, onTestFinished } from 'vitest';
 import { createCheckout, discardCheckout } from './index';
+import { sessionBranch, worktreeName } from './session-branch';
 import { initTestRepository } from './test-git.test.mocks';
 
-const occupiedBranch = 'argo/occupied';
+const occupiedBranch = sessionBranch('occupied');
 
 it('preserves an existing Session branch when Checkout creation fails', async (): Promise<void> => {
   const directory = realpathSync(
@@ -58,7 +59,7 @@ it('preserves an existing worktree and branch when creation starts with an abort
     'runtime',
     'worktrees',
     'project',
-    'occupied',
+    worktreeName('occupied'),
   );
 
   mkdirSync(join(directory, 'runtime', 'worktrees', 'project'), {
@@ -123,7 +124,12 @@ it('refuses a normal discard of a dirty Checkout', async (): Promise<void> => {
   expect(existsSync(file)).toBe(true);
   expect(
     (
-      await git('branch', '--list', '--format=%(refname:short)', 'argo/dirty')
+      await git(
+        'branch',
+        '--list',
+        '--format=%(refname:short)',
+        sessionBranch('dirty'),
+      )
     ).trim(),
-  ).toBe('argo/dirty');
+  ).toBe(sessionBranch('dirty'));
 });

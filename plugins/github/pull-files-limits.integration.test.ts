@@ -139,11 +139,13 @@ it(
 
     expect(JSON.stringify(files)).not.toContain('local-only.ts');
     expect(await status()).toBe(before);
+    // The pull request record also reads the auto-merge state, a GraphQL query; nothing is changed on GitHub.
     expect(
       run.github.requests
         .filter(({ host }) => host === 'api.github.com')
-        .every(({ method }) => method === 'GET'),
+        .every(({ method, path }) => method === 'GET' || path === '/graphql'),
     ).toBe(true);
+    expect(run.github.autoMergeCalls()).toEqual([]);
   },
   slow,
 );

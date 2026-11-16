@@ -7,7 +7,6 @@ import {
   openChanges,
   tick,
 } from './journey-watch-fixture';
-import { rowWaitMs } from './pull-row-reads';
 
 const slow = 30_000;
 
@@ -25,48 +24,37 @@ function stallGitHub(run: Journey): () => void {
   };
 }
 
-// The Changes a list asks for while GitHub holds its answer: asked once the read began, answered once the wait is over.
-async function askedWhileSlow(run: Journey, reads: number): Promise<object[]> {
-  const asked = changesOf(run);
-
-  await expect
-    .poll(() => run.github.pullReads().length, { timeout: wait })
-    .toBe(reads);
-  await run.test.clock.advance(rowWaitMs);
-
-  return asked;
-}
-
 it(
-  'keeps a Change as it was last read while GitHub is slow on the clock, then shows what GitHub answers',
+  'answers a Change as it was last read while GitHub is slow on the clock, then shows what GitHub answers',
   async () => {
     const run = await attached(1);
-    const open = openChanges(run);
 
+    // An open list holds Argo's clock, which is what makes a read due.
+    await openChanges(run).next();
     changePull(run, 1, { title: 'First' });
     await tick(run);
-
-    expect(await open.next()).toMatchObject([{ title: 'First' }]);
+    await expect
+      .poll(() => changesOf(run), { timeout: wait })
+      .toMatchObject([{ title: 'First' }]);
 
     const answer = stallGitHub(run);
-    const reads = run.github.pullReads().length + 1;
 
     changePull(run, 1, { title: 'Renamed' });
     await tick(run);
 
-    expect(await askedWhileSlow(run, reads)).toMatchObject([
-      { title: 'First' },
-    ]);
+    expect(await changesOf(run)).toMatchObject([{ title: 'First' }]);
 
     answer();
 
-    expect(await open.next()).toMatchObject([{ title: 'Renamed' }]);
+    await expect
+      .poll(() => changesOf(run), { timeout: wait })
+      .toMatchObject([{ title: 'Renamed' }]);
   },
   slow,
 );
 
 it(
-  'answers no Changes after a restart while GitHub is slow, then shows them once it answers',
+  'answers the Changes as last read straight after a restart while GitHub is slow, then what GitHub answers',
   async () => {
     const run = await journey();
 
@@ -74,15 +62,19 @@ it(
     await restart(run);
 
     const answer = stallGitHub(run);
-    const reads = run.github.pullReads().length + 1;
 
-    expect(await askedWhileSlow(run, reads)).toEqual([]);
+    changePull(run, 12, { title: 'Renamed' });
+
+    // The record outlives the worker, so the Changes are never empty while GitHub is slow.
+    expect(await changesOf(run)).toMatchObject([
+      { pullRequest: { number: 12 } },
+    ]);
 
     answer();
 
     await expect
       .poll(() => changesOf(run), { timeout: wait })
-      .toMatchObject([{ pullRequest: { number: 12 } }]);
+      .toMatchObject([{ title: 'Renamed' }]);
   },
   slow,
 );

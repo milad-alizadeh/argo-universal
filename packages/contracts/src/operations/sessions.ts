@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SessionQueueInput } from '../sessions';
+import { SessionQueueInput, SessionSubmitInput } from '../sessions';
 import {
   SessionArchiveInput,
   SessionArchiveOutput,
@@ -33,7 +33,7 @@ export const sessionOperations = {
     label: 'Submit Prompt',
     description:
       'Submit a user Prompt from an App, queuing it while the Session is busy or paused.',
-    params: SessionPromptInput,
+    params: SessionSubmitInput,
     result: z.strictObject({}),
     tier: 'act',
     keywords: ['prompt', 'queue'],

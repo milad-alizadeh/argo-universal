@@ -1,5 +1,5 @@
 import { turn } from '@repo/db/schema';
-import { sessionBranch } from '@repo/git';
+import { sessionBranch, worktreeName } from '@repo/git';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { startSessionJourney, newSession } from '#mocks/session-journey';
@@ -19,7 +19,9 @@ it('creates the Checkout, starts the Agent with the chosen options and runs the 
   await expect
     .poll(() => prompts)
     .toEqual([{ sessionId: 'owned-1', prompt: newSession.prompt }]);
-  expect(openings[0]?.cwd).toEqual(expect.stringContaining(sessionId));
+  expect(openings[0]?.cwd).toEqual(
+    expect.stringContaining(worktreeName(sessionId)),
+  );
   expect(
     (await caller.feed.page({ sessionId, direction: 'tail' })).rows,
   ).toEqual([
@@ -38,7 +40,7 @@ it('creates the Checkout, starts the Agent with the chosen options and runs the 
       titleSource: 'prompt',
       checkout: {
         type: 'worktree',
-        path: expect.stringContaining(sessionId),
+        path: expect.stringContaining(worktreeName(sessionId)),
         branch: sessionBranch(sessionId),
       },
     }),

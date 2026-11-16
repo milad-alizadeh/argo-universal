@@ -21,6 +21,7 @@ import type {
 } from '../rich-textarea-suggestions';
 import { commandTokens } from './rich-textarea-command-tokens';
 import { registerReturnToSubmit } from './rich-textarea-keys';
+import { useModifiedSubmit } from './rich-textarea-modified-submit';
 import { referenceTokens } from './rich-textarea-reference-tokens';
 import { $restoreQueryFront } from './rich-textarea-trigger-claim';
 import { renderTypeaheadMenu } from './rich-textarea-typeahead-menu';
@@ -37,7 +38,10 @@ import { referenceAdapter } from './rich-textarea-typeahead-references';
 import { suggestionAdapter } from './rich-textarea-typeahead-suggestions';
 import { isFocused, useTypedTokens } from './rich-textarea-typed-tokens';
 
-type Props = Pick<RichTextareaProps, 'suggestions' | 'onSubmit'> & {
+type Props = Pick<
+  RichTextareaProps,
+  'suggestions' | 'onSubmit' | 'onModifiedSubmit'
+> & {
   references: readonly ReferenceOption[];
   // Called with a result chosen from a source, after its text is written.
   onChooseSuggestion?: (suggestion: ComposerSuggestion) => void;
@@ -137,6 +141,7 @@ function useTypeahead(props: Props): MenuProps {
   const query = useTypeaheadQuery(useAdapters(props));
   const [menuOpen] = useState(() => new TypeaheadInteraction());
   useTypeaheadKeyboard(menuOpen, props.onSubmit);
+  useModifiedSubmit(props.onModifiedSubmit);
   useMenuLifetime(menuOpen, query.options.length);
 
   return {

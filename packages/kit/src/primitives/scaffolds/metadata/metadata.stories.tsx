@@ -4,6 +4,7 @@ import { Platform, View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { List } from '#primitives/lists/list';
 import { Metadata } from './metadata';
+import { EditableMetadata } from './metadata-editable.mocks';
 import {
   groupedPathMetadata,
   longPathMetadata,
@@ -41,4 +42,9 @@ export const InAGroupedList: Story = {
       <Metadata {...groupedPathMetadata} />
     </List>
   ),
+};
+
+// A field whose value opens the choices: a single choice, tags that are searched and created, and people.
+export const EditableFields: Story = {
+  render: () => <EditableMetadata />,
 };
