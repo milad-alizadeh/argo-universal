@@ -31,7 +31,7 @@ function monoPart(
   paths: readonly string[],
 ): ReactNode {
   return paths.includes(part) ? (
-    <Text key={key} role="code">
+    <Text key={key} className="font-mono">
       {part}
     </Text>
   ) : (
