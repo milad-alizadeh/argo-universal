@@ -276,16 +276,24 @@ Object key order and header name case do not change the entry.
 A page is a `Screen`. Its props say what the page holds, and the App lays it out at every width; a Plugin sets no sizes.
 
 - `width` is `content` (the reading column, the default), `full` or `bleed`. A `bleed` page has no column and no inset: its body fills the page, and a `Canvas` in it fills that body, as a board or a map does.
-- `aside` takes one `Metadata` of the page's properties, as an Issue's status, labels and assignee. When the window leaves room beside the column it is a column of its own at the trailing edge; otherwise it is a row of Pills under the title, and below medium those Pills show their icon alone. The aside never moves the title or changes the column's width.
+- `aside` takes one `FieldGroup` of the page's properties, as an Issue's status, labels and assignee. Its rows are `FieldGroup.Value` and `FieldGroup.Picker`, and their children are the value: a `Label`, `Pill`s, a `StatusDot` before the row's words, `Avatar`s, a `Link`, and an `Icon` before the value it leads. A `Picker` with children opens its choices when the value is pressed; `multiple` reports `onToggle` with `{ value, on }` for the one option pressed, since an Operation param cannot hold a list, and `createLabel` with `onCreate` offers to create what the search typed. When the window leaves room beside the column it is a column of its own at the trailing edge; otherwise it is a row of Pills under the title, and below medium those Pills show their icon alone. The aside never moves the title or changes the column's width.
 - `footer` stays pinned under the body and rises with the keyboard, as a chat's input does. The footer takes a `TextArea`, a `Stack` or a `Button`. `TextArea` is a multi-line input that grows to six lines and has an optional trailing action, such as a Send `IconButton`. The body does not scroll by itself, so a body longer than the screen goes in a `ScrollView` or a `List`, which then scrolls above the footer.
 
 ```tsx
 <Screen
   title="#42"
   aside={
-    <Metadata>
-      <Metadata.StatusDot title="Status" text="Open" tone="success" />
-    </Metadata>
+    <FieldGroup>
+      <FieldGroup.Section>
+        <FieldGroup.Value title="Status" value="Open">
+          <StatusDot tone="success" />
+        </FieldGroup.Value>
+        <FieldGroup.Value title="Labels">
+          <Pill text="bug" />
+          <Pill text="sync" />
+        </FieldGroup.Value>
+      </FieldGroup.Section>
+    </FieldGroup>
   }
 >
   <Detail markdown={body} />
