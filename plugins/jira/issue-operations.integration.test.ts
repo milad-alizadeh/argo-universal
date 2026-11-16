@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { fixtureIssue, listed, run } from './mocks/issue-journey';
+import { fixtureIssue, listed, run, type Listed } from './mocks/issue-journey';
 import { arenaSite, person } from './mocks/jira-data';
 
 const timeoutMs = 20_000;
@@ -21,7 +21,8 @@ it(
           status: inProgress,
           movesTo: ['To Do', 'In Review', 'Done'],
         },
-        { key: 'ARGO-2', status: 'Done', movesTo: ['To Do'] },
+        // Jira's global transition to In Progress is a move from Done, and is left out from In Progress itself.
+        { key: 'ARGO-2', status: 'Done', movesTo: ['To Do', inProgress] },
       ],
       more: true,
     });
@@ -106,29 +107,46 @@ it(
   timeoutMs,
 );
 
+const quietIssue = {
+  key: 'QUIET-1',
+  summary: 'Another team’s issue',
+  status: { name: 'To Do', category: 'new' },
+  assignee: null,
+  priority: 'Low',
+} as const;
+
+// Files an issue in QUIET, the site's other Jira project.
+function fileInQuiet({ jira }: Listed): void {
+  const projects = jira.data.sites.flatMap((site) => site.projects);
+
+  projects.find(({ key }) => key === 'QUIET')?.issues.push({ ...quietIssue });
+}
+
+// Each issue Operation, with what it needs besides the issue.
+const quietRuns: [string, Record<string, string>][] = [
+  ['getIssue', {}],
+  ['transition', { status: inProgress }],
+  ['setAssignee', { assignee: 'me' }],
+  ['setPriority', { priority: 'High' }],
+];
+
 it(
-  'refuses an issue outside the Jira project this Project shows',
+  'refuses an issue outside the Jira project this Project shows, and writes nothing',
   async () => {
     const jira = await listed();
-    const quiet = jira.jira.data.sites[0]?.projects[1];
-
-    quiet?.issues.push({
-      key: 'QUIET-1',
-      summary: 'Another team’s issue',
-      status: { name: 'To Do', category: 'new' },
-      assignee: null,
-      priority: 'Low',
-    });
 
     const refusal =
       'QUIET-1 is in the Jira project QUIET, not ARGO, the one this Project shows.';
 
-    await expect(run(jira, 'getIssue', { issue: 'QUIET-1' })).rejects.toThrow(
-      refusal,
-    );
-    await expect(
-      run(jira, 'setPriority', { issue: 'QUIET-1', priority: 'High' }),
-    ).rejects.toThrow(refusal);
+    fileInQuiet(jira);
+
+    for (const [name, params] of quietRuns)
+      await expect(
+        run(jira, name, { issue: quietIssue.key, ...params }),
+      ).rejects.toThrow(refusal);
+
+    expect(jira.jira.calls('transition')).toEqual([]);
+    expect(jira.jira.calls('assign')).toEqual([]);
     expect(jira.jira.calls('edit')).toEqual([]);
   },
   timeoutMs,

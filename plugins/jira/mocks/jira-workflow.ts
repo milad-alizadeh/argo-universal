@@ -55,9 +55,17 @@ const workflow = new Map<string, Transition[]>([
   [done.name, [{ ...stop, name: 'Reopen' }]],
 ]);
 
-// The transitions Jira lists from the status an issue is in.
-export const transitionsFrom = (issue: FixtureIssue): Transition[] =>
-  workflow.get(issue.status.name) ?? [];
+/*
+ * A global transition, "Any status → In Progress", as real Jira workflows have: Jira lists it on every issue, even one
+ * already in In Progress, so a reader must not offer an issue's own status as a move.
+ */
+const fromAnyStatus = move('81', 'Back to work', doing);
+
+// The transitions Jira lists from the status an issue is in, the global one last.
+export const transitionsFrom = (issue: FixtureIssue): Transition[] => [
+  ...(workflow.get(issue.status.name) ?? []),
+  fromAnyStatus,
+];
 
 export const statusOf = ({ status }: FixtureIssue): Status =>
   Object.values(statuses).find(({ name }) => name === status.name) ?? {
