@@ -68,10 +68,11 @@ async function openPicker({
   );
   const body = within(canvasElement.ownerDocument.body);
   const row = await body.findByRole('option', { name: model.name });
+  // The list is still opening until its overlay settles; a row read before then is not visible yet.
+  await settleOverlays(row);
   await expect(
     body.getByRole('option', { name: 'Same as Session' }),
   ).toBeVisible();
-  await settleOverlays(row);
 
   return row;
 }
