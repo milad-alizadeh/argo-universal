@@ -2,13 +2,7 @@ import type { Argo } from '@argo/plugin-kit';
 import { archiveOf, autoArchive } from './pull-archive';
 import { createArchiveStore, type ArchiveStore } from './pull-archive-store';
 import type { Automation, Offers } from './pull-automations';
-import { sameLink } from './pull-kept';
-import type { PullLink } from './pull-store';
-
-const lowered = (link: PullLink): PullLink => ({
-  ...link,
-  repository: link.repository.toLowerCase(),
-});
+import { lowered, sameLink } from './pull-kept';
 
 // How Auto-archive is offered on each of these Sessions' pull requests: on where it has a record.
 async function offersOf(

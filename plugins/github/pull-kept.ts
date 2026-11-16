@@ -16,6 +16,12 @@ const identityOf = ({
 }: PullLink): string =>
   JSON.stringify([projectId, sessionId, repository.toLowerCase(), number]);
 
+// An association as the automations keep it: GitHub names match without regard to case, so they are kept in lower case.
+export const lowered = (link: PullLink): PullLink => ({
+  ...link,
+  repository: link.repository.toLowerCase(),
+});
+
 export const sameLink = (record: PullLink, link: PullLink): boolean =>
   identityOf(record) === identityOf(link);
 

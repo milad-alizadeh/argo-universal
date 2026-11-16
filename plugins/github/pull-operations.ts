@@ -126,9 +126,11 @@ export async function detach(
   const link = { ...named, ...caller };
 
   await scope.store.detach(link);
-  await scope.automations.fix.forget(link);
-  await scope.automations.archive.forget(link);
-  await scope.records.forget({ ...named, ...caller });
+
+  for (const automation of Object.values(scope.automations))
+    await automation.forget(link);
+
+  await scope.records.forget(link);
   scope.changed();
 
   return named;

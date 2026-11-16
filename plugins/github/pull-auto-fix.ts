@@ -4,7 +4,7 @@ import { fetchComments } from './pull-comments';
 import { autoFix, failedOf, fixOf } from './pull-fix';
 import { eventsOf } from './pull-fix-prompts';
 import { createFixStore, type FixStore } from './pull-fix-store';
-import { sameLink } from './pull-kept';
+import { lowered, sameLink } from './pull-kept';
 import { fetchChecks, fetchPull } from './pull-reads';
 import type { PullLink } from './pull-store';
 
@@ -44,13 +44,8 @@ async function enable(
 
   const { head, keys } = await eventsNow(fetch, link);
 
-  await fix.enable(link, head, keys);
+  await fix.enable(lowered(link), head, keys);
 }
-
-const lowered = (link: PullLink): PullLink => ({
-  ...link,
-  repository: link.repository.toLowerCase(),
-});
 
 // How Auto-fix is offered on each of these Sessions' pull requests, from what it keeps for them.
 async function offersOf(
@@ -79,7 +74,7 @@ export function createAutoFix(
     offers: (sessionIds) => offersOf(fix, sessionIds),
     set: (link, on) =>
       on
-        ? enable({ fetch: argo.fetch, fix }, lowered(link))
+        ? enable({ fetch: argo.fetch, fix }, link)
         : fix.disable(lowered(link)),
     watch: (projectId, fresh) =>
       autoFix({ sessions: argo.sessions, fix }, fresh, projectId),

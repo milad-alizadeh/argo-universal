@@ -313,7 +313,7 @@ A person's choice, per PR association, that the Session is archived once that pu
 _Avoid_: Auto-close, cleanup
 
 **Pull request record**:
-What a Plugin last read of one pull request, kept in its own storage: the pull request, its Checks, its auto-merge while it is Open, and why the latest read failed. The Session row, the Changes and the Operations all read it, and only the Plugin's sync writes it.
+What a Plugin last read of one pull request, kept in its own storage: the pull request, its Checks, and while it is Open its auto-merge and review comments, and why the latest read failed. The Session row, the Changes and the Operations all read it, and only the Plugin's sync writes it.
 _Avoid_: PR cache, PR status, snapshot
 
 **Comparison**:
