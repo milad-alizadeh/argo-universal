@@ -47,9 +47,11 @@ const metaLine = async (
   wide: boolean,
   line: string,
 ): Promise<void> => {
-  await (wide
-    ? expect(canvas.getByText(line)).toBeVisible()
-    : expect(canvas.queryByText(line)).toBeNull());
+  await waitFor(() =>
+    wide
+      ? expect(canvas.getByText(line)).toBeVisible()
+      : expect(canvas.queryByText(line)).toBeNull(),
+  );
 };
 
 export const Running: Story = {

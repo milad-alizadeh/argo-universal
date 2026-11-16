@@ -7,6 +7,7 @@ import {
   type PluginOperationParam,
 } from '@repo/contracts/plugins/plugin-operations';
 import { z } from 'zod';
+import { isAgentCaller } from './agent-caller';
 
 // The params one Operation declares, by name.
 type Params = NonNullable<PluginOperationContribution['params']>;
@@ -78,10 +79,12 @@ export function checkRun(
 }
 
 const namesOtherProject = (
-  { sessionId, projectId }: PluginOperationCaller,
+  caller: PluginOperationCaller,
   named: ParamValue | undefined,
 ): boolean =>
-  sessionId !== undefined && typeof named === 'string' && named !== projectId;
+  isAgentCaller(caller) &&
+  typeof named === 'string' &&
+  named !== caller.projectId;
 
 const inProject = (
   caller: PluginOperationCaller,
