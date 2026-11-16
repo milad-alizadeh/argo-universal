@@ -25,6 +25,7 @@ it('asks for the page a failed load more lacked, as the App keeps its rows and a
     operations: [],
     settings: [{ key: 'busy', type: 'toggle', label: 'Busy' }],
   });
+
   const kit = await fixture.start();
   const page = await kit.pages.open({ path: '/' });
 
