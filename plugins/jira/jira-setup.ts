@@ -1,7 +1,9 @@
-import type { LoaderInput, NamedQuery } from '@argo/plugin-kit';
+import type { ListPage, LoaderInput, NamedQuery } from '@argo/plugin-kit';
+import { issuesPage, type ListedItem } from './issue-pages';
 import type { JiraAnswer, JiraFailure } from './jira-client';
-import type { IssuePage, JiraProject } from './jira-readers';
-import type { JiraReads } from './jira-reads';
+import type { IssueFilters } from './jira-filters';
+import type { JiraPerson, JiraProject } from './jira-readers';
+import type { JiraReads, ProjectTarget, Reading } from './jira-reads';
 import {
   storeQueries,
   storeReaders,
@@ -11,14 +13,21 @@ import {
 
 /*
  * Where one Argo Project stands with Jira, in the order a person meets it: signed out, no site, no Jira project, a
- * failed read, or the project's issues. Each step names the next one, and a step with one answer takes it.
+ * failed read, or the project's issues the filters leave. Each step names the next one, and a step with one answer
+ * takes it. The issues themselves are the kit's paged list, read page by page from Jira (`issue-pages.ts`).
  */
 export type ProjectView =
   | { kind: 'signed-out'; message: string | null }
   | { kind: 'no-site'; sites: JiraSite[] }
   | { kind: 'no-project'; site: JiraSite; projects: JiraProject[] }
   | FailedView
-  | { kind: 'issues'; site: JiraSite; project: JiraProject; page: IssuePage };
+  | {
+      kind: 'issues';
+      site: JiraSite;
+      project: JiraProject;
+      chosen: boolean;
+      people: JiraPerson[];
+    };
 
 /*
  * A read Jira refused: which read it was, so a 404 names the project or the site, and whether the Project chose its
@@ -34,7 +43,12 @@ export type FailedView = {
 
 type Read = LoaderInput['read'];
 
-type Step = { read: Read; reads: JiraReads; projectId: string };
+export type Step = {
+  read: Read;
+  reads: JiraReads;
+  projectId: string;
+  filters: IssueFilters;
+};
 
 const signedOutView = (message: string | null): ProjectView => ({
   kind: 'signed-out',
@@ -87,25 +101,29 @@ async function listedProject(
   return onlyOne(projects) ?? { kind: 'no-project', site, projects };
 }
 
-const issuesOf = (
-  { reads, projectId }: Step,
+const targetOf = (
+  { projectId }: Step,
   { cloudId }: JiraSite,
   { key }: JiraProject,
-): NamedQuery<JiraAnswer<IssuePage>> =>
-  reads.issues({ projectId, cloudId, projectKey: key });
+): ProjectTarget => ({ projectId, cloudId, projectKey: key });
 
-type Listing = { site: JiraSite; project: JiraProject; chosen: boolean };
+// The site and Jira project the list is for, and whether the Project chose that Jira project.
+type Listed = { site: JiraSite; project: JiraProject; chosen: boolean };
 
-async function issuesFor(
-  step: Step,
-  { site, project, chosen }: Listing,
-): Promise<ProjectView> {
-  const answer = await step.read(issuesOf(step, site, project));
+// Who the assignee filter offers by name; without them it still offers Anyone, Me and Unassigned.
+async function peopleFor(step: Step, listed: Listed): Promise<JiraPerson[]> {
+  const answer = await step.read(
+    step.reads.people(targetOf(step, listed.site, listed.project)),
+  );
 
-  return answer.ok
-    ? { kind: 'issues', site, project, page: answer.value }
-    : failedView({ site, reading: 'issues', chosen }, answer.failure);
+  return answer.ok ? answer.value : [];
 }
+
+const issuesFor = async (step: Step, listed: Listed): Promise<ProjectView> => ({
+  kind: 'issues',
+  ...listed,
+  people: await peopleFor(step, listed),
+});
 
 const isView = (value: JiraProject | ProjectView): value is ProjectView =>
   'kind' in value;
@@ -139,3 +157,22 @@ export async function loadProjectView(step: Step): Promise<ProjectView> {
 
   return account ? chosenView(step) : signedOutView(null);
 }
+
+const end: ListPage<ListedItem> = { items: [], cursor: null };
+
+/*
+ * One page of the list the kit pages through, from Jira's cursor (null for the first). A view with no list lists
+ * nothing, and the page says why.
+ */
+export const listIssues = (
+  reading: Reading,
+  { step, view }: { step: Step; view: ProjectView },
+  cursor: string | null,
+): ListPage<ListedItem> | Promise<ListPage<ListedItem>> =>
+  view.kind === 'issues'
+    ? issuesPage(reading, {
+        ...targetOf(step, view.site, view.project),
+        filters: step.filters,
+        cursor,
+      })
+    : end;

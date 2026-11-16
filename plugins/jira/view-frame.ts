@@ -1,4 +1,6 @@
-import type { PageTo } from '@argo/plugin-kit';
+import type { PagedList, PageTo } from '@argo/plugin-kit';
+import type { ListedItem } from './issue-pages';
+import type { IssueFilters } from './jira-filters';
 
 // What a site picker types before it is added: Page state, as it is no secret.
 export type ProjectState = { site: string };
@@ -11,4 +13,14 @@ export type Framing = {
   to: ProjectTo;
   state: ProjectState;
   sitePath: string;
+};
+
+// The issues page's Page state: the site picker's text, shown while no site is chosen, and the filters.
+export type IssuesState = ProjectState & IssueFilters;
+
+// What the issues view draws besides Jira's answer: the filters it was read for, and the pages the kit has read.
+export type Listing = {
+  to: PageTo<IssuesState>;
+  filters: IssueFilters;
+  list: PagedList<ListedItem>;
 };

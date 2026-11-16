@@ -14,7 +14,7 @@ const failureTitles: Record<JiraFailure['kind'], string> = {
 };
 
 // A 404 for the projects list means the site, not a project, is gone.
-const titleOf = ({ failure, reading }: FailedView): string =>
+export const titleOf = ({ failure, reading }: FailedView): string =>
   failure.kind === 'not-found' && reading === 'projects'
     ? 'Jira couldn’t find this site'
     : failureTitles[failure.kind];
