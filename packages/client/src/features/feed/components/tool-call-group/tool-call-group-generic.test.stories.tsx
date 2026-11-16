@@ -108,14 +108,15 @@ const verifyTitle = /^Verify the build/;
 // A group's child is titled with its command line; the group's own title keeps the Agent's description.
 const verifyCommand = /^pnpm verify/;
 
-// With other calls before it, the live call is a row of its own, so its detail opens under its own title (#2044).
+// With other calls before it, the live call still titles the group, and is a row of its own, so its detail opens under its own title (#2044).
 export const LiveCallAfterOthers: Story = {
   args: { group: genericGroup(pendingCall, priorCall) },
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Ran 1 command, Called 1 tool' }),
-    );
+    await expect(
+      canvas.queryByText('Ran 1 command, Called 1 tool'),
+    ).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: verifyTitle }));
     await expect(
       canvas.getByRole('button', { name: /^Read the issue/ }),
     ).toBeVisible();
@@ -133,12 +134,10 @@ export const LiveCallAfterOthers: Story = {
   },
 };
 
-// The button that opens the group, and the one that names the live call.
-const headerNames = (
-  followsOthers: boolean,
-): { name: string | RegExp; call: RegExp } =>
+// The button that opens the group, titled by the live call either way, and the one that names the live call.
+const headerNames = (followsOthers: boolean): { name: RegExp; call: RegExp } =>
   followsOthers
-    ? { name: 'Ran 1 command, Called 1 tool', call: verifyCommand }
+    ? { name: verifyTitle, call: verifyCommand }
     : { name: verifyTitle, call: verifyTitle };
 
 function headerOwnership(width: number, followsOthers: boolean): Story {

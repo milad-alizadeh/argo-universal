@@ -11,9 +11,9 @@ import { toolCallIcon } from '../tool-call-icon';
 import { toolCallOrb } from '../tool-call-orb';
 import {
   groupSummary,
+  headerLiveCall,
   headerToolCall,
   liveToolCall,
-  titledLiveCall,
 } from './group-activities';
 
 type GroupDisclosureProps = Pick<
@@ -28,7 +28,7 @@ type GroupDisclosureProps = Pick<
 >;
 
 function groupDisclosureProps(group: FeedGroup): GroupDisclosureProps {
-  const live = titledLiveCall(group);
+  const live = headerLiveCall(group);
   const leading = runningOrb(group);
 
   return live

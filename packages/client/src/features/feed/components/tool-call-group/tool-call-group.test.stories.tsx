@@ -20,6 +20,7 @@ import {
   commandLine,
   dark,
   readFileTitle,
+  runningGroupTitle,
 } from './tool-call-group-play.mocks';
 import { renderRecordedActivity } from './tool-call-group-preview.mocks';
 
@@ -78,13 +79,13 @@ function running(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleLayout(width);
 
-      const group = canvas.getByRole('button', {
-        name: commandAndFileSummary,
-      });
+      // The newest running call titles the group even behind a read, as Codex titles its active cell.
+      const group = canvas.getByRole('button', { name: runningGroupTitle });
 
       await expect(group).toBeVisible();
       await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
-      await expect(group).toHaveTextContent('Ran 1 command, Read 1 file 23s');
+      await expect(group).toHaveTextContent(`${runningGroupTitle} 23s`);
+      await expect(canvas.queryByText(commandAndFileSummary)).toBeNull();
       await expect(
         canvas.queryAllByRole('button', { name: /^Read / }),
       ).toHaveLength(0);

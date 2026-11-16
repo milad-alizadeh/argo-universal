@@ -170,6 +170,13 @@ export function titledLiveCall(group: FeedGroup): LiveToolCall {
   return leadsGroup(group, live.toolCall.id) ? live : undefined;
 }
 
+/*
+ * The call an open group's disclosure is titled by: its newest running call, wherever it sits, as
+ * Codex titles its active cell "Running …". Only a call that leads the group also gives up its row (#2044).
+ */
+export const headerLiveCall = (group: FeedGroup): LiveToolCall =>
+  titledLiveCall(group) ?? openLive(group);
+
 // A live Tool call drawn in the group's title leaves the list, but for any detail it has.
 export function visibleActivities(group: FeedGroup): FeedActivity[] {
   const live = titledLiveCall(group);
