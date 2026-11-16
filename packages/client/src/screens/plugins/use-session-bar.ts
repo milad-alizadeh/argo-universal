@@ -16,6 +16,7 @@ import {
 import { usePluginLookup } from './use-plugin-names';
 import { usePluginOpener } from './use-plugin-opener';
 import { useSlotItems } from './use-slot-items';
+import { useOperationRunner } from './use-tree-calls';
 
 export type SessionContext = SlotContextOf<typeof sessionBarSlotId>;
 
@@ -56,8 +57,26 @@ export function useSessionBar(
   );
 
   const onOpen = useOpenLine();
+  const onDetach = useDetachLine(session);
 
-  return lines && { ...lines, onOpen };
+  return lines && { ...lines, onOpen, onDetach };
+}
+
+// Runs a line's `detach` for the Session the bar is drawn for, and says why when it fails; a bar with no Session has none.
+function useDetachLine(
+  session: SessionContext | undefined,
+): SessionBarProps['onDetach'] {
+  const { run, failed } = useOperationRunner();
+
+  if (!session) return undefined;
+
+  return ({ pluginId, detach }) => {
+    if (!detach) return;
+
+    run({ pluginId, ...detach, ...session }).catch((cause: unknown) =>
+      failed(cause instanceof Error ? cause : new Error(String(cause))),
+    );
+  };
 }
 
 // Opens a line's Plugin page; a line without one has no Open.

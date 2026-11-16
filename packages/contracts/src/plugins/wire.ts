@@ -9,6 +9,7 @@ export {
   slotSchemas,
   ReplaceableSlotId,
   SessionRowItem,
+  SessionBarItem,
   SlotId,
   SlotItems,
   SlotItemsInput,

@@ -1,3 +1,4 @@
+import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
@@ -8,6 +9,8 @@ import {
   attachedIssuesBar,
   coverageLine as coverage,
   deploysLine as deploys,
+  detachableIssues,
+  detachableIssuesBar,
   issueLine as issue,
   secondIssueLine,
   sessionPageBar,
@@ -100,6 +103,57 @@ export const AttachedIssuesShareOneCard: Story = {
     }
 
     await expect(workbench.getByText(deploys.text)).toBeVisible();
+  },
+};
+
+// Each Issue line has a "…" whose one item takes that Issue off the Session, and a Plugin's line without `detach` has none.
+export const AnIssueLineCanBeDetached: Story = {
+  args: {
+    view: {
+      state: 'open',
+      ...idleSession,
+      bar: { ...detachableIssuesBar, onOpen: fn(), onDetach: fn() },
+    },
+  },
+  beforeEach: (): Promise<void> => settleLayout(1920),
+  play: async ({ args, canvas, userEvent }) => {
+    const second = detachableIssues[1];
+
+    await userEvent.click(
+      await canvas.findByRole('button', {
+        name: `Actions for ${second?.text}`,
+      }),
+    );
+    await settleOverlays();
+    await userEvent.click(
+      await within(document.body).findByRole('menuitem', {
+        name: 'Detach from Session',
+      }),
+    );
+
+    await expect(
+      args.view.state === 'open' && args.view.bar?.onDetach,
+    ).toHaveBeenCalledExactlyOnceWith(second);
+  },
+};
+
+// The "…" opens the menu with its one item, beside the line it belongs to.
+export const AnIssueLineMenuShowsDetach: Story = {
+  args: AnIssueLineCanBeDetached.args,
+  beforeEach: (): Promise<void> => settleLayout(1920),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', {
+        name: `Actions for ${detachableIssues[0]?.text}`,
+      }),
+    );
+    await settleOverlays();
+
+    await expect(
+      await within(document.body).findByRole('menuitem', {
+        name: 'Detach from Session',
+      }),
+    ).toBeVisible();
   },
 };
 

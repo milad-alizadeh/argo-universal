@@ -8,7 +8,11 @@ import {
   questionsValues,
 } from '../../../../mocks/elicitation';
 import { SessionDetailView } from './session-detail-view';
-import { sessionPageBar } from './session-detail-view-bar.mocks';
+import {
+  attachedIssuesBar,
+  detachableIssuesBar,
+  sessionPageBar,
+} from './session-detail-view-bar.mocks';
 import { changedSession } from './session-detail-view-changes-pill.mocks';
 import {
   ElicitationPreview,
@@ -78,6 +82,22 @@ export const SessionBar: Story = {
     state: 'open',
     ...longSession,
     bar: sessionPageBar,
+  },
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
+};
+
+// Two attached Issues share one Workbench card, each a row; the Plugin sent no `detach`, so the rows have no menu.
+export const AttachedIssues: Story = {
+  args: { state: 'open', ...longSession, bar: attachedIssuesBar },
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
+};
+
+// The Plugin sent `detach` for each Issue, so each row has a "…" whose one item takes the Issue off the Session.
+export const AttachedIssuesWithMenu: Story = {
+  args: {
+    state: 'open',
+    ...longSession,
+    bar: { ...detachableIssuesBar, onDetach: fn() },
   },
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };

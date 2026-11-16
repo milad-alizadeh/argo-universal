@@ -40,3 +40,20 @@ export const attachedIssuesBar: SessionBarProps = {
   ...sessionPageBar,
   hidden: [secondIssueLine, ...sessionPageBar.hidden],
 };
+
+const detachOf = (number: number): SessionBarEntry['detach'] => ({
+  operation: 'detach',
+  args: { number },
+});
+
+// Two attached Issues, each with the `detach` the Issue tracker sends, so each line has its "…" menu.
+export const detachableIssues: SessionBarEntry[] = [
+  { ...issueLine, detach: detachOf(412) },
+  { ...secondIssueLine, detach: detachOf(413) },
+];
+
+export const detachableIssuesBar: SessionBarProps = {
+  shown: detachableIssues[0] ?? issueLine,
+  hidden: detachableIssues.slice(1),
+  onOpen: () => {},
+};

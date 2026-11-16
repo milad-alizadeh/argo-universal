@@ -16,7 +16,9 @@ type Request = Readonly<{
   contexts: readonly Readonly<{ sessionId: string }>[];
 }>;
 
-type ToItems = (entries: Linked[]) => ReturnType<typeof rowItems>;
+type ToItems = (
+  entries: Linked[],
+) => ReturnType<typeof rowItems> | ReturnType<typeof barItems>;
 
 /*
  * The Issue tracker's fills for a Session (ADR-0035): the Issues a Session is attached to (`attach`, ADR-0044) show as
