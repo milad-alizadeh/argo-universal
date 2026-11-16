@@ -85,7 +85,7 @@ function checksAnswer(held: Held, path: string): FixtureAnswer {
     : { json: { total_count: runs.length, check_runs: runs } };
 }
 
-export const commentsPath =
+const commentsPath =
   /^\/repos\/([^/]+\/[^/]+)\/pulls\/(\d+)\/comments(?:\?(.*))?$/;
 
 // GitHub's pages of a pull request's review comments, oldest first; `per_page` and `page` choose the slice.
