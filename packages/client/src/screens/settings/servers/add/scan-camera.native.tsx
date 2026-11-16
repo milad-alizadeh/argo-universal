@@ -1,15 +1,16 @@
-import { Pill } from '@repo/kit/primitives/status/pill';
+import { CodeScanner } from '@repo/kit/primitives/content/code-scanner';
 import { usePageFocused } from '@repo/kit/use-shown-page';
 import { CameraView } from 'expo-camera';
 import { useState } from 'react';
 import type * as React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import {
   afterRead,
   cameraFailed,
   looking,
   noticeText,
   type ScanNotice,
+  scannerWords,
 } from './scan-notice';
 
 export interface ScanCameraProps {
@@ -30,10 +31,13 @@ export function ScanCamera(props: ScanCameraProps): React.JSX.Element {
   const [notice, setNotice] = useState<ScanNotice>(looking);
 
   return (
-    <View className="flex-1 items-center justify-end">
-      {usePageFocused() ? <Preview {...props} setNotice={setNotice} /> : null}
-      <Pill text={noticeText(notice)} />
-    </View>
+    <CodeScanner
+      preview={
+        usePageFocused() ? <Preview {...props} setNotice={setNotice} /> : null
+      }
+      notice={noticeText(notice)}
+      {...scannerWords}
+    />
   );
 }
 

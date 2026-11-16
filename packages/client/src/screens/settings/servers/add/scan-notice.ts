@@ -6,6 +6,12 @@ export type ScanNotice =
   | { kind: 'foreign'; seen: string }
   | { kind: 'camera-failed'; reason: string };
 
+// What the page says under the camera: what to do, and where the code is.
+export const scannerWords = {
+  title: 'Point the camera at the code',
+  detail: 'Settings › Devices › Pair a Device',
+};
+
 export const looking: ScanNotice = { kind: 'looking' };
 
 const longest = 28;
@@ -29,5 +35,5 @@ export function noticeText(notice: ScanNotice): string {
   if (notice.kind === 'camera-failed')
     return `The camera could not start: ${notice.reason}`;
 
-  return 'Point the camera at the code';
+  return 'Looking for a code…';
 }
