@@ -44,3 +44,18 @@ export const steerablePrompts: Omit<PromptQueueProps, 'command'> = {
   ...queuedPrompts,
   canSteer: true,
 };
+
+export const attachmentOnly: Omit<PromptQueueProps, 'command'> = {
+  ...steerablePrompts,
+  queue: {
+    items: [
+      {
+        ...first,
+        prompt: [
+          { type: 'resource_link', uri: 'file:///notes.md', name: 'notes.md' },
+        ],
+      },
+    ],
+    pauseReason: null,
+  },
+};

@@ -1,4 +1,9 @@
+import type { QueuedPrompt } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
+import {
+  reservePrompt,
+  requireSteeringSupport,
+} from './queue-steering-admission';
 import {
   consumeQueueSteering,
   releaseQueueSteering,
@@ -10,11 +15,6 @@ import type {
 import type { SessionContext } from './session-context';
 import { turnStep, type TurnStep } from './turn';
 
-type Context = Pick<
-  SessionContext,
-  'acpLease' | 'activeTurnId' | 'turnEnding' | 'queueSteering'
->;
-
 type Reserve = Extract<
   QueueSteeringCommand,
   { type: 'session.reserveQueueSteering' }
@@ -24,15 +24,6 @@ type Finish = Extract<
   QueueSteeringCommand,
   { type: 'session.finishQueueSteering' }
 >;
-
-function canSteerQueue(context: Context): boolean {
-  return [
-    context.acpLease?.steering === true,
-    context.activeTurnId !== null,
-    context.turnEnding.kind === 'completion',
-    context.queueSteering === null,
-  ].every(Boolean);
-}
 
 const conflict = (message: string): never => {
   throw new TRPCError({ code: 'CONFLICT', message });
@@ -60,13 +51,17 @@ function reservedChange(
 ): Partial<SessionContext> {
   return {
     queueSteering: steering,
-    queueHolds: { ...context.queueHolds, [steering.row.id]: steering.token },
+    queueHolds: steering.queuedId
+      ? { ...context.queueHolds, [steering.queuedId]: steering.token }
+      : context.queueHolds,
   };
 }
 
 function reserve(context: SessionContext, { command }: Reserve): QueueSteering {
-  if (!canSteerQueue(context))
-    return conflict('This Session cannot accept steering now');
+  requireSteeringSupport(context);
+
+  if (command.action === 'steerDraft')
+    return reservePrompt(context, command.prompt);
 
   return reserveRow(context, command.revision, queuedRow(context, command.id));
 }
@@ -74,7 +69,7 @@ function reserve(context: SessionContext, { command }: Reserve): QueueSteering {
 function reserveRow(
   context: SessionContext,
   revision: number,
-  row: QueueSteering['row'],
+  row: QueuedPrompt,
 ): QueueSteering {
   if (row.revision !== revision)
     return conflict('This Prompt changed in another App');
@@ -83,9 +78,9 @@ function reserveRow(
     return conflict('Finish editing this Prompt first');
 
   return {
-    row,
-    turnId: runningTurn(context),
-    token: context.input.createId(),
+    ...reservePrompt(context, row.prompt),
+    queuedId: row.id,
+    messageId: `${runningTurn(context)}:steer:${row.id}`,
   };
 }
 
@@ -128,7 +123,7 @@ function releasedSteering(context: SessionContext, event: Finish): TurnStep {
   return turnStep({ change: releaseQueueSteering(context, event.token) });
 }
 
-function queuedRow(context: SessionContext, id: string): QueueSteering['row'] {
+function queuedRow(context: SessionContext, id: string): QueuedPrompt {
   const row = context.promptQueue.items.find((item) => item.id === id);
 
   if (!row || row.id === context.dispatchingQueueId)

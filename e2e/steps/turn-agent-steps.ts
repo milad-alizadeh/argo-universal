@@ -1,6 +1,7 @@
 import { agentStep } from './agent-steps';
 
 export const turnAgentSteps = [
+  [agentStep('refuses steering into its held Turn'), 'queued-steering-refused'],
   [
     agentStep('asks permission before its command details arrive'),
     'permission-command-late',

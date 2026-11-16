@@ -9,7 +9,6 @@ import {
 import {
   all,
   columns,
-  eventKey,
   keyOf,
   recordsOf,
   run,
@@ -60,7 +59,7 @@ const enabledInOf =
 
 const enableOf =
   (execute: Execute, set: SetRecord): FixStore['enable'] =>
-  async (link, head, failed) => {
+  async (link, head, keys) => {
     await set(link, 1, null);
     await execute(
       run(
@@ -69,10 +68,8 @@ const enableOf =
       ),
     );
 
-    for (const check of failed)
-      await execute(
-        run(insertEvent(0), [...keyOf(link), head, eventKey(check)]),
-      );
+    for (const key of keys)
+      await execute(run(insertEvent(0), [...keyOf(link), head, key]));
   };
 
 const forgetOf =

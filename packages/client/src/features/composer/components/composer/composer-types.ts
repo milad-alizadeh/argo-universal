@@ -50,6 +50,7 @@ export interface ComposerProps {
   onAttachFiles?: () => void;
   onCreateGoal?: () => void;
   onSend: (draft: ComposerDraft) => void;
+  onSteer?: (draft: ComposerDraft) => void;
   onStop?: () => void;
   configuration?: ComposerConfigurationProps;
   status?: ComposerStatusProps;
@@ -74,4 +75,5 @@ export interface ComposerLayout {
   configurationInactive: boolean;
   sendState: 'stop' | 'sending' | 'ready' | 'blocked';
   send: () => void;
+  modifiedSend: () => void;
 }

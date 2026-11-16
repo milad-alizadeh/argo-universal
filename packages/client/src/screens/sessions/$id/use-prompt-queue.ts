@@ -45,17 +45,26 @@ function queueError(error: { message: string }): ErrorToast {
   return { title: 'Queue change failed', message: error.message };
 }
 
-export function queueComposerProps({
-  snapshot,
-  commands,
-}: OpenSession): Pick<ComposerProps, 'queueWhileRunning' | 'promptQueue'> {
+export function queueComposerProps(
+  open: OpenSession,
+): Pick<ComposerProps, 'queueWhileRunning' | 'promptQueue' | 'onSteer'> {
   return {
     queueWhileRunning: true,
-    promptQueue: {
-      queue: snapshot.promptQueue,
-      holds: snapshot.queueHolds,
-      canSteer: snapshot.canSteer,
-      command: commands.queueCommand,
+    onSteer: (draft) => {
+      void open.commands.sendDraft(draft, true);
     },
+    promptQueue: promptQueueProps(open),
+  };
+}
+
+function promptQueueProps({
+  snapshot,
+  commands,
+}: OpenSession): ComposerProps['promptQueue'] {
+  return {
+    queue: snapshot.promptQueue,
+    holds: snapshot.queueHolds,
+    canSteer: snapshot.canSteer,
+    command: commands.queueCommand,
   };
 }

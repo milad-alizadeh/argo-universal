@@ -57,7 +57,7 @@ function readSteeringPrompt(
   steering: QueueSteering,
 ): ReturnType<typeof readAcpPromptContent> {
   return readAcpPromptContent({
-    content: steering.row.prompt,
+    content: steering.prompt,
     capabilities:
       requireLease(context).initialization.agentCapabilities
         ?.promptCapabilities ?? {},

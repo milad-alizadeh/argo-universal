@@ -1,6 +1,6 @@
 import type {
   QueueCommand,
-  SessionPromptInput,
+  SessionSubmitInput,
   SessionQueueInput,
 } from '@repo/contracts';
 import { steerQueuedPrompt } from './queue-steering';
@@ -45,19 +45,41 @@ export async function managePromptQueue(
 
 export async function submitAppPrompt(
   sources: SessionHandlerSources,
-  input: SessionPromptInput,
+  input: SessionSubmitInput,
 ): Promise<Record<string, never>> {
+  if (await steerDraft(sources, input)) return {};
   const restart = submittedRestart(sources, input);
 
   // An Argo Slash command acts on the Session: it joins no queue and starts no Turn.
   if (restart) return restartSession(sources.open, input, restart);
 
-  return managePromptQueue(sources, {
+  return managePromptQueue(sources, queuedSubmission(input));
+}
+
+async function steerDraft(
+  sources: SessionHandlerSources,
+  input: SessionSubmitInput,
+): Promise<boolean> {
+  if (!input.steer) return false;
+  const session = await sources.open.ready(input.sessionId, queueEvent);
+  sources.open.admit();
+
+  if (session.getSnapshot().context.activeTurnId === null) return false;
+  await steerQueuedPrompt(session, {
+    action: 'steerDraft',
+    prompt: input.prompt,
+  });
+
+  return true;
+}
+
+function queuedSubmission(input: SessionSubmitInput): SessionQueueInput {
+  return {
     sessionId: input.sessionId,
     command: {
       action: 'append',
       prompt: input.prompt,
       followUpSuggestions: input.followUpSuggestions,
     },
-  });
+  };
 }
