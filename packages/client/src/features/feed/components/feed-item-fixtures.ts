@@ -1,29 +1,33 @@
-import { groupTitle } from '../view/group-title';
+import { recordedFeedMock } from '../../../lib/product/feed-message.mocks';
+import { toFeedView } from '../view/to-feed-view';
 import type { FeedItemProps } from './feed-item';
+import { required } from './recorded-tool-calls.mocks';
 import {
   completedCommand,
   readMocks,
   recordedToolCall,
-  toolCallGroupMock,
 } from './tool-call.mocks';
 
-const genericCalls = ['mcp-content', 'mcp-raw'].map(recordedToolCall);
+const recording = recordedFeedMock('agent-1', 'edit-and-command');
 
-const reads = readMocks.map(({ row }) => row);
+// Recorded calls share one Turn so the converter groups both activity boundaries.
+const rows = [
+  recordedToolCall('mcp-content'),
+  recordedToolCall('mcp-raw'),
+  ...readMocks.map(({ row }) => row),
+  completedCommand,
+].map((row, position) => ({
+  ...row,
+  sessionId: completedCommand.sessionId,
+  turnId: completedCommand.turnId,
+  position,
+}));
 
-// Recorded generic calls beside an exploration exercise both activity boundaries.
 export const mixedTools = {
-  item: {
-    ...toolCallGroupMock.group,
-    title: groupTitle([...genericCalls, ...reads, completedCommand]),
-    items: [
-      ...genericCalls.map((row) => ({ type: 'tool_call' as const, row })),
-      {
-        ...toolCallGroupMock.exploration,
-        toolCalls: reads,
-      },
-      { type: 'tool_call', row: completedCommand },
-    ],
-  },
-  imageUrl: (): string => '',
-} satisfies FeedItemProps;
+  item: required(
+    toFeedView(rows, recording.snapshot).items.find(
+      (item) => item.type === 'group',
+    ),
+    'a mixed Tool call group',
+  ),
+} satisfies Omit<FeedItemProps, 'imageUrl'>;

@@ -5,6 +5,7 @@ import { mixedTools } from './feed-item-fixtures';
 const meta = {
   title: 'Feed/FeedItem',
   component: FeedItem,
+  args: { imageUrl: (): string => '' },
   argTypes: {
     item: { control: false },
     imageUrl: { control: false },
