@@ -29,7 +29,6 @@ function DiagramBody(props: BodyProps): React.JSX.Element {
   return <ShownDiagram {...props} />;
 }
 
-// A Mermaid fence: its drawing, or its code, under the header every code block has.
 export function Diagram({
   source,
   pending = false,
@@ -40,7 +39,7 @@ export function Diagram({
   const onToggle = (): void => setShown(shown === 'code' ? 'diagram' : 'code');
 
   return (
-    <View testID="diagram" className={cn(codeBlockGroup, trayClassName)}>
+    <View className={cn(codeBlockGroup, trayClassName)}>
       <DiagramHeader {...view} onToggle={onToggle} />
       <DiagramBody {...view} />
     </View>

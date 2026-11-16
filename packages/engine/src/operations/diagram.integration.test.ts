@@ -2,22 +2,26 @@ import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { operationCaller, runOperation } from '#mocks/operations';
 
-it('checks a Mermaid fence with the renderer the Apps draw it with', async () => {
+async function validate(source: string): ReturnType<typeof runOperation> {
   const host = await startEngineTestHost({ fixtureAgents: [] });
   const caller = await operationCaller(host);
 
-  const valid = await runOperation(caller.operations, {
+  return runOperation(caller.operations, {
     id: 'diagram.validate',
-    params: { source: 'flowchart LR\n  A[Send] --> B[Queue]' },
+    params: { source },
   });
+}
 
-  const invalid = await runOperation(caller.operations, {
-    id: 'diagram.validate',
-    params: { source: 'sequenceDiagram\n  A->>B: hi\n  not mermaid at all' },
+it('passes a Mermaid fence the Apps can draw', async () => {
+  expect(await validate('flowchart LR\n  A[Send] --> B[Queue]')).toEqual({
+    valid: true,
   });
+});
 
-  expect(valid).toEqual({ valid: true });
-  expect(invalid).toMatchObject({
+it('names the line of a fence the Apps would leave out, and the kinds they draw', async () => {
+  expect(
+    await validate('sequenceDiagram\n  A->>B: hi\n  not mermaid at all'),
+  ).toMatchObject({
     valid: false,
     problems: [{ line: 3 }],
     supported: expect.arrayContaining(['flowchart', 'sequenceDiagram']),

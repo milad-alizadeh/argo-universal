@@ -29,7 +29,7 @@ export type DiagramCheck =
 // Lines that open, close or label a block draw nothing on their own, so they are not checked alone.
 const flowchartBlocks = /^\s*(?:subgraph|end|direction|class|click)\b/;
 
-const stateBlocks = /^\s*(?:state|note|end|direction|class|\}|--)/;
+const stateBlocks = /^\s*(?:(?:state|note|end|direction|class)\b|\}|--)/;
 
 const structural: Partial<Record<DiagramKeyword, RegExp>> = {
   flowchart: flowchartBlocks,
@@ -50,11 +50,12 @@ function unreadLines(input: MarkupInput): DiagramProblem[] {
 
   return input.body
     .filter((line) => !skip.test(line.text) && !colourStatement.test(line.text))
-    .filter((line) => drawsAlone(input, line))
+    .filter((line) => isUnreadLine(input, line))
     .map((line) => ({ line: line.number, message: unreadMessage }));
 }
 
-const drawsAlone = (input: MarkupInput, line: SourceLine): boolean =>
+// A line the renderer skips draws the same as the bare header when rendered on its own.
+const isUnreadLine = (input: MarkupInput, line: SourceLine): boolean =>
   drawsNothing(input, renderMarkup(lineMarkup(input, line)));
 
 function headerProblem(source: string): DiagramProblem {
@@ -95,7 +96,7 @@ const failed = (problems: DiagramProblem[]): DiagramCheck => ({
   supported: [...supportedDiagramKeywords],
 });
 
-// Whether Argo draws the fence, and if not, what to fix: the same renderer the Apps draw with.
+// The Apps draw with this same renderer, so a fence that passes is one the Feed draws.
 export function checkDiagram(source: string): DiagramCheck {
   const input = markupInput(source);
   const problems = input ? renderProblems(input) : [headerProblem(source)];

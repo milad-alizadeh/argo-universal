@@ -4,7 +4,7 @@ import { Pressable, type ViewStyle } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
 // A tall diagram is scaled down to this height in the Feed; the full-screen view shows it at any size.
-export const diagramMaxHeight = 480;
+const diagramMaxHeight = 480;
 
 // Fits the column, never larger than drawn, so a small diagram keeps its text size.
 function frameStyle({ width, height }: DiagramDrawing): ViewStyle {
@@ -39,11 +39,9 @@ interface DiagramArtworkProps {
   onOpen: () => void;
 }
 
-// The drawing as one image; a press opens it full screen.
 export function DiagramArtwork(props: DiagramArtworkProps): React.JSX.Element {
   return (
     <Pressable
-      testID="diagram-artwork"
       accessibilityRole="button"
       accessibilityLabel={props.label}
       accessibilityHint="Opens the diagram full screen"

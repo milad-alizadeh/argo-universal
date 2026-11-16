@@ -57,7 +57,6 @@ function headerExtras({
   };
 }
 
-// The header every code block has, titled from the diagram, with the switch between drawing and code.
 export function DiagramHeader(props: DiagramHeaderProps): React.JSX.Element {
   return (
     <CodeBlockHeader

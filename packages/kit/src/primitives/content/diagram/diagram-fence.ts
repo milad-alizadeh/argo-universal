@@ -1,4 +1,3 @@
-// A fenced block the Feed draws as a diagram rather than as code.
 export const isDiagramFence = (language: string | undefined): boolean =>
   language?.trim().toLowerCase() === 'mermaid';
 

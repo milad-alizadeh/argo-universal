@@ -16,7 +16,6 @@ interface DrawnDiagramProps {
   drawing: DiagramDrawing;
 }
 
-// The drawing in the Feed, and the full-screen view a press opens.
 export function DrawnDiagram({
   source,
   drawing,

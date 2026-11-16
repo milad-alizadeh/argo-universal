@@ -63,7 +63,6 @@ function roles(colors: RoleColors): Omit<DiagramPalette, 'tones'> {
   };
 }
 
-// Argo's tokens for a diagram, re-resolved when the theme or Appearance changes; none until the tokens resolve.
 export function useDiagramPalette(): DiagramPalette | undefined {
   const theme = useNativeTheme({ toneShades: true });
 

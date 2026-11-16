@@ -1,6 +1,7 @@
 import type { DiagramDrawing } from '@repo/contracts/kit-diagram';
 import type * as React from 'react';
-import { View, type ViewStyle } from 'react-native';
+import { View, type ViewStyle, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   CentredModal,
   CentredModalRoot,
@@ -52,12 +53,14 @@ const frameProps = ({
   onHover: () => {},
 });
 
-// Pinch, drag, the wheel and the arrow keys move the drawing, through the kit Canvas's own camera.
 function ViewerCanvas(props: CanvasProps): React.JSX.Element {
   return (
     <View className="flex-1" testID="diagram-viewer-canvas">
       <CanvasFrame {...frameProps(props)}>
-        <View style={placed(props.drawing, props.camera.drawn)}>
+        <View
+          testID="diagram-viewer-drawing"
+          style={placed(props.drawing, props.camera.drawn)}
+        >
           <DiagramSvg drawing={props.drawing} />
         </View>
       </CanvasFrame>
@@ -65,17 +68,32 @@ function ViewerCanvas(props: CanvasProps): React.JSX.Element {
   );
 }
 
-const cardClassName = 'h-full w-full overflow-hidden rounded-2xl bg-card';
+const cardClassName = 'overflow-hidden rounded-2xl bg-card';
 
-// The diagram over the whole window, where it can be zoomed and panned; a double tap fits it again.
+// The centred modal's scrim pads the card by 8 on each side.
+const scrimInset = 8;
+
+// The modal's wrappers take their size from the card, so the card takes its size from the window.
+function useWindowFrame(): ViewStyle {
+  const window = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+
+  return {
+    width: window.width - scrimInset * 2,
+    height: window.height - insets.top - insets.bottom - scrimInset * 2,
+  };
+}
+
 export function DiagramViewer(props: DiagramViewerProps): React.JSX.Element {
   const camera = useViewerCamera(props.drawing);
 
   return (
     <CentredModalRoot open onOpenChange={(open) => open || props.onClose()}>
       <CentredModal label={props.label} className={cardClassName}>
-        <ViewerBar {...props} onFit={camera.reset} />
-        <ViewerCanvas {...props} camera={camera} />
+        <View style={useWindowFrame()} testID="diagram-viewer">
+          <ViewerBar {...props} onFit={camera.reset} />
+          <ViewerCanvas {...props} camera={camera} />
+        </View>
       </CentredModal>
     </CentredModalRoot>
   );

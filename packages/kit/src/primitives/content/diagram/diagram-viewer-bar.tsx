@@ -27,7 +27,6 @@ function BarTitle({ title }: { title: string }): React.JSX.Element {
   );
 }
 
-// The full-screen diagram's title, with Fit and Close.
 export function ViewerBar(props: ViewerBarProps): React.JSX.Element {
   return (
     <View className="h-12 shrink-0 flex-row items-center gap-1 border-b border-border px-3">

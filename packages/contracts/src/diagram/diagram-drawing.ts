@@ -5,11 +5,7 @@ import {
   resolveTones,
   resolveVariables,
 } from './diagram-palette';
-import {
-  diagramKinds,
-  isDiagramKeyword,
-  readDiagramSource,
-} from './diagram-source';
+import { isDiagramKeyword, readDiagramSource } from './diagram-source';
 
 export interface DiagramDrawing {
   svg: string;
@@ -91,7 +87,6 @@ function renderedSvg(input: MarkupInput): string | undefined {
   }
 }
 
-// The fence drawn in the theme's tokens, or undefined when it is not a diagram Argo can draw.
 export function drawDiagram(
   source: string,
   palette: DiagramPalette,
@@ -105,5 +100,3 @@ export function drawDiagram(
 
   return { svg: scopedIds(coloured, hashed(source)), ...size(svg) };
 }
-
-export const drawableKinds = [...new Set(Object.values(diagramKinds))];

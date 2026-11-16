@@ -139,6 +139,12 @@ describe('checkDiagram', () => {
     ).toMatchObject({ valid: false, problems: [{ line: 6 }] });
   });
 
+  it('names an unread state line that starts like a block keyword', () => {
+    expect(
+      checkDiagram('stateDiagram-v2\n Idle --> Running\n stateBroken !@#$'),
+    ).toMatchObject({ valid: false, problems: [{ line: 3 }] });
+  });
+
   it('refuses a kind Argo cannot draw and lists the ones it can', () => {
     expect(checkDiagram('gantt\n title x')).toMatchObject({
       valid: false,

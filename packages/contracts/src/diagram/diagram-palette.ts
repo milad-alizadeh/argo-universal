@@ -5,7 +5,6 @@ import {
   toneSentinel,
 } from './diagram-markup';
 
-// The theme's colours a diagram is drawn in, each a token the App has resolved.
 export interface DiagramPalette {
   // The card under the diagram: edge labels sit on it, cutting the lines behind them.
   background: string;
@@ -23,7 +22,6 @@ export interface DiagramPalette {
 
 type Role = Exclude<keyof DiagramPalette, 'tones'>;
 
-// The renderer's CSS variables, each named for the palette role that stands in for it.
 const variableRoles = new Map<string, Role>([
   ['--bg', 'background'],
   ['--fg', 'text'],

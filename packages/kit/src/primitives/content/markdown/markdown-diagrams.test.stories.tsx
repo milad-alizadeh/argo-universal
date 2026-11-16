@@ -19,17 +19,20 @@ export const DrawsAMermaidFence: Story = {
     await expect(
       await canvas.findByRole('button', { name: 'Flowchart' }),
     ).toBeVisible();
-    await expect(canvas.queryByTestId('code-text')).not.toBeInTheDocument();
+    await expect(canvas.queryByText(/flowchart LR/)).not.toBeInTheDocument();
   },
 };
 
 export const KeepsOtherFencesAsCode: Story = {
   args: { text: '```ts\nconst one = 1;\n```' },
   play: async ({ canvas }) => {
+    // The code body has no role of its own, so it is found by its test id.
     await expect(canvas.getByTestId('code-text')).toHaveTextContent(
       'const one = 1;',
     );
-    await expect(canvas.queryByTestId('diagram')).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('button', { name: /Show/ }),
+    ).not.toBeInTheDocument();
   },
 };
 
@@ -39,7 +42,7 @@ export const HoldsAStreamingFence: Story = {
     streaming: true,
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByTestId('diagram-placeholder')).toBeInTheDocument();
+    await expect(canvas.getByLabelText('Drawing diagram')).toBeInTheDocument();
   },
 };
 

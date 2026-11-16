@@ -1,4 +1,3 @@
-// A Mermaid fence read for drawing: its front-matter title, its kind and the lines below the header.
 export const supportedDiagramKeywords = [
   'flowchart',
   'graph',
@@ -11,7 +10,7 @@ export const supportedDiagramKeywords = [
 
 export type DiagramKeyword = (typeof supportedDiagramKeywords)[number];
 
-export const diagramKinds = {
+const diagramKinds = {
   flowchart: 'Flowchart',
   graph: 'Flowchart',
   stateDiagram: 'State diagram',
@@ -52,7 +51,6 @@ function frontMatterEnd(lines: SourceLine[]): number {
   return isFence(lines[0]) && close !== -1 ? close + 1 : 0;
 }
 
-// `title: Name` in the front matter, with any quotes around the name taken off.
 function titleValue(line: SourceLine): string | undefined {
   const [key = '', ...value] = line.text.split(':');
 
@@ -89,19 +87,16 @@ export function isDiagramKeyword(
   return keyword !== undefined && Object.hasOwn(diagramKinds, keyword);
 }
 
-// The kind a reader hears, such as "Sequence diagram"; nothing before the header arrives.
-export function diagramKind(source: string): string | undefined {
+function diagramKind(source: string): string | undefined {
   const { keyword } = readDiagramSource(source);
 
   return isDiagramKeyword(keyword) ? diagramKinds[keyword] : undefined;
 }
 
-// The front matter's title, else the kind, such as "Flowchart"; nothing before the header arrives.
 export function diagramTitle(source: string): string | undefined {
   return readDiagramSource(source).title ?? diagramKind(source);
 }
 
-// What a screen reader says for the drawing: its kind, then its title when it has one.
 export function diagramLabel(source: string): string {
   const kind = diagramKind(source) ?? 'Diagram';
   const { title } = readDiagramSource(source);

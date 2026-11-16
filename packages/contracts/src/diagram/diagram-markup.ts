@@ -61,7 +61,6 @@ export interface MarkupInput {
   body: DiagramSource['body'];
 }
 
-// What the renderer reads: the header, the lines with their colours taken out, and the tone classes.
 export function diagramMarkup({ keyword, header, body }: MarkupInput): string {
   const lines = body
     .filter((line) => !colourStatement.test(line.text))
@@ -72,7 +71,6 @@ export function diagramMarkup({ keyword, header, body }: MarkupInput): string {
   );
 }
 
-// One line under its header, so a check can see whether that line alone draws anything.
 export function lineMarkup(input: MarkupInput, line?: SourceLine): string {
   return diagramMarkup({ ...input, body: line ? [line] : [] });
 }
