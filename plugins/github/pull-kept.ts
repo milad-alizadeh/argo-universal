@@ -1,26 +1,11 @@
-import type { FixRecord } from './pull-fix-store';
+import type { AutomationOffer } from './pull-automation';
+import type { Automations, Offered } from './pull-automations';
+import type { PullInfo } from './pull-info';
+import type { Known } from './pull-known';
 import type { PullLink, PullStore } from './pull-store';
 
-// What the automations keep for the pull requests of some Sessions: the Plugin's own, and never stale.
-type Kept = {
-  fixes: readonly FixRecord[];
-  archives: readonly PullLink[];
-};
-
-// What Auto-fix keeps for a pull request, if the person ever touched it, and whether Auto-archive is on.
-export type Attached = { fix?: FixRecord; archive?: true };
-
-async function keptOf(
-  { fix, archive }: Pick<PullStore, 'fix' | 'archive'>,
-  sessionIds: readonly string[],
-): Promise<Kept> {
-  const [fixes, archives] = await Promise.all([
-    fix.forSessions(sessionIds),
-    archive.forSessions(sessionIds),
-  ]);
-
-  return { fixes, archives };
-}
+// How the Plugin's own automations are offered on a pull request that has been read; one never read offers none.
+export type Attached = { kept?: Pick<AutomationOffer, 'fix' | 'archive'> };
 
 // One association as the records name it, whatever the case of its repository.
 const identityOf = ({
@@ -31,44 +16,72 @@ const identityOf = ({
 }: PullLink): string =>
   JSON.stringify([projectId, sessionId, repository.toLowerCase(), number]);
 
+// An association as the automations keep it: GitHub names match without regard to case, so they are kept in lower case.
+export const lowered = (link: PullLink): PullLink => ({
+  ...link,
+  repository: link.repository.toLowerCase(),
+});
+
 export const sameLink = (record: PullLink, link: PullLink): boolean =>
   identityOf(record) === identityOf(link);
 
-const fixOf = (link: PullLink, fixes: readonly FixRecord[]): Attached => {
-  const fix = fixes.find((record) => sameLink(record, link));
+type Offering = (offered: Offered) => Attached['kept'];
 
-  return fix ? { fix } : {};
-};
-
-const archiveOf = (link: PullLink, archives: readonly PullLink[]): Attached =>
-  archives.some((record) => sameLink(record, link)) ? { archive: true } : {};
-
-// The read with what Auto-fix and Auto-archive keep for its pull request.
-const attachKept = <Read extends { link: PullLink }>(
-  read: Read,
-  { fixes, archives }: Kept,
-): Read & Attached => ({
-  ...read,
-  ...fixOf(read.link, fixes),
-  ...archiveOf(read.link, archives),
-});
-
-type Shown<Read> = (links: PullLink[]) => Promise<Read[]>;
-
-/*
- * What a Slot or an Operation answers for these Sessions' pull requests: each as the record has it, beside what the
- * automations keep. The Plugin's own data is read from its tables every time, so a choice shows at once and a slow or
- * failed GitHub read never hides it.
- */
-export async function keptShown<Read extends { link: PullLink }>(
-  store: Pick<PullStore, 'fix' | 'archive' | 'forSessions'>,
+async function offeringOf(
+  { fix, archive }: Automations,
   sessionIds: readonly string[],
-  shown: Shown<Read>,
-): Promise<(Read & Attached)[]> {
-  const [links, kept] = await Promise.all([
-    store.forSessions(sessionIds),
-    keptOf(store, sessionIds),
+): Promise<Offering> {
+  const [fixOffers, archiveOffers] = await Promise.all([
+    fix.offers(sessionIds),
+    archive.offers(sessionIds),
   ]);
 
-  return (await shown(links)).map((read) => attachKept(read, kept));
+  return (offered) => ({
+    fix: fixOffers(offered),
+    archive: archiveOffers(offered),
+  });
+}
+
+type Read = {
+  link: PullLink;
+  pull: Known<PullInfo>;
+  viewer?: Known<string>;
+};
+
+const withViewer = (viewer?: string): Pick<Offered, 'viewer'> =>
+  viewer === undefined ? {} : { viewer };
+
+const attachKept = <Shown extends Read>(
+  read: Shown,
+  offering: Offering,
+): Shown & Attached =>
+  read.pull.data
+    ? {
+        ...read,
+        kept: offering({
+          link: read.link,
+          pull: read.pull.data,
+          ...withViewer(read.viewer?.data),
+        }),
+      }
+    : read;
+
+type ShownOf<Shown> = (links: PullLink[]) => Promise<Shown[]>;
+
+/*
+ * What a Slot or an Operation answers for these Sessions' pull requests: each as the record has it, beside how the
+ * automations are offered on it. The automations' own data is read every time, so a choice shows at once and a slow or
+ * failed GitHub read never hides it.
+ */
+export async function keptShown<Shown extends Read>(
+  { store, automations }: { store: PullStore; automations: Automations },
+  sessionIds: readonly string[],
+  shown: ShownOf<Shown>,
+): Promise<(Shown & Attached)[]> {
+  const [links, offering] = await Promise.all([
+    store.forSessions(sessionIds),
+    offeringOf(automations, sessionIds),
+  ]);
+
+  return (await shown(links)).map((read) => attachKept(read, offering));
 }

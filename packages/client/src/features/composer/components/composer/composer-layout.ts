@@ -12,12 +12,11 @@ export function useComposerLayout(
   const wide = useContentWide();
   const field = useMessageField();
 
-  const send = (): void => {
-    if (sendState === 'ready') props.onSend(props.draft);
-  };
+  const send = draftSender(props, sendState);
+  const modifiedSend = draftSender(props, sendState, true);
 
   return Object.assign(
-    { props, composerId, field, wide, sendState, send },
+    { props, composerId, field, wide, sendState, send, modifiedSend },
     composerActivity(props),
   );
 }
@@ -44,4 +43,22 @@ function useMessageField(): ComposerLayout['field'] {
   }, []);
 
   return { attach, insertWord };
+}
+
+function draftSender(
+  props: ComposerProps,
+  state: ComposerLayout['sendState'],
+  steer = false,
+): () => void {
+  const submit = steer ? modifiedSender(props) : props.onSend;
+
+  return () => {
+    if (state === 'ready') submit(props.draft);
+  };
+}
+
+function modifiedSender(props: ComposerProps): ComposerProps['onSend'] {
+  if (props.queueEdit) return props.onSend;
+
+  return props.onSteer ?? props.onSend;
 }

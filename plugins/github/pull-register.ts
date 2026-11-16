@@ -17,9 +17,9 @@ import { sessionCaller } from './session-caller';
 // What the Operations that store, ask GitHub or tell the App act through.
 const scopeOf = (
   argo: Argo,
-  { store, records }: ChangesSource,
+  { store, records, automations }: ChangesSource,
   { sync, changed }: Pulls,
-): Scope => ({ ...argo, store, records, sync, changed });
+): Scope => ({ ...argo, store, records, automations, sync, changed });
 
 export type Parts = { source: ChangesSource; pulls: Pulls };
 
