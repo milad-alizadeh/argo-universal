@@ -1,3 +1,6 @@
+import type { Json } from '../json';
+import { argoThreeDescription, argoThreeLabels } from './jira-descriptions';
+
 /*
  * What the fixture Jira holds: two Atlassian sites, the people whose API tokens it accepts, and each site's projects
  * and issues. A test changes its own copy, from `jiraData()`, before or while it runs.
@@ -9,7 +12,7 @@ export type FixtureIssue = {
   assignee: { accountId: string; displayName: string } | null;
   priority: string | null;
   // In the Atlassian Document Format, as Jira answers it.
-  description?: unknown;
+  description?: Json;
   labels?: string[];
 };
 
@@ -24,9 +27,11 @@ export type FixtureSite = {
   host: string;
   cloudId: string;
   projects: FixtureProject[];
-  // The people the site's projects may assign issues to; every site has `people()` unless a test says otherwise.
-  people?: { accountId: string; displayName: string }[];
+  // Who its projects may assign issues to; Ada and Grace unless a test says otherwise.
+  people?: FixturePerson[];
 };
+
+export type FixturePerson = { accountId: string; displayName: string };
 
 // A token Atlassian issued: a scoped one opens api.atlassian.com, an unscoped one only the site itself.
 export type FixtureToken = {
@@ -57,100 +62,88 @@ export const arenaSite = {
 
 export const sideSite = { host: 'side.atlassian.net', cloudId: 'cloud-side' };
 
-const ada = { accountId: person.accountId, displayName: person.displayName };
+export const ada = {
+  accountId: person.accountId,
+  displayName: person.displayName,
+};
 
 export const grace = {
   accountId: 'account-grace',
   displayName: 'Grace Hopper',
 };
 
-const paragraph = (text: string) => ({
-  type: 'paragraph',
-  content: [{ type: 'text', text }],
-});
+const inProgress = { name: 'In Progress', category: 'indeterminate' } as const;
 
-// ARGO-3's description, as Jira's ADF: a paragraph with a bold mark, and a list.
-export const argoThreeDescription = {
-  type: 'doc',
-  version: 1,
-  content: [
-    {
-      type: 'paragraph',
-      content: [
-        { type: 'text', text: 'List a project’s issues ' },
-        { type: 'text', text: 'in Argo', marks: [{ type: 'strong' }] },
-        { type: 'text', text: '.' },
-      ],
-    },
-    {
-      type: 'bulletList',
-      content: [
-        { type: 'listItem', content: [paragraph('Key and summary')] },
-        { type: 'listItem', content: [paragraph('Status and assignee')] },
-      ],
-    },
-  ],
-};
+const done = { name: 'Done', category: 'done' } as const;
 
-const argoIssues = (): FixtureIssue[] => [
-  {
-    key: 'ARGO-3',
-    summary: 'Show Jira issues in Argo',
-    status: { name: 'In Progress', category: 'indeterminate' },
-    assignee: ada,
-    priority: 'High',
-    description: argoThreeDescription,
-    labels: ['jira', 'spec-0027'],
-  },
-  {
-    key: 'ARGO-2',
-    summary: 'Sign in with a scoped API token',
-    status: { name: 'Done', category: 'done' },
-    assignee: ada,
-    priority: 'Medium',
-  },
-  {
-    key: 'ARGO-1',
-    summary: 'Pick a Jira project for each Argo Project',
-    status: { name: 'To Do', category: 'new' },
-    assignee: null,
-    priority: null,
-  },
+const toDo = { name: 'To Do', category: 'new' } as const;
+
+// An issue as a row: key, summary, status, assignee and priority.
+type IssueRow = [
+  string,
+  string,
+  FixtureIssue['status'],
+  FixtureIssue['assignee'],
+  string | null,
 ];
 
-export function jiraData(): JiraData {
-  return {
-    sites: [
-      {
-        ...arenaSite,
-        projects: [
-          { id: '10000', key: 'ARGO', name: 'Argo', issues: argoIssues() },
-          { id: '10001', key: 'QUIET', name: 'Quiet project', issues: [] },
-        ],
-      },
-      {
-        ...sideSite,
-        projects: [
-          {
-            id: '20000',
-            key: 'SIDE',
-            name: 'Side project',
-            issues: [
-              {
-                key: 'SIDE-1',
-                summary: 'A side issue',
-                status: { name: 'To Do', category: 'new' },
-                assignee: null,
-                priority: 'Low',
-              },
-            ],
-          },
-        ],
-      },
-    ],
-    tokens: [
-      { ...person, token: scopedToken, scoped: true },
-      { ...person, token: unscopedToken, scoped: false },
-    ],
-  };
-}
+const issueOf = ([
+  key,
+  summary,
+  status,
+  assignee,
+  priority,
+]: IssueRow): FixtureIssue => ({
+  key,
+  summary,
+  status,
+  assignee,
+  priority,
+});
+
+// ARGO-3's page shows a description, in Jira's ADF, and labels.
+const described = (issue: FixtureIssue): FixtureIssue =>
+  issue.key === 'ARGO-3'
+    ? { ...issue, description: argoThreeDescription, labels: argoThreeLabels }
+    : issue;
+
+const argoRows: IssueRow[] = [
+  ['ARGO-3', 'Show Jira issues in Argo', inProgress, ada, 'High'],
+  ['ARGO-2', 'Sign in with a scoped API token', done, ada, 'Medium'],
+  ['ARGO-1', 'Pick a Jira project for each Argo Project', toDo, null, null],
+];
+
+const sideRows: IssueRow[] = [['SIDE-1', 'A side issue', toDo, null, 'Low']];
+
+const arena = (): FixtureSite => ({
+  ...arenaSite,
+  projects: [
+    {
+      id: '10000',
+      key: 'ARGO',
+      name: 'Argo',
+      issues: argoRows.map(issueOf).map(described),
+    },
+    { id: '10001', key: 'QUIET', name: 'Quiet project', issues: [] },
+  ],
+});
+
+const side = (): FixtureSite => ({
+  ...sideSite,
+  projects: [
+    {
+      id: '20000',
+      key: 'SIDE',
+      name: 'Side project',
+      issues: sideRows.map(issueOf),
+    },
+  ],
+});
+
+export const jiraData = (): JiraData => ({
+  sites: [arena(), side()],
+  tokens: [
+    { ...person, token: scopedToken, scoped: true },
+    { ...person, token: unscopedToken, scoped: false },
+  ],
+});
