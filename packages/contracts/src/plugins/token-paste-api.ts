@@ -14,13 +14,18 @@ export type TokenPasteArgo = Pick<Argo, 'changed'> & {
  *   Capability.
  * - `header` is how a borrower's request carries the token, such as `{ header: 'Authorization', prefix: 'Bearer' }`.
  * - `label` checks a pasted token: it calls the service with it and answers whose Account it opens, such as the
- *   login the service answers, or null when the service refuses it.
+ *   login the service answers, or null when the service refuses it. When the Plugin knows why, as a token made
+ *   without the scopes it needs, it answers `{ refused }` with a message the page draws beside the field instead of
+ *   the kit's own; a message that holds the token is never drawn.
  */
 export type TokenPasteOptions = Readonly<{
   host: string;
   header: Readonly<{ header: string; prefix: string }>;
-  label: (token: string) => Promise<string | null>;
+  label: (token: string) => Promise<TokenLabel>;
 }>;
+
+// Whose Account a pasted token opens, null when the service refuses it, or why the Plugin refuses it.
+export type TokenLabel = string | null | Readonly<{ refused: string }>;
 
 /*
  * Where the Plugin's one token paste stands: waiting for a token, signed in as the Account just added, or `failed`

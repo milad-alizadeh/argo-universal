@@ -23,7 +23,7 @@ export type FoundNode = NonNullable<ReturnType<typeof findWireNodeEntry>>;
 // A node by the text it reads, or by a test of its own.
 export type NodeMatch = string | ((node: WireNode) => boolean);
 
-// The props a node's text is read from.
+// The props a node's text is read from: what it reads, and the supporting text drawn beside or under it.
 const textProps = [
   'label',
   'title',
@@ -32,6 +32,12 @@ const textProps = [
   'text',
   'children',
   'accessibilityLabel',
+  'caption',
+  'footer',
+  'error',
+  'message',
+  'detail',
+  'summary',
 ];
 
 const describeMatch = (match: NodeMatch): string =>

@@ -97,12 +97,14 @@ export class PluginService {
     return this.deps.pluginSettings.values(pluginId);
   }
 
-  setSetting(change: {
+  async setSetting(change: {
     pluginId: string;
     key: string;
     value: PluginSettingValue;
   }): Promise<void> {
-    return this.deps.pluginSettings.change(change);
+    await this.deps.pluginSettings.change(change);
+    // A page that draws from a Setting, such as a sign-in waiting for its OAuth app, draws again with the new value.
+    this.deps.pluginRuntime.changes.changedBy(change.pluginId);
   }
 
   // Starts each Plugin that hooks the event, in load order, then runs their Hooks over core (ADR-0027).

@@ -125,8 +125,13 @@ export class OpenPage {
     return this.act(match, 'onPress');
   }
 
-  // The next page of the page's paged list, as a List's load more asks for it.
+  /*
+   * The next page of the page's paged list, as a List's load more asks for it. After a draw that failed, the App
+   * still shows the rows it kept, so its load more asks again for the page the failed draw lacked.
+   */
   async loadMore(): Promise<void> {
+    if (this.kept.error !== undefined) return this.draw(this.kept.pages + 1);
+
     await this.act(paged, 'onLoadMore');
   }
 
