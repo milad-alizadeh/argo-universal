@@ -261,6 +261,8 @@ export function register(argo: Argo): void {
 
 Declare the command's Capability in `plugin.json`. A process Query uses the Project folder of the page it is read for unless the Query specifies `cwd`. A direct `argo.process.run` call does not select the Project folder. Use a Query for commands that belong in that folder.
 A fetch Query accepts the same fields as `argo.fetch`, including POST requests. A storage Query contains `queries`, each with a read method: `get`, `all`, or `values`.
+
+A `fetch` Capability names one exact host, or `*` for any host; there is no subdomain form such as `*.atlassian.net`. A Plugin that only learns the host when the person types it, as Jira learns a person's `<site>.atlassian.net`, declares `"host": "*"` with a `reason` that names the hosts it calls and why, and checks the typed host in its own code before calling it. The consent screen shows that reason. Jira's reads `<site>.atlassian.net/_edge/tenant_info` to find the site's cloud id, and `<site>.atlassian.net/rest/api/3/myself` to tell an unscoped API token from a wrong one; it accepts only `[a-z0-9-]+.atlassian.net` hosts (`plugins/jira/atlassian.ts`). A Plugin that knows its hosts in advance names each one instead.
 Other `argo` calls are not Queries. Storage Queries use a read-only connection; writes through another read method are also refused.
 
 `read` answers the Query's data and keeps the last successful value. It throws, failing the draw, only when the Query has no answer yet: a refused call, a transport failure, or Argo's timeout. An HTTP 401 remains fetch data. An unavailable Account Borrow fails the read until it has data.

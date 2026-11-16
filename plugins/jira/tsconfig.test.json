@@ -1,0 +1,9 @@
+{
+  "extends": "@argo/plugin-kit/tsconfig.test.json",
+  "include": [
+    "**/*.test.ts",
+    "mocks/**/*.ts",
+    "plugin.gen.d.ts",
+    "vitest.config.ts"
+  ]
+}
