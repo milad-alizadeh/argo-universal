@@ -2,16 +2,16 @@ import type { SessionBarItem } from '@repo/contracts/plugins/session-bar-item';
 import { sessionBarSlotId } from '@repo/contracts/plugins/wire';
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
-import { SessionWorkbenchColumn, sessionBarCards } from '#features/sessions';
-import type { SlotVisibility } from '#features/settings';
-import { sessionBarLines } from '../../../../plugins/session-bar-lines';
 import {
   itemsSlotEntry,
   type PluginLookup,
   readSlotItems,
   type SentItems,
   type SlotReading,
-} from '../../../../plugins/slot-items';
+} from '#features/plugins';
+import { SessionWorkbenchColumn, sessionBarCards } from '#features/sessions';
+import type { SlotVisibility } from '#features/settings';
+import { sessionBarLines } from '../../../../plugins/session-bar-lines';
 import { useSessionBarReading } from '../../../../plugins/use-session-bar';
 import { useLatestSession } from './session-row-preview';
 import type { SlotPreviewProps } from './slot-detail';

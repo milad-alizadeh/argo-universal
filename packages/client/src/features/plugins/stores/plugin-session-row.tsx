@@ -8,14 +8,17 @@ import type * as React from 'react';
 import { useMemo } from 'react';
 import { loadedAgents, useInstalledAgents } from '#features/agents';
 import { useTRPC } from '#features/connection';
-import { SessionRow, type SessionRowPlugins } from '#features/sessions';
+import {
+  type OpenPluginItemPage,
+  SessionRow,
+  type SessionRowPlugins,
+} from '#features/sessions';
 import { useSlotChoices } from '#features/settings';
 import { sessionHref } from '#lib/product/navigation/navigation';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
-import { sentDrawing } from './session-row-drawing';
-import { usePluginLookup } from './use-plugin-names';
-import { useOpenPluginPage } from './use-plugin-opener';
-import { useSentRowItems } from './use-session-row-answers';
+import { usePluginLookup } from '../hooks/use-plugin-names';
+import { useSentRowItems } from '../hooks/use-session-row-answers';
+import { sentDrawing } from '../utils/session-row-drawing';
 
 // The Session as the Sessions list reads it, live; none while it loads, or for one the Server does not list.
 function useListedSession(sessionId: string): SessionInfo | undefined {
@@ -62,15 +65,24 @@ function useRowPress(
   return onPress ?? ((id: string) => navigate(sessionHref(id)));
 }
 
-type ShownRow = SessionRowDrawingProps & { session: SessionInfo };
+// The page a Plugin item on the row opens: the App's opener, handed in by the screen that draws the Plugin's tree.
+type Opener = { onOpenPluginPage: OpenPluginItemPage };
 
-function ShownSessionRow({ session, onPress }: ShownRow): React.JSX.Element {
+type DrawnRow = SessionRowDrawingProps & Opener;
+
+type ShownRow = DrawnRow & { session: SessionInfo };
+
+function ShownSessionRow({
+  session,
+  onPress,
+  onOpenPluginPage,
+}: ShownRow): React.JSX.Element {
   return (
     <SessionRow
       session={session}
       {...useRowLook(session)}
       plugins={useRowPlugins(session)}
-      onOpenPluginPage={useOpenPluginPage()}
+      onOpenPluginPage={onOpenPluginPage}
       onSelect={useRowPress(onPress)}
     />
   );
@@ -81,14 +93,15 @@ function ShownSessionRow({ session, onPress }: ShownRow): React.JSX.Element {
  * drawn under this Device's Slot choices, so it never goes stale and shows what the list shows. A Session the Server
  * does not list, such as an archived or deleted Session or a child Session, draws nothing.
  */
-function PluginSessionRow(
-  props: SessionRowDrawingProps,
-): React.JSX.Element | null {
+function PluginSessionRow(props: DrawnRow): React.JSX.Element | null {
   const session = useListedSession(props.sessionId);
 
   return session ? <ShownSessionRow {...props} session={session} /> : null;
 }
 
-export const drawPluginSessionRow = (
-  props: SessionRowDrawingProps,
-): React.JSX.Element => <PluginSessionRow {...props} />;
+// How a kit SessionRow draws, with the items on it opening pages through `onOpenPluginPage`.
+export const drawPluginSessionRow =
+  (onOpenPluginPage: OpenPluginItemPage) =>
+  (props: SessionRowDrawingProps): React.JSX.Element => (
+    <PluginSessionRow {...props} onOpenPluginPage={onOpenPluginPage} />
+  );

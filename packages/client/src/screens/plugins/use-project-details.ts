@@ -3,15 +3,15 @@ import {
   type ProjectDetailsItem,
   type SlotInputOf,
 } from '@repo/contracts/plugins/wire';
-import { useSlotVisibility } from '#features/settings';
 import {
   itemsSlotEntry,
-  readSlotItems,
   type ReadItem,
+  readSlotItems,
   type SentItems,
-} from './slot-items';
-import { usePluginLookup } from './use-plugin-names';
-import { useSlotItems } from './use-slot-items';
+  usePluginLookup,
+  useSlotItems,
+} from '#features/plugins';
+import { useSlotVisibility } from '#features/settings';
 
 const detailsSlot = itemsSlotEntry(projectDetailsSlotId);
 

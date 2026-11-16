@@ -1,7 +1,7 @@
 import type { SlotContextOf } from '@repo/contracts/plugins/wire';
 import { sessionRowSlotId } from '@repo/contracts/plugins/wire';
+import type { SlotItemsSnapshot } from '../hooks/use-slot-items';
 import type { SentItems } from './slot-items';
-import type { SlotItemsSnapshot } from './use-slot-items';
 
 // Both Session row Slots take the same context, so one Slot's names the Session a kept answer belongs to.
 export type RowSnapshot = SlotItemsSnapshot<

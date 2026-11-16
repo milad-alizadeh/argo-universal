@@ -6,7 +6,7 @@ import {
   type SlotInputOf,
 } from '@repo/contracts/plugins/wire';
 import { useState } from 'react';
-import type { SentItems } from './slot-items';
+import type { SentItems } from '../utils/slot-items';
 import { type SlotItemsSnapshot, useSlotItems } from './use-slot-items';
 
 export type RowSession = Pick<SessionInfo, 'sessionId' | 'projectId'>;
