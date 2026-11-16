@@ -1,9 +1,11 @@
 import type { ReactElement } from 'react';
+import { View } from 'react-native';
 import { choosingPlace, ListPlaceContext, useListPlace } from '#kit/list-place';
 import { AgentLogo } from '#primitives/content/agent-logo';
 import { Icon, IconSlot } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
+import { createSection } from './field-picker-create';
 import {
   optionSections,
   type FieldPickerOption,
@@ -19,6 +21,19 @@ type ListProps = Omit<
 >;
 
 const maximumHeight = 320;
+
+// A tracker label's own colour, as a dot before its name.
+function ColorDot({ color }: { color: string }): ReactElement {
+  return (
+    <IconSlot size="md">
+      <View
+        aria-hidden
+        className="size-2.5 rounded-full"
+        style={{ backgroundColor: color }}
+      />
+    </IconSlot>
+  );
+}
 
 // The web page is a menu's plain rows that grow to fit.
 const look = {
@@ -48,6 +63,7 @@ export function ScreenRows(props: FieldPickerScreenProps): ReactElement {
         {optionSections(props.shown ?? props.options).map((section) => (
           <ChoiceSection key={section.key} {...props} section={section} />
         ))}
+        {createSection(props)}
       </List>
     </ListPlaceContext>
   );
@@ -97,8 +113,12 @@ const optionItemProps = (
 const rowRole = (props: FieldPickerScreenProps): 'radio' | undefined =>
   props.multiple ? undefined : 'radio';
 
+// A label's colour dot where the option has one, else its logo or icon.
+const optionLeading = (option: FieldPickerOption): ReactElement | undefined =>
+  option.color ? <ColorDot color={option.color} /> : logoOrIcon(option);
+
 // A logo where the option has one, else its icon.
-function optionLeading(option: FieldPickerOption): ReactElement | undefined {
+function logoOrIcon(option: FieldPickerOption): ReactElement | undefined {
   if (option.logo)
     return (
       <IconSlot size="md">

@@ -16,7 +16,7 @@ const logoPattern = /^(\s*<svg[\s>/]|data:image\/svg\+xml|https:\/\/)/i;
 
 const logoMaxLength = 100_000;
 
-const fieldGroupPickerOption = z.object({
+export const fieldGroupPickerOption = z.object({
   value: z.string(),
   label: z.string(),
   subtitle: z.string().optional().describe('A second line under the label.'),
@@ -49,6 +49,13 @@ const fieldGroupPickerOption = z.object({
     .boolean()
     .optional()
     .describe('The option is drawn dimmed and cannot be chosen.'),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional()
+    .describe(
+      'A tracker label color as #rrggbb: a dot of it leads the option, as the label’s Pill is filled.',
+    ),
   section: z
     .string()
     .optional()
@@ -57,7 +64,10 @@ const fieldGroupPickerOption = z.object({
     ),
 });
 
-const pickerChoice = z.union([z.string(), z.array(z.string()).readonly()]);
+export const pickerChoice = z.union([
+  z.string(),
+  z.array(z.string()).readonly(),
+]);
 
 export const fieldGroupPickerProps = fieldGroupRowProps.extend({
   value: pickerChoice.describe(

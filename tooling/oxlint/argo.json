@@ -294,7 +294,10 @@
     },
     {
       // Tracker label colours as GitHub sends them: a Plugin's data, which the Pill reads for its text and fill.
-      "files": ["packages/kit/src/primitives/status/pill/pill-fixtures.ts"],
+      "files": [
+        "packages/kit/src/primitives/status/pill/pill-fixtures.ts",
+        "packages/kit/src/primitives/scaffolds/metadata/metadata-editable-fixtures.ts"
+      ],
       "rules": { "argo/style-tokens": "off" }
     },
     {

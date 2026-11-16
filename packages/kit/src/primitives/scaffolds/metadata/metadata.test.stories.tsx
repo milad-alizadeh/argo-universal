@@ -2,13 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { router } from 'expo-router';
 import { Component, type ReactNode } from 'react';
 import { View } from 'react-native';
-import { expect, spyOn } from 'storybook/test';
+import { expect, spyOn, within } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
 import { Text } from '#primitives/content/text';
 import { Pill } from '#primitives/status/pill';
 import type { AsidePlace } from '../screen/screen-aside-place';
 import { Metadata } from './metadata';
 import { MetadataPlaceContext } from './metadata-drawing-context';
+import { EditableMetadata } from './metadata-editable.mocks';
 import { fields } from './metadata.mocks';
 
 const path = '~/Developer/argo';
@@ -348,5 +349,30 @@ export const AsideHeadsGroupsButNotGlyphs: Story = {
     await expect(canvas.getAllByText('Blocked by')).toHaveLength(1);
     await expect(canvas.queryByText('Status')).not.toBeInTheDocument();
     await expect(canvas.getByRole('link', { name: '#57' })).toBeVisible();
+  },
+};
+
+const page = within(document.body);
+
+export const PicksAChoice: Story = {
+  render: () => <EditableMetadata />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await userEvent.click(canvas.getByRole('button', { name: 'Change State' }));
+    await userEvent.click(await page.findByText('Closed'));
+    await expect(canvas.getByText('Closed')).toBeVisible();
+    await expect(canvas.queryByText('Open')).not.toBeInTheDocument();
+  },
+};
+
+export const CreatesATag: Story = {
+  render: () => <EditableMetadata />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Tags' }));
+    await userEvent.type(await page.findByLabelText('Search Tags'), 'epsilon');
+    await expect(page.queryByText('beta')).not.toBeInTheDocument();
+    await userEvent.click(await page.findByText('Create tag “epsilon”'));
+    await expect(canvas.getByText('epsilon')).toBeVisible();
   },
 };
