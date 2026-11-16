@@ -42,17 +42,14 @@ const pluginSvgFile = z
   );
 
 /*
- * The Plugin's own icon in its manifest (ADR-0058): a monochrome SVG file of its own, drawn in the rail and the drawer,
- * and the SF and Material names drawn where only a system symbol can be, such as a native menu. It needs one of them.
+ * The Plugin's icon in its manifest (ADR-0058): the SF and Material names every Plugin gives, as ADR-0025 asks, and
+ * optionally an SVG file of its own, a one-colour mark the rail and the drawer draw in their place.
  */
 export const ManifestIcon = z
   .strictObject({ ...symbolNames, svg: pluginSvgFile.optional() })
   .refine(
-    (icon) =>
-      icon.svg !== undefined ||
-      icon.sf !== undefined ||
-      icon.material !== undefined,
-    'icon needs an svg file, an sf name or a material name',
+    (icon) => icon.sf !== undefined || icon.material !== undefined,
+    'icon needs an sf or a material name',
   )
   .refine(sfFilledNeedsSf, 'icon.sfFilled needs an sf name');
 

@@ -51,10 +51,13 @@ describe('manifestIcon', () => {
 });
 
 describe('manifestSymbol', () => {
-  it("draws Argo's Plugin icon where only a symbol draws, for a Plugin that gave only its own SVG", () => {
-    expect(manifestSymbol({ svg: 'icon.svg' })).toEqual({
-      sf: 'powerplug',
-      material: 'power',
-    });
+  it('draws the symbol names where only a symbol draws, never the svg path', () => {
+    expect(
+      manifestSymbol({
+        svg: 'icon.svg',
+        sf: 'ticket',
+        material: 'confirmation_number',
+      }),
+    ).toEqual({ sf: 'ticket', material: 'confirmation_number' });
   });
 });

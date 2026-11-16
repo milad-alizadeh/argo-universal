@@ -34,7 +34,7 @@ Its `tsconfig.json` extends the kit's settings, and its `tsconfig.test.json` the
 
 Plugin code runs without Node, so it is checked without Node's types; only `*.test.ts` files see them.
 
-`plugin.json` stays the manifest. Its `main` names the entry, which can be `.ts` or `.tsx`. Its `icon` gives SF and Material names, and `svg` may name an SVG file of the Plugin's own: the rail and the drawer draw it in one colour, every `fill` and `stroke` taking Argo's tint, and the names stay the fallback for native menus (ADR-0058). `argo plugin validate` refuses a file over 32 KB, a gradient or anything that is not SVG. The entry exports `register`, which receives the Plugin API:
+`plugin.json` stays the manifest. Its `main` names the entry, which can be `.ts` or `.tsx`. Its `icon` gives SF and Material names, which every Plugin needs, and `svg` may add an SVG file of the Plugin's own: the rail and the drawer draw it in one colour, every `fill` and `stroke` taking Argo's tint, and the names stay the fallback for native menus (ADR-0058). `argo plugin validate` refuses a file over 32 KB, a gradient or anything that is not SVG. The entry exports `register`, which receives the Plugin API:
 
 ```tsx
 import { Text, type Argo } from '@argo/plugin-kit';

@@ -247,7 +247,7 @@ One Plugin using an Account another Plugin provides. Argo checks the Grant, asks
 _Avoid_: Share, delegate, proxy
 
 **Plugin icon**:
-The icon `plugin.json` names for a Plugin, drawn in its rail tile, drawer row and Settings row. It is SF and Material symbol names, and optionally `icon.svg`, an SVG file of the Plugin's own that the Server makes one colour and the rail and drawer draw in Argo's tint (ADR-0058). A brand logo in colour belongs to the Plugin's sign-in, not here.
+The icon `plugin.json` names for a Plugin, drawn in its rail tile, drawer row and Settings row. It is SF and Material symbol names, which every Plugin gives, and optionally `icon.svg`, an SVG file of the Plugin's own that the Server makes one colour and the rail and drawer draw in Argo's tint (ADR-0058). A brand logo in colour belongs to the Plugin's sign-in, not here.
 _Avoid_: Plugin logo, app icon
 
 **Account**:

@@ -44,14 +44,15 @@ export const rejectedManifests = [
     patch: {},
     reason: 'main file index.js is missing',
   },
+  { folder: 'empty-icon', patch: { icon: {} }, reason: 'icon needs an sf' },
   {
-    folder: 'empty-icon',
-    patch: { icon: {} },
-    reason: 'icon needs an svg file, an sf name or a material name',
+    folder: 'svg-icon-without-symbols',
+    patch: { icon: { svg: 'icon.svg' } },
+    reason: 'icon needs an sf or a material name',
   },
   {
     folder: 'icon-outside-folder',
-    patch: { icon: { svg: '../icon.svg' } },
+    patch: { icon: { svg: '../icon.svg', sf: 'ticket' } },
     reason: "icon.svg must be an .svg file inside the Plugin's folder",
   },
   {
