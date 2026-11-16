@@ -18,7 +18,7 @@ const typedName = (
 ): string | undefined => (props.create ? props.query?.trim() : undefined);
 
 // The name the search typed, once it is a new one: not empty and not any option's name, whatever its case.
-export function nameToCreate(
+function nameToCreate(
   props: Pick<FieldPickerScreenProps, 'create' | 'options' | 'query'>,
 ): string | undefined {
   const typed = typedName(props);
