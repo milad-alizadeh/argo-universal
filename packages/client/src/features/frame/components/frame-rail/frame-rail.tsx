@@ -12,6 +12,7 @@ import {
 } from '../../../../lib/product/navigation/sections';
 import { sectionBadge } from '../../utils/section-badge';
 import { AttentionBadge } from '../attention-badge/attention-badge';
+import { SelectedMarker } from './rail-selected-marker';
 import { railTiles, useRailTileStyle } from './rail-tile-style';
 
 export interface FrameRailProps {
@@ -47,7 +48,7 @@ type TileIconProps = Pick<SectionButtonProps, 'section' | 'selected'> & {
   hovered: boolean;
 };
 
-// The hover, pressed and selected tints every ghost control in Argo takes; a selected tile draws no ring.
+// The hover, pressed and selected tints every ghost control in Argo takes.
 const tileClass = (selected: boolean): string =>
   cn(
     'items-center justify-center web:transition-colors web:duration-150 web:hover-capable:hover:bg-hover web:active:bg-pressed web:outline-none web:focus-visible:ring-2 web:focus-visible:ring-focus',
@@ -93,24 +94,6 @@ function SectionTile(props: SectionButtonProps): React.JSX.Element {
     >
       {(state: HoverState) => tileIcon(props, state)}
     </Pressable>
-  );
-}
-
-/*
- * Icons stay outlined when selected, since a Plugin's own icon has no filled twin; a marker at the rail's edge says
- * which section is open instead (Paper "Rail selected state — options", D). Android's Material indicator needs none.
- */
-function SelectedMarker(props: { selected: boolean }): React.ReactNode {
-  if (!props.selected || !railTiles.marker) return null;
-
-  return (
-    <View
-      pointerEvents="none"
-      className={cn(
-        'absolute top-1/2 h-4 w-1 -translate-y-1/2 rounded-full bg-foreground',
-        railTiles.marker,
-      )}
-    />
   );
 }
 

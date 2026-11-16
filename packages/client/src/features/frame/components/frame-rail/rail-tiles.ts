@@ -3,8 +3,8 @@ export interface RailTiles {
   size: string;
   corners: string;
   selected: string;
-  // Where the selected section's edge marker sits, at the rail's edge; empty where the platform marks it itself.
-  marker: string;
+  // Where the selected section's edge marker sits, at the rail's edge; none where the platform marks it itself.
+  marker?: string;
   column: string;
   collapsedColumn: string;
 }

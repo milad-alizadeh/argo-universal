@@ -22,7 +22,7 @@ function railColumn(className: string) {
   };
 }
 
-// Paper "Rail · narrow variants", Variant B: 40 tiles on the tinted rail, the selected one a flat tint, and no separator.
+// 40 tiles on the tinted rail and no separator; icons stay outlined, and the selected one is a flat tint with a marker at the rail's edge.
 const meta = {
   title: 'Frame/FrameRail',
   component: FrameRail,
