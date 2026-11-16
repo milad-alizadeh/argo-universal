@@ -40,6 +40,12 @@ function startNext(todos: Todos): Todos {
 export const setTodos = (todos: readonly Todo[]): Todos =>
   startNext(todos.map(entry));
 
+// Completing a step completes every unfinished step before it: Agents work in order and often mark only where they got to.
+const completeThrough = (todos: Todos, index: number): Todos =>
+  todos.map((todo, at) =>
+    at <= index ? { ...todo, status: 'completed' } : todo,
+  );
+
 // The list with one step changed, by its number from 1; undefined when the list has no such step.
 export function setTodoStep(
   todos: Todos,
@@ -48,7 +54,12 @@ export function setTodoStep(
 ): Todos | undefined {
   if (step > todos.length) return undefined;
 
-  return startNext(withStatus(todos, step - 1, status));
+  const changed =
+    status === 'completed'
+      ? completeThrough(todos, step - 1)
+      : withStatus(todos, step - 1, status);
+
+  return startNext(changed);
 }
 
 export const todoProgress = (todos: Todos): TodoProgress => ({

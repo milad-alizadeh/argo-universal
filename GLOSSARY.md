@@ -407,7 +407,7 @@ What the Feed needs to know about a Tool call, decoded once from its wire detail
 _Avoid_: Tool call meta
 
 **Todo list**:
-The Agent's live checklist for a Session, which shows the person how much of the work is done and how much is left. The Agent sets it whole with `session.setTodos` and then changes one step at a time with `session.setTodoStep`; a checklist an Agent reports through ACP's `plan` is one too. The person turns it on or off in Settings. ACP calls it a plan, so its Feed row and wire types keep ACP's names (ADR-0006).
+The Agent's live checklist for a Session, which shows the person how much of the work is done and how much is left. The Agent sets it whole with `session.setTodos` and then changes one step at a time with `session.setTodoStep`, where completing a step completes those before it; a checklist an Agent reports through ACP's `plan` is one too. The person turns it on or off in Settings. ACP calls it a plan, so its Feed row and wire types keep ACP's names (ADR-0006).
 _Avoid_: Plan (for the checklist), task list
 
 **Written plan**:

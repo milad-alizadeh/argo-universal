@@ -17,7 +17,7 @@ Owner amendment, 2026-11-14 (#2115): Agents treated the Plan as optional, becaus
 
 Owner amendment, 2026-11-15: the Plan becomes the **Todo list**, and Argo owns the tool. The checklist rode each Agent's own tool, so it needed an install seed per Agent, an instruction that named vendor tools, and nothing at all for an Agent with no such tool; one such Agent kept its checklist with `session.savePlan`, which wrote `.argo/plans/plan.md` into the Checkout, where it was committed. "Plan" also meant plan mode, the Written plan and the Plan role.
 
-- **Two Operations keep the Todo list.** `session.setTodos` sets it whole, and `session.setTodoStep` changes one step by its number, so a progress report costs one small call. Completing a step starts the next pending one when none is in progress. Both answer with how many steps are done and how many there are. They reach the calling Session when `sessionId` is left out, as `session.declareSubagentRole` does.
+- **Two Operations keep the Todo list.** `session.setTodos` sets it whole, and `session.setTodoStep` changes one step by its number, so a progress report costs one small call. Completing a step also completes every unfinished step before it, and starts the next pending one when none is in progress. Both answer with how many steps are done and how many there are. They reach the calling Session when `sessionId` is left out, as `session.declareSubagentRole` does.
 - **No new MCP tool.** ADR-0044 keeps `argo mcp` at two tools. The Todo list instruction gives the Operation ids and their params, so the Agent calls `operation_run` with no `operation_list` first.
 - **The same Feed row.** The Engine hands the list to the Feed as the ACP `plan` update an Agent would send, so it is one `plan_update` row revised in place, and the Feed, the Composer and the Sessions list draw it unchanged. The row and its wire types keep ACP's names (ADR-0006). The App draws no Tool call for either Operation.
 - **A checklist an Agent reports through ACP itself is still a Todo list.** Argo no longer asks for one.
@@ -28,6 +28,15 @@ Owner amendment, 2026-11-15: the Plan becomes the **Todo list**, and Argo owns t
 - **One list per Session.** A Subagent that shares its parent's Argo MCP server sets its parent's Todo list; Argo cannot tell them apart by the call.
 
 Rejected: a mode that keeps each Agent's own tool. It kept the seeds and the vendor names for a little more reliability on two Agents. Rejected: `plan_set` and `plan_step` as MCP tools of their own, which ADR-0044 rules out.
+
+Owner amendment, 2026-11-15 (#2226 eval): Argo drove Claude Agent, Codex and pi Sessions on several models through the Todo list. Four findings changed it.
+
+- **The instruction asks for a Todo list for any task that changes files or takes more than one command**, and says to skip it only for questions that change nothing. "Three or more steps" left the call to the model, and fast models judged real work too small. It also says how to reach `operation_run` when it is not declared: tool search, or `ALL_TOOLS` in a harness such as Codex that runs MCP tools only from a code script. And it says the server can take seconds to start, so the Agent looks again after its first command.
+- **Completing a step completes the steps before it.** Agents often mark only the step they reached, which left a finished list at 1/4.
+- **pi starts through an Argo launcher.** pi-acp keeps the MCP servers ACP gives it but never connects them, and it takes no ACP system prompt, so a pi Session had neither Argo's tools nor its instructions. For a Session with Agent access, the Engine sets pi-acp's `PI_ACP_PI_COMMAND` to `argo-pi`, written beside the `argo` launcher. It runs pi (or the pi command the person set) with an extension that registers `argo mcp` as a direct MCP server and appends the Argo instructions the person's settings leave. Nothing is written to the person's pi configuration. Drop it when pi-acp connects ACP's MCP servers and takes a system prompt.
+- **A Session whose Agent never loaded Argo's tools says so.** `argo mcp` reads its instructions with the Session's token as it starts, so the Engine knows whether it ran. A Turn that ends, finished or failed, within 20 seconds of the token's issue checks nothing, since `argo mcp` may still be starting; the first Turn to end after that checks. If `argo mcp` never ran, the Feed shows one info notice: the Agent can't run Argo Operations, nor keep a Todo list when the checklist is on, and its ACP adapter may not support MCP servers. It is shown once per Session: a reopened Session finds the notice it stored and says nothing more.
+
+`argo mcp` takes two to eight seconds to start, so an Agent that looks for its tools first thing can miss them; a faster CLI start is left to its own Issue.
 
 ## Considered options
 

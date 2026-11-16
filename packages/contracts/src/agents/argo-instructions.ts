@@ -5,13 +5,14 @@ export type ArgoInstruction = { name: string; text: string };
 const todoList: ArgoInstruction = {
   name: 'Todo list',
   text:
-    'When work takes three or more steps, keep a Todo list, so the person following the Session sees what is done and what is left. ' +
-    'Use the operation_run tool of the Argo MCP server, with no operation_list first; if the tool is deferred, load it first, for example with `ToolSearch`. ' +
-    'Before you start, run session.setTodos with params {"todos":[{"content":"A step in a few words"}]}, one entry per step in order; the first step starts by itself. ' +
-    'As you finish each step, run session.setTodoStep with params {"step":1,"status":"completed"}: steps count from 1, and the next pending step starts by itself. ' +
+    'Keep a Todo list for any task that changes files or takes more than one command, so the person sees what is done and left. ' +
+    'Skip it only for questions that change nothing. ' +
+    'Use the operation_run tool of the Argo MCP server, without operation_list. ' +
+    'If it is not declared to you, load it with your tool search, such as `ToolSearch`, or find the tool ending in operation_run in `ALL_TOOLS` and call it from a code script; it can take seconds to start, so if missing, look again after your first command. ' +
+    'Before your first change, run session.setTodos with params {"todos":[{"content":"A step in a few words"}]}, one entry per step in order; the first step starts by itself. ' +
+    'Each time you finish a step, before the next, run session.setTodoStep with params {"step":1,"status":"completed"}: steps count from 1, completing a step completes those before it, and the next starts by itself. ' +
     'A status is pending, in_progress or completed. ' +
-    'Run session.setTodos again only when the steps themselves change. Leave sessionId out. ' +
-    'Skip the Todo list for one-step work and for questions.',
+    'Run session.setTodos again only if the steps change. Leave sessionId out.',
 };
 
 // The spawn tools of most Agents cannot carry a role, so the Agent declares it to Argo first (#2075).

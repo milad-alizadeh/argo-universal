@@ -43,6 +43,26 @@ it('starts nothing once no step is pending', () => {
   expect(todoProgress(done)).toEqual({ done: 3, total: 3 });
 });
 
+// Sonnet completed only the last of four steps and the list ended at 1/4 with the work done (#2226 eval).
+it('completes every unfinished step before the one completed', () => {
+  const todos = setTodoStep(three, 3, 'completed') ?? [];
+
+  expect(statuses(todos)).toEqual(['completed', 'completed', 'completed']);
+  expect(todoProgress(todos)).toEqual({ done: 3, total: 3 });
+});
+
+it('leaves the steps after the one completed as they were', () => {
+  const todos = setTodoStep(three, 2, 'completed') ?? [];
+
+  expect(statuses(todos)).toEqual(['completed', 'completed', 'in_progress']);
+});
+
+it('starts a later step without completing the ones before it', () => {
+  const todos = setTodoStep(three, 3, 'in_progress') ?? [];
+
+  expect(statuses(todos)).toEqual(['in_progress', 'pending', 'in_progress']);
+});
+
 it('finds no step 4 in a list of three', () => {
   const step = 4;
   expect(setTodoStep(three, step, 'completed')).toBeUndefined();

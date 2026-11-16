@@ -27,7 +27,10 @@ export async function openResourceSession(
     withSessionMcp(input, entry, connection.takesSystemPrompt()),
   );
 
-  return { ...lease, connectionKind: entry.kind };
+  const argoTools =
+    entry.kind === 'private' ? entry.access.argoTools : undefined;
+
+  return { ...lease, connectionKind: entry.kind, argoTools };
 }
 
 // A Session with Agent access gets its Argo MCP server and, when the Agent takes one, the Argo instructions as its system prompt (ADR-0053).
@@ -38,7 +41,7 @@ function withSessionMcp(
 ): AcpOpenInput {
   if (entry.kind === 'shared') return input;
 
-  const choices = { todoList: entry.access.todoList !== false };
+  const choices = { todoList: entry.access.environment.todoList !== false };
   const server = sessionServer(entry.access, sessionId(input), choices);
   const opening = appendServer(input.opening, server);
 

@@ -1,13 +1,44 @@
+import { join } from 'node:path';
+import { productCompatibility } from '@repo/contracts/product-identity';
 import type { AgentLaunch } from './agent-launch';
 
 export const vendorRegistryIds = {
   claude: 'claude-acp',
   codex: 'codex-acp',
+  pi: 'pi-acp',
 } as const;
 
 const environment = new Map<string, Readonly<Record<string, string>>>([
   [vendorRegistryIds.claude, { ANTHROPIC_API_KEY: '' }],
 ]);
+
+const piCommand = 'PI_ACP_PI_COMMAND' as const;
+
+const { environment: names, piLauncher } = productCompatibility;
+
+// pi-acp's own variable for the pi it starts, and Argo's for the pi command the person had set there.
+type PiSessionEnvironment = { [piCommand]: string } & Partial<
+  Record<typeof names.piCommand, string>
+>;
+
+// What a Session's Agent process adds beside its access: pi-acp starts pi through Argo's launcher, which runs a pi command the person set.
+export function vendorSessionEnvironment(
+  launch: Pick<AgentLaunch, 'registryId'>,
+  cliDirectory: string,
+  launched: NodeJS.ProcessEnv,
+): PiSessionEnvironment | undefined {
+  if (launch.registryId !== vendorRegistryIds.pi) return undefined;
+
+  const piSession: PiSessionEnvironment = {
+    [piCommand]: join(cliDirectory, piLauncher),
+  };
+
+  const chosen = launched[piCommand];
+
+  if (chosen) piSession[names.piCommand] = chosen;
+
+  return piSession;
+}
 
 // What an Agent's saved launch environment starts as when the user installs it; the user may change or clear it. No Agent needs a seed now: the checklist is Argo's own Operations (ADR-0053).
 export const seededEnvironment = (

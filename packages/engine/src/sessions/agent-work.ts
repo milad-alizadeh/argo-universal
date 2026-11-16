@@ -9,4 +9,6 @@ export type AgentWorkCommand =
 export type AgentWorkState = {
   // The checklist the Agent last set; one step changes against it.
   todos: Todos | null;
+  // Whether this open Session already checked that its Agent loaded Argo's tools.
+  argoToolsChecked: boolean;
 };
