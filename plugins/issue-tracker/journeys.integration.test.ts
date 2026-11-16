@@ -83,7 +83,7 @@ it('answers the Project details row with the Tracker the choice page saved', asy
 }, 20_000);
 
 const isStatus = (node: WireNode): boolean =>
-  node.type === 'Metadata.StatusDot';
+  node.type === 'Label' && /status-text-\d+$/.test(node.key);
 
 // The Status the open Issue's Properties show.
 function shownStatus(tree: WireNode): string {
@@ -100,7 +100,8 @@ it('closes an Issue at once, as an Operation the page shows the new status of un
     operation: 'setStatus',
     args: { number: 42, status: 'closed', projectId: project.id },
     optimistic: [
-      { key: 'dot-42', props: { text: 'Closed', tone: 'done' } },
+      { key: 'dot-42', props: { tone: 'done' } },
+      { key: 'status-text-42', props: { text: 'Closed' } },
       { key: 'picker-42', props: { value: 'closed' } },
       { key: 'status-42', props: { label: 'Reopen Issue', icon: 'issue' } },
     ],
@@ -145,7 +146,7 @@ it("lists an Issue's sub-Issues under its description, with GitHub's tally", asy
 }, 20_000);
 
 const isBlocker = (node: WireNode): boolean =>
-  node.type === 'Metadata.Label' && node.props.title === 'Blocked by';
+  node.type === 'Label' && node.props.icon === 'refused';
 
 it('names an open blocker in the Properties beside the Issue', async () => {
   const page = await openIssue(refusedTitle);

@@ -9,7 +9,7 @@ import { Canvas } from '#primitives/visual';
 import { issue } from '../detail/detail.mocks';
 import { Screen } from './index';
 
-// An Issue page with its Metadata in the aside, in a container of the given width.
+// An Issue page with its properties in the aside, in a container of the given width.
 export function AsideExample({ width }: { width: number }): ReactElement {
   return (
     <View className="h-120 border border-border" style={{ width }}>

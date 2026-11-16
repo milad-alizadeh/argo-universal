@@ -1,14 +1,5 @@
 import { actionSlot, defineKitComponent } from '../define-kit-component';
 import { echoes } from '../kit-component-props';
-import {
-  metadataAvatarProps,
-  metadataChildComponents,
-  metadataLabelProps,
-  metadataLinkProps,
-  metadataPillsProps,
-  metadataProps,
-  metadataStatusDotProps,
-} from '../metadata-props';
 import { openChange } from '../overlay-kit-props';
 import {
   detailProps,
@@ -17,7 +8,6 @@ import {
   screenProps,
   settingsLayoutProps,
 } from '../scaffold-kit-props';
-import { metadataPickerComponent } from './metadata-picker';
 
 const screenReader =
   'Announces the title as the screen title, then the search field and header Actions, then the content.';
@@ -38,8 +28,8 @@ export const scaffoldsComponents = {
         actions: actionSlot,
         // The main Action: a header button, iOS toolbar item, or Android FAB.
         primaryAction: ['Action'],
-        // The page's properties: a column beside the content when the window has room, else a row of Pills under the title.
-        aside: ['Metadata'],
+        // The page's properties, a read-only FieldGroup: a column beside the content when the window has room, else a row of Pills under the title.
+        aside: ['FieldGroup'],
         // Held at the foot of the screen above the keyboard, such as a chat's message field.
         footer: ['TextArea', 'Stack', 'Button'],
       },
@@ -84,41 +74,6 @@ export const scaffoldsComponents = {
     detailProps,
     { group: 'scaffolds', children: true },
   ),
-  Metadata: defineKitComponent(
-    "Read-only properties of an item, for a Screen's `aside`: icon and value rows beside the content, Pills under the title when there is no room.",
-    metadataProps,
-    { group: 'scaffolds', children: metadataChildComponents },
-  ),
-  'Metadata.Label': defineKitComponent(
-    'A text Metadata field.',
-    metadataLabelProps,
-    {
-      group: 'scaffolds',
-    },
-  ),
-  'Metadata.Link': defineKitComponent(
-    'A Metadata field whose value is a Link.',
-    metadataLinkProps,
-    { group: 'scaffolds' },
-  ),
-  'Metadata.Pills': defineKitComponent(
-    'A Metadata field containing Pills.',
-    metadataPillsProps,
-    { group: 'scaffolds', children: ['Pill'] },
-  ),
-  'Metadata.StatusDot': defineKitComponent(
-    'A labelled status Metadata field.',
-    metadataStatusDotProps,
-    { group: 'scaffolds' },
-  ),
-  'Metadata.Avatar': defineKitComponent(
-    'A person Metadata field.',
-    metadataAvatarProps,
-    {
-      group: 'scaffolds',
-    },
-  ),
-  'Metadata.Picker': metadataPickerComponent,
   Inspector: defineKitComponent(
     'Secondary detail about what is open: its own column on wide screens and a Sheet on compact ones.',
     inspectorProps,

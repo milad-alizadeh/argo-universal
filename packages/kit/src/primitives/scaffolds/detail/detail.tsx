@@ -20,7 +20,7 @@ const scroll = {
 } as const;
 
 /*
- * Foundations / Detail: an item's content. Its Screen declares the header Actions and holds its Metadata in the
+ * Foundations / Detail: an item's content. Its Screen declares the header Actions and holds its properties, a read-only FieldGroup, in the
  * `aside`; where the aside has no column, its Pills lead the content and scroll away with it.
  */
 export function Detail(props: DetailProps): ReactElement {

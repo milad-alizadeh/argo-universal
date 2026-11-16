@@ -1,10 +1,14 @@
+import type { ReactNode } from 'react';
 import type { FieldGroupKitProps } from '../../kit-props';
+import { createOf, reportToggle } from './field-picker-events';
 
 export type FieldPickerProps = FieldGroupKitProps<'FieldGroup.Picker'> & {
   // What the page says when there are no options at all, such as "No Agents installed"; a search that leaves none says so itself. The App's own: a Plugin's wire has no such prop.
   emptyText?: string;
-  // Offers to create what the search typed when no option has that name; the App's own, set by a Metadata field.
+  // Offers to create what the search typed when no option has that name; the App's own, which a Plugin's `createLabel` sets.
   create?: { label: string; onCreate: (text: string) => void };
+  // In a read-only FieldGroup, the value shown, which opens the choices (field-group/properties).
+  children?: ReactNode;
 };
 
 /*
@@ -41,29 +45,46 @@ export type Picking = {
 };
 
 // The props every drawing reads: the schema's, with the value narrowed. `onValueChange` reports a payload of the caller's own kind only.
-export type PickerProps = FieldPickerProps & Picking;
+export type PickerProps = Omit<FieldPickerProps, 'onValueChange'> &
+  Picking & { onValueChange: (payload: string | readonly string[]) => void };
 
 export function narrowed(
   caller: FieldPickerCallerProps | FieldPickerProps,
 ): PickerProps {
   const multiple = caller.multiple === true;
   const held = heldOf(caller.value);
-  const report = reporterOf(caller);
+  const report = reporterOf(caller, held);
 
   return {
     ...caller,
+    create: createOf(caller),
     multiple,
     held,
     onValueChange: report,
-    pick: (value) =>
-      report(multiple ? toggled(held, caller.options, value) : value),
+    pick: pickOf(caller, held, report),
   };
 }
 
+// A single choice reports the value pressed; a `multiple` one the held list with it toggled.
+const pickOf =
+  (
+    caller: FieldPickerCallerProps | FieldPickerProps,
+    held: readonly string[],
+    report: (payload: string | readonly string[]) => void,
+  ) =>
+  (value: string): void =>
+    report(
+      caller.multiple === true ? toggled(held, caller.options, value) : value,
+    );
+
 const reporterOf =
-  (caller: FieldPickerCallerProps | FieldPickerProps) =>
+  (
+    caller: FieldPickerCallerProps | FieldPickerProps,
+    held: readonly string[],
+  ) =>
   (payload: string | readonly string[]): void => {
     reportTo(caller, payload);
+    reportToggle(caller, held, payload);
   };
 
 const heldOf = (value: string | readonly string[]): readonly string[] =>
@@ -82,14 +103,14 @@ function sendList(
   caller: FieldPickerMultiple | FieldPickerProps,
   payload: string | readonly string[],
 ): void {
-  if (typeof payload !== 'string') caller.onValueChange(payload);
+  if (typeof payload !== 'string') caller.onValueChange?.(payload);
 }
 
 function sendOne(
   caller: FieldPickerSingle | FieldPickerProps,
   payload: string | readonly string[],
 ): void {
-  if (typeof payload === 'string') caller.onValueChange(payload);
+  if (typeof payload === 'string') caller.onValueChange?.(payload);
 }
 
 function toggled(

@@ -31,7 +31,7 @@ const body = issue.detail.markdown;
 const statusGroup = 'Status, In progress';
 
 // Each static field is a named group, whether it draws as a row of the aside or as a Pill under the title.
-async function expectMetadata(
+async function expectProperties(
   canvas: Parameters<Play>[0]['canvas'],
 ): Promise<void> {
   for (const name of [statusGroup, 'Labels, bug, sync'])
@@ -50,7 +50,7 @@ async function expectMetadata(
 
 type Play = NonNullable<Story['play']>;
 
-export const ReadsContentAndMetadata: Story = {
+export const ReadsContentAndProperties: Story = {
   play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('heading', { name: issue.title }),
@@ -59,15 +59,15 @@ export const ReadsContentAndMetadata: Story = {
     await expect(
       canvas.getByRole('group', { name: 'Properties' }),
     ).toBeVisible();
-    await expectMetadata(canvas);
+    await expectProperties(canvas);
     await expect(canvas.queryByLabelText('Loading')).not.toBeInTheDocument();
   },
 };
 
 type Place = 'above' | 'beside';
 
-// Where the Metadata sits: beside the content in the aside's own column, or as Pills above it.
-function metadataPlace(canvas: Parameters<Play>[0]['canvas']): Place {
+// Where the properties sit: beside the content in the aside's own column, or as Pills above it.
+function propertiesPlace(canvas: Parameters<Play>[0]['canvas']): Place {
   const content = canvas.getByText(body).getBoundingClientRect();
 
   const status = canvas
@@ -97,8 +97,8 @@ const inContainer = (
 export const TabletWidthLeadsWithPills = inContainer(
   'h-160 w-192',
   async ({ canvas }) => {
-    await expectMetadata(canvas);
-    await waitFor(() => expect(metadataPlace(canvas)).toBe('above'));
+    await expectProperties(canvas);
+    await waitFor(() => expect(propertiesPlace(canvas)).toBe('above'));
     await expect(canvas.getByText('Ana Ruiz')).toBeVisible();
   },
 );
@@ -107,18 +107,18 @@ export const TabletWidthLeadsWithPills = inContainer(
 export const PhoneWidthShowsIconsAlone = inContainer(
   'h-160 w-90',
   async ({ canvas }) => {
-    await expectMetadata(canvas);
+    await expectProperties(canvas);
     await waitFor(() => expect(canvas.queryByText('Ana Ruiz')).toBeNull());
     await expect(canvas.getByText('In progress')).toBeVisible();
   },
 );
 
-export const LoadingKeepsMetadata: Story = {
+export const LoadingKeepsProperties: Story = {
   args: { ...issue.detail, isLoading: true },
   play: async ({ canvas }) => {
     await expect(canvas.getByLabelText('Loading')).toBeVisible();
     await expect(canvas.queryByText(body)).not.toBeInTheDocument();
-    await expectMetadata(canvas);
+    await expectProperties(canvas);
   },
 };
 
@@ -128,14 +128,14 @@ const empty: DetailProps = {
   children: <EmptyState title="No description" icon="issue" />,
 };
 
-export const EmptyContentKeepsMetadata: Story = {
+export const EmptyContentKeepsProperties: Story = {
   args: empty,
   play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('heading', { name: 'No description' }),
     ).toBeVisible();
     await expect(canvas.queryByText(body)).not.toBeInTheDocument();
-    await expectMetadata(canvas);
+    await expectProperties(canvas);
   },
 };
 
@@ -159,7 +159,7 @@ export const ComposedContentFollowsMarkdown: Story = {
   },
 };
 
-export const WithoutMetadata: Story = {
+export const WithoutProperties: Story = {
   args: { markdown: body },
   render: (args) => (
     <Screen title={issue.title}>
@@ -235,7 +235,7 @@ export const AsideNeverMovesTheTitle: Story = onWidest({
     </Screen>
   ),
   play: async ({ canvas }) => {
-    await waitFor(() => expect(metadataPlace(canvas)).toBe('beside'));
+    await waitFor(() => expect(propertiesPlace(canvas)).toBe('beside'));
 
     const content = rect(canvas.getByText(body));
     const title = rect(canvas.getByRole('heading', { name: issue.title }));
@@ -314,12 +314,12 @@ function listToIssueAt(window: number, beside: boolean): Story {
     beforeEach: () => settleLayout(window, 900),
     render: (args) => <IssueAndList {...args} page={pageAt(window)} />,
     play: async ({ canvas }) => {
-      await expectMetadata(canvas);
+      await expectProperties(canvas);
       await waitFor(() => expectOneColumn(canvas));
 
       if (!beside) return;
 
-      await waitFor(() => expect(metadataPlace(canvas)).toBe('beside'));
+      await waitFor(() => expect(propertiesPlace(canvas)).toBe('beside'));
 
       const content = rect(canvas.getByText(body));
       const status = canvas.getByRole('group', { name: statusGroup });
@@ -354,7 +354,7 @@ function pageOfWidth(window: number): Story {
       </View>
     ),
     play: async ({ canvas }) => {
-      await expectMetadata(canvas);
+      await expectProperties(canvas);
 
       const edges = [
         canvas.getByTestId(overflowId),
@@ -388,8 +388,8 @@ export const PhoneWindowLeadsWithIcons: Story = {
   parameters: { screenPreview: true },
   beforeEach: () => settleLayout('phone'),
   play: async ({ canvas }) => {
-    await expectMetadata(canvas);
-    await waitFor(() => expect(metadataPlace(canvas)).toBe('above'));
+    await expectProperties(canvas);
+    await waitFor(() => expect(propertiesPlace(canvas)).toBe('above'));
   },
 };
 
@@ -408,7 +408,7 @@ const longBody = [
 export const AsideStaysWhileContentScrolls: Story = onWidest({
   args: { ...issue.detail, markdown: longBody, testID: scrollId },
   play: async ({ canvas }) => {
-    await waitFor(() => expect(metadataPlace(canvas)).toBe('beside'));
+    await waitFor(() => expect(propertiesPlace(canvas)).toBe('beside'));
     const status = canvas.getByRole('group', { name: statusGroup });
     const scroll = canvas.getByTestId(scrollId);
     const { top } = rect(status);

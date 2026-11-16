@@ -4,13 +4,13 @@ import { View } from 'react-native';
 import { within, expect } from 'storybook/test';
 import { Button } from '#primitives/actions/button';
 // The iOS line, which Storybook's web build would otherwise never draw.
-import { MetadataPills } from './metadata-pills.ios';
+import { PropertyPills } from './properties/property-pills.ios';
 
 const meta = {
-  title: 'Tests/Design System/Primitives/Scaffolds/Metadata/Pills',
-  component: MetadataPills,
+  title: 'Tests/Design System/Primitives/Forms/FieldGroup/Properties/Pills',
+  component: PropertyPills,
   args: { pills: [{ text: 'iOS' }, { text: 'Android' }, { text: 'Web' }] },
-} satisfies Meta<typeof MetadataPills>;
+} satisfies Meta<typeof PropertyPills>;
 
 export default meta;
 
@@ -24,7 +24,7 @@ export const RefitsWithoutLosingTheCount: Story = {
     return (
       <>
         <View style={{ width }}>
-          <MetadataPills
+          <PropertyPills
             pills={
               retinted
                 ? args.pills.map((pill) => ({ ...pill, tone: 'info' }))
@@ -41,7 +41,7 @@ export const RefitsWithoutLosingTheCount: Story = {
     );
   },
   play: async ({ canvas, userEvent }) => {
-    const line = within(canvas.getByTestId('metadata-visible-pills'));
+    const line = within(canvas.getByTestId('property-visible-pills'));
     await expect(await line.findByText('+2', { exact: true })).toBeVisible();
     await expect(line.getByText('iOS', { exact: true })).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Retint' }));

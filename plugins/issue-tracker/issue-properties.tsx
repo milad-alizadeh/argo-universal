@@ -1,26 +1,30 @@
-import { Metadata } from '@argo/plugin-kit';
+import { FieldGroup, Label, Link } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue, IssueRelation } from './github-issues';
 import { Assignees } from './issue-assignee-picker';
 import { IssueLabels, IssueStatus, type Editable } from './issue-pickers';
 
 // The Issue's own properties, beside its description: what it is, not the work under it.
-export function IssueMetadata(props: Editable): JSX.Element {
+export function IssueProperties(props: Editable): JSX.Element {
   return (
-    <Metadata>
-      <IssueStatus {...props} />
-      <IssueLabels {...props} />
-      <Blockers issue={props.issue} />
-      <Assignees {...props} />
-      <GitHubLink issue={props.issue} />
-    </Metadata>
+    <FieldGroup>
+      <FieldGroup.Section>
+        <IssueStatus {...props} />
+        <IssueLabels {...props} />
+        <Blockers issue={props.issue} />
+        <Assignees {...props} />
+        <GitHubLink issue={props.issue} />
+      </FieldGroup.Section>
+    </FieldGroup>
   );
 }
 
 // The Issue's number is its link out: a property of the Issue, so it sits with the rest of them.
 function GitHubLink({ issue }: { issue: Issue }): JSX.Element {
   return (
-    <Metadata.Link title="GitHub" text={`#${issue.number}`} href={issue.url} />
+    <FieldGroup.Value title="GitHub">
+      <Link label={`#${issue.number}`} href={issue.url} />
+    </FieldGroup.Value>
   );
 }
 
@@ -33,20 +37,14 @@ function Blockers({ issue }: { issue: Issue }): JSX.Element | null {
   if (open.length === 0) return null;
 
   return (
-    <>
+    <FieldGroup.Value title="Blocked by">
       {open.map((blocker) => (
         <BlockedBy key={blocker.number} blocker={blocker} />
       ))}
-    </>
+    </FieldGroup.Value>
   );
 }
 
 function BlockedBy({ blocker }: { blocker: IssueRelation }): JSX.Element {
-  return (
-    <Metadata.Label
-      title="Blocked by"
-      text={`#${blocker.number} ${blocker.title}`}
-      icon="refused"
-    />
-  );
+  return <Label text={`#${blocker.number} ${blocker.title}`} icon="refused" />;
 }

@@ -13,7 +13,7 @@ function useControlled(props: FieldPickerProps): FieldPickerProps {
     value,
     onValueChange: (next) => {
       setValue(next);
-      props.onValueChange(next);
+      props.onValueChange?.(next);
     },
   };
 }

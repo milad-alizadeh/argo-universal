@@ -122,7 +122,7 @@ const selecting = {
   native: contextual,
 } satisfies Record<Platform, Selecting>;
 
-// Metadata drew its own rows as iOS's and Android's on those phones and as the desktop's everywhere else.
+// A read-only FieldGroup draws its own rows as iOS's and Android's on those phones and as the desktop's everywhere else.
 const fieldRows = {
   web: 'web',
   ios: 'ios',

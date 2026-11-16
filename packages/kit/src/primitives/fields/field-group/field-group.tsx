@@ -23,6 +23,10 @@ import {
   type FieldGroupSectionProps,
   sectionElement,
 } from './field-group-section';
+import {
+  FieldGroupProperties,
+  useDrawsProperties,
+} from './properties/properties';
 
 export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
   children?: ReactNode;
@@ -32,11 +36,16 @@ export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
  * ADR-0042: Expo UI's universal FieldGroup on the web and iOS (SwiftUI's Form), scrolling itself. It reads its
  * sections by element type, so each FieldGroup.Section child becomes Expo's own section element here, and nothing
  * else sits between it and them (the web draws any other child as a card of its own). Android
- * draws its own (field-group.android.tsx).
+ * draws its own (field-group.android.tsx). A read-only FieldGroup draws its own rows (properties/).
  */
-function FieldGroupRoot(props: FieldGroupProps): ReactElement {
-  return useInMenu() ? (
-    <MenuFieldGroup>{props.children}</MenuFieldGroup>
+function FieldGroupRoot(props: FieldGroupProps): ReactNode {
+  const inMenu = useInMenu();
+  const properties = useDrawsProperties(props.children);
+
+  if (inMenu) return <MenuFieldGroup>{props.children}</MenuFieldGroup>;
+
+  return properties ? (
+    <FieldGroupProperties>{props.children}</FieldGroupProperties>
   ) : (
     <PageFieldGroup {...props} />
   );

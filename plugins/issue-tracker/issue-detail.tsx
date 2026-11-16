@@ -13,13 +13,14 @@ import type {
   ChoicesRead,
   IssueDetailData,
 } from './issue-detail-data';
-import { IssueMetadata } from './issue-metadata';
 import { issuePath } from './issue-paths';
 import {
   statusDotKey,
   statusPickerKey,
-  type MetadataEditing,
+  statusTextKey,
+  type IssueEditing,
 } from './issue-pickers';
+import { IssueProperties } from './issue-properties';
 import { AttachedSessions, SubIssues } from './issue-sections';
 import { statuses } from './issue-status-view';
 
@@ -81,18 +82,14 @@ function IssueDetail(props: ShownProps): JSX.Element {
       title={props.issue.title}
       primaryAction={<StartSessionAction {...props} />}
       actions={<StatusAction {...props} />}
-      aside={<IssueMetadata issue={props.issue} editing={editingOf(props)} />}
+      aside={<IssueProperties issue={props.issue} editing={editingOf(props)} />}
     >
       <IssueBody {...props} />
     </Screen>
   );
 }
 
-const editingOf = ({
-  choices,
-  projectId,
-  to,
-}: ShownProps): MetadataEditing => ({
+const editingOf = ({ choices, projectId, to }: ShownProps): IssueEditing => ({
   ...choices,
   projectId,
   to,
@@ -165,10 +162,8 @@ const setStatus = (
   });
 
 const statusPatches = (number: number, status: IssueStatus): Patches => [
-  {
-    key: statusDotKey(number),
-    props: { text: statuses[status].text, tone: statuses[status].tone },
-  },
+  { key: statusDotKey(number), props: { tone: statuses[status].tone } },
+  { key: statusTextKey(number), props: { text: statuses[status].text } },
   { key: statusPickerKey(number), props: { value: status } },
   {
     key: statusActionKey(number),

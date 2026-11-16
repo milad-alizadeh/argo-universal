@@ -71,7 +71,7 @@ export interface PlatformFacts {
   selectingDropsRowActions: boolean;
   // A row's own selected mark stands until the user selects rows, as the web's sidebar marks the open page.
   primarySelectionStands: boolean;
-  // How a part that lays out its own label and value rows, such as Metadata, draws them: as iOS's or Android's rows, or as the desktop's on every other platform.
+  // How a part that lays out its own label and value rows, such as a read-only FieldGroup, draws them: as iOS's or Android's rows, or as the desktop's on every other platform.
   fieldRows: Drawing;
 }
 

@@ -2,8 +2,8 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { Tooltip } from '#primitives/overlays/tooltip';
 import { Pill, type PillProps } from '#primitives/status/pill';
-import type { FieldProps } from './metadata-field-props';
-import { groupProps } from './metadata-group';
+import type { FieldProps } from './property-field-props';
+import { groupProps } from './property-group';
 
 /*
  * Under the title a field is one control Pill: its glyph and its value, as the approved Pill master draws a control.

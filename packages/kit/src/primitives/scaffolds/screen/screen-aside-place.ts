@@ -1,11 +1,9 @@
+import type { AsidePlace } from '#kit/aside-place-context';
+
+export type { AsidePlace } from '#kit/aside-place-context';
+
 // The aside's own width, beside the content.
 export const asideWidth = 280;
-
-/*
- * Where a Screen's aside draws: its own column at the right, a row of Pills under the title, or, where even that is
- * short of room, Pills that show their icon alone.
- */
-export type AsidePlace = 'aside' | 'pills' | 'icons';
 
 export interface AsideRoom {
   // The Screen's own width, 0 until measured.

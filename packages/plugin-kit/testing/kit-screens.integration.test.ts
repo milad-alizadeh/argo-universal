@@ -84,7 +84,7 @@ it('opens a build beside the list and offers to rerun it once cancelled', async 
   expect(page.path).toBe('/builds/web');
   expect(page.find('Deploy web').props.selected).toBe(true);
   expect(page.find('Build native').type).toBe('ListItem');
-  expect(page.find('Running').type).toBe('Metadata.StatusDot');
+  expect(page.find('Status').props.value).toBe('Running');
   await page.press('Cancel');
   expect(page.find('Rerun').type).toBe('Action');
 });

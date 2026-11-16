@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { ListItemFrame } from '#primitives/lists/list-item';
-import { groupProps } from './metadata-group';
+import { groupProps } from './property-group';
 
 export type FieldLayoutProps = {
   title: string;

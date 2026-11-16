@@ -1,23 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import type { AsidePlace } from '../screen/screen-aside-place';
+import type { AsidePlace } from '#kit/aside-place-context';
 import {
-  metadataDrawing,
-  type MetadataFacts,
-  type MetadataFieldLayout,
-  type MetadataPlatform,
-  type MetadataRoot,
-} from './metadata-drawing';
+  propertiesDrawing,
+  type PropertiesFacts,
+  type PropertyFieldLayout,
+  type PropertiesPlatform,
+  type PropertiesRoot,
+} from './properties-drawing';
 
-type Case = [MetadataFacts, Picks];
+type Case = [PropertiesFacts, Picks];
 
-type Picks = { root: MetadataRoot; field: MetadataFieldLayout };
+type Picks = { root: PropertiesRoot; field: PropertyFieldLayout };
 
-const picks = (root: MetadataRoot, field: MetadataFieldLayout): Picks => ({
+const picks = (root: PropertiesRoot, field: PropertyFieldLayout): Picks => ({
   root,
   field,
 });
 
-const platforms: MetadataPlatform[] = ['ios', 'android', 'web'];
+const platforms: PropertiesPlatform[] = ['ios', 'android', 'web'];
 
 const rowsOf = { ios: 'beside', android: 'under', web: 'stacked' } as const;
 
@@ -28,10 +28,10 @@ const own = {
 } as const;
 
 const on = (
-  platform: MetadataPlatform,
+  platform: PropertiesPlatform,
   inList: boolean,
   place: AsidePlace | null,
-): MetadataFacts => ({ platform, inList, place });
+): PropertiesFacts => ({ platform, inList, place });
 
 // A Screen's aside draws the same on every platform: its column, a row of Pills, or Pills that show their icon alone.
 const asideTable: Case[] = platforms.flatMap((platform) => [
@@ -49,13 +49,13 @@ const ownTable: Case[] = platforms.flatMap((platform) => [
   ],
 ]);
 
-describe('which drawing Metadata picks', () => {
+describe('which drawing a read-only FieldGroup picks', () => {
   it.each(asideTable)('%j draws %j', (facts, expected) => {
-    expect(metadataDrawing(facts)).toMatchObject(expected);
+    expect(propertiesDrawing(facts)).toMatchObject(expected);
   });
 
   it.each(ownTable)('%j draws %j', (facts, expected) => {
-    expect(metadataDrawing(facts)).toMatchObject(expected);
+    expect(propertiesDrawing(facts)).toMatchObject(expected);
   });
 
   it('covers every platform in every aside place, and outside one', () => {
@@ -64,7 +64,7 @@ describe('which drawing Metadata picks', () => {
 
   it('mutes values on phones only', () => {
     const muted = platforms.map(
-      (platform) => metadataDrawing(on(platform, false, null)).mutedValue,
+      (platform) => propertiesDrawing(on(platform, false, null)).mutedValue,
     );
 
     expect(muted).toEqual([true, true, false]);

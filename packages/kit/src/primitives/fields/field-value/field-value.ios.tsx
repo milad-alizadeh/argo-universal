@@ -20,11 +20,14 @@ export function FieldValue(props: FieldValueProps): ReactElement {
     <LabeledContent label={<RowTitle {...props} />}>
       <HStack spacing={dotGap}>
         {props.dot && <Dot tone={props.dot} />}
-        <NativeText>{props.value}</NativeText>
+        <NativeText>{wordsOf(props)}</NativeText>
       </HStack>
     </LabeledContent>
   );
 }
+
+// A row whose children draw its value has no words of its own here.
+const wordsOf = ({ value }: FieldValueProps): string => value ?? '';
 
 const dotGap = 6;
 

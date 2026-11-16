@@ -14,6 +14,16 @@ const rows = [
   'Button',
 ] as const;
 
+// What a read-only value draws as, each with a compact form for the Screen's aside (ADR-0058).
+const valueChildren = [
+  'Label',
+  'Pill',
+  'StatusDot',
+  'Avatar',
+  'Link',
+  'Icon',
+] as const;
+
 const rowLabel = 'The title names the row and is announced with its value.';
 
 export const fieldsComponents = {
@@ -28,10 +38,11 @@ export const fieldsComponents = {
     { group: 'fields', children: rows },
   ),
   'FieldGroup.Value': defineKitComponent(
-    'A read-only value at the end of a row.',
+    'A read-only value at the end of a row: its `value` in words, or its children, such as Pills, a StatusDot before a Label, or Avatars.',
     fieldGroupKitComponents['FieldGroup.Value'].props,
     {
       group: 'fields',
+      children: valueChildren,
       events: fieldGroupKitComponents['FieldGroup.Value'].events,
       label: rowLabel,
     },
@@ -55,10 +66,11 @@ export const fieldsComponents = {
     },
   ),
   'FieldGroup.Picker': defineKitComponent(
-    'A row that chooses one option.',
+    'A row that chooses one option, or several when `multiple`; in a read-only FieldGroup its children show the value and pressing them opens the choices.',
     fieldGroupKitComponents['FieldGroup.Picker'].props,
     {
       group: 'fields',
+      children: valueChildren,
       events: fieldGroupKitComponents['FieldGroup.Picker'].events,
       label: rowLabel,
     },

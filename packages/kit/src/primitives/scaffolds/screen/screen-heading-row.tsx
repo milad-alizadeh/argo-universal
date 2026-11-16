@@ -91,7 +91,7 @@ function CaptionLink(props: { caption: string; href: string }): ReactNode {
   );
 }
 
-// One `href` is an App route or a URL, as a Metadata link's is; the kit Link takes them apart.
+// One `href` is an App route or a URL, as a property Link's is; the kit Link takes them apart.
 const captionTarget = (href: string): { href: string } | { route: string } =>
   isRoute(href) ? { route: href } : { href };
 

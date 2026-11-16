@@ -1,14 +1,14 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
+import { flattenedChildren } from '#kit/flattened-children';
 import { Text } from '#primitives/content/text';
-import { flattenedChildren } from '../../../flattened-children';
+import type { PropertySectionProps } from './properties';
 import {
-  MetadataAvatar,
-  MetadataPillsField,
-  MetadataStatus,
-} from './metadata-parts';
-import { MetadataPicker } from './metadata-picker';
-import type { MetadataProps } from './metadata-props';
+  PropertyAvatar,
+  PropertyPillsField,
+  PropertyStatus,
+} from './property-parts';
+import { PropertyPicker } from './property-picker';
 
 type FieldElement = ReactElement<{
   title?: string;
@@ -16,7 +16,7 @@ type FieldElement = ReactElement<{
   children?: ReactNode;
 }>;
 
-// Metadata's wire children are fields alone, each with its title and, for some, an icon.
+// A section's children are fields alone, each with its row's title and, for some, an icon.
 const isField = (node: ReactNode): node is FieldElement =>
   isValidElement<FieldElement['props']>(node);
 
@@ -27,11 +27,11 @@ interface Group {
   fields: FieldElement[];
 }
 
-const glyphFields = new Set<unknown>([MetadataStatus, MetadataAvatar]);
+const glyphFields = new Set<unknown>([PropertyStatus, PropertyAvatar]);
 
 // A Pills field's icon heads its Pills; any other field's icon leads its value.
 const leadsWithIcon = (field: FieldElement): boolean =>
-  field.type !== MetadataPillsField && field.props.icon !== undefined;
+  field.type !== PropertyPillsField && field.props.icon !== undefined;
 
 // A field that leads with a glyph of its own: a status, a person, or a value with an icon.
 const hasGlyph = (field: FieldElement): boolean =>
@@ -39,9 +39,9 @@ const hasGlyph = (field: FieldElement): boolean =>
   leadsWithIcon(field) ||
   pickerShowsGlyph(field);
 
-// An editable field is bare when the one field it shows is.
+// A Picker is bare when the first field it shows is.
 function pickerShowsGlyph(field: FieldElement): boolean {
-  if (field.type !== MetadataPicker) return false;
+  if (field.type !== PropertyPicker) return false;
 
   const [shown] = flattenedChildren(field.props.children);
 
@@ -86,7 +86,10 @@ const groupKey = (group: Group): string =>
   String(group.fields[0]?.key ?? group.title);
 
 // The aside: unheaded glyph rows first, then each other group's small heading over its values; a title heads them all.
-export function AsideFields({ title, children }: MetadataProps): ReactNode {
+export function AsideFields({
+  title,
+  children,
+}: PropertySectionProps): ReactNode {
   return (
     <View role="group" aria-label={title ?? 'Properties'} className="gap-4">
       {title ? <AsideTitle title={title} /> : null}
@@ -119,7 +122,10 @@ function AsideGroup({ group }: { group: Group }): ReactNode {
 }
 
 // Under the title: one wrapping row of Pills, each a field.
-export function PillFields({ title, children }: MetadataProps): ReactNode {
+export function PillFields({
+  title,
+  children,
+}: PropertySectionProps): ReactNode {
   return (
     <View
       role="group"

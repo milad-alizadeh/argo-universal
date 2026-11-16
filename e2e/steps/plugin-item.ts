@@ -18,7 +18,7 @@ const docsField = (page: Page): ReturnType<Page['getByRole']> =>
     .or(page.getByRole('button', { name: docs }));
 
 Then(
-  'the Plugin item shows its content and Metadata',
+  'the Plugin item shows its content and properties',
   async ({ page }): Promise<void> => {
     await expect(page.getByText('Fixture item content.')).toBeVisible();
 

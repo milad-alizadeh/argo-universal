@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   fieldGroupDatePickerProps,
+  fieldGroupPickerEvents,
   fieldGroupPickerProps,
 } from './field-group-choice-props';
 import {
@@ -92,7 +93,12 @@ const fieldGroupSliderProps = fieldGroupFieldProps.extend({
 });
 
 const fieldGroupValueProps = fieldGroupRowProps.extend({
-  value: z.string().describe('The read-only value at the row’s end.'),
+  value: z
+    .string()
+    .optional()
+    .describe(
+      'The read-only value at the row’s end, in words; a row whose children draw its value needs none.',
+    ),
   loading: z
     .boolean()
     .optional()
@@ -140,12 +146,7 @@ export const fieldGroupKitComponents = {
   },
   'FieldGroup.Picker': {
     props: fieldGroupPickerProps,
-    events: {
-      // A multiple Picker echoes its whole list and stays open, so a toggle never locks it.
-      onValueChange: echoes(fieldGroupPickerProps, 'value', { blocks: false }),
-      // The footer action's press, inside the action data.
-      onPress: z.undefined().meta({ within: 'footerAction' }),
-    },
+    events: fieldGroupPickerEvents,
   },
   'FieldGroup.Slider': {
     props: fieldGroupSliderProps,

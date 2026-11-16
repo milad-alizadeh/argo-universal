@@ -15,6 +15,13 @@ const leaf = (
   slots: {},
 });
 
+const node = (
+  type: string,
+  key: string,
+  props: WireNode['props'],
+  children: WireNode[] = [],
+): WireNode => ({ ...leaf(type, key, props), children });
+
 const root = WireNode.parse({
   type: 'Screen',
   key: 'page',
@@ -30,44 +37,38 @@ const root = WireNode.parse({
   ],
   // A Screen declares its header Actions; the Detail beneath it cannot.
   slots: {
-    // The Screen's aside holds the Detail's Metadata.
+    // The Screen's aside holds the Issue's properties, a read-only FieldGroup.
     aside: [
-      {
-        type: 'Metadata',
-        key: 'fields',
-        props: {},
-        children: [
-          leaf('Metadata.StatusDot', 'status', {
-            title: 'Status',
-            text: 'In progress',
-            tone: 'info',
-          }),
-          leaf('Metadata.Avatar', 'assignee', {
-            title: 'Assignee',
-            name: 'Ana Ruiz',
-          }),
-          {
-            type: 'Metadata.Pills',
-            key: 'labels',
-            props: { title: 'Labels' },
-            children: [
-              leaf('Pill', 'bug', { text: 'bug' }),
-              leaf('Pill', 'sync', { text: 'sync' }),
-            ],
-            slots: {},
-          },
-          leaf('Metadata.Link', 'milestone', {
-            title: 'Milestone',
-            text: 'v1.2',
-            href: 'https://example.com/milestone/2',
-          }),
-          leaf('Metadata.Label', 'source', {
+      node('FieldGroup', 'fields', {}, [
+        node('FieldGroup.Section', 'section', {}, [
+          node(
+            'FieldGroup.Value',
+            'status',
+            { title: 'Status', value: 'In progress' },
+            [leaf('StatusDot', 'dot', { tone: 'info' })],
+          ),
+          node('FieldGroup.Value', 'assignee', { title: 'Assignee' }, [
+            leaf('Avatar', 'ana', {
+              name: 'Ana Ruiz',
+              accessibilityLabel: 'Ana Ruiz',
+            }),
+          ]),
+          node('FieldGroup.Value', 'labels', { title: 'Labels' }, [
+            leaf('Pill', 'bug', { text: 'bug' }),
+            leaf('Pill', 'sync', { text: 'sync' }),
+          ]),
+          node('FieldGroup.Value', 'milestone', { title: 'Milestone' }, [
+            leaf('Link', 'link', {
+              label: 'v1.2',
+              href: 'https://example.com/milestone/2',
+            }),
+          ]),
+          node('FieldGroup.Value', 'source', {
             title: 'Source',
-            text: 'GitHub',
+            value: 'GitHub',
           }),
-        ],
-        slots: {},
-      },
+        ]),
+      ]),
     ],
     actions: [
       leaf('Action', 'close', {
@@ -87,7 +88,7 @@ const meta = {
 
 export default meta;
 
-export const DrawsContentMetadataAndActions: StoryObj<typeof meta> = {
+export const DrawsContentPropertiesAndActions: StoryObj<typeof meta> = {
   render: () => <PluginTree root={root} onPageCall={onPageCall} />,
   play: async ({ canvas, userEvent }) => {
     onPageCall.mockClear();

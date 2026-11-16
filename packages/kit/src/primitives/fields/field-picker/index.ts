@@ -8,6 +8,6 @@ export type {
 
 export { FieldPickerDrill } from './field-picker-drill';
 
-export { narrowed } from './field-picker-model';
+export { choiceSummary, narrowed } from './field-picker-model';
 
 export { ScreenSearchField } from './field-picker-search';

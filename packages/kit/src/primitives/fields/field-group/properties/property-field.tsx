@@ -2,14 +2,14 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { Text, TextClassContext } from '#primitives/content/text';
 import { ListItem, ListItemFrame } from '#primitives/lists/list-item';
-import type { MetadataFieldLayout } from './metadata-drawing';
-import { useMetadataDrawing } from './metadata-drawing-context';
-import { BesideField } from './metadata-field-beside';
-import { PillField, IconField } from './metadata-field-pill';
-import type { FieldProps, MetadataFieldProps } from './metadata-field-props';
-import { groupProps } from './metadata-group';
+import type { PropertyFieldLayout } from './properties-drawing';
+import { usePropertiesDrawing } from './properties-place';
+import { BesideField } from './property-field-beside';
+import { PillField, IconField } from './property-field-pill';
+import type { FieldProps, PropertyFieldProps } from './property-field-props';
+import { groupProps } from './property-group';
 
-export type { MetadataFieldProps } from './metadata-field-props';
+export type { PropertyFieldProps } from './property-field-props';
 
 const layouts = {
   stacked: StackedField,
@@ -18,15 +18,15 @@ const layouts = {
   value: ValueField,
   pill: PillField,
   icon: IconField,
-} satisfies Record<MetadataFieldLayout, (props: FieldProps) => ReactElement>;
+} satisfies Record<PropertyFieldLayout, (props: FieldProps) => ReactElement>;
 
 /*
- * A read-only label/value field of a detail view's Metadata, drawn in the layout its Metadata's drawing names: stacked
+ * A read-only label/value field of a read-only FieldGroup, drawn in the layout its FieldGroup's drawing names: stacked
  * (label above the value), beside (iOS's LabeledContent), under (Android's one-line row), its value alone under its
  * group's heading in an aside, or one Pill under the title.
  */
-export function MetadataField(props: MetadataFieldProps): ReactElement {
-  const Field = layouts[useMetadataDrawing().field];
+export function PropertyField(props: PropertyFieldProps): ReactElement {
+  const Field = layouts[usePropertiesDrawing().field];
 
   return (
     <Field

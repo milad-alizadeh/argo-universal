@@ -7,6 +7,7 @@ import {
 } from 'react';
 import { type LayoutChangeEvent, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { AsidePlaceContext } from '#kit/aside-place-context';
 import {
   OutsideColumn,
   useClaimLead,
@@ -14,7 +15,6 @@ import {
 } from '#kit/content-column/content-column';
 import { useWide } from '#kit/use-wide/use-wide';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
-import { MetadataPlaceContext } from '../metadata/metadata-drawing-context';
 import {
   type AsideLayout,
   type AsidePlace,
@@ -101,7 +101,7 @@ type AsideProps = Pick<ScreenProps, 'aside' | 'width'> & {
   children: ReactNode;
 };
 
-// The Screen's aside, handed to the Metadata it holds with where it draws.
+// The Screen's aside, handed to the read-only FieldGroup it holds with where it draws.
 export function ScreenAside(props: AsideProps): ReactElement {
   const lead = leadOf(props);
 
@@ -118,7 +118,7 @@ export function ScreenAside(props: AsideProps): ReactElement {
 function leadOf({ aside, place }: AsideProps): ReactNode {
   if (!aside || place === 'aside') return null;
 
-  return <MetadataPlaceContext value={place}>{aside}</MetadataPlaceContext>;
+  return <AsidePlaceContext value={place}>{aside}</AsidePlaceContext>;
 }
 
 /*
@@ -148,9 +148,9 @@ function AsideScroll(props: {
   return (
     <OutsideColumn>
       <ScrollFadeView contentContainerClassName="py-6">
-        <MetadataPlaceContext value={props.place}>
+        <AsidePlaceContext value={props.place}>
           {props.children}
-        </MetadataPlaceContext>
+        </AsidePlaceContext>
       </ScrollFadeView>
     </OutsideColumn>
   );

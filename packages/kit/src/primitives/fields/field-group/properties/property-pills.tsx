@@ -1,12 +1,12 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
+import { withOccurrenceKeys } from '#kit/occurrence-keys';
 import { Pill, type PillProps } from '#primitives/status/pill';
-import { withOccurrenceKeys } from '../../../occurrence-keys';
-import { pillIdentity } from './metadata-pill-identity';
+import { pillIdentity } from './property-pill-identity';
 
 type PillValuesProps = { pills: PillProps[] };
 
-export function MetadataPills({ pills }: PillValuesProps): ReactElement {
+export function PropertyPills({ pills }: PillValuesProps): ReactElement {
   return (
     <View className="max-w-full min-w-0 shrink flex-row flex-wrap items-center gap-1">
       {withOccurrenceKeys(pills, pillIdentity).map(({ item, key }) => (

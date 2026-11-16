@@ -1,9 +1,10 @@
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
+import { Label } from '#primitives/content/label';
+import { FieldGroup } from '#primitives/fields/field-group';
 import { DrawerItem } from '#primitives/lists/drawer-item';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
-import { Metadata } from '#primitives/scaffolds/metadata';
 import { Skeleton } from './index';
 import type { SkeletonProps } from './skeleton-props';
 
@@ -21,12 +22,16 @@ function Destination(): ReactElement {
   );
 }
 
-// A metadata field: the group is one element named after the field, and its value is read from the group's label.
+// A read-only FieldGroup row: the group is one element named after the row, and its value is read from the group's label.
 function Field(): ReactElement {
   return (
-    <Metadata>
-      <Metadata.Label title="Placeholder field" text="Placeholder value" />
-    </Metadata>
+    <FieldGroup>
+      <FieldGroup.Section>
+        <FieldGroup.Value title="Placeholder field">
+          <Label text="Placeholder value" />
+        </FieldGroup.Value>
+      </FieldGroup.Section>
+    </FieldGroup>
   );
 }
 

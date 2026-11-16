@@ -23,6 +23,10 @@ import {
 } from './field-group-caption-insets';
 import { fieldGroupRowComponents } from './field-group-row-components';
 import { FieldGroupSection } from './field-group-section.android';
+import {
+  FieldGroupProperties,
+  useDrawsProperties,
+} from './properties/properties';
 
 export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
   children?: ReactNode;
@@ -32,7 +36,15 @@ export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
  * ADR-0042: the kit's own Android FieldGroup, a copy of Expo UI's (FieldGroup.android.tsx) whose Section draws
  * each row as itself. It goes when Expo fixes the headline wrapping (expo/expo#50086).
  */
-function FieldGroupRoot(props: FieldGroupProps): ReactElement {
+function FieldGroupRoot(props: FieldGroupProps): ReactNode {
+  return useDrawsProperties(props.children) ? (
+    <FieldGroupProperties>{props.children}</FieldGroupProperties>
+  ) : (
+    <PageFieldGroup {...props} />
+  );
+}
+
+function PageFieldGroup(props: FieldGroupProps): ReactElement {
   /*
    * Its cards keep Material's own inset, so the Screen adds no gutter beyond the column's own; its rows are outside the column.
    * A View is the column, as the web's scroll view is: capped, centred and padded, so the cards start on the title's line.

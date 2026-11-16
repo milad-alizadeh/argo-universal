@@ -32,13 +32,13 @@ import { Alert } from '@repo/kit/primitives/overlays/alert';
 import { Sheet } from '@repo/kit/primitives/overlays/sheet';
 import { Detail } from '@repo/kit/primitives/scaffolds/detail';
 import { ListDetail } from '@repo/kit/primitives/scaffolds/list-detail';
-import { Metadata } from '@repo/kit/primitives/scaffolds/metadata';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { Callout } from '@repo/kit/primitives/status/callout';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import { ProgressBar } from '@repo/kit/primitives/status/progress-bar';
 import { Spinner } from '@repo/kit/primitives/status/spinner';
+import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import { Canvas, Chart, Svg } from '@repo/kit/primitives/visual';
 import type { ComponentType } from 'react';
 
@@ -63,13 +63,6 @@ export const pluginEntries = {
   Screen,
   ListDetail,
   Detail,
-  Metadata,
-  'Metadata.Label': Metadata.Label,
-  'Metadata.Link': Metadata.Link,
-  'Metadata.Pills': Metadata.Pills,
-  'Metadata.StatusDot': Metadata.StatusDot,
-  'Metadata.Avatar': Metadata.Avatar,
-  'Metadata.Picker': Metadata.Picker,
   Action,
   'Action.Section': Action.Section,
   EmptyState,
@@ -102,6 +95,7 @@ export const pluginEntries = {
   Label,
   ProgressBar,
   Pill,
+  StatusDot,
   Text,
   Button,
   Stack,

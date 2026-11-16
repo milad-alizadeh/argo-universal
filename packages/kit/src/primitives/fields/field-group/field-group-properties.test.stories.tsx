@@ -1,28 +1,40 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { router } from 'expo-router';
-import { Component, type ReactNode } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, spyOn, within } from 'storybook/test';
+import { AsidePlaceContext } from '#kit/aside-place-context';
+import type { AsidePlace } from '#kit/aside-place-context';
 import { settleLayout } from '#mocks/story-layout';
-import { Text } from '#primitives/content/text';
+import { Avatar } from '#primitives/content/avatar';
+import { Label } from '#primitives/content/label';
+import { Link } from '#primitives/content/link';
 import { Pill } from '#primitives/status/pill';
-import type { AsidePlace } from '../screen/screen-aside-place';
-import { Metadata } from './metadata';
-import { MetadataPlaceContext } from './metadata-drawing-context';
-import { EditableMetadata } from './metadata-editable.mocks';
-import { fields } from './metadata.mocks';
+import { StatusDot } from '#primitives/status/status-dot';
+import { FieldGroup } from './field-group';
+import { EditableProperties } from './field-group-properties-editable.mocks';
+import { rows, section } from './field-group-properties.mocks';
 
 const path = '~/Developer/argo';
 
 const repoName = 'argo-universal';
 
+const blockedBy = 'Blocked by';
+
+const value = (
+  title: string,
+  child: ReactElement | ReactElement[],
+): ReactElement => (
+  <FieldGroup.Value key={title} title={title}>
+    {child}
+  </FieldGroup.Value>
+);
+
 const meta = {
-  title: 'Tests/Design System/Primitives/Scaffolds/Metadata',
-  component: Metadata,
-  args: {
-    children: <Metadata.Label title="Path" text={path} />,
-  },
-} satisfies Meta<typeof Metadata>;
+  title: 'Tests/Design System/Primitives/Forms/FieldGroup/Properties',
+  component: FieldGroup,
+  args: { children: section(value('Path', <Label text={path} />)) },
+} satisfies Meta<typeof FieldGroup>;
 
 export default meta;
 
@@ -40,7 +52,7 @@ export const ReadsText: Story = {
 };
 
 export const ReadsMixedValues: Story = {
-  args: fields,
+  args: { children: section(rows) },
   play: async ({ canvas }) => {
     await expect(
       canvas.getByRole('group', { name: 'Device, Milad’s MacBook Pro' }),
@@ -70,12 +82,11 @@ export const ReadsMixedValues: Story = {
 
 export const OpensLinkUrl: Story = {
   args: {
-    children: (
-      <Metadata.Link
-        title="Repository"
-        text={repoName}
-        href="https://example.com/repo"
-      />
+    children: section(
+      value(
+        'Repository',
+        <Link label={repoName} href="https://example.com/repo" />,
+      ),
     ),
   },
   play: async ({ canvas }) => {
@@ -91,7 +102,9 @@ export const OpensLinkUrl: Story = {
 
 export const NavigatesLinkRoute: Story = {
   args: {
-    children: <Metadata.Link title="Page" text="Settings" href="/settings" />,
+    children: section(
+      value('Page', <Link label="Settings" route="/settings" />),
+    ),
   },
   play: async ({ canvas, userEvent }) => {
     const navigate = spyOn(router, 'navigate').mockImplementation(() => {});
@@ -108,21 +121,19 @@ export const NavigatesLinkRoute: Story = {
 // A linked field is the page's one carrier of that link, so it draws at every width.
 const linkedField: Story = {
   args: {
-    title: 'Details',
-    children: [
-      <Metadata.StatusDot
-        key="status"
-        title="Status"
-        text="Open"
-        tone="info"
-      />,
-      <Metadata.Link
-        key="repo"
-        title="Repository"
-        text={repoName}
-        href="https://example.com/repo"
-      />,
-    ],
+    children: section(
+      [
+        value('Status', [
+          <StatusDot key="dot" tone="info" />,
+          <Label key="text" text="Open" />,
+        ]),
+        value(
+          'Repository',
+          <Link label={repoName} href="https://example.com/repo" />,
+        ),
+      ],
+      'Details',
+    ),
   },
 };
 
@@ -150,12 +161,8 @@ export const WideDrawsTheLink: Story = {
 
 export const UnsupportedLinkStaysText: Story = {
   args: {
-    children: (
-      <Metadata.Link
-        title="Repository"
-        text={repoName}
-        href="javascript:alert(1)"
-      />
+    children: section(
+      value('Repository', <Link label={repoName} href="javascript:alert(1)" />),
     ),
   },
   play: async ({ canvas }) => {
@@ -165,7 +172,7 @@ export const UnsupportedLinkStaysText: Story = {
 };
 
 export const EmptyHasNoFields: Story = {
-  args: { title: 'Unused heading', children: [] },
+  args: { children: section([], 'Unused heading') },
   play: async ({ canvas }) => {
     await expect(canvas.queryByText('Unused heading')).not.toBeInTheDocument();
     await expect(canvas.queryByRole('group')).not.toBeInTheDocument();
@@ -174,11 +181,13 @@ export const EmptyHasNoFields: Story = {
 
 export const EmptyValuesKeepTheirLabels: Story = {
   args: {
-    title: 'Details',
-    children: [
-      <Metadata.Label key="milestone" title="Milestone" text="" />,
-      <Metadata.Pills key="labels" title="Labels" />,
-    ],
+    children: section(
+      [
+        value('Milestone', <Label text="" />),
+        <FieldGroup.Value key="labels" title="Labels" value="" />,
+      ],
+      'Details',
+    ),
   },
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Details')).toBeVisible();
@@ -189,8 +198,8 @@ export const EmptyValuesKeepTheirLabels: Story = {
 
 export const PreservesSpokenPath: Story = {
   args: {
-    children: (
-      <Metadata.Label title="Path" text={path} accessibilityLabel={path} />
+    children: section(
+      value('Path', <Label text={path} accessibilityLabel={path} />),
     ),
   },
   play: async ({ canvas }) => {
@@ -203,64 +212,26 @@ export const PreservesSpokenPath: Story = {
   },
 };
 
-interface Raised {
-  message?: string;
-}
-
-// Shows what a field raised instead of the field.
-class RaisedError extends Component<{ children: ReactNode }, Raised> {
-  override state: Raised = {};
-
-  static getDerivedStateFromError(error: Error): Raised {
-    return { message: error.message };
-  }
-
-  override render(): ReactNode {
-    return this.state.message === undefined ? (
-      this.props.children
-    ) : (
-      <Text>{this.state.message}</Text>
-    );
-  }
-}
-
-export const FieldOutsideMetadataRaises: Story = {
-  render: () => (
-    <RaisedError>
-      <Metadata.Label title="Path" text={path} />
-    </RaisedError>
-  ),
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.getByText('A Metadata field draws only inside Metadata.'),
-    ).toBeVisible();
-    await expect(canvas.queryByText(path)).not.toBeInTheDocument();
-  },
-};
-
-// Metadata where a Screen's aside put it, as Pills under the title or as glyphs alone.
+// The rows where a Screen's aside put them, as Pills under the title or as glyphs alone.
 const placed = (place: AsidePlace): Story['render'] =>
   function Placed(args) {
     return (
-      <MetadataPlaceContext value={place}>
-        <Metadata {...args} />
-      </MetadataPlaceContext>
+      <AsidePlaceContext value={place}>
+        <FieldGroup {...args} />
+      </AsidePlaceContext>
     );
   };
 
-const issueFields = [
-  <Metadata.StatusDot key="status" title="Status" text="Open" tone="info" />,
-  <Metadata.Avatar key="assignee" title="Assignee" name="Ana Ruiz" />,
-  <Metadata.Link
-    key="blocker"
-    title="Blocked by"
-    text="#41"
-    href="/issues/41"
-  />,
+const issueRows = [
+  <FieldGroup.Value key="status" title="Status" value="Open">
+    <StatusDot tone="info" />
+  </FieldGroup.Value>,
+  value('Assignee', <Avatar name="Ana Ruiz" accessibilityLabel="Ana Ruiz" />),
+  value(blockedBy, <Link label="#41" route="/issues/41" />),
 ];
 
 export const PillsAreTheFieldsValues: Story = {
-  args: { children: issueFields },
+  args: { children: section(issueRows) },
   render: placed('pills'),
   play: async ({ canvas, userEvent }) => {
     const navigate = spyOn(router, 'navigate').mockImplementation(() => {});
@@ -268,7 +239,7 @@ export const PillsAreTheFieldsValues: Story = {
     try {
       await expect(canvas.getByText('Ana Ruiz')).toBeVisible();
       // A value with no glyph names its field, so "#41" reads as a blocker.
-      await expect(canvas.getByText('Blocked by')).toBeVisible();
+      await expect(canvas.getByText(blockedBy)).toBeVisible();
       await userEvent.click(
         canvas.getByRole('button', { name: 'Blocked by, #41' }),
       );
@@ -290,20 +261,19 @@ const longLabels = [
 // A long label list wraps inside the row it sits in instead of running past it.
 export const LongLabelsWrapInTheirRow: Story = {
   args: {
-    children: (
-      <Metadata.Pills title="Labels">
-        {longLabels.map((label) => (
-          <Pill key={label} text={label} />
-        ))}
-      </Metadata.Pills>
+    children: section(
+      value(
+        'Labels',
+        longLabels.map((label) => <Pill key={label} text={label} />),
+      ),
     ),
   },
   render: function Narrow(args) {
     return (
       <View testID="row" className="w-80">
-        <MetadataPlaceContext value="pills">
-          <Metadata {...args} />
-        </MetadataPlaceContext>
+        <AsidePlaceContext value="pills">
+          <FieldGroup {...args} />
+        </AsidePlaceContext>
       </View>
     );
   },
@@ -322,7 +292,7 @@ export const LongLabelsWrapInTheirRow: Story = {
 };
 
 export const IconsKeepTheStatusInWords: Story = {
-  args: { children: issueFields },
+  args: { children: section(issueRows) },
   render: placed('icons'),
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Open')).toBeVisible();
@@ -334,19 +304,18 @@ export const IconsKeepTheStatusInWords: Story = {
 
 export const AsideHeadsGroupsButNotGlyphs: Story = {
   args: {
-    children: [
-      ...issueFields,
-      <Metadata.Link
-        key="second"
-        title="Blocked by"
-        text="#57"
-        href="/issues/57"
-      />,
-    ],
+    // Two blockers in one row are two fields under one heading.
+    children: section([
+      ...issueRows.slice(0, 2),
+      value(blockedBy, [
+        <Link key="41" label="#41" route="/issues/41" />,
+        <Link key="57" label="#57" route="/issues/57" />,
+      ]),
+    ]),
   },
   render: placed('aside'),
   play: async ({ canvas }) => {
-    await expect(canvas.getAllByText('Blocked by')).toHaveLength(1);
+    await expect(canvas.getAllByText(blockedBy)).toHaveLength(1);
     await expect(canvas.queryByText('Status')).not.toBeInTheDocument();
     await expect(canvas.getByRole('link', { name: '#57' })).toBeVisible();
   },
@@ -355,7 +324,7 @@ export const AsideHeadsGroupsButNotGlyphs: Story = {
 const page = within(document.body);
 
 export const PicksAChoice: Story = {
-  render: () => <EditableMetadata />,
+  render: () => <EditableProperties />,
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
     await userEvent.click(canvas.getByRole('button', { name: 'Change State' }));
@@ -371,7 +340,7 @@ export const PicksAChoice: Story = {
 };
 
 export const CreatesATag: Story = {
-  render: () => <EditableMetadata />,
+  render: () => <EditableProperties />,
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
     await userEvent.click(canvas.getByRole('button', { name: 'Change Tags' }));

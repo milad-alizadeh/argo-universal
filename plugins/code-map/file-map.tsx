@@ -1,6 +1,7 @@
 import {
   Canvas,
-  Metadata,
+  FieldGroup,
+  Label,
   Stack,
   Text,
   type PageTo,
@@ -110,6 +111,15 @@ function MapNotes(props: { drawn: DrawnFiles; total: number }): JSX.Element {
   );
 }
 
+// A Label as the value keeps the details read-only properties under the map, not a page of settings rows.
+function FileCount(props: { title: string; count: number }): JSX.Element {
+  return (
+    <FieldGroup.Value title={props.title}>
+      <Label text={count(props.count)} />
+    </FieldGroup.Value>
+  );
+}
+
 function FileDetails({
   file,
 }: {
@@ -118,10 +128,12 @@ function FileDetails({
   if (!file) return null;
 
   return (
-    <Metadata title={file.path}>
-      <Metadata.Label title="Lines" text={count(file.lines)} />
-      <Metadata.Label title="Branching lines" text={count(file.branches)} />
-      <Metadata.Label title="Changes" text={count(file.touches)} />
-    </Metadata>
+    <FieldGroup>
+      <FieldGroup.Section title={file.path}>
+        <FileCount title="Lines" count={file.lines} />
+        <FileCount title="Branching lines" count={file.branches} />
+        <FileCount title="Changes" count={file.touches} />
+      </FieldGroup.Section>
+    </FieldGroup>
   );
 }

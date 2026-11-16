@@ -64,7 +64,6 @@ export const statusComponents = {
     }),
     {
       group: 'status',
-      wire: false,
       label:
         'Provide `accessibilityLabel` when the status mark conveys information.',
       accessibility: {

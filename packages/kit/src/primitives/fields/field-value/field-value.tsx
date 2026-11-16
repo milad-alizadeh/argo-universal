@@ -42,7 +42,7 @@ function TitleAndValue(props: FieldValueProps): ReactElement {
       <Spacer flexible />
       <View style={valueStyle} className="flex-row items-center gap-1.5">
         {props.dot && <Icon name="dot" tone={props.dot} />}
-        <NativeText tone="muted">{props.value}</NativeText>
+        <NativeText tone="muted">{props.value ?? ''}</NativeText>
       </View>
     </Row>
   );
