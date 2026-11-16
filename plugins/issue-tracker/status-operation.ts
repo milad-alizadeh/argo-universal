@@ -33,7 +33,7 @@ const setStatus =
     return { number, status };
   };
 
-// Each edit's Operation names the Issue and what to put on it; the run is the same as a status change's.
+// Each edit's Operation names the Issue and what to put on it; a status change runs the same way.
 async function runEdit(
   deps: IssueDeps,
   { projectId, number }: { projectId: string; number: number },
