@@ -25,43 +25,48 @@ function rowNamed(page: Page, text: string): Locator {
     .filter({ has: page.getByRole('group', { name: text, exact: true }) });
 }
 
+// Holding an edit is a Server round trip; until it finishes, Message still edits the separate draft.
+async function beginQueueEdit(page: Page, text: string): Promise<Locator> {
+  await rowNamed(page, text).getByRole('button', { name: editLabel }).click();
+  await expect(
+    page.getByRole('button', { name: cancelLabel, exact: true }),
+  ).toBeVisible();
+  const field = page.getByRole('textbox', { name: 'Message', exact: true });
+  await expect(field).toHaveText(text);
+
+  return field;
+}
+
 When(
   'I edit Queued Prompt {string} to {string} and save',
   async ({ page }, before: string, after: string): Promise<void> => {
-    const row = rowNamed(page, before);
-    await row.getByRole('button', { name: editLabel }).click();
-    await page
-      .getByRole('textbox', { name: 'Message', exact: true })
-      .fill(after);
+    const field = await beginQueueEdit(page, before);
+    await field.fill(after);
     await page.getByRole('button', { name: 'Send', exact: true }).click();
     await expect(rowNamed(page, after)).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: cancelLabel, exact: true }),
+    ).toBeHidden();
   },
 );
 
 When(
   'I cancel editing Queued Prompt {string} after writing {string}',
   async ({ page }, before: string, after: string): Promise<void> => {
-    const row = rowNamed(page, before);
-    await row.getByRole('button', { name: editLabel }).click();
-    await page
-      .getByRole('textbox', { name: 'Message', exact: true })
-      .fill(after);
+    const field = await beginQueueEdit(page, before);
+    await field.fill(after);
     await page.getByRole('button', { name: cancelLabel, exact: true }).click();
-    await expect(row.getByText(before, { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: cancelLabel, exact: true }),
+    ).toBeHidden();
+    await expect(rowNamed(page, before)).toBeVisible();
   },
 );
 
 When(
   'I begin editing Queued Prompt {string}',
   async ({ page }, text: string): Promise<void> => {
-    const row = rowNamed(page, text);
-    await row.getByRole('button', { name: editLabel }).click();
-    await expect(
-      page.getByRole('button', { name: cancelLabel, exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole('textbox', { name: 'Message', exact: true }),
-    ).toBeEditable();
+    await expect(await beginQueueEdit(page, text)).toBeEditable();
   },
 );
 
