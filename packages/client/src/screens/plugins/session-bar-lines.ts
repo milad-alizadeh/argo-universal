@@ -15,7 +15,16 @@ const entryOf = ({
   ...(item.icon && { icon: pluginSymbol(item.icon) }),
   text: item.text,
   tone: item.tone,
-  ...(item.action && { path: item.action.path }),
+  ...pageOf(item),
+});
+
+// The page a line opens and what detaches it, each only when the Plugin sent one.
+const pageOf = ({
+  action,
+  detach,
+}: SessionBarItem): Pick<SessionBarEntry, 'path' | 'detach'> => ({
+  ...(action && { path: action.path }),
+  ...(detach && { detach }),
 });
 
 /*

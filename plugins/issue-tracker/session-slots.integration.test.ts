@@ -100,6 +100,7 @@ it('fills the Session bar with the Issue number and state', async () => {
       text: '#42 · Open',
       tone: 'success',
       action: { path: issuePage },
+      detach: { operation: 'detach', args: { number: 42 } },
     },
   ]);
 }, 20_000);
