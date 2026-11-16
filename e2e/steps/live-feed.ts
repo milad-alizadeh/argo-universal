@@ -57,7 +57,7 @@ Then(
 
 // The unfinished command's Turn is running, its Stop shown.
 export async function expectRunningCommand(page: Page): Promise<void> {
-  // This step never waits for paint.
+  // A hidden desktop window on Linux paints no frames, so this never waits for paint; unread.ts also comes through here.
   await openGroup(page.getByTestId(feedScroll), pressWithoutPaint);
 
   await expect(
