@@ -32,6 +32,7 @@ import { negotiateAcpInitialize } from './initialize';
 import { sessionCapabilities, openProtocolSession } from './open-session';
 import { cancelledElicitation, cancelledPermission } from './refusals';
 import { createAcpResponseReaders } from './response-readers';
+import { supportsSteering } from './steering';
 import { SubagentRoutes } from './subagent-routing';
 import { routeTerminalRequests } from './terminal-requests';
 import { vendorInitialization } from './vendor-initialization';
@@ -502,6 +503,10 @@ export class AcpConnection {
   }
   private async lease(opening: LeaseOpening): Promise<AcpConnectionLease> {
     await this.releaseAbandoned(opening);
+
+    return this.registeredLease(opening);
+  }
+  private registeredLease(opening: LeaseOpening): AcpConnectionLease {
     this.requireRegistered(opening);
     const { connection, initialization, launch } = this.requireReady();
 
@@ -511,6 +516,7 @@ export class AcpConnection {
       authentication: this.authentication,
       agent: connection.agent,
       initialization,
+      steering: supportsSteering(initialization),
       close: this.leaseClose(opening),
       rejectRequest: this.leaseRejection(opening.session),
       released: opening.session.released.promise,

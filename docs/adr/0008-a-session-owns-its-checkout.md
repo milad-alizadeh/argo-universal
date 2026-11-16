@@ -2,6 +2,8 @@
 
 The model is Project, then Session. Each Session owns its Checkout: the Project's main checkout, or a worktree at `~/.argo/worktrees/<projectId>/<slug>` on branch `argo/<slug>`. There is no Workspace that several Sessions share. This carries over Argo ADR-0049.
 
+The `<slug>` is a readable name, such as `brave-otter-3f2a91`, made from the Session id alone. Worktrees made before 2026-11-15 are named by the Session id itself, and still count as owned (#2152).
+
 A Session that another Session started is the one exception: it borrows its parent's Checkout, because the Agent runs it there. It is read-only in Argo, and it is archived with its parent (owner, 2026-10-03).
 
 Owner amendment, 2026-11-15 (#2125): a Started Session may borrow too. `session.new` takes a third Checkout, `starter`, which only a Session may pass: the Session it starts runs in the caller's own Checkout, on the caller's branch, so it sees the caller's uncommitted work. This is what lets an Agent with no ACP Agents of its own, such as Pi, delegate work on the code it is editing. A new worktree or the main checkout stay the other two choices.

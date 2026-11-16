@@ -1,41 +1,44 @@
-import { IconSlot } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { ChangeChecks } from './change-checks-popover';
 import { ChangeDiffTotal } from './change-diff-total';
-import {
-  ChangeStageIcon,
-  ChangeStageModifier,
-} from './change-stage/change-stage';
+import { ChangeContextMenu, ChangeMenu } from './change-row-menu';
+import { ChangeStageIcon } from './change-stage/change-stage';
 import type { SessionPullRequest } from './session-pull-request';
 
 export interface ChangeRowProps {
   change: SessionPullRequest;
   // Open the Change on its code host.
   onOpen: () => void;
+  // Copy the Change's link, and take it off the Session; the menu leaves out an item with no handler.
+  onCopyLink?: () => void;
+  onDetach?: () => void;
+  // Ticks or unticks an automation the Change offers; the menu leaves the automation items out without it.
+  onSetAutomation?: SessionPullRequest['onSetAutomation'];
 }
 
 const rowClassName = 'flex-row items-start gap-2 px-1 py-2';
 
-// The mark takes its glyph's own width, as every Workbench card's leading mark does, centred on the title line.
+// The mark sits on a disc, the size of the title's line, so it leads the row on the title's edge.
 const stageCell = (change: SessionPullRequest): ReactElement => (
-  <View className="mt-0.5 shrink-0">
-    <IconSlot>
-      <ChangeStageIcon {...change} />
-    </IconSlot>
+  <View className="shrink-0">
+    <ChangeStageIcon {...change} form="disc" />
   </View>
 );
 
 export function ChangeRow(props: ChangeRowProps): ReactElement {
   return (
-    <View className={rowClassName}>
-      {stageCell(props.change)}
-      <View className="min-w-0 flex-1 gap-0.5">
-        <ChangeTitle {...props} />
-        <ChangeMeta {...props} />
+    <ChangeContextMenu {...props}>
+      <View className={rowClassName}>
+        {stageCell(props.change)}
+        <View className="min-w-0 flex-1 gap-0.5">
+          <ChangeTitle {...props} />
+          <ChangeMeta {...props} />
+        </View>
+        <ChangeMenu {...props} />
       </View>
-    </View>
+    </ChangeContextMenu>
   );
 }
 
@@ -70,7 +73,6 @@ function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
         #{change.number}
       </Text>
       {change.summary && <ChangeDiffTotal {...change.summary} icon />}
-      <ChangeStageModifier {...change} />
       {change.checks && checksPart(change.checks, onOpen)}
     </View>
   );

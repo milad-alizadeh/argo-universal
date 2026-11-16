@@ -12,6 +12,12 @@ const policies = {
     error: 'Plugin did not answer within 3 seconds',
     hanging: true,
   },
+  // A busy machine can delay a running Plugin's pong past one answer limit, so a ping gets two before it flags the Plugin.
+  heartbeat: {
+    limit: 2 * pluginAnswerLimitMs,
+    error: 'Plugin did not answer a heartbeat within 6 seconds',
+    hanging: true,
+  },
 };
 
 export type WorkerPhase = keyof typeof policies;

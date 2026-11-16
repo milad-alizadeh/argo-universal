@@ -34,6 +34,8 @@ export {
   WorkbenchMoreAgents,
 } from './components/session-workbench-agents';
 
+export { ChangeRows } from './components/session-workbench-changes';
+
 export { WorkbenchChangesSummary } from './components/session-workbench-change-section';
 
 export {

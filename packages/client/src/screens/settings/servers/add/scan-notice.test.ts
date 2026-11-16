@@ -3,7 +3,7 @@ import { afterRead, cameraFailed, looking, noticeText } from './scan-notice';
 
 describe('the scanner notice', () => {
   it('asks for the code until something is read', () => {
-    expect(noticeText(looking)).toBe('Point the camera at the code');
+    expect(noticeText(looking)).toBe('Looking for a code…');
   });
 
   it('goes back to asking once an Argo code is taken', () => {

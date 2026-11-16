@@ -3,6 +3,7 @@ import type { PluginOperationCall } from '@repo/contracts/plugins/plugin-operati
 import type { PluginEvent, WireJson } from '@repo/contracts/plugins/wire';
 import { runtimeError } from '../protocol/runtime-status';
 import { swallowed } from './swallowed';
+import type { RunOperation } from './watches';
 
 type OperationEvent = Extract<PluginEvent, { type: 'operation' }>;
 
@@ -17,6 +18,8 @@ export type OperationAnswering = {
 export interface OperationHandlers {
   register: (name: string, handler: OperationHandler) => void;
   answer: (event: OperationEvent) => void;
+  // Runs a registered handler directly, as a Watch does (ADR-0055); it answers the handler's JSON result.
+  run: RunOperation;
 }
 
 /*
@@ -31,6 +34,8 @@ export function operationHandlers(
   return {
     register: (name, handler) => handlers.set(name, handler),
     answer: (event) => void answer(answering, handlers.get(event.name), event),
+    run: (name, params, caller) =>
+      resultOf(handlers.get(name), { name, params, caller }),
   };
 }
 
@@ -59,7 +64,7 @@ const failed = (
 // Only JSON leaves the realm, so the Server answers the very result the handler returned.
 async function resultOf(
   handler: OperationHandler | undefined,
-  { name, params, caller }: OperationEvent,
+  { name, params, caller }: Pick<OperationEvent, 'name' | 'params' | 'caller'>,
 ): Promise<WireJson> {
   if (!handler) throw new Error(`no handler registered for ${name}`);
 

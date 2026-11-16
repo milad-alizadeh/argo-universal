@@ -22,7 +22,7 @@ export type ToneRole = 'fill' | 'stroke' | 'text';
 export const toneSentinel = (tone: DiagramTone, role: ToneRole): string =>
   `argo-tone-${tone}-${role}`;
 
-// Colours an Agent sets draw nothing: Argo's tokens colour every diagram (ADR-0056).
+// Colours an Agent sets draw nothing: Argo's tokens colour every diagram (ADR-0058).
 export const colourStatement = /^\s*(?:style|classDef|linkStyle)\b/;
 
 // `A-->B` reads as one node named `A--` without the space Mermaid itself does not need.

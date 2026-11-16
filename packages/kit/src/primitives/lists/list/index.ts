@@ -33,3 +33,5 @@ export { ListHeaderRow } from './list-header';
 export { phonesGrouped } from '../../../list-look';
 
 export { cardSides } from '../../../list-look-insets';
+
+export { ListDragHandles, ListDragHandle } from './list-drag-handles';

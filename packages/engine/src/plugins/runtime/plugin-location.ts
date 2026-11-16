@@ -16,14 +16,17 @@ export type PluginLocation = {
   hooks?: readonly HookEventName[];
   navIds?: readonly string[];
   background?: PluginManifest['contributes']['background'];
+  watch?: PluginManifest['contributes']['watch'];
   // The manifest's own Operations, whose secret params are the only place a SecretField's text may go.
   operations?: PluginManifest['contributes']['operations'];
 };
 
 export const activatedPlugin = ({
   entry,
+  name,
   capabilities = [],
 }: PluginLocation): ActivatedPlugin => ({
+  title: name,
   grants: capabilities,
   codeFolder: entry.directory,
 });

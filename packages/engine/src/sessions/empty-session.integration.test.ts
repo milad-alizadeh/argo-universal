@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import type { NewSessionRequest } from '@agentclientprotocol/sdk';
 import { session } from '@repo/db/schema';
 import { resolveExecutable } from '@repo/executables';
+import { sessionBranch } from '@repo/git';
 import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { eq } from 'drizzle-orm';
 import { expect, it } from 'vitest';
@@ -128,7 +129,7 @@ it('closing a Session no prompt reached deletes its row, worktree and argo branc
     branches: readBranches(),
     row: readRow(),
   }).toEqual({
-    opened: { worktree: true, branches: `argo/${sessionId}` },
+    opened: { worktree: true, branches: sessionBranch(sessionId) },
     worktree: false,
     branches: '',
     row: undefined,
@@ -150,7 +151,7 @@ it('closing a prompted Session keeps its row, worktree and argo branch', async (
     row: readRow(),
   }).toEqual({
     worktree: true,
-    branches: `argo/${sessionId}`,
+    branches: sessionBranch(sessionId),
     row: { id: sessionId },
   });
 });

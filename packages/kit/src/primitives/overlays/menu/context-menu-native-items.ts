@@ -1,18 +1,21 @@
 import type { ContextMenuItem, ContextMenuProps } from './context-menu-props';
 import type { NativeMenuItem, NativeMenuSection } from './menu-native-items';
+import { pressOf, subtitleOf } from './native-item-fields';
 
-const nothing = (): void => undefined;
+// Only a checkmark item carries `checked`.
+const checkedOf = (item: ContextMenuItem): Pick<NativeMenuItem, 'checked'> =>
+  item.selected === undefined ? {} : { checked: item.selected };
 
 function contextMenuItem(item: ContextMenuItem): NativeMenuItem {
-  const disabled = Boolean(item.disabled);
-
   return {
     id: item.id ?? item.label,
     title: item.label,
+    ...checkedOf(item),
+    ...subtitleOf(item),
     icon: item.icon,
     tone: item.tone,
-    disabled,
-    choose: disabled ? nothing : item.onPress,
+    disabled: Boolean(item.disabled),
+    choose: pressOf(item),
   };
 }
 

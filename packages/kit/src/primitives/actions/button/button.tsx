@@ -16,6 +16,8 @@ import { WebButton } from './button-web';
 export type ButtonProps = KitProps<'Button'> & {
   // Kit-only, web only: a segment of a split button, its corners facing the other segment drawn small.
   joined?: 'start' | 'end';
+  // Web only: a 24px inline action in a compact row.
+  control?: boolean;
   testID?: string;
 };
 

@@ -25,7 +25,7 @@ const LoggedReply = z.object({
   result: z.unknown(),
 });
 
-type LoggedReply = z.infer<typeof LoggedReply>;
+export type LoggedReply = z.infer<typeof LoggedReply>;
 
 const LoggedMessage = z.union([
   LoggedRequest,

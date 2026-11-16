@@ -10,6 +10,8 @@ import {
 } from '@argo/plugin-kit/testing';
 import { onTestFinished } from 'vitest';
 import { githubFixture, pullOf, type GitHubFixture } from './github-fixture';
+import { archiveRecorder } from './journey-archive-fixture';
+import { promptRecorder } from './journey-prompts-fixture';
 import { provider, signIn } from './journey-sign-in-fixture';
 
 export const project = {
@@ -127,6 +129,8 @@ const baseOptions = (
   network: github.network,
   clockStart: 0,
   sessions,
+  promptSession: promptRecorder(github),
+  archiveSession: archiveRecorder(github),
 });
 
 async function startOver(
@@ -157,7 +161,7 @@ async function keepFolder(): Promise<Keep> {
 export async function signedOutJourney(): Promise<Journey> {
   const github = await githubFixture();
 
-  for (const [key, pull] of defaultPulls) github.pulls.set(key, pull);
+  for (const [key, pull] of defaultPulls) github.pulls.set(key, { ...pull });
 
   const keep = await keepFolder();
   const sessions = sessionsOf();

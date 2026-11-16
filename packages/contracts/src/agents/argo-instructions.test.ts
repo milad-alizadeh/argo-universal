@@ -23,6 +23,15 @@ it('asks the Agent to declare the role of each Agent it spawns, naming the tool 
   expect(agents).toContain('operation_run');
 });
 
+// A `timeout` killed a start still waiting on the person, and each retry asked again and started a duplicate.
+it('tells the Agent to wait for session.new instead of timing it out or retrying it', () => {
+  const agents = argoInstructions.find(({ name }) => name === 'Agents')?.text;
+
+  expect(agents).toContain('session.new');
+  expect(agents).toContain('timeout');
+  expect(agents).toContain('retry');
+});
+
 it('names every Agent role the Agent can declare', () => {
   const agents = argoInstructions.find(({ name }) => name === 'Agents')?.text;
 

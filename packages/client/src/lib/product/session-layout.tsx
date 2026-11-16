@@ -1,3 +1,4 @@
+import { useFloatingHeaderHeight } from '@repo/kit/floating-header';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { type ReactNode, useMemo, useState } from 'react';
@@ -14,7 +15,7 @@ import {
 import { type DroppedFiles, FileDropPane } from './file-drop/file-drop-pane';
 import { GlassComposer } from './glass-composer';
 import { KeyboardAvoidingContent, Screen } from './screen/screen';
-import { SessionBarRow, useFloatingHeaderHeight } from './session-bar-row';
+import { SessionBarRow } from './session-bar-row';
 import { ComposerColumn, sessionSurface } from './session-column';
 import {
   filledClass,

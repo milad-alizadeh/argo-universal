@@ -2,6 +2,7 @@ import type { Argo, LoaderInput } from '@argo/plugin-kit';
 import type { IssueDeps } from './issue-deps';
 import { issuePath } from './issue-paths';
 import { createIssueSummaries, type IssueSummaries } from './issue-summary';
+import { registerLinkMarks } from './link-marks';
 import { barItems, rowItems, type Linked, type PathOf } from './session-items';
 import type { IssueLink, TrackerStorage } from './tracker-storage';
 
@@ -31,6 +32,7 @@ export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
   );
   registerItems(api, { deps, summaries });
   registerRefresh(api, deps, summaries);
+  registerLinkMarks(api, deps, summaries);
 
   return announcing(deps.storage, changed);
 }
@@ -113,16 +115,17 @@ async function answerSessions(
   );
 }
 
-const withSummaries = (
+const withSummaries = async (
   summaries: IssueSummaries,
   links: IssueLink[],
-): Promise<Linked[]> =>
-  Promise.all(
-    links.map(async (link) => ({
-      link,
-      summary: await summaries.answer(link),
-    })),
-  );
+): Promise<Linked[]> => {
+  const answered = await summaries.answer(links);
+
+  return links.map((link, index) => ({
+    link,
+    summary: answered[index] ?? null,
+  }));
+};
 
 function groupBySession(entries: Linked[]): Map<string, Linked[]> {
   const grouped = new Map<string, Linked[]>();
