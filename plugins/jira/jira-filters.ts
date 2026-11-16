@@ -35,15 +35,19 @@ export const assigneeChoices: readonly Choice<string>[] = [
   { value: 'none', label: 'Unassigned' },
 ];
 
-const quoted = (value: string): string =>
+// A JQL string literal.
+export const quoted = (value: string): string =>
   `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
 
-// JQL names status categories by their English names, whatever language the site shows them in.
+/*
+ * Status categories by Jira's fixed ids, which no site's language or renaming changes: 2 is To Do, 4 In Progress and
+ * 3 Done.
+ */
 const statusClauses: Record<StatusFilter, string | null> = {
   all: null,
-  new: 'statusCategory = "To Do"',
-  indeterminate: 'statusCategory = "In Progress"',
-  done: 'statusCategory = "Done"',
+  new: 'statusCategory = 2',
+  indeterminate: 'statusCategory = 4',
+  done: 'statusCategory = 3',
 };
 
 // Anyone adds no clause; any other value is one person's account id.
@@ -58,8 +62,11 @@ const assigneeClause = (assignee: string): string | null =>
     ? (assigneeClauses.get(assignee) ?? null)
     : `assignee = ${quoted(assignee)}`;
 
-// Characters Jira's text search reads as operators; a person typing them means the words around them.
-const searchOperators = /[+\-&|!(){}[\]^~*?\\:"/]/gu;
+/*
+ * What Jira's text search reads as operators, characters and the words AND, OR and NOT; a person typing them means
+ * the words around them.
+ */
+const searchOperators = /[+\-&|!(){}[\]^~*?\\:"/]|\b(?:AND|OR|NOT)\b/gu;
 
 // The words a text filter searches for, or '' when it has none.
 const searchText = (typed: string): string =>
@@ -81,9 +88,13 @@ export const filterClauses = (filters: IssueFilters): string[] =>
     textClause(filters.text),
   ].filter(present);
 
-// How many filters narrow the list, for the Filter menu's badge.
+// How many filters narrow the list, the search's text among them.
 export const activeFilters = (filters: IssueFilters): number =>
   filterClauses(filters).length;
+
+// How many of the Filter menu's own choices narrow the list, for its badge; the search shows its text itself.
+export const menuFilters = (filters: IssueFilters): number =>
+  activeFilters({ ...filters, text: '' });
 
 const statusFilters = new Set<string>(statusChoices.map(({ value }) => value));
 

@@ -1,5 +1,5 @@
 import type { JiraRequest } from './jira-client';
-import { filterClauses, type IssueFilters } from './jira-filters';
+import { filterClauses, quoted, type IssueFilters } from './jira-filters';
 
 // The fields a list row shows; a detail page asks for more.
 const rowFields = ['summary', 'status', 'assignee', 'priority'];
@@ -8,9 +8,6 @@ const pageSize = 50;
 
 // How many people the assignee filter offers by name, beside Anyone, Me and Unassigned.
 const peopleLimit = 50;
-
-const quoted = (value: string): string =>
-  `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
 
 export type IssuesPage = Readonly<{
   cursor: string | null;

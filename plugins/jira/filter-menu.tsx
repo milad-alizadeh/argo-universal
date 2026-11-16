@@ -1,8 +1,8 @@
 import { Action } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import {
-  activeFilters,
   assigneeChoices,
+  menuFilters,
   statusChoices,
   type IssueFilters,
 } from './jira-filters';
@@ -47,17 +47,32 @@ const statusSection = (listing: Listing): JSX.Element => (
   </Action.Section>
 );
 
-// Me first, then the people the project can assign to.
-const assigneeSection = (
-  people: JiraPerson[],
-  listing: Listing,
-): JSX.Element => (
-  <Action.Section key="assignee" title="Assignee">
-    {[...assigneeChoices, ...people.map(personChoice)].map((each) =>
-      assigneeChoice(listing, each),
-    )}
-  </Action.Section>
-);
+const offered = (choices: Choice<string>[], value: string): boolean =>
+  choices.some((each) => each.value === value);
+
+/*
+ * An assignee the menu does not name, such as one past the people Jira lists or set in an address, still shows as
+ * the checked choice, so the badge never counts a filter the menu hides.
+ */
+const otherAssignee = (
+  choices: Choice<string>[],
+  { assignee }: IssueFilters,
+): Choice<string>[] =>
+  offered(choices, assignee)
+    ? []
+    : [{ value: assignee, label: 'Someone else' }];
+
+// Anyone, Me and Unassigned, then the people the project can assign to.
+function assigneeSection(people: JiraPerson[], listing: Listing): JSX.Element {
+  const choices = [...assigneeChoices, ...people.map(personChoice)];
+  const all = [...choices, ...otherAssignee(choices, listing.filters)];
+
+  return (
+    <Action.Section key="assignee" title="Assignee">
+      {all.map((each) => assigneeChoice(listing, each))}
+    </Action.Section>
+  );
+}
 
 type Badge = { kind: 'count'; count: number } | undefined;
 
@@ -65,8 +80,8 @@ const badgeOf = (count: number): Badge =>
   count > 0 ? { kind: 'count', count } : undefined;
 
 /*
- * The header's Filter menu: a status category, and who the issues are assigned to. Its badge counts the filters in
- * use, the search's text among them.
+ * The header's Filter menu: a status category, and who the issues are assigned to. Its badge counts its own choices
+ * in use; the search shows its text itself.
  */
 export const filterMenu = (
   people: JiraPerson[],
@@ -76,7 +91,7 @@ export const filterMenu = (
     key="filter"
     label="Filter"
     icon="filters"
-    badge={badgeOf(activeFilters(listing.filters))}
+    badge={badgeOf(menuFilters(listing.filters))}
   >
     {statusSection(listing)}
     {assigneeSection(people, listing)}

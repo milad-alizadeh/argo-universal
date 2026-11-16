@@ -1,63 +1,19 @@
 import {
   Action,
   Button,
-  Callout,
   EmptyState,
   Screen,
-  Stack,
   type PluginProps,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { failedScreen } from './failure-views';
 import { filterMenu } from './filter-menu';
+import { isFailure } from './issue-pages';
 import { issueList } from './issue-rows';
-import type { JiraFailure } from './jira-client';
 import { activeFilters, noFilters } from './jira-filters';
 import type { ProjectView } from './jira-setup';
 import { changeSite, setupScreen } from './setup-views';
 import type { Framing, Listing } from './view-frame';
-
-const failureTitles: Record<JiraFailure['kind'], string> = {
-  'signed-out': 'Sign in to Jira',
-  forbidden: 'Jira refused this',
-  'not-found': 'Jira couldn’t find this project',
-  'rate-limited': 'Jira is busy',
-  failed: 'Couldn’t read Jira',
-};
-
-const anotherProject = {
-  label: 'Choose another Jira project',
-  variant: 'secondary',
-} as const;
-
-type Failed = Extract<ProjectView, { kind: 'failed' }>;
-
-const failureCallout = (failure: JiraFailure): JSX.Element => (
-  <Callout
-    tone="danger"
-    title={failureTitles[failure.kind]}
-    description={failure.message}
-  />
-);
-
-const failureBody = (
-  failure: JiraFailure,
-  { to, projectId }: Framing,
-): JSX.Element => (
-  <Stack direction="column" gap={6}>
-    {failureCallout(failure)}
-    <Button label="Try again" onPress={to.run('checkAgain', {})} />
-    <Button
-      {...anotherProject}
-      onPress={to.run('forgetProject', { projectId })}
-    />
-  </Stack>
-);
-
-const failed = ({ site, failure }: Failed, framing: Framing): JSX.Element => (
-  <Screen title="Jira" caption={site.host} actions={changeSite(framing)}>
-    {failureBody(failure, framing)}
-  </Screen>
-);
 
 const swapIcon = {
   sf: 'arrow.left.arrow.right',
@@ -113,7 +69,7 @@ const issuesHeader = (
 });
 
 // The project's issues the filters leave; load more reads the next page from Jira's cursor.
-const issues = (
+const issueScreen = (
   view: Issues,
   framing: Framing,
   listing: Listing,
@@ -125,6 +81,19 @@ const issues = (
   </Screen>
 );
 
+// The list, or why Jira refused its first page in the list's place.
+function issues(view: Issues, framing: Framing, listing: Listing): JSX.Element {
+  const refused = listing.list.items.find(isFailure);
+
+  return refused
+    ? failedScreen(
+        { site: view.site, failure: refused.failed },
+        framing,
+        listing,
+      )
+    : issueScreen(view, framing, listing);
+}
+
 // The page one Argo Project's Jira shows: the step it is at, saying what to do next.
 export function projectScreen(
   view: ProjectView,
@@ -134,6 +103,6 @@ export function projectScreen(
   if (view.kind === 'issues') return issues(view, framing, listing);
 
   return view.kind === 'failed'
-    ? failed(view, framing)
+    ? failedScreen(view, framing, listing)
     : setupScreen(view, framing);
 }

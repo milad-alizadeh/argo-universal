@@ -1,6 +1,6 @@
 import type { PagedList, PageTo } from '@argo/plugin-kit';
+import type { ListedItem } from './issue-pages';
 import type { IssueFilters } from './jira-filters';
-import type { JiraIssue } from './jira-readers';
 
 // What a site picker types before it is added: Page state, as it is no secret.
 export type ProjectState = { site: string };
@@ -22,5 +22,5 @@ export type IssuesState = ProjectState & IssueFilters;
 export type Listing = {
   to: PageTo<IssuesState>;
   filters: IssueFilters;
-  list: PagedList<JiraIssue>;
+  list: PagedList<ListedItem>;
 };

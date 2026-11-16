@@ -1,12 +1,8 @@
-import type { ListPage, LoaderInput, NamedQuery } from '@argo/plugin-kit';
+import type { Argo, ListPage, LoaderInput, NamedQuery } from '@argo/plugin-kit';
+import { issuesPage, type ListedItem } from './issue-pages';
 import type { JiraAnswer, JiraFailure } from './jira-client';
 import type { IssueFilters } from './jira-filters';
-import type {
-  IssuePage,
-  JiraIssue,
-  JiraPerson,
-  JiraProject,
-} from './jira-readers';
+import type { JiraPerson, JiraProject } from './jira-readers';
 import type { JiraReads, ProjectTarget } from './jira-reads';
 import {
   storeQueries,
@@ -18,8 +14,7 @@ import {
 /*
  * Where one Argo Project stands with Jira, in the order a person meets it: signed out, no site, no Jira project, a
  * failed read, or the project's issues the filters leave. Each step names the next one, and a step with one answer
- * takes it. The issues view holds the list's first page, which tells an empty list from a failed one; the kit's paged
- * list draws it and reads the pages after it.
+ * takes it. The issues themselves are the kit's paged list, read page by page from Jira (`issue-pages.ts`).
  */
 export type ProjectView =
   | { kind: 'signed-out'; message: string | null }
@@ -30,7 +25,6 @@ export type ProjectView =
       kind: 'issues';
       site: JiraSite;
       project: JiraProject;
-      page: IssuePage;
       people: JiraPerson[];
     };
 
@@ -96,18 +90,6 @@ const targetOf = (
 
 type Listed = { site: JiraSite; project: JiraProject };
 
-// One page of the filtered list, from Jira's cursor; the first page's is null.
-const issuesOf = (
-  step: Step,
-  { site, project }: Listed,
-  cursor: string | null,
-): NamedQuery<JiraAnswer<IssuePage>> =>
-  step.reads.issues({
-    ...targetOf(step, site, project),
-    filters: step.filters,
-    cursor,
-  });
-
 // Who the assignee filter offers by name; without them it still offers Anyone, Me and Unassigned.
 async function peopleFor(step: Step, listed: Listed): Promise<JiraPerson[]> {
   const answer = await step.read(
@@ -117,16 +99,11 @@ async function peopleFor(step: Step, listed: Listed): Promise<JiraPerson[]> {
   return answer.ok ? answer.value : [];
 }
 
-async function issuesFor(step: Step, listed: Listed): Promise<ProjectView> {
-  const [answer, people] = await Promise.all([
-    step.read(issuesOf(step, listed, null)),
-    peopleFor(step, listed),
-  ]);
-
-  return answer.ok
-    ? { kind: 'issues', ...listed, page: answer.value, people }
-    : failedView(listed.site, answer.failure);
-}
+const issuesFor = async (step: Step, listed: Listed): Promise<ProjectView> => ({
+  kind: 'issues',
+  ...listed,
+  people: await peopleFor(step, listed),
+});
 
 const isView = (value: JiraProject | ProjectView): value is ProjectView =>
   'kind' in value;
@@ -159,40 +136,21 @@ export async function loadProjectView(step: Step): Promise<ProjectView> {
   return account ? chosenView(step) : signedOutView(null);
 }
 
-const end: ListPage<JiraIssue> = { items: [], cursor: null };
-
-const listPage = ({ issues, cursor }: IssuePage): ListPage<JiraIssue> => ({
-  items: issues,
-  cursor,
-});
-
-type IssuesView = Extract<ProjectView, { kind: 'issues' }>;
-
-// A page after the first, from the cursor Jira answered; a refused one fails its read, so it is never an answer here.
-async function laterPage(
-  step: Step,
-  view: IssuesView,
-  cursor: string,
-): Promise<ListPage<JiraIssue>> {
-  const answer = await step.read(issuesOf(step, view, cursor));
-
-  return answer.ok ? listPage(answer.value) : end;
-}
-
-const pageFrom = (
-  step: Step,
-  view: IssuesView,
-  cursor: string | null,
-): ListPage<JiraIssue> | Promise<ListPage<JiraIssue>> =>
-  cursor === null ? listPage(view.page) : laterPage(step, view, cursor);
+const end: ListPage<ListedItem> = { items: [], cursor: null };
 
 /*
- * One page of the list the kit pages through. The first is the one the view read, so a draw asks Jira for it once.
- * A view with no list lists nothing, and the page says why.
+ * One page of the list the kit pages through, from Jira's cursor (null for the first). A view with no list lists
+ * nothing, and the page says why.
  */
 export const listIssues = (
-  step: Step,
-  view: ProjectView,
+  argo: Pick<Argo, 'fetch'>,
+  { step, view }: { step: Step; view: ProjectView },
   cursor: string | null,
-): ListPage<JiraIssue> | Promise<ListPage<JiraIssue>> =>
-  view.kind === 'issues' ? pageFrom(step, view, cursor) : end;
+): ListPage<ListedItem> | Promise<ListPage<ListedItem>> =>
+  view.kind === 'issues'
+    ? issuesPage(argo, {
+        ...targetOf(step, view.site, view.project),
+        filters: step.filters,
+        cursor,
+      })
+    : end;

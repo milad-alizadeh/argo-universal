@@ -7,7 +7,7 @@ import type {
   FixtureToken,
   JiraData,
 } from './jira-data';
-import { filtered } from './jira-jql';
+import { filtered, type Filtered } from './jira-jql';
 
 // One call that reached a site's Jira with a token it accepts: what a route answers from.
 export type JiraCall = {
@@ -81,6 +81,20 @@ const noSuchProject = (key: string): FixtureAnswer => ({
   },
 });
 
+// Jira refuses JQL it cannot parse with a 400 naming the clause.
+const unparsed = (clause: string): FixtureAnswer => ({
+  status: 400,
+  json: { errorMessages: [`Error in the JQL Query: ${clause}`] },
+});
+
+const searchAnswer = (
+  found: Filtered,
+  body: Json | undefined,
+): FixtureAnswer =>
+  found.ok
+    ? { json: pageOf(found.issues, pagingOf(body)) }
+    : unparsed(found.clause);
+
 // Jira's enhanced search, for the `project = "KEY"` its JQL names and the filters after it.
 function search({ site, body, who }: JiraCall): FixtureAnswer {
   const jql = text(at(body, 'jql')) ?? '';
@@ -88,7 +102,7 @@ function search({ site, body, who }: JiraCall): FixtureAnswer {
   const project = projectIn(site, key);
 
   return project
-    ? { json: pageOf(filtered(jql, project.issues, who), pagingOf(body)) }
+    ? searchAnswer(filtered(jql, project.issues, who), body)
     : noSuchProject(key);
 }
 

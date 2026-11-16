@@ -65,7 +65,7 @@ it(
 
     // The 60 added, and ARGO-1.
     expect(shownKeys(page)).toHaveLength(61);
-    expect(lastJql(jira)).toContain('statusCategory = "To Do"');
+    expect(lastJql(jira)).toContain('statusCategory = 2');
     expect(hasMore(page)).toBe(false);
   },
   timeoutMs,

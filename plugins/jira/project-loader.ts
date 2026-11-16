@@ -1,7 +1,7 @@
 import type { Argo, ListPage, LoaderInput } from '@argo/plugin-kit';
+import type { ListedItem } from './issue-pages';
 import { filtersOf } from './jira-filters';
 import { projectIdOf } from './jira-paths';
-import type { JiraIssue } from './jira-readers';
 import type { JiraReads } from './jira-reads';
 import {
   listIssues,
@@ -16,8 +16,6 @@ export type ProjectData = { projects: ArgoProject[]; view: ProjectView };
 
 type IssuesInput = LoaderInput<IssuesState>;
 
-type ViewOf = (input: IssuesInput) => Promise<ProjectView>;
-
 const stepOf = (reads: JiraReads, input: IssuesInput): Step => ({
   read: input.read,
   reads,
@@ -25,33 +23,28 @@ const stepOf = (reads: JiraReads, input: IssuesInput): Step => ({
   filters: filtersOf(input.state),
 });
 
-/*
- * A draw's Loader and paged list both need the step the Project is at, with the same input: it is worked out once per
- * draw, so the list's first page is the one the Loader read.
- */
-function projectViews(reads: JiraReads): ViewOf {
-  const views = new WeakMap<IssuesInput, Promise<ProjectView>>();
-
-  return (input) => {
-    const view = views.get(input) ?? loadProjectView(stepOf(reads, input));
-
-    views.set(input, view);
-
-    return view;
-  };
-}
-
 async function loadProject(
   argo: Argo,
-  viewOf: ViewOf,
+  reads: JiraReads,
   input: IssuesInput,
 ): Promise<ProjectData> {
   const [projects, view] = await Promise.all([
     argo.projects.list(),
-    viewOf(input),
+    loadProjectView(stepOf(reads, input)),
   ]);
 
   return { projects, view };
+}
+
+// The step the Project is at, read again by the list through the same kept Queries, then one page of its issues.
+async function listProject(
+  argo: Argo,
+  reads: JiraReads,
+  { input, cursor }: { input: IssuesInput; cursor: string | null },
+): Promise<ListPage<ListedItem>> {
+  const step = stepOf(reads, input);
+
+  return listIssues(argo, { step, view: await loadProjectView(step) }, cursor);
 }
 
 type ProjectLoader = {
@@ -59,19 +52,14 @@ type ProjectLoader = {
   list: (
     input: IssuesInput,
     cursor: string | null,
-  ) => Promise<ListPage<JiraIssue>>;
+  ) => Promise<ListPage<ListedItem>>;
 };
 
 /*
- * The issues page's Loader and paged list (ADR-0050): the Loader reads the step the Project is at with the list's
- * first page, and the list reads each page after it, for the filters the Page state holds.
+ * The issues page's Loader and paged list (ADR-0050): the Loader reads the step the Project is at and who the
+ * assignee filter offers, and the list reads the issues a page at a time, for the filters the Page state holds.
  */
-export function projectLoader(argo: Argo, reads: JiraReads): ProjectLoader {
-  const viewOf = projectViews(reads);
-
-  return {
-    load: (input) => loadProject(argo, viewOf, input),
-    list: async (input, cursor) =>
-      listIssues(stepOf(reads, input), await viewOf(input), cursor),
-  };
-}
+export const projectLoader = (argo: Argo, reads: JiraReads): ProjectLoader => ({
+  load: (input) => loadProject(argo, reads, input),
+  list: (input, cursor) => listProject(argo, reads, { input, cursor }),
+});

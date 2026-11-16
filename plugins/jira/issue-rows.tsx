@@ -8,6 +8,7 @@ import {
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { issueUrl } from './atlassian';
+import { isFailure, type ListedItem } from './issue-pages';
 import type { JiraIssue, StatusCategory } from './jira-readers';
 import type { JiraSite } from './jira-store';
 
@@ -61,7 +62,7 @@ const issueRow = (site: JiraSite, issue: JiraIssue): JSX.Element => (
 // The project's issues, one row each: load more appends Jira's next page, and a pull reads them again from the first.
 export const issueList = (
   site: JiraSite,
-  list: PagedList<JiraIssue>,
+  list: PagedList<ListedItem>,
   to: PageTo<{ site: string }>,
 ): JSX.Element => (
   <List
@@ -69,6 +70,8 @@ export const issueList = (
     onRefresh={to.set({})}
     pagination={{ hasMore: list.hasMore, onLoadMore: list.loadMore }}
   >
-    {list.items.map((issue) => issueRow(site, issue))}
+    {list.items.flatMap((item) =>
+      isFailure(item) ? [] : [issueRow(site, item)],
+    )}
   </List>
 );

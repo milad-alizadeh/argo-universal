@@ -1,6 +1,6 @@
 import type { OpenPage, WireNode } from '@argo/plugin-kit/testing';
 import { at, parseJson, text, type Json } from '../json';
-import type { FixtureIssue } from './jira-data';
+import type { FixtureIssue, FixtureProject } from './jira-data';
 import { choose, projectPage, signIn, type Jira } from './journey';
 
 // The search narrows the list once typing pauses for this long, as the App's does.
@@ -99,11 +99,19 @@ const bulkIssue = (index: number): FixtureIssue => ({
   priority: null,
 });
 
-// Adds `count` issues to ARGO, numbered from ARGO-100, each To Do and assigned to Grace Hopper.
-export function addIssues({ jira }: Jira, count: number): void {
-  const argo = jira.data.sites
-    .at(0)
-    ?.projects.find(({ key }) => key === 'ARGO');
+const argoProject = ({ jira }: Jira): FixtureProject | undefined =>
+  jira.data.sites.at(0)?.projects.find(({ key }) => key === 'ARGO');
 
-  argo?.issues.push(...Array.from({ length: count }, (_, at) => bulkIssue(at)));
+// Changes an ARGO issue's summary in the fixture Jira, as someone editing it there does.
+export function renameIssue(jira: Jira, key: string, summary: string): void {
+  const issue = argoProject(jira)?.issues.find((each) => each.key === key);
+
+  if (issue) issue.summary = summary;
+}
+
+// Adds `count` issues to ARGO, numbered from ARGO-100, each To Do and assigned to Grace Hopper.
+export function addIssues(jira: Jira, count: number): void {
+  argoProject(jira)?.issues.push(
+    ...Array.from({ length: count }, (_, at) => bulkIssue(at)),
+  );
 }

@@ -1,16 +1,18 @@
 import type { FixtureIssue, FixtureToken } from './jira-data';
 
 /*
- * The JQL clauses the Plugin's filters send, as the fixture Jira reads them: a status category by name, an assignee
- * (the caller, nobody, or one account id), and words the summary holds every one of. The `project = ` clause before
- * them is the route's to read, and a clause the fixture does not know matches every issue.
+ * The JQL clauses the Plugin's filters send, as the fixture Jira reads them: a status category by its id, an
+ * assignee (the caller, nobody, or one account id), and words the summary holds every one of. The `project = `
+ * clause before them is the route's to read. A clause the fixture cannot read is refused, as Jira refuses JQL it
+ * cannot parse, so a wrong clause fails loudly instead of matching every issue.
  */
 type Matches = (issue: FixtureIssue, who: FixtureToken) => boolean;
 
-const categoryNames: Record<FixtureIssue['status']['category'], string> = {
-  new: 'To Do',
-  indeterminate: 'In Progress',
-  done: 'Done',
+// Jira's fixed status category ids.
+const categoryIds: Record<FixtureIssue['status']['category'], string> = {
+  new: '2',
+  indeterminate: '4',
+  done: '3',
 };
 
 const unquoted = (value: string): string =>
@@ -26,9 +28,9 @@ const valueIn = (pattern: RegExp, clause: string): string | null => {
 };
 
 const categoryIs =
-  (name: string): Matches =>
+  (id: string): Matches =>
   ({ status }) =>
-    categoryNames[status.category] === name;
+    categoryIds[status.category] === id;
 
 const assignedTo =
   (accountId: string): Matches =>
@@ -54,12 +56,10 @@ const fixed = new Map<string, Matches>([
 ]);
 
 const valued: [RegExp, (value: string) => Matches][] = [
-  [/^statusCategory = "(?<value>.*)"$/u, categoryIs],
-  [/^assignee = "(?<value>.*)"$/u, assignedTo],
-  [/^text ~ "(?<value>.*)"$/u, summaryHolds],
+  [/^statusCategory = (?<value>[234])$/u, categoryIs],
+  [/^assignee = "(?<value>(?:[^"\\]|\\.)*)"$/u, assignedTo],
+  [/^text ~ "(?<value>(?:[^"\\]|\\.)*)"$/u, summaryHolds],
 ];
-
-const everyIssue: Matches = () => true;
 
 const matchIn =
   (clause: string) =>
@@ -72,19 +72,38 @@ const matchIn =
 const valuedMatch = (clause: string): Matches | null | undefined =>
   valued.map(matchIn(clause)).find((matches) => matches !== null);
 
-const clauseMatch = (clause: string): Matches =>
-  valuedMatch(clause) ?? fixed.get(clause) ?? everyIssue;
+const clauseMatch = (clause: string): Matches | undefined =>
+  valuedMatch(clause) ?? fixed.get(clause);
+
+// What the filters leave, or the first clause the fixture cannot read.
+export type Filtered =
+  | { ok: true; issues: FixtureIssue[] }
+  | { ok: false; clause: string };
+
+const clausesOf = (jql: string): string[] =>
+  (jql.split(' ORDER BY ').at(0) ?? '').split(' AND ').slice(1);
+
+const leaving = (
+  matches: Matches[],
+  issues: FixtureIssue[],
+  who: FixtureToken,
+): FixtureIssue[] =>
+  issues.filter((issue) => matches.every((match) => match(issue, who)));
 
 // What the filters after the project clause leave of its issues, for the person asking.
 export function filtered(
   jql: string,
   issues: FixtureIssue[],
   who: FixtureToken,
-): FixtureIssue[] {
-  const [where = ''] = jql.split(' ORDER BY ');
-  const clauses = where.split(' AND ').slice(1).map(clauseMatch);
+): Filtered {
+  const clauses = clausesOf(jql);
+  const matches = clauses.map(clauseMatch);
+  const unread = clauses.find((_, index) => matches[index] === undefined);
 
-  return issues.filter((issue) =>
-    clauses.every((matches) => matches(issue, who)),
-  );
+  return unread === undefined
+    ? { ok: true, issues: leaving(matches.filter(present), issues, who) }
+    : { ok: false, clause: unread };
 }
+
+const present = (match: Matches | undefined): match is Matches =>
+  match !== undefined;

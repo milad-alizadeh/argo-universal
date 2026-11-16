@@ -31,7 +31,7 @@ it(
     expect(isChosen(page, 'Done')).toBe(true);
     expect(filterCount(page)).toBe(1);
     expect(lastJql(jira)).toBe(
-      'project = "ARGO" AND statusCategory = "Done" ORDER BY updated DESC',
+      'project = "ARGO" AND statusCategory = 3 ORDER BY updated DESC',
     );
 
     await page.press(filterChoice('To Do'));
@@ -83,7 +83,8 @@ it(
     );
     expect(shownKeys(page)).toEqual(['ARGO-3']);
     expect(page.pageState).toMatchObject({ text: 'jira issues' });
-    expect(filterCount(page)).toBe(1);
+    // The search shows its own text; the Filter menu's badge counts only the menu's choices.
+    expect(filterCount(page)).toBe(0);
   },
   timeoutMs,
 );
@@ -105,10 +106,10 @@ it(
 
     expect(searchCount(jira)).toBe(before + 3);
     expect(lastJql(jira)).toBe(
-      'project = "ARGO" AND statusCategory = "In Progress" AND assignee = currentUser() AND text ~ "argo" ORDER BY updated DESC',
+      'project = "ARGO" AND statusCategory = 4 AND assignee = currentUser() AND text ~ "argo" ORDER BY updated DESC',
     );
     expect(shownKeys(page)).toEqual(['ARGO-3']);
-    expect(filterCount(page)).toBe(3);
+    expect(filterCount(page)).toBe(2);
   },
   timeoutMs,
 );
@@ -119,7 +120,7 @@ it(
     const jira = await startJira();
     const page = await argoIssues(jira);
 
-    await search(jira, page, 'sign-in "token"');
+    await search(jira, page, 'sign-in "token" AND OR');
 
     expect(lastJql(jira)).toContain('text ~ "sign in token"');
   },
