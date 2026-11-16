@@ -65,8 +65,12 @@ function selectedRect(page: OpenPage): Node | undefined {
   return nodes(page, rectType).find((rect) => rect.key === key);
 }
 
-const field = (page: OpenPage, title: string): Node | undefined =>
-  page.findText(title)?.node;
+// The Label a field's Value holds: the count the map measured.
+function field(page: OpenPage, title: string): Node | undefined {
+  const value = page.findText(title)?.node;
+
+  return value && descendants(value, 'Label')[0];
+}
 
 it('draws each text file of the Project, named by its path', async () => {
   const page = await codeMap();
