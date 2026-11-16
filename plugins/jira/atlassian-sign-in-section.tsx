@@ -29,38 +29,42 @@ const note = (words: string): JSX.Element => (
   </Text>
 );
 
-function hereRows(state: OAuthFlowState, runs: AtlassianRuns): JSX.Element[] {
-  if (state.kind === 'waiting')
-    return [
-      note(atlassianWords.waiting),
-      <Button
-        key="cancel"
-        label="Cancel"
-        variant="secondary"
-        onPress={runs.cancel}
-      />,
-    ];
+const waitingRows = (runs: AtlassianRuns): JSX.Element[] => [
+  note(atlassianWords.waiting),
+  <Button
+    key="cancel"
+    label="Cancel"
+    variant="secondary"
+    onPress={runs.cancel}
+  />,
+];
 
-  const failure =
-    state.kind === 'failed'
-      ? [
-          <Text key="failure" role="secondary" tone="danger">
-            {state.message}
-          </Text>,
-        ]
-      : [];
+// Why the last sign-in failed, such as the port in use or Atlassian refusing the client secret.
+const failureRows = (state: OAuthFlowState): JSX.Element[] =>
+  state.kind === 'failed'
+    ? [
+        <Text key="failure" role="secondary" tone="danger">
+          {state.message}
+        </Text>,
+      ]
+    : [];
 
-  return [
-    note(atlassianWords.offer),
-    ...failure,
-    <Button
-      key="start"
-      label={atlassianWords.start}
-      variant="secondary"
-      onPress={runs.start}
-    />,
-  ];
-}
+const offerRows = (
+  state: OAuthFlowState,
+  runs: AtlassianRuns,
+): JSX.Element[] => [
+  note(atlassianWords.offer),
+  ...failureRows(state),
+  <Button
+    key="start"
+    label={atlassianWords.start}
+    variant="secondary"
+    onPress={runs.start}
+  />,
+];
+
+const hereRows = (state: OAuthFlowState, runs: AtlassianRuns): JSX.Element[] =>
+  state.kind === 'waiting' ? waitingRows(runs) : offerRows(state, runs);
 
 function rowsOf(offer: AtlassianOffer, runs: AtlassianRuns): JSX.Element[] {
   if (offer.kind === 'needs-app') return [note(atlassianWords.needsApp)];

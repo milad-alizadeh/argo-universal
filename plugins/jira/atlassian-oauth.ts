@@ -1,8 +1,9 @@
 import type { Argo } from '@argo/plugin-kit';
 import { atlassianHost, jiraApiUrl, siteHost } from './atlassian';
-import { jiraReaders, jiraRequests } from './jira-client';
+import { jiraReaders, type JiraMyself } from './jira-readers';
+import { jiraRequests } from './jira-requests';
 import { keepSite, type JiraSite } from './jira-store';
-import { at, list, parseJson, text } from './json';
+import { at, list, parseJson, present, text, type Json } from './json';
 
 /*
  * Atlassian's OAuth 2.0 (3LO), for "Sign in with Atlassian" with an app the person registered at
@@ -13,8 +14,8 @@ export const authorizeUrl = `https://auth.atlassian.com/authorize?audience=${atl
 
 export const tokenUrl = 'https://auth.atlassian.com/oauth/token';
 
-// The sites a token reaches, each with its cloud id; an OAuth token opens it, a scoped API token need not.
-export const accessibleResourcesUrl = `https://${atlassianHost}/oauth/token/accessible-resources`;
+// The sites a token reaches, each with its cloud id, which an OAuth token opens.
+const accessibleResourcesUrl = `https://${atlassianHost}/oauth/token/accessible-resources`;
 
 // The scopes the API token asks for, and `offline_access` for the refresh token.
 export const oauthScopes = [
@@ -31,32 +32,69 @@ export const clientSecretSetting = 'oauth-client-secret';
 
 type Calls = Pick<Argo, 'fetch' | 'storage'>;
 
-const bearer = (token: string) => ({
+type Headers = { Accept: string; Authorization: string };
+
+const bearer = (token: string): Headers => ({
   Accept: 'application/json',
   Authorization: `Bearer ${token}`,
 });
 
-// A resource the token reaches is a Jira site when Atlassian granted it Jira scopes; a Confluence one is not.
-function jiraSiteOf(resource: unknown): JiraSite | null {
-  const cloudId = text(at(resource, 'id'));
-  const host = siteHost(text(at(resource, 'url')) ?? '');
-  const scopes = list(at(resource, 'scopes'));
-  const jira = scopes.some((scope) => String(scope).includes(':jira-'));
+const jiraScope = (scope: Json): boolean =>
+  text(scope)?.includes(':jira-') === true;
 
-  return cloudId && host && jira ? { cloudId, host } : null;
+const grantsJira = (resource: Json): boolean =>
+  list(at(resource, 'scopes')).some(jiraScope);
+
+const hostAt = (resource: Json): string | null =>
+  siteHost(text(at(resource, 'url')) ?? '');
+
+function siteAt(resource: Json): JiraSite | null {
+  const cloudId = text(at(resource, 'id'));
+  const host = hostAt(resource);
+
+  return cloudId && host ? { cloudId, host } : null;
 }
+
+// A resource the token reaches is a Jira site when Atlassian granted it Jira scopes; a Confluence one is not.
+const jiraSiteOf = (resource: Json): JiraSite | null =>
+  grantsJira(resource) ? siteAt(resource) : null;
+
+type Reply = Awaited<ReturnType<Argo['fetch']>>;
+
+const bodyOf = (reply: Reply): Json | undefined =>
+  reply?.ok ? parseJson(reply.body) : undefined;
 
 async function sitesOf(argo: Calls, token: string): Promise<JiraSite[]> {
   const reply = await argo.fetch(accessibleResourcesUrl, {
     headers: bearer(token),
   });
 
-  if (!reply?.ok) return [];
-
-  return list(parseJson(reply.body))
-    .map(jiraSiteOf)
-    .filter((site) => site !== null);
+  return list(bodyOf(reply)).map(jiraSiteOf).filter(present);
 }
+
+// Who the token signs in as, from Jira's `myself` on a site it reaches.
+async function myselfOn(
+  argo: Calls,
+  { site, token }: { site: JiraSite; token: string },
+): Promise<JiraMyself | null> {
+  const url = jiraApiUrl(site.cloudId, jiraRequests.myself().path);
+  const reply = await argo.fetch(url, { headers: bearer(token) });
+
+  return jiraReaders.myself(bodyOf(reply));
+}
+
+// Who the token signs in as, on the first Jira site it reaches, and every Jira site it reaches.
+async function whoIs(
+  argo: Calls,
+  token: string,
+): Promise<{ myself: JiraMyself | null; sites: JiraSite[] }> {
+  const sites = await sitesOf(argo, token);
+  const [site] = sites;
+
+  return { sites, myself: site ? await myselfOn(argo, { site, token }) : null };
+}
+
+const labelOf = ({ email, name }: JiraMyself): string => email || name;
 
 /*
  * The kit's `label` for an OAuth token: the email Jira's `myself` names, as the token sign-in labels its Account, so
@@ -68,20 +106,11 @@ export async function oauthLabel(
   argo: Calls,
   token: string,
 ): Promise<string | null> {
-  const sites = await sitesOf(argo, token);
-  const [first] = sites;
-
-  if (!first) return null;
-
-  const reply = await argo.fetch(
-    jiraApiUrl(first.cloudId, jiraRequests.myself().path),
-    { headers: bearer(token) },
-  );
-  const myself = reply?.ok ? jiraReaders.myself(parseJson(reply.body)) : null;
+  const { myself, sites } = await whoIs(argo, token);
 
   if (!myself) return null;
 
   for (const site of sites) await keepSite(argo, site);
 
-  return myself.email || myself.name;
+  return labelOf(myself);
 }

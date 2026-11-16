@@ -174,13 +174,16 @@ const RefusalJson = z.object({ error: z.string() });
  * 403 and `unauthorized_client`, so the error the answer names counts too. Signing in again is the way on from any of
  * them. Any other failure, no answer at all among them, gives no token, and the kept one is tried.
  */
-function refused(status: number, text: string): boolean {
-  if (status === badRequest || status === unauthorized) return true;
+const refusedStatuses: ReadonlySet<number> = new Set([
+  badRequest,
+  unauthorized,
+]);
 
-  const error = RefusalJson.safeParse(parsed(text)).data?.error;
+const namesRefusal = (text: string): boolean =>
+  refusedErrors.has(RefusalJson.safeParse(parsed(text)).data?.error ?? '');
 
-  return error !== undefined && refusedErrors.has(error);
-}
+const refused = (status: number, text: string): boolean =>
+  refusedStatuses.has(status) || namesRefusal(text);
 
 type Reply = Awaited<ReturnType<OAuthFlowArgo['fetch']>>;
 

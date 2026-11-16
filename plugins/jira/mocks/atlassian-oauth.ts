@@ -64,10 +64,25 @@ type Held = {
   forms: URLSearchParams[];
 };
 
-const refused = (status: number, error: string, description: string) => ({
+const refused = (
+  status: number,
+  error: string,
+  description: string,
+): FixtureAnswer => ({
   status,
   json: { error, error_description: description },
 });
+
+const unknownClient = refused(401, 'access_denied', 'Unauthorized');
+
+const badCode = refused(403, 'invalid_grant', 'Invalid authorization code');
+
+// What Atlassian answers a refresh token that was spent, expired after 90 days unused, or revoked.
+const spentRefresh = refused(
+  403,
+  'unauthorized_client',
+  'refresh_token is invalid',
+);
 
 // A new pair each time; the refresh token spent is spent for good.
 function issued(held: Held): FixtureAnswer {
@@ -86,61 +101,71 @@ function issued(held: Held): FixtureAnswer {
   };
 }
 
-function tokenAnswer(held: Held, form: URLSearchParams): FixtureAnswer {
-  if (
-    form.get('client_id') !== oauthClient.id ||
-    form.get('client_secret') !== oauthClient.secret
-  )
-    return refused(401, 'access_denied', 'Unauthorized');
+const knownClient = (form: URLSearchParams): boolean =>
+  form.get('client_id') === oauthClient.id &&
+  form.get('client_secret') === oauthClient.secret;
 
-  const grant = form.get('grant_type');
+const exchanged = (held: Held, form: URLSearchParams): FixtureAnswer =>
+  form.get('code') === grantedCode ? issued(held) : badCode;
 
-  if (grant === 'authorization_code')
-    return form.get('code') === grantedCode
-      ? issued(held)
-      : refused(403, 'invalid_grant', 'Invalid authorization code');
+const refreshed = (held: Held, form: URLSearchParams): FixtureAnswer =>
+  held.refresh !== null && form.get('refresh_token') === held.refresh
+    ? issued(held)
+    : spentRefresh;
 
-  if (grant === 'refresh_token' && form.get('refresh_token') === held.refresh)
-    return issued(held);
+function granted(held: Held, form: URLSearchParams): FixtureAnswer {
+  if (!knownClient(form)) return unknownClient;
 
-  return refused(403, 'unauthorized_client', 'refresh_token is invalid');
+  return form.get('grant_type') === 'authorization_code'
+    ? exchanged(held, form)
+    : refreshed(held, form);
 }
+
+// The token endpoint, which takes the client secret on every exchange and refresh.
+function tokenEndpoint(held: Held, request: FixtureRequest): FixtureAnswer {
+  const form = new URLSearchParams(request.body);
+
+  held.forms.push(form);
+
+  return granted(held, form);
+}
+
+const bearerOf = (request: FixtureRequest): string =>
+  String(request.headers.authorization).replace(/^Bearer /, '');
+
+const resourcesOf = (held: Held, request: FixtureRequest): FixtureAnswer =>
+  isIssued(held, bearerOf(request))
+    ? { json: resources }
+    : refused(401, 'unauthorized', 'Unauthorized');
+
+const isIssued = (held: Held, token: string): boolean =>
+  held.access !== null && token === held.access;
+
+const tokenPath = '/oauth/token';
+
+const resourcesPath = '/oauth/token/accessible-resources';
+
+const isTokenEndpoint = ({ host, path }: FixtureRequest): boolean =>
+  host === 'auth.atlassian.com' && path === tokenPath;
+
+function answerOf(held: Held, request: FixtureRequest): FixtureAnswer | null {
+  if (isTokenEndpoint(request)) return tokenEndpoint(held, request);
+
+  return request.path === resourcesPath ? resourcesOf(held, request) : null;
+}
+
+const refreshesIn = (held: Held): URLSearchParams[] =>
+  held.forms.filter((form) => form.get('grant_type') === 'refresh_token');
 
 export function atlassianOAuth(): AtlassianOAuth {
   const held: Held = { generation: 0, refresh: null, access: null, forms: [] };
-  const who = (token: string): FixtureToken | undefined =>
-    token !== '' && token === held.access
-      ? { ...person, token, scoped: true }
-      : undefined;
 
   return {
-    who,
-    answer: (request) => {
-      if (
-        request.host === 'auth.atlassian.com' &&
-        request.path === '/oauth/token'
-      ) {
-        const form = new URLSearchParams(request.body);
-
-        held.forms.push(form);
-
-        return tokenAnswer(held, form);
-      }
-
-      if (request.path !== '/oauth/token/accessible-resources') return null;
-
-      const bearer = String(request.headers.authorization).replace(
-        /^Bearer /,
-        '',
-      );
-
-      return who(bearer)
-        ? { json: resources }
-        : refused(401, 'unauthorized', 'Unauthorized');
-    },
+    who: (token) =>
+      isIssued(held, token) ? { ...person, token, scoped: true } : undefined,
+    answer: (request) => answerOf(held, request),
     forms: () => held.forms,
-    refreshes: () =>
-      held.forms.filter((form) => form.get('grant_type') === 'refresh_token'),
+    refreshes: () => refreshesIn(held),
     revoke: () => {
       held.refresh = null;
     },

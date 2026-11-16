@@ -22,7 +22,7 @@ export async function register(argo: Argo): Promise<void> {
   await createTables(argo);
   // One provider answers for both: a pasted token and "Sign in with Atlassian" keep one Account.
   await atlassian.provide();
-  registerOperations(argo, { reads, signIn });
+  registerOperations({ argo, reads, signIn });
   registerAtlassianOperations(argo, atlassian);
   defineSignInPage(argo, { paste: signIn, atlassian });
   defineJiraPages(argo, reads);

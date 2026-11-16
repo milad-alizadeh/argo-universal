@@ -50,6 +50,7 @@ it('answers waiting once the browser opens, then adds the Account and keeps its 
 
 it('keeps the fields a service names in its authorize URL, as Atlassian’s audience', async () => {
   const provider = fakeProvider();
+
   const flow = oauthFlow(provider.argo, {
     ...linear,
     authorizeUrl: `${linear.authorizeUrl}?audience=api.example&prompt=consent`,

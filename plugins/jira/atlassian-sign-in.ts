@@ -1,13 +1,18 @@
-import { oauthFlow, type Argo, type OAuthFlow } from '@argo/plugin-kit';
+import {
+  oauthFlow,
+  type Argo,
+  type OAuthFlow,
+  type OAuthFlowOptions,
+} from '@argo/plugin-kit';
 import { atlassianHost } from './atlassian';
+import { clientId, clientSecret, oauthReady } from './atlassian-app';
 import {
   authorizeUrl,
-  clientIdSetting,
-  clientSecretSetting,
   oauthLabel,
   oauthScopes,
   tokenUrl,
 } from './atlassian-oauth';
+import type { AtlassianOffer } from './atlassian-sign-in-section';
 import type { JiraSignIn } from './jira-sign-in';
 
 /*
@@ -26,31 +31,10 @@ type Calls = Pick<
   | 'storage'
 >;
 
-async function setting(argo: Pick<Argo, 'settings'>, key: string) {
-  const value = await argo.settings.get(key);
-
-  return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
-}
-
-export const clientId = (argo: Pick<Argo, 'settings'>) =>
-  setting(argo, clientIdSetting);
-
-const clientSecret = (argo: Pick<Argo, 'settings'>) =>
-  setting(argo, clientSecretSetting);
-
-// Whether the person set both halves of their OAuth app, so the sign-in page offers the button.
-export async function oauthReady(
-  argo: Pick<Argo, 'settings'>,
-): Promise<boolean> {
-  const [id, secret] = await Promise.all([clientId(argo), clientSecret(argo)]);
-
-  return id !== null && secret !== null;
-}
-
 type Lend = Parameters<Argo['accounts']['provide']>[2];
 
 // The handler a flow's `provide()` would register, kept so one provider can answer for both ways of signing in.
-type Held = { lend: Lend | null };
+type Held = { lend: Lend };
 
 /*
  * Argo takes one provider for each host, with one header and prefix. A token sign-in keeps the whole `Basic …`
@@ -74,18 +58,24 @@ export type AtlassianSignIn = Readonly<{
   provide: () => Promise<void>;
 }>;
 
+// The token is lent whole, `Bearer` included, since the one provider also lends a token sign-in's `Basic` value.
+const whole = { header: 'Authorization', prefix: '' };
+
+const options = (argo: Calls): OAuthFlowOptions => ({
+  host: atlassianHost,
+  authorizeUrl,
+  tokenUrl,
+  clientId: () => clientId(argo),
+  clientSecret: () => clientSecret(argo),
+  scopes: oauthScopes,
+  header: whole,
+  label: (token) => oauthLabel(argo, token),
+});
+
 export function atlassianSignIn(argo: Calls): AtlassianSignIn {
-  const held: Held = { lend: null };
-  const flow = oauthFlow(capturing(argo, held), {
-    host: atlassianHost,
-    authorizeUrl,
-    tokenUrl,
-    clientId: () => clientId(argo),
-    clientSecret: () => clientSecret(argo),
-    scopes: oauthScopes,
-    header: { header: 'Authorization', prefix: '' },
-    label: (token) => oauthLabel(argo, token),
-  });
+  const held: Held = { lend: () => null };
+
+  const flow = oauthFlow(capturing(argo, held), options(argo));
 
   return Object.freeze({
     flow,
@@ -96,36 +86,49 @@ export function atlassianSignIn(argo: Calls): AtlassianSignIn {
   });
 }
 
-const basic = 'Basic ';
+type Lending = { argo: Calls; held: Held; flow: OAuthFlow };
+
+type Account = Parameters<Lend>[0];
+
+// The OAuth token, refreshed by the flow when it has run out; a refresh Atlassian refused lends nothing.
+async function oauthToken(
+  { held, flow }: Lending,
+  account: Account,
+): Promise<string | null> {
+  const token = await held.lend(account);
+
+  if (token) return `Bearer ${token}`;
+
+  // The sign-in page stops saying the person is signed in, so it offers the sign-in again.
+  if (flow.state().kind === 'signed-in') flow.cancel();
+
+  return null;
+}
+
+const pasted = (kept: string): boolean => kept.startsWith('Basic ');
 
 /*
  * One provider for the `api.atlassian.com` Account, however the person signed in: a token sign-in's Secret is the
- * `Authorization` value itself, and anything else is the OAuth flow's, refreshed by it when it has run out. A refresh
- * Atlassian refuses lends nothing, and the sign-in page stops saying the person is signed in, so it offers the sign-in
- * again.
+ * `Authorization` value itself, and anything else is the OAuth flow's.
  */
-function provideAtlassian(
-  argo: Calls,
-  { held, flow }: { held: Held; flow: OAuthFlow },
-): Promise<void> {
-  return argo.accounts.provide(
-    atlassianHost,
-    { header: 'Authorization', prefix: '' },
-    async (account) => {
-      const kept = await argo.secrets.get(account.id);
+async function lent(
+  lending: Lending,
+  account: Account,
+): Promise<string | null> {
+  const kept = await lending.argo.secrets.get(account.id);
 
-      if (kept === null || kept.startsWith(basic)) return kept;
+  if (kept === null || pasted(kept)) return kept;
 
-      const token = await held.lend?.(account);
-
-      if (token) return `Bearer ${token}`;
-
-      if (flow.state().kind === 'signed-in') flow.cancel();
-
-      return null;
-    },
-  );
+  return oauthToken(lending, account);
 }
+
+const provideAtlassian = (
+  argo: Calls,
+  { held, flow }: Omit<Lending, 'argo'>,
+): Promise<void> =>
+  argo.accounts.provide(atlassianHost, whole, (account) =>
+    lent({ argo, held, flow }, account),
+  );
 
 /*
  * The page's "Sign in with Atlassian" and Cancel. A sign-in answers once the browser is open; the page draws the wait.
@@ -141,6 +144,22 @@ export function registerAtlassianOperations(
   argo.operations.register('cancelSignInWithAtlassian', () => ({
     state: flow.cancel().kind,
   }));
+}
+
+/*
+ * "Sign in with Atlassian" needs the person's OAuth app, and the Server Device's browser and callback port, so a
+ * paired Device is told to continue there.
+ */
+export async function atlassianOffer(
+  argo: Pick<Argo, 'settings'>,
+  { atlassian }: SignIns,
+  serverDevice: boolean,
+): Promise<AtlassianOffer> {
+  if (!(await oauthReady(argo))) return { kind: 'needs-app' };
+
+  return serverDevice
+    ? { kind: 'here', state: atlassian.flow.state() }
+    : { kind: 'elsewhere' };
 }
 
 // The token sign-in and "Sign in with Atlassian", which keep one Account between them.

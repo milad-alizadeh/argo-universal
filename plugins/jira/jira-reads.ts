@@ -1,14 +1,8 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
 import { atlassianHost } from './atlassian';
-import {
-  callJira,
-  jiraReaders,
-  jiraRequests,
-  type IssuePage,
-  type JiraAnswer,
-  type JiraProject,
-  type JiraSend,
-} from './jira-client';
+import { callJira, type JiraAnswer, type JiraSend } from './jira-client';
+import { jiraReaders, type IssuePage, type JiraProject } from './jira-readers';
+import { jiraRequests } from './jira-requests';
 
 /*
  * The Jira reads the pages share, as named reads (ADR-0037): Argo keeps each answer for the Project its args name,
@@ -17,7 +11,7 @@ import {
  */
 type Target = { projectId: string };
 
-type SiteTarget = Target & { cloudId: string };
+export type SiteTarget = Target & { cloudId: string };
 
 type IssuesTarget = SiteTarget & { projectKey: string };
 
@@ -36,35 +30,42 @@ const borrowing =
   (url, init) =>
     argo.fetch(url, { ...init, account: atlassianHost, projectId });
 
-export function defineReads(argo: Argo): JiraReads {
-  return {
-    account: argo.queries.define(
-      'account',
-      async (_args: Target) =>
-        (await argo.accounts.get(atlassianHost))?.label ?? null,
-      byProject,
-    ),
-    projects: argo.queries.define(
-      'projects',
-      ({ projectId, cloudId }: SiteTarget) =>
-        callJira(
-          borrowing(argo, projectId),
-          cloudId,
-          jiraRequests.projects(),
-          jiraReaders.projects,
-        ),
-      byProject,
-    ),
-    issues: argo.queries.define(
-      'issues',
-      ({ projectId, cloudId, projectKey }: IssuesTarget) =>
-        callJira(
-          borrowing(argo, projectId),
-          cloudId,
-          jiraRequests.issues(projectKey),
-          jiraReaders.issues,
-        ),
-      byProject,
-    ),
-  };
-}
+const accountRead = (argo: Argo): JiraReads['account'] =>
+  argo.queries.define(
+    'account',
+    async (_args: Target) =>
+      (await argo.accounts.get(atlassianHost))?.label ?? null,
+    byProject,
+  );
+
+const projectsRead = (argo: Argo): JiraReads['projects'] =>
+  argo.queries.define(
+    'projects',
+    ({ projectId, cloudId }: SiteTarget) =>
+      callJira({
+        send: borrowing(argo, projectId),
+        cloudId,
+        request: jiraRequests.projects(),
+        read: jiraReaders.projects,
+      }),
+    byProject,
+  );
+
+const issuesRead = (argo: Argo): JiraReads['issues'] =>
+  argo.queries.define(
+    'issues',
+    ({ projectId, cloudId, projectKey }: IssuesTarget) =>
+      callJira({
+        send: borrowing(argo, projectId),
+        cloudId,
+        request: jiraRequests.issues(projectKey),
+        read: jiraReaders.issues,
+      }),
+    byProject,
+  );
+
+export const defineReads = (argo: Argo): JiraReads => ({
+  account: accountRead(argo),
+  projects: projectsRead(argo),
+  issues: issuesRead(argo),
+});
