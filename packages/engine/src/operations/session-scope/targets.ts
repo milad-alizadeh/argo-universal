@@ -133,6 +133,8 @@ const targetRules = {
   'agent.install': global,
   'agent.remove': global,
   'agent.setEnvironment': global,
+  'agent.getSuggestionModels': global,
+  'agent.setSuggestionModel': global,
   'agent.getAccess': global,
   'agent.setAccess': global,
   'agent.getTodoList': global,

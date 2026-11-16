@@ -17,6 +17,7 @@ import {
   screenProps,
   settingsLayoutProps,
 } from '../scaffold-kit-props';
+import { metadataPickerComponent } from './metadata-picker';
 
 const screenReader =
   'Announces the title as the screen title, then the search field and header Actions, then the content.';
@@ -117,6 +118,7 @@ export const scaffoldsComponents = {
       group: 'scaffolds',
     },
   ),
+  'Metadata.Picker': metadataPickerComponent,
   Inspector: defineKitComponent(
     'Secondary detail about what is open: its own column on wide screens and a Sheet on compact ones.',
     inspectorProps,

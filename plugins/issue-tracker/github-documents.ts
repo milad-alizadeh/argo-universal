@@ -19,9 +19,9 @@ const listFields = `
 const relationFields = 'nodes { number title state url }';
 
 // A list reads each Issue in full, so opening one from its row needs no call of its own.
-const detailFields = `${listFields} body subIssues(first: 50) { ${relationFields} }`;
+export const detailFields = `${listFields} body subIssues(first: 50) { ${relationFields} }`;
 
-const split = (repository: string): [string, string] => {
+export const split = (repository: string): [string, string] => {
   const [owner = '', name = ''] = repository.split('/');
 
   return [owner, name];
@@ -135,7 +135,7 @@ type GraphqlIssue = Omit<GitHubIssue, 'labels' | 'assignees'> & {
 };
 
 // GitHub's GraphQL wraps labels and assignees in connections; the mappers read them as lists.
-const flatten = ({
+export const flatten = ({
   labels,
   assignees,
   ...rest

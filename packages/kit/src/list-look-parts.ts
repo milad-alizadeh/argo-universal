@@ -96,7 +96,7 @@ export const densityOf = (
 ): ListDensity => (drawing === 'web' ? input.density : 'regular');
 
 const roomyOf = (input: ListLookInput, place: ListPlaceFacts): boolean =>
-  input.wide || place.sidebar;
+  input.wide || place.sidebar || input.place === 'tray';
 
 export function rowsLook(
   drawing: Drawing,

@@ -47,6 +47,7 @@ export type AcpSessionLease = {
   agent: ClientContext;
   sessionId: SessionId;
   initialization: InitializeResponse;
+  steering?: boolean;
   response: NewSessionResponse | ResumeSessionResponse;
   // A private connection's answer to whether its Agent loaded Argo's tools; a shared one gives none.
   argoTools?: () => ArgoToolsState;

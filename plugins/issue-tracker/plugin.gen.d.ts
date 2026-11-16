@@ -62,6 +62,59 @@ declare module '@argo/plugin-kit' {
         "project"
       ]
     };
+    setLabel: {
+      "params": {
+        "number": {
+          "type": "number",
+          "required": true
+        },
+        "label": {
+          "type": "string",
+          "required": true
+        },
+        "on": {
+          "type": "boolean",
+          "required": true
+        }
+      },
+      "caller": [
+        "project"
+      ]
+    };
+    createLabel: {
+      "params": {
+        "number": {
+          "type": "number",
+          "required": true
+        },
+        "name": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "caller": [
+        "project"
+      ]
+    };
+    setAssignee: {
+      "params": {
+        "number": {
+          "type": "number",
+          "required": true
+        },
+        "assignee": {
+          "type": "string",
+          "required": true
+        },
+        "on": {
+          "type": "boolean",
+          "required": true
+        }
+      },
+      "caller": [
+        "project"
+      ]
+    };
     signIn: {
       "params": {}
     };

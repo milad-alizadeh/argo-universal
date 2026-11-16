@@ -76,6 +76,7 @@ const appliedChangeEvent = (
   type: 'feed.changeApplied',
   settled: isChangedRowSettled(feed.rows, event),
   committed: event.committed,
+  commitWith: event.commitWith,
 });
 
 const changedRowIds = (context: FeedContext, id: string): string[] =>

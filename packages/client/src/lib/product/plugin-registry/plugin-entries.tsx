@@ -69,6 +69,7 @@ export const pluginEntries = {
   'Metadata.Pills': Metadata.Pills,
   'Metadata.StatusDot': Metadata.StatusDot,
   'Metadata.Avatar': Metadata.Avatar,
+  'Metadata.Picker': Metadata.Picker,
   Action,
   'Action.Section': Action.Section,
   EmptyState,

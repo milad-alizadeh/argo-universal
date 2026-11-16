@@ -12,6 +12,7 @@ import {
 } from '../../../../lib/product/navigation/sections';
 import { sectionBadge } from '../../utils/section-badge';
 import { AttentionBadge } from '../attention-badge/attention-badge';
+import { SelectedMarker } from './rail-selected-marker';
 import { railTiles, useRailTileStyle } from './rail-tile-style';
 
 export interface FrameRailProps {
@@ -47,12 +48,10 @@ type TileIconProps = Pick<SectionButtonProps, 'section' | 'selected'> & {
   hovered: boolean;
 };
 
+// The hover, pressed and selected tints every ghost control in Argo takes.
 const tileClass = (selected: boolean): string =>
   cn(
-    'items-center justify-center web:transition-colors web:duration-150 web:active:bg-pressed web:outline-none web:focus-visible:ring-2 web:focus-visible:ring-focus',
-    selected
-      ? 'web:hover-capable:hover:ring-1 web:hover-capable:hover:ring-border'
-      : 'web:hover-capable:hover:bg-hover',
+    'items-center justify-center web:transition-colors web:duration-150 web:hover-capable:hover:bg-hover web:active:bg-pressed web:outline-none web:focus-visible:ring-2 web:focus-visible:ring-focus',
     railTiles.size,
     railTiles.corners,
     selected && railTiles.selected,
@@ -63,7 +62,6 @@ function TileIcon(props: TileIconProps): React.JSX.Element {
     <Icon
       name={props.section.icon}
       size="md"
-      filled={props.selected}
       tone={props.selected || props.hovered ? undefined : 'muted'}
     />
   );
@@ -102,6 +100,7 @@ function SectionTile(props: SectionButtonProps): React.JSX.Element {
 const SectionButton = memo(function SectionButton(props: SectionButtonProps) {
   return (
     <View>
+      <SelectedMarker selected={props.selected} />
       <SectionTile {...props} />
       <AttentionBadge badge={props.badge} />
     </View>

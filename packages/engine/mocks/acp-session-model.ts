@@ -48,6 +48,8 @@ const checkedApart = [
 // Queue behavior is exercised through the real App scenarios; this model walks the ACP lifecycle.
 const appQueueEvents = [
   'session.queue',
+  'session.reserveQueueSteering',
+  'session.finishQueueSteering',
   'session.queueEditDisconnected',
   'xstate.done.actor.prepareQueuedPrompt',
   'xstate.error.actor.prepareQueuedPrompt',

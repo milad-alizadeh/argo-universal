@@ -1,16 +1,35 @@
 import type { PluginManifest } from '@repo/contracts/plugins';
 import type { PluginDraws } from '../pages';
 import { runtimeError } from '../protocol/runtime';
-import { backgroundBudgetMs } from './query-intervals';
+import {
+  backgroundBudgetMs,
+  backgroundFloorMs,
+  watchFloorMs,
+} from './query-intervals';
 import type { QueryServices } from './query-types';
 
 export type BackgroundEntry = {
   pluginId: string;
-  declaration: NonNullable<PluginManifest['contributes']['background']>;
+  declaration: NonNullable<
+    PluginManifest['contributes']['background' | 'watch']
+  >;
   activate: () => Promise<void>;
 };
 
+/*
+ * Which entry the passes run: a Background pass runs a Loader that only reads, and a Watch (ADR-0055) runs the
+ * function `argo.watch.define` gave its path, which may act. Both share one interval and budget machinery.
+ */
+export type PassKind = 'background pass' | 'watch';
+
+// What each kind is called in an interval's log line, and the least interval it runs on.
+export const passTerms: Record<PassKind, { name: string; floorMs: number }> = {
+  'background pass': { name: 'background', floorMs: backgroundFloorMs },
+  watch: { name: 'watch', floorMs: watchFloorMs },
+};
+
 export type BackgroundServices = Pick<QueryServices, 'clock' | 'log'> & {
+  kind: PassKind;
   draws: PluginDraws;
   // A removed Project's kept answers end with its passes.
   projectRemoved: (projectId: string) => void;
@@ -100,6 +119,7 @@ export class BackgroundPass {
       {
         path: declaration.path,
         projectId: this.projectId,
+        ...(this.services.kind === 'watch' && { watch: true }),
       },
       backgroundBudgetMs,
     );
@@ -109,7 +129,7 @@ export class BackgroundPass {
 
   private line(message: string): void {
     this.services.log(
-      `Plugin ${this.entry.pluginId}: background pass ${message} (Project ${this.projectId})`,
+      `Plugin ${this.entry.pluginId}: ${this.services.kind} ${message} (Project ${this.projectId})`,
     );
   }
 }

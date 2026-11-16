@@ -101,24 +101,44 @@ async function checkedRun(
     input.caller,
   );
 
-  if (outside) await confirmed(input, operation.label);
+  const reason = confirmReason(operation, input.caller, outside);
+
+  if (reason) await confirmed(input, operation.label, reason);
 
   return { ...checked, secrets: secretValues(operation, checked.params) };
 }
 
-// Another Project is `confirm` tier whatever the Operation's own tier (ADR-0044), so the user is asked first.
+const otherProject =
+  'Run a Plugin Operation in a Project other than the calling Session’s.';
+
+const agentRun = 'An Agent asks to run this Plugin Operation.';
+
+const byAgent = (
+  { confirmAgent }: PluginOperationContribution,
+  caller: OperationRun['caller'],
+): boolean => Boolean(confirmAgent) && caller.sessionId !== undefined;
+
+// Why the user is asked before the run, when they are.
+const confirmReason = (
+  operation: PluginOperationContribution,
+  caller: OperationRun['caller'],
+  outside: boolean,
+): string | undefined => {
+  if (outside) return otherProject;
+
+  return byAgent(operation, caller) ? agentRun : undefined;
+};
+
+// Another Project is `confirm` tier whatever the Operation's own tier (ADR-0044), so the user is asked first; so is an Agent's run of an Operation that says so.
 async function confirmed(
   { confirm, name }: OperationRun,
   label: string,
+  description: string,
 ): Promise<void> {
   if (!confirm)
     throw new Error(`${name} in another Project needs the user to confirm`);
 
-  await confirm({
-    title: label,
-    description:
-      'Run a Plugin Operation in a Project other than the calling Session’s.',
-  });
+  await confirm({ title: label, description });
 }
 
 async function declaredOperation(
