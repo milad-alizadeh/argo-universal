@@ -1,18 +1,8 @@
 import { Metadata } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue, IssueRelation } from './github-issues';
-import {
-  Assignees,
-  IssueLabels,
-  IssueStatus,
-  type Editable,
-} from './issue-pickers';
-
-export {
-  statusDotKey,
-  statusPickerKey,
-  type MetadataEditing,
-} from './issue-pickers';
+import { Assignees } from './issue-assignee-picker';
+import { IssueLabels, IssueStatus, type Editable } from './issue-pickers';
 
 // The Issue's own properties, beside its description: what it is, not the work under it.
 export function IssueMetadata(props: Editable): JSX.Element {

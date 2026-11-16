@@ -5,7 +5,8 @@ import type { IssueDeps } from './issue-deps';
 
 /*
  * `setStatus` closes or reopens one Issue in a Project (ADR-0044), the write a filter list's row runs
- * (ADR-0050). The other open pages hear of it as they do of the Issue page's own change, which also
+ * (ADR-0050). `setLabel`, `createLabel` and `setAssignee` put labels and people on an Issue or take them off, from the
+ * Issue page's Properties. The other open pages hear of it as they do of the Issue page's own change, which also
  * reads the Projects' counts again for the pages it makes stale.
  */
 export function registerStatusOperation(

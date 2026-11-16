@@ -32,8 +32,8 @@ it('reads the repository labels in their own colours, and the people an Issue ca
   expect(choices.labels).toEqual([{ name: 'bug', color: '#d73a4a' }]);
   expect(choices.assignees).toEqual(['ada']);
   expect(calls(sent)).toEqual([
-    'GET /labels?per_page=100',
-    'GET /assignees?per_page=100',
+    'GET /labels?per_page=100&page=1',
+    'GET /assignees?per_page=100&page=1',
   ]);
 });
 
@@ -73,3 +73,17 @@ it("ends an edit with GitHub's own reason when it refuses", async () => {
   ).rejects.toThrow('Label already exists.');
   expect(sent).toHaveLength(1);
 });
+
+it.each([[{ name: 'bug' }], [{ color: 'd73a4a' }]])(
+  'refuses an entry GitHub sends without a name or login: %j',
+  async (entry) => {
+    const text = JSON.stringify([entry]);
+
+    const { tracker } = trackerAnswering({
+      ...listReply(),
+      text: () => Promise.resolve(text),
+    });
+
+    await expect(tracker.choices()).rejects.toThrow(/invalid/u);
+  },
+);

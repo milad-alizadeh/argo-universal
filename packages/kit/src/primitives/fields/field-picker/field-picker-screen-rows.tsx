@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { choosingPlace, ListPlaceContext, useListPlace } from '#kit/list-place';
 import { AgentLogo } from '#primitives/content/agent-logo';
+import { Avatar, initialsOf } from '#primitives/content/avatar';
 import { Icon, IconSlot } from '#primitives/content/icon';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
@@ -113,9 +114,23 @@ const optionItemProps = (
 const rowRole = (props: FieldPickerScreenProps): 'radio' | undefined =>
   props.multiple ? undefined : 'radio';
 
-// A label's colour dot where the option has one, else its logo or icon.
+// A person's avatar or a label's colour dot where the option has one, else its logo or icon.
 const optionLeading = (option: FieldPickerOption): ReactElement | undefined =>
+  option.avatar ? <PersonAvatar name={option.label} /> : colorOrLogo(option);
+
+const colorOrLogo = (option: FieldPickerOption): ReactElement | undefined =>
   option.color ? <ColorDot color={option.color} /> : logoOrIcon(option);
+
+function PersonAvatar({ name }: { name: string }): ReactElement {
+  return (
+    <Avatar
+      size="sm"
+      initials={initialsOf(name)}
+      accessibilityLabel={name}
+      decorative
+    />
+  );
+}
 
 // A logo where the option has one, else its icon.
 function logoOrIcon(option: FieldPickerOption): ReactElement | undefined {

@@ -13,13 +13,13 @@ import type {
   ChoicesRead,
   IssueDetailData,
 } from './issue-detail-data';
+import { IssueMetadata } from './issue-metadata';
+import { issuePath } from './issue-paths';
 import {
-  IssueMetadata,
   statusDotKey,
   statusPickerKey,
   type MetadataEditing,
-} from './issue-metadata';
-import { issuePath } from './issue-paths';
+} from './issue-pickers';
 import { AttachedSessions, SubIssues } from './issue-sections';
 import { statuses } from './issue-status-view';
 

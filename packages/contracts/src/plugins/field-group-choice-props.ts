@@ -49,6 +49,10 @@ export const fieldGroupPickerOption = z.object({
     .boolean()
     .optional()
     .describe('The option is drawn dimmed and cannot be chosen.'),
+  avatar: z
+    .boolean()
+    .optional()
+    .describe('A person: initials in a round avatar lead the option.'),
   color: z
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/)
