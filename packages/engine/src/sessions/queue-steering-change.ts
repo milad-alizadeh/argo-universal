@@ -1,4 +1,4 @@
-import type { PromptQueue } from '@repo/contracts';
+import type { PromptQueue, QueuedPromptId } from '@repo/contracts';
 import { userMessageChange, type FeedEvent } from '../feed';
 import { queueWrite } from './prompt-queue';
 import type {
@@ -46,7 +46,10 @@ export function consumeQueueSteering(
   });
 }
 
-function remainingQueue(context: SessionContext, id: string): PromptQueue {
+function remainingQueue(
+  context: SessionContext,
+  id: QueuedPromptId | undefined,
+): PromptQueue {
   return {
     ...context.promptQueue,
     items: context.promptQueue.items.filter((item) => item.id !== id),
@@ -71,12 +74,12 @@ function consumedMessage({
   steering,
   queue,
 }: Consumption): FeedEvent {
-  const messageId = `${steering.turnId}:steer:${steering.row.id}`;
+  const messageId = steering.messageId;
 
   return {
     type: 'feed.change',
     turnId: steering.turnId,
-    change: userMessageChange(steering.turnId, steering.row.prompt, messageId),
+    change: userMessageChange(steering.turnId, steering.prompt, messageId),
     commitWith: queueWrite(context.sessionId, queue),
     committed: event.committed,
   };
@@ -91,6 +94,6 @@ function consumption(
     context,
     event,
     steering,
-    queue: remainingQueue(context, steering.row.id),
+    queue: remainingQueue(context, steering.queuedId),
   };
 }

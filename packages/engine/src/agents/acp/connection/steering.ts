@@ -36,5 +36,5 @@ export async function steerAcpSession(
   });
 
   if (outcome.parse(response).outcome !== 'injected')
-    throw new Error('No running Turn accepted the Prompt; it remains queued');
+    throw new Error('The Agent did not accept steering; your Prompt was kept');
 }
