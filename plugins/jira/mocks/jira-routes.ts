@@ -7,6 +7,7 @@ import type {
   FixtureToken,
   JiraData,
 } from './jira-data';
+import { filtered, type Filtered } from './jira-jql';
 
 // One call that reached a site's Jira with a token it accepts: what a route answers from.
 export type JiraCall = {
@@ -81,14 +82,61 @@ const noSuchProject = (key: string): FixtureAnswer => ({
   },
 });
 
-// Jira's enhanced search, for the `project = "KEY"` its JQL names.
-function search({ site, body }: JiraCall): FixtureAnswer {
-  const key = projectKeyOf(text(at(body, 'jql')) ?? '');
+// Jira refuses JQL it cannot parse with a 400 naming the clause.
+const unparsed = (clause: string): FixtureAnswer => ({
+  status: 400,
+  json: { errorMessages: [`Error in the JQL Query: ${clause}`] },
+});
+
+const searchAnswer = (
+  found: Filtered,
+  body: Json | undefined,
+): FixtureAnswer =>
+  found.ok
+    ? { json: pageOf(found.issues, pagingOf(body)) }
+    : unparsed(found.clause);
+
+// Jira's enhanced search, for the `project = "KEY"` its JQL names and the filters after it.
+function search({ site, body, who }: JiraCall): FixtureAnswer {
+  const jql = text(at(body, 'jql')) ?? '';
+  const key = projectKeyOf(jql);
   const project = projectIn(site, key);
 
   return project
-    ? { json: pageOf(project.issues, pagingOf(body)) }
+    ? searchAnswer(filtered(jql, project.issues, who), body)
     : noSuchProject(key);
+}
+
+type Person = NonNullable<FixtureIssue['assignee']>;
+
+const assigneesOf = ({ issues }: FixtureProject): Person[] =>
+  issues.flatMap(({ assignee }) => (assignee ? [assignee] : []));
+
+const personJson = ({ accountId, displayName }: Person): Json => ({
+  accountId,
+  displayName,
+  accountType: 'atlassian',
+});
+
+// Everyone a project's issues can be assigned to, once each: the caller, and everyone its issues are assigned to.
+const assignable = (who: Person, project: FixtureProject): Json[] => [
+  ...new Map(
+    [who, ...assigneesOf(project)].map((person) => [
+      person.accountId,
+      personJson(person),
+    ]),
+  ).values(),
+];
+
+const projectParam = ({ path }: FixtureRequest): string =>
+  new URL(path, 'https://jira.test').searchParams.get('project') ?? '';
+
+// The people an issue in the project the query names can be assigned to.
+function people({ site, request, who }: JiraCall): FixtureAnswer {
+  const key = projectParam(request);
+  const project = projectIn(site, key);
+
+  return project ? { json: assignable(who, project) } : noSuchProject(key);
 }
 
 const myself = ({ who }: JiraCall): FixtureAnswer => ({
@@ -129,4 +177,10 @@ export const jiraRoutes: JiraRoute[] = [
     answer: projects,
   },
   { name: 'search', method: 'POST', path: /^\/search\/jql$/, answer: search },
+  {
+    name: 'people',
+    method: 'GET',
+    path: /^\/user\/assignable\/search$/,
+    answer: people,
+  },
 ];
