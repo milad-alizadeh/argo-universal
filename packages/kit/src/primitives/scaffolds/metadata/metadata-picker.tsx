@@ -1,42 +1,11 @@
 import type { ComponentProps, ReactElement } from 'react';
 import { Pressable } from 'react-native';
 import { FieldPickerDrill, narrowed } from '#primitives/fields/field-picker';
-import type { FieldPickerProps } from '#primitives/fields/field-picker';
+import type {
+  FieldPickerProps,
+  PickReport,
+} from '#primitives/fields/field-picker';
 import type { MetadataPickerProps } from './metadata-props';
-
-type Choice = string | readonly string[];
-
-// A `multiple` pick reports the held list toggled; the one value that differs from the held one is the pick.
-function toggledValue(
-  held: readonly string[],
-  next: readonly string[],
-): string | undefined {
-  return [...next, ...held].find(
-    (value) => next.includes(value) !== held.includes(value),
-  );
-}
-
-const heldOf = (value: Choice): readonly string[] =>
-  typeof value === 'string' ? [value] : value;
-
-// A pick of a `multiple` field: the option and whether it is now chosen.
-function toggler(
-  props: MetadataPickerProps,
-): (next: readonly string[]) => void {
-  return (next) => {
-    const value = toggledValue(heldOf(props.value), next);
-
-    if (value !== undefined)
-      void props.onToggle?.({ value, on: next.includes(value) });
-  };
-}
-
-function reporter(props: MetadataPickerProps): (choice: Choice) => void {
-  return (choice) =>
-    typeof choice === 'string'
-      ? props.onValueChange?.(choice)
-      : toggler(props)(choice);
-}
 
 function createOf(
   props: MetadataPickerProps,
@@ -51,7 +20,7 @@ function createOf(
   };
 }
 
-const pickerOf = (props: MetadataPickerProps): FieldPickerProps => ({
+const fieldOf = (props: MetadataPickerProps): FieldPickerProps => ({
   title: props.title,
   value: props.value,
   options: props.options,
@@ -61,8 +30,22 @@ const pickerOf = (props: MetadataPickerProps): FieldPickerProps => ({
   loading: props.loading,
   loadError: props.loadError,
   create: createOf(props),
-  onValueChange: reporter(props),
+  onValueChange: (choice) => {
+    if (typeof choice === 'string') props.onValueChange?.(choice);
+  },
 });
+
+// A `multiple` field hears each pick, the value pressed and whether it is now chosen, rather than the list.
+function pickerOf(
+  props: MetadataPickerProps,
+): FieldPickerProps & { onPick?: (pick: PickReport) => void } {
+  const picker = fieldOf(props);
+
+  if (props.multiple === true)
+    return { ...picker, onPick: (pick) => void props.onToggle?.(pick) };
+
+  return picker;
+}
 
 /*
  * An editable Metadata field: its children, the read-only fields, show the value, and pressing them opens the same

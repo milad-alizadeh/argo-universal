@@ -4,6 +4,7 @@ export type {
   FieldPickerCallerProps,
   FieldPickerProps,
   FieldPickerSingle,
+  PickReport,
 } from './field-picker-model';
 
 export { FieldPickerDrill } from './field-picker-drill';

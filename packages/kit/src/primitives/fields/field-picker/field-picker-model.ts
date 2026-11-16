@@ -1,4 +1,7 @@
 import type { FieldGroupKitProps } from '../../kit-props';
+import { pressing, type PickReport } from './field-picker-pick';
+
+export type { PickReport } from './field-picker-pick';
 
 export type FieldPickerProps = FieldGroupKitProps<'FieldGroup.Picker'> & {
   // What the page says when there are no options at all, such as "No Agents installed"; a search that leaves none says so itself. The App's own: a Plugin's wire has no such prop.
@@ -23,6 +26,8 @@ export type FieldPickerMultiple = Narrowed & {
   multiple: true;
   value: readonly string[];
   onValueChange: (value: readonly string[]) => void;
+  // The one value pressed and whether it is now chosen, alongside the list. Kit-only: a Plugin's wire reports the list alone.
+  onPick?: (pick: PickReport) => void;
 };
 
 export type FieldPickerCallerProps = FieldPickerSingle | FieldPickerMultiple;
@@ -32,12 +37,13 @@ export type FieldPickerOption = FieldPickerProps['options'][number];
 /*
  * What a caller's value comes to once: whether the choice is `multiple`, the values held, and `pick`, which a drawing
  * calls with the value a person pressed. A single choice reports that string; a `multiple` one reports the held list
- * with the value toggled, in the options' order.
+ * with the value toggled, in the options' order, and first the pick itself to `onPick`.
  */
 export type Picking = {
   multiple: boolean;
   held: readonly string[];
   pick: (value: string) => void;
+  onPick?: (pick: PickReport) => void;
 };
 
 // The props every drawing reads: the schema's, with the value narrowed. `onValueChange` reports a payload of the caller's own kind only.
@@ -46,19 +52,26 @@ export type PickerProps = FieldPickerProps & Picking;
 export function narrowed(
   caller: FieldPickerCallerProps | FieldPickerProps,
 ): PickerProps {
+  return { ...caller, ...picking(caller) };
+}
+
+function picking(
+  caller: FieldPickerCallerProps | FieldPickerProps,
+): Picking & Pick<PickerProps, 'onValueChange'> {
   const multiple = caller.multiple === true;
   const held = heldOf(caller.value);
   const report = reporterOf(caller);
+  const onPick = multiple ? onPickOf(caller) : undefined;
+  const { options } = caller;
+  const pick = pressing({ multiple, held, options, report, onPick });
 
-  return {
-    ...caller,
-    multiple,
-    held,
-    onValueChange: report,
-    pick: (value) =>
-      report(multiple ? toggled(held, caller.options, value) : value),
-  };
+  return { multiple, held, onValueChange: report, onPick, pick };
 }
+
+const onPickOf = (
+  caller: FieldPickerCallerProps | FieldPickerProps,
+): FieldPickerMultiple['onPick'] =>
+  'onPick' in caller ? caller.onPick : undefined;
 
 const reporterOf =
   (caller: FieldPickerCallerProps | FieldPickerProps) =>
@@ -66,7 +79,7 @@ const reporterOf =
     reportTo(caller, payload);
   };
 
-const heldOf = (value: string | readonly string[]): readonly string[] =>
+export const heldOf = (value: string | readonly string[]): readonly string[] =>
   typeof value === 'string' ? [value] : value;
 
 // A wide handler may be given either payload; a caller's own hears only its kind, a string or a list, and the other is dropped.
@@ -90,20 +103,6 @@ function sendOne(
   payload: string | readonly string[],
 ): void {
   if (typeof payload === 'string') caller.onValueChange(payload);
-}
-
-function toggled(
-  held: readonly string[],
-  options: readonly FieldPickerOption[],
-  value: string,
-): readonly string[] {
-  const next = new Set(held);
-
-  if (!next.delete(value)) next.add(value);
-
-  return options.flatMap((option) =>
-    next.has(option.value) ? [option.value] : [],
-  );
 }
 
 // The logo of the chosen option, for a row that leads with it; with several chosen, the first one's.

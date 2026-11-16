@@ -15,6 +15,7 @@ import {
 import { useState, type ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import { type FieldPickerOption, type PickerProps } from './field-picker-model';
+import { picksBetween } from './field-picker-pick';
 
 type DialogProps = PickerProps & { onClose: () => void };
 
@@ -122,6 +123,9 @@ function Confirm(
 }
 
 function confirm(props: DialogProps & Pick<Draft, 'draft'>): void {
+  for (const pick of picksBetween(props.held, props.options, props.draft))
+    props.onPick?.(pick);
+
   props.onValueChange(
     props.options
       .map((option) => option.value)

@@ -381,3 +381,19 @@ export const CreatesATag: Story = {
     await expect(canvas.getByText('epsilon')).toBeVisible();
   },
 };
+
+// A Tags pick reports the pressed value and whether it is now chosen: pressing a tag adds it, pressing it again removes it.
+export const TogglesATag: Story = {
+  render: () => <EditableMetadata />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    await userEvent.click(canvas.getByRole('button', { name: 'Change Tags' }));
+
+    const choices = within(await page.findByRole('dialog', { name: 'Tags' }));
+
+    await userEvent.click(choices.getByText('beta'));
+    await expect(canvas.getByText('beta')).toBeVisible();
+    await userEvent.click(choices.getByText('beta'));
+    await expect(canvas.queryByText('beta')).not.toBeInTheDocument();
+  },
+};
