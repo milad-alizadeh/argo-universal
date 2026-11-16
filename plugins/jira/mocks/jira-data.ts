@@ -32,7 +32,7 @@ export type FixtureSite = {
   people?: FixturePerson[];
 };
 
-export type FixturePerson = { accountId: string; displayName: string };
+type FixturePerson = { accountId: string; displayName: string };
 
 // A token Atlassian issued: a scoped one opens api.atlassian.com, an unscoped one only the site itself.
 export type FixtureToken = {

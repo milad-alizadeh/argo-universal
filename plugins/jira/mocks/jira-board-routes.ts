@@ -25,7 +25,7 @@ const issueType = (id: string, name: string, shown: Status[]): Json => ({
   statuses: shown.map(statusJson),
 });
 
-export const projectStatuses: Json = [
+const projectStatuses: Json = [
   issueType('10001', 'Task', [todo, doing, done]),
   issueType('10002', 'Bug', [todo, done, review]),
 ];
