@@ -53,6 +53,7 @@ function parseCursor(cursor: string | undefined): Cursor | undefined {
 function matchesInput(row: SessionInfo, input: SessionListInput): boolean {
   return (
     matchesProject(row, input) &&
+    matchesSession(row, input.sessionId) &&
     matchesArchived(row, input.archived) &&
     matchesQuery(row, input.query)
   );
@@ -67,6 +68,13 @@ function matchesArchived(
 
 function matchesProject(row: SessionInfo, input: SessionListInput): boolean {
   return input.projectId === undefined || row.projectId === input.projectId;
+}
+
+function matchesSession(
+  row: SessionInfo,
+  sessionId: string | undefined,
+): boolean {
+  return sessionId === undefined || row.sessionId === sessionId;
 }
 
 function matchesQuery(row: SessionInfo, query: string | undefined): boolean {

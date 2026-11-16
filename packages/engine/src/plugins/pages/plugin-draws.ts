@@ -49,6 +49,8 @@ type PluginDrawsDeps = {
   drawings: Drawings;
   // The params each of a Plugin's Operations marks secret, as its manifest declares them.
   secretParams: (pluginId: string) => SecretParams;
+  // Whether a Plugin holds `sessions:read`, which a SessionRow in its tree needs.
+  readsSessions: (pluginId: string) => boolean;
 };
 
 /*
@@ -152,6 +154,7 @@ export class PluginDraws {
       path: page.at.path,
       log: this.deps.log,
       secretParams: this.deps.secretParams(page.pluginId),
+      readsSessions: this.deps.readsSessions(page.pluginId),
     };
 
     return this.failures.checked(page, checkedPage(checking, answered));

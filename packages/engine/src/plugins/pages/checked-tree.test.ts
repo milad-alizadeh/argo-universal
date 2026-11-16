@@ -76,3 +76,32 @@ it("drops refused SVG from a component's own slot without refusing the page", ()
     refused: [{ node: 'Stack#root/Svg#unsafe' }],
   });
 });
+
+const sessionRow: WireNode = {
+  ...leaf('session', { sessionId: 'session-1' }),
+  type: 'SessionRow',
+};
+
+it('draws a SessionRow for a Plugin that holds sessions:read', () => {
+  expect(
+    checkedTree(wireJsonOf(stack([sessionRow])), 'page', noSecretParams, true),
+  ).toMatchObject({
+    ok: true,
+    root: { children: [{ type: 'SessionRow' }] },
+    refused: [],
+  });
+});
+
+it('drops a SessionRow from a Plugin without sessions:read and says why', () => {
+  expect(
+    checkedTree(wireJsonOf(stack([sessionRow])), 'page', noSecretParams),
+  ).toMatchObject({
+    ok: true,
+    root: { children: [] },
+    refused: [
+      {
+        reason: 'SessionRow needs the sessions:read Capability in plugin.json',
+      },
+    ],
+  });
+});

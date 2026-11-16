@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
 import type { PageOpening } from '../page-addresses';
+import { PluginSessionRowProvider } from '../plugin-session-row-provider';
 import { usePluginPage } from '../use-plugin-page';
 import { PluginDetailView } from './plugin-detail-view';
 
@@ -22,11 +23,13 @@ export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
   const callbacks = { onOpenPage, onPageCall };
 
   return (
-    <PluginDetailView
-      title={title}
-      root={page.root}
-      callbacks={callbacks}
-      onBack={onBack}
-    />
+    <PluginSessionRowProvider>
+      <PluginDetailView
+        title={title}
+        root={page.root}
+        callbacks={callbacks}
+        onBack={onBack}
+      />
+    </PluginSessionRowProvider>
   );
 }

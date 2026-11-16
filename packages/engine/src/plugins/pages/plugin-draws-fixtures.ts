@@ -45,6 +45,7 @@ export function draws(log: (line: string) => void = (): null => null): Draws {
     changes,
     drawings: failures,
     secretParams: (): SecretParams => noSecretParams,
+    readsSessions: (): boolean => false,
   });
 
   return { pages, workers, sent, failures };

@@ -36,6 +36,8 @@ export class RuntimeResources {
     this.identities.get(pluginId),
   );
   private readonly unwatch;
+  // The Plugins that hold `sessions:read`, which a SessionRow in their trees needs.
+  private readonly sessionReaders = new Set<string>();
   // Each Plugin's secret params, by Operation, from the manifest it was activated with.
   private readonly secrets = new Map<
     string,
@@ -72,6 +74,7 @@ export class RuntimeResources {
       drawings: this.failures,
       secretParams: (pluginId) => (operation) =>
         this.secrets.get(pluginId)?.get(operation) ?? new Set(),
+      readsSessions: (pluginId) => this.sessionReaders.has(pluginId),
     });
   }
 
@@ -124,6 +127,11 @@ export class RuntimeResources {
 
     this.identities.set(pluginId, pluginIdentity(location));
     this.secrets.set(pluginId, secretParamsOf(location));
+
+    if (plugin.grants.some(({ kind }) => kind === 'sessions:read'))
+      this.sessionReaders.add(pluginId);
+    else this.sessionReaders.delete(pluginId);
+
     this.input.services.activate(pluginId, plugin);
     this.data.badges.allow(pluginId, generation, location.navIds ?? []);
   }

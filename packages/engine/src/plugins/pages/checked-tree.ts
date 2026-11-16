@@ -31,6 +31,7 @@ export function checkedTree(
   root: WireJson,
   kind: TreeKind,
   secretParams: SecretParams,
+  readsSessions = false,
 ): Checked {
   const tooLarge = sizeReason(root, pluginMessageBytes, `${kind} message`);
 
@@ -39,20 +40,34 @@ export function checkedTree(
   const parsed = WireNode.safeParse(root);
 
   return parsed.success
-    ? sanitized(parsed.data, kind, secretParams)
+    ? sanitized(parsed.data, kind, { secretParams, readsSessions })
     : failed(`The ${kind} drew an invalid Plugin tree`);
 }
 
 // A tree checked with no manifest knows no secret param, so it sends a secret nowhere.
 export const noSecretParams: SecretParams = () => new Set();
 
+type Refusals = { secretParams: SecretParams; readsSessions: boolean };
+
+// A SessionRow reads a Session as the App does, so it needs the `sessions:read` Capability like `argo.sessions.get`.
+const sessionRowReason = (
+  node: WireNode,
+  readsSessions: boolean,
+): string | undefined =>
+  node.type === 'SessionRow' && !readsSessions
+    ? 'SessionRow needs the sessions:read Capability in plugin.json'
+    : undefined;
+
 function sanitized(
   tree: WireNode,
   kind: TreeKind,
-  secretParams: SecretParams,
+  { secretParams, readsSessions }: Refusals,
 ): Checked {
-  const { root, refused } = sanitizeTree(tree, (node) =>
-    secretBindingReason(node, secretParams),
+  const { root, refused } = sanitizeTree(
+    tree,
+    (node) =>
+      secretBindingReason(node, secretParams) ??
+      sessionRowReason(node, readsSessions),
   );
 
   const refusal = kindReason(kind, tree, refused);
@@ -88,14 +103,16 @@ type PageAt = {
   log: (line: string) => void;
   // The params each of the Plugin's Operations marks secret, the only place a SecretField's text may go.
   secretParams: SecretParams;
+  // Whether the Plugin holds `sessions:read`, which a SessionRow needs.
+  readsSessions: boolean;
 };
 
 // A page draws without the nodes the Server refused, such as SVG the sanitiser refused, and the log says what was left out.
 export function checkedPage(
-  { pluginId, path, log, secretParams }: PageAt,
+  { pluginId, path, log, secretParams, readsSessions }: PageAt,
   { root, pages, live }: DrawnTree,
 ): Drawn {
-  const tree = checkedTree(root, 'page', secretParams);
+  const tree = checkedTree(root, 'page', secretParams, readsSessions);
 
   if (!tree.ok) return tree;
 

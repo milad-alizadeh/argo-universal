@@ -105,6 +105,22 @@ A move reports the card's `id` and the `column` it lands in, which fill an Opera
 
 The move shows at once: the App sets the card's `column` and `pending` as optimistic props, so it draws in its new column with a spinner until the Operation answers, and goes back with an error toast when it fails. A move to a column the card does not name, or to the one it is in, is refused before any call is made; a page test sees that refusal from `page.act(board, 'onMove', { id, column })`. The board scrolls sideways when its columns do not fit, at every width, and never narrows a column.
 
+## Session rows
+
+A `SessionRow` draws one of the App's own Sessions as its row in the Sessions list, so a page can attach a Session to anything: an Issue, a pull request, a task. It takes the Session's `sessionId` and nothing else about it. The App reads the Session live, so the title, status, Archived state, the Change stage and other Plugins' items on the row never go stale, and a Plugin stores only the id. Pressing the row opens the Session; `onPress` replaces that.
+
+```tsx
+<List appearance="grouped">
+  <List.Section key="sessions" title="Sessions">
+    {sessionIds.map((id) => (
+      <SessionRow key={id} sessionId={id} />
+    ))}
+  </List.Section>
+</List>
+```
+
+The Plugin needs the `sessions:read` Capability in `plugin.json`; without it the Server drops the row from the page and logs why. A Session the App does not list, such as a deleted one or a child Session, draws nothing, so a Plugin that wants a "gone" mark checks with `argo.sessions.get`, which answers `null` for one that is gone.
+
 ## Source validation
 
 `argo-plugin validate <dir>` uses the manifest reader and bundler that the Plugin loader uses.

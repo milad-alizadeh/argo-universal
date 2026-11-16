@@ -30,6 +30,7 @@ type LiveDrawsDeps = {
   log: (line: string) => void;
   failures: DrawingFailures;
   secretParams: (pluginId: string) => SecretParams;
+  readsSessions: (pluginId: string) => boolean;
 };
 
 /*
@@ -63,13 +64,14 @@ export class LiveDraws {
 
   // Each tree is checked as a drawn page's is, and a refused one is the page's drawing failure.
   private checked(pluginId: string, address: DrawAt, root: WireJson): Drawn {
-    const { log, failures, secretParams } = this.deps;
+    const { log, failures, secretParams, readsSessions } = this.deps;
 
     const page = {
       pluginId,
       path: address.path,
       log,
       secretParams: secretParams(pluginId),
+      readsSessions: readsSessions(pluginId),
     };
 
     return failures.checked(
