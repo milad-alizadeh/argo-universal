@@ -165,3 +165,16 @@ export function readSlotItems<Item>(
     lookup,
   );
 }
+
+// What the Server sent for one context; none while there is no context to read.
+export const sentFor = (
+  items: SlotItems,
+  key: string | undefined,
+): SentItems => (key === undefined ? undefined : items[key]);
+
+// The choices the reader applies: the ones passed in win over the saved ones.
+export const slotReader = (
+  saved: SlotVisibility,
+  override: SlotVisibility | undefined,
+  lookup: PluginLookup,
+): SlotReader => ({ visibility: override ?? saved, lookup });

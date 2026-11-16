@@ -3,13 +3,17 @@ import type { SlotVisibility } from '#features/settings';
 import {
   type ItemsSlotId,
   readSlotItems,
+  sentFor,
   type SlotEntry,
   type SlotReading,
 } from '../utils/slot-items';
 import { useSlotItems } from './use-slot-items';
 import { useSlotReader } from './use-slot-reader';
 
-// What a screen asks of an items Slot: its input, the context to read, and, on the Slot's Settings page, the choices on the page.
+/*
+ * What a screen asks of an items Slot: its input, the context to read, and, on the Slot's Settings page, the choices
+ * on the page.
+ */
 interface SlotReadingOf<Id extends ItemsSlotId> {
   input: SlotInputOf<Id> | undefined;
   key: string | undefined;
@@ -27,9 +31,5 @@ export function useSlotReading<Item, Id extends ItemsSlotId>(
   const { items } = useSlotItems(input);
   const reader = useSlotReader(slot.id, visibility);
 
-  return readSlotItems(
-    slot,
-    key === undefined ? undefined : items[key],
-    reader,
-  );
+  return readSlotItems(slot, sentFor(items, key), reader);
 }

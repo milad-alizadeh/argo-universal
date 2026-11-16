@@ -4,15 +4,24 @@ import type { SessionContext } from '#features/plugins';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
 
-// The Session the Session Slots answer for, once its Project is known; one object until either changes.
+// The Project of the Session a feed shows, once it has loaded.
+export const projectIdOf = ({ snapshot }: SessionFeed): string | undefined =>
+  snapshot?.projectId;
+
+// The Session the Session Slots answer for; none until its Project is known.
+export const sessionSlotContext = (
+  sessionId: string,
+  projectId: string | undefined,
+): SessionContext | undefined =>
+  projectId ? { sessionId, projectId } : undefined;
+
+// The same Session's context as one object until either id changes.
 export function useSessionSlotContext(
   sessionId: string,
-  { snapshot }: SessionFeed,
+  projectId: string | undefined,
 ): SessionContext | undefined {
-  const projectId = snapshot?.projectId;
-
   return useMemo(
-    () => (projectId ? { sessionId, projectId } : undefined),
+    () => sessionSlotContext(sessionId, projectId),
     [sessionId, projectId],
   );
 }

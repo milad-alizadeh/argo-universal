@@ -1,7 +1,7 @@
 import type { useSessionFeed } from '#features/feed';
 import { useSessionBar } from '#features/plugins';
 import type { SessionDetailViewProps } from './session-detail-view';
-import { useSessionSlotContext } from './use-session-slot-context';
+import { projectIdOf, useSessionSlotContext } from './use-session-slot-context';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
 
@@ -11,7 +11,9 @@ export function useWithSessionBar(
   feed: SessionFeed,
   props: SessionDetailViewProps,
 ): SessionDetailViewProps {
-  const bar = useSessionBar(useSessionSlotContext(sessionId, feed));
+  const bar = useSessionBar(
+    useSessionSlotContext(sessionId, projectIdOf(feed)),
+  );
 
   return props.state === 'open' && bar ? { ...props, bar } : props;
 }

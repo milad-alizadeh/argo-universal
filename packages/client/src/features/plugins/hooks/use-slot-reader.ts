@@ -1,6 +1,10 @@
 import { useMemo } from 'react';
 import { type SlotVisibility, useSlotVisibility } from '#features/settings';
-import type { SlotReader } from '../utils/slot-items';
+import {
+  type ItemsSlotId,
+  type SlotReader,
+  slotReader,
+} from '../utils/slot-items';
 import { usePluginLookup } from './use-plugin-names';
 
 /*
@@ -8,12 +12,14 @@ import { usePluginLookup } from './use-plugin-names';
  * choices on the page instead, and they win over the saved ones.
  */
 export function useSlotReader(
-  slotId: string,
+  slotId: ItemsSlotId,
   visibilityOverride?: SlotVisibility,
 ): SlotReader {
   const saved = useSlotVisibility(slotId);
   const lookup = usePluginLookup();
-  const visibility = visibilityOverride ?? saved;
 
-  return useMemo(() => ({ visibility, lookup }), [visibility, lookup]);
+  return useMemo(
+    () => slotReader(saved, visibilityOverride, lookup),
+    [saved, visibilityOverride, lookup],
+  );
 }

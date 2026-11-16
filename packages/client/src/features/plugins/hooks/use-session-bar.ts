@@ -23,7 +23,7 @@ const inputOf = (
 
 /*
  * One Session's bar as the reader reads it: the Session page passes this Device's choices, and the Slot's Settings
- * page the choices on the page. None until the Session has loaded.
+ * page the choices on the page.
  */
 export function useSessionBarReading(
   session: SessionContext | undefined,
