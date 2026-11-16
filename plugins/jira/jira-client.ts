@@ -1,4 +1,5 @@
 import { jiraApiUrl } from './atlassian';
+import { filterClauses, noFilters, type IssueFilters } from './jira-filters';
 import { at, list, parseJson, text, type Json } from './json';
 
 /*
@@ -47,6 +48,15 @@ export type IssuePage = { issues: JiraIssue[]; cursor: string | null };
 
 export type JiraMyself = { accountId: string; name: string; email: string };
 
+// Someone an issue in the project can be assigned to, for the assignee filter.
+export type JiraPerson = { accountId: string; name: string };
+
+// How many issues one page of the list reads; Jira answers at most this many and a cursor for the rest.
+export const issuesPageSize = 50;
+
+// How many people the assignee filter offers by name, beside Anyone, Me and Unassigned.
+const peopleLimit = 50;
+
 // The fields a list row shows; a detail page asks for more.
 const rowFields = ['summary', 'status', 'assignee', 'priority'];
 
@@ -58,19 +68,35 @@ export const jiraRequests = {
   projects: (): JiraRequest => ({
     path: '/project/search?maxResults=100&orderBy=name',
   }),
-  // A project's issues, the most recently updated first: Jira's enhanced search, paged by `nextPageToken`.
+  /*
+   * A project's issues the filters leave, the most recently updated first: Jira's enhanced search, paged by
+   * `nextPageToken`.
+   */
   issues: (
     projectKey: string,
-    page: { cursor?: string | null; limit?: number } = {},
+    page: {
+      cursor?: string | null;
+      limit?: number;
+      filters?: IssueFilters;
+    } = {},
   ): JiraRequest => ({
     path: '/search/jql',
     method: 'POST',
     body: {
-      jql: `project = ${quoted(projectKey)} ORDER BY updated DESC`,
+      jql: [
+        `project = ${quoted(projectKey)}`,
+        ...filterClauses(page.filters ?? noFilters),
+      ]
+        .join(' AND ')
+        .concat(' ORDER BY updated DESC'),
       fields: rowFields,
-      maxResults: page.limit ?? 50,
+      maxResults: page.limit ?? issuesPageSize,
       ...(page.cursor ? { nextPageToken: page.cursor } : {}),
     },
+  }),
+  // The people an issue in the project can be assigned to.
+  people: (projectKey: string): JiraRequest => ({
+    path: `/user/assignable/search?project=${encodeURIComponent(projectKey)}&maxResults=${peopleLimit}`,
   }),
 };
 
@@ -108,6 +134,15 @@ function issueOf(json: unknown): JiraIssue | null {
   };
 }
 
+function personOf(json: unknown): JiraPerson | null {
+  const accountId = text(at(json, 'accountId'));
+
+  // Apps and integrations can be assignable too; the filter offers people.
+  if (!accountId || at(json, 'accountType') === 'app') return null;
+
+  return { accountId, name: text(at(json, 'displayName')) ?? accountId };
+}
+
 function projectOf(json: unknown): JiraProject | null {
   const id = text(at(json, 'id'));
   const key = text(at(json, 'key'));
@@ -131,6 +166,8 @@ export const jiraReaders = {
   },
   projects: (json: unknown): JiraProject[] =>
     list(at(json, 'values')).map(projectOf).filter(present),
+  people: (json: unknown): JiraPerson[] =>
+    list(json).map(personOf).filter(present),
   issues: (json: unknown): IssuePage => ({
     issues: list(at(json, 'issues')).map(issueOf).filter(present),
     cursor:
@@ -159,11 +196,45 @@ const failures: Record<
     kind: 'not-found',
     says: 'Jira couldn’t find this. It may have been deleted or moved.',
   },
-  429: {
-    kind: 'rate-limited',
-    says: 'Jira is limiting requests right now. Try again in a minute.',
-  },
 };
+
+/*
+ * Refusals Jira words as something else: a search naming a project that is gone, or the person can no longer see, is a
+ * 400 about the JQL; a scoped token without a scope the call needs is a 401, though the token itself is fine.
+ */
+const projectGone = /does not exist for the field 'project'/u;
+
+const scopeMissing = /scope does not match/iu;
+
+const goneProject: JiraFailure = {
+  kind: 'not-found',
+  message:
+    'This Jira project is gone, or your Atlassian account can no longer see it. Choose another Jira project.',
+};
+
+const missingScope: JiraFailure = {
+  kind: 'forbidden',
+  message:
+    'Your API token doesn’t have the scopes this needs. Create a token with the Jira scopes on the sign-in page, then sign in with it.',
+};
+
+// Jira's own words for a 429 name no next step.
+const rateLimited: JiraFailure = {
+  kind: 'rate-limited',
+  message:
+    'Jira is limiting how often Argo can ask right now. Try again in a minute.',
+};
+
+function reworded(status: number, reason: string | null): JiraFailure | null {
+  if (status === 429) return rateLimited;
+
+  if (status === 400 && reason && projectGone.test(reason)) return goneProject;
+
+  if (status === 401 && reason && scopeMissing.test(reason))
+    return missingScope;
+
+  return null;
+}
 
 // A reply that is not a success, as the failure the page draws.
 export function failureOf(reply: JiraReply): JiraFailure {
@@ -171,6 +242,9 @@ export function failureOf(reply: JiraReply): JiraFailure {
 
   const known = failures[reply.status];
   const reason = jiraReason(reply.body);
+  const named = reworded(reply.status, reason);
+
+  if (named) return named;
 
   // Atlassian's own words for a refused sign-in name no next step.
   if (known?.kind === 'signed-out')

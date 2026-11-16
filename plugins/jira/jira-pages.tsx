@@ -12,14 +12,16 @@ import {
   type LoaderInput,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { filtersOf, noFilters } from './jira-filters';
 import { projectPath, projectPattern, pathText } from './jira-paths';
 import type { JiraReads } from './jira-reads';
-import { loadProjectView, type ProjectView } from './jira-setup';
+import { listIssues, loadProjectView, type ProjectView } from './jira-setup';
 import { storeQueries, storeReaders, type JiraSite } from './jira-store';
 import {
   projectScreen,
   sitePicker,
   type Framing,
+  type IssuesState,
   type ProjectState,
   type ProjectTo,
 } from './project-views';
@@ -70,6 +72,33 @@ const projectIdOf = ({ params }: Pick<LoaderInput, 'params'>): string =>
   pathText(params.project ?? '');
 
 type ProjectData = { projects: Project[]; view: ProjectView };
+
+type ProjectInput = LoaderInput<IssuesState>;
+
+/*
+ * A draw's Loader and paged list both need the step the Project is at, with the same input: it is worked out once per
+ * draw, so the list's first page is the one the Loader read.
+ */
+function projectViews(
+  reads: JiraReads,
+): (input: ProjectInput) => Promise<ProjectView> {
+  const views = new WeakMap<ProjectInput, Promise<ProjectView>>();
+
+  return (input) => {
+    const view =
+      views.get(input) ??
+      loadProjectView({
+        read: input.read,
+        reads,
+        projectId: projectIdOf(input),
+        filters: filtersOf(input.state),
+      });
+
+    views.set(input, view);
+
+    return view;
+  };
+}
 
 type SiteData = { projects: Project[]; sites: JiraSite[]; chosen: string };
 
@@ -130,18 +159,31 @@ export function defineJiraPages(argo: Argo, reads: JiraReads): void {
     ),
   });
 
+  const viewOf = projectViews(reads);
+
+  // The filters are Page state, so going back shows the same filtered view; the list is read a page at a time.
   argo.pages.define(projectPattern, {
-    state: { site: '' },
+    state: { site: '', ...noFilters },
     every: freshForMs,
     load: async (input): Promise<ProjectData> => {
-      const projectId = projectIdOf(input);
       const [projects, view] = await Promise.all([
         argo.projects.list(),
-        loadProjectView({ read: input.read, reads, projectId }),
+        viewOf(input),
       ]);
 
       return { projects, view };
     },
+    list: (input, cursor) =>
+      listIssues(
+        {
+          read: input.read,
+          reads,
+          projectId: projectIdOf(input),
+          filters: filtersOf(input.state),
+        },
+        viewOf(input),
+        cursor,
+      ),
     render: (data, to, input) => {
       const projectId = projectIdOf(input);
       const framing = framingOf(projectId, to, input.state);
@@ -150,7 +192,11 @@ export function defineJiraPages(argo: Argo, reads: JiraReads): void {
         <ListDetail
           title="Jira"
           list={projectRows(data.projects, projectId)}
-          detail={projectScreen(data.view, framing)}
+          detail={projectScreen(data.view, framing, {
+            to,
+            filters: filtersOf(input.state),
+            list: input.list,
+          })}
         />
       );
     },

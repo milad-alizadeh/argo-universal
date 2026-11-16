@@ -78,14 +78,66 @@ const projectKeyOf = (jql: unknown): string | null =>
     ? (/project\s*=\s*"?([^"\s]+)"?/i.exec(jql)?.[1] ?? null)
     : null;
 
+const categoryNames: Record<FixtureIssue['status']['category'], string> = {
+  new: 'To Do',
+  indeterminate: 'In Progress',
+  done: 'Done',
+};
+
+const unquoted = (value: string): string =>
+  value.replaceAll('\\"', '"').replaceAll('\\\\', '\\');
+
+type Match = (issue: FixtureIssue, who: FixtureToken) => boolean;
+
+/*
+ * The JQL clauses the Plugin's filters send, as Jira reads them: a status category by name, an assignee (the caller,
+ * nobody, or one account id), and words every one of which the summary holds. Any other clause matches every issue.
+ */
+function clauseMatch(clause: string): Match {
+  const category = /^statusCategory = "(.*)"$/u.exec(clause);
+  const assignee = /^assignee = "(.*)"$/u.exec(clause);
+  const words = /^text ~ "(.*)"$/u.exec(clause);
+
+  if (category)
+    return (issue) =>
+      categoryNames[issue.status.category] === unquoted(category[1] ?? '');
+
+  if (clause === 'assignee = currentUser()')
+    return (issue, who) => issue.assignee?.accountId === who.accountId;
+
+  if (clause === 'assignee is EMPTY') return (issue) => issue.assignee === null;
+
+  if (assignee)
+    return (issue) =>
+      issue.assignee?.accountId === unquoted(assignee[1] ?? '');
+
+  if (words)
+    return (issue) =>
+      unquoted(words[1] ?? '')
+        .toLowerCase()
+        .split(' ')
+        .every((word) => issue.summary.toLowerCase().includes(word));
+
+  return () => true;
+}
+
+const clausesOf = (jql: unknown): Match[] =>
+  typeof jql === 'string'
+    ? (jql.split(' ORDER BY ')[0] ?? '')
+        .split(' AND ')
+        .slice(1)
+        .map(clauseMatch)
+    : [];
+
 const fieldOf = (body: unknown, key: string): unknown =>
   typeof body === 'object' && body !== null
     ? Reflect.get(body, key)
     : undefined;
 
 // Jira's enhanced search: one page of a project's issues, with a `nextPageToken` while more are left.
-function search({ site, body }: JiraCall): FixtureAnswer {
+function search({ site, body, who }: JiraCall): FixtureAnswer {
   const key = projectKeyOf(fieldOf(body, 'jql'));
+  const clauses = clausesOf(fieldOf(body, 'jql'));
   const project = site.projects.find((each) => each.key === key);
 
   if (!project)
@@ -100,9 +152,12 @@ function search({ site, body }: JiraCall): FixtureAnswer {
 
   const limit = Number(fieldOf(body, 'maxResults') ?? 50);
   const start = Number(fieldOf(body, 'nextPageToken') ?? 0);
-  const page = project.issues.slice(start, start + limit);
+  const found = project.issues.filter((issue) =>
+    clauses.every((matches) => matches(issue, who)),
+  );
+  const page = found.slice(start, start + limit);
   const next = start + limit;
-  const isLast = next >= project.issues.length;
+  const isLast = next >= found.length;
 
   return {
     json: {
@@ -110,6 +165,29 @@ function search({ site, body }: JiraCall): FixtureAnswer {
       isLast,
       ...(isLast ? {} : { nextPageToken: String(next) }),
     },
+  };
+}
+
+// The people a project's issues can be assigned to: everyone its issues are assigned to, and the caller.
+function people({ site, query, who }: JiraCall): FixtureAnswer {
+  const project = site.projects.find((each) => each.key === query.get('project'));
+
+  if (!project) return notFound('Project');
+
+  const assignees = project.issues.flatMap(({ assignee }) =>
+    assignee ? [assignee] : [],
+  );
+  const everyone = new Map(
+    [{ accountId: who.accountId, displayName: who.displayName }, ...assignees].map(
+      (person) => [person.accountId, person],
+    ),
+  );
+
+  return {
+    json: [...everyone.values()].map((person) => ({
+      ...person,
+      accountType: 'atlassian',
+    })),
   };
 }
 
@@ -138,6 +216,7 @@ export const jiraRoutes: JiraRoute[] = [
     }),
   },
   { name: 'search', method: 'POST', path: /^\/search\/jql$/, answer: search },
+  { name: 'people', method: 'GET', path: /^\/user\/assignable\/search$/, answer: people },
 ];
 
 const decoded = (header: string | string[] | undefined): string =>

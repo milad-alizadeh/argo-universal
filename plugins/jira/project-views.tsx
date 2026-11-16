@@ -7,11 +7,18 @@ import {
   Screen,
   Stack,
   Text,
+  type PagedList,
   type PageTo,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { issueList } from './issue-rows';
-import type { JiraFailure, JiraProject } from './jira-client';
+import type { JiraFailure, JiraIssue, JiraProject } from './jira-client';
+import {
+  activeFilters,
+  noFilters,
+  type IssueFilters,
+} from './jira-filters';
+import { filterMenu } from './filter-menu';
 import type { ProjectView } from './jira-setup';
 import type { JiraSite } from './jira-store';
 import { signInPath } from './sign-in-page';
@@ -20,6 +27,18 @@ import { signInPath } from './sign-in-page';
 export type ProjectState = { site: string };
 
 export type ProjectTo = PageTo<ProjectState>;
+
+// The issues page's Page state: the site picker's text, which it shows when no site is chosen, and the filters.
+export type IssuesState = ProjectState & IssueFilters;
+
+export type IssuesTo = PageTo<IssuesState>;
+
+// What the issues view draws besides Jira's answer: the filters it was read for, and the pages the kit has read.
+export type Listing = {
+  to: IssuesTo;
+  filters: IssueFilters;
+  list: PagedList<JiraIssue>;
+};
 
 // What every view of one Argo Project knows besides Jira's answer.
 export type Framing = {
@@ -239,27 +258,54 @@ const projectActions = (framing: Framing): JSX.Element[] => [
   changeSite(framing),
 ];
 
+type IssuesView = Extract<ProjectView, { kind: 'issues' }>;
+
+// An empty list says whether the project has no issues or the filters left none, and offers to clear them.
+function noIssues({ project }: IssuesView, listing: Listing): JSX.Element {
+  if (activeFilters(listing.filters) === 0)
+    return (
+      <EmptyState
+        title={`No issues in ${project.key}`}
+        description="Issues created in this Jira project show here."
+      />
+    );
+
+  return (
+    <EmptyState
+      title="No issues match these filters"
+      description={`Try other filters, or clear them to see every issue in ${project.key}.`}
+      action={
+        <Button label="Clear filters" onPress={listing.to.set(noFilters)} />
+      }
+    />
+  );
+}
+
+/*
+ * The project's issues the filters leave. The search narrows them once typing pauses and the Filter menu at once,
+ * each reading Jira's first page again; load more reads the next one from Jira's cursor.
+ */
 function issues(
-  view: Extract<ProjectView, { kind: 'issues' }>,
+  view: IssuesView,
   framing: Framing,
+  listing: Listing,
 ): JSX.Element {
-  const { site, project, page } = view;
+  const { site, project } = view;
+  const { to, list, filters } = listing;
 
   return (
     <Screen
       title={project.name}
       caption={`${project.key} · ${site.host}`}
       width="full"
-      actions={projectActions(framing)}
+      search={{ label: `Search ${project.key}` }}
+      value={filters.text}
+      onChangeText={to.bind('text')}
+      actions={[filterMenu(view.people, listing), ...projectActions(framing)]}
     >
-      {page.issues.length === 0 ? (
-        <EmptyState
-          title={`No issues in ${project.key}`}
-          description="Issues created in this Jira project show here."
-        />
-      ) : (
-        issueList(site, page.issues, framing.to)
-      )}
+      {list.items.length === 0
+        ? noIssues(view, listing)
+        : issueList(site, list, to)}
     </Screen>
   );
 }
@@ -268,6 +314,7 @@ function issues(
 export function projectScreen(
   view: ProjectView,
   framing: Framing,
+  listing: Listing,
 ): JSX.Element {
   switch (view.kind) {
     case 'signed-out':
@@ -279,6 +326,6 @@ export function projectScreen(
     case 'failed':
       return failed(view.site, view.failure, framing);
     case 'issues':
-      return issues(view, framing);
+      return issues(view, framing, listing);
   }
 }
