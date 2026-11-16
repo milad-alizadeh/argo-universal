@@ -84,6 +84,15 @@ export function liveHeaderOf(group: FeedGroup): LiveHeader | undefined {
   return group.liveHeader;
 }
 
+// The Tool call the live header names, wherever it sits in the group.
+export function headerToolCall(group: FeedGroup): ToolCallUpdate | undefined {
+  const header = group.liveHeader;
+
+  if (!header) return undefined;
+
+  return callForSource(group, header.source)?.toolCall;
+}
+
 export const liveToolCall = (group: FeedGroup): LiveToolCall =>
   group.liveHeader ? headerCall(group) : openLive(group);
 

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { LiveHeader } from './live-header';
 import {
+  movingHeader,
   retryingHeader,
   thinkingHeader,
   toolCallHeader,
@@ -37,3 +38,12 @@ export const Thinking: Story = { args: thinkingHeader };
 
 // A running Tool call lends the line its own icon.
 export const ToolCall: Story = { args: toolCallHeader };
+
+// Reading, listing and searching move the Orb as a scanning globe.
+export const Searching: Story = { args: movingHeader('searching') };
+
+// Editing moves it as a ribbon being written.
+export const Composing: Story = { args: movingHeader('composing') };
+
+// Running a command morphs it.
+export const Shaping: Story = { args: movingHeader('shaping') };

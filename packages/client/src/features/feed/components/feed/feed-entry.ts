@@ -3,7 +3,13 @@ import type {
   SessionUpdate,
   ToolCallUpdate,
 } from '@repo/contracts';
-import { type FeedViewItem, feedItemKey } from '../../view/feed-view';
+import {
+  type FeedActivity,
+  type FeedGroup,
+  type FeedViewItem,
+  feedItemKey,
+} from '../../view/feed-view';
+import { groupTitle } from '../../view/group-title';
 import { shownLiveHeader } from '../../view/shown-live-header';
 
 // The live header is the list's last row, so the list measures it and follows it like any row.
@@ -29,19 +35,66 @@ const isGroup = (
   item: FeedViewItem | undefined,
 ): item is Extract<FeedViewItem, { type: 'group' }> => item?.type === 'group';
 
-// The drawn items, then the live header while it shows; a group last takes it as its title, so the Feed and the Session row say one line.
+type ToolWork = Extract<FeedActivity, { type: 'tool_call' | 'exploration' }>;
+
+// A lone Tool call, or a settled Exploration; an open one draws its own live rows.
+function isToolWork(item: FeedViewItem): item is ToolWork {
+  if (item.type === 'exploration') return item.state === 'settled';
+
+  return item.type === 'tool_call';
+}
+
+const workCalls = (item: ToolWork): ToolCallUpdate[] =>
+  item.type === 'exploration' ? item.toolCalls : [item.row];
+
+// A lone Tool call the Turn moved past joins the live header's group, keyed as the group the next call would open.
+const workGroup = (item: ToolWork): FeedGroup => ({
+  type: 'group',
+  id: feedItemKey(item),
+  title: groupTitle(workCalls(item)),
+  state: 'settled',
+  items: [item],
+});
+
+// A request, a retry and a thought stand on their own; only the Turn's work joins the Tool call before it.
+const joinsWork = ({ source }: LiveHeaderValue): boolean =>
+  ['working', 'tool_call'].includes(source.type);
+
+function wrappedWork(
+  item: FeedViewItem,
+  liveHeader: LiveHeaderValue,
+): FeedGroup | undefined {
+  return isToolWork(item) && joinsWork(liveHeader)
+    ? workGroup(item)
+    : undefined;
+}
+
+function newestGroup(
+  newest: FeedViewItem | undefined,
+  liveHeader: LiveHeaderValue,
+): FeedGroup | undefined {
+  if (!newest) return undefined;
+
+  return isGroup(newest) ? newest : wrappedWork(newest, liveHeader);
+}
+
+/*
+ * The drawn items, then the live header while it shows. A group last takes it as its title, and so
+ * does a lone Tool call while the Agent works, wrapped in a group of its own: the Turn's work reads
+ * as one row, and the Feed and the Session row say one line.
+ */
 export function withLiveHeader(
   drawnItems: FeedViewItem[],
   liveHeader: LiveHeaderValue | null,
   toolCall?: ToolCallUpdate,
 ): FeedEntry[] {
   const shown = shownLiveHeader(drawnItems, liveHeader);
-  const newest = drawnItems.at(-1);
 
   if (!shown) return drawnItems;
+  const group = newestGroup(drawnItems.at(-1), shown);
 
-  if (isGroup(newest))
-    return [...drawnItems.slice(0, -1), { ...newest, liveHeader: shown }];
+  if (group)
+    return [...drawnItems.slice(0, -1), { ...group, liveHeader: shown }];
 
   return [...drawnItems, { type: 'live_header', liveHeader: shown, toolCall }];
 }
