@@ -84,7 +84,7 @@ export const signInGate: SignInGatePattern = (flow, options, page) => ({
     loaded(flow, input.context.serverDevice, () => page.load(input)),
   render: (answer, to, input) =>
     'signIn' in answer
-      ? signInScreen({ name: options.name, data: answer.signIn, ...runsOf(to) })
+      ? signInScreen({ ...options, data: answer.signIn, ...runsOf(to) })
       : page.render(answer.data, to, input),
 });
 
@@ -94,9 +94,9 @@ type SignInPage = {
   render: (data: SignInData, to: Runs) => ReactElement;
 };
 
-const signInPage = (flow: SignInFlow, { name }: SignInOptions): SignInPage => ({
+const signInPage = (flow: SignInFlow, options: SignInOptions): SignInPage => ({
   load: ({ context }) => signInData(flow, context.serverDevice, null),
-  render: (data, to) => signInScreen({ name, data, ...runsOf(to) }),
+  render: (data, to) => signInScreen({ ...options, data, ...runsOf(to) }),
 });
 
 export const provideSignIn: ProvideSignInPattern = async (

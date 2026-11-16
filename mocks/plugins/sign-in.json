@@ -7,116 +7,81 @@
     },
     "children": [
       {
-        "type": "Stack",
+        "type": "SignIn",
         "key": "0",
         "props": {
-          "direction": "column",
-          "gap": 6,
-          "align": "stretch"
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "Sign in to use Jira in Argo.",
+          "footer": "Opens your browser. The token stays on the Server Device."
         },
         "children": [
           {
-            "type": "Stack",
+            "type": "FieldGroup.Link",
             "key": "0",
             "props": {
-              "direction": "row",
-              "gap": 4,
-              "align": "center"
-            },
-            "children": [
-              {
-                "type": "Svg",
-                "key": "0",
-                "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
-                  "label": "Jira",
-                  "tone": "info",
-                  "width": 48,
-                  "aspectRatio": 1
-                },
-                "children": [],
-                "slots": {}
-              },
-              {
-                "type": "Stack",
-                "key": "1",
-                "props": {
-                  "direction": "column",
-                  "gap": 0,
-                  "align": "start"
-                },
-                "children": [
-                  {
-                    "type": "Text",
-                    "key": "0",
-                    "props": {
-                      "role": "heading",
-                      "children": "Connect your account"
-                    },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Text",
-                    "key": "1",
-                    "props": {
-                      "role": "secondary",
-                      "tone": "muted",
-                      "children": "Sign in to use Jira in Argo."
-                    },
-                    "children": [],
-                    "slots": {}
-                  }
-                ],
-                "slots": {}
+              "title": "Sign in to Jira",
+              "action": true,
+              "onPress": {
+                "operation": "signIn",
+                "args": {}
               }
-            ],
+            },
+            "children": [],
             "slots": {}
           }
         ],
         "slots": {}
-      },
+      }
+    ],
+    "slots": {}
+  },
+  "withLogo": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
       {
-        "type": "FieldGroup",
-        "key": "1",
-        "props": {},
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "Sign in to use Jira in Argo.",
+          "footer": "Opens your browser. The token stays on the Server Device."
+        },
         "children": [
           {
-            "type": "FieldGroup.Section",
+            "type": "FieldGroup.Link",
             "key": "0",
             "props": {
-              "footer": "Opens your browser. The token stays on the Server Device."
-            },
-            "children": [
-              {
-                "type": "FieldGroup.Value",
-                "key": "0",
-                "props": {
-                  "title": "Account",
-                  "value": "Not signed in"
-                },
-                "children": [],
-                "slots": {}
-              },
-              {
-                "type": "FieldGroup.Link",
-                "key": "1",
-                "props": {
-                  "title": "Sign in to Jira",
-                  "action": true,
-                  "onPress": {
-                    "operation": "signIn",
-                    "args": {}
-                  }
-                },
-                "children": [],
-                "slots": {}
+              "title": "Sign in to Jira",
+              "action": true,
+              "onPress": {
+                "operation": "signIn",
+                "args": {}
               }
-            ],
+            },
+            "children": [],
             "slots": {}
           }
         ],
-        "slots": {}
+        "slots": {
+          "mark": [
+            {
+              "type": "Svg",
+              "key": "0",
+              "props": {
+                "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M12 2 2 12l10 10 10-10z\" fill=\"#2684FF\"/></svg>",
+                "label": "Jira"
+              },
+              "children": [],
+              "slots": {}
+            }
+          ]
+        }
       }
     ],
     "slots": {}
@@ -129,112 +94,27 @@
     },
     "children": [
       {
-        "type": "Stack",
+        "type": "SignIn",
         "key": "0",
         "props": {
-          "direction": "column",
-          "gap": 6,
-          "align": "stretch"
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "api.atlassian.com no longer accepts this sign-in.",
+          "footer": "Opens your browser. The token stays on the Server Device."
         },
         "children": [
           {
-            "type": "Stack",
+            "type": "FieldGroup.Link",
             "key": "0",
             "props": {
-              "direction": "row",
-              "gap": 4,
-              "align": "center"
-            },
-            "children": [
-              {
-                "type": "Svg",
-                "key": "0",
-                "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
-                  "label": "Jira",
-                  "tone": "info",
-                  "width": 48,
-                  "aspectRatio": 1
-                },
-                "children": [],
-                "slots": {}
-              },
-              {
-                "type": "Stack",
-                "key": "1",
-                "props": {
-                  "direction": "column",
-                  "gap": 0,
-                  "align": "start"
-                },
-                "children": [
-                  {
-                    "type": "Text",
-                    "key": "0",
-                    "props": {
-                      "role": "heading",
-                      "children": "Connect your account"
-                    },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Text",
-                    "key": "1",
-                    "props": {
-                      "role": "secondary",
-                      "tone": "muted",
-                      "children": "api.atlassian.com no longer accepts this sign-in."
-                    },
-                    "children": [],
-                    "slots": {}
-                  }
-                ],
-                "slots": {}
+              "title": "Sign in to Jira",
+              "action": true,
+              "onPress": {
+                "operation": "signIn",
+                "args": {}
               }
-            ],
-            "slots": {}
-          }
-        ],
-        "slots": {}
-      },
-      {
-        "type": "FieldGroup",
-        "key": "1",
-        "props": {},
-        "children": [
-          {
-            "type": "FieldGroup.Section",
-            "key": "0",
-            "props": {
-              "footer": "Opens your browser. The token stays on the Server Device."
             },
-            "children": [
-              {
-                "type": "FieldGroup.Value",
-                "key": "0",
-                "props": {
-                  "title": "Account",
-                  "value": "Not signed in"
-                },
-                "children": [],
-                "slots": {}
-              },
-              {
-                "type": "FieldGroup.Link",
-                "key": "1",
-                "props": {
-                  "title": "Sign in to Jira",
-                  "action": true,
-                  "onPress": {
-                    "operation": "signIn",
-                    "args": {}
-                  }
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
+            "children": [],
             "slots": {}
           }
         ],
@@ -251,62 +131,13 @@
     },
     "children": [
       {
-        "type": "Stack",
+        "type": "SignIn",
         "key": "0",
         "props": {
-          "direction": "column",
-          "gap": 6,
-          "align": "stretch"
+          "service": "Jira",
+          "title": "Asking Jira for a code…"
         },
-        "children": [
-          {
-            "type": "Stack",
-            "key": "0",
-            "props": {
-              "direction": "row",
-              "gap": 4,
-              "align": "center"
-            },
-            "children": [
-              {
-                "type": "Svg",
-                "key": "0",
-                "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
-                  "label": "Jira",
-                  "tone": "info",
-                  "width": 48,
-                  "aspectRatio": 1
-                },
-                "children": [],
-                "slots": {}
-              },
-              {
-                "type": "Stack",
-                "key": "1",
-                "props": {
-                  "direction": "column",
-                  "gap": 0,
-                  "align": "start"
-                },
-                "children": [
-                  {
-                    "type": "Text",
-                    "key": "0",
-                    "props": {
-                      "role": "heading",
-                      "children": "Asking Jira for a code…"
-                    },
-                    "children": [],
-                    "slots": {}
-                  }
-                ],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          }
-        ],
+        "children": [],
         "slots": {}
       }
     ],
@@ -320,100 +151,26 @@
     },
     "children": [
       {
-        "type": "Stack",
+        "type": "SignIn",
         "key": "0",
         "props": {
-          "direction": "column",
-          "gap": 6,
-          "align": "stretch"
+          "service": "Jira",
+          "title": "Finish in your browser",
+          "description": "Approve Argo on Jira. This page updates when you’re done."
         },
         "children": [
           {
-            "type": "Stack",
+            "type": "FieldGroup.Link",
             "key": "0",
             "props": {
-              "direction": "row",
-              "gap": 4,
-              "align": "center"
+              "title": "Cancel",
+              "action": true,
+              "onPress": {
+                "operation": "cancelSignIn",
+                "args": {}
+              }
             },
-            "children": [
-              {
-                "type": "Svg",
-                "key": "0",
-                "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
-                  "label": "Jira",
-                  "tone": "info",
-                  "width": 48,
-                  "aspectRatio": 1
-                },
-                "children": [],
-                "slots": {}
-              },
-              {
-                "type": "Stack",
-                "key": "1",
-                "props": {
-                  "direction": "column",
-                  "gap": 0,
-                  "align": "start"
-                },
-                "children": [
-                  {
-                    "type": "Text",
-                    "key": "0",
-                    "props": {
-                      "role": "heading",
-                      "children": "Finish in your browser"
-                    },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Text",
-                    "key": "1",
-                    "props": {
-                      "role": "secondary",
-                      "tone": "muted",
-                      "children": "Approve Argo on Jira. This page updates when you’re done."
-                    },
-                    "children": [],
-                    "slots": {}
-                  }
-                ],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          }
-        ],
-        "slots": {}
-      },
-      {
-        "type": "FieldGroup",
-        "key": "1",
-        "props": {},
-        "children": [
-          {
-            "type": "FieldGroup.Section",
-            "key": "0",
-            "props": {},
-            "children": [
-              {
-                "type": "FieldGroup.Link",
-                "key": "0",
-                "props": {
-                  "title": "Cancel",
-                  "action": true,
-                  "onPress": {
-                    "operation": "cancelSignIn",
-                    "args": {}
-                  }
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
+            "children": [],
             "slots": {}
           }
         ],
@@ -430,171 +187,43 @@
     },
     "children": [
       {
-        "type": "Stack",
+        "type": "SignIn",
         "key": "0",
         "props": {
-          "direction": "column",
-          "gap": 6,
-          "align": "stretch"
+          "service": "Jira",
+          "title": "Enter this code on Jira",
+          "description": "Jira asks for it after you continue.",
+          "code": "WDJB-MJHT",
+          "footer": "Waiting for Jira… The code lasts 15 minutes."
         },
         "children": [
           {
-            "type": "Stack",
+            "type": "FieldGroup.Link",
             "key": "0",
             "props": {
-              "direction": "row",
-              "gap": 4,
-              "align": "center"
-            },
-            "children": [
-              {
-                "type": "Svg",
-                "key": "0",
-                "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
-                  "label": "Jira",
-                  "tone": "info",
-                  "width": 48,
-                  "aspectRatio": 1
-                },
-                "children": [],
-                "slots": {}
-              },
-              {
-                "type": "Stack",
-                "key": "1",
-                "props": {
-                  "direction": "column",
-                  "gap": 0,
-                  "align": "start"
-                },
-                "children": [
-                  {
-                    "type": "Text",
-                    "key": "0",
-                    "props": {
-                      "role": "heading",
-                      "children": "Enter this code on Jira"
-                    },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Text",
-                    "key": "1",
-                    "props": {
-                      "role": "secondary",
-                      "tone": "muted",
-                      "children": "Jira asks for it after you continue."
-                    },
-                    "children": [],
-                    "slots": {}
-                  }
-                ],
-                "slots": {}
+              "title": "Copy code and continue to Jira",
+              "action": true,
+              "onPress": {
+                "action": "openUrl",
+                "url": "https://example.com/login/device",
+                "copy": "WDJB-MJHT"
               }
-            ],
+            },
+            "children": [],
             "slots": {}
           },
           {
-            "type": "Surface",
+            "type": "FieldGroup.Link",
             "key": "1",
             "props": {
-              "kind": "card",
-              "padding": 4
-            },
-            "children": [
-              {
-                "type": "Stack",
-                "key": "0",
-                "props": {
-                  "direction": "row",
-                  "gap": 0,
-                  "align": "center"
-                },
-                "children": [
-                  {
-                    "type": "Text",
-                    "key": "0",
-                    "props": {
-                      "role": "title-code",
-                      "children": "WDJB-MJHT"
-                    },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Spacer",
-                    "key": "1",
-                    "props": {},
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Button",
-                    "key": "2",
-                    "props": {
-                      "label": "Copy",
-                      "variant": "text",
-                      "onPress": {
-                        "action": "copy",
-                        "text": "WDJB-MJHT"
-                      }
-                    },
-                    "children": [],
-                    "slots": {}
-                  }
-                ],
-                "slots": {}
+              "title": "Cancel",
+              "action": true,
+              "onPress": {
+                "operation": "cancelSignIn",
+                "args": {}
               }
-            ],
-            "slots": {}
-          }
-        ],
-        "slots": {}
-      },
-      {
-        "type": "FieldGroup",
-        "key": "1",
-        "props": {},
-        "children": [
-          {
-            "type": "FieldGroup.Section",
-            "key": "0",
-            "props": {
-              "footer": "Waiting for Jira… The code lasts 15 minutes."
             },
-            "children": [
-              {
-                "type": "FieldGroup.Link",
-                "key": "0",
-                "props": {
-                  "title": "Copy code and continue to Jira",
-                  "action": true,
-                  "onPress": {
-                    "action": "openUrl",
-                    "url": "https://example.com/login/device",
-                    "copy": "WDJB-MJHT"
-                  }
-                },
-                "children": [],
-                "slots": {}
-              },
-              {
-                "type": "FieldGroup.Link",
-                "key": "1",
-                "props": {
-                  "title": "Cancel",
-                  "action": true,
-                  "onPress": {
-                    "operation": "cancelSignIn",
-                    "args": {}
-                  }
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
+            "children": [],
             "slots": {}
           }
         ],
@@ -611,79 +240,21 @@
     },
     "children": [
       {
-        "type": "Stack",
+        "type": "SignIn",
         "key": "0",
         "props": {
-          "direction": "column",
-          "gap": 6,
-          "align": "stretch"
+          "service": "Jira",
+          "title": "Connected",
+          "footer": "Manage this Account in Settings › Accounts.",
+          "signedIn": true
         },
         "children": [
           {
-            "type": "Stack",
+            "type": "FieldGroup.Value",
             "key": "0",
             "props": {
-              "direction": "row",
-              "gap": 4,
-              "align": "center"
-            },
-            "children": [
-              {
-                "type": "Svg",
-                "key": "0",
-                "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
-                  "label": "Jira",
-                  "tone": "success",
-                  "width": 48,
-                  "aspectRatio": 1
-                },
-                "children": [],
-                "slots": {}
-              },
-              {
-                "type": "Stack",
-                "key": "1",
-                "props": {
-                  "direction": "column",
-                  "gap": 0,
-                  "align": "start"
-                },
-                "children": [
-                  {
-                    "type": "Text",
-                    "key": "0",
-                    "props": {
-                      "role": "heading",
-                      "children": "Connected"
-                    },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Text",
-                    "key": "1",
-                    "props": {
-                      "role": "secondary",
-                      "tone": "muted",
-                      "children": "Signed in as ada@example.com"
-                    },
-                    "children": [],
-                    "slots": {}
-                  }
-                ],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          },
-          {
-            "type": "Text",
-            "key": "1",
-            "props": {
-              "role": "secondary",
-              "tone": "muted",
-              "children": "Manage this Account in Settings › Accounts."
+              "title": "Account",
+              "value": "ada@example.com"
             },
             "children": [],
             "slots": {}
@@ -702,100 +273,26 @@
     },
     "children": [
       {
-        "type": "Stack",
+        "type": "SignIn",
         "key": "0",
         "props": {
-          "direction": "column",
-          "gap": 6,
-          "align": "stretch"
+          "service": "Jira",
+          "title": "The code expired",
+          "description": "No approval came in time."
         },
         "children": [
           {
-            "type": "Stack",
+            "type": "FieldGroup.Link",
             "key": "0",
             "props": {
-              "direction": "row",
-              "gap": 4,
-              "align": "center"
+              "title": "Try again",
+              "action": true,
+              "onPress": {
+                "operation": "signIn",
+                "args": {}
+              }
             },
-            "children": [
-              {
-                "type": "Svg",
-                "key": "0",
-                "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
-                  "label": "Jira",
-                  "tone": "info",
-                  "width": 48,
-                  "aspectRatio": 1
-                },
-                "children": [],
-                "slots": {}
-              },
-              {
-                "type": "Stack",
-                "key": "1",
-                "props": {
-                  "direction": "column",
-                  "gap": 0,
-                  "align": "start"
-                },
-                "children": [
-                  {
-                    "type": "Text",
-                    "key": "0",
-                    "props": {
-                      "role": "heading",
-                      "children": "The code expired"
-                    },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Text",
-                    "key": "1",
-                    "props": {
-                      "role": "secondary",
-                      "tone": "muted",
-                      "children": "No approval came in time."
-                    },
-                    "children": [],
-                    "slots": {}
-                  }
-                ],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          }
-        ],
-        "slots": {}
-      },
-      {
-        "type": "FieldGroup",
-        "key": "1",
-        "props": {},
-        "children": [
-          {
-            "type": "FieldGroup.Section",
-            "key": "0",
-            "props": {},
-            "children": [
-              {
-                "type": "FieldGroup.Link",
-                "key": "0",
-                "props": {
-                  "title": "Try again",
-                  "action": true,
-                  "onPress": {
-                    "operation": "signIn",
-                    "args": {}
-                  }
-                },
-                "children": [],
-                "slots": {}
-              }
-            ],
+            "children": [],
             "slots": {}
           }
         ],
@@ -812,73 +309,14 @@
     },
     "children": [
       {
-        "type": "Stack",
+        "type": "SignIn",
         "key": "0",
         "props": {
-          "direction": "column",
-          "gap": 6,
-          "align": "stretch"
+          "service": "Jira",
+          "title": "Continue on the Server Device",
+          "description": "Open Jira in Argo on the Server Device to sign in. This device updates when you’re done."
         },
-        "children": [
-          {
-            "type": "Stack",
-            "key": "0",
-            "props": {
-              "direction": "row",
-              "gap": 4,
-              "align": "center"
-            },
-            "children": [
-              {
-                "type": "Svg",
-                "key": "0",
-                "props": {
-                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 48 48\"><rect x=\"0.5\" y=\"0.5\" width=\"47\" height=\"47\" rx=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-opacity=\"0.25\"/><text x=\"24\" y=\"31\" text-anchor=\"middle\" font-size=\"22\" font-weight=\"600\" fill=\"currentColor\">J</text></svg>",
-                  "label": "Jira",
-                  "tone": "info",
-                  "width": 48,
-                  "aspectRatio": 1
-                },
-                "children": [],
-                "slots": {}
-              },
-              {
-                "type": "Stack",
-                "key": "1",
-                "props": {
-                  "direction": "column",
-                  "gap": 0,
-                  "align": "start"
-                },
-                "children": [
-                  {
-                    "type": "Text",
-                    "key": "0",
-                    "props": {
-                      "role": "heading",
-                      "children": "Continue on the Server Device"
-                    },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Text",
-                    "key": "1",
-                    "props": {
-                      "role": "secondary",
-                      "tone": "muted",
-                      "children": "Open Jira in Argo on the Server Device to sign in. This device updates when you’re done."
-                    },
-                    "children": [],
-                    "slots": {}
-                  }
-                ],
-                "slots": {}
-              }
-            ],
-            "slots": {}
-          }
-        ],
+        "children": [],
         "slots": {}
       }
     ],

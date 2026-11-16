@@ -6,12 +6,17 @@ import { signInScreen } from './sign-in-screen';
 
 const run = (operation: string): Pressed => ({ operation, args: {} });
 
+const logo =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2 2 12l10 10 10-10z" fill="#2684FF"/></svg>';
+
 const draw = (
   data: Partial<SignInData> & Pick<SignInData, 'flow'>,
+  options: { logo?: string } = {},
 ): ReturnType<typeof valuesOf> =>
   valuesOf(
     signInScreen({
       name: 'Jira',
+      ...options,
       data: { rejected: null, needsServerDevice: false, ...data },
       start: run('signIn'),
       cancel: run('cancelSignIn'),
@@ -21,6 +26,7 @@ const draw = (
 // Every step of either flow, as the wire tree an App draws; the story reads this same file (ADR-0021).
 const steps = {
   signedOut: draw({ flow: { kind: 'idle' } }),
+  withLogo: draw({ flow: { kind: 'idle' } }, { logo }),
   refused: draw({
     flow: { kind: 'idle' },
     rejected: 'api.atlassian.com no longer accepts this sign-in.',
@@ -60,6 +66,11 @@ it('copies the code, then opens the page that asks for it, from one press', () =
   expect(JSON.stringify(steps.code)).toContain(
     '"onPress":{"action":"openUrl","url":"https://example.com/login/device","copy":"WDJB-MJHT"}',
   );
+});
+
+it('draws the service’s logo in the mark when the Plugin ships one, and leaves the mark to the App when not', () => {
+  expect(JSON.stringify(steps.withLogo)).toContain('"slots":{"mark"');
+  expect(JSON.stringify(steps.signedOut)).not.toContain('"mark"');
 });
 
 it('gives a Device that cannot start nothing to press', () => {

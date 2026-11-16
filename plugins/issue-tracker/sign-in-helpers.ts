@@ -11,7 +11,7 @@ export const apiCalls = (github: GitHubFixture): FixtureRequest[] =>
     ({ host, path }) => host === 'api.github.com' && path !== '/user',
   );
 
-export const signedInText = 'Signed in as octocat';
+export const signedInText = 'Connected';
 
 const stepLimit = 6;
 
@@ -34,7 +34,7 @@ export async function showsCode(tracked: Tracked): Promise<OpenPage> {
 
   await page.press(signInLabel);
   await page.draw();
-  expect(page.findText('WDJB-MJHT')).toBeDefined();
+  expect(JSON.stringify(page.tree)).toContain('"code":"WDJB-MJHT"');
 
   return page;
 }

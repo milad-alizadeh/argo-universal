@@ -24,6 +24,9 @@ type Story = StoryObj<typeof meta>;
 
 export const SignedOut: Story = { args: step('signedOut') };
 
+// A Plugin that ships the service's logo: it fills the mark in place of the Plugin's own icon.
+export const WithLogo: Story = { args: step('withLogo') };
+
 // The service refused the token: its own words replace the purpose line.
 export const Refused: Story = { args: step('refused') };
 

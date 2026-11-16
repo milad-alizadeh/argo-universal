@@ -5,6 +5,7 @@ import { emptyStateProps } from '../core-kit-props';
 import { defineKitComponent } from '../define-kit-component';
 import { optionalLabel, stringLabel } from '../kit-component-props';
 import { calloutProps } from '../presentation-kit-props';
+import { signInProps } from '../sign-in-kit-props';
 import { pillProps, progressBarProps } from '../status-kit-props';
 
 export const statusComponents = {
@@ -43,6 +44,25 @@ export const statusComponents = {
           'The container is not focusable. Its optional Button uses its standard keyboard behavior.',
         voiceOver:
           'Reads the title as a heading, then the optional description and action.',
+      },
+    },
+  ),
+  SignIn: defineKitComponent(
+    'A Plugin’s sign-in to one service: the step beside the service’s mark, an optional device code with Copy, and FieldGroup rows.',
+    signInProps,
+    {
+      group: 'status',
+      slots: { mark: ['Svg', 'Image', 'Icon'] },
+      children: ['FieldGroup.Link', 'FieldGroup.Value'] as const,
+      appearance:
+        'Keeps to the Settings content column. The mark is a rounded tile; with no `mark`, the App draws the Plugin’s own icon in it.',
+      accessibility: {
+        label:
+          'The `title` is a heading; `service` names the mark. Each row is a FieldGroup row with its own label.',
+        keyboard:
+          'Copy and each row take focus in order, as FieldGroup rows do.',
+        voiceOver:
+          'Reads the title as a heading, the description, the code and Copy, then the rows and the footer.',
       },
     },
   ),

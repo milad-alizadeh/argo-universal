@@ -41,6 +41,7 @@ import { ProgressBar } from '@repo/kit/primitives/status/progress-bar';
 import { Spinner } from '@repo/kit/primitives/status/spinner';
 import { Canvas, Chart, Svg } from '@repo/kit/primitives/visual';
 import type { ComponentType } from 'react';
+import { PluginSignIn } from './plugin-sign-in';
 
 // A Plugin's sheet holds composed content, so it takes the standard sheet inset.
 function PluginSheet(
@@ -72,6 +73,7 @@ export const pluginEntries = {
   Action,
   'Action.Section': Action.Section,
   EmptyState,
+  SignIn: PluginSignIn,
   Spinner,
   Callout: PluginCallout,
   TextArea,
