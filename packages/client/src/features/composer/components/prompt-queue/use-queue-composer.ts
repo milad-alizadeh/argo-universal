@@ -1,4 +1,5 @@
 import type { QueuedPrompt } from '@repo/contracts';
+import { sendResumesQueue } from '../composer/composer-conditions';
 import type { ComposerProps } from '../composer/composer-types';
 import { useQueueEditors, type QueueEditors } from './queue-editors';
 import type { PromptQueueProps } from './queue-types';
@@ -14,7 +15,18 @@ export function useQueueComposer(props: ComposerProps): ComposerProps {
   const action = useQueueAction(queueCommand(queue));
   const row = queue ? editedRow(queue.queue.items, editors) : undefined;
 
-  return row ? editingProps(props, { row, editors, action }) : props;
+  if (row) return editingProps(props, { row, editors, action });
+
+  return sendResumesQueue(props) ? resumingProps(props) : props;
+}
+
+function resumingProps(props: ComposerProps): ComposerProps {
+  const command = queueCommand(props.promptQueue);
+
+  return {
+    ...props,
+    onSend: () => void command({ action: 'resume' }).catch(() => {}),
+  };
 }
 
 async function unavailable(): Promise<void> {

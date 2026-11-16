@@ -1,11 +1,12 @@
 import { layoutWidths } from '@repo/kit/mocks/story-layout';
-import { expect } from 'storybook/test';
+import { expect, fn, userEvent } from 'storybook/test';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { sending } from '../../../../../mocks/composer/draft-editing.test.mocks';
 import { disabled } from '../../../../../mocks/composer/draft-editing.test.mocks';
 import { stopPrecedence } from '../../../../../mocks/composer/turn-admission.test.mocks';
+import { pausedPrompts } from '../prompt-queue/prompt-queue-fixtures';
 import { Composer } from './composer';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer/Send' };
@@ -80,5 +81,44 @@ export const RunningWithoutStop: Story = {
       canvas.queryByRole('progressbar', { name: 'Sending' }),
     ).not.toBeInTheDocument();
     await expect(args.onSend).not.toHaveBeenCalled();
+  },
+};
+
+// With the queue paused and nothing written, Send resumes the queue rather than sending an empty Prompt.
+export const SendResumesPausedQueue: Story = {
+  render: (args) => (
+    <Composer {...composerProps({ ...args, sessionStarted: true })} />
+  ),
+  args: {
+    draft: { text: '', attachments: [] },
+    promptQueue: { ...pausedPrompts, command: fn(async () => {}) },
+  },
+  play: async ({ canvas, args }) => {
+    const send = canvas.getByRole('button', { name: 'Send' });
+    await expect(
+      canvas.queryByRole('button', { name: 'Resume queue' }),
+    ).not.toBeInTheDocument();
+    await expect(send).toBeEnabled();
+    await userEvent.click(send);
+    await expect(args.promptQueue?.command).toHaveBeenCalledWith({
+      action: 'resume',
+    });
+    await expect(args.onSend).not.toHaveBeenCalled();
+  },
+};
+
+// A written draft still sends as a Prompt while the queue is paused.
+export const SendWithDraftWhilePaused: Story = {
+  render: (args) => (
+    <Composer {...composerProps({ ...args, sessionStarted: true })} />
+  ),
+  args: {
+    draft: { text: 'A new Prompt.', attachments: [] },
+    promptQueue: { ...pausedPrompts, command: fn(async () => {}) },
+  },
+  play: async ({ canvas, args }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
+    await expect(args.onSend).toHaveBeenCalledWith(args.draft);
+    await expect(args.promptQueue?.command).not.toHaveBeenCalled();
   },
 };
