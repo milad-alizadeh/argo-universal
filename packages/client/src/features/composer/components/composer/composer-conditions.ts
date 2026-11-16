@@ -20,7 +20,9 @@ export function isConfigurationInactive(props: ComposerProps): boolean {
 }
 
 function isSendReady(props: ComposerProps): boolean {
-  return canSubmit(props) && hasDraftContent(props);
+  return (
+    canSubmit(props) && (hasDraftContent(props) || sendResumesQueue(props))
+  );
 }
 
 function canSubmit(props: ComposerProps): boolean {
@@ -33,6 +35,22 @@ function editableForSend(props: ComposerProps): boolean {
 
 function hasDraftContent({ draft }: ComposerProps): boolean {
   return draft.text.trim().length > 0 || draft.attachments.length > 0;
+}
+
+// With the queue paused and nothing written, Send resumes it, so its first Queued Prompt goes next.
+export function sendResumesQueue(props: ComposerProps): boolean {
+  return hasPausedQueue(props) && isEmptyDraft(props);
+}
+
+function hasPausedQueue({ promptQueue }: ComposerProps): boolean {
+  if (!promptQueue) return false;
+  const { pauseReason, items } = promptQueue.queue;
+
+  return Boolean(pauseReason && items.length);
+}
+
+function isEmptyDraft(props: ComposerProps): boolean {
+  return !props.queueEdit && !hasDraftContent(props);
 }
 
 export function sendButtonState(
