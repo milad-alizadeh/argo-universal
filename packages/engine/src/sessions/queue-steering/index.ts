@@ -6,12 +6,6 @@ import type { SessionContext } from '../session-context';
 import type { SessionActorRef } from '../session-machine';
 import type { QueueSteering, SteerCommand } from './types';
 
-export type {
-  QueueSteering,
-  QueueSteeringCommand,
-  SteerCommand,
-} from './types';
-
 export { finishQueueSteering, reserveQueueSteering } from './state';
 
 export async function steerQueuedPrompt(
