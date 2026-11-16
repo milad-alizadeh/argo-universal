@@ -26,6 +26,8 @@ export interface RichTextareaProps {
   onChangeText: (value: string) => void;
   // Called when Return asks to send; ⇧Return adds a line. The phone drawing adds a line on Return.
   onSubmit?: () => void;
+  // Cmd+Return (Ctrl+Return on other keyboards), separate from ordinary submission.
+  onModifiedSubmit?: () => void;
   placeholder?: string;
   inlineSuggestion?: {
     text: string;

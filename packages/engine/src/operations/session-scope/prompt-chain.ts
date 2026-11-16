@@ -1,4 +1,4 @@
-import { SessionPromptInput } from '@repo/contracts';
+import { SessionPromptInput, SessionSubmitInput } from '@repo/contracts';
 import type { OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { OperationParams } from '../implementations';
@@ -47,6 +47,9 @@ export class PromptChains {
   public clearedByUser({ id, params }: RanOperation): void {
     if (!['session.prompt', 'session.submit'].includes(id)) return;
 
-    this.cleared(SessionPromptInput.parse(params).sessionId);
+    const schema =
+      id === 'session.submit' ? SessionSubmitInput : SessionPromptInput;
+
+    this.cleared(schema.parse(params).sessionId);
   }
 }
