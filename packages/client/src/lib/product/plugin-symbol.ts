@@ -10,14 +10,18 @@ export const pluginSymbol = (icon: PluginIcon): SystemSymbolSource => ({
   ...icon,
 });
 
-/*
- * A Plugin's manifest icon: its own SVG, which the Server made one colour (ADR-0058), and otherwise its symbol names.
- * Where only a system symbol can draw, such as a native menu, the markup draws nothing, so the names stay the fallback.
- */
-export function manifestIcon(icon: ManifestIcon, markup?: string): DrawnIcon {
+// A manifest icon where only a symbol draws, such as a Settings row: its names, never the path of its SVG file.
+export function manifestSymbol(icon: ManifestIcon): SystemSymbolSource {
   const { svg, ...names } = icon;
 
-  return markup === undefined || svg === undefined
-    ? pluginSymbol(names)
-    : { markup };
+  return pluginSymbol(svg === undefined ? icon : names);
 }
+
+/*
+ * A Plugin's manifest icon in the rail and the drawer: its own SVG, which the Server made one colour (ADR-0058), and
+ * otherwise its symbol names, which every place that draws only a system symbol keeps using.
+ */
+export const manifestIcon = (icon: ManifestIcon, markup?: string): DrawnIcon =>
+  markup === undefined || icon.svg === undefined
+    ? manifestSymbol(icon)
+    : { markup };

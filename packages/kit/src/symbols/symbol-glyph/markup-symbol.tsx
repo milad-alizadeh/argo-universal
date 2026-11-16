@@ -4,6 +4,10 @@ import { SvgXml } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import { cn } from '../../utils';
 import { decorativeGlyph } from '../decorative-glyph';
+import { appleSymbolShare } from '../glyph-sizing';
+
+// A Plugin's mark usually runs edge to edge; drawn at the share an SF Symbol takes, it reads as large as Argo's glyphs.
+const markupShare = appleSymbolShare(false);
 
 export interface MarkupSymbolGlyphProps {
   markup: string;
@@ -16,7 +20,7 @@ export interface MarkupSymbolGlyphProps {
 
 /*
  * A Plugin's own icon (ADR-0058): the Server's sanitized markup, every paint `currentColor`, so it takes the tint
- * natively and the box's text colour on web, as Argo's SVG glyphs do. It fills the icon's box.
+ * natively and the box's text colour on web, as Argo's SVG glyphs do, centred in the icon's box.
  */
 function MarkupSymbolDrawing(props: MarkupSymbolGlyphProps): React.JSX.Element {
   return (
@@ -35,8 +39,8 @@ function MarkupSvg(props: MarkupSymbolGlyphProps): React.JSX.Element {
   return (
     <SvgXml
       xml={props.markup}
-      width={props.pixels}
-      height={props.pixels}
+      width={Math.round(props.pixels * markupShare)}
+      height={Math.round(props.pixels * markupShare)}
       color={props.tintColor}
     />
   );

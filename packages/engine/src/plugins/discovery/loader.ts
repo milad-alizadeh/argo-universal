@@ -149,7 +149,10 @@ async function admit(directory: string, discovery: Discovery): Promise<void> {
   try {
     const manifest = await readManifest(directory, discovery.version);
 
-    const iconMarkup = await readIconMarkup(directory, manifest.icon);
+    // A Plugin that will not load has its untrusted icon file left unread.
+    const iconMarkup = discovery.firstParty
+      ? await readIconMarkup(directory, manifest.icon)
+      : undefined;
 
     addManifest({ manifest, iconMarkup }, discovery);
     discovery.locations.set(manifest.id, directory);

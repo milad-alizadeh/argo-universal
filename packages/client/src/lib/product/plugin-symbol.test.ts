@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { manifestIcon, pluginSymbol } from './plugin-symbol';
+import { manifestIcon, manifestSymbol, pluginSymbol } from './plugin-symbol';
 
 describe('pluginSymbol', () => {
   it('draws every name a Plugin gives', () => {
@@ -45,6 +45,15 @@ describe('manifestIcon', () => {
   it('draws the symbol names, never the file path, when there is no markup', () => {
     expect(manifestIcon({ svg: 'icon.svg', sf: 'ticket' })).toEqual({
       sf: 'ticket',
+      material: 'power',
+    });
+  });
+});
+
+describe('manifestSymbol', () => {
+  it("draws Argo's Plugin icon where only a symbol draws, for a Plugin that gave only its own SVG", () => {
+    expect(manifestSymbol({ svg: 'icon.svg' })).toEqual({
+      sf: 'powerplug',
       material: 'power',
     });
   });

@@ -246,6 +246,10 @@ _Avoid_: Nav count, badge count, unread count
 One Plugin using an Account another Plugin provides. Argo checks the Grant, asks the providing Plugin for a fresh token and sets the header; the borrowing Plugin never sees the token, and the header never leaves the Account's host.
 _Avoid_: Share, delegate, proxy
 
+**Plugin icon**:
+The icon `plugin.json` names for a Plugin, drawn in its rail tile, drawer row and Settings row. It is SF and Material symbol names, and optionally `icon.svg`, an SVG file of the Plugin's own that the Server makes one colour and the rail and drawer draw in Argo's tint (ADR-0058). A brand logo in colour belongs to the Plugin's sign-in, not here.
+_Avoid_: Plugin logo, app icon
+
 **Account**:
 A sign-in one Plugin provides and other Plugins borrow, named by the API host its token opens, such as `api.linear.app`, rather than by the button that gets it. CircleCI and GitHub are separate Accounts though both sign in with GitHub. A Plugin asks Argo for an Account, and the user approves each Plugin once per Account. See ADR-0036.
 _Avoid_: Login, credential, identity, Tracker, Integration

@@ -1,6 +1,7 @@
 import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { ManifestIcon } from '@repo/contracts/plugins/manifest-fields';
+import { scanMarkup } from '../svg/markup';
 import { parseSvg } from '../svg/parser';
 import { sanitizeSvg } from '../svg/sanitizer';
 import { serializeSvg } from '../svg/serialization';
@@ -32,9 +33,19 @@ const isPaint = (name: string, value: Props[string]): boolean =>
 const painted = (props: Props): Props =>
   Object.fromEntries(Object.entries(props).map(recolour));
 
+// Exports often colour with CSS; the repaint reads only attributes, so a style says how to fix it.
+function plainPaint(node: SvgAstNode): void {
+  if (node.tag === 'style' || 'style' in node.props)
+    throw refused(
+      'icon.svg must set its colours with fill and stroke attributes, not style',
+    );
+}
+
 function monochrome(node: SvgAstNode): SvgAstNode {
   if (colouredTags.has(node.tag))
     throw refused(`icon.svg must be one colour; it holds a ${node.tag}`);
+
+  plainPaint(node);
 
   return {
     ...node,
@@ -53,8 +64,27 @@ const unsized = (props: Props): Props =>
     ),
   );
 
+// The App sizes the icon by its box, so a file sized only by width and height keeps that shape as its viewBox.
+function derivedViewBox({ width, height }: Props): string {
+  const [w, h] = [Number(width), Number(height)];
+
+  if (w > 0 && h > 0) return `0 0 ${w} ${h}`;
+
+  throw refused('icon.svg needs a viewBox, or a width and a height');
+}
+
+const viewBoxOf = (props: Props): Props[string] =>
+  props.viewBox ?? derivedViewBox(props);
+
 function rootOf(node: SvgAstNode): SvgAstNode {
-  return { ...node, props: { fill: 'currentColor', ...unsized(node.props) } };
+  return {
+    ...node,
+    props: {
+      fill: 'currentColor',
+      ...unsized(node.props),
+      viewBox: viewBoxOf(node.props),
+    },
+  };
 }
 
 async function iconSource(directory: string, file: string): Promise<string> {
@@ -73,12 +103,26 @@ async function iconSource(directory: string, file: string): Promise<string> {
   return readFile(path, 'utf8');
 }
 
-// A declaration or a doctype could define entities; an icon file needs neither, so it never reaches the parser.
-const declaration = /<!(?!--)/;
+/*
+ * The sanitizer's own scan first, so a declaration, which could define entities, and markup past its depth or element
+ * caps never reach the parser. An `<?xml ?>` prolog, as most exports start, is an instruction and passes.
+ */
+function scanned(source: string): void {
+  const { declarations } = scanOf(source);
+
+  if (declarations !== null) throw refused('icon.svg must hold no declaration');
+}
+
+function scanOf(source: string): ReturnType<typeof scanMarkup> {
+  try {
+    return scanMarkup(source);
+  } catch (error) {
+    throw refused(`icon.svg is refused: ${String(error)}`);
+  }
+}
 
 function rootOfSource(source: string): SvgAstNode {
-  if (declaration.test(source))
-    throw refused('icon.svg must hold no declaration');
+  scanned(source);
 
   return svgRoot(parseRoot(source));
 }

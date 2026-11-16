@@ -3,7 +3,7 @@ import { errorToast } from '@repo/kit/error-toast';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
-import { pluginSymbol } from '../../../lib/product/plugin-symbol';
+import { manifestSymbol } from '../../../lib/product/plugin-symbol';
 import type { PluginRow, PluginsLoad } from './plugin-list-view';
 
 export type PluginEntry = PluginList['plugins'][number];
@@ -24,7 +24,7 @@ export function usePluginEntries(): PluginEntries {
 const toPluginRow = ({ manifest }: PluginEntry): PluginRow => ({
   pluginId: manifest.id,
   name: manifest.name,
-  icon: pluginSymbol(manifest.icon),
+  icon: manifestSymbol(manifest.icon),
 });
 
 export function usePluginsLoad(): PluginsLoad {

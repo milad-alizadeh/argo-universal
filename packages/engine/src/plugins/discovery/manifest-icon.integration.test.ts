@@ -38,6 +38,14 @@ it('paints an icon that sets no colour of its own', async () => {
   expect(markup).toMatch(/^<svg[^>]*fill="currentColor"/);
 });
 
+it('reads an exported file that opens with an XML prolog and is sized only by width and height', async () => {
+  const markup = await read(
+    '<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><path d="M1 1h14v14H1z"/></svg>',
+  );
+
+  expect(markup).toContain('view-box="0 0 16 16"');
+});
+
 it('has no icon for a manifest that names no svg file', async () => {
   await expect(
     readIconMarkup(await folderWith(), { sf: 'ticket' }),
@@ -48,13 +56,33 @@ it.each([
   ['a missing file', undefined, 'icon.svg icon.svg is missing'],
   [
     'a second colour',
-    '<svg xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g"/></defs><path fill="url(#g)" d="M0 0h1v1z"/></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><defs><linearGradient id="g"/></defs><path fill="url(#g)" d="M0 0h1v1z"/></svg>',
     'icon.svg must be one colour; it holds a linearGradient',
   ],
   ['markup that is not SVG', '<html></html>', 'icon.svg is refused'],
   [
+    'colours set with CSS',
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><path style="fill:red" d="M0 0h1v1z"/></svg>',
+    'icon.svg must set its colours with fill and stroke attributes, not style',
+  ],
+  [
+    'a file with no size',
+    '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0h1v1z"/></svg>',
+    'icon.svg needs a viewBox, or a width and a height',
+  ],
+  [
+    'a declaration',
+    '<!DOCTYPE svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"/>',
+    'icon.svg must hold no declaration',
+  ],
+  [
+    'nesting past the depth cap',
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1">${'<g>'.repeat(40)}${'</g>'.repeat(40)}</svg>`,
+    'icon.svg is refused',
+  ],
+  [
     'a file over the cap',
-    `<svg xmlns="http://www.w3.org/2000/svg"><path d="${'M0 0'.repeat(iconByteLimit)}"/></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><path d="${'M0 0'.repeat(iconByteLimit)}"/></svg>`,
     `icon.svg must be at most ${iconByteLimit} bytes`,
   ],
 ])('refuses %s', async (_case, svg, message) => {
