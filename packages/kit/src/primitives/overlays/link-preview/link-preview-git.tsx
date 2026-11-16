@@ -135,8 +135,8 @@ function GitState({ data }: { data: GitItemPreview }): ReactElement {
   );
 }
 
-// The state's icon alone, drawn beside a link so its state reads without a hover.
-export function GitStateIcon({ data }: { data: State }): ReactElement {
+// The state's icon alone, in the card's state badge.
+function GitStateIcon({ data }: { data: State }): ReactElement {
   const mark = gitStateMark(data);
 
   return <Icon name={mark.icon} size="sm" tone={drawings[mark.tone].ink} />;

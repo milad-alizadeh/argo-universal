@@ -65,8 +65,35 @@ function anchorProps(
   };
 }
 
-const anchorClass =
-  'rounded-sm underline decoration-focus underline-offset-2 hover:decoration-foreground focus-visible:outline-3 focus-visible:outline-primary/35';
+const anchorBase =
+  'rounded-sm underline-offset-2 focus-visible:outline-3 focus-visible:outline-primary/35';
+
+type AnchorLook = Pick<
+  AnchorHTMLAttributes<HTMLAnchorElement>,
+  'className' | 'style'
+>;
+
+// An unmarked link keeps the text's colour and a quiet underline.
+const plainLook: AnchorLook = {
+  className: cn(
+    anchorBase,
+    'underline decoration-focus hover:decoration-foreground',
+  ),
+  style: { color: 'inherit', font: 'inherit' },
+};
+
+// A marked link is drawn in its mark's tone and underlines only under the pointer, as ChangeStage draws a number.
+const markedLook = (tone: MarkTone): AnchorLook => ({
+  className: cn(
+    anchorBase,
+    'no-underline hover:underline',
+    toneTextClass(tone),
+  ),
+  style: { font: 'inherit' },
+});
+
+const anchorLook = (tone: MarkTone | null): AnchorLook =>
+  tone ? markedLook(tone) : plainLook;
 
 function FollowedLink(props: LinkProps & { target: string }): ReactElement {
   const anchor = <LinkAnchor {...props} />;
@@ -78,22 +105,9 @@ function FollowedLink(props: LinkProps & { target: string }): ReactElement {
   );
 }
 
-// A marked link's label is drawn in its mark's tone, and underlines only under the pointer, as ChangeStage's number.
-const markedClass = (tone: MarkTone): string =>
-  cn(
-    'rounded-sm no-underline underline-offset-2 hover:underline focus-visible:outline-3 focus-visible:outline-primary/35',
-    toneTextClass(tone),
-  );
-
 function LinkAnchor(props: LinkProps & { target: string }): ReactElement {
-  const tone = useContext(LinkToneContext);
-
   return (
-    <a
-      {...anchorProps(props)}
-      className={tone ? markedClass(tone) : anchorClass}
-      style={tone ? { font: 'inherit' } : { color: 'inherit', font: 'inherit' }}
-    >
+    <a {...anchorProps(props)} {...anchorLook(useContext(LinkToneContext))}>
       {props.children}
     </a>
   );

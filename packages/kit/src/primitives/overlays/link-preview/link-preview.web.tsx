@@ -28,7 +28,7 @@ function Preview({ href, children }: LinkPreviewProps): ReactElement {
   return (
     <Popover open={state.open} onOpenChange={state.setOpen} inline>
       <PreviewAnchor state={state}>
-        <LinkMarkIcon mark={mark} />
+        <LinkMarkGlyph mark={mark} />
         <LinkToneContext value={mark?.tone ?? null}>{children}</LinkToneContext>
       </PreviewAnchor>
       <PreviewContent href={href} state={state} />
@@ -50,7 +50,7 @@ function PreviewAnchor({
   );
 }
 
-function LinkMarkIcon({
+function LinkMarkGlyph({
   mark,
 }: {
   mark: LinkMark | null;

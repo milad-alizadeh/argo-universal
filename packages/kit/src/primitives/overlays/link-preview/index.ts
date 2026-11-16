@@ -10,6 +10,6 @@ export {
 
 export { LinkPreviewCard } from './link-preview-card';
 
-export { GitStateIcon, gitStateMark } from './link-preview-git';
+export { gitStateMark } from './link-preview-git';
 
 export type { LinkPreviewCardData } from './link-preview-card-props';
