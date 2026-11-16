@@ -1,21 +1,36 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { Automation, Offers } from './pull-automations';
 import { fetchComments } from './pull-comments';
-import { autoFix, failedOf, fixOf } from './pull-fix';
+import { autoFix, failedOf, fixOf, openedByAnother } from './pull-fix';
 import { eventsOf } from './pull-fix-prompts';
 import { createFixStore, type FixStore } from './pull-fix-store';
+import type { PullInfo } from './pull-info';
 import { lowered, sameLink } from './pull-kept';
 import { fetchChecks, fetchPull } from './pull-reads';
 import type { PullLink } from './pull-store';
+import { fetchViewer } from './pull-viewer';
 
 type Fetch = Argo['fetch'];
+
+// The pull request, once GitHub says the signed-in account opened it; Auto-fix is refused on anyone else's.
+async function yoursOf(fetch: Fetch, link: PullLink): Promise<PullInfo> {
+  const [pull, viewer] = await Promise.all([
+    fetchPull(fetch, link),
+    fetchViewer(fetch, link),
+  ]);
+
+  if (openedByAnother(pull, viewer))
+    throw new Error('Only pull requests you opened can use Auto-fix.');
+
+  return pull;
+}
 
 // The head commit, and the keys of every event Auto-fix could prompt about on it now.
 async function eventsNow(
   fetch: Fetch,
   link: PullLink,
 ): Promise<{ head: string; keys: string[] }> {
-  const pull = await fetchPull(fetch, link);
+  const pull = await yoursOf(fetch, link);
 
   const [checks, comments] = await Promise.all([
     fetchChecks(fetch, { ...link, head: pull.head }),
@@ -54,10 +69,10 @@ async function offersOf(
 ): Promise<Offers> {
   const records = await fix.forSessions(sessionIds);
 
-  return (link, pull) =>
+  return (offered) =>
     fixOf(
-      records.find((record) => sameLink(record, link)),
-      pull,
+      records.find((record) => sameLink(record, offered.link)),
+      offered,
     );
 }
 

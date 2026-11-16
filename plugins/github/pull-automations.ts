@@ -9,8 +9,11 @@ export type Fresh = {
   changed: () => void;
 };
 
-// How an automation is offered on one attached pull request, as it was last read.
-export type Offers = (link: PullLink, pull: PullInfo) => AutomationState;
+// One attached pull request as it was last read, with the signed-in account when that is known.
+export type Offered = { link: PullLink; pull: PullInfo; viewer?: string };
+
+// How an automation is offered on one attached pull request.
+export type Offers = (offered: Offered) => AutomationState;
 
 /*
  * One of the Plugin's own automations on a Session's attached pull requests (ADR-0055). What it keeps, what it reads

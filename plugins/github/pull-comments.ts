@@ -8,7 +8,20 @@ export type CommentInfo = {
   path: string;
   line?: number;
   body: string;
+  // Written by the repository's owner, a member, a collaborator or a GitHub App: the only authors Auto-fix prompts about.
+  trusted: boolean;
 };
+
+// How GitHub relates an author to the repository, for the authors whose comments are trusted.
+const trustedAssociations: ReadonlySet<Json | undefined> = new Set([
+  'OWNER',
+  'MEMBER',
+  'COLLABORATOR',
+]);
+
+const trustedOf = (comment: Json): boolean =>
+  trustedAssociations.has(valueAt(comment, ['author_association'])) ||
+  valueAt(comment, ['user', 'type']) === 'Bot';
 
 const invalid = 'GitHub returned invalid review comments.';
 
@@ -37,6 +50,7 @@ const commentOf = (comment: Json): CommentInfo => ({
   path: text(comment, invalid, 'path'),
   ...lineOf(comment),
   body: text(comment, invalid, 'body'),
+  trusted: trustedOf(comment),
 });
 
 function parseComments(body: string): CommentInfo[] {

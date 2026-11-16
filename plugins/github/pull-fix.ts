@@ -29,14 +29,37 @@ const isOn = (record?: FixRecord): boolean => record?.enabled === true;
 const stoppedOn = (record: FixRecord | undefined, head: string): boolean =>
   record?.stopHead === head;
 
-// Auto-fix as the Change offers it: any attached pull request can use it, and a stop is told while its commit is the head.
-export function fixOf(
+const notYours = 'Only pull requests you opened';
+
+// Opened by another account. An author or a signed-in account not known says nothing, so it is never taken for another.
+export const openedByAnother = (
+  { author }: Pick<PullInfo, 'author'>,
+  viewer?: string,
+): boolean =>
+  author !== undefined &&
+  viewer !== undefined &&
+  author.toLowerCase() !== viewer.toLowerCase();
+
+const yoursOf = (
   record: FixRecord | undefined,
-  { head }: Pick<PullInfo, 'head'>,
-): AutomationState {
+  head: string,
+): AutomationState => {
   if (isOn(record)) return { on: true, available: true };
 
   return stoppedOn(record, head) ? stoppedOf(head) : idle;
+};
+
+/*
+ * Auto-fix as the Change offers it: only on a pull request the signed-in account opened, and a stop is told while its
+ * commit is the head.
+ */
+export function fixOf(
+  record: FixRecord | undefined,
+  { pull, viewer }: { pull: PullInfo; viewer?: string },
+): AutomationState {
+  return openedByAnother(pull, viewer)
+    ? { on: false, available: false, reason: notYours }
+    : yoursOf(record, pull.head);
 }
 
 type Sessions = Pick<Argo['sessions'], 'prompt'>;

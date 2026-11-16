@@ -11,7 +11,7 @@ async function offersOf(
 ): Promise<Offers> {
   const links = await archive.forSessions(sessionIds);
 
-  return (link) => archiveOf(links.some((kept) => sameLink(kept, link)));
+  return ({ link }) => archiveOf(links.some((kept) => sameLink(kept, link)));
 }
 
 /*

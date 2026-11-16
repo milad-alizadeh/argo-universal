@@ -17,12 +17,13 @@ import { readOpenOnly } from './pull-open-reads';
 import type { PullReads } from './pull-reads';
 import type { PullRecords } from './pull-records';
 import type { PullKey, PullLink, PullStore } from './pull-store';
+import type { ViewerReads } from './pull-viewer';
 
 export type ChangesSource = {
   store: PullStore;
   automations: Automations;
   records: PullRecords;
-  reads: PullReads & AutomationReads & CommentsReads;
+  reads: PullReads & AutomationReads & CommentsReads & ViewerReads;
   readState: Argo['queries']['readState'];
 };
 
@@ -37,6 +38,8 @@ export type LinkRead<Link extends PullKey = PullLink> = {
   settings?: Known<MergeSettings>;
   // Read only for an Open pull request, the only one Auto-fix prompts about.
   comments?: Known<CommentInfo[]>;
+  // The signed-in account, read beside an Open pull request so Auto-fix can tell whether it opened it.
+  viewer?: Known<string>;
 } & Attached;
 
 // Two Sessions attaching the same pull request ask the same question, so they share one entry.

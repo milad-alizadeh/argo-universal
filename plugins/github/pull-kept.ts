@@ -1,5 +1,5 @@
 import type { AutomationOffer } from './pull-automation';
-import type { Automations } from './pull-automations';
+import type { Automations, Offered } from './pull-automations';
 import type { PullInfo } from './pull-info';
 import type { Known } from './pull-known';
 import type { PullLink, PullStore } from './pull-store';
@@ -25,7 +25,7 @@ export const lowered = (link: PullLink): PullLink => ({
 export const sameLink = (record: PullLink, link: PullLink): boolean =>
   identityOf(record) === identityOf(link);
 
-type Offering = (link: PullLink, pull: PullInfo) => Attached['kept'];
+type Offering = (offered: Offered) => Attached['kept'];
 
 async function offeringOf(
   { fix, archive }: Automations,
@@ -36,20 +36,34 @@ async function offeringOf(
     archive.offers(sessionIds),
   ]);
 
-  return (link, pull) => ({
-    fix: fixOffers(link, pull),
-    archive: archiveOffers(link, pull),
+  return (offered) => ({
+    fix: fixOffers(offered),
+    archive: archiveOffers(offered),
   });
 }
 
-type Read = { link: PullLink; pull: Known<PullInfo> };
+type Read = {
+  link: PullLink;
+  pull: Known<PullInfo>;
+  viewer?: Known<string>;
+};
+
+const withViewer = (viewer?: string): Pick<Offered, 'viewer'> =>
+  viewer === undefined ? {} : { viewer };
 
 const attachKept = <Shown extends Read>(
   read: Shown,
   offering: Offering,
 ): Shown & Attached =>
   read.pull.data
-    ? { ...read, kept: offering(read.link, read.pull.data) }
+    ? {
+        ...read,
+        kept: offering({
+          link: read.link,
+          pull: read.pull.data,
+          ...withViewer(read.viewer?.data),
+        }),
+      }
     : read;
 
 type ShownOf<Shown> = (links: PullLink[]) => Promise<Shown[]>;

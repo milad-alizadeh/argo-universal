@@ -66,7 +66,7 @@ export const sha = '0123456789abcdef0123456789abcdef01234567';
 
 type Names = Pick<
   FixturePull,
-  'number' | 'title' | 'html_url' | 'head' | 'base' | 'node_id'
+  'number' | 'title' | 'html_url' | 'head' | 'base' | 'node_id' | 'user'
 >;
 
 const namesOf = (repository: string, number: number): Names => ({
@@ -76,6 +76,7 @@ const namesOf = (repository: string, number: number): Names => ({
   html_url: `https://github.com/${repository}/pull/${number}`,
   head: { ref: `feature-${number}`, sha, repo: { full_name: repository } },
   base: { ref: 'main', repo: { full_name: repository } },
+  user: { login: 'octocat' },
 });
 
 const factsOf = (): Omit<FixturePull, keyof Names> => ({

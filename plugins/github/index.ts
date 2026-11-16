@@ -19,6 +19,7 @@ import {
 import { rowItemsBySession } from './pull-row-items';
 import { createPullStore } from './pull-store';
 import { createPulls, type Pulls } from './pull-sync';
+import { defineViewerReads } from './pull-viewer';
 import { watchProject } from './pull-watch';
 import type { SessionCaller } from './session-caller';
 
@@ -31,6 +32,7 @@ function sourceOf(argo: Argo): ChangesSource {
       ...definePullReads(argo),
       ...defineAutomationReads(argo),
       ...defineCommentsReads(argo),
+      ...defineViewerReads(argo),
     },
     readState: argo.queries.readState,
   };
