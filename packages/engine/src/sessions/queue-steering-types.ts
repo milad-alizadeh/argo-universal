@@ -1,9 +1,17 @@
-import type { QueueCommand, QueuedPrompt } from '@repo/contracts';
+import type {
+  QueueCommand,
+  ContentBlock,
+  QueuedPromptId,
+} from '@repo/contracts';
 
-export type SteerCommand = Extract<QueueCommand, { action: 'steer' }>;
+export type SteerCommand =
+  | Extract<QueueCommand, { action: 'steer' }>
+  | { action: 'steerDraft'; prompt: ContentBlock[] };
 
 export interface QueueSteering {
-  row: QueuedPrompt;
+  prompt: ContentBlock[];
+  queuedId?: QueuedPromptId;
+  messageId: string;
   turnId: string;
   token: string;
 }

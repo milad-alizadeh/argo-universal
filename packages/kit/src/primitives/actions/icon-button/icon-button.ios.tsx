@@ -75,9 +75,12 @@ function modifiers(
   ];
 }
 
-// Expo UI's shared icon name also allows an Android drawable; on iOS it is always an SF Symbol name.
+/*
+ * Expo UI's shared icon name also allows an Android drawable; on iOS it is always an SF Symbol name. It stays outlined
+ * when selected, as every Argo icon does; the selected tint marks it.
+ */
 function systemImage(props: IconButtonProps): SwiftProps['systemImage'] {
-  const name = nativeIconName(props.icon, props.selected ?? false);
+  const name = nativeIconName(props.icon);
 
   return typeof name === 'string' ? name : undefined;
 }

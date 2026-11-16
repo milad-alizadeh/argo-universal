@@ -1,14 +1,15 @@
 import { useContext, useEffect, useState, type ReactNode } from 'react';
 import {
   LinkPreviewContext,
+  type LinkMark,
   type LinkPreviewSource,
   type LiveLinkMarks,
 } from './link-preview-context';
 
 // The mark is asked for once the link draws, so it shows without a hover, and again after each hover loads a fresher card.
-export function useLinkMark(href: string, card: ReactNode): ReactNode {
+export function useLinkMark(href: string, card: ReactNode): LinkMark | null {
   const source = useContext(LinkPreviewContext);
-  const [mark, setMark] = useState<ReactNode>(null);
+  const [mark, setMark] = useState<LinkMark | null>(null);
 
   useEffect(() => requestMark(source, href, setMark), [source, href, card]);
 
@@ -19,7 +20,7 @@ export function useLinkMark(href: string, card: ReactNode): ReactNode {
 function useLiveMark(
   marks: LiveLinkMarks | undefined,
   href: string,
-): ReactNode {
+): LinkMark | null | undefined {
   const track = marks?.track;
 
   useEffect(() => track?.(href), [track, href]);
@@ -30,7 +31,7 @@ function useLiveMark(
 function requestMark(
   source: LinkPreviewSource | null,
   href: string,
-  setMark: (mark: ReactNode) => void,
+  setMark: (mark: LinkMark) => void,
 ): (() => void) | undefined {
   const pending = markOf(source, href);
 
@@ -47,7 +48,7 @@ function requestMark(
 function markOf(
   source: LinkPreviewSource | null,
   href: string,
-): Promise<ReactNode> | null {
+): Promise<LinkMark | null> | null {
   const mark = source?.mark;
 
   return mark ? mark(href) : null;
@@ -56,8 +57,8 @@ function markOf(
 // A refetch that finds nothing (the Server busy, `gh` failing) keeps the last state drawn rather than blanking it.
 function keepMark(
   alive: { current: boolean },
-  value: ReactNode,
-  setMark: (mark: ReactNode) => void,
+  value: LinkMark | null,
+  setMark: (mark: LinkMark) => void,
 ): void {
   if (alive.current && value) setMark(value);
 }
