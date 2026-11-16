@@ -14,7 +14,7 @@ const categoryOrbs = new Map<string, OrbState>([
   ['execute', 'shaping'],
 ]);
 
-export function toolCallOrb(row: ToolCallUpdate | undefined): OrbState {
+export function toolCallOrb(row?: ToolCallUpdate): OrbState {
   if (!row) return 'working';
 
   return categoryOrbs.get(toolCallCategory(row)) ?? 'working';

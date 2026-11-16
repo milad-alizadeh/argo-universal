@@ -57,25 +57,25 @@ const workGroup = (item: ToolWork): FeedGroup => ({
 });
 
 // A request, a retry and a thought stand on their own; only the Turn's work joins the Tool call before it.
-const joinsWork = ({ source }: LiveHeaderValue): boolean =>
-  ['working', 'tool_call'].includes(source.type);
+type SourceType = LiveHeaderValue['source']['type'];
+
+const joinsWork = (source: SourceType): boolean =>
+  ['working', 'tool_call'].includes(source);
 
 function wrappedWork(
   item: FeedViewItem,
-  liveHeader: LiveHeaderValue,
+  source: SourceType,
 ): FeedGroup | undefined {
-  return isToolWork(item) && joinsWork(liveHeader)
-    ? workGroup(item)
-    : undefined;
+  return isToolWork(item) && joinsWork(source) ? workGroup(item) : undefined;
 }
 
 function newestGroup(
   newest: FeedViewItem | undefined,
-  liveHeader: LiveHeaderValue,
+  source: SourceType,
 ): FeedGroup | undefined {
   if (!newest) return undefined;
 
-  return isGroup(newest) ? newest : wrappedWork(newest, liveHeader);
+  return isGroup(newest) ? newest : wrappedWork(newest, source);
 }
 
 /*
@@ -91,7 +91,7 @@ export function withLiveHeader(
   const shown = shownLiveHeader(drawnItems, liveHeader);
 
   if (!shown) return drawnItems;
-  const group = newestGroup(drawnItems.at(-1), shown);
+  const group = newestGroup(drawnItems.at(-1), shown.source.type);
 
   if (group)
     return [...drawnItems.slice(0, -1), { ...group, liveHeader: shown }];

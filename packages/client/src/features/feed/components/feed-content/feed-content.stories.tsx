@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { recordedAcpContent } from '../../../../lib/product/acp-feed-content.mocks';
 import { toFeedView } from '../../view/to-feed-view';
 import { Feed } from '../feed/feed';
+import { workingLiveHeader } from '../live-header/live-header-fixtures';
 import { completedCommand } from '../tool-call.mocks';
 
 const { rows, snapshot } = recordedAcpContent('agent-1');
@@ -43,11 +44,6 @@ export const WorkingAfterToolCall: Story = {
   name: 'Working after a Tool call',
   args: {
     items: toFeedView([completedCommand], snapshot).items,
-    liveHeader: {
-      text: 'Working',
-      source: { type: 'working' },
-      startedAt: 0,
-    },
-    now: 61_000,
+    ...workingLiveHeader,
   },
 };

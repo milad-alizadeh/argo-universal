@@ -39,7 +39,7 @@ export const toolCallHeader = {
 } satisfies LiveHeaderProps;
 
 // A running Tool call of one kind, for the Orb that kind moves.
-export const movingHeader = (state: OrbState): LiveHeaderProps => {
+const movingHeader = (state: OrbState): LiveHeaderProps => {
   const step = toolCallStepMoving(state);
 
   return {
@@ -48,3 +48,12 @@ export const movingHeader = (state: OrbState): LiveHeaderProps => {
     now: liveHeaderNow,
   };
 };
+
+// Reading a file: the Orb scans as a globe.
+export const searchingHeader = movingHeader('searching');
+
+// Editing a file: the Orb writes as a ribbon.
+export const composingHeader = movingHeader('composing');
+
+// Running a command: the Orb morphs.
+export const shapingHeader = movingHeader('shaping');
