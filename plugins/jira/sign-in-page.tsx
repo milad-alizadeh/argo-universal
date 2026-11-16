@@ -11,6 +11,16 @@ import {
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { tokenPageUrl, tokenScopes } from './atlassian';
+import {
+  atlassianOffer,
+  whoIsSignedIn,
+  type SignIns,
+} from './atlassian-sign-in';
+import {
+  atlassianSection,
+  type AtlassianOffer,
+  type AtlassianRuns,
+} from './atlassian-sign-in-section';
 import type { JiraSignIn } from './jira-sign-in';
 
 // The page `contributes.accounts` names.
@@ -22,7 +32,11 @@ type SignInState = { email: string; site: string };
 type To = PageTo<SignInState>;
 
 // Who is signed in, or null while the page takes a token; and why the last token was not used, if it was not.
-type SignInData = { label: string | null; error: string | null };
+type SignInData = {
+  label: string | null;
+  error: string | null;
+  atlassian: AtlassianOffer;
+};
 
 const flowError = (state: TokenPasteState): string | null =>
   state.kind === 'failed' ? state.message : null;
@@ -116,6 +130,11 @@ const tokenLink = (
   </FieldGroup.Section>
 );
 
+const atlassianRuns = (to: To): AtlassianRuns => ({
+  start: to.run('signInWithAtlassian', {}),
+  cancel: to.run('cancelSignInWithAtlassian', {}),
+});
+
 const signInFields = (
   data: SignInData,
   to: To,
@@ -125,6 +144,7 @@ const signInFields = (
     {accountSection(state, to)}
     {tokenSection(state, data, to)}
     {tokenLink}
+    {atlassianSection(data.atlassian, atlassianRuns(to))}
   </FieldGroup>
 );
 
@@ -136,13 +156,17 @@ const signInForm = (
   <Screen title="Sign in to Jira">{signInFields(data, to, state)}</Screen>
 );
 
-// A token is pasted on any Device, a paired phone included; the kit keeps it and adds the Account.
-export function defineSignInPage(argo: Argo, signIn: JiraSignIn): void {
+/*
+ * A token is pasted on any Device, a paired phone included; the kit keeps it and adds the Account. "Sign in with
+ * Atlassian" is offered under it once the person has set up their OAuth app.
+ */
+export function defineSignInPage(argo: Argo, signIns: SignIns): void {
   argo.pages.define(signInPath, {
     state: { email: '', site: '' },
-    load: (): SignInData => ({
-      label: signIn.signedIn(),
-      error: errorOf(signIn),
+    load: async ({ context }): Promise<SignInData> => ({
+      label: whoIsSignedIn(signIns),
+      error: errorOf(signIns.paste),
+      atlassian: await atlassianOffer(argo, signIns, context.serverDevice),
     }),
     render: (data, to, { state }) =>
       data.label === null

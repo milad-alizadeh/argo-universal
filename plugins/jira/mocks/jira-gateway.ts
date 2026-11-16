@@ -1,12 +1,18 @@
 import type { FixtureAnswer, FixtureRequest } from '@argo/plugin-kit/testing';
 import { parseJson } from '../json';
+import type { AtlassianOAuth } from './atlassian-oauth';
 import type { FixtureSite, FixtureToken, JiraData } from './jira-data';
 import type { JiraCall, JiraRoute } from './jira-routes';
 
 // What a request reached: a named route, or tenant info, and its answer.
 export type Routed = { name: string; answer: () => FixtureAnswer };
 
-export type Routing = { data: JiraData; routes: JiraRoute[] };
+// `oauth` admits the access tokens Atlassian's OAuth fixture issued, sent as Bearer.
+export type Routing = {
+  data: JiraData;
+  routes: JiraRoute[];
+  oauth: AtlassianOAuth | null;
+};
 
 const unauthorized: FixtureAnswer = {
   status: 401,
@@ -63,17 +69,31 @@ const credentialOf = ({ headers }: FixtureRequest): string =>
     'base64',
   ).toString();
 
+const bearer = /^Bearer (?<token>.+)$/;
+
+// An API token as Basic over the email, or an OAuth access token as Bearer.
+function tokenOf(
+  { data, oauth }: Routing,
+  request: FixtureRequest,
+): FixtureToken | undefined {
+  const { token } = groupsOf(bearer, String(request.headers.authorization));
+
+  if (token) return oauth?.who(token);
+
+  const credential = credentialOf(request);
+
+  return data.tokens.find(
+    ({ email, token: issued }) => `${email}:${issued}` === credential,
+  );
+}
+
 // Whose token a request carries, when it is one Atlassian issued for where it was sent.
 function admitted(
-  data: JiraData,
+  routing: Routing,
   request: FixtureRequest,
   located: Located,
 ): FixtureToken | null {
-  const credential = credentialOf(request);
-
-  const who = data.tokens.find(
-    ({ email, token }) => `${email}:${token}` === credential,
-  );
+  const who = tokenOf(routing, request);
 
   return who?.scoped === located.scoped ? who : null;
 }
@@ -123,7 +143,7 @@ export function routed(
 
   if (!located) return notFound('Site');
 
-  const who = admitted(routing.data, request, located);
+  const who = admitted(routing, request, located);
 
   return who ? matched(routing, { request, located, who }) : unauthorized;
 }
