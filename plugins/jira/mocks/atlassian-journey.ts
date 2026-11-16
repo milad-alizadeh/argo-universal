@@ -122,7 +122,7 @@ export const projectPage = (
   test.pages.open({ path: `/projects/${firstProject.id}`, serverDevice });
 
 // The Authorization header of each read that reached Jira's issue search.
-export const searchCredentials = ({ jira }: AtlassianJira): string[] =>
+const searchCredentials = ({ jira }: AtlassianJira): string[] =>
   jira.calls('search').map(({ headers }) => String(headers.authorization));
 
 // The Authorization header the last read of Jira's issue search carried.
