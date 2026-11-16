@@ -11,7 +11,7 @@ import {
   show,
   viewSwitch,
 } from './mocks/board';
-import { statuses } from './mocks/jira-issue-routes';
+import { statuses } from './mocks/jira-workflow';
 import { firstProject } from './mocks/journey';
 
 const timeoutMs = 20_000;

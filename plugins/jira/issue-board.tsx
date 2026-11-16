@@ -1,9 +1,10 @@
 import { Board, Label, SegmentedControl } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { boardColumns, boardLabel, movesOf } from './board-columns';
-import type { JiraIssue, JiraPerson, JiraStatus } from './jira-client';
+import type { JiraStatus } from './issue-fields';
 import { issuePath } from './jira-paths';
-import type { IssuesTo } from './project-views';
+import type { JiraIssue, JiraPerson } from './jira-readers';
+import type { IssuesTo } from './view-frame';
 
 // How a Project's issues show: a list or a board. It is Page state, so the App keeps it for the page.
 export type IssuesView = 'list' | 'board';

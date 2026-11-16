@@ -1,94 +1,18 @@
 import type { FixtureAnswer } from '@argo/plugin-kit/testing';
+import { at, text, type Json } from '../json';
+import { ada, grace, type FixtureIssue, type FixtureSite } from './jira-data';
+import type { JiraCall, JiraRoute } from './jira-routes';
 import {
-  grace,
-  person,
-  type FixtureIssue,
-  type FixtureSite,
-} from './jira-data';
-import type { JiraCall, JiraRoute } from './jira-service';
+  issueJson,
+  movesFrom,
+  priorities,
+  transitionsJson,
+} from './jira-workflow';
 
 /*
- * The fixture Jira's issue routes: one issue, its transitions, and the writes the issue page makes. Every project
- * shares one workflow, so To Do cannot go straight to Done, and every site the same priorities. A write changes the
- * fixture's data, so the next read shows it.
+ * The fixture Jira's issue routes: one issue, its transitions, the site's priorities and assignable people, and the
+ * writes the issue page makes. A write changes the fixture's data, so the next read shows it.
  */
-type Category = FixtureIssue['status']['category'];
-
-type Status = { id: string; name: string; category: Category };
-
-export const statuses = {
-  todo: { id: '1', name: 'To Do', category: 'new' },
-  doing: { id: '3', name: 'In Progress', category: 'indeterminate' },
-  review: { id: '4', name: 'In Review', category: 'indeterminate' },
-  done: { id: '5', name: 'Done', category: 'done' },
-} as const satisfies Record<string, Status>;
-
-// Which statuses each status may move to, as Jira's workflow allows; the transition's id is its target's id.
-const workflow: Record<string, Status[]> = {
-  [statuses.todo.name]: [statuses.doing],
-  [statuses.doing.name]: [statuses.todo, statuses.review, statuses.done],
-  [statuses.review.name]: [statuses.doing, statuses.done],
-  [statuses.done.name]: [statuses.todo],
-};
-
-export const priorities = [
-  { id: '1', name: 'Highest' },
-  { id: '2', name: 'High' },
-  { id: '3', name: 'Medium' },
-  { id: '4', name: 'Low' },
-  { id: '5', name: 'Lowest' },
-];
-
-const ada = { accountId: person.accountId, displayName: person.displayName };
-
-const peopleOf = (site: FixtureSite) => site.people ?? [ada, grace];
-
-const statusOf = (issue: FixtureIssue): Status =>
-  Object.values(statuses).find(({ name }) => name === issue.status.name) ?? {
-    id: '0',
-    ...issue.status,
-  };
-
-const statusJson = (status: Status) => ({
-  id: status.id,
-  name: status.name,
-  statusCategory: { key: status.category },
-});
-
-const transitionsOf = (issue: FixtureIssue) =>
-  (workflow[issue.status.name] ?? []).map((to) => ({
-    id: to.id,
-    name: to.name,
-    isAvailable: true,
-    to: statusJson(to),
-  }));
-
-// An issue as Jira answers it, with its transitions when the request expands them.
-export const issueJson = (
-  issue: FixtureIssue,
-  index: number,
-  expand: string,
-) => ({
-  id: String(10_000 + index),
-  key: issue.key,
-  fields: {
-    summary: issue.summary,
-    status: statusJson(statusOf(issue)),
-    assignee: issue.assignee,
-    priority: issue.priority
-      ? {
-          id: priorities.find(({ name }) => name === issue.priority)?.id,
-          name: issue.priority,
-        }
-      : null,
-    labels: issue.labels ?? [],
-    description: issue.description ?? null,
-  },
-  ...(expand.split(',').includes('transitions')
-    ? { transitions: transitionsOf(issue) }
-    : {}),
-});
-
 const notFound: FixtureAnswer = {
   status: 404,
   json: {
@@ -106,138 +30,110 @@ const refused = (message: string): FixtureAnswer => ({
 
 const done: FixtureAnswer = { status: 204, text: '' };
 
-type Found = { issue: FixtureIssue; index: number };
+const peopleOf = (site: FixtureSite): FixtureSite['people'] =>
+  site.people ?? [ada, grace];
 
-function issueAt({ site, match }: JiraCall): Found | null {
-  const key = decodeURIComponent(match[1] ?? '');
+function issueAt({ site, match }: JiraCall): FixtureIssue | undefined {
+  const key = decodeURIComponent(match.groups?.key ?? '');
 
-  for (const project of site.projects) {
-    const index = project.issues.findIndex((issue) => issue.key === key);
-    const issue = project.issues[index];
-
-    if (issue) return { issue, index };
-  }
-
-  return null;
+  return site.projects
+    .flatMap(({ issues }) => issues)
+    .find((issue) => issue.key === key);
 }
+
+type IssueAnswer = (issue: FixtureIssue, call: JiraCall) => FixtureAnswer;
 
 // Answers for one issue, or Jira's 404 when the site has none by that key.
 const withIssue =
-  (answer: (found: Found, call: JiraCall) => FixtureAnswer) =>
+  (answer: IssueAnswer) =>
   (call: JiraCall): FixtureAnswer => {
-    const found = issueAt(call);
+    const issue = issueAt(call);
 
-    return found ? answer(found, call) : notFound;
+    return issue ? answer(issue, call) : notFound;
   };
 
-const field = (body: unknown, ...path: string[]): unknown =>
-  path.reduce<unknown>(
-    (inner, key) =>
-      typeof inner === 'object' && inner !== null
-        ? Reflect.get(inner, key)
-        : undefined,
-    body,
-  );
+const expandOf = ({ request }: JiraCall): string =>
+  new URLSearchParams(request.path.split('?')[1] ?? '').get('expand') ?? '';
 
-function transition({ issue }: Found, { body }: JiraCall): FixtureAnswer {
-  const id = field(body, 'transition', 'id');
-  const to = (workflow[issue.status.name] ?? []).find(
-    (status) => status.id === id,
-  );
+const shown: IssueAnswer = (issue, call) => ({
+  json: issueJson(issue, expandOf(call)),
+});
 
-  if (!to)
-    return refused(
-      `Transition id '${String(id)}' is not valid for this issue.`,
-    );
+const transition: IssueAnswer = (issue, { body }) => {
+  const id = text(at(body, 'transition', 'id'));
+  const to = movesFrom(issue).find((status) => status.id === id);
+
+  if (!to) return refused(`Transition id '${id}' is not valid for this issue.`);
 
   issue.status = { name: to.name, category: to.category };
 
   return done;
-}
+};
 
-function assign({ issue }: Found, { body, site }: JiraCall): FixtureAnswer {
-  const accountId = field(body, 'accountId');
+type Person = NonNullable<FixtureSite['people']>[number];
 
-  if (accountId === null) {
-    issue.assignee = null;
+// No one unassigns; anyone else must be someone the site's projects may assign.
+const assignable = (
+  site: FixtureSite,
+  accountId: Json | undefined,
+): Person | null | undefined =>
+  accountId === null
+    ? null
+    : peopleOf(site)?.find((one) => one.accountId === accountId);
 
-    return done;
-  }
+const assign: IssueAnswer = (issue, { body, site }) => {
+  const accountId = at(body, 'accountId');
+  const found = assignable(site, accountId);
 
-  const found = peopleOf(site).find((one) => one.accountId === accountId);
-
-  if (!found)
-    return refused(`User '${String(accountId)}' cannot be assigned issues.`);
+  if (found === undefined)
+    return refused(`User '${text(accountId)}' cannot be assigned issues.`);
 
   issue.assignee = found;
 
   return done;
-}
+};
 
-function edit({ issue }: Found, { body }: JiraCall): FixtureAnswer {
-  const id = field(body, 'fields', 'priority', 'id');
+const edit: IssueAnswer = (issue, { body }) => {
+  const id = text(at(body, 'fields', 'priority', 'id'));
   const priority = priorities.find((each) => each.id === id);
 
-  if (!priority) return refused(`The priority selected is invalid.`);
+  if (!priority) return refused('The priority selected is invalid.');
 
   issue.priority = priority.name;
 
   return done;
+};
+
+const people = ({ site }: JiraCall): FixtureAnswer => ({
+  json: (peopleOf(site) ?? []).map((one) => ({
+    ...one,
+    accountType: 'atlassian',
+  })),
+});
+
+const key = '(?<key>[^/]+)';
+
+// A route as `<METHOD> <path>`, over the path after `/rest/api/3`.
+function route(
+  name: string,
+  call: string,
+  answer: JiraRoute['answer'],
+): JiraRoute {
+  const [method = 'GET', path = ''] = call.split(' ');
+
+  return { name, method, path: new RegExp(`^${path}$`), answer };
 }
 
-const key = '([^/]+)';
+const transitionsOf = withIssue((issue) => ({
+  json: { transitions: transitionsJson(issue) },
+}));
 
 export const issueRoutes: JiraRoute[] = [
-  {
-    name: 'issue',
-    method: 'GET',
-    path: new RegExp(`^/issue/${key}$`),
-    answer: withIssue(({ issue, index }, { query }) => ({
-      json: issueJson(issue, index, query.get('expand') ?? ''),
-    })),
-  },
-  {
-    name: 'transitions',
-    method: 'GET',
-    path: new RegExp(`^/issue/${key}/transitions$`),
-    answer: withIssue(({ issue }) => ({
-      json: { transitions: transitionsOf(issue) },
-    })),
-  },
-  {
-    name: 'transition',
-    method: 'POST',
-    path: new RegExp(`^/issue/${key}/transitions$`),
-    answer: withIssue(transition),
-  },
-  {
-    name: 'assign',
-    method: 'PUT',
-    path: new RegExp(`^/issue/${key}/assignee$`),
-    answer: withIssue(assign),
-  },
-  {
-    name: 'edit',
-    method: 'PUT',
-    path: new RegExp(`^/issue/${key}$`),
-    answer: withIssue(edit),
-  },
-  {
-    name: 'priorities',
-    method: 'GET',
-    path: /^\/priority$/,
-    answer: () => ({ json: priorities }),
-  },
-  {
-    name: 'assignable',
-    method: 'GET',
-    path: /^\/user\/assignable\/search$/,
-    answer: ({ site }) => ({
-      json: peopleOf(site).map((one) => ({
-        ...one,
-        accountType: 'atlassian',
-        active: true,
-      })),
-    }),
-  },
+  route('issue', `GET /issue/${key}`, withIssue(shown)),
+  route('transitions', `GET /issue/${key}/transitions`, transitionsOf),
+  route('transition', `POST /issue/${key}/transitions`, withIssue(transition)),
+  route('assign', `PUT /issue/${key}/assignee`, withIssue(assign)),
+  route('edit', `PUT /issue/${key}`, withIssue(edit)),
+  route('priorities', 'GET /priority', () => ({ json: priorities })),
+  route('assignable', 'GET /user/assignable/search', people),
 ];

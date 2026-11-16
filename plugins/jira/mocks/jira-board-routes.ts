@@ -1,6 +1,7 @@
 import type { FixtureAnswer } from '@argo/plugin-kit/testing';
-import { statuses } from './jira-issue-routes';
-import type { JiraCall, JiraRoute } from './jira-service';
+import type { Json } from '../json';
+import type { JiraCall, JiraRoute } from './jira-routes';
+import { statuses } from './jira-workflow';
 
 /*
  * The fixture Jira's project statuses, as `GET /project/<key>/statuses` answers them: one list per issue type. Jira
@@ -9,51 +10,46 @@ import type { JiraCall, JiraRoute } from './jira-service';
  */
 type Status = (typeof statuses)[keyof typeof statuses];
 
-type StatusJson = {
-  id: string;
-  name: string;
-  statusCategory: { key: Status['category'] };
-};
-
-const statusJson = (status: Status): StatusJson => ({
-  id: status.id,
-  name: status.name,
-  statusCategory: { key: status.category },
+const statusJson = ({ id, name, category }: Status): Json => ({
+  id,
+  name,
+  statusCategory: { key: category },
 });
 
-export const projectStatuses = [
-  {
-    id: '10001',
-    name: 'Task',
-    subtask: false,
-    statuses: [statuses.todo, statuses.doing, statuses.done].map(statusJson),
-  },
-  {
-    id: '10002',
-    name: 'Bug',
-    subtask: false,
-    statuses: [statuses.todo, statuses.done, statuses.review].map(statusJson),
-  },
+const { todo, doing, review, done } = statuses;
+
+const issueType = (id: string, name: string, shown: Status[]): Json => ({
+  id,
+  name,
+  subtask: false,
+  statuses: shown.map(statusJson),
+});
+
+export const projectStatuses: Json = [
+  issueType('10001', 'Task', [todo, doing, done]),
+  issueType('10002', 'Bug', [todo, done, review]),
 ];
 
-function projectStatusesOf({ site, match }: JiraCall): FixtureAnswer {
-  const key = decodeURIComponent(match[1] ?? '');
+const noSuchProject = (key: string): FixtureAnswer => ({
+  status: 404,
+  json: { errorMessages: [`No project could be found with key '${key}'.`] },
+});
 
-  return site.projects.some((project) => project.key === key)
-    ? { json: projectStatuses }
-    : {
-        status: 404,
-        json: {
-          errorMessages: [`No project could be found with key '${key}'.`],
-        },
-      };
+const keyOf = ({ groups }: RegExpExecArray): string =>
+  decodeURIComponent(groups?.key ?? '');
+
+function projectStatusesOf({ site, match }: JiraCall): FixtureAnswer {
+  const key = keyOf(match);
+  const known = site.projects.some((project) => project.key === key);
+
+  return known ? { json: projectStatuses } : noSuchProject(key);
 }
 
 export const boardRoutes: JiraRoute[] = [
   {
     name: 'statuses',
     method: 'GET',
-    path: /^\/project\/([^/]+)\/statuses$/,
+    path: /^\/project\/(?<key>[^/]+)\/statuses$/,
     answer: projectStatusesOf,
   },
 ];

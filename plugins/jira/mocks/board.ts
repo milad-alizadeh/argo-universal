@@ -1,7 +1,8 @@
 import type { OpenPage, WireNode } from '@argo/plugin-kit/testing';
 import { boardLabel } from '../board-columns';
+import { listed as listedIssues } from './issue-journey';
 import type { FixtureIssue } from './jira-data';
-import { choose, projectPage, signIn, startJira, type Jira } from './journey';
+import type { Jira } from './journey';
 
 /*
  * The board's journeys: the ARGO issues of the first Project, switched between list and board as a person taps the
@@ -14,19 +15,13 @@ const editPauseMs = 300;
 
 export const argoOne = 'Pick a Jira project for each Argo Project';
 
-export const argoThree = 'Show Jira issues in Argo';
+export { argoThree } from './issue-journey';
 
 // Signed in, with ARGO chosen for the first Project: its issues, as the person first sees them.
 export async function listed(): Promise<Shown> {
-  const jira = await startJira();
+  const { list, ...jira } = await listedIssues();
 
-  await signIn(jira);
-
-  const page = await projectPage(jira);
-
-  await choose(page, 'Jira project', 'ARGO');
-
-  return { ...jira, page };
+  return { ...jira, page: list };
 }
 
 export const viewSwitch = (node: WireNode): boolean =>
