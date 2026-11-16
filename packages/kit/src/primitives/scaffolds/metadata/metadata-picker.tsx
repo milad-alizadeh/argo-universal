@@ -78,9 +78,9 @@ export function MetadataPicker(props: MetadataPickerProps): ReactElement {
   );
 }
 
-// The value reads as the button by a tint on hover alone.
+// The value reads as the button by a tint on hover alone, as wide as the value and no wider.
 const valueClass =
-  '-mx-2 min-w-0 self-stretch rounded-md px-2 web:hover:bg-hover';
+  '-mx-2 max-w-full min-w-0 self-start rounded-md px-2 web:hover:bg-hover';
 
 // The popover anchors to this button and presses it open, so what it hands down (ref, handlers, ARIA state) lands on the Pressable.
 type ValueButtonProps = ComponentProps<typeof Pressable> & { title: string };
