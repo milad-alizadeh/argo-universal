@@ -47,12 +47,10 @@ type TileIconProps = Pick<SectionButtonProps, 'section' | 'selected'> & {
   hovered: boolean;
 };
 
+// The hover, pressed and selected tints every ghost control in Argo takes; a selected tile draws no ring.
 const tileClass = (selected: boolean): string =>
   cn(
-    'items-center justify-center web:transition-colors web:duration-150 web:active:bg-pressed web:outline-none web:focus-visible:ring-2 web:focus-visible:ring-focus',
-    selected
-      ? 'web:hover-capable:hover:ring-1 web:hover-capable:hover:ring-border'
-      : 'web:hover-capable:hover:bg-hover',
+    'items-center justify-center web:transition-colors web:duration-150 web:hover-capable:hover:bg-hover web:active:bg-pressed web:outline-none web:focus-visible:ring-2 web:focus-visible:ring-focus',
     railTiles.size,
     railTiles.corners,
     selected && railTiles.selected,
@@ -63,7 +61,6 @@ function TileIcon(props: TileIconProps): React.JSX.Element {
     <Icon
       name={props.section.icon}
       size="md"
-      filled={props.selected}
       tone={props.selected || props.hovered ? undefined : 'muted'}
     />
   );
@@ -99,9 +96,28 @@ function SectionTile(props: SectionButtonProps): React.JSX.Element {
   );
 }
 
+/*
+ * Icons stay outlined when selected, since a Plugin's own icon has no filled twin; a marker at the rail's edge says
+ * which section is open instead (Paper "Rail selected state — options", D). Android's Material indicator needs none.
+ */
+function SelectedMarker(props: { selected: boolean }): React.ReactNode {
+  if (!props.selected || !railTiles.marker) return null;
+
+  return (
+    <View
+      pointerEvents="none"
+      className={cn(
+        'absolute top-1/2 h-4 w-1 -translate-y-1/2 rounded-full bg-foreground',
+        railTiles.marker,
+      )}
+    />
+  );
+}
+
 const SectionButton = memo(function SectionButton(props: SectionButtonProps) {
   return (
     <View>
+      <SelectedMarker selected={props.selected} />
       <SectionTile {...props} />
       <AttentionBadge badge={props.badge} />
     </View>
