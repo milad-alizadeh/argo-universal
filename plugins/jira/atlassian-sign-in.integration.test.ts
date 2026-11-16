@@ -10,7 +10,7 @@ import {
   signInWithAtlassian,
   startWithAtlassian,
 } from './mocks/atlassian-journey';
-import { oauthClient } from './mocks/atlassian-oauth';
+import { oauthClient, registeredCallback } from './mocks/atlassian-oauth';
 import { arenaSite, person } from './mocks/jira-data';
 
 serialiseOnOAuthPort();
@@ -52,7 +52,7 @@ it(
       audience: 'api.atlassian.com',
       prompt: 'consent',
       client_id: oauthClient.id,
-      redirect_uri: 'http://127.0.0.1:51789/callback',
+      redirect_uri: registeredCallback,
       scope: 'read:jira-work read:jira-user write:jira-work offline_access',
     });
     expect(authorize.searchParams.has('client_secret')).toBe(false);
