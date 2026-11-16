@@ -39,10 +39,10 @@ type MessageFieldProps = Pick<
   'accessibilityLabel' | 'placeholder' | 'fieldClassName'
 >;
 
-// Ten 20px lines, plus the 20px of vertical padding the Composer puts on the field.
+// Ten lines at the field's active line height, plus the Composer's vertical padding.
 const editableClassName = cn(
   plainFieldClassName,
-  'max-h-55 overflow-y-auto whitespace-pre-wrap break-words text-foreground outline-none',
+  'max-h-[calc(10lh+1.25rem)] overflow-y-auto whitespace-pre-wrap break-words text-foreground outline-none',
 );
 
 function MessageEditable(props: MessageFieldProps): React.JSX.Element {
