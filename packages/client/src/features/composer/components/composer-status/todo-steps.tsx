@@ -6,7 +6,7 @@ import { SizeClass } from '@repo/kit/size-class/size-class';
 import { cn } from '@repo/kit/utils';
 import type { JSX } from 'react';
 import { ScrollView, View } from 'react-native';
-import { maximumPlanStepsHeight } from '../../utils/status';
+import { maximumTodoStepsHeight } from '../../utils/status';
 import { mutedTextClassName } from './status-surface';
 
 interface StepProps {
@@ -56,7 +56,7 @@ function StepText({ entry }: StepProps): JSX.Element {
 }
 
 // A wide window marks the running step with a tint.
-function PlanStep({ entry }: StepProps): JSX.Element {
+function TodoStep({ entry }: StepProps): JSX.Element {
   const className = cn(
     'flex-row items-start px-4 wide:pl-3 wide:pr-0.5 py-2 gap-2.5 wide:gap-1.5',
     entry.status === 'in_progress' && 'wide:rounded-md wide:bg-foreground/5',
@@ -81,7 +81,7 @@ function StepsList({ entries }: StepsListProps): JSX.Element {
     <View className="pb-1 wide:px-1 wide:pb-2">
       {withOccurrenceKeys(entries, (entry) => entry.content).map(
         ({ item: entry, key }) => (
-          <PlanStep key={key} entry={entry} />
+          <TodoStep key={key} entry={entry} />
         ),
       )}
     </View>
@@ -89,14 +89,14 @@ function StepsList({ entries }: StepsListProps): JSX.Element {
 }
 
 // A wide popover scrolls a long plan within its height; a phone's sheet scrolls itself.
-export function PlanSteps({ entries }: StepsListProps): JSX.Element {
+export function TodoSteps({ entries }: StepsListProps): JSX.Element {
   const steps = <StepsList entries={entries} />;
 
   return (
     <SizeClass
       compact={steps}
       wide={
-        <ScrollView style={{ maxHeight: maximumPlanStepsHeight }}>
+        <ScrollView style={{ maxHeight: maximumTodoStepsHeight }}>
           {steps}
         </ScrollView>
       }

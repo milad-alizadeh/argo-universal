@@ -123,7 +123,7 @@ A folder the Server loads that adds nav items, pages, Settings sections or Slot 
 _Avoid_: Extension, add-on, mod
 
 **Argo instructions**:
-Prose core gives every Session's Agent, once per Session, through Argo's MCP server, before any Plugin instructions. It tells the Agent how to work in Argo, such as keeping a Plan.
+Prose core gives every Session's Agent, once per Session, through Argo's MCP server, before any Plugin instructions. It tells the Agent how to work in Argo, such as keeping a Todo list.
 _Avoid_: Core prompt, system prompt
 
 **Plugin instructions**:
@@ -406,13 +406,13 @@ _Avoid_: Tool use, function call, command (for the action)
 What the Feed needs to know about a Tool call, decoded once from its wire details: whether it explores, edits or runs a command, the path it names, and its permission outcome.
 _Avoid_: Tool call meta
 
-**Plan**:
-The Agent's live checklist for a Session. The Agent replaces it whole on each change.
-_Avoid_: Todo list, task list
+**Todo list**:
+The Agent's live checklist for a Session, which shows the person how much of the work is done and how much is left. The Agent sets it whole with `session.setTodos` and then changes one step at a time with `session.setTodoStep`; a checklist an Agent reports through ACP's `plan` is one too. The person turns it on or off in Settings. ACP calls it a plan, so its Feed row and wire types keep ACP's names (ADR-0006).
+_Avoid_: Plan (for the checklist), task list
 
 **Written plan**:
 A plan document the Agent keeps without asking for approval, as Markdown text or only as a URI.
-_Avoid_: Plan (for the document), Plan proposal
+_Avoid_: Plan (for the document), Plan proposal, Todo list
 
 **Attachment**:
 An image or file the user adds to a prompt from their device. The Server stores it as a Blob, and the Agent receives an image as a picture and any other file as the file itself.

@@ -9,24 +9,10 @@ const environment = new Map<string, Readonly<Record<string, string>>>([
   [vendorRegistryIds.claude, { ANTHROPIC_API_KEY: '' }],
 ]);
 
-// What an Agent's saved launch environment starts as when the user installs it; the user may change or clear it.
-const installSeeds = new Map<string, Readonly<Record<string, string>>>([
-  // Claude Code gives its current models no task tools without the flag, so it reports no Plan.
-  [vendorRegistryIds.claude, { CLAUDE_CODE_ENABLE_TODO_TOOLS: '1' }],
-  // Codex keeps `update_plan` off unless its config turns it on, so it reports no Plan. The Argo instructions reach it as its ACP system prompt (ADR-0053).
-  [
-    vendorRegistryIds.codex,
-    {
-      CODEX_CONFIG: JSON.stringify({
-        tools: { update_plan: { enabled: true } },
-      }),
-    },
-  ],
-]);
-
+// What an Agent's saved launch environment starts as when the user installs it; the user may change or clear it. No Agent needs a seed now: the checklist is Argo's own Operations (ADR-0053).
 export const seededEnvironment = (
-  registryId: string,
-): Readonly<Record<string, string>> => installSeeds.get(registryId) ?? {};
+  _registryId: string,
+): Readonly<Record<string, string>> => ({});
 
 // Terminal sign-in output that means success before the program exits, by Agent then method (Zed `conversation_view.rs`).
 const terminalSuccess = new Map<

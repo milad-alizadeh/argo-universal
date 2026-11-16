@@ -19,7 +19,7 @@ export async function expectSessionPath({
     : expect(canvas.getByText('session', { exact: true })).toBeVisible());
 }
 
-export async function expectOpenedPlan({
+export async function expectOpenedTodos({
   canvas,
   width,
 }: SessionStep): Promise<void> {
@@ -30,21 +30,21 @@ export async function expectOpenedPlan({
   else {
     await expect(overlay.queryByRole('dialog')).not.toBeInTheDocument();
     await waitFor(() => expect(canvas.getByText(planTitle)).toBeVisible());
-    await expect(canvas.getByRole('button', { name: 'Plan' })).toHaveAttribute(
+    await expect(canvas.getByRole('button', { name: 'Todos' })).toHaveAttribute(
       expandedAttribute,
       'true',
     );
   }
 }
 
-export async function closeRunningPlan({
+export async function closeRunningTodos({
   canvas,
   userEvent,
   width,
 }: SessionStep & Pick<PlayContext, 'userEvent'>): Promise<void> {
   if (width < wideBreakpoint()) await userEvent.keyboard('{Escape}');
   else {
-    await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Todos' }));
     await waitFor(() =>
       expect(canvas.queryByText(planTitle)).not.toBeVisible(),
     );

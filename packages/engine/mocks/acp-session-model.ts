@@ -42,6 +42,7 @@ const checkedApart = [
   'session.creationSettled',
   'session.permissionHooked',
   'session.permissionRequested',
+  'session.setTodos',
 ];
 
 // Queue behavior is exercised through the real App scenarios; this model walks the ACP lifecycle.

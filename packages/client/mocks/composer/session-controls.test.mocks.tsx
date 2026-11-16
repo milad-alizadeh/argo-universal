@@ -5,14 +5,14 @@ import { composerProps } from '../composer-mock';
 import { type Story } from './composer-story-context.test.mocks';
 import {
   chooseAgentLabel,
-  runningPlanStepLabel,
+  runningTodoStepLabel,
   contextWindowLabel,
 } from './composer-test-contract.test.mocks';
 import {
   expectSessionPath,
-  expectOpenedPlan,
-  closeRunningPlan,
-} from './session-plan.test.mocks';
+  expectOpenedTodos,
+  closeRunningTodos,
+} from './session-todos.test.mocks';
 
 export function sessionControls(width: number): Story {
   const onCompact = fn();
@@ -43,15 +43,15 @@ export function sessionControls(width: number): Story {
       await expect(
         canvas.queryByRole('button', { name: chooseAgentLabel }),
       ).not.toBeInTheDocument();
-      await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
-      await expectOpenedPlan({ canvas, width });
+      await userEvent.click(canvas.getByRole('button', { name: 'Todos' }));
+      await expectOpenedTodos({ canvas, width });
 
       const spinner = await overlay.findByRole('progressbar', {
-        name: runningPlanStepLabel,
+        name: runningTodoStepLabel,
       });
 
       await expect(spinner).toBeVisible();
-      await closeRunningPlan({ canvas, userEvent, width });
+      await closeRunningTodos({ canvas, userEvent, width });
       await userEvent.click(
         await canvas.findByRole('button', { name: contextWindowLabel }),
       );

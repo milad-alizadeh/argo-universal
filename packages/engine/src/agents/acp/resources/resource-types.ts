@@ -60,6 +60,8 @@ export type AcpConnectionLease = Omit<AcpSessionLease, 'connectionKind'>;
 export type SessionProcessAccess = {
   environment: NonNullable<AgentLaunch['sessionAccess']>;
   release: () => void;
+  // Whether the Session is asked to keep a checklist (ADR-0053); asked when left out.
+  todoList?: boolean;
 };
 
 // A private connection is one Session's own Agent process, holding that Session's access; a shared one serves its Agent and Project.

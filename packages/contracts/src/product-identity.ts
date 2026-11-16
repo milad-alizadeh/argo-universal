@@ -20,5 +20,7 @@ export const productCompatibility = {
     home: 'ARGO_HOME',
     token: 'ARGO_TOKEN',
     projectsDirectory: 'ARGO_PROJECTS_DIR',
+    // `0` tells `argo mcp` to leave the checklist instruction out (ADR-0053).
+    todoList: 'ARGO_TODO_LIST',
   },
 } as const;

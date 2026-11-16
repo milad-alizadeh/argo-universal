@@ -118,3 +118,18 @@ it('keeps the discovery line and Argo instructions when a bad token cannot read 
     expect(mcpStderr(client)).toContain('Plugin instructions are unavailable'),
   );
 }, 30_000);
+
+it('leaves the Todo list instruction out when the Engine says the person turned the Todo list off', async () => {
+  const home = await createRuntimePlugins([
+    { id: 'quiet', fixture: 'healthy' },
+  ]);
+
+  const host = await startCliHost({ home });
+
+  const client = await connectMcp(host.home, undefined, {
+    ARGO_TODO_LIST: '0',
+  });
+
+  expect(client.getInstructions()).toContain('## Agents');
+  expect(client.getInstructions()).not.toContain('## Todo list');
+}, 30_000);

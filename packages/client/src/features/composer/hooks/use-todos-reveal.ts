@@ -8,7 +8,7 @@ import {
   withTiming,
 } from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
-import { maximumPlanStepsHeight } from '../utils/status';
+import { maximumTodoStepsHeight } from '../utils/status';
 
 const revealTiming = { duration: 200, easing: Easing.out(Easing.cubic) };
 
@@ -26,7 +26,7 @@ function useRevealHeight(
   return revealHeight;
 }
 
-interface PlanReveal {
+interface TodosReveal {
   expanded: boolean;
   toggle: () => void;
   onLayout: (event: LayoutChangeEvent) => void;
@@ -45,7 +45,7 @@ function useRevealStyle(
   );
 }
 
-export function usePlanReveal(): PlanReveal {
+export function useTodosReveal(): TodosReveal {
   const [expanded, setExpanded] = useState(false);
   const [stepsHeight, setStepsHeight] = useState(0);
   const revealHeight = useRevealHeight(expanded, stepsHeight);
@@ -54,7 +54,7 @@ export function usePlanReveal(): PlanReveal {
 
   const onLayout = (event: LayoutChangeEvent): void =>
     setStepsHeight(
-      Math.min(maximumPlanStepsHeight, event.nativeEvent.layout.height),
+      Math.min(maximumTodoStepsHeight, event.nativeEvent.layout.height),
     );
 
   return { expanded, toggle, onLayout, style };

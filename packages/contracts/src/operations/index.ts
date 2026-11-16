@@ -8,6 +8,7 @@ import { readerOperations } from './readers';
 import { registryOperations } from './registry';
 import { operationJsonSchema } from './schema-json';
 import { sessionOperations } from './sessions';
+import { todoListOperations } from './todo-list';
 
 export { AgentAccess } from './agent-access';
 
@@ -44,6 +45,7 @@ export const operations = {
   ...appOperations,
   ...readerOperations,
   ...sessionOperations,
+  ...todoListOperations,
   ...pluginOperations,
   ...registryOperations,
   ...projectOperations,

@@ -4,11 +4,16 @@ import {
   readAgentAccess,
   setAgentAccess,
 } from '../agent-access';
+import { readTodoList, setTodoList } from '../todo-list';
 import type { OperationImplementations, OperationsDeps } from './operations';
 
 type AgentAccessImplementations = Pick<
   OperationImplementations,
-  'agent.getAccess' | 'agent.setAccess' | 'agent.installInstructions'
+  | 'agent.getAccess'
+  | 'agent.setAccess'
+  | 'agent.installInstructions'
+  | 'agent.getTodoList'
+  | 'agent.setTodoList'
 >;
 
 export function createAgentAccessOperations(
@@ -20,6 +25,9 @@ export function createAgentAccessOperations(
     'agent.getAccess': async () => readAgentAccess(deps.database),
     'agent.setAccess': ({ enabled }) =>
       setAgentAccess(deps.database, deps.databaseWriter, enabled),
+    'agent.getTodoList': async () => readTodoList(deps.database),
+    'agent.setTodoList': ({ enabled }) =>
+      setTodoList(deps.database, deps.databaseWriter, enabled),
   };
 }
 

@@ -2,18 +2,18 @@ import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn, within, waitFor, expect } from 'storybook/test';
 import { Composer } from '../../src/features/composer/components/composer/composer';
-import { composerPlan, composerProps } from '../composer-mock';
+import { composerTodos, composerProps } from '../composer-mock';
 import { type Story } from './composer-story-context.test.mocks';
-import { planStepsId, planTitle } from './composer-test-contract.test.mocks';
+import { todoStepsId, planTitle } from './composer-test-contract.test.mocks';
 import { pickerCatalogs } from './recorded-catalog.test.mocks';
 
-export function equalPlanSteps(width: number, agentIndex: number): Story {
+export function equalTodoSteps(width: number, agentIndex: number): Story {
   const catalog = pickerCatalogs[agentIndex];
-  const entry = composerPlan[0];
+  const entry = composerTodos[0];
 
   if (!catalog || !entry)
     throw new Error(
-      'Recorded catalog needs an available Agent and a Plan step.',
+      'Recorded catalog needs an available Agent and a Todo list step.',
     );
 
   return {
@@ -37,7 +37,7 @@ export function equalPlanSteps(width: number, agentIndex: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleLayout(width);
       const overlay = within(document.body);
-      await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
+      await userEvent.click(canvas.getByRole('button', { name: 'Todos' }));
 
       if (width < wideBreakpoint())
         await waitFor(() => expect(overlay.getByRole('dialog')).toBeVisible());
@@ -45,7 +45,7 @@ export function equalPlanSteps(width: number, agentIndex: number): Story {
       const list = within(
         width < wideBreakpoint()
           ? overlay.getByRole('dialog')
-          : canvas.getByTestId(planStepsId),
+          : canvas.getByTestId(todoStepsId),
       );
 
       await waitFor(async () => {

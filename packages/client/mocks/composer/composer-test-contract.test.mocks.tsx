@@ -32,11 +32,11 @@ export const subagentCountLabel = 'Agents: 2';
 
 export const contextWindowLabel = 'Context window';
 
-export const runningPlanStepLabel = 'Update the shared controls in progress';
+export const runningTodoStepLabel = 'Update the shared controls in progress';
 
 export const planTitle = 'Verify phone and desktop';
 
-export const planStepsId = 'composer-plan-steps';
+export const todoStepsId = 'composer-todo-steps';
 
 export type PickerCatalog = {
   agent: AgentServer;

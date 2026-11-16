@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { useReportComposerPills } from '#lib/product/composer-cover';
 import {
-  ComposerPlan,
+  ComposerTodos,
   ComposerWorkChips,
 } from '../composer-status/composer-status';
 import { WrittenPlan } from '../written-plan/written-plan';
@@ -84,7 +84,7 @@ function ComposerLivePlan(layout: LivePlanLayout): React.JSX.Element | null {
   const entries = livePlan(layout);
 
   return entries?.length ? (
-    <ComposerPlan entries={entries} disabled={layout.inactive} />
+    <ComposerTodos entries={entries} disabled={layout.inactive} />
   ) : null;
 }
 

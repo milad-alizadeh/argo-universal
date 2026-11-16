@@ -26,6 +26,7 @@ import type { SessionHandlerSources } from './session-sources';
 import { listSessionShells } from './shells/list';
 import { stopShell } from './shells/stop';
 import { createSessionSnapshotReader } from './snapshot';
+import { setSessionTodoStep, setSessionTodos } from './todos';
 
 // The Session Operations that answer with their result; a new Session and a Prompt start native work instead.
 type SessionOperationId = Exclude<
@@ -88,10 +89,15 @@ const agentRoleImplementations = (
   sources: SessionHandlerSources,
 ): Pick<
   SessionOperationImplementations,
-  'session.declareSubagentRole' | 'shell.stop'
+  | 'session.declareSubagentRole'
+  | 'session.setTodos'
+  | 'session.setTodoStep'
+  | 'shell.stop'
 > => ({
   'session.declareSubagentRole': (input) =>
     declareSubagentRole(sources.open, input),
+  'session.setTodos': (input) => setSessionTodos(sources, input),
+  'session.setTodoStep': (input) => setSessionTodoStep(sources, input),
   'shell.stop': async (input) => stopShell(sources, input),
 });
 

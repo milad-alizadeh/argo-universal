@@ -1,6 +1,9 @@
 import { join } from 'node:path';
 import type { McpServer } from '@agentclientprotocol/sdk';
-import { argoInstructionsMarkdown } from '@repo/contracts/agents/argo-instructions';
+import {
+  argoInstructionsMarkdown,
+  type ArgoInstructionChoices,
+} from '@repo/contracts/agents/argo-instructions';
 import {
   productName,
   productCompatibility,
@@ -35,21 +38,22 @@ function withSessionMcp(
 ): AcpOpenInput {
   if (entry.kind === 'shared') return input;
 
-  const opening = appendServer(
-    input.opening,
-    sessionServer(entry.access.environment, sessionId(input)),
-  );
+  const choices = { todoList: entry.access.todoList !== false };
+  const server = sessionServer(entry.access, sessionId(input), choices);
+  const opening = appendServer(input.opening, server);
 
-  return {
-    ...input,
-    opening: takesSystemPrompt ? withArgoInstructions(opening) : opening,
-  };
+  if (!takesSystemPrompt) return { ...input, opening };
+
+  return { ...input, opening: withArgoInstructions(opening, choices) };
 }
 
-function withArgoInstructions(opening: AcpSessionOpening): AcpSessionOpening {
+function withArgoInstructions(
+  opening: AcpSessionOpening,
+  choices: ArgoInstructionChoices,
+): AcpSessionOpening {
   const systemPrompt: AcpSystemPrompt = {
     mode: 'append',
-    content: [{ type: 'text', text: argoInstructionsMarkdown() }],
+    content: [{ type: 'text', text: argoInstructionsMarkdown(choices) }],
   };
 
   return withParams(opening, { systemPrompt });
@@ -86,17 +90,30 @@ function withParams(
   };
 }
 
+const { environment } = productCompatibility;
+
+// What `argo mcp` starts with: where the Server is, the Session's token, and `0` when the person turned the checklist off, so its instruction is left out.
+const serverVariables = (
+  { token, home }: SessionProcessAccess['environment'],
+  choices: ArgoInstructionChoices,
+): { name: string; value: string }[] => [
+  { name: environment.home, value: home },
+  { name: environment.token, value: token },
+  ...(choices.todoList ? [] : [{ name: environment.todoList, value: '0' }]),
+];
+
 function sessionServer(
-  { token, home, cliDirectory }: SessionProcessAccess['environment'],
+  access: SessionProcessAccess,
   id: string,
+  choices: ArgoInstructionChoices,
 ): McpServer {
   return {
     name: `${productCompatibility.mcpServer}-${id.replaceAll('-', '')}`,
-    command: join(cliDirectory, productCompatibility.command),
+    command: join(
+      access.environment.cliDirectory,
+      productCompatibility.command,
+    ),
     args: ['mcp'],
-    env: [
-      { name: productCompatibility.environment.home, value: home },
-      { name: productCompatibility.environment.token, value: token },
-    ],
+    env: serverVariables(access.environment, choices),
   };
 }

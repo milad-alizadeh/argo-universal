@@ -28,6 +28,7 @@ import {
 } from '../feed';
 import { feedMachine } from '../feed';
 import type { WriterActorRef, WriterCommit, WriterEvent } from '../storage';
+import { readTodoList } from '../todo-list';
 import {
   cancelAcp,
   closeAcp,
@@ -50,6 +51,7 @@ import type {
 } from './acp/prompts/prompt-types';
 import { acpContextUsage, acpTurnUsage } from './acp/prompts/usage';
 import { isReplayedHistory } from './acp/replayed-history';
+import { isTodoListUpdate, todosUpdate } from './acp/todo-update';
 import {
   admitsPermissionAnswer,
   answeredRequest,
@@ -131,6 +133,9 @@ import {
   type StartTurnParameters,
   type TurnStep,
 } from './turn';
+
+const keepsTodoList = (context: SessionContext): boolean =>
+  readTodoList(context.input.database).enabled;
 
 export type {
   SessionCommand,
@@ -457,6 +462,25 @@ const sessionSetup = setup({
         subagents: declareSubagentRole(context.subagents, event.role),
       };
     }),
+    rememberTodos: assign(({ event }): Pick<SessionContext, 'todos'> => {
+      assertEvent(event, 'session.setTodos');
+
+      return { todos: event.todos };
+    }),
+    // The Feed takes the list as the ACP `plan` update an Agent would send: one row, revised in place.
+    forwardTodos: sendTo(
+      'feed',
+      ({ context, event }): Extract<FeedEvent, { type: 'feed.acpUpdate' }> => {
+        assertEvent(event, 'session.setTodos');
+
+        return {
+          type: 'feed.acpUpdate',
+          acpSessionId: context.vendorSessionId ?? context.sessionId,
+          update: todosUpdate(event.todos),
+          turnId: context.activeTurnId,
+        };
+      },
+    ),
     flushSubagents: ({ context }) => flushSubagents(context.subagents),
     finishAcpRegistration: ({ context }): void =>
       context.acpLifetime.finishRegistration(),
@@ -542,19 +566,20 @@ const sessionSetup = setup({
         }),
       });
     }),
-    forwardAcpUpdate: sendTo(
-      'feed',
-      ({ context, event }): Extract<FeedEvent, { type: 'feed.acpUpdate' }> => {
-        assertEvent(event, acpUpdateEvent);
+    // While the person has the checklist off, one the Agent reports through ACP goes no further (ADR-0053).
+    forwardAcpUpdate: enqueueActions(({ context, event, enqueue }) => {
+      assertEvent(event, acpUpdateEvent);
+      const { sessionId, update } = event.notification;
 
-        return {
-          type: 'feed.acpUpdate',
-          acpSessionId: event.notification.sessionId,
-          update: event.notification.update,
-          turnId: context.activeTurnId,
-        };
-      },
-    ),
+      if (isTodoListUpdate(update) && !keepsTodoList(context)) return;
+
+      enqueue.sendTo('feed', {
+        type: 'feed.acpUpdate',
+        acpSessionId: sessionId,
+        update,
+        turnId: context.activeTurnId,
+      } satisfies Extract<FeedEvent, { type: 'feed.acpUpdate' }>);
+    }),
     rememberAcpOutcome: assign(
       (
         _,
@@ -1202,6 +1227,9 @@ export const sessionMachine = sessionSetup.createMachine({
             },
             'session.close': { target: '.closing' },
             'acp.failed': { target: '.closing', actions: 'recordCrash' },
+            'session.setTodos': {
+              actions: ['rememberTodos', 'forwardTodos'],
+            },
             'acp.update': [
               { guard: 'isSubagentUpdate', actions: 'routeSubagentUpdate' },
               { guard: 'isConfigUpdate', actions: 'reportAcpConfig' },

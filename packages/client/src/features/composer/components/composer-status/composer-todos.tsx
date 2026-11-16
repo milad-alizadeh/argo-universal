@@ -3,58 +3,58 @@ import type { JSX } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useContentWide } from '#lib/product/content-layout';
-import { usePlanReveal } from '../../hooks/use-plan-reveal';
+import { useTodosReveal } from '../../hooks/use-todos-reveal';
 import { ComposerPopover } from '../composer-popover/composer-popover';
-import { PlanPopoverContent } from './plan-popover';
-import { PlanSteps } from './plan-steps';
-import { createPlanTrigger } from './plan-trigger';
 import { phoneSheet } from './status-surface';
+import { TodoSteps } from './todo-steps';
+import { TodosPopoverContent } from './todos-popover';
+import { createTodosTrigger } from './todos-trigger';
 
-export interface ComposerPlanProps {
-  // The Agent's live Plan; its completed steps fill the trigger's marks.
+export interface ComposerTodosProps {
+  // The Agent's live checklist; its completed steps fill the trigger's marks.
   entries: PlanEntry[];
   disabled: boolean;
 }
 
-type PlanReveal = ReturnType<typeof usePlanReveal>;
+type TodosReveal = ReturnType<typeof useTodosReveal>;
 
-interface RevealedPlanProps {
+interface RevealedTodosProps {
   entries: PlanEntry[];
-  reveal: PlanReveal;
+  reveal: TodosReveal;
 }
 
-function RevealedPlan({ entries, reveal }: RevealedPlanProps): JSX.Element {
-  const revealProps = planRevealProps(reveal);
+function RevealedTodos({ entries, reveal }: RevealedTodosProps): JSX.Element {
+  const revealProps = todosRevealProps(reveal);
 
   return (
-    <Animated.View testID="composer-plan-steps" {...revealProps}>
-      <MeasuredPlan {...{ entries, reveal }} />
+    <Animated.View testID="composer-todo-steps" {...revealProps}>
+      <MeasuredTodos {...{ entries, reveal }} />
     </Animated.View>
   );
 }
 
-interface PhonePlanProps {
+interface PhoneTodosProps {
   entries: PlanEntry[];
   trigger: JSX.Element;
 }
 
 const phonePopoverProps = {
-  label: 'Plan',
+  label: 'Todos',
   width: 420,
   listContent: phoneSheet,
 };
 
-function PhonePlan({ entries, trigger }: PhonePlanProps): JSX.Element {
+function PhoneTodos({ entries, trigger }: PhoneTodosProps): JSX.Element {
   return (
     <ComposerPopover {...phonePopoverProps} trigger={trigger}>
-      {() => <PlanPopoverContent entries={entries} />}
+      {() => <TodosPopoverContent entries={entries} />}
     </ComposerPopover>
   );
 }
 
-export function StatusPlan(props: ComposerPlanProps): JSX.Element {
+export function StatusTodos(props: ComposerTodosProps): JSX.Element {
   const wide = useContentWide();
-  const reveal = usePlanReveal();
+  const reveal = useTodosReveal();
 
   const expansionProps = {
     wide,
@@ -62,34 +62,34 @@ export function StatusPlan(props: ComposerPlanProps): JSX.Element {
     toggle: reveal.toggle,
   };
 
-  const trigger = createPlanTrigger({ ...props, ...expansionProps });
+  const trigger = createTodosTrigger({ ...props, ...expansionProps });
   const layoutProps = { entries: props.entries, wide, reveal, trigger };
 
   return <PlanLayout {...layoutProps} />;
 }
 
 function PlanLayout(
-  props: RevealedPlanProps & PhonePlanProps & { wide: boolean },
+  props: RevealedTodosProps & PhoneTodosProps & { wide: boolean },
 ): JSX.Element {
   if (props.wide)
     return (
       <View>
         {props.trigger}
-        <RevealedPlan entries={props.entries} reveal={props.reveal} />
+        <RevealedTodos entries={props.entries} reveal={props.reveal} />
       </View>
     );
 
-  return <PhonePlan entries={props.entries} trigger={props.trigger} />;
+  return <PhoneTodos entries={props.entries} trigger={props.trigger} />;
 }
 
-type PlanVisibility = {
+type TodosVisibility = {
   'aria-hidden': boolean;
   accessibilityElementsHidden: boolean;
   className: string;
-  style: PlanReveal['style'];
+  style: TodosReveal['style'];
 };
 
-function planRevealProps(reveal: PlanReveal): PlanVisibility {
+function todosRevealProps(reveal: TodosReveal): TodosVisibility {
   return {
     'aria-hidden': !reveal.expanded,
     accessibilityElementsHidden: !reveal.expanded,
@@ -100,10 +100,10 @@ function planRevealProps(reveal: PlanReveal): PlanVisibility {
   };
 }
 
-function MeasuredPlan({ entries, reveal }: RevealedPlanProps): JSX.Element {
+function MeasuredTodos({ entries, reveal }: RevealedTodosProps): JSX.Element {
   return (
     <View className="absolute top-0 left-0 right-0" onLayout={reveal.onLayout}>
-      <PlanSteps entries={entries} />
+      <TodoSteps entries={entries} />
     </View>
   );
 }

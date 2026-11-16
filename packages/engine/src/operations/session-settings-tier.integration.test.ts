@@ -38,3 +38,20 @@ it('applies Settings confirmation to Session tokens and keeps their existing acc
     runOperation(session.caller.operations, { id: 'project.list', params: {} }),
   ).resolves.toEqual(expect.any(Array));
 }, 30_000);
+
+// A checklist saved as a Written plan was committed with the work, so an Agent's save asks first (ADR-0053).
+it('asks the person before a Session token saves a Written plan, and writes none when refused', async () => {
+  const journey = await permissionJourney();
+  const { host, session } = journey;
+  await beginHeldTurn(host, session.sessionId);
+
+  const refused = await askOperation(journey, {
+    id: 'session.savePlan',
+    params: { sessionId: session.sessionId, plan: '- [ ] Step one' },
+  });
+
+  await answerPermission(journey, refused.request, 'reject_once');
+  expect(await refused.outcome).toMatchObject([
+    { status: 'rejected', reason: { message: 'The user refused' } },
+  ]);
+}, 30_000);
