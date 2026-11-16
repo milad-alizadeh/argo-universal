@@ -1,12 +1,9 @@
 import type { PromptQueue, QueuedPromptId } from '@repo/contracts';
-import { userMessageChange, type FeedEvent } from '../feed';
-import { queueWrite } from './prompt-queue';
-import type {
-  QueueSteering,
-  QueueSteeringCommand,
-} from './queue-steering-types';
-import type { SessionContext } from './session-context';
-import { turnStep, type TurnStep } from './turn';
+import { userMessageChange, type FeedEvent } from '../../feed';
+import { queueWrite } from '../prompt-queue';
+import type { SessionContext } from '../session-context';
+import { turnStep, type TurnStep } from '../turn';
+import type { QueueSteering, QueueSteeringCommand } from './types';
 
 type Finish = Extract<
   QueueSteeringCommand,
