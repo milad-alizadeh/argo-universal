@@ -60,7 +60,7 @@ function LinkMarkGlyph({
   // The word joiner forbids a line break between the mark and the label that follows it.
   return (
     <span aria-hidden>
-      <span className="relative -top-0.5 me-0.5 inline-flex align-middle">
+      <span className="relative -top-px me-0.5 inline-flex align-middle">
         <ToneMark {...mark} />
       </span>
       {'⁠'}

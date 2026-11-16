@@ -82,7 +82,7 @@ export const StateMark: Story = {
               The {state} change is{' '}
               <Link
                 href={`https://example.com/pull/${index}`}
-                label={`example/app#${index + 1}`}
+                label={`PR #${index + 1}`}
               />
               .
             </Text>
