@@ -15,6 +15,11 @@ const leaf = (
   slots: {},
 });
 
+const holding = (node: WireNode, children: WireNode[]): WireNode => ({
+  ...node,
+  children,
+});
+
 const root = WireNode.parse({
   type: 'Screen',
   key: 'page',
@@ -30,44 +35,29 @@ const root = WireNode.parse({
   ],
   // A Screen declares its header Actions; the Detail beneath it cannot.
   slots: {
-    // The Screen's aside holds the Detail's Metadata.
+    // The Screen's aside holds the Issue's properties as FieldGroup rows.
     aside: [
-      {
-        type: 'Metadata',
-        key: 'fields',
-        props: {},
-        children: [
-          leaf('Metadata.StatusDot', 'status', {
+      holding(leaf('FieldGroup', 'fields', {}), [
+        holding(leaf('FieldGroup.Section', 'section', {}), [
+          leaf('FieldGroup.Value', 'status', {
             title: 'Status',
-            text: 'In progress',
-            tone: 'info',
+            value: 'In progress',
+            dot: 'info',
           }),
-          leaf('Metadata.Avatar', 'assignee', {
+          leaf('FieldGroup.Value', 'assignee', {
             title: 'Assignee',
-            name: 'Ana Ruiz',
+            value: 'Ana Ruiz',
           }),
-          {
-            type: 'Metadata.Pills',
-            key: 'labels',
-            props: { title: 'Labels' },
-            children: [
-              leaf('Pill', 'bug', { text: 'bug' }),
-              leaf('Pill', 'sync', { text: 'sync' }),
-            ],
-            slots: {},
-          },
-          leaf('Metadata.Link', 'milestone', {
-            title: 'Milestone',
-            text: 'v1.2',
-            href: 'https://example.com/milestone/2',
+          leaf('FieldGroup.Value', 'labels', {
+            title: 'Labels',
+            value: 'bug, sync',
           }),
-          leaf('Metadata.Label', 'source', {
+          leaf('FieldGroup.Value', 'source', {
             title: 'Source',
-            text: 'GitHub',
+            value: 'GitHub',
           }),
-        ],
-        slots: {},
-      },
+        ]),
+      ]),
     ],
     actions: [
       leaf('Action', 'close', {
@@ -87,7 +77,7 @@ const meta = {
 
 export default meta;
 
-export const DrawsContentMetadataAndActions: StoryObj<typeof meta> = {
+export const DrawsContentPropertiesAndActions: StoryObj<typeof meta> = {
   render: () => <PluginTree root={root} onPageCall={onPageCall} />,
   play: async ({ canvas, userEvent }) => {
     onPageCall.mockClear();
@@ -102,9 +92,6 @@ export const DrawsContentMetadataAndActions: StoryObj<typeof meta> = {
       'Source, GitHub',
     ])
       await expect(canvas.getByRole('group', { name })).toBeVisible();
-    await expect(
-      canvas.getByRole('button', { name: 'Milestone, v1.2' }),
-    ).toBeVisible();
     await expect(canvas.queryByText(/Update Argo/)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Close Issue' }));
     await expect(onPageCall).toHaveBeenLastCalledWith(

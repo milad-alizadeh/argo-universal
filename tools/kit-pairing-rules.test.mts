@@ -78,11 +78,11 @@ describe('pairingProblems', () => {
 
   it('asks for the parent folder of a compound name', () => {
     const problems = pairingProblems({
-      schemas: [{ name: 'Metadata.Avatar', group: 'scaffolds' }],
+      schemas: [{ name: 'Board.Card', group: 'lists' }],
       folders: [],
     });
 
     expect(problems).toHaveLength(1);
-    expect(problems[0]).toContain('Metadata ');
+    expect(problems[0]).toContain('Board ');
   });
 });

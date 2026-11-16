@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
 // The Plugin wire this App and Server speak; bump it, and the minimum, for a change an older App can't draw (ADR-0034).
-export const pluginWireVersion = 8;
+export const pluginWireVersion = 9;
 
 // The oldest App wire version the Server still sends Plugin trees to.
-export const minimumPluginWireVersion = 8;
+export const minimumPluginWireVersion = 9;
 
 export const PluginSurface = z.object({
   platform: z.enum(['ios', 'android', 'web', 'desktop']),
