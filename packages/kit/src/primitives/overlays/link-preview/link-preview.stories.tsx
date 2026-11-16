@@ -7,6 +7,7 @@ import { LinkPreviewCard } from './link-preview-card';
 import {
   commitLinkPreviewCard,
   issueLinkPreviewCard,
+  closedIssueLinkPreviewCard,
   pullRequestLinkPreviewCard,
   webLinkPreviewCard,
   webWithImageLinkPreviewCard,
@@ -88,6 +89,31 @@ export const StateMark: Story = {
   ),
 };
 
+function issueLink(state: 'open' | 'closed'): Story {
+  const issueSource = {
+    load: async (): Promise<ReactNode> => null,
+    mark: async (): Promise<LinkMark> => gitStateMark({ kind: 'issue', state }),
+  };
+
+  return {
+    render: (): ReactElement => (
+      <WebOnly>
+        <LinkPreviewContext value={issueSource}>
+          <Text role="body">
+            The {state} issue is{' '}
+            <Link href="https://example.com/issues/42" label="example/app#42" />
+            .
+          </Text>
+        </LinkPreviewContext>
+      </WebOnly>
+    ),
+  };
+}
+
+export const OpenIssueLink: Story = issueLink('open');
+
+export const ClosedIssueLink: Story = issueLink('closed');
+
 export const NoPreview: Story = {
   parameters: {
     docs: {
@@ -106,6 +132,8 @@ export const Web: Story = { args: webLinkPreviewCard };
 export const WebWithImage: Story = { args: webWithImageLinkPreviewCard };
 
 export const Issue: Story = { args: issueLinkPreviewCard };
+
+export const ClosedIssue: Story = { args: closedIssueLinkPreviewCard };
 
 export const PullRequest: Story = { args: pullRequestLinkPreviewCard };
 
