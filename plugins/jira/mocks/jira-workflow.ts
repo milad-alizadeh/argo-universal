@@ -27,9 +27,17 @@ const workflow = new Map<string, Status[]>([
   [done.name, [todo]],
 ]);
 
+/*
+ * A global transition, "Any status → In Progress", as real Jira workflows have: Jira lists it on every issue, even one
+ * already in In Progress, so a reader must not offer an issue's own status as a move.
+ */
+const fromAnyStatus: Status[] = [doing];
+
+const once = (moves: Status[]): Status[] => [...new Set(moves)];
+
 // Where an issue may move from the status it is in.
 export const movesFrom = (issue: FixtureIssue): Status[] =>
-  workflow.get(issue.status.name) ?? [];
+  once([...(workflow.get(issue.status.name) ?? []), ...fromAnyStatus]);
 
 export const priorities = [
   { id: '1', name: 'Highest' },

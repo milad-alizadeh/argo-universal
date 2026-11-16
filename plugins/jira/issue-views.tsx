@@ -84,14 +84,26 @@ const noIssues = (key: string): JSX.Element => (
 const viewOf = ({ view }: IssuesState): IssuesView =>
   view === 'board' ? 'board' : 'list';
 
-// The issues as the Page state's view shows them: a list, or a board with the project's statuses as its columns.
-const shownIssues = (
-  { site, page, statuses = [] }: Issues,
+// The list, or the empty state when the project has no issues.
+const listed = (
+  { site, project, page }: Issues,
   framing: IssuesFraming,
 ): JSX.Element =>
-  viewOf(framing.state) === 'board'
-    ? issueBoard(framing, page.issues, statuses)
+  page.issues.length === 0
+    ? noIssues(project.key)
     : issueList({ ...framing, site }, page.issues);
+
+/*
+ * The board, whose columns are the project's statuses even before it has an issue; only a project with neither, as
+ * when Jira won't list its statuses, shows the empty state.
+ */
+const boarded = (
+  { project, page, statuses = [] }: Issues,
+  framing: IssuesFraming,
+): JSX.Element =>
+  page.issues.length + statuses.length === 0
+    ? noIssues(project.key)
+    : issueBoard(framing, page.issues, statuses);
 
 const issues = (view: Issues, framing: IssuesFraming): JSX.Element => (
   <Screen
@@ -101,9 +113,9 @@ const issues = (view: Issues, framing: IssuesFraming): JSX.Element => (
     actions={projectActions(framing)}
   >
     {viewSwitch(viewOf(framing.state), framing.to)}
-    {view.page.issues.length === 0
-      ? noIssues(view.project.key)
-      : shownIssues(view, framing)}
+    {viewOf(framing.state) === 'board'
+      ? boarded(view, framing)
+      : listed(view, framing)}
   </Screen>
 );
 

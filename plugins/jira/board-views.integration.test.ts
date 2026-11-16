@@ -12,7 +12,13 @@ import {
   viewSwitch,
 } from './mocks/board';
 import { statuses } from './mocks/jira-workflow';
-import { firstProject } from './mocks/journey';
+import {
+  choose,
+  firstProject,
+  projectPage,
+  signIn,
+  startJira,
+} from './mocks/journey';
 
 const timeoutMs = 20_000;
 
@@ -69,6 +75,7 @@ it(
     );
     // Each card names as its moves the statuses Jira allows from its own.
     expect(page.find(argoOne).props.movesTo).toEqual([statuses.doing.id]);
+    // Jira also lists its global "Any status → In Progress" on ARGO-3, which is in In Progress: not a move.
     expect(page.find(argoThree).props.movesTo).toEqual([
       statuses.todo.id,
       statuses.review.id,
@@ -113,6 +120,26 @@ it(
     // No issue is in In Review, but ARGO-3 may move to it.
     expect(columnTitles(shown.page)).toEqual(grouped);
     expect(columnOf(shown.page, argoThree)).toBe(statuses.doing.name);
+  },
+  timeoutMs,
+);
+
+it(
+  'draws the project’s statuses as empty columns before it has an issue',
+  async () => {
+    const jira = await startJira();
+
+    await signIn(jira);
+
+    const page = await projectPage(jira);
+
+    await choose(page, 'Jira project', 'QUIET');
+    await show({ ...jira, page }, 'board');
+
+    expect(columnTitles(page)).toEqual(grouped);
+    expect(
+      page.find(boardLabel).children.flatMap(({ children }) => children),
+    ).toEqual([]);
   },
   timeoutMs,
 );

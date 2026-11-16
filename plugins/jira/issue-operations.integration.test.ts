@@ -21,7 +21,8 @@ it(
           status: inProgress,
           movesTo: ['To Do', 'In Review', 'Done'],
         },
-        { key: 'ARGO-2', status: 'Done', movesTo: ['To Do'] },
+        // Jira's global transition to In Progress is a move from Done, and is left out from In Progress itself.
+        { key: 'ARGO-2', status: 'Done', movesTo: ['To Do', inProgress] },
       ],
       more: true,
     });

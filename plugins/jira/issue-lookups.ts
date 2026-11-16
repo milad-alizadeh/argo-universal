@@ -34,6 +34,13 @@ const listLimit = { fallback: 20, most: 100 };
 const noProject =
   'Choose a Jira project for this Project first, on its Jira page.';
 
+// The statuses Jira allows a move to, without the one the issue is in, which a global transition still lists.
+const movesOf = ({ status, transitions }: JiraIssue): string[] => [
+  ...new Set(
+    transitions.flatMap(({ to }) => (to.id === status.id ? [] : [to.name])),
+  ),
+];
+
 const rowOf = (site: JiraSite, issue: JiraIssue): IssueRow => ({
   key: issue.key,
   summary: issue.summary,
@@ -42,7 +49,7 @@ const rowOf = (site: JiraSite, issue: JiraIssue): IssueRow => ({
   assignee: issue.assignee,
   priority: issue.priority,
   labels: issue.labels,
-  movesTo: [...new Set(issue.transitions.map(({ to }) => to.name))],
+  movesTo: movesOf(issue),
   url: issueUrl(site.host, issue.key),
 });
 
