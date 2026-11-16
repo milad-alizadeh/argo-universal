@@ -50,7 +50,7 @@ async function finish(
 
   await argo.secrets.set(id, secretOf(token));
 
-  return { kind: 'signed-in', label };
+  return { kind: 'signed-in', label, accountId: id };
 }
 
 const stateOf = (polled: Polled): DeviceFlowState =>

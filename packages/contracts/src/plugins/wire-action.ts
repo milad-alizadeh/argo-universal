@@ -14,6 +14,11 @@ export const Action = z.discriminatedUnion('action', [
     copy: z.string().optional(),
   }),
   z.strictObject({ action: z.literal('copy'), text: z.string() }),
+  // Opens one of the App's Accounts in Settings › Accounts, where it is managed and signed out (ADR-0036).
+  z.strictObject({
+    action: z.literal('openAccount'),
+    accountId: z.string().min(1),
+  }),
   z.strictObject({
     action: z.literal('share'),
     message: z.string(),

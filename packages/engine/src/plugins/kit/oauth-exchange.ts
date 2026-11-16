@@ -61,7 +61,7 @@ export async function signedIn(
 
   await argo.secrets.set(id, secretOf(token));
 
-  return { kind: 'signed-in', label };
+  return { kind: 'signed-in', label, accountId: id };
 }
 
 // The token the service gave, or why it gave none.

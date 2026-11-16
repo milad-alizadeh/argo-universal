@@ -38,3 +38,12 @@ it('lets openUrl carry text to copy first, and still refuses an unsafe URL with 
       .success,
   ).toBe(false);
 });
+
+it('opens an Account by its id, and refuses one with none', () => {
+  expect(
+    Action.safeParse({ action: 'openAccount', accountId: 'account-1' }).success,
+  ).toBe(true);
+  expect(
+    Action.safeParse({ action: 'openAccount', accountId: '' }).success,
+  ).toBe(false);
+});

@@ -256,7 +256,7 @@
         "props": {
           "service": "Jira",
           "title": "Connected",
-          "footer": "Manage this Account in Settings › Accounts.",
+          "footer": "Sign out in Settings › Accounts, where every Plugin using this Account is listed.",
           "signedIn": true
         },
         "children": [
@@ -266,6 +266,21 @@
             "props": {
               "title": "Account",
               "value": "ada@example.com"
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.Link",
+            "key": "1",
+            "props": {
+              "title": "Sign out…",
+              "action": true,
+              "destructive": true,
+              "onPress": {
+                "action": "openAccount",
+                "accountId": "account-1"
+              }
             },
             "children": [],
             "slots": {}

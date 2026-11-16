@@ -7,6 +7,7 @@ import { jsx } from './jsx-runtime';
 import {
   actionRow,
   cancelRow,
+  destructiveRow,
   signIn,
   valueRow,
   type Card,
@@ -79,10 +80,18 @@ const waitingStep = (parts: SignInParts, step: Waiting): Card =>
         rows: [cancelRow(parts.cancel)],
       };
 
+// Signing out is Settings' to do, since other Plugins may borrow the Account (ADR-0036): the row opens it there.
 const signedInStep = (step: Extract<Step, { kind: 'signed-in' }>): Card => ({
   title: 'Connected',
-  rows: [valueRow('Account', step.label)],
-  footer: 'Manage this Account in Settings › Accounts.',
+  rows: [
+    valueRow('Account', step.label),
+    destructiveRow('Sign out…', {
+      action: 'openAccount',
+      accountId: step.accountId,
+    }),
+  ],
+  footer:
+    'Sign out in Settings › Accounts, where every Plugin using this Account is listed.',
   signedIn: true,
 });
 

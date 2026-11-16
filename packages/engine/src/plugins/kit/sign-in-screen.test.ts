@@ -42,7 +42,13 @@ const steps = {
       lifetimeMs: 900_000,
     },
   }),
-  signedIn: draw({ flow: { kind: 'signed-in', label: 'ada@example.com' } }),
+  signedIn: draw({
+    flow: {
+      kind: 'signed-in',
+      label: 'ada@example.com',
+      accountId: 'account-1',
+    },
+  }),
   ended: draw({
     flow: {
       kind: 'ended',
@@ -71,6 +77,12 @@ it('copies the code, then opens the page that asks for it, from one press', () =
 it('draws the service’s logo in the mark when the Plugin ships one, and leaves the mark to the App when not', () => {
   expect(JSON.stringify(steps.withLogo)).toContain('"slots":{"mark"');
   expect(JSON.stringify(steps.signedOut)).not.toContain('"mark"');
+});
+
+it('signs out in Settings, opening the Account there, since other Plugins may borrow it', () => {
+  expect(JSON.stringify(steps.signedIn)).toContain(
+    '"onPress":{"action":"openAccount","accountId":"account-1"}',
+  );
 });
 
 it('gives a Device that cannot start nothing to press', () => {
