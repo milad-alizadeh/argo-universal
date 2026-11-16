@@ -1,15 +1,24 @@
+import {
+  issueExtras,
+  statusOf,
+  type IssueExtras,
+  type JiraStatus,
+} from './issue-fields';
 import { at, list, present, text, type Json } from './json';
 
 // What the Plugin keeps of Jira's answers: its own JSON, so a named read can keep it and a page can draw it.
 export type JiraProject = { id: string; key: string; name: string };
 
-export type StatusCategory = 'new' | 'indeterminate' | 'done';
+export type { StatusCategory } from './issue-fields';
 
-export type JiraIssue = {
+export type JiraPerson = { accountId: string; name: string };
+
+// An issue as a search or a read answers it: what its row shows, and what its page shows besides (`issue-fields.ts`).
+export type JiraIssue = IssueExtras & {
   key: string;
   summary: string;
-  status: { name: string; category: StatusCategory };
-  assignee: { accountId: string; name: string } | null;
+  status: JiraStatus;
+  assignee: JiraPerson | null;
   priority: string | null;
 };
 
@@ -21,23 +30,10 @@ export type OffsetPage<Item> = { items: Item[]; next: number | null };
 
 export type JiraMyself = { accountId: string; name: string; email: string };
 
-// Someone an issue in the project can be assigned to, for the assignee filter.
-export type JiraPerson = { accountId: string; name: string };
-
 type Read = Json | undefined;
-
-const categories: readonly StatusCategory[] = ['new', 'indeterminate', 'done'];
-
-const categoryOf = (value: Read): StatusCategory =>
-  categories.find((category) => category === value) ?? 'indeterminate';
 
 const textOr = (value: Read, fallback: string): string =>
   text(value) ?? fallback;
-
-const statusOf = (fields: Read): JiraIssue['status'] => ({
-  name: textOr(at(fields, 'status', 'name'), 'Unknown'),
-  category: categoryOf(at(fields, 'status', 'statusCategory', 'key')),
-});
 
 function assigneeOf(fields: Read): JiraIssue['assignee'] {
   const accountId = text(at(fields, 'assignee', 'accountId'));
@@ -50,18 +46,23 @@ function assigneeOf(fields: Read): JiraIssue['assignee'] {
   };
 }
 
-const issueFields = (key: string, fields: Read): JiraIssue => ({
+const issueFields = (
+  key: string,
+  fields: Read,
+): Omit<JiraIssue, keyof IssueExtras> => ({
   key,
   summary: textOr(at(fields, 'summary'), ''),
-  status: statusOf(fields),
+  status: statusOf(at(fields, 'status')),
   assignee: assigneeOf(fields),
   priority: text(at(fields, 'priority', 'name')),
 });
 
-function issueOf(json: Json): JiraIssue | null {
+export function issueOf(json: Read): JiraIssue | null {
   const key = text(at(json, 'key'));
 
-  return key ? issueFields(key, at(json, 'fields')) : null;
+  return key
+    ? { ...issueFields(key, at(json, 'fields')), ...issueExtras(json) }
+    : null;
 }
 
 function projectOf(json: Json): JiraProject | null {

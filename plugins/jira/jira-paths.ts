@@ -26,3 +26,16 @@ export const projectIdOf = ({
 }: {
   params: Readonly<Record<string, string>>;
 }): string => pathText(params.project ?? '');
+
+// The issue a page's path names.
+export const issueKeyOf = ({
+  params,
+}: {
+  params: Readonly<Record<string, string>>;
+}): string => pathText(params.key ?? '');
+
+// One Jira issue of a Project, beside that Project's views.
+export const issuePattern = `${projectPattern}/issues/:key`;
+
+export const issuePath = (projectId: string, key: string): string =>
+  `${projectPath(projectId)}/issues/${pathSegment(key)}`;

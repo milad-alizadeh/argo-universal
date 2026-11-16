@@ -23,12 +23,15 @@ export type JiraService = Pick<FixtureServices, 'network' | 'requests'> & {
   // Answers every call to a named route with this until `heal(name)`.
   fail: (name: string, answer: FixtureAnswer) => void;
   heal: (name: string) => void;
+  // Holds every call to a named route unanswered, as a slow Jira does, until the function it answers lets them go.
+  hold: (name: string) => () => void;
   // The calls that reached a named route, in order.
   calls: (name: string) => FixtureRequest[];
 };
 
 type Service = Routing & {
   failing: Map<string, FixtureAnswer>;
+  held: Map<string, Promise<void>>;
   names: WeakMap<FixtureRequest, string>;
 };
 
@@ -45,8 +48,18 @@ const tenant = (data: JiraData, { host }: FixtureRequest): Routed => ({
   answer: () => tenantInfo(data, host),
 });
 
-const reply = (service: Service, found: Routed): FixtureAnswer =>
+const now = (service: Service, found: Routed): FixtureAnswer =>
   service.failing.get(found.name) ?? found.answer();
+
+// A held route answers once it is let go, from the data as it is then.
+function reply(
+  service: Service,
+  found: Routed,
+): FixtureAnswer | Promise<FixtureAnswer> {
+  const held = service.held.get(found.name);
+
+  return held ? held.then(() => now(service, found)) : now(service, found);
+}
 
 // Atlassian's OAuth endpoints, when the test gave them, answer before Jira does.
 const signingIn = (
@@ -54,10 +67,16 @@ const signingIn = (
   request: FixtureRequest,
 ): FixtureAnswer | null => (oauth ? oauth.answer(request) : null);
 
-const answer = (service: Service, request: FixtureRequest): FixtureAnswer =>
+const answer = (
+  service: Service,
+  request: FixtureRequest,
+): FixtureAnswer | Promise<FixtureAnswer> =>
   signingIn(service, request) ?? jiraAnswer(service, request);
 
-function jiraAnswer(service: Service, request: FixtureRequest): FixtureAnswer {
+function jiraAnswer(
+  service: Service,
+  request: FixtureRequest,
+): FixtureAnswer | Promise<FixtureAnswer> {
   const found =
     request.path === tenantPath
       ? tenant(service.data, request)
@@ -83,8 +102,20 @@ const serviceOf = (
   data: options.data ?? jiraData(),
   routes: [...(options.routes ?? []), ...jiraRoutes],
   failing: new Map(),
+  held: new Map(),
   names: new WeakMap(),
 });
+
+function hold(service: Service, name: string): () => void {
+  const { promise, resolve } = Promise.withResolvers<void>();
+
+  service.held.set(name, promise);
+
+  return () => {
+    service.held.delete(name);
+    resolve();
+  };
+}
 
 const controls = (
   service: Service,
@@ -95,6 +126,7 @@ const controls = (
   data: service.data,
   fail: (name, failure) => void service.failing.set(name, failure),
   heal: (name) => void service.failing.delete(name),
+  hold: (name) => hold(service, name),
   calls: (name) =>
     requests.filter((request) => service.names.get(request) === name),
 });

@@ -1,4 +1,5 @@
 import {
+  Action,
   Icon,
   Label,
   List,
@@ -11,6 +12,7 @@ import {
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { issueUrl } from './atlassian';
 import { isFailure, type ListedItem } from './issue-pages';
+import { issuePath } from './jira-paths';
 import type { JiraIssue, StatusCategory } from './jira-readers';
 import type { JiraSite } from './jira-store';
 
@@ -20,11 +22,12 @@ import type { JiraSite } from './jira-store';
  */
 
 // Jira's status categories as Argo's tones: to do is quiet, as the Issue tracker's neutral pills are, in progress is under way, done is finished.
-const categoryTones: Record<StatusCategory, 'muted' | 'info' | 'done'> = {
-  new: 'muted',
-  indeterminate: 'info',
-  done: 'done',
-};
+export const categoryTones: Record<StatusCategory, 'muted' | 'info' | 'done'> =
+  {
+    new: 'muted',
+    indeterminate: 'info',
+    done: 'done',
+  };
 
 const inProgressIcon = {
   sf: 'circle.lefthalf.filled',
@@ -73,8 +76,22 @@ const rowMeta = (issue: JiraIssue): JSX.Element[] => [
   statusPill(issue),
 ];
 
-// A keyed ListItem itself, as a List draws its children. It opens the issue in Jira until Argo has its own page.
-const issueRow = (site: JiraSite, issue: JiraIssue): JSX.Element => (
+type RowTo = PageTo<{ site: string }>;
+
+// Where a row goes: the issue's page in this Project, and Jira on its site from its menu.
+type Rows = { site: JiraSite; projectId: string; to: RowTo };
+
+const openInJira = (site: JiraSite, issue: JiraIssue): JSX.Element => (
+  <Action
+    key="open-in-jira"
+    label="Open in Jira"
+    icon="external-link"
+    onPress={{ action: 'openUrl', url: issueUrl(site.host, issue.key) }}
+  />
+);
+
+// A keyed ListItem itself, as a List draws its children. It opens the issue's page; its menu opens it in Jira.
+const issueRow = (rows: Rows, issue: JiraIssue): JSX.Element => (
   <ListItem
     key={issue.key}
     id={issue.key}
@@ -83,14 +100,15 @@ const issueRow = (site: JiraSite, issue: JiraIssue): JSX.Element => (
     subtitle={issue.key}
     finished={issue.status.category === 'done'}
     meta={rowMeta(issue)}
-    onPress={{ action: 'openUrl', url: issueUrl(site.host, issue.key) }}
+    onPress={rows.to.go(issuePath(rows.projectId, issue.key))}
+    actions={openInJira(rows.site, issue)}
   />
 );
 
 // What the list says under its rows, and in their place when there are none.
 export type ListFrame = Pick<PluginProps['List'], 'footer' | 'empty'>;
 
-type Paging = { list: PagedList<ListedItem>; to: PageTo<{ site: string }> };
+type Paging = { list: PagedList<ListedItem>; to: RowTo };
 
 // Load more appends Jira's next page, and a pull reads them again from the first.
 const pagingProps = ({
@@ -101,16 +119,13 @@ const pagingProps = ({
   pagination: { hasMore: list.hasMore, onLoadMore: list.loadMore },
 });
 
-const issueRows = (
-  site: JiraSite,
-  items: readonly ListedItem[],
-): JSX.Element[] =>
-  items.flatMap((item) => (isFailure(item) ? [] : [issueRow(site, item)]));
+const issueRows = (rows: Rows, items: readonly ListedItem[]): JSX.Element[] =>
+  items.flatMap((item) => (isFailure(item) ? [] : [issueRow(rows, item)]));
 
 // The project's issues, one row each, in the Issue tracker's plain compact list.
 export const issueList = (
   site: JiraSite,
-  { list, to, ...frame }: Paging & ListFrame,
+  { list, to, projectId, ...frame }: Paging & ListFrame & { projectId: string },
 ): JSX.Element => (
   <List
     accessibilityLabel="Jira issues"
@@ -119,6 +134,6 @@ export const issueList = (
     {...frame}
     {...pagingProps({ list, to })}
   >
-    {issueRows(site, list.items)}
+    {issueRows({ site, projectId, to }, list.items)}
   </List>
 );

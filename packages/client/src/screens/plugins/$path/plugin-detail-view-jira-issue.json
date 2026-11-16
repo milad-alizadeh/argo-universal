@@ -1,0 +1,1594 @@
+{
+  "issue": {
+    "type": "ListDetail",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [],
+    "slots": {
+      "list": [
+        {
+          "type": "List",
+          "key": "0",
+          "props": {
+            "accessibilityLabel": "Projects"
+          },
+          "children": [
+            {
+              "type": "List.Section",
+              "key": "project-1",
+              "props": {
+                "title": "Fixture Project"
+              },
+              "children": [
+                {
+                  "type": "ListItem",
+                  "key": "issues",
+                  "props": {
+                    "title": "Issues",
+                    "selected": true,
+                    "onPress": {
+                      "action": "navigate",
+                      "path": "/projects/project-1"
+                    }
+                  },
+                  "children": [],
+                  "slots": {
+                    "leading": [
+                      {
+                        "type": "Icon",
+                        "key": "0",
+                        "props": {
+                          "name": {
+                            "sf": "list.bullet",
+                            "material": "list"
+                          },
+                          "size": "md"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ]
+                  }
+                }
+              ],
+              "slots": {}
+            }
+          ],
+          "slots": {
+            "empty": [
+              {
+                "type": "EmptyState",
+                "key": "0",
+                "props": {
+                  "title": "No Projects",
+                  "description": "Add a Project to Argo to see its Jira issues."
+                },
+                "children": [],
+                "slots": {}
+              }
+            ]
+          }
+        }
+      ],
+      "detail": [
+        {
+          "type": "Screen",
+          "key": "0",
+          "props": {
+            "title": "Show Jira issues in Argo"
+          },
+          "children": [
+            {
+              "type": "Detail",
+              "key": "0",
+              "props": {
+                "markdown": "List a project’s issues **in Argo**.\n\n- Key and summary\n- Status and assignee"
+              },
+              "children": [],
+              "slots": {}
+            }
+          ],
+          "slots": {
+            "actions": [
+              {
+                "type": "Action",
+                "key": "status-menu",
+                "props": {
+                  "label": "Status",
+                  "icon": "issue"
+                },
+                "children": [
+                  {
+                    "type": "Action.Section",
+                    "key": "moves",
+                    "props": {
+                      "title": "Move from In Progress"
+                    },
+                    "children": [
+                      {
+                        "type": "Action",
+                        "key": "move-11",
+                        "props": {
+                          "label": "To Do",
+                          "onPress": {
+                            "operation": "transition",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "status": "1",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-status",
+                                "props": {
+                                  "text": "To Do",
+                                  "tone": "neutral"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "move-31",
+                        "props": {
+                          "label": "In Review",
+                          "onPress": {
+                            "operation": "transition",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "status": "4",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-status",
+                                "props": {
+                                  "text": "In Review",
+                                  "tone": "info"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "move-41",
+                        "props": {
+                          "label": "Done",
+                          "onPress": {
+                            "operation": "transition",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "status": "5",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-status",
+                                "props": {
+                                  "text": "Done",
+                                  "tone": "done"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              },
+              {
+                "type": "Action",
+                "key": "assignee-menu",
+                "props": {
+                  "label": "Assignee",
+                  "icon": "person"
+                },
+                "children": [
+                  {
+                    "type": "Action.Section",
+                    "key": "people",
+                    "props": {
+                      "title": "Assign to"
+                    },
+                    "children": [
+                      {
+                        "type": "Action",
+                        "key": "assign-none",
+                        "props": {
+                          "label": "Unassigned",
+                          "selected": false,
+                          "onPress": {
+                            "operation": "setAssignee",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-assignee",
+                                "props": {
+                                  "text": "Unassigned"
+                                }
+                              },
+                              {
+                                "key": "assign-none",
+                                "props": {
+                                  "selected": true
+                                }
+                              },
+                              {
+                                "key": "assign-account-ada",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "assign-account-grace",
+                                "props": {
+                                  "selected": false
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "assign-account-ada",
+                        "props": {
+                          "label": "Ada Lovelace",
+                          "selected": true,
+                          "onPress": {
+                            "operation": "setAssignee",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "projectId": "project-1",
+                              "assignee": "account-ada"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-assignee",
+                                "props": {
+                                  "text": "Ada Lovelace"
+                                }
+                              },
+                              {
+                                "key": "assign-none",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "assign-account-ada",
+                                "props": {
+                                  "selected": true
+                                }
+                              },
+                              {
+                                "key": "assign-account-grace",
+                                "props": {
+                                  "selected": false
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "assign-account-grace",
+                        "props": {
+                          "label": "Grace Hopper",
+                          "selected": false,
+                          "onPress": {
+                            "operation": "setAssignee",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "projectId": "project-1",
+                              "assignee": "account-grace"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-assignee",
+                                "props": {
+                                  "text": "Grace Hopper"
+                                }
+                              },
+                              {
+                                "key": "assign-none",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "assign-account-ada",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "assign-account-grace",
+                                "props": {
+                                  "selected": true
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              },
+              {
+                "type": "Action",
+                "key": "priority-menu",
+                "props": {
+                  "label": "Priority",
+                  "icon": "flag"
+                },
+                "children": [
+                  {
+                    "type": "Action.Section",
+                    "key": "priorities",
+                    "props": {
+                      "title": "Priority"
+                    },
+                    "children": [
+                      {
+                        "type": "Action",
+                        "key": "priority-Highest",
+                        "props": {
+                          "label": "Highest",
+                          "selected": false,
+                          "onPress": {
+                            "operation": "setPriority",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "priority": "1",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-priority",
+                                "props": {
+                                  "text": "Highest"
+                                }
+                              },
+                              {
+                                "key": "priority-Highest",
+                                "props": {
+                                  "selected": true
+                                }
+                              },
+                              {
+                                "key": "priority-High",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Medium",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Low",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Lowest",
+                                "props": {
+                                  "selected": false
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "priority-High",
+                        "props": {
+                          "label": "High",
+                          "selected": true,
+                          "onPress": {
+                            "operation": "setPriority",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "priority": "2",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-priority",
+                                "props": {
+                                  "text": "High"
+                                }
+                              },
+                              {
+                                "key": "priority-Highest",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-High",
+                                "props": {
+                                  "selected": true
+                                }
+                              },
+                              {
+                                "key": "priority-Medium",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Low",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Lowest",
+                                "props": {
+                                  "selected": false
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "priority-Medium",
+                        "props": {
+                          "label": "Medium",
+                          "selected": false,
+                          "onPress": {
+                            "operation": "setPriority",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "priority": "3",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-priority",
+                                "props": {
+                                  "text": "Medium"
+                                }
+                              },
+                              {
+                                "key": "priority-Highest",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-High",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Medium",
+                                "props": {
+                                  "selected": true
+                                }
+                              },
+                              {
+                                "key": "priority-Low",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Lowest",
+                                "props": {
+                                  "selected": false
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "priority-Low",
+                        "props": {
+                          "label": "Low",
+                          "selected": false,
+                          "onPress": {
+                            "operation": "setPriority",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "priority": "4",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-priority",
+                                "props": {
+                                  "text": "Low"
+                                }
+                              },
+                              {
+                                "key": "priority-Highest",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-High",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Medium",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Low",
+                                "props": {
+                                  "selected": true
+                                }
+                              },
+                              {
+                                "key": "priority-Lowest",
+                                "props": {
+                                  "selected": false
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "priority-Lowest",
+                        "props": {
+                          "label": "Lowest",
+                          "selected": false,
+                          "onPress": {
+                            "operation": "setPriority",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "priority": "5",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-priority",
+                                "props": {
+                                  "text": "Lowest"
+                                }
+                              },
+                              {
+                                "key": "priority-Highest",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-High",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Medium",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Low",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Lowest",
+                                "props": {
+                                  "selected": true
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "aside": [
+              {
+                "type": "Metadata",
+                "key": "0",
+                "props": {},
+                "children": [
+                  {
+                    "type": "Metadata.StatusDot",
+                    "key": "issue-status",
+                    "props": {
+                      "title": "Status",
+                      "text": "In Progress",
+                      "tone": "info"
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Metadata.Label",
+                    "key": "issue-assignee",
+                    "props": {
+                      "title": "Assignee",
+                      "text": "Ada Lovelace",
+                      "icon": {
+                        "sf": "person",
+                        "material": "person"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Metadata.Label",
+                    "key": "issue-priority",
+                    "props": {
+                      "title": "Priority",
+                      "text": "High",
+                      "icon": {
+                        "sf": "flag",
+                        "material": "flag"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Metadata.Pills",
+                    "key": "3",
+                    "props": {
+                      "title": "Labels"
+                    },
+                    "children": [
+                      {
+                        "type": "Pill",
+                        "key": "jira",
+                        "props": {
+                          "text": "jira"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Pill",
+                        "key": "spec-0027",
+                        "props": {
+                          "text": "spec-0027"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Metadata.Link",
+                    "key": "4",
+                    "props": {
+                      "title": "Jira",
+                      "text": "ARGO-3",
+                      "href": "https://arena.atlassian.net/browse/ARGO-3"
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "pending": {
+    "type": "ListDetail",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [],
+    "slots": {
+      "list": [
+        {
+          "type": "List",
+          "key": "0",
+          "props": {
+            "accessibilityLabel": "Projects"
+          },
+          "children": [
+            {
+              "type": "List.Section",
+              "key": "project-1",
+              "props": {
+                "title": "Fixture Project"
+              },
+              "children": [
+                {
+                  "type": "ListItem",
+                  "key": "issues",
+                  "props": {
+                    "title": "Issues",
+                    "selected": true,
+                    "onPress": {
+                      "action": "navigate",
+                      "path": "/projects/project-1"
+                    }
+                  },
+                  "children": [],
+                  "slots": {
+                    "leading": [
+                      {
+                        "type": "Icon",
+                        "key": "0",
+                        "props": {
+                          "name": {
+                            "sf": "list.bullet",
+                            "material": "list"
+                          },
+                          "size": "md"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ]
+                  }
+                }
+              ],
+              "slots": {}
+            }
+          ],
+          "slots": {
+            "empty": [
+              {
+                "type": "EmptyState",
+                "key": "0",
+                "props": {
+                  "title": "No Projects",
+                  "description": "Add a Project to Argo to see its Jira issues."
+                },
+                "children": [],
+                "slots": {}
+              }
+            ]
+          }
+        }
+      ],
+      "detail": [
+        {
+          "type": "Screen",
+          "key": "0",
+          "props": {
+            "title": "Show Jira issues in Argo"
+          },
+          "children": [
+            {
+              "type": "Detail",
+              "key": "0",
+              "props": {
+                "markdown": "List a project’s issues **in Argo**.\n\n- Key and summary\n- Status and assignee"
+              },
+              "children": [],
+              "slots": {}
+            }
+          ],
+          "slots": {
+            "actions": [
+              {
+                "type": "Action",
+                "key": "status-menu",
+                "props": {
+                  "label": "Status",
+                  "icon": "issue"
+                },
+                "children": [
+                  {
+                    "type": "Action.Section",
+                    "key": "moves",
+                    "props": {
+                      "title": "Move from In Progress"
+                    },
+                    "children": [
+                      {
+                        "type": "Action",
+                        "key": "move-11",
+                        "props": {
+                          "label": "To Do",
+                          "onPress": {
+                            "operation": "transition",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "status": "1",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-status",
+                                "props": {
+                                  "text": "To Do",
+                                  "tone": "neutral"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "move-31",
+                        "props": {
+                          "label": "In Review",
+                          "onPress": {
+                            "operation": "transition",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "status": "4",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-status",
+                                "props": {
+                                  "text": "In Review",
+                                  "tone": "info"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "move-41",
+                        "props": {
+                          "label": "Done",
+                          "onPress": {
+                            "operation": "transition",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "status": "5",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-status",
+                                "props": {
+                                  "text": "Done",
+                                  "tone": "done"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              },
+              {
+                "type": "Action",
+                "key": "assignee-menu",
+                "props": {
+                  "label": "Assignee",
+                  "icon": "person"
+                },
+                "children": [
+                  {
+                    "type": "Action.Section",
+                    "key": "people",
+                    "props": {
+                      "title": "Assign to"
+                    },
+                    "children": [
+                      {
+                        "type": "Action",
+                        "key": "assign-none",
+                        "props": {
+                          "label": "Unassigned",
+                          "selected": false,
+                          "onPress": {
+                            "operation": "setAssignee",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-assignee",
+                                "props": {
+                                  "text": "Unassigned"
+                                }
+                              },
+                              {
+                                "key": "assign-none",
+                                "props": {
+                                  "selected": true
+                                }
+                              },
+                              {
+                                "key": "assign-account-ada",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "assign-account-grace",
+                                "props": {
+                                  "selected": false
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "assign-account-ada",
+                        "props": {
+                          "label": "Ada Lovelace",
+                          "selected": true,
+                          "onPress": {
+                            "operation": "setAssignee",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "projectId": "project-1",
+                              "assignee": "account-ada"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-assignee",
+                                "props": {
+                                  "text": "Ada Lovelace"
+                                }
+                              },
+                              {
+                                "key": "assign-none",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "assign-account-ada",
+                                "props": {
+                                  "selected": true
+                                }
+                              },
+                              {
+                                "key": "assign-account-grace",
+                                "props": {
+                                  "selected": false
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "assign-account-grace",
+                        "props": {
+                          "label": "Grace Hopper",
+                          "selected": false,
+                          "onPress": {
+                            "operation": "setAssignee",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "projectId": "project-1",
+                              "assignee": "account-grace"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-assignee",
+                                "props": {
+                                  "text": "Grace Hopper"
+                                }
+                              },
+                              {
+                                "key": "assign-none",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "assign-account-ada",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "assign-account-grace",
+                                "props": {
+                                  "selected": true
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              },
+              {
+                "type": "Action",
+                "key": "priority-menu",
+                "props": {
+                  "label": "Priority",
+                  "icon": "flag"
+                },
+                "children": [
+                  {
+                    "type": "Action.Section",
+                    "key": "priorities",
+                    "props": {
+                      "title": "Priority"
+                    },
+                    "children": [
+                      {
+                        "type": "Action",
+                        "key": "priority-Highest",
+                        "props": {
+                          "label": "Highest",
+                          "selected": false,
+                          "onPress": {
+                            "operation": "setPriority",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "priority": "1",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-priority",
+                                "props": {
+                                  "text": "Highest"
+                                }
+                              },
+                              {
+                                "key": "priority-Highest",
+                                "props": {
+                                  "selected": true
+                                }
+                              },
+                              {
+                                "key": "priority-High",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Medium",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Low",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Lowest",
+                                "props": {
+                                  "selected": false
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "priority-High",
+                        "props": {
+                          "label": "High",
+                          "selected": true,
+                          "onPress": {
+                            "operation": "setPriority",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "priority": "2",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-priority",
+                                "props": {
+                                  "text": "High"
+                                }
+                              },
+                              {
+                                "key": "priority-Highest",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-High",
+                                "props": {
+                                  "selected": true
+                                }
+                              },
+                              {
+                                "key": "priority-Medium",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Low",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Lowest",
+                                "props": {
+                                  "selected": false
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "priority-Medium",
+                        "props": {
+                          "label": "Medium",
+                          "selected": false,
+                          "onPress": {
+                            "operation": "setPriority",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "priority": "3",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-priority",
+                                "props": {
+                                  "text": "Medium"
+                                }
+                              },
+                              {
+                                "key": "priority-Highest",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-High",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Medium",
+                                "props": {
+                                  "selected": true
+                                }
+                              },
+                              {
+                                "key": "priority-Low",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Lowest",
+                                "props": {
+                                  "selected": false
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "priority-Low",
+                        "props": {
+                          "label": "Low",
+                          "selected": false,
+                          "onPress": {
+                            "operation": "setPriority",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "priority": "4",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-priority",
+                                "props": {
+                                  "text": "Low"
+                                }
+                              },
+                              {
+                                "key": "priority-Highest",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-High",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Medium",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Low",
+                                "props": {
+                                  "selected": true
+                                }
+                              },
+                              {
+                                "key": "priority-Lowest",
+                                "props": {
+                                  "selected": false
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "priority-Lowest",
+                        "props": {
+                          "label": "Lowest",
+                          "selected": false,
+                          "onPress": {
+                            "operation": "setPriority",
+                            "args": {
+                              "issue": "ARGO-3",
+                              "priority": "5",
+                              "projectId": "project-1"
+                            },
+                            "optimistic": [
+                              {
+                                "key": "issue-priority",
+                                "props": {
+                                  "text": "Lowest"
+                                }
+                              },
+                              {
+                                "key": "priority-Highest",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-High",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Medium",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Low",
+                                "props": {
+                                  "selected": false
+                                }
+                              },
+                              {
+                                "key": "priority-Lowest",
+                                "props": {
+                                  "selected": true
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "aside": [
+              {
+                "type": "Metadata",
+                "key": "0",
+                "props": {},
+                "children": [
+                  {
+                    "type": "Metadata.StatusDot",
+                    "key": "issue-status",
+                    "props": {
+                      "title": "Status",
+                      "text": "In Review",
+                      "tone": "info"
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Metadata.Label",
+                    "key": "issue-assignee",
+                    "props": {
+                      "title": "Assignee",
+                      "text": "Ada Lovelace",
+                      "icon": {
+                        "sf": "person",
+                        "material": "person"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Metadata.Label",
+                    "key": "issue-priority",
+                    "props": {
+                      "title": "Priority",
+                      "text": "High",
+                      "icon": {
+                        "sf": "flag",
+                        "material": "flag"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Metadata.Pills",
+                    "key": "3",
+                    "props": {
+                      "title": "Labels"
+                    },
+                    "children": [
+                      {
+                        "type": "Pill",
+                        "key": "jira",
+                        "props": {
+                          "text": "jira"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Pill",
+                        "key": "spec-0027",
+                        "props": {
+                          "text": "spec-0027"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Metadata.Link",
+                    "key": "4",
+                    "props": {
+                      "title": "Jira",
+                      "text": "ARGO-3",
+                      "href": "https://arena.atlassian.net/browse/ARGO-3"
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "unreadable": {
+    "type": "ListDetail",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [],
+    "slots": {
+      "list": [
+        {
+          "type": "List",
+          "key": "0",
+          "props": {
+            "accessibilityLabel": "Projects"
+          },
+          "children": [
+            {
+              "type": "List.Section",
+              "key": "project-1",
+              "props": {
+                "title": "Fixture Project"
+              },
+              "children": [
+                {
+                  "type": "ListItem",
+                  "key": "issues",
+                  "props": {
+                    "title": "Issues",
+                    "selected": true,
+                    "onPress": {
+                      "action": "navigate",
+                      "path": "/projects/project-1"
+                    }
+                  },
+                  "children": [],
+                  "slots": {
+                    "leading": [
+                      {
+                        "type": "Icon",
+                        "key": "0",
+                        "props": {
+                          "name": {
+                            "sf": "list.bullet",
+                            "material": "list"
+                          },
+                          "size": "md"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ]
+                  }
+                }
+              ],
+              "slots": {}
+            }
+          ],
+          "slots": {
+            "empty": [
+              {
+                "type": "EmptyState",
+                "key": "0",
+                "props": {
+                  "title": "No Projects",
+                  "description": "Add a Project to Argo to see its Jira issues."
+                },
+                "children": [],
+                "slots": {}
+              }
+            ]
+          }
+        }
+      ],
+      "detail": [
+        {
+          "type": "Screen",
+          "key": "0",
+          "props": {
+            "title": "ARGO-99"
+          },
+          "children": [
+            {
+              "type": "Callout",
+              "key": "0",
+              "props": {
+                "tone": "danger",
+                "title": "Jira couldn’t find this issue",
+                "description": "Issue does not exist or you do not have permission to see it."
+              },
+              "children": [],
+              "slots": {
+                "actions": [
+                  {
+                    "type": "Button",
+                    "key": "0",
+                    "props": {
+                      "label": "Try again",
+                      "onPress": {
+                        "operation": "checkAgain",
+                        "args": {}
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ]
+              }
+            }
+          ],
+          "slots": {}
+        }
+      ]
+    }
+  }
+}

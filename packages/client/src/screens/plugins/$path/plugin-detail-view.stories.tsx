@@ -8,6 +8,9 @@ import { PluginDetailView } from './plugin-detail-view';
 import {
   issueFilters,
   issueFiltersUnavailable,
+  jiraIssue,
+  jiraIssueMoving,
+  jiraIssueUnreadable,
 } from './plugin-detail-view-fixtures';
 
 const meta = {
@@ -40,4 +43,17 @@ export const IssueFilters: StoryObj<typeof meta> = {
 
 export const IssueFiltersUnavailable: StoryObj<typeof meta> = {
   args: issueFiltersUnavailable,
+};
+
+export const JiraIssue: StoryObj<typeof meta> = {
+  args: jiraIssue,
+};
+
+// A status move the App shows at once, before Jira answers it.
+export const JiraIssueMoving: StoryObj<typeof meta> = {
+  args: jiraIssueMoving,
+};
+
+export const JiraIssueUnreadable: StoryObj<typeof meta> = {
+  args: jiraIssueUnreadable,
 };

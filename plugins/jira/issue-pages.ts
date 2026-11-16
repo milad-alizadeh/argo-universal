@@ -1,4 +1,5 @@
 import type { ListPage } from '@argo/plugin-kit';
+import { seedIssues, type IssueReads } from './issue-reads';
 import { callJira, type JiraFailure } from './jira-client';
 import type { IssueFilters } from './jira-filters';
 import { jiraReaders, type IssuePage, type JiraIssue } from './jira-readers';
@@ -54,14 +55,31 @@ const searched = (
     read: jiraReaders.issues,
   });
 
+// Each listed issue seeds the entry its own page reads, so a row opens its issue at once (`issue-reads.ts`).
+async function seeded(
+  { argo }: Reading,
+  { reads, target }: { reads: IssueReads; target: IssuesTarget },
+  page: IssuePage,
+): Promise<ListPage<ListedItem>> {
+  const { projectId, cloudId } = target;
+
+  await seedIssues(argo, reads, {
+    target: { projectId, cloudId },
+    issues: page.issues,
+  });
+
+  return { items: page.issues, cursor: page.cursor };
+}
+
 // A token Jira refuses is told to the sign-in page, as every other Jira read tells it.
 export async function issuesPage(
   reading: Reading,
   target: IssuesTarget,
+  reads: IssueReads,
 ): Promise<ListPage<ListedItem>> {
   const answer = noted(reading.refused, await searched(reading, target));
 
   return answer.ok
-    ? { items: answer.value.issues, cursor: answer.value.cursor }
+    ? seeded(reading, { reads, target }, answer.value)
     : refusal(target, answer.failure);
 }

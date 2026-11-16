@@ -1,5 +1,6 @@
 import type { ListPage, LoaderInput, NamedQuery } from '@argo/plugin-kit';
-import { issuesPage, type ListedItem } from './issue-pages';
+import { issuesPage, type IssuesTarget, type ListedItem } from './issue-pages';
+import type { JiraPriority } from './issue-readers';
 import type { JiraAnswer, JiraFailure } from './jira-client';
 import type { IssueFilters } from './jira-filters';
 import type { JiraPerson, JiraProject } from './jira-readers';
@@ -59,7 +60,10 @@ const onlyOne = <Value>(values: Value[]): Value | null =>
   values.length === 1 ? (values.at(0) ?? null) : null;
 
 // A chosen site still known, or the only one there is.
-const siteFor = (sites: JiraSite[], choice: ProjectChoice): JiraSite | null =>
+export const siteFor = (
+  sites: JiraSite[],
+  choice: ProjectChoice,
+): JiraSite | null =>
   sites.find(({ cloudId }) => cloudId === choice.cloudId) ?? onlyOne(sites);
 
 type Failing = Omit<FailedView, 'kind' | 'failure'>;
@@ -119,11 +123,21 @@ async function peopleFor(step: Step, listed: Listed): Promise<JiraPerson[]> {
   return answer.ok ? answer.value : [];
 }
 
-const issuesFor = async (step: Step, listed: Listed): Promise<ProjectView> => ({
-  kind: 'issues',
-  ...listed,
-  people: await peopleFor(step, listed),
-});
+// The site's priorities are read beside the people, so an issue opened from the list offers both at once.
+const prioritiesFor = (
+  { read, reads, projectId }: Step,
+  { site }: Listed,
+): Promise<JiraPriority[]> =>
+  read(reads.priorities({ projectId, cloudId: site.cloudId }));
+
+async function issuesFor(step: Step, listed: Listed): Promise<ProjectView> {
+  const [people] = await Promise.all([
+    peopleFor(step, listed),
+    prioritiesFor(step, listed),
+  ]);
+
+  return { kind: 'issues', ...listed, people };
+}
 
 const isView = (value: JiraProject | ProjectView): value is ProjectView =>
   'kind' in value;
@@ -160,6 +174,18 @@ export async function loadProjectView(step: Step): Promise<ProjectView> {
 
 const end: ListPage<ListedItem> = { items: [], cursor: null };
 
+type Listing = Extract<ProjectView, { kind: 'issues' }>;
+
+const pageTarget = (
+  step: Step,
+  { site, project }: Listing,
+  cursor: string | null,
+): IssuesTarget => ({
+  ...targetOf(step, site, project),
+  filters: step.filters,
+  cursor,
+});
+
 /*
  * One page of the list the kit pages through, from Jira's cursor (null for the first). A view with no list lists
  * nothing, and the page says why.
@@ -170,9 +196,5 @@ export const listIssues = (
   cursor: string | null,
 ): ListPage<ListedItem> | Promise<ListPage<ListedItem>> =>
   view.kind === 'issues'
-    ? issuesPage(reading, {
-        ...targetOf(step, view.site, view.project),
-        filters: step.filters,
-        cursor,
-      })
+    ? issuesPage(reading, pageTarget(step, view, cursor), step.reads)
     : end;
