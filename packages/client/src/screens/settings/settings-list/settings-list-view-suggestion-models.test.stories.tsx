@@ -68,11 +68,13 @@ async function openPicker({
   );
   const body = within(canvasElement.ownerDocument.body);
   const row = await body.findByRole('option', { name: model.name });
-  await settleOverlays();
+  // The last model can sit below the fold of the phone-width popup, where nobody can point at it and settleOverlays would wait for ever.
+  row.scrollIntoView({ block: 'nearest' });
+  // The popup fades in, and toBeVisible reads its opacity, so assert only once the entrance has ended.
+  await settleOverlays(row);
   await expect(
     body.getByRole('option', { name: 'Same as Session' }),
   ).toBeVisible();
-  await settleOverlays(row);
 
   return row;
 }

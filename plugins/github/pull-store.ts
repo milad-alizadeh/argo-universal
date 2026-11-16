@@ -1,6 +1,4 @@
 import type { Argo, StorageResult } from '@argo/plugin-kit';
-import { createArchiveStore, type ArchiveStore } from './pull-archive-store';
-import { createFixStore, type FixStore } from './pull-fix-store';
 import type { PullReference } from './pull-reference';
 
 // One pull request as a Project reads it: the key of what is kept of it.
@@ -21,10 +19,6 @@ const table =
   'CREATE TABLE IF NOT EXISTS pull_associations (project_id TEXT NOT NULL, session_id TEXT NOT NULL, repository TEXT NOT NULL, number INTEGER NOT NULL, attached_at TEXT NOT NULL, PRIMARY KEY (project_id, session_id, repository, number))';
 
 export type PullStore = {
-  // What Auto-fix keeps beside the associations; detaching a pull request removes it too.
-  fix: FixStore;
-  // What Auto-archive keeps beside them; detaching a pull request removes it too.
-  archive: ArchiveStore;
   // Attaching twice is the same association, so the first time stands.
   attach: (link: PullLink) => Promise<void>;
   // Removes only this association; one that is not there is already detached.
@@ -105,16 +99,6 @@ const writing =
 
 type Ready = () => Promise<StorageResult>;
 
-type Write = ReturnType<typeof writing>;
-
-const detaching =
-  (write: Write, { fix, archive }: Pick<PullStore, 'fix' | 'archive'>) =>
-  async (link: PullLink): Promise<void> => {
-    await write(deleteOf(link));
-    await fix.forget(link);
-    await archive.disable(link);
-  };
-
 const reading =
   (argo: Storage, ready: Ready) =>
   async (sessionIds: readonly string[]): Promise<PullLink[]> => {
@@ -126,14 +110,10 @@ const reading =
 export function createPullStore(argo: Storage): PullStore {
   const ready = readyTables(argo);
   const write = writing(argo, ready);
-  const fix = createFixStore(argo);
-  const archive = createArchiveStore(argo);
 
   return {
-    fix,
-    archive,
     attach: (link) => write(insertOf(link)),
-    detach: detaching(write, { fix, archive }),
+    detach: (link) => write(deleteOf(link)),
     forSessions: reading(argo, ready),
   };
 }
