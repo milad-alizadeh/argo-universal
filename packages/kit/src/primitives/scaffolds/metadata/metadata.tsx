@@ -14,6 +14,7 @@ import {
   MetadataAvatar,
   MetadataPillsField,
 } from './metadata-parts';
+import { MetadataPicker } from './metadata-picker';
 import type { MetadataProps } from './metadata-props';
 
 const listOptions = { padding: 0, paddingTop: 0, paddingBottom: 0 } as const;
@@ -65,4 +66,5 @@ export const Metadata = Object.assign(MetadataRoot, {
   Pills: MetadataPillsField,
   StatusDot: MetadataStatus,
   Avatar: MetadataAvatar,
+  Picker: MetadataPicker,
 });

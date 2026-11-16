@@ -10,7 +10,6 @@ import { Icon, IconSlot } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Orb } from '@repo/kit/primitives/status/orb';
 import { StatusDot } from '@repo/kit/primitives/status/status-dot';
-import type { IconName } from '@repo/kit/symbols/icon-names';
 import { useClock } from '@repo/kit/use-clock';
 import type * as React from 'react';
 import { useEffect } from 'react';
@@ -24,7 +23,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { ShimmerText } from '../shimmer-text';
-import { toolCallIcon } from '../tool-call-icon';
+import { toolCallOrb } from '../tool-call-orb';
 
 const rowClassName = 'w-full flex-row items-center gap-1.5';
 
@@ -74,10 +73,6 @@ function RetryIcon(): React.JSX.Element {
   );
 }
 
-const mutedIcon = (name: IconName): React.JSX.Element => (
-  <Icon name={name} className="text-muted-foreground" />
-);
-
 const sourceIcons: Record<
   LiveHeaderSource['type'],
   (toolCall: ToolCallUpdate | undefined) => React.JSX.Element
@@ -85,9 +80,9 @@ const sourceIcons: Record<
   request: () => <StatusDot testID="live-header-dot" tone="warning" pulse />,
   retry: () => <RetryIcon />,
   working: () => <Orb size="sm" />,
-  thought: () => mutedIcon('thinking'),
-  tool_call: (toolCall) =>
-    mutedIcon(toolCall ? toolCallIcon(toolCall) : 'tool'),
+  thought: () => <Orb size="sm" state="solving" />,
+  // The Orb moves the way the running Tool call works: searching, composing, shaping.
+  tool_call: (toolCall) => <Orb size="sm" state={toolCallOrb(toolCall)} />,
 };
 
 export function SourceIcon({

@@ -3,7 +3,6 @@ import type {
   ToolCallTerminal,
   ToolCallUpdate,
 } from '@repo/contracts';
-import { ResourceCode as FeedCodeBlock } from '@repo/kit/primitives/content/code';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import { cn } from '@repo/kit/utils';
@@ -11,17 +10,17 @@ import type * as React from 'react';
 import { use } from 'react';
 import { View } from 'react-native';
 import { useToolCallDuration } from '../../hooks/use-tool-call-duration';
+import { ShellCode } from '../shell-code';
 import {
   ToolCallDisclosure,
   toolCallDisclosureProps,
 } from '../tool-call-disclosure';
+import { GroupChild } from '../tool-call-group/group-child';
 import { GroupLiveId } from '../tool-call-group/group-live-id';
-import { SettledGroup } from '../tool-call-group/settled-group';
 import { ToolOutput } from '../tool-output';
 import {
   type CommandFooterState,
   type CommandState,
-  commandCode,
   commandState,
 } from './command-state';
 
@@ -79,9 +78,9 @@ function CommandOutput(
 ): React.JSX.Element {
   return (
     <>
-      <FeedCodeBlock
-        title="Shell"
-        code={commandCode(props.terminal)}
+      <ShellCode
+        command={props.terminal.command}
+        output={props.terminal.output}
         footer={<CommandFooter {...props.state.footer} />}
       />
       <ToolOutput content={nonTerminalContent(props.row)} />
@@ -95,7 +94,7 @@ function useCommandDisclosureProps(
   const labels = toolCallDisclosureProps(
     props.row,
     props.awaitingApproval,
-    use(SettledGroup),
+    use(GroupChild),
   );
 
   return { ...labels, icon: 'terminal', initialOpen: props.initialOpen };

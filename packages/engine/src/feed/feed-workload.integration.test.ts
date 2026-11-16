@@ -3,7 +3,11 @@ import { runInNewContext } from 'node:vm';
 import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
 import { assert, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { readUntilIdle } from '#mocks/feed-workload-observation';
+import {
+  cpuMs,
+  measureSlowdown,
+  readUntilIdle,
+} from '#mocks/feed-workload-observation';
 
 // Published budgets for 8 Sessions each streaming a 200 KB Agent message (measured alone: ~2.3 MiB, p95 ~10 ms, worst 30–80 ms; beside the whole test run: p95 ~31 ms, worst ~109 ms).
 const retainedByteBudget = 8_388_608;
@@ -49,9 +53,8 @@ const sampleEventLoopDelay = (): EventLoopDelaySample => {
     const due = performance.now() + 10;
     const cpu = process.threadCpuUsage();
     timer = setTimeout((): void => {
-      const used = process.threadCpuUsage(cpu);
-      const cpuMs = (used.user + used.system) / 1000;
-      delays.push(Math.min(performance.now() - due, cpuMs));
+      const used = cpuMs(process.threadCpuUsage(cpu));
+      delays.push(Math.min(performance.now() - due, used));
       schedule();
     }, 10);
   };
@@ -67,7 +70,15 @@ const sampleEventLoopDelay = (): EventLoopDelaySample => {
   };
 };
 
-it('long Agent messages in several Sessions stay within the retained-byte and event-loop-delay budgets', async () => {
+interface Measurement {
+  appended: number[];
+  retained: number;
+  delayP95: number;
+  delayWorst: number;
+  slowdown: number;
+}
+
+const measureWorkload = async (): Promise<Measurement> => {
   const host = await startAcpEngine({
     steps: Array.from({ length: chunkCount / burstSize }, () => [
       ...Array.from({ length: burstSize }, (): ScriptedStep => ({
@@ -87,6 +98,7 @@ it('long Agent messages in several Sessions stay within the retained-byte and ev
     ),
   );
 
+  const slowdown = measureSlowdown();
   const before = readRetainedBytes();
   const delay = sampleEventLoopDelay();
 
@@ -112,17 +124,28 @@ it('long Agent messages in several Sessions stay within the retained-byte and ev
   assert(delayP95 !== undefined);
   const delayWorst = delays.at(-1);
   assert(delayWorst !== undefined);
-  const withinDelayBudget = delayP95 <= eventLoopDelayP95BudgetMs;
+
+  return { appended, retained, delayP95, delayWorst, slowdown };
+};
+
+it('long Agent messages in several Sessions stay within the retained-byte and event-loop-delay budgets', async () => {
+  const { appended, retained, delayP95, delayWorst, slowdown } =
+    await measureWorkload();
+
   expect(
     {
       appended,
       withinRetainedBudget: retained <= retainedByteBudget,
       withinDelayBudget:
-        withinDelayBudget && delayWorst <= eventLoopDelayWorstBudgetMs,
+        delayP95 <= eventLoopDelayP95BudgetMs * slowdown &&
+        delayWorst <= eventLoopDelayWorstBudgetMs * slowdown,
     },
-    `retained ${retained} B, delay p95 ${delayP95} ms, worst ${delayWorst} ms`,
+    `retained ${retained} B, delay p95 ${delayP95} ms, worst ${delayWorst} ms, CPU slowdown ${slowdown}`,
   ).toEqual({
-    appended: sessions.map(() => chunkCount * (chunk.length + 1)),
+    appended: Array.from(
+      { length: sessionCount },
+      () => chunkCount * (chunk.length + 1),
+    ),
     withinRetainedBudget: true,
     withinDelayBudget: true,
   });

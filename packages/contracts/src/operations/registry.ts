@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { AgentServerEnvironment, RegistryAgentId } from '../agents/servers';
+import {
+  AgentServerEnvironment,
+  AgentSuggestionModel,
+  RegistryAgentId,
+  SuggestionModelChoice,
+} from '../agents/servers';
 import type { OperationDefinition } from './index';
 import { InstalledAgentResult, RegistryResult } from './registry-results';
 
@@ -72,5 +77,25 @@ export const registryOperations = {
     result: z.null(),
     tier: 'confirm',
     keywords: ['env', 'variables', 'launch', 'settings'],
+  },
+  'agent.getSuggestionModels': {
+    id: 'agent.getSuggestionModels',
+    label: 'Read Suggestion Models',
+    description:
+      'List each Installed Agent’s model for Follow-up suggestions, and the models it last offered.',
+    params: z.strictObject({}).default({}),
+    result: z.array(AgentSuggestionModel),
+    tier: 'read',
+    keywords: ['follow-up', 'prediction', 'model', 'settings'],
+  },
+  'agent.setSuggestionModel': {
+    id: 'agent.setSuggestionModel',
+    label: 'Set Suggestion Model',
+    description:
+      'Choose the model an Installed Agent predicts Follow-up suggestions with.',
+    params: RegistryAgentId.extend({ choice: SuggestionModelChoice }),
+    result: z.null(),
+    tier: 'confirm',
+    keywords: ['follow-up', 'prediction', 'model', 'settings'],
   },
 } as const satisfies Record<string, OperationDefinition>;

@@ -1,5 +1,8 @@
+import { CodeScanner } from '@repo/kit/primitives/content/code-scanner';
 import type * as React from 'react';
-import { ScannerFrame } from './scanner-frame';
+import { looking, scannerProps } from './scan-notice';
 
-// The scanner's dark frame standing in for the live camera, which a browser has none of; the corner marks are the camera's own drawing on a phone.
-export const cameraFixture: React.JSX.Element = <ScannerFrame />;
+// The scanner with its frame dark where a phone draws the live camera, which a browser has none of.
+export const cameraFixture: React.JSX.Element = (
+  <CodeScanner {...scannerProps(looking)} />
+);

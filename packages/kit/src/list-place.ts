@@ -6,6 +6,7 @@ import { createContext, use } from 'react';
  * section or a FieldGroup never combines contexts to find out where it is.
  */
 export type ListPlace =
+  | 'tray'
   | 'page'
   | 'detail'
   | 'card'
@@ -44,6 +45,7 @@ const none = {
 
 const facts = {
   page: none,
+  tray: { ...none, padded: true },
   detail: { ...none, padded: true },
   card: { ...none, padded: true, ends: true, card: true },
   popover: { ...none, menu: true },
@@ -63,6 +65,7 @@ export const choosingPlace = (place: ListPlace): ListPlace =>
 // A popover's rows are menu rows, and one opened from the sidebar keeps the sidebar's drawing, as the place it opened from.
 const popoverPlaces = {
   page: 'popover',
+  tray: 'popover',
   detail: 'popover',
   card: 'popover',
   popover: 'popover',

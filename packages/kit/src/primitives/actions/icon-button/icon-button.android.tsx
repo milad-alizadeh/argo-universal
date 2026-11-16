@@ -46,7 +46,6 @@ function ControlIcon(props: IconButtonProps): ReactElement {
     <NativeIcon
       name={props.icon}
       size={androidGlyphOf(sizeOf(props))}
-      filled={props.selected ?? false}
       color={undefined}
     />
   );

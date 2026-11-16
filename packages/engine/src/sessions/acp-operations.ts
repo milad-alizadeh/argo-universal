@@ -54,7 +54,7 @@ const requireFeed = (input: AcpOperationInput): FeedActorRef => {
   return feed;
 };
 
-const promptStorage = (
+export const promptStorage = (
   input: SessionContext['input'],
 ): Parameters<typeof commitLocalPrompt>[0]['storage'] => ({
   database: input.database,

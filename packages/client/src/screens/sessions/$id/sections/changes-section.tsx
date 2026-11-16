@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Linking } from 'react-native';
 import { ChangesFiles, ChangesSheetHeader } from '#features/changes';
 import {
+  ChangeRows,
   type SessionPullRequest,
   WorkbenchChangesSummary,
 } from '#features/sessions';
@@ -35,6 +36,27 @@ const changesCard: SessionSection['card'] = (content, tab): SectionCard => {
     : { summary, onOpen: tab.open };
 };
 
+const pullRequestRows = (content: SessionInspectorContent): ReactNode => {
+  const pullRequests = pullRequestsOf(content);
+
+  return (
+    pullRequests.length > 0 && (
+      <ChangeRows changes={pullRequests} onOpenChange={openPullRequest} />
+    )
+  );
+};
+
+// A phone's sheet leads with every pull request the Session has, scrolling with the Checkout's files under them.
+const phoneBody = (content: SessionInspectorContent): ReactNode => {
+  const header = pullRequestRows(content) || undefined;
+
+  return content.changes ? (
+    <ChangesFiles {...content.changes} header={header} />
+  ) : (
+    header
+  );
+};
+
 export const changesSection: SessionSection = {
   ...changesFacts,
   card: changesCard,
@@ -42,8 +64,8 @@ export const changesSection: SessionSection = {
     body: <SessionChangesTab changes={changes} />,
     sheetHeader: <ChangesSheetHeader />,
   }),
-  phone: ({ changes }) => ({
+  phone: (content) => ({
     sheetHeader: <ChangesSheetHeader />,
-    body: changes && <ChangesFiles {...changes} />,
+    body: phoneBody(content),
   }),
 };

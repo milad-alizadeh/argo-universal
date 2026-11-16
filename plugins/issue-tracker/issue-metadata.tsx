@@ -1,35 +1,19 @@
-import { Metadata, Pill } from '@argo/plugin-kit';
+import { Metadata } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import type { Issue, IssueLabel, IssueRelation } from './github-issues';
-import { statuses } from './issue-status-view';
-import { labelPills } from './label-pills';
-
-// The Issue's status names its Issue, so a status change's optimistic patch repaints it.
-export const statusDotKey = (number: number): string => `dot-${number}`;
+import type { Issue, IssueRelation } from './github-issues';
+import { Assignees } from './issue-assignee-picker';
+import { IssueLabels, IssueStatus, type Editable } from './issue-pickers';
 
 // The Issue's own properties, beside its description: what it is, not the work under it.
-export function IssueMetadata({ issue }: { issue: Issue }): JSX.Element {
+export function IssueMetadata(props: Editable): JSX.Element {
   return (
     <Metadata>
-      <IssueStatus issue={issue} />
-      <IssueLabels labels={issue.labels} />
-      <Blockers issue={issue} />
-      <Assignees assignees={issue.assignees} />
-      <GitHubLink issue={issue} />
+      <IssueStatus {...props} />
+      <IssueLabels {...props} />
+      <Blockers issue={props.issue} />
+      <Assignees {...props} />
+      <GitHubLink issue={props.issue} />
     </Metadata>
-  );
-}
-
-function IssueStatus({ issue }: { issue: Issue }): JSX.Element {
-  const { text, tone } = statuses[issue.status];
-
-  return (
-    <Metadata.StatusDot
-      key={statusDotKey(issue.number)}
-      title="Status"
-      text={text}
-      tone={tone}
-    />
   );
 }
 
@@ -37,31 +21,6 @@ function IssueStatus({ issue }: { issue: Issue }): JSX.Element {
 function GitHubLink({ issue }: { issue: Issue }): JSX.Element {
   return (
     <Metadata.Link title="GitHub" text={`#${issue.number}`} href={issue.url} />
-  );
-}
-
-function IssueLabels({ labels }: { labels: IssueLabel[] }): JSX.Element {
-  return (
-    <Metadata.Pills title="Labels">
-      {labels.length === 0 ? (
-        <Pill text="None" tone="muted" />
-      ) : (
-        labelPills(labels)
-      )}
-    </Metadata.Pills>
-  );
-}
-
-function Assignees({ assignees }: { assignees: string[] }): JSX.Element {
-  if (assignees.length === 0)
-    return <Metadata.Label title="Assignees" text="None" />;
-
-  return (
-    <>
-      {assignees.map((name) => (
-        <Metadata.Avatar key={name} title="Assignee" name={name} />
-      ))}
-    </>
   );
 }
 

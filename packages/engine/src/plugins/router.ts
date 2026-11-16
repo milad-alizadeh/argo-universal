@@ -18,6 +18,7 @@ import type { PluginListChanges } from './list-changes';
 import type { PluginOperationService } from './operations';
 import type { LoaderPages } from './pages';
 import type { PluginService } from './service';
+import type { SessionActs } from './session-acts';
 import {
   connectionOf,
   requireSignal,
@@ -117,6 +118,8 @@ export type PluginsRouterDeps = {
   listChanges: PluginListChanges;
   operations: PluginOperationService;
   pages: LoaderPages;
+  // Where the Engine attaches the archive a Plugin's `argo.sessions.archive` runs.
+  sessionActs: SessionActs;
 };
 
 export const createPluginsRouter = routerFactory(

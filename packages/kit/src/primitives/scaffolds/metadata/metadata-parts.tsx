@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { isValidElement, type ReactElement } from 'react';
 import { Linking } from 'react-native';
 import { isLinkUrl } from '#kit/link-url';
-import { Avatar } from '#primitives/content/avatar';
+import { Avatar, initialsOf } from '#primitives/content/avatar';
 import { Icon, type IconProps } from '#primitives/content/icon';
 import { Link, isRoute, type LinkProps } from '#primitives/content/link';
 import type { PillProps } from '#primitives/status/pill';
@@ -90,20 +90,10 @@ export function MetadataStatus(props: MetadataStatusDotProps): ReactElement {
   );
 }
 
-function initials(name: string): string {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((word) => word.charAt(0))
-    .join('')
-    .toUpperCase();
-}
-
 const avatarGlyph = ({ name, src }: MetadataAvatarProps): ReactElement => (
   <Avatar
     size="sm"
-    initials={initials(name)}
+    initials={initialsOf(name)}
     accessibilityLabel={name}
     source={src ? { uri: src } : undefined}
     decorative

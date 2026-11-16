@@ -1,8 +1,11 @@
 import type { Argo, StorageResult } from '@argo/plugin-kit';
 import type { PullReference } from './pull-reference';
 
+// One pull request as a Project reads it: the key of what is kept of it.
+export type PullKey = PullReference & { projectId: string };
+
 // One Session's association with one pull request, in one Project: the Plugin's own record of what to read from GitHub.
-export type PullLink = PullReference & { projectId: string; sessionId: string };
+export type PullLink = PullKey & { sessionId: string };
 
 // The Plugin's own storage, which holds nothing but these associations (ADR-0052).
 type Storage = Pick<Argo, 'storage'>;
@@ -86,12 +89,22 @@ const deleteOf = (
 
 // Each statement waits for the table, then runs.
 const writing =
-  (argo: Storage, ready: () => Promise<StorageResult>) =>
+  (argo: Storage, ready: Ready) =>
   async (
     statement: Parameters<Argo['storage']['execute']>[0],
   ): Promise<void> => {
     await ready();
     await argo.storage.execute(statement);
+  };
+
+type Ready = () => Promise<StorageResult>;
+
+const reading =
+  (argo: Storage, ready: Ready) =>
+  async (sessionIds: readonly string[]): Promise<PullLink[]> => {
+    await ready();
+
+    return linksOf(await argo.storage.execute(selectFor(sessionIds)));
   };
 
 export function createPullStore(argo: Storage): PullStore {
@@ -101,11 +114,7 @@ export function createPullStore(argo: Storage): PullStore {
   return {
     attach: (link) => write(insertOf(link)),
     detach: (link) => write(deleteOf(link)),
-    forSessions: async (sessionIds) => {
-      await ready();
-
-      return linksOf(await argo.storage.execute(selectFor(sessionIds)));
-    },
+    forSessions: reading(argo, ready),
   };
 }
 
