@@ -6,10 +6,11 @@ import {
   type PluginProps,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import { failedScreen } from './failure-views';
+import { failedScreen } from './failure-view';
 import { filterMenu } from './filter-menu';
 import { isFailure } from './issue-pages';
 import { issueList } from './issue-rows';
+import type { JiraFailure } from './jira-client';
 import { activeFilters, noFilters } from './jira-filters';
 import type { ProjectView } from './jira-setup';
 import { changeSite, setupScreen } from './setup-views';
@@ -81,16 +82,26 @@ const issueScreen = (
   </Screen>
 );
 
+// Why Jira refused the list's first page, in the list's place: a refused token leads to signing in again.
+const refusedList = (
+  { site, chosen }: Issues,
+  failure: JiraFailure,
+  { framing, listing }: { framing: Framing; listing: Listing },
+): JSX.Element =>
+  failure.kind === 'signed-out'
+    ? setupScreen({ kind: 'signed-out', message: failure.message }, framing)
+    : failedScreen(
+        { kind: 'failed', site, failure, reading: 'issues', chosen },
+        framing,
+        listing,
+      );
+
 // The list, or why Jira refused its first page in the list's place.
 function issues(view: Issues, framing: Framing, listing: Listing): JSX.Element {
   const refused = listing.list.items.find(isFailure);
 
   return refused
-    ? failedScreen(
-        { site: view.site, failure: refused.failed },
-        framing,
-        listing,
-      )
+    ? refusedList(view, refused.failed, { framing, listing })
     : issueScreen(view, framing, listing);
 }
 

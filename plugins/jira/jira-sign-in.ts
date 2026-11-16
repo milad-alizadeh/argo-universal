@@ -1,22 +1,20 @@
 import {
   tokenPaste,
-  type Argo,
   type TokenPaste,
   type TokenPasteState,
 } from '@argo/plugin-kit';
-import {
-  atlassianHost,
-  basicCredential,
-  jiraApiUrl,
-  siteApiUrl,
-  siteHost,
-} from './atlassian';
-import { jiraReaders, type JiraMyself } from './jira-readers';
-import { jiraRequests } from './jira-requests';
+import { atlassianHost, basicCredential, siteHost } from './atlassian';
 import { siteOf } from './jira-sites';
 import { keepSite, type JiraSite } from './jira-store';
-import { parseJson } from './json';
 import { notices } from './sign-in-notices';
+import {
+  labelOf,
+  noteFor,
+  type Calls,
+  type Checking,
+  type Held,
+  type Signing,
+} from './token-check';
 
 /*
  * Jira's sign-in by a pasted scoped API token. A scoped token opens `api.atlassian.com` as Basic over the person's
@@ -32,83 +30,19 @@ export type JiraSignIn = Readonly<{
   // Why the last paste was not used, in Jira's terms, drawn beside the field over the kit's own message.
   notice: () => string | null;
   paste: (input: SignInInput) => Promise<TokenPasteState>;
+  /*
+   * Who is signed in, or null once a read found the Account gone or its token refused: the kit's paste stays
+   * `signed-in` for the life of the Plugin, so the sign-in page takes a new token after a revoke, as `signInGate` does.
+   */
+  signedIn: () => string | null;
+  // Why the page needs a new token: a read found no Account, or Jira refused its token. A read that succeeds clears it.
+  refusal: () => string | null;
+  refused: (message: string | null) => void;
 }>;
-
-type Calls = Pick<
-  Argo,
-  'fetch' | 'changed' | 'accounts' | 'secrets' | 'storage'
->;
-
-// The site and email a credential is being checked for, while the kit checks it.
-type Checking = JiraSite & { email: string };
-
-type Held = { notice: string | null; checking: Map<string, Checking> };
-
-type Signing = { argo: Calls; flow: TokenPaste; held: Held };
-
-type Check = { checking: Checking; credential: string };
 
 const emailPattern = /^[^\s@]+@[^\s@]+$/;
 
 const shortestToken = 8;
-
-type CheckHeaders = { Accept: string; Authorization: string };
-
-const headersFor = (credential: string): CheckHeaders => ({
-  Accept: 'application/json',
-  Authorization: credential,
-});
-
-async function myselfWith(
-  argo: Calls,
-  { checking, credential }: Check,
-): Promise<JiraMyself | null> {
-  const url = jiraApiUrl(checking.cloudId, jiraRequests.myself().path);
-  const reply = await argo.fetch(url, { headers: headersFor(credential) });
-
-  return reply?.ok ? jiraReaders.myself(parseJson(reply.body)) : null;
-}
-
-// An unscoped token opens the site itself but not `api.atlassian.com`; telling them apart lets the page say why.
-async function opensSite(
-  argo: Calls,
-  { checking, credential }: Check,
-): Promise<boolean> {
-  const url = siteApiUrl(checking.host, jiraRequests.myself().path);
-  const reply = await argo.fetch(url, { headers: headersFor(credential) });
-
-  return reply?.ok === true;
-}
-
-const labelOfMyself = (myself: JiraMyself, email: string): string =>
-  myself.email || email;
-
-async function labelFor(
-  { argo, held }: Signing,
-  check: Check,
-): Promise<string | null> {
-  const myself = await myselfWith(argo, check);
-
-  if (myself) return labelOfMyself(myself, check.checking.email);
-
-  held.notice = (await opensSite(argo, check))
-    ? notices.unscoped
-    : notices.refused;
-
-  return null;
-}
-
-/*
- * The kit's `label`: who the credential signs in as, from Jira's `myself`, or null with the reason held for the page.
- * It never keeps the credential.
- */
-function labelOf(signing: Signing, credential: string): Promise<string | null> {
-  const checking = signing.held.checking.get(credential);
-
-  return checking
-    ? labelFor(signing, { checking, credential })
-    : Promise.resolve(null);
-}
 
 const foundSite = async (
   argo: Calls,
@@ -128,11 +62,19 @@ async function siteFor(
   return host ? foundSite(argo, host) : notices.site;
 }
 
-function refuse({ argo, held }: Signing, notice: string): TokenPasteState {
-  held.notice = notice;
+function refuse(
+  { argo, held }: Signing,
+  { paste, notice }: { paste: symbol; notice: string },
+): TokenPasteState {
+  noteFor(held, paste, notice);
   argo.changed();
 
   return { kind: 'failed', reason: 'rejected', message: notice };
+}
+
+async function kept(signing: Signing, site: JiraSite): Promise<void> {
+  signing.held.refusal = null;
+  await keepSite(signing.argo, { cloudId: site.cloudId, host: site.host });
 }
 
 async function checked(
@@ -146,7 +88,7 @@ async function checked(
   try {
     const state = await signing.flow.start(credential);
 
-    if (state.kind === 'signed-in') await keepSite(signing.argo, checking);
+    if (state.kind === 'signed-in') await kept(signing, checking);
 
     return state;
   } finally {
@@ -158,21 +100,52 @@ async function pasted(
   signing: Signing,
   input: SignInInput,
 ): Promise<TokenPasteState> {
+  const paste = Symbol('paste');
+
   signing.held.notice = null;
+  signing.held.paste = paste;
 
   // Text too short for a token leaves the paste idle, as the kit does, before any site is looked up.
   if (input.token.trim().length < shortestToken)
     return signing.flow.start(input.token);
 
   const site = await siteFor(signing.argo, input);
+  const { email, token } = input;
 
   return typeof site === 'string'
-    ? refuse(signing, site)
-    : checked(signing, { ...site, email: input.email, token: input.token });
+    ? refuse(signing, { paste, notice: site })
+    : checked(signing, { ...site, email, token, paste });
 }
 
+function noteRefusal(held: Held, message: string | null): void {
+  held.refusal = message;
+}
+
+function signedInLabel(flow: TokenPaste, held: Held): string | null {
+  const state = flow.state();
+
+  return state.kind === 'signed-in' && !held.refusal ? state.label : null;
+}
+
+const emptyHeld = (): Held => ({
+  notice: null,
+  refusal: null,
+  paste: null,
+  checking: new Map(),
+});
+
+const signInOf = ({ argo, held, flow }: Signing): JiraSignIn =>
+  Object.freeze({
+    flow,
+    notice: () => held.notice,
+    paste: (input: SignInInput) => pasted({ argo, held, flow }, input),
+    signedIn: () => signedInLabel(flow, held),
+    refusal: () => held.refusal,
+    refused: (message: string | null) => noteRefusal(held, message),
+  });
+
 export function jiraSignIn(argo: Calls): JiraSignIn {
-  const held: Held = { notice: null, checking: new Map() };
+  const held = emptyHeld();
 
   const flow = tokenPaste(argo, {
     host: atlassianHost,
@@ -180,9 +153,5 @@ export function jiraSignIn(argo: Calls): JiraSignIn {
     label: (credential) => labelOf({ argo, held, flow }, credential),
   });
 
-  return Object.freeze({
-    flow,
-    notice: () => held.notice,
-    paste: (input: SignInInput) => pasted({ argo, held, flow }, input),
-  });
+  return signInOf({ argo, held, flow });
 }

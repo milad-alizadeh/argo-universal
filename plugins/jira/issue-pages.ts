@@ -1,8 +1,13 @@
-import type { Argo, ListPage } from '@argo/plugin-kit';
+import type { ListPage } from '@argo/plugin-kit';
 import { callJira, type JiraFailure } from './jira-client';
 import type { IssueFilters } from './jira-filters';
-import { jiraReaders, type JiraIssue } from './jira-readers';
-import { borrowing, type ProjectTarget } from './jira-reads';
+import { jiraReaders, type IssuePage, type JiraIssue } from './jira-readers';
+import {
+  borrowing,
+  noted,
+  type ProjectTarget,
+  type Reading,
+} from './jira-reads';
 import { jiraRequests } from './jira-requests';
 
 /*
@@ -29,7 +34,7 @@ export const isFailure = (item: ListedItem): item is ListFailure =>
  * page's has nowhere to be drawn but the load more that asked for it, so it fails that read, which keeps no answer
  * and is read again on the next load more.
  */
-function refused(
+function refusal(
   { cursor }: IssuesTarget,
   failure: JiraFailure,
 ): ListPage<ListedItem> {
@@ -38,18 +43,25 @@ function refused(
   return { items: [{ failed: failure }], cursor: null };
 }
 
-export async function issuesPage(
-  argo: Pick<Argo, 'fetch'>,
+const searched = (
+  { argo }: Reading,
   target: IssuesTarget,
-): Promise<ListPage<ListedItem>> {
-  const answer = await callJira({
+): ReturnType<typeof callJira<IssuePage>> =>
+  callJira({
     send: borrowing(argo, target.projectId),
     cloudId: target.cloudId,
     request: jiraRequests.issues(target.projectKey, target),
     read: jiraReaders.issues,
   });
 
+// A token Jira refuses is told to the sign-in page, as every other Jira read tells it.
+export async function issuesPage(
+  reading: Reading,
+  target: IssuesTarget,
+): Promise<ListPage<ListedItem>> {
+  const answer = noted(reading.refused, await searched(reading, target));
+
   return answer.ok
     ? { items: answer.value.issues, cursor: answer.value.cursor }
-    : refused(target, answer.failure);
+    : refusal(target, answer.failure);
 }

@@ -1,9 +1,9 @@
-import type { Argo, ListPage, LoaderInput, NamedQuery } from '@argo/plugin-kit';
+import type { ListPage, LoaderInput, NamedQuery } from '@argo/plugin-kit';
 import { issuesPage, type ListedItem } from './issue-pages';
 import type { JiraAnswer, JiraFailure } from './jira-client';
 import type { IssueFilters } from './jira-filters';
 import type { JiraPerson, JiraProject } from './jira-readers';
-import type { JiraReads, ProjectTarget } from './jira-reads';
+import type { JiraReads, ProjectTarget, Reading } from './jira-reads';
 import {
   storeQueries,
   storeReaders,
@@ -20,13 +20,26 @@ export type ProjectView =
   | { kind: 'signed-out'; message: string | null }
   | { kind: 'no-site'; sites: JiraSite[] }
   | { kind: 'no-project'; site: JiraSite; projects: JiraProject[] }
-  | { kind: 'failed'; site: JiraSite; failure: JiraFailure }
+  | FailedView
   | {
       kind: 'issues';
       site: JiraSite;
       project: JiraProject;
+      chosen: boolean;
       people: JiraPerson[];
     };
+
+/*
+ * A read Jira refused: which read it was, so a 404 names the project or the site, and whether the Project chose its
+ * Jira project, so the page offers another only when there is a choice to undo.
+ */
+export type FailedView = {
+  kind: 'failed';
+  site: JiraSite;
+  failure: JiraFailure;
+  reading: 'projects' | 'issues';
+  chosen: boolean;
+};
 
 type Read = LoaderInput['read'];
 
@@ -49,10 +62,12 @@ const onlyOne = <Value>(values: Value[]): Value | null =>
 const siteFor = (sites: JiraSite[], choice: ProjectChoice): JiraSite | null =>
   sites.find(({ cloudId }) => cloudId === choice.cloudId) ?? onlyOne(sites);
 
-const failedView = (site: JiraSite, failure: JiraFailure): ProjectView =>
+type Failing = Omit<FailedView, 'kind' | 'failure'>;
+
+const failedView = (failing: Failing, failure: JiraFailure): ProjectView =>
   failure.kind === 'signed-out'
     ? signedOutView(failure.message)
-    : { kind: 'failed', site, failure };
+    : { kind: 'failed', failure, ...failing };
 
 const chosenProject = (
   site: JiraSite,
@@ -75,7 +90,11 @@ async function listedProject(
 ): Promise<JiraProject | ProjectView> {
   const answer = await step.read(projectsOf(step, site));
 
-  if (!answer.ok) return failedView(site, answer.failure);
+  if (!answer.ok)
+    return failedView(
+      { site, reading: 'projects', chosen: false },
+      answer.failure,
+    );
 
   const projects = answer.value;
 
@@ -88,7 +107,8 @@ const targetOf = (
   { key }: JiraProject,
 ): ProjectTarget => ({ projectId, cloudId, projectKey: key });
 
-type Listed = { site: JiraSite; project: JiraProject };
+// The site and Jira project the list is for, and whether the Project chose that Jira project.
+type Listed = { site: JiraSite; project: JiraProject; chosen: boolean };
 
 // Who the assignee filter offers by name; without them it still offers Anyone, Me and Unassigned.
 async function peopleFor(step: Step, listed: Listed): Promise<JiraPerson[]> {
@@ -113,10 +133,12 @@ async function siteView(
   site: JiraSite,
   choice: ProjectChoice,
 ): Promise<ProjectView> {
-  const project =
-    chosenProject(site, choice) ?? (await listedProject(step, site));
+  const chosen = chosenProject(site, choice);
+  const project = chosen ?? (await listedProject(step, site));
 
-  return isView(project) ? project : issuesFor(step, { site, project });
+  return isView(project)
+    ? project
+    : issuesFor(step, { site, project, chosen: chosen !== null });
 }
 
 async function chosenView(step: Step): Promise<ProjectView> {
@@ -143,12 +165,12 @@ const end: ListPage<ListedItem> = { items: [], cursor: null };
  * nothing, and the page says why.
  */
 export const listIssues = (
-  argo: Pick<Argo, 'fetch'>,
+  reading: Reading,
   { step, view }: { step: Step; view: ProjectView },
   cursor: string | null,
 ): ListPage<ListedItem> | Promise<ListPage<ListedItem>> =>
   view.kind === 'issues'
-    ? issuesPage(argo, {
+    ? issuesPage(reading, {
         ...targetOf(step, view.site, view.project),
         filters: step.filters,
         cursor,

@@ -16,6 +16,7 @@ export type JiraCall = {
   site: FixtureSite;
   who: FixtureToken;
   match: RegExpExecArray;
+  query: URLSearchParams;
   body: Json | undefined;
 };
 
@@ -146,12 +147,26 @@ const myself = ({ who }: JiraCall): FixtureAnswer => ({
   },
 });
 
-const projects = ({ site }: JiraCall): FixtureAnswer => ({
-  json: {
-    isLast: true,
-    values: site.projects.map(({ id, key, name }) => ({ id, key, name })),
-  },
+const queryNumber = (
+  query: URLSearchParams,
+  name: string,
+  fallback: number,
+): number => Number(query.get(name) ?? fallback);
+
+const projectJson = ({ id, key, name }: FixtureProject): Json => ({
+  id,
+  key,
+  name,
 });
+
+// Jira's paged project search: `startAt` and `maxResults` in, `isLast` out.
+function projects({ site, query }: JiraCall): FixtureAnswer {
+  const startAt = queryNumber(query, 'startAt', 0);
+  const end = startAt + queryNumber(query, 'maxResults', defaultLimit);
+  const values = site.projects.slice(startAt, end).map(projectJson);
+
+  return { json: { startAt, isLast: end >= site.projects.length, values } };
+}
 
 export const jiraRoutes: JiraRoute[] = [
   { name: 'myself', method: 'GET', path: /^\/myself$/, answer: myself },

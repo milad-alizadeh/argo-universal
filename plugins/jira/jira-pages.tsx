@@ -10,7 +10,7 @@ import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { projectScreen } from './issue-views';
 import { filtersOf, noFilters } from './jira-filters';
 import { projectIdOf, projectPath, projectPattern } from './jira-paths';
-import type { JiraReads } from './jira-reads';
+import type { JiraReads, Reading, Refused } from './jira-reads';
 import { storeQueries, storeReaders, type JiraSite } from './jira-store';
 import { projectLoader } from './project-loader';
 import { chooseProject, projectRows, type ArgoProject } from './project-rows';
@@ -76,11 +76,11 @@ async function chosenSite({
 }
 
 // The filters are Page state, so going back shows the same filtered view; the list is read a page at a time.
-const defineProjectPage = (argo: Argo, reads: JiraReads): void =>
-  argo.pages.define(projectPattern, {
+const defineProjectPage = (reading: Reading, reads: JiraReads): void =>
+  reading.argo.pages.define(projectPattern, {
     state: { site: '', ...noFilters },
     every: freshForMs,
-    ...projectLoader(argo, reads),
+    ...projectLoader(reading, reads),
     render: ({ projects, view }, to, input) => {
       const framing = framingOf(to, input);
       const listing = { to, filters: filtersOf(input.state), list: input.list };
@@ -111,7 +111,7 @@ const defineSitePage = (argo: Argo): void =>
  * The Jira section's Loader pages (ADR-0050): the landing page lists each Project, a Project's page draws the step
  * its Jira is at, and its site page changes the site. A page path names its Project, so one pattern serves every one.
  */
-export function defineJiraPages(argo: Argo, reads: JiraReads): void {
+const defineLandingPage = (argo: Argo): void =>
   argo.pages.define('/', {
     load: () => argo.projects.list(),
     render: (projects) => (
@@ -122,6 +122,12 @@ export function defineJiraPages(argo: Argo, reads: JiraReads): void {
       />
     ),
   });
-  defineProjectPage(argo, reads);
+
+export function defineJiraPages(
+  argo: Argo,
+  { reads, refused }: { reads: JiraReads; refused: Refused },
+): void {
+  defineLandingPage(argo);
+  defineProjectPage({ argo, refused }, reads);
   defineSitePage(argo);
 }

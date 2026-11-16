@@ -12,11 +12,11 @@ import { defineSignInPage } from './sign-in-page';
  */
 export async function register(argo: Argo): Promise<void> {
   const signIn = jiraSignIn(argo);
-  const reads = defineReads(argo);
+  const reads = defineReads(argo, signIn.refused);
 
   await createTables(argo);
   await signIn.flow.provide();
   registerOperations({ argo, reads, signIn });
   defineSignInPage(argo, signIn);
-  defineJiraPages(argo, reads);
+  defineJiraPages(argo, { reads, refused: signIn.refused });
 }

@@ -9,6 +9,8 @@ const pageSize = 50;
 // How many people the assignee filter offers by name, beside Anyone, Me and Unassigned.
 const peopleLimit = 50;
 
+const projectPageSize = 100;
+
 export type IssuesPage = Readonly<{
   cursor: string | null;
   filters: IssueFilters;
@@ -36,8 +38,9 @@ function searchBody(
 
 export const jiraRequests = {
   myself: (): JiraRequest => ({ path: '/myself' }),
-  projects: (): JiraRequest => ({
-    path: '/project/search?maxResults=100&orderBy=name',
+  // One page of the projects the person can see, by name, from `startAt`.
+  projects: (startAt = 0): JiraRequest => ({
+    path: `/project/search?startAt=${startAt}&maxResults=${projectPageSize}&orderBy=name`,
   }),
   // A project's issues the filters leave, paged by Jira's `nextPageToken`.
   issues: (projectKey: string, page: IssuesPage): JiraRequest => ({

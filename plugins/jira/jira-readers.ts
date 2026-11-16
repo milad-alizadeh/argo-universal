@@ -16,6 +16,9 @@ export type JiraIssue = {
 // One page of a search: its issues, and Jira's cursor for the next page, or null at the end.
 export type IssuePage = { issues: JiraIssue[]; cursor: string | null };
 
+// One page of an offset-paged list, and where the next page starts, or null at the end.
+export type OffsetPage<Item> = { items: Item[]; next: number | null };
+
 export type JiraMyself = { accountId: string; name: string; email: string };
 
 // Someone an issue in the project can be assigned to, for the assignee filter.
@@ -91,14 +94,27 @@ function personOf(json: Json): JiraPerson | null {
   return { accountId, name: textOr(at(json, 'displayName'), accountId) };
 }
 
+const numberOr = (value: Read, fallback: number): number =>
+  typeof value === 'number' ? value : fallback;
+
+// An empty page ends the list too, so a reply that never says `isLast` cannot page forever.
+function nextStart(json: Read, count: number): number | null {
+  if (count === 0 || at(json, 'isLast') === true) return null;
+
+  return numberOr(at(json, 'startAt'), 0) + count;
+}
+
 const cursorOf = (json: Read): string | null =>
   at(json, 'isLast') === true ? null : text(at(json, 'nextPageToken'));
 
 // Each reader answers null for a reply it cannot read, which the client reports as unexpected.
 export const jiraReaders = {
   myself: myselfOf,
-  projects: (json: Read): JiraProject[] =>
-    list(at(json, 'values')).map(projectOf).filter(present),
+  projects: (json: Read): OffsetPage<JiraProject> => {
+    const items = list(at(json, 'values')).map(projectOf).filter(present);
+
+    return { items, next: nextStart(json, items.length) };
+  },
   people: (json: Read): JiraPerson[] =>
     list(json).map(personOf).filter(present),
   issues: (json: Read): IssuePage => ({
