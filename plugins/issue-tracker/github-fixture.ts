@@ -34,6 +34,7 @@ export type GitHubFixture = FixtureServices & {
   accepted: Set<string>;
   graphqlCalls: () => FixtureRequest[];
   closeIssue: (number: number) => void;
+  delayIssues: (ms: number) => void;
 };
 
 const sleep = (ms: number): Promise<void> =>
@@ -71,7 +72,7 @@ function api(
   return answer(graphqlAnswer(request, closedIssues));
 }
 
-type State = { replies: PollReply[]; polled: number };
+type State = { replies: PollReply[]; polled: number; issueDelay: number };
 
 const deviceCode = (): FixtureAnswer =>
   answer(
@@ -118,19 +119,28 @@ const apiWithToken = (
 
 const handle =
   (state: State, accepted: Set<string>, closedIssues: ReadonlySet<number>) =>
-  (request: FixtureRequest): FixtureAnswer | Promise<FixtureAnswer> =>
-    request.host === 'github.com'
+  async (request: FixtureRequest): Promise<FixtureAnswer> => {
+    if (request.body.includes('issue(number:')) await sleep(state.issueDelay);
+
+    return request.host === 'github.com'
       ? githubCom(state, request)
       : apiWithToken(accepted, request, closedIssues);
+  };
 
 /*
  * GitHub as the tracker meets it: the device-flow endpoints on `github.com`, and the user, GraphQL and Issue endpoints
  * on `api.github.com`, over a certificate the test trusts. A call with no User-Agent is a 403, and one with a token it does not accept a 401.
  */
 export async function githubFixture(): Promise<GitHubFixture> {
-  const state: State = { replies: [{ access_token: 'token-1' }], polled: 0 };
+  const state: State = {
+    replies: [{ access_token: 'token-1' }],
+    polled: 0,
+    issueDelay: 0,
+  };
+
   const accepted = new Set(['token-1', 'token-2']);
   const closedIssues = new Set<number>();
+
   const services = await fixtureServices(handle(state, accepted, closedIssues));
 
   return fixtureControls({ services, state, accepted, closedIssues });
@@ -143,16 +153,14 @@ type FixtureState = {
   closedIssues: Set<number>;
 };
 
-function fixtureControls({
-  services,
-  state,
-  accepted,
-  closedIssues,
-}: FixtureState): GitHubFixture {
+function fixtureControls(input: FixtureState): GitHubFixture {
+  const { services, state, accepted, closedIssues } = input;
+
   return {
     ...services,
     script: scripted(state),
     accepted,
+    delayIssues: delaying(state),
     closeIssue: (number) => void closedIssues.add(number),
     graphqlCalls: () =>
       services.requests.filter(({ path }) => path === '/graphql'),
@@ -164,4 +172,10 @@ const scripted =
   (...next) => {
     state.replies = next;
     state.polled = 0;
+  };
+
+const delaying =
+  (state: State): GitHubFixture['delayIssues'] =>
+  (ms) => {
+    state.issueDelay = ms;
   };

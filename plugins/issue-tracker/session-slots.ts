@@ -24,11 +24,9 @@ type ToItems = (entries: Linked[]) => ReturnType<typeof rowItems>;
  */
 export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
   const changed = slotsChanged(api);
-  const summaries = createIssueSummaries(deps, changed);
+  const summaries = createIssueSummaries(deps);
 
-  deps.changes.subscribe((number) =>
-    announceStatus(summaries, changed, number),
-  );
+  deps.changes.subscribe(changed);
   registerItems(api, { deps, summaries });
   registerRefresh(api, deps, summaries);
 
@@ -80,15 +78,6 @@ type Answered = Record<string, ReturnType<ToItems>>;
 
 // What the Session row and bar show changed, so Argo asks their Slots again.
 const slotsChanged = (api: Argo) => (): void => api.changed();
-
-function announceStatus(
-  summaries: IssueSummaries,
-  changed: () => void,
-  number: number,
-): void {
-  summaries.stale(number);
-  changed();
-}
 
 const pathOf: PathOf = ({ projectId, number }) => issuePath(projectId, number);
 
