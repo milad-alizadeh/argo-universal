@@ -86,7 +86,7 @@ function Stage(
 }
 
 const meta = {
-  title: 'Tests/Composer/Cover',
+  title: 'Tests/Design System/Patterns/ComposerCover',
   component: Feed,
   parameters: { screenPreview: true },
   args: feedArgs,

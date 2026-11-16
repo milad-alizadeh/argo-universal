@@ -1,37 +1,30 @@
-import { scrollFadeLayer } from '@repo/kit/scroll-fade/scroll-fade-options';
 import type * as React from 'react';
-import { createContext, type ReactNode, useContext } from 'react';
+import type { ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
-import { useFeedEndClearance } from './composer-cover';
+import {
+  ComposerPillLift,
+  overlayGap,
+  overlayLayer,
+  useFeedEndClearance,
+} from './composer-cover';
 import { SessionColumn } from './session-column';
-
-// How far a pill sits above the Composer's top, on every device; Jump to latest sits the same gap above the pill.
-const composerPillGap = 12;
 
 // The pill's height: the floating controls are 32 tall.
 const composerPillHeight = 32;
 
-// How far a pill lifts what floats above the Composer, such as Jump to latest: nothing while no pill is drawn.
-const ComposerPillLift = createContext(0);
-
-export const useComposerPillLift = (): number => useContext(ComposerPillLift);
-
-// Above the Feed's edge fades, as Jump to latest is.
-const pillLayer = scrollFadeLayer + 1;
-
-const layerStyle = (composerTop: number): ViewStyle => ({
+const layerStyle = (pillBottom: number): ViewStyle => ({
   position: 'absolute',
   left: 0,
   right: 0,
-  bottom: composerTop + composerPillGap,
-  zIndex: pillLayer,
+  bottom: pillBottom,
+  zIndex: overlayLayer,
 });
 
 function PillLayer({ pill }: { pill: ReactNode }): React.JSX.Element {
-  const { composerTop } = useFeedEndClearance();
+  const { pillBottom } = useFeedEndClearance();
 
   return (
-    <View pointerEvents="box-none" style={layerStyle(composerTop)}>
+    <View pointerEvents="box-none" style={layerStyle(pillBottom)}>
       <SessionColumn pointerEvents="box-none" className="items-center">
         {pill}
       </SessionColumn>
@@ -48,7 +41,7 @@ export function ComposerPillLayer(props: {
   pill: ReactNode;
   children: ReactNode;
 }): React.JSX.Element {
-  const lift = props.pill ? composerPillHeight + composerPillGap : 0;
+  const lift = props.pill ? composerPillHeight + overlayGap : 0;
 
   return (
     <ComposerPillLift.Provider value={lift}>
