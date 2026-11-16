@@ -149,7 +149,6 @@ function useTypeahead(props: Props): MenuProps {
   };
 }
 
-// Both triggers share the menu lifetime, keyboard selection, focus and viewport rules.
 export function TypeaheadPlugin(props: Props): React.JSX.Element {
   return (
     <LexicalTypeaheadMenuPlugin
