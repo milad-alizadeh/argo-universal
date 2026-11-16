@@ -1,4 +1,10 @@
-import { EmptyState, Icon, List, ListItem } from '@argo/plugin-kit';
+import {
+  EmptyState,
+  Icon,
+  List,
+  ListItem,
+  type PluginProps,
+} from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { projectPath } from './jira-paths';
 
@@ -29,12 +35,18 @@ const projectSection = (
   </List.Section>
 );
 
+type Sidebar = {
+  selected?: string;
+  // A pull draws the page again with its Queries read fresh, as the Issue tracker's sidebar does.
+  onRefresh: PluginProps['List']['onRefresh'];
+};
+
 // The section list, with the views of the Project the page is for selected.
 export const projectRows = (
   projects: ArgoProject[],
-  selected?: string,
+  { selected, onRefresh }: Sidebar,
 ): JSX.Element => (
-  <List accessibilityLabel="Projects" empty={noProjects}>
+  <List accessibilityLabel="Projects" empty={noProjects} onRefresh={onRefresh}>
     {projects.map((project) => projectSection(project, selected))}
   </List>
 );

@@ -19,9 +19,9 @@ import type { JiraSite } from './jira-store';
  * mark before the title, the key under it, and the row's marks, Labels then Pills, in its meta line.
  */
 
-// Jira's status categories as Argo's tones: to do is plain, in progress is under way, done is finished.
-const categoryTones: Record<StatusCategory, 'neutral' | 'info' | 'done'> = {
-  new: 'neutral',
+// Jira's status categories as Argo's tones: to do is quiet, as the Issue tracker's neutral pills are, in progress is under way, done is finished.
+const categoryTones: Record<StatusCategory, 'muted' | 'info' | 'done'> = {
+  new: 'muted',
   indeterminate: 'info',
   done: 'done',
 };

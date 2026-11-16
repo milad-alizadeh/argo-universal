@@ -21,6 +21,15 @@ const rowKey = (node: WireNode): string[] =>
 export const shownKeys = (page: OpenPage): string[] =>
   page.find(issueList).children.flatMap(rowKey);
 
+// What the list draws in place of its rows.
+export function listEmpty(page: OpenPage): WireNode {
+  const [empty] = page.find(issueList).slots.empty ?? [];
+
+  if (!empty) throw new Error('The list draws nothing in place of its rows');
+
+  return empty;
+}
+
 // Whether the list offers to load more.
 export const hasMore = (page: OpenPage): boolean =>
   at(page.find(issueList).props.pagination, 'hasMore') === true;

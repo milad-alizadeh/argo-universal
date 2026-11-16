@@ -9,7 +9,7 @@ const pathSegment = (text: string): string =>
     (character) => `_${(character.codePointAt(0) ?? 0).toString(hex)}_`,
   );
 
-export const pathText = (segment: string): string =>
+const pathText = (segment: string): string =>
   segment.replaceAll(/_([0-9a-f]+)_/gu, (_match, code: string) =>
     String.fromCodePoint(Number.parseInt(code, hex)),
   );

@@ -42,7 +42,10 @@ const listDetail = (
 ): JSX.Element => (
   <ListDetail
     title="Jira"
-    list={projectRows(projects, framing.projectId)}
+    list={projectRows(projects, {
+      selected: framing.projectId,
+      onRefresh: framing.to.set({}),
+    })}
     detail={detail}
   />
 );
@@ -114,10 +117,10 @@ const defineSitePage = (argo: Argo): void =>
 const defineLandingPage = (argo: Argo): void =>
   argo.pages.define('/', {
     load: () => argo.projects.list(),
-    render: (projects) => (
+    render: (projects, to) => (
       <ListDetail
         title="Jira"
-        list={projectRows(projects)}
+        list={projectRows(projects, { onRefresh: to.set({}) })}
         empty={chooseProject}
       />
     ),

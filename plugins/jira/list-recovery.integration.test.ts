@@ -6,6 +6,7 @@ import {
   filterChoice,
   filterCount,
   isChosen,
+  listEmpty,
   renameIssue,
   searchCount,
   shownKeys,
@@ -33,7 +34,7 @@ it(
 );
 
 it(
-  'offers to clear the filters when Jira refuses the filtered list',
+  'keeps the Filter menu beside a refused filtered list, so the filter can be undone',
   async () => {
     const jira = await startJira();
     const page = await argoIssues(jira);
@@ -50,9 +51,10 @@ it(
     await page.press(filterChoice('Me'));
 
     expect(page.findText('Couldn’t read Jira')).toBeDefined();
+    expect(isChosen(page, 'Me')).toBe(true);
 
     jira.jira.heal('search');
-    await page.press('Clear filters');
+    await page.press(filterChoice('Anyone'));
 
     expect(shownKeys(page)).toEqual(['ARGO-3', 'ARGO-2', 'ARGO-1']);
     expect(page.pageState).toMatchObject({ assignee: 'anyone' });
@@ -61,7 +63,7 @@ it(
 );
 
 it(
-  'offers no Clear filters on a failed list with no filters',
+  'says why Jira refused the list in the list’s own empty state, with Try again',
   async () => {
     const jira = await startJira();
     const page = await argoIssues(jira);
@@ -69,8 +71,16 @@ it(
     jira.jira.fail('search', { status: 500, json: {} });
     await page.act(issueList, 'onRefresh');
 
-    expect(page.findText('Couldn’t read Jira')).toBeDefined();
+    const empty = listEmpty(page);
+
+    expect(empty.type).toBe('EmptyState');
+    expect(empty.props.title).toBe('Couldn’t read Jira');
     expect(page.findText('Clear filters')).toBeUndefined();
+
+    jira.jira.heal('search');
+    await page.press('Try again');
+
+    expect(shownKeys(page)).toEqual(['ARGO-3', 'ARGO-2', 'ARGO-1']);
   },
   timeoutMs,
 );

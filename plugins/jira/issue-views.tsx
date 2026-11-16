@@ -6,29 +6,39 @@ import {
   type PluginProps,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import { failedScreen, failureBody } from './failure-view';
+import { failedScreen, titleOf } from './failure-view';
 import { filterMenu } from './filter-menu';
 import { isFailure } from './issue-pages';
 import { issueList, type ListFrame } from './issue-rows';
 import type { JiraFailure } from './jira-client';
 import { activeFilters, noFilters } from './jira-filters';
-import type { FailedView, ProjectView } from './jira-setup';
-import { changeSite, setupScreen } from './setup-views';
+import type { ProjectView } from './jira-setup';
+import { setupScreen } from './setup-views';
 import type { Framing, Listing } from './view-frame';
 
-const swapIcon = {
-  sf: 'arrow.left.arrow.right',
-  material: 'swap_horiz',
-} as const;
-
-const projectActions = (framing: Framing): JSX.Element[] => [
+/*
+ * The project's own choices, with no icon, so the header keeps them in its overflow menu and shows only the Filter
+ * menu and the search, as the Issue tracker's header shows only its search.
+ */
+const changeProject = ({ to, projectId }: Framing): JSX.Element => (
   <Action
     key="change-project"
     label="Change Jira project"
-    icon={swapIcon}
-    onPress={framing.to.run('forgetProject', { projectId: framing.projectId })}
-  />,
-  changeSite(framing),
+    onPress={to.run('forgetProject', { projectId })}
+  />
+);
+
+const changeSiteChoice = ({ to, sitePath }: Framing): JSX.Element => (
+  <Action
+    key="change-site"
+    label="Change Jira site"
+    onPress={to.go(sitePath)}
+  />
+);
+
+const projectActions = (framing: Framing): JSX.Element[] => [
+  changeProject(framing),
+  changeSiteChoice(framing),
 ];
 
 type Issues = Extract<ProjectView, { kind: 'issues' }>;
@@ -55,81 +65,89 @@ const emptyList = (key: string, listing: Listing): JSX.Element =>
     : noMatches(key, listing);
 
 /*
- * The header the Issue tracker's list has (`plugins/issue-tracker/filter-page-header.ts`): the title and a search
- * that lands once typing pauses. Jira's filters are Page state rather than sidebar rows, so they sit in its Filter
- * menu beside the project's actions.
+ * Why Jira refused the list's first page, in the list's own empty state, as the Issue tracker says why it has no
+ * Issues. Its filters and the project's choices stay in the header to change.
  */
+const refusedList = (
+  view: Issues,
+  failure: JiraFailure,
+  { to }: Framing,
+): JSX.Element => (
+  <EmptyState
+    title={titleOf({ ...listRefusal(view), failure })}
+    description={failure.message}
+    action={<Button label="Try again" onPress={to.run('checkAgain', {})} />}
+  />
+);
+
+const listRefusal = ({ site, chosen }: Issues) =>
+  ({ kind: 'failed', site, reading: 'issues', chosen }) as const;
+
+// The header the Issue tracker's list has (`plugins/issue-tracker/filter-page-header.ts`), with Jira's Filter menu.
 const issuesHeader = (
   { project, people }: Issues,
   framing: Framing,
   listing: Listing,
 ): Omit<PluginProps['Screen'], 'children'> => ({
   title: project.name,
-  search: { label: 'Search issues' },
+  search: { label: 'Search Issues' },
   value: listing.filters.text,
   onChangeText: listing.to.bind('text'),
   actions: [filterMenu(people, listing), ...projectActions(framing)],
 });
 
+type Drawing = { framing: Framing; listing: Listing };
+
+// What the list says in place of its rows: why Jira refused them, or why there are none.
+const emptyOf = (
+  view: Issues,
+  refused: JiraFailure | undefined,
+  { framing, listing }: Drawing,
+): JSX.Element =>
+  refused
+    ? refusedList(view, refused, framing)
+    : emptyList(view.project.key, listing);
+
 // Under the rows the list names its Jira project and site, as the Issue tracker names its repository.
-const listFrame = ({ project, site }: Issues, listing: Listing): ListFrame => ({
-  footer: `${project.key} · ${site.host}`,
-  empty: emptyList(project.key, listing),
+const listFrame = (
+  view: Issues,
+  refused: JiraFailure | undefined,
+  drawing: Drawing,
+): ListFrame => ({
+  footer: `${view.project.key} · ${view.site.host}`,
+  empty: emptyOf(view, refused, drawing),
 });
 
 // The project's issues the filters leave; load more reads the next page from Jira's cursor.
-const issueScreen = (
+function issueScreen(
   view: Issues,
-  framing: Framing,
-  listing: Listing,
-): JSX.Element => (
-  <Screen {...issuesHeader(view, framing, listing)}>
-    {issueList(view.site, {
-      list: listing.list,
-      to: framing.to,
-      ...listFrame(view, listing),
-    })}
-  </Screen>
-);
-
-type Drawing = { framing: Framing; listing: Listing };
-
-const listRefusal = (
-  { site, chosen }: Issues,
-  failure: JiraFailure,
-): FailedView => ({ kind: 'failed', site, failure, reading: 'issues', chosen });
-
-// A refusal other than the sign-in's, under the list's own header, so its search and filters stay to change.
-const refusedScreen = (
-  view: Issues,
-  failure: JiraFailure,
+  refused: JiraFailure | undefined,
   { framing, listing }: Drawing,
-): JSX.Element => (
-  <Screen {...issuesHeader(view, framing, listing)}>
-    {failureBody(listRefusal(view, failure), framing, listing)}
-  </Screen>
-);
+): JSX.Element {
+  const frame = listFrame(view, refused, { framing, listing });
 
-// Why Jira refused the list's first page, in the list's place: a refused token leads to signing in again.
-const refusedList = (
-  view: Issues,
-  failure: JiraFailure,
-  drawing: Drawing,
-): JSX.Element =>
-  failure.kind === 'signed-out'
-    ? setupScreen(
-        { kind: 'signed-out', message: failure.message },
-        drawing.framing,
-      )
-    : refusedScreen(view, failure, drawing);
+  return (
+    <Screen {...issuesHeader(view, framing, listing)}>
+      {issueList(view.site, { list: listing.list, to: framing.to, ...frame })}
+    </Screen>
+  );
+}
 
-// The list, or why Jira refused its first page in the list's place.
+// Why Jira refused the list's first page, if it did.
+const refusalIn = ({ list }: Listing): JiraFailure | undefined =>
+  list.items.find(isFailure)?.failed;
+
+// The list, or a refused token's way to sign in again in its place.
 function issues(view: Issues, framing: Framing, listing: Listing): JSX.Element {
-  const refused = listing.list.items.find(isFailure);
+  const refused = refusalIn(listing);
 
-  return refused
-    ? refusedList(view, refused.failed, { framing, listing })
-    : issueScreen(view, framing, listing);
+  if (refused && refused.kind === 'signed-out')
+    return setupScreen(
+      { kind: 'signed-out', message: refused.message },
+      framing,
+    );
+
+  return issueScreen(view, refused, { framing, listing });
 }
 
 // The page one Argo Project's Jira shows: the step it is at, saying what to do next.
@@ -141,6 +159,6 @@ export function projectScreen(
   if (view.kind === 'issues') return issues(view, framing, listing);
 
   return view.kind === 'failed'
-    ? failedScreen(view, framing, listing)
+    ? failedScreen(view, framing)
     : setupScreen(view, framing);
 }
