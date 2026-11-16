@@ -43,6 +43,16 @@ const workbenchId = 'desktop-workbench';
 
 const detailId = 'desktop-detail';
 
+const toggleWorkbench = 'Toggle Workbench';
+
+function lastFeedRow(canvas: Canvas): HTMLElement {
+  const feed = canvas.getAllByTestId('feed-column').at(-1);
+
+  if (!feed) throw new Error('Recorded Session needs a Feed row');
+
+  return feed;
+}
+
 async function expectSeparateCards(canvas: Canvas): Promise<void> {
   const composer = canvas.getByTestId(composerId);
   await browserUser.hover(composer);
@@ -140,16 +150,14 @@ export const WideGuttersKeepTheConversationCentered: Story = {
       (leading + frame.right) / 2,
       1,
     );
-    const feed = canvas.getAllByTestId('feed-column').at(-1);
-
-    if (!feed) throw new Error('Recorded Session needs a Feed row');
+    const feed = lastFeedRow(canvas);
     await expect(feed.getBoundingClientRect().left).toBe(before.left);
     await expect(feed.getBoundingClientRect().right).toBe(before.right);
     await expect(workbench.getBoundingClientRect().left).toBeGreaterThan(
       before.right,
     );
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Toggle Workbench' }),
+      canvas.getByRole('button', { name: toggleWorkbench }),
     );
     await waitFor(() => expect(workbench).not.toBeVisible());
     await browserUser.hover(composer);
@@ -182,12 +190,10 @@ export const NarrowGuttersMoveTheConversationAside: Story = {
         1,
       ),
     );
-    const feed = canvas.getAllByTestId('feed-column').at(-1);
-
-    if (!feed) throw new Error('Recorded Session needs a Feed row');
+    const feed = lastFeedRow(canvas);
     await expect(centreOf(feed)).toBeCloseTo(centreOf(composer), 1);
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Toggle Workbench' }),
+      canvas.getByRole('button', { name: toggleWorkbench }),
     );
     await waitFor(() =>
       expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
@@ -195,6 +201,26 @@ export const NarrowGuttersMoveTheConversationAside: Story = {
     await waitFor(() =>
       expect(centreOf(composer)).toBeCloseTo(pageCentre(canvas), 1),
     );
+  },
+};
+
+// Below the gutter width the cards hide; pressing Show draws them over the page, and the conversation moves clear of them rather than running under.
+export const ShownCardsCoverNoText: Story = {
+  beforeEach: (): Promise<void> => settleLayout(1500),
+  play: async ({ canvas, userEvent }) => {
+    const composer = await canvas.findByTestId(composerId);
+    await waitFor(() =>
+      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: toggleWorkbench }),
+    );
+    await expectSeparateCards(canvas);
+    const feed = lastFeedRow(canvas);
+    await expect(feed.getBoundingClientRect().right).toBeLessThanOrEqual(
+      canvas.getByTestId(workbenchId).getBoundingClientRect().left,
+    );
+    await browserUser.hover(composer);
   },
 };
 
