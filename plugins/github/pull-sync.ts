@@ -105,7 +105,7 @@ export function createPulls(source: ChangesSource, say: () => void): Pulls {
   const { store, records } = source;
 
   return {
-    known: (sessionIds) => keptShown(store, sessionIds, records.of),
+    known: (sessionIds) => keptShown(source, sessionIds, records.of),
     changed: () => sayChanged(state),
     sync: async (sessionIds) =>
       syncLinks(state, await store.forSessions(sessionIds)),

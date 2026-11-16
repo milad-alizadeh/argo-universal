@@ -1,16 +1,15 @@
 import type { Argo } from '@argo/plugin-kit';
-import { archiveOf } from './pull-archive';
 import {
   mergeOf,
-  offerOf,
   type AutoMergeInfo,
   type MergeSettings,
   type Reads,
 } from './pull-automation';
 import type { AutomationReads } from './pull-automation-reads';
+import type { Automations } from './pull-automations';
 import { changeOf, type ChangeItem, type Refresh } from './pull-change';
 import type { CheckInfo } from './pull-checks';
-import { fixOf } from './pull-fix';
+import type { CommentInfo, CommentsReads } from './pull-comments';
 import type { PullInfo } from './pull-info';
 import type { Attached } from './pull-kept';
 import { failureMessage, known, type Known } from './pull-known';
@@ -18,11 +17,13 @@ import { readOpenOnly } from './pull-open-reads';
 import type { PullReads } from './pull-reads';
 import type { PullRecords } from './pull-records';
 import type { PullKey, PullLink, PullStore } from './pull-store';
+import type { ViewerReads } from './pull-viewer';
 
 export type ChangesSource = {
   store: PullStore;
+  automations: Automations;
   records: PullRecords;
-  reads: PullReads & AutomationReads;
+  reads: PullReads & AutomationReads & CommentsReads & ViewerReads;
   readState: Argo['queries']['readState'];
 };
 
@@ -35,6 +36,10 @@ export type LinkRead<Link extends PullKey = PullLink> = {
   // Read only for an Open pull request, which is the only one that can auto-merge.
   autoMerge?: Known<AutoMergeInfo>;
   settings?: Known<MergeSettings>;
+  // Read only for an Open pull request, the only one Auto-fix prompts about.
+  comments?: Known<CommentInfo[]>;
+  // The signed-in account, read beside an Open pull request so Auto-fix can tell whether it opened it.
+  viewer?: Known<string>;
 } & Attached;
 
 // Two Sessions attaching the same pull request ask the same question, so they share one entry.
@@ -96,16 +101,13 @@ const readsOf = ({ autoMerge, settings }: LinkRead): Reads => ({
 });
 
 // What the Change offers to automate; GitHub's own answers, so one it could not give is never drawn as off.
-const automationOf = (read: LinkRead): Pick<Refresh, 'automation'> =>
-  read.pull.data
-    ? {
-        automation: offerOf(
-          mergeOf(read.pull.data, readsOf(read)),
-          fixOf(read.fix, read.pull.data),
-          archiveOf(read.archive),
-        ),
-      }
+const automationOf = (read: LinkRead): Pick<Refresh, 'automation'> => {
+  const { pull, kept } = read;
+
+  return pull.data && kept
+    ? { automation: { ...kept, merge: mergeOf(pull.data, readsOf(read)) } }
     : {};
+};
 
 // Stale when either read failed: the Change is what was last known, with why it could not be refreshed.
 export const refreshOf = (read: LinkRead): Refresh => ({

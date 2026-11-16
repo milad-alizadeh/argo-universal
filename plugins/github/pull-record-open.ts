@@ -4,8 +4,11 @@ import type { PullKey } from './pull-store';
 
 type Read = LinkRead<PullKey>;
 
-// What the record keeps of a pull request only while it is Open: its auto-merge and its repository's merge settings.
-export type OpenKept = Pick<Read, 'autoMerge' | 'settings'>;
+// What the record keeps of a pull request only while it is Open: its auto-merge, its repository's merge settings and its review comments.
+export type OpenKept = Pick<
+  Read,
+  'autoMerge' | 'settings' | 'comments' | 'viewer'
+>;
 
 const failureOf = (
   failure: Known<unknown>['failure'],
@@ -38,12 +41,21 @@ const settingsOf = (
   settings: OpenKept['settings'],
 ): Pick<OpenKept, 'settings'> => (settings ? { settings } : {});
 
+const commentsOf = (
+  comments: OpenKept['comments'],
+): Pick<OpenKept, 'comments'> => (comments ? { comments } : {});
+
+const viewerOf = (viewer: OpenKept['viewer']): Pick<OpenKept, 'viewer'> =>
+  viewer ? { viewer } : {};
+
 const endedOf = ({ pull }: Read): boolean =>
   pull.data !== undefined && pull.data.stage !== 'open';
 
-const standsOf = (kept: OpenKept | undefined, read: Read): OpenKept => ({
-  ...autoMergeOf(keepOne(read.autoMerge, kept?.autoMerge)),
-  ...settingsOf(keepOne(read.settings, kept?.settings)),
+const standsOf = (kept: OpenKept, read: Read): OpenKept => ({
+  ...autoMergeOf(keepOne(read.autoMerge, kept.autoMerge)),
+  ...settingsOf(keepOne(read.settings, kept.settings)),
+  ...commentsOf(keepOne(read.comments, kept.comments)),
+  ...viewerOf(keepOne(read.viewer, kept.viewer)),
 });
 
 /*
@@ -51,4 +63,4 @@ const standsOf = (kept: OpenKept | undefined, read: Read): OpenKept => ({
  * kept stands.
  */
 export const openOf = (kept: OpenKept | undefined, read: Read): OpenKept =>
-  endedOf(read) ? {} : standsOf(kept, read);
+  endedOf(read) ? {} : standsOf(kept ?? {}, read);

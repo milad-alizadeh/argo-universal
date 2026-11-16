@@ -12,6 +12,8 @@ export type PullInfo = {
   branch: string;
   // The repository the branch is in; a fork's, for a pull request from a fork. Absent when GitHub no longer names it.
   headRepository?: string;
+  // The login of the account that opened it. Absent when GitHub no longer names it, as for a deleted account.
+  author?: string;
   base: string;
   head: string;
   files: number;
@@ -48,9 +50,16 @@ const headRepositoryOf = (pull: Json): Pick<PullInfo, 'headRepository'> => {
     : {};
 };
 
+const authorOf = (pull: Json): Pick<PullInfo, 'author'> => {
+  const login = valueAt(pull, ['user', 'login']);
+
+  return typeof login === 'string' && login !== '' ? { author: login } : {};
+};
+
 // The names and numbers GitHub gives a pull request.
 const facts = (pull: Json): Omit<PullInfo, 'stage' | 'draft' | 'conflict'> => ({
   ...headRepositoryOf(pull),
+  ...authorOf(pull),
   repository: text(pull, invalid, 'base', 'repo', 'full_name'),
   number: numberOf(pull),
   title: text(pull, invalid, 'title'),

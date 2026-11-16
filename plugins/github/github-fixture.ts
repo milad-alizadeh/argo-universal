@@ -22,6 +22,7 @@ import {
 } from './github-fixture-rest';
 import type {
   FixtureCheck,
+  FixtureComment,
   FixtureFile,
   FixturePull,
 } from './github-fixture-types';
@@ -31,6 +32,10 @@ export type GitHubFixture = FixtureServices & {
   checks: Map<string, FixtureCheck[]>;
   // The status the Checks endpoint fails with for a commit, by `owner/repository@sha`; the pull request itself still reads.
   checksFailWith: Map<string, number>;
+  // The review comments of each pull request, by `owner/repository#number`; one with none listed has none.
+  comments: Map<string, FixtureComment[]>;
+  // The status the review comments endpoint fails with for a pull request, by `owner/repository#number`.
+  commentsFailWith: Map<string, number>;
   // The pull requests GitHub knows, by `owner/repository#number`.
   pulls: Map<string, FixturePull>;
   // The files each pull request changes, by `owner/repository#number`.
@@ -61,7 +66,7 @@ export const sha = '0123456789abcdef0123456789abcdef01234567';
 
 type Names = Pick<
   FixturePull,
-  'number' | 'title' | 'html_url' | 'head' | 'base' | 'node_id'
+  'number' | 'title' | 'html_url' | 'head' | 'base' | 'node_id' | 'user'
 >;
 
 const namesOf = (repository: string, number: number): Names => ({
@@ -71,6 +76,7 @@ const namesOf = (repository: string, number: number): Names => ({
   html_url: `https://github.com/${repository}/pull/${number}`,
   head: { ref: `feature-${number}`, sha, repo: { full_name: repository } },
   base: { ref: 'main', repo: { full_name: repository } },
+  user: { login: 'octocat' },
 });
 
 const factsOf = (): Omit<FixturePull, keyof Names> => ({
@@ -149,6 +155,8 @@ const heldOf = (): Held => ({
   stall: { until: null },
   checks: new Map(),
   checksFailWith: new Map(),
+  comments: new Map(),
+  commentsFailWith: new Map(),
   repositories: new Map(),
   graphqlFailWith: { status: null },
 });
