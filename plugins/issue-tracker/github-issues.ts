@@ -112,7 +112,10 @@ function labels(values: GitHubName[] | undefined): IssueLabel[] {
   );
 }
 
-function labelColor(name: string, color: string | undefined): IssueLabel {
+export function labelColor(
+  name: string,
+  color: string | undefined,
+): IssueLabel {
   return typeof color === 'string' && hexColor.test(color)
     ? { name, color: `#${color}` }
     : { name };

@@ -553,7 +553,7 @@ A small coloured dot that shows an item's state.
 _Avoid_: Status indicator
 
 **Metadata**:
-Read-only label and value fields for a detail view, such as a Project's Device and Path. Each field is a named part: Label, Link, Pills, StatusDot or Avatar. On desktop and web, beside a Detail's content, it is headed "Properties" unless the Plugin names it; a Detail too narrow for that column draws it as one line of values under the title.
+Label and value fields for a detail view, such as a Project's Device and Path. Each field is a named part: Label, Link, Pills, StatusDot or Avatar. A Picker field wraps one of those: its value is the button, and pressing it opens the choices in a popover (a page on a phone), with search when it is searchable and a create row when it can make a new choice, as an Issue's Labels do. On desktop and web, beside a Detail's content, it is headed "Properties" unless the Plugin names it; a Detail too narrow for that column draws it as one line of values under the title.
 _Avoid_: key-value list
 
 **Screen**:

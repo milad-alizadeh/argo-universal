@@ -28,7 +28,7 @@ function issueNumber(number: number): string {
 }
 
 // GitHub's own words are better than ours, but its status is enough.
-async function reasonOf(response: Reply): Promise<string> {
+export async function reasonOf(response: Reply): Promise<string> {
   try {
     const message = nonEmpty(pick(parseJson(await response.text()), 'message'));
 
