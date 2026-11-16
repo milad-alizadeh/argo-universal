@@ -110,6 +110,20 @@ function MapNotes(props: { drawn: DrawnFiles; total: number }): JSX.Element {
   );
 }
 
+const fileCounts = (file: CodeFile): JSX.Element[] => [
+  <FieldGroup.Value key="lines" title="Lines" value={count(file.lines)} />,
+  <FieldGroup.Value
+    key="branches"
+    title="Branching lines"
+    value={count(file.branches)}
+  />,
+  <FieldGroup.Value
+    key="touches"
+    title="Changes"
+    value={count(file.touches)}
+  />,
+];
+
 function FileDetails({
   file,
 }: {
@@ -120,12 +134,7 @@ function FileDetails({
   return (
     <FieldGroup>
       <FieldGroup.Section title={file.path}>
-        <FieldGroup.Value title="Lines" value={count(file.lines)} />
-        <FieldGroup.Value
-          title="Branching lines"
-          value={count(file.branches)}
-        />
-        <FieldGroup.Value title="Changes" value={count(file.touches)} />
+        {fileCounts(file)}
       </FieldGroup.Section>
     </FieldGroup>
   );

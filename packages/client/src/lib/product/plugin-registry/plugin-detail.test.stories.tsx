@@ -15,6 +15,9 @@ const leaf = (
   slots: {},
 });
 
+const value = (key: string, props: WireNode['props']): WireNode =>
+  leaf('FieldGroup.Value', key, props);
+
 const holding = (node: WireNode, children: WireNode[]): WireNode => ({
   ...node,
   children,
@@ -39,20 +42,20 @@ const root = WireNode.parse({
     aside: [
       holding(leaf('FieldGroup', 'fields', {}), [
         holding(leaf('FieldGroup.Section', 'section', {}), [
-          leaf('FieldGroup.Value', 'status', {
+          value('status', {
             title: 'Status',
             value: 'In progress',
             dot: 'info',
           }),
-          leaf('FieldGroup.Value', 'assignee', {
+          value('assignee', {
             title: 'Assignee',
             value: 'Ana Ruiz',
           }),
-          leaf('FieldGroup.Value', 'labels', {
+          value('labels', {
             title: 'Labels',
             value: 'bug, sync',
           }),
-          leaf('FieldGroup.Value', 'source', {
+          value('source', {
             title: 'Source',
             value: 'GitHub',
           }),
