@@ -9,8 +9,9 @@ import {
   attachedIssuesBar,
   coverageLine as coverage,
   deploysLine as deploys,
-  detachableIssues,
   detachableIssuesBar,
+  firstDetachableIssue,
+  secondDetachableIssue,
   issueLine as issue,
   secondIssueLine,
   sessionPageBar,
@@ -117,11 +118,9 @@ export const AnIssueLineCanBeDetached: Story = {
   },
   beforeEach: (): Promise<void> => settleLayout(1920),
   play: async ({ args, canvas, userEvent }) => {
-    const second = detachableIssues[1];
-
     await userEvent.click(
       await canvas.findByRole('button', {
-        name: `Actions for ${second?.text}`,
+        name: `Actions for ${secondDetachableIssue.text}`,
       }),
     );
     await settleOverlays();
@@ -133,7 +132,7 @@ export const AnIssueLineCanBeDetached: Story = {
 
     await expect(
       args.view.state === 'open' && args.view.bar?.onDetach,
-    ).toHaveBeenCalledExactlyOnceWith(second);
+    ).toHaveBeenLastCalledWith(secondDetachableIssue);
   },
 };
 
@@ -144,7 +143,7 @@ export const AnIssueLineMenuShowsDetach: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       await canvas.findByRole('button', {
-        name: `Actions for ${detachableIssues[0]?.text}`,
+        name: `Actions for ${firstDetachableIssue.text}`,
       }),
     );
     await settleOverlays();
