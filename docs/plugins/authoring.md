@@ -322,7 +322,7 @@ Object key order and header name case do not change the entry.
 
 - The args are the entry's key, every field of them. `{ ...target, projectKey }` beside `target` is a second entry and a second call to the service, and only a count of the service's requests in a test shows it. Build each read's args in one function, holding only what the read uses.
 - `projectOf(args)` names the Project the entry is for. Inside the read, `argo.fetch(url, { account, projectId })` borrows that Project's Account, and `argo.accounts.get(host)` answers it; a named read runs only for a Project, never as the Server Device.
-- To draw an item's page at once from its row, the list's read seeds each item's read with what it already holds: `await argo.queries.seed(issue({ projectId, key }), row)`. The page opened from the row finds its entry kept and calls nothing; the same page opened by its address reads. Read the choices its menus offer beside the list the same way. A seed is the Plugin's word for the other read's answer, so ask the service for every field the item's page draws.
+- To draw an item's page at once from its row, the list's read seeds each item's read with what it already holds: `await argo.queries.seed(issue({ projectId, key }), row)`. The page opened from the row finds its entry kept and calls nothing; the same page opened by its address reads. Read the choices its menus offer beside the list the same way; `plugins/jira/issue-reads.ts` seeds each issue from its row. A seed is the Plugin's word for the other read's answer, so ask the service for every field the item's page draws.
 - A write, an Operation run or `argo.changed()` makes every entry due. A pull reaches only a paged list's own pages; see Paged lists.
 
 ## Pages for a Project
