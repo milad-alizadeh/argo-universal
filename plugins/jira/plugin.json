@@ -114,6 +114,98 @@
         "description": "Make the Jira pages read Jira again.",
         "tier": "read",
         "keywords": ["jira", "refresh", "retry"]
+      },
+      {
+        "name": "listIssues",
+        "label": "List Jira issues",
+        "description": "Lists the issues of the Jira project this Project shows, the most recently updated first, with each one's status, assignee, priority and the statuses it can move to.",
+        "tier": "read",
+        "keywords": ["jira", "issues", "list", "search"],
+        "params": {
+          "text": {
+            "type": "string",
+            "description": "Only issues whose text contains this, as Jira's search matches it."
+          },
+          "limit": {
+            "type": "number",
+            "description": "How many issues to answer, 1 to 100; 20 when left out."
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "getIssue",
+        "label": "Read a Jira issue",
+        "description": "Reads one Jira issue: its summary, description as Markdown, status, assignee, priority, labels, link, and the statuses Jira allows it to move to now.",
+        "tier": "read",
+        "keywords": ["jira", "issue", "read", "detail"],
+        "params": {
+          "issue": {
+            "type": "string",
+            "description": "The issue's key, such as ARGO-12.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "transition",
+        "label": "Move a Jira issue to a status",
+        "description": "Moves a Jira issue to another status, as Jira's workflow allows from its current one. Fails with the statuses it can move to when Jira does not allow that move.",
+        "tier": "act",
+        "keywords": ["jira", "issue", "status", "transition", "move"],
+        "params": {
+          "issue": {
+            "type": "string",
+            "description": "The issue's key, such as ARGO-12.",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The status to move it to, by name or id, such as In Progress.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "setAssignee",
+        "label": "Assign a Jira issue",
+        "description": "Assigns a Jira issue to a person, to the signed-in person with me, or to nobody.",
+        "tier": "act",
+        "keywords": ["jira", "issue", "assignee", "assign"],
+        "params": {
+          "issue": {
+            "type": "string",
+            "description": "The issue's key, such as ARGO-12.",
+            "required": true
+          },
+          "assignee": {
+            "type": "string",
+            "description": "The person's Atlassian account id, or me for the signed-in person; leave it out to unassign the issue."
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "setPriority",
+        "label": "Set a Jira issue's priority",
+        "description": "Sets a Jira issue's priority to one the Jira site has.",
+        "tier": "act",
+        "keywords": ["jira", "issue", "priority"],
+        "params": {
+          "issue": {
+            "type": "string",
+            "description": "The issue's key, such as ARGO-12.",
+            "required": true
+          },
+          "priority": {
+            "type": "string",
+            "description": "The priority, by name or id, such as High.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
       }
     ]
   },

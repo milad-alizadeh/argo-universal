@@ -6,6 +6,9 @@ import {
   jiraRequests,
   type IssuePage,
   type JiraAnswer,
+  type JiraIssue,
+  type JiraPerson,
+  type JiraPriority,
   type JiraProject,
   type JiraSend,
 } from './jira-client';
@@ -21,11 +24,20 @@ type SiteTarget = Target & { cloudId: string };
 
 type IssuesTarget = SiteTarget & { projectKey: string };
 
+type IssueTarget = SiteTarget & { key: string };
+
+// What an issue's page offers to change it to: the site's priorities and the people its Jira project can assign.
+export type EditChoices = { priorities: JiraPriority[]; people: JiraPerson[] };
+
 export type JiraReads = Readonly<{
   // The label of the Account the Project borrows, or null when it has none.
   account: (args: Target) => NamedQuery<string | null>;
   projects: (args: SiteTarget) => NamedQuery<JiraAnswer<JiraProject[]>>;
   issues: (args: IssuesTarget) => NamedQuery<JiraAnswer<IssuePage>>;
+  // One issue, as its page shows it; a search seeds it for each issue it lists.
+  issue: (args: IssueTarget) => NamedQuery<JiraAnswer<JiraIssue>>;
+  // A choice Jira cannot list now is left out, so the page still offers the others.
+  choices: (args: IssuesTarget) => NamedQuery<EditChoices>;
 }>;
 
 const byProject = { projectOf: ({ projectId }: Target): string => projectId };
@@ -36,8 +48,79 @@ const borrowing =
   (url, init) =>
     argo.fetch(url, { ...init, account: atlassianHost, projectId });
 
+// What a call answers, or nothing when it fails.
+const orNone = <Value>(answer: JiraAnswer<Value[]>): Value[] =>
+  answer.ok ? answer.value : [];
+
+function choicesRead(argo: Argo): JiraReads['choices'] {
+  return argo.queries.define(
+    'choices',
+    async ({ projectId, cloudId, projectKey }: IssuesTarget) => {
+      const send = borrowing(argo, projectId);
+      const [priorities, people] = await Promise.all([
+        callJira(
+          send,
+          cloudId,
+          jiraRequests.priorities(),
+          jiraReaders.priorities,
+        ),
+        callJira(
+          send,
+          cloudId,
+          jiraRequests.assignable(projectKey),
+          jiraReaders.assignable,
+        ),
+      ]);
+
+      return { priorities: orNone(priorities), people: orNone(people) };
+    },
+    byProject,
+  );
+}
+
+function issueRead(argo: Argo): JiraReads['issue'] {
+  return argo.queries.define(
+    'issue',
+    ({ projectId, cloudId, key }: IssueTarget) =>
+      callJira(
+        borrowing(argo, projectId),
+        cloudId,
+        jiraRequests.issue(key),
+        jiraReaders.issue,
+      ),
+    byProject,
+  );
+}
+
+// A search answers each issue in full, so it seeds the entry the issue's page reads, which then draws at once.
+async function seeded(
+  argo: Argo,
+  issue: JiraReads['issue'],
+  target: IssuesTarget,
+  answer: JiraAnswer<IssuePage>,
+): Promise<JiraAnswer<IssuePage>> {
+  if (!answer.ok) return answer;
+
+  const { projectId, cloudId } = target;
+
+  await Promise.all(
+    answer.value.issues.map((found) =>
+      argo.queries.seed(issue({ projectId, cloudId, key: found.key }), {
+        ok: true,
+        value: found,
+      }),
+    ),
+  );
+
+  return answer;
+}
+
 export function defineReads(argo: Argo): JiraReads {
+  const issue = issueRead(argo);
+
   return {
+    issue,
+    choices: choicesRead(argo),
     account: argo.queries.define(
       'account',
       async (_args: Target) =>
@@ -57,12 +140,17 @@ export function defineReads(argo: Argo): JiraReads {
     ),
     issues: argo.queries.define(
       'issues',
-      ({ projectId, cloudId, projectKey }: IssuesTarget) =>
-        callJira(
-          borrowing(argo, projectId),
-          cloudId,
-          jiraRequests.issues(projectKey),
-          jiraReaders.issues,
+      async (target: IssuesTarget) =>
+        seeded(
+          argo,
+          issue,
+          target,
+          await callJira(
+            borrowing(argo, target.projectId),
+            target.cloudId,
+            jiraRequests.issues(target.projectKey),
+            jiraReaders.issues,
+          ),
         ),
       byProject,
     ),

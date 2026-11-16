@@ -1,3 +1,4 @@
+import { adfMarkdown } from './adf';
 import { jiraApiUrl } from './atlassian';
 import { at, list, parseJson, text, type Json } from './json';
 
@@ -34,21 +35,46 @@ export type JiraProject = { id: string; key: string; name: string };
 
 export type StatusCategory = 'new' | 'indeterminate' | 'done';
 
+export type JiraStatus = { id: string; name: string; category: StatusCategory };
+
+// A move Jira allows from an issue's current status, named by the status it leads to.
+export type JiraTransition = { id: string; name: string; to: JiraStatus };
+
+export type JiraPerson = { accountId: string; name: string };
+
+/*
+ * An issue as a search or a read answers it: what a list row shows, and what its detail page shows besides, so a row
+ * seeds its issue's page and the page draws at once (Spec 0027).
+ */
 export type JiraIssue = {
   key: string;
   summary: string;
-  status: { name: string; category: StatusCategory };
-  assignee: { accountId: string; name: string } | null;
+  status: JiraStatus;
+  assignee: JiraPerson | null;
   priority: string | null;
+  description: string;
+  labels: string[];
+  transitions: JiraTransition[];
 };
+
+export type JiraPriority = { id: string; name: string };
 
 // One page of a search: its issues, and Jira's cursor for the next page, or null at the end.
 export type IssuePage = { issues: JiraIssue[]; cursor: string | null };
 
 export type JiraMyself = { accountId: string; name: string; email: string };
 
-// The fields a list row shows; a detail page asks for more.
-const rowFields = ['summary', 'status', 'assignee', 'priority'];
+// The fields a list row and the issue's page show, so a search answers both.
+const issueFields = [
+  'summary',
+  'status',
+  'assignee',
+  'priority',
+  'labels',
+  'description',
+];
+
+const issuePath = (key: string): string => `/issue/${encodeURIComponent(key)}`;
 
 const quoted = (value: string): string =>
   `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
@@ -61,18 +87,49 @@ export const jiraRequests = {
   // A project's issues, the most recently updated first: Jira's enhanced search, paged by `nextPageToken`.
   issues: (
     projectKey: string,
-    page: { cursor?: string | null; limit?: number } = {},
+    page: { cursor?: string | null; limit?: number; text?: string } = {},
   ): JiraRequest => ({
     path: '/search/jql',
     method: 'POST',
     body: {
-      jql: `project = ${quoted(projectKey)} ORDER BY updated DESC`,
-      fields: rowFields,
+      jql: `project = ${quoted(projectKey)}${page.text ? ` AND text ~ ${quoted(page.text)}` : ''} ORDER BY updated DESC`,
+      fields: issueFields,
+      expand: 'transitions',
       maxResults: page.limit ?? 50,
       ...(page.cursor ? { nextPageToken: page.cursor } : {}),
     },
   }),
+  issue: (key: string): JiraRequest => ({
+    path: `${issuePath(key)}?fields=${issueFields.join(',')}&expand=transitions`,
+  }),
+  transitions: (key: string): JiraRequest => ({
+    path: `${issuePath(key)}/transitions`,
+  }),
+  transition: (key: string, transitionId: string): JiraRequest => ({
+    path: `${issuePath(key)}/transitions`,
+    method: 'POST',
+    body: { transition: { id: transitionId } },
+  }),
+  // `null` unassigns the issue.
+  assign: (key: string, accountId: string | null): JiraRequest => ({
+    path: `${issuePath(key)}/assignee`,
+    method: 'PUT',
+    body: { accountId },
+  }),
+  setPriority: (key: string, priorityId: string): JiraRequest => ({
+    path: issuePath(key),
+    method: 'PUT',
+    body: { fields: { priority: { id: priorityId } } },
+  }),
+  // Every priority on the site. `/priority/search` needs an admin scope, so this reads the older list.
+  priorities: (): JiraRequest => ({ path: '/priority' }),
+  // The people who may be assigned a Jira project's issues.
+  assignable: (projectKey: string): JiraRequest => ({
+    path: `/user/assignable/search?project=${encodeURIComponent(projectKey)}&maxResults=50`,
+  }),
 };
+
+const present = <Value>(value: Value | null): value is Value => value !== null;
 
 const categories: readonly StatusCategory[] = ['new', 'indeterminate', 'done'];
 
@@ -90,6 +147,28 @@ function assigneeOf(fields: unknown): JiraIssue['assignee'] {
   };
 }
 
+const statusOf = (json: unknown): JiraStatus => ({
+  id: text(at(json, 'id')) ?? '',
+  name: text(at(json, 'name')) ?? 'Unknown',
+  category: categoryOf(at(json, 'statusCategory', 'key')),
+});
+
+// A transition Jira lists but will not run now, as one whose conditions fail, is left out.
+function transitionOf(json: unknown): JiraTransition | null {
+  const id = text(at(json, 'id'));
+
+  if (!id || at(json, 'isAvailable') === false) return null;
+
+  const to = statusOf(at(json, 'to'));
+
+  return { id, name: text(at(json, 'name')) ?? to.name, to };
+}
+
+const labelsOf = (fields: unknown): string[] =>
+  list(at(fields, 'labels'))
+    .map(text)
+    .filter((label) => label !== null);
+
 function issueOf(json: unknown): JiraIssue | null {
   const key = text(at(json, 'key'));
   const fields = at(json, 'fields');
@@ -99,13 +178,32 @@ function issueOf(json: unknown): JiraIssue | null {
   return {
     key,
     summary: text(at(fields, 'summary')) ?? '',
-    status: {
-      name: text(at(fields, 'status', 'name')) ?? 'Unknown',
-      category: categoryOf(at(fields, 'status', 'statusCategory', 'key')),
-    },
+    status: statusOf(at(fields, 'status')),
     assignee: assigneeOf(fields),
     priority: text(at(fields, 'priority', 'name')),
+    description: adfMarkdown(at(fields, 'description')),
+    labels: labelsOf(fields),
+    transitions: list(at(json, 'transitions'))
+      .map(transitionOf)
+      .filter(present),
   };
+}
+
+function priorityOf(json: unknown): JiraPriority | null {
+  const id = text(at(json, 'id'));
+  const name = text(at(json, 'name'));
+
+  return id && name ? { id, name } : null;
+}
+
+// Only people, not apps, are offered as assignees.
+function personOf(json: unknown): JiraPerson | null {
+  const accountId = text(at(json, 'accountId'));
+  const type = text(at(json, 'accountType'));
+
+  if (!accountId || (type && type !== 'atlassian')) return null;
+
+  return { accountId, name: text(at(json, 'displayName')) ?? accountId };
 }
 
 function projectOf(json: unknown): JiraProject | null {
@@ -114,8 +212,6 @@ function projectOf(json: unknown): JiraProject | null {
 
   return id && key ? { id, key, name: text(at(json, 'name')) ?? key } : null;
 }
-
-const present = <Value>(value: Value | null): value is Value => value !== null;
 
 export const jiraReaders = {
   myself: (json: unknown): JiraMyself | null => {
@@ -131,6 +227,15 @@ export const jiraReaders = {
   },
   projects: (json: unknown): JiraProject[] =>
     list(at(json, 'values')).map(projectOf).filter(present),
+  issue: issueOf,
+  transitions: (json: unknown): JiraTransition[] =>
+    list(at(json, 'transitions')).map(transitionOf).filter(present),
+  priorities: (json: unknown): JiraPriority[] =>
+    list(json).map(priorityOf).filter(present),
+  assignable: (json: unknown): JiraPerson[] =>
+    list(json).map(personOf).filter(present),
+  // A write answers 204 with no body; any success is enough.
+  done: (): true => true,
   issues: (json: unknown): IssuePage => ({
     issues: list(at(json, 'issues')).map(issueOf).filter(present),
     cursor:

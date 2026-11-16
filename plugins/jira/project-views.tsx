@@ -258,7 +258,10 @@ function issues(
           description="Issues created in this Jira project show here."
         />
       ) : (
-        issueList(site, page.issues, framing.to)
+        issueList(
+          { site, projectId: framing.projectId, to: framing.to },
+          page.issues,
+        )
       )}
     </Screen>
   );

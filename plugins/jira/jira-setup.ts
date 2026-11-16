@@ -24,7 +24,10 @@ type Read = LoaderInput['read'];
 type Step = { read: Read; reads: JiraReads; projectId: string };
 
 // A chosen site still known, or the only one there is.
-function siteFor(sites: JiraSite[], choice: ProjectChoice): JiraSite | null {
+export function siteFor(
+  sites: JiraSite[],
+  choice: ProjectChoice,
+): JiraSite | null {
   const chosen = sites.find(({ cloudId }) => cloudId === choice.cloudId);
 
   if (chosen) return chosen;
@@ -64,13 +67,16 @@ async function issuesFor(
   site: JiraSite,
   project: JiraProject,
 ): Promise<ProjectView> {
-  const answer = await step.read(
-    step.reads.issues({
-      projectId: step.projectId,
-      cloudId: site.cloudId,
-      projectKey: project.key,
-    }),
-  );
+  const target = {
+    projectId: step.projectId,
+    cloudId: site.cloudId,
+    projectKey: project.key,
+  };
+  // The choices an issue's page offers are read beside the list, so an issue opened from it draws at once.
+  const [answer] = await Promise.all([
+    step.read(step.reads.issues(target)),
+    step.read(step.reads.choices(target)),
+  ]);
 
   return answer.ok
     ? { kind: 'issues', site, project, page: answer.value }

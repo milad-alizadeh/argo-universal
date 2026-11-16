@@ -12,7 +12,14 @@ import {
   type LoaderInput,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import { projectPath, projectPattern, pathText } from './jira-paths';
+import { issueScreen, type IssueView } from './issue-detail';
+import { loadIssueView } from './issue-view';
+import {
+  issuePattern,
+  projectPath,
+  projectPattern,
+  pathText,
+} from './jira-paths';
 import type { JiraReads } from './jira-reads';
 import { loadProjectView, type ProjectView } from './jira-setup';
 import { storeQueries, storeReaders, type JiraSite } from './jira-store';
@@ -69,7 +76,12 @@ const chooseProject = (
 const projectIdOf = ({ params }: Pick<LoaderInput, 'params'>): string =>
   pathText(params.project ?? '');
 
+const issueKeyOf = ({ params }: Pick<LoaderInput, 'params'>): string =>
+  pathText(params.key ?? '');
+
 type ProjectData = { projects: Project[]; view: ProjectView };
+
+type IssueData = { projects: Project[]; view: IssueView };
 
 type SiteData = { projects: Project[]; sites: JiraSite[]; chosen: string };
 
@@ -151,6 +163,38 @@ export function defineJiraPages(argo: Argo, reads: JiraReads): void {
           title="Jira"
           list={projectRows(data.projects, projectId)}
           detail={projectScreen(data.view, framing)}
+        />
+      );
+    },
+  });
+
+  argo.pages.define(issuePattern, {
+    every: freshForMs,
+    load: async (input): Promise<IssueData> => {
+      const [projects, view] = await Promise.all([
+        argo.projects.list(),
+        loadIssueView({
+          read: input.read,
+          reads,
+          projectId: projectIdOf(input),
+          key: issueKeyOf(input),
+        }),
+      ]);
+
+      return { projects, view };
+    },
+    render: (data, to, input) => {
+      const projectId = projectIdOf(input);
+
+      return (
+        <ListDetail
+          title="Jira"
+          list={projectRows(data.projects, projectId)}
+          detail={issueScreen(data.view, {
+            key: issueKeyOf(input),
+            projectId,
+            to,
+          })}
         />
       );
     },

@@ -1,11 +1,22 @@
-import { Label, List, ListItem, Pill, type PageTo } from '@argo/plugin-kit';
+import {
+  Action,
+  Label,
+  List,
+  ListItem,
+  Pill,
+  type PageTo,
+} from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { issueUrl } from './atlassian';
 import type { JiraIssue, StatusCategory } from './jira-client';
+import { issuePath } from './jira-paths';
 import type { JiraSite } from './jira-store';
 
 // Jira's status categories as Argo's tones: to do is plain, in progress is under way, done is finished.
-const categoryTones: Record<StatusCategory, 'neutral' | 'info' | 'done'> = {
+export const categoryTones: Record<
+  StatusCategory,
+  'neutral' | 'info' | 'done'
+> = {
   new: 'neutral',
   indeterminate: 'info',
   done: 'done',
@@ -33,8 +44,15 @@ const rowMeta = (issue: JiraIssue): JSX.Element[] => [
   />,
 ];
 
-// A keyed ListItem itself, as a List draws its children. It opens the issue in Jira until Argo has its own page.
-const issueRow = (site: JiraSite, issue: JiraIssue): JSX.Element => (
+type RowTo = PageTo<{ site: string }>;
+
+type Rows = { site: JiraSite; projectId: string; to: RowTo };
+
+// A keyed ListItem itself, as a List draws its children. It opens the issue's page; its menu opens it in Jira.
+const issueRow = (
+  { site, projectId, to }: Rows,
+  issue: JiraIssue,
+): JSX.Element => (
   <ListItem
     key={issue.key}
     id={issue.key}
@@ -42,17 +60,21 @@ const issueRow = (site: JiraSite, issue: JiraIssue): JSX.Element => (
     subtitle={issue.key}
     finished={issue.status.category === 'done'}
     meta={rowMeta(issue)}
-    onPress={{ action: 'openUrl', url: issueUrl(site.host, issue.key) }}
+    onPress={to.go(issuePath(projectId, issue.key))}
+    actions={
+      <Action
+        key="open-in-jira"
+        label="Open in Jira"
+        icon="external-link"
+        onPress={{ action: 'openUrl', url: issueUrl(site.host, issue.key) }}
+      />
+    }
   />
 );
 
 // The project's issues, one row each; a pull reads them again.
-export const issueList = (
-  site: JiraSite,
-  issues: JiraIssue[],
-  to: PageTo<{ site: string }>,
-): JSX.Element => (
-  <List accessibilityLabel="Jira issues" onRefresh={to.set({})}>
-    {issues.map((issue) => issueRow(site, issue))}
+export const issueList = (rows: Rows, issues: JiraIssue[]): JSX.Element => (
+  <List accessibilityLabel="Jira issues" onRefresh={rows.to.set({})}>
+    {issues.map((issue) => issueRow(rows, issue))}
   </List>
 );

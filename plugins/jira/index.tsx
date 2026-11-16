@@ -1,4 +1,5 @@
 import type { Argo } from '@argo/plugin-kit';
+import { registerIssueOperations } from './issue-operations';
 import { registerOperations } from './jira-operations';
 import { defineJiraPages } from './jira-pages';
 import { defineReads } from './jira-reads';
@@ -17,6 +18,7 @@ export async function register(argo: Argo): Promise<void> {
   await createTables(argo);
   await signIn.flow.provide();
   registerOperations(argo, { reads, signIn });
+  registerIssueOperations(argo);
   defineSignInPage(argo, signIn);
   defineJiraPages(argo, reads);
 }

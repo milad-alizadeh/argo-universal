@@ -19,3 +19,9 @@ export const projectPattern = '/projects/:project';
 
 export const projectPath = (projectId: string): string =>
   `/projects/${pathSegment(projectId)}`;
+
+// One Jira issue of a Project, beside that Project's views.
+export const issuePattern = `${projectPattern}/issues/:key`;
+
+export const issuePath = (projectId: string, key: string): string =>
+  `${projectPath(projectId)}/issues/${pathSegment(key)}`;
