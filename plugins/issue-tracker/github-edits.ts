@@ -1,8 +1,14 @@
 import type { Argo } from '@argo/plugin-kit';
-import { called, githubHost, type GitHubRequest } from './github-api';
-import { labelColor, type IssueLabel } from './github-issues';
-import { reasonOf } from './github-write';
-import { isObject, nonEmpty, parseJson, pick, type Json } from './json';
+import {
+  accepted,
+  answerOf,
+  issueUrl,
+  repositoryUrl,
+  restRequest,
+  type GitHubRequest,
+} from './github-api';
+import { labelColor, type IssueLabel, type IssueStatus } from './github-issues';
+import { isObject, nonEmpty, pick, type Json } from './json';
 
 type Fetch = Argo['fetch'];
 
@@ -13,43 +19,6 @@ export type Choices = { labels: IssueLabel[]; assignees: string[] };
 
 // GitHub's largest page.
 const perPage = 100;
-
-const base = (repository: string): string =>
-  `https://${githubHost}/repos/${repository}`;
-
-const json = { accept: 'application/vnd.github+json' };
-
-const get = (url: string): GitHubRequest => ({
-  url,
-  init: { method: 'GET', headers: json },
-});
-
-const send = (
-  method: 'POST' | 'DELETE',
-  url: string,
-  body?: Json,
-): GitHubRequest => ({
-  url,
-  init: {
-    method,
-    headers: { ...json, 'content-type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  },
-});
-
-async function answerOf(
-  fetch: Fetch,
-  projectId: string,
-  request: GitHubRequest,
-): Promise<Json> {
-  const response = await called(fetch, projectId, request);
-
-  if (!response.ok) throw new Error(await reasonOf(response));
-
-  const text = await response.text();
-
-  return text === '' ? null : parseJson(text);
-}
 
 // GitHub's answer is what the code reads; anything else is refused, not skipped.
 function entriesOf(answer: Json): Json[] {
@@ -79,6 +48,17 @@ function loginOf(entry: Json): string {
 // A person scrolls and searches a few hundred before they stop; past this many pages the rest is left out.
 const maxPages = 10;
 
+// One page of a list.
+const pageOf = async (
+  fetch: Fetch,
+  projectId: string,
+  { url, page }: { url: string; page: number },
+): Promise<Json[]> => {
+  const request = restRequest('GET', `${url}?per_page=${perPage}&page=${page}`);
+
+  return entriesOf(await answerOf(fetch, projectId, request));
+};
+
 // Every page of a list GitHub has, up to the limit.
 async function listOf(
   fetch: Fetch,
@@ -88,8 +68,7 @@ async function listOf(
   const found: Json[] = [];
 
   for (let page = 1; page <= maxPages; page += 1) {
-    const request = get(`${url}?per_page=${perPage}&page=${page}`);
-    const entries = entriesOf(await answerOf(fetch, projectId, request));
+    const entries = await pageOf(fetch, projectId, { url, page });
 
     found.push(...entries);
 
@@ -104,7 +83,7 @@ export async function readChoices(
   { repository, projectId }: Target,
 ): Promise<Choices> {
   const read = (list: 'labels' | 'assignees'): Promise<Json[]> =>
-    listOf(fetch, projectId, `${base(repository)}/${list}`);
+    listOf(fetch, projectId, `${repositoryUrl(repository)}/${list}`);
 
   const [labels, assignees] = await Promise.all([
     read('labels'),
@@ -117,14 +96,14 @@ export async function readChoices(
 export type IssueEdit =
   | { kind: 'label'; name: string; on: boolean }
   | { kind: 'assignee'; login: string; on: boolean }
-  | { kind: 'new-label'; name: string };
+  | { kind: 'new-label'; name: string }
+  | { kind: 'status'; status: IssueStatus };
 
-const issueUrl = (repository: string, number: number): string => {
-  if (!Number.isSafeInteger(number) || number < 1)
-    throw new Error('Issue number must be a positive integer.');
-
-  return `${base(repository)}/issues/${number}`;
-};
+// What GitHub's REST API takes for each status, with the reason it records.
+const states = {
+  open: { state: 'open', state_reason: 'reopened' },
+  closed: { state: 'closed', state_reason: 'completed' },
+} as const;
 
 type Located = Target & { number: number };
 
@@ -134,8 +113,8 @@ const labelCalls = (
   on: boolean,
 ): GitHubRequest[] => [
   on
-    ? send('POST', `${url}/labels`, { labels: [name] })
-    : send('DELETE', `${url}/labels/${encodeURIComponent(name)}`),
+    ? restRequest('POST', `${url}/labels`, { labels: [name] })
+    : restRequest('DELETE', `${url}/labels/${encodeURIComponent(name)}`),
 ];
 
 const assigneeCalls = (
@@ -143,7 +122,9 @@ const assigneeCalls = (
   login: string,
   on: boolean,
 ): GitHubRequest[] => [
-  send(on ? 'POST' : 'DELETE', `${url}/assignees`, { assignees: [login] }),
+  restRequest(on ? 'POST' : 'DELETE', `${url}/assignees`, {
+    assignees: [login],
+  }),
 ];
 
 // A label that is not there yet is made first, then put on the Issue.
@@ -152,11 +133,11 @@ const newLabelCalls = (
   url: string,
   name: string,
 ): GitHubRequest[] => [
-  send('POST', `${base(repository)}/labels`, { name }),
+  restRequest('POST', `${repositoryUrl(repository)}/labels`, { name }),
   ...labelCalls(url, name, true),
 ];
 
-type Change = Exclude<IssueEdit, { kind: 'new-label' }>;
+type Change = Exclude<IssueEdit, { kind: 'new-label' | 'status' }>;
 
 const changeCalls = (url: string, edit: Change): GitHubRequest[] =>
   edit.kind === 'assignee'
@@ -170,13 +151,16 @@ const requestsOf = (
 ): GitHubRequest[] => {
   const url = issueUrl(repository, number);
 
+  if (edit.kind === 'status')
+    return [restRequest('PATCH', url, states[edit.status])];
+
   return edit.kind === 'new-label'
     ? newLabelCalls(repository, url, edit.name)
     : changeCalls(url, edit);
 };
 
 /*
- * Puts a label or a person on an Issue, or takes them off, as the signed-in person. The calls run in order, and the
+ * Puts a label or a person on an Issue, takes them off, or closes or reopens it, as the signed-in person. The calls run in order, and the
  * first one GitHub refuses ends the edit with GitHub's own reason; Argo marks the Plugin's pages stale when the
  * Operation that calls this ends.
  */
@@ -185,6 +169,9 @@ export async function editIssue(
   target: Located,
   edit: IssueEdit,
 ): Promise<void> {
+  // A status change never read GitHub's answer, and still does not.
+  const answer = edit.kind === 'status' ? accepted : answerOf;
+
   for (const request of requestsOf(target, edit))
-    await answerOf(fetch, target.projectId, request);
+    await answer(fetch, target.projectId, request);
 }

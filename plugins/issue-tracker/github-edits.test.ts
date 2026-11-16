@@ -63,6 +63,44 @@ it.each([
   },
 );
 
+it.each([
+  ['open', { state: 'open', state_reason: 'reopened' }],
+  ['closed', { state: 'closed', state_reason: 'completed' }],
+] as const)(
+  'sets an Issue %s with one PATCH of its state',
+  async (status, body) => {
+    const { sent, tracker } = trackerAnswering(reply(200, {}));
+
+    await tracker.edit(7, { kind: 'status', status });
+
+    expect(calls(sent)).toEqual(['PATCH /issues/7']);
+    expect(JSON.parse(String(sent[0]?.init?.body))).toEqual(body);
+  },
+);
+
+it('does not read the body of a status change GitHub accepted', async () => {
+  const { tracker } = trackerAnswering({
+    ...listReply(),
+    text: () => Promise.reject(new Error('unread')),
+  });
+
+  await expect(
+    tracker.edit(7, { kind: 'status', status: 'closed' }),
+  ).resolves.toBeUndefined();
+});
+
+it.each([0, -1, 1.5])(
+  'refuses Issue number %s for a status change',
+  async (number) => {
+    const { sent, tracker } = trackerAnswering(reply(200, {}));
+
+    await expect(
+      tracker.edit(number, { kind: 'status', status: 'open' }),
+    ).rejects.toThrow('Issue number must be a positive integer.');
+    expect(sent).toHaveLength(0);
+  },
+);
+
 it("ends an edit with GitHub's own reason when it refuses", async () => {
   const { sent, tracker } = trackerAnswering(
     reply(422, { message: 'Label already exists.' }),
