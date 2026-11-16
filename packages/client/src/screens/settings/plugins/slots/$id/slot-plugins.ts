@@ -1,5 +1,5 @@
+import { usePluginEntries } from '#features/plugins';
 import { slotVisibility, useSlotChoices } from '#features/settings';
-import { usePluginEntries } from '../../use-plugins';
 import type { SlotDetail } from './slot-detail';
 import type { SlotPlugin } from './slot-detail-model';
 import { toSlotPlugins } from './slot-plugin-list';

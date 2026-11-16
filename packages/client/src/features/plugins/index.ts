@@ -66,3 +66,13 @@ export { ConnectedReplaceableSlots } from './stores/connected-replaceable-slot';
 export { LinkMarksProvider } from './stores/link-marks-provider';
 
 export { PluginErrorToasts } from './stores/plugin-error-toasts';
+
+export { useDeclaredItems } from './hooks/use-declared-items';
+
+export {
+  type PluginEntries,
+  type PluginEntry,
+  usePluginEntries,
+} from './hooks/use-plugin-entries';
+
+export { invalidatePluginState } from './utils/refresh-plugin-list';

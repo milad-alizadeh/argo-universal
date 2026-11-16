@@ -1,5 +1,14 @@
 import type { QueryClient, QueryFilters } from '@tanstack/react-query';
 
+// The query families that make up Plugin state, as the tRPC options proxy names them.
+interface Trpc {
+  plugin: {
+    list: { queryFilter: () => QueryFilters };
+    getSettings: { queryFilter: () => QueryFilters };
+  };
+  plugins: { declared: { queryFilter: () => QueryFilters } };
+}
+
 /*
  * A live change refreshes the Plugin lists by replacing any fetch already in flight, never by joining
  * one. Such a fetch asked the Server before the change happened, so it answers without it, and because
@@ -19,4 +28,27 @@ export async function refreshPluginList(
       await client.invalidateQueries(list);
     }),
   );
+}
+
+// The live change: the Plugin list and the declared Slot items follow which Plugins the Server runs.
+export function refreshLivePluginState(
+  client: QueryClient,
+  trpc: Trpc,
+): Promise<void> {
+  return refreshPluginList(client, [
+    trpc.plugin.list.queryFilter(),
+    trpc.plugins.declared.queryFilter(),
+  ]);
+}
+
+// A Settings change: also each Plugin's settings, which only Settings changes. It joins fetches in flight, as it always has.
+export async function invalidatePluginState(
+  client: QueryClient,
+  trpc: Trpc,
+): Promise<void> {
+  await Promise.all([
+    client.invalidateQueries(trpc.plugin.list.queryFilter()),
+    client.invalidateQueries(trpc.plugin.getSettings.queryFilter()),
+    client.invalidateQueries(trpc.plugins.declared.queryFilter()),
+  ]);
 }

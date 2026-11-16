@@ -7,7 +7,7 @@ import {
   sessionRowSlotId,
 } from '@repo/contracts/plugins/wire';
 import { describe, expect, it } from 'vitest';
-import type { PluginEntry } from '../../use-plugins';
+import type { PluginEntry } from '#features/plugins';
 import type { SlotDetail } from './slot-detail';
 import { toSlotPlugins } from './slot-plugin-list';
 

@@ -5,16 +5,12 @@ import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useTRPC } from '#features/connection';
+import { type PluginEntry, usePluginEntries } from '#features/plugins';
 import {
   useScreenFocused,
   useNavigate,
 } from '#lib/product/navigation/navigation';
-import {
-  type PluginEntry,
-  usePluginEnabledChange,
-  usePluginEntries,
-  usePluginSettingChange,
-} from '../use-plugins';
+import { usePluginEnabledChange, usePluginSettingChange } from '../use-plugins';
 import {
   type PluginSettingsDetailViewProps,
   type PluginLoad,
