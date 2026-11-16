@@ -1,6 +1,6 @@
 import { useTextStyle } from '@repo/kit/primitives/content/text';
 import type { ReactElement, ReactNode } from 'react';
-import { ScopedVariables } from 'uniwind';
+import { ScopedVariables, useResolveClassNames } from 'uniwind';
 
 const composerRoles = [
   'body',
@@ -17,19 +17,27 @@ const composerRoles = [
   'row-detail',
 ];
 
-// Every Composer label follows Body, including controls and text rendered by the editor.
+// Prompt content follows Body; phone pills retain the compact Control metrics.
 export function ComposerTypography({
   children,
+  compact,
 }: {
   children: ReactNode;
+  compact?: boolean;
 }): ReactElement {
-  const body = useTextStyle('body');
+  const variables = useComposerVariables(compact);
 
-  return (
-    <ScopedVariables variables={bodyVariables(body)}>
-      {children}
-    </ScopedVariables>
-  );
+  return <ScopedVariables variables={variables}>{children}</ScopedVariables>;
+}
+
+function useComposerVariables(
+  compact: boolean | undefined,
+): Record<string, string | number> {
+  const body = useTextStyle('body');
+  const control = useResolveClassNames('text-sm leading-5');
+  const roles = compact ? ['control', 'badge'] : composerRoles;
+
+  return bodyVariables(compact ? control : body, roles);
 }
 
 type BodyStyle = Pick<
@@ -37,14 +45,14 @@ type BodyStyle = Pick<
   'fontSize' | 'lineHeight'
 >;
 
-function bodyVariables({
-  fontSize,
-  lineHeight,
-}: BodyStyle): Record<string, string | number> {
+function bodyVariables(
+  { fontSize, lineHeight }: BodyStyle,
+  roles: string[],
+): Record<string, string | number> {
   if (fontSize === undefined || lineHeight === undefined) return {};
 
   return Object.fromEntries(
-    composerRoles.flatMap((role) => [
+    roles.flatMap((role) => [
       [`--text-${role}`, fontSize],
       [`--text-${role}-wide`, fontSize],
       [`--leading-${role}`, lineHeight],
