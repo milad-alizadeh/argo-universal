@@ -1,15 +1,10 @@
 import { Text } from '@repo/kit/primitives/content/text';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
-import type { ReactNode } from 'react';
 import { ShimmerText } from './shimmer-text';
-
-const regexSpecialCharacters = /[.*+?^${}()|[\]\\]/g;
 
 export interface FeedDisclosureLabelProps {
   label: string;
-  // Parts of the label to draw in mono.
-  paths?: readonly string[];
   running?: boolean;
   trailing?: string;
   awaitingApproval?: boolean;
@@ -17,49 +12,12 @@ export interface FeedDisclosureLabelProps {
   hovered: boolean;
 }
 
-function pathPattern(paths: readonly string[]): string {
-  return paths
-    .flatMap((path) =>
-      path ? [path.replaceAll(regexSpecialCharacters, '\\$&')] : [],
-    )
-    .join('|');
-}
-
-function monoPart(
-  part: string,
-  key: string,
-  paths: readonly string[],
-): ReactNode {
-  return paths.includes(part) ? (
-    <Text key={key} className="font-mono">
-      {part}
-    </Text>
-  ) : (
-    part
-  );
-}
-
-function withMonoPaths(title: string, paths: readonly string[]): ReactNode[] {
-  const pattern = pathPattern(paths);
-
-  if (!pattern) return [title];
-  let offset = 0;
-
-  return title.split(new RegExp(`(${pattern})`)).map((part) => {
-    const key = `${offset}`;
-    offset += part.length;
-
-    return monoPart(part, key, paths);
-  });
-}
-
 const disclosureTitle = (label: string, trailing?: string): string =>
   trailing ? `${label} ${trailing}` : label;
 
-// The colour comes from the Collapsible header, muted until hovered.
+// Every settled label keeps the same typography and tone, including on hover.
 const plainLabelClassName = (props: FeedDisclosureLabelProps): string =>
-  cn('min-w-0 shrink', {
-    'text-warning': props.awaitingApproval,
+  cn('min-w-0 shrink font-sans', {
     'line-through': props.denied,
   });
 
@@ -68,11 +26,13 @@ function PlainLabel(
 ): React.JSX.Element {
   return (
     <Text
+      role="body"
+      tone="muted"
       numberOfLines={1}
       selectable={false}
       className={plainLabelClassName(props)}
     >
-      {withMonoPaths(props.title, props.paths ?? [])}
+      {props.title}
     </Text>
   );
 }

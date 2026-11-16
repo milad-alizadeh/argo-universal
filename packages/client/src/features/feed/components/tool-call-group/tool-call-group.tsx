@@ -48,12 +48,7 @@ interface GroupActivitiesProps {
 
 type GroupDisclosureProps = Pick<
   React.ComponentProps<typeof ToolCallDisclosure>,
-  | 'label'
-  | 'paths'
-  | 'icon'
-  | 'running'
-  | 'awaitingApproval'
-  | 'permissionOutcome'
+  'label' | 'icon' | 'running' | 'awaitingApproval' | 'permissionOutcome'
 >;
 
 function groupDisclosureProps(group: FeedGroup): GroupDisclosureProps {
@@ -72,7 +67,6 @@ function groupDisclosureProps(group: FeedGroup): GroupDisclosureProps {
 function groupSummaryProps(group: FeedGroup): GroupDisclosureProps {
   return {
     label: groupSummary(group),
-    paths: [],
     icon: 'terminal',
     running: group.state === 'open',
     awaitingApproval: liveToolCall(group)?.awaitingApproval,

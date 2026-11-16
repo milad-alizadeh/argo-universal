@@ -5,26 +5,10 @@ import {
 } from '@repo/contracts';
 import { toolCallFacts } from './feed-row-facts';
 
-function actionPaths(action: CommandAction): string[] {
-  if (!['read', 'search', 'list'].includes(action.type)) return [];
-
-  return action.path ? [action.path] : [];
-}
-
 function readPath(row: ToolCallUpdate): string | undefined {
   if (row.kind !== 'read') return undefined;
 
   return toolCallFacts(row).location;
-}
-
-export function toolCallTitlePaths(
-  row: ToolCallUpdate,
-  awaitingApproval = false,
-  showCommand?: boolean,
-): string[] {
-  if (awaitingApproval) return [];
-
-  return pathsFor(row, showCommand);
 }
 
 function commandLabel(row: ToolCallUpdate): string | undefined {
@@ -33,24 +17,6 @@ function commandLabel(row: ToolCallUpdate): string | undefined {
   if (facts.explores) return undefined;
 
   return facts.command?.trim();
-}
-
-function pathsFor(row: ToolCallUpdate, showCommand?: boolean): string[] {
-  const command = showCommand ? commandLabel(row) : undefined;
-
-  return command ? [command] : activityTitlePaths(row);
-}
-
-function activityTitlePaths(row: ToolCallUpdate): string[] {
-  const { actions } = toolCallFacts(row);
-
-  return actions.length ? actions.flatMap(actionPaths) : impliedReadPaths(row);
-}
-
-function impliedReadPaths(row: ToolCallUpdate): string[] {
-  const path = readPath(row);
-
-  return path ? [path] : [];
 }
 
 const actionTitles: Partial<

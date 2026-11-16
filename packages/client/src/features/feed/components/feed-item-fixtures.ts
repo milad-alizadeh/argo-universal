@@ -10,7 +10,7 @@ import {
 
 const recording = recordedFeedMock('agent-1', 'edit-and-command');
 
-// Recorded calls share one Turn so the converter groups both activity boundaries.
+// Replay recorded calls as one completed Turn so every plain label is visible together.
 const rows = [
   recordedToolCall('mcp-content'),
   recordedToolCall('mcp-raw'),
@@ -21,6 +21,8 @@ const rows = [
   sessionId: completedCommand.sessionId,
   turnId: completedCommand.turnId,
   position,
+  state: 'settled' as const,
+  status: 'completed' as const,
 }));
 
 export const mixedTools = {

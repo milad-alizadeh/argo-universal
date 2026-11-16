@@ -110,6 +110,19 @@ export function useLiveHeaderTitle(
   return `${text} ${formatElapsed(clock - startedAt)}`;
 }
 
+function RequestTitle({ title }: { title: string }): React.JSX.Element {
+  return (
+    <Text
+      numberOfLines={1}
+      role="body"
+      tone="muted"
+      className="min-w-0 shrink font-sans"
+    >
+      {title}
+    </Text>
+  );
+}
+
 export function LiveTitle({
   title,
   source,
@@ -117,17 +130,14 @@ export function LiveTitle({
   title: string;
   source: LiveHeaderSource;
 }): React.JSX.Element {
-  if (source.type !== 'request')
-    return <ShimmerText text={title} className="min-w-0 shrink type-body" />;
-
-  return (
-    <Text numberOfLines={1} role="body" className="min-w-0 shrink text-warning">
-      {title}
-    </Text>
+  return source.type === 'request' ? (
+    <RequestTitle title={title} />
+  ) : (
+    <ShimmerText text={title} className="min-w-0 shrink type-body" />
   );
 }
 
-// The last line of the Feed while a Turn runs; it waits on you in amber, otherwise it shimmers.
+// The last line of the Feed while a Turn runs; its source icon marks a request, otherwise the title shimmers.
 export function LiveHeader(props: LiveHeaderProps): React.JSX.Element {
   const { liveHeader } = props;
   const title = useLiveHeaderTitle(liveHeader, props.now);
