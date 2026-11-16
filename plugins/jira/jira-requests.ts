@@ -1,8 +1,6 @@
+import { issueFields } from './issue-requests';
 import type { JiraRequest } from './jira-client';
 import { filterClauses, quoted, type IssueFilters } from './jira-filters';
-
-// The fields a list row shows; a detail page asks for more.
-const rowFields = ['summary', 'status', 'assignee', 'priority'];
 
 const pageSize = 50;
 
@@ -11,9 +9,11 @@ const peopleLimit = 50;
 
 const projectPageSize = 100;
 
+// `limit` is for an Agent's `listIssues`; the list takes Jira's page size.
 export type IssuesPage = Readonly<{
   cursor: string | null;
   filters: IssueFilters;
+  limit?: number;
 }>;
 
 // The project's issues the filters leave, the most recently updated first.
@@ -25,12 +25,14 @@ const jqlOf = (projectKey: string, filters: IssueFilters): string =>
 // Jira's enhanced search body; a cursor goes in only when there is one.
 function searchBody(
   projectKey: string,
-  { cursor, filters }: IssuesPage,
+  { cursor, filters, limit = pageSize }: IssuesPage,
 ): JiraRequest['body'] {
   const body = {
     jql: jqlOf(projectKey, filters),
-    fields: rowFields,
-    maxResults: pageSize,
+    // A row seeds its issue's page, so the search asks for what the page shows too.
+    fields: issueFields,
+    expand: 'transitions',
+    maxResults: limit,
   };
 
   return cursor ? { ...body, nextPageToken: cursor } : body;

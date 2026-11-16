@@ -71,5 +71,73 @@ declare module '@argo/plugin-kit' {
     checkAgain: {
       "params": {}
     };
+    listIssues: {
+      "params": {
+        "text": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "number"
+        }
+      },
+      "caller": [
+        "project"
+      ]
+    };
+    getIssue: {
+      "params": {
+        "issue": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "caller": [
+        "project"
+      ]
+    };
+    transition: {
+      "params": {
+        "issue": {
+          "type": "string",
+          "required": true
+        },
+        "status": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "caller": [
+        "project"
+      ]
+    };
+    setAssignee: {
+      "params": {
+        "issue": {
+          "type": "string",
+          "required": true
+        },
+        "assignee": {
+          "type": "string"
+        }
+      },
+      "caller": [
+        "project"
+      ]
+    };
+    setPriority: {
+      "params": {
+        "issue": {
+          "type": "string",
+          "required": true
+        },
+        "priority": {
+          "type": "string",
+          "required": true
+        }
+      },
+      "caller": [
+        "project"
+      ]
+    };
   }
 }

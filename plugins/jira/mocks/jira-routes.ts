@@ -7,7 +7,10 @@ import type {
   FixtureToken,
   JiraData,
 } from './jira-data';
+import { peopleOf } from './jira-issue-found';
+import { issueRoutes } from './jira-issue-routes';
 import { filtered, type Filtered } from './jira-jql';
+import { defaultLimit, pageOf, pagingOf } from './jira-search-page';
 
 // One call that reached a site's Jira with a token it accepts: what a route answers from.
 export type JiraCall = {
@@ -27,37 +30,6 @@ export type JiraRoute = {
   path: RegExp;
   answer: (call: JiraCall) => FixtureAnswer;
 };
-
-const issueJson = (issue: FixtureIssue): Json => ({
-  key: issue.key,
-  fields: {
-    summary: issue.summary,
-    status: {
-      name: issue.status.name,
-      statusCategory: { key: issue.status.category },
-    },
-    assignee: issue.assignee,
-    priority: issue.priority ? { name: issue.priority } : null,
-  },
-});
-
-const defaultLimit = 50;
-
-type Paging = { start: number; limit: number };
-
-const pagingOf = (body: Json | undefined): Paging => ({
-  start: Number(at(body, 'nextPageToken') ?? 0),
-  limit: Number(at(body, 'maxResults') ?? defaultLimit),
-});
-
-// One page of issues, with a `nextPageToken` while more are left.
-function pageOf(issues: FixtureIssue[], { start, limit }: Paging): Json {
-  const next = start + limit;
-  const isLast = next >= issues.length;
-  const page = { issues: issues.slice(start, next).map(issueJson), isLast };
-
-  return isLast ? page : { ...page, nextPageToken: String(next) };
-}
 
 const projectInJql = /project\s*=\s*"?(?<key>[^"\s]+)"?/i;
 
@@ -90,10 +62,10 @@ const unparsed = (clause: string): FixtureAnswer => ({
 
 const searchAnswer = (
   found: Filtered,
-  body: Json | undefined,
+  { body, projectKey }: { body: Json | undefined; projectKey: string },
 ): FixtureAnswer =>
   found.ok
-    ? { json: pageOf(found.issues, pagingOf(body)) }
+    ? { json: pageOf({ issues: found.issues, projectKey }, pagingOf(body)) }
     : unparsed(found.clause);
 
 // Jira's enhanced search, for the `project = "KEY"` its JQL names and the filters after it.
@@ -103,7 +75,10 @@ function search({ site, body, who }: JiraCall): FixtureAnswer {
   const project = projectIn(site, key);
 
   return project
-    ? searchAnswer(filtered(jql, project.issues, who), body)
+    ? searchAnswer(filtered(jql, project.issues, who), {
+        body,
+        projectKey: key,
+      })
     : noSuchProject(key);
 }
 
@@ -118,10 +93,13 @@ const personJson = ({ accountId, displayName }: Person): Json => ({
   accountType: 'atlassian',
 });
 
-// Everyone a project's issues can be assigned to, once each: the caller, and everyone its issues are assigned to.
-const assignable = (who: Person, project: FixtureProject): Json[] => [
+// Everyone a project's issues can be assigned to, once each: the caller, everyone its issues are assigned to, and the site's people.
+const assignable = (
+  who: Person,
+  { site, project }: { site: FixtureSite; project: FixtureProject },
+): Json[] => [
   ...new Map(
-    [who, ...assigneesOf(project)].map((person) => [
+    [who, ...assigneesOf(project), ...(peopleOf(site) ?? [])].map((person) => [
       person.accountId,
       personJson(person),
     ]),
@@ -136,7 +114,9 @@ function people({ site, request, who }: JiraCall): FixtureAnswer {
   const key = projectParam(request);
   const project = projectIn(site, key);
 
-  return project ? { json: assignable(who, project) } : noSuchProject(key);
+  return project
+    ? { json: assignable(who, { site, project }) }
+    : noSuchProject(key);
 }
 
 const myself = ({ who }: JiraCall): FixtureAnswer => ({
@@ -183,4 +163,5 @@ export const jiraRoutes: JiraRoute[] = [
     path: /^\/user\/assignable\/search$/,
     answer: people,
   },
+  ...issueRoutes,
 ];

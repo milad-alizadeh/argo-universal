@@ -3,6 +3,7 @@ import {
   atlassianSignIn,
   registerAtlassianOperations,
 } from './atlassian-sign-in';
+import { registerIssueOperations } from './issue-operations';
 import { registerOperations } from './jira-operations';
 import { defineJiraPages } from './jira-pages';
 import { defineReads } from './jira-reads';
@@ -23,6 +24,7 @@ export async function register(argo: Argo): Promise<void> {
   // One provider answers for both: a pasted token and "Sign in with Atlassian" keep one Account.
   await atlassian.provide();
   registerOperations({ argo, reads, signIn });
+  registerIssueOperations(argo);
   registerAtlassianOperations(argo, atlassian);
   defineSignInPage(argo, { paste: signIn, atlassian });
   defineJiraPages(argo, { reads, refused: signIn.refused });

@@ -7,6 +7,7 @@ import {
   type LoaderInput,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
+import { defineIssuePage } from './issue-page';
 import { projectScreen } from './issue-views';
 import { filtersOf, noFilters } from './jira-filters';
 import { projectIdOf, projectPath, projectPattern } from './jira-paths';
@@ -133,4 +134,5 @@ export function defineJiraPages(
   defineLandingPage(argo);
   defineProjectPage({ argo, refused }, reads);
   defineSitePage(argo);
+  defineIssuePage(argo, reads);
 }

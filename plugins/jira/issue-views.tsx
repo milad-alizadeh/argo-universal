@@ -125,10 +125,11 @@ function issueScreen(
   { framing, listing }: Drawing,
 ): JSX.Element {
   const frame = listFrame(view, refused, { framing, listing });
+  const { to, projectId } = framing;
 
   return (
     <Screen {...issuesHeader(view, framing, listing)}>
-      {issueList(view.site, { list: listing.list, to: framing.to, ...frame })}
+      {issueList(view.site, { list: listing.list, to, projectId, ...frame })}
     </Screen>
   );
 }
