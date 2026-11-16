@@ -89,37 +89,30 @@ export const StateMark: Story = {
   ),
 };
 
-const issueStates = ['open', 'closed'] as const;
+function issueLink(state: 'open' | 'closed'): Story {
+  const issueSource = {
+    load: async (): Promise<ReactNode> => null,
+    mark: async (): Promise<LinkMark> => gitStateMark({ kind: 'issue', state }),
+  };
 
-const issueSource = {
-  load: async (): Promise<ReactNode> => null,
-  mark: async (href: string): Promise<LinkMark> =>
-    gitStateMark({
-      kind: 'issue',
-      state: issueStates[Number(href.slice(-1))] ?? 'open',
-    }),
-};
+  return {
+    render: (): ReactElement => (
+      <WebOnly>
+        <LinkPreviewContext value={issueSource}>
+          <Text role="body">
+            The {state} issue is{' '}
+            <Link href="https://example.com/issues/42" label="example/app#42" />
+            .
+          </Text>
+        </LinkPreviewContext>
+      </WebOnly>
+    ),
+  };
+}
 
-export const IssueStateMark: Story = {
-  render: (): ReactElement => (
-    <WebOnly>
-      <LinkPreviewContext value={issueSource}>
-        <View className="gap-2">
-          {issueStates.map((state, index) => (
-            <Text key={state} role="body">
-              The {state} issue is{' '}
-              <Link
-                href={`https://example.com/issues/${index}`}
-                label={`example/app#${index + 1}`}
-              />
-              .
-            </Text>
-          ))}
-        </View>
-      </LinkPreviewContext>
-    </WebOnly>
-  ),
-};
+export const OpenIssueLink: Story = issueLink('open');
+
+export const ClosedIssueLink: Story = issueLink('closed');
 
 export const NoPreview: Story = {
   parameters: {
