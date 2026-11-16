@@ -32,8 +32,12 @@ function unavailableMessage(context: Context): string {
     : 'This Agent does not support steering; submit normally to queue the Prompt';
 }
 
+type ReservationContext = Pick<SessionContext, 'activeTurnId'> & {
+  input: Pick<SessionContext['input'], 'createId'>;
+};
+
 export function reservePrompt(
-  context: SessionContext,
+  context: ReservationContext,
   prompt: ContentBlock[],
 ): QueueSteering {
   if (!context.activeTurnId) throw new Error('The Turn has finished');

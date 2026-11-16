@@ -13,7 +13,7 @@ Feature: Steering from the Composer
       | 2     | phone |
 
   Scenario: Rejected steering preserves the draft and existing queue
-    Given a wide Frame
+    Given a phone Frame
     And Agent 1 refuses steering into its held Turn
     And a New Session with Agent 1
     When I send the prompt "First prompt"

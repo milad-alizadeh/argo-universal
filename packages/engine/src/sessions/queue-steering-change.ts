@@ -1,4 +1,4 @@
-import type { PromptQueue } from '@repo/contracts';
+import type { PromptQueue, QueuedPromptId } from '@repo/contracts';
 import { userMessageChange, type FeedEvent } from '../feed';
 import { queueWrite } from './prompt-queue';
 import type {
@@ -48,7 +48,7 @@ export function consumeQueueSteering(
 
 function remainingQueue(
   context: SessionContext,
-  id: string | undefined,
+  id: QueuedPromptId | undefined,
 ): PromptQueue {
   return {
     ...context.promptQueue,

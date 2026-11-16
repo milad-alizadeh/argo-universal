@@ -1,4 +1,8 @@
-import type { QueueCommand, ContentBlock } from '@repo/contracts';
+import type {
+  QueueCommand,
+  ContentBlock,
+  QueuedPromptId,
+} from '@repo/contracts';
 
 export type SteerCommand =
   | Extract<QueueCommand, { action: 'steer' }>
@@ -6,7 +10,7 @@ export type SteerCommand =
 
 export interface QueueSteering {
   prompt: ContentBlock[];
-  queuedId?: string;
+  queuedId?: QueuedPromptId;
   messageId: string;
   turnId: string;
   token: string;
