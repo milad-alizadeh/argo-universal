@@ -4,6 +4,7 @@ import {
   type FixtureRequest,
   type FixtureServices,
 } from '@argo/plugin-kit/testing';
+import type { AtlassianOAuth } from './atlassian-oauth';
 import { jiraData, type JiraData } from './jira-data';
 import { notFound, routed, type Routed, type Routing } from './jira-gateway';
 import { jiraRoutes, type JiraRoute } from './jira-routes';
@@ -11,7 +12,8 @@ import { jiraRoutes, type JiraRoute } from './jira-routes';
 /*
  * Jira Cloud as the Plugin meets it, for its tests: Atlassian's gateway at `api.atlassian.com/ex/jira/<cloudId>`, which
  * takes a scoped token as Basic auth, each site's own API at `<site>.atlassian.net`, which takes only an unscoped one,
- * and the site's public tenant info. Every call the Plugin makes reaches one handler over a certificate the test trusts.
+ * the site's public tenant info, and, given `oauth`, Atlassian's OAuth endpoints, whose tokens the gateway takes as
+ * Bearer. Every call the Plugin makes reaches one handler over a certificate the test trusts.
  *
  * Extend it with a route (`jira-routes.ts`): a name, a method, a pattern over the path after `/rest/api/3`, and an
  * answer; pass more as `routes`. A test can make any named route, or `tenant`, fail with `fail(name, answer)`.
@@ -46,7 +48,16 @@ const tenant = (data: JiraData, { host }: FixtureRequest): Routed => ({
 const reply = (service: Service, found: Routed): FixtureAnswer =>
   service.failing.get(found.name) ?? found.answer();
 
-function answer(service: Service, request: FixtureRequest): FixtureAnswer {
+// Atlassian's OAuth endpoints, when the test gave them, answer before Jira does.
+const signingIn = (
+  { oauth }: Service,
+  request: FixtureRequest,
+): FixtureAnswer | null => (oauth ? oauth.answer(request) : null);
+
+const answer = (service: Service, request: FixtureRequest): FixtureAnswer =>
+  signingIn(service, request) ?? jiraAnswer(service, request);
+
+function jiraAnswer(service: Service, request: FixtureRequest): FixtureAnswer {
   const found =
     request.path === tenantPath
       ? tenant(service.data, request)
@@ -59,9 +70,16 @@ function answer(service: Service, request: FixtureRequest): FixtureAnswer {
   return reply(service, found);
 }
 
-type Options = { data?: JiraData; routes?: JiraRoute[] };
+// `oauth` stands in for Atlassian's OAuth endpoints, for a test that signs in with Atlassian.
+type Options = {
+  data?: JiraData;
+  routes?: JiraRoute[];
+  oauth?: AtlassianOAuth | null;
+};
 
-const serviceOf = (options: Options): Service => ({
+const serviceOf = (
+  options: Omit<Options, 'oauth'>,
+): Omit<Service, 'oauth'> => ({
   data: options.data ?? jiraData(),
   routes: [...(options.routes ?? []), ...jiraRoutes],
   failing: new Map(),
@@ -81,8 +99,11 @@ const controls = (
     requests.filter((request) => service.names.get(request) === name),
 });
 
-export async function jiraService(options: Options = {}): Promise<JiraService> {
-  const service = serviceOf(options);
+export async function jiraService({
+  oauth = null,
+  ...options
+}: Options = {}): Promise<JiraService> {
+  const service = { ...serviceOf(options), oauth };
   const services = await fixtureServices((request) => answer(service, request));
 
   return controls(service, services);

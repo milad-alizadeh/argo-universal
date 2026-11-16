@@ -19,6 +19,12 @@ declare module '@argo/plugin-kit' {
         }
       }
     };
+    signInWithAtlassian: {
+      "params": {}
+    };
+    cancelSignInWithAtlassian: {
+      "params": {}
+    };
     addSite: {
       "params": {
         "site": {
