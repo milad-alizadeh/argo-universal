@@ -25,13 +25,37 @@ export const failed = (message: string): OAuthFlowState => ({
   message,
 });
 
+/*
+ * The authorize URL with the sign-in's fields added. A service that needs fields of its own on every authorize URL,
+ * as Atlassian's `audience` and `prompt`, names them in `authorizeUrl`'s query, which is kept.
+ */
 export function authorizeLocation(
   options: OAuthFlowOptions,
   start: Waiting,
 ): string {
+  const joiner = options.authorizeUrl.includes('?') ? '&' : '?';
+
+  return `${options.authorizeUrl}${joiner}${form(authorizeFields(options, start))}`;
+}
+
+// RFC 6749 section 4.1.1 and RFC 7636 section 4.3: what an authorization request carries.
+type AuthorizeFields = {
+  response_type: 'code';
+  client_id: string;
+  redirect_uri: string;
+  state: string;
+  code_challenge: string;
+  code_challenge_method: string;
+  scope?: string;
+};
+
+function authorizeFields(
+  options: OAuthFlowOptions,
+  start: Waiting,
+): AuthorizeFields {
   const scope = options.scopes?.join(' ');
 
-  return `${options.authorizeUrl}?${form({
+  return {
     response_type: 'code',
     client_id: start.client.client_id,
     redirect_uri: start.redirectUri,
@@ -39,7 +63,7 @@ export function authorizeLocation(
     code_challenge: start.codeChallenge,
     code_challenge_method: start.codeChallengeMethod,
     ...(scope && { scope }),
-  })}`;
+  };
 }
 
 // Argo mints the Account id; the token lives in the Plugin's own secrets under it.

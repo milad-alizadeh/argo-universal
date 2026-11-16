@@ -24,6 +24,20 @@
         "page": "/sign-in"
       }
     ],
+    "settings": [
+      {
+        "key": "oauth-client-id",
+        "label": "Atlassian OAuth client ID",
+        "type": "secret",
+        "description": "From your OAuth 2.0 (3LO) app at developer.atlassian.com, whose callback URL is http://127.0.0.1:51789/callback. Set it with the client secret to sign in with Atlassian."
+      },
+      {
+        "key": "oauth-client-secret",
+        "label": "Atlassian OAuth client secret",
+        "type": "secret",
+        "description": "The secret of the same Atlassian OAuth app. Argo keeps it in your computer’s secret store and sends it only to auth.atlassian.com."
+      }
+    ],
     "operations": [
       {
         "name": "signIn",
@@ -49,6 +63,20 @@
             "secret": true
           }
         }
+      },
+      {
+        "name": "signInWithAtlassian",
+        "label": "Sign in with Atlassian",
+        "description": "Opens Atlassian's sign-in in the browser on the Server Device, with the OAuth app set in the Plugin's settings, and signs in to Jira when the person allows it.",
+        "tier": "act",
+        "keywords": ["jira", "atlassian", "account", "sign in", "oauth"]
+      },
+      {
+        "name": "cancelSignInWithAtlassian",
+        "label": "Cancel signing in with Atlassian",
+        "description": "Stops waiting for the browser's Atlassian sign-in.",
+        "tier": "act",
+        "keywords": ["jira", "atlassian", "sign in", "cancel"]
       },
       {
         "name": "addSite",

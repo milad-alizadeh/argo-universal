@@ -16,6 +16,7 @@
       "types": "./src/jsx-runtime.d.ts"
     },
     "./testing": "./testing/index.ts",
+    "./testing/oauth-port": "./testing/oauth-port.ts",
     "./tsconfig.json": "./tsconfig.plugin.json",
     "./tsconfig.test.json": "./tsconfig.plugin-test.json"
   },

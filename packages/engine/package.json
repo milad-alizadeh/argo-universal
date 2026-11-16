@@ -72,6 +72,7 @@
     "./mocks/engine-channel": "./mocks/engine-channel.ts",
     "./mocks/app-socket": "./mocks/app-socket.ts",
     "./mocks/secret-store": "./mocks/memory-secret-store.ts",
+    "./mocks/oauth-port-lock": "./mocks/oauth-port-lock.ts",
     "./mocks/test-accounts": "./mocks/test-accounts.ts",
     "./mocks/data-fixture": "./mocks/data-fixture.ts",
     "./pairing-vector": "./src/pairing/noise-vector-fixtures.ts",
