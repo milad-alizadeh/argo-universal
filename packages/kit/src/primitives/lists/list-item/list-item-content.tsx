@@ -1,6 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/content/text';
 import { cn } from '../../../utils';
 import { LineEnd } from './list-item-line-end';
 import { CompactMeta, hasMeta, Meta } from './list-item-meta';
@@ -11,8 +10,8 @@ import {
 } from './list-item-pass-through';
 import type { PlacedContentProps } from './list-item-placement';
 import type { ListItemProps } from './list-item-props';
-import { Subtitle, type SubtitleProps } from './list-item-subtitle';
 import { RowText } from './list-item-row-text';
+import { Subtitle, type SubtitleProps } from './list-item-subtitle';
 import { TreeLane } from './list-item-tree';
 
 // A sidebar row's title is medium, or semibold while it holds news for its reader.
