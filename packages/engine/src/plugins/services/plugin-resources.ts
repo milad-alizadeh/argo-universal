@@ -4,6 +4,7 @@ import { readAssetResponse } from '../assets/fetch';
 import { realClock, type PluginClock } from '../clock';
 import type { FsCall, PluginValue } from '../protocol/runtime';
 import { fetchCall, fetchResponse, type FetchContext } from './plugin-fetch';
+import { PluginFetchCache } from './plugin-fetch-cache';
 import type { Hop } from './plugin-fetch-response';
 import { fsCall } from './plugin-file-calls';
 import { pluginTimeoutMs } from './plugin-limits';
@@ -16,10 +17,12 @@ import { PluginProcesses, type CheckedProcessCall } from './plugin-processes';
 export class PluginResources {
   private readonly processes;
   private readonly cleanups = new Set<() => void>();
+  private readonly fetchCache;
   private released = false;
 
   constructor(private readonly clock: PluginClock = realClock) {
     this.processes = new PluginProcesses(clock);
+    this.fetchCache = new PluginFetchCache(clock);
   }
 
   release(): void {
@@ -58,7 +61,12 @@ export class PluginResources {
     hop: Hop,
     context: Omit<FetchContext, 'signal'>,
   ): Promise<PluginValue> {
-    return this.request((signal) => fetchCall(hop, { ...context, signal }));
+    this.assertOpen();
+
+    // Conditional requests and rate-limit backoff, for every Plugin that fetches (#2197).
+    return this.fetchCache.fetch(hop, (sent) =>
+      this.request((signal) => fetchCall(sent, { ...context, signal })),
+    );
   }
 
   private async request<T>(

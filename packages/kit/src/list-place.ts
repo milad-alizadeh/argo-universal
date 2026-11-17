@@ -9,6 +9,7 @@ export type ListPlace =
   | 'tray'
   | 'page'
   | 'detail'
+  | 'aside'
   | 'card'
   | 'popover'
   | 'choice'
@@ -47,6 +48,7 @@ const facts = {
   page: none,
   tray: { ...none, padded: true },
   detail: { ...none, padded: true },
+  aside: { ...none, padded: true },
   card: { ...none, padded: true, ends: true, card: true },
   popover: { ...none, menu: true },
   choice: { ...none, menu: true, choosing: true },
@@ -67,6 +69,7 @@ const popoverPlaces = {
   page: 'popover',
   tray: 'popover',
   detail: 'popover',
+  aside: 'popover',
   card: 'popover',
   popover: 'popover',
   choice: 'choice',
@@ -84,3 +87,6 @@ export const useListPlace = (): ListPlace => use(ListPlaceContext);
 
 // A web popover's rows are menu rows; a phone's popover is a Sheet and keeps the page place.
 export const useInMenu = (): boolean => listPlaceFacts(useListPlace()).menu;
+
+// A Screen's aside, its own column or the lead above the body: a FieldGroup there sizes to its rows and scrolls with what holds it.
+export const useInAside = (): boolean => useListPlace() === 'aside';

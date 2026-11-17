@@ -81,7 +81,7 @@ function rowOf(
   };
 }
 
-// The Table reads its rows and cells from its children, as Metadata reads its fields.
+// The Table reads its rows and cells from its children, as a FieldGroup Section reads its rows.
 export const tableRows = (
   children: ReactNode,
   columns: TableProps['columns'],

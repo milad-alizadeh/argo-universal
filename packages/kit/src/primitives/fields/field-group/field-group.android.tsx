@@ -1,27 +1,20 @@
-import { Column as ComposeColumn, LazyColumn } from '@expo/ui/jetpack-compose';
-import {
-  fillMaxSize,
-  fillMaxWidth,
-  height,
-  imePadding,
-} from '@expo/ui/jetpack-compose/modifiers';
-import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import { LazyColumn } from '@expo/ui/jetpack-compose';
+import { fillMaxSize, imePadding } from '@expo/ui/jetpack-compose/modifiers';
+import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import {
   fieldGroupColumnStyle,
   OutsideColumn,
   useClaimColumn,
 } from '#kit/content-column/content-column';
-import { flattenedChildren } from '#kit/flattened-children';
+import { useInAside } from '#kit/list-place';
 import { GroupDisabledContext } from '#primitives/fields/field-row';
 import { Host, InsideHostContext } from '#primitives/native/host';
 import type { FieldGroupKitProps } from '../../kit-props';
-import {
-  contentPadding,
-  rowSpacing,
-  sectionBreakHeight,
-} from './field-group-caption-insets';
+import { AsideFieldGroup } from './field-group-aside.android';
+import { contentPadding, rowSpacing } from './field-group-caption-insets';
 import { fieldGroupRowComponents } from './field-group-row-components';
+import { sectionedRows } from './field-group-runs.android';
 import { FieldGroupSection } from './field-group-section.android';
 
 export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
@@ -33,6 +26,14 @@ export type FieldGroupProps = FieldGroupKitProps<'FieldGroup'> & {
  * each row as itself. It goes when Expo fixes the headline wrapping (expo/expo#50086).
  */
 function FieldGroupRoot(props: FieldGroupProps): ReactElement {
+  return useInAside() ? (
+    <AsideFieldGroup {...props} />
+  ) : (
+    <PageFieldGroup {...props} />
+  );
+}
+
+function PageFieldGroup(props: FieldGroupProps): ReactElement {
   /*
    * Its cards keep Material's own inset, so the Screen adds no gutter beyond the column's own; its rows are outside the column.
    * A View is the column, as the web's scroll view is: capped, centred and padded, so the cards start on the title's line.
@@ -74,56 +75,10 @@ function Column(props: Pick<FieldGroupProps, 'children'>): ReactElement {
       contentPadding={contentPadding}
       modifiers={[fillMaxSize(), imePadding()]}
     >
-      {withBreaks(groupSections(props.children))}
+      {sectionedRows(props.children)}
     </LazyColumn>
   );
 }
-
-const breakModifiers = [fillMaxWidth(), height(sectionBreakHeight)];
-
-const withBreaks = (sections: ReactNode[]): ReactNode[] =>
-  sections.flatMap((section, index) =>
-    index === 0
-      ? [section]
-      : [
-          <ComposeColumn
-            key={`break-${keyOf(section)}`}
-            modifiers={breakModifiers}
-          />,
-          section,
-        ],
-  );
-
-const groupSections = (children: ReactNode): ReactNode[] =>
-  flattenedChildren(children)
-    .reduce<ReactNode[][]>(addChild, [])
-    .map(toSection);
-
-const isSection = (child: ReactNode): boolean =>
-  isValidElement(child) && child.type === FieldGroupSection;
-
-const startsRun = (child: ReactNode, last: ReactNode[] | undefined): boolean =>
-  isSection(child) || last === undefined || isSection(last[0]);
-
-function addChild(runs: ReactNode[][], child: ReactNode): ReactNode[][] {
-  const last = runs.at(-1);
-
-  if (startsRun(child, last)) return [...runs, [child]];
-
-  return [...runs.slice(0, -1), [...(last ?? []), child]];
-}
-
-const keyOf = (node: ReactNode): string =>
-  isValidElement(node) ? String(node.key) : '';
-
-const toSection = (run: ReactNode[]): ReactNode =>
-  isSection(run[0]) ? (
-    run[0]
-  ) : (
-    <FieldGroupSection key={`implicit-${keyOf(run[0])}`}>
-      {run}
-    </FieldGroupSection>
-  );
 
 export const FieldGroup = Object.assign(FieldGroupRoot, {
   Section: FieldGroupSection,

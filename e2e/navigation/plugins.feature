@@ -104,11 +104,11 @@ Feature: Plugin navigation
       | wide  |
       | phone |
 
-  Scenario Outline: A Plugin item page draws its content and Metadata on a <frame> Frame
+  Scenario Outline: A Plugin item page draws its content and properties on a <frame> Frame
     Given a <frame> Frame
     When I open the Counter Plugin
     And I press "Open item" on the Plugin page
-    Then the Plugin item shows its content and Metadata
+    Then the Plugin item shows its content and properties
 
     Examples:
       | frame |

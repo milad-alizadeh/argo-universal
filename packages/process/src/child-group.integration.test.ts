@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn, type Serializable } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { z } from 'zod';
@@ -39,7 +39,9 @@ async function startParent(): Promise<{ parent: number; child: number }> {
   onTestFinished((): void => kill(-pid));
 
   const started = await new Promise<unknown>((resolve): void => {
-    parent.once('message', resolve);
+    parent.on('message', (message: Serializable): void => {
+      if (Started.safeParse(message).success) resolve(message);
+    });
   });
 
   const { child } = Started.parse(started);
@@ -75,9 +77,11 @@ it('stopping a child kept in its caller group kills only the child, which leaves
   );
 
   const descendant = await new Promise<number>((resolve): void => {
-    child.onMessage((message): void =>
-      resolve(Started.shape.message.parse(message).descendant),
-    );
+    child.onMessage((message): void => {
+      const result = Started.shape.message.safeParse(message);
+
+      if (result.success) resolve(result.data.descendant);
+    });
   });
 
   onTestFinished((): void => kill(descendant));

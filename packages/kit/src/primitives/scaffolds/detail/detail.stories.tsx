@@ -6,7 +6,7 @@ import { Screen } from '#primitives/scaffolds/screen';
 import { Detail } from './detail';
 import {
   agentDetail,
-  contentAndMetadataDetail,
+  contentAndPropertiesDetail,
   emptyDetail,
   errorDetail,
   loadingDetail,
@@ -18,7 +18,7 @@ const meta = {
   component: Detail,
   argTypes: kitArgTypes('Detail'),
   /*
-   * A Detail fills the Screen that holds it, so each story draws it inside one, with the Issue's Metadata in the
+   * A Detail fills the Screen that holds it, so each story draws it inside one, with the Issue's properties in the
    * Screen's aside. A story names its own page with `parameters.screenTitle` and `parameters.aside`.
    */
   decorators: [
@@ -39,7 +39,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const ContentAndMetadata: Story = { args: contentAndMetadataDetail };
+export const ContentAndProperties: Story = { args: contentAndPropertiesDetail };
 
 export const Agent: Story = {
   args: agentDetail,

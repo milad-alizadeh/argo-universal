@@ -1,4 +1,3 @@
-import type { Serializable } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { z } from 'zod';
@@ -24,11 +23,14 @@ const label = 'Fixture';
 
 vi.setConfig({ testTimeout: 20_000 });
 
-function firstMessage(child: ChildHandle): Promise<Serializable> {
+function firstMessage<T>(child: ChildHandle, schema: z.ZodType<T>): Promise<T> {
   return new Promise((resolve): void => {
     const stop = child.onMessage((message): void => {
+      const result = schema.safeParse(message);
+
+      if (!result.success) return;
       stop();
-      resolve(message);
+      resolve(result.data);
     });
   });
 }
@@ -45,7 +47,7 @@ async function serve(
   onTestFinished(async (): Promise<void> => {
     await child.stop(graceMs);
   });
-  const { descendant } = Descendant.parse(await firstMessage(child));
+  const { descendant } = await firstMessage(child, Descendant);
 
   return { child, descendant };
 }
@@ -140,7 +142,9 @@ it('a service runs without ELECTRON_RUN_AS_NODE and with the environment it is g
     env: { FIXTURE_VALUE: 'given' },
   });
 
-  await expect(firstMessage(service)).resolves.toEqual({
+  await expect(
+    firstMessage(service, z.object({ electron: z.null(), value: z.string() })),
+  ).resolves.toEqual({
     electron: null,
     value: 'given',
   });
