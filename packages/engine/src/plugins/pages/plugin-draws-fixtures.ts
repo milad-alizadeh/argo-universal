@@ -24,7 +24,7 @@ const idleClock: PluginClock = {
   schedule: () => () => null,
 };
 
-// A write makes nothing due in these draws.
+// A write makes nothing due in these draws, and they build their PageChanges without a ChangeFlow, so a change is neither coalesced nor refreshed here (runtime-resources.test.ts covers that).
 const written = (): null => null;
 
 // A Plugin named Atlas whatever its id, so its drawing failures can be listed.

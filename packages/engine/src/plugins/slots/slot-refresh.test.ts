@@ -132,3 +132,42 @@ it('ages the Queries a Slot read, only of a running Plugin, and asks the shown c
     'again tracker 1',
   ]);
 });
+
+it('releases the clock of a Plugin the person turns off, and sets it again when they turn it on', () => {
+  const { refreshing, timers, tick, off, enabled } = refresh();
+
+  refreshing.hold(['github'], { ms: every, enabled }, list);
+  expect(timers.size).toBe(1);
+
+  off.add('github');
+  refreshing.restarted('github');
+  expect(timers.size).toBe(0);
+
+  off.delete('github');
+  refreshing.restarted('github');
+  expect(timers.size).toBe(1);
+
+  // A tick that finds the Plugin turned off since does not set the clock again.
+  off.add('github');
+  tick();
+  expect(timers.size).toBe(0);
+});
+
+it('sets the timer afresh when the Plugin stops or starts, never keeping two', () => {
+  const { refreshing, timers, enabled } = refresh();
+
+  refreshing.hold(['github'], { ms: every, enabled }, list);
+  refreshing.restarted('github');
+  refreshing.restarted('github');
+
+  expect(timers.size).toBe(1);
+});
+
+it('asks nothing once closed', () => {
+  const { refreshing, timers, enabled } = refresh();
+
+  refreshing.hold(['github'], { ms: every, enabled }, list);
+  refreshing.close();
+
+  expect(timers.size).toBe(0);
+});
