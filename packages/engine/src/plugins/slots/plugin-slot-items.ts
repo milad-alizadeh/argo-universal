@@ -9,6 +9,7 @@ import type {
   WorkerCalls,
 } from '../runtime/worker-calls';
 import {
+  forget,
   itemsLeftOut,
   keptAnswer,
   leftOut,
@@ -17,7 +18,7 @@ import {
   type SlotWorker,
 } from './kept-items';
 import { SlotItemChanges } from './slot-item-changes';
-import { refreshFor, type SlotRefresh } from './slot-refresh';
+import { refreshFor, type Shown, type SlotRefresh } from './slot-refresh';
 
 // How long one batched call may take before its Plugin is left out of that answer.
 const slotItemsLimitMs = 2000;
@@ -54,7 +55,7 @@ export class PluginSlotItems {
   constructor(
     private readonly workers: WorkerCalls,
     clock: PluginClock,
-    data: { written: (pluginId: string) => void },
+    data: Parameters<typeof refreshFor>[1]['data'],
   ) {
     this.refresh = refreshFor(workers, { clock, data, items: this });
     this.calls = workers.kind({
@@ -98,6 +99,22 @@ export class PluginSlotItems {
   // A Plugin's answer or its failure; one from an ended worker is ignored.
   receive(caller: Caller, call: SlotCall): void {
     this.calls.answer(caller, call);
+  }
+
+  /*
+   * A list's clock ticked: what the Plugin answered for the contexts the lists show is dropped and they ask it
+   * again; what it answered for any other context is kept.
+   */
+  askAgain(pluginId: string, shown: readonly Shown[]): void {
+    const worker = this.kept.get(pluginId);
+
+    if (worker) {
+      worker.epoch += 1;
+
+      for (const list of shown) forget(worker, list);
+    }
+
+    this.changes.bump();
   }
 
   // What the Plugin shows changed: nothing it answered is kept, and open lists ask it again.

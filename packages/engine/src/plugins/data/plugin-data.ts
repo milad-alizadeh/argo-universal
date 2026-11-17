@@ -7,6 +7,7 @@ import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import { runtimeError, type PluginReply } from '../protocol/runtime';
 import type { WorkerCalls } from '../runtime/worker-calls';
 import { boundWarm, removeWhere } from './entry-map';
+import { EntryWrites } from './entry-writes';
 import { NamedReads } from './named-reads';
 import { PluginBadges } from './plugin-badges';
 import { QueryEntry, type EntryServices } from './query-entry';
@@ -41,6 +42,8 @@ export type QueryOrigin = { projectId?: string; drawn?: DrawnFor };
 export class PluginData {
   readonly badges;
   readonly reads;
+  // What a Plugin's changes and its lists' clocks do to its entries.
+  readonly writes = new EntryWrites((id) => this.entriesOf(id));
   private readonly plugins = new Map<string, Map<string, QueryEntry>>();
   private readonly services: EntryServices;
 
@@ -140,7 +143,7 @@ export class PluginData {
     const project = projectOf(query, named ?? projectId);
     const entry = this.entry(caller, project, query);
 
-    return entry.read(drawn ? drawnRead(drawn, fresh) : { fresh: false });
+    return entry.read(drawnRead(drawn, fresh));
   }
 
   private entry(
@@ -194,14 +197,10 @@ export class PluginData {
       removeWhere(entries, ({ owner }) => owner.projectId === projectId);
   }
 
-  // One of the Plugin's Operations ran, or it said `argo.changed()`: every answer it kept is due.
-  written(pluginId: string): void {
-    for (const entry of this.entriesOf(pluginId).values()) entry.written();
-  }
+  // A new worker runs: every answer the Plugin kept is due.
+  readonly written = (pluginId: string): void => this.writes.written(pluginId);
 
   // A storage write makes only the Plugin's storage reads due.
-  storageWritten(pluginId: string): void {
-    for (const entry of this.entriesOf(pluginId).values())
-      if (entry.owner.query.api === 'storage') entry.written();
-  }
+  readonly storageWritten = (pluginId: string): void =>
+    this.writes.storageWritten(pluginId);
 }

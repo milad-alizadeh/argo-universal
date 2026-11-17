@@ -28,4 +28,6 @@ export type QueryRead = {
   // The draw reading, which a paged list's page is read for; code outside a draw has none.
   draw?: number;
   every?: number;
+  // Read by code outside a draw, such as a Slot's provider, which a list's clock may age.
+  outside?: boolean;
 };

@@ -1,13 +1,23 @@
+import type { SlotItemsInput } from '@repo/contracts/plugins/wire';
 import type { PluginClock } from '../clock';
+
+// What one open list shows: its Slot and the contexts it asks for.
+export type Shown = Pick<SlotItemsInput, 'slotId' | 'contexts'>;
+
+/*
+ * A Query a Slot read is re-read when it is as old as the interval; the clock ticks a little under the interval
+ * after the read the last tick caused ended, so an answer a hair younger counts.
+ */
+export const ageSlack = 0.9;
 
 // What the clock needs of the runtime: whether a Plugin runs, and how to make what it kept due and ask it again.
 export type Refreshing = {
   clock: PluginClock;
-  running: (pluginId: string) => boolean;
-  // Makes the Plugin's kept Query answers due (ADR-0037).
-  due: (pluginId: string) => void;
-  // Drops what the Plugin's Slots kept, so every open list asks it again.
-  ask: (pluginId: string) => void;
+  /*
+   * Asks the lists again for what they show: what the Plugin's Slots kept for those contexts is dropped, and the
+   * Query answers a Slot read that are as old as the interval are made due (ADR-0060). Nothing else is.
+   */
+  ask: (pluginId: string, shown: readonly Shown[], ms: number) => void;
 };
 
 // Whether the person left the Plugin on: a Plugin they turned off has no clock.
@@ -17,7 +27,7 @@ type Hold = {
   pluginId: string;
   ms: number;
   enabled: Enabled;
-  count: number;
+  lists: Set<Shown>;
   cancel?: () => void;
 };
 
@@ -25,7 +35,7 @@ const keyOf = (pluginId: string, ms: number): string => `${pluginId}\n${ms}`;
 
 /*
  * The clock of a list that is open (ADR-0052): while at least one App holds a list that wants its Plugins asked
- * again, one timer per Plugin and interval makes the Plugin's Queries due and its Slots ask again. It is Argo's, not
+ * again, one timer per Plugin and interval asks again the contexts those lists show. It is Argo's, not
  * the Plugin's: nothing runs once the last list closes or while the person has the Plugin turned off, and a Plugin that is not running is not read. Every open list shares the
  * one timer, and the answers it asks for come through the Queries the Pages share.
  */
@@ -34,31 +44,53 @@ export class SlotRefresh {
 
   constructor(private readonly refreshing: Refreshing) {}
 
-  // Holds the clock for these Plugins; the returned function lets go of it.
-  hold(pluginIds: readonly string[], ms: number, enabled: Enabled): () => void {
-    const held = pluginIds.map((id) => this.acquire(id, ms, enabled));
+  // Holds the clock for these Plugins, for as long as the list that shows `shows` is open; the returned function lets go of it.
+  hold(
+    pluginIds: readonly string[],
+    clock: Pick<Hold, 'ms' | 'enabled'>,
+    shows: Shown,
+  ): () => void {
+    const shown = { ...shows };
+    const held = pluginIds.map((id) => this.acquire(id, clock, shown));
 
     return () => {
-      for (const hold of held) this.release(hold);
+      for (const hold of held) this.release(hold, shown);
     };
   }
 
-  private acquire(pluginId: string, ms: number, enabled: Enabled): Hold {
-    const key = keyOf(pluginId, ms);
-    const hold = this.holds.get(key) ?? { pluginId, ms, enabled, count: 0 };
+  private acquire(
+    pluginId: string,
+    clock: Pick<Hold, 'ms' | 'enabled'>,
+    shown: Shown,
+  ): Hold {
+    const hold = this.holdOf(pluginId, clock);
 
-    hold.count += 1;
-    this.holds.set(key, hold);
+    hold.lists.add(shown);
 
-    if (hold.count === 1) this.arm(hold);
+    if (hold.lists.size === 1) this.arm(hold);
 
     return hold;
   }
 
-  private release(hold: Hold): void {
-    hold.count -= 1;
+  // The one hold of a Plugin and interval, made when the first list wants it.
+  private holdOf(pluginId: string, clock: Pick<Hold, 'ms' | 'enabled'>): Hold {
+    const key = keyOf(pluginId, clock.ms);
 
-    if (hold.count > 0) return;
+    const hold = this.holds.get(key) ?? {
+      pluginId,
+      ...clock,
+      lists: new Set(),
+    };
+
+    this.holds.set(key, hold);
+
+    return hold;
+  }
+
+  private release(hold: Hold, shown: Shown): void {
+    hold.lists.delete(shown);
+
+    if (hold.lists.size > 0) return;
 
     hold.cancel?.();
     hold.cancel = undefined;
@@ -84,10 +116,7 @@ export class SlotRefresh {
   private tick(hold: Hold): void {
     hold.cancel = undefined;
 
-    // Nothing of a Plugin that is not running is read; the open list only asks again.
-    if (this.refreshing.running(hold.pluginId))
-      this.refreshing.due(hold.pluginId);
-    this.refreshing.ask(hold.pluginId);
+    this.refreshing.ask(hold.pluginId, [...hold.lists], hold.ms);
     this.arm(hold);
   }
 
@@ -103,16 +132,16 @@ export class SlotRefresh {
   }
 }
 
-// What the clock of one runtime's open lists is built from: its clock, the Queries it makes due, and the Slots it asks again.
+// What the clock of one runtime's open lists is built from: its clock, the Queries it ages, and the Slots it asks again.
 type RefreshParts = {
   clock: PluginClock;
-  data: { written: (pluginId: string) => void };
-  items: { changed: (pluginId: string) => void };
+  data: { writes: { dueWhenOlder: (pluginId: string, ms: number) => void } };
+  items: { askAgain: (pluginId: string, shown: readonly Shown[]) => void };
 };
 
 /*
- * The clock of one runtime's open lists: a Plugin counts as running while it has a worker generation, and a tick makes
- * its Queries due before the Slots ask it again.
+ * The clock of one runtime's open lists: a tick asks the Slots again for the contexts the lists show, and makes due,
+ * of a running Plugin, only the Query answers a Slot read that are as old as the interval.
  */
 export const refreshFor = (
   workers: { generation: (pluginId: string) => number | undefined },
@@ -120,7 +149,10 @@ export const refreshFor = (
 ): SlotRefresh =>
   new SlotRefresh({
     clock,
-    due: (pluginId): void => data.written(pluginId),
-    ask: (pluginId): void => items.changed(pluginId),
-    running: (pluginId): boolean => workers.generation(pluginId) !== undefined,
+    ask: (pluginId, shown, ms): void => {
+      // Nothing of a Plugin that is not running is read; the open list only asks again.
+      if (workers.generation(pluginId) !== undefined)
+        data.writes.dueWhenOlder(pluginId, ms * ageSlack);
+      items.askAgain(pluginId, shown);
+    },
   });

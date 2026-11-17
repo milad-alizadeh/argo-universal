@@ -4,14 +4,17 @@ import type { DrawnFor, QueryOrigin } from './plugin-data';
 import { QueryEntry, type EntryServices } from './query-entry';
 import type { QueryOwner, QueryRead } from './query-types';
 
-// A Loader's read holds its Page address, and a background pass, which holds none, reads fresh.
+/*
+ * A Loader's read holds its Page address, and a background pass, which holds none, reads fresh. Code outside a draw,
+ * such as a Slot's provider, reads what was kept, and a list's clock may age it.
+ */
 export const drawnRead = (
-  drawn: DrawnFor,
+  drawn: DrawnFor | undefined,
   fresh: boolean | undefined,
-): QueryRead => ({
-  ...drawn,
-  fresh: fresh === true || drawn.holder === undefined,
-});
+): QueryRead =>
+  drawn
+    ? { ...drawn, fresh: fresh === true || drawn.holder === undefined }
+    : { fresh: false, outside: true };
 
 // A named read that names its Project is kept for it, whatever Project the draw or the Slot asking runs for.
 export const projectOf = (

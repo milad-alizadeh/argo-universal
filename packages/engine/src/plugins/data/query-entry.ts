@@ -17,6 +17,8 @@ export class QueryEntry {
   private readonly timing;
   private readonly holders = new QueryHolders();
   private flight: Promise<void> | undefined;
+  // Whether code outside a draw, such as a Slot's provider, read it, so a list's clock may make it due.
+  private readOutside = false;
 
   constructor(
     readonly owner: QueryOwner,
@@ -28,21 +30,44 @@ export class QueryEntry {
   /*
    * A Loader's read: the kept answer while it is current, or a read joined or begun. A read joined that
    * began before a write is not current when it lands, so the Loader waits for one more. A page drawn
-   * again on a clock reads again once the kept answer is as old as its interval.
+   * again on a clock reads again once the kept answer is as old as its interval. An address that already
+   * has a tree is served what was kept while the read it is due runs behind, and is marked if that read
+   * answers differently (ADR-0060); a first draw, a pull and a background pass wait for the read.
    */
-  async read({
-    holder,
-    fresh,
-    draw,
-    every,
-  }: QueryRead): Promise<PluginDataState> {
-    this.holders.hold(holder, reading);
+  async read(read: QueryRead): Promise<PluginDataState> {
+    const kept = this.serving(read);
 
-    if (fresh || this.timing.olderThan(every)) await this.refresh(draw);
-    await this.untilCurrent(draw, 2);
-    this.holders.hold(holder, this.state.revision);
+    if (read.outside) this.readOutside = true;
+
+    this.holders.hold(read.holder, reading);
+
+    if (kept) this.revalidate(read.every);
+    else await this.awaited(read);
+
+    this.holders.hold(read.holder, this.state.revision);
 
     return this.state;
+  }
+
+  // Whether the draw is served what was kept: its address already has a tree and no one pulled it fresh.
+  private serving({ holder, fresh }: QueryRead): boolean {
+    return !fresh && this.holders.has(holder) && this.servable();
+  }
+
+  private async awaited({ fresh, draw, every }: QueryRead): Promise<void> {
+    if (fresh || this.timing.olderThan(every)) await this.refresh(draw);
+    await this.untilCurrent(draw, 2);
+  }
+
+  // An answer to serve while a fresh one is read: one the last read did not fail.
+  private servable(): boolean {
+    return this.state.data !== undefined && this.state.error === undefined;
+  }
+
+  // Starts, behind the draw that was served, the read the entry is due or old enough for.
+  private revalidate(every: number | undefined): void {
+    if (this.timing.overdue || this.timing.olderThan(every))
+      void this.refresh();
   }
 
   private async untilCurrent(
@@ -122,6 +147,24 @@ export class QueryEntry {
   // A write makes the entry due: a read in flight lands still due, and the next Loader read waits for a fresh answer.
   written(): void {
     this.timing.makeDue();
+  }
+
+  /*
+   * A write has made the entry due; one a page holds is read again now, so the addresses whose answer
+   * differs are marked and the rest hear nothing. One nobody holds waits to be read.
+   */
+  async refreshHeld(): Promise<void> {
+    if (this.holders.any) await this.untilCurrent(undefined, 2);
+  }
+
+  // The addresses whose draws hold the entry.
+  get heldKeys(): IteratorObject<string> {
+    return this.holders.keys;
+  }
+
+  // A list's clock makes due an entry a Slot read once it is as old as the list's interval.
+  dueWhenOlder(ms: number): void {
+    if (this.readOutside && this.timing.olderThan(ms)) this.timing.makeDue();
   }
 
   private publish(state: PluginDataState): void {

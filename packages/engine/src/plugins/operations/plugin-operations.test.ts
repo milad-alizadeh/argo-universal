@@ -27,6 +27,7 @@ const lastRunId = (sent: PluginEvent[]): number => {
 // One run of `close` on Plugin `tracker`, which the worker answers with `answer`, and the Plugins heard to run.
 async function runAnswered(
   answer: (id: number) => Parameters<PluginOperations['receive']>[1],
+  tier?: 'read' | 'act',
 ): Promise<string[]> {
   const sent: PluginEvent[] = [];
 
@@ -41,7 +42,7 @@ async function runAnswered(
   operations.onRan((pluginId) => heard.push(pluginId));
   workers.run('tracker', 1);
 
-  const running = operations.run('tracker', request);
+  const running = operations.run('tracker', { ...request, tier });
 
   operations.receive(
     { pluginId: 'tracker', generation: 1 },
@@ -61,5 +62,17 @@ it('is heard to have run when its handler returned', async () => {
 it('is heard to have run when its handler threw, as it may have written first', async () => {
   expect(
     await runAnswered((id) => ({ action: 'failed', id, error: 'nope' })),
+  ).toEqual(['tracker']);
+});
+
+it('is not heard to have run when it is a read-tier Operation, which writes nothing', async () => {
+  expect(
+    await runAnswered((id) => ({ action: 'result', id, result: null }), 'read'),
+  ).toEqual([]);
+});
+
+it('is heard to have run when it is an act-tier Operation', async () => {
+  expect(
+    await runAnswered((id) => ({ action: 'result', id, result: null }), 'act'),
   ).toEqual(['tracker']);
 });
