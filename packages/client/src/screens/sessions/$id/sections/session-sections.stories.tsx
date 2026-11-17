@@ -7,7 +7,10 @@ import {
   SessionWorkbenchColumn,
   useSessionPanels,
 } from '#features/sessions';
-import { severalPullRequests } from '../../../../features/sessions/components/session-pull-request.mocks';
+import {
+  busyPullRequest,
+  severalPullRequests,
+} from '../../../../features/sessions/components/session-pull-request.mocks';
 import {
   sessionShells,
   shellNow,
@@ -84,6 +87,15 @@ type Story = StoryObj<typeof meta>;
 
 // Every Section a Session offers: Changes, Agents and Shells, each on its own card with only its title, chevron and handle on the title line.
 export const AllSections: Story = {};
+
+// One pull request with a long title, 15 files and 10/23 checks: the number and diff total stay on the second line, the checks at its trailing edge.
+export const BusyPullRequest: Story = {
+  args: {
+    content: {
+      header: { ...everySection.header, pullRequests: [busyPullRequest] },
+    },
+  },
+};
 
 // Two Plugins' cards, stacked after Argo's own in the order the Slot gives them (ADR-0035).
 export const PluginCards: Story = {
