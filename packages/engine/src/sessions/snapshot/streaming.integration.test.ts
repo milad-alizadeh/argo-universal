@@ -23,7 +23,9 @@ function watchStreamingSession(): {
   snapshots: SessionSnapshot[];
 } {
   vi.useFakeTimers();
-  onTestFinished(() => vi.useRealTimers());
+  onTestFinished((): void => {
+    vi.useRealTimers();
+  });
   const host = startSnapshotHost();
   insertSession(host.database, { id: 'child', parentSessionId: 'session-1' });
   const feed = createActor(feedMachine, {
@@ -37,7 +39,9 @@ function watchStreamingSession(): {
       findWrittenRow: (): undefined => undefined,
     },
   }).start();
-  onTestFinished(() => feed.stop());
+  onTestFinished((): void => {
+    feed.stop();
+  });
   const watch = createSessionSnapshotWatcher({
     ...host.sources,
     findFeed: () => feed,
