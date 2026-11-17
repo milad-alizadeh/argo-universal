@@ -2,7 +2,7 @@ import { useState, type ReactElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { tintTransitionClassName } from '#kit/motion';
 import { cn } from '#kit/utils';
-import { RowPressContext } from './field-row-press';
+import { InRowFrameContext, RowPressContext } from './field-row-press';
 
 /*
  * A pressable row tints its whole frame, hover then pressed, out to the card's edges (the margins undo Expo's row
@@ -17,9 +17,11 @@ export function RowFrame(props: {
 
   return (
     <RowPressContext.Provider value={setPressable}>
-      <View className={frameClass(pressable, props.flush)}>
-        {props.children}
-      </View>
+      <InRowFrameContext value>
+        <View className={frameClass(pressable, props.flush)}>
+          {props.children}
+        </View>
+      </InRowFrameContext>
     </RowPressContext.Provider>
   );
 }
