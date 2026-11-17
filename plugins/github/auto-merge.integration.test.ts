@@ -14,6 +14,8 @@ import { openRepository } from './github-fixture-automation';
 import { restart } from './journey-fixture';
 import { openChanges } from './journey-watch-fixture';
 
+const pullRequestId = 'PR_owner/repository#12';
+
 it(
   'offers Auto-merge, Auto-fix and Auto-archive, all off, on an open pull request',
   async () => {
@@ -38,7 +40,7 @@ it(
     expect(run.github.autoMergeCalls()).toEqual([
       {
         kind: 'enable',
-        pullRequestId: 'PR_owner/repository#12',
+        pullRequestId,
         mergeMethod: 'SQUASH',
       },
     ]);
@@ -148,6 +150,31 @@ it(
       expect(order.at(-1)).toBe('read');
       expect(order.at(-2)).toBe('write');
     }
+  },
+  slow,
+);
+
+it(
+  'merges a pull request GitHub could merge now, with the same method, when GitHub will not queue auto-merge on it',
+  async () => {
+    const run = await attached();
+
+    pullOf12(run).mergeable_state = 'clean';
+    await tap(run, { kind: 'merge', on: true });
+
+    expect(run.github.autoMergeCalls()).toEqual([
+      {
+        kind: 'enable',
+        pullRequestId,
+        mergeMethod: 'SQUASH',
+      },
+      {
+        kind: 'merge',
+        pullRequestId,
+        mergeMethod: 'SQUASH',
+      },
+    ]);
+    expect(pullOf12(run).merged).toBe(true);
   },
   slow,
 );
