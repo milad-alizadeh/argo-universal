@@ -29,10 +29,7 @@ import {
   type TypeaheadOption,
   TypeaheadInteraction,
 } from './rich-textarea-typeahead-option';
-import {
-  useTypeaheadQuery,
-  type TypeaheadQuery,
-} from './rich-textarea-typeahead-query';
+import { useTypeaheadQuery } from './rich-textarea-typeahead-query';
 import { referenceAdapter } from './rich-textarea-typeahead-references';
 import { suggestionAdapter } from './rich-textarea-typeahead-suggestions';
 import { isFocused, useTypedTokens } from './rich-textarea-typed-tokens';
@@ -49,7 +46,7 @@ type SelectOption = (
   close: () => void,
 ) => void;
 
-type MenuProps = TypeaheadQuery & {
+type MenuProps = ReturnType<typeof useTypeaheadQuery> & {
   onSelectOption: SelectOption;
   onOpen: () => void;
   onClose: () => void;
