@@ -68,17 +68,15 @@ const row: SessionPullRequest = {
 
 const scope = { projectId: 'project-1', sessionId: 'session-1' };
 
-type Run = RowActionPorts['run'];
+type Fire = RowActionPorts['fire'];
 
-function ports(
-  run: Run = () => Promise.resolve({ result: null }),
-): RowActionPorts & {
-  run: Mock<Run>;
+function ports(): RowActionPorts & {
+  fire: Mock<Fire>;
   failed: Mock<RowActionPorts['failed']>;
 } {
   return {
     scope,
-    run: vi.fn<Run>(run),
+    fire: vi.fn<Fire>(),
     failed: vi.fn<RowActionPorts['failed']>(),
     copy: vi.fn<RowActionPorts['copy']>(() => Promise.resolve(true)),
   };
@@ -91,21 +89,12 @@ describe('ticking an automation in the row menu', () => {
 
     first?.onSetAutomation?.('merge', false);
 
-    expect(kit.run).toHaveBeenCalledWith({
+    expect(kit.fire).toHaveBeenCalledWith({
       pluginId: 'github',
       operation: 'automationSet',
       args: { reference: 'owner/repository#12', kind: 'merge', on: false },
       ...scope,
     });
-  });
-
-  it('says why a tick failed', async () => {
-    const error = new Error('refused');
-    const kit = ports(() => Promise.reject(error));
-    const [first] = withRowActions([row], kit);
-
-    first?.onSetAutomation?.('merge', true);
-    await vi.waitFor(() => expect(kit.failed).toHaveBeenCalledWith(error));
   });
 
   it('offers no tick for a PR with no automation, or whose repository is unknown', () => {
