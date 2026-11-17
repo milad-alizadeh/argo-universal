@@ -32,6 +32,7 @@ export type AccountTransport = {
 export class AccountProviders {
   private readonly providers = new Map<string, Provider>();
   private readonly pending = new Map<number, Waiting>();
+  private readonly requests = new Map<string, Promise<Credential | null>>();
   private next = 0;
 
   constructor(
@@ -50,23 +51,34 @@ export class AccountProviders {
     });
   }
 
+  // Borrows of one Account while its request is out share that request, its deadline and its answer (#2315).
   token(account: PluginAccount): Promise<Credential | null> {
-    return providerDeadline(this.clock, (signal) =>
+    const key = requestKey(account);
+    const running = this.requests.get(key);
+
+    if (running) return running;
+
+    const request = providerDeadline(this.clock, (signal) =>
       this.request(account, signal),
-    );
+    ).finally(() => this.requests.delete(key));
+
+    this.requests.set(key, request);
+
+    return request;
   }
 
   private async request(
     account: PluginAccount,
     signal: AbortSignal,
   ): Promise<Credential | null> {
-    await this.transport.wake(account.providedBy);
+    const key = providerKey(account.providedBy, account.host);
+
+    // A registered provider's worker is running; release drops it when that worker stops.
+    if (!this.providers.has(key)) await this.transport.wake(account.providedBy);
 
     if (signal.aborted) return null;
 
-    const provider = this.providers.get(
-      providerKey(account.providedBy, account.host),
-    );
+    const provider = this.providers.get(key);
 
     if (!provider) throw accountUnavailable();
     const token = await this.wait(provider, account, signal);
@@ -151,6 +163,9 @@ export class AccountProviders {
 
 const providerKey = (pluginId: string, host: string): string =>
   JSON.stringify([pluginId, host]);
+
+const requestKey = (account: PluginAccount): string =>
+  JSON.stringify([account.providedBy, account.host, account.id]);
 
 const sameWorker = (left: SpawnCaller, right: SpawnCaller): boolean =>
   left.pluginId === right.pluginId && left.generation === right.generation;
