@@ -85,6 +85,33 @@ pnpm test
 
 `argo-plugin <validate|types|test> <dir>` accepts an absolute or relative Plugin directory. The CLI's `argo plugin <validate|types|test> <dir>` runs the same command.
 
+## The Plugin realm
+
+Plugin code runs in a bare JavaScript realm, neither Node nor a browser. It has JavaScript's own built-ins (`JSON`, `Math`, `Intl`, `RegExp`, `Map`, typed arrays, `encodeURIComponent` and the rest), `setTimeout`, `clearTimeout` and `argo`. It has no `URL`, `URLSearchParams`, `fetch`, `btoa`, `atob`, `TextEncoder`, `Buffer`, `crypto`, `structuredClone`, `setInterval`, `queueMicrotask`, `AbortController` or `process`; `argo-plugin validate` refuses each one and names what to use instead:
+
+- A request: `argo.fetch`, or a fetch Query.
+- A URL: read it with string methods or a RegExp, as `siteHost` in `plugins/jira/atlassian.ts` does, and build one with `encodeURIComponent`.
+- Base64 and UTF-8 bytes: by hand from `encodeURIComponent`, as `basicCredential` in `plugins/jira/atlassian.ts` does.
+- Work on a clock: a page's `every`, or a Watch.
+
+`console` exists and writes nothing: a Plugin's `console.log` reaches no log, terminal or test (#2238). To see a value while you work, draw it on a page and read it in a test.
+
+## Repository gates
+
+A Plugin in this repository is checked like the rest of it: its code, its `mocks/` and its tests go through the repository's oxlint config (`.oxlintrc.json`, which extends `tooling/oxlint/`), and through the comment, test-suffix and test-only-import checks of `pnpm quality:lint`. The caps a first draft breaks most:
+
+| Rule | Cap |
+| --- | --- |
+| `complexity` | 3 per function |
+| `max-lines-per-function` | 15, or 150 in a test |
+| `max-lines` | 150 per file, tests included |
+| `max-statements` | 10, or 30 in a test |
+| `max-params`, `max-depth`, `max-nested-callbacks` | 3 |
+| `no-magic-numbers` | outside tests, name each number |
+| `anti-slop/no-unknown-parameters`, `typescript/consistent-type-assertions` | no `unknown` parameter and no `as`: narrow with a type guard |
+
+Write small modules from the first draft, one concern to a file, as `plugins/jira` keeps its requests, readers, failures and views apart. Run `node_modules/.bin/oxlint --type-aware plugins/<id>` from the repository root as you go, and `pnpm verify` before you hand back.
+
 ## Boards
 
 A `Board` draws columns of cards that a person moves between columns: by drag, or from a card's menu, which offers the same moves for touch and keyboard. The Plugin writes no drag logic. Each `Board.Column` has an `id`, a `title` and an optional `count`, which defaults to the cards it shows. Each `Board.Card` has an `id`, a `title`, an optional `subtitle` and `meta`, and `movesTo`, the ids of the columns it may move to; only those accept its drop, the others fade while it is dragged, and a card without `movesTo` does not move. A card's `onPress` opens it, as a row's does; a card that moves but opens nothing is still a focus stop, whose context-menu key offers its moves.
@@ -197,17 +224,33 @@ Each test has a ten-second time limit.
 The test host uses the production loader, worker, Hook chain, wire preparation, and page checks.
 Tests run local Plugin code and use its declared Capabilities. Executable fixtures remain necessary for tests that run external commands.
 
+### Journeys on Vitest
+
+`argo-plugin test` gives each test ten seconds and one Project. A journey that needs a second Project, a fixture service with state of its own, or longer on a loaded machine runs on Vitest instead, as `plugins/jira` and `plugins/issue-tracker` do: the Plugin's `test` script is `vitest run`, with a `vitest.config.ts` beside `plugin.json`, and each test starts the Plugin with `startPluginTest` from `@argo/plugin-kit/testing`:
+
+```ts
+const kit = await startPluginTest({ directory, pluginId: 'jira', version: '0.0.0', projects, network, clockStart: 0 });
+onTestFinished(() => kit.close());
+const page = await kit.pages.open({ path: '/projects/project-1', projectId: 'project-1' });
+```
+
+`network` is `fixtureServices(handler).network`, which answers every host the Plugin names; `clockStart` puts the Plugin's timers on `kit.clock`. `plugins/jira/mocks/journey.ts` and `mocks/jira-service.ts` are a worked example. List the test files and `mocks/` in `tsconfig.test.json`, and leave them out of `tsconfig.json`.
+
+A test file runs in Node, where `@argo/plugin-kit` is types only: a test cannot import a module that uses the kit's components, JSX or flows, and Node says so when it tries. Keep what a test shares with Plugin code, such as keys, paths and fixture data, in a module that imports nothing from the kit, and reach the rest through the pages the test opens.
+
 ## Test kit
 
 | API | Behavior |
 | --- | --- |
 | `pages.open({ path, projectId?, sessionId?, pageState?, platform? })` | Draws a page once, as the App on `platform` (web by default) asks for it, and returns its page. A page that cannot draw rejects with why. |
 | `page.tree`, `page.pageState`, `page.path` | The tree last drawn, the Page state it was drawn for, and its Page path. |
-| `page.find(match)` | Returns the node a text or a node test matches, or throws. |
-| `page.press(match)` | Acts on the node's `onPress` as the App does and returns the page showing after it: a navigation opens the page it names, a Page state change draws the page again, and an Operation runs for the page's Project and Session, then the page draws again. A press that flushes, such as a Button's or an Action's, first lands every edit still waiting for its pause. An Operation that fails rejects the press with why. |
+| `page.find(match)`, `page.findText(text)` | Returns the node a text or a node test matches; `find` throws when none does, and `findText` answers `undefined`. |
+| `page.press(match)` | Acts on the node's `onPress` as the App does and returns the page showing after it: a navigation opens the page it names, a Page state change draws the page again, and an Operation runs for the page's Project and Session, then the page draws again. A press that flushes, such as a Button's or an Action's, first lands every edit still waiting for its pause. An Operation that fails rejects the press with why, where the App shows it in an error toast; the test kit has no toast. |
 | `page.act(match, event, value?)` | The same for any Component event, with the value a component reports, such as a search's text for `onChangeText` or a move for `onMove`, filled into the event's `to.payload` values. A bound value, or a throttled edit such as a TextField's `onChangeText`, waits for the edits to pause, as in the App: `clock.advance(300)` lands it. |
-| `page.loadMore()` | Draws one more page of the page's paged list. |
+| `page.loadMore()` | Draws one more page of the page's paged list. After a draw that failed, while the tree kept from before it offers a load more, it asks again for the page that draw lacked, as the App does with the rows it kept. |
 | `page.draw()` | Draws the page again, as the App does when an Operation or `argo.changed()` marks it stale. |
+| `page.error` | Why the last draw failed, or `undefined`. While it is set, `page.tree` throws it. |
+| `fixtureServices(handler)` | Plays the services the Plugin reaches: `handler(request)` answers `{ status?, json?, text?, headers? }`, and `requests` lists what the Plugin asked. Pass its `network` to `startPluginTest`. |
 | `pages.draw(input)`, `pages.run(input)`, `pages.stale(signal)` | One draw answer, one Operation run, and the stale marks every App is sent, as the Server answers them. |
 | `slotItems(input, { signal, platform })` | Asks an items Slot for one list, as an App does, and yields each merged answer. |
 | `clock.advance(ms)` | Advances Plugin timers, dates, Query intervals, background passes, Hook deadlines, and the open pages' edit pauses together. |
@@ -217,7 +260,7 @@ Tests run local Plugin code and use its declared Capabilities. Executable fixtur
 | `sessions` option | What `argo.sessions.get` answers, by Session id. |
 | `emit(name, event)` | Checks an event and raises it through the production Hook chain. |
 
-`find` matches a label, title, text, text content, or accessible label.
+A text matches a node's label, title, subtitle, description, text, text content or accessible label, or the supporting text beside it: a caption, footer, error, message, detail or summary.
 While an Operation runs, `page.tree` shows its `optimistic` props, as the App does; the page drawn after it answers replaces them, and a failure puts the tree back.
 The chosen platform sets `ctx.surface.platform`; the test App always speaks the current Plugin wire version. The kit does not open an App or draw native pixels.
 
@@ -260,9 +303,9 @@ export function register(argo: Argo): void {
 ```
 
 Declare the command's Capability in `plugin.json`. A process Query uses the Project folder of the page it is read for unless the Query specifies `cwd`. A direct `argo.process.run` call does not select the Project folder. Use a Query for commands that belong in that folder.
-A fetch Query accepts the same fields as `argo.fetch`, including POST requests. A storage Query contains `queries`, each with a read method: `get`, `all`, or `values`.
+A fetch Query accepts the same fields as `argo.fetch`, including POST requests. A storage Query contains `queries`, each with a read method: `get`, `all`, or `values`. It answers one `{ rows }` for each, and a row is an array of its column values in the `SELECT`'s order, never an object: `all` and `values` answer every row, and `get` answers its one row as `rows` itself, or `[]` when there is none. Read columns by position, as `const [cloudId, host] = row`.
 
-A `fetch` Capability names one exact host, or `*` for any host; there is no subdomain form such as `*.atlassian.net`. A Plugin that only learns the host when the person types it, as Jira learns a person's `<site>.atlassian.net`, declares `"host": "*"` with a `reason` that names the hosts it calls and why, and checks the typed host in its own code before calling it. The consent screen shows that reason. Jira's reads `<site>.atlassian.net/_edge/tenant_info` to find the site's cloud id, and `<site>.atlassian.net/rest/api/3/myself` to tell an unscoped API token from a wrong one; it accepts only `[a-z0-9-]+.atlassian.net` hosts (`plugins/jira/atlassian.ts`). A Plugin that knows its hosts in advance names each one instead.
+A `fetch` Capability names one exact host, or `*` for any host; there is no subdomain form such as `*.atlassian.net` yet (#2239). A Plugin that only learns the host when the person types it, as Jira learns a person's `<site>.atlassian.net`, declares `"host": "*"` with a `reason` that names the hosts it calls and why, and checks the typed host in its own code before calling it. The consent screen shows that reason. Jira's reads `<site>.atlassian.net/_edge/tenant_info` to find the site's cloud id, and `<site>.atlassian.net/rest/api/3/myself` to tell an unscoped API token from a wrong one; it accepts only `[a-z0-9-]+.atlassian.net` hosts (`plugins/jira/atlassian.ts`). A Plugin that knows its hosts in advance names each one instead.
 Other `argo` calls are not Queries. Storage Queries use a read-only connection; writes through another read method are also refused.
 
 `read` answers the Query's data and keeps the last successful value. It throws, failing the draw, only when the Query has no answer yet: a refused call, a transport failure, or Argo's timeout. An HTTP 401 remains fetch data. An unavailable Account Borrow fails the read until it has data.
@@ -272,6 +315,32 @@ Storage Queries are never polled. A committed Plugin storage write marks them du
 
 Entries belong to a Plugin and a Project. Equal Queries in that Project share one entry, including Queries from different pages.
 Object key order and header name case do not change the entry.
+
+## Named reads
+
+`argo.queries.define(name, read, { projectOf })` makes a named read (ADR-0037): a read the Plugin writes and Argo keeps like a Query, for data that a list and its item's page, or a page and a Slot, share. A Loader reads it with `read(query(args))`; code outside a draw reads it with `argo.queries.read`, or `argo.queries.readState` to have a failure as an answer. `plugins/jira/jira-reads.ts` is a worked example.
+
+- The args are the entry's key, every field of them. `{ ...target, projectKey }` beside `target` is a second entry and a second call to the service, and only a count of the service's requests in a test shows it. Build each read's args in one function, holding only what the read uses.
+- `projectOf(args)` names the Project the entry is for. Inside the read, `argo.fetch(url, { account, projectId })` borrows that Project's Account, and `argo.accounts.get(host)` answers it; a named read runs only for a Project, never as the Server Device.
+- To draw an item's page at once from its row, the list's read seeds each item's read with what it already holds: `await argo.queries.seed(issue({ projectId, key }), row)`. The page opened from the row finds its entry kept and calls nothing; the same page opened by its address reads. Read the choices its menus offer beside the list the same way; `plugins/jira/issue-reads.ts` seeds each issue from its row. A seed is the Plugin's word for the other read's answer, so ask the service for every field the item's page draws.
+- A write, an Operation run or `argo.changed()` makes every entry due. A pull reaches only a paged list's own pages; see Paged lists.
+
+## Pages for a Project
+
+A page opened from the Plugin's nav item has no `context.projectId`. A page that shows one Project's data puts the Project in its path, such as `/projects/:project`, and reads through named reads that name it:
+
+- The Loader takes the Project from `input.params.project` and passes it in each named read's args; `projectOf` hands it to Argo.
+- The page lists the Projects to choose from with `argo.projects.list()`, and each row opens `to.go('/projects/<id>')`.
+- `argo.accounts.get` and an Account Borrow answer only inside such a read, a Loader of a page drawn for a Project, an Operation run for one, or a Hook.
+
+`plugins/jira/jira-pages.tsx` and `plugins/jira/jira-reads.ts` hold the whole pattern; `plugins/issue-tracker` follows it too.
+
+## Paged lists
+
+A page with many rows gives its definition `list(input, cursor)`, which answers one page as `{ items, cursor }`, with `cursor: null` for the last. The Render reads the pages so far as `input.list` and hands the List `pagination={{ hasMore: list.hasMore, onLoadMore: list.loadMore }}`. Each page is kept as Argo's own Query of the address and its cursor.
+
+- A pull, the List's `onRefresh` or `to.set({})`, reads the first page fresh. It does not reach a named read: one that `list` or the Loader calls still answers its kept value. A list that must show the service's latest rows on a pull calls the service itself in `list`, page 1 included, and the Loader leaves the rows to it. A refused first page then comes back as an item the Render draws as the List's `empty`, as `plugins/jira/issue-pages.ts` does.
+- A later page that fails throws in `list`, which fails that draw: the App keeps the rows it shows, and the next load more asks again. A list has no row of its own for "couldn't load more" yet (#2242).
 
 ## Page frames
 
@@ -295,6 +364,8 @@ A page is a `Screen`. Its props say what the page holds, and the App lays it out
 ```
 
 `Detail` holds the page's body only; its properties go in the `Screen`'s `aside`. A failed read shows a `Callout` in the body with `tone="danger"` and a Button that tries again, so empty and error read differently. While the page's loader reads for the first time, the App draws the page's Screen with its title and a blank body, and a revisit draws the kept tree at once and asks again behind it, so a page never builds a loading state for its own first read and its render never sees one. `isLoading` draws the body's skeleton, and a `Spinner` marks work with no body to sketch, only for a part the page itself marks pending inside a render, such as a body the loader left unread.
+
+A Screen header draws an `Action` as a button only when it has an icon, and puts the rest in its overflow menu, which suits actions used now and then, such as "Change Jira site". A submenu `Action`, such as a Filter menu, needs an Argo icon name: a key of `iconSymbols` in `packages/contracts/src/kit-symbols/icon-map.ts`, which type-checking holds the prop to. A press `Action` may take an `{ sf, material }` pair instead. A new name is an Argo change: its entry in that map, its Android drawings as `packages/kit/src/symbols/assets/README.md` says, then `pnpm --filter @repo/kit generate:material-images`. A switch between a few views of one page, such as a list and a board, is a `SegmentedControl` and needs no icon.
 
 ## Session row items
 
@@ -550,6 +621,8 @@ A failed, disabled, stopped, or slow provider rejects the borrow with a temporar
 Use the page’s existing load-error handling and refresh interval to retry without asking the person to sign in again.
 A missing Account, refused Grant, or provider that returns no credential still makes the borrow return `null`.
 
+Argo keeps one provider for each host, with one header and prefix, so two kit sign-ins for one host, such as a token paste and `oauthFlow`, cannot each `provide()`. Give both the prefix `''` and keep each token whole, `Basic …` or `Bearer …`. Pass `oauthFlow` an `argo` whose `accounts.provide` keeps the handler instead of registering it, then register one provider that lends the paste's Secret as it is and asks the kept handler for anything else; `plugins/jira/atlassian-sign-in.ts` does this (#2244).
+
 After sign-in, create the Account and store its token under the returned id:
 
 ```ts
@@ -612,7 +685,7 @@ await signIn.provide();
 - `host` is the Account's API host. Declare it in `contributes.accounts` and as a `fetch` Capability; `tokenUrl`'s host needs a `fetch` Capability too.
 - `authorizeUrl` keeps any query it carries, so a service that wants fields of its own on every authorize URL names them there, as Atlassian's `https://auth.atlassian.com/authorize?audience=api.atlassian.com&prompt=consent`.
 - `clientId` is the OAuth app's public client ID, or a function the flow calls when a sign-in starts.
-- `clientSecret` is for a service that requires the app's client secret on every code exchange and refresh. Argo ships no secret: declare a `secret` Setting the person fills in, and give a function that reads it with `argo.settings.get`. The flow sends it to `tokenUrl` only, never in the browser, and a sign-in started before it is set fails, saying so. Leave it out for a public client.
+- `clientSecret` is for a service that requires the app's client secret on every code exchange and refresh. Argo ships no secret: declare a `secret` Setting the person fills in, and give a function that reads it with `argo.settings.get`. The flow sends it to `tokenUrl` only, never in the browser, and a sign-in started before it is set fails, saying so. Leave it out for a public client. Changing a Setting marks the Plugin's pages stale, so a sign-in page that offers its button once both values are set draws again; `argo.settings.get` is not a Query, so its Queries and named reads stay as they were. No Action opens a Plugin's settings yet, so the page names the place in words, "Settings › Plugins › Jira" (#2245).
 - `label` turns a token into the name of whose Account it opens, such as the login the service answers; `null` fails the sign-in.
 - `tokenPath` says where the token sits in the token endpoint's JSON when it is not `access_token`, such as `['authed_user', 'access_token']`.
 - `header` is how a borrower's request carries the token, `{ header: 'Authorization', prefix: 'Bearer' }` unless you say otherwise.
@@ -625,7 +698,7 @@ A token whose answer carried `refresh_token` and `expires_in` is refreshed at `t
 
 Declare `signIn` and `cancelSignIn` in `contributes.operations` with tier `act`. Start a sign-in only on the Server Device: the page's Loader reads `context.serverDevice` and offers the button there, and says to continue on the Server Device elsewhere. In the test harness, `kit.pages.draw` and `kit.pages.run` draw and run as a paired Device's App; `serverDevice: true` asks as the App on the Server Device.
 
-A test that signs in through the browser binds Argo's fixed callback port, so call `serialiseOnOAuthPort()` from `@argo/plugin-kit/testing/oauth-port` once at the top of its file; files that do take turns. Give `startPluginTest` an `openBrowser` that plays the browser: it reads the authorize URL's `redirect_uri` and `state` and fetches the redirect with a `code`. `plugins/jira/mocks/atlassian-journey.ts` is a worked example.
+A test that signs in through the browser binds Argo's fixed callback port, so call `serialiseOnOAuthPort()` from `@argo/plugin-kit/testing/oauth-port` once at the top of its file; files that do take turns. Give `startPluginTest` an `openBrowser` that plays the browser: it reads the authorize URL's `redirect_uri` and `state` and fetches the redirect with a `code`. `plugins/jira/mocks/atlassian-journey.ts` is a worked example. `cancel()` ends the flow's wait but not Argo's: the callback listener holds the port until the five-minute wait ends or the Plugin host closes, so a test that cancels a sign-in closes its host before the next file binds the port (#2246).
 
 ### The sign-in pattern
 
@@ -672,12 +745,20 @@ argo.pages.define('/', signInGate(flow, { name: 'Linear' }, { load, render }));
 
 - `host` is the Account's API host. Declare it in `contributes.accounts` and as a `fetch` Capability.
 - `header` is how a borrower's request carries the kept token.
-- `label(token)` checks a pasted token: call the service with it, as `argo.fetch(url, { headers })`, and answer whose Account it opens, or `null` when the service refuses it. It is the only Plugin code that sees the token, and only the one being pasted; never keep it.
+- `label(token)` checks a pasted token: call the service with it, as `argo.fetch(url, { headers })`, and answer whose Account it opens, or `null` when the service refuses it. When the Plugin knows why, such as a token made without the scopes it needs, it answers `{ refused: message }`, and the page draws that message beside the field in place of the kit's "wasn't accepted"; a message that holds the token is not drawn. It is the only Plugin code that sees the token, and only the one being pasted; never keep it.
 - Declare `signIn` in `contributes.operations`, tier `act`, with one param `token`: `{ "type": "string", "description": "The pasted API token.", "required": true, "secret": true }`. The sign-in page's `FieldGroup.SecretField` sends what is pasted to it, so the token is never logged, answered or kept in Page state (ADR-0051). A token paste needs no `cancelSignIn`.
 - A refused token is shown beside the field, which stays for the next paste. A token is pasted on any Device, a paired phone included. Signing in again with a token for the same label rewrites that Account's token, so a revoked token's gate takes a new one.
 - `flow.state()` is `idle`, `signed-in` with the Account's `label`, or `failed` with the `message` drawn beside the field. A `label` that throws shows a fixed message, never its error, which may name the token.
 - The field sends its text each time typing pauses for 150 ms, and each send is checked with `label`; a paste is one send. A token typed by hand is therefore checked at every pause, and "wasn't accepted" can show while the person is still typing; the field keeps their text. Text shorter than 8 characters is never sent to `label`, and an emptied field clears the error. The token is trimmed of surrounding spaces before it is checked.
 - A newer send replaces one still being checked or kept: the older one keeps no token, and adds no Account unless it was already being added.
+
+The kit's page draws one token field, and `label` gets the token alone. A service that needs more, as Atlassian takes `Basic` over `email:token` and a site to check it against, draws its own sign-in page and still uses `tokenPaste` for the rest (#2243):
+
+- The page holds the other fields in Page state, which never holds a Secret, and its SecretField runs `signIn` with them beside the secret `token` param.
+- The `signIn` handler builds the whole header value, such as `Basic <base64 of email:token>`, and starts the flow with it; the flow's `header` prefix is `''`, so the Secret is the value a borrower's request carries.
+- `flow.state()` stays `signed-in` for the life of the Plugin process, after the service stops taking the token or the person signs out in Settings. `signInGate` guards against that; a page of your own does too: when a read finds no Account or the service answers 401, note it, and draw the field again until a read succeeds or a paste signs in.
+
+`plugins/jira/sign-in-page.tsx`, `jira-sign-in.ts` and `revoke.integration.test.ts` hold the whole pattern.
 
 ### `argo.oauth`
 

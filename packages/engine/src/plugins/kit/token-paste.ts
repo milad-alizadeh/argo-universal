@@ -1,4 +1,5 @@
 import type {
+  TokenLabel,
   TokenPasteArgo,
   TokenPasteOptions,
   TokenPastePattern,
@@ -91,6 +92,20 @@ async function pasted(
   return held.paste === mine ? settle(held, given.argo, state) : held.state;
 }
 
+/*
+ * Why a token was refused: the Plugin's own words when it gave them, unless they hold the token, since the page
+ * draws them.
+ */
+function refusal(named: TokenLabel, token: string): TokenPasteState {
+  const said = refusedSaying(named);
+  const shown = said !== '' && !said.includes(token);
+
+  return rejected(shown ? said : notAccepted);
+}
+
+const refusedSaying = (named: TokenLabel): string =>
+  typeof named === 'object' && named !== null ? named.refused : '';
+
 // The service's answer to the token; one it refuses, or that cannot be checked, says why instead.
 async function checked(
   { argo, options }: Given,
@@ -98,7 +113,7 @@ async function checked(
   live: () => boolean,
 ): Promise<TokenPasteState> {
   const label = await options.label(token).then(
-    (named) => named || rejected(notAccepted),
+    (named) => (typeof named === 'string' && named) || refusal(named, token),
     () => rejected(unchecked),
   );
 

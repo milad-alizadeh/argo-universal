@@ -8,12 +8,17 @@
   },
   "exports": {
     ".": {
-      "types": "./src/index.d.ts"
+      "types": "./src/index.d.ts",
+      "default": "./src/outside-plugin.mjs"
     },
     "./cli": "./cli/plugin-command.ts",
     "./launch": "./bin/launch.mjs",
     "./jsx-runtime": {
-      "types": "./src/jsx-runtime.d.ts"
+      "types": "./src/jsx-runtime.d.ts",
+      "default": "./src/outside-plugin.mjs"
+    },
+    "./jsx-dev-runtime": {
+      "default": "./src/outside-plugin.mjs"
     },
     "./testing": "./testing/index.ts",
     "./testing/oauth-port": "./testing/oauth-port.ts",

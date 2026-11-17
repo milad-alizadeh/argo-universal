@@ -23,7 +23,7 @@ export type FoundNode = NonNullable<ReturnType<typeof findWireNodeEntry>>;
 // A node by the text it reads, or by a test of its own.
 export type NodeMatch = string | ((node: WireNode) => boolean);
 
-// The props a node's text is read from.
+// The props a node's text is read from: what it reads, and the supporting text drawn beside or under it.
 const textProps = [
   'label',
   'title',
@@ -32,6 +32,12 @@ const textProps = [
   'text',
   'children',
   'accessibilityLabel',
+  'caption',
+  'footer',
+  'error',
+  'message',
+  'detail',
+  'summary',
 ];
 
 const describeMatch = (match: NodeMatch): string =>
@@ -75,6 +81,10 @@ export function handlerOf(node: WireNode, event: string): Handler | undefined {
 
   return Handler.safeParse(node.props[event] ?? within[0]).data;
 }
+
+// A node whose List loads more.
+export const paged = (node: WireNode): boolean =>
+  handlerOf(node, 'onLoadMore') !== undefined;
 
 type Reported = { key: string; name: string; value?: WireJson };
 
