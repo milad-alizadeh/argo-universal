@@ -36,10 +36,9 @@ type MessageField = React.ComponentProps<typeof RichTextarea>;
 function useComposerText(layout: TextLayout): MessageField {
   const suggestions = useSuggestionSources(layout.props);
   const followUp = useFollowUpSuggestion(layout.props, layout.inactive);
-  const props = { ...layout.props, onDraftChange: followUp.changeDraft };
 
   return {
-    ...textInputProps({ ...layout, props }),
+    ...textInputProps(layout),
     inlineSuggestion: followUp.inlineSuggestion,
     ref: layout.field.attach,
     suggestions,

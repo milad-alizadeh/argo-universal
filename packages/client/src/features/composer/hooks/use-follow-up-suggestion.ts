@@ -19,7 +19,6 @@ type InlineSuggestion = RichTextareaProps['inlineSuggestion'];
 
 type FollowUpControls = {
   inlineSuggestion: InlineSuggestion;
-  changeDraft: ComposerProps['onDraftChange'];
 };
 
 function hasRequest(props: FollowUpProps): boolean {
@@ -49,7 +48,7 @@ function useDismissal(
 ): Dismissal {
   const [turnId, setTurnId] = useState<string | null>(null);
 
-  const disabled = dismissedCandidateTurn(candidate, turnId);
+  const disabled = disabledTurn(candidate);
 
   const nextTurn = dismissalTurn({ sending, turnId, disabled });
 
@@ -81,11 +80,7 @@ function dismissal(
   setTurnId: (id: string) => void,
 ): Dismissal {
   const dismiss = (): void => {
-    if (!candidate) {
-      setTurnId('');
-
-      return;
-    }
+    if (!candidate) return;
 
     setTurnId(candidate.turnId);
     candidate.onDismiss?.();
@@ -94,26 +89,9 @@ function dismissal(
   return { dismiss, hidden: isDismissed(candidate, turnId) };
 }
 
-type SuggestionControls = {
-  dismiss: () => void;
-  hidden: boolean;
-  changeDraft: ComposerProps['onDraftChange'];
-};
-
-function useControls(props: FollowUpProps): SuggestionControls {
-  const dismissal = useDismissal(props.followUpSuggestion, props.sending);
-
-  const changeDraft: ComposerProps['onDraftChange'] = (draft) => {
-    dismissal.dismiss();
-    props.onDraftChange(draft);
-  };
-
-  return { ...dismissal, changeDraft };
-}
-
 function prediction(
   props: FollowUpProps,
-  controls: ReturnType<typeof useControls>,
+  dismissal: Dismissal,
 ): InlineSuggestion {
   const candidate = props.followUpSuggestion;
 
@@ -125,23 +103,26 @@ function prediction(
 
   return {
     text,
-    onAccept: () => controls.changeDraft({ ...props.draft, text }),
-    onDismiss: controls.dismiss,
+    onAccept: () => props.onDraftChange({ ...props.draft, text }),
+    onDismiss: dismissal.dismiss,
   };
 }
 
+/*
+ * Only Esc dismisses a Follow-up suggestion (ADR-0056). Tab and any other draft change leave it in
+ * place, so it shows again as the placeholder whenever the draft is empty (#2175).
+ */
 export function useFollowUpSuggestion(
   props: FollowUpProps,
   inactive: boolean,
 ): FollowUpControls {
-  const controls = useControls(props);
+  const dismissal = useDismissal(props.followUpSuggestion, props.sending);
 
   return {
-    changeDraft: controls.changeDraft,
     inlineSuggestion:
-      controls.hidden || isBlocked(props, inactive)
+      dismissal.hidden || isBlocked(props, inactive)
         ? undefined
-        : prediction(props, controls),
+        : prediction(props, dismissal),
   };
 }
 
@@ -149,15 +130,6 @@ function enabledCandidate(
   candidate: ComposerProps['followUpSuggestion'],
 ): candidate is NonNullable<ComposerProps['followUpSuggestion']> {
   return candidate?.enabled === true;
-}
-
-function dismissedCandidateTurn(
-  candidate: ComposerProps['followUpSuggestion'],
-  editedTurn: string | null,
-): string | undefined {
-  if (candidate && editedTurn === '') return candidate.turnId;
-
-  return disabledTurn(candidate);
 }
 
 function shouldPersistDismissal(
