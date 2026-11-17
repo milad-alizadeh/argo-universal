@@ -154,6 +154,10 @@ _Avoid_: Wire tree, Plugin UI
 An items Slot only one source shows at a time, such as a Session row's Activity line. Every Plugin that declares it answers; the App shows the answer of the one Plugin the user chose in Settings on that Device, or Argo's own while none is chosen or the chosen Plugin is turned off or has no answer.
 _Avoid_: Part, takeover, exclusive Slot
 
+**Last good items**:
+The items a Plugin last answered in time for each context of an items Slot, kept by the Engine across change signals and restarts. While the Plugin's answer is late, fails or it is not running yet, a list draws these instead, so a Session row keeps its pull requests; they are dropped when the Plugin is turned off or removed.
+_Avoid_: Cached items, stale items
+
 **Replaceable Slot**:
 A Slot placed around a core component, a Tool call or a message in the Feed. A Plugin reaches one only through its `ui.render` Hook and may pass it through, change its props or draw its own; core draws its own when the Plugin's tree is refused.
 _Avoid_: Override, component override

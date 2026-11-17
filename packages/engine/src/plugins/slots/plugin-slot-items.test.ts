@@ -2,61 +2,16 @@ import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
 import {
   sessionBarSlotId,
   sessionRowSlotId,
-  type PluginEvent,
   type SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
-import type { PluginClock } from '../clock';
-import { WorkerCalls } from '../runtime/worker-calls';
 import { itemsLeftOut } from './kept-items';
-import { PluginSlotItems } from './plugin-slot-items';
-
-const nothing = (): void => {};
+import { slotItems } from './slot-items-fixture';
 
 const input: SlotItemsInput = {
   slotId: sessionRowSlotId,
   contexts: [{ sessionId: 'first', projectId: 'argo' }],
 };
-
-const manualClock = (): PluginClock & { fire: () => void } => {
-  const timers = new Set<() => void>();
-
-  return {
-    now: () => 0,
-    delay: async () => {},
-    schedule: (callback) => {
-      timers.add(callback);
-
-      return () => timers.delete(callback);
-    },
-    fire: () => {
-      for (const timer of timers) timer();
-    },
-  };
-};
-
-type SlotItems = {
-  calls: PluginSlotItems;
-  workers: WorkerCalls;
-  sent: PluginEvent[];
-  clock: ReturnType<typeof manualClock>;
-};
-
-function slotItems(): SlotItems {
-  const sent: PluginEvent[] = [];
-  const clock = manualClock();
-
-  const workers = new WorkerCalls({
-    clock,
-    send: (_pluginId, event): void => void sent.push(event),
-  });
-
-  const calls = new PluginSlotItems(workers, clock, { written: nothing });
-
-  workers.run('counter', 1);
-
-  return { calls, workers, sent, clock };
-}
 
 const answer = (id: number, text: string): SlotCall => ({
   action: 'items',
