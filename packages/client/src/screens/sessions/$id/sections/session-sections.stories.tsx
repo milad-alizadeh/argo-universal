@@ -16,6 +16,7 @@ import {
   subagentNow,
   subagentStates,
 } from '../../../../features/sessions/components/subagent-list/subagent-list.mocks';
+import { attachedIssuesBar } from '../session-detail-view-bar.mocks';
 import type { SessionInspectorContent } from '../session-inspector-content';
 import { coverageCard, issueTrackerCard } from './plugin-card.mocks';
 import { itemsOf } from './session-section';
@@ -90,6 +91,9 @@ export const PluginCards: Story = {
     content: { ...everySection, pluginCards: [issueTrackerCard, coverageCard] },
   },
 };
+
+// Two attached Issues share one Plugin card, each a row; the Plugin sent no `detach`, so the rows have no menu.
+export const AttachedIssues: Story = { args: { bar: attachedIssuesBar } };
 
 // One-line cards: a diff total, finished Agents and an Issue's line each draw one summary line, at one height.
 export const SummaryLines: Story = {
