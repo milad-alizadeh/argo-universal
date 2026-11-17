@@ -4,12 +4,21 @@ import { installShardProbe } from './shard-probe';
 
 installShardProbe();
 
+const STORY_CLEANUP_TIMEOUT_MS = 90_000;
+
+/*
+ * Release memory between story files. Collection can outlast assertions on a loaded runner,
+ * so it has a separate cleanup budget.
+ * Stories may emulate touch or resize the page; each starts with a mouse and the configured viewport.
+ */
 afterAll(async () => {
   await cdp().send('HeapProfiler.collectGarbage');
-});
+}, STORY_CLEANUP_TIMEOUT_MS);
 
-// Play functions resize the page, so every story starts at the configured viewport.
 beforeEach(async ({ task, onTestFailed }) => {
+  if (matchMedia('(pointer: coarse)').matches)
+    await cdp().send('Emulation.setTouchEmulationEnabled', { enabled: false });
+
   const { width, height } = server.config.browser.viewport;
   await page.viewport(width, height);
   // Vitest's own failure screenshot finds an unmounted page here, so take it while the story is still up.
