@@ -34,12 +34,7 @@ export type RunOrigin = { projectId?: string; serverDevice: boolean };
 
 const eventOf = (
   id: number,
-  {
-    serverDevice: _serverDevice,
-    secrets: _secrets,
-    tier: _tier,
-    ...request
-  }: Request,
+  { serverDevice: _serverDevice, secrets: _secrets, ...request }: Request,
 ): OperationEvent => ({ type: 'operation', id, ...request });
 
 export type Answer = { ok: true; result: Json } | Failure;

@@ -1,5 +1,5 @@
-import type { PluginClock } from '../clock';
 import type { ActivatedPlugin } from '../access/plugin-access';
+import type { PluginClock } from '../clock';
 import { PluginData } from '../data/plugin-data';
 import { PluginPasses } from '../data/plugin-passes';
 import type { QueryServices } from '../data/query-types';

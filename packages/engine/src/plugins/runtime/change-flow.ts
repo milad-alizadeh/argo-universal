@@ -39,7 +39,10 @@ export class ChangeFlow {
   readonly changes: PageChanges;
   private readonly window: ChangeWindow;
 
-  constructor({ changeClock = realClock, log }: Services, resources: Resources) {
+  constructor(
+    { changeClock = realClock, log }: Services,
+    resources: Resources,
+  ) {
     const { workers, data, items } = resources;
 
     this.window = new ChangeWindow(changeClock, settled({ data, items }), log);

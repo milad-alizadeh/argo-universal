@@ -3,6 +3,7 @@ import {
   PluginOperationCaller,
   PluginOperationName,
   PluginOperationParams,
+  PluginOperationTier,
 } from '#plugin-operations';
 import { PageAddress } from '#plugin-page-address';
 import { PluginSurface } from '#plugin-surface';
@@ -62,6 +63,8 @@ export const PluginEvent = z.union([
     name: PluginOperationName,
     params: PluginOperationParams,
     caller: PluginOperationCaller,
+    // The tier its manifest declares: a change said inside a read-tier handler is not folded into the run's end, which marks nothing.
+    tier: PluginOperationTier.optional(),
   }),
   /*
    * One draw of a Loader page at its address, with `pages` of its paged list (ADR-0050), for the
