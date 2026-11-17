@@ -3,9 +3,13 @@ import type { Database } from '@repo/db';
 import { project } from '@repo/db/schema';
 import { readOriginUrl } from '@repo/git';
 
+// How a Project's origin is read; git by default, a fake in tests that count reads.
+export type ReadOrigin = (path: string) => Promise<string | null>;
+
 // Give Plugins generic Project identity and origin metadata without Tracker rules.
 export async function readPluginProjects(
   database: Database,
+  readOrigin: ReadOrigin = readOriginUrl,
 ): Promise<PluginProjectInfo[]> {
   const projects = database
     .select({ id: project.id, path: project.path, name: project.name })
@@ -16,7 +20,7 @@ export async function readPluginProjects(
     projects.map(async ({ id, name, path }) => ({
       id,
       name,
-      originUrl: await originOf(database, id, path),
+      originUrl: await originOf(database, { id, path }, readOrigin),
     })),
   );
 }
@@ -35,8 +39,8 @@ const origins = new WeakMap<Database, Map<string, Promise<string | null>>>();
 // One in-flight or settled read per Project, so concurrent reads share a single git process.
 function originOf(
   database: Database,
-  id: string,
-  path: string,
+  { id, path }: { id: string; path: string },
+  readOrigin: ReadOrigin,
 ): Promise<string | null> {
   const kept = origins.get(database) ?? new Map();
   const key = `${id}\0${path}`;
@@ -44,7 +48,7 @@ function originOf(
 
   if (known) return known;
 
-  const reading = readOriginUrl(path).catch(() => null);
+  const reading = readOrigin(path).catch(() => null);
 
   kept.set(key, reading);
   origins.set(database, kept);
