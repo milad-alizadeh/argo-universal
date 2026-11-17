@@ -25,6 +25,7 @@ export function runtimeFor(
     ...runtimePorts(options),
     ...projectPorts(options),
     ...foundationPorts(parts),
+    watch: options.watchPlugins,
   });
 }
 

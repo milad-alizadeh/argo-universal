@@ -11,19 +11,27 @@ export type WorkerRecord = {
   heartbeat: ReturnType<typeof setTimeout> | null;
 };
 
-export function startWorker(
-  entry: PluginEntry,
-  failed: (error: string, hanging: boolean) => void,
-): WorkerRecord {
-  const worker = new Worker(new URL('../worker/process.ts', import.meta.url), {
-    workerData: entry,
+// The worker runs `worker/process.ts` with the Plugin's entry and the kit the host bundled.
+const spawn = (entry: PluginEntry, kit: string): Worker =>
+  new Worker(new URL('../worker/process.ts', import.meta.url), {
+    workerData: { entry, kit },
     resourceLimits: { maxOldGenerationSizeMb: heapLimitMb },
   });
 
-  return {
-    generation: entry.generation,
-    worker,
-    deadline: workerDeadline('initializing', failed),
-    heartbeat: null,
-  };
+export const startWorker = (
+  entry: PluginEntry,
+  kit: string,
+  failed: (error: string, hanging: boolean) => void,
+): WorkerRecord => ({
+  generation: entry.generation,
+  worker: spawn(entry, kit),
+  deadline: workerDeadline('initializing', failed),
+  heartbeat: null,
+});
+
+export function stopWorker(record: WorkerRecord): void {
+  clearTimeout(record.deadline);
+
+  if (record.heartbeat) clearTimeout(record.heartbeat);
+  void record.worker.terminate();
 }

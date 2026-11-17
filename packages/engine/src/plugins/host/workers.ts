@@ -11,18 +11,23 @@ import {
   type HostCommand,
 } from '../protocol/runtime.ts';
 import type { TestReply } from '../protocol/test-control.ts';
-import { startWorker, type WorkerRecord } from './start-worker.ts';
+import { KitStarts, workerSources, type WorkerSources } from './kit-starts.ts';
+import { stopWorker, type WorkerRecord } from './start-worker.ts';
 import { workerDeadline, type WorkerPhase } from './worker-deadline.ts';
 
 const heartbeatIntervalMs = 1000;
 
 export class HostWorkers {
   private readonly workers = new Map<string, WorkerRecord>();
-
   private readonly report: (message: HostMessage) => void;
+  private readonly kits: KitStarts;
 
-  constructor(report: (message: HostMessage) => void) {
+  constructor(
+    report: (message: HostMessage) => void,
+    sources: WorkerSources = workerSources,
+  ) {
     this.report = report;
+    this.kits = new KitStarts(sources, report);
   }
 
   // A reply or Hook belongs to the worker generation it names; a reloaded worker never receives it.
@@ -48,27 +53,23 @@ export class HostWorkers {
 
   activate(entry: PluginEntry): void {
     if (this.workers.has(entry.pluginId)) return;
-
-    const record = startWorker(entry, (error, hanging) =>
-      this.crash(entry.pluginId, error, hanging),
-    );
-
-    this.workers.set(entry.pluginId, record);
-    this.listen(entry.pluginId, record);
+    this.kits.begin(entry, {
+      record: (record) => this.listen(entry.pluginId, record),
+      crash: (error, hanging) => this.crash(entry.pluginId, error, hanging),
+    });
   }
 
   stop(pluginId: string): void {
+    this.kits.cancel(pluginId);
+
     const record = this.workers.get(pluginId);
 
-    if (!record) return;
+    if (record) stopWorker(record);
     this.workers.delete(pluginId);
-    clearTimeout(record.deadline);
-
-    if (record.heartbeat) clearTimeout(record.heartbeat);
-    void record.worker.terminate();
   }
 
   private listen(pluginId: string, record: WorkerRecord): void {
+    this.workers.set(pluginId, record);
     record.worker.on('message', (message) => {
       if (this.workers.get(pluginId) === record)
         this.parsed(pluginId, record, WorkerMessage.safeParse(message));

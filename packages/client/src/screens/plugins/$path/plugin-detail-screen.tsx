@@ -8,9 +8,11 @@ import {
   pluginPagePath,
   pluginPath,
   type PluginSection,
+  routeOpening,
   showsBack,
   usePluginAt,
   usePluginOpener,
+  usePrefetchRoutePage,
 } from '#features/plugins';
 import { PluginPageDetailView } from './plugin-page-detail-view';
 
@@ -35,11 +37,18 @@ export function PluginDetailScreen(
   if (section)
     return <PluginPageDetail {...props} section={section} root={root} />;
 
-  return loaded ? <PluginUnavailable /> : <PluginLoading />;
+  return loaded ? <PluginUnavailable /> : <PluginLoading {...props} />;
 }
 
-// The header is declared while the list loads, so a narrow root still has ☰ and a pushed page its Back.
-function PluginLoading(): React.JSX.Element {
+// The header is declared while the list loads, so a narrow root still has ☰ and a pushed page its Back. The page's draw starts from the route meanwhile, so only the title waits on the list.
+function PluginLoading(props: PluginDetailScreenProps): React.JSX.Element {
+  usePrefetchRoutePage(
+    routeOpening(props.path, {
+      projectId: props.projectId,
+      sessionId: props.sessionId,
+    }),
+  );
+
   return (
     <>
       <ScreenStackHeader />

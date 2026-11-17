@@ -11,7 +11,7 @@ import type { PluginEntry } from '../protocol/runtime';
 import { pluginFiles } from './files';
 import { DevVersion } from './version';
 
-type BundleCallbacks = {
+export type BundleCallbacks = {
   loaded: (source: string, version: string) => void;
   failed: (error: string) => void;
 };
@@ -29,12 +29,13 @@ const devBuildOptions: BuildOptions = {
 };
 
 /*
- * esbuild watches the Plugin's import graph. Build output stays in memory and
- * never changes the Plugin folder; every input is confined to that folder.
+ * esbuild builds the Plugin's import graph, and watches it for changes while `watch` is on (a dev Server); otherwise it
+ * builds once. Build output stays in memory and never changes the Plugin folder; every input is confined to that folder.
  */
 export async function watchPlugin(
   entry: Pick<PluginEntry, 'directory' | 'main'>,
   callbacks: BundleCallbacks,
+  watch = true,
 ): Promise<BuildContext> {
   const build = await context({
     ...devBuildOptions,
@@ -42,9 +43,15 @@ export async function watchPlugin(
     plugins: watchPlugins(entry.directory, callbacks),
   });
 
-  await build.watch();
+  await (watch ? build.watch() : buildOnce(build));
 
   return build;
+}
+
+// A build that fails reports through the callbacks; its rejection adds nothing, and nothing is kept watching.
+async function buildOnce(build: BuildContext): Promise<void> {
+  await build.rebuild().catch(() => null);
+  await build.dispose();
 }
 
 function watchPlugins(directory: string, callbacks: BundleCallbacks): Plugin[] {
