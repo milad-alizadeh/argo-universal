@@ -2,7 +2,7 @@ import type { PluginDataState } from '@repo/contracts/plugins/argo-calls';
 import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import { runtimeError } from '../protocol/runtime';
 import { queryState, readQuery, type QueryReaders } from './query-answer';
-import { changed, drawOnly, shows, unreadable } from './query-changes';
+import { changed, shows, unreadable, waitsForDraw } from './query-changes';
 import { QueryHolders, reading } from './query-holders';
 import { QueryRest, restServices } from './query-rest';
 import { QueryTiming } from './query-timing';
@@ -60,8 +60,10 @@ export class QueryEntry {
     return !fresh && this.holders.has(holder) && this.servable();
   }
 
-  private async awaited({ fresh, draw, every }: QueryRead): Promise<void> {
-    this.rest.pulled(fresh);
+  private async awaited(read: QueryRead): Promise<void> {
+    const { fresh, draw, every } = read;
+
+    this.rest.pulled(read);
 
     if (fresh || this.timing.olderThan(every)) await this.refresh(draw);
     await this.untilCurrent(draw, 2);
@@ -72,12 +74,8 @@ export class QueryEntry {
     return (
       this.state.data !== undefined &&
       this.state.error === undefined &&
-      !this.waitsForDraw()
+      !waitsForDraw(this.owner, this.timing.overdue)
     );
-  }
-
-  private waitsForDraw(): boolean {
-    return drawOnly(this.owner) && this.timing.overdue;
   }
 
   // Starts, behind the draw that was served, the read the entry is due or old enough for.

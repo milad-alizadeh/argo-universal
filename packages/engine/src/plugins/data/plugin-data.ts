@@ -3,7 +3,6 @@ import type {
   PluginDataRequest,
   PluginDataState,
 } from '@repo/contracts/plugins/argo-calls';
-import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import { runtimeError, type PluginReply } from '../protocol/runtime';
 import type { WorkerCalls } from '../runtime/worker-calls';
 import { boundWarm, removeWhere } from './entry-map';
@@ -19,20 +18,12 @@ import {
   refuseOutside,
   requireRegistered,
 } from './query-scope';
+import type { QueryOrigin } from './query-types';
 import type { QueryOwner, QueryServices } from './query-types';
 
 type ReadRequest = Extract<PluginDataRequest, { action: 'read' }>;
 
 type Caller = Pick<QueryOwner, 'pluginId' | 'generation'>;
-
-// The draw a Loader's read is for: its id, and the Page address holding the read, or none for a background pass.
-export type DrawnFor = { draw: number; holder?: PageAddress };
-
-/*
- * Where a Loader's read came from: the Project its Query is for and the draw. The runtime works it out
- * from the draw the call runs for, so this module needs no draws.
- */
-export type QueryOrigin = { projectId?: string; drawn?: DrawnFor };
 
 /*
  * The one cache of a Plugin's reads (ADR-0037, ADR-0050): an entry per Plugin, Project and Query, held by
@@ -137,13 +128,13 @@ export class PluginData {
   // Begins the read on the entry it is for.
   private start(
     caller: Caller,
-    { projectId, drawn }: QueryOrigin,
+    { projectId, drawn, forRun }: QueryOrigin,
     { query, projectId: named, fresh }: ReadRequest,
   ): Promise<PluginDataState> {
     const project = projectOf(query, named ?? projectId);
     const entry = this.entry(caller, project, query);
 
-    return entry.read(drawnRead(drawn, fresh));
+    return entry.read(drawnRead(drawn, fresh, forRun));
   }
 
   private entry(

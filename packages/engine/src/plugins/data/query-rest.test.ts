@@ -62,3 +62,15 @@ it('ends a rest when a read answers during it', () => {
   rest.read(true, false);
   expect(rest.resting).toBe(false);
 });
+
+it('ends a rest for a read someone asked for, such as an Operation run’s, and not for one in the background', () => {
+  const { rest } = restOver();
+
+  rest.began();
+  rest.read(false, false);
+  rest.pulled({ fresh: false, asked: false });
+  expect(rest.resting).toBe(true);
+
+  rest.pulled({ fresh: false, asked: true });
+  expect(rest.resting).toBe(false);
+});

@@ -27,3 +27,7 @@ export const unreadable = (
   owner: QueryOwner,
   draw: number | undefined,
 ): boolean => draw === undefined && drawOnly(owner);
+
+// A paged list that is due waits for the draw that reads it, rather than serving what it kept.
+export const waitsForDraw = (owner: QueryOwner, overdue: boolean): boolean =>
+  drawOnly(owner) && overdue;

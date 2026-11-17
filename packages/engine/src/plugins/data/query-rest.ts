@@ -1,4 +1,4 @@
-import type { QueryOwner, QueryServices } from './query-types';
+import type { QueryOwner, QueryRead, QueryServices } from './query-types';
 
 // How long a Query rests after its first failed read, doubling with each failure in a row up to the longest rest (#2197).
 export const failureBackoffMs = 5000;
@@ -57,9 +57,9 @@ export class QueryRest {
     else this.fail(held);
   }
 
-  // A pull asks for a fresh answer whatever the rest.
-  pulled(fresh: boolean): void {
-    if (fresh) this.stop();
+  // A pull, or a read someone asked for such as an Operation run's, asks for a fresh answer whatever the rest.
+  pulled({ fresh, asked }: Pick<QueryRead, 'fresh' | 'asked'>): void {
+    if (fresh || asked === true) this.stop();
   }
 
   // A write or a pull says what failed may not fail now, so the next read is made.

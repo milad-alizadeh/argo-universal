@@ -1,20 +1,25 @@
 import type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
 import { keepNewest, queryKey } from './entry-map';
-import type { DrawnFor, QueryOrigin } from './plugin-data';
 import { QueryEntry, type EntryServices } from './query-entry';
-import type { QueryOwner, QueryRead } from './query-types';
+import type {
+  DrawnFor,
+  QueryOrigin,
+  QueryOwner,
+  QueryRead,
+} from './query-types';
 
 /*
  * A Loader's read holds its Page address, and a background pass, which holds none, reads fresh. Code outside a draw,
- * such as a Slot's provider, reads what was kept, and a list's clock may age it.
+ * such as a Slot's provider, reads what was kept, and a list's clock may age it; an Operation run's read was asked for.
  */
 export const drawnRead = (
   drawn: DrawnFor | undefined,
   fresh: boolean | undefined,
+  forRun?: true,
 ): QueryRead =>
   drawn
     ? { ...drawn, fresh: fresh === true || drawn.holder === undefined }
-    : { fresh: false, outside: true };
+    : { fresh: false, outside: true, asked: forRun === true };
 
 // A named read that names its Project is kept for it, whatever Project the draw or the Slot asking runs for.
 export const projectOf = (
