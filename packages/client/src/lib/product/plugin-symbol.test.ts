@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pluginSymbol } from './plugin-symbol';
+import { manifestIcon, manifestSymbol, pluginSymbol } from './plugin-symbol';
 
 describe('pluginSymbol', () => {
   it('draws every name a Plugin gives', () => {
@@ -31,4 +31,33 @@ describe('pluginSymbol', () => {
       expect(pluginSymbol(icon)).toEqual(drawn);
     },
   );
+});
+
+describe('manifestIcon', () => {
+  const markup = '<svg fill="currentColor"/>';
+
+  it("draws the Plugin's own markup when the Server sent it", () => {
+    expect(manifestIcon({ svg: 'icon.svg', sf: 'ticket' }, markup)).toEqual({
+      markup,
+    });
+  });
+
+  it('draws the symbol names, never the file path, when there is no markup', () => {
+    expect(manifestIcon({ svg: 'icon.svg', sf: 'ticket' })).toEqual({
+      sf: 'ticket',
+      material: 'power',
+    });
+  });
+});
+
+describe('manifestSymbol', () => {
+  it('draws the symbol names where only a symbol draws, never the svg path', () => {
+    expect(
+      manifestSymbol({
+        svg: 'icon.svg',
+        sf: 'ticket',
+        material: 'confirmation_number',
+      }),
+    ).toEqual({ sf: 'ticket', material: 'confirmation_number' });
+  });
 });

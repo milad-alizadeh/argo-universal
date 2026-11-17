@@ -16,6 +16,7 @@ import {
 } from './group-activities';
 import { GroupChild } from './group-child';
 import { groupHeaderProps } from './group-header-props';
+import { groupImageAside } from './group-images';
 import { GroupLiveId } from './group-live-id';
 import { useGrowthAbove } from './use-growth-above';
 
@@ -93,6 +94,7 @@ export function ToolCallGroup(props: ToolCallGroupProps): React.JSX.Element {
       {...groupHeaderProps(props.group, liveHeader, title)}
       initialOpen={props.initialOpen}
       trailing={liveHeader ? undefined : trailing}
+      aside={groupImageAside(props.group)}
     >
       <GroupBody {...props} />
     </ToolCallDisclosure>

@@ -1,5 +1,5 @@
 import { executingOver, type Storage } from './pull-execute';
-import { recordedBy, seenOf, sentOf, unrecordedBy } from './pull-fix-events';
+import { recordedBy, seenOf, unrecordedBy } from './pull-fix-events';
 import {
   all,
   columns,
@@ -12,6 +12,7 @@ import {
   type FixStore,
   type Link,
 } from './pull-fix-rows';
+import { clearedOn, sentOf, sentWritersOf, waitingOf } from './pull-fix-sent';
 
 export type { FixRecord, FixStore } from './pull-fix-rows';
 
@@ -61,6 +62,7 @@ const enableOf =
         [...keyOf(link), head],
       ),
     );
+    await clearedOn(execute, link, head);
   };
 
 const forgetOf =
@@ -70,15 +72,22 @@ const forgetOf =
     await execute(
       run(`DELETE FROM pull_auto_fix_events WHERE ${where}`, keyOf(link)),
     );
+    await execute(
+      run(`DELETE FROM pull_auto_fix_prompts WHERE ${where}`, keyOf(link)),
+    );
   };
 
 const readingOf = (
   execute: Execute,
-): Pick<FixStore, 'forSessions' | 'enabledIn' | 'seen' | 'sent'> => ({
+): Pick<
+  FixStore,
+  'forSessions' | 'enabledIn' | 'seen' | 'sent' | 'waiting'
+> => ({
   forSessions: forSessionsOf(execute),
   enabledIn: enabledInOf(execute),
   seen: seenOf(execute),
   sent: sentOf(execute),
+  waiting: waitingOf(execute),
 });
 
 const writingOf = (
@@ -89,6 +98,7 @@ const writingOf = (
   return {
     record: recordedBy(execute),
     unrecord: unrecordedBy(execute),
+    ...sentWritersOf(execute),
     enable: enableOf(execute, set),
     disable: (link) => set(link, 0, null),
     stop: (link, head) => set(link, 0, head),

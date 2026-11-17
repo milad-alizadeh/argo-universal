@@ -4,6 +4,7 @@ import {
   reconcileQueueHolds,
   type QueueEditDisconnected,
 } from './queue-hold-connections';
+import { withdrawRow } from './queue-withdraw';
 import type { SessionContext, SessionCommand } from './session-context';
 import { turnStep, type TurnStep } from './turn';
 
@@ -71,6 +72,19 @@ function connectedQueueStep(
   return { ...step, change: { ...step.change, queueHoldConnections } };
 }
 
+// The Server's withdraw for a Plugin, or an App's command with the sender and id the Server set.
+const changeOf = (
+  context: QueueContext,
+  { command, sender, queuedId }: QueueEvent,
+): ReturnType<typeof changePromptQueue> =>
+  command.action === 'withdraw'
+    ? withdrawRow(context, command)
+    : changePromptQueue(
+        context,
+        { ...command, sender, queuedId },
+        context.input.createId,
+      );
+
 function acceptQueueCommand(
   context: QueueContext,
   event: QueueEvent,
@@ -78,11 +92,7 @@ function acceptQueueCommand(
 ): TurnStep {
   requireQueueConnection(event);
 
-  const change = changePromptQueue(
-    context,
-    { ...event.command, sender: event.sender },
-    context.input.createId,
-  );
+  const change = changeOf(context, event);
 
   event.committed.promise.catch(() => {});
 

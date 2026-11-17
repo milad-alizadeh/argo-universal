@@ -16,18 +16,22 @@ const change: SessionPullRequest = {
 
 const scope = { projectId: 'project-1', sessionId: 'session-1' };
 
-type Run = RowActionPorts['run'];
+type Fire = RowActionPorts['fire'];
 
-function ports(overrides: { run?: Run } = {}): RowActionPorts & {
-  run: Mock<Run>;
+function ports(
+  overrides: { copy?: RowActionPorts['copy'] } = {},
+): RowActionPorts & {
+  fire: Mock<Fire>;
   failed: Mock<RowActionPorts['failed']>;
   copy: Mock<RowActionPorts['copy']>;
 } {
   return {
     scope,
-    run: vi.fn<Run>(overrides.run ?? (() => Promise.resolve({ result: null }))),
+    fire: vi.fn<Fire>(),
     failed: vi.fn<RowActionPorts['failed']>(),
-    copy: vi.fn<RowActionPorts['copy']>(() => Promise.resolve(true)),
+    copy: vi.fn<RowActionPorts['copy']>(
+      overrides.copy ?? (() => Promise.resolve(true)),
+    ),
   };
 }
 
@@ -38,7 +42,7 @@ describe('withRowActions', () => {
 
     first?.onDetach?.();
 
-    expect(kit.run).toHaveBeenCalledWith({
+    expect(kit.fire).toHaveBeenCalledWith({
       pluginId: 'github',
       operation: 'detach',
       args: { reference: 'owner/app#12' },
@@ -57,12 +61,12 @@ describe('withRowActions', () => {
     );
   });
 
-  it('says why a Detach failed', async () => {
+  it('says why a Copy link failed', async () => {
     const error = new Error('refused');
-    const kit = ports({ run: () => Promise.reject(error) });
+    const kit = ports({ copy: () => Promise.reject(error) });
     const [first] = withRowActions([change], kit);
 
-    first?.onDetach?.();
+    first?.onCopyLink?.();
     await vi.waitFor(() => expect(kit.failed).toHaveBeenCalledWith(error));
   });
 

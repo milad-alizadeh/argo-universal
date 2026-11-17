@@ -1,6 +1,8 @@
+import type { ImageContent, ToolCallUpdate } from '@repo/contracts';
 import { recordedFeedMocks } from '@repo/mocks/app';
 import { permissionMock } from '../../../../../mocks/requests/recorded-requests';
-import type { FeedGroup } from '../../view/feed-view';
+import { recordedUserMessage } from '../../../../lib/product/feed-message.mocks';
+import type { FeedActivity, FeedGroup } from '../../view/feed-view';
 import { toFeedView } from '../../view/to-feed-view';
 import { toolCallGroupMock } from '../tool-call.mocks';
 import type { ToolCallGroupProps } from './tool-call-group';
@@ -85,4 +87,76 @@ export const allowedOnceHeaderGroup = {
       startedAt: null,
     },
   },
+} satisfies ToolCallGroupFixture;
+
+function requireRecordedImage(): ImageContent {
+  const image = recordedUserMessage('agent-1', 'image-prompt').content.find(
+    (block): block is ImageContent => block.type === 'image',
+  );
+
+  if (!image) throw new Error('Recorded catalog needs a prompt image.');
+
+  return image;
+}
+
+const recordedImage = requireRecordedImage();
+
+const imagePaths = [
+  'docs/screens/feed-before.png',
+  'docs/screens/feed-after.png',
+];
+
+const imageOutput = (): ToolCallUpdate['content'] => [
+  {
+    type: 'content',
+    content: { type: 'image', mimeType: 'image/png', blob: recordedImage.blob },
+  },
+];
+
+// A recorded read as if it had read an image: the Engine stores the image as a Blob.
+function asImageRead(
+  row: ToolCallUpdate,
+  path: string,
+  index: number,
+): ToolCallUpdate {
+  return {
+    ...row,
+    id: `${row.id}-image-${index}`,
+    title: `Read ${path}`,
+    locations: [{ path }],
+    rawInput: { file_path: path },
+    rawOutput: undefined,
+    content: imageOutput(),
+  };
+}
+
+// Two image reads before the recorded text read, so the exploration mixes both.
+function withImageCalls(item: FeedActivity): FeedActivity {
+  if (item.type !== 'exploration') return item;
+  const [first] = item.toolCalls;
+
+  const images = first
+    ? imagePaths.map((path, index) => asImageRead(first, path, index))
+    : [];
+
+  return { ...item, toolCalls: [...images, ...item.toolCalls] };
+}
+
+function withImageReads(group: FeedGroup): FeedGroup {
+  return {
+    ...group,
+    title: 'Ran 1 command, Read 3 files',
+    items: group.items.map(withImageCalls),
+  };
+}
+
+// Two reads returned images: the header ends in their thumbnails.
+export const imageReadsGroup = {
+  group: withImageReads(toolCallGroupMock.group),
+} satisfies ToolCallGroupFixture;
+
+// Opened: each image read ends in its thumbnail; the text read is unchanged.
+export const imageReadsExpandedGroup = {
+  ...imageReadsGroup,
+  initialOpen: true,
 } satisfies ToolCallGroupFixture;

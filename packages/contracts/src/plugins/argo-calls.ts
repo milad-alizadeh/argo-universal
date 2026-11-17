@@ -10,10 +10,12 @@ export {
   PluginProjectInfo,
   PluginPromptAnswer,
   PluginSessionInfo,
+  PluginWithdrawAnswer,
   SessionArchive,
   SessionCall,
   SessionGet,
   SessionPrompt,
+  SessionWithdraw,
 } from '#plugin-session-calls';
 
 export { SlotCall } from '#plugin-slot-calls';

@@ -96,6 +96,25 @@ it('sends no system prompt when Agent access is disabled', async () => {
   await host.caller.session.close(created);
 }, 30_000);
 
+it('leaves the Todo list out of the system prompt when the person turned the Todo list off', async () => {
+  const host = await startHost(takesSystemPrompt);
+
+  await host.caller.agent.setTodoList({ enabled: false });
+
+  const created = await host.caller.session.new(emptySessionInput);
+
+  await expect(
+    sentSystemPrompt(firstProcess(host), newSession),
+  ).resolves.toEqual({
+    mode: 'append',
+    content: [
+      { type: 'text', text: argoInstructionsMarkdown({ todoList: false }) },
+    ],
+  });
+
+  await host.caller.session.close(created);
+}, 30_000);
+
 it('appends the Argo instructions again when a Session resumes on a new process', async () => {
   const host = await startHost(takesSystemPrompt);
 

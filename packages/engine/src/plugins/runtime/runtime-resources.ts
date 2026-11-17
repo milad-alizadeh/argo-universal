@@ -72,11 +72,13 @@ export class RuntimeResources {
     });
   }
 
-  // A Query answer that changed marks the Page addresses whose draws read it.
+  // A changed Query answer refreshes Slots and marks the pages that read it.
   private pluginData(input: QueryServices): PluginData {
-    return new PluginData(input, this.workers, (pluginId, addresses) =>
-      this.changes.heldChanged(pluginId, addresses),
-    );
+    return new PluginData(input, this.workers, (pluginId, addresses) => {
+      this.items.changed(pluginId);
+
+      if (addresses.length) this.changes.heldChanged(pluginId, addresses);
+    });
   }
 
   private backgroundPasses(input: QueryServices): PluginPasses {

@@ -4,8 +4,9 @@ import { join } from 'node:path';
 import type { PluginList } from '@repo/contracts/plugins';
 import { productName } from '@repo/contracts/product-identity';
 import { z } from 'zod';
-import { notStarted } from '../protocol/runtime';
+import { type Admitted, listed } from './listed-plugin';
 import { readManifest } from './manifest';
+import { readIconMarkup } from './manifest-icon';
 
 export interface PluginsDeps {
   // The Server's runtime directory, `ARGO_HOME` or `~/.argo` (`resolveRuntimeDirectory`); user Plugins sit in its `plugins/`.
@@ -148,7 +149,12 @@ async function admit(directory: string, discovery: Discovery): Promise<void> {
   try {
     const manifest = await readManifest(directory, discovery.version);
 
-    addManifest(manifest, discovery);
+    // A Plugin that will not load has its untrusted icon file left unread.
+    const iconMarkup = discovery.firstParty
+      ? await readIconMarkup(directory, manifest.icon)
+      : undefined;
+
+    addManifest({ manifest, iconMarkup }, discovery);
     discovery.locations.set(manifest.id, directory);
   } catch (error) {
     reportError(directory, ThrownError.parse(error), discovery.result);
@@ -167,16 +173,18 @@ function reportError(
 }
 
 function addManifest(
-  manifest: PluginList['plugins'][number]['manifest'],
+  admitted: Admitted,
   { firstParty, result }: Discovery,
 ): void {
-  if (result.plugins.some((plugin) => plugin.manifest.id === manifest.id))
-    throw new Error(`Duplicate Plugin id: ${manifest.id}`);
+  const { id } = admitted.manifest;
+
+  if (result.plugins.some((plugin) => plugin.manifest.id === id))
+    throw new Error(`Duplicate Plugin id: ${id}`);
 
   // Third-party Plugins wait for consent and an operating-system boundary (ADR-0030), like Obsidian's Restricted mode.
   if (!firstParty)
     throw new Error(
       `Plugin is not loaded: only Plugins shipped with ${productName} load until ${productName} asks for consent`,
     );
-  result.plugins.push({ manifest, firstParty, enabled: true, ...notStarted });
+  result.plugins.push(listed(admitted, firstParty));
 }

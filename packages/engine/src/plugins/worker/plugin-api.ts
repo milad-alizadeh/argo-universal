@@ -140,6 +140,8 @@ const pluginApi: Argo = frozen({
     get: (sessionId) => call({ api: 'sessions', action: 'get', sessionId }),
     prompt: (sessionId, text) =>
       call({ api: 'sessions', action: 'prompt', sessionId, text }),
+    withdraw: (sessionId, queuedId) =>
+      call({ api: 'sessions', action: 'withdraw', sessionId, queuedId }),
     archive: async (sessionId) => {
       await call({ api: 'sessions', action: 'archive', sessionId });
     },

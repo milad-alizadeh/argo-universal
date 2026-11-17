@@ -1,4 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
+import { recordedImageUrl } from '../../../../lib/product/feed-message.mocks';
+import { FeedImageUrlContext } from '../feed-image';
 import { ToolCallGroup } from './tool-call-group';
 import {
   allowedOnceGroup,
@@ -9,6 +12,8 @@ import {
   runningGroup,
   settledGroup,
   failedCommandsGroup,
+  imageReadsExpandedGroup,
+  imageReadsGroup,
 } from './tool-call-group-fixtures';
 import { renderRecordedActivity } from './tool-call-group-preview.mocks';
 
@@ -22,6 +27,13 @@ const meta = {
     now: { control: 'number' },
   },
   args: { ...settledGroup, renderActivity: renderRecordedActivity },
+  decorators: [
+    (Story): React.JSX.Element => (
+      <FeedImageUrlContext.Provider value={recordedImageUrl}>
+        <Story />
+      </FeedImageUrlContext.Provider>
+    ),
+  ],
 } satisfies Meta<typeof ToolCallGroup>;
 
 export default meta;
@@ -49,3 +61,9 @@ export const AllowedOnce: Story = { args: allowedOnceGroup };
 export const FailedCommands: Story = { args: failedCommandsGroup };
 
 export const AnsweredLiveHeader: Story = { args: allowedOnceHeaderGroup };
+
+// Reads that returned images: the header ends in an overlapping stack of their thumbnails.
+export const ImageReads: Story = { args: imageReadsGroup };
+
+// Opened: each image read ends in a thumbnail instead of drawing a code block.
+export const ImageReadsExpanded: Story = { args: imageReadsExpandedGroup };

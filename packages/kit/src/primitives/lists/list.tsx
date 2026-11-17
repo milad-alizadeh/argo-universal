@@ -1,6 +1,7 @@
 import { listDefaults } from '@repo/contracts/kit-tokens';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
+import { InRowFrameContext } from '#primitives/fields/field-row';
 import { useSkeletonLoading } from '#primitives/status/skeleton';
 import type { ListLook } from '../../list-look';
 import {
@@ -92,17 +93,22 @@ const CardEdge = ({
 }): ReactElement =>
   card ? <View className="-mx-1">{children}</View> : children;
 
-// A Plugin's List, whose props its wire checked: plugin-kit's types keep `onMove` off a List of `items` there.
+/*
+ * A Plugin's List, whose props its wire checked: plugin-kit's types keep `onMove` off a List of `items` there. A List
+ * inside a row's frame starts outside it: only its own grouped cells frame its rows.
+ */
 export function PluginList<Item>(props: ListProps<Item>): ReactElement {
   const list = useListContent(props);
   const look = useLook(list);
 
   return (
-    <ListLookContext value={look}>
-      <CardEdge card={look.card}>
-        <ListBehaviours list={list} render={renderRows} />
-      </CardEdge>
-    </ListLookContext>
+    <InRowFrameContext value={false}>
+      <ListLookContext value={look}>
+        <CardEdge card={look.card}>
+          <ListBehaviours list={list} render={renderRows} />
+        </CardEdge>
+      </ListLookContext>
+    </InRowFrameContext>
   );
 }
 

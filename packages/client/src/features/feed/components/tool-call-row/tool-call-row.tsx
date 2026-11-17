@@ -9,6 +9,8 @@ import { use } from 'react';
 import { View } from 'react-native';
 import { toolCallFacts } from '../../view/feed-row-facts';
 import { fileName } from '../../view/file-edit-label';
+import { toolCallImages, withoutImages } from '../../view/tool-call-images';
+import { imageStackAside } from '../feed-image-stack';
 import { shellRuns } from '../shell-runs';
 import {
   ToolCallDisclosure,
@@ -103,12 +105,20 @@ function RawToolOutput({
   return sections.length > 0 ? <CodeSections sections={sections} /> : null;
 }
 
-function ToolCallBody({ row }: { row: ToolCallUpdate }): React.JSX.Element {
-  return row.content.length > 0 ? (
-    <ToolOutput content={row.content} fileName={toolCallPath(row)} />
-  ) : (
+// A call that returned images draws them as thumbnails on its header; its raw output only repeats their bytes.
+function ToolCallBody({
+  row,
+}: {
+  row: ToolCallUpdate;
+}): React.JSX.Element | null {
+  const content = withoutImages(row.content);
+
+  if (content.length > 0)
+    return <ToolOutput content={content} fileName={toolCallPath(row)} />;
+
+  return content.length === row.content.length ? (
     <RawToolOutput row={row} />
-  );
+  ) : null;
 }
 
 function ToolCallRowOutput({
@@ -124,19 +134,24 @@ function ToolCallRowOutput({
   );
 }
 
-function ToolCallRowDisclosure(props: ToolCallRowProps): React.JSX.Element {
-  const { row } = props;
-  const groupChild = use(GroupChild);
+function rowDisclosureProps(
+  { row, awaitingApproval, initialOpen }: ToolCallRowProps,
+  groupChild: boolean,
+): Omit<React.ComponentProps<typeof ToolCallDisclosure>, 'children'> {
+  return {
+    ...toolCallDisclosureProps(row, awaitingApproval, groupChild),
+    icon: toolCallIcon(row),
+    running: isToolCallRunning(row),
+    failed: row.status === 'failed',
+    initialOpen,
+    aside: imageStackAside(toolCallImages(row), 'row'),
+  };
+}
 
+function ToolCallRowDisclosure(props: ToolCallRowProps): React.JSX.Element {
   return (
-    <ToolCallDisclosure
-      {...toolCallDisclosureProps(row, props.awaitingApproval, groupChild)}
-      icon={toolCallIcon(row)}
-      running={isToolCallRunning(row)}
-      failed={row.status === 'failed'}
-      initialOpen={props.initialOpen}
-    >
-      <ToolCallRowOutput row={row} />
+    <ToolCallDisclosure {...rowDisclosureProps(props, use(GroupChild))}>
+      <ToolCallRowOutput row={props.row} />
     </ToolCallDisclosure>
   );
 }
