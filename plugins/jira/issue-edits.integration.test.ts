@@ -58,7 +58,7 @@ it(
     const jira = await listed();
     const page = await jira.list.press(argoThree);
 
-    const dot = (): WireNode['props'][string] =>
+    const dot = (): WireNode['props'][string] | undefined =>
       page.find(keyed(fieldKeys.status)).props.dot;
 
     expect(dot()).toBe('info');
