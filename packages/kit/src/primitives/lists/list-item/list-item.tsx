@@ -31,15 +31,10 @@ import {
   ChoiceSlot,
   SelectionTint,
 } from './list-item-selection';
-import {
-  itemSeparator,
-  itemSurface,
-  type ItemDrawing,
-} from './list-item-styles';
+import { itemSeparator, type ItemDrawing } from './list-item-styles';
+import { useItemSurface } from './list-item-surface';
 
 const hairline = { height: StyleSheet.hairlineWidth };
-
-const tileSurface = 'relative overflow-hidden rounded-3xl bg-card';
 
 function useItemDrawing(props: Pick<ListItemProps, 'sidebar'>): ItemDrawing {
   const { position } = useContext(RowPositionContext);
@@ -95,7 +90,7 @@ function ItemSurface(props: DrawingProps): ReactElement {
 
   return (
     <View
-      className={tile ? tileSurface : itemSurface(drawing, props)}
+      className={useItemSurface(drawing, props, tile !== null)}
       aria-hidden={loading || undefined}
     >
       <PressedContent props={props} drawing={drawing} tile={tile !== null} />
