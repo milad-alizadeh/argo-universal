@@ -53,6 +53,8 @@ catalog:
   vaul: 1.1.2
   # Native toasts; Expo SDK 58 lists no version for it, so this is its newest release.
   burnt: 0.13.0
+  # Mermaid fences drawn as SVG without a DOM, on every App and the Server.
+  beautiful-mermaid: 1.1.3
   # The web toast library under Burnt's Toaster; a toast with an action (Undo) calls it directly. Burnt 0.13.0's own version.
   sonner: 2.0.8
   "@playwright/test": 1.63.0

@@ -3,6 +3,7 @@ import type { z } from 'zod';
 import type { NativeStartRequest } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
 import { createAppOperations } from './app';
+import { createDiagramOperations } from './diagram';
 import type { NativeStartId, StartedWork } from './native-start';
 import type { OperationsDeps } from './operations';
 import { createPluginOperations } from './plugins';
@@ -72,6 +73,7 @@ export function createImplementations(
   return {
     ...createAgentAccessOperations(deps),
     ...createAppOperations(deps),
+    ...createDiagramOperations(),
     ...sessionImplementations(deps.sessions),
     ...createPluginOperations(deps.plugins.plugins),
     ...createRegistryOperations(deps),

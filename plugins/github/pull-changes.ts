@@ -1,31 +1,49 @@
 import type { Argo } from '@argo/plugin-kit';
+import {
+  mergeOf,
+  type AutoMergeInfo,
+  type MergeSettings,
+  type Reads,
+} from './pull-automation';
+import type { AutomationReads } from './pull-automation-reads';
+import type { Automations } from './pull-automations';
 import { changeOf, type ChangeItem, type Refresh } from './pull-change';
 import type { CheckInfo } from './pull-checks';
+import type { CommentInfo, CommentsReads } from './pull-comments';
 import type { PullInfo } from './pull-info';
+import type { Attached } from './pull-kept';
 import { failureMessage, known, type Known } from './pull-known';
+import { readOpenOnly } from './pull-open-reads';
 import type { PullReads } from './pull-reads';
-import type { PullLink, PullStore } from './pull-store';
+import type { PullRecords } from './pull-records';
+import type { PullKey, PullLink, PullStore } from './pull-store';
+import type { ViewerReads } from './pull-viewer';
 
 export type ChangesSource = {
   store: PullStore;
-  reads: PullReads;
+  automations: Automations;
+  records: PullRecords;
+  reads: PullReads & AutomationReads & CommentsReads & ViewerReads;
   readState: Argo['queries']['readState'];
 };
 
 // One association with what is known of its pull request and that commit's Checks.
-export type LinkRead = {
-  link: PullLink;
+export type LinkRead<Link extends PullKey = PullLink> = {
+  link: Link;
   pull: Known<PullInfo>;
   // Unknown until the pull request has said which commit is its head.
   checks?: Known<CheckInfo[]>;
-};
+  // Read only for an Open pull request, which is the only one that can auto-merge.
+  autoMerge?: Known<AutoMergeInfo>;
+  settings?: Known<MergeSettings>;
+  // Read only for an Open pull request, the only one Auto-fix prompts about.
+  comments?: Known<CommentInfo[]>;
+  // The signed-in account, read beside an Open pull request so Auto-fix can tell whether it opened it.
+  viewer?: Known<string>;
+} & Attached;
 
 // Two Sessions attaching the same pull request ask the same question, so they share one entry.
-const targetOf = ({
-  projectId,
-  repository,
-  number,
-}: PullLink): Pick<PullLink, 'projectId' | 'repository' | 'number'> => ({
+const targetOf = ({ projectId, repository, number }: PullKey): PullKey => ({
   projectId,
   repository,
   number,
@@ -33,7 +51,7 @@ const targetOf = ({
 
 const readPull = (
   { readState, reads }: ChangesSource,
-  link: PullLink,
+  link: PullKey,
 ): Promise<Known<PullInfo>> =>
   known(() =>
     readState(reads.pull(targetOf(link)), { projectId: link.projectId }),
@@ -41,32 +59,28 @@ const readPull = (
 
 const readChecks = (
   { readState, reads }: ChangesSource,
-  { projectId, repository }: PullLink,
+  { projectId, repository }: PullKey,
   head: string,
 ): Promise<Known<CheckInfo[]>> =>
   known(() =>
     readState(reads.checks({ projectId, repository, head }), { projectId }),
   );
 
-export async function readLink(
+// One pull request with what GitHub says of it now, read through the named Queries; only `sync` asks (see `pull-sync.ts`).
+export async function readLink<Link extends PullKey>(
   source: ChangesSource,
-  link: PullLink,
-): Promise<LinkRead> {
+  link: Link,
+): Promise<LinkRead<Link>> {
   const pull = await readPull(source, link);
 
   if (!pull.data) return { link, pull };
 
-  return { link, pull, checks: await readChecks(source, link, pull.data.head) };
-}
+  const [checks, open] = await Promise.all([
+    readChecks(source, link, pull.data.head),
+    readOpenOnly(source, link, pull.data),
+  ]);
 
-// Every association of these Sessions with what is known of its pull request, read through the named Queries that Slots and Operations share. Each is read alone.
-export async function readLinks(
-  source: ChangesSource,
-  sessionIds: readonly string[],
-): Promise<LinkRead[]> {
-  const links = await source.store.forSessions(sessionIds);
-
-  return Promise.all(links.map((link) => readLink(source, link)));
+  return { link, pull, checks, ...open };
 }
 
 const failureOfRead = ({ pull, checks }: LinkRead): Known<unknown> =>
@@ -81,10 +95,25 @@ const staleOf = (read: LinkRead): Pick<Refresh, 'stale'> => {
   return failure ? { stale: failure.reason } : {};
 };
 
+const readsOf = ({ autoMerge, settings }: LinkRead): Reads => ({
+  autoMerge: autoMerge?.data,
+  settings: settings?.data,
+});
+
+// What the Change offers to automate; GitHub's own answers, so one it could not give is never drawn as off.
+const automationOf = (read: LinkRead): Pick<Refresh, 'automation'> => {
+  const { pull, kept } = read;
+
+  return pull.data && kept
+    ? { automation: { ...kept, merge: mergeOf(pull.data, readsOf(read)) } }
+    : {};
+};
+
 // Stale when either read failed: the Change is what was last known, with why it could not be refreshed.
 export const refreshOf = (read: LinkRead): Refresh => ({
   ...checksOf(read),
   ...staleOf(read),
+  ...automationOf(read),
 });
 
 type ChangeRead = { sessionId: string; change: ChangeItem };
@@ -125,8 +154,8 @@ function refuseUnread(
 /*
  * Each pull request is answered alone: one that could not be read, and was never read before, is left out while the
  * others show, and one read before keeps its last known data marked stale. Only when nothing could be read at all is
- * the failure thrown: Argo then keeps the Plugin's contribution out and says why. One GitHub is slow to answer is
- * no failure: it shows as last read, or not yet (see `pull-row-reads.ts`).
+ * the failure thrown: Argo then keeps the Plugin's contribution out and says why. One GitHub has not answered yet
+ * is no failure: it shows as last read, or not yet (see `pull-sync.ts`).
  */
 export function changesBySession(
   reads: readonly LinkRead[],

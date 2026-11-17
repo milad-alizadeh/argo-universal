@@ -6,6 +6,12 @@ import { cn } from '#kit/utils';
 import { TextClassContext } from '#primitives/content/text';
 import type { ContextMenuItem, ContextMenuProps } from './context-menu-props';
 import { MenuActionLabel } from './menu-action-label';
+import {
+  ChoiceCheck,
+  ChoiceGutterContext,
+  choiceRole,
+  hasChoice,
+} from './menu-choice-check';
 import { MenuSection } from './menu-section';
 import {
   menuContentClassName,
@@ -95,7 +101,9 @@ function ContextMenuContent(props: ContentProps): ReactElement {
         className="z-50"
         onCloseAutoFocus={props.chosen.onCloseAutoFocus}
       >
-        <View className={contentClassName}>{menuRows(props)}</View>
+        <ChoiceGutterContext.Provider value={hasChoice(props.groups.flat())}>
+          <View className={contentClassName}>{menuRows(props)}</View>
+        </ChoiceGutterContext.Provider>
       </RadixContextMenu.Content>
     </TextClassContext.Provider>
   );
@@ -123,6 +131,7 @@ function ContextMenuRow({ item, chosen }: RowProps): ReactElement {
     <TextClassContext.Provider value={menuTextClass(item.tone)}>
       <RadixContextMenu.Item {...itemProps(item, chosen)}>
         <View className={menuRowClass(item.tone)}>
+          <ChoiceCheck selected={item.selected} />
           <MenuActionLabel {...item} />
         </View>
       </RadixContextMenu.Item>
@@ -137,6 +146,7 @@ const itemProps = (
   asChild: true,
   disabled: item.disabled,
   'aria-label': item.label,
+  ...choiceRole(item.selected),
   onSelect: () => chosen.choose(item),
 });
 

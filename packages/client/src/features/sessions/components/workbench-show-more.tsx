@@ -25,7 +25,7 @@ const pressable = (props: Props) =>
     role: 'button',
     accessibilityLabel: `Show ${label(props)}`,
     onPress: props.onOpen,
-    className: `rounded-control ${props.icons?.length ? '' : 'px-2 py-2 '}web:hover:bg-hover web:focus-visible:bg-hover`,
+    className: `rounded-control ${props.icons?.length ? '' : 'px-1 py-2 '}web:hover:bg-hover web:focus-visible:bg-hover`,
   }) as const;
 
 // The footer of a card that draws only its live items: it names the rest and opens the section's full list.
@@ -43,9 +43,5 @@ function ShowMoreLabel(props: Props): ReactElement {
   if (props.icons?.length)
     return <StackedSummary icons={props.icons} texts={[label(props)]} />;
 
-  return (
-    <Text role="secondary" tone="muted">
-      {label(props)}
-    </Text>
-  );
+  return <Text numberOfLines={1}>{label(props)}</Text>;
 }

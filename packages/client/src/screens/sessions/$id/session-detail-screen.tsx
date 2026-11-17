@@ -1,11 +1,14 @@
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
 import { useIsPreview } from 'expo-router';
-import { useState } from 'react';
+import { memo, useDeferredValue, useState } from 'react';
 import type * as React from 'react';
 import { View, type ViewStyle } from 'react-native';
+import {
+  ConnectedReplaceableSlots,
+  LinkMarksProvider,
+} from '#features/plugins';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
-import { ConnectedReplaceableSlots } from '../../plugins/connected-replaceable-slot';
 import { sessionsInDrawOrder, retainSession } from './retained-sessions';
 import {
   SessionDetailView,
@@ -55,18 +58,23 @@ function useRecentSessions(sessionId: string): string[] {
   return next;
 }
 
-// The three most recently shown wide Session pages keep their live Feeds.
+/*
+ * The three most recently shown wide Session pages keep their live Feeds. The page shown follows the route a render
+ * behind: the click's own render keeps the pages as they are, so the list marks its row at once, and the next Session
+ * mounts in a render the browser can interrupt to draw a frame.
+ */
 function RetainedSessions({
   sessionId,
 }: {
   sessionId: string;
 }): React.JSX.Element {
-  const recent = useRecentSessions(sessionId);
+  const shown = useDeferredValue(sessionId);
+  const recent = useRecentSessions(shown);
 
   return (
     <View style={{ flex: 1 }}>
       {sessionsInDrawOrder(recent).map((id) => (
-        <RetainedSession key={id} sessionId={id} visible={id === sessionId} />
+        <RetainedSession key={id} sessionId={id} visible={id === shown} />
       ))}
     </View>
   );
@@ -94,7 +102,8 @@ function retainedProps(visible: boolean): React.ComponentProps<typeof View> {
   };
 }
 
-function RetainedSession({
+// Memoised, so a page redraws from its own state and not with the navigator above it.
+const RetainedSession = memo(function RetainedSession({
   sessionId,
   visible,
 }: {
@@ -108,7 +117,7 @@ function RetainedSession({
       </View>
     </RetainedPageVisibility>
   );
-}
+});
 
 // A Feed row a Plugin replaces runs its Operations for this Session and its Project. The cards' pages are drawn beside the page, so a preview draws the same cards.
 function ConnectedSession({
@@ -120,7 +129,9 @@ function ConnectedSession({
 
   return (
     <ConnectedReplaceableSlots session={opened.session}>
-      <SessionPageBody {...body} />
+      <LinkMarksProvider projectId={opened.session.projectId}>
+        <SessionPageBody {...body} />
+      </LinkMarksProvider>
       {opened.cards.held}
     </ConnectedReplaceableSlots>
   );

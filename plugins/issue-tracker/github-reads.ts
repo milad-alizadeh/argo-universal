@@ -1,5 +1,6 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
 import { SignInRequired } from './github-api';
+import type { Choices } from './github-edits';
 import type { Issue } from './github-issues';
 import type { TrackerClient } from './github-tracker';
 import { openClient, projectById, type ClientSource } from './issue-client';
@@ -63,12 +64,18 @@ type IssuesTarget = Target & { search: string; limit: number };
 
 type IssueTarget = Target & { number: number };
 
+type AttachedTarget = Target & { numbers: number[] };
+
 export type GitHubReads = {
   // A Project's labels and counts: one GitHub call.
   overview: (args: Target) => NamedQuery<Settled<Overview>>;
   // One page of a Project's Issues for a search, newest first.
   issues: (args: IssuesTarget) => NamedQuery<Settled<Issue[]>>;
   issue: (args: IssueTarget) => NamedQuery<Settled<Issue>>;
+  // The Issues a Project's Sessions are attached to, in one GitHub call: the numbers GitHub still has.
+  attached: (args: AttachedTarget) => NamedQuery<Settled<number[]>>;
+  // The labels and people an Issue in the Project can be given.
+  choices: (args: Target) => NamedQuery<Settled<Choices>>;
 };
 
 async function clientFor(
@@ -94,6 +101,20 @@ async function listed(
   await Promise.all(issues.map(seed));
 
   return issues;
+}
+
+// Read together and in full, so each seeds the entry its own page, or a Slot's summary, reads next.
+async function attachedNumbers(
+  source: Source,
+  seed: (issue: Issue) => Promise<void>,
+  { projectId, numbers }: AttachedTarget,
+): Promise<number[]> {
+  const client = await clientFor(source, projectId);
+  const issues = await client.getIssues(numbers);
+
+  await Promise.all(issues.map(seed));
+
+  return issues.map(({ number }) => number);
 }
 
 // Each read is kept for the Project its args name, so a page drawn for a Project and a Slot share its entry.
@@ -128,6 +149,14 @@ const overviewRead = (argo: Argo, source: Source): GitHubReads['overview'] =>
     byProject,
   );
 
+const choicesRead = (argo: Argo, source: Source): GitHubReads['choices'] =>
+  argo.queries.define(
+    'choices',
+    ({ projectId }: Target) =>
+      settle(async () => (await clientFor(source, projectId)).choices()),
+    byProject,
+  );
+
 const issuesRead = (
   argo: Argo,
   source: Source,
@@ -142,6 +171,20 @@ const issuesRead = (
     byProject,
   );
 
+const attachedRead = (
+  argo: Argo,
+  source: Source,
+  issue: GitHubReads['issue'],
+): GitHubReads['attached'] =>
+  argo.queries.define(
+    'attached',
+    (target: AttachedTarget) =>
+      settle(() =>
+        attachedNumbers(source, seeding(argo, issue, target.projectId), target),
+      ),
+    byProject,
+  );
+
 export function defineReads(argo: Argo, source: Source): GitHubReads {
   const issue = issueRead(argo, source);
 
@@ -149,5 +192,7 @@ export function defineReads(argo: Argo, source: Source): GitHubReads {
     issue,
     overview: overviewRead(argo, source),
     issues: issuesRead(argo, source, issue),
+    attached: attachedRead(argo, source, issue),
+    choices: choicesRead(argo, source),
   };
 }

@@ -3,6 +3,7 @@ import { disabled } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import {
   nativeSectionKey,
+  nativeTitle,
   type NativeMenuItem,
   type NativeMenuSection,
 } from './menu-native-items';
@@ -46,7 +47,7 @@ const submenu = (
 const toggle = (item: NativeMenuItem, isOn: boolean): ReactElement => (
   <Toggle
     key={item.id}
-    label={item.title}
+    label={nativeTitle(item)}
     systemImage={menuSymbol(item.icon)}
     isOn={isOn}
     onIsOnChange={item.choose}
@@ -57,7 +58,7 @@ const toggle = (item: NativeMenuItem, isOn: boolean): ReactElement => (
 const button = (item: NativeMenuItem): ReactElement => (
   <Button
     key={item.id}
-    label={item.title}
+    label={nativeTitle(item)}
     systemImage={menuSymbol(item.icon)}
     role={item.tone === 'danger' ? 'destructive' : undefined}
     onPress={item.choose}

@@ -1,6 +1,7 @@
-import type { ComponentProps, ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { formatAge } from '#kit/format-elapsed';
+import { changeMarks, issueMarks, type StageMark } from '#kit/stage-marks';
 import { useClock } from '#kit/use-clock';
 import { cn } from '#kit/utils';
 import { Avatar } from '#primitives/content/avatar';
@@ -102,55 +103,43 @@ function DiffTotals({ data }: { data: GitItemPreview }): ReactElement {
   );
 }
 
-const stateDrawing = {
-  open: {
-    text: 'Open',
-    tone: 'success',
-    fill: 'bg-success/14',
-    icon: 'pr-open',
-  },
-  merged: {
-    text: 'Merged',
-    tone: 'done',
-    fill: 'bg-done/14',
-    icon: 'pr-merged',
-  },
-  closed: { text: 'Closed', tone: 'muted', fill: 'bg-tint', icon: 'pr-closed' },
-  draft: { text: 'Draft', tone: 'muted', fill: 'bg-tint', icon: 'pr-draft' },
+// The ink and the pill fill each tone of a mark draws in here.
+const drawings = {
+  success: { ink: 'success', fill: 'bg-success/14' },
+  done: { ink: 'done', fill: 'bg-done/14' },
+  danger: { ink: 'danger', fill: 'bg-danger/14' },
+  warning: { ink: 'warning', fill: 'bg-warning/14' },
+  neutral: { ink: 'muted', fill: 'bg-tint' },
 } as const;
 
+type State = Pick<GitItemPreview, 'kind' | 'state'>;
+
+// An Issue is open or closed; a pull request has every Stage a Change with one can be at.
+const issueMark = ({ state }: State): StageMark =>
+  issueMarks[state === 'closed' ? 'closed' : 'open'];
+
+export const gitStateMark = (data: State): StageMark =>
+  data.kind === 'issue' ? issueMark(data) : changeMarks[data.state ?? 'open'];
+
 function GitState({ data }: { data: GitItemPreview }): ReactElement {
-  const drawing = stateDrawing[data.state ?? 'open'];
+  const mark = gitStateMark(data);
+  const { ink, fill } = drawings[mark.tone];
 
   return (
-    <View className={stateClass(drawing.fill)}>
-      <Icon {...stateIcon(data)} />
-      <Text role="badge" tone={drawing.tone}>
-        {drawing.text}
+    <View className={stateClass(fill)}>
+      <GitStateIcon data={data} />
+      <Text role="badge" tone={ink}>
+        {mark.label}
       </Text>
     </View>
   );
 }
 
-// The state's icon alone, drawn beside a link so its state reads without a hover.
-export function GitStateIcon({
-  data,
-}: {
-  data: Pick<GitItemPreview, 'kind' | 'state'>;
-}): ReactElement {
-  return <Icon {...stateIcon(data)} />;
-}
+// The state's icon alone, in the card's state badge.
+function GitStateIcon({ data }: { data: State }): ReactElement {
+  const mark = gitStateMark(data);
 
-function stateIcon(
-  data: Pick<GitItemPreview, 'kind' | 'state'>,
-): ComponentProps<typeof Icon> {
-  const drawing = stateDrawing[data.state ?? 'open'];
-
-  return {
-    name: data.kind === 'issue' ? issueIcon(data.state) : drawing.icon,
-    size: 'sm',
-    tone: drawing.tone,
-  };
+  return <Icon name={mark.icon} size="sm" tone={drawings[mark.tone].ink} />;
 }
 
 function stateClass(fill: string): string {
@@ -164,10 +153,4 @@ type DiffTotals = { additions: number; deletions: number };
 
 function diffTotals(data: GitItemPreview): DiffTotals {
   return { additions: data.additions ?? 0, deletions: data.deletions ?? 0 };
-}
-
-function issueIcon(
-  state: GitItemPreview['state'],
-): 'git-issue-open' | 'git-issue-closed' {
-  return state === 'closed' ? 'git-issue-closed' : 'git-issue-open';
 }

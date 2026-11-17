@@ -1,3 +1,7 @@
+import type {
+  AgentSuggestionModel,
+  SuggestionModelChoice,
+} from '@repo/contracts';
 import type { RowBadge } from '@repo/kit/primitives/lists/list-item';
 import type { IconName } from '@repo/kit/symbols/icon-names';
 import type { Href } from 'expo-router';
@@ -27,6 +31,9 @@ export interface SettingsListViewProps {
   onThemeChange: (theme: ThemeChoice) => void;
   followUpSuggestions?: boolean;
   onFollowUpSuggestionsChange?: (enabled: boolean) => void;
+  // Each Installed Agent's model for Follow-up suggestions; undefined until the Server has answered.
+  suggestionModels?: AgentSuggestionModel[];
+  onSuggestionModelChange?: (id: string, choice: SuggestionModelChoice) => void;
   notificationsState?: string;
   status?: 'ready' | 'loading' | 'disconnected';
   // The sidebar's search: only pages whose title matches show.

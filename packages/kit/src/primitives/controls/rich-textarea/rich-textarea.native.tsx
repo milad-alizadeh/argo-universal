@@ -40,6 +40,7 @@ function useFieldMaxHeight(): number {
 // What the text field takes: the drawing's own props stay out of it.
 function textFieldProps({
   onSubmit: _onSubmit,
+  onModifiedSubmit: _onModifiedSubmit,
   disabled: _disabled,
   fieldClassName: _fieldClassName,
   autoFocus: _autoFocus,

@@ -14,7 +14,7 @@ export type Step =
       verificationUri: string;
       lifetimeMs: number;
     }
-  | { kind: 'signed-in'; label: string }
+  | { kind: 'signed-in'; label: string; accountId: string }
   | { kind: 'ended'; title: string; message: string };
 
 const endTitles = {

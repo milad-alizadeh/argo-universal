@@ -37,6 +37,7 @@ const createSessionCreationInput = (
   checkout: event.checkout,
   configOptions: event.configOptions,
   prompt: event.prompt,
+  followUpSuggestions: event.followUpSuggestions,
   turnId: event.turnId,
   startedBySessionId: event.startedBySessionId,
 });

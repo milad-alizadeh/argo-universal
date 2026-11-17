@@ -34,3 +34,28 @@ export const editingElsewhere: Omit<PromptQueueProps, 'command'> = {
   ...queuedPrompts,
   holds: [first.id],
 };
+
+export const singlePrompt: Omit<PromptQueueProps, 'command'> = {
+  ...queuedPrompts,
+  queue: { ...queuedPrompts.queue, items: [first] },
+};
+
+export const steerablePrompts: Omit<PromptQueueProps, 'command'> = {
+  ...queuedPrompts,
+  canSteer: true,
+};
+
+export const attachmentOnly: Omit<PromptQueueProps, 'command'> = {
+  ...steerablePrompts,
+  queue: {
+    items: [
+      {
+        ...first,
+        prompt: [
+          { type: 'resource_link', uri: 'file:///notes.md', name: 'notes.md' },
+        ],
+      },
+    ],
+    pauseReason: null,
+  },
+};

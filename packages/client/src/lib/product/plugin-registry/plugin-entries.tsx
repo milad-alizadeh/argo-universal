@@ -27,6 +27,7 @@ import { Surface } from '@repo/kit/primitives/layout/surface';
 import { Board } from '@repo/kit/primitives/lists/board';
 import { ListSection, PluginList } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { SessionRow } from '@repo/kit/primitives/lists/session-row';
 import { Table } from '@repo/kit/primitives/lists/table';
 import { Alert } from '@repo/kit/primitives/overlays/alert';
 import { Sheet } from '@repo/kit/primitives/overlays/sheet';
@@ -41,6 +42,7 @@ import { ProgressBar } from '@repo/kit/primitives/status/progress-bar';
 import { Spinner } from '@repo/kit/primitives/status/spinner';
 import { Canvas, Chart, Svg } from '@repo/kit/primitives/visual';
 import type { ComponentType } from 'react';
+import { PluginSignIn } from './plugin-sign-in';
 
 // A Plugin's sheet holds composed content, so it takes the standard sheet inset.
 function PluginSheet(
@@ -69,9 +71,11 @@ export const pluginEntries = {
   'Metadata.Pills': Metadata.Pills,
   'Metadata.StatusDot': Metadata.StatusDot,
   'Metadata.Avatar': Metadata.Avatar,
+  'Metadata.Picker': Metadata.Picker,
   Action,
   'Action.Section': Action.Section,
   EmptyState,
+  SignIn: PluginSignIn,
   Spinner,
   Callout: PluginCallout,
   TextArea,
@@ -92,6 +96,7 @@ export const pluginEntries = {
   List: PluginList,
   'List.Section': ListSection,
   ListItem,
+  SessionRow,
   Board,
   'Board.Column': Board.Column,
   'Board.Card': Board.Card,

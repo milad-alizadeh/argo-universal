@@ -25,6 +25,7 @@ export interface ComposerDraft {
 export interface ComposerProps {
   draft: ComposerDraft;
   promptQueue?: PromptQueueProps;
+  queueEdit?: { id: string; cancel: () => void };
   queueWhileRunning?: boolean;
   followUpSuggestion?: {
     sessionId: string;
@@ -49,6 +50,7 @@ export interface ComposerProps {
   onAttachFiles?: () => void;
   onCreateGoal?: () => void;
   onSend: (draft: ComposerDraft) => void;
+  onSteer?: (draft: ComposerDraft) => void;
   onStop?: () => void;
   configuration?: ComposerConfigurationProps;
   status?: ComposerStatusProps;
@@ -73,4 +75,5 @@ export interface ComposerLayout {
   configurationInactive: boolean;
   sendState: 'stop' | 'sending' | 'ready' | 'blocked';
   send: () => void;
+  modifiedSend: () => void;
 }

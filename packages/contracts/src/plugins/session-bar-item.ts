@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { tones } from '#kit-tokens';
 import { PluginIcon, PluginPath } from '#plugin-manifest-fields';
+import { PluginOperationName, PluginOperationParams } from '#plugin-operations';
 
 // The Session bar is one line across the Session's column, so its text may run longer than a row's meta label.
 const sessionBarTextLimit = 80;
@@ -13,6 +14,13 @@ export const SessionBarItem = z.strictObject({
   tone: z.enum(tones).optional(),
   // The Plugin page the bar's Open goes to.
   action: z.strictObject({ path: PluginPath }).optional(),
+  // The Operation that takes the line off the Session; Argo draws "Detach from Session" in the line's menu and runs it, so a line without one has no menu.
+  detach: z
+    .strictObject({
+      operation: PluginOperationName,
+      args: PluginOperationParams,
+    })
+    .optional(),
 });
 
 export type SessionBarItem = z.infer<typeof SessionBarItem>;

@@ -15,7 +15,7 @@ function RecordedExploration({
   activity: Exploration;
 }): React.JSX.Element {
   return (
-    <View className="gap-2">
+    <View className="gap-2 wide-type:gap-1.5">
       {activity.toolCalls.map((row) => (
         <ToolCallRow key={row.id} row={row} />
       ))}

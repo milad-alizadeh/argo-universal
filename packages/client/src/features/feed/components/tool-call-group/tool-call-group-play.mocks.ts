@@ -1,12 +1,17 @@
 import type { CommandAction, ToolCallUpdate } from '@repo/contracts';
 import { startedAt } from '../recorded-tool-calls.mocks';
-import { runningRead, toolCallGroupMocks } from '../tool-call.mocks';
+import {
+  runningRead,
+  toolCallGroupMock,
+  toolCallGroupMocks,
+} from '../tool-call.mocks';
 
 export const commandAndFileSummary = 'Ran 1 command, Read 1 file';
 
 export const readFileTitle = 'Read /project/hello.txt';
 
-export const commandTitle = 'Show hello.txt and short git status';
+// A group's child is titled with its command line, running or settled.
+export const commandLine = 'cat hello.txt && git status --short';
 
 export const dark = { globals: { mode: 'dark' } };
 
@@ -53,3 +58,12 @@ export function parallelCase(agentIndex: number): ParallelCase {
 
   return { recorded, expectedTitle: expectedTitle(recorded.earlier), read };
 }
+
+const { running } = toolCallGroupMock;
+
+const runningLive = running.state === 'open' ? running.live : undefined;
+
+if (!runningLive) throw new Error('Recorded catalog needs a running command');
+
+// The recorded running group's command runs behind a read, and still titles the group.
+export const runningGroupTitle = expectedTitle(runningLive.toolCall);

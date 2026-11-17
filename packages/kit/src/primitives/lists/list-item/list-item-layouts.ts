@@ -16,6 +16,7 @@ export const pressLayouts = {
   row: 'w-full flex-row items-start gap-4 px-4 py-4 wide:px-5',
   // A compact List's row (Paper "Issue row"): one 36-tall line, 10 in from its edges, its lanes 8 apart.
   compact: 'w-full min-h-9 flex-row items-center gap-2 px-2.5',
+  tray: 'w-full min-h-7 flex-row items-center gap-1.5 px-1.5',
   menu: 'w-full min-h-9 flex-row items-start gap-2 rounded-xl p-2',
   'sidebar-tile': 'w-full min-h-13 flex-row items-center gap-3.5 px-2 py-1.5',
   ...sidebarPressLayouts,
@@ -29,6 +30,7 @@ const controlLine = 'flex-wrap gap-y-2';
 export const controlLines = {
   row: controlLine,
   compact: controlLine,
+  tray: controlLine,
   menu: 'flex-wrap gap-y-3',
   'sidebar-tile': controlLine,
   sidebar: controlLine,

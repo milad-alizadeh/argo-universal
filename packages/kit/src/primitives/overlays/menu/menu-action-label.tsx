@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import {
   Kbd,
@@ -13,15 +14,35 @@ interface LabelProps {
   icon?: IconSymbol;
   content?: ReactNode;
   shortcut?: ActionShortcut;
+  subtitle?: string;
+  subtitleTone?: 'warning';
 }
 
 export function MenuActionLabel(props: LabelProps): React.JSX.Element {
   return (
     <>
       <LeadingIcon icon={props.icon} />
-      {props.content ?? <Text className="flex-1">{props.label}</Text>}
+      {props.content ?? <LabelText {...props} />}
       <ShortcutHint shortcut={props.shortcut} />
     </>
+  );
+}
+
+// The label, with its subtitle under it in the muted tone, or the warning tone when it says something stopped.
+function LabelText({
+  label,
+  subtitle,
+  subtitleTone,
+}: Pick<LabelProps, 'label' | 'subtitle' | 'subtitleTone'>): React.JSX.Element {
+  if (!subtitle) return <Text className="flex-1">{label}</Text>;
+
+  return (
+    <View className="flex-1">
+      <Text>{label}</Text>
+      <Text role="secondary" tone={subtitleTone ?? 'muted'}>
+        {subtitle}
+      </Text>
+    </View>
   );
 }
 

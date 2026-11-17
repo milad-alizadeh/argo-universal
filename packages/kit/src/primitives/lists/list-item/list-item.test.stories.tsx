@@ -247,7 +247,9 @@ export const SubtitleStateDot: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('button', { name: title })).toBeVisible();
     await expect(canvas.getByText('Connected')).toBeVisible();
-    await expect(canvas.getByTestId('icon-dot')).toBeVisible();
+    const dot = canvas.getByTestId('icon-dot');
+    await expect(dot).toBeVisible();
+    await expect(dot.getBoundingClientRect().width).toBe(8);
   },
 };
 

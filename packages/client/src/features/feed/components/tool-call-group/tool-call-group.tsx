@@ -4,27 +4,19 @@ import type { ReactNode } from 'react';
 import { type LayoutChangeEvent, View } from 'react-native';
 import { useToolCallDuration } from '../../hooks/use-tool-call-duration';
 import type { FeedActivity, FeedGroup } from '../../view/feed-view';
-import {
-  LiveTitle,
-  SourceIcon,
-  useLiveHeaderTitle,
-} from '../live-header/live-header';
-import {
-  ToolCallDisclosure,
-  toolCallDisclosureProps,
-} from '../tool-call-disclosure';
-import { toolCallIcon } from '../tool-call-icon';
+import { useLiveHeaderTitle } from '../live-header/live-header';
+import { ToolCallDisclosure } from '../tool-call-disclosure';
 import {
   activityKey,
-  groupSummary,
   liveHeaderOf,
   liveToolCall,
   showsDuration,
-  titledLiveCall,
+  headerLiveCall,
   visibleActivities,
 } from './group-activities';
+import { GroupChild } from './group-child';
+import { groupHeaderProps } from './group-header-props';
 import { GroupLiveId } from './group-live-id';
-import { SettledGroup } from './settled-group';
 import { useGrowthAbove } from './use-growth-above';
 
 const idleHeader: LiveHeader = {
@@ -44,39 +36,6 @@ interface GroupActivitiesProps {
   items: FeedActivity[];
   onLayout: (event: LayoutChangeEvent) => void;
   renderActivity: ToolCallGroupProps['renderActivity'];
-}
-
-type GroupDisclosureProps = Pick<
-  React.ComponentProps<typeof ToolCallDisclosure>,
-  | 'label'
-  | 'paths'
-  | 'icon'
-  | 'running'
-  | 'awaitingApproval'
-  | 'permissionOutcome'
->;
-
-function groupDisclosureProps(group: FeedGroup): GroupDisclosureProps {
-  const live = titledLiveCall(group);
-  const running = group.state === 'open';
-
-  return live
-    ? {
-        ...toolCallDisclosureProps(live.toolCall, live.awaitingApproval),
-        icon: toolCallIcon(live.toolCall),
-        running,
-      }
-    : groupSummaryProps(group);
-}
-
-function groupSummaryProps(group: FeedGroup): GroupDisclosureProps {
-  return {
-    label: groupSummary(group),
-    paths: [],
-    icon: 'terminal',
-    running: group.state === 'open',
-    awaitingApproval: liveToolCall(group)?.awaitingApproval,
-  };
 }
 
 function useGroupTrailing(group: FeedGroup, now?: number): string | undefined {
@@ -107,47 +66,19 @@ function GroupActivities({
   );
 }
 
-function liveHeaderDisclosureProps(
-  { source }: LiveHeader,
-  title: string,
-): Pick<
-  React.ComponentProps<typeof ToolCallDisclosure>,
-  'label' | 'leading' | 'title'
-> {
-  return {
-    label: title,
-    leading: <SourceIcon source={source} />,
-    title: <LiveTitle title={title} source={source} />,
-  };
-}
-
-function groupHeaderProps(
-  group: FeedGroup,
-  liveHeader: LiveHeader | undefined,
-  title: string,
-):
-  | ReturnType<typeof groupDisclosureProps>
-  | ReturnType<typeof liveHeaderDisclosureProps> {
-  const disclosure = groupDisclosureProps(group);
-
-  return liveHeader
-    ? { ...disclosure, ...liveHeaderDisclosureProps(liveHeader, title) }
-    : disclosure;
-}
-
 // One component whether or not a live header titles the group, so the header coming and going keeps the open state.
 function GroupBody(props: ToolCallGroupProps): React.JSX.Element {
   const activities = useGroupActivities(props.group);
-  const live = titledLiveCall(props.group);
+  const live = headerLiveCall(props.group);
 
   return (
     <GroupLiveId value={live?.toolCall.id}>
-      <SettledGroup value={props.group.state === 'settled'}>
+      <GroupChild value>
         <GroupActivities
           {...activities}
           renderActivity={props.renderActivity}
         />
-      </SettledGroup>
+      </GroupChild>
     </GroupLiveId>
   );
 }

@@ -54,7 +54,7 @@ const enterCodeButton = (props: ScanCodeViewProps): ReactNode =>
   props.onEnterCode ? (
     <Button
       label="Enter code instead"
-      variant="secondary"
+      variant={props.access === 'allowed' ? 'primary' : 'secondary'}
       fullWidth
       onPress={props.onEnterCode}
     />

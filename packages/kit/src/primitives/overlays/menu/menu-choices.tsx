@@ -112,7 +112,7 @@ function MenuChoiceGroupRows(
   );
 }
 
-// Groups sit 8px apart with no line (Paper's Menu "Section line"); Radix's Separator gives the gap role="separator", so it is announced and skipped by the keyboard.
+// A hairline parts the groups; Radix's Separator gives it role="separator", so it is announced and skipped by the keyboard.
 function MenuGroupSeparator(): React.JSX.Element {
   return (
     <RadixMenu.Separator asChild>
