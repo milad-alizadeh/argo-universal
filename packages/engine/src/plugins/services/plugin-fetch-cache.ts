@@ -2,7 +2,10 @@ import { createHash } from 'node:crypto';
 import type { FetchReply } from '@repo/contracts/plugins/argo-calls';
 import type { PluginClock } from '../clock';
 import type { Hop } from './plugin-fetch-response';
+import { HostSlots } from './plugin-host-slots';
 import { lower, rateLimited, refusal, reopensAt } from './plugin-rate-limit';
+
+export { concurrentPerHostLimit } from './plugin-host-slots';
 
 // One reply as `argo.fetch` hands it back.
 type Send = (hop: Hop) => Promise<FetchReply>;
@@ -88,6 +91,7 @@ const withValidators = (hop: Hop, kept: Kept | undefined): Hop =>
 export class PluginFetchCache {
   private readonly replies = new Map<string, Kept>();
   private readonly closed = new Map<string, number>();
+  private readonly slots = new HostSlots();
   private keptBytes = 0;
 
   constructor(private readonly clock: Pick<PluginClock, 'now'>) {}
@@ -98,12 +102,27 @@ export class PluginFetchCache {
 
     if (until !== undefined) return refusal(until, this.clock.now());
 
-    const reply = await this.sendKept(hop, send);
+    const reply = await this.slots.run(hop.url.host, () =>
+      this.sendWhileOpen(gate, hop, send),
+    );
 
     if (rateLimited(reply))
       this.closed.set(gate, reopensAt(reply, this.clock.now()));
 
     return reply;
+  }
+
+  // A request that waited for its turn may find the origin closed by an answer that came in meanwhile.
+  private async sendWhileOpen(
+    gate: string,
+    hop: Hop,
+    send: Send,
+  ): Promise<FetchReply> {
+    const until = this.closedUntil(gate);
+
+    return until === undefined
+      ? this.sendKept(hop, send)
+      : refusal(until, this.clock.now());
   }
 
   private closedUntil(gate: string): number | undefined {
