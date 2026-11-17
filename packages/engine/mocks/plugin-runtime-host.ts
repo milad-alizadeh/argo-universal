@@ -16,10 +16,9 @@ import { MemorySecretStore } from './memory-secret-store';
 export function startPluginRuntime(
   home: string,
   options: Pick<PluginServiceOptions, 'oauth' | 'clock'> = {},
-  builds?: PluginBuilds,
+  builds?: Partial<PluginBuilds>,
 ): PluginRuntime {
-  const log = (line: string): void =>
-    writeLog({ home, label: 'plugins', line });
+  const log = pluginLog(home);
 
   const runtime = new PluginRuntime(
     log,
@@ -32,6 +31,11 @@ export function startPluginRuntime(
 
   return runtime;
 }
+
+const pluginLog =
+  (home: string) =>
+  (line: string): void =>
+    writeLog({ home, label: 'plugins', line });
 
 const pluginServices = (
   home: string,

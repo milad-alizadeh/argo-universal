@@ -13,7 +13,7 @@ import { projectPorts } from './project-ports';
 import { runtimePorts } from './runtime-ports';
 import { createPluginRuntime } from './runtime/create-runtime';
 import type { PluginLocation } from './runtime/plugin-location';
-import type { PluginRuntime } from './runtime/plugin-runtime';
+import type { PluginBuilds, PluginRuntime } from './runtime/plugin-runtime';
 import { PluginService } from './service';
 import { HeldSecrets } from './services/held-secrets';
 import type { PluginNetwork } from './services/plugin-fetch';
@@ -130,10 +130,16 @@ function runtimeFor(
     hooks: parts.hookPort.hooks,
     settings: async (pluginId, key) => parts.settings.read(pluginId, key),
     locate: locator(parts),
-    // A dev build landing may come with a changed `plugin.json`.
-    rebuilt: () => parts.discovery.located.clear(),
-    watch: options.watchPlugins,
+    builds: buildsOf(options, parts),
   });
+}
+
+// A dev build landing may come with a changed `plugin.json`; only a dev Server watches sources, any other builds once.
+function buildsOf(options: PluginsOptions, parts: Foundations): PluginBuilds {
+  return {
+    rebuilt: () => parts.discovery.located.clear(),
+    watch: options.watchPlugins ?? true,
+  };
 }
 
 // A sign-in wakes its account provider the way the service activates any Plugin.

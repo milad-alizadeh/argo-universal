@@ -97,14 +97,13 @@ export class RuntimePlugins {
   }
 
   private pluginInput(location: PluginLocation): PluginInput {
-    const { host, clockStart, resources, log, rebuilt, watch } = this.input;
+    const { host, clockStart, resources, log, ...builds } = this.input;
 
     return {
       entry: location.entry,
       host,
       log,
-      rebuilt,
-      watch,
+      ...builds,
       clockStart,
       deferReload: () => this.turnsRunning,
       grant: (plugin, generation) =>

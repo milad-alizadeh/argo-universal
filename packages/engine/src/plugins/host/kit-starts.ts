@@ -1,6 +1,6 @@
+import { bundleKit } from '../kit/bundle.ts';
 import { runtimeError, type PluginEntry } from '../protocol/runtime.ts';
 import type { HostMessage } from '../protocol/runtime.ts';
-import { bundleKit } from '../kit/bundle.ts';
 import { startWorker, type WorkerRecord } from './start-worker.ts';
 
 // How the host starts workers: the kit it bundles once, and how a worker is spawned with it.

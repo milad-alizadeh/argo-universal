@@ -11,7 +11,7 @@ import type { PluginEntry } from '../protocol/runtime';
 import { pluginFiles } from './files';
 import { DevVersion } from './version';
 
-type BundleCallbacks = {
+export type BundleCallbacks = {
   loaded: (source: string, version: string) => void;
   failed: (error: string) => void;
 };
@@ -43,8 +43,7 @@ export async function watchPlugin(
     plugins: watchPlugins(entry.directory, callbacks),
   });
 
-  if (watch) await build.watch();
-  else await buildOnce(build);
+  await (watch ? build.watch() : buildOnce(build));
 
   return build;
 }

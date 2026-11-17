@@ -17,7 +17,9 @@ const entry = (pluginId: string): PluginEntry => ({
 function idleWorker(generation: number): WorkerRecord {
   const worker = new Worker('setInterval(() => {}, 1000)', { eval: true });
 
-  onTestFinished(() => worker.terminate());
+  onTestFinished(() => {
+    void worker.terminate();
+  });
 
   return {
     generation,

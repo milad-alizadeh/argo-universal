@@ -1,4 +1,5 @@
 import { parentPort, workerData } from 'node:worker_threads';
+import { z } from 'zod';
 import { CallScope, originOf } from '../protocol/call-origin.ts';
 import {
   PluginEntry,
@@ -6,7 +7,6 @@ import {
   type WorkerCall,
 } from '../protocol/runtime.ts';
 import type { TestReply } from '../protocol/test-control.ts';
-import { z } from 'zod';
 import { registerPlugin, type PluginInboxes } from './modules.ts';
 import { createPluginBridge, WorkerCalls } from './plugin-bridge.ts';
 import { answerTest, PluginTestClock } from './test-clock.ts';

@@ -19,7 +19,7 @@ import { TestControl } from './test-control';
 // How Plugins are built: told whenever a dev build lands, and whether a build watches the Plugin's sources or runs once.
 export type PluginBuilds = { rebuilt: () => void; watch: boolean };
 
-const defaultBuilds: PluginBuilds = { rebuilt: () => undefined, watch: true };
+const defaultBuilds: PluginBuilds = { rebuilt: () => null, watch: true };
 
 export class PluginRuntime {
   readonly hooks;
@@ -38,7 +38,7 @@ export class PluginRuntime {
     private readonly log: (line: string) => void,
     readonly services: PluginServices,
     clock: PluginClock = realClock,
-    private readonly builds: PluginBuilds = defaultBuilds,
+    private readonly builds: Partial<PluginBuilds> = {},
   ) {
     this.host = new HostConnection(this.callbacks());
     this.connectAccounts();
@@ -77,6 +77,7 @@ export class PluginRuntime {
       clockStart: () => this.testControl.workerStart(),
       resources: this.resources,
       log: this.log,
+      ...defaultBuilds,
       ...this.builds,
     };
   }
