@@ -19,7 +19,9 @@ const readsOf = (run: Run, number: number): number =>
   run.github.pullReads().filter(({ path }) => path === pathOf(number)).length;
 
 // A list the App keeps open, drawn until it shows the pull request Closed, as GitHub now says it is.
-async function openedOnClosed(run: Run): ReturnType<typeof openChanges> {
+async function openedOnClosed(
+  run: Run,
+): Promise<ReturnType<typeof openChanges>> {
   const open = openChanges(run);
 
   await open.next();

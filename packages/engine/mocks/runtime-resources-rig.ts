@@ -26,6 +26,7 @@ const services = {
   onStorageWrite: (): void => {},
   watchProjects: (): (() => void) => (): void => {},
   projectIds: async (): Promise<string[]> => ['p1'],
+  limitedUntil: (): number | undefined => undefined,
   handle: async (): Promise<PluginReply> => ({ ok: false, error: 'none' }),
   activate: (): void => {},
   release: (): void => {},

@@ -27,9 +27,9 @@ export class QueryEntry {
     private readonly services: EntryServices,
   ) {
     this.timing = new QueryTiming(services.clock);
-    this.rest = new QueryRest(restServices(owner, services), () =>
-      this.refreshHeld(),
-    );
+    this.rest = new QueryRest(restServices(owner, services), () => {
+      void this.refreshHeld();
+    });
   }
 
   /*
