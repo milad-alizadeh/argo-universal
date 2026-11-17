@@ -1,5 +1,9 @@
 import type { CompactionUpdate, Notice } from '@repo/contracts';
 import {
+  argoToolsNoticeDescription,
+  argoToolsNoticeTitle,
+} from '@repo/contracts/agents/argo-tools-notice';
+import {
   compactionStates,
   noticeStates,
 } from '../../../../../mocks/feed-paper';
@@ -22,6 +26,15 @@ function compactionOf(status: string): CompactionUpdate {
 }
 
 export const infoNotice = { row: noticeOf('info') } satisfies FeedNoticeProps;
+
+// The Engine's notice after a first Turn whose Agent never started `argo mcp` (ADR-0053).
+export const missingArgoToolsNotice = {
+  row: {
+    ...noticeOf('info'),
+    title: argoToolsNoticeTitle,
+    description: argoToolsNoticeDescription(true),
+  },
+} satisfies FeedNoticeProps;
 
 export const warningNotice = {
   row: noticeOf('warning'),

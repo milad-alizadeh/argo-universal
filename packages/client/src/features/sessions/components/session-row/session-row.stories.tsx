@@ -155,7 +155,7 @@ function SteppingPlanRow(args: SessionRowProps): React.JSX.Element {
   return <SessionRow {...args} session={{ ...args.session, plan }} />;
 }
 
-export const PlanSteps: Story = {
+export const TodoSteps: Story = {
   name: 'Plan steps',
   args: runningSession,
   render: (args) => <SteppingPlanRow {...args} />,

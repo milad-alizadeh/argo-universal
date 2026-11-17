@@ -58,7 +58,7 @@ export const composerFiles: ComposerAttachment[] = [
   composerOtherFile,
 ];
 
-export const composerPlan: PlanEntry[] = [
+export const composerTodos: PlanEntry[] = [
   {
     content: 'Inspect the Composer layout',
     priority: 'high',
@@ -76,7 +76,7 @@ export const composerPlan: PlanEntry[] = [
   },
 ];
 
-export const composerPlanDone: PlanEntry[] = composerPlan.map((entry) => ({
+export const composerTodosDone: PlanEntry[] = composerTodos.map((entry) => ({
   ...entry,
   status: 'completed',
 }));

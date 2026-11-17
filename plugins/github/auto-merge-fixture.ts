@@ -1,3 +1,4 @@
+import { graphqlPath } from './github-fixture-automation';
 import type { FixturePull } from './github-fixture-types';
 import { attach, changesOf } from './journey-calls-fixture';
 import {
@@ -74,3 +75,13 @@ export function pullOf12(run: Journey): FixturePull {
 
   return pull;
 }
+
+// What GitHub's GraphQL endpoint was asked, in order: each call a write when it is a mutation, otherwise a read.
+export const graphqlOrder = (run: Journey): ('write' | 'read')[] =>
+  run.github.requests
+    .filter(({ path }) => path === graphqlPath)
+    .map(({ body }) => {
+      const { query }: { query: string } = JSON.parse(body);
+
+      return query.includes('mutation') ? 'write' : 'read';
+    });

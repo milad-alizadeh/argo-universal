@@ -12,7 +12,7 @@ import type { JSX } from 'react';
 import { Pressable, View } from 'react-native';
 import { completedSteps } from '../../utils/status';
 
-interface PlanTriggerProps {
+interface TodosTriggerProps {
   entries: PlanEntry[];
   disabled: boolean;
   wide: boolean;
@@ -20,7 +20,7 @@ interface PlanTriggerProps {
   toggle: () => void;
 }
 
-function PlanIcon(): JSX.Element {
+function TodosIcon(): JSX.Element {
   return (
     <IconSlot>
       <Icon name="checklist" />
@@ -28,67 +28,67 @@ function PlanIcon(): JSX.Element {
   );
 }
 
-// A phone floats the Plan above the card as a pill; a wide window draws it as the tray's own row, never a pill.
-export function createPlanTrigger(props: PlanTriggerProps): JSX.Element {
+// A phone floats the checklist above the card as a pill; a wide window draws it as the tray's own row, never a pill.
+export function createTodosTrigger(props: TodosTriggerProps): JSX.Element {
   return props.wide ? (
-    <PlanRow {...props} />
+    <TodosRow {...props} />
   ) : (
-    <Pill {...planPillProps(props)} />
+    <Pill {...todosPillProps(props)} />
   );
 }
 
-const planPillProps = (
-  props: PlanTriggerProps,
+const todosPillProps = (
+  props: TodosTriggerProps,
 ): React.ComponentProps<typeof Pill> => ({
   variant: 'control',
   appearance: 'glass',
-  accessibilityLabel: 'Plan',
+  accessibilityLabel: 'Todos',
   disabled: props.disabled,
-  text: 'Plan',
-  leading: <PlanIcon />,
+  text: 'Todos',
+  leading: <TodosIcon />,
 });
 
-const planRowClass =
+const todosRowClass =
   'group w-full min-h-7 flex-row items-center gap-1.5 pl-4 pr-3 rounded-t-2xl web:outline-none web:hover:bg-hover web:focus-visible:ring-2 web:focus-visible:ring-focus';
 
-const planRowPress = (
-  props: PlanTriggerProps,
+const todosRowPress = (
+  props: TodosTriggerProps,
 ): React.ComponentProps<typeof Pressable> => ({
   role: 'button',
-  accessibilityLabel: 'Plan',
+  accessibilityLabel: 'Todos',
   'aria-expanded': props.expanded,
   disabled: props.disabled,
   onPress: props.toggle,
-  className: cn(planRowClass, props.disabled && 'opacity-35'),
+  className: cn(todosRowClass, props.disabled && 'opacity-35'),
 });
 
-function PlanRow(props: PlanTriggerProps): JSX.Element {
+function TodosRow(props: TodosTriggerProps): JSX.Element {
   return (
-    <Pressable {...planRowPress(props)}>
+    <Pressable {...todosRowPress(props)}>
       <IconSizeContext value={{ size: 'sm', fixed: true }}>
-        <PlanIcon />
-        <PlanRowWords {...props} />
+        <TodosIcon />
+        <TodosRowWords {...props} />
         <Chevron direction="up" />
       </IconSizeContext>
     </Pressable>
   );
 }
 
-function PlanRowWords({ entries }: PlanTriggerProps): JSX.Element {
+function TodosRowWords({ entries }: TodosTriggerProps): JSX.Element {
   const current = entries.find((entry) => entry.status === 'in_progress');
 
   return (
     <View className="min-w-0 flex-1 flex-row items-center gap-1.5">
       <Text role="control" selectable={false}>
-        {`Plan ${completedSteps(entries)}/${entries.length}`}
+        {`Todos ${completedSteps(entries)}/${entries.length}`}
       </Text>
-      {current && <PlanRowStep content={current.content} />}
+      {current && <TodosRowStep content={current.content} />}
     </View>
   );
 }
 
 // The step under way, cut short before it reaches the chevron at the row's end.
-function PlanRowStep({ content }: { content: string }): JSX.Element {
+function TodosRowStep({ content }: { content: string }): JSX.Element {
   return (
     <View className="min-w-0 shrink">
       <Text role="control" tone="muted" numberOfLines={1} selectable={false}>

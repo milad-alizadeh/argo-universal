@@ -123,7 +123,7 @@ A folder the Server loads that adds nav items, pages, Settings sections or Slot 
 _Avoid_: Extension, add-on, mod
 
 **Argo instructions**:
-Prose core gives every Session's Agent, once per Session, through Argo's MCP server, before any Plugin instructions. It tells the Agent how to work in Argo, such as keeping a Plan.
+Prose core gives every Session's Agent, once per Session, through Argo's MCP server, before any Plugin instructions. It tells the Agent how to work in Argo, such as keeping a Todo list.
 _Avoid_: Core prompt, system prompt
 
 **Plugin instructions**:
@@ -153,6 +153,10 @@ _Avoid_: Wire tree, Plugin UI
 **Single-owner Slot**:
 An items Slot only one source shows at a time, such as a Session row's Activity line. Every Plugin that declares it answers; the App shows the answer of the one Plugin the user chose in Settings on that Device, or Argo's own while none is chosen or the chosen Plugin is turned off or has no answer.
 _Avoid_: Part, takeover, exclusive Slot
+
+**Last good items**:
+The items a Plugin last answered in time for each context of an items Slot, kept by the Engine across change signals and restarts. While the Plugin's answer is late, fails or it is not running yet, a list draws these instead, so a Session row keeps its pull requests; they are dropped when the Plugin is turned off or removed.
+_Avoid_: Cached items, stale items
 
 **Replaceable Slot**:
 A Slot placed around a core component, a Tool call or a message in the Feed. A Plugin reaches one only through its `ui.render` Hook and may pass it through, change its props or draw its own; core draws its own when the Plugin's tree is refused.
@@ -249,6 +253,10 @@ _Avoid_: Nav count, badge count, unread count
 **Borrow**:
 One Plugin using an Account another Plugin provides. Argo checks the Grant, asks the providing Plugin for a fresh token and sets the header; the borrowing Plugin never sees the token, and the header never leaves the Account's host.
 _Avoid_: Share, delegate, proxy
+
+**Plugin icon**:
+The icon `plugin.json` names for a Plugin, drawn in its rail tile, drawer row and Settings row. It is SF and Material symbol names, which every Plugin gives, and optionally `icon.svg`, an SVG file of the Plugin's own that the Server makes one colour and the rail and drawer draw in Argo's tint (ADR-0058). A brand logo in colour belongs to the Plugin's sign-in, not here.
+_Avoid_: Plugin logo, app icon
 
 **Account**:
 A sign-in one Plugin provides and other Plugins borrow, named by the API host its token opens, such as `api.linear.app`, rather than by the button that gets it. CircleCI and GitHub are separate Accounts though both sign in with GitHub. A Plugin asks Argo for an Account, and the user approves each Plugin once per Account. See ADR-0036.
@@ -442,13 +450,13 @@ _Avoid_: Tool use, function call, command (for the action)
 What the Feed needs to know about a Tool call, decoded once from its wire details: whether it explores, edits or runs a command, the path it names, and its permission outcome.
 _Avoid_: Tool call meta
 
-**Plan**:
-The Agent's live checklist for a Session. The Agent replaces it whole on each change.
-_Avoid_: Todo list, task list
+**Todo list**:
+The Agent's live checklist for a Session, which shows the person how much of the work is done and how much is left. The Agent sets it whole with `session.setTodos` and then changes one step at a time with `session.setTodoStep`, where completing a step completes those before it; a checklist an Agent reports through ACP's `plan` is one too. The person turns it on or off in Settings. ACP calls it a plan, so its Feed row and wire types keep ACP's names (ADR-0006).
+_Avoid_: Plan (for the checklist), task list
 
 **Written plan**:
 A plan document the Agent keeps without asking for approval, as Markdown text or only as a URI.
-_Avoid_: Plan (for the document), Plan proposal
+_Avoid_: Plan (for the document), Plan proposal, Todo list
 
 **Attachment**:
 An image or file the user adds to a prompt from their device. The Server stores it as a Blob, and the Agent receives an image as a picture and any other file as the file itself.

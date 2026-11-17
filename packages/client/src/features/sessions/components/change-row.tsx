@@ -34,12 +34,23 @@ export function ChangeRow(props: ChangeRowProps): ReactElement {
       <View className={rowClassName}>
         {stageCell(props.change)}
         <View className="min-w-0 flex-1 gap-0.5">
-          <ChangeTitle {...props} />
+          <ChangeHeading {...props} />
           <ChangeMeta {...props} />
         </View>
-        <ChangeMenu {...props} />
       </View>
     </ChangeContextMenu>
+  );
+}
+
+// The title and the menu on one line; the meta below spans both, so its checks sit under the menu.
+function ChangeHeading(props: ChangeRowProps): ReactElement {
+  return (
+    <View className="flex-row items-start gap-2">
+      <View className="min-w-0 flex-1">
+        <ChangeTitle {...props} />
+      </View>
+      <ChangeMenu {...props} />
+    </View>
   );
 }
 
@@ -93,7 +104,7 @@ function trailingPart(
   return change.checks && checksPart(change.checks, onOpen);
 }
 
-// The number and the diff total, with the checks at the trailing edge; the checks list each check on the web, and on a phone open the Change.
+// The number and the diff total, with the checks at the trailing edge, under the menu; the checks list each check on the web, and on a phone open the Change.
 function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
   return (
     <View className="min-h-6 flex-row flex-wrap items-center gap-2">

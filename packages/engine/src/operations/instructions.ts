@@ -15,6 +15,7 @@ export class OperationInstructions {
 
   public read(token: string | undefined): Promise<PluginInstruction[]> {
     authenticate(this.deps, token);
+    this.deps.sessionTokens.recordToolsLoaded(token);
 
     return this.plugins.instructions();
   }

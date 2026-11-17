@@ -85,6 +85,16 @@ export const pullRequestMocks = {
   },
 } satisfies Record<string, SessionPullRequest>;
 
+// A PR with a long title, many files and double-digit checks: the widest meta line a card has to hold.
+export const busyPullRequest: SessionPullRequest = {
+  ...sessionPullRequest,
+  url: 'https://github.com/owner/app/pull/2219',
+  number: 2219,
+  title: 'Use uniform Body typography throughout the Workbench',
+  summary: { files: 15, additions: 152, deletions: 50 },
+  checks: { passed: 10, failing: 0, running: 13, total: 23 },
+};
+
 export const severalPullRequests: SessionPullRequest[] = [
   pullRequestMocks.checksRunning,
   {

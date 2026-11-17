@@ -31,7 +31,7 @@ export function sessionProgress({
     value: plan.done / plan.total,
     tone: statusTones[status],
     active: activeStatuses.has(status),
-    accessibilityLabel: `Plan: ${plan.done} of ${plan.total} complete`,
-    testID: 'session-plan',
+    accessibilityLabel: `Todos: ${plan.done} of ${plan.total} complete`,
+    testID: 'session-todos',
   };
 }

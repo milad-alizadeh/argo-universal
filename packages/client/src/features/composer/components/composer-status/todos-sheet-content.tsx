@@ -4,23 +4,23 @@ import { ListSection } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { JSX } from 'react';
 import { completedSteps } from '../../utils/status';
-import { StepIndicator } from './plan-steps';
 import { StatusSheetList } from './status-surface';
+import { StepIndicator } from './todo-steps';
 
-interface PlanSheetContentProps {
+interface TodosSheetContentProps {
   entries: PlanEntry[];
 }
 
-// A phone's Plan sheet: the steps sit in one grouped card, as Settings' rows, titled with how many are done.
-export function PlanSheetContent({
+// A phone's checklist sheet: the steps sit in one grouped card, as Settings' rows, titled with how many are done.
+export function TodosSheetContent({
   entries,
-}: PlanSheetContentProps): JSX.Element {
+}: TodosSheetContentProps): JSX.Element {
   const title = `${completedSteps(entries)} of ${entries.length} done`;
   const steps = withOccurrenceKeys(entries, (entry) => entry.content);
 
   return (
     <StatusSheetList>
-      <ListSection title={title}>{steps.map(planStepItem)}</ListSection>
+      <ListSection title={title}>{steps.map(todoStepItem)}</ListSection>
     </StatusSheetList>
   );
 }
@@ -30,7 +30,7 @@ interface KeyedStep {
   key: string;
 }
 
-function planStepItem({ item: entry, key }: KeyedStep): JSX.Element {
+function todoStepItem({ item: entry, key }: KeyedStep): JSX.Element {
   return (
     <ListItem
       key={key}

@@ -101,21 +101,43 @@ export const EscapeDismissalSurvivesRemount: Story = {
   },
 };
 
-export const LatePredictionCannotReplaceAnEditedDraft: Story = {
+async function clear(field: HTMLElement, length: number): Promise<void> {
+  await userEvent.click(field);
+  await userEvent.keyboard('{End}' + '{Backspace}'.repeat(length));
+  await waitFor(() => expect(shownText(field)).toBe(''));
+}
+
+export const ErasingAnAcceptedDraftShowsTheSuggestionAgain: Story = {
   play: async ({ canvas, args }) => {
     await settleLayout('wide');
+    await deliver(canvas);
+    const field = canvas.getByRole('textbox', { name: 'Message' });
+    await userEvent.click(field);
+    await userEvent.keyboard('{Tab}');
+    await waitFor(() => expect(shownText(field)).toBe(predictedPrompt));
+    await clear(field, predictedPrompt.length);
+    await expect(
+      canvas.getByText(predictedPrompt, { exact: true }),
+    ).toBeVisible();
+    await userEvent.keyboard('{Tab}');
+    await waitFor(() => expect(shownText(field)).toBe(predictedPrompt));
+    await expect(args.onSend).not.toHaveBeenCalled();
+  },
+};
+
+export const TypingHidesTheSuggestionAndClearingShowsItAgain: Story = {
+  play: async ({ canvas, args }) => {
+    await settleLayout('wide');
+    await deliver(canvas);
     const field = canvas.getByRole('textbox', { name: 'Message' });
     await userEvent.type(field, 'hello');
-    await userEvent.keyboard(
-      '{Backspace}{Backspace}{Backspace}{Backspace}{Backspace}',
-    );
-    await waitFor(() => expect(shownText(field)).toBe(''));
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Deliver prediction' }),
-    );
     await expect(
       canvas.queryByText(predictedPrompt, { exact: true }),
     ).not.toBeInTheDocument();
+    await clear(field, 'hello'.length);
+    await expect(
+      canvas.getByText(predictedPrompt, { exact: true }),
+    ).toBeVisible();
     await expect(args.onSend).not.toHaveBeenCalled();
   },
 };

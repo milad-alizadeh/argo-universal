@@ -1,13 +1,7 @@
-import { drawsNothing, markupInput, renderMarkup } from './diagram-drawing';
-import {
-  type MarkupInput,
-  colourStatement,
-  diagramMarkup,
-  lineMarkup,
-} from './diagram-markup';
+import { type MarkupInput, colourStatement } from './diagram-markup';
+import { lineDrawsNothing, markupInput, renderDiagram } from './diagram-render';
 import {
   type DiagramKeyword,
-  type SourceLine,
   readDiagramSource,
   supportedDiagramKeywords,
 } from './diagram-source';
@@ -50,13 +44,9 @@ function unreadLines(input: MarkupInput): DiagramProblem[] {
 
   return input.body
     .filter((line) => !skip.test(line.text) && !colourStatement.test(line.text))
-    .filter((line) => isUnreadLine(input, line))
+    .filter((line) => lineDrawsNothing(input, line))
     .map((line) => ({ line: line.number, message: unreadMessage }));
 }
-
-// A line the renderer skips draws the same as the bare header when rendered on its own.
-const isUnreadLine = (input: MarkupInput, line: SourceLine): boolean =>
-  drawsNothing(input, renderMarkup(lineMarkup(input, line)));
 
 function headerProblem(source: string): DiagramProblem {
   const { header, keyword } = readDiagramSource(source);
@@ -73,7 +63,7 @@ function headerProblem(source: string): DiagramProblem {
 }
 
 function drawnProblems(input: MarkupInput): DiagramProblem[] {
-  if (!drawsNothing(input, renderMarkup(diagramMarkup(input)))) {
+  if (renderDiagram(input)) {
     return unreadLines(input);
   }
 

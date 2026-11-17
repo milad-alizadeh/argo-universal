@@ -8,4 +8,12 @@ export interface SvgSymbolSource {
   svg: SvgSymbolName;
 }
 
-export type SymbolSource = SystemSymbolSource | SvgSymbolSource;
+// A Plugin's own icon: the one-colour SVG markup the Server read from its manifest and painted in `currentColor` (ADR-0058).
+export interface MarkupSymbolSource {
+  markup: string;
+}
+
+export type SymbolSource =
+  | SystemSymbolSource
+  | SvgSymbolSource
+  | MarkupSymbolSource;
