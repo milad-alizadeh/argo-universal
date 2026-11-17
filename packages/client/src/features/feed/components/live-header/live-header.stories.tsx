@@ -6,7 +6,6 @@ import {
   searchingHeader,
   shapingHeader,
   thinkingHeader,
-  toolCallHeader,
   waitingHeader,
   workingLiveHeader,
 } from './live-header-fixtures';
@@ -38,10 +37,7 @@ export const Working: Story = { args: workingLiveHeader };
 // A titled thought.
 export const Thinking: Story = { args: thinkingHeader };
 
-// A running Tool call lends the line its own icon.
-export const ToolCall: Story = { args: toolCallHeader };
-
-// Reading, listing and searching move the Orb as a scanning globe.
+// A running Tool call lends the line its own icon, and its kind moves the Orb: reading, listing and searching scan it as a globe.
 export const Searching: Story = { args: searchingHeader };
 
 // Editing moves it as a ribbon being written.

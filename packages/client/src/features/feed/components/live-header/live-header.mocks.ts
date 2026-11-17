@@ -56,8 +56,6 @@ export const requestHeader = liveHeaderStepOf('request').liveHeader;
 
 export const retryHeader = liveHeaderStepOf('retry').liveHeader;
 
-export const toolCallStep = liveHeaderStepOf('tool_call');
-
 // The first recorded Tool call step whose Orb moves as `state`.
 export const toolCallStepMoving = (
   state: OrbState,
