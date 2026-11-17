@@ -98,12 +98,22 @@ function OpenImage({
   );
 }
 
+// `feed` sits in a message; `row` ends a Tool call row; `stack` overlaps in a group header.
+export type FeedImageSize = 'feed' | 'row' | 'stack';
+
 interface ThumbnailProps extends ImageSourceProps {
+  size: FeedImageSize;
   onPress: () => void;
 }
 
-const thumbnailClassName =
-  'h-21 w-30 shrink-0 overflow-hidden rounded-lg border border-border bg-muted';
+const thumbnailClassNames: Record<FeedImageSize, string> = {
+  feed: 'h-21 w-30 rounded-lg border border-border',
+  row: 'size-6 rounded-sm border border-hairline',
+  stack: 'size-5.5 rounded-sm border-2 border-card',
+};
+
+const thumbnailClassName = (size: FeedImageSize): string =>
+  `shrink-0 overflow-hidden bg-muted ${thumbnailClassNames[size]}`;
 
 function thumbnailLabel(image: ImageContent): string {
   const label = imageLabel(image);
@@ -119,7 +129,7 @@ function ImageThumbnail(props: ThumbnailProps): React.JSX.Element {
       role="button"
       aria-label={thumbnailLabel(props.image)}
       onPress={props.onPress}
-      className={thumbnailClassName}
+      className={thumbnailClassName(props.size)}
     >
       <Image source={source} resizeMode="cover" className="size-full" />
     </Pressable>
@@ -129,18 +139,21 @@ function ImageThumbnail(props: ThumbnailProps): React.JSX.Element {
 interface FeedImageProps {
   image: ImageContent;
   imageUrl?: ImageUrl;
+  size?: FeedImageSize;
 }
 
 export function FeedImage({
   image,
   imageUrl,
+  size = 'feed',
 }: FeedImageProps): React.JSX.Element {
   const uri = useImageUrl(imageUrl)(image.blob);
   const [open, setOpen] = useState(false);
+  const source = { image, uri };
 
   return (
     <>
-      <ImageThumbnail image={image} uri={uri} onPress={() => setOpen(true)} />
+      <ImageThumbnail {...source} size={size} onPress={() => setOpen(true)} />
       <OpenImage open={open} onOpenChange={setOpen} image={image} uri={uri} />
     </>
   );

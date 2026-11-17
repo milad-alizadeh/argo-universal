@@ -64,9 +64,13 @@ async function baseCommit(
   const branch = comparisonBranchName(comparison, main);
   const ref = branch.startsWith('refs/') ? branch : `${headsPrefix}${branch}`;
 
+  // The branch check and the merge-base run together; a missing branch reports as such, not as git's merge-base error.
+  const mergeBase = git(checkout, ['merge-base', ref, 'HEAD']);
+
+  mergeBase.catch(() => {});
   await requireBranch(checkout, ref, branch);
 
-  return (await git(checkout, ['merge-base', ref, 'HEAD'])).trim();
+  return (await mergeBase).trim();
 }
 
 function comparisonBranchName(

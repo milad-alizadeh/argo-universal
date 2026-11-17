@@ -9,24 +9,89 @@ export type SentPrompt = {
   sender: { pluginId: string; title: string };
 };
 
-const sentBy = new WeakMap<GitHubFixture, SentPrompt[]>();
+// The Server's queue as the Plugin meets it: every Prompt sent, and the ids of those still waiting.
+type Queue = {
+  sent: SentPrompt[];
+  waiting: Map<string, SentPrompt>;
+  withdrawn: SentPrompt[];
+  refused: Set<string>;
+};
 
-// The Server's prompt queue as the Plugin meets it: every Prompt is taken and recorded, as queued behind other work.
+const queues = new WeakMap<GitHubFixture, Queue>();
+
+const queueOf = (github: GitHubFixture): Queue => {
+  const queue = queues.get(github) ?? {
+    sent: [],
+    waiting: new Map(),
+    withdrawn: [],
+    refused: new Set(),
+  };
+
+  queues.set(github, queue);
+
+  return queue;
+};
+
+// Every Prompt is taken and recorded as queued behind other work, under an id it waits by until `startPrompts`.
 export function promptRecorder(
   github: GitHubFixture,
 ): NonNullable<PluginTestOptions['promptSession']> {
-  const sent = sentBy.get(github) ?? [];
-
-  sentBy.set(github, sent);
+  const queue = queueOf(github);
 
   return async (sessionId, text, sender) => {
-    sent.push({ sessionId, text, sender });
+    const prompt = { sessionId, text, sender };
+    const queuedId = `queued-${queue.sent.length + 1}`;
 
-    return { status: 'queued' };
+    queue.sent.push(prompt);
+    queue.waiting.set(queuedId, prompt);
+
+    return { status: 'queued', queuedId };
   };
 }
+
+// The Server taking back a Prompt that still waits; one that started is left, and answers not withdrawn.
+export function withdrawRecorder(
+  github: GitHubFixture,
+): NonNullable<PluginTestOptions['withdrawPrompt']> {
+  const queue = queueOf(github);
+
+  return async (_sessionId, queuedId) => {
+    if (queue.refused.has(queuedId))
+      throw new Error(`Withdrawing ${queuedId} was refused`);
+
+    const prompt = queue.waiting.get(queuedId);
+
+    if (!prompt) return { withdrawn: false };
+
+    queue.waiting.delete(queuedId);
+    queue.withdrawn.push(prompt);
+
+    return { withdrawn: true };
+  };
+}
+
+// The Server refuses to withdraw the Prompts sent so far until `allowWithdraw`, as when the Session cannot be reached.
+export const refuseWithdraw = ({ github }: Pick<Journey, 'github'>): void => {
+  const queue = queueOf(github);
+
+  for (const queuedId of queue.waiting.keys()) queue.refused.add(queuedId);
+};
+
+export const allowWithdraw = ({ github }: Pick<Journey, 'github'>): void => {
+  queueOf(github).refused.clear();
+};
+
+// The Session's Turns take every waiting Prompt, so none can be withdrawn.
+export const startPrompts = ({ github }: Pick<Journey, 'github'>): void => {
+  queueOf(github).waiting.clear();
+};
 
 // The Prompts sent so far, in order, surviving a restart of the Plugin.
 export const promptsSent = ({
   github,
-}: Pick<Journey, 'github'>): SentPrompt[] => sentBy.get(github) ?? [];
+}: Pick<Journey, 'github'>): SentPrompt[] => queueOf(github).sent;
+
+// The Prompts taken back so far, in order.
+export const promptsWithdrawn = ({
+  github,
+}: Pick<Journey, 'github'>): SentPrompt[] => queueOf(github).withdrawn;

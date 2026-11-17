@@ -87,3 +87,23 @@ export async function until(
     if (wanted(answer)) return answer;
   }
 }
+
+// How long after a failed first read the Issue tracker asks its Slots again.
+const firstRetryMs = 15_000;
+
+// Moves the Plugin clock a retry at a time until an answer is the one wanted, as a failed read may land after a move.
+export async function advancedUntil(
+  test: PluginTest,
+  answers: AsyncGenerator<Answer>,
+  wanted: (answer: Answer) => boolean,
+): Promise<{ answer: Answer; movedMs: number }> {
+  const moved = { ms: 0, landed: false };
+  const waiting = until(answers, wanted).finally(() => (moved.landed = true));
+
+  while (!moved.landed) {
+    await test.clock.advance(firstRetryMs);
+    moved.ms += firstRetryMs;
+  }
+
+  return { answer: await waiting, movedMs: moved.ms };
+}

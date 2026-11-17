@@ -23,9 +23,9 @@ export type Automated = {
   graphqlFailWith: { status: number | null };
 };
 
-// One auto-merge call GitHub received: turned on with a method, or turned off.
+// One auto-merge call GitHub received: turned on with a method, merged now with a method, or turned off.
 export type AutoMergeCall = {
-  kind: 'enable' | 'disable';
+  kind: 'enable' | 'merge' | 'disable';
   pullRequestId: string;
   mergeMethod?: string;
 };
@@ -51,17 +51,57 @@ const byId = (
   id: string | undefined,
 ): FixturePull[] => [...pulls.values()].filter((pull) => pull.node_id === id);
 
-function mutate(held: Automated, { query, variables }: Body): FixtureAnswer {
-  const [pull] = byId(held.pulls, variables.pullRequestId);
+// GitHub's own words for a pull request it could merge now.
+const clean: FixtureAnswer = {
+  json: {
+    errors: [{ message: 'Pull request Pull request is in clean status' }],
+  },
+};
+
+function merge(pull: FixturePull): undefined {
+  pull.state = 'closed';
+  pull.merged = true;
+
+  return undefined;
+}
+
+function enable(pull: FixturePull, method: string): FixtureAnswer | undefined {
+  if (pull.mergeable_state === 'clean') return clean;
+
+  pull.auto_merge = { merge_method: method };
+
+  return undefined;
+}
+
+function disable(pull: FixturePull): undefined {
+  pull.auto_merge = null;
+
+  return undefined;
+}
+
+// Each mutation changes the pull request, or answers GitHub's refusal.
+const apply = (
+  pull: FixturePull,
+  { query, variables }: Body,
+): FixtureAnswer | undefined => {
+  if (query.includes('mergePullRequest')) return merge(pull);
+
+  return query.includes('enablePullRequestAutoMerge')
+    ? enable(pull, String(variables.mergeMethod))
+    : disable(pull);
+};
+
+function mutate(held: Automated, body: Body): FixtureAnswer {
+  const [pull] = byId(held.pulls, body.variables.pullRequestId);
 
   if (!pull)
     return { json: { errors: [{ message: 'Could not resolve to a node' }] } };
 
-  pull.auto_merge = query.includes('enablePullRequestAutoMerge')
-    ? { merge_method: String(variables.mergeMethod) }
-    : null;
-
-  return { json: { data: { pullRequest: { id: pull.node_id } } } };
+  return (
+    apply(pull, body) ?? {
+      json: { data: { pullRequest: { id: pull.node_id } } },
+    }
+  );
 }
 
 const keyOf = ({ owner, name, number }: Variables): string =>
@@ -115,8 +155,14 @@ export const settingsOf = (
   repository: string,
 ): FixtureRepository => repositories.get(repository) ?? openRepository;
 
+const kindOf = (query: string): AutoMergeCall['kind'] => {
+  if (query.includes('mergePullRequest')) return 'merge';
+
+  return query.includes('enablePullRequestAutoMerge') ? 'enable' : 'disable';
+};
+
 const callOf = ({ query, variables }: Body): AutoMergeCall => ({
-  kind: query.includes('enablePullRequestAutoMerge') ? 'enable' : 'disable',
+  kind: kindOf(query),
   pullRequestId: String(variables.pullRequestId),
   ...(variables.mergeMethod !== undefined && {
     mergeMethod: variables.mergeMethod,

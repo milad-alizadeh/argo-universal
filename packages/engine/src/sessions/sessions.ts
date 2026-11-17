@@ -13,7 +13,7 @@ import {
   type CalledOperation,
   type SessionOperationCall,
 } from './operation-call';
-import { promptFromPlugin } from './plugin-prompt';
+import { promptFromPlugin, withdrawFromPlugin } from './plugin-prompt';
 import type { NativeStartRequest } from './prompt-sender';
 import { createSessionRouter } from './router';
 import {
@@ -74,6 +74,14 @@ export class Sessions {
     sender: NonUserPromptSender,
   ): ReturnType<typeof promptFromPlugin> {
     return promptFromPlugin(this.sources, input, sender);
+  }
+  // Takes back a Queued Prompt the Plugin sent; one that started, is gone or is held for editing stays (ADR-0055).
+  public withdrawFromPlugin(
+    sessionId: string,
+    queuedId: string,
+    pluginId: string,
+  ): ReturnType<typeof withdrawFromPlugin> {
+    return withdrawFromPlugin(this.sources, { sessionId, queuedId, pluginId });
   }
   // A Plugin's archive: the App's, refused while the Checkout has uncommitted files (ADR-0055).
   public archiveFromPlugin(
