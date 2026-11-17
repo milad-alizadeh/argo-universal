@@ -164,7 +164,10 @@ async function unseenOf(
  * One pull request's turn: a Prompt for each failed Check, conflict and review comment Auto-fix has not seen, never
  * twice for the same event, and never past the tries a head gets.
  */
-async function turnOf(step: Step, fresh: FixFacts): Promise<boolean> {
+export async function fixCurrent(
+  step: Step,
+  fresh: FixFacts,
+): Promise<boolean> {
   const { head } = fresh.pull;
   const sent = await step.fix.sent(step.record, head);
   const unseen = await unseenOf(step, fresh, sent);
@@ -186,7 +189,7 @@ async function fixOne(
 ): Promise<boolean> {
   const facts = await freshRead(fresh, record);
 
-  return facts ? turnOf({ ...fixing, record }, facts) : false;
+  return facts ? fixCurrent({ ...fixing, record }, facts) : false;
 }
 
 /*
