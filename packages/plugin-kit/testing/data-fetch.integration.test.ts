@@ -44,9 +44,12 @@ it('keeps an HTTP error as data, and the last answer through a transport error',
     expect(requests).toBe(2);
     expect(await kit.log()).toContain('argo call failed: socket hang up');
   });
-  // A Query whose last read failed is waited on, and still answers its last answer.
+  // A Query whose last read failed rests before it reads again, and still answers its last answer (#2197).
   expect(await drawnText(kit, { path: '/' })).toBe('401:first');
-  expect(requests).toBe(4);
+  expect(requests).toBe(2);
+  // Once the first rest is over, the page that holds it is read again with no draw to ask.
+  await kit.clock.advance(5000);
+  await vi.waitFor(() => expect(requests).toBe(3));
 });
 
 it('joins two pages reading one fetch whose object keys and header names differ in order or case', async () => {

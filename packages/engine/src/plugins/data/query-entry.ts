@@ -2,6 +2,7 @@ import type { PluginDataState } from '@repo/contracts/plugins/argo-calls';
 import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import { runtimeError } from '../protocol/runtime';
 import { queryState, readQuery, type QueryReaders } from './query-answer';
+import { changed, drawOnly, shows, unreadable } from './query-changes';
 import { QueryHolders, reading } from './query-holders';
 import { QueryRest, restServices } from './query-rest';
 import { QueryTiming } from './query-timing';
@@ -66,9 +67,17 @@ export class QueryEntry {
     await this.untilCurrent(draw, 2);
   }
 
-  // An answer to serve while a fresh one is read: one the last read did not fail.
+  // An answer to serve while a fresh one is read: one the last read did not fail, and not a paged list's that is due.
   private servable(): boolean {
-    return this.state.data !== undefined && this.state.error === undefined;
+    return (
+      this.state.data !== undefined &&
+      this.state.error === undefined &&
+      !this.waitsForDraw()
+    );
+  }
+
+  private waitsForDraw(): boolean {
+    return drawOnly(this.owner) && this.timing.overdue;
   }
 
   // Starts, behind the draw that was served, the read the entry is due or old enough for.
@@ -100,9 +109,20 @@ export class QueryEntry {
    * failure until it is over: a rate-limited read is not made again at once, which would only double the load (#2197).
    */
   private refresh(draw?: number): Promise<void> {
-    if (this.flight) return this.flight;
+    return this.flight ?? this.unrested(draw);
+  }
+
+  private unrested(draw: number | undefined): Promise<void> {
+    if (unreadable(this.owner, draw)) return this.redraw();
 
     return this.rest.resting ? Promise.resolve() : this.begin(draw);
+  }
+
+  // A paged list due outside a draw marks the pages that hold it, which read it again as they draw (ADR-0060).
+  private redraw(): Promise<void> {
+    this.services.marked(this.owner.pluginId, this.holders.before(reading));
+
+    return Promise.resolve();
   }
 
   private begin(draw: number | undefined): Promise<void> {
@@ -196,14 +216,3 @@ export class QueryEntry {
     this.holders.clear();
   }
 }
-
-// First answers also wake Slots that timed out while waiting for this entry.
-const changed = (
-  before: PluginDataState['data'],
-  after: PluginDataState['data'],
-): boolean => JSON.stringify(before) !== JSON.stringify(after);
-
-// What a page would draw differently: another answer, or the end of a failure it shows, even for the same answer.
-const shows = (before: PluginDataState, after: PluginDataState): boolean =>
-  changed(before.data, after.data) ||
-  (before.error !== undefined && after.error === undefined);
