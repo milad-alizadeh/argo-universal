@@ -1,5 +1,5 @@
 // A Plugin drawn through the kit the way a real one is: its Loader pages define, the Engine draws them, and a press acts on what the tree holds.
-export const kitScreensSource = `import { Action, Button, Card, Detail, EmptyState, FieldGroup, Grid, List, ListDetail, ListItem, Metadata, Screen, SegmentedControl, Stack, Text } from '@argo/plugin-kit';
+export const kitScreensSource = `import { Action, Button, Card, Detail, EmptyState, FieldGroup, Grid, List, ListDetail, ListItem, Screen, SegmentedControl, Stack, Text } from '@argo/plugin-kit';
 
 const views = (view, to) => (
   <Screen title="Issue views">
@@ -47,7 +47,7 @@ const form = (state, to) => (
 );
 
 const build = (cancelled, to) => (
-  <Screen title="Build web" actions={<Action label={cancelled ? 'Rerun' : 'Cancel'} icon="check" onPress={to.set({ cancelled: !cancelled })} />} aside={<Metadata><Metadata.StatusDot title="Status" text="Running" tone="info" /></Metadata>}>
+  <Screen title="Build web" actions={<Action label={cancelled ? 'Rerun' : 'Cancel'} icon="check" onPress={to.set({ cancelled: !cancelled })} />} aside={<FieldGroup><FieldGroup.Section><FieldGroup.Value title="Status" value="Running" dot="info" /></FieldGroup.Section></FieldGroup>}>
     <Detail markdown="Deploying" />
   </Screen>
 );

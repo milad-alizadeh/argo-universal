@@ -83,19 +83,13 @@ it('answers the Project details row with the Tracker the choice page saved', asy
 }, 20_000);
 
 const isStatus = (node: WireNode): boolean =>
-  node.type === 'Metadata.StatusDot';
+  node.type === 'FieldGroup.Picker' && node.props.title === 'Status';
 
-// The Status the open Issue's Properties show.
+// The Status the open Issue's Properties show: the status Picker's chosen value.
 function shownStatus(tree: WireNode): string {
-  const entry = findWireNodeEntry(tree, isStatus);
+  const value = findWireNodeEntry(tree, isStatus)?.node.props.value;
 
-  return entry ? textOf(entry.node) : '';
-}
-
-function textOf(node: WireNode): string {
-  const { text } = node.props;
-
-  return typeof text === 'string' ? text : '';
+  return typeof value === 'string' ? value : '';
 }
 
 it('closes an Issue at once, as an Operation the page shows the new status of until it answers', async () => {
@@ -106,13 +100,13 @@ it('closes an Issue at once, as an Operation the page shows the new status of un
     operation: 'setStatus',
     args: { number: 42, status: 'closed', projectId: project.id },
     optimistic: [
-      { key: 'dot-42', props: { text: 'Closed', tone: 'done' } },
+      { key: 'picker-42', props: { value: 'closed' } },
       { key: 'status-42', props: { label: 'Reopen Issue', icon: 'issue' } },
     ],
   });
   await page.press(closeIssue);
   // The fixture GitHub keeps no status, so the Issue reads as open when drawn again.
-  expect(shownStatus(page.tree)).toBe('Open');
+  expect(shownStatus(page.tree)).toBe('open');
 }, 20_000);
 
 it('fails a status change GitHub refuses with its error, and draws the old status', async () => {
@@ -122,7 +116,7 @@ it('fails a status change GitHub refuses with its error, and draws the old statu
   await expect(page.press(closeIssue)).rejects.toThrow(
     'Could not close the issue.',
   );
-  expect(shownStatus(page.tree)).toBe('Open');
+  expect(shownStatus(page.tree)).toBe('open');
   expect(page.findText(closeIssue)).toBeDefined();
 }, 20_000);
 
@@ -150,14 +144,14 @@ it("lists an Issue's sub-Issues under its description, with GitHub's tally", asy
 }, 20_000);
 
 const isBlocker = (node: WireNode): boolean =>
-  node.type === 'Metadata.Label' && node.props.title === 'Blocked by';
+  node.type === 'FieldGroup.Value' && node.props.title === 'Blocked by';
 
 it('names an open blocker in the Properties beside the Issue', async () => {
   const page = await openIssue(refusedTitle);
 
-  const entry = findWireNodeEntry(page.tree, isBlocker);
+  const text = findWireNodeEntry(page.tree, isBlocker)?.node.props.value;
 
-  expect(entry && textOf(entry.node)).toBe('#42 Fixture issue from GitHub');
+  expect(text).toBe('#42 Fixture issue from GitHub');
 }, 20_000);
 
 it('marks a blocked row and a parent row’s progress in the list', async () => {

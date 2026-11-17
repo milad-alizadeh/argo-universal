@@ -12,6 +12,9 @@ export type {
   AcpOpenInput,
   AcpResourceInput,
   AcpProcess,
+  AccessGrant,
+  ArgoToolsState,
+  SessionProcessAccess,
 } from './resources/resource-types';
 
 export type { TerminalRequests } from './connection/terminal-requests';
@@ -24,3 +27,5 @@ export {
 } from './connection/refusals';
 
 export type { ExitNotice } from './exit-notice';
+
+export { steerAcpSession } from './connection/steering';

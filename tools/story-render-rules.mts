@@ -51,33 +51,35 @@ const sameContent = (left: RenderNode, right: RenderNode): boolean =>
 const sameNode = (left: RenderNode, right: RenderNode): boolean =>
   sameStructure(left, right) && sameContent(left, right);
 
-const differingChildren = (left: RenderNode, right: RenderNode): number[] =>
-  left.children.flatMap((_child, index): number[] =>
-    maskPath(childAt(left, index), childAt(right, index)) === undefined
-      ? []
-      : [index],
-  );
+type ChildDifference = { index: number; path: number[] };
 
-const deeper = (
+const childDifference = (
   left: RenderNode,
   right: RenderNode,
   index: number,
-): number[] => [
-  index,
-  ...(maskPath(childAt(left, index), childAt(right, index)) ?? []),
-];
+): ChildDifference[] => {
+  const path = maskPath(childAt(left, index), childAt(right, index));
 
-const onlyDiffering = (differing: readonly number[]): number | undefined =>
+  return path === undefined ? [] : [{ index, path }];
+};
+
+const differingChildren = (
+  left: RenderNode,
+  right: RenderNode,
+): ChildDifference[] =>
+  left.children.flatMap((_child, index) => childDifference(left, right, index));
+
+const onlyDiffering = (
+  differing: readonly ChildDifference[],
+): ChildDifference | undefined =>
   differing.length === 1 ? differing[0] : undefined;
 
 const descend = (
-  left: RenderNode,
-  right: RenderNode,
-  differing: readonly number[],
+  differing: readonly ChildDifference[],
 ): number[] | undefined => {
-  const index = onlyDiffering(differing);
+  const only = onlyDiffering(differing);
 
-  if (index !== undefined) return deeper(left, right, index);
+  if (only !== undefined) return [only.index, ...only.path];
 
   return differing.length === 0 ? undefined : [];
 };
@@ -90,9 +92,7 @@ export const maskPath = (
   left: RenderNode,
   right: RenderNode,
 ): number[] | undefined =>
-  sameNode(left, right)
-    ? descend(left, right, differingChildren(left, right))
-    : [];
+  sameNode(left, right) ? descend(differingChildren(left, right)) : [];
 
 const byFile = <T extends { file: string }>(
   rows: readonly T[],

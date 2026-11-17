@@ -3,9 +3,11 @@ import { type ColorValue, Platform, View } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { cn } from '../../utils';
 import { decorativeGlyph } from '../decorative-glyph';
+import type { OwnDrawing } from '../drawn-symbol';
 import { type SvgSymbolName, svgSymbols } from '../svg-symbols';
+import { MarkupSymbolGlyph } from './markup-symbol';
 
-export interface SvgSymbolGlyphProps {
+interface SvgSymbolGlyphProps {
   name: SvgSymbolName;
   pixels: number;
   // The icon's text colour classes: the tint natively, and the CSS colour of the box on web.
@@ -30,9 +32,25 @@ function SvgSymbolDrawing(props: SvgSymbolGlyphProps): React.JSX.Element {
   );
 }
 
-export const SvgSymbolGlyph =
+const SvgSymbolGlyph =
   Platform.OS === 'web'
     ? SvgSymbolDrawing
     : withUniwind(SvgSymbolDrawing, {
         tintColor: { fromClassName: 'colorClassName', styleProperty: 'color' },
       });
+
+type OwnGlyphProps = Omit<SvgSymbolGlyphProps, 'name'> & {
+  drawing: OwnDrawing;
+};
+
+// An icon's own drawing, on every platform: one of Argo's SVG glyphs, or a Plugin's markup (ADR-0058).
+export function OwnGlyph({
+  drawing,
+  ...props
+}: OwnGlyphProps): React.JSX.Element {
+  return drawing.kind === 'svg' ? (
+    <SvgSymbolGlyph {...props} name={drawing.svg} />
+  ) : (
+    <MarkupSymbolGlyph {...props} markup={drawing.markup} />
+  );
+}

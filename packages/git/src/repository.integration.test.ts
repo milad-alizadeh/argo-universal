@@ -8,8 +8,14 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, it, onTestFinished } from 'vitest';
-import { isSessionBranch, readRepository, sessionBranch } from './index';
+import {
+  isSessionBranch,
+  readCurrentBranch,
+  readRepository,
+  sessionBranch,
+} from './index';
 import { initTestRepository } from './test-git.test.mocks';
+import { repository, sessionWorktree } from './test-repository.test.mocks';
 
 it('reads the main checkout and common directory from a nested path', async (): Promise<void> => {
   const directory = realpathSync(
@@ -28,8 +34,19 @@ it('reads the main checkout and common directory from a nested path', async (): 
   });
 });
 
+it('reads the branch a worktree is on now, after it switches, and null once detached', async (): Promise<void> => {
+  const { directory, git } = await repository();
+  const checkout = await sessionWorktree(directory, git);
+
+  expect(await readCurrentBranch(checkout)).toBe('argo/session-1');
+  await git('-C', checkout, 'switch', '-q', '-c', 'later-branch');
+  expect(await readCurrentBranch(checkout)).toBe('later-branch');
+  await git('-C', checkout, 'switch', '-q', '--detach');
+  expect(await readCurrentBranch(checkout)).toBeNull();
+});
+
 it('names a Session branch with its stored prefix', (): void => {
-  expect(sessionBranch('session-1')).toBe('argo/session-1');
+  expect(sessionBranch('session-1')).toMatch(/^argo\/[a-z]+-[a-z]+-ssion1$/);
 });
 
 it.each([

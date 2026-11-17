@@ -1,16 +1,17 @@
-import { secretParamNames } from '@repo/contracts/plugins/plugin-operations';
 import type { ActivatedPlugin } from '../access/plugin-access';
-import { PluginBackground } from '../data/plugin-background';
 import { PluginData } from '../data/plugin-data';
+import { PluginPasses } from '../data/plugin-passes';
 import type { QueryServices } from '../data/query-types';
 import { PluginOperations } from '../operations';
 import { PageChanges, PluginDraws } from '../pages';
+import { noRefusals, type Refusals } from '../pages/checked-tree';
 import type { PluginStatus } from '../protocol/runtime';
 import type { PluginServices } from '../services/plugin-services';
 import { PluginSlotItems } from '../slots/plugin-slot-items';
 import type { RuntimeCalls } from './calls';
 import { PluginFailures } from './failures';
 import type { PluginLocation } from './plugin-location';
+import { refusalsOf } from './plugin-refusals';
 import { pluginIdentity } from './status';
 import { WorkerCalls, type WorkerTransport } from './worker-calls';
 
@@ -20,7 +21,8 @@ export type RuntimeInput = QueryServices &
 
 export class RuntimeResources {
   readonly data;
-  readonly background;
+  // The Background passes and the Watches.
+  readonly passes;
   readonly items;
   readonly operations;
   readonly draws;
@@ -35,11 +37,8 @@ export class RuntimeResources {
     this.identities.get(pluginId),
   );
   private readonly unwatch;
-  // Each Plugin's secret params, by Operation, from the manifest it was activated with.
-  private readonly secrets = new Map<
-    string,
-    Map<string, ReadonlySet<string>>
-  >();
+  // What the Server refuses in each Plugin's trees, from the manifest and Grants it was activated with.
+  private readonly refusals = new Map<string, Refusals>();
   private projectUpdates: Promise<void> = Promise.resolve();
 
   constructor(private readonly input: RuntimeInput) {
@@ -52,7 +51,7 @@ export class RuntimeResources {
     );
     this.changes = this.pageChanges();
     this.draws = this.pluginDraws(input);
-    this.background = this.backgroundPasses(input);
+    this.passes = this.backgroundPasses(input);
     this.unwatch = this.watch(input);
   }
 
@@ -69,8 +68,7 @@ export class RuntimeResources {
       log: input.log,
       changes: this.changes,
       drawings: this.failures,
-      secretParams: (pluginId) => (operation) =>
-        this.secrets.get(pluginId)?.get(operation) ?? new Set(),
+      refusals: (pluginId) => this.refusals.get(pluginId) ?? noRefusals,
     });
   }
 
@@ -81,8 +79,8 @@ export class RuntimeResources {
     );
   }
 
-  private backgroundPasses(input: QueryServices): PluginBackground {
-    return new PluginBackground({
+  private backgroundPasses(input: QueryServices): PluginPasses {
+    return new PluginPasses({
       ...input,
       draws: this.draws,
       projectRemoved: (projectId): void => this.projectRemoved(projectId),
@@ -122,7 +120,7 @@ export class RuntimeResources {
     const { pluginId } = location.entry;
 
     this.identities.set(pluginId, pluginIdentity(location));
-    this.secrets.set(pluginId, secretParamsOf(location));
+    this.refusals.set(pluginId, refusalsOf(location, plugin));
     this.input.services.activate(pluginId, plugin);
     this.data.badges.allow(pluginId, generation, location.navIds ?? []);
   }
@@ -149,7 +147,7 @@ export class RuntimeResources {
       this.input.services.projectInfo(),
       this.projectUpdates,
     ]).then(([projects]) =>
-      this.background.syncProjects(projects.map(({ id }) => id)),
+      this.passes.syncProjects(projects.map(({ id }) => id)),
     );
 
     this.projectUpdates = updated.catch(() => {});
@@ -165,17 +163,10 @@ export class RuntimeResources {
 
   close(): void {
     for (const unwatch of this.unwatch) unwatch();
-    this.background.close();
+    this.passes.close();
     this.failures.close();
     this.data.badges.close();
     this.workers.close();
     this.items.close();
   }
 }
-
-const secretParamsOf = ({
-  operations = [],
-}: PluginLocation): Map<string, ReadonlySet<string>> =>
-  new Map(
-    operations.map(({ name, params }) => [name, secretParamNames(params)]),
-  );

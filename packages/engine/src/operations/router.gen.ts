@@ -39,6 +39,28 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      getTodoList: publicProcedure
+        .input(operations['agent.getTodoList'].params)
+        .output(operations['agent.getTodoList'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'agent.getTodoList',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      setTodoList: publicProcedure
+        .input(operations['agent.setTodoList'].params)
+        .output(operations['agent.setTodoList'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'agent.setTodoList',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       list: publicProcedure
         .input(operations['agent.list'].params)
         .output(operations['agent.list'].result)
@@ -83,6 +105,28 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      getSuggestionModels: publicProcedure
+        .input(operations['agent.getSuggestionModels'].params)
+        .output(operations['agent.getSuggestionModels'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'agent.getSuggestionModels',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      setSuggestionModel: publicProcedure
+        .input(operations['agent.setSuggestionModel'].params)
+        .output(operations['agent.setSuggestionModel'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'agent.setSuggestionModel',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
     }),
     app: router({
       open: publicProcedure
@@ -92,6 +136,19 @@ export function generatedOperations(runner: OperationRunner) {
           runner.run({
             kind: 'app',
             id: 'app.open',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+    }),
+    diagram: router({
+      validate: publicProcedure
+        .input(operations['diagram.validate'].params)
+        .output(operations['diagram.validate'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'diagram.validate',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),
@@ -292,6 +349,28 @@ export function generatedOperations(runner: OperationRunner) {
           runner.run({
             kind: 'app',
             id: 'session.savePlan',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      setTodos: publicProcedure
+        .input(operations['session.setTodos'].params)
+        .output(operations['session.setTodos'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.setTodos',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      setTodoStep: publicProcedure
+        .input(operations['session.setTodoStep'].params)
+        .output(operations['session.setTodoStep'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.setTodoStep',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),

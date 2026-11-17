@@ -1,5 +1,6 @@
 import type { ActivityIndicatorProps, ViewProps } from 'react-native';
 import type { IconSize, IconSizeValue } from '../../../symbols/icon-size';
+import type { DrawnIcon } from '../../../symbols/icon-symbol';
 import type { LogoSource } from '../../../symbols/logo-source';
 import type { KitProps } from '../../kit-props';
 
@@ -8,7 +9,8 @@ type IconSizeProp = { size?: IconSizeValue };
 
 // Kit-only: a logo drawn from its own SVG in place of a named symbol (ADR-0019). It speaks its brand's name.
 type IconDrawing =
-  | (Omit<KitProps<'Icon'>, 'size'> & IconSizeProp & { source?: never })
+  | (Omit<KitProps<'Icon'>, 'name' | 'size'> &
+      IconSizeProp & { name: DrawnIcon; source?: never })
   | (Omit<KitProps<'Icon'>, 'name' | 'size'> &
       IconSizeProp & { name?: never; source: LogoSource });
 

@@ -3,22 +3,21 @@ import { validateAccountCapabilities } from './account-manifest';
 import { AccountHost, PluginCapability } from './capabilities';
 import { DeclaredContributions } from './declared-slots';
 import { HookEventName } from './hooks';
-import { InstructionsFile, PluginIcon, PluginPath } from './manifest-fields';
+import {
+  InstructionsFile,
+  ManifestIcon,
+  PluginPass,
+  PluginPath,
+} from './manifest-fields';
 import { PluginOperationContributions } from './plugin-operations';
 import { PluginIdentifier, PluginSettingsSchema } from './plugin-settings';
 import { PluginStatus } from './runtime';
+import { uniqueIds } from './unique-ids';
 import { AddOnlySlotId, ReplaceableSlotId } from './wire';
 
 export { PluginProjectInfo } from './argo-calls';
 
 export { PluginIcon } from './manifest-fields';
-
-function uniqueIds<Id extends z.ZodType<string>>(
-  id: Id,
-  message: string,
-): z.ZodArray<Id> {
-  return z.array(id).refine((ids) => new Set(ids).size === ids.length, message);
-}
 
 type Contributions = Partial<{
   order: number | undefined;
@@ -60,7 +59,7 @@ export const PluginManifest = z
       .regex(
         /^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[a-zA-Z0-9_./-]+\.(?:js|mjs|cjs|ts|tsx)$/,
       ),
-    icon: PluginIcon,
+    icon: ManifestIcon,
     contributes: z
       .strictObject({
         accounts: z
@@ -90,12 +89,9 @@ export const PluginManifest = z
             'Nav ids must be unique',
           ),
         settings: PluginSettingsSchema.optional(),
-        background: z
-          .strictObject({
-            path: PluginPath,
-            interval: z.number().finite().nonnegative(),
-          })
-          .optional(),
+        background: PluginPass.optional(),
+        // A function that runs for each Project on Argo's clock with no App open, and may act (ADR-0055).
+        watch: PluginPass.optional(),
         // The add-only Slots the Plugin fills; core asks only these Plugins for a Slot's content.
         slots: uniqueIds(AddOnlySlotId, 'Slot ids must be unique').optional(),
         // What the Plugin adds to a declared Slot, such as Session header actions, by Slot id; the App draws it without starting the Plugin (ADR-0035).
@@ -137,6 +133,7 @@ export const PluginList = z.object({
   plugins: z.array(
     z.object({
       manifest: PluginManifest,
+      iconMarkup: z.string().optional(),
       firstParty: z.boolean(),
       enabled: z.boolean(),
       ...PluginStatus.shape,

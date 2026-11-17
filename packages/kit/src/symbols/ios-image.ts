@@ -1,6 +1,6 @@
 import type { SFSymbol } from 'expo-symbols';
 import { type CustomSymbol, isCustomSymbol } from './custom-symbols';
-import { drawnSymbol } from './drawn-symbol';
+import { drawnSymbol, isSystemDrawing } from './drawn-symbol';
 import { type IconSymbol, resolveIcon } from './icon-symbol';
 
 // What a SwiftUI or UIKit surface can draw for an Argo icon: a system SF Symbol by name, or Argo's own symbol, an asset-catalog image.
@@ -15,7 +15,7 @@ export function iosImage(
 ): IosImage | undefined {
   const drawn = drawnSymbol(resolveIcon(icon).symbol, filled);
 
-  if (drawn.kind === 'svg') return undefined;
+  if (!isSystemDrawing(drawn)) return undefined;
 
   return isCustomSymbol(drawn.sf)
     ? { kind: 'asset', name: drawn.sf }

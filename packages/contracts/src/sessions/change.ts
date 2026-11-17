@@ -49,8 +49,8 @@ const ChangeCheck = z.strictObject({
   state: z.enum(changeCheckStates),
 });
 
-// Why a Change shows what it last knew: its latest read failed, because the person must sign in or for any other reason.
-export const changeStaleReasons = ['signIn', 'failed'] as const;
+// Why a Change shows what it last knew: its latest read failed because the person must sign in, the code host's rate limit refused it, or for any other reason.
+export const changeStaleReasons = ['signIn', 'rateLimited', 'failed'] as const;
 
 export type ChangeStaleReason = (typeof changeStaleReasons)[number];
 
@@ -68,6 +68,26 @@ const ChangeTotals = z.strictObject({
   files: z.int(),
   additions: z.int(),
   deletions: z.int(),
+});
+
+const reasonLimit = 200;
+
+// One automation of a PR: whether it is on, whether it can be used, and why not, or why it stopped.
+const ChangeAutomationState = z.strictObject({
+  on: z.boolean(),
+  available: z.boolean(),
+  reason: z.string().trim().min(1).max(reasonLimit).optional(),
+});
+
+// The three automations a Plugin may offer on a PR-backed Change (ADR-0052, "PR automation and the row menu").
+export const changeAutomationKinds = ['fix', 'merge', 'archive'] as const;
+
+export type ChangeAutomationKind = (typeof changeAutomationKinds)[number];
+
+const ChangeAutomation = z.strictObject({
+  fix: ChangeAutomationState,
+  merge: ChangeAutomationState,
+  archive: ChangeAutomationState,
 });
 
 /*
@@ -104,6 +124,8 @@ export const Change = z
     checks: z.array(ChangeCheck).max(changesShown).optional(),
     // Set when the latest read of this Change failed: everything else is what was last known, and why it is out of date.
     stale: z.enum(changeStaleReasons).optional(),
+    // What the Plugin offers to turn on for this PR. Absent means it offers none, and the App draws none.
+    automation: ChangeAutomation.optional(),
   })
   .refine(({ pullRequest, repository }) => !pullRequest || !!repository, {
     message: 'A pull request is identified by its repository and number',

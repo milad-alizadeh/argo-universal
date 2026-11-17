@@ -1,5 +1,7 @@
 import type { LiveHeader, ToolCallUpdate } from '@repo/contracts';
+import type { OrbState } from '@repo/kit/primitives/status/orb';
 import { recordedFeedMocks } from '@repo/mocks/app';
+import { toolCallOrb } from '../tool-call-orb';
 
 // Every live header the Server's producer gave over the recorded Turns, once per text.
 export const liveHeaderSteps = recordedFeedMocks
@@ -41,7 +43,7 @@ export const liveHeaderElapsed = '2m 14s';
 
 export const liveHeaderNow = startedAt + 134_000;
 
-// The first recorded step of a kind: its live header, and the Tool call a `tool_call` step names.
+// The first recorded step of a kind: its live header.
 const liveHeaderStepOf = (
   type: LiveHeader['source']['type'],
 ): (typeof liveHeaderSteps)[number] =>
@@ -54,7 +56,13 @@ export const requestHeader = liveHeaderStepOf('request').liveHeader;
 
 export const retryHeader = liveHeaderStepOf('retry').liveHeader;
 
-export const toolCallStep = liveHeaderStepOf('tool_call');
+// The first recorded Tool call step whose Orb moves as `state`.
+export const toolCallStepMoving = (
+  state: OrbState,
+): (typeof liveHeaderSteps)[number] =>
+  liveHeaderSteps.find(
+    (step) => step.toolCall && toolCallOrb(step.toolCall) === state,
+  ) ?? missingStep(`${state} tool_call`);
 
 // Paper's titled thought: the Feed never receives reasoning text to draw here.
 export const thoughtHeader: LiveHeader = {

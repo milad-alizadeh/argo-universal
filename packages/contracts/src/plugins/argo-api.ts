@@ -24,6 +24,7 @@ import { PluginSettingValue } from './plugin-settings';
 import type { QueriesApi } from './query-results';
 import { sessionApiCalls } from './session-api';
 import type { SlotsApi } from './slot-api';
+import type { WatchApi } from './watch-api';
 
 export type { SlotItemsAnswer, SlotItemsProvider, SlotsApi } from './slot-api';
 
@@ -148,6 +149,8 @@ export type Argo<Operations = OperationDeclarations> = ArgoCalls &
     accounts: PluginApiCalls['accounts'] & AccountProviderRegistration;
     pages: LoaderPagesApi<Operations>;
     slots: SlotsApi;
+    // Defines the function a manifest's `contributes.watch` path runs, for each Project, with no App open (ADR-0055).
+    watch: WatchApi;
     operations: OperationsApi<Operations>;
     queries: QueriesApi;
     /*

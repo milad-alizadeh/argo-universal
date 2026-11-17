@@ -33,14 +33,18 @@ When(
   },
 );
 
+// A Follow-up suggestion's background session opens in the Checkout without Session access.
+const hasSessionAccess = ({ params }: LoggedRequest): boolean =>
+  (params?.mcpServers ?? []).length > 0;
+
 // Sessions the Agent opened outside the Project folder: only a New worktree's, at Send.
 const worktreeOpens = (app: {
   requestLogPath: string;
   projectPath: string;
 }): LoggedRequest[] =>
-  openRequests(app).filter(
-    (request) => openedIn(request) !== realpathSync(app.projectPath),
-  );
+  openRequests(app)
+    .filter(hasSessionAccess)
+    .filter((request) => openedIn(request) !== realpathSync(app.projectPath));
 
 // Discovery holds its session open for a Slash command list up to the Engine's 10 s cap.
 const discoveryCloseMs = 15_000;

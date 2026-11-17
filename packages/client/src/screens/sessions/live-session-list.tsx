@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import {
   type InstalledAgents,
   loadedAgents,
   useInstalledAgents,
 } from '#features/agents';
 import { useConnectionState, useTRPC } from '#features/connection';
+import { useOpenPluginPage, useSessionRowPlugins } from '#features/plugins';
 import {
   ArchiveSessionAlert,
   liveUpdatesStopped,
@@ -15,21 +16,19 @@ import {
   type SessionsView,
   sessionsLoadState,
 } from '#features/sessions';
+import { useSessionListUpdates } from '#features/sessions';
 import {
   newSessionHref,
   projectHref,
   sessionHref,
-  useNavigate,
 } from '#lib/product/navigation/navigation';
-import { useOpenPluginPage } from '../plugins/use-plugin-opener';
-import { useSessionRowPlugins } from '../plugins/use-session-row-plugins';
+import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
 import {
   SessionListView,
   type SessionListViewProps,
 } from './session-list-view';
 import { useArchiveSession } from './use-archive-session';
 import { useRenameSession } from './use-rename-session';
-import { useSessionListUpdates } from './use-session-list-updates';
 import { useSessionPages } from './use-session-pages';
 
 export interface LiveSessionListProps {
@@ -84,14 +83,18 @@ function useSessionsNavigation(): Pick<
   SessionListViewProps,
   'onSelect' | 'onNewSession' | 'onNewSessionInProject' | 'onProjectSettings'
 > {
-  const navigate = useNavigate();
+  const navigate = useNavigateFromShown();
 
-  return {
-    onSelect: (id) => navigate(sessionHref(id)),
-    onNewSession: () => navigate(newSessionHref()),
-    onNewSessionInProject: (projectId) => navigate(newSessionHref(projectId)),
-    onProjectSettings: (name) => navigate(projectHref(name)),
-  };
+  // Each keeps one identity, so a row redraws only when its own Session changes.
+  return useMemo(
+    () => ({
+      onSelect: (id) => navigate(sessionHref(id)),
+      onNewSession: () => navigate(newSessionHref()),
+      onNewSessionInProject: (projectId) => navigate(newSessionHref(projectId)),
+      onProjectSettings: (name) => navigate(projectHref(name)),
+    }),
+    [navigate],
+  );
 }
 
 // What the Plugins add to the drawn rows, and the page an item opens.
@@ -127,7 +130,7 @@ function useSessionsViewProps(
 }
 
 // The Sessions list: its queries and live updates, passed to the view as props, the dialog that renames a row's Session, and the phones' alert before archiving one.
-export function LiveSessionList(
+export const LiveSessionList = memo(function LiveSessionList(
   props: LiveSessionListProps,
 ): React.JSX.Element {
   const listView = useSessionsViewProps(props);
@@ -142,7 +145,7 @@ export function LiveSessionList(
       <ArchiveSessionAlert {...archive.alert} />
     </>
   );
-}
+});
 
 function listActions(
   rename: ReturnType<typeof useRenameSession>,

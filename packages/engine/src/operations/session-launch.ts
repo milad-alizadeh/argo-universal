@@ -1,11 +1,10 @@
-import { randomUUID } from 'node:crypto';
-import { mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { productCompatibility } from '@repo/contracts/product-identity';
 import type { AcpResourceInput } from '../agents';
+import { quote, replaceFile } from './launcher-file';
+import { piLauncherFiles } from './pi-launcher';
 import type { SessionTokens } from './session-tokens';
-
-const quote = (argument: string): string =>
-  `'${argument.replaceAll("'", "'\\''")}'`;
 
 // The Server's Node can be bundled or absent from the Project login shell's PATH.
 const cliLauncher = (cliEntry: string): string => `#!/bin/sh
@@ -15,15 +14,16 @@ exec ${quote(process.execPath)} ${quote(cliEntry)} "$@"
 function writeCliLauncher(home: string, cliEntry: string): string {
   const directory = join(home, 'cli', 'bin');
   mkdirSync(directory, { recursive: true });
-  const temporary = join(directory, `argo.${randomUUID()}`);
 
-  try {
-    writeFileSync(temporary, cliLauncher(cliEntry), { mode: 0o755 });
-    renameSync(temporary, join(directory, 'argo'));
-  } catch (error) {
-    rmSync(temporary, { force: true });
-    throw error;
-  }
+  for (const file of [
+    {
+      name: productCompatibility.command,
+      content: cliLauncher(cliEntry),
+      mode: 0o755,
+    },
+    ...piLauncherFiles(directory),
+  ])
+    replaceFile(directory, file);
 
   return directory;
 }
@@ -41,6 +41,7 @@ export function sessionLaunchPolicy(
     return {
       environment: { token: grant.token, home, cliDirectory: launcher() },
       release: grant.release,
+      argoTools: grant.argoTools,
     };
   };
 }

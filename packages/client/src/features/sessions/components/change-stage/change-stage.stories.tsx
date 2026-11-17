@@ -63,7 +63,7 @@ export const Merged: Story = { args: mergedChange };
 
 export const Closed: Story = { args: closedChange };
 
-// A modifier says more about an Open Change without changing its glyph or tone.
+// A draft or a conflicting Change has a mark of its own, in place of Open's; a draft that conflicts is marked Draft.
 export const Draft: Story = { args: draftChange };
 
 export const Conflict: Story = { args: conflictChange };

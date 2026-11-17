@@ -27,7 +27,7 @@ export function createOperationProcedures(
   };
 }
 
-export { SessionTokens } from './session-tokens';
+export { argoToolsGraceMs, SessionTokens } from './session-tokens';
 
 export type { OperationWaitClock } from './work';
 

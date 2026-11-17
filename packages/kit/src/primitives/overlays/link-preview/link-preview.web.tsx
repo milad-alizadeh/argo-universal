@@ -9,6 +9,8 @@ import type {
 import TextAncestorContext from 'react-native-web/dist/exports/Text/TextAncestorContext';
 import { Text } from '#primitives/content/text';
 import { Popover, PopoverContent } from '#primitives/overlays/popover';
+import { ToneMark } from '../../../tone-mark';
+import { LinkToneContext, type LinkMark } from './link-preview-context';
 import type { LinkPreviewProps } from './link-preview-props';
 import { useLinkMark } from './use-link-mark';
 import { useLinkPreview, type PreviewState } from './use-link-preview';
@@ -26,8 +28,8 @@ function Preview({ href, children }: LinkPreviewProps): ReactElement {
   return (
     <Popover open={state.open} onOpenChange={state.setOpen} inline>
       <PreviewAnchor state={state}>
-        <LinkMark mark={mark} />
-        {children}
+        <LinkMarkGlyph mark={mark} />
+        <LinkToneContext value={mark?.tone ?? null}>{children}</LinkToneContext>
       </PreviewAnchor>
       <PreviewContent href={href} state={state} />
     </Popover>
@@ -48,13 +50,19 @@ function PreviewAnchor({
   );
 }
 
-function LinkMark({ mark }: { mark: ReactNode }): ReactElement | null {
+function LinkMarkGlyph({
+  mark,
+}: {
+  mark: LinkMark | null;
+}): ReactElement | null {
   if (!mark) return null;
 
   // The word joiner forbids a line break between the mark and the label that follows it.
   return (
     <span aria-hidden>
-      <span className="me-0.5 inline-flex align-middle">{mark}</span>
+      <span className="relative -top-px me-0.5 inline-flex align-middle">
+        <ToneMark {...mark} />
+      </span>
       {'⁠'}
     </span>
   );

@@ -1,4 +1,7 @@
-import type { AgentServerEnvironment } from '@repo/contracts';
+import type {
+  AgentServerEnvironment,
+  SuggestionModelChoice,
+} from '@repo/contracts';
 import type { Database } from '@repo/db';
 import {
   writeDatabaseJobAndWaitForCommit,
@@ -8,6 +11,7 @@ import {
   AgentServerChangeJob,
   AgentServerEnvironmentJob,
 } from '../servers/agent-servers-sql';
+import { SuggestionModelJob } from '../servers/suggestion-models';
 import { readRegistry } from './registry-cache';
 import { requestRegistry, type RegistryActor } from './registry-machine';
 
@@ -44,6 +48,19 @@ export const setAgentEnvironment = async (
     true,
   );
   deps.dropAgentConnections(id);
+};
+
+// Only the next prediction reads it, so the Agent's connections stay open.
+export const setSuggestionModel = async (
+  deps: Pick<RegistryDeps, 'databaseWriter'>,
+  id: string,
+  choice: SuggestionModelChoice,
+): Promise<void> => {
+  await writeDatabaseJobAndWaitForCommit(
+    deps.databaseWriter,
+    new SuggestionModelJob(id, choice),
+    true,
+  );
 };
 
 export const refreshRegistry = async (

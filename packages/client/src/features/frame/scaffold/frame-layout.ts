@@ -1,6 +1,6 @@
-import { contentSpan } from '../../../lib/product/content-rule';
 import { transitionKeyOf } from '../utils/frame-timing';
 import type { PaneSpan } from '../utils/pane-shift';
+import { contentRegion } from './frame-layout-content';
 import { resizeHandles } from './frame-layout-handles';
 import {
   contentFloor,
@@ -67,42 +67,6 @@ function pageRegion(
     offset: contentStart,
     width: hidden ? 0 : Math.max(0, input.width - contentStart - trailing),
     hidden,
-  };
-}
-
-const centredContent = (
-  { measures }: FrameLayoutInput,
-  page: PaneSpan,
-): PaneSpan =>
-  contentSpan(page, {
-    maximum: measures.contentMaximum,
-    gutter: measures.contentGutter,
-  });
-
-// How far the centred content moves towards the page's leading edge so a Workbench in the gutter keeps its gap from the column: nothing where the trailing gutter alone holds it.
-function contentShift(
-  { measures }: FrameLayoutInput,
-  centred: PaneSpan,
-  workbench: FrameLayout['workbench'],
-): number {
-  if (workbench.state !== 'gutter') return 0;
-
-  const columnEnd = centred.offset + centred.width - measures.contentGutter;
-
-  return Math.max(0, columnEnd + measures.paneGap - workbench.offset);
-}
-
-// The content column: centred in the page, or beside a Workbench that the trailing gutter alone does not hold.
-function contentRegion(
-  input: FrameLayoutInput,
-  { page, workbench }: Placed,
-): Pick<FrameLayout, 'content' | 'contentShift'> {
-  const centred = centredContent(input, page);
-  const shift = contentShift(input, centred, workbench);
-
-  return {
-    content: { ...centred, offset: centred.offset - shift },
-    contentShift: shift,
   };
 }
 

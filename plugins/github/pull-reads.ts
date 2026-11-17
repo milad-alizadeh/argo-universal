@@ -8,11 +8,15 @@ export const githubHost = 'api.github.com';
 
 const okStatus = 200;
 
-const shortHead = 7;
+export const shortHead = 7;
 
 const unauthorizedStatus = 401;
 
+const forbiddenStatus = 403;
+
 const notFoundStatus = 404;
+
+const tooManyStatus = 429;
 
 export type PullTarget = PullReference & { projectId: string };
 
@@ -34,15 +38,44 @@ const unavailable = 'Account is unavailable';
 export const needsSignIn = (message: string): boolean =>
   message.includes(signInMessage) || message.includes(unavailable);
 
-function refusalOf(status: number, subject: string): Error {
-  if (status === unauthorizedStatus) return new Error(signInMessage);
+// What a read refused for GitHub's rate limit says, so the Change can say why it stopped updating.
+const rateLimitMessage = 'GitHub rate limit reached.';
 
-  return new Error(
-    status === notFoundStatus
-      ? `${subject} was not found on GitHub, or this account cannot see it.`
-      : `GitHub answered ${status}.`,
+export const rateLimited = (message: string): boolean =>
+  message.includes(rateLimitMessage);
+
+type Reply = NonNullable<Awaited<ReturnType<Fetch>>>;
+
+const headerOf = ({ headers }: Reply, name: string): string | undefined =>
+  Object.entries(headers).find(([key]) => key.toLowerCase() === name)?.[1];
+
+// GitHub refuses a spent limit with 429, or with 403 and the headers that say so; any other 403 is a refusal.
+const saysSpent = (reply: Reply): boolean =>
+  headerOf(reply, 'retry-after') !== undefined ||
+  headerOf(reply, 'x-ratelimit-remaining') === '0';
+
+const isRateLimit = (reply: Reply): boolean =>
+  reply.status === tooManyStatus ||
+  (reply.status === forbiddenStatus && saysSpent(reply));
+
+const refusals = new Map<number, (subject: string) => string>([
+  [unauthorizedStatus, (): string => signInMessage],
+  [
+    notFoundStatus,
+    (subject: string): string =>
+      `${subject} was not found on GitHub, or this account cannot see it.`,
+  ],
+]);
+
+const refusalMessage = (status: number, subject: string): string =>
+  refusals.get(status)?.(subject) ?? `GitHub answered ${status}.`;
+
+const refusalOf = (reply: Reply, subject: string): Error =>
+  new Error(
+    isRateLimit(reply)
+      ? rateLimitMessage
+      : refusalMessage(reply.status, subject),
   );
-}
 
 export const call = (path: string, projectId: string): Parameters<Fetch> => [
   `https://${githubHost}${path}`,
@@ -64,7 +97,7 @@ export async function bodyOf(
 
   if (!reply) throw new Error(signInMessage);
 
-  if (reply.status !== okStatus) throw refusalOf(reply.status, subject);
+  if (reply.status !== okStatus) throw refusalOf(reply, subject);
 
   return reply.text();
 }
@@ -84,7 +117,7 @@ export async function fetchPull(
 }
 
 // The Checks of one commit as the signed-in person sees them.
-async function fetchChecks(
+export async function fetchChecks(
   fetch: Fetch,
   { repository, head, projectId }: ChecksTarget,
 ): Promise<CheckInfo[]> {

@@ -32,6 +32,7 @@ import {
   type SlotProviders,
   type SlotSend,
 } from './slot-providers';
+import { Watches } from './watches';
 import * as loader from './worker-pages';
 
 // A kit component with members is a component carrying them, as `List` carries `List.Section`; the rest are their wire type.
@@ -79,6 +80,10 @@ export interface Kit {
   operations: OperationHandlers;
   // `argo.pages.define`, which also answers the inbox's draws (ADR-0050).
   loaderPages: loader.WorkerPages;
+  // `argo.watch.define`, which also answers the inbox's Watch runs (ADR-0055).
+  watches: Watches;
+  // A manifest's `watch` path, when it names one, must have been defined.
+  requireWatch: Watches['require'];
   inbox: (json: string) => void;
   isElement: typeof React.isValidElement;
   // A manifest's `background` path and `contributes.accounts` pages name the Plugin's Loader pages.
@@ -98,18 +103,21 @@ type KitParts = {
   slots: SlotProviders;
   operations: OperationHandlers;
   loaderPages: loader.WorkerPages;
+  watches: Watches;
 };
 
 // Runs inside a Plugin's context before its code, bundled with the Plugin API (`bundleKit`); the context's `argo` and the `@argo/plugin-kit` module are built from it.
 export function createKit(calls: KitCalls): Kit {
   const parts = kitParts(calls);
-  const { slots, operations, loaderPages } = parts;
+  const { slots, operations, loaderPages, watches } = parts;
 
   return {
     ...modules,
     slots: { register: slots.register },
     operations,
     loaderPages,
+    watches,
+    requireWatch: watches.require,
     changed: loaderPages.changed,
     requireLoaderPage: loaderPages.requirePage,
     inbox: (json) => deliver(parts, PluginEvent.parse(JSON.parse(json))),
@@ -121,7 +129,14 @@ function kitParts(calls: KitCalls): KitParts {
   const loaderPages = loader.loaderPages(calls);
   const operations = operationHandlers(loaderPages.answering(calls.operations));
 
-  return { slots: slotProviders(calls.slots), operations, loaderPages };
+  const run = operations.run;
+
+  return {
+    slots: slotProviders(calls.slots),
+    operations,
+    loaderPages,
+    watches: new Watches({ data: calls.data, pages: calls.pages, run }),
+  };
 }
 
 // What the kit holds the same for every Plugin: its modules and how it reads a tree.
@@ -138,5 +153,20 @@ function deliver(parts: KitParts, event: PluginEvent): void {
 
   if (event.type === 'operation') return parts.operations.answer(event);
 
+  return answerDraw(parts, event);
+}
+
+// A draw that is a Watch's run goes to the function its path names; any other event is a Loader page's.
+function answerDraw(
+  parts: KitParts,
+  event: Exclude<PluginEvent, { type: 'slotItems' | 'operation' }>,
+): void {
+  if (isWatch(event)) return parts.watches.answer(event);
+
   return parts.loaderPages.answer(event);
 }
+
+const isWatch = (
+  event: PluginEvent,
+): event is Extract<PluginEvent, { type: 'draw' }> =>
+  event.type === 'draw' && event.watch === true;

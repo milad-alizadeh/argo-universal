@@ -1,6 +1,16 @@
 import { router, type Href } from 'expo-router';
-import type { AnchorHTMLAttributes, MouseEvent, ReactElement } from 'react';
-import { LinkPreview } from '#primitives/overlays/link-preview';
+import {
+  useContext,
+  type AnchorHTMLAttributes,
+  type MouseEvent,
+  type ReactElement,
+} from 'react';
+import { cn } from '#kit/utils';
+import {
+  LinkPreview,
+  LinkToneContext,
+} from '#primitives/overlays/link-preview';
+import { toneTextClass, type MarkTone } from '../../../tone-mark';
 import type { LinkProps } from './link-props';
 import { linkTarget, isRoute } from './link-target';
 
@@ -55,8 +65,35 @@ function anchorProps(
   };
 }
 
-const anchorClass =
-  'rounded-sm underline decoration-focus underline-offset-2 hover:decoration-foreground focus-visible:outline-3 focus-visible:outline-primary/35';
+const anchorBase =
+  'rounded-sm underline-offset-2 focus-visible:outline-3 focus-visible:outline-primary/35';
+
+type AnchorLook = Pick<
+  AnchorHTMLAttributes<HTMLAnchorElement>,
+  'className' | 'style'
+>;
+
+// An unmarked link keeps the text's colour and a quiet underline.
+const plainLook: AnchorLook = {
+  className: cn(
+    anchorBase,
+    'underline decoration-focus hover:decoration-foreground',
+  ),
+  style: { color: 'inherit', font: 'inherit' },
+};
+
+// A marked link is drawn in its mark's tone and underlines only under the pointer, as ChangeStage draws a number.
+const markedLook = (tone: MarkTone): AnchorLook => ({
+  className: cn(
+    anchorBase,
+    'no-underline hover:underline',
+    toneTextClass(tone),
+  ),
+  style: { font: 'inherit' },
+});
+
+const anchorLook = (tone: MarkTone | null): AnchorLook =>
+  tone ? markedLook(tone) : plainLook;
 
 function FollowedLink(props: LinkProps & { target: string }): ReactElement {
   const anchor = <LinkAnchor {...props} />;
@@ -70,11 +107,7 @@ function FollowedLink(props: LinkProps & { target: string }): ReactElement {
 
 function LinkAnchor(props: LinkProps & { target: string }): ReactElement {
   return (
-    <a
-      {...anchorProps(props)}
-      className={anchorClass}
-      style={{ color: 'inherit', font: 'inherit' }}
-    >
+    <a {...anchorProps(props)} {...anchorLook(useContext(LinkToneContext))}>
       {props.children}
     </a>
   );

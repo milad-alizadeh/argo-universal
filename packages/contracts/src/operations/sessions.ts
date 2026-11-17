@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SessionQueueInput } from '../sessions';
+import { SessionQueueInput, SessionSubmitInput } from '../sessions';
 import {
   SessionArchiveInput,
   SessionArchiveOutput,
@@ -33,7 +33,7 @@ export const sessionOperations = {
     label: 'Submit Prompt',
     description:
       'Submit a user Prompt from an App, queuing it while the Session is busy or paused.',
-    params: SessionPromptInput,
+    params: SessionSubmitInput,
     result: z.strictObject({}),
     tier: 'act',
     keywords: ['prompt', 'queue'],
@@ -126,13 +126,14 @@ export const sessionOperations = {
   },
   'session.savePlan': {
     id: 'session.savePlan',
-    label: 'Save plan',
+    label: 'Save Written plan',
     description:
-      'Save a Markdown plan to a new file under .argo/plans in the Session Checkout.',
+      'Save a Written plan the person asked to keep as a new Markdown file under .argo/plans in the Session Checkout. Never for a Todo list: run session.setTodos.',
     params: SessionSavePlanInput,
     result: SessionSavePlanOutput,
-    tier: 'act',
-    keywords: ['plan', 'markdown', 'file'],
+    // An Agent that calls it asks the person first: a checklist saved here was committed with the work (ADR-0053).
+    tier: 'confirm',
+    keywords: ['written plan', 'markdown', 'file'],
   },
   ...sessionAgentOperations,
   ...sessionRestartOperations,

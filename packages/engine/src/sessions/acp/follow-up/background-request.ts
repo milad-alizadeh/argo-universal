@@ -20,7 +20,7 @@ export type BackgroundRequest = {
     'agent' | 'projectId' | 'configOptions' | 'acpResponseReaders'
   > & {
     checkout: Pick<SessionContext['checkout'], 'path'>;
-    input: Pick<SessionContext['input'], 'acp'>;
+    input: Pick<SessionContext['input'], 'acp' | 'database'>;
   };
   conversation: string;
   controller: AbortController;

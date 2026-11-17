@@ -26,7 +26,7 @@ type AccessibilityProps = Pick<
 // Server sanitizes the markup; native rendering resolves currentColor gradient stops to the tone.
 export function Svg(props: SvgProps): React.JSX.Element {
   const { color } = useResolveClassNames(toneClass(props.tone));
-  const frame = useArtworkFrame(artworkRatio(props));
+  const frame = useArtworkFrame(artworkRatio(props), props.width);
 
   const draws = useSvgDrawing();
 
@@ -160,10 +160,10 @@ function artworkRatio(props: SvgProps): number {
   return props.aspectRatio ?? viewBoxRatio(props.xml) ?? 1;
 }
 
-function useArtworkFrame(ratio: number): ViewStyle {
+function useArtworkFrame(ratio: number, width: number | undefined): ViewStyle {
   const tile = useContext(ListTileContext);
 
   return tile
     ? { width: '100%', height: '100%' }
-    : { width: '100%', aspectRatio: ratio };
+    : { width: width ?? '100%', aspectRatio: ratio };
 }

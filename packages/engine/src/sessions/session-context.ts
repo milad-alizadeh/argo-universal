@@ -1,7 +1,6 @@
 import type {
   ContextUsage,
   PromptQueue,
-  QueueCommand,
   FollowUpSuggestion,
   PendingElicitation,
   PendingPermission,
@@ -9,7 +8,6 @@ import type {
   SlashCommand,
   SessionOpenError,
   ShellRecord,
-  SubagentRole,
 } from '@repo/contracts';
 import type { CoreHooks } from '@repo/contracts/plugins';
 import type { createRejectionCounter } from '@repo/machine-log';
@@ -26,6 +24,7 @@ import type { AcpTurnOutcome } from './acp/prompts/prompt-outcome';
 import type { AcpPromptRequest as PromptRequest } from './acp/prompts/prompt-types';
 import type { LocalSubmission } from './acp/prompts/submission';
 import type { ElicitationAnswerContent } from './acp/requests/elicitation-types';
+import type { AgentWorkCommand, AgentWorkState } from './agent-work';
 import type {
   SessionCreationReceipt,
   SessionCreationSettled,
@@ -35,10 +34,12 @@ import type {
   NativePermissions,
 } from './native-permissions';
 import type { PermissionHooked } from './permission-hooks';
+import type { QueueSessionCommand } from './queue-command-types';
 import type {
   QueueHoldConnections,
   QueueEditDisconnected,
 } from './queue-hold-connections';
+import type { QueueSteering } from './queue-steering/types';
 import type { ClosingCommand } from './restart/restart-command';
 import type { SessionData, SessionInput } from './session-data';
 import type { Shells } from './shells';
@@ -75,6 +76,7 @@ export type SessionMachineInput = SessionInput & {
 };
 
 export type SessionCommand =
+  | QueueSessionCommand
   | ({ type: 'session.prompt' } & LocalSubmission)
   | {
       type: 'session.answerPermission';
@@ -94,16 +96,10 @@ export type SessionCommand =
       applied?: PromiseWithResolvers<SessionConfigOption[]>;
       held?: boolean;
     }
-  | {
-      type: 'session.queue';
-      connectionSignal?: AbortSignal;
-      command: QueueCommand;
-      committed: PromiseWithResolvers<void>;
-    }
   | { type: 'session.archive' }
   | { type: 'session.unarchive' }
   | { type: 'session.cancel' }
-  | { type: 'session.declareSubagentRole'; role: SubagentRole }
+  | AgentWorkCommand
   | ClosingCommand;
 
 export type SessionEvent =
@@ -119,10 +115,11 @@ export type SessionEvent =
   | NativePermissionEvent
   | SessionCreationSettled;
 
-export interface SessionContext extends SessionData {
+export interface SessionContext extends SessionData, AgentWorkState {
   input: SessionMachineInput;
   promptQueue: PromptQueue;
   queueHolds: Record<string, string>;
+  queueSteering: QueueSteering | null;
   queueHoldConnections: QueueHoldConnections;
   queueCommitted: Promise<void>;
   dispatchingQueueId: string | null;

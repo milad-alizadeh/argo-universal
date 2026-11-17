@@ -4,6 +4,7 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import {
   backgroundResult,
+  movedResult,
   reportedCommand,
   reportedEnd,
 } from '#mocks/acp-terminal-output';
@@ -46,6 +47,50 @@ it('ends the Shell at the task file exit line when the Agent never reports the e
   await vi.waitFor(() =>
     expect(changes.at(-1)).toMatchObject({ status: 'exited', exitCode: 0 }),
   );
+});
+
+it('records a foreground command the Agent moved to the background when it outran its timeout', async (): Promise<void> => {
+  const { notify, changes } = openMemoryShells();
+
+  const send = sender(notify);
+  const path = await writeTaskFile('MOVED_MARK\n');
+  send(reportedCommand(call, { command, description: 'Run verify' }));
+  send(movedResult(call, path));
+  await vi.waitFor(() =>
+    expect(changes).toMatchObject([
+      { id: call, command, description: 'Run verify', status: 'running' },
+    ]),
+  );
+
+  await writeFile(path, 'MOVED_MARK\n\n[exited with code 1]\n');
+
+  await vi.waitFor(() =>
+    expect(changes.at(-1)).toMatchObject({ status: 'exited', exitCode: 1 }),
+  );
+});
+
+it('does not record a foreground command that only prints the moved message mid-line', async (): Promise<void> => {
+  const { notify, changes } = openMemoryShells();
+
+  const send = sender(notify);
+  const path = await writeTaskFile('[exited with code 0]\n');
+  send(reportedCommand(call, { command: 'cat notes' }));
+
+  send([
+    {
+      sessionUpdate: 'tool_call_update',
+      toolCallId: call,
+      _meta: {
+        terminal_output_delta: {
+          terminal_id: call,
+          data: `notes: Command did not complete within its 600s timeout and was moved to the background (ID: b1). Output is being written to: ${path}.`,
+        },
+      },
+    },
+  ]);
+  await new Promise((resolve) => setTimeout(resolve, 20));
+
+  expect(changes).toEqual([]);
 });
 
 it('does not follow a path from anything but the background result', async (): Promise<void> => {

@@ -8,9 +8,14 @@ import {
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue, IssueStatus } from './github-issues';
-import type { AttachedSession, IssueDetailData } from './issue-detail-data';
-import { IssueMetadata, statusDotKey } from './issue-metadata';
+import type {
+  AttachedSession,
+  ChoicesRead,
+  IssueDetailData,
+} from './issue-detail-data';
 import { issuePath } from './issue-paths';
+import { statusPickerKey, type IssueEditing } from './issue-pickers';
+import { IssueProperties } from './issue-properties';
 import { AttachedSessions, SubIssues } from './issue-sections';
 import { statuses } from './issue-status-view';
 
@@ -24,6 +29,7 @@ type IssueDetailProps = {
 type ShownProps = Omit<IssueDetailProps, 'data'> & {
   issue: Issue;
   sessions: AttachedSession[];
+  choices: ChoicesRead;
 };
 
 // One Issue's own page: its description, status and labels, and the presses that act on it.
@@ -32,7 +38,16 @@ export function IssueDetailPage(props: IssueDetailProps): JSX.Element {
 
   if (!data.ok) return <Unreadable {...props} message={data.message} />;
 
-  return <IssueDetail {...props} issue={data.issue} sessions={data.sessions} />;
+  const { choices, choicesError } = data;
+
+  return (
+    <IssueDetail
+      {...props}
+      issue={data.issue}
+      sessions={data.sessions}
+      choices={{ choices, choicesError }}
+    />
+  );
 }
 
 // An Issue that cannot be read says why, and offers to read it again.
@@ -62,12 +77,18 @@ function IssueDetail(props: ShownProps): JSX.Element {
       title={props.issue.title}
       primaryAction={<StartSessionAction {...props} />}
       actions={<StatusAction {...props} />}
-      aside={<IssueMetadata issue={props.issue} />}
+      aside={<IssueProperties issue={props.issue} editing={editingOf(props)} />}
     >
       <IssueBody {...props} />
     </Screen>
   );
 }
+
+const editingOf = ({ choices, projectId, to }: ShownProps): IssueEditing => ({
+  ...choices,
+  projectId,
+  to,
+});
 
 // The description, the Issue's own properties beside it, and the work under both.
 function IssueBody({ issue, projectId, sessions }: ShownProps): JSX.Element {
@@ -136,10 +157,7 @@ const setStatus = (
   });
 
 const statusPatches = (number: number, status: IssueStatus): Patches => [
-  {
-    key: statusDotKey(number),
-    props: { text: statuses[status].text, tone: statuses[status].tone },
-  },
+  { key: statusPickerKey(number), props: { value: status } },
   {
     key: statusActionKey(number),
     props: {

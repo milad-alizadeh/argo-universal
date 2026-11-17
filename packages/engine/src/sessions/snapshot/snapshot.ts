@@ -135,11 +135,12 @@ function liveShells(session: SessionState): SessionSnapshot['shells'] {
 function queueFields(
   session: SessionState | null,
   stored: StoredSnapshot,
-): Pick<SessionSnapshot, 'promptQueue' | 'queueHolds'> {
+): Pick<SessionSnapshot, 'promptQueue' | 'queueHolds' | 'canSteer'> {
   return session
     ? {
         promptQueue: session.context.promptQueue,
         queueHolds: Object.keys(session.context.queueHolds),
+        ...steeringFields(session.context),
       }
     : { promptQueue: stored.promptQueue, queueHolds: [] };
 }
@@ -148,4 +149,16 @@ function revisionFields(
   feed: FeedSnapshot,
 ): Pick<SessionSnapshot, 'maxRevision' | 'epoch'> {
   return { maxRevision: feed.maxRevision, epoch: feed.epoch };
+}
+
+function steeringFields(
+  context: SessionState['context'],
+): Pick<SessionSnapshot, 'canSteer'> {
+  const supported = [
+    context.acpLease?.steering === true,
+    context.activeTurnId !== null,
+    context.turnEnding.kind === 'completion',
+  ].every(Boolean);
+
+  return supported ? { canSteer: true } : {};
 }

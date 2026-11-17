@@ -11,11 +11,14 @@ const meta = {
     installing: { control: 'boolean' },
     installed: { control: 'select', options: ['written', 'updated'] },
     error: { control: 'text' },
+    todoList: { control: 'boolean' },
   },
   parameters: { screenPreview: true },
   args: {
     access: { status: 'loaded', enabled: true },
+    todoList: true,
     onEnabledChange: action('change Agent access'),
+    onTodoListChange: action('change the Todo list setting'),
     onInstall: action('add Argo instructions'),
     onRetry: action('retry loading Agent access'),
   },
@@ -30,6 +33,8 @@ export const Enabled: Story = {};
 export const Disabled: Story = {
   args: { access: { status: 'loaded', enabled: false } },
 };
+
+export const TodoListOff: Story = { args: { todoList: false } };
 
 export const Saving: Story = { args: { saving: true } };
 

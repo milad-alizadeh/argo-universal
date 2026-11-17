@@ -11,7 +11,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { type ClientError, useTRPC } from '#features/connection';
 import { toFileDiffs } from '#features/feed';
 import type {
@@ -23,6 +23,7 @@ import type {
   FilesPages,
   Loaded,
 } from './changes-source';
+import { ReloadPacer } from './reload-pacer';
 
 type Read<Data> = {
   data?: Data;
@@ -121,20 +122,46 @@ function useServerDiffPages(
   }).map(loaded);
 }
 
-function useServerRefresh({ sessionId, open, revision }: ChangesScope): void {
+type QueryClient = ReturnType<typeof useQueryClient>;
+
+type TRPC = ReturnType<typeof useTRPC>;
+
+// Marks a Session's files and every diff page read stale, and reloads those in use.
+const changesReload =
+  (queryClient: QueryClient, trpc: TRPC, sessionId: string) =>
+  async (): Promise<void> => {
+    // A reload already on its way is left to finish: it is answered by the pacer's next one.
+    const whole = { cancelRefetch: false };
+    const files = trpc.session.changes.infiniteQueryFilter({ sessionId });
+    const diffs = trpc.session.diff.queryFilter({ sessionId });
+
+    await Promise.all([
+      queryClient.invalidateQueries(files, whole),
+      queryClient.invalidateQueries(diffs, whole),
+    ]);
+  };
+
+// One pacer per Session, stopped when the Session's Changes are let go.
+function useReloadPacer(sessionId: string): ReloadPacer {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!open) return;
+  const pacer = useMemo(
+    () => new ReloadPacer(changesReload(queryClient, trpc, sessionId)),
+    [queryClient, trpc, sessionId],
+  );
 
-    void queryClient.invalidateQueries(
-      trpc.session.changes.infiniteQueryFilter({ sessionId }),
-    );
-    void queryClient.invalidateQueries(
-      trpc.session.diff.queryFilter({ sessionId }),
-    );
-  }, [queryClient, trpc, sessionId, open, revision]);
+  useEffect(() => pacer.stop, [pacer]);
+
+  return pacer;
+}
+
+function useServerRefresh({ sessionId, open, revision }: ChangesScope): void {
+  const pacer = useReloadPacer(sessionId);
+
+  useEffect(() => {
+    if (open) pacer.request();
+  }, [pacer, open, revision]);
 }
 
 // The Server's Changes over tRPC: the files a page at a time, each opened file's diff a page of lines at a time.
