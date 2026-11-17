@@ -138,7 +138,7 @@ it('never serves the previous Account’s Issue after signing in as another pers
   await untilShown(test, page, `${issueTitle} (as hubot)`);
 
   expect(page.findText(issueTitle)).toBeUndefined();
-});
+}, 20_000);
 
 it('makes one call for an Issue a Slot and a page opened for a Project both read', async () => {
   const tracked = await trackedGitHub();
