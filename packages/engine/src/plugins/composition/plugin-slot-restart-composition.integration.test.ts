@@ -23,8 +23,14 @@ const leftOutLines = async (home: string): Promise<string[]> =>
 
 it("keeps a Session row's items while its Plugin restarts and then runs late", async () => {
   const home = await createRuntimePlugins([
-    { id: 'restarting', fixture: 'healthy', dev: true, slots: [sessionRowSlotId] },
+    {
+      id: 'restarting',
+      fixture: 'healthy',
+      dev: true,
+      slots: [sessionRowSlotId],
+    },
   ]);
+
   const entry = join(home, shippedFolder, 'restarting', 'index.mjs');
 
   await writeFile(entry, restarting);
@@ -34,7 +40,10 @@ it("keeps a Session row's items while its Plugin restarts and then runs late", a
   const app = createCaller({ signal: controller.signal });
 
   const firstAnswer = async (): Promise<SlotItems | undefined> => {
-    const items = await app.plugins.slotItems({ slotId: sessionRowSlotId, contexts });
+    const items = await app.plugins.slotItems({
+      slotId: sessionRowSlotId,
+      contexts,
+    });
 
     return (await items[Symbol.asyncIterator]().next()).value;
   };
