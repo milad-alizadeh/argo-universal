@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 import {
   attached,
   automationOf,
+  graphqlOrder,
   mergeOf,
   pullOf12,
   refresh,
@@ -130,6 +131,23 @@ it(
       { pullRequest: { number: 12 }, automation: { merge: { on: false } } },
     ]);
     await changes.close();
+  },
+  slow,
+);
+
+it(
+  'asks GitHub again after turning auto-merge on or off, so the Change shows what GitHub now says',
+  async () => {
+    const run = await attached();
+
+    for (const on of [true, false]) {
+      await tap(run, { kind: 'merge', on });
+
+      const order = graphqlOrder(run);
+
+      expect(order.at(-1)).toBe('read');
+      expect(order.at(-2)).toBe('write');
+    }
   },
   slow,
 );
