@@ -48,6 +48,7 @@ it('allows discovery and global reads while retaining Plugin secret masking', as
     'agent.getAccess',
     'plugin.list',
     'plugin.getSettings',
+    'diagram.validate',
   ])
     expect(discovered).toContainEqual(
       expect.objectContaining({ id, enabled: true, disabledReason: null }),
