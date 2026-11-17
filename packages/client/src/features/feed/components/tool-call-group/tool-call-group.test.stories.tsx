@@ -3,7 +3,6 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import type { FeedGroup } from '../../view/feed-view';
 import { FeedItem } from '../feed-item';
-import { required } from '../recorded-tool-calls.mocks';
 import { scriptedToolCall } from '../tool-call-description.mocks';
 import {
   failedCommand,
@@ -17,9 +16,10 @@ import {
 } from './tool-call-group-fixtures';
 import {
   commandAndFileSummary,
-  commandTitle,
+  commandLine,
   dark,
   readFileTitle,
+  runningGroupTitle,
 } from './tool-call-group-play.mocks';
 import { renderRecordedActivity } from './tool-call-group-preview.mocks';
 
@@ -56,9 +56,7 @@ function settled(width: number): Story {
         canvas.getByRole('button', { name: readFileTitle }),
       ).toBeVisible();
       await expect(
-        canvas.getAllByRole('button', {
-          name: 'cat hello.txt && git status --short',
-        }),
+        canvas.getAllByRole('button', { name: commandLine }),
       ).toHaveLength(1);
       await userEvent.click(group);
       await waitFor(() =>
@@ -80,13 +78,13 @@ function running(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleLayout(width);
 
-      const group = canvas.getByRole('button', {
-        name: commandAndFileSummary,
-      });
+      // The newest running call titles the group even behind a read, as Codex titles its active cell.
+      const group = canvas.getByRole('button', { name: runningGroupTitle });
 
       await expect(group).toBeVisible();
       await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
-      await expect(group).toHaveTextContent('Ran 1 command, Read 1 file 23s');
+      await expect(group).toHaveTextContent(`${runningGroupTitle} 23s`);
+      await expect(canvas.queryByText(commandAndFileSummary)).toBeNull();
       await expect(
         canvas.queryAllByRole('button', { name: /^Read / }),
       ).toHaveLength(0);
@@ -95,14 +93,10 @@ function running(width: number): Story {
         canvas.getByRole('button', { name: readFileTitle }),
       ).toBeVisible();
 
-      // The running command is a row of its own behind the read, so its output opens under it (#2044).
-      const [commandRow, ...rest] = canvas.getAllByRole('button', {
-        name: commandTitle,
-      });
-
-      await expect(rest).toHaveLength(0);
-      await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
-      await userEvent.click(required(commandRow, 'the command’s own row'));
+      // The title names the running command once, as Codex does: its output draws in its place, untitled.
+      await expect(
+        canvas.queryByRole('button', { name: commandLine }),
+      ).not.toBeInTheDocument();
       await expect(canvas.getByText('Shell')).toBeVisible();
       await userEvent.click(group);
       await waitFor(() =>
@@ -128,7 +122,7 @@ export const OpenCompletedHistory: Story = {
     );
     await expect(
       canvas.getAllByRole('button', {
-        name: commandTitle,
+        name: commandLine,
       }),
     ).toHaveLength(1);
   },

@@ -24,6 +24,8 @@ export const exemptFolders = {
     'App-only drawing of a check beside a label; a Plugin sends a FieldGroup.Toggle.',
   'fields/code-field':
     'App-only: one box per character for the code typed into Add a Server (#1502); a Plugin has no code to take.',
+  'content/code-scanner':
+    'App-only: the camera frame that reads the code for Add a Server; a Plugin has no camera.',
   'scaffolds/pinned-footer':
     'App-only: holds one button at the foot of a Screen body; a Plugin has no footer to pin.',
   'actions/pressable':
@@ -31,6 +33,8 @@ export const exemptFolders = {
   'content/agent-logo':
     "An Agent's logo from the ACP registry, drawn beside a Picker option; a Plugin sends the option's `logo`.",
   'content/liquid-glass': 'A native surface material; only how it looks.',
+  'content/diagram':
+    'App-only: a Mermaid fence in Markdown draws as a diagram; a Plugin sends the Markdown or an Svg.',
   'content/media-url':
     'Resolves the src of Image, Video and Audio; no props of its own.',
   'content/native-text': 'The platform fork of Text.',

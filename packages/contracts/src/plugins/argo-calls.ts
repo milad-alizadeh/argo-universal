@@ -2,14 +2,18 @@ import { z } from 'zod';
 import { AccountCall, OAuthCall } from '#plugin-account-calls';
 import { PluginAssetRequest } from '#plugin-assets';
 import { FsCall } from '#plugin-fs-calls';
-import { SessionGet } from '#plugin-session-calls';
+import { SessionCall } from '#plugin-session-calls';
 import { SlotCall } from '#plugin-slot-calls';
 import { WireJson } from '#plugin-wire-json';
 
 export {
   PluginProjectInfo,
+  PluginPromptAnswer,
   PluginSessionInfo,
+  SessionArchive,
+  SessionCall,
   SessionGet,
+  SessionPrompt,
 } from '#plugin-session-calls';
 
 export { SlotCall } from '#plugin-slot-calls';
@@ -168,34 +172,7 @@ export type PluginNavBadge = z.infer<typeof PluginNavBadge>;
 
 export { serialisePluginQuery } from '#plugin-query-normalisation';
 
-// `get` answers one row, the other methods a list of rows: the shapes Drizzle's sqlite-proxy driver expects.
-export const StorageResult = z.object({
-  rows: z.array(z.unknown()),
-});
-
-export type StorageResult = z.infer<typeof StorageResult>;
-
-export const ProcessResult = z.object({
-  exitCode: z.number().nullable(),
-  stdout: z.string(),
-  stderr: z.string(),
-  truncated: z.boolean(),
-  timedOut: z.boolean(),
-});
-
-export type ProcessResult = z.infer<typeof ProcessResult>;
-
-// The body as the Server read it, capped at its limit.
-export const FetchReply = z.object({
-  ok: z.boolean(),
-  status: z.number(),
-  statusText: z.string(),
-  headers: z.record(z.string(), z.string()),
-  body: z.string(),
-  truncated: z.boolean(),
-});
-
-export type FetchReply = z.infer<typeof FetchReply>;
+export { FetchReply, ProcessResult, StorageResult } from '#plugin-argo-results';
 
 // Each `argo` call as it crosses to the Server; the Plugin host adds Hooks, views and dispatch results.
 export const ArgoRequest = z.discriminatedUnion('api', [
@@ -206,7 +183,7 @@ export const ArgoRequest = z.discriminatedUnion('api', [
   PluginNavBadge,
   z.object({ api: z.literal('storage'), queries: z.array(StorageQuery) }),
   z.object({ api: z.literal('projects'), action: z.literal('list') }),
-  SessionGet,
+  SessionCall,
   z.object({ api: z.literal('slots'), call: SlotCall }),
   z.object({ api: z.literal('secrets'), call: SecretCall }),
   z.object({ api: z.literal('settings'), key: z.string() }),

@@ -1,5 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import { graphqlData, type GitHubRequest } from './github-api';
+import { readIssues } from './github-attached';
 import {
   issueQuery,
   listQuery,
@@ -8,6 +9,12 @@ import {
   mapOverview,
   overviewQuery,
 } from './github-documents';
+import {
+  editIssue,
+  readChoices,
+  type Choices,
+  type IssueEdit,
+} from './github-edits';
 import type { Issue, IssueStatus } from './github-issues';
 import { setIssueStatus } from './github-write';
 import type { Json } from './json';
@@ -18,8 +25,16 @@ export type TrackerClient = {
   overview: () => Promise<Overview>;
   listIssues: (search: string, limit: number) => Promise<Issue[]>;
   getIssue: (number: number) => Promise<Issue>;
+  // The Issues with these numbers that GitHub still has, read together; one that is gone is left out.
+  getIssues: (numbers: readonly number[]) => Promise<Issue[]>;
   setStatus: (number: number, status: IssueStatus) => Promise<void>;
+  // The labels and people an Issue can be given.
+  choices: () => Promise<Choices>;
+  // Puts a label or a person on an Issue, takes them off, or makes a new label for it.
+  edit: (number: number, edit: IssueEdit) => Promise<void>;
 };
+
+type Written = 'setStatus' | 'choices' | 'edit';
 
 type Source = { projectId: string; repository: string };
 
@@ -30,6 +45,18 @@ const readerOf =
   (request) =>
     graphqlData(fetch, projectId, request);
 
+const readsOf = (
+  read: Read,
+  repository: string,
+): Omit<TrackerClient, Written> => ({
+  overview: async () => mapOverview(await read(overviewQuery(repository))),
+  listIssues: async (search, limit) =>
+    mapIssueList(await read(listQuery(repository, search, limit))),
+  getIssue: async (number) =>
+    mapIssueDetail(await read(issueQuery(repository, number))),
+  getIssues: (numbers) => readIssues(read, repository, numbers),
+});
+
 /*
  * The Tracker talks to GitHub only through `argo.fetch`, borrowing the Account the Project chose (ADR-0036); the
  * Plugin never holds a token. An unavailable Account or a rejected token is `SignInRequired`.
@@ -38,15 +65,12 @@ export function createGitHubTracker(
   fetch: Argo['fetch'],
   { projectId, repository }: Source,
 ): TrackerClient {
-  const read = readerOf(fetch, projectId);
-
   return {
-    overview: async () => mapOverview(await read(overviewQuery(repository))),
-    listIssues: async (search, limit) =>
-      mapIssueList(await read(listQuery(repository, search, limit))),
-    getIssue: async (number) =>
-      mapIssueDetail(await read(issueQuery(repository, number))),
+    ...readsOf(readerOf(fetch, projectId), repository),
     setStatus: (number, status) =>
       setIssueStatus(fetch, { repository, number, status, projectId }),
+    choices: () => readChoices(fetch, { repository, projectId }),
+    edit: (number, edit) =>
+      editIssue(fetch, { repository, projectId, number }, edit),
   };
 }

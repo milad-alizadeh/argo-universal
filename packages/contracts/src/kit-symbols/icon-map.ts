@@ -107,6 +107,7 @@ export const iconSymbols = {
   private: { sf: 'lock', material: 'lock' },
   read: { sf: 'book', material: 'menu_book' },
   rename: { sf: 'pencil', material: 'edit' },
+  grip: { svg: 'grip' },
   reorder: { sf: 'arrow.up.arrow.down', material: 'drag_indicator' },
   reply: { sf: 'arrowshape.turn.up.left', material: 'reply' },
   resource: { sf: 'square.dashed', material: 'select' },

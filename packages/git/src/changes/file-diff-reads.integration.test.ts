@@ -83,8 +83,8 @@ it('reads what a comparison shares once for files asked for together', async () 
     1,
   );
   expect(started.filter((args) => args.includes('--numstat'))).toHaveLength(1);
-  // The Project's branch and those three are shared; what is left is one patch per file.
-  expect(started).toHaveLength(paths.length + 4);
+  // The Project's branch, its upstream and those three reads are shared; what is left is one patch per file.
+  expect(started).toHaveLength(paths.length + 5);
 });
 
 it('sees a change made after an earlier read of the same comparison', async () => {

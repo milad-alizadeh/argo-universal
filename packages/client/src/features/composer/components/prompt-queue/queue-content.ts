@@ -16,12 +16,10 @@ export function editedPrompt(
   ];
 }
 
-export function attachmentLabels(prompt: ContentBlock[]): string {
-  return prompt
-    .flatMap((block) => (block.type === 'text' ? [] : [attachmentName(block)]))
-    .join(', ');
-}
+export function attachmentSummary(prompt: ContentBlock[]): string {
+  const count = prompt.filter((block) => block.type !== 'text').length;
 
-function attachmentName(block: ContentBlock): string {
-  return 'name' in block ? (block.name ?? 'Attachment') : 'Attachment';
+  if (count === 0) return '';
+
+  return `${count} ${count === 1 ? 'Attachment' : 'Attachments'}`;
 }

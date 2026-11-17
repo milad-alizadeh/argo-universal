@@ -22,7 +22,7 @@ function railColumn(className: string) {
   };
 }
 
-// Paper "Rail · narrow variants", Variant B: 40 tiles on the tinted rail, the selected one a flat tint, and no separator.
+// 40 tiles on the tinted rail and no separator; icons stay outlined, and the selected one is a flat tint with a marker at the rail's edge.
 const meta = {
   title: 'Frame/FrameRail',
   component: FrameRail,
@@ -63,7 +63,7 @@ export const ManyPluginSections: Story = {
 // A Plugin's `argo.nav.badge` count rides its tile's corner, capped at 99+.
 export const PluginBadges: Story = { args: pluginBadgeRail };
 
-// A pointer over an unselected tile darkens its icon. The tile's fill and the selected tile's hairline ring are CSS `:hover`, which the story's synthetic hover never sets, so they are not drawn here; a selected tile hovered draws as Expanded does.
+// A pointer over an unselected tile darkens its icon. The tile's hover tint is CSS `:hover`, which the story's synthetic hover never sets, so it is not drawn here; a selected tile hovered draws as Expanded does.
 export const Hovered: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.hover(canvas.getByRole('button', { name: 'Settings' }));

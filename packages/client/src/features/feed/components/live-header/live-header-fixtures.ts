@@ -1,3 +1,4 @@
+import type { OrbState } from '@repo/kit/primitives/status/orb';
 import type { LiveHeaderProps } from './live-header';
 import {
   liveHeaderNow,
@@ -5,6 +6,7 @@ import {
   retryHeader,
   thoughtHeader,
   toolCallStep,
+  toolCallStepMoving,
   workingHeader,
 } from './live-header.mocks';
 
@@ -35,3 +37,23 @@ export const toolCallHeader = {
   toolCall: toolCallStep.toolCall,
   now: liveHeaderNow,
 } satisfies LiveHeaderProps;
+
+// A running Tool call of one kind, for the Orb that kind moves.
+const movingHeader = (state: OrbState): LiveHeaderProps => {
+  const step = toolCallStepMoving(state);
+
+  return {
+    liveHeader: step.liveHeader,
+    toolCall: step.toolCall,
+    now: liveHeaderNow,
+  };
+};
+
+// Reading a file: the Orb scans as a globe.
+export const searchingHeader = movingHeader('searching');
+
+// Editing a file: the Orb writes as a ribbon.
+export const composingHeader = movingHeader('composing');
+
+// Running a command: the Orb morphs.
+export const shapingHeader = movingHeader('shaping');

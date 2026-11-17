@@ -1,3 +1,7 @@
+---
+status: accepted
+---
+
 # Agents send Follow-up suggestions, and Argo predicts only as a fallback
 
 Accepted by the owner, 2026-11-17. This supersedes [ADR-0055](0055-argo-generates-follow-up-suggestions-in-background-agent-sessions.md) and takes up the direction of [ADR-0052](0052-agents-provide-follow-up-suggestions-through-a-shared-capability.md), which was set aside because no shared contract existed. One exists now.

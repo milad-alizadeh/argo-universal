@@ -1,9 +1,13 @@
+import { setStringAsync } from 'expo-clipboard';
 import { useMemo } from 'react';
 import type { useSessionFeed } from '#features/feed';
 import {
   type ChangesContext,
+  useOperationRunner,
   useSessionPullRequests,
-} from '../../plugins/use-session-pull-requests';
+  withRowActions,
+} from '#features/plugins';
+import type { SessionPullRequest } from '#features/sessions';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { withSessionPullRequests } from './with-session-pull-requests';
 
@@ -22,6 +26,23 @@ function useChangesContext(
   );
 }
 
+// The Plugins' Changes with what their … menus do in this Session: copy the link, detach.
+function useRowActions(
+  context: ChangesContext | undefined,
+  pullRequests: SessionPullRequest[],
+): SessionPullRequest[] {
+  const { run, failed } = useOperationRunner();
+
+  return context
+    ? withRowActions(pullRequests, {
+        scope: context,
+        run,
+        failed,
+        copy: setStringAsync,
+      })
+    : pullRequests;
+}
+
 // An open Session with the Changes the Plugins supply, which its Workbench draws.
 export function useWithSessionPullRequests(
   sessionId: string,
@@ -30,5 +51,8 @@ export function useWithSessionPullRequests(
 ): SessionDetailViewProps {
   const context = useChangesContext(sessionId, feed);
 
-  return withSessionPullRequests(props, useSessionPullRequests(context));
+  return withSessionPullRequests(
+    props,
+    useRowActions(context, useSessionPullRequests(context)),
+  );
 }

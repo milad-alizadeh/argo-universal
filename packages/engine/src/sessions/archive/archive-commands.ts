@@ -24,7 +24,10 @@ type ArchiveSources = HandlerSources<
 const archiveSettleLimitMs = 30_000;
 
 // Only an active, top-level Session archives: a child is archived with its parent.
-function requireArchivable(sources: ArchiveSources, sessionId: string): void {
+export function requireArchivable(
+  sources: ArchiveSources,
+  sessionId: string,
+): void {
   const record = sources.readSession(sessionId);
 
   if (record.parentSessionId !== null || record.archivedAt !== null)

@@ -39,8 +39,7 @@ export const TabAcceptsAnEditableDraft: Story = {
     await userEvent.keyboard('{Tab}');
     await waitFor(() => expect(shownText(field)).toBe(predictedPrompt));
     await expect(args.onSend).not.toHaveBeenCalled();
-    await userEvent.click(field);
-    await userEvent.keyboard('{End} please');
+    await userEvent.keyboard(' please');
     await waitFor(() =>
       expect(args.onDraftChange).toHaveBeenLastCalledWith({
         text: `${predictedPrompt} please`,

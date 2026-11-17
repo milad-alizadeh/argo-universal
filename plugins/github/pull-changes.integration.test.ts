@@ -76,7 +76,7 @@ it(
 );
 
 it(
-  'lists the pull request it could not read after a restart with the reason, which is not an empty list',
+  'keeps a pull request GitHub no longer shows as it was last read, marked stale, across a restart',
   async () => {
     const run = await journey();
 
@@ -86,25 +86,21 @@ it(
 
     const failed = await listed(run);
 
-    expect(failed).toEqual({
-      changes: [
-        {
-          repository,
-          number: 12,
-          error: expect.stringContaining('not found'),
-        },
-      ],
+    expect(failed).toMatchObject({
+      changes: [{ pullRequest: { number: 12 }, stale: 'failed' }],
     });
     expect(failed).not.toEqual(
       await listed(run, { ...caller, sessionId: 'session-2' }),
     );
-    expect(await changesOf(run)).toEqual([]);
+    expect(await changesOf(run)).toMatchObject([
+      { pullRequest: { number: 12 }, stale: 'failed' },
+    ]);
   },
   slow,
 );
 
 it(
-  'degrades to a sign-in error, not to an empty list, when the Account stops being accepted after attaching',
+  'keeps a pull request as it was last read, marked for sign-in, when the Account stops being accepted after attaching',
   async () => {
     const run = await journey();
 
@@ -112,12 +108,12 @@ it(
     await restart(run);
     run.github.accepted.clear();
 
-    expect(await listed(run)).toEqual({
-      changes: [
-        { repository, number: 12, error: expect.stringContaining('Sign in') },
-      ],
+    expect(await listed(run)).toMatchObject({
+      changes: [{ pullRequest: { number: 12 }, stale: 'signIn' }],
     });
-    expect(await changesOf(run)).toEqual([]);
+    expect(await changesOf(run)).toMatchObject([
+      { pullRequest: { number: 12 }, stale: 'signIn' },
+    ]);
   },
   slow,
 );

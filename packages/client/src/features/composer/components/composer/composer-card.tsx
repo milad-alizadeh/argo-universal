@@ -51,11 +51,9 @@ const textFieldLook = {
   fieldClassName: 'px-4 wide:px-4.75 pt-3 pb-2',
 } as const;
 
-function textInputProps({
-  props,
-  inactive,
-  send,
-}: Omit<TextLayout, 'field'>): React.ComponentProps<typeof RichTextarea> {
+function textInputProps(layout: Omit<TextLayout, 'field'>): MessageField {
+  const { props, inactive, send, modifiedSend } = layout;
+
   return {
     ...textFieldLook,
     autoFocus: !inactive,
@@ -64,6 +62,7 @@ function textInputProps({
     disabled: inactive,
     ...draftChanges(props),
     onSubmit: send,
+    onModifiedSubmit: modifiedSend,
   };
 }
 

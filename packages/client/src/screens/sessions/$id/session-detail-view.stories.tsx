@@ -8,13 +8,17 @@ import {
   questionsValues,
 } from '../../../../mocks/elicitation';
 import { SessionDetailView } from './session-detail-view';
-import { sessionPageBar } from './session-detail-view-bar.mocks';
+import {
+  attachedIssuesBar,
+  sessionPageBar,
+} from './session-detail-view-bar.mocks';
 import { changedSession } from './session-detail-view-changes-pill.mocks';
 import {
   ElicitationPreview,
   elicitationSession,
 } from './session-detail-view-elicitation.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
+import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import {
   emptySession,
@@ -57,6 +61,11 @@ export const StoppedTurn: Story = {
   },
 };
 
+// A paused queue above the stopped Turn: both are sections of the Composer's one tray.
+export const StoppedTurnOverQueue: Story = {
+  args: { state: 'open', ...stoppedOverQueueSession },
+};
+
 // Every recording in turn, so the Feed scrolls under a pinned header and Composer.
 export const LongFeed: Story = { args: { state: 'open', ...longSession } };
 
@@ -73,6 +82,12 @@ export const SessionBar: Story = {
     ...longSession,
     bar: sessionPageBar,
   },
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
+};
+
+// Two attached Issues share one Workbench card, each a row; the Plugin sent no `detach`, so the rows have no menu.
+export const AttachedIssues: Story = {
+  args: { state: 'open', ...longSession, bar: attachedIssuesBar },
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 

@@ -7,6 +7,7 @@ import { contentListProps, listItemProps, rowPress } from '../list-kit-props';
 import { listMediaComponents } from '../list-media-components';
 import { listMoveProps } from '../list-move-props';
 import { listSectionProps } from '../list-section-props';
+import { sessionRowKitProps } from '../session-row-kit-props';
 import {
   tableCellProps,
   tableProps,
@@ -77,6 +78,24 @@ export const listsComponents = {
       events: { onPress: rowPress },
       label:
         'The title and optional value supply the accessible name; accessibilityLabel overrides it.',
+    },
+  ),
+  SessionRow: defineKitComponent(
+    'One of the App’s own Sessions, drawn as its row in the Sessions list from the live Session; pressing it opens the Session.',
+    sessionRowKitProps,
+    {
+      group: 'lists',
+      label:
+        'The row reads the Session’s title, status and Archived state as its accessible name.',
+      accessibility: {
+        keyboard:
+          'The row is one focus stop; Enter or Space opens the Session, or runs `onPress`.',
+        voiceOver:
+          'Reads the Session’s title, status and whether it is Archived.',
+      },
+      appearance:
+        'Draws the same row as the Sessions list, with its status mark, meta items and Plugin items, in light and dark appearance. A Session that is gone draws nothing.',
+      events: { onPress: rowPress },
     },
   ),
   Table: defineKitComponent(

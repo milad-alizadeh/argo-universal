@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { diagramTones } from '../diagram';
 import { SubagentRole } from '../feed/subagent-role';
 import { pluginInstructionsLimit } from '../plugins/manifest-fields';
 import { argoInstructions } from './argo-instructions';
@@ -22,6 +23,15 @@ it('asks the Agent to declare the role of each Agent it spawns, naming the tool 
   expect(agents).toContain('operation_run');
 });
 
+// A `timeout` killed a start still waiting on the person, and each retry asked again and started a duplicate.
+it('tells the Agent to wait for session.new instead of timing it out or retrying it', () => {
+  const agents = argoInstructions.find(({ name }) => name === 'Agents')?.text;
+
+  expect(agents).toContain('session.new');
+  expect(agents).toContain('timeout');
+  expect(agents).toContain('retry');
+});
+
 it('names every Agent role the Agent can declare', () => {
   const agents = argoInstructions.find(({ name }) => name === 'Agents')?.text;
 
@@ -36,4 +46,15 @@ it('names the checklist tool of each Agent the Plan reaches', () => {
 
   for (const tool of ['TaskCreate', 'TodoWrite', 'update_plan', 'ToolSearch'])
     expect(plan).toContain(tool);
+});
+
+it('asks the Agent to validate each diagram, naming the Operation and every tone it may mark a node with', () => {
+  const diagrams = argoInstructions.find(
+    ({ name }) => name === 'Diagrams',
+  )?.text;
+
+  expect(diagrams).toContain('diagram.validate');
+  expect(diagrams).toContain('operation_run');
+
+  for (const tone of diagramTones) expect(diagrams).toContain(tone);
 });

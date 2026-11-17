@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ChangeStageName } from './change-stage-model';
-import {
-  changeDescription,
-  changeModifiers,
-  resolveChangeStage,
-} from './change-stage-model';
+import { changeDescription, resolveChangeStage } from './change-stage-model';
 
 const stages: ChangeStageName[] = [
   'working',
@@ -32,27 +28,22 @@ describe('Change stage', () => {
   });
 });
 
-it('keeps draft and conflicted Changes Open and describes each modifier separately', () => {
+it('gives a draft and a conflicting Change each a mark of its own, in place of Open', () => {
   expect(resolveChangeStage({ stage: 'open', modifier: 'draft' })).toEqual({
-    label: 'Open',
-    icon: 'pr-open',
-    tone: 'success',
-    modifier: { label: 'Draft', tone: 'muted' },
+    label: 'Draft',
+    icon: 'pr-draft',
+    tone: 'neutral',
   });
   expect(resolveChangeStage({ stage: 'open', modifier: 'conflict' })).toEqual({
-    label: 'Open',
-    icon: 'pr-open',
-    tone: 'success',
-    modifier: { label: 'Conflict', tone: 'warning' },
+    label: 'Conflict',
+    icon: 'pr-conflict',
+    tone: 'warning',
   });
 });
 
-it('describes a draft Change that also conflicts by both facts', () => {
+it('marks a draft Change that also conflicts as a draft', () => {
   const both = { stage: 'open', modifiers: ['conflict', 'draft'] } as const;
 
-  expect(changeModifiers(both).map(({ label }) => label)).toEqual([
-    'Draft',
-    'Conflict',
-  ]);
-  expect(changeDescription(both)).toBe('Open, Draft, Conflict');
+  expect(resolveChangeStage(both)).toMatchObject({ icon: 'pr-draft' });
+  expect(changeDescription(both)).toBe('Draft');
 });

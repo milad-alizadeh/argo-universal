@@ -4,6 +4,9 @@ export const backgroundFloorMs = 300000;
 
 export const backgroundBudgetMs = 60000;
 
+// A Watch acts on outside events, so its floor is a minute (ADR-0055); its budget is a Background pass's.
+export const watchFloorMs = 60000;
+
 /*
  * The interval a Loader page asks to be drawn again on while it is on screen, clamped to a floor as
  * ADR-0037 clamps a Query's (ADR-0050). One line per Plugin and clamped interval, kept beside the Plugin

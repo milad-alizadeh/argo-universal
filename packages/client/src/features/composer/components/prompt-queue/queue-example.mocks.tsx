@@ -46,7 +46,7 @@ function changedItem(
   item: PromptQueue['items'][number],
   command: QueueCommand,
 ): PromptQueue['items'] {
-  if (command.action === 'delete') return [];
+  if (['delete', 'steer'].includes(command.action)) return [];
 
   if (command.action === 'save')
     return [{ ...item, prompt: command.prompt, revision: item.revision + 1 }];
