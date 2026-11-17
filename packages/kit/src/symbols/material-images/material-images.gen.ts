@@ -100,6 +100,7 @@ import material_notifications from '../assets/material-light/notifications.xml';
 import material_open_in_full from '../assets/material-light/open_in_full.xml';
 import material_open_in_new from '../assets/material-light/open_in_new.xml';
 import material_pause from '../assets/material-light/pause.xml';
+import material_person from '../assets/material-light/person.xml';
 import material_photo_camera from '../assets/material-light/photo_camera.xml';
 import material_photo_library from '../assets/material-light/photo_library.xml';
 import material_play_arrow from '../assets/material-light/play_arrow.xml';
@@ -247,6 +248,7 @@ import filled_material_notifications from '../assets/material-filled/notificatio
 import filled_material_open_in_full from '../assets/material-filled/open_in_full.xml';
 import filled_material_open_in_new from '../assets/material-filled/open_in_new.xml';
 import filled_material_pause from '../assets/material-filled/pause.xml';
+import filled_material_person from '../assets/material-filled/person.xml';
 import filled_material_photo_camera from '../assets/material-filled/photo_camera.xml';
 import filled_material_photo_library from '../assets/material-filled/photo_library.xml';
 import filled_material_play_arrow from '../assets/material-filled/play_arrow.xml';
@@ -401,6 +403,7 @@ export const materialImages = {
   open_in_full: material_open_in_full,
   open_in_new: material_open_in_new,
   pause: material_pause,
+  person: material_person,
   photo_camera: material_photo_camera,
   photo_library: material_photo_library,
   play_arrow: material_play_arrow,
@@ -552,6 +555,7 @@ export const materialFilledImages = {
   open_in_full: filled_material_open_in_full,
   open_in_new: filled_material_open_in_new,
   pause: filled_material_pause,
+  person: filled_material_person,
   photo_camera: filled_material_photo_camera,
   photo_library: filled_material_photo_library,
   play_arrow: filled_material_play_arrow,

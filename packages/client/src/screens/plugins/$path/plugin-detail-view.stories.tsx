@@ -8,6 +8,12 @@ import { PluginDetailView } from './plugin-detail-view';
 import {
   issueFilters,
   issueFiltersUnavailable,
+  jiraBoard,
+  jiraBoardEmpty,
+  jiraBoardMoving,
+  jiraIssue,
+  jiraIssueMoving,
+  jiraIssueUnreadable,
 } from './plugin-detail-view-fixtures';
 
 const meta = {
@@ -40,4 +46,30 @@ export const IssueFilters: StoryObj<typeof meta> = {
 
 export const IssueFiltersUnavailable: StoryObj<typeof meta> = {
   args: issueFiltersUnavailable,
+};
+
+export const JiraIssue: StoryObj<typeof meta> = {
+  args: jiraIssue,
+};
+
+// A status move the App shows at once, before Jira answers it.
+export const JiraIssueMoving: StoryObj<typeof meta> = {
+  args: jiraIssueMoving,
+};
+
+export const JiraIssueUnreadable: StoryObj<typeof meta> = {
+  args: jiraIssueUnreadable,
+};
+
+export const JiraBoard: StoryObj<typeof meta> = {
+  args: jiraBoard,
+};
+
+// A card the App shows in its new column at once, pending, before Jira answers the move.
+export const JiraBoardMoving: StoryObj<typeof meta> = {
+  args: jiraBoardMoving,
+};
+
+export const JiraBoardEmpty: StoryObj<typeof meta> = {
+  args: jiraBoardEmpty,
 };

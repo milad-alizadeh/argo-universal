@@ -113,6 +113,7 @@ const accountsOf = (
 const secretsOf = (kept: Map<string, string>): DeviceFlowArgo['secrets'] => ({
   get: (id) => Promise.resolve(kept.get(id) ?? null),
   set: (id, value) => Promise.resolve(void kept.set(id, value)),
+  delete: (id) => Promise.resolve(void kept.delete(id)),
 });
 
 // Borrows through the provider registered last, as Argo would for any borrowing Plugin.

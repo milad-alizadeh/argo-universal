@@ -3,6 +3,10 @@ import type {
   LoaderInput,
   PageTo,
 } from '@repo/contracts/plugins/loader-page-api';
+import type {
+  OperationDeclaration,
+  OperationParams,
+} from '@repo/contracts/plugins/operations-api';
 import type { PageState } from '@repo/contracts/plugins/page-address';
 import type {
   AccountFetchPattern,
@@ -13,6 +17,7 @@ import type {
   SignInOptions,
 } from '@repo/contracts/plugins/sign-in-api';
 import type { ReactElement } from 'react';
+import { z } from 'zod';
 import { signInScreen, type SignInParts } from './sign-in-screen';
 
 // How long an answer is fresh unless the page says: a sign-out or a rejected token is noticed within it (ADR-0037).
@@ -50,6 +55,7 @@ const signInData = (
   flow: flowStateOf(flow, rejected),
   rejected,
   needsServerDevice: flow.serverDevice && !serverDevice,
+  pastesToken: 'pastesToken' in flow,
 });
 
 async function loaded<Data>(
@@ -66,11 +72,13 @@ async function loaded<Data>(
   }
 }
 
-type Runs = Pick<PageTo<PageState>, 'run'>;
+type Runs = Pick<PageTo<PageState>, 'run' | 'payload'>;
 
-const runsOf = (to: Runs): Pick<SignInParts, 'start' | 'cancel'> => ({
+// A pasted token goes only to `signIn`'s secret `token` param (ADR-0051).
+const runsOf = (to: Runs): Pick<SignInParts, 'start' | 'cancel' | 'paste'> => ({
   start: to.run('signIn', {}),
   cancel: to.run('cancelSignIn', {}),
+  paste: to.run('signIn', { token: to.payload() }),
 });
 
 /*
@@ -99,12 +107,20 @@ const signInPage = (flow: SignInFlow, options: SignInOptions): SignInPage => ({
   render: (data, to) => signInScreen({ ...options, data, ...runsOf(to) }),
 });
 
+// A token paste's `signIn` carries the pasted token; the other flows' carries nothing.
+const PastedToken = z.object({ token: z.string() });
+
+const tokenIn = (params: OperationParams<OperationDeclaration>): string =>
+  PastedToken.safeParse(params).data?.token ?? '';
+
 export const provideSignIn: ProvideSignInPattern = async (
   argo,
   flow,
   options,
 ) => {
-  argo.operations.register('signIn', async () => ({ ...(await flow.start()) }));
+  argo.operations.register('signIn', async (params) => ({
+    ...(await flow.start(tokenIn(params))),
+  }));
   argo.operations.register('cancelSignIn', () => ({ ...flow.cancel() }));
   argo.pages.define(options.path ?? '/sign-in', signInPage(flow, options));
 

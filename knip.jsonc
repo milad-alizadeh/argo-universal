@@ -67,8 +67,12 @@
       ]
     },
     "packages/plugin-kit": {
-      // The `argo-plugin` bin runs this entry by path through tsx; the sign-in fixtures are copied or read by folder.
-      "entry": ["cli/main.ts", "mocks/sign-in-plugins/*/index.tsx"]
+      // The `argo-plugin` bin runs this entry by path through tsx; the sign-in and token-paste fixtures are copied or read by folder.
+      "entry": [
+        "cli/main.ts",
+        "mocks/sign-in-plugins/*/index.tsx",
+        "mocks/token-paste-plugins/*/index.{ts,tsx}"
+      ]
     },
     "apps/universal-app": {
       // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.
