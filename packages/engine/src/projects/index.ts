@@ -5,7 +5,7 @@ export {
   seedProject,
 } from './project';
 
-export { readPluginProjects } from './plugin-projects';
+export { readPluginProjectIds, readPluginProjects } from './plugin-projects';
 
 export { watchProjectChanges } from './changes';
 

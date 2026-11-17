@@ -23,8 +23,10 @@ export class RuntimePlugin {
       input: { ...input, answer: (status) => this.answer(status) },
     }).start();
     this.build = watchPlugin(input.entry, {
-      loaded: (source, version) =>
-        this.actor.send({ type: 'build.loaded', source, version }),
+      loaded: (source, version) => {
+        input.rebuilt?.();
+        this.actor.send({ type: 'build.loaded', source, version });
+      },
       failed: (error) => this.actor.send({ type: 'build.failed', error }),
     });
     void this.build.catch((cause: unknown) =>
