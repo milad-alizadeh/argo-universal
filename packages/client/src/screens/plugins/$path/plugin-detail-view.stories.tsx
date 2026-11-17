@@ -14,6 +14,7 @@ import {
   jiraIssue,
   jiraIssueMoving,
   jiraIssueUnreadable,
+  jiraList,
 } from './plugin-detail-view-fixtures';
 
 const meta = {
@@ -59,6 +60,10 @@ export const JiraIssueMoving: StoryObj<typeof meta> = {
 
 export const JiraIssueUnreadable: StoryObj<typeof meta> = {
   args: jiraIssueUnreadable,
+};
+
+export const JiraList: StoryObj<typeof meta> = {
+  args: jiraList,
 };
 
 export const JiraBoard: StoryObj<typeof meta> = {

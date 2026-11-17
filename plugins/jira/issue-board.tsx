@@ -1,4 +1,4 @@
-import { Board, Label, SegmentedControl } from '@argo/plugin-kit';
+import { Action, Board, Label } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { boardColumns, boardLabel, movesOf } from './board-columns';
 import type { JiraStatus } from './issue-fields';
@@ -12,19 +12,43 @@ import type { IssuesTo, Listing } from './view-frame';
 export type IssuesView = 'list' | 'board';
 
 const issuesViews = [
-  { value: 'list', label: 'List' },
-  { value: 'board', label: 'Board' },
-] as const satisfies readonly { value: IssuesView; label: string }[];
+  { value: 'list', label: 'List', icon: 'list-view' },
+  { value: 'board', label: 'Board', icon: 'board-view' },
+] as const satisfies readonly {
+  value: IssuesView;
+  label: string;
+  icon: string;
+}[];
 
-// The list/board switch above the issues.
-export const viewSwitch = (view: IssuesView, to: IssuesTo): JSX.Element => (
-  <SegmentedControl
-    key="view"
-    label="Show issues as"
-    options={issuesViews}
-    value={view}
-    onValueChange={to.bind('view')}
+type ViewChoice = (typeof issuesViews)[number];
+
+const viewChoice = (
+  { value, label, icon }: ViewChoice,
+  view: IssuesView,
+  to: IssuesTo,
+): JSX.Element => (
+  <Action
+    key={value}
+    label={label}
+    icon={icon}
+    selected={value === view}
+    onPress={to.set({ view: value })}
   />
+);
+
+const shownIcon = (view: IssuesView): ViewChoice['icon'] =>
+  view === 'board' ? 'board-view' : 'list-view';
+
+/*
+ * The header's choice between the list and the board, beside the Filter menu, as the Sessions list keeps its layout
+ * in a header menu: its icon is the view shown, and the menu checks it.
+ */
+export const viewMenu = (view: IssuesView, to: IssuesTo): JSX.Element => (
+  <Action key="view" label="Show issues as" icon={shownIcon(view)}>
+    <Action.Section key="views">
+      {issuesViews.map((each) => viewChoice(each, view, to))}
+    </Action.Section>
+  </Action>
 );
 
 const personIcon = { sf: 'person', material: 'person' } as const;
@@ -115,7 +139,7 @@ const listSaysWhy = (listing: Listing, issues: JiraIssue[]): boolean =>
   (listing.statuses.length === 0 || activeFilters(listing.filters) > 0);
 
 /*
- * The issues the filters leave as a board, when the switch asks for one, whose columns are the project's statuses even
+ * The issues the filters leave as a board, when the header's view menu asks for one, whose columns are the project's statuses even
  * before it has an issue; null for the list, or when the list's empty state should say why there are no cards.
  */
 export function boardOf(

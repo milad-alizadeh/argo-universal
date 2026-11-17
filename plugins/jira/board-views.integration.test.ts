@@ -3,13 +3,15 @@ import { boardLabel } from './board-columns';
 import {
   argoOne,
   argoThree,
+  checkedView,
   columnOf,
   columnTitles,
   drawsBoard,
+  headerActions,
   listed,
   onBoard,
   show,
-  viewSwitch,
+  viewMenu,
 } from './mocks/board';
 import { statuses } from './mocks/jira-workflow';
 import {
@@ -40,7 +42,13 @@ it(
     const shown = await listed();
     const { page } = shown;
 
-    expect(page.find(viewSwitch).props.value).toBe('list');
+    // The switch is the header's view menu, beside the Filter menu, and not a control above the issues.
+    expect(headerActions(page).slice(0, 2)).toEqual([
+      'Filter',
+      'Show issues as',
+    ]);
+    expect(checkedView(page)).toBe('list');
+    expect(page.find(viewMenu).props.icon).toBe('list-view');
     expect(page.find(listLabel).type).toBe('List');
     expect(drawsBoard(page)).toBe(false);
     // The list asks Jira for no statuses: only the board draws them.
@@ -49,7 +57,8 @@ it(
     await show(shown, 'board');
 
     expect(page.pageState).toMatchObject({ view: 'board' });
-    expect(page.find(viewSwitch).props.value).toBe('board');
+    expect(checkedView(page)).toBe('board');
+    expect(page.find(viewMenu).props.icon).toBe('board-view');
     expect(page.find(boardLabel).type).toBe('Board');
     expect(page.findText(listLabel)).toBeUndefined();
 
@@ -100,7 +109,7 @@ it(
     });
 
     expect(back.find(boardLabel).type).toBe('Board');
-    expect(back.find(viewSwitch).props.value).toBe('board');
+    expect(checkedView(back)).toBe('board');
   },
   timeoutMs,
 );

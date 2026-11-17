@@ -8,7 +8,7 @@ import {
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { failedScreen, titleOf } from './failure-view';
 import { filterMenu } from './filter-menu';
-import { boardOf, viewOf, viewSwitch } from './issue-board';
+import { boardOf, viewMenu, viewOf } from './issue-board';
 import { isFailure } from './issue-pages';
 import { issueList, type ListFrame } from './issue-rows';
 import type { JiraFailure } from './jira-client';
@@ -19,7 +19,7 @@ import type { Framing, Listing } from './view-frame';
 
 /*
  * The project's own choices, with no icon, so the header keeps them in its overflow menu and shows only the Filter
- * menu and the search, as the Issue tracker's header shows only its search.
+ * menu, the view menu and the search, as the Issue tracker's header shows only its search.
  */
 const changeProject = ({ to, projectId }: Framing): JSX.Element => (
   <Action
@@ -84,7 +84,7 @@ const refusedList = (
 const listRefusal = ({ site, chosen }: Issues) =>
   ({ kind: 'failed', site, reading: 'issues', chosen }) as const;
 
-// The header the Issue tracker's list has (`plugins/issue-tracker/filter-page-header.ts`), with Jira's Filter menu.
+// The header the Issue tracker's list has (`plugins/issue-tracker/filter-page-header.ts`), with Jira's Filter and view menus.
 const issuesHeader = (
   { project, people }: Issues,
   framing: Framing,
@@ -94,7 +94,11 @@ const issuesHeader = (
   search: { label: 'Search Issues' },
   value: listing.filters.text,
   onChangeText: listing.to.bind('text'),
-  actions: [filterMenu(people, listing), ...projectActions(framing)],
+  actions: [
+    filterMenu(people, listing),
+    viewMenu(viewOf(listing), listing.to),
+    ...projectActions(framing),
+  ],
 });
 
 type Drawing = { framing: Framing; listing: Listing };
@@ -131,7 +135,7 @@ function listBody(
   return issueList(view.site, { list: listing.list, to, projectId, ...frame });
 }
 
-// The board the switch asks for, or, when Jira refused the list or there is nothing to draw, the list that says why.
+// The board the view menu asks for, or, when Jira refused the list or there is nothing to draw, the list that says why.
 function shownBody(
   view: Issues,
   refused: JiraFailure | undefined,
@@ -142,7 +146,7 @@ function shownBody(
   return board ?? listBody(view, refused, drawing);
 }
 
-// The project's issues the filters leave, as the list or the board the switch above them shows.
+// The project's issues the filters leave, as the list or the board the header's view menu shows.
 function issueScreen(
   view: Issues,
   refused: JiraFailure | undefined,
@@ -150,7 +154,6 @@ function issueScreen(
 ): JSX.Element {
   return (
     <Screen {...issuesHeader(view, drawing.framing, drawing.listing)}>
-      {viewSwitch(viewOf(drawing.listing), drawing.listing.to)}
       {shownBody(view, refused, drawing)}
     </Screen>
   );
