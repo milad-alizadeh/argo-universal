@@ -1,7 +1,4 @@
-import type { Tone } from '#primitives/content/text';
 import type { FieldGroupKitProps } from '../../kit-props';
 
-// Kit-only: a state dot before the value, coloured by the tone while the value's words stay muted.
-export type FieldValueProps = FieldGroupKitProps<'FieldGroup.Value'> & {
-  dot?: Tone;
-};
+// The row's props, its state `dot` among them: a dot before the value in the tone's colour while the words stay muted.
+export type FieldValueProps = FieldGroupKitProps<'FieldGroup.Value'>;

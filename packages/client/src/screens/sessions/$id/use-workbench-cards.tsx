@@ -3,6 +3,7 @@ import {
   sessionWorkbenchSlot,
 } from '@repo/contracts/plugins/declared-slots';
 import { type ReactNode, useState, useSyncExternalStore } from 'react';
+import { useDeclaredItems } from '#features/plugins';
 import {
   type SessionPanels,
   SessionMemory,
@@ -20,7 +21,6 @@ import {
   pluginCardKey,
   type SessionPluginCard,
 } from './sections/plugin-card-section';
-import { useDeclaredItems } from './use-declared-items';
 import type { ToggleWorkbenchCard } from './use-plugin-header-actions';
 
 type DeclaredCard = DeclaredItemOf<typeof sessionWorkbenchSlot>;

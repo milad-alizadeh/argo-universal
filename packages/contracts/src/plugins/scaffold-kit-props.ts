@@ -50,7 +50,7 @@ export const detailProps = z.object({
   isLoading: z
     .boolean()
     .optional()
-    .describe('Show the content loading state; the Metadata stays.'),
+    .describe('Show the content loading state; the Screen’s aside stays.'),
 });
 
 export const listDetailProps = z.object({

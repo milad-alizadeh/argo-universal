@@ -67,3 +67,22 @@ export const answeredElicitation = {
   request: elicitationRequest,
   state: { kind: 'answered', reason: 'Already answered on another device' },
 } satisfies ElicitationFixture;
+
+// A complete question as a field label, as Agents send when asking for a free-text answer.
+export const longQuestionElicitation = {
+  ...open,
+  request: {
+    ...functionNameRequest,
+    message: 'Please provide the pull request details.',
+    requestedSchema: {
+      properties: {
+        reference: {
+          type: 'string',
+          title:
+            'Which PR’s Workbench card disappeared when you switched Auto-merge off? Include the pull request number or its GitHub link so I can check the exact state.',
+        },
+      },
+      required: ['reference'],
+    },
+  },
+} satisfies ElicitationFixture;

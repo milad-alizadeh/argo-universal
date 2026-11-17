@@ -11,6 +11,7 @@ import {
 } from './auto-merge-fixture';
 import { openRepository } from './github-fixture-automation';
 import { restart } from './journey-fixture';
+import { openChanges } from './journey-watch-fixture';
 
 it(
   'offers Auto-merge, Auto-fix and Auto-archive, all off, on an open pull request',
@@ -104,6 +105,31 @@ it(
     await refresh(run);
 
     expect((await mergeOf(run)).on).toBe(false);
+  },
+  slow,
+);
+
+it(
+  'keeps the PR visible in an open Workbench list when Auto-merge is switched off',
+  async () => {
+    const run = await attached();
+
+    await tap(run, { kind: 'merge', on: true });
+
+    const changes = openChanges(run);
+
+    expect(await changes.next()).toMatchObject([
+      { pullRequest: { number: 12 }, automation: { merge: { on: true } } },
+    ]);
+
+    const next = changes.next();
+
+    await tap(run, { kind: 'merge', on: false });
+
+    expect(await next).toMatchObject([
+      { pullRequest: { number: 12 }, automation: { merge: { on: false } } },
+    ]);
+    await changes.close();
   },
   slow,
 );

@@ -49,7 +49,7 @@ function useComposerText(layout: TextLayout): MessageField {
 // The padding sits on the field, so a press anywhere in the white area focuses it.
 const textFieldLook = {
   accessibilityLabel: 'Message',
-  fieldClassName: 'px-4 wide:px-4.75 pt-3 pb-2',
+  fieldClassName: 'px-4 wide:px-4.75 pt-3 pb-2 type-body',
 } as const;
 
 function textInputProps(layout: Omit<TextLayout, 'field'>): MessageField {

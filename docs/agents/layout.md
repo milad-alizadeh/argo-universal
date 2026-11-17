@@ -105,7 +105,7 @@ The Workbench has four effective states. One toggle drives the person’s Show o
 
 The session frame's column above (800 and a 24 gutter, 848 with its gutters) is the Feed's. A Screen, which draws every Plugin page and every Settings page, has its own: `--container-column` 800 inside `--spacing-8` margins on a wide window, so its region caps at 864, and `--spacing-4` below wide ([ADR-0049](../adr/0049-a-screen-frames-its-page-with-aside-bleed-and-footer.md)).
 
-- **`aside`** holds the page's one Metadata. Its place comes from the Screen's width alone: a 280 column at the trailing edge when the reading column beside it keeps the medium width, a wrapping row of Pills under the title when it does not, and icon-only Pills below medium. The column moves towards the leading edge for the lane and never under it, with or without an aside, so opening an Issue from its list moves neither the title nor the body.
+- **`aside`** holds the page's one FieldGroup of Settings rows ([ADR-0059](../adr/0059-the-screens-aside-holds-the-settings-fieldgroup-rows.md)), which sizes to its rows there. Its place comes from the Screen's width alone: a 280 column at the trailing edge when the reading column beside it keeps the medium width, and above the body, at the top of what scrolls, when it does not. The column moves towards the leading edge for the lane and never under it, with or without an aside, so opening an Issue from its list moves neither the title nor the body.
 - **`width: bleed`** has no column and no margins; a Canvas in the body fills it. The title keeps its margin.
 - **`footer`** is pinned under the body and rises with the keyboard. A body over a footer scrolls in a ScrollView or a List.
 

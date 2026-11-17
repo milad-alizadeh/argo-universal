@@ -1,11 +1,8 @@
 // The aside's own width, beside the content.
 export const asideWidth = 280;
 
-/*
- * Where a Screen's aside draws: its own column at the right, a row of Pills under the title, or, where even that is
- * short of room, Pills that show their icon alone.
- */
-export type AsidePlace = 'aside' | 'pills' | 'icons';
+// Where a Screen's aside draws: its own column at the right, or the lead above the body, where the content's top holds it.
+export type AsidePlace = 'aside' | 'lead';
 
 export interface AsideRoom {
   // The Screen's own width, 0 until measured.
@@ -14,7 +11,7 @@ export interface AsideRoom {
   // The reading column's cap and the inset each side of it.
   column: number;
   inset: number;
-  // The medium Size class threshold: below it Pills show icons, and the column beside an aside never reads narrower.
+  // The medium Size class threshold: the column beside an aside never reads narrower.
   medium: number;
 }
 
@@ -36,19 +33,14 @@ export interface AsideLayout {
  * from its list moves neither. From the width that leaves the column beside the aside at least the medium width (or
  * the column's own cap, if that is less), the aside takes a lane at the right: an inset, its width and an inset. The
  * column then gives up its width first, keeping its left inset, and once it is back at its cap it moves right until
- * it is centred, where both gutters hold the aside. Below that width the aside is Pills under the title.
+ * it is centred, where both gutters hold the aside. Below that width, and while the Screen is unmeasured, the aside
+ * leads the body.
  */
 export function asideLayout(room: AsideRoom): AsideLayout {
-  if (belowMedium(room)) return { place: 'icons' };
-
   const column = besideAside(room);
 
-  return column ? { place: 'aside', column } : { place: 'pills' };
+  return column ? { place: 'aside', column } : { place: 'lead' };
 }
-
-// An unmeasured Screen, width 0, draws Pills until it knows its width.
-const belowMedium = ({ width, medium }: AsideRoom): boolean =>
-  width > 0 && width < medium;
 
 // The aside's lane at the right: its width and an inset each side of it.
 const laneWidth = (inset: number): number => asideWidth + inset * 2;

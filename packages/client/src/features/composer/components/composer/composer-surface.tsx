@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import { ComposerAttachments } from './composer-card-attachments';
 import type { CardLayout } from './composer-card-types';
 import { ComposerToolbar } from './composer-toolbar';
+import { ComposerTypography } from './composer-typography';
 
 type MessageField = React.ComponentProps<typeof RichTextarea>;
 
@@ -39,7 +40,9 @@ export function ComposerSurface(props: SurfaceProps): React.JSX.Element {
     <LiquidGlass {...cardGlass}>
       <ComposerAttachments {...layout} />
       <ComposerText field={field} phone={phone} />
-      <ComposerToolbar {...layout} />
+      <ComposerTypography compact={phone}>
+        <ComposerToolbar {...layout} />
+      </ComposerTypography>
     </LiquidGlass>
   );
 }

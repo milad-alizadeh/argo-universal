@@ -26,6 +26,16 @@ export interface TypeaheadAdapter {
 export class TypeaheadInteraction {
   private opened = false;
   private options = 0;
+  private dismissedText: string | null = null;
+  dismiss = (text: string): void => {
+    this.dismissedText = text;
+  };
+  allows = (text: string): boolean => {
+    if (this.dismissedText === text) return false;
+    this.dismissedText = null;
+
+    return true;
+  };
   open = (): void => {
     this.opened = true;
   };

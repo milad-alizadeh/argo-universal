@@ -15,6 +15,7 @@ import { useComposerLayout } from './composer-layout';
 import { ComposerTray } from './composer-tray';
 import { ComposerPhoneTray } from './composer-trays';
 import type { ComposerProps } from './composer-types';
+import { ComposerTypography } from './composer-typography';
 
 export type { ComposerDraft, ComposerProps } from './composer-types';
 
@@ -22,9 +23,11 @@ export type { ComposerAttachment } from '../composer-attachment-card/composer-at
 
 export function Composer(props: ComposerProps): React.JSX.Element {
   return (
-    <QueueEditorsProvider command={queueCommand(props.promptQueue)}>
-      <ComposerBody {...props} />
-    </QueueEditorsProvider>
+    <ComposerTypography>
+      <QueueEditorsProvider command={queueCommand(props.promptQueue)}>
+        <ComposerBody {...props} />
+      </QueueEditorsProvider>
+    </ComposerTypography>
   );
 }
 

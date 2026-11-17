@@ -1,5 +1,6 @@
 import { useQueries } from '@tanstack/react-query';
 import type * as React from 'react';
+import { type PluginEntry, usePluginEntries } from '#features/plugins';
 import { slotChoicesQuery, slotVisibility } from '#features/settings';
 import {
   slotDetailHref,
@@ -11,11 +12,7 @@ import type { SlotDetail } from './slots/$id/slot-detail';
 import { fillingPlugins, shownCount } from './slots/$id/slot-detail-model';
 import { slotDetails } from './slots/$id/slot-detail-registry';
 import { toSlotPlugins } from './slots/$id/slot-plugin-list';
-import {
-  type PluginEntry,
-  usePluginEntries,
-  usePluginsLoad,
-} from './use-plugins';
+import { usePluginsLoad } from './use-plugins';
 
 // A declared Slot's row, while some Plugin fills it, with how many are on in it.
 function slotLink(

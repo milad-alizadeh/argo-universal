@@ -6,6 +6,7 @@ import {
   View,
   type TextInputProps,
 } from 'react-native';
+import { useResolveClassNames } from 'uniwind';
 import { cn } from '#kit/utils';
 import {
   useNativeSuggestions,
@@ -23,18 +24,21 @@ type TextInputInstance = React.ComponentRef<typeof TextInput>;
 // The phone drawing: a plain native text area that grows to 6 lines, then scrolls (no numberOfLines).
 const maximumVisibleLines = 6;
 
-// The control role's line height at the unscaled text size.
-const lineHeight = 20;
-
 /*
  * Six lines means six of the reader's own lines. Kit text scales with Dynamic Type (ADR-0032), so the cap
  * scales with it; held at the unscaled 120, the largest sizes fit barely two lines and cut the first one in
  * half (#1529).
  */
-function useFieldMaxHeight(): number {
+function useFieldMaxHeight(props: RichTextareaProps): number | undefined {
   const { fontScale } = useWindowDimensions();
 
-  return maximumVisibleLines * lineHeight * Math.max(1, fontScale);
+  const { lineHeight } = useResolveClassNames(
+    cn(plainFieldClassName, props.fieldClassName),
+  );
+
+  return lineHeight === undefined
+    ? undefined
+    : maximumVisibleLines * lineHeight * Math.max(1, fontScale);
 }
 
 // What the text field takes: the drawing's own props stay out of it.
@@ -78,9 +82,9 @@ const fieldLook = {
   textAlignVertical: 'top',
 } as const;
 
-const useFieldLook = (): TextInputProps => ({
+const useFieldLook = (props: RichTextareaProps): TextInputProps => ({
   ...fieldLook,
-  style: { maxHeight: useFieldMaxHeight() },
+  style: { maxHeight: useFieldMaxHeight(props) },
 });
 
 interface PlainFieldProps {
@@ -102,7 +106,7 @@ function PlainField({
 function usePlainFieldProps(props: RichTextareaProps): TextInputProps {
   return {
     ...plainFieldProps(props),
-    ...useFieldLook(),
+    ...useFieldLook(props),
     placeholder: props.inlineSuggestion?.text ?? props.placeholder,
     className: fieldClassName(props),
   };

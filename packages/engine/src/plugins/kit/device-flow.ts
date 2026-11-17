@@ -16,14 +16,13 @@ import {
   type Polled,
 } from './device-poll';
 import { deviceRefresh } from './device-token';
-import { keepSignIn, tokenLender, type KeptToken } from './kept-token';
+import { heldSignIn, type HeldSignIn } from './held-sign-in';
+import { keepSignIn, provideKept, type KeptToken } from './kept-token';
 import { sleep } from './scheduler';
 
 const slowDownMs = 5000;
 
 const idle: DeviceFlowState = { kind: 'idle' };
-
-const bearer = { header: 'Authorization', prefix: 'Bearer' };
 
 // What one attempt reaches: the Plugin's calls, the service, and whether it is still the current one.
 type Attempt = {
@@ -106,87 +105,34 @@ async function requestCode(attempt: Attempt): Promise<DeviceFlowState> {
   return attempt.settle(shown(found));
 }
 
-type Held = { state: DeviceFlowState; attempt: symbol | null };
-
-// Records a state for the attempt that still counts, and says so, so the pages that draw it redraw.
-const settling =
-  (held: Held, argo: DeviceFlowArgo, mine: symbol) =>
-  (state: DeviceFlowState): DeviceFlowState => {
-    if (held.attempt !== mine) return held.state;
-
-    held.state = state;
-    argo.changed();
-
-    return state;
-  };
-
-// A new attempt replaces the one before, whose answers then change nothing.
-function attemptOf(
-  held: Held,
-  argo: DeviceFlowArgo,
-  options: DeviceFlowOptions,
-): Attempt {
-  const mine = Symbol('attempt');
-
-  held.attempt = mine;
-
-  return {
-    argo,
-    options,
-    live: () => held.attempt === mine,
-    settle: settling(held, argo, mine),
-  };
-}
-
-// A borrower's request gets the kept token, refreshed when it has run out, in the header the flow names; Argo sets it.
-function provide(
-  argo: DeviceFlowArgo,
-  options: DeviceFlowOptions,
-): Promise<void> {
-  const lend = tokenLender(argo.secrets, deviceRefresh(argo.fetch, options));
-
-  return argo.accounts.provide(
-    options.host,
-    options.header ?? bearer,
-    (account) => lend(account.id),
-  );
-}
-
 /*
  * A kit pattern on the open `argo.fetch`, `argo.accounts` and `argo.secrets` calls: ask for a code, show it, poll
  * for the token, add the Account and keep its token, saying `argo.changed()` at each step so the pages that draw
  * the state redraw. Nothing here needs the Server Device, a callback port or a client secret.
  */
 export const deviceFlow: DeviceFlowPattern = (argo, options) => {
-  const held: Held = { state: idle, attempt: null };
+  const held = heldSignIn<DeviceFlowState>(argo, idle);
 
   return Object.freeze({
     serverDevice: false,
-    state: () => held.state,
+    state: held.state,
     start: () => start(held, argo, options),
-    cancel: () => cancel(held, argo),
-    provide: () => provide(argo, options),
+    cancel: held.cancel,
+    provide: () =>
+      provideKept(argo, options, deviceRefresh(argo.fetch, options)),
   });
 };
 
 function start(
-  held: Held,
+  held: HeldSignIn<DeviceFlowState>,
   argo: DeviceFlowArgo,
   options: DeviceFlowOptions,
 ): Promise<DeviceFlowState> {
-  const attempt = attemptOf(held, argo, options);
+  const attempt: Attempt = { argo, options, ...held.begin() };
 
   attempt.settle({ kind: 'requesting' });
 
   return requestCode(attempt).catch((cause: unknown) =>
     attempt.settle(ended('failed', runtimeError(cause))),
   );
-}
-
-function cancel(held: Held, argo: DeviceFlowArgo): DeviceFlowState {
-  held.attempt = null;
-  held.state = idle;
-  argo.changed();
-
-  return idle;
 }

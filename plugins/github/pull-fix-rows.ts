@@ -17,8 +17,8 @@ export type FixStore = {
   forSessions: (sessionIds: readonly string[]) => Promise<FixRecord[]>;
   // Every pull request of a Project that has Auto-fix on.
   enabledIn: (projectId: string) => Promise<FixRecord[]>;
-  // Turns it on at once: clears the reason, starts the count again on this head, and notes the events already there.
-  enable: (link: Link, head: string, keys: readonly string[]) => Promise<void>;
+  // Turns it on at once: clears the reason, starts the count again on this head, and lets current problems be prompted.
+  enable: (link: Link, head: string) => Promise<void>;
   disable: (link: Link) => Promise<void>;
   // Turns it off and remembers the commit it gave up on.
   stop: (link: Link, head: string) => Promise<void>;
@@ -35,7 +35,7 @@ export type FixStore = {
  * One row per Session per pull request the person has turned Auto-fix on for. `stop_head` is the head commit it gave up
  * on, so the reason is told only while that commit is still the head. The events table holds each event per head commit
  * it was seen on (`check:<name>`, `conflict` or `comment:<id>`, see `pull-fix-prompts.ts`): `sent` is 1 for a Prompt
- * Auto-fix sent and 0 for an event already there when it was turned on, which is never prompted and never counted.
+ * Auto-fix sent; legacy entries with 0 are cleared when Auto-fix is enabled.
  */
 export const tables = [
   'CREATE TABLE IF NOT EXISTS pull_auto_fix (project_id TEXT NOT NULL, session_id TEXT NOT NULL, repository TEXT NOT NULL, number INTEGER NOT NULL, enabled INTEGER NOT NULL, stop_head TEXT, PRIMARY KEY (project_id, session_id, repository, number))',
