@@ -26,22 +26,26 @@ function Providers(props: {
 
 const waitedMs = 100;
 
+// What the Server was asked to draw once the screen has had time to ask, answering the list after when `answers`.
+async function drawsBeforeTheList(
+  host: Server,
+  answers: boolean,
+): Promise<string> {
+  await new Promise((resolve) => setTimeout(resolve, waitedMs));
+
+  const before = host.draws.join(',');
+
+  if (answers) host.answerList();
+
+  return `Drew before the list answered: ${before}`;
+}
+
 // Reports what the Server was asked to draw once the screen has had time to ask, and again after the list answers.
 function Report(props: { host: Server; answers: boolean }): React.JSX.Element {
   const [report, setReport] = React.useState('Waiting');
 
   React.useEffect(() => {
-    const { host, answers } = props;
-
-    void new Promise((resolve) => setTimeout(resolve, waitedMs))
-      .then(() => {
-        const before = [...host.draws];
-
-        if (answers) host.answerList();
-
-        return before;
-      })
-      .then((before) => setReport(`Drew before the list answered: ${before}`));
+    void drawsBeforeTheList(props.host, props.answers).then(setReport);
   }, [props]);
 
   return <Text>{report}</Text>;
@@ -89,7 +93,8 @@ function NavDraws({ host }: { host: Server }): React.JSX.Element {
 
   React.useEffect(() => {
     const timer = setInterval(() => {
-      if (host.draws.length >= 2) setDraws(`Drew after: ${host.draws}`);
+      if (host.draws.length >= 2)
+        setDraws(`Drew after: ${host.draws.join(',')}`);
     }, waitedMs);
 
     return (): void => clearInterval(timer);

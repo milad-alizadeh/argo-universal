@@ -52,7 +52,7 @@ function SessionFeedScreen(): JSX.Element {
 }
 
 const meta = {
-  title: 'Tests/Feed/SnapshotRenders',
+  title: 'Tests/Feed/SessionFeedSnapshotRenders',
   render: (): JSX.Element => (
     <Profiler id={renders.id} onRender={renders.onRender}>
       <SessionFeedScreen />

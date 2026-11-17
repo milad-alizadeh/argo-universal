@@ -14,7 +14,7 @@ export const pluginId = 'tracker';
 const refused: PluginReply = { ok: false, error: 'No services' };
 
 // What a test makes go wrong: reads that throw before the worker is asked, and the time a rate limit reopens.
-export type Faults = { broken: boolean; limitedUntil?: number };
+type Faults = { broken: boolean; limitedUntil?: number };
 
 type ReadEvent = Extract<PluginEvent, { type: 'read' }>;
 

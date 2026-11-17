@@ -64,7 +64,7 @@ function SessionFeedScreen(): JSX.Element {
 }
 
 const meta = {
-  title: 'Tests/Feed/HiddenRenders',
+  title: 'Tests/Feed/SessionFeedHiddenRenders',
   render: (): JSX.Element => (
     <Profiler id={renders.id} onRender={renders.onRender}>
       <SessionFeedScreen />

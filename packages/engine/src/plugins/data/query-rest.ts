@@ -3,10 +3,10 @@ import type { QueryOwner, QueryServices } from './query-types';
 // How long a Query rests after its first failed read, doubling with each failure in a row up to the longest rest (#2197).
 export const failureBackoffMs = 5000;
 
-export const longestBackoffMs = 300_000;
+const longestBackoffMs = 300_000;
 
 // A rate limit that reopens later than this is not waited out in full.
-export const longestLimitMs = 3_600_000;
+const longestLimitMs = 3_600_000;
 
 // What a failed Query needs of the Server: the time, a timer, and when the limit its read ran into reopens.
 export type RestServices = {

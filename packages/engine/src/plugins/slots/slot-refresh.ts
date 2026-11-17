@@ -8,7 +8,7 @@ export type Shown = Pick<SlotItemsInput, 'slotId' | 'contexts'>;
  * A Query a Slot read is re-read when it is as old as the interval; the clock ticks a little under the interval
  * after the read the last tick caused ended, so an answer a hair younger counts.
  */
-export const ageSlack = 0.9;
+const ageSlack = 0.9;
 
 // What the clock needs of the runtime: whether a Plugin runs, and how to make what it kept due and ask it again.
 export type Refreshing = {

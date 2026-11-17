@@ -2,7 +2,7 @@ import type { PluginClock } from '../clock';
 import type { PluginData } from '../data/plugin-data';
 import type { PluginDraws } from '../pages';
 import { ChangeWindow } from '../pages/change-window';
-import { PageChanges } from '../pages/page-changes';
+import { PageChanges } from '../pages';
 import type { PluginSlotItems } from '../slots/plugin-slot-items';
 import type { WorkerCalls } from './worker-calls';
 
