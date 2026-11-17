@@ -32,6 +32,7 @@ import type { RpcConnection } from '../rpc';
 import { discoverWithAccounts } from './accounts/removed-plugins';
 import { runsBackground } from './discovery/plugin-contributions';
 import { callerOf } from './hooks/hook-rules';
+import { LocatedCache } from './located-cache';
 import {
   applyEnabled,
   applyStatus,
@@ -40,7 +41,6 @@ import {
   startPlugins,
   type PluginServiceDeps,
 } from './located-plugins';
-import { LocatedCache } from './located-cache';
 import { pluginInstructions } from './plugin-instructions';
 import { startOrderedPlugins } from './plugin-order';
 import { declaredItems } from './slots/declared-items';
