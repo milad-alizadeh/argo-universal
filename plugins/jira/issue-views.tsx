@@ -8,6 +8,7 @@ import {
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { failedScreen, titleOf } from './failure-view';
 import { filterMenu } from './filter-menu';
+import { boardOf, viewOf, viewSwitch } from './issue-board';
 import { isFailure } from './issue-pages';
 import { issueList, type ListFrame } from './issue-rows';
 import type { JiraFailure } from './jira-client';
@@ -118,8 +119,8 @@ const listFrame = (
   empty: emptyOf(view, refused, drawing),
 });
 
-// The project's issues the filters leave; load more reads the next page from Jira's cursor.
-function issueScreen(
+// The issues the filters leave as a list, whose load more reads Jira's next page.
+function listBody(
   view: Issues,
   refused: JiraFailure | undefined,
   { framing, listing }: Drawing,
@@ -127,9 +128,30 @@ function issueScreen(
   const frame = listFrame(view, refused, { framing, listing });
   const { to, projectId } = framing;
 
+  return issueList(view.site, { list: listing.list, to, projectId, ...frame });
+}
+
+// The board the switch asks for, or, when Jira refused the list or there is nothing to draw, the list that says why.
+function shownBody(
+  view: Issues,
+  refused: JiraFailure | undefined,
+  drawing: Drawing,
+): JSX.Element {
+  const board = refused ? null : boardOf(drawing.framing, drawing.listing);
+
+  return board ?? listBody(view, refused, drawing);
+}
+
+// The project's issues the filters leave, as the list or the board the switch above them shows.
+function issueScreen(
+  view: Issues,
+  refused: JiraFailure | undefined,
+  drawing: Drawing,
+): JSX.Element {
   return (
-    <Screen {...issuesHeader(view, framing, listing)}>
-      {issueList(view.site, { list: listing.list, to, projectId, ...frame })}
+    <Screen {...issuesHeader(view, drawing.framing, drawing.listing)}>
+      {viewSwitch(viewOf(drawing.listing), drawing.listing.to)}
+      {shownBody(view, refused, drawing)}
     </Screen>
   );
 }

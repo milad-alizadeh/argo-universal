@@ -1,5 +1,6 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
 import { atlassianHost } from './atlassian';
+import { defineBoardReads, type BoardReads } from './board-reads';
 import { defineIssueReads, type IssueReads } from './issue-reads';
 import { callJira, type JiraAnswer, type JiraFailure } from './jira-client';
 import { allPages } from './jira-paging';
@@ -26,6 +27,7 @@ export { borrowing } from './read-scope';
 export type ProjectTarget = IssuesTarget;
 
 export type JiraReads = IssueReads &
+  BoardReads &
   Readonly<{
     // The label of the Account the Project borrows, or null when it has none.
     account: (args: Target) => NamedQuery<string | null>;
@@ -121,6 +123,7 @@ export function defineReads(argo: Argo, refused: Refused): JiraReads {
 
   return {
     ...defineIssueReads(argo),
+    ...defineBoardReads(argo),
     account: accountRead(reading),
     projects: projectsRead(reading),
     people: peopleRead(reading),

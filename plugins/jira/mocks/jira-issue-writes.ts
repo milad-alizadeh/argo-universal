@@ -1,7 +1,14 @@
 import type { FixtureAnswer } from '@argo/plugin-kit/testing';
 import { at, text, type Json } from '../json';
-import type { FixtureSite } from './jira-data';
-import { done, peopleOf, refused, type IssueAnswer } from './jira-issue-found';
+import type { FixtureIssue } from './jira-data';
+import {
+  done,
+  refused,
+  type Found,
+  type IssueAnswer,
+} from './jira-issue-found';
+import { assignableIn } from './jira-people';
+import type { JiraCall } from './jira-routes';
 import { priorities, transitionsFrom } from './jira-workflow';
 
 /*
@@ -23,25 +30,40 @@ export const transition: IssueAnswer = ({ issue }, { body }) => {
   return done;
 };
 
-type Person = NonNullable<FixtureSite['people']>[number];
+type Assignee = NonNullable<FixtureIssue['assignee']>;
 
-// No one unassigns; anyone else must be someone the site's projects may assign.
-const assignable = (
-  site: FixtureSite,
+// Someone the `people` route offers for the issue's project, as the issue holds an assignee.
+function offered(
+  { projectKey }: Found,
+  { site, who }: JiraCall,
   accountId: Json | undefined,
-): Person | null | undefined =>
-  accountId === null
-    ? null
-    : peopleOf(site)?.find((one) => one.accountId === accountId);
+): Assignee | undefined {
+  const project = site.projects.find(({ key }) => key === projectKey);
+  const people = project ? assignableIn(who, { site, project }) : [];
+  const found = people.find((one) => one.accountId === accountId);
 
-export const assign: IssueAnswer = ({ issue }, { body, site }) => {
-  const accountId = at(body, 'accountId');
-  const found = assignable(site, accountId);
+  return (
+    found && { accountId: found.accountId, displayName: found.displayName }
+  );
+}
 
-  if (found === undefined)
+// No one unassigns; anyone else must be someone the `people` route offers.
+const assignable = (
+  found: Found,
+  call: JiraCall,
+  accountId: Json | undefined,
+): Assignee | null | undefined =>
+  accountId === null ? null : offered(found, call, accountId);
+
+export const assign: IssueAnswer = (found, call) => {
+  const { issue } = found;
+  const accountId = at(call.body, 'accountId');
+  const person = assignable(found, call, accountId);
+
+  if (person === undefined)
     return refused(`User '${text(accountId)}' cannot be assigned issues.`);
 
-  issue.assignee = found;
+  issue.assignee = person;
 
   return done;
 };

@@ -8,6 +8,9 @@ import { PluginDetailView } from './plugin-detail-view';
 import {
   issueFilters,
   issueFiltersUnavailable,
+  jiraBoard,
+  jiraBoardEmpty,
+  jiraBoardMoving,
   jiraIssue,
   jiraIssueMoving,
   jiraIssueUnreadable,
@@ -56,4 +59,17 @@ export const JiraIssueMoving: StoryObj<typeof meta> = {
 
 export const JiraIssueUnreadable: StoryObj<typeof meta> = {
   args: jiraIssueUnreadable,
+};
+
+export const JiraBoard: StoryObj<typeof meta> = {
+  args: jiraBoard,
+};
+
+// A card the App shows in its new column at once, pending, before Jira answers the move.
+export const JiraBoardMoving: StoryObj<typeof meta> = {
+  args: jiraBoardMoving,
+};
+
+export const JiraBoardEmpty: StoryObj<typeof meta> = {
+  args: jiraBoardEmpty,
 };

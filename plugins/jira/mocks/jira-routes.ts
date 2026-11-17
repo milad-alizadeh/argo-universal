@@ -1,15 +1,15 @@
 import type { FixtureAnswer, FixtureRequest } from '@argo/plugin-kit/testing';
 import { at, text, type Json } from '../json';
+import { boardRoutes } from './jira-board-routes';
 import type {
-  FixtureIssue,
   FixtureProject,
   FixtureSite,
   FixtureToken,
   JiraData,
 } from './jira-data';
-import { peopleOf } from './jira-issue-found';
 import { issueRoutes } from './jira-issue-routes';
 import { filtered, type Filtered } from './jira-jql';
+import { assignableIn, personJson } from './jira-people';
 import { defaultLimit, pageOf, pagingOf } from './jira-search-page';
 
 // One call that reached a site's Jira with a token it accepts: what a route answers from.
@@ -82,30 +82,6 @@ function search({ site, body, who }: JiraCall): FixtureAnswer {
     : noSuchProject(key);
 }
 
-type Person = NonNullable<FixtureIssue['assignee']>;
-
-const assigneesOf = ({ issues }: FixtureProject): Person[] =>
-  issues.flatMap(({ assignee }) => (assignee ? [assignee] : []));
-
-const personJson = ({ accountId, displayName }: Person): Json => ({
-  accountId,
-  displayName,
-  accountType: 'atlassian',
-});
-
-// Everyone a project's issues can be assigned to, once each: the caller, everyone its issues are assigned to, and the site's people.
-const assignable = (
-  who: Person,
-  { site, project }: { site: FixtureSite; project: FixtureProject },
-): Json[] => [
-  ...new Map(
-    [who, ...assigneesOf(project), ...(peopleOf(site) ?? [])].map((person) => [
-      person.accountId,
-      personJson(person),
-    ]),
-  ).values(),
-];
-
 const projectParam = ({ path }: FixtureRequest): string =>
   new URL(path, 'https://jira.test').searchParams.get('project') ?? '';
 
@@ -115,7 +91,7 @@ function people({ site, request, who }: JiraCall): FixtureAnswer {
   const project = projectIn(site, key);
 
   return project
-    ? { json: assignable(who, { site, project }) }
+    ? { json: assignableIn(who, { site, project }).map(personJson) }
     : noSuchProject(key);
 }
 
@@ -164,4 +140,5 @@ export const jiraRoutes: JiraRoute[] = [
     answer: people,
   },
   ...issueRoutes,
+  ...boardRoutes,
 ];
