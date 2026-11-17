@@ -33,7 +33,6 @@ import { Alert } from '@repo/kit/primitives/overlays/alert';
 import { Sheet } from '@repo/kit/primitives/overlays/sheet';
 import { Detail } from '@repo/kit/primitives/scaffolds/detail';
 import { ListDetail } from '@repo/kit/primitives/scaffolds/list-detail';
-import { Metadata } from '@repo/kit/primitives/scaffolds/metadata';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { Callout } from '@repo/kit/primitives/status/callout';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
@@ -65,13 +64,6 @@ export const pluginEntries = {
   Screen,
   ListDetail,
   Detail,
-  Metadata,
-  'Metadata.Label': Metadata.Label,
-  'Metadata.Link': Metadata.Link,
-  'Metadata.Pills': Metadata.Pills,
-  'Metadata.StatusDot': Metadata.StatusDot,
-  'Metadata.Avatar': Metadata.Avatar,
-  'Metadata.Picker': Metadata.Picker,
   Action,
   'Action.Section': Action.Section,
   EmptyState,

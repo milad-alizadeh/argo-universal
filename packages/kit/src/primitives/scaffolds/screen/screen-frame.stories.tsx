@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Screen } from './index';
 import {
+  AsideColumnExample,
   AsideExample,
   BleedExample,
   FooterExample,
@@ -21,8 +22,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /*
- * Where the aside draws as the page narrows: Pills under the title at tablet width, and icon Pills at phone width, with
- * the status keeping its words. The aside's own column needs a wide Screen at least 976 wide (screen-aside-place.ts).
+ * Where the aside draws as the page narrows: at tablet and phone width it leads the body, the same FieldGroup rows as
+ * its own column holds. The aside's own column needs a wide Screen at least 976 wide (screen-aside-place.ts).
  */
 export const AsidePlaces: Story = {
   render: (): React.JSX.Element => (
@@ -31,6 +32,12 @@ export const AsidePlaces: Story = {
       <AsideExample width={768} />
     </View>
   ),
+};
+
+// A window wide enough for the aside's own column at the trailing edge, beside the reading column.
+export const AsideColumn: Story = {
+  parameters: { screenPreview: true },
+  render: (): React.JSX.Element => <AsideColumnExample />,
 };
 
 export const Bleed: Story = {

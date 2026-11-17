@@ -4,7 +4,7 @@ import { EmptyState } from '#primitives/status/empty-state';
 import type { DetailProps } from './detail-props';
 import { agent, issue } from './detail.mocks';
 
-export const contentAndMetadataDetail = {
+export const contentAndPropertiesDetail = {
   ...issue.detail,
 } satisfies DetailProps;
 

@@ -5,7 +5,7 @@ import { issueTitle, openIssue } from './journey-fixture';
 const pickerTitled =
   (title: string) =>
   (node: WireNode): boolean =>
-    node.type === 'Metadata.Picker' && node.props.title === title;
+    node.type === 'FieldGroup.Picker' && node.props.title === title;
 
 type Page = Awaited<ReturnType<typeof openIssue>>;
 

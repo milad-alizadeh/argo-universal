@@ -9,7 +9,7 @@ import { Canvas } from '#primitives/visual';
 import { issue } from '../detail/detail.mocks';
 import { Screen } from './index';
 
-// An Issue page with its Metadata in the aside, in a container of the given width.
+// An Issue page with its properties in the aside, in a container of the given width.
 export function AsideExample({ width }: { width: number }): ReactElement {
   return (
     <View className="h-120 border border-border" style={{ width }}>
@@ -17,6 +17,15 @@ export function AsideExample({ width }: { width: number }): ReactElement {
         <Detail {...issue.detail} />
       </Screen>
     </View>
+  );
+}
+
+// The Issue page filling the window, as the App draws it, so a wide window gives the aside its own column.
+export function AsideColumnExample(): ReactElement {
+  return (
+    <Screen title={issue.title} aside={issue.aside}>
+      <Detail {...issue.detail} />
+    </Screen>
   );
 }
 

@@ -80,7 +80,7 @@ const kitFolder = 'packages/kit/src/primitives';
 const kebab = (name: string): string =>
   name.replaceAll(/(?<=[a-z])(?=[A-Z])/g, '-').toLowerCase();
 
-// A compound name (`List.Section`, `Metadata.Avatar`, `Canvas.Rect`) is drawn by its parent's folder, so it pairs through the part before the first dot.
+// A compound name (`List.Section`, `FieldGroup.Value`, `Canvas.Rect`) is drawn by its parent's folder, so it pairs through the part before the first dot.
 export const parentName = (name: string): string => name.split('.')[0] ?? name;
 
 const groupOf = (path: string): string => path.split('/')[0] ?? '';
