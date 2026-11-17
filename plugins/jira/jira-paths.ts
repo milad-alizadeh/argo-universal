@@ -9,7 +9,7 @@ const pathSegment = (text: string): string =>
     (character) => `_${(character.codePointAt(0) ?? 0).toString(hex)}_`,
   );
 
-export const pathText = (segment: string): string =>
+const pathText = (segment: string): string =>
   segment.replaceAll(/_([0-9a-f]+)_/gu, (_match, code: string) =>
     String.fromCodePoint(Number.parseInt(code, hex)),
   );
@@ -19,6 +19,20 @@ export const projectPattern = '/projects/:project';
 
 export const projectPath = (projectId: string): string =>
   `/projects/${pathSegment(projectId)}`;
+
+// The Argo Project a page's path names.
+export const projectIdOf = ({
+  params,
+}: {
+  params: Readonly<Record<string, string>>;
+}): string => pathText(params.project ?? '');
+
+// The issue a page's path names.
+export const issueKeyOf = ({
+  params,
+}: {
+  params: Readonly<Record<string, string>>;
+}): string => pathText(params.key ?? '');
 
 // One Jira issue of a Project, beside that Project's views.
 export const issuePattern = `${projectPattern}/issues/:key`;

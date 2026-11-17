@@ -1,29 +1,41 @@
 import { issueFields } from './issue-requests';
 import type { JiraRequest } from './jira-client';
+import { filterClauses, quoted, type IssueFilters } from './jira-filters';
 
 const pageSize = 50;
 
+// How many people the assignee filter offers by name, beside Anyone, Me and Unassigned.
+const peopleLimit = 50;
+
 const projectPageSize = 100;
 
-const quoted = (value: string): string =>
-  `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
+// `limit` is for an Agent's `listIssues`; the list takes Jira's page size.
+export type IssuesPage = Readonly<{
+  cursor: string | null;
+  filters: IssueFilters;
+  limit?: number;
+}>;
 
-export type IssuesPage = { cursor?: string; limit?: number; text?: string };
-
-const textMatch = (text?: string): string =>
-  text ? ` AND text ~ ${quoted(text)}` : '';
+// The project's issues the filters leave, the most recently updated first.
+const jqlOf = (projectKey: string, filters: IssueFilters): string =>
+  [`project = ${quoted(projectKey)}`, ...filterClauses(filters)]
+    .join(' AND ')
+    .concat(' ORDER BY updated DESC');
 
 // Jira's enhanced search body; a cursor goes in only when there is one.
-function searchBody(projectKey: string, page: IssuesPage): JiraRequest['body'] {
+function searchBody(
+  projectKey: string,
+  { cursor, filters, limit = pageSize }: IssuesPage,
+): JiraRequest['body'] {
   const body = {
-    jql: `project = ${quoted(projectKey)}${textMatch(page.text)} ORDER BY updated DESC`,
+    jql: jqlOf(projectKey, filters),
     // A row seeds its issue's page, so the search asks for what the page shows too.
     fields: issueFields,
     expand: 'transitions',
-    maxResults: page.limit ?? pageSize,
+    maxResults: limit,
   };
 
-  return page.cursor ? { ...body, nextPageToken: page.cursor } : body;
+  return cursor ? { ...body, nextPageToken: cursor } : body;
 }
 
 export const jiraRequests = {
@@ -32,10 +44,14 @@ export const jiraRequests = {
   projects: (startAt = 0): JiraRequest => ({
     path: `/project/search?startAt=${startAt}&maxResults=${projectPageSize}&orderBy=name`,
   }),
-  // A project's issues, the most recently updated first, paged by Jira's `nextPageToken`.
-  issues: (projectKey: string, page: IssuesPage = {}): JiraRequest => ({
+  // A project's issues the filters leave, paged by Jira's `nextPageToken`.
+  issues: (projectKey: string, page: IssuesPage): JiraRequest => ({
     path: '/search/jql',
     method: 'POST',
     body: searchBody(projectKey, page),
+  }),
+  // The people an issue in the project can be assigned to.
+  people: (projectKey: string): JiraRequest => ({
+    path: `/user/assignable/search?project=${encodeURIComponent(projectKey)}&maxResults=${peopleLimit}`,
   }),
 };

@@ -13,8 +13,6 @@ export const issueFields = [
 
 const issuePath = (key: string): string => `/issue/${encodeURIComponent(key)}`;
 
-const mostAssignable = 50;
-
 // The calls one issue's page and its Operations make: reading the issue, and the writes that change it.
 export const issueRequests = {
   issue: (key: string): JiraRequest => ({
@@ -41,8 +39,4 @@ export const issueRequests = {
   }),
   // Every priority on the site. `/priority/search` needs an admin scope, so this reads the older list.
   priorities: (): JiraRequest => ({ path: '/priority' }),
-  // The people who may be assigned a Jira project's issues.
-  assignable: (projectKey: string): JiraRequest => ({
-    path: `/user/assignable/search?project=${encodeURIComponent(projectKey)}&maxResults=${mostAssignable}`,
-  }),
 };

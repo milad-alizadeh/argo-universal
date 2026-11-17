@@ -12,14 +12,18 @@
           "type": "List",
           "key": "0",
           "props": {
-            "accessibilityLabel": "Projects"
+            "accessibilityLabel": "Projects",
+            "onRefresh": {
+              "pageState": {}
+            }
           },
           "children": [
             {
               "type": "List.Section",
               "key": "project-1",
               "props": {
-                "title": "Fixture Project"
+                "title": "Fixture Project",
+                "collapsible": true
               },
               "children": [
                 {
@@ -78,8 +82,13 @@
           "key": "0",
           "props": {
             "title": "Argo",
-            "caption": "ARGO · arena.atlassian.net",
-            "width": "full"
+            "search": {
+              "label": "Search Issues"
+            },
+            "value": "",
+            "onChangeText": {
+              "bind": "text"
+            }
           },
           "children": [
             {
@@ -298,13 +307,175 @@
             "actions": [
               {
                 "type": "Action",
+                "key": "filter",
+                "props": {
+                  "label": "Filter",
+                  "icon": "filters"
+                },
+                "children": [
+                  {
+                    "type": "Action.Section",
+                    "key": "status",
+                    "props": {
+                      "title": "Status"
+                    },
+                    "children": [
+                      {
+                        "type": "Action",
+                        "key": "all",
+                        "props": {
+                          "label": "Any status",
+                          "selected": true,
+                          "onPress": {
+                            "pageState": {
+                              "status": "all"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "new",
+                        "props": {
+                          "label": "To Do",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "status": "new"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "indeterminate",
+                        "props": {
+                          "label": "In Progress",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "status": "indeterminate"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "done",
+                        "props": {
+                          "label": "Done",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "status": "done"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Action.Section",
+                    "key": "assignee",
+                    "props": {
+                      "title": "Assignee"
+                    },
+                    "children": [
+                      {
+                        "type": "Action",
+                        "key": "anyone",
+                        "props": {
+                          "label": "Anyone",
+                          "selected": true,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "anyone"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "me",
+                        "props": {
+                          "label": "Me",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "me"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "none",
+                        "props": {
+                          "label": "Unassigned",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "none"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "account-ada",
+                        "props": {
+                          "label": "Ada Lovelace",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "account-ada"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "account-grace",
+                        "props": {
+                          "label": "Grace Hopper",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "account-grace"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              },
+              {
+                "type": "Action",
                 "key": "change-project",
                 "props": {
                   "label": "Change Jira project",
-                  "icon": {
-                    "sf": "arrow.left.arrow.right",
-                    "material": "swap_horiz"
-                  },
                   "onPress": {
                     "operation": "forgetProject",
                     "args": {
@@ -320,10 +491,6 @@
                 "key": "change-site",
                 "props": {
                   "label": "Change Jira site",
-                  "icon": {
-                    "sf": "globe",
-                    "material": "language"
-                  },
                   "onPress": {
                     "action": "navigate",
                     "path": "/projects/project-1/site"
@@ -351,14 +518,18 @@
           "type": "List",
           "key": "0",
           "props": {
-            "accessibilityLabel": "Projects"
+            "accessibilityLabel": "Projects",
+            "onRefresh": {
+              "pageState": {}
+            }
           },
           "children": [
             {
               "type": "List.Section",
               "key": "project-1",
               "props": {
-                "title": "Fixture Project"
+                "title": "Fixture Project",
+                "collapsible": true
               },
               "children": [
                 {
@@ -417,8 +588,13 @@
           "key": "0",
           "props": {
             "title": "Argo",
-            "caption": "ARGO · arena.atlassian.net",
-            "width": "full"
+            "search": {
+              "label": "Search Issues"
+            },
+            "value": "",
+            "onChangeText": {
+              "bind": "text"
+            }
           },
           "children": [
             {
@@ -639,13 +815,175 @@
             "actions": [
               {
                 "type": "Action",
+                "key": "filter",
+                "props": {
+                  "label": "Filter",
+                  "icon": "filters"
+                },
+                "children": [
+                  {
+                    "type": "Action.Section",
+                    "key": "status",
+                    "props": {
+                      "title": "Status"
+                    },
+                    "children": [
+                      {
+                        "type": "Action",
+                        "key": "all",
+                        "props": {
+                          "label": "Any status",
+                          "selected": true,
+                          "onPress": {
+                            "pageState": {
+                              "status": "all"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "new",
+                        "props": {
+                          "label": "To Do",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "status": "new"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "indeterminate",
+                        "props": {
+                          "label": "In Progress",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "status": "indeterminate"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "done",
+                        "props": {
+                          "label": "Done",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "status": "done"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Action.Section",
+                    "key": "assignee",
+                    "props": {
+                      "title": "Assignee"
+                    },
+                    "children": [
+                      {
+                        "type": "Action",
+                        "key": "anyone",
+                        "props": {
+                          "label": "Anyone",
+                          "selected": true,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "anyone"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "me",
+                        "props": {
+                          "label": "Me",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "me"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "none",
+                        "props": {
+                          "label": "Unassigned",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "none"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "account-ada",
+                        "props": {
+                          "label": "Ada Lovelace",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "account-ada"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "account-grace",
+                        "props": {
+                          "label": "Grace Hopper",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "account-grace"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              },
+              {
+                "type": "Action",
                 "key": "change-project",
                 "props": {
                   "label": "Change Jira project",
-                  "icon": {
-                    "sf": "arrow.left.arrow.right",
-                    "material": "swap_horiz"
-                  },
                   "onPress": {
                     "operation": "forgetProject",
                     "args": {
@@ -661,10 +999,6 @@
                 "key": "change-site",
                 "props": {
                   "label": "Change Jira site",
-                  "icon": {
-                    "sf": "globe",
-                    "material": "language"
-                  },
                   "onPress": {
                     "action": "navigate",
                     "path": "/projects/project-1/site"
@@ -692,14 +1026,18 @@
           "type": "List",
           "key": "0",
           "props": {
-            "accessibilityLabel": "Projects"
+            "accessibilityLabel": "Projects",
+            "onRefresh": {
+              "pageState": {}
+            }
           },
           "children": [
             {
               "type": "List.Section",
               "key": "project-1",
               "props": {
-                "title": "Fixture Project"
+                "title": "Fixture Project",
+                "collapsible": true
               },
               "children": [
                 {
@@ -758,8 +1096,13 @@
           "key": "0",
           "props": {
             "title": "Quiet project",
-            "caption": "QUIET · arena.atlassian.net",
-            "width": "full"
+            "search": {
+              "label": "Search Issues"
+            },
+            "value": "",
+            "onChangeText": {
+              "bind": "text"
+            }
           },
           "children": [
             {
@@ -852,13 +1195,175 @@
             "actions": [
               {
                 "type": "Action",
+                "key": "filter",
+                "props": {
+                  "label": "Filter",
+                  "icon": "filters"
+                },
+                "children": [
+                  {
+                    "type": "Action.Section",
+                    "key": "status",
+                    "props": {
+                      "title": "Status"
+                    },
+                    "children": [
+                      {
+                        "type": "Action",
+                        "key": "all",
+                        "props": {
+                          "label": "Any status",
+                          "selected": true,
+                          "onPress": {
+                            "pageState": {
+                              "status": "all"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "new",
+                        "props": {
+                          "label": "To Do",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "status": "new"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "indeterminate",
+                        "props": {
+                          "label": "In Progress",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "status": "indeterminate"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "done",
+                        "props": {
+                          "label": "Done",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "status": "done"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Action.Section",
+                    "key": "assignee",
+                    "props": {
+                      "title": "Assignee"
+                    },
+                    "children": [
+                      {
+                        "type": "Action",
+                        "key": "anyone",
+                        "props": {
+                          "label": "Anyone",
+                          "selected": true,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "anyone"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "me",
+                        "props": {
+                          "label": "Me",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "me"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "none",
+                        "props": {
+                          "label": "Unassigned",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "none"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "account-ada",
+                        "props": {
+                          "label": "Ada Lovelace",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "account-ada"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Action",
+                        "key": "account-grace",
+                        "props": {
+                          "label": "Grace Hopper",
+                          "selected": false,
+                          "onPress": {
+                            "pageState": {
+                              "assignee": "account-grace"
+                            }
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              },
+              {
+                "type": "Action",
                 "key": "change-project",
                 "props": {
                   "label": "Change Jira project",
-                  "icon": {
-                    "sf": "arrow.left.arrow.right",
-                    "material": "swap_horiz"
-                  },
                   "onPress": {
                     "operation": "forgetProject",
                     "args": {
@@ -874,10 +1379,6 @@
                 "key": "change-site",
                 "props": {
                   "label": "Change Jira site",
-                  "icon": {
-                    "sf": "globe",
-                    "material": "language"
-                  },
                   "onPress": {
                     "action": "navigate",
                     "path": "/projects/project-1/site"

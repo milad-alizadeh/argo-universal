@@ -86,6 +86,21 @@ function myselfOf(json: Read): JiraMyself | null {
   };
 }
 
+// Apps and service-desk customers can be assignable too; the filter and the Assignee menu offer people only.
+function isPerson(json: Json): boolean {
+  const type = text(at(json, 'accountType'));
+
+  return type === null || type === 'atlassian';
+}
+
+function personOf(json: Json): JiraPerson | null {
+  const accountId = text(at(json, 'accountId'));
+
+  if (!accountId || !isPerson(json)) return null;
+
+  return { accountId, name: textOr(at(json, 'displayName'), accountId) };
+}
+
 const numberOr = (value: Read, fallback: number): number =>
   typeof value === 'number' ? value : fallback;
 
@@ -107,6 +122,8 @@ export const jiraReaders = {
 
     return { items, next: nextStart(json, items.length) };
   },
+  people: (json: Read): JiraPerson[] =>
+    list(json).map(personOf).filter(present),
   issues: (json: Read): IssuePage => ({
     issues: list(at(json, 'issues')).map(issueOf).filter(present),
     cursor: cursorOf(json),

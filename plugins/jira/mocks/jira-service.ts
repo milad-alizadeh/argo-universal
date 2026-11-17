@@ -61,18 +61,22 @@ function reply(
   return held ? held.then(() => now(service, found)) : now(service, found);
 }
 
-type Answer = FixtureAnswer | Promise<FixtureAnswer>;
-
 // Atlassian's OAuth endpoints, when the test gave them, answer before Jira does.
 const signingIn = (
   { oauth }: Service,
   request: FixtureRequest,
 ): FixtureAnswer | null => (oauth ? oauth.answer(request) : null);
 
-const answer = (service: Service, request: FixtureRequest): Answer =>
+const answer = (
+  service: Service,
+  request: FixtureRequest,
+): FixtureAnswer | Promise<FixtureAnswer> =>
   signingIn(service, request) ?? jiraAnswer(service, request);
 
-function jiraAnswer(service: Service, request: FixtureRequest): Answer {
+function jiraAnswer(
+  service: Service,
+  request: FixtureRequest,
+): FixtureAnswer | Promise<FixtureAnswer> {
   const found =
     request.path === tenantPath
       ? tenant(service.data, request)

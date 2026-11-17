@@ -3,7 +3,7 @@ import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { issueScreen, type IssueView } from './issue-detail';
 import type { IssueTo } from './issue-shown';
 import { loadIssueView } from './issue-view';
-import { issuePattern, pathText } from './jira-paths';
+import { issueKeyOf, issuePattern, projectIdOf } from './jira-paths';
 import type { JiraReads } from './jira-reads';
 import { projectRows, type ArgoProject } from './project-rows';
 
@@ -11,11 +11,6 @@ import { projectRows, type ArgoProject } from './project-rows';
 const freshForMs = 60_000;
 
 type Params = Pick<LoaderInput, 'params'>;
-
-const projectIdOf = ({ params }: Params): string =>
-  pathText(params.project ?? '');
-
-const keyOf = ({ params }: Params): string => pathText(params.key ?? '');
 
 type IssueData = { projects: ArgoProject[]; view: IssueView };
 
@@ -25,7 +20,7 @@ async function loadIssue(
   input: LoaderInput,
 ): Promise<IssueData> {
   const projectId = projectIdOf(input);
-  const step = { read: input.read, reads, projectId, key: keyOf(input) };
+  const step = { read: input.read, reads, projectId, key: issueKeyOf(input) };
 
   const [projects, view] = await Promise.all([
     argo.projects.list(),
@@ -39,12 +34,15 @@ type Drawn = IssueData & { to: IssueTo; input: Params };
 
 const issueBeside = ({ projects, view, to, input }: Drawn): JSX.Element => {
   const projectId = projectIdOf(input);
-  const framing = { key: keyOf(input), projectId, to };
+  const framing = { key: issueKeyOf(input), projectId, to };
 
   return (
     <ListDetail
       title="Jira"
-      list={projectRows(projects, projectId)}
+      list={projectRows(projects, {
+        selected: projectId,
+        onRefresh: to.set({}),
+      })}
       detail={issueScreen(view, framing)}
     />
   );

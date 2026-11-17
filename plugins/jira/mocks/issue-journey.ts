@@ -1,6 +1,7 @@
 import type { OpenPage, PluginTest, WireNode } from '@argo/plugin-kit/testing';
 import { fieldKeys } from '../issue-keys';
 import type { FixtureIssue } from './jira-data';
+import type { JiraService } from './jira-service';
 import {
   choose,
   firstProject,
@@ -17,9 +18,9 @@ export const argoThreePath = `/projects/${firstProject.id}/issues/ARGO-3`;
 
 export type Listed = Jira & { list: OpenPage };
 
-// Signed in, with ARGO chosen for the first Project: its list, as the person sees it.
-export async function listed(): Promise<Listed> {
-  const jira = await startJira();
+// Signed in, with ARGO chosen for the first Project: its list, as the person sees it, over the given fixture Jira.
+export async function listed(service?: JiraService): Promise<Listed> {
+  const jira = await startJira(undefined, service);
 
   await signIn(jira);
 

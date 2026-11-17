@@ -25,7 +25,7 @@ export async function register(argo: Argo): Promise<void> {
   await atlassian.provide();
   registerOperations({ argo, reads, signIn });
   registerIssueOperations(argo);
-  defineSignInPage(argo, { paste: signIn, atlassian });
   registerAtlassianOperations(argo, atlassian);
-  defineJiraPages(argo, reads);
+  defineSignInPage(argo, { paste: signIn, atlassian });
+  defineJiraPages(argo, { reads, refused: signIn.refused });
 }
