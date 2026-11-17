@@ -16,6 +16,8 @@ const page = node('Screen', { title: 'Sign in', caption: 'Jira Cloud' }, [
     }),
   ]),
   node('Callout', { title: 'Jira is busy', message: 'Try again in a minute.' }),
+  node('Banner', { label: 'Sync failed', detail: 'HTTP 503 from Jira' }),
+  node('FieldGroup.Picker', { title: 'Status', summary: 'In Progress' }),
 ]);
 
 it.each([
@@ -23,6 +25,8 @@ it.each([
   ['footer', 'This token wasn’t accepted.', 'FieldGroup.Section'],
   ['error', 'Paste a token with scopes.', 'FieldGroup.SecretField'],
   ['message', 'Try again in a minute.', 'Callout'],
+  ['detail', 'HTTP 503 from Jira', 'Banner'],
+  ['summary', 'In Progress', 'FieldGroup.Picker'],
 ])('finds a node by the text in its %s', (_prop, text, type) => {
   expect(findByText(page, text)?.node.type).toBe(type);
 });

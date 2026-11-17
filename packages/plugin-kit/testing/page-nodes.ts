@@ -82,6 +82,10 @@ export function handlerOf(node: WireNode, event: string): Handler | undefined {
   return Handler.safeParse(node.props[event] ?? within[0]).data;
 }
 
+// A node whose List loads more.
+export const paged = (node: WireNode): boolean =>
+  handlerOf(node, 'onLoadMore') !== undefined;
+
 type Reported = { key: string; name: string; value?: WireJson };
 
 /*

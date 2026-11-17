@@ -19,6 +19,7 @@ import {
   findNode,
   madeEventCall,
   handlerOf,
+  paged,
   pageEventOf,
   type FoundNode,
   type NodeMatch,
@@ -29,10 +30,6 @@ import {
   type PageOpening,
   type PageServer,
 } from './page-server';
-
-// A node whose List loads more.
-const paged = (node: WireNode): boolean =>
-  handlerOf(node, 'onLoadMore') !== undefined;
 
 const rejected = (error: Error): never => {
   throw error;
@@ -127,10 +124,10 @@ export class OpenPage {
 
   /*
    * The next page of the page's paged list, as a List's load more asks for it. After a draw that failed, the App
-   * still shows the rows it kept, so its load more asks again for the page the failed draw lacked.
+   * still shows the rows it kept, so the load more they offer asks again for the page the failed draw lacked.
    */
   async loadMore(): Promise<void> {
-    if (this.kept.error !== undefined) return this.draw(this.kept.pages + 1);
+    if (this.kept.failedOfferingMore()) return this.draw(this.kept.pages + 1);
 
     await this.act(paged, 'onLoadMore');
   }

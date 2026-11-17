@@ -27,3 +27,26 @@ it('answers a request with the headers the test names', async () => {
 
   expect(page.findText('429 after 30')).toBeDefined();
 });
+
+// A page that shows the content type the service answered with.
+const typePage = `import { Text } from '@argo/plugin-kit';
+  const issues = { api: 'fetch', url: 'https://${host}/issues' };
+  export function register(argo) {
+    argo.pages.define('/', {
+      load: ({ read }) => read(issues),
+      render: (reply) => <Text>{reply.headers['content-type']}</Text>,
+    });
+  }`;
+
+it('keeps the content type of the answer the test gives over a content-type header it names', async () => {
+  const services = await fixtureServices(() => ({
+    json: [],
+    headers: { 'content-type': 'text/html' },
+  }));
+
+  const fixture = await dataFixture(typePage, {}, [{ kind: 'fetch', host }]);
+  const kit = await fixture.start({ network: services.network });
+  const page = await kit.pages.open({ path: '/' });
+
+  expect(page.findText('application/json')).toBeDefined();
+});
