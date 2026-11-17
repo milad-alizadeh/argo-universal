@@ -50,12 +50,15 @@ export class ChangeFlow {
     this.changes = new PageChanges(
       workers,
       (pluginId): void => data.written(pluginId),
-      (pluginId): void => {
-        data.written(pluginId);
-        this.markUncomparable(resources, pluginId);
-        this.window.request(pluginId);
-      },
+      (pluginId): void => this.said(resources, pluginId),
     );
+  }
+
+  // A Plugin's own change: its answers are due at once, what core cannot compare is marked, and the rest waits for the window.
+  private said(resources: Resources, pluginId: string): void {
+    resources.data.written(pluginId);
+    this.markUncomparable(resources, pluginId);
+    this.window.request(pluginId);
   }
 
   /*
