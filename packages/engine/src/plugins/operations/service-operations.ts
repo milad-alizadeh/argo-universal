@@ -5,6 +5,7 @@ import {
   secretParamNames,
   type PluginOperationCaller,
   type PluginOperationContribution,
+  type PluginOperationTier,
 } from '@repo/contracts/plugins/plugin-operations';
 import type { OperationCard } from '../../sessions';
 import { checkRun, type CheckedRun } from './checked-run';
@@ -29,6 +30,8 @@ export type OperationsPort = {
       params: Readonly<Record<string, string | number | boolean>>;
       caller: PluginOperationCaller;
       serverDevice?: boolean;
+      // The tier the Plugin's manifest declares for it.
+      tier?: PluginOperationTier;
       // The secret params' values, which nothing the run writes or answers may show.
       secrets?: readonly string[];
     },
@@ -90,11 +93,11 @@ const secretValues = (
     return typeof value === 'string' ? [value] : [];
   });
 
-// The params and caller the handler is given, and the secret ones' values; a run in another Project is confirmed first.
+// The params and caller the handler is given, with its tier and secret values; a run in another Project is confirmed first.
 async function checkedRun(
   { operation }: DeclaredOperation,
   input: OperationRun,
-): Promise<Omit<CheckedRun, 'outside'> & { secrets: string[] }> {
+): Promise<Omit<CheckedRun, 'outside'> & Disclosed> {
   const { outside, ...checked } = checkRun(
     operation,
     input.params,
@@ -103,8 +106,19 @@ async function checkedRun(
 
   if (outside) await confirmed(input, operation.label);
 
-  return { ...checked, secrets: secretValues(operation, checked.params) };
+  return { ...checked, ...disclosed(operation, checked.params) };
 }
+
+// What the run reports of its Operation: the tier it declares and the values of its secret params.
+type Disclosed = { tier: PluginOperationTier; secrets: string[] };
+
+const disclosed = (
+  operation: PluginOperationContribution,
+  given: CheckedRun['params'],
+): Disclosed => ({
+  tier: operation.tier,
+  secrets: secretValues(operation, given),
+});
 
 // Another Project is `confirm` tier whatever the Operation's own tier (ADR-0044), so the user is asked first.
 async function confirmed(

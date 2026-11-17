@@ -30,7 +30,8 @@ it('keeps the answer for a draw until a write makes it due', async () => {
   expect(reads()).toHaveLength(1);
 
   data.written(pluginId);
-  const after = read();
+  // An address with no tree yet waits for the fresh read; one that has a tree is served what was kept.
+  const after = read({ holder: { ...address, path: '/new' } });
   await vi.waitFor(() => expect(reads()).toHaveLength(2));
   await answer({ count: 2 });
 
@@ -83,4 +84,105 @@ it('forgets the named reads of a worker generation that ended', async () => {
   await answer({ count: 3 }, 2);
 
   expect(valueOf(await after)).toEqual({ count: 3 });
+});
+
+it('serves a page that already has a tree from what was kept after a write, and marks it if the read behind changes', async () => {
+  const { data, read, answer, reads, marks } = harness();
+
+  const first = read();
+  await answer({ count: 1 });
+  await first;
+
+  data.written(pluginId);
+
+  // No answer has come yet, and the draw is not waiting for one.
+  expect(valueOf(await read())).toEqual({ count: 1 });
+  await vi.waitFor(() => expect(reads()).toHaveLength(2));
+  expect(marks).toEqual([]);
+
+  await answer({ count: 2 });
+  await vi.waitFor(() => expect(marks).toEqual([[address]]));
+});
+
+it('waits for a fresh read when the address has no tree yet, or the person pulled to refresh', async () => {
+  const { data, read, answer, reads } = harness();
+  const other = { ...address, path: '/other' };
+
+  const first = read();
+  await answer({ count: 1 });
+  await first;
+  data.written(pluginId);
+
+  const pulled = read({ holder: address }, true);
+  await vi.waitFor(() => expect(reads()).toHaveLength(2));
+  await answer({ count: 2 });
+  expect(valueOf(await pulled)).toEqual({ count: 2 });
+
+  data.written(pluginId);
+  const unseen = read({ holder: other });
+  await vi.waitFor(() => expect(reads()).toHaveLength(3));
+  await answer({ count: 3 });
+  expect(valueOf(await unseen)).toEqual({ count: 3 });
+});
+
+it('on a change reads again only the Queries a page holds, and marks only the addresses whose answer differs', async () => {
+  const { data, read, answer, reads, marks } = harness();
+
+  const first = read();
+  await answer({ count: 1 });
+  await first;
+
+  // Nothing changed: it reads again, finds the same answer and marks nothing.
+  data.written(pluginId);
+  const same = data.writes.changed(pluginId);
+  await vi.waitFor(() => expect(reads()).toHaveLength(2));
+  await answer({ count: 1 });
+  await same;
+  expect(marks).toEqual([]);
+
+  data.written(pluginId);
+  const differs = data.writes.changed(pluginId);
+  await vi.waitFor(() => expect(reads()).toHaveLength(3));
+  await answer({ count: 2 });
+  await differs;
+  expect(marks).toEqual([[address]]);
+});
+
+it('on a change makes due, and does not read, a Query no page holds', async () => {
+  const { data, slotRead, answer, reads } = harness();
+
+  const first = slotRead();
+  await answer({ count: 1 });
+  await first;
+
+  data.written(pluginId);
+  await data.writes.changed(pluginId);
+  expect(reads()).toHaveLength(1);
+
+  const next = slotRead();
+  await vi.waitFor(() => expect(reads()).toHaveLength(2));
+  await answer({ count: 2 });
+  expect(valueOf(await next)).toEqual({ count: 2 });
+});
+
+it('on a clock tick makes due only the Queries a Slot read that are as old as its interval', async () => {
+  const { data, slotRead, read, answer, reads } = harness();
+
+  const page = read();
+  await answer({ count: 1 });
+  await page;
+
+  // Held by a page only, so a Slot's clock leaves it alone.
+  data.writes.dueWhenOlder(pluginId, 0);
+  expect(valueOf(await read())).toEqual({ count: 1 });
+  expect(reads()).toHaveLength(1);
+
+  const slot = slotRead();
+  await answer({ count: 5 });
+  await slot;
+  data.writes.dueWhenOlder(pluginId, 0);
+  const again = slotRead();
+  await vi.waitFor(() => expect(reads()).toHaveLength(3));
+  await answer({ count: 6 });
+  await again;
 });

@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { dataFixture } from '../mocks/data-fixture';
 import { drawnText } from './query-pages';
 
@@ -44,9 +44,12 @@ it('reads a storage Query again after a write, and not on a clock', async () => 
   expect(await drawnText(kit, { path: '/' })).toBe(firstRow);
   expect((await kit.log()).split('argo.storage')).toHaveLength(before);
 
+  // The page already has a tree, so a draw is served what was kept while the Query is read again behind it (ADR-0056).
   await kit.pages.run({ operation: 'write', args: {} });
-  expect(await drawnText(kit, { path: '/' })).toBe(
-    '[{"rows":[["first"],["second"]]}]',
+  await vi.waitFor(async () =>
+    expect(await drawnText(kit, { path: '/' })).toBe(
+      '[{"rows":[["first"],["second"]]}]',
+    ),
   );
 });
 

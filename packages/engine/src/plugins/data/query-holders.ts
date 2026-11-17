@@ -21,6 +21,16 @@ export class QueryHolders {
     this.cap();
   }
 
+  // Whether the address drew this entry before, so the App already has a tree for it.
+  public has(address: PageAddress | undefined): boolean {
+    return address !== undefined && this.held.has(JSON.stringify(address));
+  }
+
+  // Whether any address holds the entry.
+  public get any(): boolean {
+    return this.held.size > 0;
+  }
+
   // The addresses that drew an answer older than `revision`.
   public before(revision: number): PageAddress[] {
     return this.held

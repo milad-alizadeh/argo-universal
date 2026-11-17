@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { dataFixture } from '../mocks/data-fixture';
 
 // A Loader page drawn again on a clock (ADR-0050), reading the fixture's count through a described Query.
@@ -40,7 +40,14 @@ it.each([9999, 10000, 10001])(
     });
     expect(await fixture.requests()).toHaveLength(1);
 
+    // The draw is served what was kept while the Query is read behind it (ADR-0056); the next one has the new answer.
     await kit.clock.advance(1);
+    expect(await kit.pages.draw({ path: '/', known })).toMatchObject({
+      kind: 'unchanged',
+    });
+    await vi.waitFor(async () =>
+      expect(await fixture.requests()).toHaveLength(2),
+    );
     expect(await kit.pages.draw({ path: '/', known })).toMatchObject({
       kind: 'tree',
       every: period,

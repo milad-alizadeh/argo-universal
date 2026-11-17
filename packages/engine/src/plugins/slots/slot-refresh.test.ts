@@ -1,10 +1,16 @@
+import { sessionRowSlotId } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import type { PluginClock } from '../clock';
-import { SlotRefresh } from './slot-refresh';
+import { refreshFor, SlotRefresh, type Shown } from './slot-refresh';
 
 const every = 30_000;
 
-const asking = 'ask github';
+const asking = `ask github ${sessionRowSlotId} 30000`;
+
+const list: Shown = {
+  slotId: sessionRowSlotId,
+  contexts: [{ sessionId: 'first', projectId: 'argo' }],
+};
 
 type Timer = { callback: () => void; ms: number };
 
@@ -38,9 +44,10 @@ function refresh(): Harness {
 
   const refreshing = new SlotRefresh({
     clock,
-    running: (pluginId): boolean => running.has(pluginId),
-    due: (pluginId): void => void asked.push(`due ${pluginId}`),
-    ask: (pluginId): void => void asked.push(`ask ${pluginId}`),
+    ask: (pluginId, shown, ms): void =>
+      void asked.push(
+        `ask ${pluginId} ${shown.map(({ slotId }) => slotId).join()} ${ms}`,
+      ),
   });
 
   // The clock runs out once: what it fires, it re-arms itself.
@@ -58,20 +65,20 @@ function refresh(): Harness {
   return { refreshing, timers, tick, asked, running, off, enabled };
 }
 
-it('makes the Plugin due and asks it again on each tick while a list holds the clock', () => {
+it('asks the contexts the list shows again on each tick while a list holds the clock', () => {
   const { refreshing, tick, asked, enabled } = refresh();
 
-  refreshing.hold(['github'], every, enabled);
+  refreshing.hold(['github'], { ms: every, enabled }, list);
   tick();
   tick();
 
-  expect(asked).toEqual(['due github', asking, 'due github', asking]);
+  expect(asked).toEqual([asking, asking]);
 });
 
 it('runs one clock for every list that holds it, and stops when the last lets go', () => {
   const { refreshing, timers, enabled } = refresh();
-  const workbench = refreshing.hold(['github'], every, enabled);
-  const inspector = refreshing.hold(['github'], every, enabled);
+  const workbench = refreshing.hold(['github'], { ms: every, enabled }, list);
+  const inspector = refreshing.hold(['github'], { ms: every, enabled }, list);
 
   expect(timers.size).toBe(1);
 
@@ -82,51 +89,46 @@ it('runs one clock for every list that holds it, and stops when the last lets go
   expect(timers.size).toBe(0);
 });
 
-it('only asks again, and makes nothing due, while the Plugin is on but not running', () => {
-  const { refreshing, tick, asked, running, enabled } = refresh();
+it('ages the Queries a Slot read, only of a running Plugin, and asks the shown contexts again', () => {
+  const calls: string[] = [];
+  const fires: Array<() => void> = [];
+  const generations = new Map([['github', 1]]);
 
-  running.delete('github');
-  refreshing.hold(['github'], every, enabled);
-  tick();
+  const parts = {
+    clock: {
+      now: (): number => 0,
+      delay: async (): Promise<void> => {},
+      schedule: (callback: () => void): (() => void) => {
+        fires.push(callback);
 
-  expect(asked).toEqual([asking]);
-});
+        return (): void => {};
+      },
+    },
+    data: {
+      writes: {
+        dueWhenOlder: (id: string, ms: number): void =>
+          void calls.push(`older ${id} ${ms}`),
+      },
+    },
+    items: {
+      askAgain: (id: string, shown: readonly Shown[]): void =>
+        void calls.push(`again ${id} ${shown.length}`),
+    },
+  };
 
-it('releases the clock of a Plugin the person turns off, and sets it again when they turn it on', () => {
-  const { refreshing, timers, tick, off, enabled } = refresh();
+  const hold = { ms: 1000, enabled: (): boolean => true };
 
-  refreshing.hold(['github'], every, enabled);
-  expect(timers.size).toBe(1);
+  refreshFor({ generation: (id) => generations.get(id) }, parts).hold(
+    ['github', 'tracker'],
+    hold,
+    list,
+  );
 
-  off.add('github');
-  refreshing.restarted('github');
-  expect(timers.size).toBe(0);
+  for (const fire of fires.values().toArray()) fire();
 
-  off.delete('github');
-  refreshing.restarted('github');
-  expect(timers.size).toBe(1);
-
-  // A tick that finds the Plugin turned off since does not set the clock again.
-  off.add('github');
-  tick();
-  expect(timers.size).toBe(0);
-});
-
-it('sets the timer afresh when the Plugin stops or starts, never keeping two', () => {
-  const { refreshing, timers, enabled } = refresh();
-
-  refreshing.hold(['github'], every, enabled);
-  refreshing.restarted('github');
-  refreshing.restarted('github');
-
-  expect(timers.size).toBe(1);
-});
-
-it('asks nothing once closed', () => {
-  const { refreshing, timers, enabled } = refresh();
-
-  refreshing.hold(['github'], every, enabled);
-  refreshing.close();
-
-  expect(timers.size).toBe(0);
+  expect(calls).toEqual([
+    'older github 900',
+    'again github 1',
+    'again tracker 1',
+  ]);
 });

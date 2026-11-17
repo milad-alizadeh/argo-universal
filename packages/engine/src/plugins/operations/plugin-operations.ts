@@ -2,6 +2,7 @@ import { Json } from '@repo/contracts/plugins/hook-protocol';
 import {
   operationLimitMs,
   type PluginOperationCall,
+  type PluginOperationTier,
 } from '@repo/contracts/plugins/plugin-operations';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import { failed, type Failure } from '../protocol/runtime-status';
@@ -24,6 +25,8 @@ type OperationEvent = Extract<PluginEvent, { type: 'operation' }>;
 type Request = Omit<OperationEvent, 'type' | 'id'> & {
   serverDevice?: boolean;
   secrets?: readonly string[];
+  // The tier its manifest declares; a `read` run writes nothing, so it is not heard. A run with none may write.
+  tier?: PluginOperationTier;
 };
 
 // What a run's `argo` calls reach: the Project it acts in and whether it was asked from the Server Device.
@@ -31,7 +34,12 @@ export type RunOrigin = { projectId?: string; serverDevice: boolean };
 
 const eventOf = (
   id: number,
-  { serverDevice: _serverDevice, secrets: _secrets, ...request }: Request,
+  {
+    serverDevice: _serverDevice,
+    secrets: _secrets,
+    tier: _tier,
+    ...request
+  }: Request,
 ): OperationEvent => ({ type: 'operation', id, ...request });
 
 export type Answer = { ok: true; result: Json } | Failure;
@@ -58,8 +66,8 @@ function answerOf(
 /*
  * The runtime side of a Plugin's own Operations (ADR-0044): one call per run, answered by the worker
  * generation it went to. A Plugin that is not running answers nothing, so the caller starts it first.
- * Every run is heard once it ends, whoever ran it and however it ended: a handler that wrote and then threw
- * leaves the Plugin's pages stale (ADR-0050).
+ * Every run but a read-tier one is heard once it ends, whoever ran it and however it ended: a handler that
+ * wrote and then threw leaves the Plugin's pages stale (ADR-0050, ADR-0056).
  */
 export class PluginOperations {
   private readonly calls: KindCalls<Request, PluginOperationCall, Answer>;
@@ -85,9 +93,16 @@ export class PluginOperations {
       this.scrubbed(await this.calls.call(pluginId, request)),
     );
 
-    for (const listener of this.ranListeners) listener(pluginId);
+    this.heard(pluginId, request.tier);
 
     return answer;
+  }
+
+  // A read-tier run wrote nothing, so no one hears of it.
+  private heard(pluginId: string, tier: PluginOperationTier | undefined): void {
+    if (tier === 'read') return;
+
+    for (const listener of this.ranListeners) listener(pluginId);
   }
 
   private scrubbed(answer: Answer): Answer {

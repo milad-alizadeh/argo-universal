@@ -4,19 +4,20 @@ import { PluginBackground } from '../data/plugin-background';
 import { PluginData } from '../data/plugin-data';
 import type { QueryServices } from '../data/query-types';
 import { PluginOperations } from '../operations';
-import { PageChanges, PluginDraws } from '../pages';
+import { PluginDraws } from '../pages';
 import type { PluginStatus } from '../protocol/runtime';
-import type { PluginServices } from '../services/plugin-services';
 import { PluginSlotItems } from '../slots/plugin-slot-items';
 import type { RuntimeCalls } from './calls';
+import { ChangeFlow } from './change-flow';
 import { PluginFailures } from './failures';
 import type { PluginLocation } from './plugin-location';
+import type { ResourceServices } from './resource-services';
 import { pluginIdentity } from './status';
 import { WorkerCalls, type WorkerTransport } from './worker-calls';
 
 // What the runtime's resources are built from: the Queries' services, with the whole of the Plugin services and the send to a worker.
 export type RuntimeInput = QueryServices &
-  Pick<WorkerTransport, 'send'> & { services: PluginServices };
+  Pick<WorkerTransport, 'send'> & { services: ResourceServices };
 
 export class RuntimeResources {
   readonly data;
@@ -26,7 +27,9 @@ export class RuntimeResources {
   readonly draws;
   // Hears each running worker's `argo.changed()` and Operations, and the addresses whose reads changed.
   readonly changes;
-  private readonly workers;
+  private readonly flow;
+  // The running workers, which the change flow and the Plugin's calls share.
+  readonly workers;
   private readonly identities = new Map<
     string,
     ReturnType<typeof pluginIdentity>
@@ -50,17 +53,11 @@ export class RuntimeResources {
       this.workers,
       input.services.heldSecrets,
     );
-    this.changes = this.pageChanges();
+    this.flow = new ChangeFlow(input, this);
+    this.changes = this.flow.changes;
     this.draws = this.pluginDraws(input);
     this.background = this.backgroundPasses(input);
     this.unwatch = this.watch(input);
-  }
-
-  // A write makes the Plugin's Queries due before its pages hear of it.
-  private pageChanges(): PageChanges {
-    return new PageChanges(this.workers, (pluginId): void =>
-      this.data.written(pluginId),
-    );
   }
 
   private pluginDraws(input: RuntimeInput): PluginDraws {
@@ -89,7 +86,7 @@ export class RuntimeResources {
     });
   }
 
-  // `argo.changed()` and every Operation run reach pages and items Slots alike.
+  // `argo.changed()` and every act-tier Operation run reach pages and items Slots alike.
   private watch(input: RuntimeInput): Array<() => void> {
     input.services.onStorageWrite((id) => this.data.storageWritten(id));
 
@@ -165,6 +162,7 @@ export class RuntimeResources {
 
   close(): void {
     for (const unwatch of this.unwatch) unwatch();
+    this.flow.close();
     this.background.close();
     this.failures.close();
     this.data.badges.close();

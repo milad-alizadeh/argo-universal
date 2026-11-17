@@ -28,11 +28,19 @@ export type Harness = {
   marks: PageAddress[][];
   answer: (value: WireJson, generation?: number) => Promise<void>;
   read: (drawn?: Partial<DrawnFor>, fresh?: boolean) => Promise<PluginReply>;
+  // A read from code outside a draw, such as a Slot's provider, of another Query than `read`.
+  slotRead: () => Promise<PluginReply>;
 };
 
 export const overview = {
   api: 'read',
   name: 'overview',
+  args: { projectId: 'p1' },
+} as const;
+
+const other = {
+  api: 'read',
+  name: 'other',
   args: { projectId: 'p1' },
 } as const;
 
@@ -95,6 +103,15 @@ const reading =
       { drawn: { draw: 1, ...drawn } },
     );
 
+const slotReading =
+  ({ data }: Wiring): Harness['slotRead'] =>
+  () =>
+    data.handle(
+      { pluginId, generation: 1 },
+      { api: 'data', action: 'read', query: other, fresh: false },
+      {},
+    );
+
 export function harness(): Harness {
   const wiring = wired();
   const { data, workers, marks, sent } = wiring;
@@ -106,6 +123,7 @@ export function harness(): Harness {
     reads: () => readsOf(sent),
     answer: answering(wiring),
     read: reading(wiring),
+    slotRead: slotReading(wiring),
   };
 }
 

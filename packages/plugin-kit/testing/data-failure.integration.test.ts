@@ -62,7 +62,7 @@ it('reports one drawing failure while other pages, Hooks and background passes k
     }),
   ).toEqual({ prompt });
   await kit.clock.advance(10000);
-  expect(await drawnText(kit, { path: '/' })).toBe('3');
+  await expect.poll(() => drawnText(kit, { path: '/' }), processWait).toBe('3');
   await kit.clock.advance(290000);
   await expect.poll(() => fixture.requests(), processWait).toHaveLength(4);
   await expect.poll(() => completed(kit), processWait).toBe(2);

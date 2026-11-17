@@ -52,7 +52,7 @@ function refreshing(
 
   return ms === undefined
     ? noRefresh
-    : slotItems.refresh.hold(pluginIds, ms, enabled);
+    : slotItems.refresh.hold(pluginIds, { ms, enabled }, input);
 }
 
 async function* merges(

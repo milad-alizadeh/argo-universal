@@ -37,7 +37,7 @@ export function draws(log: (line: string) => void = (): null => null): Draws {
   const send = (_: string, event: PluginEvent): number => sent.push(event);
   const workers = new WorkerCalls({ send, clock: idleClock });
   const failures = named();
-  const changes = new PageChanges(workers, written);
+  const changes = new PageChanges(workers, written, written);
 
   const pages = new PluginDraws({
     workers,
