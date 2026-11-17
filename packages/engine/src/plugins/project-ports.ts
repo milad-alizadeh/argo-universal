@@ -3,6 +3,7 @@ import type { PluginSessionInfo } from '@repo/contracts/plugins/argo-calls';
 import type { Database } from '@repo/db';
 import { readCurrentBranch } from '@repo/git';
 import {
+  readPluginProjectIds,
   readPluginProjects,
   readProjectPath,
   readProjectPaths,
@@ -18,12 +19,13 @@ export function projectPorts(
   options: ProjectSources,
 ): Pick<
   Parameters<typeof createPluginRuntime>[1],
-  'watchProjects' | 'projects' | 'projectInfo' | 'projectPath' | 'sessionInfo'
+  'watchProjects' | 'projects' | 'projectIds' | 'projectInfo' | 'projectPath' | 'sessionInfo'
 > {
   return {
     watchProjects: (changed) =>
       watchProjectChanges(options.database, changed, options.databaseWriter),
     projects: async () => readProjectPaths(options.database),
+    projectIds: async () => readPluginProjectIds(options.database),
     projectInfo: async () => readPluginProjects(options.database),
     projectPath: async (projectId) => pluginProjectPath(options, projectId),
     sessionInfo: async (sessionId) => pluginSession(options, sessionId),

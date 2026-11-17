@@ -38,5 +38,6 @@ const pluginServices = (
     log,
     assets: new PluginAssets(home),
     projects: async (): Promise<string[]> => [],
+    projectIds: async (): Promise<string[]> => [],
     projectInfo: async (): Promise<PluginProjectInfo[]> => [],
   });

@@ -101,8 +101,8 @@ export class PluginData {
 
   // The Projects Argo has registered; the call keeps its receiver.
   private readonly projects = (): ReturnType<
-    QueryServices['services']['projectInfo']
-  > => this.services.services.projectInfo();
+    QueryServices['services']['projectIds']
+  > => this.services.services.projectIds();
 
   private overtaken(pluginId: string): boolean {
     return [...this.entriesOf(pluginId).values()].some(
