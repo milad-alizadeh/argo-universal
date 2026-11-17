@@ -16,6 +16,7 @@ import {
   type Reply,
   type SlotWorker,
 } from './kept-items';
+import { LastGoodItems } from './last-good-items';
 import { SlotItemChanges } from './slot-item-changes';
 import { refreshFor, type SlotRefresh } from './slot-refresh';
 
@@ -47,6 +48,7 @@ function replyOf(outcome: CallOutcome<SlotCall>): Reply {
 export class PluginSlotItems {
   readonly changes = new SlotItemChanges();
   private readonly kept = new Map<string, SlotWorker>();
+  private readonly lastGood = new LastGoodItems();
   private readonly calls: KindCalls<SlotItemsInput, SlotCall, Reply>;
   // The clock of the lists that are open: one per Plugin, held for as long as an App has a list open (ADR-0052).
   readonly refresh: SlotRefresh;
@@ -74,13 +76,50 @@ export class PluginSlotItems {
 
   // The Plugin's items for every context of one list: kept ones, then one call for the rest.
   async items(pluginId: string, input: SlotItemsInput): Promise<ItemsAnswer> {
+    return this.lastGood.standIn(
+      pluginId,
+      input,
+      await this.answer(pluginId, input),
+    );
+  }
+
+  // A Plugin turned off or removed: open lists ask again and draw nothing it answered before.
+  forget(pluginId: string): void {
+    this.lastGood.forget(pluginId);
+    this.changes.bump();
+  }
+
+  private async answer(
+    pluginId: string,
+    input: SlotItemsInput,
+  ): Promise<ItemsAnswer> {
     const generation = this.workers.generation(pluginId);
 
     if (generation === undefined) return leftOut(itemsLeftOut.notRunning);
 
-    return keptAnswer(this.worker(pluginId, generation), input, (missing) =>
+    return this.workerAnswer(
+      pluginId,
+      this.worker(pluginId, generation),
+      input,
+    );
+  }
+
+  // An answer asked for before a change signal is never kept, so it never becomes the last good either.
+  private async workerAnswer(
+    pluginId: string,
+    worker: SlotWorker,
+    input: SlotItemsInput,
+  ): Promise<ItemsAnswer> {
+    const { epoch } = worker;
+
+    const answer = await keptAnswer(worker, input, (missing) =>
       this.calls.call(pluginId, missing),
     );
+
+    if (answer.ok && worker.epoch === epoch)
+      this.lastGood.record(pluginId, input, answer.items);
+
+    return answer;
   }
 
   private worker(pluginId: string, generation: number): SlotWorker {
@@ -115,6 +154,7 @@ export class PluginSlotItems {
 
   close(): void {
     this.kept.clear();
+    this.lastGood.clear();
     this.refresh.close();
     this.changes.close();
   }
