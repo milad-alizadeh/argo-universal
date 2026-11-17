@@ -8,13 +8,13 @@ import {
   type PluginEntry,
   usePluginEntries,
 } from '#features/plugins';
-import { pluginSymbol } from '../../../lib/product/plugin-symbol';
+import { manifestSymbol } from '../../../lib/product/plugin-symbol';
 import type { PluginRow, PluginsLoad } from './plugin-list-view';
 
 const toPluginRow = ({ manifest }: PluginEntry): PluginRow => ({
   pluginId: manifest.id,
   name: manifest.name,
-  icon: pluginSymbol(manifest.icon),
+  icon: manifestSymbol(manifest.icon),
 });
 
 export function usePluginsLoad(): PluginsLoad {

@@ -46,6 +46,16 @@ export const rejectedManifests = [
   },
   { folder: 'empty-icon', patch: { icon: {} }, reason: 'icon needs an sf' },
   {
+    folder: 'svg-icon-without-symbols',
+    patch: { icon: { svg: 'icon.svg' } },
+    reason: 'icon needs an sf or a material name',
+  },
+  {
+    folder: 'icon-outside-folder',
+    patch: { icon: { svg: '../icon.svg', sf: 'ticket' } },
+    reason: "icon.svg must be an .svg file inside the Plugin's folder",
+  },
+  {
     folder: 'argo-icon-name',
     patch: { icon: 'plug' },
     reason: 'expected object, received string',

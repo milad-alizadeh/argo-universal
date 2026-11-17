@@ -8,6 +8,7 @@ import {
   collapsedRail,
   expandedRail,
   manyPluginSectionsRail,
+  ownPluginIconRail,
   pluginBadgeRail,
 } from './frame-rail-fixtures';
 
@@ -59,6 +60,9 @@ export const ManyPluginSections: Story = {
   args: manyPluginSectionsRail,
   decorators: [railColumn('h-64 flex-row bg-hover')],
 };
+
+// A Plugin's own SVG icon draws outlined in the tile's tint, as Argo's symbols do, and takes the edge marker when open.
+export const OwnPluginIcon: Story = { args: ownPluginIconRail };
 
 // A Plugin's `argo.nav.badge` count rides its tile's corner, capped at 99+.
 export const PluginBadges: Story = { args: pluginBadgeRail };
