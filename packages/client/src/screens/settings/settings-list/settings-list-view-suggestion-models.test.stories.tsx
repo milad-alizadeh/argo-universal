@@ -4,6 +4,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn, within } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { SettingsListView } from './settings-list-view';
 import { readySettings } from './settings-list-view-fixtures';
 
@@ -61,20 +62,21 @@ type PlayContext = Parameters<NonNullable<Story['play']>>[0];
 async function openPicker({
   canvas,
   canvasElement,
-  userEvent,
 }: PlayContext): Promise<HTMLElement> {
-  await userEvent.click(
-    canvas.getByRole('button', { name: new RegExp(`^${second.name}`) }),
-  );
+  await page
+    .elementLocator(
+      canvas.getByRole('button', { name: new RegExp(`^${second.name}`) }),
+    )
+    .click();
   const body = within(canvasElement.ownerDocument.body);
   const row = await body.findByRole('option', { name: model.name });
-  // The last model can sit below the fold of the phone-width popup, where nobody can point at it and settleOverlays would wait for ever.
-  row.scrollIntoView({ block: 'nearest' });
-  // The popup fades in, and toBeVisible reads its opacity, so assert only once the entrance has ended.
-  await settleOverlays(row);
+  await settleOverlays();
   await expect(
     body.getByRole('option', { name: 'Same as Session' }),
   ).toBeVisible();
+  // Check the first option before scrolling the last model into view.
+  row.scrollIntoView({ block: 'nearest' });
+  await settleOverlays(row);
 
   return row;
 }
@@ -87,7 +89,7 @@ const choosesAModel = (width: number): Story => ({
     for (const agent of agents)
       await expect(agentRow(context.canvas, agent.name)).toBeVisible();
 
-    await context.userEvent.click(await openPicker(context));
+    await page.elementLocator(await openPicker(context)).click();
     await expect(onSuggestionModelChange).toHaveBeenLastCalledWith(second.id, {
       type: 'model',
       value: model.value,

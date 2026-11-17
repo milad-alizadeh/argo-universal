@@ -532,6 +532,10 @@ _Avoid_: Group (when naming a List section)
 How one List draws, resolved once from the platform, its appearance and where it sits (a popover, a sidebar): its insets, its headings and footers, whether rows are separated, and whether the web draws its grouped sections as cards or a phone draws them as corners. Every part of the List reads it; none asks the platform itself.
 _Avoid_: Theme, style
 
+**Diagram**:
+A ` ```mermaid ` fence in Markdown, drawn in Argo's colours instead of shown as code, with a switch to its code. Agents check one with `diagram.validate` before sending it (ADR-0058).
+_Avoid_: Chart (a Plugin's `Chart` draws data), graph
+
 **Density**:
 How tightly a List or a Card draws its content: `regular` or `compact`. A compact List draws each row as one line on a wide desktop or web window; phones and narrow windows always draw regular rows.
 _Avoid_: Size, dense, condensed

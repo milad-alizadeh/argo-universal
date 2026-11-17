@@ -15,3 +15,9 @@ export { DiffScroll } from './diff-hunks';
 export { syntaxRuns } from './code-highlight/syntax-runs';
 
 export { type SyntaxRun, syntaxRunsText } from '../../../code-text/syntax-run';
+
+export { CodeBlockBody } from './code-block-body';
+
+export { CodeBlockHeader } from './code-block-header';
+
+export { codeBlockGroup } from './copy-button';
