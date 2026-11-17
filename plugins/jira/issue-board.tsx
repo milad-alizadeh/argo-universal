@@ -3,6 +3,7 @@ import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { boardColumns, boardLabel, movesOf } from './board-columns';
 import type { JiraStatus } from './issue-fields';
 import { isFailure } from './issue-pages';
+import { activeFilters } from './jira-filters';
 import { issuePath } from './jira-paths';
 import type { JiraIssue, JiraPerson } from './jira-readers';
 import type { IssuesTo, Listing } from './view-frame';
@@ -106,17 +107,24 @@ const issuesIn = ({ list }: Listing): JiraIssue[] =>
   list.items.flatMap((item) => (isFailure(item) ? [] : [item]));
 
 /*
+ * With no issue, the list's empty state says why: filters that match nothing, with Clear filters, or a project with
+ * neither issues nor statuses. An empty project with statuses still draws them as empty columns.
+ */
+const listSaysWhy = (listing: Listing, issues: JiraIssue[]): boolean =>
+  issues.length === 0 &&
+  (listing.statuses.length === 0 || activeFilters(listing.filters) > 0);
+
+/*
  * The issues the filters leave as a board, when the switch asks for one, whose columns are the project's statuses even
- * before it has an issue; null for the list, or when there is neither an issue nor a status to draw.
+ * before it has an issue; null for the list, or when the list's empty state should say why there are no cards.
  */
 export function boardOf(
   { projectId }: { projectId: string },
   listing: Listing,
 ): JSX.Element | null {
   const issues = issuesIn(listing);
-  const empty = issues.length + listing.statuses.length === 0;
 
-  if (viewOf(listing) !== 'board' || empty) return null;
+  if (viewOf(listing) !== 'board' || listSaysWhy(listing, issues)) return null;
 
   return issueBoard({ projectId, to: listing.to }, issues, listing.statuses);
 }
