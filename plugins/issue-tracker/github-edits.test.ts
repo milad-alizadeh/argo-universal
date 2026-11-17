@@ -1,0 +1,160 @@
+import { expect, it } from 'vitest';
+import { SignInRequired } from './github-api';
+import type { Sent } from './tracker-answering';
+import { bodyOf, reply, trackerAnswering } from './tracker-answering';
+
+const calls = (sent: Sent[]): string[] =>
+  sent.map(
+    ({ url, init }) =>
+      `${init?.method} ${url.replace('https://api.github.com/repos/owner/repository', '')}`,
+  );
+
+// GitHub answers each of the two lists with an array.
+const listReply = (): NonNullable<Parameters<typeof trackerAnswering>[0]> => {
+  const text = JSON.stringify([{ name: 'bug', color: 'd73a4a', login: 'ada' }]);
+
+  return {
+    ok: true,
+    status: 200,
+    statusText: '',
+    headers: {},
+    body: text,
+    truncated: false,
+    text: () => Promise.resolve(text),
+    json: () => Promise.resolve({}),
+  };
+};
+
+it('reads the repository labels in their own colours, and the people an Issue can be assigned to', async () => {
+  const { sent, tracker } = trackerAnswering(listReply());
+
+  const choices = await tracker.choices();
+
+  expect(choices.labels).toEqual([{ name: 'bug', color: '#d73a4a' }]);
+  expect(choices.assignees).toEqual(['ada']);
+  expect(calls(sent)).toEqual([
+    'GET /labels?per_page=100&page=1',
+    'GET /assignees?per_page=100&page=1',
+  ]);
+});
+
+it.each([
+  [{ kind: 'label', name: 'bug', on: true }, ['POST /issues/7/labels']],
+  [
+    { kind: 'label', name: 'good first', on: false },
+    ['DELETE /issues/7/labels/good%20first'],
+  ],
+  [{ kind: 'assignee', login: 'ada', on: true }, ['POST /issues/7/assignees']],
+  [
+    { kind: 'assignee', login: 'ada', on: false },
+    ['DELETE /issues/7/assignees'],
+  ],
+  [
+    { kind: 'new-label', name: 'needs-design' },
+    ['POST /labels', 'POST /issues/7/labels'],
+  ],
+] as const)(
+  'sends %j as the calls GitHub takes for it',
+  async (edit, expected) => {
+    const { sent, tracker } = trackerAnswering(reply(200, {}));
+
+    await tracker.edit(7, edit);
+
+    expect(calls(sent)).toEqual(expected);
+  },
+);
+
+it.each([
+  ['open', { state: 'open', state_reason: 'reopened' }],
+  ['closed', { state: 'closed', state_reason: 'completed' }],
+] as const)(
+  'sets an Issue %s with one PATCH of its state',
+  async (status, body) => {
+    const { sent, tracker } = trackerAnswering(reply(200, {}));
+
+    await tracker.edit(7, { kind: 'status', status });
+
+    expect(calls(sent)).toEqual(['PATCH /issues/7']);
+    expect(sent[0]).toMatchObject({
+      init: {
+        headers: {
+          accept: 'application/vnd.github+json',
+          'content-type': 'application/json',
+        },
+      },
+    });
+    expect(bodyOf(sent)).toEqual(body);
+  },
+);
+
+it("ends a status change with GitHub's own reason when it refuses", async () => {
+  const { tracker } = trackerAnswering(
+    reply(422, { message: 'Could not close the issue.' }),
+  );
+
+  await expect(
+    tracker.edit(7, { kind: 'status', status: 'closed' }),
+  ).rejects.toThrow('Could not close the issue.');
+});
+
+it.each([
+  [null, 'Sign in to GitHub.'],
+  [reply(401, { message: 'Bad' }), 'GitHub no longer accepts this sign-in.'],
+] as const)(
+  'asks to sign in when a status change gets no Account or a rejected token',
+  async (answer, message) => {
+    const { tracker } = trackerAnswering(answer);
+    const asked = tracker.edit(7, { kind: 'status', status: 'closed' });
+
+    await expect(asked).rejects.toBeInstanceOf(SignInRequired);
+    await expect(asked).rejects.toThrow(message);
+  },
+);
+
+it('does not read the body of a status change GitHub accepted', async () => {
+  const { tracker } = trackerAnswering({
+    ...listReply(),
+    text: () => Promise.reject(new Error('unread')),
+  });
+
+  await expect(
+    tracker.edit(7, { kind: 'status', status: 'closed' }),
+  ).resolves.toBeUndefined();
+});
+
+it.each([0, -1, 1.5])(
+  'refuses Issue number %s for a status change',
+  async (number) => {
+    const { sent, tracker } = trackerAnswering(reply(200, {}));
+
+    await expect(
+      tracker.edit(number, { kind: 'status', status: 'open' }),
+    ).rejects.toThrow('Issue number must be a positive integer.');
+    expect(sent).toHaveLength(0);
+  },
+);
+
+it("ends an edit with GitHub's own reason when it refuses", async () => {
+  const { sent, tracker } = trackerAnswering(
+    reply(422, { message: 'Label already exists.' }),
+  );
+
+  await expect(
+    tracker.edit(7, { kind: 'new-label', name: 'bug' }),
+  ).rejects.toThrow('Label already exists.');
+  expect(sent).toHaveLength(1);
+});
+
+it.each([[{ name: 'bug' }], [{ color: 'd73a4a' }]])(
+  'refuses an entry GitHub sends without a name or login: %j',
+  async (entry) => {
+    const text = JSON.stringify([entry]);
+
+    const { tracker } = trackerAnswering({
+      ...listReply(),
+      text: () => Promise.resolve(text),
+    });
+
+    await expect(tracker.choices()).rejects.toThrow(/invalid/u);
+  },
+);

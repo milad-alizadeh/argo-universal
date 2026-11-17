@@ -1,6 +1,8 @@
 import { z } from 'zod';
+import { tones } from '../kit-tokens';
 import {
   fieldGroupDatePickerProps,
+  fieldGroupPickerEvents,
   fieldGroupPickerProps,
 } from './field-group-choice-props';
 import {
@@ -93,6 +95,12 @@ const fieldGroupSliderProps = fieldGroupFieldProps.extend({
 
 const fieldGroupValueProps = fieldGroupRowProps.extend({
   value: z.string().describe('The read-only value at the row’s end.'),
+  dot: z
+    .enum(tones)
+    .optional()
+    .describe(
+      'A state dot before the value in the tone’s colour, as a status reads; the value’s words stay muted.',
+    ),
   loading: z
     .boolean()
     .optional()
@@ -140,12 +148,7 @@ export const fieldGroupKitComponents = {
   },
   'FieldGroup.Picker': {
     props: fieldGroupPickerProps,
-    events: {
-      // A multiple Picker echoes its whole list and stays open, so a toggle never locks it.
-      onValueChange: echoes(fieldGroupPickerProps, 'value', { blocks: false }),
-      // The footer action's press, inside the action data.
-      onPress: z.undefined().meta({ within: 'footerAction' }),
-    },
+    events: fieldGroupPickerEvents,
   },
   'FieldGroup.Slider': {
     props: fieldGroupSliderProps,

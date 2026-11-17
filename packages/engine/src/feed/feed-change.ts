@@ -37,12 +37,13 @@ const userMessageId = (turnId: string): string => `${turnId}:user`;
 export const userMessageChange = (
   turnId: string,
   content: ContentBlock[],
+  messageId = userMessageId(turnId),
 ): FeedUpsert => ({
   type: 'upsert',
   update: {
-    id: userMessageId(turnId),
+    id: messageId,
     sessionUpdate: 'user_message',
-    messageId: userMessageId(turnId),
+    messageId,
     state: 'settled',
     content,
     _meta: { argo: { sender: { type: 'user' } } },

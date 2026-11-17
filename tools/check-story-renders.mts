@@ -18,6 +18,7 @@ import {
   type FixturePair,
   type StoryRender,
 } from './story-render-rules.mts';
+import { parseShard, shardByWeight } from './story-render-shard.mts';
 import { root } from './tracked-files.mts';
 
 type PlannedFile = { file: string; pairs: FixturePair[] };
@@ -39,10 +40,20 @@ const presentationFiles = (): StoryFile[] =>
     ({ file }): boolean => !testStory.test(file),
   );
 
-const planFor = (story: StoryFile): PlannedFile[] =>
-  readStory(story).exports.length < 2
-    ? []
-    : [{ file: story.file, pairs: fixturePairs(story) }];
+/* What a file costs in the browser: each story is drawn once and each candidate pair twice more. */
+type Weighted = PlannedFile & { weight: number };
+
+const planFor = (story: StoryFile): Weighted[] => {
+  const { exports } = readStory(story);
+
+  if (exports.length < 2) return [];
+
+  const pairs = fixturePairs(story);
+
+  return [
+    { file: story.file, pairs, weight: exports.length + 2 * pairs.length },
+  ];
+};
 
 const runStorybookProject = (): void => {
   execFileSync(
@@ -65,12 +76,36 @@ const report = (problems: readonly string[], files: number): number => {
   return problems.length > 0 ? 1 : 0;
 };
 
-/* An argument narrows the plan to the files whose path contains it, for trying one gate by hand. */
-const only = process.argv[2] ?? '';
+/*
+ * A path fragment narrows the plan to the files whose path contains it, for trying one gate by hand.
+ * `--shard=2/4` keeps that runner's share of the plan; both gates judge one file against itself, so
+ * the shards need no merge and each judges its own drawings.
+ */
+const args = process.argv.slice(2);
 
-const files = presentationFiles()
+const only = args.find((arg): boolean => !arg.startsWith('--')) ?? '';
+
+const shardArg = args.find((arg): boolean => arg.startsWith('--shard='));
+
+const shard =
+  shardArg === undefined
+    ? undefined
+    : parseShard(shardArg.slice('--shard='.length));
+
+if (shardArg !== undefined && shard === undefined) {
+  console.error(`check-story-renders: ${shardArg} is not --shard=<n>/<total>.`);
+  process.exit(2);
+}
+
+const planned = presentationFiles()
   .filter(({ file }): boolean => file.includes(only))
   .flatMap(planFor);
+
+const files: PlannedFile[] = (
+  shard === undefined
+    ? planned
+    : shardByWeight(planned, ({ weight }): number => weight, shard)
+).map(({ file, pairs }): PlannedFile => ({ file, pairs }));
 
 const release = await lockBrowserSuite();
 

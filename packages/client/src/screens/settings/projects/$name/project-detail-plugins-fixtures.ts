@@ -1,8 +1,8 @@
 import type { ProjectInfo } from '@repo/contracts';
 import type { ProjectDetailsItem } from '@repo/contracts/plugins/wire';
 import { iconSymbols } from '@repo/kit/symbols/icon-names';
+import type { ReadItem } from '#features/plugins';
 import { worktreeProject } from '../../../../features/settings/components/settings-pages.mocks';
-import type { ReadItem } from '../../../plugins/slot-items';
 
 const read = (
   pluginId: string,

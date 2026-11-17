@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { List, NativeGroupedList } from '#primitives/lists/list';
+import { createSection } from './field-picker-create';
 import { OptionRow } from './field-picker-inline-row';
 import { optionSections, type OptionSection } from './field-picker-model';
 import type { FieldPickerScreenProps } from './field-picker-screen';
@@ -13,8 +14,11 @@ import { screenEmpty } from './field-picker-screen-parts';
 export function ScreenRows(props: FieldPickerScreenProps): ReactElement {
   return (
     <NativeGroupedList empty={screenEmpty(props)}>
-      {optionSections(props.shown ?? props.options).map((section) =>
-        screenSection(props, section),
+      {withCreate(
+        optionSections(props.shown ?? props.options).map((section) =>
+          screenSection(props, section),
+        ),
+        createSection(props),
       )}
     </NativeGroupedList>
   );
@@ -36,3 +40,8 @@ function screenSection(
     </List.Section>
   );
 }
+
+const withCreate = (
+  sections: ReactElement[],
+  create: ReactElement | null,
+): ReactElement[] => (create ? [...sections, create] : sections);

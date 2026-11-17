@@ -24,7 +24,6 @@ export class PluginRuntime {
   readonly items: RuntimeResources['items'];
   readonly operations: RuntimeResources['operations'];
   readonly draws: RuntimeResources['draws'];
-  readonly background: RuntimeResources['background'];
   private readonly plugins: RuntimePlugins;
   private readonly resources: RuntimeResources;
   private readonly host: HostConnection;
@@ -34,6 +33,7 @@ export class PluginRuntime {
     private readonly log: (line: string) => void,
     readonly services: PluginServices,
     clock: PluginClock = realClock,
+    private readonly rebuilt: () => void = () => undefined,
   ) {
     this.host = new HostConnection(this.callbacks());
     this.connectAccounts();
@@ -41,7 +41,7 @@ export class PluginRuntime {
     this.hooks = hostHooks(this.host, this.log, clock);
     this.resources = new RuntimeResources(this.resourceInput());
     ({ data: this.data } = this.resources);
-    ({ items: this.items, background: this.background } = this.resources);
+    ({ items: this.items } = this.resources);
     ({ operations: this.operations, draws: this.draws } = this.resources);
     this.plugins = new RuntimePlugins(this.pluginInput());
   }
@@ -72,6 +72,7 @@ export class PluginRuntime {
       clockStart: () => this.testControl.workerStart(),
       resources: this.resources,
       log: this.log,
+      rebuilt: this.rebuilt,
     };
   }
 

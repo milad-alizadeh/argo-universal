@@ -7,6 +7,7 @@ import {
   answeredElicitation,
   choiceFieldsElicitation,
   formFieldsElicitation,
+  longQuestionElicitation,
   multipleChoiceElicitation,
   severalQuestionsElicitation,
   singleChoiceElicitation,
@@ -75,3 +76,5 @@ export const ChoiceFields: Story = { args: choiceFieldsElicitation };
 export const Submitting: Story = { args: submittingElicitation };
 
 export const AlreadyAnswered: Story = { args: answeredElicitation };
+
+export const LongQuestion: Story = { args: longQuestionElicitation };

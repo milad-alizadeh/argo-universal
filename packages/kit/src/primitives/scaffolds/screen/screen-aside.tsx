@@ -12,9 +12,9 @@ import {
   useClaimLead,
   useLeadClaimed,
 } from '#kit/content-column/content-column';
+import { ListPlaceContext } from '#kit/list-place';
 import { useWide } from '#kit/use-wide/use-wide';
 import { ScrollFadeView } from '../../../scroll-fade/scroll-fade';
-import { MetadataPlaceContext } from '../metadata/metadata-drawing-context';
 import {
   type AsideLayout,
   type AsidePlace,
@@ -25,11 +25,11 @@ import {
 import { insetWidth, ScreenColumn, useColumnTokens } from './screen-column';
 import type { ScreenProps } from './screen-props';
 
-// The aside's Pills, for the content that scrolls to draw at its top; null when the aside has its own column.
+// The aside's rows, for the content that scrolls to draw at its top; null when the aside has its own column.
 const AsideLeadContext = createContext<ReactNode>(null);
 
 /*
- * Content that scrolls, a Detail, draws the aside's Pills at its top, so they scroll away with it as the page's first
+ * Content that scrolls, a Detail, draws the aside's rows at its top, so they scroll away with it as the page's first
  * lines. It claims them, and the Screen then draws no strip of its own.
  */
 export function useAsideLead(): ReactNode {
@@ -54,7 +54,7 @@ let lastScreenWidth = 0;
 
 /*
  * Where the aside draws, and where the column sits beside it, from the Screen's own measured width. A page with no
- * reading column to stand beside, `full` or `bleed`, has no gutter, so its aside is always Pills.
+ * reading column to stand beside, `full` or `bleed`, has no gutter, so its aside always leads the body.
  */
 export function useAsideFrame(screenWidth: ScreenProps['width']): AsideFrame {
   const [width, setWidth] = useState(lastScreenWidth);
@@ -87,7 +87,7 @@ function useAsideRoom(
   };
 }
 
-// The medium Size class threshold; 0 where the token is missing, so Pills keep their words.
+// The medium Size class threshold; 0 where the token is missing.
 function useMediumWidth(): number {
   const medium = Number.parseFloat(
     String(useCSSVariable('--breakpoint-medium')),
@@ -101,7 +101,7 @@ type AsideProps = Pick<ScreenProps, 'aside' | 'width'> & {
   children: ReactNode;
 };
 
-// The Screen's aside, handed to the Metadata it holds with where it draws.
+// The Screen's aside: its own column when the Screen has room, else the lead above the body.
 export function ScreenAside(props: AsideProps): ReactElement {
   const lead = leadOf(props);
 
@@ -118,12 +118,22 @@ export function ScreenAside(props: AsideProps): ReactElement {
 function leadOf({ aside, place }: AsideProps): ReactNode {
   if (!aside || place === 'aside') return null;
 
-  return <MetadataPlaceContext value={place}>{aside}</MetadataPlaceContext>;
+  return <AsidePlace>{aside}</AsidePlace>;
+}
+
+// The page's properties, read as one group, where a FieldGroup sizes to its rows.
+function AsidePlace({ children }: { children: ReactNode }): ReactElement {
+  return (
+    <View role="group" aria-label="Properties">
+      <ListPlaceContext value="aside">{children}</ListPlaceContext>
+    </View>
+  );
 }
 
 /*
  * The aside's own column at the trailing edge, beside the reading column that leaves it room, from the top of the
- * Screen. It scrolls on its own, so a long list of values stays in reach while the content scrolls.
+ * Screen. It scrolls on its own, so a long list of values stays in reach while the content scrolls; the FieldGroup it
+ * holds sizes to its rows and scrolls with it.
  */
 function AsideColumn(props: {
   place: AsidePlace;
@@ -148,15 +158,13 @@ function AsideScroll(props: {
   return (
     <OutsideColumn>
       <ScrollFadeView contentContainerClassName="py-6">
-        <MetadataPlaceContext value={props.place}>
-          {props.children}
-        </MetadataPlaceContext>
+        <AsidePlace>{props.children}</AsidePlace>
       </ScrollFadeView>
     </OutsideColumn>
   );
 }
 
-// Content that scrolls none of its own leaves the aside's Pills to the Screen, between its heading and its body.
+// Content that scrolls none of its own leaves the aside's rows to the Screen, between its heading and its body.
 export function ScreenLead({ width }: Pick<ScreenProps, 'width'>): ReactNode {
   const lead = use(AsideLeadContext);
   const shown = !useLeadClaimed() && lead !== null;

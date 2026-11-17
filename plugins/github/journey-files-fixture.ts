@@ -1,5 +1,6 @@
 import type { PluginTest } from '@argo/plugin-kit/testing';
-import type { FixtureFile, GitHubFixture } from './github-fixture';
+import type { GitHubFixture } from './github-fixture';
+import type { FixtureFile } from './github-fixture-types';
 import { caller, type Caller, type Journey } from './journey-fixture';
 
 type OperationAnswer = Awaited<ReturnType<PluginTest['operations']['run']>>;

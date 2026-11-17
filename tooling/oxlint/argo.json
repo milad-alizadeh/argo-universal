@@ -294,7 +294,10 @@
     },
     {
       // Tracker label colours as GitHub sends them: a Plugin's data, which the Pill reads for its text and fill.
-      "files": ["packages/kit/src/primitives/status/pill/pill-fixtures.ts"],
+      "files": [
+        "packages/kit/src/primitives/status/pill/pill-fixtures.ts",
+        "packages/kit/src/primitives/scaffolds/metadata/metadata-editable-fixtures.ts"
+      ],
       "rules": { "argo/style-tokens": "off" }
     },
     {
@@ -973,7 +976,8 @@
                   "!@repo/uniwind/**",
                   "!@repo/contracts/kit-tokens",
                   "!@repo/contracts/kit-symbols",
-                  "!@repo/contracts/kit-moves"
+                  "!@repo/contracts/kit-moves",
+                  "!@repo/contracts/kit-diagram"
                 ],
                 "message": "The UI kit cannot import feature or domain packages (A2)."
               }

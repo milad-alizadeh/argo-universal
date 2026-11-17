@@ -2,6 +2,7 @@ import { existsSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { project, session } from '@repo/db/schema';
+import { sessionBranch, worktreeName } from '@repo/git';
 import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { eq } from 'drizzle-orm';
 import { afterEach, expect, it } from 'vitest';
@@ -39,9 +40,13 @@ function checkoutExpectations(
   return type === 'main'
     ? { branch: 'main', commit: 'Initial', path: directory }
     : {
-        branch: 'argo/new-session',
+        branch: sessionBranch(newSessionId),
         commit: 'Feature',
-        path: join(directory, '.argo/worktrees/project-1/new-session'),
+        path: join(
+          directory,
+          '.argo/worktrees/project-1',
+          worktreeName(newSessionId),
+        ),
       };
 }
 

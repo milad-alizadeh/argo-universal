@@ -72,7 +72,7 @@ it('searches the repository newest first and maps the Issues', async () => {
 it('closes an Issue as the signed-in person, and says GitHub’s own words when it refuses', async () => {
   const done = trackerAnswering(reply(200, { number: 8 }));
 
-  await done.tracker.setStatus(8, 'closed');
+  await done.tracker.edit(8, { kind: 'status', status: 'closed' });
   expect(done.sent[0]).toMatchObject({
     url: 'https://api.github.com/repos/owner/repository/issues/8',
     init: { method: 'PATCH', account: githubHost, projectId: 'project-1' },
@@ -86,9 +86,9 @@ it('closes an Issue as the signed-in person, and says GitHub’s own words when 
     reply(422, { message: 'Could not close the issue.' }),
   );
 
-  await expect(refused.tracker.setStatus(8, 'closed')).rejects.toThrow(
-    'Could not close the issue.',
-  );
+  await expect(
+    refused.tracker.edit(8, { kind: 'status', status: 'closed' }),
+  ).rejects.toThrow('Could not close the issue.');
 });
 
 it('leaves a filter without a count when GitHub does not report it, and rejects a label list it does not send', async () => {
@@ -125,4 +125,20 @@ it('skips a search node that is no Issue, and rejects a node with some of an Iss
   await expect(malformed.tracker.listIssues('is:open', 30)).rejects.toThrow(
     'GitHub returned an invalid Issue.',
   );
+});
+
+it('reads several Issues in one call, each under its own alias, and leaves out one GitHub no longer has', async () => {
+  const { sent, tracker } = trackerAnswering(
+    reply(200, {
+      data: { repository: { issue8: issueNode(), issue9: null } },
+      errors: [{ message: 'Could not resolve to an Issue.' }],
+    }),
+  );
+
+  const issues = await tracker.getIssues([8, 9]);
+
+  expect(issues.map(({ number }) => number)).toEqual([8]);
+  expect(sent).toHaveLength(1);
+  expect(JSON.stringify(sent)).toContain('issue8: issue(number: 8)');
+  expect(JSON.stringify(sent)).toContain('issue9: issue(number: 9)');
 });

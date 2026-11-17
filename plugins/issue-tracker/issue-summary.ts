@@ -1,26 +1,24 @@
-import type { Issue } from './github-issues';
-import { unwrap } from './github-reads';
-import type { IssueDeps } from './issue-deps';
-import type { IssueLink, TrackerStorage } from './tracker-storage';
+import {
+  keyOf,
+  readTogether,
+  storedSummary,
+  type Cached,
+  type IssueSummary,
+  type Read,
+  type Source,
+  type Target,
+  type Together,
+} from './issue-summary-reads';
 
-// What a Session row and the Session bar say about an Issue: its state, and its title for a tooltip.
-export type IssueSummary = Pick<Issue, 'title' | 'status' | 'closedAs'>;
+export type { IssueSummary } from './issue-summary-reads';
 
-type Source = Pick<
-  IssueDeps,
-  'storage' | 'trackers' | 'listProjects' | 'reads' | 'readQuery'
->;
-
-type Target = Pick<IssueLink, 'projectId' | 'number'>;
-
-// A Session list asks again whenever a Session changes; one Issue is not fetched twice inside this.
+// A Session list asks again whenever a Session changes; one Issue is not read twice inside this.
 const freshForMs = 60_000;
 
 export type IssueSummaries = {
-  // The last summary this Plugin stored for the Issue; `null` until one has loaded.
-  cached: (target: Target) => Promise<IssueSummary | null>;
-  // The Issue's summary for a Slot: the stored one, refreshed in the background, or else one read now within the budget.
-  answer: (target: Target) => Promise<IssueSummary | null>;
+  cached: Cached;
+  // Each Issue's summary for a Slot, in the order asked: the stored one, refreshed in the background, or else one read now within the budget.
+  answer: (targets: readonly Target[]) => Promise<(IssueSummary | null)[]>;
   // The Issue's state changed, so the next ask loads it again whatever its age.
   stale: (number: number) => void;
   refresh: (
@@ -31,24 +29,16 @@ export type IssueSummaries = {
 
 type Loads = {
   loadedAt: Map<string, number>;
-  load: (target: Target) => Promise<void>;
+  // Reads these Issues and answers the ones that could not be read.
+  load: (targets: readonly Target[]) => Promise<Target[]>;
 };
 
-// A summary lives in the Plugin's view cache under the Issue's number.
-type CacheKey = Pick<Target, 'projectId'> & { view: string };
-
-const keyOf = ({ projectId, number }: Target): string =>
-  `${projectId}#${number}`;
-
-const cacheKey = ({ projectId, number }: Target): CacheKey => ({
-  projectId,
-  view: `issue-summary-${number}`,
-});
+type First = { together: Together; cached: Cached; changed: () => void };
 
 /*
  * The batched Slot call answers inside two seconds, and a Tracker call can take longer, so the Slots answer from the
- * stored summary and load a fresh one on the side. A summary that differs is stored and `changed` is called, which
- * asks the Slots again.
+ * stored summary and load fresh ones on the side, all of a Project's in one Tracker call. A summary that differs is
+ * stored and `changed` is called, which asks the Slots again.
  */
 export function createIssueSummaries(
   source: Source,
@@ -56,112 +46,111 @@ export function createIssueSummaries(
 ): IssueSummaries {
   const loadedAt = new Map<string, number>();
   const cached = storedSummary(source.storage);
-  const loads = { loadedAt, load: loadSummary(source, cached, changed) };
-  const first = { source, cached, changed };
+  const first = { together: readTogether(source, cached), cached, changed };
+  const loads = { loadedAt, load: loadSummaries(first) };
 
   return {
     cached,
-    answer: (target) => answering(loads, first, target),
+    answer: (targets) => answering(loads, first, targets),
     stale: (number) => forget(loadedAt, number),
-    refresh: refreshSummaries(first),
+    refresh: refreshSummaries(source, first),
   };
 }
 
-const refreshSummaries =
-  ({ source, cached, changed }: First): IssueSummaries['refresh'] =>
-  async (targets, readQuery) => {
-    const refreshed = await Promise.all(
-      targets.map((target) =>
-        readAndStore({ ...source, readQuery }, cached, target)
-          .then(({ differs }) => differs)
-          .catch(() => false),
-      ),
-    );
+const differs = (reads: readonly (Read | null)[]): boolean =>
+  reads.some((read) => read?.differs);
 
-    if (refreshed.includes(true)) changed();
+// A page's refresh reads through the page's own `read`, so the page is drawn again when an answer moves.
+const refreshSummaries =
+  (source: Source, { cached, changed }: First): IssueSummaries['refresh'] =>
+  async (targets, readQuery) => {
+    const together = readTogether({ ...source, readQuery }, cached);
+
+    if (differs(await together(targets))) changed();
   };
 
-type First = {
-  source: Source;
-  cached: IssueSummaries['cached'];
-  changed: () => void;
-};
+type Stored = readonly (IssueSummary | null)[];
 
-// The stored summary, refreshed on the side, or else one read now.
+// The Issues with a stored summary, or those without one.
+const whereStored = (
+  targets: readonly Target[],
+  stored: Stored,
+  wanted: boolean,
+): Target[] =>
+  targets.filter((_target, index) => Boolean(stored[index]) === wanted);
+
+// The stored summaries, refreshed on the side, and one read now for each Issue not stored yet.
 async function answering(
   loads: Loads,
   first: First,
-  target: Target,
-): Promise<IssueSummary | null> {
-  const stored = await first.cached(target);
+  targets: readonly Target[],
+): Promise<(IssueSummary | null)[]> {
+  const stored = await Promise.all(targets.map(first.cached));
 
-  if (!stored) return firstSummary(first, target);
+  refreshDue(loads, whereStored(targets, stored, true));
 
-  refreshAll(loads, [target]);
+  const read = await firstSummaries(first, whereStored(targets, stored, false));
 
-  return stored;
+  return targets.map(
+    (target, index) => stored[index] ?? read.get(keyOf(target)) ?? null,
+  );
 }
 
-const storedSummary =
-  (storage: TrackerStorage): IssueSummaries['cached'] =>
-  (target) =>
-    storage.readCache<IssueSummary>(cacheKey(target)).catch(() => null);
+const loadSummaries =
+  ({ together, changed }: First): Loads['load'] =>
+  async (targets) => {
+    const reads = await together(targets);
 
-type Read = { summary: IssueSummary; differs: boolean };
+    if (differs(reads)) changed();
 
-// Reads the summary through the Issue's Query and stores it when it differs from the stored one.
-async function readAndStore(
-  source: Source,
-  cached: IssueSummaries['cached'],
-  target: Target,
-): Promise<Read> {
-  const summary = await summaryOf(source, target);
-
-  const differs =
-    JSON.stringify(summary) !== JSON.stringify(await cached(target));
-
-  if (differs) await source.storage.writeCache(cacheKey(target), summary);
-
-  return { summary, differs };
-}
-
-function loadSummary(
-  source: Source,
-  cached: IssueSummaries['cached'],
-  changed: () => void,
-): Loads['load'] {
-  return async (target) => {
-    if ((await readAndStore(source, cached, target)).differs) changed();
+    return targets.filter((_target, index) => !reads[index]);
   };
-}
 
-// How long a Slot's first answer waits for the Issue before it answers without it.
+// How long a Slot's first answer waits for the Issues before it answers without them.
 const slotBudgetMs = 1500;
 
 const late = Symbol('late');
 
+type Summaries = Map<string, IssueSummary>;
+
+const summariesOf = (
+  targets: readonly Target[],
+  reads: readonly (Read | null)[],
+): Summaries =>
+  new Map(
+    targets.flatMap((target, index) => {
+      const read = reads[index];
+
+      return read ? [[keyOf(target), read.summary] as const] : [];
+    }),
+  );
+
 /*
- * The first answer for an Issue not stored yet reads it through the Query in the Slot's own call, so the Slot says
- * nothing is `changed` and the page's entry stays as fresh as it was; one that is late answers without it, then says so.
+ * The first answer for Issues not stored yet reads them in the Slot's own call, so the Slot says nothing is
+ * `changed` and the page's entry stays as fresh as it was; a read that is late answers without them, then says so.
  */
-async function firstSummary(
-  { source, cached, changed }: First,
-  target: Target,
-): Promise<IssueSummary | null> {
-  const loading = readAndStore(source, cached, target).catch(() => null);
+async function firstSummaries(
+  { together, changed }: First,
+  targets: readonly Target[],
+): Promise<Summaries> {
+  if (targets.length === 0) return new Map();
+
+  const loading = together(targets).catch(() => []);
   const winner = await Promise.race([loading, timeout()]);
 
-  return winner === late ? lateSummary(loading, changed) : summaryIn(winner);
+  return winner === late
+    ? lateSummaries(loading, changed)
+    : summariesOf(targets, winner);
 }
 
-const summaryIn = (read: Read | null): IssueSummary | null =>
-  read?.summary ?? null;
-
 // A read that missed the budget answers without it, then says the Slots' items changed once it lands.
-function lateSummary(loading: Promise<Read | null>, changed: () => void): null {
-  void loading.then((read) => read && changed());
+function lateSummaries(
+  loading: Promise<(Read | null)[]>,
+  changed: () => void,
+): Summaries {
+  void loading.then((reads) => reads.some(Boolean) && changed());
 
-  return null;
+  return new Map();
 }
 
 const timeout = (): Promise<typeof late> =>
@@ -169,37 +158,30 @@ const timeout = (): Promise<typeof late> =>
     setTimeout(() => done(late), slotBudgetMs);
   });
 
-function refreshAll(loads: Loads, targets: readonly Target[]): void {
+const isDue = (loadedAt: Loads['loadedAt'], target: Target): boolean => {
+  const last = loadedAt.get(keyOf(target));
+
+  return last === undefined || Date.now() - last >= freshForMs;
+};
+
+// The Issues not read inside the last minute are read again, together; one that fails is due at the next ask.
+function refreshDue(
+  { loadedAt, load }: Loads,
+  targets: readonly Target[],
+): void {
   const unique = new Map(targets.map((target) => [keyOf(target), target]));
+  const due = [...unique.values()].filter((target) => isDue(loadedAt, target));
 
-  for (const target of unique.values()) refreshOne(loads, target);
-}
+  if (due.length === 0) return;
 
-function refreshOne({ loadedAt, load }: Loads, target: Target): void {
-  const key = keyOf(target);
-  const last = loadedAt.get(key);
+  for (const target of due) loadedAt.set(keyOf(target), Date.now());
 
-  if (last !== undefined && Date.now() - last < freshForMs) return;
-
-  loadedAt.set(key, Date.now());
-  void load(target).catch(() => loadedAt.delete(key));
+  void load(due).then((unread) => {
+    for (const target of unread) loadedAt.delete(keyOf(target));
+  });
 }
 
 function forget(loadedAt: Loads['loadedAt'], number: number): void {
   for (const key of loadedAt.keys())
     if (key.endsWith(`#${number}`)) loadedAt.delete(key);
-}
-
-async function summaryOf(
-  source: Source,
-  { projectId, number }: Target,
-): Promise<IssueSummary> {
-  // The same entry a page's Loader reads, so a Slot and a page asking for the Issue make one read.
-  const settled = await source.readQuery(
-    source.reads.issue({ projectId, number }),
-  );
-
-  const { title, status, closedAs } = unwrap(settled);
-
-  return { title, status, closedAs };
 }

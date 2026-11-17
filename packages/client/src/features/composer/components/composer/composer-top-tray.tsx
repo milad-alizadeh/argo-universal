@@ -1,4 +1,3 @@
-import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useReportComposerPills } from '#lib/product/composer-cover';
@@ -7,7 +6,6 @@ import {
   ComposerWorkChips,
 } from '../composer-status/composer-status';
 import { WrittenPlan } from '../written-plan/written-plan';
-import { composerTrayClass } from './composer-tray-class';
 import type {
   TopTrayLayout,
   PlanLayout,
@@ -15,15 +13,22 @@ import type {
   LivePlanLayout,
 } from './composer-tray-types';
 import type { ComposerProps } from './composer-types';
+import { ComposerTypography } from './composer-typography';
 
-export function ComposerTopTray(
+// A phone's Plan, a pill above the Composer. A wide window's Plan sits in the Composer's tray.
+export function ComposerPhoneTray(
   layout: TopTrayLayout,
 ): React.JSX.Element | null {
-  return layout.wide ? (
-    <ComposerWidePlan {...layout} />
-  ) : (
-    <ComposerPhonePlan {...layout} />
+  return layout.wide ? null : (
+    <ComposerTypography compact>
+      <ComposerPhonePlan {...layout} />
+    </ComposerTypography>
   );
+}
+
+// The Plan a wide window's tray holds: none while a request has the tray.
+export function hasTrayPlan(layout: Pick<PlanLayout, 'props'>): boolean {
+  return !hasRequest(layout) && hasPlan(layout);
 }
 
 function shownWrittenPlan({
@@ -38,16 +43,6 @@ function hasPlan(layout: Pick<PlanLayout, 'props'>): boolean {
 
 function hasPhoneTray(layout: Pick<PlanLayout, 'props'>): boolean {
   return hasPlan(layout) || hasWork(layout);
-}
-
-function ComposerWidePlan(layout: PlanLayout): React.JSX.Element | null {
-  if (hasRequest(layout) || !hasPlan(layout)) return null;
-
-  return (
-    <View className={cn(composerTrayClass, '-mb-3 pb-3 rounded-t-2xl')}>
-      <ComposerPlans {...layout} />
-    </View>
-  );
 }
 
 function ComposerPhonePlan(layout: PlanLayout): React.JSX.Element | null {
@@ -71,7 +66,7 @@ function ComposerPhonePills(layout: PlanLayout): React.JSX.Element {
   );
 }
 
-function ComposerPlans(layout: PlanLayout): React.JSX.Element {
+export function ComposerPlans(layout: PlanLayout): React.JSX.Element {
   return (
     <>
       <ComposerLivePlan {...layout} />

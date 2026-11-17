@@ -25,6 +25,16 @@ function unavailable(editor: LexicalEditor): boolean {
   );
 }
 
+// A controlled draft arrives in a later update, whose import resets the selection.
+function selectAfterImport(editor: LexicalEditor): void {
+  const stop = editor.registerUpdateListener(({ editorState }) => {
+    if (editorState.read(() => $getRoot().getTextContentSize()) === 0) return;
+
+    stop();
+    editor.update(() => $getRoot().selectEnd());
+  });
+}
+
 function acceptHandler(
   editor: LexicalEditor,
   suggestion: Suggestion,
@@ -33,6 +43,7 @@ function acceptHandler(
     if (modified(event) || unavailable(editor)) return false;
 
     event.preventDefault();
+    selectAfterImport(editor);
     suggestion.onAccept();
 
     return true;

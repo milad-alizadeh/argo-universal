@@ -18,9 +18,12 @@ it('shows the code and where to enter it, then names the Account once approved, 
   const tracked = await trackedGitHub();
   const page = await showsCode(tracked);
 
-  expect(page.findText('Open GitHub')?.node.props.onPress).toEqual({
+  expect(
+    page.findText('Copy code and continue to GitHub')?.node.props.onPress,
+  ).toEqual({
     action: 'openUrl',
     url: 'https://github.com/login/device',
+    copy: 'WDJB-MJHT',
   });
   await until(tracked, page, signedInText);
   expect(tracked.github.requests.map(({ path }) => path)).toContain(
@@ -61,7 +64,7 @@ it('lets the person give up waiting', async () => {
   await page.press('Cancel');
   await page.draw();
   expect(page.findText(signInLabel)).toBeDefined();
-  expect(page.findText('WDJB-MJHT')).toBeUndefined();
+  expect(JSON.stringify(page.tree)).not.toContain('"value":"WDJB-MJHT"');
 });
 
 it('draws the sign-in in place of the Issues page when there is no Account, calling no GitHub API', async () => {

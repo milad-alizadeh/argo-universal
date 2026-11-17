@@ -15,6 +15,7 @@ import {
   elicitationSession,
 } from './session-detail-view-elicitation.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
+import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import {
   emptySession,
@@ -55,6 +56,11 @@ export const StoppedTurn: Story = {
       onRetry: fn(),
     },
   },
+};
+
+// A paused queue above the stopped Turn: both are sections of the Composer's one tray.
+export const StoppedTurnOverQueue: Story = {
+  args: { state: 'open', ...stoppedOverQueueSession },
 };
 
 // Every recording in turn, so the Feed scrolls under a pinned header and Composer.

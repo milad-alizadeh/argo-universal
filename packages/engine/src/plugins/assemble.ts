@@ -7,8 +7,10 @@ import type { PluginClock } from './clock';
 import { discoverPlugins } from './discovery/loader';
 import { HookPort } from './hooks/hook-port';
 import { PluginListChanges } from './list-changes';
+import { LocatedCache } from './located-cache';
 import { pluginLocation, pluginManifest } from './located-plugins';
 import { projectPorts } from './project-ports';
+import { runtimePorts } from './runtime-ports';
 import { createPluginRuntime } from './runtime/create-runtime';
 import type { PluginLocation } from './runtime/plugin-location';
 import type { PluginRuntime } from './runtime/plugin-runtime';
@@ -16,6 +18,7 @@ import { PluginService } from './service';
 import { HeldSecrets } from './services/held-secrets';
 import type { PluginNetwork } from './services/plugin-fetch';
 import { osSecretStore, type SecretStore } from './services/secret-store';
+import type { SessionActs } from './session-acts';
 import { PluginSettings } from './settings/plugin-settings';
 
 export type PluginServerOptions = {
@@ -35,12 +38,14 @@ export type PluginsOptions = PluginServerOptions & {
   sessions: OpenSessionsActorRef;
   // Where Sessions reach Plugin Hooks; the runtime attaches to it while the server runs.
   hookPort?: HookPort;
+  // What `argo.sessions.archive` reaches; the Engine attaches the App's archive to it.
+  sessionActs?: SessionActs;
 };
 
 type Discovery = Pick<
   PluginsOptions,
   'home' | 'version' | 'firstPartyPluginsDirectory'
->;
+> & { located: LocatedCache };
 
 export type Assembled = {
   service: PluginService;
@@ -98,7 +103,8 @@ function foundations(options: PluginsOptions): Foundations {
   const secretStore = heldSecrets.keeping(options.secretStore ?? osSecretStore);
   const listChanges = new PluginListChanges();
   const { home, version, firstPartyPluginsDirectory } = options;
-  const discovery = { home, version, firstPartyPluginsDirectory };
+  const located = new LocatedCache();
+  const discovery = { home, version, firstPartyPluginsDirectory, located };
   const parts = { secretStore, heldSecrets, discovery, listChanges };
 
   return {
@@ -106,19 +112,6 @@ function foundations(options: PluginsOptions): Foundations {
     hookPort: options.hookPort ?? new HookPort(),
     settings: settingsFor(options, parts),
     accounts: accountsFor(options, { secretStore, discovery }),
-  };
-}
-
-function runtimePorts(
-  options: PluginsOptions,
-): Pick<
-  Parameters<typeof createPluginRuntime>[1],
-  'network' | 'oauth' | 'clock'
-> {
-  return {
-    network: options.pluginNetwork,
-    oauth: options.pluginOAuth,
-    clock: options.pluginClock,
   };
 }
 
@@ -135,6 +128,8 @@ function runtimeFor(
     hooks: parts.hookPort.hooks,
     settings: async (pluginId, key) => parts.settings.read(pluginId, key),
     locate: locator(parts),
+    // A dev build landing may come with a changed `plugin.json`.
+    rebuilt: () => parts.discovery.located.clear(),
   });
 }
 

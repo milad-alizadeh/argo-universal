@@ -86,11 +86,11 @@ it('selects a file and shows what the map measured', async () => {
   );
 
   expect(selectedRect(page)).toMatchObject({ props: { label: app } });
-  expect(field(page, 'Lines')).toMatchObject({ props: { text: '120' } });
+  expect(field(page, 'Lines')).toMatchObject({ props: { value: '120' } });
   expect(field(page, 'Branching lines')).toMatchObject({
-    props: { text: '24' },
+    props: { value: '24' },
   });
-  expect(field(page, 'Changes')).toMatchObject({ props: { text: '2' } });
+  expect(field(page, 'Changes')).toMatchObject({ props: { value: '2' } });
 });
 
 it('says so when git cannot read the Project', async () => {

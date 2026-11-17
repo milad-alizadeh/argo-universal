@@ -26,6 +26,7 @@ type Harness = {
   sent: PluginEvent[];
   // How many refresh timers are set and not yet cancelled, so a second timer for the same list shows as two.
   refreshTimers: () => number;
+  expireCalls: () => void;
   contributors: Contributors;
 };
 
@@ -33,19 +34,23 @@ type Harness = {
 function harness(): Harness {
   let live = 0;
   const sent: PluginEvent[] = [];
+  const deadlines = new Set<() => void>();
 
   const clock: PluginClock = {
     now: (): number => 0,
     delay: async (): Promise<void> => {},
-    schedule: (_callback, ms): (() => void) => {
+    schedule: (callback, ms): (() => void) => {
       const counted = ms === refreshMs;
       let cancelled = false;
 
       live += counted ? 1 : 0;
 
+      if (!counted) deadlines.add(callback);
+
       return (): void => {
         live -= counted && !cancelled ? 1 : 0;
         cancelled = true;
+        deadlines.delete(callback);
       };
     },
   };
@@ -65,6 +70,9 @@ function harness(): Harness {
     calls,
     sent,
     refreshTimers: () => live,
+    expireCalls: () => {
+      for (const deadline of deadlines) deadline();
+    },
     contributors: {
       pluginIds: ['github'],
       input,
@@ -115,4 +123,62 @@ it('releases the Slot clock when the App stops reading the list without aborting
   await list.return(null);
 
   expect(run.refreshTimers()).toBe(0);
+});
+
+it('keeps a displayed PR during a timed-out refresh and removes it after a successful detach', async () => {
+  const run = harness();
+  const failed = vi.fn<Contributors['failed']>();
+  const controller = new AbortController();
+
+  const list = watchSlotItems(
+    run.calls,
+    { ...run.contributors, failed },
+    controller.signal,
+  );
+
+  const first = list.next();
+
+  const item = {
+    id: 'github:owner/repository#12',
+    stage: 'open',
+    title: 'Fix the checks',
+    repository: 'owner/repository',
+    pullRequest: {
+      number: 12,
+      url: 'https://github.com/owner/repository/pull/12',
+    },
+  };
+
+  await vi.waitFor(() => expect(run.sent).toHaveLength(1));
+  run.calls.receive(
+    { pluginId: 'github', generation: 1 },
+    {
+      action: 'items',
+      id: 0,
+      items: { first: [item] },
+    },
+  );
+  expect((await first).value).toMatchObject({ first: { items: [{ item }] } });
+
+  run.calls.changed('github');
+  const next = list.next();
+  await vi.waitFor(() => expect(run.sent).toHaveLength(2));
+  run.expireCalls();
+  await vi.waitFor(() =>
+    expect(failed).toHaveBeenCalledWith(
+      'github',
+      sessionChangesSlotId,
+      'items provider ran late',
+    ),
+  );
+
+  run.calls.changed('github');
+  await vi.waitFor(() => expect(run.sent).toHaveLength(3));
+  run.calls.receive(
+    { pluginId: 'github', generation: 1 },
+    { ...answer, id: 2 },
+  );
+  expect((await next).value).toEqual({});
+  controller.abort();
+  await list.return(null);
 });

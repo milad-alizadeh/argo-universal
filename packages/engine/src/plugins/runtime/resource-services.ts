@@ -4,7 +4,7 @@ import type { PluginServices } from '../services/plugin-services';
 export type ResourceServices = Pick<
   PluginServices,
   | 'handle'
-  | 'projectInfo'
+  | 'projectIds'
   | 'heldSecrets'
   | 'onStorageWrite'
   | 'watchProjects'

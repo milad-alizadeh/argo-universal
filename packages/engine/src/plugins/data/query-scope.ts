@@ -36,14 +36,14 @@ export function refuseOutside(
     throw new Error('Code outside a draw reads only a named Query');
 }
 
-type Projects = () => Promise<{ id: string }[]>;
+type Projects = () => Promise<string[]>;
 
 async function checkRegistered(
   projects: Projects,
   ids: string[],
 ): Promise<void> {
   const known = await projects();
-  const missing = ids.find((id) => !known.some((one) => one.id === id));
+  const missing = ids.find((id) => !known.includes(id));
 
   if (missing !== undefined)
     throw new Error(

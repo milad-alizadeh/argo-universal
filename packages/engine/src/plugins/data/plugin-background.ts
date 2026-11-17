@@ -1,9 +1,9 @@
 import {
   BackgroundPass,
+  passTerms,
   type BackgroundEntry,
   type BackgroundServices,
 } from './background-pass';
-import { backgroundFloorMs } from './query-intervals';
 
 // At most this many background passes run at once, so many Projects never burst into one crowd of calls.
 const concurrentPasses = 4;
@@ -56,11 +56,12 @@ export class PluginBackground {
     pluginId: string,
     declaration: BackgroundEntry['declaration'],
   ): BackgroundEntry['declaration'] {
-    const interval = Math.max(backgroundFloorMs, declaration.interval);
+    const { name, floorMs } = passTerms[this.services.kind];
+    const interval = Math.max(floorMs, declaration.interval);
 
     if (interval !== declaration.interval)
       this.services.log(
-        `Plugin ${pluginId}: background interval ${declaration.interval} ms clamped to ${backgroundFloorMs} ms`,
+        `Plugin ${pluginId}: ${name} interval ${declaration.interval} ms clamped to ${floorMs} ms`,
       );
 
     return { ...declaration, interval };

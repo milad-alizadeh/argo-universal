@@ -13,7 +13,7 @@ const categoryIcons = new Map<string, IconName>([
   ['move', 'edit'],
 ]);
 
-const toolCallCategory = (row: ToolCallUpdate): string =>
+export const toolCallCategory = (row: ToolCallUpdate): string =>
   toolCallFacts(row).actions[0]?.type ?? row.kind;
 
 export function toolCallIcon(row: ToolCallUpdate): IconName {

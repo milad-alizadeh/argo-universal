@@ -18,7 +18,7 @@ import { DrawFeedScroll, useFeedOnScroll } from './feed-scroll-drawing';
 import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
 
-// Clears whatever of the Composer covers the Feed's end and leaves the Feed's gap above it.
+// Clears whatever of the Composer covers the Feed's end, and the pill above it, and leaves the Feed's gap above them.
 function FeedEnd(): React.JSX.Element {
   const { endSpace } = useFeedEndClearance();
 

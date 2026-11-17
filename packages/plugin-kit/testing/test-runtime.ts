@@ -22,6 +22,16 @@ export type RuntimeParts = {
   accounts: TestAccounts['accounts'];
 };
 
+const hostOf = ({
+  clockStart,
+  promptSession,
+  archiveSession,
+  network,
+}: ConfiguredTest): Pick<
+  ConfiguredTest,
+  'clockStart' | 'promptSession' | 'archiveSession' | 'network'
+> => ({ clockStart, promptSession, archiveSession, network });
+
 export function runtimeFor(
   home: string,
   options: ConfiguredTest,
@@ -29,8 +39,7 @@ export function runtimeFor(
 ): PluginRuntime {
   return createPluginRuntime(home, {
     ...parts,
-    clockStart: options.clockStart,
-    network: options.network,
+    ...hostOf(options),
     oauth: oauthOf(options),
     settings: settingsOf(options, parts.secretStore),
     ...projectOptions(options),
@@ -62,12 +71,14 @@ function projectOptions(
   options: ConfiguredTest,
 ): Pick<
   Parameters<typeof createPluginRuntime>[1],
-  'projects' | 'projectPath' | 'projectInfo' | 'sessionInfo'
+  'projects' | 'projectPath' | 'projectIds' | 'projectInfo' | 'sessionInfo'
 > {
   return {
     projects: async (): Promise<string[]> =>
       Object.values(options.projectPaths),
     projectPath: async (projectId) => options.projectPaths[projectId],
+    projectIds: async (): Promise<string[]> =>
+      options.projects.map(({ id }) => id),
     projectInfo: async (): Promise<PluginProjectInfo[]> => options.projects,
     sessionInfo: async (sessionId) => options.sessions?.[sessionId] ?? null,
   };

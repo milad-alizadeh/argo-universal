@@ -22,6 +22,7 @@ type Dependencies = {
   clockStart: () => number | undefined;
   resources: RuntimeResources;
   log: (line: string) => void;
+  rebuilt: () => void;
 };
 
 export class RuntimePlugins {
@@ -74,12 +75,17 @@ export class RuntimePlugins {
   }
 
   private configureBackground(location: PluginLocation): void {
-    if (!location.background) return;
-    this.input.resources.background.configure(
-      location.entry.pluginId,
-      location.background,
-      () => this.requireRunning(location),
-    );
+    const { background, watching } = this.input.resources.passes;
+
+    if (location.background)
+      background.configure(location.entry.pluginId, location.background, () =>
+        this.requireRunning(location),
+      );
+
+    if (location.watch)
+      watching.configure(location.entry.pluginId, location.watch, () =>
+        this.requireRunning(location),
+      );
   }
 
   // The pass owns the retry: its interval is the backoff, so a crash is not final.
@@ -90,12 +96,13 @@ export class RuntimePlugins {
   }
 
   private pluginInput(location: PluginLocation): PluginInput {
-    const { host, clockStart, resources, log } = this.input;
+    const { host, clockStart, resources, log, rebuilt } = this.input;
 
     return {
       entry: location.entry,
       host,
       log,
+      rebuilt,
       clockStart,
       deferReload: () => this.turnsRunning,
       grant: (plugin, generation) =>
@@ -111,7 +118,8 @@ export class RuntimePlugins {
   }
 
   async deactivate(pluginId: string): Promise<void> {
-    this.input.resources.background.remove(pluginId);
+    this.input.resources.passes.background.remove(pluginId);
+    this.input.resources.passes.watching.remove(pluginId);
     this.input.resources.failures.ended(pluginId);
     const plugin = this.plugins.get(pluginId);
 

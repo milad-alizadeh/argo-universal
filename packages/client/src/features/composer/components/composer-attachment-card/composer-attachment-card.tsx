@@ -30,7 +30,7 @@ const cardClass = 'size-full overflow-hidden rounded-md border bg-card';
 
 const previewClass = 'h-22.5 overflow-hidden';
 
-const linesClass = 'p-2 font-mono text-xs leading-4 text-muted-foreground';
+const linesClass = 'p-2 type-body-code text-muted-foreground';
 
 const kindClass = 'items-center justify-center gap-1 bg-muted';
 
@@ -111,7 +111,7 @@ function FileKind({ name }: { name: string }): React.JSX.Element {
   return (
     <View aria-hidden className={cn(previewClass, kindClass)}>
       <Icon name={fileTypeIcon(name)} className={mutedClass} />
-      <Text role="badge" className={cn(mutedClass, 'wide-type:text-sm')}>
+      <Text role="body" className={mutedClass}>
         {extensionOf(name)}
       </Text>
     </View>
@@ -123,9 +123,9 @@ function FileName({ name }: { name: string }): React.JSX.Element {
     <View className="h-7 flex-row items-center gap-1.5 border-t border-border px-2">
       <Icon name={fileTypeIcon(name)} />
       <Text
-        role="badge"
+        role="body"
         numberOfLines={1}
-        className="min-w-0 flex-1 text-muted-foreground wide-type:text-sm"
+        className="min-w-0 flex-1 text-muted-foreground"
       >
         {name}
       </Text>

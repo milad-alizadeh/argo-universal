@@ -61,7 +61,7 @@ function ScreenHeaderSource(props: ScreenProps): ReactElement {
   return <ScreenDrawing {...drawing} />;
 }
 
-// The heading, then the body with the aside's Pills over it and the footer under it, beside the aside's column.
+// The heading, then the body with the aside's rows over it and the footer under it, beside the aside's column.
 function ScreenFrame(
   props: ScreenHeaderPlanned & { place: AsidePlace },
 ): ReactElement {

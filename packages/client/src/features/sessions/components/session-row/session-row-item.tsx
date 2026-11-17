@@ -141,16 +141,10 @@ const modifiersOf = ({
   ...(conflict ? (['conflict'] as const) : []),
 ];
 
-// A conflict is what blocks a pull request, so it shows ahead of draft; both are kept.
-function openState(modifiers: ('draft' | 'conflict')[]): ChangeState {
-  const modifier = modifiers.includes('conflict') ? 'conflict' : modifiers[0];
-
-  return modifier ? { stage: 'open', modifier, modifiers } : { stage: 'open' };
-}
-
+// Both facts are kept; the Change stage model picks the one mark, a draft ahead of a conflict.
 const changeState = (change: RowChange): ChangeState =>
   change.stage === 'open'
-    ? openState(modifiersOf(change))
+    ? { stage: 'open', modifiers: modifiersOf(change) }
     : { stage: change.stage };
 
 function ItemLabel({

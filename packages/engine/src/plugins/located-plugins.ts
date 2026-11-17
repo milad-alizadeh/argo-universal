@@ -1,6 +1,8 @@
 import type { PluginList, PluginManifest } from '@repo/contracts/plugins';
 import type { PluginAccounts } from './accounts/plugin-accounts';
 import { discoverPlugins, type PluginsDeps } from './discovery/loader';
+import type { LocatedCache } from './located-cache';
+import { locationFor } from './runtime/location-for';
 import type { PluginLocation } from './runtime/plugin-location';
 import type { PluginRuntime } from './runtime/plugin-runtime';
 import type { PluginSettings } from './settings/plugin-settings';
@@ -22,8 +24,11 @@ export type ServiceAccounts = Pick<
   'list' | 'grants' | 'removePlugin'
 >;
 
+// Discovery reads from disk each time unless the Server hands it a cache.
+export type CachedDeps = PluginsDeps & { located?: LocatedCache };
+
 // What finding a Plugin needs: where Plugins are and whether each is turned on.
-export type LocateDeps = PluginsDeps & { pluginSettings: ServiceSettings };
+export type LocateDeps = CachedDeps & { pluginSettings: ServiceSettings };
 
 export type PluginServiceDeps = LocateDeps & {
   pluginAccounts: ServiceAccounts;
@@ -48,17 +53,19 @@ export function applyStatus(result: PluginList, runtime: PluginRuntime): void {
 
 type Discovered = { result: PluginList; locations: Map<string, string> };
 
-async function discover(deps: PluginsDeps): Promise<Discovered> {
+async function discover(deps: CachedDeps): Promise<Discovered> {
+  if (deps.located) return deps.located.read(deps);
   const locations = new Map<string, string>();
 
   return { result: await discoverPlugins(deps, locations), locations };
 }
 
+// Copies each descriptor, so what the cache holds is never marked with one caller's settings.
 function locatedIn({ result, locations }: Discovered): LocatedPlugin[] {
   return result.plugins.flatMap((plugin) => {
     const directory = locations.get(plugin.manifest.id);
 
-    return directory ? [{ plugin, directory }] : [];
+    return directory ? [{ plugin: { ...plugin }, directory }] : [];
   });
 }
 
@@ -66,10 +73,12 @@ function locatedIn({ result, locations }: Discovered): LocatedPlugin[] {
 export async function locatePlugins(
   deps: LocateDeps,
 ): Promise<LocatedPlugin[]> {
-  const discovered = await discover(deps);
-  applyEnabled(discovered.result, deps.pluginSettings);
+  const located = locatedIn(await discover(deps));
 
-  return locatedIn(discovered);
+  for (const { plugin } of located)
+    plugin.enabled = deps.pluginSettings.enabled(plugin.manifest.id);
+
+  return located;
 }
 
 function findLocated(
@@ -83,10 +92,19 @@ function findLocated(
   return found;
 }
 
-export const locatePlugin = async (
+// A Plugin the cache has not seen may have just been added to a folder, so it reads disk once more before giving up.
+export async function locatePlugin(
   deps: LocateDeps,
   pluginId: string,
-): Promise<LocatedPlugin> => findLocated(await locatePlugins(deps), pluginId);
+): Promise<LocatedPlugin> {
+  const located = await locatePlugins(deps);
+  const found = located.find(({ plugin }) => plugin.manifest.id === pluginId);
+
+  if (found || !deps.located) return findLocated(located, pluginId);
+  deps.located.clear();
+
+  return findLocated(await locatePlugins(deps), pluginId);
+}
 
 // Where the runtime loads a Plugin from; a turned-off Plugin has none.
 export async function pluginLocation(
@@ -98,7 +116,7 @@ export async function pluginLocation(
 
 // The manifest of a Plugin the loader admits, for reading its settings schema.
 export async function pluginManifest(
-  deps: PluginsDeps,
+  deps: CachedDeps,
   pluginId: string,
 ): Promise<PluginManifest> {
   return findLocated(locatedIn(await discover(deps)), pluginId).plugin.manifest;
@@ -113,34 +131,6 @@ function launchable(
     throw new Error(`Plugin ${manifest.id} is turned off`);
 
   return locationFor(manifest, directory);
-}
-
-function locationFor(
-  manifest: PluginManifest,
-  directory: string,
-): PluginLocation {
-  return {
-    entry: entryFor(manifest, directory),
-    name: manifest.name,
-    capabilities: manifest.capabilities ?? [],
-    hooks: manifest.contributes.hooks ?? [],
-    navIds: manifest.contributes.nav.map(({ id }) => id),
-    background: manifest.contributes.background,
-    operations: manifest.contributes.operations,
-  };
-}
-
-function entryFor(
-  manifest: PluginManifest,
-  directory: string,
-): PluginLocation['entry'] {
-  return {
-    pluginId: manifest.id,
-    directory,
-    main: manifest.main,
-    backgroundPath: manifest.contributes.background?.path,
-    accountPaths: manifest.contributes.accounts?.map(({ page }) => page),
-  };
 }
 
 // Starts each located Plugin that `declares` picks, in load order; one that fails to start is reported as stopped.

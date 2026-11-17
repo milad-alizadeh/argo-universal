@@ -7,6 +7,20 @@
   --placeholderTextColor: var(--color-muted-foreground);
 }
 
+:root.light {
+  color-scheme: light;
+}
+
+:root.dark {
+  color-scheme: dark;
+}
+
+/* Keep native scrollbars quiet, including the track macOS reveals on hover. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(128 128 128 / 55%) transparent;
+}
+
 /* Expo UI's web components colour themselves from a palette of their own, the
    `--expo-ui-*` variables its Host writes: a GitHub-ish ramp whose dark end is a
    blue near-black (#0b0f14), not Graphite. Every one of them is remapped onto
@@ -516,6 +530,9 @@ label input[role="switch"] {
 @media (width >= 1100px) {
   .feed-scrollbar > * > .scroll-fade > * {
     scrollbar-gutter: stable both-edges;
+    /* Non-auto standard properties override the Feed's dedicated WebKit drawing. */
+    scrollbar-width: auto;
+    scrollbar-color: auto;
   }
   .feed-scrollbar > * > .scroll-fade > *::-webkit-scrollbar {
     width: 12px;

@@ -1,4 +1,3 @@
-import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import { vi } from 'vitest';
@@ -25,9 +24,7 @@ const services = {
   heldSecrets: new HeldSecrets(),
   onStorageWrite: (): void => {},
   watchProjects: (): (() => void) => (): void => {},
-  projectInfo: async (): Promise<PluginProjectInfo[]> => [
-    { id: 'p1', name: 'p1', originUrl: null },
-  ],
+  projectIds: async (): Promise<string[]> => ['p1'],
   handle: async (): Promise<PluginReply> => ({ ok: false, error: 'none' }),
   activate: (): void => {},
   release: (): void => {},
