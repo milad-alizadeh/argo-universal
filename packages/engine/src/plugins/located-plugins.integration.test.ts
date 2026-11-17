@@ -3,7 +3,42 @@ import { expect, it, vi } from 'vitest';
 import { createRuntimePlugins, shippedFolder } from '#mocks/runtime-plugins';
 import { discoverPlugins } from './discovery/loader';
 import { LocatedCache } from './located-cache';
+import type { ServiceSettings } from './located-plugins';
+import { createPluginRuntime } from './runtime/create-runtime';
+import type { PluginRuntime } from './runtime/plugin-runtime';
 import { PluginService } from './service';
+
+// The real runtime, with only what counts launches replaced; no worker ever starts.
+function fakeRuntime(home: string, activated: string[]): PluginRuntime {
+  const runtime = createPluginRuntime(home, {
+    projects: async () => [],
+    projectIds: async () => [],
+    projectInfo: async () => [],
+  });
+
+  vi.spyOn(runtime, 'activate').mockImplementation(async (location) => {
+    activated.push(location.entry.pluginId);
+
+    return { state: 'running', hanging: false, error: null };
+  });
+  vi.spyOn(runtime, 'refreshProjects').mockResolvedValue();
+
+  return runtime;
+}
+
+function settingsOf(settings: Map<string, boolean>): ServiceSettings {
+  return {
+    enabled: (id) => settings.get(id) ?? true,
+    setEnabled: async (id, enabled): Promise<void> => {
+      settings.set(id, enabled);
+    },
+    values: async (): ReturnType<ServiceSettings['values']> => ({
+      values: {},
+      secretsSet: [],
+    }),
+    change: async (): Promise<void> => {},
+  };
+}
 
 async function serviceOf(
   plugins: Parameters<typeof createRuntimePlugins>[0],
@@ -16,7 +51,6 @@ async function serviceOf(
   const home = await createRuntimePlugins(plugins);
   let runs = 0;
   const activated: string[] = [];
-  const settings = new Map<string, boolean>();
 
   const cache = new LocatedCache((deps, locations) => {
     runs += 1;
@@ -24,22 +58,7 @@ async function serviceOf(
     return discoverPlugins(deps, locations);
   });
 
-  const pluginRuntime = {
-    activate: (location: { entry: { pluginId: string } }) => {
-      activated.push(location.entry.pluginId);
-
-      return Promise.resolve({ state: 'running' });
-    },
-    hooks: {
-      exempt: () => new Set<string>(),
-      run: () => Promise.resolve({ decision: 'ask' }),
-    },
-    items: { refresh: { restarted: vi.fn() } },
-    status: () => ({ state: 'running' }),
-    error: () => null,
-    refreshProjects: () => Promise.resolve(),
-    deactivate: vi.fn(),
-  };
+  const pluginRuntime = fakeRuntime(home, activated);
 
   const service = new PluginService({
     home,
@@ -47,18 +66,13 @@ async function serviceOf(
     firstPartyPluginsDirectory: join(home, shippedFolder),
     located: cache,
     pluginRuntime,
-    pluginAccounts: { list: () => [], grants: () => [], removePlugin: vi.fn() },
-    pluginSettings: {
-      enabled: (id: string) => settings.get(id) ?? true,
-      setEnabled: (id: string, enabled: boolean) => {
-        settings.set(id, enabled);
-
-        return Promise.resolve();
-      },
-      values: () => Promise.resolve({ values: {}, secretsSet: [] }),
-      change: () => Promise.resolve(),
+    pluginAccounts: {
+      list: (): never[] => [],
+      grants: (): never[] => [],
+      removePlugin: vi.fn<() => Promise<void>>(),
     },
-  } as never);
+    pluginSettings: settingsOf(new Map()),
+  });
 
   return { service, discoveries: () => runs, activated, cache };
 }

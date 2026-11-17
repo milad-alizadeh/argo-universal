@@ -8,8 +8,8 @@ import {
   readProjectPath,
   readProjectPaths,
   watchProjectChanges,
+  type ReadOrigin,
 } from '../projects';
-import type { ReadOrigin } from '../projects/plugin-projects';
 import { readSessionRow } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import type { createPluginRuntime } from './runtime/create-runtime';
@@ -20,9 +20,7 @@ type ProjectSources = {
   readOrigin?: ReadOrigin;
 };
 
-export function projectPorts(
-  options: ProjectSources,
-): Pick<
+type ProjectPorts = Pick<
   Parameters<typeof createPluginRuntime>[1],
   | 'watchProjects'
   | 'projects'
@@ -30,16 +28,29 @@ export function projectPorts(
   | 'projectInfo'
   | 'projectPath'
   | 'sessionInfo'
-> {
+>;
+
+export function projectPorts(options: ProjectSources): ProjectPorts {
   return {
+    ...projectReads(options),
     watchProjects: (changed) =>
       watchProjectChanges(options.database, changed, options.databaseWriter),
-    projects: async () => readProjectPaths(options.database),
-    projectIds: async () => readPluginProjectIds(options.database),
-    projectInfo: async () =>
-      readPluginProjects(options.database, options.readOrigin),
     projectPath: async (projectId) => pluginProjectPath(options, projectId),
     sessionInfo: async (sessionId) => pluginSession(options, sessionId),
+  };
+}
+
+function projectReads({
+  database,
+  readOrigin,
+}: ProjectSources): Pick<
+  ProjectPorts,
+  'projects' | 'projectIds' | 'projectInfo'
+> {
+  return {
+    projects: async () => readProjectPaths(database),
+    projectIds: async () => readPluginProjectIds(database),
+    projectInfo: async () => readPluginProjects(database, readOrigin),
   };
 }
 

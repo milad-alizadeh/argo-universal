@@ -8,11 +8,8 @@ import { discoverPlugins } from './discovery/loader';
 import { HookPort } from './hooks/hook-port';
 import { PluginListChanges } from './list-changes';
 import { LocatedCache } from './located-cache';
-import { pluginLocation, pluginManifest } from './located-plugins';
-import { projectPorts } from './project-ports';
-import { runtimePorts } from './runtime-ports';
-import { createPluginRuntime } from './runtime/create-runtime';
-import type { PluginLocation } from './runtime/plugin-location';
+import { pluginManifest } from './located-plugins';
+import { runtimeFor } from './runtime-for';
 import type { PluginRuntime } from './runtime/plugin-runtime';
 import { PluginService } from './service';
 import { HeldSecrets } from './services/held-secrets';
@@ -55,7 +52,7 @@ export type Assembled = {
   hookPort: HookPort;
 };
 
-type Foundations = {
+export type Foundations = {
   heldSecrets: HeldSecrets;
   secretStore: SecretStore;
   listChanges: PluginListChanges;
@@ -113,33 +110,6 @@ function foundations(options: PluginsOptions): Foundations {
     settings: settingsFor(options, parts),
     accounts: accountsFor(options, { secretStore, discovery }),
   };
-}
-
-function runtimeFor(
-  options: PluginsOptions,
-  parts: Foundations,
-): PluginRuntime {
-  return createPluginRuntime(options.home, {
-    accounts: parts.accounts,
-    secretStore: parts.secretStore,
-    heldSecrets: parts.heldSecrets,
-    ...runtimePorts(options),
-    ...projectPorts(options),
-    hooks: parts.hookPort.hooks,
-    settings: async (pluginId, key) => parts.settings.read(pluginId, key),
-    locate: locator(parts),
-    // A dev build landing may come with a changed `plugin.json`.
-    rebuilt: () => parts.discovery.located.clear(),
-  });
-}
-
-// A sign-in wakes its account provider the way the service activates any Plugin.
-function locator({
-  discovery,
-  settings,
-}: Foundations): (pluginId: string) => Promise<PluginLocation> {
-  return (pluginId) =>
-    pluginLocation({ ...discovery, pluginSettings: settings }, pluginId);
 }
 
 function serviceFor(parts: Foundations, runtime: PluginRuntime): PluginService {

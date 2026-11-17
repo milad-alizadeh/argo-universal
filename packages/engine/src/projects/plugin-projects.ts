@@ -11,18 +11,22 @@ export async function readPluginProjects(
   database: Database,
   readOrigin: ReadOrigin = readOriginUrl,
 ): Promise<PluginProjectInfo[]> {
-  const projects = database
-    .select({ id: project.id, path: project.path, name: project.name })
-    .from(project)
-    .all();
-
   return Promise.all(
-    projects.map(async ({ id, name, path }) => ({
+    registeredProjects(database).map(async ({ id, name, path }) => ({
       id,
       name,
       originUrl: await originOf(database, { id, path }, readOrigin),
     })),
   );
+}
+
+function registeredProjects(
+  database: Database,
+): { id: string; path: string; name: string }[] {
+  return database
+    .select({ id: project.id, path: project.path, name: project.name })
+    .from(project)
+    .all();
 }
 
 // The registered Projects' ids, from the database alone: a registration check needs no origin and so no git.
