@@ -6,7 +6,7 @@ import { PluginSlotItems } from './plugin-slot-items';
 const nothing = (): void => {};
 
 // A clock whose timers run only when the test fires them, so a call runs late exactly when the test says.
-export const manualClock = (): PluginClock & { fire: () => void } => {
+const manualClock = (): PluginClock & { fire: () => void } => {
   const timers = new Set<() => void>();
 
   return {
