@@ -40,15 +40,12 @@ const screen = (node: WireNode): boolean => node.type === 'Screen';
 export const headerActions = (page: OpenPage): unknown[] =>
   (page.find(screen).slots.actions ?? []).map((each) => each.props.label);
 
-// The view the header's view menu checks.
-export function checkedView(page: OpenPage): IssuesView | undefined {
-  const choices = page.find(viewMenu).children.flatMap((each) => each.children);
-  const checked = choices.find((each) => each.props.selected === true);
-
-  return checked?.key === 'board' || checked?.key === 'list'
-    ? checked.key
-    : undefined;
-}
+// The view the header's view menu checks, by its choice's key.
+export const checkedView = (page: OpenPage): string | undefined =>
+  page
+    .find(viewMenu)
+    .children.flatMap((each) => each.children)
+    .find((each) => each.props.selected === true)?.key;
 
 // Shows the issues as a list or a board, as a person chooses one in the header's view menu.
 export async function show({ page }: Shown, view: IssuesView): Promise<void> {
