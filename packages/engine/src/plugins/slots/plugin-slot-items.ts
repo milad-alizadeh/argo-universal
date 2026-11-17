@@ -16,6 +16,7 @@ import {
   type Reply,
   type SlotWorker,
 } from './kept-items';
+import { LastItems } from './last-items';
 import { SlotItemChanges } from './slot-item-changes';
 import { refreshFor, type SlotRefresh } from './slot-refresh';
 
@@ -88,7 +89,13 @@ export class PluginSlotItems {
 
     if (kept?.generation === generation) return kept;
 
-    const worker = { generation, epoch: 0, kept: new Map(), failed: new Map() };
+    const worker = {
+      generation,
+      epoch: 0,
+      kept: new Map(),
+      last: new LastItems(),
+      failed: new Map(),
+    };
 
     this.kept.set(pluginId, worker);
 
@@ -100,7 +107,7 @@ export class PluginSlotItems {
     this.calls.answer(caller, call);
   }
 
-  // What the Plugin shows changed: nothing it answered is kept, and open lists ask it again.
+  // What the Plugin shows changed: nothing it answered is kept but for a late answer, and open lists ask it again.
   changed(pluginId: string): void {
     const worker = this.kept.get(pluginId);
 

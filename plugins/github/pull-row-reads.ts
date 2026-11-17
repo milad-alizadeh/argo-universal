@@ -3,8 +3,8 @@ import type { PullLink } from './pull-store';
 
 /*
  * How long a Slot waits for GitHub before it answers with what it already knows. It stays under Argo's own
- * limit for an items Slot answer: an answer past that is left out, and the Slot is not asked again until the
- * Plugin says it changed, so a cold start would empty every row and a slow read would empty the Changes.
+ * limit for an items Slot answer: past that, Argo draws the Plugin's last answer and does not ask again until
+ * the Plugin says it changed, so a cold start would leave every row empty and a slow read would hold old Changes.
  */
 export const rowWaitMs = 1000;
 

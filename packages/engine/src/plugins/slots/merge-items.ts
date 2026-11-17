@@ -4,7 +4,8 @@ import type {
   ItemsContext,
   ItemsSlotItem,
 } from '@repo/contracts/plugins/wire';
-import { contextKey, type PluginItems } from './kept-items';
+import { contextKey } from './item-keys';
+import type { PluginItems } from './kept-items';
 
 type Attributed = { pluginId: string; item: ItemsSlotItem };
 

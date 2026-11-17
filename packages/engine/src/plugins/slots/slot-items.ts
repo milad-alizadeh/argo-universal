@@ -98,7 +98,7 @@ async function merged(
   return SlotItems.parse(mergeItems(target, answers));
 }
 
-// A Plugin that is not running, throws, runs late or answers off-schema is left out alone.
+// A Plugin that is not running, throws or answers off-schema is left out alone; one that runs late keeps what it last answered.
 async function answered(
   slotItems: PluginSlotItems,
   contributors: Contributors,
@@ -119,10 +119,16 @@ async function contribution(
 ): Promise<Contribution[]> {
   const answer = await askedAgain(slotItems, { input, start }, pluginId);
 
-  if (answer.ok) return [{ pluginId, items: answer.items }];
-  failed(pluginId, input.slotId, answer.reason);
+  if (!answer.ok) {
+    failed(pluginId, input.slotId, answer.reason);
 
-  return [];
+    return [];
+  }
+
+  // A late Plugin keeps what it last answered, and is still logged as late.
+  if (answer.late) failed(pluginId, input.slotId, itemsLeftOut.late);
+
+  return [{ pluginId, items: answer.items }];
 }
 
 const refreshes = ({ slotId }: SlotItemsInput): boolean =>
