@@ -1,6 +1,7 @@
 import type { Database } from '@repo/db';
 import { project } from '@repo/db/schema';
 import type { WriterActorRef } from '../storage';
+import { forgetProjectOrigins } from './plugin-projects';
 
 const watchers = new WeakMap<Database, Set<() => void>>();
 
@@ -47,6 +48,7 @@ class ProjectMembership {
 
     if (this.previous === current) return;
     this.previous = current;
+    forgetProjectOrigins(this.database);
     this.changed();
   };
 
@@ -66,5 +68,7 @@ function projectIds(database: Database): string {
 }
 
 export function notifyProjectChanges(database: Database): void {
+  forgetProjectOrigins(database);
+
   for (const changed of watchers.get(database) ?? []) changed();
 }

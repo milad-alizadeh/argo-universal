@@ -33,6 +33,7 @@ export class PluginRuntime {
     private readonly log: (line: string) => void,
     readonly services: PluginServices,
     clock: PluginClock = realClock,
+    private readonly rebuilt: () => void = () => undefined,
   ) {
     this.host = new HostConnection(this.callbacks());
     this.connectAccounts();
@@ -71,6 +72,7 @@ export class PluginRuntime {
       clockStart: () => this.testControl.workerStart(),
       resources: this.resources,
       log: this.log,
+      rebuilt: this.rebuilt,
     };
   }
 
