@@ -67,7 +67,7 @@ function answerOf(
  * The runtime side of a Plugin's own Operations (ADR-0044): one call per run, answered by the worker
  * generation it went to. A Plugin that is not running answers nothing, so the caller starts it first.
  * Every run but a read-tier one is heard once it ends, whoever ran it and however it ended: a handler that
- * wrote and then threw leaves the Plugin's pages stale (ADR-0050, ADR-0056).
+ * wrote and then threw leaves the Plugin's pages stale (ADR-0050, ADR-0060).
  */
 export class PluginOperations {
   private readonly calls: KindCalls<Request, PluginOperationCall, Answer>;

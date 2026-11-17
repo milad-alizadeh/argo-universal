@@ -32,7 +32,7 @@ it("reads a shared Query again at each page's own interval", async () => {
   expect(await drawnText(kit, { path: '/fast' })).toBe('1');
   await kit.clock.advance(10_000);
   expect(await drawnText(kit, { path: '/slow' })).toBe('1');
-  // The page that is due is served what was kept while the Query is read behind it (ADR-0056).
+  // The page that is due is served what was kept while the Query is read behind it (ADR-0060).
   expect(await drawnText(kit, { path: '/fast' })).toBe('1');
   await vi.waitFor(async () =>
     expect(await drawnText(kit, { path: '/fast' })).toBe('2'),

@@ -26,6 +26,11 @@ export class QueryHolders {
     return address !== undefined && this.held.has(JSON.stringify(address));
   }
 
+  // The addresses holding the entry, by the key their draws are known by.
+  public get keys(): IteratorObject<string> {
+    return this.held.keys();
+  }
+
   // Whether any address holds the entry.
   public get any(): boolean {
     return this.held.size > 0;

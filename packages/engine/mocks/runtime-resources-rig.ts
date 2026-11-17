@@ -104,11 +104,22 @@ export class Rig {
 
   // A page's draw reads the overview.
   drawn(): Promise<PluginReply> {
+    this.resources.draws.reads.drew(address);
+
     return this.resources.data.handle(
       caller,
       { api: 'data', action: 'read', query: overview, fresh: false },
       { drawn: { draw: 1, holder: address } },
     );
+  }
+
+  // A page's draw that reads no Query, as one of the Plugin's own state does.
+  drawnPlain(path: string): PageAddress {
+    const plain = { ...address, path };
+
+    this.resources.draws.reads.drew(plain);
+
+    return plain;
   }
 
   // One run of the Plugin's Operation `discover`, declared with `tier`, which the worker answers.

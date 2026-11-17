@@ -13,16 +13,17 @@ export type ChangeListener = (
 // What a new worker makes due before anyone hears of it, so a page drawn again reads past it.
 export type Written = (pluginId: string) => void;
 
-// Where a Plugin's own changes go to be coalesced and settled, so each costs a refresh of what pages hold, not a wipe (ADR-0056).
+// Where a Plugin's own changes go to be coalesced and settled, so each costs a refresh of what pages hold, not a wipe (ADR-0060).
 export type Scoped = (pluginId: string) => void;
 
 /*
- * A Plugin's changes as its pages hear them (ADR-0050, ADR-0056): `argo.changed()` from its running worker and each
+ * A Plugin's changes as its pages hear them (ADR-0050, ADR-0060): `argo.changed()` from its running worker and each
  * of its act-tier Operations are handed on to be coalesced; only a worker that starts marks every page, and an
  * answer that changed marks the addresses that read it. A change from an ended worker is ignored.
  */
 export class PageChanges {
   private readonly listeners = new Set<ChangeListener>();
+  private readonly restarts = new Set<(pluginId: string) => void>();
 
   public constructor(
     private readonly workers: WorkerCalls,
@@ -40,11 +41,24 @@ export class PageChanges {
     if (this.workers.generation(pluginId) !== undefined) this.scoped(pluginId);
   }
 
+  // Every page of the Plugin may have changed: it names no addresses.
+  public allChanged(pluginId: string): void {
+    for (const listener of this.listeners) listener(pluginId);
+  }
+
   // A new worker of the Plugin runs: what it kept in the App from the one before is stale.
   public restarted(pluginId: string): void {
     this.written(pluginId);
+    this.allChanged(pluginId);
 
-    for (const listener of this.listeners) listener(pluginId);
+    for (const listener of this.restarts) listener(pluginId);
+  }
+
+  // Hears each new worker of a Plugin; the answer unsubscribes.
+  public onRestarted(listener: (pluginId: string) => void): () => void {
+    this.restarts.add(listener);
+
+    return () => this.restarts.delete(listener);
   }
 
   // A running worker's `argo.changed()`.

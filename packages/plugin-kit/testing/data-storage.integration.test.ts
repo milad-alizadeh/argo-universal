@@ -44,7 +44,7 @@ it('reads a storage Query again after a write, and not on a clock', async () => 
   expect(await drawnText(kit, { path: '/' })).toBe(firstRow);
   expect((await kit.log()).split('argo.storage')).toHaveLength(before);
 
-  // The page already has a tree, so a draw is served what was kept while the Query is read again behind it (ADR-0056).
+  // The page already has a tree, so a draw is served what was kept while the Query is read again behind it (ADR-0060).
   await kit.pages.run({ operation: 'write', args: {} });
   await vi.waitFor(async () =>
     expect(await drawnText(kit, { path: '/' })).toBe(

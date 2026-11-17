@@ -102,7 +102,10 @@ function answerService(
   message: StateCall,
 ): Promise<PluginReply> {
   const { pluginId, generation, request } = message;
-  const { projectId, serverDevice } = reach(runtime, message);
+  const { projectId, serverDevice, drawn } = reach(runtime, message);
+
+  // A draw's own call to the host is data core cannot compare (ADR-0060).
+  if (drawn?.holder) runtime.draws.reads.hostRead(drawn.holder);
 
   return runtime.services.handle(pluginId, generation, {
     ...request,

@@ -60,3 +60,26 @@ it('marks every page, as before, when a new worker of the Plugin runs', async ()
 
   expect(open.marks).toEqual(['all']);
 });
+
+it('marks, with each change, an address whose draw read no Query, and none that a Query answered the same', async () => {
+  const open = await opened();
+  const plain = open.drawnPlain('/plain');
+
+  await open.ran('act');
+
+  expect(open.marks).toEqual([[plain]]);
+
+  open.elapse();
+  await vi.waitFor(() => expect(open.reads()).toHaveLength(2));
+  await open.answer(1);
+  await vi.waitFor(() => expect(open.windows).toBe(0));
+  expect(open.marks).toEqual([[plain]]);
+});
+
+it('marks every page when a change comes before the Server has drawn any of the Plugin', () => {
+  const open = new Rig();
+
+  open.resources.changes.changed(caller);
+
+  expect(open.marks).toEqual(['all']);
+});

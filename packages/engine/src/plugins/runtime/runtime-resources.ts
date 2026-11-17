@@ -91,9 +91,7 @@ export class RuntimeResources {
     return [
       input.services.watchProjects(() => this.projectsChanged()),
       this.operations.onRan((pluginId) => this.changes.changedBy(pluginId)),
-      this.changes.listen((pluginId, addresses) => {
-        if (!addresses) this.items.changed(pluginId);
-      }),
+      this.changes.onRestarted((pluginId) => this.items.changed(pluginId)),
     ];
   }
 

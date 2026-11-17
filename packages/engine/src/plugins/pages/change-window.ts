@@ -1,6 +1,6 @@
 import type { PluginClock } from '../clock';
 
-// How long a Plugin's changes gather before they are settled once (ADR-0056).
+// How long a Plugin's changes gather before they are settled once (ADR-0060).
 export const changeWindowMs = 200;
 
 /*

@@ -24,7 +24,7 @@ it('drops the kept answers when a Plugin reloads on an advanced clock', async ()
   await kit.clock.advance(9000);
   expect(await drawnText(kit, { path: '/' })).toBe('2');
   await kit.clock.advance(1000);
-  // The page is served what was kept while the Query is read behind it (ADR-0056).
+  // The page is served what was kept while the Query is read behind it (ADR-0060).
   expect(await drawnText(kit, { path: '/' })).toBe('2');
   await expect.poll(() => drawnText(kit, { path: '/' }), processWait).toBe('3');
   expect(

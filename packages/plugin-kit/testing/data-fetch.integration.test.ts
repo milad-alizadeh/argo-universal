@@ -38,7 +38,7 @@ it('keeps an HTTP error as data, and the last answer through a transport error',
 
   expect(await drawnText(kit, { path: '/' })).toBe('401:first');
   await kit.clock.advance(10000);
-  // The draw is served what was kept while the failing read runs behind it (ADR-0056).
+  // The draw is served what was kept while the failing read runs behind it (ADR-0060).
   expect(await drawnText(kit, { path: '/' })).toBe('401:first');
   await vi.waitFor(async () => {
     expect(requests).toBe(2);

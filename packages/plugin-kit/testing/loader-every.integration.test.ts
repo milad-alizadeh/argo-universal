@@ -40,7 +40,7 @@ it.each([9999, 10000, 10001])(
     });
     expect(await fixture.requests()).toHaveLength(1);
 
-    // The draw is served what was kept while the Query is read behind it (ADR-0056); the next one has the new answer.
+    // The draw is served what was kept while the Query is read behind it (ADR-0060); the next one has the new answer.
     await kit.clock.advance(1);
     expect(await kit.pages.draw({ path: '/', known })).toMatchObject({
       kind: 'unchanged',

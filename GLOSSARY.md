@@ -171,7 +171,7 @@ What names one drawing of a Plugin page: the Plugin, the Page path, the Page sta
 _Avoid_: Query key, cache key, URL
 
 **Stale mark**:
-The Server telling every connected App that a Plugin's pages may have changed: all of them when a new worker of the Plugin runs, or the Page addresses that read a Query whose answer changed, which a write finds by reading the held Queries again. A write that changes no answer sends none. An App asks again for the marked pages it shows, and asks for the rest when they are next opened.
+The Server telling every connected App that a Plugin's pages may have changed: all of them when a new worker of the Plugin runs, or the Page addresses that read a Query whose answer changed, which a write finds by reading the held Queries again. A write that changes no answer sends none, except to pages whose draws read nothing core can compare. An App asks again for the marked pages it shows, and asks for the rest when they are next opened.
 _Avoid_: Invalidation, refresh event, push update
 
 **Loader**:

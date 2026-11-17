@@ -32,7 +32,7 @@ export class QueryEntry {
    * began before a write is not current when it lands, so the Loader waits for one more. A page drawn
    * again on a clock reads again once the kept answer is as old as its interval. An address that already
    * has a tree is served what was kept while the read it is due runs behind, and is marked if that read
-   * answers differently (ADR-0056); a first draw, a pull and a background pass wait for the read.
+   * answers differently (ADR-0060); a first draw, a pull and a background pass wait for the read.
    */
   async read(read: QueryRead): Promise<PluginDataState> {
     const kept = this.serving(read);
@@ -155,6 +155,11 @@ export class QueryEntry {
    */
   async refreshHeld(): Promise<void> {
     if (this.holders.any) await this.untilCurrent(undefined, 2);
+  }
+
+  // The addresses whose draws hold the entry.
+  get heldKeys(): IteratorObject<string> {
+    return this.holders.keys;
   }
 
   // A list's clock makes due an entry a Slot read once it is as old as the list's interval.

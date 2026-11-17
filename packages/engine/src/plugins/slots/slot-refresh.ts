@@ -15,7 +15,7 @@ export type Refreshing = {
   clock: PluginClock;
   /*
    * Asks the lists again for what they show: what the Plugin's Slots kept for those contexts is dropped, and the
-   * Query answers a Slot read that are as old as the interval are made due (ADR-0056). Nothing else is.
+   * Query answers a Slot read that are as old as the interval are made due (ADR-0060). Nothing else is.
    */
   ask: (pluginId: string, shown: readonly Shown[], ms: number) => void;
 };

@@ -68,7 +68,7 @@ const nextMark = (
 
 const marked = { pluginId: dataPluginId, addresses: [{ path: '/' }] };
 
-// Past the window Argo coalesces a Plugin's changes in (ADR-0056).
+// Past the window Argo coalesces a Plugin's changes in (ADR-0060).
 const window = 250;
 
 it('marks the address whose answer changed once when an Operation says argo.changed() as it writes', async () => {

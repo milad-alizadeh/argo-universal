@@ -69,7 +69,7 @@ it('shares one named read between the pages reading it, until a write makes it d
 
   await kit.pages.run({ operation: 'close', args: { number: 1 } });
 
-  // A page that has a tree is served what was kept while the read runs again behind it (ADR-0056).
+  // A page that has a tree is served what was kept while the read runs again behind it (ADR-0060).
   await vi.waitFor(async () => expect(await title('/counted-too')).toBe('2'));
 });
 
@@ -82,7 +82,7 @@ it('runs a declared Operation and reads the shown pages again, which mark the Lo
 
   expect(run).toEqual({ result: { closed: 3 } });
 
-  // Past the window Argo coalesces the Plugin's changes in, the pages the list shows are read again (ADR-0056).
+  // Past the window Argo coalesces the Plugin's changes in, the pages the list shows are read again (ADR-0060).
   await kit.clock.advance(250);
 
   await vi.waitFor(async () => {
