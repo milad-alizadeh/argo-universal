@@ -15,7 +15,7 @@ export type Together = (
   targets: readonly Target[],
 ) => Promise<(IssueSummary | null)[]>;
 
-export const keyOf = ({ projectId, number }: Target): string =>
+const keyOf = ({ projectId, number }: Target): string =>
   `${projectId}#${number}`;
 
 async function summaryOf(
