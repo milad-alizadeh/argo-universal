@@ -42,8 +42,11 @@ export class SnapshotPublication {
 
   // The revision and epoch move on every streamed chunk and the App reads rows for them, so they alone do not make a snapshot new; the next snapshot that does carries the latest.
   private isNew(snapshot: PublishedSnapshot, reattached: boolean): boolean {
-    const { maxRevision: _revision, epoch: _epoch, ...shown } = snapshot;
-    const serialized = JSON.stringify(shown);
+    const serialized = JSON.stringify({
+      ...snapshot,
+      maxRevision: 0,
+      epoch: 0,
+    });
 
     if (serialized === this.serialized && !reattached) return false;
     this.serialized = serialized;

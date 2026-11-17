@@ -17,42 +17,52 @@ const chunk = {
   },
 } as const;
 
-// A Session shown in the App while its Agent streams, on a real Feed actor.
-function watchStreamingSession(): {
+interface StreamingSession {
   stream: (chunks: number) => void;
   snapshots: SessionSnapshot[];
-} {
+}
+
+const feedInput = {
+  sessionId: 'child',
+  epoch: 1,
+  maxRevision: 0,
+  nextPosition: 0,
+  now: (): number => 0,
+  createId: (): string => 'feed-id',
+  findWrittenRow: (): undefined => undefined,
+};
+
+// A Session shown in the App while its Agent streams, on a real Feed actor.
+function watchStreamingSession(): StreamingSession {
   vi.useFakeTimers();
   onTestFinished((): void => {
     vi.useRealTimers();
   });
+
   const host = startSnapshotHost();
   insertSession(host.database, { id: 'child', parentSessionId: 'session-1' });
-  const feed = createActor(feedMachine, {
-    input: {
-      sessionId: 'child',
-      epoch: 1,
-      maxRevision: 0,
-      nextPosition: 0,
-      now: (): number => 0,
-      createId: (): string => 'feed-id',
-      findWrittenRow: (): undefined => undefined,
-    },
-  }).start();
+
+  const feed = createActor(feedMachine, { input: feedInput }).start();
   onTestFinished((): void => {
     feed.stop();
   });
+
   const watch = createSessionSnapshotWatcher({
     ...host.sources,
     findFeed: () => feed,
   });
+
   const snapshots: SessionSnapshot[] = [];
+
   const subscription = watch('child', {
     next: (event): void => {
       if (event.type === 'snapshot') snapshots.push(event.snapshot);
     },
   });
-  onTestFinished(() => subscription.unsubscribe());
+
+  onTestFinished((): void => {
+    subscription.unsubscribe();
+  });
 
   return {
     snapshots,
