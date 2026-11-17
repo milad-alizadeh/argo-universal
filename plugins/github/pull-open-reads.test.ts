@@ -69,7 +69,7 @@ const askedOf = async (stage: PullInfo['stage']): Promise<string[]> => {
 };
 
 it('reads every entry of the table for an Open pull request', async () => {
-  expect(await askedOf('open')).toEqual(sorted(openReadKeys));
+  expect(await askedOf('open')).toEqual(sorted([...openReadKeys]));
 });
 
 it('reads none of them for a Merged or Closed one', async () => {
