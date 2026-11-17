@@ -78,6 +78,14 @@ export function changedState(
 const sameShown = (state: KeptFeed, next: KeptFeed): boolean =>
   state.feed.rows === next.feed.rows && state.snapshot === next.snapshot;
 
+// Snapshots are plain data from the Server, so equal ones serialize alike.
+export const sameSnapshot = (
+  held: SessionSnapshot | null,
+  next: SessionSnapshot,
+): boolean =>
+  held === next ||
+  (held !== null && JSON.stringify(held) === JSON.stringify(next));
+
 // A later screen starts from the committed rows and snapshot, once they have an epoch.
 export const keptFeedChanged = (previous: KeptFeed, next: KeptFeed): boolean =>
   next.feed.epoch !== null &&
