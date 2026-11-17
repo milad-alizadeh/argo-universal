@@ -44,6 +44,7 @@
     "./navigation": "./src/navigation/index.ts",
     "./operations/control": "./src/operations/control.ts",
     "./operations/registry": "./src/operations/registry.ts",
+    "./operations/diagram": "./src/operations/diagram.ts",
     "./operations/plugin-guide": "./src/operations/plugin-guide.ts",
     "./plugins/plugin-template": "./src/plugins/plugin-template.ts",
     "./registry-schema": "./src/agents/upstream/schema.ts",
@@ -92,6 +93,7 @@
     "./plugins/replacement-tree": "./src/plugins/replacement-tree.ts",
     "./plugins/prepare-tree": "./src/plugins/prepare-tree.ts",
     "./kit-tokens": "./src/kit-tokens.ts",
+    "./kit-diagram": "./src/diagram/index.ts",
     "./kit-moves": "./src/kit-moves.ts",
     "./plugins/wire-node-key": "./src/plugins/wire-node-key.ts",
     "./kit-props": "./src/kit-props.ts",
@@ -117,6 +119,7 @@
     "@noble/curves": "catalog:",
     "@noble/hashes": "catalog:",
     "@repo/db": "workspace:*",
+    "beautiful-mermaid": "catalog:",
     "drizzle-orm": "catalog:",
     "zod": "catalog:"
   },

@@ -27,7 +27,7 @@ export const expiresAtMsOf = (
   expiresIn === undefined ? undefined : Date.now() + expiresIn * msPerSecond;
 
 // A token that never runs out is kept as the bare string, as it was before refresh tokens; anything more as JSON.
-export const secretOf = (token: KeptToken): string =>
+const secretOf = (token: KeptToken): string =>
   token.refresh === undefined && token.expiresAtMs === undefined
     ? token.access
     : JSON.stringify(token);
@@ -117,4 +117,28 @@ export function tokenLender(
 
     return next;
   };
+}
+
+// What a kit sign-in adds and keeps with: the Account, under the host its token opens, and the token's secret.
+type Keeping = {
+  accounts: Pick<Argo['accounts'], 'add'>;
+  secrets: Pick<Argo['secrets'], 'set'>;
+};
+
+// Who signed in, with the token the service gave for them.
+type SignedInPerson = { host: string; label: string; token: KeptToken };
+
+/*
+ * Argo mints the Account id and reuses the row of a person who signs in again; the token is kept under it, and the
+ * sign-in answers with the id so its page can open the Account in Settings.
+ */
+export async function keepSignIn(
+  argo: Keeping,
+  { host, label, token }: SignedInPerson,
+): Promise<{ kind: 'signed-in'; label: string; accountId: string }> {
+  const accountId = await argo.accounts.add(host, { label });
+
+  await argo.secrets.set(accountId, secretOf(token));
+
+  return { kind: 'signed-in', label, accountId };
 }

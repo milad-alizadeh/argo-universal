@@ -15,6 +15,8 @@ export { LinkMarkItem } from '#plugin-link-mark-item';
 
 export { SessionRowItem } from '#plugin-session-row-item';
 
+export { SessionBarItem } from '#plugin-session-bar-item';
+
 export {
   addOnlySlots,
   itemsSlotEntry,

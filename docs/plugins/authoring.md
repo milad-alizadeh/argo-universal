@@ -105,6 +105,22 @@ A move reports the card's `id` and the `column` it lands in, which fill an Opera
 
 The move shows at once: the App sets the card's `column` and `pending` as optimistic props, so it draws in its new column with a spinner until the Operation answers, and goes back with an error toast when it fails. A move to a column the card does not name, or to the one it is in, is refused before any call is made; a page test sees that refusal from `page.act(board, 'onMove', { id, column })`. The board scrolls sideways when its columns do not fit, at every width, and never narrows a column.
 
+## Session rows
+
+A `SessionRow` draws one of the App's own Sessions as its row in the Sessions list, so a page can attach a Session to anything: an Issue, a pull request, a task. It takes the Session's `sessionId` and nothing else about it. The App reads the Session live, so the title, status, the Change stage and other Plugins' items on the row never go stale, and a Plugin stores only the id. Pressing the row opens the Session; `onPress` replaces that.
+
+```tsx
+<List appearance="grouped">
+  <List.Section key="sessions" title="Sessions">
+    {sessionIds.map((id) => (
+      <SessionRow key={id} sessionId={id} />
+    ))}
+  </List.Section>
+</List>
+```
+
+The Plugin needs the `sessions:read` Capability in `plugin.json`; without it the Server drops the row from the page and logs why. A Session the App does not list, such as an archived or deleted one or a child Session, draws nothing, so a Plugin that wants a "gone" mark checks with `argo.sessions.get`, which answers `null` for one that is gone.
+
 ## Source validation
 
 `argo-plugin validate <dir>` uses the manifest reader and bundler that the Plugin loader uses.
@@ -642,6 +658,7 @@ argo.pages.define('/', signInGate(flow, { name: 'GitHub' }, { load, render }));
 - `provideSignIn` registers the `signIn` and `cancelSignIn` Operations (declare both in `contributes.operations`, tier `act`), defines the sign-in page at `/sign-in` (the page `contributes.accounts` names) and registers the Account's provider.
 - `signInGate(flow, options, page)` takes an ordinary Loader page whose `load` answers once. When a read finds no Account, or the service rejects the Account's token (a 401), `load` throws `SignInRequired`, and the gate draws the sign-in in the page's place. Signing in again rewrites the same Account's token. The page reads again every minute unless it says `every`, so a sign-out or a revoked token is noticed within it, and a sign-in redraws it at once.
 - `deviceFlow`'s `label` names the person: the kit calls `url` with the token and reads `field`, so the Plugin never sees the token. A person who signs in again with the same label keeps one Account.
+- The sign-in page is the kit's `SignIn` component, laid out as Settings is: the step beside the service's mark, then Settings rows: a device flow's code is a `FieldGroup.Value` row above the one that copies it and continues. `options.logo` is SVG markup of the service's logo for the mark, such as `{ name: 'GitHub', logo: githubLogoSvg }`; without it, the App draws the Plugin's own `icon`. A Plugin can also place `SignIn` on its own pages, with `FieldGroup.Link` and `FieldGroup.Value` rows as its children.
 - The sign-in page draws every step: asking for a code, the code with where to enter it and a countdown length, denied, expired and failed, and the redirect flow's wait for the browser. A redirect flow on a Device that is not the Server Device says to continue there; a device flow does not need it, and `argo.accounts.add` is not refused to a paired Device.
 - A read for a Project the page's path names, rather than the page's own, passes `projectId` to `argo.fetch`.
 

@@ -7,6 +7,7 @@ import {
   useInstalledAgents,
 } from '#features/agents';
 import { useConnectionState, useTRPC } from '#features/connection';
+import { useOpenPluginPage, useSessionRowPlugins } from '#features/plugins';
 import {
   ArchiveSessionAlert,
   liveUpdatesStopped,
@@ -15,21 +16,19 @@ import {
   type SessionsView,
   sessionsLoadState,
 } from '#features/sessions';
+import { useSessionListUpdates } from '#features/sessions';
 import {
   newSessionHref,
   projectHref,
   sessionHref,
 } from '#lib/product/navigation/navigation';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
-import { useOpenPluginPage } from '../plugins/use-plugin-opener';
-import { useSessionRowPlugins } from '../plugins/use-session-row-plugins';
 import {
   SessionListView,
   type SessionListViewProps,
 } from './session-list-view';
 import { useArchiveSession } from './use-archive-session';
 import { useRenameSession } from './use-rename-session';
-import { useSessionListUpdates } from './use-session-list-updates';
 import { useSessionPages } from './use-session-pages';
 
 export interface LiveSessionListProps {

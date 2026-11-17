@@ -99,6 +99,14 @@ export const svgProps = z.object({
     .positive()
     .optional()
     .describe('The artwork width divided by its height.'),
+  width: z
+    .number()
+    .finite()
+    .positive()
+    .optional()
+    .describe(
+      'The artwork width in points; left out, it fills the width it is given.',
+    ),
   onPress: pressHandler
     .optional()
     .describe('The action run when the artwork is pressed.'),

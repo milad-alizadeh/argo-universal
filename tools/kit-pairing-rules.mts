@@ -33,6 +33,8 @@ export const exemptFolders = {
   'content/agent-logo':
     "An Agent's logo from the ACP registry, drawn beside a Picker option; a Plugin sends the option's `logo`.",
   'content/liquid-glass': 'A native surface material; only how it looks.',
+  'content/diagram':
+    'App-only: a Mermaid fence in Markdown draws as a diagram; a Plugin sends the Markdown or an Svg.',
   'content/media-url':
     'Resolves the src of Image, Video and Audio; no props of its own.',
   'content/native-text': 'The platform fork of Text.',

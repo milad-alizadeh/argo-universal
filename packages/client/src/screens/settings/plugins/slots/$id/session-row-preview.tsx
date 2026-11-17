@@ -4,15 +4,15 @@ import { useClock } from '@repo/kit/use-clock';
 import { useQuery } from '@tanstack/react-query';
 import type * as React from 'react';
 import { useTRPC } from '#features/connection';
+import {
+  type PluginLookup,
+  rowDrawing,
+  type SentRowItems,
+  usePluginLookup,
+  useSentRowItems,
+} from '#features/plugins';
 import { SessionRow } from '#features/sessions';
 import type { SlotVisibility } from '#features/settings';
-import { rowDrawing } from '../../../../plugins/session-row-drawing';
-import type { PluginLookup } from '../../../../plugins/slot-items';
-import { usePluginLookup } from '../../../../plugins/use-plugin-names';
-import {
-  type SentRowItems,
-  useSentRowItems,
-} from '../../../../plugins/use-session-row-answers';
 import type { SlotPreviewProps } from './slot-detail';
 
 // What the preview draws: a Session and the Plugins' answers for it, before this page's choices apply.

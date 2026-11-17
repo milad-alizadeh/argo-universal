@@ -6,7 +6,7 @@ The first version also added `CodeMap`, the Atlas Code Map as a kit component wi
 
 ## Decision
 
-- **`Svg` draws SVG markup the Plugin sends.** Its props are `xml`, `label`, `tone`, an optional `aspectRatio` and an optional `onPress`. The App draws it with `react-native-svg`'s `SvgXml` on every platform, as `AgentLogo` already does for registry logos.
+- **`Svg` draws SVG markup the Plugin sends.** Its props are `xml`, `label`, `tone`, an optional `aspectRatio`, an optional `width` in points (left out, the artwork fills the width it is given) and an optional `onPress`. The App draws it with `react-native-svg`'s `SvgXml` on every platform, as `AgentLogo` already does for registry logos.
   - The Server parses the markup with `react-native-svg`'s own `parse`, checks the tree against the allowlists below and sends re-serialised markup. The Apps never read a Plugin's raw markup.
   - Elements allowed: `svg`, `g`, `defs`, `path`, `rect`, `circle`, `ellipse`, `line`, `polyline`, `polygon`, `text`, `tspan`, `linearGradient`, `radialGradient`, `stop` and `clipPath`. Everything else is refused, including `image`, `use`, `pattern`, `mask`, `filter`, `foreignObject`, `a`, `style` and `script`, so no SVG fetches a URL.
   - Attributes come from an allowlist; `style`, `class` and event attributes are refused. `href` and `url()` may only point at an id in the same markup.

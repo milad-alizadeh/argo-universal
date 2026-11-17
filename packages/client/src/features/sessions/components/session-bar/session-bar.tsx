@@ -17,6 +17,8 @@ export interface SessionBarEntry {
   tone?: SessionBarItem['tone'];
   // The Plugin page the line opens, when it has one.
   path?: string;
+  // What takes the line off the Session; a line with it has a "…" menu in the Workbench card.
+  detach?: SessionBarItem['detach'];
 }
 
 export interface SessionBarProps {
@@ -26,6 +28,8 @@ export interface SessionBarProps {
   hidden: readonly SessionBarEntry[];
   // Opens a line's Plugin page; a line without one never calls it.
   onOpen: (entry: SessionBarEntry) => void;
+  // Runs a line's `detach`; a line without one has no menu.
+  onDetach?: (entry: SessionBarEntry) => void;
 }
 
 /*
