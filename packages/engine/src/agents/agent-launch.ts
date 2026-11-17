@@ -10,7 +10,13 @@ export type AgentLaunch = {
   cwd: string;
   env: Readonly<Record<string, string>>;
   authContext: string;
-  sessionAccess?: { token: string; home: string; cliDirectory: string };
+  sessionAccess?: {
+    token: string;
+    home: string;
+    cliDirectory: string;
+    // Whether the person keeps the checklist on (ADR-0053); on when left out.
+    todoList?: boolean;
+  };
   release?: () => void;
 };
 

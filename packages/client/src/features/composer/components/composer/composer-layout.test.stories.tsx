@@ -165,8 +165,8 @@ export const TrayWordsShareAnEdge: Story = {
   render: (args) => <Composer {...composerProps(args)} />,
   play: async ({ canvas, userEvent }) => {
     await settleLayout(layoutWidths.wide);
-    await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
-    const edge = leftOf(canvas.getByText('Plan 1/3'));
+    await userEvent.click(canvas.getByRole('button', { name: 'Todos' }));
+    const edge = leftOf(canvas.getByText('Todos 1/3'));
 
     await expect(leftOf(canvas.getByText('Inspect the Composer layout'))).toBe(
       edge,

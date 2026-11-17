@@ -83,7 +83,8 @@ const factsOf = (): Omit<FixturePull, keyof Names> => ({
   state: 'open',
   merged: false,
   draft: false,
-  mergeable_state: 'clean',
+  // Waiting on its Checks, so GitHub queues auto-merge rather than refusing a pull request it could merge now.
+  mergeable_state: 'blocked',
   auto_merge: null,
   additions: 10,
   deletions: 2,

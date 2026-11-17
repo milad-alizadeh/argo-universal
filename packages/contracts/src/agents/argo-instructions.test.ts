@@ -2,7 +2,12 @@ import { expect, it } from 'vitest';
 import { diagramTones } from '../diagram';
 import { SubagentRole } from '../feed/subagent-role';
 import { pluginInstructionsLimit } from '../plugins/manifest-fields';
-import { argoInstructions } from './argo-instructions';
+import { todoOperationIds } from '../sessions/todos';
+import {
+  argoInstructions,
+  argoInstructionsMarkdown,
+  chosenArgoInstructions,
+} from './argo-instructions';
 
 it('keeps each Argo instruction within the Plugin instructions limit', () => {
   const over = argoInstructions.filter(
@@ -12,8 +17,8 @@ it('keeps each Argo instruction within the Plugin instructions limit', () => {
   expect(over).toEqual([]);
 });
 
-it('asks the Agent to keep a Plan', () => {
-  expect(argoInstructions.map(({ name }) => name)).toContain('Plan');
+it('asks the Agent to keep a Todo list', () => {
+  expect(argoInstructions.map(({ name }) => name)).toContain('Todo list');
 });
 
 it('asks the Agent to declare the role of each Agent it spawns, naming the tool that runs it', () => {
@@ -40,12 +45,35 @@ it('names every Agent role the Agent can declare', () => {
   for (const role of SubagentRole.options) expect(agents).toContain(role);
 });
 
-// Claude Code defers its task tools behind ToolSearch, and an unnamed tool went unused.
-it('names the checklist tool of each Agent the Plan reaches', () => {
-  const plan = argoInstructions.find(({ name }) => name === 'Plan')?.text;
+// The Agent runs both Operations with no discovery call, so the instruction carries their ids and the tool that runs them.
+it('gives the Agent the Operations that keep the Todo list and the tool that runs them', () => {
+  const todoList = argoInstructions.find(
+    ({ name }) => name === 'Todo list',
+  )?.text;
 
-  for (const tool of ['TaskCreate', 'TodoWrite', 'update_plan', 'ToolSearch'])
-    expect(plan).toContain(tool);
+  for (const word of [...todoOperationIds, 'operation_run', 'ToolSearch'])
+    expect(todoList).toContain(word);
+});
+
+it("names no Agent's own checklist tool", () => {
+  const todoList = argoInstructions.find(
+    ({ name }) => name === 'Todo list',
+  )?.text;
+
+  for (const tool of ['TaskCreate', 'TodoWrite', 'update_plan'])
+    expect(todoList).not.toContain(tool);
+});
+
+it('leaves the Todo list instruction out when the person turned the Todo list off', () => {
+  const names = argoInstructions.map(({ name }) => name);
+
+  expect(
+    chosenArgoInstructions({ todoList: false }).map(({ name }) => name),
+  ).toEqual(names.filter((name) => name !== 'Todo list'));
+  expect(argoInstructionsMarkdown({ todoList: false })).not.toContain(
+    'session.setTodos',
+  );
+  expect(argoInstructionsMarkdown()).toContain('session.setTodos');
 });
 
 it('asks the Agent to validate each diagram, naming the Operation and every tone it may mark a node with', () => {
@@ -57,4 +85,14 @@ it('asks the Agent to validate each diagram, naming the Operation and every tone
   expect(diagrams).toContain('operation_run');
 
   for (const tone of diagramTones) expect(diagrams).toContain(tone);
+});
+
+// `gh pr create` alone left each pull request unattached to the Session.
+it('asks the Agent to attach each pull request it opens, naming both Operations and the tool that runs them', () => {
+  const pullRequests = argoInstructions.find(
+    ({ name }) => name === 'Pull requests',
+  )?.text;
+
+  for (const word of ['github.discover', 'github.attach', 'operation_run'])
+    expect(pullRequests).toContain(word);
 });

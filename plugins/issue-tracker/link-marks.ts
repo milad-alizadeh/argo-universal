@@ -51,13 +51,7 @@ function markedOf(repositories: Repositories, asked: Asked): Marked[] {
     : [];
 }
 
-type Summaries = Pick<IssueSummaries, 'cached' | 'refresh'>;
-
-const storedOf = (
-  summaries: Summaries,
-  links: readonly Marked[],
-): Promise<(IssueSummary | null)[]> =>
-  Promise.all(links.map((link) => summaries.cached(link)));
+type Summaries = Pick<IssueSummaries, 'answer'>;
 
 const entryOf = (
   { href }: Marked,
@@ -65,54 +59,7 @@ const entryOf = (
 ): [string, Mark[]][] =>
   summary ? [[href, [{ kind: 'issue', state: summary.status }]]] : [];
 
-type State = {
-  deps: IssueDeps;
-  summaries: Summaries;
-  // A refresh is under way, so another ask starts none.
-  busy: boolean;
-  // The last refresh changed a stored summary, so the ask that follows it is answered from what it stored.
-  echo: boolean;
-};
-
-async function refresh(
-  state: State,
-  links: readonly Marked[],
-  before: readonly (IssueSummary | null)[],
-): Promise<void> {
-  await state.summaries.refresh(links, state.deps.readQuery);
-
-  const after = await storedOf(state.summaries, links);
-
-  state.echo = JSON.stringify(after) !== JSON.stringify(before);
-}
-
-// A refresh that could not run leaves the summaries as they were; the next ask runs it again.
-const leftAsItWas = (): void => {};
-
-// Whether this ask starts no refresh: one is under way, or the last one caused this very ask.
-function skips(state: State): boolean {
-  const skipped = state.echo || state.busy;
-
-  state.echo = false;
-
-  return skipped;
-}
-
-// The Tracker is asked behind the Slot's answer, through the one read that stores an Issue's summary.
-function behind(
-  state: State,
-  links: readonly Marked[],
-  before: readonly (IssueSummary | null)[],
-): void {
-  if (skips(state)) return;
-
-  state.busy = true;
-  void refresh(state, links, before)
-    .catch(leftAsItWas)
-    .finally(() => {
-      state.busy = false;
-    });
-}
+type State = { deps: IssueDeps; summaries: Summaries };
 
 async function marksOf(
   state: State,
@@ -120,9 +67,7 @@ async function marksOf(
 ): Promise<Record<string, Mark[]>> {
   const repositories = await repositoriesOf(state.deps.listProjects);
   const links = asked.flatMap((link) => markedOf(repositories, link));
-  const stored = await storedOf(state.summaries, links);
-
-  behind(state, links, stored);
+  const stored = await state.summaries.answer(links);
 
   return Object.fromEntries(
     links.flatMap((link, index) => entryOf(link, stored[index])),
@@ -130,15 +75,15 @@ async function marksOf(
 }
 
 /*
- * The state beside a link to an Issue (ADR-0052): the summary the Session row and the Session bar read, so a link
- * never says other than they do, refreshed while a feed that shows the link is open.
+ * The state beside a link to an Issue (ADR-0052): the same shared Query answers the Session row
+ * and Session bar read. Query changes refresh the visible marks.
  */
 export function registerLinkMarks(
   api: Argo,
   deps: IssueDeps,
   summaries: Summaries,
 ): void {
-  const state: State = { deps, summaries, busy: false, echo: false };
+  const state: State = { deps, summaries };
 
   api.slots.register(linkMarkSlot, ({ contexts }) => marksOf(state, contexts));
 }

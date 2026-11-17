@@ -8,6 +8,8 @@ export const serverSettings = snakeCase.table(
     singleton: integer().primaryKey(),
     // Whether the Server outlives the desktop app that started it (ADR-0022).
     keepRunningAfterQuit: integer({ mode: 'boolean' }).notNull().default(false),
+    // Whether Sessions keep a checklist of their steps (ADR-0053).
+    todoList: integer({ mode: 'boolean' }).notNull().default(true),
   },
   (table) => [check('server_settings_singleton', sql`${table.singleton} = 1`)],
 );

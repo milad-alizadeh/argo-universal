@@ -6,6 +6,7 @@ import {
   createUnsupportedContent,
   collectUnsupportedContentReasons,
 } from './content';
+import { toolImageBlob } from './tool-images';
 
 const mapToolDiff = (
   block: Extract<AcpToolCallContent, { type: 'diff' }>,
@@ -32,6 +33,31 @@ const createUnavailableTerminalContent = (
   _meta: createAcpContentMetadata(block._meta),
 });
 
+type AcpContent = Extract<AcpToolCallContent, { type: 'content' }>;
+
+type MappedContent = Extract<ToolCallContent, { type: 'content' }>['content'];
+
+type AcpImage = Extract<AcpContent['content'], { type: 'image' }>;
+
+// A tool's image is stored as a Blob; one without image bytes maps as message content does.
+const mapToolImage = (content: AcpImage): MappedContent => {
+  const stored = toolImageBlob(content);
+
+  if (!stored) return mapSupportedContentBlock(content);
+
+  return {
+    type: 'image',
+    mimeType: content.mimeType,
+    blob: stored.blob,
+    _meta: createAcpContentMetadata(content._meta),
+  };
+};
+
+const mapToolContentBlock = (content: AcpContent['content']): MappedContent =>
+  content.type === 'image'
+    ? mapToolImage(content)
+    : mapSupportedContentBlock(content);
+
 export const mapToolCallContent = (
   block: AcpToolCallContent,
 ): ToolCallContent => {
@@ -41,7 +67,7 @@ export const mapToolCallContent = (
 
   return {
     type: 'content',
-    content: mapSupportedContentBlock(block.content),
+    content: mapToolContentBlock(block.content),
     _meta: createAcpContentMetadata(block._meta),
   };
 };

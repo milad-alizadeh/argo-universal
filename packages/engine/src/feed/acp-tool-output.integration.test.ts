@@ -1,3 +1,6 @@
+import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { assert, expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
@@ -117,4 +120,36 @@ it('a capped multibyte text keeps only whole characters', async () => {
   const text = readPreview(row);
   expect(text).not.toContain('�');
   expect(text.replaceAll('€', '')).toBe('\n…\n');
+});
+
+it('an image a tool returns is stored as a Blob the row shows as an image', async () => {
+  const png = Buffer.from('a tiny png');
+  const blobId = createHash('sha256').update(png).digest('hex');
+
+  const host = await startToolHost({
+    kind: 'read',
+    content: [
+      {
+        type: 'content',
+        content: {
+          type: 'image',
+          mimeType: 'image/png',
+          data: png.toString('base64'),
+        },
+      },
+    ],
+  });
+
+  const row = await readToolRow(host);
+  expect(row.content).toEqual([
+    {
+      type: 'content',
+      content: {
+        type: 'image',
+        mimeType: 'image/png',
+        blob: { blobId, mime: 'image/png', bytes: png.length },
+      },
+    },
+  ]);
+  expect(await readFile(join(host.blobsFolder, blobId))).toEqual(png);
 });

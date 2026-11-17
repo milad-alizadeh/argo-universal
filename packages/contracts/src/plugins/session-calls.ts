@@ -40,15 +40,30 @@ export const SessionPrompt = z.object({
   text: z.string().min(1),
 });
 
+// `argo.sessions.withdraw` takes back a Queued Prompt this Plugin sent; needs `sessions:prompt` (ADR-0055).
+export const SessionWithdraw = z.object({
+  api: z.literal('sessions'),
+  action: z.literal('withdraw'),
+  sessionId: z.string().min(1),
+  queuedId: z.string().min(1),
+});
+
 export const SessionCall = z.discriminatedUnion('action', [
   SessionGet,
   SessionArchive,
   SessionPrompt,
+  SessionWithdraw,
 ]);
 
-// Whether the Prompt started a Turn now, or waits in the Session's queue behind the work already there.
-export const PluginPromptAnswer = z.object({
-  status: z.enum(['started', 'queued']),
-});
+// Whether the Prompt started a Turn now, or waits in the Session's queue behind the work already there, by the id `withdraw` takes.
+export const PluginPromptAnswer = z.discriminatedUnion('status', [
+  z.object({ status: z.literal('started') }),
+  z.object({ status: z.literal('queued'), queuedId: z.string().min(1) }),
+]);
 
 export type PluginPromptAnswer = z.infer<typeof PluginPromptAnswer>;
+
+// Whether the Prompt was taken back; false when it started, is gone, or the person is editing it.
+export const PluginWithdrawAnswer = z.object({ withdrawn: z.boolean() });
+
+export type PluginWithdrawAnswer = z.infer<typeof PluginWithdrawAnswer>;

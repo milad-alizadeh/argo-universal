@@ -39,6 +39,13 @@ const messageOf = (error: Json, invalid: string): string => {
   return typeof message === 'string' ? message : invalid;
 };
 
+// The message of GraphQL's first refusal, or nothing when it did not refuse.
+export function refusalOf(body: string): string | undefined {
+  const [first] = errorsOf(JSON.parse(body));
+
+  return first === undefined ? undefined : messageOf(first, '');
+}
+
 // GraphQL answers 200 with `errors` when it refuses, so the reply is read before it is trusted.
 export function dataOf(body: string, invalid: string): Json {
   const reply: Json = JSON.parse(body);

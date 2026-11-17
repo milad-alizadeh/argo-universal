@@ -17,7 +17,6 @@ const act: [OperationId, (sessionId: string) => Json][] = [
       value: 'x',
     }),
   ],
-  ['session.savePlan', (sessionId): Json => ({ sessionId, plan: '# Plan' })],
   ['shell.stop', (sessionId): Json => ({ sessionId, shellId: 'shell-1' })],
   ['session.close', sessionOnly],
 ];

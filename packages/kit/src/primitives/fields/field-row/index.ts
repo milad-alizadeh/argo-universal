@@ -10,7 +10,9 @@ export {
 export { useFieldText } from './field-row-text-state';
 
 export {
+  InRowFrameContext,
   RowPressContext,
+  rowFrameReachClassName,
   rowPressTargetClassName,
   useRowPressable,
 } from './field-row-press';

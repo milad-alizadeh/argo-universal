@@ -34,7 +34,7 @@ type Story = StoryObj<typeof meta>;
 const modelLabel = 'Agent and model';
 
 const names = [
-  'Plan',
+  'Todos',
   'Agents: 2',
   'Background Tasks: 1',
   modelLabel,
@@ -120,8 +120,8 @@ const plainControls = [modelLabel, 'Mode', 'Context window'];
 // A phone floats the Plan above the card as glass; a wide window draws it as the tray's own row, never a pill.
 const materialGroups = (compact: boolean): [string[], string[]] =>
   compact
-    ? [[...glassControls, 'Plan'], plainControls]
-    : [glassControls, [...plainControls, 'Plan']];
+    ? [[...glassControls, 'Todos'], plainControls]
+    : [glassControls, [...plainControls, 'Todos']];
 
 async function expectMaterialPolicy(
   canvas: ReturnType<typeof within>,

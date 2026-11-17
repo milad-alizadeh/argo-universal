@@ -130,8 +130,17 @@ function cancelBackground(
   return () => signal.removeEventListener('abort', cancel);
 }
 
+/*
+ * claude-agent-acp passes `_meta.claudeCode.options` to the Claude Agent SDK, so the prediction leaves no transcript in Claude's resume list.
+ * Agents that do not know the key ignore `_meta`.
+ */
+const unsaved = { claudeCode: { options: { persistSession: false } } };
+
 function opening(cwd: string): AcpSessionOpening {
-  return { method: 'session/new', params: { cwd, mcpServers: [] } };
+  return {
+    method: 'session/new',
+    params: { cwd, mcpServers: [], _meta: unsaved },
+  };
 }
 
 function promptParams(
