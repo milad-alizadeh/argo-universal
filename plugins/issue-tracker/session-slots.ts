@@ -27,7 +27,7 @@ type ToItems = (
  */
 export function registerSessionFills(api: Argo, deps: IssueDeps): Attachments {
   const changed = slotsChanged(api);
-  const summaries = createIssueSummaries(deps);
+  const summaries = createIssueSummaries(deps, changed);
 
   deps.changes.subscribe(changed);
   registerItems(api, { deps, summaries });
