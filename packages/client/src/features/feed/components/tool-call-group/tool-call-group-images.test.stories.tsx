@@ -2,7 +2,10 @@ import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
-import { recordedImageUrl } from '../../../../lib/product/feed-message.mocks';
+import {
+  recordedImageUrl,
+  redSquareDataUrl,
+} from '../../../../lib/product/feed-message.mocks';
 import { FeedImageUrlContext } from '../feed-image';
 import { ToolCallGroup } from './tool-call-group';
 import { imageReadsGroup } from './tool-call-group-fixtures';
@@ -38,9 +41,10 @@ function opensReadImages(width: number): Story {
 
       await userEvent.click(canvas.getByRole('button', { name: before }));
       const dialog = await within(document.body).findByRole('dialog');
+      await waitFor(() => expect(dialog).toBeVisible());
       await expect(
         within(dialog).getByRole('img', { name: 'feed-before.png' }),
-      ).toBeVisible();
+      ).toHaveAttribute('src', redSquareDataUrl);
       await userEvent.keyboard('{Escape}');
       await waitFor(() =>
         expect(
