@@ -58,6 +58,7 @@ import {
   saveSessionArchive,
   removeSessionCheckout,
 } from './archive/archive-operations';
+import { archiveFailure } from './archive/own-archive';
 import { type ClosureStep, nextClosureStep } from './closure/closure-step';
 import { sessionConfiguration, type ConfigurationStep } from './configuration';
 import { creationSettledEvent } from './creation/creation-receipt';
@@ -1272,6 +1273,12 @@ export const sessionMachine = sessionSetup.createMachine({
                 onError: {
                   target: 'closing',
                   actions: [
+                    sendTo('feed', ({ context, event }): FeedEvent =>
+                      archiveFailure(
+                        `${context.sessionId}:archive-failed`,
+                        event.error,
+                      ),
+                    ),
                     'cancelArchiveRequest',
                     {
                       type: 'rememberFailure',

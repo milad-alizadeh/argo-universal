@@ -79,10 +79,10 @@ export const sessionOperations = {
     id: 'session.archive',
     label: 'Archive Session',
     description:
-      'Archive an idle Session and remove its Checkout after the Undo window.',
+      'Archive a Session and remove its Checkout after the Undo window. When the user asks an Agent to archive its own Session, schedule it for when the Session is idle without another confirmation.',
     params: SessionArchiveInput,
     result: SessionArchiveOutput,
-    tier: 'confirm',
+    tier: 'act',
     keywords: ['archive', 'remove', 'checkout'],
   },
   'session.unarchive': {
