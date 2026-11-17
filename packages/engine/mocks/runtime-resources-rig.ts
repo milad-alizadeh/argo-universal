@@ -3,7 +3,7 @@ import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import { vi } from 'vitest';
 import type { PluginClock } from '../src/plugins/clock';
 import type { PluginReply } from '../src/plugins/protocol/runtime';
-import { answerService } from '../src/plugins/runtime/calls';
+import { answerService, type StateCall } from '../src/plugins/runtime/calls';
 import { RuntimeResources } from '../src/plugins/runtime/runtime-resources';
 import { HeldSecrets } from '../src/plugins/services/held-secrets';
 
@@ -35,6 +35,16 @@ const services = {
  * A Plugin's runtime resources with a clock the test turns by hand: what the Server sends the worker is kept, and
  * the test plays the worker's answers.
  */
+// A Loader's call to the host, made for the draw with this id.
+const hostCall = (draw: number): StateCall => ({
+  type: 'call',
+  pluginId,
+  generation: caller.generation,
+  id: 1,
+  origin: { kind: 'draw', draw },
+  request: { api: 'projects', action: 'list' },
+});
+
 export class Rig {
   readonly resources: RuntimeResources;
   // The Page addresses marked stale, one entry per mark sent, or `all` for every page.
@@ -132,17 +142,7 @@ export class Rig {
 
     const draw = await vi.waitFor(() => this.lastOf('draw'));
 
-    await answerService(
-      { ...this.resources, services: { handle: async () => ({ ok: true }) } },
-      {
-        type: 'call',
-        pluginId,
-        generation: caller.generation,
-        id: 1,
-        origin: { kind: 'draw', draw },
-        request: { api: 'projects', action: 'list' },
-      },
-    );
+    await this.askHost(draw);
     this.resources.draws.receive(caller, {
       action: 'drawn',
       id: draw,
@@ -150,6 +150,15 @@ export class Rig {
       pages: 1,
     });
     await answering;
+  }
+
+  // The draw's Loader asks the host for the Projects.
+  private askHost(draw: number): Promise<PluginReply> {
+    const services = {
+      handle: async (): Promise<PluginReply> => ({ ok: true }),
+    };
+
+    return answerService({ ...this.resources, services }, hostCall(draw));
   }
 
   // One run of the Plugin's Operation `discover`, declared with `tier`, which the worker answers.

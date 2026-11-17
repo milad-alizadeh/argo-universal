@@ -4,6 +4,7 @@ import { toolCallSlotFixture } from '@repo/contracts/plugins/replaceable-fixture
 import type { SlotItems } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import { dataFixture, dataPluginId } from '../mocks/data-fixture';
+import { markFor } from './stale-marks';
 
 const rowSlotId = 'argo/session/row/v1';
 
@@ -99,15 +100,7 @@ it("draws a page again and asks an items Slot again after the Plugin's argo.chan
    * The Plugin starting marks every page, and the page that drew its own state is marked as it says so; the page that
    * read the count is marked once Argo has read its Query again (ADR-0060).
    */
-  const seen: unknown[] = [];
-
-  for (let mark = await stale.next(); ; mark = await stale.next()) {
-    seen.push(mark.value);
-
-    if (mark.value?.addresses?.some(({ path }) => path === '/')) break;
-  }
-
-  expect(seen.at(-1)).toEqual({
+  expect(await markFor(stale, '/')).toEqual({
     pluginId: dataPluginId,
     addresses: [expect.objectContaining({ path: '/' })],
   });
