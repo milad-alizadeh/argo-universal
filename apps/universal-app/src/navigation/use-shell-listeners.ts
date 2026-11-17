@@ -2,6 +2,7 @@ import {
   useDesktopNavigation,
   useNotifications,
   usePluginListChanges,
+  usePrefetchNavPages,
   useRememberShownPage,
   useStaleMarks,
 } from '@repo/client';
@@ -16,4 +17,6 @@ export function useShellListeners(): void {
   usePluginListChanges();
   // Every Loader page and Workbench card hears a Plugin's stale marks, whichever Section is shown or none.
   useStaleMarks();
+  // Each nav item's root page is drawn once the Plugin list arrives, so its first visit shows a kept tree.
+  usePrefetchNavPages();
 }

@@ -25,6 +25,7 @@ type ServerSource = {
     | 'pluginNetwork'
     | 'pluginOAuth'
     | 'pluginClock'
+    | 'watchPlugins'
     | 'version'
     | 'startedAt'
     | 'database'
@@ -67,6 +68,7 @@ type ServerConfiguration = Pick<
   | 'pluginNetwork'
   | 'pluginOAuth'
   | 'pluginClock'
+  | 'watchPlugins'
   | 'discoveryName'
 >;
 
@@ -101,6 +103,10 @@ function whereAndWhat(
 
 function pluginFlowOptions(
   context: ServerConfiguration,
-): Pick<ServerConfiguration, 'pluginOAuth' | 'pluginClock'> {
-  return { pluginOAuth: context.pluginOAuth, pluginClock: context.pluginClock };
+): Pick<ServerConfiguration, 'pluginOAuth' | 'pluginClock' | 'watchPlugins'> {
+  return {
+    pluginOAuth: context.pluginOAuth,
+    pluginClock: context.pluginClock,
+    watchPlugins: context.watchPlugins,
+  };
 }

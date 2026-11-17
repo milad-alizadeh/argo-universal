@@ -14,10 +14,11 @@ import type { PluginLocation } from './plugin-location';
 import { forgetOnce, logFallback, type Fallback } from './render-fallback';
 import { RuntimePlugins } from './runtime-plugins';
 import { RuntimeResources, type RuntimeInput } from './runtime-resources';
+import type { PluginBuilds } from './runtime-setup';
 import { TestControl } from './test-control';
 
 // The clock every deadline and worker realm share, and what is told when a dev build lands.
-type RuntimeExtras = { clock: PluginClock; rebuilt: () => void };
+type RuntimeExtras = { clock: PluginClock } & PluginBuilds;
 
 export class PluginRuntime {
   readonly hooks;
@@ -74,7 +75,7 @@ export class PluginRuntime {
       clockStart: () => this.testControl.workerStart(),
       resources: this.resources,
       log: this.log,
-      rebuilt: this.extras.rebuilt,
+      builds: { rebuilt: this.extras.rebuilt, watch: this.extras.watch },
     };
   }
 
