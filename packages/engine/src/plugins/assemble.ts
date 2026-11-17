@@ -7,6 +7,7 @@ import type { PluginClock } from './clock';
 import { discoverPlugins } from './discovery/loader';
 import { HookPort } from './hooks/hook-port';
 import { PluginListChanges } from './list-changes';
+import { LocatedCache } from './located-cache';
 import { pluginLocation, pluginManifest } from './located-plugins';
 import { projectPorts } from './project-ports';
 import { runtimePorts } from './runtime-ports';
@@ -44,7 +45,7 @@ export type PluginsOptions = PluginServerOptions & {
 type Discovery = Pick<
   PluginsOptions,
   'home' | 'version' | 'firstPartyPluginsDirectory'
->;
+> & { located: LocatedCache };
 
 export type Assembled = {
   service: PluginService;
@@ -102,7 +103,8 @@ function foundations(options: PluginsOptions): Foundations {
   const secretStore = heldSecrets.keeping(options.secretStore ?? osSecretStore);
   const listChanges = new PluginListChanges();
   const { home, version, firstPartyPluginsDirectory } = options;
-  const discovery = { home, version, firstPartyPluginsDirectory };
+  const located = new LocatedCache();
+  const discovery = { home, version, firstPartyPluginsDirectory, located };
   const parts = { secretStore, heldSecrets, discovery, listChanges };
 
   return {
@@ -126,6 +128,8 @@ function runtimeFor(
     hooks: parts.hookPort.hooks,
     settings: async (pluginId, key) => parts.settings.read(pluginId, key),
     locate: locator(parts),
+    // A dev build landing may come with a changed `plugin.json`.
+    rebuilt: () => parts.discovery.located.clear(),
   });
 }
 
