@@ -46,36 +46,36 @@ const readViewer = (
 ): Promise<Known<string>> =>
   known(() => readState(reads.viewer({ projectId }), { projectId }));
 
-type Reader<Value> = (source: Source, link: PullKey) => Promise<Known<Value>>;
-
-// What each Open-only read answers with.
-type OpenValues = {
-  autoMerge: AutoMergeInfo;
-  settings: MergeSettings;
-  comments: CommentInfo[];
-  viewer: string;
+/*
+ * What only an Open pull request has, and why: its auto-merge and its repository's merge settings, since only an Open one
+ * can auto-merge; its review comments, which Auto-fix prompts about; and the signed-in account, so Auto-fix can tell
+ * whether it opened the pull request. Each answer's type comes from its read, so the compiler checks every name.
+ */
+export type OpenReads = {
+  autoMerge?: Awaited<ReturnType<typeof readAutoMerge>>;
+  settings?: Awaited<ReturnType<typeof readSettings>>;
+  comments?: Awaited<ReturnType<typeof readComments>>;
+  viewer?: Awaited<ReturnType<typeof readViewer>>;
 };
 
-export type OpenReadKey = keyof OpenValues;
+export type OpenReadKey = keyof OpenReads;
 
-export type OpenReads = { [Key in OpenReadKey]?: Known<OpenValues[Key]> };
+export const openReadKeys = [
+  'autoMerge',
+  'settings',
+  'comments',
+  'viewer',
+] as const satisfies readonly OpenReadKey[];
 
-type OpenReadTable = { [Key in OpenReadKey]: Reader<OpenValues[Key]> };
+// A name left out of the list above fails to type-check here.
+export const listsEveryName: Exclude<
+  OpenReadKey,
+  (typeof openReadKeys)[number]
+> extends never
+  ? true
+  : false = true;
 
-// The one place an Open-only read is named: a fifth read is one more entry here.
-const openReadTable: OpenReadTable = {
-  autoMerge: readAutoMerge,
-  settings: readSettings,
-  comments: readComments,
-  viewer: readViewer,
-};
-
-const isOpenReadKey = (key: string): key is OpenReadKey => key in openReadTable;
-
-export const openReadKeys: OpenReadKey[] =
-  Object.keys(openReadTable).filter(isOpenReadKey);
-
-// What only an Open pull request has: the only one that can auto-merge or be auto-fixed, so a Merged or Closed one is never asked.
+// A Merged or Closed pull request is never asked.
 export async function readOpenOnly(
   source: Source,
   link: PullKey,
@@ -83,13 +83,12 @@ export async function readOpenOnly(
 ): Promise<OpenReads> {
   if (pull.stage !== 'open') return {};
 
-  const read: OpenReads = {};
+  const [autoMerge, settings, comments, viewer] = await Promise.all([
+    readAutoMerge(source, link),
+    readSettings(source, link),
+    readComments(source, link),
+    readViewer(source, link),
+  ]);
 
-  const readKey = async <Key extends OpenReadKey>(key: Key): Promise<void> => {
-    Object.assign(read, { [key]: await openReadTable[key](source, link) });
-  };
-
-  await Promise.all(openReadKeys.map((key) => readKey(key)));
-
-  return read;
+  return { autoMerge, settings, comments, viewer };
 }

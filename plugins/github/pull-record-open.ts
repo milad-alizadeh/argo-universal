@@ -1,15 +1,11 @@
 import type { LinkRead } from './pull-changes';
 import { withData, type Known } from './pull-known';
-import {
-  openReadKeys,
-  type OpenReadKey,
-  type OpenReads,
-} from './pull-open-reads';
+import type { OpenReads } from './pull-open-reads';
 import type { PullKey } from './pull-store';
 
 type Read = LinkRead<PullKey>;
 
-// What the record keeps of a pull request only while it is Open: its auto-merge, its repository's merge settings and its review comments.
+// What the record keeps of a pull request only while it is Open: its auto-merge, its repository's merge settings, its review comments and the signed-in account.
 export type OpenKept = OpenReads;
 
 const failureOf = (
@@ -38,19 +34,48 @@ const keepOne = <Value>(
 const endedOf = ({ pull }: Read): boolean =>
   pull.data !== undefined && pull.data.stage !== 'open';
 
-const standsOf = (kept: OpenKept, read: Read): OpenKept => {
-  const stands: OpenKept = {};
+const autoMergeOf = (
+  next: OpenKept['autoMerge'],
+  before: OpenKept['autoMerge'],
+): Pick<OpenKept, 'autoMerge'> => {
+  const autoMerge = keepOne(next, before);
 
-  const keep = <Key extends OpenReadKey>(key: Key): void => {
-    const one = keepOne<unknown>(read[key], kept[key]);
-
-    if (one) Object.assign(stands, { [key]: one });
-  };
-
-  for (const key of openReadKeys) keep(key);
-
-  return stands;
+  return autoMerge ? { autoMerge } : {};
 };
+
+const settingsOf = (
+  next: OpenKept['settings'],
+  before: OpenKept['settings'],
+): Pick<OpenKept, 'settings'> => {
+  const settings = keepOne(next, before);
+
+  return settings ? { settings } : {};
+};
+
+const commentsOf = (
+  next: OpenKept['comments'],
+  before: OpenKept['comments'],
+): Pick<OpenKept, 'comments'> => {
+  const comments = keepOne(next, before);
+
+  return comments ? { comments } : {};
+};
+
+const viewerOf = (
+  next: OpenKept['viewer'],
+  before: OpenKept['viewer'],
+): Pick<OpenKept, 'viewer'> => {
+  const viewer = keepOne(next, before);
+
+  return viewer ? { viewer } : {};
+};
+
+const standsOf = (kept: OpenKept, read: Read): OpenKept => ({
+  ...autoMergeOf(read.autoMerge, kept.autoMerge),
+  ...settingsOf(read.settings, kept.settings),
+  ...commentsOf(read.comments, kept.comments),
+  ...viewerOf(read.viewer, kept.viewer),
+});
 
 /*
  * A Merged or Closed pull request keeps neither; a read that failed outright says nothing of the stage, so what was
