@@ -7,10 +7,13 @@ import { expect } from 'vitest';
  */
 export async function drawnUntil(page: OpenPage, text: string): Promise<void> {
   await expect
-    .poll(async () => {
-      await page.draw();
+    .poll(
+      async () => {
+        await page.draw();
 
-      return page.findText(text) !== undefined;
-    })
+        return page.findText(text) !== undefined;
+      },
+      { timeout: 5000 },
+    )
     .toBe(true);
 }

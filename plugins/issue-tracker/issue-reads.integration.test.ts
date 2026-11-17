@@ -38,8 +38,8 @@ async function untilShown(
   text: string,
 ): Promise<void> {
   await clockUntilShown(test, page, { text, stepMs: 1000, steps: 6 });
-
-  expect(page.findText(text)).toBeDefined();
+  // The answer the last poll read is drawn once Argo's change window, on the real clock, is over (ADR-0060).
+  await drawnUntil(page, text);
 }
 
 it('opens an Issue from its row with its title and status at once, and no further GitHub call', async () => {
