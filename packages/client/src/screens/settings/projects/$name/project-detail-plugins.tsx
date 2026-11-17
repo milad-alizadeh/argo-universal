@@ -1,8 +1,8 @@
 import type { ProjectDetailsItem } from '@repo/contracts/plugins/wire';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
+import type { ReadItem } from '#features/plugins';
 import { pluginSymbol } from '../../../../lib/product/plugin-symbol';
-import type { ReadItem } from '../../../plugins/slot-items';
 
 // Opens the Plugin page a row drills into (ADR-0046); a row with no action never calls it.
 export type OpenPluginPage = (pluginId: string, path: string) => void;

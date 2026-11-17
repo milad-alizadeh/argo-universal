@@ -1,9 +1,13 @@
 import type * as React from 'react';
+import {
+  type PageOpening,
+  PluginSessionRowProvider,
+  useOpenPluginPage,
+  usePluginLookup,
+  usePluginPage,
+} from '#features/plugins';
 import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
 import { PluginSymbolContext } from '../../../lib/product/plugin-registry';
-import type { PageOpening } from '../page-addresses';
-import { usePluginLookup } from '../use-plugin-names';
-import { usePluginPage } from '../use-plugin-page';
 import { PluginDetailView } from './plugin-detail-view';
 
 type PageViewProps = PageOpening & {
@@ -34,7 +38,7 @@ export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
   );
 }
 
-// The Plugin's own icon, for a sign-in on its page that sends no mark of its own.
+// The Plugin's own icon, for a sign-in on its page that sends no mark of its own, and the page's kit Session rows.
 function PluginSymbol(props: {
   pluginId: string;
   children: React.ReactNode;
@@ -42,6 +46,8 @@ function PluginSymbol(props: {
   const symbol = usePluginLookup()(props.pluginId).icon;
 
   return (
-    <PluginSymbolContext value={symbol}>{props.children}</PluginSymbolContext>
+    <PluginSessionRowProvider onOpenPluginPage={useOpenPluginPage()}>
+      <PluginSymbolContext value={symbol}>{props.children}</PluginSymbolContext>
+    </PluginSessionRowProvider>
   );
 }

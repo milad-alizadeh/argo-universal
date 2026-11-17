@@ -4,14 +4,14 @@ import { Redirect, router, usePathname } from 'expo-router';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useKeepSidebarWhileOpening } from '#features/frame';
-import { showsBack } from '../plugin-back';
-import { pluginPagePath } from '../plugin-page-route';
-import { usePluginOpener } from '../use-plugin-opener';
 import {
+  pluginPagePath,
   pluginPath,
-  usePluginAt,
   type PluginSection,
-} from '../use-plugin-sections';
+  showsBack,
+  usePluginAt,
+  usePluginOpener,
+} from '#features/plugins';
 import { PluginPageDetailView } from './plugin-page-detail-view';
 
 interface PluginDetailScreenProps {

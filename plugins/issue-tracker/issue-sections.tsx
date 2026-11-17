@@ -1,4 +1,4 @@
-import { FieldGroup, List, ListItem } from '@argo/plugin-kit';
+import { List, ListItem, SessionRow } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { Issue, IssueProgress, IssueRelation } from './github-issues';
 import type { AttachedSession } from './issue-detail-data';
@@ -63,9 +63,8 @@ function SubIssueRow(props: RowProps): JSX.Element {
 }
 
 /*
- * The Sessions an Agent attached with `argo run issue-tracker.attach`: the work on this Issue, as the
- * Issue's own rows of values, each opening that Session. A grouped List of FieldGroup rows (ADR-0042), so the card
- * takes its own height inside the Detail's column instead of a FieldGroup's own scrolling Form.
+ * The Sessions an Agent attached with `argo run issue-tracker.attach`: the work on this Issue, each as Argo's own Session
+ * row, read live, so it never goes stale and opens that Session.
  */
 export function AttachedSessions(props: SessionsProps): JSX.Element | null {
   if (props.sessions.length === 0) return null;
@@ -73,25 +72,10 @@ export function AttachedSessions(props: SessionsProps): JSX.Element | null {
   return (
     <List appearance="grouped">
       <List.Section key="sessions" title="Sessions">
-        {props.sessions.map((session) => sessionRow(session))}
+        {props.sessions.map((session) => (
+          <SessionRow key={session.sessionId} sessionId={session.sessionId} />
+        ))}
       </List.Section>
     </List>
-  );
-}
-
-// A keyed FieldGroup row itself, as the List draws its children (ADR-0042).
-const sessionRow = (session: AttachedSession): JSX.Element => (
-  <SessionRow key={session.sessionId} session={session} />
-);
-
-function SessionRow({ session }: { session: AttachedSession }): JSX.Element {
-  return (
-    <FieldGroup.Link
-      id={session.sessionId}
-      leading="new-session"
-      title={session.title}
-      value={session.branch ?? undefined}
-      onPress={{ action: 'openSession', sessionId: session.sessionId }}
-    />
   );
 }
