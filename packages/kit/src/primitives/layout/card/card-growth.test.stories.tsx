@@ -75,3 +75,29 @@ export const ContentArrivesWhileOpening: Story = {
     await expect(trigger.getBoundingClientRect().width).toBe(initial.width);
   },
 };
+
+// Content that changes in a card already open and at rest, as another Session's does, takes its height at once.
+export const ContentChangesAtRest: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+    const card = canvas.getByRole('group', { name: 'First' });
+
+    canvas.getByRole('button', { name: 'Expand First' }).click();
+    await waitFor(() =>
+      expect(card.getAnimations({ subtree: true }).length).toBeGreaterThan(0),
+    );
+    await Promise.all(
+      card.getAnimations({ subtree: true }).map(({ finished }) => finished),
+    );
+    await nextFrame();
+    await userEvent.click(canvas.getByRole('button', { name: 'Load content' }));
+    await expect(canvas.getByText(arrivingCopy.trim())).toBeInTheDocument();
+    await nextFrame();
+    await nextFrame();
+
+    await expect(card.getAnimations({ subtree: true })).toHaveLength(0);
+    await expect(
+      canvas.getByText(arrivingCopy.trim()).getBoundingClientRect().bottom,
+    ).toBeLessThanOrEqual(card.getBoundingClientRect().bottom);
+  },
+};
