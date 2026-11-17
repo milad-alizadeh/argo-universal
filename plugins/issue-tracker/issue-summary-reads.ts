@@ -1,12 +1,16 @@
 import type { Issue } from './github-issues';
 import { unwrap } from './github-reads';
 import type { IssueDeps } from './issue-deps';
+import type { ReadRetry } from './read-retry';
 import type { IssueLink } from './tracker-storage';
 
 // What a Session row and the Session bar say about an Issue: its state, and its title for a tooltip.
 export type IssueSummary = Pick<Issue, 'title' | 'status' | 'closedAs'>;
 
 export type Source = Pick<IssueDeps, 'storage' | 'reads' | 'readQuery'>;
+
+// The reads, with the retry that asks the Slots again when one fails.
+export type Reading = Source & { retry: ReadRetry };
 
 export type Target = Pick<IssueLink, 'projectId' | 'number'>;
 
@@ -59,21 +63,28 @@ async function attachedIn(
 
 // The summary is read from the Issue's own entry, so a page that read the Issue since is never answered with something older.
 const readFound = async (
-  source: Source,
+  source: Reading,
   found: ReadonlySet<number>,
   target: Target,
 ): Promise<IssueSummary | null> =>
-  found.has(target.number) ? summaryOf(source, target).catch(() => null) : null;
+  found.has(target.number) ? source.retry(summaryOf(source, target)) : null;
 
 // One Project's Issues, in the order asked.
 async function readProject(
-  source: Source,
+  source: Reading,
   targets: readonly Target[],
 ): Promise<(IssueSummary | null)[]> {
   const found = await attachedIn(source, targets);
 
   return Promise.all(targets.map((target) => readFound(source, found, target)));
 }
+
+// A Project whose Tracker fails reads as nothing, and asks the Slots again later.
+const readGroup = async (
+  source: Reading,
+  group: readonly Target[],
+): Promise<(IssueSummary | null)[]> =>
+  (await source.retry(readProject(source, group))) ?? [];
 
 const byProject = (targets: readonly Target[]): Target[][] =>
   Object.values(Object.groupBy(targets, ({ projectId }) => projectId)).map(
@@ -82,14 +93,14 @@ const byProject = (targets: readonly Target[]): Target[][] =>
 
 // Each Project is read alone: one whose Tracker fails leaves only its own Issues unread.
 async function readProjects(
-  source: Source,
+  source: Reading,
   targets: readonly Target[],
 ): Promise<Map<string, IssueSummary | null>> {
   const reads = new Map<string, IssueSummary | null>();
 
   await Promise.all(
     byProject(targets).map(async (group) => {
-      const read = await readProject(source, group).catch(() => []);
+      const read = await readGroup(source, group);
 
       for (const [index, target] of group.entries())
         reads.set(keyOf(target), read[index] ?? null);
@@ -101,7 +112,7 @@ async function readProjects(
 
 // Reads these Issues, each Project's in one Tracker call.
 export const readTogether =
-  (source: Source): Together =>
+  (source: Reading): Together =>
   async (targets) => {
     const reads = await readProjects(source, targets);
 

@@ -11,6 +11,7 @@ import {
   tokenOf,
 } from './github-fixture-data';
 import { childNumber, parentNumber } from './github-issue-nodes';
+import { githubOutage, type GitHubOutage } from './github-outage';
 
 const slowRefusalMs = 1000;
 
@@ -35,6 +36,7 @@ export type GitHubFixture = FixtureServices & {
   graphqlCalls: () => FixtureRequest[];
   closeIssue: (number: number) => void;
   delayIssues: (ms: number) => void;
+  down: GitHubOutage['down'];
 };
 
 const sleep = (ms: number): Promise<void> =>
@@ -141,9 +143,11 @@ export async function githubFixture(): Promise<GitHubFixture> {
   const accepted = new Set(['token-1', 'token-2']);
   const closedIssues = new Set<number>();
 
-  const services = await fixtureServices(handle(state, accepted, closedIssues));
+  const outage = githubOutage();
+  const handler = outage.around(handle(state, accepted, closedIssues));
+  const services = await fixtureServices(handler);
 
-  return fixtureControls({ services, state, accepted, closedIssues });
+  return fixtureControls({ services, state, accepted, closedIssues, outage });
 }
 
 type FixtureState = {
@@ -151,10 +155,11 @@ type FixtureState = {
   state: State;
   accepted: Set<string>;
   closedIssues: Set<number>;
+  outage: GitHubOutage;
 };
 
 function fixtureControls(input: FixtureState): GitHubFixture {
-  const { services, state, accepted, closedIssues } = input;
+  const { services, state, accepted, closedIssues, outage } = input;
 
   return {
     ...services,
@@ -162,6 +167,7 @@ function fixtureControls(input: FixtureState): GitHubFixture {
     accepted,
     delayIssues: delaying(state),
     closeIssue: (number) => void closedIssues.add(number),
+    down: outage.down,
     graphqlCalls: () =>
       services.requests.filter(({ path }) => path === '/graphql'),
   };
