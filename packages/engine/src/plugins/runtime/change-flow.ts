@@ -1,4 +1,4 @@
-import type { PluginClock } from '../clock';
+import { realClock, type PluginClock } from '../clock';
 import type { PluginData } from '../data/plugin-data';
 import type { PluginDraws } from '../pages';
 import { ChangeWindow } from '../pages/change-window';
@@ -14,8 +14,11 @@ type Resources = {
   draws: PluginDraws;
 };
 
-// The services that time and log the changes.
-type Services = { clock: PluginClock; log: (line: string) => void };
+/*
+ * The services that time and log the changes. The window is Argo's own rate limit, not Plugin time, so it runs on
+ * the real clock unless a test turns its own; a Plugin's test clock never stalls a change.
+ */
+type Services = { changeClock?: PluginClock; log: (line: string) => void };
 
 // What one window of a Plugin's changes comes to: its Queries are read, and its Slots ask again at once.
 const settled =
@@ -36,10 +39,10 @@ export class ChangeFlow {
   readonly changes: PageChanges;
   private readonly window: ChangeWindow;
 
-  constructor({ clock, log }: Services, resources: Resources) {
+  constructor({ changeClock = realClock, log }: Services, resources: Resources) {
     const { workers, data, items } = resources;
 
-    this.window = new ChangeWindow(clock, settled({ data, items }), log);
+    this.window = new ChangeWindow(changeClock, settled({ data, items }), log);
 
     this.changes = new PageChanges(
       workers,

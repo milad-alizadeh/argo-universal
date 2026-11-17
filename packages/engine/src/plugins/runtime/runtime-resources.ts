@@ -1,3 +1,4 @@
+import type { PluginClock } from '../clock';
 import type { ActivatedPlugin } from '../access/plugin-access';
 import { PluginData } from '../data/plugin-data';
 import { PluginPasses } from '../data/plugin-passes';
@@ -18,7 +19,11 @@ import { WorkerCalls, type WorkerTransport } from './worker-calls';
 
 // What the runtime's resources are built from: the Queries' services, with the whole of the Plugin services and the send to a worker.
 export type RuntimeInput = QueryServices &
-  Pick<WorkerTransport, 'send'> & { services: ResourceServices };
+  Pick<WorkerTransport, 'send'> & {
+    services: ResourceServices;
+    // The clock a Plugin's changes are coalesced on; the real one unless a test turns its own (ADR-0060).
+    changeClock?: PluginClock;
+  };
 
 export class RuntimeResources {
   readonly data;

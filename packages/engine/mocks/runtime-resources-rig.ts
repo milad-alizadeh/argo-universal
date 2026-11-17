@@ -67,6 +67,7 @@ export class Rig {
     this.resources = new RuntimeResources({
       services,
       clock: this.clock,
+      changeClock: this.clock,
       log: (): void => {},
       during: (call): ReturnType<typeof call> => call(),
       send: (_id, event): void => void this.sent.push(event),
