@@ -30,6 +30,20 @@ type ServiceOptions = Omit<PluginServiceOptions, 'assets'> & {
   secretStore?: SecretStore;
 };
 
+// What a Server holds for the runtime besides its own ports: its Accounts and its secrets.
+export const heldBy = ({
+  accounts,
+  secretStore,
+  heldSecrets,
+}: Pick<
+  PluginRuntimeOptions,
+  'accounts' | 'secretStore' | 'heldSecrets'
+>): Pick<PluginRuntimeOptions, 'accounts' | 'secretStore' | 'heldSecrets'> => ({
+  accounts,
+  secretStore,
+  heldSecrets,
+});
+
 export function createPluginRuntime(
   home: string,
   options: PluginRuntimeOptions,

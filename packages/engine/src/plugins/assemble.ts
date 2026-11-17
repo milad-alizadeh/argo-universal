@@ -11,7 +11,7 @@ import { LocatedCache } from './located-cache';
 import { pluginLocation, pluginManifest } from './located-plugins';
 import { projectPorts } from './project-ports';
 import { runtimePorts } from './runtime-ports';
-import { createPluginRuntime } from './runtime/create-runtime';
+import { createPluginRuntime, heldBy } from './runtime/create-runtime';
 import type { PluginLocation } from './runtime/plugin-location';
 import type { PluginRuntime } from './runtime/plugin-runtime';
 import { runtimeBuilds } from './runtime/runtime-setup';
@@ -123,9 +123,7 @@ function runtimeFor(
   parts: Foundations,
 ): PluginRuntime {
   return createPluginRuntime(options.home, {
-    accounts: parts.accounts,
-    secretStore: parts.secretStore,
-    heldSecrets: parts.heldSecrets,
+    ...heldBy(parts),
     ...runtimePorts(options),
     ...projectPorts(options),
     hooks: parts.hookPort.hooks,
