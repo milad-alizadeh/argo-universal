@@ -9,7 +9,6 @@ import { regularEnds } from './session-row-ends';
 import { SessionMark } from './session-row-mark';
 import { sessionRowMenu } from './session-row-menu';
 import { sessionMetadata } from './session-row-metadata';
-import { sessionProgress } from './session-row-plan';
 import {
   hasPluginItems,
   PluginAccessories,
@@ -17,6 +16,7 @@ import {
 } from './session-row-plugin-items';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
 import { sidebarDrawing } from './session-row-sidebar';
+import { sessionProgress } from './session-row-todos';
 
 export type { SessionRowProps } from './session-row-props';
 

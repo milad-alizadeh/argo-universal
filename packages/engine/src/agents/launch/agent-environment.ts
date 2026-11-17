@@ -1,7 +1,7 @@
 import { delimiter } from 'node:path';
 import { productCompatibility } from '@repo/contracts/product-identity';
 import type { AgentLaunch } from '../agent-launch';
-import { vendorEnvironment } from '../vendor';
+import { vendorEnvironment, vendorSessionEnvironment } from '../vendor';
 import { shellEnvironment } from './shell-env';
 
 // A sign-in terminal's launch message carries only the names that have values.
@@ -25,6 +25,8 @@ export function applySessionEnvironment(
   return addSessionAccess(launch, environment);
 }
 
+type SessionAccess = NonNullable<AgentLaunch['sessionAccess']>;
+
 function addSessionAccess(
   launch: AgentLaunch,
   environment: NodeJS.ProcessEnv,
@@ -33,13 +35,35 @@ function addSessionAccess(
 
   if (!access) return environment;
 
-  environment[productCompatibility.environment.token] = access.token;
-  environment[productCompatibility.environment.home] = access.home;
-  environment.PATH = [access.cliDirectory, environment.PATH]
-    .filter(Boolean)
-    .join(delimiter);
+  return Object.assign(
+    environment,
+    accessEnvironment(access, environment.PATH),
+    vendorSessionEnvironment(launch, access.cliDirectory, environment),
+  );
+}
 
-  return environment;
+const { environment: names } = productCompatibility;
+
+type AccessEnvironment = Record<
+  typeof names.token | typeof names.home,
+  string
+> &
+  Partial<Record<typeof names.todoList, '0'>> & { PATH: string };
+
+// The `argo` launcher goes first on PATH so the Agent's shell runs this Server's CLI, not another checkout's.
+function accessEnvironment(
+  access: SessionAccess,
+  path: string | undefined,
+): AccessEnvironment {
+  const added: AccessEnvironment = {
+    [names.token]: access.token,
+    [names.home]: access.home,
+    PATH: [access.cliDirectory, path].filter(Boolean).join(delimiter),
+  };
+
+  if (access.todoList === false) added[names.todoList] = '0';
+
+  return added;
 }
 
 export const agentEnvironment = async (

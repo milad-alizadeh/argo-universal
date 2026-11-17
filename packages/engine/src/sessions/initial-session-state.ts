@@ -62,6 +62,8 @@ type AcpState = Pick<
   | 'pendingSubmission'
   | 'feedEnded'
   | 'subagents'
+  | 'todos'
+  | 'argoToolsChecked'
   | 'acpPrompt'
   | 'acpResponseReaders'
   | 'acpConfigurationRejections'
@@ -91,6 +93,8 @@ export const initialAcpState = (input: SessionMachineInput): AcpState => ({
   pendingSubmission: null,
   feedEnded: false,
   subagents: noSubagents,
+  todos: null,
+  argoToolsChecked: false,
   acpPrompt: null,
   ...acpReaders(input),
   acpTurnOutcome: null,

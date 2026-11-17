@@ -193,7 +193,7 @@ export const LongWorktree: Story = {
 };
 
 // A Session with no Plan: the tray above the card goes.
-export const NoPlan: Story = { args: planlessSessionComposer };
+export const NoTodos: Story = { args: planlessSessionComposer };
 
 // Choosing an image failed: the Composer raises the failure as a toast.
 export const ImageSelectionFailed: Story = {

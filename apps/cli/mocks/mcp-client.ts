@@ -22,23 +22,28 @@ function recordStderr(client: Client, transport: StdioClientTransport): void {
   transport.stderr?.on('data', (chunk: Buffer) => errors.push(String(chunk)));
 }
 
+type LauncherEnvironment = NonNullable<StdioServerParameters['env']>;
+
 const launcher = (
   home: string,
   token: string | undefined,
+  extra: LauncherEnvironment,
 ): StdioClientTransport =>
   new StdioClientTransport({
     command: process.execPath,
     args: [entry, 'mcp'],
-    env: clientEnvironment(home, token),
+    env: { ...clientEnvironment(home, token), ...extra },
     stderr: 'pipe',
   });
 
+// `extra` is what the Engine adds to the launcher's environment for one Session.
 export async function connectMcp(
   home: string,
   token?: string,
+  extra: LauncherEnvironment = {},
 ): Promise<Client> {
   const client = new Client({ name: 'argo-test', version: '1.0.0' });
-  const transport = launcher(home, token);
+  const transport = launcher(home, token, extra);
 
   recordStderr(client, transport);
   onTestFinished(() => client.close());
@@ -50,8 +55,8 @@ export async function connectMcp(
 function clientEnvironment(
   home: string,
   token: string | undefined,
-): NonNullable<StdioServerParameters['env']> {
-  const env: NonNullable<StdioServerParameters['env']> = { ARGO_HOME: home };
+): LauncherEnvironment {
+  const env: LauncherEnvironment = { ARGO_HOME: home };
 
   if (token !== undefined) env.ARGO_TOKEN = token;
 

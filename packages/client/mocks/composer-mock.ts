@@ -9,7 +9,7 @@ import {
   newSessionOptions,
 } from '@repo/mocks/app';
 import type { ComposerProps } from '../src/features/composer/components/composer/composer';
-import { composerPlan } from './composer-attachments';
+import { composerTodos } from './composer-attachments';
 
 export {
   composerImages,
@@ -18,8 +18,8 @@ export {
   composerFiles,
   composerTextFile,
   composerOtherFile,
-  composerPlan,
-  composerPlanDone,
+  composerTodos,
+  composerTodosDone,
 } from './composer-attachments';
 
 export {
@@ -82,7 +82,7 @@ function sessionStatus(
   props: Pick<ComposerMockProps, 'plan'>,
 ): ComposerProps['status'] {
   return {
-    plan: props.plan ?? composerPlan,
+    plan: props.plan ?? composerTodos,
     subagents: { count: 2, running: true, onPress: () => {} },
     shells: { count: 1, running: false, onPress: () => {} },
     context: { used: 34_000, size: 200_000, onCompact: () => {} },
