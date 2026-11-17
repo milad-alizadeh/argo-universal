@@ -1,11 +1,10 @@
 import type { QueuedPrompt } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import type { WithdrawCommand } from './queue-command-types';
-import type { SessionContext } from './session-context';
-
-type QueueChange = Pick<SessionContext, 'promptQueue' | 'queueHolds'>;
-
-type QueueContext = QueueChange & Pick<SessionContext, 'dispatchingQueueId'>;
+import type {
+  QueueChange,
+  QueueContext,
+  WithdrawCommand,
+} from './queue-command-types';
 
 const sentBy = (row: QueuedPrompt, pluginId: string): boolean =>
   row.sender?.type === 'plugin' && row.sender.pluginId === pluginId;
@@ -36,19 +35,24 @@ const keptOf = (context: QueueContext, row?: QueuedPrompt): QueuedPrompt[] => {
 
 /*
  * A Plugin takes back a Prompt it sent (ADR-0055). One that started or is gone has nothing to take back, and one the
- * person holds for editing is theirs now; both stay as they are. Anyone else's Prompt is refused.
+ * person holds for editing is theirs now; both stay as they are, and the step says nothing was withdrawn. Anyone
+ * else's Prompt is refused.
  */
 export function withdrawRow(
   context: QueueContext,
-  { id, pluginId }: WithdrawCommand,
+  { id, pluginId, decided }: WithdrawCommand,
 ): QueueChange {
   const row = waitingRow(context, id);
 
   if (row && !sentBy(row, pluginId))
     throw new TRPCError({ code: 'CONFLICT', message: notSent });
 
+  const items = keptOf(context, row);
+
+  decided(items.length < context.promptQueue.items.length);
+
   return {
-    promptQueue: { ...context.promptQueue, items: keptOf(context, row) },
+    promptQueue: { ...context.promptQueue, items },
     queueHolds: context.queueHolds,
   };
 }

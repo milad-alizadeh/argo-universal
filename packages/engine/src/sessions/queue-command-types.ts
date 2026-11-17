@@ -1,11 +1,20 @@
 import type { NonUserPromptSender, QueueCommand } from '@repo/contracts';
 import type { QueueSteeringCommand } from './queue-steering/types';
+import type { SessionContext } from './session-context';
+
+// What a queue step changes, and what it reads to change it.
+export type QueueChange = Pick<SessionContext, 'promptQueue' | 'queueHolds'>;
+
+export type QueueContext = QueueChange &
+  Pick<SessionContext, 'dispatchingQueueId'>;
 
 // A Plugin taking back a Queued Prompt it sent (ADR-0055); only the Server sends it, never an App.
 export type WithdrawCommand = {
   action: 'withdraw';
   id: string;
   pluginId: string;
+  // Told by the queue step whether it took the Prompt out, so the answer is the change itself.
+  decided: (withdrawn: boolean) => void;
 };
 
 // What changes a Session's queue: an App's command, or the Server's withdraw for a Plugin.

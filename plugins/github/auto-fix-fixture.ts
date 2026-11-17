@@ -45,12 +45,18 @@ export const failChecks = (
   run.github.checks.set(`${repository}@${head}`, failing(...names));
 };
 
-// The Watch's runs that finished for the journey's own Project; another Project's run says nothing of its turn.
+/*
+ * The Watch's runs that ended for the journey's own Project; another Project's run says nothing of its pass. A Watch
+ * that threw has still ended: it logs `watch failed: …` instead.
+ */
+const watchEnded = /watch (completed|failed)/;
+
+const ofProject = `(Project ${project.id})`;
+
 const completed = async (run: Journey): Promise<number> =>
   (await run.test.log())
     .split('\n')
-    .filter((line) => line.includes(`watch completed (Project ${project.id})`))
-    .length;
+    .filter((line) => watchEnded.test(line) && line.includes(ofProject)).length;
 
 const watchIntervalMs = 60_000;
 

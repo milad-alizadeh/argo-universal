@@ -317,7 +317,7 @@ A Plugin's own record that a Session produced one pull request, named by its rep
 _Avoid_: PR link, attachment
 
 **Auto-fix**:
-A person's choice, per PR association, that the Session's Agent is prompted to fix each new failed Check, review comment or merge conflict on that pull request. Once a head commit's Checks have all reported, one Prompt lists everything new on it; a push withdraws that Prompt if it has not started. It is off until turned on.
+A person's choice, per PR association, that the Session's Agent is prompted to fix each new failed Check, review comment or merge conflict on that pull request. One Prompt lists everything new on a head commit; its failed Checks wait until every Check has reported, so they come in one Prompt. A push, a close, or turning it off withdraws a Prompt that has not started. It is off until turned on.
 _Avoid_: Babysit, watch, auto-repair
 
 **Auto-merge**:

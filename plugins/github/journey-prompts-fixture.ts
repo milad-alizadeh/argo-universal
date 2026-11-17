@@ -14,6 +14,7 @@ type Queue = {
   sent: SentPrompt[];
   waiting: Map<string, SentPrompt>;
   withdrawn: SentPrompt[];
+  refused: Set<string>;
 };
 
 const queues = new WeakMap<GitHubFixture, Queue>();
@@ -23,6 +24,7 @@ const queueOf = (github: GitHubFixture): Queue => {
     sent: [],
     waiting: new Map(),
     withdrawn: [],
+    refused: new Set(),
   };
 
   queues.set(github, queue);
@@ -54,6 +56,9 @@ export function withdrawRecorder(
   const queue = queueOf(github);
 
   return async (_sessionId, queuedId) => {
+    if (queue.refused.has(queuedId))
+      throw new Error(`Withdrawing ${queuedId} was refused`);
+
     const prompt = queue.waiting.get(queuedId);
 
     if (!prompt) return { withdrawn: false };
@@ -64,6 +69,17 @@ export function withdrawRecorder(
     return { withdrawn: true };
   };
 }
+
+// The Server refuses to withdraw the Prompts sent so far until `allowWithdraw`, as when the Session cannot be reached.
+export const refuseWithdraw = ({ github }: Pick<Journey, 'github'>): void => {
+  const queue = queueOf(github);
+
+  for (const queuedId of queue.waiting.keys()) queue.refused.add(queuedId);
+};
+
+export const allowWithdraw = ({ github }: Pick<Journey, 'github'>): void => {
+  queueOf(github).refused.clear();
+};
 
 // The Session's Turns take every waiting Prompt, so none can be withdrawn.
 export const startPrompts = ({ github }: Pick<Journey, 'github'>): void => {

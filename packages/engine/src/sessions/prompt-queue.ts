@@ -5,8 +5,8 @@ import type {
   QueueCommand,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
+import type { QueueChange, QueueContext } from './queue-command-types';
 import { appendedPrompt, type AppendCommand } from './queued-prompt-append';
-import type { SessionContext } from './session-context';
 import { SessionRowUpdateJob } from './session-storage';
 
 export const queueWrite = (
@@ -14,10 +14,6 @@ export const queueWrite = (
   promptQueue: PromptQueue,
 ): SessionRowUpdateJob =>
   new SessionRowUpdateJob({ id: sessionId, set: { promptQueue } });
-
-type QueueChange = Pick<SessionContext, 'promptQueue' | 'queueHolds'>;
-
-type QueueContext = QueueChange & Pick<SessionContext, 'dispatchingQueueId'>;
 
 type RowCommand = Exclude<
   QueueCommand,

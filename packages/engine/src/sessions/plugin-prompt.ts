@@ -76,23 +76,9 @@ async function queuePluginPrompt(
   return { status: 'queued', queuedId };
 }
 
-// The Prompt waits in the queue, has not started, and the person is not editing it.
-const waiting = (
-  {
-    promptQueue,
-    dispatchingQueueId,
-    queueHolds,
-  }: Pick<SessionContext, 'promptQueue' | 'dispatchingQueueId' | 'queueHolds'>,
-  id: string,
-): boolean =>
-  id !== dispatchingQueueId &&
-  !queueHolds[id] &&
-  promptQueue.items.some((item) => item.id === id);
-
 /*
  * A Plugin takes back a Queued Prompt it sent (ADR-0055). One that started, is gone, or the person is editing stays as
- * it is and answers not withdrawn; anyone else's is refused. The queue is read in the same tick the command is sent,
- * so nothing starts between the look and the withdraw.
+ * it is and answers not withdrawn; anyone else's is refused. The queue step that changes the queue gives the answer.
  */
 export async function withdrawFromPlugin(
   sources: PluginPromptSources,
@@ -102,14 +88,14 @@ export async function withdrawFromPlugin(
 
   sources.open.admit();
 
-  const withdrawn = waiting(session.getSnapshot().context, input.queuedId);
+  const answer = Promise.withResolvers<boolean>();
   const command = { action: 'withdraw' as const, id: input.queuedId };
 
   await sendQueueCommand(session, {
-    command: { ...command, pluginId: input.pluginId },
+    command: { ...command, pluginId: input.pluginId, decided: answer.resolve },
   });
 
-  return { withdrawn };
+  return { withdrawn: await answer.promise };
 }
 
 async function startPluginPrompt(

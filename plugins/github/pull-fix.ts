@@ -65,17 +65,35 @@ export function fixOf(
 // What Auto-fix's Watch turn works with: the Sessions it prompts, and the record of what it has seen and sent.
 export type Fixing = { sessions: Sessions; fix: FixStore };
 
+async function fixOpen(
+  step: Step,
+  pull: PullInfo,
+  read: LinkRead,
+): Promise<boolean> {
+  const facts = factsOf(pull, read);
+
+  return facts ? fixCurrent(step, facts) : false;
+}
+
+// A withdraw that failed is thrown only after the head had its Prompt, so it never holds the Prompt back.
+function afterWithdraw(
+  withdrawal: PromiseSettledResult<boolean>,
+  fixed: boolean,
+): boolean {
+  if (withdrawal.status === 'rejected') throw withdrawal.reason;
+
+  return withdrawal.value || fixed;
+}
+
 // Stale Prompts are taken back first, then the open head is given its Prompt.
 async function fixPull(
   step: Step,
   pull: PullInfo,
   read: LinkRead,
 ): Promise<boolean> {
-  const withdrew = await withdrawStale(step, pull);
-  const facts = factsOf(pull, read);
-  const fixed = facts ? await fixCurrent(step, facts) : false;
+  const [withdrawal] = await Promise.allSettled([withdrawStale(step, pull)]);
 
-  return withdrew || fixed;
+  return afterWithdraw(withdrawal, await fixOpen(step, pull, read));
 }
 
 function fixRead(step: Step, read: LinkRead): Promise<boolean> | false {

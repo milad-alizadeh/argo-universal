@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import {
   checksRunning,
+  conflictItem,
   failChecks,
   failedItem,
   fixPrompt,
@@ -11,6 +12,7 @@ import { attached, tap as tapAutomation } from './auto-merge-fixture';
 import { sha } from './github-fixture';
 import type { Journey } from './journey-fixture';
 import { promptsSent } from './journey-prompts-fixture';
+import { changePull } from './journey-watch-fixture';
 
 const slow = 120_000;
 
@@ -51,6 +53,27 @@ it(
     await watch(run);
 
     expect(texts(run)).toEqual([
+      fixPrompt(sha, [failedItem(quality), failedItem(storyTests)]),
+    ]);
+  },
+  slow,
+);
+
+it(
+  'prompts a conflict while Checks still run, and the failed Checks once they have all reported',
+  async () => {
+    const run = await attached();
+
+    checksRunning(run, sha, { failed: [quality], running: [storyTests] });
+    changePull(run, 12, { mergeable_state: 'dirty' });
+    await tap(run, true);
+    expect(texts(run)).toEqual([fixPrompt(sha, [conflictItem])]);
+
+    failChecks(run, sha, quality, storyTests);
+    await watch(run);
+
+    expect(texts(run)).toEqual([
+      fixPrompt(sha, [conflictItem]),
       fixPrompt(sha, [failedItem(quality), failedItem(storyTests)]),
     ]);
   },

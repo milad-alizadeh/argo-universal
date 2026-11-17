@@ -68,9 +68,12 @@ async function unseenOf(
   return eventsOf(facts).filter(({ key }) => !seen.has(key));
 }
 
-// The head's Checks have all reported and it has tries left.
-const due = (facts: FixFacts, sent: number): boolean =>
-  !facts.running && sent < fixTries;
+/*
+ * While a Check of the head still runs, its failed Checks wait, so one Prompt lists them all once every Check has
+ * reported. A conflict and review comments do not wait for the Checks.
+ */
+const promptable = (facts: FixFacts): FixFacts =>
+  facts.running ? { ...facts, failed: [] } : facts;
 
 async function promptUnseen(
   step: Step,
@@ -88,8 +91,8 @@ async function promptUnseen(
 }
 
 /*
- * One pull request's turn: one Prompt listing every failed Check, conflict and review comment Auto-fix has not seen,
- * sent once the head's Checks have all reported, never twice for the same event, and never past the tries a head gets.
+ * One pull request's pass in a Watch: one Prompt listing every failed Check, conflict and review comment Auto-fix has
+ * not seen, never twice for the same event, and never past the tries a head gets.
  */
 export async function fixCurrent(
   step: Step,
@@ -97,5 +100,5 @@ export async function fixCurrent(
 ): Promise<boolean> {
   const sent = await step.fix.sent(step.record, facts.pull.head);
 
-  return due(facts, sent) ? promptUnseen(step, facts, sent) : false;
+  return sent < fixTries ? promptUnseen(step, promptable(facts), sent) : false;
 }
