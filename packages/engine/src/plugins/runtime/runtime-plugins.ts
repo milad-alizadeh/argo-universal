@@ -22,6 +22,7 @@ type Dependencies = {
   clockStart: () => number | undefined;
   resources: RuntimeResources;
   log: (line: string) => void;
+  rebuilt: () => void;
 };
 
 export class RuntimePlugins {
@@ -95,12 +96,13 @@ export class RuntimePlugins {
   }
 
   private pluginInput(location: PluginLocation): PluginInput {
-    const { host, clockStart, resources, log } = this.input;
+    const { host, clockStart, resources, log, rebuilt } = this.input;
 
     return {
       entry: location.entry,
       host,
       log,
+      rebuilt,
       clockStart,
       deferReload: () => this.turnsRunning,
       grant: (plugin, generation) =>

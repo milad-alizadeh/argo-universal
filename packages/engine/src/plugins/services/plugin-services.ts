@@ -47,6 +47,10 @@ export class PluginServices {
     this.storage.onWrite(written);
   }
 
+  projectIds(): Promise<string[]> {
+    return this.options.projectIds();
+  }
+
   projectInfo(): Promise<PluginProjectInfo[]> {
     return this.options.projectInfo();
   }
@@ -114,9 +118,9 @@ export class PluginServices {
   }
 
   private async requireRegistered(projectId: string): Promise<void> {
-    const projects = await this.options.projectInfo();
+    const projects = await this.options.projectIds();
 
-    if (!projects.some(({ id }) => id === projectId))
+    if (!projects.includes(projectId))
       throw new CapabilityRefusal('Project is unavailable');
   }
 

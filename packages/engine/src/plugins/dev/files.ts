@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { dirname, extname } from 'node:path';
+import { dirname, extname, join } from 'node:path';
 import type { Loader, OnLoadArgs, OnLoadResult, Plugin } from 'esbuild';
 import { requirePluginFile } from '../access/plugin-files';
 
@@ -41,5 +41,10 @@ async function loadSource(
   const contents = await readFile(path, 'utf8');
   observed?.(path, contents);
 
-  return { contents, loader, resolveDir: dirname(path), watchFiles: [path] };
+  return {
+    contents,
+    loader,
+    resolveDir: dirname(path),
+    watchFiles: [path, join(directory, 'plugin.json')],
+  };
 }

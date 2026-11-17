@@ -144,11 +144,9 @@ export class RuntimeResources {
 
   async refreshProjects(): Promise<void> {
     const updated = Promise.all([
-      this.input.services.projectInfo(),
+      this.input.services.projectIds(),
       this.projectUpdates,
-    ]).then(([projects]) =>
-      this.passes.syncProjects(projects.map(({ id }) => id)),
-    );
+    ]).then(([projects]) => this.passes.syncProjects(projects));
 
     this.projectUpdates = updated.catch(() => {});
 
