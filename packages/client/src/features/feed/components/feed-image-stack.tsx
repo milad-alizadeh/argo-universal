@@ -18,7 +18,7 @@ const overlap = (size: StackSize, index: number): string | undefined =>
   size === 'stack' && index > 0 ? '-ml-2' : undefined;
 
 // A run of thumbnails at the end of a header row; a group's overlap, a row's sit apart.
-export function FeedImageStack({
+function FeedImageStack({
   images,
   size,
 }: FeedImageStackProps): React.JSX.Element {
