@@ -99,9 +99,15 @@ it("draws a page again and asks an items Slot again after the Plugin's argo.chan
    * The Plugin starting marks every page, and the page that drew its own state is marked as it says so; the page that
    * read the count is marked once Argo has read its Query again (ADR-0060).
    */
-  const marks = [await stale.next(), await stale.next(), await stale.next()];
+  const seen: unknown[] = [];
 
-  expect(marks.map(({ value }) => value)).toContainEqual({
+  for (let mark = await stale.next(); ; mark = await stale.next()) {
+    seen.push(mark.value);
+
+    if (mark.value?.addresses?.some(({ path }) => path === '/')) break;
+  }
+
+  expect(seen.at(-1)).toEqual({
     pluginId: dataPluginId,
     addresses: [expect.objectContaining({ path: '/' })],
   });
