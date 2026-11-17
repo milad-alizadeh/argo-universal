@@ -5,7 +5,7 @@ import { readProjectPath } from '../projects';
 
 type SessionCheckout = { projectId: string; checkout: { path: string } };
 
-// The Session's Checkout, and the Project's main Checkout the default comparison is made against.
+// The Session's Checkout and the Project Checkout whose branch supplies the default comparison.
 export const sessionChangesSelection = (
   database: Database,
   session: SessionCheckout,

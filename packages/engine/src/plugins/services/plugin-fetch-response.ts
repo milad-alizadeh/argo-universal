@@ -1,6 +1,6 @@
 import type { IncomingMessage } from 'node:http';
+import type { FetchReply } from '@repo/contracts/plugins/argo-calls';
 import { confineAccountHeaders } from '../accounts/account-headers';
-import type { PluginValue } from '../protocol/runtime';
 import { pluginFetchLimitBytes } from './plugin-limits';
 
 // One request `argo.fetch` sends: the first, or one a redirect leads to.
@@ -96,7 +96,7 @@ type Received = { chunks: Buffer[]; size: number };
 // Reads the body as a stream and stops at the cap, so a huge response is never held whole.
 export async function responseValue(
   response: IncomingMessage,
-): Promise<PluginValue> {
+): Promise<FetchReply> {
   const { chunks, size } = await readCapped(response);
   const status = statusOf(response);
 

@@ -206,6 +206,10 @@ _Avoid_: Interaction, action (Action is a kit component), handler
 A kit component of columns of cards that a person moves between columns, by drag or from a card's menu. Each card names the columns it may move to, and a move fills an Operation call with the card and its new column. The kit draws a Board's columns as a List's lanes, so "lane" is the kit's word inside and "column" the Plugin's.
 _Avoid_: Kanban, lanes (for the Plugin's columns)
 
+**SessionRow**:
+A kit component that draws one of the App's own Sessions as its row in the Sessions list, from the live Session. A Plugin sends only the Session's id, and needs `sessions:read`; it opens the Session when pressed. A Session the App does not list draws nothing. Not the Session row Slot, which adds items to the list's own rows.
+_Avoid_: Session card, attached Session row
+
 **Capability**:
 Something a Plugin's manifest says it needs, such as running `gh` or reaching `api.github.com`. Without any, a Plugin's calls to the machine can only read Projects and use the Plugin's own data.
 _Avoid_: Permission (that is the Agent's Permission request), scope, entitlement
@@ -496,9 +500,13 @@ _Avoid_: Design system (for the code), component library
 One component of the UI kit, such as Button, List or Screen, drawn by Argo on every platform. A Plugin sends one by name and props; a Contracts schema defines its props, Slots and events once. A plain component is a function a Plugin author writes in JSX.
 _Avoid_: Part, UI kit component, primitive
 
+**SignIn**:
+The kit component a Plugin's sign-in draws, laid out as Settings is: the step beside the service's mark, then FieldGroup rows, a device flow's code among them. The mark is the service's logo when the Plugin ships one, and the Plugin's own icon otherwise. `provideSignIn` and `signInGate` draw it for every step of either OAuth flow.
+_Avoid_: OAuth window, sign-in card, login screen
+
 **FieldGroup**:
-A page's fixed rows of values and controls, such as Project details or Plugin settings, arranged in sections. Values save as they change, or a page that sends them puts one submit button below the FieldGroup.
-_Avoid_: Grouped list, settings list, Form
+A page's fixed rows of values and controls, such as Project details or Plugin settings, arranged in sections. Values save as they change, or a page that sends them puts one submit button below the FieldGroup. A Screen's `aside` holds one of the item's properties, such as an Issue's status, labels and assignees, drawn with the same rows; there it sizes to its rows instead of scrolling.
+_Avoid_: Grouped list, settings list, Form, Metadata
 
 **Field**:
 One row in a FieldGroup, of a fixed type such as a value, a link, a toggle, a text field or a choice.
@@ -523,6 +531,10 @@ _Avoid_: Group (when naming a List section)
 **List look**:
 How one List draws, resolved once from the platform, its appearance and where it sits (a popover, a sidebar): its insets, its headings and footers, whether rows are separated, and whether the web draws its grouped sections as cards or a phone draws them as corners. Every part of the List reads it; none asks the platform itself.
 _Avoid_: Theme, style
+
+**Diagram**:
+A ` ```mermaid ` fence in Markdown, drawn in Argo's colours instead of shown as code, with a switch to its code. Agents check one with `diagram.validate` before sending it (ADR-0058).
+_Avoid_: Chart (a Plugin's `Chart` draws data), graph
 
 **Density**:
 How tightly a List or a Card draws its content: `regular` or `compact`. A compact List draws each row as one line on a wide desktop or web window; phones and narrow windows always draw regular rows.
@@ -552,10 +564,6 @@ _Avoid_: Profile picture
 A small coloured dot that shows an item's state.
 _Avoid_: Status indicator
 
-**Metadata**:
-Label and value fields for a detail view, such as a Project's Device and Path. Each field is a named part: Label, Link, Pills, StatusDot or Avatar. A Picker field wraps one of those: its value is the button, and pressing it opens the choices in a popover (a page on a phone), with search when it is searchable and a create row when it can make a new choice, as an Issue's Labels do. On desktop and web, beside a Detail's content, it is headed "Properties" unless the Plugin names it; a Detail too narrow for that column draws it as one line of values under the title.
-_Avoid_: key-value list
-
 **Screen**:
 One entry on a navigation stack: its header (title, search, primary Action, Actions) and its content, declared together. A route shows one Screen; a Sheet stacks Screens of its own.
 _Avoid_: Page, view (for a stack entry)
@@ -569,7 +577,7 @@ Where a Screen's header draws, decided once from the facts around it: its own he
 _Avoid_: Header placement, header mode
 
 **Content column**:
-The column a Screen's heading and content keep to: on a wide window the reading width centred in the pane, inside the Screen's side margins; a Metadata column beside the content widens it, so the reading width stays the content's. Each part of a Screen offers it to what it holds; a scroll view or grouped cards claim it and keep to it themselves, and the part pads anything else. A popover, a sheet's page or a FieldGroup's rows are outside it.
+The column a Screen's heading and content keep to: on a wide window the reading width centred in the pane, inside the Screen's side margins; the aside's column beside the content widens it, so the reading width stays the content's. Each part of a Screen offers it to what it holds; a scroll view or grouped cards claim it and keep to it themselves, and the part pads anything else. A popover, a sheet's page or a FieldGroup's rows are outside it.
 _Avoid_: Scroll column, heading inset
 
 **Content wide**:

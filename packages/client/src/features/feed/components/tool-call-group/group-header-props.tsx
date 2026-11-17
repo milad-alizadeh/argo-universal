@@ -20,7 +20,6 @@ type GroupDisclosureProps = Pick<
   React.ComponentProps<typeof ToolCallDisclosure>,
   | 'label'
   | 'leading'
-  | 'paths'
   | 'icon'
   | 'running'
   | 'awaitingApproval'
@@ -57,7 +56,6 @@ function runningOrb(group: FeedGroup): React.JSX.Element | undefined {
 function groupSummaryProps(group: FeedGroup): GroupDisclosureProps {
   return {
     label: groupSummary(group),
-    paths: [],
     icon: 'terminal',
     running: group.state === 'open',
     awaitingApproval: liveToolCall(group)?.awaitingApproval,

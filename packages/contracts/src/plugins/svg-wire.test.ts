@@ -11,6 +11,7 @@ const svg: WireNode = {
     label: 'Service map',
     tone: 'info',
     aspectRatio: 1.5,
+    width: 64,
     onPress: { operation: 'open', args: {} },
   },
   children: [],
@@ -30,6 +31,8 @@ describe('Svg kit component', () => {
     { ...svg, props: { ...svg.props, label: '' } },
     { ...svg, props: { ...svg.props, tone: 'chart-1' } },
     { ...svg, props: { ...svg.props, aspectRatio: Number.POSITIVE_INFINITY } },
+    { ...svg, props: { ...svg.props, width: 0 } },
+    { ...svg, props: { ...svg.props, width: Number.POSITIVE_INFINITY } },
   ])('rejects invalid Svg props through its registered schema', (root) => {
     expect(prepareWireTree(root)).toEqual(emptySvg());
   });

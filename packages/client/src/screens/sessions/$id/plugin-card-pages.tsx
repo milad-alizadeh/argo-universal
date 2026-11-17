@@ -1,9 +1,12 @@
 import { type ReactNode, useEffect, useRef, useSyncExternalStore } from 'react';
+import {
+  type PageOpening,
+  PluginSessionRowProvider,
+  useOpenPluginPage,
+  usePluginPage,
+} from '#features/plugins';
 import { closeSessionPanel } from '#features/sessions';
 import { BoundedPluginTree } from '../../../lib/product/plugin-registry';
-import type { PageOpening } from '../../plugins/page-addresses';
-import { useOpenPluginPage } from '../../plugins/use-plugin-opener';
-import { usePluginPage } from '../../plugins/use-plugin-page';
 import type { HeldCardPage, HeldCardStore } from './held-card-store';
 
 // One declared card's page, watched for a Session whether or not its card is drawn.
@@ -149,10 +152,12 @@ function DrawnPluginPage({ page, pluginId }: Drawn): ReactNode {
   if (!page?.root) return null;
 
   return (
-    <BoundedPluginTree
-      root={page.root}
-      onOpenPage={(opened) => openPage(pluginId, opened)}
-      onPageCall={page.onPageCall}
-    />
+    <PluginSessionRowProvider onOpenPluginPage={openPage}>
+      <BoundedPluginTree
+        root={page.root}
+        onOpenPage={(opened) => openPage(pluginId, opened)}
+        onPageCall={page.onPageCall}
+      />
+    </PluginSessionRowProvider>
   );
 }

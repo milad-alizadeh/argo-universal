@@ -11,6 +11,7 @@ import {
   closedChangeRow,
   draftChangeRow,
   mergedChangeRow,
+  rateLimitedChangeRow,
 } from './change-row-fixtures';
 
 // Paper 24GB-0: Components / ChangeRow, including the checks StatusDot states.
@@ -50,6 +51,16 @@ export const ChecksRunning: Story = { args: checksRunningChangeRow };
 export const ChecksFailing: Story = { args: checksFailingChangeRow };
 
 export const ChecksPassed: Story = { args: checksPassedChangeRow };
+
+// GitHub's rate limit refused the latest read: a dash holds the checks' place, and a pointer over it says why.
+export const RateLimited: Story = {
+  args: rateLimitedChangeRow,
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.hover(
+      canvas.getByRole('button', { name: /GitHub rate limit reached/ }),
+    );
+  },
+};
 
 // No diff total and no checks: ChangeRow's own meta line carries the modifier alone.
 export const Draft: Story = { args: draftChangeRow };

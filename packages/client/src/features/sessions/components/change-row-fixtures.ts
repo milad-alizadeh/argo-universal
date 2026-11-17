@@ -36,6 +36,11 @@ export const closedChangeRow = {
   change: { ...pullRequestMocks.closed, ...closedChange },
 } satisfies ChangeRowFixture;
 
+// GitHub's rate limit refused the latest read: the row keeps what it last knew, with a dash where its checks go.
+export const rateLimitedChangeRow = {
+  change: { ...checksPassedChangeRow.change, stale: 'rateLimited' as const },
+} satisfies ChangeRowFixture;
+
 const overflowChecks = Array.from({ length: 24 }, (_, index) => ({
   name: `Workflow ${index + 1}`,
   state: 'passed' as const,

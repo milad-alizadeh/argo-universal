@@ -4,7 +4,6 @@ import type * as React from 'react';
 import { type RefObject, useCallback } from 'react';
 import { Platform, View } from 'react-native';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
-import { useComposerPillLift } from '#lib/product/composer-pill-layer';
 import { useFeedFade } from '#lib/product/feed-fade';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import { type FeedEntry } from './feed-entry';
@@ -22,9 +21,8 @@ import { useCollapsibleMotion } from './use-collapsible-motion';
 // Clears whatever of the Composer covers the Feed's end, and the pill above it, and leaves the Feed's gap above them.
 function FeedEnd(): React.JSX.Element {
   const { endSpace } = useFeedEndClearance();
-  const pillLift = useComposerPillLift();
 
-  return <View style={{ height: endSpace + pillLift }} />;
+  return <View style={{ height: endSpace }} />;
 }
 
 // Older rows paging in above keep the reader's place, and so do rows above that measure as the reader scrolls.

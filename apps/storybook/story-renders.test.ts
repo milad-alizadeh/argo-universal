@@ -112,6 +112,7 @@ const drawFile = async (
     const story = module[name];
 
     if (story === undefined) continue;
+    console.info(`render-gate: ${file}#${name}`);
     const drawn = await drawAuditedStory(file, name, story);
 
     subjects.set(name, { story, tree: drawn.tree });
@@ -139,6 +140,7 @@ const recordPair = async (
 };
 
 const runPlannedFile = async (planned: PlannedFile): Promise<void> => {
+  console.info(`render-gate: ${planned.file}`);
   const subjects = await drawFile(planned.file, await moduleFor(planned.file));
 
   for (const pair of planned.pairs) await recordPair(pair, subjects);

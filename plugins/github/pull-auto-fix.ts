@@ -1,8 +1,14 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { Automation, Offers } from './pull-automations';
 import { fetchComments } from './pull-comments';
-import { autoFix, failedOf, fixOf, openedByAnother } from './pull-fix';
-import { eventsOf } from './pull-fix-prompts';
+import {
+  autoFix,
+  failedOf,
+  fixOf,
+  openedByAnother,
+  fixCurrent,
+} from './pull-fix';
+import type { FixFacts } from './pull-fix-prompts';
 import { createFixStore, type FixStore } from './pull-fix-store';
 import type { PullInfo } from './pull-info';
 import { lowered, sameLink } from './pull-kept';
@@ -25,11 +31,8 @@ async function yoursOf(fetch: Fetch, link: PullLink): Promise<PullInfo> {
   return pull;
 }
 
-// The head commit, and the keys of every event Auto-fix could prompt about on it now.
-async function eventsNow(
-  fetch: Fetch,
-  link: PullLink,
-): Promise<{ head: string; keys: string[] }> {
+// Read all current problems before enabling, so a failed read never acts on an incomplete answer.
+async function eventsNow(fetch: Fetch, link: PullLink): Promise<FixFacts> {
   const pull = await yoursOf(fetch, link);
 
   const [checks, comments] = await Promise.all([
@@ -37,9 +40,7 @@ async function eventsNow(
     fetchComments(fetch, link),
   ]);
 
-  const events = eventsOf({ pull, failed: failedOf(checks), comments });
-
-  return { head: pull.head, keys: events.map(({ key }) => key) };
+  return { pull, failed: failedOf(checks), comments };
 }
 
 const isOn = async (fix: FixStore, link: PullLink): Promise<boolean> =>
@@ -48,18 +49,26 @@ const isOn = async (fix: FixStore, link: PullLink): Promise<boolean> =>
   );
 
 /*
- * Turning it on reads the head's Checks, the review comments and the conflict first, so one already there is not
- * prompted, and a read that fails refuses turning it on rather than guessing. Turning it on when it is on changes nothing.
+ * Turning it on prompts about current problems immediately. A failed read refuses enabling, and turning on what
+ * is already on changes nothing. Later Watch turns use the same event history and prompt limit.
  */
 async function enable(
-  { fetch, fix }: { fetch: Fetch; fix: FixStore },
+  {
+    fetch,
+    sessions,
+    fix,
+  }: Pick<Argo, 'fetch' | 'sessions'> & { fix: FixStore },
   link: PullLink,
 ): Promise<void> {
   if (await isOn(fix, link)) return;
 
-  const { head, keys } = await eventsNow(fetch, link);
+  const facts = await eventsNow(fetch, link);
+  const record = { ...lowered(link), enabled: true, stopHead: null };
 
-  await fix.enable(lowered(link), head, keys);
+  await fix.enable(record, facts.pull.head);
+
+  if (facts.pull.stage === 'open')
+    await fixCurrent({ sessions, fix, record }, facts);
 }
 
 // How Auto-fix is offered on each of these Sessions' pull requests, from what it keeps for them.
@@ -88,9 +97,7 @@ export function createAutoFix(
   return {
     offers: (sessionIds) => offersOf(fix, sessionIds),
     set: (link, on) =>
-      on
-        ? enable({ fetch: argo.fetch, fix }, link)
-        : fix.disable(lowered(link)),
+      on ? enable({ ...argo, fix }, link) : fix.disable(lowered(link)),
     watch: (projectId, fresh) =>
       autoFix({ sessions: argo.sessions, fix }, fresh, projectId),
     forget: (link) => fix.forget(link),
