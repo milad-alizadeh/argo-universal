@@ -8,8 +8,8 @@ import type {
   KindCalls,
   WorkerCalls,
 } from '../runtime/worker-calls';
-import { forget } from './forget-items';
 import {
+  forget,
   itemsLeftOut,
   keptAnswer,
   leftOut,

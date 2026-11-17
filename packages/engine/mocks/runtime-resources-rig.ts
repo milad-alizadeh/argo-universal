@@ -160,9 +160,7 @@ export class Rig {
       handle: async (): Promise<PluginReply> => ({ ok: true }),
     };
 
-    const { draws, operations } = this.resources;
-
-    return answerService({ draws, operations, services }, hostCall(draw));
+    return answerService({ ...this.resources, services }, hostCall(draw));
   }
 
   // One run of the Plugin's Operation `discover`, declared with `tier`, which the worker answers.

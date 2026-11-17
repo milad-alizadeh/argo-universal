@@ -35,7 +35,7 @@ function Report(props: { host: Server; answers: boolean }): React.JSX.Element {
 
     void new Promise((resolve) => setTimeout(resolve, waitedMs))
       .then(() => {
-        const before = host.draws.join(',');
+        const before = [...host.draws];
 
         if (answers) host.answerList();
 
@@ -89,8 +89,7 @@ function NavDraws({ host }: { host: Server }): React.JSX.Element {
 
   React.useEffect(() => {
     const timer = setInterval(() => {
-      if (host.draws.length >= 2)
-        setDraws(`Drew after: ${host.draws.join(',')}`);
+      if (host.draws.length >= 2) setDraws(`Drew after: ${host.draws}`);
     }, waitedMs);
 
     return (): void => clearInterval(timer);
