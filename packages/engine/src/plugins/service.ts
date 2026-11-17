@@ -30,7 +30,7 @@ import {
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../rpc';
 import { discoverWithAccounts } from './accounts/removed-plugins';
-import { runsBackground } from './discovery/plugin-contributions';
+import { startsWithServer } from './discovery/plugin-contributions';
 import { callerOf } from './hooks/hook-rules';
 import {
   applyEnabled,
@@ -59,7 +59,7 @@ export class PluginService {
 
   async startBackground(): Promise<void> {
     await Promise.all([this.list(), this.deps.pluginRuntime.refreshProjects()]);
-    await startPlugins(this.deps, ({ plugin }) => runsBackground(plugin));
+    await startPlugins(this.deps, ({ plugin }) => startsWithServer(plugin));
   }
 
   async list(): Promise<PluginList> {

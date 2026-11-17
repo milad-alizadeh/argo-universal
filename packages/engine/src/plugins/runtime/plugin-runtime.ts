@@ -16,6 +16,11 @@ import { RuntimePlugins } from './runtime-plugins';
 import { RuntimeResources, type RuntimeInput } from './runtime-resources';
 import { TestControl } from './test-control';
 
+// How Plugins are built: told whenever a dev build lands, and whether a build watches the Plugin's sources or runs once.
+export type PluginBuilds = { rebuilt: () => void; watch: boolean };
+
+const defaultBuilds: PluginBuilds = { rebuilt: () => undefined, watch: true };
+
 export class PluginRuntime {
   readonly hooks;
   // What a Plugin's test kit drives: the clock every deadline and worker realm share.
@@ -33,7 +38,7 @@ export class PluginRuntime {
     private readonly log: (line: string) => void,
     readonly services: PluginServices,
     clock: PluginClock = realClock,
-    private readonly rebuilt: () => void = () => undefined,
+    private readonly builds: PluginBuilds = defaultBuilds,
   ) {
     this.host = new HostConnection(this.callbacks());
     this.connectAccounts();
@@ -72,7 +77,7 @@ export class PluginRuntime {
       clockStart: () => this.testControl.workerStart(),
       resources: this.resources,
       log: this.log,
-      rebuilt: this.rebuilt,
+      ...this.builds,
     };
   }
 

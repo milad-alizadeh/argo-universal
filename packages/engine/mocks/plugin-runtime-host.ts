@@ -2,7 +2,10 @@ import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import { writeLog } from '@repo/machine-log';
 import { onTestFinished } from 'vitest';
 import { PluginAssets } from '../src/plugins/assets/plugin-assets';
-import { PluginRuntime } from '../src/plugins/runtime/plugin-runtime';
+import {
+  PluginRuntime,
+  type PluginBuilds,
+} from '../src/plugins/runtime/plugin-runtime';
 import {
   PluginServices,
   type PluginServiceOptions,
@@ -13,6 +16,7 @@ import { MemorySecretStore } from './memory-secret-store';
 export function startPluginRuntime(
   home: string,
   options: Pick<PluginServiceOptions, 'oauth' | 'clock'> = {},
+  builds?: PluginBuilds,
 ): PluginRuntime {
   const log = (line: string): void =>
     writeLog({ home, label: 'plugins', line });
@@ -21,6 +25,7 @@ export function startPluginRuntime(
     log,
     pluginServices(home, options, log),
     options.clock,
+    builds,
   );
 
   onTestFinished(() => runtime.close());

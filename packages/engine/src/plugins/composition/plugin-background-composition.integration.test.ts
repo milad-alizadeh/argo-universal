@@ -133,6 +133,24 @@ it('is ready while a background Plugin is still starting', async () => {
   expect(await fixtureState(host.caller)).toBe('not-started');
 }, 30_000);
 
+it('starts a Plugin with a nav item at Server startup, so the first draw of its page finds it running', async () => {
+  const fixture = await dataFixture(
+    `import {Text} from '@argo/plugin-kit';
+  export function register(argo) {
+    argo.pages.define('/', { load: () => null, render: () => <Text>page</Text> });
+  }`,
+    { nav: [{ id: 'inbox', title: 'Inbox', path: '/' }] },
+  );
+
+  const host = await startEngineTestHost({
+    home: await shippedHome(fixture.directory),
+  });
+
+  await expect
+    .poll(() => fixtureState(host.caller), { timeout: 15_000 })
+    .toBe('running');
+}, 20_000);
+
 async function fixtureState(
   caller: Caller,
 ): Promise<PluginStatus['state'] | undefined> {

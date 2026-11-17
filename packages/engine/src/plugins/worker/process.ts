@@ -6,6 +6,7 @@ import {
   type WorkerCall,
 } from '../protocol/runtime.ts';
 import type { TestReply } from '../protocol/test-control.ts';
+import { z } from 'zod';
 import { registerPlugin, type PluginInboxes } from './modules.ts';
 import { createPluginBridge, WorkerCalls } from './plugin-bridge.ts';
 import { answerTest, PluginTestClock } from './test-clock.ts';
@@ -20,7 +21,10 @@ const scope = new CallScope();
 
 const bridge = createPluginBridge(calls, scope);
 
-const entry = PluginEntry.parse(workerData);
+// The host bundles the kit once and hands it over, so a worker starts without an esbuild run.
+const { entry, kit } = z
+  .object({ entry: PluginEntry, kit: z.string() })
+  .parse(workerData);
 
 const clock =
   entry.clockStart === undefined
@@ -68,6 +72,7 @@ parentPort?.on('message', (message) => {
 
 // Start the Plugin execution deadline after trusted imports, kit bundling and realm setup.
 inboxes = await registerPlugin(entry, bridge, {
+  kit,
   initialized: () => post('bootstrap-ready'),
   clock,
 });

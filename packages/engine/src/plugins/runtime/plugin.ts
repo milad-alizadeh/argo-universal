@@ -22,13 +22,17 @@ export class RuntimePlugin {
     this.actor = createActor(runtimePluginMachine, {
       input: { ...input, answer: (status) => this.answer(status) },
     }).start();
-    this.build = watchPlugin(input.entry, {
-      loaded: (source, version) => {
-        input.rebuilt?.();
-        this.actor.send({ type: 'build.loaded', source, version });
+    this.build = watchPlugin(
+      input.entry,
+      {
+        loaded: (source, version) => {
+          input.rebuilt?.();
+          this.actor.send({ type: 'build.loaded', source, version });
+        },
+        failed: (error) => this.actor.send({ type: 'build.failed', error }),
       },
-      failed: (error) => this.actor.send({ type: 'build.failed', error }),
-    });
+      input.watch,
+    );
     void this.build.catch((cause: unknown) =>
       this.actor.send({ type: 'build.failed', error: runtimeError(cause) }),
     );

@@ -23,22 +23,26 @@ export type PluginRuntimeOptions = Omit<
   locate?: (pluginId: string) => Promise<PluginLocation>;
   // Told whenever a Plugin's dev build lands.
   rebuilt?: () => void;
+  // Whether a Plugin's build watches its sources, as a dev Server's does; a Server that is not in dev builds each once.
+  watch?: boolean;
 };
 
 type ServiceOptions = Omit<PluginServiceOptions, 'assets'> & {
   secretStore?: SecretStore;
 };
 
+const noop = (): void => undefined;
+
 export function createPluginRuntime(
   home: string,
   options: PluginRuntimeOptions,
 ): PluginRuntime {
-  const { clockStart, locate, rebuilt, ...rest } = options;
+  const { clockStart, locate, rebuilt = noop, watch = true, ...rest } = options;
   const held = heldLog(home, options.heldSecrets);
   const clock = options.clock ?? runtimeClockSource(clockStart);
   const back = reachBack(() => runtime, locate);
   const services = createServices(home, { ...rest, ...back, ...held, clock });
-  const runtime = new PluginRuntime(held.log, services, clock, rebuilt);
+  const runtime = new PluginRuntime(held.log, services, clock, { rebuilt, watch });
 
   return runtime;
 }

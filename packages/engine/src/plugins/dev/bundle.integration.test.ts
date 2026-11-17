@@ -66,3 +66,31 @@ it('loads imports within the Plugin folder while preserving a failed rebuild acr
     .poll(() => runtime.status('dev'), processWait)
     .toEqual({ state: 'running', hanging: false, error: null });
 }, 15_000);
+
+it('builds a Plugin once, without watching its sources, when the Server is not in dev', async () => {
+  const home = await createRuntimePlugins([
+    { id: 'dev', fixture: 'dev', dev: true },
+  ]);
+
+  const directory = join(home, 'shipped/dev');
+  const source = join(directory, 'check.ts');
+  await writeFile(source, 'export function check(): void {}');
+  let rebuilds = 0;
+
+  const runtime = startPluginRuntime(
+    home,
+    {},
+    { rebuilt: () => (rebuilds += 1), watch: false },
+  );
+
+  const location = {
+    entry: { pluginId: 'dev', directory, main: 'index.mjs' },
+  };
+
+  expect(await runtime.activate(location)).toMatchObject({ state: 'running' });
+  await writeFile(source, 'not valid TypeScript }');
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+
+  expect(runtime.status('dev').state).toBe('running');
+  expect(rebuilds).toBe(1);
+}, 15_000);

@@ -5,6 +5,11 @@ const minuteMs = 60_000,
 
 const keptFor = minutesKept * minuteMs;
 
+const hoursKept = 24;
+
+// A Plugin page's tree is asked for again behind the kept one on every visit, so keeping it costs one stale draw and saves the first draw from waiting on a Plugin start and its Loader's reads.
+const pageTreesKeptFor = hoursKept * 60 * minuteMs;
+
 /*
  * The Server's own lists: each is what a list screen waits on before it can draw a row, and each changes
  * far more slowly than a reader moves between pages. React Query drops a query nothing is watching after
@@ -26,6 +31,8 @@ export function createQueryClient(): QueryClient {
 
   for (const path of keptQueries)
     client.setQueryDefaults([path], { gcTime: keptFor });
+
+  client.setQueryDefaults(['pluginPageTree'], { gcTime: pageTreesKeptFor });
 
   return client;
 }
