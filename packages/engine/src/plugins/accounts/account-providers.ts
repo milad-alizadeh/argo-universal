@@ -5,12 +5,14 @@ import type {
 import type { PluginAccount } from '@repo/contracts/plugins/accounts';
 import type { PluginClock } from '../clock';
 import type { SpawnCaller } from '../hooks/spawn-hooks';
+import type { AccountCredential } from './account-headers';
 import { accountUnavailable } from './account-unavailable';
 import { providerDeadline } from './provider-deadline';
+import { SharedTokenRequests } from './shared-token-requests';
 
 type Provider = SpawnCaller & { host: string; header: string; prefix: string };
 
-type Credential = { header: string; value: string };
+type Credential = AccountCredential;
 
 type TokenWait = { promise: Promise<string | null>; release: () => void };
 
@@ -32,6 +34,7 @@ export type AccountTransport = {
 export class AccountProviders {
   private readonly providers = new Map<string, Provider>();
   private readonly pending = new Map<number, Waiting>();
+  private readonly shared = new SharedTokenRequests();
   private next = 0;
 
   constructor(
@@ -51,8 +54,8 @@ export class AccountProviders {
   }
 
   token(account: PluginAccount): Promise<Credential | null> {
-    return providerDeadline(this.clock, (signal) =>
-      this.request(account, signal),
+    return this.shared.share(account, () =>
+      providerDeadline(this.clock, (signal) => this.request(account, signal)),
     );
   }
 
@@ -60,18 +63,22 @@ export class AccountProviders {
     account: PluginAccount,
     signal: AbortSignal,
   ): Promise<Credential | null> {
-    await this.transport.wake(account.providedBy);
+    const key = providerKey(account.providedBy, account.host);
+    await this.awake(key, account.providedBy);
 
     if (signal.aborted) return null;
 
-    const provider = this.providers.get(
-      providerKey(account.providedBy, account.host),
-    );
+    const provider = this.providers.get(key);
 
     if (!provider) throw accountUnavailable();
     const token = await this.wait(provider, account, signal);
 
     return credentialValue(provider, token);
+  }
+
+  // A registered provider's worker is running, and release drops it when that worker stops, so only others are woken.
+  private async awake(key: string, pluginId: string): Promise<void> {
+    if (!this.providers.has(key)) await this.transport.wake(pluginId);
   }
 
   private async wait(
@@ -131,6 +138,7 @@ export class AccountProviders {
   release(pluginId: string): void {
     for (const [key, provider] of this.providers)
       if (provider.pluginId === pluginId) this.providers.delete(key);
+    this.shared.forget(pluginId);
     this.releaseCalls(pluginId);
   }
 
@@ -145,6 +153,7 @@ export class AccountProviders {
   close(): void {
     for (const pending of this.pending.values()) pending.fail();
     this.pending.clear();
+    this.shared.clear();
     this.providers.clear();
   }
 }
