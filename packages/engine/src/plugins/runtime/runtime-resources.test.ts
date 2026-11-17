@@ -83,3 +83,12 @@ it('marks every page when a change comes before the Server has drawn any of the 
 
   expect(open.marks).toEqual(['all']);
 });
+
+it('marks, with each change, an address whose draw asked the host beside its Query', async () => {
+  const open = await opened();
+
+  await open.drawnWithHostRead();
+  await open.ran('act');
+
+  expect(open.marks).toEqual([[address]]);
+});

@@ -175,6 +175,8 @@ it('on a clock tick makes due only the Queries a Slot read that are as old as it
   // Held by a page only, so a Slot's clock leaves it alone.
   data.writes.dueWhenOlder(pluginId, 0);
   expect(valueOf(await read())).toEqual({ count: 1 });
+  // A read behind the draw would begin on a later turn, so let one pass before counting.
+  await new Promise((settle) => setTimeout(settle, 0));
   expect(reads()).toHaveLength(1);
 
   const slot = slotRead();

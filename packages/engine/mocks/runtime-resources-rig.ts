@@ -3,6 +3,7 @@ import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import { vi } from 'vitest';
 import type { PluginClock } from '../src/plugins/clock';
 import type { PluginReply } from '../src/plugins/protocol/runtime';
+import { answerService } from '../src/plugins/runtime/calls';
 import { RuntimeResources } from '../src/plugins/runtime/runtime-resources';
 import { HeldSecrets } from '../src/plugins/services/held-secrets';
 
@@ -122,6 +123,35 @@ export class Rig {
     return plain;
   }
 
+  // A draw of the overview page whose Loader asks the host for the Projects, as a page reading its Plugin's host data does.
+  async drawnWithHostRead(): Promise<void> {
+    const answering = this.resources.draws.answer({
+      pluginId,
+      at: { path: address.path, pageState: address.pageState, pages: 1 },
+    });
+
+    const draw = await vi.waitFor(() => this.lastOf('draw'));
+
+    await answerService(
+      { ...this.resources, services: { handle: async () => ({ ok: true }) } },
+      {
+        type: 'call',
+        pluginId,
+        generation: caller.generation,
+        id: 1,
+        origin: { kind: 'draw', draw },
+        request: { api: 'projects', action: 'list' },
+      },
+    );
+    this.resources.draws.receive(caller, {
+      action: 'drawn',
+      id: draw,
+      root: { type: 'Text', props: { children: 'x' } },
+      pages: 1,
+    });
+    await answering;
+  }
+
   // One run of the Plugin's Operation `discover`, declared with `tier`, which the worker answers.
   async ran(tier: 'read' | 'act'): Promise<void> {
     const running = this.resources.operations.run(pluginId, {
@@ -139,9 +169,14 @@ export class Rig {
   }
 
   private lastRun(): number {
-    const last = this.sent.findLast((event) => event.type === 'operation');
+    return this.lastOf('operation');
+  }
 
-    if (last?.type !== 'operation') throw new Error('No run sent');
+  // The id of the newest event of this type the Server sent the worker.
+  private lastOf(type: 'operation' | 'draw'): number {
+    const last = this.sent.findLast((event) => event.type === type);
+
+    if (last?.type !== type) throw new Error(`No ${type} sent`);
 
     return last.id;
   }

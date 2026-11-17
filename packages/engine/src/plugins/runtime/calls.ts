@@ -95,10 +95,15 @@ const answerRuntime = <Name extends RuntimeApi>(
   call: CallOf<Name>,
 ): ReturnType<Answer<Name>> => runtimeCalls[call.request.api](runtime, call);
 
-type StateCall = Omit<Call, 'request'> & { request: StateRequest };
+export type StateCall = Omit<Call, 'request'> & { request: StateRequest };
 
-function answerService(
-  runtime: RuntimeCalls,
+// What a call to the host service reaches: the draw or run that made it, and the service itself.
+export type ServiceCalls = Pick<RuntimeCalls, 'draws' | 'operations'> & {
+  services: Pick<PluginServices, 'handle'>;
+};
+
+export function answerService(
+  runtime: ServiceCalls,
   message: StateCall,
 ): Promise<PluginReply> {
   const { pluginId, generation, request } = message;
@@ -116,7 +121,7 @@ function answerService(
 
 // What a call reaches is looked up from the draw or the run its origin names, still waiting on its generation.
 function reach(
-  { draws, operations }: RuntimeCalls,
+  { draws, operations }: Pick<RuntimeCalls, 'draws' | 'operations'>,
   { pluginId, generation, origin }: Omit<Call, 'request'>,
 ): DrawReach<DrawLookup> {
   const caller = { pluginId, generation };
