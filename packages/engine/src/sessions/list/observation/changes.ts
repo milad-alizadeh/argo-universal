@@ -1,23 +1,26 @@
-import type {
-  SessionCounts,
-  SessionInfo,
-  SessionListUpdate,
-} from '@repo/contracts';
+import type { SessionCounts, SessionListUpdate } from '@repo/contracts';
 import type { SessionListState } from './machine';
 
+type Listed = { row: SessionListState[number]; json: string };
+
+/*
+ * A row the list kept from the last read is the same object, so it is unchanged without being written out again.
+ * Only a row read again is compared by its JSON, because reading it again may still give the same row.
+ */
 export function selectSessionChanges(): (
   state: SessionListState,
 ) => SessionListUpdate[] {
-  let previous = new Map<string, string>();
+  let previous = new Map<string, Listed>();
 
   return (state): SessionListUpdate[] => {
-    const rows = state.map((row): SessionInfo => row.information);
-
     const next = new Map(
-      rows.map((row): [string, string] => [row.sessionId, JSON.stringify(row)]),
+      state.map((row): [string, Listed] => [
+        row.information.sessionId,
+        listed(row, previous.get(row.information.sessionId)),
+      ]),
     );
 
-    const changed = changedSessions(rows, previous, next);
+    const changed = changedSessions(state, previous, next);
 
     changed.push(...removedSessions(previous, next));
     previous = next;
@@ -26,18 +29,27 @@ export function selectSessionChanges(): (
   };
 }
 
+function listed(row: SessionListState[number], before?: Listed): Listed {
+  return before?.row === row
+    ? before
+    : { row, json: JSON.stringify(row.information) };
+}
+
 function changedSessions(
-  rows: SessionInfo[],
-  previous: Map<string, string>,
-  next: Map<string, string>,
+  rows: SessionListState,
+  previous: Map<string, Listed>,
+  next: Map<string, Listed>,
 ): SessionListUpdate[] {
   return rows
-    .values()
     .filter(
-      (row): boolean => previous.get(row.sessionId) !== next.get(row.sessionId),
+      (row): boolean =>
+        previous.get(row.information.sessionId)?.json !==
+        next.get(row.information.sessionId)?.json,
     )
-    .map((row): SessionListUpdate => ({ type: 'changed', session: row }))
-    .toArray();
+    .map((row): SessionListUpdate => ({
+      type: 'changed',
+      session: row.information,
+    }));
 }
 
 export function selectSessionCounts(): (
@@ -72,8 +84,8 @@ function countActiveSessions(rows: SessionListState): SessionCounts {
 }
 
 function removedSessions(
-  previous: Map<string, string>,
-  next: Map<string, string>,
+  previous: Map<string, Listed>,
+  next: Map<string, Listed>,
 ): SessionListUpdate[] {
   return [...previous.keys()].flatMap((sessionId): SessionListUpdate[] =>
     next.has(sessionId) ? [] : [{ type: 'removed', sessionId }],
