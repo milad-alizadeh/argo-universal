@@ -43,7 +43,7 @@ export const liveHeaderElapsed = '2m 14s';
 
 export const liveHeaderNow = startedAt + 134_000;
 
-// The first recorded step of a kind: its live header, and the Tool call a `tool_call` step names.
+// The first recorded step of a kind: its live header.
 const liveHeaderStepOf = (
   type: LiveHeader['source']['type'],
 ): (typeof liveHeaderSteps)[number] =>
@@ -55,8 +55,6 @@ export const workingHeader = liveHeaderStepOf('working').liveHeader;
 export const requestHeader = liveHeaderStepOf('request').liveHeader;
 
 export const retryHeader = liveHeaderStepOf('retry').liveHeader;
-
-export const toolCallStep = liveHeaderStepOf('tool_call');
 
 // The first recorded Tool call step whose Orb moves as `state`.
 export const toolCallStepMoving = (

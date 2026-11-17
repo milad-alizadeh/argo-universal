@@ -5,7 +5,6 @@ import {
   requestHeader,
   retryHeader,
   thoughtHeader,
-  toolCallStep,
   toolCallStepMoving,
   workingHeader,
 } from './live-header.mocks';
@@ -29,12 +28,6 @@ export const workingLiveHeader = {
 
 export const thinkingHeader = {
   liveHeader: thoughtHeader,
-  now: liveHeaderNow,
-} satisfies LiveHeaderProps;
-
-export const toolCallHeader = {
-  liveHeader: toolCallStep.liveHeader,
-  toolCall: toolCallStep.toolCall,
   now: liveHeaderNow,
 } satisfies LiveHeaderProps;
 
