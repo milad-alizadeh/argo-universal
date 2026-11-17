@@ -1,5 +1,5 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
-import { List, ListSection } from '@repo/kit/primitives/lists/list';
+import { List } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import {
   Menu,
@@ -81,17 +81,16 @@ const pluginCard = (
 const hasMenu = (entry: SessionBarEntry, { onDetach }: Handlers): boolean =>
   Boolean(entry.detach && onDetach);
 
+// Loose rows, not a Section: a Section ends with a gap, which would sit under the card's last line.
 function CardLines({
   lines,
   ...handlers
 }: Handlers & { lines: Lines }): ReactNode {
   return (
     <List appearance="plain" density="compact" padding={0} fit>
-      <ListSection>
-        {lines.map((entry) => (
-          <BarRow key={rowKey(entry)} entry={entry} {...handlers} />
-        ))}
-      </ListSection>
+      {lines.map((entry) => (
+        <BarRow key={rowKey(entry)} entry={entry} {...handlers} />
+      ))}
     </List>
   );
 }

@@ -13,7 +13,10 @@ import {
   type WebContentMotion,
 } from './collapsible-web-motion';
 
-type Drawing = Pick<WebContentMotion, 'mounted' | 'height' | 'measure'>;
+type Drawing = Pick<
+  WebContentMotion,
+  'mounted' | 'moving' | 'height' | 'measure'
+>;
 
 type BodyProps = { content: ContentProps; motion: Drawing };
 
@@ -32,6 +35,12 @@ const bodyStyle = ({ content, motion }: BodyProps): StyleProp<ViewStyle> => [
   { height: motion.height },
 ];
 
+// Only opening and closing animate; at rest the box takes its content's new height at once.
+const bodyClass = (moving: boolean): string =>
+  moving
+    ? 'overflow-x-visible overflow-y-clip transition-height duration-200 ease-out motion-reduce:transition-none'
+    : 'overflow-x-visible overflow-y-clip';
+
 /*
  * Caller padding is measured inside the moving box, so closing can reach zero. The box clips only along the height
  * it animates: a row that reaches past the body's sides, as a card's rows do with their hover tile, stays whole.
@@ -45,7 +54,7 @@ function WebBody(props: BodyProps): ReactElement {
       {...own}
       {...contentAccessibility(open)}
       style={bodyStyle(props)}
-      className="overflow-x-visible overflow-y-clip transition-height duration-200 ease-out motion-reduce:transition-none"
+      className={bodyClass(props.motion.moving)}
     >
       <MeasuredBody {...props} />
     </View>

@@ -24,7 +24,11 @@ import type { SessionInspectorContent } from '../session-inspector-content';
 import { coverageCard, issueTrackerCard } from './plugin-card.mocks';
 import { itemsOf } from './session-section';
 import { offeredSections, sessionWorkbench } from './session-sections';
-import { onlyDoneSections, summaryLines } from './session-sections-fixtures';
+import {
+  detachableLine,
+  onlyDoneSections,
+  summaryLines,
+} from './session-sections-fixtures';
 
 const everySection = {
   header: {
@@ -131,6 +135,17 @@ export const AttachedIssues: Story = {
   args: {
     content: { header: { ...everySection.header, pullRequests: [] } },
     bar: attachedIssuesBar,
+  },
+};
+
+// One attached Issue the Session can detach: its card lists the line as a row with its "…", as tall as that row.
+export const DetachableLine: Story = {
+  args: {
+    content: {
+      header: { ...everySection.header, pullRequests: [] },
+      subagents: { subagents: [], now: subagentNow },
+    },
+    bar: { shown: detachableLine, hidden: [], onOpen: fn(), onDetach: fn() },
   },
 };
 
