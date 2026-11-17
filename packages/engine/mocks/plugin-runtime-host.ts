@@ -2,10 +2,8 @@ import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import { writeLog } from '@repo/machine-log';
 import { onTestFinished } from 'vitest';
 import { PluginAssets } from '../src/plugins/assets/plugin-assets';
-import {
-  PluginRuntime,
-  type PluginBuilds,
-} from '../src/plugins/runtime/plugin-runtime';
+import { PluginRuntime } from '../src/plugins/runtime/plugin-runtime';
+import type { PluginBuilds } from '../src/plugins/runtime/runtime-setup';
 import {
   PluginServices,
   type PluginServiceOptions,
@@ -20,12 +18,10 @@ export function startPluginRuntime(
 ): PluginRuntime {
   const log = pluginLog(home);
 
-  const runtime = new PluginRuntime(
-    log,
-    pluginServices(home, options, log),
-    options.clock,
+  const runtime = new PluginRuntime(log, pluginServices(home, options, log), {
+    clock: options.clock,
     builds,
-  );
+  });
 
   onTestFinished(() => runtime.close());
 

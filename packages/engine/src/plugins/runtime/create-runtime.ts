@@ -9,7 +9,8 @@ import {
 import { osSecretStore, type SecretStore } from '../services/secret-store';
 import { PluginStorage } from '../services/storage';
 import type { PluginLocation } from './plugin-location';
-import { PluginRuntime, type PluginBuilds } from './plugin-runtime';
+import { PluginRuntime } from './plugin-runtime';
+import type { PluginBuilds } from './runtime-setup';
 import { runtimeClockSource } from './test-control';
 
 export type PluginRuntimeOptions = Omit<
@@ -38,7 +39,7 @@ export function createPluginRuntime(
   const clock = options.clock ?? runtimeClockSource(clockStart);
   const back = reachBack(() => runtime, locate);
   const services = createServices(home, { ...rest, ...back, ...held, clock });
-  const runtime = new PluginRuntime(held.log, services, clock, builds);
+  const runtime = new PluginRuntime(held.log, services, { clock, builds });
 
   return runtime;
 }

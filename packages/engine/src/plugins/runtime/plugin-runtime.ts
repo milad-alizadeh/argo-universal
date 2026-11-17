@@ -14,12 +14,8 @@ import type { PluginLocation } from './plugin-location';
 import { forgetOnce, logFallback, type Fallback } from './render-fallback';
 import { RuntimePlugins } from './runtime-plugins';
 import { RuntimeResources, type RuntimeInput } from './runtime-resources';
+import { defaultBuilds, type RuntimeSetup } from './runtime-setup';
 import { TestControl } from './test-control';
-
-// How Plugins are built: told whenever a dev build lands, and whether a build watches the Plugin's sources or runs once.
-export type PluginBuilds = { rebuilt: () => void; watch: boolean };
-
-const defaultBuilds: PluginBuilds = { rebuilt: () => null, watch: true };
 
 export class PluginRuntime {
   readonly hooks;
@@ -37,13 +33,12 @@ export class PluginRuntime {
   constructor(
     private readonly log: (line: string) => void,
     readonly services: PluginServices,
-    clock: PluginClock = realClock,
-    private readonly builds: Partial<PluginBuilds> = {},
+    private readonly setup: RuntimeSetup = {},
   ) {
     this.host = new HostConnection(this.callbacks());
     this.connectAccounts();
-    this.testControl = this.controlFor(clock);
-    this.hooks = hostHooks(this.host, this.log, clock);
+    this.testControl = this.controlFor(setup.clock ?? realClock);
+    this.hooks = hostHooks(this.host, this.log, this.testControl.clock);
     this.resources = new RuntimeResources(this.resourceInput());
     ({ data: this.data } = this.resources);
     ({ items: this.items } = this.resources);
@@ -78,7 +73,7 @@ export class PluginRuntime {
       resources: this.resources,
       log: this.log,
       ...defaultBuilds,
-      ...this.builds,
+      ...this.setup.builds,
     };
   }
 
