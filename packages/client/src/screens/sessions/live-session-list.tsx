@@ -7,7 +7,7 @@ import {
   useInstalledAgents,
 } from '#features/agents';
 import { useConnectionState, useTRPC } from '#features/connection';
-import { useSessionRowPlugins } from '#features/plugins';
+import { useOpenPluginPage, useSessionRowPlugins } from '#features/plugins';
 import {
   ArchiveSessionAlert,
   liveUpdatesStopped,
@@ -23,7 +23,6 @@ import {
   sessionHref,
 } from '#lib/product/navigation/navigation';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
-import { useOpenPluginPage } from '../plugins/use-plugin-opener';
 import {
   SessionListView,
   type SessionListViewProps,

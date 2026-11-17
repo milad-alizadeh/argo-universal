@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { agentAccessOperations } from './agent-access';
 import { appOperations } from './app';
+import { diagramOperations } from './diagram';
 import type { OperationTier } from './metadata';
 import { pluginOperations } from './plugins';
 import { projectOperations } from './projects';
@@ -42,6 +43,7 @@ export interface OperationDefinition {
 export const operations = {
   ...agentAccessOperations,
   ...appOperations,
+  ...diagramOperations,
   ...readerOperations,
   ...sessionOperations,
   ...pluginOperations,

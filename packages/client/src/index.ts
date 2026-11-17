@@ -112,7 +112,16 @@ export { useNotifications } from './features/notifications';
 
 export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
 
-export { useStaleMarks } from './screens/plugins/use-stale-marks';
+export {
+  pluginAt,
+  PluginErrorToasts,
+  pluginPath,
+  type PluginSection,
+  usePluginAt,
+  usePluginListChanges,
+  usePluginSections,
+  useStaleMarks,
+} from '#features/plugins';
 
 export { ScreenBesideList } from '@repo/kit/primitives/scaffolds/screen';
 
@@ -120,18 +129,6 @@ export {
   TableRowDetailHost,
   type OpenRowDetail,
 } from '@repo/kit/primitives/lists/table';
-
-export { PluginErrorToasts } from './screens/plugins/plugin-error-toasts';
-
-export { usePluginListChanges } from './screens/plugins/use-plugin-list-changes';
-
-export {
-  pluginAt,
-  pluginPath,
-  usePluginAt,
-  usePluginSections,
-  type PluginSection,
-} from './screens/plugins/use-plugin-sections';
 
 export {
   coreNavigationSections,

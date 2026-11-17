@@ -1,10 +1,12 @@
 import { type ReactNode, useEffect, useRef, useSyncExternalStore } from 'react';
-import { PluginSessionRowProvider } from '#features/plugins';
+import {
+  type PageOpening,
+  PluginSessionRowProvider,
+  useOpenPluginPage,
+  usePluginPage,
+} from '#features/plugins';
 import { closeSessionPanel } from '#features/sessions';
 import { BoundedPluginTree } from '../../../lib/product/plugin-registry';
-import type { PageOpening } from '../../plugins/page-addresses';
-import { useOpenPluginPage } from '../../plugins/use-plugin-opener';
-import { usePluginPage } from '../../plugins/use-plugin-page';
 import type { HeldCardPage, HeldCardStore } from './held-card-store';
 
 // One declared card's page, watched for a Session whether or not its card is drawn.
