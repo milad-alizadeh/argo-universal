@@ -4,6 +4,7 @@ import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useInstalledAgents, useSuggestionModels } from '#features/agents';
 import { useConnectionState } from '#features/connection';
+import { usePluginEntries } from '#features/plugins';
 import {
   useProjects,
   useThemeChoice,
@@ -12,7 +13,6 @@ import {
 import { useNavigate } from '#lib/product/navigation/navigation';
 import { type ServerScope, useServerScope } from '#lib/product/server-scope';
 import { sections } from '../../lib/product/navigation/sections';
-import { usePluginEntries } from './plugins/use-plugins';
 import { connectionStatus } from './settings-connection-status';
 import {
   SettingsListView,

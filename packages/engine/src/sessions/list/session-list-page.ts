@@ -50,17 +50,15 @@ function parseCursor(cursor: string | undefined): Cursor | undefined {
   });
 }
 
+type Matches = (row: SessionInfo, input: SessionListInput) => boolean;
+
 function matchesInput(row: SessionInfo, input: SessionListInput): boolean {
-  return (
-    matchesProject(row, input) &&
-    matchesArchived(row, input.archived) &&
-    matchesQuery(row, input.query)
-  );
+  return matchers.every((matches) => matches(row, input));
 }
 
 function matchesArchived(
   row: SessionInfo,
-  archived: boolean | undefined,
+  { archived }: SessionListInput,
 ): boolean {
   return archived === undefined || (row.archivedAt !== null) === archived;
 }
@@ -69,12 +67,26 @@ function matchesProject(row: SessionInfo, input: SessionListInput): boolean {
   return input.projectId === undefined || row.projectId === input.projectId;
 }
 
-function matchesQuery(row: SessionInfo, query: string | undefined): boolean {
+function matchesSession(
+  row: SessionInfo,
+  { sessionId }: SessionListInput,
+): boolean {
+  return sessionId === undefined || row.sessionId === sessionId;
+}
+
+function matchesQuery(row: SessionInfo, { query }: SessionListInput): boolean {
   return (
     query === undefined ||
     row.title.toLocaleLowerCase().includes(query.toLocaleLowerCase())
   );
 }
+
+const matchers: readonly Matches[] = [
+  matchesProject,
+  matchesSession,
+  matchesArchived,
+  matchesQuery,
+];
 
 function afterCursor(row: SessionInfo, cursor: Cursor | undefined): boolean {
   return !cursor || compareRows(cursor, row) < 0;

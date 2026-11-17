@@ -142,6 +142,7 @@ export type {
 export type {
   ProjectDetailsItem,
   SessionActivityItem,
+  SessionBarItem,
   SessionRowItem,
 } from '@repo/contracts/plugins/wire';
 

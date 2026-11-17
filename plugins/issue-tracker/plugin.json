@@ -101,6 +101,76 @@
         "caller": ["project"]
       },
       {
+        "name": "setLabel",
+        "label": "Set Issue label",
+        "description": "Put a label on one Issue in a Project, or take it off.",
+        "tier": "act",
+        "keywords": ["issue", "label", "tag"],
+        "params": {
+          "number": {
+            "type": "number",
+            "description": "The Issue number.",
+            "required": true
+          },
+          "label": {
+            "type": "string",
+            "description": "The label's name.",
+            "required": true
+          },
+          "on": {
+            "type": "boolean",
+            "description": "Whether the Issue has the label.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "createLabel",
+        "label": "Create an Issue label",
+        "description": "Make a new label in the Project's repository and put it on one Issue.",
+        "tier": "act",
+        "keywords": ["issue", "label", "tag", "create"],
+        "params": {
+          "number": {
+            "type": "number",
+            "description": "The Issue number.",
+            "required": true
+          },
+          "name": {
+            "type": "string",
+            "description": "The new label's name.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "setAssignee",
+        "label": "Set Issue assignee",
+        "description": "Assign one Issue in a Project to a person, or take them off it.",
+        "tier": "act",
+        "keywords": ["issue", "assignee", "assign"],
+        "params": {
+          "number": {
+            "type": "number",
+            "description": "The Issue number.",
+            "required": true
+          },
+          "assignee": {
+            "type": "string",
+            "description": "The person's GitHub login.",
+            "required": true
+          },
+          "on": {
+            "type": "boolean",
+            "description": "Whether the Issue is assigned to them.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
+      },
+      {
         "name": "signIn",
         "label": "Sign in to GitHub",
         "description": "Asks GitHub for a sign-in code, shows it on the sign-in page, and adds the Account once the person approves it on GitHub.",

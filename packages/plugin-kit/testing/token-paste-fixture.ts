@@ -100,9 +100,9 @@ export async function paste(
 export const secretFieldOf = (page: OpenPage): WireNode =>
   page.find(isSecretField);
 
-// The Section the field sits in, whose footer is the error a person reads.
+// The SignIn the field sits in, whose footer, under the field, is the error a person reads.
 export const fieldSectionOf = (page: OpenPage): WireNode =>
-  page.find((node) => node.type === 'FieldGroup.Section');
+  page.find((node) => node.type === 'SignIn');
 
 // Whether a text shows anywhere the App keeps of the page: its tree or its Page state.
 export const keeps = (page: OpenPage, text: string): boolean =>

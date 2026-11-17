@@ -16,6 +16,8 @@ export type FixturePull = {
   changed_files: number;
   head: { ref: string; sha: string; repo: { full_name: string } };
   base: { ref: string; repo: { full_name: string } };
+  // The account that opened it.
+  user: { login: string };
 };
 
 // One changed file as GitHub lists a pull request's files; `patch` is absent for a binary or very large file.
@@ -41,4 +43,16 @@ export type FixtureCheck = {
     | 'skipped'
     | 'cancelled'
     | null;
+};
+
+// One review comment on a pull request's diff as GitHub's REST API answers it; `line` is null once the line is outdated.
+export type FixtureComment = {
+  id: number;
+  path: string;
+  line: number | null;
+  body: string;
+  // `type` is `Bot` for a GitHub App.
+  user: { login: string; type: string };
+  // How the author is related to the repository: OWNER, MEMBER, COLLABORATOR, CONTRIBUTOR, NONE and so on.
+  author_association: string;
 };

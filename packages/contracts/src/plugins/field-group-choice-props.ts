@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { iconName } from '../kit-symbols/icon-schema';
 import { stockIcon } from '../kit-symbols/stock-icon-schema';
 import { fieldGroupRowProps } from './field-group-row-props';
-import { handler } from './kit-component-props';
+import { echoes, handler } from './kit-component-props';
+import { acknowledgedPayload } from './kit-event-props';
 import { datePickerProps } from './text-field-kit-props';
 
 // The rows that choose a value: a Picker from options, and a DatePicker from the calendar.
@@ -49,6 +50,17 @@ const fieldGroupPickerOption = z.object({
     .boolean()
     .optional()
     .describe('The option is drawn dimmed and cannot be chosen.'),
+  avatar: z
+    .boolean()
+    .optional()
+    .describe('A person: initials in a round avatar lead the option.'),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional()
+    .describe(
+      'A tracker label color as #rrggbb: a dot of it leads the option, as the label’s Pill is filled.',
+    ),
   section: z
     .string()
     .optional()
@@ -107,5 +119,35 @@ export const fieldGroupPickerProps = fieldGroupRowProps.extend({
     .describe(
       'The `page`\'s one action, such as "Add Agents": in the pushed page\'s header on phones, an icon button when it has an icon; a button below the choices in a desktop popover, which has no header.',
     ),
-  onValueChange: handler('onValueChange'),
+  createLabel: z
+    .string()
+    .optional()
+    .describe(
+      'Offers to create what the search typed when no option has that name, as “<createLabel> “text””, such as “Create label”; a press reports `onCreate`.',
+    ),
+  onValueChange: handler('onValueChange')
+    .optional()
+    .describe(
+      'The chosen option value, or the whole list when `multiple`; an Operation param cannot hold a list, so a Plugin’s `multiple` Picker reports `onToggle`.',
+    ),
+  onToggle: handler('onToggle')
+    .optional()
+    .describe(
+      'A `multiple` choice: the option pressed and whether it is now chosen.',
+    ),
+  onCreate: handler('onCreate')
+    .optional()
+    .describe('The text of the option to create, from `createLabel`.'),
 });
+
+export const fieldGroupPickerEvents = {
+  // A multiple Picker echoes its whole list and stays open, so a toggle never locks it.
+  onValueChange: echoes(fieldGroupPickerProps, 'value', { blocks: false }),
+  // The footer action's press, inside the action data.
+  onPress: z.undefined().meta({ within: 'footerAction' }),
+  // An Operation param cannot hold a list, so a `multiple` pick also reports the one option it toggled.
+  onToggle: acknowledgedPayload(
+    z.object({ value: z.string(), on: z.boolean() }),
+  ),
+  onCreate: acknowledgedPayload(z.string()),
+};

@@ -83,9 +83,13 @@ it('opens a filter list, then an Issue from it, on their own pages', async () =>
     'This Issue came from the fixture GitHub.',
   );
   // The Issue's one link out is a property beside its description: the number goes to GitHub.
-  expect(detail.findText('#42')?.node.props.href).toBe(
-    'https://github.com/owner/repository/issues/42',
-  );
+  expect(detail.find('GitHub').props).toMatchObject({
+    value: '#42',
+    onPress: {
+      action: 'openUrl',
+      url: 'https://github.com/owner/repository/issues/42',
+    },
+  });
   expect(await test.log()).not.toContain('refused');
   // The three pages read one overview, which is one GraphQL call.
   expect(overviewCalls(github)).toHaveLength(1);

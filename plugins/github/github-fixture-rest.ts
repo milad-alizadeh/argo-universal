@@ -13,6 +13,8 @@ export type Held = Pick<
   | 'stall'
   | 'checks'
   | 'checksFailWith'
+  | 'comments'
+  | 'commentsFailWith'
   | 'repositories'
   | 'graphqlFailWith'
 >;
@@ -23,6 +25,9 @@ export const refusal = (message: string, status: number): FixtureAnswer => ({
   status,
   json: { message },
 });
+
+const serverError = (status: number): FixtureAnswer =>
+  refusal('Server Error', status);
 
 export const pullPath = /^\/repos\/([^/]+\/[^/]+)\/pulls\/(\d+)$/;
 
@@ -45,17 +50,21 @@ const intParam = (
   fallback: number,
 ): number => Number(params.get(key) ?? fallback);
 
-function filesAnswer(
-  { files }: Held,
-  [, repository, number, query]: RegExpExecArray,
-): FixtureAnswer {
+// The slice of a list that `per_page` and `page` ask for.
+function pageIn<Item>(all: readonly Item[], query: string | undefined): Item[] {
   const params = new URLSearchParams(query);
   const size = intParam(params, 'per_page', defaultPageSize);
   const page = intParam(params, 'page', 1);
-  const all = files.get(`${repository}#${number}`) ?? [];
 
-  return { json: all.slice((page - 1) * size, page * size) };
+  return all.slice((page - 1) * size, page * size);
 }
+
+const filesAnswer = (
+  { files }: Held,
+  [, repository, number, query]: RegExpExecArray,
+): FixtureAnswer => ({
+  json: pageIn(files.get(`${repository}#${number}`) ?? [], query),
+});
 
 export const checksPath =
   /^\/repos\/([^/]+\/[^/]+)\/commits\/([0-9a-f]+)\/check-runs(\?.*)?$/;
@@ -72,8 +81,24 @@ function checksAnswer(held: Held, path: string): FixtureAnswer {
   const runs = runsOf(held, repository, head);
 
   return status
-    ? refusal('Server Error', status)
+    ? serverError(status)
     : { json: { total_count: runs.length, check_runs: runs } };
+}
+
+const commentsPath =
+  /^\/repos\/([^/]+\/[^/]+)\/pulls\/(\d+)\/comments(?:\?(.*))?$/;
+
+// GitHub's pages of a pull request's review comments, oldest first; `per_page` and `page` choose the slice.
+function commentsAnswer(
+  { comments, commentsFailWith }: Held,
+  [, repository, number, query]: RegExpExecArray,
+): FixtureAnswer {
+  const key = `${repository}#${number}`;
+  const status = commentsFailWith.get(key);
+
+  return status
+    ? serverError(status)
+    : { json: pageIn(comments.get(key) ?? [], query) };
 }
 
 export const listPath = /^\/repos\/([^/]+\/[^/?]+)\/pulls\?(.*)$/;
@@ -134,6 +159,7 @@ type Route = [RegExp, (held: Held, match: RegExpExecArray) => FixtureAnswer];
 
 const routes: Route[] = [
   [filesPath, filesAnswer],
+  [commentsPath, commentsAnswer],
   [
     listPath,
     (held, match) => listAnswer(held, String(match[1]), String(match[2])),
@@ -153,8 +179,7 @@ function route(held: Held, path: string): FixtureAnswer {
 
 // The repository endpoints of `api.github.com`; while `failWith` is set, each one fails with that status.
 export function rest(held: Held, path: string): FixtureAnswer {
-  if (held.failWith.status)
-    return refusal('Server Error', held.failWith.status);
+  if (held.failWith.status) return serverError(held.failWith.status);
 
   return route(held, path);
 }

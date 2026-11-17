@@ -139,5 +139,5 @@ async function kept(
 
   await argo.secrets.set(id, token);
 
-  return { kind: 'signed-in', label };
+  return { kind: 'signed-in', label, accountId: id };
 }

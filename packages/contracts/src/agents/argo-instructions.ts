@@ -26,7 +26,23 @@ const agents: ArgoInstruction = {
     'Never wrap it in a timeout and never retry it, because each retry asks the person again and starts another Session.',
 };
 
-export const argoInstructions: readonly ArgoInstruction[] = [plan, agents];
+// The Feed draws Mermaid fences as diagrams, with a renderer that skips what it cannot read (ADR-0058).
+const diagrams: ArgoInstruction = {
+  name: 'Diagrams',
+  text:
+    'Argo draws ```mermaid fences as diagrams: flowchart, sequenceDiagram, stateDiagram-v2, classDiagram and erDiagram. ' +
+    'Before you send one, run the Argo Operation diagram.validate with its source, through the operation_run tool of the Argo MCP server, ' +
+    'and fix every problem it reports until it passes. ' +
+    'Name a diagram with front matter (---, title: Name, ---). ' +
+    'Argo colours every diagram itself, so leave out style, classDef, linkStyle and init colours; ' +
+    'to mark a node, give it a tone class such as `class A success`: info, success, warning, danger, done or muted.',
+};
+
+export const argoInstructions: readonly ArgoInstruction[] = [
+  plan,
+  agents,
+  diagrams,
+];
 
 // Each Argo instruction under its name, as one block of Markdown.
 export const argoInstructionsMarkdown = (): string =>

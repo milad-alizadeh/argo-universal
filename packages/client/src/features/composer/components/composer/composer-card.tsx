@@ -36,10 +36,9 @@ type MessageField = React.ComponentProps<typeof RichTextarea>;
 function useComposerText(layout: TextLayout): MessageField {
   const suggestions = useSuggestionSources(layout.props);
   const followUp = useFollowUpSuggestion(layout.props, layout.inactive);
-  const props = { ...layout.props, onDraftChange: followUp.changeDraft };
 
   return {
-    ...textInputProps({ ...layout, props }),
+    ...textInputProps(layout),
     inlineSuggestion: followUp.inlineSuggestion,
     ref: layout.field.attach,
     suggestions,
@@ -49,14 +48,12 @@ function useComposerText(layout: TextLayout): MessageField {
 // The padding sits on the field, so a press anywhere in the white area focuses it.
 const textFieldLook = {
   accessibilityLabel: 'Message',
-  fieldClassName: 'px-4 wide:px-4.75 pt-3 pb-2',
+  fieldClassName: 'px-4 wide:px-4.75 pt-3 pb-2 type-body',
 } as const;
 
-function textInputProps({
-  props,
-  inactive,
-  send,
-}: Omit<TextLayout, 'field'>): React.ComponentProps<typeof RichTextarea> {
+function textInputProps(layout: Omit<TextLayout, 'field'>): MessageField {
+  const { props, inactive, send, modifiedSend } = layout;
+
   return {
     ...textFieldLook,
     autoFocus: !inactive,
@@ -65,6 +62,7 @@ function textInputProps({
     disabled: inactive,
     ...draftChanges(props),
     onSubmit: send,
+    onModifiedSubmit: modifiedSend,
   };
 }
 

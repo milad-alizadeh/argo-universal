@@ -34,13 +34,21 @@ it(
       assignee: person.displayName,
       priority: 'High',
     });
-    expect(page.find(keyed(fieldKeys.status)).type).toBe('Metadata.StatusDot');
-    expect(page.findText('spec-0027')).toBeDefined();
+    expect(page.find(keyed(fieldKeys.status)).props.dot).toBe('info');
     expect(
-      page.find((node) => node.type === 'Metadata.Link').props,
+      page.find(
+        (node) =>
+          node.type === 'FieldGroup.Value' && node.props.title === 'Labels',
+      ).props.value,
+    ).toContain('spec-0027');
+    expect(
+      page.find((node) => node.type === 'FieldGroup.Link').props,
     ).toMatchObject({
-      text: 'ARGO-3',
-      href: `https://${arenaSite.host}/browse/ARGO-3`,
+      value: 'ARGO-3',
+      onPress: {
+        action: 'openUrl',
+        url: `https://${arenaSite.host}/browse/ARGO-3`,
+      },
     });
     expect(page.find((node) => node.type === 'Detail').props.markdown).toBe(
       argoThreeMarkdown,

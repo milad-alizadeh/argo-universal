@@ -1,5 +1,5 @@
 import type { NonUserPromptSender, QueueCommand } from '@repo/contracts';
-import type { QueueSteeringCommand } from './queue-steering-types';
+import type { QueueSteeringCommand } from './queue-steering/types';
 
 export type QueueSessionCommand =
   | QueueSteeringCommand

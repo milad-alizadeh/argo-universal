@@ -42,7 +42,7 @@ it('shows the code once the service gives it, then adds the Account and keeps th
 
   await wait();
 
-  expect(flow.state()).toEqual({ kind: 'signed-in', label: 'octocat' });
+  expect(flow.state()).toMatchObject({ kind: 'signed-in', label: 'octocat' });
   expect(fake.added).toEqual([{ host: 'api.github.com', label: 'octocat' }]);
   expect(fake.secrets.get('account-1')).toBe('token-1');
   expect(fake.calls[1]?.body).toBe(
@@ -79,7 +79,7 @@ it('keeps waiting through pending, and waits five seconds longer after slow_down
   await wait(5000);
   expect(flow.state().kind).toBe('code');
   await wait(1000);
-  expect(flow.state()).toEqual({ kind: 'signed-in', label: 'octocat' });
+  expect(flow.state()).toMatchObject({ kind: 'signed-in', label: 'octocat' });
 });
 
 it.each([

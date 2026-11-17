@@ -9,6 +9,9 @@ import {
 
 const timeoutMs = 30_000;
 
+// How long Argo's fetch keeps a 429'd origin closed when Jira names no Retry-After.
+const rateLimitedFor = 60_000;
+
 const rateLimited = {
   status: 429,
   text: 'Rate limit exceeded.',
@@ -70,6 +73,8 @@ it.each(failures)(
     expect(page.findText('No issues match these filters')).toBeUndefined();
 
     jira.jira.heal('search');
+    // Argo's fetch answers a rate-limited origin itself for a minute after a 429, as Jira asks.
+    await jira.test.clock.advance(rateLimitedFor);
     await page.press('Try again');
 
     expect(shownKeys(page)).toEqual(['ARGO-1']);
@@ -94,6 +99,7 @@ it(
 
     // The failed page kept no answer, so asking for it again reads Jira again.
     jira.jira.heal('search');
+    await jira.test.clock.advance(rateLimitedFor);
     await page.draw(2);
 
     expect(page.error).toBeUndefined();

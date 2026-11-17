@@ -16,6 +16,8 @@ import type { AutomationState } from './pull-automation';
 
 const slow = 120_000;
 
+const oldFailure = expect.stringContaining('Check `old` failed');
+
 // How long a Change may take to show what GitHub now says, which a Slot reads behind its answer.
 const wait = 20_000;
 
@@ -40,22 +42,26 @@ it(
 );
 
 it(
-  'sends one Prompt per new failed Check, never twice, and leaves failures from before it was turned on',
+  'prompts existing failed Checks when enabled and never sends the same failure twice',
   async () => {
     const run = await attached();
 
     failChecks(run, sha, 'old');
     await tap(run, true);
     expect(await fixOffer(run)).toEqual({ on: true, available: true });
+    expect(texts(run)).toEqual([oldFailure]);
 
     await watch(run);
-    expect(promptsSent(run)).toEqual([]);
+    expect(texts(run)).toEqual([oldFailure]);
 
     failChecks(run, sha, 'old', 'lint');
     await watch(run);
     await watch(run);
 
     expect(promptsSent(run)).toEqual([
+      expect.objectContaining({
+        text: oldFailure,
+      }),
       {
         sessionId,
         text: lintPrompt,
@@ -90,7 +96,7 @@ it(
 );
 
 it(
-  'turns itself off after three Prompts on one head, says why, and clears the reason on a push or turning it on',
+  'stops after three Prompts on a head and retries existing problems when re-enabled',
   async () => {
     const run = await attached();
 
@@ -109,14 +115,15 @@ it(
     await watch(run);
     expect(promptsSent(run)).toHaveLength(3);
 
-    changePull(run, 12, { head: pushed(12) });
+    await tap(run, true);
+    expect(promptsSent(run)).toHaveLength(6);
     await expect
       .poll(() => fixOffer(run), { timeout: wait })
-      .toEqual({ on: false, available: true });
-
-    changePull(run, 12, {});
-    await tap(run, true);
-    expect(await fixOffer(run)).toEqual({ on: true, available: true });
+      .toEqual({
+        on: false,
+        available: true,
+        reason: `Stopped after 3 tries on \`${sha.slice(0, 7)}\``,
+      });
   },
   slow,
 );

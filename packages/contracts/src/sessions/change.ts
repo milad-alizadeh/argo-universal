@@ -49,8 +49,8 @@ const ChangeCheck = z.strictObject({
   state: z.enum(changeCheckStates),
 });
 
-// Why a Change shows what it last knew: its latest read failed, because the person must sign in or for any other reason.
-export const changeStaleReasons = ['signIn', 'failed'] as const;
+// Why a Change shows what it last knew: its latest read failed because the person must sign in, the code host's rate limit refused it, or for any other reason.
+export const changeStaleReasons = ['signIn', 'rateLimited', 'failed'] as const;
 
 export type ChangeStaleReason = (typeof changeStaleReasons)[number];
 

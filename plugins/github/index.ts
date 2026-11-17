@@ -1,8 +1,11 @@
 import type { Argo } from '@argo/plugin-kit';
+import { createAutoArchive } from './pull-auto-archive';
+import { createAutoFix } from './pull-auto-fix';
 import { defineAutomationReads } from './pull-automation-reads';
 import type { ChangeItem } from './pull-change';
 import { changesBySession, type ChangesSource } from './pull-changes';
 import { checkoutIdentity, markCheckout } from './pull-checkout';
+import { defineCommentsReads } from './pull-comments';
 import { keptShown } from './pull-kept';
 import { linkMarks, markedLinks } from './pull-link-marks';
 import { definePullReads } from './pull-reads';
@@ -16,14 +19,21 @@ import {
 import { rowItemsBySession } from './pull-row-items';
 import { createPullStore } from './pull-store';
 import { createPulls, type Pulls } from './pull-sync';
+import { defineViewerReads } from './pull-viewer';
 import { watchProject } from './pull-watch';
 import type { SessionCaller } from './session-caller';
 
 function sourceOf(argo: Argo): ChangesSource {
   return {
     store: createPullStore(argo),
+    automations: { fix: createAutoFix(argo), archive: createAutoArchive(argo) },
     records: createPullRecords(argo),
-    reads: { ...definePullReads(argo), ...defineAutomationReads(argo) },
+    reads: {
+      ...definePullReads(argo),
+      ...defineAutomationReads(argo),
+      ...defineCommentsReads(argo),
+      ...defineViewerReads(argo),
+    },
     readState: argo.queries.readState,
   };
 }
@@ -69,7 +79,7 @@ const changesOf = async (
 ): Promise<Readonly<Record<string, ChangeItem[]>>> =>
   changesBySession(
     await keptShown(
-      source.store,
+      source,
       contexts.map(({ sessionId }) => sessionId),
       shown,
     ),
@@ -104,11 +114,10 @@ function registerRowItems(argo: Argo, { source, pulls }: Parts): void {
 
 // The Watch runs on Argo's clock for each Project with no App open (ADR-0055); each automation takes its turn in it.
 function registerWatch(argo: Argo, { source, pulls }: Parts): void {
-  const acting = { sessions: argo.sessions, changed: pulls.changed };
-  const watching = { store: source.store, pulls };
+  const fresh = { pulls, changed: pulls.changed };
 
   argo.watch.define('/', async ({ context: { projectId } }) => {
-    if (projectId) await watchProject(acting, watching, projectId);
+    if (projectId) await watchProject(source.automations, fresh, projectId);
   });
 }
 

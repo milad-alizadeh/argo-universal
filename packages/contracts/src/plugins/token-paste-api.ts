@@ -33,7 +33,7 @@ export type TokenLabel = string | null | Readonly<{ refused: string }>;
  */
 export type TokenPasteState =
   | { kind: 'idle' }
-  | { kind: 'signed-in'; label: string }
+  | { kind: 'signed-in'; label: string; accountId: string }
   | { kind: 'failed'; reason: 'rejected'; message: string };
 
 /*

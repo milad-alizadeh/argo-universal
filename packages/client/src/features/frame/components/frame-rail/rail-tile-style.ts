@@ -6,6 +6,7 @@ export const railTiles: RailTiles = {
   size: 'size-12',
   corners: 'rounded-xl',
   selected: 'bg-selected',
+  marker: '-left-4',
   column: 'gap-px',
   collapsedColumn: 'gap-px',
 };

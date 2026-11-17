@@ -23,7 +23,7 @@ type Choosing = { shown: Shown; keys: string[] };
 
 const optimistic = ({ name }: JiraPriority, keys: string[]): Showing => ({
   optimistic: [
-    { key: fieldKeys.priority, props: { text: name } },
+    { key: fieldKeys.priority, props: { value: name } },
     ...checks(keys, priorityKey(name)),
   ],
 });

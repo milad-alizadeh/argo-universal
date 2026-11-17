@@ -14,11 +14,11 @@ export const failureOf = (state: SignInState): string | undefined =>
 const errorOf = (error: string | undefined): { error?: string } =>
   error ? { error } : {};
 
-const footerOf = (error: string | undefined): { footer?: string } =>
-  error ? { footer: error } : {};
-
 // The pasted text goes only to `signIn`'s secret `token` param (ADR-0051), and the field never shows it back.
-const secretField = (parts: Pasting, error: string | undefined): ReactElement =>
+export const secretField = (
+  parts: Pasting,
+  error: string | undefined,
+): ReactElement =>
   jsx(
     'FieldGroup.SecretField',
     {
@@ -29,20 +29,4 @@ const secretField = (parts: Pasting, error: string | undefined): ReactElement =>
       ...errorOf(error),
     },
     'token',
-  );
-
-// The field a token is pasted into, with why the last one was not kept beneath it.
-export const tokenField = (
-  parts: Pasting,
-  error: string | undefined,
-): ReactElement =>
-  jsx(
-    'FieldGroup',
-    {
-      children: jsx('FieldGroup.Section', {
-        ...footerOf(error),
-        children: secretField(parts, error),
-      }),
-    },
-    'paste',
   );

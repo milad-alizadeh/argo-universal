@@ -46,6 +46,8 @@ const alice = 'token-alice';
 
 const bob = 'token-bob';
 
+const bobsAccount = 'account-bob';
+
 const people = new Map([
   [alice, 'alice'],
   [bob, 'bob'],
@@ -72,8 +74,12 @@ it('adds no Account for a paste a newer one overtakes while its token is checked
   await first;
 
   expect(added).toEqual(['bob']);
-  expect([...secrets]).toEqual([['account-bob', bob]]);
-  expect(flow.state()).toEqual({ kind: 'signed-in', label: 'bob' });
+  expect([...secrets]).toEqual([[bobsAccount, bob]]);
+  expect(flow.state()).toEqual({
+    kind: 'signed-in',
+    label: 'bob',
+    accountId: bobsAccount,
+  });
 });
 
 it('keeps no token for a paste a newer one overtakes while its Account is added', async () => {
@@ -93,6 +99,10 @@ it('keeps no token for a paste a newer one overtakes while its Account is added'
   adding.resolve();
   await first;
 
-  expect([...secrets]).toEqual([['account-bob', bob]]);
-  expect(flow.state()).toEqual({ kind: 'signed-in', label: 'bob' });
+  expect([...secrets]).toEqual([[bobsAccount, bob]]);
+  expect(flow.state()).toEqual({
+    kind: 'signed-in',
+    label: 'bob',
+    accountId: bobsAccount,
+  });
 });

@@ -1,15 +1,8 @@
 import { executingOver, type Storage } from './pull-execute';
-import {
-  insertEvent,
-  recordedBy,
-  seenOf,
-  sentOf,
-  unrecordedBy,
-} from './pull-fix-events';
+import { recordedBy, seenOf, sentOf, unrecordedBy } from './pull-fix-events';
 import {
   all,
   columns,
-  eventKey,
   keyOf,
   recordsOf,
   run,
@@ -60,19 +53,14 @@ const enabledInOf =
 
 const enableOf =
   (execute: Execute, set: SetRecord): FixStore['enable'] =>
-  async (link, head, failed) => {
+  async (link, head) => {
     await set(link, 1, null);
     await execute(
       run(
-        `UPDATE pull_auto_fix_events SET sent = 0 WHERE ${where} AND head = ?`,
+        `DELETE FROM pull_auto_fix_events WHERE ${where} AND (head = ? OR sent = 0)`,
         [...keyOf(link), head],
       ),
     );
-
-    for (const check of failed)
-      await execute(
-        run(insertEvent(0), [...keyOf(link), head, eventKey(check)]),
-      );
   };
 
 const forgetOf =

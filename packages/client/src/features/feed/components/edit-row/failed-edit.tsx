@@ -25,9 +25,7 @@ const errorText = (row: ToolCallUpdate): string =>
     .join(' ');
 
 function FailedPath({ path }: { path?: string }): React.JSX.Element | null {
-  return path ? (
-    <FileName path={path} className="text-muted-foreground" />
-  ) : null;
+  return path ? <FileName path={path} /> : null;
 }
 
 function FailedError({ error }: { error: string }): React.JSX.Element | null {
@@ -48,7 +46,7 @@ export function FailedEdit(props: FailedEditProps): React.JSX.Element {
   return (
     <View className="min-h-5 flex-row items-center gap-1.5">
       <Icon name="edit" className="shrink-0 text-danger" />
-      <Text role="body" className="text-danger">
+      <Text role="body" tone="muted" className="font-sans">
         Couldn't edit
       </Text>
       <FailedPath path={failedPath(props)} />

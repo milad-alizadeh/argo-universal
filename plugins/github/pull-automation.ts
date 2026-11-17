@@ -75,13 +75,6 @@ export function mergeOf(
   return known ? knownMerge(pull, known) : { on: false, available: false };
 }
 
-// The three automations of a Change, as the menu draws them.
-export const offerOf = (
-  merge: AutomationState,
-  fix: AutomationState,
-  archive: AutomationState,
-): AutomationOffer => ({ fix, merge, archive });
-
 // The first method the repository allows, in the order squash, merge, rebase.
 export const methodOf = ({ methods }: MergeSettings): MergeMethod => {
   const [first] = methods;

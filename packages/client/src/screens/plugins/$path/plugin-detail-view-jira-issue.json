@@ -647,86 +647,71 @@
             ],
             "aside": [
               {
-                "type": "Metadata",
+                "type": "FieldGroup",
                 "key": "0",
                 "props": {},
                 "children": [
                   {
-                    "type": "Metadata.StatusDot",
-                    "key": "issue-status",
-                    "props": {
-                      "title": "Status",
-                      "text": "In Progress",
-                      "tone": "info"
-                    },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Metadata.Label",
-                    "key": "issue-assignee",
-                    "props": {
-                      "title": "Assignee",
-                      "text": "Ada Lovelace",
-                      "icon": {
-                        "sf": "person",
-                        "material": "person"
-                      }
-                    },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Metadata.Label",
-                    "key": "issue-priority",
-                    "props": {
-                      "title": "Priority",
-                      "text": "High",
-                      "icon": {
-                        "sf": "flag",
-                        "material": "flag"
-                      }
-                    },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Metadata.Pills",
-                    "key": "3",
-                    "props": {
-                      "title": "Labels"
-                    },
+                    "type": "FieldGroup.Section",
+                    "key": "0",
+                    "props": {},
                     "children": [
                       {
-                        "type": "Pill",
-                        "key": "jira",
+                        "type": "FieldGroup.Value",
+                        "key": "issue-status",
                         "props": {
-                          "text": "jira"
+                          "title": "Status",
+                          "value": "In Progress",
+                          "dot": "info"
                         },
                         "children": [],
                         "slots": {}
                       },
                       {
-                        "type": "Pill",
-                        "key": "spec-0027",
+                        "type": "FieldGroup.Value",
+                        "key": "issue-assignee",
                         "props": {
-                          "text": "spec-0027"
+                          "title": "Assignee",
+                          "value": "Ada Lovelace"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "FieldGroup.Value",
+                        "key": "issue-priority",
+                        "props": {
+                          "title": "Priority",
+                          "value": "High"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "FieldGroup.Value",
+                        "key": "3",
+                        "props": {
+                          "title": "Labels",
+                          "value": "jira, spec-0027"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "FieldGroup.Link",
+                        "key": "4",
+                        "props": {
+                          "title": "Jira",
+                          "value": "ARGO-3",
+                          "onPress": {
+                            "action": "openUrl",
+                            "url": "https://arena.atlassian.net/browse/ARGO-3"
+                          }
                         },
                         "children": [],
                         "slots": {}
                       }
                     ],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Metadata.Link",
-                    "key": "4",
-                    "props": {
-                      "title": "Jira",
-                      "text": "ARGO-3",
-                      "href": "https://arena.atlassian.net/browse/ARGO-3"
-                    },
-                    "children": [],
                     "slots": {}
                   }
                 ],
@@ -1386,86 +1371,71 @@
             ],
             "aside": [
               {
-                "type": "Metadata",
+                "type": "FieldGroup",
                 "key": "0",
                 "props": {},
                 "children": [
                   {
-                    "type": "Metadata.StatusDot",
-                    "key": "issue-status",
-                    "props": {
-                      "title": "Status",
-                      "text": "In Review",
-                      "tone": "info"
-                    },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Metadata.Label",
-                    "key": "issue-assignee",
-                    "props": {
-                      "title": "Assignee",
-                      "text": "Ada Lovelace",
-                      "icon": {
-                        "sf": "person",
-                        "material": "person"
-                      }
-                    },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Metadata.Label",
-                    "key": "issue-priority",
-                    "props": {
-                      "title": "Priority",
-                      "text": "High",
-                      "icon": {
-                        "sf": "flag",
-                        "material": "flag"
-                      }
-                    },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Metadata.Pills",
-                    "key": "3",
-                    "props": {
-                      "title": "Labels"
-                    },
+                    "type": "FieldGroup.Section",
+                    "key": "0",
+                    "props": {},
                     "children": [
                       {
-                        "type": "Pill",
-                        "key": "jira",
+                        "type": "FieldGroup.Value",
+                        "key": "issue-status",
                         "props": {
-                          "text": "jira"
+                          "title": "Status",
+                          "value": "In Review",
+                          "dot": "info"
                         },
                         "children": [],
                         "slots": {}
                       },
                       {
-                        "type": "Pill",
-                        "key": "spec-0027",
+                        "type": "FieldGroup.Value",
+                        "key": "issue-assignee",
                         "props": {
-                          "text": "spec-0027"
+                          "title": "Assignee",
+                          "value": "Ada Lovelace"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "FieldGroup.Value",
+                        "key": "issue-priority",
+                        "props": {
+                          "title": "Priority",
+                          "value": "High"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "FieldGroup.Value",
+                        "key": "3",
+                        "props": {
+                          "title": "Labels",
+                          "value": "jira, spec-0027"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "FieldGroup.Link",
+                        "key": "4",
+                        "props": {
+                          "title": "Jira",
+                          "value": "ARGO-3",
+                          "onPress": {
+                            "action": "openUrl",
+                            "url": "https://arena.atlassian.net/browse/ARGO-3"
+                          }
                         },
                         "children": [],
                         "slots": {}
                       }
                     ],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Metadata.Link",
-                    "key": "4",
-                    "props": {
-                      "title": "Jira",
-                      "text": "ARGO-3",
-                      "href": "https://arena.atlassian.net/browse/ARGO-3"
-                    },
-                    "children": [],
                     "slots": {}
                   }
                 ],

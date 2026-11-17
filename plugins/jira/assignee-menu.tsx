@@ -50,7 +50,7 @@ const argsOf = (
 
 const optimistic = (choice: Choice, keys: string[]): Showing => ({
   optimistic: [
-    { key: fieldKeys.assignee, props: { text: choice.name } },
+    { key: fieldKeys.assignee, props: { value: choice.name } },
     ...checks(keys, choice.key),
   ],
 });

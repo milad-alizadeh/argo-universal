@@ -11,10 +11,11 @@ import type { OperationDeclarations } from './operations-api';
 import type { PageState } from './page-address';
 
 /*
- * How a service is named on the sign-in page, such as `GitHub`. Nothing else is Argo's: the Plugin owns its
+ * How a service is named on the sign-in page, such as `GitHub`, and its logo: SVG markup the Plugin ships, drawn in
+ * the page's mark. Without one, the App draws the Plugin's own icon. Nothing else is Argo's: the Plugin owns its
  * sign-in (ADR-0036), and the kit draws it.
  */
-export type SignInOptions = Readonly<{ name: string }>;
+export type SignInOptions = Readonly<{ name: string; logo?: string }>;
 
 /*
  * What the sign-in page draws: the flow where it stands, why a token already in use was refused when it was,

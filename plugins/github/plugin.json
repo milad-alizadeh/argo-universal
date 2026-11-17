@@ -94,7 +94,7 @@
       {
         "name": "automationSet",
         "label": "Turn an automation on or off for a pull request",
-        "description": "Turn Auto-fix, Auto-merge or Auto-archive on or off for one pull request attached to the calling Session. Auto-fix prompts the Session once for each failed Check of the pull request's head commit, and turns itself off after three Prompts on one commit with no new push. Auto-merge is GitHub's own: it merges when the pull request is ready, with the first method the repository allows (squash, merge, rebase), and shows whatever GitHub reports. Auto-archive archives the Session once the pull request is merged or closed and no other attached pull request is open, waiting while a Turn runs. An Agent's call asks the person first.",
+        "description": "Turn Auto-fix, Auto-merge or Auto-archive on or off for one pull request attached to the calling Session. Auto-fix prompts the Session once for each failed Check, merge conflict and review comment from a trusted author on the pull request, and turns itself off after three Prompts on one commit with no new push; it is only for pull requests the signed-in account opened. Auto-merge is GitHub's own: it merges when the pull request is ready, with the first method the repository allows (squash, merge, rebase), and shows whatever GitHub reports. Auto-archive archives the Session once the pull request is merged or closed and no other attached pull request is open, waiting while a Turn runs. An Agent's call asks the person first.",
         "tier": "act",
         "keywords": [
           "github",
@@ -116,7 +116,7 @@
           },
           "kind": {
             "type": "string",
-            "description": "Which automation: fix (prompt the Session about each failed Check), merge (GitHub's auto-merge) or archive (archive the Session once the pull request is merged or closed).",
+            "description": "Which automation: fix (prompt the Session about each failed Check, conflict and trusted review comment), merge (GitHub's auto-merge) or archive (archive the Session once the pull request is merged or closed).",
             "required": true,
             "choices": ["fix", "merge", "archive"]
           },

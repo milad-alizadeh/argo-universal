@@ -3,10 +3,10 @@ import type { ReactElement } from 'react';
 import { fn } from 'storybook/test';
 import { PromptQueue } from './prompt-queue';
 import {
+  attachmentOnly,
   queuedPrompts,
   singlePrompt,
   steerablePrompts,
-  pausedPrompts,
   editingElsewhere,
 } from './prompt-queue-fixtures';
 import { QueueComposerExample } from './queue-composer.mocks';
@@ -40,11 +40,11 @@ type Story = StoryObj<typeof meta>;
 
 export const Queued: Story = {};
 
+export const Attachment: Story = { args: attachmentOnly };
+
 export const Steerable: Story = { args: steerablePrompts };
 
 export const SingleQueued: Story = { args: singlePrompt };
-
-export const Paused: Story = { args: pausedPrompts };
 
 export const HeldInAnotherApp: Story = { args: editingElsewhere };
 

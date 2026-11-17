@@ -13,6 +13,7 @@ export {
 
 export {
   listBranches,
+  readCurrentBranch,
   readRepository,
   type Checkout,
   type Repository,

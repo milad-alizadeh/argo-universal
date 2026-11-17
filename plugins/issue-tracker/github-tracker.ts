@@ -9,8 +9,13 @@ import {
   mapOverview,
   overviewQuery,
 } from './github-documents';
-import type { Issue, IssueStatus } from './github-issues';
-import { setIssueStatus } from './github-write';
+import {
+  editIssue,
+  readChoices,
+  type Choices,
+  type IssueEdit,
+} from './github-edits';
+import type { Issue } from './github-issues';
 import type { Json } from './json';
 import type { Overview } from './overview';
 
@@ -21,8 +26,13 @@ export type TrackerClient = {
   getIssue: (number: number) => Promise<Issue>;
   // The Issues with these numbers that GitHub still has, read together; one that is gone is left out.
   getIssues: (numbers: readonly number[]) => Promise<Issue[]>;
-  setStatus: (number: number, status: IssueStatus) => Promise<void>;
+  // The labels and people an Issue can be given.
+  choices: () => Promise<Choices>;
+  // Puts a label or a person on an Issue, takes them off, makes a new label for it, or closes or reopens it.
+  edit: (number: number, edit: IssueEdit) => Promise<void>;
 };
+
+type Written = 'choices' | 'edit';
 
 type Source = { projectId: string; repository: string };
 
@@ -36,7 +46,7 @@ const readerOf =
 const readsOf = (
   read: Read,
   repository: string,
-): Omit<TrackerClient, 'setStatus'> => ({
+): Omit<TrackerClient, Written> => ({
   overview: async () => mapOverview(await read(overviewQuery(repository))),
   listIssues: async (search, limit) =>
     mapIssueList(await read(listQuery(repository, search, limit))),
@@ -55,7 +65,8 @@ export function createGitHubTracker(
 ): TrackerClient {
   return {
     ...readsOf(readerOf(fetch, projectId), repository),
-    setStatus: (number, status) =>
-      setIssueStatus(fetch, { repository, number, status, projectId }),
+    choices: () => readChoices(fetch, { repository, projectId }),
+    edit: (number, edit) =>
+      editIssue(fetch, { repository, projectId, number }, edit),
   };
 }

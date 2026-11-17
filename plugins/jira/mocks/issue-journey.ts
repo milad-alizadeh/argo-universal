@@ -43,7 +43,7 @@ const words = (node: WireNode, prop: string): string => {
 };
 
 const textOf = (page: OpenPage, key: string): string =>
-  words(page.find(keyed(key)), 'text');
+  words(page.find(keyed(key)), 'value');
 
 type Shown = { status: string; assignee: string; priority: string };
 

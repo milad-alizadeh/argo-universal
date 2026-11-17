@@ -50,7 +50,10 @@ const palettes = {
   },
 };
 
-type MarkTone = keyof typeof palettes;
+export type MarkTone = keyof typeof palettes;
+
+// The tone's text colour beside a bare mark, for a label that is not ToneCaption, such as a link's.
+export const toneTextClass = (tone: MarkTone): string => palettes[tone].bare;
 
 interface ToneMarkProps {
   icon: IconName;

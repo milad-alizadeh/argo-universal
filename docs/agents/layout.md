@@ -66,7 +66,7 @@ The Workbench has four effective states. One toggle drives the person’s Show o
 
 - **Gutter** — the page's two gutters together fit a card and its gaps, so the cards sit at the page's trailing edge and the content, moved aside where the trailing gutter alone is too narrow, never sits under them.
 - **Auto-hidden** — the gutters are too narrow and the toggle is unpressed: the Workbench is not drawn.
-- **Overlay** — the gutters are too narrow and the person pressed Show: the Workbench is drawn over the trailing edge of the content, left of the Inspector when it is open. The column has no backing, so the Feed shows faintly through the cards' glass and nothing clips them. The page stays mounted and interactive underneath; the same band toggle hides it.
+- **Overlay** — the gutters are too narrow and the person pressed Show: the Workbench is drawn over the trailing edge of the content, left of the Inspector when it is open. The column moves aside as in the gutter, keeping its 16px gap from the cards, and narrows as it goes, no further than the Composer's width, so the cards cover no text unless the page is narrower than both. The column has no backing, so the Feed shows faintly through the cards' glass and nothing clips them. The page stays mounted and interactive underneath; the same band toggle hides it.
 - **Hidden** — explicit Hide persists across resize. An expanded Inspector temporarily hides the Workbench without changing that intent.
 
 ## The Workbench
@@ -105,7 +105,7 @@ The Workbench has four effective states. One toggle drives the person’s Show o
 
 The session frame's column above (800 and a 24 gutter, 848 with its gutters) is the Feed's. A Screen, which draws every Plugin page and every Settings page, has its own: `--container-column` 800 inside `--spacing-8` margins on a wide window, so its region caps at 864, and `--spacing-4` below wide ([ADR-0049](../adr/0049-a-screen-frames-its-page-with-aside-bleed-and-footer.md)).
 
-- **`aside`** holds the page's one Metadata. Its place comes from the Screen's width alone: a 280 column at the trailing edge when the reading column beside it keeps the medium width, a wrapping row of Pills under the title when it does not, and icon-only Pills below medium. The column moves towards the leading edge for the lane and never under it, with or without an aside, so opening an Issue from its list moves neither the title nor the body.
+- **`aside`** holds the page's one FieldGroup of Settings rows ([ADR-0059](../adr/0059-the-screens-aside-holds-the-settings-fieldgroup-rows.md)), which sizes to its rows there. Its place comes from the Screen's width alone: a 280 column at the trailing edge when the reading column beside it keeps the medium width, and above the body, at the top of what scrolls, when it does not. The column moves towards the leading edge for the lane and never under it, with or without an aside, so opening an Issue from its list moves neither the title nor the body.
 - **`width: bleed`** has no column and no margins; a Canvas in the body fills it. The title keeps its margin.
 - **`footer`** is pinned under the body and rises with the keyboard. A body over a footer scrolls in a ScrollView or a List.
 

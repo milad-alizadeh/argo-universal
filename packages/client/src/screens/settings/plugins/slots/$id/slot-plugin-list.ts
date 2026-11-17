@@ -1,5 +1,5 @@
 import { DeclaredSlotId } from '@repo/contracts/plugins/declared-slots';
-import type { PluginEntry } from '../../use-plugins';
+import type { PluginEntry } from '#features/plugins';
 import type { SlotDetail, SlotDetailId } from './slot-detail';
 import type { SlotPlugin } from './slot-detail-model';
 

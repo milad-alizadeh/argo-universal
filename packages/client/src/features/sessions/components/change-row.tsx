@@ -1,14 +1,11 @@
-import { IconSlot } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
+import { Tooltip } from '@repo/kit/primitives/overlays/tooltip';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { ChangeChecks } from './change-checks-popover';
 import { ChangeDiffTotal } from './change-diff-total';
 import { ChangeContextMenu, ChangeMenu } from './change-row-menu';
-import {
-  ChangeStageIcon,
-  ChangeStageModifier,
-} from './change-stage/change-stage';
+import { ChangeStageIcon } from './change-stage/change-stage';
 import type { SessionPullRequest } from './session-pull-request';
 
 export interface ChangeRowProps {
@@ -24,12 +21,10 @@ export interface ChangeRowProps {
 
 const rowClassName = 'flex-row items-start gap-2 px-1 py-2';
 
-// The mark takes its glyph's own width, as every Workbench card's leading mark does, centred on the title line.
+// The mark sits on a disc, the size of the title's line, so it leads the row on the title's edge.
 const stageCell = (change: SessionPullRequest): ReactElement => (
-  <View className="mt-0.5 shrink-0">
-    <IconSlot>
-      <ChangeStageIcon {...change} />
-    </IconSlot>
+  <View className="shrink-0">
+    <ChangeStageIcon {...change} form="disc" />
   </View>
 );
 
@@ -71,6 +66,33 @@ const checksPart = (
   </View>
 );
 
+const rateLimitLabel = 'GitHub rate limit reached';
+
+// The code host would not say how the checks stand, so a dash holds their place and a pointer over it says why.
+const rateLimitedPart = (): ReactElement => (
+  <View className="ml-auto">
+    <Tooltip label={rateLimitLabel}>
+      <Pressable
+        accessibilityLabel={`CI Checks unknown, ${rateLimitLabel}`}
+        className="px-1"
+      >
+        <Text role="secondary" tone="muted">
+          –
+        </Text>
+      </Pressable>
+    </Tooltip>
+  </View>
+);
+
+function trailingPart(
+  change: SessionPullRequest,
+  onOpen: () => void,
+): ReactElement | undefined {
+  if (change.stale === 'rateLimited') return rateLimitedPart();
+
+  return change.checks && checksPart(change.checks, onOpen);
+}
+
 // The number and the diff total, with the checks at the trailing edge; the checks list each check on the web, and on a phone open the Change.
 function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
   return (
@@ -79,8 +101,7 @@ function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
         #{change.number}
       </Text>
       {change.summary && <ChangeDiffTotal {...change.summary} icon />}
-      <ChangeStageModifier {...change} />
-      {change.checks && checksPart(change.checks, onOpen)}
+      {trailingPart(change, onOpen)}
     </View>
   );
 }

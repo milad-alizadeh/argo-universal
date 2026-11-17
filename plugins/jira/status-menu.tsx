@@ -14,7 +14,7 @@ const optimistic = ({ to }: JiraTransition): Showing => ({
   optimistic: [
     {
       key: fieldKeys.status,
-      props: { text: to.name, tone: categoryTones[to.category] },
+      props: { value: to.name, dot: categoryTones[to.category] },
     },
   ],
 });

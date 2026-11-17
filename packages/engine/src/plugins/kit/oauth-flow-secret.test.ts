@@ -5,7 +5,11 @@ import { oauthFlow } from './oauth-flow';
 // A service that requires the OAuth app's client secret, as Atlassian and Google do; the person supplies it.
 const callback = { code: 'code-1', verifier: 'verifier-1' };
 
-const signedIn = { kind: 'signed-in', label: 'Milad' };
+const signedIn = {
+  kind: 'signed-in',
+  label: 'Milad',
+  accountId: 'account-1',
+};
 
 it('sends the client secret on the code exchange, and never in the browser', async () => {
   const provider = fakeProvider();

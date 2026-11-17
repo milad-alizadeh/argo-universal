@@ -6,7 +6,7 @@ import type {
 import { z } from 'zod';
 import { oneLine } from '../runtime/render-fallback';
 import { form, formPost } from './form-body';
-import { secretOf, type KeptToken } from './kept-token';
+import { keepSignIn, type KeptToken } from './kept-token';
 import { keptIn, parsed, type Client } from './oauth-token';
 
 // What Argo's redirect answered when it started listening, with the client the sign-in read.
@@ -66,7 +66,7 @@ function authorizeFields(
   };
 }
 
-// Argo mints the Account id; the token lives in the Plugin's own secrets under it.
+// The exchanged token's person signs in, as `keepSignIn` keeps them.
 export async function signedIn(
   argo: OAuthFlowArgo,
   options: OAuthFlowOptions,
@@ -81,11 +81,7 @@ export async function signedIn(
 
   if (!label) return failed('The service did not say who signed in.');
 
-  const id = await argo.accounts.add(options.host, { label });
-
-  await argo.secrets.set(id, secretOf(token));
-
-  return { kind: 'signed-in', label };
+  return keepSignIn(argo, { host: options.host, label, token });
 }
 
 // The token the service gave, or why it gave none.

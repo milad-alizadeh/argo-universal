@@ -32,8 +32,10 @@ const textArea = node('TextArea', {
 });
 
 describe("a Screen's frame", () => {
-  it('takes Metadata as its aside', () => {
-    expect(supportsWireNode(screen({ aside: [node('Metadata')] }))).toBe(true);
+  it('takes a FieldGroup as its aside', () => {
+    expect(supportsWireNode(screen({ aside: [node('FieldGroup')] }))).toBe(
+      true,
+    );
   });
 
   it('takes nothing else as its aside', () => {
@@ -52,8 +54,8 @@ describe("a Screen's frame", () => {
 });
 
 describe('a Detail', () => {
-  it('no longer holds Metadata itself', () => {
-    const detail = node('Detail', {}, { metadata: [node('Metadata')] });
+  it('holds no properties of its own', () => {
+    const detail = node('Detail', {}, { metadata: [node('FieldGroup')] });
 
     expect(supportsWireNode(detail)).toBe(false);
   });
