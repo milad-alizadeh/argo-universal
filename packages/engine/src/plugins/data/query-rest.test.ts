@@ -74,3 +74,11 @@ it('ends a rest for a read someone asked for, such as an Operation run’s, and 
   rest.pulled({ fresh: false, asked: true });
   expect(rest.resting).toBe(false);
 });
+
+it('takes no rest for a failed read a write overtook, as it failed on what was true before the write', () => {
+  const { rest } = restOver();
+
+  rest.began();
+  rest.read(false, false, true);
+  expect(rest.resting).toBe(false);
+});

@@ -19,7 +19,7 @@ export const shows = (
   (before.error !== undefined && after.error === undefined);
 
 // A paged list's page is read only for its draw, so code outside a draw cannot read it again.
-export const drawOnly = ({ query }: QueryOwner): boolean =>
+const drawOnly = ({ query }: QueryOwner): boolean =>
   query.api === 'read' && query.name === pagedListRead;
 
 // Whether a read made with no draw would be refused, as a paged list's is.

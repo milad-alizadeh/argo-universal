@@ -51,10 +51,13 @@ export class QueryRest {
     this.since = this.services.now();
   }
 
-  // How a read ended; `held` says whether pages are waiting on the Query, which are then read again when the rest ends.
-  read(answered: boolean, held: boolean): void {
+  /*
+   * How a read ended; `held` says whether pages are waiting on the Query, which are then read again when the rest ends.
+   * A read a write overtook failed on what was true before the write, such as a signed-out Account, so it earns no rest.
+   */
+  read(answered: boolean, held: boolean, overtaken?: boolean): void {
     if (answered) this.succeed();
-    else this.fail(held);
+    else this.fail(held, overtaken === true);
   }
 
   // A pull, or a read someone asked for such as an Operation run's, asks for a fresh answer whatever the rest.
@@ -75,7 +78,9 @@ export class QueryRest {
     this.stop();
   }
 
-  private fail(held: boolean): void {
+  private fail(held: boolean, overtaken: boolean): void {
+    if (overtaken) return;
+
     const now = this.services.now();
 
     const limited = Math.min(

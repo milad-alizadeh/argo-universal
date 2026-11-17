@@ -139,7 +139,7 @@ export class QueryEntry {
     const before = this.state;
 
     this.publish(queryState(this.state, reply));
-    this.rest.read(reply.ok, this.holders.any);
+    this.rest.read(reply.ok, this.holders.any, this.timing.overtaken);
 
     if (shows(before, this.state)) this.markHolders();
   }
@@ -154,7 +154,7 @@ export class QueryEntry {
   private failed(cause: unknown): void {
     const error = runtimeError(cause);
 
-    this.rest.read(false, this.holders.any);
+    this.rest.read(false, this.holders.any, this.timing.overtaken);
     this.services.log(`Plugin ${this.owner.pluginId}: Query failed: ${error}`);
     this.publish({ ...this.state, error, stale: false });
   }
