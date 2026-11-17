@@ -116,3 +116,23 @@ it('reports a Plugin crashed when the kit does not bundle', async () => {
       }),
     ]);
 });
+
+it('bundles the kit again for a Plugin started after a bundle failed', async () => {
+  let bundles = 0;
+
+  const { workers, starts, reported } = hostOver(async () => {
+    bundles += 1;
+
+    if (bundles === 1) throw new Error('no esbuild');
+
+    return bundle;
+  });
+
+  workers.activate(entry('first'));
+  await expect.poll(() => reported).toHaveLength(1);
+  workers.activate(entry('first'));
+  await expect.poll(() => starts.length).toBe(1);
+
+  expect(bundles).toBe(2);
+  workers.stop('first');
+});

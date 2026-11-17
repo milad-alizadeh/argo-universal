@@ -28,7 +28,8 @@ interface Started {
  */
 export class KitStarts {
   private readonly waiting = new Set<string>();
-  private readonly kit: Promise<string>;
+  private kit: Promise<string> | null;
+  private readonly bundle: () => Promise<string>;
   private readonly start: typeof startWorker;
   private readonly report: (message: HostMessage) => void;
 
@@ -38,9 +39,19 @@ export class KitStarts {
   ) {
     this.start = start;
     this.report = report;
-    this.kit = kit();
-    // A failed bundle is reported to each Plugin that waits on it.
-    this.kit.catch(() => null);
+    this.bundle = kit;
+    this.kit = this.bundled();
+  }
+
+  // A failed bundle is reported to each Plugin that waits on it, and the next start bundles again.
+  private bundled(): Promise<string> {
+    const kit = this.bundle();
+
+    kit.catch(() => {
+      if (this.kit === kit) this.kit = null;
+    });
+
+    return kit;
   }
 
   // Starts the Plugin's worker with the kit once it is bundled, unless it is stopped before then.
@@ -48,6 +59,7 @@ export class KitStarts {
     if (this.waiting.has(entry.pluginId)) return;
 
     this.waiting.add(entry.pluginId);
+    this.kit ??= this.bundled();
     void this.kit.then(
       (kit) => {
         if (this.waiting.delete(entry.pluginId))
