@@ -13,6 +13,7 @@ import {
   retainToolContent,
   capAssembledToolOutput,
 } from './tool-content-stream';
+import { toolImageBlobs } from './tool-images';
 import { nameToolCall } from './tool-names';
 import { applyToolTerminalUpdate, mapToolTerminal } from './tool-terminal';
 import {
@@ -164,7 +165,7 @@ export const assembleToolCall = (input: ToolInput): AssembledContent => {
 
   return {
     change: { type: 'upsert', update },
-    blobs,
+    blobs: [...blobs, ...toolImageBlobs(input.update.content)],
     toolContents: retainToolContent(input.toolContents, assembled, update),
     diagnostics: unsupportedToolReasons(input.update, update),
   };
