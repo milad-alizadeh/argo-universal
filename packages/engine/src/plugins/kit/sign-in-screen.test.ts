@@ -76,6 +76,14 @@ const steps = {
     },
     pastesToken: true,
   }),
+  tokenSignedIn: draw({
+    flow: {
+      kind: 'signed-in',
+      label: 'ada@example.com',
+      accountId: 'account-token',
+    },
+    pastesToken: true,
+  }),
 };
 
 it('draws every sign-in step as the wire trees the story shows', async () => {
@@ -99,6 +107,15 @@ it('signs out in Settings, opening the Account there, since other Plugins may bo
   expect(JSON.stringify(steps.signedIn)).toContain(
     '"onPress":{"action":"openAccount","accountId":"account-1"}',
   );
+});
+
+it('opens the Account a pasted token signed in to, from the same Sign out row, and draws no field once signed in', () => {
+  const signedIn = JSON.stringify(steps.tokenSignedIn);
+
+  expect(signedIn).toContain(
+    '"onPress":{"action":"openAccount","accountId":"account-token"}',
+  );
+  expect(signedIn).not.toContain('"FieldGroup.SecretField"');
 });
 
 it('gives a Device that cannot start nothing to press', () => {

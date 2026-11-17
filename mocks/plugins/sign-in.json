@@ -423,5 +423,53 @@
       }
     ],
     "slots": {}
+  },
+  "tokenSignedIn": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connected",
+          "footer": "Sign out in Settings › Accounts, where every Plugin using this Account is listed.",
+          "signedIn": true
+        },
+        "children": [
+          {
+            "type": "FieldGroup.Value",
+            "key": "0",
+            "props": {
+              "title": "Account",
+              "value": "ada@example.com"
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.Link",
+            "key": "1",
+            "props": {
+              "title": "Sign out…",
+              "action": true,
+              "destructive": true,
+              "onPress": {
+                "action": "openAccount",
+                "accountId": "account-token"
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
   }
 }
