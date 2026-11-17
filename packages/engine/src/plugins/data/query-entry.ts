@@ -80,13 +80,22 @@ export class QueryEntry {
     return this.untilCurrent(draw, tries - 1);
   }
 
-  // Read since the last write, not past its due time, and read without failing.
+  // Read since the last write, not past its due time, and read without failing; a failed one resting counts as read.
   private current(): boolean {
-    return !this.timing.overdue && this.state.error === undefined;
+    return (
+      this.timing.resting ||
+      (!this.timing.overdue && this.state.error === undefined)
+    );
   }
 
+  /*
+   * A failed Query rests, exponentially longer for each failure in a row, and serves its last good answer with the
+   * failure until it is over: a rate-limited read is not made again at once, which would only double the load (#2197).
+   */
   private refresh(draw?: number): Promise<void> {
-    return this.flight ?? this.begin(draw);
+    if (this.flight) return this.flight;
+
+    return this.timing.resting ? Promise.resolve() : this.begin(draw);
   }
 
   private begin(draw: number | undefined): Promise<void> {
@@ -104,6 +113,7 @@ export class QueryEntry {
     const before = this.state.data;
 
     this.publish(queryState(this.state, reply));
+    this.timing[reply.ok ? 'answered' : 'failed']();
 
     if (changed(before, this.state.data)) this.markHolders();
   }
@@ -119,6 +129,7 @@ export class QueryEntry {
   private failed(cause: unknown): void {
     const error = runtimeError(cause);
 
+    this.timing.failed();
     this.services.log(`Plugin ${this.owner.pluginId}: Query failed: ${error}`);
     this.publish({ ...this.state, error, stale: false });
   }
@@ -139,6 +150,7 @@ export class QueryEntry {
 
     this.timing.started();
     this.publish(queryState(this.state, { ok: true, value }));
+    this.timing.answered();
     this.timing.finished();
 
     if (changed(before, this.state.data)) this.markHolders();

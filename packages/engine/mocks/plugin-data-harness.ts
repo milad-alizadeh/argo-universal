@@ -12,11 +12,21 @@ export const pluginId = 'tracker';
 // Named reads run in the worker, so no Server service is asked.
 const refused: PluginReply = { ok: false, error: 'No services' };
 
-const clock: PluginClock = {
-  now: () => 0,
-  delay: async () => {},
-  schedule: () => () => null,
-};
+// A clock that stands still until a test advances it.
+type StillClock = PluginClock & { advance: (ms: number) => void };
+
+function stillClock(): StillClock {
+  let now = 0;
+
+  return {
+    now: () => now,
+    advance: (ms) => {
+      now += ms;
+    },
+    delay: async () => {},
+    schedule: () => () => null,
+  };
+}
 
 type ReadEvent = Extract<PluginEvent, { type: 'read' }>;
 
@@ -26,6 +36,9 @@ export type Harness = {
   reads: () => ReadEvent[];
   marks: PageAddress[][];
   answer: (value: WireJson, generation?: number) => Promise<void>;
+  // The worker fails the newest named read, and the clock a test moves on.
+  fail: (error: string) => Promise<void>;
+  clock: StillClock;
   read: (drawn?: Partial<DrawnFor>, fresh?: boolean) => Promise<PluginReply>;
   // A read from code outside a draw, such as a Slot's provider, of another Query than `read`.
   slotRead: () => Promise<PluginReply>;
@@ -52,7 +65,7 @@ type Wiring = {
   data: PluginData;
 };
 
-const services = {
+const servicesOn = (clock: PluginClock): ConstructorParameters<typeof PluginData>[0] => ({
   services: {
     handle: async (): Promise<PluginReply> => refused,
     projectIds: async (): Promise<string[]> => ['p1', 'p2'],
@@ -60,9 +73,9 @@ const services = {
   clock,
   log: (): null => null,
   during: <T>(call: () => Promise<T>): Promise<T> => call(),
-};
+});
 
-function wired(): Wiring {
+function wired(clock: PluginClock): Wiring {
   const sent: PluginEvent[] = [];
   const marks: PageAddress[][] = [];
 
@@ -71,7 +84,7 @@ function wired(): Wiring {
     send: (_pluginId, event): void => void sent.push(event),
   });
 
-  const data = new PluginData(services, workers, (_id, addresses) =>
+  const data = new PluginData(servicesOn(clock), workers, (_id, addresses) =>
     marks.push(addresses),
   );
 
@@ -92,6 +105,18 @@ const answering =
     data.reads.receive({ pluginId, generation }, { action: 'read', id, value });
   };
 
+// The worker fails the newest named read Argo asked of it.
+const failing =
+  ({ sent, data }: Wiring): Harness['fail'] =>
+  async (error) => {
+    const { id } = await vi.waitFor(() => newest(readsOf(sent)));
+
+    data.reads.receive(
+      { pluginId, generation: 1 },
+      { action: 'failed', id, error },
+    );
+  };
+
 const reading =
   ({ data }: Wiring): Harness['read'] =>
   (drawn = { holder: address }, fresh = false) =>
@@ -110,19 +135,21 @@ const slotReading =
       {},
     );
 
-export function harness(): Harness {
-  const wiring = wired();
-  const { data, workers, marks, sent } = wiring;
+const actionsOn = (wiring: Wiring): Omit<Harness, 'clock'> => ({
+  data: wiring.data,
+  workers: wiring.workers,
+  marks: wiring.marks,
+  reads: () => readsOf(wiring.sent),
+  answer: answering(wiring),
+  fail: failing(wiring),
+  read: reading(wiring),
+  slotRead: slotReading(wiring),
+});
 
-  return {
-    data,
-    workers,
-    marks,
-    reads: () => readsOf(sent),
-    answer: answering(wiring),
-    read: reading(wiring),
-    slotRead: slotReading(wiring),
-  };
+export function harness(): Harness {
+  const clock = stillClock();
+
+  return { ...actionsOn(wired(clock)), clock };
 }
 
 const Answered = z.object({ data: z.json().optional() });
