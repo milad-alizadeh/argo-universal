@@ -4,6 +4,7 @@ import type * as React from 'react';
 import { Text, View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
 import {
+  type ComposerFade,
   GlassCoverProvider,
   useComposerFade,
   useReportComposerPills,
@@ -17,6 +18,7 @@ import {
 } from './feed-reader.mocks';
 import { longRows } from './feed.mocks';
 import { feedArgs, PagedFeed } from './paged-feed.mocks';
+
 interface Scene {
   // Wraps the Feed in a glass Composer's cover of this many points.
   glassCover?: number;
@@ -37,10 +39,13 @@ function PillRow({ height }: { height: number }): React.JSX.Element {
 function FadeReading({ atEnd }: { atEnd: boolean }): React.JSX.Element {
   const { inset, depth } = useComposerFade(atEnd);
 
+  const id = `fade-${atEnd ? 'at-end' : 'away'}`;
+
   return (
-    <Text testID={`fade-${atEnd ? 'at-end' : 'away'}`}>
-      {JSON.stringify({ inset, depth })}
-    </Text>
+    <>
+      <Text testID={`${id}-inset`}>{inset}</Text>
+      <Text testID={`${id}-depth`}>{depth}</Text>
+    </>
   );
 }
 
@@ -50,8 +55,8 @@ function Pill(): React.JSX.Element {
 
 function Covered(
   props: Scene & { children: React.ReactNode },
-): React.JSX.Element {
-  if (props.glassCover === undefined) return <>{props.children}</>;
+): React.ReactNode {
+  if (props.glassCover === undefined) return props.children;
 
   return (
     <GlassCoverProvider cover={props.glassCover}>
@@ -64,10 +69,14 @@ function Covered(
 function Stage(props: Scene & { args: FeedProps }): React.JSX.Element {
   return (
     <View className="w-full">
-      <View testID="baseline" className="relative h-[300px] w-full">
+      <View
+        testID="baseline"
+        className="relative w-full"
+        style={{ height: 300 }}
+      >
         <PagedFeed {...props.args} rows={longRows} opensAtStart />
       </View>
-      <View testID="scene" className="relative h-[500px] w-full">
+      <View testID="scene" className="relative w-full" style={{ height: 500 }}>
         <Covered {...props}>
           <ComposerPillLayer pill={props.pill ? <Pill /> : null}>
             <PagedFeed
@@ -114,13 +123,14 @@ const bottomOfLayer = (control: HTMLElement): number =>
 
 // The lowest text in the Feed sits this far above the end of its content when nothing is cleared below it: the last row's own padding.
 const lastTextToEnd = (scroll: HTMLElement): number => {
-  const texts = Array.from(scroll.querySelectorAll<HTMLElement>('*')).filter(
+  const texts = [...scroll.querySelectorAll<HTMLElement>('*')].filter(
     (element) => !element.children.length && element.textContent,
   );
 
   const lowest = Math.max(
     ...texts.map((text) => text.getBoundingClientRect().bottom),
   );
+
   const contentEnd =
     scroll.getBoundingClientRect().top - scroll.scrollTop + scroll.scrollHeight;
 
@@ -143,12 +153,16 @@ const feedEndGapPoints = 24;
 async function measureLastRowPadding(baseline: HTMLElement): Promise<number> {
   const scroll = await within(baseline).findByTestId(feedScrollId);
   let padding = 0;
+  let previous = Number.NaN;
   // A Feed that opens at its start draws its end rows as the reader gets there, so it is read again until they are drawn.
   await waitFor(
     async () => {
       await scrollToEnd(scroll);
-      padding = lastTextToEnd(scroll) - feedEndGapPoints;
-      await expect(padding).toBeGreaterThan(0);
+      const current = lastTextToEnd(scroll) - feedEndGapPoints;
+      const settled = current === previous;
+      previous = current;
+      padding = current;
+      await expect(settled).toBe(true);
     },
     { timeout: 15000, interval: 200 },
   );
@@ -159,11 +173,10 @@ async function measureLastRowPadding(baseline: HTMLElement): Promise<number> {
 const readFade = (
   canvas: { getByTestId: (id: string) => HTMLElement },
   id: string,
-) =>
-  JSON.parse(canvas.getByTestId(id).textContent ?? '') as {
-    inset: number;
-    depth: number;
-  };
+): ComposerFade => ({
+  inset: Number(canvas.getByTestId(`${id}-inset`).textContent),
+  depth: Number(canvas.getByTestId(`${id}-depth`).textContent),
+});
 
 // Pins every number the Feed's end learns from the Composer's cover, the pill row and the pill lift.
 function pins(scene: Scene, expected: Expected): Story {
@@ -171,36 +184,38 @@ function pins(scene: Scene, expected: Expected): Story {
     render: () => <Stage {...scene} args={feedArgs} />,
     play: async ({ canvas: page }) => {
       await settleLayout('phone');
+
       const baseline = await measureLastRowPadding(
         await page.findByTestId('baseline'),
       );
+
       const canvas = within(await page.findByTestId('scene'));
       const scroll = await canvas.findByTestId(feedScrollId);
       await waitFor(
         async () => {
           await scrollToEnd(scroll);
-          await expect(lastTextToEnd(scroll) - baseline).toBeCloseTo(
-            expected.endSpace,
-            0,
-          );
+          // Within a point: the baseline Feed sits at another fraction of a pixel than this one.
+          await expect(
+            Math.abs(lastTextToEnd(scroll) - baseline - expected.endSpace),
+          ).toBeLessThan(1);
         },
         { timeout: 15000, interval: 200 },
       );
       await expect(readFade(canvas, 'fade-at-end')).toEqual(expected.fadeAtEnd);
       await expect(readFade(canvas, 'fade-away')).toEqual(expected.fadeAway);
 
-      if (expected.pillBottom === null)
-        await expect(canvas.queryByTestId('pill')).toBeNull();
-      else
-        await expect(bottomOfLayer(canvas.getByTestId('pill'))).toBeCloseTo(
-          expected.pillBottom,
-          0,
-        );
+      const pill = canvas.queryByTestId('pill');
+      // Null where no pill is drawn, so a pill that should be absent fails here.
+      await expect(pill ? Math.round(bottomOfLayer(pill)) : null).toBe(
+        expected.pillBottom,
+      );
 
       await scrollAwayFromEnd(canvas, scroll);
+
       const jump = await canvas.findByRole('button', {
         name: 'Jump to latest',
       });
+
       await waitFor(() =>
         expect(bottomOfLayer(jump)).toBeCloseTo(expected.jumpBottom, 0),
       );
