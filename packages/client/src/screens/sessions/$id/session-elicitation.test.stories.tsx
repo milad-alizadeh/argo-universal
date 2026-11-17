@@ -123,7 +123,7 @@ async function resizeAndDismiss({
   userEvent,
 }: PlayContext): Promise<void> {
   await expect(
-    canvas.queryByRole('button', { name: /^Plan/ }),
+    canvas.queryByRole('button', { name: /^Todos/ }),
   ).not.toBeInTheDocument();
   const page = within(document.body);
 
@@ -139,7 +139,7 @@ async function resizeAndDismiss({
   await expect(
     await canvas.findByRole('textbox', { name: 'Message' }),
   ).toBeVisible();
-  await expect(canvas.getByRole('button', { name: /^Plan/ })).toBeVisible();
+  await expect(canvas.getByRole('button', { name: /^Todos/ })).toBeVisible();
 }
 
 async function resizeAnswer(

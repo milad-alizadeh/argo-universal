@@ -18,8 +18,10 @@ it(
     const workbench = openChanges(run);
     const inspector = openChanges(run);
 
-    await workbench.next();
-    await inspector.next();
+    await Promise.all([workbench.next(), inspector.next()]);
+
+    // Slots answer from storage before their opening sync finishes; count the next tick after that sync drains.
+    await run.test.clock.until(() => true, { stepMs: 0, steps: 0 });
 
     const pulls = run.github.pullReads().length;
     const checks = run.github.checkReads().length;

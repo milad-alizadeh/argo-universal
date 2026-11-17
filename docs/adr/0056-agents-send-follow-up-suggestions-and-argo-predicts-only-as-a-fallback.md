@@ -1,10 +1,10 @@
 ---
-status: proposed
+status: accepted
 ---
 
 # Agents send Follow-up suggestions, and Argo predicts only as a fallback
 
-Proposed for owner approval, 2026-11-15. Once accepted, this supersedes [ADR-0055](0055-argo-generates-follow-up-suggestions-in-background-agent-sessions.md) and takes up the direction of [ADR-0052](0052-agents-provide-follow-up-suggestions-through-a-shared-capability.md), which was set aside because no shared contract existed. One exists now.
+Accepted by the owner, 2026-11-17. This supersedes [ADR-0055](0055-argo-generates-follow-up-suggestions-in-background-agent-sessions.md) and takes up the direction of [ADR-0052](0052-agents-provide-follow-up-suggestions-through-a-shared-capability.md), which was set aside because no shared contract existed. One exists now.
 
 ADR-0055 opens a hidden ACP session for every prediction, copies up to 20,000 characters of the conversation into it and runs a full Turn on the Suggestion model. In use, a suggestion takes seconds to tens of seconds and is often missing. A prediction is dropped without a word when it hits the 30-second limit, when the Agent calls a tool, when the reply is not clean JSON, or when the next Prompt arrives first. With six or seven Sessions running, every Turn end starts one more Agent session at the same moment, and none of them reuse the conversation's prompt cache.
 

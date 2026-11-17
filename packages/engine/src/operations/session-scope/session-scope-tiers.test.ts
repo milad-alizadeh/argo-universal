@@ -10,6 +10,8 @@ import {
   type ScopedOperation,
 } from './scope-fixtures';
 
+const archiveOperation = 'session.archive';
+
 const get = (sessionId: string): ScopedOperation =>
   operation('session.get', { sessionId });
 
@@ -33,7 +35,10 @@ const cases: [ScopedOperation, string][] = [
   [branches('p1'), runs],
   [branches('p2'), asks],
   [operation('project.update', { projectId: 'p1' }), asks],
-  [operation('session.archive', { sessionId: 'started' }), asks],
+  [operation(archiveOperation, { sessionId: 'caller' }), runs],
+  [operation(archiveOperation, { sessionId: 'started' }), asks],
+  [operation(archiveOperation, { sessionId: 'unrelated' }), asks],
+  [operation(archiveOperation, { sessionId: 'foreign' }), asks],
   [operation('agent.install', { id: 'mock' }), asks],
   [promptTo('started'), runs],
   [promptTo('caller'), asks],

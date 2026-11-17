@@ -1,30 +1,20 @@
-import type { PluginList, PluginSettingValue } from '@repo/contracts/plugins';
+import type { PluginSettingValue } from '@repo/contracts/plugins';
 import { errorToast } from '@repo/kit/error-toast';
 import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
-import { pluginSymbol } from '../../../lib/product/plugin-symbol';
+import {
+  invalidatePluginState,
+  type PluginEntry,
+  usePluginEntries,
+} from '#features/plugins';
+import { manifestSymbol } from '../../../lib/product/plugin-symbol';
 import type { PluginRow, PluginsLoad } from './plugin-list-view';
-
-export type PluginEntry = PluginList['plugins'][number];
-
-export interface PluginEntries {
-  // Undefined until the Server has answered once.
-  plugins: PluginEntry[] | undefined;
-  isError: boolean;
-}
-
-// The connected Server's Plugins.
-export function usePluginEntries(): PluginEntries {
-  const { data, isError } = useQuery(useTRPC().plugin.list.queryOptions());
-
-  return { plugins: data?.plugins, isError };
-}
 
 const toPluginRow = ({ manifest }: PluginEntry): PluginRow => ({
   pluginId: manifest.id,
   name: manifest.name,
-  icon: pluginSymbol(manifest.icon),
+  icon: manifestSymbol(manifest.icon),
 });
 
 export function usePluginsLoad(): PluginsLoad {
@@ -40,13 +30,7 @@ function usePluginsInvalidation(): () => Promise<void> {
   const trpc = useTRPC(),
     cache = useQueryClient();
 
-  return async () => {
-    await Promise.all([
-      cache.invalidateQueries(trpc.plugin.list.queryFilter()),
-      cache.invalidateQueries(trpc.plugin.getSettings.queryFilter()),
-      cache.invalidateQueries(trpc.plugins.declared.queryFilter()),
-    ]);
-  };
+  return () => invalidatePluginState(cache, trpc);
 }
 
 // Turns a Plugin on or off on the Server; a failure shows one toast.

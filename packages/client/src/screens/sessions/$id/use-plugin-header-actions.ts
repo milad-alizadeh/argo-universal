@@ -2,7 +2,7 @@ import {
   type SessionHeaderTarget,
   sessionHeaderSlot,
 } from '@repo/contracts/plugins/declared-slots';
-import { usePluginOpener } from '#features/plugins';
+import { useDeclaredItems, usePluginOpener } from '#features/plugins';
 import {
   type DeclaredHeaderAction,
   placeSessionHeaderActions,
@@ -10,7 +10,6 @@ import {
   type SessionPluginActions,
 } from '#features/sessions';
 import { useSlotVisibility } from '#features/settings';
-import { useDeclaredItems } from './use-declared-items';
 
 type PageOpener = ReturnType<typeof usePluginOpener>;
 

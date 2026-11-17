@@ -39,7 +39,7 @@ export const CompactPullRequest: Story = {
       await expect(canvas.queryByText('#45')).not.toBeInTheDocument();
       await expect(canvas.getByTestId('session-status')).toBeVisible();
       await expect(canvas.queryByText('12m')).not.toBeInTheDocument();
-      await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
+      await expect(canvas.queryByLabelText(/^Todos:/)).not.toBeInTheDocument();
       await expect(
         canvas.queryByText(session.activity),
       ).not.toBeInTheDocument();

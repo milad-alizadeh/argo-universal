@@ -65,9 +65,9 @@ function wired(): Wiring {
     send: (_pluginId, event): void => void sent.push(event),
   });
 
-  const data = new PluginData(services, workers, (_id, addresses) =>
-    marks.push(addresses),
-  );
+  const data = new PluginData(services, workers, (_id, addresses) => {
+    if (addresses.length) marks.push(addresses);
+  });
 
   workers.run(pluginId, 1);
 

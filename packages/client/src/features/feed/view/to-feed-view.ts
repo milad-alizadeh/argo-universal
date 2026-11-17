@@ -7,6 +7,7 @@ import type { FeedView, FeedViewItem } from './feed-view';
 import { isGroupRow, startsNewTurn } from './grouping-rules';
 import { OpenGroup } from './open-group';
 import { foldedPrompts, subagentItem } from './subagent-items';
+import { isTodoCall } from './todo-call';
 import { turnEndItem } from './turn-end-item';
 
 interface Pass {
@@ -16,8 +17,12 @@ interface Pass {
   snapshot: SessionSnapshot;
 }
 
+// The Composer shows the checklist, so neither its row nor the calls that keep it draw in the Feed.
+const drawsNothing = (row: SessionUpdate): boolean =>
+  row.sessionUpdate === 'plan_update' || isTodoCall(row);
+
 function appendRow(row: SessionUpdate, pass: Pass): void {
-  if (row.sessionUpdate === 'plan_update') return;
+  if (drawsNothing(row)) return;
   const end = turnEndItem(row);
 
   if (end) {

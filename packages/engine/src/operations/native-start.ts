@@ -4,6 +4,7 @@ import type {
 } from '@repo/contracts/operations';
 import type { NativeStart, SessionOperationCall } from '../sessions';
 import type { OperationParams, OperationResult } from './implementations';
+import { parseResult } from './params';
 
 // The one list of Operations that start native work: a Session, or a Turn.
 const nativeStartIds = [
@@ -74,4 +75,21 @@ export async function recordStartedWork<Result>(
     call.started({ kind: 'turn', sessionId, turnId: admitted.turnId });
 
   return admitted.result;
+}
+
+// Validate the admission result when its native work accepts, without changing when that work is awaited.
+export async function parsedStartedWork<Id extends NativeStartId>(
+  id: Id,
+  starting: Promise<StartedWork<OperationResult<Id>>>,
+): Promise<StartedWork<OperationResult<Id>>> {
+  const started = await starting;
+
+  return {
+    ...started,
+    accepted: async () => {
+      const accepted = await started.accepted();
+
+      return { ...accepted, result: await parseResult(id, accepted.result) };
+    },
+  };
 }

@@ -43,7 +43,7 @@ export const liveHeaderElapsed = '2m 14s';
 
 export const liveHeaderNow = startedAt + 134_000;
 
-// The first recorded step of a kind: its live header, and the Tool call a `tool_call` step names.
+// The first recorded step of a kind: its live header.
 const liveHeaderStepOf = (
   type: LiveHeader['source']['type'],
 ): (typeof liveHeaderSteps)[number] =>

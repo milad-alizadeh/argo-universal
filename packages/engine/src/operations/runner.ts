@@ -11,6 +11,9 @@ import { requireAppQueueCaller } from './app-queue-access';
 import {
   answer,
   type CallerImplementations,
+  type AppRun,
+  type UserRun,
+  type SessionRun,
   type NativeStartImplementations,
   type NewSessionId,
   type OperationImplementations,
@@ -23,6 +26,7 @@ import {
 } from './implementations';
 import {
   acceptedResult,
+  parsedStartedWork,
   eachNativeStart,
   isNativeStartOperation,
   recordStartedWork,
@@ -31,27 +35,16 @@ import {
 } from './native-start';
 import { parseResult, validateParams } from './params';
 import type { PromptChains, SessionScope } from './session-scope';
-import type { AppCaller, SessionCaller, UserCaller } from './session-tokens';
-import type { UserAdmission } from './work';
+import type { SessionCaller } from './session-tokens';
 
-type Operation = { id: OperationId; params: Json };
-
-// The App's procedure has parsed the params, and parses the result itself.
-export type AppRun<Id extends OperationId> = AppCaller & {
-  id: Id;
-  params: OperationParams<Id>;
-};
-
-export type UserRun = UserCaller & Operation & { admission: UserAdmission };
-
-export type SessionRun = SessionCaller &
-  Operation & {
-    call: SessionOperationCall;
-  };
+export type { AppRun, UserRun, SessionRun } from './implementations';
 
 type SessionContext = { caller: SessionCaller; call: SessionOperationCall };
 
 type RunnerPorts = {
+  archiveOwn: (
+    sessionId: string,
+  ) => Promise<OperationResult<'session.archive'>>;
   scope: SessionScope;
   directory: SessionDirectory;
   chains: PromptChains;
@@ -127,6 +120,10 @@ export class OperationRunner {
     const implementations: CallerImplementations<[NewSessionId]> = {
       ...this.plain,
       'session.queue': (params) => this.plain['session.queue'](params),
+      'session.archive': (params) =>
+        params.sessionId === context.caller.sessionId
+          ? this.ports.archiveOwn(params.sessionId)
+          : this.plain['session.archive'](params),
       ...eachNativeStart((id, params, start: NewSessionId) =>
         this.startFromSession(context, { id, params }, start),
       ),
@@ -161,15 +158,9 @@ export class OperationRunner {
     params: Json,
     request: NativeStartRequest,
   ): Promise<StartedWork<OperationResult<Id>>> {
-    const started = await this.native[id](validateParams(id, params), request);
-
-    return {
-      ...started,
-      accepted: async () => {
-        const accepted = await started.accepted();
-
-        return { ...accepted, result: await parseResult(id, accepted.result) };
-      },
-    };
+    return parsedStartedWork(
+      id,
+      this.native[id](validateParams(id, params), request),
+    );
   }
 }

@@ -7,8 +7,8 @@
       "files": [
         "packages/client/src/features/composer/components/composer-attachment-card/composer-attachment-card.tsx",
         "packages/client/src/features/composer/components/composer-popover/composer-popover.tsx",
-        "packages/client/src/features/composer/components/composer-status/plan-popover.tsx",
-        "packages/client/src/features/composer/components/composer-status/plan-steps.tsx",
+        "packages/client/src/features/composer/components/composer-status/todos-popover.tsx",
+        "packages/client/src/features/composer/components/composer-status/todo-steps.tsx",
         "packages/client/src/features/composer/components/composer-status/status-text.tsx",
         "packages/client/src/features/composer/components/start-session-in/server-location.tsx",
         "packages/client/src/features/connection/components/connection-banner/connection-banner.tsx",

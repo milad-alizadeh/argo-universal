@@ -1,23 +1,23 @@
 import {
   useEffect,
   useCallback,
-  useRef,
   useState,
   type Dispatch,
-  type RefObject,
   type RefCallback,
   type SetStateAction,
   type TransitionEvent,
 } from 'react';
-import type { LayoutChangeEvent } from 'react-native';
 import { useReducedMotionNow } from '#kit/use-reduced-motion-now';
+import {
+  type HeightState,
+  type Region,
+  useHeight,
+} from './collapsible-web-height';
 
 interface Visibility {
   open: boolean;
   forceMount?: true;
 }
-
-type Region = RefObject<HTMLDivElement | null>;
 
 type SetMounted = Dispatch<SetStateAction<boolean>>;
 
@@ -25,18 +25,14 @@ export interface WebContentMotion {
   region: RefCallback<HTMLDivElement>;
   mounted: boolean;
   height: number | undefined;
-  measure: (event: LayoutChangeEvent) => void;
+  // Whether the content is opening or closing; only then does its height animate.
+  moving: boolean;
+  measure: HeightState['measure'];
   onTransitionEnd: (event: TransitionEvent<HTMLDivElement>) => void;
 }
 
 const mayUnmount = ({ open, forceMount }: Visibility): boolean =>
   !open && !forceMount;
-
-const measuredBody = (region: Region): Element | null | undefined =>
-  region.current?.firstElementChild?.firstElementChild;
-
-const bodyHeight = (region: Region): number | undefined =>
-  measuredBody(region)?.getBoundingClientRect().height;
 
 const drawnHeight = (region: Region): number | undefined =>
   region.current?.firstElementChild?.getBoundingClientRect().height;
@@ -49,52 +45,24 @@ function useMounted(visibility: Visibility): [boolean, SetMounted] {
   return [mounted, setMounted];
 }
 
-interface Measurement {
-  region: Region;
-  mounted: boolean;
-  setHeight: Dispatch<SetStateAction<number | undefined>>;
-}
+type SetMoving = () => void;
 
-function attachRegion(node: HTMLDivElement | null, options: Measurement): void {
-  options.region.current = node;
+/*
+ * Opening or closing moves the content; a change in what open content holds, such as another Session's rows,
+ * takes its new height at once. Reduced motion never moves it.
+ */
+function useMoving(open: boolean): [boolean, SetMoving] {
+  const reduced = useReducedMotionNow();
+  const [motion, setMotion] = useState({ open, moving: false });
 
-  if (node && options.mounted) options.setHeight(bodyHeight(options.region));
-}
+  if (motion.open !== open) setMotion({ open, moving: !reduced });
 
-function useRegionAttachment({
-  region,
-  mounted,
-  setHeight,
-}: Measurement): RefCallback<HTMLDivElement> {
-  return useCallback(
-    (node: HTMLDivElement | null): void =>
-      attachRegion(node, { region, mounted, setHeight }),
-    [region, mounted, setHeight],
-  );
-}
-
-type HeightState = [
-  number | undefined,
-  WebContentMotion['measure'],
-  RefCallback<HTMLDivElement>,
-];
-
-function useHeight(
-  region: Region,
-  mounted: boolean,
-  initialOpen: boolean,
-): HeightState {
-  const [height, setHeight] = useState<number | undefined>(
-    initialOpen ? undefined : 0,
+  const rest = useCallback(
+    () => setMotion((now) => (now.moving ? { ...now, moving: false } : now)),
+    [],
   );
 
-  const attach = useRegionAttachment({ region, mounted, setHeight });
-
-  return [
-    height,
-    (event) => setHeight(event.nativeEvent.layout.height),
-    attach,
-  ];
+  return [motion.open === open ? motion.moving : !reduced, rest];
 }
 
 interface Closing {
@@ -102,14 +70,19 @@ interface Closing {
   region: Region;
   height: number | undefined;
   setMounted: SetMounted;
+  setMoving: SetMoving;
 }
 
 function closeAtRest({
   region,
   setMounted,
-}: Pick<Closing, 'region' | 'setMounted'>): () => void {
+  setMoving,
+}: Pick<Closing, 'region' | 'setMounted' | 'setMoving'>): () => void {
   const frame = requestAnimationFrame(() => {
-    if (!drawnHeight(region)) setMounted(false);
+    if (drawnHeight(region)) return;
+
+    setMounted(false);
+    setMoving();
   });
 
   return () => cancelAnimationFrame(frame);
@@ -124,13 +97,14 @@ function useCloseAtRest(options: Closing): void {
     height,
     region,
     setMounted,
+    setMoving,
   } = options;
 
   useEffect(() => {
     if (open || forceMount) return;
 
-    return closeAtRest({ region, setMounted });
-  }, [open, forceMount, height, reduced, region, setMounted]);
+    return closeAtRest({ region, setMounted, setMoving });
+  }, [open, forceMount, height, reduced, region, setMounted, setMoving]);
 }
 
 const isHeightEnd = (event: TransitionEvent<HTMLDivElement>): boolean =>
@@ -141,24 +115,37 @@ function endMotion(
   event: TransitionEvent<HTMLDivElement>,
   options: Closing,
 ): void {
-  if (isHeightEnd(event) && mayUnmount(options.visibility))
-    options.setMounted(false);
+  if (!isHeightEnd(event)) return;
+
+  options.setMoving();
+
+  if (mayUnmount(options.visibility)) options.setMounted(false);
+}
+
+type MotionState = Pick<Closing, 'setMounted' | 'setMoving'> &
+  Pick<WebContentMotion, 'mounted' | 'moving'>;
+
+function useMotionState(visibility: Visibility): MotionState {
+  const [mounted, setMounted] = useMounted(visibility);
+  const [moving, setMoving] = useMoving(visibility.open);
+
+  return { mounted, setMounted, moving, setMoving };
 }
 
 // A new measurement retargets the browser transition from its current height, without React rendering each frame.
 export function useWebContentMotion(visibility: Visibility): WebContentMotion {
-  const region = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useMounted(visibility);
-  const [height, measure, attach] = useHeight(region, mounted, visibility.open);
-  const closing = { visibility, height, region, setMounted };
+  const state = useMotionState(visibility);
+  const box = useHeight(state.mounted, visibility.open);
+  const closing = { ...state, ...box, visibility };
 
   useCloseAtRest(closing);
 
   return {
-    region: attach,
-    mounted,
-    measure,
-    height: visibility.open ? height : 0,
+    mounted: state.mounted,
+    moving: state.moving,
+    region: box.attach,
+    measure: box.measure,
+    height: visibility.open ? box.height : 0,
     onTransitionEnd: (event) => endMotion(event, closing),
   };
 }
