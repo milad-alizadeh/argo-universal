@@ -4,9 +4,11 @@ import { useIsPreview } from 'expo-router';
 import { memo, useDeferredValue, useState } from 'react';
 import type * as React from 'react';
 import { View, type ViewStyle } from 'react-native';
+import {
+  ConnectedReplaceableSlots,
+  LinkMarksProvider,
+} from '#features/plugins';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
-import { ConnectedReplaceableSlots } from '../../plugins/connected-replaceable-slot';
-import { LinkMarksProvider } from '../../plugins/link-marks-provider';
 import { sessionsInDrawOrder, retainSession } from './retained-sessions';
 import {
   SessionDetailView,

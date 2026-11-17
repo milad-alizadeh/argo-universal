@@ -4,7 +4,9 @@ const headsPrefix = 'refs/heads/';
 
 const remotesPrefix = 'refs/remotes/';
 
-// What a Checkout is compared against: the main Checkout's branch, its own HEAD, or a named branch or ref.
+const listRefsCommand = 'for-each-ref';
+
+// The default follows the main Checkout branch's upstream when available; explicit comparisons keep their selected ref.
 export type Comparison = 'main' | 'uncommitted' | { branch: string };
 
 // Which Checkout to read, and what to compare it against; the main comparison when none is given.
@@ -14,10 +16,43 @@ export type ChangesSelection = {
   comparison?: Comparison;
 };
 
-async function mainBranch(projectCheckout: string): Promise<string | null> {
-  return (
-    (await git(projectCheckout, ['branch', '--show-current'])).trim() || null
-  );
+const upstreamPair = (line: string): [string, string] => {
+  const [ref = '', upstream = ''] = line.split('\t');
+
+  return [ref, upstream];
+};
+
+async function branchUpstreams(checkout: string): Promise<Map<string, string>> {
+  const output = await git(checkout, [
+    listRefsCommand,
+    '--format=%(refname)%09%(upstream)',
+    headsPrefix,
+    remotesPrefix,
+  ]);
+
+  return new Map(output.split('\n').map(upstreamPair));
+}
+
+async function mainComparisonRef(
+  projectCheckout: string,
+): Promise<string | null> {
+  const branch = (
+    await git(projectCheckout, ['branch', '--show-current'])
+  ).trim();
+
+  if (!branch) return null;
+  const refs = await branchUpstreams(projectCheckout);
+
+  return trackedUpstream(branch, refs) ?? branch;
+}
+
+function trackedUpstream(
+  branch: string,
+  refs: ReadonlyMap<string, string>,
+): string | undefined {
+  const upstream = refs.get(`${headsPrefix}${branch}`);
+
+  return upstream && refs.has(upstream) ? upstream : undefined;
 }
 
 async function baseCommit(
@@ -52,7 +87,7 @@ async function requireBranch(
 ): Promise<void> {
   const local = (
     await git(checkout, [
-      'for-each-ref',
+      listRefsCommand,
       '--format=%(refname)',
       headsPrefix,
       remotesPrefix,
@@ -62,11 +97,11 @@ async function requireBranch(
   if (!local.includes(ref)) throw new Error(`No branch ${branch}`);
 }
 
-// The commit the Checkout is compared from, and the branch the Project's main Checkout is on.
+// The comparison commit and the default comparison's branch name, including the remote when it tracks one.
 export async function comparisonBase(
   selection: ChangesSelection,
 ): Promise<{ main: string | null; base: string }> {
-  const main = await mainBranch(selection.projectCheckout);
+  const main = await mainComparisonRef(selection.projectCheckout);
 
   const base = await baseCommit(
     selection.checkout,
@@ -74,8 +109,11 @@ export async function comparisonBase(
     main,
   );
 
-  return { main, base };
+  return { main: branchLabel(main), base };
 }
+
+const branchLabel = (ref: string | null): string | null =>
+  ref?.startsWith('refs/') ? ref.slice(refPrefix(ref).length) : ref;
 
 // The branches a Checkout can be compared against: local and remote-tracking, by name and full ref.
 export async function listComparisonBranches(
@@ -83,7 +121,7 @@ export async function listComparisonBranches(
 ): Promise<{ name: string; ref: string }[]> {
   const lines = (
     await git(checkout, [
-      'for-each-ref',
+      listRefsCommand,
       '--format=%(refname)%09%(symref)',
       headsPrefix,
       remotesPrefix,

@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { type App, expect } from '../fixtures';
 import { readAgent } from './agents';
+import { pressWithoutPaint } from './background-click';
 import { Given, When, Then } from './fixtures';
 
 const feedScroll = 'feed-scroll';
@@ -8,6 +9,9 @@ const feedScroll = 'feed-scroll';
 const commandLine = 'cat greeting.txt';
 
 const groupTitle = 'Ran 1 command, Edited 1 file';
+
+// The running command's own title, which titles its group while it runs.
+const runningTitle = 'Check greeting';
 
 Given(
   /^Agent (\d+) supplies (?:edits and commands|an unfinished command)$/,
@@ -18,21 +22,21 @@ Given(
   },
 );
 
-// A hidden window paints no frames on Linux, so Playwright's stable check never ends; dispatch the click.
-async function clickGroup(group: Locator, hidden: boolean): Promise<void> {
-  await (hidden
-    ? group.evaluate<void, void, HTMLElement>((el) => el.click())
-    : group.click());
-}
-
-async function openGroup(feed: Locator, hidden = false): Promise<void> {
-  const group = feed.getByRole('button', { name: groupTitle, exact: true });
+async function openGroupTitled(
+  feed: Locator,
+  title: string,
+  press: (group: Locator) => Promise<void>,
+): Promise<void> {
+  const group = feed.getByRole('button', { name: title, exact: true });
 
   if ((await group.getAttribute('aria-expanded')) !== 'true')
-    await clickGroup(group, hidden);
+    await press(group);
 
   await expect(group).toHaveAttribute('aria-expanded', 'true');
 }
+
+const openGroup = (feed: Locator): Promise<void> =>
+  openGroupTitled(feed, groupTitle, (group) => group.click());
 
 async function openEdit(feed: Locator): Promise<void> {
   const edit = feed.getByRole('button', { name: /^Edited greeting\.txt/ });
@@ -58,16 +62,27 @@ Then(
   },
 );
 
-// The unfinished command's Turn is running, its Stop shown.
-export async function expectRunningCommand(page: Page): Promise<void> {
-  // Callers may have hidden the desktop window.
-  await openGroup(page.getByTestId(feedScroll), true);
-
+/*
+ * The unfinished command's Turn is running, its Stop shown. The running command titles its group
+ * and says its title once: its row draws only its output, with no title of its own.
+ */
+async function expectUntitledCommand(feed: Locator): Promise<void> {
   await expect(
-    page
-      .getByTestId(feedScroll)
-      .getByRole('button', { name: commandLine, exact: true }),
+    feed
+      .getByText(/cat greeting\.txt/)
+      .filter({ visible: true })
+      .first(),
   ).toBeVisible();
+  await expect(
+    feed.getByRole('button', { name: commandLine, exact: true }),
+  ).toHaveCount(0);
+}
+
+export async function expectRunningCommand(page: Page): Promise<void> {
+  const feed = page.getByTestId(feedScroll);
+  // A hidden desktop window on Linux paints no frames, so this never waits for paint; unread.ts also comes through here.
+  await openGroupTitled(feed, runningTitle, pressWithoutPaint);
+  await expectUntitledCommand(feed);
   await expect(
     page.getByRole('button', { name: 'Stop', exact: true }),
   ).toBeVisible();

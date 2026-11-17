@@ -7,7 +7,7 @@ import type { OwnDrawing } from '../drawn-symbol';
 import { type SvgSymbolName, svgSymbols } from '../svg-symbols';
 import { MarkupSymbolGlyph } from './markup-symbol';
 
-export interface SvgSymbolGlyphProps {
+interface SvgSymbolGlyphProps {
   name: SvgSymbolName;
   pixels: number;
   // The icon's text colour classes: the tint natively, and the CSS colour of the box on web.
@@ -32,7 +32,7 @@ function SvgSymbolDrawing(props: SvgSymbolGlyphProps): React.JSX.Element {
   );
 }
 
-export const SvgSymbolGlyph =
+const SvgSymbolGlyph =
   Platform.OS === 'web'
     ? SvgSymbolDrawing
     : withUniwind(SvgSymbolDrawing, {

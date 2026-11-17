@@ -1,6 +1,11 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { List, ListSection } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import {
+  Menu,
+  type MenuAction,
+  MenuTrigger,
+} from '@repo/kit/primitives/overlays/menu';
 import type { ReactNode } from 'react';
 import type { WorkbenchSection } from '../session-workbench';
 import {
@@ -13,9 +18,11 @@ import {
 // A line's card is keyed by its Plugin, so it never meets one of Argo's Section keys or a Plugin card's.
 const sessionBarCardKey = (pluginId: string): string => `bar:${pluginId}`;
 
+type Handlers = Pick<SessionBarProps, 'onOpen' | 'onDetach'>;
+
 const lineCard = (
   entry: SessionBarEntry,
-  onOpen: SessionBarProps['onOpen'],
+  { onOpen }: Handlers,
 ): WorkbenchSection => ({
   key: sessionBarCardKey(entry.pluginId),
   title: entry.pluginName,
@@ -33,14 +40,14 @@ const lineCard = (
  */
 type Lines = [SessionBarEntry, ...SessionBarEntry[]];
 
-type RowProps = Pick<SessionBarProps, 'onOpen'> & { entry: SessionBarEntry };
+type RowProps = Handlers & { entry: SessionBarEntry };
 
 export const sessionBarCards = (
   bar: SessionBarProps | undefined,
 ): WorkbenchSection[] =>
   bar
     ? groupedLines([bar.shown, ...bar.hidden]).map((lines) =>
-        pluginCard(lines, bar.onOpen),
+        pluginCard(lines, bar),
       )
     : [];
 
@@ -57,35 +64,39 @@ function groupedLines(lines: SessionBarEntry[]): Lines[] {
   return [...grouped.values()];
 }
 
+// A card of several lines, or of one that has a menu, lists its lines as rows so each can carry its "…".
 const pluginCard = (
   [first, ...rest]: Lines,
-  onOpen: SessionBarProps['onOpen'],
+  handlers: Handlers,
 ): WorkbenchSection =>
-  rest.length === 0
-    ? lineCard(first, onOpen)
+  rest.length === 0 && !hasMenu(first, handlers)
+    ? lineCard(first, handlers)
     : {
-        ...lineCard(first, onOpen),
+        ...lineCard(first, handlers),
         onOpen: undefined,
         noRows: false,
-        summary: <CardLines lines={[first, ...rest]} onOpen={onOpen} />,
+        summary: <CardLines lines={[first, ...rest]} {...handlers} />,
       };
+
+const hasMenu = (entry: SessionBarEntry, { onDetach }: Handlers): boolean =>
+  Boolean(entry.detach && onDetach);
 
 function CardLines({
   lines,
-  onOpen,
-}: Pick<SessionBarProps, 'onOpen'> & { lines: Lines }): ReactNode {
+  ...handlers
+}: Handlers & { lines: Lines }): ReactNode {
   return (
     <List appearance="plain" density="compact" padding={0} fit>
       <ListSection>
         {lines.map((entry) => (
-          <BarRow key={rowKey(entry)} entry={entry} onOpen={onOpen} />
+          <BarRow key={rowKey(entry)} entry={entry} {...handlers} />
         ))}
       </ListSection>
     </List>
   );
 }
 
-function BarRow({ entry, onOpen }: RowProps): ReactNode {
+function BarRow({ entry, onOpen, onDetach }: RowProps): ReactNode {
   return (
     <ListItem
       title={entry.text}
@@ -94,6 +105,30 @@ function BarRow({ entry, onOpen }: RowProps): ReactNode {
       }
       accessibilityLabel={`${openLabel(entry)}: ${entry.text}`}
       onPress={openRow(entry, onOpen)}
+      trailingAccessories={<LineMenu entry={entry} onDetach={onDetach} />}
+    />
+  );
+}
+
+const detachAction = (onPress: () => void): MenuAction => ({
+  label: 'Detach from Session',
+  icon: 'close',
+  onPress,
+});
+
+// The line's …, which holds the one item a Plugin's `detach` gives it; a line with none, or no handler, has no menu.
+function LineMenu({
+  entry,
+  onDetach,
+}: Pick<RowProps, 'entry' | 'onDetach'>): ReactNode {
+  if (!entry.detach || !onDetach) return null;
+
+  return (
+    <Menu
+      accessibilityLabel={`Actions for ${entry.text}`}
+      align="end"
+      trigger={<MenuTrigger label="Actions" icon="more" iconOnly />}
+      actions={[detachAction(() => onDetach(entry))]}
     />
   );
 }

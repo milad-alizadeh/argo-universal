@@ -62,7 +62,7 @@ const markedSource = {
   load: async (): Promise<ReactNode> => null,
   mark: async (href: string): Promise<LinkMark> =>
     gitStateMark({
-      kind: 'pullRequest',
+      kind: href.includes('/issue/') ? 'issue' : 'pullRequest',
       state: states[Number(href.slice(-1))] ?? 'open',
     }),
 };
@@ -73,12 +73,16 @@ export const StateMark: Story = {
     <WebOnly>
       <LinkPreviewContext value={markedSource}>
         <View className="gap-2">
+          <Text role="body">
+            The issue is{' '}
+            <Link href="https://example.com/issue/0" label="Issue #1" />.
+          </Text>
           {states.map((state, index) => (
             <Text key={state} role="body">
               The {state} change is{' '}
               <Link
                 href={`https://example.com/pull/${index}`}
-                label={`example/app#${index + 1}`}
+                label={`PR #${index + 1}`}
               />
               .
             </Text>

@@ -16,7 +16,7 @@ import {
   type Polled,
 } from './device-poll';
 import { deviceRefresh } from './device-token';
-import { secretOf, tokenLender, type KeptToken } from './kept-token';
+import { keepSignIn, tokenLender, type KeptToken } from './kept-token';
 import { sleep } from './scheduler';
 
 const slowDownMs = 5000;
@@ -33,7 +33,7 @@ type Attempt = {
   settle: (state: DeviceFlowState) => DeviceFlowState;
 };
 
-// Argo mints the Account id and reuses the row of a person who signs in again; the token is kept under it.
+// The person the service names signs in; one it does not name ends the sign-in.
 async function finish(
   { argo, options }: Attempt,
   token: KeptToken,
@@ -46,11 +46,7 @@ async function finish(
 
   if (!label) return unnamed(options, status);
 
-  const id = await argo.accounts.add(options.host, { label });
-
-  await argo.secrets.set(id, secretOf(token));
-
-  return { kind: 'signed-in', label };
+  return keepSignIn(argo, { host: options.host, label, token });
 }
 
 const stateOf = (polled: Polled): DeviceFlowState =>

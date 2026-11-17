@@ -1,13 +1,13 @@
 import { setStringAsync } from 'expo-clipboard';
 import { useMemo } from 'react';
 import type { useSessionFeed } from '#features/feed';
-import type { SessionPullRequest } from '#features/sessions';
-import { withRowActions } from '../../plugins/session-pull-request-actions';
 import {
   type ChangesContext,
+  useOperationRunner,
   useSessionPullRequests,
-} from '../../plugins/use-session-pull-requests';
-import { useOperationRunner } from '../../plugins/use-tree-calls';
+  withRowActions,
+} from '#features/plugins';
+import type { SessionPullRequest } from '#features/sessions';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { withSessionPullRequests } from './with-session-pull-requests';
 

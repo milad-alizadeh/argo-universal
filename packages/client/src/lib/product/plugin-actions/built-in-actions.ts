@@ -32,7 +32,15 @@ const runners: Runners = {
   newSession: ({ projectId, draft }) =>
     router.navigate(newSessionHref(projectId, draft, pageShown())),
   openSession: ({ sessionId }) => router.navigate(sessionHref(sessionId)),
-  openUrl: async ({ url }) => {
+  openAccount: ({ accountId }) =>
+    router.navigate({
+      pathname: '/settings/accounts/[id]',
+      params: { id: accountId },
+    }),
+  openUrl: async ({ url, copy }) => {
+    // The text is on screen too, so a clipboard that refuses it must not stop the page from opening.
+    if (copy !== undefined) await setStringAsync(copy).catch(() => false);
+
     await Linking.openURL(url);
   },
   copy: async ({ text }) => {
