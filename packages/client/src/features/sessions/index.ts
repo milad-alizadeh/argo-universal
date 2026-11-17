@@ -86,6 +86,8 @@ export { droppedOpenToast, pastSessionDropToast } from './utils/session-toasts';
 
 export { useConnectionDropped } from './hooks/use-connection-dropped';
 
+export { useSessionListUpdates } from './hooks/use-session-list-updates';
+
 export { opensOnReconnect } from './utils/new-session-attempt';
 
 export { canOpenSession } from './utils/open-session';
@@ -173,12 +175,6 @@ export {
 
 export { type SessionsLoadState } from './utils/sessions-load-state';
 
-export { useResubscribeOnFocus } from './hooks/use-resubscribe-on-focus';
-
-export { createCoalescedRefetch } from './api/coalesced-refetch';
-
-export { refreshSessionList } from './api/refresh-session-list';
-
 export { ConfigurationStatus } from './components/session-callout/configuration-status';
 
 export { SessionCallout } from './components/session-callout/session-callout';
@@ -236,6 +232,7 @@ export { archivedToast } from './components/archive-session/archived-toast';
 export { SessionRow } from './components/session-row/session-row';
 
 export {
+  type OpenPluginItemPage,
   type SessionRowActivity,
   type SessionRowPluginItem,
   type SessionRowPlugins,

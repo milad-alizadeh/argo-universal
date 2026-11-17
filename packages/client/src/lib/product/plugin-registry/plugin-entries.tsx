@@ -27,6 +27,7 @@ import { Surface } from '@repo/kit/primitives/layout/surface';
 import { Board } from '@repo/kit/primitives/lists/board';
 import { ListSection, PluginList } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { SessionRow } from '@repo/kit/primitives/lists/session-row';
 import { Table } from '@repo/kit/primitives/lists/table';
 import { Alert } from '@repo/kit/primitives/overlays/alert';
 import { Sheet } from '@repo/kit/primitives/overlays/sheet';
@@ -95,6 +96,7 @@ export const pluginEntries = {
   List: PluginList,
   'List.Section': ListSection,
   ListItem,
+  SessionRow,
   Board,
   'Board.Column': Board.Column,
   'Board.Card': Board.Card,
