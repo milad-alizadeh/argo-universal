@@ -8,6 +8,8 @@ import { CheckoutChoice } from './new';
  */
 export const SessionListInput = z.strictObject({
   projectId: sessionColumns.shape.projectId.optional(),
+  // Lists only this Session, such as a Plugin's SessionRow reading the one it draws; none when it is not top level.
+  sessionId: sessionColumns.shape.id.optional(),
   archived: z.boolean().optional(),
   query: z.string().optional(),
   cursor: z.string().optional(),

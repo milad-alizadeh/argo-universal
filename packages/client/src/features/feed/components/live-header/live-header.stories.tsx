@@ -26,7 +26,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Waiting on you: an amber pulse and amber words, which never shimmer.
+// Waiting on you: an amber pulse and the same muted words as other plain labels.
 export const Waiting: Story = { args: waitingHeader };
 
 // The retry arrow turns once a second, and holds still under reduced motion.

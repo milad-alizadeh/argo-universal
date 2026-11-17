@@ -127,6 +127,7 @@ const targetRules = {
   'session.archive': sessionParam,
   'session.unarchive': sessionParam,
   'registry.get': global,
+  'diagram.validate': global,
   'registry.refresh': global,
   'registry.sync': global,
   'agent.list': global,

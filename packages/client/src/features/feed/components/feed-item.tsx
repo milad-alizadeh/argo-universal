@@ -1,6 +1,7 @@
 import type { BlobRef } from '@repo/contracts';
 import type * as React from 'react';
 import { memo, Fragment } from 'react';
+import { View } from 'react-native';
 import { toolCallFacts } from '../view/feed-row-facts';
 import {
   explorationTitle,
@@ -154,10 +155,16 @@ function renderRemaining(
   return renderActivityItem(item, drawing.now);
 }
 
-function explorationRows(rows: ToolCall[]): React.JSX.Element[] {
-  return rows.map((row) => (
-    <Fragment key={row.id}>{renderToolCallSlot(row, explorationRow)}</Fragment>
-  ));
+function explorationRows(rows: ToolCall[]): React.JSX.Element {
+  return (
+    <View className="gap-2 wide-type:gap-1.5">
+      {rows.map((row) => (
+        <Fragment key={row.id}>
+          {renderToolCallSlot(row, explorationRow)}
+        </Fragment>
+      ))}
+    </View>
+  );
 }
 
 function renderActivityItem(

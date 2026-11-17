@@ -141,6 +141,19 @@ export function generatedOperations(runner: OperationRunner) {
           }),
         ),
     }),
+    diagram: router({
+      validate: publicProcedure
+        .input(operations['diagram.validate'].params)
+        .output(operations['diagram.validate'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'diagram.validate',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+    }),
     session: router({
       diff: publicProcedure
         .input(operations['session.diff'].params)

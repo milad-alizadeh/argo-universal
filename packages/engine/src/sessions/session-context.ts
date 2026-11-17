@@ -39,7 +39,7 @@ import type {
   QueueHoldConnections,
   QueueEditDisconnected,
 } from './queue-hold-connections';
-import type { QueueSteering } from './queue-steering-types';
+import type { QueueSteering } from './queue-steering/types';
 import type { ClosingCommand } from './restart/restart-command';
 import type { SessionData, SessionInput } from './session-data';
 import type { Shells } from './shells';

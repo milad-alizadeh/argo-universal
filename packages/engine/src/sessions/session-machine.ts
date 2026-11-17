@@ -86,10 +86,7 @@ import {
   disconnectedQueueHold,
   stopQueueHolds,
 } from './queue-hold-connections';
-import {
-  reserveQueueSteering,
-  finishQueueSteering,
-} from './queue-steering-state';
+import { reserveQueueSteering, finishQueueSteering } from './queue-steering';
 import {
   selectQueuedPrompt,
   removeQueuedPrompt,

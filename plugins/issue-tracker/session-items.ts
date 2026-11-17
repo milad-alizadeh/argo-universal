@@ -1,4 +1,4 @@
-import type { SessionRowItem } from '@argo/plugin-kit';
+import type { SessionBarItem, SessionRowItem } from '@argo/plugin-kit';
 import { statuses } from './issue-status-view';
 import type { IssueSummary } from './issue-summary';
 import type { IssueLink } from './tracker-storage';
@@ -24,7 +24,7 @@ export const rowItems = (pathOf: PathOf, entries: Linked[]): SessionRowItem[] =>
   entries.slice(0, rowItemLimit).map((entry) => rowItem(pathOf, entry));
 
 // Each attached Issue keeps its own state and page in the Session bar's Plugin card.
-export const barItems = (pathOf: PathOf, entries: Linked[]): SessionRowItem[] =>
+export const barItems = (pathOf: PathOf, entries: Linked[]): SessionBarItem[] =>
   entries.map((entry) => barItem(pathOf, entry));
 
 // The Issue's number, in the state's tone; its title and state are the tooltip once they have loaded.
@@ -54,9 +54,10 @@ function rowDetails(
 const barItem = (
   pathOf: PathOf,
   { link, summary }: Linked,
-): SessionRowItem => ({
+): SessionBarItem => ({
   icon: issueIcon,
   text: summary ? `#${link.number} · ${stateText(summary)}` : `#${link.number}`,
   action: { path: pathOf(link) },
+  detach: { operation: 'detach', args: { number: link.number } },
   ...(summary && { tone: statuses[summary.status].tone }),
 });

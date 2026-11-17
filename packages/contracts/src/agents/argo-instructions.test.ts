@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { diagramTones } from '../diagram';
 import { SubagentRole } from '../feed/subagent-role';
 import { pluginInstructionsLimit } from '../plugins/manifest-fields';
 import { todoOperationIds } from '../sessions/todos';
@@ -64,11 +65,24 @@ it("names no Agent's own checklist tool", () => {
 });
 
 it('leaves the Todo list instruction out when the person turned the Todo list off', () => {
+  const names = argoInstructions.map(({ name }) => name);
+
   expect(
     chosenArgoInstructions({ todoList: false }).map(({ name }) => name),
-  ).toEqual(['Agents']);
+  ).toEqual(names.filter((name) => name !== 'Todo list'));
   expect(argoInstructionsMarkdown({ todoList: false })).not.toContain(
     'session.setTodos',
   );
   expect(argoInstructionsMarkdown()).toContain('session.setTodos');
+});
+
+it('asks the Agent to validate each diagram, naming the Operation and every tone it may mark a node with', () => {
+  const diagrams = argoInstructions.find(
+    ({ name }) => name === 'Diagrams',
+  )?.text;
+
+  expect(diagrams).toContain('diagram.validate');
+  expect(diagrams).toContain('operation_run');
+
+  for (const tone of diagramTones) expect(diagrams).toContain(tone);
 });
