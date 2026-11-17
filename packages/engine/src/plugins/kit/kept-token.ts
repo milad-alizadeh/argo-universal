@@ -98,7 +98,7 @@ async function renewed(
  * same Account due share one refresh; two refreshes racing would spend it twice, and the second would sign the person
  * out.
  */
-export function tokenLender(
+function tokenLender(
   secrets: Secrets,
   refresh: Refresh,
 ): (id: string) => Promise<string | null> {
@@ -117,6 +117,26 @@ export function tokenLender(
 
     return next;
   };
+}
+
+const bearer = { header: 'Authorization', prefix: 'Bearer' };
+
+// A borrower's request gets the kept token, refreshed when it has run out, in the header the flow names; Argo sets it.
+export function provideKept(
+  argo: { accounts: Pick<Argo['accounts'], 'provide'>; secrets: Secrets },
+  options: {
+    host: string;
+    header?: Readonly<{ header: string; prefix: string }>;
+  },
+  refresh: Refresh,
+): Promise<void> {
+  const lend = tokenLender(argo.secrets, refresh);
+
+  return argo.accounts.provide(
+    options.host,
+    options.header ?? bearer,
+    (account) => lend(account.id),
+  );
 }
 
 // What a kit sign-in adds and keeps with: the Account, under the host its token opens, and the token's secret.
