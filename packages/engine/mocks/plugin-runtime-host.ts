@@ -2,6 +2,7 @@ import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import { writeLog } from '@repo/machine-log';
 import { onTestFinished } from 'vitest';
 import { PluginAssets } from '../src/plugins/assets/plugin-assets';
+import { realClock } from '../src/plugins/clock';
 import { PluginRuntime } from '../src/plugins/runtime/plugin-runtime';
 import {
   PluginServices,
@@ -17,11 +18,10 @@ export function startPluginRuntime(
   const log = (line: string): void =>
     writeLog({ home, label: 'plugins', line });
 
-  const runtime = new PluginRuntime(
-    log,
-    pluginServices(home, options, log),
-    options.clock,
-  );
+  const runtime = new PluginRuntime(log, pluginServices(home, options, log), {
+    clock: options.clock ?? realClock,
+    rebuilt: (): void => {},
+  });
 
   onTestFinished(() => runtime.close());
 

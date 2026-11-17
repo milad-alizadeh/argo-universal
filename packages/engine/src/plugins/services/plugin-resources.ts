@@ -110,10 +110,9 @@ export class PluginResources {
   }
 }
 
-export function supersede(
-  held: { generation: number; resources: PluginResources } | undefined,
-  generation: number,
-): void {
+export type Held = { generation: number; resources: PluginResources };
+
+export function supersede(held: Held | undefined, generation: number): void {
   if (!held) return;
 
   if (generation < held.generation)

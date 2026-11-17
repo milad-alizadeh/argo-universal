@@ -38,7 +38,11 @@ export function createPluginRuntime(
   const clock = options.clock ?? runtimeClockSource(clockStart);
   const back = reachBack(() => runtime, locate);
   const services = createServices(home, { ...rest, ...back, ...held, clock });
-  const runtime = new PluginRuntime(held.log, services, clock, rebuilt);
+
+  const runtime = new PluginRuntime(held.log, services, {
+    clock,
+    rebuilt: rebuilt ?? ((): void => {}),
+  });
 
   return runtime;
 }
