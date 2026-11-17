@@ -7,6 +7,7 @@ import {
   listed,
   shown,
 } from './mocks/issue-journey';
+import { fieldKeys } from './issue-keys';
 import { statuses, transitions } from './mocks/jira-workflow';
 
 const timeoutMs = 20_000;
@@ -46,6 +47,29 @@ it(
     // The open list hears of it too.
     await jira.list.draw();
     expect(jira.list.findText(review.name)).toBeDefined();
+  },
+  timeoutMs,
+);
+
+it(
+  'paints the status dot in the tone of the status it leads to while Jira answers',
+  async () => {
+    const jira = await listed();
+    const page = await jira.list.press(argoThree);
+    const dot = (): unknown => page.find(keyed(fieldKeys.status)).props.dot;
+
+    expect(dot()).toBe('info');
+
+    const release = jira.jira.hold('transition');
+    const moving = page.press(moveTo(transitions.finish.id));
+
+    await vi.waitFor(() =>
+      expect(jira.jira.calls('transition')).toHaveLength(1),
+    );
+    // Pending: Done's category, not In Progress's, before Jira answers.
+    expect(dot()).toBe('done');
+    release();
+    await moving;
   },
   timeoutMs,
 );

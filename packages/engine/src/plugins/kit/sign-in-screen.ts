@@ -108,19 +108,23 @@ function plainStep(parts: SignInParts, step: Plain): Card {
   return step.kind === 'idle' ? idleStep(parts) : waitingStep(parts, step);
 }
 
-const pasteInvitation = (parts: SignInParts): string =>
-  parts.data.rejected ??
+const pasteInstructions = (parts: SignInParts): string =>
   `Paste an API token you made at ${parts.name}. Argo keeps it in your computer’s secret store.`;
 
-// The field a token is pasted into, with a refused token's reason as the footer under it.
+/*
+ * The field a token is pasted into, with a refused token's reason as the footer under it. When the service refused the
+ * last sign-in, its reason leads and the paste instructions move to the footer, unless a refused token's reason is there.
+ */
 function fieldCard(parts: SignInParts): Card {
   const error = failureOf(parts.data.flow);
+  const { rejected } = parts.data;
+  const footer = error ?? (rejected ? pasteInstructions(parts) : undefined);
 
   return {
     title: 'Connect your account',
-    description: pasteInvitation(parts),
+    description: rejected ?? pasteInstructions(parts),
     rows: [secretField(parts, error)],
-    ...(error && { footer: error }),
+    ...(footer && { footer }),
   };
 }
 
