@@ -1,7 +1,7 @@
 import type { BuildContext } from 'esbuild';
 import { createActor, type Actor } from 'xstate';
 import type { ActivatedPlugin } from '../access/plugin-access';
-import { watchPlugin } from '../dev/bundle';
+import { watchPlugin, type BundleCallbacks } from '../dev/bundle';
 import { crashed, runtimeError } from '../protocol/runtime';
 import type { PluginStatus } from '../protocol/runtime';
 import type { RuntimePluginInput } from './plugin-events';
@@ -22,16 +22,23 @@ export class RuntimePlugin {
     this.actor = createActor(runtimePluginMachine, {
       input: { ...input, answer: (status) => this.answer(status) },
     }).start();
-    this.build = watchPlugin(input.entry, {
+    this.build = watchPlugin(input.entry, this.buildEvents(input), input.watch);
+    void this.build.catch((cause: unknown) =>
+      this.actor.send({ type: 'build.failed', error: runtimeError(cause) }),
+    );
+  }
+
+  // A build that lands or fails is the machine's to hear; a landing also tells what was read from the folder.
+  private buildEvents(
+    input: Pick<RuntimePluginInput, 'rebuilt'>,
+  ): BundleCallbacks {
+    return {
       loaded: (source, version) => {
         input.rebuilt?.();
         this.actor.send({ type: 'build.loaded', source, version });
       },
       failed: (error) => this.actor.send({ type: 'build.failed', error }),
-    });
-    void this.build.catch((cause: unknown) =>
-      this.actor.send({ type: 'build.failed', error: runtimeError(cause) }),
-    );
+    };
   }
 
   get status(): PluginStatus {

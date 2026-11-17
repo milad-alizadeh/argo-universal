@@ -24,6 +24,8 @@ export type PluginServerOptions = {
   pluginNetwork?: PluginNetwork;
   pluginOAuth?: OAuthOptions;
   pluginClock?: PluginClock;
+  // A dev Server watches Plugin sources and rebuilds on a change; any other builds each Plugin once.
+  watchPlugins?: boolean;
 };
 
 // What the Engine hands over; the Plugin module builds everything else.

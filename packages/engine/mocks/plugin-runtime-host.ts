@@ -5,6 +5,10 @@ import { PluginAssets } from '../src/plugins/assets/plugin-assets';
 import { realClock } from '../src/plugins/clock';
 import { PluginRuntime } from '../src/plugins/runtime/plugin-runtime';
 import {
+  buildsWithDefaults,
+  type PluginBuilds,
+} from '../src/plugins/runtime/runtime-setup';
+import {
   PluginServices,
   type PluginServiceOptions,
 } from '../src/plugins/services/plugin-services';
@@ -14,13 +18,14 @@ import { MemorySecretStore } from './memory-secret-store';
 export function startPluginRuntime(
   home: string,
   options: Pick<PluginServiceOptions, 'oauth' | 'clock'> = {},
+  builds?: Partial<PluginBuilds>,
 ): PluginRuntime {
   const log = (line: string): void =>
     writeLog({ home, label: 'plugins', line });
 
   const runtime = new PluginRuntime(log, pluginServices(home, options, log), {
     clock: options.clock ?? realClock,
-    rebuilt: (): void => {},
+    ...buildsWithDefaults({ ...builds }),
   });
 
   onTestFinished(() => runtime.close());
