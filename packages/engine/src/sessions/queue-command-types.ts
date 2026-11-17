@@ -18,7 +18,7 @@ export type WithdrawCommand = {
 };
 
 // What changes a Session's queue: an App's command, or the Server's withdraw for a Plugin.
-export type ServerQueueCommand =
+type ServerQueueCommand =
   | Exclude<QueueCommand, { action: 'steer' }>
   | WithdrawCommand;
 

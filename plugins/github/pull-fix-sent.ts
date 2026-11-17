@@ -26,7 +26,7 @@ export const sentOf =
     return rows.find(isCountRow)?.[0] ?? 0;
   };
 
-export const sentPromptBy =
+const sentPromptBy =
   (execute: Execute): FixStore['sentPrompt'] =>
   async (link, { head, keys, queuedId }) => {
     await execute(
@@ -51,7 +51,7 @@ export const waitingOf =
 
 const byQueuedId = `${where} AND queued_id = ?`;
 
-export const withdrawnBy =
+const withdrawnBy =
   (execute: Execute): FixStore['withdrawn'] =>
   async (link, prompt) => {
     await execute(
@@ -63,7 +63,7 @@ export const withdrawnBy =
     await unrecordedBy(execute)(link, prompt.head, prompt.keys);
   };
 
-export const startedBy =
+const startedBy =
   (execute: Execute): FixStore['started'] =>
   async (link, prompt) => {
     await execute(
