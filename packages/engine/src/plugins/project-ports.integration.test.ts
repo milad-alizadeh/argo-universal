@@ -48,9 +48,7 @@ async function checkoutOnItsBranch(): Promise<string> {
 }
 
 // A Session `session-1` whose Checkout is a repository on the branch it was started on.
-async function sessionOnItsBranch(
-  now?: () => number,
-): Promise<StartedSession> {
+async function sessionOnItsBranch(now?: () => number): Promise<StartedSession> {
   const checkoutPath = await checkoutOnItsBranch();
 
   const stored = openTestDatabase({ checkoutPath, checkoutBranch: startedOn });

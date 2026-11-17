@@ -1,22 +1,21 @@
 import type { FetchReply } from '@repo/contracts/plugins/argo-calls';
 import { describe, expect, it } from 'vitest';
-import {
-  PluginFetchCache,
-  concurrentPerHostLimit,
-} from './plugin-fetch-cache';
+import { PluginFetchCache, concurrentPerHostLimit } from './plugin-fetch-cache';
 import { hopOf, reply } from './plugin-fetch-cache-fixtures';
+import type { Hop } from './plugin-fetch-response';
 
-type Waiting = { release: () => void };
-
-// A cache in front of a service that holds every request it gets until told to answer it.
-function slowService(): {
-  fetch: PluginFetchCache['fetch'];
+type SlowService = {
+  fetch: (hop: Hop) => Promise<FetchReply>;
   inFlight: () => number;
   peak: () => number;
-  waiting: Waiting[];
-} {
-  const cache = new PluginFetchCache({ now: () => 1_000_000 });
-  const waiting: Waiting[] = [];
+  // The requests that reached the service and have not been answered.
+  waiting: (() => void)[];
+};
+
+// A cache in front of a service that holds every request it gets until told to answer it.
+function slowService(): SlowService {
+  const cache = new PluginFetchCache({ now: (): number => 1_000_000 });
+  const waiting: (() => void)[] = [];
   let active = 0;
   let peak = 0;
 
@@ -25,11 +24,9 @@ function slowService(): {
     peak = Math.max(peak, active);
 
     return new Promise((resolve) => {
-      waiting.push({
-        release: () => {
-          active -= 1;
-          resolve(reply(200));
-        },
+      waiting.push(() => {
+        active -= 1;
+        resolve(reply(200));
       });
     });
   };
@@ -43,12 +40,15 @@ function slowService(): {
 }
 
 const settle = async (): Promise<void> => {
-  await new Promise((resolve) => setImmediate(resolve));
+  await new Promise((resolve) => {
+    setImmediate(resolve);
+  });
 };
 
 describe('concurrent requests per host', () => {
   it('sends at most the cap at once to one host, and the rest as those answer', async () => {
     const github = slowService();
+
     const pulls = Array.from({ length: 20 }, (_, n) =>
       github.fetch(hopOf(`/pulls/${n}`)),
     );
@@ -57,7 +57,7 @@ describe('concurrent requests per host', () => {
     expect(github.inFlight()).toBe(concurrentPerHostLimit);
 
     while (github.waiting.length > 0) {
-      github.waiting.shift()?.release();
+      github.waiting.shift()?.();
       await settle();
     }
 

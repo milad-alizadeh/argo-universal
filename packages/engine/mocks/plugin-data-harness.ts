@@ -65,7 +65,9 @@ type Wiring = {
   data: PluginData;
 };
 
-const servicesOn = (clock: PluginClock): ConstructorParameters<typeof PluginData>[0] => ({
+const servicesOn = (
+  clock: PluginClock,
+): ConstructorParameters<typeof PluginData>[0] => ({
   services: {
     handle: async (): Promise<PluginReply> => refused,
     projectIds: async (): Promise<string[]> => ['p1', 'p2'],

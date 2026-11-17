@@ -40,9 +40,18 @@ export class HostSlots {
     const state = this.hosts.get(host);
     const next = state?.waiting.shift();
 
-    if (next) return next();
+    if (next) next();
+    else this.close(host);
+  }
 
-    if (state) state.open -= 1;
-    if (state?.open === 0) this.hosts.delete(host);
+  // Nobody is waiting: the turn is free, and a host with none open is forgotten.
+  private close(host: string): void {
+    const state = this.hosts.get(host);
+
+    if (!state) return;
+
+    state.open -= 1;
+
+    if (state.open === 0) this.hosts.delete(host);
   }
 }

@@ -29,11 +29,14 @@ const isRunning = ({ state }: CheckInfo): boolean => state === 'running';
 const running = ({ checks }: Read): boolean =>
   (checks?.data ?? []).some(isRunning);
 
-const ended = ({ pull }: Read): boolean =>
-  pull.data?.stage === 'merged' || pull.data?.stage === 'closed';
+const endedStages = new Set<string | undefined>(['merged', 'closed']);
 
-// A merged or closed pull request whose Checks have all reported cannot change, so a Slot never asks GitHub for it again;
-// a refresh the person asks for still reads it, which is how a reopened one is found.
+const ended = ({ pull }: Read): boolean => endedStages.has(pull.data?.stage);
+
+/*
+ * A merged or closed pull request whose Checks have all reported cannot change, so a Slot never asks GitHub for it
+ * again; a refresh the person asks for still reads it, which is how a reopened one is found.
+ */
 const settled = (read: Read): boolean =>
   ended(read) && !read.pull.failure && !running(read);
 

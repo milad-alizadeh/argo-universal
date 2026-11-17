@@ -8,7 +8,6 @@ import {
 } from '#mocks/plugin-data-harness';
 import { failureBackoffMs } from './query-timing';
 
-
 const rateLimited = 'rate limited';
 
 // A Query that answered once, was written to, and whose next read failed.
