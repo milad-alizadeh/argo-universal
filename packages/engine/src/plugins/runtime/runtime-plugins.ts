@@ -124,9 +124,13 @@ export class RuntimePlugins {
     this.input.resources.failures.ended(pluginId);
     const plugin = this.plugins.get(pluginId);
 
-    if (!plugin) return;
-    this.plugins.delete(pluginId);
-    await plugin.stop();
+    if (plugin) {
+      this.plugins.delete(pluginId);
+      await plugin.stop();
+    }
+
+    // Turned off or removed, not restarting: its last good items no longer stand in for it.
+    this.input.resources.items.forget(pluginId);
   }
 
   update({

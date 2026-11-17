@@ -3,6 +3,7 @@ import type {
   SessionNewInput,
   SessionPromptInput,
 } from '@repo/contracts';
+import { OwnSessionArchive } from './archive/own-archive';
 import { archiveSessionFromPlugin } from './archive/plugin-archive';
 import { startSessionCreation } from './creation/session-creation';
 import { createSessionList } from './list/session-list';
@@ -33,6 +34,7 @@ import { createSessionWorkSource, type SessionWorkSource } from './work-source';
  * with stays behind this interface.
  */
 export class Sessions {
+  private readonly ownArchive: OwnSessionArchive;
   // The Session Operations that answer with their result, keyed by Operation id.
   public readonly implementations: SessionOperationImplementations;
   // The Sessions a Session caller's scope can see.
@@ -50,6 +52,7 @@ export class Sessions {
     this.directory = createSessionDirectory(this.sources);
     this.work = createSessionWorkSource(this.sources);
     this.router = createSessionRouter({ sources: this.sources, list });
+    this.ownArchive = new OwnSessionArchive(this.sources);
   }
   // Starts a new Session; the request's signal also stops its admission.
   public create(
@@ -77,6 +80,11 @@ export class Sessions {
     sessionId: string,
   ): ReturnType<typeof archiveSessionFromPlugin> {
     return archiveSessionFromPlugin(this.sources, sessionId);
+  }
+  public archiveOwn(
+    sessionId: string,
+  ): ReturnType<OwnSessionArchive['request']> {
+    return this.ownArchive.request(sessionId);
   }
   // Begins the Tool call of an Operation that a Session calls.
   public call(

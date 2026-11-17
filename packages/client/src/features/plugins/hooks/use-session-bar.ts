@@ -10,7 +10,7 @@ import { sessionBarLines } from '../utils/session-bar-lines';
 import { itemsSlotEntry, type SlotReading } from '../utils/slot-items';
 import { usePluginOpener } from './use-plugin-opener';
 import { useSlotReading } from './use-slot-reading';
-import { useOperationRunner } from './use-tree-calls';
+import { useFireOperation } from './use-tree-calls';
 
 export type SessionContext = SlotContextOf<typeof sessionBarSlotId>;
 
@@ -54,16 +54,14 @@ export function useSessionBar(
 function useDetachLine(
   session: SessionContext | undefined,
 ): SessionBarProps['onDetach'] {
-  const { run, failed } = useOperationRunner();
+  const fire = useFireOperation();
 
   if (!session) return undefined;
 
   return ({ pluginId, detach }) => {
     if (!detach) return;
 
-    run({ pluginId, ...detach, ...session }).catch((cause: unknown) =>
-      failed(cause instanceof Error ? cause : new Error(String(cause))),
-    );
+    fire({ pluginId, ...detach, ...session });
   };
 }
 

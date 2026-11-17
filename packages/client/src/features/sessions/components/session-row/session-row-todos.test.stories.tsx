@@ -6,13 +6,16 @@ import {
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
 
-// A Regular row's Plan bar on a phone and a wide window.
-const meta = { ...sessionRowTestMeta, title: 'Tests/Sessions/SessionRow/Plan' };
+// A Regular row's checklist bar on a phone and a wide window.
+const meta = {
+  ...sessionRowTestMeta,
+  title: 'Tests/Sessions/SessionRow/Todos',
+};
 
 export default meta;
 
-// A failed Plan keeps its bar but does not sweep.
-export const FailedPlanStill: Story = {
+// A failed checklist keeps its bar but does not sweep.
+export const FailedTodosStill: Story = {
   args: {
     session: { ...sessionRows.failed, plan: { done: 2, total: 3 } },
   },
@@ -20,10 +23,10 @@ export const FailedPlanStill: Story = {
     for (const width of [390, 1440]) {
       await settleLayout(width);
       await expect(
-        canvas.getByLabelText('Plan: 2 of 3 complete'),
+        canvas.getByLabelText('Todos: 2 of 3 complete'),
       ).toBeVisible();
       await expect(
-        canvas.queryByTestId('session-plan-sweep'),
+        canvas.queryByTestId('session-todos-sweep'),
       ).not.toBeInTheDocument();
     }
   },

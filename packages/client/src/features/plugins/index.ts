@@ -66,7 +66,9 @@ export {
 
 export { useStaleMarks } from './hooks/use-stale-marks';
 
-export { useOperationRunner } from './hooks/use-tree-calls';
+export { useFireOperation } from './hooks/use-tree-calls';
+
+export { sayOperationFailed } from './utils/say-operation-failed';
 
 export { ConnectedReplaceableSlots } from './stores/connected-replaceable-slot';
 

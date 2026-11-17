@@ -2,7 +2,8 @@ import { setStringAsync } from 'expo-clipboard';
 import type { useSessionFeed } from '#features/feed';
 import {
   type ChangesContext,
-  useOperationRunner,
+  sayOperationFailed,
+  useFireOperation,
   useSessionPullRequests,
   withRowActions,
 } from '#features/plugins';
@@ -18,13 +19,13 @@ function useRowActions(
   context: ChangesContext | undefined,
   pullRequests: SessionPullRequest[],
 ): SessionPullRequest[] {
-  const { run, failed } = useOperationRunner();
+  const fire = useFireOperation();
 
   return context
     ? withRowActions(pullRequests, {
         scope: context,
-        run,
-        failed,
+        fire,
+        failed: sayOperationFailed,
         copy: setStringAsync,
       })
     : pullRequests;

@@ -56,6 +56,8 @@ export * from './turn';
 
 export * from './declare-subagent-role';
 
+export * from './todos';
+
 export * from './subagent';
 
 export * from './prompt-queue';

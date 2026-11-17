@@ -3,7 +3,7 @@ import type { JSX } from 'react';
 import { View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
 import type { ComposerStatusProps } from '../../utils/status';
-import { StatusPlan } from './composer-plan';
+import { StatusTodos } from './composer-todos';
 import { ContextControl } from './context-control';
 import { UsageControl } from './usage-control';
 import { WorkChips } from './work-chips';
@@ -16,11 +16,11 @@ export interface StatusControlsProps {
   disabled: boolean;
 }
 
-export function ComposerPlan(props: {
+export function ComposerTodos(props: {
   entries: PlanEntry[];
   disabled: boolean;
 }): JSX.Element {
-  return <StatusPlan {...props} />;
+  return <StatusTodos {...props} />;
 }
 
 export function ComposerStatusControls({

@@ -2,7 +2,7 @@ import { type AgentServer } from '@repo/contracts';
 import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import { recordedSessionOptions } from '@repo/mocks/app';
 import { fn, expect, within } from 'storybook/test';
-import { composerPlan } from '../composer-mock';
+import { composerTodos } from '../composer-mock';
 import { type Story } from './composer-story-context.test.mocks';
 import {
   subagentCountLabel,
@@ -24,7 +24,7 @@ export function phoneStatusControls(agent: AgentServer): Story {
         },
       },
       status: {
-        plan: composerPlan,
+        plan: composerTodos,
         subagents: { count: 2, running: true, onPress: fn() },
         shells: { count: 1, running: false, onPress: fn() },
       },
@@ -34,7 +34,7 @@ export function phoneStatusControls(agent: AgentServer): Story {
       await expect(
         canvas.queryByRole('button', { name: 'Checkout' }),
       ).not.toBeInTheDocument();
-      await expect(canvas.getByRole('button', { name: 'Plan' })).toBeVisible();
+      await expect(canvas.getByRole('button', { name: 'Todos' })).toBeVisible();
       await expect(
         canvas.getByRole('button', { name: subagentCountLabel }),
       ).toBeVisible();

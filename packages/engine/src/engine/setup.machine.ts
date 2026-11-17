@@ -82,6 +82,8 @@ export interface EngineInput extends Pick<
   operationWaitClock?: OperationWaitClock;
   // How long New Session discovery waits for an Agent's Slash commands; the default suits real Agents.
   slashCommandsWaitMs?: number;
+  // How long an Agent has to start `argo mcp` before its Session says it has no Argo tools; the default suits the CLI's start.
+  argoToolsGraceMs?: number;
   startedAt: string;
   acp?: AcpResourceInput;
   fetchAgents?: FetchAgents;

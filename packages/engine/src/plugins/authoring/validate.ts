@@ -4,6 +4,7 @@ import type { PluginManifest } from '@repo/contracts/plugins';
 import type { BuildResult } from 'esbuild';
 import { bundlePlugin } from '../dev/bundle';
 import { readManifest } from '../discovery/manifest';
+import { readIconMarkup } from '../discovery/manifest-icon';
 import { runtimeError } from '../protocol/runtime';
 import { BuildError, buildDiagnostics } from './build-diagnostics';
 import type { PluginDiagnostic } from './diagnostics';
@@ -35,12 +36,24 @@ export async function validatePlugin(
   return report;
 }
 
+// The manifest, and its icon file read as the Server reads it when it loads the Plugin (ADR-0058).
+async function iconCheckedManifest(input: {
+  directory: string;
+  version: string;
+}): Promise<PluginManifest> {
+  const manifest = await readManifest(input.directory, input.version);
+
+  await readIconMarkup(input.directory, manifest.icon);
+
+  return manifest;
+}
+
 async function checkedManifest(
   input: { directory: string; version: string },
   report: PluginValidation,
 ): Promise<PluginManifest | undefined> {
   try {
-    return await readManifest(input.directory, input.version);
+    return await iconCheckedManifest(input);
   } catch (error) {
     const cause =
       error instanceof Error ? error : new Error(runtimeError(error));

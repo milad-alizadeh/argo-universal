@@ -1,15 +1,16 @@
 import type { PageScope } from '@repo/contracts/plugins/page-address';
 import type { ScopedRun } from '@repo/contracts/plugins/page-calls';
 import type { SessionPullRequest } from '#features/sessions';
-import type { OperationRunner } from './page-calls-ports';
+import { type FireOperation, toError } from './fire-operation';
 
 // The one Plugin whose PR rows these are: Detach is its Operation, and Core keeps no PR model (ADR-0052).
 const githubPluginId = 'github';
 
 export interface RowActionPorts {
   scope: PageScope;
-  // The App's one run of an Operation, which rejects with why it failed.
-  run: OperationRunner['run'];
+  // The App's fire-and-forget run of an Operation, which says why it failed.
+  fire: FireOperation;
+  // Says why a copy failed.
   failed: (error: Error) => void;
   copy: (text: string) => Promise<boolean>;
 }
@@ -20,22 +21,12 @@ const referenceOf = ({
 }: SessionPullRequest): string | undefined =>
   repository && `${repository}#${number}`;
 
-const toError = (cause: unknown): Error =>
-  cause instanceof Error ? cause : new Error(String(cause));
-
-const failedWith =
-  (ports: RowActionPorts) =>
-  (cause: unknown): void =>
-    ports.failed(toError(cause));
-
 function runOperation(
   ports: RowActionPorts,
   operation: string,
   args: ScopedRun['args'],
 ): void {
-  ports
-    .run({ pluginId: githubPluginId, operation, args, ...ports.scope })
-    .catch(failedWith(ports));
+  ports.fire({ pluginId: githubPluginId, operation, args, ...ports.scope });
 }
 
 function detachOf(
@@ -57,7 +48,7 @@ function copyOf(
 
   return {
     onCopyLink: () => {
-      ports.copy(url).catch(failedWith(ports));
+      ports.copy(url).catch((cause: unknown) => ports.failed(toError(cause)));
     },
   };
 }

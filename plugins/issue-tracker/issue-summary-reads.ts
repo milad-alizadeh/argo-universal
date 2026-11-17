@@ -1,43 +1,22 @@
 import type { Issue } from './github-issues';
 import { unwrap } from './github-reads';
 import type { IssueDeps } from './issue-deps';
-import type { IssueLink, TrackerStorage } from './tracker-storage';
+import type { IssueLink } from './tracker-storage';
 
 // What a Session row and the Session bar say about an Issue: its state, and its title for a tooltip.
 export type IssueSummary = Pick<Issue, 'title' | 'status' | 'closedAs'>;
 
-export type Source = Pick<
-  IssueDeps,
-  'storage' | 'trackers' | 'listProjects' | 'reads' | 'readQuery'
->;
+export type Source = Pick<IssueDeps, 'storage' | 'reads' | 'readQuery'>;
 
 export type Target = Pick<IssueLink, 'projectId' | 'number'>;
 
-// The last summary this Plugin stored for the Issue; `null` until one has loaded.
-export type Cached = (target: Target) => Promise<IssueSummary | null>;
+// Each Issue's shared Query answer, in the order asked.
+export type Together = (
+  targets: readonly Target[],
+) => Promise<(IssueSummary | null)[]>;
 
-export type Read = { summary: IssueSummary; differs: boolean };
-
-// Each Issue's read, in the order asked; `null` for one that could not be read.
-export type Together = (targets: readonly Target[]) => Promise<(Read | null)[]>;
-
-type Reading = { source: Source; cached: Cached };
-
-// A summary lives in the Plugin's view cache under the Issue's number.
-type CacheKey = Pick<Target, 'projectId'> & { view: string };
-
-export const keyOf = ({ projectId, number }: Target): string =>
+const keyOf = ({ projectId, number }: Target): string =>
   `${projectId}#${number}`;
-
-const cacheKey = ({ projectId, number }: Target): CacheKey => ({
-  projectId,
-  view: `issue-summary-${number}`,
-});
-
-export const storedSummary =
-  (storage: TrackerStorage): Cached =>
-  (target) =>
-    storage.readCache<IssueSummary>(cacheKey(target)).catch(() => null);
 
 async function summaryOf(
   source: Source,
@@ -51,21 +30,6 @@ async function summaryOf(
   const { title, status, closedAs } = unwrap(settled);
 
   return { title, status, closedAs };
-}
-
-// Reads the summary through the Issue's Query and stores it when it differs from the stored one.
-async function readAndStore(
-  { source, cached }: Reading,
-  target: Target,
-): Promise<Read> {
-  const summary = await summaryOf(source, target);
-
-  const differs =
-    JSON.stringify(summary) !== JSON.stringify(await cached(target));
-
-  if (differs) await source.storage.writeCache(cacheKey(target), summary);
-
-  return { summary, differs };
 }
 
 const numbersOf = (targets: readonly Pick<Target, 'number'>[]): number[] =>
@@ -95,24 +59,20 @@ async function attachedIn(
 
 // The summary is read from the Issue's own entry, so a page that read the Issue since is never answered with something older.
 const readFound = async (
-  reading: Reading,
+  source: Source,
   found: ReadonlySet<number>,
   target: Target,
-): Promise<Read | null> =>
-  found.has(target.number)
-    ? readAndStore(reading, target).catch(() => null)
-    : null;
+): Promise<IssueSummary | null> =>
+  found.has(target.number) ? summaryOf(source, target).catch(() => null) : null;
 
 // One Project's Issues, in the order asked.
 async function readProject(
-  reading: Reading,
+  source: Source,
   targets: readonly Target[],
-): Promise<(Read | null)[]> {
-  const found = await attachedIn(reading.source, targets);
+): Promise<(IssueSummary | null)[]> {
+  const found = await attachedIn(source, targets);
 
-  return Promise.all(
-    targets.map((target) => readFound(reading, found, target)),
-  );
+  return Promise.all(targets.map((target) => readFound(source, found, target)));
 }
 
 const byProject = (targets: readonly Target[]): Target[][] =>
@@ -122,14 +82,14 @@ const byProject = (targets: readonly Target[]): Target[][] =>
 
 // Each Project is read alone: one whose Tracker fails leaves only its own Issues unread.
 async function readProjects(
-  reading: Reading,
+  source: Source,
   targets: readonly Target[],
-): Promise<Map<string, Read | null>> {
-  const reads = new Map<string, Read | null>();
+): Promise<Map<string, IssueSummary | null>> {
+  const reads = new Map<string, IssueSummary | null>();
 
   await Promise.all(
     byProject(targets).map(async (group) => {
-      const read = await readProject(reading, group).catch(() => []);
+      const read = await readProject(source, group).catch(() => []);
 
       for (const [index, target] of group.entries())
         reads.set(keyOf(target), read[index] ?? null);
@@ -141,9 +101,9 @@ async function readProjects(
 
 // Reads these Issues, each Project's in one Tracker call.
 export const readTogether =
-  (source: Source, cached: Cached): Together =>
+  (source: Source): Together =>
   async (targets) => {
-    const reads = await readProjects({ source, cached }, targets);
+    const reads = await readProjects(source, targets);
 
     return targets.map((target) => reads.get(keyOf(target)) ?? null);
   };

@@ -118,12 +118,11 @@ export class QueryEntry {
     if (changed(before, this.state.data)) this.markHolders();
   }
 
-  // The addresses that drew the answer before this one are marked, so the Apps showing them draw again.
+  // Announce the changed answer even without page holders, so visible Slots ask again.
   private markHolders(): void {
     const addresses = this.holders.before(this.state.revision);
 
-    if (addresses.length > 0)
-      this.services.marked(this.owner.pluginId, addresses);
+    this.services.marked(this.owner.pluginId, addresses);
   }
 
   private failed(cause: unknown): void {
@@ -188,9 +187,8 @@ export class QueryEntry {
   }
 }
 
-// A first answer changes nothing on screen; after that, a different answer does.
+// First answers also wake Slots that timed out while waiting for this entry.
 const changed = (
   before: PluginDataState['data'],
   after: PluginDataState['data'],
-): boolean =>
-  before !== undefined && JSON.stringify(before) !== JSON.stringify(after);
+): boolean => JSON.stringify(before) !== JSON.stringify(after);

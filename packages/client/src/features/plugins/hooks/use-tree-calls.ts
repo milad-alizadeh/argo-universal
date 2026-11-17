@@ -5,6 +5,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useTRPCClient } from '#features/connection';
 import type { OnPageCall } from '../../../lib/product/plugin-registry';
+import { type FireOperation, fireOperation } from '../utils/fire-operation';
 import type { OperationRunner } from '../utils/page-calls-ports';
 import { sayOperationFailed } from '../utils/say-operation-failed';
 
@@ -23,4 +24,9 @@ export function useOperationRunner(): OperationRunner {
   const run = useTRPCClient().plugins.run;
 
   return { run: (scoped) => run.mutate(scoped), failed: sayOperationFailed };
+}
+
+// The App's Operation run without waiting: a failure is toasted and never escapes.
+export function useFireOperation(): FireOperation {
+  return fireOperation(useOperationRunner());
 }

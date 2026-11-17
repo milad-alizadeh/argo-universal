@@ -1,6 +1,9 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { argoInstructions } from '@repo/contracts/agents/argo-instructions';
+import {
+  chosenArgoInstructions,
+  type ArgoInstructionChoices,
+} from '@repo/contracts/agents/argo-instructions';
 import {
   OperationWaitId,
   type PluginInstruction,
@@ -46,11 +49,20 @@ const result = (
   content: [{ type: 'text', text: JSON.stringify(value) }],
 });
 
+// What `argo mcp` tells the Agent beside the discovery line: the Plugins' prose, and which Argo instructions the person's settings leave.
+export type McpInstructions = {
+  plugins?: PluginInstruction[];
+  argo?: ArgoInstructionChoices;
+};
+
 // Argo's discovery line, then each Argo instruction and each Plugin's prose under its name, in the order given (the Server sends Plugin id order).
-function mcpInstructions(plugins: PluginInstruction[]): string {
+function mcpInstructions({
+  plugins = [],
+  argo = { todoList: true },
+}: McpInstructions): string {
   return [
     discoveryInstructions,
-    ...[...argoInstructions, ...plugins].map(
+    ...[...chosenArgoInstructions(argo), ...plugins].map(
       ({ name, text }) => `## ${name}\n\n${text}`,
     ),
   ].join('\n\n');
@@ -58,11 +70,11 @@ function mcpInstructions(plugins: PluginInstruction[]): string {
 
 export function createOperationMcpServer(
   client: ControlClient,
-  plugins: PluginInstruction[] = [],
+  instructions: McpInstructions = {},
 ): McpServer {
   const server = new McpServer(
     { name: productCompatibility.mcpServer, version: '1.0.0' },
-    { instructions: mcpInstructions(plugins) },
+    { instructions: mcpInstructions(instructions) },
   );
 
   registerDiscovery(server, client);

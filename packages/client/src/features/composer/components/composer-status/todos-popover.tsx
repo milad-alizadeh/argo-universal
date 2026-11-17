@@ -5,38 +5,38 @@ import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { JSX } from 'react';
 import { View } from 'react-native';
 import { completedSteps, fullPercent } from '../../utils/status';
-import { PlanSheetContent } from './plan-sheet-content';
-import { PlanSteps } from './plan-steps';
 import { Meter } from './status-meter';
 import { phoneSheet } from './status-surface';
+import { TodoSteps } from './todo-steps';
+import { TodosSheetContent } from './todos-sheet-content';
 
-const planHeadingProps = {
+const todosHeadingProps = {
   role: 'heading',
   accessibilityRole: 'heading',
   'aria-level': 2,
 } as const;
 
-function PlanHeading(): JSX.Element {
+function TodosHeading(): JSX.Element {
   return (
     <View className="flex-row items-center gap-2">
       <Icon name="checklist" className="text-foreground" />
-      <Text selectable={false} {...planHeadingProps} className="select-none">
-        Plan
+      <Text selectable={false} {...todosHeadingProps} className="select-none">
+        Todos
       </Text>
     </View>
   );
 }
 
-interface PlanEntriesProps {
+interface TodosEntriesProps {
   entries: PlanEntry[];
 }
 
-function PlanCompletion({ entries }: PlanEntriesProps): JSX.Element {
+function TodosCompletion({ entries }: TodosEntriesProps): JSX.Element {
   const done = completedSteps(entries);
 
   return (
     <View className="flex-row items-center gap-2">
-      <PlanCompletionMeter done={done} total={entries.length} />
+      <TodosCompletionMeter done={done} total={entries.length} />
       <Text selectable={false} role="secondary" className="select-none">
         {done} of {entries.length} done
       </Text>
@@ -44,34 +44,36 @@ function PlanCompletion({ entries }: PlanEntriesProps): JSX.Element {
   );
 }
 
-function PlanPopoverHeading({ entries }: PlanEntriesProps): JSX.Element {
+function TodosPopoverHeading({ entries }: TodosEntriesProps): JSX.Element {
   return (
     <View className="px-4 py-3 gap-1.5">
-      <PlanHeading />
+      <TodosHeading />
       <SizeClass only="wide">
-        <PlanCompletion entries={entries} />
+        <TodosCompletion entries={entries} />
       </SizeClass>
     </View>
   );
 }
 
-function HeadedPlanSteps({ entries }: PlanEntriesProps): JSX.Element {
+function HeadedTodoSteps({ entries }: TodosEntriesProps): JSX.Element {
   return (
     <View>
-      <PlanPopoverHeading entries={entries} />
-      <PlanSteps entries={entries} />
+      <TodosPopoverHeading entries={entries} />
+      <TodoSteps entries={entries} />
     </View>
   );
 }
 
-// A web popover heads the steps (with the plan's progress when wide); a native sheet carries its own title and draws the steps in a grouped card.
-export function PlanPopoverContent({ entries }: PlanEntriesProps): JSX.Element {
-  if (phoneSheet) return <PlanSheetContent entries={entries} />;
+// A web popover heads the steps (with the checklist's progress when wide); a native sheet carries its own title and draws the steps in a grouped card.
+export function TodosPopoverContent({
+  entries,
+}: TodosEntriesProps): JSX.Element {
+  if (phoneSheet) return <TodosSheetContent entries={entries} />;
 
-  return <HeadedPlanSteps entries={entries} />;
+  return <HeadedTodoSteps entries={entries} />;
 }
 
-function PlanCompletionMeter({
+function TodosCompletionMeter({
   done,
   total,
 }: {

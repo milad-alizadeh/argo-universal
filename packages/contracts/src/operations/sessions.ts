@@ -79,10 +79,10 @@ export const sessionOperations = {
     id: 'session.archive',
     label: 'Archive Session',
     description:
-      'Archive an idle Session and remove its Checkout after the Undo window.',
+      'Archive a Session and remove its Checkout after the Undo window. When the user asks an Agent to archive its own Session, schedule it for when the Session is idle without another confirmation.',
     params: SessionArchiveInput,
     result: SessionArchiveOutput,
-    tier: 'confirm',
+    tier: 'act',
     keywords: ['archive', 'remove', 'checkout'],
   },
   'session.unarchive': {
@@ -126,13 +126,14 @@ export const sessionOperations = {
   },
   'session.savePlan': {
     id: 'session.savePlan',
-    label: 'Save plan',
+    label: 'Save Written plan',
     description:
-      'Save a Markdown plan to a new file under .argo/plans in the Session Checkout.',
+      'Save a Written plan the person asked to keep as a new Markdown file under .argo/plans in the Session Checkout. Never for a Todo list: run session.setTodos.',
     params: SessionSavePlanInput,
     result: SessionSavePlanOutput,
-    tier: 'act',
-    keywords: ['plan', 'markdown', 'file'],
+    // An Agent that calls it asks the person first: a checklist saved here was committed with the work (ADR-0053).
+    tier: 'confirm',
+    keywords: ['written plan', 'markdown', 'file'],
   },
   ...sessionAgentOperations,
   ...sessionRestartOperations,

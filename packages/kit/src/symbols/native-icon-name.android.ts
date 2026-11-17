@@ -1,5 +1,5 @@
 import type { IconName } from '@expo/ui';
-import { drawnSymbol } from './drawn-symbol';
+import { drawnSymbol, isSystemDrawing } from './drawn-symbol';
 import { type IconSymbol, resolveIcon } from './icon-symbol';
 import {
   materialFilledImage,
@@ -17,7 +17,7 @@ export function nativeIconName(
   const { symbol, materialFill } = resolveIcon(icon);
   const drawn = drawnSymbol(symbol, filled, materialFill);
 
-  if (drawn.kind === 'svg') return undefined;
+  if (!isSystemDrawing(drawn)) return undefined;
 
   return drawn.filled
     ? materialFilledImage(drawn.material)
