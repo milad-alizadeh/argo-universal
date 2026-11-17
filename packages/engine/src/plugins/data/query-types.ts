@@ -12,7 +12,7 @@ export type QueryOwner = {
 
 // What Queries need of the Server: the one call that performs a described Query, its clock and its log.
 export type QueryServices = {
-  services: Pick<PluginServices, 'handle' | 'projectIds'>;
+  services: Pick<PluginServices, 'handle' | 'projectIds' | 'limitedUntil'>;
   clock: PluginClock;
   log: (line: string) => void;
   during: <T>(call: () => Promise<T>) => Promise<T>;

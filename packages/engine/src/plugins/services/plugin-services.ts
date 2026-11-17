@@ -1,6 +1,6 @@
 import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import type { PluginAssetRef } from '@repo/contracts/plugins/assets';
-import { CapabilityRefusal, replyFailure } from '../access/capability-refusal';
+import { replyFailure } from '../access/capability-refusal';
 import type { PluginAccess, ActivatedPlugin } from '../access/plugin-access';
 import { AccountServices } from '../accounts/account-services';
 import type { OpenedAsset } from '../assets/plugin-assets';
@@ -17,6 +17,7 @@ import { PluginResources, supersede, type Held } from './plugin-resources';
 import type { PluginServiceOptions } from './plugin-service-options';
 import type { SecretStore } from './secret-store';
 import { serviceAccess } from './service-access';
+import { projectOf } from './service-project';
 import type { PluginStorage } from './storage';
 
 export type { PluginServiceOptions } from './plugin-service-options';
@@ -47,6 +48,11 @@ export class PluginServices {
 
   projectIds(): Promise<string[]> {
     return this.options.projectIds();
+  }
+
+  // When the rate limit that a Plugin's calls since `since` ran into reopens, so a Query that failed on it rests until then.
+  limitedUntil(pluginId: string, since: number): number | undefined {
+    return this.held.get(pluginId)?.resources.limitedUntil(since);
   }
 
   projectInfo(): Promise<PluginProjectInfo[]> {
@@ -102,26 +108,6 @@ export class PluginServices {
     this.storage.close();
   }
 
-  // A fetch may name its Project, which then decides the Account it borrows (ADR-0037).
-  private async projectOf(
-    request: ServiceRequest,
-  ): Promise<string | undefined> {
-    const named = request.api === 'fetch' ? request.call.projectId : undefined;
-
-    if (named === undefined) return request.projectId;
-
-    await this.requireRegistered(named);
-
-    return named;
-  }
-
-  private async requireRegistered(projectId: string): Promise<void> {
-    const projects = await this.options.projectIds();
-
-    if (!projects.includes(projectId))
-      throw new CapabilityRefusal('Project is unavailable');
-  }
-
   private async attempt(
     caller: SpawnCaller,
     request: ServiceRequest,
@@ -129,7 +115,7 @@ export class PluginServices {
     return answerCall(
       {
         ...this.reach(caller),
-        projectId: await this.projectOf(request),
+        projectId: await projectOf(request, () => this.options.projectIds()),
         serverDevice: request.serverDevice,
         query: request.query,
       },

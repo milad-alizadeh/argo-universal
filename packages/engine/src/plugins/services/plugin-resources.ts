@@ -51,6 +51,11 @@ export class PluginResources {
     );
   }
 
+  // When the rate limit a call since `since` ran into reopens, if one did.
+  limitedUntil(since: number): number | undefined {
+    return this.fetchCache.limitedUntil(since);
+  }
+
   async process(call: CheckedProcessCall): Promise<PluginValue> {
     this.assertOpen();
 
