@@ -1,4 +1,4 @@
-import { ProjectsBranchesInput } from '@repo/contracts';
+import { ProjectsBranchesInput, type SessionRecord } from '@repo/contracts';
 import type { PluginSessionInfo } from '@repo/contracts/plugins/argo-calls';
 import type { Database } from '@repo/db';
 import { readCurrentBranch } from '@repo/git';
@@ -13,11 +13,14 @@ import {
 import { readSessionRow } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import type { createPluginRuntime } from './runtime/create-runtime';
+import { SessionInfoCache } from './session-info-cache';
 
 type ProjectSources = {
   database: Database;
   databaseWriter: WriterActorRef;
   readOrigin?: ReadOrigin;
+  // The clock the kept Session answers age on; tests pass their own.
+  now?: () => number;
 };
 
 type ProjectPorts = Pick<
@@ -31,12 +34,17 @@ type ProjectPorts = Pick<
 >;
 
 export function projectPorts(options: ProjectSources): ProjectPorts {
+  const sessions = new SessionInfoCache<SessionRecord, PluginSessionInfo>(
+    options.now,
+  );
+
   return {
     ...projectReads(options),
     watchProjects: (changed) =>
       watchProjectChanges(options.database, changed, options.databaseWriter),
     projectPath: async (projectId) => pluginProjectPath(options, projectId),
-    sessionInfo: async (sessionId) => pluginSession(options, sessionId),
+    sessionInfo: async (sessionId) =>
+      pluginSession(options, sessions, sessionId),
   };
 }
 
@@ -55,8 +63,9 @@ function projectReads({
 }
 
 // Only a Session's Project and branch reach a Plugin; null when there is no such Session.
-async function pluginSession(
+function pluginSession(
   options: ProjectSources,
+  sessions: SessionInfoCache<SessionRecord, PluginSessionInfo>,
   sessionId: string,
 ): Promise<PluginSessionInfo | null> {
   const row = readSessionRow(
@@ -64,13 +73,11 @@ async function pluginSession(
     sessionId,
   );
 
-  if (!row) return null;
-
-  return {
-    projectId: row.projectId,
-    branch: await checkoutBranch(row),
-    title: row.title,
-  };
+  return sessions.read(sessionId, row, async (found) => ({
+    projectId: found.projectId,
+    branch: await checkoutBranch(found),
+    title: found.title,
+  }));
 }
 
 /*
