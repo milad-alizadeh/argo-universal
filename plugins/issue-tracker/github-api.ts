@@ -51,7 +51,7 @@ export const graphqlRequest = (
 });
 
 // The reply of a call made as the signed-in person; nothing came back when no Account answered.
-export async function called(
+async function called(
   fetch: Fetch,
   projectId: string,
   { url, init }: GitHubRequest,
@@ -138,7 +138,7 @@ export const restRequest = (
 });
 
 // GitHub's own words are better than ours, but its status is enough.
-export async function reasonOf(response: Reply): Promise<string> {
+async function reasonOf(response: Reply): Promise<string> {
   try {
     const message = nonEmpty(pick(parseJson(await response.text()), 'message'));
 
