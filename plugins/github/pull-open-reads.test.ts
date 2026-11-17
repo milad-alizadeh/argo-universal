@@ -1,4 +1,4 @@
-import type { NamedQuery, QueryState } from '@argo/plugin-kit';
+import type { Argo, NamedQuery } from '@argo/plugin-kit';
 import { expect, it } from 'vitest';
 import type { LinkRead } from './pull-changes';
 import type { PullInfo } from './pull-info';
@@ -6,6 +6,7 @@ import {
   openReadKeys,
   readOpenOnly,
   type OpenReadKey,
+  type OpenReads,
 } from './pull-open-reads';
 import { openOf } from './pull-record-open';
 import type { PullKey } from './pull-store';
@@ -34,27 +35,28 @@ const named = <Value>(name: string): NamedQuery<Value> => ({
   args: {},
 });
 
-const answer = <Value>(): Promise<QueryState<Value>> =>
-  Promise.resolve({ stale: false });
-
 // A source that says which reads it was asked and fails the ones named, answering nothing for the rest.
 type Source = Parameters<typeof readOpenOnly>[0];
 
-const sourceOf = (asked: string[], failing: string[] = []): Source => ({
-  reads: {
-    autoMerge: (): NamedQuery<never> => named('autoMerge'),
-    mergeSettings: (): NamedQuery<never> => named('settings'),
-    comments: (): NamedQuery<never> => named('comments'),
-    viewer: (): NamedQuery<never> => named('viewer'),
-  },
-  readState: <Value>(query: NamedQuery<Value>): Promise<QueryState<Value>> => {
+const sourceOf = (asked: string[], failing: string[] = []): Source => {
+  const readState: Argo['queries']['readState'] = (query) => {
     asked.push(query.name);
 
     return failing.includes(query.name)
       ? Promise.reject(new Error(`${query.name} broke`))
-      : answer();
-  },
-});
+      : Promise.resolve({ stale: false });
+  };
+
+  return {
+    reads: {
+      autoMerge: () => named('autoMerge'),
+      mergeSettings: () => named('settings'),
+      comments: () => named('comments'),
+      viewer: () => named('viewer'),
+    },
+    readState,
+  };
+};
 
 const sorted = (names: string[]): string[] => names.toSorted();
 
@@ -107,7 +109,7 @@ const before: LinkRead<PullKey> = {
   viewer: { data: 'me' },
 };
 
-const dataOf = (read: LinkRead<PullKey>): unknown[] =>
+const dataOf = (read: OpenReads): unknown[] =>
   openReadKeys.map((key) => read[key]?.data);
 
 it('keeps the last good answer of every entry beside a failure', () => {
