@@ -3,10 +3,11 @@ export { Feed, type FeedProps } from './components/feed/feed';
 export { FeedItem } from './components/feed-item';
 
 export {
-  useSessionFeed,
   useFeedHistoryPages,
   useFeedLiveChanges,
-} from './hooks/use-session-feed';
+} from './hooks/use-feed-sources';
+
+export { useSessionFeed } from './hooks/use-session-feed';
 
 export { useSessionFeedStore } from './hooks/use-session-feed-store';
 

@@ -13,7 +13,7 @@ import {
   type CallReach,
   type StateRequest,
 } from './plugin-calls';
-import { PluginResources, supersede } from './plugin-resources';
+import { PluginResources, supersede, type Held } from './plugin-resources';
 import type { PluginServiceOptions } from './plugin-service-options';
 import type { SecretStore } from './secret-store';
 import { serviceAccess } from './service-access';
@@ -23,8 +23,6 @@ export type { PluginServiceOptions } from './plugin-service-options';
 
 type ServiceRequest = StateRequest &
   Pick<CallReach, 'projectId' | 'query' | 'serverDevice'>;
-
-type Held = { generation: number; resources: PluginResources };
 
 // The Server boundary for Plugin API calls; each Plugin keeps its own storage and secret store namespace.
 export class PluginServices {
@@ -108,7 +106,7 @@ export class PluginServices {
   private async projectOf(
     request: ServiceRequest,
   ): Promise<string | undefined> {
-    const named = namedProject(request);
+    const named = request.api === 'fetch' ? request.call.projectId : undefined;
 
     if (named === undefined) return request.projectId;
 
@@ -187,7 +185,3 @@ export class PluginServices {
     return resources;
   }
 }
-
-// The Project a fetch names, when it names one.
-const namedProject = (request: ServiceRequest): string | undefined =>
-  request.api === 'fetch' ? request.call.projectId : undefined;

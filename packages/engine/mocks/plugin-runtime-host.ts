@@ -2,8 +2,12 @@ import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import { writeLog } from '@repo/machine-log';
 import { onTestFinished } from 'vitest';
 import { PluginAssets } from '../src/plugins/assets/plugin-assets';
+import { realClock } from '../src/plugins/clock';
 import { PluginRuntime } from '../src/plugins/runtime/plugin-runtime';
-import type { PluginBuilds } from '../src/plugins/runtime/runtime-setup';
+import {
+  buildsWithDefaults,
+  type PluginBuilds,
+} from '../src/plugins/runtime/runtime-setup';
 import {
   PluginServices,
   type PluginServiceOptions,
@@ -16,22 +20,18 @@ export function startPluginRuntime(
   options: Pick<PluginServiceOptions, 'oauth' | 'clock'> = {},
   builds?: Partial<PluginBuilds>,
 ): PluginRuntime {
-  const log = pluginLog(home);
+  const log = (line: string): void =>
+    writeLog({ home, label: 'plugins', line });
 
   const runtime = new PluginRuntime(log, pluginServices(home, options, log), {
-    clock: options.clock,
-    builds,
+    clock: options.clock ?? realClock,
+    ...buildsWithDefaults({ ...builds }),
   });
 
   onTestFinished(() => runtime.close());
 
   return runtime;
 }
-
-const pluginLog =
-  (home: string) =>
-  (line: string): void =>
-    writeLog({ home, label: 'plugins', line });
 
 const pluginServices = (
   home: string,

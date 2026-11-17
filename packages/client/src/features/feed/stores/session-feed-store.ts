@@ -53,9 +53,12 @@ export class SessionFeedStore {
 
   public readonly getState = (): SessionFeedState => this.state;
 
-  // Shows the Session until the returned stop, which drops what arrives after it; starting again commits the rows still held.
+  // Shows the Session until the returned stop, which drops what arrives after it; starting again commits the rows still held, and opens live changes after them.
   public start(): () => void {
-    this.run ??= { release: this.ports.kept.retain() };
+    if (!this.run) {
+      this.run = { release: this.ports.kept.retain() };
+      this.openAfterHeld();
+    }
 
     if (this.hasHeldChange()) this.scheduleCommit();
 
@@ -132,6 +135,21 @@ export class SessionFeedStore {
     const syncPoint = resumedPoint({ open, held, retry });
 
     if (retry || syncPoint !== open) this.update({ closure: null, syncPoint });
+  }
+
+  // A run that follows a stop catches up from the rows held, not from where the first run opened.
+  private openAfterHeld(): void {
+    const open = this.state.syncPoint;
+
+    if (open === null) return;
+
+    const syncPoint = resumedPoint({
+      open,
+      held: syncPointOf(this.buffer),
+      retry: true,
+    });
+
+    if (syncPoint !== open) this.update({ syncPoint });
   }
 
   // The snapshot waits for the frame with the rows; one equal to the held snapshot is dropped, so nothing downstream sees a change.
