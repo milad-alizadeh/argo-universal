@@ -86,11 +86,17 @@ function myselfOf(json: Read): JiraMyself | null {
   };
 }
 
-// Apps and integrations can be assignable too; the filter offers people.
+// Apps and service-desk customers can be assignable too; the filter and the Assignee menu offer people only.
+function isPerson(json: Json): boolean {
+  const type = text(at(json, 'accountType'));
+
+  return type === null || type === 'atlassian';
+}
+
 function personOf(json: Json): JiraPerson | null {
   const accountId = text(at(json, 'accountId'));
 
-  if (!accountId || at(json, 'accountType') === 'app') return null;
+  if (!accountId || !isPerson(json)) return null;
 
   return { accountId, name: textOr(at(json, 'displayName'), accountId) };
 }

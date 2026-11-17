@@ -32,7 +32,12 @@ export type FixtureSite = {
   people?: FixturePerson[];
 };
 
-type FixturePerson = { accountId: string; displayName: string };
+// `accountType` is Jira's: a customer or an app can be assignable too; untyped, the account is a person's.
+type FixturePerson = {
+  accountId: string;
+  displayName: string;
+  accountType?: 'atlassian' | 'app' | 'customer';
+};
 
 // A token Atlassian issued: a scoped one opens api.atlassian.com, an unscoped one only the site itself.
 export type FixtureToken = {

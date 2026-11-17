@@ -1,4 +1,5 @@
 import type { PagedList, PageTo } from '@argo/plugin-kit';
+import type { JiraStatus } from './issue-fields';
 import type { ListedItem } from './issue-pages';
 import type { IssueFilters } from './jira-filters';
 
@@ -15,12 +16,20 @@ export type Framing = {
   sitePath: string;
 };
 
-// The issues page's Page state: the site picker's text, shown while no site is chosen, and the filters.
-export type IssuesState = ProjectState & IssueFilters;
+/*
+ * The issues page's Page state: the site picker's text, shown while no site is chosen, the filters, and whether the
+ * issues show as a list or a board.
+ */
+export type IssuesState = ProjectState & IssueFilters & { view: string };
+
+export type IssuesTo = PageTo<IssuesState>;
 
 // What the issues view draws besides Jira's answer: the filters it was read for, and the pages the kit has read.
 export type Listing = {
-  to: PageTo<IssuesState>;
+  to: IssuesTo;
   filters: IssueFilters;
   list: PagedList<ListedItem>;
+  // `board` shows the issues as a board, whose columns are `statuses`; anything else, as a list.
+  view: string;
+  statuses: JiraStatus[];
 };

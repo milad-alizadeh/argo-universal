@@ -5,8 +5,8 @@ import type { JiraCall, JiraRoute } from './jira-routes';
 import { priorities } from './jira-workflow';
 
 /*
- * The fixture Jira's issue routes: one issue, its transitions, the site's priorities and assignable people, and the
- * writes the issue page makes (`jira-issue-writes.ts`). A write changes the fixture's data, so the next read shows it.
+ * The fixture Jira's issue routes: one issue, its transitions, the site's priorities, and the writes the issue page
+ * makes (`jira-issue-writes.ts`). A write changes the fixture's data, so the next read shows it.
  */
 const queryOf = ({ request }: JiraCall): URLSearchParams =>
   new URLSearchParams(request.path.split('?')[1] ?? '');

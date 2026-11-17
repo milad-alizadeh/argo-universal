@@ -1,4 +1,6 @@
 import type { Argo, ListPage, LoaderInput } from '@argo/plugin-kit';
+import { boardStatuses } from './board-view';
+import type { JiraStatus } from './issue-fields';
 import type { ListedItem } from './issue-pages';
 import { filtersOf } from './jira-filters';
 import { projectIdOf } from './jira-paths';
@@ -12,7 +14,12 @@ import {
 import type { ArgoProject } from './project-rows';
 import type { IssuesState } from './view-frame';
 
-export type ProjectData = { projects: ArgoProject[]; view: ProjectView };
+// `statuses` are the board's columns, read only while the issues show as a board.
+export type ProjectData = {
+  projects: ArgoProject[];
+  view: ProjectView;
+  statuses: JiraStatus[];
+};
 
 type IssuesInput = LoaderInput<IssuesState>;
 
@@ -28,12 +35,16 @@ async function loadProject(
   reads: JiraReads,
   input: IssuesInput,
 ): Promise<ProjectData> {
+  const step = stepOf(reads, input);
+
   const [projects, view] = await Promise.all([
     argo.projects.list(),
-    loadProjectView(stepOf(reads, input)),
+    loadProjectView(step),
   ]);
 
-  return { projects, view };
+  const statuses = await boardStatuses(step, input.state, view);
+
+  return { projects, view, statuses };
 }
 
 // The step the Project is at, read again by the list through the same kept Queries, then one page of its issues.

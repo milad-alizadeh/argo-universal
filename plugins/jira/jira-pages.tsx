@@ -16,7 +16,13 @@ import { storeQueries, storeReaders, type JiraSite } from './jira-store';
 import { projectLoader } from './project-loader';
 import { chooseProject, projectRows, type ArgoProject } from './project-rows';
 import { sitePicker } from './site-picker';
-import type { Framing, ProjectState, ProjectTo } from './view-frame';
+import type {
+  Framing,
+  IssuesState,
+  Listing,
+  ProjectState,
+  ProjectTo,
+} from './view-frame';
 
 // How long Jira's answers are fresh while the page is open: a revoked token or a change made in Jira shows within it.
 const freshForMs = 60_000;
@@ -79,15 +85,28 @@ async function chosenSite({
   return { sites, chosen: choice.cloudId ?? onlyCloud(sites) ?? '' };
 }
 
-// The filters are Page state, so going back shows the same filtered view; the list is read a page at a time.
+type Rendered = { list: Listing['list']; state: IssuesState };
+
+const listingOf = (
+  { to, statuses }: Pick<Listing, 'to' | 'statuses'>,
+  { list, state }: Rendered,
+): Listing => ({
+  to,
+  filters: filtersOf(state),
+  list,
+  view: state.view,
+  statuses,
+});
+
+// The filters and the view are Page state, so going back shows the same view; the list is read a page at a time.
 const defineProjectPage = (reading: Reading, reads: JiraReads): void =>
   reading.argo.pages.define(projectPattern, {
-    state: { site: '', ...noFilters },
+    state: { site: '', ...noFilters, view: 'list' },
     every: freshForMs,
     ...projectLoader(reading, reads),
-    render: ({ projects, view }, to, input) => {
+    render: ({ projects, view, statuses }, to, input) => {
       const framing = framingOf(to, input);
-      const listing = { to, filters: filtersOf(input.state), list: input.list };
+      const listing = listingOf({ to, statuses }, input);
 
       return listDetail(
         projects,
