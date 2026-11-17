@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import type { FetchReply } from '@repo/contracts/plugins/argo-calls';
 import type { PluginClock } from '../clock';
 import type { Hop } from './plugin-fetch-response';
+import { lower, rateLimited, refusal, reopensAt } from './plugin-rate-limit';
 
 // One reply as `argo.fetch` hands it back.
 type Send = (hop: Hop) => Promise<FetchReply>;
@@ -11,21 +12,12 @@ type Kept = { validators: Record<string, string>; reply: FetchReply };
 // Enough for every pull request, Check list and page a Plugin reads at once; the oldest goes first past it.
 export const keptRepliesLimit = 500;
 
-// And at most this much body in all, since one reply may be as large as a fetch reads.
-export const keptBytesLimit = 32 * 1024 * 1024;
-
-// How long an origin stays closed when it said it was rate-limited but not until when.
-export const defaultBackoffMs = 60_000;
+// And at most this much body in all, 32 MiB, since one reply may be as large as a fetch reads.
+export const keptBytesLimit = 33_554_432;
 
 const okStatus = 200;
 
 const notModifiedStatus = 304;
-
-const forbiddenStatus = 403;
-
-const tooManyStatus = 429;
-
-const secondMs = 1000;
 
 const credentialHeaders = ['authorization', 'cookie', 'proxy-authorization'];
 
@@ -33,11 +25,6 @@ const validatorHeaders = [
   ['etag', 'if-none-match'],
   ['last-modified', 'if-modified-since'],
 ] as const;
-
-const lower = (headers: Record<string, string>): Record<string, string> =>
-  Object.fromEntries(
-    Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]),
-  );
 
 const digest = (parts: readonly unknown[]): string =>
   createHash('sha256').update(JSON.stringify(parts)).digest('hex');
@@ -51,6 +38,7 @@ const replyKey = (hop: Hop): string =>
 
 const credentialOf = (hop: Hop): string[] => {
   const headers = lower(hop.headers);
+
   const names = hop.accountHeader
     ? [hop.accountHeader.toLowerCase()]
     : credentialHeaders;
@@ -88,48 +76,8 @@ const keepable = (reply: FetchReply): boolean =>
   !reply.truncated &&
   Object.keys(validatorsOf(reply)).length > 0;
 
-const secondsAfter = (value: string | undefined): number | undefined => {
-  const seconds = Number(value);
-
-  return value !== undefined && value !== '' && Number.isFinite(seconds)
-    ? Math.max(seconds, 0)
-    : undefined;
-};
-
-const rateLimited = (reply: FetchReply): boolean => {
-  const headers = lower(reply.headers);
-
-  if (reply.status === tooManyStatus) return true;
-
-  return (
-    reply.status === forbiddenStatus &&
-    ('retry-after' in headers || headers['x-ratelimit-remaining'] === '0')
-  );
-};
-
-// `retry-after` first, then the epoch second the limit resets at, then a minute.
-function reopensAt(reply: FetchReply, now: number): number {
-  const headers = lower(reply.headers);
-  const after = secondsAfter(headers['retry-after']);
-
-  if (after !== undefined) return now + after * secondMs;
-
-  const reset = secondsAfter(headers['x-ratelimit-reset']);
-
-  return reset !== undefined && reset * secondMs > now
-    ? reset * secondMs
-    : now + defaultBackoffMs;
-}
-
-// What a closed origin answers in its place: the refusal the service would give, with the time still left.
-const refusal = (until: number, now: number): FetchReply => ({
-  ok: false,
-  status: tooManyStatus,
-  statusText: 'Too Many Requests',
-  headers: { 'retry-after': String(Math.ceil((until - now) / secondMs)) },
-  body: '',
-  truncated: false,
-});
+const withValidators = (hop: Hop, kept: Kept | undefined): Hop =>
+  kept ? { ...hop, headers: { ...hop.headers, ...kept.validators } } : hop;
 
 /*
  * What `argo.fetch` keeps between one Plugin's calls, so a Plugin that reads the plain way is cheap on the services it
@@ -173,21 +121,31 @@ export class PluginFetchCache {
 
     const key = replyKey(hop);
     const kept = this.replies.get(key);
-    const reply = await send(
-      kept ? { ...hop, headers: { ...hop.headers, ...kept.validators } } : hop,
-    );
 
+    return this.settle(key, kept, await send(withValidators(hop, kept)));
+  }
+
+  // A 304 answers what was kept; any other reply replaces it.
+  private settle(
+    key: string,
+    kept: Kept | undefined,
+    reply: FetchReply,
+  ): FetchReply {
     if (kept && reply.status === notModifiedStatus) {
       this.keep(key, kept);
 
       return kept.reply;
     }
 
+    this.remember(key, reply);
+
+    return reply;
+  }
+
+  private remember(key: string, reply: FetchReply): void {
     if (keepable(reply))
       this.keep(key, { validators: validatorsOf(reply), reply });
     else this.forget(key);
-
-    return reply;
   }
 
   // Kept most recently used last, so the first one is the one to drop.

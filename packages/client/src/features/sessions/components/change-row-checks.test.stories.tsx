@@ -62,7 +62,9 @@ export const RateLimited: Story = {
     await settleLayout(1280);
   },
   play: async ({ canvas, userEvent }) => {
-    await expect(canvas.queryByRole('button', { name: /CI Checks \d/ })).toBeNull();
+    await expect(
+      canvas.queryByRole('button', { name: /CI Checks \d/ }),
+    ).toBeNull();
     await expect(canvas.getByText('–')).toBeVisible();
 
     await userEvent.hover(

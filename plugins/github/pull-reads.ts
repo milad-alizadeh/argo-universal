@@ -50,25 +50,32 @@ const headerOf = ({ headers }: Reply, name: string): string | undefined =>
   Object.entries(headers).find(([key]) => key.toLowerCase() === name)?.[1];
 
 // GitHub refuses a spent limit with 429, or with 403 and the headers that say so; any other 403 is a refusal.
+const saysSpent = (reply: Reply): boolean =>
+  headerOf(reply, 'retry-after') !== undefined ||
+  headerOf(reply, 'x-ratelimit-remaining') === '0';
+
 const isRateLimit = (reply: Reply): boolean =>
   reply.status === tooManyStatus ||
-  (reply.status === forbiddenStatus &&
-    (headerOf(reply, 'retry-after') !== undefined ||
-      headerOf(reply, 'x-ratelimit-remaining') === '0'));
+  (reply.status === forbiddenStatus && saysSpent(reply));
 
-function refusalOf(reply: Reply, subject: string): Error {
-  const { status } = reply;
+const refusals = new Map<number, (subject: string) => string>([
+  [unauthorizedStatus, (): string => signInMessage],
+  [
+    notFoundStatus,
+    (subject: string): string =>
+      `${subject} was not found on GitHub, or this account cannot see it.`,
+  ],
+]);
 
-  if (status === unauthorizedStatus) return new Error(signInMessage);
+const refusalMessage = (status: number, subject: string): string =>
+  refusals.get(status)?.(subject) ?? `GitHub answered ${status}.`;
 
-  if (isRateLimit(reply)) return new Error(rateLimitMessage);
-
-  return new Error(
-    status === notFoundStatus
-      ? `${subject} was not found on GitHub, or this account cannot see it.`
-      : `GitHub answered ${status}.`,
+const refusalOf = (reply: Reply, subject: string): Error =>
+  new Error(
+    isRateLimit(reply)
+      ? rateLimitMessage
+      : refusalMessage(reply.status, subject),
   );
-}
 
 export const call = (path: string, projectId: string): Parameters<Fetch> => [
   `https://${githubHost}${path}`,

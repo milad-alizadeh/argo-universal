@@ -2,10 +2,10 @@ import { lookup as dnsLookup } from 'node:dns';
 import type { IncomingMessage, ClientRequest } from 'node:http';
 import { request, type RequestOptions } from 'node:https';
 import type { LookupFunction } from 'node:net';
+import type { FetchReply } from '@repo/contracts/plugins/argo-calls';
 import { CapabilityRefusal } from '../access/capability-refusal';
 import type { PluginAccess } from '../access/plugin-access';
 import { checkedLookup } from '../access/plugin-addresses';
-import type { FetchReply } from '@repo/contracts/plugins/argo-calls';
 import type { FetchCall } from '../protocol/runtime';
 import { redirected, responseValue, type Hop } from './plugin-fetch-response';
 
