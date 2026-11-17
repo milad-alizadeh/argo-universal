@@ -111,20 +111,24 @@ function plainStep(parts: SignInParts, step: Plain): Card {
 const pasteInstructions = (parts: SignInParts): string =>
   `Paste an API token you made at ${parts.name}. Argo keeps it in your computer’s secret store.`;
 
-/*
- * The field a token is pasted into, with a refused token's reason as the footer under it. When the service refused the
- * last sign-in, its reason leads and the paste instructions move to the footer, unless a refused token's reason is there.
- */
+// What the page says above the field and under it: the service's refusal leads and moves the instructions below.
+function pasteWords(parts: SignInParts): Pick<Card, 'description' | 'footer'> {
+  const { rejected } = parts.data;
+
+  return rejected === null
+    ? { description: pasteInstructions(parts) }
+    : { description: rejected, footer: pasteInstructions(parts) };
+}
+
+// The field a token is pasted into, with a refused token's reason as the footer under it, over the instructions.
 function fieldCard(parts: SignInParts): Card {
   const error = failureOf(parts.data.flow);
-  const { rejected } = parts.data;
-  const footer = error ?? (rejected ? pasteInstructions(parts) : undefined);
 
   return {
     title: 'Connect your account',
-    description: rejected ?? pasteInstructions(parts),
+    ...pasteWords(parts),
     rows: [secretField(parts, error)],
-    ...(footer && { footer }),
+    ...(error && { footer: error }),
   };
 }
 

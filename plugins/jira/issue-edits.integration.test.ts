@@ -1,4 +1,6 @@
+import type { WireNode } from '@argo/plugin-kit/testing';
 import { expect, it, vi } from 'vitest';
+import { fieldKeys } from './issue-keys';
 import {
   argoThree,
   entries,
@@ -7,7 +9,6 @@ import {
   listed,
   shown,
 } from './mocks/issue-journey';
-import { fieldKeys } from './issue-keys';
 import { statuses, transitions } from './mocks/jira-workflow';
 
 const timeoutMs = 20_000;
@@ -56,7 +57,9 @@ it(
   async () => {
     const jira = await listed();
     const page = await jira.list.press(argoThree);
-    const dot = (): unknown => page.find(keyed(fieldKeys.status)).props.dot;
+
+    const dot = (): WireNode['props'][string] =>
+      page.find(keyed(fieldKeys.status)).props.dot;
 
     expect(dot()).toBe('info');
 
