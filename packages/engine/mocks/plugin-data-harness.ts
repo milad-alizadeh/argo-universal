@@ -1,4 +1,3 @@
-import type { PluginProjectInfo } from '@repo/contracts/plugins';
 import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import type { PluginEvent, WireJson } from '@repo/contracts/plugins/wire';
 import { vi } from 'vitest';
@@ -48,8 +47,7 @@ type Wiring = {
 const services = {
   services: {
     handle: async (): Promise<PluginReply> => refused,
-    projectInfo: async (): Promise<PluginProjectInfo[]> =>
-      ['p1', 'p2'].map((id) => ({ id, name: id, originUrl: null })),
+    projectIds: async (): Promise<string[]> => ['p1', 'p2'],
   },
   clock,
   log: (): null => null,

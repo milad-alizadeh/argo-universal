@@ -22,6 +22,7 @@ it('keeps no Grants for a Plugin once it is released', async () => {
       assets: new PluginAssets(home),
       log: (): void => {},
       projects: async (): Promise<string[]> => [],
+      projectIds: async (): Promise<string[]> => [],
       projectInfo: async (): Promise<PluginProjectInfo[]> => [],
     },
   );
