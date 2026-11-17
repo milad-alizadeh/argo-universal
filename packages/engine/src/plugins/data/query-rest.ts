@@ -6,7 +6,7 @@ export const failureBackoffMs = 5000;
 const longestBackoffMs = 300_000;
 
 // A rate limit that reopens later than this is not waited out in full.
-const longestLimitMs = 3_600_000;
+export const longestLimitMs = 3_600_000;
 
 // What a failed Query needs of the Server: the time, a timer, and when the limit its read ran into reopens.
 export type RestServices = {
@@ -53,7 +53,7 @@ export class QueryRest {
 
   // How a read ended; `held` says whether pages are waiting on the Query, which are then read again when the rest ends.
   read(answered: boolean, held: boolean): void {
-    if (answered) this.failures = 0;
+    if (answered) this.succeed();
     else this.fail(held);
   }
 
@@ -67,6 +67,12 @@ export class QueryRest {
     this.cancelTimer?.();
     this.cancelTimer = undefined;
     this.until = 0;
+  }
+
+  // A read that answered ends any rest, such as one a read overtaken by a write made in the meantime.
+  private succeed(): void {
+    this.failures = 0;
+    this.stop();
   }
 
   private fail(held: boolean): void {

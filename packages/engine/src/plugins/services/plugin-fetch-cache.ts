@@ -111,8 +111,10 @@ export class PluginFetchCache {
   }
 
   /*
-   * When the limit a call ran into reopens, for the Query that read since `since`: the latest reopening among the origins
-   * that refused or tripped since then. A Query that failed for another reason has none, and keeps its own backoff.
+   * When the limit its read ran into reopens, for the Query whose read began at `since`: the latest reopening among any
+   * of the Plugin's origins touched since then, whichever call of the Plugin touched it, as the cache does not know which
+   * call was this Query's. A Query that failed for another reason, with no origin of the Plugin limited, has none, and
+   * keeps its own backoff.
    */
   limitedUntil(since: number): number | undefined {
     const now = this.clock.now();
