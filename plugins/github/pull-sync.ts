@@ -35,7 +35,7 @@ const ended = ({ pull }: Read): boolean => endedStages.has(pull.data?.stage);
 
 /*
  * A merged or closed pull request whose Checks have all reported cannot change, so a Slot never asks GitHub for it
- * again; a refresh the person asks for still reads it, which is how a reopened one is found.
+ * again. A closed one that GitHub reopens is read again only by a sync that is not a Slot's ask.
  */
 const settled = (read: Read): boolean =>
   ended(read) && !read.pull.failure && !running(read);

@@ -2,12 +2,32 @@ import { expect, it } from 'vitest';
 import {
   attached,
   changePull,
+  idOf,
   openChanges,
   repository,
   tick,
 } from './journey-watch-fixture';
 
 const slow = 60_000;
+
+const pathOf = (number: number): string =>
+  `/repos/${repository}/pulls/${number}`;
+
+type Run = Awaited<ReturnType<typeof attached>>;
+
+const readsOf = (run: Run, number: number): number =>
+  run.github.pullReads().filter(({ path }) => path === pathOf(number)).length;
+
+// A list the App keeps open, drawn until it shows the pull request Closed, as GitHub now says it is.
+async function openedOnClosed(run: Run): ReturnType<typeof openChanges> {
+  const open = openChanges(run);
+
+  await open.next();
+  await tick(run);
+  expect(await open.next()).toMatchObject([{ stage: 'closed' }, {}]);
+
+  return open;
+}
 
 // A Closed pull request cannot change under a list that draws it again, so the list does not ask GitHub for it each time.
 it(
@@ -16,24 +36,20 @@ it(
     const run = await attached(1, 2);
 
     changePull(run, 1, { state: 'closed' });
-    const open = openChanges(run);
+    const open = await openedOnClosed(run);
+    const [closedReads, openReads] = [readsOf(run, 1), readsOf(run, 2)];
 
-    await open.next();
+    expect(closedReads).toBeGreaterThan(1);
+
+    changePull(run, 2, { title: 'Renamed' });
     await tick(run);
-    await open.next().catch(() => []);
 
-    const asked = run.github.pullReads().length;
-
-    await tick(run);
-    await open.next().catch(() => []);
-
-    const paths = run.github
-      .pullReads()
-      .slice(asked)
-      .map(({ path }) => path);
-
-    expect(paths).toContain(`/repos/${repository}/pulls/2`);
-    expect(paths).not.toContain(`/repos/${repository}/pulls/1`);
+    expect(await open.next()).toMatchObject([
+      { id: idOf(1), stage: 'closed' },
+      { id: idOf(2), title: 'Renamed' },
+    ]);
+    expect(readsOf(run, 2)).toBeGreaterThan(openReads);
+    expect(readsOf(run, 1)).toBe(closedReads);
   },
   slow,
 );
