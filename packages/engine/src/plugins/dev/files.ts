@@ -41,5 +41,10 @@ async function loadSource(
   const contents = await readFile(path, 'utf8');
   observed?.(path, contents);
 
-  return { contents, loader, resolveDir: dirname(path), watchFiles: [path, join(directory, 'plugin.json')] };
+  return {
+    contents,
+    loader,
+    resolveDir: dirname(path),
+    watchFiles: [path, join(directory, 'plugin.json')],
+  };
 }
