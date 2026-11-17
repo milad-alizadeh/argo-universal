@@ -2,6 +2,11 @@ import type { Tokens } from 'marked';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Code } from '#primitives/content/code';
+import {
+  Diagram,
+  isDiagramFence,
+  isOpenFence,
+} from '#primitives/content/diagram';
 import { Caret } from './caret';
 import { ClampedBlock } from './clamped-block';
 import { type BlockTokenProps, literal } from './markdown-tokens';
@@ -60,9 +65,28 @@ export function CodeToken({
 }: BlockTokenProps<Tokens.Code>): React.JSX.Element {
   return (
     <ClampedBlock caret={caret}>
-      <Code code={token.text} language={token.lang || undefined} />
+      <FencedBlock token={token} streaming={caret} />
     </ClampedBlock>
   );
+}
+
+type FenceProps = { token: Tokens.Code; streaming: boolean };
+
+// Only the last block streams, so a fence above it has closed even without its marker.
+function DiagramFence({ token, streaming }: FenceProps): React.JSX.Element {
+  return (
+    <Diagram
+      source={token.text}
+      pending={streaming && isOpenFence(token.raw)}
+    />
+  );
+}
+
+function FencedBlock({ token, streaming }: FenceProps): React.JSX.Element {
+  if (isDiagramFence(token.lang))
+    return <DiagramFence token={token} streaming={streaming} />;
+
+  return <Code code={token.text} language={token.lang || undefined} />;
 }
 
 // A token this Feed does not draw still carries the streaming caret.
