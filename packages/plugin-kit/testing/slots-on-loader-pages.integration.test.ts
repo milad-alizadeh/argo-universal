@@ -95,13 +95,13 @@ it("draws a page again and asks an items Slot again after the Plugin's argo.chan
   await kit.pages.draw({ path: '/bump' });
   await kit.clock.advance(250);
 
-  // A Plugin starting marks every page; the page that read the count is then marked once Argo has read its Query again (ADR-0060).
-  const first = await stale.next();
-  const marked = first.value?.addresses ? first : await stale.next();
+  // The Plugin starting marks every page, and the page that drew its own state is marked as it says so; the page that read
+  // the count is marked once Argo has read its Query again (ADR-0060).
+  const marks = [await stale.next(), await stale.next(), await stale.next()];
 
-  expect(marked.value).toMatchObject({
+  expect(marks.map(({ value }) => value)).toContainEqual({
     pluginId: dataPluginId,
-    addresses: [{ path: '/' }],
+    addresses: [expect.objectContaining({ path: '/' })],
   });
   expect(await kit.pages.draw({ path: '/' })).toMatchObject({
     root: { props: { children: 'Count 1' } },
