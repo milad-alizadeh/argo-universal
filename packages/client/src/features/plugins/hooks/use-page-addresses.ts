@@ -1,20 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
 import { useTRPCClient } from '#features/connection';
-import { PageAddresses } from '../utils/page-addresses';
+import type { PageAddresses } from '../utils/page-addresses';
+import { pageAddressesFor } from '../utils/page-addresses-registry';
 
-// The App's Page addresses on the connected Server, drawn through `plugins.draw` and followed live through `plugins.live`.
+// The App's Page addresses on the connected Server, drawn through `plugins.draw` and followed live through `plugins.live`. Every caller under one Connection shares them.
 export function usePageAddresses(): PageAddresses {
-  const client = useQueryClient();
-  const { draw, live } = useTRPCClient().plugins;
-
-  return useMemo(
-    () =>
-      new PageAddresses(client, draw.query, (request, onAnswer) => {
-        const subscription = live.subscribe(request, { onData: onAnswer });
-
-        return () => subscription.unsubscribe();
-      }),
-    [client, draw, live],
-  );
+  return pageAddressesFor(useQueryClient(), useTRPCClient());
 }
