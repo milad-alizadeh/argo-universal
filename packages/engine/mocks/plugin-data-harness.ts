@@ -77,6 +77,13 @@ const servicesOn = (
   during: <T>(call: () => Promise<T>): Promise<T> => call(),
 });
 
+// A mark with no address to draw again says nothing a page could act on.
+const marking =
+  (marks: PageAddress[][]) =>
+  (_id: string, addresses: PageAddress[]): void => {
+    if (addresses.length) marks.push(addresses);
+  };
+
 function wired(clock: PluginClock): Wiring {
   const sent: PluginEvent[] = [];
   const marks: PageAddress[][] = [];
@@ -86,13 +93,7 @@ function wired(clock: PluginClock): Wiring {
     send: (_pluginId, event): void => void sent.push(event),
   });
 
-  const data = new PluginData(
-    servicesOn(clock),
-    workers,
-    (_id, addresses) => {
-      if (addresses.length) marks.push(addresses);
-    },
-  );
+  const data = new PluginData(servicesOn(clock), workers, marking(marks));
 
   workers.run(pluginId, 1);
 
