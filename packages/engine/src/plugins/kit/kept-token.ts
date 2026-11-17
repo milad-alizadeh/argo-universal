@@ -98,7 +98,7 @@ async function renewed(
  * same Account due share one refresh; two refreshes racing would spend it twice, and the second would sign the person
  * out.
  */
-export function tokenLender(
+function tokenLender(
   secrets: Secrets,
   refresh: Refresh,
 ): (id: string) => Promise<string | null> {

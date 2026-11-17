@@ -2,7 +2,7 @@
 type Changes = { changed: () => void };
 
 // One attempt at a sign-in: whether it is still the current one, and how it records the flow's state.
-export type HeldAttempt<S> = {
+type HeldAttempt<S> = {
   live: () => boolean;
   settle: (state: S) => S;
 };
