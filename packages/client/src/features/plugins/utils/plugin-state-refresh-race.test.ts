@@ -1,6 +1,6 @@
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { describe, expect, it } from 'vitest';
-import { refreshPluginList } from './refresh-plugin-list';
+import { refreshPluginList } from './plugin-state-refresh';
 
 const liveName = 'Check the live list';
 
