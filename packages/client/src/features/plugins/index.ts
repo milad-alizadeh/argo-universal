@@ -69,10 +69,6 @@ export { PluginErrorToasts } from './stores/plugin-error-toasts';
 
 export { useDeclaredItems } from './hooks/use-declared-items';
 
-export {
-  type PluginEntries,
-  type PluginEntry,
-  usePluginEntries,
-} from './hooks/use-plugin-entries';
+export { type PluginEntry, usePluginEntries } from './hooks/use-plugin-entries';
 
 export { invalidatePluginState } from './utils/plugin-state-refresh';
