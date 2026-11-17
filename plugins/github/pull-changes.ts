@@ -1,19 +1,14 @@
 import type { Argo } from '@argo/plugin-kit';
-import {
-  mergeOf,
-  type AutoMergeInfo,
-  type MergeSettings,
-  type Reads,
-} from './pull-automation';
+import { mergeOf, type Reads } from './pull-automation';
 import type { AutomationReads } from './pull-automation-reads';
 import type { Automations } from './pull-automations';
 import { changeOf, type ChangeItem, type Refresh } from './pull-change';
 import type { CheckInfo } from './pull-checks';
-import type { CommentInfo, CommentsReads } from './pull-comments';
+import type { CommentsReads } from './pull-comments';
 import type { PullInfo } from './pull-info';
 import type { Attached } from './pull-kept';
 import { failureMessage, known, type Known } from './pull-known';
-import { readOpenOnly } from './pull-open-reads';
+import { readOpenOnly, type OpenReads } from './pull-open-reads';
 import type { PullReads } from './pull-reads';
 import type { PullRecords } from './pull-records';
 import type { PullKey, PullLink, PullStore } from './pull-store';
@@ -33,14 +28,8 @@ export type LinkRead<Link extends PullKey = PullLink> = {
   pull: Known<PullInfo>;
   // Unknown until the pull request has said which commit is its head.
   checks?: Known<CheckInfo[]>;
-  // Read only for an Open pull request, which is the only one that can auto-merge.
-  autoMerge?: Known<AutoMergeInfo>;
-  settings?: Known<MergeSettings>;
-  // Read only for an Open pull request, the only one Auto-fix prompts about.
-  comments?: Known<CommentInfo[]>;
-  // The signed-in account, read beside an Open pull request so Auto-fix can tell whether it opened it.
-  viewer?: Known<string>;
-} & Attached;
+} & OpenReads &
+  Attached;
 
 // Two Sessions attaching the same pull request ask the same question, so they share one entry.
 const targetOf = ({ projectId, repository, number }: PullKey): PullKey => ({

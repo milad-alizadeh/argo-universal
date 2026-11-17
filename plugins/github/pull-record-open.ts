@@ -1,14 +1,16 @@
 import type { LinkRead } from './pull-changes';
 import { withData, type Known } from './pull-known';
+import {
+  openReadKeys,
+  type OpenReadKey,
+  type OpenReads,
+} from './pull-open-reads';
 import type { PullKey } from './pull-store';
 
 type Read = LinkRead<PullKey>;
 
 // What the record keeps of a pull request only while it is Open: its auto-merge, its repository's merge settings and its review comments.
-export type OpenKept = Pick<
-  Read,
-  'autoMerge' | 'settings' | 'comments' | 'viewer'
->;
+export type OpenKept = OpenReads;
 
 const failureOf = (
   failure: Known<unknown>['failure'],
@@ -33,30 +35,22 @@ const keepOne = <Value>(
   before: Known<Value> | undefined,
 ): Known<Value> | undefined => (next ? lastOf(next, before) : dataOnly(before));
 
-const autoMergeOf = (
-  autoMerge: OpenKept['autoMerge'],
-): Pick<OpenKept, 'autoMerge'> => (autoMerge ? { autoMerge } : {});
-
-const settingsOf = (
-  settings: OpenKept['settings'],
-): Pick<OpenKept, 'settings'> => (settings ? { settings } : {});
-
-const commentsOf = (
-  comments: OpenKept['comments'],
-): Pick<OpenKept, 'comments'> => (comments ? { comments } : {});
-
-const viewerOf = (viewer: OpenKept['viewer']): Pick<OpenKept, 'viewer'> =>
-  viewer ? { viewer } : {};
-
 const endedOf = ({ pull }: Read): boolean =>
   pull.data !== undefined && pull.data.stage !== 'open';
 
-const standsOf = (kept: OpenKept, read: Read): OpenKept => ({
-  ...autoMergeOf(keepOne(read.autoMerge, kept.autoMerge)),
-  ...settingsOf(keepOne(read.settings, kept.settings)),
-  ...commentsOf(keepOne(read.comments, kept.comments)),
-  ...viewerOf(keepOne(read.viewer, kept.viewer)),
-});
+const standsOf = (kept: OpenKept, read: Read): OpenKept => {
+  const stands: OpenKept = {};
+
+  const keep = <Key extends OpenReadKey>(key: Key): void => {
+    const one = keepOne<unknown>(read[key], kept[key]);
+
+    if (one) Object.assign(stands, { [key]: one });
+  };
+
+  for (const key of openReadKeys) keep(key);
+
+  return stands;
+};
 
 /*
  * A Merged or Closed pull request keeps neither; a read that failed outright says nothing of the stage, so what was
