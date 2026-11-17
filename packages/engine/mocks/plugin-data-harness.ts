@@ -6,27 +6,15 @@ import type { PluginClock } from '../src/plugins/clock';
 import { PluginData, type DrawnFor } from '../src/plugins/data/plugin-data';
 import type { PluginReply } from '../src/plugins/protocol/runtime';
 import { WorkerCalls } from '../src/plugins/runtime/worker-calls';
+import { StillClock } from './still-clock';
 
 export const pluginId = 'tracker';
 
 // Named reads run in the worker, so no Server service is asked.
 const refused: PluginReply = { ok: false, error: 'No services' };
 
-// A clock that stands still until a test advances it.
-type StillClock = PluginClock & { advance: (ms: number) => void };
-
-function stillClock(): StillClock {
-  let now = 0;
-
-  return {
-    now: () => now,
-    advance: (ms) => {
-      now += ms;
-    },
-    delay: async () => {},
-    schedule: () => () => null,
-  };
-}
+// What a test makes go wrong: reads that throw before the worker is asked, and the time a rate limit reopens.
+export type Faults = { broken: boolean; limitedUntil?: number };
 
 type ReadEvent = Extract<PluginEvent, { type: 'read' }>;
 
@@ -39,6 +27,7 @@ export type Harness = {
   // The worker fails the newest named read, and the clock a test moves on.
   fail: (error: string) => Promise<void>;
   clock: StillClock;
+  faults: Faults;
   read: (drawn?: Partial<DrawnFor>, fresh?: boolean) => Promise<PluginReply>;
   // A read from code outside a draw, such as a Slot's provider, of another Query than `read`.
   slotRead: () => Promise<PluginReply>;
@@ -67,14 +56,17 @@ type Wiring = {
 
 const servicesOn = (
   clock: PluginClock,
+  faults: Faults,
 ): ConstructorParameters<typeof PluginData>[0] => ({
   services: {
     handle: async (): Promise<PluginReply> => refused,
     projectIds: async (): Promise<string[]> => ['p1', 'p2'],
+    limitedUntil: (): number | undefined => faults.limitedUntil,
   },
   clock,
   log: (): null => null,
-  during: <T>(call: () => Promise<T>): Promise<T> => call(),
+  during: <T>(call: () => Promise<T>): Promise<T> =>
+    faults.broken ? Promise.reject(new Error('The read broke')) : call(),
 });
 
 // A mark with no address to draw again says nothing a page could act on.
@@ -84,7 +76,7 @@ const marking =
     if (addresses.length) marks.push(addresses);
   };
 
-function wired(clock: PluginClock): Wiring {
+function wired(clock: PluginClock, faults: Faults): Wiring {
   const sent: PluginEvent[] = [];
   const marks: PageAddress[][] = [];
 
@@ -93,7 +85,11 @@ function wired(clock: PluginClock): Wiring {
     send: (_pluginId, event): void => void sent.push(event),
   });
 
-  const data = new PluginData(servicesOn(clock), workers, marking(marks));
+  const data = new PluginData(
+    servicesOn(clock, faults),
+    workers,
+    marking(marks),
+  );
 
   workers.run(pluginId, 1);
 
@@ -142,7 +138,7 @@ const slotReading =
       {},
     );
 
-const actionsOn = (wiring: Wiring): Omit<Harness, 'clock'> => ({
+const actionsOn = (wiring: Wiring): Omit<Harness, 'clock' | 'faults'> => ({
   data: wiring.data,
   workers: wiring.workers,
   marks: wiring.marks,
@@ -154,9 +150,10 @@ const actionsOn = (wiring: Wiring): Omit<Harness, 'clock'> => ({
 });
 
 export function harness(): Harness {
-  const clock = stillClock();
+  const clock = new StillClock();
+  const faults: Faults = { broken: false };
 
-  return { ...actionsOn(wired(clock)), clock };
+  return { ...actionsOn(wired(clock, faults)), clock, faults };
 }
 
 const Answered = z.object({ data: z.json().optional() });

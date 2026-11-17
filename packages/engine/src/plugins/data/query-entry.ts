@@ -3,6 +3,7 @@ import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import { runtimeError } from '../protocol/runtime';
 import { queryState, readQuery, type QueryReaders } from './query-answer';
 import { QueryHolders, reading } from './query-holders';
+import { QueryRest, restServices } from './query-rest';
 import { QueryTiming } from './query-timing';
 import type { QueryOwner, QueryRead, QueryServices } from './query-types';
 
@@ -15,6 +16,7 @@ export type EntryServices = QueryServices &
 export class QueryEntry {
   state: PluginDataState = { stale: false, revision: 0 };
   private readonly timing;
+  private readonly rest: QueryRest;
   private readonly holders = new QueryHolders();
   private flight: Promise<void> | undefined;
   // Whether code outside a draw, such as a Slot's provider, read it, so a list's clock may make it due.
@@ -25,6 +27,9 @@ export class QueryEntry {
     private readonly services: EntryServices,
   ) {
     this.timing = new QueryTiming(services.clock);
+    this.rest = new QueryRest(restServices(owner, services), () =>
+      this.refreshHeld(),
+    );
   }
 
   /*
@@ -55,6 +60,8 @@ export class QueryEntry {
   }
 
   private async awaited({ fresh, draw, every }: QueryRead): Promise<void> {
+    this.rest.pulled(fresh);
+
     if (fresh || this.timing.olderThan(every)) await this.refresh(draw);
     await this.untilCurrent(draw, 2);
   }
@@ -83,7 +90,7 @@ export class QueryEntry {
   // Read since the last write, not past its due time, and read without failing; a failed one resting counts as read.
   private current(): boolean {
     return (
-      this.timing.resting ||
+      this.rest.resting ||
       (!this.timing.overdue && this.state.error === undefined)
     );
   }
@@ -95,10 +102,11 @@ export class QueryEntry {
   private refresh(draw?: number): Promise<void> {
     if (this.flight) return this.flight;
 
-    return this.timing.resting ? Promise.resolve() : this.begin(draw);
+    return this.rest.resting ? Promise.resolve() : this.begin(draw);
   }
 
   private begin(draw: number | undefined): Promise<void> {
+    this.rest.began();
     this.timing.started();
     this.publish({ ...this.state, stale: this.state.data !== undefined });
     this.flight = this.execute(draw)
@@ -110,12 +118,12 @@ export class QueryEntry {
 
   private async execute(draw: number | undefined): Promise<void> {
     const reply = await readQuery(this.owner, this.services, draw);
-    const before = this.state.data;
+    const before = this.state;
 
     this.publish(queryState(this.state, reply));
-    this.timing[reply.ok ? 'answered' : 'failed']();
+    this.rest.read(reply.ok, this.holders.any);
 
-    if (changed(before, this.state.data)) this.markHolders();
+    if (shows(before, this.state)) this.markHolders();
   }
 
   // Announce the changed answer even without page holders, so visible Slots ask again.
@@ -128,7 +136,7 @@ export class QueryEntry {
   private failed(cause: unknown): void {
     const error = runtimeError(cause);
 
-    this.timing.failed();
+    this.rest.read(false, this.holders.any);
     this.services.log(`Plugin ${this.owner.pluginId}: Query failed: ${error}`);
     this.publish({ ...this.state, error, stale: false });
   }
@@ -149,7 +157,7 @@ export class QueryEntry {
 
     this.timing.started();
     this.publish(queryState(this.state, { ok: true, value }));
-    this.timing.answered();
+    this.rest.read(true, this.holders.any);
     this.timing.finished();
 
     if (changed(before, this.state.data)) this.markHolders();
@@ -157,6 +165,7 @@ export class QueryEntry {
 
   // A write makes the entry due: a read in flight lands still due, and the next Loader read waits for a fresh answer.
   written(): void {
+    this.rest.stop();
     this.timing.makeDue();
   }
 
@@ -183,6 +192,7 @@ export class QueryEntry {
   }
 
   close(): void {
+    this.rest.stop();
     this.holders.clear();
   }
 }
@@ -192,3 +202,8 @@ const changed = (
   before: PluginDataState['data'],
   after: PluginDataState['data'],
 ): boolean => JSON.stringify(before) !== JSON.stringify(after);
+
+// What a page would draw differently: another answer, or the end of a failure it shows, even for the same answer.
+const shows = (before: PluginDataState, after: PluginDataState): boolean =>
+  changed(before.data, after.data) ||
+  (before.error !== undefined && after.error === undefined);

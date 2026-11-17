@@ -1,35 +1,12 @@
 import type { PluginClock } from '../clock';
 
-// How long a Query rests after its first failed read, doubling with each failure in a row up to the longest rest (#2197).
-export const failureBackoffMs = 5000;
-
-export const longestBackoffMs = 300_000;
-
-// When an entry's kept answer was read, whether a write since has made it due, and how long it rests after failing.
+// When an entry's kept answer was read, and whether a write since has made it due.
 export class QueryTiming {
   private lastAt: number | null = null;
   private due = true;
   private writtenDuringRead = false;
-  private failures = 0;
-  private restsUntil = 0;
 
   constructor(private readonly clock: PluginClock) {}
-
-  // Whether the last reads failed and the rest they earned is not over: no read is made until it is.
-  get resting(): boolean {
-    return this.failures > 0 && this.clock.now() < this.restsUntil;
-  }
-
-  failed(): void {
-    this.failures += 1;
-    this.restsUntil =
-      this.clock.now() +
-      Math.min(failureBackoffMs * 2 ** (this.failures - 1), longestBackoffMs);
-  }
-
-  answered(): void {
-    this.failures = 0;
-  }
 
   get overdue(): boolean {
     return this.due;

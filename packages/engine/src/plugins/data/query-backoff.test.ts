@@ -1,31 +1,7 @@
 import { expect, it, vi } from 'vitest';
-import {
-  address,
-  harness,
-  pluginId,
-  valueOf,
-  type Harness,
-} from '#mocks/plugin-data-harness';
-import { failureBackoffMs } from './query-timing';
-
-const rateLimited = 'rate limited';
-
-// A Query that answered once, was written to, and whose next read failed.
-async function failedAfterAnswer(): Promise<Harness> {
-  const github = harness();
-  const first = github.read();
-
-  await github.answer({ count: 1 });
-  await first;
-  github.data.written(pluginId);
-
-  const failed = github.read({ holder: { ...address, path: '/other' } });
-
-  await github.fail(rateLimited);
-  await failed;
-
-  return github;
-}
+import { address, pluginId, valueOf } from '#mocks/plugin-data-harness';
+import { failedAfterAnswer, rateLimited } from './query-backoff-fixtures';
+import { failureBackoffMs } from './query-rest';
 
 it('serves the last good answer with the failure, and reads nothing during the backoff', async () => {
   const github = await failedAfterAnswer();
