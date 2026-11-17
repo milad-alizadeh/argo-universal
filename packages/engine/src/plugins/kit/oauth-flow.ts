@@ -4,7 +4,8 @@ import type {
   OAuthFlowPattern,
   OAuthFlowState,
 } from '@repo/contracts/plugins/oauth-flow-api';
-import { tokenLender } from './kept-token';
+import { heldSignIn, type HeldSignIn } from './held-sign-in';
+import { provideKept } from './kept-token';
 import {
   authorizeLocation,
   failed,
@@ -12,9 +13,6 @@ import {
   type Waiting,
 } from './oauth-exchange';
 import { clientIdOf, oauthRefresh } from './oauth-token';
-
-// The one sign-in a flow holds, and the attempt whose answers still count.
-type Held = { state: OAuthFlowState; attempt: symbol | null };
 
 // What one attempt reaches: the Plugin's calls, the service, and whether it is still the current one.
 type Attempt = {
@@ -28,58 +26,35 @@ type Given = Omit<Attempt, 'live' | 'settle'>;
 
 const idle: OAuthFlowState = { kind: 'idle' };
 
-const bearer = { header: 'Authorization', prefix: 'Bearer' };
-
 /*
  * A kit pattern on the open `argo.oauth`, `argo.fetch`, `argo.accounts` and `argo.secrets` calls: start a
  * sign-in, wait for the browser, exchange the code for a token, add the Account and keep its token, saying
  * `argo.changed()` at each step so the pages that draw the state redraw.
  */
 export const oauthFlow: OAuthFlowPattern = (argo, options) => {
-  const held: Held = { state: idle, attempt: null };
+  const held = heldSignIn<OAuthFlowState>(argo, idle);
 
   return Object.freeze({
     serverDevice: true,
-    state: () => held.state,
+    state: held.state,
     start: () => start(held, { argo, options }),
-    cancel: () => cancel(held, argo),
-    provide: () => provide(argo, options),
+    cancel: held.cancel,
+    provide: () =>
+      provideKept(argo, options, oauthRefresh(argo.fetch, options)),
   });
 };
 
-// Each change of state is said, so the pages that draw it redraw.
-const settling =
-  (held: Held, argo: OAuthFlowArgo) =>
-  (state: OAuthFlowState): OAuthFlowState => {
-    held.state = state;
-    argo.changed();
-
-    return state;
-  };
-
-// A new attempt replaces the one before, whose answers then change nothing.
-function current(held: Held, given: Given): Attempt {
-  const mine = Symbol('attempt');
-  const live = (): boolean => held.attempt === mine;
-  const settle = settling(held, given.argo);
-
-  held.attempt = mine;
-
-  return {
-    ...given,
-    live,
-    settle: (state) => (live() ? settle(state) : held.state),
-  };
-}
-
 // Answers the state once the browser is open, or why it could not be.
-async function start(held: Held, given: Given): Promise<OAuthFlowState> {
-  const attempt = current(held, given);
+async function start(
+  held: HeldSignIn<OAuthFlowState>,
+  given: Given,
+): Promise<OAuthFlowState> {
+  const attempt: Attempt = { ...given, ...held.begin() };
 
   attempt.settle({ kind: 'waiting' });
   await opened(attempt).catch((error: Error) => attempt.settle(refused(error)));
 
-  return held.state;
+  return held.state();
 }
 
 // Once Argo listens, the flow waits for the browser on its own, past the call that started it.
@@ -123,24 +98,4 @@ async function finished(
   if (!result || !attempt.live()) return idle;
 
   return signedIn(attempt.argo, attempt.options, { ...waiting, ...result });
-}
-
-function cancel(held: Held, argo: OAuthFlowArgo): OAuthFlowState {
-  held.attempt = null;
-
-  return settling(held, argo)(idle);
-}
-
-// A borrower's request gets the kept token, refreshed when it has run out, in the header the flow names; Argo sets it.
-function provide(
-  argo: OAuthFlowArgo,
-  options: OAuthFlowOptions,
-): Promise<void> {
-  const lend = tokenLender(argo.secrets, oauthRefresh(argo.fetch, options));
-
-  return argo.accounts.provide(
-    options.host,
-    options.header ?? bearer,
-    (account) => lend(account.id),
-  );
 }

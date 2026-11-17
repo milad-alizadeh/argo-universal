@@ -1,6 +1,6 @@
 import {
   Canvas,
-  Metadata,
+  FieldGroup,
   Stack,
   Text,
   type PageTo,
@@ -110,6 +110,20 @@ function MapNotes(props: { drawn: DrawnFiles; total: number }): JSX.Element {
   );
 }
 
+const fileCounts = (file: CodeFile): JSX.Element[] => [
+  <FieldGroup.Value key="lines" title="Lines" value={count(file.lines)} />,
+  <FieldGroup.Value
+    key="branches"
+    title="Branching lines"
+    value={count(file.branches)}
+  />,
+  <FieldGroup.Value
+    key="touches"
+    title="Changes"
+    value={count(file.touches)}
+  />,
+];
+
 function FileDetails({
   file,
 }: {
@@ -118,10 +132,10 @@ function FileDetails({
   if (!file) return null;
 
   return (
-    <Metadata title={file.path}>
-      <Metadata.Label title="Lines" text={count(file.lines)} />
-      <Metadata.Label title="Branching lines" text={count(file.branches)} />
-      <Metadata.Label title="Changes" text={count(file.touches)} />
-    </Metadata>
+    <FieldGroup>
+      <FieldGroup.Section title={file.path}>
+        {fileCounts(file)}
+      </FieldGroup.Section>
+    </FieldGroup>
   );
 }

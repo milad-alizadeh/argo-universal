@@ -92,9 +92,6 @@ export const PluginCards: Story = {
   },
 };
 
-// Two attached Issues share one Plugin card, each a row; the Plugin sent no `detach`, so the rows have no menu.
-export const AttachedIssues: Story = { args: { bar: attachedIssuesBar } };
-
 // One-line cards: a diff total, finished Agents and an Issue's line each draw one summary line, at one height.
 export const SummaryLines: Story = {
   args: {
@@ -114,6 +111,14 @@ export const LeadingMarks: Story = {
       subagents: { subagents: subagentStates.allFinished, now: subagentNow },
     },
     bar: { shown: summaryLines, hidden: [], onOpen: fn() },
+  },
+};
+
+// Two attached Issues share one card, each a row; the Plugin sent no `detach`, so the rows have no menu.
+export const AttachedIssues: Story = {
+  args: {
+    content: { header: { ...everySection.header, pullRequests: [] } },
+    bar: attachedIssuesBar,
   },
 };
 

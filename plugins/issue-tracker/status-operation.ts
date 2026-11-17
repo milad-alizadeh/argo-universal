@@ -28,16 +28,12 @@ export function registerStatusOperation(
 const setStatus =
   (deps: IssueDeps): OperationHandler<'setStatus'> =>
   async ({ number, status }, { projectId }) => {
-    const project = await projectOf(deps, projectId);
-    const client = await openDepsClient({ project, deps });
-
-    await client.setStatus(number, status);
-    deps.changes.publish(number);
+    await runEdit(deps, { projectId, number }, { kind: 'status', status });
 
     return { number, status };
   };
 
-// Each edit's Operation names the Issue and what to put on it; the run is the same as a status change's.
+// Each edit's Operation names the Issue and what to put on it; a status change runs the same way.
 async function runEdit(
   deps: IssueDeps,
   { projectId, number }: { projectId: string; number: number },

@@ -1,7 +1,7 @@
-import { needsSignIn } from './pull-reads';
+import { needsSignIn, rateLimited } from './pull-reads';
 
-// Why a read failed, and whether signing in would mend it.
-type Failure = { reason: 'signIn' | 'failed'; message: string };
+// Why a read failed: signing in would mend it, GitHub's rate limit refused it, or anything else.
+type Failure = { reason: 'signIn' | 'rateLimited' | 'failed'; message: string };
 
 // What Argo keeps for one named read: the last good answer, and why the latest read failed, either or both.
 export type Known<Value> = { data?: Value; failure?: Failure };
@@ -10,8 +10,14 @@ type State<Value> = { data?: Value; error?: string };
 
 const noAnswer = 'GitHub gave no answer.';
 
+function reasonOf(message: string): Failure['reason'] {
+  if (needsSignIn(message)) return 'signIn';
+
+  return rateLimited(message) ? 'rateLimited' : 'failed';
+}
+
 const failureOf = (message: string): Failure => ({
-  reason: needsSignIn(message) ? 'signIn' : 'failed',
+  reason: reasonOf(message),
   message,
 });
 

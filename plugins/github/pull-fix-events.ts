@@ -10,7 +10,7 @@ import {
   type FixStore,
 } from './pull-fix-rows';
 
-export const insertEvent = (sent: number): string =>
+const insertEvent = (sent: number): string =>
   `INSERT INTO pull_auto_fix_events (project_id, session_id, repository, number, head, event_key, sent) VALUES (?, ?, ?, ?, ?, ?, ${sent}) ON CONFLICT DO NOTHING`;
 
 export const seenOf =

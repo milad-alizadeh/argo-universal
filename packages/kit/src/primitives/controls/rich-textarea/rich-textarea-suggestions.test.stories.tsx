@@ -158,6 +158,25 @@ export const EscapeKeepsTheSlashWord: Story = {
   },
 };
 
+export const ClickingTheEditorDismissesSuggestions: Story = {
+  play: async ({ canvas, args }) => {
+    const field = canvas.getByRole('textbox', { name: exampleLabel });
+
+    await userEvent.type(field, '/sec');
+    await screen.findByRole('option', { name: secondOptionName });
+    await userEvent.click(field);
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('group', { name: 'Suggestions' }),
+      ).not.toBeInTheDocument(),
+    );
+    await expect(args.onChangeText).toHaveBeenLastCalledWith('/sec');
+    await expect(args.onSubmit).not.toHaveBeenCalled();
+    await userEvent.keyboard('o');
+    await screen.findByRole('option', { name: secondOptionName });
+  },
+};
+
 function plainText(text: string): Story {
   return {
     play: async ({ canvas, args }) => {

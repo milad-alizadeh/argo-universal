@@ -40,30 +40,30 @@ describe('where a Screen draws its aside', () => {
     ]);
   });
 
-  it('as Pills at 1280 with the sidebar shown, where the column beside it would read narrower than a tablet', () => {
-    expect(placeAt(sidebarShown(1280))).toBe('pills');
+  it('above the body at 1280 with the sidebar shown, where the column beside it would read narrower than a tablet', () => {
+    expect(placeAt(sidebarShown(1280))).toBe('lead');
   });
 
   it('beside the column from the width that leaves it the medium width', () => {
     const threshold = 600 + 3 * 32 + 280;
 
-    expect([threshold - 1, threshold].map(placeAt)).toEqual(['pills', 'aside']);
+    expect([threshold - 1, threshold].map(placeAt)).toEqual(['lead', 'aside']);
   });
 
-  it('as Pills on a medium window, which has no gutters', () => {
-    expect(asideLayout(room(768, false)).place).toBe('pills');
+  it('above the body on a medium window, which has no gutters', () => {
+    expect(asideLayout(room(768, false)).place).toBe('lead');
   });
 
-  it('as icon Pills below medium', () => {
-    expect(asideLayout(room(375, false)).place).toBe('icons');
+  it('above the body on a phone', () => {
+    expect(asideLayout(room(375, false)).place).toBe('lead');
   });
 
   it('never beside the column below wide, however much room', () => {
-    expect(asideLayout(room(2000, false)).place).toBe('pills');
+    expect(asideLayout(room(2000, false)).place).toBe('lead');
   });
 
-  it('as Pills until it is measured', () => {
-    expect(placeAt(0)).toBe('pills');
+  it('above the body until it is measured', () => {
+    expect(placeAt(0)).toBe('lead');
   });
 });
 
@@ -90,7 +90,7 @@ describe('the column beside the aside', () => {
     });
   });
 
-  it('moves nowhere while the aside draws as Pills', () => {
+  it('moves nowhere while the aside leads the body', () => {
     expect(columnAt(sidebarShown(1280))).toBeUndefined();
   });
 

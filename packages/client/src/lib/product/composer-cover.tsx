@@ -1,4 +1,5 @@
 import { liquidGlassAvailable } from '@repo/kit/primitives/content/liquid-glass';
+import { scrollFadeLayer } from '@repo/kit/scroll-fade/scroll-fade-options';
 import { type SpacingToken, useSpacing } from '@repo/kit/use-spacing';
 import {
   createContext,
@@ -25,6 +26,15 @@ const composerFadeDepth = {
 // The Feed's gap between its last row and the Composer.
 const feedEndGap = '--spacing-6';
 
+// How far a pill, and Jump to latest above the Composer, sit above what is under them, on every device.
+export const overlayGap = 12;
+
+// Above the Feed's edge fades. On native a frame without a style of its own is flattened away, and its fades then compete with an overlay on one level.
+export const overlayLayer = scrollFadeLayer + 1;
+
+// How far a pill lifts what floats above the Composer, such as Jump to latest: nothing while no pill is drawn.
+export const ComposerPillLift = createContext(0);
+
 // How far the Composer covers the Feed's end: its overlap, or under iOS 26's glass Composer, the whole Composer area.
 export const ComposerCover = createContext(composerOverlap);
 
@@ -36,16 +46,26 @@ export function useGlassComposer(): boolean {
 }
 
 export interface FeedEndClearance {
-  // The space after the Feed's last row, so it rests above the Composer.
+  // The space after the Feed's last row, so it rests above the Composer and the pill over it.
   endSpace: number;
-  // How far above the Feed's bottom edge the Composer's top lies, with its pills and trays, so anything laid over the Feed's end, such as Jump to latest, keeps one gap above it.
+  // How far above the Feed's bottom edge the Composer's top lies, with its pills and trays, which the Feed's fade ends at.
   composerTop: number;
+  // The `bottom` of Jump to latest: one gap above the Composer's top and above the pill, when there is one.
+  floatingBottom: number;
+  // The `bottom` of a pill: one gap above the Composer's top, whatever lifts.
+  pillBottom: number;
 }
 
 export function useFeedEndClearance(): FeedEndClearance {
   const cover = useContext(ComposerCover);
+  const lift = useContext(ComposerPillLift);
 
-  return { endSpace: cover + useSpacing(feedEndGap), composerTop: cover };
+  return {
+    endSpace: cover + useSpacing(feedEndGap) + lift,
+    composerTop: cover,
+    floatingBottom: cover + lift + overlayGap,
+    pillBottom: cover + overlayGap,
+  };
 }
 
 // How deep the Feed fades out above the Composer.
@@ -95,7 +115,7 @@ export interface ComposerFade {
 
 // Where the Feed fades out above the Composer. Over a glass Composer it starts at the pills' top and ends at the card's top, so nothing above the pills fades; with no pills, only a short fade above the card, at the Feed's end and away from it alike.
 export function useComposerFade(atEnd: boolean): ComposerFade {
-  const { composerTop } = useFeedEndClearance();
+  const composerTop = useContext(ComposerCover);
   const pills = useContext(ComposerPills);
   const depth = useComposerFadeDepth(atEnd);
   const shortDepth = useComposerFadeDepth(true);

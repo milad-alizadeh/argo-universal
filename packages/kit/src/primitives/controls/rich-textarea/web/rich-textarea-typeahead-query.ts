@@ -1,4 +1,5 @@
 import type { TriggerFn } from '@lexical/react/LexicalTypeaheadMenuPlugin';
+import { $getRoot } from 'lexical';
 import {
   useCallback,
   useEffect,
@@ -10,6 +11,7 @@ import {
 import type {
   TypeaheadAdapter,
   TypeaheadOption,
+  TypeaheadInteraction,
 } from './rich-textarea-typeahead-option';
 
 type Query = { adapter: number; text: string } | null;
@@ -76,8 +78,10 @@ function queryOptions(
 function triggerFor(
   adapters: TypeaheadAdapter[],
   select: (index: number) => void,
+  menu: TypeaheadInteraction,
 ): TriggerFn {
   return (text, editor) => {
+    if (!menu.allows($getRoot().getTextContent())) return null;
     const result = matchingAdapter(adapters, text, editor);
 
     if (!result) return null;
@@ -90,13 +94,16 @@ function triggerFor(
 function queryHandlers(
   adapters: TypeaheadAdapter[],
   receive: (query: Query) => void,
+  menu: TypeaheadInteraction,
 ): Omit<TypeaheadQuery, 'options'> {
   let active = 0;
 
+  const select = (index: number): void => {
+    active = index;
+  };
+
   return {
-    triggerFn: triggerFor(adapters, (index) => {
-      active = index;
-    }),
+    triggerFn: triggerFor(adapters, select, menu),
     onQueryChange: (text) =>
       receive(text === null ? null : { adapter: active, text }),
   };
@@ -104,13 +111,17 @@ function queryHandlers(
 
 export function useTypeaheadQuery(
   adapters: TypeaheadAdapter[],
+  menu: TypeaheadInteraction,
 ): TypeaheadQuery {
   const [query, setQuery] = useState<Query>(null);
   const receive = useQueryReceiver(setQuery);
   useLateAnswers(adapters, setQuery);
 
   return {
-    ...useMemo(() => queryHandlers(adapters, receive), [adapters, receive]),
+    ...useMemo(
+      () => queryHandlers(adapters, receive, menu),
+      [adapters, receive, menu],
+    ),
     options: useMemo(() => queryOptions(adapters, query), [adapters, query]),
   };
 }

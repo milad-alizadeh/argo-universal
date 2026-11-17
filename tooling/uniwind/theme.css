@@ -846,6 +846,12 @@
   box-shadow: var(--shadow-hairline);
 }
 
+@utility max-h-rich-textarea {
+  @variant web {
+    max-height: calc(10lh + var(--spacing-5));
+  }
+}
+
 @utility transition-height {
   transition-property: height;
 }

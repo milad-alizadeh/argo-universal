@@ -1,7 +1,7 @@
 import type { PluginAccount } from '@repo/contracts/plugins/accounts';
 import { useQuery } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
-import { usePluginEntries } from '../plugins/use-plugins';
+import { usePluginEntries } from '#features/plugins';
 import type { AccountRow, AccountsLoad } from './account-list-view';
 
 // Each Plugin's name by id, falling back to the id while the Plugin list loads or if it has been removed.

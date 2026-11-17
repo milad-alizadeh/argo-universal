@@ -13,12 +13,17 @@ import type {
   LivePlanLayout,
 } from './composer-tray-types';
 import type { ComposerProps } from './composer-types';
+import { ComposerTypography } from './composer-typography';
 
 // A phone's Plan, a pill above the Composer. A wide window's Plan sits in the Composer's tray.
 export function ComposerPhoneTray(
   layout: TopTrayLayout,
 ): React.JSX.Element | null {
-  return layout.wide ? null : <ComposerPhonePlan {...layout} />;
+  return layout.wide ? null : (
+    <ComposerTypography compact>
+      <ComposerPhonePlan {...layout} />
+    </ComposerTypography>
+  );
 }
 
 // The Plan a wide window's tray holds: none while a request has the tray.

@@ -1,4 +1,5 @@
 import { Text } from '@repo/kit/primitives/content/text';
+import { Tooltip } from '@repo/kit/primitives/overlays/tooltip';
 import type { ReactElement } from 'react';
 import { Pressable, View } from 'react-native';
 import { ChangeChecks } from './change-checks-popover';
@@ -65,6 +66,33 @@ const checksPart = (
   </View>
 );
 
+const rateLimitLabel = 'GitHub rate limit reached';
+
+// The code host would not say how the checks stand, so a dash holds their place and a pointer over it says why.
+const rateLimitedPart = (): ReactElement => (
+  <View className="ml-auto">
+    <Tooltip label={rateLimitLabel}>
+      <Pressable
+        accessibilityLabel={`CI Checks unknown, ${rateLimitLabel}`}
+        className="px-1"
+      >
+        <Text role="secondary" tone="muted">
+          –
+        </Text>
+      </Pressable>
+    </Tooltip>
+  </View>
+);
+
+function trailingPart(
+  change: SessionPullRequest,
+  onOpen: () => void,
+): ReactElement | undefined {
+  if (change.stale === 'rateLimited') return rateLimitedPart();
+
+  return change.checks && checksPart(change.checks, onOpen);
+}
+
 // The number and the diff total, with the checks at the trailing edge; the checks list each check on the web, and on a phone open the Change.
 function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
   return (
@@ -73,7 +101,7 @@ function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
         #{change.number}
       </Text>
       {change.summary && <ChangeDiffTotal {...change.summary} icon />}
-      {change.checks && checksPart(change.checks, onOpen)}
+      {trailingPart(change, onOpen)}
     </View>
   );
 }

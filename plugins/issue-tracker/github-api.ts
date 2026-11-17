@@ -3,6 +3,7 @@ import {
   at,
   isObject,
   item,
+  nonEmpty,
   parseJson,
   pick,
   type Json,
@@ -50,7 +51,7 @@ export const graphqlRequest = (
 });
 
 // The reply of a call made as the signed-in person; nothing came back when no Account answered.
-export async function called(
+async function called(
   fetch: Fetch,
   projectId: string,
   { url, init }: GitHubRequest,
@@ -103,4 +104,70 @@ function dataOf(answer: Json): Json {
   if (usable(data, answer)) return data;
 
   throw new Error(firstError(answer));
+}
+
+const restBase = `https://${githubHost}/repos`;
+
+export const repositoryUrl = (repository: string): string =>
+  `${restBase}/${repository}`;
+
+// The one check an Issue number passes before it is put in a URL.
+export const issueUrl = (repository: string, number: number): string => {
+  if (!Number.isSafeInteger(number) || number < 1)
+    throw new Error('Issue number must be a positive integer.');
+
+  return `${repositoryUrl(repository)}/issues/${number}`;
+};
+
+const githubJson = { accept: 'application/vnd.github+json' };
+
+const jsonBody = { 'content-type': 'application/json' };
+
+// A REST call; a body is sent as JSON.
+export const restRequest = (
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+  url: string,
+  body?: Json,
+): GitHubRequest => ({
+  url,
+  init: {
+    method,
+    headers: body === undefined ? githubJson : { ...githubJson, ...jsonBody },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  },
+});
+
+// GitHub's own words are better than ours, but its status is enough.
+async function reasonOf(response: Reply): Promise<string> {
+  try {
+    const message = nonEmpty(pick(parseJson(await response.text()), 'message'));
+
+    return message ?? `GitHub answered ${response.status}.`;
+  } catch {
+    return `GitHub answered ${response.status}.`;
+  }
+}
+
+// The reply of a REST call GitHub accepted; its body is left unread. A refusal ends the call with GitHub's reason.
+export async function accepted(
+  fetch: Fetch,
+  projectId: string,
+  request: GitHubRequest,
+): Promise<Reply> {
+  const reply = await called(fetch, projectId, request);
+
+  if (!reply.ok) throw new Error(await reasonOf(reply));
+
+  return reply;
+}
+
+// The JSON a REST call answers with, or nothing when the body is empty.
+export async function answerOf(
+  fetch: Fetch,
+  projectId: string,
+  request: GitHubRequest,
+): Promise<Json> {
+  const text = await (await accepted(fetch, projectId, request)).text();
+
+  return text === '' ? null : parseJson(text);
 }
