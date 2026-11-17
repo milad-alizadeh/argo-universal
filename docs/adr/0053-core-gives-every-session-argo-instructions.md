@@ -38,6 +38,8 @@ Owner amendment, 2026-11-15 (#2226 eval): Argo drove Claude Agent, Codex and pi 
 
 `argo mcp` takes two to eight seconds to start, so an Agent that looks for its tools first thing can miss them; a faster CLI start is left to its own Issue.
 
+Owner amendment, 2026-11-17: the fourth Argo instruction is **Pull requests**. An Agent opened a pull request with `gh pr create` and stopped, leaving it unattached to the Session; the GitHub Plugin's prose only said when `github.discover` was useful, and sits at its 1,000-character limit. The instruction asks the Agent to run `github.discover` in the turn it opens one, and `github.attach` for one opened from another branch.
+
 ## Considered options
 
 - **A built-in Plugin that holds only instructions.** Rejected: a person could disable it, and it would make a core behaviour look optional.

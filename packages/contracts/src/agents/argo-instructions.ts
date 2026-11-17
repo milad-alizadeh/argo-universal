@@ -40,10 +40,22 @@ const diagrams: ArgoInstruction = {
     'to mark a node, give it a tone class such as `class A success`: info, success, warning, danger, done or muted.',
 };
 
+// `gh pr create` leaves a pull request unattached, so the Agent attaches it itself.
+const pullRequests: ArgoInstruction = {
+  name: 'Pull requests',
+  text:
+    'Right after you open a pull request, in the same turn and before you report it done, attach it to this Session: ' +
+    'run the Argo Operation github.discover through the operation_run tool of the Argo MCP server, with params {"unlessAttached":false} and wait true. ' +
+    '`gh pr create` alone does not attach it. ' +
+    'discover finds the pull requests of this Session\'s current branch; for one opened from another branch, run github.attach with params {"reference":"owner/repo#123"}. ' +
+    'Say that it attached.',
+};
+
 export const argoInstructions: readonly ArgoInstruction[] = [
   todoList,
   agents,
   diagrams,
+  pullRequests,
 ];
 
 // What the person's settings leave of the Argo instructions for one Session.

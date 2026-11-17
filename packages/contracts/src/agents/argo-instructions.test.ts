@@ -86,3 +86,13 @@ it('asks the Agent to validate each diagram, naming the Operation and every tone
 
   for (const tone of diagramTones) expect(diagrams).toContain(tone);
 });
+
+// `gh pr create` alone left each pull request unattached to the Session.
+it('asks the Agent to attach each pull request it opens, naming both Operations and the tool that runs them', () => {
+  const pullRequests = argoInstructions.find(
+    ({ name }) => name === 'Pull requests',
+  )?.text;
+
+  for (const word of ['github.discover', 'github.attach', 'operation_run'])
+    expect(pullRequests).toContain(word);
+});
