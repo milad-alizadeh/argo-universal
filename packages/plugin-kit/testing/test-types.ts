@@ -62,7 +62,13 @@ export interface PluginTestOptions {
     sessionId: string,
     text: string,
     sender: { pluginId: string; title: string },
-  ) => Promise<{ status: 'started' | 'queued' }>;
+  ) => Promise<{ status: 'started' } | { status: 'queued'; queuedId: string }>;
+  // Stands in for the Server taking back the Plugin's Queued Prompt: what `argo.sessions.withdraw` reaches.
+  withdrawPrompt?: (
+    sessionId: string,
+    queuedId: string,
+    sender: { pluginId: string; title: string },
+  ) => Promise<{ withdrawn: boolean }>;
   // Stands in for the App's archive: what `argo.sessions.archive` reaches; it rejects as core does for a Turn that runs or a Checkout with uncommitted files. A Plugin without it cannot archive.
   archiveSession?: (sessionId: string) => Promise<void>;
 }

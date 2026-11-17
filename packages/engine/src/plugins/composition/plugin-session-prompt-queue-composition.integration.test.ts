@@ -15,7 +15,9 @@ it('queues behind the person’s queued Prompts, keeps its sender and starts whe
 
   await expect(
     journey.run(journey.session.sessionId, pluginLater),
-  ).resolves.toEqual({ result: { status: 'queued' } });
+  ).resolves.toEqual({
+    result: { status: 'queued', queuedId: expect.any(String) },
+  });
   journey.release.resolve();
   await vi.waitFor(() => expect(journey.requests).toHaveLength(3));
 
@@ -50,7 +52,9 @@ it('leaves a paused queue paused when it appends', async () => {
 
   await expect(
     journey.run(journey.session.sessionId, pluginLater),
-  ).resolves.toEqual({ result: { status: 'queued' } });
+  ).resolves.toEqual({
+    result: { status: 'queued', queuedId: expect.any(String) },
+  });
   journey.release.resolve();
   await new Promise((resolve) => setTimeout(resolve, 300));
 

@@ -317,7 +317,7 @@ A Plugin's own record that a Session produced one pull request, named by its rep
 _Avoid_: PR link, attachment
 
 **Auto-fix**:
-A person's choice, per PR association, that the Session's Agent is prompted to fix each new failed Check, review comment or merge conflict on that pull request. It is off until turned on.
+A person's choice, per PR association, that the Session's Agent is prompted to fix each new failed Check, review comment or merge conflict on that pull request. Once a head commit's Checks have all reported, one Prompt lists everything new on it; a push withdraws that Prompt if it has not started. It is off until turned on.
 _Avoid_: Babysit, watch, auto-repair
 
 **Auto-merge**:
@@ -377,7 +377,7 @@ What is sent to a Session's Agent to start a Turn. It comes from the user, from 
 _Avoid_: Message (alone), input, instruction
 
 **Queued Prompt**:
-A user Prompt waiting in a Session’s ordered queue for a Turn of its own. It is future work, outside the Feed until it starts.
+A Prompt waiting in a Session’s ordered queue for a Turn of its own, the person’s or a Plugin’s. It is future work, outside the Feed until it starts. A Plugin may withdraw one it sent, never anyone else’s.
 _Avoid_: Pending message, draft Prompt
 
 **Turn**:

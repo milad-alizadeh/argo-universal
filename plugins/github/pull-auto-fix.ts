@@ -1,14 +1,10 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { Automation, Offers } from './pull-automations';
 import { fetchComments } from './pull-comments';
-import {
-  autoFix,
-  failedOf,
-  fixOf,
-  openedByAnother,
-  fixCurrent,
-} from './pull-fix';
+import { autoFix, fixOf, openedByAnother } from './pull-fix';
+import { failedOf, runningOf } from './pull-fix-facts';
 import type { FixFacts } from './pull-fix-prompts';
+import { fixCurrent } from './pull-fix-send';
 import { createFixStore, type FixStore } from './pull-fix-store';
 import type { PullInfo } from './pull-info';
 import { lowered, sameLink } from './pull-kept';
@@ -40,7 +36,12 @@ async function eventsNow(fetch: Fetch, link: PullLink): Promise<FixFacts> {
     fetchComments(fetch, link),
   ]);
 
-  return { pull, failed: failedOf(checks), comments };
+  return {
+    pull,
+    failed: failedOf(checks),
+    running: runningOf(checks),
+    comments,
+  };
 }
 
 const isOn = async (fix: FixStore, link: PullLink): Promise<boolean> =>

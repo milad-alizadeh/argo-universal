@@ -37,12 +37,13 @@ function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
     archive: async (sessionId) => {
       await sessions.archiveFromPlugin(sessionId);
     },
-    prompt: async (sessionId, text, { pluginId, title }) => ({
-      status: await sessions.promptFromPlugin(
+    prompt: (sessionId, text, { pluginId, title }) =>
+      sessions.promptFromPlugin(
         { sessionId, prompt: [{ type: 'text', text }] },
         { type: 'plugin', pluginId, title },
       ),
-    }),
+    withdraw: (sessionId, queuedId, { pluginId }) =>
+      sessions.withdrawFromPlugin(sessionId, queuedId, pluginId),
   });
 }
 

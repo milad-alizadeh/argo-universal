@@ -1,17 +1,22 @@
 import type { NonUserPromptSender, SessionPromptInput } from '@repo/contracts';
+import type {
+  PluginPromptAnswer,
+  PluginWithdrawAnswer,
+} from '@repo/contracts/plugins/argo-calls';
 import { TRPCError } from '@trpc/server';
+import type { QueueSessionCommand } from './queue-command-types';
 import { sendSessionCommand } from './session-command';
 import type { SessionContext } from './session-context';
 import type { SessionActorRef } from './session-machine';
 import { startSessionPrompt } from './session-prompt';
 import type { HandlerSources } from './session-sources';
 
+const queueEvent = 'session.queue';
+
 type PluginPromptSources = HandlerSources<
   'readSession' | 'createId' | 'installedAgents' | 'hooks',
   'admit' | 'ready' | 'context'
 >;
-
-export type PluginPromptStatus = 'started' | 'queued';
 
 // A Turn runs, or work already waits, or the queue is paused: the Prompt cannot start now.
 const hasWork = ({
@@ -38,27 +43,83 @@ export async function promptFromPlugin(
   sources: PluginPromptSources,
   input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
   sender: NonUserPromptSender,
-): Promise<PluginPromptStatus> {
-  const session = await sources.open.ready(input.sessionId, 'session.queue');
+): Promise<PluginPromptAnswer> {
+  const session = await sources.open.ready(input.sessionId, queueEvent);
   const context = sources.open.context(input.sessionId);
 
   if (!context || !hasWork(context))
     return startPluginPrompt(sources, input, sender);
 
   sources.open.admit();
-  await appendPluginPrompt(session, input.prompt, sender);
 
-  return 'queued';
+  const queuedId = sources.createId();
+
+  return queuePluginPrompt(session, { prompt: input.prompt, sender, queuedId });
+}
+
+type QueuedPluginPrompt = Pick<SessionPromptInput, 'prompt'> & {
+  sender: NonUserPromptSender;
+  queuedId: string;
+};
+
+// Appends under an id the Server chose, so the Plugin can withdraw it.
+async function queuePluginPrompt(
+  session: SessionActorRef,
+  { prompt, sender, queuedId }: QueuedPluginPrompt,
+): Promise<PluginPromptAnswer> {
+  await sendQueueCommand(session, {
+    command: { action: 'append', prompt },
+    sender,
+    queuedId,
+  });
+
+  return { status: 'queued', queuedId };
+}
+
+// The Prompt waits in the queue, has not started, and the person is not editing it.
+const waiting = (
+  {
+    promptQueue,
+    dispatchingQueueId,
+    queueHolds,
+  }: Pick<SessionContext, 'promptQueue' | 'dispatchingQueueId' | 'queueHolds'>,
+  id: string,
+): boolean =>
+  id !== dispatchingQueueId &&
+  !queueHolds[id] &&
+  promptQueue.items.some((item) => item.id === id);
+
+/*
+ * A Plugin takes back a Queued Prompt it sent (ADR-0055). One that started, is gone, or the person is editing stays as
+ * it is and answers not withdrawn; anyone else's is refused. The queue is read in the same tick the command is sent,
+ * so nothing starts between the look and the withdraw.
+ */
+export async function withdrawFromPlugin(
+  sources: PluginPromptSources,
+  input: { sessionId: string; queuedId: string; pluginId: string },
+): Promise<PluginWithdrawAnswer> {
+  const session = await sources.open.ready(input.sessionId, queueEvent);
+
+  sources.open.admit();
+
+  const withdrawn = waiting(session.getSnapshot().context, input.queuedId);
+  const command = { action: 'withdraw' as const, id: input.queuedId };
+
+  await sendQueueCommand(session, {
+    command: { ...command, pluginId: input.pluginId },
+  });
+
+  return { withdrawn };
 }
 
 async function startPluginPrompt(
   sources: PluginPromptSources,
   input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
   sender: NonUserPromptSender,
-): Promise<PluginPromptStatus> {
+): Promise<PluginPromptAnswer> {
   const started = await startSessionPrompt(sources, input, { sender }).accepted;
 
-  if (started.messageId !== null) return 'started';
+  if (started.messageId !== null) return { status: 'started' };
 
   throw new TRPCError({
     code: 'CONFLICT',
@@ -66,18 +127,17 @@ async function startPluginPrompt(
   });
 }
 
-function appendPluginPrompt(
+type ServerQueueEvent = Omit<
+  Extract<QueueSessionCommand, { type: typeof queueEvent }>,
+  'type' | 'committed' | 'connectionSignal'
+>;
+
+function sendQueueCommand(
   session: SessionActorRef,
-  prompt: SessionPromptInput['prompt'],
-  sender: NonUserPromptSender,
+  event: ServerQueueEvent,
 ): Promise<void> {
   const committed = Promise.withResolvers<void>();
-  sendSessionCommand(session, {
-    type: 'session.queue',
-    command: { action: 'append', prompt },
-    sender,
-    committed,
-  });
+  sendSessionCommand(session, { type: queueEvent, ...event, committed });
 
   return committed.promise;
 }
