@@ -8,14 +8,13 @@ import {
   type LinkMark,
 } from '@repo/kit/primitives/overlays/link-preview';
 import { useMemo } from 'react';
-import { useSlotVisibility } from '#features/settings';
 import {
   itemsSlotEntry,
   readSlotItems,
   type SlotReader,
 } from '../utils/slot-items';
-import { usePluginLookup } from './use-plugin-names';
 import { useSlotItems } from './use-slot-items';
+import { useSlotReader } from './use-slot-reader';
 
 const markSlot = itemsSlotEntry(linkMarkSlotId);
 
@@ -56,11 +55,7 @@ export function useLinkMarks(
 ): ReadonlyMap<string, LinkMark | null> {
   const input = useMemo(() => inputOf(projectId, hrefs), [projectId, hrefs]);
   const { items } = useSlotItems(input);
-  const visibility = useSlotVisibility(linkMarkSlotId);
-  const lookup = usePluginLookup();
+  const reader = useSlotReader(linkMarkSlotId);
 
-  return useMemo(
-    () => marksOf(hrefs, items, { visibility, lookup }),
-    [hrefs, items, visibility, lookup],
-  );
+  return useMemo(() => marksOf(hrefs, items, reader), [hrefs, items, reader]);
 }

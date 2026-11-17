@@ -1,5 +1,4 @@
 import { setStringAsync } from 'expo-clipboard';
-import { useMemo } from 'react';
 import type { useSessionFeed } from '#features/feed';
 import {
   type ChangesContext,
@@ -10,22 +9,10 @@ import {
 } from '#features/plugins';
 import type { SessionPullRequest } from '#features/sessions';
 import type { SessionDetailViewProps } from './session-detail-view';
+import { projectIdOf, useSessionSlotContext } from './use-session-slot-context';
 import { withSessionPullRequests } from './with-session-pull-requests';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
-
-// The Session the Plugins' Changes answer for, once its Project is known; one object until either changes.
-function useChangesContext(
-  sessionId: string,
-  { snapshot }: SessionFeed,
-): ChangesContext | undefined {
-  const projectId = snapshot?.projectId;
-
-  return useMemo(
-    () => (projectId ? { sessionId, projectId } : undefined),
-    [sessionId, projectId],
-  );
-}
 
 // The Plugins' Changes with what their … menus do in this Session: copy the link, detach.
 function useRowActions(
@@ -50,7 +37,7 @@ export function useWithSessionPullRequests(
   feed: SessionFeed,
   props: SessionDetailViewProps,
 ): SessionDetailViewProps {
-  const context = useChangesContext(sessionId, feed);
+  const context = useSessionSlotContext(sessionId, projectIdOf(feed));
 
   return withSessionPullRequests(
     props,
