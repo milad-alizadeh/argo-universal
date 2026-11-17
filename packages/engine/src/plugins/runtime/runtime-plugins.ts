@@ -12,6 +12,7 @@ import {
   type PluginLocation,
 } from './plugin-location';
 import type { RuntimeResources } from './runtime-resources';
+import type { PluginBuilds } from './runtime-setup';
 import { hostCrashLine } from './status';
 
 type PluginInput = ConstructorParameters<typeof RuntimePlugin>[0];
@@ -22,8 +23,7 @@ type Dependencies = {
   clockStart: () => number | undefined;
   resources: RuntimeResources;
   log: (line: string) => void;
-  rebuilt: () => void;
-  watch: boolean;
+  builds: PluginBuilds;
 };
 
 export class RuntimePlugins {
@@ -97,7 +97,7 @@ export class RuntimePlugins {
   }
 
   private pluginInput(location: PluginLocation): PluginInput {
-    const { host, clockStart, resources, log, ...builds } = this.input;
+    const { host, clockStart, resources, log, builds } = this.input;
 
     return {
       entry: location.entry,

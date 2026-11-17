@@ -9,10 +9,13 @@ export type RuntimeSetup = {
   builds?: Partial<PluginBuilds>;
 };
 
-export const defaultBuilds: PluginBuilds = {
-  rebuilt: () => null,
-  watch: true,
-};
+// A build setting that is left out, or given as undefined, takes its default.
+export const buildsWithDefaults = (
+  builds: Partial<PluginBuilds>,
+): PluginBuilds => ({
+  rebuilt: builds.rebuilt ?? ((): null => null),
+  watch: builds.watch ?? true,
+});
 
 // A dev build landing may come with a changed `plugin.json`; only a dev Server watches sources, any other builds once.
 export const runtimeBuilds = (

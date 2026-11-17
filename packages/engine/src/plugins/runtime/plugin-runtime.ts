@@ -14,7 +14,7 @@ import type { PluginLocation } from './plugin-location';
 import { forgetOnce, logFallback, type Fallback } from './render-fallback';
 import { RuntimePlugins } from './runtime-plugins';
 import { RuntimeResources, type RuntimeInput } from './runtime-resources';
-import { defaultBuilds, type RuntimeSetup } from './runtime-setup';
+import { buildsWithDefaults, type RuntimeSetup } from './runtime-setup';
 import { TestControl } from './test-control';
 
 export class PluginRuntime {
@@ -72,8 +72,7 @@ export class PluginRuntime {
       clockStart: () => this.testControl.workerStart(),
       resources: this.resources,
       log: this.log,
-      ...defaultBuilds,
-      ...this.setup.builds,
+      builds: buildsWithDefaults(this.setup.builds ?? {}),
     };
   }
 
