@@ -20,20 +20,20 @@ type Resources = {
  */
 type Services = { changeClock?: PluginClock; log: (line: string) => void };
 
-// What one window of a Plugin's changes comes to: its Queries are read, and its Slots ask again at once.
+// What one window of a Plugin's changes comes to: its held Queries are read, and its open lists wake.
 const settled =
   ({ data, items }: Pick<Resources, 'data' | 'items'>) =>
   async (pluginId: string): Promise<void> => {
     const refreshed = data.writes.changed(pluginId);
 
-    items.changed(pluginId);
+    items.wake();
     await refreshed;
   };
 
 /*
  * How a Plugin's changes reach its pages (ADR-0060): `argo.changed()` and act-tier Operation runs are coalesced
  * per Plugin, then each window refreshes the Queries pages hold, marks the addresses whose answer differs and
- * asks the Slots again once. A change makes the Plugin's answers due at once; only the reading and the marks wait for the window. A new worker, which makes everything the App kept older code's, marks every page at once.
+ * wakes the open lists once. A change makes the Plugin's answers due, and drops what its Slots kept, at once; only the reading and the marks wait for the window. A new worker, which makes everything the App kept older code's, marks every page at once.
  */
 export class ChangeFlow {
   readonly changes: PageChanges;
@@ -57,6 +57,7 @@ export class ChangeFlow {
   // A Plugin's own change: its answers are due at once, what core cannot compare is marked, and the rest waits for the window.
   private said(resources: Resources, pluginId: string): void {
     resources.data.written(pluginId);
+    resources.items.drop(pluginId);
     this.markUncomparable(resources, pluginId);
     this.window.request(pluginId);
   }

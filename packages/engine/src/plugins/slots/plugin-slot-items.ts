@@ -156,17 +156,26 @@ export class PluginSlotItems {
     this.changes.bump();
   }
 
-  // What the Plugin shows changed: nothing it answered is kept, and open lists ask it again.
-  changed(pluginId: string): void {
+  // What the Plugin answered is dropped at once, so a list opened now asks it again; open lists wake when `wake` says so.
+  drop(pluginId: string): void {
     const worker = this.kept.get(pluginId);
 
-    if (worker) {
-      worker.epoch += 1;
-      worker.kept.clear();
-      worker.failed.clear();
-    }
+    if (!worker) return;
 
+    worker.epoch += 1;
+    worker.kept.clear();
+    worker.failed.clear();
+  }
+
+  // Open lists ask again.
+  wake(): void {
     this.changes.bump();
+  }
+
+  // What the Plugin shows changed: nothing it answered is kept, and open lists ask it again.
+  changed(pluginId: string): void {
+    this.drop(pluginId);
+    this.wake();
   }
 
   close(): void {
