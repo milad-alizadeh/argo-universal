@@ -21,6 +21,8 @@ export type PluginRuntimeOptions = Omit<
   clock?: PluginClock;
   // Where an account provider is found, so a sign-in can wake it; without it, it must already run.
   locate?: (pluginId: string) => Promise<PluginLocation>;
+  // Told whenever a Plugin's dev build lands.
+  rebuilt?: () => void;
 };
 
 type ServiceOptions = Omit<PluginServiceOptions, 'assets'> & {
@@ -31,12 +33,12 @@ export function createPluginRuntime(
   home: string,
   options: PluginRuntimeOptions,
 ): PluginRuntime {
-  const { clockStart, locate, ...rest } = options;
+  const { clockStart, locate, rebuilt, ...rest } = options;
   const held = heldLog(home, options.heldSecrets);
   const clock = options.clock ?? runtimeClockSource(clockStart);
   const back = reachBack(() => runtime, locate);
   const services = createServices(home, { ...rest, ...back, ...held, clock });
-  const runtime = new PluginRuntime(held.log, services, clock);
+  const runtime = new PluginRuntime(held.log, services, clock, rebuilt);
 
   return runtime;
 }
