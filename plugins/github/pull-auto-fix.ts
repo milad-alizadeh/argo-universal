@@ -1,15 +1,12 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { Automation, Offers } from './pull-automations';
 import { fetchComments } from './pull-comments';
-import {
-  autoFix,
-  failedOf,
-  fixOf,
-  openedByAnother,
-  fixCurrent,
-} from './pull-fix';
+import { autoFix, fixOf, openedByAnother } from './pull-fix';
+import { failedOf, runningOf } from './pull-fix-facts';
 import type { FixFacts } from './pull-fix-prompts';
+import { fixCurrent } from './pull-fix-send';
 import { createFixStore, type FixStore } from './pull-fix-store';
+import { withdrawWaiting } from './pull-fix-withdraw';
 import type { PullInfo } from './pull-info';
 import { lowered, sameLink } from './pull-kept';
 import { fetchChecks, fetchPull } from './pull-reads';
@@ -40,7 +37,12 @@ async function eventsNow(fetch: Fetch, link: PullLink): Promise<FixFacts> {
     fetchComments(fetch, link),
   ]);
 
-  return { pull, failed: failedOf(checks), comments };
+  return {
+    pull,
+    failed: failedOf(checks),
+    running: runningOf(checks),
+    comments,
+  };
 }
 
 const isOn = async (fix: FixStore, link: PullLink): Promise<boolean> =>
@@ -71,6 +73,17 @@ async function enable(
     await fixCurrent({ sessions, fix, record }, facts);
 }
 
+// Turning it off takes back its Prompts that still wait, so none starts after the person said stop.
+async function disable(
+  { sessions, fix }: Pick<Argo, 'sessions'> & { fix: FixStore },
+  link: PullLink,
+): Promise<void> {
+  const record = { ...lowered(link), enabled: false, stopHead: null };
+
+  await fix.disable(record);
+  await withdrawWaiting({ sessions, fix, record });
+}
+
 // How Auto-fix is offered on each of these Sessions' pull requests, from what it keeps for them.
 async function offersOf(
   fix: FixStore,
@@ -97,7 +110,7 @@ export function createAutoFix(
   return {
     offers: (sessionIds) => offersOf(fix, sessionIds),
     set: (link, on) =>
-      on ? enable({ ...argo, fix }, link) : fix.disable(lowered(link)),
+      on ? enable({ ...argo, fix }, link) : disable({ ...argo, fix }, link),
     watch: (projectId, fresh) =>
       autoFix({ sessions: argo.sessions, fix }, fresh, projectId),
     forget: (link) => fix.forget(link),

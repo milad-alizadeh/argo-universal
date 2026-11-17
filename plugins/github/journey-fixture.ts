@@ -11,7 +11,7 @@ import {
 import { onTestFinished } from 'vitest';
 import { githubFixture, pullOf, type GitHubFixture } from './github-fixture';
 import { archiveRecorder } from './journey-archive-fixture';
-import { promptRecorder } from './journey-prompts-fixture';
+import { promptRecorder, withdrawRecorder } from './journey-prompts-fixture';
 import { provider, signIn } from './journey-sign-in-fixture';
 
 export const project = {
@@ -130,6 +130,7 @@ const baseOptions = (
   clockStart: 0,
   sessions,
   promptSession: promptRecorder(github),
+  withdrawPrompt: withdrawRecorder(github),
   archiveSession: archiveRecorder(github),
 });
 
