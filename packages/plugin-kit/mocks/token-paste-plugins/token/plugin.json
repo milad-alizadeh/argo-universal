@@ -1,0 +1,51 @@
+{
+  "id": "token-paste",
+  "name": "Token paste",
+  "version": "0.0.1",
+  "engines": {
+    "argo": ">=0.0.0 <1.0.0"
+  },
+  "main": "index.tsx",
+  "icon": {
+    "sf": "key",
+    "material": "key"
+  },
+  "contributes": {
+    "nav": [
+      {
+        "id": "items",
+        "title": "Items",
+        "path": "/"
+      }
+    ],
+    "accounts": [
+      {
+        "host": "api.service.example",
+        "page": "/sign-in"
+      }
+    ],
+    "operations": [
+      {
+        "name": "signIn",
+        "label": "Sign in",
+        "description": "Checks a pasted token and signs in with it.",
+        "tier": "act",
+        "params": {
+          "token": {
+            "type": "string",
+            "description": "The pasted API token.",
+            "required": true,
+            "secret": true
+          }
+        }
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "fetch",
+      "host": "api.service.example",
+      "reason": "Reads the fixture service."
+    }
+  ]
+}

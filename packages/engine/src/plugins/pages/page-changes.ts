@@ -46,6 +46,15 @@ export class PageChanges {
     for (const listener of this.listeners) listener(pluginId);
   }
 
+  /*
+   * A Setting changed: its pages draw again and read it, but no Query is due, since `argo.settings.get` is not one.
+   */
+  public settingChanged(pluginId: string): void {
+    if (this.workers.generation(pluginId) === undefined) return;
+
+    for (const listener of this.listeners) listener(pluginId);
+  }
+
   // A new worker of the Plugin runs: what it kept in the App from the one before is stale.
   public restarted(pluginId: string): void {
     this.written(pluginId);

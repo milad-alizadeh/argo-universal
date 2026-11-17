@@ -161,7 +161,16 @@ class HostedPlugin implements PluginTest {
     return testOperations({ service, runtime }, this.options.pluginId);
   }
 
-  public async close(): Promise<void> {
+  private closing: Promise<void> | undefined;
+
+  // A test that restarts the Server closes the first start itself; the close the fixture registered then does nothing.
+  public close(): Promise<void> {
+    this.closing ??= this.closed();
+
+    return this.closing;
+  }
+
+  private async closed(): Promise<void> {
     try {
       await this.runtime.close();
     } finally {

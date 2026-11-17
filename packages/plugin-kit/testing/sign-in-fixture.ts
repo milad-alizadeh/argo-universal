@@ -77,9 +77,15 @@ const directory = fileURLToPath(
   new URL('../mocks/sign-in-plugins', import.meta.url),
 );
 
+// What a sign-in test may set: the services, the browser, the Settings, and what a restart keeps.
+export type StartOptions = Pick<
+  PluginTestOptions,
+  'network' | 'openBrowser' | 'settings' | 'secretStore' | 'clockStart' | 'home'
+>;
+
 export async function start(
-  plugin: 'device' | 'redirect',
-  options: Pick<PluginTestOptions, 'network' | 'openBrowser'>,
+  plugin: 'device' | 'redirect' | 'confidential',
+  options: StartOptions,
 ): Promise<PluginTest> {
   const test = await startPluginTest({
     directory,
@@ -94,6 +100,22 @@ export async function start(
 
   return test;
 }
+
+const param = (url: URL, name: string): string =>
+  url.searchParams.get(name) ?? '';
+
+// Plays the browser: the person approves at once, so the service sends them back to Argo with a code.
+export const approving =
+  (opened: URL[] = []) =>
+  async (url: string): Promise<void> => {
+    const authorize = new URL(url);
+    const back = new URL(param(authorize, 'redirect_uri'));
+
+    opened.push(authorize);
+    back.searchParams.set('state', param(authorize, 'state'));
+    back.searchParams.set('code', 'fixture-code');
+    await fetch(back);
+  };
 
 const clockStep = 5000;
 

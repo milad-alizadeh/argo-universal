@@ -32,6 +32,7 @@ import {
   type SlotProviders,
   type SlotSend,
 } from './slot-providers';
+import { tokenPaste } from './token-paste';
 import { Watches } from './watches';
 import * as loader from './worker-pages';
 
@@ -61,6 +62,7 @@ const exportsOf = {
   applyListMove,
   oauthFlow,
   deviceFlow,
+  tokenPaste,
   signInGate,
   provideSignIn,
   accountFetch,

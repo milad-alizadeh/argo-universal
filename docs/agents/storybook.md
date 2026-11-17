@@ -95,13 +95,15 @@ A PR that changes how the UI looks carries a before and an after screenshot of e
 Other checkouts serve Storybooks on this Mac, so pick a port nothing listens on (`lsof -nP -iTCP:<port> -sTCP:LISTEN` prints nothing) and shoot the story's iframe, which draws the story without Storybook's chrome:
 
 ```sh
-pnpm --filter @repo/storybook exec storybook dev -p <port> --exact-port --ci
+EXPO_PUBLIC_STORYBOOK_WS_PORT=<sync port> pnpm --filter @repo/storybook exec storybook dev -p <port> --exact-port --ci
 pnpm --filter @repo/storybook exec playwright screenshot --viewport-size "1280,800" \
   --wait-for-selector "#storybook-root > *" --wait-for-timeout 1000 \
   "http://localhost:<port>/iframe.html?id=<story-id>&viewMode=story" /tmp/<name>-after.png
 ```
 
 - `--exact-port --ci` makes Storybook exit when the port is taken; without them it waits on a prompt while the screenshot shoots the other checkout's Storybook.
+- Storybook also opens its sync channel, on 7007 unless `EXPO_PUBLIC_STORYBOOK_WS_PORT` names another, and fails to start while another checkout holds it. Pick a free sync port the same way as the web port.
+- A Plugin page has no story of its own. Draw it from a recorded tree: open the page in the Plugin's harness test, write `JSON.stringify(page.tree)` for each state to a JSON file beside `packages/client/src/screens/plugins/$path/plugin-detail-view.stories.tsx`, and add a story whose args are `{ root: WireNode.parse(tree) }`, as the Jira issue page's stories in `plugin-detail-view-fixtures.ts` are. Commit the stories, so a later change has a before to diff against, and leave the recording code out.
 - The two waits hold the shot until the story has drawn; without them it is Storybook's loading spinner. Open each image and check it shows the story.
 - `<story-id>` is the `id` in `http://localhost:<port>/index.json`.
 - Shoot the story that shows the changed state at the width where it changes: 390 wide for a phone, 1280 for a wide window. When no story shows the state, write one first.

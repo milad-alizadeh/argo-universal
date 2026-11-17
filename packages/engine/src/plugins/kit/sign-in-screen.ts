@@ -13,6 +13,7 @@ import {
   type Card,
   type Pressed,
 } from './sign-in-card';
+import { failureOf, secretField } from './sign-in-paste';
 import { stepOf, type Step } from './sign-in-step';
 
 // What the screen draws and the Operations its rows run, as values the App acts on (ADR-0050).
@@ -22,6 +23,7 @@ export type SignInParts = {
   data: SignInData;
   start: Pressed;
   cancel: Pressed;
+  paste: Pressed;
 };
 
 const msPerMinute = 60_000;
@@ -31,14 +33,17 @@ const handOver = (name: string): Card => ({
   description: `Open ${name} in Argo on the Server Device to sign in. This device updates when you’re done.`,
 });
 
+// What the page asks for first, or why the service refused the last sign-in.
+const invitation = (parts: SignInParts): string =>
+  parts.data.rejected ?? `Sign in to use ${parts.name} in Argo.`;
+
 const canStart = ({ data }: SignInParts): boolean => !data.needsServerDevice;
 
 const idleStep = (parts: SignInParts): Card =>
   canStart(parts)
     ? {
         title: 'Connect your account',
-        description:
-          parts.data.rejected ?? `Sign in to use ${parts.name} in Argo.`,
+        description: invitation(parts),
         rows: [actionRow(`Sign in to ${parts.name}`, parts.start)],
         footer: 'Opens your browser. The token stays on the Server Device.',
       }
@@ -103,7 +108,29 @@ function plainStep(parts: SignInParts, step: Plain): Card {
   return step.kind === 'idle' ? idleStep(parts) : waitingStep(parts, step);
 }
 
-function stepCard(parts: SignInParts): Card {
+const pasteInvitation = (parts: SignInParts): string =>
+  parts.data.rejected ??
+  `Paste an API token you made at ${parts.name}. Argo keeps it in your computer’s secret store.`;
+
+// The field a token is pasted into, with a refused token's reason as the footer under it.
+function fieldCard(parts: SignInParts): Card {
+  const error = failureOf(parts.data.flow);
+
+  return {
+    title: 'Connect your account',
+    description: pasteInvitation(parts),
+    rows: [secretField(parts, error)],
+    ...(error && { footer: error }),
+  };
+}
+
+// A token paste draws its field until it is signed in, on every Device, never handing over.
+const pasteCard = (parts: SignInParts): Card =>
+  parts.data.flow.kind === 'signed-in'
+    ? signedInStep(parts.data.flow)
+    : fieldCard(parts);
+
+function flowCard(parts: SignInParts): Card {
   const step = stepOf(parts.data.flow);
 
   if (step.kind === 'code') return codeStep(parts, step);
@@ -115,5 +142,8 @@ function stepCard(parts: SignInParts): Card {
 export const signInScreen = (parts: SignInParts): ReactElement =>
   jsx('Screen', {
     title: parts.name,
-    children: signIn(parts, stepCard(parts)),
+    children: signIn(
+      parts,
+      parts.data.pastesToken ? pasteCard(parts) : flowCard(parts),
+    ),
   });

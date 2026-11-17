@@ -7,6 +7,7 @@ import {
   type PluginDiagnostic,
   type SourceFile,
 } from './diagnostics';
+import { unavailableGlobalMessage } from './global-fixes';
 
 // CommonJS module names, which Node gives every file but no Plugin realm has.
 const moduleNames = ['require', 'module', 'exports', '__dirname', '__filename'];
@@ -64,7 +65,7 @@ function diagnostic(
     file: input.file,
     line: original.line ?? 1,
     column: (original.column ?? 0) + 1,
-    message: `Node global ${String(match[1])} is unavailable; use argo`,
+    message: unavailableGlobalMessage(String(match[1])),
   };
 }
 

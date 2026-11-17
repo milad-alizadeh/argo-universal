@@ -4,7 +4,12 @@ import type {
 } from '@repo/contracts/plugins/oauth-flow-api';
 import { z } from 'zod';
 import { formPost } from './form-body';
-import { expiresAtMsOf, type KeptToken, type Refresh } from './kept-token';
+import {
+  expiresAtMsOf,
+  type KeptToken,
+  type Refresh,
+  type Refreshed,
+} from './kept-token';
 
 const AnswerJson = z.json();
 
@@ -82,40 +87,115 @@ export function keptIn(
   return { access, refresh, expiresAtMs: expiresAtMsOf(expiresIn) };
 }
 
-// The client ID as a sign-in or a refresh reads it: given, or read from where the Plugin keeps it.
-export async function clientIdOf(
-  options: OAuthFlowOptions,
-): Promise<string | null> {
-  const { clientId } = options;
-  const value = typeof clientId === 'function' ? await clientId() : clientId;
+type Given = OAuthFlowOptions['clientId'];
+
+// A value as a sign-in or a refresh reads it: given, or read from where the Plugin keeps it.
+async function read(given: Given): Promise<string | null> {
+  const value = typeof given === 'function' ? await given() : given;
 
   return value || null;
 }
 
-// RFC 6749 section 6, as the public client the sign-in was: the client ID and the refresh token, no client secret.
+// What a token request says of the client (RFC 6749 section 2.3.1): its ID, and its secret when the service needs one.
+export type Client = { client_id: string; client_secret?: string };
+
+const noClientId = 'This Plugin has no OAuth client ID yet.';
+
+const noClientSecret =
+  'This Plugin has no OAuth client secret yet. Set it in the Plugin’s settings.';
+
+// The secret a confidential client reads; nothing at all for a public client, which was given none to read.
+const secretOf = (
+  options: OAuthFlowOptions,
+): Promise<string | null> | undefined =>
+  options.clientSecret === undefined ? undefined : read(options.clientSecret);
+
+function withSecret(
+  clientId: string,
+  secret: string | null | undefined,
+): Client | string {
+  if (secret === undefined) return { client_id: clientId };
+
+  return secret === null
+    ? noClientSecret
+    : { client_id: clientId, client_secret: secret };
+}
+
+/*
+ * The client a token request sends, or what the Plugin has not set yet. A flow given no `clientSecret` is a public
+ * client; one given a `clientSecret` that reads nothing cannot sign in, since the service would refuse it.
+ */
+export async function clientOf(
+  options: OAuthFlowOptions,
+): Promise<Client | string> {
+  const clientId = await read(options.clientId);
+
+  if (!clientId) return noClientId;
+
+  return withSecret(clientId, await secretOf(options));
+}
+
+// RFC 6749 section 6: the client, with its secret when it has one, and the refresh token.
 export const oauthRefresh =
   (fetch: OAuthFlowArgo['fetch'], options: OAuthFlowOptions): Refresh =>
   async (refresh) => {
-    const clientId = await clientIdOf(options);
+    const client = await clientOf(options);
 
-    if (!clientId) return null;
+    if (typeof client === 'string') return null;
 
     const reply = await fetch(
       options.tokenUrl,
       formPost({
         grant_type: 'refresh_token',
-        client_id: clientId,
+        ...client,
         refresh_token: refresh,
       }),
     );
 
-    return keptFromReply(reply, options.tokenPath);
+    return refreshedBy(reply, options.tokenPath);
   };
 
-// A refusal, or no answer at all, gives no token.
-async function keptFromReply(
-  reply: Awaited<ReturnType<OAuthFlowArgo['fetch']>>,
+const badRequest = 400;
+
+const unauthorized = 401;
+
+// RFC 6749 section 5.2's errors that say this refresh token, or this client, will not be accepted again.
+const refusedErrors: ReadonlySet<string> = new Set([
+  'invalid_grant',
+  'invalid_client',
+  'unauthorized_client',
+]);
+
+const RefusalJson = z.object({ error: z.string() });
+
+/*
+ * RFC 6749 section 5.2: a refresh token that expired or was revoked is refused with `invalid_grant`, a 400, and a
+ * client the service no longer accepts with a 401. Atlassian refuses a spent or expired rotating refresh token with a
+ * 403 and `unauthorized_client`, so the error the answer names counts too. Signing in again is the way on from any of
+ * them. Any other failure, no answer at all among them, gives no token, and the kept one is tried.
+ */
+const refusedStatuses: ReadonlySet<number> = new Set([
+  badRequest,
+  unauthorized,
+]);
+
+const namesRefusal = (text: string): boolean =>
+  refusedErrors.has(RefusalJson.safeParse(parsed(text)).data?.error ?? '');
+
+const refused = (status: number, text: string): boolean =>
+  refusedStatuses.has(status) || namesRefusal(text);
+
+type Reply = Awaited<ReturnType<OAuthFlowArgo['fetch']>>;
+
+async function refusal(reply: NonNullable<Reply>): Promise<Refreshed> {
+  return refused(reply.status, await reply.text()) ? 'refused' : null;
+}
+
+async function refreshedBy(
+  reply: Reply,
   path: OAuthFlowOptions['tokenPath'],
-): Promise<KeptToken | null> {
-  return reply?.ok ? keptIn(await reply.text(), path) : null;
+): Promise<Refreshed> {
+  if (!reply) return null;
+
+  return reply.ok ? keptIn(await reply.text(), path) : refusal(reply);
 }

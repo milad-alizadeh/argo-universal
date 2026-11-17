@@ -76,6 +76,7 @@
     "./plugins/oauth-flow-api": "./src/plugins/oauth-flow-api.ts",
     "./plugins/device-flow-api": "./src/plugins/device-flow-api.ts",
     "./plugins/sign-in-api": "./src/plugins/sign-in-api.ts",
+    "./plugins/token-paste-api": "./src/plugins/token-paste-api.ts",
     "./plugins/hooks": "./src/plugins/hooks.ts",
     "./plugins/wire-limits": "./src/plugins/wire-limits.ts",
     "./plugins/replaceable-fixtures": "./mocks/replaceable-slots.ts",

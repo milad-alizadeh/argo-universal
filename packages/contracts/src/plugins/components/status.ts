@@ -53,7 +53,11 @@ export const statusComponents = {
     {
       group: 'status',
       slots: { mark: ['Svg', 'Image', 'Icon'] },
-      children: ['FieldGroup.Link', 'FieldGroup.Value'] as const,
+      children: [
+        'FieldGroup.Link',
+        'FieldGroup.Value',
+        'FieldGroup.SecretField',
+      ] as const,
       appearance:
         'Keeps to the Settings content column. The mark is a rounded tile; with no `mark`, the App draws the Plugin’s own icon in it.',
       accessibility: {

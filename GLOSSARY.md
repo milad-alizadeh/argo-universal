@@ -270,6 +270,10 @@ _Avoid_: Credential, password, Keychain item
 The kit's ready-made sign-in for a service that signs in with OAuth: the Plugin names the service's authorize and token URLs, its client ID and the Account's host, and the flow opens the browser, waits for the person, keeps the token and adds the Account. It holds where the sign-in stands, such as waiting or failed, for the Plugin's sign-in page to draw, and a sign-in started can be cancelled. It runs on the Server Device only.
 _Avoid_: OAuth helper, login flow, auth handler
 
+**Token paste**:
+The kit's ready-made sign-in for a service that takes a personal API token: the Plugin names the Account's host, the header the token goes in and a check that names whose token it is, and the kit draws the field, checks a pasted token, keeps it and adds the Account. A refused token is shown beside the field. It runs on any Device.
+_Avoid_: API key login, token form, manual token
+
 ## Agents and Sessions
 
 **Agent**:

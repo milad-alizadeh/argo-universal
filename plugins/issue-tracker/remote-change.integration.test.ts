@@ -1,6 +1,7 @@
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { WireNode } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
 import {
   chooseGithub,
@@ -16,6 +17,10 @@ type Test = Awaited<ReturnType<typeof tracker>>;
 const testTimeout = 20_000;
 
 const noRemote = 'This Project has no GitHub remote.';
+
+// The EmptyState in the issue list's place that says why; the sidebar's Section footer says the same.
+const noRemoteState = (node: WireNode): boolean =>
+  node.type === 'EmptyState' && node.props.title === noRemote;
 
 async function setRemote(test: Test, originUrl: string | null): Promise<void> {
   const path = await mkdtemp(join(tmpdir(), 'argo-remote-'));
@@ -60,7 +65,7 @@ it(
 
     const list = await openFilter(test);
 
-    expect(list.findText(noRemote)).toBeDefined();
+    expect(list.find(noRemoteState)).toBeDefined();
     expect(list.findText(issueTitle)).toBeUndefined();
   },
   testTimeout,
@@ -72,7 +77,7 @@ it(
     const test = await openList(null);
     const list = await openFilter(test);
 
-    expect(list.findText(noRemote)).toBeDefined();
+    expect(list.find(noRemoteState)).toBeDefined();
   },
   testTimeout,
 );

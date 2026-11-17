@@ -21,6 +21,8 @@ export type FixtureAnswer = {
   // Sent as JSON unless `text` is given.
   json?: unknown;
   text?: string;
+  // Response headers beside the content type, such as a 429's `retry-after`.
+  headers?: Record<string, string>;
 };
 
 export type FixtureServices = {
@@ -67,7 +69,10 @@ function rendered({ json, text }: FixtureAnswer): Rendered {
 function answer(response: ServerResponse, given: FixtureAnswer): void {
   const { type, body } = rendered(given);
 
-  response.writeHead(given.status ?? okStatus, { 'content-type': type });
+  response.writeHead(given.status ?? okStatus, {
+    ...given.headers,
+    'content-type': type,
+  });
   response.end(body);
 }
 
