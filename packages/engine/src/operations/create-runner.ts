@@ -12,6 +12,7 @@ export function createRunner(deps: OperationsDeps): OperationRunner {
   return new OperationRunner(createImplementations(deps), {
     directory,
     chains,
+    archiveOwn: (sessionId) => deps.sessions.archiveOwn(sessionId),
     scope: new SessionScope({ directory, createId: deps.createId, chains }),
   });
 }
