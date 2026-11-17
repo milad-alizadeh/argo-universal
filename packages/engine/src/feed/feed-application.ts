@@ -1,4 +1,5 @@
 import type { SessionUpdate } from '@repo/contracts';
+import { steppedActivityAt } from './activity-step';
 import {
   applyFeedChange,
   changedRowId,
@@ -61,7 +62,7 @@ const acceptedFeedApplication = (
 ): FeedApplication => ({
   state: {
     ...result.feed,
-    activityAt: context.now(),
+    activityAt: steppedActivityAt(context.activityAt, context.now()),
     changedRowIds: changedRowIds(context, changedRowId(event.change)),
     streamEvents: [...context.streamEvents, result.streamEvent],
     outputBlobs: [...context.outputBlobs, ...(event.blobs ?? [])],
