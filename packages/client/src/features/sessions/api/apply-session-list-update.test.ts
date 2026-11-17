@@ -1,4 +1,8 @@
-import type { SessionInfo, SessionListOutput } from '@repo/contracts';
+import type {
+  SessionInfo,
+  SessionListInput,
+  SessionListOutput,
+} from '@repo/contracts';
 import { sessionRows } from '@repo/mocks/app';
 import { type InfiniteData, QueryClient } from '@tanstack/react-query';
 import { describe, expect, it } from 'vitest';
@@ -6,7 +10,7 @@ import { applySessionListUpdate } from './apply-session-list-update';
 
 const list = { queryKey: [['session', 'list']] };
 
-const keyFor = (input: object): unknown[] => [
+const keyFor = (input: SessionListInput): unknown[] => [
   ['session', 'list'],
   { input, type: 'infinite' },
 ];
@@ -29,7 +33,7 @@ const session = (
 function listWith(
   sessions: SessionInfo[],
   nextCursor: string | null,
-  input: object = {},
+  input: SessionListInput = {},
 ): QueryClient {
   const client = new QueryClient();
 

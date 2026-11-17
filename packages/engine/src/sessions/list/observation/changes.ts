@@ -13,13 +13,7 @@ export function selectSessionChanges(): (
   let previous = new Map<string, Listed>();
 
   return (state): SessionListUpdate[] => {
-    const next = new Map(
-      state.map((row): [string, Listed] => [
-        row.information.sessionId,
-        listed(row, previous.get(row.information.sessionId)),
-      ]),
-    );
-
+    const next = listedRows(state, previous);
     const changed = changedSessions(state, previous, next);
 
     changed.push(...removedSessions(previous, next));
@@ -27,6 +21,18 @@ export function selectSessionChanges(): (
 
     return changed;
   };
+}
+
+function listedRows(
+  state: SessionListState,
+  previous: Map<string, Listed>,
+): Map<string, Listed> {
+  return new Map(
+    state.map((row): [string, Listed] => [
+      row.information.sessionId,
+      listed(row, previous.get(row.information.sessionId)),
+    ]),
+  );
 }
 
 function listed(row: SessionListState[number], before?: Listed): Listed {
@@ -41,15 +47,21 @@ function changedSessions(
   next: Map<string, Listed>,
 ): SessionListUpdate[] {
   return rows
-    .filter(
-      (row): boolean =>
-        previous.get(row.information.sessionId)?.json !==
-        next.get(row.information.sessionId)?.json,
-    )
+    .filter((row): boolean => isChanged(row, previous, next))
     .map((row): SessionListUpdate => ({
       type: 'changed',
       session: row.information,
     }));
+}
+
+function isChanged(
+  row: SessionListState[number],
+  previous: Map<string, Listed>,
+  next: Map<string, Listed>,
+): boolean {
+  const { sessionId } = row.information;
+
+  return previous.get(sessionId)?.json !== next.get(sessionId)?.json;
 }
 
 export function selectSessionCounts(): (
