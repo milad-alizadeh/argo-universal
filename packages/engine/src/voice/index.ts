@@ -1,7 +1,5 @@
 export { voiceCallMachine, voiceCallSystemId } from './call.machine';
 
-export type { VoiceCallActorRef } from './call.machine';
-
 export type { VoiceCallInput } from './call-types';
 
 export {
@@ -10,14 +8,7 @@ export {
   sessionBriefing,
 } from './engine-input';
 
-export { FakeVoiceProvider } from './fake-provider';
-
-export type {
-  VoiceDelivery,
-  VoiceProvider,
-  VoiceProviderCall,
-  VoiceProviderEvent,
-} from './provider';
+export type { VoiceProvider } from './provider';
 
 export { createVoiceRouter } from './router';
 

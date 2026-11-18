@@ -6,7 +6,7 @@ import type { VoiceAvailability } from '@repo/contracts';
  */
 
 // The connection's standing as the provider sees it: the four values of the call's connection.
-export type VoiceConnectionStatus =
+type VoiceConnectionStatus =
   | 'connecting'
   | 'connected'
   | 'disconnected'
