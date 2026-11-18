@@ -24,6 +24,12 @@ import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.moc
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import { usageLimitsSession } from './session-detail-view-usage.mocks';
 import {
+  callConnectingSession,
+  callElsewhereSession,
+  voiceCallSession,
+  voiceReadySession,
+} from './session-detail-view-voice.mocks';
+import {
   emptySession,
   idleSession,
   longSession,
@@ -123,6 +129,27 @@ export const DraggingFiles: Story = {
       new DragEvent('dragenter', { bubbles: true, dataTransfer: transfer }),
     );
   },
+};
+
+// A Voice call here: the orb pinned above the Feed with its label and timer, and the Composer with mic, speaker and End.
+export const OnAVoiceCall: Story = {
+  args: { state: 'open', ...voiceCallSession },
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
+};
+
+// The call is still connecting: End shows at once with its ring turning, and the field says so.
+export const VoiceCallConnecting: Story = {
+  args: { state: 'open', ...callConnectingSession },
+};
+
+// No call, nothing written, a usable Voice provider: the voice button, Send's circle with the five bars.
+export const VoiceReady: Story = {
+  args: { state: 'open', ...voiceReadySession },
+};
+
+// The call runs in another Session: the voice button's slot names it and takes the person there.
+export const CallInAnotherSession: Story = {
+  args: { state: 'open', ...callElsewhereSession },
 };
 
 export const Opening: Story = { args: { state: 'opening' } };
