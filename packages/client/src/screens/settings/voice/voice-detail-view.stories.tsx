@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
-import { unusableVoice, usableVoice } from './voice-detail-view-fixtures';
 import { VoiceDetailView } from './voice-detail-view';
+import { unusableVoice, usableVoice } from './voice-detail-view-fixtures';
 
 const meta = {
   title: 'Screens/Settings/Voice',

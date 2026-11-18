@@ -54,6 +54,6 @@ export function useVoiceSettings(): Controls {
     onEnabledChange: (enabled) => change.mutate({ enabled }),
     onProviderChange: (provider) => change.mutate({ provider }),
     onVoiceChange: (voice) => change.mutate({ voice }),
-    onRetry: () => query.refetch(),
+    onRetry: () => void query.refetch(),
   };
 }

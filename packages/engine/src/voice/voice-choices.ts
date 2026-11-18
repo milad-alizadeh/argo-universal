@@ -6,7 +6,7 @@ import type {
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import type { VoiceProvider } from './provider';
-import type { StoredVoiceSettings } from './voice-settings';
+import type { StoredVoiceSettings, VoiceSettingsStore } from './voice-settings';
 
 const noChoices: Omit<VoiceSettings, 'enabled'> = {
   provider: null,
@@ -19,7 +19,7 @@ const firstVoice = (voices: VoiceOption[]): string | null =>
   voices[0]?.id ?? null;
 
 // A stored voice the provider still lists, else the provider's first.
-export const voiceChosen = (
+const voiceChosen = (
   stored: string | null,
   voices: VoiceOption[],
 ): string | null =>
@@ -49,7 +49,7 @@ async function offered(
 }
 
 // The settings as the person sees them: what is stored, narrowed to what the Server's provider offers.
-export async function settingsOf(
+async function settingsOf(
   stored: StoredVoiceSettings,
   provider: VoiceProvider | null,
 ): Promise<VoiceSettings> {
@@ -72,8 +72,9 @@ function requireProvider(
     throw refuse(`There is no Voice provider ${id}`);
 }
 
-const voicesOf = async (provider: VoiceProvider | null): Promise<VoiceOption[]> =>
-  (await provider?.voices()) ?? [];
+const voicesOf = async (
+  provider: VoiceProvider | null,
+): Promise<VoiceOption[]> => (await provider?.voices()) ?? [];
 
 async function requireVoice(
   id: string | undefined,
@@ -94,7 +95,7 @@ const kept = (
 });
 
 // What is stored once the change is applied; a choice the Server does not list is refused.
-export async function changedSettings(
+async function changedSettings(
   stored: StoredVoiceSettings,
   change: VoiceSettingsChange,
   provider: VoiceProvider | null,
@@ -103,4 +104,46 @@ export async function changedSettings(
   await requireVoice(change.voice, provider);
 
   return { ...kept(stored, change), provider: provider?.id ?? null };
+}
+
+// The person's Voice settings against the Server's provider: read, changed, and heard when they change.
+export class VoiceChoices {
+  private readonly listeners = new Set<() => void>();
+
+  public constructor(
+    private readonly store: VoiceSettingsStore,
+    private readonly provider: () => VoiceProvider | null,
+  ) {}
+
+  public listen(listener: () => void): () => void {
+    this.listeners.add(listener);
+
+    return () => this.listeners.delete(listener);
+  }
+
+  public enabled(): boolean {
+    return this.store.read().enabled;
+  }
+
+  public settings(): Promise<VoiceSettings> {
+    return settingsOf(this.store.read(), this.provider());
+  }
+
+  public async change(change: VoiceSettingsChange): Promise<VoiceSettings> {
+    const stored = this.store.read();
+    await this.store.write(
+      await changedSettings(stored, change, this.provider()),
+    );
+
+    for (const listener of this.listeners) listener();
+
+    return this.settings();
+  }
+
+  // The voice the next call speaks with: the one chosen, else the provider's first.
+  public async voice(): Promise<string | undefined> {
+    const voices = await voicesOf(this.provider());
+
+    return voiceChosen(this.store.read().voice, voices) ?? undefined;
+  }
 }

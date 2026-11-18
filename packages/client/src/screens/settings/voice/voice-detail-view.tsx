@@ -1,4 +1,4 @@
-import type { VoiceSettings } from '@repo/contracts';
+import type { VoiceAvailability, VoiceSettings } from '@repo/contracts';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
@@ -19,7 +19,9 @@ export interface VoiceDetailViewProps {
   onBack?: () => void;
 }
 
-export function VoiceDetailView(props: VoiceDetailViewProps): React.JSX.Element {
+export function VoiceDetailView(
+  props: VoiceDetailViewProps,
+): React.JSX.Element {
   return (
     <Screen title="Voice" onBack={props.onBack}>
       <FieldGroup>
@@ -63,13 +65,16 @@ function switchSection(props: VoiceDetailViewProps): React.JSX.Element {
   );
 }
 
-// Why the chosen provider cannot be used, when it cannot.
-function unusableReason(settings: VoiceSettings): string | undefined {
-  const chosen = settings.providers.find(({ id }) => id === settings.provider);
-  const availability = chosen?.availability;
+const reasonOf = (
+  availability: VoiceAvailability | undefined,
+): string | undefined =>
+  availability?.usable === false ? availability.reason : undefined;
 
-  return availability?.usable === false ? availability.reason : undefined;
-}
+// Why the chosen provider cannot be used, when it cannot.
+const unusableReason = (settings: VoiceSettings): string | undefined =>
+  reasonOf(
+    settings.providers.find(({ id }) => id === settings.provider)?.availability,
+  );
 
 const providerOptions = (
   settings: VoiceSettings,
@@ -135,6 +140,8 @@ function statusSection(props: VoiceDetailViewProps): React.JSX.Element | null {
   const message = props.error ?? messages[props.voice.status];
 
   return message ? (
-    <FieldGroup.Section footer={message}>{retryButton(props)}</FieldGroup.Section>
+    <FieldGroup.Section footer={message}>
+      {retryButton(props)}
+    </FieldGroup.Section>
   ) : null;
 }

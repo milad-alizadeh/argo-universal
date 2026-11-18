@@ -9,17 +9,18 @@ import type {
   VoiceStatus,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import { waitFor, type SnapshotFrom } from 'xstate';
+import { waitFor } from 'xstate';
 import { sessionActorId } from '../sessions';
-import type { EndedCall } from './call-types';
-import type { VoiceCallActorRef, voiceCallMachine } from './call.machine';
+import type { VoiceCallEvent } from './call-types';
+import type { VoiceCallActorRef } from './call.machine';
 import { Changes } from './changes';
 import type { VoiceProvider } from './provider';
 import type { VoiceSessions } from './session-link';
-import { changedSettings, settingsOf, voiceChosen } from './voice-choices';
+import { answerOf, startSettled } from './voice-call-answer';
+import { VoiceChoices } from './voice-choices';
 import type { VoiceSettingsStore } from './voice-settings';
 
-type CallSnapshot = SnapshotFrom<typeof voiceCallMachine>;
+type CallStart = Extract<VoiceCallEvent, { type: 'call.start' }>;
 
 // What the App and Operations ask of the Voice call: start it, end it, read it, watch it.
 export interface VoiceCallsPort {
@@ -37,22 +38,18 @@ export interface VoiceCallsPort {
   changeSettings: (change: VoiceSettingsChange) => Promise<VoiceSettings>;
 }
 
-const unavailable = (message: string): TRPCError =>
+export const unavailable = (message: string): TRPCError =>
   new TRPCError({ code: 'PRECONDITION_FAILED', message });
 
 // The Voice call machine behind its Operations: it checks what can be refused before the machine is asked.
 export class VoiceCalls implements VoiceCallsPort {
+  private readonly choices: VoiceChoices;
+
   public constructor(
     private readonly actor: VoiceCallActorRef,
-    private readonly store: VoiceSettingsStore,
-  ) {}
-
-  private readonly listeners = new Set<() => void>();
-
-  public listen(listener: () => void): () => void {
-    this.listeners.add(listener);
-
-    return () => this.listeners.delete(listener);
+    store: VoiceSettingsStore,
+  ) {
+    this.choices = new VoiceChoices(store, () => this.provider());
   }
 
   public async status(): Promise<VoiceStatus> {
@@ -62,44 +59,28 @@ export class VoiceCalls implements VoiceCallsPort {
       call: call && this.callOf(call.callId, call.sessionId),
       ended,
       availability: await this.availability(),
-      enabled: this.store.read().enabled,
+      enabled: this.choices.enabled(),
     };
   }
 
   public settings(): Promise<VoiceSettings> {
-    return settingsOf(this.store.read(), this.provider());
+    return this.choices.settings();
   }
 
-  public async changeSettings(
-    change: VoiceSettingsChange,
-  ): Promise<VoiceSettings> {
-    const changed = await changedSettings(
-      this.store.read(),
-      change,
-      this.provider(),
-    );
-    await this.store.write(changed);
-    for (const listener of this.listeners) listener();
-
-    return this.settings();
+  public changeSettings(change: VoiceSettingsChange): Promise<VoiceSettings> {
+    return this.choices.change(change);
   }
 
   public async start(
     input: VoiceStartInput,
     connection?: AbortSignal,
   ): Promise<VoiceStartOutput> {
-    if (!this.store.read().enabled) throw unavailable('Voice calls are off');
-    const availability = await this.availability();
-
-    if (!availability.usable) throw unavailable(availability.reason);
-    this.requireRoom(input.sessionId);
+    await this.requireStartable(input.sessionId);
     connection?.throwIfAborted();
-    const callId = randomUUID();
-    const voice = await this.voice();
-    this.actor.send({ type: 'call.start', callId, ...input, voice, connection });
-    const settled = await waitFor(this.actor, startSettled);
+    const event = await this.callStart(input, connection);
+    this.actor.send(event);
 
-    return answerOf(settled, callId);
+    return answerOf(await waitFor(this.actor, startSettled), event.callId);
   }
 
   public end(sessionId?: string): VoiceEndOutput {
@@ -114,7 +95,7 @@ export class VoiceCalls implements VoiceCallsPort {
   }
 
   public async *watch(signal: AbortSignal): AsyncGenerator<VoiceStatus> {
-    const changes = new Changes(this.actor, signal, this);
+    const changes = new Changes(this.actor, signal, this.choices);
 
     try {
       yield await this.status();
@@ -140,19 +121,36 @@ export class VoiceCalls implements VoiceCallsPort {
     return this.actor.getSnapshot().context.provider;
   }
 
-  // The voice the next call speaks with: the one chosen, else the provider's first.
-  private async voice(): Promise<string | undefined> {
-    const voices = (await this.provider()?.voices()) ?? [];
-
-    return voiceChosen(this.store.read().voice, voices) ?? undefined;
-  }
-
   private async availability(): Promise<VoiceAvailability> {
     const provider = this.provider();
 
     return provider
       ? provider.availability()
       : { usable: false, reason: 'No Voice provider is configured' };
+  }
+
+  private async callStart(
+    input: VoiceStartInput,
+    connection?: AbortSignal,
+  ): Promise<CallStart> {
+    const voice = await this.choices.voice();
+
+    return {
+      type: 'call.start',
+      callId: randomUUID(),
+      ...input,
+      voice,
+      connection,
+    };
+  }
+
+  // Voice calls are on, the provider can be used, and there is room for a call in this Session.
+  private async requireStartable(sessionId: string): Promise<void> {
+    if (!this.choices.enabled()) throw unavailable('Voice calls are off');
+    const availability = await this.availability();
+
+    if (!availability.usable) throw unavailable(availability.reason);
+    this.requireRoom(sessionId);
   }
 
   private requireRoom(sessionId: string): void {
@@ -169,61 +167,3 @@ export class VoiceCalls implements VoiceCallsPort {
       });
   }
 }
-
-// The start has settled once the provider answered or the call is over.
-const startSettled = (snapshot: CallSnapshot): boolean =>
-  snapshot.matches('idle') || snapshot.context.call?.answer != null;
-
-const answerOfCall = (snapshot: CallSnapshot, callId: string): string | null =>
-  snapshot.context.call?.callId === callId
-    ? snapshot.context.call.answer
-    : null;
-
-const endedMessage = (ended: EndedCall | null): string =>
-  ended
-    ? `The Voice call ended: ${ended.reason}`
-    : 'The Voice call failed to start';
-
-// Why a start that settled without an answer did not get one.
-const failureOf = ({ context }: CallSnapshot): string =>
-  context.failure ?? endedMessage(context.ended);
-
-function answerOf(snapshot: CallSnapshot, callId: string): VoiceStartOutput {
-  const answer = answerOfCall(snapshot, callId);
-
-  if (answer !== null) return { callId, answer };
-
-  throw new TRPCError({
-    code: 'INTERNAL_SERVER_ERROR',
-    message: failureOf(snapshot),
-  });
-}
-
-const noStatus: VoiceStatus = {
-  call: null,
-  ended: null,
-  availability: { usable: false, reason: 'Voice calls are not available' },
-  enabled: true,
-};
-
-// What the Server runs with when it was given no Voice call machine: a Voice call can never start.
-export const noVoiceCalls: VoiceCallsPort = {
-  status: () => Promise.resolve(noStatus),
-  start: () => Promise.reject(unavailable('Voice calls are not available')),
-  end: () => ({ ended: false }),
-  attach: () => {},
-  settings: () =>
-    Promise.resolve({
-      enabled: true,
-      provider: null,
-      voice: null,
-      providers: [],
-      voices: [],
-    }),
-  changeSettings: () =>
-    Promise.reject(unavailable('Voice calls are not available')),
-  watch: async function* () {
-    await Promise.resolve();
-    yield noStatus;
-  },
-};

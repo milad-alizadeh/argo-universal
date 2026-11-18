@@ -41,7 +41,9 @@ export class VoiceSettingsStore {
   }
 }
 
-const storedOf = (row: typeof serverSettings.$inferSelect): StoredVoiceSettings => ({
+const storedOf = (
+  row: typeof serverSettings.$inferSelect,
+): StoredVoiceSettings => ({
   enabled: row.voiceCalls,
   provider: row.voiceProvider,
   voice: row.voiceName,

@@ -8,7 +8,9 @@ export type { VoiceProvider } from './provider';
 
 export { createVoiceRouter } from './router';
 
-export { VoiceCalls, noVoiceCalls, type VoiceCallsPort } from './voice-calls';
+export { noVoiceCalls } from './no-voice-calls';
+
+export { VoiceCalls, type VoiceCallsPort } from './voice-calls';
 
 export { VoiceSettingsStore } from './voice-settings';
 

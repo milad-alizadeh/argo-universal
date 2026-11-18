@@ -5,7 +5,7 @@ import {
   type VoiceCallEvent,
   type VoiceSay,
 } from './call-types';
-import type { VoiceProvider } from './provider';
+import type { VoiceProvider, VoiceStartRequest } from './provider';
 
 export type ProviderCallInput = {
   provider: VoiceProvider;
@@ -56,6 +56,12 @@ class ProviderHold {
 const asError = (error: Error | string): Error =>
   typeof error === 'string' ? new Error(error) : error;
 
+const requestOf = ({
+  offer,
+  briefing,
+  voice,
+}: ProviderCallInput): VoiceStartRequest => ({ offer, briefing, voice });
+
 // Starts the provider's call, passes its events on, and ends it when the machine leaves `running`.
 export const providerCall = fromCallback<VoiceCallEvent, ProviderCallInput>(
   ({ input, sendBack, receive }) => {
@@ -63,16 +69,10 @@ export const providerCall = fromCallback<VoiceCallEvent, ProviderCallInput>(
     receive((event) => {
       if (event.type === 'voice.say') hold.say(event.say);
     });
-    void input.provider
-      .start({
-        offer: input.offer,
-        briefing: input.briefing,
-        voice: input.voice,
-      })
-      .then(
-        (call) => hold.adopt(call),
-        (error: Error | string) => hold.fail(asError(error)),
-      );
+    void input.provider.start(requestOf(input)).then(
+      (call) => hold.adopt(call),
+      (error: Error | string) => hold.fail(asError(error)),
+    );
 
     return (): void => hold.release();
   },

@@ -1,8 +1,8 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import { unusableVoice, usableVoice } from './voice-detail-view-fixtures';
 import { VoiceDetailView } from './voice-detail-view';
+import { unusableVoice, usableVoice } from './voice-detail-view-fixtures';
 
 const meta = {
   title: 'Tests/Screens/Settings/Voice',
