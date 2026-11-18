@@ -1,5 +1,6 @@
 import type { VoiceCallEnd } from '@repo/contracts';
-import { assertEvent, assign, setup, type ActorRefFrom } from 'xstate';
+import { assertEvent, assign, sendTo, setup, type ActorRefFrom } from 'xstate';
+import { agentRelay, type RelayInput } from './agent-relay-actor';
 import {
   runningCall,
   type RunningCall,
@@ -10,6 +11,7 @@ import {
 import { watchConnection, watchSession } from './call-watchers';
 import type { VoiceProvider, VoiceProviderEvent } from './provider';
 import { providerCall, type ProviderCallInput } from './provider-call';
+import { SessionLink } from './session-link';
 import { isTranscript, storeTranscript, withTranscript } from './transcript';
 
 /*
@@ -55,14 +57,14 @@ const finished = (
   };
 };
 
-export const voiceCallSetup = setup({
+const voiceCallSetup = setup({
   // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
     input: {} as VoiceCallInput,
     context: {} as VoiceCallContext,
     events: {} as VoiceCallEvent,
   },
-  actors: { providerCall, watchSession, watchConnection },
+  actors: { providerCall, agentRelay, watchSession, watchConnection },
   actions: {
     begin: assign(({ event }): Partial<VoiceCallContext> => {
       assertEvent(event, 'call.start');
@@ -119,6 +121,8 @@ export const voiceCallSetup = setup({
     },
     providerClosed: ({ event }): boolean =>
       providerEventOf(event).type === 'closed',
+    asksForWork: ({ event }): boolean =>
+      providerEventOf(event).type === 'work.requested',
   },
 });
 
@@ -150,6 +154,7 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
   id: 'voiceCall',
   context: ({ input }): VoiceCallContext => ({
     ...input,
+    sessions: new SessionLink(),
     call: null,
     ended: null,
     failure: null,
@@ -169,8 +174,17 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
     running: {
       invoke: [
         {
+          id: 'providerCall',
           src: 'providerCall',
           input: ({ context }): ProviderCallInput => providerInput(context),
+        },
+        {
+          id: 'agentRelay',
+          src: 'agentRelay',
+          input: ({ context }): RelayInput => ({
+            sessions: context.sessions,
+            sessionId: runningCall(context).sessionId,
+          }),
         },
         {
           src: 'watchSession',
@@ -233,7 +247,14 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
             target: idleTarget,
             actions: endsWith('provider-closed'),
           },
+          {
+            guard: 'asksForWork',
+            actions: sendTo('agentRelay', ({ event }) => event),
+          },
         ],
+        'voice.say': {
+          actions: sendTo('providerCall', ({ event }) => event),
+        },
       },
       states: {
         starting: {

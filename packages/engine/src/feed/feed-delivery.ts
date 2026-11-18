@@ -3,6 +3,7 @@ import type { FeedDeps } from './feed';
 import { FeedCatchUp } from './feed-catch-up';
 import type { ClosedFeed } from './feed-listener';
 import type { LiveFeedEvent } from './live-feed-queue';
+import { VoiceMarkerFilter } from './marker-filter';
 import { MovedRowDelivery } from './moved-row-delivery';
 
 type SyncPoint = { after: number; storedRevision: number };
@@ -21,6 +22,7 @@ export class FeedDelivery {
   private catchUp: FeedCatchUp;
   private movedRows = new MovedRowDelivery([]);
   private delivered = 0;
+  private readonly marks = new VoiceMarkerFilter();
 
   public constructor(
     private readonly sources: FeedDeps,
@@ -30,21 +32,44 @@ export class FeedDelivery {
     this.catchUp = new FeedCatchUp(sources, sessionId, syncPoint);
   }
 
-  public *readCatchUp(): Generator<FeedSubscribeOutput> {
+  // Everything delivered leaves without the voice marks of Agent messages.
+  private *unmarked(
+    outputs: Generator<FeedSubscribeOutput>,
+  ): Generator<FeedSubscribeOutput> {
+    for (const output of outputs) yield this.marks.output(output);
+  }
+
+  public readCatchUp(): Generator<FeedSubscribeOutput> {
+    return this.unmarked(this.readCaughtUp());
+  }
+
+  public recover(): Generator<FeedSubscribeOutput> {
+    return this.unmarked(this.recovered());
+  }
+
+  public deliver(event: LiveFeedEvent): Generator<FeedSubscribeOutput> {
+    return this.unmarked(this.delivering(event));
+  }
+
+  public close(event: ClosedFeed): Generator<FeedSubscribeOutput> {
+    return this.unmarked(this.closing(event));
+  }
+
+  private *readCaughtUp(): Generator<FeedSubscribeOutput> {
     yield* catchUpRows(this.catchUp);
     this.movedRows = new MovedRowDelivery(this.catchUp.readMovedRows());
     this.delivered = Math.max(this.delivered, this.catchUp.highWaterMark);
   }
 
-  public *recover(): Generator<FeedSubscribeOutput> {
+  private *recovered(): Generator<FeedSubscribeOutput> {
     this.catchUp = new FeedCatchUp(this.sources, this.sessionId, {
       after: this.delivered,
       storedRevision: this.sources.readSession(this.sessionId).maxRevision,
     });
-    yield* this.readCatchUp();
+    yield* this.readCaughtUp();
   }
 
-  public *deliver(event: LiveFeedEvent): Generator<FeedSubscribeOutput> {
+  private *delivering(event: LiveFeedEvent): Generator<FeedSubscribeOutput> {
     if (event.type === 'snapshot') {
       yield event;
 
@@ -56,7 +81,7 @@ export class FeedDelivery {
     this.delivered = event.rev;
   }
 
-  public *close(event: ClosedFeed): Generator<FeedSubscribeOutput> {
+  private *closing(event: ClosedFeed): Generator<FeedSubscribeOutput> {
     yield* this.movedRows.releaseThrough();
     yield event;
   }

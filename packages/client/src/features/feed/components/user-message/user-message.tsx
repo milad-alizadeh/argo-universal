@@ -77,9 +77,13 @@ export const UserMessage = memo(function UserMessage({
 function PromptSenderCaption({
   row,
 }: Pick<UserMessageProps, 'row'>): React.JSX.Element | null {
-  return row.sessionUpdate === 'prompt_message' ? (
+  if (row.sessionUpdate !== 'prompt_message') return null;
+  const { sender } = row._meta.argo;
+
+  // The Voice call's Prompts are never drawn, so a sender without a title has no caption.
+  return 'title' in sender ? (
     <Text role="secondary" tone="muted">
-      From {row._meta.argo.sender.title}
+      From {sender.title}
     </Text>
   ) : null;
 }

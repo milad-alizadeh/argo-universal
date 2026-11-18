@@ -1,10 +1,20 @@
 import type { VoiceCallEnd, VoicePartial } from '@repo/contracts';
-import type { VoiceProvider, VoiceProviderEvent } from './provider';
+import type {
+  VoiceDelivery,
+  VoiceProvider,
+  VoiceProviderEvent,
+} from './provider';
+import type { SessionLink } from './session-link';
 
 export type SessionGoneReason = Extract<
   VoiceCallEnd,
   'session-closed' | 'session-archived'
 >;
+
+// Something the Engine tells the voice: the answer to a request for work, or a word it did not ask for.
+export type VoiceSay =
+  | { kind: 'reply'; requestId: string; text: string; delivery: VoiceDelivery }
+  | { kind: 'tell'; text: string; delivery: VoiceDelivery };
 
 export type VoiceCallEvent =
   | {
@@ -20,7 +30,8 @@ export type VoiceCallEvent =
   | { type: 'call.failed'; message: string }
   | { type: 'call.sessionGone'; reason: SessionGoneReason }
   | { type: 'call.appDisconnected' }
-  | { type: 'provider.event'; event: VoiceProviderEvent };
+  | { type: 'provider.event'; event: VoiceProviderEvent }
+  | { type: 'voice.say'; say: VoiceSay };
 
 export type SendBack = (event: VoiceCallEvent) => void;
 
@@ -56,6 +67,8 @@ export interface EndedCall {
 }
 
 export interface VoiceCallContext extends VoiceCallInput {
+  // Where the call reaches its Session, filled in once Sessions exist.
+  sessions: SessionLink;
   call: RunningCall | null;
   ended: EndedCall | null;
   // Why the last call failed, for the Notice that says so.

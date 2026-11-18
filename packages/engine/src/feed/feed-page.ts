@@ -12,6 +12,7 @@ import {
   storedFeedColumns,
   type FeedRowWrite,
 } from './feed-row';
+import { withoutVoiceMarkers } from './voice-markers';
 
 const isStaleCursor = (input: FeedPageInput, epoch: number): boolean =>
   input.epoch !== undefined && input.epoch !== epoch;
@@ -68,7 +69,9 @@ const hydratePageRows = (
   stored
     .slice(0, input.limit)
     .reverse()
-    .map((row): SessionUpdate => hydrateStoredFeedRow(input.sessionId, row));
+    .map((row): SessionUpdate =>
+      withoutVoiceMarkers(hydrateStoredFeedRow(input.sessionId, row)),
+    );
 
 function pageContent(
   stored: FeedRowWrite[],
