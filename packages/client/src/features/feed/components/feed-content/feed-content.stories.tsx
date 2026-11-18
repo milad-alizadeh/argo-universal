@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { recordedAcpContent } from '../../../../lib/product/acp-feed-content.mocks';
 import { toFeedView } from '../../view/to-feed-view';
+import { compactingNotice } from '../feed-notice/feed-notice-fixtures';
 import { Feed } from '../feed/feed';
 import { workingLiveHeader } from '../live-header/live-header-fixtures';
 import { completedCommand } from '../tool-call.mocks';
@@ -44,6 +45,14 @@ export const WorkingAfterToolCall: Story = {
   name: 'Working after a Tool call',
   args: {
     items: toFeedView([completedCommand], snapshot).items,
+    ...workingLiveHeader,
+  },
+};
+
+// A Compaction runs while the Agent works: its own row says so, and no Working line draws beneath it.
+export const Compacting: Story = {
+  args: {
+    items: toFeedView([compactingNotice.row], snapshot).items,
     ...workingLiveHeader,
   },
 };
