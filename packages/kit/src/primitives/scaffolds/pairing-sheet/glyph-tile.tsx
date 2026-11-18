@@ -5,7 +5,7 @@ import { cn } from '#kit/utils';
 import { Icon } from '#primitives/content/icon';
 import { Spinner } from '#primitives/status/spinner';
 
-export type GlyphTone = 'info' | 'warning' | 'neutral';
+type GlyphTone = 'info' | 'warning' | 'neutral';
 
 export interface GlyphTileProps {
   tone: GlyphTone;

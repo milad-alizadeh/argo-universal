@@ -2,7 +2,7 @@ import { channelPath } from '@repo/contracts';
 import type { ByteSocket, ChannelAddress } from './byte-socket';
 
 // A Server on the local network answers in milliseconds; one that has not in this long is not at that address, and the next one is tried. The platform's own wait is over a minute.
-export const connectTimeoutMs = 4000;
+const connectTimeoutMs = 4000;
 
 type Message = ArrayBuffer | string;
 
@@ -14,7 +14,7 @@ const bytesOf = (data: Message): Uint8Array =>
 const bracketedIfIPv6 = (host: string): string =>
   host.includes(':') ? `[${host}]` : host;
 
-export const channelUrl = ({ host, port }: ChannelAddress): string =>
+const channelUrl = ({ host, port }: ChannelAddress): string =>
   `ws://${bracketedIfIPv6(host)}:${port}${channelPath}`;
 
 function adapter(webSocket: WebSocket): ByteSocket {

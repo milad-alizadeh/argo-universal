@@ -17,7 +17,7 @@ export function addressOfUrl(url: string): ServerAddress[] {
 export const addressKey = ({ host, port }: ServerAddress): string =>
   `${host}:${port}`;
 
-export const withoutDuplicates = (
+const withoutDuplicates = (
   addresses: readonly ServerAddress[],
 ): ServerAddress[] => [
   ...new Map(
