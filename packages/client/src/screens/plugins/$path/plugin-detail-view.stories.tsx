@@ -73,3 +73,5 @@ export const JiraBoardMoving: StoryObj<typeof meta> = {
 export const JiraBoardEmpty: StoryObj<typeof meta> = {
   args: jiraBoardEmpty,
 };
+
+export const Loading: StoryObj<typeof meta> = { args: { root: null } };

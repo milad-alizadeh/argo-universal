@@ -1,10 +1,12 @@
 import { isRootOnly } from '@repo/contracts/plugins/prepare-tree';
 import type { WireNode } from '@repo/contracts/plugins/wire';
+import { List } from '@repo/kit/primitives/lists/list';
 import { Detail } from '@repo/kit/primitives/scaffolds/detail';
 import {
   Screen,
   ScreenDefaultBack,
 } from '@repo/kit/primitives/scaffolds/screen';
+import { Skeleton } from '@repo/kit/primitives/status/skeleton';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useKeepSidebarWhilePending } from '#features/frame';
@@ -22,7 +24,7 @@ interface PluginPageCallbacks {
 }
 
 export interface PluginDetailViewProps {
-  // The page the Plugin draws; blank until its first tree arrives.
+  // The page the Plugin draws; null until its first tree arrives.
   root: WireNode | null;
   title?: string;
   callbacks: PluginPageCallbacks;
@@ -42,6 +44,13 @@ export function PluginDetailView(
 }
 
 function PluginPageBody(props: PluginDetailViewProps): React.ReactNode {
+  if (!props.root)
+    return (
+      <Screen title={props.title}>
+        <PendingPage />
+      </Screen>
+    );
+
   if (ownsPage(props.root)) return <PluginContent {...props} />;
 
   return (
@@ -92,14 +101,16 @@ function ownsPage(root: WireNode | null): boolean {
 function PluginContent(props: PluginDetailViewProps): React.ReactNode {
   return props.root ? (
     <BoundedPluginTree root={props.root} {...props.callbacks} />
-  ) : (
-    <PendingPage />
-  );
+  ) : null;
 }
 
-// A page waiting for its first tree draws nothing, but holds the sidebar as the page before it left it.
-function PendingPage(): null {
+// Keep the previous sidebar while the destination waits for its first tree.
+export function PendingPage(): React.ReactElement {
   useKeepSidebarWhilePending();
 
-  return null;
+  return (
+    <Skeleton loading fill accessibilityLabel="Loading page">
+      <List appearance="plain" density="compact" fit />
+    </Skeleton>
+  );
 }

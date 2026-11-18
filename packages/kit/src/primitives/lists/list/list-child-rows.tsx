@@ -34,6 +34,10 @@ function PreparedList({ prepared, ...props }: PreparedListProps): ReactElement {
       {...prepared}
       {...measures}
       {...childHeights(props, height)}
+      recycleItems={props.recycleItems ?? Boolean(props.pagination)}
+      drawDistance={
+        props.drawDistance ?? (props.pagination ? height : undefined)
+      }
       maintainVisibleContentPosition={childAnchor(props.anchor)}
     />
   );

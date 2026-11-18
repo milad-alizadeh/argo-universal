@@ -3,7 +3,7 @@ import { runListRoot } from '@repo/contracts/plugins/wire-fixtures';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
-import { expect, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { PluginDetailView } from './plugin-detail-view';
 
 const meta = {
@@ -108,5 +108,63 @@ export const ListInAStackScrolls: Story = {
     await expect(scroller.getBoundingClientRect().bottom).toBeLessThanOrEqual(
       window.innerHeight,
     );
+  },
+};
+
+export const WaitingForPage: Story = {
+  args: { root: null },
+  play: async ({ canvas }) => {
+    const status = await canvas.findByRole('status', { name: 'Loading page' });
+
+    await expect(status).toHaveAttribute('aria-busy', 'true');
+    await waitFor(() => {
+      const bar = status.querySelector('[data-skeleton-overlay] > *');
+      const bounds = bar?.getBoundingClientRect();
+
+      expect(bounds?.width).toBeGreaterThan(0);
+      expect(bounds?.height).toBeGreaterThan(0);
+    });
+  },
+};
+
+export const PagedListScrollsBothWays: Story = {
+  args: {
+    callbacks: { onOpenPage: fn() },
+    root: {
+      ...manyRows,
+      children: manyRows.children.map((row) => ({
+        ...row,
+        props: {
+          ...row.props,
+          onPress: { action: 'navigate', path: '/' + row.key },
+        },
+      })),
+      props: {
+        appearance: 'plain',
+        pagination: { hasMore: false, onLoadMore: { loadMore: true } },
+      },
+    },
+  },
+  play: async ({ canvas, args }) => {
+    const scroller = scrollerOf(await canvas.findByText('Row 0'));
+
+    scroller.scrollTop = scroller.scrollHeight;
+    await waitFor(() => {
+      const last = canvas.getByText('Row 39').getBoundingClientRect();
+
+      expect(last.top).toBeLessThan(scroller.getBoundingClientRect().bottom);
+    });
+    await userEvent.click(canvas.getByText('Row 39'));
+    await expect(args.callbacks.onOpenPage).toHaveBeenLastCalledWith('/row-39');
+    scroller.scrollTop = 0;
+    await waitFor(() => {
+      const first = canvas.getByText('Row 0').getBoundingClientRect();
+
+      expect(first.bottom).toBeGreaterThan(
+        scroller.getBoundingClientRect().top,
+      );
+    });
+    await userEvent.click(canvas.getByText('Row 0'));
+    await expect(args.callbacks.onOpenPage).toHaveBeenLastCalledWith('/row-0');
   },
 };
