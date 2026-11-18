@@ -30,7 +30,7 @@ const quoted = (body: string): string =>
     .map((line) => `  > ${line}`)
     .join('\n');
 
-const checkEvent = ({ name, id }: FailedCheck): FixEvent => ({
+export const checkEvent = ({ name, id }: FailedCheck): FixEvent => ({
   key: checkKey(name, id),
   item: `Check \`${name}\` failed.`,
 });

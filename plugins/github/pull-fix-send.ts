@@ -1,5 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import {
+  checkEvent,
   eventsOf,
   promptOf,
   stillRedAfterMs,
@@ -35,7 +36,7 @@ async function send(
 }
 
 // A Prompt that could not be sent is not remembered, so the next Watch sends it.
-async function promptNew(
+async function promptEvents(
   step: Step,
   pull: PullInfo,
   events: readonly FixEvent[],
@@ -86,21 +87,21 @@ async function promptUnseen(
 
   if (unseen.length === 0) return false;
 
-  await promptNew(step, facts.pull, unseen);
+  await promptEvents(step, facts.pull, unseen);
   await stopIfSpent(step, { head: facts.pull.head, sent: sent + 1 });
 
   return true;
 }
 
 // The Session has sat idle long enough that its Agent may be waiting on the person; a busy one has no idle time.
-async function idleLong({ sessions, record }: Step): Promise<boolean> {
+async function isIdleLong({ sessions, record }: Step): Promise<boolean> {
   const idleFor = (await sessions.get(record.sessionId))?.idleFor;
 
   return (idleFor ?? 0) >= stillRedAfterMs;
 }
 
 // Auto-fix already prompted about this head, every Check has reported, and one still failed.
-const stillRed = (facts: FixFacts, sent: number): boolean =>
+const isStillRed = (facts: FixFacts, sent: number): boolean =>
   [sent > 0, !facts.running, facts.failed.length > 0].every(Boolean);
 
 // The still-red Prompt counts as a try, so a head never gets more than three Prompts.
@@ -109,7 +110,8 @@ async function sendStillRed(
   facts: FixFacts,
   sent: number,
 ): Promise<boolean> {
-  const events = eventsOf({ ...facts, comments: [] });
+  // CI only: a conflict or comment has its own event.
+  const events = facts.failed.map(checkEvent);
   const { head } = facts.pull;
 
   await send(step, stillRedPromptOf(facts.pull, events), {
@@ -130,7 +132,7 @@ async function promptStillRed(
   facts: FixFacts,
   sent: number,
 ): Promise<boolean> {
-  if (!stillRed(facts, sent) || !(await idleLong(step))) return false;
+  if (!isStillRed(facts, sent) || !(await isIdleLong(step))) return false;
 
   return sendStillRed(step, facts, sent);
 }
