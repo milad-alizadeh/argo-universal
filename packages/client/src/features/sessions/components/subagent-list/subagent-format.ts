@@ -43,13 +43,25 @@ function durationLabel(subagent: Subagent, now: number): string {
   return elapsed === null ? '—' : formatElapsed(elapsed);
 }
 
-export function subagentMetrics(subagent: Subagent): string {
-  return joined([subagent.model, tokensLabel(subagent.tokens)]);
+export function subagentModel(subagent: Subagent): string | null {
+  return subagent.model
+    ? subagent.model.charAt(0).toUpperCase() + subagent.model.slice(1)
+    : null;
+}
+
+export function subagentMetrics(
+  subagent: Subagent,
+  includeModel = true,
+): string {
+  return joined([
+    includeModel ? subagentModel(subagent) : null,
+    tokensLabel(subagent.tokens),
+  ]);
 }
 
 export function subagentSupporting(subagent: Subagent, now: number): string {
   return joined([
-    subagent.model,
+    subagentModel(subagent),
     subagent.state === 'running' ? null : subagentStateLabel(subagent),
     subagent.state === 'requires_action' ? null : durationLabel(subagent, now),
     tokensLabel(subagent.tokens),
