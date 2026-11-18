@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useReportComposerPills } from '#lib/product/composer-cover';
 import {
   ComposerTodos,
@@ -42,7 +42,7 @@ function hasPlan(layout: Pick<PlanLayout, 'props'>): boolean {
 }
 
 function hasPhoneTray(layout: Pick<PlanLayout, 'props'>): boolean {
-  return hasPlan(layout) || hasWork(layout);
+  return Boolean(layout.props.phonePill) || hasPlan(layout) || hasWork(layout);
 }
 
 function ComposerPhonePlan(layout: PlanLayout): React.JSX.Element | null {
@@ -53,17 +53,26 @@ function ComposerPhonePlan(layout: PlanLayout): React.JSX.Element | null {
 function ComposerPhonePills(layout: PlanLayout): React.JSX.Element {
   return (
     <View className="max-w-full pb-1" onLayout={useReportComposerPills()}>
-      <View className="min-h-7 max-w-full flex-row flex-wrap items-center justify-center gap-2">
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerClassName="min-h-7 flex-grow flex-row items-center justify-center gap-2"
+      >
+        {layout.props.phonePill}
         <ComposerPlans {...layout} />
-        {layout.props.status && (
-          <ComposerWorkChips
-            status={layout.props.status}
-            disabled={layout.inactive}
-          />
-        )}
-      </View>
+        <PhoneWorkChips {...layout} />
+      </ScrollView>
     </View>
   );
+}
+
+function PhoneWorkChips(layout: PlanLayout): React.JSX.Element | null {
+  return layout.props.status ? (
+    <ComposerWorkChips
+      status={layout.props.status}
+      disabled={layout.inactive}
+    />
+  ) : null;
 }
 
 export function ComposerPlans(layout: PlanLayout): React.JSX.Element {

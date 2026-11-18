@@ -2,6 +2,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
 import { expect, screen, waitFor } from 'storybook/test';
+import { composerTodos } from '../../../../mocks/composer-mock';
 import {
   feedScrollId,
   scrollAwayFromEnd,
@@ -58,6 +59,27 @@ export const OpensTheChangesSheetOnPhone: Story = {
     await expect(
       await screen.findByRole('dialog', { name: 'Changes' }),
     ).toBeVisible();
+  },
+};
+
+export const SharesPhoneRowWithTodos: Story = {
+  args: {
+    view: {
+      ...changedSession,
+      state: 'open',
+      composer: { ...changedSession.composer, status: { plan: composerTodos } },
+    },
+  },
+  beforeEach: (): Promise<void> => settleLayout('phone'),
+  play: async ({ canvas }) => {
+    const changes = await canvas.findByRole('button', pillName);
+    const todos = await canvas.findByRole('button', { name: 'Todos' });
+    const changesBox = changes.getBoundingClientRect();
+    const todosBox = todos.getBoundingClientRect();
+    await expect(changesBox.top + changesBox.height / 2).toBeCloseTo(
+      todosBox.top + todosBox.height / 2,
+      0,
+    );
   },
 };
 
