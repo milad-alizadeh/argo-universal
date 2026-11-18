@@ -5,6 +5,7 @@ import { useNativeTheme } from '#kit/native-theme';
 import { iconSymbols } from '#kit/symbols/icon-names';
 import type { ActionGroup, ScreenHeader } from '#primitives/actions/action';
 import { useScreenMenu } from './screen-menu-context';
+import { toolbarOptionsButton } from './screen-options-item.ios';
 import type { PageOptions, ScreenHeaderInput } from './screen-props';
 import { ScreenSearchBar } from './screen-search-bar.ios';
 import { TitleMenu } from './screen-title-menu';
@@ -12,7 +13,6 @@ import {
   overflowMenu,
   toolbarButton,
   toolbarEntry,
-  toolbarOptionsButton,
 } from './screen-toolbar-items.ios';
 
 export const screenTitleOptions = {
@@ -28,12 +28,9 @@ export function ScreenHeaderItems(
 
   if (header.selecting) return null;
 
-  const menuTitle = props.titleGroups.length > 0;
-
   return (
     <>
-      {menuTitle ? null : <RootTitle />}
-      <TitleMenuItem title={props.title} groups={props.titleGroups} />
+      <TitleItem title={props.title} groups={props.titleGroups} />
       <MenuItem />
       <HeaderItems header={header} options={props.pageOptions} />
       {props.search ? <ScreenSearchBar {...props} /> : null}
@@ -48,17 +45,20 @@ function RootTitle(): ReactElement | null {
   return <Stack.Screen options={{ headerLargeTitleEnabled: true }} />;
 }
 
+type TitleProps = { title?: string; groups: ActionGroup[] };
+
 /*
  * A title with a menu draws in the bar's title place as the menu's button, inline: a large title is UIKit's own text
  * and could not open the menu.
  */
-function TitleMenuItem(props: {
-  title?: string;
-  groups: ActionGroup[];
-}): ReactElement | null {
-  const { title, groups } = props;
+function TitleItem(props: TitleProps): ReactElement | null {
+  if (!props.groups.length) return <RootTitle />;
 
-  if (!title || !groups.length) return null;
+  return <TitleMenuItem {...props} />;
+}
+
+function TitleMenuItem({ title, groups }: TitleProps): ReactElement | null {
+  if (!title) return null;
 
   const headerTitle = (): ReactElement => (
     <TitleMenu title={title} level={1} groups={groups} />
@@ -89,26 +89,24 @@ function MenuItem(): ReactElement | null {
 }
 
 // The primary Action sits top right on every iPhone and iPad, wherever the search bar is; the page's Options come first.
-function HeaderItems({
-  header,
-  options,
-}: {
-  header: ScreenHeader;
-  options: PageOptions | null;
-}): ReactElement {
+type HeaderItemsProps = { header: ScreenHeader; options: PageOptions | null };
+
+function HeaderItems({ header, options }: HeaderItemsProps): ReactElement {
   const dotColor = useNativeTheme().colors.primary;
-  const entry = toolbarEntry(dotColor);
-  const { primary } = header;
 
   return (
     <Stack.Toolbar placement="right">
       {options ? toolbarOptionsButton(options, dotColor) : null}
-      {header.direct.map(entry)}
+      {header.direct.map(toolbarEntry(dotColor))}
       {overflowMenu(header.overflow, header.label)}
       {selectItem(header.select)}
-      {primary ? toolbarButton({ ...primary, id: 'primary' }) : null}
+      {primaryItem(header.primary)}
     </Stack.Toolbar>
   );
+}
+
+function primaryItem(primary: ScreenHeader['primary']): ReactElement | null {
+  return primary ? toolbarButton({ ...primary, id: 'primary' }) : null;
 }
 
 // Select is a stock bar button of its own: the stack sizes it, and it ends the bar's items before the primary Action.

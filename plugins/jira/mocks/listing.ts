@@ -47,21 +47,18 @@ const isPicker = (node: WireNode): boolean => node.type === 'FieldGroup.Picker';
 
 type Option = { value: string; label: string };
 
+const optionOf = (each: Json): Option[] => {
+  const value = text(at(each, 'value'));
+
+  return value === null
+    ? []
+    : [{ value, label: text(at(each, 'label')) ?? '' }];
+};
+
 const optionsOf = (picker: WireNode): Option[] => {
   const options = picker.props.options;
 
-  return Array.isArray(options)
-    ? options.flatMap((each) =>
-        typeof at(each, 'value') === 'string'
-          ? [
-              {
-                value: String(at(each, 'value')),
-                label: text(at(each, 'label')) ?? '',
-              },
-            ]
-          : [],
-      )
-    : [];
+  return Array.isArray(options) ? options.flatMap(optionOf) : [];
 };
 
 // The labels a row of the header's options offers, by its title, such as Status or Assignee.

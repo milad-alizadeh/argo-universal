@@ -77,15 +77,17 @@ export function ScreenOptionsButton({
 }): ReactElement {
   return (
     <Host matchContents>
-      <MenuIcon
-        icon={optionsIcon}
-        label={optionsSpoken(options)}
-        badge={submenuBadgeText(options.badge)}
-        onPress={() => options.onOpenChange(true)}
-      />
+      <MenuIcon {...optionsIconOf(options)} />
     </Host>
   );
 }
+
+const optionsIconOf = (options: PageOptions): MenuIconProps => ({
+  icon: optionsIcon,
+  label: optionsSpoken(options),
+  badge: submenuBadgeText(options.badge),
+  onPress: () => options.onOpenChange(true),
+});
 
 type MenuIconProps = Omit<ScreenMenuButtonProps, 'groups'> & {
   onPress: () => void;

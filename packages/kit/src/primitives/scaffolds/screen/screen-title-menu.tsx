@@ -61,3 +61,27 @@ function TitleTrigger({ title, ...props }: TitleTriggerProps): ReactElement {
     </Pressable>
   );
 }
+
+const titleProps = {
+  role: 'title',
+  accessibilityRole: 'heading',
+  numberOfLines: 1,
+} as const;
+
+type ScreenTitleProps = Omit<TitleMenuProps, 'title'> & { title?: string };
+
+// A title with a menu is a menu button inside the heading; one without is the heading's text.
+export function ScreenTitle(props: ScreenTitleProps): ReactElement | null {
+  const { title, level, groups } = props;
+
+  if (!title) return null;
+
+  if (groups.length)
+    return <TitleMenu title={title} level={level} groups={groups} />;
+
+  return (
+    <Text {...titleProps} aria-level={level}>
+      {title}
+    </Text>
+  );
+}

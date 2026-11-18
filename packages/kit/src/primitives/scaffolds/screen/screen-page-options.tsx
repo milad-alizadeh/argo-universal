@@ -1,4 +1,5 @@
-import type { ReactElement } from 'react';
+import type { ComponentProps, ReactElement } from 'react';
+import { countBadge } from '#kit/badge-count';
 import { useWide } from '#kit/use-wide/use-wide';
 import { HeaderTrigger, submenuLabel } from '#primitives/actions/action';
 import type { IconButtonSize } from '#primitives/actions/icon-button';
@@ -50,36 +51,45 @@ export function PageOptionsSheet({
 // The button sits at the header's end, so its popover opens below it and keeps to the window.
 const belowFromEnd = { side: 'bottom', align: 'end' } as const;
 
+type SheetProps = ComponentProps<typeof Sheet>;
+
+const sheetProps = (
+  options: PageOptions,
+  trigger: SheetProps['trigger'],
+): Omit<SheetProps, 'children'> => ({
+  open: options.open,
+  onOpenChange: options.onOpenChange,
+  label: optionsLabel,
+  trigger,
+  popoverPlacement: belowFromEnd,
+  inset: true,
+});
+
 function OptionsSheet(props: {
   options: PageOptions;
-  trigger?: ReactElement<{ onPress?: () => void }>;
+  trigger?: SheetProps['trigger'];
 }): ReactElement {
-  const { options } = props;
-
   return (
-    <Sheet
-      open={options.open}
-      onOpenChange={options.onOpenChange}
-      label={optionsLabel}
-      trigger={props.trigger}
-      popoverPlacement={belowFromEnd}
-      inset
-    >
+    <Sheet {...sheetProps(props.options, props.trigger)}>
       <Sheet.Screen name="options" title={optionsLabel}>
-        {options.content}
+        {props.options.content}
       </Sheet.Screen>
     </Sheet>
   );
 }
 
-// The sheet's trigger passes its press handlers and ref through the rest.
-type TriggerProps = OptionsEntryProps & Record<string, unknown>;
+// The sheet's trigger passes its press handler, and on the web Radix's handlers and ref, through these.
+type TriggerHandlers = Partial<
+  Pick<ComponentProps<typeof HeaderTrigger>, 'onPress'>
+>;
+
+type TriggerProps = OptionsEntryProps & TriggerHandlers;
 
 // A wide window's button names itself and its count; a narrow one is the header's icon, its badge on the corner.
 function OptionsTrigger(props: TriggerProps): ReactElement {
-  if (useWide()) return <LabelledTrigger {...props} />;
-
   const { options, size, ...handlers } = props;
+
+  if (useWide()) return <LabelledTrigger {...handlers} options={options} />;
 
   return (
     <HeaderTrigger
@@ -93,11 +103,7 @@ function OptionsTrigger(props: TriggerProps): ReactElement {
 }
 
 // The toolbar pill a popover opens from: the icon, the label with its count, and a down chevron.
-function LabelledTrigger({
-  options,
-  size: _size,
-  ...handlers
-}: TriggerProps): ReactElement {
+function LabelledTrigger({ options, ...handlers }: TriggerProps): ReactElement {
   return (
     <MenuTrigger
       {...handlers}
@@ -108,7 +114,18 @@ function LabelledTrigger({
   );
 }
 
-const labelWithCount = ({ badge }: Pick<PageOptions, 'badge'>): string =>
-  badge?.kind === 'count' && badge.count > 0
-    ? `${optionsLabel} · ${badge.count}`
-    : optionsLabel;
+type Badge = PageOptions['badge'];
+
+const counted = (
+  badge: Badge,
+): Extract<Badge, { kind: 'count' }> | undefined =>
+  badge?.kind === 'count' ? badge : undefined;
+
+const countOf = (badge: Badge): string | undefined =>
+  countBadge(counted(badge))?.text;
+
+function labelWithCount({ badge }: Pick<PageOptions, 'badge'>): string {
+  const count = countOf(badge);
+
+  return count ? `${optionsLabel} · ${count}` : optionsLabel;
+}

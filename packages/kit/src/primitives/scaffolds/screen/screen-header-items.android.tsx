@@ -35,15 +35,9 @@ export function ScreenHeaderItems(
 
   if (header.selecting) return null;
 
-  const headerRight = (): ReactElement => (
-    <ToolbarActions header={header} options={props.pageOptions} />
-  );
-
-  const title = titleOf(props.titleGroups);
-
   return (
     <>
-      <Stack.Screen options={toolbarOptions({ headerRight, title, leading })} />
+      <Stack.Screen options={toolbarOptions(props, leading)} />
       {props.search ? <ScreenSearchBar {...props} /> : null}
     </>
   );
@@ -72,14 +66,15 @@ function titleOf(groups: ActionGroup[]): TitleDrawing {
   };
 }
 
-const toolbarOptions = (parts: {
-  headerRight: () => ReactElement;
-  title: TitleDrawing;
-  leading: ReturnType<typeof drawerLeading>;
-}): NativeStackNavigationOptions => ({
-  headerRight: parts.headerRight,
-  headerTitle: parts.title,
-  ...parts.leading,
+const toolbarOptions = (
+  props: ScreenHeaderInput,
+  leading: ReturnType<typeof drawerLeading>,
+): NativeStackNavigationOptions => ({
+  headerRight: () => (
+    <ToolbarActions header={props.headers.native} options={props.pageOptions} />
+  ),
+  headerTitle: titleOf(props.titleGroups),
+  ...leading,
 });
 
 // The page's Options, direct Actions, submenus and the overflow menu are all stock Compose icon buttons, the menus stock DropdownMenus.

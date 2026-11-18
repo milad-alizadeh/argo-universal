@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type { ReactElement } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 import { settleOverlays } from '#mocks/settle-overlays';
 import { Screen } from './index';
@@ -9,7 +10,7 @@ const meta = {
   title: 'Tests/Design System/Primitives/Scaffolds/Screen/TitleOptions',
   component: Screen,
   args: { title: 'Group one' },
-  render: () => <TitleAndOptionsExample />,
+  render: (): ReactElement => <TitleAndOptionsExample />,
 } satisfies Meta<typeof Screen>;
 
 export default meta;
@@ -18,7 +19,7 @@ type Story = StoryObj<typeof meta>;
 
 type PlayContext = Parameters<NonNullable<Story['play']>>[0];
 
-const body = ({ canvasElement }: PlayContext) =>
+const body = ({ canvasElement }: PlayContext): ReturnType<typeof within> =>
   within(canvasElement.ownerDocument.body);
 
 // The title stays the page's heading and holds a menu button named by it, which opens the menu with the shown one checked.
@@ -33,11 +34,14 @@ const titleMenu: Story = {
     await expect(
       await body(context).findByRole('menuitemradio', { name: 'Group one' }),
     ).toHaveAttribute('aria-checked', 'true');
+
     const other = await body(context).findByRole('menuitemradio', {
       name: 'Group two',
     });
+
     await settleOverlays(other);
     await userEvent.click(other);
+
     await expect(
       canvas.getByRole('button', { name: 'Group two' }),
     ).toBeVisible();
@@ -56,11 +60,14 @@ export const TitleMenuKeyboard = atWidth(screenWidths.Wide, {
 
     button.focus();
     await userEvent.keyboard('{Enter}');
+
     const row = await body(context).findByRole('menuitem', {
       name: 'Change place…',
     });
+
     await settleOverlays(row);
     await expect(row).toBeVisible();
+
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(button).toHaveFocus());
   },
@@ -75,10 +82,13 @@ const options: Story = {
     const { canvas, userEvent } = context;
 
     await userEvent.click(canvas.getByRole('button', { name: 'Options, 1' }));
+
     const dialog = await body(context).findByRole('dialog', {
       name: 'Options',
     });
+
     await settleOverlays();
+
     await userEvent.click(
       within(dialog).getByRole('button', { name: 'Board' }),
     );
@@ -100,14 +110,19 @@ export const OptionsPopoverWide = atWidth(screenWidths.Wide, {
     const button = canvas.getByRole('button', { name: 'Options, 1' });
 
     await userEvent.click(button);
+
     const dialog = await body(context).findByRole('dialog', {
       name: 'Options',
     });
+
     await settleOverlays();
+
     const below = dialog.getBoundingClientRect();
     const trigger = button.getBoundingClientRect();
+
     await expect(below.top).toBeGreaterThanOrEqual(trigger.bottom);
     await expect(below.right).toBeLessThanOrEqual(window.innerWidth);
+
     await userEvent.keyboard('{Escape}');
     await waitFor(() =>
       expect(

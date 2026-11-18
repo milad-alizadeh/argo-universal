@@ -10,30 +10,31 @@ type Choose = (value: string) => void;
 
 const titleChoices = ['Group one', 'Group two', 'Group three'];
 
+const groupChoice = (
+  label: string,
+  chosen: string,
+  choose: Choose,
+): ReactElement => (
+  <Action
+    key={label}
+    label={label}
+    selected={label === chosen}
+    onPress={() => choose(label)}
+  />
+);
+
 /*
  * A title menu: the groups the page can show, the shown one checked, and a way to look elsewhere; each Action
  * reports its label.
  */
-function exampleTitleMenu(
-  chosen: string,
-  choose: Choose,
-): ReactElement[] {
-  return [
-    <Action.Section key="groups" title="example.com">
-      {titleChoices.map((label) => (
-        <Action
-          key={label}
-          label={label}
-          selected={label === chosen}
-          onPress={() => choose(label)}
-        />
-      ))}
-    </Action.Section>,
-    <Action.Section key="elsewhere">
-      <Action label="Change place…" onPress={() => choose('Change place')} />
-    </Action.Section>,
-  ];
-}
+const exampleTitleMenu = (chosen: string, choose: Choose): ReactElement[] => [
+  <Action.Section key="groups" title="example.com">
+    {titleChoices.map((label) => groupChoice(label, chosen, choose))}
+  </Action.Section>,
+  <Action.Section key="elsewhere">
+    <Action label="Change place…" onPress={() => choose('Change place')} />
+  </Action.Section>,
+];
 
 const viewChoices = [
   { value: 'list', label: 'List' },
@@ -53,34 +54,45 @@ interface OptionsState {
   onStatus: Choose;
 }
 
-// A page's options: how it shows its items, as a segmented switch, then a filter row.
-function exampleOptions(state: OptionsState): ReactElement {
-  return (
-    <Stack direction="column" gap={4}>
-      <SegmentedControl
-        label="Show as"
-        options={viewChoices}
-        value={state.view}
-        onValueChange={state.onView}
+const statusRow = (state: OptionsState): ReactElement => (
+  <FieldGroup>
+    <FieldGroup.Section title="Filter">
+      <FieldGroup.Picker
+        title="Status"
+        presentation="menu"
+        options={statusChoices}
+        value={state.status}
+        onValueChange={state.onStatus}
       />
-      <FieldGroup>
-        <FieldGroup.Section title="Filter">
-          <FieldGroup.Picker
-            title="Status"
-            presentation="menu"
-            options={statusChoices}
-            value={state.status}
-            onValueChange={state.onStatus}
-          />
-        </FieldGroup.Section>
-      </FieldGroup>
-    </Stack>
-  );
-}
+    </FieldGroup.Section>
+  </FieldGroup>
+);
+
+// A page's options: how it shows its items, as a segmented switch, then a filter row.
+const exampleOptions = (state: OptionsState): ReactElement => (
+  <Stack direction="column" gap={4}>
+    <SegmentedControl
+      label="Show as"
+      options={viewChoices}
+      value={state.view}
+      onValueChange={state.onView}
+    />
+    {statusRow(state)}
+  </Stack>
+);
+
+const search = { label: 'Search' };
 
 // One filter in use counts on the button.
 const badgeOf = (status: string): ScreenProps['optionsBadge'] =>
   status === 'any' ? undefined : { kind: 'count', count: 1 };
+
+function useOptionsState(): OptionsState {
+  const [view, onView] = useState('list');
+  const [status, onStatus] = useState('closed');
+
+  return { view, status, onView, onStatus };
+}
 
 /*
  * A Screen whose title picks what it shows and whose Options hold its view and filter, each kept here as a Plugin
@@ -88,19 +100,17 @@ const badgeOf = (status: string): ScreenProps['optionsBadge'] =>
  */
 export function TitleAndOptionsExample(): ReactElement {
   const [group, setGroup] = useState(titleChoices[0] ?? '');
-  const [view, onView] = useState('list');
-  const [status, onStatus] = useState('closed');
+  const options = useOptionsState();
+
+  const header = {
+    titleMenu: exampleTitleMenu(group, setGroup),
+    options: exampleOptions(options),
+    optionsBadge: badgeOf(options.status),
+  };
 
   return (
-    <Screen
-      title={group}
-      caption="example.com"
-      titleMenu={exampleTitleMenu(group, setGroup)}
-      options={exampleOptions({ view, status, onView, onStatus })}
-      optionsBadge={badgeOf(status)}
-      search={{ label: 'Search' }}
-    >
-      <Text>{`Showing ${view}, ${status}`}</Text>
+    <Screen title={group} caption="example.com" search={search} {...header}>
+      <Text>{`Showing ${options.view}, ${options.status}`}</Text>
     </Screen>
   );
 }

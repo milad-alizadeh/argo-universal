@@ -13,16 +13,13 @@ import type { AsideLayout, AsidePlace } from './screen-aside-place';
 import { ScreenBody } from './screen-body';
 import { ScreenColumnEdgesContext } from './screen-column';
 import { ScreenFooterFrame } from './screen-footer';
-import { screenHeadersOf } from './screen-headers';
 import { ScreenHeadingBody } from './screen-heading-row';
 import { ListColumnScreen } from './screen-list-column-screen';
 import { ScreenNavigation } from './screen-navigation';
 import { PageOptionsSheet } from './screen-page-options';
 import type { ScreenHeaderPlanned, ScreenProps } from './screen-props';
 import { ShortcutAnchors } from './screen-shortcut-anchors';
-import { useHeaderDeclaration } from './use-header-declaration';
-import { useHeaderPlan } from './use-header-plan';
-import { useScreenExtras, withAnchor } from './use-screen-extras';
+import { useHeaderDrawing } from './use-header-drawing';
 
 // Search text is always the caller's: an App's state, or a Plugin's field in Plugin controls.
 export function Screen(props: ScreenProps): ReactElement {
@@ -48,22 +45,11 @@ function ScreenSurface(props: ScreenProps): ReactElement {
 
 // The header draws where its plan says (header-site.ts); each site's adapter only draws.
 function ScreenHeaderSource(props: ScreenProps): ReactElement {
-  const selection = useClaimedSelectionMode();
-  const declared = useHeaderDeclaration(props, selection);
-  const plan = useHeaderPlan('screen');
-  const extras = useScreenExtras(props, { selection, site: plan.site });
-  const declaration = withAnchor(declared, extras.anchor);
+  const header = useHeaderDrawing(props, 'screen', useClaimedSelectionMode());
+  const drawing = { ...props, ...header };
 
-  const drawing = {
-    ...props,
-    declaration,
-    headers: screenHeadersOf(declaration),
-    titleGroups: extras.titleGroups,
-    pageOptions: extras.pageOptions,
-    plan,
-  };
-
-  if (plan.site === 'list column') return <ListColumnScreen {...drawing} />;
+  if (header.plan.site === 'list column')
+    return <ListColumnScreen {...drawing} />;
 
   return <ScreenDrawing {...drawing} />;
 }

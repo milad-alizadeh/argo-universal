@@ -12,6 +12,10 @@ import {
 
 const timeoutMs = 30_000;
 
+const quiet = 'Quiet project';
+
+const changeSite = 'Change Jira site…';
+
 const screen = (node: WireNode): boolean => node.type === 'Screen';
 
 // The Actions of one of the Screen's slots, by their labels, a Section's under it.
@@ -37,20 +41,16 @@ it(
     expect(props.title).toBe('Argo');
     expect(props.caption).toBe('ARGO · arena.atlassian.net');
     expect(slotLabels(page, 'actions')).toEqual([]);
-    expect(slotLabels(page, 'titleMenu')).toEqual([
-      'Argo',
-      'Quiet project',
-      'Change Jira site…',
-    ]);
+    expect(slotLabels(page, 'titleMenu')).toEqual(['Argo', quiet, changeSite]);
     expect(page.find(titleChoice('Argo')).props.selected).toBe(true);
-    expect(page.find(titleChoice('Quiet project')).props.selected).toBe(false);
+    expect(page.find(titleChoice(quiet)).props.selected).toBe(false);
 
-    await page.press(titleChoice('Quiet project'));
+    await page.press(titleChoice(quiet));
 
-    expect(page.find(screen).props.title).toBe('Quiet project');
+    expect(page.find(screen).props.title).toBe(quiet);
     expect(listEmpty(page).props.title).toBe('No issues in QUIET');
 
-    const site = await page.press('Change Jira site…');
+    const site = await page.press(changeSite);
 
     expect(site.path).toBe(`${page.path}/site`);
   },

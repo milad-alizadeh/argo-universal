@@ -2,7 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { OutsideColumn } from '#kit/content-column/content-column';
 import { ListPlaceContext } from '#kit/list-place';
 import { InsideHostContext } from '#primitives/native/host';
-import { ScreenNavigationEnabled } from '#primitives/scaffolds/screen';
+import { ScreenNavigationEnabled } from '#kit/screen-navigation-enabled';
 
 /*
  * What a sheet page holds is React Native again, and a page of its own. A sheet opened from inside a FieldGroup's
