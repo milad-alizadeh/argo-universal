@@ -106,3 +106,7 @@ Spec #1300 proposed a core Change module with a Forge port and a `gh` adapter, p
 
 - Where PRs return to the Inspector, if they do, and how a person sees what an Agent attached, detached or refreshed.
 - Legacy commit statuses (as opposed to Check runs), and more than one read's worth of Checks.
+
+## Reviews under ADR-0061
+
+Owner amendment, 2026-11-18 (#2373): [ADR-0061](0061-reviews-belong-to-the-engine-and-change-providers-own-remote-writes.md) keeps GitHub transport and pull request records in the GitHub Plugin. The Engine consumes Change invalidations and the shared refresh lifecycle without an App to run Reviews. A new typed Change-provider contract supplies fresh Review context and an internal `mergeReviewed` handler. This adds explicit reviewed merge through the GitHub Plugin, guarded by Argo readiness, person-only Approval and `expectedHeadOid`. Existing GitHub Auto-merge keeps its existing policy. A separate Review Inspector tab holds Reviews; the wide Changes tab keeps the Checkout alone. These amendments replace the earlier deferral of Reviews under “Reconciling #1300”.

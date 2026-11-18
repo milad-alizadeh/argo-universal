@@ -4,6 +4,7 @@ import {
   type PluginTest,
 } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
+import { drawnUntil } from './drawn-again';
 import type { GitHubFixture } from './github-fixture';
 import {
   chooseGithub,
@@ -37,8 +38,8 @@ async function untilShown(
   text: string,
 ): Promise<void> {
   await clockUntilShown(test, page, { text, stepMs: 1000, steps: 6 });
-
-  expect(page.findText(text)).toBeDefined();
+  // The answer the last poll read is drawn once Argo's change window, on the real clock, is over (ADR-0060).
+  await drawnUntil(page, text);
 }
 
 it('opens an Issue from its row with its title and status at once, and no further GitHub call', async () => {
@@ -79,7 +80,7 @@ it('makes one call for an Issue a Slot and then a page both read', async () => {
   expect(issueCalls(tracked.github)).toBe(1);
 });
 
-it('closes an Issue with four pages open and re-reads only the page on screen', async () => {
+it('closes an Issue with four pages open and reads each Query they hold once, then nothing until one draws', async () => {
   const { test, github, root } = await signedInRoot();
   const list = await root.press('Open');
   const issue = await list.press(issueTitle);
@@ -93,13 +94,16 @@ it('closes an Issue with four pages open and re-reads only the page on screen', 
 
   await issue.press(closeLabel);
 
-  // The Issue page's own overview and Issue; the root, the list and the other Issue are not drawn, so not read.
-  expect(github.graphqlCalls().length - before).toBe(2);
+  /*
+   * Once the change is past its window, each Query a drawn page holds is read again once (ADR-0060): the overview,
+   * the list's search and both Issues.
+   */
+  await expect.poll(() => github.graphqlCalls().length - before).toBe(4);
   expect(overviewCalls(github) - overviews).toBe(1);
-  expect(issueCalls(github) - issues).toBe(1);
-  // Past the freshness window, a page nobody draws is still not read: only a page on screen reads again.
+  expect(issueCalls(github) - issues).toBe(2);
+  // Past the freshness window, a page nobody draws is not read again.
   await test.clock.advance(61_000);
-  expect(github.graphqlCalls().length - before).toBe(2);
+  expect(github.graphqlCalls().length - before).toBe(4);
 });
 
 it('reads an Issue again once its page’s freshness window has passed, and not before', async () => {
@@ -113,7 +117,8 @@ it('reads an Issue again once its page’s freshness window has passed, and not 
 
   await test.clock.advance(31_000);
   await page.draw();
-  expect(issueCalls(github)).toBe(1);
+  // The draw is served what was read while the Issue is read again behind it (ADR-0060).
+  await expect.poll(() => issueCalls(github)).toBe(1);
 });
 
 it('never serves the previous Account’s Issue after signing in as another person', async () => {
@@ -125,16 +130,15 @@ it('never serves the previous Account’s Issue after signing in as another pers
   expect(page.findText(issueTitle)).toBeDefined();
   await test.accounts.signOut(account?.id ?? '');
   await test.clock.advance(61_000);
-  await page.draw();
+  await drawnUntil(page, signInLabel);
   expect(page.findText(issueTitle)).toBeUndefined();
-  expect(page.findText(signInLabel)).toBeDefined();
 
   github.script({ access_token: 'token-2' });
   await page.press(signInLabel);
   await untilShown(test, page, `${issueTitle} (as hubot)`);
 
   expect(page.findText(issueTitle)).toBeUndefined();
-});
+}, 20_000);
 
 it('makes one call for an Issue a Slot and a page opened for a Project both read', async () => {
   const tracked = await trackedGitHub();

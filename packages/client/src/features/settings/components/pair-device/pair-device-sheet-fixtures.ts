@@ -26,16 +26,6 @@ export const live = {
   },
 } satisfies Shown;
 
-// The code that ran out, which the sheet still draws, dimmed.
-export const expired = {
-  open: true,
-  code: {
-    ...live.code,
-    status: 'expired',
-    expiresAt: new Date(Date.now() - 1000).toISOString(),
-  },
-} satisfies Shown;
-
 export const minting = {
   open: true,
   code: { status: 'minting' },

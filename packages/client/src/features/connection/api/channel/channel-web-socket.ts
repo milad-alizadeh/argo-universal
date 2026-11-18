@@ -1,4 +1,5 @@
 import { bytesText, concatBytes, bytesBase64, textBytes } from './bytes';
+import { ServerUnreachable } from './channel-route';
 import { readHead, type HeadAndRest } from './http-exchange';
 import { PairingRefused, type OpenedChannel } from './open-channel';
 import {
@@ -152,7 +153,7 @@ class ChannelWebSocket {
 
   private fail(cause: unknown): void {
     if (isUnknownDevice(cause)) this.deps.onRefused?.();
-    console.error('The channel to the Server failed', cause);
+    else reportFault(cause);
     this.emit('error', {});
     this.shutdown(abnormalClosure);
   }
@@ -167,6 +168,12 @@ class ChannelWebSocket {
     for (const listener of this.listeners.get(type) ?? [])
       listener.call(this, event);
   }
+}
+
+// A Server that is off or away is drawn by the Connection as reconnecting, as an unpaired Device is drawn as not allowed; only anything else is a fault worth the error overlay.
+function reportFault(cause: unknown): void {
+  if (cause instanceof ServerUnreachable) return;
+  console.error('The channel to the Server failed', cause);
 }
 
 // A Device with a row and a key does not meet this: the Server asks for a Ticket only of a Device it has no row for.

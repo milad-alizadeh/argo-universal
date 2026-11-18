@@ -20,3 +20,7 @@ The Server runs all git work, calling `git` and `gh` from `packages/git`; Apps o
 - Paseo's Project, Workspace, Agent model, where several agents share one worktree. Rejected: Argo's Session-owned worktree is simpler and is already proven. The 2026-11-15 amendment does not bring it back: a Checkout still has one owner, and a Session borrows only from the Session that started it.
 - Let a Session borrow any Session's Checkout in its Project (2026-11-15). Not taken: the starter is the one Session known to be coordinating the work in that tree.
 - Lock the working tree while a borrower writes (2026-11-15). Not taken: an Agent's in-process subagents already share its tree unlocked.
+
+## Reviews under ADR-0061
+
+Owner amendment, 2026-11-18 (#2373): [ADR-0061](0061-reviews-belong-to-the-engine-and-change-providers-own-remote-writes.md) adds Engine-created Reviewer Started Sessions. Each owns a temporary detached Checkout at the reviewed commit. It never borrows the Change Session’s Checkout. The Server removes it after the Agent stops and keeps the transcript and Review result. Ordinary Started Session Checkouts are unchanged.

@@ -21,7 +21,7 @@ export type ChangeItem = {
   onCheckout?: true;
   totals: { files: number; additions: number; deletions: number };
   // Absent while the Checks are not known, which is never the same as passed.
-  checks?: CheckInfo[];
+  checks?: Pick<CheckInfo, 'name' | 'state'>[];
   // Set when the latest read failed and the rest is what was last known.
   stale?: 'signIn' | 'rateLimited' | 'failed';
   // What the Plugin offers to turn on; absent where it was not read, as when a pull request has only just been attached.

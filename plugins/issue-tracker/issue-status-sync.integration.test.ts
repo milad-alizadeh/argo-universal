@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { drawnUntil } from './drawn-again';
 import {
   signedInRoot,
   trackedGitHub,
@@ -52,9 +53,7 @@ it('refreshes visible Session items when an Issue page reads a changed Query', a
 
   github.closeIssue(42);
   await test.clock.advance(61_000);
-  await page.draw();
-
-  expect(page.findText('Reopen Issue')).toBeDefined();
+  await drawnUntil(page, 'Reopen Issue');
   await expect
     .poll(() => [row, line], { timeout: 3000 })
     .toMatchObject([

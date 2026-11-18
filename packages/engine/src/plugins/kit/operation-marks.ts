@@ -13,7 +13,8 @@ type Clock = () => number;
  * `argo.changed()` and the Plugin's Operations mark its pages stale, and the host makes one mark per
  * write, which also makes the Plugin's kept Queries due. A change said inside an Operation's handler joins
  * the mark the host makes when that Operation ends, failed or not. The host ends it for good once its
- * limit passes, whether or not the handler is done, so a change said after that marks as usual.
+ * limit passes, whether or not the handler is done, so a change said after that marks as usual. A read-tier
+ * Operation makes no mark of its own, so a change its handler says is sent at once.
  */
 export function operationMarks(
   { pages: send, origin }: Pick<LoaderCalls, 'pages' | 'origin'>,
@@ -44,8 +45,9 @@ const sendChanged = (send: LoaderPageSend): void =>
 const answering =
   (running: Running, now: Clock) =>
   (send: OperationSend): OperationAnswering => ({
-    during: (id, run) => {
-      running.set(id, now());
+    during: ({ id, tier }, run) => {
+      // A read-tier run writes nothing, so a change its handler says is its own mark to make.
+      if (tier !== 'read') running.set(id, now());
 
       return run();
     },

@@ -1,5 +1,6 @@
 import type { PluginTestOptions } from '@argo/plugin-kit/testing';
 import { expect, it } from 'vitest';
+import { drawnUntil } from './drawn-again';
 import {
   chooseGithub,
   project,
@@ -70,8 +71,7 @@ it('recovers from a slow credential read without asking the person to sign in ag
     'Account is temporarily unavailable. Try again.',
   );
   await tracked.test.clock.advance(61_000);
-  await root.draw();
-  expect(root.findText('good first issue')).toBeDefined();
+  await drawnUntil(root, 'good first issue');
   expect(root.find(project.name).props.footer).toBeUndefined();
   expect(root.findText('Sign in to GitHub')).toBeUndefined();
 }, 30_000);

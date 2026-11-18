@@ -3,12 +3,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { PairDeviceSheet } from './pair-device-sheet';
-import {
-  expired,
-  live,
-  mintFailed,
-  wantsToPair,
-} from './pair-device-sheet-fixtures';
+import { live, mintFailed, wantsToPair } from './pair-device-sheet-fixtures';
 
 const typedCode = '482 · 915';
 
@@ -93,15 +88,13 @@ export const DoneClosesTheSheet: Story = {
   },
 };
 
-export const AnExpiredCodeSaysSoAndOffersAnother: Story = {
-  args: expired,
-  play: async ({ args, userEvent }) => {
-    await shown(/This code has expired/);
-    await expect(sheet.queryByText(typedCode)).toBeNull();
-    await userEvent.click(
-      sheet.getByRole('button', { name: 'Show a new code' }),
-    );
-    await expect(args.onNewCode).toHaveBeenCalledOnce();
+// A live code renews itself, so the owner is never asked for another while one is on screen.
+export const ALiveCodeOffersNoOther: Story = {
+  play: async () => {
+    await shown(typedCode);
+    await expect(
+      sheet.queryByRole('button', { name: 'Show a new code' }),
+    ).toBeNull();
   },
 };
 

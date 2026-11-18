@@ -3,6 +3,7 @@ import { memo, useMemo } from 'react';
 import { View } from 'react-native';
 import { lexMarkdown } from '#kit/lex-markdown';
 import { Blocks } from './block-tokens';
+import { ArrivalsContext, useArrivals } from './markdown-arrivals';
 import { MarkdownClamp } from './markdown-clamp';
 import type { MarkdownProps } from './markdown-props';
 import { MarkdownSelectable, MarkdownTone } from './markdown-tone';
@@ -39,10 +40,13 @@ function MarkdownContent({
   streaming = false,
 }: MarkdownProps): React.JSX.Element {
   const tokens = useMemo(() => lexMarkdown(text), [text]);
+  const arrivals = useArrivals(streaming);
 
   return (
     <View className="max-w-full web:select-text gap-paragraph wide-type:gap-paragraph-wide">
-      <Blocks tokens={tokens} caret={streaming} />
+      <ArrivalsContext value={arrivals}>
+        <Blocks tokens={tokens} caret={streaming} />
+      </ArrivalsContext>
     </View>
   );
 }

@@ -4,6 +4,8 @@ import { isObject, type Json } from './json';
 export type CheckInfo = {
   name: string;
   state: 'running' | 'passed' | 'failed';
+  // GitHub's id for this run of the Check; a re-run is a new run with a new id.
+  id: number;
 };
 
 const invalid = 'GitHub returned invalid Checks.';
@@ -31,10 +33,16 @@ const nameOf = ({ name }: { [key: string]: Json }): string => {
   throw new Error(invalid);
 };
 
+const idOf = ({ id }: { [key: string]: Json }): number => {
+  if (typeof id === 'number') return id;
+
+  throw new Error(invalid);
+};
+
 function checkOf(run: Json): CheckInfo {
   if (!isObject(run)) throw new Error(invalid);
 
-  return { name: nameOf(run), state: stateOf(run) };
+  return { name: nameOf(run), state: stateOf(run), id: idOf(run) };
 }
 
 const runsOf = (reply: Json): Json[] => {

@@ -17,7 +17,7 @@ const meta = {
 
 export default meta;
 
-const compactingLabel = 'Compacting context';
+const compactingLabel = 'Compacting';
 
 async function drawsNotices({ canvas }: FeedPlayContext): Promise<void> {
   await expect(

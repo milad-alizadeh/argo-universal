@@ -37,6 +37,8 @@ export type PluginServiceOptions = {
   environment?: NodeJS.ProcessEnv;
   log: (line: string) => void;
   projects: () => Promise<readonly string[]>;
+  // The registered Projects' ids; a registration check reads these, never an origin.
+  projectIds: () => Promise<string[]>;
   projectInfo: () => Promise<PluginProjectInfo[]>;
   projectPath?: (projectId: string) => Promise<string | undefined>;
   // Answers `argo.sessions.get`; without it every Session reads as unknown.

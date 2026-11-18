@@ -14,5 +14,7 @@ export interface OrbProps {
   state?: OrbState;
   size?: OrbSize;
   paused?: boolean;
+  // Shows the one orb its `OrbContinuity` draws, rather than an orb of its own: it carries on from the orb shown before it, and morphs from that orb's shape. Such an orb is never paused.
+  continues?: boolean;
   accessibilityLabel?: string;
 }

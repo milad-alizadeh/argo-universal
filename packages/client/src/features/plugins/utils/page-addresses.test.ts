@@ -154,3 +154,25 @@ it('keeps the Page state asked last when an earlier change draws more slowly', a
 
   expect(stateOf()).toEqual({ query: 'bug' });
 });
+
+it('draws a prefetched address at once from the cache, with no wait on the Server', async () => {
+  const cache = cacheOverMemory();
+
+  await cache.addresses.prefetch(issues);
+  cache.server.hold();
+
+  const screen = onScreen(cache, issues);
+
+  expect(kept(screen.answer()).root).toBeDefined();
+  screen.leave();
+  cache.server.release();
+});
+
+it('does not draw an address again that is already kept when it is prefetched', async () => {
+  const cache = cacheOverMemory();
+
+  await cache.addresses.prefetch(issues);
+  await cache.addresses.prefetch(issues);
+
+  expect(cache.server.requests).toHaveLength(1);
+});

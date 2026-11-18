@@ -79,10 +79,12 @@ const sourceIcons: Record<
 > = {
   request: () => <StatusDot testID="live-header-dot" tone="warning" pulse />,
   retry: () => <RetryIcon />,
-  working: () => <Orb size="sm" />,
-  thought: () => <Orb size="sm" state="solving" />,
+  working: () => <Orb size="sm" continues />,
+  thought: () => <Orb size="sm" state="solving" continues />,
   // The Orb moves the way the running Tool call works: searching, composing, shaping.
-  tool_call: (toolCall) => <Orb size="sm" state={toolCallOrb(toolCall)} />,
+  tool_call: (toolCall) => (
+    <Orb size="sm" state={toolCallOrb(toolCall)} continues />
+  ),
 };
 
 export function SourceIcon({

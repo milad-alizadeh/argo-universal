@@ -1,14 +1,19 @@
+import type { MintedPairingTicket } from '@repo/contracts';
 import {
   useMutation,
   useQueryClient,
   type QueryKey,
 } from '@tanstack/react-query';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useEffectEvent, useState } from 'react';
 import { useTRPC, type ServerMutation, type TRPC } from '#features/connection';
 import type { PairingCodeLoad } from '../components/pair-device/pair-device-sheet';
+import { renewsAt } from '../components/pair-device/pairing-renewal';
 
-// A code is replaced a little before its Ticket runs out, so the one on screen is still good when the owner finally gets their phone out.
-const redrawMargin = 5_000;
+/*
+ * The shortest a code is ever left on screen. The Server and this computer read one clock, so a fresh code
+ * always has most of two minutes to run; this only stops a clock that disagrees from minting codes back to back.
+ */
+const shortestShown = 10_000;
 
 export interface PairingCode {
   load: PairingCodeLoad;
@@ -16,52 +21,76 @@ export interface PairingCode {
 }
 
 /*
- * The one code this sheet is showing. It exists because the owner asked for it: opening the sheet mints a Pairing Ticket, closing it revokes whatever is outstanding (ADR-0045).
+ * The one code this sheet is showing. It exists because the owner asked for it: opening the sheet mints a Pairing Ticket, and closing it revokes whatever is outstanding (ADR-0045).
+ * While the sheet is open the code renews itself a little before its Ticket runs out, as a 2FA code does, so the owner never meets one that has expired (#2353).
  */
 export function usePairingCode(open: boolean): PairingCode {
   const minting = useMintMutation();
-  const expired = useExpiry(minting.data?.expiresAt);
-  const revoke = useRevoke();
+  const [shown, setShown] = useState<MintedPairingTicket>();
+  const mint = useMint(minting, setShown);
+  const { reset } = minting;
 
-  // `mutate` keeps its identity across renders, so the effect below runs for the sheet opening and closing and for nothing else.
-  const { mutate } = minting;
+  useOpening(open, mint, (): void => {
+    // Reset first, so a code still on its way when the sheet closed is never put on screen.
+    reset();
+    setShown(undefined);
+  });
+  useRenewal(shown?.expiresAt, mint);
 
-  useEffect((): void => {
-    if (open) mutate();
-    else revoke();
-  }, [mutate, open, revoke]);
-
-  return {
-    load: codeLoad(minting, expired.expired),
-    mint: minted(expired, mutate),
-  };
+  return { load: codeLoad(minting, shown), mint };
 }
 
-const minted =
-  (expired: Expiry, mutate: () => void): (() => void) =>
-  (): void => {
-    expired.reset();
-    mutate();
-  };
+/*
+ * The sheet opening mints its first code, and closing it takes the code down. Every Ticket is revoked
+ * whenever the sheet is shut, including when the App starts, so none outlives the owner's attention.
+ * `mint` and `revoke` keep their identity across renders, so this runs for the sheet opening and closing and for nothing else.
+ */
+function useOpening(open: boolean, mint: () => void, close: () => void): void {
+  const revoke = useRevoke();
+  const closed = useEffectEvent(close);
+
+  useEffect((): (() => void) | undefined => {
+    if (!open) {
+      revoke();
+
+      return undefined;
+    }
+
+    mint();
+
+    return (): void => closed();
+  }, [mint, open, revoke]);
+}
 
 type Minting = ServerMutation<TRPC['pairing']['mint']>;
 
-// What the Server has said so far, read from the one mutation rather than copied into state of its own.
-function codeLoad(minting: Minting, expired: boolean): PairingCodeLoad {
-  if (minting.isPending) return { status: 'minting' };
+/*
+ * Asks the Server for a code and puts it on screen once it arrives. The code it replaces stays up until
+ * then, since it is still good for the margin it was renewed by; a mint that fails takes it down.
+ */
+function useMint(
+  minting: Minting,
+  setShown: (code: MintedPairingTicket | undefined) => void,
+): () => void {
+  const { mutate } = minting;
 
-  return answered(minting, expired);
+  return useCallback((): void => {
+    mutate(undefined, {
+      onSuccess: (code): void => setShown(code),
+      onError: (): void => setShown(undefined),
+    });
+  }, [mutate, setShown]);
 }
 
-// An expired code keeps what the Server minted, so the sheet can draw it dimmed.
-const answered = (minting: Minting, expired: boolean): PairingCodeLoad =>
-  minting.data
-    ? { status: expired ? 'expired' : 'live', ...minting.data }
-    : unanswered(minting);
+// What the sheet draws: the code on screen, else why there is none yet.
+function codeLoad(
+  minting: Minting,
+  shown: MintedPairingTicket | undefined,
+): PairingCodeLoad {
+  if (minting.isError) return { status: 'error' };
 
-const unanswered = (minting: Minting): PairingCodeLoad => ({
-  status: minting.isError ? 'error' : 'minting',
-});
+  return shown ? { status: 'live', ...shown } : { status: 'minting' };
+}
 
 function useMintMutation(): Minting {
   const trpc = useTRPC();
@@ -69,24 +98,15 @@ function useMintMutation(): Minting {
   return useMutation(trpc.pairing.mint.mutationOptions());
 }
 
-interface Expiry {
-  expired: boolean;
-  reset: () => void;
-}
-
-// An expired code says so and offers a new one, so a scan that failed is not a mystery.
-function useExpiry(expiresAt: string | undefined): Expiry {
-  const [expired, setExpired] = useState(false);
-
+// Mints the next code when the one on screen is due to be replaced.
+function useRenewal(expiresAt: string | undefined, mint: () => void): void {
   useEffect((): (() => void) | undefined => {
     if (expiresAt === undefined) return undefined;
-    const due = Date.parse(expiresAt) - Date.now() - redrawMargin;
-    const timer = setTimeout((): void => setExpired(true), Math.max(0, due));
+    const due = Math.max(shortestShown, renewsAt(expiresAt) - Date.now());
+    const timer = setTimeout(mint, due);
 
     return (): void => clearTimeout(timer);
-  }, [expiresAt]);
-
-  return { expired, reset: useCallback((): void => setExpired(false), []) };
+  }, [expiresAt, mint]);
 }
 
 // The sheet closing: the code it put on screen stops working at once rather than outliving the owner's attention by up to two minutes.

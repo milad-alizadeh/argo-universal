@@ -5,8 +5,13 @@ import type { FixFacts } from './pull-fix-prompts';
 import type { PullInfo } from './pull-info';
 import type { Known } from './pull-known';
 
-export const failedOf = (checks: readonly CheckInfo[]): string[] =>
-  checks.flatMap(({ name, state }) => (state === 'failed' ? [name] : []));
+// A failed run of a Check: its name, and GitHub's id for the run.
+export type FailedCheck = Pick<CheckInfo, 'name' | 'id'>;
+
+export const failedOf = (checks: readonly CheckInfo[]): FailedCheck[] =>
+  checks.flatMap(({ name, id, state }) =>
+    state === 'failed' ? [{ name, id }] : [],
+  );
 
 export const runningOf = (checks: readonly CheckInfo[]): boolean =>
   checks.some(({ state }) => state === 'running');

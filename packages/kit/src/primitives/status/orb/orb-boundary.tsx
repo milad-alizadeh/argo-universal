@@ -15,7 +15,8 @@ export function OrbPlaceholder({
 }
 
 interface Props {
-  size?: OrbSize;
+  // What stands in for an orb that cannot draw.
+  fallback: ReactNode;
   children: ReactNode;
 }
 
@@ -30,10 +31,6 @@ export class OrbBoundary extends Component<Props, State> {
     return { failed: true };
   }
   public override render(): ReactNode {
-    return this.state.failed ? (
-      <OrbPlaceholder size={this.props.size} />
-    ) : (
-      this.props.children
-    );
+    return this.state.failed ? this.props.fallback : this.props.children;
   }
 }
