@@ -31,37 +31,3 @@ export const voiceCallSession: OpenSessionViewProps = {
     },
   },
 };
-
-// The same Session, with the call running in another one: the voice button's slot points there.
-export const callElsewhereSession: OpenSessionViewProps = {
-  ...idleSession,
-  composer: {
-    ...idleSession.composer,
-    voice: {
-      usable: true,
-      call: 'elsewhere',
-      onStart: fn(),
-      onEnd: fn(),
-      elsewhere: { title: 'Fix flaky Feed sync test', onOpen: fn() },
-    },
-  },
-};
-
-// The call is still connecting: End shows at once, with its ring, and the field says so.
-export const callConnectingSession: OpenSessionViewProps = {
-  ...idleSession,
-  composer: {
-    ...idleSession.composer,
-    placeholder: 'Connecting…',
-    voice: { usable: true, call: 'connecting', onStart: fn(), onEnd: fn() },
-  },
-};
-
-// No call, a usable Voice provider and an empty draft: the voice button is the primary button.
-export const voiceReadySession: OpenSessionViewProps = {
-  ...idleSession,
-  composer: {
-    ...idleSession.composer,
-    voice: { usable: true, call: 'none', onStart: fn(), onEnd: fn() },
-  },
-};
