@@ -38,6 +38,7 @@ interface ContextLevel {
   used: string;
   size: string;
   percent: number;
+  description?: string;
   zone: 'Smart zone' | 'Dumb zone';
 }
 
@@ -85,6 +86,10 @@ const contextRing = (
       expect(panel.getByText(`/ ${level.size} tokens`)).toBeVisible(),
     );
     await expect(panel.getByText(level.used)).toBeVisible();
+
+    if (level.description)
+      await expect(panel.getByText(level.description)).toBeVisible();
+
     await expect(
       panel.getByText(`${level.percent}% · ${level.zone}`),
     ).toBeVisible();
@@ -120,15 +125,16 @@ export const FullDesktop = contextRing(layoutWidths.wide, full, true);
 
 export const FullPhone = contextRing(layoutWidths.phone, full, false);
 
-export const PartialDesktop = hidden(layoutWidths.wide, {
-  ...low.usage,
-  scope: 'model-call',
-});
+const lastCall: ContextLevel = {
+  ...low,
+  used: '~34k',
+  description: 'Estimated from the last model call.',
+  usage: { ...low.usage, scope: 'model-call' },
+};
 
-export const PartialPhone = hidden(layoutWidths.phone, {
-  ...low.usage,
-  scope: 'model-call',
-});
+export const PartialDesktop = contextRing(layoutWidths.wide, lastCall, true);
+
+export const PartialPhone = contextRing(layoutWidths.phone, lastCall, false);
 
 export const MissingDesktop = hidden(layoutWidths.wide);
 
