@@ -13,7 +13,7 @@ import type { HandlerSources } from './session-sources';
 type VoicePromptSources = Parameters<typeof promptFromPlugin>[0] &
   HandlerSources<never, 'ready'>;
 
-// The Voice call as a Prompt sender (ADR-0062): stored with the Prompt and never drawn.
+// The Voice call as a Prompt sender (ADR-0063): stored with the Prompt and never drawn.
 const voiceSender: NonUserPromptSender = { type: 'voice' };
 
 type Steerable = { id: string; revision: number };

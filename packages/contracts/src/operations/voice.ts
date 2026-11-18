@@ -10,7 +10,7 @@ import {
 } from '../voice';
 import type { OperationDefinition } from './index';
 
-// The Voice call's Operations (ADR-0062): the App starts one with its connection offer and ends it; anyone reads its status.
+// The Voice call's Operations (ADR-0063): the App starts one with its connection offer and ends it; anyone reads its status.
 export const voiceOperations = {
   'voice.status': {
     id: 'voice.status',

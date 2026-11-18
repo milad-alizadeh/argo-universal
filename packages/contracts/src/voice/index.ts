@@ -6,7 +6,7 @@ export const VoiceCallStatus = z.enum(['connecting', 'connected']);
 
 export type VoiceCallStatus = z.infer<typeof VoiceCallStatus>;
 
-// Why a Voice call stopped (ADR-0062).
+// Why a Voice call stopped (ADR-0063).
 export const VoiceCallEnd = z.enum([
   'person',
   'agent',
