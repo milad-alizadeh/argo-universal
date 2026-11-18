@@ -43,18 +43,14 @@ export function PluginDetailView(
   );
 }
 
-function PluginPageBody(props: PluginDetailViewProps): React.ReactNode {
-  if (!props.root)
-    return (
-      <Screen title={props.title}>
-        <PendingPage />
-      </Screen>
-    );
-
+function PluginPageBody({
+  title = 'Plugin',
+  ...props
+}: PluginDetailViewProps): React.ReactNode {
   if (ownsPage(props.root)) return <PluginContent {...props} />;
 
   return (
-    <Screen title={props.title ?? 'Plugin'}>
+    <Screen title={title}>
       <PageHolder {...props} />
     </Screen>
   );
@@ -62,6 +58,8 @@ function PluginPageBody(props: PluginDetailViewProps): React.ReactNode {
 
 // A List scrolls and insets itself, so it fills the body; anything else scrolls in a Detail.
 function PageHolder(props: PluginDetailViewProps): React.ReactNode {
+  if (!props.root) return <PendingPage />;
+
   const list = soleList(props.root);
 
   if (!list)

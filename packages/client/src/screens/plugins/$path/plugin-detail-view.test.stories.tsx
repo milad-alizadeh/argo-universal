@@ -119,10 +119,13 @@ export const WaitingForPage: Story = {
     await expect(status).toHaveAttribute('aria-busy', 'true');
     await waitFor(() => {
       const bar = status.querySelector('[data-skeleton-overlay] > *');
-      const bounds = bar?.getBoundingClientRect();
 
-      expect(bounds?.width).toBeGreaterThan(0);
-      expect(bounds?.height).toBeGreaterThan(0);
+      if (!bar) throw new Error('Waiting for the first skeleton bar');
+
+      const bounds = bar.getBoundingClientRect();
+
+      expect(bounds.width).toBeGreaterThan(0);
+      expect(bounds.height).toBeGreaterThan(0);
     });
   },
 };
