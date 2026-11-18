@@ -5,6 +5,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { PluginDetailView } from './plugin-detail-view';
+import { loading } from './plugin-detail-view-fixtures';
 
 const meta = {
   title: 'Tests/Screens/Plugins/Plugin page',
@@ -112,7 +113,7 @@ export const ListInAStackScrolls: Story = {
 };
 
 export const WaitingForPage: Story = {
-  args: { root: null },
+  args: loading,
   play: async ({ canvas }) => {
     const status = await canvas.findByRole('status', { name: 'Loading page' });
 

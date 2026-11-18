@@ -34,27 +34,10 @@ function PreparedList({ prepared, ...props }: PreparedListProps): ReactElement {
       {...prepared}
       {...measures}
       {...childHeights(props, height)}
-      {...pageWindow(props, height)}
+      recycleItems={props.recycleItems ?? Boolean(props.pagination)}
       maintainVisibleContentPosition={childAnchor(props.anchor)}
     />
   );
-}
-
-const pageDrawDistance = (
-  pagination: ChildrenOptions['pagination'],
-  height: number,
-): number | undefined => (pagination ? height : undefined);
-
-// Once the visible rows are ready, a paginated List keeps another screen of cells ready for a fling.
-function pageWindow(
-  props: ChildrenOptions,
-  height: number,
-): Pick<ChildrenOptions, 'drawDistance' | 'recycleItems'> {
-  return {
-    drawDistance:
-      props.drawDistance ?? pageDrawDistance(props.pagination, height),
-    recycleItems: props.recycleItems ?? Boolean(props.pagination),
-  };
 }
 
 function ChildrenList({ children, ...options }: ChildrenOptions): ReactElement {
