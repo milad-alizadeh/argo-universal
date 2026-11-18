@@ -3,6 +3,7 @@ import { type ListProps } from '@repo/kit/primitives/lists/list';
 import type * as React from 'react';
 import { type RefObject, useCallback } from 'react';
 import { Platform, View } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { useFeedFade } from '#lib/product/feed-fade';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
@@ -35,6 +36,9 @@ const endThreshold = 0.02;
 const followEnd = {
   on: { layout: true, footerLayout: true, dataChange: true, itemLayout: true },
 };
+
+// While prose wraps, move the reader to the new end over several frames.
+const glideToEnd = { ...followEnd, animated: true };
 
 // In screens from the top: older rows load this far ahead of the reader.
 const startThreshold = 2;
@@ -138,12 +142,20 @@ export type FeedListProps = Pick<
 function anchorsOf(
   opensAtStart: boolean | undefined,
   focused: boolean,
+  following: typeof followEnd,
 ): Pick<FeedListProps, 'maintainScrollAtEnd' | 'alignItemsAtEnd'> {
   return {
-    maintainScrollAtEnd: opensAtStart || !focused ? false : followEnd,
+    maintainScrollAtEnd: opensAtStart || !focused ? false : following,
     // Rows start at the top of the view, never against the Composer.
     alignItemsAtEnd: false,
   };
+}
+
+function useEndMotion(items: FeedRowData[]): typeof followEnd {
+  const reduced = useReducedMotion();
+  const streaming = items.slice(-2).some((item) => item.streaming);
+
+  return streaming && !reduced ? glideToEnd : followEnd;
 }
 
 function useFeedListProps(
@@ -157,7 +169,7 @@ function useFeedListProps(
     items,
     renderItem: useRenderEntry({ ...props, ...motion }),
     initialScrollIndex: props.initialIndex,
-    ...anchorsOf(props.opensAtStart, useScreenFocused()),
+    ...anchorsOf(props.opensAtStart, useScreenFocused(), useEndMotion(items)),
     onStartReached: props.onStartReached,
     header: <LoadingEarlier loading={props.loadingOlder} />,
   };

@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
-import { Text as Span } from 'react-native';
-import { Easing } from 'react-native-reanimated';
+import { Easing, Text as Span } from 'react-native';
 import { useReducedMotionNow } from '#kit/use-reduced-motion-now';
 import type { ArrivingRunProps } from './arriving-run-props';
 import { fadeMilliseconds } from './arriving-text';
@@ -10,7 +9,10 @@ type Paint = (now: number) => boolean;
 
 const painting = new Set<Paint>();
 
-const easedOpacity = Easing.inOut(Easing.quad);
+// Match ease-streaming-text on web. A steady middle limits jumps after a late frame.
+const { x1, y1, x2, y2 } = { x1: 0.3, y1: 0.12, x2: 0.7, y2: 0.88 };
+
+const easedOpacity = Easing.bezier(x1, y1, x2, y2);
 
 let frame: number | undefined;
 
