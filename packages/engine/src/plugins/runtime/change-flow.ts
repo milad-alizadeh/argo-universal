@@ -79,6 +79,11 @@ export class ChangeFlow {
     if (addresses.length > 0) this.changes.heldChanged(pluginId, addresses);
   }
 
+  // Resolves once every window of changes has been settled: its Queries read and its pages marked.
+  settled(): Promise<void> {
+    return this.window.settled();
+  }
+
   close(): void {
     this.window.close();
   }

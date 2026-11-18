@@ -58,11 +58,15 @@ function answerOf(
     : failed(call.error);
 }
 
+// A read-tier run no person made from a page.
+const unheard = ({ tier, caller }: Request): boolean =>
+  tier === 'read' && caller.person !== true;
+
 /*
  * The runtime side of a Plugin's own Operations (ADR-0044): one call per run, answered by the worker
  * generation it went to. A Plugin that is not running answers nothing, so the caller starts it first.
- * Every run but a read-tier one is heard once it ends, whoever ran it and however it ended: a handler that
- * wrote and then threw leaves the Plugin's pages stale (ADR-0050, ADR-0060).
+ * Every run but a read-tier one no person made is heard once it ends, whoever ran it and however it ended: a
+ * handler that wrote and then threw leaves the Plugin's pages stale (ADR-0050, ADR-0060).
  */
 export class PluginOperations {
   private readonly calls: KindCalls<Request, PluginOperationCall, Answer>;
@@ -88,14 +92,17 @@ export class PluginOperations {
       this.scrubbed(await this.calls.call(pluginId, request)),
     );
 
-    this.heard(pluginId, request.tier);
+    this.heard(pluginId, request);
 
     return answer;
   }
 
-  // A read-tier run wrote nothing, so no one hears of it.
-  private heard(pluginId: string, tier: PluginOperationTier | undefined): void {
-    if (tier === 'read') return;
+  /*
+   * A read-tier run an Agent or a Hook makes wrote nothing, so no one hears of it. One a person makes from a page is
+   * heard whatever its tier: it is how a page's Try again asks its reads again (ADR-0060).
+   */
+  private heard(pluginId: string, request: Request): void {
+    if (unheard(request)) return;
 
     for (const listener of this.ranListeners) listener(pluginId);
   }

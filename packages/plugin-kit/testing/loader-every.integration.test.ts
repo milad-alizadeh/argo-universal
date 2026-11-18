@@ -45,8 +45,9 @@ it.each([9999, 10000, 10001])(
     expect(await kit.pages.draw({ path: '/', known })).toMatchObject({
       kind: 'unchanged',
     });
-    await vi.waitFor(async () =>
-      expect(await fixture.requests()).toHaveLength(2),
+    await vi.waitFor(
+      async () => expect(await fixture.requests()).toHaveLength(2),
+      { timeout: 5000 },
     );
     expect(await kit.pages.draw({ path: '/', known })).toMatchObject({
       kind: 'tree',

@@ -165,12 +165,12 @@ export class Rig {
     return answerService({ draws, operations, services }, hostCall(draw));
   }
 
-  // One run of the Plugin's Operation `discover`, declared with `tier`, which the worker answers.
+  // One Agent's run of the Plugin's Operation `discover`, declared with `tier`, which the worker answers.
   async ran(tier: 'read' | 'act'): Promise<void> {
     const running = this.resources.operations.run(pluginId, {
       name: 'discover',
       params: {},
-      caller: { person: true },
+      caller: { sessionId: 'session-1' },
       tier,
     });
 

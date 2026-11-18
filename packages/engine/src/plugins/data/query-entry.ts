@@ -56,8 +56,8 @@ export class QueryEntry {
   }
 
   // Whether the draw is served what was kept: its address already has a tree and no one pulled it fresh.
-  private serving({ holder, fresh }: QueryRead): boolean {
-    return !fresh && this.holders.has(holder) && this.servable();
+  private serving({ holder, fresh, every }: QueryRead): boolean {
+    return !fresh && this.holders.has(holder) && this.servable(every);
   }
 
   private async awaited(read: QueryRead): Promise<void> {
@@ -69,19 +69,26 @@ export class QueryEntry {
     await this.untilCurrent(draw, 2);
   }
 
-  // An answer to serve while a fresh one is read: one the last read did not fail, and not a paged list's that is due.
-  private servable(): boolean {
+  /*
+   * An answer to serve while a fresh one is read: one the last read did not fail, and not a paged list's that is due
+   * or old, which only a draw can read.
+   */
+  private servable(every: number | undefined): boolean {
     return (
       this.state.data !== undefined &&
       this.state.error === undefined &&
-      !waitsForDraw(this.owner, this.timing.overdue)
+      !waitsForDraw(this.owner, this.dueFor(every))
     );
   }
 
   // Starts, behind the draw that was served, the read the entry is due or old enough for.
   private revalidate(every: number | undefined): void {
-    if (this.timing.overdue || this.timing.olderThan(every))
-      void this.refresh();
+    if (this.dueFor(every)) void this.refresh();
+  }
+
+  // Due from a write, or as old as the page's `every`.
+  private dueFor(every: number | undefined): boolean {
+    return this.timing.overdue || this.timing.olderThan(every);
   }
 
   private async untilCurrent(

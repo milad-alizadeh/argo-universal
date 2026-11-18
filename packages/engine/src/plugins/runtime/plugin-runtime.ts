@@ -65,6 +65,7 @@ export class PluginRuntime {
       clock,
       tell: (command): void => this.host.tell(command),
       running: (): string[] => this.plugins.runningIds(),
+      changesSettled: () => this.resources.changesSettled(),
     });
   }
 

@@ -78,3 +78,30 @@ it('settles nothing once closed', () => {
   expect(timers.size).toBe(0);
   expect(settled).toEqual([]);
 });
+
+it('is settled once its window has ended and the settle it began is over', async () => {
+  const { changes, settled, elapse } = windowed();
+  let over = false;
+
+  changes.request('github');
+
+  const waiting = changes.settled().then(() => {
+    over = true;
+  });
+
+  await Promise.resolve();
+  expect(over).toBe(false);
+
+  elapse();
+  await waiting;
+  expect(settled).toEqual(['github']);
+});
+
+it('is settled at once with no window open, and when a closed one never ends', async () => {
+  const { changes } = windowed();
+
+  await expect(changes.settled()).resolves.toBeUndefined();
+  changes.request('github');
+  changes.close();
+  await expect(changes.settled()).resolves.toBeUndefined();
+});

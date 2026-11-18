@@ -161,6 +161,10 @@ export class RuntimeResources {
     );
   }
 
+  changesSettled(): Promise<void> {
+    return this.flow.settled();
+  }
+
   close(): void {
     for (const unwatch of this.unwatch) unwatch();
     this.flow.close();
