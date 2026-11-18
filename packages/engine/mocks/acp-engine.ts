@@ -109,13 +109,17 @@ type Fixture = OpenedStorage & {
   agentId?: string;
 };
 
+// No Voice provider unless a test supplies one, whatever the shell's ARGO_VOICE_PROVIDER says.
+const voiceProviderOf = (scenario: AcpScenario): AcpScenario['voiceProvider'] =>
+  scenario.voiceProvider ?? null;
+
 // Most tests have Agents that send no Slash command list; they must not wait for one.
 const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({
   caffeinate: scenario.caffeinate,
   operationWaitClock: scenario.operationWaitClock,
   slashCommandsWaitMs: scenario.slashCommandsWaitMs ?? 0,
   argoToolsGraceMs: scenario.argoToolsGraceMs ?? Number.POSITIVE_INFINITY,
-  voiceProvider: scenario.voiceProvider,
+  voiceProvider: voiceProviderOf(scenario),
 });
 
 const fixtureAgents = (

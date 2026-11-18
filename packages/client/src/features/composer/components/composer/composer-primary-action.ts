@@ -2,6 +2,8 @@ import type { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import type * as React from 'react';
 import type { SendLayout } from './composer-toolbar-types';
 
+export const endButtonId = 'composer-end';
+
 type IconButtonProps = React.ComponentProps<typeof IconButton>;
 
 type PrimaryAction = (layout: SendLayout) => IconButtonProps;
@@ -18,6 +20,7 @@ function sendAction(layout: SendLayout): IconButtonProps {
 function endAction(layout: SendLayout): IconButtonProps {
   return {
     accessibilityLabel: 'End',
+    testID: endButtonId,
     icon: 'close',
     onPress: (): void => layout.props.voice?.onEnd(),
   };

@@ -84,6 +84,15 @@ function expectVoice(expected: Snapshot): void {
   expect(voice.getSnapshot().context.ended).toEqual(expected.context.ended);
 }
 
+const expectNoCall = (snapshot: Snapshot): void =>
+  expect(snapshot.context.call).toBeNull();
+
+const expectCall = (snapshot: Snapshot): void =>
+  expect(snapshot.context.call?.callId).toBe('call-1');
+
+const expectAnswer = (snapshot: Snapshot): void =>
+  expect(snapshot.context.call?.answer).toBe('answer');
+
 const model = modelTest(
   modelMachine,
   {
@@ -116,7 +125,11 @@ const model = modelTest(
     ),
     delays: {},
     always: expectVoice,
-    states: {},
+    states: {
+      idle: expectNoCall,
+      running: expectCall,
+      'running.connecting': expectAnswer,
+    },
   },
 );
 
@@ -134,7 +147,10 @@ it('does not start a call without a provider', () => {
   }).start();
 
   idle.send(start);
-  expect(idle.getSnapshot().value).toBe('idle');
+  expect(idle.getSnapshot().context).toMatchObject({
+    call: null,
+    ended: null,
+  });
 });
 
 it('ignores a second call while one is running', () => {
@@ -148,7 +164,7 @@ it('ends only the call an end names', () => {
   const running = createActor(modelMachine, { input }).start();
   running.send(start);
   running.send({ type: 'call.end', reason: 'agent', sessionId: 'session-2' });
-  expect(running.getSnapshot().matches('running')).toBe(true);
+  expect(running.getSnapshot().context.call?.callId).toBe('call-1');
   running.send({ type: 'call.end', reason: 'agent', sessionId: 'session-1' });
   expect(running.getSnapshot().context.ended).toEqual({
     callId: 'call-1',

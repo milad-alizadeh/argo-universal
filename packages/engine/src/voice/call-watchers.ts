@@ -9,14 +9,21 @@ import {
 
 export type SessionWatch = { sessionId: string };
 
-type Tagged = { hasTag: (tag: string) => boolean };
+type Tagged = {
+  hasTag: (tag: string) => boolean;
+  context: { archiveRequested: boolean };
+};
 
 const closed = 'session-closed';
+
+// An archive closes the Session on its way to `archived`, so a close that was asked for as an archive is one.
+const closingReason = (snapshot: Tagged): SessionGoneReason =>
+  snapshot.context.archiveRequested ? 'session-archived' : closed;
 
 const reasonOf = (snapshot: Tagged): SessionGoneReason | undefined => {
   if (snapshot.hasTag('archived')) return 'session-archived';
 
-  return snapshot.hasTag('closing') ? closed : undefined;
+  return snapshot.hasTag('closing') ? closingReason(snapshot) : undefined;
 };
 
 function subscribeSession(actor: AnyActorRef, sendBack: SendBack): () => void {

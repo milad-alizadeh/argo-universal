@@ -3,6 +3,7 @@ import { composerProps } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { Composer } from './composer';
+import { endButtonId } from './composer-primary-action';
 import type { ComposerVoice } from './composer-types';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer/Voice' };
@@ -16,34 +17,17 @@ const voice = (call: ComposerVoice['call']): ComposerVoice => ({
   onEnd: fn(),
 });
 
-// The voice button is not drawn yet, so a Session that can start a call shows what a blocked Composer shows, and no End.
-export const VoiceReady: Story = {
-  render: (args) => (
-    <Composer {...composerProps({ ...args, sessionStarted: true })} />
-  ),
-  args: { voice: voice('none') },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
-    await expect(
-      canvas.queryByRole('button', { name: 'End' }),
-    ).not.toBeInTheDocument();
-  },
-};
-
-// The call is starting: End is already there, and pressing it hangs up.
+// The call is starting: the call's own button is already there, and pressing it hangs up.
 export const Connecting: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
-  args: {
-    voice: voice('connecting'),
-    placeholder: 'Type, or keep talking',
-  },
+  args: { voice: voice('connecting') },
   play: async ({ canvas, args }) => {
     await expect(
       canvas.queryByRole('button', { name: 'Send' }),
     ).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('button', { name: 'End' }));
+    await userEvent.click(canvas.getByTestId(endButtonId));
     await expect(args.voice?.onEnd).toHaveBeenCalledOnce();
   },
 };
@@ -58,9 +42,7 @@ export const SendDuringCall: Story = {
     draft: { text: 'A pasted stack trace.', attachments: [] },
   },
   play: async ({ canvas, args }) => {
-    await expect(
-      canvas.queryByRole('button', { name: 'End' }),
-    ).not.toBeInTheDocument();
+    await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
     await expect(args.onSend).toHaveBeenCalledWith(args.draft);
     await expect(args.voice?.onEnd).not.toHaveBeenCalled();

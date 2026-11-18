@@ -25,17 +25,22 @@ describe('Voice call endings', () => {
     const { host, provider } = await runningCall();
     provider.call.close('ended');
     await expect
-      .poll(() => endedOf(host))
+      .poll(() => host.caller.voice.status())
       .toMatchObject({
-        reason: 'provider-closed',
+        call: null,
+        ended: { reason: 'provider-closed' },
       });
-    expect(await callOf(host)).toBeNull();
   });
 
   it('ends as failed when the provider reports an error', async () => {
     const { host, provider } = await runningCall();
     provider.call.emit({ type: 'status', status: 'error' });
-    await expect.poll(() => endedOf(host)).toMatchObject({ reason: 'failed' });
+    await expect
+      .poll(() => host.caller.voice.status())
+      .toMatchObject({
+        call: null,
+        ended: { reason: 'failed' },
+      });
     expect(provider.call.ended).toBe(true);
   });
 
@@ -50,7 +55,12 @@ describe('Voice call endings', () => {
   it('ends when its Session is archived', async () => {
     const { host, provider, sessionId } = await runningCall();
     await host.caller.session.archive({ sessionId });
-    await expect.poll(() => callOf(host)).toBeNull();
+    await expect
+      .poll(() => host.caller.voice.status())
+      .toMatchObject({
+        call: null,
+        ended: { reason: 'session-archived' },
+      });
     expect(provider.call.ended).toBe(true);
   });
 

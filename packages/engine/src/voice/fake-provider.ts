@@ -114,8 +114,9 @@ export class FakeVoiceCall implements VoiceProviderCall {
     for (const listener of this.listeners) listener(event);
   }
 
+  // A call that ended reports no connection, however late a scheduled connect fires.
   public connect(): void {
-    this.emit({ type: 'status', status: 'connected' });
+    if (!this.ended) this.emit({ type: 'status', status: 'connected' });
   }
 
   public personSays(text: string, id = 'person'): void {
