@@ -6,7 +6,7 @@ import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import type { PageOptions } from './screen-props';
 
-export const optionsLabel = 'Options';
+const optionsLabel = 'Options';
 
 export const optionsIcon = 'filters';
 

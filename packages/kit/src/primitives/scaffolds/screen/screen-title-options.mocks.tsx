@@ -8,13 +8,13 @@ import { Screen, type ScreenProps } from './index';
 
 type Choose = (value: string) => void;
 
-export const titleChoices = ['Group one', 'Group two', 'Group three'];
+const titleChoices = ['Group one', 'Group two', 'Group three'];
 
 /*
  * A title menu: the groups the page can show, the shown one checked, and a way to look elsewhere; each Action
  * reports its label.
  */
-export function exampleTitleMenu(
+function exampleTitleMenu(
   chosen: string,
   choose: Choose,
 ): ReactElement[] {
@@ -35,18 +35,18 @@ export function exampleTitleMenu(
   ];
 }
 
-export const viewChoices = [
+const viewChoices = [
   { value: 'list', label: 'List' },
   { value: 'board', label: 'Board' },
 ];
 
-export const statusChoices = [
+const statusChoices = [
   { value: 'any', label: 'Any status' },
   { value: 'open', label: 'Open' },
   { value: 'closed', label: 'Closed' },
 ];
 
-export interface OptionsState {
+interface OptionsState {
   view: string;
   status: string;
   onView: Choose;
@@ -54,7 +54,7 @@ export interface OptionsState {
 }
 
 // A page's options: how it shows its items, as a segmented switch, then a filter row.
-export function exampleOptions(state: OptionsState): ReactElement {
+function exampleOptions(state: OptionsState): ReactElement {
   return (
     <Stack direction="column" gap={4}>
       <SegmentedControl
