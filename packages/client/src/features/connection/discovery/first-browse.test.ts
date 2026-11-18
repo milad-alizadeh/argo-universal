@@ -1,59 +1,49 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import type { KnownServer } from './resolve-server';
+import { type KnownServer, resolveServer } from './resolve-server';
 
-const silent = () => (): void => undefined;
+const silent = (): (() => void) => (): void => {};
 
 const known: KnownServer = { name: 'Studio', key: 'studio-key' };
 
-// The first browse of a session is the one a Local Network prompt may still be on screen for, so it is given longer.
 beforeEach(() => {
   vi.useFakeTimers();
-  vi.resetModules();
 });
 
 afterEach(() => {
   vi.useRealTimers();
 });
 
-const settled = async (promise: Promise<unknown>): Promise<unknown> =>
+// What a resolve ended as: the name of its error, or that it resolved.
+const endedAs = (promise: Promise<unknown>): Promise<string> =>
   promise.then(
     () => 'resolved',
-    (cause: unknown) => cause,
+    (cause: Error) => cause.name,
   );
 
+// The tests run in this order: the first browse of a session is the one that waits longer, and the module remembers that it has happened.
 it('waits four seconds on the first browse, and says undetermined when nothing was heard', async () => {
-  const { resolveServer } = await import('./resolve-server');
-  const outcome = settled(resolveServer(known, silent));
+  const outcome = endedAs(resolveServer(known, silent));
 
   await vi.advanceTimersByTimeAsync(3500);
   await expect(Promise.race([outcome, 'pending'])).resolves.toBe('pending');
   await vi.advanceTimersByTimeAsync(600);
 
-  expect(await outcome).toMatchObject({ name: 'BrowseUndeterminedError' });
+  await expect(outcome).resolves.toBe('BrowseUndeterminedError');
 });
 
 it('waits three seconds on a later browse, and says the Server is not there', async () => {
-  const { resolveServer } = await import('./resolve-server');
-  await Promise.all([
-    settled(resolveServer(known, silent)),
-    vi.advanceTimersByTimeAsync(4100),
-  ]);
-  const outcome = settled(resolveServer(known, silent));
+  const outcome = endedAs(resolveServer(known, silent));
 
   await vi.advanceTimersByTimeAsync(3100);
 
-  expect(await outcome).toMatchObject({ name: 'ServerNotFoundError' });
+  await expect(outcome).resolves.toBe('ServerNotFoundError');
 });
 
-it('still answers with the stored address when the first browse hears nothing', async () => {
-  const { resolveServer } = await import('./resolve-server');
-  const withAddress = {
-    ...known,
-    address: { host: 'studio.local', port: 4000 },
-  };
-  const outcome = resolveServer(withAddress, silent);
+it('still answers with the stored address when nothing is heard', async () => {
+  const address = { host: 'studio.local', port: 4000 };
+  const outcome = resolveServer({ ...known, address }, silent);
 
-  await vi.advanceTimersByTimeAsync(4100);
+  await vi.advanceTimersByTimeAsync(3100);
 
   await expect(outcome).resolves.toMatchObject({ source: 'address' });
 });

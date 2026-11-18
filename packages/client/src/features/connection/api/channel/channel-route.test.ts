@@ -106,7 +106,7 @@ describe('ChannelRoute', () => {
     const route = new ChannelRoute(kept, announcing(), [wire, tailnet]);
     const server = serverOn();
 
-    await route.open(server.attempt).catch(() => undefined);
+    await expect(route.open(server.attempt)).rejects.toThrow('The Server did not answer');
 
     expect(server.tried).toEqual([kept, tailnet, wire]);
   });

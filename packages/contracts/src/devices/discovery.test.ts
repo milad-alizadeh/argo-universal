@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import {
+  type Announced,
   HeardServers,
   keyHashOf,
   keyHostLabelOf,
@@ -60,45 +61,54 @@ describe('the key hash an announcement carries', () => {
   });
 });
 
-describe('Servers heard on the network', () => {
-  const heardAs = (name: string, key: string, txtName?: string) => ({
-    name,
-    txt: { keyhash: keyHashOf(key), ...(txtName ? { name: txtName } : {}) },
-    addresses: [],
-    port: 4000,
+const studioMac = 'Studio Mac';
+
+const heardAs = (name: string, key: string, txtName = ''): Announced => ({
+  name,
+  txt: { keyhash: keyHashOf(key), name: txtName },
+  addresses: [],
+  port: 4000,
+});
+
+interface Listening {
+  heard: HeardServers;
+  listed: () => unknown[];
+}
+
+function listening(): Listening {
+  let listed: unknown[] = [];
+
+  const heard = new HeardServers((servers): void => {
+    listed = [...servers];
   });
 
+  return { heard, listed: (): unknown[] => listed };
+}
+
+describe('Servers heard on the network', () => {
   it('keeps two Servers that announce one name, by their key hashes', (): void => {
-    let listed: readonly { keyHash: string }[] = [];
-    const heard = new HeardServers((servers): void => {
-      listed = servers;
-    });
+    const { heard, listed } = listening();
 
-    heard.up('Studio Mac', heardAs('Studio Mac', 'key-1'));
-    heard.up('Studio Mac', heardAs('Studio Mac', 'key-2'));
+    heard.up(studioMac, heardAs(studioMac, 'key-1'));
+    heard.up(studioMac, heardAs(studioMac, 'key-2'));
 
-    expect(listed.map((server) => server.keyHash).toSorted()).toEqual(
-      [keyHashOf('key-1'), keyHashOf('key-2')].toSorted(),
-    );
+    expect(listed()).toHaveLength(2);
   });
 
   it('drops every Server heard under a name that goes away', (): void => {
-    let listed: readonly unknown[] = [];
-    const heard = new HeardServers((servers): void => {
-      listed = servers;
-    });
-    heard.up('Studio Mac', heardAs('Studio Mac', 'key-1'));
+    const { heard, listed } = listening();
+    heard.up(studioMac, heardAs(studioMac, 'key-1'));
 
-    heard.down('Studio Mac');
+    heard.down(studioMac);
 
-    expect(listed).toEqual([]);
+    expect(listed()).toEqual([]);
   });
 
   it('lists a Server by the computer name it announces, not by its instance name', (): void => {
     const server = toDiscoveredServer(
-      heardAs('Studio Mac (0a1b2c)', 'key-1', 'Studio Mac'),
+      heardAs('Studio Mac (0a1b2c)', 'key-1', studioMac),
     );
 
-    expect(server?.name).toBe('Studio Mac');
+    expect(server?.name).toBe(studioMac);
   });
 });

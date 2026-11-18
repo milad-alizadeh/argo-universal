@@ -7,6 +7,7 @@ import type {
   resolveServer,
   ServerAddress,
 } from '#features/connection';
+import { directAddresses, keyOf, otherAddressesOf } from './invite-addresses';
 
 /*
  * How one try at pairing ended. Each has its own page, because each needs the owner to do something different (ADR-0045):
@@ -65,41 +66,33 @@ interface Attempt {
   deps: PairDeps;
 }
 
-const pairedAt = (address: ServerAddress, attempt: Attempt): PairOutcome => ({
-  kind: 'paired',
-  server: {
-    name: attempt.name,
-    key: attempt.invite.key,
-    address,
-    ...otherAddressesOf(address, attempt),
-  },
-});
+function pairedAt(address: ServerAddress, attempt: Attempt): PairOutcome {
+  const { invite, name } = attempt;
+  const server: KnownServer = { name, key: invite.key, address };
+  const others = otherAddressesOf(invite, address);
 
-// Every other address the invite carried is kept, so the phone can reach the Server later from another network.
-function otherAddressesOf(
-  answered: ServerAddress,
-  { invite }: Attempt,
-): { otherAddresses?: ServerAddress[] } {
-  const others = (invite.urls ?? [])
-    .flatMap(addressOfUrl)
-    .filter((address) => keyOf(address) !== keyOf(answered));
+  if (others.length > 0) server.otherAddresses = others;
 
-  return others.length > 0 ? { otherAddresses: unique(others) } : {};
+  return { kind: 'paired', server };
 }
+
+// Spends the Ticket on a channel to one address.
+const spend = (
+  address: ServerAddress,
+  { invite, deps }: Attempt,
+): ReturnType<PairDeps['pair']> =>
+  deps.pair({ ...address, serverPublicKey: invite.key }, invite.ticket, {
+    signal: deps.signal,
+    onReached: deps.onReached,
+  });
 
 // One address. One that does not answer is not a refusal, so it gives nothing and the next may be the Server.
 async function tryAt(
   address: ServerAddress,
   attempt: Attempt,
 ): Promise<PairOutcome | null> {
-  const { invite, deps } = attempt;
-  const endpoint = { ...address, serverPublicKey: invite.key };
-
   try {
-    await deps.pair(endpoint, invite.ticket, {
-      signal: deps.signal,
-      onReached: deps.onReached,
-    });
+    await spend(address, attempt);
 
     return pairedAt(address, attempt);
   } catch (cause) {
@@ -121,32 +114,6 @@ async function pairOnAny(
   return null;
 }
 
-// `http://host:port`, with an IPv6 host in brackets; anything else in the code is not somewhere to knock.
-const urlPattern = /^https?:\/\/(?:\[([^\]]+)\]|([^/:]+)):(\d+)/;
-
-function addressOfUrl(url: string): ServerAddress[] {
-  const [, bracketed, plain, port] = urlPattern.exec(url) ?? [];
-  const host = bracketed ?? plain;
-
-  return host && port ? [{ host, port: Number(port) }] : [];
-}
-
-const keyOf = ({ host, port }: ServerAddress): string => `${host}:${port}`;
-
-const unique = (addresses: readonly ServerAddress[]): ServerAddress[] => [
-  ...new Map(addresses.map((address) => [keyOf(address), address])).values(),
-];
-
-// Where the code says the Server answers, then where the owner said it is: knocked on first, before anything is asked of the network.
-const directAddresses = (
-  invite: PairingInvite,
-  deps: PairDeps,
-): ServerAddress[] =>
-  unique([
-    ...(invite.urls ?? []).flatMap(addressOfUrl),
-    ...(deps.address ? [deps.address] : []),
-  ]);
-
 interface Announced {
   name: string;
   addresses: ServerAddress[];
@@ -156,28 +123,55 @@ interface Announced {
 const isUndetermined = (cause: unknown): boolean =>
   cause instanceof Error && cause.name === 'BrowseUndeterminedError';
 
+const nothingHeard = (invite: PairingInvite, cause: unknown): Announced =>
+  isUndetermined(cause)
+    ? { name: invite.server, addresses: [], undetermined: true }
+    : { name: invite.server, addresses: [] };
+
+type Located = Awaited<ReturnType<PairDeps['resolve']>>;
+
+// Where the Server was heard, less where it was already knocked on.
+function unvisited(
+  located: Located,
+  tried: readonly ServerAddress[],
+): ServerAddress[] {
+  const skip = new Set(tried.map(keyOf));
+
+  return located.hosts
+    .map((host) => ({ host, port: located.port }))
+    .filter((address) => !skip.has(keyOf(address)));
+}
+
 // Where the Server announces itself now, less where it was already knocked on; none when it is not heard.
 async function announcedAt(
-  attempt: Attempt,
+  { invite, deps }: Attempt,
   tried: readonly ServerAddress[],
 ): Promise<Announced> {
-  const { invite, deps } = attempt;
-  const known = { name: invite.server, key: invite.key };
-
   try {
+    const known = { name: invite.server, key: invite.key };
     const located = await deps.resolve(known, deps.browse);
-    const skip = new Set(tried.map(keyOf));
 
-    const addresses = located.hosts
-      .map((host) => ({ host, port: located.port }))
-      .filter((address) => !skip.has(keyOf(address)));
-
-    return { name: located.name, addresses };
+    return { name: located.name, addresses: unvisited(located, tried) };
   } catch (cause) {
-    const nothing = { name: invite.server, addresses: [] };
-
-    return isUndetermined(cause) ? { ...nothing, undetermined: true } : nothing;
+    return nothingHeard(invite, cause);
   }
+}
+
+// Looks for the Server on the network and knocks where it is heard; what no answer means depends on whether anything could be heard at all.
+async function afterAnnouncement(
+  attempt: Attempt,
+  tried: readonly ServerAddress[],
+): Promise<PairOutcome> {
+  const announced = await announcedAt(attempt, tried);
+
+  const outcome = await pairOnAny(announced.addresses, {
+    ...attempt,
+    name: announced.name,
+  });
+
+  return (
+    outcome ?? { kind: announced.undetermined ? 'undetermined' : 'not-found' }
+  );
 }
 
 /*
@@ -189,18 +183,9 @@ export async function pairWithInvite(
   deps: PairDeps,
 ): Promise<PairOutcome> {
   const attempt = { invite, name: invite.server, deps };
-  const direct = directAddresses(invite, deps);
-  const answered = await pairOnAny(direct, attempt);
+  const direct = directAddresses(invite, deps.address);
 
-  if (answered) return answered;
-  const announced = await announcedAt(attempt, direct);
-
-  const outcome = await pairOnAny(announced.addresses, {
-    ...attempt,
-    name: announced.name,
-  });
-
-  if (outcome) return outcome;
-
-  return { kind: announced.undetermined ? 'undetermined' : 'not-found' };
+  return (
+    (await pairOnAny(direct, attempt)) ?? afterAnnouncement(attempt, direct)
+  );
 }

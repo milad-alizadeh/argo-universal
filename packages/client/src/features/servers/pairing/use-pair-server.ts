@@ -10,7 +10,7 @@ import {
   scanning,
   settle,
 } from './pair-hook';
-import { pairWithInvite } from './pair-with-invite';
+import { type PairOutcome, pairWithInvite } from './pair-with-invite';
 import { typeCode } from './type-code';
 
 export interface PairServer {
@@ -80,16 +80,24 @@ function ask(invite: PairingInvite, read: Read, hook: Hook): void {
 
   const deps = {
     ...depsOf(controller.signal, read.address),
-    onReached: (): void => {
-      if (!controller.signal.aborted)
-        hook.setState({ phase: 'waiting', serverName: invite.server });
-    },
+    onReached: (): void => waitOn(invite, controller, hook),
   };
 
   void pairWithInvite(invite, deps).then((outcome) => {
-    if (controller.signal.aborted) return;
-
-    hook.held.running = null;
-    settle(outcome, hook, { serverName: invite.server });
+    if (!controller.signal.aborted) end(outcome, invite, hook);
   });
+}
+
+function waitOn(
+  invite: PairingInvite,
+  controller: AbortController,
+  hook: Hook,
+): void {
+  if (!controller.signal.aborted)
+    hook.setState({ phase: 'waiting', serverName: invite.server });
+}
+
+function end(outcome: PairOutcome, invite: PairingInvite, hook: Hook): void {
+  hook.held.running = null;
+  settle(outcome, hook, { serverName: invite.server });
 }

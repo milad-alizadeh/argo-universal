@@ -145,6 +145,21 @@ function remembered(known: KnownServer, first: boolean): ServerLocation {
   };
 }
 
+interface BrowsePlan {
+  waitMs: number;
+  firstBrowse: boolean;
+}
+
+// How long this browse waits, and whether it is the first of the session: the first of a browser that can listen, and no other, is the one a Local Network prompt may still be open for.
+function planBrowse(
+  timeoutMs: number | undefined,
+  browse: BrowseServers | null,
+): BrowsePlan {
+  const firstBrowse = !browsedBefore && browse !== null;
+
+  return { waitMs: timeoutMs ?? nextBrowseTimeoutMs(), firstBrowse };
+}
+
 /*
  * Where the Server is now, asked of the network on every connect and never taken from the last connect (ADR-0045).
  * The announcement is matched by the hash of the key, so a renamed computer is still found; the stored address answers only when nothing announces itself.
@@ -155,9 +170,8 @@ export async function resolveServer(
   browse: BrowseServers | null,
   timeoutMs?: number,
 ): Promise<ServerLocation> {
-  const first = !browsedBefore;
-  const waited = timeoutMs ?? nextBrowseTimeoutMs();
-  const found = await waitForAnnouncement(browse, known.key, waited);
+  const { waitMs, firstBrowse } = planBrowse(timeoutMs, browse);
+  const found = await waitForAnnouncement(browse, known.key, waitMs);
 
-  return found ? announced(found) : remembered(known, first && browse !== null);
+  return found ? announced(found) : remembered(known, firstBrowse);
 }

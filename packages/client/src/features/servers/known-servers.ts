@@ -23,7 +23,7 @@ const Kept = z.object({
   key: z.string().min(1),
   address: z.unknown().optional(),
   // Older entries have none.
-  otherAddresses: z.unknown().optional(),
+  otherAddresses: z.array(z.unknown()).optional(),
 });
 
 // Anything kept that does not read as a Server is dropped, and the Servers beside it are still listed.
@@ -69,10 +69,10 @@ const canList = (
 ): boolean => kept.key !== ownServerId && !servers.has(kept.key);
 
 // Every address in the list that reads as one; the rest cost only themselves.
-const readAddresses = (others: unknown): z.infer<typeof Address>[] =>
-  Array.isArray(others)
-    ? others.flatMap((one) => Address.safeParse(one).data ?? [])
-    : [];
+const readAddresses = (
+  others: readonly unknown[] = [],
+): z.infer<typeof Address>[] =>
+  others.flatMap((one) => Address.safeParse(one).data ?? []);
 
 const knownServer = ({
   name,
