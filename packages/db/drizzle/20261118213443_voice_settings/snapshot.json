@@ -1,10 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "c791062e-aa38-456c-9fa5-c2f2eccc9e5f",
+  "id": "745c2dba-6c8d-46fc-98d8-ea6881a4a5ec",
   "prevIds": [
-    "5c746520-1f57-462c-9da7-31aaf3561bc1",
-    "eab82de1-720c-4be9-8833-25a6bd963c55"
+    "401d2c70-92cb-4b21-aadd-9bc4a996d945"
   ],
   "ddl": [
     {
@@ -500,6 +499,16 @@
       "default": null,
       "generated": null,
       "name": "checkout_branch",
+      "entityType": "columns",
+      "table": "session"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "checkout_type",
       "entityType": "columns",
       "table": "session"
     },
