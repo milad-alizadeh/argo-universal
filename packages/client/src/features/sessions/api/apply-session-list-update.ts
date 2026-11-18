@@ -43,10 +43,23 @@ function applyToQuery(
   query: Query,
   session: SessionInfo,
 ): Outcome {
-  const data = client.getQueryData<ListPages>(query.queryKey);
+  const data = client.getQueryData<ListPages | SessionListOutput>(
+    query.queryKey,
+  );
 
   if (!data) return 'unaffected';
 
+  // Plugin Session rows also read this procedure, as an ordinary query without pages.
+  if (!('pages' in data)) return 'asks';
+
+  return applyToPages(client, { query, data }, session);
+}
+
+function applyToPages(
+  client: QueryClient,
+  { query, data }: { query: Query; data: ListPages },
+  session: SessionInfo,
+): Outcome {
   const outcome = outcomeFor(data, session, inputOf(query));
 
   if (outcome === 'placed')

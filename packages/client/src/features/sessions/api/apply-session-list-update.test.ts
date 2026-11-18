@@ -53,6 +53,27 @@ const shown = (client: QueryClient): SessionInfo[] =>
   ).flatMap((page): SessionInfo[] => page.sessions);
 
 describe('applying a live update to the loaded Sessions list', () => {
+  it('refreshes ordinary query results while updating infinite rows', () => {
+    const client = listWith([session('a', 1)], null);
+    const queryKey = [['session', 'list'], { input: {}, type: 'query' }];
+
+    const ordinary: SessionListOutput = {
+      sessions: [session('a', 1)],
+      nextCursor: null,
+    };
+
+    client.setQueryData(queryKey, ordinary);
+
+    const asks = applySessionListUpdate(client, list, {
+      type: 'changed',
+      session: session('a', 1, { title: 'Renamed' }),
+    });
+
+    expect(asks).toBe(true);
+    expect(shown(client)[0]?.title).toBe('Renamed');
+    expect(client.getQueryData(queryKey)).toBe(ordinary);
+  });
+
   it('replaces a changed row where it sits and asks nothing', () => {
     const client = listWith([session('b', 2), session('a', 1)], null);
 
