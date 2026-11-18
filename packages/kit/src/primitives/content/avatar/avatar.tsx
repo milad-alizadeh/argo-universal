@@ -1,20 +1,26 @@
 import { avatarDefaults } from '@repo/contracts/kit-tokens';
-import type * as React from 'react';
-import { useState } from 'react';
+import { useContext, useState, type JSX, type ReactNode } from 'react';
 import { Image, type ViewProps, View } from 'react-native';
 import { cn } from '#kit/utils';
 import { Icon } from '#primitives/content/icon';
 import { useMediaUrl } from '#primitives/content/media-url';
 import { Text } from '#primitives/content/text';
+import { AvatarMetaSize } from './avatar-meta-size';
 import type { AvatarProps } from './avatar-props';
 import { avatarSource } from './avatar-source';
 import { AvatarStatus } from './avatar-status';
 
-export function Avatar(props: AvatarProps): React.JSX.Element {
-  return <AvatarFrame {...props} />;
+export function Avatar(props: AvatarProps): JSX.Element {
+  const inMeta = useContext(AvatarMetaSize);
+
+  return (
+    <AvatarFrame {...props} size={inMeta ? 'xs' : props.size} inMeta={inMeta} />
+  );
 }
 
-function AvatarFrame(props: AvatarProps): React.JSX.Element {
+type FrameProps = AvatarProps & { inMeta: boolean };
+
+function AvatarFrame(props: FrameProps): JSX.Element {
   return (
     <View {...avatarFrameProps(props)}>
       <AvatarMedia hosted={props.children !== undefined}>
@@ -25,11 +31,11 @@ function AvatarFrame(props: AvatarProps): React.JSX.Element {
   );
 }
 
-function avatarFrameProps(props: AvatarProps): ViewProps {
+function avatarFrameProps(props: FrameProps): ViewProps {
   return {
     ...avatarAccessibilityProps(props),
     testID: props.testID,
-    className: avatarClassName(props.size),
+    className: avatarClassName(props),
   };
 }
 
@@ -58,8 +64,8 @@ function avatarAccessibleName(props: AvatarProps): string {
   return `${props.accessibilityLabel}, ${props.status.accessibilityLabel ?? props.status.tone}`;
 }
 
-function avatarClassName(size: AvatarProps['size']): string {
-  const sizeClass = avatarSizeClass(size);
+function avatarClassName({ size, inMeta }: FrameProps): string {
+  const sizeClass = inMeta ? 'size-5' : avatarSizeClass(size);
 
   return cn('relative shrink-0', sizeClass);
 }
@@ -77,8 +83,8 @@ function avatarSizeClass(size: AvatarProps['size']): string {
 // Avatar's own content sits on tint (Paper Avatar master); hosted content, the Session row's logo, keeps muted.
 function AvatarMedia(props: {
   hosted: boolean;
-  children: React.ReactNode;
-}): React.JSX.Element {
+  children: ReactNode;
+}): JSX.Element {
   return (
     <View
       className={cn(
@@ -91,7 +97,7 @@ function AvatarMedia(props: {
   );
 }
 
-function avatarContent(props: AvatarProps): React.ReactNode {
+function avatarContent(props: AvatarProps): ReactNode {
   if (props.children) return props.children;
 
   if (props.src) return <ResolvedAvatarImage {...props} />;
@@ -99,7 +105,7 @@ function avatarContent(props: AvatarProps): React.ReactNode {
   return <AvatarFallback key={JSON.stringify(props.source)} {...props} />;
 }
 
-function ResolvedAvatarImage(props: AvatarProps): React.JSX.Element {
+function ResolvedAvatarImage(props: AvatarProps): JSX.Element {
   const url = useMediaUrl();
   const source = props.src ? avatarSource(url(props.src)) : undefined;
 
@@ -108,7 +114,7 @@ function ResolvedAvatarImage(props: AvatarProps): React.JSX.Element {
   );
 }
 
-function AvatarFallback(props: AvatarProps): React.JSX.Element {
+function AvatarFallback(props: AvatarProps): JSX.Element {
   const [failed, setFailed] = useState(false);
 
   if (props.source && !failed)
@@ -156,7 +162,7 @@ function displayedInitials(
 function AvatarInitials({
   initials = '',
   size,
-}: Pick<AvatarProps, 'initials' | 'size'>): React.JSX.Element {
+}: Pick<AvatarProps, 'initials' | 'size'>): JSX.Element {
   if (!initials)
     return <Icon name={{ sf: 'person.fill', material: 'person' }} />;
 

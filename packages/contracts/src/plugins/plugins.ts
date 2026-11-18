@@ -156,6 +156,7 @@ export {
   PluginCapability,
   isRefusedVariable,
   isSpecialHost,
+  matchesSubdomain,
   sameHost,
   type FetchCapability,
   type ProcessCapability,

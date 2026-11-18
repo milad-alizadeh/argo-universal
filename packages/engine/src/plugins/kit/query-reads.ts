@@ -2,6 +2,7 @@ import {
   pagedListRead,
   QueryReadName,
 } from '@repo/contracts/plugins/argo-calls';
+import type { ListPage } from '@repo/contracts/plugins/loader-page-api';
 import type { QueryReadAnswer } from '@repo/contracts/plugins/page-address';
 import type {
   QueriesApi,
@@ -24,7 +25,9 @@ type ReadEvent = Extract<PluginEvent, { type: 'read' }>;
 type Read = (args: WireJson, context: QueryReadContext) => Promise<WireJson>;
 
 // One page of a paged list, read from its cursor by the draw still running: the Plugin's own `ListPage`.
-type ListRead = (cursor: string | null) => object | Promise<object>;
+type ListRead = (
+  cursor: string | null,
+) => ListPage<unknown> | Promise<ListPage<unknown>>;
 
 // The paged list a draw still running reads its pages with, by the draw's id.
 export type DrawLists = Map<number, ListRead>;
@@ -123,7 +126,15 @@ async function listPage(
 
   if (!list) throw new Error('A paged list is read only during its draw');
 
-  return wireJsonOf(await list(ListArgs.parse(args).cursor));
+  return pageValue(await list(ListArgs.parse(args).cursor));
+}
+
+// A failed page follows the Query's failure policy and never replaces a good cached answer.
+function pageValue(page: ListPage<unknown>): WireJson {
+  if ('failed' in page && typeof page.failed === 'string')
+    throw new Error(page.failed);
+
+  return wireJsonOf(page);
 }
 
 // A read that failed, or whose answer could not be sent, is answered with why.

@@ -406,6 +406,7 @@
 
       /* Every colour is a Tailwind palette shade: the nearest one, measured in OKLab. */
       --color-foreground: var(--color-neutral-950);
+      --color-segment-selected-foreground: var(--color-foreground);
       /* The iOS Settings grouped row (#ffffff). */
       --color-card: var(--color-white);
       --color-primary: var(--color-neutral-900);
@@ -588,6 +589,7 @@
          step up the neutral ramp, so elevation needs no shadow; text is
          neutral-200, never white; tints and edges are white alphas. */
       --color-foreground: var(--color-neutral-200);
+      --color-segment-selected-foreground: var(--color-white);
       --color-card: var(--color-neutral-900);
       --color-primary: var(--color-neutral-200);
       --color-primary-foreground: var(--color-neutral-900);

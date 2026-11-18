@@ -67,21 +67,34 @@ function authorizeFields(
 }
 
 // The exchanged token's person signs in, as `keepSignIn` keeps them.
+type SignIn = {
+  argo: OAuthFlowArgo;
+  options: OAuthFlowOptions;
+  live: () => boolean;
+};
+
 export async function signedIn(
-  argo: OAuthFlowArgo,
-  options: OAuthFlowOptions,
+  { argo, options, live }: SignIn,
   grant: Grant,
 ): Promise<OAuthFlowState> {
   const exchanged = await exchange(argo, options, grant);
 
   if (exchanged.problem !== undefined) return failed(exchanged.problem);
 
-  const { token } = exchanged;
+  return storeSignIn({ argo, options, live }, exchanged.token);
+}
+
+async function storeSignIn(
+  { argo, options, live }: SignIn,
+  token: KeptToken,
+): Promise<OAuthFlowState> {
   const label = await options.label(token.access);
 
-  if (!label) return failed('The service did not say who signed in.');
+  if (!live()) return { kind: 'idle' };
 
-  return keepSignIn(argo, { host: options.host, label, token });
+  return label
+    ? keepSignIn(argo, { host: options.host, label, token })
+    : failed('The service did not say who signed in.');
 }
 
 // The token the service gave, or why it gave none.

@@ -155,13 +155,13 @@ describe('the hosted page', () => {
   );
 
   it.each([
-    { open: true, next: 'expanded', change: { expanded: true, open: null } },
-    { open: true, next: 'closed', change: { expanded: false, open: false } },
-    { open: false, next: 'open', change: { expanded: false, open: true } },
+    ['expanded', false, { expanded: true, open: null }],
+    ['closed', true, { expanded: true, open: false }],
+    ['open', true, { expanded: false, open: null }],
   ] as const)(
-    'is told $change.open when it is open: $open and the move is $next',
-    ({ open, next, change }) => {
-      expect(hostedChange(open, next)).toEqual(change);
+    'moves an open hosted Inspector to %s',
+    (next, expanded, change) => {
+      expect(hostedChange({ open: true, expanded }, next)).toEqual(change);
     },
   );
 });

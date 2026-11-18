@@ -47,3 +47,17 @@ export const ServerDevice: Story = { args: step('serverDevice') };
 
 // A token paste the service refused: its words lead, and the paste instructions stay under the field.
 export const TokenRejected: Story = { args: step('tokenRejected') };
+
+export const Combined: Story = { args: step('combined') };
+
+export const CombinedRejected: Story = { args: step('combinedRejected') };
+
+export const CombinedWaiting: Story = { args: step('combinedWaiting') };
+
+export const CombinedPaired: Story = { args: step('combinedPaired') };
+
+export const CombinedPasteRefused: Story = {
+  args: step('combinedPasteRefused'),
+};
+
+export const CombinedOAuthFailed: Story = { args: step('combinedOAuthFailed') };

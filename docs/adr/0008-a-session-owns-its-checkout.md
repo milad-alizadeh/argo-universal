@@ -24,3 +24,9 @@ The Server runs all git work, calling `git` and `gh` from `packages/git`; Apps o
 ## Reviews under ADR-0061
 
 Owner amendment, 2026-11-18 (#2373): [ADR-0061](0061-reviews-belong-to-the-engine-and-change-providers-own-remote-writes.md) adds Engine-created Reviewer Started Sessions. Each owns a temporary detached Checkout at the reviewed commit. It never borrows the Change Session’s Checkout. The Server removes it after the Agent stops and keeps the transcript and Review result. Ordinary Started Session Checkouts are unchanged.
+
+## Caller-supplied branches
+
+The owner approved an exception for #2250. A caller of `session.new` can supply the branch name for a worktree Checkout. A new branch starts at the requested base's `origin` tracking ref when present, with the local branch as a fallback.
+
+When a requested branch is checked out, Argo reports the path holding it. A clean, unlocked linked worktree without a Session owner can be reused in place. The caller can also choose removal from its current path. Argo moves the worktree to the new Session's normal path in one Git operation, keeping the branch tip. Both choices require the path from the conflict and transfer ownership to the new Session. Argo stores that ownership separately from the branch name. The main Checkout and any Checkout recorded against another Session are ineligible.

@@ -1,9 +1,9 @@
 import type { Database } from '@repo/db';
 import { session } from '@repo/db/schema';
-import { isSessionBranch } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { and, eq, isNull, ne } from 'drizzle-orm';
 import { closeSession } from '../session-closure';
+import { readStoredCheckout } from '../session-record';
 import type { HandlerSources } from '../session-sources';
 import { readLatestTurns } from '../session-storage';
 
@@ -22,15 +22,9 @@ const readOwnedWorktree = (
   database: Database,
   ownerId: string,
 ): string | undefined => {
-  const owner = database
-    .select({ path: session.checkoutPath, branch: session.checkoutBranch })
-    .from(session)
-    .where(eq(session.id, ownerId))
-    .get();
+  const owner = readStoredCheckout(database, ownerId);
 
-  return owner && isSessionBranch(owner.branch, ownerId)
-    ? owner.path
-    : undefined;
+  return owner?.type === 'worktree' ? owner.path : undefined;
 };
 
 const sharesWorktree = (

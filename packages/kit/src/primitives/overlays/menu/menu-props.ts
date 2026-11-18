@@ -73,7 +73,11 @@ export interface MenuTriggerProps {
 }
 
 // Kit-only: the local interactive trigger, optionally by Size class.
-type MenuTrigger = { trigger: SizeClassValue<ReactElement | string> };
+type MenuTrigger = {
+  trigger: SizeClassValue<ReactElement | string>;
+  // The Android toolbar needs a Compose button so its title can be focused and activated like the other bar items.
+  toolbarTitle?: boolean;
+};
 
 export const menuLoadingLabel = 'Loading options…';
 

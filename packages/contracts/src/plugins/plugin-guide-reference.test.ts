@@ -16,6 +16,10 @@ describe('the kit reference', () => {
     }
   });
 
+  it('lists Avatar as a ListItem meta slot child', () => {
+    expect(kitReference(['ListItem'])).toContain('Label, Pill, Avatar');
+  });
+
   it('marks a required prop apart from an optional one, as the schema does', () => {
     expect(reference).toContain('- `label`: string');
     expect(reference).toContain('- `variant?`:');

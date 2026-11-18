@@ -12,13 +12,6 @@ type Source = {
   readState: Argo['queries']['readState'];
 };
 
-type OpenReads = {
-  autoMerge?: Known<AutoMergeInfo>;
-  settings?: Known<MergeSettings>;
-  comments?: Known<CommentInfo[]>;
-  viewer?: Known<string>;
-};
-
 const readAutoMerge = (
   { readState, reads }: Source,
   { projectId, repository, number }: PullKey,
@@ -53,7 +46,19 @@ const readViewer = (
 ): Promise<Known<string>> =>
   known(() => readState(reads.viewer({ projectId }), { projectId }));
 
-// What only an Open pull request has: the only one that can auto-merge or be auto-fixed, so a Merged or Closed one is never asked.
+/*
+ * What only an Open pull request has, and why: its auto-merge and its repository's merge settings, since only an Open one
+ * can auto-merge; its review comments, which Auto-fix prompts about; and the signed-in account, so Auto-fix can tell
+ * whether it opened the pull request. Each answer's type comes from its read, so the compiler checks every name.
+ */
+export type OpenReads = {
+  autoMerge?: Awaited<ReturnType<typeof readAutoMerge>>;
+  settings?: Awaited<ReturnType<typeof readSettings>>;
+  comments?: Awaited<ReturnType<typeof readComments>>;
+  viewer?: Awaited<ReturnType<typeof readViewer>>;
+};
+
+// A Merged or Closed pull request is never asked.
 export async function readOpenOnly(
   source: Source,
   link: PullKey,

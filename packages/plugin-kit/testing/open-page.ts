@@ -1,15 +1,17 @@
 import type { PageState } from '@repo/contracts/plugins/page-address';
 import {
+  loadMoreAt,
   PageCalls,
+  type DrawOptions,
   type PageCallsPorts,
   type PageEvent,
   type ScopedRun,
 } from '@repo/contracts/plugins/page-calls';
-import {
-  type Action,
-  type PageCall,
-  type WireJson,
-  type WireNode,
+import type {
+  Action,
+  PageCall,
+  WireJson,
+  WireNode,
 } from '@repo/contracts/plugins/wire';
 import { KeptTree } from './kept-tree';
 import {
@@ -104,21 +106,21 @@ export class OpenPage {
     const { marks } = this.showing;
     const heard = marks.heard;
 
-    await this.drawn(pages);
+    await this.drawn({ pages });
     await this.showing.settled();
 
-    if (marks.reachedSince(heard, this.path)) await this.drawn(pages);
+    if (marks.reachedSince(heard, this.path)) await this.drawn({ pages });
   }
 
   // One draw of the address, naming the tree kept; a pull says so.
-  private async drawn(pages = this.kept.pages, pull = false): Promise<void> {
+  private async drawn(options: DrawOptions = {}): Promise<void> {
     const request = {
       path: this.path,
       pageState: this.state,
       ...caller(this.opening),
-      pages,
+      pages: this.kept.pages,
       ...this.kept.known(),
-      ...pullOf(pull),
+      ...options,
     };
 
     this.kept.keep(await this.showing.server.draw(request, this.opening));
@@ -134,7 +136,8 @@ export class OpenPage {
    * still shows the rows it kept, so the load more they offer asks again for the page the failed draw lacked.
    */
   async loadMore(): Promise<void> {
-    if (this.kept.failedOfferingMore()) return this.drawn(this.kept.pages + 1);
+    if (this.kept.failedOfferingMore())
+      return this.drawn(loadMoreAt(this.kept.pages));
 
     await this.act(paged, 'onLoadMore');
   }
@@ -187,7 +190,7 @@ export class OpenPage {
       failed: rejected,
       pageState: {
         change: (change) => this.change(change),
-        loadMore: () => this.drawn(this.kept.pages + 1),
+        loadMore: (retry) => this.drawn(loadMoreAt(this.kept.pages, retry)),
       },
     };
   }
@@ -202,13 +205,12 @@ export class OpenPage {
 
   // An empty change is a pull, which reads the first page again and keeps the pages loaded, as the App's does.
   private async change(change: PageState): Promise<void> {
-    if (Object.keys(change).length === 0)
-      return this.drawn(this.kept.pages, true);
+    if (Object.keys(change).length === 0) return this.drawn({ pull: true });
 
     this.state = { ...this.state, ...change };
     this.kept.forget();
 
-    await this.drawn(1);
+    await this.drawn({ pages: 1 });
   }
 
   private requireDrawn(): void {
@@ -217,5 +219,3 @@ export class OpenPage {
     if (error !== undefined) throw new Error(error);
   }
 }
-
-const pullOf = (pull: boolean): { pull?: true } => (pull ? { pull: true } : {});

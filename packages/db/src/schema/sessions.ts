@@ -52,6 +52,7 @@ export const session = snakeCase.table(
     }),
     checkoutPath: text().notNull(),
     checkoutBranch: text(),
+    checkoutType: text({ enum: ['worktree', 'main', 'starter'] }),
     vendorRef: text({ mode: 'json' }),
     // The config values the Session last ran with, as JSON, so a resume keeps its model and mode.
     configValues: text({ mode: 'json' })

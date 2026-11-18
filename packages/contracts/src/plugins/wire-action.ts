@@ -25,6 +25,7 @@ export const Action = z.discriminatedUnion('action', [
     url: WebUrl.optional(),
     title: z.string().optional(),
   }),
+  z.strictObject({ action: z.literal('openPluginSettings') }),
   z.strictObject({ action: z.literal('pop') }),
   // Opens one of the App's own Sessions, such as a Session a Plugin's page connected to its item.
   z.strictObject({
@@ -103,7 +104,10 @@ export type PageStateChange = z.infer<typeof PageStateChange>;
 export type OperationCall = z.infer<typeof OperationCall>;
 
 // A paged list's next page: the App asks for one more page of the address it shows and appends what comes back.
-export const LoadMore = z.strictObject({ loadMore: z.literal(true) });
+export const LoadMore = z.strictObject({
+  loadMore: z.literal(true),
+  retry: z.literal(true).optional(),
+});
 
 export type LoadMore = z.infer<typeof LoadMore>;
 

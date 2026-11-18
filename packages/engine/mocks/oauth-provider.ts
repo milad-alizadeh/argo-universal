@@ -130,6 +130,7 @@ const fakeOAuth = ({
   opening,
 }: Omit<Fake, 'replies'>): OAuthFlowArgo['oauth'] => ({
   start: () => opening.start(),
+  cancel: () => Promise.resolve(null),
   await: (_state, url) => {
     seen.authorize.push(url);
 

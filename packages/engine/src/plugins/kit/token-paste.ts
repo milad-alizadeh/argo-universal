@@ -1,10 +1,13 @@
 import type {
   TokenLabel,
+  TokenPaste,
   TokenPasteArgo,
   TokenPasteOptions,
   TokenPastePattern,
   TokenPasteState,
 } from '@repo/contracts/plugins/token-paste-api';
+import { flowCredential } from './sign-in-credentials';
+import { checkedFields, inputOf, type Input } from './token-paste-fields';
 
 // The one sign-in a token paste holds, and the paste whose check still counts.
 type Held = { state: TokenPasteState; paste: symbol | null };
@@ -31,17 +34,36 @@ const unchecked =
  * draw the state redraw. The token reaches the kit as a secret Operation param, so it is never logged or answered.
  */
 export const tokenPaste: TokenPastePattern = (argo, options) => {
+  const credential = flowCredential(
+    argo.secrets,
+    options,
+    (secrets) =>
+      (account): Promise<string | null> =>
+        secrets.get(account.id),
+  );
+
+  const given = { argo: { ...argo, secrets: credential.keeping }, options };
+
+  return credential.attach(
+    Object.freeze(pasteFlow(given, () => provide({ argo, options }))),
+  );
+};
+
+function pasteFlow(given: Given, register: TokenPaste['provide']): TokenPaste {
+  const fields = checkedFields(given.options.fields ?? []);
   const held: Held = { state: idle, paste: null };
 
-  return Object.freeze({
+  return {
     serverDevice: false,
     pastesToken: true,
+    fields,
     state: () => held.state,
-    start: (token: string) => pasted(held, { argo, options }, token.trim()),
-    cancel: () => forget(held, argo),
-    provide: () => provide({ argo, options }),
-  });
-};
+    start: (token, values = {}) =>
+      pasted(held, given, inputOf(fields, token, values)),
+    cancel: () => forget(held, given.argo),
+    provide: register,
+  };
+}
 
 function forget(held: Held, argo: TokenPasteArgo): TokenPasteState {
   held.paste = null;
@@ -79,15 +101,15 @@ const shortestToken = 8;
 async function pasted(
   held: Held,
   given: Given,
-  token: string,
+  input: Input,
 ): Promise<TokenPasteState> {
   const mine = Symbol('paste');
 
   held.paste = mine;
 
-  if (token.length < shortestToken) return settle(held, given.argo, idle);
+  if (input.token.length < shortestToken) return settle(held, given.argo, idle);
 
-  const state = await checked(given, token, () => held.paste === mine);
+  const state = await checked(given, input, () => held.paste === mine);
 
   return held.paste === mine ? settle(held, given.argo, state) : held.state;
 }
@@ -106,22 +128,54 @@ function refusal(named: TokenLabel, token: string): TokenPasteState {
 const refusedSaying = (named: TokenLabel): string =>
   typeof named === 'object' && named !== null ? named.refused : '';
 
+const acceptedLabel = (
+  named: TokenLabel,
+  token: string,
+): string | TokenPasteState =>
+  (typeof named === 'string' && named) || refusal(named, token);
+
 // The service's answer to the token; one it refuses, or that cannot be checked, says why instead.
 async function checked(
-  { argo, options }: Given,
-  token: string,
+  given: Given,
+  input: Input,
   live: () => boolean,
 ): Promise<TokenPasteState> {
-  const label = await options.label(token).then(
-    (named) => (typeof named === 'string' && named) || refusal(named, token),
-    () => rejected(unchecked),
-  );
+  const { token, fields } = input;
+
+  const label = await Promise.resolve()
+    .then(() => given.options.label(token, fields))
+    .then(
+      (named) => acceptedLabel(named, token),
+      () => rejected(unchecked),
+    );
 
   if (typeof label !== 'string') return label;
 
-  // A newer paste is being checked, so this one adds no Account.
-  return live() ? kept({ argo, options }, { token, label }, live) : idle;
+  return live() ? keepCredential(given, { ...input, label }, live) : idle;
 }
+
+function keepCredential(
+  given: Given,
+  input: Input & { label: string },
+  live: () => boolean,
+): Promise<TokenPasteState> {
+  const { token, fields, label } = input;
+  let credential: string;
+
+  try {
+    credential = credentialOf(given.options, { token, fields });
+  } catch {
+    return Promise.resolve(rejected(unchecked));
+  }
+
+  return kept(given, { token: credential, label }, live);
+}
+
+const credentialOf = (
+  options: TokenPasteOptions,
+  { token, fields }: Input,
+): string =>
+  options.credential ? options.credential({ ...fields, token }) : token;
 
 // Argo mints the Account id and reuses the row of a person who signs in again; the token is kept under it.
 async function kept(

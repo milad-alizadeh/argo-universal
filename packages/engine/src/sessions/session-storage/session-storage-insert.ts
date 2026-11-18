@@ -78,8 +78,14 @@ export class SessionInsertJob
     current: SessionRecord | undefined,
     sessionId: string,
   ): SessionRecord | undefined {
-    return this.insert.session.id === sessionId
-      ? SessionRecord.parse({ ...sessionDefaults, ...this.insert.session })
+    const stored = this.insert.session;
+
+    return stored.id === sessionId
+      ? SessionRecord.parse({
+          ...sessionDefaults,
+          ...stored,
+          checkoutType: stored.checkoutType ?? null,
+        })
       : current;
   }
 

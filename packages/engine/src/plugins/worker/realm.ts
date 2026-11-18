@@ -1,12 +1,22 @@
 import { createContext, runInContext } from 'node:vm';
 import { realClock, type PluginClock } from '../clock.ts';
+import type { ConsoleMessage } from '../protocol/runtime.ts';
+import { consolePrelude } from './console-prelude.ts';
 import { kitPrelude } from './kit-prelude.ts';
 import type { PluginRealmExports } from './plugin-api.ts';
 import type { PluginBridge } from './plugin-bridge.ts';
 
 export type PluginRealm = ReturnType<typeof createContext>;
 
-export type { PluginClock } from '../clock.ts';
+export type ConsoleWriter = (
+  level: ConsoleMessage['level'],
+  text: string,
+) => void;
+
+export type RealmOptions = {
+  clock?: PluginClock;
+  writeConsole?: ConsoleWriter;
+};
 
 type StartedRealm = PluginRealmExports & { context: PluginRealm };
 
@@ -14,9 +24,10 @@ type StartedRealm = PluginRealmExports & { context: PluginRealm };
 export function createPluginRealm(
   bridge: PluginBridge,
   kitSource: string,
-  clock?: PluginClock,
+  { clock, writeConsole }: RealmOptions = {},
 ): StartedRealm {
-  const context = baseRealm({ __argoBridge: bridge });
+  const context = baseRealm({ __argoBridge: bridge }, writeConsole);
+
   runInContext(kitSource, context);
 
   if (clock) installClock(context, clock);
@@ -44,12 +55,18 @@ export function realmGlobals(): Set<string> {
   return names;
 }
 
-function baseRealm(globals: { __argoBridge?: PluginBridge }): PluginRealm {
+function baseRealm(
+  globals: { __argoBridge?: PluginBridge },
+  writeConsole?: ConsoleWriter,
+): PluginRealm {
   const context = createContext(globals, {
     codeGeneration: { strings: false, wasm: false },
   });
 
   installClock(context, realClock);
+
+  context.__argoConsole = writeConsole;
+  runInContext(consolePrelude, context);
 
   return context;
 }

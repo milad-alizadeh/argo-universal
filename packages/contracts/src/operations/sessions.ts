@@ -51,7 +51,7 @@ export const sessionOperations = {
     label: 'Start Session',
     icon: 'new-session',
     description:
-      'Start a Session with an Agent, Checkout and optional first prompt. A Session may pass the `starter` Checkout to run the new Session in its own working tree, uncommitted changes included.',
+      'Start a Session with an Agent, Checkout and optional first prompt. A Session may pass the `starter` Checkout to run the new Session in its own working tree, uncommitted changes included. A worktree Checkout can name its branch. If that branch is held by a clean unowned linked worktree, the conflict reports its path and offers a retry with checkout.takenBranch.',
     params: SessionNewInput,
     result: SessionNewOutput,
     tier: 'act',

@@ -34,6 +34,7 @@ type CheckoutRow = {
   id: string;
   checkoutPath: SessionCheckout['path'];
   checkoutBranch: SessionCheckout['branch'];
+  checkoutType?: SessionCheckout['type'] | null;
 };
 
 // A worktree is made in a folder named for the Session that owns it, on that Session's branch.
@@ -49,7 +50,7 @@ function checkoutType(row: CheckoutRow): SessionCheckout['type'] {
 // A worktree Session runs on its own Session branch, a borrower in another Session's worktree; anything else is the main checkout.
 export function toSessionCheckout(row: CheckoutRow): SessionCheckout {
   return {
-    type: checkoutType(row),
+    type: row.checkoutType ?? checkoutType(row),
     path: row.checkoutPath,
     branch: row.checkoutBranch,
   };
@@ -69,6 +70,7 @@ export type SessionFieldsRow = Pick<
   | 'maxRevision'
   | 'checkoutPath'
   | 'checkoutBranch'
+  | 'checkoutType'
 > & { promptQueue: unknown };
 
 const unrecognisedSession = (): TRPCError =>

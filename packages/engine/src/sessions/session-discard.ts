@@ -9,6 +9,7 @@ import type {
   SessionData,
   SessionInput,
 } from './session-data';
+import { ownsStoredWorktree } from './session-record';
 import { SessionDeleteJob } from './session-storage';
 
 export interface SessionDiscard {
@@ -18,8 +19,14 @@ export interface SessionDiscard {
   writer: WriterActorRef | undefined;
 }
 
-const createdWorktreeProject = (input: NewSessionInput): string | undefined =>
-  input.checkout.type === 'worktree' ? input.projectPath : undefined;
+function createdWorktreeProject({
+  checkout,
+  projectPath,
+}: NewSessionInput): string | undefined {
+  if (checkout.type !== 'worktree') return undefined;
+
+  return checkout.takenBranch ? undefined : projectPath;
+}
 
 // The Project path of a worktree the Session created; undefined for the main checkout.
 const ownedWorktreeProject = ({
@@ -28,7 +35,7 @@ const ownedWorktreeProject = ({
 }: SessionDiscard): string | undefined => {
   if (input.kind === 'new') return createdWorktreeProject(input);
 
-  return isSessionBranch(data.checkout.branch, data.sessionId)
+  return ownsStoredWorktree(input.database, data.sessionId)
     ? readProjectPath(input.database, data.projectId)
     : undefined;
 };
@@ -42,15 +49,26 @@ async function discardStored(discard: SessionDiscard): Promise<void> {
   );
 }
 
-// Deletes the row of a Session no prompt reached, then removes the worktree it created; the main checkout stays.
+function branchToDiscard(discard: SessionDiscard): string | null {
+  const { checkout, sessionId } = discard.data;
+
+  return isSessionBranch(checkout.branch, sessionId) ? checkout.branch : null;
+}
+
+// Deletes the row of a Session no prompt reached, then removes the worktree it created.
 export async function discardSession(
   discard: SessionDiscard,
   signal?: AbortSignal,
 ): Promise<void> {
-  if (discard.stored) await discardStored(discard);
-
   const projectPath = ownedWorktreeProject(discard);
 
-  if (projectPath)
-    await discardCheckout(projectPath, discard.data.checkout, signal);
+  if (discard.stored) await discardStored(discard);
+
+  if (!projectPath) return;
+
+  await discardCheckout(
+    projectPath,
+    { ...discard.data.checkout, branch: branchToDiscard(discard) },
+    signal,
+  );
 }

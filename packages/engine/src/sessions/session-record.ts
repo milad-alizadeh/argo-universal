@@ -7,6 +7,7 @@ import {
   createFieldsReader,
   type SessionFieldsRow,
   type SessionSnapshotFields,
+  toSessionCheckout,
 } from './session-fields';
 import { readQueuedSessionRows, type RowSources } from './session-storage';
 import { decodeStoredSession, storedSessionColumns } from './stored-session';
@@ -15,7 +16,35 @@ export { toSessionCheckout } from './session-fields';
 
 export { decodeStoredSession, storedSessionColumns } from './stored-session';
 
+const checkoutColumns = {
+  id: session.id,
+  checkoutPath: session.checkoutPath,
+  checkoutBranch: session.checkoutBranch,
+  checkoutType: session.checkoutType,
+};
+
+export function readStoredCheckout(
+  database: Database,
+  sessionId: string,
+): ReturnType<typeof toSessionCheckout> | undefined {
+  const row = database
+    .select(checkoutColumns)
+    .from(session)
+    .where(eq(session.id, sessionId))
+    .get();
+
+  return row && toSessionCheckout(row);
+}
+
+export function ownsStoredWorktree(
+  database: Database,
+  sessionId: string,
+): boolean {
+  return readStoredCheckout(database, sessionId)?.type === 'worktree';
+}
+
 const sessionFieldColumns = {
+  ...checkoutColumns,
   projectId: session.projectId,
   title: session.title,
   archivedAt: session.archivedAt,
@@ -26,9 +55,6 @@ const sessionFieldColumns = {
   promptQueue: session.promptQueue,
   epoch: session.epoch,
   maxRevision: session.maxRevision,
-  id: session.id,
-  checkoutPath: session.checkoutPath,
-  checkoutBranch: session.checkoutBranch,
 };
 
 export function createSessionReader(

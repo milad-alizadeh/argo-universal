@@ -8,12 +8,14 @@ import type * as React from 'react';
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import { ComposerCover } from '#lib/product/composer-cover';
+import { useContentWide } from '#lib/product/content-layout';
 import type { FeedViewItem } from '../../view/feed-view';
 import { drawnFeedItems } from '../drawn-feed-item';
 import { FeedImages } from '../feed-images';
 import { withoutDisclosedTurnEnds } from '../turn-end/turn-end';
 import { newestKeyOf, withLiveHeader } from './feed-entry';
 import { FeedList, type FeedListProps } from './feed-list';
+import { FeedTrayInset } from './feed-row';
 import { useExitingLiveHeader } from './use-exiting-live-header';
 import { useReportsAtEnd } from './use-feed-scroll-position';
 
@@ -127,7 +129,14 @@ function FeedWithImages(props: FeedListProps & FeedProps): React.JSX.Element {
 
 // A Feed that opens at its start has no Composer at its end, so it keeps no room for one.
 function FeedWithCover(props: FeedListProps): React.JSX.Element {
-  if (!props.opensAtStart) return <FeedList {...props} />;
+  const wide = useContentWide();
+
+  if (!props.opensAtStart)
+    return (
+      <FeedTrayInset.Provider value={wide}>
+        <FeedList {...props} />
+      </FeedTrayInset.Provider>
+    );
 
   return (
     <ComposerCover.Provider value={noComposerCover}>

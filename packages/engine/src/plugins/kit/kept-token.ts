@@ -127,7 +127,7 @@ async function lent(
  * same Account due share one refresh; two refreshes racing would spend it twice, and the second would sign the person
  * out.
  */
-function tokenLender(
+export function tokenLender(
   secrets: Secrets,
   refresh: Refresh,
 ): (id: string) => Promise<string | null> {
@@ -148,7 +148,7 @@ function tokenLender(
   };
 }
 
-const bearer = { header: 'Authorization', prefix: 'Bearer' };
+export const bearer = { header: 'Authorization', prefix: 'Bearer' };
 
 // A borrower's request gets the kept token, refreshed when it has run out, in the header the flow names; Argo sets it.
 export function provideKept(

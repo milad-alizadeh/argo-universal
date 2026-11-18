@@ -21,37 +21,22 @@ type InspectorWidths = Pick<
   | 'setDraggedContentFloor'
 >;
 
-type State<Value> = [Value, React.Dispatch<React.SetStateAction<Value>>];
+// Keep the floor that goes with the dragged width. The layout uses its normal floor while the Inspector is closed.
+function useInspectorWidths(defaultWidth: number): InspectorWidths {
+  const [preferredInspectorWidth, setPreferredInspectorWidth] =
+    useState(defaultWidth);
 
-// A closed Inspector gives the content its floor back, but keeps the width it had, so it reopens where it was.
-function restoreContentFloor([floor, setFloor]: State<
-  number | undefined
->): void {
-  if (floor !== undefined) setFloor(undefined);
-}
-
-// The Inspector's dragged width, and the page's width that drag left, which it keeps only while it stays open.
-function useInspectorWidths(
-  measures: FrameMeasures,
-  closed: boolean,
-): InspectorWidths {
-  const width = useState(measures.inspectorWidth);
-  const floor = useState<number>();
-
-  if (closed) restoreContentFloor(floor);
+  const [draggedContentFloor, setDraggedContentFloor] = useState<number>();
 
   return {
-    preferredInspectorWidth: width[0],
-    setPreferredInspectorWidth: width[1],
-    draggedContentFloor: floor[0],
-    setDraggedContentFloor: floor[1],
+    preferredInspectorWidth,
+    setPreferredInspectorWidth,
+    draggedContentFloor,
+    setDraggedContentFloor,
   };
 }
 
-export function usePreferredWidths(
-  measures: FrameMeasures,
-  inspectorClosed: boolean,
-): PreferredWidths {
+export function usePreferredWidths(measures: FrameMeasures): PreferredWidths {
   const [draggedListWidth, setPreferredListWidth] = useState<number>();
   const fontScale = useWindowDimensions().fontScale;
 
@@ -61,6 +46,6 @@ export function usePreferredWidths(
   return {
     preferredListWidth,
     setPreferredListWidth,
-    ...useInspectorWidths(measures, inspectorClosed),
+    ...useInspectorWidths(measures.inspectorWidth),
   };
 }

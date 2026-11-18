@@ -1,6 +1,5 @@
 import type { Argo, ListPage, LoaderInput } from '@argo/plugin-kit';
-import { boardStatuses } from './board-view';
-import type { JiraStatus } from './issue-fields';
+import { boardStatuses, type BoardStatus } from './board-view';
 import type { ListedItem } from './issue-pages';
 import { filtersOf } from './jira-filters';
 import { projectIdOf } from './jira-paths';
@@ -18,7 +17,7 @@ import type { IssuesState } from './view-frame';
 export type ProjectData = {
   projects: ArgoProject[];
   view: ProjectView;
-  statuses: JiraStatus[];
+  statuses: BoardStatus[];
 };
 
 type IssuesInput = LoaderInput<IssuesState>;
