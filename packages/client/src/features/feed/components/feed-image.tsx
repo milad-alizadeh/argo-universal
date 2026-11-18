@@ -6,7 +6,7 @@ import {
 } from '@repo/kit/primitives/overlays/dialog';
 import type * as React from 'react';
 import { createContext, useContext, useState } from 'react';
-import { Image, Pressable, useWindowDimensions } from 'react-native';
+import { Image, Pressable, useWindowDimensions, View } from 'react-native';
 
 type ImageUrl = (blob: BlobRef) => string;
 
@@ -106,11 +106,22 @@ interface ThumbnailProps extends ImageSourceProps {
   onPress: () => void;
 }
 
+// A stack's card ring keeps overlapping thumbnails apart; the hairline edge sits inside it.
 const thumbnailClassNames: Record<FeedImageSize, string> = {
-  feed: 'h-21 w-30 rounded-lg border border-border',
-  row: 'size-6 rounded-sm border border-hairline',
+  feed: 'h-21 w-30 rounded-lg',
+  row: 'size-6 rounded-sm',
   stack: 'size-5.5 rounded-sm border-2 border-card',
 };
+
+// Every image thumbnail draws a hairline over its edge, so a white image still shows where it ends.
+const edgeClassNames: Record<FeedImageSize, string> = {
+  feed: 'rounded-lg',
+  row: 'rounded-sm',
+  stack: 'rounded-xs',
+};
+
+const edgeClassName = (size: FeedImageSize): string =>
+  `pointer-events-none absolute inset-0 border border-border ${edgeClassNames[size]}`;
 
 const thumbnailClassName = (size: FeedImageSize): string =>
   `shrink-0 overflow-hidden bg-muted ${thumbnailClassNames[size]}`;
@@ -132,6 +143,7 @@ function ImageThumbnail(props: ThumbnailProps): React.JSX.Element {
       className={thumbnailClassName(props.size)}
     >
       <Image source={source} resizeMode="cover" className="size-full" />
+      <View aria-hidden className={edgeClassName(props.size)} />
     </Pressable>
   );
 }
