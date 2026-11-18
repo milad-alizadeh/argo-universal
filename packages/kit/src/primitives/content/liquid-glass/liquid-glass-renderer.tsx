@@ -5,7 +5,7 @@ import { useNativeTheme } from '#kit/native-theme';
 import { cn } from '#kit/utils';
 import { FallbackSurface } from './liquid-glass-fallback';
 import {
-  floatingGlassFallback,
+  fallbackSurfaceClass,
   glassCornerClass,
   LiquidGlassMaterial,
 } from './liquid-glass-material';
@@ -83,7 +83,7 @@ function SystemGlass(
 type SystemGlassProps = LiquidGlassProps & { withoutEffect: boolean };
 
 const glassSurface = (props: SystemGlassProps): string =>
-  props.withoutEffect ? (props.fallbackClassName ?? floatingGlassFallback) : '';
+  props.withoutEffect ? fallbackSurfaceClass(props) : '';
 
 const interactiveEffect = (props: SystemGlassProps): boolean =>
   Boolean(props.interactive) && !props.withoutEffect;
