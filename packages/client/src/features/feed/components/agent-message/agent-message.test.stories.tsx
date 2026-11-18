@@ -73,7 +73,7 @@ export const FirstAgentStreaming: Story = {
   play: async ({ canvas }) => {
     for (const width of widths) {
       await settleLayout(width);
-      await expect(canvas.getByTestId(streamingCaretId)).toBeVisible();
+      await expect(canvas.queryByTestId(streamingCaretId)).toBeNull();
     }
   },
 };
@@ -86,7 +86,7 @@ export const SecondAgentStreaming: Story = {
   play: async ({ canvas }) => {
     for (const width of widths) {
       await settleLayout(width);
-      await expect(canvas.getByTestId(streamingCaretId)).toBeVisible();
+      await expect(canvas.queryByTestId(streamingCaretId)).toBeNull();
     }
   },
 };

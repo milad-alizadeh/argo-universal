@@ -131,7 +131,7 @@
       {
         "name": "forgetProject",
         "label": "Choose another Jira project",
-        "description": "Forget a Project's Jira project, so the page asks which one to show again.",
+        "description": "Forget a Project's Jira project, so the page asks which one to show again. The issues page switches projects from its title menu instead; this stays for Agents and for the page that says Jira refused the chosen project.",
         "tier": "act",
         "keywords": ["jira", "project", "site"],
         "caller": ["project"]

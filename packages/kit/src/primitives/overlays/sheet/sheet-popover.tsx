@@ -20,8 +20,7 @@ export function PopoverSheet(props: PresentationProps): ReactElement {
 function PopoverSheetContent(props: PresentationProps): ReactElement {
   return (
     <PopoverContent
-      side="top"
-      align="start"
+      {...(props.popoverPlacement ?? aboveFromStart)}
       accessibilityLabel={props.label}
       onClosed={props.stack.reports.closed}
       list
@@ -30,6 +29,8 @@ function PopoverSheetContent(props: PresentationProps): ReactElement {
     </PopoverContent>
   );
 }
+
+const aboveFromStart = { side: 'top', align: 'start' } as const;
 
 function PopoverSheetTrigger(
   props: Pick<PresentationProps, 'trigger'>,

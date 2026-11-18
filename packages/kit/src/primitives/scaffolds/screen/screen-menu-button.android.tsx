@@ -19,6 +19,8 @@ import {
 } from '#primitives/native/header-icon-button';
 import { Host } from '#primitives/native/host';
 import { MenuDropdown, nativeMenuItems } from '#primitives/overlays/menu';
+import { optionsIcon, optionsSpoken } from './screen-page-options';
+import type { PageOptions } from './screen-props';
 
 interface ScreenMenuButtonProps {
   icon: HeaderIconButtonProps['icon'];
@@ -67,7 +69,29 @@ export function ScreenOverflowButton({
   return <ScreenMenuButton icon={overflowIcon} label={label} groups={groups} />;
 }
 
-type MenuIconProps = ScreenMenuButtonProps & { onPress: () => void };
+// The page's Options button: the same stock icon button and badge, opening the sheet the Screen holds.
+export function ScreenOptionsButton({
+  options,
+}: {
+  options: PageOptions;
+}): ReactElement {
+  return (
+    <Host matchContents>
+      <MenuIcon {...optionsIconOf(options)} />
+    </Host>
+  );
+}
+
+const optionsIconOf = (options: PageOptions): MenuIconProps => ({
+  icon: optionsIcon,
+  label: optionsSpoken(options),
+  badge: submenuBadgeText(options.badge),
+  onPress: () => options.onOpenChange(true),
+});
+
+type MenuIconProps = Omit<ScreenMenuButtonProps, 'groups'> & {
+  onPress: () => void;
+};
 
 function MenuIcon(props: MenuIconProps): ReactElement {
   return (

@@ -3,7 +3,8 @@ import { expect, it } from 'vitest';
 import { startJira } from './mocks/journey';
 import {
   argoIssues,
-  filterChoice,
+  filterBy,
+  offered,
   filterCount,
   isChosen,
   listEmpty,
@@ -48,13 +49,13 @@ it(
         ],
       },
     });
-    await page.press(filterChoice('Me'));
+    await filterBy(page, 'Me');
 
     expect(page.findText('Couldn’t read Jira')).toBeDefined();
     expect(isChosen(page, 'Me')).toBe(true);
 
     jira.jira.heal('search');
-    await page.press(filterChoice('Anyone'));
+    await filterBy(page, 'Anyone');
 
     expect(shownKeys(page)).toEqual(['ARGO-3', 'ARGO-2', 'ARGO-1']);
     expect(page.pageState).toMatchObject({ assignee: 'anyone' });
@@ -100,11 +101,9 @@ it(
 
     expect(shownKeys(page)).toEqual(['ARGO-3', 'ARGO-2', 'ARGO-1']);
     expect(page.findText('Ada Lovelace')).toBeDefined();
-    expect(() => page.find(filterChoice('Ada Lovelace'))).toThrow(
-      'No node matches',
-    );
+    expect(offered(page, 'Assignee')).not.toContain('Ada Lovelace');
 
-    await page.press(filterChoice('Unassigned'));
+    await filterBy(page, 'Unassigned');
 
     expect(shownKeys(page)).toEqual(['ARGO-1']);
   },

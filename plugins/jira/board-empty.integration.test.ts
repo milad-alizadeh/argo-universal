@@ -3,7 +3,7 @@ import { boardLabel } from './board-columns';
 import { drawsBoard, listed, onBoard, show } from './mocks/board';
 import { fixtureIssue, run } from './mocks/issue-journey';
 import { choose, projectPage, signIn, startJira } from './mocks/journey';
-import { filterChoice, listEmpty } from './mocks/listing';
+import { filterBy, listEmpty } from './mocks/listing';
 
 const timeoutMs = 30_000;
 
@@ -15,8 +15,8 @@ it(
     const shown = await onBoard();
     const { page } = shown;
 
-    await page.press(filterChoice('Done'));
-    await page.press(filterChoice('Unassigned'));
+    await filterBy(page, 'Done');
+    await filterBy(page, 'Unassigned');
 
     expect(drawsBoard(page)).toBe(false);
     expect(listEmpty(page).props.title).toBe('No issues match these filters');

@@ -15,6 +15,7 @@ import {
 } from './field-group-caption-insets';
 import { Caption } from './field-group-caption.android';
 import type { FieldGroupSectionProps } from './field-group-section';
+import { markedSection } from './field-group-section-mark';
 
 /*
  * A copy of Expo UI's Android FieldGroup.Section (FieldSection.android.tsx): the title, then a 2dp-spaced column
@@ -37,6 +38,8 @@ export function FieldGroupSection(props: FieldGroupSectionProps): ReactElement {
     </Column>
   );
 }
+
+markedSection(FieldGroupSection);
 
 function Rows(props: { children: ReactNode }): ReactNode {
   const rows = expandInlinePickers(flattenedChildren(props.children)).filter(

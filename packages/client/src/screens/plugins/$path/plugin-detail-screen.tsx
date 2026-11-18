@@ -2,7 +2,6 @@ import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import { Redirect, router, usePathname } from 'expo-router';
 import type * as React from 'react';
-import { View } from 'react-native';
 import { useKeepSidebarWhileOpening } from '#features/frame';
 import {
   pluginPagePath,
@@ -14,6 +13,7 @@ import {
   usePluginOpener,
   usePrefetchRoutePage,
 } from '#features/plugins';
+import { PendingPage } from './plugin-detail-view';
 import { PluginPageDetailView } from './plugin-page-detail-view';
 
 interface PluginDetailScreenProps {
@@ -27,7 +27,7 @@ interface PluginDetailScreenProps {
 
 const unavailable = { title: 'This Plugin is not available' };
 
-// A Plugin page from the connected Server's list: blank until the list arrives; a Plugin the Server no longer lists says so and returns to Sessions.
+// A Plugin page from the connected Server's list: shows a skeleton until the list arrives; a Plugin the Server no longer lists says so and returns to Sessions.
 export function PluginDetailScreen(
   props: PluginDetailScreenProps,
 ): React.JSX.Element {
@@ -52,7 +52,7 @@ function PluginLoading(props: PluginDetailScreenProps): React.JSX.Element {
   return (
     <>
       <ScreenStackHeader />
-      <View className="flex-1 bg-content" />
+      <PendingPage />
     </>
   );
 }
@@ -72,6 +72,7 @@ function PluginPageDetail(props: PluginPageDetailProps): React.JSX.Element {
 
   return (
     <PluginPageDetailView
+      key={JSON.stringify([section.pluginId, path, projectId, sessionId])}
       {...opening}
       title={section.title}
       onOpenPage={onOpenPage}

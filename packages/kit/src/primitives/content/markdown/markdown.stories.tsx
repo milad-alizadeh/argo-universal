@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Markdown } from './index';
 import {
@@ -12,6 +13,7 @@ import {
   codeMarkdown,
   tableMarkdown,
   streamingMarkdown,
+  startingParagraphMarkdown,
 } from './markdown-fixtures';
 
 const meta = {
@@ -42,26 +44,32 @@ const charsPerChunk = 14;
 
 const msBetweenChunks = 90;
 
-// Chunks to wait with the answer whole before it is written again.
-const chunksAtRest = 20;
-
-// The answer written a few words at a time, over and over, as an Agent's message streams.
+// Play a single response in the same fixed column throughout the stream.
 function Written({ text }: { text: string }): React.JSX.Element {
-  const [chunks, setChunks] = useState(1);
-  const whole = Math.ceil(text.length / charsPerChunk) + chunksAtRest;
+  const [length, setLength] = useState(charsPerChunk);
+  const streaming = length < text.length;
   useEffect(() => {
-    const timer = setInterval(
-      () => setChunks((sent) => (sent >= whole ? 1 : sent + 1)),
+    if (!streaming) return;
+
+    const timer = setTimeout(
+      () => setLength(length + charsPerChunk),
       msBetweenChunks,
     );
 
-    return (): void => clearInterval(timer);
-  }, [whole]);
+    return (): void => clearTimeout(timer);
+  }, [length, streaming]);
 
-  return <Markdown text={text.slice(0, chunks * charsPerChunk)} streaming />;
+  return (
+    <View className="mx-auto w-full max-w-column px-6 pt-6">
+      <Markdown text={text.slice(0, length)} streaming={streaming} />
+    </View>
+  );
 }
 
 export const Arriving: Story = {
   args: arrivingMarkdown,
+  parameters: { screenPreview: true },
   render: ({ text }) => <Written text={text} />,
 };
+
+export const StartingParagraph: Story = { args: startingParagraphMarkdown };

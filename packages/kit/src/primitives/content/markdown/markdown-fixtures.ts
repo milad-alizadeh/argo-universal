@@ -32,3 +32,8 @@ export const streamingMarkdown = {
 export const arrivingMarkdown = {
   text: 'The first paragraph of an answer arrives a few words at a time, with **a phrase in bold** and `some code` partway through it.\n\nA second paragraph starts once the first has ended, and it grows the same way until the answer is whole.\n\n- A first point in a list\n- A second point in a list',
 } satisfies MarkdownProps;
+
+export const startingParagraphMarkdown = {
+  text: 'A paragraph is already on screen.\n\n *',
+  streaming: true,
+} satisfies MarkdownProps;
