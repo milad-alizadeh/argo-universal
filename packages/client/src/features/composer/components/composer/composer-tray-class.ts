@@ -1,5 +1,3 @@
-import { composerTrayInsetClass } from '#lib/product/session-column';
-
 /*
  * The trays above and below the Composer card on a wide window: the plan or request tray and the status tray.
  * Paper fills them with content at 80% in light and a white 3% tray in dark, ringed.
@@ -8,7 +6,8 @@ import { composerTrayInsetClass } from '#lib/product/session-column';
  * Neither a tray nor the card takes a backdrop blur. Only the window's flat surface lies behind the Composer, since
  * the Feed fades out above it, and a blurred surface there drew a band in dark mode: LiquidGlass's `frosted` says why.
  */
-export const composerTrayClass = `self-stretch ${composerTrayInsetClass} bg-content/80 dark:bg-tray shadow-tray`;
+export const composerTrayClass =
+  'self-stretch mx-7 web:mx-4.5 bg-content/80 dark:bg-tray shadow-tray';
 
 /*
  * Each tray tucks 12px under the card, so its side and hairline never show in the card's rounded corner. The web's
