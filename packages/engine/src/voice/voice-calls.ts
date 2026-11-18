@@ -13,6 +13,7 @@ import type { EndedCall, RunningCall } from './call-types';
 import type { VoiceCallActorRef, voiceCallMachine } from './call.machine';
 import { Changes } from './changes';
 import type { VoiceSessions } from './session-link';
+import { unavailable } from './unavailable';
 
 type CallSnapshot = SnapshotFrom<typeof voiceCallMachine>;
 
@@ -31,8 +32,10 @@ export interface VoiceCallsPort {
   attach: (sessions: VoiceSessions) => void;
 }
 
-const unavailable = (message: string): TRPCError =>
-  new TRPCError({ code: 'PRECONDITION_FAILED', message });
+const namesSession = (
+  sessionId: string | undefined,
+  call: RunningCall,
+): boolean => sessionId === undefined || sessionId === call.sessionId;
 
 // The Voice call machine behind its Operations: it checks what can be refused before the machine is asked.
 export class VoiceCalls implements VoiceCallsPort {
@@ -72,10 +75,8 @@ export class VoiceCalls implements VoiceCallsPort {
   }
 
   public hangUp(sessionId?: string): VoiceEndOutput {
-    const { call } = this.actor.getSnapshot().context;
+    const call = this.callOfSession(sessionId);
 
-    if (!call || (sessionId !== undefined && sessionId !== call.sessionId))
-      throw unavailable('The Session has no Voice call');
     this.actor.send({
       type: 'call.end',
       reason: 'agent',
@@ -83,6 +84,16 @@ export class VoiceCalls implements VoiceCallsPort {
     });
 
     return { ended: this.actor.getSnapshot().context.call === null };
+  }
+
+  // The running call of the Session, or a refusal when the Session has none.
+  private callOfSession(sessionId?: string): RunningCall {
+    const { call } = this.actor.getSnapshot().context;
+
+    if (!call || !namesSession(sessionId, call))
+      throw unavailable('The Session has no Voice call');
+
+    return call;
   }
 
   public attach(sessions: VoiceSessions): void {
@@ -166,24 +177,3 @@ function answerOf(snapshot: CallSnapshot, callId: string): VoiceStartOutput {
     message: failureOf(snapshot),
   });
 }
-
-const noStatus: VoiceStatus = {
-  call: null,
-  ended: null,
-  availability: { usable: false, reason: 'Voice calls are not available' },
-};
-
-// What the Server runs with when it was given no Voice call machine: a Voice call can never start.
-export const noVoiceCalls: VoiceCallsPort = {
-  status: () => Promise.resolve(noStatus),
-  start: () => Promise.reject(unavailable('Voice calls are not available')),
-  end: () => ({ ended: false }),
-  hangUp: () => {
-    throw unavailable('The Session has no Voice call');
-  },
-  attach: () => {},
-  watch: async function* () {
-    await Promise.resolve();
-    yield noStatus;
-  },
-};

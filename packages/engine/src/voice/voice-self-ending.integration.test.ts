@@ -119,7 +119,9 @@ describe('an idle Voice call', () => {
       [{ prompt: 'Long job', holdUntil: gate.promise }],
       { idleMs: 150 },
     );
+
     await work.start();
+
     work.provider.call.requestWork('r1', 'Long job');
     await expect.poll(() => work.prompts.length).toBe(2);
 

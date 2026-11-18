@@ -24,7 +24,11 @@ const spokenMarks = new Set<VoiceMarker | null>(['[COMPLETE]']);
 
 type Speak = (say: VoiceSay) => void;
 
-type TurnsRunning = (running: boolean) => void;
+// What the relay reports back to the call: what the voice should be told, and whether a Turn it started is running.
+export interface RelayReports {
+  speak: Speak;
+  turnsRunning: (running: boolean) => void;
+}
 
 // What the Agent said during the running Turn that the voice may still need at its end.
 type TurnMemory = { resultSent: boolean; last: string | null };
@@ -44,14 +48,14 @@ export class AgentRelay {
   public constructor(
     private readonly sessions: VoiceSessions,
     private readonly sessionId: string,
-    private readonly speak: Speak,
-    private readonly turnsRunning: TurnsRunning,
+    private readonly reports: RelayReports,
   ) {}
 
   // The person asked for work: the Agent gets it, and the voice an answer at once.
   public async request(requestId: string, text: string): Promise<void> {
     // Counted before the Prompt settles: a quick Turn may end before the send is answered.
     this.sentChanged(1);
+
     const answer = await this.sessions
       .prompt(this.sessionId, this.promptText(text))
       .then(
@@ -77,7 +81,7 @@ export class AgentRelay {
     const before = this.sent > 0;
     this.sent = Math.max(0, this.sent + by);
 
-    if (before !== this.sent > 0) this.turnsRunning(this.sent > 0);
+    if (before !== this.sent > 0) this.reports.turnsRunning(this.sent > 0);
   }
 
   private promptText(request: string): string {
@@ -88,12 +92,12 @@ export class AgentRelay {
   }
 
   private reply(requestId: string, text: string): void {
-    this.speak({ kind: 'reply', requestId, text, delivery: 'speak' });
+    this.reports.speak({ kind: 'reply', requestId, text, delivery: 'speak' });
   }
 
   private tell(text: string, delivery: 'speak' | 'background'): void {
     for (const piece of inPieces(text))
-      this.speak({ kind: 'tell', text: piece, delivery });
+      this.reports.speak({ kind: 'tell', text: piece, delivery });
   }
 
   private agentSaid(text: string): void {
