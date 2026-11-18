@@ -49,15 +49,11 @@ function ComposerPhonePlan(layout: PlanLayout): React.JSX.Element | null {
   return hasPhoneTray(layout) ? <ComposerPhonePills {...layout} /> : null;
 }
 
-// The pill row reports its height, so the Feed's fade starts at its top and ends under it.
+// The row reports its height for the Feed fade; its horizontal ScrollView must not grow vertically on native.
 function ComposerPhonePills(layout: PlanLayout): React.JSX.Element {
   return (
     <View className="max-w-full pb-1" onLayout={useReportComposerPills()}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerClassName="min-h-7 flex-grow flex-row items-center justify-center gap-2 px-2 py-2"
-      >
+      <ScrollView {...phoneScrollProps}>
         {layout.props.phonePill}
         <ComposerPlans {...layout} />
         <PhoneWorkChips {...layout} />
@@ -65,6 +61,14 @@ function ComposerPhonePills(layout: PlanLayout): React.JSX.Element {
     </View>
   );
 }
+
+const phoneScrollProps = {
+  className: 'flex-none',
+  horizontal: true,
+  showsHorizontalScrollIndicator: false,
+  contentContainerClassName:
+    'min-h-7 flex-grow flex-row items-center justify-center gap-2 px-2 py-2',
+} as const;
 
 function PhoneWorkChips(layout: PlanLayout): React.JSX.Element | null {
   return layout.props.status ? (
