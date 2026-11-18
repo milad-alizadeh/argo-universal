@@ -1,4 +1,5 @@
-import type { FeedDeps } from '../feed';
+import type { FeedUpdate } from '@repo/contracts';
+import type { FeedDeps, FeedEvent } from '../feed';
 import { FeedHappenings } from './feed-happenings';
 import type {
   PromptOutcome,
@@ -6,7 +7,9 @@ import type {
   VoiceSessions,
 } from './session-link';
 
-type FeedSources = Pick<FeedDeps, 'findFeed' | 'watchSessionSnapshot'>;
+type FeedSources = Pick<FeedDeps, 'findFeed' | 'watchSessionSnapshot'> & {
+  createId: () => string;
+};
 
 type FeedActor = NonNullable<ReturnType<FeedSources['findFeed']>>;
 
@@ -66,9 +69,40 @@ export const voiceSessions = (
   prompt: VoicePrompts,
 ): VoiceSessions => ({
   prompt,
+  failed: (sessionId, description) =>
+    announceFailure(sources, sessionId, description),
   watch: (sessionId, listener) => {
     const watch = new FeedWatch(sources, sessionId, listener);
 
     return (): void => watch.stop();
   },
 });
+
+type FailureNotice = Extract<FeedUpdate, { sessionUpdate: 'notice' }>;
+
+// The one Notice a call that ended by failure leaves in its Session's Feed, written outside any Turn.
+const voiceCallFailure = (id: string, description: string): FeedEvent => ({
+  type: 'feed.change',
+  turnId: null,
+  blobs: [],
+  change: { type: 'upsert', update: failureNotice(id, description) },
+});
+
+const failureNotice = (id: string, description: string): FailureNotice => ({
+  id,
+  sessionUpdate: 'notice',
+  state: 'settled',
+  severity: 'warning',
+  title: 'Voice call failed',
+  description,
+});
+
+function announceFailure(
+  sources: FeedSources,
+  sessionId: string,
+  description: string,
+): void {
+  const event = voiceCallFailure(sources.createId(), description);
+
+  sources.findFeed(sessionId)?.send(event);
+}

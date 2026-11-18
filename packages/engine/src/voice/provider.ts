@@ -1,4 +1,7 @@
-import type { VoiceAvailability } from '@repo/contracts';
+import type {
+  VoiceAvailability,
+  VoiceConnectionStatus as ContractConnectionStatus,
+} from '@repo/contracts';
 
 /*
  * The Voice provider interface (ADR-0062). It names no vendor: only a provider's own module does.
@@ -6,11 +9,7 @@ import type { VoiceAvailability } from '@repo/contracts';
  */
 
 // The connection's standing as the provider sees it: the four values of the call's connection.
-type VoiceConnectionStatus =
-  | 'connecting'
-  | 'connected'
-  | 'disconnected'
-  | 'error';
+type VoiceConnectionStatus = ContractConnectionStatus;
 
 // Why a provider closed a call.
 export type VoiceClosedReason = 'ended' | 'lost' | 'error';
@@ -23,6 +22,10 @@ export type VoiceProviderEvent =
   | { type: 'voice.transcript'; id: string; text: string; final: boolean }
   // The person asked for work; answer it with `reply` under this id.
   | { type: 'work.requested'; requestId: string; text: string }
+  // The voice started or stopped speaking.
+  | { type: 'speaking'; speaking: boolean }
+  // Trouble on the person's side of the call, such as a microphone the App may not use; null once it clears.
+  | { type: 'trouble'; trouble: 'microphone-blocked' | null }
   | { type: 'usage'; inputTokens: number; outputTokens: number }
   // How much of the provider's allowance is left, as a fraction from 0 to 1.
   | { type: 'limit'; remaining: number; resetsAt?: string }

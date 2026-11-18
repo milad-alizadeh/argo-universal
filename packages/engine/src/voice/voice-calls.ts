@@ -2,14 +2,16 @@ import { randomUUID } from 'node:crypto';
 import type {
   VoiceAvailability,
   VoiceEndOutput,
+  VoiceOrbState,
   VoiceStartInput,
   VoiceStartOutput,
   VoiceStatus,
+  VoiceTrouble,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { waitFor, type SnapshotFrom } from 'xstate';
 import { sessionActorId } from '../sessions';
-import type { EndedCall } from './call-types';
+import type { EndedCall, RunningCall } from './call-types';
 import type { VoiceCallActorRef, voiceCallMachine } from './call.machine';
 import { Changes } from './changes';
 import type { VoiceSessions } from './session-link';
@@ -40,7 +42,7 @@ export class VoiceCalls implements VoiceCallsPort {
     const { call, ended } = this.actor.getSnapshot().context;
 
     return {
-      call: call && this.callOf(call.callId, call.sessionId),
+      call: call && this.callOf(call),
       ended,
       availability: await this.availability(),
     };
@@ -85,15 +87,20 @@ export class VoiceCalls implements VoiceCallsPort {
     }
   }
 
-  private callOf(
-    callId: string,
-    sessionId: string,
-  ): NonNullable<VoiceStatus['call']> {
-    const status = this.actor.getSnapshot().matches({ running: 'connected' })
-      ? 'connected'
-      : 'connecting';
+  private callOf(call: RunningCall): NonNullable<VoiceStatus['call']> {
+    const { callId, sessionId, providerConnection: connection } = call;
 
-    return { callId, sessionId, status };
+    return {
+      callId,
+      sessionId,
+      status: this.actor.getSnapshot().matches({ running: 'connected' })
+        ? 'connected'
+        : 'connecting',
+      connection,
+      orb: orbOf(call),
+      trouble: troubleOf(call),
+      startedAt: call.startedAt,
+    };
   }
 
   private async availability(): Promise<VoiceAvailability> {
@@ -117,6 +124,23 @@ export class VoiceCalls implements VoiceCallsPort {
         message: 'The Session is not open',
       });
   }
+}
+
+// The voice's own speech shows over the Agent's work, and the work over waiting for the person.
+function liveOrb(call: RunningCall): VoiceOrbState {
+  if (call.speaking) return 'talking';
+
+  return call.turnRunning ? 'thinking' : 'listening';
+}
+
+// What the orb shows: nothing while the call has no connection.
+const orbOf = (call: RunningCall): VoiceOrbState =>
+  call.providerConnection === 'connected' ? liveOrb(call) : 'none';
+
+function troubleOf(call: RunningCall): VoiceTrouble | null {
+  if (call.providerConnection === 'disconnected') return 'reconnecting';
+
+  return call.microphoneBlocked ? 'microphone-blocked' : null;
 }
 
 // The start has settled once the provider answered or the call is over.

@@ -1,4 +1,4 @@
-import type { VoiceCallEnd } from '@repo/contracts';
+import type { VoiceCallEnd, VoiceConnectionStatus } from '@repo/contracts';
 import type {
   VoiceDelivery,
   VoiceProvider,
@@ -29,6 +29,8 @@ export type VoiceCallEvent =
   | { type: 'call.answered'; answer: string }
   | { type: 'call.failed'; message: string }
   | { type: 'call.sessionGone'; reason: SessionGoneReason }
+  // The Session's Turn started or stopped running.
+  | { type: 'session.turn'; running: boolean }
   | { type: 'call.appDisconnected' }
   | { type: 'provider.event'; event: VoiceProviderEvent }
   | { type: 'voice.say'; say: VoiceSay };
@@ -58,6 +60,13 @@ export interface RunningCall {
   offer: string;
   connection?: AbortSignal;
   answer: string | null;
+  // The provider's connection as last reported.
+  providerConnection: VoiceConnectionStatus;
+  // When the call first connected.
+  startedAt: string | null;
+  speaking: boolean;
+  turnRunning: boolean;
+  microphoneBlocked: boolean;
 }
 
 export interface EndedCall {

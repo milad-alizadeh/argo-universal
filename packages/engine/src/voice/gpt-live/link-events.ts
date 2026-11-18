@@ -23,6 +23,11 @@ const connected = (): VoiceProviderEvent => ({
   status: 'connected',
 });
 
+const speaking = (on: boolean) => (): VoiceProviderEvent => ({
+  type: 'speaking',
+  speaking: on,
+});
+
 const closed = (): VoiceProviderEvent => ({ type: 'closed', reason: 'ended' });
 
 const requested = ({
@@ -69,6 +74,15 @@ const reported = z.union([
   z
     .looseObject({ type: z.literal('session.usage.updated'), ...usageFields })
     .transform(counted),
+  z
+    .looseObject({
+      type: z.literal('turn.created'),
+      role: z.literal('assistant'),
+    })
+    .transform(speaking(true)),
+  z
+    .looseObject({ type: z.literal('turn.done'), role: z.literal('assistant') })
+    .transform(speaking(false)),
   z.looseObject({ type: z.literal('session.closed') }).transform(closed),
 ]);
 

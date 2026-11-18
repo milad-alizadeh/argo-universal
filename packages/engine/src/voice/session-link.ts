@@ -18,6 +18,8 @@ export type PromptOutcome = 'started' | 'queued';
 export interface VoiceSessions {
   // Sends the Session a Prompt from the Voice call.
   prompt: (sessionId: string, text: string) => Promise<PromptOutcome>;
+  // Adds a Notice to the Session's Feed that its Voice call failed, and why.
+  failed: (sessionId: string, description: string) => void;
   // Listens to the Session's Feed; the returned function stops listening.
   watch: (
     sessionId: string,
@@ -31,6 +33,11 @@ export class SessionLink {
 
   public attach(sessions: VoiceSessions): void {
     this.sessions = sessions;
+  }
+
+  // Tells the Session's Feed its call failed; nothing is told before Sessions are attached.
+  public failed(sessionId: string, description: string): void {
+    this.sessions?.failed(sessionId, description);
   }
 
   public get current(): VoiceSessions | null {

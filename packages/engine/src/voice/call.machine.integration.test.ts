@@ -60,6 +60,8 @@ const events: VoiceCallEvent[] = [
   providerEvent({ type: 'status', status: 'connected' }),
   providerEvent({ type: 'status', status: 'error' }),
   providerEvent({ type: 'closed', reason: 'ended' }),
+  providerEvent({ type: 'speaking', speaking: true }),
+  { type: 'session.turn', running: true },
 ];
 
 // How a call ended is checked on the actor after each step, so a restart after any ending is one edge.

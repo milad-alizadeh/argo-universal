@@ -38,6 +38,55 @@ function providerEventOf(event: VoiceCallEvent): VoiceProviderEvent {
   return event.event;
 }
 
+type CallStart = Pick<
+  RunningCall,
+  'callId' | 'sessionId' | 'offer' | 'connection'
+>;
+
+// A call that has only been asked for: not answered, not connected, nobody speaking.
+const newCall = (start: CallStart): RunningCall => ({
+  ...start,
+  answer: null,
+  providerConnection: 'connecting',
+  startedAt: null,
+  speaking: false,
+  turnRunning: false,
+  microphoneBlocked: false,
+});
+
+const providerFailure = 'The connection to the voice failed.';
+
+type Report<Type extends VoiceProviderEvent['type']> = (
+  event: Extract<VoiceProviderEvent, { type: Type }>,
+  call: RunningCall,
+) => Partial<RunningCall>;
+
+type Reports = { [Type in VoiceProviderEvent['type']]?: Report<Type> };
+
+// The timer starts the first time the call connects and keeps that time through any reconnecting.
+const startedAfter = (call: RunningCall, status: string): string | null =>
+  status === 'connected'
+    ? (call.startedAt ?? new Date().toISOString())
+    : call.startedAt;
+
+// What each provider report changes about the running call; reports not listed change nothing.
+const reports: Reports = {
+  status: (event, call) => ({
+    providerConnection: event.status,
+    startedAt: startedAfter(call, event.status),
+  }),
+  speaking: (event) => ({ speaking: event.speaking }),
+  trouble: (event) => ({ microphoneBlocked: event.trouble !== null }),
+};
+
+// Folds what the provider reported about the call into the running call.
+function reported(call: RunningCall, event: VoiceProviderEvent): RunningCall {
+  // SAFETY: `reports` keys each report by the event type it reads, so the report found for `event.type` takes `event`.
+  const report = reports[event.type] as Report<typeof event.type> | undefined;
+
+  return { ...call, ...report?.(event, call) };
+}
+
 const namesCall = (
   sessionId: string | undefined,
   call: RunningCall | null,
@@ -69,7 +118,7 @@ const voiceCallSetup = setup({
       const { callId, sessionId, offer, connection } = event;
 
       return {
-        call: { callId, sessionId, offer, connection, answer: null },
+        call: newCall({ callId, sessionId, offer, connection }),
         ended: null,
         failure: null,
       };
@@ -86,6 +135,22 @@ const voiceCallSetup = setup({
       assertEvent(event, 'call.failed');
 
       return { failure: event.message };
+    }),
+    recordProviderFailure: assign({ failure: providerFailure }),
+    // Runs before `finish`, while the call and its Session are still known; a call ends once, so it says so once.
+    announceFailure: ({ context }): void => {
+      const { call, failure } = context;
+
+      if (call && failure !== null)
+        context.sessions.failed(call.sessionId, failure);
+    },
+    foldProvider: assign(({ context, event }): Partial<VoiceCallContext> => ({
+      call: reported(runningCall(context), providerEventOf(event)),
+    })),
+    foldTurn: assign(({ context, event }): Partial<VoiceCallContext> => {
+      assertEvent(event, 'session.turn');
+
+      return { call: { ...runningCall(context), turnRunning: event.running } };
     }),
   },
   guards: {
@@ -104,6 +169,11 @@ const voiceCallSetup = setup({
     },
     providerClosed: ({ event }): boolean =>
       providerEventOf(event).type === 'closed',
+    turnChanged: ({ context, event }): boolean => {
+      assertEvent(event, 'session.turn');
+
+      return runningCall(context).turnRunning !== event.running;
+    },
     asksForWork: ({ event }): boolean =>
       providerEventOf(event).type === 'work.requested',
   },
@@ -212,13 +282,17 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
         },
         'call.failed': {
           target: idleTarget,
-          actions: ['recordFailure', endsWith('failed')],
+          actions: ['recordFailure', 'announceFailure', endsWith('failed')],
         },
         'provider.event': [
           {
             guard: 'providerErrored',
             target: idleTarget,
-            actions: endsWith('failed'),
+            actions: [
+              'recordProviderFailure',
+              'announceFailure',
+              endsWith('failed'),
+            ],
           },
           {
             guard: 'providerClosed',
@@ -229,7 +303,9 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
             guard: 'asksForWork',
             actions: sendTo('agentRelay', ({ event }) => event),
           },
+          { actions: 'foldProvider' },
         ],
+        'session.turn': { guard: 'turnChanged', actions: 'foldTurn' },
         'voice.say': {
           actions: sendTo('providerCall', ({ event }) => event),
         },
@@ -242,7 +318,11 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
         },
         connecting: {
           on: {
-            'provider.event': { guard: 'isConnected', target: 'connected' },
+            'provider.event': {
+              guard: 'isConnected',
+              target: 'connected',
+              actions: 'foldProvider',
+            },
           },
         },
         connected: {},

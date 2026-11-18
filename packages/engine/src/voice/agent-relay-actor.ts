@@ -8,6 +8,7 @@ export type RelayInput = { sessions: SessionLink; sessionId: string };
 // What a call has before Sessions are attached: nothing to send to, nothing to hear.
 const detached: VoiceSessions = {
   prompt: () => Promise.reject(new Error('The Session cannot be reached')),
+  failed: () => {},
   watch: () => (): void => {},
 };
 
