@@ -21,6 +21,9 @@ export interface ChangeRowProps {
   onSetAutomation?: SessionPullRequest['onSetAutomation'];
 }
 
+// The total opens the Checkout's own Changes, never the pull request's files (ADR-0052), so it says so.
+export const checkoutChangesLabel = "Show the Checkout's Changes against main";
+
 const rowClassName = 'flex-row items-start gap-2 px-1 py-2';
 
 // The mark sits on a disc, the size of the title's line, so it leads the row on the title's edge.
@@ -118,7 +121,7 @@ function DiffTotalPart({
   return onOpenFiles ? (
     <Pressable
       role="button"
-      accessibilityLabel={`Show Change #${change.number}'s files in Changes`}
+      accessibilityLabel={checkoutChangesLabel}
       onPress={onOpenFiles}
       className="web:hover:underline"
     >

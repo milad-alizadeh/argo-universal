@@ -22,18 +22,22 @@ const openPullRequest = ({ url }: SessionPullRequest): void => {
 };
 
 // The pull requests as rows draw them: the one on the Checkout opens its files in the Changes tab.
-const rowsOf = (
+const checkoutRowsOf = (
   content: SessionInspectorContent,
   tab: SectionTabHandle,
 ): SessionPullRequest[] =>
-  withCheckoutFiles(pullRequestsOf(content), content.changes, tab.open);
+  withCheckoutFiles(
+    pullRequestsOf(content),
+    content.changes?.onComparisonChange,
+    tab.open,
+  );
 
 const changesSummary = (
   content: SessionInspectorContent,
   tab: SectionTabHandle,
 ): ReactNode => (
   <WorkbenchChangesSummary
-    pullRequests={rowsOf(content, tab)}
+    pullRequests={checkoutRowsOf(content, tab)}
     summary={summaryOf(content)}
     onOpenChange={openPullRequest}
   />
@@ -55,7 +59,7 @@ const pullRequestRows = (
   content: SessionInspectorContent,
   tab: SectionTabHandle,
 ): ReactNode => {
-  const pullRequests = rowsOf(content, tab);
+  const pullRequests = checkoutRowsOf(content, tab);
 
   return (
     pullRequests.length > 0 && (

@@ -3,7 +3,7 @@ import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, screen, waitFor } from 'storybook/test';
-import { ChangeRow } from './change-row';
+import { ChangeRow, checkoutChangesLabel } from './change-row';
 import { checksRunningChangeRow, spokenText } from './change-row-fixtures';
 
 const { number } = checksRunningChangeRow.change;
@@ -142,7 +142,7 @@ export const LeavesOutItemsWithNoHandler: Story = {
   },
 };
 
-const filesName = `Show Change #${number}'s files in Changes`;
+const filesName = checkoutChangesLabel;
 
 // On the Checkout's own Change, the diff total opens its files, and opens neither the PR nor the menu.
 export const PressingTheTotalOpensTheFiles: Story = {
