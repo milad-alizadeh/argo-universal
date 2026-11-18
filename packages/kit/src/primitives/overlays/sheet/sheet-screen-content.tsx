@@ -6,14 +6,21 @@ import type { SheetProps } from './sheet-props';
 export type SheetScreenContentProps = Pick<
   SheetProps,
   'label' | 'inset' | 'children' | 'contentScrolls'
->;
+> & {
+  // No title row sits above the page, so its inset pads the top too.
+  insetTop?: boolean;
+};
 
 // A page that owns its scroller fills the sheet without a second scroller around its header.
 export function SheetScreenContent(
   props: SheetScreenContentProps,
 ): ReactElement {
   return props.contentScrolls ? (
-    <SheetInset inset={props.inset} className="min-h-0 shrink">
+    <SheetInset
+      inset={props.inset}
+      top={props.insetTop}
+      className="min-h-0 shrink"
+    >
       {props.children}
     </SheetInset>
   ) : (
@@ -29,7 +36,9 @@ function ScreenScroll(props: SheetScreenContentProps): ReactElement {
       role="region"
       accessibilityLabel={props.label}
     >
-      <SheetInset inset={props.inset}>{props.children}</SheetInset>
+      <SheetInset inset={props.inset} top={props.insetTop}>
+        {props.children}
+      </SheetInset>
     </ScrollView>
   );
 }

@@ -175,12 +175,48 @@ export const OptionsOneEdgePhone = atWidth(screenWidths.Phone, oneEdge);
 
 export const OptionsOneEdgeWide = atWidth(screenWidths.Wide, oneEdge);
 
-// A wide window's Options pill shows its count beside its label, as well as saying it.
-export const OptionsPillCountWide = atWidth(screenWidths.Wide, {
+// On every width the Options button is the icon alone, its count a badge on its corner, and it says both.
+const optionsIconWithBadge: Story = {
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole('button', optionsButton)).toHaveTextContent(
-      'Options · 1',
+    const button = canvas.getByRole('button', optionsButton);
+
+    await expect(button).not.toHaveTextContent('Options');
+    await expect(button.parentElement).toHaveTextContent('1');
+  },
+};
+
+export const OptionsIconBadgePhone = atWidth(
+  screenWidths.Phone,
+  optionsIconWithBadge,
+);
+
+export const OptionsIconBadgeWide = atWidth(
+  screenWidths.Wide,
+  optionsIconWithBadge,
+);
+
+const topOf = (element: Element): number =>
+  Math.round(element.getBoundingClientRect().top);
+
+// The popover pads its first content as far from its top edge as from its leading one.
+export const OptionsPopoverTopInsetWide = atWidth(screenWidths.Wide, {
+  play: async (context) => {
+    const { canvas, userEvent } = context;
+
+    await userEvent.click(canvas.getByRole('button', optionsButton));
+
+    const dialog = await body(context).findByRole('dialog', {
+      name: 'Options',
+    });
+
+    await settleOverlays();
+
+    const first = within(dialog).getByRole('group', { name: 'Show as' });
+
+    await expect(topOf(first) - topOf(dialog)).toBe(
+      leftOf(first) - leftOf(dialog),
     );
+    await expect(topOf(first) - topOf(dialog)).toBeGreaterThan(8);
   },
 });
 

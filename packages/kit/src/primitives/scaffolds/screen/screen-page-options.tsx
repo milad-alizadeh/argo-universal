@@ -1,9 +1,6 @@
 import type { ComponentProps, ReactElement } from 'react';
-import { countBadge } from '#kit/badge-count';
-import { useWide } from '#kit/use-wide/use-wide';
 import { HeaderTrigger, submenuLabel } from '#primitives/actions/action';
 import type { IconButtonSize } from '#primitives/actions/icon-button';
-import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from '#primitives/overlays/sheet';
 import type { PageOptions } from './screen-props';
 
@@ -85,11 +82,9 @@ type TriggerHandlers = Partial<
 
 type TriggerProps = OptionsEntryProps & TriggerHandlers;
 
-// A wide window's button names itself and its count; a narrow one is the header's icon, its badge on the corner.
+// On every width the button is the header's icon, its count a badge on the corner; its spoken name says both.
 function OptionsTrigger(props: TriggerProps): ReactElement {
   const { options, size, ...handlers } = props;
-
-  if (useWide()) return <LabelledTrigger {...handlers} options={options} />;
 
   return (
     <HeaderTrigger
@@ -100,32 +95,4 @@ function OptionsTrigger(props: TriggerProps): ReactElement {
       size={size}
     />
   );
-}
-
-// The toolbar pill a popover opens from: the icon, the label with its count, and a down chevron.
-function LabelledTrigger({ options, ...handlers }: TriggerProps): ReactElement {
-  return (
-    <MenuTrigger
-      {...handlers}
-      label={labelWithCount(options)}
-      accessibilityLabel={optionsSpoken(options)}
-      icon={optionsIcon}
-    />
-  );
-}
-
-type Badge = PageOptions['badge'];
-
-const counted = (
-  badge: Badge,
-): Extract<Badge, { kind: 'count' }> | undefined =>
-  badge?.kind === 'count' ? badge : undefined;
-
-const countOf = (badge: Badge): string | undefined =>
-  countBadge(counted(badge))?.text;
-
-function labelWithCount({ badge }: Pick<PageOptions, 'badge'>): string {
-  const count = countOf(badge);
-
-  return count ? `${optionsLabel} · ${count}` : optionsLabel;
 }

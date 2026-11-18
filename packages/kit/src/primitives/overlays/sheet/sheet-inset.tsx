@@ -3,13 +3,20 @@ import { View } from 'react-native';
 import { ListPlaceContext } from '#kit/list-place';
 import { cn } from '#kit/utils';
 
-// Paper's iOS sheet pads composed content 16 on every side; Android's drag handle zone already sets the top.
-function sheetInsetClass(inset: boolean | undefined): string {
-  return cn(inset && 'px-4 ios:py-4');
+/*
+ * Paper's iOS sheet pads composed content 16 on every side; Android's drag handle zone already sets the top. A popover
+ * draws no title row above its first page, so that page takes the same 16 on top as on its sides.
+ */
+function sheetInsetClass(
+  props: Pick<SheetInsetProps, 'inset' | 'top'>,
+): string {
+  return cn(props.inset && 'px-4 ios:py-4', props.inset && props.top && 'pt-4');
 }
 
 interface SheetInsetProps {
   inset?: boolean;
+  // Nothing sits above the content, so the inset pads its top too.
+  top?: boolean;
   className?: string;
   children: ReactNode;
 }
@@ -20,7 +27,7 @@ interface SheetInsetProps {
  */
 export function SheetInset(props: SheetInsetProps): ReactElement {
   const view = (
-    <View className={cn(sheetInsetClass(props.inset), props.className)}>
+    <View className={cn(sheetInsetClass(props), props.className)}>
       {props.children}
     </View>
   );
