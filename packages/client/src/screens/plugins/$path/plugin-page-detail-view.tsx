@@ -26,7 +26,11 @@ export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
   const { title, onOpenPage, onBack, ...opening } = props;
   const page = usePluginPage(opening);
   // Let the destination paint its loading state even when its first tree is already cached.
-  const callbacks = { onOpenPage, onPageCall: page.onPageCall, pluginId: opening.pluginId };
+  const callbacks = {
+    onOpenPage,
+    onPageCall: page.onPageCall,
+    pluginId: opening.pluginId,
+  };
 
   return (
     <PluginSymbol pluginId={opening.pluginId}>
