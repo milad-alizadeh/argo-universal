@@ -1,4 +1,4 @@
-import type { Token } from 'marked';
+import type { Token, TokensList } from 'marked';
 import { withOccurrenceKeys } from '#kit/occurrence-keys';
 
 // A block's token with the key React holds it by.
@@ -27,3 +27,31 @@ export const keyedBlocks = (tokens: readonly Token[]): KeyedToken[] =>
     tokens.filter((token) => token.type !== 'space'),
     (token) => token.type,
   );
+
+const sameBlock = (left: Token, right: Token | undefined): boolean =>
+  right !== undefined && left.type === right.type && left.raw === right.raw;
+
+function sharedBlocks(previous: TokensList, next: TokensList): number {
+  const changed = previous.findIndex(
+    (token, index) => !sameBlock(token, next[index]),
+  );
+
+  return changed < 0 ? previous.length : changed;
+}
+
+// Appends keep the completed prefix. Reference definitions can resolve links in earlier blocks.
+export function keepBlockPrefix(
+  previous: TokensList,
+  next: TokensList,
+): TokensList {
+  if ([previous, next].some((tokens) => Object.keys(tokens.links).length > 0))
+    return next;
+
+  const prefix = sharedBlocks(previous, next);
+
+  if (!prefix) return next;
+
+  return Object.assign([...previous.slice(0, prefix), ...next.slice(prefix)], {
+    links: next.links,
+  });
+}

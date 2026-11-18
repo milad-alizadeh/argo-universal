@@ -2,6 +2,7 @@ import type { Token, Tokens } from 'marked';
 import {
   type ComponentType,
   createElement,
+  memo,
   type ReactElement,
   type ReactNode,
   useContext,
@@ -118,12 +119,15 @@ const blockTokens = new Map<string, ComponentType<BlockTokenProps>>([
   byType('blockquote', BlockquoteToken),
 ]);
 
-function Block({ token, streaming }: BlockTokenProps): ReactElement {
+const Block = memo(function Block({
+  token,
+  streaming,
+}: BlockTokenProps): ReactElement {
   return createElement(blockTokens.get(token.type) ?? OtherToken, {
     token,
     streaming,
   });
-}
+});
 
 export function Blocks({ tokens, streaming }: BlocksProps): ReactNode[] {
   const blocks = keyedBlocks(tokens);

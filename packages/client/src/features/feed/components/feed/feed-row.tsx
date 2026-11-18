@@ -66,7 +66,7 @@ function entryContent(
 
 /*
  * A row's collapsibles resize it in the list each frame they move, so the rows below move in the
- * same frame. The list data keeps unchanged entries, their gap and their caret, so a row draws
+ * same frame. The list data keeps unchanged entries, their gap and streaming state, so a row draws
  * again only when one of those changes.
  */
 export const FeedRow = memo(function FeedRow(props: FeedRowProps) {

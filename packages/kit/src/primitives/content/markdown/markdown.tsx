@@ -1,7 +1,8 @@
 import type * as React from 'react';
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { lexMarkdown } from '#kit/lex-markdown';
+import { keepBlockPrefix } from './block-keys';
 import { Blocks } from './block-tokens';
 import { ArrivalsContext, useArrivals } from './markdown-arrivals';
 import { MarkdownClamp } from './markdown-clamp';
@@ -39,11 +40,21 @@ function ClampedContent({
 function useTokens(
   text: string,
   streaming: boolean,
-): ReturnType<typeof lexMarkdown> {
-  return useMemo(
+): ReturnType<typeof keepBlockPrefix> {
+  const tokens = useMemo(
     () => lexMarkdown(streaming ? streamingText(text) : text),
     [text, streaming],
   );
+
+  const [drawing, setDrawing] = useState(() => ({ tokens, blocks: tokens }));
+
+  if (tokens === drawing.tokens) return drawing.blocks;
+
+  const blocks = keepBlockPrefix(drawing.blocks, tokens);
+
+  setDrawing({ tokens, blocks });
+
+  return blocks;
 }
 
 function MarkdownContent({
