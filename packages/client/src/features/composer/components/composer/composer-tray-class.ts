@@ -9,6 +9,17 @@
 export const composerTrayClass =
   'self-stretch mx-7 web:mx-4.5 bg-content/80 dark:bg-tray shadow-tray';
 
+/*
+ * The web's card is unfrosted and its fill translucent, so a tray's tuck would show through it as a band and a
+ * hairline (#2362). Each tray's tuck is `3` (12px); the web clips it off at the card's edge, keeping the shadow the
+ * other sides cast.
+ */
+export const composerTopTrayClipClass =
+  'web:[clip-path:inset(-64px_-64px_12px_-64px)]';
+
+export const composerBottomTrayClipClass =
+  'web:[clip-path:inset(12px_-64px_-64px_-64px)]';
+
 // The line between a tray's sections: the tray ring's own width and colour, light and dark.
 export const composerTrayDividerClass =
   'border-t border-shadow-subtle dark:border-hairline';

@@ -5,6 +5,7 @@ import { ElicitationSheet, PermissionRequest } from '#features/requests';
 import { filledClass, useSessionFill } from '#lib/product/session-fill';
 import { PromptQueue } from '../prompt-queue/prompt-queue';
 import {
+  composerTopTrayClipClass,
   composerTrayClass,
   composerTrayDividerClass,
 } from './composer-tray-class';
@@ -13,6 +14,7 @@ import type { ComposerLayout } from './composer-types';
 
 const trayClass = cn(
   composerTrayClass,
+  composerTopTrayClipClass,
   '-mb-3 pb-3 rounded-t-2xl overflow-hidden',
 );
 

@@ -3,7 +3,10 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { ComposerStatusControls } from '../composer-status/composer-status';
 import { TrayCheckout } from './composer-tray-checkout';
-import { composerTrayClass } from './composer-tray-class';
+import {
+  composerBottomTrayClipClass,
+  composerTrayClass,
+} from './composer-tray-class';
 import type {
   BottomTrayLayout,
   WideStatusLayout,
@@ -29,13 +32,19 @@ export function ComposerBottomTray(
 const statusRowClass =
   'flex-1 min-h-0 flex-row items-center pl-1.25 pr-1.5 gap-1';
 
+const statusTrayClass = cn(
+  composerTrayClass,
+  composerBottomTrayClipClass,
+  'h-11 -mt-3 pt-3 rounded-b-2xl',
+);
+
 function ComposerWideStatus(
   layout: WideStatusLayout,
 ): React.JSX.Element | null {
   if (!(layout.props.configuration || layout.props.status)) return null;
 
   return (
-    <View className={cn(composerTrayClass, 'h-11 -mt-3 pt-3 rounded-b-2xl')}>
+    <View className={statusTrayClass}>
       <View className={statusRowClass}>
         <ComposerTrayStatus {...layout} />
         {/* The Checkout's name gives up its width first, so the status controls keep theirs. */}
