@@ -68,20 +68,24 @@ it('leaves no space for a message that draws nothing, so a prompt has the same s
   expect(gaps[0]).toBe(gaps[1]);
 });
 
-it('gives activity and Agent text a shared gap in either order and separates Prompts', () => {
-  const group: FeedEntry = {
-    type: 'group',
-    state: 'settled',
-    id: 'group',
-    title: 'Called tools',
-    items: [],
-  };
+const group: FeedEntry = {
+  type: 'group',
+  state: 'settled',
+  id: 'group',
+  title: 'Called tools',
+  items: [],
+};
 
+it('gives activity and Agent text a shared gap in either order', () => {
   const message = row(agentText, 'message');
-  const user = row(prompt, 'prompt');
 
   expect(spaceBelowEntry(group, message)).toBe('pb-4 wide-type:pb-3');
   expect(spaceBelowEntry(message, group)).toBe(spaceBelowEntry(group, message));
+});
+
+it('separates a Prompt from activity in either order', () => {
+  const user = row(prompt, 'prompt');
+
   expect(spaceBelowEntry(group, user)).toBe('pb-6 wide-type:pb-5');
   expect(spaceBelowEntry(user, group)).toBe(spaceBelowEntry(group, user));
 });
