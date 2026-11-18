@@ -17,7 +17,7 @@ export function panel(children: JSX.Element): JSX.Element {
   );
 }
 
-export function edges(left: JSX.Element, right: JSX.Element): JSX.Element {
+function edges(left: JSX.Element, right: JSX.Element): JSX.Element {
   return (
     <Stack direction="row" align="center" gap={2}>
       {left}
