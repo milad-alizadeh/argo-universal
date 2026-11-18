@@ -32,7 +32,7 @@ async function bodyOf(request: IncomingMessage): Promise<Buffer> {
 
 async function fieldsOf(
   request: IncomingMessage,
-): Promise<Record<string, FormDataEntryValue>> {
+): Promise<Record<string, string | File>> {
   const contentType = request.headers['content-type'] ?? '';
 
   const form = await new Response(await bodyOf(request), {
