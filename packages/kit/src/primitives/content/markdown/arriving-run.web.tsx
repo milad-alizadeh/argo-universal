@@ -7,7 +7,7 @@ export function ArrivingRun({ children }: ArrivingRunProps): React.JSX.Element {
   return (
     <Span
       testID="arriving-text"
-      className="animate-in fade-in-0 duration-200 ease-out motion-reduce:animate-none"
+      className="animate-in fade-in-0 duration-300 ease-in-out motion-reduce:animate-none"
     >
       {children}
     </Span>

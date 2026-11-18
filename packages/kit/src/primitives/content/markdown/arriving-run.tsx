@@ -1,6 +1,7 @@
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Text as Span } from 'react-native';
+import { Easing } from 'react-native-reanimated';
 import { useReducedMotionNow } from '#kit/use-reduced-motion-now';
 import type { ArrivingRunProps } from './arriving-run-props';
 import { fadeMilliseconds } from './arriving-text';
@@ -8,6 +9,8 @@ import { fadeMilliseconds } from './arriving-text';
 type Paint = (now: number) => boolean;
 
 const painting = new Set<Paint>();
+
+const easedOpacity = Easing.inOut(Easing.quad);
 
 let frame: number | undefined;
 
@@ -27,9 +30,7 @@ function fade(setOpacity: (opacity: number) => void): () => void {
 
   const paint = (now: number): boolean => {
     const progress = Math.min(1, (now - start) / fadeMilliseconds);
-    const remaining = 1 - progress;
-
-    setOpacity(1 - remaining * remaining * remaining);
+    setOpacity(easedOpacity(progress));
 
     return progress === 1;
   };

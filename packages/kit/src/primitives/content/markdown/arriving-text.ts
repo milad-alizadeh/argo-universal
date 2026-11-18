@@ -9,13 +9,13 @@ export interface Trail {
 }
 
 // How long a run of arrived text takes to fade in.
-export const fadeMilliseconds = 200;
+export const fadeMilliseconds = 300;
 
 /*
  * The most runs kept. A block draws at most once a frame, and at 120 frames a second this many
  * draws outlast a fade, so a run older than that has faded and joins the settled text.
  */
-export const maxRuns = 32;
+export const maxRuns = 40;
 
 export const settledTrail = (text: string): Trail => ({ text, marks: [] });
 
