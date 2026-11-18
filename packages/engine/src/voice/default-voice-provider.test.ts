@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ScriptedAuth } from '#mocks/gpt-live-setup';
+import { ScriptedAuth } from '#mocks/scripted-auth';
 import { defaultVoiceProvider } from './engine-input';
 import { FakeVoiceProvider } from './fake-provider';
 import { GptLiveProvider } from './gpt-live/gpt-live-provider';

@@ -1,4 +1,4 @@
-import type { CodexAuth, CodexReading } from '../src/voice/gpt-live/codex-auth';
+import type { CodexReading } from '../src/voice/gpt-live/codex-auth';
 import type { GptLiveCall } from '../src/voice/gpt-live/gpt-live-call';
 import { createGptLiveProvider } from '../src/voice/gpt-live/gpt-live-provider';
 import type {
@@ -10,23 +10,7 @@ import {
   startFakeEndpoint,
   type FakeGptLiveEndpoint,
 } from './gpt-live-endpoint';
-
-// A Codex that hands out these readings in turn, and counts how often it was asked.
-export class ScriptedAuth implements CodexAuth {
-  public asked = 0;
-
-  public constructor(private readonly readings: CodexReading[]) {}
-
-  public read(): Promise<CodexReading> {
-    const last = this.readings.length - 1;
-    const reading = this.readings.at(Math.min(this.asked, last));
-    this.asked += 1;
-
-    return Promise.resolve(
-      reading ?? { signedIn: false, reason: 'No reading' },
-    );
-  }
-}
+import { ScriptedAuth } from './scripted-auth';
 
 export const signedIn = (token: string): CodexReading => ({
   signedIn: true,
