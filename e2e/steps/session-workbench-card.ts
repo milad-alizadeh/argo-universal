@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
+import { requests } from './agent-requests';
 import { Given, Then, When } from './fixtures';
 
 // The fixture Plugins' cards in the Workbench column, keyed by the Plugin and the card each declares.
@@ -90,3 +91,26 @@ Given('the Notes card has nothing to show', async ({ page }): Promise<void> => {
     .getByRole('button', { name: 'Empty the Notes card', exact: true })
     .click();
 });
+
+When('I press Create PR in the Workbench', async ({ page }): Promise<void> => {
+  await page.getByRole('button', { name: 'Create PR', exact: true }).click();
+});
+
+const createPullRequestPrompt = expect.objectContaining({
+  type: 'text',
+  text: expect.stringContaining(
+    "Open a pull request for this Session's changes and attach it to this Session.",
+  ),
+});
+
+Then(
+  'the Agent receives a Prompt to open and attach the pull request',
+  async ({ app }): Promise<void> => {
+    await expect
+      .poll(
+        () =>
+          requests(app.requestLogPath, 'session/prompt').at(-1)?.params?.prompt,
+      )
+      .toEqual(expect.arrayContaining([createPullRequestPrompt]));
+  },
+);
