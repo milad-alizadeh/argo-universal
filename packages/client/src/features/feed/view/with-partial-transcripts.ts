@@ -15,6 +15,11 @@ const envelope = {
   state: 'open',
 } as const;
 
+const kinds = {
+  person: 'person_transcript',
+  voice: 'voice_transcript',
+} as const;
+
 const partialItem = (
   { speaker, text }: VoicePartial,
   sessionId: string,
@@ -26,8 +31,7 @@ const partialItem = (
     id: partialId(speaker),
     messageId: partialId(speaker),
     sessionId,
-    sessionUpdate:
-      speaker === 'person' ? 'person_transcript' : 'voice_transcript',
+    sessionUpdate: kinds[speaker],
     content: [{ type: 'text', text }],
   },
 });

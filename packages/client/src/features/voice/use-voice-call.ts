@@ -23,8 +23,14 @@ const noPartials: VoicePartial[] = [];
 export function useVoicePartials(sessionId: string): VoicePartial[] {
   const status = useQuery(useTRPC().voice.status.queryOptions()).data;
 
-  return status?.call?.sessionId === sessionId ? status.partials : noPartials;
+  return status ? partialsHere(status, sessionId) : noPartials;
 }
+
+const partialsHere = (
+  status: VoiceStatus,
+  sessionId: string,
+): VoicePartial[] =>
+  status.call?.sessionId === sessionId ? status.partials : noPartials;
 
 // The Voice call's standing: read once, then followed from the Server on every Device.
 function useVoiceStatus(): VoiceStatus | undefined {

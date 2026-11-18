@@ -1,6 +1,7 @@
 import type { TerminalOutputResponse } from '@agentclientprotocol/sdk';
 import type { VoiceCall, VoiceStatus } from '@repo/contracts';
 import { FakeVoiceProvider } from '../src/voice/fake-provider';
+import type { VoiceProviderEvent } from '../src/voice/provider';
 import { startAcpEngine } from './acp-engine';
 import { openAccessSession, sessionIdentityStep } from './session-access';
 
@@ -42,15 +43,25 @@ export const endedOf = async (host: Host): Promise<VoiceStatus['ended']> =>
 
 type VoiceEngine = Awaited<ReturnType<typeof startVoiceEngine>>;
 
-// What a speaker says on the call; words not `final` may still change.
-export const say = (
-  voice: VoiceEngine,
-  speaker: 'person' | 'voice',
-  id: string,
-  text: string,
-  final: boolean,
-): void =>
-  voice.provider.call.emit({ type: `${speaker}.transcript`, id, text, final });
+// What a speaker says; words not `final` may still change.
+export const said = {
+  person: (id: string, text: string, final: boolean): VoiceProviderEvent => ({
+    type: 'person.transcript',
+    id,
+    text,
+    final,
+  }),
+  voice: (id: string, text: string, final: boolean): VoiceProviderEvent => ({
+    type: 'voice.transcript',
+    id,
+    text,
+    final,
+  }),
+};
+
+// The provider reports it on the running call.
+export const say = (voice: VoiceEngine, event: VoiceProviderEvent): void =>
+  voice.provider.call.emit(event);
 
 export const partialsOf = async (
   host: Host,
