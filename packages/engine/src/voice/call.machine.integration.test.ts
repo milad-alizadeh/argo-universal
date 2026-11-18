@@ -4,7 +4,7 @@ import {
   type DelayEvent,
   type Vertex,
 } from '@repo/vitest/model-test';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createActor,
   fromCallback,
@@ -61,6 +61,15 @@ const events: VoiceCallEvent[] = [
   providerEvent({ type: 'status', status: 'connected' }),
   providerEvent({ type: 'status', status: 'error' }),
   providerEvent({ type: 'closed', reason: 'ended' }),
+  providerEvent({ type: 'closed', reason: 'limit' }),
+  providerEvent({ type: 'limit', remaining: 0.1 }),
+  providerEvent({
+    type: 'person.transcript',
+    id: 'p1',
+    text: 'Hello',
+    final: true,
+  }),
+  { type: 'call.turns', running: false },
 ];
 
 // How a call ended is checked on the actor after each step, so a restart after any ending is one edge.
@@ -79,7 +88,14 @@ const fixtureOf = (event: VoiceCallEvent | DelayEvent): VoiceCallEvent =>
 
 let voice: Actor<typeof modelMachine>;
 
-afterEach(() => voice?.stop());
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  voice?.stop();
+  vi.useRealTimers();
+});
 
 function expectVoice(expected: Snapshot): void {
   expect(voice.getSnapshot().value).toEqual(expected.value);
@@ -125,7 +141,7 @@ const model = modelTest(
           voice.send(fixtureOf(event)),
       ]),
     ),
-    delays: {},
+    delays: { idle: input.idleMs },
     always: expectVoice,
     states: {
       idle: expectNoCall,
