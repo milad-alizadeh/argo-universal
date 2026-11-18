@@ -13,7 +13,8 @@ export type VoiceConnectionStatus =
   | 'error';
 
 // Why a provider closed a call.
-export type VoiceClosedReason = 'ended' | 'lost' | 'error';
+// `limit` is a call the provider closed because the person's allowance ran out.
+export type VoiceClosedReason = 'ended' | 'lost' | 'error' | 'limit';
 
 export type VoiceProviderEvent =
   | { type: 'status'; status: VoiceConnectionStatus }

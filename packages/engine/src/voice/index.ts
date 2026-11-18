@@ -4,7 +4,11 @@ export type { VoiceCallActorRef } from './call.machine';
 
 export type { VoiceCallInput } from './call-types';
 
-export { defaultVoiceProvider, sessionBriefing } from './engine-input';
+export {
+  defaultVoiceIdleMs,
+  defaultVoiceProvider,
+  sessionBriefing,
+} from './engine-input';
 
 export { FakeVoiceProvider } from './fake-provider';
 

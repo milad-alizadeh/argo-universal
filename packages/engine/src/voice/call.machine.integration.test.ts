@@ -39,6 +39,7 @@ type Snapshot = SnapshotFrom<typeof modelMachine>;
 const input: VoiceCallInput = {
   provider: new FakeVoiceProvider(),
   briefing: () => '',
+  idleMs: 60_000,
 };
 
 const start: VoiceCallEvent = {

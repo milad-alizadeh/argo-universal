@@ -9,6 +9,7 @@ export type RelayInput = { sessions: SessionLink; sessionId: string };
 const detached: VoiceSessions = {
   prompt: () => Promise.reject(new Error('The Session cannot be reached')),
   watch: () => (): void => {},
+  notice: () => {},
 };
 
 type WorkRequest = { requestId: string; text: string };
@@ -26,8 +27,11 @@ export const agentRelay = fromCallback<VoiceCallEvent, RelayInput>(
   ({ input, sendBack, receive }) => {
     const sessions = input.sessions.current ?? detached;
 
-    const relay = new AgentRelay(sessions, input.sessionId, (say) =>
-      sendBack({ type: 'voice.say', say }),
+    const relay = new AgentRelay(
+      sessions,
+      input.sessionId,
+      (say) => sendBack({ type: 'voice.say', say }),
+      (running) => sendBack({ type: 'call.turns', running }),
     );
 
     receive((event) => {

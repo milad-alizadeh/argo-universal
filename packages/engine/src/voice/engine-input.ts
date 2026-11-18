@@ -4,6 +4,9 @@ import { briefingOf } from './briefing';
 import { FakeVoiceProvider } from './fake-provider';
 import type { VoiceProvider } from './provider';
 
+// How long a Voice call may pass without speech before it ends by itself.
+export const defaultVoiceIdleMs = 5 * 60_000;
+
 // The Voice provider a Server uses unless it is given one: the fake for development when asked for, otherwise none.
 export function defaultVoiceProvider(
   environment: NodeJS.ProcessEnv,

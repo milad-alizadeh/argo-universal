@@ -15,6 +15,12 @@ export type SessionHappening =
 // How a request for work reached the Session: it started a Turn or waits behind running work.
 export type PromptOutcome = 'started' | 'queued';
 
+// A Notice the call writes into its Session's Feed.
+export interface VoiceNotice {
+  title: string;
+  description: string;
+}
+
 export interface VoiceSessions {
   // Sends the Session a Prompt from the Voice call.
   prompt: (sessionId: string, text: string) => Promise<PromptOutcome>;
@@ -23,6 +29,8 @@ export interface VoiceSessions {
     sessionId: string,
     listener: (happening: SessionHappening) => void,
   ) => () => void;
+  // Writes a Notice into the Session's Feed.
+  notice: (sessionId: string, notice: VoiceNotice) => void;
 }
 
 // A holder the Engine fills after the call machine exists, because Sessions are built later.

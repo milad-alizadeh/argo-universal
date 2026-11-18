@@ -151,6 +151,7 @@ const targetRules = {
   'voice.status': global,
   'voice.start': sessionParam,
   'voice.end': callerSessionParam,
+  'voice.hangUp': callerSessionParam,
 } satisfies TargetRules;
 
 const targets: TargetRules = targetRules;

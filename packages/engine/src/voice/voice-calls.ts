@@ -9,7 +9,7 @@ import type {
 import { TRPCError } from '@trpc/server';
 import { waitFor, type SnapshotFrom } from 'xstate';
 import { sessionActorId } from '../sessions';
-import type { EndedCall } from './call-types';
+import type { EndedCall, RunningCall } from './call-types';
 import type { VoiceCallActorRef, voiceCallMachine } from './call.machine';
 import { Changes } from './changes';
 import type { VoiceSessions } from './session-link';
@@ -24,6 +24,8 @@ export interface VoiceCallsPort {
     connection?: AbortSignal,
   ) => Promise<VoiceStartOutput>;
   end: (sessionId?: string) => VoiceEndOutput;
+  // An Agent ends its Session's call; refused when the Session has no call.
+  hangUp: (sessionId?: string) => VoiceEndOutput;
   watch: (signal: AbortSignal) => AsyncGenerator<VoiceStatus>;
   // Gives the call the Sessions it sends Prompts to and listens to.
   attach: (sessions: VoiceSessions) => void;
@@ -40,7 +42,7 @@ export class VoiceCalls implements VoiceCallsPort {
     const { call, ended } = this.actor.getSnapshot().context;
 
     return {
-      call: call && this.callOf(call.callId, call.sessionId),
+      call: call && this.callOf(call),
       ended,
       availability: await this.availability(),
     };
@@ -69,6 +71,20 @@ export class VoiceCalls implements VoiceCallsPort {
     return { ended: running && this.actor.getSnapshot().context.call === null };
   }
 
+  public hangUp(sessionId?: string): VoiceEndOutput {
+    const { call } = this.actor.getSnapshot().context;
+
+    if (!call || (sessionId !== undefined && sessionId !== call.sessionId))
+      throw unavailable('The Session has no Voice call');
+    this.actor.send({
+      type: 'call.end',
+      reason: 'agent',
+      sessionId: call.sessionId,
+    });
+
+    return { ended: this.actor.getSnapshot().context.call === null };
+  }
+
   public attach(sessions: VoiceSessions): void {
     this.actor.getSnapshot().context.sessions.attach(sessions);
   }
@@ -85,15 +101,18 @@ export class VoiceCalls implements VoiceCallsPort {
     }
   }
 
-  private callOf(
-    callId: string,
-    sessionId: string,
-  ): NonNullable<VoiceStatus['call']> {
+  private callOf({
+    callId,
+    sessionId,
+    limit,
+  }: RunningCall): NonNullable<VoiceStatus['call']> {
     const status = this.actor.getSnapshot().matches({ running: 'connected' })
       ? 'connected'
       : 'connecting';
 
-    return { callId, sessionId, status };
+    return limit
+      ? { callId, sessionId, status, limit }
+      : { callId, sessionId, status };
   }
 
   private async availability(): Promise<VoiceAvailability> {
@@ -159,6 +178,9 @@ export const noVoiceCalls: VoiceCallsPort = {
   status: () => Promise.resolve(noStatus),
   start: () => Promise.reject(unavailable('Voice calls are not available')),
   end: () => ({ ended: false }),
+  hangUp: () => {
+    throw unavailable('The Session has no Voice call');
+  },
   attach: () => {},
   watch: async function* () {
     await Promise.resolve();

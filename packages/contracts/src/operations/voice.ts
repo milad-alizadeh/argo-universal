@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   VoiceEndInput,
   VoiceEndOutput,
+  VoiceHangUpInput,
   VoiceStartInput,
   VoiceStartOutput,
   VoiceStatus,
@@ -34,10 +35,20 @@ export const voiceOperations = {
     id: 'voice.end',
     label: 'End Voice call',
     description:
-      "End the Session's Voice call. Use it when the person asks to hang up.",
+      "End the Session's Voice call from the App's End button. An Agent ends the call with voice.hangUp.",
     params: VoiceEndInput,
     result: VoiceEndOutput,
     tier: 'act',
     keywords: ['voice', 'call', 'hang up', 'end', 'stop', 'microphone'],
+  },
+  'voice.hangUp': {
+    id: 'voice.hangUp',
+    label: 'Hang up Voice call',
+    description:
+      'End the Voice call of the calling Session, because the person clearly said they are done talking. Refused when the Session has no Voice call. Do not use it when the person only asks to stop work or pause.',
+    params: VoiceHangUpInput,
+    result: VoiceEndOutput,
+    tier: 'act',
+    keywords: ['voice', 'call', 'hang up', 'goodbye', 'done', 'end'],
   },
 } as const satisfies Record<string, OperationDefinition>;

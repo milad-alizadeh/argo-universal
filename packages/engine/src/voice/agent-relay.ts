@@ -16,11 +16,15 @@ const voiceInstruction = [
   '[COMPLETE] for the result, a question, or a blocker once you are done,',
   '[ANALYSIS] for notes that must stay silent.',
   'Keep spoken messages short and plain; do not read out code or tool output.',
+  'End the call by running the Argo Operation voice.hangUp, but only when the person clearly says they are done with the call, such as goodbye or hang up.',
+  'Do not end it when the person asks you to stop work, pause or wait: that is not the end of the call.',
 ].join('\n');
 
 const spokenMarks = new Set<VoiceMarker | null>(['[COMPLETE]']);
 
 type Speak = (say: VoiceSay) => void;
+
+type TurnsRunning = (running: boolean) => void;
 
 // What the Agent said during the running Turn that the voice may still need at its end.
 type TurnMemory = { resultSent: boolean; last: string | null };
@@ -34,20 +38,29 @@ const freshTurn = (): TurnMemory => ({ resultSent: false, last: null });
 export class AgentRelay {
   private instructed = false;
   private turn = freshTurn();
+  // Prompts the call sent whose Turn has not ended.
+  private sent = 0;
 
   public constructor(
     private readonly sessions: VoiceSessions,
     private readonly sessionId: string,
     private readonly speak: Speak,
+    private readonly turnsRunning: TurnsRunning,
   ) {}
 
   // The person asked for work: the Agent gets it, and the voice an answer at once.
   public async request(requestId: string, text: string): Promise<void> {
+    // Counted before the Prompt settles: a quick Turn may end before the send is answered.
+    this.sentChanged(1);
     const answer = await this.sessions
       .prompt(this.sessionId, this.promptText(text))
       .then(
         (outcome: PromptOutcome) => relayWords[outcome],
-        (error: Error) => relayWords.unsent(error.message),
+        (error: Error) => {
+          this.sentChanged(-1);
+
+          return relayWords.unsent(error.message);
+        },
       );
 
     this.reply(requestId, answer);
@@ -58,6 +71,13 @@ export class AgentRelay {
     else if (happening.type === 'person.typed')
       this.personTyped(happening.text);
     else this.turnEnded(happening);
+  }
+
+  private sentChanged(by: number): void {
+    const before = this.sent > 0;
+    this.sent = Math.max(0, this.sent + by);
+
+    if (before !== this.sent > 0) this.turnsRunning(this.sent > 0);
   }
 
   private promptText(request: string): string {
@@ -102,6 +122,7 @@ export class AgentRelay {
   ): void {
     const { resultSent, last } = this.turn;
     this.turn = freshTurn();
+    this.sentChanged(-1);
 
     if (!resultSent && last) this.tell(last, 'speak');
     this.tell(endingText(ended), endingDelivery(ended, told(resultSent, last)));

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { FeedDeps } from '../feed';
 import { FeedHappenings } from './feed-happenings';
 import type {
@@ -70,5 +71,23 @@ export const voiceSessions = (
     const watch = new FeedWatch(sources, sessionId, listener);
 
     return (): void => watch.stop();
+  },
+  notice: (sessionId, { title, description }) => {
+    sources.findFeed(sessionId)?.send({
+      type: 'feed.change',
+      turnId: null,
+      blobs: [],
+      change: {
+        type: 'upsert',
+        update: {
+          id: randomUUID(),
+          sessionUpdate: 'notice',
+          state: 'settled',
+          severity: 'warning',
+          title,
+          description,
+        },
+      },
+    });
   },
 });

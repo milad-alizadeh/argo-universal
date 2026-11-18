@@ -92,6 +92,8 @@ export interface EngineInput extends Pick<
   caffeinate?: Caffeinate;
   // Where Voice calls run; development's fake when `ARGO_VOICE_PROVIDER=fake`, and none otherwise.
   voiceProvider?: VoiceProvider | null;
+  // How long a Voice call may pass without speech before it ends by itself; five minutes unless a test says otherwise.
+  voiceIdleMs?: number;
   notificationOptions?: NotificationOptions;
   // What an App lists this Server by; the computer's name unless a test says otherwise.
   discoveryName?: string;
