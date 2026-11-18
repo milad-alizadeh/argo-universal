@@ -32,6 +32,7 @@ function ports(
     copy: vi.fn<RowActionPorts['copy']>(
       overrides.copy ?? (() => Promise.resolve(true)),
     ),
+    hold: () => () => {},
   };
 }
 

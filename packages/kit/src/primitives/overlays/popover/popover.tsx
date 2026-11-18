@@ -2,13 +2,8 @@ import { useDismissableLayerSurface } from '@radix-ui/react-dismissable-layer';
 import * as WebPopover from '@radix-ui/react-popover';
 import * as React from 'react';
 import { View } from 'react-native';
-import { OutsideColumn } from '#kit/content-column/content-column';
-import { ListPlaceContext, popoverPlace, useListPlace } from '#kit/list-place';
-import { menuSurfaceClassName, windowEdgeInset } from '#kit/menu-surface';
-import { cn } from '#kit/utils';
-import { TextClassContext } from '#primitives/content/text';
-import { InsideHostContext } from '#primitives/native/host';
-import { useOpenState } from '#primitives/overlays/open-state';
+import { windowEdgeInset } from '#kit/menu-surface';
+import { OneOverlay, useOpenState } from '#primitives/overlays/open-state';
 import { PopoverContext, usePopoverState } from './popover-context';
 import { HoverProvider, PopoverHover } from './popover-hover';
 import { hoverContentProps } from './popover-hover-focus';
@@ -16,6 +11,7 @@ import type {
   PopoverContentProps as ContentProps,
   PopoverProps,
 } from './popover-props';
+import { PopoverSurface } from './popover-surface';
 import {
   keepTriggerInside,
   TriggerElementProvider,
@@ -36,11 +32,13 @@ export function Popover(props: PopoverProps): React.JSX.Element {
   const state = useOpenState(props);
 
   return (
-    <PopoverContext.Provider value={state}>
-      <WebPopover.Root open={state.open} onOpenChange={state.onOpenChange}>
-        <PopoverFrame {...props} />
-      </WebPopover.Root>
-    </PopoverContext.Provider>
+    <OneOverlay {...state} beside={props.beside}>
+      <PopoverContext.Provider value={state}>
+        <WebPopover.Root open={state.open} onOpenChange={state.onOpenChange}>
+          <PopoverFrame {...props} />
+        </WebPopover.Root>
+      </PopoverContext.Provider>
+    </OneOverlay>
   );
 }
 
@@ -68,11 +66,6 @@ function PopoverChildren(props: PopoverProps): React.JSX.Element {
   );
 }
 
-const contentClassName = cn(
-  menuSurfaceClassName,
-  'outline-hidden z-50 w-72 p-4 popover-content cursor-auto web:max-h-(--radix-popover-content-available-height) web:overflow-y-auto',
-);
-
 function contentPlacement({
   align = 'center',
   sideOffset = 4,
@@ -80,8 +73,6 @@ function contentPlacement({
 }: ContentProps): Pick<ContentProps, 'align' | 'sideOffset' | 'alignOffset'> {
   return { align, sideOffset, alignOffset };
 }
-
-const listContentClassName = 'w-80 overflow-hidden p-0';
 
 // A ref handed to the content still reaches Radix's element: the close transition waits on it.
 type BodyProps = ContentProps & { ref?: React.Ref<HTMLDivElement> };
@@ -138,43 +129,6 @@ function webContentProps(
     'aria-label': props.accessibilityLabel,
     onEscapeKeyDown: props.onEscapeKeyDown,
   };
-}
-
-const surfaceClassName = (props: ContentProps): string =>
-  cn(contentClassName, props.list && listContentClassName, props.className);
-
-// Lists inside draw menu rows (the popover place); a phone's popover is a Sheet and keeps its grouped rows.
-function PopoverSurface(
-  props: ContentProps & { open: boolean },
-): React.JSX.Element {
-  return (
-    <View
-      style={props.style}
-      className={surfaceClassName(props)}
-      data-state={props.open ? 'open' : 'closed'}
-    >
-      <TextClassContext.Provider value="text-foreground">
-        <PopoverRows>{props.children}</PopoverRows>
-      </TextClassContext.Provider>
-    </View>
-  );
-}
-
-/*
- * A popover opened from a Screen's column is a surface of its own, so its lists take none of the column's padding, nor
- * claim it from the Screen. It sits in a portal, outside any FieldGroup's tree it was opened from, so its Hosts draw
- * their own.
- */
-function PopoverRows(props: { children: React.ReactNode }): React.JSX.Element {
-  const place = popoverPlace(useListPlace());
-
-  return (
-    <InsideHostContext.Provider value={false}>
-      <OutsideColumn>
-        <ListPlaceContext value={place}>{props.children}</ListPlaceContext>
-      </OutsideColumn>
-    </InsideHostContext.Provider>
-  );
 }
 
 // The Portal's direct child stays the content: its Presence needs that child's ref to wait out the close animation.

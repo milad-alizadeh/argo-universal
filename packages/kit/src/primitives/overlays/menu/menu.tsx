@@ -1,6 +1,8 @@
 import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import type * as React from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
+import { OneOverlay } from '#primitives/overlays/open-state';
 import { MenuActions } from './menu-actions';
 import {
   type KeyboardFocus,
@@ -24,17 +26,29 @@ type MenuPartProps<Value extends string> = MenuProps<Value> & {
 export function Menu<Value extends string>(
   props: MenuProps<Value>,
 ): React.JSX.Element {
+  const [open, onOpenChange] = useState(false);
+
+  return (
+    <OneOverlay open={open} onOpenChange={onOpenChange}>
+      <RadixMenu.Root open={open} onOpenChange={onOpenChange}>
+        <MenuParts {...props} />
+      </RadixMenu.Root>
+    </OneOverlay>
+  );
+}
+
+function MenuParts<Value extends string>(
+  props: MenuProps<Value>,
+): React.JSX.Element {
   const focus = useKeyboardFocus();
 
   return (
-    <RadixMenu.Root>
-      <View>
-        <MenuTrigger {...props} focus={focus} />
-        <RadixMenu.Portal>
-          <MenuBody {...props} focus={focus} />
-        </RadixMenu.Portal>
-      </View>
-    </RadixMenu.Root>
+    <View>
+      <MenuTrigger {...props} focus={focus} />
+      <RadixMenu.Portal>
+        <MenuBody {...props} focus={focus} />
+      </RadixMenu.Portal>
+    </View>
   );
 }
 

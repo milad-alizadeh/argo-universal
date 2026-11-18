@@ -34,7 +34,7 @@ type TooltipState = {
 
 type TooltipPopoverProps = Pick<
   ComponentProps<typeof Popover>,
-  'open' | 'onOpenChange' | 'openOnHover' | 'frameless'
+  'open' | 'onOpenChange' | 'openOnHover' | 'frameless' | 'beside'
 >;
 
 export function Tooltip(props: TooltipProps): ReactElement {
@@ -63,6 +63,8 @@ function useTooltipState(props: TooltipProps): TooltipState {
       onOpenChange: setOpen,
       openOnHover: true,
       frameless: props.frameless,
+      // A tooltip names what the pointer is on; it closes no popover or menu the reader has open.
+      beside: true,
     },
     onDismiss: (): void => setDismissed(true),
     onPointerLeave: (): void => setDismissed(false),
