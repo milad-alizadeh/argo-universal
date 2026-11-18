@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import { View } from 'react-native';
 import { cn } from '#kit/utils';
 import {
-  floatingGlassFallback,
+  fallbackSurfaceClass,
   glassCornerClass,
   LiquidGlassMaterial,
 } from './liquid-glass-material';
@@ -23,8 +23,7 @@ function fallbackClass(props: LiquidGlassProps, inherited: boolean): string {
   return cn(
     props.className,
     glassCornerClass[props.corners],
-    !inheritsMaterial(props, inherited) &&
-      (props.fallbackClassName ?? floatingGlassFallback),
+    !inheritsMaterial(props, inherited) && fallbackSurfaceClass(props),
   );
 }
 

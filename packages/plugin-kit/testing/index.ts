@@ -2,6 +2,8 @@ export { startPluginTest } from './host';
 
 export type { PluginTest, PluginTestOptions } from './host';
 
+export type { TestSession } from './test-types';
+
 // A secret store to share between two starts of a Plugin, so a restart keeps its Accounts' tokens.
 export { MemorySecretStore } from '@repo/engine/mocks/secret-store';
 

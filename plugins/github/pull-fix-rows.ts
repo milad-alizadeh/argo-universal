@@ -57,7 +57,7 @@ export type FixStore = {
 /*
  * One row per Session per pull request the person has turned Auto-fix on for. `stop_head` is the head commit it gave up
  * on, so the reason is told only while that commit is still the head. The events table holds each event per head commit
- * it was seen on (`check:<name>`, `conflict` or `comment:<id>`, see `pull-fix-prompts.ts`): `sent` is 1 for an event a
+ * it was seen on (`check:<name>:<run id>`, `conflict` or `comment:<id>`, see `pull-fix-prompts.ts`): `sent` is 1 for an event a
  * Prompt listed; legacy entries with 0 are cleared when Auto-fix is enabled. The Prompts table holds each Prompt Auto-fix
  * sent, one listing every new event of a head: they are the tries on that head, and `queued_id` names one that may still
  * wait in the Session's queue, so a push can withdraw it. `event_keys` is the events it listed, one per line.
@@ -76,9 +76,11 @@ export const where =
 
 /*
  * An event's key in the events table. A failed Check and a conflict belong to the head commit they were seen on; a
- * review comment is keyed by its id alone and is seen on every head, so a push never prompts it again.
+ * review comment is keyed by its id alone and is seen on every head, so a push never prompts it again. A failed Check
+ * is keyed by its run, so a re-run that fails again is a new event.
  */
-export const checkKey = (check: string): string => `check:${check}`;
+export const checkKey = (check: string, run: number): string =>
+  `check:${check}:${run}`;
 
 export const commentPrefix = 'comment:';
 

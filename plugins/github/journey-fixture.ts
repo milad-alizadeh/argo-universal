@@ -7,6 +7,7 @@ import {
   startPluginTest,
   type PluginTest,
   type PluginTestOptions,
+  type TestSession,
 } from '@argo/plugin-kit/testing';
 import { onTestFinished } from 'vitest';
 import { githubFixture, pullOf, type GitHubFixture } from './github-fixture';
@@ -98,7 +99,7 @@ const sessionsOf = (): Sessions => ({
   [gitlabSessionId]: { ...gitlabSession },
 });
 
-type SessionState = { projectId: string; branch: string | null; title: string };
+type SessionState = TestSession;
 
 type Sessions = Record<
   | typeof sessionId

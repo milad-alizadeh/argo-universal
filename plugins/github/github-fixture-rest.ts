@@ -75,6 +75,18 @@ const runsOf = (
   head: string | undefined,
 ): FixtureCheck[] => checks.get(`${repository}@${head}`) ?? [];
 
+// A Check's run id when the test names none: the same for a name every time, so a list in another order is no re-run.
+const runIds = new Map<string, number>();
+
+function runIdOf(name: string): number {
+  if (!runIds.has(name)) runIds.set(name, runIds.size + 1);
+
+  return runIds.get(name) ?? 0;
+}
+
+const withIds = (runs: readonly FixtureCheck[]): FixtureCheck[] =>
+  runs.map((check) => ({ id: runIdOf(check.name), ...check }));
+
 function checksAnswer(held: Held, path: string): FixtureAnswer {
   const [, repository, head] = checksPath.exec(path) ?? [];
   const status = held.checksFailWith.get(`${repository}@${head}`);
@@ -82,7 +94,7 @@ function checksAnswer(held: Held, path: string): FixtureAnswer {
 
   return status
     ? serverError(status)
-    : { json: { total_count: runs.length, check_runs: runs } };
+    : { json: { total_count: runs.length, check_runs: withIds(runs) } };
 }
 
 const commentsPath =
