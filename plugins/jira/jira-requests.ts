@@ -1,6 +1,11 @@
 import { issueFields } from './issue-requests';
 import type { JiraRequest } from './jira-client';
-import { filterClauses, quoted, type IssueFilters } from './jira-filters';
+import {
+  filterClauses,
+  orderClauses,
+  quoted,
+  type IssueFilters,
+} from './jira-filters';
 
 const pageSize = 50;
 
@@ -16,11 +21,11 @@ export type IssuesPage = Readonly<{
   limit?: number;
 }>;
 
-// The project's issues the filters leave, the most recently updated first.
+// The project's issues the filters leave, in the order they ask for: the most recently updated first unless they say.
 const jqlOf = (projectKey: string, filters: IssueFilters): string =>
   [`project = ${quoted(projectKey)}`, ...filterClauses(filters)]
     .join(' AND ')
-    .concat(' ORDER BY updated DESC');
+    .concat(` ORDER BY ${orderClauses[filters.sort]}`);
 
 // Jira's enhanced search body; a cursor goes in only when there is one.
 function searchBody(

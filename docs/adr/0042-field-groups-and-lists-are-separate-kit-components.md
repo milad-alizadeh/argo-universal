@@ -29,7 +29,7 @@ Expo UI's universal `List` doesn't replace LegendList for data: on web it is a p
 - **Every choice control has one job and one component** (owner, 2026-10-23):
   - A choice in a form or settings row is `FieldGroup.Picker`. A page that submits is a FieldGroup, so the standalone `Picker` goes, and `Combobox` and `Drill` fold into `FieldGroup.Picker`: the Combobox's search page becomes the picker's searchable page.
   - A quick choice from a toolbar pill is `Menu` with choices. It keeps sections (`groups`, each with an optional label). A `Menu` holds verbs and short choices and has no search: anything searchable is the picker (owner, 2026-10-23).
-  - Switching between two to four views is `SegmentedControl`. Acting and choosing at once is `SplitButton`. Both are unchanged.
+  - Switching between two to four views is `SegmentedControl`. Acting and choosing at once is `SplitButton`. Both are unchanged. Owner amendment, 2026-11-18: a page's view switch lives in its options sheet as a `SegmentedControl` ([ADR-0062](0062-a-screen-header-offers-a-title-menu-and-page-options.md)); a header never shows a full-width segmented bar.
 - **`FieldGroup.Picker` takes `presentation`, `searchable`, `multiple`, `trigger` and options** (owner, 2026-10-23). Options take an optional `subtitle` and a leading `icon`. `presentation` is `'menu'`, `'page'` or `'inline'`, and each call site states it: there is no default that changes with the parent.
   - `menu` is for a short known list and opens in place:
     - iOS: the stock SwiftUI menu `Picker`;

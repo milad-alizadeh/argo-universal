@@ -105,8 +105,8 @@ const issueRow = (rows: Rows, issue: JiraIssue): JSX.Element => (
   />
 );
 
-// What the list says under its rows, and in their place when there are none.
-export type ListFrame = Pick<PluginProps['List'], 'footer' | 'empty'>;
+// What the list says in place of its rows when there are none.
+export type ListFrame = Pick<PluginProps['List'], 'empty'>;
 
 type Paging = { list: PagedList<ListedItem>; to: RowTo };
 

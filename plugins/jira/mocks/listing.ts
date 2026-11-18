@@ -34,22 +34,75 @@ export function listEmpty(page: OpenPage): WireNode {
 export const hasMore = (page: OpenPage): boolean =>
   at(page.find(issueList).props.pagination, 'hasMore') === true;
 
-// One choice in the header's Filter menu, which the rows' own texts never match.
-export const filterChoice =
-  (label: string) =>
-  (node: WireNode): boolean =>
-    node.type === 'Action' && node.props.label === label;
-
-const filterMenu = filterChoice('Filter');
-
-// How many filters the Filter menu's badge counts, or 0 with no badge.
-export const filterCount = (page: OpenPage): number =>
-  Number(at(page.find(filterMenu).props.badge, 'count') ?? 0);
-
-export const isChosen = (page: OpenPage, label: string): boolean =>
-  page.find(filterChoice(label)).props.selected === true;
-
 const screen = (node: WireNode): boolean => node.type === 'Screen';
+
+// Every node of the page, its slots' among them, such as the header's options.
+const allNodes = (node: WireNode): WireNode[] => [
+  node,
+  ...node.children.flatMap(allNodes),
+  ...Object.values(node.slots).flat().flatMap(allNodes),
+];
+
+const isPicker = (node: WireNode): boolean => node.type === 'FieldGroup.Picker';
+
+type Option = { value: string; label: string };
+
+const optionOf = (each: Json): Option[] => {
+  const value = text(at(each, 'value'));
+
+  return value === null
+    ? []
+    : [{ value, label: text(at(each, 'label')) ?? '' }];
+};
+
+const optionsOf = (picker: WireNode): Option[] => {
+  const options = picker.props.options;
+
+  return Array.isArray(options) ? options.flatMap(optionOf) : [];
+};
+
+// The labels a row of the header's options offers, by its title, such as Status or Assignee.
+export function offered(page: OpenPage, title: string): string[] {
+  const picker = allNodes(page.tree).find(
+    (node) => isPicker(node) && node.props.title === title,
+  );
+
+  return picker ? optionsOf(picker).map(({ label }) => label) : [];
+}
+
+type Found = { picker: WireNode; option: Option };
+
+// The row of the header's options that offers a choice by its label, which the rows' own texts never match.
+function choiceIn(page: OpenPage, label: string): Found {
+  for (const picker of allNodes(page.tree).filter(isPicker)) {
+    const option = optionsOf(picker).find((each) => each.label === label);
+
+    if (option) return { picker, option };
+  }
+
+  throw new Error(`The options offer no ${label}`);
+}
+
+// Chooses a filter or an order in the header's options, as a person picks it from its row.
+export async function filterBy(page: OpenPage, label: string): Promise<void> {
+  const { picker, option } = choiceIn(page, label);
+
+  await page.act(
+    (node) => isPicker(node) && node.key === picker.key,
+    'onValueChange',
+    option.value,
+  );
+}
+
+// How many filters the Options button's badge counts, or 0 with no badge.
+export const filterCount = (page: OpenPage): number =>
+  Number(at(page.find(screen).props.optionsBadge, 'count') ?? 0);
+
+export function isChosen(page: OpenPage, label: string): boolean {
+  const { picker, option } = choiceIn(page, label);
+
+  return picker.props.value === option.value;
+}
 
 export const searchShown = (page: OpenPage): string | null =>
   text(page.find(screen).props.value);

@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { ViewStyle } from 'react-native';
 import { OutsideColumn } from '#kit/content-column/content-column';
+import { useListPlace } from '#kit/list-place';
 import type { FieldGroupKitProps } from '../../kit-props';
 import { ColumnFieldGroup } from './field-group-form';
 
@@ -19,12 +20,25 @@ const fitted: ViewStyle = {
   margin: -expoPadding,
 };
 
+/*
+ * In a sheet's inset the cards keep the sheet's edge at the sides and the gap of what sits above them, but keep Expo's
+ * space under the last card, which ends the sheet or popover.
+ */
+const insetFitted: ViewStyle = {
+  ...fitted,
+  margin: 0,
+  marginHorizontal: -expoPadding,
+  marginTop: -expoPadding,
+};
+
 export function AsideFieldGroup(
   props: FieldGroupKitProps<'FieldGroup'> & { children?: ReactNode },
 ): ReactElement {
+  const style = useListPlace() === 'inset' ? insetFitted : fitted;
+
   return (
     <OutsideColumn>
-      <ColumnFieldGroup {...props} style={fitted} />
+      <ColumnFieldGroup {...props} style={style} />
     </OutsideColumn>
   );
 }
