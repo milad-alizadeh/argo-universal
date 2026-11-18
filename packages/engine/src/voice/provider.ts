@@ -11,8 +11,8 @@ import type {
 // The connection's standing as the provider sees it: the four values of the call's connection.
 type VoiceConnectionStatus = ContractConnectionStatus;
 
-// Why a provider closed a call.
-export type VoiceClosedReason = 'ended' | 'lost' | 'error';
+// Why a provider closed a call; `limit` is a call closed because the person's allowance ran out.
+export type VoiceClosedReason = 'ended' | 'lost' | 'error' | 'limit';
 
 export type VoiceProviderEvent =
   | { type: 'status'; status: VoiceConnectionStatus }
@@ -62,6 +62,10 @@ export interface VoiceOption {
 }
 
 export interface VoiceProvider {
+  // What Settings lists the provider by: a stable id, its name, and whether it is still experimental.
+  readonly id: string;
+  readonly label: string;
+  readonly experimental: boolean;
   // Whether a call can start now, and if not, why.
   availability: () => Promise<VoiceAvailability>;
   voices: () => Promise<VoiceOption[]>;

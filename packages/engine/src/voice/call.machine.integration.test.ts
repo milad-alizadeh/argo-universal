@@ -4,18 +4,15 @@ import {
   type DelayEvent,
   type Vertex,
 } from '@repo/vitest/model-test';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createActor,
   fromCallback,
   type Actor,
   type SnapshotFrom,
 } from 'xstate';
-import {
-  providerEvent,
-  type VoiceCallEvent,
-  type VoiceCallInput,
-} from './call-types';
+import { events, start } from '#mocks/voice-call-events';
+import { type VoiceCallEvent, type VoiceCallInput } from './call-types';
 import { type ConnectionWatch, type SessionWatch } from './call-watchers';
 import { voiceCallMachine } from './call.machine';
 import { FakeVoiceProvider } from './fake-provider';
@@ -39,30 +36,8 @@ type Snapshot = SnapshotFrom<typeof modelMachine>;
 const input: VoiceCallInput = {
   provider: new FakeVoiceProvider(),
   briefing: () => '',
+  idleMs: 60_000,
 };
-
-const start: VoiceCallEvent = {
-  type: 'call.start',
-  callId: 'call-1',
-  sessionId: 'session-1',
-  offer: 'offer',
-};
-
-const events: VoiceCallEvent[] = [
-  start,
-  { type: 'call.answered', answer: 'answer' },
-  { type: 'call.end', reason: 'person' },
-  { type: 'call.failed', message: 'no' },
-  { type: 'call.sessionGone', reason: 'session-closed' },
-  { type: 'call.sessionGone', reason: 'session-archived' },
-  { type: 'call.appDisconnected' },
-  { type: 'voice.say', say: { kind: 'tell', text: 'Done', delivery: 'speak' } },
-  providerEvent({ type: 'status', status: 'connected' }),
-  providerEvent({ type: 'status', status: 'error' }),
-  providerEvent({ type: 'closed', reason: 'ended' }),
-  providerEvent({ type: 'speaking', speaking: true }),
-  { type: 'session.turn', running: true },
-];
 
 // How a call ended is checked on the actor after each step, so a restart after any ending is one edge.
 const vertex = (snapshot: Snapshot): Vertex => ({ state: snapshot.value });
@@ -80,7 +55,14 @@ const fixtureOf = (event: VoiceCallEvent | DelayEvent): VoiceCallEvent =>
 
 let voice: Actor<typeof modelMachine>;
 
-afterEach(() => voice?.stop());
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
+afterEach(() => {
+  voice?.stop();
+  vi.useRealTimers();
+});
 
 function expectVoice(expected: Snapshot): void {
   expect(voice.getSnapshot().value).toEqual(expected.value);
@@ -126,7 +108,7 @@ const model = modelTest(
           voice.send(fixtureOf(event)),
       ]),
     ),
-    delays: {},
+    delays: { idle: input.idleMs },
     always: expectVoice,
     states: {
       idle: expectNoCall,

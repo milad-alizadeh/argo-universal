@@ -21,6 +21,8 @@ type VoiceWorkOptions = {
   provider?: FakeVoiceProvider;
   // The Agent supports steering and takes what it is given into the running Turn.
   steering?: boolean;
+  // How long the call may pass without speech before it ends by itself, in milliseconds.
+  idleMs?: number;
 };
 
 // What a test holds of the Session it drives.
@@ -165,9 +167,10 @@ function playOf(
 
   const base = scenarioOf(replies, { prompts, provider });
 
-  const scenario = options.steering
-    ? { ...base, ...steeringScenario(steered) }
-    : base;
+  const scenario: Scenario = {
+    ...(options.steering ? { ...base, ...steeringScenario(steered) } : base),
+    voiceIdleMs: options.idleMs,
+  };
 
   return { provider, prompts, steered: steered.promise, scenario };
 }

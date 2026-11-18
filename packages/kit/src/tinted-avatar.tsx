@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { StatusDot } from '#primitives/status/status-dot';
 import type { IconName } from './symbols/icon-names';
+import { useIconBox } from './symbols/icon-size';
 import { cn } from './utils';
 
 const palettes = {
@@ -15,33 +16,29 @@ const palettes = {
   pink: { fill: 'bg-tone-pink-100', ink: 'text-tone-pink-700' },
 };
 
-// A leading avatar stands beside a row of its own; an inline one sits on the line of text beside it.
-const sizes = {
-  leading: { box: 'size-9 wide-type:size-7', glyph: 'sm' },
-  inline: { box: 'size-6 wide-type:size-5', glyph: 'sm' },
-} as const;
+const glyphSize = 'sm';
 
 interface TintedAvatarProps {
   icon: IconName;
   accessibilityLabel?: string;
   tone: keyof typeof palettes;
-  size?: keyof typeof sizes;
+  size?: 'leading' | 'inline';
   dimmed?: boolean;
   status?: { tone: 'success' | 'warning'; accessibilityLabel: string };
 }
 
-// Paper SubagentRow: role-tinted avatar, with an optional ringless status dot.
+// Inline avatars fit the same icon box as the Feed's adjacent Tool calls.
 export function TintedAvatar(props: TintedAvatarProps): ReactElement {
+  const { icon, tone } = props;
+  const inlineBox = useIconBox(glyphSize);
+
   return (
     <View
       className={avatarClass(props)}
       accessibilityLabel={props.accessibilityLabel}
+      style={props.size === 'inline' ? inlineBox : undefined}
     >
-      <Icon
-        name={props.icon}
-        size={sizes[props.size ?? 'leading'].glyph}
-        className={palettes[props.tone].ink}
-      />
+      <Icon name={icon} size={glyphSize} className={palettes[tone].ink} />
       <AvatarStatus status={props.status} />
     </View>
   );
@@ -50,7 +47,7 @@ export function TintedAvatar(props: TintedAvatarProps): ReactElement {
 const avatarClass = ({ tone, size, dimmed }: TintedAvatarProps): string =>
   cn(
     'relative shrink-0 self-center items-center justify-center rounded-full',
-    sizes[size ?? 'leading'].box,
+    size !== 'inline' && 'size-9 wide-type:size-7',
     palettes[tone].fill,
     dimmed && 'opacity-50',
   );

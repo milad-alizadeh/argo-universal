@@ -1,4 +1,6 @@
+import type { Database } from '@repo/db';
 import type { AnyActorRef } from 'xstate';
+import { VoiceSettingsStore } from '../voice';
 import type { HttpServerOptions } from './http-server';
 import { requireRegistry } from './registry-input';
 import {
@@ -40,15 +42,22 @@ type ServerSource = {
 
 type ServerInput = (source: ServerSource) => HttpServerOptions;
 
+const voiceSettings = (
+  system: AnyActorRef['system'],
+  database: Database,
+): VoiceSettingsStore =>
+  new VoiceSettingsStore(database, requireDatabaseWriter(system));
+
 // The actors the Server reaches the Engine through.
 const engineActors = (
   system: AnyActorRef['system'],
+  database: Database,
 ): Pick<
   HttpServerOptions,
   'sessions' | 'voice' | 'databaseWriter' | 'registry'
 > => ({
   sessions: requireOpenSessions(system),
-  voice: requireVoiceCalls(system),
+  voice: requireVoiceCalls(system, voiceSettings(system, database)),
   databaseWriter: requireDatabaseWriter(system),
   registry: requireRegistry(system),
 });
@@ -56,7 +65,7 @@ const engineActors = (
 export const serverInput: ServerInput = ({ context, self }) => ({
   createId: context.createId,
   sessionTokens: context.sessionTokens,
-  ...engineActors(self.system),
+  ...engineActors(self.system, openDatabaseOf(context)),
   commandAdmission: context.commandAdmission,
   acp: context.acp,
   userHome: context.userHome,

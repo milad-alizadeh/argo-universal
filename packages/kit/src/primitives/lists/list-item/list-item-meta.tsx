@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { useSpacing } from '#kit/use-spacing';
+import { AvatarMetaSize } from '#primitives/content/avatar';
 import { FittedRow } from '../../../fitted-row/fitted-row';
 import { cn } from '../../../utils';
 import {
@@ -30,7 +31,9 @@ function MetaItems(props: MetaProps): ReactNode {
     <>
       <InertLane className="min-w-0 shrink flex-row items-center">
         {props.meta === undefined ? null : (
-          <FittedRow gap={gap}>{props.meta}</FittedRow>
+          <AvatarMetaSize.Provider value>
+            <FittedRow gap={gap}>{props.meta}</FittedRow>
+          </AvatarMetaSize.Provider>
         )}
       </InertLane>
       <AccessoryLane>{props.metaAccessories}</AccessoryLane>

@@ -12,9 +12,11 @@ import type {
 import type { PageState as SignInPageState } from '@repo/contracts/plugins/page-address';
 import type {
   AccountFetchPattern,
+  CombinedSignInFlows,
   Gated,
   GatedPage as ContractsGatedPage,
   SignInOptions,
+  SignInFlows,
 } from '@repo/contracts/plugins/sign-in-api';
 import type { Argo, LoaderPage } from './plugin-api';
 
@@ -22,6 +24,7 @@ export type {
   Gated,
   SignInData,
   SignInOptions,
+  SignInFlows,
 } from '@repo/contracts/plugins/sign-in-api';
 
 // A Loader page for `signInGate` to wrap, bound to this Plugin's declared Operations.
@@ -42,7 +45,7 @@ export declare function signInGate<
   Data,
   Item = never,
 >(
-  flow: SignInFlow,
+  flow: SignInFlows,
   options: SignInOptions,
   page: GatedPage<State, Data, Item>,
 ): LoaderPage<State, Gated<Data>, Item>;
@@ -50,6 +53,12 @@ export declare function signInGate<
 export declare function provideSignIn(
   argo: Pick<Argo, 'operations' | 'pages'>,
   flow: SignInFlow,
+  options: SignInOptions & { path?: string },
+): Promise<void>;
+
+export declare function provideSignIn(
+  argo: Pick<Argo, 'operations' | 'pages' | 'accounts' | 'changed'>,
+  flow: CombinedSignInFlows,
   options: SignInOptions & { path?: string },
 ): Promise<void>;
 

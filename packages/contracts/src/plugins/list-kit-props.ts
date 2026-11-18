@@ -13,6 +13,12 @@ export const contentListProps = z.object({
     .object({
       hasMore: z.boolean().describe('Whether another page is available.'),
       onLoadMore: handler('onLoadMore'),
+      failed: z
+        .string()
+        .optional()
+        .describe(
+          'Why load more failed. Offers Try again in place of automatic loading.',
+        ),
     })
     .optional()
     .describe('Loads automatically near the end, or the top with anchor=end.'),

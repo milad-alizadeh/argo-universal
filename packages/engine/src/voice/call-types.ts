@@ -1,4 +1,9 @@
-import type { VoiceCallEnd, VoiceConnectionStatus } from '@repo/contracts';
+import type {
+  VoiceCallEnd,
+  VoiceConnectionStatus,
+  VoiceLimit,
+  VoicePartial,
+} from '@repo/contracts';
 import type {
   VoiceDelivery,
   VoiceProvider,
@@ -22,6 +27,8 @@ export type VoiceCallEvent =
       callId: string;
       sessionId: string;
       offer: string;
+      // The voice the call speaks with; the provider's own when left out.
+      voice?: string;
       // The App Connection that started the call; the call ends when it closes.
       connection?: AbortSignal;
     }
@@ -32,6 +39,8 @@ export type VoiceCallEvent =
   // The Session's Turn started or stopped running.
   | { type: 'session.turn'; running: boolean }
   | { type: 'call.appDisconnected' }
+  // Whether a Turn the call started is running.
+  | { type: 'call.turns'; running: boolean }
   | { type: 'provider.event'; event: VoiceProviderEvent }
   | { type: 'voice.say'; say: VoiceSay };
 
@@ -52,12 +61,15 @@ export interface VoiceCallInput {
   provider: VoiceProvider | null;
   // What the voice is told about a Session before it speaks.
   briefing: (sessionId: string) => string;
+  // How long a call may pass without speech before it ends by itself, in milliseconds.
+  idleMs: number;
 }
 
 export interface RunningCall {
   callId: string;
   sessionId: string;
   offer: string;
+  voice?: string;
   connection?: AbortSignal;
   answer: string | null;
   // The provider's connection as last reported.
@@ -65,8 +77,11 @@ export interface RunningCall {
   // When the call first connected.
   startedAt: string | null;
   speaking: boolean;
-  turnRunning: boolean;
+  // The Agent is working on the Session, whoever started its Turn.
+  agentWorking: boolean;
   microphoneBlocked: boolean;
+  // What the provider last reported of its allowance.
+  limit?: VoiceLimit;
 }
 
 export interface EndedCall {
@@ -82,6 +97,10 @@ export interface VoiceCallContext extends VoiceCallInput {
   ended: EndedCall | null;
   // Why the last call failed, for the Notice that says so.
   failure: string | null;
+  // Whether a Turn the call started is running; an idle call never ends while one is.
+  turnRunning: boolean;
+  // Words being said now that may still change; live state, never stored.
+  partials: VoicePartial[];
 }
 
 // The call `running` was entered for; `running` is only entered by `call.start`, which sets it.

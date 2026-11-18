@@ -145,4 +145,6 @@ export {
 
 export { AgentAccessDetailScreen } from './screens/settings/agent-access/agent-access-detail-screen';
 
+export { VoiceDetailScreen } from './screens/settings/voice/voice-detail-screen';
+
 export { PluginSignInDetailScreen } from './screens/settings/plugins/sign-in/$id/plugin-sign-in-detail-screen';

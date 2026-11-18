@@ -2,6 +2,8 @@ import { z } from 'zod';
 import {
   VoiceEndInput,
   VoiceEndOutput,
+  VoiceSettings,
+  VoiceSettingsChange,
   VoiceStartInput,
   VoiceStartOutput,
   VoiceStatus,
@@ -37,10 +39,43 @@ export const voiceOperations = {
     label: 'End Voice call',
     icon: 'voice-off',
     description:
-      "End the Session's Voice call. Use it when the person asks to hang up.",
+      "End the Session's Voice call from the App's End button. An Agent ends the call with voice.hangUp.",
     params: VoiceEndInput,
     result: VoiceEndOutput,
     tier: 'act',
     keywords: ['voice', 'call', 'hang up', 'end', 'stop', 'microphone'],
+  },
+  'voice.getSettings': {
+    id: 'voice.getSettings',
+    icon: 'settings',
+    label: 'Read Voice settings',
+    description:
+      'Read whether Voice calls are on, the Voice provider and voice chosen, and the providers and voices to choose from.',
+    params: z.strictObject({}).default({}),
+    result: VoiceSettings,
+    tier: 'read',
+    keywords: ['voice', 'settings', 'provider', 'speak'],
+  },
+  'voice.setSettings': {
+    id: 'voice.setSettings',
+    icon: 'settings',
+    label: 'Change Voice settings',
+    description:
+      'Turn Voice calls on or off, or choose the Voice provider or the voice the next call uses.',
+    params: VoiceSettingsChange,
+    result: VoiceSettings,
+    tier: 'confirm',
+    keywords: ['voice', 'settings', 'provider', 'enable', 'disable'],
+  },
+  'voice.hangUp': {
+    id: 'voice.hangUp',
+    icon: 'voice-off',
+    label: 'Hang up Voice call',
+    description:
+      'End the Voice call of the calling Session, because the person clearly said they are done talking. Refused when the Session has no Voice call. Do not use it when the person only asks to stop work or pause.',
+    params: VoiceEndInput,
+    result: VoiceEndOutput,
+    tier: 'act',
+    keywords: ['voice', 'call', 'hang up', 'goodbye', 'done', 'end'],
   },
 } as const satisfies Record<string, OperationDefinition>;

@@ -18,6 +18,7 @@ export type OnPageCall = (
 export interface RenderContext {
   key: string;
   openPage: OpenPluginPage;
+  pluginId?: string;
   controls: PluginControls;
   pageCall?: OnPageCall;
   drawn: DrawnNodes;

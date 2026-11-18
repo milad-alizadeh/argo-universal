@@ -125,7 +125,8 @@ function renderFeedItem(
   item: Exclude<FeedViewItem, { type: 'turn_end' }>,
   drawing: Drawing,
 ): React.JSX.Element | null {
-  if (item.type === 'row') return renderRow(item.row, drawing);
+  if (item.type === 'row')
+    return renderRow(item.row, drawing, 'partial' in item && item.partial);
 
   return renderNonRow(item, drawing);
 }

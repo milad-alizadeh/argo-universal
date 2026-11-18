@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import type {
   VoiceAvailability,
+  VoiceSettings,
+  VoiceSettingsChange,
   VoiceEndOutput,
   VoiceOrbState,
   VoiceStartInput,
@@ -8,15 +10,19 @@ import type {
   VoiceStatus,
   VoiceTrouble,
 } from '@repo/contracts';
-import { TRPCError } from '@trpc/server';
-import { waitFor, type SnapshotFrom } from 'xstate';
-import { sessionActorId } from '../sessions';
-import type { EndedCall, RunningCall } from './call-types';
-import type { VoiceCallActorRef, voiceCallMachine } from './call.machine';
+import { waitFor } from 'xstate';
+import type { RunningCall, VoiceCallEvent } from './call-types';
+import type { VoiceCallActorRef } from './call.machine';
 import { Changes } from './changes';
+import type { VoiceProvider } from './provider';
 import type { VoiceSessions } from './session-link';
+import { unavailable } from './unavailable';
+import { answerOf, startSettled } from './voice-call-answer';
+import { requireRoom } from './voice-call-room';
+import { VoiceChoices } from './voice-choices';
+import type { VoiceSettingsStore } from './voice-settings';
 
-type CallSnapshot = SnapshotFrom<typeof voiceCallMachine>;
+type CallStart = Extract<VoiceCallEvent, { type: 'call.start' }>;
 
 // What the App and Operations ask of the Voice call: start it, end it, read it, watch it.
 export interface VoiceCallsPort {
@@ -26,42 +32,62 @@ export interface VoiceCallsPort {
     connection?: AbortSignal,
   ) => Promise<VoiceStartOutput>;
   end: (sessionId?: string) => VoiceEndOutput;
+  // An Agent ends its Session's call; refused when the Session has no call.
+  hangUp: (sessionId?: string) => VoiceEndOutput;
   watch: (signal: AbortSignal) => AsyncGenerator<VoiceStatus>;
   // Gives the call the Sessions it sends Prompts to and listens to.
   attach: (sessions: VoiceSessions) => void;
+  // Settings › Voice: what the person chose and can choose from, and changing it.
+  settings: () => Promise<VoiceSettings>;
+  changeSettings: (change: VoiceSettingsChange) => Promise<VoiceSettings>;
 }
 
-const unavailable = (message: string): TRPCError =>
-  new TRPCError({ code: 'PRECONDITION_FAILED', message });
+const namesSession = (
+  sessionId: string | undefined,
+  call: RunningCall,
+): boolean => sessionId === undefined || sessionId === call.sessionId;
 
 // The Voice call machine behind its Operations: it checks what can be refused before the machine is asked.
 export class VoiceCalls implements VoiceCallsPort {
-  public constructor(private readonly actor: VoiceCallActorRef) {}
+  private readonly choices: VoiceChoices;
+
+  public constructor(
+    private readonly actor: VoiceCallActorRef,
+    store: VoiceSettingsStore,
+  ) {
+    this.choices = new VoiceChoices(store, () => this.provider());
+  }
 
   public async status(): Promise<VoiceStatus> {
-    const { call, ended } = this.actor.getSnapshot().context;
+    const { call, ended, partials } = this.actor.getSnapshot().context;
 
     return {
       call: call && this.callOf(call),
       ended,
+      partials,
       availability: await this.availability(),
+      enabled: this.choices.enabled(),
     };
+  }
+
+  public settings(): Promise<VoiceSettings> {
+    return this.choices.settings();
+  }
+
+  public changeSettings(change: VoiceSettingsChange): Promise<VoiceSettings> {
+    return this.choices.change(change);
   }
 
   public async start(
     input: VoiceStartInput,
     connection?: AbortSignal,
   ): Promise<VoiceStartOutput> {
-    const availability = await this.availability();
-
-    if (!availability.usable) throw unavailable(availability.reason);
-    this.requireRoom(input.sessionId);
+    await this.requireStartable(input.sessionId);
     connection?.throwIfAborted();
-    const callId = randomUUID();
-    this.actor.send({ type: 'call.start', callId, ...input, connection });
-    const settled = await waitFor(this.actor, startSettled);
+    const event = await this.callStart(input, connection);
+    this.actor.send(event);
 
-    return answerOf(settled, callId);
+    return answerOf(await waitFor(this.actor, startSettled), event.callId);
   }
 
   public end(sessionId?: string): VoiceEndOutput {
@@ -71,12 +97,34 @@ export class VoiceCalls implements VoiceCallsPort {
     return { ended: running && this.actor.getSnapshot().context.call === null };
   }
 
+  public hangUp(sessionId?: string): VoiceEndOutput {
+    const call = this.callOfSession(sessionId);
+
+    this.actor.send({
+      type: 'call.end',
+      reason: 'agent',
+      sessionId: call.sessionId,
+    });
+
+    return { ended: this.actor.getSnapshot().context.call === null };
+  }
+
+  // The running call of the Session, or a refusal when the Session has none.
+  private callOfSession(sessionId?: string): RunningCall {
+    const { call } = this.actor.getSnapshot().context;
+
+    if (!call || !namesSession(sessionId, call))
+      throw unavailable('The Session has no Voice call');
+
+    return call;
+  }
+
   public attach(sessions: VoiceSessions): void {
     this.actor.getSnapshot().context.sessions.attach(sessions);
   }
 
   public async *watch(signal: AbortSignal): AsyncGenerator<VoiceStatus> {
-    const changes = new Changes(this.actor, signal);
+    const changes = new Changes(this.actor, signal, this.choices);
 
     try {
       yield await this.status();
@@ -88,41 +136,58 @@ export class VoiceCalls implements VoiceCallsPort {
   }
 
   private callOf(call: RunningCall): NonNullable<VoiceStatus['call']> {
-    const { callId, sessionId, providerConnection: connection } = call;
+    const { callId, sessionId, limit } = call;
+
+    const status = this.actor.getSnapshot().matches({ running: 'connected' })
+      ? 'connected'
+      : 'connecting';
 
     return {
       callId,
       sessionId,
-      status: this.actor.getSnapshot().matches({ running: 'connected' })
-        ? 'connected'
-        : 'connecting',
-      connection,
+      status,
+      connection: call.providerConnection,
       orb: orbOf(call),
       trouble: troubleOf(call),
       startedAt: call.startedAt,
+      ...(limit && { limit }),
     };
   }
 
+  private provider(): VoiceProvider | null {
+    return this.actor.getSnapshot().context.provider;
+  }
+
   private async availability(): Promise<VoiceAvailability> {
-    const { provider } = this.actor.getSnapshot().context;
+    const provider = this.provider();
 
     return provider
       ? provider.availability()
       : { usable: false, reason: 'No Voice provider is configured' };
   }
 
-  private requireRoom(sessionId: string): void {
-    if (!this.actor.getSnapshot().matches('idle'))
-      throw new TRPCError({
-        code: 'CONFLICT',
-        message: 'A Voice call is already running',
-      });
+  private async callStart(
+    input: VoiceStartInput,
+    connection?: AbortSignal,
+  ): Promise<CallStart> {
+    const voice = await this.choices.voice();
 
-    if (!this.actor.system.get(sessionActorId(sessionId)))
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'The Session is not open',
-      });
+    return {
+      type: 'call.start',
+      callId: randomUUID(),
+      ...input,
+      voice,
+      connection,
+    };
+  }
+
+  // Voice calls are on, the provider can be used, and there is room for a call in this Session.
+  private async requireStartable(sessionId: string): Promise<void> {
+    if (!this.choices.enabled()) throw unavailable('Voice calls are off');
+    const availability = await this.availability();
+
+    if (!availability.usable) throw unavailable(availability.reason);
+    requireRoom(this.actor, sessionId);
   }
 }
 
@@ -130,7 +195,7 @@ export class VoiceCalls implements VoiceCallsPort {
 function liveOrb(call: RunningCall): VoiceOrbState {
   if (call.speaking) return 'talking';
 
-  return call.turnRunning ? 'thinking' : 'listening';
+  return call.agentWorking ? 'thinking' : 'listening';
 }
 
 // What the orb shows: nothing while the call has no connection.
@@ -142,50 +207,3 @@ function troubleOf(call: RunningCall): VoiceTrouble | null {
 
   return call.microphoneBlocked ? 'microphone-blocked' : null;
 }
-
-// The start has settled once the provider answered or the call is over.
-const startSettled = (snapshot: CallSnapshot): boolean =>
-  snapshot.matches('idle') || snapshot.context.call?.answer != null;
-
-const answerOfCall = (snapshot: CallSnapshot, callId: string): string | null =>
-  snapshot.context.call?.callId === callId
-    ? snapshot.context.call.answer
-    : null;
-
-const endedMessage = (ended: EndedCall | null): string =>
-  ended
-    ? `The Voice call ended: ${ended.reason}`
-    : 'The Voice call failed to start';
-
-// Why a start that settled without an answer did not get one.
-const failureOf = ({ context }: CallSnapshot): string =>
-  context.failure ?? endedMessage(context.ended);
-
-function answerOf(snapshot: CallSnapshot, callId: string): VoiceStartOutput {
-  const answer = answerOfCall(snapshot, callId);
-
-  if (answer !== null) return { callId, answer };
-
-  throw new TRPCError({
-    code: 'INTERNAL_SERVER_ERROR',
-    message: failureOf(snapshot),
-  });
-}
-
-const noStatus: VoiceStatus = {
-  call: null,
-  ended: null,
-  availability: { usable: false, reason: 'Voice calls are not available' },
-};
-
-// What the Server runs with when it was given no Voice call machine: a Voice call can never start.
-export const noVoiceCalls: VoiceCallsPort = {
-  status: () => Promise.resolve(noStatus),
-  start: () => Promise.reject(unavailable('Voice calls are not available')),
-  end: () => ({ ended: false }),
-  attach: () => {},
-  watch: async function* () {
-    await Promise.resolve();
-    yield noStatus;
-  },
-};

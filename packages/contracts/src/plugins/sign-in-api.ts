@@ -7,8 +7,16 @@ import type {
   PageTo,
   RenderInput,
 } from './loader-page-api';
+import type { OAuthFlow } from './oauth-flow-api';
 import type { OperationDeclarations } from './operations-api';
 import type { PageState } from './page-address';
+import type { TokenPaste } from './token-paste-api';
+
+export type CombinedSignInFlows =
+  | readonly [TokenPaste, OAuthFlow]
+  | readonly [OAuthFlow, TokenPaste];
+
+export type SignInFlows = SignInFlow | CombinedSignInFlows;
 
 /*
  * How a service is named on the sign-in page, such as `GitHub`, and its logo: SVG markup the Plugin ships, drawn in
@@ -30,7 +38,9 @@ export type SignInData = Readonly<{
 }>;
 
 // What a gated page loads: its own data, or the sign-in in its place.
-export type Gated<Data> = { data: Data } | { signIn: SignInData };
+export type Gated<Data> =
+  | { data: Data }
+  | { signIn: SignInData; alternatives?: readonly SignInData[] };
 
 /*
  * An ordinary Loader page for the gate to wrap, whose Loader answers once. A read that finds no Account, or an
@@ -56,7 +66,7 @@ export type GatedPage<
  * minute unless the page says otherwise, so a sign-out or a rejected token is noticed within it.
  */
 export type SignInGatePattern = <State extends PageState, Data, Item = never>(
-  flow: SignInFlow,
+  flow: SignInFlows,
   options: SignInOptions,
   page: GatedPage<State, Data, Item>,
 ) => LoaderPage<State, Gated<Data>, Item>;
@@ -71,11 +81,22 @@ export type ProvideSignInArgo = Pick<Argo, 'operations' | 'pages'>;
  * `signIn` takes the pasted token as its `token` param, which the manifest marks `"secret": true`; it needs no
  * `cancelSignIn`.
  */
-export type ProvideSignInPattern = (
-  argo: ProvideSignInArgo,
-  flow: SignInFlow,
-  options: SignInOptions & { path?: string },
-) => Promise<void>;
+export type ProvideSignInOptions = SignInOptions & { path?: string };
+
+export type CombinedSignInArgo = Pick<Argo, 'accounts' | 'changed'>;
+
+export type ProvideSignInPattern = {
+  (
+    argo: ProvideSignInArgo,
+    flow: SignInFlow,
+    options: ProvideSignInOptions,
+  ): Promise<void>;
+  (
+    argo: ProvideSignInArgo & CombinedSignInArgo,
+    flow: CombinedSignInFlows,
+    options: ProvideSignInOptions,
+  ): Promise<void>;
+};
 
 // What `accountFetch` needs of the Plugin API, and the Account's host it signs requests as.
 export type AccountFetchArgo = Pick<Argo, 'fetch'>;

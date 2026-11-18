@@ -16,11 +16,19 @@ const voiceInstruction = [
   '[COMPLETE] for the result, a question, or a blocker once you are done,',
   '[ANALYSIS] for notes that must stay silent.',
   'Keep spoken messages short and plain; do not read out code or tool output.',
+  'End the call by running the Argo Operation voice.hangUp, but only when the person clearly says they are done with the call, such as goodbye or hang up.',
+  'Do not end it when the person asks you to stop work, pause or wait: that is not the end of the call.',
 ].join('\n');
 
 const spokenMarks = new Set<VoiceMarker | null>(['[COMPLETE]']);
 
 type Speak = (say: VoiceSay) => void;
+
+// What the relay reports back to the call: what the voice should be told, and whether a Turn it started is running.
+export interface RelayReports {
+  speak: Speak;
+  turnsRunning: (running: boolean) => void;
+}
 
 // What the Agent said during the running Turn that the voice may still need at its end.
 type TurnMemory = { resultSent: boolean; last: string | null };
@@ -34,30 +42,70 @@ const freshTurn = (): TurnMemory => ({ resultSent: false, last: null });
 export class AgentRelay {
   private instructed = false;
   private turn = freshTurn();
+  // Prompts the call sent that have not reached the Feed yet.
+  private unseen = 0;
+  // The Turns the call's Prompts are in, until each ends; a Turn the person typed is never in it.
+  private readonly turns = new Set<string | null>();
 
   public constructor(
     private readonly sessions: VoiceSessions,
     private readonly sessionId: string,
-    private readonly speak: Speak,
+    private readonly reports: RelayReports,
   ) {}
 
   // The person asked for work: the Agent gets it, and the voice an answer at once.
   public async request(requestId: string, text: string): Promise<void> {
+    // Counted before the Prompt settles: a quick Turn may end before the send is answered.
+    this.sentChanged(() => (this.unseen += 1));
+
     const answer = await this.sessions
       .prompt(this.sessionId, this.promptText(text))
       .then(
         (outcome: PromptOutcome) => relayWords[outcome],
-        (error: Error) => relayWords.unsent(error.message),
+        (error: Error) => {
+          this.sentChanged(() => (this.unseen -= 1));
+
+          return relayWords.unsent(error.message);
+        },
       );
 
     this.reply(requestId, answer);
   }
 
   public happened(happening: SessionHappening): void {
+    if (happening.type === 'turn.ended') this.turnEnded(happening);
+    else if (happening.type === 'voice.prompted')
+      this.prompted(happening.turnId);
+    else this.said(happening);
+  }
+
+  private said(
+    happening: Extract<
+      SessionHappening,
+      { type: 'agent.message' | 'person.typed' }
+    >,
+  ): void {
     if (happening.type === 'agent.message') this.agentSaid(happening.text);
-    else if (happening.type === 'person.typed')
-      this.personTyped(happening.text);
-    else this.turnEnded(happening);
+    else this.personTyped(happening.text);
+  }
+
+  private get running(): boolean {
+    return this.unseen > 0 || this.turns.size > 0;
+  }
+
+  // Applies a change to what the call has running and reports it when it flips.
+  private sentChanged(change: () => void): void {
+    const before = this.running;
+    change();
+
+    if (before !== this.running) this.reports.turnsRunning(this.running);
+  }
+
+  private prompted(turnId: string | null): void {
+    this.sentChanged(() => {
+      this.unseen = Math.max(0, this.unseen - 1);
+      this.turns.add(turnId);
+    });
   }
 
   private promptText(request: string): string {
@@ -68,12 +116,12 @@ export class AgentRelay {
   }
 
   private reply(requestId: string, text: string): void {
-    this.speak({ kind: 'reply', requestId, text, delivery: 'speak' });
+    this.reports.speak({ kind: 'reply', requestId, text, delivery: 'speak' });
   }
 
   private tell(text: string, delivery: 'speak' | 'background'): void {
     for (const piece of inPieces(text))
-      this.speak({ kind: 'tell', text: piece, delivery });
+      this.reports.speak({ kind: 'tell', text: piece, delivery });
   }
 
   private agentSaid(text: string): void {
@@ -102,6 +150,7 @@ export class AgentRelay {
   ): void {
     const { resultSent, last } = this.turn;
     this.turn = freshTurn();
+    this.sentChanged(() => this.turns.delete(ended.turnId));
 
     if (!resultSent && last) this.tell(last, 'speak');
     this.tell(endingText(ended), endingDelivery(ended, told(resultSent, last)));
@@ -113,7 +162,10 @@ const told = (resultSent: boolean, last: string | null): boolean =>
 
 type Ended = Extract<SessionHappening, { type: 'turn.ended' }>;
 
-const finishedCleanly = ({ stopReason, error }: Omit<Ended, 'type'>): boolean =>
+const finishedCleanly = ({
+  stopReason,
+  error,
+}: Pick<Ended, 'stopReason' | 'error'>): boolean =>
   error === null && stopReason === 'end_turn';
 
 function endingText({ stopReason, error }: Ended): string {

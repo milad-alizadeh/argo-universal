@@ -180,6 +180,6 @@ type ListProps = Pick<
 const listProps = ({ data, list, to }: DetailProps): ListProps => ({
   footer: noIssuesBecause(data) || repositoryText(data.project),
   empty: noIssues(data, to),
-  pagination: { hasMore: list.hasMore, onLoadMore: list.loadMore },
+  pagination: list.pagination,
   onRefresh: to.set({}),
 });

@@ -123,7 +123,7 @@ async function oauthToken(
   if (token) return `Bearer ${token}`;
 
   // The sign-in page stops saying the person is signed in, so it offers the sign-in again.
-  if (flow.state().kind === 'signed-in') flow.cancel();
+  if (flow.state().kind === 'signed-in') void flow.cancel();
 
   return null;
 }
@@ -164,8 +164,8 @@ export function registerAtlassianOperations(
   argo.operations.register('signInWithAtlassian', async () => ({
     state: (await flow.start()).kind,
   }));
-  argo.operations.register('cancelSignInWithAtlassian', () => ({
-    state: flow.cancel().kind,
+  argo.operations.register('cancelSignInWithAtlassian', async () => ({
+    state: (await flow.cancel()).kind,
   }));
 }
 

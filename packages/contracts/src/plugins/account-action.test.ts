@@ -47,3 +47,13 @@ it('opens an Account by its id, and refuses one with none', () => {
     Action.safeParse({ action: 'openAccount', accountId: '' }).success,
   ).toBe(false);
 });
+
+it('opens the calling Plugin settings without accepting a target Plugin', () => {
+  expect(Action.safeParse({ action: 'openPluginSettings' }).success).toBe(true);
+  expect(
+    Action.safeParse({
+      action: 'openPluginSettings',
+      pluginId: 'another-plugin',
+    }).success,
+  ).toBe(false);
+});

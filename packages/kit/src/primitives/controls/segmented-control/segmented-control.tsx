@@ -30,12 +30,28 @@ type SegmentProps = SegmentedControlProps & { option: SegmentOption };
 function Segment(props: SegmentProps): ReactElement {
   return (
     <button {...segmentProps(props)}>
-      <Text role="control" selectable={false} numberOfLines={1}>
-        {props.option.label}
-      </Text>
+      <SegmentLabel {...props} />
     </button>
   );
 }
+
+function SegmentLabel({ option, value }: SegmentProps): ReactElement {
+  const labelClass = segmentLabelClass(option.value === value);
+
+  return (
+    <Text
+      role="control"
+      selectable={false}
+      numberOfLines={1}
+      className={labelClass}
+    >
+      {option.label}
+    </Text>
+  );
+}
+
+const segmentLabelClass = (selected: boolean): string | undefined =>
+  selected ? 'text-segment-selected-foreground' : undefined;
 
 const segmentProps = (
   props: SegmentProps,
@@ -61,7 +77,7 @@ function tabStop(props: SegmentProps): boolean {
 
 const trackClass = (disabled?: boolean): string =>
   cn(
-    'flex min-h-8 gap-0.5 rounded-control bg-tint p-0.5 segmented-control-track',
+    'flex min-h-8 gap-0.5 rounded-control bg-tint p-0.5 dark:bg-muted segmented-control-track',
     disabled && 'opacity-50',
   );
 
@@ -69,6 +85,6 @@ const segmentClass = (selected: boolean): string =>
   cn(
     'flex-1 cursor-pointer rounded-md border-0 px-3 py-1 outline-none disabled:cursor-default',
     selected
-      ? 'bg-card segment-selected'
+      ? 'bg-card dark:bg-tertiary segment-selected'
       : 'bg-transparent enabled:hover:bg-hover enabled:active:bg-pressed',
   );

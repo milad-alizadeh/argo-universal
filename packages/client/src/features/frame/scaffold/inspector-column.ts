@@ -96,13 +96,13 @@ export interface HostedChange {
 }
 
 export function hostedChange(
-  open: boolean,
+  { open, expanded }: { open: boolean; expanded: boolean },
   next: InspectorState,
 ): HostedChange {
-  const wanted = next !== 'closed';
+  const wantsOpen = next !== 'closed';
 
   return {
-    expanded: next === 'expanded',
-    open: wanted === open ? null : wanted,
+    expanded: wantsOpen ? next === 'expanded' : expanded,
+    open: wantsOpen === open ? null : wantsOpen,
   };
 }

@@ -1,6 +1,6 @@
 import type { SessionNewInput } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { listBranches } from '@repo/git';
+import { CheckoutBaseMissing, resolveCheckoutBase } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { readProjectPath } from '../../projects';
 
@@ -8,11 +8,12 @@ async function requireBranch(
   projectPath: string,
   branch: string,
 ): Promise<void> {
-  if (!(await listBranches(projectPath)).branches.includes(branch))
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: `No local branch ${branch}`,
-    });
+  try {
+    await resolveCheckoutBase(projectPath, branch);
+  } catch (error) {
+    if (!(error instanceof CheckoutBaseMissing)) throw error;
+    throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
+  }
 }
 
 export async function requireCheckoutProjectPath(

@@ -1,15 +1,15 @@
+import { randomUUID } from 'node:crypto';
 import type { FeedUpdate } from '@repo/contracts';
 import type { FeedDeps, FeedEvent } from '../feed';
 import { FeedHappenings } from './feed-happenings';
 import type {
   PromptOutcome,
   SessionHappening,
+  VoiceNotice,
   VoiceSessions,
 } from './session-link';
 
-type FeedSources = Pick<FeedDeps, 'findFeed' | 'watchSessionSnapshot'> & {
-  createId: () => string;
-};
+type FeedSources = Pick<FeedDeps, 'findFeed' | 'watchSessionSnapshot'>;
 
 type FeedActor = NonNullable<ReturnType<FeedSources['findFeed']>>;
 
@@ -63,46 +63,40 @@ class FeedWatch {
   }
 }
 
+type NoticeUpdate = Extract<FeedUpdate, { sessionUpdate: 'notice' }>;
+
+const noticeUpdate = ({ title, description }: VoiceNotice): NoticeUpdate => ({
+  id: randomUUID(),
+  sessionUpdate: 'notice',
+  state: 'settled',
+  severity: 'warning',
+  title,
+  description,
+});
+
+// A settled warning Notice, written outside any Turn.
+const noticeEvent = (notice: VoiceNotice): FeedEvent => ({
+  type: 'feed.change',
+  turnId: null,
+  blobs: [],
+  change: { type: 'upsert', update: noticeUpdate(notice) },
+});
+
+const watchOf =
+  (sources: FeedSources): VoiceSessions['watch'] =>
+  (sessionId, listener) => {
+    const watch = new FeedWatch(sources, sessionId, listener);
+
+    return (): void => watch.stop();
+  };
+
 // The Session the Voice call speaks for, reached through the Engine's own Prompt path and Feed.
 export const voiceSessions = (
   sources: FeedSources,
   prompt: VoicePrompts,
 ): VoiceSessions => ({
   prompt,
-  failed: (sessionId, description) =>
-    announceFailure(sources, sessionId, description),
-  watch: (sessionId, listener) => {
-    const watch = new FeedWatch(sources, sessionId, listener);
-
-    return (): void => watch.stop();
-  },
+  watch: watchOf(sources),
+  notice: (sessionId, notice) =>
+    sources.findFeed(sessionId)?.send(noticeEvent(notice)),
 });
-
-type FailureNotice = Extract<FeedUpdate, { sessionUpdate: 'notice' }>;
-
-// The one Notice a call that ended by failure leaves in its Session's Feed, written outside any Turn.
-const voiceCallFailure = (id: string, description: string): FeedEvent => ({
-  type: 'feed.change',
-  turnId: null,
-  blobs: [],
-  change: { type: 'upsert', update: failureNotice(id, description) },
-});
-
-const failureNotice = (id: string, description: string): FailureNotice => ({
-  id,
-  sessionUpdate: 'notice',
-  state: 'settled',
-  severity: 'warning',
-  title: 'Voice call failed',
-  description,
-});
-
-function announceFailure(
-  sources: FeedSources,
-  sessionId: string,
-  description: string,
-): void {
-  const event = voiceCallFailure(sources.createId(), description);
-
-  sources.findFeed(sessionId)?.send(event);
-}

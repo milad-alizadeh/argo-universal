@@ -19,6 +19,7 @@ const act: [OperationId, (sessionId: string) => Json][] = [
   ],
   ['shell.stop', (sessionId): Json => ({ sessionId, shellId: 'shell-1' })],
   ['session.close', sessionOnly],
+  ['voice.hangUp', sessionOnly],
 ];
 
 const targets = ['caller', 'started', 'unrelated', 'foreign', 'opening'];
@@ -40,6 +41,10 @@ it.each(act)(
     });
   },
 );
+
+it('hangs up the calling Session when voice.hangUp names no Session', async () => {
+  expect((await scoped({ id: 'voice.hangUp', params: {} })).outcome).toBe(runs);
+});
 
 it('shows the Operation label and description on the card', async () => {
   expect(

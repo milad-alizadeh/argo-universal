@@ -60,13 +60,14 @@ const drawingKey = ({ input, state }: ReplaceableSlotViewProps): string =>
   `${input.slotId}:${state.replacement ? drawingOf(state.replacement.root) : 'core'}:${JSON.stringify(input)}`;
 
 function slotDrawing(props: ReplaceableSlotViewProps): ReactNode {
-  const root = props.state.replacement?.root;
+  const replacement = props.state.replacement;
 
-  if (!root) return props.renderCore(coreInput(props));
+  if (!replacement) return props.renderCore(coreInput(props));
 
   return (
     <PluginTree
-      root={root}
+      root={replacement.root}
+      pluginId={replacement.pluginId}
       onOpenPage={props.onOpenPage}
       onPageCall={props.onPageCall}
     />

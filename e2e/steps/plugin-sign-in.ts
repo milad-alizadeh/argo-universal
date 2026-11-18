@@ -32,13 +32,16 @@ const manifest = {
 };
 
 const sourceFor = (state: string): string => `
-  import { Text } from '@argo/plugin-kit';
+  import { Button, Screen, Text } from '@argo/plugin-kit';
   import { jsx } from '@argo/plugin-kit/jsx-runtime';
   export async function register(argo) {
     ${state === 'crashed' ? "throw new Error('Fixture crash');" : ''}
     argo.pages.define('/sign-in', {
       load: ({ context }) => context.serverDevice,
-      render: () => jsx(Text, { children: 'Fixture sign-in page' }),
+      render: () => jsx(Screen, { title: 'Sign in', children: [
+        jsx(Text, { children: 'Fixture sign-in page' }, 'message'),
+        jsx(Button, { label: 'Open Plugin settings', onPress: { action: 'openPluginSettings' } }, 'settings'),
+      ] }),
     });
     ${state === 'signed-in' ? "await argo.accounts.add('api.fixture.test', { label: 'Fixture' });" : ''}
   }
@@ -136,3 +139,14 @@ Then(
     }
   },
 );
+
+When("I press the Account Plugin's settings Action", async ({ page }) => {
+  await page.getByRole('button', { name: 'Open Plugin settings' }).click();
+});
+
+Then('the Account Plugin settings are open', async ({ page }) => {
+  await expect(page).toHaveURL(new RegExp(`/settings/plugins/${pluginId}$`));
+  await expect(
+    page.getByRole('link', { name: `${host}, Sign in` }),
+  ).toBeVisible();
+});

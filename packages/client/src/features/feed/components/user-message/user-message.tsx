@@ -1,6 +1,7 @@
 import type {
   BlobRef,
   UserMessage as UserMessageRow,
+  PersonTranscript,
   PromptMessage,
 } from '@repo/contracts';
 import { Text } from '@repo/kit/primitives/content/text';
@@ -13,9 +14,11 @@ import { type Reference, ReferenceChips } from './reference-chips';
 import { UserMessageBubble } from './user-message-bubble';
 
 export interface UserMessageProps {
-  row: UserMessageRow | PromptMessage;
+  row: UserMessageRow | PromptMessage | PersonTranscript;
   // Where the App loads a stored image from.
   imageUrl: (blob: BlobRef) => string;
+  // The words are still being said, so they are drawn as a partial.
+  partial?: boolean;
 }
 
 interface MessageParts {
@@ -53,10 +56,11 @@ function MessageImages({
   );
 }
 
-// A stored Prompt uses the existing bubble, with its sender when another Session or Plugin sent it.
+// A stored Prompt, or what the person said on a Voice call, uses the existing bubble, with its sender when another Session or Plugin sent it.
 export const UserMessage = memo(function UserMessage({
   row,
   imageUrl,
+  partial = false,
 }: UserMessageProps) {
   const { text, images, references } = messageParts(row);
 
@@ -65,7 +69,7 @@ export const UserMessage = memo(function UserMessage({
       <PromptSenderCaption row={row} />
       <ReferenceChips references={references} />
       <MessageImages images={images} imageUrl={imageUrl} />
-      {text.length > 0 && <UserMessageBubble text={text} />}
+      {text.length > 0 && <UserMessageBubble text={text} partial={partial} />}
     </View>
   );
 });

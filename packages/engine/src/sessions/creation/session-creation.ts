@@ -1,4 +1,5 @@
 import type { SessionNewInput, PromptSender } from '@repo/contracts';
+import { TRPCError } from '@trpc/server';
 import { requireInstalledAgent } from '../../agents';
 import type { OpenSessionsCommand } from '../open-sessions-machine';
 import type { NativeStart, NativeStartRequest } from '../prompt-sender';
@@ -82,6 +83,55 @@ function openCreation(
   return { ...ids, accepted };
 }
 
+// A clean worktree is claimable until the new owner is committed to the database.
+const openingBranches = new Set<string>();
+
+function claimBranch(key: string, branch: string): () => void {
+  if (openingBranches.has(key))
+    throw new TRPCError({
+      code: 'CONFLICT',
+      message: `A Session is opening on branch ${branch}. Try again when it has opened.`,
+    });
+
+  openingBranches.add(key);
+
+  return (): void => {
+    openingBranches.delete(key);
+  };
+}
+
+function openWithClaim(
+  sources: CreationSources,
+  prepared: PreparedCreation,
+  release: () => void,
+): SessionCreation {
+  try {
+    const creation = openCreation(sources, prepared);
+
+    void creation.accepted.then(release, release);
+
+    return creation;
+  } catch (error) {
+    release();
+
+    throw error;
+  }
+}
+
+function openWithBranchClaim(
+  sources: CreationSources,
+  prepared: PreparedCreation,
+): SessionCreation {
+  const { checkout } = prepared.newSession;
+
+  if (checkout.type !== 'worktree' || !checkout.branch)
+    return openCreation(sources, prepared);
+
+  const key = JSON.stringify([prepared.projectPath, checkout.branch]);
+
+  return openWithClaim(sources, prepared, claimBranch(key, checkout.branch));
+}
+
 // Allocate native identity before waiting for the Agent or the first prompt's admission.
 export async function startSessionCreation(
   sources: CreationSources,
@@ -99,7 +149,7 @@ export async function startSessionCreation(
 
   sources.open.admit(origin.signal);
 
-  return openCreation(sources, { newSession, origin, projectPath });
+  return openWithBranchClaim(sources, { newSession, origin, projectPath });
 }
 
 async function completeCreation(

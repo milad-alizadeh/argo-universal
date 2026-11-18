@@ -112,7 +112,7 @@ it('adds no Account for a sign-in cancelled before the browser answered', async 
   const flow = oauthFlow(provider.argo, linear);
 
   await flow.start();
-  expect(flow.cancel()).toEqual({ kind: 'idle' });
+  expect(await flow.cancel()).toEqual({ kind: 'idle' });
   provider.browser.resolve(callback);
   // Every continuation of the browser's answer runs before the next turn of the event loop.
   await setImmediate();

@@ -2,6 +2,7 @@ import type { Subagent } from '@repo/contracts';
 import { formatElapsed } from '@repo/kit/format-elapsed';
 import {
   subagentElapsedMs,
+  subagentModel,
   subagentStateLabel,
 } from '../subagent-list/subagent-format';
 
@@ -10,7 +11,9 @@ import {
  * Subagent runs and settles on its final duration; a Subagent waiting on you names that instead.
  */
 export function subagentFeedMeta(subagent: Subagent, now: number): string {
-  const label = subagentStateLabel(subagent);
+  const label = [subagentStateLabel(subagent), subagentModel(subagent)]
+    .filter(Boolean)
+    .join(' · ');
 
   // A Subagent waiting on you names that alone; the others count their time.
   if (subagent.state === 'requires_action') return label;

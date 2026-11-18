@@ -1,4 +1,4 @@
-import type { VoiceCallEnd } from '@repo/contracts';
+import type { VoiceCallEnd, VoiceLimit } from '@repo/contracts';
 import { assertEvent, assign, sendTo, setup, type ActorRefFrom } from 'xstate';
 import { agentRelay, type RelayInput } from './agent-relay-actor';
 import {
@@ -11,7 +11,8 @@ import {
 import { watchConnection, watchSession } from './call-watchers';
 import type { VoiceProvider, VoiceProviderEvent } from './provider';
 import { providerCall, type ProviderCallInput } from './provider-call';
-import { SessionLink } from './session-link';
+import { SessionLink, type VoiceNotice } from './session-link';
+import { isTranscript, storeTranscript, withTranscript } from './transcript';
 
 /*
  * The Voice call's lifecycle (ADR-0062): one machine for the one call a Server runs, attached to one Session for its whole life.
@@ -40,7 +41,7 @@ function providerEventOf(event: VoiceCallEvent): VoiceProviderEvent {
 
 type CallStart = Pick<
   RunningCall,
-  'callId' | 'sessionId' | 'offer' | 'connection'
+  'callId' | 'sessionId' | 'offer' | 'voice' | 'connection'
 >;
 
 // A call that has only been asked for: not answered, not connected, nobody speaking.
@@ -50,8 +51,13 @@ const newCall = (start: CallStart): RunningCall => ({
   providerConnection: 'connecting',
   startedAt: null,
   speaking: false,
-  turnRunning: false,
+  agentWorking: false,
   microphoneBlocked: false,
+});
+
+const failedNotice = (description: string): VoiceNotice => ({
+  title: 'Voice call failed',
+  description,
 });
 
 const providerFailure = 'The connection to the voice failed.';
@@ -87,6 +93,24 @@ function reported(call: RunningCall, event: VoiceProviderEvent): RunningCall {
   return { ...call, ...report?.(event, call) };
 }
 
+const isLimitClose = (event: VoiceProviderEvent): boolean =>
+  event.type === 'closed' && event.reason === 'limit';
+
+function limitOf(event: VoiceCallEvent): VoiceLimit {
+  const reported = providerEventOf(event);
+
+  if (reported.type !== 'limit') throw new Error('Not a limit report');
+  const { remaining, resetsAt } = reported;
+
+  return resetsAt === undefined ? { remaining } : { remaining, resetsAt };
+}
+
+const limitNotice = {
+  title: 'Voice call ended: usage limit reached',
+  description:
+    'The Voice provider closed the call because the allowance ran out. Start a new call once it resets.',
+};
+
 const namesCall = (
   sessionId: string | undefined,
   call: RunningCall | null,
@@ -101,6 +125,7 @@ const finished = (
   return {
     call: null,
     ended: call && { callId: call.callId, sessionId: call.sessionId, reason },
+    partials: [],
   };
 };
 
@@ -111,16 +136,18 @@ const voiceCallSetup = setup({
     context: {} as VoiceCallContext,
     events: {} as VoiceCallEvent,
   },
+  delays: { idle: ({ context }): number => context.idleMs },
   actors: { providerCall, agentRelay, watchSession, watchConnection },
   actions: {
     begin: assign(({ event }): Partial<VoiceCallContext> => {
       assertEvent(event, 'call.start');
-      const { callId, sessionId, offer, connection } = event;
+      const { callId, sessionId, offer, voice, connection } = event;
 
       return {
-        call: newCall({ callId, sessionId, offer, connection }),
+        call: newCall({ callId, sessionId, offer, voice, connection }),
         ended: null,
         failure: null,
+        turnRunning: false,
       };
     }),
     answer: assign(({ context, event }): Partial<VoiceCallContext> => {
@@ -128,9 +155,36 @@ const voiceCallSetup = setup({
 
       return { call: { ...runningCall(context), answer: event.answer } };
     }),
+    noteLimit: assign(({ context, event }): Partial<VoiceCallContext> => ({
+      call: { ...runningCall(context), limit: limitOf(event) },
+    })),
+    noteTurns: assign(({ event }): Partial<VoiceCallContext> => {
+      assertEvent(event, 'call.turns');
+
+      return { turnRunning: event.running };
+    }),
+    // Tells the person, in the Session's Feed, why the call ended.
+    noticeLimit: ({ context }): void =>
+      context.sessions.current?.notice(
+        runningCall(context).sessionId,
+        limitNotice,
+      ),
     finish: assign(({ context }, params: EndParameters) =>
       finished(context, params),
     ),
+    storeTranscript: ({ context, event, system }): void => {
+      const heard = providerEventOf(event);
+
+      if (isTranscript(heard))
+        storeTranscript(system, runningCall(context), heard);
+    },
+    trackPartials: assign(({ context, event }): Partial<VoiceCallContext> => {
+      const heard = providerEventOf(event);
+
+      return isTranscript(heard)
+        ? { partials: withTranscript(context.partials, heard) }
+        : {};
+    }),
     recordFailure: assign(({ event }): Partial<VoiceCallContext> => {
       assertEvent(event, 'call.failed');
 
@@ -142,7 +196,7 @@ const voiceCallSetup = setup({
       const { call, failure } = context;
 
       if (call && failure !== null)
-        context.sessions.failed(call.sessionId, failure);
+        context.sessions.notice(call.sessionId, failedNotice(failure));
     },
     foldProvider: assign(({ context, event }): Partial<VoiceCallContext> => ({
       call: reported(runningCall(context), providerEventOf(event)),
@@ -150,7 +204,7 @@ const voiceCallSetup = setup({
     foldTurn: assign(({ context, event }): Partial<VoiceCallContext> => {
       assertEvent(event, 'session.turn');
 
-      return { call: { ...runningCall(context), turnRunning: event.running } };
+      return { call: { ...runningCall(context), agentWorking: event.running } };
     }),
   },
   guards: {
@@ -160,6 +214,8 @@ const voiceCallSetup = setup({
 
       return namesCall(event.sessionId, context.call);
     },
+    hearsTranscript: ({ event }): boolean =>
+      isTranscript(providerEventOf(event)),
     isConnected: ({ event }): boolean =>
       isConnectedStatus(providerEventOf(event)),
     providerErrored: ({ event }): boolean => {
@@ -167,12 +223,16 @@ const voiceCallSetup = setup({
 
       return isErrorStatus(reported) || isErrorClose(reported);
     },
+    noTurnRunning: ({ context }): boolean => !context.turnRunning,
+    reportsLimit: ({ event }): boolean =>
+      providerEventOf(event).type === 'limit',
+    limitClosed: ({ event }): boolean => isLimitClose(providerEventOf(event)),
     providerClosed: ({ event }): boolean =>
       providerEventOf(event).type === 'closed',
     turnChanged: ({ context, event }): boolean => {
       assertEvent(event, 'session.turn');
 
-      return runningCall(context).turnRunning !== event.running;
+      return runningCall(context).agentWorking !== event.running;
     },
     asksForWork: ({ event }): boolean =>
       providerEventOf(event).type === 'work.requested',
@@ -193,15 +253,23 @@ const endsWith = (reason: VoiceCallEnd): FinishAction => ({
 });
 
 const providerInput = (context: VoiceCallContext): ProviderCallInput => {
-  const { offer, sessionId } = runningCall(context);
+  const { offer, sessionId, voice } = runningCall(context);
 
   return {
     // SAFETY: `call.start` is refused without a provider, so `running` always has one.
     provider: context.provider as VoiceProvider,
     offer,
+    voice,
     briefing: context.briefing(sessionId),
   };
 };
+
+// A Turn the call started began or ended: the idle period starts over.
+const turnsChanged = {
+  target: 'connected',
+  reenter: true,
+  actions: 'noteTurns',
+} as const;
 
 export const voiceCallMachine = voiceCallSetup.createMachine({
   id: 'voiceCall',
@@ -211,6 +279,8 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
     call: null,
     ended: null,
     failure: null,
+    turnRunning: false,
+    partials: [],
   }),
   initial: 'idle',
   states: {
@@ -284,7 +354,12 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
           target: idleTarget,
           actions: ['recordFailure', 'announceFailure', endsWith('failed')],
         },
+        'call.turns': { actions: 'noteTurns' },
         'provider.event': [
+          {
+            guard: 'hearsTranscript',
+            actions: ['storeTranscript', 'trackPartials'],
+          },
           {
             guard: 'providerErrored',
             target: idleTarget,
@@ -293,6 +368,12 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
               'announceFailure',
               endsWith('failed'),
             ],
+          },
+          { guard: 'reportsLimit', actions: 'noteLimit' },
+          {
+            guard: 'limitClosed',
+            target: idleTarget,
+            actions: ['noticeLimit', endsWith('limit-reached')],
           },
           {
             guard: 'providerClosed',
@@ -325,7 +406,25 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
             },
           },
         },
-        connected: {},
+        // Speech keeps the call alive; a call that hears none for the idle period ends, unless a Turn it started is running.
+        connected: {
+          on: {
+            'provider.event': {
+              guard: 'hearsTranscript',
+              actions: ['storeTranscript', 'trackPartials'],
+              target: 'connected',
+              reenter: true,
+            },
+            'call.turns': turnsChanged,
+          },
+          after: {
+            idle: {
+              guard: 'noTurnRunning',
+              target: idleTarget,
+              actions: endsWith('idle'),
+            },
+          },
+        },
       },
     },
   },

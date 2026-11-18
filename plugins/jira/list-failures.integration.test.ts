@@ -89,13 +89,20 @@ it(
     jira.jira.fail('search', rateLimited);
     await page.loadMore();
 
-    // The App keeps the rows it shows and says why the draw failed.
-    expect(page.error).toContain('Jira is limiting requests right now.');
+    expect(page.error).toBeUndefined();
+    expect(shownKeys(page)).toHaveLength(50);
+    expect(
+      page.find((node) => node.props.accessibilityLabel === 'Jira issues').props
+        .pagination,
+    ).toMatchObject({
+      failed: 'Jira is limiting requests right now. Try again in a minute.',
+      onLoadMore: { loadMore: true, retry: true },
+    });
 
     // The failed page kept no answer, so asking for it again reads Jira again.
     jira.jira.heal('search');
     await jira.test.clock.advance(rateLimitedFor);
-    await page.draw(2);
+    await page.loadMore();
 
     expect(page.error).toBeUndefined();
     expect(shownKeys(page)).toHaveLength(63);
@@ -114,6 +121,35 @@ it(
 
     expect(page.findText('Sign in to Jira')).toBeDefined();
     expect(page.findText('Jira no longer accepts this sign-in.')).toBeDefined();
+  },
+  timeoutMs,
+);
+
+it(
+  'honours Jira’s Retry-After through the shared fetch cooldown',
+  async () => {
+    const jira = await startJira();
+    const page = await argoIssues(jira);
+    const retryAfterSeconds = 30;
+
+    jira.jira.fail('search', {
+      ...rateLimited,
+      headers: { 'Retry-After': String(retryAfterSeconds) },
+    });
+    await filterBy(page, 'To Do');
+
+    const searchCalls = jira.jira.calls('search').length;
+    jira.jira.heal('search');
+    const retryAfterMs = retryAfterSeconds * 1_000;
+    await jira.test.clock.advance(retryAfterMs - 1);
+    await page.press('Try again');
+    expect(page.findText('Jira is busy')).toBeDefined();
+    expect(jira.jira.calls('search')).toHaveLength(searchCalls);
+
+    await jira.test.clock.advance(1);
+    await page.press('Try again');
+    expect(jira.jira.calls('search')).toHaveLength(searchCalls + 1);
+    expect(shownKeys(page)).toEqual(['ARGO-1']);
   },
   timeoutMs,
 );

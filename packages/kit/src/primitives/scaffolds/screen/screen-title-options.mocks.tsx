@@ -3,6 +3,7 @@ import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
 import { SegmentedControl } from '#primitives/controls/segmented-control';
 import { FieldGroup } from '#primitives/fields/field-group';
+import { ScrollView } from '#primitives/layout/scroll-view';
 import { Stack } from '#primitives/layout/stack';
 import { Screen, type ScreenProps } from './index';
 
@@ -110,7 +111,19 @@ export function TitleAndOptionsExample(): ReactElement {
 
   return (
     <Screen title={group} caption="example.com" search={search} {...header}>
-      <Text>{`Showing ${options.view}, ${options.status}`}</Text>
+      <ExampleStatus view={options.view} status={options.status} />
     </Screen>
+  );
+}
+
+// Scroll as a Screen's list does, keeping the status line below the native navigation bar.
+function ExampleStatus({
+  view,
+  status,
+}: Pick<OptionsState, 'view' | 'status'>): ReactElement {
+  return (
+    <ScrollView>
+      <Text>{`Showing ${view}, ${status}`}</Text>
+    </ScrollView>
   );
 }

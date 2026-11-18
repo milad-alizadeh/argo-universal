@@ -35,6 +35,8 @@ export type VoiceTrouble = z.infer<typeof VoiceTrouble>;
 export const VoiceCallEnd = z.enum([
   'person',
   'agent',
+  'idle',
+  'limit-reached',
   'session-closed',
   'session-archived',
   'app-disconnected',
@@ -46,6 +48,14 @@ export const VoiceCallEnd = z.enum([
 export type VoiceCallEnd = z.infer<typeof VoiceCallEnd>;
 
 const voiceSessionId = sessionColumns.shape.id;
+
+// The provider's allowance, reported while the call runs: how much is left as a fraction from 0 to 1.
+export const VoiceLimit = z.strictObject({
+  remaining: z.number().min(0).max(1),
+  resetsAt: z.string().min(1).optional(),
+});
+
+export type VoiceLimit = z.infer<typeof VoiceLimit>;
 
 // The one Voice call a Server runs, and the Session it is attached to for its whole life.
 export const VoiceCall = z.strictObject({
@@ -62,6 +72,8 @@ export const VoiceCall = z.strictObject({
     .describe(
       'When the call first connected, as a date and time; null until then.',
     ),
+  // Set once the provider reports its allowance running low; absent until then.
+  limit: VoiceLimit.optional(),
 });
 
 export type VoiceCall = z.infer<typeof VoiceCall>;
@@ -74,6 +86,19 @@ export const VoiceAvailability = z.discriminatedUnion('usable', [
 
 export type VoiceAvailability = z.infer<typeof VoiceAvailability>;
 
+export const VoiceSpeaker = z.enum(['person', 'voice']);
+
+export type VoiceSpeaker = z.infer<typeof VoiceSpeaker>;
+
+// Words that may still change: live state of the running call, never a stored Feed row. A final transcript replaces it.
+export const VoicePartial = z.strictObject({
+  speaker: VoiceSpeaker,
+  id: z.string().min(1),
+  text: z.string(),
+});
+
+export type VoicePartial = z.infer<typeof VoicePartial>;
+
 // What the App draws its Composer from: the running call, how the last one ended, and whether a new one can start.
 export const VoiceStatus = z.strictObject({
   call: VoiceCall.nullable(),
@@ -85,6 +110,10 @@ export const VoiceStatus = z.strictObject({
     })
     .nullable(),
   availability: VoiceAvailability,
+  // Whether the person keeps Voice calls on; with them off no Composer offers the voice button.
+  enabled: z.boolean(),
+  // What is being said now, at most one per speaker; drawn at the tail of the call's Session's Feed.
+  partials: z.array(VoicePartial),
 });
 
 export type VoiceStatus = z.infer<typeof VoiceStatus>;
@@ -119,3 +148,41 @@ export type VoiceEndInput = z.infer<typeof VoiceEndInput>;
 export const VoiceEndOutput = z.strictObject({ ended: z.boolean() });
 
 export type VoiceEndOutput = z.infer<typeof VoiceEndOutput>;
+
+// A voice a Voice provider speaks with.
+export const VoiceOption = z.strictObject({
+  id: z.string().min(1),
+  label: z.string().min(1),
+});
+
+export type VoiceOption = z.infer<typeof VoiceOption>;
+
+// A Voice provider the Server lists, and whether it can be used now.
+export const VoiceProviderOption = z.strictObject({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  experimental: z.boolean(),
+  availability: VoiceAvailability,
+});
+
+export type VoiceProviderOption = z.infer<typeof VoiceProviderOption>;
+
+// Settings › Voice: what the person chose, and what they can choose from. `provider` and `voice` are null while the Server has no provider.
+export const VoiceSettings = z.strictObject({
+  enabled: z.boolean(),
+  provider: z.string().min(1).nullable(),
+  voice: z.string().min(1).nullable(),
+  providers: z.array(VoiceProviderOption),
+  voices: z.array(VoiceOption),
+});
+
+export type VoiceSettings = z.infer<typeof VoiceSettings>;
+
+// What `voice.setSettings` changes; what is left out stays.
+export const VoiceSettingsChange = z.strictObject({
+  enabled: z.boolean().optional(),
+  provider: z.string().min(1).optional(),
+  voice: z.string().min(1).optional(),
+});
+
+export type VoiceSettingsChange = z.infer<typeof VoiceSettingsChange>;
