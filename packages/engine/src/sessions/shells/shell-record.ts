@@ -2,10 +2,7 @@ import { mkdir, readdir, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { z } from 'zod';
 import { jsonCodec } from '../../lib/json-codec';
-import {
-  processGroupMembers,
-  type ProcessGroupMember,
-} from './shell-group-members';
+import { hasGroupOwner, hasLiveGroupMembers } from './shell-group-members';
 import { releaseShellGroup } from './shell-process-group';
 import {
   ShellProcessRecord,
@@ -44,22 +41,11 @@ const recordNames = async (home: string): Promise<string[]> => {
 const isRecord = (name: string): boolean =>
   name.endsWith('.json') || name.endsWith('.json.pending');
 
-const requireOwner = (
-  members: ProcessGroupMember[],
-  record: ShellProcessRecord,
-): void => {
-  const owner = members.find((member) => member.pid === record.pid);
-
-  if (!owner?.command.includes(record.token))
-    throw new Error('Shell process group identity changed');
-};
-
 const releaseRecordedGroup = async (path: string): Promise<void> => {
   const record = StoredRecord.parse(await readFile(path, 'utf8'));
-  const members = processGroupMembers(record.pid);
-
-  if (members.length) {
-    requireOwner(members, record);
+  if (hasLiveGroupMembers(record.pid)) {
+    if (!hasGroupOwner(record.pid, record.token))
+      throw new Error('Shell process group identity changed');
     await releaseShellGroup(record.pid);
   }
 
