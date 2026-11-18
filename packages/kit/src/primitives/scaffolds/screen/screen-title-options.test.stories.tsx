@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type { ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 import { settleOverlays } from '#mocks/settle-overlays';
+import { Text } from '#primitives/content/text';
 import { Screen } from './index';
 import { TitleAndOptionsExample } from './screen-title-options.mocks';
 import { atWidth, screenWidths } from './screen-widths.mocks';
@@ -202,3 +203,61 @@ export const TitleMenuBelowWide = atWidth(screenWidths.Wide, {
     await expect(below.top).toBeGreaterThanOrEqual(title.bottom);
   },
 });
+
+const toggleOptions = 'story:toggle-options';
+
+// A Screen whose options come and go when the story says, as a Plugin's redraw without them does.
+function ComingAndGoing(): ReactElement {
+  const [shown, setShown] = useState(true);
+
+  useEffect(() => {
+    const toggle = (): void => setShown((now) => !now);
+
+    window.addEventListener(toggleOptions, toggle);
+
+    return (): void => window.removeEventListener(toggleOptions, toggle);
+  }, []);
+
+  return (
+    <Screen
+      title="Group one"
+      options={shown ? <Text>Some options</Text> : undefined}
+    >
+      <Text>{shown ? 'Options shown' : 'Options gone'}</Text>
+    </Screen>
+  );
+}
+
+// Options that go away while open close with them, so they come back closed.
+const optionsComeBackClosed: Story = {
+  render: (): ReactElement => <ComingAndGoing />,
+  play: async (context) => {
+    const { canvas, userEvent } = context;
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Options' }));
+    const shown = await body(context).findByText('Some options');
+
+    await settleOverlays();
+    await expect(shown).toBeVisible();
+
+    window.dispatchEvent(new Event(toggleOptions));
+    await expect(await canvas.findByText('Options gone')).toBeVisible();
+
+    window.dispatchEvent(new Event(toggleOptions));
+    await expect(await canvas.findByText('Options shown')).toBeVisible();
+    await waitFor(() =>
+      expect(body(context).queryByText('Some options')).toBeNull(),
+    );
+    await expect(canvas.getByRole('button', { name: 'Options' })).toBeVisible();
+  },
+};
+
+export const OptionsComeBackClosedPhone = atWidth(
+  screenWidths.Phone,
+  optionsComeBackClosed,
+);
+
+export const OptionsComeBackClosedWide = atWidth(
+  screenWidths.Wide,
+  optionsComeBackClosed,
+);
