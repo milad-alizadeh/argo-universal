@@ -19,17 +19,34 @@ const activeStatuses: ReadonlySet<SessionInfo['status']> = new Set([
   'needs_input',
 ]);
 
-export function sessionProgress({
-  plan,
-  status,
-}: Pick<SessionInfo, 'plan' | 'status'>): ProgressBarProps | undefined {
+type SessionWork = Pick<
+  SessionInfo,
+  'plan' | 'status' | 'shells' | 'subagents'
+>;
+
+function backgroundWork({ shells, subagents }: SessionWork): boolean {
+  return shells.running > 0 || subagents.running > 0;
+}
+
+// An idle Session whose Background Task or Agent still runs is not done: its bar stays green, and still, until that work ends.
+function barTone(session: SessionWork): Tone {
+  return session.status === 'idle' && backgroundWork(session)
+    ? statusTones.running
+    : statusTones[session.status];
+}
+
+export function sessionProgress(
+  session: SessionWork,
+): ProgressBarProps | undefined {
+  const { plan, status } = session;
+
   if (!plan) return undefined;
 
   if (!unfinished(plan)) return undefined;
 
   return {
     value: plan.done / plan.total,
-    tone: statusTones[status],
+    tone: barTone(session),
     active: activeStatuses.has(status),
     accessibilityLabel: `Todos: ${plan.done} of ${plan.total} complete`,
     testID: 'session-todos',

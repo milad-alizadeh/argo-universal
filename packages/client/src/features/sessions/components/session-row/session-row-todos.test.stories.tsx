@@ -31,3 +31,29 @@ export const FailedTodosStill: Story = {
     }
   },
 };
+
+// A Turn that ended while a Background Task runs keeps its bar and the count's dot, with no sweep and no status dot.
+export const BackgroundWorkStill: Story = {
+  args: {
+    session: {
+      ...sessionRows.idle,
+      plan: { done: 3, total: 5 },
+      shells: { running: 1, total: 1 },
+    },
+  },
+  play: async ({ canvas }) => {
+    for (const width of [390, 1440]) {
+      await settleLayout(width);
+      await expect(
+        canvas.getByLabelText('Todos: 3 of 5 complete'),
+      ).toBeVisible();
+      await expect(canvas.getByTestId('shells-status')).toBeVisible();
+      await expect(
+        canvas.queryByTestId('session-todos-sweep'),
+      ).not.toBeInTheDocument();
+      await expect(
+        canvas.queryByTestId('session-status'),
+      ).not.toBeInTheDocument();
+    }
+  },
+};
