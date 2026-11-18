@@ -89,6 +89,10 @@ export class OAuthListener {
     this.closing = active.ready.then(() => closeServer(active.server));
   }
 
+  closed(): Promise<void> {
+    return this.closing;
+  }
+
   private callback(request: IncomingMessage, response: ServerResponse): void {
     if (!callbackHostAllowed(request.headers.host)) {
       response.writeHead(forbidden).end();

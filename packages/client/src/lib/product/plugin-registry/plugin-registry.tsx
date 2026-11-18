@@ -15,6 +15,7 @@ export type { OnPageCall } from './plugin-rendering';
 
 export interface PluginTreeProps {
   root: WireNode;
+  pluginId?: string;
   // Opens the page a `navigate` Action names, for the Plugin that drew this tree; a tree with no Plugin behind it has none.
   onOpenPage?: OpenPluginPage;
   // A Loader page's Page state changes and Operation calls.
@@ -40,12 +41,19 @@ function useLatest<Args extends unknown[], Result>(
   );
 }
 
+function treeIdentity({ root, pluginId }: PluginTreeProps): {
+  key: string;
+  pluginId?: string;
+} {
+  return { key: childNodeKey('', root.key), pluginId };
+}
+
 // One tree: overlays are ordinary nodes in it.
 export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
   const [drawn] = useState(() => new DrawnNodes());
 
   const context = {
-    key: childNodeKey('', props.root.key),
+    ...treeIdentity(props),
     openPage: useLatest(props.onOpenPage, pageUnavailable),
     controls: useComponentEvents(props.root, drawn),
     pageCall: useLatest(props.onPageCall, pageCallRefused),

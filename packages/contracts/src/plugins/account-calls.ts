@@ -50,6 +50,7 @@ export const WebUrl = z.url({ protocol: /^https?$/ });
 
 export const OAuthCall = z.discriminatedUnion('action', [
   z.object({ action: z.literal('start') }),
+  z.object({ action: z.literal('cancel'), state: z.string() }),
   z.object({ action: z.literal('await'), state: z.string(), url: WebUrl }),
 ]);
 

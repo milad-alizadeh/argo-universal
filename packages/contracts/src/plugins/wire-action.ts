@@ -25,6 +25,7 @@ export const Action = z.discriminatedUnion('action', [
     url: WebUrl.optional(),
     title: z.string().optional(),
   }),
+  z.strictObject({ action: z.literal('openPluginSettings') }),
   z.strictObject({ action: z.literal('pop') }),
   // Opens one of the App's own Sessions, such as a Session a Plugin's page connected to its item.
   z.strictObject({

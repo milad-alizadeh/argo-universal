@@ -56,6 +56,7 @@ export const statusComponents = {
       children: [
         'FieldGroup.Link',
         'FieldGroup.Value',
+        'FieldGroup.TextField',
         'FieldGroup.SecretField',
       ] as const,
       appearance:

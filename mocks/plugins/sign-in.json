@@ -462,6 +462,571 @@
     ],
     "slots": {}
   },
+  "combined": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "Paste an API token you made at Jira. Argo keeps it in your computer’s secret store."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.TextField",
+            "key": "email",
+            "props": {
+              "title": "Email",
+              "value": "",
+              "onChangeText": {
+                "bind": "email"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.TextField",
+            "key": "site",
+            "props": {
+              "title": "Jira site",
+              "value": "",
+              "onChangeText": {
+                "bind": "site"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.SecretField",
+            "key": "token",
+            "props": {
+              "title": "API token",
+              "value": "",
+              "placeholder": "Paste a Jira API token",
+              "onChangeText": {
+                "operation": "signIn",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      },
+      {
+        "type": "FieldGroup",
+        "key": "oauth",
+        "props": {},
+        "children": [
+          {
+            "type": "FieldGroup.Section",
+            "key": "0",
+            "props": {
+              "title": "Use your browser",
+              "footer": "Opens your browser. The token stays on the Server Device."
+            },
+            "children": [
+              {
+                "type": "FieldGroup.Link",
+                "key": "0",
+                "props": {
+                  "title": "Sign in to Jira",
+                  "action": true,
+                  "onPress": {
+                    "operation": "signIn",
+                    "args": {}
+                  }
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "combinedRejected": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "Jira no longer accepts this sign-in.",
+          "footer": "Paste an API token you made at Jira. Argo keeps it in your computer’s secret store."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.TextField",
+            "key": "email",
+            "props": {
+              "title": "Email",
+              "value": "",
+              "onChangeText": {
+                "bind": "email"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.TextField",
+            "key": "site",
+            "props": {
+              "title": "Jira site",
+              "value": "",
+              "onChangeText": {
+                "bind": "site"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.SecretField",
+            "key": "token",
+            "props": {
+              "title": "API token",
+              "value": "",
+              "placeholder": "Paste a Jira API token",
+              "onChangeText": {
+                "operation": "signIn",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      },
+      {
+        "type": "FieldGroup",
+        "key": "oauth",
+        "props": {},
+        "children": [
+          {
+            "type": "FieldGroup.Section",
+            "key": "0",
+            "props": {
+              "title": "Use your browser",
+              "footer": "Opens your browser. The token stays on the Server Device."
+            },
+            "children": [
+              {
+                "type": "FieldGroup.Link",
+                "key": "0",
+                "props": {
+                  "title": "Sign in to Jira",
+                  "action": true,
+                  "onPress": {
+                    "operation": "signIn",
+                    "args": {}
+                  }
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "combinedWaiting": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "Paste an API token you made at Jira. Argo keeps it in your computer’s secret store."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.TextField",
+            "key": "email",
+            "props": {
+              "title": "Email",
+              "value": "",
+              "onChangeText": {
+                "bind": "email"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.TextField",
+            "key": "site",
+            "props": {
+              "title": "Jira site",
+              "value": "",
+              "onChangeText": {
+                "bind": "site"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.SecretField",
+            "key": "token",
+            "props": {
+              "title": "API token",
+              "value": "",
+              "placeholder": "Paste a Jira API token",
+              "onChangeText": {
+                "operation": "signIn",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      },
+      {
+        "type": "FieldGroup",
+        "key": "oauth",
+        "props": {},
+        "children": [
+          {
+            "type": "FieldGroup.Section",
+            "key": "0",
+            "props": {
+              "title": "Finish in your browser",
+              "footer": "Approve Argo on Jira. This page updates when you’re done."
+            },
+            "children": [
+              {
+                "type": "FieldGroup.Link",
+                "key": "0",
+                "props": {
+                  "title": "Cancel",
+                  "action": true,
+                  "destructive": true,
+                  "onPress": {
+                    "operation": "cancelSignIn",
+                    "args": {}
+                  }
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "combinedPaired": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "Paste an API token you made at Jira. Argo keeps it in your computer’s secret store."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.TextField",
+            "key": "email",
+            "props": {
+              "title": "Email",
+              "value": "",
+              "onChangeText": {
+                "bind": "email"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.TextField",
+            "key": "site",
+            "props": {
+              "title": "Jira site",
+              "value": "",
+              "onChangeText": {
+                "bind": "site"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.SecretField",
+            "key": "token",
+            "props": {
+              "title": "API token",
+              "value": "",
+              "placeholder": "Paste a Jira API token",
+              "onChangeText": {
+                "operation": "signIn",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      },
+      {
+        "type": "FieldGroup",
+        "key": "oauth",
+        "props": {},
+        "children": [
+          {
+            "type": "FieldGroup.Section",
+            "key": "0",
+            "props": {
+              "title": "Continue on the Server Device",
+              "footer": "Open Jira in Argo on the Server Device to sign in. This device updates when you’re done."
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "combinedPasteRefused": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "Paste an API token you made at Jira. Argo keeps it in your computer’s secret store.",
+          "footer": "Jira didn’t accept that token."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.TextField",
+            "key": "email",
+            "props": {
+              "title": "Email",
+              "value": "",
+              "onChangeText": {
+                "bind": "email"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.TextField",
+            "key": "site",
+            "props": {
+              "title": "Jira site",
+              "value": "",
+              "onChangeText": {
+                "bind": "site"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.SecretField",
+            "key": "token",
+            "props": {
+              "title": "API token",
+              "value": "",
+              "placeholder": "Paste a Jira API token",
+              "onChangeText": {
+                "operation": "signIn",
+                "args": {}
+              },
+              "error": "Jira didn’t accept that token."
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      },
+      {
+        "type": "FieldGroup",
+        "key": "oauth",
+        "props": {},
+        "children": [
+          {
+            "type": "FieldGroup.Section",
+            "key": "0",
+            "props": {
+              "title": "Use your browser",
+              "footer": "Opens your browser. The token stays on the Server Device."
+            },
+            "children": [
+              {
+                "type": "FieldGroup.Link",
+                "key": "0",
+                "props": {
+                  "title": "Sign in to Jira",
+                  "action": true,
+                  "onPress": {
+                    "operation": "signIn",
+                    "args": {}
+                  }
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "combinedOAuthFailed": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "Paste an API token you made at Jira. Argo keeps it in your computer’s secret store."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.TextField",
+            "key": "email",
+            "props": {
+              "title": "Email",
+              "value": "",
+              "onChangeText": {
+                "bind": "email"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.TextField",
+            "key": "site",
+            "props": {
+              "title": "Jira site",
+              "value": "",
+              "onChangeText": {
+                "bind": "site"
+              }
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.SecretField",
+            "key": "token",
+            "props": {
+              "title": "API token",
+              "value": "",
+              "placeholder": "Paste a Jira API token",
+              "onChangeText": {
+                "operation": "signIn",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      },
+      {
+        "type": "FieldGroup",
+        "key": "oauth",
+        "props": {},
+        "children": [
+          {
+            "type": "FieldGroup.Section",
+            "key": "0",
+            "props": {
+              "title": "Couldn’t sign in",
+              "footer": "Couldn’t start sign-in."
+            },
+            "children": [
+              {
+                "type": "FieldGroup.Link",
+                "key": "0",
+                "props": {
+                  "title": "Try again",
+                  "action": true,
+                  "onPress": {
+                    "operation": "signIn",
+                    "args": {}
+                  }
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
   "tokenSignedIn": {
     "type": "Screen",
     "key": "0",

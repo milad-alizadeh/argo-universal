@@ -13,3 +13,11 @@ Feature: Sign-in in Plugin Settings
       | signed-in   | wide   | Signed in as Fixture | account     |
       | stopped     | phone  | Sign in              | sign-in     |
       | crashed     | wide   | Sign in              | unavailable |
+
+  Scenario: Open the calling Plugin's settings from its sign-in page
+    Given an Account Plugin is signed-out
+    And a wide Frame
+    When I open the Account Plugin settings
+    And I follow the Account Plugin row
+    And I press the Account Plugin's settings Action
+    Then the Account Plugin settings are open

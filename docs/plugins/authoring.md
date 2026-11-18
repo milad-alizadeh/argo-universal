@@ -650,7 +650,13 @@ A failed, disabled, stopped, or slow provider rejects the borrow with a temporar
 Use the page’s existing load-error handling and refresh interval to retry without asking the person to sign in again.
 A missing Account, refused Grant, or provider that returns no credential still makes the borrow return `null`.
 
-Argo keeps one provider for each host, with one header and prefix, so two kit sign-ins for one host, such as a token paste and `oauthFlow`, cannot each `provide()`. Give both the prefix `''` and keep each token whole, `Basic …` or `Bearer …`. Pass `oauthFlow` an `argo` whose `accounts.provide` keeps the handler instead of registering it, then register one provider that lends the paste's Secret as it is and asks the kept handler for anything else; `plugins/jira/atlassian-sign-in.ts` does this (#2244).
+To offer token paste and OAuth for one Account host, pass both flows to `provideSignIn(argo, [paste, oauth], options)` and `signInGate`.
+Declare a required string `flow` param on both Operations.
+Make the secret `token` param optional so OAuth can start without it.
+
+Both flows must use the same header name.
+Each flow supplies its prefix, such as `Basic` or `Bearer`.
+If the Plugin already has Secrets from a single flow, put that flow first.
 
 After sign-in, create the Account and store its token under the returned id:
 
@@ -682,6 +688,8 @@ Argo removes any borrower header with the same name first. Network-reserved head
 First-party Plugins receive unset Grants silently until consent screens exist. A refused Grant stays refused across Server restarts.
 
 ### The OAuth flow
+
+Use `{ action: 'openPluginSettings' }` on a Button, FieldGroup row or header Action to open your Plugin's settings. For example, link there when sign-in needs a client ID or secret.
 
 `oauthFlow(argo, options)` from `@argo/plugin-kit` is the whole sign-in for a service that takes OAuth's authorization code grant with PKCE: from a public client, with no client secret, such as Linear or GitLab, or with a client secret the person supplies, such as Atlassian or Google. Give it the service's URLs:
 
@@ -727,7 +735,7 @@ A token whose answer carried `refresh_token` and `expires_in` is refreshed at `t
 
 Declare `signIn` and `cancelSignIn` in `contributes.operations` with tier `act`. Start a sign-in only on the Server Device: the page's Loader reads `context.serverDevice` and offers the button there, and says to continue on the Server Device elsewhere. In the test harness, `kit.pages.draw` and `kit.pages.run` draw and run as a paired Device's App; `serverDevice: true` asks as the App on the Server Device.
 
-A test that signs in through the browser binds Argo's fixed callback port, so call `serialiseOnOAuthPort()` from `@argo/plugin-kit/testing/oauth-port` once at the top of its file; files that do take turns. Give `startPluginTest` an `openBrowser` that plays the browser: it reads the authorize URL's `redirect_uri` and `state` and fetches the redirect with a `code`. `plugins/jira/mocks/atlassian-journey.ts` is a worked example. `cancel()` ends the flow's wait but not Argo's: the callback listener holds the port until the five-minute wait ends or the Plugin host closes, so a test that cancels a sign-in closes its host before the next file binds the port (#2246).
+A test that signs in through the browser binds Argo's fixed callback port, so call `serialiseOnOAuthPort()` from `@argo/plugin-kit/testing/oauth-port` once at the top of its file; files that do take turns. Give `startPluginTest` an `openBrowser` that plays the browser: it reads the authorize URL's `redirect_uri` and `state` and fetches the redirect with a `code`. `plugins/jira/mocks/atlassian-journey.ts` is a worked example. Await `cancel()` to end the exchange and release the callback port when no other exchange is pending.
 
 ### The sign-in pattern
 
@@ -775,20 +783,20 @@ argo.pages.define('/', signInGate(flow, { name: 'Linear' }, { load, render }));
 
 - `host` is the Account's API host. Declare it in `contributes.accounts` and as a `fetch` Capability.
 - `header` is how a borrower's request carries the kept token.
-- `label(token)` checks a pasted token: call the service with it, as `argo.fetch(url, { headers })`, and answer whose Account it opens, or `null` when the service refuses it. When the Plugin knows why, such as a token made without the scopes it needs, it answers `{ refused: message }`, and the page draws that message beside the field in place of the kit's "wasn't accepted"; a message that holds the token is not drawn. It is the only Plugin code that sees the token, and only the one being pasted; never keep it.
+- `label(token, fields)` checks a pasted token: call the service with it, as `argo.fetch(url, { headers })`, and answer whose Account it opens, or `null` when the service refuses it. When the Plugin knows why, such as a token made without the scopes it needs, it answers `{ refused: message }`, and the page draws that message beside the field in place of the kit's "wasn't accepted"; a message that holds the token is not drawn. The token also goes to `credential` if you supply it.
 - Declare `signIn` in `contributes.operations`, tier `act`, with one param `token`: `{ "type": "string", "description": "The pasted API token.", "required": true, "secret": true }`. The sign-in page's `FieldGroup.SecretField` sends what is pasted to it, so the token is never logged, answered or kept in Page state (ADR-0051). A token paste needs no `cancelSignIn`.
 - A refused token is shown beside the field, which stays for the next paste. A token is pasted on any Device, a paired phone included. Signing in again with a token for the same label rewrites that Account's token, so a revoked token's gate takes a new one.
 - `flow.state()` is `idle`, `signed-in` with the Account's `label`, or `failed` with the `message` drawn beside the field. A `label` that throws shows a fixed message, never its error, which may name the token.
 - The field sends its text each time typing pauses for 150 ms, and each send is checked with `label`; a paste is one send. A token typed by hand is therefore checked at every pause, and "wasn't accepted" can show while the person is still typing; the field keeps their text. Text shorter than 8 characters is never sent to `label`, and an emptied field clears the error. The token is trimmed of surrounding spaces before it is checked.
 - A newer send replaces one still being checked or kept: the older one keeps no token, and adds no Account unless it was already being added.
 
-The kit's page draws one token field, and `label` gets the token alone. A service that needs more, as Atlassian takes `Basic` over `email:token` and a site to check it against, draws its own sign-in page and still uses `tokenPaste` for the rest (#2243):
+For a service that needs an email or site, declare extra fields in `fields`, such as `{ key: 'email', title: 'Email' }`.
+Declare a string Operation param for each field.
+The kit holds these values in Page state and passes them to `label(token, fields)`.
 
-- The page holds the other fields in Page state, which never holds a Secret, and its SecretField runs `signIn` with them beside the secret `token` param.
-- The `signIn` handler builds the whole header value, such as `Basic <base64 of email:token>`, and starts the flow with it; the flow's `header` prefix is `''`, so the Secret is the value a borrower's request carries.
-- `flow.state()` stays `signed-in` for the life of the Plugin process, after the service stops taking the token or the person signs out in Settings. `signInGate` guards against that; a page of your own does too: when a read finds no Account or the service answers 401, note it, and draw the field again until a read succeeds or a paste signs in.
-
-`plugins/jira/sign-in-page.tsx`, `jira-sign-in.ts` and `revoke.integration.test.ts` hold the whole pattern.
+Use `credential: ({ token, email }) => …` to build the credential the Account keeps.
+For Basic auth, encode `email:token` as Base64 and use a `Basic` header prefix.
+The token arrives through the secret Operation param.
 
 ### `argo.oauth`
 
@@ -805,6 +813,7 @@ Build the service’s authorize URL with these values, then call `argo.oauth.awa
 Argo opens that HTTP or HTTPS URL without a shell.
 The result is `{ code, verifier }` or `null`. The Plugin exchanges the code itself.
 A denial, unknown state, five-minute timeout, reload, or stop resolves to `null`.
+Call `argo.oauth.cancel(state)` to end the pending exchange and resolve its wait to `null`.
 Each Plugin holds one pending exchange. The callback listener runs only while an exchange is pending.
 
 Accounts screens, consent presentation, native sign-out confirmation, and the close-tab document remain pending approved designs in #1166.
