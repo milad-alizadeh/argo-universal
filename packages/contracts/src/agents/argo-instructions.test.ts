@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { diagramTones } from '../diagram';
+import { diagramTones, supportedDiagramKeywords } from '../diagram';
 import { SubagentRole } from '../feed/subagent-role';
 import { pluginInstructionsLimit } from '../plugins/manifest-fields';
 import { todoOperationIds } from '../sessions/todos';
@@ -76,6 +76,12 @@ it('leaves the Todo list instruction out when the person turned the Todo list of
   expect(argoInstructionsMarkdown()).toContain('session.setTodos');
 });
 
+// Accepted by the renderer but deliberately not advertised: the instruction names only the canonical keyword.
+const unadvertisedDiagramAliases = {
+  graph: 'flowchart',
+  stateDiagram: 'stateDiagram-v2',
+};
+
 it('asks the Agent to validate each diagram, naming the Operation and every tone it may mark a node with', () => {
   const diagrams = argoInstructions.find(
     ({ name }) => name === 'Diagrams',
@@ -85,6 +91,30 @@ it('asks the Agent to validate each diagram, naming the Operation and every tone
   expect(diagrams).toContain('operation_run');
 
   for (const tone of diagramTones) expect(diagrams).toContain(tone);
+});
+
+it('names every diagram keyword Argo draws, except the aliases it leaves unadvertised', () => {
+  const diagrams = argoInstructions.find(
+    ({ name }) => name === 'Diagrams',
+  )?.text;
+
+  const advertised = supportedDiagramKeywords.filter(
+    (keyword) => !(keyword in unadvertisedDiagramAliases),
+  );
+
+  for (const keyword of advertised) expect(diagrams).toContain(keyword);
+});
+
+it('keeps each unadvertised diagram alias pointing at a keyword the instruction names', () => {
+  const diagrams = argoInstructions.find(
+    ({ name }) => name === 'Diagrams',
+  )?.text;
+
+  for (const [alias, target] of Object.entries(unadvertisedDiagramAliases)) {
+    expect(supportedDiagramKeywords).toContain(alias);
+    expect(supportedDiagramKeywords).toContain(target);
+    expect(diagrams).toContain(target);
+  }
 });
 
 // `gh pr create` alone left each pull request unattached to the Session.
