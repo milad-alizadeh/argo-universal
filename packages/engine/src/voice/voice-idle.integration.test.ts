@@ -130,3 +130,40 @@ describe('an idle call and a Turn the person typed', () => {
     slow,
   );
 });
+
+describe('an idle call and a steered Prompt', () => {
+  it(
+    'stays up while its Prompt is steered into a typed Turn, then idles after that Turn ends',
+    async () => {
+      const typedGate = Promise.withResolvers<void>();
+
+      const work = await startVoiceWork(
+        [{ prompt: 'Typed job', holdUntil: typedGate.promise }],
+        { idleMs, steering: true },
+      );
+
+      await work.start();
+      await work.host.caller.session.prompt({
+        sessionId: work.sessionId,
+        prompt: [{ type: 'text', text: 'Typed job' }],
+      });
+      await expect.poll(() => work.prompts.length).toBe(2);
+
+      work.provider.call.requestWork('r1', 'Steer this');
+      expect(JSON.stringify(await work.steered)).toContain('Steer this');
+      await expect.poll(async () => (await work.promptRows()).length).toBe(1);
+
+      await pause(idleMs * 1.5);
+      expect((await statusOf(work)).call).not.toBeNull();
+
+      typedGate.resolve();
+      const resolvedAt = Date.now();
+
+      await expect
+        .poll(() => statusOf(work), waitForEnd)
+        .toMatchObject({ call: null, ended: { reason: 'idle' } });
+      expect(Date.now() - resolvedAt).toBeGreaterThanOrEqual(idleMs);
+    },
+    slow,
+  );
+});
