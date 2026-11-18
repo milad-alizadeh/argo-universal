@@ -96,8 +96,3 @@ export type VoiceEndInput = z.infer<typeof VoiceEndInput>;
 export const VoiceEndOutput = z.strictObject({ ended: z.boolean() });
 
 export type VoiceEndOutput = z.infer<typeof VoiceEndOutput>;
-
-// Input of `voice.hangUp`: the calling Session's Voice call unless the params name another Session.
-export const VoiceHangUpInput = VoiceEndInput;
-
-export type VoiceHangUpInput = VoiceEndInput;

@@ -16,7 +16,7 @@ export type SessionHappening =
 export type PromptOutcome = 'started' | 'queued';
 
 // A Notice the call writes into its Session's Feed.
-export interface VoiceNotice {
+interface VoiceNotice {
   title: string;
   description: string;
 }

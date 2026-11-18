@@ -2,7 +2,6 @@ import { z } from 'zod';
 import {
   VoiceEndInput,
   VoiceEndOutput,
-  VoiceHangUpInput,
   VoiceStartInput,
   VoiceStartOutput,
   VoiceStatus,
@@ -46,7 +45,7 @@ export const voiceOperations = {
     label: 'Hang up Voice call',
     description:
       'End the Voice call of the calling Session, because the person clearly said they are done talking. Refused when the Session has no Voice call. Do not use it when the person only asks to stop work or pause.',
-    params: VoiceHangUpInput,
+    params: VoiceEndInput,
     result: VoiceEndOutput,
     tier: 'act',
     keywords: ['voice', 'call', 'hang up', 'goodbye', 'done', 'end'],
