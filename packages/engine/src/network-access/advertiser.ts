@@ -82,36 +82,91 @@ class Responder {
   }
 }
 
+// Where the Server's interfaces are read from and how often they are read again; a test says both.
+export interface NetworkWatch {
+  addresses: () => string[];
+  checkEveryMs: number;
+}
+
+const defaultWatch: NetworkWatch = {
+  addresses: interfaceAddresses,
+  checkEveryMs: 10_000,
+};
+
 class Announcer {
-  private responders: Responder[] = [];
+  private responders = new Map<string, Responder>();
   private queue: Promise<void> = Promise.resolve();
+  private checking: ReturnType<typeof setInterval> | undefined;
 
   public constructor(
     private readonly announcement: Announcement,
     private readonly report: (line: string) => void,
+    private readonly watch: NetworkWatch,
   ) {}
 
   // Changes are applied one at a time, in the order they arrive.
   public set(on: boolean): Promise<void> {
-    this.queue = this.queue
-      .then(() => (on ? this.start() : this.stop()))
-      .catch((cause: unknown): void => {
-        this.report(`could not change the announcement: ${String(cause)}`);
-      });
+    return this.enqueue(() => (on ? this.start() : this.stop()));
+  }
+
+  private enqueue(change: () => void | Promise<void>): Promise<void> {
+    this.queue = this.queue.then(change).catch((cause: unknown): void => {
+      this.report(`could not change the announcement: ${String(cause)}`);
+    });
 
     return this.queue;
   }
 
   private start(): void {
-    if (this.responders.length > 0) return;
+    if (this.checking) return;
+    this.checking = setInterval(() => {
+      void this.enqueue(() => this.follow());
+    }, this.watch.checkEveryMs);
+    this.checking.unref();
+    this.follow();
+  }
 
-    this.responders = interfaceAddresses().map(
-      (address) => new Responder(address, this.announcement, this.report),
+  // A laptop that moves to another network keeps announcing the old addresses until its interfaces are read again.
+  private follow(): void {
+    const now = new Set(this.watch.addresses());
+    const before = [...this.responders.keys()];
+
+    for (const [address, responder] of this.responders)
+      if (!now.has(address)) this.drop(address, responder);
+
+    for (const address of now) this.join(address);
+    if (before.length !== now.size || before.some((one) => !now.has(one)))
+      this.say([...now]);
+  }
+
+  private drop(address: string, responder: Responder): void {
+    this.responders.delete(address);
+    void responder.withdraw();
+  }
+
+  private join(address: string): void {
+    if (this.responders.has(address)) return;
+
+    this.responders.set(
+      address,
+      new Responder(address, this.announcement, this.report),
+    );
+  }
+
+  // What the Server announced and where, so a phone that finds nothing can be compared with what was said.
+  private say(addresses: readonly string[]): void {
+    const { name, port } = this.announcement;
+
+    this.report(
+      `announcing "${name}" on ${addresses.join(', ') || 'no network'} port ${port}`,
     );
   }
 
   private async stop(): Promise<void> {
-    const responders = this.responders.splice(0);
+    clearInterval(this.checking);
+    this.checking = undefined;
+    const responders = [...this.responders.values()];
+    this.responders.clear();
 
     await Promise.all(responders.map((responder) => responder.withdraw()));
   }
@@ -125,8 +180,9 @@ export function announceWhileLocalNetworkAccessIsOn(
   access: LocalNetworkAccess,
   announcement: Announcement,
   report: (line: string) => void,
+  watch: NetworkWatch = defaultWatch,
 ): () => Promise<void> {
-  const announcer = new Announcer(announcement, report);
+  const announcer = new Announcer(announcement, report, watch);
 
   const unsubscribe = access.subscribe((enabled): void => {
     void announcer.set(enabled);

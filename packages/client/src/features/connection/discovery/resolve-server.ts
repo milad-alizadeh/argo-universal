@@ -28,10 +28,30 @@ export interface ServerLocation {
 
 const defaultTimeoutMs = 3000;
 
+// The first browse of a session may be asked while the system's Local Network prompt is still on screen, so it waits as long as Expo's launcher does (4 s).
+const firstBrowseTimeoutMs = 4000;
+
+let browsedBefore = false;
+
+function nextBrowseTimeoutMs(): number {
+  const timeoutMs = browsedBefore ? defaultTimeoutMs : firstBrowseTimeoutMs;
+  browsedBefore = true;
+
+  return timeoutMs;
+}
+
 class ServerNotFoundError extends Error {
   public constructor(name: string) {
     super(`${name} is not on the local network`);
     this.name = 'ServerNotFoundError';
+  }
+}
+
+// Nothing was heard on the first browse and nothing else says where the Server is: not a failure, because the prompt for Local Network may have been answered too late to help this try.
+class BrowseUndeterminedError extends Error {
+  public constructor(name: string) {
+    super(`Nothing has answered for ${name} yet`);
+    this.name = 'BrowseUndeterminedError';
   }
 }
 
@@ -93,7 +113,7 @@ function waitForAnnouncement(
 export async function announcedAddresses(
   key: string,
   browse: BrowseServers | null,
-  timeoutMs: number = defaultTimeoutMs,
+  timeoutMs: number = nextBrowseTimeoutMs(),
 ): Promise<ServerAddress[]> {
   const found = await waitForAnnouncement(browse, key, timeoutMs);
 
@@ -109,8 +129,11 @@ const announced = (found: DiscoveredServer): ServerLocation => ({
   source: 'discovery',
 });
 
-function remembered(known: KnownServer): ServerLocation {
-  if (!known.address) throw new ServerNotFoundError(known.name);
+function remembered(known: KnownServer, first: boolean): ServerLocation {
+  if (!known.address)
+    throw first
+      ? new BrowseUndeterminedError(known.name)
+      : new ServerNotFoundError(known.name);
 
   return {
     name: known.name,
@@ -128,9 +151,11 @@ function remembered(known: KnownServer): ServerLocation {
 export async function resolveServer(
   known: KnownServer,
   browse: BrowseServers | null,
-  timeoutMs: number = defaultTimeoutMs,
+  timeoutMs?: number,
 ): Promise<ServerLocation> {
-  const found = await waitForAnnouncement(browse, known.key, timeoutMs);
+  const first = !browsedBefore;
+  const waited = timeoutMs ?? nextBrowseTimeoutMs();
+  const found = await waitForAnnouncement(browse, known.key, waited);
 
-  return found ? announced(found) : remembered(known);
+  return found ? announced(found) : remembered(known, first && browse !== null);
 }

@@ -18,6 +18,8 @@ export type PairOutcome =
   | { kind: 'declined' }
   | { kind: 'unanswered' }
   | { kind: 'not-found' }
+  // The first look at the network heard nothing, which is no proof the Server is away: a Local Network prompt may have been answered after the wait ended.
+  | { kind: 'undetermined' }
   | { kind: 'failed' };
 
 // The ways that have a page of their own; a `failed` one is only a toast, and the scanner stays.
@@ -128,11 +130,20 @@ const directAddresses = (
     ...(deps.address ? [deps.address] : []),
   ]);
 
+interface Announced {
+  name: string;
+  addresses: ServerAddress[];
+  undetermined?: true;
+}
+
+const isUndetermined = (cause: unknown): boolean =>
+  cause instanceof Error && cause.name === 'BrowseUndeterminedError';
+
 // Where the Server announces itself now, less where it was already knocked on; none when it is not heard.
 async function announcedAt(
   attempt: Attempt,
   tried: readonly ServerAddress[],
-): Promise<{ name: string; addresses: ServerAddress[] }> {
+): Promise<Announced> {
   const { invite, deps } = attempt;
   const known = { name: invite.server, key: invite.key };
 
@@ -145,8 +156,10 @@ async function announcedAt(
       .filter((address) => !skip.has(keyOf(address)));
 
     return { name: located.name, addresses };
-  } catch {
-    return { name: invite.server, addresses: [] };
+  } catch (cause) {
+    const nothing = { name: invite.server, addresses: [] };
+
+    return isUndetermined(cause) ? { ...nothing, undetermined: true } : nothing;
   }
 }
 
@@ -165,10 +178,12 @@ export async function pairWithInvite(
   if (answered) return answered;
   const announced = await announcedAt(attempt, direct);
 
-  return (
-    (await pairOnAny(announced.addresses, {
-      ...attempt,
-      name: announced.name,
-    })) ?? { kind: 'not-found' }
-  );
+  const outcome = await pairOnAny(announced.addresses, {
+    ...attempt,
+    name: announced.name,
+  });
+
+  if (outcome) return outcome;
+
+  return { kind: announced.undetermined ? 'undetermined' : 'not-found' };
 }

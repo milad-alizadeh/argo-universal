@@ -112,6 +112,18 @@ describe('pairing with the Server a code names', () => {
     expect(pair).toHaveBeenCalledTimes(2);
   });
 
+  it('says undetermined, not not-found, when the first look at the network hears nothing', async () => {
+    const pair = vi.fn<Pair>();
+    const undetermined = Object.assign(new Error('nothing heard yet'), {
+      name: 'BrowseUndeterminedError',
+    });
+    const resolve = vi.fn<Resolve>().mockRejectedValue(undetermined);
+
+    await expect(pairWithInvite(invite, deps(pair, resolve))).resolves.toEqual({
+      kind: 'undetermined',
+    });
+  });
+
   it('knocks first where the code says the Server answers, without asking the network', async () => {
     const pair = vi.fn<Pair>().mockResolvedValue({ deviceId: 'phone' });
     const resolve = heardAt(first);

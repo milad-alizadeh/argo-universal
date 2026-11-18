@@ -142,9 +142,16 @@ function accessOf(permission: Permission): 'ask' | 'refused' | 'allowed' {
   return isRefused(permission) ? 'refused' : 'ask';
 }
 
+// Seam: an `undetermined` outcome (the first look at the network heard nothing) has no page of its own yet, so it shows the not-found page, as before. A designed page for it replaces this mapping.
 const kindOf = (
   state: Exclude<PairPhase, { phase: 'scanning' | 'looking' }>,
-): PairPageKind => (state.phase === 'waiting' ? 'waiting' : state.outcome.kind);
+): PairPageKind => {
+  if (state.phase === 'waiting') return 'waiting';
+
+  return state.outcome.kind === 'undetermined'
+    ? 'not-found'
+    : state.outcome.kind;
+};
 
 // Cancelling the wait and scanning again are one thing, as is trying a Server that was not found once more; every other page leads back to the scanner.
 interface OutcomeProps {

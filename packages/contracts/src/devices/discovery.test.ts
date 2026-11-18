@@ -1,6 +1,11 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { keyHashOf, keyHostLabelOf, toDiscoveredServer } from './discovery';
+import {
+  HeardServers,
+  keyHashOf,
+  keyHostLabelOf,
+  toDiscoveredServer,
+} from './discovery';
 
 const digestOf = (key: string): Buffer =>
   createHash('sha256').update(key).digest();
@@ -52,5 +57,48 @@ describe('the key hash an announcement carries', () => {
         port: 1,
       }),
     ).toBeUndefined();
+  });
+});
+
+describe('Servers heard on the network', () => {
+  const heardAs = (name: string, key: string, txtName?: string) => ({
+    name,
+    txt: { keyhash: keyHashOf(key), ...(txtName ? { name: txtName } : {}) },
+    addresses: [],
+    port: 4000,
+  });
+
+  it('keeps two Servers that announce one name, by their key hashes', (): void => {
+    let listed: readonly { keyHash: string }[] = [];
+    const heard = new HeardServers((servers): void => {
+      listed = servers;
+    });
+
+    heard.up('Studio Mac', heardAs('Studio Mac', 'key-1'));
+    heard.up('Studio Mac', heardAs('Studio Mac', 'key-2'));
+
+    expect(listed.map((server) => server.keyHash).toSorted()).toEqual(
+      [keyHashOf('key-1'), keyHashOf('key-2')].toSorted(),
+    );
+  });
+
+  it('drops every Server heard under a name that goes away', (): void => {
+    let listed: readonly unknown[] = [];
+    const heard = new HeardServers((servers): void => {
+      listed = servers;
+    });
+    heard.up('Studio Mac', heardAs('Studio Mac', 'key-1'));
+
+    heard.down('Studio Mac');
+
+    expect(listed).toEqual([]);
+  });
+
+  it('lists a Server by the computer name it announces, not by its instance name', (): void => {
+    const server = toDiscoveredServer(
+      heardAs('Studio Mac (0a1b2c)', 'key-1', 'Studio Mac'),
+    );
+
+    expect(server?.name).toBe('Studio Mac');
   });
 });
