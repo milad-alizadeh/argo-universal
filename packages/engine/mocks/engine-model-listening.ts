@@ -19,6 +19,7 @@ function listeningInput(): HttpServerOptions {
 
     database: model.mockDatabase,
     sessions: expect.anything(),
+    voice: expect.anything(),
     sessionTokens: expect.any(SessionTokens),
     databaseWriter: expect.anything(),
     registry: expect.anything(),
