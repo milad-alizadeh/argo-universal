@@ -3,6 +3,7 @@ import {
   Pill,
   Stack,
   Spacer,
+  Surface,
   Text,
   type PageTo,
 } from '@argo/plugin-kit';
@@ -103,13 +104,23 @@ function toolbar(data: Pace, state: Filters, to: To): JSX.Element {
   );
 }
 
-export function controls(data: Pace, state: Filters, to: To): JSX.Element {
+function filterBar(data: Pace, state: Filters, to: To): JSX.Element {
   const start = data.target.start + (state.previous ? days * dayMs : 0);
 
   return (
+    <Surface kind="muted" padding={2}>
+      <Stack direction="column" gap={2}>
+        {toolbar(data, state, to)}
+        {state.choosingWeek && weekChoices(start, to)}
+      </Stack>
+    </Surface>
+  );
+}
+
+export function controls(data: Pace, state: Filters, to: To): JSX.Element {
+  return (
     <Stack direction="column" gap={2}>
-      {toolbar(data, state, to)}
-      {state.choosingWeek && weekChoices(start, to)}
+      {filterBar(data, state, to)}
       {status(data, state)}
     </Stack>
   );

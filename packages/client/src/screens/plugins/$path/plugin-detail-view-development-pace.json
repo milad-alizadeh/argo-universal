@@ -60,38 +60,59 @@
                 "props": { "gap": 2, "direction": "column" },
                 "children": [
                   {
-                    "type": "Stack",
+                    "type": "Surface",
                     "key": "0",
-                    "props": {
-                      "gap": 2,
-                      "align": "center",
-                      "direction": "row"
-                    },
+                    "props": { "kind": "muted", "padding": 2 },
                     "children": [
                       {
-                        "type": "Pill",
+                        "type": "Stack",
                         "key": "0",
-                        "props": {
-                          "text": "argo-universal",
-                          "variant": "control",
-                          "disclosure": "down",
-                          "accessibilityLabel": "Choose repository, milad-alizadeh/argo-universal",
-                          "onPress": { "action": "navigate", "path": "/pace" }
-                        },
-                        "children": [],
-                        "slots": {}
-                      },
-                      {
-                        "type": "Pill",
-                        "key": "1",
-                        "props": {
-                          "text": "Nov 12 – 18",
-                          "variant": "control",
-                          "disclosure": "down",
-                          "accessibilityLabel": "Choose week",
-                          "onPress": { "pageState": { "choosingWeek": true } }
-                        },
-                        "children": [],
+                        "props": { "gap": 2, "direction": "column" },
+                        "children": [
+                          {
+                            "type": "Stack",
+                            "key": "0",
+                            "props": {
+                              "gap": 2,
+                              "align": "center",
+                              "direction": "row"
+                            },
+                            "children": [
+                              {
+                                "type": "Pill",
+                                "key": "0",
+                                "props": {
+                                  "text": "argo-universal",
+                                  "variant": "control",
+                                  "disclosure": "down",
+                                  "accessibilityLabel": "Choose repository, milad-alizadeh/argo-universal",
+                                  "onPress": {
+                                    "action": "navigate",
+                                    "path": "/pace"
+                                  }
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Pill",
+                                "key": "1",
+                                "props": {
+                                  "text": "Nov 12 – 18",
+                                  "variant": "control",
+                                  "disclosure": "down",
+                                  "accessibilityLabel": "Choose week",
+                                  "onPress": {
+                                    "pageState": { "choosingWeek": true }
+                                  }
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
                         "slots": {}
                       }
                     ],
