@@ -175,7 +175,7 @@ What names one drawing of a Plugin page: the Plugin, the Page path, the Page sta
 _Avoid_: Query key, cache key, URL
 
 **Stale mark**:
-The Server telling every connected App that a Plugin's pages may have changed: all of them after a write, or the Page addresses that read a Query whose answer changed. An App asks again for the marked pages it shows, and asks for the rest when they are next opened.
+The Server telling every connected App that a Plugin's pages may have changed: all of them when a new worker of the Plugin runs, or the Page addresses that read a Query whose answer changed, which a write finds by reading the held Queries again. A write that changes no answer sends none, except to pages whose draws read nothing core can compare. An App asks again for the marked pages it shows, and asks for the rest when they are next opened.
 _Avoid_: Invalidation, refresh event, push update
 
 **Loader**:
@@ -329,7 +329,7 @@ A Plugin's own record that a Session produced one pull request, named by its rep
 _Avoid_: PR link, attachment
 
 **Auto-fix**:
-A person's choice, per PR association, that the Session's Agent is prompted to fix each new failed Check, review comment or merge conflict on that pull request. One Prompt lists everything new on a head commit; its failed Checks wait until every Check has reported, so they come in one Prompt. A push, a close, or turning it off withdraws a Prompt that has not started. It is off until turned on.
+A person's choice, per PR association, that the Session's Agent is prompted to fix each new failed Check run, review comment or merge conflict on that pull request; a re-run that fails again is new. One Prompt lists everything new on a head commit; its failed Checks wait until every Check has reported, so they come in one Prompt. When CI is still red on a head it already prompted about and the Session has been idle for 30 minutes, it prompts again to go on and push. A push, a close, or turning it off withdraws a Prompt that has not started. It is off until turned on.
 _Avoid_: Babysit, watch, auto-repair
 
 **Auto-merge**:

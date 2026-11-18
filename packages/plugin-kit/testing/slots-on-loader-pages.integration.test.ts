@@ -4,6 +4,7 @@ import { toolCallSlotFixture } from '@repo/contracts/plugins/replaceable-fixture
 import type { SlotItems } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
 import { dataFixture, dataPluginId } from '../mocks/data-fixture';
+import { markFor } from './stale-marks';
 
 const rowSlotId = 'argo/session/row/v1';
 
@@ -24,8 +25,9 @@ const bump = {
 const source = `import { Text } from '@argo/plugin-kit';
 let count = 0;
 export function register(argo) {
+  const counted = argo.queries.define('count', async () => count);
   argo.operations.register('bump', async () => ({ count: ++count }));
-  argo.pages.define('/', { load: () => count, render: (seen) => <Text>{'Count ' + seen}</Text> });
+  argo.pages.define('/', { load: ({ read }) => read(counted({})), render: (seen) => <Text>{'Count ' + seen}</Text> });
   argo.pages.define('/bump', {
     load: () => { count += 1; argo.changed(); return count; },
     render: (seen) => <Text>{'Bumped ' + seen}</Text>,
@@ -92,8 +94,16 @@ it("draws a page again and asks an items Slot again after the Plugin's argo.chan
   });
 
   await kit.pages.draw({ path: '/bump' });
+  await kit.clock.advance(250);
 
-  expect((await stale.next()).value).toEqual({ pluginId: dataPluginId });
+  /*
+   * The Plugin starting marks every page, and the page that drew its own state is marked as it says so; the page that
+   * read the count is marked once Argo has read its Query again (ADR-0060).
+   */
+  expect(await markFor(stale, '/')).toEqual({
+    pluginId: dataPluginId,
+    addresses: [expect.objectContaining({ path: '/' })],
+  });
   expect(await kit.pages.draw({ path: '/' })).toMatchObject({
     root: { props: { children: 'Count 1' } },
   });
@@ -108,6 +118,7 @@ it('asks an items Slot again after one of the Plugin’s Operations ran', async 
 
   expect((await items.next()).value).toEqual(rowOf('Count 0'));
   await kit.operations.run({ name: 'bump' });
+  await kit.clock.advance(250);
   expect((await items.next()).value).toEqual(rowOf('Count 1'));
   controller.abort();
 });

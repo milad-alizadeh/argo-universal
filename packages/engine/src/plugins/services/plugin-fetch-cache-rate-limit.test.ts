@@ -53,6 +53,24 @@ describe('rate limits', () => {
     expect(github.sent).toHaveLength(1);
   });
 
+  it('tells a Query that read since the limit tripped, or was refused by it, when it reopens, and one that read before or after nothing', async () => {
+    const github = service();
+    const started = github.clock.now();
+
+    github.answer(reply(429, { 'retry-after': '30' }));
+    await github.fetch(hopOf('/a'));
+    expect(github.limitedUntil(started)).toBe(started + 30_000);
+
+    github.clock.advance(10_000);
+    expect(github.limitedUntil(github.clock.now())).toBeUndefined();
+
+    await github.fetch(hopOf('/b'));
+    expect(github.limitedUntil(github.clock.now())).toBe(started + 30_000);
+
+    github.clock.advance(20_000);
+    expect(github.limitedUntil(started)).toBeUndefined();
+  });
+
   it('leaves a plain 403 open, and another credential open', async () => {
     const github = service();
 

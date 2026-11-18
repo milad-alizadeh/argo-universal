@@ -33,9 +33,12 @@ it(
     // An open list holds Argo's clock, which is what makes a read due.
     await openChanges(run).next();
 
-    // GitHub no longer accepts the token, and meanwhile the pull request was closed there.
+    /*
+     * GitHub no longer accepts the token, and meanwhile the pull request was renamed there; it stays open, as a closed
+     * one is settled and not asked for again (#2197).
+     */
     run.github.accepted.delete(token);
-    changePull(run, 1, { state: 'closed' });
+    changePull(run, 1, { title: 'Moved' });
     await tick(run);
 
     await expect
@@ -53,7 +56,7 @@ it(
 
     const [recovered] = await changesOf(run);
 
-    expect(recovered).toMatchObject({ stage: 'closed' });
+    expect(recovered).toMatchObject({ stage: 'open', title: 'Moved' });
     expect(recovered).not.toHaveProperty('stale');
 
     run.github.failWith.status = 503;
@@ -62,9 +65,9 @@ it(
 
     await expect
       .poll(() => changesOf(run), { timeout: wait })
-      .toMatchObject([{ stage: 'closed', stale: 'failed' }]);
+      .toMatchObject([{ title: 'Moved', stale: 'failed' }]);
     expect(await listed(run)).toMatchObject({
-      changes: [{ stage: 'closed', stale: 'failed' }],
+      changes: [{ title: 'Moved', stale: 'failed' }],
     });
 
     run.github.failWith.status = null;

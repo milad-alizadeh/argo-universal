@@ -8,6 +8,7 @@ import type {
   KindCalls,
   WorkerCalls,
 } from '../runtime/worker-calls';
+import { forget } from './forget-items';
 import {
   itemsLeftOut,
   keptAnswer,
@@ -18,7 +19,7 @@ import {
 } from './kept-items';
 import { LastGoodItems } from './last-good-items';
 import { SlotItemChanges } from './slot-item-changes';
-import { refreshFor, type SlotRefresh } from './slot-refresh';
+import { refreshFor, type Shown, type SlotRefresh } from './slot-refresh';
 
 // How long one batched call may take before its Plugin is left out of that answer.
 const slotItemsLimitMs = 2000;
@@ -56,7 +57,7 @@ export class PluginSlotItems {
   constructor(
     private readonly workers: WorkerCalls,
     clock: PluginClock,
-    data: { written: (pluginId: string) => void },
+    data: Parameters<typeof refreshFor>[1]['data'],
   ) {
     this.refresh = refreshFor(workers, { clock, data, items: this });
     this.calls = workers.kind({
@@ -139,17 +140,42 @@ export class PluginSlotItems {
     this.calls.answer(caller, call);
   }
 
-  // What the Plugin shows changed: nothing it answered is kept, and open lists ask it again.
-  changed(pluginId: string): void {
+  /*
+   * A list's clock ticked: what the Plugin answered for the contexts the lists show is dropped and they ask it
+   * again; what it answered for any other context is kept.
+   */
+  askAgain(pluginId: string, shown: readonly Shown[]): void {
     const worker = this.kept.get(pluginId);
 
     if (worker) {
       worker.epoch += 1;
-      worker.kept.clear();
-      worker.failed.clear();
+
+      for (const list of shown) forget(worker, list);
     }
 
     this.changes.bump();
+  }
+
+  // What the Plugin answered is dropped at once, so a list opened now asks it again; open lists wake when `wake` says so.
+  drop(pluginId: string): void {
+    const worker = this.kept.get(pluginId);
+
+    if (!worker) return;
+
+    worker.epoch += 1;
+    worker.kept.clear();
+    worker.failed.clear();
+  }
+
+  // Open lists ask again.
+  wake(): void {
+    this.changes.bump();
+  }
+
+  // What the Plugin shows changed: nothing it answered is kept, and open lists ask it again.
+  changed(pluginId: string): void {
+    this.drop(pluginId);
+    this.wake();
   }
 
   close(): void {

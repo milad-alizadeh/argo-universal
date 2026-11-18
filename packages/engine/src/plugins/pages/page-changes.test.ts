@@ -9,16 +9,27 @@ const idleClock: PluginClock = {
   schedule: () => () => null,
 };
 
-type Changes = { changes: PageChanges; workers: WorkerCalls };
+type Changes = {
+  changes: PageChanges;
+  workers: WorkerCalls;
+  scoped: string[];
+};
 
 function pageChanges(): Changes {
   const workers = new WorkerCalls({ send: (): null => null, clock: idleClock });
+  const scoped: string[] = [];
 
-  return { changes: new PageChanges(workers, (): null => null), workers };
+  const changes = new PageChanges(
+    workers,
+    (): null => null,
+    (pluginId): void => void scoped.push(pluginId),
+  );
+
+  return { changes, workers, scoped };
 }
 
-it('tells its listeners when the running worker says what it shows changed', () => {
-  const { changes, workers } = pageChanges();
+it('hands on what the running worker says changed, and marks no page itself', () => {
+  const { changes, workers, scoped } = pageChanges();
   const marked: string[] = [];
 
   changes.listen((pluginId) => marked.push(pluginId));
@@ -26,7 +37,8 @@ it('tells its listeners when the running worker says what it shows changed', () 
   changes.changed({ pluginId: 'tracker', generation: 1 });
   changes.changed({ pluginId: 'tracker', generation: 2 });
 
-  expect(marked).toEqual(['tracker']);
+  expect(scoped).toEqual(['tracker']);
+  expect(marked).toEqual([]);
 });
 
 it('stops telling a listener that unsubscribed', () => {
@@ -37,21 +49,19 @@ it('stops telling a listener that unsubscribed', () => {
 
   workers.run('tracker', 1);
   unsubscribe();
-  changes.changed({ pluginId: 'tracker', generation: 1 });
+  changes.restarted('tracker');
 
   expect(marked).toEqual([]);
 });
 
-it('tells its listeners when an Operation of a running Plugin ran', () => {
-  const { changes, workers } = pageChanges();
-  const marked: string[] = [];
+it('hands on what an Operation of a running Plugin wrote', () => {
+  const { changes, workers, scoped } = pageChanges();
 
-  changes.listen((pluginId) => marked.push(pluginId));
   changes.changedBy('tracker');
   workers.run('tracker', 1);
   changes.changedBy('tracker');
 
-  expect(marked).toEqual(['tracker']);
+  expect(scoped).toEqual(['tracker']);
 });
 
 it('tells its listeners when a new worker of a Plugin starts running, so its kept answers are drawn again', () => {

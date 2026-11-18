@@ -28,7 +28,7 @@ export function register(argo) {
     return { closed: number };
   });
 
-  argo.operations.register('attach', async () => ({ attached: true }));
+  argo.operations.register('attach', async (_params, caller) => ({ attached: true, caller }));
 
   argo.operations.register('note', async ({ title }) => {
     notes.push(title);

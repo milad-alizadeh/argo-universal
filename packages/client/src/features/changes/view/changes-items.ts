@@ -148,6 +148,14 @@ export function itemKeeper(): (items: ChangesItem[]) => ChangesItem[] {
 const headerIndices = (items: readonly ChangesItem[]): number[] =>
   items.flatMap((item, index) => (item.kind === 'header' ? [index] : []));
 
-// Some file's diff has a page on its way: the list says so once, at its end.
-export const diffsLoading = (diffs: Diffs): boolean =>
-  Object.values(diffs).some((diff) => diff.loading);
+/*
+ * Some open file's diff has a page on its way: the list says so once, at its end. A folded file draws no rows, so
+ * its diff loading says nothing.
+ */
+export const diffsLoading = (
+  diffs: Diffs,
+  folded: ReadonlySet<string>,
+): boolean =>
+  Object.entries(diffs).some(
+    ([path, diff]) => diff.loading && !folded.has(path),
+  );

@@ -31,18 +31,18 @@ function formFields(width: number): Story {
     },
     play: async ({ canvas, userEvent, args }) => {
       await settleLayout(width);
+      await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
       await expect(canvas.getByText(/1024.*65535/)).toBeVisible();
       await expect(canvas.getByText('Fix Port to submit')).toBeVisible();
       await expect(canvas.queryByText(choiceHint)).not.toBeInTheDocument();
-      await expect(
-        canvas.getByRole('button', { name: 'Submit' }),
-      ).toBeDisabled();
+      await expect(canvas.getByRole('button', { name: 'Next' })).toBeDisabled();
       const port = canvas.getByRole('textbox', { name: 'Port' });
       await userEvent.clear(port);
       await userEvent.type(port, '3.5');
       await expect(canvas.getByText(/whole number/)).toBeVisible();
       await userEvent.clear(port);
       await userEvent.type(port, '8080');
+      await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
       // Expo's web switch hides its input under the drawn track, so a press lands on its title.
       await userEvent.click(canvas.getByText('Enable logging'));
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
@@ -91,25 +91,30 @@ export const SubmitWithEnter: Story = {
     await settleLayout('wide');
     await userEvent.click(canvas.getByRole('textbox', { name: /^Name/ }));
     await userEvent.keyboard('{Enter}');
+    await expect(args.onAnswer).not.toHaveBeenCalled();
+    await expect(canvas.getByRole('textbox', { name: 'Port' })).toBeVisible();
+    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard('{Enter}');
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
   },
 };
 
-// Skip declines a form, as it has no further page.
+// Skip moves past a field without submitting the request.
 function skip(width: number): Story {
   return {
     args: { request: configurationRequest },
     play: async ({ canvas, userEvent, args }) => {
       await settleLayout(width);
       await userEvent.click(canvas.getByRole('button', { name: 'Skip' }));
-      await expect(args.onAnswer).toHaveBeenCalledWith({ action: 'decline' });
+      await expect(args.onAnswer).not.toHaveBeenCalled();
+      await expect(canvas.getByRole('textbox', { name: 'Port' })).toBeVisible();
     },
   };
 }
 
-export const SkipDeclinesPhone = skip(390);
+export const SkipFieldPhone = skip(390);
 
-export const SkipDeclinesWide = skip(1440);
+export const SkipFieldWide = skip(1440);
 
 export const DismissWide: Story = {
   args: { request: configurationRequest },
@@ -135,7 +140,9 @@ function clearOptionalNumber(width: number): Story {
     args: { request: configurationRequest, initialValues: validPort },
     play: async ({ canvas, userEvent, args }) => {
       await settleLayout(width);
+      await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
       await userEvent.clear(canvas.getByRole('textbox', { name: 'Port' }));
+      await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
       await expect(args.onAnswer).toHaveBeenCalledWith({
         action: 'accept',

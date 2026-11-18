@@ -51,6 +51,11 @@ export class PluginResources {
     );
   }
 
+  // When the rate limit a call since `since` ran into reopens, if one did.
+  limitedUntil(since: number): number | undefined {
+    return this.fetchCache.limitedUntil(since);
+  }
+
   async process(call: CheckedProcessCall): Promise<PluginValue> {
     this.assertOpen();
 
@@ -110,10 +115,9 @@ export class PluginResources {
   }
 }
 
-export function supersede(
-  held: { generation: number; resources: PluginResources } | undefined,
-  generation: number,
-): void {
+export type Held = { generation: number; resources: PluginResources };
+
+export function supersede(held: Held | undefined, generation: number): void {
   if (!held) return;
 
   if (generation < held.generation)

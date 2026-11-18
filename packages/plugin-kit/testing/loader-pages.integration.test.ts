@@ -55,7 +55,7 @@ it('refuses an Operation call the manifest does not allow', async () => {
   ).rejects.toThrow(/number/);
 });
 
-it('runs a tap as the person at the App, so an Operation only a Session may run refuses it', async () => {
+it('runs a tap in Session scope while keeping the person as its caller', async () => {
   const kit = await start();
 
   await expect(
@@ -65,6 +65,19 @@ it('runs a tap as the person at the App, so an Operation only a Session may run 
       projectId: 'project-1',
       sessionId: 'session-1',
     }),
+  ).resolves.toEqual({
+    result: {
+      attached: true,
+      caller: { person: true, projectId: 'project-1', sessionId: 'session-1' },
+    },
+  });
+});
+
+it('refuses a tap without the Session scope its Operation needs', async () => {
+  const kit = await start();
+
+  await expect(
+    kit.pages.run({ operation: 'attach', args: {}, projectId: 'project-1' }),
   ).rejects.toThrow(/Only a Session can run attach/);
 });
 

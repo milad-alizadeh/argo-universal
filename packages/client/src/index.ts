@@ -120,6 +120,7 @@ export {
   usePluginAt,
   usePluginListChanges,
   usePluginSections,
+  usePrefetchNavPages,
   useStaleMarks,
 } from '#features/plugins';
 

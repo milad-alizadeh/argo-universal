@@ -1,4 +1,5 @@
 import type { SessionUpdate } from '@repo/contracts';
+import { steppedActivityAt } from '../activity-step';
 import { changedRowId, type Feed, type FeedChangeResult } from '../feed-change';
 import type {
   FeedContext,
@@ -121,7 +122,7 @@ const createAcceptedFeedState = (
   ...result.feed,
   ...acceptedStreams(context, result),
   unaddressedPlan: result.unaddressedPlan ?? context.unaddressedPlan,
-  activityAt: context.now(),
+  activityAt: steppedActivityAt(context.activityAt, context.now()),
   changedRowIds: [...new Set([...context.changedRowIds, id])],
   streamEvents: [...context.streamEvents, result.streamEvent],
   outputBlobs: appendOutputBlobs(context, result),

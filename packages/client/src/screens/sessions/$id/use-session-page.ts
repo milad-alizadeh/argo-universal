@@ -1,4 +1,6 @@
 import type { UsageLimitsSubject } from '@repo/contracts';
+import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
+import { use } from 'react';
 import { useInstalledAgents, useUsageLimits } from '#features/agents';
 import { useBlobUrl, useConnectionState } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
@@ -46,7 +48,9 @@ export interface OpenedSession {
 
 // Everything one Session page reads, with the Plugin cards it has open folded into its props (ADR-0035).
 export function useSessionPage(page: SessionPage): OpenedSession {
-  const sources = useConnectedFeed(page.sessionId);
+  // A retained page its Session list hides keeps what it holds and does none of its live work.
+  const shown = use(RetainedPageVisibility);
+  const sources = useConnectedFeed(page.sessionId, shown);
 
   const session = {
     sessionId: page.sessionId,
@@ -105,8 +109,8 @@ interface ConnectedFeed {
   usageLimits: SessionDetailViewSources['usageLimits'];
 }
 
-function useConnectedFeed(sessionId: string): ConnectedFeed {
-  const feed = useSessionFeed(sessionId);
+function useConnectedFeed(sessionId: string, shown: boolean): ConnectedFeed {
+  const feed = useSessionFeed(sessionId, undefined, shown);
 
   return {
     feed,

@@ -1,5 +1,5 @@
 import type { WireJson } from '@repo/contracts/plugins/wire';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { startLists } from './loader-list-fixture';
 import {
   issuesPath,
@@ -69,10 +69,11 @@ it('shares one named read between the pages reading it, until a write makes it d
 
   await kit.pages.run({ operation: 'close', args: { number: 1 } });
 
-  expect(await title('/counted-too')).toBe('2');
+  // A page that has a tree is served what was kept while the read runs again behind it (ADR-0060).
+  await vi.waitFor(async () => expect(await title('/counted-too')).toBe('2'));
 });
 
-it('runs a declared Operation, marks every Loader page stale and reads the shown pages again', async () => {
+it('runs a declared Operation and reads the shown pages again, which mark the Loader page stale', async () => {
   const kit = await start();
 
   await kit.pages.draw({ path: issuesPath, pages: 2 });
@@ -81,10 +82,17 @@ it('runs a declared Operation, marks every Loader page stale and reads the shown
 
   expect(run).toEqual({ result: { closed: 3 } });
 
-  const { root } = treeOf(await kit.pages.draw({ path: issuesPath, pages: 2 }));
+  // Past the window Argo coalesces the Plugin's changes in, the pages the list shows are read again (ADR-0060).
+  await kit.clock.advance(250);
 
-  expect(root.children[0]?.children[2]?.props.finished).toBe(true);
-  expect(await listed(kit)).toBe('null,2,null,2');
+  await vi.waitFor(async () => {
+    const { root } = treeOf(
+      await kit.pages.draw({ path: issuesPath, pages: 2 }),
+    );
+
+    expect(root.children[0]?.children[2]?.props.finished).toBe(true);
+  });
+  await vi.waitFor(async () => expect(await listed(kit)).toBe('null,2,null,2'));
 });
 
 type Shown = { keys: string[]; pagination: WireJson | undefined };

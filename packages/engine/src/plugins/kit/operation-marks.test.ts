@@ -38,7 +38,7 @@ it('holds a change said inside a running Operation for the mark its end makes', 
 
   await marks
     .answering(() => Promise.resolve())
-    .during(1, () => {
+    .during({ id: 1 }, () => {
       marks.changed();
 
       return Promise.resolve();
@@ -52,7 +52,7 @@ it('marks a change said after the Server gave up on the Operation, though its ha
 
   await marks
     .answering(() => Promise.resolve())
-    .during(1, () => {
+    .during({ id: 1 }, () => {
       later(operationLimitMs + 1);
       marks.changed();
 
@@ -60,4 +60,18 @@ it('marks a change said after the Server gave up on the Operation, though its ha
     });
 
   expect(send).toHaveBeenCalledWith({ action: 'changed' });
+});
+
+it('sends a change said inside a read-tier Operation, which makes no mark when it ends', async () => {
+  const { marks, send } = marksOver(operation(1));
+
+  await marks
+    .answering(() => Promise.resolve())
+    .during({ id: 1, tier: 'read' }, () => {
+      marks.changed();
+
+      return Promise.resolve();
+    });
+
+  expect(send).toHaveBeenCalledTimes(1);
 });

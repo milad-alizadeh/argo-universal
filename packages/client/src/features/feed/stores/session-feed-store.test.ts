@@ -27,6 +27,48 @@ describe('SessionFeedStore', () => {
     expect(h.store.getState().view?.items.length).toBeGreaterThan(0);
   });
 
+  it('commits a streamed snapshot with the rows of its frame, not before', () => {
+    const h = sessionFeedHarness();
+    h.store.start();
+    h.store.mergeHistory([page([], 0)]);
+    h.store.receive({ type: 'snapshot', snapshot });
+    h.drawFrame();
+    const before = h.changes();
+
+    for (const event of rowEvents(stream)) h.store.receive(event);
+    h.store.receive({
+      type: 'snapshot',
+      snapshot: { ...snapshot, title: 'A' },
+    });
+    h.store.receive({
+      type: 'snapshot',
+      snapshot: { ...snapshot, title: 'B' },
+    });
+
+    expect(h.changes()).toBe(before);
+    expect(h.store.getState().snapshot).toBe(snapshot);
+    h.drawFrame();
+    expect(h.changes() - before).toBe(1);
+    expect(h.store.getState().snapshot?.title).toBe('B');
+  });
+
+  it('keeps the snapshot it holds when the next one is equal', () => {
+    const h = sessionFeedHarness();
+    h.store.start();
+    h.store.mergeHistory([tail]);
+    h.store.receive({ type: 'snapshot', snapshot });
+    h.drawFrame();
+    const held = h.store.getState();
+    const before = h.changes();
+
+    h.store.receive({ type: 'snapshot', snapshot: { ...snapshot } });
+    h.drawFrame();
+
+    expect(h.store.getState().snapshot).toBe(held.snapshot);
+    expect(h.store.getState().view).toBe(held.view);
+    expect(h.changes()).toBe(before);
+  });
+
   it('keeps the sync point it opened at when history pages again', () => {
     const h = sessionFeedHarness();
     h.store.start();

@@ -40,7 +40,9 @@ export function slotItems(): SlotItems {
     send: (_pluginId, event): void => void sent.push(event),
   });
 
-  const calls = new PluginSlotItems(workers, clock, { written: nothing });
+  const calls = new PluginSlotItems(workers, clock, {
+    writes: { dueWhenOlder: nothing },
+  });
 
   workers.run('counter', 1);
 

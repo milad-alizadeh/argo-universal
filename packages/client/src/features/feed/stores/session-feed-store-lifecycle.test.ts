@@ -72,6 +72,7 @@ describe('SessionFeedStore while a screen shows the Session', () => {
     h.store.mergeHistory([tail]);
     h.drawFrame();
     h.store.receive({ type: 'snapshot', snapshot });
+    h.drawFrame();
 
     expect(feeds.entryOf('session-1').writes).toBe(2);
     h.store.receive({ type: 'closed', failure: null });
