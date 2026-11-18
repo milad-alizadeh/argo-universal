@@ -11,11 +11,8 @@ import {
   type Actor,
   type SnapshotFrom,
 } from 'xstate';
-import {
-  providerEvent,
-  type VoiceCallEvent,
-  type VoiceCallInput,
-} from './call-types';
+import { events, start } from '#mocks/voice-call-events';
+import { type VoiceCallEvent, type VoiceCallInput } from './call-types';
 import { type ConnectionWatch, type SessionWatch } from './call-watchers';
 import { voiceCallMachine } from './call.machine';
 import { FakeVoiceProvider } from './fake-provider';
@@ -41,36 +38,6 @@ const input: VoiceCallInput = {
   briefing: () => '',
   idleMs: 60_000,
 };
-
-const start: VoiceCallEvent = {
-  type: 'call.start',
-  callId: 'call-1',
-  sessionId: 'session-1',
-  offer: 'offer',
-};
-
-const events: VoiceCallEvent[] = [
-  start,
-  { type: 'call.answered', answer: 'answer' },
-  { type: 'call.end', reason: 'person' },
-  { type: 'call.failed', message: 'no' },
-  { type: 'call.sessionGone', reason: 'session-closed' },
-  { type: 'call.sessionGone', reason: 'session-archived' },
-  { type: 'call.appDisconnected' },
-  { type: 'voice.say', say: { kind: 'tell', text: 'Done', delivery: 'speak' } },
-  providerEvent({ type: 'status', status: 'connected' }),
-  providerEvent({ type: 'status', status: 'error' }),
-  providerEvent({ type: 'closed', reason: 'ended' }),
-  providerEvent({ type: 'closed', reason: 'limit' }),
-  providerEvent({ type: 'limit', remaining: 0.1 }),
-  providerEvent({
-    type: 'person.transcript',
-    id: 'p1',
-    text: 'Hello',
-    final: true,
-  }),
-  { type: 'call.turns', running: false },
-];
 
 // How a call ended is checked on the actor after each step, so a restart after any ending is one edge.
 const vertex = (snapshot: Snapshot): Vertex => ({ state: snapshot.value });
