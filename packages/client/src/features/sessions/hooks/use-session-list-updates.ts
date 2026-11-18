@@ -5,6 +5,7 @@ import { useSubscription } from '@trpc/tanstack-react-query';
 import { useMemo } from 'react';
 import type { ClientError } from '#features/connection';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
+import { applySessionListUpdate } from '../api/apply-session-list-update';
 import { createCoalescedRefetch } from '../api/coalesced-refetch';
 import { refreshSessionList } from '../api/refresh-session-list';
 import { useResubscribeOnFocus } from './use-resubscribe-on-focus';
@@ -14,28 +15,40 @@ type SessionListSubscription = TRPCSubscriptionResult<
   ClientError
 >;
 
-function useSessionListRefetch(): () => void {
+type SessionListRefresh = {
+  refetch: () => void;
+  apply: (update: SessionListUpdate) => void;
+};
+
+function useSessionListRefresh(): SessionListRefresh {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  return useMemo(
-    () =>
-      createCoalescedRefetch(() =>
-        refreshSessionList(queryClient, trpc.session.list.pathFilter()),
-      ),
-    [queryClient, trpc],
-  );
+  return useMemo((): SessionListRefresh => {
+    const list = trpc.session.list.pathFilter();
+
+    const refetch = createCoalescedRefetch(() =>
+      refreshSessionList(queryClient, list),
+    );
+
+    // A row the list shows changes where it sits; only what the loaded pages cannot place asks the Server again.
+    const apply = (update: SessionListUpdate): void => {
+      if (applySessionListUpdate(queryClient, list, update)) refetch();
+    };
+
+    return { refetch, apply };
+  }, [queryClient, trpc]);
 }
 
-// Live list updates refetch its pages and resume after Connection recovery or when the window regains focus.
+// Live list updates change the rows the list shows, or refetch its pages when they cannot, and resume after Connection recovery or when the window regains focus.
 export function useSessionListUpdates(): SessionListSubscription {
   const trpc = useTRPC();
-  const refetch = useSessionListRefetch();
+  const { refetch, apply } = useSessionListRefresh();
 
   const subscription = useSubscription(
     trpc.session.listUpdates.subscriptionOptions(undefined, {
       onStarted: refetch,
-      onData: refetch,
+      onData: apply,
     }),
   );
 

@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { drawnUntil } from './drawn-again';
 import {
   chooseGithub,
   signIn,
@@ -92,8 +93,7 @@ it('draws the sign-in again after GitHub rejects the token, and signing in again
   // GitHub revokes the token; the page's next read after its freshness window is a 401.
   tracked.github.accepted.clear();
   await tracked.test.clock.advance(61_000);
-  await root.draw();
-  expect(root.findText(signInLabel)).toBeDefined();
+  await drawnUntil(root, signInLabel);
   expect(root.findText('GitHub no longer accepts this sign-in.')).toBeDefined();
 
   tracked.github.accepted.add('token-1');

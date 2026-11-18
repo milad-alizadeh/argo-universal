@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { dataFixture } from '../mocks/data-fixture';
 import { drawnText, processRead, textPages } from './query-pages';
 
@@ -32,7 +32,11 @@ it("reads a shared Query again at each page's own interval", async () => {
   expect(await drawnText(kit, { path: '/fast' })).toBe('1');
   await kit.clock.advance(10_000);
   expect(await drawnText(kit, { path: '/slow' })).toBe('1');
-  expect(await drawnText(kit, { path: '/fast' })).toBe('2');
+  // The page that is due is served what was kept while the Query is read behind it (ADR-0060).
+  expect(await drawnText(kit, { path: '/fast' })).toBe('1');
+  await vi.waitFor(async () =>
+    expect(await drawnText(kit, { path: '/fast' })).toBe('2'),
+  );
   expect(await drawnText(kit, { path: '/slow' })).toBe('2');
   expect(await fixture.requests()).toHaveLength(2);
 });

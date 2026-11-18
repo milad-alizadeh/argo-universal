@@ -36,7 +36,7 @@ function useReportFeed(parentId: string, childId: string): LiveReports {
 
   const cacheId = JSON.stringify(['reports', parentId, childId]);
 
-  return useSessionFeedStore(parentId, translate, cacheId);
+  return useSessionFeedStore(parentId, translate, { cacheId, shown: true });
 }
 
 const noItems: readonly FeedViewItem[] = [];

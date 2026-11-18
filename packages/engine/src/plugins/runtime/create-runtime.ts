@@ -10,6 +10,7 @@ import { osSecretStore, type SecretStore } from '../services/secret-store';
 import { PluginStorage } from '../services/storage';
 import type { PluginLocation } from './plugin-location';
 import { PluginRuntime } from './plugin-runtime';
+import { buildsWithDefaults } from './runtime-setup';
 import { runtimeClockSource } from './test-control';
 
 export type PluginRuntimeOptions = Omit<
@@ -21,6 +22,10 @@ export type PluginRuntimeOptions = Omit<
   clock?: PluginClock;
   // Where an account provider is found, so a sign-in can wake it; without it, it must already run.
   locate?: (pluginId: string) => Promise<PluginLocation>;
+  // Told whenever a Plugin's dev build lands.
+  rebuilt?: () => void;
+  // Whether a Plugin's build watches its sources, as a dev Server's does; otherwise it builds once.
+  watch?: boolean;
 };
 
 type ServiceOptions = Omit<PluginServiceOptions, 'assets'> & {
@@ -31,12 +36,16 @@ export function createPluginRuntime(
   home: string,
   options: PluginRuntimeOptions,
 ): PluginRuntime {
-  const { clockStart, locate, ...rest } = options;
+  const { clockStart, locate, rebuilt, watch, ...rest } = options;
   const held = heldLog(home, options.heldSecrets);
   const clock = options.clock ?? runtimeClockSource(clockStart);
   const back = reachBack(() => runtime, locate);
   const services = createServices(home, { ...rest, ...back, ...held, clock });
-  const runtime = new PluginRuntime(held.log, services, clock);
+
+  const runtime = new PluginRuntime(held.log, services, {
+    clock,
+    ...buildsWithDefaults({ rebuilt, watch }),
+  });
 
   return runtime;
 }

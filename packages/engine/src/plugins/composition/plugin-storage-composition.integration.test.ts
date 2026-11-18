@@ -32,7 +32,24 @@ const notesIn = (home: string, pluginId: string): unknown[] => {
   }
 };
 
-it('creates a Plugin file only when the Plugin first uses storage', async () => {
+/*
+ * Plugins with a nav item start with the Server (#2196), so a Plugin that uses storage makes its file as it starts. The
+ * Plugin that never uses it makes none, which is shown alone, where nothing else can have made the folder.
+ */
+it('creates no Plugin file for a Plugin that never uses storage', async () => {
+  const home = await createRuntimePlugins([{ id: 'idle', fixture: 'healthy' }]);
+
+  const { caller } = await startEngineTestHost({
+    home,
+    secretStore: new MemorySecretStore(),
+  });
+
+  await caller.plugin.activate({ pluginId: 'idle' });
+
+  expect(existsSync(join(home, 'plugin-data'))).toBe(false);
+});
+
+it('creates a Plugin file once the Plugin uses storage, and none for one that does not', async () => {
   const home = await createRuntimePlugins([
     { id: 'idle', fixture: 'healthy' },
     storagePlugin,
@@ -44,8 +61,6 @@ it('creates a Plugin file only when the Plugin first uses storage', async () => 
   });
 
   await caller.plugin.activate({ pluginId: 'idle' });
-
-  expect(existsSync(join(home, 'plugin-data'))).toBe(false);
   expect(await caller.plugin.activate({ pluginId: storageId })).toMatchObject({
     state: 'running',
     error: null,

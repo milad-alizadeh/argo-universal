@@ -1,6 +1,6 @@
 import type { ServerResponse } from 'node:http';
 import type { PluginTest } from '@argo/plugin-kit/testing';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { fixtureNetwork, httpsServer } from '../../engine/mocks/probe-plugin';
 import { dataFixture } from '../mocks/data-fixture';
 import { drawnText, textPages } from './query-pages';
@@ -38,9 +38,18 @@ it('keeps an HTTP error as data, and the last answer through a transport error',
 
   expect(await drawnText(kit, { path: '/' })).toBe('401:first');
   await kit.clock.advance(10000);
+  // The draw is served what was kept while the failing read runs behind it (ADR-0060).
   expect(await drawnText(kit, { path: '/' })).toBe('401:first');
-  expect(requests).toBe(4);
-  expect(await kit.log()).toContain('argo call failed: socket hang up');
+  await vi.waitFor(async () => {
+    expect(requests).toBe(2);
+    expect(await kit.log()).toContain('argo call failed: socket hang up');
+  });
+  // A Query whose last read failed rests before it reads again, and still answers its last answer (#2197).
+  expect(await drawnText(kit, { path: '/' })).toBe('401:first');
+  expect(requests).toBe(2);
+  // Once the first rest is over, the page that holds it is read again with no draw to ask.
+  await kit.clock.advance(5000);
+  await vi.waitFor(() => expect(requests).toBe(3));
 });
 
 it('joins two pages reading one fetch whose object keys and header names differ in order or case', async () => {

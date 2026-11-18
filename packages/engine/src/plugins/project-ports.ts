@@ -3,30 +3,60 @@ import type { PluginSessionInfo } from '@repo/contracts/plugins/argo-calls';
 import type { Database } from '@repo/db';
 import { readCurrentBranch } from '@repo/git';
 import {
+  readPluginProjectIds,
   readPluginProjects,
   readProjectPath,
   readProjectPaths,
   watchProjectChanges,
+  type ReadOrigin,
 } from '../projects';
 import { readLatestTurn, readSessionRow } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import type { createPluginRuntime } from './runtime/create-runtime';
+import { SessionInfoCache } from './session-info-cache';
 
-type ProjectSources = { database: Database; databaseWriter: WriterActorRef };
+type ProjectSources = {
+  database: Database;
+  databaseWriter: WriterActorRef;
+  readOrigin?: ReadOrigin;
+  // The clock the kept Session answers age on; tests pass their own.
+  now?: () => number;
+};
 
-export function projectPorts(
-  options: ProjectSources,
-): Pick<
+type ProjectPorts = Pick<
   Parameters<typeof createPluginRuntime>[1],
-  'watchProjects' | 'projects' | 'projectInfo' | 'projectPath' | 'sessionInfo'
-> {
+  | 'watchProjects'
+  | 'projects'
+  | 'projectIds'
+  | 'projectInfo'
+  | 'projectPath'
+  | 'sessionInfo'
+>;
+
+export function projectPorts(options: ProjectSources): ProjectPorts {
+  const sessions = new SessionInfoCache<Checkout, string | null>(options.now);
+
   return {
+    ...projectReads(options),
     watchProjects: (changed) =>
       watchProjectChanges(options.database, changed, options.databaseWriter),
-    projects: async () => readProjectPaths(options.database),
-    projectInfo: async () => readPluginProjects(options.database),
     projectPath: async (projectId) => pluginProjectPath(options, projectId),
-    sessionInfo: async (sessionId) => pluginSession(options, sessionId),
+    sessionInfo: async (sessionId) =>
+      pluginSession(options, sessions, sessionId),
+  };
+}
+
+function projectReads({
+  database,
+  readOrigin,
+}: ProjectSources): Pick<
+  ProjectPorts,
+  'projects' | 'projectIds' | 'projectInfo'
+> {
+  return {
+    projects: async () => readProjectPaths(database),
+    projectIds: async () => readPluginProjectIds(database),
+    projectInfo: async () => readPluginProjects(database, readOrigin),
   };
 }
 
@@ -69,32 +99,47 @@ const sourcesOf = (options: ProjectSources): RowSources => ({
   writer: options.databaseWriter,
 });
 
-// A Session's Project, branch, title and idle time reach a Plugin; null when there is no such Session.
+/*
+ * A Session's Project, branch, title and idle time reach a Plugin; null when there is no such Session. The branch is a
+ * `git` run, so it is kept while the Checkout is unchanged; the rest is read each time.
+ */
 async function pluginSession(
   options: ProjectSources,
+  sessions: SessionInfoCache<Checkout, string | null>,
   sessionId: string,
 ): Promise<PluginSessionInfo | null> {
   const sources = sourcesOf(options);
   const row = readSessionRow(sources, sessionId);
+  const checkout = row && checkoutOf(row);
+  const branch = await sessions.read(sessionId, checkout, checkoutBranch);
 
-  if (!row) return null;
-
-  return {
-    projectId: row.projectId,
-    branch: await checkoutBranch(row),
-    title: row.title,
-    idleFor: idleFor(sources, row),
-  };
+  return row ? infoOf(sources, row, branch) : null;
 }
+
+const infoOf = (
+  sources: RowSources,
+  row: SessionRow,
+  branch: string | null,
+): PluginSessionInfo => ({
+  projectId: row.projectId,
+  branch,
+  title: row.title,
+  idleFor: idleFor(sources, row),
+});
+
+type Checkout = { checkoutPath: string; checkoutBranch: string | null };
+
+// What the Session's branch is read from, so its kept branch outlives a change to the rest of its row.
+const checkoutOf = ({ checkoutPath, checkoutBranch }: Checkout): Checkout => ({
+  checkoutPath,
+  checkoutBranch,
+});
 
 /*
  * The branch the Checkout is on now, which an Agent may have switched since the Session began; the stored branch
  * only when the Checkout cannot be read, as once it is removed.
  */
-async function checkoutBranch(row: {
-  checkoutPath: string;
-  checkoutBranch: string | null;
-}): Promise<string | null> {
+async function checkoutBranch(row: Checkout): Promise<string | null> {
   try {
     return await readCurrentBranch(row.checkoutPath);
   } catch {

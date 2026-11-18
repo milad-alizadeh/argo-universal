@@ -73,18 +73,28 @@ const oauthOf = ({
 }: ConfiguredTest): { open: (url: string) => Promise<void> } | undefined =>
   openBrowser && { open: openBrowser };
 
-function projectOptions(
-  options: ConfiguredTest,
-): Pick<
+type ProjectOptions = Pick<
   Parameters<typeof createPluginRuntime>[1],
-  'projects' | 'projectPath' | 'projectInfo' | 'sessionInfo'
-> {
+  'projects' | 'projectPath' | 'projectIds' | 'projectInfo' | 'sessionInfo'
+>;
+
+function projectOptions(options: ConfiguredTest): ProjectOptions {
+  return {
+    ...projectLists(options),
+    projectPath: async (projectId) => options.projectPaths[projectId],
+    sessionInfo: async (sessionId) => sessionOf(options, sessionId),
+  };
+}
+
+function projectLists(
+  options: ConfiguredTest,
+): Pick<ProjectOptions, 'projects' | 'projectIds' | 'projectInfo'> {
   return {
     projects: async (): Promise<string[]> =>
       Object.values(options.projectPaths),
-    projectPath: async (projectId) => options.projectPaths[projectId],
+    projectIds: async (): Promise<string[]> =>
+      options.projects.map(({ id }) => id),
     projectInfo: async (): Promise<PluginProjectInfo[]> => options.projects,
-    sessionInfo: async (sessionId) => sessionOf(options, sessionId),
   };
 }
 

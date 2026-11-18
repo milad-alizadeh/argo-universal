@@ -8,7 +8,9 @@ import {
 } from '@repo/engine/plugins';
 import { OpenPage } from './open-page';
 import type { PageClock } from './page-clock';
+import { PageMarks } from './page-marks';
 import type { PageServer, TestApp } from './page-server';
+import type { Showing } from './showing';
 import type { PluginTest } from './test-types';
 
 type Operations = PluginTest['operations'];
@@ -68,15 +70,49 @@ export function testPages(
   clock: PageClock,
 ): PluginTest['pages'] {
   const pages = loaderPages(hosted);
-  const server = pageServer(pages, pluginId);
+  const showing = showingOn(hosted, pages, { pluginId, clock });
 
   return {
-    draw: firstPages(server),
-    open: (opening) => OpenPage.open({ server, clock }, opening),
-    run: pageRuns(server),
+    draw: firstPages(showing.server),
+    open: (opening) => OpenPage.open(showing, opening),
+    run: pageRuns(showing.server),
     stale: (signal) => pages.stale(signal),
     live: livePages(pages, pluginId),
   };
+}
+
+type ShownFor = { pluginId: string; clock: PageClock };
+
+// Where the test's open pages draw and run, with the marks the Plugin's pages hear and the wait for them.
+function showingOn(
+  { runtime }: Hosted,
+  pages: LoaderPages,
+  { pluginId, clock }: ShownFor,
+): Showing {
+  const stale = pages.stale(new AbortController().signal);
+
+  return {
+    server: pageServer(pages, pluginId),
+    clock,
+    settled: () => readsLanded(runtime),
+    marks: new PageMarks(stale, pluginId),
+  };
+}
+
+/*
+ * Waits for the Plugin's changes to settle and, on a test clock, for the reads a draw left running behind it, so a
+ * page marked by them draws again as the App would (ADR-0060). On the real clock only the changes are waited for.
+ */
+async function readsLanded({ testControl }: PluginRuntime): Promise<void> {
+  await testControl.changesSettled();
+
+  if (testControl.workerStart() !== undefined) {
+    await testControl.idle();
+    await testControl.changesSettled();
+  }
+
+  // The marks the settle sent reach the page's watch before it asks for them.
+  await new Promise((resolve) => setImmediate(resolve));
 }
 
 const loaderPages = ({ service, runtime }: Hosted): LoaderPages =>
