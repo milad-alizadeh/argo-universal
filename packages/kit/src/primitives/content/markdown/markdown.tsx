@@ -7,6 +7,7 @@ import { ArrivalsContext, useArrivals } from './markdown-arrivals';
 import { MarkdownClamp } from './markdown-clamp';
 import type { MarkdownProps } from './markdown-props';
 import { MarkdownSelectable, MarkdownTone } from './markdown-tone';
+import { streamingText } from './streaming-text';
 
 // Foundations / Markdown: one prose drawing wherever the kit is used.
 export const Markdown = memo(function Markdown({
@@ -35,17 +36,27 @@ function ClampedContent({
   );
 }
 
+function useTokens(
+  text: string,
+  streaming: boolean,
+): ReturnType<typeof lexMarkdown> {
+  return useMemo(
+    () => lexMarkdown(streaming ? streamingText(text) : text),
+    [text, streaming],
+  );
+}
+
 function MarkdownContent({
   text,
   streaming = false,
 }: MarkdownProps): React.JSX.Element {
-  const tokens = useMemo(() => lexMarkdown(text), [text]);
+  const tokens = useTokens(text, streaming);
   const arrivals = useArrivals(streaming);
 
   return (
     <View className="max-w-full web:select-text gap-paragraph wide-type:gap-paragraph-wide">
       <ArrivalsContext value={arrivals}>
-        <Blocks tokens={tokens} caret={streaming} />
+        <Blocks tokens={tokens} streaming={streaming} />
       </ArrivalsContext>
     </View>
   );

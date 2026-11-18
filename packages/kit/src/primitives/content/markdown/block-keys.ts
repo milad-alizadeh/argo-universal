@@ -10,7 +10,7 @@ export interface KeyedToken<T extends Token = Token> {
 /*
  * A block is held by its kind and how many of that kind come before it, never by its text: a block
  * still being written has new text every frame, and a key made of it would unmount the block and draw
- * it again each time, a code fence's scroll views and the caret with it.
+ * it again each time, including a code fence’s scroll views.
  */
 export function keyedTokens<T extends Token>(
   tokens: readonly T[],

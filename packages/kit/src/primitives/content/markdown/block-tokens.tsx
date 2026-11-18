@@ -10,7 +10,6 @@ import { View } from 'react-native';
 import { markdownBlockClassNames } from '#kit/markdown-marks';
 import { cn } from '#kit/utils';
 import { keyedBlocks, keyedTokens } from './block-keys';
-import { Caret } from './caret';
 import { ClampText } from './clamp-text';
 import {
   CodeToken,
@@ -29,12 +28,12 @@ import { TableToken } from './table-token';
 interface ListItemProps {
   marker: string;
   tokens: Token[];
-  caret: boolean;
+  streaming: boolean;
 }
 
 interface BlocksProps {
   tokens: Token[];
-  caret: boolean;
+  streaming: boolean;
 }
 
 function listMarker(list: Tokens.List, index: number): string {
@@ -45,7 +44,7 @@ function listMarker(list: Tokens.List, index: number): string {
 
 function listItems(
   list: Tokens.List,
-  caret: boolean,
+  streaming: boolean,
 ): (ListItemProps & { key: string })[] {
   const last = list.items.length - 1;
 
@@ -53,7 +52,7 @@ function listItems(
     key,
     marker: listMarker(list, index),
     tokens: token.tokens,
-    caret: caret && index === last,
+    streaming: streaming && index === last,
   }));
 }
 
@@ -71,12 +70,12 @@ function ListMarker({ children }: { children: string }): ReactElement {
   );
 }
 
-function ListItem({ marker, tokens, caret }: ListItemProps): ReactElement {
+function ListItem({ marker, tokens, streaming }: ListItemProps): ReactElement {
   return (
     <View className="flex-row w-full gap-2">
       <ListMarker>{marker}</ListMarker>
       <View className="min-w-0 shrink grow gap-1">
-        <Blocks tokens={tokens} caret={caret} />
+        <Blocks tokens={tokens} streaming={streaming} />
       </View>
     </View>
   );
@@ -84,11 +83,11 @@ function ListItem({ marker, tokens, caret }: ListItemProps): ReactElement {
 
 function ListToken({
   token,
-  caret,
+  streaming,
 }: BlockTokenProps<Tokens.List>): ReactElement {
   return (
     <View className="gap-1">
-      {listItems(token, caret).map(({ key, ...item }) => (
+      {listItems(token, streaming).map(({ key, ...item }) => (
         <ListItem key={key} {...item} />
       ))}
     </View>
@@ -97,11 +96,11 @@ function ListToken({
 
 function BlockquoteToken({
   token,
-  caret,
+  streaming,
 }: BlockTokenProps<Tokens.Blockquote>): ReactElement {
   return (
     <View className={cn('gap-2.5', markdownBlockClassNames.quote)}>
-      <Blocks tokens={token.tokens} caret={caret} />
+      <Blocks tokens={token.tokens} streaming={streaming} />
     </View>
   );
 }
@@ -119,20 +118,19 @@ const blockTokens = new Map<string, ComponentType<BlockTokenProps>>([
   byType('blockquote', BlockquoteToken),
 ]);
 
-function Block({ token, caret }: BlockTokenProps): ReactElement {
+function Block({ token, streaming }: BlockTokenProps): ReactElement {
   return createElement(blockTokens.get(token.type) ?? OtherToken, {
     token,
-    caret,
+    streaming,
   });
 }
 
-export function Blocks({ tokens, caret }: BlocksProps): ReactNode[] {
+export function Blocks({ tokens, streaming }: BlocksProps): ReactNode[] {
   const blocks = keyedBlocks(tokens);
 
-  if (caret && blocks.length === 0) return [<Caret key="caret" />];
   const last = blocks.length - 1;
 
   return blocks.map(({ token, key }, index) => (
-    <Block key={key} token={token} caret={caret && index === last} />
+    <Block key={key} token={token} streaming={streaming && index === last} />
   ));
 }

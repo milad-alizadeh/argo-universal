@@ -154,7 +154,7 @@ const openMessage = (
 });
 
 // Every message of a running Turn stays open until the Turn ends; the Agent writes only into the newest.
-export const OneCaretAcrossOpenMessages: Story = {
+export const NoCursorAcrossOpenMessages: Story = {
   args: {
     items: toFeedView(
       [
@@ -170,6 +170,6 @@ export const OneCaretAcrossOpenMessages: Story = {
   play: async ({ canvas }) => {
     await settleLayout('wide');
     await expect(await canvas.findByText('Starting on the rest')).toBeVisible();
-    await expect(canvas.getAllByTestId('streaming-caret')).toHaveLength(1);
+    await expect(canvas.queryByTestId('streaming-caret')).toBeNull();
   },
 };
