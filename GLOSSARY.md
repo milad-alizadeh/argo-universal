@@ -424,6 +424,14 @@ _Avoid_: Pending message, draft Prompt
 A stretch of Agent work started by a Prompt or by the Agent, ending with a stop reason when the Agent finishes or the Session ends it.
 _Avoid_: Run, request, exchange
 
+**Voice call**:
+A live spoken exchange between the person and a voice model, attached to one Session. What the person asks for reaches that Session's Agent as Prompts.
+_Avoid_: Conversation, conversation mode, voice mode, live
+
+**Voice provider**:
+A service or local model that runs a Voice call's voice.
+_Avoid_: Conversation provider, realtime provider, voice backend
+
 **Stored Turn**:
 A Turn as read back from storage, before the Writer's queued changes are laid over it.
 _Avoid_: Turn row, saved Turn
