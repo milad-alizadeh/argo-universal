@@ -32,7 +32,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const WithEvidenceCard: Story = {
+export const SettingsPath: Story = {
   args: {
     children: (
       <EvidenceCard icon="settings" lead="Route up to" detail="The setting" />
@@ -40,7 +40,7 @@ export const WithEvidenceCard: Story = {
   },
 };
 
-export const WithCode: Story = {
+export const DebugCode: Story = {
   args: {
     tone: 'warning',
     icon: 'code',
@@ -49,7 +49,7 @@ export const WithCode: Story = {
   },
 };
 
-export const WithField: Story = {
+export const AddressEntry: Story = {
   args: {
     tone: 'neutral',
     icon: 'computer-off',
