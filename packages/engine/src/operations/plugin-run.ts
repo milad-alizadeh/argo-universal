@@ -31,6 +31,7 @@ const pluginOperationCall = (
 ): CalledOperation => ({
   name: id,
   label: row.label,
+  icon: row.icon ?? 'plugins',
   input: withoutSecrets(row, params),
 });
 

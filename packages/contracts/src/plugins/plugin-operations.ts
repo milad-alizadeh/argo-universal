@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { WireJson } from '#plugin-wire-json';
+import { stockIcon } from '../kit-symbols/stock-icon-schema';
 
 /*
  * A Plugin's own Operations: what an Agent runs with `argo run <plugin-id>.<name>` (ADR-0044). A Plugin
@@ -103,6 +104,7 @@ export const projectParam = 'projectId';
 export const PluginOperationContribution = z.strictObject({
   name: PluginOperationName,
   label: z.string().trim().min(1),
+  icon: stockIcon.optional(),
   description: z.string().trim().min(1),
   tier: PluginOperationTier,
   params: z

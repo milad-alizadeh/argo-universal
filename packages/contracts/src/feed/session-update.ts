@@ -1,6 +1,7 @@
 import { sessionUpdateKinds, sessionUpdateStates } from '@repo/db/schema';
 import { z } from 'zod';
 import { shellColumns } from '../columns';
+import { OperationIcon } from '../operations/metadata';
 import { OperationWorkTarget } from '../operations/work';
 import { TurnEnd } from '../sessions/turn';
 import { CompactionUpdate } from './compaction';
@@ -60,6 +61,7 @@ export const ToolCallUpdate = z.strictObject({
         })
         .optional(),
       permissionOutcome: PermissionOutcome.optional(),
+      operationIcon: OperationIcon.optional(),
       operationWork: OperationWorkTarget.optional(),
       commandActions: z.array(CommandAction).optional(),
       startedAt: z.int().optional(),

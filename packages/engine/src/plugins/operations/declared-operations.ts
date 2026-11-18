@@ -29,6 +29,7 @@ export function declaredOperations(list: PluginList): DeclaredOperation[] {
 
 export const operationRow = (declared: DeclaredOperation): OperationRow => ({
   ...operationIdentity(declared),
+  icon: declared.operation.icon ?? 'plugins',
   params: paramsSchema(runParams(declared.operation)),
   result: { description: `What ${declared.pluginName} answers.` },
   tier: declared.operation.tier,

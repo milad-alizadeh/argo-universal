@@ -1,12 +1,16 @@
 import { z } from 'zod';
+import { iconNames } from '../kit-symbols';
 
 export const OperationTier = z.enum(['read', 'act', 'confirm']);
 
 export type OperationTier = z.infer<typeof OperationTier>;
 
+export const OperationIcon = z.enum(iconNames);
+
 export const OperationRow = z.object({
   id: z.string(),
   label: z.string(),
+  icon: OperationIcon.optional(),
   description: z.string(),
   params: z.record(z.string(), z.unknown()),
   result: z.record(z.string(), z.unknown()),

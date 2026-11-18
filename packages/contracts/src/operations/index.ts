@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { IconName } from '../kit-symbols';
 import { agentAccessOperations } from './agent-access';
 import { appOperations } from './app';
 import { diagramOperations } from './diagram';
@@ -34,6 +35,7 @@ export { ProjectAdded, projectOperations } from './projects';
 export interface OperationDefinition {
   id: string;
   label: string;
+  icon: IconName;
   description: string;
   params: z.ZodType;
   result: z.ZodType;

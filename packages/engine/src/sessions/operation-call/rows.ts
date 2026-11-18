@@ -1,9 +1,15 @@
 import type { FeedUpdate } from '@repo/contracts';
+import type { IconName } from '@repo/contracts/kit-symbols';
 import type { OperationWorkTarget } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 
 // The Operation a Session called, as its Tool call shows it.
-export type CalledOperation = { name: string; label: string; input: Json };
+export type CalledOperation = {
+  name: string;
+  label: string;
+  input: Json;
+  icon?: IconName;
+};
 
 export type CallResult = { output: Json } | { error: string };
 
@@ -24,13 +30,28 @@ export const openRow = (
   sessionUpdate: 'tool_call_update',
   state: 'open',
   toolCallId,
-  title: operation.label,
-  name: operation.name,
   kind: 'other',
   status: 'in_progress',
   content: [],
-  rawInput: operation.input,
+  ...operationFields(operation),
 });
+
+function operationFields({
+  icon,
+  label,
+  name,
+  input,
+}: CalledOperation): Pick<
+  OperationRow,
+  'title' | 'name' | 'rawInput' | '_meta'
+> {
+  return {
+    title: label,
+    name,
+    rawInput: input,
+    ...(icon && { _meta: { argo: { operationIcon: icon } } }),
+  };
+}
 
 export const settledRow = (
   row: OperationRow,
@@ -51,4 +72,7 @@ export const cancelledRow = (row: OperationRow): OperationRow => ({
 export const startedRow = (
   row: OperationRow,
   work: OperationWorkTarget,
-): OperationRow => ({ ...row, _meta: { argo: { operationWork: work } } });
+): OperationRow => ({
+  ...row,
+  _meta: { ...row._meta, argo: { ...row._meta?.argo, operationWork: work } },
+});
