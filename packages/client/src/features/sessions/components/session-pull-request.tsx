@@ -32,6 +32,8 @@ export type SessionPullRequest = ChangeState & {
   // What the row's … menu does besides open the PR; a row without a handler leaves that item out.
   onCopyLink?: () => void;
   onDetach?: () => void;
+  // Opens the Checkout's Changes against main; set only for the Change on the Checkout, whose totals then press.
+  onOpenFiles?: () => void;
   // What the Plugin offers to turn on for this PR; the menu draws an item for each that works or says why it does not.
   automation?: Change['automation'];
   // Ticks or unticks one of them; the menu leaves the automation items out without it.

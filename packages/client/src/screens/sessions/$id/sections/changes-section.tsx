@@ -9,16 +9,31 @@ import {
 import { SessionChangesTab } from '../session-changes-tab';
 import type { SessionInspectorContent } from '../session-inspector-content';
 import { changesFacts, pullRequestsOf, summaryOf } from './changes-facts';
-import type { SectionCard, SessionSection } from './session-section';
+import { withCheckoutFiles } from './checkout-files';
+import type {
+  SectionCard,
+  SectionTabHandle,
+  SessionSection,
+} from './session-section';
 
 // A pull request's row opens it on its code host, through the App's external-link opener.
 const openPullRequest = ({ url }: SessionPullRequest): void => {
   if (url) void Linking.openURL(url);
 };
 
-const changesSummary = (content: SessionInspectorContent): ReactNode => (
+// The pull requests as rows draw them: the one on the Checkout opens its files in the Changes tab.
+const rowsOf = (
+  content: SessionInspectorContent,
+  tab: SectionTabHandle,
+): SessionPullRequest[] =>
+  withCheckoutFiles(pullRequestsOf(content), content.changes, tab.open);
+
+const changesSummary = (
+  content: SessionInspectorContent,
+  tab: SectionTabHandle,
+): ReactNode => (
   <WorkbenchChangesSummary
-    pullRequests={pullRequestsOf(content)}
+    pullRequests={rowsOf(content, tab)}
     summary={summaryOf(content)}
     onOpenChange={openPullRequest}
   />
@@ -29,15 +44,18 @@ const changesSummary = (content: SessionInspectorContent): ReactNode => (
  * Checkout's changed files.
  */
 const changesCard: SessionSection['card'] = (content, tab): SectionCard => {
-  const summary = changesSummary(content);
+  const summary = changesSummary(content, tab);
 
   return pullRequestsOf(content).length
     ? { summary }
     : { summary, onOpen: tab.open };
 };
 
-const pullRequestRows = (content: SessionInspectorContent): ReactNode => {
-  const pullRequests = pullRequestsOf(content);
+const pullRequestRows = (
+  content: SessionInspectorContent,
+  tab: SectionTabHandle,
+): ReactNode => {
+  const pullRequests = rowsOf(content, tab);
 
   return (
     pullRequests.length > 0 && (
@@ -47,8 +65,11 @@ const pullRequestRows = (content: SessionInspectorContent): ReactNode => {
 };
 
 // A phone's sheet leads with every pull request the Session has, scrolling with the Checkout's files under them.
-const phoneBody = (content: SessionInspectorContent): ReactNode => {
-  const header = pullRequestRows(content) || undefined;
+const phoneBody = (
+  content: SessionInspectorContent,
+  tab: SectionTabHandle,
+): ReactNode => {
+  const header = pullRequestRows(content, tab) || undefined;
 
   return content.changes ? (
     <ChangesFiles {...content.changes} header={header} />
@@ -64,8 +85,8 @@ export const changesSection: SessionSection = {
     body: <SessionChangesTab changes={changes} />,
     sheetHeader: <ChangesSheetHeader />,
   }),
-  phone: (content) => ({
+  phone: (content, tab) => ({
     sheetHeader: <ChangesSheetHeader />,
-    body: phoneBody(content),
+    body: phoneBody(content, tab),
   }),
 };

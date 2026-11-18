@@ -141,3 +141,30 @@ export const LeavesOutItemsWithNoHandler: Story = {
     ).toEqual([openName]);
   },
 };
+
+const filesName = `Show Change #${number}'s files in Changes`;
+
+// On the Checkout's own Change, the diff total opens its files, and opens neither the PR nor the menu.
+export const PressingTheTotalOpensTheFiles: Story = {
+  args: { onOpenFiles: fn() },
+  play: async ({ userEvent, args }) => {
+    await settleLayout('wide');
+    await userEvent.click(
+      await screen.findByRole('button', { name: filesName }),
+    );
+    await expect(args.onOpenFiles).toHaveBeenCalledTimes(1);
+    await expect(args.onOpen).not.toHaveBeenCalled();
+    await expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  },
+};
+
+// Any other pull request's total is plain text.
+export const TheTotalIsPlainWithoutAHandler: Story = {
+  play: async () => {
+    await settleLayout('wide');
+    await screen.findByRole('button', { name: triggerName });
+    await expect(
+      screen.queryByRole('button', { name: filesName }),
+    ).not.toBeInTheDocument();
+  },
+};
