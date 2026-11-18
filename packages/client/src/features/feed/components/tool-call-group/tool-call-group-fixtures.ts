@@ -160,8 +160,3 @@ export const imageReadsExpandedGroup = {
   ...imageReadsGroup,
   initialOpen: true,
 } satisfies ToolCallGroupFixture;
-
-export {
-  runningOperations,
-  settledOperations,
-} from './operation-group-fixtures';
