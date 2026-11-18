@@ -12,11 +12,11 @@ const processTable = (args: string[]): string => {
 };
 
 const isLiveMember = (
-  group: string,
-  state: string,
+  group: string | undefined,
+  state: string | undefined,
   expected: number,
 ): boolean =>
-  Number(group) === expected && Boolean(state) && !state.startsWith('Z');
+  Boolean(state && !state.startsWith('Z') && Number(group) === expected);
 
 export const hasLiveGroupMembers = (group: number): boolean =>
   processTable(['-A', '-o', memberColumns])
