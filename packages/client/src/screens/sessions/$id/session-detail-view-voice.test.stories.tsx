@@ -7,7 +7,7 @@ import { voiceCallSession } from './session-detail-view-voice.mocks';
 import { longSession } from './session-detail-view.mocks';
 
 const meta = {
-  title: 'Tests/Screens/Sessions/Session/VoiceCall',
+  title: 'Tests/Screens/Sessions/Session/Voice',
   parameters: { screenPreview: true },
   render: (): React.JSX.Element => (
     <FramedSessionPreview

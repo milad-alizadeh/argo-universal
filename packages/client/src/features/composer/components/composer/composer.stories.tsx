@@ -34,13 +34,6 @@ import {
   slashSuggestionsComposer,
 } from './composer-fixtures';
 import { SuggestionComposer } from './composer-suggestions.mocks';
-import {
-  callElsewhereComposer,
-  voiceCallComposer,
-  voiceCallDraftComposer,
-  voiceConnectingComposer,
-  voiceReadyComposer,
-} from './composer-voice-fixtures';
 
 const [firstAgent] = newSessionCatalogs.bothAvailable;
 
@@ -244,18 +237,3 @@ export const PredictedReply: Story = {
     </SessionColumn>
   ),
 };
-
-// Nothing written and no call: the voice button is the primary button.
-export const VoiceReady: Story = { args: voiceReadyComposer };
-
-// The call is connecting: End is already there with a ring turning inside it.
-export const VoiceConnecting: Story = { args: voiceConnectingComposer };
-
-// A connected call with an empty draft: mic, speaker and End.
-export const VoiceCall: Story = { args: voiceCallComposer };
-
-// Text in the draft on a call: the primary button is Send.
-export const VoiceCallWithDraft: Story = { args: voiceCallDraftComposer };
-
-// The call runs in another Session: the voice button's slot points at it.
-export const CallInAnotherSession: Story = { args: callElsewhereComposer };
