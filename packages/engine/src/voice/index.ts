@@ -16,4 +16,6 @@ export { noVoiceCalls } from './no-voice-calls';
 
 export { VoiceCalls, type VoiceCallsPort } from './voice-calls';
 
+export { VoiceSettingsStore } from './voice-settings';
+
 export { voiceSessions } from './voice-sessions';

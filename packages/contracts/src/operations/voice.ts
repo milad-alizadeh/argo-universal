@@ -2,6 +2,8 @@ import { z } from 'zod';
 import {
   VoiceEndInput,
   VoiceEndOutput,
+  VoiceSettings,
+  VoiceSettingsChange,
   VoiceStartInput,
   VoiceStartOutput,
   VoiceStatus,
@@ -42,6 +44,28 @@ export const voiceOperations = {
     result: VoiceEndOutput,
     tier: 'act',
     keywords: ['voice', 'call', 'hang up', 'end', 'stop', 'microphone'],
+  },
+  'voice.getSettings': {
+    id: 'voice.getSettings',
+    icon: 'settings',
+    label: 'Read Voice settings',
+    description:
+      'Read whether Voice calls are on, the Voice provider and voice chosen, and the providers and voices to choose from.',
+    params: z.strictObject({}).default({}),
+    result: VoiceSettings,
+    tier: 'read',
+    keywords: ['voice', 'settings', 'provider', 'speak'],
+  },
+  'voice.setSettings': {
+    id: 'voice.setSettings',
+    icon: 'settings',
+    label: 'Change Voice settings',
+    description:
+      'Turn Voice calls on or off, or choose the Voice provider or the voice the next call uses.',
+    params: VoiceSettingsChange,
+    result: VoiceSettings,
+    tier: 'confirm',
+    keywords: ['voice', 'settings', 'provider', 'enable', 'disable'],
   },
   'voice.hangUp': {
     id: 'voice.hangUp',

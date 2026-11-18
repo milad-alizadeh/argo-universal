@@ -467,6 +467,28 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      getSettings: publicProcedure
+        .input(operations['voice.getSettings'].params)
+        .output(operations['voice.getSettings'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.getSettings',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      setSettings: publicProcedure
+        .input(operations['voice.setSettings'].params)
+        .output(operations['voice.setSettings'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.setSettings',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       hangUp: publicProcedure
         .input(operations['voice.hangUp'].params)
         .output(operations['voice.hangUp'].result)

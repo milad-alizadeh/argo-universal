@@ -22,6 +22,8 @@ export type VoiceCallEvent =
       callId: string;
       sessionId: string;
       offer: string;
+      // The voice the call speaks with; the provider's own when left out.
+      voice?: string;
       // The App Connection that started the call; the call ends when it closes.
       connection?: AbortSignal;
     }
@@ -60,6 +62,7 @@ export interface RunningCall {
   callId: string;
   sessionId: string;
   offer: string;
+  voice?: string;
   connection?: AbortSignal;
   answer: string | null;
   // What the provider last reported of its allowance.

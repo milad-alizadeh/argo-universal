@@ -2,21 +2,12 @@ import type { VoicePartial, VoiceStatus } from '@repo/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useEffect } from 'react';
-import type { ComposerVoice, ComposerVoiceCall } from '#features/composer';
+import type { ComposerVoice } from '#features/composer';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import { offerTo } from './offer-to';
 import type { VoiceConnection } from './voice-connection';
 import { useVoiceConnection } from './voice-connection-context';
-
-// Where the call is, as this Session's Composer sees it.
-function callHere(
-  call: VoiceStatus['call'] | undefined,
-  sessionId: string,
-): ComposerVoiceCall {
-  if (!call) return 'none';
-
-  return call.sessionId === sessionId ? call.status : 'elsewhere';
-}
+import { composerVoice } from './voice-offer';
 
 const noPartials: VoicePartial[] = [];
 
@@ -97,10 +88,5 @@ export function useVoiceCall(sessionId: string): ComposerVoice | undefined {
 
   if (!connection || !status) return undefined;
 
-  return {
-    usable: status.availability.usable,
-    call: callHere(status.call, sessionId),
-    onStart,
-    onEnd,
-  };
+  return composerVoice(status, sessionId, { onStart, onEnd });
 }
