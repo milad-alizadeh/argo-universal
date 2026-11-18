@@ -28,3 +28,16 @@ export const iconAndDescriptionEmptyState = {
   title: 'No open items',
   description: 'All caught up.',
 } satisfies EmptyStateProps;
+
+export const guidedEmptyState = {
+  icon: 'warning',
+  title: 'Something needs your attention',
+  description: 'Change the setting, then come back here.',
+  note: { lead: 'In Settings, open', detail: 'Privacy › Item' },
+} satisfies EmptyStateProps;
+
+export const busyEmptyState = {
+  busy: true,
+  title: 'Waiting for the item',
+  description: 'It is still looking.',
+} satisfies EmptyStateProps;
