@@ -1,7 +1,7 @@
 import { useCollapsibleHovered } from '@repo/kit/primitives/layout/collapsible';
 import type { ReactNode } from 'react';
 import type * as React from 'react';
-import { Text } from 'react-native';
+import { Platform, Text } from 'react-native';
 import Animated, { useReducedMotion } from 'react-native-reanimated';
 import {
   piecesOf,
@@ -10,6 +10,7 @@ import {
   useBandSweep,
   useShimmerStyle,
 } from './shimmer-sweep';
+import { ShimmerText } from './shimmer-text';
 
 interface TitleProps {
   text: string;
@@ -46,6 +47,22 @@ function shimmerContent({ text, state }: LabelProps): React.ReactNode {
 }
 
 function ShimmerLabel(props: LabelProps): React.JSX.Element {
+  if (Platform.OS === 'web') return <WebShimmerLabel {...props} />;
+
+  return <NativeShimmerLabel {...props} />;
+}
+
+function WebShimmerLabel(props: LabelProps): React.JSX.Element {
+  return (
+    <ShimmerText
+      text={props.text}
+      emphasized={props.state.hovered}
+      className="min-w-0 shrink type-body text-foreground"
+    />
+  );
+}
+
+function NativeShimmerLabel(props: LabelProps): React.JSX.Element {
   return (
     <Text
       numberOfLines={1}
