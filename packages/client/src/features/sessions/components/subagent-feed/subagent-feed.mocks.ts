@@ -133,6 +133,7 @@ export const runningSubagent = subagent;
 export const startingSubagent: Subagent = {
   ...subagent,
   startedAt: subagentFeedNow - 2_000,
+  model: null,
   tokens: null,
 };
 

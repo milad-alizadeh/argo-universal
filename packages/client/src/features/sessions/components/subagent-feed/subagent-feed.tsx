@@ -1,8 +1,11 @@
 import { Button } from '@repo/kit/primitives/actions/button';
+import { Text } from '@repo/kit/primitives/content/text';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Feed } from '#features/feed';
+import { SessionColumn } from '#lib/product/session-column';
+import { subagentMetrics } from '../subagent-list/subagent-format';
 import { SubagentFeedHeader } from './subagent-feed-header';
 import type { SubagentFeedProps } from './subagent-feed-props';
 
@@ -21,10 +24,25 @@ export function SubagentFeed(props: SubagentFeedProps): React.JSX.Element {
       <SizeClass only="wide">
         <SubagentFeedHeader {...props} />
       </SizeClass>
+      <Metrics subagent={props.subagent} />
       <ReportControls {...props} />
       {props.feed && <Feed {...props.feed} opensAtStart />}
     </View>
   );
+}
+
+function Metrics({
+  subagent,
+}: Pick<SubagentFeedProps, 'subagent'>): React.JSX.Element | null {
+  const metrics = subagentMetrics(subagent);
+
+  return metrics ? (
+    <SessionColumn className="pb-2">
+      <Text role="secondary" tone="muted">
+        {metrics}
+      </Text>
+    </SessionColumn>
+  ) : null;
 }
 
 function ReportControls(props: SubagentFeedProps): React.JSX.Element {

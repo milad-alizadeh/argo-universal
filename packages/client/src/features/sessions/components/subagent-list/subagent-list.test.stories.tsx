@@ -1,6 +1,6 @@
 import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import { interleavedSubagents, subagentStates } from './subagent-list.mocks';
 import listMeta from './subagent-list.stories';
 
@@ -13,6 +13,19 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
+
+async function expectMetrics(
+  canvas: Canvas,
+  { wide, name }: { wide: boolean; name: RegExp },
+  metrics: string[],
+): Promise<void> {
+  const row = within(canvas.getByRole(wide ? 'button' : 'link', { name }));
+
+  for (const value of metrics)
+    await expect(row.getByText(value, { exact: false })).toBeVisible();
+}
 
 export const None: Story = {
   args: { subagents: subagentStates.none },
@@ -32,14 +45,10 @@ export const OneRunning: Story = {
       await expect(
         canvas.getByRole('heading', { name: 'Running' }),
       ).toBeVisible();
-      await expect(
-        canvas.getByRole(wide ? 'button' : 'link', {
-          name: /Find every Feed reader/,
-        }),
-      ).toBeVisible();
-      await expect(
-        canvas.getByText('Sonnet 4.5 · 34s · 8.2k tokens'),
-      ).toBeVisible();
+      await expectMetrics(canvas, { wide, name: /Find every Feed reader/ }, [
+        'Sonnet 4.5',
+        '8.2k tokens',
+      ]);
       await expect(canvas.queryByRole('heading', { name: 'Done' })).toBeNull();
       await expect(canvas.getByText('1')).toBeVisible();
     }),
@@ -48,7 +57,7 @@ export const OneRunning: Story = {
 export const SeveralMixed: Story = {
   args: { subagents: subagentStates.severalMixed },
   play: async ({ canvas }) =>
-    eachLayout(async () => {
+    eachLayout(async (wide) => {
       await expect(
         canvas.getByRole('heading', { name: 'Running' }),
       ).toBeVisible();
@@ -57,11 +66,19 @@ export const SeveralMixed: Story = {
       await expect(
         canvas.getByRole('img', { name: 'Needs input' }),
       ).toBeVisible();
-      await expect(
-        canvas.getByText('Finished · 2m 18s · 12.9k tokens'),
-      ).toBeVisible();
-      await expect(canvas.getByText('Opus 4.5 · Needs input')).toBeVisible();
-      await expect(canvas.getByText('Cancelled · 12s')).toBeVisible();
+      await expectMetrics(canvas, { wide, name: /Draft the Plan schema/ }, [
+        'Haiku 4.5',
+        '12.9k tokens',
+      ]);
+      await expectMetrics(
+        canvas,
+        { wide, name: /Migrate tokens to kit roles/ },
+        ['Opus 4.5', '21.4k tokens'],
+      );
+      await expectMetrics(canvas, { wide, name: /Port the mock CLIs/ }, [
+        'Haiku 4.5',
+        '1.3k tokens',
+      ]);
     }),
 };
 
@@ -87,9 +104,10 @@ export const AllFinished: Story = {
       ).toBeNull();
       await expect(canvas.getByRole('heading', { name: 'Done' })).toBeVisible();
       await expect(canvas.getByText('2')).toBeVisible();
-      await expect(
-        canvas.getByText('Finished · 2m 18s · 12.9k tokens'),
-      ).toBeVisible();
+      await expectMetrics(canvas, { wide, name: /Draft the Plan schema/ }, [
+        'Haiku 4.5',
+        '12.9k tokens',
+      ]);
       await expect(
         canvas.getByRole(wide ? 'button' : 'link', {
           name: /Port the mock CLIs/,
