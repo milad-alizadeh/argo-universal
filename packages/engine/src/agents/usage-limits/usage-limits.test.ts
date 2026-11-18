@@ -78,3 +78,37 @@ it('tells watchers of a change but not of the same values read again', async () 
     ]);
   expect(other).toEqual([]);
 });
+
+it('drops omitted account windows and keeps limits received from ACP', async () => {
+  const limits = new UsageLimits();
+  const seen = watch(limits);
+  await Promise.resolve();
+
+  const weekly = limit('seven_day', 0.5);
+  const extra = limit('monthly_extra_usage', 0.2);
+  limits.publish(subject, [limit('seven_day', 0.6)]);
+  limits.publishAccount(subject, [weekly, extra]);
+  limits.publishAccount(subject, []);
+
+  await expect
+    .poll(() => seen.at(-1))
+    .toEqual({
+      limits: [limit('seven_day', 0.6)],
+    });
+});
+
+it('keeps an account percentage when a later ACP update has no usage figure', () => {
+  const limits = new UsageLimits();
+  const weekly = limit('seven_day', 0.5);
+
+  limits.publishAccount(subject, [weekly]);
+  limits.publish(subject, [
+    {
+      ...weekly,
+      observedAt: '2026-11-18T10:01:00.000Z',
+      measure: { kind: 'none' },
+    },
+  ]);
+
+  expect(limits.read(subject).limits[0]?.measure).toEqual(weekly.measure);
+});
