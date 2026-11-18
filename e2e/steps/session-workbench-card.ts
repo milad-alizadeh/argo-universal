@@ -98,8 +98,8 @@ When('I press Create PR in the Workbench', async ({ page }): Promise<void> => {
 
 const createPullRequestPrompt = expect.objectContaining({
   type: 'text',
-  text: expect.stringContaining(
-    "Open a pull request for this Session's changes and attach it to this Session.",
+  text: expect.stringMatching(
+    /Use the \/pr skill.*commit the relevant files.*attach it to this Session/,
   ),
 });
 

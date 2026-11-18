@@ -14,7 +14,7 @@ const creationFailed: ErrorToast = {
 const prompt = [
   {
     type: 'text',
-    text: "Open a pull request for this Session's changes and attach it to this Session. If a pull request already exists for this branch, attach it instead.",
+    text: "Use the /pr skill to create a pull request for this Session's changes. Prepare the branch and commit the relevant files as needed before opening the pull request, then attach it to this Session. If a pull request already exists for this branch, attach it instead.",
   },
 ] satisfies ContentBlock[];
 
