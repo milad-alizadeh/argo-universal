@@ -55,8 +55,8 @@ export interface PluginTestOptions {
   home?: string;
   // Stands in for the OS secret store; an in-memory one when left out. Share one across starts to keep Account tokens.
   secretStore?: SecretStore;
-  // What `argo.sessions.get` answers, by Session id.
-  sessions?: Record<string, PluginSessionInfo>;
+  // What `argo.sessions.get` answers, by Session id; a Session with no `idleFor` reads as busy (null).
+  sessions?: Record<string, TestSession>;
   // Stands in for the Server's prompt queue: what `argo.sessions.prompt` reaches. A Plugin without it cannot prompt.
   promptSession?: (
     sessionId: string,
@@ -72,6 +72,10 @@ export interface PluginTestOptions {
   // Stands in for the App's archive: what `argo.sessions.archive` reaches; it rejects as core does for a Turn that runs or a Checkout with uncommitted files. A Plugin without it cannot archive.
   archiveSession?: (sessionId: string) => Promise<void>;
 }
+
+// What a test says `argo.sessions.get` answers for one Session; `idleFor` may be left out.
+export type TestSession = Omit<PluginSessionInfo, 'idleFor'> &
+  Partial<Pick<PluginSessionInfo, 'idleFor'>>;
 
 // The App an items Slot list is asked from; it decides how many items show before "+N".
 type SlotItemsOptions = {

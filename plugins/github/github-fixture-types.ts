@@ -35,6 +35,8 @@ export type FixtureFile = {
 // One Check run of a commit as GitHub's REST API answers it.
 export type FixtureCheck = {
   name: string;
+  // GitHub's id for this run; left out, the fixture derives one from the name, so it stays the same run.
+  id?: number;
   status: 'queued' | 'in_progress' | 'completed';
   conclusion:
     | 'success'
