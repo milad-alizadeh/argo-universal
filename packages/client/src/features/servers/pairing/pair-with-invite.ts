@@ -7,6 +7,8 @@ import type {
   resolveServer,
   ServerAddress,
 } from '#features/connection';
+import { announcedAt } from './announced-at';
+import { addressesToKnockOn, otherQrAddresses } from './qr-addresses';
 
 /*
  * How one try at pairing ended. Each has its own page, because each needs the owner to do something different (ADR-0045):
@@ -18,6 +20,12 @@ export type PairOutcome =
   | { kind: 'declined' }
   | { kind: 'unanswered' }
   | { kind: 'not-found' }
+  // The first look at the network heard nothing (ADR-0045).
+  | { kind: 'undetermined' }
+  // The owner turned Local Network off for the App, so the network cannot be looked at.
+  | { kind: 'denied' }
+  // This build never declared that it browses for Servers, which iOS refuses without; a fault of the build, not of the network.
+  | { kind: 'misconfigured' }
   | { kind: 'failed' };
 
 // The ways that have a page of their own; a `failed` one is only a toast, and the scanner stays.
@@ -41,17 +49,16 @@ export interface PairDeps {
   pair: typeof pairWithServer;
   resolve: typeof resolveServer;
   signal?: AbortSignal;
-  // Where to knock when nothing announces the Server; a hint the handshake still has to prove.
+  // Where to knock besides the URLs the code carries; a hint the handshake still has to prove.
   address?: ServerAddress;
-}
-
-type Located = Awaited<ReturnType<typeof resolveServer>>;
-
-// What one try at pairing is about: the code, where its Server answers now, and where everything comes from.
-interface Attempt {
-  invite: PairingInvite;
-  located: Located;
-  deps: PairDeps;
+  // Something answered at an address and has the request: from here the wait is the owner's on the Server Device.
+  onReached?: () => void;
+  // Fires when an address fails after the socket opened.
+  onUnreached?: () => void;
+  // The first look at the network since the page opened (ADR-0045).
+  firstBrowse?: boolean;
+  // Whether this build declares that it browses for Servers. Unset reads as declared.
+  declared?: boolean;
 }
 
 // What `PairingRefused` carries; read by shape because the class lives behind the connection feature's index.
@@ -63,62 +70,104 @@ const refusalOutcome = (cause: unknown): PairOutcome | null => {
   return refused.success ? refusals[refused.data.refusal] : null;
 };
 
-const pairedAt = (host: string, attempt: Attempt): PairOutcome => ({
-  kind: 'paired',
-  server: {
-    name: attempt.located.name,
-    key: attempt.invite.key,
-    address: { host, port: attempt.located.port },
-  },
-});
+interface Attempt {
+  invite: PairingInvite;
+  name: string;
+  deps: PairDeps;
+}
 
-// One address. One that does not answer is not a refusal, so it gives nothing and the next may be the Server.
-async function tryHost(
-  host: string,
+function pairedAt(address: ServerAddress, attempt: Attempt): PairOutcome {
+  const { invite, name } = attempt;
+  const otherAddresses = otherQrAddresses(invite, address);
+
+  return {
+    kind: 'paired',
+    server: {
+      name,
+      key: invite.key,
+      address,
+      ...(otherAddresses.length > 0 && { otherAddresses }),
+    },
+  };
+}
+
+const spendTicketAt = (
+  address: ServerAddress,
+  { invite, deps }: Attempt,
+): ReturnType<PairDeps['pair']> =>
+  deps.pair({ ...address, serverPublicKey: invite.key }, invite.ticket, {
+    signal: deps.signal,
+    onReached: deps.onReached,
+  });
+
+// An address that does not answer is not a refusal: it gives nothing, and the next may be the Server.
+async function tryAt(
+  address: ServerAddress,
   attempt: Attempt,
 ): Promise<PairOutcome | null> {
-  const { invite, located, deps } = attempt;
-  const endpoint = { host, port: located.port, serverPublicKey: invite.key };
-
   try {
-    await deps.pair(endpoint, invite.ticket, { signal: deps.signal });
+    await spendTicketAt(address, attempt);
 
-    return pairedAt(host, attempt);
+    return pairedAt(address, attempt);
   } catch (cause) {
+    attempt.deps.onUnreached?.();
+
     return refusalOutcome(cause);
   }
 }
 
-// The first address the Server answers on.
-async function pairOnAny(attempt: Attempt): Promise<PairOutcome> {
-  for (const host of attempt.located.hosts) {
-    const outcome = await tryHost(host, attempt);
+async function pairOnAny(
+  addresses: readonly ServerAddress[],
+  attempt: Attempt,
+): Promise<PairOutcome | null> {
+  for (const address of addresses) {
+    const outcome = await tryAt(address, attempt);
 
     if (outcome) return outcome;
   }
 
-  return { kind: 'not-found' };
+  return null;
 }
 
-const knownOf = (invite: PairingInvite, deps: PairDeps): KnownServer => ({
-  name: invite.server,
-  key: invite.key,
-  address: deps.address,
-});
+async function afterAnnouncement(
+  attempt: Attempt,
+  alreadyKnockedOn: readonly ServerAddress[],
+): Promise<PairOutcome> {
+  const announced = await announcedAt(attempt, alreadyKnockedOn);
+
+  if (!announced.heard) return unheard(announced.denied, attempt.deps);
+
+  const outcome = await pairOnAny(announced.addresses, {
+    ...attempt,
+    name: announced.name,
+  });
+
+  return outcome ?? { kind: 'not-found' };
+}
+
+// Why nothing was heard, the most certain first: a build that cannot browse, then a refusal by the system, then plain silence.
+function unheard(denied: boolean, deps: PairDeps): PairOutcome {
+  const causes: [boolean, PairOutcome][] = [
+    [deps.declared === false, { kind: 'misconfigured' }],
+    [denied, { kind: 'denied' }],
+    [deps.firstBrowse === true, { kind: 'undetermined' }],
+  ];
+
+  return causes.find(([applies]) => applies)?.[1] ?? { kind: 'not-found' };
+}
 
 /*
- * Pairs with the Server a scanned code names: finds where it is now, spends the Ticket on a channel to it, and waits for the owner's answer on the Server Device.
- * The Server is found by its key's hash and not by the name, so a Server renamed since the code was drawn is still the one (ADR-0045).
+ * Pairs with the Server a scanned code names, the way a phone reaches an Expo dev server: it knocks first where the code says the Server answers, and looks for it on the network only when nothing answers there.
+ * Either way the Ticket is spent on a channel to it, and the wait is for the owner's answer on the Server Device. On the network the Server is found by its key's hash and not by the name, so a Server renamed since the code was drawn is still the one (ADR-0045).
  */
 export async function pairWithInvite(
   invite: PairingInvite,
   deps: PairDeps,
 ): Promise<PairOutcome> {
-  try {
-    const located = await deps.resolve(knownOf(invite, deps), deps.browse);
+  const attempt = { invite, name: invite.server, deps };
+  const direct = addressesToKnockOn(invite, deps.address);
 
-    return await pairOnAny({ invite, located, deps });
-  } catch {
-    return { kind: 'not-found' };
-  }
+  return (
+    (await pairOnAny(direct, attempt)) ?? afterAnnouncement(attempt, direct)
+  );
 }

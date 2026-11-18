@@ -22,6 +22,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { toolCallFacts } from '../../view/feed-row-facts';
 import { ShimmerText } from '../shimmer-text';
 import { toolCallOrb } from '../tool-call-orb';
 
@@ -73,6 +74,16 @@ function RetryIcon(): React.JSX.Element {
   );
 }
 
+function toolSourceIcon(toolCall?: ToolCallUpdate): React.JSX.Element {
+  const operation = toolCall && toolCallFacts(toolCall).operation;
+
+  return operation ? (
+    <Icon name={operation.icon} className="text-muted-foreground" />
+  ) : (
+    <Orb size="sm" state={toolCallOrb(toolCall)} continues />
+  );
+}
+
 const sourceIcons: Record<
   LiveHeaderSource['type'],
   (toolCall: ToolCallUpdate | undefined) => React.JSX.Element
@@ -81,10 +92,7 @@ const sourceIcons: Record<
   retry: () => <RetryIcon />,
   working: () => <Orb size="sm" continues />,
   thought: () => <Orb size="sm" state="solving" continues />,
-  // The Orb moves the way the running Tool call works: searching, composing, shaping.
-  tool_call: (toolCall) => (
-    <Orb size="sm" state={toolCallOrb(toolCall)} continues />
-  ),
+  tool_call: toolSourceIcon,
 };
 
 export function SourceIcon({
@@ -96,15 +104,22 @@ export function SourceIcon({
   return sourceIcons[source.type](toolCall);
 }
 
+function operationTitle(toolCall?: ToolCallUpdate): string | undefined {
+  return toolCall ? toolCallFacts(toolCall).operation?.label : undefined;
+}
+
 export function useLiveHeaderTitle(
   { text, startedAt }: LiveHeaderValue,
   now: number | undefined,
+  toolCall?: ToolCallUpdate,
 ): string {
+  const title = operationTitle(toolCall) ?? text;
+
   const clock = useClock(startedAt !== null, now);
 
-  if (startedAt === null) return text;
+  if (startedAt === null) return title;
 
-  return `${text} ${formatElapsed(clock - startedAt)}`;
+  return `${title} ${formatElapsed(clock - startedAt)}`;
 }
 
 function RequestTitle({ title }: { title: string }): React.JSX.Element {
@@ -120,7 +135,7 @@ function RequestTitle({ title }: { title: string }): React.JSX.Element {
   );
 }
 
-export function LiveTitle({
+function LiveTitle({
   title,
   source,
 }: {
@@ -137,7 +152,7 @@ export function LiveTitle({
 // The last line of the Feed while a Turn runs; its source icon marks a request, otherwise the title shimmers.
 export function LiveHeader(props: LiveHeaderProps): React.JSX.Element {
   const { liveHeader } = props;
-  const title = useLiveHeaderTitle(liveHeader, props.now);
+  const title = useLiveHeaderTitle(liveHeader, props.now, props.toolCall);
 
   return (
     <View role="status" accessibilityLabel={title} className={rowClassName}>

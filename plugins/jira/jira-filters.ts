@@ -7,14 +7,29 @@ import type { StatusCategory } from './jira-readers';
  */
 export type StatusFilter = 'all' | StatusCategory;
 
-// The assignee is `anyone`, `me`, `none` for unassigned, or one person's Atlassian account id.
+// The order the list reads in, as Jira's ORDER BY: the most recently updated, the newest, or the most urgent first.
+export type IssueSort = 'updated' | 'created' | 'priority';
+
+/*
+ * The assignee is `anyone`, `me`, `none` for unassigned, or one person's Atlassian account id. The sort orders what the
+ * filters leave and narrows nothing.
+ */
 export type IssueFilters = {
   status: StatusFilter;
   assignee: string;
   text: string;
+  sort: IssueSort;
 };
 
 export const noFilters: IssueFilters = {
+  status: 'all',
+  assignee: 'anyone',
+  text: '',
+  sort: 'updated',
+};
+
+// Clearing the filters keeps the order the person chose.
+export const cleared: Omit<IssueFilters, 'sort'> = {
   status: 'all',
   assignee: 'anyone',
   text: '',
@@ -34,6 +49,19 @@ export const assigneeChoices: readonly Choice<string>[] = [
   { value: 'me', label: 'Me' },
   { value: 'none', label: 'Unassigned' },
 ];
+
+export const sortChoices: readonly Choice<IssueSort>[] = [
+  { value: 'updated', label: 'Recently updated' },
+  { value: 'created', label: 'Newest' },
+  { value: 'priority', label: 'Priority' },
+];
+
+// Each order as Jira's ORDER BY; equal priorities keep the most recently updated first.
+export const orderClauses: Record<IssueSort, string> = {
+  updated: 'updated DESC',
+  created: 'created DESC',
+  priority: 'priority DESC, updated DESC',
+};
 
 // A JQL string literal.
 export const quoted = (value: string): string =>
@@ -104,9 +132,18 @@ const isStatusFilter = (value: string): value is StatusFilter =>
 const statusOf = (value: string): StatusFilter =>
   isStatusFilter(value) ? value : 'all';
 
+const isSort = (value: string): value is IssueSort =>
+  Object.hasOwn(orderClauses, value);
+
+const sortOf = (value: string | undefined): IssueSort =>
+  value && isSort(value) ? value : 'updated';
+
 // The filters a Page state holds; a value no filter has, as in an edited address, reads as no filter there.
-export const filtersOf = (state: IssueFilters): IssueFilters => ({
+export const filtersOf = (
+  state: Omit<IssueFilters, 'sort'> & { sort?: string },
+): IssueFilters => ({
   status: statusOf(state.status),
   assignee: state.assignee || 'anyone',
   text: state.text,
+  sort: sortOf(state.sort),
 });

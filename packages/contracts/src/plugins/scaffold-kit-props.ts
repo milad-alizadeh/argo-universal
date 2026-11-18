@@ -5,6 +5,7 @@ import { productName } from '../product-identity';
 import { handler, stringLabel } from './kit-component-props';
 import { listItemProps } from './list-kit-props';
 import { perSizeClass } from './schema-size-class';
+import { rowBadgeProps } from './status-kit-props';
 import { PageBind } from './wire';
 
 export const screenProps = z.object({
@@ -33,6 +34,11 @@ export const screenProps = z.object({
   onChangeText: PageBind.optional().describe(
     'Receive the search query when it changes.',
   ),
+  optionsBadge: rowBadgeProps
+    .optional()
+    .describe(
+      'A count or status dot on the Options button the `options` slot draws, such as how many filters are in use.',
+    ),
   width: z
     .enum(screenWidths)
     .optional()

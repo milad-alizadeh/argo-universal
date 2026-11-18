@@ -1,8 +1,12 @@
 import { turn } from '@repo/db/schema';
+import { smallModelUpdate } from '@repo/mocks/agent/acp-configuration';
+import { subagentSessionId } from '@repo/mocks/agent/subagent-scenarios';
+import { eq } from 'drizzle-orm';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { insertSession } from '#mocks/database';
+import { associate, onTranscript, played } from '#mocks/subagent-steps';
 
 const latestTurn = {
   id: 'latest',
@@ -75,4 +79,24 @@ it('rejects Subagent queries for an unknown parent Session', async (): Promise<v
   await expect(
     caller.session.listAgents({ sessionId: 'missing' }),
   ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+});
+
+it('keeps a model reported before the child starts its Turn', async () => {
+  const { database, childId } = await played([
+    associate(subagentSessionId),
+    onTranscript(smallModelUpdate, subagentSessionId),
+    onTranscript({
+      sessionUpdate: 'subagent_update',
+      sessionId: subagentSessionId,
+      state: { state: 'running' },
+    }),
+  ]);
+
+  const stored = database
+    .select()
+    .from(turn)
+    .where(eq(turn.sessionId, childId(subagentSessionId)))
+    .get();
+
+  expect(stored).toMatchObject({ status: 'running', model: 'small' });
 });

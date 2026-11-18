@@ -1,46 +1,16 @@
-import {
-  Action,
-  Button,
-  EmptyState,
-  Screen,
-  type PluginProps,
-} from '@argo/plugin-kit';
+import { Button, EmptyState, Screen, type PluginProps } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { failedScreen, titleOf } from './failure-view';
-import { filterMenu } from './filter-menu';
-import { boardOf, viewOf, viewSwitch } from './issue-board';
+import { boardOf } from './issue-board';
+import { issueOptions, optionsBadge } from './issue-options';
 import { isFailure } from './issue-pages';
 import { issueList, type ListFrame } from './issue-rows';
 import type { JiraFailure } from './jira-client';
-import { activeFilters, noFilters } from './jira-filters';
+import { activeFilters, cleared } from './jira-filters';
 import type { ProjectView } from './jira-setup';
+import { projectMenu } from './project-menu';
 import { setupScreen } from './setup-views';
 import type { Framing, Listing } from './view-frame';
-
-/*
- * The project's own choices, with no icon, so the header keeps them in its overflow menu and shows only the Filter
- * menu and the search, as the Issue tracker's header shows only its search.
- */
-const changeProject = ({ to, projectId }: Framing): JSX.Element => (
-  <Action
-    key="change-project"
-    label="Change Jira project"
-    onPress={to.run('forgetProject', { projectId })}
-  />
-);
-
-const changeSiteChoice = ({ to, sitePath }: Framing): JSX.Element => (
-  <Action
-    key="change-site"
-    label="Change Jira site"
-    onPress={to.go(sitePath)}
-  />
-);
-
-const projectActions = (framing: Framing): JSX.Element[] => [
-  changeProject(framing),
-  changeSiteChoice(framing),
-];
 
 type Issues = Extract<ProjectView, { kind: 'issues' }>;
 
@@ -55,7 +25,7 @@ const noMatches = (key: string, { to }: Listing): JSX.Element => (
   <EmptyState
     title="No issues match these filters"
     description={`Try other filters, or clear them to see every issue in ${key}.`}
-    action={<Button label="Clear filters" onPress={to.set(noFilters)} />}
+    action={<Button label="Clear filters" onPress={to.set(cleared)} />}
   />
 );
 
@@ -84,17 +54,24 @@ const refusedList = (
 const listRefusal = ({ site, chosen }: Issues) =>
   ({ kind: 'failed', site, reading: 'issues', chosen }) as const;
 
-// The header the Issue tracker's list has (`plugins/issue-tracker/filter-page-header.ts`), with Jira's Filter menu.
+/*
+ * The issues' header (Paper, "Project header on phone", options C and E): the title picks the Jira project, one
+ * Options button holds the view, the filters and the order, and the search narrows by text. A phone shows only Options
+ * and Search beside the title; a wide window names the project's key and site under it.
+ */
 const issuesHeader = (
-  { project, people }: Issues,
+  view: Issues,
   framing: Framing,
   listing: Listing,
 ): Omit<PluginProps['Screen'], 'children'> => ({
-  title: project.name,
+  title: view.project.name,
+  caption: `${view.project.key} · ${view.site.host}`,
+  titleMenu: projectMenu(view, framing),
+  options: issueOptions(view.people, listing),
+  optionsBadge: optionsBadge(listing),
   search: { label: 'Search Issues' },
   value: listing.filters.text,
   onChangeText: listing.to.bind('text'),
-  actions: [filterMenu(people, listing), ...projectActions(framing)],
 });
 
 type Drawing = { framing: Framing; listing: Listing };
@@ -109,15 +86,15 @@ const emptyOf = (
     ? refusedList(view, refused, framing)
     : emptyList(view.project.key, listing);
 
-// Under the rows the list names its Jira project and site, as the Issue tracker names its repository.
+/*
+ * The list's frame is its empty state: the header names the Jira project and site, in the caption on a wide window and
+ * at the head of the title's menu on every window, so no footer repeats them under the rows.
+ */
 const listFrame = (
   view: Issues,
   refused: JiraFailure | undefined,
   drawing: Drawing,
-): ListFrame => ({
-  footer: `${view.project.key} · ${view.site.host}`,
-  empty: emptyOf(view, refused, drawing),
-});
+): ListFrame => ({ empty: emptyOf(view, refused, drawing) });
 
 // The issues the filters leave as a list, whose load more reads Jira's next page.
 function listBody(
@@ -131,7 +108,7 @@ function listBody(
   return issueList(view.site, { list: listing.list, to, projectId, ...frame });
 }
 
-// The board the switch asks for, or, when Jira refused the list or there is nothing to draw, the list that says why.
+// The board the options ask for, or, when Jira refused the list or there is nothing to draw, the list that says why.
 function shownBody(
   view: Issues,
   refused: JiraFailure | undefined,
@@ -142,7 +119,7 @@ function shownBody(
   return board ?? listBody(view, refused, drawing);
 }
 
-// The project's issues the filters leave, as the list or the board the switch above them shows.
+// The project's issues the filters leave, as the list or the board the header's options show.
 function issueScreen(
   view: Issues,
   refused: JiraFailure | undefined,
@@ -150,7 +127,6 @@ function issueScreen(
 ): JSX.Element {
   return (
     <Screen {...issuesHeader(view, drawing.framing, drawing.listing)}>
-      {viewSwitch(viewOf(drawing.listing), drawing.listing.to)}
       {shownBody(view, refused, drawing)}
     </Screen>
   );

@@ -14,7 +14,14 @@ const meta = {
   argTypes: {
     kind: {
       control: 'select',
-      options: ['waiting', 'expired', 'declined', 'unanswered', 'not-found'],
+      options: [
+        'finding',
+        'waiting',
+        'expired',
+        'declined',
+        'unanswered',
+        'not-found',
+      ],
     },
     serverName: { control: 'text' },
     onAction: { control: false },

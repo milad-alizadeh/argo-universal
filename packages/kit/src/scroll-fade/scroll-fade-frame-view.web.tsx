@@ -10,6 +10,7 @@ import {
   edgeMode,
   fadeEdgesFor,
 } from './scroll-fade-options';
+import { useTrackScrollFade } from './track-scroll-fade.web';
 
 type FadeLengths = React.CSSProperties &
   Partial<
@@ -76,19 +77,21 @@ function FadeLayer({
   children,
   ...options
 }: FadeOptions & { children: React.ReactNode }): React.JSX.Element {
+  const attach = useTrackScrollFade(Boolean(options.horizontal));
+
   const className = cn(
     'scroll-fade',
     options.horizontal && 'scroll-fade-inline',
   );
 
   return (
-    <div className={className} style={fadeLengths(options)}>
+    <div ref={attach} className={className} style={fadeLengths(options)}>
       <OfferColumn>{children}</OfferColumn>
     </div>
   );
 }
 
-// Around a scroll view: CSS fades its content itself at each edge as it scrolls, over whatever lies behind, with no JavaScript.
+// Around a scroll view: CSS fades its content itself at each edge as it scrolls, over whatever lies behind, with pixel distances that stay stable as content grows.
 export function ScrollFadeFrame({
   className,
   style,

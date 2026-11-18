@@ -3,10 +3,12 @@ import { Stack } from 'expo-router';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { iconSymbols } from '#kit/symbols/icon-names';
-import type { ScreenHeader } from '#primitives/actions/action';
+import type { ActionGroup, ScreenHeader } from '#primitives/actions/action';
 import { useScreenMenu } from './screen-menu-context';
-import type { ScreenHeaderInput } from './screen-props';
+import { toolbarOptionsButton } from './screen-options-item.ios';
+import type { PageOptions, ScreenHeaderInput } from './screen-props';
 import { ScreenSearchBar } from './screen-search-bar.ios';
+import { TitleMenu } from './screen-title-menu';
 import {
   overflowMenu,
   toolbarButton,
@@ -28,19 +30,44 @@ export function ScreenHeaderItems(
 
   return (
     <>
-      <RootTitle />
+      <TitleItem title={props.title} groups={props.titleGroups} />
       <MenuItem />
-      <HeaderItems header={header} />
+      <HeaderItems header={header} options={props.pageOptions} />
       {props.search ? <ScreenSearchBar {...props} /> : null}
     </>
   );
 }
 
-// A narrow root, which ☰ opens from, has the system's large title; pushed pages keep the inline one.
-function RootTitle(): ReactElement | null {
-  if (useScreenMenu() === null) return null;
+type TitleProps = { title?: string; groups: ActionGroup[] };
 
-  return <Stack.Screen options={{ headerLargeTitleEnabled: true }} />;
+type TitleDrawing = (() => ReactElement) | undefined;
+
+// A title with a menu is the menu's button; with none, the bar draws its own title, so a menu set before goes.
+function titleDrawing({ title, groups }: TitleProps): TitleDrawing {
+  if (!title || !groups.length) return undefined;
+
+  return function TitleMenuDrawing() {
+    return <TitleMenu title={title} level={1} groups={groups} />;
+  };
+}
+
+/*
+ * Every draw sets the title's options, since a navigator keeps what an earlier draw set: a title with a menu draws in
+ * the bar's title place as the menu's button, inline, as a large title is UIKit's own text and could not open it; a
+ * narrow root without one, which ☰ opens from, has the system's large title, and pushed pages keep the inline one.
+ */
+function TitleItem(props: TitleProps): ReactElement {
+  const headerTitle = titleDrawing(props);
+  const root = useScreenMenu() !== null;
+
+  return (
+    <Stack.Screen
+      options={{
+        headerTitle,
+        headerLargeTitleEnabled: root && headerTitle === undefined,
+      }}
+    />
+  );
 }
 
 // A narrow root leads with ☰ as a stock bar button item, which the system places like the back chevron, with the stock badge.
@@ -62,19 +89,25 @@ function MenuItem(): ReactElement | null {
   );
 }
 
-// The primary Action sits top right on every iPhone and iPad, wherever the search bar is.
-function HeaderItems({ header }: { header: ScreenHeader }): ReactElement {
-  const entry = toolbarEntry(useNativeTheme().colors.primary);
-  const { primary } = header;
+// The primary Action sits top right on every iPhone and iPad, wherever the search bar is; the page's Options come first.
+type HeaderItemsProps = { header: ScreenHeader; options: PageOptions | null };
+
+function HeaderItems({ header, options }: HeaderItemsProps): ReactElement {
+  const dotColor = useNativeTheme().colors.primary;
 
   return (
     <Stack.Toolbar placement="right">
-      {header.direct.map(entry)}
+      {options ? toolbarOptionsButton(options, dotColor) : null}
+      {header.direct.map(toolbarEntry(dotColor))}
       {overflowMenu(header.overflow, header.label)}
       {selectItem(header.select)}
-      {primary ? toolbarButton({ ...primary, id: 'primary' }) : null}
+      {primaryItem(header.primary)}
     </Stack.Toolbar>
   );
+}
+
+function primaryItem(primary: ScreenHeader['primary']): ReactElement | null {
+  return primary ? toolbarButton({ ...primary, id: 'primary' }) : null;
 }
 
 // Select is a stock bar button of its own: the stack sizes it, and it ends the bar's items before the primary Action.

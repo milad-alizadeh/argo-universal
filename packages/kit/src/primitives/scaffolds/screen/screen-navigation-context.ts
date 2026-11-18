@@ -1,8 +1,8 @@
 import { NavigationContext } from 'expo-router/react-navigation';
 import { createContext, use } from 'react';
+import { ScreenNavigationEnabled } from '#kit/screen-navigation-enabled';
 
-// Previews have no page navigator of their own; the App enables stock headers by default.
-export const ScreenNavigationEnabled = createContext(true);
+export { ScreenNavigationEnabled };
 
 // A ListDetail marks the detail it shows beside its list, which needs no Back to reach the list.
 export const ScreenBesideList = createContext(false);

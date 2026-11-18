@@ -1,6 +1,7 @@
 import type { OperationRow } from '@repo/contracts/operations';
 import type { PluginList } from '@repo/contracts/plugins';
 import {
+  defaultPluginOperationIcon,
   pluginOperationId,
   type PluginOperationContribution,
   type PluginOperationParam,
@@ -29,6 +30,7 @@ export function declaredOperations(list: PluginList): DeclaredOperation[] {
 
 export const operationRow = (declared: DeclaredOperation): OperationRow => ({
   ...operationIdentity(declared),
+  icon: declared.operation.icon ?? defaultPluginOperationIcon,
   params: paramsSchema(runParams(declared.operation)),
   result: { description: `What ${declared.pluginName} answers.` },
   tier: declared.operation.tier,

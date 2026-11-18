@@ -2,6 +2,7 @@ import type { AgentUsageLimits } from '@repo/contracts';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { capturedClaudeRateLimit } from '#mocks/claude-rate-limit';
 
 type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 
@@ -88,4 +89,45 @@ it("keeps the Usage limits an Agent's update reports for its Agent and Project",
   });
   await expect.poll(() => seen).toEqual([{ limits: [fiveHour] }]);
   expect(otherProject).toEqual([]);
+});
+
+// Regression: a Claude subscription's update gave the Usage control no percentage to draw, on every Session.
+it('keeps the used share a Claude subscription reports under its unified windows', async () => {
+  const host = await startAcpEngine({
+    steps: [],
+    responses: {
+      'session/prompt': [
+        {
+          steps: [
+            {
+              type: 'update',
+              update: {
+                ...usageUpdate,
+                _meta: { '_claude/rateLimit': capturedClaudeRateLimit },
+              },
+            },
+          ],
+          result: { stopReason: 'end_turn' },
+        },
+      ],
+    },
+  });
+
+  const created = await host.caller.session.new(emptySessionInput);
+
+  await host.caller.session.prompt({
+    ...created,
+    prompt: [{ type: 'text', text: 'Use some of the plan' }],
+  });
+  await waitForAcpSessionIdle(host, created.sessionId);
+
+  expect(await host.caller.agents.usageLimits(subject)).toEqual({
+    limits: [
+      expect.objectContaining({
+        id: 'seven_day',
+        measure: { kind: 'fraction', used: 0.44 },
+        resetsAt: '2026-11-21T17:00:00.000Z',
+      }),
+    ],
+  });
 });

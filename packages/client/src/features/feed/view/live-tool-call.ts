@@ -3,6 +3,7 @@ import type {
   SessionUpdate,
   ToolCallUpdate,
 } from '@repo/contracts';
+import { operationRecords, presentOperation } from './operation-records';
 
 function matchesToolCall(
   row: SessionUpdate,
@@ -19,13 +20,20 @@ export function findLiveToolCall(
 ): ToolCallUpdate | undefined {
   const source = liveSource(snapshot);
 
-  if (!source) return undefined;
+  return source?.type === 'tool_call'
+    ? presentLiveCall(rows, source.toolCallId)
+    : undefined;
+}
 
-  if (source.type !== 'tool_call') return undefined;
-
-  return rows.findLast((row): row is ToolCallUpdate =>
-    matchesToolCall(row, source.toolCallId),
+function presentLiveCall(
+  rows: readonly SessionUpdate[],
+  toolCallId: string,
+): ToolCallUpdate | undefined {
+  const call = rows.findLast((row): row is ToolCallUpdate =>
+    matchesToolCall(row, toolCallId),
   );
+
+  return call && presentOperation(call, operationRecords(rows));
 }
 
 function liveSource(

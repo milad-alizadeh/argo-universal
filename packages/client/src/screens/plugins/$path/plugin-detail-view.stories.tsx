@@ -6,6 +6,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { PluginDetailView } from './plugin-detail-view';
 import {
+  loading,
   issueFilters,
   issueFiltersUnavailable,
   jiraBoard,
@@ -14,6 +15,7 @@ import {
   jiraIssue,
   jiraIssueMoving,
   jiraIssueUnreadable,
+  jiraList,
 } from './plugin-detail-view-fixtures';
 
 const meta = {
@@ -61,6 +63,10 @@ export const JiraIssueUnreadable: StoryObj<typeof meta> = {
   args: jiraIssueUnreadable,
 };
 
+export const JiraList: StoryObj<typeof meta> = {
+  args: jiraList,
+};
+
 export const JiraBoard: StoryObj<typeof meta> = {
   args: jiraBoard,
 };
@@ -73,3 +79,5 @@ export const JiraBoardMoving: StoryObj<typeof meta> = {
 export const JiraBoardEmpty: StoryObj<typeof meta> = {
   args: jiraBoardEmpty,
 };
+
+export const Loading: StoryObj<typeof meta> = { args: loading };

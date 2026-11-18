@@ -1,8 +1,12 @@
 import { Button } from '@repo/kit/primitives/actions/button';
+import { Text } from '@repo/kit/primitives/content/text';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 import { Feed } from '#features/feed';
+import { SessionColumn, WideColumnGutter } from '#lib/product/session-column';
+import { subagentMetrics } from '../subagent-list/subagent-format';
 import { SubagentFeedHeader } from './subagent-feed-header';
 import type { SubagentFeedProps } from './subagent-feed-props';
 
@@ -16,15 +20,43 @@ export type { SubagentFeedProps } from './subagent-feed-props';
  * task message, so it never draws the empty Session's heading.
  */
 export function SubagentFeed(props: SubagentFeedProps): React.JSX.Element {
+  // The Inspector tabs use spacing-3 for their leading inset.
+  const gutter = Number.parseFloat(String(useCSSVariable('--spacing-3')));
+
   return (
-    <View className="min-h-0 flex-1">
+    <WideColumnGutter.Provider value={gutter}>
+      <View className="agent-feed min-h-0 flex-1">
+        <FeedHeading {...props} />
+        <ReportControls {...props} />
+        {props.feed && <Feed {...props.feed} opensAtStart />}
+      </View>
+    </WideColumnGutter.Provider>
+  );
+}
+
+function FeedHeading(props: SubagentFeedProps): React.JSX.Element {
+  return (
+    <View className="agent-feed-heading shrink-0">
       <SizeClass only="wide">
         <SubagentFeedHeader {...props} />
       </SizeClass>
-      <ReportControls {...props} />
-      {props.feed && <Feed {...props.feed} opensAtStart />}
+      <Metrics subagent={props.subagent} />
     </View>
   );
+}
+
+function Metrics({
+  subagent,
+}: Pick<SubagentFeedProps, 'subagent'>): React.JSX.Element | null {
+  const metrics = subagentMetrics(subagent);
+
+  return metrics ? (
+    <SessionColumn className="pb-2">
+      <Text role="secondary" tone="muted">
+        {metrics}
+      </Text>
+    </SessionColumn>
+  ) : null;
 }
 
 function ReportControls(props: SubagentFeedProps): React.JSX.Element {

@@ -15,6 +15,7 @@ export const voiceOperations = {
   'voice.status': {
     id: 'voice.status',
     label: 'Read Voice call status',
+    icon: 'voice',
     description:
       'Read the running Voice call, how the last one ended, and whether a new one can start.',
     params: z.strictObject({}).default({}),
@@ -25,6 +26,7 @@ export const voiceOperations = {
   'voice.start': {
     id: 'voice.start',
     label: 'Start Voice call',
+    icon: 'voice',
     description:
       "Start a Voice call attached to a Session from the App's connection offer. One Voice call runs at a time.",
     params: VoiceStartInput,
@@ -35,6 +37,7 @@ export const voiceOperations = {
   'voice.end': {
     id: 'voice.end',
     label: 'End Voice call',
+    icon: 'voice-off',
     description:
       "End the Session's Voice call. Use it when the person asks to hang up.",
     params: VoiceEndInput,

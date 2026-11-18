@@ -15,10 +15,17 @@ export const headerWithPullRequests = (
 export function withSessionPullRequests(
   props: SessionDetailViewProps,
   pullRequests: SessionPullRequest[],
+  canCreatePullRequest: boolean,
 ): SessionDetailViewProps {
   if (props.state !== 'open') return props;
 
   const header = headerWithPullRequests(props.header, pullRequests);
 
-  return header === props.header ? props : { ...props, header };
+  return {
+    ...props,
+    header,
+    createPullRequest: canCreatePullRequest
+      ? props.createPullRequest
+      : undefined,
+  };
 }

@@ -1,0 +1,621 @@
+{
+  "list": {
+    "type": "ListDetail",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [],
+    "slots": {
+      "list": [
+        {
+          "type": "List",
+          "key": "0",
+          "props": {
+            "accessibilityLabel": "Projects",
+            "onRefresh": {
+              "pageState": {}
+            }
+          },
+          "children": [
+            {
+              "type": "List.Section",
+              "key": "project-1",
+              "props": {
+                "title": "Fixture Project",
+                "collapsible": true
+              },
+              "children": [
+                {
+                  "type": "ListItem",
+                  "key": "issues",
+                  "props": {
+                    "title": "Issues",
+                    "selected": true,
+                    "onPress": {
+                      "action": "navigate",
+                      "path": "/projects/project-1"
+                    }
+                  },
+                  "children": [],
+                  "slots": {
+                    "leading": [
+                      {
+                        "type": "Icon",
+                        "key": "0",
+                        "props": {
+                          "name": {
+                            "sf": "list.bullet",
+                            "material": "list"
+                          },
+                          "size": "md"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ]
+                  }
+                }
+              ],
+              "slots": {}
+            }
+          ],
+          "slots": {
+            "empty": [
+              {
+                "type": "EmptyState",
+                "key": "0",
+                "props": {
+                  "title": "No Projects",
+                  "description": "Add a Project to Argo to see its Jira issues."
+                },
+                "children": [],
+                "slots": {}
+              }
+            ]
+          }
+        }
+      ],
+      "detail": [
+        {
+          "type": "Screen",
+          "key": "0",
+          "props": {
+            "title": "Argo",
+            "caption": "ARGO · arena.atlassian.net",
+            "search": {
+              "label": "Search Issues"
+            },
+            "value": "",
+            "onChangeText": {
+              "bind": "text"
+            }
+          },
+          "children": [
+            {
+              "type": "List",
+              "key": "0",
+              "props": {
+                "accessibilityLabel": "Jira issues",
+                "pagination": {
+                  "hasMore": false,
+                  "onLoadMore": {
+                    "loadMore": true
+                  }
+                },
+                "onRefresh": {
+                  "pageState": {}
+                },
+                "appearance": "plain",
+                "density": "compact"
+              },
+              "children": [
+                {
+                  "type": "ListItem",
+                  "key": "ARGO-3",
+                  "props": {
+                    "id": "ARGO-3",
+                    "title": "Show Jira issues in Argo",
+                    "subtitle": "ARGO-3",
+                    "finished": false,
+                    "onPress": {
+                      "action": "navigate",
+                      "path": "/projects/project-1/issues/ARGO-3"
+                    }
+                  },
+                  "children": [],
+                  "slots": {
+                    "leading": [
+                      {
+                        "type": "Icon",
+                        "key": "0",
+                        "props": {
+                          "name": {
+                            "sf": "circle.lefthalf.filled",
+                            "material": "contrast"
+                          },
+                          "size": "sm",
+                          "tone": "info"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "meta": [
+                      {
+                        "type": "Label",
+                        "key": "assignee",
+                        "props": {
+                          "icon": {
+                            "sf": "person",
+                            "material": "person"
+                          },
+                          "text": "Ada Lovelace"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Label",
+                        "key": "priority",
+                        "props": {
+                          "icon": {
+                            "sf": "flag",
+                            "material": "flag"
+                          },
+                          "text": "High"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Pill",
+                        "key": "status",
+                        "props": {
+                          "text": "In Progress",
+                          "tone": "info"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "actions": [
+                      {
+                        "type": "Action",
+                        "key": "open-in-jira",
+                        "props": {
+                          "label": "Open in Jira",
+                          "icon": "external-link",
+                          "onPress": {
+                            "action": "openUrl",
+                            "url": "https://arena.atlassian.net/browse/ARGO-3"
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "ListItem",
+                  "key": "ARGO-2",
+                  "props": {
+                    "id": "ARGO-2",
+                    "title": "Sign in with a scoped API token",
+                    "subtitle": "ARGO-2",
+                    "finished": true,
+                    "onPress": {
+                      "action": "navigate",
+                      "path": "/projects/project-1/issues/ARGO-2"
+                    }
+                  },
+                  "children": [],
+                  "slots": {
+                    "leading": [
+                      {
+                        "type": "Icon",
+                        "key": "0",
+                        "props": {
+                          "name": "passed",
+                          "size": "sm",
+                          "filled": true,
+                          "tone": "done"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "meta": [
+                      {
+                        "type": "Label",
+                        "key": "assignee",
+                        "props": {
+                          "icon": {
+                            "sf": "person",
+                            "material": "person"
+                          },
+                          "text": "Ada Lovelace"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Label",
+                        "key": "priority",
+                        "props": {
+                          "icon": {
+                            "sf": "flag",
+                            "material": "flag"
+                          },
+                          "text": "Medium"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Pill",
+                        "key": "status",
+                        "props": {
+                          "text": "Done",
+                          "tone": "done"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "actions": [
+                      {
+                        "type": "Action",
+                        "key": "open-in-jira",
+                        "props": {
+                          "label": "Open in Jira",
+                          "icon": "external-link",
+                          "onPress": {
+                            "action": "openUrl",
+                            "url": "https://arena.atlassian.net/browse/ARGO-2"
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "ListItem",
+                  "key": "ARGO-1",
+                  "props": {
+                    "id": "ARGO-1",
+                    "title": "Pick a Jira project for each Argo Project",
+                    "subtitle": "ARGO-1",
+                    "finished": false,
+                    "onPress": {
+                      "action": "navigate",
+                      "path": "/projects/project-1/issues/ARGO-1"
+                    }
+                  },
+                  "children": [],
+                  "slots": {
+                    "leading": [
+                      {
+                        "type": "Icon",
+                        "key": "0",
+                        "props": {
+                          "name": "pending",
+                          "size": "sm",
+                          "filled": false,
+                          "tone": "muted"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "meta": [
+                      {
+                        "type": "Label",
+                        "key": "assignee",
+                        "props": {
+                          "icon": {
+                            "sf": "person",
+                            "material": "person"
+                          },
+                          "text": "Unassigned",
+                          "tone": "muted"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Pill",
+                        "key": "status",
+                        "props": {
+                          "text": "To Do",
+                          "tone": "muted"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "actions": [
+                      {
+                        "type": "Action",
+                        "key": "open-in-jira",
+                        "props": {
+                          "label": "Open in Jira",
+                          "icon": "external-link",
+                          "onPress": {
+                            "action": "openUrl",
+                            "url": "https://arena.atlassian.net/browse/ARGO-1"
+                          }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ]
+                  }
+                }
+              ],
+              "slots": {
+                "empty": [
+                  {
+                    "type": "EmptyState",
+                    "key": "0",
+                    "props": {
+                      "title": "No issues in ARGO",
+                      "description": "Issues created in this Jira project show here."
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ]
+              }
+            }
+          ],
+          "slots": {
+            "titleMenu": [
+              {
+                "type": "Action.Section",
+                "key": "projects",
+                "props": {
+                  "title": "arena.atlassian.net"
+                },
+                "children": [
+                  {
+                    "type": "Action",
+                    "key": "ARGO",
+                    "props": {
+                      "label": "Argo",
+                      "selected": true,
+                      "onPress": {
+                        "operation": "chooseProject",
+                        "args": {
+                          "cloudId": "cloud-arena",
+                          "key": "ARGO",
+                          "projectId": "project-1"
+                        }
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Action",
+                    "key": "QUIET",
+                    "props": {
+                      "label": "Quiet project",
+                      "selected": false,
+                      "onPress": {
+                        "operation": "chooseProject",
+                        "args": {
+                          "cloudId": "cloud-arena",
+                          "key": "QUIET",
+                          "projectId": "project-1"
+                        }
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              },
+              {
+                "type": "Action.Section",
+                "key": "site",
+                "props": {},
+                "children": [
+                  {
+                    "type": "Action",
+                    "key": "change-site",
+                    "props": {
+                      "label": "Change Jira site…",
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/site"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "options": [
+              {
+                "type": "Stack",
+                "key": "options",
+                "props": {
+                  "gap": 4,
+                  "direction": "column"
+                },
+                "children": [
+                  {
+                    "type": "SegmentedControl",
+                    "key": "view",
+                    "props": {
+                      "label": "Show issues as",
+                      "options": [
+                        {
+                          "value": "list",
+                          "label": "List"
+                        },
+                        {
+                          "value": "board",
+                          "label": "Board"
+                        }
+                      ],
+                      "value": "list",
+                      "onValueChange": {
+                        "bind": "view"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "FieldGroup",
+                    "key": "rows",
+                    "props": {},
+                    "children": [
+                      {
+                        "type": "FieldGroup.Section",
+                        "key": "filter",
+                        "props": {
+                          "title": "Filter"
+                        },
+                        "children": [
+                          {
+                            "type": "FieldGroup.Picker",
+                            "key": "status",
+                            "props": {
+                              "title": "Status",
+                              "value": "all",
+                              "options": [
+                                {
+                                  "value": "all",
+                                  "label": "Any status"
+                                },
+                                {
+                                  "value": "new",
+                                  "label": "To Do"
+                                },
+                                {
+                                  "value": "indeterminate",
+                                  "label": "In Progress"
+                                },
+                                {
+                                  "value": "done",
+                                  "label": "Done"
+                                }
+                              ],
+                              "presentation": "menu",
+                              "onValueChange": {
+                                "pageState": {
+                                  "status": {
+                                    "$payload": true
+                                  }
+                                }
+                              }
+                            },
+                            "children": [],
+                            "slots": {}
+                          },
+                          {
+                            "type": "FieldGroup.Picker",
+                            "key": "assignee",
+                            "props": {
+                              "title": "Assignee",
+                              "value": "anyone",
+                              "options": [
+                                {
+                                  "value": "anyone",
+                                  "label": "Anyone"
+                                },
+                                {
+                                  "value": "me",
+                                  "label": "Me"
+                                },
+                                {
+                                  "value": "none",
+                                  "label": "Unassigned"
+                                },
+                                {
+                                  "value": "account-ada",
+                                  "label": "Ada Lovelace"
+                                },
+                                {
+                                  "value": "account-grace",
+                                  "label": "Grace Hopper"
+                                }
+                              ],
+                              "presentation": "page",
+                              "searchable": true,
+                              "onValueChange": {
+                                "pageState": {
+                                  "assignee": {
+                                    "$payload": true
+                                  }
+                                }
+                              }
+                            },
+                            "children": [],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      },
+                      {
+                        "type": "FieldGroup.Section",
+                        "key": "sort",
+                        "props": {},
+                        "children": [
+                          {
+                            "type": "FieldGroup.Picker",
+                            "key": "sort",
+                            "props": {
+                              "title": "Sort",
+                              "value": "updated",
+                              "options": [
+                                {
+                                  "value": "updated",
+                                  "label": "Recently updated"
+                                },
+                                {
+                                  "value": "created",
+                                  "label": "Newest"
+                                },
+                                {
+                                  "value": "priority",
+                                  "label": "Priority"
+                                }
+                              ],
+                              "presentation": "menu",
+                              "onValueChange": {
+                                "pageState": {
+                                  "sort": {
+                                    "$payload": true
+                                  }
+                                }
+                              }
+                            },
+                            "children": [],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

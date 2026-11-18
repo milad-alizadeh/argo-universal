@@ -1,7 +1,6 @@
 import type { Token } from 'marked';
 import type * as React from 'react';
 import { useContext } from 'react';
-import { Caret } from './caret';
 import { ClampText } from './clamp-text';
 import { InlineTokens } from './inline-tokens';
 import { MarkdownTone } from './markdown-tone';
@@ -9,7 +8,7 @@ import { useArrivingMarks } from './use-arriving-marks';
 
 interface ProseProps {
   tokens: Token[] | undefined;
-  caret: boolean;
+  streaming: boolean;
   headingLevel?: number;
 }
 
@@ -24,7 +23,7 @@ function proseRole(level: number | undefined): 'body' | 'title' | 'heading' {
 }
 
 export function Prose(props: ProseProps): React.JSX.Element {
-  const arriving = useArrivingMarks(props.tokens, props.caret);
+  const arriving = useArrivingMarks(props.tokens, props.streaming);
 
   return (
     <ClampText
@@ -35,7 +34,6 @@ export function Prose(props: ProseProps): React.JSX.Element {
       className="min-w-0 max-w-full wrap-anywhere"
     >
       <InlineTokens tokens={props.tokens} arriving={arriving} />
-      {props.caret && <Caret />}
     </ClampText>
   );
 }

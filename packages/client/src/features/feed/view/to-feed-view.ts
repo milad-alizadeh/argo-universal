@@ -6,6 +6,7 @@ import {
 import type { FeedView, FeedViewItem } from './feed-view';
 import { isGroupRow, startsNewTurn } from './grouping-rules';
 import { OpenGroup } from './open-group';
+import { operationRecords, presentOperation } from './operation-records';
 import { foldedPrompts, subagentItem } from './subagent-items';
 import { isTodoCall } from './todo-call';
 import { turnEndItem } from './turn-end-item';
@@ -76,6 +77,14 @@ export function toFeedView(
   snapshot: SessionSnapshot,
 ): FeedView {
   const pass = newPass(rows, snapshot);
+  appendRows(rows, pass);
+  pass.items.push(...pass.group.flush());
+
+  return { items: pass.items, plan: selectActivePlan(rows) };
+}
+
+function appendRows(rows: readonly SessionUpdate[], pass: Pass): void {
+  const records = operationRecords(rows);
   let previousTurnId: string | null | undefined;
 
   for (const row of rows) {
@@ -83,10 +92,15 @@ export function toFeedView(
       pass.items.push(...pass.group.flush());
 
     previousTurnId = row.turnId;
-    appendRow(row, pass);
+    appendRow(presentRow(row, records), pass);
   }
+}
 
-  pass.items.push(...pass.group.flush());
-
-  return { items: pass.items, plan: selectActivePlan(rows) };
+function presentRow(
+  row: SessionUpdate,
+  records: ReturnType<typeof operationRecords>,
+): SessionUpdate {
+  return row.sessionUpdate === 'tool_call_update'
+    ? presentOperation(row, records)
+    : row;
 }
