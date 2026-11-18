@@ -43,6 +43,10 @@ describe('the Composer voice state', () => {
       callId: 'c1',
       sessionId: 's1',
       status: 'connected',
+      connection: 'connected',
+      orb: 'listening',
+      trouble: null,
+      startedAt: '2026-11-18T10:00:00.000Z',
     } as const;
 
     const running = status(true, { usable: true }, call);
