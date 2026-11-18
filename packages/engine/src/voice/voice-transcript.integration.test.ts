@@ -1,17 +1,16 @@
 import { describe, expect, it } from 'vitest';
+import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
 import {
+  heldPrompt,
   partialsOf,
   said,
   say,
+  startCallInHeldSession,
   startedCall,
   startVoiceEngine,
   storedRows,
   transcriptsOf,
 } from '#mocks/voice-engine';
-
-type Words = { type: 'text'; text: string }[];
-
-const words = (text: string): Words => [{ type: 'text', text }];
 
 const person = 'person_transcript';
 
@@ -34,24 +33,39 @@ describe('Voice call transcript', () => {
     await expect
       .poll(() => transcriptsOf(voice.host, sessionId))
       .toEqual([
-        { kind: person, text: words(isItDone) },
-        { kind: voiceKind, text: words('Not yet.') },
-        { kind: person, text: words('Thanks') },
+        { kind: person, text: isItDone },
+        { kind: voiceKind, text: 'Not yet.' },
+        { kind: person, text: 'Thanks' },
       ]);
   });
 
-  it('places the transcript after the Agent’s Turn rows that came before it', async () => {
-    const voice = await startVoiceEngine();
-    const sessionId = await startedCall(voice);
-    say(voice, said.person(personId, 'Hello again', true));
-    await expect
-      .poll(async () => (await storedRows(voice.host, sessionId)).at(-1))
-      .toMatchObject({ sessionUpdate: person });
+  it(
+    'interleaves the transcript with the Agent’s Turn rows as it was spoken',
+    { timeout: 30000 },
+    async () => {
+      const { voice, sessionId } = await startCallInHeldSession();
+      const { host } = voice;
+      await host.caller.session.prompt({
+        sessionId,
+        prompt: [{ type: 'text', text: heldPrompt }],
+      });
+      await waitForAcpSnapshot(host, sessionId, (s) => s.state === 'running');
+      say(voice, said.person(personId, 'During the Turn', true));
+      await expect.poll(() => transcriptsOf(host, sessionId)).toHaveLength(1);
+      await host.caller.session.cancel({ sessionId });
+      await waitForAcpSessionIdle(host, sessionId);
+      say(voice, said.voice(voiceId, 'After the Turn', true));
+      await expect.poll(() => transcriptsOf(host, sessionId)).toHaveLength(2);
 
-    const rows = await storedRows(voice.host, sessionId);
-    const kinds = rows.map((row) => row.sessionUpdate);
-    expect(kinds.slice(0, -1)).toContain('user_message');
-  });
+      const rows = await storedRows(host, sessionId);
+      expect(rows.map((row) => row.sessionUpdate)).toEqual([
+        'user_message',
+        person,
+        'notice',
+        voiceKind,
+      ]);
+    },
+  );
 
   it('keeps words that are not final as live state of the call, not as rows', async () => {
     const voice = await startVoiceEngine();
@@ -71,7 +85,7 @@ describe('Voice call transcript', () => {
     await expect.poll(() => partialsOf(voice.host)).toEqual([]);
     await expect
       .poll(() => transcriptsOf(voice.host, sessionId))
-      .toEqual([{ kind: person, text: words(isItDone) }]);
+      .toEqual([{ kind: person, text: isItDone }]);
   });
 
   it('holds one partial per speaker', async () => {
@@ -95,10 +109,13 @@ describe('Voice call transcript', () => {
     await expect
       .poll(() => transcriptsOf(voice.host, sessionId))
       .toHaveLength(1);
+    await expect
+      .poll(() => partialsOf(voice.host))
+      .toEqual([{ speaker: 'voice', id: voiceId, text: 'Half a sen' }]);
     await voice.host.caller.voice.end({ sessionId });
 
     expect(await transcriptsOf(voice.host, sessionId)).toEqual([
-      { kind: person, text: words('Keep this') },
+      { kind: person, text: 'Keep this' },
     ]);
     expect(await partialsOf(voice.host)).toEqual([]);
   });

@@ -1,7 +1,8 @@
+import { Text } from '@repo/kit/primitives/content/text';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { expect } from 'storybook/test';
+import { expect, type within } from 'storybook/test';
 import { FeedItem, type FeedItemProps } from './feed-item';
 import {
   personSaid,
@@ -37,33 +38,50 @@ const pair = (above: Fixture, below: Fixture) => (): React.JSX.Element => (
 const colorOf = (element: HTMLElement): string =>
   getComputedStyle(element).color;
 
+const mutedProbe = 'Muted probe';
+
+// A final row above a partial one, with a known muted-foreground element to read that colour from.
+const withMutedProbe =
+  (final: Fixture, partial: Fixture) => (): React.JSX.Element => (
+    <View className="w-full gap-4">
+      {pair(final, partial)()}
+      <Text role="secondary" tone="muted">
+        {mutedProbe}
+      </Text>
+    </View>
+  );
+
+type Canvas = ReturnType<typeof within>;
+
+async function expectMutedUntilFinal(
+  canvas: Canvas,
+  words: { final: string; partial: string },
+): Promise<void> {
+  const final = await canvas.findByText(words.final);
+  const partial = await canvas.findByText(words.partial);
+  const muted = colorOf(await canvas.findByText(mutedProbe));
+
+  await expect(final).toBeVisible();
+  await expect(colorOf(partial)).toBe(muted);
+  await expect(colorOf(final)).not.toBe(muted);
+}
+
 export const PersonWordsMuteUntilFinal: Story = {
   args: personSaid,
-  render: pair(personSaid, personSaying),
-  play: async ({ canvas }) => {
-    const final = await canvas.findByText(words.person);
-    const partial = await canvas.findByText(words.personPartial);
-
-    await expect(colorOf(partial)).not.toBe(colorOf(final));
-  },
+  render: withMutedProbe(personSaid, personSaying),
+  play: ({ canvas }) =>
+    expectMutedUntilFinal(canvas, {
+      final: words.person,
+      partial: words.personPartial,
+    }),
 };
 
 export const VoiceWordsMuteUntilFinal: Story = {
   args: voiceSaid,
-  render: pair(voiceSaid, voiceSaying),
-  play: async ({ canvas }) => {
-    const final = await canvas.findByText(words.voice);
-    const partial = await canvas.findByText(words.voicePartial);
-
-    await expect(colorOf(partial)).not.toBe(colorOf(final));
-  },
-};
-
-export const BothKindsDrawTheirWords: Story = {
-  args: personSaid,
-  render: pair(personSaid, voiceSaid),
-  play: async ({ canvas }) => {
-    await expect(await canvas.findByText(words.person)).toBeVisible();
-    await expect(await canvas.findByText(words.voice)).toBeVisible();
-  },
+  render: withMutedProbe(voiceSaid, voiceSaying),
+  play: ({ canvas }) =>
+    expectMutedUntilFinal(canvas, {
+      final: words.voice,
+      partial: words.voicePartial,
+    }),
 };
