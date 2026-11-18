@@ -47,7 +47,8 @@ function titleDrawing({ title, groups }: TitleProps): TitleDrawing {
   if (!title || !groups.length) return undefined;
 
   return function TitleMenuDrawing() {
-    return <TitleMenu title={title} level={1} groups={groups} />;
+    // Match the inline UIKit title and keep enlarged text within the toolbar.
+    return <TitleMenu title={title} level={1} groups={groups} inlineToolbar />;
   };
 }
 

@@ -11,6 +11,7 @@ interface TitleMenuProps {
   // The heading level the title keeps: 1 for a page, 2 for a list column's.
   level: number;
   groups: ActionGroup[];
+  inlineToolbar?: boolean;
 }
 
 /*
@@ -21,7 +22,9 @@ interface TitleMenuProps {
  * Android. It opens below the title, from its start, as a scope picker under a leading title does.
  */
 export function TitleMenu(props: TitleMenuProps): ReactElement {
-  const trigger = <TitleTrigger title={props.title} />;
+  const trigger = (
+    <TitleTrigger title={props.title} inlineToolbar={props.inlineToolbar} />
+  );
 
   return (
     <View {...headingOf(props.level)}>
@@ -46,14 +49,17 @@ const headingOf = (level: number) =>
 type TitleTriggerProps = Omit<
   ComponentProps<typeof Pressable>,
   'children' | 'className' | 'role'
-> & { title: string };
+> &
+  Pick<TitleMenuProps, 'title' | 'inlineToolbar'>;
 
 const triggerClassName = cn(
   'min-w-0 flex-row items-center gap-1 self-start rounded-control -mx-1 px-1 web:outline-none web:hover:bg-hover web:focus-visible:bg-hover',
   tintTransitionClassName,
 );
 
-function TitleTrigger({ title, ...props }: TitleTriggerProps): ReactElement {
+function TitleTrigger(options: TitleTriggerProps): ReactElement {
+  const { title, inlineToolbar, ...props } = options;
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -61,11 +67,28 @@ function TitleTrigger({ title, ...props }: TitleTriggerProps): ReactElement {
       {...props}
       className={triggerClassName}
     >
-      <Text role="title" numberOfLines={1} selectable={false}>
-        {title}
-      </Text>
+      <TitleLabel title={title} inlineToolbar={inlineToolbar} />
       <Chevron direction="down" />
     </Pressable>
+  );
+}
+
+// The inline iOS toolbar has a fixed height even at accessibility text sizes.
+const toolbarTitleMaxScale = 1.5;
+
+type TitleLabelProps = Pick<TitleMenuProps, 'title' | 'inlineToolbar'>;
+
+function TitleLabel({ title, inlineToolbar }: TitleLabelProps): ReactElement {
+  return (
+    <Text
+      role={inlineToolbar ? 'nav-title' : 'title'}
+      className="shrink"
+      numberOfLines={1}
+      maxFontSizeMultiplier={inlineToolbar ? toolbarTitleMaxScale : undefined}
+      selectable={false}
+    >
+      {title}
+    </Text>
   );
 }
 
