@@ -28,6 +28,9 @@ function adapter(
   return bytes;
 }
 
+// A Server on the local network answers in milliseconds; one that has not in this long is not at that address, and the next one is tried. The platform's own wait is over a minute.
+const connectTimeoutMs = 4000;
+
 /*
  * The App's sockets on iOS and Android: a raw TCP socket, because a release Android build refuses `ws://` and `http://` to a local-network address and lets a socket through (#1488, ADR-0045). The Device Key sits in the Keychain or Keystore.
  */
@@ -35,7 +38,11 @@ export const appChannelPlatform: ChannelPlatform = {
   openSocket: (address) =>
     new Promise((resolve, reject) => {
       const socket = TcpSocket.createConnection(
-        { host: address.host, port: address.port },
+        {
+          host: address.host,
+          port: address.port,
+          connectTimeout: connectTimeoutMs,
+        },
         () => resolve(adapter(socket)),
       );
 

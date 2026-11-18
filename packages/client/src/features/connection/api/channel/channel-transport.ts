@@ -2,6 +2,7 @@ import type { PairingClaim } from '@repo/contracts';
 import type { ChannelTransport } from '../trpc/create-trpc-client';
 import type { ChannelAddress, OpenSocket } from './byte-socket';
 import { channelFetch } from './channel-fetch';
+import { ChannelRoute, type LocateServer } from './channel-route';
 import { channelWebSocket } from './channel-web-socket';
 import {
   type ChannelInput,
@@ -24,29 +25,37 @@ export interface ChannelPlatform {
 
 export type DeviceClaim = Omit<PairingClaim, 'ticket'>;
 
-// A paired Server as the App holds it: the address to knock on, and the static key it must answer with.
+// A paired Server as the App holds it: the address Pairing kept, and the static key it must answer with.
 export interface ChannelTarget {
   readonly address: ChannelAddress;
+  // Where the Server announces itself now; asked whenever the address that answered last does not (ADR-0045).
+  readonly locate?: LocateServer;
   readonly serverPublicKey: string;
   // The Pairing Ticket the QR carried, for the one Connection that pairs; every Connection after it is the Device Key alone.
   readonly ticket?: string;
 }
 
 /*
- * Opens a channel to the target. The Device Key is read once, whatever opens first: two channels opening together would otherwise each find none kept and each make a key, and only the last one written would be this Device's.
+ * Opens a channel to the target, on whichever address of it answers (`ChannelRoute`). The Device Key is read once, whatever opens first: two channels opening together would otherwise each find none kept and each make a key, and only the last one written would be this Device's.
  */
 export const opener = (
   target: ChannelTarget,
   platform: ChannelPlatform,
 ): (() => Promise<OpenedChannel>) => {
   const deviceKey = once(platform.deviceKey);
+  const route = new ChannelRoute(target.address, target.locate);
 
-  return async () =>
+  return async () => route.open(at(target, platform, await deviceKey()));
+};
+
+// One try at one address the Server may answer on.
+const at =
+  (target: ChannelTarget, platform: ChannelPlatform, deviceKey: Keypair) =>
+  async (address: ChannelAddress): Promise<OpenedChannel> =>
     openChannel(
-      inputOf(target, platform, await deviceKey()),
+      inputOf({ ...target, address }, platform, deviceKey),
       platform.openSocket,
     );
-};
 
 const inputOf = (
   target: ChannelTarget,
