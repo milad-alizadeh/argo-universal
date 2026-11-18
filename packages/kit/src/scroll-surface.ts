@@ -9,3 +9,6 @@ import { createContext, useContext } from 'react';
 export const ScrollEndGapContext = createContext(0);
 
 export const useScrollEndGap = (): number => useContext(ScrollEndGapContext);
+
+// Native Sheets let their content scroll all the way to the platform chrome.
+export const SheetScrollContext = createContext(false);

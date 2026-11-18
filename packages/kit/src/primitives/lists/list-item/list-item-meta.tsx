@@ -30,7 +30,7 @@ function MetaItems(props: MetaProps): ReactNode {
   return (
     <>
       <InertLane className="min-w-0 shrink flex-row items-center">
-        {props.meta === undefined ? null : (
+        {props.meta == null ? null : (
           <AvatarMetaSize.Provider value>
             <FittedRow gap={gap}>{props.meta}</FittedRow>
           </AvatarMetaSize.Provider>

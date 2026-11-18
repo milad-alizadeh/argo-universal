@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { useState, type ReactElement } from 'react';
+import { useState, type ComponentProps, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Text } from '#primitives/content/text';
 import { FieldGroup } from '#primitives/fields/field-group';
+import { List } from '#primitives/lists/list';
+import { ListItem } from '#primitives/lists/list-item';
 import { MenuTrigger } from '#primitives/overlays/menu';
 import { Sheet } from './sheet';
 import {
@@ -11,9 +13,12 @@ import {
   fullHeightSheet,
   settingsSheet,
   pinnedSubmitSheet,
+  ScrollingList as scrollingList,
   type SheetFixture,
 } from './sheet-fixtures';
 import { useSheet } from './sheet-screens';
+
+type SheetStoryProps = ComponentProps<typeof Sheet> & { items?: string[] };
 
 const meta = {
   title: 'Design System/Primitives/Overlays/Sheet',
@@ -26,7 +31,7 @@ const meta = {
   argTypes: kitArgTypes('Sheet'),
   // PagedSheet is the example `sheet.test.stories.tsx` drives, not a story.
   excludeStories: ['PagedSheet'],
-} satisfies Meta<typeof Sheet>;
+} satisfies Meta<SheetStoryProps>;
 
 export default meta;
 
@@ -44,6 +49,32 @@ export const PinnedSubmit: Story = {
 export const FullHeight: Story = {
   render: () => <ExampleSheet {...fullHeightSheet} />,
 };
+
+export const ScrollingList: Story = {
+  args: scrollingList,
+  render: (args) => <ListSheet {...args} />,
+};
+
+function ListSheet({ items = [], ...props }: SheetStoryProps): ReactElement {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Sheet
+      {...props}
+      open={open}
+      onOpenChange={setOpen}
+      trigger={<MenuTrigger label={props.label ?? scrollingList.label} />}
+    >
+      <Sheet.Screen name="items" title={props.label}>
+        <List appearance="plain">
+          {items.map((item) => (
+            <ListItem key={item} title={item} />
+          ))}
+        </List>
+      </Sheet.Screen>
+    </Sheet>
+  );
+}
 
 // Settings drills in to Select Fruit and back, the pages sliding in one sheet.
 export const ScreenStack: Story = { render: () => <PagedSheet /> };

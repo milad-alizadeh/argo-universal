@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { Platform, ScrollView, View, type ViewProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ScrollEndGapContext } from '#kit/scroll-surface';
+import { ScrollEndGapContext, SheetScrollContext } from '#kit/scroll-surface';
 import { cn } from '#kit/utils';
 import { isDismissible } from './sheet-dismissible';
 import { SheetInset } from './sheet-inset';
@@ -19,6 +19,7 @@ type BodyProps = Pick<
 > & {
   // The page fills the sheet's height, as a sheet with detents gives it.
   fill: boolean;
+  underHeader?: boolean;
   children: ReactNode;
 };
 
@@ -33,12 +34,14 @@ export function SheetBody(props: BodyProps): ReactElement {
 
   return (
     <ReactContent>
-      <ScrollEndGapContext value={gap.scrolled}>
-        <View {...bodyProps(props)} style={gap.padded}>
-          <ScreenContent {...props} gap={gap.scrolled} />
-          {props.footer}
-        </View>
-      </ScrollEndGapContext>
+      <SheetScrollContext value>
+        <ScrollEndGapContext value={gap.scrolled}>
+          <View {...bodyProps(props)} style={gap.padded}>
+            <ScreenContent {...props} gap={gap.scrolled} />
+            {props.footer}
+          </View>
+        </ScrollEndGapContext>
+      </SheetScrollContext>
     </ReactContent>
   );
 }
@@ -94,6 +97,7 @@ function ScreenScroll(props: BodyProps & { gap: number }): ReactElement {
     <ScrollView
       className={cn('min-h-0 shrink', props.fill && 'flex-1')}
       contentContainerStyle={{ paddingBottom: props.gap }}
+      contentInsetAdjustmentBehavior={props.underHeader ? 'automatic' : 'never'}
       keyboardShouldPersistTaps="handled"
       automaticallyAdjustKeyboardInsets={!props.footer}
       nestedScrollEnabled

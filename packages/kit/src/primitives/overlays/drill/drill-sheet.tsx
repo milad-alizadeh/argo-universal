@@ -129,19 +129,24 @@ type Live = Required<Pick<DestinationOwner, 'parent'>> &
 
 // A page the sheet already holds is replaced where it stands; one on standby is handed over to be held.
 function hand(props: DrillProps, live: Live): void {
-  const page = {
+  const page = choicePage(props, live);
+
+  if (live.standby) live.parent.standby(page);
+  else live.parent.update(page);
+}
+
+function choicePage(props: DrillProps, live: Live): SheetDestination {
+  return {
     name: live.name,
     title: props.title,
     contentScrolls: props.contentScrolls,
+    keepsHeaderInset: props.search !== undefined,
     placeholder: props.placeholder,
     standby: live.standby,
     onExit: live.onExit,
     ...sheetAction(props.action, live.parent.back),
     children: props.children(live.parent.back, false),
   };
-
-  if (live.standby) live.parent.standby(page);
-  else live.parent.update(page);
 }
 
 type Opening = {
@@ -170,13 +175,11 @@ function pushChoices(
   parent: SheetNavigation,
   completion: { name: string; onExit: () => void },
 ): void {
-  parent.push({
-    ...completion,
-    title: props.title,
-    contentScrolls: props.contentScrolls,
-    placeholder: props.placeholder,
-    standby: props.mount === 'eager',
-    ...sheetAction(props.action, parent.back),
-    children: props.children(parent.back, false),
-  });
+  parent.push(
+    choicePage(props, {
+      ...completion,
+      parent,
+      standby: props.mount === 'eager',
+    }),
+  );
 }
