@@ -42,8 +42,10 @@ const freshTurn = (): TurnMemory => ({ resultSent: false, last: null });
 export class AgentRelay {
   private instructed = false;
   private turn = freshTurn();
-  // Prompts the call sent whose Turn has not ended.
-  private sent = 0;
+  // Prompts the call sent that have not reached the Feed yet.
+  private unseen = 0;
+  // The Turns the call's Prompts are in, until each ends; a Turn the person typed is never in it.
+  private readonly turns = new Set<string | null>();
 
   public constructor(
     private readonly sessions: VoiceSessions,
@@ -54,14 +56,14 @@ export class AgentRelay {
   // The person asked for work: the Agent gets it, and the voice an answer at once.
   public async request(requestId: string, text: string): Promise<void> {
     // Counted before the Prompt settles: a quick Turn may end before the send is answered.
-    this.sentChanged(1);
+    this.sentChanged(() => (this.unseen += 1));
 
     const answer = await this.sessions
       .prompt(this.sessionId, this.promptText(text))
       .then(
         (outcome: PromptOutcome) => relayWords[outcome],
         (error: Error) => {
-          this.sentChanged(-1);
+          this.sentChanged(() => (this.unseen -= 1));
 
           return relayWords.unsent(error.message);
         },
@@ -72,16 +74,30 @@ export class AgentRelay {
 
   public happened(happening: SessionHappening): void {
     if (happening.type === 'agent.message') this.agentSaid(happening.text);
+    else if (happening.type === 'voice.prompted')
+      this.prompted(happening.turnId);
     else if (happening.type === 'person.typed')
       this.personTyped(happening.text);
     else this.turnEnded(happening);
   }
 
-  private sentChanged(by: number): void {
-    const before = this.sent > 0;
-    this.sent = Math.max(0, this.sent + by);
+  private get running(): boolean {
+    return this.unseen > 0 || this.turns.size > 0;
+  }
 
-    if (before !== this.sent > 0) this.reports.turnsRunning(this.sent > 0);
+  // Applies a change to what the call has running and reports it when it flips.
+  private sentChanged(change: () => void): void {
+    const before = this.running;
+    change();
+
+    if (before !== this.running) this.reports.turnsRunning(this.running);
+  }
+
+  private prompted(turnId: string | null): void {
+    this.sentChanged(() => {
+      this.unseen = Math.max(0, this.unseen - 1);
+      this.turns.add(turnId);
+    });
   }
 
   private promptText(request: string): string {
@@ -126,7 +142,7 @@ export class AgentRelay {
   ): void {
     const { resultSent, last } = this.turn;
     this.turn = freshTurn();
-    this.sentChanged(-1);
+    this.sentChanged(() => this.turns.delete(ended.turnId));
 
     if (!resultSent && last) this.tell(last, 'speak');
     this.tell(endingText(ended), endingDelivery(ended, told(resultSent, last)));
@@ -138,7 +154,10 @@ const told = (resultSent: boolean, last: string | null): boolean =>
 
 type Ended = Extract<SessionHappening, { type: 'turn.ended' }>;
 
-const finishedCleanly = ({ stopReason, error }: Omit<Ended, 'type'>): boolean =>
+const finishedCleanly = ({
+  stopReason,
+  error,
+}: Pick<Ended, 'stopReason' | 'error'>): boolean =>
   error === null && stopReason === 'end_turn';
 
 function endingText({ stopReason, error }: Ended): string {

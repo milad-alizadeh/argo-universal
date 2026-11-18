@@ -9,8 +9,15 @@ export type SessionHappening =
   | { type: 'agent.message'; id: string; text: string }
   // The person typed a Prompt to the Session.
   | { type: 'person.typed'; text: string }
+  // A Prompt the Voice call sent reached the Feed, in the Turn it started or was steered into.
+  | { type: 'voice.prompted'; turnId: string | null }
   // A Turn ended; `error` is the message of a Turn that failed.
-  | { type: 'turn.ended'; stopReason: string; error: string | null };
+  | {
+      type: 'turn.ended';
+      turnId: string | null;
+      stopReason: string;
+      error: string | null;
+    };
 
 // How a request for work reached the Session: it started a Turn or waits behind running work.
 export type PromptOutcome = 'started' | 'queued';

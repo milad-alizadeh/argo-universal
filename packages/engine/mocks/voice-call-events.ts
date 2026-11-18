@@ -28,4 +28,5 @@ export const events: VoiceCallEvent[] = [
     final: true,
   }),
   { type: 'call.turns', running: false },
+  { type: 'call.turns', running: true },
 ];

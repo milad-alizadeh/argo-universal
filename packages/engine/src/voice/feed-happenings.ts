@@ -28,15 +28,27 @@ const endOf = (row: Notice): End => row._meta?.argo?.turnEnd;
 const errorOf = (end: NonNullable<End>): string | null =>
   end.error?.message ?? null;
 
-const endedHappening = (end: End): SessionHappening | undefined =>
+const endedHappening = (
+  end: End,
+  turnId: string | null,
+): SessionHappening | undefined =>
   end && {
     type: 'turn.ended',
+    turnId,
     stopReason: end.stopReason,
     error: errorOf(end),
   };
 
 const turnEndOf = (row: Row): SessionHappening | undefined =>
-  row.sessionUpdate === 'notice' ? endedHappening(endOf(row)) : undefined;
+  row.sessionUpdate === 'notice'
+    ? endedHappening(endOf(row), row.turnId)
+    : undefined;
+
+const promptedOf = (row: Row): SessionHappening | undefined =>
+  row.sessionUpdate === 'prompt_message' &&
+  row._meta?.argo?.sender?.type === 'voice'
+    ? { type: 'voice.prompted', turnId: row.turnId }
+    : undefined;
 
 const happeningOf = (id: string, { kind, text }: Tracked): SessionHappening =>
   kind === 'agent'
@@ -68,9 +80,9 @@ export class FeedHappenings {
   }
 
   private upsert(row: Row): SessionHappening[] {
-    const end = turnEndOf(row);
+    const found = turnEndOf(row) ?? promptedOf(row);
 
-    return end ? this.once(row.id, end) : this.track(row);
+    return found ? this.once(row.id, found) : this.track(row);
   }
 
   private track(row: Row): SessionHappening[] {
