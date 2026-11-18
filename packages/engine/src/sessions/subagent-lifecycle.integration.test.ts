@@ -1,5 +1,6 @@
 import type { FeedSubscribeOutput, Subagent } from '@repo/contracts';
 import { turn } from '@repo/db/schema';
+import { smallModelUpdate } from '@repo/mocks/agent/acp-configuration';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { scenarios } from '@repo/mocks/agent/scenarios';
 import { eq } from 'drizzle-orm';
@@ -36,6 +37,14 @@ async function resumeBackgroundParent(): Promise<ResumedParent> {
 
   const { host, sessionId } = await openAcpFeedSession({
     ...background,
+    steps: [
+      ...background.steps,
+      {
+        type: 'update',
+        sessionId: 'subagent-review',
+        update: smallModelUpdate,
+      },
+    ],
     resumedSteps: [
       {
         type: 'update',
@@ -68,10 +77,12 @@ async function resumeBackgroundParent(): Promise<ResumedParent> {
 it('finishes the original child Turn when its resumed parent receives an idle outcome', async () => {
   const { host, sessionId, child } = await resumeBackgroundParent();
 
+  expect(child).toMatchObject({ state: 'running', model: 'small' });
   expect(await host.caller.session.listAgents({ sessionId })).toMatchObject([
     {
       state: 'idle',
       stopReason: 'end_turn',
+      model: 'small',
       tokens: 12,
       endedAt: expect.any(Number),
     },

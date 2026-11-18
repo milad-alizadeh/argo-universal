@@ -58,10 +58,14 @@ export const SeveralMixed: Story = {
         canvas.getByRole('img', { name: 'Needs input' }),
       ).toBeVisible();
       await expect(
-        canvas.getByText('Finished · 2m 18s · 12.9k tokens'),
+        canvas.getByText('Haiku 4.5 · Finished · 2m 18s · 12.9k tokens'),
       ).toBeVisible();
-      await expect(canvas.getByText('Opus 4.5 · Needs input')).toBeVisible();
-      await expect(canvas.getByText('Cancelled · 12s')).toBeVisible();
+      await expect(
+        canvas.getByText('Opus 4.5 · Needs input · 21.4k tokens'),
+      ).toBeVisible();
+      await expect(
+        canvas.getByText('Haiku 4.5 · Cancelled · 12s · 1.3k tokens'),
+      ).toBeVisible();
     }),
 };
 
@@ -88,7 +92,7 @@ export const AllFinished: Story = {
       await expect(canvas.getByRole('heading', { name: 'Done' })).toBeVisible();
       await expect(canvas.getByText('2')).toBeVisible();
       await expect(
-        canvas.getByText('Finished · 2m 18s · 12.9k tokens'),
+        canvas.getByText('Haiku 4.5 · Finished · 2m 18s · 12.9k tokens'),
       ).toBeVisible();
       await expect(
         canvas.getByRole(wide ? 'button' : 'link', {

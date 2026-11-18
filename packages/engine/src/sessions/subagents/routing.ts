@@ -10,7 +10,7 @@ import { withDeclaredRole, type AssociatedChild } from './declared-roles';
 import type { SubagentRouting } from './routing-types';
 import { deliverSubagentMessage, isSubagentMessage } from './subagent-messages';
 import { associationEvent } from './subagent-rows';
-import { subagentWorkState } from './subagent-work';
+import { deliverChildUpdate, subagentWorkState } from './subagent-work';
 import { updateSubagentWork } from './work';
 
 export type Subagents = {
@@ -102,7 +102,7 @@ function routeUpdate(
       { ...input, children, transcriptId: notification.sessionId },
       update,
     );
-  deliverChildUpdate(children, notification);
+  deliverChildUpdate(input, children, notification);
 }
 
 // Only explicit ACP associations establish parentage; an unknown id never becomes a Subagent.
@@ -128,20 +128,6 @@ export function routeSubagents(
 export function flushSubagents(subagents: Subagents): void {
   for (const child of subagents.children.values())
     child.feed.send({ type: 'feed.flush' });
-}
-
-function deliverChildUpdate(
-  children: ReadonlyMap<string, ChildFeed>,
-  notification: SessionNotification,
-): void {
-  const source = children.get(notification.sessionId);
-
-  source?.feed.send({
-    type: 'feed.acpUpdate',
-    acpSessionId: notification.sessionId,
-    update: notification.update,
-    turnId: source.turnId,
-  });
 }
 
 function routingSource(

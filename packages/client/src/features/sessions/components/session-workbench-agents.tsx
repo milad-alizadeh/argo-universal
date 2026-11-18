@@ -45,10 +45,11 @@ export function WorkbenchMoreAgents({
   return <WorkbenchShowMore {...{ more, done, icons, onOpen }} />;
 }
 
-const rowPressable = ({ agent, onOpen }: RowProps) =>
+const rowPressable = ({ agent, now, onOpen }: RowProps) =>
   ({
     role: 'button',
     accessibilityLabel: `Open ${agent.title}`,
+    accessibilityHint: subagentSupporting(agent, now),
     onPress: () => onOpen(agent),
     className:
       'flex-row items-start gap-2 rounded-control px-1 py-2 web:hover:bg-hover web:focus-visible:bg-hover',
@@ -67,7 +68,7 @@ function AgentText({ agent, now }: Omit<RowProps, 'onOpen'>): ReactElement {
   return (
     <View className="min-w-0 flex-1 gap-0.5">
       <Text numberOfLines={1}>{agent.title}</Text>
-      <Text role="secondary" tone="muted" numberOfLines={1}>
+      <Text role="secondary" tone="muted">
         {subagentSupporting(agent, now)}
       </Text>
     </View>

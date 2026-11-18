@@ -61,6 +61,7 @@ export const Running: Story = {
       await expect(canvas.getByText(childOutput)).toBeVisible();
       await expect(canvas.getByRole('status', liveRow)).toBeVisible();
       await metaLine(canvas, wide, 'Running · 34s');
+      await expect(canvas.getByText('Sonnet 4.5 · 8.2k tokens')).toBeVisible();
     }),
 };
 
@@ -71,6 +72,7 @@ export const Finished: Story = {
       await expect(canvas.getAllByText(incomingMessage)[0]).toBeVisible();
       await expect(canvas.queryByRole('status', liveRow)).toBeNull();
       await metaLine(canvas, wide, 'Finished · 1m 41s');
+      await expect(canvas.getByText('Sonnet 4.5 · 12.9k tokens')).toBeVisible();
     }),
 };
 
@@ -94,6 +96,7 @@ export const Empty: Story = {
       await expect(canvas.queryByText(incomingMessage)).toBeNull();
       await expect(canvas.queryByText(childOutput)).toBeNull();
       await metaLine(canvas, wide, 'Running · 2s');
+      await expect(canvas.queryByText('Sonnet 4.5')).toBeNull();
     }),
 };
 
@@ -116,6 +119,7 @@ export const Loading: Story = {
       await expect(canvas.queryByText(incomingMessage)).toBeNull();
       await expect(canvas.queryByTestId('feed-scroll')).toBeNull();
       await metaLine(canvas, wide, 'Finished · 1m 41s');
+      await expect(canvas.getByText('Sonnet 4.5 · 12.9k tokens')).toBeVisible();
     }),
 };
 
