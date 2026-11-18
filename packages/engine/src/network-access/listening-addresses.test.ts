@@ -24,10 +24,3 @@ it('says the home network first and a cable last, so a phone knocks where it mos
     `${cable(9)}:4000`,
   ]);
 });
-
-it('says the name the owner set before every network, as a tailnet name', () => {
-  expect(listeningAddresses(4000, [lan(172)], 'desk.tailnet.ts.net')).toEqual([
-    'desk.tailnet.ts.net:4000',
-    `${lan(172)}:4000`,
-  ]);
-});

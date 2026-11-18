@@ -17,13 +17,9 @@ const likeliestFirst = (hosts: readonly string[]): string[] =>
 
 /*
  * Where this computer answers on each of its networks, as `host:port`, the likeliest first: what the QR carries and what an owner types on a Device that cannot find it by itself.
- * A name the owner set, such as the computer's name on a tailnet, comes before all of them, the way `REACT_NATIVE_PACKAGER_HOSTNAME` steers an Expo dev server's code.
+ * A home network comes first, then others such as a tailnet, and a link-local address last.
  */
 export const listeningAddresses = (
   port: number,
   hosts: readonly string[] = interfaceAddresses(),
-  named: string | undefined = undefined,
-): string[] =>
-  [...(named ? [named] : []), ...likeliestFirst(hosts)].map(
-    (host) => `${host}:${port}`,
-  );
+): string[] => likeliestFirst(hosts).map((host) => `${host}:${port}`);
