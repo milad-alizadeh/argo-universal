@@ -155,6 +155,7 @@ function DrawnPluginPage({ page, pluginId }: Drawn): ReactNode {
     <PluginSessionRowProvider onOpenPluginPage={openPage}>
       <BoundedPluginTree
         root={page.root}
+        pluginId={pluginId}
         onOpenPage={(opened) => openPage(pluginId, opened)}
         onPageCall={page.onPageCall}
       />

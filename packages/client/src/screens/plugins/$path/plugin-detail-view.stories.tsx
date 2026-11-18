@@ -12,6 +12,7 @@ import {
   jiraBoard,
   jiraBoardEmpty,
   jiraBoardMoving,
+  jiraBoardPaged,
   jiraIssue,
   jiraIssueMoving,
   jiraIssueUnreadable,
@@ -69,6 +70,10 @@ export const JiraList: StoryObj<typeof meta> = {
 
 export const JiraBoard: StoryObj<typeof meta> = {
   args: jiraBoard,
+};
+
+export const JiraBoardPaged: StoryObj<typeof meta> = {
+  args: jiraBoardPaged,
 };
 
 // A card the App shows in its new column at once, pending, before Jira answers the move.

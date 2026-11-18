@@ -1,0 +1,1 @@
+ALTER TABLE `session` ADD `checkout_type` text;

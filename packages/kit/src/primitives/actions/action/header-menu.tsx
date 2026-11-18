@@ -46,6 +46,7 @@ interface ActionMenuProps {
   trigger: ReactElement;
   // Which edge of the trigger the menu lines up with: the end, as right-hand header buttons need, unless said.
   align?: MenuProps['align'];
+  toolbarTitle?: boolean;
 }
 
 // The one header menu: the overflow's and each submenu's.
@@ -56,6 +57,7 @@ export function ActionMenu(props: ActionMenuProps): ReactElement {
       trigger={props.trigger}
       actions={headerMenuActions(props.groups)}
       align={props.align}
+      toolbarTitle={props.toolbarTitle}
     />
   );
 }

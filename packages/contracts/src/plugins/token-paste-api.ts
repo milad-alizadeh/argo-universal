@@ -18,10 +18,16 @@ export type TokenPasteArgo = Pick<Argo, 'changed'> & {
  *   without the scopes it needs, it answers `{ refused }` with a message the page draws beside the field instead of
  *   the kit's own; a message that holds the token is never drawn.
  */
+export type TokenPasteField = Readonly<{ key: string; title: string }>;
+
+export type TokenPasteFields = Readonly<Record<string, string>>;
+
 export type TokenPasteOptions = Readonly<{
   host: string;
   header: Readonly<{ header: string; prefix: string }>;
-  label: (token: string) => Promise<TokenLabel>;
+  fields?: readonly TokenPasteField[];
+  label: (token: string, fields: TokenPasteFields) => Promise<TokenLabel>;
+  credential?: (input: TokenPasteFields & { token: string }) => string;
 }>;
 
 // Whose Account a pasted token opens, null when the service refuses it, or why the Plugin refuses it.
@@ -51,7 +57,8 @@ export type TokenPaste = Readonly<{
   serverDevice: false;
   pastesToken: true;
   state: () => TokenPasteState;
-  start: (token: string) => Promise<TokenPasteState>;
+  fields: readonly TokenPasteField[];
+  start: (token: string, fields?: TokenPasteFields) => Promise<TokenPasteState>;
   cancel: () => TokenPasteState;
   provide: () => Promise<void>;
 }>;

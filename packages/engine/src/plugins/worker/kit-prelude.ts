@@ -30,5 +30,4 @@ export const kitPrelude = `
     };
     globalThis.clearTimeout = (id) => timers.delete(id);
   })();
-  globalThis.console = { log() {}, info() {}, warn() {}, error() {}, debug() {} };
 `;

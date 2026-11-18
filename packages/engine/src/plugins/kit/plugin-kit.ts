@@ -8,6 +8,7 @@ import { PluginEvent, type WireJson } from '@repo/contracts/plugins/wire';
 import * as React from 'react';
 import { deviceFlow } from './device-flow';
 import type { ElementProps } from './element-props';
+import { issueRow, issueStatusMark } from './issue-row';
 import {
   jsx,
   jsxs,
@@ -60,6 +61,8 @@ const exportsOf = {
   ),
   Fragment: React.Fragment,
   applyListMove,
+  issueRow,
+  issueStatusMark,
   oauthFlow,
   deviceFlow,
   tokenPaste,

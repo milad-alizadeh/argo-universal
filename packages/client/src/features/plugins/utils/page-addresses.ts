@@ -4,6 +4,7 @@ import type {
   PageState,
   StaleMark,
 } from '@repo/contracts/plugins/page-address';
+import { loadMoreAt } from '@repo/contracts/plugins/page-calls';
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import {
   hashKey,
@@ -155,11 +156,11 @@ export class PageAddresses {
   }
 
   // One more page of the opening's paged list, appended to the tree kept.
-  public async loadMore(opening: PageOpening): Promise<void> {
+  public async loadMore(opening: PageOpening, retry?: true): Promise<void> {
     const address = this.addressOf(opening);
     const kept = this.keptAt(address);
 
-    if (kept) await this.draws.pages(address, { pages: kept.pages + 1 });
+    if (kept) await this.draws.pages(address, loadMoreAt(kept.pages, retry));
   }
 
   /*

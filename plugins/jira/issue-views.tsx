@@ -108,26 +108,28 @@ function listBody(
   return issueList(view.site, { list: listing.list, to, projectId, ...frame });
 }
 
-// The board the options ask for, or, when Jira refused the list or there is nothing to draw, the list that says why.
-function shownBody(
-  view: Issues,
-  refused: JiraFailure | undefined,
-  drawing: Drawing,
-): JSX.Element {
-  const board = refused ? null : boardOf(drawing.framing, drawing.listing);
-
-  return board ?? listBody(view, refused, drawing);
-}
+const boardFooter = (
+  board: JSX.Element | null,
+  { hasMore, loadMore }: Listing['list'],
+): JSX.Element | undefined =>
+  board && hasMore ? (
+    <Button label="Load more issues" onPress={loadMore} />
+  ) : undefined;
 
 // The project's issues the filters leave, as the list or the board the header's options show.
 function issueScreen(
   view: Issues,
   refused: JiraFailure | undefined,
-  drawing: Drawing,
+  { framing, listing }: Drawing,
 ): JSX.Element {
+  const board = refused ? null : boardOf(framing, listing);
+
   return (
-    <Screen {...issuesHeader(view, drawing.framing, drawing.listing)}>
-      {shownBody(view, refused, drawing)}
+    <Screen
+      {...issuesHeader(view, framing, listing)}
+      footer={boardFooter(board, listing.list)}
+    >
+      {board ?? listBody(view, refused, { framing, listing })}
     </Screen>
   );
 }

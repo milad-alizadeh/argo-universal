@@ -41,6 +41,7 @@ interface Scope {
 interface Here {
   column?: ContentColumn;
   scope?: Scope;
+  stackColumn?: ContentColumn;
 }
 
 const outside: Here = {};
@@ -71,8 +72,12 @@ function useClaimOn(
 }
 
 function useProvide(here: Here, children: ReactNode): ReactElement {
-  const { column, scope } = here;
-  const value = useMemo(() => ({ column, scope }), [column, scope]);
+  const { column, scope, stackColumn } = here;
+
+  const value = useMemo(
+    () => ({ column, scope, stackColumn }),
+    [column, scope, stackColumn],
+  );
 
   return createElement(ColumnContext, { value }, children);
 }
@@ -96,14 +101,55 @@ export function ColumnScope(props: { children: ReactNode }): ReactElement {
 export function ColumnPart(props: {
   column: ContentColumn;
   children: (layout: PartLayout) => ReactNode;
+  stack?: 'root' | 'child';
 }): ReactElement {
   const outer = use(ColumnContext);
   const scope = useScope();
-  useClaimOn(outer.scope, scope.state.grouped ? 'grouped' : undefined);
-  useClaimOn(outer.scope, scope.state.lead ? 'lead' : undefined);
   const layout = usePartLayout(scope.state, props.column, outer.column);
+  const stackColumn = props.stack ? props.column : undefined;
 
-  return useProvide({ column: layout.offered, scope }, props.children(layout));
+  useReportPart(outer.scope, scope.state, props.stack === 'child');
+
+  return useProvide(
+    { column: layout.offered, scope, stackColumn },
+    props.children(layout),
+  );
+}
+
+function useReportPart(
+  outer: Scope | undefined,
+  state: ClaimState,
+  stackChild: boolean,
+): void {
+  useClaimOn(outer, state.grouped ? 'grouped' : undefined);
+  useClaimOn(outer, state.lead ? 'lead' : undefined);
+  useClaimOn(outer, stackChildClaim(stackChild, state));
+}
+
+const stackChildClaim = (
+  stackChild: boolean,
+  state: ClaimState,
+): ColumnClaim | undefined =>
+  stackChild && state.claimed ? partClaim(state) : undefined;
+
+function partClaim(state: ClaimState): ColumnClaim | undefined {
+  if (state.grouped) return undefined;
+
+  return state.filled ? 'fill' : 'keep';
+}
+
+export type StackColumn = { column: ContentColumn; state: ClaimState };
+
+/*
+ * A vertical Stack gives each child a part of its own. Once a child claims the column,
+ * the Stack supplies the insets for loose children because the surrounding part drops them.
+ */
+export function useStackColumn(): StackColumn | undefined {
+  const { stackColumn, scope } = use(ColumnContext);
+
+  return stackColumn && scope
+    ? { column: stackColumn, state: scope.state }
+    : undefined;
 }
 
 const usePartLayout = (

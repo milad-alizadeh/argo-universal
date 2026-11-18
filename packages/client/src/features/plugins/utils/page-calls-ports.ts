@@ -28,7 +28,7 @@ const pageStateOf = (
   opening: PageOpening,
 ): PageStatePort => ({
   change: (change) => addresses.change(opening, change),
-  loadMore: () => addresses.loadMore(opening),
+  loadMore: (retry) => addresses.loadMore(opening, retry),
 });
 
 /*

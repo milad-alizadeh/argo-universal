@@ -5,6 +5,7 @@ export {
   AccountHost,
   FetchCapability,
   isSpecialHost,
+  matchesSubdomain,
   sameHost,
 } from '#plugin-fetch-capability';
 

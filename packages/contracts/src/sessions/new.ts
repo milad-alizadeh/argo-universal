@@ -19,7 +19,16 @@ export type SessionCheckoutChoice = z.infer<typeof SessionCheckoutChoice>;
 
 // Only a Session may ask for `starter`: the Session it starts runs in the caller's own Checkout (ADR-0008).
 export const NewSessionCheckout = z.discriminatedUnion('type', [
-  ...SessionCheckoutChoice.options,
+  SessionCheckoutChoice.options[0].extend({
+    branch: z.string().min(1).optional(),
+    takenBranch: z
+      .strictObject({
+        action: z.enum(['reuse', 'remove']),
+        path: z.string().min(1),
+      })
+      .optional(),
+  }),
+  SessionCheckoutChoice.options[1],
   z.strictObject({ type: z.literal('starter') }),
 ]);
 

@@ -102,7 +102,18 @@ export type HostHook = Extract<HostCommand, { type: 'hook' }>;
 
 export type HostWaiting = Extract<HostCommand, { type: 'waiting' }>;
 
+export const consoleMessageLimitBytes = 4096;
+
+const ConsoleMessage = z.object({
+  type: z.literal('console'),
+  level: z.enum(['log', 'info', 'warn', 'error', 'debug']),
+  text: z.string().max(consoleMessageLimitBytes),
+});
+
+export type ConsoleMessage = z.infer<typeof ConsoleMessage>;
+
 export const HostMessage = z.discriminatedUnion('type', [
+  ConsoleMessage.extend({ pluginId: z.string(), generation: z.number() }),
   TestReply.extend({ pluginId: z.string(), generation: z.number() }),
   z.object({ type: z.literal('ready') }),
   PluginStatus.extend({
@@ -134,8 +145,11 @@ export type WorkerCall = z.infer<typeof WorkerCall>;
 export const WorkerMessage = z.union([
   z.enum(['bootstrap-ready', 'ready', 'pong']),
   WorkerCall,
+  ConsoleMessage,
   TestReply,
 ]);
+
+export type WorkerMessage = z.infer<typeof WorkerMessage>;
 
 export const WorkerReply = z.object({
   type: z.literal('reply'),

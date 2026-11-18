@@ -32,6 +32,7 @@ it('refuses a wildcard Capability in place of the Account host, naming the missi
 
 it.each([
   '*',
+  '*.github.com',
   'localhost',
   'localhost:8080',
   'localhost.',

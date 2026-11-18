@@ -1,40 +1,41 @@
 import { execFileSync } from 'node:child_process';
 
-export type ProcessGroupMember = {
-  pid: number;
-  group: number;
-  state: string;
-  command: string;
-};
+// Full command lines are only needed to identify the recorded group leader.
+const memberColumns = 'pid=,pgid=,stat=';
 
-const parseMember = (line: string): ProcessGroupMember | undefined => {
-  const [pid, group, state, ...command] = line.trim().split(/\s+/);
-
-  if (!group) return undefined;
-
-  return {
-    pid: Number(pid),
-    group: Number(group),
-    state: state ?? '',
-    command: command.join(' '),
-  };
-};
-
-const processTableArguments = ['-A', '-ww', '-o', 'pid=,pgid=,stat=,command='];
-
-const processTable = (): string => {
+const processTable = (args: string[]): string => {
   try {
-    return execFileSync('/bin/ps', processTableArguments, { encoding: 'utf8' });
+    return execFileSync('/bin/ps', args, { encoding: 'utf8' });
   } catch (error) {
     throw new Error('Process group cannot be observed', { cause: error });
   }
 };
 
-export const processGroupMembers = (group: number): ProcessGroupMember[] =>
-  processTable()
+const isLiveMember = (
+  group: string | undefined,
+  state: string | undefined,
+  expected: number,
+): boolean =>
+  Boolean(state && !state.startsWith('Z') && Number(group) === expected);
+
+export const hasLiveGroupMembers = (group: number): boolean =>
+  processTable(['-A', '-o', memberColumns])
     .split('\n')
-    .map(parseMember)
-    .filter((member) => member !== undefined)
-    .filter(
-      (member) => member.group === group && !member.state.startsWith('Z'),
-    );
+    .some((line) => {
+      const [, memberGroup, state] = line.trim().split(/\s+/);
+
+      return isLiveMember(memberGroup, state, group);
+    });
+
+export const hasGroupOwner = (pid: number, token: string): boolean =>
+  processTable(['-p', String(pid), '-ww', '-o', `${memberColumns},command=`])
+    .split('\n')
+    .some((line) => {
+      const [memberPid, group, state, ...command] = line.trim().split(/\s+/);
+
+      return (
+        Number(memberPid) === pid &&
+        isLiveMember(group, state, pid) &&
+        command.join(' ').includes(token)
+      );
+    });

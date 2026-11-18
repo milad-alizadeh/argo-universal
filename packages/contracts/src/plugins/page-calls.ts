@@ -7,6 +7,7 @@ import {
   type MadeOperationCall,
   type MadePageCall,
 } from './page-call-payload';
+import type { DrawRequest } from './page-draw';
 import {
   PageCall,
   PageStateValue,
@@ -39,7 +40,7 @@ export type ScopedRun = Omit<PageRun, 'pluginId'>;
 // What a tree with Page state draws again for: a Page state change, which an empty one draws from page one, and a load more.
 export type PageStatePort = {
   change: (change: PageState) => Promise<void>;
-  loadMore: () => Promise<void>;
+  loadMore: (retry?: true) => Promise<void>;
 };
 
 /*
@@ -190,7 +191,9 @@ function drawPageFor(
 ): Promise<void> {
   if ('pageState' in call) return pageState.change(call.pageState);
 
-  return 'loadMore' in call ? pageState.loadMore() : Promise.resolve();
+  if (!('loadMore' in call)) return Promise.resolve();
+
+  return pageState.loadMore(call.retry);
 }
 
 // A run names only the Project and Session the tree has.
@@ -202,3 +205,14 @@ const definedScope = ({ projectId, sessionId }: PageScope): PageScope => ({
 // Each throttled event of each node waits on its own.
 const eventKey = ({ key, name }: PageEvent): string =>
   JSON.stringify([key, name]);
+
+export type DrawOptions = Partial<
+  Pick<DrawRequest, 'pages' | 'pull' | 'retry'>
+>;
+
+// A retry asks for the same number of pages, including the one that failed.
+export const loadMoreAt = (
+  pages: number,
+  retry?: true,
+): Pick<DrawRequest, 'pages' | 'retry'> =>
+  retry ? { pages, retry } : { pages: pages + 1 };

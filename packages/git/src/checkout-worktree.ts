@@ -5,6 +5,11 @@ import { discardWorktree } from './checkout-removal';
 import { git } from './git';
 import { listBranches, type Checkout, type CheckoutChoice } from './repository';
 import { sessionBranch, worktreeName } from './session-branch';
+import {
+  resolveCheckoutBase,
+  resolveTakenBranch,
+  type TakenBranch,
+} from './worktree-branch';
 
 export type CheckoutInput = {
   projectPath: string;
@@ -12,6 +17,7 @@ export type CheckoutInput = {
   sessionId: string;
   choice: CheckoutChoice;
   runtimeDirectory: string;
+  isOwned?: (path: string) => boolean;
 };
 
 export type WorktreeInput = CheckoutInput & {
@@ -31,76 +37,113 @@ function checkoutPath(input: WorktreeInput): string {
   );
 }
 
-export async function createWorktree(
+type WorktreeCheckout = Checkout & { branch: string };
+
+type WorktreePlan = { checkout: WorktreeCheckout; base: string };
+
+async function planWorktree(
   input: WorktreeInput,
   signal?: AbortSignal,
-): Promise<Checkout> {
+): Promise<WorktreePlan> {
   const checkout = {
     path: checkoutPath(input),
-    branch: sessionBranch(input.sessionId),
+    branch: input.choice.branch ?? sessionBranch(input.sessionId),
   };
 
-  await mkdir(dirname(checkout.path), { recursive: true });
+  const base = await resolveCheckoutBase(
+    input.projectPath,
+    input.choice.baseBranch,
+    signal,
+  );
 
-  const existing = await existingCheckout(input.projectPath, checkout, signal);
+  return { checkout, base };
+}
 
-  signal?.throwIfAborted();
+async function validateRequestedBranch(
+  input: WorktreeInput,
+  signal?: AbortSignal,
+): Promise<void> {
+  if (input.choice.branch !== undefined)
+    await git(
+      input.projectPath,
+      ['check-ref-format', `refs/heads/${input.choice.branch}`],
+      signal,
+    );
+}
 
-  await addWorktree(input, checkout, existing);
+async function moveTakenWorktree(
+  input: WorktreeInput,
+  paths: { from: string; to: string },
+  signal?: AbortSignal,
+): Promise<void> {
+  if (existsSync(paths.to))
+    throw new Error(`The Session Checkout path already exists at ${paths.to}.`);
+
+  // Relocating the worktree keeps the existing tip and makes the path change a single Git operation.
+  await git(
+    input.projectPath,
+    ['worktree', 'move', '--', paths.from, paths.to],
+    signal,
+  );
+}
+
+async function placeWorktree(
+  input: WorktreeInput,
+  setup: { plan: WorktreePlan; taken: TakenBranch | undefined },
+  signal?: AbortSignal,
+): Promise<void> {
+  const { plan, taken } = setup;
+
+  await mkdir(dirname(plan.checkout.path), { recursive: true });
+  await (taken
+    ? moveTakenWorktree(
+        input,
+        { from: taken.path, to: plan.checkout.path },
+        signal,
+      )
+    : addWorktree(input, plan, signal));
+}
+
+async function materializeWorktree(
+  input: WorktreeInput,
+  plan: WorktreePlan,
+  signal?: AbortSignal,
+): Promise<Checkout> {
+  const { checkout } = plan;
+  const taken = await resolveTakenBranch(input, checkout.branch, signal);
+
+  if (taken?.action === 'reuse') return { ...checkout, path: taken.path };
+
+  await placeWorktree(input, { plan, taken }, signal);
 
   return checkout;
 }
 
-type Existing = {
-  signal: AbortSignal | undefined;
-  checkoutExists: boolean;
-  branchExists: boolean;
-};
-
-async function existingCheckout(
-  projectPath: string,
-  checkout: Checkout,
-  signal: AbortSignal | undefined,
-): Promise<Existing> {
-  return {
-    signal,
-    checkoutExists: existsSync(checkout.path),
-    branchExists: (await listBranches(projectPath, signal)).branches.includes(
-      checkout.branch ?? '',
-    ),
-  };
-}
-
-function shouldClean(existing: Existing): boolean {
-  return (
-    isAborted(existing.signal) &&
-    !existing.checkoutExists &&
-    !existing.branchExists
-  );
-}
-
-function isAborted(signal: AbortSignal | undefined): boolean {
-  return Boolean(signal?.aborted);
-}
-
-async function runAdd(
+export async function createWorktree(
   input: WorktreeInput,
-  checkout: Checkout,
   signal?: AbortSignal,
-): Promise<void> {
-  await git(input.projectPath, addArguments(input, checkout), signal);
+): Promise<Checkout> {
+  const plan = await planWorktree(input, signal);
+
+  await validateRequestedBranch(input, signal);
+
+  return materializeWorktree(input, plan, signal);
 }
 
-// A full ref keeps the base a local branch, and never an option.
-function addArguments(input: WorktreeInput, checkout: Checkout): string[] {
-  return [
-    'worktree',
-    'add',
-    '-b',
-    checkout.branch ?? '',
-    checkout.path,
-    `refs/heads/${input.choice.baseBranch}`,
-  ];
+async function canCleanAborted(
+  input: WorktreeInput,
+  checkout: WorktreeCheckout,
+  signal?: AbortSignal,
+): Promise<boolean> {
+  if (existsSync(checkout.path)) return false;
+
+  const { branches } = await listBranches(input.projectPath, signal);
+
+  return !branches.includes(checkout.branch);
+}
+
+function addArguments({ checkout, base }: WorktreePlan): string[] {
+  return ['worktree', 'add', '-b', checkout.branch, '--', checkout.path, base];
 }
 
 async function cleanupAborted(
@@ -113,15 +156,22 @@ async function cleanupAborted(
   });
 }
 
+function abortedAfterAdd(canClean: boolean, signal?: AbortSignal): boolean {
+  return canClean && Boolean(signal?.aborted);
+}
+
 async function addWorktree(
   input: WorktreeInput,
-  checkout: Checkout,
-  existing: Existing,
+  plan: WorktreePlan,
+  signal?: AbortSignal,
 ): Promise<void> {
+  const canClean = await canCleanAborted(input, plan.checkout, signal);
+
   try {
-    await runAdd(input, checkout, existing.signal);
+    await git(input.projectPath, addArguments(plan), signal);
   } catch (error) {
-    if (shouldClean(existing)) await cleanupAborted(input, checkout);
+    if (abortedAfterAdd(canClean, signal))
+      await cleanupAborted(input, plan.checkout);
 
     throw error;
   }

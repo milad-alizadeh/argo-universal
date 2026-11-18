@@ -31,15 +31,14 @@ export const isFailure = (item: ListedItem): item is ListFailure =>
   'failed' in item;
 
 /*
- * A refused first page answers its failure as the list's one item, so the page says why there is no list. A later
- * page's has nowhere to be drawn but the load more that asked for it, so it fails that read, which keeps no answer
- * and is read again on the next load more.
+ * A refused first page answers its failure as the list's one item, so the page says why there is no list.
+ * The App shows a later refusal at the end of the list.
  */
 function refusal(
   { cursor }: IssuesTarget,
   failure: JiraFailure,
 ): ListPage<ListedItem> {
-  if (cursor !== null) throw new Error(failure.message);
+  if (cursor !== null) return { items: [], failed: failure.message };
 
   return { items: [{ failed: failure }], cursor: null };
 }

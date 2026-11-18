@@ -1,5 +1,5 @@
 import type { PagedList, PageTo } from '@argo/plugin-kit';
-import type { JiraStatus } from './issue-fields';
+import type { BoardStatus } from './board-view';
 import type { ListedItem } from './issue-pages';
 import type { IssueFilters } from './jira-filters';
 
@@ -31,5 +31,5 @@ export type Listing = {
   list: PagedList<ListedItem>;
   // `board` shows the issues as a board, whose columns are `statuses`; anything else, as a list.
   view: string;
-  statuses: JiraStatus[];
+  statuses: BoardStatus[];
 };
