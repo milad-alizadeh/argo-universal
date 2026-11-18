@@ -1,40 +1,41 @@
-import type { SessionInfo } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { sessionProgress } from './session-row-todos';
 
-type Work = Pick<SessionInfo, 'plan' | 'status' | 'shells' | 'subagents'>;
+type SessionWork = Parameters<typeof sessionProgress>[0];
 
-const none = { running: 0, total: 0 };
+const noneRunning = { running: 0, total: 0 };
 
-const one = { running: 1, total: 1 };
+const oneRunning = { running: 1, total: 1 };
 
-function bar(work: Partial<Work>): ReturnType<typeof sessionProgress> {
+function todosBar(
+  work: Partial<SessionWork>,
+): ReturnType<typeof sessionProgress> {
   return sessionProgress({
     plan: { done: 2, total: 5 },
     status: 'idle',
-    shells: none,
-    subagents: none,
+    shells: noneRunning,
+    subagents: noneRunning,
     ...work,
   });
 }
 
 describe('sessionProgress', () => {
   it('keeps an idle Session green and still while a Background Task runs', () => {
-    expect(bar({ shells: one })).toMatchObject({
+    expect(todosBar({ shells: oneRunning })).toMatchObject({
       tone: 'success',
       active: false,
     });
   });
 
   it('keeps an idle Session green and still while an Agent runs', () => {
-    expect(bar({ subagents: one })).toMatchObject({
+    expect(todosBar({ subagents: oneRunning })).toMatchObject({
       tone: 'success',
       active: false,
     });
   });
 
   it('mutes an idle Session with nothing running', () => {
-    expect(bar({})).toMatchObject({ tone: 'muted', active: false });
+    expect(todosBar({})).toMatchObject({ tone: 'muted', active: false });
   });
 
   it.each([
@@ -45,7 +46,9 @@ describe('sessionProgress', () => {
   ] as const)(
     'keeps a $status Session $tone while background work runs',
     ({ status, tone, active }) => {
-      expect(bar({ status, shells: one, subagents: one })).toMatchObject({
+      expect(
+        todosBar({ status, shells: oneRunning, subagents: oneRunning }),
+      ).toMatchObject({
         tone,
         active,
       });

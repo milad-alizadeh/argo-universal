@@ -24,13 +24,13 @@ type SessionWork = Pick<
   'plan' | 'status' | 'shells' | 'subagents'
 >;
 
-function backgroundWork({ shells, subagents }: SessionWork): boolean {
+function hasBackgroundWork({ shells, subagents }: SessionWork): boolean {
   return shells.running > 0 || subagents.running > 0;
 }
 
 // An idle Session whose Background Task or Agent still runs is not done: its bar stays green, and still, until that work ends.
 function barTone(session: SessionWork): Tone {
-  return session.status === 'idle' && backgroundWork(session)
+  return session.status === 'idle' && hasBackgroundWork(session)
     ? statusTones.running
     : statusTones[session.status];
 }
