@@ -1,7 +1,7 @@
 import type { ContentBlock, SessionUpdate } from '@repo/contracts';
 
 /*
- * The marks an Agent puts at the start of a message on a Voice call (ADR-0062): progress, a result, or silent analysis.
+ * The marks an Agent puts at the start of a message on a Voice call (ADR-0063): progress, a result, or silent analysis.
  * They are for the voice, not the reader: the Feed strips them whenever it is read for drawing, and stored text keeps them.
  */
 const voiceMarkers = ['[STATUS]', '[COMPLETE]', '[ANALYSIS]'] as const;

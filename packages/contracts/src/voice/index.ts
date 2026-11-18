@@ -31,7 +31,7 @@ export const VoiceTrouble = z.enum(['reconnecting', 'microphone-blocked']);
 
 export type VoiceTrouble = z.infer<typeof VoiceTrouble>;
 
-// Why a Voice call stopped (ADR-0062).
+// Why a Voice call stopped (ADR-0063).
 export const VoiceCallEnd = z.enum([
   'person',
   'agent',

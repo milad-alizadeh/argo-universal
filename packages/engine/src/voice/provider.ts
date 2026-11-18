@@ -4,7 +4,7 @@ import type {
 } from '@repo/contracts';
 
 /*
- * The Voice provider interface (ADR-0062). It names no vendor: only a provider's own module does.
+ * The Voice provider interface (ADR-0063). It names no vendor: only a provider's own module does.
  * A provider starts a Voice call from the App's offer, reports what was said and asked for, accepts text to speak or to keep as background, and ends the call. Audio travels straight between the App and the provider; the Engine only relays the offer and the answer.
  */
 

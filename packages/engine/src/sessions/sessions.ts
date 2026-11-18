@@ -76,7 +76,7 @@ export class Sessions {
   ): ReturnType<typeof promptFromPlugin> {
     return promptFromPlugin(this.sources, input, sender);
   }
-  // The Voice call's request for work: a Plugin's Prompt with the Voice call as sender, steering a running Turn when it can (ADR-0062).
+  // The Voice call's request for work: a Plugin's Prompt with the Voice call as sender, steering a running Turn when it can (ADR-0063).
   public promptFromVoice(
     input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
   ): ReturnType<typeof promptFromVoice> {
