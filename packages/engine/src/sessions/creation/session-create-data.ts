@@ -110,22 +110,9 @@ export async function createSessionCheckout(
   return dataForCheckout(input, await sessionCheckout(input, signal));
 }
 
-type InsertData = Pick<
-  typeof session.$inferInsert,
-  | 'id'
-  | 'projectId'
-  | 'agent'
-  | 'vendorSessionId'
-  | 'checkoutPath'
-  | 'checkoutBranch'
-  | 'checkoutType'
-  | 'configValues'
-  | 'heldConfig'
-  | 'projectionVersion'
-  | 'activityAt'
->;
+type SessionInsertData = typeof session.$inferInsert;
 
-const sessionInsertData = (data: SessionData): InsertData => ({
+const sessionInsertData = (data: SessionData): SessionInsertData => ({
   id: data.sessionId,
   projectId: data.projectId,
   agent: data.agent,
@@ -149,7 +136,7 @@ function namedCheckoutType(branch: string | undefined): 'worktree' | undefined {
 
 function storedCheckoutType(
   input: NewSessionInput,
-): InsertData['checkoutType'] {
+): SessionInsertData['checkoutType'] {
   const { checkout } = input;
 
   if (checkout.type === 'starter') return borrowedCheckoutType(input);

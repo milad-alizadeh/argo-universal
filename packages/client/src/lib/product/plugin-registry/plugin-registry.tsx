@@ -41,10 +41,9 @@ function useLatest<Args extends unknown[], Result>(
   );
 }
 
-function treeIdentity({ root, pluginId }: PluginTreeProps): {
-  key: string;
-  pluginId?: string;
-} {
+type TreeIdentity = Pick<PluginTreeProps, 'pluginId'> & { key: string };
+
+function treeIdentity({ root, pluginId }: PluginTreeProps): TreeIdentity {
   return { key: childNodeKey('', root.key), pluginId };
 }
 

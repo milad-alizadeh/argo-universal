@@ -45,24 +45,30 @@ type BranchHolder = {
 
 const listArguments = ['worktree', 'list', '--porcelain', '-z'];
 
+type BranchRecords = { records: string[][]; holders: string[][] };
+
+function branchRecords(output: string, branch: string): BranchRecords {
+  const records = output.split('\0\0').map((record) => record.split('\0'));
+  const refField = `branch refs/heads/${branch}`;
+
+  return {
+    records,
+    holders: records.filter((fields) => fields.includes(refField)),
+  };
+}
+
 function findBranchHolder(
   output: string,
   branch: string,
 ): BranchHolder | undefined {
-  const records = output.split('\0\0').map((record) => record.split('\0'));
-
-  const holders = records.filter((fields) =>
-    fields.includes(`branch refs/heads/${branch}`),
-  );
+  const { records, holders } = branchRecords(output, branch);
   const [fields] = holders;
 
   if (!fields) return undefined;
 
-  const path = String(fields[0]).slice('worktree '.length);
-
   return {
     branch,
-    path,
+    path: String(fields[0]).slice('worktree '.length),
     index: records.indexOf(fields),
     fields,
     shared: holders.length > 1,
