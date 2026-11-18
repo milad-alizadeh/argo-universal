@@ -56,27 +56,3 @@ export const usageLimitsSession = {
     ),
   },
 };
-
-const accountWindows = [
-  reading({
-    id: 'primary',
-    label: 'Weekly limit',
-    window: 'week',
-    resetsAt: '2026-11-21T14:00:00.000Z',
-    used: 0.4,
-  }),
-  reading({
-    id: 'secondary',
-    label: 'Monthly limit',
-    window: 'month',
-    used: 0.05,
-  }),
-];
-
-export const accountUsageSession = {
-  ...idleSession,
-  composer: {
-    ...idleSession.composer,
-    status: composerStatus(null, undefined, { limits: accountWindows, now }),
-  },
-};

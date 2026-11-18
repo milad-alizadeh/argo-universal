@@ -15,7 +15,7 @@ export const epochReset = z.number().positive().nullish().catch(null);
 
 export type Reset = string | null | undefined;
 
-export function resetAt(date: Date): Reset {
+function resetAt(date: Date): Reset {
   return Number.isFinite(date.getTime()) ? date.toISOString() : undefined;
 }
 

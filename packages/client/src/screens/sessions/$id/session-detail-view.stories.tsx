@@ -22,10 +22,7 @@ import {
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
-import {
-  accountUsageSession,
-  usageLimitsSession,
-} from './session-detail-view-usage.mocks';
+import { usageLimitsSession } from './session-detail-view-usage.mocks';
 import {
   emptySession,
   idleSession,
@@ -57,10 +54,6 @@ export const Running: Story = { args: { state: 'open', ...runningSession } };
 // The Agent reported a 5-hour window, a weekly window, and monthly spending.
 export const UsageLimits: Story = {
   args: { state: 'open', ...usageLimitsSession },
-};
-
-export const AccountUsage: Story = {
-  args: { state: 'open', ...accountUsageSession },
 };
 
 // The last Turn ended in an error: the Retry card above the Composer, which keeps its prompt.
