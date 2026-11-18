@@ -7,7 +7,7 @@ import {
 } from '@repo/contracts/pake';
 import type { ChannelCarrier } from './channel-carrier';
 import { frameRecord } from './frames';
-import { HandshakeBuffer } from './handshake-buffer';
+import { readingOf, readMore, type Reading } from './handshake-reading';
 import { KeyRun } from './key-run';
 
 export interface KeyDoorDeps {
@@ -25,12 +25,6 @@ interface Asked {
   readonly offered: OfferedTicket[];
 }
 
-interface Reading {
-  readonly socket: ChannelCarrier;
-  readonly buffer: HandshakeBuffer;
-  readonly proven: () => void;
-}
-
 const turnedAway = frameRecord(Buffer.from(refuseRun('ticket-attempts')));
 
 /*
@@ -41,28 +35,24 @@ export class KeyDoor {
   public constructor(private readonly deps: KeyDoorDeps) {}
 
   public accept(
-    socket: ChannelCarrier,
+    carrier: ChannelCarrier,
     opening: Buffer,
     proven: () => void,
   ): void {
-    this.read({ socket, buffer: new HandshakeBuffer(), proven }, opening);
+    this.read(readingOf(carrier, proven), opening);
   }
 
   private read(reading: Reading, chunk: Buffer): void {
-    const { socket, buffer, proven } = reading;
-
     try {
-      const message = buffer.push(chunk);
+      const message = reading.buffer.push(chunk);
 
       if (!message)
-        return void socket.once('data', (more: Buffer): void =>
-          this.read(reading, more),
-        );
-      proven();
-      this.answer(socket, message.handshake);
+        return readMore(reading, (again, more) => this.read(again, more));
+      reading.proven();
+      this.answer(reading.socket, message.handshake);
     } catch (cause) {
       this.deps.report('key question', String(cause));
-      socket.destroy();
+      reading.socket.destroy();
     }
   }
 

@@ -6,6 +6,7 @@ import { admitAs, type RpcIdentity } from '../rpc/identity';
 import type { ChannelCarrier } from './channel-carrier';
 import { ChannelSocket } from './channel-socket';
 import { HandshakeBuffer, type FirstMessage } from './handshake-buffer';
+import { readingOf, readMore, type Reading } from './handshake-reading';
 import { HandshakeReply } from './handshake-reply';
 import { receiveHandshake } from './handshake-responder';
 import { SeenHandshakes } from './seen-handshakes';
@@ -29,12 +30,6 @@ export interface ChannelDoorDeps {
   readonly report: (subject: string, value: string | undefined) => void;
 }
 
-interface Reading {
-  readonly socket: ChannelCarrier;
-  readonly buffer: HandshakeBuffer;
-  readonly proven: () => void;
-}
-
 /*
  * The Server's side of the encrypted channel. Every Device beyond the Server Device's own App arrives here, proves which Device Key it holds, and is either given the Connection or told why it is not (ADR-0045).
  * Nothing it cannot authenticate reaches a router: a socket that fails here is closed, not passed on.
@@ -49,7 +44,7 @@ export class ChannelDoor {
     opening: Buffer,
     proven: () => void,
   ): void {
-    this.read({ socket, buffer: new HandshakeBuffer(), proven }, opening);
+    this.read(readingOf(socket, proven), opening);
   }
 
   private read(reading: Reading, chunk: Buffer): void {
@@ -59,9 +54,7 @@ export class ChannelDoor {
     if (!message) return;
 
     if (message === 'waiting')
-      return void socket.once('data', (more: Buffer): void =>
-        this.read(reading, more),
-      );
+      return readMore(reading, (again, more) => this.read(again, more));
     proven();
     socket.pause();
     void this.answer(socket, message).catch((cause: unknown): void =>
