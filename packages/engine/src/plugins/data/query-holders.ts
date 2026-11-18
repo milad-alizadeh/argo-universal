@@ -1,4 +1,5 @@
 import type { PageAddress } from '@repo/contracts/plugins/page-address';
+import type { QueryRead } from './query-types';
 
 // The Page addresses whose last draw read an entry, each with the revision it read; the oldest go past this many.
 const keptHolders = 64;
@@ -24,6 +25,15 @@ export class QueryHolders {
   // Whether the address drew this entry before, so the App already has a tree for it.
   public has(address: PageAddress | undefined): boolean {
     return address !== undefined && this.held.has(JSON.stringify(address));
+  }
+
+  /*
+   * Whether a read is served the kept answer while the entry reads again: its address drew the entry before, or it
+   * answers a Slot. A Slot answers inside its Plugin's budget, so waiting on a slow service would leave it nothing to
+   * draw, and its chip would draw grey until the answer changed (#2339).
+   */
+  public serve({ holder, slot }: Pick<QueryRead, 'holder' | 'slot'>): boolean {
+    return slot === true || this.has(holder);
   }
 
   // The addresses holding the entry, by the key their draws are known by.

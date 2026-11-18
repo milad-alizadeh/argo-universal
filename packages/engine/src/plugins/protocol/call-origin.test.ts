@@ -62,13 +62,13 @@ it.each<[string, Delivered, ReturnType<typeof originOf>]>([
     { kind: 'none' },
   ],
   [
-    'a batched items call for nothing',
+    'a batched items call for a Slot',
     event({
       type: 'slotItems',
       id: 1,
       input: { slotId: 'argo/project/details/v1', contexts: [] },
     }),
-    { kind: 'none' },
+    { kind: 'slot' },
   ],
   [
     'a Hook for its Project',
@@ -143,6 +143,11 @@ it.each<[string, CallOrigin, ReturnType<typeof reachOf>]>([
     'a Project origin reaches the Project but never the Server Device',
     { kind: 'project', projectId: 'hooked' },
     { projectId: 'hooked', serverDevice: false },
+  ],
+  [
+    "a Slot's call reaches no Project, and says it answers a Slot",
+    { kind: 'slot' },
+    { serverDevice: false, slot: true },
   ],
   ['no origin reaches nothing', { kind: 'none' }, { serverDevice: false }],
 ])('%s', (_name, origin, reach) => {

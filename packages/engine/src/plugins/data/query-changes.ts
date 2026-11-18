@@ -11,12 +11,26 @@ export const changed = (
 ): boolean => JSON.stringify(before) !== JSON.stringify(after);
 
 // What a page would draw differently: another answer, or the end of a failure it shows, even for the same answer.
+const pageShows = (before: PluginDataState, after: PluginDataState): boolean =>
+  changed(before.data, after.data) ||
+  (before.error !== undefined && after.error === undefined);
+
+/*
+ * The start of a failure, which code outside a draw, such as a Slot served the kept answer, drew as good: a Slot that
+ * waited saw it, so one served the kept answer hears of it and asks again (#2339).
+ */
+const startsFailing = (
+  before: PluginDataState,
+  after: PluginDataState,
+): boolean => before.error === undefined && after.error !== undefined;
+
+// What a page, or code outside a draw that read the entry, would draw differently.
 export const shows = (
   before: PluginDataState,
   after: PluginDataState,
+  readOutside: boolean,
 ): boolean =>
-  changed(before.data, after.data) ||
-  (before.error !== undefined && after.error === undefined);
+  pageShows(before, after) || (readOutside && startsFailing(before, after));
 
 // A paged list's page is read only for its draw, so code outside a draw cannot read it again.
 const drawOnly = ({ query }: QueryOwner): boolean =>
