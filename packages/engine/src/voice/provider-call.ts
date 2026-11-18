@@ -3,6 +3,7 @@ import {
   providerEvent,
   type SendBack,
   type VoiceCallEvent,
+  type VoiceSay,
 } from './call-types';
 import type { VoiceProvider } from './provider';
 
@@ -13,6 +14,11 @@ export type ProviderCallInput = {
 };
 
 type StartedCall = Awaited<ReturnType<VoiceProvider['start']>>;
+
+function deliver(call: StartedCall, say: VoiceSay): void {
+  if (say.kind === 'reply') call.reply(say.requestId, say.text, say.delivery);
+  else call.tell(say.text, say.delivery);
+}
 
 // The provider's call, from the moment it answers to the moment the machine stops wanting it.
 class ProviderHold {
@@ -27,6 +33,11 @@ class ProviderHold {
     this.call = call;
     this.unlisten = call.listen((event) => this.sendBack(providerEvent(event)));
     this.sendBack({ type: 'call.answered', answer: call.answer });
+  }
+
+  // Tells the voice something; a call that is gone hears nothing.
+  public say(say: VoiceSay): void {
+    if (!this.released && this.call) deliver(this.call, say);
   }
 
   public fail(error: Error): void {
@@ -46,8 +57,11 @@ const asError = (error: Error | string): Error =>
 
 // Starts the provider's call, passes its events on, and ends it when the machine leaves `running`.
 export const providerCall = fromCallback<VoiceCallEvent, ProviderCallInput>(
-  ({ input, sendBack }) => {
+  ({ input, sendBack, receive }) => {
     const hold = new ProviderHold(sendBack);
+    receive((event) => {
+      if (event.type === 'voice.say') hold.say(event.say);
+    });
     void input.provider
       .start({ offer: input.offer, briefing: input.briefing })
       .then(

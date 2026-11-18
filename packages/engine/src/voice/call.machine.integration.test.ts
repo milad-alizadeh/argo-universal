@@ -56,6 +56,7 @@ const events: VoiceCallEvent[] = [
   { type: 'call.sessionGone', reason: 'session-closed' },
   { type: 'call.sessionGone', reason: 'session-archived' },
   { type: 'call.appDisconnected' },
+  { type: 'voice.say', say: { kind: 'tell', text: 'Done', delivery: 'speak' } },
   providerEvent({ type: 'status', status: 'connected' }),
   providerEvent({ type: 'status', status: 'error' }),
   providerEvent({ type: 'closed', reason: 'ended' }),

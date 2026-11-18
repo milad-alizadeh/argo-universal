@@ -66,7 +66,8 @@ export function promptMessageChange(
   return nonUserPromptChange(promptMessageId(turnId, sender), content, sender);
 }
 
-const nonUserPromptChange = (
+// A Prompt from a sender other than the person, stored under the id it is given.
+export const nonUserPromptChange = (
   messageId: string,
   content: ContentBlock[],
   sender: NonUserPromptSender,

@@ -57,23 +57,35 @@ function reserve(context: SessionContext, { command }: Reserve): QueueSteering {
   return reserveRow(context, command.revision, queuedRow(context, command.id));
 }
 
+// The Prompt is the one the App saw, and nobody is editing it.
+function requireFree(
+  context: SessionContext,
+  revision: number,
+  row: QueuedPrompt,
+): void {
+  if (row.revision !== revision) conflict('This Prompt changed in another App');
+
+  if (context.queueHolds[row.id]) conflict('Finish editing this Prompt first');
+}
+
 function reserveRow(
   context: SessionContext,
   revision: number,
   row: QueuedPrompt,
 ): QueueSteering {
-  if (row.revision !== revision)
-    return conflict('This Prompt changed in another App');
-
-  if (context.queueHolds[row.id])
-    return conflict('Finish editing this Prompt first');
+  requireFree(context, revision, row);
 
   return {
     ...reservePrompt(context, row.prompt),
+    ...senderOf(row),
     queuedId: row.id,
     messageId: `${runningTurn(context)}:steer:${row.id}`,
   };
 }
+
+// A Prompt that did not come from the person keeps its sender when steered.
+const senderOf = (row: QueuedPrompt): Pick<QueueSteering, 'sender'> =>
+  row.sender ? { sender: row.sender } : {};
 
 export function finishQueueSteering(
   context: SessionContext,

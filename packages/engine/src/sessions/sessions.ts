@@ -26,6 +26,7 @@ import {
 } from './session-operations';
 import { startSessionPrompt } from './session-prompt';
 import type { SessionHandlerSources, SessionSources } from './session-sources';
+import { promptFromVoice } from './voice-prompt';
 import { createSessionWorkSource, type SessionWorkSource } from './work-source';
 
 /*
@@ -74,6 +75,12 @@ export class Sessions {
     sender: NonUserPromptSender,
   ): ReturnType<typeof promptFromPlugin> {
     return promptFromPlugin(this.sources, input, sender);
+  }
+  // The Voice call's request for work: a Plugin's Prompt with the Voice call as sender, steering a running Turn when it can (ADR-0062).
+  public promptFromVoice(
+    input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
+  ): ReturnType<typeof promptFromVoice> {
+    return promptFromVoice(this.sources, input);
   }
   // Takes back a Queued Prompt the Plugin sent; one that started, is gone or is held for editing stays (ADR-0055).
   public withdrawFromPlugin(

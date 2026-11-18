@@ -1,6 +1,7 @@
 import type {
   CommandAction,
   PlanUpdate,
+  PromptMessage,
   ToolCallUpdate,
 } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
@@ -114,3 +115,36 @@ describe.each(workMocks)('command actions for $agent', ({ rows, snapshot }) => {
     ]);
   });
 });
+
+it.each(workMocks)(
+  'draws a Prompt from a Plugin but never one from a Voice call for $agent',
+  ({ rows, snapshot }) => {
+    const source = commandRow(rows);
+
+    const prompt: PromptMessage = {
+      id: 'prompt',
+      sessionId: source.sessionId,
+      turnId: source.turnId,
+      position: source.position,
+      revision: source.revision,
+      state: 'settled',
+      sessionUpdate: 'prompt_message',
+      messageId: 'prompt',
+      content: [{ type: 'text', text: 'Fix the build' }],
+      _meta: { argo: { sender: { type: 'voice' } } },
+    };
+
+    const plugin: PromptMessage = {
+      ...prompt,
+      id: 'plugin',
+      _meta: {
+        argo: { sender: { type: 'plugin', pluginId: 'p', title: 'P' } },
+      },
+    };
+
+    expect(toFeedView([prompt], snapshot).items).toEqual([]);
+    expect(toFeedView([plugin], snapshot).items).toEqual([
+      { type: 'row', row: plugin },
+    ]);
+  },
+);

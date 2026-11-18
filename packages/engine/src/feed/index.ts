@@ -1,4 +1,5 @@
 export {
+  nonUserPromptChange,
   promptMessageChange,
   promptMessageId,
   userMessageChange,
@@ -80,3 +81,11 @@ export { mapSupportedContentBlock } from './acp/content';
 export { toolCallEvent } from './tool-call-event';
 
 export { nativePermissionOutcomeEvent } from './native-permission-outcome';
+
+export {
+  readVoiceMarker,
+  stripVoiceMarker,
+  voiceMarkers,
+  withoutVoiceMarkers,
+  type VoiceMarker,
+} from './voice-markers';
