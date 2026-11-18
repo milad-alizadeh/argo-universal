@@ -42,10 +42,11 @@ function channelOf(
   network: Network,
   onRefused: () => void,
 ): ChannelTransport {
-  const { host, port, serverPublicKey } = endpoint;
+  const { host, port, serverPublicKey, others } = endpoint;
 
   const target: ChannelTarget = {
     address: { host, port },
+    others,
     serverPublicKey,
     locate: async () => announcedAddresses(serverPublicKey, network.browse),
   };

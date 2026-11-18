@@ -1,7 +1,7 @@
 import { useWide } from '@repo/kit/use-wide/use-wide';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
-import type { Ref } from 'react';
+import { createContext, useContext, type Ref } from 'react';
 import { type ViewProps, View, type ViewInstance } from 'react-native';
 import { useContentShift } from './content-layout';
 import { columnGutter } from './content-rule';
@@ -23,14 +23,26 @@ type ColumnPaneProps = Pick<
   'fill' | 'shrink' | 'pointerEvents' | 'children'
 >;
 
+export const WideColumnGutter = createContext<number | undefined>(undefined);
+
 const shrinkClass = 'min-h-0 shrink';
 
 const paneClassName = ({ shrink, fill }: ColumnPaneProps): string =>
   cn('w-full', shrink && shrinkClass, fill && filledClass);
 
+function useColumnGutter(): number {
+  const rule = useContentRule();
+  const wide = useWide();
+  const wideGutter = useContext(WideColumnGutter);
+
+  return wide && wideGutter !== undefined
+    ? wideGutter
+    : columnGutter(rule, wide);
+}
+
 // The pane's side padding, the content rule's gutter at the window's Size class. Twice the shift on the trailing side moves the centred column that far towards the leading edge.
 function ColumnPane(props: ColumnPaneProps): React.JSX.Element {
-  const gutter = columnGutter(useContentRule(), useWide());
+  const gutter = useColumnGutter();
   const shift = useContentShift();
 
   return (

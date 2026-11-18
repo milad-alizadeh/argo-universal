@@ -39,15 +39,16 @@ const differentFrom =
 
 /*
  * Where a paired Server's channels open (ADR-0045). The address that last proved the Server's key is tried first, so a channel per Blob does not ask the network each time.
- * When it does not answer, the Server is looked for again: every address it announces now, then the one Pairing kept, and the first that proves the key is kept for the next channel.
+ * When it does not answer, the network is asked while the addresses Pairing kept are tried, so a phone off the local network, where Bonjour only ever times out, is not held up by it. Then what the Server announces now is tried, and the first address that proves the key is kept for the next channel.
  */
 export class ChannelRoute {
   private proven: ChannelAddress | undefined;
   private locating: Promise<readonly ChannelAddress[]> | undefined;
 
   public constructor(
-    private readonly kept: ChannelAddress,
+    private readonly keptAddress: ChannelAddress,
     private readonly locate: LocateServer = nothingAnnounced,
+    private readonly otherKeptAddresses: readonly ChannelAddress[] = [],
   ) {}
 
   public async open<T>(
@@ -64,12 +65,22 @@ export class ChannelRoute {
     throw new ServerUnreachable(causes);
   }
 
-  // The network is asked only once the address that answered last does not.
   private async *candidates(): AsyncGenerator<ChannelAddress> {
     const last = this.proven;
 
     if (last) yield last;
-    yield* (await this.located()).filter(differentFrom(last));
+    const announcing = this.lookAgain();
+    const kept = inOrder([this.keptAddress, ...this.otherKeptAddresses]);
+
+    const direct = kept
+      .filter(differentFrom(last))
+      .filter((a) => !linkLocal(a));
+
+    yield* direct;
+    const everywhere = inOrder([...kept, ...(await announcing)]);
+    const asked = new Set([last, ...direct].map((a) => a && keyOf(a)));
+
+    yield* everywhere.filter((address) => !asked.has(keyOf(address)));
   }
 
   private async tryAt<T>(
@@ -91,19 +102,15 @@ export class ChannelRoute {
     }
   }
 
-  private async located(): Promise<ChannelAddress[]> {
-    this.locating ??= this.lookAgain();
-
-    return inOrder([...(await this.locating), this.kept]);
-  }
-
   // Channels that open together share one look at the network; one that fails is as if nothing announced the Server.
   private lookAgain(): Promise<readonly ChannelAddress[]> {
-    return this.locate()
+    this.locating ??= this.locate()
       .catch(() => [])
       .finally(() => {
         this.locating = undefined;
       });
+
+    return this.locating;
   }
 }
 

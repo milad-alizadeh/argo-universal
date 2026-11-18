@@ -21,3 +21,17 @@ Feature: Changed files on live data
       | 1     | phone | light |
       | 2     | wide  | dark  |
       | 2     | phone | dark  |
+
+  Scenario: Create PR sends a Prompt and preserves the Composer draft
+    Given a wide Frame
+    And the Project has a committed greeting
+    And Agent 1 edits a file and keeps its Turn running
+    And a New Session with Agent 1
+    When I send the prompt "Update the greeting"
+    And the Agent edits the greeting
+    Then the changed-files entry shows 1 file while the Turn runs
+    When I stop the Turn
+    And I type "Keep this draft" in the Message box
+    And I press Create PR in the Workbench
+    Then the Agent receives a Prompt to open and attach the pull request
+    And the Message box shows "Keep this draft"

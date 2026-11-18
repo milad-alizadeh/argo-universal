@@ -2,6 +2,7 @@ import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type { SubagentRole } from '@repo/contracts';
 import { SessionRowUpdateJob } from '../session-storage';
 import {
+  forwardChildUpdate,
   openChildFeed,
   type ChildFeed,
   type OpenedChildFeed,
@@ -10,7 +11,7 @@ import { withDeclaredRole, type AssociatedChild } from './declared-roles';
 import type { SubagentRouting } from './routing-types';
 import { deliverSubagentMessage, isSubagentMessage } from './subagent-messages';
 import { associationEvent } from './subagent-rows';
-import { subagentWorkState } from './subagent-work';
+import { subagentWorkState, updateChildModel } from './subagent-work';
 import { updateSubagentWork } from './work';
 
 export type Subagents = {
@@ -102,7 +103,7 @@ function routeUpdate(
       { ...input, children, transcriptId: notification.sessionId },
       update,
     );
-  deliverChildUpdate(children, notification);
+  deliverChildUpdate(input, children, notification);
 }
 
 // Only explicit ACP associations establish parentage; an unknown id never becomes a Subagent.
@@ -131,17 +132,18 @@ export function flushSubagents(subagents: Subagents): void {
 }
 
 function deliverChildUpdate(
-  children: ReadonlyMap<string, ChildFeed>,
-  notification: SessionNotification,
+  input: SubagentRouting,
+  children: Map<string, ChildFeed>,
+  { update, sessionId }: SessionNotification,
 ): void {
-  const source = children.get(notification.sessionId);
+  const child = children.get(sessionId);
 
-  source?.feed.send({
-    type: 'feed.acpUpdate',
-    acpSessionId: notification.sessionId,
-    update: notification.update,
-    turnId: source.turnId,
-  });
+  if (!child) return;
+
+  if (update.sessionUpdate !== 'config_option_update')
+    return forwardChildUpdate(child, { acpSessionId: sessionId, update });
+
+  children.set(sessionId, updateChildModel(input, child, update.configOptions));
 }
 
 function routingSource(

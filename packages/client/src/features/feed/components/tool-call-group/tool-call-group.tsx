@@ -12,6 +12,7 @@ import {
   liveToolCall,
   showsDuration,
   headerLiveCall,
+  headerToolCall,
   visibleActivities,
 } from './group-activities';
 import { GroupChild } from './group-child';
@@ -84,9 +85,25 @@ function GroupBody(props: ToolCallGroupProps): React.JSX.Element {
   );
 }
 
+interface GroupHeader {
+  liveHeader: LiveHeader | undefined;
+  title: string;
+}
+
+function useGroupHeader({ group, now }: ToolCallGroupProps): GroupHeader {
+  const liveHeader = liveHeaderOf(group);
+
+  const title = useLiveHeaderTitle(
+    liveHeader ?? idleHeader,
+    now,
+    headerToolCall(group),
+  );
+
+  return { liveHeader, title };
+}
+
 export function ToolCallGroup(props: ToolCallGroupProps): React.JSX.Element {
-  const liveHeader = liveHeaderOf(props.group);
-  const title = useLiveHeaderTitle(liveHeader ?? idleHeader, props.now);
+  const { liveHeader, title } = useGroupHeader(props);
   const trailing = useGroupTrailing(props.group, props.now);
 
   return (

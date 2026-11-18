@@ -1,4 +1,5 @@
 import type { LiveHeader, ToolCallUpdate } from '@repo/contracts';
+import { toolCallFacts } from '../../view/feed-row-facts';
 import type { FeedActivity, FeedGroup } from '../../view/feed-view';
 import { groupTitle } from '../../view/group-title';
 import { toolCallTitle } from '../../view/tool-call-title';
@@ -39,13 +40,23 @@ function matchingHeaderCall(
 
   if (!live) return undefined;
 
+  return namesCall(group, header, live) ? live : undefined;
+}
+
+function namesCall(
+  group: FeedGroup,
+  header: LiveHeader,
+  live: NonNullable<LiveToolCall>,
+): boolean {
+  if (toolCallFacts(live.toolCall).operation) return true;
+
   const title = toolCallTitle(
     live.toolCall,
     live.awaitingApproval,
     group.state === 'settled',
   );
 
-  return header.text.trim() === title.trim() ? live : undefined;
+  return header.text.trim() === title.trim();
 }
 
 function callForSource(

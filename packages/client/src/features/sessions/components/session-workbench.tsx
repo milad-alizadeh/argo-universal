@@ -8,6 +8,7 @@ export interface WorkbenchSection {
   key: string;
   title: string;
   summary: ReactNode;
+  trailing?: ReactNode;
   footer?: ReactNode;
   // Absent where the summary's own rows carry the presses.
   onOpen?: () => void;
@@ -70,7 +71,7 @@ function SectionCard(props: SectionCardProps): ReactElement {
   return (
     <View testID={`workbench-${props.section.key}`}>
       <Card {...cardProps(props)}>
-        <SectionBody section={props.section} />
+        <SectionSummary section={props.section} />
       </Card>
     </View>
   );
@@ -92,6 +93,21 @@ const openProps = (
     onPress: onOpen,
     onLongPress: ignoreLongPress,
   }) as const;
+
+function SectionSummary({
+  section,
+}: Pick<SectionCardProps, 'section'>): ReactNode {
+  const body = <SectionBody section={section} />;
+
+  if (!section.trailing) return body;
+
+  return (
+    <View className="flex-row items-center gap-2">
+      <View className="min-w-0 flex-1">{body}</View>
+      <View className="shrink-0">{section.trailing}</View>
+    </View>
+  );
+}
 
 function SectionBody({
   section,

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { OperationIcon } from '#operation-metadata';
 import { WireJson } from '#plugin-wire-json';
 
 /*
@@ -100,9 +101,12 @@ export type PluginOperationNeed = z.infer<typeof PluginOperationNeed>;
 // The param core adds to an Operation that needs a Project; a Plugin never declares it.
 export const projectParam = 'projectId';
 
+export const defaultPluginOperationIcon = 'plugins';
+
 export const PluginOperationContribution = z.strictObject({
   name: PluginOperationName,
   label: z.string().trim().min(1),
+  icon: OperationIcon.optional(),
   description: z.string().trim().min(1),
   tier: PluginOperationTier,
   params: z

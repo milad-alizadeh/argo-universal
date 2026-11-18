@@ -66,7 +66,7 @@ export const InTheInspector: Story = {
   render: (args) => <SubagentFeedInspector {...args} />,
 };
 
-// Wide, expanded: the header keeps to the Feed's column, with Back hanging in the margin.
+// Wide, expanded: the header and Back keep to the Feed's column.
 export const InTheExpandedInspector: Story = {
   args: finishedSubagentFeed,
   render: (args) => <SubagentFeedInspector {...args} expanded />,

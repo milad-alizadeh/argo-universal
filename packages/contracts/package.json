@@ -31,6 +31,8 @@
     "#plugin-manifest-fields": "./src/plugins/manifest-fields.ts",
     "#plugin-sf-symbol-names": "./src/plugins/sf-symbol-names.gen.ts",
     "#plugin-material-symbol-names": "./src/plugins/material-symbol-names.gen.ts",
+    "#kit-symbols/*": "./src/kit-symbols/*.ts",
+    "#operation-metadata": "./src/operations/metadata.ts",
     "#kit-tokens": "./src/kit-tokens.ts",
     "#plugin-session-calls": "./src/plugins/session-calls.ts",
     "#plugin-fs-calls": "./src/plugins/fs-calls.ts",

@@ -148,6 +148,8 @@ export class AcpConnection {
   private readonly translateDraftSubagents = createDraftSubagentTranslator(
     createRejectionCounter('ACP draft subagent updates'),
   );
+  private readonly usageLimitRejections =
+    createRejectionCounter('ACP Usage limits');
   private connection: ClientConnection | undefined;
   private initialized: Omit<Ready, 'connection'> | undefined;
   private launching: Promise<AcpProcess> | undefined;
@@ -262,7 +264,13 @@ export class AcpConnection {
     const launch = this.initialized?.launch;
 
     if (!launch) return;
-    const readings = vendorUsageLimits(notification.update._meta, new Date());
+
+    const readings = vendorUsageLimits(
+      notification.update._meta,
+      new Date(),
+      this.usageLimitRejections,
+    );
+
     this.hooks.usageLimits.publish(
       { agent: launch.agentId, projectId: launch.projectId },
       readings,

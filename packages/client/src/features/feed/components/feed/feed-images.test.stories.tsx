@@ -262,15 +262,15 @@ function reachesImageNotDrawn(width: number): Story {
       await closed();
 
       await waitFor(async () => {
-        await expect(scrolledToEnd(scroll)).toBe(true);
-        const restoredOpener = canvas.getByRole(
+        const thumbnailOnReturn = canvas.getByRole(
           'button',
           thumbnail(answerImage),
         );
 
         await expect(
-          Math.abs(restoredOpener.getBoundingClientRect().top - place),
+          Math.abs(thumbnailOnReturn.getBoundingClientRect().top - place),
         ).toBeLessThan(2);
+        await expect(scrolledToEnd(scroll)).toBe(true);
       }, settleWait);
       await expect(
         canvas.queryByRole('button', thumbnail(promptImage)),

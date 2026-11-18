@@ -15,6 +15,7 @@ import {
   FeedDisclosureLabel,
   type FeedDisclosureLabelProps,
 } from './feed-disclosure-label';
+import { ShimmerDisclosureTitle } from './shimmer-disclosure-title';
 
 export interface FeedDisclosureProps extends Omit<
   FeedDisclosureLabelProps,
@@ -64,6 +65,24 @@ function feedDisclosureIcon(
   );
 }
 
+function shouldShimmer(props: Omit<FeedDisclosureProps, 'children'>): boolean {
+  if (!props.running || props.awaitingApproval) return false;
+
+  return !props.title;
+}
+
+function titleRenderer(
+  props: Omit<FeedDisclosureProps, 'children'>,
+): ((chevron: ReactNode) => ReactNode) | undefined {
+  if (!shouldShimmer(props)) return undefined;
+
+  const text = props.trailing
+    ? `${props.label} ${props.trailing}`
+    : props.label;
+
+  return (chevron) => <ShimmerDisclosureTitle text={text} chevron={chevron} />;
+}
+
 function FeedDisclosureHeader(
   props: Omit<FeedDisclosureProps, 'children'>,
 ): React.JSX.Element {
@@ -71,6 +90,7 @@ function FeedDisclosureHeader(
     <CollapsibleHeader
       label={props.label}
       leading={props.leading ?? feedDisclosureIcon(props)}
+      renderTitle={titleRenderer(props)}
     >
       <FeedDisclosureTitle {...props} />
     </CollapsibleHeader>

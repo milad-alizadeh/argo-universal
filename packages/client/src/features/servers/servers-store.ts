@@ -1,5 +1,4 @@
 import type { KnownServer } from '#features/connection';
-import { ownServerId } from '#lib/product/server-scope';
 import { type AppServer, ownAppServer, pairedAppServer } from './app-server';
 import {
   forgetKnownServer,
@@ -11,9 +10,9 @@ import {
 import { forgetServerHistory, notePaired } from './server-history';
 
 export interface ServersSnapshot {
-  // The own Server first, then each Server this Device has paired with, in the order Pairing kept them.
+  // The own Server first, where this Device runs one, then each Server it has paired with, in the order Pairing kept them.
   servers: readonly AppServer[];
-  // The id of the Server the App is showing: whose Sessions, Projects and Feed it reads.
+  // The id of the Server the App is showing: whose Sessions, Projects and Feed it reads. A phone that holds none shows none.
   lookingAt: string;
   // False until this Device's kept Servers have been read, so the App never opens on its own Server and then moves.
   read: boolean;
@@ -32,19 +31,20 @@ export interface ServersStore {
 
 /*
  * The App's list of Servers: the Server on this Device, then the Servers it paired with, which it reads from this
- * Device's storage. One entry is the ordinary case and no entry is missing, so the list never draws as empty.
+ * Device's storage. Only the desktop app and the web App run beside a Server of their own; a phone or tablet lists
+ * just the Servers it paired with, and holds none until it pairs.
  */
 class AppServersStore implements ServersStore {
-  private readonly own: AppServer;
+  private readonly own: readonly AppServer[];
   private readonly listeners = new Set<() => void>();
   private snapshot: ServersSnapshot;
   private loading: Promise<void> | undefined;
 
-  public constructor(ownServerUrl: string) {
-    this.own = ownAppServer(ownServerUrl);
+  public constructor(ownServerUrl: string | undefined) {
+    this.own = ownServerUrl === undefined ? [] : [ownAppServer(ownServerUrl)];
     this.snapshot = {
-      servers: [this.own],
-      lookingAt: ownServerId,
+      servers: this.own,
+      lookingAt: fallbackOf(this.own),
       read: false,
     };
   }
@@ -62,7 +62,7 @@ class AppServersStore implements ServersStore {
   public readonly look = (id: string): void => {
     if (id === this.snapshot.lookingAt) return;
 
-    if (!canShow(this.snapshot.servers, id)) return;
+    if (!showsServer(this.snapshot.servers, id)) return;
 
     this.set({ ...this.snapshot, lookingAt: id });
     keepLookedAtServer(id);
@@ -110,7 +110,7 @@ class AppServersStore implements ServersStore {
       loadLookedAtServer(),
     ]);
 
-    const servers = [this.own, ...known.map(pairedAppServer)];
+    const servers = [...this.own, ...known.map(pairedAppServer)];
 
     this.set({
       servers,
@@ -120,26 +120,32 @@ class AppServersStore implements ServersStore {
   }
 }
 
-export const createServersStore = (ownServerUrl: string): ServersStore =>
+export const createServersStore = (ownServerUrl?: string): ServersStore =>
   new AppServersStore(ownServerUrl);
 
 /*
  * A Server the App can show: one it holds with somewhere to open a Connection. A paired Server whose address this
  * Device has not learned has none, so it stays in the list, reading as unreachable, rather than showing a blank App.
  */
-const canShow = (servers: readonly AppServer[], id: string): boolean =>
-  servers.some(
-    (server) =>
-      server.id === id &&
-      (server.url !== undefined || server.channel !== undefined),
-  );
+const showable = (server: AppServer): boolean =>
+  server.url !== undefined || server.channel !== undefined;
+
+export const showsServer = (
+  servers: readonly AppServer[],
+  id: string,
+): boolean => servers.some((server) => server.id === id && showable(server));
+
+const fallbackOf = (servers: readonly AppServer[]): string =>
+  servers.find(showable)?.id ?? '';
 
 /*
  * A kept Server the App cannot show — one this Device has since unpaired, or one whose address it has not learned —
- * leaves the App on its own Server rather than on a page with nothing in it.
+ * leaves the App on its own Server, or on another it paired with, rather than on a page with nothing in it.
  */
 const shownOrOwn = (
   servers: readonly AppServer[],
   lookedAt: string | null,
 ): string =>
-  lookedAt !== null && canShow(servers, lookedAt) ? lookedAt : ownServerId;
+  lookedAt !== null && showsServer(servers, lookedAt)
+    ? lookedAt
+    : fallbackOf(servers);

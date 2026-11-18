@@ -11,6 +11,7 @@ export const sessionRestartOperations = {
   'session.reload': {
     id: 'session.reload',
     label: 'Reload Agent',
+    icon: 'retry',
     description:
       'Close an idle Session’s Agent session and open the same one again, so its Agent process restarts and reads new skills, extensions and settings. The Agent keeps the conversation.',
     params: SessionReloadInput,
@@ -21,6 +22,7 @@ export const sessionRestartOperations = {
   'session.clear': {
     id: 'session.clear',
     label: 'Clear context',
+    icon: 'clear',
     description:
       'Give an idle Session a new Agent session with an empty context. The Feed and Checkout stay; the Agent forgets the conversation.',
     params: SessionClearInput,
