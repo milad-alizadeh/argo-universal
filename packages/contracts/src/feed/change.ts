@@ -13,6 +13,8 @@ import {
   UserMessage,
   PromptMessage,
   SessionMessage,
+  PersonTranscript,
+  VoiceTranscript,
 } from './session-update';
 
 // The Feed actor sets these envelope fields, so a change never carries them.
@@ -33,6 +35,8 @@ export const FeedUpdate = z.discriminatedUnion('sessionUpdate', [
   UserMessage.omit(withoutEnvelope),
   PromptMessage.omit(withoutEnvelope),
   SessionMessage.omit(withoutEnvelope),
+  PersonTranscript.omit(withoutEnvelope),
+  VoiceTranscript.omit(withoutEnvelope),
   AgentMessage.omit(withoutEnvelope),
   AgentThought.omit(withoutEnvelope),
   ToolCallUpdate.omit(withoutEnvelope),

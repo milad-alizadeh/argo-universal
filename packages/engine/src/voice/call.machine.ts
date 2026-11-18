@@ -12,6 +12,7 @@ import { watchConnection, watchSession } from './call-watchers';
 import type { VoiceProvider, VoiceProviderEvent } from './provider';
 import { providerCall, type ProviderCallInput } from './provider-call';
 import { SessionLink } from './session-link';
+import { isTranscript, storeTranscript, withTranscript } from './transcript';
 
 /*
  * The Voice call's lifecycle (ADR-0062): one machine for the one call a Server runs, attached to one Session for its whole life.
@@ -52,6 +53,7 @@ const finished = (
   return {
     call: null,
     ended: call && { callId: call.callId, sessionId: call.sessionId, reason },
+    partials: [],
   };
 };
 
@@ -82,6 +84,19 @@ const voiceCallSetup = setup({
     finish: assign(({ context }, params: EndParameters) =>
       finished(context, params),
     ),
+    storeTranscript: ({ context, event, system }): void => {
+      const heard = providerEventOf(event);
+
+      if (isTranscript(heard))
+        storeTranscript(system, runningCall(context), heard);
+    },
+    trackPartials: assign(({ context, event }): Partial<VoiceCallContext> => {
+      const heard = providerEventOf(event);
+
+      return isTranscript(heard)
+        ? { partials: withTranscript(context.partials, heard) }
+        : {};
+    }),
     recordFailure: assign(({ event }): Partial<VoiceCallContext> => {
       assertEvent(event, 'call.failed');
 
@@ -95,6 +110,8 @@ const voiceCallSetup = setup({
 
       return namesCall(event.sessionId, context.call);
     },
+    hearsTranscript: ({ event }): boolean =>
+      isTranscript(providerEventOf(event)),
     isConnected: ({ event }): boolean =>
       isConnectedStatus(providerEventOf(event)),
     providerErrored: ({ event }): boolean => {
@@ -142,6 +159,7 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
     call: null,
     ended: null,
     failure: null,
+    partials: [],
   }),
   initial: 'idle',
   states: {
@@ -216,6 +234,10 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
           actions: ['recordFailure', endsWith('failed')],
         },
         'provider.event': [
+          {
+            guard: 'hearsTranscript',
+            actions: ['storeTranscript', 'trackPartials'],
+          },
           {
             guard: 'providerErrored',
             target: idleTarget,

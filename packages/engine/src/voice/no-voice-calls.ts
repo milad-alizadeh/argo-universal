@@ -6,6 +6,7 @@ const notAvailable = 'Voice calls are not available';
 const noStatus: VoiceStatus = {
   call: null,
   ended: null,
+  partials: [],
   availability: { usable: false, reason: notAvailable },
   enabled: true,
 };

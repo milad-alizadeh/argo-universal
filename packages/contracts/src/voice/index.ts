@@ -39,6 +39,19 @@ export const VoiceAvailability = z.discriminatedUnion('usable', [
 
 export type VoiceAvailability = z.infer<typeof VoiceAvailability>;
 
+export const VoiceSpeaker = z.enum(['person', 'voice']);
+
+export type VoiceSpeaker = z.infer<typeof VoiceSpeaker>;
+
+// Words that may still change: live state of the running call, never a stored Feed row. A final transcript replaces it.
+export const VoicePartial = z.strictObject({
+  speaker: VoiceSpeaker,
+  id: z.string().min(1),
+  text: z.string(),
+});
+
+export type VoicePartial = z.infer<typeof VoicePartial>;
+
 // What the App draws its Composer from: the running call, how the last one ended, and whether a new one can start.
 export const VoiceStatus = z.strictObject({
   call: VoiceCall.nullable(),
@@ -52,6 +65,8 @@ export const VoiceStatus = z.strictObject({
   availability: VoiceAvailability,
   // Whether the person keeps Voice calls on; with them off no Composer offers the voice button.
   enabled: z.boolean(),
+  // What is being said now, at most one per speaker; drawn at the tail of the call's Session's Feed.
+  partials: z.array(VoicePartial),
 });
 
 export type VoiceStatus = z.infer<typeof VoiceStatus>;

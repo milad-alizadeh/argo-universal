@@ -53,11 +53,12 @@ export class VoiceCalls implements VoiceCallsPort {
   }
 
   public async status(): Promise<VoiceStatus> {
-    const { call, ended } = this.actor.getSnapshot().context;
+    const { call, ended, partials } = this.actor.getSnapshot().context;
 
     return {
       call: call && this.callOf(call.callId, call.sessionId),
       ended,
+      partials,
       availability: await this.availability(),
       enabled: this.choices.enabled(),
     };

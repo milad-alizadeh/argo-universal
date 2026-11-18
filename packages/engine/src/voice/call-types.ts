@@ -1,4 +1,4 @@
-import type { VoiceCallEnd } from '@repo/contracts';
+import type { VoiceCallEnd, VoicePartial } from '@repo/contracts';
 import type {
   VoiceDelivery,
   VoiceProvider,
@@ -76,6 +76,8 @@ export interface VoiceCallContext extends VoiceCallInput {
   ended: EndedCall | null;
   // Why the last call failed, for the Notice that says so.
   failure: string | null;
+  // Words being said now that may still change; live state, never stored.
+  partials: VoicePartial[];
 }
 
 // The call `running` was entered for; `running` is only entered by `call.start`, which sets it.
