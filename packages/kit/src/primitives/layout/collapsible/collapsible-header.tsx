@@ -58,9 +58,23 @@ function HeaderTitle(
 ): ReactElement {
   return (
     <View className="min-w-0 shrink flex-row items-center gap-1">
+      {props.renderTitle ? (
+        props.renderTitle(<HeaderChevron hovered />)
+      ) : (
+        <DefaultTitle {...props} />
+      )}
+    </View>
+  );
+}
+
+function DefaultTitle(
+  props: CollapsibleHeaderProps & { hovered: boolean },
+): ReactElement {
+  return (
+    <>
       {props.children ?? <HeaderLabel label={props.label} />}
       <HeaderChevron hovered={props.hovered} />
-    </View>
+    </>
   );
 }
 

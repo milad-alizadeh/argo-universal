@@ -17,7 +17,7 @@ const bandHalfWidth = 8;
 
 const sweepMilliseconds = 1600;
 
-const shimmerOpacity = {
+export const shimmerOpacity = {
   plain: { resting: 0.45, highlight: 0.55 },
   emphasized: { resting: 0.7, highlight: 0.3 },
 };
@@ -142,7 +142,7 @@ function bandCentre(sweep: Sweep): number {
   return sweep.progress.get() * sweep.span.get() - bandHalfWidth;
 }
 
-function useShimmerStyle(
+export function useShimmerStyle(
   props: ShimmerStyleProps,
 ): ReturnType<typeof useAnimatedStyle<{ opacity: number }>> {
   const { centre, opacity, sweep } = props;

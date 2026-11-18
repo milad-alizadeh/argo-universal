@@ -2,7 +2,7 @@ import type { LiveHeader } from '@repo/contracts';
 import { Orb } from '@repo/kit/primitives/status/orb';
 import type * as React from 'react';
 import type { FeedGroup } from '../../view/feed-view';
-import { LiveTitle, SourceIcon } from '../live-header/live-header';
+import { SourceIcon } from '../live-header/live-header';
 import {
   type ToolCallDisclosure,
   toolCallDisclosureProps,
@@ -74,12 +74,12 @@ function liveHeaderDisclosureProps(
   title: string,
 ): Pick<
   React.ComponentProps<typeof ToolCallDisclosure>,
-  'label' | 'leading' | 'title'
+  'label' | 'leading' | 'running'
 > {
   return {
     label: title,
     leading: <SourceIcon source={source} toolCall={headerToolCall(group)} />,
-    title: <LiveTitle title={title} source={source} />,
+    running: source.type !== 'request',
   };
 }
 
