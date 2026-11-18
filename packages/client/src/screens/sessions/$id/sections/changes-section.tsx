@@ -45,7 +45,7 @@ const changesSummary = (
 );
 
 /*
- * With pull requests, each row opens its own pull request and the card opens nothing; without, the whole body opens the
+ * With pull requests, each row opens its own pull request and the card opens nothing; without, the diff totals open the
  * Checkout's changed files.
  */
 const changesCard: SessionSection['card'] = (content, tab): SectionCard => {
@@ -58,7 +58,7 @@ const changesCard: SessionSection['card'] = (content, tab): SectionCard => {
   return {
     summary,
     onOpen: tab.open,
-    footer: action && (
+    trailing: action && (
       <Button label="Create PR" variant="secondary" size="sm" {...action} />
     ),
   };
