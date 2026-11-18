@@ -15,3 +15,7 @@ The Jira Plugin's project page had a full-width List/Board `SegmentedControl` ab
 - **A header submenu per choice** (#2323's first version: a Filter menu and a "Show issues as" menu). Rejected: two icons on a phone, and the ⋮ stayed for the project and site.
 - **A full-width segmented bar under the header** (Paper option D). Rejected: it costs 48 pt of height on every phone page, and it is the bar the owner called out.
 - **Let a header `Action` open a Sheet the Plugin keeps open in Page state.** Rejected: every page would carry the open flag in its address, and on a wide window the sheet had no button to anchor a popover on.
+
+## Jira filters in Options
+
+The owner confirmed that Jira's filters stay in Options (#2251). Sidebar rows would make filters and their counts visible at a glance and would cost one Jira read per filter. Options keeps the filters with the view and sort controls and avoids those extra reads.

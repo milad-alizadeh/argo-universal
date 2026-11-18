@@ -62,7 +62,14 @@ function titleOf(groups: ActionGroup[]): TitleDrawing {
   if (!groups.length) return ToolbarTitle;
 
   return function ToolbarTitleMenu(props) {
-    return <TitleMenu title={props.children ?? ''} level={1} groups={groups} />;
+    return (
+      <TitleMenu
+        title={props.children ?? ''}
+        level={1}
+        groups={groups}
+        inlineToolbar
+      />
+    );
   };
 }
 

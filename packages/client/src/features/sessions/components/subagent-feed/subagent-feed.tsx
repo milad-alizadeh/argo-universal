@@ -40,15 +40,23 @@ function FeedHeading(props: SubagentFeedProps): React.JSX.Element {
       <SizeClass only="wide">
         <SubagentFeedHeader {...props} />
       </SizeClass>
-      <Metrics subagent={props.subagent} />
+      <SizeClass only="wide">
+        <Metrics subagent={props.subagent} includeModel={false} />
+      </SizeClass>
+      <SizeClass only="compact">
+        <Metrics subagent={props.subagent} />
+      </SizeClass>
     </View>
   );
 }
 
 function Metrics({
   subagent,
-}: Pick<SubagentFeedProps, 'subagent'>): React.JSX.Element | null {
-  const metrics = subagentMetrics(subagent);
+  includeModel = true,
+}: Pick<SubagentFeedProps, 'subagent'> & {
+  includeModel?: boolean;
+}): React.JSX.Element | null {
+  const metrics = subagentMetrics(subagent, includeModel);
 
   return metrics ? (
     <SessionColumn className="pb-2">

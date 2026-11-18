@@ -11,11 +11,11 @@ export function register(argo) {
     load: () => null,
     list: async (_input, cursor) => {
       if (cursor === null) return { items: ['Issue 1'], cursor: 'next' };
-      if (await argo.settings.get('busy')) throw new Error('The service is busy.');
+      if (await argo.settings.get('busy')) return { items: [], failed: 'The service is busy.' };
       return { items: ['Issue 2'], cursor: null };
     },
     render: (_data, _to, { list }) => (
-      <List pagination={{ hasMore: list.hasMore, onLoadMore: list.loadMore }}>
+      <List pagination={list.pagination}>
         {list.items.map((title) => <ListItem key={title} title={title} />)}
       </List>
     ),
@@ -34,17 +34,22 @@ it('asks for the page a failed load more lacked, as the App keeps its rows and a
   kit.settings.set('busy', true);
   await page.loadMore();
 
-  expect(page.error).toContain(busy);
-  expect(() => page.tree).toThrow(busy);
+  expect(page.error).toBeUndefined();
+  expect(page.findText('Issue 1')).toBeDefined();
+  expect(page.findText('Issue 2')).toBeUndefined();
+  expect(page.tree.props.pagination).toMatchObject({
+    hasMore: false,
+    failed: busy,
+    onLoadMore: { loadMore: true, retry: true },
+  });
 
   kit.settings.set('busy', false);
-  // The failed page rests before it is read again (#2197).
-  await kit.clock.advance(5000);
   await page.loadMore();
 
   expect(page.error).toBeUndefined();
   expect(page.findText('Issue 1')).toBeDefined();
   expect(page.findText('Issue 2')).toBeDefined();
+  expect(page.tree.props.pagination).not.toHaveProperty('failed');
 });
 
 // A short list whose redraw fails while the service is busy: its tree offers no load more.

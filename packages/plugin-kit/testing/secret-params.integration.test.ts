@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { dataFixture } from '../mocks/data-fixture';
+import { dataFixture, dataPluginId } from '../mocks/data-fixture';
 
 const token = 'fixture-pasted-token-8f3a';
 
@@ -21,7 +21,9 @@ const saveToken = {
 
 // A careless Plugin: it names the token in a call Argo logs, and answers it back.
 const careless = `export function register(argo) {
+  console.log('x');
   argo.operations.register('saveToken', async (params) => {
+    console.warn({ token: params.token });
     await argo.settings.get(params.token);
     return { saved: params.token, label: params.label ?? null };
   });
@@ -37,8 +39,11 @@ it('keeps a secret param out of the log and out of what the run answers', async 
   });
 
   expect(result).toEqual({ saved: '[secret]', label: 'Jira' });
-  expect(await kit.log()).toContain('argo.settings.get [secret]');
-  expect(await kit.log()).not.toContain(token);
+  const log = await kit.log(dataPluginId);
+  expect(log).toContain('console.log x');
+  expect(log).toContain('console.warn {"token":"[secret]"}');
+  expect(log).toContain('argo.settings.get [secret]');
+  expect(log).not.toContain(token);
 }, 30_000);
 
 it('keeps a secret param a page’s run carries out of the log and what the App is answered', async () => {

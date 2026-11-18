@@ -3,6 +3,7 @@ import { expect, it } from 'vitest';
 import { valuesOf } from './render-tree';
 import type { Pressed } from './sign-in-card';
 import { signInScreen } from './sign-in-screen';
+import { combinedSteps } from './sign-in-screen-fixtures';
 
 const run = (operation: string): Pressed => ({ operation, args: {} });
 
@@ -81,6 +82,7 @@ const steps = {
     pastesToken: true,
     rejected: 'Jira no longer accepts this token.',
   }),
+  ...combinedSteps,
   tokenSignedIn: draw({
     flow: {
       kind: 'signed-in',

@@ -18,20 +18,26 @@ type Actions = { [Each in Action as Each['action']]: Each };
 
 type Name = keyof Actions;
 
+type Owner = { openPage: OpenPluginPage; pluginId?: string };
+
 type Runners = {
-  [Each in Name]: (
-    action: Actions[Each],
-    openPage: OpenPluginPage,
-  ) => Promise<void> | void;
+  [Each in Name]: (action: Actions[Each], owner: Owner) => Promise<void> | void;
 };
 
 // One runner per Action, so a new Action fails to compile until the App runs it.
 const runners: Runners = {
   toast: ({ message }) => showToast({ title: message, tone: 'success' }),
-  navigate: ({ path }, openPage) => openPage(path),
+  navigate: ({ path }, { openPage }) => openPage(path),
   newSession: ({ projectId, draft }) =>
     router.navigate(newSessionHref(projectId, draft, pageShown())),
   openSession: ({ sessionId }) => router.navigate(sessionHref(sessionId)),
+  openPluginSettings: (_action, { pluginId }) => {
+    if (pluginId)
+      router.navigate({
+        pathname: '/settings/plugins/[id]',
+        params: { id: pluginId },
+      });
+  },
   openAccount: ({ accountId }) =>
     router.navigate({
       pathname: '/settings/accounts/[id]',
@@ -53,15 +59,17 @@ const runners: Runners = {
 async function dispatch<Each extends Name>(
   name: Each,
   action: Actions[Each],
-  openPage: OpenPluginPage,
+  owner: Owner,
 ): Promise<void> {
-  await runners[name](action, openPage);
+  await runners[name](action, owner);
 }
 
 // The built-in Actions run here, in the App, with no round trip to the Server.
 export async function runAction(
   action: Action,
   openPage: OpenPluginPage,
+  pluginId?: string,
 ): Promise<void> {
-  if (mayRun(action)) await dispatch(action.action, action, openPage);
+  if (mayRun(action))
+    await dispatch(action.action, action, { openPage, pluginId });
 }

@@ -1,7 +1,7 @@
 import type {
   AgentOptionsUpdate,
   SessionAgentOptionsInput,
-  SlashCommand,
+  SessionConfigOption,
 } from '@repo/contracts';
 import type { Subscription } from 'xstate';
 import type { OpenSessions } from '../open-sessions';
@@ -14,25 +14,34 @@ type Input = SessionAgentOptionsInput & { sessionId: string };
 type Observation = {
   sessions: Pick<OpenSessions, 'session' | 'subscribe'>;
   input: Input;
-  // The Agent and Project list, which stands in until this Session's Agent reports its own.
-  savedCommands: () => SlashCommand[] | null;
+  // The Agent and Project's saved lists, with this Session's own choices; they stand in until its Agent reports its own.
+  saved: () => Pick<AgentOptionsUpdate, 'commands' | 'configOptions'>;
   observer: {
     update: (update: AgentOptionsUpdate) => void;
     done: () => void;
   };
 };
 
+// A Session's options start empty until its Agent session opens, so its saved ones stand in until then.
+const sessionOptions = (
+  { saved }: Observation,
+  context: SessionContext,
+): SessionConfigOption[] =>
+  context.configOptions.length
+    ? context.configOptions
+    : (saved().configOptions ?? []);
+
 const optionsUpdate = (
-  { input, savedCommands }: Observation,
+  observation: Observation,
   context: SessionContext,
 ): AgentOptionsUpdate => ({
-  agent: input.agent,
-  projectId: input.projectId,
+  agent: observation.input.agent,
+  projectId: observation.input.projectId,
   configOptions: withHeldConfiguration(
-    context.configOptions,
+    sessionOptions(observation, context),
     context.heldConfig,
   ),
-  commands: context.slashCommands ?? savedCommands(),
+  commands: context.slashCommands ?? observation.saved().commands,
   stage: 'ready',
 });
 

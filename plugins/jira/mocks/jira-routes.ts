@@ -68,19 +68,36 @@ const searchAnswer = (
     ? { json: pageOf({ issues: found.issues, projectKey }, pagingOf(body)) }
     : unparsed(found.clause);
 
-// Jira's enhanced search, for the `project = "KEY"` its JQL names and the filters after it.
-function search({ site, body, who }: JiraCall): FixtureAnswer {
+type SearchReply = (
+  found: Filtered,
+  frame: { body: Json | undefined; projectKey: string },
+) => FixtureAnswer;
+
+function searchWith(
+  { site, body, who }: JiraCall,
+  reply: SearchReply,
+): FixtureAnswer {
   const jql = text(at(body, 'jql')) ?? '';
   const key = projectKeyOf(jql);
   const project = projectIn(site, key);
 
   return project
-    ? searchAnswer(filtered(jql, project.issues, who), {
+    ? reply(filtered(jql, project.issues, who), {
         body,
         projectKey: key,
       })
     : noSuchProject(key);
 }
+
+const search = (call: JiraCall): FixtureAnswer =>
+  searchWith(call, searchAnswer);
+
+const count = (call: JiraCall): FixtureAnswer =>
+  searchWith(call, (found) =>
+    found.ok
+      ? { json: { count: found.issues.length } }
+      : unparsed(found.clause),
+  );
 
 const projectParam = ({ path }: FixtureRequest): string =>
   new URL(path, 'https://jira.test').searchParams.get('project') ?? '';
@@ -133,6 +150,12 @@ export const jiraRoutes: JiraRoute[] = [
     answer: projects,
   },
   { name: 'search', method: 'POST', path: /^\/search\/jql$/, answer: search },
+  {
+    name: 'approximate-count',
+    method: 'POST',
+    path: /^\/search\/approximate-count$/,
+    answer: count,
+  },
   {
     name: 'people',
     method: 'GET',

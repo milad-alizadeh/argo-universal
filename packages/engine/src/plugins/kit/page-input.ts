@@ -106,5 +106,16 @@ const loadMore: LoadMore = { loadMore: true };
 export const renderedList = <Item>({
   items,
   hasMore,
-}: Paged<Item>): RenderedList<Item> =>
-  Object.freeze({ items, hasMore, loadMore });
+  failed,
+}: Paged<Item>): RenderedList<Item> => {
+  const onLoadMore: LoadMore =
+    failed === undefined ? loadMore : { loadMore: true, retry: true };
+
+  const pagination = Object.freeze({
+    hasMore,
+    onLoadMore,
+    ...(failed !== undefined && { failed }),
+  });
+
+  return Object.freeze({ items, hasMore, loadMore: onLoadMore, pagination });
+};

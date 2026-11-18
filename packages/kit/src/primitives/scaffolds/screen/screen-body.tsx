@@ -1,3 +1,4 @@
+import { screenDefaults } from '@repo/contracts/kit-tokens';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,7 +23,9 @@ export function ScreenBody(props: ScreenHeaderInput): ReactElement {
 
   if (parts.length < 2) return <BodyPart {...props} />;
 
-  return <View className="min-h-0 flex-1">{screenParts(props, parts)}</View>;
+  return (
+    <View className="min-h-0 flex-1 gap-2">{screenParts(props, parts)}</View>
+  );
 }
 
 const screenParts = (
@@ -33,6 +36,7 @@ const screenParts = (
     <BodyPart
       key={partKey(part, index)}
       {...props}
+      first={index === 0}
       last={index === parts.length - 1}
     >
       {part}
@@ -42,7 +46,7 @@ const screenParts = (
 const partKey = (part: ReactNode, index: number): string =>
   isValidElement(part) && part.key !== null ? part.key : String(index);
 
-type PartProps = ScreenHeaderInput & { last?: boolean };
+type PartProps = ScreenHeaderInput & { first?: boolean; last?: boolean };
 
 /*
  * The content keeps to the heading's column. A scroll view that fills the body claims the column and keeps to it
@@ -50,10 +54,14 @@ type PartProps = ScreenHeaderInput & { last?: boolean };
  * the body is then the whole pane. Anything else the body holds in the column itself.
  */
 function BodyPart(props: PartProps): ReactElement {
-  const column = useScreenColumn(props.width);
+  const width = props.width ?? screenDefaults.width;
+  const column = useScreenColumn(width);
 
   return (
-    <ColumnPart column={column}>
+    <ColumnPart
+      column={column}
+      stack={width === 'content' ? 'root' : undefined}
+    >
       {(layout) => <PartView {...props} column={column} layout={layout} />}
     </ColumnPart>
   );
@@ -103,11 +111,13 @@ const claimedClass = (props: PartProps, filled: boolean): string =>
 function unclaimedClass(props: PartProps): string {
   if (props.width === 'bleed') return 'min-h-0 w-full flex-1';
 
-  if (props.last === undefined)
-    return cn('min-h-0 flex-1 w-full self-center', screenContentEnds);
-
-  return 'w-full self-center pt-2 wide:pt-0';
+  return props.last === undefined
+    ? cn('min-h-0 flex-1 w-full self-center', screenContentEnds)
+    : cn('w-full self-center', firstPartInset(props.first));
 }
+
+const firstPartInset = (first?: boolean): string | undefined =>
+  first ? 'pt-2 wide:pt-0' : undefined;
 
 const fabClearance = (props: PartProps, wide: boolean): string | false =>
   !wide && hasFab(props) && 'android:pb-safe-offset-22';

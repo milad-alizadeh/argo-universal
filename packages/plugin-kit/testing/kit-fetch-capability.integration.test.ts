@@ -1,3 +1,5 @@
+import { lookup } from 'node:dns';
+import { request } from 'node:https';
 import type { OpenPage } from '@argo/plugin-kit/testing';
 import type { PluginCapability } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
@@ -67,4 +69,68 @@ it('refuses a page fetching a host its manifest does not declare', async () => {
     `Refused: localhost:${port} is not a declared host. Add { "kind": "fetch", "host": "localhost:${port}" } to capabilities in plugin.json.`,
   );
   expect(requested).toEqual([]);
+});
+
+it('fetches only one label under the declared suffix on the default port', async () => {
+  const { port, requested } = await recordingServer();
+
+  const fixture = await dataFixture(
+    `export async function register(argo) {
+      async function fetchHost(host) {
+        return argo.fetch('https://' + host + '/posts').then(
+          (reply) => reply.text(), (error) => error.message,
+        );
+      }
+      argo.operations.register('checkHosts', async () => ({
+        allowed: await fetchHost('team.atlassian.net'),
+        bare: await fetchHost('atlassian.net'),
+        wildcard: await fetchHost('*.atlassian.net'),
+        deep: await fetchHost('nested.team.atlassian.net'),
+        unrelated: await fetchHost('atlassian.net.evil.example'),
+        port: await fetchHost('team.atlassian.net:8443'),
+        privateAddress: await fetchHost('private.atlassian.net'),
+      }));
+    }`,
+    {
+      operations: [
+        {
+          name: 'checkHosts',
+          label: 'Check hosts',
+          description: 'Fetch the fixture hosts.',
+          tier: 'read',
+          params: {},
+        },
+      ],
+    },
+    [{ kind: 'fetch', host: '*.atlassian.net' }],
+  );
+
+  const network = await fixtureNetwork();
+
+  const kit = await fixture.start({
+    network: {
+      ...network,
+      lookup: (_hostname, options, callback) =>
+        lookup('127.0.0.1', options, callback),
+      request: (url, options) =>
+        request(
+          url.hostname === 'team.atlassian.net'
+            ? new URL(`https://127.0.0.1:${port}${url.pathname}`)
+            : url,
+          { ...options, servername: 'localhost' },
+        ),
+    },
+  });
+
+  const refusedHost = expect.stringContaining('is not a declared host');
+  await expect(kit.operations.run({ name: 'checkHosts' })).resolves.toEqual({
+    allowed: 'posts',
+    bare: refusedHost,
+    wildcard: refusedHost,
+    deep: refusedHost,
+    unrelated: refusedHost,
+    port: refusedHost,
+    privateAddress: expect.stringContaining('resolves to private address'),
+  });
+  expect(requested).toEqual(['/posts']);
 });

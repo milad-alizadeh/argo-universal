@@ -77,7 +77,7 @@ class AgentOptionsReader {
     this.unsubscribe = observeLiveAgentOptions({
       sessions: this.sources.open,
       input: { ...this.input, sessionId },
-      savedCommands: () => savedAgentOptions(this.sources, this.input).commands,
+      saved: () => savedAgentOptions(this.sources, this.input),
       observer: {
         update: (update) => this.publish({ update }),
         done: () => this.events.emit('done'),

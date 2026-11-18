@@ -8,7 +8,7 @@ import {
   scrollToOldestHistoryMessage,
 } from './feed-history-scroll';
 import { Given, When, Then } from './fixtures';
-import { reloadApp } from './frame';
+import { serveOnePage } from './frame';
 import { query } from './server-query';
 import { agentWork } from './timeouts';
 
@@ -85,13 +85,9 @@ When('I reopen the stored long Feed', async ({ page, server }) => {
     .poll(() => historyIsStored(page, server.httpUrl), agentWork)
     .toBe(true);
   const sessionUrl = page.url();
-  await reloadApp(page);
-  await expect(page).toHaveURL(/\/sessions$/);
-  // The bootstrap list can appear before its replacement Screen mounts this control.
-  await expect(
-    page.getByRole('button', { name: 'New Session', exact: true }),
-  ).toBeVisible();
-  await page.getByRole('button', { name: /^Build a long history,/ }).click();
+
+  await serveOnePage(page);
+  await page.goto(sessionUrl);
   await expect(page).toHaveURL(sessionUrl);
 });
 

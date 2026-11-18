@@ -7,10 +7,8 @@ import {
   type HostEvent,
   type HostDelivery,
   type HostWaiting,
-  type WorkerCall,
   type HostCommand,
 } from '../protocol/runtime.ts';
-import type { TestReply } from '../protocol/test-control.ts';
 import { KitStarts, workerSources, type WorkerSources } from './kit-starts.ts';
 import { stopWorker, type WorkerRecord } from './start-worker.ts';
 import { workerDeadline, type WorkerPhase } from './worker-deadline.ts';
@@ -106,9 +104,10 @@ export class HostWorkers {
   private call(
     pluginId: string,
     record: WorkerRecord,
-    call: WorkerCall | TestReply,
+    call: Exclude<WorkerMessage, string>,
   ): void {
-    if (record.heartbeat === null) this.arm(pluginId, record);
+    if (call.type !== 'console' && record.heartbeat === null)
+      this.arm(pluginId, record);
 
     this.report({ ...call, pluginId, generation: record.generation });
   }

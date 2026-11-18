@@ -2,18 +2,46 @@ import { parentPort, workerData } from 'node:worker_threads';
 import { z } from 'zod';
 import { CallScope, originOf } from '../protocol/call-origin.ts';
 import {
+  consoleMessageLimitBytes,
   PluginEntry,
   WorkerCommand,
-  type WorkerCall,
+  type WorkerMessage,
 } from '../protocol/runtime.ts';
-import type { TestReply } from '../protocol/test-control.ts';
 import { registerPlugin, type PluginInboxes } from './modules.ts';
 import { createPluginBridge, WorkerCalls } from './plugin-bridge.ts';
+import type { ConsoleWriter } from './realm.ts';
 import { answerTest, PluginTestClock } from './test-clock.ts';
 
-const post = (
-  message: WorkerCall | TestReply | 'bootstrap-ready' | 'pong' | 'ready',
-): void => parentPort?.postMessage(message);
+const post = (message: WorkerMessage): void => parentPort?.postMessage(message);
+
+// One worker runs one Plugin. Its clock is independent of the realm clock.
+const consoleWindowMs = 1000;
+
+const consoleMessagesPerWindow = 20;
+
+let consoleWindow = -Infinity;
+
+let consoleCount = 0;
+
+function withinConsoleRate(): boolean {
+  const now = performance.now();
+
+  if (now - consoleWindow >= consoleWindowMs) {
+    consoleWindow = now;
+    consoleCount = 0;
+  }
+
+  return consoleCount++ < consoleMessagesPerWindow;
+}
+
+const writeConsole: ConsoleWriter = (level, text) => {
+  // Drop oversized messages whole so a partial secret never reaches redaction.
+  if (
+    Buffer.byteLength(text) <= consoleMessageLimitBytes &&
+    withinConsoleRate()
+  )
+    post({ type: 'console', level, text });
+};
 
 const calls = new WorkerCalls(post);
 
@@ -75,6 +103,7 @@ inboxes = await registerPlugin(entry, bridge, {
   kit,
   initialized: () => post('bootstrap-ready'),
   clock,
+  writeConsole,
 });
 
 post('ready');

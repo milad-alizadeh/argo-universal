@@ -135,7 +135,8 @@ async function runInApp(
 ): Promise<void> {
   if (!handler) return;
 
-  if ('action' in handler) return runAction(handler, input.context.openPage);
+  if ('action' in handler)
+    return runAction(handler, input.context.openPage, input.context.pluginId);
 
   const checked = componentEventPayload(schema, sent(schema, payload));
   const from = { key: input.context.key, name, schema, payload: checked };

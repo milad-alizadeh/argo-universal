@@ -1,4 +1,8 @@
-import { isSpecialHost, type FetchCapability } from '@repo/contracts/plugins';
+import {
+  isSpecialHost,
+  matchesSubdomain,
+  type FetchCapability,
+} from '@repo/contracts/plugins';
 import { CapabilityRefusal } from './capability-refusal';
 
 // A fetch hop the Capabilities allow; `private` is true only for a raw address or `localhost` declared with a reason.
@@ -13,7 +17,12 @@ export const exactHost = ({ host, reason }: FetchCapability): HostRule => ({
 });
 
 export function anyHost(capabilities: FetchCapability[], url: URL): HostRule {
-  if (capabilities.some(({ host }) => host === '*')) return { private: false };
+  if (
+    capabilities.some(
+      ({ host }) => host === '*' || matchesSubdomain(host, url.host),
+    )
+  )
+    return { private: false };
 
   throw new CapabilityRefusal(
     `${url.host} is not a declared host. Add { "kind": "fetch", "host": "${url.host}" } to capabilities in plugin.json.`,

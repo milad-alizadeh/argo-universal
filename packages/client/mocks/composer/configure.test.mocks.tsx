@@ -1,3 +1,4 @@
+import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { wideBreakpoint } from '@repo/kit/mocks/story-layout';
 import { expect, waitFor, within } from 'storybook/test';
 import { configurationLabel } from '../../src/features/composer/components/composer-configuration/configuration-values';
@@ -10,6 +11,14 @@ import {
 export type PickerStep = Pick<PlayContext, 'canvas' | 'userEvent'> & {
   width: number;
 };
+
+async function clickSettled(
+  userEvent: PickerStep['userEvent'],
+  target: HTMLElement,
+): Promise<void> {
+  await settleOverlays(target);
+  await userEvent.click(target);
+}
 
 // Drives the Configure control the way a reader does, on a phone's sheet and on a desktop's popover alike.
 export interface Configure {
@@ -52,7 +61,8 @@ export function configure(
     },
     async chooseModel(name) {
       if (!modelsOpen())
-        await userEvent.click(
+        await clickSettled(
+          userEvent,
           await overlay.findByRole('button', { name: chooseModelLabel }),
         );
 
@@ -60,7 +70,7 @@ export function configure(
         name: configurationLabel(name),
       });
 
-      await userEvent.click(choice);
+      await clickSettled(userEvent, choice);
       // A phone's next pick waits until the old choice has gone, or its click lands mid-slide.
       await (wide
         ? expect(choice).toHaveAttribute('aria-checked', 'true')

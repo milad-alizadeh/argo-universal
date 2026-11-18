@@ -98,6 +98,8 @@ const pluginApi: Argo = frozen({
   }),
   oauth: frozen({
     start: () => call({ api: 'oauth', call: { action: 'start' } }),
+    cancel: (state) =>
+      call({ api: 'oauth', call: { action: 'cancel', state } }),
     await: (state, url) =>
       call({ api: 'oauth', call: { action: 'await', state, url } }),
   }),

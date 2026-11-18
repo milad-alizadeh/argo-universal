@@ -62,7 +62,7 @@ export const listsComponents = {
     },
   ),
   ListItem: defineKitComponent(
-    'A slotted row or media tile, arranged by its List, with selection, a corner badge and context Actions. Child ListItems nest under it and fold on desktop.',
+    'A slotted row or media tile, arranged by its List, with selection, a corner badge and context Actions. Child ListItems nest under it and fold on desktop. Its meta slot accepts Label, Pill, Avatar.',
     listItemProps,
     {
       group: 'lists',
@@ -73,7 +73,7 @@ export const listsComponents = {
         media: listMediaComponents,
         leading: ['Icon', 'Avatar', 'Image', 'Text', 'Label', 'Svg'],
         trailing: ['Text', 'Label', 'Pill', 'Button'],
-        meta: ['Label', 'Pill'],
+        meta: ['Label', 'Pill', 'Avatar'],
       },
       events: { onPress: rowPress },
       label:

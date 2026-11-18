@@ -20,7 +20,7 @@ A page is \`{ state, load, render }\`. \`load\` reads and may be slow. \`render\
 
 | You need | Use | Copy |
 | --- | --- | --- |
-| A list | \`Screen\` holding a \`List\` of \`ListItem\`; many rows: a \`list\` loader and \`pagination\` | \`plugins/issue-tracker/filter-rows.tsx\` |
+| A list | \`Screen\` holding a \`List\` of \`ListItem\`; draw tracker rows with \`issueRow\` from \`@argo/plugin-kit\`; many rows: a \`list\` loader and \`pagination\` | \`plugins/issue-tracker/filter-rows.tsx\` |
 | One thing in full | \`Screen\` holding a \`Detail\`; its properties in the Screen's \`aside\` | \`plugins/issue-tracker/issue-detail.tsx\` |
 | Cards a person moves between columns | \`Screen width="bleed"\` holding a \`Board\` of \`Board.Column\` and \`Board.Card\`, each card's \`movesTo\` naming where it may go; \`onMove\` fills an Operation call | \`docs/plugins/authoring.md\`, "Boards" |
 | A canvas, a chat | \`Screen width="bleed"\`, \`footer\` for an input | \`docs/plugins/authoring.md\`, "Page frames" |

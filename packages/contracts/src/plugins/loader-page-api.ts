@@ -84,13 +84,20 @@ export type LoaderInput<State extends PageState> = PageInput<State> &
     ) => Promise<QueryResult<Query>>;
   }>;
 
-export type ListPage<Item> = { items: Item[]; cursor: string | null };
+export type ListPage<Item> =
+  | { items: Item[]; cursor: string | null }
+  | { items: []; failed: string };
 
-// The paged list's items so far; `loadMore` goes in the List's `pagination` and the App appends the next page.
+// The paged list's items so far, and the pagination props that load the next page or retry a failed page.
 export type PagedList<Item> = Readonly<{
   items: readonly Item[];
   hasMore: boolean;
   loadMore: LoadMore;
+  pagination: Readonly<{
+    hasMore: boolean;
+    onLoadMore: LoadMore;
+    failed?: string;
+  }>;
 }>;
 
 // The Render reads nothing: it is pure, so it gets what the draw is for and the pages the Loader's `list` read.

@@ -84,7 +84,7 @@ export type StartOptions = Pick<
 >;
 
 export async function start(
-  plugin: 'device' | 'redirect' | 'confidential',
+  plugin: 'device' | 'redirect' | 'confidential' | 'combined',
   options: StartOptions,
 ): Promise<PluginTest> {
   const test = await startPluginTest({

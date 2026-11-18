@@ -1,4 +1,5 @@
 import type { PageAddress } from '@repo/contracts/plugins/page-address';
+import type { DrawOptions } from '@repo/contracts/plugins/page-calls';
 import type {
   DrawAnswer,
   DrawRequest,
@@ -17,12 +18,10 @@ import { treeKey } from './page-keys';
 // The one call the cache makes: a draw of an address, naming what it keeps. tRPC in the App, a function in tests.
 export type DrawPage = (request: DrawRequest) => Promise<DrawAnswer>;
 
-export type HowDrawn = { pages?: number; pull?: true };
-
 const requestOf = (
   address: PageAddress,
   kept: Kept | undefined,
-  how: HowDrawn,
+  how: DrawOptions,
 ): DrawRequest => ({
   ...address,
   known: kept?.hash,
@@ -56,7 +55,7 @@ export class TreeDraws {
    * A load more or a pull: drawn outside the query's own fetch, so the cache tracks it. A mark that arrives
    * while it draws marks the tree again when it lands, and an optimistic patch made meanwhile is not painted over.
    */
-  public async pages(address: PageAddress, how: HowDrawn): Promise<void> {
+  public async pages(address: PageAddress, how: DrawOptions): Promise<void> {
     const queryKey = treeKey(address);
     const key = hashKey(queryKey);
 
@@ -76,7 +75,7 @@ export class TreeDraws {
   }
 
   // The tree drawn, unless an optimistic patch or other pages landed meanwhile.
-  private async paint(address: PageAddress, how: HowDrawn): Promise<void> {
+  private async paint(address: PageAddress, how: DrawOptions): Promise<void> {
     const queryKey = treeKey(address);
     const key = hashKey(queryKey);
     const epoch = this.tracking.epochOf(key);
@@ -91,7 +90,7 @@ export class TreeDraws {
   // The address drawn again, showing `pages` pages, or as many as it shows now; a pull reads the first page again.
   private async redraw(
     address: PageAddress,
-    how: HowDrawn = {},
+    how: DrawOptions = {},
   ): Promise<KeptPage> {
     const before = this.client.getQueryData<KeptPage>(treeKey(address));
     const answer = await this.draw(requestOf(address, keptOf(before), how));
