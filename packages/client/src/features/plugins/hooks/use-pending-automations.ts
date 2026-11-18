@@ -18,14 +18,14 @@ import type {
  * How long an answered tick stands over the rows whatever they say. Two quick ticks on one automation are read back
  * one after the other, and without this the first one's refresh showed for a moment under the second.
  */
-export const settleTick = 3000;
+const settleTick = 3000;
 
 /*
  * How long an answered tick waits, at most, for the Plugin's row to carry it. A row that lands sooner takes the tick
  * over unseen; past this the reader is shown what the Plugin really has rather than a tick it did not keep. Three
  * seconds let a slow refresh flick the tick back and on again.
  */
-export const dropTick = 15_000;
+const dropTick = 15_000;
 
 export interface PendingAutomationRows {
   // The rows with each held tick shown on them.
