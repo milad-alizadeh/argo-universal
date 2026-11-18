@@ -263,6 +263,7 @@ function reachesImageNotDrawn(width: number): Story {
 
       await waitFor(async () => {
         await expect(scrolledToEnd(scroll)).toBe(true);
+
         const restoredOpener = canvas.getByRole(
           'button',
           thumbnail(answerImage),
