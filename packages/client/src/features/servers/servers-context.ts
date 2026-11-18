@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { KnownServer } from '#features/connection';
 import type { AppServer } from './app-server';
+import { showsServer } from './servers-store';
 
 export interface AppServers {
   servers: readonly AppServer[];
@@ -20,3 +21,6 @@ export function useAppServers(): AppServers {
 
   return servers;
 }
+
+// False while the App holds no Server it can show, as on a phone that has not paired yet: it shows only Pairing.
+export const useShowsServer = (): boolean => showsServer(useAppServers());

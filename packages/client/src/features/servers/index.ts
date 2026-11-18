@@ -17,10 +17,15 @@ export { type ServerStates } from './server-states-store';
 
 export { useAppServerStates } from './server-states';
 
-export { ServersContext, useAppServers } from './servers-context';
+export {
+  ServersContext,
+  useAppServers,
+  useShowsServer,
+} from './servers-context';
 
 export {
   createServersStore,
+  showsServer,
   type ServersSnapshot,
   type ServersStore,
 } from './servers-store';

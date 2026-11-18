@@ -86,7 +86,9 @@ function useAddServer(): (server: KnownServer) => void {
 
   return (server) => {
     add(server);
-    router.dismissAll();
+
+    // On a phone that held no Server, Pairing is the only page and holding one opens the App, so there is nothing to empty.
+    if (router.canDismiss()) router.dismissAll();
     router.navigate('/');
   };
 }

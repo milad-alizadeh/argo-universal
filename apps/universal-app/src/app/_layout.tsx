@@ -7,6 +7,7 @@ import {
   Toaster,
   useConnection,
   useRestoredThemeChoice,
+  useShowsServer,
 } from '@repo/client';
 import '../../global.css';
 import { registerDevMenuItems } from 'expo-dev-client';
@@ -57,11 +58,14 @@ declare global {
   }
 }
 
-// Electron's preload gives the Server URL; elsewhere it comes from the environment.
+/*
+ * The Server on this Device. Electron's preload gives its URL, and the web App is served beside it. A phone or tablet
+ * runs none and pairs with one instead, unless a dev build points it at a Server with EXPO_PUBLIC_ARGO_SERVER_URL.
+ */
 const serverUrl =
   globalThis.window?.argo?.serverUrl ??
   process.env.EXPO_PUBLIC_ARGO_SERVER_URL ??
-  'ws://127.0.0.1:7337';
+  (Platform.OS === 'web' ? 'ws://127.0.0.1:7337' : undefined);
 
 const renderSymbolImage = globalThis.window?.argo?.symbols?.render;
 
@@ -87,7 +91,7 @@ function RestoredApp(): React.JSX.Element | null {
 
   return (
     <AppProviders serverUrl={serverUrl}>
-      <ForegroundSignal />
+      <ShownServerSignal />
       <ThemedApp />
     </AppProviders>
   );
@@ -130,12 +134,30 @@ function RootStack(): React.JSX.Element {
       screenOptions={{ headerShown: false, headerTintColor }}
       screenLayout={rootScreenLayout}
     >
-      <Stack.Screen name="(frame)" />
-      <Stack.Screen {...pushedScreen} />
-      <Stack.Screen name="open/[...link]" />
+      {guardedScreens(useShowsServer())}
       <Stack.Screen {...storybookScreen} />
     </Stack>
   );
+}
+
+/*
+ * A phone or tablet that holds no Server can reach only Pairing, and pairing one opens the App on it; unpairing the
+ * last one brings Pairing back (#2388). The desktop and web Apps always hold their own Server.
+ */
+const guardedScreens = (showsServer: boolean): React.JSX.Element[] => [
+  <Stack.Protected key="app" guard={showsServer}>
+    <Stack.Screen name="(frame)" />
+    <Stack.Screen {...pushedScreen} />
+    <Stack.Screen name="open/[...link]" />
+  </Stack.Protected>,
+  <Stack.Protected key="pair" guard={!showsServer}>
+    <Stack.Screen name="pair" />
+  </Stack.Protected>,
+];
+
+// Only a Server the App shows has a Connection to wake; a phone that holds none has nothing to signal.
+function ShownServerSignal(): React.JSX.Element | null {
+  return useShowsServer() ? <ForegroundSignal /> : null;
 }
 
 // Coming to the foreground lets a waiting reconnect attempt go at once.
