@@ -1,6 +1,6 @@
 import { cn } from '@repo/kit/utils';
 import type { ReactElement } from 'react';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
 import { ScrollFadeView } from '#lib/product/scroll-fade/scroll-fade';
 import type { ElicitationActionsProps } from './elicitation-actions';
@@ -29,7 +29,7 @@ type ViewProps = { view: ElicitationView };
 export const cancel = (view: ElicitationView): void =>
   view.props.onAnswer({ action: 'cancel' });
 
-// The header, then the rows, which inset themselves; only the header pads on a phone. In the Composer's tray the rows scroll under the written plan's cap, between the header and the actions.
+// The header, then the rows, which inset themselves; only the header pads on a phone. In the Composer's tray the rows scroll only once they pass the tray's cap, between the header and the actions.
 export function ElicitationBody({
   view,
   fill = false,
@@ -54,14 +54,26 @@ function BodyRows({
   rows: ReactElement;
   scroll?: boolean;
 }): ReactElement {
+  const maxHeight = useRowsCap();
+
   if (!scroll) return rows;
 
   return (
-    <ScrollFadeView fitContent testID="elicitation-rows" className="max-h-70">
+    <ScrollFadeView fitContent testID="elicitation-rows" style={{ maxHeight }}>
       {rows}
     </ScrollFadeView>
   );
 }
+
+// The written plan's cap, which the rows never go under.
+const smallestCap = 280;
+
+/*
+ * One question and its answers are a page, so they show whole: the rows take up to half the window before they
+ * scroll, which leaves the Feed above and the Composer below in view.
+ */
+const useRowsCap = (): number =>
+  Math.max(smallestCap, Math.round(useWindowDimensions().height / 2));
 
 function bodyClassName(wide: boolean, fill: boolean): string {
   return cn('gap-3 pt-1 ios:pt-9', wide && 'px-3 pt-3', fill && 'flex-1');

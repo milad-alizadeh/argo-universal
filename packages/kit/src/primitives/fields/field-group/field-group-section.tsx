@@ -7,6 +7,7 @@ import { expandInlinePickers } from '#primitives/fields/field-picker';
 import type { FieldGroupKitProps } from '../../kit-props';
 import { MenuSection } from './field-group-menu';
 import { sectionRows } from './field-group-rows';
+import { markedSection } from './field-group-section-mark';
 
 export type FieldGroupSectionProps =
   FieldGroupKitProps<'FieldGroup.Section'> & {
@@ -37,6 +38,8 @@ export function FieldGroupSection(props: FieldGroupSectionProps): ReactElement {
 
   return inMenu ? <MenuSection {...props} /> : sectionElement(props);
 }
+
+markedSection(FieldGroupSection);
 
 export function sectionElement(props: FieldGroupSectionProps): ReactElement {
   return (

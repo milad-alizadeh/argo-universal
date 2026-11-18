@@ -3,6 +3,7 @@ import { fillMaxWidth, height } from '@expo/ui/jetpack-compose/modifiers';
 import { isValidElement, type ReactNode } from 'react';
 import { flattenedChildren } from '#kit/flattened-children';
 import { sectionBreakHeight } from './field-group-caption-insets';
+import { isFieldGroupSection as isSection } from './field-group-section-mark';
 import { FieldGroupSection } from './field-group-section.android';
 
 const breakModifiers = [fillMaxWidth(), height(sectionBreakHeight)];
@@ -24,9 +25,6 @@ const groupSections = (children: ReactNode): ReactNode[] =>
   flattenedChildren(children)
     .reduce<ReactNode[][]>(addChild, [])
     .map(toSection);
-
-const isSection = (child: ReactNode): boolean =>
-  isValidElement(child) && child.type === FieldGroupSection;
 
 const startsRun = (child: ReactNode, last: ReactNode[] | undefined): boolean =>
   isSection(child) || last === undefined || isSection(last[0]);
