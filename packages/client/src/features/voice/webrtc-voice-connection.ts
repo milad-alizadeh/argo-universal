@@ -1,8 +1,19 @@
-import type { VoiceConnection } from './voice-connection';
+import type { VoiceConnection, VoiceLevels } from './voice-connection';
 
 // The microphone as the connection uses it: something to let go of. The browser's own carries the sound.
 export interface Microphone {
   stop: () => void;
+  setMuted: (muted: boolean) => void;
+  // How loud it is now, from 0 to 1.
+  level: () => number;
+}
+
+// The voice as it plays: something to silence and to let go of.
+export interface VoicePlayback {
+  stop: () => void;
+  // 0 is silent and 1 is full.
+  setVolume: (volume: number) => void;
+  level: () => number;
 }
 
 // A peer connection reduced to what a call needs.
@@ -19,8 +30,7 @@ export interface VoicePeer {
 export interface VoiceEnvironment {
   openMicrophone: () => Promise<Microphone>;
   createPeer: () => VoicePeer;
-  // Plays the voice; returns the function that stops it.
-  playVoice: (stream: MediaStream) => () => void;
+  playVoice: (stream: MediaStream) => VoicePlayback;
 }
 
 // The microphone was refused or is missing; the call cannot start.
@@ -30,17 +40,37 @@ export class MicrophoneUnavailable extends Error {
   }
 }
 
+const noLevels: VoiceLevels = { input: 0, output: 0 };
+
 // What one call holds until it is released: the microphone, the peer and the voice's playback.
 class HeldCall {
-  public stopPlaying: (() => void) | undefined;
+  public playback: VoicePlayback | undefined;
+  public speakerMuted = false;
 
   public constructor(
     public readonly microphone: Microphone,
     public readonly peer: VoicePeer,
   ) {}
 
+  public play(playback: VoicePlayback): void {
+    this.playback = playback;
+    this.setSpeakerMuted(this.speakerMuted);
+  }
+
+  public setSpeakerMuted(muted: boolean): void {
+    this.speakerMuted = muted;
+    this.playback?.setVolume(muted ? 0 : 1);
+  }
+
+  public levels(): VoiceLevels {
+    return {
+      input: this.microphone.level(),
+      output: this.playback?.level() ?? 0,
+    };
+  }
+
   public release(): void {
-    this.stopPlaying?.();
+    this.playback?.stop();
     this.microphone.stop();
     this.peer.close();
   }
@@ -65,15 +95,25 @@ class WebRtcVoiceConnection implements VoiceConnection {
     const held = new HeldCall(microphone, this.environment.createPeer());
     this.held = held;
 
-    held.peer.onVoice((voice) => {
-      held.stopPlaying = this.environment.playVoice(voice);
-    });
+    held.peer.onVoice((voice) => held.play(this.environment.playVoice(voice)));
 
     return held.peer.offer(microphone);
   }
 
   public async accept(answer: string): Promise<void> {
     await this.held?.peer.accept(answer);
+  }
+
+  public setMicrophoneMuted(muted: boolean): void {
+    this.held?.microphone.setMuted(muted);
+  }
+
+  public setSpeakerMuted(muted: boolean): void {
+    this.held?.setSpeakerMuted(muted);
+  }
+
+  public levels(): VoiceLevels {
+    return this.held?.levels() ?? noLevels;
   }
 
   public close(): void {
