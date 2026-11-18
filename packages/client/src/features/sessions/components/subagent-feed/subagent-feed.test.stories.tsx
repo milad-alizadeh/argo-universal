@@ -70,7 +70,7 @@ export const Running: Story = {
       await expect(canvas.getAllByText(incomingMessage)[0]).toBeVisible();
       await expect(canvas.getByText(childOutput)).toBeVisible();
       await expect(canvas.getByRole('status', liveRow)).toBeVisible();
-      await metaLine(canvas, wide, 'Running · 34s');
+      await metaLine(canvas, wide, 'Running · Sonnet 4.5 · 34s');
       await expectMetrics(canvas, runningUsage);
     }),
 };
@@ -81,7 +81,7 @@ export const Finished: Story = {
     eachLayout(async (wide) => {
       await expect(canvas.getAllByText(incomingMessage)[0]).toBeVisible();
       await expect(canvas.queryByRole('status', liveRow)).toBeNull();
-      await metaLine(canvas, wide, 'Finished · 1m 41s');
+      await metaLine(canvas, wide, 'Finished · Sonnet 4.5 · 1m 41s');
       await expectMetrics(canvas, '12.9k tokens');
     }),
 };
@@ -91,7 +91,7 @@ export const Cancelled: Story = {
   args: { subagent: cancelledSubagent, feed: finishedFeed },
   play: async ({ canvas }) =>
     eachLayout(async (wide) => {
-      await metaLine(canvas, wide, 'Cancelled · 34s');
+      await metaLine(canvas, wide, 'Cancelled · Sonnet 4.5 · 34s');
       await expectMetrics(canvas, runningUsage);
     }),
 };
@@ -132,7 +132,7 @@ export const Loading: Story = {
       await expect(canvas.queryByRole('heading', { name: /build/ })).toBeNull();
       await expect(canvas.queryByText(incomingMessage)).toBeNull();
       await expect(canvas.queryByTestId('feed-scroll')).toBeNull();
-      await metaLine(canvas, wide, 'Finished · 1m 41s');
+      await metaLine(canvas, wide, 'Finished · Sonnet 4.5 · 1m 41s');
       await expectMetrics(canvas, '12.9k tokens');
     }),
 };
@@ -167,7 +167,7 @@ export const InTheInspector: Story = {
   play: async ({ canvas }) => {
     await settleLayout('wide');
     await expect(canvas.getByRole('heading', subagentHeading)).toBeVisible();
-    await expect(canvas.getByText('Running · 34s')).toBeVisible();
+    await expect(canvas.getByText('Running · Sonnet 4.5 · 34s')).toBeVisible();
     await expect(canvas.getAllByText(incomingMessage)[0]).toBeVisible();
 
     await expectInspectorInset(canvas);

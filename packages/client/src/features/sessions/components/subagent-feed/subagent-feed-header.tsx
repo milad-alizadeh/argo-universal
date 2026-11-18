@@ -64,8 +64,8 @@ export function SubagentFeedHeader({
   return (
     <SessionColumn className="h-frame-control shrink-0 flex-row items-center gap-1.5">
       <BackButton onBack={onBack} />
-      <Title title={subagent.title} />
       <Meta subagent={subagent} now={now} />
+      <Title title={subagent.title} />
     </SessionColumn>
   );
 }
