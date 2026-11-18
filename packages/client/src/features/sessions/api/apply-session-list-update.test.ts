@@ -17,6 +17,11 @@ const keyFor = (input: SessionListInput): unknown[] => [
 
 const listKey = keyFor({});
 
+const rowKey = [
+  ['session', 'list'],
+  { input: { sessionId: 'a', archived: false }, type: 'query' },
+];
+
 const session = (
   sessionId: string,
   createdAt: number,
@@ -53,6 +58,52 @@ const shown = (client: QueryClient): SessionInfo[] =>
   ).flatMap((page): SessionInfo[] => page.sessions);
 
 describe('applying a live update to the loaded Sessions list', () => {
+  it('updates an Issue Session row alongside the paginated list without changing either cache shape', () => {
+    const client = listWith([session('a', 1)], null);
+    client.setQueryData(rowKey, {
+      sessions: [session('a', 1)],
+      nextCursor: null,
+    });
+    const changed = session('a', 1, { activity: 'Reading' });
+
+    expect(
+      applySessionListUpdate(client, list, {
+        type: 'changed',
+        session: changed,
+      }),
+    ).toBe(false);
+    expect(client.getQueryData(rowKey)).toEqual({
+      sessions: [changed],
+      nextCursor: null,
+    });
+    expect(shown(client)).toEqual([changed]);
+  });
+
+  it.each([
+    { rows: [], changed: session('a', 1), asks: true },
+    {
+      rows: [session('a', 1)],
+      changed: session('a', 1, { archivedAt: 5 }),
+      asks: true,
+    },
+    { rows: [session('a', 1)], changed: session('other', 2), asks: false },
+  ])(
+    'keeps ordinary query membership fresh: $asks for $changed.sessionId',
+    ({ rows, changed, asks }) => {
+      const client = new QueryClient();
+      const original = { sessions: rows, nextCursor: null };
+      client.setQueryData(rowKey, original);
+
+      expect(
+        applySessionListUpdate(client, list, {
+          type: 'changed',
+          session: changed,
+        }),
+      ).toBe(asks);
+      expect(client.getQueryData(rowKey)).toEqual(original);
+    },
+  );
+
   it('replaces a changed row where it sits and asks nothing', () => {
     const client = listWith([session('b', 2), session('a', 1)], null);
 

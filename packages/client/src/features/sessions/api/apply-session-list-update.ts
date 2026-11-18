@@ -14,6 +14,8 @@ import { z } from 'zod';
 
 type ListPages = InfiniteData<SessionListOutput, unknown>;
 
+type ListData = ListPages | SessionListOutput;
+
 type Outcome = 'asks' | 'placed' | 'unaffected';
 
 const keyedInput = z.object({ input: SessionListInput });
@@ -43,16 +45,20 @@ function applyToQuery(
   query: Query,
   session: SessionInfo,
 ): Outcome {
-  const data = client.getQueryData<ListPages>(query.queryKey);
+  const data = client.getQueryData<ListData>(query.queryKey);
 
   if (!data) return 'unaffected';
 
-  const outcome = outcomeFor(data, session, inputOf(query));
+  const outcome = outcomeFor(pagesOf(data), session, inputOf(query));
 
   if (outcome === 'placed')
     client.setQueryData(query.queryKey, replaced(data, session));
 
   return outcome;
+}
+
+function pagesOf(data: ListData): ListPages {
+  return 'pages' in data ? data : { pages: [data], pageParams: [null] };
 }
 
 function inputOf(query: Query): SessionListInput {
@@ -92,15 +98,21 @@ function isShown(data: ListPages, session: SessionInfo): boolean {
   );
 }
 
-function replaced(data: ListPages, session: SessionInfo): ListPages {
+function replaced(data: ListData, session: SessionInfo): ListData {
+  return 'pages' in data
+    ? { ...data, pages: data.pages.map((page) => replacedPage(page, session)) }
+    : replacedPage(data, session);
+}
+
+function replacedPage(
+  page: SessionListOutput,
+  session: SessionInfo,
+): SessionListOutput {
   return {
-    ...data,
-    pages: data.pages.map((page): SessionListOutput => ({
-      ...page,
-      sessions: page.sessions.map((row): SessionInfo =>
-        row.sessionId === session.sessionId ? session : row,
-      ),
-    })),
+    ...page,
+    sessions: page.sessions.map((row): SessionInfo =>
+      row.sessionId === session.sessionId ? session : row,
+    ),
   };
 }
 
