@@ -1,6 +1,6 @@
 import { providerEvent, type VoiceCallEvent } from '../src/voice/call-types';
 
-export const start: VoiceCallEvent = {
+export const start: Extract<VoiceCallEvent, { type: 'call.start' }> = {
   type: 'call.start',
   callId: 'call-1',
   sessionId: 'session-1',
