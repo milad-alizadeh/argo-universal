@@ -1,4 +1,6 @@
-import { Pill } from '@repo/kit/primitives/status/pill';
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
+import { PhonePill } from '@repo/kit/primitives/status/pill';
 import type { JSX } from 'react';
 import type { ComposerStatusProps, ComposerWork } from '../../utils/status';
 
@@ -13,29 +15,39 @@ interface WorkChipProps {
 function WorkChip({ work, ...props }: WorkChipProps): JSX.Element | null {
   if (!work) return null;
 
+  return <WorkChipPill {...props} work={work} />;
+}
+
+function WorkChipPill({
+  work,
+  ...props
+}: WorkChipProps & { work: ComposerWork }): JSX.Element {
   return (
-    <Pill
-      variant="control"
-      appearance="glass"
-      {...workPillProps({ ...props, work })}
-    />
+    <PhonePill
+      role="button"
+      accessibilityLabel={`${props.label}: ${work.count}`}
+      disabled={props.disabled}
+      onPress={work.onPress}
+    >
+      <WorkChipContent {...props} work={work} />
+    </PhonePill>
   );
 }
 
-function workPillProps({
+const WorkChipContent = ({
   work,
   ...props
-}: WorkChipProps & { work: ComposerWork }): React.ComponentProps<typeof Pill> {
-  return {
-    text: work.count === 1 ? props.singular : props.label,
-    icon: props.icon,
-    count: work.count,
-    countTone: work.running ? 'success' : 'muted',
-    disabled: props.disabled,
-    accessibilityLabel: `${props.label}: ${work.count}`,
-    onPress: work.onPress,
-  };
-}
+}: WorkChipProps & { work: ComposerWork }): JSX.Element => (
+  <>
+    <Icon name={props.icon} />
+    <Text role="control" tone={work.running ? 'success' : 'muted'}>
+      {work.count}
+    </Text>
+    <Text role="control">
+      {work.count === 1 ? props.singular : props.label}
+    </Text>
+  </>
+);
 
 interface WorkChipsProps {
   status: ComposerStatusProps;
