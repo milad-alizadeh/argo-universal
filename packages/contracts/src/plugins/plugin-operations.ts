@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { WireJson } from '#plugin-wire-json';
-import { OperationIcon } from '../operations/metadata';
+import { OperationIcon } from '../operations/metadata.ts';
 
 /*
  * A Plugin's own Operations: what an Agent runs with `argo run <plugin-id>.<name>` (ADR-0044). A Plugin
