@@ -8,7 +8,7 @@ const addressOfParts = ([, host = '', port = '']: string[]): ServerAddress => ({
   port: Number(port),
 });
 
-function addressOfUrl(url: string): ServerAddress[] {
+export function addressOfUrl(url: string): ServerAddress[] {
   const parts = urlPattern.exec(url);
 
   return parts ? [addressOfParts(parts)] : [];

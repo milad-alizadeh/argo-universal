@@ -22,6 +22,10 @@ export type PairOutcome =
   | { kind: 'not-found' }
   // The first look at the network heard nothing (ADR-0045).
   | { kind: 'undetermined' }
+  // The owner turned Local Network off for the App, so the network cannot be looked at.
+  | { kind: 'denied' }
+  // This build never declared that it browses for Servers, which iOS refuses without; a fault of the build, not of the network.
+  | { kind: 'misconfigured' }
   | { kind: 'failed' };
 
 // The ways that have a page of their own; a `failed` one is only a toast, and the scanner stays.
@@ -53,6 +57,8 @@ export interface PairDeps {
   onUnreached?: () => void;
   // The first look at the network since the page opened (ADR-0045).
   firstBrowse?: boolean;
+  // Whether this build declares that it browses for Servers. Unset reads as declared.
+  declared?: boolean;
 }
 
 // What `PairingRefused` carries; read by shape because the class lives behind the connection feature's index.
@@ -129,7 +135,7 @@ async function afterAnnouncement(
 ): Promise<PairOutcome> {
   const announced = await announcedAt(attempt, alreadyKnockedOn);
 
-  if (!announced.heard) return silence(attempt.deps);
+  if (!announced.heard) return unheard(announced.denied, attempt.deps);
 
   const outcome = await pairOnAny(announced.addresses, {
     ...attempt,
@@ -139,8 +145,16 @@ async function afterAnnouncement(
   return outcome ?? { kind: 'not-found' };
 }
 
-const silence = (deps: PairDeps): PairOutcome =>
-  deps.firstBrowse ? { kind: 'undetermined' } : { kind: 'not-found' };
+// Why nothing was heard, the most certain first: a build that cannot browse, then a refusal by the system, then plain silence.
+function unheard(denied: boolean, deps: PairDeps): PairOutcome {
+  const causes: [boolean, PairOutcome][] = [
+    [deps.declared === false, { kind: 'misconfigured' }],
+    [denied, { kind: 'denied' }],
+    [deps.firstBrowse === true, { kind: 'undetermined' }],
+  ];
+
+  return causes.find(([applies]) => applies)?.[1] ?? { kind: 'not-found' };
+}
 
 /*
  * Pairs with the Server a scanned code names, the way a phone reaches an Expo dev server: it knocks first where the code says the Server answers, and looks for it on the network only when nothing answers there.

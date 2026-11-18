@@ -134,6 +134,28 @@ describe('pairing with the Server a code names', () => {
     });
   });
 
+  it('says denied when the system refused the look, even on the first one', async () => {
+    const resolve = vi.fn<Resolve>().mockImplementation((...args) => {
+      args[3]?.();
+
+      return Promise.reject(new Error('none'));
+    });
+    const first = deps(vi.fn<Pair>(), resolve, { firstBrowse: true });
+
+    await expect(pairWithInvite(invite, first)).resolves.toEqual({
+      kind: 'denied',
+    });
+  });
+
+  it('says misconfigured when the build never declared that it browses', async () => {
+    const resolve = vi.fn<Resolve>().mockRejectedValue(new Error('none'));
+    const build = deps(vi.fn<Pair>(), resolve, { declared: false });
+
+    await expect(pairWithInvite(invite, build)).resolves.toEqual({
+      kind: 'misconfigured',
+    });
+  });
+
   it('says the address did not go on to ask the owner when it fails after the socket opened', async () => {
     const onUnreached = vi.fn<() => void>();
     const pair = vi.fn<Pair>().mockRejectedValue(new Error('closed'));

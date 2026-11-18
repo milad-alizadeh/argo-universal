@@ -24,6 +24,7 @@ export { requestServerKey } from './api/request-server-key';
 export { retryServer } from './api/retry-server';
 
 // The connect step passes this as `browse`; null where the platform cannot browse.
+export { bonjourDeclared } from './discovery/bonjour-declared';
 export { browseServers } from './discovery/browse-servers';
 
 export {

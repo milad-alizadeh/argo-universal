@@ -1,5 +1,6 @@
 import { showToast } from '@repo/kit/primitives/overlays/toast';
 import {
+  bonjourDeclared,
   browseServers,
   type KnownServer,
   pairWithServer,
@@ -12,8 +13,8 @@ import type { TypedOutcome } from './pair-with-typed-code';
 // Where the Add a Server pages are: reading a code, waiting on the owner, or told how it went.
 export type PairPhase =
   | { phase: 'scanning' }
-  // A typed code is being asked of the Servers on the network, which takes a moment before any of them can be named.
-  | { phase: 'looking' }
+  // The Server is being looked for on the network. A scanned code names it already; a typed code does not, which takes a moment before any Server can be named.
+  | { phase: 'looking'; serverName?: string }
   | { phase: 'waiting'; serverName: string }
   | { phase: 'failed'; serverName: string; outcome: PairFailure; typed?: true };
 
@@ -64,6 +65,7 @@ export const depsOf = (
   signal,
   address,
   firstBrowse: takeFirstBrowse(held),
+  declared: bonjourDeclared(),
 });
 
 /*

@@ -35,6 +35,7 @@
     "expo": "catalog:",
     "expo-camera": "catalog:",
     "expo-clipboard": "catalog:",
+    "expo-constants": "catalog:",
     "expo-crypto": "catalog:",
     "expo-document-picker": "catalog:",
     "expo-file-system": "catalog:",
