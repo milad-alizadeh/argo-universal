@@ -3,7 +3,11 @@ import type { OperationImplementations } from './operations';
 
 type VoiceImplementations = Pick<
   OperationImplementations,
-  'voice.status' | 'voice.start' | 'voice.end'
+  | 'voice.status'
+  | 'voice.start'
+  | 'voice.end'
+  | 'voice.getSettings'
+  | 'voice.setSettings'
 >;
 
 export function createVoiceOperations(
@@ -12,6 +16,8 @@ export function createVoiceOperations(
   return {
     'voice.status': () => voice.status(),
     'voice.start': (input, connection) => voice.start(input, connection),
+    'voice.getSettings': () => voice.settings(),
+    'voice.setSettings': (change) => voice.changeSettings(change),
     'voice.end': ({ sessionId }) => Promise.resolve(voice.end(sessionId)),
   };
 }

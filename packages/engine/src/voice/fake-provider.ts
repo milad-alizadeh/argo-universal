@@ -17,6 +17,8 @@ export interface FakeVoiceOptions {
   connect?: number | 'manual';
   // Makes starting a call fail with this message.
   failStart?: string;
+  // The voices it lists; one by default.
+  voices?: VoiceOption[];
 }
 
 // Something the Engine told the voice, as a test reads it back.
@@ -31,6 +33,9 @@ const defaultConnectDelay = 400;
  * It implements the real interface; a test drives what the person says through the call it returns.
  */
 export class FakeVoiceProvider implements VoiceProvider {
+  public readonly id = 'fake';
+  public readonly label = 'Fake voice provider';
+  public readonly experimental = true;
   public readonly calls: FakeVoiceCall[] = [];
   private options: FakeVoiceOptions;
 
@@ -51,7 +56,9 @@ export class FakeVoiceProvider implements VoiceProvider {
   }
 
   public voices(): Promise<VoiceOption[]> {
-    return Promise.resolve([{ id: 'fake', label: 'Fake voice' }]);
+    return Promise.resolve(
+      this.options.voices ?? [{ id: 'fake', label: 'Fake voice' }],
+    );
   }
 
   public start(request: VoiceStartRequest): Promise<FakeVoiceCall> {

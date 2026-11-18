@@ -50,6 +50,8 @@ export const VoiceStatus = z.strictObject({
     })
     .nullable(),
   availability: VoiceAvailability,
+  // Whether the person keeps Voice calls on; with them off no Composer offers the voice button.
+  enabled: z.boolean(),
 });
 
 export type VoiceStatus = z.infer<typeof VoiceStatus>;
@@ -84,3 +86,41 @@ export type VoiceEndInput = z.infer<typeof VoiceEndInput>;
 export const VoiceEndOutput = z.strictObject({ ended: z.boolean() });
 
 export type VoiceEndOutput = z.infer<typeof VoiceEndOutput>;
+
+// A voice a Voice provider speaks with.
+export const VoiceOption = z.strictObject({
+  id: z.string().min(1),
+  label: z.string().min(1),
+});
+
+export type VoiceOption = z.infer<typeof VoiceOption>;
+
+// A Voice provider the Server lists, and whether it can be used now.
+export const VoiceProviderOption = z.strictObject({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  experimental: z.boolean(),
+  availability: VoiceAvailability,
+});
+
+export type VoiceProviderOption = z.infer<typeof VoiceProviderOption>;
+
+// Settings › Voice: what the person chose, and what they can choose from. `provider` and `voice` are null while the Server has no provider.
+export const VoiceSettings = z.strictObject({
+  enabled: z.boolean(),
+  provider: z.string().min(1).nullable(),
+  voice: z.string().min(1).nullable(),
+  providers: z.array(VoiceProviderOption),
+  voices: z.array(VoiceOption),
+});
+
+export type VoiceSettings = z.infer<typeof VoiceSettings>;
+
+// What `voice.setSettings` changes; what is left out stays.
+export const VoiceSettingsChange = z.strictObject({
+  enabled: z.boolean().optional(),
+  provider: z.string().min(1).optional(),
+  voice: z.string().min(1).optional(),
+});
+
+export type VoiceSettingsChange = z.infer<typeof VoiceSettingsChange>;

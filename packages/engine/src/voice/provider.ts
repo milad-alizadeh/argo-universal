@@ -59,6 +59,10 @@ export interface VoiceOption {
 }
 
 export interface VoiceProvider {
+  // What Settings lists the provider by: a stable id, its name, and whether it is still experimental.
+  readonly id: string;
+  readonly label: string;
+  readonly experimental: boolean;
   // Whether a call can start now, and if not, why.
   availability: () => Promise<VoiceAvailability>;
   voices: () => Promise<VoiceOption[]>;

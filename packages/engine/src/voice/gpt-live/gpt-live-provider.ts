@@ -40,6 +40,9 @@ type Held<T> = { value: T; token: string };
  * The token lives in memory for the call and is never stored or refreshed here; a rejected one is asked for again once.
  */
 export class GptLiveProvider implements VoiceProvider {
+  public readonly id = 'gpt-live';
+  public readonly label = 'GPT-Live';
+  public readonly experimental = true;
   private readonly settings: Required<GptLiveOptions>;
 
   public constructor(options: GptLiveOptions = {}) {

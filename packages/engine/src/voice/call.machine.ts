@@ -66,10 +66,10 @@ const voiceCallSetup = setup({
   actions: {
     begin: assign(({ event }): Partial<VoiceCallContext> => {
       assertEvent(event, 'call.start');
-      const { callId, sessionId, offer, connection } = event;
+      const { callId, sessionId, offer, voice, connection } = event;
 
       return {
-        call: { callId, sessionId, offer, connection, answer: null },
+        call: { callId, sessionId, offer, voice, connection, answer: null },
         ended: null,
         failure: null,
       };
@@ -123,12 +123,13 @@ const endsWith = (reason: VoiceCallEnd): FinishAction => ({
 });
 
 const providerInput = (context: VoiceCallContext): ProviderCallInput => {
-  const { offer, sessionId } = runningCall(context);
+  const { offer, sessionId, voice } = runningCall(context);
 
   return {
     // SAFETY: `call.start` is refused without a provider, so `running` always has one.
     provider: context.provider as VoiceProvider,
     offer,
+    voice,
     briefing: context.briefing(sessionId),
   };
 };

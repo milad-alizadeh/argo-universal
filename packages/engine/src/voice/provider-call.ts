@@ -11,6 +11,7 @@ export type ProviderCallInput = {
   provider: VoiceProvider;
   offer: string;
   briefing: string;
+  voice?: string;
 };
 
 type StartedCall = Awaited<ReturnType<VoiceProvider['start']>>;
@@ -63,7 +64,11 @@ export const providerCall = fromCallback<VoiceCallEvent, ProviderCallInput>(
       if (event.type === 'voice.say') hold.say(event.say);
     });
     void input.provider
-      .start({ offer: input.offer, briefing: input.briefing })
+      .start({
+        offer: input.offer,
+        briefing: input.briefing,
+        voice: input.voice,
+      })
       .then(
         (call) => hold.adopt(call),
         (error: Error | string) => hold.fail(asError(error)),
