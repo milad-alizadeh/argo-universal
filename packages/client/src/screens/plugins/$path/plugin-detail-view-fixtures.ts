@@ -1,5 +1,6 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
 import { Platform } from 'react-native';
+import paceTrees from './plugin-detail-view-development-pace.json' with { type: 'json' };
 import trees from './plugin-detail-view-issue-filters.json' with { type: 'json' };
 import jiraBoards from './plugin-detail-view-jira-board.json' with { type: 'json' };
 import jiraTrees from './plugin-detail-view-jira-issue.json' with { type: 'json' };
@@ -35,3 +36,10 @@ export const jiraBoardMoving = { root: WireNode.parse(jiraBoards.pending) };
 export const jiraBoardEmpty = { root: WireNode.parse(jiraBoards.empty) };
 
 export const loading = { root: null };
+
+// Recorded at the GitHub Plugin page boundary with the repository's November 18 development data.
+export const developmentPace = { root: WireNode.parse(paceTrees.loaded) };
+
+export const paceRepositories = { root: WireNode.parse(paceTrees.picker) };
+
+export const paceUnavailable = { root: WireNode.parse(paceTrees.unavailable) };
