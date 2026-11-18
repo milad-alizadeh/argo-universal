@@ -245,18 +245,23 @@ function reachesImageNotDrawn(width: number): Story {
       await expect(
         canvas.queryByRole('button', thumbnail(promptImage)),
       ).toBeNull();
-      const place = scroll.scrollTop;
+      // Rows above may still measure, so the place is where the thumbnail sits on screen, not scrollTop.
+      const opener = canvas.getByRole('button', thumbnail(answerImage));
+      const place = opener.getBoundingClientRect().top;
       // The Feed may ask for older rows as it opens; stepping must not ask again.
       const asked = olderRowsAsked.mock.calls.length;
 
-      await userEvent.click(canvas.getByRole('button', thumbnail(answerImage)));
+      await userEvent.click(opener);
       await shows(answerImage);
       await steps(context, 'ArrowLeft', [promptImage, promptImage]);
       await expect(olderRowsAsked).toHaveBeenCalledTimes(asked);
       await userEvent.keyboard('{Escape}');
       await closed();
 
-      await expect(Math.abs(scroll.scrollTop - place)).toBeLessThan(2);
+      await expect(
+        Math.abs(opener.getBoundingClientRect().top - place),
+      ).toBeLessThan(2);
+      await expect(scrolledToEnd(scroll)).toBe(true);
       await expect(
         canvas.queryByRole('button', thumbnail(promptImage)),
       ).toBeNull();
