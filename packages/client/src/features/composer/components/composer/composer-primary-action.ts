@@ -4,6 +4,8 @@ import type { SendLayout } from './composer-toolbar-types';
 
 export const endButtonId = 'composer-end';
 
+export const voiceButtonId = 'composer-voice';
+
 type IconButtonProps = React.ComponentProps<typeof IconButton>;
 
 type PrimaryAction = (layout: SendLayout) => IconButtonProps;
@@ -37,7 +39,17 @@ export function stopButtonAction(
   };
 }
 
-// The voice button is not drawn yet (the Voice page of Paper draws End and the mute buttons only), so the voice state draws as the blocked Send button until it is.
+// Option B of the Voice page's button states: Send's circle with the voice bars, which starts a call.
+function voiceAction(layout: SendLayout): IconButtonProps {
+  return {
+    accessibilityLabel: 'Start voice call',
+    testID: voiceButtonId,
+    icon: 'voice-bars',
+    onPress: (): void => layout.props.voice?.onStart(),
+  };
+}
+
+// The pointer's slot is drawn by the toolbar, so this stands in only where an action is read without it.
 const primaryActions: Record<SendLayout['sendState'], PrimaryAction> = {
   stop: stopButtonAction,
   end: endAction,
@@ -45,7 +57,8 @@ const primaryActions: Record<SendLayout['sendState'], PrimaryAction> = {
   ready: sendAction,
   sending: sendAction,
   blocked: sendAction,
-  voice: sendAction,
+  voice: voiceAction,
+  elsewhere: sendAction,
 };
 
 export function sendButtonAction(layout: SendLayout): IconButtonProps {

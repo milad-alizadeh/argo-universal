@@ -15,13 +15,31 @@ function callHere(
 const voiceOffered = (status: VoiceStatus): boolean =>
   status.enabled && status.availability.usable;
 
+type Handlers = Pick<ComposerVoice, 'onStart' | 'onEnd'> &
+  Partial<Pick<ComposerVoice, 'mutes' | 'elsewhere'>>;
+
+// The mute buttons belong to the connected call here; the pointer to the call in another Session.
+const placedAt = (
+  call: ComposerVoice['call'],
+  { mutes, elsewhere }: Handlers,
+): Pick<ComposerVoice, 'mutes' | 'elsewhere'> => ({
+  mutes: call === 'connected' ? mutes : undefined,
+  elsewhere: call === 'elsewhere' ? elsewhere : undefined,
+});
+
 // The Composer's voice state for one Session, drawn from the Server's status.
 export const composerVoice = (
   status: VoiceStatus,
   sessionId: string,
-  handlers: Pick<ComposerVoice, 'onStart' | 'onEnd'>,
-): ComposerVoice => ({
-  usable: voiceOffered(status),
-  call: callHere(status.call, sessionId),
-  ...handlers,
-});
+  handlers: Handlers,
+): ComposerVoice => {
+  const call = callHere(status.call, sessionId);
+
+  return {
+    usable: voiceOffered(status),
+    call,
+    onStart: handlers.onStart,
+    onEnd: handlers.onEnd,
+    ...placedAt(call, handlers),
+  };
+};

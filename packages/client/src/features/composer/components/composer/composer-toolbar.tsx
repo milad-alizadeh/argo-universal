@@ -18,6 +18,11 @@ import type {
   ConfigurationActionsLayout,
   SendLayout,
 } from './composer-toolbar-types';
+import {
+  ComposerCallPointer,
+  ComposerMuteButtons,
+  ConnectingRing,
+} from './composer-voice-controls';
 
 /*
  * The order the toolbar gives its width up in, as the layout's regions have one (docs/agents/layout.md).
@@ -88,6 +93,7 @@ function ComposerRightControls(layout: RightControlsLayout): React.JSX.Element {
     <View className="pointer-events-box-none max-w-full shrink-0 flex-row items-center gap-2.5">
       <ComposerConfigurationActions {...layout} />
       <SeparateStopButton {...layout} />
+      <ComposerMuteButtons voice={layout.props.voice} />
       <View className="shrink-0">
         <ComposerSendButton {...layout} />
       </View>
@@ -108,8 +114,17 @@ function ComposerConfigurationActions(
   return <ComposerModeControl {...controls} />;
 }
 
+// The primary slot: Send, Stop, the voice button or End, or, with the call in another Session, the pointer to it.
 function ComposerSendButton(layout: SendLayout): React.JSX.Element {
-  return <IconButton {...sendButtonProps(layout)} />;
+  if (layout.sendState === 'elsewhere')
+    return <ComposerCallPointer elsewhere={layout.props.voice?.elsewhere} />;
+
+  return (
+    <View>
+      <IconButton {...sendButtonProps(layout)} />
+      {layout.sendState === 'connecting' && <ConnectingRing />}
+    </View>
+  );
 }
 
 function sendButtonProps(

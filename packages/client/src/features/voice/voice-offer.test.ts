@@ -54,4 +54,63 @@ describe('the Composer voice state', () => {
     expect(composerVoice(running, 's1', handlers).call).toBe('connected');
     expect(composerVoice(running, 's2', handlers).call).toBe('elsewhere');
   });
+
+  it('hands the mute buttons to a connected call only', () => {
+    const mutes = {
+      microphone: false,
+      speaker: true,
+      onMicrophone: noop,
+      onSpeaker: noop,
+    };
+
+    const call = {
+      callId: 'c1',
+      sessionId: 's1',
+      status: 'connecting',
+      connection: 'connecting',
+      orb: 'none',
+      trouble: null,
+      startedAt: null,
+    } as const;
+
+    const connecting = status(true, { usable: true }, call);
+    const connected = status(
+      true,
+      { usable: true },
+      { ...call, status: 'connected' },
+    );
+
+    expect(
+      composerVoice(connecting, 's1', { ...handlers, mutes }).mutes,
+    ).toBeUndefined();
+    expect(composerVoice(connected, 's1', { ...handlers, mutes }).mutes).toBe(
+      mutes,
+    );
+    expect(
+      composerVoice(connected, 's2', { ...handlers, mutes }).mutes,
+    ).toBeUndefined();
+  });
+
+  it('points at the Session the call runs in, from another Session only', () => {
+    const elsewhere = { title: 'Fix the build', onOpen: noop };
+
+    const call = {
+      callId: 'c1',
+      sessionId: 's1',
+      status: 'connected',
+      connection: 'connected',
+      orb: 'listening',
+      trouble: null,
+      startedAt: '2026-11-18T10:00:00.000Z',
+    } as const;
+
+    const running = status(true, { usable: true }, call);
+
+    expect(
+      composerVoice(running, 's2', { ...handlers, elsewhere }).elsewhere,
+    ).toBe(elsewhere);
+    expect(
+      composerVoice(running, 's1', { ...handlers, elsewhere }).elsewhere,
+    ).toBeUndefined();
+  });
 });

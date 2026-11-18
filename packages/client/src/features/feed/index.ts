@@ -2,6 +2,8 @@ export { Feed, type FeedProps } from './components/feed/feed';
 
 export { FeedItem } from './components/feed-item';
 
+export { ShimmerText } from './components/shimmer-text';
+
 export {
   useFeedHistoryPages,
   useFeedLiveChanges,
