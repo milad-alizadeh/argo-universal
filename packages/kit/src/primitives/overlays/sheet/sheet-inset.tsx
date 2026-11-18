@@ -9,8 +9,10 @@ import { cn } from '#kit/utils';
  */
 function sheetInsetClass(
   props: Pick<SheetInsetProps, 'inset' | 'top'>,
-): string {
-  return cn(props.inset && 'px-4 ios:py-4', props.inset && props.top && 'pt-4');
+): string | undefined {
+  if (!props.inset) return undefined;
+
+  return props.top ? 'px-4 ios:py-4 pt-4' : 'px-4 ios:py-4';
 }
 
 interface SheetInsetProps {
