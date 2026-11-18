@@ -26,6 +26,7 @@ import {
   planlessSessionComposer,
   readyComposer,
   runningTurnComposer,
+  queueIdleComposer,
   queueReadyComposer,
   scrollableDraftComposer,
   sendingComposer,
@@ -148,6 +149,8 @@ export const Disabled: Story = { args: disabledComposer };
 
 // The Turn is running, so Send becomes Stop.
 export const TurnRunning: Story = { args: runningTurnComposer };
+
+export const QueueIdle: Story = { args: queueIdleComposer };
 
 export const QueueReady: Story = { args: queueReadyComposer };
 

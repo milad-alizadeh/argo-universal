@@ -69,14 +69,30 @@ function isConnectionSendable(props: ComposerProps): boolean {
   return (props.sendable ?? true) && allowsSubmission(props);
 }
 
-function isTurnRunning({ configuration }: ComposerProps): boolean {
+function isTurnRunning({
+  configuration,
+}: Pick<ComposerProps, 'configuration'>): boolean {
   return Boolean(configuration?.turnRunning);
 }
 
+// While a turn runs the one button is Stop, unless a written draft would queue behind it.
 function hasStopAction(props: ComposerProps): boolean {
-  return (
-    isTurnRunning(props) && Boolean(props.onStop) && !props.queueWhileRunning
-  );
+  return isTurnRunning(props) && Boolean(props.onStop) && !queuesDraft(props);
+}
+
+function queuesDraft(props: ComposerProps): boolean {
+  return props.queueWhileRunning === true && !isIdleDraft(props);
+}
+
+function isIdleDraft(props: ComposerProps): boolean {
+  return isEmptyDraft(props) && !sendResumesQueue(props);
+}
+
+// What Send does to a written draft: Queue it behind the running turn, or send it now.
+export function sendsToQueue(
+  props: Pick<ComposerProps, 'configuration' | 'queueWhileRunning'>,
+): boolean {
+  return isTurnRunning(props) && props.queueWhileRunning === true;
 }
 
 function allowsSubmission(props: ComposerProps): boolean {

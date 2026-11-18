@@ -1,18 +1,16 @@
-import { buttonInteractionProps } from '@repo/kit/primitives/actions/pressable';
-import { Icon } from '@repo/kit/primitives/content/icon';
-import { Text } from '@repo/kit/primitives/content/text';
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import type { RichTextareaProps } from '@repo/kit/primitives/controls/rich-textarea';
 import type { ComponentProps, JSX } from 'react';
-import { Pressable, View } from 'react-native';
-import { ComposerTypography } from './composer-typography';
-
-type Suggestion = NonNullable<RichTextareaProps['inlineSuggestion']>;
+import { View } from 'react-native';
 
 type AcceptanceProps = {
   suggestion: RichTextareaProps['inlineSuggestion'];
   phone: boolean;
   onAccept: (text: string) => void;
 };
+
+// The Send button's size and shape, so the key and Send read as one family down the card's trailing edge.
+const keyLook = { variant: 'secondary', size: 'sm', control: true } as const;
 
 /*
  * The phone's Tab. The Follow-up suggestion is the empty field's placeholder, as on the web, and this key at
@@ -26,35 +24,20 @@ export function FollowUpAcceptance({
   if (!suggestion || !phone) return null;
 
   return (
-    <ComposerTypography compact>
-      <Pressable {...keyProps(suggestion, onAccept)}>
-        {({ pressed }) => <UseKey pressed={pressed} />}
-      </Pressable>
-    </ComposerTypography>
-  );
-}
-
-function keyProps(
-  suggestion: Suggestion,
-  accept: (text: string) => void,
-): ComponentProps<typeof Pressable> {
-  return {
-    ...buttonInteractionProps({}),
-    accessibilityLabel: `Use ${suggestion.text}`,
-    onPress: () => accept(suggestion.text),
-    className: 'min-h-11 min-w-11 shrink-0 items-center justify-center pr-3',
-  };
-}
-
-const keyClass = 'flex-row items-center gap-1 rounded-sm px-2 py-1';
-
-function UseKey({ pressed }: { pressed: boolean }): JSX.Element {
-  return (
-    <View className={`${keyClass} ${pressed ? 'bg-pressed' : 'bg-tint'}`}>
-      <Icon name="return" size="sm" tone="muted" />
-      <Text role="badge" tone="muted">
-        Use
-      </Text>
+    <View className="shrink-0 pr-2.5 pt-1.5">
+      <IconButton {...keyLook} {...keyAction(suggestion, onAccept)} />
     </View>
   );
 }
+
+const keyAction = (
+  { text }: NonNullable<AcceptanceProps['suggestion']>,
+  accept: AcceptanceProps['onAccept'],
+): Pick<
+  ComponentProps<typeof IconButton>,
+  'icon' | 'accessibilityLabel' | 'onPress'
+> => ({
+  icon: 'return',
+  accessibilityLabel: `Use ${text}`,
+  onPress: () => accept(text),
+});

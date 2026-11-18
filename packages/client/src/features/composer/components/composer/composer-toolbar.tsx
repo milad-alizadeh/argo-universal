@@ -7,6 +7,7 @@ import {
   ComposerModeControl,
 } from '../composer-configuration/composer-configuration';
 import { ComposerStatusControls } from '../composer-status/composer-status';
+import { sendsToQueue } from './composer-conditions';
 import { ComposerAttachmentOrCancel } from './composer-queue-cancel';
 import type {
   ToolbarLayout,
@@ -86,7 +87,6 @@ function ComposerRightControls(layout: RightControlsLayout): React.JSX.Element {
   return (
     <View className="pointer-events-box-none max-w-full shrink-0 flex-row items-center gap-2.5">
       <ComposerConfigurationActions {...layout} />
-      <SeparateStopButton {...layout} />
       <View className="shrink-0">
         <ComposerSendButton {...layout} />
       </View>
@@ -129,7 +129,7 @@ function sendButtonAction(
   if (layout.sendState === 'stop') return stopButtonAction(layout);
 
   return {
-    accessibilityLabel: 'Send',
+    accessibilityLabel: sendsToQueue(layout.props) ? 'Queue' : 'Send',
     icon: 'arrow-up',
     disabled: layout.sendState !== 'ready',
     onPress: layout.send,
@@ -152,21 +152,3 @@ const filledSendProps = {
   size: 'sm',
   control: true,
 } as const;
-
-function SeparateStopButton(
-  layout: RightControlsLayout,
-): React.JSX.Element | null {
-  if (!layout.props.queueWhileRunning) return null;
-
-  return <RunningStopButton {...layout} />;
-}
-
-function RunningStopButton(
-  layout: RightControlsLayout,
-): React.JSX.Element | null {
-  const show = Boolean(layout.props.configuration?.turnRunning);
-
-  return show ? (
-    <IconButton {...stopButtonAction(layout)} size="sm" control />
-  ) : null;
-}

@@ -83,10 +83,16 @@ export const runningTurnComposer = {
   running: true,
 } satisfies ComposerFixture;
 
-export const queueReadyComposer = {
+// A Session that queues while its Turn runs, with nothing written: the one button is Stop.
+export const queueIdleComposer = {
   ...runningTurnComposer,
-  draft: readyComposer.draft,
   queueWhileRunning: true,
+} satisfies ComposerFixture;
+
+// A written draft in that Session: Stop gives way to Queue.
+export const queueReadyComposer = {
+  ...queueIdleComposer,
+  draft: readyComposer.draft,
 } satisfies ComposerFixture;
 
 // Inside a Session: the Plan tray sits above the card and the status tray below it.
