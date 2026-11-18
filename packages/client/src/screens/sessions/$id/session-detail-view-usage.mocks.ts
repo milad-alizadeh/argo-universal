@@ -20,7 +20,7 @@ const reading = (
 });
 
 // The Usage limits an Agent reported, as the Server keeps them: the weekly one first, as it arrived.
-export const reportedUsageLimits: UsageLimit[] = [
+const reportedUsageLimits: UsageLimit[] = [
   reading({
     id: 'seven_day',
     label: 'Weekly limit',
