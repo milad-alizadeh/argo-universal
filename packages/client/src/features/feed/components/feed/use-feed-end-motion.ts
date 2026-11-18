@@ -1,10 +1,11 @@
 import { useReducedMotion } from 'react-native-reanimated';
+import {
+  type FeedEndMotion,
+  type FeedTail,
+  followEnd,
+} from './feed-end-motion';
 import type { FeedRowData } from './feed-row-data';
-
-// A settled Feed follows viewport and Composer measurements to the end (#1811).
-const followEnd = {
-  on: { layout: true, footerLayout: true, dataChange: true, itemLayout: true },
-};
+import type { ListRef } from './keep-place';
 
 // Incoming rows and new lines of prose move the reader to the new end over several frames.
 const glideToEnd = { ...followEnd, animated: true };
@@ -20,11 +21,10 @@ function followsNewRows(items: FeedRowData[], turnRunning: boolean): boolean {
   );
 }
 
-export type FeedEndMotion = typeof followEnd;
-
 export function useFeedEndMotion(
-  items: FeedRowData[],
-  turnRunning: boolean,
+  _list: ListRef,
+  { items, turnRunning }: FeedTail,
+  _enabled: boolean,
 ): FeedEndMotion {
   const reduced = useReducedMotion();
 

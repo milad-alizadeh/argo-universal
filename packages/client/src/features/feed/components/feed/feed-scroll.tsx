@@ -6,6 +6,7 @@ import { Platform, View } from 'react-native';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { useFeedFade } from '#lib/product/feed-fade';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
+import type { FeedTail } from './feed-end-motion';
 import type { FeedEntry } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
 import {
@@ -17,7 +18,7 @@ import {
 import { DrawFeedScroll, useFeedOnScroll } from './feed-scroll-drawing';
 import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
-import { type FeedEndMotion, useFeedEndMotion } from './use-feed-end-motion';
+import { useFeedEndMotion } from './use-feed-end-motion';
 
 // Clears whatever of the Composer covers the Feed's end, and the pill above it, and leaves the Feed's gap above them.
 function FeedEnd(): React.JSX.Element {
@@ -133,13 +134,15 @@ export type FeedListProps = Pick<
 
 // A Feed read from its start, or hidden behind another page, does not follow incoming rows.
 function useAnchors(
-  opensAtStart: boolean | undefined,
-  following: FeedEndMotion,
+  list: ListRef,
+  tail: FeedTail,
+  opensAtStart?: boolean,
 ): Pick<FeedListProps, 'maintainScrollAtEnd' | 'alignItemsAtEnd'> {
-  const focused = useScreenFocused();
+  const enabled = useScreenFocused() && !opensAtStart;
+  const motion = useFeedEndMotion(list, tail, enabled);
 
   return {
-    maintainScrollAtEnd: opensAtStart || !focused ? false : following,
+    maintainScrollAtEnd: enabled && motion,
     // Rows start at the top of the view, never against the Composer.
     alignItemsAtEnd: false,
   };
@@ -156,7 +159,7 @@ function useFeedListProps(
     items,
     renderItem: useRenderEntry({ ...props, ...motion }),
     initialScrollIndex: props.initialIndex,
-    ...useAnchors(props.opensAtStart, useFeedEndMotion(items, turnRunning)),
+    ...useAnchors(list, { items, turnRunning }, props.opensAtStart),
     onStartReached: props.onStartReached,
     header: <LoadingEarlier loading={props.loadingOlder} />,
   };
