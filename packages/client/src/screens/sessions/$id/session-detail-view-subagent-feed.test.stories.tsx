@@ -3,7 +3,7 @@ import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
-import { expect, fn, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, fn, waitFor, within } from 'storybook/test';
 import { toFeedView } from '#features/feed';
 import { SubagentFeed } from '#features/sessions';
 import {
@@ -163,3 +163,42 @@ export const PhoneFeedRowOpensSheet = feedRowOpens(layoutWidths.phone);
 export const WideListRowOpensFeed = listRowOpensFeed(workbenchWide);
 
 export const PhoneListRowOpensFeed = listRowOpensFeed(layoutWidths.phone);
+
+const agentFeed = { name: 'Agent Feed' };
+
+export const ReopeningTheInspectorKeepsTheAgentFeed: Story = {
+  beforeEach: () => settleLayout(workbenchWide, 360),
+  args: { view: sessionWithSubagentFeed() },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', {
+        name: `Open ${runningSubagent.title}`,
+      }),
+    );
+    const feed = await within(
+      await canvas.findByRole('tabpanel', agentFeed),
+    ).findByTestId('feed-scroll');
+    await waitFor(() =>
+      expect(feed.scrollHeight - feed.clientHeight).toBeGreaterThan(20),
+    );
+    feed.dispatchEvent(new WheelEvent('wheel', { deltaY: -feed.clientHeight }));
+    feed.scrollTop = 10;
+    await fireEvent.scroll(feed);
+    await waitFor(() => expect(feed.scrollTop).toBeCloseTo(10, 0));
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Hide Inspector' }),
+    );
+    await expect(canvas.queryByRole('tabpanel', agentFeed)).toBeNull();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Show Inspector' }),
+    );
+
+    await assertOpened(canvas, true);
+    await assertFeedShown(canvas, true);
+    const restoredFeed = within(
+      canvas.getByRole('tabpanel', agentFeed),
+    ).getByTestId('feed-scroll');
+    await expect(restoredFeed.scrollTop).toBeCloseTo(10, 0);
+  },
+};

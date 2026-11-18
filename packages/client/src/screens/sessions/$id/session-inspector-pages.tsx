@@ -17,10 +17,14 @@ type Props = SessionInspectorContent & {
 
 type PageProps = Props & { section: SessionSection };
 
+const retainedTabs = (
+  state: SessionPanels['state'],
+): Pick<SessionPanels['state'], 'tabs' | 'shown'> => state.hidden ?? state;
+
 function RetainedPage(props: PageProps): ReactElement {
   return (
     <InspectorScreen
-      active={props.panels.state.shown === props.section.key}
+      active={retainedTabs(props.panels.state).shown === props.section.key}
       label={props.section.title}
     >
       <PageBody {...props} />
@@ -36,14 +40,16 @@ function PageBody({ section, ...props }: PageProps): ReactElement {
   );
 }
 
-const openSections = (props: Props): SessionSection[] =>
-  props.panels.state.tabs.flatMap((key) => sectionOf(props, key) ?? []);
+const retainedSections = (props: Props): SessionSection[] =>
+  retainedTabs(props.panels.state).tabs.flatMap(
+    (key) => sectionOf(props, key) ?? [],
+  );
 
-// Hidden tab pages keep their content tree and native/virtualised scroll views mounted.
+// Keep tab pages mounted across tab switches and while the Inspector is hidden.
 export function RetainedInspectorPages(props: Props): ReactElement {
   return (
     <InspectorScreens>
-      {openSections(props).map((section) => (
+      {retainedSections(props).map((section) => (
         <RetainedPage key={section.key} {...props} section={section} />
       ))}
     </InspectorScreens>

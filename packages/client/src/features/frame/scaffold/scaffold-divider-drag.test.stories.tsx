@@ -14,6 +14,7 @@ import {
   moreActionsLabel,
   pointerPress,
   pointerRelease,
+  pressInspectorButton,
   resizeInspectorLabel,
   resizeSidebarLabel,
   sessionListId,
@@ -101,8 +102,7 @@ export const DragToCollapseExpandAndReopen: ScaffoldStory = {
   }),
 };
 
-// Closed and opened again, the Inspector sits beside a page that has its floor back.
-export const ClosingTheInspectorRestoresTheContentFloor: ScaffoldStory = {
+export const ReopeningTheInspectorRestoresItsDraggedWidth: ScaffoldStory = {
   play: controlledPlay(async (context, controlled) => {
     const { canvas } = context;
     await settleLayout('wide');
@@ -110,9 +110,15 @@ export const ClosingTheInspectorRestoresTheContentFloor: ScaffoldStory = {
     const list = listHidden(canvas);
     await drag(context, resizeInspectorLabel, 300 - pageWidth(canvas));
     await waitFor(() => expect(Math.round(pageWidth(canvas))).toBe(300));
-    await controlled.render({ inspectorState: 'closed' });
+    const inspector = canvas.getByTestId(inspectorId);
+    const width = inspector.getBoundingClientRect().width;
+    await pressInspectorButton(context, controlled, 'closed');
+    await waitForZeroWidth(canvas, inspectorId);
+    await expect(pageWidth(canvas)).toBeGreaterThanOrEqual(688);
     await controlled.render({ inspectorState: 'open' });
-    await waitFor(() => expect(pageWidth(canvas)).toBeGreaterThanOrEqual(688));
+    await waitFor(() =>
+      expect(inspector.getBoundingClientRect().width).toBe(width),
+    );
     await expect(listHidden(canvas)).toBe(list);
   }),
 };

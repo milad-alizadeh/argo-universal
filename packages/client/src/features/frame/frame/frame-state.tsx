@@ -67,12 +67,12 @@ function useHostedColumn(
   sessionId: string | undefined,
 ): HostedColumn {
   const open = hosted?.open === true;
-  const [expanded, setExpanded] = useExpanded(open, sessionId);
+  const [expanded, setExpanded] = useExpanded(sessionId);
 
   return {
     inspectorState: hostedInspectorState(open, expanded),
     onInspectorStateChange: (state) => {
-      const change = hostedChange(open, state);
+      const change = hostedChange({ open, expanded }, state);
       setExpanded(change.expanded);
 
       if (change.open !== null) hosted?.onOpenChange(change.open);

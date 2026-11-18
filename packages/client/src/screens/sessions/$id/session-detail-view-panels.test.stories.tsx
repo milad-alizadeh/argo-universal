@@ -1,7 +1,7 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { panelsSession } from './session-detail-view-panels.test.mocks';
@@ -31,6 +31,10 @@ const subagentsName = { name: 'Agents' };
 const subagentsTab = { name: 'Agents: 4' };
 
 const changesName = { name: 'Changes' };
+
+const hideInspector = { name: 'Hide Inspector' };
+
+const showInspector = { name: 'Show Inspector' };
 
 const changesEntry = { name: 'Open Changes overview' };
 
@@ -68,12 +72,23 @@ export const FocusExistingTab: Story = {
   },
 };
 
-// Expanding a Session's tabbed Inspector keeps its current panel selected.
+const inspectorWidth = (canvas: Context['canvas']): number =>
+  canvas.getByTestId('desktop-inspector').getBoundingClientRect().width;
+
+// Reopening an expanded Inspector restores its mode, selected tab and docked width.
 export const ExpandSelectedPanel: Story = {
   play: async (context) => {
     const { canvas, userEvent } = context;
 
     await openBoth(context);
+    const originalWidth = inspectorWidth(canvas);
+    canvas.getByRole('separator', { name: 'Resize Inspector' }).focus();
+    await userEvent.keyboard('{ArrowLeft}{ArrowLeft}');
+    await waitFor(() =>
+      expect(inspectorWidth(canvas)).toBeGreaterThan(originalWidth),
+    );
+    const resizedWidth = inspectorWidth(canvas);
+
     await userEvent.click(
       canvas.getByRole('button', { name: 'Expand Inspector' }),
     );
@@ -83,6 +98,21 @@ export const ExpandSelectedPanel: Story = {
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
       ...selected,
     );
+    await userEvent.click(canvas.getByRole('button', hideInspector));
+    await userEvent.click(canvas.getByRole('button', showInspector));
+    await expect(
+      await canvas.findByRole('button', { name: 'Restore Inspector' }),
+    ).toBeVisible();
+    await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
+      ...selected,
+    );
+    await expect(
+      within(canvas.getByRole('tabpanel', subagentsName)).getByText(firstTitle),
+    ).toBeVisible();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Restore Inspector' }),
+    );
+    await waitFor(() => expect(inspectorWidth(canvas)).toBe(resizedWidth));
   },
 };
 
@@ -103,9 +133,10 @@ export const CloseTabs: Story = {
       canvas.getByRole('button', { name: 'Close Changes' }),
     );
     await expect(canvas.queryByRole('tab')).not.toBeInTheDocument();
-    await expect(
-      canvas.getByRole('button', { name: 'Show Inspector' }),
-    ).toHaveAttribute('aria-pressed', 'false');
+    await expect(canvas.getByRole('button', showInspector)).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
   },
 };
 
@@ -115,20 +146,14 @@ export const CloseInspector: Story = {
     const { canvas, userEvent } = context;
 
     await openBoth(context);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Hide Inspector' }),
-    );
+    await userEvent.click(canvas.getByRole('button', hideInspector));
     await expect(canvas.queryByRole('tab')).not.toBeInTheDocument();
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Show Inspector' }),
-    );
+    await userEvent.click(canvas.getByRole('button', showInspector));
     await expect(canvas.getAllByRole('tab')).toHaveLength(2);
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
       ...selected,
     );
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Hide Inspector' }),
-    );
+    await userEvent.click(canvas.getByRole('button', hideInspector));
     await userEvent.click(canvas.getByRole('button', subagentsEntry));
     await expect(canvas.getAllByRole('tab')).toHaveLength(2);
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
