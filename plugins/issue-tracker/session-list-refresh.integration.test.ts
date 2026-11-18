@@ -6,14 +6,17 @@ it('refreshes the visible Session list Issue without opening its page or changin
   const { test, github } = await signedInRoot();
   await attach(test, 'attach');
   const rows = watch(test, rowSlot);
+
   let row = itemsOf(
     await until(rows, (answer) =>
       JSON.stringify(itemsOf(answer)).includes('Open'),
     ),
   );
-  void (async () => {
+
+  void (async (): Promise<void> => {
     for await (const answer of rows) row = itemsOf(answer);
   })();
+
   github.closeIssue(42);
   await test.clock.advance(31_000);
   await expect
