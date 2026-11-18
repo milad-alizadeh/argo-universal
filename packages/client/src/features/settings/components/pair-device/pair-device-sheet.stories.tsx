@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { fn } from 'storybook/test';
 import { PairDeviceSheet } from './pair-device-sheet';
 import {
-  expired,
   live,
   mintFailed,
   minting,
@@ -35,8 +34,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Live: Story = {};
-
-export const Expired: Story = { args: expired };
 
 export const Minting: Story = { args: minting };
 
