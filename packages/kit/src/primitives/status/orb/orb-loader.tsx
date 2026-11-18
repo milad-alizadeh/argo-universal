@@ -1,1 +1,4 @@
-export { default as OrbLoader } from './orb-renderer';
+export {
+  default as OrbLoader,
+  OrbDriver as OrbDriverLoader,
+} from './orb-renderer';

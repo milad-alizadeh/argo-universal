@@ -1,4 +1,5 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
+import { OrbContinuity } from '@repo/kit/primitives/status/orb';
 import type * as React from 'react';
 import { useRef } from 'react';
 import { View } from 'react-native';
@@ -30,12 +31,15 @@ export interface FeedListProps extends EntryDrawing {
   opensAtStart?: boolean;
 }
 
+// The running Turn's Orb moves between the live header's row and a Tool call group's header; one drawing for the Feed keeps it going across them.
 function FeedBody(scroll: FeedScrollProps): React.JSX.Element {
   const feedGrowth = useFeedGrowth(scroll.list);
 
   return (
     <FeedGrowthContext.Provider value={feedGrowth}>
-      <FeedScroll {...scroll} />
+      <OrbContinuity>
+        <FeedScroll {...scroll} />
+      </OrbContinuity>
     </FeedGrowthContext.Provider>
   );
 }
