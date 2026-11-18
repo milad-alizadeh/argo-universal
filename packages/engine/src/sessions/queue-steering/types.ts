@@ -1,4 +1,5 @@
 import type {
+  NonUserPromptSender,
   QueueCommand,
   ContentBlock,
   QueuedPromptId,
@@ -11,6 +12,8 @@ export type SteerCommand =
 export interface QueueSteering {
   prompt: ContentBlock[];
   queuedId?: QueuedPromptId;
+  // Who sent a steered queue item that did not come from the person, so the Feed stores it as theirs.
+  sender?: NonUserPromptSender;
   messageId: string;
   turnId: string;
   token: string;

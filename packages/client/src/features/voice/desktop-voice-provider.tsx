@@ -4,7 +4,7 @@ import {
   browserVoiceEnvironment,
 } from './browser-voice-environment';
 import type { VoiceConnection } from './voice-connection';
-import { VoiceConnectionContext } from './voice-connection-context';
+import { VoiceConnectionProvider } from './voice-connection-context';
 import { createWebRtcVoiceConnection } from './webrtc-voice-connection';
 
 // The desktop App carries a Voice call's audio itself; any other page offers no voice button.
@@ -22,8 +22,8 @@ export function DesktopVoiceProvider({
   const connection = useMemo(() => connectionFor(desktop), [desktop]);
 
   return (
-    <VoiceConnectionContext.Provider value={connection}>
+    <VoiceConnectionProvider value={connection}>
       {children}
-    </VoiceConnectionContext.Provider>
+    </VoiceConnectionProvider>
   );
 }

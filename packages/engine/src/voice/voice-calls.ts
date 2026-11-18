@@ -12,6 +12,7 @@ import { sessionActorId } from '../sessions';
 import type { EndedCall } from './call-types';
 import type { VoiceCallActorRef, voiceCallMachine } from './call.machine';
 import { Changes } from './changes';
+import type { VoiceSessions } from './session-link';
 
 type CallSnapshot = SnapshotFrom<typeof voiceCallMachine>;
 
@@ -24,6 +25,8 @@ export interface VoiceCallsPort {
   ) => Promise<VoiceStartOutput>;
   end: (sessionId?: string) => VoiceEndOutput;
   watch: (signal: AbortSignal) => AsyncGenerator<VoiceStatus>;
+  // Gives the call the Sessions it sends Prompts to and listens to.
+  attach: (sessions: VoiceSessions) => void;
 }
 
 const unavailable = (message: string): TRPCError =>
@@ -64,6 +67,10 @@ export class VoiceCalls implements VoiceCallsPort {
     this.actor.send({ type: 'call.end', reason: 'person', sessionId });
 
     return { ended: running && this.actor.getSnapshot().context.call === null };
+  }
+
+  public attach(sessions: VoiceSessions): void {
+    this.actor.getSnapshot().context.sessions.attach(sessions);
   }
 
   public async *watch(signal: AbortSignal): AsyncGenerator<VoiceStatus> {
@@ -152,6 +159,7 @@ export const noVoiceCalls: VoiceCallsPort = {
   status: () => Promise.resolve(noStatus),
   start: () => Promise.reject(unavailable('Voice calls are not available')),
   end: () => ({ ended: false }),
+  attach: () => {},
   watch: async function* () {
     await Promise.resolve();
     yield noStatus;

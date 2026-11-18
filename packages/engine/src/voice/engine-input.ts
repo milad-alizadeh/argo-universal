@@ -1,5 +1,6 @@
 import type { Database } from '@repo/db';
 import { createSessionReader } from '../sessions';
+import { briefingOf } from './briefing';
 import { FakeVoiceProvider } from './fake-provider';
 import { createGptLiveProvider } from './gpt-live/gpt-live-provider';
 import type { VoiceProvider } from './provider';
@@ -13,7 +14,7 @@ export function defaultVoiceProvider(
     : createGptLiveProvider();
 }
 
-// What the voice is told about a Session before it speaks: its title and working folder.
+// What the voice is told about a Session before it speaks: its title, working folder and recent Feed.
 export function sessionBriefing(
   database: Database,
 ): (sessionId: string) => string {
@@ -22,6 +23,10 @@ export function sessionBriefing(
   return (sessionId) => {
     const { title, checkout } = read(sessionId);
 
-    return `Session: ${title}\nWorking folder: ${checkout.path}`;
+    return briefingOf(database, {
+      id: sessionId,
+      title,
+      folder: checkout.path,
+    });
   };
 }

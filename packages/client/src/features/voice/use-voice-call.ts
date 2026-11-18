@@ -8,7 +8,7 @@ import type { VoiceConnection } from './voice-connection';
 import { useVoiceConnection } from './voice-connection-context';
 
 // Where the call is, as this Session's Composer sees it.
-export function callHere(
+function callHere(
   call: VoiceStatus['call'] | undefined,
   sessionId: string,
 ): ComposerVoiceCall {
