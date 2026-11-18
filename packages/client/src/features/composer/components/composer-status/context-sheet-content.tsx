@@ -4,7 +4,12 @@ import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import type { JSX } from 'react';
 import type { ComposerContext } from '../../utils/status';
-import { compactNumber, contextZone } from '../../utils/status';
+import {
+  contextDescription,
+  contextUsedLabel,
+  compactNumber,
+  contextZone,
+} from '../../utils/status';
 import { contextZones } from './context-zones';
 import { Meter } from './status-meter';
 import { StatusSheetList } from './status-surface';
@@ -14,9 +19,6 @@ export interface ContextSheetContentProps {
   percent: number;
   close: () => void;
 }
-
-export const contextDescription =
-  'Instructions, tools, files and the conversation the Agent reads for its next reply.';
 
 /*
  * A phone's Context window sheet, in grouped cards as Settings' rows: the tokens used with their meter, the two
@@ -60,9 +62,9 @@ function TokensRow({
 
   return (
     <ListItem
-      title={`${compactNumber(context.used)} / ${compactNumber(context.size)} tokens`}
+      title={`${contextUsedLabel(context)} / ${compactNumber(context.size)} tokens`}
       value={`${percent}% · ${zone}`}
-      description={contextDescription}
+      description={contextDescription(context)}
       control={<Meter percent={percent} warning />}
     />
   );

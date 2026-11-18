@@ -87,3 +87,11 @@ Owner amendment, 2026-10-29: Argo supplies MCP tools automatically when it opens
 Owner amendment, 2026-11-15: when the user asks an Agent to archive the Session it is working in, the Agent runs `session.archive` without a second Permission request. The Operation is `act`, with scope restricted to the calling Session itself; every other Session, including one it started, still requires confirmation. This does not turn an Agent-supplied consent flag or the wording of a Prompt into authority.
 
 A self archive answers `{ scheduled: true }` and waits for the Session actor to accept archive after its Turn finishes. The ordinary archive path then checks borrowers and uses the same Undo and Checkout cleanup rules. A later refusal appears as a Notice in the Feed. Closing the Session or stopping the Engine cancels an in-memory pending self archive. The App, user-token calls and confirmed calls targeting another Session retain their immediate idle-only archive behavior.
+
+## Reviews under ADR-0061
+
+Owner amendment, 2026-11-18 (#2373): [ADR-0061](0061-reviews-belong-to-the-engine-and-change-providers-own-remote-writes.md) adds Review as a fourth authenticated Prompt sender. Engine-created Reviewer Sessions use a separate Server-wide queue with at most two active runs. They do not consume their starter’s delegation slots and cannot create further Sessions through Operations. Ordinary Started Session caps and Prompt chains are unchanged. Argo Approval and withdrawal join the person-only consent exceptions. `change.merge` is confirm for an Agent and uses the guarded provider handler defined there.
+
+## Voice calls under ADR-0062
+
+Owner amendment, 2026-11-18: [ADR-0062](0062-a-voice-call-belongs-to-the-server-and-speaks-for-one-session.md) counts consent spoken in a Voice call as the person's own. The Engine applies a spoken allow-once or reject through the same hand-written procedure the App's click uses, and only when a spoken turn of the person's arrived after the voice announced that request. Answering a Permission request is still not an Operation, and always-allow is still a click. Ending a Voice call is an Operation the Session's Agent may run at the `act` tier, since it grants nothing.

@@ -10,6 +10,7 @@ import { View } from 'react-native';
 import { ComposerCover } from '#lib/product/composer-cover';
 import type { FeedViewItem } from '../../view/feed-view';
 import { drawnFeedItems } from '../drawn-feed-item';
+import { FeedImages } from '../feed-images';
 import { withoutDisclosedTurnEnds } from '../turn-end/turn-end';
 import { newestKeyOf, withLiveHeader } from './feed-entry';
 import { FeedList, type FeedListProps } from './feed-list';
@@ -79,7 +80,7 @@ function useDrawnItems(items: FeedProps['items']): FeedViewItem[] {
 
 function useFeedEntries(
   props: FeedProps,
-): Pick<FeedListProps, 'entries' | 'newestKey'> {
+): Pick<FeedListProps, 'entries' | 'newestKey' | 'turnRunning'> {
   const { liveHeader, liveToolCall, sessionId } = props;
   const drawnItems = useDrawnItems(props.items);
 
@@ -88,9 +89,10 @@ function useFeedEntries(
     [drawnItems, liveHeader, liveToolCall],
   );
 
-  const visible = useExitingLiveHeader(entries, sessionId, liveHeader !== null);
+  const turnRunning = liveHeader !== null;
+  const visible = useExitingLiveHeader(entries, sessionId, turnRunning);
 
-  return { entries: visible, newestKey: newestKeyOf(drawnItems) };
+  return { entries: visible, newestKey: newestKeyOf(drawnItems), turnRunning };
 }
 
 // What a Feed read without a Composer leaves for one at its end.
@@ -111,20 +113,25 @@ export function Feed({
       />
     );
 
-  return <FeedWithCover {...props} {...feed} />;
+  return <FeedWithImages {...props} {...feed} />;
+}
+
+// The Feed's images open above its list, so one stays open when its row scrolls out and is no longer drawn.
+function FeedWithImages(props: FeedListProps & FeedProps): React.JSX.Element {
+  return (
+    <FeedImages items={props.items} imageUrl={props.imageUrl}>
+      <FeedWithCover {...props} />
+    </FeedImages>
+  );
 }
 
 // A Feed that opens at its start has no Composer at its end, so it keeps no room for one.
-function FeedWithCover(
-  props: Omit<FeedListProps, 'turnRunning'> & FeedProps,
-): React.JSX.Element {
-  const feed = { ...props, turnRunning: props.liveHeader !== null };
-
-  if (!props.opensAtStart) return <FeedList {...feed} />;
+function FeedWithCover(props: FeedListProps): React.JSX.Element {
+  if (!props.opensAtStart) return <FeedList {...props} />;
 
   return (
     <ComposerCover.Provider value={noComposerCover}>
-      <FeedList {...feed} />
+      <FeedList {...props} />
     </ComposerCover.Provider>
   );
 }

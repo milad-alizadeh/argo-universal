@@ -296,6 +296,10 @@ _Avoid_: Subagent, child agent, task agent
 What an Agent (the second sense) is for: Explore, Plan, Implement, Review, Test or General. Its parent's Agent declares it through `session.declareSubagentRole` before the spawn, since most Agents' spawn tools cannot carry one; a role the Agent itself reports counts only when none was declared, and an Agent with neither is General. Argo draws each role with its own mark, in its own colour, in the Feed and the Agents list.
 _Avoid_: Agent type, subagent type
 
+**Usage limit**:
+One limit on the plan an Agent is signed in with, such as Claude's 5-hour or weekly window, read from what the Agent reports. Each says how much is used, when it resets and whether it is exhausted; a number the Agent did not report is unknown, never zero. The Server keeps the latest Usage limits for each Agent and Project, the same pair its sign-in is kept for. The shape follows Copilot's quota observations.
+_Avoid_: Quota, rate limit, plan limit, subscription usage
+
 **Started Session**:
 A Session that another Session started through an Operation, such as `session.create`. It is a full Session: the person, its starter or any other Session can prompt it. It is listed nested under its starter in the Sessions list, and it is not one of the starter's Agents, so it is never in the Workbench or Inspector. The code calls the link `startedBySessionId`. It runs in a new worktree, in the main checkout, or, when its starter passes the `starter` Checkout, in its starter's own Checkout, which it borrows and never owns (ADR-0008).
 _Avoid_: Agent, Subagent, child Session, delegated Session
@@ -315,6 +319,34 @@ _Avoid_: Workspace, worktree (when the main checkout is also possible)
 **Change**:
 One line of work in a Session, named by its branch, at one of five stages: Working, Branch, Open, Merged or Closed. A Session can have several at once.
 _Avoid_: PR, pull request, diff, branch (for the work)
+
+**Reviewer**:
+A repository definition of what to examine in a Change and whether to return Findings or a Score.
+_Avoid_: Review Agent (for the definition), review prompt
+
+**Reviewer run**:
+One execution of a Reviewer for one Review, represented by a Started Session.
+_Avoid_: Review (for one run), Subagent
+
+**Review**:
+The Reviewer runs and their results for one Change at one head commit. A later Review keeps the earlier one as history.
+_Avoid_: GitHub review (for Argo’s Review), report
+
+**Finding**:
+A located problem from a Reviewer run, with a severity and an open, resolved or dismissed state. An open high Finding blocks readiness.
+_Avoid_: Comment (for an Argo Finding), issue
+
+**Score**:
+A Reviewer run’s bounded assessment of a Change, with a reason and a direction that says whether higher or lower is better.
+_Avoid_: Rating, grade
+
+**Check**:
+A code host’s reported result for a commit. An unknown Check is not a passed Check.
+_Avoid_: Test (for every Check), CI status
+
+**Argo Approval**:
+A person’s consent to merge one Change at one head commit. It is separate from a GitHub review and clears when the head changes.
+_Avoid_: Approval (without Argo when ambiguous), Agent approval
 
 **Stage**:
 How far a Change has come: Working, Branch, Open, Merged or Closed. A draft or a conflict describes an Open Change; it is not a Stage of its own.
@@ -391,6 +423,14 @@ _Avoid_: Pending message, draft Prompt
 **Turn**:
 A stretch of Agent work started by a Prompt or by the Agent, ending with a stop reason when the Agent finishes or the Session ends it.
 _Avoid_: Run, request, exchange
+
+**Voice call**:
+A live spoken exchange between the person and a voice model, attached to one Session. What the person asks for reaches that Session's Agent as Prompts.
+_Avoid_: Conversation, conversation mode, voice mode, live
+
+**Voice provider**:
+A service or local model that runs a Voice call's voice.
+_Avoid_: Conversation provider, realtime provider, voice backend
 
 **Stored Turn**:
 A Turn as read back from storage, before the Writer's queued changes are laid over it.

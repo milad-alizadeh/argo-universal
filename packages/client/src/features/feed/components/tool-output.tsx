@@ -2,6 +2,7 @@ import type {
   ContentBlock,
   ToolCallContent,
   ToolCallDiff,
+  ToolCallUpdate,
 } from '@repo/contracts';
 import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
 import { ResourceCode as FeedCodeBlock } from '@repo/kit/primitives/content/code';
@@ -9,8 +10,11 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { unfencedText } from '../view/fenced-text';
 import { toFileDiffs } from '../view/file-diff';
+import type { KeyedImage } from '../view/keyed-image';
+import { toolCallImageAt } from '../view/tool-call-images';
 import { DiffView } from './diff-view/diff-view';
 import { FeedContent } from './feed-content/feed-content';
+import { FeedImage } from './feed-image';
 import { UnsupportedFeedContent } from './feed-notice/feed-notice';
 
 function ToolDiffOutput({ block }: { block: ToolCallDiff }): React.JSX.Element {
@@ -25,30 +29,32 @@ function ToolDiffOutput({ block }: { block: ToolCallDiff }): React.JSX.Element {
   );
 }
 
+interface BlockDrawing {
+  fileName?: string;
+  // The block's image as the Feed lists it, so it opens among the Feed's other images.
+  image?: KeyedImage;
+}
+
 function ToolOutputBlock({
   block,
-  fileName,
-}: {
-  block: ToolCallContent;
-  fileName?: string;
-}): React.JSX.Element {
+  ...drawing
+}: BlockDrawing & { block: ToolCallContent }): React.JSX.Element {
   if (block.type === 'diff') return <ToolDiffOutput block={block} />;
 
   if (block.type === 'terminal')
     return <FeedCodeBlock code={block.output} title="Output" />;
 
-  return <ToolContentOrPlaceholder block={block} fileName={fileName} />;
+  return <ToolContentOrPlaceholder block={block} {...drawing} />;
 }
 
 function ToolContentOrPlaceholder({
   block,
-  fileName,
-}: {
+  ...drawing
+}: BlockDrawing & {
   block: Exclude<ToolCallContent, { type: 'diff' | 'terminal' }>;
-  fileName?: string;
 }): React.JSX.Element {
   return block.type === 'content' ? (
-    <ToolContentBlock block={block.content} fileName={fileName} />
+    <ToolContentBlock block={block.content} {...drawing} />
   ) : (
     <UnsupportedFeedContent block={block} />
   );
@@ -70,14 +76,16 @@ function ToolText({ text, fileName }: ToolTextProps): React.JSX.Element {
   );
 }
 
-function ToolContentBlock(props: {
-  block: ContentBlock;
-  fileName?: string;
-}): React.JSX.Element {
-  const { block, fileName } = props;
+function ToolContentBlock({
+  block,
+  fileName,
+  image,
+}: BlockDrawing & { block: ContentBlock }): React.JSX.Element {
+  if (block.type === 'text')
+    return <ToolText text={block.text} fileName={fileName} />;
 
-  return block.type === 'text' ? (
-    <ToolText text={block.text} fileName={fileName} />
+  return image ? (
+    <FeedImage image={image.image} imageKey={image.key} />
   ) : (
     <FeedContent content={[block]} />
   );
@@ -86,17 +94,25 @@ function ToolContentBlock(props: {
 interface ToolOutputProps {
   content: readonly ToolCallContent[];
   fileName?: string;
+  // The Tool call the blocks are from, when its row draws their images itself.
+  row?: ToolCallUpdate;
 }
 
-export function ToolOutput({
-  content,
-  fileName,
-}: ToolOutputProps): React.JSX.Element {
+const drawingOf = (
+  { fileName, row }: ToolOutputProps,
+  block: ToolCallContent,
+): BlockDrawing => ({ fileName, image: row && toolCallImageAt(row, block) });
+
+export function ToolOutput(props: ToolOutputProps): React.JSX.Element {
   return (
     <View className="gap-2">
-      {withOccurrenceKeys(content, (block) => block.type).map(
+      {withOccurrenceKeys(props.content, (block) => block.type).map(
         ({ item: block, key }) => (
-          <ToolOutputBlock key={key} block={block} fileName={fileName} />
+          <ToolOutputBlock
+            key={key}
+            block={block}
+            {...drawingOf(props, block)}
+          />
         ),
       )}
     </View>

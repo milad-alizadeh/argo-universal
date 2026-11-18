@@ -79,6 +79,7 @@ function ports(): RowActionPorts & {
     fire: vi.fn<Fire>(),
     failed: vi.fn<RowActionPorts['failed']>(),
     copy: vi.fn<RowActionPorts['copy']>(() => Promise.resolve(true)),
+    hold: () => () => {},
   };
 }
 
@@ -89,12 +90,36 @@ describe('ticking an automation in the row menu', () => {
 
     first?.onSetAutomation?.('merge', false);
 
-    expect(kit.fire).toHaveBeenCalledWith({
-      pluginId: 'github',
-      operation: 'automationSet',
-      args: { reference: 'owner/repository#12', kind: 'merge', on: false },
-      ...scope,
+    expect(kit.fire).toHaveBeenCalledWith(
+      {
+        pluginId: 'github',
+        operation: 'automationSet',
+        args: { reference: 'owner/repository#12', kind: 'merge', on: false },
+        ...scope,
+      },
+      expect.any(Function),
+    );
+  });
+
+  it('holds the tick from the press, and hands the run what settles it', () => {
+    const settle = vi.fn<(answered: boolean) => void>();
+
+    const kit = {
+      ...ports(),
+      hold: vi.fn<RowActionPorts['hold']>(() => settle),
+    };
+
+    const [first] = withRowActions([row], kit);
+
+    first?.onSetAutomation?.('merge', false);
+
+    expect(kit.hold).toHaveBeenCalledWith({
+      reference: 'owner/repository#12',
+      kind: 'merge',
+      on: false,
     });
+    expect(kit.fire).toHaveBeenCalledWith(expect.anything(), settle);
+    expect(settle).not.toHaveBeenCalled();
   });
 
   it('offers no tick for a PR with no automation, or whose repository is unknown', () => {

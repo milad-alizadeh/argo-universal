@@ -87,6 +87,21 @@ function waitForAnnouncement(
   return heard.promise.finally(release(timer, stop));
 }
 
+/*
+ * Every address the Server with this key announces itself on now, or none when it is not heard in time. A paired Connection asks this whenever the address that answered last does not (ADR-0045).
+ */
+export async function announcedAddresses(
+  key: string,
+  browse: BrowseServers | null,
+  timeoutMs: number = defaultTimeoutMs,
+): Promise<ServerAddress[]> {
+  const found = await waitForAnnouncement(browse, key, timeoutMs);
+
+  if (!found) return [];
+
+  return found.addresses.map((host) => ({ host, port: found.port }));
+}
+
 const announced = (found: DiscoveredServer): ServerLocation => ({
   name: found.name,
   hosts: found.addresses,

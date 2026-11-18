@@ -28,6 +28,19 @@ export interface UsageLimit {
 
 export type ComposerContext = ContextUsage & { onCompact?: () => void };
 
+export function contextDescription(context: ComposerContext): string {
+  if (context.scope === 'model-call')
+    return 'Estimated from the last model call.';
+
+  if (context.scope === 'unverified') return 'Agent-reported estimate.';
+
+  return 'Instructions, tools, files and the conversation the Agent reads for its next reply.';
+}
+
+export function contextUsedLabel(context: ComposerContext): string {
+  return `${context.scope ? '~' : ''}${compactNumber(context.used)}`;
+}
+
 export function contextZone(percent: number): 'smart' | 'dumb' {
   return percent < smartZonePercent ? 'smart' : 'dumb';
 }
@@ -36,10 +49,6 @@ export function contextPercent(context: ComposerContext): number {
   return context.size > 0
     ? Math.round((context.used / context.size) * fullPercent)
     : 0;
-}
-
-export function completedSteps(entries: PlanEntry[]): number {
-  return entries.filter((entry) => entry.status === 'completed').length;
 }
 
 export function compactNumber(value: number): string {

@@ -1,10 +1,14 @@
-import type { PlanEntry } from '@repo/contracts';
+import {
+  countPlanSteps,
+  startedPlanSteps,
+  type PlanEntry,
+} from '@repo/contracts';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type { JSX } from 'react';
 import { View } from 'react-native';
-import { completedSteps, fullPercent } from '../../utils/status';
+import { fullPercent } from '../../utils/status';
 import { Meter } from './status-meter';
 import { phoneSheet } from './status-surface';
 import { TodoSteps } from './todo-steps';
@@ -31,14 +35,16 @@ interface TodosEntriesProps {
   entries: PlanEntry[];
 }
 
-function TodosCompletion({ entries }: TodosEntriesProps): JSX.Element {
-  const done = completedSteps(entries);
+function TodosProgress({ entries }: TodosEntriesProps): JSX.Element {
+  const counts = countPlanSteps(entries);
+  const started = startedPlanSteps(counts);
 
   return (
     <View className="flex-row items-center gap-2">
-      <TodosCompletionMeter done={done} total={entries.length} />
+      <TodosProgressMeter started={started} total={entries.length} />
       <Text selectable={false} role="secondary" className="select-none">
-        {done} of {entries.length} done
+        {started} of {entries.length}{' '}
+        {counts.inProgress > 0 ? 'started' : 'done'}
       </Text>
     </View>
   );
@@ -49,7 +55,7 @@ function TodosPopoverHeading({ entries }: TodosEntriesProps): JSX.Element {
     <View className="px-4 py-3 gap-1.5">
       <TodosHeading />
       <SizeClass only="wide">
-        <TodosCompletion entries={entries} />
+        <TodosProgress entries={entries} />
       </SizeClass>
     </View>
   );
@@ -73,16 +79,16 @@ export function TodosPopoverContent({
   return <HeadedTodoSteps entries={entries} />;
 }
 
-function TodosCompletionMeter({
-  done,
+function TodosProgressMeter({
+  started,
   total,
 }: {
-  done: number;
+  started: number;
   total: number;
 }): JSX.Element {
   return (
     <View className="w-16">
-      <Meter percent={(done / total) * fullPercent} className="h-1" />
+      <Meter percent={(started / total) * fullPercent} className="h-1" />
     </View>
   );
 }

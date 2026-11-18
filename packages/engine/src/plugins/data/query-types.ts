@@ -32,6 +32,8 @@ export type QueryRead = {
   outside?: boolean;
   // Asked for by someone, as an Operation run's read is, so a failed Query's rest does not hold it back (#2197).
   asked?: boolean;
+  // A read that answers a Slot, which takes the kept answer of a due entry and reads again behind it (#2339).
+  slot?: true;
 };
 
 // The draw a Loader's read is for: its id, and the Page address holding the read, or none for a background pass.
@@ -45,4 +47,5 @@ export type QueryOrigin = {
   projectId?: string;
   drawn?: DrawnFor;
   forRun?: true;
+  slot?: true;
 };

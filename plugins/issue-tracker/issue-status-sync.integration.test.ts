@@ -52,7 +52,8 @@ it('refreshes visible Session items when an Issue page reads a changed Query', a
   const page = await test.pages.open({ path: issuePage });
 
   github.closeIssue(42);
-  await test.clock.advance(61_000);
+  // Let the visible row finish each refresh before advancing through its Slot budget.
+  await test.clock.until(() => false, { stepMs: 1000, steps: 61 });
   await drawnUntil(page, 'Reopen Issue');
   await expect
     .poll(() => [row, line], { timeout: 3000 })

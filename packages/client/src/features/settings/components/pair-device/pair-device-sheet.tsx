@@ -10,11 +10,11 @@ import { PairingCode } from './pairing-code';
 
 /*
  * Where the Server's answer has got to. A sheet holds at most one live code, and never two at once.
- * An expired code keeps the Ticket it had, so the sheet can show it dimmed rather than leave a hole where it was.
+ * There is no expired code: the open sheet swaps a code for a new one before its Ticket runs out (ADR-0045).
  */
 export type PairingCodeLoad =
   | { status: 'minting' | 'error' }
-  | ({ status: 'live' | 'expired' } & MintedPairingTicket);
+  | ({ status: 'live' } & MintedPairingTicket);
 
 export interface PairDeviceSheetProps {
   open: boolean;
@@ -126,8 +126,7 @@ function PageBody(props: PairDeviceSheetProps): React.JSX.Element {
 function CodeOrMessage(props: { code: PairingCodeLoad }): React.JSX.Element {
   const { code } = props;
 
-  if (code.status === 'live' || code.status === 'expired')
-    return <PairingCode code={code} expired={code.status === 'expired'} />;
+  if (code.status === 'live') return <PairingCode code={code} />;
 
   return <Text role="secondary">{messages[code.status]}</Text>;
 }

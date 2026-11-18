@@ -171,6 +171,7 @@ export const addOnlySlots = [
     key: 'sessionId',
     item: SessionRowItem,
     limit: { phone: 1, desktop: 3, perPlugin: 8 },
+    refreshMs: sessionChangesSlot.refreshMs,
   }),
   // Single-owner: each Plugin that asks answers one line per row; the App shows the chosen Plugin's.
   itemsSlotEntry(sessionActivitySlotId, SessionRowContext, {
