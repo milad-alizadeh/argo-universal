@@ -2,6 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { recordedImageUrl } from '../../../../lib/product/feed-message.mocks';
 import { FeedImageUrlContext } from '../feed-image';
+import {
+  runningOperations,
+  settledOperations,
+} from './operation-group-fixtures';
 import { ToolCallGroup } from './tool-call-group';
 import {
   allowedOnceGroup,
@@ -10,8 +14,6 @@ import {
   parallelGroup,
   runningExpandedGroup,
   runningGroup,
-  runningOperations,
-  settledOperations,
   settledGroup,
   failedCommandsGroup,
   imageReadsExpandedGroup,
