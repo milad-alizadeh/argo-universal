@@ -2,6 +2,7 @@ import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type { SubagentRole } from '@repo/contracts';
 import { SessionRowUpdateJob } from '../session-storage';
 import {
+  forwardChildUpdate,
   openChildFeed,
   type ChildFeed,
   type OpenedChildFeed,
@@ -10,7 +11,7 @@ import { withDeclaredRole, type AssociatedChild } from './declared-roles';
 import type { SubagentRouting } from './routing-types';
 import { deliverSubagentMessage, isSubagentMessage } from './subagent-messages';
 import { associationEvent } from './subagent-rows';
-import { deliverChildUpdate, subagentWorkState } from './subagent-work';
+import { subagentWorkState, updateChildModel } from './subagent-work';
 import { updateSubagentWork } from './work';
 
 export type Subagents = {
@@ -128,6 +129,21 @@ export function routeSubagents(
 export function flushSubagents(subagents: Subagents): void {
   for (const child of subagents.children.values())
     child.feed.send({ type: 'feed.flush' });
+}
+
+function deliverChildUpdate(
+  input: SubagentRouting,
+  children: Map<string, ChildFeed>,
+  { update, sessionId }: SessionNotification,
+): void {
+  const child = children.get(sessionId);
+
+  if (!child) return;
+
+  if (update.sessionUpdate !== 'config_option_update')
+    return forwardChildUpdate(child, { acpSessionId: sessionId, update });
+
+  children.set(sessionId, updateChildModel(input, child, update.configOptions));
 }
 
 function routingSource(

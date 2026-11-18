@@ -1,6 +1,5 @@
 import type {
   SessionConfigOption,
-  SessionNotification,
   StateUpdate,
 } from '@agentclientprotocol/sdk';
 import { StopReason } from '@repo/contracts';
@@ -25,42 +24,27 @@ export function subagentWorkState(
   };
 }
 
-type ChildWork = Pick<SubagentRouting, 'write'>;
-
-function recordChildModel(
-  { write }: ChildWork,
-  id: string,
+export function updateChildModel(
+  { write }: Pick<SubagentRouting, 'write'>,
+  child: ChildFeed,
   options: SessionConfigOption[],
-): void {
+): ChildFeed {
   const model = options.find((option) => option.category === 'model');
 
-  if (model?.type === 'select') {
-    write(new TurnUpdateJob({ id, set: { model: model.currentValue } }));
-  }
+  return model?.type === 'select'
+    ? withModel(write, child, model.currentValue)
+    : child;
 }
 
-export function deliverChildUpdate(
-  input: ChildWork,
-  children: ReadonlyMap<string, ChildFeed>,
-  notification: SessionNotification,
-): void {
-  const child = children.get(notification.sessionId);
-
-  if (child) updateChild(input, child, notification);
-}
-
-function updateChild(
-  input: ChildWork,
+function withModel(
+  write: SubagentRouting['write'],
   child: ChildFeed,
-  { update, sessionId }: SessionNotification,
-): void {
-  if (update.sessionUpdate === 'config_option_update' && child.turnId)
-    return recordChildModel(input, child.turnId, update.configOptions);
+  model: string,
+): ChildFeed {
+  if (model === child.model) return child;
 
-  child.feed.send({
-    type: 'feed.acpUpdate',
-    acpSessionId: sessionId,
-    update,
-    turnId: child.turnId,
-  });
+  if (child.turnId)
+    write(new TurnUpdateJob({ id: child.turnId, set: { model } }));
+
+  return { ...child, model };
 }

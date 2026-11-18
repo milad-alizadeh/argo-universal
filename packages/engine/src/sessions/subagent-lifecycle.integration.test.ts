@@ -3,6 +3,7 @@ import { turn } from '@repo/db/schema';
 import { smallModelUpdate } from '@repo/mocks/agent/acp-configuration';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { scenarios } from '@repo/mocks/agent/scenarios';
+import { subagentSessionId } from '@repo/mocks/agent/subagent-scenarios';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import {
@@ -11,6 +12,7 @@ import {
   waitForAcpSessionIdle,
 } from '#mocks/acp-feed';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
+import { onTranscript } from '#mocks/subagent-steps';
 
 const missingChild = 'No Subagent was persisted';
 
@@ -39,18 +41,14 @@ async function resumeBackgroundParent(): Promise<ResumedParent> {
     ...background,
     steps: [
       ...background.steps,
-      {
-        type: 'update',
-        sessionId: 'subagent-review',
-        update: smallModelUpdate,
-      },
+      onTranscript(smallModelUpdate, subagentSessionId),
     ],
     resumedSteps: [
       {
         type: 'update',
         update: {
           sessionUpdate: 'subagent_update',
-          sessionId: 'subagent-review',
+          sessionId: subagentSessionId,
           state: {
             state: 'idle',
             stopReason: 'end_turn',
