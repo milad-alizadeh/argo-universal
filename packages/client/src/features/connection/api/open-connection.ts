@@ -1,10 +1,20 @@
+import { browseServers } from '../discovery/browse-servers';
+import {
+  announcedAddresses,
+  type BrowseServers,
+} from '../discovery/resolve-server';
 import { type Connection, createConnection } from '../stores/connection';
 import { appChannelPlatform } from './channel/channel-platform';
 import {
   type ChannelPlatform,
+  type ChannelTarget,
   createChannelTransport,
 } from './channel/channel-transport';
-import { isPaired, type ServerEndpoint } from './server-endpoint';
+import {
+  isPaired,
+  type PairedEndpoint,
+  type ServerEndpoint,
+} from './server-endpoint';
 import {
   channelServerUrl,
   createTRPCClient,
@@ -20,17 +30,27 @@ export interface OpenConnection {
   close: () => Promise<void>;
 }
 
+// Where the App finds Servers on the local network, and how; one place so a test can announce a Server of its own.
+interface Network {
+  platform: ChannelPlatform;
+  browse: BrowseServers | null;
+}
+
+// The address Pairing kept is a fallback: the Server is looked for by its key whenever the address that answered last does not (ADR-0045).
 function channelOf(
-  endpoint: ServerEndpoint,
-  platform: ChannelPlatform,
+  endpoint: PairedEndpoint,
+  network: Network,
   onRefused: () => void,
-): ChannelTransport | undefined {
-  if (!isPaired(endpoint)) return undefined;
-
+): ChannelTransport {
   const { host, port, serverPublicKey } = endpoint;
-  const target = { address: { host, port }, serverPublicKey };
 
-  return createChannelTransport(target, platform, onRefused);
+  const target: ChannelTarget = {
+    address: { host, port },
+    serverPublicKey,
+    locate: async () => announcedAddresses(serverPublicKey, network.browse),
+  };
+
+  return createChannelTransport(target, network.platform, onRefused);
 }
 
 interface Wiring {
@@ -40,13 +60,13 @@ interface Wiring {
 
 const wiredTo = (
   endpoint: ServerEndpoint,
-  platform: ChannelPlatform,
+  network: Network,
   connection: Connection,
 ): Wiring =>
   isPaired(endpoint)
     ? {
         url: channelServerUrl,
-        channel: channelOf(endpoint, platform, connection.refuse),
+        channel: channelOf(endpoint, network, connection.refuse),
       }
     : { url: endpoint.url, channel: undefined };
 
@@ -59,12 +79,16 @@ const closing =
 /*
  * The App's Connection to a Server: a tRPC client whose socket opens only when the Connection allows each attempt. The Server on this Device is reached on its loopback WebSocket; a paired Server only inside the encrypted channel, with no plain-HTTP route left to fall back to (ADR-0045).
  */
-export function openConnection(
+export const openConnection = (
   endpoint: ServerEndpoint,
   platform: ChannelPlatform = appChannelPlatform,
-): OpenConnection {
+  browse: BrowseServers | null = browseServers,
+): OpenConnection => openOver(endpoint, { platform, browse });
+
+function openOver(endpoint: ServerEndpoint, network: Network): OpenConnection {
   const connection = createConnection();
-  const { url, channel } = wiredTo(endpoint, platform, connection);
+  const { url, channel } = wiredTo(endpoint, network, connection);
+
   const trpc = createTRPCClient(url, connection.nextAttempt, { channel });
 
   connection.watch(trpc.webSocketClient.connectionState);
