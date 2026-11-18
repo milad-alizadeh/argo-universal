@@ -11,7 +11,7 @@ const hasComposer = (props: OpenSessionViewProps): boolean =>
   !props.preview && !props.archived;
 
 // Nothing without a Composer, or while the Checkout has no changes.
-export const changesPill = (
+const changesPill = (
   props: OpenSessionViewProps,
   panels: SessionPanels,
 ): React.ReactNode => {
