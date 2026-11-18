@@ -1,6 +1,7 @@
 import type { DeferredAgentLaunch } from '../..';
 import { AuthChanges } from '../../auth/auth-changes';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
+import { UsageLimits } from '../../usage-limits';
 import { awaitAcpOpening } from '../connection/client';
 import { AcpConnections } from './resource-connections';
 import { entryAuthentication } from './resource-entry';
@@ -16,9 +17,13 @@ import type {
 
 class EngineAcpResources implements AcpResources {
   public readonly authChanges = new AuthChanges();
+  public readonly usageLimits = new UsageLimits();
   private readonly connections: AcpConnections;
   public constructor(input: AcpResourceInput) {
-    this.connections = new AcpConnections(input, this.authChanges);
+    this.connections = new AcpConnections(input, {
+      authChanges: this.authChanges,
+      usageLimits: this.usageLimits,
+    });
   }
   public async open(input: AcpOpenInput): Promise<AcpSessionLease> {
     this.assertOpening(input);

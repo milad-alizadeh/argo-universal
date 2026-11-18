@@ -14,6 +14,7 @@ import type { AgentLaunch, DeferredAgentLaunch } from '../..';
 import type { LaunchLoginTerminal } from '../..';
 import type { AuthChanges } from '../../auth/auth-changes';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
+import type { UsageLimits } from '../../usage-limits';
 import type { TerminalRequests } from '../connection/terminal-requests';
 
 // ACP's `systemPrompt` on session/new, resume and load, which the SDK this Engine builds on does not type yet.
@@ -112,6 +113,7 @@ export type AcpResources = {
     projectId: string,
   ) => Promise<ConnectionAuthentication> | undefined;
   authChanges: Pick<AuthChanges, 'watch'>;
+  usageLimits: Pick<UsageLimits, 'read' | 'watch'>;
   dropAgentConnections: (agentId: string) => void;
   isDirectoryInUse: (directory: string) => boolean;
   open: (input: AcpOpenInput) => Promise<AcpSessionLease>;
