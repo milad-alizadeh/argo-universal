@@ -80,7 +80,9 @@ interface LookedAtProps {
 
 // A phone that holds no Server draws its screens with no Connection under them, so the router can show Pairing.
 const shown = (props: LookedAtProps): ReactNode =>
-  showsServer(props.servers) ? lookedAtServer(props) : props.children;
+  showsServer(props.servers.servers, props.servers.lookingAt)
+    ? lookedAtServer(props)
+    : props.children;
 
 /*
  * Looking at another Server starts its screens again on a QueryClient of its own — a new key, so a new client — and

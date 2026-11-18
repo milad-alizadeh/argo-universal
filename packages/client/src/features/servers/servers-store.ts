@@ -62,7 +62,7 @@ class AppServersStore implements ServersStore {
   public readonly look = (id: string): void => {
     if (id === this.snapshot.lookingAt) return;
 
-    if (!canShow(this.snapshot.servers, id)) return;
+    if (!showsServer(this.snapshot.servers, id)) return;
 
     this.set({ ...this.snapshot, lookingAt: id });
     keepLookedAtServer(id);
@@ -131,15 +131,11 @@ export const createServersStore = (ownServerUrl?: string): ServersStore =>
 const showable = (server: AppServer): boolean =>
   server.url !== undefined || server.channel !== undefined;
 
-const canShow = (servers: readonly AppServer[], id: string): boolean =>
-  servers.some((server) => server.id === id && showable(server));
-
-// True while the App holds a Server it can show; a phone that holds none shows only Pairing.
-export const showsServer = ({
-  servers,
-  lookingAt,
-}: Pick<ServersSnapshot, 'servers' | 'lookingAt'>): boolean =>
-  canShow(servers, lookingAt);
+// True while the App holds this Server with somewhere to open a Connection; a phone that holds none shows only Pairing.
+export const showsServer = (
+  servers: readonly AppServer[],
+  id: string,
+): boolean => servers.some((server) => server.id === id && showable(server));
 
 // The Server the App shows when it was looking at none it can show: its own, listed first, else the first it paired with that it can.
 const fallbackOf = (servers: readonly AppServer[]): string =>
@@ -153,6 +149,6 @@ const shownOrOwn = (
   servers: readonly AppServer[],
   lookedAt: string | null,
 ): string =>
-  lookedAt !== null && canShow(servers, lookedAt)
+  lookedAt !== null && showsServer(servers, lookedAt)
     ? lookedAt
     : fallbackOf(servers);

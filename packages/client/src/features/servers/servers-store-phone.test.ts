@@ -1,7 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { describe, expect, it, vi } from 'vitest';
 import { memoryStorage } from '../../../mocks/memory-storage';
-import { createServersStore, type ServersStore } from './servers-store';
+import {
+  createServersStore,
+  showsServer,
+  type ServersStore,
+} from './servers-store';
 
 const studioKey = 'studio-key';
 
@@ -51,5 +55,27 @@ describe("a phone's list of Servers", () => {
     store.remove(studioKey);
 
     expect(store.getSnapshot().servers).toEqual([]);
+  });
+});
+
+const shows = (store: ServersStore): boolean => {
+  const { servers, lookingAt } = store.getSnapshot();
+
+  return showsServer(servers, lookingAt);
+};
+
+describe('whether a phone shows a Server or only Pairing', () => {
+  it('shows only Pairing while it holds no Server', async () => {
+    expect(shows(await phoneKeeping([]))).toBe(false);
+  });
+
+  it('shows a Server it holds, whether or not it answers, so the banner can say it cannot be reached', async () => {
+    expect(shows(await phoneKeeping([studio]))).toBe(true);
+  });
+
+  it('shows only Pairing for a Server whose address it never learned, which has nothing to open a Connection to', async () => {
+    const unaddressed = { name: 'Studio', key: studioKey };
+
+    expect(shows(await phoneKeeping([unaddressed]))).toBe(false);
   });
 });
