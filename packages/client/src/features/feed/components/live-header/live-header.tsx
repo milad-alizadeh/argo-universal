@@ -120,7 +120,7 @@ function RequestTitle({ title }: { title: string }): React.JSX.Element {
   );
 }
 
-export function LiveTitle({
+function LiveTitle({
   title,
   source,
 }: {

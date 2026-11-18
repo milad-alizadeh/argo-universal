@@ -23,4 +23,6 @@ export interface CollapsibleHeaderProps {
   iconTone?: Tone;
   // Replaces the label text, between the icon and the chevron; hover is read with useCollapsibleHovered.
   children?: ReactNode;
+  // Replaces the title row, including its chevron.
+  renderTitle?: (chevron: ReactNode) => ReactNode;
 }
