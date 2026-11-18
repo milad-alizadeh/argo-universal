@@ -23,9 +23,13 @@ const endedAs = (promise: Promise<unknown>): Promise<string> =>
 // The tests run in this order: the first browse of a session is the one that waits longer, and the module remembers that it has happened.
 it('waits four seconds on the first browse, and says undetermined when nothing was heard', async () => {
   const outcome = endedAs(resolveServer(known, silent));
+  let ended = false;
 
+  void outcome.then(() => {
+    ended = true;
+  });
   await vi.advanceTimersByTimeAsync(3500);
-  await expect(Promise.race([outcome, 'pending'])).resolves.toBe('pending');
+  expect(ended).toBe(false);
   await vi.advanceTimersByTimeAsync(600);
 
   await expect(outcome).resolves.toBe('BrowseUndeterminedError');

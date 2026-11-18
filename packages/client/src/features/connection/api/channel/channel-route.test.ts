@@ -18,6 +18,8 @@ const cable = (last: number): ChannelAddress => ({
 
 const kept = lan(20);
 
+const unreachable = 'The Server did not answer';
+
 const opened = 'channel';
 
 interface FakeServer {
@@ -106,7 +108,7 @@ describe('ChannelRoute', () => {
     const route = new ChannelRoute(kept, announcing(), [wire, tailnet]);
     const server = serverOn();
 
-    await expect(route.open(server.attempt)).rejects.toThrow('The Server did not answer');
+    await expect(route.open(server.attempt)).rejects.toThrow(unreachable);
 
     expect(server.tried).toEqual([kept, tailnet, wire]);
   });
@@ -126,9 +128,7 @@ describe('ChannelRoute', () => {
     const route = new ChannelRoute(kept, announcing(kept, kept));
     const server = serverOn();
 
-    await expect(route.open(server.attempt)).rejects.toThrow(
-      'The Server did not answer',
-    );
+    await expect(route.open(server.attempt)).rejects.toThrow(unreachable);
     expect(server.tried).toEqual([kept]);
   });
 
@@ -149,9 +149,7 @@ describe('ChannelRoute', () => {
   it('says the Server is unreachable when no address answers', async () => {
     const route = new ChannelRoute(kept, announcing(lan(40)));
 
-    await expect(route.open(serverOn().attempt)).rejects.toThrow(
-      'The Server did not answer',
-    );
+    await expect(route.open(serverOn().attempt)).rejects.toThrow(unreachable);
   });
 
   it('asks the network once for channels that open together', async () => {
