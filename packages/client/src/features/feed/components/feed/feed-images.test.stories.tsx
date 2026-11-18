@@ -1,4 +1,5 @@
 import type { ContentBlock, ImageContent } from '@repo/contracts';
+import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
@@ -12,7 +13,7 @@ import { commandTitle } from '../command-row/command-row-play.mocks';
 import { imageReadsGroup } from '../tool-call-group/tool-call-group-fixtures';
 import { completedCommand } from '../tool-call.mocks';
 import { Feed } from './feed';
-import { feedScrollId, scrolledToEnd } from './feed-reader.mocks';
+import { feedScrollId, scrolledToEnd, settleWait } from './feed-reader.mocks';
 import { feedArgs } from './paged-feed.mocks';
 
 const { snapshot } = recordedFeedMock('agent-1', 'markdown-answer');
@@ -247,6 +248,8 @@ function reachesImageNotDrawn(width: number): Story {
       ).toBeNull();
       // Rows above may still measure, so the place is where the thumbnail sits on screen, not scrollTop.
       const opener = canvas.getByRole('button', thumbnail(answerImage));
+
+      await settleOverlays(opener);
       const place = opener.getBoundingClientRect().top;
       // The Feed may ask for older rows as it opens; stepping must not ask again.
       const asked = olderRowsAsked.mock.calls.length;
@@ -258,10 +261,17 @@ function reachesImageNotDrawn(width: number): Story {
       await userEvent.keyboard('{Escape}');
       await closed();
 
-      await expect(
-        Math.abs(opener.getBoundingClientRect().top - place),
-      ).toBeLessThan(2);
-      await expect(scrolledToEnd(scroll)).toBe(true);
+      await waitFor(async () => {
+        await expect(scrolledToEnd(scroll)).toBe(true);
+        const restoredOpener = canvas.getByRole(
+          'button',
+          thumbnail(answerImage),
+        );
+
+        await expect(
+          Math.abs(restoredOpener.getBoundingClientRect().top - place),
+        ).toBeLessThan(2);
+      }, settleWait);
       await expect(
         canvas.queryByRole('button', thumbnail(promptImage)),
       ).toBeNull();
