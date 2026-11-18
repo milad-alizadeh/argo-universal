@@ -1,8 +1,4 @@
-import {
-  type FeedProps,
-  type useSessionFeed,
-  withPartialTranscripts,
-} from '#features/feed';
+import type { FeedProps, useSessionFeed } from '#features/feed';
 import {
   openFailureText,
   sessionMissing,
@@ -19,6 +15,7 @@ import type {
   OpenSessionViewProps,
   SessionDetailViewProps,
 } from './session-detail-view';
+import { feedItems } from './session-feed-items';
 import { sessionHeaderProps } from './session-header-props-source';
 import { type StoppedTurn, stoppedTurn } from './stopped-turn';
 
@@ -87,17 +84,6 @@ const pagingProps = (
   historyCursor: feed.historyCursor,
   onStartReached: (): void => void feed.loadOlder(),
 });
-
-// The Feed's items, with what is being said on a Voice call drawn last.
-const feedItems = (
-  open: OpenSession,
-  stoppedEnding: StoppedTurn['ending'] | undefined,
-): FeedProps['items'] =>
-  withPartialTranscripts(
-    open.view.items.filter((item) => item !== stoppedEnding),
-    open.partials ?? [],
-    open.sessionId,
-  );
 
 const sessionFeedProps = (
   open: OpenSession,

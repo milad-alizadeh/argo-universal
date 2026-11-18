@@ -5,7 +5,7 @@ import { OperationIcon } from '../operations/metadata';
 import { OperationWorkTarget } from '../operations/work';
 import { TurnEnd } from '../sessions/turn';
 import { CompactionUpdate } from './compaction';
-import { BlobRef, ContentBlock } from './content-block';
+import { BlobRef } from './content-block';
 import {
   AgentMessage,
   AgentThought,
@@ -17,7 +17,7 @@ import {
 } from './messages';
 import { createFeedMetadataSchema } from './metadata';
 import { Plan } from './plan';
-import { SubagentRole } from './subagent-role';
+import { SubagentUpdate } from './subagent-update';
 import {
   CommandAction,
   PermissionOutcome,
@@ -91,42 +91,9 @@ export const PlanUpdate = z.strictObject({
 
 export type PlanUpdate = z.infer<typeof PlanUpdate>;
 
-export const SubagentState = z.enum(['running', 'idle', 'requires_action']);
-
-export type SubagentState = z.infer<typeof SubagentState>;
-
 export { SubagentRole } from './subagent-role';
 
-// ACP has no `wait` or `close`, so neither is an action (#930).
-export const SubagentAction = z.enum(['spawn', 'message']);
-
-export type SubagentAction = z.infer<typeof SubagentAction>;
-
-// ACP's `sessionId` and `state` clash with the envelope's, so both carry a `subagent` prefix.
-export const SubagentUpdate = z.strictObject({
-  ...envelope,
-  sessionUpdate: kind('subagent_update'),
-  subagentSessionId: z.string(),
-  title: z.string().optional(),
-  subagentState: SubagentState.optional(),
-  /*
-   * `prompt` is the parent's outgoing message; `result` only an explicit reply from the child.
-   * `childPosition` is the child Feed's next position when the result first arrived, where the child's Feed draws it (#1981).
-   */
-  _meta: createFeedMetadataSchema(
-    z.strictObject({
-      action: SubagentAction.optional(),
-      role: z.string().optional(),
-      // The role the Session declared before the spawn; it outranks any role the Agent reports.
-      declaredRole: SubagentRole.optional(),
-      prompt: z.array(ContentBlock).optional(),
-      result: z.array(ContentBlock).optional(),
-      childPosition: z.number().int().nonnegative().optional(),
-    }),
-  ),
-});
-
-export type SubagentUpdate = z.infer<typeof SubagentUpdate>;
+export * from './subagent-update';
 
 export const knownNoticeSeverities = ['info', 'warning', 'error'] as const;
 
