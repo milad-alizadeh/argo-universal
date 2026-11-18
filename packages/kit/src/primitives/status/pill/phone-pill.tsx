@@ -11,7 +11,7 @@ export function PhonePill({
   const className = phonePillClass(props.disabled);
 
   return (
-    <LiquidGlass corners="pill" interactive inherit className="h-8">
+    <LiquidGlass corners="pill" interactive frosted={false} className="h-8">
       <Pressable {...props} hitSlop={6} className={className}>
         {children}
       </Pressable>

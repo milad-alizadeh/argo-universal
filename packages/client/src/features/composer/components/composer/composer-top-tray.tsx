@@ -56,7 +56,7 @@ function ComposerPhonePills(layout: PlanLayout): React.JSX.Element {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerClassName="min-h-7 flex-grow flex-row items-center justify-center gap-2"
+        contentContainerClassName="min-h-7 flex-grow flex-row items-center justify-center gap-2 px-2 py-2"
       >
         {layout.props.phonePill}
         <ComposerPlans {...layout} />

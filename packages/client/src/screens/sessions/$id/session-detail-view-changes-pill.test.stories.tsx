@@ -76,6 +76,13 @@ export const SharesPhoneRowWithTodos: Story = {
     const todos = await canvas.findByRole('button', { name: 'Todos' });
     const changesBox = changes.getBoundingClientRect();
     const todosBox = todos.getBoundingClientRect();
+    const input = canvas.getByRole('textbox', { name: 'Message' });
+    const card = input.parentElement?.parentElement;
+
+    if (!card) throw new Error('Composer card is missing.');
+    await expect(
+      card.getBoundingClientRect().top - changesBox.bottom,
+    ).toBeGreaterThanOrEqual(12);
     await expect(changesBox.top + changesBox.height / 2).toBeCloseTo(
       todosBox.top + todosBox.height / 2,
       0,
