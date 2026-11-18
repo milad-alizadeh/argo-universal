@@ -22,9 +22,15 @@ const parseMember = (line: string): ProcessGroupMember | undefined => {
 
 const processTableArguments = ['-A', '-ww', '-o', 'pid=,pgid=,stat=,command='];
 
+// Full command lines of every process outgrow Node's 1 MB default on a busy Mac.
+const processTableBytes = 64 * 1024 * 1024;
+
 const processTable = (): string => {
   try {
-    return execFileSync('/bin/ps', processTableArguments, { encoding: 'utf8' });
+    return execFileSync('/bin/ps', processTableArguments, {
+      encoding: 'utf8',
+      maxBuffer: processTableBytes,
+    });
   } catch (error) {
     throw new Error('Process group cannot be observed', { cause: error });
   }
