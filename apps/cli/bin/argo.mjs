@@ -16,4 +16,10 @@ if (command === 'server') {
     process.send?.({ type: 'supervisor.spawned', pid: child.pid }, (error) => {
       if (error) process.stderr.write(`${error.message}\n`);
     });
-} else launch(fileURLToPath(new URL('../src/main.ts', import.meta.url)));
+} else if (command === 'plugin')
+  // The Plugin command loads the Engine, so it has its own entry and `argo mcp` starts without it.
+  launch(
+    fileURLToPath(new URL('../src/plugin-main.ts', import.meta.url)),
+    args,
+  );
+else launch(fileURLToPath(new URL('../src/main.ts', import.meta.url)));
