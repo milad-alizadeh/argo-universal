@@ -1,5 +1,9 @@
 import { maxBlobUploadBytes } from '@repo/contracts';
-import type { ComposerProps } from './composer-types';
+import type {
+  ComposerProps,
+  ComposerVoiceCall,
+  SendState,
+} from './composer-types';
 
 function hasOversizedAttachment(props: ComposerProps): boolean {
   return oversizedAttachmentIds(props).length > 0;
@@ -53,9 +57,31 @@ function isEmptyDraft(props: ComposerProps): boolean {
   return !props.queueEdit && !hasDraftContent(props);
 }
 
-export function sendButtonState(
-  props: ComposerProps,
-): 'stop' | 'sending' | 'ready' | 'blocked' {
+// The primary button: Stop, Send, or, with nothing written, the voice button while no call runs and End while one does. Text in the draft is always Send.
+export function sendButtonState(props: ComposerProps): SendState {
+  return callSendState(props) ?? idleSendState(props);
+}
+
+const inCall: Partial<Record<ComposerVoiceCall, 'connecting' | 'end'>> = {
+  connecting: 'connecting',
+  connected: 'end',
+};
+
+const voiceCall = (props: ComposerProps): ComposerVoiceCall =>
+  props.voice?.call ?? 'none';
+
+// While a call runs here and the draft is empty, the button is End: it comes back as Send once the person types.
+function callSendState(props: ComposerProps): 'connecting' | 'end' | undefined {
+  return hasDraftContent(props) ? undefined : inCall[voiceCall(props)];
+}
+
+function idleSendState(props: ComposerProps): SendState {
+  const state = baseSendState(props);
+
+  return state === 'blocked' && canStartVoice(props) ? 'voice' : state;
+}
+
+function baseSendState(props: ComposerProps): SendState {
   const candidates = [
     ['stop', hasStopAction(props)],
     ['sending', props.sending],
@@ -64,6 +90,19 @@ export function sendButtonState(
 
   return candidates.find(([, active]) => active)?.[0] ?? 'blocked';
 }
+
+// A call here, or in another Session, keeps a second from starting: one Voice call runs per App.
+const voiceStartConditions: ((props: ComposerProps) => boolean)[] = [
+  (props) => props.voice?.usable === true,
+  (props) => voiceCall(props) === 'none',
+  (props) => !isInactive(props),
+  (props) => props.sendable ?? true,
+  (props) => !props.queueEdit,
+  (props) => !hasDraftContent(props),
+];
+
+const canStartVoice = (props: ComposerProps): boolean =>
+  voiceStartConditions.every((condition) => condition(props));
 
 function isConnectionSendable(props: ComposerProps): boolean {
   return (props.sendable ?? true) && allowsSubmission(props);

@@ -22,6 +22,30 @@ export interface ComposerDraft {
   resources?: readonly SuggestionResource[];
 }
 
+// Where the Voice call is, seen from this Session's Composer: none, starting or running here, or running in another Session.
+export type ComposerVoiceCall =
+  | 'none'
+  | 'connecting'
+  | 'connected'
+  | 'elsewhere';
+
+export interface ComposerVoice {
+  // Whether a Voice provider can start a call now.
+  usable: boolean;
+  call: ComposerVoiceCall;
+  onStart: () => void;
+  onEnd: () => void;
+}
+
+export type SendState =
+  | 'stop'
+  | 'sending'
+  | 'ready'
+  | 'blocked'
+  | 'voice'
+  | 'connecting'
+  | 'end';
+
 export interface ComposerProps {
   draft: ComposerDraft;
   promptQueue?: PromptQueueProps;
@@ -58,6 +82,8 @@ export interface ComposerProps {
   sending?: boolean;
   disabled?: boolean;
   sendable?: boolean;
+  // Absent where Voice calls are not offered.
+  voice?: ComposerVoice;
   error?: string;
   errorKey?: string;
 }
@@ -73,7 +99,7 @@ export interface ComposerLayout {
   wide: boolean;
   inactive: boolean;
   configurationInactive: boolean;
-  sendState: 'stop' | 'sending' | 'ready' | 'blocked';
+  sendState: SendState;
   send: () => void;
   modifiedSend: () => void;
 }

@@ -7,6 +7,7 @@ import {
   ComposerModeControl,
 } from '../composer-configuration/composer-configuration';
 import { ComposerStatusControls } from '../composer-status/composer-status';
+import { sendButtonAction, stopButtonAction } from './composer-primary-action';
 import { ComposerAttachmentOrCancel } from './composer-queue-cancel';
 import type {
   ToolbarLayout,
@@ -120,30 +121,6 @@ function sendButtonProps(
     ...action,
     ...filledSendProps,
     'aria-busy': layout.sendState === 'sending',
-  };
-}
-
-function sendButtonAction(
-  layout: SendLayout,
-): React.ComponentProps<typeof IconButton> {
-  if (layout.sendState === 'stop') return stopButtonAction(layout);
-
-  return {
-    accessibilityLabel: 'Send',
-    icon: 'arrow-up',
-    disabled: layout.sendState !== 'ready',
-    onPress: layout.send,
-  };
-}
-
-function stopButtonAction(
-  layout: Pick<SendLayout, 'props'>,
-): React.ComponentProps<typeof IconButton> {
-  return {
-    accessibilityLabel: 'Stop',
-    icon: 'cancelled',
-    disabled: layout.props.disabled,
-    onPress: (): void => layout.props.onStop?.(),
   };
 }
 

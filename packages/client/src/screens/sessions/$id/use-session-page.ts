@@ -2,7 +2,7 @@ import type { UsageLimitsSubject } from '@repo/contracts';
 import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
 import { use } from 'react';
 import { useInstalledAgents, useUsageLimits } from '#features/agents';
-import { useBlobUrl, useConnectionState } from '#features/connection';
+import { useBlobUrl } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
 import { useConnectionDropped, useSessionWork } from '#features/sessions';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
@@ -22,6 +22,7 @@ import {
   type SessionCommands,
   useSessionCommands,
 } from './use-session-commands';
+import { useSessionLink } from './use-session-link';
 import { useSessionReadOptions } from './use-session-read-options';
 import { useWithSessionBar } from './use-with-session-bar';
 import { useWithSessionPullRequests } from './use-with-session-pull-requests';
@@ -75,7 +76,8 @@ type SessionSurroundings =
   | 'permission'
   | 'onAtEndChange'
   | 'shells'
-  | 'inspectorPanels';
+  | 'inspectorPanels'
+  | 'voice';
 
 // A Session's Usage limits are its Agent's, kept for the Agent and Project.
 const usageLimitsSubject = (
@@ -96,7 +98,7 @@ function useSessionSurroundings(
     agents: useInstalledAgents(),
     navigate: useNavigateFromShown(),
     imageUrl: useBlobUrl(),
-    connected: useConnectionState() === 'open',
+    ...useSessionLink(sessionId),
     onAtEndChange: useMarkSeen(sessionId, feed.revision, preview),
   };
 }

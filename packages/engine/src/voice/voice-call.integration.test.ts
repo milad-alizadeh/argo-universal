@@ -51,6 +51,7 @@ describe('Voice call', () => {
     const voice = await startVoiceEngine(
       new FakeVoiceProvider({ usable: false, reason: signInReason }),
     );
+
     const { host } = voice;
     const { sessionId } = await openVoiceSession(voice);
 

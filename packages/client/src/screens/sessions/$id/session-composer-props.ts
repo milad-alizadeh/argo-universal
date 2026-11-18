@@ -11,6 +11,7 @@ import {
 import type {
   ComposerConfigurationProps,
   ComposerProps,
+  ComposerVoiceCall,
 } from '#features/composer';
 import type { useBlobUrl } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
@@ -40,6 +41,8 @@ export interface OpenSession {
   elicitation: ElicitationFormProps | undefined;
   permission: PermissionRequestProps | undefined;
   usageLimits: UsageLimitsRead;
+  // Where a Voice call is, and how to start or end it; absent where the App carries no audio.
+  voice?: ComposerProps['voice'];
   options?: {
     configOptions: SessionSnapshot['configOptions'];
     loading: boolean;
@@ -51,12 +54,7 @@ export interface OpenSession {
 
 type DraftProps = Pick<
   ComposerProps,
-  | 'placeholder'
-  | 'draft'
-  | 'onDraftChange'
-  | 'onAttachImages'
-  | 'onAttachFiles'
-  | 'onSend'
+  'draft' | 'onDraftChange' | 'onAttachImages' | 'onAttachFiles' | 'onSend'
 >;
 
 const isTurnRunning = (snapshot: SessionSnapshot): boolean =>
@@ -118,13 +116,25 @@ function configurationProps(open: OpenSession): ComposerConfigurationProps {
 }
 
 const draftProps = (commands: SessionCommands): DraftProps => ({
-  placeholder: 'Message the Agent',
   draft: commands.draft,
   onDraftChange: commands.changeDraft,
   onAttachImages: () => void commands.attachImages(),
   onAttachFiles: () => void commands.attachFiles(),
   onSend: (sent) => void commands.sendDraft(sent),
 });
+
+const callStates: ReadonlySet<ComposerVoiceCall> = new Set([
+  'connecting',
+  'connected',
+]);
+
+// While a call runs here, the field invites typing as well as talking.
+const callingNow = (voice: ComposerProps['voice']): boolean =>
+  callStates.has(voice?.call ?? 'none');
+
+// While a call runs here, the field invites typing as well as talking.
+const placeholderOf = ({ voice }: OpenSession): string =>
+  callingNow(voice) ? 'Type, or keep talking' : 'Message the Agent';
 
 // An open Session always offers Argo's Slash commands, whether or not its Agent has reported any.
 const slashCommandsOf = (open: OpenSession): ComposerProps['slashCommands'] =>
@@ -136,6 +146,7 @@ export function sessionComposerProps(open: OpenSession): ComposerProps {
 
   return {
     ...draftProps(commands),
+    placeholder: placeholderOf(open),
     ...queueComposerProps(open),
     followUpSuggestion: followUpProps(open),
     slashCommands: slashCommandsOf(open),
@@ -158,6 +169,10 @@ function composerOptions({
 
 function sendingProps(
   open: OpenSession,
-): Pick<ComposerProps, 'sending' | 'sendable'> {
-  return { sending: isSending(open), sendable: isSendable(open) };
+): Pick<ComposerProps, 'sending' | 'sendable' | 'voice'> {
+  return {
+    sending: isSending(open),
+    sendable: isSendable(open),
+    voice: open.voice,
+  };
 }
