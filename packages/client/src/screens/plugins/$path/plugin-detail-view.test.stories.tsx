@@ -117,15 +117,15 @@ export const WaitingForPage: Story = {
     const status = await canvas.findByRole('status', { name: 'Loading page' });
 
     await expect(status).toHaveAttribute('aria-busy', 'true');
-    await waitFor(() => {
+    await waitFor(async () => {
       const bar = status.querySelector('[data-skeleton-overlay] > *');
 
       if (!bar) throw new Error('Waiting for the first skeleton bar');
 
       const bounds = bar.getBoundingClientRect();
 
-      expect(bounds.width).toBeGreaterThan(0);
-      expect(bounds.height).toBeGreaterThan(0);
+      await expect(bounds.width).toBeGreaterThan(0);
+      await expect(bounds.height).toBeGreaterThan(0);
     });
   },
 };
@@ -152,18 +152,20 @@ export const PagedListScrollsBothWays: Story = {
     const scroller = scrollerOf(await canvas.findByText('Row 0'));
 
     scroller.scrollTop = scroller.scrollHeight;
-    await waitFor(() => {
+    await waitFor(async () => {
       const last = canvas.getByText('Row 39').getBoundingClientRect();
 
-      expect(last.top).toBeLessThan(scroller.getBoundingClientRect().bottom);
+      await expect(last.top).toBeLessThan(
+        scroller.getBoundingClientRect().bottom,
+      );
     });
     await userEvent.click(canvas.getByText('Row 39'));
     await expect(args.callbacks.onOpenPage).toHaveBeenLastCalledWith('/row-39');
     scroller.scrollTop = 0;
-    await waitFor(() => {
+    await waitFor(async () => {
       const first = canvas.getByText('Row 0').getBoundingClientRect();
 
-      expect(first.bottom).toBeGreaterThan(
+      await expect(first.bottom).toBeGreaterThan(
         scroller.getBoundingClientRect().top,
       );
     });
