@@ -24,6 +24,8 @@ export type Harness = {
   workers: WorkerCalls;
   reads: () => ReadEvent[];
   marks: PageAddress[][];
+  // How many times an answer was announced, with or without a page holding it.
+  announced: () => number;
   answer: (value: WireJson, generation?: number) => Promise<void>;
   // The worker fails the newest named read, and the clock a test moves on.
   fail: (error: string) => Promise<void>;
@@ -51,6 +53,7 @@ export const address: PageAddress = { pluginId, path: '/', pageState: {} };
 type Wiring = {
   sent: PluginEvent[];
   marks: PageAddress[][];
+  announced: { count: number };
   workers: WorkerCalls;
   data: PluginData;
 };
@@ -70,31 +73,37 @@ const servicesOn = (
     faults.broken ? Promise.reject(new Error('The read broke')) : call(),
 });
 
-// A mark with no address to draw again says nothing a page could act on.
+// Every announcement counts, as a Slot hears one; a mark with no address to draw again says nothing a page could act on.
 const marking =
-  (marks: PageAddress[][]) =>
+  (marks: PageAddress[][], announced: { count: number }) =>
   (_id: string, addresses: PageAddress[]): void => {
+    announced.count += 1;
+
     if (addresses.length) marks.push(addresses);
   };
 
-function wired(clock: PluginClock, faults: Faults): Wiring {
-  const sent: PluginEvent[] = [];
-  const marks: PageAddress[][] = [];
-
-  const workers = new WorkerCalls({
+// The worker calls, which keep each event Argo sends the worker.
+const workersOn = (clock: PluginClock, sent: PluginEvent[]): WorkerCalls =>
+  new WorkerCalls({
     clock,
     send: (_pluginId, event): void => void sent.push(event),
   });
 
+function wired(clock: PluginClock, faults: Faults): Wiring {
+  const sent: PluginEvent[] = [];
+  const marks: PageAddress[][] = [];
+  const announced = { count: 0 };
+  const workers = workersOn(clock, sent);
+
   const data = new PluginData(
     servicesOn(clock, faults),
     workers,
-    marking(marks),
+    marking(marks, announced),
   );
 
   workers.run(pluginId, 1);
 
-  return { sent, marks, workers, data };
+  return { sent, marks, announced, workers, data };
 }
 
 const readsOf = (sent: PluginEvent[]): ReadEvent[] =>
@@ -143,6 +152,7 @@ const actionsOn = (wiring: Wiring): Omit<Harness, 'clock' | 'faults'> => ({
   data: wiring.data,
   workers: wiring.workers,
   marks: wiring.marks,
+  announced: () => wiring.announced.count,
   reads: () => readsOf(wiring.sent),
   answer: answering(wiring),
   fail: failing(wiring),

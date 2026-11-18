@@ -8,13 +8,14 @@ const id = z.number().int().nonnegative();
 
 /*
  * What a worker's call runs for, as the event that started its code said: a draw or an Operation run by
- * id, which the Server looks up rather than trusts, or the Project a Hook or a named read runs for; or
- * nothing, as code its Plugin runs as it registers.
+ * id, which the Server looks up rather than trusts; the Project a Hook or a named read runs for; a Slot's
+ * batched items call; or nothing, as code its Plugin runs as it registers.
  */
 export const CallOrigin = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('draw'), draw: id }),
   z.strictObject({ kind: z.literal('operation'), operation: id }),
   z.strictObject({ kind: z.literal('project'), projectId: z.string().min(1) }),
+  z.strictObject({ kind: z.literal('slot') }),
   z.strictObject({ kind: z.literal('none') }),
 ]);
 
@@ -53,7 +54,7 @@ const eventOrigins: EventOrigins = {
     name === pagedListRead && draw !== undefined
       ? { kind: 'draw', draw }
       : forProject(projectId),
-  slotItems: () => none,
+  slotItems: () => ({ kind: 'slot' }),
 };
 
 const eventOrigin = <Type extends PluginEvent['type']>(
@@ -101,8 +102,12 @@ export class CallScope {
 // What a call may reach on the Server: a Project, and whether its App is the Server Device.
 type Reach = { projectId?: string; serverDevice: boolean };
 
-// A reach that also holds the draw the call is for, or says it is for an Operation run.
-export type DrawReach<Draw> = Reach & { drawn?: Draw; forRun?: true };
+// A reach that also holds the draw the call is for, or says it is for an Operation run or answers a Slot.
+export type DrawReach<Draw> = Reach & {
+  drawn?: Draw;
+  forRun?: true;
+  slot?: true;
+};
 
 // The draws and Operation runs still waiting on the calling worker generation, by id.
 export type WaitingCalls<Draw extends Reach> = {
@@ -129,17 +134,24 @@ export function reachOf<Draw extends Reach>(
   return reachOfProject(origin);
 }
 
-// A call for a Project reaches that Project and never the Server Device.
-function reachOfProject(
-  origin: Extract<CallOrigin, { kind: 'project' | 'none' }>,
-): DrawReach<never> {
-  switch (origin.kind) {
-    case 'project':
-      return { projectId: origin.projectId, serverDevice: false };
-    case 'none':
-      return reachesNothing;
-  }
-}
+type ProjectKind = 'project' | 'slot' | 'none';
+
+// What a call for no Project reaches, by its kind; a new kind fails type-checking until it says.
+const unnamedReaches: Record<
+  Exclude<ProjectKind, 'project'>,
+  DrawReach<never>
+> = {
+  slot: { serverDevice: false, slot: true },
+  none: reachesNothing,
+};
+
+// A call for a Project reaches that Project and never the Server Device; a Slot's call reaches nothing.
+const reachOfProject = (
+  origin: Extract<CallOrigin, { kind: ProjectKind }>,
+): DrawReach<never> =>
+  origin.kind === 'project'
+    ? { projectId: origin.projectId, serverDevice: false }
+    : unnamedReaches[origin.kind];
 
 const reachOfDraw = <Draw extends Reach>(
   draw: Draw | undefined,

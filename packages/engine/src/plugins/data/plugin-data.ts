@@ -128,13 +128,13 @@ export class PluginData {
   // Begins the read on the entry it is for.
   private start(
     caller: Caller,
-    { projectId, drawn, forRun }: QueryOrigin,
+    origin: QueryOrigin,
     { query, projectId: named, fresh }: ReadRequest,
   ): Promise<PluginDataState> {
-    const project = projectOf(query, named ?? projectId);
+    const project = projectOf(query, named ?? origin.projectId);
     const entry = this.entry(caller, project, query);
 
-    return entry.read(drawnRead(drawn, fresh, forRun));
+    return entry.read(drawnRead(origin, fresh));
   }
 
   private entry(

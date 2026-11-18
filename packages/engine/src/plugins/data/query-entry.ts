@@ -55,9 +55,9 @@ export class QueryEntry {
     return this.state;
   }
 
-  // Whether the draw is served what was kept: its address already has a tree and no one pulled it fresh.
-  private serving({ holder, fresh, every }: QueryRead): boolean {
-    return !fresh && this.holders.has(holder) && this.servable(every);
+  // Whether the read is served what was kept: no one pulled it fresh, and its address has a tree or it answers a Slot.
+  private serving(read: QueryRead): boolean {
+    return !read.fresh && this.holders.serve(read) && this.servable(read.every);
   }
 
   private async awaited(read: QueryRead): Promise<void> {
@@ -148,7 +148,7 @@ export class QueryEntry {
     this.publish(queryState(this.state, reply));
     this.rest.read(reply.ok, this.holders.any, this.timing.overtaken);
 
-    if (shows(before, this.state)) this.markHolders();
+    if (shows(before, this.state, this.readOutside)) this.markHolders();
   }
 
   // Announce the changed answer even without page holders, so visible Slots ask again.
@@ -160,10 +160,13 @@ export class QueryEntry {
 
   private failed(cause: unknown): void {
     const error = runtimeError(cause);
+    const before = this.state;
 
     this.rest.read(false, this.holders.any, this.timing.overtaken);
     this.services.log(`Plugin ${this.owner.pluginId}: Query failed: ${error}`);
     this.publish({ ...this.state, error, stale: false });
+
+    if (shows(before, this.state, this.readOutside)) this.markHolders();
   }
 
   private finished(): void {
