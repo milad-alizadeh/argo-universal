@@ -20,7 +20,7 @@ export type PairOutcome =
   | { kind: 'declined' }
   | { kind: 'unanswered' }
   | { kind: 'not-found' }
-  // The first look at the network heard nothing, which is no proof the Server is away: a Local Network prompt may have been answered after the wait ended.
+  // The first look at the network heard nothing (ADR-0045).
   | { kind: 'undetermined' }
   | { kind: 'failed' };
 
@@ -49,9 +49,9 @@ export interface PairDeps {
   address?: ServerAddress;
   // Something answered at an address and has the request: from here the wait is the owner's on the Server Device.
   onReached?: () => void;
-  // The address that had answered did not go on to ask the owner, so the page goes back to looking.
+  // Fires when an address fails after the socket opened.
   onUnreached?: () => void;
-  // Whether this is the first look at the network since the App opened: the Local Network prompt may still be open, so it waits longer and hearing nothing proves nothing.
+  // The first look at the network since the page opened (ADR-0045).
   firstBrowse?: boolean;
 }
 
@@ -64,7 +64,6 @@ const refusalOutcome = (cause: unknown): PairOutcome | null => {
   return refused.success ? refusals[refused.data.refusal] : null;
 };
 
-// One try at pairing: the code, the name the Server goes by, and where everything comes from.
 interface Attempt {
   invite: PairingInvite;
   name: string;

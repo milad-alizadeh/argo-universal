@@ -9,7 +9,6 @@ export interface PairedEndpoint {
   readonly port: number;
   // The Server's static public key as it was paired; a computer that does not hold its private half gets no Connection.
   readonly serverPublicKey: string;
-  // Other addresses the Server's invite carried, such as a tailnet's, for when the phone is off the local network.
   readonly others?: readonly { host: string; port: number }[];
 }
 

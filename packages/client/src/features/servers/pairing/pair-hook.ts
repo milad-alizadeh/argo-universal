@@ -28,7 +28,6 @@ export interface Held {
   last: Read | null;
   // The code typed last, kept so a Server that was not found can be asked again without typing it twice.
   lastTyped: Typed | null;
-  // Whether the network has been looked at since this page opened.
   browsed: boolean;
 }
 

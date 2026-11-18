@@ -7,7 +7,6 @@ import type { HttpServerOptions, RoutedSetup } from './http-server';
 export const discoveryNameOf = (options: HttpServerOptions): string =>
   options.discoveryName ?? readSystemInfo(options).name;
 
-// Where the announcement is said to have happened: the Server's own log.
 const reportTo =
   (options: HttpServerOptions) =>
   (line: string): void =>

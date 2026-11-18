@@ -11,12 +11,11 @@ const bytesOf = (data: Message): Uint8Array =>
     ? new TextEncoder().encode(data)
     : new Uint8Array(data);
 
-// An IPv6 host is written in brackets in a URL.
-const hostOf = (host: string): string =>
+const bracketedIfIPv6 = (host: string): string =>
   host.includes(':') ? `[${host}]` : host;
 
 export const channelUrl = ({ host, port }: ChannelAddress): string =>
-  `ws://${hostOf(host)}:${port}${channelPath}`;
+  `ws://${bracketedIfIPv6(host)}:${port}${channelPath}`;
 
 function adapter(webSocket: WebSocket): ByteSocket {
   const bytes: ByteSocket = {
@@ -35,7 +34,6 @@ function adapter(webSocket: WebSocket): ByteSocket {
 
 type Settle = Pick<PromiseWithResolvers<ByteSocket>, 'resolve' | 'reject'>;
 
-// Gives up on a Server that has not answered in time, and says which address it was.
 function giveUpAfterTimeout(
   webSocket: WebSocket,
   url: string,
@@ -48,8 +46,7 @@ function giveUpAfterTimeout(
 }
 
 /*
- * The channel's bytes over a WebSocket at the Server's channel path, as an Expo dev server is reached: a URL, so the same channel crosses a tailnet or anything else that carries HTTP (ADR-0045).
- * The WebSocket only carries; the Noise handshake inside it is what proves the Server, so nothing here is trusted for being on this network.
+ * The channel's bytes over a WebSocket at the Server's channel path (ADR-0045). The WebSocket only carries; the Noise handshake inside it proves the Server.
  */
 export function openWebSocketCarrier(
   address: ChannelAddress,

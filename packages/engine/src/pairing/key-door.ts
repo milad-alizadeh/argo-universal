@@ -25,7 +25,6 @@ interface Asked {
   readonly offered: OfferedTicket[];
 }
 
-// A socket whose first message is still arriving.
 interface Reading {
   readonly socket: ChannelCarrier;
   readonly buffer: HandshakeBuffer;

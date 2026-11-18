@@ -18,7 +18,6 @@ const defaultWatch: NetworkWatch = {
   checkEveryMs: 10_000,
 };
 
-// Where the announcement is reported to, and, for a test, how the interfaces are read.
 export interface Announcing {
   report: Report;
   watch?: NetworkWatch;

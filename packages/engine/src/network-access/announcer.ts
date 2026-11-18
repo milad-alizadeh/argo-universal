@@ -49,7 +49,6 @@ export class Announcer {
     if (this.reconcile(new Set(now))) this.say(now);
   }
 
-  // Answers whether anything changed.
   private reconcile(now: ReadonlySet<string>): boolean {
     const gone = [...this.responders.keys()].filter((one) => !now.has(one));
     const added = [...now].filter((one) => !this.responders.has(one));
@@ -73,7 +72,6 @@ export class Announcer {
     );
   }
 
-  // What the Server announced and where, so a phone that finds nothing can be compared with what was said.
   private say(addresses: readonly string[]): void {
     const { name, port } = this.announcement;
 

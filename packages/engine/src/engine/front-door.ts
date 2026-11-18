@@ -85,14 +85,12 @@ type Plain = (knocking: Knocking, opening: Buffer) => void;
 // Enough bytes to tell a channel, a typed code's ask and a channel's WebSocket apart; every HTTP request line is longer.
 const openingLength = Math.max(channelMagic.length, carrierOpeningLength);
 
-// What has arrived so far, with whatever the socket holds now.
 function joined(socket: ChannelCarrier, received: Buffer): Buffer {
   const chunk: unknown = socket.read();
 
   return Buffer.isBuffer(chunk) ? Buffer.concat([received, chunk]) : received;
 }
 
-// A channel or a typed code's ask is known by its first bytes; anything else waits until a WebSocket's request line could be read.
 const isTold = (opening: Buffer): boolean =>
   Boolean(nameOf(opening)) || opening.length >= openingLength;
 

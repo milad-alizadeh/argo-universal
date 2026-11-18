@@ -48,7 +48,6 @@ export class ChannelRoute {
   public constructor(
     private readonly keptAddress: ChannelAddress,
     private readonly locate: LocateServer = nothingAnnounced,
-    // The other addresses the invite carried, such as a tailnet's.
     private readonly otherKeptAddresses: readonly ChannelAddress[] = [],
   ) {}
 
@@ -66,7 +65,6 @@ export class ChannelRoute {
     throw new ServerUnreachable(causes);
   }
 
-  // The network is asked only once the address that answered last does not, and is not waited for before the kept addresses are tried.
   private async *candidates(): AsyncGenerator<ChannelAddress> {
     const last = this.proven;
 

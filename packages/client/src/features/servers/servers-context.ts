@@ -22,7 +22,6 @@ export function useAppServers(): AppServers {
   return servers;
 }
 
-// False while the App holds no Server it can show, as on a phone that has not paired yet: it shows only Pairing.
 export const useShowsServer = (): boolean => {
   const { servers, lookingAt } = useAppServers();
 

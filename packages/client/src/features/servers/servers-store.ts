@@ -120,7 +120,6 @@ class AppServersStore implements ServersStore {
   }
 }
 
-// The own Server's URL, where this Device runs one; a phone or tablet passes none.
 export const createServersStore = (ownServerUrl?: string): ServersStore =>
   new AppServersStore(ownServerUrl);
 
@@ -131,13 +130,11 @@ export const createServersStore = (ownServerUrl?: string): ServersStore =>
 const showable = (server: AppServer): boolean =>
   server.url !== undefined || server.channel !== undefined;
 
-// True while the App holds this Server with somewhere to open a Connection; a phone that holds none shows only Pairing.
 export const showsServer = (
   servers: readonly AppServer[],
   id: string,
 ): boolean => servers.some((server) => server.id === id && showable(server));
 
-// The Server the App shows when it was looking at none it can show: its own, listed first, else the first it paired with that it can.
 const fallbackOf = (servers: readonly AppServer[]): string =>
   servers.find(showable)?.id ?? '';
 

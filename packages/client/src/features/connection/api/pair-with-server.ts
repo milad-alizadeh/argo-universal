@@ -34,7 +34,6 @@ export interface PairOptions {
   onReached?: () => void;
 }
 
-// The platform, saying when its socket opened: until then nothing has reached the Server, so nobody is being asked.
 function reporting(options: PairOptions): ChannelPlatform {
   const platform = options.platform ?? appChannelPlatform;
   const { onReached } = options;

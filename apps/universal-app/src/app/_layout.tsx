@@ -161,7 +161,6 @@ const guardedScreens = (showsServer: boolean): React.JSX.Element[] => {
   ];
 };
 
-// Only a Server the App shows has a Connection to wake; a phone that holds none has nothing to signal.
 function ShownServerSignal(): React.JSX.Element | null {
   return useShowsServer() ? <ForegroundSignal /> : null;
 }

@@ -30,7 +30,6 @@ export interface ChannelTarget {
   readonly address: ChannelAddress;
   // Where the Server announces itself now; asked whenever the address that answered last does not (ADR-0045).
   readonly locate?: LocateServer;
-  // The other addresses the invite carried, tried after the kept one.
   readonly others?: readonly ChannelAddress[];
   readonly serverPublicKey: string;
   // The Pairing Ticket the QR carried, for the one Connection that pairs; every Connection after it is the Device Key alone.

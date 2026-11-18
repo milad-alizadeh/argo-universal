@@ -76,7 +76,6 @@ function createRequests(
 
 type Upgrade = (request: IncomingMessage, socket: Socket, head: Buffer) => void;
 
-// Only a socket that opened a channel here, asking for the channel path, becomes a carrier.
 function upgrading(
   knocking: WeakMap<object, () => void>,
   arrive: Arrive,
@@ -93,11 +92,9 @@ function upgrading(
   };
 }
 
-// The path of the request line, without its query.
 const pathOf = (request: IncomingMessage): string =>
   (request.url ?? '/').split('?')[0] ?? '/';
 
-// The WebSocket's messages as one stream of bytes, knocking from where the socket under it did.
 const carrierOf = (webSocket: WebSocket, socket: Socket): ChannelCarrier =>
   Object.assign(createWebSocketStream(webSocket), {
     remoteAddress: socket.remoteAddress,

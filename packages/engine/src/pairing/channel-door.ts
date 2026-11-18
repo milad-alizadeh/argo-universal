@@ -29,7 +29,6 @@ export interface ChannelDoorDeps {
   readonly report: (subject: string, value: string | undefined) => void;
 }
 
-// A socket whose first message is still arriving.
 interface Reading {
   readonly socket: ChannelCarrier;
   readonly buffer: HandshakeBuffer;
