@@ -1,20 +1,52 @@
 import { expect, it } from 'vitest';
-import { seededEnvironment, vendorRegistryIds } from './vendor';
+import {
+  seededEnvironment,
+  vendorRegistryIds,
+  vendorSessionEnvironment,
+} from './vendor';
 
-it('Claude is installed with its task tools on, so it reports a Plan', () => {
-  expect(seededEnvironment(vendorRegistryIds.claude)).toEqual({
-    CLAUDE_CODE_ENABLE_TODO_TOOLS: '1',
+// The checklist is Argo's own Operations (ADR-0053), so no Agent's checklist tool is turned on at install.
+it.each([vendorRegistryIds.claude, vendorRegistryIds.codex, 'example-agent'])(
+  '%s is installed with an empty launch environment',
+  (registryId) => {
+    expect(seededEnvironment(registryId)).toEqual({});
+  },
+);
+
+const cliDirectory = '/home/cli/bin';
+
+// pi-acp passes pi neither MCP servers nor a system prompt, so Argo starts pi through its own launcher (ADR-0053).
+it('starts pi through the launcher beside argo', () => {
+  expect(
+    vendorSessionEnvironment(
+      { registryId: vendorRegistryIds.pi },
+      cliDirectory,
+      {},
+    ),
+  ).toEqual({ PI_ACP_PI_COMMAND: `${cliDirectory}/argo-pi` });
+});
+
+it('keeps a pi command the person set, run through the launcher', () => {
+  expect(
+    vendorSessionEnvironment(
+      { registryId: vendorRegistryIds.pi },
+      cliDirectory,
+      {
+        PI_ACP_PI_COMMAND: '/opt/pi/bin/pi',
+      },
+    ),
+  ).toEqual({
+    PI_ACP_PI_COMMAND: `${cliDirectory}/argo-pi`,
+    ARGO_PI_COMMAND: '/opt/pi/bin/pi',
   });
 });
 
-it('Codex is installed with update_plan on, so it keeps a Plan', () => {
-  const { CODEX_CONFIG } = seededEnvironment(vendorRegistryIds.codex);
-
-  expect(JSON.parse(CODEX_CONFIG ?? '')).toEqual({
-    tools: { update_plan: { enabled: true } },
-  });
-});
-
-it('any other Agent is installed with an empty launch environment', () => {
-  expect(seededEnvironment('example-agent')).toEqual({});
+it('adds nothing for any other Agent', () => {
+  expect(
+    vendorSessionEnvironment(
+      { registryId: vendorRegistryIds.claude },
+      cliDirectory,
+      {},
+    ),
+  ).toBeUndefined();
 });

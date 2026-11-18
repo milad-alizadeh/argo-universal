@@ -100,6 +100,9 @@ const answerNative: SessionEvent = {
   optionId: 'allow',
 };
 
+// An Agent sets its checklist through its Operation, which the paths never send.
+const todos: SessionEvent = { type: 'session.setTodos', todos: [] };
+
 function isWorking(state: AcpModelSnapshot): boolean {
   return (
     state.matches({ open: { acp: { activeTurn: 'working' } } }) &&
@@ -119,6 +122,7 @@ function permissionWitnesses(states: AcpModelSnapshot[]): Sent[] {
     { state, event: hooked },
     { state, event: permission },
     { state: requested, event: answerNative },
+    { state, event: todos },
   ];
 }
 

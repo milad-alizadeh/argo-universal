@@ -48,10 +48,6 @@ const actOperations: ActOperation[] = [
     ranWith: 'BAD_REQUEST: The Agent did not offer mode=x',
   },
   {
-    id: 'session.savePlan',
-    params: (sessionId) => ({ sessionId, plan: '# Plan' }),
-  },
-  {
     id: 'shell.stop',
     params: (sessionId) => ({ sessionId, shellId: 'no-shell' }),
     ranWith: 'NOT_FOUND: No Shell in this Session',

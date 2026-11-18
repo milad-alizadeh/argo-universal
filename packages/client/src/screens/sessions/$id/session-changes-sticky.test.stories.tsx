@@ -188,9 +188,9 @@ export const FarDiffWaitsForTheReader: Story = {
 
 type Box = { path: string; top: number; bottom: number };
 
-// The list's cell a header is drawn in, the whole row the reader sees, not the toggle inside it.
+// Both regular and sticky Legend List cells contain layout and paint; recycling can replace one with the other.
 function cellOf(header: HTMLElement): HTMLElement {
-  const cell = header.closest<HTMLElement>('[style*="z-index"]');
+  const cell = header.closest<HTMLElement>('[style*="contain:"]');
 
   if (!cell) throw new Error('A file header is not inside a list cell');
 

@@ -19,6 +19,12 @@ export const summaryLines: SessionBarEntry = {
   path: '/issues/412',
 };
 
+// An attached Issue's line with the `detach` the Issue tracker sends, so its card lists it as a row with its "…".
+export const detachableLine: SessionBarEntry = {
+  ...summaryLines,
+  detach: { operation: 'detach', args: { number: 412 } },
+};
+
 // A Session whose Agents and Background Tasks have all finished, so each card draws only its "N done" line.
 export const onlyDoneSections = {
   subagents: { subagents: subagentStates.allFinished, now: subagentNow },

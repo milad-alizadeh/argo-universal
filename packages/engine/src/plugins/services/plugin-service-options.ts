@@ -2,6 +2,7 @@ import type { CoreHooks, PluginProjectInfo } from '@repo/contracts/plugins';
 import type {
   PluginPromptAnswer,
   PluginSessionInfo,
+  PluginWithdrawAnswer,
 } from '@repo/contracts/plugins/argo-calls';
 import type { PluginAccounts } from '../accounts/plugin-accounts';
 import type { OAuthOptions } from '../accounts/plugin-oauth';
@@ -21,6 +22,13 @@ export type PromptSession = (
   sender: PluginPromptSender,
 ) => Promise<PluginPromptAnswer>;
 
+// Takes back a Queued Prompt the Plugin sent; one that started, is gone or is held for editing stays.
+export type WithdrawPrompt = (
+  sessionId: string,
+  queuedId: string,
+  sender: PluginPromptSender,
+) => Promise<PluginWithdrawAnswer>;
+
 export type PluginServiceOptions = {
   accounts?: PluginAccounts;
   wakePlugin?: (pluginId: string) => Promise<void>;
@@ -37,6 +45,8 @@ export type PluginServiceOptions = {
   archiveSession?: (sessionId: string) => Promise<void>;
   // Sends a Plugin's Prompt to a Session as the Plugin; without it no Plugin prompts.
   promptSession?: PromptSession;
+  // Withdraws a Plugin's own Queued Prompt; without it no Plugin withdraws.
+  withdrawPrompt?: WithdrawPrompt;
   network?: PluginNetwork;
   settings?: (pluginId: string, key: string) => Promise<PluginValue>;
   hooks?: CoreHooks;

@@ -14,7 +14,10 @@ export interface AgentAccessDetailViewProps {
   installing?: boolean;
   installed?: 'written' | 'updated';
   error?: string;
+  // Whether Sessions keep a checklist of their steps; unknown until the Server answers.
+  todoList?: boolean;
   onEnabledChange: (enabled: boolean) => void;
+  onTodoListChange: (enabled: boolean) => void;
   onInstall: () => void;
   onRetry: () => void;
   onBack?: () => void;
@@ -27,6 +30,7 @@ export function AgentAccessDetailView(
     <Screen title="Agent access" onBack={props.onBack}>
       <FieldGroup>
         {accessSection(props)}
+        {todoListSection(props)}
         {instructionsSection(props)}
         {statusSection(props)}
       </FieldGroup>
@@ -46,6 +50,30 @@ function accessSection(props: AgentAccessDetailViewProps): React.JSX.Element {
         value={access.status === 'loaded' && access.enabled}
         disabled={access.status !== 'loaded' || props.saving}
         onValueChange={props.onEnabledChange}
+      />
+    </FieldGroup.Section>
+  );
+}
+
+const todoListFooter =
+  'Agents keep a Todo list as they work, so you see what is done and what is left. It needs Agent access, and a change reaches new Sessions.';
+
+// The toggle waits for both answers: Agent access and its own setting.
+const todoListWaits = (props: AgentAccessDetailViewProps): boolean =>
+  [
+    props.access.status !== 'loaded',
+    props.todoList === undefined,
+    props.saving,
+  ].some(Boolean);
+
+function todoListSection(props: AgentAccessDetailViewProps): React.JSX.Element {
+  return (
+    <FieldGroup.Section footer={todoListFooter}>
+      <FieldGroup.Toggle
+        title="Todo list"
+        value={props.todoList === true}
+        disabled={todoListWaits(props)}
+        onValueChange={props.onTodoListChange}
       />
     </FieldGroup.Section>
   );

@@ -28,6 +28,7 @@ import {
 } from '../feed';
 import { feedMachine } from '../feed';
 import type { WriterActorRef, WriterCommit, WriterEvent } from '../storage';
+import { readTodoList } from '../todo-list';
 import {
   cancelAcp,
   closeAcp,
@@ -40,6 +41,10 @@ import {
 } from './acp-operations';
 import type { AcpLifetimeEvent, AcpSessionLifetime } from './acp/acp-lifetime';
 import {
+  argoToolsOutcome,
+  missingArgoToolsNotice,
+} from './acp/argo-tools-notice';
+import {
   deniedOutcome,
   endsStaleProcess,
   promptFailureOutcome,
@@ -50,6 +55,7 @@ import type {
 } from './acp/prompts/prompt-types';
 import { acpContextUsage, acpTurnUsage } from './acp/prompts/usage';
 import { isReplayedHistory } from './acp/replayed-history';
+import { isTodoListUpdate, todosUpdate } from './acp/todo-update';
 import {
   admitsPermissionAnswer,
   answeredRequest,
@@ -58,6 +64,7 @@ import {
   saveSessionArchive,
   removeSessionCheckout,
 } from './archive/archive-operations';
+import { archiveFailure } from './archive/own-archive';
 import { type ClosureStep, nextClosureStep } from './closure/closure-step';
 import { sessionConfiguration, type ConfigurationStep } from './configuration';
 import { creationSettledEvent } from './creation/creation-receipt';
@@ -132,6 +139,22 @@ import {
   type StartTurnParameters,
   type TurnStep,
 } from './turn';
+
+type AgentUpdateEvent = Extract<FeedEvent, { type: 'feed.acpUpdate' }>;
+
+// An update for the Feed as the Agent would send it, in the Session's ACP session and its running Turn.
+const agentUpdate = (
+  context: SessionContext,
+  update: AgentUpdateEvent['update'],
+): AgentUpdateEvent => ({
+  type: 'feed.acpUpdate',
+  acpSessionId: context.vendorSessionId ?? context.sessionId,
+  update,
+  turnId: context.activeTurnId,
+});
+
+const keepsTodoList = (context: SessionContext): boolean =>
+  readTodoList(context.input.database).enabled;
 
 export type {
   SessionCommand,
@@ -468,6 +491,17 @@ const sessionSetup = setup({
         subagents: declareSubagentRole(context.subagents, event.role),
       };
     }),
+    rememberTodos: assign(({ event }): Pick<SessionContext, 'todos'> => {
+      assertEvent(event, 'session.setTodos');
+
+      return { todos: event.todos };
+    }),
+    // The Feed takes the list as the ACP `plan` update an Agent would send: one row, revised in place.
+    forwardTodos: sendTo('feed', ({ context, event }) => {
+      assertEvent(event, 'session.setTodos');
+
+      return agentUpdate(context, todosUpdate(event.todos));
+    }),
     flushSubagents: ({ context }) => flushSubagents(context.subagents),
     finishAcpRegistration: ({ context }): void =>
       context.acpLifetime.finishRegistration(),
@@ -553,19 +587,30 @@ const sessionSetup = setup({
         }),
       });
     }),
-    forwardAcpUpdate: sendTo(
-      'feed',
-      ({ context, event }): Extract<FeedEvent, { type: 'feed.acpUpdate' }> => {
-        assertEvent(event, acpUpdateEvent);
+    // At the end of a Turn, finished or failed, a Session with Agent access whose Agent never started `argo mcp` says so in its Feed, once.
+    noticeMissingArgoTools: enqueueActions(({ context, enqueue }) => {
+      const found = argoToolsOutcome(context);
 
-        return {
-          type: 'feed.acpUpdate',
-          acpSessionId: event.notification.sessionId,
-          update: event.notification.update,
-          turnId: context.activeTurnId,
-        };
-      },
-    ),
+      if (found === 'unsettled') return;
+      enqueue.assign({ argoToolsChecked: true });
+
+      if (found === 'missing')
+        enqueue.sendTo(
+          'feed',
+          agentUpdate(context, missingArgoToolsNotice(keepsTodoList(context))),
+        );
+    }),
+    // While the person has the checklist off, one the Agent reports through ACP goes no further (ADR-0053).
+    forwardAcpUpdate: enqueueActions(({ context, event, enqueue }) => {
+      assertEvent(event, acpUpdateEvent);
+      const { sessionId, update } = event.notification;
+
+      if (isTodoListUpdate(update) && !keepsTodoList(context)) return;
+      enqueue.sendTo('feed', {
+        ...agentUpdate(context, update),
+        acpSessionId: sessionId,
+      });
+    }),
     rememberAcpOutcome: assign(
       (
         _,
@@ -1215,6 +1260,9 @@ export const sessionMachine = sessionSetup.createMachine({
             },
             'session.close': { target: '.closing' },
             'acp.failed': { target: '.closing', actions: 'recordCrash' },
+            'session.setTodos': {
+              actions: ['rememberTodos', 'forwardTodos'],
+            },
             'acp.update': [
               { guard: 'isSubagentUpdate', actions: 'routeSubagentUpdate' },
               { guard: 'isConfigUpdate', actions: 'reportAcpConfig' },
@@ -1272,6 +1320,12 @@ export const sessionMachine = sessionSetup.createMachine({
                 onError: {
                   target: 'closing',
                   actions: [
+                    sendTo('feed', ({ context, event }): FeedEvent =>
+                      archiveFailure(
+                        `${context.sessionId}:archive-failed`,
+                        event.error,
+                      ),
+                    ),
                     'cancelArchiveRequest',
                     {
                       type: 'rememberFailure',
@@ -1513,15 +1567,19 @@ export const sessionMachine = sessionSetup.createMachine({
                 input: ({ context }) => context,
                 onDone: {
                   target: 'publishing',
-                  actions: {
-                    type: 'rememberAcpOutcome',
-                    params: ({ context, event }) =>
-                      acpOutcome(context, event.output),
-                  },
+                  actions: [
+                    {
+                      type: 'rememberAcpOutcome',
+                      params: ({ context, event }): EndTurnParameters =>
+                        acpOutcome(context, event.output),
+                    },
+                    'noticeMissingArgoTools',
+                  ],
                 },
                 onError: {
                   target: 'publishing',
                   actions: [
+                    'noticeMissingArgoTools',
                     {
                       type: 'rememberPromptFailure',
                       params: ({ event }): FailureParameters => ({

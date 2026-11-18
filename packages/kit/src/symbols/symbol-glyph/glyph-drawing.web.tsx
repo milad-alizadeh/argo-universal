@@ -10,7 +10,7 @@ import {
   useSymbolImageRenderer,
 } from '../symbol-images';
 import { MaterialGlyph } from './material-glyph.web';
-import { SvgSymbolGlyph } from './svg-symbol';
+import { OwnGlyph } from './svg-symbol';
 import type { SymbolGlyphProps } from './symbol-glyph-props';
 import { PathMask, SymbolMask } from './symbol-mask.web';
 
@@ -23,12 +23,12 @@ type GlyphDrawingProps = Pick<SymbolGlyphProps, 'symbol' | 'pixels'>;
 export function GlyphDrawing(props: GlyphDrawingProps): React.JSX.Element {
   const render = useSymbolImageRenderer();
 
-  if (props.symbol.kind === 'svg')
+  if (props.symbol.kind !== 'system')
     return (
-      <SvgSymbolGlyph
-        name={props.symbol.svg}
+      <OwnGlyph
+        drawing={props.symbol}
         pixels={props.pixels}
-        testID="svg-symbol"
+        testID={`${props.symbol.kind}-symbol`}
       />
     );
 

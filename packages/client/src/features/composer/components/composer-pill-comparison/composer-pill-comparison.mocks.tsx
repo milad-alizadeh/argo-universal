@@ -8,7 +8,7 @@ import {
   type ComposerConfigurationProps,
 } from '../composer-configuration/composer-configuration';
 import {
-  ComposerPlan,
+  ComposerTodos,
   ComposerStatusControls,
   ComposerWorkChips,
   type ComposerStatusProps,
@@ -34,7 +34,7 @@ export function ComposerPillComparison(
   return (
     <View className="w-full gap-2">
       {comparisonCaption}
-      <ComposerPlan
+      <ComposerTodos
         entries={props.entries}
         disabled={Boolean(props.disabled)}
       />
