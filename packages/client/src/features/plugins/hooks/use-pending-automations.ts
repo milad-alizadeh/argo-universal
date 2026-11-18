@@ -2,6 +2,7 @@ import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 import type { SessionPullRequest } from '#features/sessions';
 import {
   answering,
+  confirming,
   holding,
   type PendingAutomations,
   releasing,
@@ -14,11 +15,17 @@ import type {
 } from '../utils/session-pull-request-actions';
 
 /*
- * How long a tick stands once its Operation has answered. The Plugin's row is read again after the answer, so the
- * tick is held until that row carries it, and let go of after this, which leaves the reader looking at what the
- * Plugin really has rather than at a tick it did not keep.
+ * How long an answered tick stands over the rows whatever they say. Two quick ticks on one automation are read back
+ * one after the other, and without this the first one's refresh showed for a moment under the second.
  */
-export const holdAnsweredTick = 3000;
+export const settleTick = 3000;
+
+/*
+ * How long an answered tick waits, at most, for the Plugin's row to carry it. A row that lands sooner takes the tick
+ * over unseen; past this the reader is shown what the Plugin really has rather than a tick it did not keep. Three
+ * seconds let a slow refresh flick the tick back and on again.
+ */
+export const dropTick = 15_000;
 
 export interface PendingAutomationRows {
   // The rows with each held tick shown on them.
@@ -38,7 +45,7 @@ export function usePendingAutomations(
   rows: SessionPullRequest[],
 ): PendingAutomationRows {
   const [pending, setPending] = useState<PendingAutomations>({});
-  const later = useLater(holdAnsweredTick);
+  const later = useLater();
   const open = unconfirmed(pending, rows);
 
   if (open !== pending) setPending(open);
@@ -53,7 +60,7 @@ export function usePendingAutomations(
   };
 }
 
-// A failed tick is taken back at once; an answered one waits for the Plugin's row, and no longer than the hold.
+// A failed tick is taken back at once; an answered one settles, then waits for the Plugin's row until it is dropped.
 const settling =
   (tick: AutomationTick, setPending: SetPending, later: Later) =>
   (answered: boolean): void => {
@@ -62,10 +69,11 @@ const settling =
     if (!answered) return release();
 
     setPending((held) => answering(held, tick));
-    later(release);
+    later(() => setPending((held) => confirming(held, tick)), settleTick);
+    later(release, dropTick);
   };
 
-type Later = (run: () => void) => void;
+type Later = (run: () => void, wait: number) => void;
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -73,13 +81,13 @@ function clearAll(timers: Set<Timer>): void {
   for (const timer of timers) clearTimeout(timer);
 }
 
-// Runs each call after the wait, and none once the rows are gone.
-function useLater(wait: number): Later {
+// Runs each call after its wait, and none once the rows are gone.
+function useLater(): Later {
   const [timers] = useState(() => new Set<Timer>());
 
   useEffect(() => (): void => clearAll(timers), [timers]);
 
-  return (run) => {
+  return (run, wait) => {
     const timer = setTimeout(() => {
       timers.delete(timer);
       run();

@@ -5,8 +5,15 @@ import {
   referenceOf,
 } from './session-pull-request-actions';
 
-// A tick the menu shows ahead of the Plugin's row, and whether its Operation has answered yet.
-type Held = { tick: AutomationTick; answered: boolean };
+/*
+ * How far a held tick has come. While its Operation is `running` and while its answer is `settling`, the rows are not
+ * believed: a refresh that lands then may be an earlier tick's. Once `confirming`, the rows are, and the tick is let
+ * go of when they carry it.
+ */
+type Stage = 'running' | 'settling' | 'confirming';
+
+// A tick the menu shows ahead of the Plugin's row.
+type Held = { tick: AutomationTick; stage: Stage };
 
 // The ticks made here that the Plugin's rows do not carry yet, by the PR and automation each was made on.
 export type PendingAutomations = Readonly<Record<string, Held>>;
@@ -37,14 +44,29 @@ const withHeld = (
 export const holding = (
   pending: PendingAutomations,
   tick: AutomationTick,
-): PendingAutomations => withHeld(pending, { tick, answered: false });
+): PendingAutomations => withHeld(pending, { tick, stage: 'running' });
 
-// The Operation answered: the tick stands until the Plugin's row carries it.
+const staged = (
+  pending: PendingAutomations,
+  tick: AutomationTick,
+  stage: Stage,
+): PendingAutomations =>
+  isHeld(pending, tick) ? withHeld(pending, { tick, stage }) : pending;
+
+/*
+ * The Operation answered. The tick still stands over the rows: two quick ticks on one automation are read back one
+ * after the other, and the first one's refresh would otherwise show for a moment under the second.
+ */
 export const answering = (
   pending: PendingAutomations,
   tick: AutomationTick,
-): PendingAutomations =>
-  isHeld(pending, tick) ? withHeld(pending, { tick, answered: true }) : pending;
+): PendingAutomations => staged(pending, tick, 'settling');
+
+// The answer has settled: the tick now stands only until the Plugin's row carries it.
+export const confirming = (
+  pending: PendingAutomations,
+  tick: AutomationTick,
+): PendingAutomations => staged(pending, tick, 'confirming');
 
 // The tick is let go of, and the row shows what the Plugin says again.
 export const releasing = (
@@ -62,15 +84,15 @@ const carries = (
   );
 
 /*
- * A tick the rows now carry is no longer held: the Plugin speaks for it again. One whose Operation is still running
- * stays, since the rows may match only because an earlier tick on the same automation has not landed yet.
+ * A tick the rows now carry is no longer held: the Plugin speaks for it again. One still running or settling stays,
+ * since the rows may match only because an earlier tick on the same automation has not landed yet.
  */
 export function unconfirmed(
   pending: PendingAutomations,
   rows: readonly SessionPullRequest[],
 ): PendingAutomations {
   const waiting = Object.entries(pending).filter(
-    ([, held]) => !(held.answered && carries(rows, held.tick)),
+    ([, held]) => !(held.stage === 'confirming' && carries(rows, held.tick)),
   );
 
   return waiting.length === Object.keys(pending).length

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import type { SessionPullRequest } from '#features/sessions';
 import {
   answering,
+  confirming,
   holding,
+  type PendingAutomations,
   releasing,
   unconfirmed,
   withPendingAutomations,
@@ -33,6 +35,20 @@ const tick = (on: boolean): AutomationTick => ({
 // Whether Auto-merge reads on, for each row that offers it.
 const mergeOn = (rows: SessionPullRequest[]): boolean[] =>
   rows.flatMap((row) => (row.automation ? [row.automation.merge.on] : []));
+
+// What Auto-merge reads as each refresh of the row lands, the held ticks carried from one to the next.
+function shownThrough(
+  pending: PendingAutomations,
+  refreshes: SessionPullRequest[],
+): boolean[] {
+  let held = pending;
+
+  return refreshes.flatMap((row) => {
+    held = unconfirmed(held, [row]);
+
+    return mergeOn(withPendingAutomations([row], held));
+  });
+}
 
 describe('a tick held ahead of the Plugin', () => {
   it('shows on its row from the press, and on no other automation', () => {
@@ -73,12 +89,32 @@ describe('a tick held ahead of the Plugin', () => {
     );
   });
 
-  it('is let go of once its Operation answered and the row carries it', () => {
+  it('is let go of once its answer has settled and the row carries it', () => {
     const on = tick(true);
-    const answered = answering(holding({}, on), on);
+    const settled = confirming(answering(holding({}, on), on), on);
 
-    expect(unconfirmed(answered, [rowWith(false)])).toBe(answered);
-    expect(unconfirmed(answered, [rowWith(true)])).toEqual({});
+    expect(unconfirmed(settled, [rowWith(false)])).toBe(settled);
+    expect(unconfirmed(settled, [rowWith(true)])).toEqual({});
+  });
+
+  it('stands over the rows while its answer settles, so an earlier tick read back late does not show', () => {
+    const off = tick(false);
+    const settling = answering(holding(holding({}, tick(true)), off), off);
+
+    // The row still says off, as before either tick; then the first tick's refresh lands, then the second's.
+    const refreshes = [rowWith(false), rowWith(true), rowWith(false)];
+
+    expect(shownThrough(settling, refreshes)).toEqual([false, false, false]);
+  });
+
+  it('shows an earlier tick read back late once the rows are believed, which settling is there to outlast', () => {
+    const off = tick(false);
+    const held = holding(holding({}, tick(true)), off);
+    const believed = confirming(answering(held, off), off);
+
+    expect(
+      shownThrough(believed, [rowWith(false), rowWith(true), rowWith(false)]),
+    ).toEqual([false, true, false]);
   });
 
   it('stays while its Operation runs, though the row already matches it', () => {
@@ -97,6 +133,7 @@ describe('a tick held ahead of the Plugin', () => {
     const held = holding(holding({}, first), second);
 
     expect(answering(held, first)).toBe(held);
+    expect(confirming(held, first)).toBe(held);
     expect(releasing(held, first)).toBe(held);
   });
 });
