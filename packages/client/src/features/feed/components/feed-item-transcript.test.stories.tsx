@@ -38,6 +38,7 @@ const colorOf = (element: HTMLElement): string =>
   getComputedStyle(element).color;
 
 export const PersonWordsMuteUntilFinal: Story = {
+  args: personSaid,
   render: pair(personSaid, personSaying),
   play: async ({ canvas }) => {
     const final = await canvas.findByText(words.person);
@@ -48,6 +49,7 @@ export const PersonWordsMuteUntilFinal: Story = {
 };
 
 export const VoiceWordsMuteUntilFinal: Story = {
+  args: voiceSaid,
   render: pair(voiceSaid, voiceSaying),
   play: async ({ canvas }) => {
     const final = await canvas.findByText(words.voice);
@@ -58,6 +60,7 @@ export const VoiceWordsMuteUntilFinal: Story = {
 };
 
 export const BothKindsDrawTheirWords: Story = {
+  args: personSaid,
   render: pair(personSaid, voiceSaid),
   play: async ({ canvas }) => {
     await expect(await canvas.findByText(words.person)).toBeVisible();
