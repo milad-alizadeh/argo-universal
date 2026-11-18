@@ -12,6 +12,7 @@ import {
   codeMarkdown,
   tableMarkdown,
   streamingMarkdown,
+  startingParagraphMarkdown,
 } from './markdown-fixtures';
 
 const meta = {
@@ -65,3 +66,5 @@ export const Arriving: Story = {
   args: arrivingMarkdown,
   render: ({ text }) => <Written text={text} />,
 };
+
+export const StartingParagraph: Story = { args: startingParagraphMarkdown };

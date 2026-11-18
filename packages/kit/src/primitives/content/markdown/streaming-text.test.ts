@@ -3,7 +3,7 @@ import { lexMarkdown } from '#kit/lex-markdown';
 import { streamingText } from './streaming-text';
 
 describe('incomplete streaming Markdown', () => {
-  it.each(['*', '**', '-', '1.', '#'])(
+  it.each(['*', '**', '-', '1.', '#', ' *', '  *', '   *', '  #'])(
     'holds an ambiguous trailing marker %s',
     (marker) => {
       const tokens = lexMarkdown(streamingText(`Before.\n\n${marker}`));

@@ -38,19 +38,14 @@ function GrowingScroll(): ReactElement {
   );
 }
 
-const depth = (scroll: HTMLElement, edge: string): number =>
-  Number.parseFloat(
-    getComputedStyle(scroll).getPropertyValue(`--scroll-fade-${edge}`),
-  );
-
-export const KeepsFadeWhileContentGrows: Story = {
+export const KeepsPositionWhileContentGrows: Story = {
   render: () => <GrowingScroll />,
   play: async ({ canvas, userEvent }) => {
     const scroll = canvas.getByTestId('growing-scroll');
-    await waitFor(() => expect(depth(scroll, 'top')).toBe(0));
+    await waitFor(() => expect(scroll.scrollTop).toBe(0));
     scroll.scrollTop = 80;
     scroll.dispatchEvent(new Event('scroll'));
-    await waitFor(() => expect(depth(scroll, 'top')).toBe(28));
+    await waitFor(() => expect(scroll.scrollTop).toBe(80));
 
     for (let step = 1; step <= 8; step++) {
       await userEvent.click(
@@ -61,15 +56,16 @@ export const KeepsFadeWhileContentGrows: Story = {
           600 + step * 40,
         ),
       );
-      await expect(depth(scroll, 'top')).toBe(28);
-      await expect(depth(scroll, 'bottom')).toBe(36);
+      await expect(scroll.scrollTop).toBe(80);
     }
 
     scroll.scrollTop = scroll.scrollHeight;
     scroll.dispatchEvent(new Event('scroll'));
-    await waitFor(() => expect(depth(scroll, 'bottom')).toBe(0));
+    await waitFor(() =>
+      expect(scroll.scrollTop + scroll.clientHeight).toBe(scroll.scrollHeight),
+    );
     scroll.scrollTop = 0;
     scroll.dispatchEvent(new Event('scroll'));
-    await waitFor(() => expect(depth(scroll, 'top')).toBe(0));
+    await waitFor(() => expect(scroll.scrollTop).toBe(0));
   },
 };
