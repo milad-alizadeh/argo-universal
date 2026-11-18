@@ -1,31 +1,39 @@
-import type { LoaderInput } from '@argo/plugin-kit';
+import { boardColumns } from './board-columns';
 import type { JiraStatus } from './issue-fields';
-import type { JiraReads } from './jira-reads';
+import { targetOf, type Step } from './issue-scope';
 import type { ProjectView } from './jira-setup';
+import type { IssuesTarget } from './read-scope';
 import type { IssuesState } from './view-frame';
 
-type Step = { read: LoaderInput['read']; reads: JiraReads; projectId: string };
+export type BoardStatus = JiraStatus & { count?: number };
 
 type Issues = Extract<ProjectView, { kind: 'issues' }>;
 
-/*
- * The Jira project's statuses, the board's columns. When Jira does not list them, the board still draws the statuses
- * its issues are in and may move to, so a failed read never hides a card.
- */
-async function statusesOf(
-  { read, reads, projectId }: Step,
-  { site, project }: Issues,
-): Promise<JiraStatus[]> {
-  const target = { projectId, cloudId: site.cloudId, projectKey: project.key };
-  const answer = await read(reads.statuses(target));
+const countStatus =
+  ({ read, reads, filters }: Step, target: IssuesTarget) =>
+  async (status: JiraStatus): Promise<BoardStatus> => {
+    const count = await read(
+      reads.statusCount({ ...target, filters, statusId: status.id }),
+    );
 
-  return answer.ok ? answer.value : [];
+    return count.ok ? { ...status, count: count.value } : status;
+  };
+
+async function statusesOf(
+  step: Step,
+  { site, project }: Issues,
+): Promise<BoardStatus[]> {
+  const target = targetOf(step, site, project);
+  const answer = await step.read(step.reads.statuses(target));
+
+  return answer.ok
+    ? Promise.all(boardColumns(answer.value, []).map(countStatus(step, target)))
+    : [];
 }
 
-// Only the board reads the statuses; the list and every other step need none.
 export const boardStatuses = async (
   step: Step,
   { view: shown }: IssuesState,
   view: ProjectView,
-): Promise<JiraStatus[]> =>
+): Promise<BoardStatus[]> =>
   shown === 'board' && view.kind === 'issues' ? statusesOf(step, view) : [];

@@ -124,3 +124,32 @@ it(
   },
   timeoutMs,
 );
+
+it(
+  'honours Jira’s Retry-After through the shared fetch cooldown',
+  async () => {
+    const jira = await startJira();
+    const page = await argoIssues(jira);
+    const retryAfterSeconds = 30;
+
+    jira.jira.fail('search', {
+      ...rateLimited,
+      headers: { 'Retry-After': String(retryAfterSeconds) },
+    });
+    await filterBy(page, 'To Do');
+
+    const searchCalls = jira.jira.calls('search').length;
+    jira.jira.heal('search');
+    const retryAfterMs = retryAfterSeconds * 1_000;
+    await jira.test.clock.advance(retryAfterMs - 1);
+    await page.press('Try again');
+    expect(page.findText('Jira is busy')).toBeDefined();
+    expect(jira.jira.calls('search')).toHaveLength(searchCalls);
+
+    await jira.test.clock.advance(1);
+    await page.press('Try again');
+    expect(jira.jira.calls('search')).toHaveLength(searchCalls + 1);
+    expect(shownKeys(page)).toEqual(['ARGO-1']);
+  },
+  timeoutMs,
+);
