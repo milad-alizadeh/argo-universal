@@ -1,5 +1,4 @@
-import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
-import { settleLayout } from '@repo/kit/mocks/story-layout';
+import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import { VoiceDetailView } from './voice-detail-view';
@@ -20,7 +19,7 @@ const meta = {
     onVoiceChange: fn(),
     onRetry: fn(),
   },
-  beforeEach: (): Promise<void> => settleLayout('wide'),
+  beforeEach: (): Promise<void> => settleLayout(layoutWidths.wide),
 } satisfies Meta<typeof VoiceDetailView>;
 
 export default meta;
@@ -32,7 +31,7 @@ const voiceCalls = { name: 'Voice calls' };
 export const UsableProviderShowsItsChoicesAndNoReason: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByRole('switch', voiceCalls)).toBeChecked();
-    await expect(canvas.getByText('GPT-Live')).toBeVisible();
+    await expect(canvas.getByText(/GPT-Live/)).toBeVisible();
     await expect(canvas.getByText('Cove')).toBeVisible();
     await expect(canvas.queryByText(/signed in/)).toBeNull();
     await expect(canvas.getAllByRole('switch')).toHaveLength(1);
@@ -98,9 +97,8 @@ export const ChoosesTheSecondVoice: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: /^Voice(?! provider)/ }),
     );
-    const marin = await opened(canvasElement).findByText('Marin');
-    await settleOverlays(marin);
-    await userEvent.click(marin);
+    await opened(canvasElement).findAllByText('Marin');
+    await userEvent.keyboard('{ArrowDown}{Enter}');
     await expect(args.onVoiceChange).toHaveBeenCalledWith('marin');
     await expect(args.onProviderChange).not.toHaveBeenCalled();
   },
