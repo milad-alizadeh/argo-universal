@@ -7,6 +7,7 @@ import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import { offerTo } from './offer-to';
 import type { VoiceConnection } from './voice-connection';
 import { useVoiceConnection } from './voice-connection-context';
+import { voiceOffered } from './voice-offer';
 
 // Where the call is, as this Session's Composer sees it.
 function callHere(
@@ -83,7 +84,7 @@ export function useVoiceCall(sessionId: string): ComposerVoice | undefined {
   if (!connection || !status) return undefined;
 
   return {
-    usable: status.availability.usable,
+    usable: voiceOffered(status),
     call: callHere(status.call, sessionId),
     onStart,
     onEnd,
