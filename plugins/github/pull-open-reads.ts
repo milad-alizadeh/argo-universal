@@ -58,23 +58,6 @@ export type OpenReads = {
   viewer?: Awaited<ReturnType<typeof readViewer>>;
 };
 
-export type OpenReadKey = keyof OpenReads;
-
-export const openReadKeys = [
-  'autoMerge',
-  'settings',
-  'comments',
-  'viewer',
-] as const satisfies readonly OpenReadKey[];
-
-// A name left out of the list above fails to type-check here.
-export const listsEveryName: Exclude<
-  OpenReadKey,
-  (typeof openReadKeys)[number]
-> extends never
-  ? true
-  : false = true;
-
 // A Merged or Closed pull request is never asked.
 export async function readOpenOnly(
   source: Source,
