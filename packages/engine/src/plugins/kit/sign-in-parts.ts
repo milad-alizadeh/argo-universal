@@ -40,7 +40,7 @@ export function signInData(
   }));
 }
 
-export const fieldsOf = (flow: SignInFlow): readonly TokenPasteField[] =>
+const fieldsOf = (flow: SignInFlow): readonly TokenPasteField[] =>
   'fields' in flow ? flow.fields : [];
 
 type Draw = {

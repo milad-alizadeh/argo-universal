@@ -8,8 +8,6 @@ import type { PluginBridge } from './plugin-bridge.ts';
 
 export type PluginRealm = ReturnType<typeof createContext>;
 
-export type { PluginClock } from '../clock.ts';
-
 export type ConsoleWriter = (
   level: ConsoleMessage['level'],
   text: string,
