@@ -147,6 +147,8 @@ it('asks the service nothing for text too short to be a token, and an emptied fi
   await paste(test, page, '');
 
   expect(service.checkedTokens()).toEqual([wrongToken]);
-  expect(fieldSectionOf(page).props.footer).toBeUndefined();
+  // The error clears, and the paste instructions are back under the field.
+  expect(secretFieldOf(page).props.error).toBeUndefined();
+  expect(fieldSectionOf(page).props.footer).toMatch(/^Paste an API token/);
   expect(test.accounts.list()).toEqual([]);
 });

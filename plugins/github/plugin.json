@@ -94,7 +94,7 @@
       {
         "name": "automationSet",
         "label": "Turn an automation on or off for a pull request",
-        "description": "Turn Auto-fix, Auto-merge or Auto-archive on or off for one pull request attached to the calling Session. Auto-fix prompts the Session once for each failed Check, merge conflict and review comment from a trusted author on the pull request, and turns itself off after three Prompts on one commit with no new push; it is only for pull requests the signed-in account opened. Auto-merge is GitHub's own: it merges when the pull request is ready, with the first method the repository allows (squash, merge, rebase), and shows whatever GitHub reports. Auto-archive archives the Session once the pull request is merged or closed and no other attached pull request is open, waiting while a Turn runs. An Agent's call asks the person first.",
+        "description": "Turn Auto-fix, Auto-merge or Auto-archive on or off for one pull request attached to the calling Session. Auto-fix prompts the Session once for each failed Check, merge conflict and review comment from a trusted author on the pull request, and turns itself off after three Prompts on one commit with no new push; it is only for pull requests the signed-in account opened. Auto-merge is GitHub's own: it merges when the pull request is ready, or at once when it is ready already, with the first method the repository allows (squash, merge, rebase), and shows whatever GitHub reports. Auto-archive archives the Session once the pull request is merged or closed and no other attached pull request is open, waiting while a Turn runs. An Agent's call asks the person first.",
         "tier": "act",
         "keywords": [
           "github",

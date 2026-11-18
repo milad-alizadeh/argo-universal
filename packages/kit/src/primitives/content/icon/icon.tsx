@@ -13,7 +13,7 @@ import {
   useIconPixels,
 } from '../../../symbols/icon-size';
 import {
-  type IconSymbol,
+  type DrawnIcon,
   type ResolvedIcon,
   resolveIcon,
 } from '../../../symbols/icon-symbol';
@@ -69,7 +69,7 @@ type Sized<P> = P & { size: IconSizeValue };
 
 type LogoIconProps = Sized<IconProps> & { source: LogoSource };
 
-type SymbolIconProps = Sized<IconProps> & { name: IconSymbol };
+type SymbolIconProps = Sized<IconProps> & { name: DrawnIcon };
 
 function IconGlyph(props: Sized<IconProps>): React.JSX.Element {
   if (props.source) return <IconLogo {...props} source={props.source} />;

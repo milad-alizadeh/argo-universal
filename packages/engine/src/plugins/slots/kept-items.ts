@@ -16,7 +16,7 @@ export const itemsLeftOut = {
   schema: 'items failed the Slot schema',
 } as const;
 
-type LeftOut = {
+export type LeftOut = {
   ok: false;
   reason: (typeof itemsLeftOut)[keyof typeof itemsLeftOut];
 };
@@ -32,7 +32,14 @@ export const leftOut = (reason: LeftOut['reason']): LeftOut => ({
 // One Plugin's items for a list, by each context's key.
 export type PluginItems = Readonly<Record<string, readonly ItemsSlotItem[]>>;
 
-export type ItemsAnswer = { ok: true; items: PluginItems } | LeftOut;
+/*
+ * What a list draws of one Plugin: its fresh items, why it was left out, or, when it was left out but answered
+ * before, its last good items standing in (see `last-good-items.ts`).
+ */
+export type ItemsAnswer =
+  | { ok: true; items: PluginItems }
+  | { ok: true; items: PluginItems; standingInFor: LeftOut['reason'] }
+  | LeftOut;
 
 type Kept = Map<string, readonly ItemsSlotItem[]>;
 

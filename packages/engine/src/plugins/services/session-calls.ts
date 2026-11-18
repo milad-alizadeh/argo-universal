@@ -5,17 +5,37 @@ import type { PluginPromptSender } from './plugin-service-options';
 
 type SessionRequest = Extract<PluginRequest, { api: 'sessions' }>;
 
-export function answerSession(
-  call: PluginCall,
-  request: SessionRequest,
-): Promise<PluginValue> {
-  if (request.action === 'prompt')
-    return promptSession(call, request.sessionId, request.text);
+type PromptRequest = Extract<SessionRequest, { action: 'prompt' | 'withdraw' }>;
 
-  return request.action === 'get'
+type OtherRequest = Exclude<SessionRequest, PromptRequest>;
+
+const isPromptRequest = (request: SessionRequest): request is PromptRequest =>
+  request.action === 'prompt' || request.action === 'withdraw';
+
+// The calls under `sessions:prompt`: send a Prompt, or take back one it queued.
+const answerPrompt = (
+  call: PluginCall,
+  request: PromptRequest,
+): Promise<PluginValue> =>
+  request.action === 'prompt'
+    ? promptSession(call, request.sessionId, request.text)
+    : withdrawPrompt(call, request.sessionId, request.queuedId);
+
+const answerOther = (
+  call: PluginCall,
+  request: OtherRequest,
+): Promise<PluginValue> =>
+  request.action === 'get'
     ? readSession(call, request.sessionId)
     : archiveSession(call, request.sessionId);
-}
+
+export const answerSession = (
+  call: PluginCall,
+  request: SessionRequest,
+): Promise<PluginValue> =>
+  isPromptRequest(request)
+    ? answerPrompt(call, request)
+    : answerOther(call, request);
 
 // `argo.sessions.get` reads a Session's Project and branch only under a `sessions:read` Grant (ADR-0030).
 async function readSession(
@@ -60,6 +80,23 @@ async function promptSession(
   return available(call.options.promptSession, 'Prompting')(
     sessionId,
     text,
+    pluginSender(call),
+  );
+}
+
+// `argo.sessions.withdraw` takes back a Queued Prompt this Plugin sent to a Session of the call's Project (ADR-0055).
+async function withdrawPrompt(
+  call: PluginCall,
+  sessionId: string,
+  queuedId: string,
+): Promise<PluginValue> {
+  call.access().checkSessions('sessions:prompt');
+  call.logCall();
+  await requireProjectSession(call, sessionId);
+
+  return available(call.options.withdrawPrompt, 'Withdrawing Prompts from')(
+    sessionId,
+    queuedId,
     pluginSender(call),
   );
 }

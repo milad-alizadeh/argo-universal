@@ -6,6 +6,7 @@
     "**/node_modules",
     "github-fixture.ts",
     "github-fixture-data.ts",
+    "github-outage.ts",
     "journey-fixture.ts",
     "sign-in-helpers.ts",
     "tracker-answering.ts",

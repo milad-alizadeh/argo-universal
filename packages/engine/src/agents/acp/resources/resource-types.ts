@@ -49,6 +49,8 @@ export type AcpSessionLease = {
   initialization: InitializeResponse;
   steering?: boolean;
   response: NewSessionResponse | ResumeSessionResponse;
+  // A private connection's answer to whether its Agent loaded Argo's tools; a shared one gives none.
+  argoTools?: () => ArgoToolsState;
   close: () => Promise<void>;
   // Rethrows a request's failure once a connection closure behind it has reached the Session.
   rejectRequest: (cause: unknown) => Promise<never>;
@@ -58,9 +60,17 @@ export type AcpSessionLease = {
 // What one connection opens; the resources add which kind of connection it runs on.
 export type AcpConnectionLease = Omit<AcpSessionLease, 'connectionKind'>;
 
-export type SessionProcessAccess = {
-  environment: NonNullable<AgentLaunch['sessionAccess']>;
+// Whether a Session's Agent started `argo mcp`: it has, it may still, or it had its grace and did not.
+export type ArgoToolsState = 'loaded' | 'waiting' | 'missing';
+
+// What a Session's token grant gives its Agent process besides the environment.
+export type AccessGrant = {
   release: () => void;
+  argoTools?: () => ArgoToolsState;
+};
+
+export type SessionProcessAccess = AccessGrant & {
+  environment: NonNullable<AgentLaunch['sessionAccess']>;
 };
 
 // A private connection is one Session's own Agent process, holding that Session's access; a shared one serves its Agent and Project.

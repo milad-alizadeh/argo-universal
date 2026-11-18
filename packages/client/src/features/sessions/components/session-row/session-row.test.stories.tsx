@@ -296,7 +296,7 @@ export const PullRequestWithoutOtherMetadata: Story = {
       await settleLayout(width);
       const pullRequest = canvas.getByLabelText('Open Change #45');
       await expect(pullRequest).toBeVisible();
-      await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
+      await expect(canvas.queryByLabelText(/^Todos:/)).not.toBeInTheDocument();
       await expect(canvas.queryByLabelText(/^Agents:/)).not.toBeInTheDocument();
       await expect(canvas.queryByLabelText(/^Issue #/)).not.toBeInTheDocument();
     }
@@ -321,10 +321,10 @@ export const PlanAndSubagents: Story = {
     for (const width of [390, 1440]) {
       await settleLayout(width);
       await expect(
-        canvas.getByLabelText('Plan: 2 of 5 complete'),
+        canvas.getByLabelText('Todos: 2 of 5 complete'),
       ).toBeVisible();
       // A running Plan sweeps; a Regular row's Plan is a bar, with no step count.
-      await expect(canvas.getByTestId('session-plan-sweep')).toBeVisible();
+      await expect(canvas.getByTestId('session-todos-sweep')).toBeVisible();
       await expect(canvas.queryByText('2/5')).not.toBeInTheDocument();
       await expect(
         canvas.getByLabelText('Agents: 2 running'),
@@ -343,7 +343,7 @@ export const NoPlanOrSubagents: Story = {
   play: async ({ canvas }) => {
     for (const width of [390, 1440]) {
       await settleLayout(width);
-      await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
+      await expect(canvas.queryByLabelText(/^Todos:/)).not.toBeInTheDocument();
       await expect(canvas.queryByLabelText(/^Agents:/)).not.toBeInTheDocument();
       await expect(
         canvas.queryByTestId('session-issue-slot'),
@@ -363,7 +363,7 @@ export const FinishedSubagents: Story = {
     for (const width of [390, 1440]) {
       await settleLayout(width);
       // A finished Plan leaves no bar.
-      await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
+      await expect(canvas.queryByLabelText(/^Todos:/)).not.toBeInTheDocument();
       await expect(canvas.queryByLabelText(/^Agents:/)).not.toBeInTheDocument();
       await expect(
         canvas.queryByLabelText(/^Background Tasks:/),

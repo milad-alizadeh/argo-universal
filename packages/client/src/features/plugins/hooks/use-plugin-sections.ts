@@ -7,7 +7,7 @@ import {
   pluginSectionId,
   sectionOf,
 } from '../../../lib/product/navigation/sections';
-import { pluginSymbol } from '../../../lib/product/plugin-symbol';
+import { manifestIcon } from '../../../lib/product/plugin-symbol';
 import { pluginRoute, segmentsOf } from '../utils/plugin-page-route';
 
 export interface PluginSection extends NavigationSection {
@@ -42,7 +42,9 @@ function usePluginList(): PluginListState {
 
   const sections = (data?.plugins ?? noPlugins)
     .filter((plugin) => plugin.enabled)
-    .flatMap(({ manifest }) => pluginSections(manifest));
+    .flatMap(({ manifest, iconMarkup }) =>
+      pluginSections(manifest, iconMarkup),
+    );
 
   return { sections, loaded: isSuccess };
 }
@@ -80,22 +82,42 @@ type Manifest = PluginList['plugins'][number]['manifest'];
 
 type NavItem = Manifest['contributes']['nav'][number];
 
-const pluginSections = (manifest: Manifest): PluginSection[] =>
-  manifest.contributes.nav.map((nav) => pluginSection(manifest, nav));
+const pluginSections = (
+  manifest: Manifest,
+  iconMarkup: string | undefined,
+): PluginSection[] =>
+  manifest.contributes.nav.map((nav) =>
+    pluginSection({ manifest, iconMarkup }, nav),
+  );
 
-function pluginSection(manifest: Manifest, nav: NavItem): PluginSection {
+type Listed = { manifest: Manifest; iconMarkup: string | undefined };
+
+// The nav item's own path, as segments, and the route of its root page.
+function navPaths(
+  pluginId: string,
+  nav: NavItem,
+): Pick<PluginSection, 'navPath' | 'rootPath'> {
   const navPath = segmentsOf(nav.path);
 
+  return {
+    navPath,
+    rootPath: pluginPath(
+      pluginRoute({ pluginId, navId: nav.id, page: navPath }),
+    ),
+  };
+}
+
+function pluginSection(
+  { manifest, iconMarkup }: Listed,
+  nav: NavItem,
+): PluginSection {
   return {
     id: pluginSectionId(manifest.id, nav.id),
     pluginId: manifest.id,
     name: manifest.name,
     title: nav.title,
-    icon: pluginSymbol(manifest.icon),
+    icon: manifestIcon(manifest.icon, iconMarkup),
     navId: nav.id,
-    navPath,
-    rootPath: pluginPath(
-      pluginRoute({ pluginId: manifest.id, navId: nav.id, page: navPath }),
-    ),
+    ...navPaths(manifest.id, nav),
   };
 }

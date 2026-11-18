@@ -5,8 +5,8 @@ import type {
   QueueCommand,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
+import type { QueueChange, QueueContext } from './queue-command-types';
 import { appendedPrompt, type AppendCommand } from './queued-prompt-append';
-import type { SessionContext } from './session-context';
 import { SessionRowUpdateJob } from './session-storage';
 
 export const queueWrite = (
@@ -15,13 +15,10 @@ export const queueWrite = (
 ): SessionRowUpdateJob =>
   new SessionRowUpdateJob({ id: sessionId, set: { promptQueue } });
 
-type QueueChange = Pick<SessionContext, 'promptQueue' | 'queueHolds'>;
-
-type QueueContext = QueueChange & Pick<SessionContext, 'dispatchingQueueId'>;
-
-type QueueChangeCommand = Exclude<QueueCommand, { action: 'steer' }>;
-
-type RowCommand = Exclude<QueueChangeCommand, { action: 'append' | 'resume' }>;
+type RowCommand = Exclude<
+  QueueCommand,
+  { action: 'append' | 'resume' | 'steer' }
+>;
 
 type EditingCommand = Extract<QueueCommand, { action: 'save' | 'release' }>;
 
@@ -31,13 +28,18 @@ const conflict = (message: string): never => {
   throw new TRPCError({ code: 'CONFLICT', message });
 };
 
+// A Plugin's append carries its sender and the id the Server chose for it.
+type QueueChangeCommand = Exclude<QueueCommand, { action: 'steer' }> & {
+  sender?: NonUserPromptSender;
+  queuedId?: string;
+};
+
 export function changePromptQueue(
   context: QueueContext,
-  command: QueueChangeCommand & { sender?: NonUserPromptSender },
+  command: QueueChangeCommand,
   createId: () => string,
 ): QueueChange {
-  if (command.action === 'append')
-    return appendRow(context, command, createId());
+  if (command.action === 'append') return appendRow(context, command, createId);
 
   if (command.action === 'resume')
     return {
@@ -155,12 +157,12 @@ function insertRow(
 
 function appendRow(
   context: QueueContext,
-  command: AppendCommand,
-  id: string,
+  command: AppendCommand & { queuedId?: string },
+  createId: () => string,
 ): QueueChange {
   return withItems(context, [
     ...context.promptQueue.items,
-    appendedPrompt(command, id),
+    appendedPrompt(command, command.queuedId ?? createId()),
   ]);
 }
 

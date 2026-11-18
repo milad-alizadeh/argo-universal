@@ -1,6 +1,6 @@
 import { defaultEffortConfiguration } from '../composer-configuration/composer-configuration-fixtures';
-import { runningPlan } from '../composer-status/composer-plan-fixtures';
 import { runningWork } from '../composer-status/composer-status-fixtures';
+import { runningTodos } from '../composer-status/composer-todos-fixtures';
 import { smartZoneContext } from '../composer-status/context-control-fixtures';
 import type { ComposerPillComparisonProps } from './composer-pill-comparison.mocks';
 
@@ -15,6 +15,6 @@ export const sharedControls = {
       ],
     },
   },
-  entries: runningPlan.entries,
+  entries: runningTodos.entries,
   disabled: false,
 } satisfies ComposerPillComparisonProps;

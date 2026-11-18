@@ -21,12 +21,16 @@ export const readPatch = (
 ): Promise<string> =>
   git(checkout, [literalPathspecs, 'diff', '-M', base, '--', ...paths]);
 
-// The working tree's state, untracked files listed one by one; one path's, or all.
+/*
+ * The working tree's state, untracked files listed one by one; one path's, or all. It takes no index lock, as it runs
+ * beside the Changes' other reads and the Agent's own git commands.
+ */
 export const readWorktree = (
   checkout: string,
   paths: string[] = [],
 ): Promise<string> =>
   git(checkout, [
+    '--no-optional-locks',
     literalPathspecs,
     'status',
     '--porcelain=v1',

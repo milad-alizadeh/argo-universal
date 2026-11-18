@@ -1,7 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { useTRPC } from '#features/connection';
-import { pluginSymbol } from '../../../lib/product/plugin-symbol';
+import {
+  manifestSymbol,
+  pluginSymbol,
+} from '../../../lib/product/plugin-symbol';
 import type { PluginIdentity, PluginLookup } from '../utils/slot-items';
 
 // A Plugin the list has not sent yet: its id, and the generic Plugin glyph.
@@ -19,7 +22,7 @@ export function usePluginLookup(): PluginLookup {
     const plugins = new Map(
       (data?.plugins ?? []).map(({ manifest }) => [
         manifest.id,
-        { name: manifest.name, icon: pluginSymbol(manifest.icon) },
+        { name: manifest.name, icon: manifestSymbol(manifest.icon) },
       ]),
     );
 

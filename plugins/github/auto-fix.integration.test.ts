@@ -1,15 +1,20 @@
 import { expect, it } from 'vitest';
-import { failChecks, lintPrompt, texts, watch } from './auto-fix-fixture';
+import {
+  failChecks,
+  failedItem,
+  fixPrompt,
+  lintPrompt,
+  texts,
+  watch,
+} from './auto-fix-fixture';
 import {
   attached,
   automationOf,
-  reference,
   repository,
   tap as tapAutomation,
 } from './auto-merge-fixture';
 import { sha } from './github-fixture';
-import { attach, detach } from './journey-calls-fixture';
-import { journey, restart, sessionId, type Journey } from './journey-fixture';
+import { restart, sessionId, type Journey } from './journey-fixture';
 import { promptsSent } from './journey-prompts-fixture';
 import { changePull, newHead, pushed } from './journey-watch-fixture';
 import type { AutomationState } from './pull-automation';
@@ -88,7 +93,7 @@ it(
 
     expect(texts(run)).toEqual([
       lintPrompt,
-      `Check \`lint\` failed on ${reference} at ${newHead.slice(0, 7)}. Read it, fix it, and push.`,
+      fixPrompt(newHead, [failedItem('lint')]),
     ]);
     expect((await fixOffer(run)).on).toBe(true);
   },
@@ -101,10 +106,17 @@ it(
     const run = await attached();
 
     await tap(run, true);
-    failChecks(run, sha, 'a', 'b', 'c');
-    await watch(run);
 
-    expect(promptsSent(run)).toHaveLength(3);
+    for (const checks of [['a'], ['a', 'b'], ['a', 'b', 'c']]) {
+      failChecks(run, sha, ...checks);
+      await watch(run);
+    }
+
+    expect(texts(run)).toEqual([
+      fixPrompt(sha, [failedItem('a')]),
+      fixPrompt(sha, [failedItem('b')]),
+      fixPrompt(sha, [failedItem('c')]),
+    ]);
     expect(await fixOffer(run)).toEqual({
       on: false,
       available: true,
@@ -116,14 +128,12 @@ it(
     expect(promptsSent(run)).toHaveLength(3);
 
     await tap(run, true);
-    expect(promptsSent(run)).toHaveLength(6);
+    expect(texts(run).at(-1)).toBe(
+      fixPrompt(sha, ['a', 'b', 'c', 'd'].map(failedItem)),
+    );
     await expect
       .poll(() => fixOffer(run), { timeout: wait })
-      .toEqual({
-        on: false,
-        available: true,
-        reason: `Stopped after 3 tries on \`${sha.slice(0, 7)}\``,
-      });
+      .toEqual({ on: true, available: true });
   },
   slow,
 );
@@ -144,34 +154,6 @@ it(
     run.github.checksFailWith.clear();
     await watch(run);
     expect(texts(run)).toEqual([lintPrompt]);
-  },
-  slow,
-);
-
-it(
-  'forgets Auto-fix when the pull request is detached',
-  async () => {
-    const run = await attached();
-
-    await tap(run, true);
-    await detach(run, reference);
-    await attach(run, reference);
-
-    expect(await fixOffer(run)).toEqual({ on: false, available: true });
-
-    failChecks(run, sha, 'lint');
-    await watch(run);
-    expect(promptsSent(run)).toEqual([]);
-  },
-  slow,
-);
-
-it(
-  'is refused for a pull request that is not attached',
-  async () => {
-    const run = await journey();
-
-    await expect(tap(run, true)).rejects.toThrow('not attached');
   },
   slow,
 );

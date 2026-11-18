@@ -4,7 +4,7 @@ import { isCustomSymbol } from '../custom-symbols';
 import { appleRowSymbolPixels } from '../glyph-sizing';
 import { AssetSymbol } from './asset-symbol';
 import { NativeSymbolView } from './native-symbol-view';
-import { SvgSymbolGlyph } from './svg-symbol';
+import { OwnGlyph } from './svg-symbol';
 import type { SymbolGlyphProps } from './symbol-glyph-props';
 
 /*
@@ -18,8 +18,7 @@ export function SymbolGlyph({
   symbol,
   ...props
 }: SymbolGlyphProps): React.JSX.Element {
-  if (symbol.kind === 'svg')
-    return <SvgSymbolGlyph {...props} name={symbol.svg} />;
+  if (symbol.kind !== 'system') return <OwnGlyph {...props} drawing={symbol} />;
 
   if (isCustomSymbol(symbol.sf))
     return <AssetSymbol {...props} assetName={symbol.sf} />;
