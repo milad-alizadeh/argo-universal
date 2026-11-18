@@ -4,12 +4,14 @@ import { heard, startedCall, type GptLiveFixture } from '#mocks/gpt-live-setup';
 let fixture: GptLiveFixture | undefined;
 
 afterEach(async () => {
-  await fixture?.endpoint.close();
+  await fixture?.close();
   fixture = undefined;
 });
 
-async function startCall(): ReturnType<typeof startedCall> {
-  const started = await startedCall();
+async function startCall(
+  ...options: Parameters<typeof startedCall>
+): ReturnType<typeof startedCall> {
+  const started = await startedCall(...options);
   fixture = started;
 
   return started;
@@ -53,29 +55,24 @@ describe('GPT-Live call events', () => {
     await expect.poll(() => events.length).toBe(5);
     expect(events).toEqual([
       { type: 'status', status: 'connected' },
-      {
-        type: 'person.transcript',
-        id: 'i1',
-        text: requestText,
-        final: true,
-      },
+      { type: 'person.transcript', id: 'i1', text: requestText, final: true },
       { type: 'voice.transcript', id: 'o1', text: 'On it', final: true },
       { type: 'work.requested', requestId: 'd1', text: requestText },
       { type: 'usage', inputTokens: 12, outputTokens: 34 },
     ]);
   });
 
-  it('drops audio frames unread', async () => {
+  it('drops audio frames unread, even one whose bytes read as an event', async () => {
     const { endpoint, call } = await startCall();
     const events = heard(call);
 
-    endpoint.sendAudio();
-    endpoint.sendAudio();
-    endpoint.send(connected);
+    endpoint.sendAudio(Buffer.from(connected));
+    endpoint.sendAudio(Buffer.from(handedOver));
+    endpoint.send(usage);
 
     await expect
       .poll(() => events)
-      .toEqual([{ type: 'status', status: 'connected' }]);
+      .toEqual([{ type: 'usage', inputTokens: 12, outputTokens: 34 }]);
   });
 
   it('reports the provider closing the call', async () => {
@@ -119,7 +116,7 @@ describe('GPT-Live call speaking', () => {
 
 describe('GPT-Live call losing its link', () => {
   it('ends the call as lost when the control link stays down past the grace period', async () => {
-    const { endpoint, call } = await startCall();
+    const { endpoint, call } = await startCall({ lostLinkMs: 300 });
     const events = heard(call);
 
     endpoint.refuseLinks = true;
@@ -131,17 +128,19 @@ describe('GPT-Live call losing its link', () => {
     expect(events.at(0)).toEqual({ type: 'status', status: 'disconnected' });
   });
 
-  it('keeps the call when the control link comes back within the grace period', async () => {
+  it('keeps the call when the control link comes back, and it still works on the new link', async () => {
     const { endpoint, call } = await startCall();
     const events = heard(call);
 
     endpoint.dropLink();
-    await expect.poll(() => endpoint.links.length).toBe(2);
     await expect
       .poll(() => events.at(-1))
       .toEqual({ type: 'status', status: 'connected' });
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    endpoint.send(usage);
 
+    await expect.poll(() => events.at(-1)).toMatchObject({ type: 'usage' });
     expect(events.map(({ type }) => type)).not.toContain('closed');
+    call.tell('Back again', 'speak');
+    await expect.poll(() => endpoint.received.length).toBe(1);
   });
 });

@@ -35,3 +35,13 @@ export const scriptedEngineInput = (
     ...scriptedGrace,
   };
 };
+
+// A test Engine names its Voice provider, or null for none; left undefined, the Engine would build the real one, which runs Codex.
+export function decided(input: EngineInput): EngineInput {
+  if (input.voiceProvider === undefined)
+    throw new Error(
+      'A test Engine must name its Voice provider (null for none).',
+    );
+
+  return input;
+}

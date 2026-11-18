@@ -1,4 +1,5 @@
 import type { VoiceAvailability } from '@repo/contracts';
+import type { WebSocket } from 'ws';
 import type {
   VoiceOption,
   VoiceProvider,
@@ -32,6 +33,8 @@ const settingsOf = (options: GptLiveOptions): Required<GptLiveOptions> => ({
   ...options,
 });
 
+type Held<T> = { value: T; token: string };
+
 /*
  * The GPT-Live Voice provider: a call on the person's ChatGPT subscription, with the token asked from the installed Codex each time.
  * The token lives in memory for the call and is never stored or refreshed here; a rejected one is asked for again once.
@@ -56,12 +59,50 @@ export class GptLiveProvider implements VoiceProvider {
   }
 
   public async start(request: VoiceStartRequest): Promise<GptLiveCall> {
+    const { callsUrl, linkUrl } = this.settings;
+    const token = await this.token();
+
+    const created = await this.asking(
+      (fresh) => createCall(callsUrl, fresh, request),
+      token,
+    );
+
+    const url = `${linkUrl}/${created.value.callId}`;
+
+    // A refusal at the link joins the same call again; it never creates a second one.
+    const linked = await this.asking(
+      (token) => joinLink(url, token),
+      created.token,
+    );
+
+    return this.callOf(created.value.answer, url, linked);
+  }
+
+  private callOf(
+    answer: string,
+    url: string,
+    link: Held<WebSocket>,
+  ): GptLiveCall {
+    return new GptLiveCall({
+      answer,
+      link: link.value,
+      rejoin: () => joinLink(url, link.token),
+      lostLinkMs: this.settings.lostLinkMs,
+    });
+  }
+
+  // Runs `attempt` with the token; when the service rejects it, asks Codex once more and runs it again.
+  private async asking<T>(
+    attempt: (token: string) => Promise<T>,
+    token: string,
+  ): Promise<Held<T>> {
     try {
-      return await this.place(await this.token(), request);
+      return { value: await attempt(token), token };
     } catch (error) {
       if (!(error instanceof TokenRejected)) throw error;
+      const fresh = await this.token();
 
-      return this.place(await this.token(), request);
+      return { value: await attempt(fresh), token: fresh };
     }
   }
 
@@ -71,23 +112,6 @@ export class GptLiveProvider implements VoiceProvider {
     if (!reading.signedIn) throw new Error(reading.reason);
 
     return reading.token;
-  }
-
-  private async place(
-    token: string,
-    request: VoiceStartRequest,
-  ): Promise<GptLiveCall> {
-    const { callsUrl, linkUrl, lostLinkMs } = this.settings;
-    const { answer, callId } = await createCall(callsUrl, token, request);
-    const url = `${linkUrl}/${callId}`;
-    const link = await joinLink(url, token);
-
-    return new GptLiveCall({
-      answer,
-      link,
-      rejoin: () => joinLink(url, token),
-      lostLinkMs,
-    });
   }
 }
 

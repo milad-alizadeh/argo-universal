@@ -4,6 +4,7 @@ import { useSubscription } from '@trpc/tanstack-react-query';
 import { useEffect } from 'react';
 import type { ComposerVoice, ComposerVoiceCall } from '#features/composer';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
+import { offerTo } from './offer-to';
 import type { VoiceConnection } from './voice-connection';
 import { useVoiceConnection } from './voice-connection-context';
 
@@ -48,16 +49,6 @@ function useReleaseWhenOver(
     if (over) connection?.close();
   }, [over, connection]);
 }
-
-// A refused microphone means no offer, so no call starts and the Composer stays where it was.
-const offerTo = (
-  connection: VoiceConnection | null,
-  send: (offer: string) => void,
-): Promise<void> | undefined =>
-  connection
-    ?.createOffer()
-    .then(send)
-    .catch(() => connection.close());
 
 // Starting a call: the offer goes to the Server, and its answer completes the connection.
 function useStartCall(

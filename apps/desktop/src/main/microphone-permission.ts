@@ -1,11 +1,29 @@
-import {
-  systemPreferences,
-  type MediaAccessPermissionRequest,
-  type PermissionRequest,
-  type Session,
-} from 'electron';
+import { systemPreferences, type Session } from 'electron';
 
-type PermissionDetails = MediaAccessPermissionRequest | PermissionRequest;
+// What a page's permission request says, as far as the microphone is concerned.
+export type RequestDetails = {
+  requestingUrl: string;
+  mediaTypes?: readonly string[];
+};
+
+type Answer = (granted: boolean) => void;
+
+// Where permission requests arrive: the Electron session in the App, a fake in a test.
+export type PermissionPort = {
+  onRequest: (
+    listener: (
+      permission: string,
+      details: RequestDetails,
+      answer: Answer,
+    ) => void,
+  ) => void;
+};
+
+// The system's own say over the microphone: on macOS it asks the person the first time.
+export type MicrophoneSystem = {
+  platform: string;
+  askForMediaAccess: (media: 'microphone') => Promise<boolean>;
+};
 
 type Request = {
   permission: string;
@@ -13,56 +31,69 @@ type Request = {
   audioOnly: boolean;
 };
 
-// The App's own page may use the microphone for a Voice call, and nothing else may use it, or the camera.
-export function allowsMicrophone(
-  request: Request,
-  windowOrigin: string,
-): boolean {
-  return (
-    request.permission === 'media' &&
-    request.audioOnly &&
-    request.requestingOrigin === windowOrigin
-  );
-}
-
 const originOfUrl = (url: string): string =>
   URL.canParse(url) ? new URL(url).origin : '';
 
-// On macOS the system asks the person the first time; a refusal answers the page as a refusal.
-async function systemAllows(): Promise<boolean> {
-  if (process.platform !== 'darwin') return true;
-
-  return systemPreferences.askForMediaAccess('microphone');
-}
-
-// Only a request that names audio and nothing else is a microphone request.
-const audioOnly = (details: PermissionDetails): boolean =>
-  'mediaTypes' in details && details.mediaTypes?.every(isAudio) === true;
-
 const isAudio = (type: string): boolean => type === 'audio';
 
-const requestOf = (
-  permission: string,
-  details: PermissionDetails,
-): Request => ({
+// Only a request that names audio and nothing else is a microphone request.
+const audioOnly = (details: RequestDetails): boolean =>
+  details.mediaTypes?.every(isAudio) === true;
+
+const requestOf = (permission: string, details: RequestDetails): Request => ({
   permission,
   requestingOrigin: originOfUrl(details.requestingUrl),
   audioOnly: audioOnly(details),
 });
 
-type Answer = (granted: boolean) => void;
+// The App's own page may use the microphone for a Voice call, and nothing else may use it, or the camera.
+const allowsMicrophone = (request: Request, windowOrigin: string): boolean =>
+  request.permission === 'media' &&
+  request.audioOnly &&
+  request.requestingOrigin === windowOrigin;
 
-function decide(request: Request, windowOrigin: string, answer: Answer): void {
-  if (!allowsMicrophone(request, windowOrigin)) return answer(false);
+// A refusal on macOS answers the page as a refusal; other systems leave the say to the page's origin alone.
+const systemAllows = (system: MicrophoneSystem): Promise<boolean> =>
+  system.platform === 'darwin'
+    ? system.askForMediaAccess('microphone')
+    : Promise.resolve(true);
 
-  void systemAllows().then(answer, () => answer(false));
+type Context = { windowOrigin: string; system: MicrophoneSystem };
+
+function decide(request: Request, context: Context, answer: Answer): void {
+  if (!allowsMicrophone(request, context.windowOrigin)) return answer(false);
+
+  void systemAllows(context.system).then(answer, () => answer(false));
 }
+
+const electronSystem: MicrophoneSystem = {
+  platform: process.platform,
+  askForMediaAccess: (media) => systemPreferences.askForMediaAccess(media),
+};
+
+const electronPermissions = (appSession: Session): PermissionPort => ({
+  onRequest: (listener) =>
+    appSession.setPermissionRequestHandler(
+      (...[, permission, answer, details]) =>
+        listener(permission, details, answer),
+    ),
+});
 
 export function handleMicrophone(
-  appSession: Session,
-  windowOrigin: string,
+  permissions: PermissionPort,
+  context: Context,
 ): void {
-  appSession.setPermissionRequestHandler((...[, permission, answer, details]) =>
-    decide(requestOf(permission, details), windowOrigin, answer),
+  permissions.onRequest((permission, details, answer) =>
+    decide(requestOf(permission, details), context, answer),
   );
 }
+
+// The App's own session: microphone requests from its page, answered by Electron and the system.
+export const handleAppMicrophone = (
+  appSession: Session,
+  windowOrigin: string,
+): void =>
+  handleMicrophone(electronPermissions(appSession), {
+    windowOrigin,
+    system: electronSystem,
+  });

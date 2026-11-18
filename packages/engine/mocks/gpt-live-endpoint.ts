@@ -1,54 +1,45 @@
-import {
-  createServer,
-  type IncomingMessage,
-  type Server,
-  type ServerResponse,
-} from 'node:http';
+import { createServer, type IncomingMessage, type Server } from 'node:http';
 import type { Duplex } from 'node:stream';
-import { text } from 'node:stream/consumers';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { z } from 'zod';
-import { textOfFrame } from '../src/voice/gpt-live/link-events';
+import {
+  answer,
+  bearerOf,
+  callRequestOf,
+  refused,
+  wordsOf,
+  type CallRequest,
+  type Reply,
+} from './gpt-live-call-request';
 
-// A recorded call-creation request, as the fake endpoint saw it.
-export type CreatedCall = {
+export type CreatedCall = CallRequest & {
   authorization: string | undefined;
   alpha: string | undefined;
   url: string;
-  body: string;
 };
 
 export type FakeEndpointOptions = {
-  // Tokens the endpoint accepts; any other bearer token is rejected with 401.
+  // Tokens the call-creation endpoint accepts; any other bearer token is rejected with 401.
   accepts: string[];
+  // Tokens the control link accepts; the same as `accepts` when left out.
+  linkAccepts?: string[];
   // The SDP answer the call is created with.
   answer?: string;
   callId?: string;
 };
 
-type Reply = { status: number; headers: Record<string, string>; body: string };
-
 // What the control link carries out of a call: flat text fields.
 const sentMessage = z.record(z.string(), z.string());
 
-const unauthorized: Reply = { status: 401, headers: {}, body: 'unauthorized' };
-
-const bearerOf = (request: IncomingMessage): string | undefined =>
-  request.headers.authorization?.replace(/^Bearer /, '');
-
-async function recordOf(request: IncomingMessage): Promise<CreatedCall> {
-  return {
-    authorization: request.headers.authorization,
-    alpha: request.headers['openai-alpha']?.toString(),
-    url: request.url ?? '',
-    body: await text(request),
-  };
-}
-
-function answer(response: ServerResponse, reply: Reply): void {
-  response.writeHead(reply.status, reply.headers);
-  response.end(reply.body);
-}
+const recordOf = (
+  request: IncomingMessage,
+  form: CallRequest,
+): CreatedCall => ({
+  authorization: request.headers.authorization,
+  alpha: request.headers['openai-alpha']?.toString(),
+  url: request.url ?? '',
+  ...form,
+});
 
 /*
  * A local stand-in for the GPT-Live service: the call-creation POST and the control-link WebSocket.
@@ -96,9 +87,9 @@ export class FakeGptLiveEndpoint {
     this.link().send(frame);
   }
 
-  // Sends a raw audio frame down the control link.
-  public sendAudio(): void {
-    this.link().send(Buffer.from([1, 2, 3, 4]), { binary: true });
+  // Sends a raw binary frame, as audio travels, down the control link.
+  public sendAudio(payload: Buffer): void {
+    this.link().send(payload, { binary: true });
   }
 
   // The service loses the link without a word.
@@ -106,8 +97,11 @@ export class FakeGptLiveEndpoint {
     this.link().terminate();
   }
 
+  // Ends every link and both servers, and waits until they are gone.
   public async close(): Promise<void> {
     for (const link of this.links) link.terminate();
+    await new Promise<void>((resolve) => this.sockets.close(() => resolve()));
+    this.http.closeAllConnections();
     await new Promise<void>((resolve) => this.http.close(() => resolve()));
   }
 
@@ -119,8 +113,20 @@ export class FakeGptLiveEndpoint {
     return link;
   }
 
-  private accepts(token: string | undefined): boolean {
-    return token !== undefined && this.options.accepts.includes(token);
+  private callsAccept(request: IncomingMessage): boolean {
+    return this.accepts(request, this.options.accepts);
+  }
+
+  private linksAccept(request: IncomingMessage): boolean {
+    const accepted = this.options.linkAccepts ?? this.options.accepts;
+
+    return !this.refuseLinks && this.accepts(request, accepted);
+  }
+
+  private accepts(request: IncomingMessage, accepted: string[]): boolean {
+    const token = bearerOf(request);
+
+    return token !== undefined && accepted.includes(token);
   }
 
   private upgrade(
@@ -128,10 +134,9 @@ export class FakeGptLiveEndpoint {
     socket: Duplex,
     head: Buffer,
   ): void {
-    const token = bearerOf(request);
-    this.linkTokens.push(token);
+    this.linkTokens.push(bearerOf(request));
 
-    if (this.refuseLinks || !this.accepts(token))
+    if (!this.linksAccept(request))
       return void socket.end('HTTP/1.1 401 Unauthorized\r\n\r\n');
 
     this.sockets.handleUpgrade(request, socket, head, (link) =>
@@ -141,17 +146,28 @@ export class FakeGptLiveEndpoint {
 
   private join(link: WebSocket): void {
     this.links.push(link);
-    link.on('message', (data, binary) => {
-      const frame = textOfFrame(data, binary);
+    link.on('message', (data, binary) => this.record(wordsOf(data, binary)));
+  }
 
-      if (frame) this.received.push(sentMessage.parse(JSON.parse(frame)));
-    });
+  // A message that is not flat text fields is dropped, as the service would not understand it.
+  private record(words: string): void {
+    try {
+      const message = sentMessage.safeParse(JSON.parse(words));
+
+      if (message.success) this.received.push(message.data);
+    } catch {
+      // Not JSON: nothing to record.
+    }
   }
 
   private async create(request: IncomingMessage): Promise<Reply> {
-    this.created.push(await recordOf(request));
+    if (!this.callsAccept(request)) return refused(401, 'unauthorized');
+    const form = await callRequestOf(request);
 
-    return this.accepts(bearerOf(request)) ? this.createdReply() : unauthorized;
+    if (!form) return refused(400, 'bad call request');
+    this.created.push(recordOf(request, form));
+
+    return this.createdReply();
   }
 
   private createdReply(): Reply {
@@ -159,7 +175,10 @@ export class FakeGptLiveEndpoint {
 
     return {
       status: 201,
-      headers: { Location: `/v1/live/${callId}` },
+      headers: {
+        Location: `/v1/live/${callId}`,
+        'Content-Type': 'application/sdp',
+      },
       body,
     };
   }

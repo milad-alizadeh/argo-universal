@@ -32,9 +32,6 @@ const channelOf = (delivery: VoiceDelivery): string =>
 
 const retryMs = 100;
 
-// Lets `session.close` leave before the link goes.
-const closeDelayMs = 50;
-
 /*
  * One GPT-Live call after the service answered: the control link it keeps for its whole life.
  * The link also carries raw audio, which is dropped unread; audio travels between the App and the service, never through here.
@@ -99,10 +96,10 @@ export class GptLiveCall implements VoiceProviderCall {
   }
 
   private finish(): void {
-    const { link } = this;
     this.ended = true;
     clearTimeout(this.lostTimer);
-    setTimeout(() => link.close(), closeDelayMs);
+    // Anything already sent leaves before the closing frame does.
+    this.link.close();
   }
 
   private sendOut(message: LinkMessage): void {

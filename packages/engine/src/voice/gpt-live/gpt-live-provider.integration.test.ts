@@ -5,28 +5,29 @@ import {
   signedIn,
   type GptLiveFixture,
 } from '#mocks/gpt-live-setup';
+import { codexAppServerAuth } from './codex-auth';
+import { createGptLiveProvider } from './gpt-live-provider';
 
 let fixture: GptLiveFixture | undefined;
 
 afterEach(async () => {
-  await fixture?.endpoint.close();
+  await fixture?.close();
   fixture = undefined;
 });
 
 async function setup(
-  readings: Parameters<typeof fixtureOf>[0],
-  accepts: string[],
+  ...input: Parameters<typeof fixtureOf>
 ): Promise<GptLiveFixture> {
-  fixture = await fixtureOf(readings, accepts);
+  fixture = await fixtureOf(...input);
 
   return fixture;
 }
 
 describe('GPT-Live provider starting a call', () => {
-  it('creates a call with the token, the offer and the alpha header, then joins the control link', async () => {
-    const { endpoint, provider } = await setup([signedIn('t1')], ['t1']);
+  it('creates a call with the token, the offer and the session, then joins the control link', async () => {
+    const { endpoint, start } = await setup([signedIn('t1')], ['t1']);
 
-    const call = await provider.start(request);
+    const call = await start(request);
 
     expect(call.answer).toBe('v=0 answer');
     expect(endpoint.created).toHaveLength(1);
@@ -34,28 +35,31 @@ describe('GPT-Live provider starting a call', () => {
       authorization: 'Bearer t1',
       alpha: 'quicksilver=v2',
       url: expect.stringContaining('intent=quicksilver&architecture=avas'),
-      body: expect.stringContaining('gpt-live-1.1-codex'),
+      sdp: 'v=0 offer',
+      session: {
+        type: 'realtime',
+        model: 'gpt-live-1.1-codex',
+        instructions: expect.stringContaining('Session: Fix the build'),
+        audio: { output: { voice: 'cove' } },
+        delegation: { type: 'client' },
+      },
     });
-    expect(endpoint.created.at(0)?.body).toContain('v=0 offer');
-    expect(endpoint.created.at(0)?.body).toContain('Session: Fix the build');
     expect(endpoint.linkTokens).toEqual(['t1']);
     expect(endpoint.links).toHaveLength(1);
   });
 
   it('asks Codex for a new token once when the first is rejected', async () => {
-    const { endpoint, auth, provider } = await setup(
+    const { endpoint, auth, start } = await setup(
       [signedIn('stale'), signedIn('fresh')],
       ['fresh'],
     );
 
-    const call = await provider.start(request);
+    const call = await start(request);
 
     expect(call.answer).toBe('v=0 answer');
     expect(auth.asked).toBe(2);
-    expect(endpoint.created.map(({ authorization }) => authorization)).toEqual([
-      'Bearer stale',
-      'Bearer fresh',
-    ]);
+    expect(endpoint.created).toHaveLength(1);
+    expect(endpoint.created.at(0)?.authorization).toBe('Bearer fresh');
   });
 
   it('fails the start when the second token is rejected too, asking no third time', async () => {
@@ -65,6 +69,20 @@ describe('GPT-Live provider starting a call', () => {
     );
 
     await expect(provider.start(request)).rejects.toThrow(/rejected/i);
+    expect(auth.asked).toBe(2);
+  });
+
+  it('joins the same call again with a new token when the control link rejects the first, creating no second call', async () => {
+    const { endpoint, auth, start } = await setup(
+      [signedIn('stale'), signedIn('fresh')],
+      ['stale', 'fresh'],
+      { linkAccepts: ['fresh'] },
+    );
+
+    await start(request);
+
+    expect(endpoint.created).toHaveLength(1);
+    expect(endpoint.linkTokens).toEqual(['stale', 'fresh']);
     expect(auth.asked).toBe(2);
   });
 });
@@ -82,5 +100,21 @@ describe('GPT-Live provider availability', () => {
     const { provider } = await setup([signedIn('t1')], ['t1']);
 
     expect(await provider.availability()).toEqual({ usable: true });
+  });
+
+  it('is unusable, naming Codex, when Codex is not installed, and a start fails the same way', async () => {
+    const provider = createGptLiveProvider({
+      auth: codexAppServerAuth({
+        program: () => {
+          throw new Error('not found');
+        },
+      }),
+    });
+
+    expect(await provider.availability()).toEqual({
+      usable: false,
+      reason: expect.stringContaining('Install Codex'),
+    });
+    await expect(provider.start(request)).rejects.toThrow('Install Codex');
   });
 });
