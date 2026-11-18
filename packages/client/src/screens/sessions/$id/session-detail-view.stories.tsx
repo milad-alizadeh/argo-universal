@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { fn } from 'storybook/test';
+import { composerTodos } from '../../../../mocks/composer-mock';
 import {
   elicitationProps,
   longQuestionRequest,
@@ -186,4 +187,14 @@ export const EstimatedContext: Story = {
       mapping: estimateSources,
     },
   },
+};
+
+// Changes and Todos share the phone's pill row.
+export const ChangesAndTodos: Story = {
+  args: {
+    ...changedSession,
+    state: 'open',
+    composer: { ...idleSession.composer, status: { plan: composerTodos } },
+  },
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
