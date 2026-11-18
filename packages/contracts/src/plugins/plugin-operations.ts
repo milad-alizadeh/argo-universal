@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { WireJson } from '#plugin-wire-json';
-import { stockIcon } from '../kit-symbols/stock-icon-schema';
+import { OperationIcon } from '../operations/metadata';
 
 /*
  * A Plugin's own Operations: what an Agent runs with `argo run <plugin-id>.<name>` (ADR-0044). A Plugin
@@ -101,10 +101,12 @@ export type PluginOperationNeed = z.infer<typeof PluginOperationNeed>;
 // The param core adds to an Operation that needs a Project; a Plugin never declares it.
 export const projectParam = 'projectId';
 
+export const defaultPluginOperationIcon = 'plugins';
+
 export const PluginOperationContribution = z.strictObject({
   name: PluginOperationName,
   label: z.string().trim().min(1),
-  icon: stockIcon.optional(),
+  icon: OperationIcon.optional(),
   description: z.string().trim().min(1),
   tier: PluginOperationTier,
   params: z

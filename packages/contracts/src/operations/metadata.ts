@@ -21,3 +21,12 @@ export const OperationRow = z.object({
 });
 
 export type OperationRow = z.infer<typeof OperationRow>;
+
+export const discoveryOperation = {
+  id: 'operations.list',
+  label: 'Discover Operations',
+  icon: 'search',
+} as const;
+
+export const operationFeedRowId = (toolCallId: string): string =>
+  `argo:${toolCallId}`;

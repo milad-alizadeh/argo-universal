@@ -3,6 +3,8 @@ import { recordedAcpContent } from '../../../../lib/product/acp-feed-content.moc
 import type { FeedGroup } from '../../view/feed-view';
 import { toFeedView } from '../../view/to-feed-view';
 import { recordedToolCall } from '../tool-call.mocks';
+import type { ToolCallGroupProps } from './tool-call-group';
+import { renderOperationActivity } from './tool-call-group-preview.mocks';
 
 const { snapshot } = recordedAcpContent('agent-1');
 
@@ -18,6 +20,8 @@ function agentCall(id: string, position: number): ToolCallUpdate {
     title: `${server}: operation_run`,
     name: 'operation_run',
     kind: 'execute',
+    state: 'settled',
+    status: 'completed',
     position,
     rawInput: { server, tool: 'operation_run', arguments: { id } },
   };
@@ -46,12 +50,20 @@ function operationGroup(rows: ToolCallUpdate[]): FeedGroup {
   return group;
 }
 
-export const settledOperations = operationGroup([
-  agentCall('session.feed', 0),
-  plugin,
-  recorded,
-]);
+type OperationStoryArgs = Pick<
+  ToolCallGroupProps,
+  'group' | 'initialOpen' | 'renderActivity'
+>;
 
-export const runningOperations = operationGroup([
-  { ...agentCall('session.feed', 0), state: 'open', status: 'in_progress' },
-]);
+export const settledOperations: OperationStoryArgs = {
+  group: operationGroup([agentCall('session.feed', 0), plugin, recorded]),
+  initialOpen: true,
+  renderActivity: renderOperationActivity,
+};
+
+export const runningOperations: OperationStoryArgs = {
+  renderActivity: renderOperationActivity,
+  group: operationGroup([
+    { ...agentCall('session.feed', 0), state: 'open', status: 'in_progress' },
+  ]),
+};

@@ -2,10 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { recordedImageUrl } from '../../../../lib/product/feed-message.mocks';
 import { FeedImageUrlContext } from '../feed-image';
-import {
-  runningOperations,
-  settledOperations,
-} from './operation-group-fixtures';
 import { ToolCallGroup } from './tool-call-group';
 import {
   allowedOnceGroup,
@@ -14,6 +10,8 @@ import {
   parallelGroup,
   runningExpandedGroup,
   runningGroup,
+  runningOperations,
+  settledOperations,
   settledGroup,
   failedCommandsGroup,
   imageReadsExpandedGroup,
@@ -73,9 +71,9 @@ export const ImageReads: Story = { args: imageReadsGroup };
 export const ImageReadsExpanded: Story = { args: imageReadsExpandedGroup };
 
 export const RunningOperation: Story = {
-  args: { group: runningOperations },
+  args: runningOperations,
 };
 
 export const SettledOperations: Story = {
-  args: { group: settledOperations, initialOpen: true },
+  args: settledOperations,
 };

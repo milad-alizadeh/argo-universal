@@ -1,6 +1,9 @@
 import type { FeedUpdate } from '@repo/contracts';
 import type { IconName } from '@repo/contracts/kit-symbols';
-import type { OperationWorkTarget } from '@repo/contracts/operations';
+import {
+  operationFeedRowId,
+  type OperationWorkTarget,
+} from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 
 // The Operation a Session called, as its Tool call shows it.
@@ -19,8 +22,7 @@ export type OperationRow = Extract<
 >;
 
 // The one Feed row id of an Operation Tool call; reading the call back uses it too.
-export const operationRowId = (toolCallId: string): string =>
-  `argo:${toolCallId}`;
+export const operationRowId = operationFeedRowId;
 
 export const openRow = (
   toolCallId: string,
@@ -36,15 +38,17 @@ export const openRow = (
   ...operationFields(operation),
 });
 
+type OperationFields = Pick<
+  OperationRow,
+  'title' | 'name' | 'rawInput' | '_meta'
+>;
+
 function operationFields({
   icon,
   label,
   name,
   input,
-}: CalledOperation): Pick<
-  OperationRow,
-  'title' | 'name' | 'rawInput' | '_meta'
-> {
+}: CalledOperation): OperationFields {
   return {
     title: label,
     name,

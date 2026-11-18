@@ -2,9 +2,12 @@ import { expect, it } from 'vitest';
 import { toolCallFacts } from './feed-row-facts';
 import { call } from './feed-row-facts.mocks';
 import { operationRecords, presentOperation } from './operation-records';
+import { isTodoCall } from './todo-call';
 import { toolCallTitle } from './tool-call-title';
 
 const server = 'argo-688241988e5d4453b682b7a37ad4ac62';
+
+const feedLabel = 'Read Session messages';
 
 const input = { id: 'session.feed', params: { limit: 2 } };
 
@@ -17,8 +20,8 @@ it.each([
 ])('names and illustrates Session messages for $name', (fields) => {
   const row = call({ ...fields, title: 'MCP call', kind: 'execute' });
 
-  expect(toolCallTitle(row)).toBe('Read Session messages');
-  expect(toolCallTitle(row, true)).toBe('Read Session messages');
+  expect(toolCallTitle(row)).toBe(feedLabel);
+  expect(toolCallTitle(row, true)).toBe(feedLabel);
   expect(toolCallFacts(row).operation?.icon).toBe('message');
 });
 
@@ -81,4 +84,17 @@ it('shares a recorded Plugin Operation label and icon with its Agent call', () =
   expect(
     presentOperation({ ...agent, turnId: 'other-turn' }, records).title,
   ).toBe('operation_run');
+});
+
+it('uses the server in a Claude MCP title before applying Argo presentation', () => {
+  const base = { name: 'operation_run', rawInput: input };
+  const foreign = call({ ...base, title: 'other: operation_run' });
+
+  const argo = call({ ...base, title: `${server}: operation_run` });
+
+  expect(toolCallTitle(argo)).toBe(feedLabel);
+  expect(toolCallTitle(foreign)).toBe('other: operation_run');
+  expect(isTodoCall({ ...foreign, rawInput: { id: 'session.setTodos' } })).toBe(
+    false,
+  );
 });

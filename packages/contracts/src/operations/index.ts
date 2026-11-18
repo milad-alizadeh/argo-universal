@@ -24,7 +24,12 @@ export {
 
 export { OperationWorkTarget } from './work';
 
-export { OperationRow, OperationTier } from './metadata';
+export {
+  discoveryOperation,
+  operationFeedRowId,
+  OperationRow,
+  OperationTier,
+} from './metadata';
 
 export { readerOperations } from './readers';
 
