@@ -8,6 +8,7 @@ import type { FeedEntry } from './feed-entry';
 import { JumpToLatestWhenAway } from './feed-overlays';
 import type { EntryDrawing } from './feed-row';
 import { FeedScroll, type FeedScrollProps } from './feed-scroll';
+import { LiveHeaderMeasurement } from './live-header-row';
 import { useFeedGrowth } from './use-feed-growth';
 import {
   type FeedScrollPosition,
@@ -22,6 +23,7 @@ export interface FeedListProps extends EntryDrawing {
   entries: FeedEntry[];
   // The newest row's key, so a row arriving while the reader is away marks Jump to latest.
   newestKey: string;
+  turnRunning: boolean;
   loadingOlder: boolean;
   hasOlder?: boolean;
   historyCursor?: number | null;
@@ -38,7 +40,9 @@ function FeedBody(scroll: FeedScrollProps): React.JSX.Element {
   return (
     <FeedGrowthContext.Provider value={feedGrowth}>
       <OrbContinuity>
-        <FeedScroll {...scroll} />
+        <LiveHeaderMeasurement>
+          <FeedScroll {...scroll} />
+        </LiveHeaderMeasurement>
       </OrbContinuity>
     </FeedGrowthContext.Provider>
   );

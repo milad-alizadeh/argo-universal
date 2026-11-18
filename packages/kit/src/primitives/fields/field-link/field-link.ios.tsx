@@ -29,18 +29,28 @@ const disclosureStyle = [
  * shape lets the whole row take the press. A row that performs an action opens no page, so it ends in no chevron.
  */
 export function FieldLink(
-  props: FieldGroupKitProps<'FieldGroup.Link'>,
+  props: FieldGroupKitProps<'FieldGroup.Link'> & { wrapSubtitle?: boolean },
 ): ReactElement {
   return (
     <Button onPress={props.onPress} modifiers={pressing(props.disabled)}>
       <HStack modifiers={[contentShape(shapes.rectangle())]}>
         {props.leadingMark ? <FieldLinkMark mark={props.leadingMark} /> : null}
-        <RowTitle {...props} tone={linkTone(props)} subtitleLines={1} />
+        <LinkTitle {...props} />
         <Spacer />
         <LinkValue value={props.value} />
         <Disclosure action={props.action} />
       </HStack>
     </Button>
+  );
+}
+
+function LinkTitle(props: Parameters<typeof FieldLink>[0]): ReactElement {
+  return (
+    <RowTitle
+      {...props}
+      tone={linkTone(props)}
+      subtitleLines={props.wrapSubtitle ? undefined : 1}
+    />
   );
 }
 

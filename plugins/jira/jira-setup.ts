@@ -1,16 +1,23 @@
-import type { ListPage, LoaderInput, NamedQuery } from '@argo/plugin-kit';
+import type { ListPage } from '@argo/plugin-kit';
 import { issuesPage, type IssuesTarget, type ListedItem } from './issue-pages';
-import type { JiraPriority } from './issue-readers';
-import type { JiraAnswer, JiraFailure } from './jira-client';
-import type { IssueFilters } from './jira-filters';
+import {
+  issueScope,
+  projectsOf,
+  targetOf,
+  type Listed,
+  type Step,
+} from './issue-scope';
+import type { JiraFailure } from './jira-client';
 import type { JiraPerson, JiraProject } from './jira-readers';
-import type { JiraReads, ProjectTarget, Reading } from './jira-reads';
+import type { Reading } from './jira-reads';
 import {
   storeQueries,
   storeReaders,
   type JiraSite,
   type ProjectChoice,
 } from './jira-store';
+
+export type { Step } from './issue-scope';
 
 /*
  * Where one Argo Project stands with Jira, in the order a person meets it: signed out, no site, no Jira project, a
@@ -28,6 +35,8 @@ export type ProjectView =
       project: JiraProject;
       chosen: boolean;
       people: JiraPerson[];
+      // The site's Jira projects the title's menu offers, the shown one among them.
+      projects: JiraProject[];
     };
 
 /*
@@ -40,15 +49,6 @@ export type FailedView = {
   failure: JiraFailure;
   reading: 'projects' | 'issues';
   chosen: boolean;
-};
-
-type Read = LoaderInput['read'];
-
-export type Step = {
-  read: Read;
-  reads: JiraReads;
-  projectId: string;
-  filters: IssueFilters;
 };
 
 const signedOutView = (message: string | null): ProjectView => ({
@@ -81,12 +81,6 @@ const chosenProject = (
     ? { id: choice.project.key, ...choice.project }
     : null;
 
-const projectsOf = (
-  { reads, projectId }: Step,
-  { cloudId }: JiraSite,
-): NamedQuery<JiraAnswer<JiraProject[]>> =>
-  reads.projects({ projectId, cloudId });
-
 // The only Jira project the person can see is chosen for them; otherwise the page asks.
 async function listedProject(
   step: Step,
@@ -105,38 +99,8 @@ async function listedProject(
   return onlyOne(projects) ?? { kind: 'no-project', site, projects };
 }
 
-const targetOf = (
-  { projectId }: Step,
-  { cloudId }: JiraSite,
-  { key }: JiraProject,
-): ProjectTarget => ({ projectId, cloudId, projectKey: key });
-
-// The site and Jira project the list is for, and whether the Project chose that Jira project.
-type Listed = { site: JiraSite; project: JiraProject; chosen: boolean };
-
-// Who the assignee filter offers by name; without them it still offers Anyone, Me and Unassigned.
-async function peopleFor(step: Step, listed: Listed): Promise<JiraPerson[]> {
-  const answer = await step.read(
-    step.reads.people(targetOf(step, listed.site, listed.project)),
-  );
-
-  return answer.ok ? answer.value : [];
-}
-
-// The site's priorities are read beside the people, so an issue opened from the list offers both at once.
-const prioritiesFor = (
-  { read, reads, projectId }: Step,
-  { site }: Listed,
-): Promise<JiraPriority[]> =>
-  read(reads.priorities({ projectId, cloudId: site.cloudId }));
-
 async function issuesFor(step: Step, listed: Listed): Promise<ProjectView> {
-  const [people] = await Promise.all([
-    peopleFor(step, listed),
-    prioritiesFor(step, listed),
-  ]);
-
-  return { kind: 'issues', ...listed, people };
+  return { kind: 'issues', ...listed, ...(await issueScope(step, listed)) };
 }
 
 const isView = (value: JiraProject | ProjectView): value is ProjectView =>

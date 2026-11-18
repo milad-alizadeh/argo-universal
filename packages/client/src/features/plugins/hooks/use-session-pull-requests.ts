@@ -5,8 +5,14 @@ import {
 } from '@repo/contracts/plugins/wire';
 import type { SessionPullRequest } from '#features/sessions';
 import { sessionPullRequests } from '../utils/session-pull-requests';
-import { itemsSlotEntry } from '../utils/slot-items';
-import { useSlotReading } from './use-slot-reading';
+import {
+  itemsSlotEntry,
+  readSlotItems,
+  sentFor,
+  type SentItems,
+} from '../utils/slot-items';
+import { useSlotItems } from './use-slot-items';
+import { useSlotReader } from './use-slot-reader';
 
 export type ChangesContext = SlotContextOf<typeof sessionChangesSlotId>;
 
@@ -17,17 +23,33 @@ const inputOf = (
 ): SlotInputOf<typeof sessionChangesSlotId> | undefined =>
   session && { slotId: sessionChangesSlotId, contexts: [session] };
 
-/*
- * The open Session's Changes the Plugins supplied, for its Workbench and Inspector to draw (ADR-0052). Argo's own
- * Working and Branch Changes come from the Checkout, never from here.
- */
+interface SessionPullRequests {
+  rows: SessionPullRequest[];
+  canCreatePullRequest: boolean;
+}
+
+function hasAttachedPullRequest(sent: SentItems): boolean {
+  const parsed = sessionChangesSlot.merged.safeParse(sent);
+
+  if (!parsed.success) return false;
+
+  return [...parsed.data.items, ...parsed.data.overflow].some(
+    ({ item }) => item.pullRequest !== undefined,
+  );
+}
+
 export function useSessionPullRequests(
   session: ChangesContext | undefined,
-): SessionPullRequest[] {
-  return sessionPullRequests(
-    useSlotReading(sessionChangesSlot, {
-      input: inputOf(session),
-      key: session?.sessionId,
-    }),
-  );
+): SessionPullRequests {
+  const { contexts, items } = useSlotItems(inputOf(session));
+  const reader = useSlotReader(sessionChangesSlotId);
+  const key = session?.sessionId;
+  const sent = sentFor(items, key);
+
+  return {
+    rows: sessionPullRequests(readSlotItems(sessionChangesSlot, sent, reader)),
+    canCreatePullRequest:
+      contexts.some(({ sessionId }) => sessionId === key) &&
+      !hasAttachedPullRequest(sent),
+  };
 }

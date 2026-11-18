@@ -7,6 +7,7 @@ import {
 import {
   productName,
   productCompatibility,
+  sessionMcpServerName,
 } from '@repo/contracts/product-identity';
 import type { AcpConnection } from '../connection/connection';
 import type {
@@ -111,7 +112,7 @@ function sessionServer(
   choices: ArgoInstructionChoices,
 ): McpServer {
   return {
-    name: `${productCompatibility.mcpServer}-${id.replaceAll('-', '')}`,
+    name: sessionMcpServerName(id),
     command: join(
       access.environment.cliDirectory,
       productCompatibility.command,

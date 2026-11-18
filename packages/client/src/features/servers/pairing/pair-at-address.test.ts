@@ -53,7 +53,7 @@ describe('pairing at an address the owner typed', () => {
 
     expect(requestKey).toHaveBeenCalledExactlyOnceWith(at, ticket);
     expect(browse).not.toHaveBeenCalled();
-    expect(resolve.mock.calls.at(-1)?.[1]).toBeNull();
+    expect(resolve).not.toHaveBeenCalled();
     expect(pair).toHaveBeenCalledWith(
       { ...at, serverPublicKey: key },
       ticket,

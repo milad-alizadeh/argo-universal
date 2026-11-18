@@ -30,9 +30,12 @@ export interface ChannelTarget {
   readonly address: ChannelAddress;
   // Where the Server announces itself now; asked whenever the address that answered last does not (ADR-0045).
   readonly locate?: LocateServer;
+  readonly others?: readonly ChannelAddress[];
   readonly serverPublicKey: string;
   // The Pairing Ticket the QR carried, for the one Connection that pairs; every Connection after it is the Device Key alone.
   readonly ticket?: string;
+  // Called when the Server says the request is with the owner, before the owner has answered.
+  readonly onAsked?: () => void;
 }
 
 /*
@@ -43,7 +46,7 @@ export const opener = (
   platform: ChannelPlatform,
 ): (() => Promise<OpenedChannel>) => {
   const deviceKey = once(platform.deviceKey);
-  const route = new ChannelRoute(target.address, target.locate);
+  const route = new ChannelRoute(target.address, target.locate, target.others);
 
   return async () => route.open(at(target, platform, await deviceKey()));
 };
@@ -67,6 +70,7 @@ const inputOf = (
   deviceKey,
   claim: { ...platform.claim(), ticket: target.ticket },
   randomBytes: platform.randomBytes,
+  onAsked: target.onAsked,
 });
 
 // A failed read is not kept, so a Device that could not reach secure storage once can try again.

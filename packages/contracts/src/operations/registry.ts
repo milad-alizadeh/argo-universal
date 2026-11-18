@@ -12,6 +12,7 @@ export const registryOperations = {
   'registry.get': {
     id: 'registry.get',
     label: 'Read Registry',
+    icon: 'registry',
     description:
       'Read available Agents from the cached ACP Registry and their launch support.',
     params: z.strictObject({}).default({}),
@@ -22,6 +23,7 @@ export const registryOperations = {
   'registry.refresh': {
     id: 'registry.refresh',
     label: 'Refresh Registry',
+    icon: 'retry',
     description:
       'Fetch the latest ACP Registry and replace the cached available Agents.',
     params: z.strictObject({}).default({}),
@@ -32,6 +34,7 @@ export const registryOperations = {
   'registry.sync': {
     id: 'registry.sync',
     label: 'Sync Registry',
+    icon: 'retry',
     description:
       'Fetch the ACP Registry when the cached copy is stale, then list available Agents.',
     params: z.strictObject({}).default({}),
@@ -42,6 +45,7 @@ export const registryOperations = {
   'agent.list': {
     id: 'agent.list',
     label: 'List Installed Agents',
+    icon: 'agent',
     description: 'List Installed Agents and their saved launch environment.',
     params: z.strictObject({}).default({}),
     result: z.array(InstalledAgentResult),
@@ -51,6 +55,7 @@ export const registryOperations = {
   'agent.install': {
     id: 'agent.install',
     label: 'Install Agent',
+    icon: 'add',
     description:
       'Install a Registry Agent by id so it is available for new Sessions.',
     params: RegistryAgentId,
@@ -61,6 +66,7 @@ export const registryOperations = {
   'agent.remove': {
     id: 'agent.remove',
     label: 'Remove Agent',
+    icon: 'delete',
     description:
       'Remove an Installed Agent and close its pooled Agent connections.',
     params: RegistryAgentId,
@@ -71,6 +77,7 @@ export const registryOperations = {
   'agent.setEnvironment': {
     id: 'agent.setEnvironment',
     label: 'Set Agent Environment',
+    icon: 'settings',
     description:
       'Replace an Installed Agent’s saved launch environment and close its pooled Agent connections, so its next Session starts with it.',
     params: RegistryAgentId.extend({ env: AgentServerEnvironment }),
@@ -81,6 +88,7 @@ export const registryOperations = {
   'agent.getSuggestionModels': {
     id: 'agent.getSuggestionModels',
     label: 'Read Suggestion Models',
+    icon: 'thinking',
     description:
       'List each Installed Agent’s model for Follow-up suggestions, and the models it last offered.',
     params: z.strictObject({}).default({}),
@@ -91,6 +99,7 @@ export const registryOperations = {
   'agent.setSuggestionModel': {
     id: 'agent.setSuggestionModel',
     label: 'Set Suggestion Model',
+    icon: 'thinking',
     description:
       'Choose the model an Installed Agent predicts Follow-up suggestions with.',
     params: RegistryAgentId.extend({ choice: SuggestionModelChoice }),

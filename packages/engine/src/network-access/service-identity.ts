@@ -1,5 +1,6 @@
 import {
   discoveryKeyHashField,
+  discoveryNameField,
   discoveryProtocol,
   discoveryServiceType,
   keyHashOf,
@@ -18,9 +19,15 @@ export interface Announcement {
 
 const labelLimit = 50;
 
+const hashPieceLength = 6;
+
 // A DNS label holds no dot and is short.
 const labelOf = (name: string): string =>
   name.replaceAll('.', '-').slice(0, labelLimit);
+
+// The instance a Server answers for is its computer's name and a piece of its key's hash: two Servers on one computer announce two instances, and neither answers for the other's. The name an owner reads travels in the TXT record.
+const instanceLabelOf = (announcement: Announcement): string =>
+  `${labelOf(announcement.name)} (${keyHostLabelOf(announcement.key).slice(0, hashPieceLength)})`;
 
 const listing = `_${discoveryServiceType}._${discoveryProtocol}.local`;
 
@@ -38,7 +45,7 @@ export class Identity {
     private readonly announcement: Announcement,
     private readonly address: string,
   ) {
-    this.instance = `${labelOf(announcement.name)}.${listing}`;
+    this.instance = `${instanceLabelOf(announcement)}.${listing}`;
 
     this.host = `${productCompatibility.discoveryHostPrefix}-${keyHostLabelOf(announcement.key)}.local`;
   }
@@ -68,6 +75,7 @@ export class Identity {
       Buffer.from(
         `${discoveryKeyHashField}=${keyHashOf(this.announcement.key)}`,
       ),
+      Buffer.from(`${discoveryNameField}=${this.announcement.name}`),
     ];
   }
 }

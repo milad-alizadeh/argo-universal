@@ -63,9 +63,19 @@ const routerInput = ({
   pairing,
 }: RouterSources): Parameters<typeof createAppRouterDeps>[0] => ({
   ...httpRouterInput(options, setup, controlToken),
+  ...pairingInput(options, pairing),
   serverPublicKey: publicKey,
+});
+
+const pairingInput = (
+  options: HttpServerOptions,
+  pairing: Pairing,
+): Pick<
+  Parameters<typeof createAppRouterDeps>[0],
+  'discoveryName' | 'addresses' | 'tickets' | 'registrations' | 'channels'
+> => ({
   discoveryName: discoveryNameOf(options),
-  addresses: () => listeningAddresses(options.port),
+  addresses: (): string[] => listeningAddresses(options.port),
   tickets: pairing.tickets,
   registrations: pairing.registrations,
   channels: pairing.channels,

@@ -1,6 +1,7 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { page } from 'vitest/browser';
 import {
   elicitationMocks,
   elicitationProps,
@@ -13,7 +14,11 @@ import {
   type SessionDetailViewProps,
 } from './session-detail-view';
 import { idleSession, runningSession } from './session-detail-view.mocks';
-import { Elicitation, LongElicitation } from './session-detail-view.stories';
+import {
+  DescribedElicitation,
+  Elicitation,
+  LongElicitation,
+} from './session-detail-view.stories';
 
 const meta = {
   title: 'Tests/Screens/Sessions/Session/Elicitation',
@@ -27,6 +32,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 type PlayContext = Parameters<NonNullable<Story['play']>>[0];
+
+const trayLabel = 'Elicitation questions';
 
 type Agent = (typeof elicitationMocks)[number]['agent'];
 
@@ -42,7 +49,7 @@ export const LongQuestionScrollsInTray: Story = {
   },
   play: async ({ canvas }) => {
     const region = await canvas.findByRole('region', {
-      name: 'Elicitation questions',
+      name: trayLabel,
     });
 
     const tray = within(region);
@@ -55,6 +62,28 @@ export const LongQuestionScrollsInTray: Story = {
     await expect(
       canvas.getByRole('textbox', { name: 'Message' }),
     ).toBeVisible();
+  },
+};
+
+// One question, its described answers and its note are a page: on a desktop window they show whole, with nothing to scroll.
+export const DescribedQuestionShowsWhole: Story = {
+  args: DescribedElicitation.args,
+  beforeEach: async (): Promise<void> => {
+    await settleLayout('wide');
+    await page.viewport(1280, 1000);
+  },
+  play: async ({ canvas }) => {
+    const region = await canvas.findByRole('region', {
+      name: trayLabel,
+    });
+
+    const rows = within(region).getByTestId('elicitation-rows');
+
+    await waitFor(() =>
+      expect(rows.scrollHeight).toBeLessThanOrEqual(rows.clientHeight),
+    );
+    await expect(within(region).getAllByRole('radio')).toHaveLength(2);
+    await expectPinned(region, ['Dismiss', 'Skip']);
   },
 };
 
@@ -127,9 +156,7 @@ async function resizeAndDismiss({
   ).not.toBeInTheDocument();
   const page = within(document.body);
 
-  const sheet = within(
-    await page.findByRole('region', { name: 'Elicitation questions' }),
-  );
+  const sheet = within(await page.findByRole('region', { name: trayLabel }));
 
   const title = await resizeAnswer(sheet, userEvent);
   await waitFor(() =>

@@ -1,4 +1,6 @@
 @theme static {
+  --ease-streaming-text: cubic-bezier(0.3, 0.12, 0.7, 0.88);
+
   /* Canvas intensity: 0 is the quietest shade, 1 the strongest. */
   --color-tone-neutral-100: var(--color-neutral-100);
   --color-tone-neutral-200: var(--color-neutral-200);
@@ -140,6 +142,9 @@
   --leading-5_5: 22px;
   --leading-6: 24px;
   /* Text roles, the same tokens as Paper. "-wide" is the desktop step. */
+  /* A pairing sheet's headline, a step above the page title (Pairing pages, direction B). */
+  --text-sheet-title: 24px;
+  --text-sheet-title--line-height: 30px;
   --text-title: var(--text-xl);
   --leading-title: var(--leading-6);
   --font-weight-title: var(--font-weight-semibold);

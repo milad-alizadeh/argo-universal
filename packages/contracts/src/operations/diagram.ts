@@ -30,6 +30,7 @@ export const diagramOperations = {
   'diagram.validate': {
     id: 'diagram.validate',
     label: 'Validate diagram',
+    icon: 'diagram',
     description:
       'Check a Mermaid diagram before you send it: valid, or the problems to fix with their line numbers. The Feed draws only what this passes.',
     params: DiagramValidateInput,

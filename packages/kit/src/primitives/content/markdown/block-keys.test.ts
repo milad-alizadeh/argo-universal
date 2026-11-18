@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { lexMarkdown } from '#kit/lex-markdown';
-import { keyedBlocks } from './block-keys';
+import { keepBlockPrefix, keyedBlocks } from './block-keys';
 
 const keysOf = (text: string): string[] =>
   keyedBlocks(lexMarkdown(text)).map(({ key }) => key);
@@ -36,5 +36,31 @@ describe('keyedBlocks while a message streams', () => {
   it('gives a block of another kind its own key', () => {
     expect(keysOf('Text.\n\n```\ncode\n```')).toHaveLength(2);
     expect(new Set(keysOf('Text.\n\n```\ncode\n```')).size).toBe(2);
+  });
+});
+
+describe('keeping completed Markdown blocks', () => {
+  it('keeps the same paragraph through successive appends and redraws the tail', () => {
+    const first = lexMarkdown('First.\n\nSecond');
+    const second = keepBlockPrefix(first, lexMarkdown('First.\n\nSecond.'));
+
+    const third = keepBlockPrefix(
+      second,
+      lexMarkdown('First.\n\nSecond.\n\nThird.'),
+    );
+
+    expect(third[0]).toBe(first[0]);
+    expect(second[2]).not.toBe(first[2]);
+    expect(third[4]?.raw).toBe('Third.');
+  });
+
+  it('allows a later definition to resolve an earlier link', () => {
+    const first = lexMarkdown('[See][target]\n\nSecond.');
+    const next = lexMarkdown('[See][target]\n\nSecond.\n\n[target]: /target');
+
+    expect(keepBlockPrefix(first, next)).toBe(next);
+    expect(next[0]).toMatchObject({
+      tokens: [{ type: 'link', href: '/target' }],
+    });
   });
 });

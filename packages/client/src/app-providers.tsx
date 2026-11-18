@@ -8,14 +8,15 @@ import {
   ServersContext,
   type ServersSnapshot,
   type ServersStore,
+  showsServer,
   useRememberConnected,
   useServerConnections,
 } from '#features/servers';
 import { LookedAtServer } from './looked-at-server';
 
 export interface AppProvidersProps {
-  // The Server on this Device: the one the App opens on, and the only one on a Device that has paired with none.
-  serverUrl: string;
+  // The Server on this Device, where it runs one: the desktop app and the web App do, a phone or tablet does not.
+  serverUrl?: string;
   // How a Connection to a Server is opened; a story stands in for the network here.
   openServer?: OpenServerConnection;
   children: ReactNode;
@@ -65,9 +66,7 @@ function AppServers({ store, ...props }: AppServersProps): React.JSX.Element {
   return (
     <ServersContext.Provider value={{ ...servers, ...serversActions(store) }}>
       <ServerConnectionsContext.Provider value={connections}>
-        {servers.read
-          ? lookedAtServer({ servers, connections, ...props })
-          : null}
+        {servers.read ? shown({ servers, connections, ...props }) : null}
       </ServerConnectionsContext.Provider>
     </ServersContext.Provider>
   );
@@ -78,6 +77,12 @@ interface LookedAtProps {
   connections: ServerConnections;
   children: ReactNode;
 }
+
+// A phone that holds no Server draws its screens with no Connection under them, so the router can show Pairing.
+const shown = (props: LookedAtProps): ReactNode =>
+  showsServer(props.servers.servers, props.servers.lookingAt)
+    ? lookedAtServer(props)
+    : props.children;
 
 /*
  * Looking at another Server starts its screens again on a QueryClient of its own — a new key, so a new client — and

@@ -16,6 +16,9 @@ const categoryIcons = new Map<string, IconName>([
 export const toolCallCategory = (row: ToolCallUpdate): string =>
   toolCallFacts(row).actions[0]?.type ?? row.kind;
 
+const categoryIcon = (row: ToolCallUpdate): IconName =>
+  categoryIcons.get(toolCallCategory(row)) ?? 'tool';
+
 export function toolCallIcon(row: ToolCallUpdate): IconName {
-  return categoryIcons.get(toolCallCategory(row)) ?? 'tool';
+  return toolCallFacts(row).operation?.icon ?? categoryIcon(row);
 }

@@ -1,12 +1,13 @@
-import type { Socket } from 'node:net';
 import { PairingClaim } from '@repo/contracts';
 import { productCompatibility } from '@repo/contracts/product-identity';
 import type { Admission, DeviceAdmission } from '../devices/admit-device';
 import type { OpenChannels } from '../devices/open-channels';
 import { admitAs, type RpcIdentity } from '../rpc/identity';
+import type { ChannelCarrier } from './channel-carrier';
 import { ChannelSocket } from './channel-socket';
-import { frameRecord } from './frames';
 import { HandshakeBuffer, type FirstMessage } from './handshake-buffer';
+import { readingOf, readMore, type Reading } from './handshake-reading';
+import { HandshakeReply } from './handshake-reply';
 import { receiveHandshake } from './handshake-responder';
 import { SeenHandshakes } from './seen-handshakes';
 import type { Keypair } from './x25519';
@@ -38,28 +39,32 @@ export class ChannelDoor {
 
   public constructor(private readonly deps: ChannelDoorDeps) {}
 
-  public accept(socket: Socket, opening: Buffer, proven: () => void): void {
-    const buffer = new HandshakeBuffer();
+  public accept(
+    socket: ChannelCarrier,
+    opening: Buffer,
+    proven: () => void,
+  ): void {
+    this.read(readingOf(socket, proven), opening);
+  }
 
-    const read = (chunk: Buffer): void => {
-      const message = this.received(socket, buffer, chunk);
+  private read(reading: Reading, chunk: Buffer): void {
+    const { socket, buffer, proven } = reading;
+    const message = this.received(socket, buffer, chunk);
 
-      if (!message) return;
+    if (!message) return;
 
-      if (message === 'waiting') return void socket.once('data', read);
-      proven();
-      socket.pause();
-      void this.answer(socket, message).catch((cause: unknown): void =>
-        this.refuseSocket(socket, cause),
-      );
-    };
-
-    read(opening);
+    if (message === 'waiting')
+      return readMore(reading, (again, more) => this.read(again, more));
+    proven();
+    socket.pause();
+    void this.answer(socket, message).catch((cause: unknown): void =>
+      this.refuseSocket(socket, cause),
+    );
   }
 
   // A first message that is too large is refused where it stands, so the Server never waits for bytes that were claimed and will not come.
   private received(
-    socket: Socket,
+    socket: ChannelCarrier,
     buffer: HandshakeBuffer,
     chunk: Buffer,
   ): FirstMessage | 'waiting' | undefined {
@@ -72,19 +77,21 @@ export class ChannelDoor {
     }
   }
 
-  private async answer(socket: Socket, message: FirstMessage): Promise<void> {
+  private async answer(
+    socket: ChannelCarrier,
+    message: FirstMessage,
+  ): Promise<void> {
     const received = receiveHandshake(this.deps.staticKey, message.handshake);
     const claim = PairingClaim.parse(JSON.parse(received.claim.toString()));
 
+    const reply = new HandshakeReply(received, socket);
+
     const admission = this.seen.accept(received.ephemeral)
-      ? await this.admit(received.deviceKey, claim, socket)
+      ? await this.admit(received.deviceKey, claim, { socket, reply })
       : replayed;
 
-    const answered = received.answer(
-      Buffer.from(JSON.stringify(admission.welcome)),
-    );
+    const answered = reply.welcome(admission.welcome);
 
-    socket.write(frameRecord(answered.message));
     this.open({ socket, message, answered }, admission.identity);
   }
 
@@ -92,13 +99,12 @@ export class ChannelDoor {
   private admit(
     deviceKey: Buffer,
     claim: PairingClaim,
-    socket: Socket,
+    { socket, reply }: { socket: ChannelCarrier; reply: HandshakeReply },
   ): Promise<Admission> {
-    return this.deps.admission.admit(
-      deviceKey,
-      claim,
-      socket.remoteAddress ?? 'unknown',
-    );
+    return this.deps.admission.admit(deviceKey, claim, {
+      source: socket.remoteAddress ?? 'unknown',
+      onAsking: () => reply.asking(),
+    });
   }
 
   private open(
@@ -121,14 +127,14 @@ export class ChannelDoor {
       this.deps.channels.track(identity.deviceId, channel);
   }
 
-  private refuseSocket(socket: Socket, cause: unknown): void {
+  private refuseSocket(socket: ChannelCarrier, cause: unknown): void {
     this.deps.report('channel handshake', String(cause));
     socket.destroy();
   }
 }
 
 type AnsweredSocket = {
-  socket: Socket;
+  socket: ChannelCarrier;
   message: FirstMessage;
   answered: ReturnType<ReturnType<typeof receiveHandshake>['answer']>;
 };

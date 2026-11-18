@@ -1,14 +1,11 @@
 import { isStockIconName } from '@repo/contracts/kit-symbols';
-import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { flattenedChildren } from '#kit/flattened-children';
 import { Icon } from '#primitives/content/icon';
+import { isFieldGroupSection } from '#primitives/fields/field-group';
 import {
-  FieldGroup,
-  type FieldGroupSectionProps,
-} from '#primitives/fields/field-group';
-import type {
-  FieldPickerCallerProps,
-  FieldPickerSingle,
+  isFieldPicker,
+  type FieldPickerSingle,
 } from '#primitives/fields/field-picker';
 import { ListSection } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
@@ -19,7 +16,7 @@ import { Menu } from '#primitives/overlays/menu';
  * choice and opens the menu of options, so Theme reads as part of the list above it. Any other last section is undefined.
  */
 function sidebarChoice(section: ReactNode): ReactElement | undefined {
-  if (!isSection(section)) return undefined;
+  if (!isFieldGroupSection(section)) return undefined;
 
   const rows = flattenedChildren(section.props.children);
 
@@ -34,17 +31,10 @@ function sidebarChoice(section: ReactNode): ReactElement | undefined {
   );
 }
 
-const isSection = (
-  node: ReactNode,
-): node is ReactElement<FieldGroupSectionProps> =>
-  isValidElement(node) && node.type === FieldGroup.Section;
-
 const isSinglePicker = (
   node: ReactNode,
 ): node is ReactElement<FieldPickerSingle> =>
-  isValidElement<FieldPickerCallerProps>(node) &&
-  node.type === FieldGroup.Picker &&
-  node.props.multiple !== true;
+  isFieldPicker(node) && node.props.multiple !== true;
 
 const ChoiceRow = (props: FieldPickerSingle): ReactElement => (
   <Menu

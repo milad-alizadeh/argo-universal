@@ -1,14 +1,20 @@
 import type { Server as RequestServer } from 'node:http';
 import { createServer, type Server, type Socket } from 'node:net';
 import { pakeMagic } from '@repo/contracts/pake';
+import type { ChannelCarrier } from '../pairing/channel-carrier';
 import { channelMagic } from '../pairing/channel-door';
+import {
+  carrierOpeningLength,
+  createCarrierDoor,
+  opensCarrier,
+} from './channel-carrier-door';
 import { isLoopback } from './network-listener';
 import type { SocketGuard } from './socket-guard';
 
 interface ChannelDoorPort {
   // `proven` is for the channel to call once the socket's first handshake message has all arrived, which is when the door stops timing it.
   readonly accept: (
-    socket: Socket,
+    socket: ChannelCarrier,
     opening: Buffer,
     proven: () => void,
   ) => void;
@@ -31,18 +37,33 @@ export interface FrontDoorDeps {
  * Arriving on loopback is not itself a proof, because a web page on a name that resolves to this computer arrives there too, so a plain-HTTP socket is admitted as nothing: each request on it proves the Server Device for itself (#1696).
  * So a Device on the local network reaches no router, no Blob and no Plugin asset without the handshake, and there is no plain-HTTP side door beside it.
  */
-export const createFrontDoor = (deps: FrontDoorDeps): Server =>
-  createServer((socket): void => knock(deps, socket));
+export function createFrontDoor(deps: FrontDoorDeps): Server {
+  const carried = createCarrierDoor(
+    (carrier, proven): void =>
+      peek({ deps, socket: carrier, proven, plain: refuse }, Buffer.alloc(0)),
+    deps.report,
+  );
+
+  const plain: Plain = (knocking, opening) =>
+    opensCarrier(opening)
+      ? carried.accept(knocking.socket, opening, knocking.proven)
+      : loopbackOnly(knocking, opening);
+
+  return createServer((socket): void => knock({ deps, plain }, socket));
+}
 
 /*
  * The socket's own errors are this door's to handle, from before the first byte of it is read.
  * A raw socket with no `'error'` listener raises an uncaught exception when its peer resets the connection, and that ends the whole Server. Resetting a connection takes no Pairing Ticket and no knowledge of the Server's static key, so until this listener is attached, anyone who can reach the port can stop Argo.
  */
-function knock(deps: FrontDoorDeps, socket: Socket): void {
+function knock(
+  { deps, plain }: { deps: FrontDoorDeps; plain: Plain },
+  socket: Socket,
+): void {
   socket.on('error', (cause: Error): void => broke(deps, socket, cause));
   const proven = deps.unproven.hold(socket);
 
-  if (proven) peek({ deps, socket, proven }, Buffer.alloc(0));
+  if (proven) peek({ deps, socket, proven, plain }, Buffer.alloc(0));
 }
 
 // Whatever went wrong with the socket, there is nothing left to answer on it.
@@ -53,33 +74,47 @@ function broke(deps: FrontDoorDeps, socket: Socket, cause: Error): void {
 
 type Knocking = {
   deps: FrontDoorDeps;
-  socket: Socket;
+  socket: ChannelCarrier;
   proven: () => void;
+  // What a socket that does not open with a channel's first bytes gets.
+  plain: Plain;
 };
 
-function peek(knocking: Knocking, received: Buffer): void {
-  const { socket } = knocking;
+type Plain = (knocking: Knocking, opening: Buffer) => void;
+
+// Enough bytes to tell a channel, a typed code's ask and a channel's WebSocket apart; every HTTP request line is longer.
+const openingLength = Math.max(channelMagic.length, carrierOpeningLength);
+
+function joined(socket: ChannelCarrier, received: Buffer): Buffer {
   const chunk: unknown = socket.read();
 
-  const opening = Buffer.isBuffer(chunk)
-    ? Buffer.concat([received, chunk])
-    : received;
-
-  if (opening.length >= channelMagic.length) return admit(knocking, opening);
-  socket.once('readable', (): void => peek(knocking, opening));
+  return Buffer.isBuffer(chunk) ? Buffer.concat([received, chunk]) : received;
 }
 
-function admit({ deps, socket, proven }: Knocking, opening: Buffer): void {
+const isTold = (opening: Buffer): boolean =>
+  Boolean(nameOf(opening)) || opening.length >= openingLength;
+
+function peek(knocking: Knocking, received: Buffer): void {
+  const opening = joined(knocking.socket, received);
+
+  if (isTold(opening)) return admit(knocking, opening);
+  knocking.socket.once('readable', (): void => peek(knocking, opening));
+}
+
+function admit(knocking: Knocking, opening: Buffer): void {
+  const { deps, socket, proven } = knocking;
   const named = nameOf(opening);
 
-  if (named)
-    return deps[named].accept(
-      socket,
-      opening.subarray(channelMagic.length),
-      proven,
-    );
+  if (!named) return knocking.plain(knocking, opening);
+  deps[named].accept(socket, opening.subarray(channelMagic.length), proven);
+}
 
-  if (!isLoopback(socket.remoteAddress)) return refuse(deps, socket);
+// Plain HTTP is this computer's own App and tooling, on loopback only.
+function loopbackOnly(
+  { deps, socket, proven }: Knocking,
+  opening: Buffer,
+): void {
+  if (!isLoopback(socket.remoteAddress)) return refuse({ deps, socket });
   proven();
   socket.unshift(opening);
   deps.requests.emit('connection', socket);
@@ -97,7 +132,7 @@ const nameOf = (opening: Buffer): 'channel' | 'key' | undefined => {
 };
 
 // A Device on the local network that speaks plain HTTP has proved nothing, so it is not answered at all.
-function refuse(deps: FrontDoorDeps, socket: Socket): void {
+function refuse({ deps, socket }: Pick<Knocking, 'deps' | 'socket'>): void {
   deps.report('unauthenticated Connection', socket.remoteAddress);
   socket.destroy();
 }

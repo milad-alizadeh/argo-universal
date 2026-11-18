@@ -42,14 +42,14 @@ export class DeviceAdmission {
   public async admit(
     deviceKey: Buffer,
     claim: PairingClaim,
-    source: string,
+    knocking: Knocking,
   ): Promise<Admission> {
     const publicKey = storedPublicKey(deviceKey);
     const known = readDeviceByPublicKey(this.deps.database, publicKey);
 
     return known
       ? this.welcomeBack(known)
-      : this.pair(publicKey, claim, source);
+      : this.pair({ publicKey, claim }, knocking);
   }
 
   private async welcomeBack(
@@ -66,9 +66,8 @@ export class DeviceAdmission {
   }
 
   private async pair(
-    publicKey: string,
-    claim: PairingClaim,
-    source: string,
+    { publicKey, claim }: Pairing,
+    { source, onAsking }: Knocking,
   ): Promise<Admission> {
     if (claim.ticket === undefined)
       return refused({ paired: false, refusal: 'ticket-required' });
@@ -76,7 +75,7 @@ export class DeviceAdmission {
 
     return refusal
       ? refused({ paired: false, refusal })
-      : this.register(publicKey, claim);
+      : this.register({ publicKey, claim }, onAsking);
   }
 
   /*
@@ -84,17 +83,16 @@ export class DeviceAdmission {
    * Writing it down is the Allow, so a Device that is declined or never answered leaves nothing behind.
    */
   private async register(
-    publicKey: string,
-    claim: PairingClaim,
+    { publicKey, claim }: Pairing,
+    onAsking: () => void,
   ): Promise<Admission> {
     const id = this.deps.createId();
 
-    const write = (): Promise<void> =>
-      this.writeDown({ id, publicKey, claim, now: this.deps.now() });
+    onAsking();
 
     const answer = await this.deps.registrations.ask(
       registration(id, claim),
-      write,
+      () => this.writeDown({ id, publicKey, claim, now: this.deps.now() }),
     );
 
     return answer === 'allowed'
@@ -105,6 +103,17 @@ export class DeviceAdmission {
   private writeDown(input: PairedDeviceInput): Promise<void> {
     return recordPairedDevice(this.deps.databaseWriter, input);
   }
+}
+
+interface Pairing {
+  publicKey: string;
+  claim: PairingClaim;
+}
+
+// Where a Device knocks from, and what to do when its request reaches the owner.
+export interface Knocking {
+  source: string;
+  onAsking: () => void;
 }
 
 // What the open pair sheet names in its prompt: the Device's own claim about itself, which decides nothing.

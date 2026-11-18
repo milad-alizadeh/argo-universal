@@ -1,19 +1,11 @@
 import { FieldGroup as ExpoFieldGroup } from '@expo/ui';
 import { createModifier } from '@expo/ui/jetpack-compose/modifiers';
-import {
-  cloneElement,
-  isValidElement,
-  type ReactElement,
-  type ReactNode,
-} from 'react';
+import { cloneElement, type ReactElement, type ReactNode } from 'react';
 import type { ViewStyle } from 'react-native';
 import { flattenedChildren } from '#kit/flattened-children';
 import type { FieldGroupKitProps } from '../../kit-props';
-import {
-  FieldGroupSection,
-  type FieldGroupSectionProps,
-  sectionElement,
-} from './field-group-section';
+import { sectionElement } from './field-group-section';
+import { isFieldGroupSection } from './field-group-section-mark';
 
 type FormProps = FieldGroupKitProps<'FieldGroup'> & {
   children?: ReactNode;
@@ -51,12 +43,7 @@ const sections = (children: ReactNode): ReactNode[] =>
   flattenedChildren(children).map(section);
 
 function section(child: ReactNode): ReactNode {
-  if (!isValidElement(child) || !isFieldGroupSection(child)) return child;
+  if (!isFieldGroupSection(child)) return child;
 
   return cloneElement(sectionElement(child.props), { key: child.key });
 }
-
-const isFieldGroupSection = (
-  child: ReactElement,
-): child is ReactElement<FieldGroupSectionProps> =>
-  child.type === FieldGroupSection;

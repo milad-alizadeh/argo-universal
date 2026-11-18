@@ -29,3 +29,19 @@ export const productCompatibility = {
     piCommand: 'ARGO_PI_COMMAND',
   },
 } as const;
+
+export const sessionMcpServerName = (sessionId: string): string =>
+  `${productCompatibility.mcpServer}-${sessionId.replaceAll('-', '')}`;
+
+export function isArgoMcpServer(server: string): boolean {
+  const name = productCompatibility.mcpServer;
+
+  return server === name || scopedMcpServer(server, name);
+}
+
+function scopedMcpServer(server: string, name: string): boolean {
+  return (
+    server.startsWith(`${name}-`) &&
+    /^[a-f0-9]{32}$/.test(server.slice(name.length + 1))
+  );
+}

@@ -6,7 +6,8 @@ import { Platform, View } from 'react-native';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { useFeedFade } from '#lib/product/feed-fade';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
-import { type FeedEntry } from './feed-entry';
+import type { FeedTail } from './feed-end-motion';
+import type { FeedEntry } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
 import {
   type FeedRowData,
@@ -17,6 +18,7 @@ import {
 import { DrawFeedScroll, useFeedOnScroll } from './feed-scroll-drawing';
 import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
+import { useFeedEndMotion } from './use-feed-end-motion';
 
 // Clears whatever of the Composer covers the Feed's end, and the pill above it, and leaves the Feed's gap above them.
 function FeedEnd(): React.JSX.Element {
@@ -30,11 +32,6 @@ const keepPosition = { data: true };
 
 // In screens from the end: only a reader at the very end is at the end, and follows the Composer.
 const endThreshold = 0.02;
-
-// The Feed follows its end as the view and the Composer change size, and as rows load or measure, so a settled Session ends above the Composer (#1811) and a streaming answer stays in view until the reader scrolls up.
-const followEnd = {
-  on: { layout: true, footerLayout: true, dataChange: true, itemLayout: true },
-};
 
 // In screens from the top: older rows load this far ahead of the reader.
 const startThreshold = 2;
@@ -112,6 +109,7 @@ type ListRef = RefObject<LegendListRef | null>;
 export interface FeedScrollProps extends EntryDrawing {
   list: ListRef;
   entries: FeedEntry[];
+  turnRunning: boolean;
   initialIndex: number;
   onStartReached: () => void;
   // Older rows are paging in above.
@@ -135,12 +133,16 @@ export type FeedListProps = Pick<
 >;
 
 // A Feed read from its start, or hidden behind another page, does not follow incoming rows.
-function anchorsOf(
-  opensAtStart: boolean | undefined,
-  focused: boolean,
+function useAnchors(
+  list: ListRef,
+  tail: FeedTail,
+  opensAtStart?: boolean,
 ): Pick<FeedListProps, 'maintainScrollAtEnd' | 'alignItemsAtEnd'> {
+  const enabled = useScreenFocused() && !opensAtStart;
+  const motion = useFeedEndMotion(list, tail, enabled);
+
   return {
-    maintainScrollAtEnd: opensAtStart || !focused ? false : followEnd,
+    maintainScrollAtEnd: enabled && motion,
     // Rows start at the top of the view, never against the Composer.
     alignItemsAtEnd: false,
   };
@@ -148,7 +150,7 @@ function anchorsOf(
 
 function useFeedListProps(
   list: ListRef,
-  { entries, ...props }: Omit<FeedScrollProps, 'list' | 'atEnd'>,
+  { entries, turnRunning, ...props }: Omit<FeedScrollProps, 'list' | 'atEnd'>,
 ): FeedListProps {
   const motion = useCollapsibleMotion(list);
   const items = useFeedRowData(entries);
@@ -157,7 +159,7 @@ function useFeedListProps(
     items,
     renderItem: useRenderEntry({ ...props, ...motion }),
     initialScrollIndex: props.initialIndex,
-    ...anchorsOf(props.opensAtStart, useScreenFocused()),
+    ...useAnchors(list, { items, turnRunning }, props.opensAtStart),
     onStartReached: props.onStartReached,
     header: <LoadingEarlier loading={props.loadingOlder} />,
   };

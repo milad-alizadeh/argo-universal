@@ -8,6 +8,7 @@ import {
   type TurnEnd,
 } from '@repo/contracts';
 import { z } from 'zod';
+import { operationPresentation } from './operation-call';
 
 type ToolMetadata = NonNullable<ToolCallUpdate['_meta']>['argo'];
 
@@ -16,6 +17,7 @@ type ToolMetadata = NonNullable<ToolCallUpdate['_meta']>['argo'];
  * The rest of the view reads these facts, never `_meta.argo` or a `kind` string.
  */
 export interface ToolCallFacts {
+  operation: ReturnType<typeof operationPresentation>;
   // The command actions the Agent reported; none when it reported none or any it could not classify.
   actions: readonly CommandAction[];
   // What an exploring call did: the reported actions, else one implied by a read or search kind.
@@ -148,6 +150,7 @@ const commandFacts = (
 
 const decode = (row: ToolCallUpdate): ToolCallFacts => ({
   ...decodeActions(row),
+  operation: operationPresentation(row),
   ...commandFacts(row),
   isEdit: editKinds.has(row.kind),
   editedPaths: editedPathsOf(row),

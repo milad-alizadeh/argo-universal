@@ -46,6 +46,19 @@ describe('adding a Server that has just paired', () => {
     });
   });
 
+  it('keeps the other addresses the invite carried, and reads an entry without them', async () => {
+    const store = await readingServers();
+    const tailnet = { host: `100.101.102.${7}`, port: 4000 };
+    const reachable = { ...studio, otherAddresses: [tailnet] };
+
+    store.add(reachable);
+    store.add(bench);
+
+    await vi.waitFor(async () => {
+      expect(await loadKnownServers()).toEqual([reachable, bench]);
+    });
+  });
+
   it('lists a Server paired again once, at the address it answered on this time', async () => {
     const store = await readingServers();
     const moved = { ...studio, address: { host: 'moved.local', port: 4001 } };

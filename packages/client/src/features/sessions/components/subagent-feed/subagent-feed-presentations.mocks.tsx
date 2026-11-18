@@ -26,6 +26,7 @@ const tabs = {
 
 const paneProps = {
   title: 'Agents',
+  testID: 'agent-feed-inspector',
   open: true,
   onOpenChange: ignore,
   tabs,

@@ -8,6 +8,7 @@ import {
 } from './mocks/issue-journey';
 import { grace, jiraData, person } from './mocks/jira-data';
 import { jiraService } from './mocks/jira-service';
+import { offered } from './mocks/listing';
 
 const timeoutMs = 20_000;
 
@@ -44,7 +45,7 @@ it(
   'offers only people as assignees, though Jira can assign customers and apps',
   async () => {
     const jira = await withCustomerAndApp();
-    const filter = entries(jira.list, 'filter');
+    const filter = offered(jira.list, 'Assignee');
     const page = await jira.list.press(argoThree);
 
     expect(entries(page, 'assignee-menu')).toEqual(['Unassigned', ...people]);

@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollEndGapContext } from '#kit/scroll-surface';
 import { cn } from '#kit/utils';
 import { isDismissible } from './sheet-dismissible';
-import { sheetInsetClass } from './sheet-inset';
+import { SheetInset } from './sheet-inset';
 import type { SheetProps } from './sheet-props';
 import { ReactContent } from './sheet-react-content';
 
@@ -82,9 +82,9 @@ function ScreenContent(props: BodyProps & { gap: number }): ReactElement {
   if (!props.contentScrolls) return <ScreenScroll {...props} />;
 
   return (
-    <View className={cn(sheetInsetClass(props.inset), props.fill && 'flex-1')}>
+    <SheetInset inset={props.inset} className={cn(props.fill && 'flex-1')}>
       {props.children}
-    </View>
+    </SheetInset>
   );
 }
 
@@ -98,7 +98,7 @@ function ScreenScroll(props: BodyProps & { gap: number }): ReactElement {
       automaticallyAdjustKeyboardInsets={!props.footer}
       nestedScrollEnabled
     >
-      <View className={sheetInsetClass(props.inset)}>{props.children}</View>
+      <SheetInset inset={props.inset}>{props.children}</SheetInset>
     </ScrollView>
   );
 }

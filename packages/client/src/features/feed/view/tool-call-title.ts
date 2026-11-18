@@ -66,7 +66,18 @@ const approvalTitle = (row: ToolCallUpdate): string =>
 
 export function toolCallTitle(
   row: ToolCallUpdate,
-  awaitingApproval = false,
+  awaitingApproval?: boolean,
+  showCommand?: boolean,
+): string {
+  return (
+    toolCallFacts(row).operation?.label ??
+    fallbackTitle(row, awaitingApproval, showCommand)
+  );
+}
+
+function fallbackTitle(
+  row: ToolCallUpdate,
+  awaitingApproval?: boolean,
   showCommand?: boolean,
 ): string {
   return awaitingApproval

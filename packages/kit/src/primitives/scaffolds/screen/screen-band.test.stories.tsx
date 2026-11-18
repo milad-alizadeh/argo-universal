@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { createPlace, useClaimed, type Place } from '#kit/place';
 import { Action } from '#primitives/actions/action';
+import { Text } from '#primitives/content/text';
 import { ScreenBandPlaceOffer, type ScreenBand } from './screen-band';
 import { ScreenStackHeader } from './screen-stack-header';
 import { atWidth, screenWidths } from './screen-widths.mocks';
@@ -90,3 +91,52 @@ export const NoBandBelowWide: Story = atWidth(screenWidths.Phone, {
     await expect(await canvas.findByTestId('band')).toBeEmptyDOMElement();
   },
 });
+
+const onPlace = fn();
+
+// A header-only Screen whose title picks a place and whose options hold a line of text.
+function PickerHost(): ReactElement {
+  const [place] = useState(() => createPlace<ScreenBand>());
+
+  return (
+    <ScreenBandPlaceOffer value={place}>
+      <Band place={place} />
+      <ScreenStackHeader
+        title="Build the band"
+        titleMenu={
+          <Action.Section key="places">
+            <Action label="Another place" onPress={onPlace} />
+          </Action.Section>
+        }
+        options={<Text>Band options</Text>}
+        optionsBadge={{ kind: 'count', count: 2 }}
+      />
+    </ScreenBandPlaceOffer>
+  );
+}
+
+// The band draws the title's menu and the Options button, and the button opens the options the header holds.
+export const HeaderOnlyScreenTitleMenuAndOptionsInTheBand: Story = atWidth(
+  screenWidths.Wide,
+  {
+    render: () => <PickerHost />,
+    play: async ({ canvas, canvasElement, userEvent }) => {
+      const band = await canvas.findByTestId('band');
+      const page = within(canvasElement.ownerDocument.body);
+      const heading = within(band).getByRole('heading', { level: 2 });
+
+      await userEvent.click(
+        within(heading).getByRole('button', { name: 'Build the band' }),
+      );
+      await userEvent.click(
+        await page.findByRole('menuitem', { name: 'Another place' }),
+      );
+      await expect(onPlace).toHaveBeenCalledTimes(1);
+
+      await userEvent.click(
+        within(band).getByRole('button', { name: 'Options, 2' }),
+      );
+      await waitFor(() => expect(page.getByText('Band options')).toBeVisible());
+    },
+  },
+);
