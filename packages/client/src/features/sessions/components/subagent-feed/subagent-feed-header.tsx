@@ -62,12 +62,10 @@ export function SubagentFeedHeader({
   now,
 }: HeaderProps): React.JSX.Element {
   return (
-    <View className="agent-feed-heading shrink-0">
-      <SessionColumn className="h-frame-control shrink-0 flex-row items-center gap-1.5">
-        <BackButton onBack={onBack} />
-        <Title title={subagent.title} />
-        <Meta subagent={subagent} now={now} />
-      </SessionColumn>
-    </View>
+    <SessionColumn className="h-frame-control shrink-0 flex-row items-center gap-1.5">
+      <BackButton onBack={onBack} />
+      <Title title={subagent.title} />
+      <Meta subagent={subagent} now={now} />
+    </SessionColumn>
   );
 }

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { createPlace, useClaimed, type Place } from '#kit/place';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
@@ -136,7 +136,7 @@ export const HeaderOnlyScreenTitleMenuAndOptionsInTheBand: Story = atWidth(
       await userEvent.click(
         within(band).getByRole('button', { name: 'Options, 2' }),
       );
-      await expect(await page.findByText('Band options')).toBeVisible();
+      await waitFor(() => expect(page.getByText('Band options')).toBeVisible());
     },
   },
 );

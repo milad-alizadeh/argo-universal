@@ -43,21 +43,15 @@ function durationLabel(subagent: Subagent, now: number): string {
   return elapsed === null ? '—' : formatElapsed(elapsed);
 }
 
-function finishedSupporting(subagent: Subagent, duration: string): string {
-  const label = subagentStateLabel(subagent);
-
-  if (subagent.stopReason === 'cancelled') return `${label} · ${duration}`;
-
-  return joined([label, duration, tokensLabel(subagent.tokens)]);
+export function subagentMetrics(subagent: Subagent): string {
+  return joined([subagent.model, tokensLabel(subagent.tokens)]);
 }
 
 export function subagentSupporting(subagent: Subagent, now: number): string {
-  if (subagent.state === 'requires_action')
-    return joined([subagent.model, subagentStateLabel(subagent)]);
-
-  const duration = durationLabel(subagent, now);
-
-  if (subagent.state === 'idle') return finishedSupporting(subagent, duration);
-
-  return joined([subagent.model, duration, tokensLabel(subagent.tokens)]);
+  return joined([
+    subagent.model,
+    subagent.state === 'running' ? null : subagentStateLabel(subagent),
+    subagent.state === 'requires_action' ? null : durationLabel(subagent, now),
+    tokensLabel(subagent.tokens),
+  ]);
 }

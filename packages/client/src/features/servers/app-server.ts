@@ -44,6 +44,7 @@ export const pairedAppServer = (known: KnownServer): AppServer => ({
   channel: known.address && {
     host: known.address.host,
     port: known.address.port,
+    others: known.otherAddresses,
     serverPublicKey: known.key,
   },
 });

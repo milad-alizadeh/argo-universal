@@ -4,7 +4,7 @@ import { startEngineTestHost } from '#mocks/engine';
 import { connectAsDevice, type TestDevice } from '#mocks/engine-channel';
 import { PairingRefused } from './connect-channel';
 
-it('carries the key, the name and the Ticket a Device needs to find and prove this Server', async (): Promise<void> => {
+it('carries the key, the name, the Ticket and the URLs a Device needs to find and prove this Server', async (): Promise<void> => {
   const { caller } = await startEngineTestHost({ discoveryName: 'Studio Mac' });
 
   const minted = await caller.pairing.mint();
@@ -13,6 +13,7 @@ it('carries the key, the name and the Ticket a Device needs to find and prove th
     key: (await caller.devices.serverKey()).publicKey,
     server: 'Studio Mac',
     ticket: expect.stringMatching(/^\d{6}$/),
+    urls: minted.addresses.map((address) => `http://${address}`),
   });
   expect(Date.parse(minted.expiresAt)).toBeGreaterThan(Date.now());
 });
