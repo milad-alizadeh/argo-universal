@@ -1,6 +1,7 @@
 import { pressTarget } from '@repo/kit/mocks/press-target';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { sessionRows } from '@repo/mocks/app';
+import { type JSX, useState } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import {
   dark,
@@ -11,6 +12,7 @@ import {
   statusParity,
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
+import { SessionRow } from './session-row';
 import {
   archivedSession,
   coverageItem,
@@ -152,6 +154,38 @@ function pluginItems(width: number): Story {
 export const PluginItemsPhone = pluginItems(layoutWidths.phone);
 
 export const PluginItemsWide = pluginItems(layoutWidths.wide);
+
+function LatePluginItems(props: SessionRowProps): JSX.Element {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <div onPointerDownCapture={() => setLoaded(true)}>
+      <SessionRow {...props} plugins={loaded ? props.plugins : undefined} />
+    </div>
+  );
+}
+
+export const PluginItemsArriveDuringAPress: Story = {
+  args: { ...pluginItemsSession, onSelect: fn() },
+  render: (args) => <LatePluginItems {...args} />,
+  beforeEach: () => settleLayout(layoutWidths.phone),
+  play: async ({ canvas, userEvent, args }) => {
+    const title = canvas.getByText(args.session.title, { exact: true });
+
+    await userEvent.pointer({
+      target: pressTarget(title),
+      keys: '[MouseLeft>]',
+    });
+    await expect(canvas.getByText(rowIssue, { exact: true })).toBeVisible();
+    await userEvent.pointer({
+      target: pressTarget(
+        canvas.getByText(args.session.title, { exact: true }),
+      ),
+      keys: '[/MouseLeft]',
+    });
+    await expect(args.onSelect).toHaveBeenCalledWith(args.session.sessionId);
+  },
+};
 
 // An item with no page has no press of its own: pressing it, tooltip or not, opens the Session.
 function plainItems(width: number): Story {

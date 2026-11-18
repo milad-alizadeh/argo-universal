@@ -4,6 +4,7 @@ import {
 } from '@repo/kit/primitives/lists/list-item';
 import { memo } from 'react';
 import type * as React from 'react';
+import { Platform } from 'react-native';
 import { CompactSessionRow } from './session-row-compact';
 import { regularEnds } from './session-row-ends';
 import { SessionMark } from './session-row-mark';
@@ -77,7 +78,8 @@ function regularAccessories({
   plugins,
   onOpenPluginPage,
 }: SessionRowProps): React.ReactNode {
-  if (!hasPluginItems(plugins)) return undefined;
+  // Web keeps the same press layer while Plugin items load.
+  if (!hasPluginItems(plugins)) return Platform.OS === 'web' ? null : undefined;
 
   return (
     <PluginAccessories className="min-w-0 shrink flex-row items-center gap-2.5">
