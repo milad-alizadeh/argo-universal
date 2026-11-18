@@ -15,6 +15,8 @@ export const sessionUpdateKinds = [
   'user_message',
   'prompt_message',
   'session_message',
+  'person_transcript',
+  'voice_transcript',
   'agent_message',
   'agent_thought',
   'tool_call_update',

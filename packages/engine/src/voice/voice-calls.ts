@@ -42,11 +42,12 @@ export class VoiceCalls implements VoiceCallsPort {
   public constructor(private readonly actor: VoiceCallActorRef) {}
 
   public async status(): Promise<VoiceStatus> {
-    const { call, ended } = this.actor.getSnapshot().context;
+    const { call, ended, partials } = this.actor.getSnapshot().context;
 
     return {
       call: call && this.callOf(call),
       ended,
+      partials,
       availability: await this.availability(),
     };
   }

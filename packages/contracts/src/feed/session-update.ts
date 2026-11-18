@@ -9,9 +9,11 @@ import { BlobRef, ContentBlock } from './content-block';
 import {
   AgentMessage,
   AgentThought,
+  PersonTranscript,
   PromptMessage,
   SessionMessage,
   UserMessage,
+  VoiceTranscript,
 } from './messages';
 import { createFeedMetadataSchema } from './metadata';
 import { Plan } from './plan';
@@ -171,6 +173,8 @@ export const SessionUpdate = z.discriminatedUnion('sessionUpdate', [
   UserMessage,
   PromptMessage,
   SessionMessage,
+  PersonTranscript,
+  VoiceTranscript,
   AgentMessage,
   AgentThought,
   ToolCallUpdate,

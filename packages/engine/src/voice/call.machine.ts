@@ -12,6 +12,7 @@ import { watchConnection, watchSession } from './call-watchers';
 import type { VoiceProvider, VoiceProviderEvent } from './provider';
 import { providerCall, type ProviderCallInput } from './provider-call';
 import { SessionLink } from './session-link';
+import { isTranscript, storeTranscript, withTranscript } from './transcript';
 
 /*
  * The Voice call's lifecycle (ADR-0062): one machine for the one call a Server runs, attached to one Session for its whole life.
@@ -37,9 +38,6 @@ function providerEventOf(event: VoiceCallEvent): VoiceProviderEvent {
 
   return event.event;
 }
-
-const isSpeech = (event: VoiceProviderEvent): boolean =>
-  event.type === 'person.transcript' || event.type === 'voice.transcript';
 
 const isLimitClose = (event: VoiceProviderEvent): boolean =>
   event.type === 'closed' && event.reason === 'limit';
@@ -73,6 +71,7 @@ const finished = (
   return {
     call: null,
     ended: call && { callId: call.callId, sessionId: call.sessionId, reason },
+    partials: [],
   };
 };
 
@@ -119,6 +118,19 @@ const voiceCallSetup = setup({
     finish: assign(({ context }, params: EndParameters) =>
       finished(context, params),
     ),
+    storeTranscript: ({ context, event, system }): void => {
+      const heard = providerEventOf(event);
+
+      if (isTranscript(heard))
+        storeTranscript(system, runningCall(context), heard);
+    },
+    trackPartials: assign(({ context, event }): Partial<VoiceCallContext> => {
+      const heard = providerEventOf(event);
+
+      return isTranscript(heard)
+        ? { partials: withTranscript(context.partials, heard) }
+        : {};
+    }),
     recordFailure: assign(({ event }): Partial<VoiceCallContext> => {
       assertEvent(event, 'call.failed');
 
@@ -132,6 +144,8 @@ const voiceCallSetup = setup({
 
       return namesCall(event.sessionId, context.call);
     },
+    hearsTranscript: ({ event }): boolean =>
+      isTranscript(providerEventOf(event)),
     isConnected: ({ event }): boolean =>
       isConnectedStatus(providerEventOf(event)),
     providerErrored: ({ event }): boolean => {
@@ -140,7 +154,6 @@ const voiceCallSetup = setup({
       return isErrorStatus(reported) || isErrorClose(reported);
     },
     noTurnRunning: ({ context }): boolean => !context.turnRunning,
-    isSpeech: ({ event }): boolean => isSpeech(providerEventOf(event)),
     reportsLimit: ({ event }): boolean =>
       providerEventOf(event).type === 'limit',
     limitClosed: ({ event }): boolean => isLimitClose(providerEventOf(event)),
@@ -191,6 +204,7 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
     ended: null,
     failure: null,
     turnRunning: false,
+    partials: [],
   }),
   initial: 'idle',
   states: {
@@ -267,6 +281,10 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
         'call.turns': { actions: 'noteTurns' },
         'provider.event': [
           {
+            guard: 'hearsTranscript',
+            actions: ['storeTranscript', 'trackPartials'],
+          },
+          {
             guard: 'providerErrored',
             target: idleTarget,
             actions: endsWith('failed'),
@@ -306,7 +324,8 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
         connected: {
           on: {
             'provider.event': {
-              guard: 'isSpeech',
+              guard: 'hearsTranscript',
+              actions: ['storeTranscript', 'trackPartials'],
               target: 'connected',
               reenter: true,
             },

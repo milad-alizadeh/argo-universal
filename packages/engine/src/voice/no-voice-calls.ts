@@ -5,6 +5,7 @@ import type { VoiceCallsPort } from './voice-calls';
 const noStatus: VoiceStatus = {
   call: null,
   ended: null,
+  partials: [],
   availability: { usable: false, reason: 'Voice calls are not available' },
 };
 

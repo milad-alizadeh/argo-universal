@@ -1,6 +1,7 @@
 import {
   type SessionSnapshot,
   type SlashCommand,
+  type VoicePartial,
   withArgoSlashCommands,
 } from '@repo/contracts';
 import {
@@ -43,6 +44,8 @@ export interface OpenSession {
   usageLimits: UsageLimitsRead;
   // Where a Voice call is, and how to start or end it; absent where the App carries no audio.
   voice?: ComposerProps['voice'];
+  // What is being said on this Session's Voice call, drawn at the tail of its Feed.
+  partials?: VoicePartial[];
   options?: {
     configOptions: SessionSnapshot['configOptions'];
     loading: boolean;

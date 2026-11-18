@@ -1,4 +1,4 @@
-import type { VoiceCallEnd, VoiceLimit } from '@repo/contracts';
+import type { VoiceCallEnd, VoiceLimit, VoicePartial } from '@repo/contracts';
 import type {
   VoiceDelivery,
   VoiceProvider,
@@ -81,6 +81,8 @@ export interface VoiceCallContext extends VoiceCallInput {
   failure: string | null;
   // Whether a Turn the call started is running; an idle call never ends while one is.
   turnRunning: boolean;
+  // Words being said now that may still change; live state, never stored.
+  partials: VoicePartial[];
 }
 
 // The call `running` was entered for; `running` is only entered by `call.start`, which sets it.
