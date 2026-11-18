@@ -13,6 +13,7 @@ import { drawnFeedItems } from '../drawn-feed-item';
 import { withoutDisclosedTurnEnds } from '../turn-end/turn-end';
 import { newestKeyOf, withLiveHeader } from './feed-entry';
 import { FeedList, type FeedListProps } from './feed-list';
+import { useExitingLiveHeader } from './use-exiting-live-header';
 import { useReportsAtEnd } from './use-feed-scroll-position';
 
 export interface FeedProps {
@@ -69,22 +70,27 @@ function EmptyFeedAtEnd({
   return <EmptyFeed {...props} />;
 }
 
-function useFeedEntries({
-  items,
-  liveHeader,
-  liveToolCall,
-}: FeedProps): Pick<FeedListProps, 'entries' | 'newestKey'> {
-  const drawnItems = useMemo(
+function useDrawnItems(items: FeedProps['items']): FeedViewItem[] {
+  return useMemo(
     () => drawnFeedItems(withoutDisclosedTurnEnds(items)),
     [items],
   );
+}
+
+function useFeedEntries(
+  props: FeedProps,
+): Pick<FeedListProps, 'entries' | 'newestKey'> {
+  const { liveHeader, liveToolCall, sessionId } = props;
+  const drawnItems = useDrawnItems(props.items);
 
   const entries = useMemo(
     () => withLiveHeader(drawnItems, liveHeader, liveToolCall),
     [drawnItems, liveHeader, liveToolCall],
   );
 
-  return { entries, newestKey: newestKeyOf(drawnItems) };
+  const visible = useExitingLiveHeader(entries, sessionId, liveHeader !== null);
+
+  return { entries: visible, newestKey: newestKeyOf(drawnItems) };
 }
 
 // What a Feed read without a Composer leaves for one at its end.

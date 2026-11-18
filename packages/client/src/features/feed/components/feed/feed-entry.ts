@@ -13,13 +13,14 @@ import { groupTitle } from '../../view/group-title';
 import { shownLiveHeader } from '../../view/shown-live-header';
 
 // The live header is the list's last row, so the list measures it and follows it like any row.
-export type FeedEntry =
-  | FeedViewItem
-  | {
-      type: 'live_header';
-      liveHeader: LiveHeaderValue;
-      toolCall?: ToolCallUpdate;
-    };
+export interface LiveHeaderEntry {
+  type: 'live_header';
+  liveHeader: LiveHeaderValue;
+  toolCall?: ToolCallUpdate;
+  onExit?: () => void;
+}
+
+export type FeedEntry = FeedViewItem | LiveHeaderEntry;
 
 export const entryType = (
   entry: FeedEntry,
@@ -28,8 +29,15 @@ export const entryType = (
   | Extract<FeedEntry, { type: 'row' }>['row']['sessionUpdate'] =>
   entry.type === 'row' ? entry.row.sessionUpdate : entry.type;
 
+export const liveHeaderKey = 'live-header';
+
 export const entryKey = (entry: FeedEntry): string =>
-  entry.type === 'live_header' ? 'live-header' : feedItemKey(entry);
+  entry.type === 'live_header' ? liveHeaderKey : feedItemKey(entry);
+
+export const liveHeaderEntry = (
+  entry?: FeedEntry,
+): LiveHeaderEntry | undefined =>
+  entry?.type === 'live_header' ? entry : undefined;
 
 const isGroup = (
   item: FeedViewItem | undefined,

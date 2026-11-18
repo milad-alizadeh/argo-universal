@@ -1,8 +1,11 @@
 import { sampleEachFrame } from '@repo/kit/mocks/sample-each-frame';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { type ReactElement, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
-import { Feed } from './feed';
+import { recordedAgentMessage } from '../../../../lib/product/feed-message.mocks';
+import { workingHeader } from '../live-header/live-header.mocks';
+import { Feed, type FeedProps } from './feed';
 import {
   expandedAttribute,
   feedScrollId,
@@ -30,6 +33,65 @@ type Story = StoryObj<typeof meta>;
 
 // Long enough for the slowest close and the frames after it.
 const closingFrames = 40;
+
+const workingLabel = new RegExp(`^${workingHeader.text}`);
+
+function CompletingTurn(args: FeedProps): ReactElement {
+  const [running, setRunning] = useState(true);
+
+  const [items] = useState<FeedProps['items']>(() => [
+    ...args.items,
+    {
+      type: 'row',
+      row: {
+        ...recordedAgentMessage('agent-1', 'edit-and-command'),
+        id: 'finishing-answer',
+        state: 'settled',
+      },
+    },
+  ]);
+
+  return (
+    <>
+      <button type="button" onClick={() => setRunning(false)}>
+        Complete Turn
+      </button>
+      <Feed
+        {...args}
+        items={items}
+        liveHeader={running ? workingHeader : null}
+      />
+    </>
+  );
+}
+
+export const EasesToEndWhenWorkingCloses: Story = {
+  render: (args) => <CompletingTurn {...args} />,
+  play: async ({ canvas }) => {
+    await settleLayout('phone');
+    const scroll = await canvas.findByTestId(feedScrollId);
+    const working = await canvas.findByRole('status', { name: workingLabel });
+    await scrollToEnd(scroll);
+    const before = scroll.scrollTop;
+    const finish = canvas.getByRole('button', { name: 'Complete Turn' });
+
+    const offsets = await sampleEachFrame(
+      () => finish.click(),
+      () => scroll.scrollTop,
+      closingFrames,
+    );
+
+    await expect(working).not.toBeInTheDocument();
+
+    const after = scroll.scrollTop;
+
+    await expect(after).toBeLessThan(before);
+    await expect(scrolledToEnd(scroll)).toBe(true);
+    await expect(
+      offsets.some((offset) => offset < before && offset > after),
+    ).toBe(true);
+  },
+};
 
 // Feed disclosures expand inline; code-title tooltip triggers open a popup.
 const closedDisclosureRows = (scroll: HTMLElement): HTMLElement[] =>

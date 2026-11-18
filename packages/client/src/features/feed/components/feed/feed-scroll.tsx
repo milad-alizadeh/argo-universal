@@ -3,11 +3,10 @@ import { type ListProps } from '@repo/kit/primitives/lists/list';
 import type * as React from 'react';
 import { type RefObject, useCallback } from 'react';
 import { Platform, View } from 'react-native';
-import { useReducedMotion } from 'react-native-reanimated';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { useFeedFade } from '#lib/product/feed-fade';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
-import { type FeedEntry } from './feed-entry';
+import type { FeedEntry } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
 import {
   type FeedRowData,
@@ -18,6 +17,8 @@ import {
 import { DrawFeedScroll, useFeedOnScroll } from './feed-scroll-drawing';
 import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
+import { useRemoveUnrenderedLiveHeader } from './use-exiting-live-header';
+import { type FeedEndMotion, useFeedEndMotion } from './use-feed-end-motion';
 
 // Clears whatever of the Composer covers the Feed's end, and the pill above it, and leaves the Feed's gap above them.
 function FeedEnd(): React.JSX.Element {
@@ -31,14 +32,6 @@ const keepPosition = { data: true };
 
 // In screens from the end: only a reader at the very end is at the end, and follows the Composer.
 const endThreshold = 0.02;
-
-// The Feed follows its end as the view and the Composer change size, and as rows load or measure, so a settled Session ends above the Composer (#1811) and a streaming answer stays in view until the reader scrolls up.
-const followEnd = {
-  on: { layout: true, footerLayout: true, dataChange: true, itemLayout: true },
-};
-
-// While a Turn adds rows or wraps prose, move the reader to the new end over several frames.
-const glideToEnd = { ...followEnd, animated: true };
 
 // In screens from the top: older rows load this far ahead of the reader.
 const startThreshold = 2;
@@ -142,7 +135,7 @@ export type FeedListProps = Pick<
 // A Feed read from its start, or hidden behind another page, does not follow incoming rows.
 function useAnchors(
   opensAtStart: boolean | undefined,
-  following: typeof followEnd,
+  following: FeedEndMotion,
 ): Pick<FeedListProps, 'maintainScrollAtEnd' | 'alignItemsAtEnd'> {
   const focused = useScreenFocused();
 
@@ -151,19 +144,6 @@ function useAnchors(
     // Rows start at the top of the view, never against the Composer.
     alignItemsAtEnd: false,
   };
-}
-
-function isGrowing(items: FeedRowData[], turnRunning: boolean): boolean {
-  return turnRunning || items.slice(-2).some((item) => item.streaming);
-}
-
-function useEndMotion(
-  items: FeedRowData[],
-  turnRunning: boolean,
-): typeof followEnd {
-  const reduced = useReducedMotion();
-
-  return isGrowing(items, turnRunning) && !reduced ? glideToEnd : followEnd;
 }
 
 function useFeedListProps(
@@ -177,7 +157,7 @@ function useFeedListProps(
     items,
     renderItem: useRenderEntry({ ...props, ...motion }),
     initialScrollIndex: props.initialIndex,
-    ...useAnchors(props.opensAtStart, useEndMotion(items, turnRunning)),
+    ...useAnchors(props.opensAtStart, useFeedEndMotion(items, turnRunning)),
     onStartReached: props.onStartReached,
     header: <LoadingEarlier loading={props.loadingOlder} />,
   };
@@ -187,6 +167,7 @@ export function FeedScroll(props: FeedScrollProps): React.JSX.Element {
   const { list, atEnd, sessionId, ...rest } = props;
   const listProps = useFeedListProps(list, rest);
   const onScroll = useFeedOnScroll(sessionId, list);
+  useRemoveUnrenderedLiveHeader(list, rest.entries.at(-1));
 
   const drawing = {
     base: feedListProps,
