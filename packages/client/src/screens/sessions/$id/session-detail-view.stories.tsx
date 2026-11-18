@@ -8,13 +8,13 @@ import {
   questionsValues,
 } from '../../../../mocks/elicitation';
 import { SessionDetailView } from './session-detail-view';
-import { lastModelCall, openingEstimate } from './session-detail-view-fixtures';
 import { sessionPageBar } from './session-detail-view-bar.mocks';
 import { changedSession } from './session-detail-view-changes-pill.mocks';
 import {
   ElicitationPreview,
   elicitationSession,
 } from './session-detail-view-elicitation.mocks';
+import { lastModelCall, openingEstimate } from './session-detail-view-fixtures';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
