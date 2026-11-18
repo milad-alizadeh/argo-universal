@@ -3,12 +3,15 @@ import type { ElicitationView } from './elicitation-body';
 import { QuestionPager } from './elicitation-question-pager';
 
 export function fieldsHeader(
-  model: ElicitationPagedModel,
+  model: Pick<
+    ElicitationPagedModel,
+    'count' | 'index' | 'last' | 'inactive' | 'navigate'
+  > & { message: string },
 ): ElicitationView['header'] {
-  if (model.count <= 1) return { title: model.props.request.message };
+  if (model.count <= 1) return { title: model.message };
 
   return {
-    title: model.props.request.message,
+    title: model.message,
     progress: `${model.index + 1} of ${model.count}`,
     pager: <QuestionPager model={model} />,
   };

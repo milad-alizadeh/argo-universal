@@ -1,5 +1,9 @@
 import { useState } from 'react';
 import type { ElicitationFormProps } from '../components/elicitation-form/elicitation-form-props';
+import {
+  questionPageIndex,
+  questionPosition,
+} from '../components/elicitation-form/elicitation-page-position';
 import type { ElicitationQuestion } from '../components/elicitation-form/elicitation-questions';
 import type { ElicitationValues } from '../components/elicitation-form/elicitation-schema';
 
@@ -108,8 +112,7 @@ function change(
 }
 
 function navigate(fields: QuestionFields, page: Page, index: number): void {
-  if (!fields.inactive)
-    page.setIndex(Math.max(0, Math.min(page.count - 1, index)));
+  if (!fields.inactive) page.setIndex(questionPageIndex(index, page.count));
 }
 
 function currentQuestion(
@@ -121,13 +124,6 @@ function currentQuestion(
   if (!question) throw new Error('Question flow needs a question.');
 
   return question;
-}
-
-function questionPosition(
-  index: number,
-  count: number,
-): Pick<QuestionFields, 'index' | 'count' | 'last'> {
-  return { index, count, last: index === count - 1 };
 }
 
 function completePage(

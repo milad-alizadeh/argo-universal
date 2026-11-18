@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { action } from 'storybook/actions';
+import {
+  claudeQuestionsRequest,
+  claudeQuestionsValues,
+} from '../../../../../mocks/requests/elicitation/claude-elicitation';
 import { RequestFrame } from '../../../../lib/product/request-frame';
 import { ElicitationForm } from './elicitation-form';
 import {
@@ -66,7 +70,7 @@ export const MultipleChoice: Story = { args: multipleChoiceElicitation };
 // Several questions: each takes its own page, headed by its title and the pager.
 export const SeveralQuestions: Story = { args: severalQuestionsElicitation };
 
-// Any other form is one page of fields, headed by its message.
+// Other forms page their fields, headed by the request message.
 export const TextField: Story = { args: textFieldElicitation };
 
 export const FormFields: Story = { args: formFieldsElicitation };
@@ -78,3 +82,10 @@ export const Submitting: Story = { args: submittingElicitation };
 export const AlreadyAnswered: Story = { args: answeredElicitation };
 
 export const LongQuestion: Story = { args: longQuestionElicitation };
+
+export const MixedQuestions: Story = {
+  args: {
+    request: claudeQuestionsRequest,
+    initialValues: claudeQuestionsValues,
+  },
+};

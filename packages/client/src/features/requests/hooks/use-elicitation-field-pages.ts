@@ -1,7 +1,12 @@
 import { useStore } from '@tanstack/react-form';
 import { useState } from 'react';
 import type { ElicitationFormProps } from '../components/elicitation-form/elicitation-form-props';
+import {
+  questionPageIndex,
+  questionPosition,
+} from '../components/elicitation-form/elicitation-page-position';
 import { elicitationPages } from '../components/elicitation-form/elicitation-pages';
+import { skipFieldPage } from '../components/elicitation-form/elicitation-skip';
 import {
   useElicitationForm,
   type ElicitationModel,
@@ -21,7 +26,7 @@ type Flow = PageState &
   Navigation & { model: ElicitationModel; pages: Entries[] };
 
 export type ElicitationPagedModel = ElicitationModel &
-  PageState &
+  Omit<PageState, 'errors'> &
   Navigation & {
     advance: () => void;
     skip: () => void;
@@ -36,15 +41,14 @@ export function useElicitationFieldPages(
   const state = usePageState(model, pages, index);
 
   const navigate = (next: number): void => {
-    if (!model.inactive)
-      setIndex(Math.max(0, Math.min(pages.length - 1, next)));
+    if (!model.inactive) setIndex(questionPageIndex(next, pages.length));
   };
 
   return pagedModel({ model, ...state, pages, navigate });
 }
 
 function usePageState(
-  model: ElicitationModel,
+  model: Pick<ElicitationModel, 'form' | 'schema'>,
   pages: Entries[],
   index: number,
 ): PageState {
@@ -61,9 +65,7 @@ function usePageState(
 
 function pagePosition(pages: Entries[], index: number): Position {
   return {
-    index,
-    count: pages.length,
-    last: index >= pages.length - 1,
+    ...questionPosition(index, pages.length),
     page: pages[index] ?? [],
   };
 }
@@ -81,11 +83,10 @@ function pagedModel(flow: Flow): ElicitationPagedModel {
   return {
     ...flow.model,
     ...pagePosition(flow.pages, flow.index),
-    errors: flow.errors,
     canAdvance: flow.canAdvance,
     navigate: flow.navigate,
     advance: (): void => advance(flow),
-    skip: (): void => skip(flow),
+    skip: (): void => skipFieldPage(flow),
   };
 }
 
@@ -105,13 +106,6 @@ function submit(flow: Flow): void {
 
   if (invalid >= 0) flow.navigate(invalid);
   else flow.model.answer('accept');
-}
-
-function skip(flow: Flow): void {
-  if (flow.model.inactive) return;
-
-  if (flow.last) flow.model.answer('decline');
-  else flow.navigate(flow.index + 1);
 }
 
 const formIssue = (errors: Errors): string | undefined => errors?.form;

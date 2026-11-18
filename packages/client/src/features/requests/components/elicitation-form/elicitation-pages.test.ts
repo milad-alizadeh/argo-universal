@@ -1,5 +1,6 @@
 import type { ElicitationSchema } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
+import { claudeQuestionsRequest } from '../../../../../mocks/requests/elicitation/claude-elicitation';
 import { elicitationPages } from './elicitation-pages';
 import { createElicitationSchema } from './elicitation-schema';
 
@@ -9,6 +10,12 @@ const pages = (properties: ElicitationSchema['properties']): string[][] =>
   );
 
 describe('Elicitation pages', () => {
+  it('groups the real Claude ACP custom-answer convention', () => {
+    expect(pages(claudeQuestionsRequest.requestedSchema.properties)).toEqual([
+      ['question_0', 'question_0_custom'],
+      ['question_1', 'question_1_custom'],
+    ]);
+  });
   it('keeps a named Other with its choice even when listed first', () => {
     expect(
       pages({

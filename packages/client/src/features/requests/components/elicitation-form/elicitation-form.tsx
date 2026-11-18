@@ -126,7 +126,7 @@ function fieldsView(
   return {
     props,
     ...requestState(model),
-    header: fieldsHeader(model),
+    header: fieldsHeader({ ...model, message: props.request.message }),
     rows: <ElicitationFields model={model} />,
     validation: <FieldsValidation model={model} />,
     actions: fieldsActions(model),

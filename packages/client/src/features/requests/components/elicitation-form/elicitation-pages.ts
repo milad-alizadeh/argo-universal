@@ -33,15 +33,8 @@ function companionOwner(
 const textField = (field: ElicitationEntry): boolean =>
   field.property.type === 'string' && !elicitationChoices(field.property);
 
-const suffixes = [
-  '_other',
-  '__other',
-  '.other',
-  '-other',
-  ' (other)',
-  '_note',
-  '_notes',
-];
+// Claude ACP uses _custom; named Other/note fields use the same owner key.
+const suffixes = ['_custom', '_other', '_note', '_notes'];
 
 const namedCompanion = (name: string, companion: string): boolean =>
   suffixes.some((suffix) => companion === `${name}${suffix}`);

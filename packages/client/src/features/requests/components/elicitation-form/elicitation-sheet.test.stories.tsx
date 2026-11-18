@@ -87,6 +87,33 @@ export const SubmitReturnsToUnansweredPage: Story = {
   },
 };
 
+export const SkipStillValidatesEarlierQuestions: Story = {
+  args: { request: configurationRequest },
+  play: async ({ userEvent, args }) => {
+    const sheet = within(await within(document.body).findByRole('dialog'));
+    await userEvent.click(sheet.getByRole('button', { name: 'Skip' }));
+    await userEvent.click(sheet.getByRole('button', { name: 'Next' }));
+    await userEvent.click(sheet.getByRole('button', { name: 'Skip' }));
+    await expect(args.onAnswer).not.toHaveBeenCalled();
+    await expect(sheet.getByText('1 of 3', { exact: false })).toBeVisible();
+    await expect(sheet.getByRole('button', { name: 'Next' })).toBeDisabled();
+  },
+};
+
+export const EmptyFormCanSubmit: Story = {
+  args: {
+    request: { ...configurationRequest, requestedSchema: { properties: {} } },
+  },
+  play: async ({ userEvent, args }) => {
+    const sheet = within(await within(document.body).findByRole('dialog'));
+    await userEvent.click(sheet.getByRole('button', { name: 'Submit' }));
+    await expect(args.onAnswer).toHaveBeenCalledWith({
+      action: 'accept',
+      content: {},
+    });
+  },
+};
+
 export const DismissWithEscape: Story = {
   play: async ({ userEvent, args }) => {
     const page = within(document.body);
