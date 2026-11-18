@@ -55,15 +55,15 @@ type OperationStoryArgs = Pick<
   'group' | 'initialOpen' | 'renderActivity'
 >;
 
-export const settledOperations: OperationStoryArgs = {
+export const settledOperations = {
   group: operationGroup([agentCall('session.feed', 0), plugin, recorded]),
   initialOpen: true,
   renderActivity: renderOperationActivity,
-};
+} satisfies OperationStoryArgs;
 
-export const runningOperations: OperationStoryArgs = {
+export const runningOperations = {
   renderActivity: renderOperationActivity,
   group: operationGroup([
     { ...agentCall('session.feed', 0), state: 'open', status: 'in_progress' },
   ]),
-};
+} satisfies OperationStoryArgs;

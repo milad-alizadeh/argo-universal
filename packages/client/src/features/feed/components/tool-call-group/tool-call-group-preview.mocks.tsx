@@ -50,8 +50,9 @@ export function renderRecordedActivity(
 
 export function renderOperationActivity(
   activity: FeedActivity,
-): React.JSX.Element | null {
-  return activity.type === 'tool_call' ? (
-    <ToolCallRow row={activity.row} />
-  ) : null;
+): React.JSX.Element {
+  if (activity.type !== 'tool_call')
+    throw new Error('The Operation preview needs a Tool call');
+
+  return <ToolCallRow row={activity.row} />;
 }
