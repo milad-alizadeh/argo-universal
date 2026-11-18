@@ -5,8 +5,6 @@ import type * as React from 'react';
 export interface AddressFieldProps {
   value: string;
   disabled?: boolean;
-  // What the row says under itself, where the page that holds it needs other words than the Enter code page's.
-  hint?: string;
   onChangeText: (value: string) => void;
 }
 
@@ -18,7 +16,7 @@ const footer = `Optional. Only if ${productName} can’t find the computer by it
 export function AddressField(props: AddressFieldProps): React.JSX.Element {
   return (
     <FieldGroup disabled={props.disabled}>
-      <FieldGroup.Section footer={props.hint ?? footer}>
+      <FieldGroup.Section footer={footer}>
         <FieldGroup.TextField
           title="Address"
           placeholder="studio-mac.local:4000"

@@ -3,10 +3,9 @@ import { View } from 'react-native';
 import { useListPlace } from '#kit/list-place';
 import { Icon } from '#primitives/content/icon';
 import { Text } from '#primitives/content/text';
-import { Spinner } from '#primitives/status/spinner';
 import { iconNames } from '../../../symbols/icon-names';
 import type { IconName } from '../../../symbols/icon-names';
-import type { EmptyStateNote, EmptyStateProps } from './empty-state-props';
+import type { EmptyStateProps } from './empty-state-props';
 
 /*
  * Centred as a column. The action sits in a box of its own size that the column centres: Expo's web Host, which
@@ -26,9 +25,8 @@ function PageEmptyState(props: EmptyStateProps): React.JSX.Element {
       testID={props.testID}
       className="min-h-50 flex-1 flex-col items-center justify-center gap-4 p-6 text-center"
     >
-      <EmptyStateMark {...props} />
+      {props.icon && <EmptyStateIcon icon={props.icon} />}
       <EmptyStateText {...props} />
-      {props.note && <EmptyStateNoteCard {...props.note} />}
       {props.action && <View className="self-center">{props.action}</View>}
     </View>
   );
@@ -47,29 +45,6 @@ function CardEmptyState(props: EmptyStateProps): React.JSX.Element {
         </Text>
       )}
       {props.action && <View className="self-start">{props.action}</View>}
-    </View>
-  );
-}
-
-function EmptyStateMark({
-  busy,
-  icon,
-}: Pick<EmptyStateProps, 'busy' | 'icon'>): React.JSX.Element | null {
-  if (busy) return <Spinner accessibilityLabel="Waiting" />;
-
-  return icon ? <EmptyStateIcon icon={icon} /> : null;
-}
-
-function EmptyStateNoteCard({
-  lead,
-  detail,
-}: EmptyStateNote): React.JSX.Element {
-  return (
-    <View className="self-stretch rounded-grouped bg-card px-4 py-3">
-      <Text role="secondary" tone="muted">
-        {lead}
-      </Text>
-      <Text role="body">{detail}</Text>
     </View>
   );
 }

@@ -32,9 +32,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// The Server is being looked for on the network after a scan, before the owner can be asked.
-export const FindingTheServer: Story = { args: { kind: 'finding' } };
-
 // The Server holds this Device until the owner answers, so the phone has nothing to do but wait or cancel.
 export const WaitingForApproval: Story = {};
 

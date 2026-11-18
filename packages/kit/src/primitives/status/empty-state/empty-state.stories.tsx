@@ -2,9 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { EmptyState } from './empty-state';
 import {
-  busyEmptyState,
   defaultEmptyState,
-  guidedEmptyState,
   iconAndDescriptionEmptyState,
   noActionEmptyState,
   searchEmptyState,
@@ -32,9 +30,3 @@ export const Search: Story = { args: searchEmptyState };
 export const IconAndDescription: Story = {
   args: iconAndDescriptionEmptyState,
 };
-
-// App-only: a card under the description says where the owner acts.
-export const PointsToASetting: Story = { args: guidedEmptyState };
-
-// App-only: a page that waits draws a spinner where the icon would stand.
-export const Busy: Story = { args: busyEmptyState };
