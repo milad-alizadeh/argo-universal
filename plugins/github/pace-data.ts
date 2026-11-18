@@ -15,7 +15,6 @@ function searchRange(start: number): string {
 const displayDate = new Intl.DateTimeFormat('en', {
   month: 'short',
   day: 'numeric',
-  year: 'numeric',
   timeZone: 'UTC',
 });
 
@@ -46,6 +45,7 @@ export type Pace = Overview & {
   previous: Week;
   ci: Workflows | null;
   prior: string;
+  snapshot: number;
 };
 
 export async function paceData(
@@ -61,5 +61,7 @@ export async function paceData(
     readWorkflows(fetch, target).catch(() => null),
   ]);
 
-  return { ...info, target, current, previous, ci, prior: period(prior.start) };
+  const window = { target, prior: period(prior.start), snapshot: Date.now() };
+
+  return { ...info, ...window, current, previous, ci };
 }

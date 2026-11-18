@@ -60,34 +60,82 @@
                 "props": { "gap": 2, "direction": "column" },
                 "children": [
                   {
-                    "type": "Button",
+                    "type": "Stack",
                     "key": "0",
                     "props": {
-                      "label": "milad-alizadeh/argo-universal",
-                      "variant": "secondary",
-                      "onPress": { "action": "navigate", "path": "/pace" }
+                      "gap": 2,
+                      "align": "center",
+                      "direction": "row"
                     },
-                    "children": [],
+                    "children": [
+                      {
+                        "type": "Pill",
+                        "key": "0",
+                        "props": {
+                          "text": "argo-universal",
+                          "variant": "control",
+                          "disclosure": "down",
+                          "accessibilityLabel": "Choose repository, milad-alizadeh/argo-universal",
+                          "onPress": { "action": "navigate", "path": "/pace" }
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Pill",
+                        "key": "1",
+                        "props": {
+                          "text": "Nov 12 – 18",
+                          "variant": "control",
+                          "disclosure": "down",
+                          "accessibilityLabel": "Choose week",
+                          "onPress": { "pageState": { "choosingWeek": true } }
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
                     "slots": {}
                   },
                   {
-                    "type": "Text",
+                    "type": "Stack",
                     "key": "1",
                     "props": {
-                      "children": "Nov 12 – 18, 2026 UTC · today in progress"
+                      "gap": 2,
+                      "align": "center",
+                      "direction": "row"
                     },
-                    "children": [],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Button",
-                    "key": "2",
-                    "props": {
-                      "label": "View previous week",
-                      "size": "sm",
-                      "onPress": { "pageState": { "previous": true } }
-                    },
-                    "children": [],
+                    "children": [
+                      {
+                        "type": "Text",
+                        "key": "0",
+                        "props": {
+                          "children": "main · partial",
+                          "role": "secondary",
+                          "tone": "muted"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Spacer",
+                        "key": "1",
+                        "props": {},
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Text",
+                        "key": "2",
+                        "props": {
+                          "children": "Nov 18, 2026 · UTC snapshot",
+                          "role": "secondary",
+                          "tone": "muted"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
                     "slots": {}
                   }
                 ],
@@ -96,86 +144,614 @@
               {
                 "type": "Stack",
                 "key": "1",
-                "props": { "gap": 4, "direction": "column" },
+                "props": { "gap": 3, "direction": "column" },
                 "children": [
                   {
-                    "type": "Stack",
+                    "type": "Surface",
                     "key": "0",
-                    "props": { "direction": "column" },
+                    "props": { "kind": "card", "padding": 5 },
                     "children": [
                       {
-                        "type": "Card",
+                        "type": "Stack",
                         "key": "0",
-                        "props": {
-                          "title": "Cumulative merges",
-                          "subtitle": "PRs merged into main · days 1–7, UTC"
-                        },
+                        "props": { "gap": 3, "direction": "column" },
                         "children": [
                           {
                             "type": "Stack",
                             "key": "0",
-                            "props": { "gap": 2, "direction": "column" },
+                            "props": {
+                              "gap": 2,
+                              "align": "center",
+                              "direction": "row"
+                            },
                             "children": [
                               {
                                 "type": "Text",
                                 "key": "0",
                                 "props": {
-                                  "children": "Nov 12 – 18, 2026 · 215 merged",
-                                  "tone": "info"
+                                  "children": "Cumulative merges",
+                                  "role": "title"
                                 },
                                 "children": [],
                                 "slots": {}
                               },
                               {
+                                "type": "Spacer",
+                                "key": "1",
+                                "props": {},
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
                                 "type": "Text",
+                                "key": "2",
+                                "props": {
+                                  "children": "By weekday",
+                                  "role": "secondary",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "1",
+                            "props": { "gap": 3, "direction": "row" },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "0",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "●",
+                                      "tone": "info"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Text",
+                                    "key": "1",
+                                    "props": {
+                                      "children": "Nov 12 – 18 · 215",
+                                      "role": "control",
+                                      "tone": "neutral"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
                                 "key": "1",
                                 "props": {
-                                  "children": "Nov 5 – 11, 2026 · 24 merged",
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "●",
+                                      "tone": "muted"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Text",
+                                    "key": "1",
+                                    "props": {
+                                      "children": "Nov 5 – 11 · 24",
+                                      "role": "control",
+                                      "tone": "muted"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Canvas",
+                            "key": "2",
+                            "props": {
+                              "label": "Daily cumulative merges. Selected week: 5, 31, 60, 96, 128, 164, 215. Previous week: 0, 0, 0, 0, 2, 20, 24.",
+                              "width": 660,
+                              "height": 156,
+                              "camera": "fixed"
+                            },
+                            "children": [
+                              {
+                                "type": "Canvas.Path",
+                                "key": "area",
+                                "props": {
+                                  "tone": "info",
+                                  "intensity": 0.1,
+                                  "fill": true,
+                                  "d": "M7.0 145.7 L114.7 128.5 L222.3 109.4 L330.0 85.6 L437.7 64.5 L545.3 40.7 L653.0 7.0 L653 149 L7 149 Z"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "grid-7",
+                                "props": {
+                                  "tone": "muted",
+                                  "intensity": 0.22,
+                                  "stroke": true,
+                                  "x1": 0,
+                                  "y1": 7,
+                                  "x2": 660,
+                                  "y2": 7
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "grid-78",
+                                "props": {
+                                  "tone": "muted",
+                                  "intensity": 0.22,
+                                  "stroke": true,
+                                  "x1": 0,
+                                  "y1": 78,
+                                  "x2": 660,
+                                  "y2": 78
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "grid-149",
+                                "props": {
+                                  "tone": "muted",
+                                  "intensity": 0.22,
+                                  "stroke": true,
+                                  "x1": 0,
+                                  "y1": 149,
+                                  "x2": 660,
+                                  "y2": 149
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-muted-7",
+                                "props": {
+                                  "tone": "muted",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 7,
+                                  "y1": 149,
+                                  "x2": 114.66666666666667,
+                                  "y2": 149
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-muted-114.66666666666667",
+                                "props": {
+                                  "tone": "muted",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 114.66666666666667,
+                                  "y1": 149,
+                                  "x2": 222.33333333333334,
+                                  "y2": 149
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-muted-222.33333333333334",
+                                "props": {
+                                  "tone": "muted",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 222.33333333333334,
+                                  "y1": 149,
+                                  "x2": 330,
+                                  "y2": 149
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-muted-330",
+                                "props": {
+                                  "tone": "muted",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 330,
+                                  "y1": 149,
+                                  "x2": 437.6666666666667,
+                                  "y2": 147.67906976744186
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-muted-437.6666666666667",
+                                "props": {
+                                  "tone": "muted",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 437.6666666666667,
+                                  "y1": 147.67906976744186,
+                                  "x2": 545.3333333333334,
+                                  "y2": 135.7906976744186
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-muted-545.3333333333334",
+                                "props": {
+                                  "tone": "muted",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 545.3333333333334,
+                                  "y1": 135.7906976744186,
+                                  "x2": 653,
+                                  "y2": 133.14883720930231
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-info-7",
+                                "props": {
+                                  "tone": "info",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 7,
+                                  "y1": 145.69767441860466,
+                                  "x2": 114.66666666666667,
+                                  "y2": 128.52558139534884
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-info-114.66666666666667",
+                                "props": {
+                                  "tone": "info",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 114.66666666666667,
+                                  "y1": 128.52558139534884,
+                                  "x2": 222.33333333333334,
+                                  "y2": 109.37209302325581
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-info-222.33333333333334",
+                                "props": {
+                                  "tone": "info",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 222.33333333333334,
+                                  "y1": 109.37209302325581,
+                                  "x2": 330,
+                                  "y2": 85.5953488372093
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-info-330",
+                                "props": {
+                                  "tone": "info",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 330,
+                                  "y1": 85.5953488372093,
+                                  "x2": 437.6666666666667,
+                                  "y2": 64.46046511627907
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-info-437.6666666666667",
+                                "props": {
+                                  "tone": "info",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 437.6666666666667,
+                                  "y1": 64.46046511627907,
+                                  "x2": 545.3333333333334,
+                                  "y2": 40.68372093023255
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-info-545.3333333333334",
+                                "props": {
+                                  "tone": "info",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 545.3333333333334,
+                                  "y1": 40.68372093023255,
+                                  "x2": 653,
+                                  "y2": 7
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-muted-7",
+                                "props": {
+                                  "tone": "muted",
+                                  "fill": true,
+                                  "cx": 7,
+                                  "cy": 149,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-muted-114.66666666666667",
+                                "props": {
+                                  "tone": "muted",
+                                  "fill": true,
+                                  "cx": 114.66666666666667,
+                                  "cy": 149,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-muted-222.33333333333334",
+                                "props": {
+                                  "tone": "muted",
+                                  "fill": true,
+                                  "cx": 222.33333333333334,
+                                  "cy": 149,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-muted-330",
+                                "props": {
+                                  "tone": "muted",
+                                  "fill": true,
+                                  "cx": 330,
+                                  "cy": 149,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-muted-437.6666666666667",
+                                "props": {
+                                  "tone": "muted",
+                                  "fill": true,
+                                  "cx": 437.6666666666667,
+                                  "cy": 147.67906976744186,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-muted-545.3333333333334",
+                                "props": {
+                                  "tone": "muted",
+                                  "fill": true,
+                                  "cx": 545.3333333333334,
+                                  "cy": 135.7906976744186,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-muted-653",
+                                "props": {
+                                  "tone": "muted",
+                                  "fill": true,
+                                  "cx": 653,
+                                  "cy": 133.14883720930231,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-info-7",
+                                "props": {
+                                  "tone": "info",
+                                  "fill": true,
+                                  "cx": 7,
+                                  "cy": 145.69767441860466,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-info-114.66666666666667",
+                                "props": {
+                                  "tone": "info",
+                                  "fill": true,
+                                  "cx": 114.66666666666667,
+                                  "cy": 128.52558139534884,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-info-222.33333333333334",
+                                "props": {
+                                  "tone": "info",
+                                  "fill": true,
+                                  "cx": 222.33333333333334,
+                                  "cy": 109.37209302325581,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-info-330",
+                                "props": {
+                                  "tone": "info",
+                                  "fill": true,
+                                  "cx": 330,
+                                  "cy": 85.5953488372093,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-info-437.6666666666667",
+                                "props": {
+                                  "tone": "info",
+                                  "fill": true,
+                                  "cx": 437.6666666666667,
+                                  "cy": 64.46046511627907,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-info-545.3333333333334",
+                                "props": {
+                                  "tone": "info",
+                                  "fill": true,
+                                  "cx": 545.3333333333334,
+                                  "cy": 40.68372093023255,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-info-653",
+                                "props": {
+                                  "tone": "info",
+                                  "fill": true,
+                                  "cx": 653,
+                                  "cy": 7,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "3",
+                            "props": {
+                              "gap": 2,
+                              "align": "center",
+                              "direction": "row"
+                            },
+                            "children": [
+                              {
+                                "type": "Text",
+                                "key": "0",
+                                "props": {
+                                  "children": "Thursday",
+                                  "role": "secondary",
                                   "tone": "muted"
                                 },
                                 "children": [],
                                 "slots": {}
                               },
                               {
-                                "type": "Chart",
+                                "type": "Spacer",
+                                "key": "1",
+                                "props": {},
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Text",
                                 "key": "2",
                                 "props": {
-                                  "kind": "line",
-                                  "label": "Cumulative merged pull requests by day",
-                                  "grid": true,
-                                  "series": [
-                                    {
-                                      "name": "Selected week",
-                                      "tone": "info",
-                                      "points": [
-                                        { "x": 1, "y": 5 },
-                                        { "x": 2, "y": 31 },
-                                        { "x": 3, "y": 60 },
-                                        { "x": 4, "y": 96 },
-                                        { "x": 5, "y": 128 },
-                                        { "x": 6, "y": 164 },
-                                        { "x": 7, "y": 215 }
-                                      ]
-                                    },
-                                    {
-                                      "name": "Previous week",
-                                      "tone": "muted",
-                                      "points": [
-                                        { "x": 1, "y": 0 },
-                                        { "x": 2, "y": 0 },
-                                        { "x": 3, "y": 0 },
-                                        { "x": 4, "y": 0 },
-                                        { "x": 5, "y": 2 },
-                                        { "x": 6, "y": 20 },
-                                        { "x": 7, "y": 24 }
-                                      ]
-                                    }
-                                  ]
+                                  "children": "Wednesday · partial",
+                                  "role": "secondary",
+                                  "tone": "muted"
                                 },
                                 "children": [],
                                 "slots": {}
                               }
                             ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Text",
+                            "key": "4",
+                            "props": {
+                              "children": "Each point is the running total of PRs merged into main.",
+                              "role": "secondary",
+                              "tone": "muted"
+                            },
+                            "children": [],
                             "slots": {}
                           }
                         ],
@@ -185,179 +761,147 @@
                     "slots": {}
                   },
                   {
-                    "type": "Stack",
+                    "type": "Surface",
                     "key": "1",
-                    "props": { "direction": "column" },
+                    "props": { "kind": "card", "padding": 5 },
                     "children": [
                       {
-                        "type": "Card",
+                        "type": "Stack",
                         "key": "0",
-                        "props": {
-                          "title": "How long PRs stayed open",
-                          "subtitle": "Opening to merge · 215 merged pull requests"
-                        },
+                        "props": { "gap": 3, "direction": "column" },
                         "children": [
                           {
-                            "type": "Stack",
+                            "type": "Text",
                             "key": "0",
-                            "props": { "gap": 3, "direction": "column" },
+                            "props": {
+                              "children": "How long PRs stayed open",
+                              "role": "title"
+                            },
+                            "children": [],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Text",
+                            "key": "1",
+                            "props": {
+                              "children": "Elapsed time from opening to merge · 215 merged pull requests",
+                              "role": "secondary",
+                              "tone": "muted"
+                            },
+                            "children": [],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "2",
+                            "props": { "gap": 1, "direction": "column" },
                             "children": [
                               {
-                                "type": "Stack",
+                                "type": "Svg",
                                 "key": "Under 30 min",
-                                "props": { "gap": 1, "direction": "column" },
-                                "children": [
-                                  {
-                                    "type": "Text",
-                                    "key": "0",
-                                    "props": {
-                                      "children": "Under 30 min · 24 PRs",
-                                      "role": "secondary"
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  },
-                                  {
-                                    "type": "Svg",
-                                    "key": "1",
-                                    "props": {
-                                      "xml": "<svg view-box=\"0 0 500 8\" xmlns=\"http://www.w3.org/2000/svg\"><rect fill=\"currentColor\" height=\"8\" rx=\"3\" width=\"127.65957446808511\"/></svg>",
-                                      "label": "Under 30 min · 24 PRs",
-                                      "tone": "done",
-                                      "aspectRatio": 62.5
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  }
-                                ],
+                                "props": {
+                                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" x=\"0\" y=\"68%\"><![CDATA[Under 30 min]]></text><rect fill=\"currentColor\" height=\"60%\" opacity=\"0.83\" rx=\"3\" width=\"13.787234042553191%\" x=\"32%\" y=\"18%\"/><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"end\" x=\"98%\" y=\"68%\"><![CDATA[24]]></text></svg>",
+                                  "label": "Under 30 min, 24 pull requests",
+                                  "tone": "done",
+                                  "aspectRatio": 21
+                                },
+                                "children": [],
                                 "slots": {}
                               },
                               {
-                                "type": "Stack",
+                                "type": "Svg",
                                 "key": "30 min–2 hr",
-                                "props": { "gap": 1, "direction": "column" },
-                                "children": [
-                                  {
-                                    "type": "Text",
-                                    "key": "0",
-                                    "props": {
-                                      "children": "30 min–2 hr · 94 PRs",
-                                      "role": "secondary"
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  },
-                                  {
-                                    "type": "Svg",
-                                    "key": "1",
-                                    "props": {
-                                      "xml": "<svg view-box=\"0 0 500 8\" xmlns=\"http://www.w3.org/2000/svg\"><rect fill=\"currentColor\" height=\"8\" rx=\"3\" width=\"500\"/></svg>",
-                                      "label": "30 min–2 hr · 94 PRs",
-                                      "tone": "done",
-                                      "aspectRatio": 62.5
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  }
-                                ],
+                                "props": {
+                                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" x=\"0\" y=\"68%\"><![CDATA[30 min–2 hr]]></text><rect fill=\"currentColor\" height=\"60%\" opacity=\"0.83\" rx=\"3\" width=\"54%\" x=\"32%\" y=\"18%\"/><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"end\" x=\"98%\" y=\"68%\"><![CDATA[94]]></text></svg>",
+                                  "label": "30 min–2 hr, 94 pull requests",
+                                  "tone": "done",
+                                  "aspectRatio": 21
+                                },
+                                "children": [],
                                 "slots": {}
                               },
                               {
-                                "type": "Stack",
+                                "type": "Svg",
                                 "key": "2–6 hr",
-                                "props": { "gap": 1, "direction": "column" },
-                                "children": [
-                                  {
-                                    "type": "Text",
-                                    "key": "0",
-                                    "props": {
-                                      "children": "2–6 hr · 63 PRs",
-                                      "role": "secondary"
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  },
-                                  {
-                                    "type": "Svg",
-                                    "key": "1",
-                                    "props": {
-                                      "xml": "<svg view-box=\"0 0 500 8\" xmlns=\"http://www.w3.org/2000/svg\"><rect fill=\"currentColor\" height=\"8\" rx=\"3\" width=\"335.1063829787234\"/></svg>",
-                                      "label": "2–6 hr · 63 PRs",
-                                      "tone": "done",
-                                      "aspectRatio": 62.5
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  }
-                                ],
+                                "props": {
+                                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" x=\"0\" y=\"68%\"><![CDATA[2–6 hr]]></text><rect fill=\"currentColor\" height=\"60%\" opacity=\"0.83\" rx=\"3\" width=\"36.191489361702125%\" x=\"32%\" y=\"18%\"/><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"end\" x=\"98%\" y=\"68%\"><![CDATA[63]]></text></svg>",
+                                  "label": "2–6 hr, 63 pull requests",
+                                  "tone": "done",
+                                  "aspectRatio": 21
+                                },
+                                "children": [],
                                 "slots": {}
                               },
                               {
-                                "type": "Stack",
+                                "type": "Svg",
                                 "key": "6–24 hr",
-                                "props": { "gap": 1, "direction": "column" },
-                                "children": [
-                                  {
-                                    "type": "Text",
-                                    "key": "0",
-                                    "props": {
-                                      "children": "6–24 hr · 28 PRs",
-                                      "role": "secondary"
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  },
-                                  {
-                                    "type": "Svg",
-                                    "key": "1",
-                                    "props": {
-                                      "xml": "<svg view-box=\"0 0 500 8\" xmlns=\"http://www.w3.org/2000/svg\"><rect fill=\"currentColor\" height=\"8\" rx=\"3\" width=\"148.93617021276594\"/></svg>",
-                                      "label": "6–24 hr · 28 PRs",
-                                      "tone": "done",
-                                      "aspectRatio": 62.5
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  }
-                                ],
+                                "props": {
+                                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" x=\"0\" y=\"68%\"><![CDATA[6–24 hr]]></text><rect fill=\"currentColor\" height=\"60%\" opacity=\"0.83\" rx=\"3\" width=\"16.085106382978722%\" x=\"32%\" y=\"18%\"/><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"end\" x=\"98%\" y=\"68%\"><![CDATA[28]]></text></svg>",
+                                  "label": "6–24 hr, 28 pull requests",
+                                  "tone": "done",
+                                  "aspectRatio": 21
+                                },
+                                "children": [],
                                 "slots": {}
                               },
                               {
-                                "type": "Stack",
+                                "type": "Svg",
                                 "key": "24 hr or more",
-                                "props": { "gap": 1, "direction": "column" },
-                                "children": [
-                                  {
-                                    "type": "Text",
-                                    "key": "0",
-                                    "props": {
-                                      "children": "24 hr or more · 6 PRs",
-                                      "role": "secondary"
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  },
-                                  {
-                                    "type": "Svg",
-                                    "key": "1",
-                                    "props": {
-                                      "xml": "<svg view-box=\"0 0 500 8\" xmlns=\"http://www.w3.org/2000/svg\"><rect fill=\"currentColor\" height=\"8\" rx=\"3\" width=\"31.914893617021278\"/></svg>",
-                                      "label": "24 hr or more · 6 PRs",
-                                      "tone": "done",
-                                      "aspectRatio": 62.5
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  }
-                                ],
+                                "props": {
+                                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" x=\"0\" y=\"68%\"><![CDATA[24 hr or more]]></text><rect fill=\"currentColor\" height=\"60%\" opacity=\"0.83\" rx=\"3\" width=\"3.4468085106382977%\" x=\"32%\" y=\"18%\"/><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"end\" x=\"98%\" y=\"68%\"><![CDATA[6]]></text></svg>",
+                                  "label": "24 hr or more, 6 pull requests",
+                                  "tone": "done",
+                                  "aspectRatio": 21
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Svg",
+                            "key": "3",
+                            "props": {
+                              "xml": "<svg view-box=\"0 0 500 1\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M0 .5H500\" opacity=\"0.35\" stroke=\"currentColor\"/></svg>",
+                              "label": "Section divider",
+                              "tone": "muted"
+                            },
+                            "children": [],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "4",
+                            "props": {
+                              "gap": 2,
+                              "align": "center",
+                              "direction": "row"
+                            },
+                            "children": [
+                              {
+                                "type": "Text",
+                                "key": "0",
+                                "props": {
+                                  "children": "Median · 102 min",
+                                  "role": "control"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Spacer",
+                                "key": "1",
+                                "props": {},
+                                "children": [],
                                 "slots": {}
                               },
                               {
                                 "type": "Text",
-                                "key": "5",
+                                "key": "2",
                                 "props": {
-                                  "children": "Median 1h 42m · 90th percentile 15h 28m",
-                                  "role": "secondary"
+                                  "children": "90th percentile · 15.5 hr",
+                                  "role": "control"
                                 },
                                 "children": [],
                                 "slots": {}
@@ -374,15 +918,15 @@
                   {
                     "type": "Grid",
                     "key": "2",
-                    "props": { "columns": 2, "gap": 3 },
+                    "props": {
+                      "columns": { "compact": 1, "medium": 3, "wide": 3 },
+                      "gap": 3
+                    },
                     "children": [
                       {
-                        "type": "Card",
+                        "type": "Surface",
                         "key": "0",
-                        "props": {
-                          "title": "Merged PRs",
-                          "density": "compact"
-                        },
+                        "props": { "kind": "card", "padding": 4 },
                         "children": [
                           {
                             "type": "Stack",
@@ -392,13 +936,28 @@
                               {
                                 "type": "Text",
                                 "key": "0",
-                                "props": { "children": "215", "role": "title" },
+                                "props": {
+                                  "children": "Merged to main",
+                                  "role": "secondary",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Svg",
+                                "key": "1",
+                                "props": {
+                                  "xml": "<svg view-box=\"0 0 120 38\" xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"31\" font-weight=\"bold\" x=\"0\" y=\"31\"><![CDATA[215]]></text></svg>",
+                                  "label": "215",
+                                  "width": 120
+                                },
                                 "children": [],
                                 "slots": {}
                               },
                               {
                                 "type": "Text",
-                                "key": "1",
+                                "key": "2",
                                 "props": {
                                   "children": "Previously 24",
                                   "role": "secondary",
@@ -414,12 +973,9 @@
                         "slots": {}
                       },
                       {
-                        "type": "Card",
+                        "type": "Surface",
                         "key": "1",
-                        "props": {
-                          "title": "Average open to merge",
-                          "density": "compact"
-                        },
+                        "props": { "kind": "card", "padding": 4 },
                         "children": [
                           {
                             "type": "Stack",
@@ -430,55 +986,27 @@
                                 "type": "Text",
                                 "key": "0",
                                 "props": {
-                                  "children": "4h 27m",
-                                  "role": "title"
-                                },
-                                "children": [],
-                                "slots": {}
-                              },
-                              {
-                                "type": "Text",
-                                "key": "1",
-                                "props": {
-                                  "children": "Previously 1h 29m",
+                                  "children": "Median open to merge",
                                   "role": "secondary",
                                   "tone": "muted"
                                 },
                                 "children": [],
                                 "slots": {}
-                              }
-                            ],
-                            "slots": {}
-                          }
-                        ],
-                        "slots": {}
-                      },
-                      {
-                        "type": "Card",
-                        "key": "2",
-                        "props": {
-                          "title": "Median open to merge",
-                          "density": "compact"
-                        },
-                        "children": [
-                          {
-                            "type": "Stack",
-                            "key": "0",
-                            "props": { "gap": 1, "direction": "column" },
-                            "children": [
+                              },
                               {
-                                "type": "Text",
-                                "key": "0",
+                                "type": "Svg",
+                                "key": "1",
                                 "props": {
-                                  "children": "1h 42m",
-                                  "role": "title"
+                                  "xml": "<svg view-box=\"0 0 120 38\" xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"31\" font-weight=\"bold\" x=\"0\" y=\"31\"><![CDATA[102 min]]></text></svg>",
+                                  "label": "102 min",
+                                  "width": 120
                                 },
                                 "children": [],
                                 "slots": {}
                               },
                               {
                                 "type": "Text",
-                                "key": "1",
+                                "key": "2",
                                 "props": {
                                   "children": "Previously 41 min",
                                   "role": "secondary",
@@ -494,12 +1022,9 @@
                         "slots": {}
                       },
                       {
-                        "type": "Card",
-                        "key": "3",
-                        "props": {
-                          "title": "Open pull requests",
-                          "density": "compact"
-                        },
+                        "type": "Surface",
+                        "key": "2",
+                        "props": { "kind": "card", "padding": 4 },
                         "children": [
                           {
                             "type": "Stack",
@@ -509,15 +1034,30 @@
                               {
                                 "type": "Text",
                                 "key": "0",
-                                "props": { "children": "5", "role": "title" },
+                                "props": {
+                                  "children": "Open pull requests",
+                                  "role": "secondary",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Svg",
+                                "key": "1",
+                                "props": {
+                                  "xml": "<svg view-box=\"0 0 120 38\" xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"31\" font-weight=\"bold\" x=\"0\" y=\"31\"><![CDATA[5]]></text></svg>",
+                                  "label": "5",
+                                  "width": 120
+                                },
                                 "children": [],
                                 "slots": {}
                               },
                               {
                                 "type": "Text",
-                                "key": "1",
+                                "key": "2",
                                 "props": {
-                                  "children": "Drafts: 1 · repository total now",
+                                  "children": "Including drafts · 1",
                                   "role": "secondary",
                                   "tone": "muted"
                                 },
@@ -534,21 +1074,275 @@
                     "slots": {}
                   },
                   {
-                    "type": "Stack",
+                    "type": "Surface",
                     "key": "3",
-                    "props": { "direction": "column" },
+                    "props": { "kind": "card", "padding": 5 },
                     "children": [
                       {
-                        "type": "Card",
+                        "type": "Stack",
                         "key": "0",
-                        "props": {
-                          "title": "GitHub Actions timing",
-                          "subtitle": "PR workflows created in the selected week"
-                        },
+                        "props": { "gap": 3, "direction": "column" },
                         "children": [
                           {
-                            "type": "Stack",
+                            "type": "Text",
                             "key": "0",
+                            "props": {
+                              "children": "How capabilities evolved",
+                              "role": "title"
+                            },
+                            "children": [],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "Feed",
+                            "props": { "gap": 3, "direction": "column" },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "Feed",
+                                "props": { "gap": 2, "direction": "column" },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Feed",
+                                      "role": "control"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Grid",
+                                    "key": "1",
+                                    "props": { "columns": 2, "gap": 4 },
+                                    "children": [
+                                      {
+                                        "type": "Stack",
+                                        "key": "0",
+                                        "props": {
+                                          "gap": 1,
+                                          "direction": "column"
+                                        },
+                                        "children": [
+                                          {
+                                            "type": "Text",
+                                            "key": "0",
+                                            "props": {
+                                              "children": "Nov 12 · #2003",
+                                              "role": "secondary",
+                                              "tone": "muted"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          },
+                                          {
+                                            "type": "Text",
+                                            "key": "1",
+                                            "props": {
+                                              "children": "Fit the Feed's pipe tables to the content column on wide windows",
+                                              "role": "control"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          }
+                                        ],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "Stack",
+                                        "key": "1",
+                                        "props": {
+                                          "gap": 1,
+                                          "direction": "column"
+                                        },
+                                        "children": [
+                                          {
+                                            "type": "Text",
+                                            "key": "0",
+                                            "props": {
+                                              "children": "→ Nov 18 · #2442",
+                                              "role": "secondary",
+                                              "tone": "muted"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          },
+                                          {
+                                            "type": "Text",
+                                            "key": "1",
+                                            "props": {
+                                              "children": "Shrink Agent role glyphs in the Feed",
+                                              "role": "control"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          }
+                                        ],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "Inspector",
+                            "props": { "gap": 3, "direction": "column" },
+                            "children": [
+                              {
+                                "type": "Svg",
+                                "key": "0",
+                                "props": {
+                                  "xml": "<svg view-box=\"0 0 500 1\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M0 .5H500\" opacity=\"0.35\" stroke=\"currentColor\"/></svg>",
+                                  "label": "Section divider",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "Inspector",
+                                "props": { "gap": 2, "direction": "column" },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Inspector",
+                                      "role": "control"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Grid",
+                                    "key": "1",
+                                    "props": { "columns": 2, "gap": 4 },
+                                    "children": [
+                                      {
+                                        "type": "Stack",
+                                        "key": "0",
+                                        "props": {
+                                          "gap": 1,
+                                          "direction": "column"
+                                        },
+                                        "children": [
+                                          {
+                                            "type": "Text",
+                                            "key": "0",
+                                            "props": {
+                                              "children": "Nov 13 · #2045",
+                                              "role": "secondary",
+                                              "tone": "muted"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          },
+                                          {
+                                            "type": "Text",
+                                            "key": "1",
+                                            "props": {
+                                              "children": "Let a drag of the Inspector narrow the page to 200 before it expands",
+                                              "role": "control"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          }
+                                        ],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "Stack",
+                                        "key": "1",
+                                        "props": {
+                                          "gap": 1,
+                                          "direction": "column"
+                                        },
+                                        "children": [
+                                          {
+                                            "type": "Text",
+                                            "key": "0",
+                                            "props": {
+                                              "children": "→ Nov 18 · #2436",
+                                              "role": "secondary",
+                                              "tone": "muted"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          },
+                                          {
+                                            "type": "Text",
+                                            "key": "1",
+                                            "props": {
+                                              "children": "Show Agent model in Inspector metadata",
+                                              "role": "control"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          }
+                                        ],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Text",
+                    "key": "4",
+                    "props": {
+                      "children": "Your contribution · 215 of 215 merged PRs authored by milad-alizadeh. Prior period: Nov 5 – 11.",
+                      "role": "secondary",
+                      "tone": "muted"
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Card",
+                    "key": "5",
+                    "props": {
+                      "title": "GitHub Actions timing",
+                      "subtitle": "PR workflows created in the selected week"
+                    },
+                    "children": [
+                      {
+                        "type": "Stack",
+                        "key": "0",
+                        "props": { "gap": 2, "direction": "column" },
+                        "children": [
+                          {
+                            "type": "Text",
+                            "key": "0",
+                            "props": {
+                              "children": "Average PR time · 4h 27m (previously 1h 29m)",
+                              "role": "control"
+                            },
+                            "children": [],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "1",
                             "props": { "gap": 2, "direction": "column" },
                             "children": [
                               {
@@ -614,115 +1408,6 @@
                         "slots": {}
                       }
                     ],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Stack",
-                    "key": "4",
-                    "props": { "direction": "column" },
-                    "children": [
-                      {
-                        "type": "Card",
-                        "key": "0",
-                        "props": {
-                          "title": "What changed",
-                          "subtitle": "Latest merges into the default branch in each week"
-                        },
-                        "children": [
-                          {
-                            "type": "Stack",
-                            "key": "0",
-                            "props": { "gap": 4, "direction": "column" },
-                            "children": [
-                              {
-                                "type": "Stack",
-                                "key": "0",
-                                "props": { "gap": 2, "direction": "column" },
-                                "children": [
-                                  {
-                                    "type": "Text",
-                                    "key": "0",
-                                    "props": {
-                                      "children": "Previous week",
-                                      "role": "control"
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  },
-                                  {
-                                    "type": "Text",
-                                    "key": "1994",
-                                    "props": {
-                                      "children": "2026-11-11 · #1994  Sweep the Feed's shimmer without a mask, so no band shows in the Composer's glass"
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  },
-                                  {
-                                    "type": "Text",
-                                    "key": "1993",
-                                    "props": {
-                                      "children": "2026-11-11 · #1993  Move the content aside for the Workbench where the gutters together hold it"
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  }
-                                ],
-                                "slots": {}
-                              },
-                              {
-                                "type": "Stack",
-                                "key": "1",
-                                "props": { "gap": 2, "direction": "column" },
-                                "children": [
-                                  {
-                                    "type": "Text",
-                                    "key": "0",
-                                    "props": {
-                                      "children": "Selected week",
-                                      "role": "control"
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  },
-                                  {
-                                    "type": "Text",
-                                    "key": "2442",
-                                    "props": {
-                                      "children": "2026-11-18 · #2442  Shrink Agent role glyphs in the Feed"
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  },
-                                  {
-                                    "type": "Text",
-                                    "key": "2430",
-                                    "props": {
-                                      "children": "2026-11-18 · #2430  Tighten Feed spacing between Agent text and activity"
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  }
-                                ],
-                                "slots": {}
-                              }
-                            ],
-                            "slots": {}
-                          }
-                        ],
-                        "slots": {}
-                      }
-                    ],
-                    "slots": {}
-                  },
-                  {
-                    "type": "Text",
-                    "key": "5",
-                    "props": {
-                      "children": "Your contribution · 215 of 215 merged PRs authored by milad-alizadeh.",
-                      "role": "secondary"
-                    },
-                    "children": [],
                     "slots": {}
                   }
                 ],

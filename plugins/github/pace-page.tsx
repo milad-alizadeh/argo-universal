@@ -4,22 +4,18 @@ import {
   Screen,
   ScrollView,
   Stack,
-  Text,
   type Argo,
   type LoaderInput,
   type PageTo,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
-import { paceData, period, type Pace } from './pace-data';
+import { paceData, type Pace } from './pace-data';
+import { controls, initial, type Filters as State } from './pace-filters';
 import { days, dayMs, weekStart } from './pace-metrics';
 import { picker, root, type Project } from './pace-picker';
 import type { Target } from './pace-search';
 import { PaceView } from './pace-view';
 import { repositoryOfOrigin } from './pull-reference';
-
-type State = { previous: boolean };
-
-const initial: State = { previous: false };
 
 type Result = { data: Pace } | { message: string };
 
@@ -68,45 +64,7 @@ async function loadProject(
   };
 }
 
-function weekButton(previous: boolean, to: PageTo<State>): JSX.Element {
-  const label = previous ? 'View current week' : 'View previous week';
-
-  return (
-    <Button size="sm" label={label} onPress={to.set({ previous: !previous })} />
-  );
-}
-
-function rangeLabel(data: Pace, previous: boolean): string {
-  return (
-    period(data.target.start) + (previous ? ' UTC' : ' UTC · today in progress')
-  );
-}
-
 type Input = { state: State };
-
-function repoButton(data: Pace, to: PageTo<State>): JSX.Element {
-  return (
-    <Button
-      label={data.target.repository}
-      onPress={to.go(root)}
-      variant="secondary"
-    />
-  );
-}
-
-function controls(
-  data: Pace,
-  previous: boolean,
-  to: PageTo<State>,
-): JSX.Element {
-  return (
-    <Stack direction="column" gap={2}>
-      {repoButton(data, to)}
-      <Text>{rangeLabel(data, previous)}</Text>
-      {weekButton(previous, to)}
-    </Stack>
-  );
-}
 
 function unavailable(message: string, to: PageTo<State>): JSX.Element {
   return (
@@ -124,8 +82,8 @@ function dashboard(
 ): JSX.Element {
   return 'data' in result ? (
     <Stack direction="column" gap={4}>
-      {controls(result.data, state.previous, to)}
-      <PaceView data={result.data} />
+      {controls(result.data, state, to)}
+      <PaceView data={result.data} partial={!state.previous} />
     </Stack>
   ) : (
     unavailable(result.message, to)

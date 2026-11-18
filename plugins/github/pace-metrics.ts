@@ -1,3 +1,5 @@
+import { milestones, type Lane } from './pace-milestones';
+
 export const days = 7;
 
 const hours = 24;
@@ -87,6 +89,7 @@ export type Week = {
   total: number;
   own: number;
   recent: Merge[];
+  lanes: Lane[];
   points: ReturnType<typeof running>;
   bins: number[];
   average: number | null;
@@ -117,6 +120,7 @@ export function summarize(all: Merge[], start: number, viewer: string): Week {
     total: merges.length,
     own: merges.filter((pr) => pr.author === viewer).length,
     recent: merges.slice(0, recentLimit),
+    lanes: milestones(merges),
     points: running(merges, start),
     bins: histogram(times),
     average: mean(times),

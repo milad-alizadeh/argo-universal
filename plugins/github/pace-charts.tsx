@@ -1,88 +1,155 @@
-import { Card, Chart, Svg, Stack, Text } from '@argo/plugin-kit';
+import { Spacer, Stack, Surface, Svg, Text } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { period, type Pace } from './pace-data';
-import { bucketNames, duration } from './pace-metrics';
+import { bucketNames, days, dayMs, type Week } from './pace-metrics';
+import { Plot } from './pace-plot';
 
-function lineChart(data: Pace): JSX.Element {
+const weekday = new Intl.DateTimeFormat('en', {
+  weekday: 'long',
+  timeZone: 'UTC',
+});
+
+export function panel(children: JSX.Element): JSX.Element {
   return (
-    <Chart
-      label="Cumulative merged pull requests by day"
-      kind="line"
-      grid
-      series={[
-        { name: 'Selected week', tone: 'info', points: data.current.points },
-        { name: 'Previous week', tone: 'muted', points: data.previous.points },
-      ]}
-    />
+    <Surface kind="card" padding={5}>
+      {children}
+    </Surface>
   );
 }
 
-export function Trajectory({ data }: { data: Pace }): JSX.Element {
-  const { current, previous, target, prior } = data;
-
+export function edges(left: JSX.Element, right: JSX.Element): JSX.Element {
   return (
-    <Card
-      title="Cumulative merges"
-      subtitle={`PRs merged into ${data.branch} · days 1–7, UTC`}
-    >
-      <Stack direction="column" gap={2}>
-        <Text tone="info">{`${period(target.start)} · ${current.total} merged`}</Text>
-        <Text tone="muted">{`${prior} · ${previous.total} merged`}</Text>
-        {lineChart(data)}
-      </Stack>
-    </Card>
-  );
-}
-
-const barWidth = 500;
-
-const barHeight = 8;
-
-function bar(count: number, max: number, label: string): JSX.Element {
-  const width = (barWidth * count) / max;
-  const xml = `<svg viewBox="0 0 ${barWidth} ${barHeight}" xmlns="http://www.w3.org/2000/svg"><rect width="${width}" height="${barHeight}" rx="3" fill="currentColor"/></svg>`;
-
-  return (
-    <Svg
-      xml={xml}
-      label={label}
-      tone="done"
-      aspectRatio={barWidth / barHeight}
-    />
-  );
-}
-
-function bucket(name: string, count: number, max: number): JSX.Element {
-  const label = `${name} · ${count} PRs`;
-
-  return (
-    <Stack key={name} direction="column" gap={1}>
-      <Text role="secondary">{label}</Text>
-      {bar(count, max, label)}
+    <Stack direction="row" align="center" gap={2}>
+      {left}
+      <Spacer />
+      {right}
     </Stack>
   );
 }
 
-function bucketBars(bins: number[]): JSX.Element[] {
-  return bucketNames.map((name, i) =>
-    bucket(name, bins[i] ?? 0, Math.max(1, ...bins)),
+export const note = (label: string): JSX.Element => (
+  <Text role="secondary" tone="muted">
+    {label}
+  </Text>
+);
+
+export const heading = (label: string): JSX.Element => (
+  <Text role="title">{label}</Text>
+);
+
+function key(label: string, tone: 'info' | 'muted'): JSX.Element {
+  return (
+    <Stack direction="row" gap={1} align="center">
+      <Text tone={tone}>●</Text>
+      <Text role="control" tone={tone === 'info' ? 'neutral' : 'muted'}>
+        {label}
+      </Text>
+    </Stack>
   );
 }
 
-export function Distribution({ data }: { data: Pace }): JSX.Element {
-  const { bins, total, median, p90 } = data.current;
+function legend(data: Pace): JSX.Element {
+  return (
+    <Stack direction="row" gap={3}>
+      {key(`${period(data.target.start)} · ${data.current.total}`, 'info')}
+      {key(`${data.prior} · ${data.previous.total}`, 'muted')}
+    </Stack>
+  );
+}
 
-  const bars = bucketBars(bins);
+function bounds(start: number, partial: boolean): JSX.Element {
+  const end = weekday.format(start + (days - 1) * dayMs);
+
+  return edges(
+    note(weekday.format(start)),
+    note(partial ? `${end} · partial` : end),
+  );
+}
+
+const chartTitle = 'Cumulative merges';
+
+const alignment = 'By weekday';
+
+export function trajectory(data: Pace, partial: boolean): JSX.Element {
+  const title = edges(heading(chartTitle), note(alignment));
+  const caption = `Each point is the running total of PRs merged into ${data.branch}.`;
+
+  return panel(
+    <Stack direction="column" gap={3}>
+      {title}
+      {legend(data)}
+      <Plot data={data} />
+      {bounds(data.target.start, partial)}
+      {note(caption)}
+    </Stack>,
+  );
+}
+
+const barShare = 54;
+
+const rowRatio = 21;
+
+function bucket(name: string, count: number, max: number): JSX.Element {
+  const share = (barShare * count) / max;
+  const xml = `<svg xmlns="http://www.w3.org/2000/svg"><text x="0" y="68%" font-family="sans-serif" font-size="13" fill="currentColor">${name}</text><rect x="32%" y="18%" width="${share}%" height="60%" rx="3" fill="currentColor" opacity=".83"/><text x="98%" y="68%" font-family="sans-serif" font-size="13" font-weight="bold" text-anchor="end" fill="currentColor">${count}</text></svg>`;
 
   return (
-    <Card
-      title="How long PRs stayed open"
-      subtitle={`Opening to merge · ${total} merged pull requests`}
-    >
-      <Stack direction="column" gap={3}>
-        {bars}
-        <Text role="secondary">{`Median ${duration(median)} · 90th percentile ${duration(p90)}`}</Text>
-      </Stack>
-    </Card>
+    <Svg
+      tone="done"
+      key={name}
+      xml={xml}
+      label={`${name}, ${count} pull requests`}
+      aspectRatio={rowRatio}
+    />
   );
+}
+
+const hourMinutes = 60;
+
+export const minutes = (n: number | null): string =>
+  n === null ? '—' : `${Math.round(n)} min`;
+
+function summary(week: Week): JSX.Element {
+  const tail =
+    week.p90 === null ? '—' : `${(week.p90 / hourMinutes).toFixed(1)} hr`;
+
+  return edges(
+    <Text role="control">{`Median · ${minutes(week.median)}`}</Text>,
+    <Text role="control">{`90th percentile · ${tail}`}</Text>,
+  );
+}
+
+function histogram(week: Week): JSX.Element {
+  const max = Math.max(1, ...week.bins);
+
+  const rows = bucketNames.map((label, i) =>
+    bucket(label, week.bins[i] ?? 0, max),
+  );
+
+  return (
+    <Stack direction="column" gap={1}>
+      {rows}
+    </Stack>
+  );
+}
+
+export function distribution(week: Week): JSX.Element {
+  const caption = `Elapsed time from opening to merge · ${week.total} merged pull requests`;
+
+  return panel(
+    <Stack direction="column" gap={3}>
+      {heading('How long PRs stayed open')}
+      {note(caption)}
+      {histogram(week)}
+      {rule()}
+      {summary(week)}
+    </Stack>,
+  );
+}
+
+export function rule(): JSX.Element {
+  const xml =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 1"><path d="M0 .5H500" stroke="currentColor" opacity=".35"/></svg>';
+
+  return <Svg xml={xml} tone="muted" label="Section divider" />;
 }

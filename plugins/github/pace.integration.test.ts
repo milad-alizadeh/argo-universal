@@ -111,8 +111,16 @@ it('opens the selected repository and compares merges, authorship and CI timing 
     '15 min average elapsed · 3 min to start',
   );
   expect(JSON.stringify(page.tree)).toContain('Type check · 11 min');
-  const previous = await page.press('View previous week');
-  expect(previous.findText('View current week')).toBeDefined();
+  const options = await page.press('Choose week');
+
+  const label = new Intl.DateTimeFormat('en', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  }).formatRange(new Date('1969-12-19'), new Date('1969-12-25'));
+
+  const previous = await options.press(label);
+  expect(previous.findText(label)).toBeDefined();
   expect(
     serviceFixture.requests.some((r) =>
       r.body.includes('repo:owner/repository'),
