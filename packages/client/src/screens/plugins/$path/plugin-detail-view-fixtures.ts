@@ -29,3 +29,5 @@ export const jiraBoard = { root: WireNode.parse(jiraBoards.board) };
 export const jiraBoardMoving = { root: WireNode.parse(jiraBoards.pending) };
 
 export const jiraBoardEmpty = { root: WireNode.parse(jiraBoards.empty) };
+
+export const loading = { root: null };

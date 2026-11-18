@@ -6,6 +6,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { PluginDetailView } from './plugin-detail-view';
 import {
+  loading,
   issueFilters,
   issueFiltersUnavailable,
   jiraBoard,
@@ -73,3 +74,5 @@ export const JiraBoardMoving: StoryObj<typeof meta> = {
 export const JiraBoardEmpty: StoryObj<typeof meta> = {
   args: jiraBoardEmpty,
 };
+
+export const Loading: StoryObj<typeof meta> = { args: loading };
