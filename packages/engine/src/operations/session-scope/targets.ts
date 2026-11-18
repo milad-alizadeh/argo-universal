@@ -153,6 +153,7 @@ const targetRules = {
   'voice.getSettings': global,
   'voice.setSettings': global,
   'voice.end': callerSessionParam,
+  'voice.hangUp': callerSessionParam,
 } satisfies TargetRules;
 
 const targets: TargetRules = targetRules;

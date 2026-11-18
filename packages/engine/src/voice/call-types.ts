@@ -1,4 +1,4 @@
-import type { VoiceCallEnd, VoicePartial } from '@repo/contracts';
+import type { VoiceCallEnd, VoiceLimit, VoicePartial } from '@repo/contracts';
 import type {
   VoiceDelivery,
   VoiceProvider,
@@ -32,6 +32,8 @@ export type VoiceCallEvent =
   | { type: 'call.failed'; message: string }
   | { type: 'call.sessionGone'; reason: SessionGoneReason }
   | { type: 'call.appDisconnected' }
+  // Whether a Turn the call started is running.
+  | { type: 'call.turns'; running: boolean }
   | { type: 'provider.event'; event: VoiceProviderEvent }
   | { type: 'voice.say'; say: VoiceSay };
 
@@ -52,6 +54,8 @@ export interface VoiceCallInput {
   provider: VoiceProvider | null;
   // What the voice is told about a Session before it speaks.
   briefing: (sessionId: string) => string;
+  // How long a call may pass without speech before it ends by itself, in milliseconds.
+  idleMs: number;
 }
 
 export interface RunningCall {
@@ -61,6 +65,8 @@ export interface RunningCall {
   voice?: string;
   connection?: AbortSignal;
   answer: string | null;
+  // What the provider last reported of its allowance.
+  limit?: VoiceLimit;
 }
 
 export interface EndedCall {
@@ -76,6 +82,8 @@ export interface VoiceCallContext extends VoiceCallInput {
   ended: EndedCall | null;
   // Why the last call failed, for the Notice that says so.
   failure: string | null;
+  // Whether a Turn the call started is running; an idle call never ends while one is.
+  turnRunning: boolean;
   // Words being said now that may still change; live state, never stored.
   partials: VoicePartial[];
 }

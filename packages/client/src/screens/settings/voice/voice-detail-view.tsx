@@ -81,8 +81,9 @@ const providerOptions = (
 ): React.ComponentProps<typeof FieldGroup.Picker>['options'] =>
   settings.providers.map((provider) => ({
     value: provider.id,
-    label: provider.label,
-    subtitle: provider.experimental ? 'Experimental' : undefined,
+    label: provider.experimental
+      ? `${provider.label} (experimental)`
+      : provider.label,
   }));
 
 function providerSection(props: VoiceDetailViewProps): React.JSX.Element {

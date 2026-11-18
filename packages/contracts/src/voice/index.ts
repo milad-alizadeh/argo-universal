@@ -10,6 +10,8 @@ export type VoiceCallStatus = z.infer<typeof VoiceCallStatus>;
 export const VoiceCallEnd = z.enum([
   'person',
   'agent',
+  'idle',
+  'limit-reached',
   'session-closed',
   'session-archived',
   'app-disconnected',
@@ -22,11 +24,21 @@ export type VoiceCallEnd = z.infer<typeof VoiceCallEnd>;
 
 const voiceSessionId = sessionColumns.shape.id;
 
+// The provider's allowance, reported while the call runs: how much is left as a fraction from 0 to 1.
+export const VoiceLimit = z.strictObject({
+  remaining: z.number().min(0).max(1),
+  resetsAt: z.string().min(1).optional(),
+});
+
+export type VoiceLimit = z.infer<typeof VoiceLimit>;
+
 // The one Voice call a Server runs, and the Session it is attached to for its whole life.
 export const VoiceCall = z.strictObject({
   callId: z.string().min(1),
   sessionId: voiceSessionId,
   status: VoiceCallStatus,
+  // Set once the provider reports its allowance running low; absent until then.
+  limit: VoiceLimit.optional(),
 });
 
 export type VoiceCall = z.infer<typeof VoiceCall>;

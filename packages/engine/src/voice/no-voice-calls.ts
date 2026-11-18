@@ -1,5 +1,6 @@
 import type { VoiceStatus } from '@repo/contracts';
-import { unavailable, type VoiceCallsPort } from './voice-calls';
+import { unavailable } from './unavailable';
+import type { VoiceCallsPort } from './voice-calls';
 
 const notAvailable = 'Voice calls are not available';
 
@@ -16,6 +17,9 @@ export const noVoiceCalls: VoiceCallsPort = {
   status: () => Promise.resolve(noStatus),
   start: () => Promise.reject(unavailable(notAvailable)),
   end: () => ({ ended: false }),
+  hangUp: () => {
+    throw unavailable('The Session has no Voice call');
+  },
   attach: () => {},
   settings: () =>
     Promise.resolve({

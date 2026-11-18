@@ -1,3 +1,4 @@
+import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
@@ -74,8 +75,8 @@ export const LabelsAnExperimentalProvider: Story = {
       canvas.getByRole('button', { name: /^Voice provider/ }),
     );
     await expect(
-      await opened(canvasElement).findByText('Experimental'),
-    ).toBeVisible();
+      await opened(canvasElement).findAllByText(/GPT-Live.*experimental/i),
+    ).toHaveLength(2);
   },
 };
 
@@ -88,7 +89,7 @@ export const LeavesAStableProviderUnlabelled: Story = {
     await expect(
       await opened(canvasElement).findAllByText('GPT-Live'),
     ).toHaveLength(2);
-    await expect(opened(canvasElement).queryByText('Experimental')).toBeNull();
+    await expect(opened(canvasElement).queryByText(/experimental/i)).toBeNull();
   },
 };
 
@@ -97,7 +98,9 @@ export const ChoosesTheSecondVoice: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: /^Voice(?! provider)/ }),
     );
-    await userEvent.click(await opened(canvasElement).findByText('Marin'));
+    const marin = await opened(canvasElement).findByText('Marin');
+    await settleOverlays(marin);
+    await userEvent.click(marin);
     await expect(args.onVoiceChange).toHaveBeenCalledWith('marin');
     await expect(args.onProviderChange).not.toHaveBeenCalled();
   },

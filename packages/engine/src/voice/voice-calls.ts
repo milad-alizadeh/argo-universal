@@ -8,15 +8,15 @@ import type {
   VoiceStartOutput,
   VoiceStatus,
 } from '@repo/contracts';
-import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
-import { sessionActorId } from '../sessions';
-import type { VoiceCallEvent } from './call-types';
+import type { RunningCall, VoiceCallEvent } from './call-types';
 import type { VoiceCallActorRef } from './call.machine';
 import { Changes } from './changes';
 import type { VoiceProvider } from './provider';
 import type { VoiceSessions } from './session-link';
+import { unavailable } from './unavailable';
 import { answerOf, startSettled } from './voice-call-answer';
+import { requireRoom } from './voice-call-room';
 import { VoiceChoices } from './voice-choices';
 import type { VoiceSettingsStore } from './voice-settings';
 
@@ -30,6 +30,8 @@ export interface VoiceCallsPort {
     connection?: AbortSignal,
   ) => Promise<VoiceStartOutput>;
   end: (sessionId?: string) => VoiceEndOutput;
+  // An Agent ends its Session's call; refused when the Session has no call.
+  hangUp: (sessionId?: string) => VoiceEndOutput;
   watch: (signal: AbortSignal) => AsyncGenerator<VoiceStatus>;
   // Gives the call the Sessions it sends Prompts to and listens to.
   attach: (sessions: VoiceSessions) => void;
@@ -38,8 +40,10 @@ export interface VoiceCallsPort {
   changeSettings: (change: VoiceSettingsChange) => Promise<VoiceSettings>;
 }
 
-export const unavailable = (message: string): TRPCError =>
-  new TRPCError({ code: 'PRECONDITION_FAILED', message });
+const namesSession = (
+  sessionId: string | undefined,
+  call: RunningCall,
+): boolean => sessionId === undefined || sessionId === call.sessionId;
 
 // The Voice call machine behind its Operations: it checks what can be refused before the machine is asked.
 export class VoiceCalls implements VoiceCallsPort {
@@ -56,7 +60,7 @@ export class VoiceCalls implements VoiceCallsPort {
     const { call, ended, partials } = this.actor.getSnapshot().context;
 
     return {
-      call: call && this.callOf(call.callId, call.sessionId),
+      call: call && this.callOf(call),
       ended,
       partials,
       availability: await this.availability(),
@@ -91,6 +95,28 @@ export class VoiceCalls implements VoiceCallsPort {
     return { ended: running && this.actor.getSnapshot().context.call === null };
   }
 
+  public hangUp(sessionId?: string): VoiceEndOutput {
+    const call = this.callOfSession(sessionId);
+
+    this.actor.send({
+      type: 'call.end',
+      reason: 'agent',
+      sessionId: call.sessionId,
+    });
+
+    return { ended: this.actor.getSnapshot().context.call === null };
+  }
+
+  // The running call of the Session, or a refusal when the Session has none.
+  private callOfSession(sessionId?: string): RunningCall {
+    const { call } = this.actor.getSnapshot().context;
+
+    if (!call || !namesSession(sessionId, call))
+      throw unavailable('The Session has no Voice call');
+
+    return call;
+  }
+
   public attach(sessions: VoiceSessions): void {
     this.actor.getSnapshot().context.sessions.attach(sessions);
   }
@@ -107,15 +133,18 @@ export class VoiceCalls implements VoiceCallsPort {
     }
   }
 
-  private callOf(
-    callId: string,
-    sessionId: string,
-  ): NonNullable<VoiceStatus['call']> {
+  private callOf({
+    callId,
+    sessionId,
+    limit,
+  }: RunningCall): NonNullable<VoiceStatus['call']> {
     const status = this.actor.getSnapshot().matches({ running: 'connected' })
       ? 'connected'
       : 'connecting';
 
-    return { callId, sessionId, status };
+    return limit
+      ? { callId, sessionId, status, limit }
+      : { callId, sessionId, status };
   }
 
   private provider(): VoiceProvider | null {
@@ -151,20 +180,6 @@ export class VoiceCalls implements VoiceCallsPort {
     const availability = await this.availability();
 
     if (!availability.usable) throw unavailable(availability.reason);
-    this.requireRoom(sessionId);
-  }
-
-  private requireRoom(sessionId: string): void {
-    if (!this.actor.getSnapshot().matches('idle'))
-      throw new TRPCError({
-        code: 'CONFLICT',
-        message: 'A Voice call is already running',
-      });
-
-    if (!this.actor.system.get(sessionActorId(sessionId)))
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'The Session is not open',
-      });
+    requireRoom(this.actor, sessionId);
   }
 }
