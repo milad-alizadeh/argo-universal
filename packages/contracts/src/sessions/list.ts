@@ -61,7 +61,13 @@ export const SessionInfo = z.strictObject({
   activity: z.string(),
   activityAt: sessionColumns.shape.activityAt,
   checkout: SessionCheckout,
-  plan: z.strictObject({ done: z.int(), total: z.int() }).nullable(),
+  plan: z
+    .strictObject({
+      done: z.int(),
+      inProgress: z.int().optional(),
+      total: z.int(),
+    })
+    .nullable(),
   subagents: SessionWorkCount,
   shells: SessionWorkCount,
   archivedAt: sessionColumns.shape.archivedAt,

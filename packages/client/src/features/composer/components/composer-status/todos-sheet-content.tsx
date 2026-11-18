@@ -1,9 +1,8 @@
-import type { PlanEntry } from '@repo/contracts';
+import { countPlanSteps, type PlanEntry } from '@repo/contracts';
 import { withOccurrenceKeys } from '@repo/kit/occurrence-keys';
 import { ListSection } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { JSX } from 'react';
-import { completedSteps } from '../../utils/status';
 import { StatusSheetList } from './status-surface';
 import { StepIndicator } from './todo-steps';
 
@@ -15,7 +14,8 @@ interface TodosSheetContentProps {
 export function TodosSheetContent({
   entries,
 }: TodosSheetContentProps): JSX.Element {
-  const title = `${completedSteps(entries)} of ${entries.length} done`;
+  const { done } = countPlanSteps(entries);
+  const title = `${done} of ${entries.length} done`;
   const steps = withOccurrenceKeys(entries, (entry) => entry.content);
 
   return (

@@ -1,4 +1,8 @@
-import type { PlanEntry } from '@repo/contracts';
+import {
+  countPlanSteps,
+  startedPlanSteps,
+  type PlanEntry,
+} from '@repo/contracts';
 import {
   Icon,
   IconSizeContext,
@@ -10,7 +14,6 @@ import { Pill } from '@repo/kit/primitives/status/pill';
 import { cn } from '@repo/kit/utils';
 import type { JSX } from 'react';
 import { Pressable, View } from 'react-native';
-import { completedSteps } from '../../utils/status';
 
 interface TodosTriggerProps {
   entries: PlanEntry[];
@@ -75,12 +78,13 @@ function TodosRow(props: TodosTriggerProps): JSX.Element {
 }
 
 function TodosRowWords({ entries }: TodosTriggerProps): JSX.Element {
+  const started = startedPlanSteps(countPlanSteps(entries));
   const current = entries.find((entry) => entry.status === 'in_progress');
 
   return (
     <View className="min-w-0 flex-1 flex-row items-center gap-1.5">
       <Text role="control" selectable={false}>
-        {`Todos ${completedSteps(entries)}/${entries.length}`}
+        {`Todos ${started}/${entries.length}`}
       </Text>
       {current && <TodosRowStep content={current.content} />}
     </View>

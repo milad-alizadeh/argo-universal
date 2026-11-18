@@ -71,3 +71,21 @@ export const AgentStill: Story = backgroundWorkStill(
   },
   'subagents-status',
 );
+
+export const FirstStepInProgress: Story = {
+  args: {
+    session: {
+      ...sessionRows.failed,
+      status: 'running',
+      plan: { done: 0, inProgress: 1, total: 3 },
+    },
+  },
+  play: async ({ canvas }) => {
+    const bar = canvas.getByRole('progressbar', {
+      name: 'Todos: 1 of 3 started',
+    });
+
+    await expect(bar).toBeVisible();
+    await expect(bar).toHaveAttribute('aria-valuenow', '33');
+  },
+};

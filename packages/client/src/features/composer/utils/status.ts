@@ -51,10 +51,6 @@ export function contextPercent(context: ComposerContext): number {
     : 0;
 }
 
-export function completedSteps(entries: PlanEntry[]): number {
-  return entries.filter((entry) => entry.status === 'completed').length;
-}
-
 export function compactNumber(value: number): string {
   return new Intl.NumberFormat('en', {
     notation: 'compact',

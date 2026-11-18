@@ -87,6 +87,27 @@ it('Plans replace whole content and retain removed history without resurrecting 
   });
 });
 
+it('the Sessions list reports an active Plan step separately from completed steps', async () => {
+  const { host } = await openAcpFeedSession([
+    {
+      sessionUpdate: 'plan_update',
+      plan: {
+        type: 'items',
+        planId: 'current',
+        entries: [
+          { content: 'First', priority: 'high', status: 'in_progress' },
+          { content: 'Second', priority: 'medium', status: 'pending' },
+          { content: 'Third', priority: 'low', status: 'pending' },
+        ],
+      },
+    },
+  ]);
+
+  expect(
+    (await host.caller.session.list({ archived: false })).sessions[0]?.plan,
+  ).toEqual({ done: 0, inProgress: 1, total: 3 });
+});
+
 it('an addressed Plan can replace markdown with a file reference without reading the URI', async () => {
   const { host, sessionId } = await openAcpFeedSession([
     {

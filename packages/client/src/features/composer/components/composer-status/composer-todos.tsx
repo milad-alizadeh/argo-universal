@@ -11,7 +11,6 @@ import { TodosPopoverContent } from './todos-popover';
 import { createTodosTrigger } from './todos-trigger';
 
 export interface ComposerTodosProps {
-  // The Agent's live checklist; its completed steps fill the trigger's marks.
   entries: PlanEntry[];
   disabled: boolean;
 }

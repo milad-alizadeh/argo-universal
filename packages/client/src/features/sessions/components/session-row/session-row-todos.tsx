@@ -1,4 +1,4 @@
-import type { SessionInfo } from '@repo/contracts';
+import { startedPlanSteps, type SessionInfo } from '@repo/contracts';
 import type { Tone } from '@repo/kit/primitives/content/text';
 import type { ProgressBarProps } from '@repo/kit/primitives/status/progress-bar';
 
@@ -40,15 +40,19 @@ export function sessionProgress(
 ): ProgressBarProps | undefined {
   const { plan, status } = session;
 
-  if (!plan) return undefined;
+  if (!plan || !unfinished(plan)) return undefined;
 
-  if (!unfinished(plan)) return undefined;
+  const started = startedPlanSteps(plan);
 
   return {
-    value: plan.done / plan.total,
+    value: started / plan.total,
     tone: barTone(session),
     active: activeStatuses.has(status),
-    accessibilityLabel: `Todos: ${plan.done} of ${plan.total} complete`,
+    accessibilityLabel: `Todos: ${started} of ${plan.total} ${progressStatus(plan)}`,
     testID: 'session-todos',
   };
+}
+
+function progressStatus(plan: NonNullable<SessionInfo['plan']>): string {
+  return (plan.inProgress ?? 0) > 0 ? 'started' : 'complete';
 }
