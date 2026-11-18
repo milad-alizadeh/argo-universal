@@ -37,3 +37,9 @@ export { type LoginTerminalProps } from './components/agent-login-terminal/termi
 export { useAgentEnvironmentChange } from './hooks/use-agent-changes';
 
 export { useRememberedAgent } from './hooks/use-remembered-agent';
+
+export {
+  useUsageLimits,
+  type UsageLimitsRead,
+  type UsageLimitsSubject,
+} from './hooks/use-usage-limits';

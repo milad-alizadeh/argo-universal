@@ -296,6 +296,10 @@ _Avoid_: Subagent, child agent, task agent
 What an Agent (the second sense) is for: Explore, Plan, Implement, Review, Test or General. Its parent's Agent declares it through `session.declareSubagentRole` before the spawn, since most Agents' spawn tools cannot carry one; a role the Agent itself reports counts only when none was declared, and an Agent with neither is General. Argo draws each role with its own mark, in its own colour, in the Feed and the Agents list.
 _Avoid_: Agent type, subagent type
 
+**Usage limit**:
+One limit on the plan an Agent is signed in with, such as Claude's 5-hour or weekly window, read from what the Agent reports. Each says how much is used, when it resets and whether it is exhausted; a number the Agent did not report is unknown, never zero. The Server keeps the latest Usage limits for each Agent and Project, the same pair its sign-in is kept for. The shape follows Copilot's quota observations.
+_Avoid_: Quota, rate limit, plan limit, subscription usage
+
 **Started Session**:
 A Session that another Session started through an Operation, such as `session.create`. It is a full Session: the person, its starter or any other Session can prompt it. It is listed nested under its starter in the Sessions list, and it is not one of the starter's Agents, so it is never in the Workbench or Inspector. The code calls the link `startedBySessionId`. It runs in a new worktree, in the main checkout, or, when its starter passes the `starter` Checkout, in its starter's own Checkout, which it borrows and never owns (ADR-0008).
 _Avoid_: Agent, Subagent, child Session, delegated Session

@@ -1,4 +1,8 @@
-import { useInstalledAgents } from '#features/agents';
+import {
+  useInstalledAgents,
+  useUsageLimits,
+  type UsageLimitsSubject,
+} from '#features/agents';
 import { useBlobUrl, useConnectionState } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
 import { useConnectionDropped, useSessionWork } from '#features/sessions';
@@ -72,6 +76,14 @@ type SessionSurroundings =
   | 'shells'
   | 'inspectorPanels';
 
+// A Session's Usage limits are its Agent's, kept for the Agent and Project.
+const usageLimitsSubject = (
+  snapshot: SessionFeed['snapshot'],
+): UsageLimitsSubject | undefined =>
+  snapshot
+    ? { agent: snapshot.agent, projectId: snapshot.projectId }
+    : undefined;
+
 function useSessionSurroundings(
   { sessionId, preview }: SessionPage,
   cards: readonly SessionPluginCard[],
@@ -93,6 +105,7 @@ interface ConnectedFeed {
   // The Connection dropped the Feed's open: a toast says why, not a callout.
   feedDropped: boolean;
   commands: SessionCommands;
+  usageLimits: SessionDetailViewSources['usageLimits'];
 }
 
 function useConnectedFeed(sessionId: string): ConnectedFeed {
@@ -101,6 +114,7 @@ function useConnectedFeed(sessionId: string): ConnectedFeed {
   return {
     feed,
     feedDropped: useConnectionDropped(feed.openError),
+    usageLimits: useUsageLimits(usageLimitsSubject(feed.snapshot)),
     commands: useSessionCommands({
       sessionId,
       resumeAfterCommand: feed.resumeAfterCommand,

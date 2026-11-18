@@ -122,7 +122,7 @@ export {
 
 export { toNewSessionInput } from './utils/open-session';
 
-export { composerStatus } from './utils/composer-status';
+export { composerStatus, type UsageLimitsAt } from './utils/composer-status';
 
 export { toSendError } from './utils/send-error';
 

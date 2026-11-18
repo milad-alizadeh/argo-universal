@@ -1,5 +1,19 @@
-import type { ContextUsage, Plan, PlanEntry } from '@repo/contracts';
+import type {
+  ContextUsage,
+  Plan,
+  PlanEntry,
+  UsageLimit,
+} from '@repo/contracts';
 import type { ComposerProps } from '#features/composer';
+import { usageLimitRows } from './usage-limit-rows';
+
+type ComposerStatusProps = NonNullable<ComposerProps['status']>;
+
+// The Agent's Usage limits, and the minute their resets count down from.
+export interface UsageLimitsAt {
+  limits: readonly UsageLimit[];
+  now: Date;
+}
 
 const planEntries = (plan: Plan | null): PlanEntry[] | undefined =>
   plan?.type === 'items' ? plan.entries : undefined;
@@ -13,14 +27,31 @@ const measuredContext = (
 ): ContextUsage | undefined =>
   usage?.scope === undefined ? availableContext(usage) : undefined;
 
-// The Composer's plan chips and its Context ring; Usage limits wait for a Server source.
+const noUsageLimits: UsageLimitsAt = { limits: [], now: new Date(0) };
+
+const shownUsage = ({
+  limits: reported,
+  now,
+}: UsageLimitsAt): ComposerStatusProps['usage'] => {
+  const limits = usageLimitRows(reported, now);
+
+  return limits.length > 0 ? { limits } : undefined;
+};
+
+const anyShown = (status: ComposerStatusProps): boolean =>
+  Object.values(status).some((part) => part !== undefined);
+
+// The Composer's plan chips, its Context ring and its Usage control.
 export function composerStatus(
   plan: Plan | null,
   usage: ContextUsage | undefined,
+  usageLimits: UsageLimitsAt = noUsageLimits,
 ): ComposerProps['status'] {
-  const entries = planEntries(plan);
-  const context = measuredContext(usage);
-  const shown = entries !== undefined || context !== undefined;
+  const status = {
+    plan: planEntries(plan),
+    context: measuredContext(usage),
+    usage: shownUsage(usageLimits),
+  };
 
-  return shown ? { plan: entries, context } : undefined;
+  return anyShown(status) ? status : undefined;
 }

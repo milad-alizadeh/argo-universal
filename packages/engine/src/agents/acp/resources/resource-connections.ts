@@ -1,5 +1,6 @@
 import type { DeferredAgentLaunch } from '../..';
 import type { AuthChanges } from '../../auth/auth-changes';
+import type { UsageLimits } from '../../usage-limits';
 import { AcpConnection } from '../connection/connection';
 import {
   createEntry,
@@ -22,7 +23,10 @@ export class AcpConnections {
   private stopped = false;
   public constructor(
     private readonly input: AcpResourceInput,
-    private readonly authChanges: AuthChanges,
+    private readonly shared: {
+      authChanges: AuthChanges;
+      usageLimits: UsageLimits;
+    },
   ) {}
   public authenticationEntry(
     agent: string,
@@ -89,7 +93,7 @@ export class AcpConnections {
     const connection: AcpConnection = new AcpConnection(this.input, {
       forget: () => this.forget(key, connection),
       idle: () => this.connectionIdle(connection),
-      authChanges: this.authChanges,
+      ...this.shared,
     });
 
     return connection;
