@@ -5,29 +5,23 @@ import {
   MipmapMode,
   type SkImage,
 } from '@shopify/react-native-skia';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useContext, useEffect, useId, useMemo } from 'react';
 import { PixelRatio } from 'react-native';
 import { type SharedValue, useSharedValue } from 'react-native-reanimated';
 import { scheduleOnUI } from 'react-native-worklets';
 import { useNativeTheme } from '../../../native-theme';
 import { useReducedMotionNow } from '../../../use-reduced-motion-now';
-import { type Resolved, resolvePreset } from './engine/presets';
-import { MODE_DRAWS } from './engine/registry';
-import type { ModeDraw } from './engine/types';
+import { drawOrb, type OrbDrawing } from './orb-draw';
+import type { OrbDriverProps } from './orb-driver-props';
 import type { OrbFrame } from './orb-frame';
 import { useOrbFrames } from './orb-frames';
-import {
-  disposePen,
-  drawImage,
-  type OrbInk,
-  type OrbPen,
-  penFor,
-} from './orb-image';
-import { defaultRMin } from './orb-ink';
+import type { OrbHolder } from './orb-holders';
+import { disposePen, drawImage, type OrbPen, penFor } from './orb-image';
+import { orbMotions } from './orb-motions';
 import type { OrbProps, OrbSize, OrbState } from './orb-props';
+import { OrbSeatHost, SeatedOrb } from './orb-seat';
+import { type OrbAsks, type OrbShare, OrbShareContext } from './orb-share';
 import { orbPixels } from './orb-size';
-
-const millisecondsPerSecond = 1000;
 
 // The frame a reduced-motion viewer sees: a still with the shape readable.
 const stillSeconds = 0.6;
@@ -38,43 +32,30 @@ const density = Math.min(PixelRatio.get(), 2);
 // Scaled up smoothly, as a browser scales the original's canvas.
 const sampling = { filter: FilterMode.Linear, mipmap: MipmapMode.None };
 
-interface Drawing extends Resolved {
-  draw: ModeDraw;
-  pixels: number;
-  ink: OrbInk;
-  // The time to hold the drawing at, for a reduced-motion viewer; null lets it move.
-  still: number | null;
+// What an orb shows and how it comes to show it.
+interface Look {
+  state: OrbState;
+  size: OrbSize;
+  paused: boolean;
+  // Whether it fades in on its first frame, rather than starting whole.
+  fadesIn: boolean;
 }
-
-type Look = Pick<Drawing, 'still'> & { state: OrbState; size: OrbSize };
 
 interface OrbCanvasProps {
   image: SharedValue<SkImage | null>;
   pixels: number;
 }
 
-function useInk(preset: Resolved): OrbInk {
+// The orb's drawing, held still while paused or for a reduced-motion viewer.
+function useDrawing({ state, size, paused, fadesIn }: Look): OrbDrawing {
   const dark = useNativeTheme().colorScheme === 'dark';
+  const reducedMotion = useReducedMotionNow();
+  const still = reducedMotion ? stillSeconds : null;
+  const moving = !(paused || reducedMotion);
 
   return useMemo(
-    () => ({ dark, rMin: preset.opts.rMin ?? defaultRMin }),
-    [dark, preset],
-  );
-}
-
-function useDrawing({ state, size, still }: Look): Drawing {
-  const preset = useMemo(() => resolvePreset(state, size), [state, size]);
-  const ink = useInk(preset);
-
-  return useMemo(
-    () => ({
-      ...preset,
-      draw: MODE_DRAWS[preset.mode],
-      pixels: orbPixels[size],
-      ink,
-      still,
-    }),
-    [ink, preset, size, still],
+    () => ({ motions: orbMotions[size], state, dark, still, moving, fadesIn }),
+    [dark, fadesIn, moving, size, state, still],
   );
 }
 
@@ -87,46 +68,95 @@ function usePen(): SharedValue<OrbPen | null> {
   return pen;
 }
 
-function useOrbFrame(drawing: Drawing): OrbFrame {
+function useOrbFrame(drawing: OrbDrawing, pixels: number): OrbFrame {
   const pen = usePen();
 
   return useCallback(
     (milliseconds: number, previous: SkImage | null) => {
       'worklet';
 
-      const { draw, pixels, speed, opts, ink, still } = drawing;
       const current = penFor(pen, pixels, density);
-      const seconds = (milliseconds / millisecondsPerSecond) * speed;
 
-      draw(current.dots, pixels, still ?? seconds, opts);
+      drawOrb(current, drawing, milliseconds);
 
-      return drawImage(current, ink, previous);
+      return drawImage(current, previous);
     },
-    [drawing, pen],
+    [drawing, pen, pixels],
   );
 }
 
-// The orb's image, kept still while paused or for a reduced-motion viewer.
+// The orb's image, drawn into `slot` when something outside the orb shows it.
 function useOrbImage(
-  state: OrbState,
-  size: OrbSize,
-  paused: boolean,
+  look: Look,
+  slot?: SharedValue<SkImage | null>,
 ): SharedValue<SkImage | null> {
-  const reducedMotion = useReducedMotionNow();
-  const still = reducedMotion ? stillSeconds : null;
-  const drawing = useDrawing({ state, size, still });
+  const drawing = useDrawing(look);
+  const frame = useOrbFrame(drawing, orbPixels[look.size]);
 
-  return useOrbFrames(useOrbFrame(drawing), !(paused || reducedMotion));
+  return useOrbFrames(frame, drawing.moving, slot);
 }
 
-function OrbRenderer(props: OrbProps): React.JSX.Element {
+function OwnOrb(props: OrbProps): React.JSX.Element {
   const { state = 'working', size = 'md' } = props;
+  const paused = Boolean(props.paused);
 
   return (
     <OrbCanvas
-      image={useOrbImage(state, size, Boolean(props.paused))}
+      image={useOrbImage({ state, size, paused, fadesIn: false })}
       pixels={orbPixels[size]}
     />
+  );
+}
+
+// Asks the shared orb for this orb's look while it is on screen.
+function useHeldLook({ join, leave }: OrbAsks, look: Asked): string {
+  const id = useId();
+  const { state, size } = look;
+
+  useEffect(() => join({ id, state, size }), [id, join, size, state]);
+  useEffect(() => (): void => leave(id), [id, leave]);
+
+  return id;
+}
+
+type Asked = Pick<OrbHolder, 'state' | 'size'>;
+
+// Shows the orb its `OrbContinuity` draws: the drawing was running before this orb mounted, so it has no first frame to wait for.
+function ContinuedOrb({
+  share,
+  state = 'working',
+  size = 'md',
+}: OrbProps & { share: OrbShare }): React.JSX.Element {
+  const id = useHeldLook(share, { state, size });
+  const pixels = orbPixels[size];
+
+  return (
+    <OrbSeatHost seat={share.seat} pixels={pixels} seated={share.holder === id}>
+      <OrbCanvas image={share.image} pixels={pixels} />
+    </OrbSeatHost>
+  );
+}
+
+function OrbRenderer(props: OrbProps): React.JSX.Element {
+  const share = useContext(OrbShareContext);
+
+  return share && props.continues ? (
+    <ContinuedOrb share={share} {...props} />
+  ) : (
+    <OwnOrb {...props} />
+  );
+}
+
+// The loop an `OrbContinuity` draws its one orb with, and on the web the one canvas its orbs pass between them.
+export function OrbDriver(props: OrbDriverProps): React.JSX.Element {
+  const { image, state, size } = props;
+
+  useOrbImage({ state, size, paused: false, fadesIn: true }, image);
+
+  return (
+    <SeatedOrb seat={props.seat}>
+      <OrbCanvas image={image} pixels={orbPixels[size]} />
+    </SeatedOrb>
   );
 }
 
