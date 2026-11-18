@@ -2,8 +2,12 @@ import { useSyncLayout } from '@legendapp/list/react-native';
 import type { BlobRef } from '@repo/contracts';
 import { CollapsibleLayoutSyncContext } from '@repo/kit/primitives/layout/collapsible';
 import type * as React from 'react';
-import { memo, useMemo } from 'react';
-import { SessionColumn } from '#lib/product/session-column';
+import { createContext, memo, useContext, useMemo } from 'react';
+import { View } from 'react-native';
+import {
+  composerTrayInsetClass,
+  SessionColumn,
+} from '#lib/product/session-column';
 import { FeedItem } from '../feed-item';
 import { type FeedEntry, entryKey } from './feed-entry';
 import { LiveHeaderRow } from './live-header-row';
@@ -32,6 +36,8 @@ interface FeedRowProps extends RowMotion, EntryDrawing {
 type LayoutSync = NonNullable<
   React.ContextType<typeof CollapsibleLayoutSyncContext>
 >;
+
+export const FeedTrayInset = createContext(false);
 
 function useLayoutSync(
   itemKey: string,
@@ -67,11 +73,14 @@ function EntryContent(props: FeedRowProps): React.JSX.Element {
 export const FeedRow = memo(function FeedRow(props: FeedRowProps) {
   const { entry, spaceBelow } = props;
   const layoutSync = useLayoutSync(entryKey(entry), props);
+  const inset = useContext(FeedTrayInset) ? composerTrayInsetClass : undefined;
 
   return (
     <CollapsibleLayoutSyncContext.Provider value={layoutSync}>
-      <SessionColumn testID="feed-column" className={spaceBelow}>
-        <EntryContent {...props} />
+      <SessionColumn className={spaceBelow}>
+        <View testID="feed-column" className={inset}>
+          <EntryContent {...props} />
+        </View>
       </SessionColumn>
     </CollapsibleLayoutSyncContext.Provider>
   );

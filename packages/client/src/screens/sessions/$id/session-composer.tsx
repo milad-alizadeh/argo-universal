@@ -27,7 +27,6 @@ export function SessionComposer(
   const filled = useSessionFill().filled;
 
   return (
-    // As wide as the Feed: the SessionColumn around it sets the width.
     <View className={cn('w-full items-center', filled && filledClass)}>
       <Composer
         {...composerUnderQuestion(props.composer, props.elicitation)}

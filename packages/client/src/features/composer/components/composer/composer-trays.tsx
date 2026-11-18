@@ -44,7 +44,7 @@ function ComposerWideStatus(
   if (!(layout.props.configuration || layout.props.status)) return null;
 
   return (
-    <View className={statusTrayClass}>
+    <View testID="composer-status-tray" className={statusTrayClass}>
       <View className={statusRowClass}>
         <ComposerTrayStatus {...layout} />
         {/* The Checkout's name gives up its width first, so the status controls keep theirs. */}

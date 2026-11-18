@@ -151,8 +151,13 @@ export const WideGuttersKeepTheConversationCentered: Story = {
       1,
     );
     const feed = lastFeedRow(canvas);
-    await expect(feed.getBoundingClientRect().left).toBe(before.left);
-    await expect(feed.getBoundingClientRect().right).toBe(before.right);
+
+    const tray = canvas
+      .getByTestId('composer-status-tray')
+      .getBoundingClientRect();
+
+    await expect(feed.getBoundingClientRect().left).toBeCloseTo(tray.left, 1);
+    await expect(feed.getBoundingClientRect().right).toBeCloseTo(tray.right, 1);
     await expect(workbench.getBoundingClientRect().left).toBeGreaterThan(
       before.right,
     );

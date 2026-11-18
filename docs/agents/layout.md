@@ -96,6 +96,7 @@ The Workbench has four effective states. One toggle drives the person’s Show o
 ## The content column
 
 - `--container-column` is 800. The Feed viewport and the Composer take the same column: `max-width` 848 at a 24 gutter on each side, centred in the page, or moved aside together for a Workbench the trailing gutter alone does not hold.
+- Feed rows align with the Composer tray on each side when the column draws the wide Composer. On a phone they align with the Composer card.
 - The region caps at 848, including its two 24px gutters. Its protected floor is 688: the 640px Composer plus those gutters. A window resize or a pane opening never takes the page below it.
 - Dragging the Inspector's divider is the one way under that floor. The page keeps narrowing with the drag down to 200, and a drag past that expands the Inspector over the page. The list does not fold during the drag. The width the drag left is the content's floor until the Inspector closes, so a narrower window then folds the list before the page gives more, and expanding the Inspector keeps the list; closing the Inspector restores 688 and keeps its width, so it reopens where it was. The Sessions list keeps its dragged width across a close the same way. A divider moved while the Inspector is at its default width lowers nothing.
 - The Workbench and the Inspector sit outside the cap. The Inspector is its own region of the window; the Workbench is drawn over the page's gutter.

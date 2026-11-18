@@ -11,6 +11,9 @@ import { useContentRule } from './use-content-rule';
 // The one surface a Session sits on, the same on a phone and in a window. The screen and the Feed's native fades take it from here.
 export const sessionSurface = 'bg-content';
 
+// The wide Feed and Composer trays share their edges inside the Session column.
+export const composerTrayInsetClass = 'mx-7 web:mx-4.5';
+
 type SessionColumnProps = ViewProps & {
   ref?: Ref<ViewInstance>;
   fill?: boolean;
