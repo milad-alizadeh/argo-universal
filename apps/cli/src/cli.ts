@@ -26,7 +26,6 @@ export type CliIo = CommandIo & { writeError: Write };
 
 type Command = (args: string[], io: CliIo) => Promise<number>;
 
-// `server` and `plugin` are not here: the launcher starts each from its own entry.
 const commands = new Map<string, Command>([
   ['operations', runOperations],
   ['run', runOperation],

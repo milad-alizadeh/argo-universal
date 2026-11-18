@@ -1,13 +1,13 @@
 import { appendFileSync } from 'node:fs';
 import { registerHooks } from 'node:module';
 
-// Preloaded into a CLI process by a test: appends the URL of each module the process loads to the file named here.
-const record = process.env.ARGO_TEST_LOADED_MODULES;
+// A test preloads this through NODE_OPTIONS, which also reaches the process the launcher starts.
+const loadedModulesFile = process.env.ARGO_TEST_LOADED_MODULES;
 
-if (record)
+if (loadedModulesFile)
   registerHooks({
     load(url, context, nextLoad) {
-      appendFileSync(record, `${url}\n`);
+      appendFileSync(loadedModulesFile, `${url}\n`);
 
       return nextLoad(url, context);
     },

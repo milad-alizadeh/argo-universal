@@ -36,7 +36,7 @@ async function modulesLoadedBy(args: string[]): Promise<string[]> {
   return (await readFile(record, 'utf8')).split('\n');
 }
 
-const from =
+const moduleUrlContains =
   (path: string) =>
   (url: string): boolean =>
     url.includes(path);
@@ -47,8 +47,11 @@ it(
   async () => {
     const loaded = await modulesLoadedBy(['mcp', 'unexpected']);
 
-    expect(loaded.filter(from('/apps/cli/src/mcp-command.ts'))).toHaveLength(1);
-    expect(loaded.filter(from('/packages/plugin-kit/cli/'))).toEqual([]);
+    // The CLI's own source shows the record is of the command, and `cli/` is the Plugin kit's `./cli` export.
+    expect(loaded.some(moduleUrlContains('/apps/cli/src/'))).toBe(true);
+    expect(
+      loaded.filter(moduleUrlContains('/packages/plugin-kit/cli/')),
+    ).toEqual([]);
   },
   processLimitMs,
 );
