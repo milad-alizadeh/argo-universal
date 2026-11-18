@@ -37,7 +37,7 @@ const followEnd = {
   on: { layout: true, footerLayout: true, dataChange: true, itemLayout: true },
 };
 
-// While prose wraps, move the reader to the new end over several frames.
+// While a Turn adds rows or wraps prose, move the reader to the new end over several frames.
 const glideToEnd = { ...followEnd, animated: true };
 
 // In screens from the top: older rows load this far ahead of the reader.
@@ -116,6 +116,7 @@ type ListRef = RefObject<LegendListRef | null>;
 export interface FeedScrollProps extends EntryDrawing {
   list: ListRef;
   entries: FeedEntry[];
+  turnRunning: boolean;
   initialIndex: number;
   onStartReached: () => void;
   // Older rows are paging in above.
@@ -139,11 +140,12 @@ export type FeedListProps = Pick<
 >;
 
 // A Feed read from its start, or hidden behind another page, does not follow incoming rows.
-function anchorsOf(
+function useAnchors(
   opensAtStart: boolean | undefined,
-  focused: boolean,
   following: typeof followEnd,
 ): Pick<FeedListProps, 'maintainScrollAtEnd' | 'alignItemsAtEnd'> {
+  const focused = useScreenFocused();
+
   return {
     maintainScrollAtEnd: opensAtStart || !focused ? false : following,
     // Rows start at the top of the view, never against the Composer.
@@ -151,16 +153,22 @@ function anchorsOf(
   };
 }
 
-function useEndMotion(items: FeedRowData[]): typeof followEnd {
-  const reduced = useReducedMotion();
-  const streaming = items.slice(-2).some((item) => item.streaming);
+function isGrowing(items: FeedRowData[], turnRunning: boolean): boolean {
+  return turnRunning || items.slice(-2).some((item) => item.streaming);
+}
 
-  return streaming && !reduced ? glideToEnd : followEnd;
+function useEndMotion(
+  items: FeedRowData[],
+  turnRunning: boolean,
+): typeof followEnd {
+  const reduced = useReducedMotion();
+
+  return isGrowing(items, turnRunning) && !reduced ? glideToEnd : followEnd;
 }
 
 function useFeedListProps(
   list: ListRef,
-  { entries, ...props }: Omit<FeedScrollProps, 'list' | 'atEnd'>,
+  { entries, turnRunning, ...props }: Omit<FeedScrollProps, 'list' | 'atEnd'>,
 ): FeedListProps {
   const motion = useCollapsibleMotion(list);
   const items = useFeedRowData(entries);
@@ -169,7 +177,7 @@ function useFeedListProps(
     items,
     renderItem: useRenderEntry({ ...props, ...motion }),
     initialScrollIndex: props.initialIndex,
-    ...anchorsOf(props.opensAtStart, useScreenFocused(), useEndMotion(items)),
+    ...useAnchors(props.opensAtStart, useEndMotion(items, turnRunning)),
     onStartReached: props.onStartReached,
     header: <LoadingEarlier loading={props.loadingOlder} />,
   };

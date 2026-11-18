@@ -109,12 +109,16 @@ export function Feed({
 }
 
 // A Feed that opens at its start has no Composer at its end, so it keeps no room for one.
-function FeedWithCover(props: FeedListProps & FeedProps): React.JSX.Element {
-  if (!props.opensAtStart) return <FeedList {...props} />;
+function FeedWithCover(
+  props: Omit<FeedListProps, 'turnRunning'> & FeedProps,
+): React.JSX.Element {
+  const feed = { ...props, turnRunning: props.liveHeader !== null };
+
+  if (!props.opensAtStart) return <FeedList {...feed} />;
 
   return (
     <ComposerCover.Provider value={noComposerCover}>
-      <FeedList {...props} />
+      <FeedList {...feed} />
     </ComposerCover.Provider>
   );
 }
