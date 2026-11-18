@@ -1,19 +1,9 @@
-import type {
-  ContextUsage,
-  Plan,
-  PlanEntry,
-  UsageLimit,
-} from '@repo/contracts';
+import type { ContextUsage, Plan, PlanEntry } from '@repo/contracts';
+import type { UsageLimitsRead } from '#features/agents';
 import type { ComposerProps } from '#features/composer';
 import { usageLimitRows } from './usage-limit-rows';
 
 type ComposerStatusProps = NonNullable<ComposerProps['status']>;
-
-// The Agent's Usage limits, and the minute their resets count down from.
-export interface UsageLimitsAt {
-  limits: readonly UsageLimit[];
-  now: Date;
-}
 
 const planEntries = (plan: Plan | null): PlanEntry[] | undefined =>
   plan?.type === 'items' ? plan.entries : undefined;
@@ -27,31 +17,32 @@ const measuredContext = (
 ): ContextUsage | undefined =>
   usage?.scope === undefined ? availableContext(usage) : undefined;
 
-const noUsageLimits: UsageLimitsAt = { limits: [], now: new Date(0) };
+// A caller with no Usage limits to show, such as a story of the Plan or Context.
+const noUsageLimits: UsageLimitsRead = { limits: [], now: new Date(0) };
 
-const shownUsage = ({
+const usageControl = ({
   limits: reported,
   now,
-}: UsageLimitsAt): ComposerStatusProps['usage'] => {
+}: UsageLimitsRead): ComposerStatusProps['usage'] => {
   const limits = usageLimitRows(reported, now);
 
   return limits.length > 0 ? { limits } : undefined;
 };
 
-const anyShown = (status: ComposerStatusProps): boolean =>
+const showsAnyControl = (status: ComposerStatusProps): boolean =>
   Object.values(status).some((part) => part !== undefined);
 
 // The Composer's plan chips, its Context ring and its Usage control.
 export function composerStatus(
   plan: Plan | null,
   usage: ContextUsage | undefined,
-  usageLimits: UsageLimitsAt = noUsageLimits,
+  usageLimits: UsageLimitsRead = noUsageLimits,
 ): ComposerProps['status'] {
   const status = {
     plan: planEntries(plan),
     context: measuredContext(usage),
-    usage: shownUsage(usageLimits),
+    usage: usageControl(usageLimits),
   };
 
-  return anyShown(status) ? status : undefined;
+  return showsAnyControl(status) ? status : undefined;
 }

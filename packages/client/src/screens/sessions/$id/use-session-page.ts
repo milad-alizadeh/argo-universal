@@ -1,8 +1,5 @@
-import {
-  useInstalledAgents,
-  useUsageLimits,
-  type UsageLimitsSubject,
-} from '#features/agents';
+import type { UsageLimitsSubject } from '@repo/contracts';
+import { useInstalledAgents, useUsageLimits } from '#features/agents';
 import { useBlobUrl, useConnectionState } from '#features/connection';
 import { useSessionFeed } from '#features/feed';
 import { useConnectionDropped, useSessionWork } from '#features/sessions';

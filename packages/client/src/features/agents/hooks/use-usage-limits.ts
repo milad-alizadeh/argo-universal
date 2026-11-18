@@ -1,31 +1,31 @@
-import type { AgentUsageLimits, UsageLimit } from '@repo/contracts';
+import type {
+  AgentUsageLimits,
+  UsageLimit,
+  UsageLimitsSubject,
+} from '@repo/contracts';
 import { skipToken, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useEffect, useState } from 'react';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 
-// The Agent and Project a sign-in, and so its Usage limits, belong to.
-export interface UsageLimitsSubject {
-  agent: string;
-  projectId: string;
-}
-
-// The Agent's latest Usage limits, and the minute they are read against, so a reset counts down.
+// The Agent's latest Usage limits, and the current minute their resets count down from.
 export interface UsageLimitsRead {
-  limits: UsageLimit[];
+  limits: readonly UsageLimit[];
   now: Date;
 }
 
 const aMinute = 60_000;
 
-function useMinute(): Date {
+// The time now, read again as each minute turns, so "Resets in 2h 14m" changes when the clock does.
+function useCurrentMinute(): Date {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    const tick = setInterval((): void => setNow(new Date()), aMinute);
+    const untilNextMinute = aMinute - (now.getTime() % aMinute);
+    const tick = setTimeout((): void => setNow(new Date()), untilNextMinute);
 
-    return (): void => clearInterval(tick);
-  }, []);
+    return (): void => clearTimeout(tick);
+  }, [now]);
 
   return now;
 }
@@ -68,5 +68,5 @@ export function useUsageLimits(
 
   useFollowUsageLimits(input);
 
-  return { limits: limitsOf(read.data), now: useMinute() };
+  return { limits: limitsOf(read.data), now: useCurrentMinute() };
 }

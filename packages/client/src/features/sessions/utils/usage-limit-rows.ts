@@ -48,7 +48,7 @@ const percentOf = (share: number): number =>
   Math.min(fullPercent, Math.max(0, Math.round(share * fullPercent)));
 
 // "2h 14m", or "2h" on the hour.
-const amount = (
+const twoUnits = (
   [big, bigUnit]: [number, string],
   [small, smallUnit]: [number, string],
 ): string =>
@@ -58,8 +58,11 @@ const hoursText = (minutes: number): string => {
   const hours = Math.floor(minutes / minutesInHour);
 
   return hours < hoursInDay
-    ? amount([hours, 'h'], [minutes % minutesInHour, 'm'])
-    : amount([Math.floor(hours / hoursInDay), 'd'], [hours % hoursInDay, 'h']);
+    ? twoUnits([hours, 'h'], [minutes % minutesInHour, 'm'])
+    : twoUnits(
+        [Math.floor(hours / hoursInDay), 'd'],
+        [hours % hoursInDay, 'h'],
+      );
 };
 
 const durationText = (minutes: number): string =>

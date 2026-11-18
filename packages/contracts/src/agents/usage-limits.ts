@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AgentAuthSubject } from './auth';
 
 // How much of a Usage limit is spent. Only `budget` and `fraction` may be drawn as a percentage.
 export const UsageLimitMeasure = z.discriminatedUnion('kind', [
@@ -52,7 +53,12 @@ export const UsageLimit = z.strictObject({
 
 export type UsageLimit = z.infer<typeof UsageLimit>;
 
-// The latest Usage limits of one Agent and Project, the pair its sign-in is kept for.
+// The Agent and Project whose Usage limits are kept: the pair its sign-in is kept for.
+export const UsageLimitsSubject = AgentAuthSubject;
+
+export type UsageLimitsSubject = z.infer<typeof UsageLimitsSubject>;
+
+// The latest Usage limits of one Agent and Project.
 export const AgentUsageLimits = z.strictObject({
   limits: z.array(UsageLimit),
 });

@@ -3,7 +3,11 @@ import {
   type SlashCommand,
   withArgoSlashCommands,
 } from '@repo/contracts';
-import { type InstalledAgents, loadedAgents } from '#features/agents';
+import {
+  type InstalledAgents,
+  loadedAgents,
+  type UsageLimitsRead,
+} from '#features/agents';
 import type {
   ComposerConfigurationProps,
   ComposerProps,
@@ -14,11 +18,7 @@ import type {
   ElicitationFormProps,
   PermissionRequestProps,
 } from '#features/requests';
-import {
-  decodeOpenFailure,
-  toSendError,
-  type UsageLimitsAt,
-} from '#features/sessions';
+import { decodeOpenFailure, toSendError } from '#features/sessions';
 import { type Navigate } from '#lib/product/navigation/navigation';
 import { followUpProps } from './follow-up-composer-props';
 import { sessionStatusProps } from './session-status-props';
@@ -39,7 +39,7 @@ export interface OpenSession {
   connected: boolean;
   elicitation: ElicitationFormProps | undefined;
   permission: PermissionRequestProps | undefined;
-  usageLimits: UsageLimitsAt;
+  usageLimits: UsageLimitsRead;
   options?: {
     configOptions: SessionSnapshot['configOptions'];
     loading: boolean;
