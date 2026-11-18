@@ -44,8 +44,11 @@ export function useWithSessionPullRequests(
 ): SessionDetailViewProps {
   const context = useSessionSlotContext(sessionId, projectIdOf(feed));
 
+  const { rows, canCreatePullRequest } = useSessionPullRequests(context);
+
   return withSessionPullRequests(
     props,
-    useRowActions(context, useSessionPullRequests(context)),
+    useRowActions(context, rows),
+    canCreatePullRequest,
   );
 }

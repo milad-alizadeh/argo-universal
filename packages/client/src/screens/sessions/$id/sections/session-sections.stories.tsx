@@ -158,3 +158,12 @@ export const OnlyDone: Story = {
     },
   },
 };
+
+export const CreatePullRequest: Story = {
+  args: {
+    content: {
+      header: { ...everySection.header, pullRequests: [] },
+      createPullRequest: { onPress: fn(), disabled: false },
+    },
+  },
+};

@@ -1,3 +1,4 @@
+import { Button } from '@repo/kit/primitives/actions/button';
 import type { ReactNode } from 'react';
 import { Linking } from 'react-native';
 import { ChangesFiles, ChangesSheetHeader } from '#features/changes';
@@ -44,15 +45,23 @@ const changesSummary = (
 );
 
 /*
- * With pull requests, each row opens its own pull request and the card opens nothing; without, the whole body opens the
+ * With pull requests, each row opens its own pull request and the card opens nothing; without, the diff totals open the
  * Checkout's changed files.
  */
 const changesCard: SessionSection['card'] = (content, tab): SectionCard => {
   const summary = changesSummary(content, tab);
 
-  return pullRequestsOf(content).length
-    ? { summary }
-    : { summary, onOpen: tab.open };
+  if (pullRequestsOf(content).length) return { summary };
+
+  const action = content.createPullRequest;
+
+  return {
+    summary,
+    onOpen: tab.open,
+    trailing: action && (
+      <Button label="Create PR" variant="secondary" size="sm" {...action} />
+    ),
+  };
 };
 
 const pullRequestRows = (
