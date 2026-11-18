@@ -91,3 +91,7 @@ A self archive answers `{ scheduled: true }` and waits for the Session actor to 
 ## Reviews under ADR-0061
 
 Owner amendment, 2026-11-18 (#2373): [ADR-0061](0061-reviews-belong-to-the-engine-and-change-providers-own-remote-writes.md) adds Review as a fourth authenticated Prompt sender. Engine-created Reviewer Sessions use a separate Server-wide queue with at most two active runs. They do not consume their starter’s delegation slots and cannot create further Sessions through Operations. Ordinary Started Session caps and Prompt chains are unchanged. Argo Approval and withdrawal join the person-only consent exceptions. `change.merge` is confirm for an Agent and uses the guarded provider handler defined there.
+
+## Voice calls under ADR-0062
+
+Owner amendment, 2026-11-18: [ADR-0062](0062-a-voice-call-belongs-to-the-server-and-speaks-for-one-session.md) counts consent spoken in a Voice call as the person's own. The Engine applies a spoken allow-once or reject through the same hand-written procedure the App's click uses, and only when a spoken turn of the person's arrived after the voice announced that request. Answering a Permission request is still not an Operation, and always-allow is still a click. Ending a Voice call is an Operation the Session's Agent may run at the `act` tier, since it grants nothing.

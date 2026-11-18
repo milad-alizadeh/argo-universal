@@ -321,3 +321,43 @@ Two surfaces, `main-thread` and `global-overlay` (`preferredPresentationSurface`
 8. Is dictation in the composer (Codex's ⌃⇧D, Claude Code `/voice`) a separate, earlier feature?
 9. Should spoken prompts appear in the Feed as user messages, which needs an ADR 0012 amendment, or as a separate transcript row, as Codex's `realtime-transcript` does?
 10. Should CarPlay through the iOS 26.4 voice-conversation entitlement be in scope at all?
+
+## 13. Pipeline findings from two spikes (2026-11-18)
+
+The sections above describe an older Codex build and were written before the pipeline was traced. This section records what was measured against ChatGPT.app 26.1111.21308 (bundled Codex 0.169) and the live service, on a ChatGPT Pro login. The decisions taken from it are in [ADR-0062](../adr/0062-a-voice-call-belongs-to-the-server-and-speaks-for-one-session.md); it answers open questions 1 to 4 and 9 above.
+
+### How Codex voice is wired
+
+- **Two models.** A voice model (`gpt-live-1.1-codex`) hears and speaks. The ordinary Codex model does the work. The voice hands work over as text and is told the result as text.
+- **Audio.** WebRTC between the app and the service, with a data channel named `oai-events`.
+- **Call creation.** A POST of the SDP offer and a session object to `chatgpt.com/backend-api/codex/realtime/calls?intent=quicksilver&architecture=avas`, with the header `openai-alpha: quicksilver=v2`. The session object carries the model, the persona instructions, the voice, and `delegation: {type: "client"}`. The answer SDP is the body; the call id is in `Location`.
+- **Control link.** A WebSocket at `wss://api.openai.com/v1/live/{callId}` with the same bearer token. It carries every event the data channel does, plus the raw audio in both directions.
+- **Events in.** `session.started`, `turn.created`, `turn.delta`, `turn.done` (each with a role and a transcript), `input_transcript.added`, `output_transcript.added`, `delegation.created`, `delegation.context.appended`, `session.context.appended`, `session.usage.updated`, `session.closed`.
+- **Events out.** `delegation.context.append` answers one delegation; `session.context.append` says something unprompted; both take a channel of `speakable` or `commentary`. `session.close` ends the call.
+- **What the worker is told.** At the start of a call Codex tells the working model to begin each message with `[STATUS]`, `[COMPLETE]` or `[ANALYSIS]`, and streams every Agent message to the voice in pieces of at most 500 bytes. Tool output is not sent.
+- **Memory.** The voice remembers nothing between calls. Codex rebuilds a briefing of about 5,300 tokens from the thread, recent work and a workspace map.
+- **Voices.** 25 on the current protocol version; the default is `cove`.
+
+### Spike 1: Codex's app-server runs the call
+
+One `codex app-server` on a unix socket, shared by the Codex ACP adapter (through a stdio-to-WebSocket shim set with `CODEX_PATH`) and a second client that started the call on the adapter's thread.
+
+- The call worked, the voice handed over a request, Codex ran a Turn in the same thread, and the file asked for was created.
+- Over ACP the Turn arrived without a start, a stop reason or a user side. Agent messages, the Tool call and usage arrived as normal. The adapter drops every realtime notification.
+- `codex app-server proxy` did not work as the bridge; the socket speaks WebSocket.
+
+### Spike 2: Argo-side code runs the call, with no Codex process
+
+- **Token.** The app-server request `getAuthStatus` with `includeToken` returned a ChatGPT token valid for about ten days. Codex ran only for that request.
+- **Call creation** from plain Node returned 201 and connected in about a second. No attestation header was needed.
+- **The voice hands work over only while something is joined to the control link.** With only the browser connected, the voice said "On it" and nothing else happened. With the control link joined, `delegation.created` arrived about seven seconds after the spoken request. One run each.
+- **Replies are spoken.** A reply containing a detail the voice could not guess was read back correctly, sent on the data channel and again on the control link.
+- **Unprompted messages are spoken** when sent as `session.context.append`.
+- **`session.close`** ended the call with a final usage figure.
+
+### Not tested
+
+- Token refresh, a long task, an interruption, and two requests at once.
+- Whether the voice reliably uses a fixed reply form, which spoken consent depends on.
+- A Permission request during a Turn the voice started.
+
