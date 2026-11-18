@@ -1,5 +1,6 @@
 import {
   AppProviders,
+  DesktopVoiceProvider,
   PortalProvider,
   NavigationProvider,
   type DesktopBridge,
@@ -87,8 +88,10 @@ function RestoredApp(): React.JSX.Element | null {
 
   return (
     <AppProviders serverUrl={serverUrl}>
-      <ForegroundSignal />
-      <ThemedApp />
+      <DesktopVoiceProvider desktop={globalThis.window?.argo !== undefined}>
+        <ForegroundSignal />
+        <ThemedApp />
+      </DesktopVoiceProvider>
     </AppProviders>
   );
 }

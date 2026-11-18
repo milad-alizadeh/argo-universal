@@ -18,3 +18,5 @@ export type {
 export { createVoiceRouter } from './router';
 
 export { VoiceCalls, noVoiceCalls, type VoiceCallsPort } from './voice-calls';
+
+export { createGptLiveProvider } from './gpt-live/gpt-live-provider';

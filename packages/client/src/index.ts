@@ -110,6 +110,8 @@ export { PortalProvider } from '@repo/kit/primitives/overlays/portal';
 
 export { useNotifications } from './features/notifications';
 
+export { DesktopVoiceProvider } from './features/voice';
+
 export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
 
 export {

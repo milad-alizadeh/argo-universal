@@ -61,10 +61,12 @@ function useStartCall(
     }),
   );
 
+  // A refused microphone means no offer, so no call starts and the Composer stays where it was.
   return () =>
     void connection
       ?.createOffer()
-      .then((offer) => start.mutate({ sessionId, offer }));
+      .then((offer) => start.mutate({ sessionId, offer }))
+      .catch(() => connection.close());
 }
 
 function useEndCall(sessionId: string): ComposerVoice['onEnd'] {
