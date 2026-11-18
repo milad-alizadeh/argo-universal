@@ -9,13 +9,13 @@ export interface Trail {
 }
 
 // How long a run of arrived text takes to fade in.
-export const fadeMilliseconds = 200;
+export const fadeMilliseconds = 300;
 
 /*
  * The most runs kept. A block draws at most once a frame, and at 120 frames a second this many
  * draws outlast a fade, so a run older than that has faded and joins the settled text.
  */
-export const maxRuns = 32;
+export const maxRuns = 40;
 
 export const settledTrail = (text: string): Trail => ({ text, marks: [] });
 
@@ -45,6 +45,23 @@ export function firstTrail(
   return began ? arrivingTrail(text) : restingTrail(text, growing);
 }
 
+// Keep a word and its ligatures or joined glyphs in the run that already draws it.
+function newRunStart(previous: string, text: string): number | undefined {
+  const added = text.slice(previous.length);
+  const wordBoundary = /\s$/.test(previous) ? /(?:^|\s)\S/ : /\s\S/;
+  const boundary = added.search(wordBoundary);
+
+  return boundary < 0 ? undefined : previous.length + boundary;
+}
+
+function grownMarks(trail: Trail, text: string): readonly number[] {
+  const start = newRunStart(trail.text, text);
+
+  return start === undefined
+    ? trail.marks
+    : [...trail.marks, start].slice(-maxRuns);
+}
+
 /*
  * Text that grew begins a run where the old text ended. Text that changed any other way, as when
  * `**bo` becomes bold, moved what is on screen, so nothing fades: a letter already read never fades twice.
@@ -54,7 +71,7 @@ function grownTrail(trail: Trail, text: string): Trail {
 
   if (!text.startsWith(trail.text)) return settledTrail(text);
 
-  return { text, marks: [...trail.marks, trail.text.length].slice(-maxRuns) };
+  return { text, marks: grownMarks(trail, text) };
 }
 
 const followed = (trail: Trail | null, text: string): Trail =>

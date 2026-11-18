@@ -1,14 +1,19 @@
 import type { UsageLimit } from '@repo/contracts';
 import { z } from 'zod';
+import {
+  capacityOf,
+  isoTime,
+  rateLimitStatus,
+  UnifiedWindows,
+  unifiedWindowReadings,
+  windowReset,
+  type WindowReading,
+} from './vendor-unified-windows';
 
 // Part of the vendor module (ADR-0004): each Agent's own `_meta` key for its Usage limits, read in one place.
 
 // `claude-agent-acp` puts the Agent SDK's `SDKRateLimitInfo` under this key on `usage_update`.
 const rateLimitKey = '_claude/rateLimit';
-
-const millisecondsPerSecond = 1000;
-
-const status = z.enum(['allowed', 'allowed_warning', 'rejected']);
 
 const limitType = z.enum([
   'five_hour',
@@ -19,32 +24,40 @@ const limitType = z.enum([
   'overage',
 ]);
 
+type LimitType = z.infer<typeof limitType>;
+
 // Only the fields Argo reads; the SDK sends more and adds fields over time.
 const RateLimit = z.object({
-  status,
-  rateLimitType: limitType,
+  status: rateLimitStatus,
+  // The window this verdict is on, when it names one.
+  rateLimitType: limitType.optional(),
   // Epoch seconds.
   resetsAt: z.number().positive().optional(),
+  // A subscription leaves this out and reports its used share under `unifiedWindows`.
   utilization: z.number().min(0).optional(),
-  overageStatus: status.optional(),
+  overageStatus: rateLimitStatus.optional(),
   overageEnabled: z.boolean().optional(),
+  unifiedWindows: UnifiedWindows.optional(),
 });
 
 type RateLimit = z.infer<typeof RateLimit>;
 
-// Any ACP update's `_meta`, parsed here: one that is missing or does not parse reads as no Usage limit.
+type Verdict = RateLimit & { rateLimitType: LimitType };
+
+// Any ACP update's `_meta`: most carry no rate limit, and one under the key that does not parse is rejected.
 const UpdateMeta = z
   .unknown()
-  .pipe(
-    z
-      .object({ [rateLimitKey]: RateLimit.nullable().catch(null) })
-      .catch({ [rateLimitKey]: null }),
-  );
+  .pipe(z.object({ [rateLimitKey]: RateLimit.optional() }).nullish());
 
 export type UpdateMeta = z.input<typeof UpdateMeta>;
 
+// Where a rate limit the reader does not recognise is reported and counted.
+export type UsageLimitRejections = {
+  report: (detail: string, cause?: unknown) => void;
+};
+
 const limits: Record<
-  z.infer<typeof limitType>,
+  LimitType,
   Pick<UsageLimit, 'label' | 'window' | 'model'>
 > = {
   five_hour: { label: '5-hour limit', window: 'five_hour' },
@@ -62,20 +75,33 @@ const limits: Record<
   overage: { label: 'Extra usage', window: 'other' },
 };
 
-const capacity = (info: RateLimit): UsageLimit['capacity'] =>
-  info.status === 'rejected' ? 'exhausted' : 'available';
+type Observation = Pick<UsageLimit, 'observed' | 'observedAt'>;
 
-const measure = (info: RateLimit): UsageLimit['measure'] =>
+const named = (
+  type: LimitType,
+  reading: WindowReading,
+  observation: Observation,
+): UsageLimit => ({ id: type, ...limits[type], ...reading, ...observation });
+
+const windowMeasure = (
+  window: WindowReading | undefined,
+): UsageLimit['measure'] => window?.measure ?? { kind: 'none' };
+
+const measure = (
+  info: RateLimit,
+  window: WindowReading | undefined,
+): UsageLimit['measure'] =>
   info.utilization === undefined
-    ? { kind: 'none' }
+    ? windowMeasure(window)
     : { kind: 'fraction', used: info.utilization };
 
-const resetsAt = (info: RateLimit): Pick<UsageLimit, 'resetsAt'> =>
+const resetsAt = (
+  info: RateLimit,
+  window: WindowReading | undefined,
+): Pick<UsageLimit, 'resetsAt'> =>
   info.resetsAt === undefined
-    ? {}
-    : {
-        resetsAt: new Date(info.resetsAt * millisecondsPerSecond).toISOString(),
-      };
+    ? windowReset(window)
+    : { resetsAt: isoTime(info.resetsAt) };
 
 const overage = (info: RateLimit): Pick<UsageLimit, 'overage'> =>
   info.overageEnabled === undefined
@@ -86,24 +112,77 @@ const overage = (info: RateLimit): Pick<UsageLimit, 'overage'> =>
         },
       };
 
-// One rate-limit event is the verdict on one request, for the one window it names.
-const rateLimitReading = (info: RateLimit, observedAt: Date): UsageLimit => ({
-  id: info.rateLimitType,
-  ...limits[info.rateLimitType],
-  capacity: capacity(info),
-  measure: measure(info),
-  ...resetsAt(info),
-  ...overage(info),
-  observed: 'admission',
-  observedAt: observedAt.toISOString(),
+const verdictWindow = (
+  info: RateLimit,
+  window: WindowReading | undefined,
+): WindowReading => ({
+  capacity: capacityOf(info.status),
+  measure: measure(info, window),
+  ...resetsAt(info, window),
 });
+
+// The verdict on one request for the window it names: its own numbers win, and that window's reading fills the rest.
+const verdictReading = (
+  info: Verdict,
+  window: WindowReading | undefined,
+  observedAt: string,
+): UsageLimit => ({
+  ...named(info.rateLimitType, verdictWindow(info, window), {
+    observed: 'admission',
+    observedAt,
+  }),
+  ...overage(info),
+});
+
+const hasWindow = (info: RateLimit): info is Verdict =>
+  info.rateLimitType !== undefined;
+
+const verdictOf = (
+  info: RateLimit,
+  windows: Map<LimitType, WindowReading>,
+  observedAt: string,
+): UsageLimit[] =>
+  hasWindow(info)
+    ? [verdictReading(info, windows.get(info.rateLimitType), observedAt)]
+    : [];
+
+// The verdict's window first, then every other window the SDK read: those are readings of the plan.
+const rateLimitReadings = (
+  info: RateLimit,
+  observedAt: string,
+): UsageLimit[] => {
+  const windows: Map<LimitType, WindowReading> = unifiedWindowReadings(
+    info.unifiedWindows,
+  );
+
+  const others = windows
+    .entries()
+    .filter(([type]) => type !== info.rateLimitType)
+    .map(([type, reading]) =>
+      named(type, reading, { observed: 'snapshot', observedAt }),
+    );
+
+  return [...verdictOf(info, windows, observedAt), ...others];
+};
+
+const rateLimitOf = (
+  meta: UpdateMeta,
+  rejections: UsageLimitRejections,
+): RateLimit | undefined => {
+  const parsed = UpdateMeta.safeParse(meta);
+
+  if (!parsed.success) rejections.report(rateLimitKey, parsed.error);
+
+  return parsed.data?.[rateLimitKey];
+};
 
 // The Usage limits one ACP session update's `_meta` reports, if any.
 export const vendorUsageLimits = (
   meta: UpdateMeta,
   observedAt: Date,
+  rejections: UsageLimitRejections,
 ): UsageLimit[] => {
-  const info = UpdateMeta.parse(meta)[rateLimitKey];
+  const info = rateLimitOf(meta, rejections);
 
-  return info ? [rateLimitReading(info, observedAt)] : [];
+  return info ? rateLimitReadings(info, observedAt.toISOString()) : [];
 };

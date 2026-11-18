@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { KnownServer } from '#features/connection';
 import type { AppServer } from './app-server';
+import { showsServer } from './servers-store';
 
 export interface AppServers {
   servers: readonly AppServer[];
@@ -20,3 +21,9 @@ export function useAppServers(): AppServers {
 
   return servers;
 }
+
+export const useShowsServer = (): boolean => {
+  const { servers, lookingAt } = useAppServers();
+
+  return showsServer(servers, lookingAt);
+};

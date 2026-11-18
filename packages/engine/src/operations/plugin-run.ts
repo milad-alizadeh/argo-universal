@@ -2,6 +2,7 @@ import type { OperationRow } from '@repo/contracts/operations';
 import type { OperationRunResponse } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import {
+  defaultPluginOperationIcon,
   redactedSecret,
   splitPluginOperationId,
   type PluginOperationCaller,
@@ -31,6 +32,7 @@ const pluginOperationCall = (
 ): CalledOperation => ({
   name: id,
   label: row.label,
+  icon: row.icon ?? defaultPluginOperationIcon,
   input: withoutSecrets(row, params),
 });
 

@@ -8,10 +8,18 @@ import {
   recordedAgentMessage,
   recordedUserMessage,
 } from '../../../../lib/product/feed-message.mocks';
+import type { FeedView } from '../../view/feed-view';
+import { keepUnchangedItems } from '../../view/keep-unchanged-items';
 import { toFeedView } from '../../view/to-feed-view';
 import { liveHeaderNow, workingHeader } from '../live-header/live-header.mocks';
 import { Feed } from './feed';
-import { feedScrollId, scrolledToEnd, settleWait } from './feed-reader.mocks';
+import {
+  feedScrollId,
+  markSettledMiddleOfView,
+  scrollAwayFromEnd,
+  scrolledToEnd,
+  settleWait,
+} from './feed-reader.mocks';
 import { longSnapshot, longTail } from './feed.mocks';
 import { feedArgs } from './paged-feed.mocks';
 
@@ -104,15 +112,33 @@ function useStreamedLength(): number {
   return length;
 }
 
+function useStreamedView(length: number): FeedView {
+  const [drawing, setDrawing] = useState(() => ({
+    length: 0,
+    view: toFeedView(longTail, longSnapshot),
+  }));
+
+  if (drawing.length === length) return drawing.view;
+
+  const view = keepUnchangedItems(
+    drawing.view,
+    toFeedView([...longTail, ...sentRows(length)], longSnapshot),
+  );
+
+  setDrawing({ length, view });
+
+  return view;
+}
+
 // The Long Feed, then a prompt and its answer streaming in a few words at a time once the story sends it.
 function StreamingFeed(): React.JSX.Element {
   const length = useStreamedLength();
-  const rows = [...longTail, ...sentRows(length)];
+  const view = useStreamedView(length);
 
   return (
     <Feed
       {...feedArgs}
-      items={toFeedView(rows, longSnapshot).items}
+      items={view.items}
       liveHeader={length ? workingHeader : null}
       now={liveHeaderNow}
     />
@@ -122,6 +148,14 @@ function StreamingFeed(): React.JSX.Element {
 // Longest the answer may take to stream in before the story gives up. The steps before it can spend 15s of the 30s test timeout, so this stays inside what is left.
 const streamDeadlineMs = 12_000;
 
+async function sendAndWait(): Promise<void> {
+  await waitFor(() => expect(stream.send).not.toBeNull(), settleWait);
+  stream.send?.();
+  await waitFor(() => expect(stream.streamed).toBe(answerText.length), {
+    timeout: streamDeadlineMs,
+  });
+}
+
 // A sent prompt and its answer streaming in below it: the Feed follows the end, so the newest text stays in view above the Composer.
 export const FollowsEndWhileAnswerStreams: Story = {
   render: () => <StreamingFeed />,
@@ -129,14 +163,25 @@ export const FollowsEndWhileAnswerStreams: Story = {
     await settleLayout('wide');
     const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
-    // The Feed's mount effect hands over `send`; wait for it rather than assume it ran.
-    await waitFor(() => expect(stream.send).not.toBeNull(), settleWait);
-    stream.send?.();
-    await canvas.findByText(promptText);
-    await waitFor(() => expect(stream.streamed).toBe(answerText.length), {
-      timeout: streamDeadlineMs,
-    });
+    await sendAndWait();
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
+  },
+};
+
+export const HoldsReadingPositionWhileAnswerStreams: Story = {
+  render: () => <StreamingFeed />,
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+    const scroll = await canvas.findByTestId(feedScrollId);
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
+    await scrollAwayFromEnd(canvas, scroll);
+    const before = await markSettledMiddleOfView(scroll);
+
+    await sendAndWait();
+
+    const after = await markSettledMiddleOfView(scroll);
+    await expect(after.element).toBe(before.element);
+    await expect(Math.abs(after.top - before.top)).toBeLessThan(2);
   },
 };
 
@@ -154,7 +199,7 @@ const openMessage = (
 });
 
 // Every message of a running Turn stays open until the Turn ends; the Agent writes only into the newest.
-export const OneCaretAcrossOpenMessages: Story = {
+export const NoCursorAcrossOpenMessages: Story = {
   args: {
     items: toFeedView(
       [
@@ -170,6 +215,6 @@ export const OneCaretAcrossOpenMessages: Story = {
   play: async ({ canvas }) => {
     await settleLayout('wide');
     await expect(await canvas.findByText('Starting on the rest')).toBeVisible();
-    await expect(canvas.getAllByTestId('streaming-caret')).toHaveLength(1);
+    await expect(canvas.queryByTestId('streaming-caret')).toBeNull();
   },
 };

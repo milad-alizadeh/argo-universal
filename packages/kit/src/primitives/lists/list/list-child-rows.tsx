@@ -34,6 +34,7 @@ function PreparedList({ prepared, ...props }: PreparedListProps): ReactElement {
       {...prepared}
       {...measures}
       {...childHeights(props, height)}
+      recycleItems={props.recycleItems ?? Boolean(props.pagination)}
       maintainVisibleContentPosition={childAnchor(props.anchor)}
     />
   );

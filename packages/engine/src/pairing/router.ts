@@ -30,19 +30,26 @@ export interface PairingDeps {
 
 const Answered = z.strictObject({ deviceId: z.string() });
 
-const inviteFor = (deps: PairingDeps, minted: MintedTicket): PairingInvite => ({
+// The QR carries where the Server answers, as URLs, so a Device knocks there before it looks on the network, as a phone reaches an Expo dev server.
+const inviteFor = (
+  deps: PairingDeps,
+  minted: MintedTicket,
+  addresses: readonly string[],
+): PairingInvite => ({
   key: deps.serverPublicKey,
   server: deps.discoveryName,
   ticket: minted.ticket,
+  urls: addresses.map((address) => `http://${address}`),
 });
 
 const mintedTicket = (deps: PairingDeps): MintedPairingTicket => {
   const minted = deps.tickets.mint();
+  const addresses = deps.addresses();
 
   return {
-    invite: inviteFor(deps, minted),
+    invite: inviteFor(deps, minted, addresses),
     expiresAt: new Date(minted.expiresAt).toISOString(),
-    addresses: deps.addresses(),
+    addresses,
   };
 };
 

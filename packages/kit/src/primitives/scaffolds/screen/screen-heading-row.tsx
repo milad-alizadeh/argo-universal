@@ -2,21 +2,19 @@ import type { ReactElement, ReactNode } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { useHeadingInset } from '#kit/content-column/content-column';
 import { useEnlargedText } from '#kit/enlarged-text';
-import { useWide } from '#kit/use-wide/use-wide';
 import type { ScreenHeader } from '#primitives/actions/action';
 import {
   FixedSizeChrome,
   type IconButtonSize,
 } from '#primitives/actions/icon-button';
-import { Icon } from '#primitives/content/icon';
-import { Link, isRoute } from '#primitives/content/link';
-import { Text } from '#primitives/content/text';
 import { ScreenBack } from './screen-back';
+import { ScreenCaption } from './screen-caption';
 import { insetWidth, ScreenColumn } from './screen-column';
 import { HeadingActions } from './screen-heading-actions';
 import { HeadingLayout, type HeadingContent } from './screen-heading-layout';
 import { SearchHeading } from './screen-heading-search';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
+import { ScreenTitle } from './screen-title-menu';
 
 /*
  * The Screen's own heading, drawn where its plan puts the header there. Wide, it starts at the body's top, which
@@ -53,48 +51,6 @@ function HeadingCaption(props: ScreenHeaderInput): ReactNode {
   );
 }
 
-// A wide page's caption; a phone leaves it out, as its native header has no room for it.
-function ScreenCaption({
-  caption,
-  captionHref,
-}: Pick<ScreenProps, 'caption' | 'captionHref'>): ReactNode {
-  const wide = useWide();
-
-  if (!caption || !wide) return null;
-
-  return <Caption caption={caption} href={captionHref} />;
-}
-
-function Caption(props: { caption: string; href?: string }): ReactNode {
-  if (!props.href) return <CaptionText caption={props.caption} />;
-
-  return <CaptionLink caption={props.caption} href={props.href} />;
-}
-
-function CaptionText({ caption }: { caption: string }): ReactNode {
-  return (
-    <Text role="body" tone="muted">
-      {caption}
-    </Text>
-  );
-}
-
-// A caption that goes somewhere says so with a link glyph after it, as the page's one link out.
-function CaptionLink(props: { caption: string; href: string }): ReactNode {
-  return (
-    <View className="flex-row items-center gap-1">
-      <Text role="body" tone="muted">
-        <Link label={props.caption} {...captionTarget(props.href)} />
-      </Text>
-      <Icon name="external-link" size="sm" tone="muted" />
-    </View>
-  );
-}
-
-// One `href` is an App route or a URL, as a Link's is; the kit Link takes them apart.
-const captionTarget = (href: string): { href: string } | { route: string } =>
-  isRoute(href) ? { route: href } : { href };
-
 /*
  * A page's heading sits in its own column; a list column's is denser, its title one level down, its buttons small and
  * its search the sidebar's, since it sits above a list beside its page. A List that is selecting replaces it with its
@@ -120,26 +76,54 @@ type DeclaredHeadingProps = HeadingRowProps & { header: ScreenHeader };
 
 function DeclaredHeading(props: DeclaredHeadingProps): ReactElement {
   const { placement = 'page' } = props;
-  const look = placements[placement];
-
-  const content = {
-    title: <ScreenTitle title={props.title} level={look.titleLevel} />,
-    actions: <HeadingActions header={props.header} size={look.buttonSize} />,
-  };
 
   return (
     <View>
       <ScreenBack onBack={props.onBack} />
-      <Heading content={content} page={props} placement={placement} />
+      <Heading
+        content={headingContent(props, placements[placement])}
+        page={props}
+        placement={placement}
+      />
     </View>
   );
 }
 
+type Look = { titleLevel: number; buttonSize?: IconButtonSize };
+
+// The title, a menu button when it has a menu, and the header's buttons, in the placement's looks.
+const headingContent = (
+  props: DeclaredHeadingProps,
+  look: Look,
+): HeadingContent => ({
+  title: headingTitle(props, look),
+  actions: headingActions(props, look),
+});
+
+const headingTitle = (
+  props: DeclaredHeadingProps,
+  look: Look,
+): ReactElement => (
+  <ScreenTitle
+    title={props.title}
+    level={look.titleLevel}
+    groups={props.titleGroups}
+  />
+);
+
+const headingActions = (
+  props: DeclaredHeadingProps,
+  look: Look,
+): ReactElement => (
+  <HeadingActions
+    header={props.header}
+    size={look.buttonSize}
+    options={props.pageOptions}
+  />
+);
+
 // A page's title is its heading; a list column's sits a level below it, under the window's own page title.
-const placements: Record<
-  HeadingPlacement,
-  { titleLevel: number; buttonSize?: IconButtonSize; sidebar: boolean }
-> = {
+const placements: Record<HeadingPlacement, Look & { sidebar: boolean }> = {
   page: { titleLevel: 1, sidebar: false },
   list: { titleLevel: 2, buttonSize: 'sm', sidebar: true },
 };
@@ -163,23 +147,4 @@ function Heading(props: {
 
 function PlainHeading(props: HeadingContent): ReactElement {
   return <HeadingLayout {...props} stacked={useEnlargedText()} />;
-}
-
-const titleProps = {
-  role: 'title',
-  accessibilityRole: 'heading',
-  numberOfLines: 1,
-} as const;
-
-function ScreenTitle(props: {
-  title?: string;
-  level: number;
-}): ReactElement | null {
-  if (!props.title) return null;
-
-  return (
-    <Text {...titleProps} aria-level={props.level}>
-      {props.title}
-    </Text>
-  );
 }

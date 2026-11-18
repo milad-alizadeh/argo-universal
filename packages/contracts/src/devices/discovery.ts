@@ -11,6 +11,9 @@ export const discoveryProtocol = 'tcp';
 // The announcement's TXT field holding the hash of the Server's static public key: what survives a rename, a new router and a new address. The key itself is never announced; it reaches an App out of band (ADR-0045).
 export const discoveryKeyHashField = 'keyhash';
 
+// The TXT field holding the computer's name. The instance name carries a piece of the key hash to stay unique, so the name an owner reads travels here.
+export const discoveryNameField = 'name';
+
 const keyHashBytes = 16;
 
 // One digest of the key, the source of everything an announcement derives from it, so the Server and the App cannot disagree.
@@ -53,7 +56,10 @@ export interface Announced {
 
 const ipv4 = /^\d+\.\d+\.\d+\.\d+$/;
 
-const Txt = z.looseObject({ [discoveryKeyHashField]: z.coerce.string() });
+const Txt = z.looseObject({
+  [discoveryKeyHashField]: z.coerce.string(),
+  [discoveryNameField]: z.coerce.string().optional(),
+});
 
 const keyHashIn = (found: Announced): string => {
   const parsed = Txt.safeParse(found.txt);
@@ -61,12 +67,19 @@ const keyHashIn = (found: Announced): string => {
   return parsed.success ? (parsed.data[discoveryKeyHashField] ?? '') : '';
 };
 
+// The computer's name when the announcement says it, else the instance name an older Server announced.
+const nameIn = (found: Announced): string => {
+  const parsed = Txt.safeParse(found.txt);
+
+  return (parsed.success && parsed.data[discoveryNameField]) || found.name;
+};
+
 // An announcement worth listing: it carries a key hash and parses as a `DiscoveredServer`. IPv6 is left out.
 export function toDiscoveredServer(
   found: Announced,
 ): DiscoveredServer | undefined {
   const parsed = DiscoveredServer.safeParse({
-    name: found.name,
+    name: nameIn(found),
     keyHash: keyHashIn(found),
     addresses: found.addresses.filter((address) => ipv4.test(address)),
     port: found.port,
@@ -75,9 +88,12 @@ export function toDiscoveredServer(
   return parsed.success && parsed.data.keyHash ? parsed.data : undefined;
 }
 
-// Every Argo Server heard so far, by whatever identifies an announcement to the platform; one that is removed is dropped. Each change reports the whole list.
+// Every Argo Server heard so far, by the name the platform hears it under and its key hash: two Servers announcing one name stay two. One that is removed is dropped, and a removal names only the instance. Each change reports the whole list.
 export class HeardServers {
-  private readonly servers = new Map<string, DiscoveredServer>();
+  private readonly servers = new Map<
+    string,
+    { id: string; server: DiscoveredServer }
+  >();
 
   public constructor(
     private readonly listener: (servers: readonly DiscoveredServer[]) => void,
@@ -86,12 +102,17 @@ export class HeardServers {
   public up(id: string, found: Announced): void {
     const server = toDiscoveredServer(found);
 
-    if (server) this.servers.set(id, server);
-    this.listener([...this.servers.values()]);
+    if (server) this.servers.set(`${id}\0${server.keyHash}`, { id, server });
+    this.report();
   }
 
   public down(id: string): void {
-    this.servers.delete(id);
-    this.listener([...this.servers.values()]);
+    for (const [key, heard] of this.servers)
+      if (heard.id === id) this.servers.delete(key);
+    this.report();
+  }
+
+  private report(): void {
+    this.listener([...this.servers.values()].map(({ server }) => server));
   }
 }

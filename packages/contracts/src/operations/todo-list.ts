@@ -7,6 +7,7 @@ export const todoListOperations = {
   'agent.getTodoList': {
     id: 'agent.getTodoList',
     label: 'Read Todo list setting',
+    icon: 'checklist',
     description: 'Read whether Sessions keep a Todo list.',
     params: z.strictObject({}).default({}),
     result: TodoListSetting,
@@ -16,6 +17,7 @@ export const todoListOperations = {
   'agent.setTodoList': {
     id: 'agent.setTodoList',
     label: 'Change Todo list setting',
+    icon: 'checklist',
     description:
       'Turn the Todo list on or off. Off, new Sessions are not asked to keep one and none is shown.',
     params: TodoListSetting,

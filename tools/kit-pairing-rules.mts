@@ -26,6 +26,8 @@ export const exemptFolders = {
     'App-only: one box per character for the code typed into Add a Server (#1502); a Plugin has no code to take.',
   'content/code-scanner':
     'App-only: the camera frame that reads the code for Add a Server; a Plugin has no camera.',
+  'scaffolds/pairing-sheet':
+    'App-only: the bottom sheet over the scanner that stops Add a Server short of a Server, with its tile, evidence, field and pills; a Plugin has no pairing to stop.',
   'scaffolds/pinned-footer':
     'App-only: holds one button at the foot of a Screen body; a Plugin has no footer to pin.',
   'actions/pressable':

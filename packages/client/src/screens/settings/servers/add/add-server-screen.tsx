@@ -4,13 +4,8 @@ import type * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Linking, Platform } from 'react-native';
 import type { KnownServer, ServerAddress } from '#features/connection';
-import {
-  type PairPhase,
-  useAppServers,
-  usePairServer,
-} from '#features/servers';
-import type { PairPageKind, PairWay } from './pair-copy';
-import { PairPageView } from './pair-page-view';
+import { useAppServers, usePairServer } from '#features/servers';
+import { PairOutcome, shown } from './pair-outcome';
 import { ScanCamera } from './scan-camera';
 import { ScanCodeView } from './scan-code-view';
 import { TypeCodeView } from './type-code-view';
@@ -29,23 +24,26 @@ export function AddServerScreen(
   props: AddServerScreenProps,
 ): React.JSX.Element {
   const pairing = usePairServer(useAddServer());
-  // A phone starts on the camera; the code is typed only once the owner chose to (#1502).
-  const [typing, setTyping] = useState(typesTheCode);
 
   useLink(props.link, pairing.read);
 
-  return idle(pairing.state) ? (
-    <Entry pairing={pairing} typing={typing} onTyping={setTyping} />
-  ) : (
-    <Outcome pairing={pairing} way={typing ? 'type' : 'scan'} />
-  );
+  return <Page pairing={pairing} />;
 }
 
-// Nothing has been tried yet, or a typed code is out being asked: the page that takes the code.
-const idle = (
-  state: PairPhase,
-): state is Extract<PairPhase, { phase: 'scanning' | 'looking' }> =>
-  state.phase === 'scanning' || state.phase === 'looking';
+// A phone starts on the camera; the code is typed only once the owner chose to (#1502).
+function Page({ pairing }: { pairing: Pairing }): React.JSX.Element {
+  const [typing, setTyping] = useState(typesTheCode);
+
+  return shown(pairing.state) ? (
+    <PairOutcome
+      pairing={pairing}
+      state={pairing.state}
+      way={typing ? 'type' : 'scan'}
+    />
+  ) : (
+    <Entry pairing={pairing} typing={typing} onTyping={setTyping} />
+  );
+}
 
 // A browser-shaped App has no camera: the desktop app takes the code typed, and a phone reads it (#1502).
 const typesTheCode = Platform.OS === 'web';
@@ -86,7 +84,9 @@ function useAddServer(): (server: KnownServer) => void {
 
   return (server) => {
     add(server);
-    router.dismissAll();
+
+    // On a phone that held no Server, Pairing is the only page and holding one opens the App, so there is nothing to empty.
+    if (router.canDismiss()) router.dismissAll();
     router.navigate('/');
   };
 }
@@ -138,29 +138,4 @@ function accessOf(permission: Permission): 'ask' | 'refused' | 'allowed' {
   if (isGranted(permission)) return 'allowed';
 
   return isRefused(permission) ? 'refused' : 'ask';
-}
-
-const kindOf = (
-  state: Exclude<PairPhase, { phase: 'scanning' | 'looking' }>,
-): PairPageKind => (state.phase === 'waiting' ? 'waiting' : state.outcome.kind);
-
-// Cancelling the wait and scanning again are one thing, as is trying a Server that was not found once more; every other page leads back to the scanner.
-interface OutcomeProps {
-  pairing: Pairing;
-  way: PairWay;
-}
-
-function Outcome({ pairing, way }: OutcomeProps): React.JSX.Element | null {
-  const { state } = pairing;
-
-  if (idle(state)) return null;
-
-  return (
-    <PairPageView
-      kind={kindOf(state)}
-      serverName={state.serverName}
-      way={way}
-      onAction={kindOf(state) === 'not-found' ? pairing.retry : pairing.back}
-    />
-  );
 }

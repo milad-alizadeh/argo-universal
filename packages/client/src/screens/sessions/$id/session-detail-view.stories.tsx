@@ -7,6 +7,7 @@ import {
   questionsRequest,
   questionsValues,
 } from '../../../../mocks/elicitation';
+import { claudeDescribedRequest } from '../../../../mocks/requests/elicitation/claude-elicitation';
 import { SessionDetailView } from './session-detail-view';
 import { sessionPageBar } from './session-detail-view-bar.mocks';
 import { changedSession } from './session-detail-view-changes-pill.mocks';
@@ -135,6 +136,14 @@ export const Elicitation: Story = {
     elicitationProps({ request: questionsRequest, values: questionsValues }),
   ),
   render: (args): React.JSX.Element => <ElicitationPreview {...args} />,
+};
+
+// A question whose answers each say what they do: the tray shows it whole.
+export const DescribedElicitation: Story = {
+  args: elicitationSession(
+    elicitationProps({ request: claudeDescribedRequest }),
+  ),
+  render: Elicitation.render,
 };
 
 // A question taller than the Composer's tray scrolls its choices inside it, its title and actions in view.

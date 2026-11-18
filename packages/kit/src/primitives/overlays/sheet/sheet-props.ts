@@ -14,6 +14,8 @@ export type SheetProps = KitProps<'Sheet'> & {
     Pick<PressableProps, 'onPress'> & { disabled?: boolean | null }
   >;
   bottomEdge?: boolean;
+  // Where a wide window's popover opens on its trigger: above it from its start unless said, as the Composer's do; a header's opens below it, from its end.
+  popoverPlacement?: { side: 'top' | 'bottom'; align: 'start' | 'end' };
   // A detached phone sheet, inset from the screen edges, as the Session's Git sheet.
   floating?: boolean;
   // The pages scroll themselves, as a FieldGroup does, so the sheet gives them its height and wraps them in no scroller of its own; a page may say otherwise.

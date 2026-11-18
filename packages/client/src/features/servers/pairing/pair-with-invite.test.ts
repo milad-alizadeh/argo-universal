@@ -37,6 +37,19 @@ const deps = (
 const refused = (refusal: string): Error =>
   Object.assign(new Error('refused'), { refusal });
 
+const refusingBrowse: NonNullable<PairDeps['browse']> = (_, onDenied) => {
+  onDenied?.();
+
+  return (): void => {};
+};
+
+// A look at the network that the system refuses: it says so to the browse, then finds nothing.
+const refusedLook: Resolve = (_, browse) => {
+  browse?.(() => {});
+
+  return Promise.reject(new Error('none'));
+};
+
 describe('pairing with the Server a code names', () => {
   it('has nothing to knock on when the Server is not heard and no address is known', async () => {
     const pair = vi.fn<Pair>();
@@ -110,5 +123,69 @@ describe('pairing with the Server a code names', () => {
       pairWithInvite(invite, deps(pair, heardAt(first, second))),
     ).resolves.toEqual({ kind: 'not-found' });
     expect(pair).toHaveBeenCalledTimes(2);
+  });
+
+  it('waits four seconds on the first look at the network, and three on a later one', async () => {
+    const resolve = vi.fn<Resolve>().mockRejectedValue(new Error('none'));
+    const pair = vi.fn<Pair>();
+
+    await pairWithInvite(invite, deps(pair, resolve, { firstBrowse: true }));
+    await pairWithInvite(invite, deps(pair, resolve));
+
+    expect(resolve.mock.calls.map((call) => call[2])).toEqual([
+      4000,
+      undefined,
+    ]);
+  });
+
+  it('says undetermined, not not-found, when the first look at the network hears nothing', async () => {
+    const resolve = vi.fn<Resolve>().mockRejectedValue(new Error('none'));
+    const first = deps(vi.fn<Pair>(), resolve, { firstBrowse: true });
+
+    await expect(pairWithInvite(invite, first)).resolves.toEqual({
+      kind: 'undetermined',
+    });
+  });
+
+  it('says denied when the system refused the look, even on the first one', async () => {
+    const first = deps(vi.fn<Pair>(), refusedLook, {
+      browse: refusingBrowse,
+      firstBrowse: true,
+    });
+
+    await expect(pairWithInvite(invite, first)).resolves.toEqual({
+      kind: 'denied',
+    });
+  });
+
+  it('says misconfigured when the build never declared that it browses', async () => {
+    const resolve = vi.fn<Resolve>().mockRejectedValue(new Error('none'));
+    const build = deps(vi.fn<Pair>(), resolve, { declared: false });
+
+    await expect(pairWithInvite(invite, build)).resolves.toEqual({
+      kind: 'misconfigured',
+    });
+  });
+
+  it('says the address did not go on to ask the owner when it fails after the socket opened', async () => {
+    const onUnreached = vi.fn<() => void>();
+    const pair = vi.fn<Pair>().mockRejectedValue(new Error('closed'));
+
+    await pairWithInvite(invite, deps(pair, heardAt(studio), { onUnreached }));
+
+    expect(onUnreached).toHaveBeenCalledOnce();
+  });
+
+  it('passes on when the Server is reached, so the owner is said to be asked only then', async () => {
+    const onReached = vi.fn<() => void>();
+    const pair = vi.fn<Pair>().mockResolvedValue({ deviceId: 'phone' });
+
+    await pairWithInvite(invite, deps(pair, heardAt(studio), { onReached }));
+
+    expect(pair).toHaveBeenCalledWith(
+      expect.anything(),
+      invite.ticket,
+      expect.objectContaining({ onReached }),
+    );
   });
 });

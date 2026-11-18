@@ -29,6 +29,7 @@
     "operations": [
       {
         "name": "attach",
+        "icon": "attach",
         "label": "Attach Issue to Session",
         "description": "Connect the calling Session to an Issue it is implementing, so the Issue's page lists it.",
         "tier": "act",
@@ -44,6 +45,7 @@
       },
       {
         "name": "detach",
+        "icon": "close",
         "label": "Detach Issue from Session",
         "description": "Disconnect the calling Session from an Issue it is no longer working on.",
         "tier": "act",
@@ -59,6 +61,7 @@
       },
       {
         "name": "chooseTracker",
+        "icon": "settings",
         "label": "Choose a Project's Issue tracker",
         "description": "Choose which Tracker a Project's Issues come from, or none when no tracker is named.",
         "tier": "act",
@@ -73,6 +76,7 @@
       },
       {
         "name": "checkAgain",
+        "icon": "retry",
         "label": "Read a Project's Issues again",
         "description": "Make the Issue tracker's pages read again.",
         "tier": "read",
@@ -81,6 +85,7 @@
       },
       {
         "name": "setStatus",
+        "icon": "check",
         "label": "Set Issue status",
         "description": "Close or reopen one Issue in a Project.",
         "tier": "act",
@@ -102,6 +107,7 @@
       },
       {
         "name": "setLabel",
+        "icon": "tag",
         "label": "Set Issue label",
         "description": "Put a label on one Issue in a Project, or take it off.",
         "tier": "act",
@@ -127,6 +133,7 @@
       },
       {
         "name": "createLabel",
+        "icon": "tag",
         "label": "Create an Issue label",
         "description": "Make a new label in the Project's repository and put it on one Issue.",
         "tier": "act",
@@ -147,6 +154,7 @@
       },
       {
         "name": "setAssignee",
+        "icon": "person",
         "label": "Set Issue assignee",
         "description": "Assign one Issue in a Project to a person, or take them off it.",
         "tier": "act",
@@ -172,6 +180,7 @@
       },
       {
         "name": "signIn",
+        "icon": "key",
         "label": "Sign in to GitHub",
         "description": "Asks GitHub for a sign-in code, shows it on the sign-in page, and adds the Account once the person approves it on GitHub.",
         "tier": "act",
@@ -179,6 +188,7 @@
       },
       {
         "name": "cancelSignIn",
+        "icon": "close",
         "label": "Cancel GitHub sign-in",
         "description": "Stops waiting for the GitHub sign-in code to be approved.",
         "tier": "act",

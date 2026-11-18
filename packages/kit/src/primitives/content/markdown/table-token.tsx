@@ -53,10 +53,9 @@ function tableRows(token: Tokens.Table): ReactElement[] {
 // Pipe tables use the same scrolling Table as Plugin content.
 export function TableToken({
   token,
-  caret,
 }: BlockTokenProps<Tokens.Table>): ReactElement {
   return (
-    <ClampedBlock caret={caret}>
+    <ClampedBlock>
       <Table columns={tableColumns(token)} overflow="scroll">
         {tableRows(token)}
       </Table>

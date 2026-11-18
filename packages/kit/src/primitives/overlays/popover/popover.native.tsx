@@ -1,5 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
+import { ListPlaceContext } from '#kit/list-place';
 import { TextClassContext } from '#primitives/content/text';
 import { triggerChild, useOpenState } from '#primitives/overlays/open-state';
 import { Sheet } from '#primitives/overlays/sheet';
@@ -43,18 +44,25 @@ export function PopoverHoverGroup({
   return children;
 }
 
-// The sheet gives the popover's content the standard sheet inset.
+const sheetPropsOf = (props: ContentProps) =>
+  ({
+    onClosed: props.onClosed,
+    label: props.accessibilityLabel,
+    inset: true,
+  }) as const;
+
+/*
+ * The sheet gives the popover's content the standard sheet inset. Its rows keep a page's place, as they always have:
+ * a phone popover's Lists and pickers draw as on a page, not flush in the inset as a sheet's composed FieldGroup does.
+ */
 function PopoverContent(props: ContentProps): React.JSX.Element {
   return (
-    <Sheet
-      {...usePopoverState()}
-      onClosed={props.onClosed}
-      label={props.accessibilityLabel}
-      inset
-    >
-      <TextClassContext.Provider value="text-foreground">
-        {props.children}
-      </TextClassContext.Provider>
+    <Sheet {...usePopoverState()} {...sheetPropsOf(props)}>
+      <ListPlaceContext value="page">
+        <TextClassContext.Provider value="text-foreground">
+          {props.children}
+        </TextClassContext.Provider>
+      </ListPlaceContext>
     </Sheet>
   );
 }

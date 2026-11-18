@@ -18,6 +18,7 @@ export const pluginOperations = {
   'plugin.list': {
     id: 'plugin.list',
     label: 'List Plugins',
+    icon: 'plugins',
     description:
       'List available Plugins, their capabilities and current status.',
     params: z.strictObject({}).default({}),
@@ -28,6 +29,7 @@ export const pluginOperations = {
   'plugin.activate': {
     id: 'plugin.activate',
     label: 'Start Plugin',
+    icon: 'plug',
     description:
       'Start an enabled Plugin and report its running or failed status.',
     params: PluginActivation.strict(),
@@ -38,6 +40,7 @@ export const pluginOperations = {
   'plugin.setEnabled': {
     id: 'plugin.setEnabled',
     label: 'Turn Plugin on or off',
+    icon: 'plug',
     description:
       'Enable or disable a Plugin. Disabling stops its worker and open views.',
     params: PluginEnablement.strict(),
@@ -48,6 +51,7 @@ export const pluginOperations = {
   'plugin.getSettings': {
     id: 'plugin.getSettings',
     label: 'Read Plugin settings',
+    icon: 'settings',
     description:
       'Read a Plugin’s setting values and whether each secret is set, without secret values.',
     params: PluginActivation.strict(),
@@ -58,6 +62,7 @@ export const pluginOperations = {
   'plugin.setSetting': {
     id: 'plugin.setSetting',
     label: 'Change Plugin setting',
+    icon: 'settings',
     description:
       'Save one Plugin setting. An empty secret clears it from the secret store.',
     params: PluginSettingChange.strict(),
@@ -68,6 +73,7 @@ export const pluginOperations = {
   'plugin.guide': {
     id: 'plugin.guide',
     label: 'Plugin blueprint',
+    icon: 'guide',
     description:
       'Read how to build, create or scaffold an Argo Plugin: the blueprint and an index of kit components; pass components to read their props. Read it before building a Plugin, then run plugin.new.',
     params: PluginGuideInput,
@@ -88,6 +94,7 @@ export const pluginOperations = {
   'plugin.new': {
     id: 'plugin.new',
     label: 'New Plugin',
+    icon: 'plugins',
     description:
       'Write a working Plugin into a Session Checkout: one page, one Operation and one passing test. Run plugin.guide first.',
     params: PluginNewInput,

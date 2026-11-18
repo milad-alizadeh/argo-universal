@@ -15,6 +15,12 @@ export const statusSymbols = {
     sfFilled: 'checkmark.circle.fill',
     material: 'check_circle',
   },
+  // Local Network off for the App, and a computer that cannot be found.
+  'network-off': { sf: 'network.slash', material: 'wifi_off' },
+  'computer-off': {
+    sf: 'laptopcomputer.slash',
+    material: 'desktop_access_disabled',
+  },
   pending: { sf: 'circle', material: 'radio_button_unchecked' },
   permission: {
     sf: 'exclamationmark.shield',
