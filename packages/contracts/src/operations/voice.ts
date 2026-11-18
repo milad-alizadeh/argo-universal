@@ -47,6 +47,7 @@ export const voiceOperations = {
   },
   'voice.getSettings': {
     id: 'voice.getSettings',
+    icon: 'settings',
     label: 'Read Voice settings',
     description:
       'Read whether Voice calls are on, the Voice provider and voice chosen, and the providers and voices to choose from.',
@@ -57,6 +58,7 @@ export const voiceOperations = {
   },
   'voice.setSettings': {
     id: 'voice.setSettings',
+    icon: 'settings',
     label: 'Change Voice settings',
     description:
       'Turn Voice calls on or off, or choose the Voice provider or the voice the next call uses.',
