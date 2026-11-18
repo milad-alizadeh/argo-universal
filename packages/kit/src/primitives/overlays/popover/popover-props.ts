@@ -10,6 +10,8 @@ export type PopoverProps = KitProps<'Popover'> & {
   inline?: boolean;
   // Keep the trigger in its existing layout parent.
   frameless?: boolean;
+  // Web only: opens beside whatever popover or menu is open and closes none, as a tooltip does.
+  beside?: boolean;
   className?: string;
   style?: StyleProp<ViewStyle>;
 };

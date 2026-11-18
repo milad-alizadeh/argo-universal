@@ -4,6 +4,7 @@ import {
   type ChangesContext,
   sayOperationFailed,
   useFireOperation,
+  usePendingAutomations,
   useSessionPullRequests,
   withRowActions,
 } from '#features/plugins';
@@ -14,21 +15,25 @@ import { withSessionPullRequests } from './with-session-pull-requests';
 
 type SessionFeed = ReturnType<typeof useSessionFeed>;
 
-// The Plugins' Changes with what their … menus do in this Session: copy the link, detach.
+/*
+ * The Plugins' Changes with what their … menus do in this Session: copy the link, detach, and tick an automation.
+ * A tick shows at once, ahead of the Plugin's answer.
+ */
 function useRowActions(
   context: ChangesContext | undefined,
   pullRequests: SessionPullRequest[],
 ): SessionPullRequest[] {
   const fire = useFireOperation();
+  const { rows, hold } = usePendingAutomations(pullRequests);
 
-  return context
-    ? withRowActions(pullRequests, {
-        scope: context,
-        fire,
-        failed: sayOperationFailed,
-        copy: setStringAsync,
-      })
-    : pullRequests;
+  const ports = {
+    fire,
+    hold,
+    failed: sayOperationFailed,
+    copy: setStringAsync,
+  };
+
+  return context ? withRowActions(rows, { scope: context, ...ports }) : rows;
 }
 
 // An open Session with the Changes the Plugins supply, which its Workbench draws.

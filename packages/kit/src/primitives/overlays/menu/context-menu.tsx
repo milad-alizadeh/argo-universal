@@ -1,9 +1,10 @@
 import * as RadixContextMenu from '@radix-ui/react-context-menu';
 import { Fragment } from 'react';
-import { type ComponentType, type ReactElement, useRef } from 'react';
+import { type ComponentType, type ReactElement, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#kit/utils';
 import { TextClassContext } from '#primitives/content/text';
+import { OneOverlay } from '#primitives/overlays/open-state';
 import type { ContextMenuItem, ContextMenuProps } from './context-menu-props';
 import { MenuActionLabel } from './menu-action-label';
 import {
@@ -25,10 +26,28 @@ import {
  * context-menu key, Shift+F10 or a long touch opens it at the pointer; it draws the action menu's rows.
  */
 export function ContextMenu(props: ContextMenuProps): ReactElement {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <OneOverlay open={open} onOpenChange={staysOpen}>
+      <RadixContextMenu.Root onOpenChange={setOpen}>
+        <ContextMenuParts {...props} />
+      </RadixContextMenu.Root>
+    </OneOverlay>
+  );
+}
+
+/*
+ * Opening the context menu closes the popover or menu open beside it. Radix gives it no `open` to close it by in
+ * turn, and it needs none: it takes every press outside it, so nothing else opens while it is open.
+ */
+const staysOpen = (): void => {};
+
+function ContextMenuParts(props: ContextMenuProps): ReactElement {
   const chosen = useChosenAction();
 
   return (
-    <RadixContextMenu.Root>
+    <>
       <ContextMenuTrigger {...props} />
       <RadixContextMenu.Portal>
         <ContextMenuContent
@@ -37,7 +56,7 @@ export function ContextMenu(props: ContextMenuProps): ReactElement {
           chosen={chosen}
         />
       </RadixContextMenu.Portal>
-    </RadixContextMenu.Root>
+    </>
   );
 }
 

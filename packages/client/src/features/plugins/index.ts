@@ -57,6 +57,8 @@ export {
   useSessionPullRequests,
 } from './hooks/use-session-pull-requests';
 
+export { usePendingAutomations } from './hooks/use-pending-automations';
+
 export { useStaleMarks } from './hooks/use-stale-marks';
 
 export { useFireOperation } from './hooks/use-tree-calls';
