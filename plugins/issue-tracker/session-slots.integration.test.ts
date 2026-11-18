@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { signedInRoot, tracker } from './journey-fixture';
+import { project, signedInRoot, tracker } from './journey-fixture';
 import {
   attach,
   barSlot,
@@ -132,7 +132,11 @@ it('leaves the row and the bar empty again once the Session is detached', async 
 
   await until(rows, (answer) => itemsOf(answer).length === 1);
   await until(bar, (answer) => itemsOf(answer).length === 1);
-  await attach(test, 'detach');
+  await test.operations.run({
+    name: 'detach',
+    params: { number: 42 },
+    caller: { person: true, sessionId: 'session-1', projectId: project.id },
+  });
 
   const emptyRow = await until(rows, (answer) => itemsOf(answer).length === 0);
   const emptyBar = await until(bar, (answer) => itemsOf(answer).length === 0);
