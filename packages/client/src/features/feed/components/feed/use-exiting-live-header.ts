@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { Platform } from 'react-native';
 import {
   type FeedEntry,
   type LiveHeaderEntry,
@@ -18,6 +19,7 @@ interface LiveState {
   sessionId?: string;
   active?: LiveHeaderEntry;
   turnRunning: boolean;
+  keepCell: boolean;
 }
 
 interface HeldHeader extends LiveState {
@@ -48,6 +50,7 @@ function startExit(
 ): LiveHeaderEntry {
   const exiting: LiveHeaderEntry = {
     ...entry,
+    closing: true,
     onExit: (): void =>
       setHeld((held) =>
         held.exiting === exiting ? { ...held, exiting: undefined } : held,
@@ -55,6 +58,16 @@ function startExit(
   };
 
   return exiting;
+}
+
+function closingEntry(
+  entry: LiveHeaderEntry,
+  live: LiveState,
+  setHeld: SetHeldHeader,
+): LiveHeaderEntry {
+  return live.keepCell
+    ? { ...entry, closing: true }
+    : startExit(entry, setHeld);
 }
 
 function nextHeader(
@@ -72,7 +85,9 @@ function retainOnExit(
   live: LiveState,
   setHeld: SetHeldHeader,
 ): HeldHeader {
-  return active ? { ...live, exiting: startExit(active, setHeld) } : live;
+  return active
+    ? { ...live, exiting: closingEntry(active, live, setHeld) }
+    : live;
 }
 
 function useHeldHeader(live: LiveState): LiveHeaderEntry | undefined {
@@ -92,8 +107,8 @@ export function useExitingLiveHeader(
   sessionId: string | undefined,
   turnRunning: boolean,
 ): FeedEntry[] {
-  const active = liveHeaderEntry(entries.at(-1));
-  const exiting = useHeldHeader({ active, sessionId, turnRunning });
+  const last = entries.at(-1);
+  const exiting = useHeldHeader(liveState(last, sessionId, turnRunning));
 
   return useMemo(
     () => (exiting ? [...entries, exiting] : entries),
@@ -101,27 +116,57 @@ export function useExitingLiveHeader(
   );
 }
 
-function liveHeaderRendered(list: LegendListRef | null): boolean {
-  if (!list) return false;
+/*
+ * iOS can retarget a pending end scroll when the final cell is deleted. At a successful Turn end,
+ * keep the collapsed cell until the next Turn selects a new tail.
+ */
+const keepClosedCell = (last?: FeedEntry): boolean =>
+  Platform.OS === 'ios' && hasSettledTail(last);
+
+const hasSettledTail = (last?: FeedEntry): boolean =>
+  last !== undefined && last.type !== 'turn_end';
+
+const liveState = (
+  last: FeedEntry | undefined,
+  sessionId: string | undefined,
+  turnRunning: boolean,
+): LiveState => ({
+  active: liveHeaderEntry(last),
+  sessionId,
+  turnRunning,
+  keepCell: keepClosedCell(last),
+});
+
+function liveHeaderNeedsMeasurement(list: LegendListRef): boolean {
   const state = list.getState();
   const index = state.indexByKey(liveHeaderKey);
 
-  return index !== undefined && Boolean(state.elementAtIndex(index));
+  return index !== undefined && !state.elementAtIndex(index);
+}
+
+function closeUnrenderedHeader(
+  list: LegendListRef,
+  entry: LiveHeaderEntry,
+): void {
+  if (!liveHeaderNeedsMeasurement(list)) return;
+
+  if (entry.onExit) entry.onExit();
+  else list.setItemSize(liveHeaderKey, { width: 0, height: 0 });
 }
 
 // There is no animation to wait for when the reader is far above the closing cell.
-export function useRemoveUnrenderedLiveHeader(
+export function useCloseUnrenderedLiveHeader(
   list: RefObject<LegendListRef | null>,
   last?: FeedEntry,
 ): void {
-  const onExit = liveHeaderEntry(last)?.onExit;
+  const entry = liveHeaderEntry(last);
   useEffect(() => {
-    if (!onExit) return;
+    if (!entry?.closing) return;
 
     const frame = requestAnimationFrame(() => {
-      if (!liveHeaderRendered(list.current)) onExit();
+      if (list.current) closeUnrenderedHeader(list.current, entry);
     });
 
     return (): void => cancelAnimationFrame(frame);
-  }, [list, onExit]);
+  }, [list, entry]);
 }

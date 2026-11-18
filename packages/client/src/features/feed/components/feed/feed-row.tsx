@@ -67,7 +67,7 @@ function closeAtZero(onExit: LiveHeaderEntry['onExit']): ViewProps['onLayout'] {
 }
 
 function LiveHeaderRow({
-  entry: { onExit, liveHeader, toolCall },
+  entry: { closing, onExit, liveHeader, toolCall },
   now,
   spaceBefore,
 }: LiveHeaderRowProps): React.JSX.Element {
@@ -75,7 +75,7 @@ function LiveHeaderRow({
   useEffect(() => onExit, [onExit]);
 
   return (
-    <Collapsible open={!onExit} onLayout={closeAtZero(onExit)}>
+    <Collapsible open={!closing} onLayout={closeAtZero(onExit)}>
       <CollapsibleContent>
         {spaceBefore && <View className={spaceBefore} />}
         <LiveHeader liveHeader={liveHeader} toolCall={toolCall} now={now} />

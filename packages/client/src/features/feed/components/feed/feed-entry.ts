@@ -17,6 +17,7 @@ export interface LiveHeaderEntry {
   type: 'live_header';
   liveHeader: LiveHeaderValue;
   toolCall?: ToolCallUpdate;
+  closing?: boolean;
   onExit?: () => void;
 }
 

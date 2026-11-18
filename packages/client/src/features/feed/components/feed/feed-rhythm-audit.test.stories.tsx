@@ -100,6 +100,12 @@ function requiredContent(column: HTMLElement): Element {
   return content;
 }
 
+function rowStart(column: HTMLElement): number {
+  const liveHeader = column.querySelector('[role="status"]');
+
+  return (liveHeader ?? column).getBoundingClientRect().top;
+}
+
 async function expectGap(
   columns: HTMLElement[],
   index: number,
@@ -108,8 +114,7 @@ async function expectGap(
   const next = requiredColumn(columns, index + 1);
   const content = requiredContent(requiredColumn(columns, index));
 
-  const actual =
-    next.getBoundingClientRect().top - content.getBoundingClientRect().bottom;
+  const actual = rowStart(next) - content.getBoundingClientRect().bottom;
 
   await expect(actual).toBeCloseTo(expected, 0);
 }
