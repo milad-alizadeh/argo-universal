@@ -4,6 +4,7 @@ import { PinnedFooter } from '@repo/kit/primitives/scaffolds/pinned-footer';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import type * as React from 'react';
+import { FindingAlert } from './finding-alert';
 import {
   type EndedKind,
   type PairPageKind,
@@ -19,7 +20,7 @@ export interface PairPageViewProps {
   serverName: string;
   // Whether the code was scanned or typed, for the pages whose words name the camera.
   way?: PairWay;
-  // The page's one action: Cancel while it waits, then scan again or try again. The way back is the header's.
+  // The page's one action: Cancel while it looks or waits, then scan again or try again. The way back is the header's.
   onAction: () => void;
 }
 
@@ -27,21 +28,25 @@ export interface PairPageViewProps {
  * One page of Add a Server that says where it stands and gives the owner the one way on. The same page draws the wait and every way it can end (ADR-0045).
  */
 export function PairPageView(props: PairPageViewProps): React.JSX.Element {
-  return props.kind === 'waiting' ? (
+  return props.kind === 'waiting' || props.kind === 'finding' ? (
     <WaitingScreen {...props} />
   ) : (
     <EndedScreen {...props} kind={props.kind} />
   );
 }
 
-// The wait is a card over the scanner as the scan page draws it, with its frame dark where the camera was.
+// The look and the wait are a card over the scanner as the scan page draws it, with its frame dark where the camera was.
 function WaitingScreen(props: PairPageViewProps): React.JSX.Element {
   return (
     <Screen title="Add a Server">
       <PinnedFooter footer={null}>
         <CodeScanner {...scannerProps(looking)} />
       </PinnedFooter>
-      <WaitingAlert {...props} />
+      {props.kind === 'finding' ? (
+        <FindingAlert {...props} />
+      ) : (
+        <WaitingAlert {...props} />
+      )}
     </Screen>
   );
 }

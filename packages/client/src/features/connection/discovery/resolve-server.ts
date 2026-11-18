@@ -1,6 +1,6 @@
 import { type DiscoveredServer, keyHashOf } from '@repo/contracts';
 
-// Starts listening for Argo Servers on the local network and reports every one heard so far each time that changes; answers a function that stops. The platform supplies it: mDNS on a phone, a browser of its own on a desktop. `onDenied` is called when the system refuses the browse itself, which a phone does when the owner turned Local Network off.
+// Starts listening for Argo Servers on the local network and reports every one heard so far each time that changes; answers a function that stops. The platform supplies it: mDNS on a phone, a browser of its own on a desktop. `onDenied` is called when the system refuses the browse itself, which a phone does when the owner turned Local Network off; the wait for the Server then ends at once.
 export type BrowseServers = (
   listener: (servers: readonly DiscoveredServer[]) => void,
   onDenied?: () => void,
@@ -50,27 +50,17 @@ type Heard = PromiseWithResolvers<DiscoveredServer | null>;
 // Listens for the Server whose announced hash is this key's. Where nothing can listen, or the browser cannot start (a native module that is not linked), nothing is awaited and the stored address answers.
 function startBrowsing(
   browse: BrowseServers | null,
-  waiting: Waiting,
+  key: string,
   heard: Heard,
 ): () => void {
   try {
-    return browse ? listen(browse, waiting, heard) : giveUp(heard);
+    return browse ? listen(browse, key, heard) : giveUp(heard);
   } catch {
     return giveUp(heard);
   }
 }
 
-// The Server's key, and who to tell when the system refuses to look at all.
-interface Waiting {
-  key: string;
-  onDenied?: () => void;
-}
-
-function listen(
-  browse: BrowseServers,
-  { key, onDenied }: Waiting,
-  heard: Heard,
-): () => void {
+function listen(browse: BrowseServers, key: string, heard: Heard): () => void {
   const keyHash = keyHashOf(key);
 
   return browse(
@@ -79,10 +69,7 @@ function listen(
 
       if (found) heard.resolve(found);
     },
-    (): void => {
-      onDenied?.();
-      heard.resolve(null);
-    },
+    () => heard.resolve(null),
   );
 }
 
@@ -95,11 +82,11 @@ function giveUp(heard: Heard): () => void {
 // Waits for the Server with this key to announce itself, or gives up. A computer that answers to the right name with another key is not the Server.
 function waitForAnnouncement(
   browse: BrowseServers | null,
-  waiting: Waiting,
+  key: string,
   timeoutMs: number,
 ): Promise<DiscoveredServer | null> {
   const heard = Promise.withResolvers<DiscoveredServer | null>();
-  const stop = startBrowsing(browse, waiting, heard);
+  const stop = startBrowsing(browse, key, heard);
   const timer = setTimeout((): void => heard.resolve(null), timeoutMs);
 
   return heard.promise.finally(release(timer, stop));
@@ -113,7 +100,7 @@ export async function announcedAddresses(
   browse: BrowseServers | null,
   timeoutMs: number = defaultTimeoutMs,
 ): Promise<ServerAddress[]> {
-  const found = await waitForAnnouncement(browse, { key }, timeoutMs);
+  const found = await waitForAnnouncement(browse, key, timeoutMs);
 
   if (!found) return [];
 
@@ -147,10 +134,8 @@ export async function resolveServer(
   known: KnownServer,
   browse: BrowseServers | null,
   timeoutMs: number = defaultTimeoutMs,
-  onDenied?: () => void,
 ): Promise<ServerLocation> {
-  const waiting = { key: known.key, onDenied };
-  const found = await waitForAnnouncement(browse, waiting, timeoutMs);
+  const found = await waitForAnnouncement(browse, known.key, timeoutMs);
 
   return found ? announced(found) : remembered(known);
 }

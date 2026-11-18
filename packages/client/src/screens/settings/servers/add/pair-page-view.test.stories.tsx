@@ -39,6 +39,19 @@ export const WaitingOffersCancel: Story = {
   },
 };
 
+// The look for the Server can be cancelled and shows it is working, before the owner is asked anything.
+export const FindingOffersCancel: Story = {
+  args: { kind: 'finding' },
+  play: async ({ args, userEvent }) => {
+    await expect(
+      await body.findByText(/Finding Studio PC/),
+    ).toBeInTheDocument();
+    await expect(await body.findByRole('progressbar')).toBeInTheDocument();
+    await userEvent.click(await body.findByRole('button', { name: 'Cancel' }));
+    await expect(args.onAction).toHaveBeenCalledOnce();
+  },
+};
+
 // The wait shows it is waiting, with a spinner in the card rather than silence.
 export const WaitingShowsASpinner: Story = {
   args: { kind: 'waiting' },

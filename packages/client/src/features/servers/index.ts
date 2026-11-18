@@ -32,4 +32,4 @@ export {
 
 export type { PairPhase } from './pairing/pair-hook';
 
-export { usePairServer } from './pairing/use-pair-server';
+export { type PairServer, usePairServer } from './pairing/use-pair-server';

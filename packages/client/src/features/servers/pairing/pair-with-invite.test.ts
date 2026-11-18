@@ -37,6 +37,19 @@ const deps = (
 const refused = (refusal: string): Error =>
   Object.assign(new Error('refused'), { refusal });
 
+const refusingBrowse: NonNullable<PairDeps['browse']> = (_, onDenied) => {
+  onDenied?.();
+
+  return (): void => {};
+};
+
+// A look at the network that the system refuses: it says so to the browse, then finds nothing.
+const refusedLook: Resolve = (_, browse) => {
+  browse?.(() => {});
+
+  return Promise.reject(new Error('none'));
+};
+
 describe('pairing with the Server a code names', () => {
   it('has nothing to knock on when the Server is not heard and no address is known', async () => {
     const pair = vi.fn<Pair>();
@@ -135,12 +148,10 @@ describe('pairing with the Server a code names', () => {
   });
 
   it('says denied when the system refused the look, even on the first one', async () => {
-    const resolve = vi.fn<Resolve>().mockImplementation((...args) => {
-      args[3]?.();
-
-      return Promise.reject(new Error('none'));
+    const first = deps(vi.fn<Pair>(), refusedLook, {
+      browse: refusingBrowse,
+      firstBrowse: true,
     });
-    const first = deps(vi.fn<Pair>(), resolve, { firstBrowse: true });
 
     await expect(pairWithInvite(invite, first)).resolves.toEqual({
       kind: 'denied',

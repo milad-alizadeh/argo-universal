@@ -12,6 +12,7 @@ import {
   type Hook,
   type PairPhase,
   type Read,
+  type Typed,
   scanning,
   settle,
 } from './pair-hook';
@@ -64,14 +65,22 @@ const actionsOf = (hook: Hook): Omit<PairServer, 'state'> => ({
   },
 });
 
+const typedAgain = (typed: Typed, host: string | undefined): Typed => ({
+  ...typed,
+  host: host || typed.host,
+});
+
+const readAgain = (last: Read, host: string | undefined): Read => ({
+  ...last,
+  address: readTypedAddress(host) ?? last.address,
+});
+
 // The same code once more: an address the owner typed replaces the one it was tried at, and a code typed in is asked again with it.
 function retryLast(host: string | undefined, hook: Hook): void {
   const { last, lastTyped } = hook.held;
 
-  if (lastTyped !== null)
-    typeCode({ ...lastTyped, host: host || lastTyped.host }, hook);
-  else if (last)
-    void readCode({ ...last, address: readTypedAddress(host) ?? last.address }, hook);
+  if (lastTyped !== null) typeCode(typedAgain(lastTyped, host), hook);
+  else if (last) void readCode(readAgain(last, host), hook);
 }
 
 function readCode(read: Read, hook: Hook): boolean {

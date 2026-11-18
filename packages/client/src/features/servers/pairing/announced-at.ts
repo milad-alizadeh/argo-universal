@@ -31,17 +31,21 @@ const heardAt = (
   addresses: notYetKnockedOn(located, alreadyKnockedOn),
 });
 
-// What the system said about looking at all, written as the browse reports it.
-function listenForRefusal(): { refusal: { denied: boolean }; onDenied: () => void } {
-  const refusal = { denied: false };
-
-  return {
-    refusal,
-    onDenied: (): void => {
-      refusal.denied = true;
-    },
-  };
+interface Refusal {
+  denied: boolean;
 }
+
+// The browse, told to note when the system refuses to look at all, so the answer can tell a refusal from silence.
+const watching = (
+  browse: PairDeps['browse'],
+  refusal: Refusal,
+): PairDeps['browse'] =>
+  browse &&
+  ((listener, onDenied) =>
+    browse(listener, () => {
+      refusal.denied = true;
+      onDenied?.();
+    }));
 
 export async function announcedAt(
   { invite, deps }: { invite: PairingInvite; deps: PairDeps },
@@ -49,10 +53,11 @@ export async function announcedAt(
 ): Promise<Announced> {
   const known = { name: invite.server, key: invite.key };
   const timeoutMs = deps.firstBrowse ? firstBrowseTimeoutMs : undefined;
-  const { refusal, onDenied } = listenForRefusal();
+  const refusal = { denied: false };
 
   try {
-    const located = await deps.resolve(known, deps.browse, timeoutMs, onDenied);
+    const browse = watching(deps.browse, refusal);
+    const located = await deps.resolve(known, browse, timeoutMs);
 
     return heardAt(located, alreadyKnockedOn);
   } catch {

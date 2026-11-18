@@ -1,14 +1,15 @@
 import type { IconName } from '@repo/kit/symbols/icon-names';
 
 export type PairPageKind =
+  | 'finding'
   | 'waiting'
   | 'expired'
   | 'declined'
   | 'unanswered'
   | 'not-found';
 
-// Every page but the wait is a page of its own; the wait is a card over the scanner.
-export type EndedKind = Exclude<PairPageKind, 'waiting'>;
+// Every page but the look and the wait is a page of its own; those two are cards over the scanner.
+export type EndedKind = Exclude<PairPageKind, 'finding' | 'waiting'>;
 
 // What a page of Add a Server says. `action` is the way on once the page has ended. The way back is the header's.
 export interface PairCopy {

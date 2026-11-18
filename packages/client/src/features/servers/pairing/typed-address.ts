@@ -18,10 +18,13 @@ const TypedAddress = z
   .transform(addressOf)
   .refine(({ port }) => port <= highestPort);
 
+const linkedAddress = (typed: string | undefined): ServerAddress | undefined =>
+  addressOfUrl(typed?.trim() ?? '')[0];
+
 /*
  * The address an owner typed as `host:port`, such as the one the Server Device shows beside its code, or as an http link with a port, or nothing when it is neither: a name or an address with no port is a hint for discovery, not a place to knock.
  */
 export const readTypedAddress = (
   typed: string | undefined,
 ): ServerAddress | undefined =>
-  TypedAddress.safeParse(typed).data ?? addressOfUrl(typed?.trim() ?? '')[0];
+  TypedAddress.safeParse(typed).data ?? linkedAddress(typed);
