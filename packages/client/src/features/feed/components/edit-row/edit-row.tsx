@@ -62,6 +62,7 @@ export function EditRow({ row }: EditRowProps): React.JSX.Element {
       <FileEdits row={row} />
       <ToolOutput
         content={row.content.filter((block) => block.type !== 'diff')}
+        row={row}
       />
     </View>
   );

@@ -29,6 +29,16 @@ export const toolCallImages = (row: ToolCallUpdate): KeyedImage[] => {
   );
 };
 
+// The image one of a Tool call's own content blocks holds, as the Feed lists it, or none for any other block.
+export const toolCallImageAt = (
+  row: ToolCallUpdate,
+  block: ToolContent[number],
+): KeyedImage | undefined => {
+  const key = imageKeyAt(row.id, row.content.indexOf(block));
+
+  return toolCallImages(row).find((image) => image.key === key);
+};
+
 // A Tool call's output without the images it draws as thumbnails.
 export const withoutImages = (content: ToolContent): ToolContent =>
   content.filter((block) => !isImage(block));

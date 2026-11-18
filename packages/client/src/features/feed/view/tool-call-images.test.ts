@@ -1,7 +1,12 @@
 import { expect, it } from 'vitest';
 import type { FeedGroup } from './feed-view';
 import { blob, read } from './image-read.mocks';
-import { groupImages, toolCallImages, withoutImages } from './tool-call-images';
+import {
+  groupImages,
+  toolCallImageAt,
+  toolCallImages,
+  withoutImages,
+} from './tool-call-images';
 
 it('names a read image after its file', () => {
   expect(toolCallImages(read('a', '/repo/docs/before.png', 'b1'))).toEqual([
@@ -49,4 +54,18 @@ it('collects a group’s images in the order its calls ran, inside explorations 
     'b1',
     'b2',
   ]);
+});
+
+const imageRead = read('a', '/x/shot.png', 'b1');
+
+it('finds the listed image of one of a call\u2019s own blocks', () => {
+  const [block] = imageRead.content;
+
+  expect(block && toolCallImageAt(imageRead, block)?.key).toBe('a:0');
+});
+
+it('finds no image for a text block, nor for a block of another call', () => {
+  const [text] = read('b', '/x/app.ts').content;
+
+  expect(text && toolCallImageAt(imageRead, text)).toBeUndefined();
 });

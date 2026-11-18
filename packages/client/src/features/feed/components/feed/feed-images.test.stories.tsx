@@ -8,7 +8,9 @@ import {
   recordedUserMessage,
 } from '../../../../lib/product/feed-message.mocks';
 import { toFeedView } from '../../view/to-feed-view';
+import { commandTitle } from '../command-row/command-row-play.mocks';
 import { imageReadsGroup } from '../tool-call-group/tool-call-group-fixtures';
+import { completedCommand } from '../tool-call.mocks';
 import { Feed } from './feed';
 import { feedScrollId, scrolledToEnd } from './feed-reader.mocks';
 import { feedArgs } from './paged-feed.mocks';
@@ -174,6 +176,52 @@ const rowsWithoutImages = feedArgs.items.filter(
 
 if (rowsWithoutImages.length < 100)
   throw new Error('Recorded catalog needs a long Feed of rows without images');
+
+const commandImage = 'command.png';
+
+// A recorded command as if it had also returned an image, which its row draws in its output.
+const commandWithImage = {
+  type: 'tool_call' as const,
+  row: {
+    ...completedCommand,
+    id: 'image-command-row',
+    content: [
+      ...completedCommand.content,
+      ...imagesNamed(commandImage).map((content) => ({
+        type: 'content' as const,
+        content,
+      })),
+    ],
+  },
+};
+
+// An image a command returned is drawn in the command's own output, and is a stop like any other.
+function stepsFromCommandOutput(width: number): Story {
+  return {
+    args: { items: [...answerItems, commandWithImage] },
+    play: async (context) => {
+      const { canvas, userEvent } = context;
+      await settleLayout(width);
+      await userEvent.click(
+        await canvas.findByRole('button', { name: commandTitle }),
+      );
+      await userEvent.click(
+        await canvas.findByRole('button', thumbnail(commandImage)),
+      );
+      await shows(commandImage);
+      await steps(context, 'ArrowLeft', [answerImage]);
+      await steps(context, 'ArrowRight', [commandImage, commandImage]);
+    },
+  };
+}
+
+export const StepsFromCommandOutputPhone = stepsFromCommandOutput(
+  layoutWidths.phone,
+);
+
+export const StepsFromCommandOutputWide = stepsFromCommandOutput(
+  layoutWidths.wide,
+);
 
 const olderRowsAsked = fn();
 
