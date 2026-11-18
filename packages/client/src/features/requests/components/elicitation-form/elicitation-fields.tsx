@@ -20,7 +20,9 @@ import {
   type FieldSection,
 } from './elicitation-sections';
 
-type ModelProps = { model: ElicitationModel };
+type ModelProps = {
+  model: ElicitationModel & { page: ElicitationModel['schema']['fields'] };
+};
 
 // The form's fields on one page: a FieldGroup, its rows grouped in sections that end at a field's description.
 export function ElicitationFields({ model }: ModelProps): ReactElement {
@@ -31,7 +33,7 @@ export function ElicitationFields({ model }: ModelProps): ReactElement {
 
   return (
     <FieldGroup disabled={model.inactive}>
-      {fieldSections(model.schema.fields).map((section) =>
+      {fieldSections(model.page).map((section) =>
         fieldsSection({ model, section, meta }),
       )}
     </FieldGroup>
