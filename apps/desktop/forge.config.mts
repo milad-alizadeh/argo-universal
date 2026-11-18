@@ -9,7 +9,12 @@ const config: ForgeConfig = {
     // The system opens `argo://` Screen links in this app; `app://app` stays internal.
     protocols: [{ name: 'Argo', schemes: ['argo'] }],
     // Argo runs on macOS 15 and later, the oldest system with SF Symbols 6.0 (ADR-0029).
-    extendInfo: { LSMinimumSystemVersion: '15.0' },
+    extendInfo: {
+      LSMinimumSystemVersion: '15.0',
+      // Asked the first time a Voice call listens.
+      NSMicrophoneUsageDescription:
+        'Argo listens through the microphone while you talk in a Voice call.',
+    },
   },
   rebuildConfig: {},
   // Release packaging is out of scope for now, so the generated makers are removed.

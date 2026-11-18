@@ -4,6 +4,7 @@ import { useSubscription } from '@trpc/tanstack-react-query';
 import { useEffect } from 'react';
 import type { ComposerVoice, ComposerVoiceCall } from '#features/composer';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
+import { offerTo } from './offer-to';
 import type { VoiceConnection } from './voice-connection';
 import { useVoiceConnection } from './voice-connection-context';
 
@@ -77,9 +78,7 @@ function useStartCall(
   );
 
   return () =>
-    void connection
-      ?.createOffer()
-      .then((offer) => start.mutate({ sessionId, offer }));
+    void offerTo(connection, (offer) => start.mutate({ sessionId, offer }));
 }
 
 function useEndCall(sessionId: string): ComposerVoice['onEnd'] {

@@ -22,8 +22,8 @@ const parseMember = (line: string): ProcessGroupMember | undefined => {
 
 const processTableArguments = ['-A', '-ww', '-o', 'pid=,pgid=,stat=,command='];
 
-// Full command lines of every process outgrow Node's 1 MB default on a busy Mac.
-const processTableBytes = 64 * 1024 * 1024;
+// 64 MiB: full command lines of every process outgrow Node's 1 MB default on a busy Mac.
+const processTableBytes = 67_108_864;
 
 const processTable = (): string => {
   try {
