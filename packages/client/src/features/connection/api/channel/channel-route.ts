@@ -39,7 +39,7 @@ const differentFrom =
 
 /*
  * Where a paired Server's channels open (ADR-0045). The address that last proved the Server's key is tried first, so a channel per Blob does not ask the network each time.
- * When it does not answer, the Server is looked for again: every address it announces now, then the one Pairing kept, and the first that proves the key is kept for the next channel.
+ * When it does not answer, the Server is looked for again: every address it announces now, then the one Pairing kept, then the others the code carried, and the first that proves the key is kept for the next channel.
  */
 export class ChannelRoute {
   private proven: ChannelAddress | undefined;
@@ -48,6 +48,8 @@ export class ChannelRoute {
   public constructor(
     private readonly kept: ChannelAddress,
     private readonly locate: LocateServer = nothingAnnounced,
+    // The other addresses the invite carried, such as a tailnet's: tried after the kept one, for a phone that is off the LAN.
+    private readonly alsoKept: readonly ChannelAddress[] = [],
   ) {}
 
   public async open<T>(
@@ -94,7 +96,7 @@ export class ChannelRoute {
   private async located(): Promise<ChannelAddress[]> {
     this.locating ??= this.lookAgain();
 
-    return inOrder([...(await this.locating), this.kept]);
+    return inOrder([...(await this.locating), this.kept, ...this.alsoKept]);
   }
 
   // Channels that open together share one look at the network; one that fails is as if nothing announced the Server.

@@ -67,8 +67,25 @@ interface Attempt {
 
 const pairedAt = (address: ServerAddress, attempt: Attempt): PairOutcome => ({
   kind: 'paired',
-  server: { name: attempt.name, key: attempt.invite.key, address },
+  server: {
+    name: attempt.name,
+    key: attempt.invite.key,
+    address,
+    ...otherAddressesOf(address, attempt),
+  },
 });
+
+// Every other address the invite carried is kept, so the phone can reach the Server later from another network.
+function otherAddressesOf(
+  answered: ServerAddress,
+  { invite }: Attempt,
+): { otherAddresses?: ServerAddress[] } {
+  const others = (invite.urls ?? [])
+    .flatMap(addressOfUrl)
+    .filter((address) => keyOf(address) !== keyOf(answered));
+
+  return others.length > 0 ? { otherAddresses: unique(others) } : {};
+}
 
 // One address. One that does not answer is not a refusal, so it gives nothing and the next may be the Server.
 async function tryAt(

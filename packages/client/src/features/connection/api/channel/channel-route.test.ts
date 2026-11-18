@@ -90,6 +90,27 @@ describe('ChannelRoute', () => {
     expect(moved.tried).toEqual([before, after]);
   });
 
+  it('tries the other addresses the invite carried after Bonjour and the kept one, off the LAN included', async () => {
+    const tailnet: ChannelAddress = { host: `100.101.102.${7}`, port };
+    const now = lan(40);
+    const route = new ChannelRoute(kept, announcing(now), [tailnet]);
+    const server = serverOn(tailnet);
+
+    await expect(route.open(server.attempt)).resolves.toBe(opened);
+    expect(server.tried).toEqual([now, kept, tailnet]);
+  });
+
+  it('still tries a link-local address last among the kept ones', async () => {
+    const wire = cable(90);
+    const tailnet: ChannelAddress = { host: `100.101.102.${7}`, port };
+    const route = new ChannelRoute(kept, announcing(), [wire, tailnet]);
+    const server = serverOn();
+
+    await route.open(server.attempt).catch(() => undefined);
+
+    expect(server.tried).toEqual([kept, tailnet, wire]);
+  });
+
   it('tries a link-local address last, since it answers only while a cable joins the two', async () => {
     const wire = cable(90);
     const wifi = lan(172);

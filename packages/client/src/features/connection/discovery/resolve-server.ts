@@ -15,6 +15,8 @@ export interface KnownServer {
   name: string;
   key: string;
   address?: ServerAddress;
+  // The other addresses the invite carried, such as a tailnet's; the address above is the one that answered.
+  otherAddresses?: ServerAddress[];
 }
 
 export interface ServerLocation {

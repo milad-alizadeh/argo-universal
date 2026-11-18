@@ -22,6 +22,8 @@ const Kept = z.object({
   name: z.string(),
   key: z.string().min(1),
   address: z.unknown().optional(),
+  // Older entries have none.
+  otherAddresses: z.unknown().optional(),
 });
 
 // Anything kept that does not read as a Server is dropped, and the Servers beside it are still listed.
@@ -66,10 +68,27 @@ const canList = (
   kept: KeptServer,
 ): boolean => kept.key !== ownServerId && !servers.has(kept.key);
 
-const knownServer = ({ name, key, address }: KeptServer): KnownServer => {
-  const read = Address.safeParse(address);
+// Every address in the list that reads as one; the rest cost only themselves.
+const readAddresses = (others: unknown): z.infer<typeof Address>[] =>
+  Array.isArray(others)
+    ? others.flatMap((one) => Address.safeParse(one).data ?? [])
+    : [];
 
-  return { name, key, ...(read.success && { address: read.data }) };
+const knownServer = ({
+  name,
+  key,
+  address,
+  otherAddresses,
+}: KeptServer): KnownServer => {
+  const read = Address.safeParse(address);
+  const others = readAddresses(otherAddresses);
+
+  return {
+    name,
+    key,
+    ...(read.success && { address: read.data }),
+    ...(others.length > 0 && { otherAddresses: others }),
+  };
 };
 
 // Writes run one after another, so the last list is the one kept, and a read waits for them.
