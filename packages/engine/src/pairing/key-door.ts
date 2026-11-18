@@ -1,13 +1,13 @@
 import { randomBytes } from 'node:crypto';
-import type { Socket } from 'node:net';
 import {
   answerRun,
   refuseRun,
   type OfferedTicket,
   type ServerRun,
 } from '@repo/contracts/pake';
+import type { ChannelCarrier } from './channel-carrier';
 import { frameRecord } from './frames';
-import { HandshakeBuffer } from './handshake-buffer';
+import { readingOf, readMore, type Reading } from './handshake-reading';
 import { KeyRun } from './key-run';
 
 export interface KeyDoorDeps {
@@ -34,26 +34,29 @@ const turnedAway = frameRecord(Buffer.from(refuseRun('ticket-attempts')));
 export class KeyDoor {
   public constructor(private readonly deps: KeyDoorDeps) {}
 
-  public accept(socket: Socket, opening: Buffer, proven: () => void): void {
-    const buffer = new HandshakeBuffer();
-
-    const read = (chunk: Buffer): void => {
-      try {
-        const message = buffer.push(chunk);
-
-        if (!message) return void socket.once('data', read);
-        proven();
-        this.answer(socket, message.handshake);
-      } catch (cause) {
-        this.deps.report('key question', String(cause));
-        socket.destroy();
-      }
-    };
-
-    read(opening);
+  public accept(
+    carrier: ChannelCarrier,
+    opening: Buffer,
+    proven: () => void,
+  ): void {
+    this.read(readingOf(carrier, proven), opening);
   }
 
-  private answer(socket: Socket, ask: Buffer): void {
+  private read(reading: Reading, chunk: Buffer): void {
+    try {
+      const message = reading.buffer.push(chunk);
+
+      if (!message)
+        return readMore(reading, (again, more) => this.read(again, more));
+      reading.proven();
+      this.answer(reading.socket, message.handshake);
+    } catch (cause) {
+      this.deps.report('key question', String(cause));
+      reading.socket.destroy();
+    }
+  }
+
+  private answer(socket: ChannelCarrier, ask: Buffer): void {
     const source = socket.remoteAddress ?? 'unknown';
     const offered = this.deps.offering(source);
 
@@ -61,7 +64,7 @@ export class KeyDoor {
     else socket.end(turnedAway);
   }
 
-  private begin(socket: Socket, asked: Asked): void {
+  private begin(socket: ChannelCarrier, asked: Asked): void {
     const settle = (proved: boolean): void =>
       this.deps.settled(asked.source, proved);
 

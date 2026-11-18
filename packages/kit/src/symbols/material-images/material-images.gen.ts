@@ -37,6 +37,7 @@ import material_data_object from '../assets/material-light/data_object.xml';
 import material_delete from '../assets/material-light/delete.xml';
 import material_deployed_code from '../assets/material-light/deployed_code.xml';
 import material_description from '../assets/material-light/description.xml';
+import material_desktop_access_disabled from '../assets/material-light/desktop_access_disabled.xml';
 import material_desktop_mac from '../assets/material-light/desktop_mac.xml';
 import material_diamond from '../assets/material-light/diamond.xml';
 import material_dns from '../assets/material-light/dns.xml';
@@ -149,6 +150,7 @@ import material_volume_up from '../assets/material-light/volume_up.xml';
 import material_warning from '../assets/material-light/warning.xml';
 import material_web_asset from '../assets/material-light/web_asset.xml';
 import material_wifi from '../assets/material-light/wifi.xml';
+import material_wifi_off from '../assets/material-light/wifi_off.xml';
 import material_workspaces from '../assets/material-light/workspaces.xml';
 import material_zoom_in from '../assets/material-light/zoom_in.xml';
 import material_zoom_out from '../assets/material-light/zoom_out.xml';
@@ -340,6 +342,7 @@ export const materialImages = {
   delete: material_delete,
   deployed_code: material_deployed_code,
   description: material_description,
+  desktop_access_disabled: material_desktop_access_disabled,
   desktop_mac: material_desktop_mac,
   diamond: material_diamond,
   dns: material_dns,
@@ -452,6 +455,7 @@ export const materialImages = {
   warning: material_warning,
   web_asset: material_web_asset,
   wifi: material_wifi,
+  wifi_off: material_wifi_off,
   workspaces: material_workspaces,
   zoom_in: material_zoom_in,
   zoom_out: material_zoom_out,

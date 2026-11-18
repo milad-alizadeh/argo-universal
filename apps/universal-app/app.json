@@ -52,6 +52,9 @@
         {
           "ios": {
             "deploymentTarget": "18.0"
+          },
+          "android": {
+            "usesCleartextTraffic": true
           }
         }
       ],

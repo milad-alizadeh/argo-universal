@@ -4,7 +4,7 @@ export interface ChannelAddress {
 }
 
 /*
- * A TCP socket as the channel needs it, and nothing more. The App opens one with `react-native-tcp-socket`; a test opens one with `node:net`. Either way what crosses it is bytes, with no HTTP stack in between, which is what an Android release build lets reach a local-network address (ADR-0045).
+ * A socket as the channel needs it, and nothing more: bytes in order. The App and its tests open one as a WebSocket at the Server's channel path, which carries the channel over anything that carries HTTP (ADR-0045).
  */
 export interface ByteSocket {
   write: (data: Uint8Array) => void;

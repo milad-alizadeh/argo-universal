@@ -142,6 +142,9 @@
   --leading-5_5: 22px;
   --leading-6: 24px;
   /* Text roles, the same tokens as Paper. "-wide" is the desktop step. */
+  /* A pairing sheet's headline, a step above the page title (Pairing pages, direction B). */
+  --text-sheet-title: 24px;
+  --text-sheet-title--line-height: 30px;
   --text-title: var(--text-xl);
   --leading-title: var(--leading-6);
   --font-weight-title: var(--font-weight-semibold);

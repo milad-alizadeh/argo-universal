@@ -22,7 +22,7 @@ const typedDepsOf = (
   hook: Hook,
   found: { name: string; host?: string },
 ): TypedDeps => ({
-  ...depsOf(controller.signal),
+  ...depsOf(controller.signal, hook.held),
   requestKey: requestServerKey,
   host: found.host,
   onFound: (name) => {

@@ -1,5 +1,6 @@
 import { connect, type Socket } from 'node:net';
 import {
+  PairingAnswer,
   PairingWelcome,
   type PairingClaim,
   type PairingRefusal,
@@ -29,6 +30,8 @@ export interface ChannelInput {
   readonly serverPublicKey: string;
   readonly deviceKey: Keypair;
   readonly claim: PairingClaim;
+  // Called when the Server says the request is with the owner, before the owner answers.
+  readonly onAsked?: () => void;
 }
 
 export interface OpenedChannel {
@@ -52,7 +55,7 @@ export async function connectChannel(
   const socket = await opened(input.address);
   socket.write(Buffer.concat([channelMagic, frameRecord(handshake.message)]));
 
-  return accept(socket, handshake, await firstRecord(socket));
+  return accept({ socket, handshake, input }, await firstRecord(socket));
 }
 
 const opened = (address: ChannelAddress): Promise<Socket> =>
@@ -66,7 +69,10 @@ const opened = (address: ChannelAddress): Promise<Socket> =>
 
 type Records = { record: Buffer; rest: Buffer };
 
-function firstRecord(socket: Socket): Promise<Records> {
+function firstRecord(
+  socket: Socket,
+  earlier: Buffer = Buffer.alloc(0),
+): Promise<Records> {
   return new Promise<Records>((resolve, reject): void => {
     const read = recordReader(socket, resolve);
 
@@ -74,7 +80,9 @@ function firstRecord(socket: Socket): Promise<Records> {
     socket.once('close', (): void =>
       reject(new Error('The Server closed the channel')),
     );
-    socket.once('data', read);
+
+    if (earlier.length > 0) read(earlier);
+    else socket.once('data', read);
   });
 }
 
@@ -95,18 +103,50 @@ function recordReader(
   return read;
 }
 
-function accept(
+interface Connecting {
+  socket: Socket;
+  handshake: ReturnType<typeof startHandshake>;
+  input: ChannelInput;
+}
+
+async function accept(
+  { socket, handshake, input }: Connecting,
+  { record, rest }: Records,
+): Promise<OpenedChannel> {
+  const accepted = handshake.accept(record);
+  const answer = PairingAnswer.parse(JSON.parse(accepted.welcome.toString()));
+
+  if ('asked' in answer) {
+    input.onAsked?.();
+
+    return welcomed(socket, accepted.cipher, await firstRecord(socket, rest));
+  }
+
+  return settled(socket, answer, { rest, cipher: accepted.cipher });
+}
+
+// The welcome that followed the early answer, sealed by the channel's own cipher.
+function welcomed(
   socket: Socket,
-  handshake: ReturnType<typeof startHandshake>,
+  cipher: ChannelCipher,
   { record, rest }: Records,
 ): OpenedChannel {
-  const accepted = handshake.accept(record);
-  const welcome = PairingWelcome.parse(JSON.parse(accepted.welcome.toString()));
+  const welcome = PairingWelcome.parse(
+    JSON.parse(cipher.open(record).toString()),
+  );
 
+  return settled(socket, welcome, { rest, cipher });
+}
+
+function settled(
+  socket: Socket,
+  welcome: PairingWelcome,
+  channel: { rest: Buffer; cipher: ChannelCipher },
+): OpenedChannel {
   if (!welcome.paired) return refuse(socket, welcome.refusal);
 
   return {
-    socket: resumed(socket, rest, accepted.cipher),
+    socket: resumed(socket, channel.rest, channel.cipher),
     deviceId: welcome.deviceId,
   };
 }
