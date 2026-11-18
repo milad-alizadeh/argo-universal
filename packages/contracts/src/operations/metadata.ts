@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { iconNames } from '../kit-symbols/icon-map.ts';
+import { iconNames } from '#kit-symbols/icon-map';
 
 export const OperationTier = z.enum(['read', 'act', 'confirm']);
 
