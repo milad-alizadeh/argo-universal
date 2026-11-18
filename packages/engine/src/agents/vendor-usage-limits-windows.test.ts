@@ -1,5 +1,5 @@
 import { UsageLimit } from '@repo/contracts';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { capturedClaudeRateLimit } from '#mocks/claude-rate-limit';
 import { vendorUsageLimits } from './vendor';
 
@@ -33,8 +33,12 @@ type RateLimitInfo = {
       };
 };
 
+const rejections = {
+  report: vi.fn<(detail: string, cause?: unknown) => void>(),
+};
+
 const read = (info: RateLimitInfo): UsageLimit[] =>
-  vendorUsageLimits({ '_claude/rateLimit': info }, observedAt);
+  vendorUsageLimits({ '_claude/rateLimit': info }, observedAt, rejections);
 
 // Regression: on a Claude subscription the Usage control was empty on every Session, as the used share came only here.
 it('reads the used share a Claude subscription reports under its unified windows', () => {
@@ -112,30 +116,39 @@ it('reads the unified windows when the verdict names no window', () => {
   ]);
 });
 
-it('keeps the other windows when one does not parse', () => {
-  expect(
-    read({
+it.each<[string, RateLimitInfo]>([
+  [
+    'a window that does not parse',
+    {
       status: 'allowed',
       unifiedWindows: {
         five_hour: { utilization: 'high' },
         seven_day: { utilization: 0.1, resetsAt: weekEnds },
       },
-    }),
-  ).toEqual([expect.objectContaining({ id: 'seven_day' })]);
-});
-
-it('keeps the verdict when its unified windows do not parse', () => {
-  expect(
-    read({
+    },
+  ],
+  [
+    'unified windows that do not parse',
+    {
       status: 'allowed',
       rateLimitType: 'five_hour',
       utilization: 0.4,
       unifiedWindows: 'soon',
-    }),
-  ).toEqual([
-    expect.objectContaining({
-      id: 'five_hour',
-      measure: { kind: 'fraction', used: 0.4 },
-    }),
-  ]);
+    },
+  ],
+])('rejects and reports %s', (_name, info) => {
+  rejections.report.mockClear();
+
+  expect(read(info)).toEqual([]);
+  expect(rejections.report).toHaveBeenCalledOnce();
+});
+
+it('reads a verdict with no reset as having none', () => {
+  const [limit] = read({
+    status: 'allowed',
+    rateLimitType: 'overage',
+    utilization: 0.1,
+  });
+
+  expect(limit).not.toHaveProperty('resetsAt');
 });

@@ -1,5 +1,5 @@
 import { UsageLimit } from '@repo/contracts';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { vendorUsageLimits } from './vendor';
 
 const observedAt = new Date('2026-11-18T10:00:00.000Z');
@@ -17,8 +17,12 @@ type RateLimitInfo = {
   limitScope?: string;
 };
 
+const rejections = {
+  report: vi.fn<(detail: string, cause?: unknown) => void>(),
+};
+
 const read = (info: RateLimitInfo): UsageLimit[] =>
-  vendorUsageLimits({ [rateLimitKey]: info }, observedAt);
+  vendorUsageLimits({ [rateLimitKey]: info }, observedAt, rejections);
 
 it('reads a warned 5-hour window as a used fraction with its reset', () => {
   const limits = read({
@@ -106,18 +110,30 @@ it('reads allowed overage and ignores fields added later', () => {
 });
 
 it.each<[string, RateLimitInfo]>([
-  ['no window', { status: 'allowed', utilization: 0.2 }],
   ['an unknown window', { status: 'allowed', rateLimitType: 'hourly' }],
   ['an unknown status', { status: 'paused', rateLimitType: 'five_hour' }],
   [
     'a negative use',
     { status: 'allowed', rateLimitType: 'five_hour', utilization: -1 },
   ],
-])('reads nothing from %s', (_name, info) => {
+])('rejects and reports %s', (_name, info) => {
+  rejections.report.mockClear();
+
   expect(read(info)).toEqual([]);
+  expect(rejections.report).toHaveBeenCalledOnce();
 });
 
-it('reads nothing from an update without its key', () => {
-  expect(vendorUsageLimits(undefined, observedAt)).toEqual([]);
-  expect(vendorUsageLimits({ other: 1 }, observedAt)).toEqual([]);
+it('reads nothing from a verdict on no window, with no unified windows', () => {
+  rejections.report.mockClear();
+
+  expect(read({ status: 'allowed', utilization: 0.2 })).toEqual([]);
+  expect(rejections.report).not.toHaveBeenCalled();
+});
+
+it('reads nothing, and reports nothing, from an update without its key', () => {
+  rejections.report.mockClear();
+
+  expect(vendorUsageLimits(undefined, observedAt, rejections)).toEqual([]);
+  expect(vendorUsageLimits({ other: 1 }, observedAt, rejections)).toEqual([]);
+  expect(rejections.report).not.toHaveBeenCalled();
 });

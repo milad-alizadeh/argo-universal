@@ -16,16 +16,13 @@ const UnifiedWindow = z.object({
   utilization: z.number().min(0),
   resetsAt: z.number().positive(),
   // At or past the window's own limit; the verdict's status says whether requests are refused.
-  status: rateLimitStatus.nullish().catch(null),
+  status: rateLimitStatus.optional(),
 });
 
-// A window that is missing or does not parse reads as none, so the others still count.
-const unifiedWindow = UnifiedWindow.nullish().catch(null);
-
 export const UnifiedWindows = z.object({
-  five_hour: unifiedWindow,
-  seven_day: unifiedWindow,
-  seven_day_overage_included: unifiedWindow,
+  five_hour: UnifiedWindow.optional(),
+  seven_day: UnifiedWindow.optional(),
+  seven_day_overage_included: UnifiedWindow.optional(),
 });
 
 type UnifiedWindows = z.infer<typeof UnifiedWindows>;
@@ -40,17 +37,25 @@ export type WindowReading = Pick<
   'capacity' | 'measure' | 'resetsAt'
 >;
 
-const windowTypes: readonly UnifiedWindowType[] = [
-  'five_hour',
-  'seven_day',
-  'seven_day_overage_included',
-];
+// The shortest window first.
+const windowTypes = UnifiedWindows.keyof().options;
 
 export const isoTime = (epochSeconds: number): string =>
   new Date(epochSeconds * millisecondsPerSecond).toISOString();
 
+export const capacityOf = (
+  limitStatus: z.infer<typeof rateLimitStatus> | undefined,
+): UsageLimit['capacity'] =>
+  limitStatus === 'rejected' ? 'exhausted' : 'available';
+
+// A window's reset, left out when it gave none.
+export const windowReset = (
+  window: WindowReading | undefined,
+): Pick<UsageLimit, 'resetsAt'> =>
+  window?.resetsAt === undefined ? {} : { resetsAt: window.resetsAt };
+
 const windowReading = (window: UnifiedWindow): WindowReading => ({
-  capacity: window.status === 'rejected' ? 'exhausted' : 'available',
+  capacity: capacityOf(window.status),
   measure: { kind: 'fraction', used: window.utilization },
   resetsAt: isoTime(window.resetsAt),
 });
@@ -66,7 +71,7 @@ const readingOf = (
 
 // Each window the SDK reported, read; the shortest first.
 export const unifiedWindowReadings = (
-  windows: UnifiedWindows | null | undefined,
+  windows: UnifiedWindows | undefined,
 ): Map<UnifiedWindowType, WindowReading> =>
   new Map(
     windows ? windowTypes.flatMap((type) => readingOf(windows, type)) : [],
