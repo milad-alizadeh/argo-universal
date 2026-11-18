@@ -148,11 +148,15 @@ const sessionParts = (
   header: bandClaim(props, panels),
   bar: sessionBar(props),
   feed: sessionFeed(props, panels),
-  stage: props.stage && <VoiceStageView {...props.stage} />,
+  stage: voiceStage(props),
   composer: sessionBottom(props),
   panel: props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />,
   onDropFiles: hasDraft(props) ? props.onDropFiles : undefined,
 });
+
+// The orb pinned above the Feed while a call runs in this Session.
+const voiceStage = (props: OpenSessionViewProps): React.ReactNode =>
+  props.stage && <VoiceStageView {...props.stage} />;
 
 const bandClaim = (
   props: OpenSessionViewProps,

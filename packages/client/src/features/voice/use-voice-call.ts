@@ -80,17 +80,40 @@ function useEndCall(sessionId: string): ComposerVoice['onEnd'] {
   return () => end.mutate({ sessionId });
 }
 
+// The call's id and the Session it runs in, when there is a call.
+type CallIds = { callId: string | undefined; session: string | undefined };
+
+const idsOf = (call: VoiceStatus['call'] | undefined): CallIds => ({
+  callId: call?.callId,
+  session: call?.sessionId,
+});
+
+type Handlers = Parameters<typeof composerVoice>[2];
+
+// What the Composer's voice buttons do: start, end, mute, and point at a call in another Session.
+function useHandlers(
+  sessionId: string,
+  connection: VoiceConnection | null,
+  status: VoiceStatus | undefined,
+): Handlers {
+  const ids = idsOf(status?.call);
+
+  return {
+    onStart: useStartCall(sessionId, connection),
+    onEnd: useEndCall(sessionId),
+    mutes: useVoiceMutes(connection, ids.callId),
+    elsewhere: useCallPointer(ids.session, sessionId),
+  };
+}
+
 // The Composer's voice state for one Session, or nothing where the App carries no audio.
 export function useVoiceCall(sessionId: string): ComposerVoice | undefined {
   const connection = useVoiceConnection();
   const status = useVoiceStatus();
-  const onStart = useStartCall(sessionId, connection);
-  const onEnd = useEndCall(sessionId);
-  const mutes = useVoiceMutes(connection, status?.call?.callId);
-  const elsewhere = useCallPointer(status?.call?.sessionId, sessionId);
+  const handlers = useHandlers(sessionId, connection, status);
   useReleaseWhenOver(status, connection);
 
-  if (!connection || !status) return undefined;
-
-  return composerVoice(status, sessionId, { onStart, onEnd, mutes, elsewhere });
+  return connection && status
+    ? composerVoice(status, sessionId, handlers)
+    : undefined;
 }

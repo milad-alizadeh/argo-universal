@@ -59,6 +59,7 @@ describe('the label under the orb', () => {
       connection: 'disconnected',
       trouble: 'reconnecting',
     } as const;
+
     const blocked = { ...call, trouble: 'microphone-blocked' } as const;
 
     expect(voiceLabel(reconnecting, at(30)).headline).toBe('Reconnecting…');

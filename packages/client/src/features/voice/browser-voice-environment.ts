@@ -22,6 +22,8 @@ function gathered(connection: RTCPeerConnection): Promise<void> {
 
 const fftSize = 256;
 
+const loudest = 255;
+
 // Reads how loud a stream is, from 0 to 1, as the loudest frequency's strength. The levels stay in the App: they only move the orb.
 class LevelMeter {
   private readonly context = new AudioContext();
@@ -37,7 +39,7 @@ class LevelMeter {
   public level(): number {
     this.analyser.getByteFrequencyData(this.bins);
 
-    return Math.max(...this.bins) / 255;
+    return Math.max(...this.bins) / loudest;
   }
 
   public close(): void {
@@ -55,12 +57,14 @@ class BrowserMicrophone implements Microphone {
 
   public stop(): void {
     this.meter.close();
+
     for (const track of this.stream.getTracks()) track.stop();
   }
 
   // A muted track sends silence, so the call stays up.
   public setMuted(muted: boolean): void {
     this.muted = muted;
+
     for (const track of this.stream.getAudioTracks()) track.enabled = !muted;
   }
 

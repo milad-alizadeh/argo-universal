@@ -47,6 +47,7 @@ function sample(grid: Grid, u: number, v: number): number {
   const fx = smooth(x - x0);
   const fy = smooth(y - y0);
   const top = at(grid, x0, y0) * (1 - fx) + at(grid, x0 + 1, y0) * fx;
+
   const bottom =
     at(grid, x0, y0 + 1) * (1 - fx) + at(grid, x0 + 1, y0 + 1) * fx;
 
@@ -59,6 +60,17 @@ const gridsOf = (): { grid: Grid; weight: number }[] =>
     weight,
   }));
 
+// The noise at one texel, every octave blended by its weight.
+function valueAt(grids: ReturnType<typeof gridsOf>, index: number): number {
+  const u = (index % size) / size;
+  const v = Math.floor(index / size) / size;
+
+  return grids.reduce(
+    (sum, { grid, weight }) => sum + sample(grid, u, v) * weight,
+    0,
+  );
+}
+
 /*
  * The smooth, tiling noise the orb's shader reads for its flow, as RGBA texels. ElevenLabs' orb loads a noise image from
  * its CDN; this makes the same kind of image locally, so the orb needs no network and no asset.
@@ -68,18 +80,8 @@ export function noiseTexels(): Uint8Array {
   const texels = new Uint8Array(size * size * channels);
 
   for (let index = 0; index < size * size; index += 1) {
-    const u = (index % size) / size;
-    const v = Math.floor(index / size) / size;
-
-    const value = grids.reduce(
-      (sum, { grid, weight }) => sum + sample(grid, u, v) * weight,
-      0,
-    );
-
-    texels.set(
-      [value * byteMax, value * byteMax, value * byteMax, byteMax],
-      index * channels,
-    );
+    const grey = valueAt(grids, index) * byteMax;
+    texels.set([grey, grey, grey, byteMax], index * channels);
   }
 
   return texels;

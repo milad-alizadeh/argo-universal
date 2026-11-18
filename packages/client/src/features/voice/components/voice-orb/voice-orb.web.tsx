@@ -2,7 +2,7 @@ import type * as React from 'react';
 import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import type { VoiceLevels } from '../../voice-connection';
-import { orbOn } from './orb-gl';
+import { orbOn, type OrbGl } from './orb-gl';
 import { OrbMotion } from './orb-motion';
 import { voiceOrbSize, type VoiceOrbProps } from './voice-orb-props';
 
@@ -11,31 +11,77 @@ const quiet: VoiceLevels = { input: 0, output: 0 };
 const millisecondsPerSecond = 1000;
 
 // Draws a frame at a time until stopped; each frame reads the state and the levels as they are then.
-function animate(
-  canvas: HTMLCanvasElement,
+class OrbLoop {
+  private readonly motion = new OrbMotion();
+  private last = performance.now();
+  private frame = 0;
+
+  public constructor(
+    private readonly drawing: OrbGl,
+    private readonly read: () => VoiceOrbProps,
+  ) {}
+
+  public start(): void {
+    this.frame = requestAnimationFrame(this.tick);
+  }
+
+  public stop(): void {
+    cancelAnimationFrame(this.frame);
+    this.drawing.dispose();
+  }
+
+  private readonly tick = (now: number): void => {
+    const { state, levels } = this.read();
+    const seconds = (now - this.last) / millisecondsPerSecond;
+    this.drawing.draw(this.motion.step(state, levels?.() ?? quiet, seconds));
+    this.last = now;
+    this.start();
+  };
+}
+
+// A loop on the canvas, or none where the window has no WebGL2.
+function loopOn(
+  canvas: HTMLCanvasElement | null,
   read: () => VoiceOrbProps,
-): () => void {
-  const drawing = orbOn(canvas);
+): OrbLoop | undefined {
+  const drawing = canvas && orbOn(canvas);
 
-  if (!drawing) return () => {};
-  const motion = new OrbMotion();
-  let last = performance.now();
-  let frame = 0;
+  return drawing ? new OrbLoop(drawing, read) : undefined;
+}
 
-  const tick = (now: number): void => {
-    const { state, levels } = read();
-    const seconds = (now - last) / millisecondsPerSecond;
-    drawing.draw(motion.step(state, levels?.() ?? quiet, seconds));
-    last = now;
-    frame = requestAnimationFrame(tick);
-  };
+// The orb runs for as long as the canvas is on the page, reading the props each frame without drawing the page again.
+function useOrbLoop(
+  canvas: React.RefObject<HTMLCanvasElement | null>,
+  props: VoiceOrbProps,
+): void {
+  const latest = useRef(props);
 
-  frame = requestAnimationFrame(tick);
+  useEffect(() => {
+    latest.current = props;
+  });
 
-  return (): void => {
-    cancelAnimationFrame(frame);
-    drawing.dispose();
-  };
+  useEffect(() => {
+    const loop = loopOn(canvas.current, () => latest.current);
+    loop?.start();
+
+    return (): void => loop?.stop();
+  }, [canvas]);
+}
+
+const pixels = voiceOrbSize * window.devicePixelRatio;
+
+function OrbCanvas(props: VoiceOrbProps): React.JSX.Element {
+  const canvas = useRef<HTMLCanvasElement>(null);
+  useOrbLoop(canvas, props);
+
+  return (
+    <canvas
+      ref={canvas}
+      width={pixels}
+      height={pixels}
+      style={{ width: voiceOrbSize, height: voiceOrbSize }}
+    />
+  );
 }
 
 /*
@@ -43,21 +89,6 @@ function animate(
  * Voice call's screen draws `VoiceOrb`, and a phone's own drawing replaces this file without the screen changing.
  */
 export function VoiceOrb(props: VoiceOrbProps): React.JSX.Element {
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const latest = useRef(props);
-
-  useEffect(() => {
-    latest.current = props;
-  });
-
-  useEffect(
-    () =>
-      canvas.current
-        ? animate(canvas.current, () => latest.current)
-        : undefined,
-    [],
-  );
-
   return (
     <View
       accessibilityRole="image"
@@ -65,12 +96,7 @@ export function VoiceOrb(props: VoiceOrbProps): React.JSX.Element {
       className="overflow-hidden rounded-full bg-tone-info-200"
       style={{ width: voiceOrbSize, height: voiceOrbSize }}
     >
-      <canvas
-        ref={canvas}
-        width={voiceOrbSize * window.devicePixelRatio}
-        height={voiceOrbSize * window.devicePixelRatio}
-        style={{ width: voiceOrbSize, height: voiceOrbSize }}
-      />
+      <OrbCanvas {...props} />
     </View>
   );
 }

@@ -135,8 +135,11 @@ const callPlaceholders: Partial<Record<ComposerVoiceCall, string>> = {
   connected: 'Type, or keep talking',
 };
 
+const callHere = (voice: ComposerProps['voice']): ComposerVoiceCall =>
+  voice?.call ?? 'none';
+
 const placeholderOf = ({ voice }: OpenSession): string =>
-  callPlaceholders[voice?.call ?? 'none'] ?? 'Message the Agent';
+  callPlaceholders[callHere(voice)] ?? 'Message the Agent';
 
 // An open Session always offers Argo's Slash commands, whether or not its Agent has reported any.
 const slashCommandsOf = (open: OpenSession): ComposerProps['slashCommands'] =>

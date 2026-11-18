@@ -56,11 +56,9 @@ const followsVoice: ReadonlySet<VoiceOrbState> = new Set(['talking']);
 const volumeOf = (
   wave: Wave,
   time: number,
-  followed: { follows: boolean; level: number },
+  level: number | undefined,
 ): number =>
-  followed.follows
-    ? mix(waveOf(wave, time), followed.level)
-    : waveOf(wave, time);
+  level === undefined ? waveOf(wave, time) : mix(waveOf(wave, time), level);
 
 const ease = (current: number, target: number, rate: number): number =>
   current + (target - current) * rate;
@@ -78,6 +76,37 @@ const slowest = 0.1;
 const speedRange = 0.9;
 
 const fadeSeconds = 0.5;
+
+type Volumes = { input: number; output: number };
+
+// The sound that moves a volume, when that side is the one speaking in this state.
+const heardIn = (
+  follows: ReadonlySet<VoiceOrbState>,
+  state: VoiceOrbState,
+  level: number,
+): number | undefined => (follows.has(state) ? level : undefined);
+
+// What the state and the sound ask each volume to be at this moment in the orb's noise time.
+function volumesOf(
+  state: VoiceOrbState,
+  levels: VoiceLevels,
+  time: number,
+): Volumes {
+  const { input, output } = profiles[state];
+
+  return {
+    input: volumeOf(
+      input,
+      time,
+      heardIn(followsMicrophone, state, levels.input),
+    ),
+    output: volumeOf(output, time, heardIn(followsVoice, state, levels.output)),
+  };
+}
+
+// The animation runs faster the louder the voice is.
+const speedOf = (output: number): number =>
+  slowest + (1 - (output - 1) ** 2) * speedRange;
 
 /*
  * The orb's motion, frame by frame: the volumes it draws ease towards what the state and the sound ask for, and the
@@ -115,21 +144,9 @@ export class OrbMotion {
   }
 
   private easeVolumes(state: VoiceOrbState, levels: VoiceLevels): void {
-    const time = this.time * noiseTimeScale;
-    const { input, output } = profiles[state];
-
-    const listening = {
-      follows: followsMicrophone.has(state),
-      level: levels.input,
-    };
-    const talking = { follows: followsVoice.has(state), level: levels.output };
-    this.input = ease(this.input, volumeOf(input, time, listening), volumeEase);
-    this.output = ease(
-      this.output,
-      volumeOf(output, time, talking),
-      volumeEase,
-    );
-    const target = slowest + (1 - (this.output - 1) ** 2) * speedRange;
-    this.speed = ease(this.speed, target, speedEase);
+    const target = volumesOf(state, levels, this.time * noiseTimeScale);
+    this.input = ease(this.input, target.input, volumeEase);
+    this.output = ease(this.output, target.output, volumeEase);
+    this.speed = ease(this.speed, speedOf(this.output), speedEase);
   }
 }

@@ -74,6 +74,7 @@ describe('the Composer voice state', () => {
     } as const;
 
     const connecting = status(true, { usable: true }, call);
+
     const connected = status(
       true,
       { usable: true },

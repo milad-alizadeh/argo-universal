@@ -10,27 +10,36 @@ const elsewhereOf = (
   sessionId: string,
 ): string | undefined => (callSession === sessionId ? undefined : callSession);
 
+const fallbackTitle = 'another Session';
+
+// A Session's title, as the Sessions list reads it; none until it loads, or without a Session.
+function useSessionTitle(sessionId: string | undefined): string | undefined {
+  const trpc = useTRPC();
+  const input = { sessionId, archived: false };
+
+  const listed = useQuery({
+    ...trpc.session.list.queryOptions(input),
+    enabled: sessionId !== undefined,
+  });
+
+  return listed.data?.sessions[0]?.title;
+}
+
 /*
- * Where the call is, for the pointer in another Session's Composer: that Session's title, as the Sessions list reads it,
- * and a way there.
+ * Where the call is, for the pointer in another Session's Composer: that Session's title and a way there.
  */
 export function useCallPointer(
   callSession: string | undefined,
   sessionId: string,
 ): ComposerVoice['elsewhere'] {
-  const trpc = useTRPC();
   const navigate = useNavigateFromShown();
   const target = elsewhereOf(callSession, sessionId);
-
-  const listed = useQuery({
-    ...trpc.session.list.queryOptions({ sessionId: target, archived: false }),
-    enabled: target !== undefined,
-  });
+  const title = useSessionTitle(target);
 
   if (!target) return undefined;
 
   return {
-    title: listed.data?.sessions[0]?.title ?? 'another Session',
+    title: title ?? fallbackTitle,
     onOpen: () => navigate(sessionHref(target)),
   };
 }

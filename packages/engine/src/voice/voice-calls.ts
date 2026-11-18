@@ -4,13 +4,12 @@ import type {
   VoiceSettings,
   VoiceSettingsChange,
   VoiceEndOutput,
-  VoiceOrbState,
   VoiceStartInput,
   VoiceStartOutput,
   VoiceStatus,
-  VoiceTrouble,
 } from '@repo/contracts';
 import { waitFor } from 'xstate';
+import { lookOf } from './call-look';
 import type { RunningCall, VoiceCallEvent } from './call-types';
 import type { VoiceCallActorRef } from './call.machine';
 import { Changes } from './changes';
@@ -138,18 +137,15 @@ export class VoiceCalls implements VoiceCallsPort {
   private callOf(call: RunningCall): NonNullable<VoiceStatus['call']> {
     const { callId, sessionId, limit } = call;
 
-    const status = this.actor.getSnapshot().matches({ running: 'connected' })
-      ? 'connected'
-      : 'connecting';
+    const connected = this.actor
+      .getSnapshot()
+      .matches({ running: 'connected' });
 
     return {
       callId,
       sessionId,
-      status,
-      connection: call.providerConnection,
-      orb: orbOf(call),
-      trouble: troubleOf(call),
-      startedAt: call.startedAt,
+      status: connected ? 'connected' : 'connecting',
+      ...lookOf(call),
       ...(limit && { limit }),
     };
   }
@@ -189,21 +185,4 @@ export class VoiceCalls implements VoiceCallsPort {
     if (!availability.usable) throw unavailable(availability.reason);
     requireRoom(this.actor, sessionId);
   }
-}
-
-// The voice's own speech shows over the Agent's work, and the work over waiting for the person.
-function liveOrb(call: RunningCall): VoiceOrbState {
-  if (call.speaking) return 'talking';
-
-  return call.agentWorking ? 'thinking' : 'listening';
-}
-
-// What the orb shows: nothing while the call has no connection.
-const orbOf = (call: RunningCall): VoiceOrbState =>
-  call.providerConnection === 'connected' ? liveOrb(call) : 'none';
-
-function troubleOf(call: RunningCall): VoiceTrouble | null {
-  if (call.providerConnection === 'disconnected') return 'reconnecting';
-
-  return call.microphoneBlocked ? 'microphone-blocked' : null;
 }

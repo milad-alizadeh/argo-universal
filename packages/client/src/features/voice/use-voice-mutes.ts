@@ -20,6 +20,18 @@ const unmuted = (callId: string | undefined): Held => ({
 const heldFor = (held: Held, callId: string | undefined): Held =>
   held.callId === callId ? held : unmuted(callId);
 
+// What the connection does is what the buttons show: it is told each time a mute changes.
+function useAppliedMutes(
+  connection: VoiceConnection | null,
+  { microphone, speaker }: Held,
+): void {
+  useEffect(
+    () => connection?.setMicrophoneMuted(microphone),
+    [connection, microphone],
+  );
+  useEffect(() => connection?.setSpeakerMuted(speaker), [connection, speaker]);
+}
+
 /*
  * The mic and speaker mutes live in the App: the connection holds them, and nothing about them reaches the Server.
  * Both start unmuted with each call.
@@ -29,20 +41,12 @@ export function useVoiceMutes(
   callId: string | undefined,
 ): Mutes {
   const [stored, setStored] = useState(unmuted(callId));
-  const { microphone, speaker } = heldFor(stored, callId);
-
-  useEffect(
-    () => connection?.setMicrophoneMuted(microphone),
-    [connection, microphone],
-  );
-  useEffect(() => connection?.setSpeakerMuted(speaker), [connection, speaker]);
+  const held = heldFor(stored, callId);
+  useAppliedMutes(connection, held);
 
   return {
-    microphone,
-    speaker,
-    onMicrophone: () =>
-      setStored({ ...heldFor(stored, callId), microphone: !microphone }),
-    onSpeaker: () =>
-      setStored({ ...heldFor(stored, callId), speaker: !speaker }),
+    ...held,
+    onMicrophone: () => setStored({ ...held, microphone: !held.microphone }),
+    onSpeaker: () => setStored({ ...held, speaker: !held.speaker }),
   };
 }

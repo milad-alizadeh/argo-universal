@@ -2,12 +2,16 @@ import type { OrbDrawn } from './orb-motion';
 import { noiseSize, noiseTexels } from './orb-noise';
 import { orbFragmentShader } from './orb-shader';
 
-// ElevenLabs' defaults: the darker and the lighter blue the shader ramps between.
-const darkerBlue: Rgb = [0xca / 255, 0xdc / 255, 0xfc / 255];
-
-const lighterBlue: Rgb = [0xa0 / 255, 0xb9 / 255, 0xd1 / 255];
-
 type Rgb = [number, number, number];
+
+type Blue = { red: number; green: number; blue: number };
+
+const rgbOf = ({ red, green, blue }: Blue): Rgb => [red, green, blue];
+
+// ElevenLabs' defaults: the darker and the lighter blue the shader ramps between, each channel from 0 to 1.
+const darker: Blue = { red: 0.792, green: 0.863, blue: 0.988 };
+
+const lighter: Blue = { red: 0.627, green: 0.725, blue: 0.82 };
 
 const vertexSource = `#version 300 es
 in vec2 position;
@@ -32,10 +36,19 @@ const ovals = 7;
 const fullScreenTriangles = [-1, -1, 1, -1, -1, 1, 1, 1];
 
 // Where each of the seven ovals starts round the orb, fixed so the same orb is drawn each time.
+const goldenAngle = 2.399963;
+
 const offsets = Float32Array.from(
   { length: ovals },
-  (_, index) => (index * 2.399963) % (Math.PI * 2),
+  (_, index) => (index * goldenAngle) % (Math.PI * 2),
 );
+
+// A shader that failed to compile says why; one that compiled is returned as it is.
+function checked(gl: WebGL2RenderingContext, shader: WebGLShader): WebGLShader {
+  if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return shader;
+
+  throw new Error(gl.getShaderInfoLog(shader) ?? 'The orb shader failed');
+}
 
 function compiled(
   gl: WebGL2RenderingContext,
@@ -48,10 +61,7 @@ function compiled(
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
 
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
-    throw new Error(gl.getShaderInfoLog(shader) ?? 'The orb shader failed');
-
-  return shader;
+  return checked(gl, shader);
 }
 
 function linked(gl: WebGL2RenderingContext): WebGLProgram {
@@ -66,23 +76,33 @@ function linked(gl: WebGL2RenderingContext): WebGLProgram {
   return program;
 }
 
-function noiseTexture(gl: WebGL2RenderingContext): void {
-  gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+function upload(gl: WebGL2RenderingContext, texels: Uint8Array): void {
+  const { TEXTURE_2D, RGBA, UNSIGNED_BYTE } = gl;
   gl.texImage2D(
-    gl.TEXTURE_2D,
+    TEXTURE_2D,
     0,
-    gl.RGBA,
+    RGBA,
     noiseSize,
     noiseSize,
     0,
-    gl.RGBA,
-    gl.UNSIGNED_BYTE,
-    noiseTexels(),
+    RGBA,
+    UNSIGNED_BYTE,
+    texels,
   );
+}
+
+// The noise repeats and reads smoothly at any scale.
+function sampling(gl: WebGL2RenderingContext): void {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+}
+
+function noiseTexture(gl: WebGL2RenderingContext): void {
+  gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+  upload(gl, noiseTexels());
+  sampling(gl);
 }
 
 function corners(gl: WebGL2RenderingContext, program: WebGLProgram): void {
@@ -116,8 +136,8 @@ export class OrbGl {
 
   // What never changes during a call: the colours, the ovals' starting angles and the noise's place.
   private fixed(): void {
-    this.gl.uniform3fv(this.at('uColor1'), darkerBlue);
-    this.gl.uniform3fv(this.at('uColor2'), lighterBlue);
+    this.gl.uniform3fv(this.at('uColor1'), rgbOf(darker));
+    this.gl.uniform3fv(this.at('uColor2'), rgbOf(lighter));
     this.gl.uniform1fv(this.at('uOffsets'), offsets);
     this.gl.uniform1f(this.at('uInverted'), 0);
     this.gl.uniform1i(this.at('uPerlinTexture'), 0);

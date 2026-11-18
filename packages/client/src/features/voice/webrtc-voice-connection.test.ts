@@ -8,8 +8,8 @@ import {
   type VoicePlayback,
 } from './webrtc-voice-connection';
 
-// SAFETY: the connection hands the stream straight to the environment, so a test never reads from it.
-const voiceStream = {} as MediaStream;
+// The connection hands the stream straight to the environment, so a test never reads from it.
+const voiceStream: MediaStream = Object.create(null);
 
 class FakeMicrophone implements Microphone {
   public stopped = false;

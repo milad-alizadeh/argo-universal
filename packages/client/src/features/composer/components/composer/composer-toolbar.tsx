@@ -7,6 +7,9 @@ import {
   ComposerModeControl,
 } from '../composer-configuration/composer-configuration';
 import { ComposerStatusControls } from '../composer-status/composer-status';
+import { ComposerCallPointer } from './composer-call-pointer';
+import { ConnectingRing } from './composer-connecting-ring';
+import { ComposerMuteButtons } from './composer-mute-buttons';
 import { sendButtonAction, stopButtonAction } from './composer-primary-action';
 import { ComposerAttachmentOrCancel } from './composer-queue-cancel';
 import type {
@@ -18,11 +21,6 @@ import type {
   ConfigurationActionsLayout,
   SendLayout,
 } from './composer-toolbar-types';
-import {
-  ComposerCallPointer,
-  ComposerMuteButtons,
-  ConnectingRing,
-} from './composer-voice-controls';
 
 /*
  * The order the toolbar gives its width up in, as the layout's regions have one (docs/agents/layout.md).
@@ -116,9 +114,15 @@ function ComposerConfigurationActions(
 
 // The primary slot: Send, Stop, the voice button or End, or, with the call in another Session, the pointer to it.
 function ComposerSendButton(layout: SendLayout): React.JSX.Element {
-  if (layout.sendState === 'elsewhere')
-    return <ComposerCallPointer elsewhere={layout.props.voice?.elsewhere} />;
+  return layout.sendState === 'elsewhere' ? (
+    <ComposerCallPointer elsewhere={layout.props.voice?.elsewhere} />
+  ) : (
+    <PrimaryButton {...layout} />
+  );
+}
 
+// While the call connects, End carries the turning ring.
+function PrimaryButton(layout: SendLayout): React.JSX.Element {
   return (
     <View>
       <IconButton {...sendButtonProps(layout)} />
