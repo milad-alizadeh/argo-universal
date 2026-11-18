@@ -7,7 +7,8 @@ import type {
   resolveServer,
   ServerAddress,
 } from '#features/connection';
-import { directAddresses, keyOf, otherAddressesOf } from './invite-addresses';
+import { announcedAt } from './announced-at';
+import { addressesToKnockOn, otherQrAddresses } from './qr-addresses';
 
 /*
  * How one try at pairing ended. Each has its own page, because each needs the owner to do something different (ADR-0045):
@@ -48,6 +49,10 @@ export interface PairDeps {
   address?: ServerAddress;
   // Something answered at an address and has the request: from here the wait is the owner's on the Server Device.
   onReached?: () => void;
+  // The address that had answered did not go on to ask the owner, so the page goes back to looking.
+  onUnreached?: () => void;
+  // Whether this is the first look at the network since the App opened: the Local Network prompt may still be open, so it waits longer and hearing nothing proves nothing.
+  firstBrowse?: boolean;
 }
 
 // What `PairingRefused` carries; read by shape because the class lives behind the connection feature's index.
@@ -68,16 +73,20 @@ interface Attempt {
 
 function pairedAt(address: ServerAddress, attempt: Attempt): PairOutcome {
   const { invite, name } = attempt;
-  const server: KnownServer = { name, key: invite.key, address };
-  const others = otherAddressesOf(invite, address);
+  const otherAddresses = otherQrAddresses(invite, address);
 
-  if (others.length > 0) server.otherAddresses = others;
-
-  return { kind: 'paired', server };
+  return {
+    kind: 'paired',
+    server: {
+      name,
+      key: invite.key,
+      address,
+      ...(otherAddresses.length > 0 && { otherAddresses }),
+    },
+  };
 }
 
-// Spends the Ticket on a channel to one address.
-const spend = (
+const spendTicketAt = (
   address: ServerAddress,
   { invite, deps }: Attempt,
 ): ReturnType<PairDeps['pair']> =>
@@ -86,21 +95,22 @@ const spend = (
     onReached: deps.onReached,
   });
 
-// One address. One that does not answer is not a refusal, so it gives nothing and the next may be the Server.
+// An address that does not answer is not a refusal: it gives nothing, and the next may be the Server.
 async function tryAt(
   address: ServerAddress,
   attempt: Attempt,
 ): Promise<PairOutcome | null> {
   try {
-    await spend(address, attempt);
+    await spendTicketAt(address, attempt);
 
     return pairedAt(address, attempt);
   } catch (cause) {
+    attempt.deps.onUnreached?.();
+
     return refusalOutcome(cause);
   }
 }
 
-// The first address the Server answers on, or null when none does.
 async function pairOnAny(
   addresses: readonly ServerAddress[],
   attempt: Attempt,
@@ -114,65 +124,24 @@ async function pairOnAny(
   return null;
 }
 
-interface Announced {
-  name: string;
-  addresses: ServerAddress[];
-  undetermined?: true;
-}
-
-const isUndetermined = (cause: unknown): boolean =>
-  cause instanceof Error && cause.name === 'BrowseUndeterminedError';
-
-const nothingHeard = (invite: PairingInvite, cause: unknown): Announced =>
-  isUndetermined(cause)
-    ? { name: invite.server, addresses: [], undetermined: true }
-    : { name: invite.server, addresses: [] };
-
-type Located = Awaited<ReturnType<PairDeps['resolve']>>;
-
-// Where the Server was heard, less where it was already knocked on.
-function unvisited(
-  located: Located,
-  tried: readonly ServerAddress[],
-): ServerAddress[] {
-  const skip = new Set(tried.map(keyOf));
-
-  return located.hosts
-    .map((host) => ({ host, port: located.port }))
-    .filter((address) => !skip.has(keyOf(address)));
-}
-
-// Where the Server announces itself now, less where it was already knocked on; none when it is not heard.
-async function announcedAt(
-  { invite, deps }: Attempt,
-  tried: readonly ServerAddress[],
-): Promise<Announced> {
-  try {
-    const known = { name: invite.server, key: invite.key };
-    const located = await deps.resolve(known, deps.browse);
-
-    return { name: located.name, addresses: unvisited(located, tried) };
-  } catch (cause) {
-    return nothingHeard(invite, cause);
-  }
-}
-
-// Looks for the Server on the network and knocks where it is heard; what no answer means depends on whether anything could be heard at all.
 async function afterAnnouncement(
   attempt: Attempt,
-  tried: readonly ServerAddress[],
+  alreadyKnockedOn: readonly ServerAddress[],
 ): Promise<PairOutcome> {
-  const announced = await announcedAt(attempt, tried);
+  const announced = await announcedAt(attempt, alreadyKnockedOn);
+
+  if (!announced.heard) return silence(attempt.deps);
 
   const outcome = await pairOnAny(announced.addresses, {
     ...attempt,
     name: announced.name,
   });
 
-  return (
-    outcome ?? { kind: announced.undetermined ? 'undetermined' : 'not-found' }
-  );
+  return outcome ?? { kind: 'not-found' };
 }
+
+const silence = (deps: PairDeps): PairOutcome =>
+  deps.firstBrowse ? { kind: 'undetermined' } : { kind: 'not-found' };
 
 /*
  * Pairs with the Server a scanned code names, the way a phone reaches an Expo dev server: it knocks first where the code says the Server answers, and looks for it on the network only when nothing answers there.
@@ -183,7 +152,7 @@ export async function pairWithInvite(
   deps: PairDeps,
 ): Promise<PairOutcome> {
   const attempt = { invite, name: invite.server, deps };
-  const direct = directAddresses(invite, deps.address);
+  const direct = addressesToKnockOn(invite, deps.address);
 
   return (
     (await pairOnAny(direct, attempt)) ?? afterAnnouncement(attempt, direct)

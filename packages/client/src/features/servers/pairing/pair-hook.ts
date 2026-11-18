@@ -28,6 +28,8 @@ export interface Held {
   last: Read | null;
   // The code typed last, kept so a Server that was not found can be asked again without typing it twice.
   lastTyped: Typed | null;
+  // Whether the network has been looked at since this page opened.
+  browsed: boolean;
 }
 
 // What the owner typed on the Enter code page: the code, and an address when they gave one.
@@ -45,8 +47,16 @@ export interface Hook {
 
 export const scanning: PairPhase = { phase: 'scanning' };
 
+function takeFirstBrowse(held: Held): boolean {
+  const first = !held.browsed;
+  held.browsed = true;
+
+  return first;
+}
+
 export const depsOf = (
   signal: AbortSignal,
+  held: Held,
   address?: ServerAddress,
 ): PairDeps => ({
   browse: browseServers,
@@ -54,6 +64,7 @@ export const depsOf = (
   resolve: resolveServer,
   signal,
   address,
+  firstBrowse: takeFirstBrowse(held),
 });
 
 /*

@@ -15,7 +15,6 @@ export interface KnownServer {
   name: string;
   key: string;
   address?: ServerAddress;
-  // The other addresses the invite carried, such as a tailnet's; the address above is the one that answered.
   otherAddresses?: ServerAddress[];
 }
 
@@ -30,30 +29,10 @@ export interface ServerLocation {
 
 const defaultTimeoutMs = 3000;
 
-// The first browse of a session may be asked while the system's Local Network prompt is still on screen, so it waits as long as Expo's launcher does (4 s).
-const firstBrowseTimeoutMs = 4000;
-
-let browsedBefore = false;
-
-function nextBrowseTimeoutMs(): number {
-  const timeoutMs = browsedBefore ? defaultTimeoutMs : firstBrowseTimeoutMs;
-  browsedBefore = true;
-
-  return timeoutMs;
-}
-
 class ServerNotFoundError extends Error {
   public constructor(name: string) {
     super(`${name} is not on the local network`);
     this.name = 'ServerNotFoundError';
-  }
-}
-
-// Nothing was heard on the first browse and nothing else says where the Server is: not a failure, because the prompt for Local Network may have been answered too late to help this try.
-class BrowseUndeterminedError extends Error {
-  public constructor(name: string) {
-    super(`Nothing has answered for ${name} yet`);
-    this.name = 'BrowseUndeterminedError';
   }
 }
 
@@ -115,7 +94,7 @@ function waitForAnnouncement(
 export async function announcedAddresses(
   key: string,
   browse: BrowseServers | null,
-  timeoutMs: number = nextBrowseTimeoutMs(),
+  timeoutMs: number = defaultTimeoutMs,
 ): Promise<ServerAddress[]> {
   const found = await waitForAnnouncement(browse, key, timeoutMs);
 
@@ -131,11 +110,8 @@ const announced = (found: DiscoveredServer): ServerLocation => ({
   source: 'discovery',
 });
 
-function remembered(known: KnownServer, first: boolean): ServerLocation {
-  if (!known.address)
-    throw first
-      ? new BrowseUndeterminedError(known.name)
-      : new ServerNotFoundError(known.name);
+function remembered(known: KnownServer): ServerLocation {
+  if (!known.address) throw new ServerNotFoundError(known.name);
 
   return {
     name: known.name,
@@ -143,21 +119,6 @@ function remembered(known: KnownServer, first: boolean): ServerLocation {
     port: known.address.port,
     source: 'address',
   };
-}
-
-interface BrowsePlan {
-  waitMs: number;
-  firstBrowse: boolean;
-}
-
-// How long this browse waits, and whether it is the first of the session: the first of a browser that can listen, and no other, is the one a Local Network prompt may still be open for.
-function planBrowse(
-  timeoutMs: number | undefined,
-  browse: BrowseServers | null,
-): BrowsePlan {
-  const firstBrowse = !browsedBefore && browse !== null;
-
-  return { waitMs: timeoutMs ?? nextBrowseTimeoutMs(), firstBrowse };
 }
 
 /*
@@ -168,10 +129,9 @@ function planBrowse(
 export async function resolveServer(
   known: KnownServer,
   browse: BrowseServers | null,
-  timeoutMs?: number,
+  timeoutMs: number = defaultTimeoutMs,
 ): Promise<ServerLocation> {
-  const { waitMs, firstBrowse } = planBrowse(timeoutMs, browse);
-  const found = await waitForAnnouncement(browse, known.key, waitMs);
+  const found = await waitForAnnouncement(browse, known.key, timeoutMs);
 
-  return found ? announced(found) : remembered(known, firstBrowse);
+  return found ? announced(found) : remembered(known);
 }

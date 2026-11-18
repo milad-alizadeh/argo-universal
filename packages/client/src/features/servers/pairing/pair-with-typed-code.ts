@@ -1,5 +1,6 @@
 import { type DiscoveredServer, readTypedTicket } from '@repo/contracts';
 import type { requestServerKey } from '#features/connection';
+import { browseTimeoutMs } from './browse-timing';
 import { heardServers, type Timing } from './hear-servers';
 import { pairAtAddress } from './pair-at-address';
 import {
@@ -27,8 +28,6 @@ export interface TypedDeps extends PairDeps {
   // What the owner typed in the Address field: `host:port` is the place to knock with no discovery at all, and a bare name or address is tried first among the addresses discovery gave, for a network that announces a name but not where it is.
   host?: string;
 }
-
-const defaultTimeoutMs = 3000;
 
 const defaultSettleMs = 300;
 
@@ -90,7 +89,8 @@ async function askEach(
 }
 
 const timingOf = ({
-  timeoutMs = defaultTimeoutMs,
+  firstBrowse,
+  timeoutMs = browseTimeoutMs(firstBrowse),
   settleMs = defaultSettleMs,
 }: TypedDeps): Timing => ({ timeoutMs, settleMs });
 
@@ -115,7 +115,7 @@ function pairFound(
 
   return pairWithInvite(
     { key: found.key, server: found.server.name, ticket },
-    { ...deps, address: found.at },
+    { ...deps, address: found.at, firstBrowse: false },
   );
 }
 

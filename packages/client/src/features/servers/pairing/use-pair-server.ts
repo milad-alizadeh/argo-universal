@@ -37,6 +37,7 @@ export function usePairServer(
     running: null,
     last: null,
     lastTyped: null,
+    browsed: false,
   });
 
   useEffect((): (() => void) => () => held.running?.abort(), [held]);
@@ -79,8 +80,9 @@ function ask(invite: PairingInvite, read: Read, hook: Hook): void {
   hook.setState({ phase: 'looking' });
 
   const deps = {
-    ...depsOf(controller.signal, read.address),
+    ...depsOf(controller.signal, hook.held, read.address),
     onReached: (): void => waitOn(invite, controller, hook),
+    onUnreached: (): void => lookAgain(controller, hook),
   };
 
   void pairWithInvite(invite, deps).then((outcome) => {
@@ -95,6 +97,10 @@ function waitOn(
 ): void {
   if (!controller.signal.aborted)
     hook.setState({ phase: 'waiting', serverName: invite.server });
+}
+
+function lookAgain(controller: AbortController, hook: Hook): void {
+  if (!controller.signal.aborted) hook.setState({ phase: 'looking' });
 }
 
 function end(outcome: PairOutcome, invite: PairingInvite, hook: Hook): void {

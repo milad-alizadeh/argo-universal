@@ -112,18 +112,35 @@ describe('pairing with the Server a code names', () => {
     expect(pair).toHaveBeenCalledTimes(2);
   });
 
-  it('says undetermined, not not-found, when the first look at the network hears nothing', async () => {
+  it('waits four seconds on the first look at the network, and three on a later one', async () => {
+    const resolve = vi.fn<Resolve>().mockRejectedValue(new Error('none'));
     const pair = vi.fn<Pair>();
 
-    const undetermined = Object.assign(new Error('nothing heard yet'), {
-      name: 'BrowseUndeterminedError',
-    });
+    await pairWithInvite(invite, deps(pair, resolve, { firstBrowse: true }));
+    await pairWithInvite(invite, deps(pair, resolve));
 
-    const resolve = vi.fn<Resolve>().mockRejectedValue(undetermined);
+    expect(resolve.mock.calls.map((call) => call[2])).toEqual([
+      4000,
+      undefined,
+    ]);
+  });
 
-    await expect(pairWithInvite(invite, deps(pair, resolve))).resolves.toEqual({
+  it('says undetermined, not not-found, when the first look at the network hears nothing', async () => {
+    const resolve = vi.fn<Resolve>().mockRejectedValue(new Error('none'));
+    const first = deps(vi.fn<Pair>(), resolve, { firstBrowse: true });
+
+    await expect(pairWithInvite(invite, first)).resolves.toEqual({
       kind: 'undetermined',
     });
+  });
+
+  it('says the address did not go on to ask the owner when it fails after the socket opened', async () => {
+    const onUnreached = vi.fn<() => void>();
+    const pair = vi.fn<Pair>().mockRejectedValue(new Error('closed'));
+
+    await pairWithInvite(invite, deps(pair, heardAt(studio), { onUnreached }));
+
+    expect(onUnreached).toHaveBeenCalledOnce();
   });
 
   it('passes on when the Server is reached, so the owner is said to be asked only then', async () => {
