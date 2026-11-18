@@ -246,8 +246,11 @@ function reachesImageNotDrawn(width: number): Story {
       await expect(
         canvas.queryByRole('button', thumbnail(promptImage)),
       ).toBeNull();
+
       // Rows above may still measure, so the place is where the thumbnail sits on screen, not scrollTop.
-      const opener = () => canvas.getByRole('button', thumbnail(answerImage));
+      const opener = (): HTMLElement =>
+        canvas.getByRole('button', thumbnail(answerImage));
+
       const place = await settledTopOf(opener);
       // The Feed may ask for older rows as it opens; stepping must not ask again.
       const asked = olderRowsAsked.mock.calls.length;
