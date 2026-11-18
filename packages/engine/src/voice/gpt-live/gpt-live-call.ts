@@ -7,7 +7,7 @@ import type {
 import { eventOfFrame } from './link-events';
 
 // Opens the call's control link again; rejects when the service will not have it.
-export type RejoinLink = () => Promise<WebSocket>;
+type RejoinLink = () => Promise<WebSocket>;
 
 export type GptLiveCallOptions = {
   answer: string;
