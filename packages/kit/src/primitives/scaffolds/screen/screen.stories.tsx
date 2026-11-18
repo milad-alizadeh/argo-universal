@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
+import { SegmentedControl } from '#primitives/controls/segmented-control';
+import { FieldGroup } from '#primitives/fields/field-group';
+import { Stack } from '#primitives/layout/stack';
 import { List } from '#primitives/lists/list';
 import { ListItem } from '#primitives/lists/list-item';
 import { withStack } from '#story-stack';
@@ -74,6 +77,47 @@ export const FullWidth: Story = {
   args: { width: 'full' },
   render: (args) => <WidthExample width={args.width} />,
 };
+
+export const TextAndFields: Story = {
+  render: () => (
+    <Screen title="Connection" width="content">
+      <Stack direction="column" gap={2}>
+        <Text>Your connection determines which projects appear in Argo.</Text>
+        <FieldGroup>
+          <FieldGroup.Section title="Account">
+            <FieldGroup.Value title="Site" value="Argo" />
+          </FieldGroup.Section>
+        </FieldGroup>
+      </Stack>
+    </Screen>
+  ),
+};
+
+export const ListWithViewSwitcher: Story = {
+  render: () => (
+    <Screen title="Issues">
+      <SegmentedControl
+        label="View"
+        options={issueViews}
+        value="list"
+        onValueChange={ignoreViewChange}
+      />
+      <List>
+        <List.Section>
+          <ListItem title="Review the first build" />
+          <ListItem title="Update the release notes" />
+        </List.Section>
+      </List>
+    </Screen>
+  ),
+};
+
+const issueViews = [
+  { value: 'list', label: 'List' },
+  { value: 'board', label: 'Board' },
+];
+
+const ignoreViewChange = (): void => {};
 
 type Example = {
   search?: boolean;
