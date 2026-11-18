@@ -13,8 +13,10 @@ export const browseServers: BrowseServers = (listener) => {
 
   zeroconf.on('resolved', (service): void => heard.up(service.name, service));
   zeroconf.on('remove', (name): void => heard.down(name));
-  // A denied permission or a missing service type arrives here; the list stays empty and the stored address answers.
-  zeroconf.on('error', (): void => undefined);
+  // A denied Local Network permission or a missing service type arrives here. The list stays empty and the code's URLs or the stored address answer, but the reason is said rather than lost.
+  zeroconf.on('error', (cause): void =>
+    console.warn('Could not look for Servers on the local network', cause),
+  );
   zeroconf.scan({ type: discoveryServiceType, protocol: discoveryProtocol });
 
   return (): void => {

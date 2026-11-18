@@ -50,7 +50,6 @@
     "react-native-safe-area-context": "catalog:",
     "react-native-screens": "catalog:",
     "react-native-svg": "catalog:",
-    "react-native-tcp-socket": "catalog:",
     "react-native-zeroconf": "catalog:",
     "uniwind": "catalog:",
     "zod": "catalog:"

@@ -58,9 +58,16 @@ export const PairingInvite = z.strictObject({
   // The Server's discovery name, which the App re-resolves to an address on each connect.
   server: z.string(),
   ticket: z.string(),
+  // Where the Server answers, as `http://host:port` URLs, most likely first: a Device knocks there before it looks for the Server on the network, as Expo's dev server puts its URL in its code. Absent from a code drawn before Servers wrote it.
+  urls: z.array(z.string()).optional(),
 });
 
 export type PairingInvite = z.infer<typeof PairingInvite>;
+
+/*
+ * The path a Device opens its channel at, as a WebSocket on the Server's one port (ADR-0045). The Noise handshake inside it is still the only gate; the WebSocket only carries its bytes, so the channel crosses anything that carries HTTP, such as a tailnet.
+ */
+export const channelPath = '/channel';
 
 /*
  * What a connecting Device says inside the completed handshake. Pre-authentication and untrusted: the name is shown for recognition and decides nothing.

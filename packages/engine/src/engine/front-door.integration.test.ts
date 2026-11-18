@@ -134,6 +134,21 @@ describe.skipIf(!lanAddress)(
       ).toBe(200);
     });
 
+    it('answers the channel path only as a WebSocket, so it serves nothing over plain HTTP either', async (): Promise<void> => {
+      const host = await startEngineTestHost();
+      const port = portOf(host.url);
+      await host.caller.network.setLocalAccess({ enabled: true });
+
+      expect(
+        await plainStatus({
+          host: lanAddress,
+          port,
+          path: '/channel',
+          headers: await asServerDevice(host.home),
+        }),
+      ).toBe(404);
+    });
+
     it('answers a Device that handshakes, and only while the owner leaves the network on', async (): Promise<void> => {
       const host = await startEngineTestHost();
       await host.caller.network.setLocalAccess({ enabled: true });

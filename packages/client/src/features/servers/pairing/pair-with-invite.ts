@@ -41,17 +41,10 @@ export interface PairDeps {
   pair: typeof pairWithServer;
   resolve: typeof resolveServer;
   signal?: AbortSignal;
-  // Where to knock when nothing announces the Server; a hint the handshake still has to prove.
+  // Where to knock besides the URLs the code carries; a hint the handshake still has to prove.
   address?: ServerAddress;
-}
-
-type Located = Awaited<ReturnType<typeof resolveServer>>;
-
-// What one try at pairing is about: the code, where its Server answers now, and where everything comes from.
-interface Attempt {
-  invite: PairingInvite;
-  located: Located;
-  deps: PairDeps;
+  // Something answered at an address and has the request: from here the wait is the owner's on the Server Device.
+  onReached?: () => void;
 }
 
 // What `PairingRefused` carries; read by shape because the class lives behind the connection feature's index.
@@ -63,62 +56,119 @@ const refusalOutcome = (cause: unknown): PairOutcome | null => {
   return refused.success ? refusals[refused.data.refusal] : null;
 };
 
-const pairedAt = (host: string, attempt: Attempt): PairOutcome => ({
+// One try at pairing: the code, the name the Server goes by, and where everything comes from.
+interface Attempt {
+  invite: PairingInvite;
+  name: string;
+  deps: PairDeps;
+}
+
+const pairedAt = (address: ServerAddress, attempt: Attempt): PairOutcome => ({
   kind: 'paired',
-  server: {
-    name: attempt.located.name,
-    key: attempt.invite.key,
-    address: { host, port: attempt.located.port },
-  },
+  server: { name: attempt.name, key: attempt.invite.key, address },
 });
 
 // One address. One that does not answer is not a refusal, so it gives nothing and the next may be the Server.
-async function tryHost(
-  host: string,
+async function tryAt(
+  address: ServerAddress,
   attempt: Attempt,
 ): Promise<PairOutcome | null> {
-  const { invite, located, deps } = attempt;
-  const endpoint = { host, port: located.port, serverPublicKey: invite.key };
+  const { invite, deps } = attempt;
+  const endpoint = { ...address, serverPublicKey: invite.key };
 
   try {
-    await deps.pair(endpoint, invite.ticket, { signal: deps.signal });
+    await deps.pair(endpoint, invite.ticket, {
+      signal: deps.signal,
+      onReached: deps.onReached,
+    });
 
-    return pairedAt(host, attempt);
+    return pairedAt(address, attempt);
   } catch (cause) {
     return refusalOutcome(cause);
   }
 }
 
-// The first address the Server answers on.
-async function pairOnAny(attempt: Attempt): Promise<PairOutcome> {
-  for (const host of attempt.located.hosts) {
-    const outcome = await tryHost(host, attempt);
+// The first address the Server answers on, or null when none does.
+async function pairOnAny(
+  addresses: readonly ServerAddress[],
+  attempt: Attempt,
+): Promise<PairOutcome | null> {
+  for (const address of addresses) {
+    const outcome = await tryAt(address, attempt);
 
     if (outcome) return outcome;
   }
 
-  return { kind: 'not-found' };
+  return null;
 }
 
-const knownOf = (invite: PairingInvite, deps: PairDeps): KnownServer => ({
-  name: invite.server,
-  key: invite.key,
-  address: deps.address,
-});
+// `http://host:port`, with an IPv6 host in brackets; anything else in the code is not somewhere to knock.
+const urlPattern = /^https?:\/\/(?:\[([^\]]+)\]|([^/:]+)):(\d+)/;
+
+function addressOfUrl(url: string): ServerAddress[] {
+  const [, bracketed, plain, port] = urlPattern.exec(url) ?? [];
+  const host = bracketed ?? plain;
+
+  return host && port ? [{ host, port: Number(port) }] : [];
+}
+
+const keyOf = ({ host, port }: ServerAddress): string => `${host}:${port}`;
+
+const unique = (addresses: readonly ServerAddress[]): ServerAddress[] => [
+  ...new Map(addresses.map((address) => [keyOf(address), address])).values(),
+];
+
+// Where the code says the Server answers, then where the owner said it is: knocked on first, before anything is asked of the network.
+const directAddresses = (
+  invite: PairingInvite,
+  deps: PairDeps,
+): ServerAddress[] =>
+  unique([
+    ...(invite.urls ?? []).flatMap(addressOfUrl),
+    ...(deps.address ? [deps.address] : []),
+  ]);
+
+// Where the Server announces itself now, less where it was already knocked on; none when it is not heard.
+async function announcedAt(
+  attempt: Attempt,
+  tried: readonly ServerAddress[],
+): Promise<{ name: string; addresses: ServerAddress[] }> {
+  const { invite, deps } = attempt;
+  const known = { name: invite.server, key: invite.key };
+
+  try {
+    const located = await deps.resolve(known, deps.browse);
+    const skip = new Set(tried.map(keyOf));
+
+    const addresses = located.hosts
+      .map((host) => ({ host, port: located.port }))
+      .filter((address) => !skip.has(keyOf(address)));
+
+    return { name: located.name, addresses };
+  } catch {
+    return { name: invite.server, addresses: [] };
+  }
+}
 
 /*
- * Pairs with the Server a scanned code names: finds where it is now, spends the Ticket on a channel to it, and waits for the owner's answer on the Server Device.
- * The Server is found by its key's hash and not by the name, so a Server renamed since the code was drawn is still the one (ADR-0045).
+ * Pairs with the Server a scanned code names, the way a phone reaches an Expo dev server: it knocks first where the code says the Server answers, and looks for it on the network only when nothing answers there.
+ * Either way the Ticket is spent on a channel to it, and the wait is for the owner's answer on the Server Device. On the network the Server is found by its key's hash and not by the name, so a Server renamed since the code was drawn is still the one (ADR-0045).
  */
 export async function pairWithInvite(
   invite: PairingInvite,
   deps: PairDeps,
 ): Promise<PairOutcome> {
-  try {
-    const located = await deps.resolve(knownOf(invite, deps), deps.browse);
+  const attempt = { invite, name: invite.server, deps };
+  const direct = directAddresses(invite, deps);
+  const answered = await pairOnAny(direct, attempt);
 
-    return await pairOnAny({ invite, located, deps });
-  } catch {
-    return { kind: 'not-found' };
-  }
+  if (answered) return answered;
+  const announced = await announcedAt(attempt, direct);
+
+  return (
+    (await pairOnAny(announced.addresses, {
+      ...attempt,
+      name: announced.name,
+    })) ?? { kind: 'not-found' }
+  );
 }

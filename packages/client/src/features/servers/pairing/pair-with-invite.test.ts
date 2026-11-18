@@ -111,4 +111,66 @@ describe('pairing with the Server a code names', () => {
     ).resolves.toEqual({ kind: 'not-found' });
     expect(pair).toHaveBeenCalledTimes(2);
   });
+
+  it('knocks first where the code says the Server answers, without asking the network', async () => {
+    const pair = vi.fn<Pair>().mockResolvedValue({ deviceId: 'phone' });
+    const resolve = heardAt(first);
+    const coded = { ...invite, urls: [`http://${studio}:7337`] };
+
+    await expect(pairWithInvite(coded, deps(pair, resolve))).resolves.toEqual({
+      kind: 'paired',
+      server: {
+        name: invite.server,
+        key: invite.key,
+        address: { host: studio, port: 7337 },
+      },
+    });
+    expect(resolve).not.toHaveBeenCalled();
+  });
+
+  it('looks on the network when nothing answers where the code says, and knocks nowhere twice', async () => {
+    const pair = vi
+      .fn<Pair>()
+      .mockRejectedValueOnce(new Error('timed out'))
+      .mockResolvedValueOnce({ deviceId: 'phone' });
+
+    const coded = { ...invite, urls: [`http://${first}:4000`] };
+
+    const outcome = await pairWithInvite(
+      coded,
+      deps(pair, heardAt(first, second)),
+    );
+
+    expect(outcome).toMatchObject({
+      kind: 'paired',
+      server: { address: { host: second, port: 4000 } },
+    });
+    expect(pair).toHaveBeenCalledTimes(2);
+  });
+
+  it('reads an IPv6 host in a URL, and skips what is not a URL', async () => {
+    const pair = vi.fn<Pair>().mockResolvedValue({ deviceId: 'phone' });
+    const coded = { ...invite, urls: ['not a url', 'http://[fd00::7]:7337'] };
+
+    await pairWithInvite(coded, deps(pair, heardAt()));
+
+    expect(pair).toHaveBeenCalledWith(
+      { host: 'fd00::7', port: 7337, serverPublicKey: invite.key },
+      invite.ticket,
+      expect.anything(),
+    );
+  });
+
+  it('passes on when the Server is reached, so the owner is said to be asked only then', async () => {
+    const onReached = vi.fn();
+    const pair = vi.fn<Pair>().mockResolvedValue({ deviceId: 'phone' });
+
+    await pairWithInvite(invite, deps(pair, heardAt(studio), { onReached }));
+
+    expect(pair).toHaveBeenCalledWith(
+      expect.anything(),
+      invite.ticket,
+      expect.objectContaining({ onReached }),
+    );
+  });
 });

@@ -1,11 +1,11 @@
 import { randomBytes } from 'node:crypto';
-import type { Socket } from 'node:net';
 import {
   answerRun,
   refuseRun,
   type OfferedTicket,
   type ServerRun,
 } from '@repo/contracts/pake';
+import type { ChannelCarrier } from './channel-carrier';
 import { frameRecord } from './frames';
 import { HandshakeBuffer } from './handshake-buffer';
 import { KeyRun } from './key-run';
@@ -34,7 +34,11 @@ const turnedAway = frameRecord(Buffer.from(refuseRun('ticket-attempts')));
 export class KeyDoor {
   public constructor(private readonly deps: KeyDoorDeps) {}
 
-  public accept(socket: Socket, opening: Buffer, proven: () => void): void {
+  public accept(
+    socket: ChannelCarrier,
+    opening: Buffer,
+    proven: () => void,
+  ): void {
     const buffer = new HandshakeBuffer();
 
     const read = (chunk: Buffer): void => {
@@ -53,7 +57,7 @@ export class KeyDoor {
     read(opening);
   }
 
-  private answer(socket: Socket, ask: Buffer): void {
+  private answer(socket: ChannelCarrier, ask: Buffer): void {
     const source = socket.remoteAddress ?? 'unknown';
     const offered = this.deps.offering(source);
 
@@ -61,7 +65,7 @@ export class KeyDoor {
     else socket.end(turnedAway);
   }
 
-  private begin(socket: Socket, asked: Asked): void {
+  private begin(socket: ChannelCarrier, asked: Asked): void {
     const settle = (proved: boolean): void =>
       this.deps.settled(asked.source, proved);
 

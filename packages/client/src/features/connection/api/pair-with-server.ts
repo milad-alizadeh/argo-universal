@@ -14,9 +14,9 @@ import type { PairedEndpoint } from './server-endpoint';
 export async function pairWithServer(
   endpoint: PairedEndpoint,
   ticket: string,
-  options: { platform?: ChannelPlatform; signal?: AbortSignal },
+  options: PairOptions,
 ): Promise<{ deviceId: string }> {
-  const platform = options.platform ?? appChannelPlatform;
+  const platform = reporting(options);
   const opening = opener(targetOf(endpoint, ticket), platform)();
 
   options.signal?.addEventListener('abort', () => void closeWhenOpen(opening));
@@ -25,6 +25,32 @@ export async function pairWithServer(
   stream.close();
 
   return { deviceId };
+}
+
+export interface PairOptions {
+  platform?: ChannelPlatform;
+  signal?: AbortSignal;
+  // Called once a socket to the Server is open and the request can reach it, so the App says it waits on the owner only then.
+  onReached?: () => void;
+}
+
+// The platform, saying when its socket opened: until then nothing has reached the Server, so nobody is being asked.
+function reporting(options: PairOptions): ChannelPlatform {
+  const platform = options.platform ?? appChannelPlatform;
+  const { onReached } = options;
+
+  if (!onReached) return platform;
+
+  return {
+    ...platform,
+    openSocket: async (address) => {
+      const socket = await platform.openSocket(address);
+
+      onReached();
+
+      return socket;
+    },
+  };
 }
 
 const targetOf = (endpoint: PairedEndpoint, ticket: string): ChannelTarget => ({

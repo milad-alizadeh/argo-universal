@@ -65,7 +65,13 @@ const routerInput = ({
   ...httpRouterInput(options, setup, controlToken),
   serverPublicKey: publicKey,
   discoveryName: discoveryNameOf(options),
-  addresses: () => listeningAddresses(options.port),
+  // ARGO_SERVER_HOSTNAME names this computer where a phone can reach it beyond the local network, such as on a tailnet.
+  addresses: () =>
+    listeningAddresses(
+      options.port,
+      undefined,
+      process.env.ARGO_SERVER_HOSTNAME,
+    ),
   tickets: pairing.tickets,
   registrations: pairing.registrations,
   channels: pairing.channels,

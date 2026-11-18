@@ -75,14 +75,21 @@ function readCode(read: Read, hook: Hook): boolean {
 function ask(invite: PairingInvite, read: Read, hook: Hook): void {
   const controller = new AbortController();
   hook.held.running = controller;
-  hook.setState({ phase: 'waiting', serverName: invite.server });
+  // The owner is asked only once the request reaches the Server; until then the App is still finding it.
+  hook.setState({ phase: 'looking' });
 
-  void pairWithInvite(invite, depsOf(controller.signal, read.address)).then(
-    (outcome) => {
-      if (controller.signal.aborted) return;
-
-      hook.held.running = null;
-      settle(outcome, hook, { serverName: invite.server });
+  const deps = {
+    ...depsOf(controller.signal, read.address),
+    onReached: (): void => {
+      if (!controller.signal.aborted)
+        hook.setState({ phase: 'waiting', serverName: invite.server });
     },
-  );
+  };
+
+  void pairWithInvite(invite, deps).then((outcome) => {
+    if (controller.signal.aborted) return;
+
+    hook.held.running = null;
+    settle(outcome, hook, { serverName: invite.server });
+  });
 }
