@@ -1,6 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { FeedItem } from './feed-item';
 import { mixedTools } from './feed-item-fixtures';
+import {
+  personSaid,
+  personSaying,
+  voiceSaid,
+  voiceSaying,
+} from './transcript/transcript-fixtures';
 
 const meta = {
   title: 'Feed/FeedItem',
@@ -20,3 +26,15 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const MixedTools: Story = { args: mixedTools };
+
+// What the person said on a Voice call is their message: a bubble.
+export const PersonSaid: Story = { args: personSaid };
+
+// What the voice said is plain text, like the Agent's.
+export const VoiceSaid: Story = { args: voiceSaid };
+
+// Words the person is still saying: the bubble's text in the muted colour until final.
+export const PersonSaying: Story = { args: personSaying };
+
+// Words the voice is still saying: the plain text in the muted colour until final.
+export const VoiceSaying: Story = { args: voiceSaying };

@@ -1,4 +1,4 @@
-import type { VoiceStatus } from '@repo/contracts';
+import type { VoicePartial, VoiceStatus } from '@repo/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useEffect } from 'react';
@@ -15,6 +15,15 @@ export function callHere(
   if (!call) return 'none';
 
   return call.sessionId === sessionId ? call.status : 'elsewhere';
+}
+
+const noPartials: VoicePartial[] = [];
+
+// What is being said on this Session's call, followed from the status `useVoiceCall` keeps current.
+export function useVoicePartials(sessionId: string): VoicePartial[] {
+  const status = useQuery(useTRPC().voice.status.queryOptions()).data;
+
+  return status?.call?.sessionId === sessionId ? status.partials : noPartials;
 }
 
 // The Voice call's standing: read once, then followed from the Server on every Device.

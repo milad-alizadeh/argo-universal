@@ -40,6 +40,24 @@ export const SessionMessage = z.strictObject({
   ),
 });
 
+// What the person said during a Voice call (ADR-0062). Drawn as the person's message, never sent to the Agent as written.
+export const PersonTranscript = z.strictObject({
+  ...envelope,
+  sessionUpdate: kind('person_transcript'),
+  ...message,
+});
+
+export type PersonTranscript = z.infer<typeof PersonTranscript>;
+
+// What the voice said during a Voice call. Drawn as plain text.
+export const VoiceTranscript = z.strictObject({
+  ...envelope,
+  sessionUpdate: kind('voice_transcript'),
+  ...message,
+});
+
+export type VoiceTranscript = z.infer<typeof VoiceTranscript>;
+
 export type SessionMessage = z.infer<typeof SessionMessage>;
 
 export type UserMessage = z.infer<typeof UserMessage>;

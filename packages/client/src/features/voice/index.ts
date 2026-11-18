@@ -1,4 +1,4 @@
-export { useVoiceCall } from './use-voice-call';
+export { useVoiceCall, useVoicePartials } from './use-voice-call';
 
 export { fakeVoiceConnection, type VoiceConnection } from './voice-connection';
 

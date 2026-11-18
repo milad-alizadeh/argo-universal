@@ -34,11 +34,12 @@ export class VoiceCalls implements VoiceCallsPort {
   public constructor(private readonly actor: VoiceCallActorRef) {}
 
   public async status(): Promise<VoiceStatus> {
-    const { call, ended } = this.actor.getSnapshot().context;
+    const { call, ended, partials } = this.actor.getSnapshot().context;
 
     return {
       call: call && this.callOf(call.callId, call.sessionId),
       ended,
+      partials,
       availability: await this.availability(),
     };
   }
@@ -144,6 +145,7 @@ function answerOf(snapshot: CallSnapshot, callId: string): VoiceStartOutput {
 const noStatus: VoiceStatus = {
   call: null,
   ended: null,
+  partials: [],
   availability: { usable: false, reason: 'Voice calls are not available' },
 };
 
