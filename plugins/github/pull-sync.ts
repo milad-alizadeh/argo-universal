@@ -29,11 +29,16 @@ const isRunning = ({ state }: CheckInfo): boolean => state === 'running';
 const running = ({ checks }: Read): boolean =>
   (checks?.data ?? []).some(isRunning);
 
-const merged = ({ pull }: Read): boolean => pull.data?.stage === 'merged';
+const endedStages = new Set<string | undefined>(['merged', 'closed']);
 
-// A merged pull request whose Checks have all reported cannot change, so a Slot never asks GitHub for it again.
+const ended = ({ pull }: Read): boolean => endedStages.has(pull.data?.stage);
+
+/*
+ * A merged or closed pull request whose Checks have all reported cannot change, so a Slot never asks GitHub for it
+ * again. A closed one that GitHub reopens is read again only by a sync that is not a Slot's ask.
+ */
 const settled = (read: Read): boolean =>
-  merged(read) && !read.pull.failure && !running(read);
+  ended(read) && !read.pull.failure && !running(read);
 
 // Whether a Slot is being asked again only because the Plugin itself just said its records changed.
 type Echo = { pending: boolean };

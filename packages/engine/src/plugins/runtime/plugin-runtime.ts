@@ -1,5 +1,5 @@
 import type { PluginFailure } from '@repo/contracts/plugins/runtime';
-import { realClock, type PluginClock } from '../clock';
+import type { PluginClock } from '../clock';
 import { hostHooks } from '../hooks/host-hooks';
 import { keepWaiting } from '../hooks/keep-waiting';
 import { HostConnection } from '../host/connection';
@@ -14,7 +14,11 @@ import type { PluginLocation } from './plugin-location';
 import { forgetOnce, logFallback, type Fallback } from './render-fallback';
 import { RuntimePlugins } from './runtime-plugins';
 import { RuntimeResources, type RuntimeInput } from './runtime-resources';
+import type { PluginBuilds } from './runtime-setup';
 import { TestControl } from './test-control';
+
+// The clock every deadline and worker realm share, and what is told when a dev build lands.
+type RuntimeExtras = { clock: PluginClock } & PluginBuilds;
 
 export class PluginRuntime {
   readonly hooks;
@@ -32,12 +36,12 @@ export class PluginRuntime {
   constructor(
     private readonly log: (line: string) => void,
     readonly services: PluginServices,
-    clock: PluginClock = realClock,
+    private readonly extras: RuntimeExtras,
   ) {
     this.host = new HostConnection(this.callbacks());
     this.connectAccounts();
-    this.testControl = this.controlFor(clock);
-    this.hooks = hostHooks(this.host, this.log, clock);
+    this.testControl = this.controlFor(extras.clock);
+    this.hooks = hostHooks(this.host, this.log, extras.clock);
     this.resources = new RuntimeResources(this.resourceInput());
     ({ data: this.data } = this.resources);
     ({ items: this.items } = this.resources);
@@ -61,6 +65,7 @@ export class PluginRuntime {
       clock,
       tell: (command): void => this.host.tell(command),
       running: (): string[] => this.plugins.runningIds(),
+      changesSettled: () => this.resources.changesSettled(),
     });
   }
 
@@ -71,6 +76,7 @@ export class PluginRuntime {
       clockStart: () => this.testControl.workerStart(),
       resources: this.resources,
       log: this.log,
+      builds: { rebuilt: this.extras.rebuilt, watch: this.extras.watch },
     };
   }
 

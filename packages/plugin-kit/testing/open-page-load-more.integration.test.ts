@@ -38,6 +38,8 @@ it('asks for the page a failed load more lacked, as the App keeps its rows and a
   expect(() => page.tree).toThrow(busy);
 
   kit.settings.set('busy', false);
+  // The failed page rests before it is read again (#2197).
+  await kit.clock.advance(5000);
   await page.loadMore();
 
   expect(page.error).toBeUndefined();

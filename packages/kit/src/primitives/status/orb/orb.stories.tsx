@@ -1,5 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
+import { useEffect, useState } from 'react';
 import { Orb } from './orb';
+import { OrbContinuity } from './orb-continuity';
+import type { OrbProps, OrbState } from './orb-props';
 
 const meta = {
   title: 'Design System/Primitives/Status/Orb',
@@ -19,6 +23,7 @@ const meta = {
     },
     size: { control: 'select', options: ['sm', 'md'] },
     paused: { control: 'boolean' },
+    continues: { control: 'boolean' },
     accessibilityLabel: { control: 'text' },
   },
   args: { state: 'working', size: 'md' },
@@ -43,3 +48,39 @@ export const Shaping: Story = { args: { state: 'shaping' } };
 export const Inline: Story = { args: { size: 'sm' } };
 
 export const Paused: Story = { args: { paused: true } };
+
+const everyState: OrbState[] = [
+  'working',
+  'searching',
+  'solving',
+  'composing',
+  'shaping',
+  'listening',
+];
+
+const msPerState = 1500;
+
+// A new orb for each state, as a Feed row's orb gives way to the next row's: the one drawing carries on and morphs between them.
+function OrbAfterOrb(props: OrbProps): React.JSX.Element {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setStep((shown) => shown + 1), msPerState);
+
+    return (): void => clearInterval(timer);
+  }, []);
+
+  return (
+    <OrbContinuity>
+      <Orb
+        key={step}
+        {...props}
+        state={everyState[step % everyState.length]}
+        continues
+      />
+    </OrbContinuity>
+  );
+}
+
+export const Morphing: Story = {
+  render: (args) => <OrbAfterOrb {...args} />,
+};

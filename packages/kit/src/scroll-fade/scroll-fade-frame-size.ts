@@ -29,17 +29,19 @@ function followContentLength(
   };
 }
 
-// The list's content length, followed only while capped: Legend List's web build never calls onContentSizeChange.
+// The list's content length up to the cap, followed only while capped: Legend List's web build never calls onContentSizeChange. Past the cap the frame's height no longer changes, so the same length sets no state.
 function useContentLength(
   list: RefObject<LegendListRef | null>,
-  follow: boolean,
+  cap: number | undefined,
 ): number | undefined {
   const [length, setLength] = useState<number>();
   useEffect(() => {
-    if (!follow || !list.current) return;
+    if (cap === undefined || !list.current) return;
 
-    return followContentLength(list.current, setLength);
-  }, [list, follow]);
+    return followContentLength(list.current, (content) =>
+      setLength(Math.min(content, cap)),
+    );
+  }, [list, cap]);
 
   return length;
 }
@@ -61,7 +63,7 @@ export function useFrameSize(
   const held = useSizeClassValue(caps.maxHeight);
   const offered = useSizeClassValue(caps.fitHeight);
   const cap = held ?? offered;
-  const length = useContentLength(list, cap !== undefined);
+  const length = useContentLength(list, cap);
 
   if (cap === undefined) return { className: 'min-h-0 flex-1' };
 

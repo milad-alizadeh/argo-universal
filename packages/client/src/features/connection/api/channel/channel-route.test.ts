@@ -1,0 +1,153 @@
+import { describe, expect, it, vi } from 'vitest';
+import type { ChannelAddress } from './byte-socket';
+import { ChannelRoute, type LocateServer } from './channel-route';
+import { PairingRefused } from './open-channel';
+
+const port = 7337;
+
+// An address on the home network, and one on a cable between the phone and the computer.
+const lan = (last: number): ChannelAddress => ({
+  host: `192.168.1.${last}`,
+  port,
+});
+
+const cable = (last: number): ChannelAddress => ({
+  host: `169.254.116.${last}`,
+  port,
+});
+
+const kept = lan(20);
+
+const opened = 'channel';
+
+interface FakeServer {
+  attempt: (address: ChannelAddress) => Promise<string>;
+  // Every address a channel was opened to, in order.
+  tried: ChannelAddress[];
+}
+
+// A Server that answers only on `answering`; every other address gives the socket error a phone gets.
+function serverOn(...answering: ChannelAddress[]): FakeServer {
+  const tried: ChannelAddress[] = [];
+
+  const attempt = async (address: ChannelAddress): Promise<string> => {
+    tried.push(address);
+
+    if (answering.some((one) => one.host === address.host)) return opened;
+    throw new Error('Operation timed out');
+  };
+
+  return { attempt, tried };
+}
+
+const announcing = (
+  ...addresses: ChannelAddress[]
+): ReturnType<typeof vi.fn<LocateServer>> =>
+  vi.fn<LocateServer>(async () => addresses);
+
+describe('ChannelRoute', () => {
+  it('tries where the Server announces itself now before the address Pairing kept', async () => {
+    const now = lan(40);
+    const route = new ChannelRoute(kept, announcing(now));
+    const server = serverOn(now);
+
+    await expect(route.open(server.attempt)).resolves.toBe(opened);
+    expect(server.tried).toEqual([now]);
+  });
+
+  it('falls back to the kept address when nothing announces the Server', async () => {
+    const route = new ChannelRoute(kept, announcing());
+    const server = serverOn(kept);
+
+    await expect(route.open(server.attempt)).resolves.toBe(opened);
+    expect(server.tried).toEqual([kept]);
+  });
+
+  it('opens the next channel where the last one answered, without asking the network again', async () => {
+    const now = lan(40);
+    const locate = announcing(now);
+    const route = new ChannelRoute(kept, locate);
+    const server = serverOn(now);
+
+    await route.open(server.attempt);
+    await route.open(server.attempt);
+
+    expect(locate).toHaveBeenCalledTimes(1);
+    expect(server.tried).toEqual([now, now]);
+  });
+
+  it('looks for the Server again when the address that answered last stops answering', async () => {
+    const before = lan(40);
+    const after = lan(41);
+    const announced = [before];
+    const route = new ChannelRoute(kept, async () => announced);
+
+    await route.open(serverOn(before).attempt);
+    announced.splice(0, 1, after);
+    const moved = serverOn(after);
+
+    await expect(route.open(moved.attempt)).resolves.toBe(opened);
+    expect(moved.tried).toEqual([before, after]);
+  });
+
+  it('tries a link-local address last, since it answers only while a cable joins the two', async () => {
+    const wire = cable(90);
+    const wifi = lan(172);
+    const route = new ChannelRoute(kept, announcing(wire, wifi));
+    const server = serverOn(wire);
+
+    await route.open(server.attempt);
+
+    expect(server.tried).toEqual([wifi, kept, wire]);
+  });
+
+  it('tries an address announced twice, or announced and kept, once', async () => {
+    const route = new ChannelRoute(kept, announcing(kept, kept));
+    const server = serverOn();
+
+    await expect(route.open(server.attempt)).rejects.toThrow(
+      'The Server did not answer',
+    );
+    expect(server.tried).toEqual([kept]);
+  });
+
+  it('stops at a Server that answered and refused this Device', async () => {
+    const now = lan(40);
+    const route = new ChannelRoute(kept, announcing(now));
+    const tried: ChannelAddress[] = [];
+
+    const refused = route.open(async (address) => {
+      tried.push(address);
+      throw new PairingRefused('ticket-required');
+    });
+
+    await expect(refused).rejects.toBeInstanceOf(PairingRefused);
+    expect(tried).toEqual([now]);
+  });
+
+  it('says the Server is unreachable when no address answers', async () => {
+    const route = new ChannelRoute(kept, announcing(lan(40)));
+
+    await expect(route.open(serverOn().attempt)).rejects.toThrow(
+      'The Server did not answer',
+    );
+  });
+
+  it('asks the network once for channels that open together', async () => {
+    const locate = announcing(kept);
+    const route = new ChannelRoute(kept, locate);
+    const server = serverOn(kept);
+
+    await Promise.all([route.open(server.attempt), route.open(server.attempt)]);
+
+    expect(locate).toHaveBeenCalledTimes(1);
+  });
+
+  it('tries only the kept address when nothing can look for the Server', async () => {
+    const route = new ChannelRoute(kept);
+    const server = serverOn(kept);
+
+    await expect(route.open(server.attempt)).resolves.toBe(opened);
+    expect(server.tried).toEqual([kept]);
+  });
+});

@@ -14,21 +14,27 @@ import { useResetHistory } from './use-feed-history';
 
 const uncached = { staleTime: 0, gcTime: 0 };
 
-interface SessionFeedHandle {
+interface FeedStoreOptions {
+  // The key of the Feed the App keeps; the Session's id unless a screen shows another Feed of it.
+  cacheId: string | undefined;
+  shown: boolean;
+}
+
+export interface SessionFeedHandle {
   store: SessionFeedStore;
   state: SessionFeedState;
 }
 
-// The store shows the Session while this screen does; new ports reach it without dropping its rows.
+// The store shows the Session while this screen does, and while it is shown (a hidden retained page holds its rows and commits nothing); new ports reach it without dropping its rows.
 export function useSessionFeedStore(
   sessionId: string | undefined,
   translate: FeedViewTranslator,
-  cacheId = sessionId,
+  { cacheId, shown }: FeedStoreOptions,
 ): SessionFeedHandle {
   const ports = useSessionFeedPorts(sessionId, translate, cacheId);
   const store = useStoreFor(cacheId, ports);
   useEffect(() => store.setPorts(ports));
-  useEffect(() => store.start(), [store]);
+  useEffect(() => (shown ? store.start() : undefined), [store, shown]);
 
   const state = useFeedStoreState(store);
 

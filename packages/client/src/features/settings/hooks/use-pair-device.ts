@@ -25,7 +25,7 @@ export function usePairDevice(): PairDeviceControls {
     asking: asking.registration,
     onNewCode: code.mint,
     onOpen: (): void => setOpen(true),
-    ...answering(asking, setOpen),
+    ...answering(asking, setOpen, code.mint),
   };
 }
 
@@ -34,18 +34,33 @@ type Answering = Pick<
   'onOpenChange' | 'onAllow' | 'onDecline'
 >;
 
-// Every way the owner finishes with the Device that asked: allowing it, declining it, or closing the sheet on it.
+/*
+ * Every way the owner finishes with the Device that asked: allowing it, declining it, or closing the sheet on it.
+ * The Device spent the code on screen when it registered, so an answer that leaves the sheet open puts up a new one
+ * at once rather than a code that no longer works (#2353).
+ */
 const answering = (
   asking: Asking,
   setOpen: (open: boolean) => void,
+  mint: () => void,
 ): Answering => ({
-  onAllow: asking.allow,
+  onAllow: thenMint(asking.allow, mint),
   onOpenChange: (next): void => {
     setOpen(next);
     asking.answered();
   },
-  onDecline: asking.decline,
+  onDecline: thenMint(asking.decline, mint),
 });
+
+const thenMint =
+  (
+    answer: (registration: PairingRegistration) => void,
+    mint: () => void,
+  ): ((registration: PairingRegistration) => void) =>
+  (registration): void => {
+    answer(registration);
+    mint();
+  };
 
 interface Asking {
   registration: PairingRegistration | undefined;

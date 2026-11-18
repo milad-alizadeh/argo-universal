@@ -1,5 +1,6 @@
 import type { Section } from '../../../lib/product/navigation/sections';
 import type { PluginSection } from '../hooks/use-plugin-sections';
+import type { PageOpening } from './page-keys';
 
 // Who is opening a page: the Plugin whose tree fired the event, and the section the App is showing.
 export interface PluginPageOrigin {
@@ -32,6 +33,26 @@ function parsePluginRoute(route: readonly string[]): PluginRoute {
 
 export const pluginPagePath = (route: readonly string[]): string =>
   `/${parsePluginRoute(route).page.join('/')}`;
+
+// The page a route draws, from the route alone, so a draw can start before the Server's Plugin list says what the route is.
+export const routeOpening = (
+  route: readonly string[],
+  opened: { projectId?: string; sessionId?: string } = {},
+): PageOpening => ({
+  pluginId: parsePluginRoute(route).pluginId,
+  path: pluginPagePath(route),
+  ...opened,
+});
+
+// The root page of a nav item, as its route opens it.
+export const navRootOpening = (section: PluginSection): PageOpening =>
+  routeOpening(
+    pluginRoute({
+      pluginId: section.pluginId,
+      navId: section.navId,
+      page: section.navPath,
+    }),
+  );
 
 const sits = (section: PluginSection, page: readonly string[]): boolean =>
   section.navPath.every((segment, at) => page[at] === segment);

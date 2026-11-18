@@ -15,6 +15,11 @@ export const PluginSessionInfo = z.object({
   branch: z.string().nullable(),
   // The Session's own title, so a Plugin's page can name a Session it points at.
   title: z.string(),
+  /*
+   * How long, in milliseconds, nothing has happened in the Session: no Turn runs, no Prompt waits, and its Feed has not
+   * changed. Null while a Turn runs, a Prompt waits or the queue is paused (ADR-0055).
+   */
+  idleFor: z.number().nonnegative().nullable(),
 });
 
 export type PluginSessionInfo = z.infer<typeof PluginSessionInfo>;

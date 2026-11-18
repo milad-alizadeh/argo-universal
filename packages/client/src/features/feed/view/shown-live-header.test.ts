@@ -1,5 +1,6 @@
-import type { LiveHeader } from '@repo/contracts';
+import { type LiveHeader, runningCompactionStatus } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
+import { compactionStates } from '../../../../mocks/feed-paper';
 import type { FeedViewItem } from './feed-view';
 import { shownLiveHeader } from './shown-live-header';
 
@@ -29,6 +30,16 @@ const exploring: FeedViewItem = {
   toolCalls: [],
 };
 
+function compaction(status: string): FeedViewItem {
+  const row = compactionStates.find((state) => state.status === status);
+
+  if (!row) throw new Error(`Feed mocks need a ${status} Compaction`);
+
+  return { type: 'row', row };
+}
+
+const compacting = compaction(runningCompactionStatus);
+
 describe('shownLiveHeader', () => {
   it.each([
     { source: { type: 'tool_call', toolCallId: 'tool' } as const },
@@ -38,6 +49,15 @@ describe('shownLiveHeader', () => {
     ({ source }) => {
       expect(shownLiveHeader([openGroup], header(source))).toBeNull();
       expect(shownLiveHeader([exploring], header(source))).toBeNull();
+      expect(shownLiveHeader([compacting], header(source))).toBeNull();
+    },
+  );
+
+  it.each(['completed', 'failed', 'cancelled'])(
+    'shows Working again once a Compaction is %s',
+    (status) => {
+      const value = header({ type: 'working' });
+      expect(shownLiveHeader([compaction(status)], value)).toBe(value);
     },
   );
 
@@ -61,6 +81,7 @@ describe('shownLiveHeader', () => {
     const value = header(source, 'Awaiting approval');
     expect(shownLiveHeader([openGroup], value)).toBe(value);
     expect(shownLiveHeader([exploring], value)).toBe(value);
+    expect(shownLiveHeader([compacting], value)).toBe(value);
   });
 
   it('shows Working when nothing open draws the work', () => {

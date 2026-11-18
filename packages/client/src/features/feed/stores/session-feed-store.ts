@@ -1,4 +1,8 @@
-import type { FeedPageOutput, FeedSubscribeOutput } from '@repo/contracts';
+import type {
+  FeedPageOutput,
+  FeedSubscribeOutput,
+  SessionSnapshot,
+} from '@repo/contracts';
 import { StoreListeners } from '../../../lib/store-listeners';
 import { closedFeedError } from '../utils/closed-feed-error';
 import { mergeHistoryPages } from '../view/feed-history';
@@ -12,6 +16,7 @@ import {
   changedState,
   keptFeedChanged,
   resumedPoint,
+  sameSnapshot,
   type SessionFeedPorts,
   type SessionFeedState,
   startState,
@@ -28,6 +33,7 @@ interface Run {
 export class SessionFeedStore {
   private state: SessionFeedState;
   private buffer: FeedState;
+  private bufferedSnapshot: SessionSnapshot | null;
   private run: Run | undefined;
   private cancelFrame: (() => void) | undefined;
   private readonly listeners = new StoreListeners();
@@ -35,6 +41,7 @@ export class SessionFeedStore {
   public constructor(private ports: SessionFeedPorts) {
     this.state = startState(ports);
     this.buffer = this.state.feed;
+    this.bufferedSnapshot = this.state.snapshot;
   }
 
   // The screen's latest ports, for the same Session.
@@ -46,11 +53,14 @@ export class SessionFeedStore {
 
   public readonly getState = (): SessionFeedState => this.state;
 
-  // Shows the Session until the returned stop, which drops what arrives after it; starting again commits the rows still held.
+  // Shows the Session until the returned stop, which drops what arrives after it; starting again commits the rows still held, and opens live changes after them.
   public start(): () => void {
-    this.run ??= { release: this.ports.kept.retain() };
+    if (!this.run) {
+      this.run = { release: this.ports.kept.retain() };
+      this.openAfterHeld();
+    }
 
-    if (this.buffer !== this.state.feed) this.scheduleCommit();
+    if (this.hasHeldChange()) this.scheduleCommit();
 
     return this.stop;
   }
@@ -94,8 +104,7 @@ export class SessionFeedStore {
     if (event.type === 'closed')
       return this.update({ closure: { error: closedFeedError(event) } });
 
-    if (event.type === 'snapshot')
-      return this.update({ snapshot: event.snapshot });
+    if (event.type === 'snapshot') return this.holdSnapshot(event.snapshot);
 
     this.applyRowEvent(event);
   }
@@ -128,6 +137,35 @@ export class SessionFeedStore {
     if (retry || syncPoint !== open) this.update({ closure: null, syncPoint });
   }
 
+  // A run that follows a stop catches up from the rows held, not from where the first run opened.
+  private openAfterHeld(): void {
+    const open = this.state.syncPoint;
+
+    if (open === null) return;
+
+    const syncPoint = resumedPoint({
+      open,
+      held: syncPointOf(this.buffer),
+      retry: true,
+    });
+
+    if (syncPoint !== open) this.update({ syncPoint });
+  }
+
+  // The snapshot waits for the frame with the rows; one equal to the held snapshot is dropped, so nothing downstream sees a change.
+  private holdSnapshot(snapshot: SessionSnapshot): void {
+    if (sameSnapshot(this.bufferedSnapshot, snapshot)) return;
+    this.bufferedSnapshot = snapshot;
+    this.scheduleCommit();
+  }
+
+  private hasHeldChange(): boolean {
+    return (
+      this.buffer !== this.state.feed ||
+      this.bufferedSnapshot !== this.state.snapshot
+    );
+  }
+
   private replace(feed: FeedState): void {
     this.buffer = feed;
     this.scheduleCommit();
@@ -136,7 +174,7 @@ export class SessionFeedStore {
   private scheduleCommit(): void {
     this.cancelFrame ??= this.ports.frame(() => {
       this.cancelFrame = undefined;
-      this.update({ feed: this.buffer });
+      this.update({ feed: this.buffer, snapshot: this.bufferedSnapshot });
     });
   }
 

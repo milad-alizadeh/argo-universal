@@ -21,6 +21,10 @@ import {
   unreadSession,
 } from './session-row-fixtures';
 import { pullRequestItemsSession } from './session-row-pull-request-fixtures';
+import {
+  backgroundWorkSession,
+  todosLeftSession,
+} from './session-row-todos-fixtures';
 
 const meta = {
   title: 'Sessions/SessionRow',
@@ -76,6 +80,12 @@ export const Failed: Story = { args: failedSession };
 
 // Nothing is running: no status dot ends the row, and a finished Plan draws no bar.
 export const Idle: Story = { args: idleSession };
+
+// The Turn ended with Todos left and nothing running: no status dot, and the bar is muted.
+export const TodosLeft: Story = { args: todosLeftSession };
+
+// The Turn ended but a Background Task still runs: no status dot, the count keeps its own, and the bar stays green without sweeping.
+export const BackgroundWork: Story = { args: backgroundWorkSession };
 
 // Unread: the title is semibold and the activity is muted.
 export const Unread: Story = { args: unreadSession };

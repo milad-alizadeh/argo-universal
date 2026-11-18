@@ -2,10 +2,16 @@ import { createHash } from 'node:crypto';
 import type { FetchReply } from '@repo/contracts/plugins/argo-calls';
 import type { PluginClock } from '../clock';
 import type { Hop } from './plugin-fetch-response';
+import { HostSlots } from './plugin-host-slots';
 import { lower, rateLimited, refusal, reopensAt } from './plugin-rate-limit';
+
+export { concurrentPerHostLimit } from './plugin-host-slots';
 
 // One reply as `argo.fetch` hands it back.
 type Send = (hop: Hop) => Promise<FetchReply>;
+
+// An origin that said it was rate-limited: when it reopens, and when a call last ran into that.
+type Closed = { until: number; touched: number };
 
 type Kept = { validators: Record<string, string>; reply: FetchReply };
 
@@ -87,29 +93,79 @@ const withValidators = (hop: Hop, kept: Kept | undefined): Hop =>
  */
 export class PluginFetchCache {
   private readonly replies = new Map<string, Kept>();
-  private readonly closed = new Map<string, number>();
+  private readonly closed = new Map<string, Closed>();
+  private readonly slots = new HostSlots();
   private keptBytes = 0;
 
   constructor(private readonly clock: Pick<PluginClock, 'now'>) {}
 
-  async fetch(hop: Hop, send: Send): Promise<FetchReply> {
+  fetch(hop: Hop, send: Send): Promise<FetchReply> {
     const gate = gateKey(hop);
     const until = this.closedUntil(gate);
 
-    if (until !== undefined) return refusal(until, this.clock.now());
+    if (until !== undefined) return Promise.resolve(this.refuse(gate, until));
+
+    return this.slots.run(hop.url.host, () =>
+      this.sendWhileOpen(gate, hop, send),
+    );
+  }
+
+  /*
+   * When the limit its read ran into reopens, for the Query whose read began at `since`: the latest reopening among any
+   * of the Plugin's origins touched since then, whichever call of the Plugin touched it, as the cache does not know which
+   * call was this Query's. A Query that failed for another reason, with no origin of the Plugin limited, has none, and
+   * keeps its own backoff.
+   */
+  limitedUntil(since: number): number | undefined {
+    const now = this.clock.now();
+
+    const reopenings = this.closed
+      .values()
+      .flatMap(({ touched, until }) =>
+        touched >= since && until > now ? [until] : [],
+      )
+      .toArray();
+
+    return reopenings.length > 0 ? Math.max(...reopenings) : undefined;
+  }
+
+  // A request that waited for its turn may find the origin closed by an answer that came in meanwhile.
+  private async sendWhileOpen(
+    gate: string,
+    hop: Hop,
+    send: Send,
+  ): Promise<FetchReply> {
+    const until = this.closedUntil(gate);
+
+    if (until !== undefined) return this.refuse(gate, until);
 
     const reply = await this.sendKept(hop, send);
 
     if (rateLimited(reply))
-      this.closed.set(gate, reopensAt(reply, this.clock.now()));
+      this.closed.set(gate, {
+        until: reopensAt(reply, this.clock.now()),
+        touched: this.clock.now(),
+      });
 
     return reply;
   }
 
-  private closedUntil(gate: string): number | undefined {
-    const until = this.closed.get(gate);
+  // What a closed origin answers in the service's place; the call is noted as one the limit stopped.
+  private refuse(gate: string, until: number): FetchReply {
+    const now = this.clock.now();
+    const closed = this.closed.get(gate);
 
-    if (until === undefined || until > this.clock.now()) return until;
+    if (closed) closed.touched = now;
+
+    return refusal(until, now);
+  }
+
+  private closedUntil(gate: string): number | undefined {
+    const closed = this.closed.get(gate);
+
+    if (!closed) return undefined;
+
+    if (closed.until > this.clock.now()) return closed.until;
 
     this.closed.delete(gate);
 

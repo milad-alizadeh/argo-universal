@@ -35,6 +35,13 @@ export { useOpenPluginPage, usePluginOpener } from './hooks/use-plugin-opener';
 export { usePluginPage } from './hooks/use-plugin-page';
 
 export {
+  usePrefetchNavPages,
+  usePrefetchRoutePage,
+} from './hooks/use-prefetch-pages';
+
+export { routeOpening } from './utils/plugin-page-route';
+
+export {
   pluginAt,
   pluginPath,
   type PluginSection,

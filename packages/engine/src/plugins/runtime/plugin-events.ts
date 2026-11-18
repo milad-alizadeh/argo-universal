@@ -21,6 +21,10 @@ export type RuntimePluginInput = {
   // Settles every activation waiting on the Plugin.
   answer: (status: PluginStatus) => void;
   log: (line: string) => void;
+  // Told when a dev build lands, so what was read from the Plugin's folder is read again.
+  rebuilt?: () => void;
+  // Whether the Plugin's build watches its sources, as a dev Server's does; otherwise it builds once.
+  watch?: boolean;
 };
 
 export type Loaded = { type: 'build.loaded'; source: string; version: string };

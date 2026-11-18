@@ -9,6 +9,10 @@ export const knownCompactionStatuses = [
   'cancelled',
 ] as const;
 
+// The one status of a Compaction that still runs.
+export const runningCompactionStatus =
+  'in_progress' satisfies (typeof knownCompactionStatuses)[number];
+
 const CompactionStatus = z.string();
 
 export const CompactionUpdate = z.strictObject({

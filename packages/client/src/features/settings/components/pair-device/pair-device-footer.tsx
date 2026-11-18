@@ -9,9 +9,9 @@ import type {
   PairingCodeLoad,
 } from './pair-device-sheet';
 
-// Only a code that ran out or never arrived offers another: a live code and one still on its way need no answer.
+// Only a code that never arrived offers another: a live code renews itself, and one on its way needs no answer.
 const offersANewCode = (code: PairingCodeLoad): boolean =>
-  code.status === 'expired' || code.status === 'error';
+  code.status === 'error';
 
 // The sheet's actions sit at its foot, as a request sheet's do; the page above them holds only what is read.
 export function SheetActions(

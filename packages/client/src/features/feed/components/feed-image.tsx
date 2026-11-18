@@ -6,7 +6,8 @@ import {
 } from '@repo/kit/primitives/overlays/dialog';
 import type * as React from 'react';
 import { createContext, useContext, useState } from 'react';
-import { Image, Pressable, useWindowDimensions } from 'react-native';
+import { Image, Pressable, View } from 'react-native';
+import { useOpenImageStyle } from '../hooks/use-open-image-style';
 import { imageLabel } from '../view/image-label';
 import type { KeyedImage } from '../view/keyed-image';
 
@@ -19,16 +20,6 @@ export const OpenFeedImageContext = createContext<
   ((image: KeyedImage) => void) | null
 >(null);
 
-const openImageWidthFraction = 0.9;
-
-const openImageHeightFraction = 0.8;
-
-function aspectRatioOf({ width, height }: BlobRef): number {
-  if (!width || !height) return 1;
-
-  return width / height;
-}
-
 function useImageUrl(imageUrl: ImageUrl | undefined): ImageUrl {
   const feedImageUrl = useContext(FeedImageUrlContext);
   const loadImage = imageUrl ?? feedImageUrl;
@@ -37,20 +28,6 @@ function useImageUrl(imageUrl: ImageUrl | undefined): ImageUrl {
     throw new Error('Feed images need the Server Blob URL resolver.');
 
   return loadImage;
-}
-
-type OpenImageSize = { width: number; aspectRatio: number };
-
-function useOpenImageStyle(blob: BlobRef): OpenImageSize {
-  const window = useWindowDimensions();
-  const aspectRatio = aspectRatioOf(blob);
-
-  const width = Math.min(
-    window.width * openImageWidthFraction,
-    window.height * openImageHeightFraction * aspectRatio,
-  );
-
-  return { width, aspectRatio };
 }
 
 interface ImageSourceProps {
@@ -102,11 +79,22 @@ interface ThumbnailProps extends ImageSourceProps {
   onPress: () => void;
 }
 
+// A stack's card ring keeps overlapping thumbnails apart; the hairline edge sits inside it.
 const thumbnailClassNames: Record<FeedImageSize, string> = {
-  feed: 'h-21 w-30 rounded-lg border border-border',
-  row: 'size-6 rounded-sm border border-hairline',
+  feed: 'h-21 w-30 rounded-lg',
+  row: 'size-6 rounded-sm',
   stack: 'size-5.5 rounded-sm border-2 border-card',
 };
+
+// Every image thumbnail draws a hairline over its edge, so a white image still shows where it ends.
+const edgeClassNames: Record<FeedImageSize, string> = {
+  feed: 'rounded-lg',
+  row: 'rounded-sm',
+  stack: 'rounded-xs',
+};
+
+const edgeClassName = (size: FeedImageSize): string =>
+  `pointer-events-none absolute inset-0 border border-border ${edgeClassNames[size]}`;
 
 const thumbnailClassName = (size: FeedImageSize): string =>
   `shrink-0 overflow-hidden bg-muted ${thumbnailClassNames[size]}`;
@@ -128,6 +116,7 @@ function ImageThumbnail(props: ThumbnailProps): React.JSX.Element {
       className={thumbnailClassName(props.size)}
     >
       <Image source={source} resizeMode="cover" className="size-full" />
+      <View aria-hidden className={edgeClassName(props.size)} />
     </Pressable>
   );
 }

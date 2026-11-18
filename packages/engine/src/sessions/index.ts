@@ -49,6 +49,7 @@ export { createSessionActorInput } from './session-actor-input';
 export { recoverAfterRestart } from './recovery';
 
 export {
+  readLatestTurn,
   SessionRowUpdateJob,
   TurnInsertJob,
   TurnUpdateJob,

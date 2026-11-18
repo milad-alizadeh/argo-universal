@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { makeDotBuffer } from './engine/core';
 import { resolvePreset } from './engine/presets';
 import { MODE_DRAWS } from './engine/registry';
-import type { Dot } from './engine/types';
-import { defaultRMin, inkLevel, minAlpha } from './orb-ink';
+import { defaultRMin } from './orb-ink';
+import { paintedFrame as painted } from './orb-painted.mocks';
 import type { OrbSize, OrbState } from './orb-props';
 
 interface Frame {
@@ -69,28 +69,17 @@ const pixels: Record<OrbSize, number> = { sm: 20, md: 64 };
 // One buffer for every frame, as an orb keeps one, so frames of other sizes and counts reuse its dots.
 const buffer = makeDotBuffer();
 
-// The same weighting the original's sums were taken with.
-function score(dot: Dot, rMin: number): number {
-  const position = dot.x + 2 * dot.y;
-  const radius = 3 * Math.max(rMin, dot.r);
-
-  return position + radius + 5 * inkLevel(dot.white, false) + 7 * dot.a;
-}
-
 function paintedFrame({ state, size, seconds }: Frame): Frame {
   const { mode, opts } = resolvePreset(state, size);
 
   MODE_DRAWS[mode](buffer, pixels[size], seconds, opts);
 
-  const painted = buffer.dots
-    .slice(0, buffer.count)
-    .filter((dot) => dot.a >= minAlpha);
-
-  const rMin = opts.rMin ?? defaultRMin;
-
-  const sum = painted.reduce((total, dot) => total + score(dot, rMin), 0);
-
-  return { state, size, seconds, count: painted.length, sum };
+  return {
+    state,
+    size,
+    seconds,
+    ...painted(buffer, opts.rMin ?? defaultRMin),
+  };
 }
 
 describe('the orb engine', () => {
