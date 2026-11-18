@@ -7,26 +7,21 @@ import {
 import type * as React from 'react';
 import { createContext, useContext, useState } from 'react';
 import { Image, Pressable, useWindowDimensions } from 'react-native';
+import { imageLabel } from '../view/image-label';
+import type { KeyedImage } from '../view/keyed-image';
 
 type ImageUrl = (blob: BlobRef) => string;
 
 export const FeedImageUrlContext = createContext<ImageUrl | null>(null);
 
+// Opens an image over the Feed it is drawn in; null where an image is drawn outside a Feed.
+export const OpenFeedImageContext = createContext<
+  ((image: KeyedImage) => void) | null
+>(null);
+
 const openImageWidthFraction = 0.9;
 
 const openImageHeightFraction = 0.8;
-
-const isPasted = (image: ImageContent): boolean =>
-  image._meta?.argo?.source === 'pasted';
-
-function sizeLabel({ width, height }: BlobRef): string | undefined {
-  if (!width || !height) return undefined;
-
-  return `${width}×${height}`;
-}
-
-const imageLabel = (image: ImageContent): string | undefined =>
-  image.name ?? (isPasted(image) ? 'Pasted' : sizeLabel(image.blob));
 
 function aspectRatioOf({ width, height }: BlobRef): number {
   if (!width || !height) return 1;
@@ -84,7 +79,8 @@ interface OpenImageProps extends ImageSourceProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function OpenImage({
+// One image at its full size, over the page; its title and label follow the image it is given.
+export function OpenImage({
   image,
   uri,
   ...dialog
@@ -138,23 +134,55 @@ function ImageThumbnail(props: ThumbnailProps): React.JSX.Element {
 
 interface FeedImageProps {
   image: ImageContent;
+  // Where the Feed holds the image, so it opens among the Feed's other images; without one it opens alone.
+  imageKey?: string;
   imageUrl?: ImageUrl;
   size?: FeedImageSize;
 }
 
-export function FeedImage({
-  image,
-  imageUrl,
-  size = 'feed',
-}: FeedImageProps): React.JSX.Element {
-  const uri = useImageUrl(imageUrl)(image.blob);
+type ThumbnailSource = Omit<ThumbnailProps, 'onPress'>;
+
+// An image drawn outside a Feed, or one the Feed does not list, opens in a dialog of its own.
+function LoneImage(props: ThumbnailSource): React.JSX.Element {
   const [open, setOpen] = useState(false);
-  const source = { image, uri };
 
   return (
     <>
-      <ImageThumbnail {...source} size={size} onPress={() => setOpen(true)} />
-      <OpenImage open={open} onOpenChange={setOpen} image={image} uri={uri} />
+      <ImageThumbnail {...props} onPress={() => setOpen(true)} />
+      <OpenImage
+        open={open}
+        onOpenChange={setOpen}
+        image={props.image}
+        uri={props.uri}
+      />
     </>
+  );
+}
+
+// The Feed's opener for a listed image, or none for one that opens alone.
+function useOpenInFeed(
+  image: ImageContent,
+  key: string | undefined,
+): (() => void) | undefined {
+  const openInFeed = useContext(OpenFeedImageContext);
+
+  if (!openInFeed || key === undefined) return undefined;
+
+  return () => openInFeed({ key, image });
+}
+
+export function FeedImage({
+  image,
+  imageKey,
+  imageUrl,
+  size = 'feed',
+}: FeedImageProps): React.JSX.Element {
+  const openInFeed = useOpenInFeed(image, imageKey);
+  const source = { image, uri: useImageUrl(imageUrl)(image.blob), size };
+
+  return openInFeed ? (
+    <ImageThumbnail {...source} onPress={openInFeed} />
+  ) : (
+    <LoneImage {...source} />
   );
 }

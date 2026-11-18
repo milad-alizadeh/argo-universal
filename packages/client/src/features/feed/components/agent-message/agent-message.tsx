@@ -13,5 +13,7 @@ export const AgentMessage = memo(function AgentMessage({
   row,
   streaming = false,
 }: AgentMessageProps) {
-  return <FeedContent content={row.content} streaming={streaming} />;
+  return (
+    <FeedContent content={row.content} streaming={streaming} rowId={row.id} />
+  );
 });

@@ -1,7 +1,5 @@
 import type {
   BlobRef,
-  ContentBlock,
-  ImageContent,
   UserMessage as UserMessageRow,
   PromptMessage,
 } from '@repo/contracts';
@@ -9,6 +7,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { memo } from 'react';
 import { View } from 'react-native';
+import { contentImages, type KeyedImage } from '../../view/keyed-image';
 import { FeedImage } from '../feed-image';
 import { type Reference, ReferenceChips } from './reference-chips';
 import { UserMessageBubble } from './user-message-bubble';
@@ -21,15 +20,18 @@ export interface UserMessageProps {
 
 interface MessageParts {
   text: string;
-  images: ImageContent[];
+  images: KeyedImage[];
   references: Reference[];
 }
 
-const messageParts = (content: ContentBlock[]): MessageParts => ({
+const messageParts = ({
+  id,
+  content,
+}: UserMessageProps['row']): MessageParts => ({
   text: content
     .flatMap((block) => (block.type === 'text' ? [block.text] : []))
     .join('\n\n'),
-  images: content.filter((block) => block.type === 'image'),
+  images: contentImages(id, content),
   references: content.filter(
     (block) => block.type === 'resource_link' || block.type === 'resource',
   ),
@@ -44,8 +46,8 @@ function MessageImages({
 
   return (
     <View className="max-w-full flex-row flex-wrap justify-end gap-1.5">
-      {images.map((image) => (
-        <FeedImage key={image.blob.blobId} image={image} imageUrl={imageUrl} />
+      {images.map(({ key, image }) => (
+        <FeedImage key={key} image={image} imageKey={key} imageUrl={imageUrl} />
       ))}
     </View>
   );
@@ -56,7 +58,7 @@ export const UserMessage = memo(function UserMessage({
   row,
   imageUrl,
 }: UserMessageProps) {
-  const { text, images, references } = messageParts(row.content);
+  const { text, images, references } = messageParts(row);
 
   return (
     <View className="items-end gap-1.5">

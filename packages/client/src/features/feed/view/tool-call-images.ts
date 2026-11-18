@@ -2,6 +2,7 @@ import type { ImageContent, ToolCallUpdate } from '@repo/contracts';
 import { toolCallFacts } from './feed-row-facts';
 import type { FeedActivity, FeedGroup } from './feed-view';
 import { fileName } from './file-edit-label';
+import { imageKeyAt, type KeyedImage } from './keyed-image';
 
 type ToolContent = ToolCallUpdate['content'];
 
@@ -12,14 +13,20 @@ const isImage = (
 } => block.type === 'content' && block.content.type === 'image';
 
 // The images a Tool call returned, each named after the file it read.
-export const toolCallImages = (row: ToolCallUpdate): ImageContent[] => {
+export const toolCallImages = (row: ToolCallUpdate): KeyedImage[] => {
   const path = toolCallFacts(row).path;
+  const name = path ? { name: fileName(path) } : undefined;
 
-  return row.content
-    .filter(isImage)
-    .map((block) =>
-      path ? { ...block.content, name: fileName(path) } : block.content,
-    );
+  return row.content.flatMap((block, index) =>
+    isImage(block)
+      ? [
+          {
+            key: imageKeyAt(row.id, index),
+            image: { ...block.content, ...name },
+          },
+        ]
+      : [],
+  );
 };
 
 // A Tool call's output without the images it draws as thumbnails.
@@ -32,6 +39,10 @@ const activityCalls = (activity: FeedActivity): ToolCallUpdate[] => {
   return activity.type === 'exploration' ? activity.toolCalls : [];
 };
 
+// The images an activity's Tool calls returned, in the order they ran.
+export const activityImages = (activity: FeedActivity): KeyedImage[] =>
+  activityCalls(activity).flatMap(toolCallImages);
+
 // Every image a group's Tool calls returned, in the order they ran.
-export const groupImages = (group: FeedGroup): ImageContent[] =>
-  group.items.flatMap(activityCalls).flatMap(toolCallImages);
+export const groupImages = (group: FeedGroup): KeyedImage[] =>
+  group.items.flatMap(activityImages);
