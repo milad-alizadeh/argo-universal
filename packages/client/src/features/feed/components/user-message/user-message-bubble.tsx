@@ -3,7 +3,8 @@ import {
   Markdown,
   type MarkdownProps,
 } from '@repo/kit/primitives/content/markdown';
-import { Text } from '@repo/kit/primitives/content/text';import type * as React from 'react';
+import { Text } from '@repo/kit/primitives/content/text';
+import type * as React from 'react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { transcriptStyle } from '../transcript/transcript-style';

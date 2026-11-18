@@ -27,14 +27,12 @@ type Fixture = Pick<FeedItemProps, 'item'>;
 const noImage = (): string => '';
 
 // Two rows, as the Feed draws them one above the other.
-const pair =
-  (above: Fixture, below: Fixture) =>
-  (): React.JSX.Element => (
-    <View className="w-full gap-4">
-      <FeedItem item={above.item} imageUrl={noImage} />
-      <FeedItem item={below.item} imageUrl={noImage} />
-    </View>
-  );
+const pair = (above: Fixture, below: Fixture) => (): React.JSX.Element => (
+  <View className="w-full gap-4">
+    <FeedItem item={above.item} imageUrl={noImage} />
+    <FeedItem item={below.item} imageUrl={noImage} />
+  </View>
+);
 
 const colorOf = (element: HTMLElement): string =>
   getComputedStyle(element).color;

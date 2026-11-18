@@ -8,7 +8,8 @@ import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { memo } from 'react';
 import { View } from 'react-native';
-import { contentImages, type KeyedImage } from '../../view/keyed-image';import { FeedImage } from '../feed-image';
+import { contentImages, type KeyedImage } from '../../view/keyed-image';
+import { FeedImage } from '../feed-image';
 import { type Reference, ReferenceChips } from './reference-chips';
 import { UserMessageBubble } from './user-message-bubble';
 

@@ -27,7 +27,10 @@ const isOwnRow = (row: FeedRowItem): row is Exclude<FeedRowItem, StandardRow> =>
   ownKinds.has(row.sessionUpdate);
 
 function noticeRow(
-  row: Exclude<StandardRow, { sessionUpdate: 'user_message' | 'agent_message' }>,
+  row: Exclude<
+    StandardRow,
+    { sessionUpdate: 'user_message' | 'agent_message' }
+  >,
 ): React.JSX.Element | null {
   return row.sessionUpdate === 'notice' ||
     row.sessionUpdate === 'compaction_update' ? (
