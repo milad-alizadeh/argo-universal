@@ -3,8 +3,9 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 import { Feed } from '#features/feed';
-import { SessionColumn } from '#lib/product/session-column';
+import { SessionColumn, WideColumnGutter } from '#lib/product/session-column';
 import { subagentMetrics } from '../subagent-list/subagent-format';
 import { SubagentFeedHeader } from './subagent-feed-header';
 import type { SubagentFeedProps } from './subagent-feed-props';
@@ -19,14 +20,27 @@ export type { SubagentFeedProps } from './subagent-feed-props';
  * task message, so it never draws the empty Session's heading.
  */
 export function SubagentFeed(props: SubagentFeedProps): React.JSX.Element {
+  // The Inspector tabs use spacing-3 for their leading inset.
+  const gutter = Number.parseFloat(String(useCSSVariable('--spacing-3')));
+
   return (
-    <View className="min-h-0 flex-1">
+    <WideColumnGutter.Provider value={gutter}>
+      <View className="agent-feed min-h-0 flex-1">
+        <FeedHeading {...props} />
+        <ReportControls {...props} />
+        {props.feed && <Feed {...props.feed} opensAtStart />}
+      </View>
+    </WideColumnGutter.Provider>
+  );
+}
+
+function FeedHeading(props: SubagentFeedProps): React.JSX.Element {
+  return (
+    <View className="agent-feed-heading shrink-0">
       <SizeClass only="wide">
         <SubagentFeedHeader {...props} />
       </SizeClass>
       <Metrics subagent={props.subagent} />
-      <ReportControls {...props} />
-      {props.feed && <Feed {...props.feed} opensAtStart />}
     </View>
   );
 }
