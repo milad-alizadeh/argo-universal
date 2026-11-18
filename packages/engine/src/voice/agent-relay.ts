@@ -8,7 +8,7 @@ import type {
 } from './session-link';
 
 // What the first Prompt of a call asks of the Agent, so the voice can tell progress from a result.
-export const voiceInstruction = [
+const voiceInstruction = [
   'A person is talking to you through a voice, and the voice reads your messages aloud.',
   'Begin every message with one mark:',
   '[STATUS] for progress the person may hear while you work,',

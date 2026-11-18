@@ -84,8 +84,6 @@ export { nativePermissionOutcomeEvent } from './native-permission-outcome';
 
 export {
   readVoiceMarker,
-  stripVoiceMarker,
-  voiceMarkers,
   withoutVoiceMarkers,
   type VoiceMarker,
 } from './voice-markers';

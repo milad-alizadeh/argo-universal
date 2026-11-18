@@ -1,5 +1,5 @@
 // The most bytes of an Agent message the voice is sent at once.
-export const pieceBytes = 500;
+const pieceBytes = 500;
 
 const byteLength = (text: string): number => Buffer.byteLength(text, 'utf8');
 

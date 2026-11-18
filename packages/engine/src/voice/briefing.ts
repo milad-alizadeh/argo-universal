@@ -10,7 +10,7 @@ import {
 } from '../feed';
 
 // About 5,000 tokens at four characters a token.
-export const briefingCharacters = 20_000;
+const briefingCharacters = 20_000;
 
 const recentRows = 300;
 

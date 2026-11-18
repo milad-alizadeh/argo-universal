@@ -4,7 +4,7 @@ import type { ContentBlock, SessionUpdate } from '@repo/contracts';
  * The marks an Agent puts at the start of a message on a Voice call (ADR-0062): progress, a result, or silent analysis.
  * They are for the voice, not the reader: the Feed strips them whenever it is read for drawing, and stored text keeps them.
  */
-export const voiceMarkers = ['[STATUS]', '[COMPLETE]', '[ANALYSIS]'] as const;
+const voiceMarkers = ['[STATUS]', '[COMPLETE]', '[ANALYSIS]'] as const;
 
 export type VoiceMarker = (typeof voiceMarkers)[number];
 
@@ -22,8 +22,7 @@ export function readVoiceMarker(text: string): MarkedText {
     : { marker: null, body: text };
 }
 
-export const stripVoiceMarker = (text: string): string =>
-  readVoiceMarker(text).body;
+const stripVoiceMarker = (text: string): string => readVoiceMarker(text).body;
 
 const firstText = (content: readonly ContentBlock[]): string | undefined => {
   const [first] = content;
