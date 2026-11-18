@@ -39,8 +39,6 @@ export class Announcer {
     this.checking = setInterval(() => {
       void this.enqueue(() => this.follow());
     }, this.watch.checkEveryMs);
-
-    this.checking.unref();
     this.follow();
   }
 
