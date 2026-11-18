@@ -38,7 +38,7 @@ interface ContextLevel {
   used: string;
   size: string;
   percent: number;
-  description?: string;
+  description?: RegExp;
   zone: 'Smart zone' | 'Dumb zone';
 }
 
@@ -128,7 +128,7 @@ export const FullPhone = contextRing(layoutWidths.phone, full, false);
 const lastCall: ContextLevel = {
   ...low,
   used: '~34k',
-  description: 'Estimated from the last model call.',
+  description: /last model call/i,
   usage: { ...low.usage, scope: 'model-call' },
 };
 

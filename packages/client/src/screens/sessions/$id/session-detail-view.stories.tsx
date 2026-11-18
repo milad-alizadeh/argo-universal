@@ -8,6 +8,7 @@ import {
   questionsValues,
 } from '../../../../mocks/elicitation';
 import { SessionDetailView } from './session-detail-view';
+import { lastModelCall, openingEstimate } from './session-detail-view-fixtures';
 import { sessionPageBar } from './session-detail-view-bar.mocks';
 import { changedSession } from './session-detail-view-changes-pill.mocks';
 import {
@@ -156,3 +157,7 @@ export const ChangesPill: Story = {
   args: changedSession,
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
+
+export const LastModelCall: Story = { args: lastModelCall };
+
+export const OpeningEstimate: Story = { args: openingEstimate };
