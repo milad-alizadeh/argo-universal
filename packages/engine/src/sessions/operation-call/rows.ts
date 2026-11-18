@@ -1,9 +1,18 @@
 import type { FeedUpdate } from '@repo/contracts';
-import type { OperationWorkTarget } from '@repo/contracts/operations';
+import type { IconName } from '@repo/contracts/kit-symbols';
+import {
+  operationFeedRowId,
+  type OperationWorkTarget,
+} from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 
 // The Operation a Session called, as its Tool call shows it.
-export type CalledOperation = { name: string; label: string; input: Json };
+export type CalledOperation = {
+  name: string;
+  label: string;
+  input: Json;
+  icon?: IconName;
+};
 
 export type CallResult = { output: Json } | { error: string };
 
@@ -13,8 +22,7 @@ export type OperationRow = Extract<
 >;
 
 // The one Feed row id of an Operation Tool call; reading the call back uses it too.
-export const operationRowId = (toolCallId: string): string =>
-  `argo:${toolCallId}`;
+export const operationRowId = operationFeedRowId;
 
 export const openRow = (
   toolCallId: string,
@@ -24,13 +32,30 @@ export const openRow = (
   sessionUpdate: 'tool_call_update',
   state: 'open',
   toolCallId,
-  title: operation.label,
-  name: operation.name,
   kind: 'other',
   status: 'in_progress',
   content: [],
-  rawInput: operation.input,
+  ...operationFields(operation),
 });
+
+type OperationFields = Pick<
+  OperationRow,
+  'title' | 'name' | 'rawInput' | '_meta'
+>;
+
+function operationFields({
+  icon,
+  label,
+  name,
+  input,
+}: CalledOperation): OperationFields {
+  return {
+    title: label,
+    name,
+    rawInput: input,
+    ...(icon && { _meta: { argo: { operationIcon: icon } } }),
+  };
+}
 
 export const settledRow = (
   row: OperationRow,
@@ -51,4 +76,7 @@ export const cancelledRow = (row: OperationRow): OperationRow => ({
 export const startedRow = (
   row: OperationRow,
   work: OperationWorkTarget,
-): OperationRow => ({ ...row, _meta: { argo: { operationWork: work } } });
+): OperationRow => ({
+  ...row,
+  _meta: { ...row._meta, argo: { ...row._meta?.argo, operationWork: work } },
+});

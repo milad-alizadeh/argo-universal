@@ -23,7 +23,10 @@ type Anchor = Pick<
   'aria-controls'?: string;
 };
 
-type FieldLinkProps = FieldGroupKitProps<'FieldGroup.Link'> & Anchor;
+type FieldLinkProps = FieldGroupKitProps<'FieldGroup.Link'> &
+  Anchor & {
+    wrapSubtitle?: boolean;
+  };
 
 /*
  * A row that opens a page ends in what the page holds, muted, then the kit's disclosure chevron, which the web draws

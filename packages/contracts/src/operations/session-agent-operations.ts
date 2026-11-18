@@ -14,6 +14,7 @@ export const sessionAgentOperations = {
   'session.setTodos': {
     id: 'session.setTodos',
     label: 'Set Todo list',
+    icon: 'checklist',
     description:
       'Set the whole Todo list of your work, in order, so the person sees what is done and what is left. With no step in progress, the first pending step starts.',
     params: SessionSetTodosInput,
@@ -24,6 +25,7 @@ export const sessionAgentOperations = {
   'session.setTodoStep': {
     id: 'session.setTodoStep',
     label: 'Update Todo step',
+    icon: 'checklist',
     description:
       'Change one step of the Todo list by its number, counted from 1. Completing a step starts the next pending one when none is in progress.',
     params: SessionSetTodoStepInput,
@@ -34,6 +36,7 @@ export const sessionAgentOperations = {
   'session.declareSubagentRole': {
     id: 'session.declareSubagentRole',
     label: 'Declare Agent role',
+    icon: 'agent',
     description:
       'Before spawning a subagent, name its role; each spawn takes the next declared role, and Argo draws that role for the Agent.',
     params: SessionDeclareSubagentRoleInput,

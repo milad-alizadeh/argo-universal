@@ -2,6 +2,8 @@ export type { DesktopBridge } from '@repo/contracts';
 
 export { useConnection } from '#features/connection';
 
+export { useShowsServer } from '#features/servers';
+
 export {
   Frame,
   FramePage,

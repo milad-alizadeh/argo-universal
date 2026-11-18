@@ -2,6 +2,8 @@
 
 This is the pairing and authentication protocol that [ADR-0002](0002-a-local-server-owns-all-machine-work.md) and [ADR-0022](0022-server-device-and-paired-devices.md) deferred to its own ADR, and it extends [ADR-0044](0044-argo-is-driven-through-one-operation-registry-and-the-argo-cli.md)'s list of procedures that are the user's alone (owner, 2026-10-30, grilling of 24 questions on Spec 0025 #1486).
 
+Amended 2026-11-18 (owner, #2393): the channel's bytes ride inside a WebSocket at `/channel` on the Server's one port rather than on a raw TCP socket, and the QR carries the Server's URLs. A phone reaches a Server the way it reaches an Expo dev server: by a URL in the code, over anything that carries HTTP, which includes a tailnet. The Noise handshake inside is unchanged and is still the only gate. Android release builds declare `usesCleartextTraffic` for it. The WebSocket is a carrier, not a credential; what it carries is encrypted end to end. See [the research](../research/expo-dev-server-connection.md).
+
 The owner cannot open Argo on their phone. The Server binds `127.0.0.1` and has no authentication, so the only App that can reach it is one on the Server Device itself; a phone on the same Wi-Fi has no route in and no way to prove who it is. Pairing is therefore not a feature added to an authenticated Server. It is the first authentication the whole API has ever had, and the transport that carries every tRPC call has no path for a credential at all.
 
 ## What this replaces
@@ -23,7 +25,7 @@ The Server holds a long-term static keypair, made once and stored beside its ide
 
 Paseo then stops, and that is its flaw: knowing the daemon's public key **is** the credential. Every paired Device holds the same secret, so no two are distinguishable and per-Device revocation is not merely unimplemented, it is structurally impossible. Argo separates the ticket from the credential, as Tailscale does.
 
-- The QR carries the Server's static public key, the Server's discovery name, and a short-lived, single-use **Pairing Ticket**.
+- The QR carries the Server's static public key, the Server's discovery name, a short-lived, single-use **Pairing Ticket**, and the URLs it answers on (`http://host:port`, likeliest first; amended 2026-11-18). A Device knocks at those URLs first and looks for the Server by Bonjour only when none answers.
 - The App makes its own long-term **Device Key** and sends the public half inside the completed handshake, with the Device name it claims.
 - The Server stores one row per Device: id, public key, name, platform, paired at, last seen. The Server Device has a row, made with the Server.
 - From then on the Device authenticates with its own key. The ticket is spent and never used again.
@@ -50,6 +52,12 @@ The record number is not a field on the wire and nothing checks it on receive. B
 **Each platform keeps the Device Key in its own store, and web keeps nothing** (owner, 2026-10-31). A paired desktop uses Electron's `safeStorage`, which encrypts with a key the OS keychain holds for the app, and the ciphertext sits in the app's `userData` directory with the Server's own exclusive-create and `0600` handling. No native module and no `keytar`: the one in Electron is enough, and it raises no prompt, so there is no desktop secure-store dialog to design. iOS and Android keep `expo-secure-store`. Web stores nothing at all, because a web App is Server-Device-only and has no Device Key to keep.
 
 ## The transport: the encrypted channel is the socket
+
+> **Amended 2026-11-18 (#2393).** The section below is the original decision. The channel now rides inside a WebSocket at `/channel` (binary messages, no compression) on the same port. The Noise handshake, the framing and tRPC inside it are unchanged. The front door reads a request line of `GET /channel ` and hands the upgraded WebSocket to the same channel and key doors that a raw socket reaches; any other plain HTTP from beyond loopback is still refused. The owner chose this over raw TCP so that a phone reaches its Server by URL, as an Expo dev server is reached, and so that the channel crosses a tailnet or anything else that carries HTTP. The cost this section measured is accepted knowingly: Android declares `usesCleartextTraffic`. Nothing readable crosses it, because every byte inside the WebSocket is Noise ciphertext. The Server still accepts a raw TCP channel.
+
+> The same amendment also settles how a phone finds the Server. The QR's URLs are knocked on first, then Bonjour, then the address Pairing kept. A paired Server keeps every URL its QR carried, and a reconnect tries them after the proven address without waiting on Bonjour, so a phone off the local network, where Bonjour only times out, is not held up (link-local last). The first look at the network after the page opens waits four seconds, as Expo's launcher does, because the system's Local Network prompt may still be open; hearing nothing then is undetermined, not not-found. A Server announces an instance named for its computer and a piece of its key's hash, so two Servers on one computer never answer for one instance; the computer's name travels in the TXT record, and the App tells Servers apart by instance and key hash. The Server re-reads its interfaces every ten seconds, and logs what it announced and where.
+
+> The Server also says early when a Pairing request is with the owner. When a Device that is not yet paired spends a live Ticket, the Server answers the handshake at once with `{"asked": true}`, sealed like any handshake answer. The welcome then follows as the first record the finished channel's cipher seals. A Device that is already paired, or that is refused before the owner is asked, gets the welcome as the handshake answer, as before. The App shows "Waiting for approval" only on that early answer, so the page never claims the owner was asked when the request has not reached the Server. An App built before this cannot read the early answer and cannot pair with a Server built after it; it reconnects as before once paired.
 
 The encrypted channel cannot sit on top of `ws://`. **It is the transport**, with tRPC riding inside it.
 

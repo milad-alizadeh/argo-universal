@@ -33,6 +33,8 @@ type Story = StoryObj<typeof meta>;
 
 const incomingMessage = /^Use apply_patch to change beta to gamma/;
 
+const runningUsage = '8.2k tokens';
+
 const reportedText = 'Two packages.';
 
 const childOutput = 'I’ll update both files and check their contents.';
@@ -54,6 +56,14 @@ const metaLine = async (
   );
 };
 
+async function expectMetrics(
+  canvas: Parameters<NonNullable<Story['play']>>[0]['canvas'],
+  usage: string,
+): Promise<void> {
+  await expect(canvas.getByText('Sonnet 4.5', { exact: false })).toBeVisible();
+  await expect(canvas.getByText(usage, { exact: false })).toBeVisible();
+}
+
 export const Running: Story = {
   play: async ({ canvas }) =>
     eachLayout(async (wide) => {
@@ -61,6 +71,7 @@ export const Running: Story = {
       await expect(canvas.getByText(childOutput)).toBeVisible();
       await expect(canvas.getByRole('status', liveRow)).toBeVisible();
       await metaLine(canvas, wide, 'Running · 34s');
+      await expectMetrics(canvas, runningUsage);
     }),
 };
 
@@ -71,6 +82,7 @@ export const Finished: Story = {
       await expect(canvas.getAllByText(incomingMessage)[0]).toBeVisible();
       await expect(canvas.queryByRole('status', liveRow)).toBeNull();
       await metaLine(canvas, wide, 'Finished · 1m 41s');
+      await expectMetrics(canvas, '12.9k tokens');
     }),
 };
 
@@ -80,6 +92,7 @@ export const Cancelled: Story = {
   play: async ({ canvas }) =>
     eachLayout(async (wide) => {
       await metaLine(canvas, wide, 'Cancelled · 34s');
+      await expectMetrics(canvas, runningUsage);
     }),
 };
 
@@ -94,6 +107,10 @@ export const Empty: Story = {
       await expect(canvas.queryByText(incomingMessage)).toBeNull();
       await expect(canvas.queryByText(childOutput)).toBeNull();
       await metaLine(canvas, wide, 'Running · 2s');
+      await expect(
+        canvas.queryByText('Sonnet 4.5', { exact: false }),
+      ).toBeNull();
+      await expect(canvas.queryByText(/\dk? tokens/u)).toBeNull();
     }),
 };
 
@@ -116,6 +133,7 @@ export const Loading: Story = {
       await expect(canvas.queryByText(incomingMessage)).toBeNull();
       await expect(canvas.queryByTestId('feed-scroll')).toBeNull();
       await metaLine(canvas, wide, 'Finished · 1m 41s');
+      await expectMetrics(canvas, '12.9k tokens');
     }),
 };
 
@@ -129,6 +147,21 @@ export const BackToTheList: Story = {
   },
 };
 
+async function expectInspectorInset(
+  canvas: Parameters<NonNullable<Story['play']>>[0]['canvas'],
+): Promise<void> {
+  const inspector = canvas.getByTestId('agent-feed-inspector');
+  const leadingEdge = inspector.getBoundingClientRect().left + 12;
+  const tabs = canvas.getByRole('tablist');
+  const back = canvas.getByRole('button', { name: subagentFeedBackLabel });
+  const metrics = canvas.getByText(runningUsage, { exact: false });
+  const row = await canvas.findByRole('status', liveRow);
+
+  for (const element of [tabs, back, metrics, row]) {
+    await expect(element.getBoundingClientRect().left).toBeCloseTo(leadingEdge);
+  }
+}
+
 export const InTheInspector: Story = {
   render: (args) => <SubagentFeedInspector {...args} />,
   play: async ({ canvas }) => {
@@ -136,6 +169,8 @@ export const InTheInspector: Story = {
     await expect(canvas.getByRole('heading', subagentHeading)).toBeVisible();
     await expect(canvas.getByText('Running · 34s')).toBeVisible();
     await expect(canvas.getAllByText(incomingMessage)[0]).toBeVisible();
+
+    await expectInspectorInset(canvas);
   },
 };
 

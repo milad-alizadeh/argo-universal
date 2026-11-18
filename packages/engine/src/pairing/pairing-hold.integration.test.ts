@@ -2,7 +2,7 @@ import { pairingAnswerLifetimeMs } from '@repo/contracts';
 import { expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import { connectAsDevice } from '#mocks/engine-channel';
-import { PairingRefused } from './connect-channel';
+import { connectChannel, PairingRefused } from './connect-channel';
 
 type Host = Awaited<ReturnType<typeof startEngineTestHost>>;
 
@@ -111,4 +111,37 @@ it('answers one prompt once, so Allow after No pairs nothing', async (): Promise
     'That Device is not asking to pair',
   );
   await onlyTheServerDevice(host);
+});
+
+it('tells a Device its request is with the owner before the owner answers', async (): Promise<void> => {
+  const host = await startEngineTestHost();
+  const onAsked = vi.fn<() => void>();
+  const { invite } = await host.caller.pairing.mint();
+
+  const connecting = connectAsDevice(host, {
+    ticket: invite.ticket,
+    answer: 'none',
+    onAsked,
+  });
+
+  for await (const asking of await host.caller.pairing.registered()) {
+    await vi.waitFor(() => expect(onAsked).toHaveBeenCalledOnce());
+    await host.caller.pairing.allow({ deviceId: asking.deviceId });
+    break;
+  }
+
+  await expect(connecting).resolves.toMatchObject({
+    deviceId: expect.any(String),
+  });
+});
+
+it('says nothing early to a Device the Server already knows', async (): Promise<void> => {
+  const host = await startEngineTestHost();
+  const onAsked = vi.fn<() => void>();
+  const { invite } = await host.caller.pairing.mint();
+  const device = await connectAsDevice(host, { ticket: invite.ticket });
+  const opened = await connectChannel({ ...device.channel, onAsked });
+  opened.socket.destroy();
+
+  expect(onAsked).not.toHaveBeenCalled();
 });

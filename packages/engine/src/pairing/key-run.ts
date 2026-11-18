@@ -1,5 +1,5 @@
-import type { Socket } from 'node:net';
 import type { ServerRun } from '@repo/contracts/pake';
+import type { ChannelCarrier } from './channel-carrier';
 import { FrameReader } from './frames';
 
 // A Device that has been answered and says nothing more is a guess that went away, and is counted as one.
@@ -14,16 +14,19 @@ export class KeyRun {
   private ended = false;
 
   public constructor(
-    private readonly socket: Socket,
+    private readonly socket: ChannelCarrier,
     private readonly run: ServerRun,
     private readonly settle: (proved: boolean) => void,
   ) {}
 
   public start(reply: Buffer): void {
-    this.socket.setTimeout(
-      confirmWaitMs,
+    // A WebSocket carrier has no idle timer of its own, so the wait is the run's.
+    const waiting = setTimeout(
       (): void => void this.socket.destroy(),
+      confirmWaitMs,
     );
+
+    this.socket.once('close', (): void => clearTimeout(waiting));
     this.socket.on('data', (chunk): void => this.hear(chunk));
     this.socket.once('close', (): void => this.end(false));
     this.socket.write(reply);

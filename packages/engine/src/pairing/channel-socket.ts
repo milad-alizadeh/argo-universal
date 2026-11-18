@@ -1,5 +1,5 @@
-import type { Socket } from 'node:net';
 import { Duplex } from 'node:stream';
+import type { ChannelCarrier } from './channel-carrier';
 import type { ChannelCipher } from './channel-cipher';
 import { channelFailure } from './channel-failure';
 import { tagBytes } from './cipher-state';
@@ -17,7 +17,7 @@ export class ChannelSocket extends Duplex {
   private readonly records = new FrameReader();
 
   public constructor(
-    private readonly socket: Socket,
+    private readonly socket: ChannelCarrier,
     private readonly cipher: ChannelCipher,
   ) {
     super();

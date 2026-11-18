@@ -1,8 +1,9 @@
 import { type DiscoveredServer, keyHashOf } from '@repo/contracts';
 
-// Starts listening for Argo Servers on the local network and reports every one heard so far each time that changes; answers a function that stops. The platform supplies it: mDNS on a phone, a browser of its own on a desktop.
+// Starts listening for Argo Servers on the local network and reports every one heard so far each time that changes; answers a function that stops. The platform supplies it: mDNS on a phone, a browser of its own on a desktop. `onDenied` is called when the system refuses the browse itself, which a phone does when the owner turned Local Network off; the wait for the Server then ends at once.
 export type BrowseServers = (
   listener: (servers: readonly DiscoveredServer[]) => void,
+  onDenied?: () => void,
 ) => () => void;
 
 export interface ServerAddress {
@@ -15,6 +16,7 @@ export interface KnownServer {
   name: string;
   key: string;
   address?: ServerAddress;
+  otherAddresses?: ServerAddress[];
 }
 
 export interface ServerLocation {
@@ -61,11 +63,14 @@ function startBrowsing(
 function listen(browse: BrowseServers, key: string, heard: Heard): () => void {
   const keyHash = keyHashOf(key);
 
-  return browse((servers): void => {
-    const found = servers.find((server) => server.keyHash === keyHash);
+  return browse(
+    (servers): void => {
+      const found = servers.find((server) => server.keyHash === keyHash);
 
-    if (found) heard.resolve(found);
-  });
+      if (found) heard.resolve(found);
+    },
+    () => heard.resolve(null),
+  );
 }
 
 function giveUp(heard: Heard): () => void {

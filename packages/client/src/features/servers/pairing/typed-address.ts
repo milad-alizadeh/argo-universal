@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { ServerAddress } from '#features/connection';
+import { addressOfUrl } from './qr-addresses';
 
 const highestPort = 65_535;
 
@@ -17,9 +18,13 @@ const TypedAddress = z
   .transform(addressOf)
   .refine(({ port }) => port <= highestPort);
 
+const linkedAddress = (typed: string | undefined): ServerAddress | undefined =>
+  addressOfUrl(typed?.trim() ?? '')[0];
+
 /*
- * The address an owner typed as `host:port`, such as the one the Server Device shows beside its code, or nothing when it is not one: a name or an address with no port is a hint for discovery, not a place to knock.
+ * The address an owner typed as `host:port`, such as the one the Server Device shows beside its code, or as an http link with a port, or nothing when it is neither: a name or an address with no port is a hint for discovery, not a place to knock.
  */
 export const readTypedAddress = (
   typed: string | undefined,
-): ServerAddress | undefined => TypedAddress.safeParse(typed).data;
+): ServerAddress | undefined =>
+  TypedAddress.safeParse(typed).data ?? linkedAddress(typed);

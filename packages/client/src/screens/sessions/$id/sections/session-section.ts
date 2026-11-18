@@ -34,7 +34,7 @@ export interface SectionTabHandle {
 
 export type SectionCard = Pick<
   WorkbenchSection,
-  'summary' | 'footer' | 'onOpen' | 'noRows'
+  'summary' | 'trailing' | 'footer' | 'onOpen' | 'noRows'
 >;
 
 export interface SectionTab extends Pick<InspectorTab, 'count' | 'countTone'> {

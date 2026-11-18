@@ -41,6 +41,7 @@
     "operations": [
       {
         "name": "signIn",
+        "icon": "key",
         "label": "Sign in to Jira",
         "description": "Checks a pasted scoped Atlassian API token with the email and site it belongs to, and signs in to Jira with it.",
         "tier": "act",
@@ -66,6 +67,7 @@
       },
       {
         "name": "signInWithAtlassian",
+        "icon": "key",
         "label": "Sign in with Atlassian",
         "description": "Opens Atlassian's sign-in in the browser on the Server Device, with the OAuth app set in the Plugin's settings, and signs in to Jira when the person allows it.",
         "tier": "act",
@@ -73,6 +75,7 @@
       },
       {
         "name": "cancelSignInWithAtlassian",
+        "icon": "close",
         "label": "Cancel signing in with Atlassian",
         "description": "Stops waiting for the browser's Atlassian sign-in.",
         "tier": "act",
@@ -80,6 +83,7 @@
       },
       {
         "name": "addSite",
+        "icon": "add",
         "label": "Add a Jira site",
         "description": "Finds an Atlassian site by its address and uses it for the Project.",
         "tier": "act",
@@ -95,6 +99,7 @@
       },
       {
         "name": "chooseSite",
+        "icon": "web",
         "label": "Choose a Project's Jira site",
         "description": "Choose which Atlassian site a Project's Jira issues come from.",
         "tier": "act",
@@ -110,6 +115,7 @@
       },
       {
         "name": "chooseProject",
+        "icon": "folder",
         "label": "Choose a Project's Jira project",
         "description": "Choose which Jira project a Project shows the issues of.",
         "tier": "act",
@@ -130,6 +136,7 @@
       },
       {
         "name": "forgetProject",
+        "icon": "delete",
         "label": "Choose another Jira project",
         "description": "Forget a Project's Jira project, so the page asks which one to show again. The issues page switches projects from its title menu instead; this stays for Agents and for the page that says Jira refused the chosen project.",
         "tier": "act",
@@ -138,6 +145,7 @@
       },
       {
         "name": "checkAgain",
+        "icon": "retry",
         "label": "Read Jira again",
         "description": "Make the Jira pages read Jira again.",
         "tier": "read",
@@ -145,6 +153,7 @@
       },
       {
         "name": "listIssues",
+        "icon": "flat-view",
         "label": "List Jira issues",
         "description": "Lists the issues of the Jira project this Project shows, the most recently updated first, with each one's status, assignee, priority and the statuses it can move to.",
         "tier": "read",
@@ -163,6 +172,7 @@
       },
       {
         "name": "getIssue",
+        "icon": "issue",
         "label": "Read a Jira issue",
         "description": "Reads one issue of the Jira project this Project shows: its summary, description as Markdown, status, assignee, priority, labels, link, and the statuses Jira allows it to move to now.",
         "tier": "read",
@@ -178,6 +188,7 @@
       },
       {
         "name": "transition",
+        "icon": "steer",
         "label": "Move a Jira issue to a status",
         "description": "Moves an issue of the Jira project this Project shows to another status, as Jira's workflow allows from its current one. Fails with the statuses it can move to when Jira does not allow that move.",
         "tier": "act",
@@ -198,6 +209,7 @@
       },
       {
         "name": "setAssignee",
+        "icon": "person",
         "label": "Assign a Jira issue",
         "description": "Assigns an issue of the Jira project this Project shows to a person, to the signed-in person with me, or to nobody.",
         "tier": "act",
@@ -217,6 +229,7 @@
       },
       {
         "name": "setPriority",
+        "icon": "flag",
         "label": "Set a Jira issue's priority",
         "description": "Sets the priority of an issue of the Jira project this Project shows to one the Jira site has.",
         "tier": "act",
