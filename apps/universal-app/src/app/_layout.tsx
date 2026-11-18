@@ -22,9 +22,11 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useUniwind, withUniwind } from 'uniwind';
 import { watchFontScale } from '@/lib/font-scale-watch';
+import { pairLinkEnabled } from '@/lib/pair-link';
 import { holdPhonesInPortrait } from '@/lib/phone-orientation';
 import { useNavigationTheme } from '@/lib/theme';
 import { useWindowBackground } from '@/lib/window-background';
+import { appRoutes, reachableRoutes } from '@/navigation/reachable-routes';
 import {
   pushedScreen,
   rootScreenLayout,
@@ -144,16 +146,20 @@ function RootStack(): React.JSX.Element {
  * A phone or tablet that holds no Server can reach only Pairing, and pairing one opens the App on it; unpairing the
  * last one brings Pairing back (#2388). The desktop and web Apps always hold their own Server.
  */
-const guardedScreens = (showsServer: boolean): React.JSX.Element[] => [
-  <Stack.Protected key="app" guard={showsServer}>
-    <Stack.Screen name="(frame)" />
-    <Stack.Screen {...pushedScreen} />
-    <Stack.Screen name="open/[...link]" />
-  </Stack.Protected>,
-  <Stack.Protected key="pair" guard={!showsServer}>
-    <Stack.Screen name="pair" />
-  </Stack.Protected>,
-];
+const guardedScreens = (showsServer: boolean): React.JSX.Element[] => {
+  const reachable = reachableRoutes({ showsServer, pairLink: pairLinkEnabled });
+
+  return [
+    <Stack.Protected key="app" guard={reachable.includes(appRoutes[0])}>
+      <Stack.Screen name="(frame)" />
+      <Stack.Screen {...pushedScreen} />
+      <Stack.Screen name="open/[...link]" />
+    </Stack.Protected>,
+    <Stack.Protected key="pair" guard={reachable.includes('pair')}>
+      <Stack.Screen name="pair" />
+    </Stack.Protected>,
+  ];
+};
 
 // Only a Server the App shows has a Connection to wake; a phone that holds none has nothing to signal.
 function ShownServerSignal(): React.JSX.Element | null {

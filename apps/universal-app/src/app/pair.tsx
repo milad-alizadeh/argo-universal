@@ -1,7 +1,12 @@
 import { AddServerScreen } from '@repo/client';
+import { useLocalSearchParams } from 'expo-router';
 import type * as React from 'react';
+import { pairLinkEnabled, pairLinkIn } from '@/lib/pair-link';
 
-// The only page a phone or tablet that holds no Server can reach: pairing one opens the App on it (#2388).
 export default function PairRoute(): React.JSX.Element {
-  return <AddServerScreen />;
+  return (
+    <AddServerScreen
+      link={pairLinkIn(useLocalSearchParams(), pairLinkEnabled)}
+    />
+  );
 }
