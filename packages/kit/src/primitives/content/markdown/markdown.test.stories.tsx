@@ -50,7 +50,9 @@ export const Streaming: Story = {
   args: { text: 'Text arriving', streaming: true },
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Text arriving')).toBeVisible();
-    await expect(canvas.getByTestId('streaming-caret')).toBeVisible();
+    await expect(
+      canvas.queryByTestId('streaming-caret'),
+    ).not.toBeInTheDocument();
   },
 };
 
@@ -121,5 +123,14 @@ export const SelectableText: Story = {
   args: { text: 'Run `npm install -g pi`', selectable: true },
   play: async ({ canvas }) => {
     await expect(canvas.getByText('npm install -g pi')).toBeVisible();
+  },
+};
+
+export const IncompleteEmphasisDoesNotFlashAList: Story = {
+  args: { text: 'Before.\n\n*', streaming: true },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Before.')).toBeVisible();
+    await expect(canvas.queryByText('•')).toBeNull();
+    await expect(canvas.queryByTestId('streaming-caret')).toBeNull();
   },
 };

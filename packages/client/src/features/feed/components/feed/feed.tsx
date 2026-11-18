@@ -14,6 +14,7 @@ import { FeedImages } from '../feed-images';
 import { withoutDisclosedTurnEnds } from '../turn-end/turn-end';
 import { newestKeyOf, withLiveHeader } from './feed-entry';
 import { FeedList, type FeedListProps } from './feed-list';
+import { useExitingLiveHeader } from './use-exiting-live-header';
 import { useReportsAtEnd } from './use-feed-scroll-position';
 
 export interface FeedProps {
@@ -70,22 +71,28 @@ function EmptyFeedAtEnd({
   return <EmptyFeed {...props} />;
 }
 
-function useFeedEntries({
-  items,
-  liveHeader,
-  liveToolCall,
-}: FeedProps): Pick<FeedListProps, 'entries' | 'newestKey'> {
-  const drawnItems = useMemo(
+function useDrawnItems(items: FeedProps['items']): FeedViewItem[] {
+  return useMemo(
     () => drawnFeedItems(withoutDisclosedTurnEnds(items)),
     [items],
   );
+}
+
+function useFeedEntries(
+  props: FeedProps,
+): Pick<FeedListProps, 'entries' | 'newestKey' | 'turnRunning'> {
+  const { liveHeader, liveToolCall, sessionId } = props;
+  const drawnItems = useDrawnItems(props.items);
 
   const entries = useMemo(
     () => withLiveHeader(drawnItems, liveHeader, liveToolCall),
     [drawnItems, liveHeader, liveToolCall],
   );
 
-  return { entries, newestKey: newestKeyOf(drawnItems) };
+  const turnRunning = liveHeader !== null;
+  const visible = useExitingLiveHeader(entries, sessionId, turnRunning);
+
+  return { entries: visible, newestKey: newestKeyOf(drawnItems), turnRunning };
 }
 
 // What a Feed read without a Composer leaves for one at its end.
@@ -119,7 +126,7 @@ function FeedWithImages(props: FeedListProps & FeedProps): React.JSX.Element {
 }
 
 // A Feed that opens at its start has no Composer at its end, so it keeps no room for one.
-function FeedWithCover(props: FeedListProps & FeedProps): React.JSX.Element {
+function FeedWithCover(props: FeedListProps): React.JSX.Element {
   if (!props.opensAtStart) return <FeedList {...props} />;
 
   return (

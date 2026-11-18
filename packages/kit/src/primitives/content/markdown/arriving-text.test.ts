@@ -36,6 +36,15 @@ describe('the text a streaming block remembers', () => {
     expect(followText(trail, helloWorld, true)).toBe(trail);
   });
 
+  it('keeps a word in the same run as later chunks finish it', () => {
+    const trail = grown(['An', 'An off', 'An office', 'An office door']);
+
+    expect(trail?.marks).toEqual([2, 9]);
+    expect(grown(['Tap 👩', 'Tap 👩‍💻', 'Tap 👩‍💻 now'])?.marks).toEqual([
+      'Tap 👩‍💻'.length,
+    ]);
+  });
+
   it('forgets its marks when markdown changes the text drawn, so nothing on screen fades again', () => {
     const trail = grown(['a', 'a **bo', 'a bo']);
 
@@ -43,14 +52,15 @@ describe('the text a streaming block remembers', () => {
   });
 
   it('keeps no more runs than can still be fading', () => {
-    const texts = Array.from({ length: maxRuns + 5 }, (_unused, index) =>
-      'x'.repeat(index + 1),
+    const texts = Array.from(
+      { length: maxRuns + 5 },
+      (_unused, index) => `x${' x'.repeat(index)}`,
     );
 
     const trail = grown(texts);
 
     expect(trail?.marks).toHaveLength(maxRuns);
-    expect(trail?.marks.at(-1)).toBe(maxRuns + 4);
+    expect(trail?.marks.at(-1)).toBe(2 * (maxRuns + 4) - 1);
   });
 
   it('fades the whole of a block that starts while its message streams', () => {
