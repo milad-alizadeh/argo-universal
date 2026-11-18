@@ -2,7 +2,6 @@ import { formatPairingTicket, type MintedPairingTicket } from '@repo/contracts';
 import { productName } from '@repo/contracts/product-identity';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Stack } from '@repo/kit/primitives/layout/stack';
-import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { PairingCountdown } from './pairing-countdown';
@@ -22,9 +21,6 @@ const scanInstruction = `Open ${productName} on the other Device, choose Add a S
 const spacedCode = (ticket: string): string =>
   formatPairingTicket(ticket).replace('-', ' · ');
 
-// What stands where an expired code's digits were.
-const hiddenCode = '• • • • • •';
-
 const typeLabel = 'No camera? Type this code on the other Device';
 
 /*
@@ -33,8 +29,6 @@ const typeLabel = 'No camera? Type this code on the other Device';
  */
 export function PairingCode(props: {
   code: MintedPairingTicket;
-  // A code that ran out is still drawn, dimmed, so the sheet never leaves a stale one looking usable.
-  expired: boolean;
 }): React.JSX.Element {
   return (
     <View className="gap-6 medium:flex-row medium:items-center medium:gap-8">
@@ -50,11 +44,9 @@ export function PairingCode(props: {
 
 const typedFrom = (props: {
   code: MintedPairingTicket;
-  expired: boolean;
 }): Parameters<typeof TypedCode>[0] => ({
   ticket: props.code.invite.ticket,
   address: props.code.addresses[0],
-  hidden: props.expired,
 });
 
 // What the code is for, in the words the owner needs before they pick their phone up.
@@ -70,27 +62,10 @@ function ScanInstruction(): React.JSX.Element {
 }
 
 // White under the code in both appearances, because a camera reads a code by contrast rather than by taste.
-function CodeTile(props: {
-  code: MintedPairingTicket;
-  expired: boolean;
-}): React.JSX.Element {
+function CodeTile(props: { code: MintedPairingTicket }): React.JSX.Element {
   return (
     <View className="shrink-0 self-center rounded-xl border border-hairline bg-code-light p-4 medium:self-auto">
-      <View className={cn(props.expired && 'opacity-15')}>
-        <PairingQrCode invite={props.code.invite} size={codeSize} />
-      </View>
-      {props.expired ? <ExpiredNotice /> : null}
-    </View>
-  );
-}
-
-// Over the dimmed code, where the owner is already looking; the way to another is the sheet's footer.
-function ExpiredNotice(): React.JSX.Element {
-  return (
-    <View className="absolute inset-0 items-center justify-center">
-      <Text role="heading" accessibilityRole="heading" aria-level={2}>
-        This code has expired
-      </Text>
+      <PairingQrCode invite={props.code.invite} size={codeSize} />
     </View>
   );
 }
@@ -103,25 +78,21 @@ function TypedCode(props: {
   ticket: string;
   // Where this computer answers, as `host:port`, for a Device that cannot find it by itself (#1490, Enter code); none when it is on no network.
   address?: string;
-  hidden: boolean;
 }): React.JSX.Element {
   return (
     <View className="gap-2 rounded-xl bg-tint p-4">
       <Text role="badge" tone="muted">
         {typeLabel}
       </Text>
-      <TypedDigits {...props} />
+      <TypedDigits ticket={props.ticket} />
       {props.address ? <TypedAddress address={props.address} /> : null}
     </View>
   );
 }
 
-const TypedDigits = (props: {
-  ticket: string;
-  hidden: boolean;
-}): React.JSX.Element => (
+const TypedDigits = (props: { ticket: string }): React.JSX.Element => (
   <Text role="title-code" selectable>
-    {props.hidden ? hiddenCode : spacedCode(props.ticket)}
+    {spacedCode(props.ticket)}
   </Text>
 );
 
