@@ -1,4 +1,8 @@
-export { FieldPicker, expandInlinePickers } from './field-picker';
+export {
+  FieldPicker,
+  expandInlinePickers,
+  isFieldPicker,
+} from './field-picker';
 
 export type {
   FieldPickerCallerProps,

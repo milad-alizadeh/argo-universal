@@ -1,11 +1,6 @@
 import { expect, it } from 'vitest';
 import { startJira } from './mocks/journey';
-import {
-  addIssues,
-  argoIssues,
-  filterChoice,
-  shownKeys,
-} from './mocks/listing';
+import { addIssues, argoIssues, filterBy, shownKeys } from './mocks/listing';
 
 const timeoutMs = 30_000;
 
@@ -66,7 +61,7 @@ it.each(failures)(
     const page = await argoIssues(jira);
 
     jira.jira.fail('search', answer);
-    await page.press(filterChoice('To Do'));
+    await filterBy(page, 'To Do');
 
     expect(page.findText(title)).toBeDefined();
     expect(page.findText(message)).toBeDefined();
@@ -115,7 +110,7 @@ it(
     const page = await argoIssues(jira);
 
     jira.jira.data.tokens.splice(0);
-    await page.press(filterChoice('Done'));
+    await filterBy(page, 'Done');
 
     expect(page.findText('Sign in to Jira')).toBeDefined();
     expect(page.findText('Jira no longer accepts this sign-in.')).toBeDefined();

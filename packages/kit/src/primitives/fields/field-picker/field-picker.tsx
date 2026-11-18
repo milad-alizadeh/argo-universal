@@ -1,9 +1,5 @@
-import {
-  isValidElement,
-  type ComponentType,
-  type ReactElement,
-  type ReactNode,
-} from 'react';
+import type { ComponentType, ReactElement, ReactNode } from 'react';
+import { isMarkedElement, markedComponent } from '#kit/component-mark';
 import { useInMenu } from '#kit/list-place';
 import { useRowPressable } from '#primitives/fields/field-row';
 import { pickerDrawing } from './field-picker-drawing';
@@ -45,6 +41,16 @@ export function FieldPicker(
 
   return <Drawing {...props} />;
 }
+
+const mark = 'FieldPicker';
+
+markedComponent(mark, FieldPicker);
+
+// By the mark, not the function, so a Section still opens an inline picker after a hot reload.
+export const isFieldPicker = (
+  row: ReactNode,
+): row is ReactElement<FieldPickerCallerProps | FieldPickerProps> =>
+  isMarkedElement(mark, row);
 
 const InlineRows = (props: PickerProps): ReactElement => (
   <>{inlineOptionRows(props)}</>
@@ -95,6 +101,4 @@ function opened(row: ReactNode): ReactNode[] {
 }
 
 const pickerOf = (row: ReactNode): PickerProps | undefined =>
-  isValidElement<FieldPickerProps>(row) && row.type === FieldPicker
-    ? narrowed(row.props)
-    : undefined;
+  isFieldPicker(row) ? narrowed(row.props) : undefined;

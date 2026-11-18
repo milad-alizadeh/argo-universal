@@ -8,6 +8,7 @@ import { ListItem } from '#primitives/lists/list-item';
 import { withStack } from '#story-stack';
 import { Screen, type ScreenProps } from './index';
 import { exampleSubmenu } from './screen-submenu-example.mocks';
+import { TitleAndOptionsExample } from './screen-title-options.mocks';
 import { WidthExample } from './screen-width.mocks';
 
 const meta = {
@@ -38,6 +39,14 @@ export const Submenu: Story = {
 };
 
 export const Search: Story = { render: () => <ScreenExample search /> };
+
+/*
+ * The title picks what the page shows, and one Options button holds how it shows it and its filters: a sheet on a
+ * phone, a popover on its button on a wide window.
+ */
+export const TitlePickerAndOptions: Story = {
+  render: () => <TitleAndOptionsExample />,
+};
 
 export const PrimaryAction: Story = {
   render: () => <ScreenExample search primary />,

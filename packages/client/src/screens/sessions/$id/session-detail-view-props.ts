@@ -113,7 +113,7 @@ const sessionFeedProps = (
   onAtEndChange: open.onAtEndChange,
 });
 
-const canRetry = (open: OpenSessionSources): boolean =>
+const canPromptIdleSession = (open: OpenSessionSources): boolean =>
   [
     open.connected,
     open.snapshot.state === 'idle',
@@ -123,7 +123,7 @@ const canRetry = (open: OpenSessionSources): boolean =>
   ].every(Boolean);
 
 const retryableTurn = (open: OpenSessionSources): StoppedTurn | undefined =>
-  canRetry(open) ? stoppedTurn(open.view.items) : undefined;
+  canPromptIdleSession(open) ? stoppedTurn(open.view.items) : undefined;
 
 const stoppedTurnProps = (
   open: OpenSession,
@@ -145,12 +145,26 @@ function feedAndStoppedTurn(
   };
 }
 
+function createPullRequest(
+  open: OpenSessionSources,
+): OpenSessionViewProps['createPullRequest'] {
+  if (open.snapshot.archivedAt !== null) return undefined;
+
+  const action = open.commands.createPullRequest;
+
+  return {
+    ...action,
+    disabled: action.disabled || !canPromptIdleSession(open),
+  };
+}
+
 const openSessionProps = (open: OpenSessionSources): OpenSessionViewProps => ({
   ...open.callouts,
   ...feedAndStoppedTurn(open),
   elicitation: open.elicitation,
   header: sessionHeaderProps(open),
   composer: sessionComposerProps(open),
+  createPullRequest: createPullRequest(open),
   subagents: sessionAgents(open),
   shells: open.shells,
   inspectorPanels: open.inspectorPanels,

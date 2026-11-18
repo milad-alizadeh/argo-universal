@@ -13,19 +13,25 @@ function startWork(input: SubagentRouting, child: ChildFeed): ChildFeed {
   if (child.turnId) return child;
   const turnId = input.createId();
 
-  input.write(
-    new TurnInsertJob({
-      turn: {
-        id: turnId,
-        sessionId: child.sessionId,
-        status: 'running',
-        startedAt: input.now(),
-      },
-    }),
-  );
+  input.write(startWorkJob(child, turnId, input.now()));
 
   return { ...child, turnId };
 }
+
+const startWorkJob = (
+  child: ChildFeed,
+  id: string,
+  startedAt: number,
+): TurnInsertJob =>
+  new TurnInsertJob({
+    turn: {
+      id,
+      sessionId: child.sessionId,
+      status: 'running',
+      startedAt,
+      model: child.model,
+    },
+  });
 
 function endSubagentWork(
   input: SubagentRouting,

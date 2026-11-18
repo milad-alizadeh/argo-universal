@@ -36,6 +36,8 @@ export interface TestDeviceOptions {
    * refuse it, or say nothing and leave the Server holding the registration. A Device with no Ticket has nobody to answer for it.
    */
   answer?: Owner;
+  // Called when the Server says the request is with the owner, before the owner has answered.
+  onAsked?: () => void;
 }
 
 interface OwnerCaller {
@@ -146,6 +148,7 @@ async function channelInput(
     serverPublicKey: await staticKeyFor(host, options),
     deviceKey: options.deviceKey ?? generateKeypair(),
     claim: claimFrom(options),
+    onAsked: options.onAsked,
   };
 }
 

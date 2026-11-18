@@ -13,14 +13,13 @@ import type { AsideLayout, AsidePlace } from './screen-aside-place';
 import { ScreenBody } from './screen-body';
 import { ScreenColumnEdgesContext } from './screen-column';
 import { ScreenFooterFrame } from './screen-footer';
-import { screenHeadersOf } from './screen-headers';
 import { ScreenHeadingBody } from './screen-heading-row';
 import { ListColumnScreen } from './screen-list-column-screen';
 import { ScreenNavigation } from './screen-navigation';
+import { PageOptionsSheet } from './screen-page-options';
 import type { ScreenHeaderPlanned, ScreenProps } from './screen-props';
 import { ShortcutAnchors } from './screen-shortcut-anchors';
-import { useHeaderDeclaration } from './use-header-declaration';
-import { useHeaderPlan } from './use-header-plan';
+import { useHeaderDrawing } from './use-header-drawing';
 
 // Search text is always the caller's: an App's state, or a Plugin's field in Plugin controls.
 export function Screen(props: ScreenProps): ReactElement {
@@ -46,17 +45,11 @@ function ScreenSurface(props: ScreenProps): ReactElement {
 
 // The header draws where its plan says (header-site.ts); each site's adapter only draws.
 function ScreenHeaderSource(props: ScreenProps): ReactElement {
-  const declaration = useHeaderDeclaration(props, useClaimedSelectionMode());
-  const plan = useHeaderPlan('screen');
+  const header = useHeaderDrawing(props, 'screen', useClaimedSelectionMode());
+  const drawing = { ...props, ...header };
 
-  const drawing = {
-    ...props,
-    declaration,
-    headers: screenHeadersOf(declaration),
-    plan,
-  };
-
-  if (plan.site === 'list column') return <ListColumnScreen {...drawing} />;
+  if (header.plan.site === 'list column')
+    return <ListColumnScreen {...drawing} />;
 
   return <ScreenDrawing {...drawing} />;
 }
@@ -110,12 +103,16 @@ function ScreenColumns({
   );
 }
 
-// After the body: iOS's docked search is a native view, and UIKit's large title only finds a scroll view that comes first.
+/*
+ * After the body: iOS's docked search is a native view, and UIKit's large title only finds a scroll view that comes
+ * first. A navigator's header only opens the page's options, so their sheet draws here, inside the Screen's tree.
+ */
 function ScreenEnd(props: ScreenHeaderPlanned): ReactElement {
   return (
     <>
       <ScreenNavigation {...props} />
       <ScreenAccessory {...props} />
+      <PageOptionsSheet options={props.pageOptions} />
     </>
   );
 }

@@ -11,20 +11,17 @@ type HeaderProps = Omit<SubagentFeedProps, 'feed'>;
 
 export const subagentFeedBackLabel = 'Back to Agents';
 
-// Back hangs in the column's 24 gutter, so the title starts where the Feed's rows do, at either Inspector width.
 function BackButton({
   onBack,
 }: Pick<HeaderProps, 'onBack'>): React.JSX.Element {
   return (
-    <View className="absolute inset-y-0 -left-6 justify-center">
-      <IconButton
-        variant="ghost"
-        size="sm"
-        icon="back"
-        accessibilityLabel={subagentFeedBackLabel}
-        onPress={onBack}
-      />
-    </View>
+    <IconButton
+      variant="ghost"
+      size="sm"
+      icon="back"
+      accessibilityLabel={subagentFeedBackLabel}
+      onPress={onBack}
+    />
   );
 }
 

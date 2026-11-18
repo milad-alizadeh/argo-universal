@@ -1,8 +1,8 @@
 import { session } from '@repo/db/schema';
 import { and, eq } from 'drizzle-orm';
-import { type FeedActorRef } from '../../feed';
+import { type FeedActorRef, type FeedEvent } from '../../feed';
 import { SessionInsertJob } from '../session-storage';
-import { activeChildTurn } from './active-turn';
+import { childTurnState } from './active-turn';
 import { childFeedInput } from './feed-input';
 import type { SubagentRouting } from './routing-types';
 
@@ -11,7 +11,17 @@ export type ChildFeed = {
   parentId: string;
   feed: FeedActorRef;
   turnId: string | null;
+  model: string | null;
 };
+
+type ChildUpdate = Pick<
+  Extract<FeedEvent, { type: 'feed.acpUpdate' }>,
+  'acpSessionId' | 'update'
+>;
+
+export function forwardChildUpdate(child: ChildFeed, event: ChildUpdate): void {
+  child.feed.send({ type: 'feed.acpUpdate', turnId: child.turnId, ...event });
+}
 
 const storedChild = (
   input: SubagentRouting,
@@ -69,7 +79,7 @@ const childFeed = (
   sessionId: identity.sessionId,
   parentId: input.parentId,
   feed: input.spawn(childFeedInput(input, identity)),
-  turnId: activeChildTurn(input, identity.sessionId),
+  ...childTurnState(input, identity.sessionId),
 });
 
 export function openChildFeed(

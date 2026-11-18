@@ -12,7 +12,7 @@ export type TokenOf<T extends TokenType> = Extract<MarkedToken, { type: T }>;
 
 export interface BlockTokenProps<T extends Token = Token> {
   token: T;
-  caret: boolean;
+  streaming: boolean;
 }
 
 function isToken<T extends TokenType>(

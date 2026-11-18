@@ -38,7 +38,9 @@ export {
   type HeaderActionsProps,
 } from './header-buttons';
 
-export { headerMenuActions, overflowIcon } from './header-menu';
+export { ActionMenu, headerMenuActions, overflowIcon } from './header-menu';
+
+export { HeaderTrigger } from './header-trigger';
 
 export {
   submenuBadgeText,

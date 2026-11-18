@@ -49,6 +49,16 @@ const expoSymbolsRewrites = [
     from: `export const MaterialSymbols_${weight} = require('./MaterialSymbols_${weight}.ttf');`,
     to: `import font from './MaterialSymbols_${weight}.ttf?url';\nexport const MaterialSymbols_${weight} = font;`,
   })),
+  // Rolldown's production build can wrap a required font URL in a default export.
+  ...[
+    ['regular', '400Regular'],
+    ['light', '300Light'],
+    ['extraLight', '200ExtraLight'],
+  ].map(([weight, suffix]) => ({
+    file: `/expo-symbols/build/android/weights/${weight}/index.js`,
+    from: `font: MaterialSymbols_${suffix}`,
+    to: `font: MaterialSymbols_${suffix}.default ?? MaterialSymbols_${suffix}`,
+  })),
 ];
 
 interface Rewrite {

@@ -20,10 +20,10 @@ import { countedTitle } from '#primitives/overlays/menu';
 type ToolbarButton = ComponentProps<typeof Stack.Toolbar.Button>;
 
 // Template rendering tints image icons (custom symbols) like SF Symbols, in light and dark.
-const tinted = { iconRenderingMode: 'template' } as const;
+export const tinted = { iconRenderingMode: 'template' } as const;
 
 // An overflow menu row may have no icon.
-function toolbarIcon(
+export function toolbarIcon(
   icon: ActionProps['icon'],
 ): SFSymbol | ImageSourcePropType | undefined {
   return icon ? symbolSource(icon) : undefined;
@@ -86,7 +86,7 @@ const submenuItem = (submenu: DeclaredSubmenu) =>
   }) as const;
 
 // Stack.Toolbar.Badge shows its text, or a dot with none; only a root item in the left or right toolbar draws it.
-function toolbarBadge(
+export function toolbarBadge(
   text: string | undefined,
   dotColor: string | undefined,
 ): ReactElement | null {

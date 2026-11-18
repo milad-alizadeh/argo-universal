@@ -7,53 +7,54 @@ import {
   isDiagramFence,
   isOpenFence,
 } from '#primitives/content/diagram';
-import { Caret } from './caret';
 import { ClampedBlock } from './clamped-block';
 import { type BlockTokenProps, literal } from './markdown-tokens';
 import { Prose } from './prose';
 
 export function HeadingToken({
   token,
-  caret,
+  streaming,
 }: BlockTokenProps<Tokens.Heading>): React.JSX.Element | null {
   return (
-    <Prose tokens={token.tokens} caret={caret} headingLevel={token.depth} />
+    <Prose
+      streaming={streaming}
+      tokens={token.tokens}
+      headingLevel={token.depth}
+    />
   );
 }
 
 export function ParagraphToken({
   token,
-  caret,
+  streaming,
 }: BlockTokenProps<Tokens.Paragraph>): React.JSX.Element | null {
-  return <Prose tokens={token.tokens} caret={caret} />;
+  return <Prose streaming={streaming} tokens={token.tokens} />;
 }
 
 export function TextToken({
   token,
-  caret,
+  streaming,
 }: BlockTokenProps<Tokens.Text>): React.JSX.Element | null {
-  return <Prose tokens={token.tokens ?? [token]} caret={caret} />;
+  return <Prose streaming={streaming} tokens={token.tokens ?? [token]} />;
 }
 
 export function HtmlToken({
   token,
-  caret,
+  streaming,
 }: BlockTokenProps<Tokens.HTML | Tokens.Tag>): React.JSX.Element {
-  return <Prose tokens={[literal(token)]} caret={caret} />;
+  return <Prose streaming={streaming} tokens={[literal(token)]} />;
 }
 
 export function DefToken({
   token,
-  caret,
+  streaming,
 }: BlockTokenProps<Tokens.Def>): React.JSX.Element {
-  return <Prose tokens={[literal(token)]} caret={caret} />;
+  return <Prose streaming={streaming} tokens={[literal(token)]} />;
 }
 
-export function HrToken({
-  caret,
-}: BlockTokenProps<Tokens.Hr>): React.JSX.Element {
+export function HrToken(): React.JSX.Element {
   return (
-    <ClampedBlock caret={caret}>
+    <ClampedBlock>
       <View role="separator" />
     </ClampedBlock>
   );
@@ -61,11 +62,11 @@ export function HrToken({
 
 export function CodeToken({
   token,
-  caret,
+  streaming,
 }: BlockTokenProps<Tokens.Code>): React.JSX.Element {
   return (
-    <ClampedBlock caret={caret}>
-      <FencedBlock token={token} streaming={caret} />
+    <ClampedBlock>
+      <FencedBlock token={token} streaming={streaming} />
     </ClampedBlock>
   );
 }
@@ -89,9 +90,7 @@ function FencedBlock({ token, streaming }: FenceProps): React.JSX.Element {
   return <Code code={token.text} language={token.lang || undefined} />;
 }
 
-// A token this Feed does not draw still carries the streaming caret.
-export function OtherToken({
-  caret,
-}: BlockTokenProps): React.JSX.Element | null {
-  return caret ? <Caret /> : null;
+// Unsupported blocks draw nothing.
+export function OtherToken(): React.JSX.Element | null {
+  return null;
 }

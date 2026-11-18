@@ -14,10 +14,11 @@ import type { PairedEndpoint } from './server-endpoint';
 export async function pairWithServer(
   endpoint: PairedEndpoint,
   ticket: string,
-  options: { platform?: ChannelPlatform; signal?: AbortSignal },
+  options: PairOptions,
 ): Promise<{ deviceId: string }> {
   const platform = options.platform ?? appChannelPlatform;
-  const opening = opener(targetOf(endpoint, ticket), platform)();
+  const target = targetOf(endpoint, ticket, options.onReached);
+  const opening = opener(target, platform)();
 
   options.signal?.addEventListener('abort', () => void closeWhenOpen(opening));
 
@@ -27,10 +28,22 @@ export async function pairWithServer(
   return { deviceId };
 }
 
-const targetOf = (endpoint: PairedEndpoint, ticket: string): ChannelTarget => ({
+export interface PairOptions {
+  platform?: ChannelPlatform;
+  signal?: AbortSignal;
+  // Called once the Server says the owner's Allow prompt is up, so the App says it waits on the owner only then.
+  onReached?: () => void;
+}
+
+const targetOf = (
+  endpoint: PairedEndpoint,
+  ticket: string,
+  onAsked: (() => void) | undefined,
+): ChannelTarget => ({
   address: { host: endpoint.host, port: endpoint.port },
   serverPublicKey: endpoint.serverPublicKey,
   ticket,
+  onAsked,
 });
 
 async function closeWhenOpen(opening: Promise<OpenedChannel>): Promise<void> {

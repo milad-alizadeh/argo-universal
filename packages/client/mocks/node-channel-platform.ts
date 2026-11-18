@@ -1,7 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { connect } from 'node:net';
 import type { PairingClaim, PairingRegistration } from '@repo/contracts';
-import type { ByteSocket } from '../src/features/connection/api/channel/byte-socket';
 import type {
   ChannelPlatform,
   DeviceClaim,
@@ -10,6 +8,7 @@ import {
   openChannel,
   type ChannelInput,
 } from '../src/features/connection/api/channel/open-channel';
+import { openWebSocketCarrier } from '../src/features/connection/api/channel/web-socket-carrier';
 import {
   keypairFromPrivateKey,
   type Keypair,
@@ -24,39 +23,13 @@ export const nodeRandomBytes = (length: number): Uint8Array =>
 export const newDeviceKey = (): Keypair =>
   keypairFromPrivateKey(nodeRandomBytes(keyBytes));
 
-type Socket = ReturnType<typeof connect>;
-
-function adapter(socket: Socket): ByteSocket {
-  const bytes: ByteSocket = {
-    write: (data) => void socket.write(data),
-    close: () => void socket.destroy(),
-    onData: () => {},
-    onClose: () => {},
-  };
-
-  socket.on('data', (chunk) => bytes.onData(new Uint8Array(chunk)));
-  socket.on('close', () => bytes.onClose());
-  socket.on('error', (error) => bytes.onClose(error));
-
-  return bytes;
-}
-
-const openSocket: ChannelPlatform['openSocket'] = (address) =>
-  new Promise((resolve, reject) => {
-    const socket = connect(address.port, address.host, () =>
-      resolve(adapter(socket)),
-    );
-
-    socket.once('error', reject);
-  });
-
 export interface NodeDevice {
   deviceKey?: Keypair;
   claim?: Partial<DeviceClaim>;
 }
 
 /*
- * The App's sockets and randomness, taken from Node: a real TCP socket to a real Engine, which is as close to a phone as a test here gets. Only the socket module differs on a phone.
+ * The App's sockets and randomness, taken from Node: the phone's own WebSocket carrier, on Node's WebSocket, to a real Engine, which is as close to a phone as a test here gets.
  */
 export const nodeChannelPlatform = (
   device: NodeDevice = {},
@@ -64,7 +37,7 @@ export const nodeChannelPlatform = (
   const key = device.deviceKey ?? newDeviceKey();
 
   return {
-    openSocket,
+    openSocket: openWebSocketCarrier,
     randomBytes: nodeRandomBytes,
     deviceKey: async () => key,
     claim: () => ({ name: 'Test phone', platform: 'android', ...device.claim }),

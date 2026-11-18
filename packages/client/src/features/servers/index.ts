@@ -17,14 +17,19 @@ export { type ServerStates } from './server-states-store';
 
 export { useAppServerStates } from './server-states';
 
-export { ServersContext, useAppServers } from './servers-context';
+export {
+  ServersContext,
+  useAppServers,
+  useShowsServer,
+} from './servers-context';
 
 export {
   createServersStore,
+  showsServer,
   type ServersSnapshot,
   type ServersStore,
 } from './servers-store';
 
 export type { PairPhase } from './pairing/pair-hook';
 
-export { usePairServer } from './pairing/use-pair-server';
+export { type PairServer, usePairServer } from './pairing/use-pair-server';

@@ -80,5 +80,4 @@ const supportingProps = (subagent: Subagent) =>
     role: 'secondary',
     tone: 'muted',
     dimmed: subagent.state === 'idle',
-    numberOfLines: 1,
   }) as const;

@@ -1,12 +1,15 @@
 import {
+  PairingAnswer,
   PairingWelcome,
   type PairingClaim,
   type PairingRefusal,
 } from '@repo/contracts';
 import type { ByteSocket, ChannelAddress, OpenSocket } from './byte-socket';
 import { bytesText, concatBytes, textBytes } from './bytes';
-import { FrameReader, frameRecord } from './frames';
+import type { ChannelCipher } from './channel-cipher';
+import { frameRecord } from './frames';
 import { startHandshake, type InitiatorHandshake } from './noise-initiator';
+import { RecordInbox } from './record-inbox';
 import { SecureStream } from './secure-stream';
 import { rawFromStoredPublicKey, type Keypair } from './x25519';
 
@@ -27,6 +30,8 @@ export interface ChannelInput {
   readonly deviceKey: Keypair;
   readonly claim: PairingClaim;
   readonly randomBytes: (length: number) => Uint8Array;
+  // Called when the Server says the request is with the owner, before the owner has answered.
+  readonly onAsked?: () => void;
 }
 
 export interface OpenedChannel {
@@ -51,13 +56,13 @@ export async function openChannel(
 ): Promise<OpenedChannel> {
   const handshake = handshakeOf(input);
   const socket = await openSocket(input.address);
-  const answer = firstRecord(socket);
+  const inbox = new RecordInbox(socket);
 
   socket.write(concatBytes(channelMagic, frameRecord(handshake.message)));
 
   return closingOnFailure(
     socket,
-    answer.then((read) => welcomed(socket, handshake.accept, read)),
+    answered({ socket, inbox, input }, handshake.accept),
   );
 }
 
@@ -73,41 +78,47 @@ async function closingOnFailure<T>(
   }
 }
 
-interface Answer {
-  record: Uint8Array;
-  rest: Uint8Array;
+interface Opening {
+  socket: ByteSocket;
+  inbox: RecordInbox;
+  input: ChannelInput;
 }
 
-// Reads until the Server's first whole record has arrived, and keeps whatever followed it in the same chunk.
-function firstRecord(socket: ByteSocket): Promise<Answer> {
-  return new Promise<Answer>((resolve, reject): void => {
-    const records = new FrameReader();
-
-    socket.onClose = (error): void =>
-      reject(error ?? new Error('The Server closed the channel'));
-
-    socket.onData = (chunk): void => {
-      const [record, ...rest] = records.push(chunk);
-
-      if (record)
-        resolve({ record, rest: concatBytes(...rest.map(frameRecord)) });
-    };
-  });
-}
-
-function welcomed(
-  socket: ByteSocket,
+async function answered(
+  opening: Opening,
   accept: InitiatorHandshake['accept'],
-  { record, rest }: Answer,
+): Promise<OpenedChannel> {
+  const { welcome, cipher } = accept(await opening.inbox.next());
+  const answer = PairingAnswer.parse(JSON.parse(bytesText(welcome)));
+
+  if ('asked' in answer) {
+    opening.input.onAsked?.();
+
+    return opened(opening, cipher, await sealedWelcome(opening.inbox, cipher));
+  }
+
+  return opened(opening, cipher, answer);
+}
+
+// After an early answer, the welcome is the first record the channel's own cipher seals.
+async function sealedWelcome(
+  inbox: RecordInbox,
+  cipher: ChannelCipher,
+): Promise<PairingWelcome> {
+  const record = await inbox.next();
+
+  return PairingWelcome.parse(JSON.parse(bytesText(cipher.open(record))));
+}
+
+function opened(
+  { socket, inbox }: Opening,
+  cipher: ChannelCipher,
+  welcome: PairingWelcome,
 ): OpenedChannel {
-  const accepted = accept(record);
-
-  const welcome = PairingWelcome.parse(JSON.parse(bytesText(accepted.welcome)));
-
   if (!welcome.paired) throw new PairingRefused(welcome.refusal);
 
   return {
-    stream: new SecureStream(socket, accepted.cipher, rest),
+    stream: new SecureStream(socket, cipher, inbox.rest()),
     deviceId: welcome.deviceId,
   };
 }
