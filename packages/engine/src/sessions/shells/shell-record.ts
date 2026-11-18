@@ -43,6 +43,7 @@ const isRecord = (name: string): boolean =>
 
 const releaseRecordedGroup = async (path: string): Promise<void> => {
   const record = StoredRecord.parse(await readFile(path, 'utf8'));
+
   if (hasLiveGroupMembers(record.pid)) {
     if (!hasGroupOwner(record.pid, record.token))
       throw new Error('Shell process group identity changed');

@@ -22,7 +22,8 @@ export const hasLiveGroupMembers = (group: number): boolean =>
   processTable(['-A', '-o', memberColumns])
     .split('\n')
     .some((line) => {
-      const [, memberGroup = '', state = ''] = line.trim().split(/\s+/);
+      const [, memberGroup, state] = line.trim().split(/\s+/);
+
       return isLiveMember(memberGroup, state, group);
     });
 
@@ -30,9 +31,8 @@ export const hasGroupOwner = (pid: number, token: string): boolean =>
   processTable(['-p', String(pid), '-ww', '-o', `${memberColumns},command=`])
     .split('\n')
     .some((line) => {
-      const [memberPid, group = '', state = '', ...command] = line
-        .trim()
-        .split(/\s+/);
+      const [memberPid, group, state, ...command] = line.trim().split(/\s+/);
+
       return (
         Number(memberPid) === pid &&
         isLiveMember(group, state, pid) &&
