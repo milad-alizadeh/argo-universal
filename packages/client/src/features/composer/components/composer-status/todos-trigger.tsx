@@ -71,7 +71,7 @@ function TodosRow(props: TodosTriggerProps): JSX.Element {
       <IconSizeContext value={{ size: 'sm', fixed: true }}>
         <TodosIcon />
         <TodosRowWords {...props} />
-        <Chevron direction="up" />
+        <Chevron direction={props.expanded ? 'down' : 'up'} />
       </IconSizeContext>
     </Pressable>
   );
