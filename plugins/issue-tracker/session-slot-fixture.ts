@@ -87,3 +87,34 @@ export async function until(
     if (wanted(answer)) return answer;
   }
 }
+
+// How long after a failed first read the Issue tracker asks its Slots again.
+const firstRetryMs = 15_000;
+
+// Past the window in which Argo coalesces a Plugin's changes, which runs on the real clock (ADR-0060).
+const changesSettleMs = 400;
+
+// Argo coalesces the Plugin's changes on the real clock, so the Slots ask again only once that window is over.
+const settled = (waiting: Promise<Answer>): Promise<Answer | null> =>
+  Promise.race([
+    waiting,
+    new Promise<null>((done) => setTimeout(() => done(null), changesSettleMs)),
+  ]);
+
+// Moves the Plugin clock a retry at a time until an answer is the one wanted, as a failed read may land after a move.
+export async function advancedUntil(
+  test: PluginTest,
+  answers: AsyncGenerator<Answer>,
+  wanted: (answer: Answer) => boolean,
+): Promise<{ answer: Answer; movedMs: number }> {
+  const moved = { ms: 0, landed: false };
+  const waiting = until(answers, wanted).finally(() => (moved.landed = true));
+
+  while (!moved.landed) {
+    await test.clock.advance(firstRetryMs);
+    moved.ms += firstRetryMs;
+    await settled(waiting);
+  }
+
+  return { answer: await waiting, movedMs: moved.ms };
+}

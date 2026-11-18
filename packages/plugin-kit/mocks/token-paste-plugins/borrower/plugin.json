@@ -1,0 +1,31 @@
+{
+  "id": "token-paste-borrower",
+  "name": "Token paste borrower",
+  "version": "0.0.1",
+  "engines": {
+    "argo": ">=0.0.0 <1.0.0"
+  },
+  "main": "index.ts",
+  "icon": {
+    "sf": "key",
+    "material": "key"
+  },
+  "contributes": {
+    "nav": [],
+    "operations": [
+      {
+        "name": "readItems",
+        "label": "Read the items",
+        "description": "Reads the items as the Account another Plugin provides.",
+        "tier": "read"
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "fetch",
+      "host": "api.service.example",
+      "reason": "Reads the fixture service."
+    }
+  ]
+}

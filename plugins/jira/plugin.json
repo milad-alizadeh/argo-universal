@@ -1,0 +1,257 @@
+{
+  "id": "jira",
+  "name": "Jira",
+  "version": "0.0.1",
+  "engines": {
+    "argo": ">=0.0.0 <1.0.0"
+  },
+  "main": "index.tsx",
+  "icon": {
+    "sf": "ticket",
+    "material": "confirmation_number"
+  },
+  "contributes": {
+    "nav": [
+      {
+        "id": "issues",
+        "title": "Jira",
+        "path": "/"
+      }
+    ],
+    "accounts": [
+      {
+        "host": "api.atlassian.com",
+        "page": "/sign-in"
+      }
+    ],
+    "settings": [
+      {
+        "key": "oauth-client-id",
+        "label": "Atlassian OAuth client ID",
+        "type": "secret",
+        "description": "From your OAuth 2.0 (3LO) app at developer.atlassian.com, whose callback URL is http://127.0.0.1:51789/callback. Set it with the client secret to sign in with Atlassian."
+      },
+      {
+        "key": "oauth-client-secret",
+        "label": "Atlassian OAuth client secret",
+        "type": "secret",
+        "description": "The secret of the same Atlassian OAuth app. Argo keeps it in your computer’s secret store and sends it only to auth.atlassian.com."
+      }
+    ],
+    "operations": [
+      {
+        "name": "signIn",
+        "label": "Sign in to Jira",
+        "description": "Checks a pasted scoped Atlassian API token with the email and site it belongs to, and signs in to Jira with it.",
+        "tier": "act",
+        "keywords": ["jira", "atlassian", "account", "sign in", "token"],
+        "params": {
+          "email": {
+            "type": "string",
+            "description": "The email of the Atlassian account the token belongs to.",
+            "required": true
+          },
+          "site": {
+            "type": "string",
+            "description": "The Atlassian site, such as your-team.atlassian.net.",
+            "required": true
+          },
+          "token": {
+            "type": "string",
+            "description": "The pasted scoped API token.",
+            "required": true,
+            "secret": true
+          }
+        }
+      },
+      {
+        "name": "signInWithAtlassian",
+        "label": "Sign in with Atlassian",
+        "description": "Opens Atlassian's sign-in in the browser on the Server Device, with the OAuth app set in the Plugin's settings, and signs in to Jira when the person allows it.",
+        "tier": "act",
+        "keywords": ["jira", "atlassian", "account", "sign in", "oauth"]
+      },
+      {
+        "name": "cancelSignInWithAtlassian",
+        "label": "Cancel signing in with Atlassian",
+        "description": "Stops waiting for the browser's Atlassian sign-in.",
+        "tier": "act",
+        "keywords": ["jira", "atlassian", "sign in", "cancel"]
+      },
+      {
+        "name": "addSite",
+        "label": "Add a Jira site",
+        "description": "Finds an Atlassian site by its address and uses it for the Project.",
+        "tier": "act",
+        "keywords": ["jira", "site", "atlassian"],
+        "params": {
+          "site": {
+            "type": "string",
+            "description": "The Atlassian site, such as your-team.atlassian.net.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "chooseSite",
+        "label": "Choose a Project's Jira site",
+        "description": "Choose which Atlassian site a Project's Jira issues come from.",
+        "tier": "act",
+        "keywords": ["jira", "site", "project"],
+        "params": {
+          "cloudId": {
+            "type": "string",
+            "description": "The site's Atlassian cloud id.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "chooseProject",
+        "label": "Choose a Project's Jira project",
+        "description": "Choose which Jira project a Project shows the issues of.",
+        "tier": "act",
+        "keywords": ["jira", "project"],
+        "params": {
+          "cloudId": {
+            "type": "string",
+            "description": "The cloud id of the Atlassian site the Jira project is on.",
+            "required": true
+          },
+          "key": {
+            "type": "string",
+            "description": "The Jira project's key, such as ARGO.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "forgetProject",
+        "label": "Choose another Jira project",
+        "description": "Forget a Project's Jira project, so the page asks which one to show again.",
+        "tier": "act",
+        "keywords": ["jira", "project", "site"],
+        "caller": ["project"]
+      },
+      {
+        "name": "checkAgain",
+        "label": "Read Jira again",
+        "description": "Make the Jira pages read Jira again.",
+        "tier": "read",
+        "keywords": ["jira", "refresh", "retry"]
+      },
+      {
+        "name": "listIssues",
+        "label": "List Jira issues",
+        "description": "Lists the issues of the Jira project this Project shows, the most recently updated first, with each one's status, assignee, priority and the statuses it can move to.",
+        "tier": "read",
+        "keywords": ["jira", "issues", "list", "search"],
+        "params": {
+          "text": {
+            "type": "string",
+            "description": "Only issues whose text contains this, as Jira's search matches it."
+          },
+          "limit": {
+            "type": "number",
+            "description": "How many issues to answer, 1 to 100; 20 when left out."
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "getIssue",
+        "label": "Read a Jira issue",
+        "description": "Reads one issue of the Jira project this Project shows: its summary, description as Markdown, status, assignee, priority, labels, link, and the statuses Jira allows it to move to now.",
+        "tier": "read",
+        "keywords": ["jira", "issue", "read", "detail"],
+        "params": {
+          "issue": {
+            "type": "string",
+            "description": "The issue's key, such as ARGO-12.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "transition",
+        "label": "Move a Jira issue to a status",
+        "description": "Moves an issue of the Jira project this Project shows to another status, as Jira's workflow allows from its current one. Fails with the statuses it can move to when Jira does not allow that move.",
+        "tier": "act",
+        "keywords": ["jira", "issue", "status", "transition", "move"],
+        "params": {
+          "issue": {
+            "type": "string",
+            "description": "The issue's key, such as ARGO-12.",
+            "required": true
+          },
+          "status": {
+            "type": "string",
+            "description": "The status to move it to, by name or id, such as In Progress.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "setAssignee",
+        "label": "Assign a Jira issue",
+        "description": "Assigns an issue of the Jira project this Project shows to a person, to the signed-in person with me, or to nobody.",
+        "tier": "act",
+        "keywords": ["jira", "issue", "assignee", "assign"],
+        "params": {
+          "issue": {
+            "type": "string",
+            "description": "The issue's key, such as ARGO-12.",
+            "required": true
+          },
+          "assignee": {
+            "type": "string",
+            "description": "The person's Atlassian account id, or me for the signed-in person; leave it out to unassign the issue."
+          }
+        },
+        "caller": ["project"]
+      },
+      {
+        "name": "setPriority",
+        "label": "Set a Jira issue's priority",
+        "description": "Sets the priority of an issue of the Jira project this Project shows to one the Jira site has.",
+        "tier": "act",
+        "keywords": ["jira", "issue", "priority"],
+        "params": {
+          "issue": {
+            "type": "string",
+            "description": "The issue's key, such as ARGO-12.",
+            "required": true
+          },
+          "priority": {
+            "type": "string",
+            "description": "The priority, by name or id, such as High.",
+            "required": true
+          }
+        },
+        "caller": ["project"]
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "fetch",
+      "host": "api.atlassian.com",
+      "reason": "Reads and changes Jira issues as the signed-in person."
+    },
+    {
+      "kind": "fetch",
+      "host": "auth.atlassian.com",
+      "reason": "Signs in with Atlassian."
+    },
+    {
+      "kind": "fetch",
+      "host": "*",
+      "reason": "Finds your Atlassian site's cloud id at <site>.atlassian.net, and tells an unscoped API token from a wrong one. The Plugin calls only *.atlassian.net hosts this way."
+    }
+  ]
+}

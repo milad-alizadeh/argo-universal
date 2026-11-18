@@ -13,6 +13,7 @@ import type { Caller, KindCalls, WorkerCalls } from '../runtime/worker-calls';
 import { checkedPage, type Refusals } from './checked-tree';
 import { DefinedPatterns } from './defined-patterns';
 import {
+  addressOf,
   answeredError,
   drawLookupOf,
   drawKind,
@@ -30,6 +31,7 @@ import {
   type DrawnFor,
   type Drawings,
 } from './drawing-failures';
+import { DrawnReads } from './drawn-reads';
 import { LiveDraws, type LiveFollow } from './live-draws';
 import type { PageChanges } from './page-changes';
 import { SentTrees } from './sent-trees';
@@ -61,6 +63,8 @@ export class PluginDraws {
   private readonly sent: SentTrees;
   private readonly calls: KindCalls<DrawAt, Answered, Outcome>;
   private readonly failures: DrawingFailures;
+  // What each drawn address read, so a change finds the ones core cannot compare (ADR-0060).
+  public readonly reads = new DrawnReads();
 
   public constructor(private readonly deps: PluginDrawsDeps) {
     const { workers, log, drawings } = deps;
@@ -90,6 +94,8 @@ export class PluginDraws {
    * Argo" (ADR-0034), and the tree it was not sent is not kept as sent.
    */
   public async answer(page: DrawnFor, known?: string): Promise<DrawAnswer> {
+    this.reads.drew(addressOf(page.pluginId, page.at));
+
     const drawn = forApp(
       { ...page, log: this.deps.log },
       await this.draw(page),
@@ -197,5 +203,6 @@ export class PluginDraws {
   private forgetEnded(pluginId: string): void {
     this.sent.forget(pluginId);
     this.patterns.forget(pluginId);
+    this.reads.forget(pluginId);
   }
 }

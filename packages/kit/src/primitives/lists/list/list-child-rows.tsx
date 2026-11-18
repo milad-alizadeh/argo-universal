@@ -1,6 +1,6 @@
 import type { ReactElement, Ref } from 'react';
-import { useWindowDimensions } from 'react-native';
 import type { ListRef } from '../../../list-ref';
+import { useChildSizing } from './list-child-estimate';
 import { childIdentity, sameChild } from './list-child-identity';
 import { usePreparedChildren, type PreparedChildren } from './list-children';
 import { childrenOptions, type ChildrenOptions } from './list-children-options';
@@ -24,7 +24,7 @@ interface PreparedListProps extends Omit<ChildrenOptions, 'children'> {
 
 function PreparedList({ prepared, ...props }: PreparedListProps): ReactElement {
   // Fixed children can live inside a scrolling page without a bounded flex height.
-  const { height } = useWindowDimensions();
+  const { height, ...measures } = useChildSizing(props, prepared.items.length);
 
   if (drawsNothing(prepared)) return <ListEmpty {...props} />;
 
@@ -32,6 +32,7 @@ function PreparedList({ prepared, ...props }: PreparedListProps): ReactElement {
     <ChildDataList
       {...props}
       {...prepared}
+      {...measures}
       {...childHeights(props, height)}
       maintainVisibleContentPosition={childAnchor(props.anchor)}
     />

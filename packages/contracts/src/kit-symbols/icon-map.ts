@@ -102,6 +102,8 @@ export const iconSymbols = {
   more: { sf: 'ellipsis', material: 'more_horiz' },
   'new-session': { sf: 'square.and.pencil', material: 'edit_square' },
   pair: { sf: 'qrcode', material: 'qr_code' },
+  // Who an item is assigned to.
+  person: { sf: 'person', material: 'person' },
   phone: { sf: 'iphone', material: 'smartphone' },
   'plan-mode': { sf: 'map', material: 'map' },
   private: { sf: 'lock', material: 'lock' },

@@ -30,8 +30,9 @@ import {
 } from '@repo/contracts/plugins/wire';
 import type { RpcConnection } from '../rpc';
 import { discoverWithAccounts } from './accounts/removed-plugins';
-import { runsBackground } from './discovery/plugin-contributions';
+import { startsWithServer } from './discovery/plugin-contributions';
 import { callerOf } from './hooks/hook-rules';
+import { LocatedCache } from './located-cache';
 import {
   applyEnabled,
   applyStatus,
@@ -49,11 +50,16 @@ import { slotItemsFor } from './slots/slot-streams';
 export type { PluginServiceDeps } from './located-plugins';
 
 export class PluginService {
-  constructor(private readonly deps: PluginServiceDeps) {}
+  private readonly deps: PluginServiceDeps;
+
+  // Where Plugins are found is read from disk once and kept; a Server shares its cache with the runtime's dev builds.
+  constructor(deps: PluginServiceDeps) {
+    this.deps = { ...deps, located: deps.located ?? new LocatedCache() };
+  }
 
   async startBackground(): Promise<void> {
     await Promise.all([this.list(), this.deps.pluginRuntime.refreshProjects()]);
-    await startPlugins(this.deps, ({ plugin }) => runsBackground(plugin));
+    await startPlugins(this.deps, ({ plugin }) => startsWithServer(plugin));
   }
 
   async list(): Promise<PluginList> {
@@ -84,6 +90,7 @@ export class PluginService {
   async setEnabled(pluginId: string, enabled: boolean): Promise<void> {
     await locatePlugin(this.deps, pluginId);
     await this.deps.pluginSettings.setEnabled(pluginId, enabled);
+    this.deps.located?.clear();
     // An open list's refresh clock follows the setting: off releases it, on sets it again.
     this.deps.pluginRuntime.items.refresh.restarted(pluginId);
 
@@ -97,12 +104,14 @@ export class PluginService {
     return this.deps.pluginSettings.values(pluginId);
   }
 
-  setSetting(change: {
+  async setSetting(change: {
     pluginId: string;
     key: string;
     value: PluginSettingValue;
   }): Promise<void> {
-    return this.deps.pluginSettings.change(change);
+    await this.deps.pluginSettings.change(change);
+    // A page that draws from a Setting, such as a sign-in waiting for its OAuth app, draws again with the new value.
+    this.deps.pluginRuntime.changes.settingChanged(change.pluginId);
   }
 
   // Starts each Plugin that hooks the event, in load order, then runs their Hooks over core (ADR-0027).

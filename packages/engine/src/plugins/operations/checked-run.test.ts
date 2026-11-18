@@ -91,6 +91,11 @@ const refusals = {
     from: { projectId: 'project-1' },
     message: 'Only a Session can run attach',
   },
+  'a person with no Session when one is needed': {
+    given: { number: 42 },
+    from: { person: true, projectId: 'project-1' },
+    message: 'Only a Session can run attach',
+  },
   'a run with no Project when one is needed': {
     given: { number: 1 },
     from: { sessionId: 'session-1' },
@@ -122,6 +127,22 @@ it('does not treat a person viewing a Session as an Agent reaching into another 
   ).toEqual({
     params: { number: 7 },
     caller: { person: true, sessionId: 'session-1', projectId: 'project-2' },
+    outside: false,
+  });
+});
+
+it('lets a person detach an Issue in the Session they are viewing', () => {
+  const from = {
+    person: true,
+    sessionId: 'session-1',
+    projectId: 'project-1',
+  } as const;
+
+  expect(
+    checkRun({ ...operation, name: 'detach' }, { number: 42 }, from),
+  ).toEqual({
+    params: { number: 42 },
+    caller: from,
     outside: false,
   });
 });

@@ -1,5 +1,6 @@
 import type { SessionSnapshot } from '@repo/contracts';
-import { useMemo } from 'react';
+import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
+import { use, useMemo } from 'react';
 import {
   type ChangesRevision,
   type ChangesSource,
@@ -63,8 +64,12 @@ interface OpenChanges {
 
 type OpenSessionPage = Extract<SessionDetailViewProps, { state: 'open' }>;
 
-// A Session page draws its Changes while it is open, and nothing while it is still opening or has failed.
+// A Session page loads its Changes while it is open, and nothing while it is still opening or has failed.
 const isOpen = ({ props }: ChangedSession): boolean => props.state === 'open';
+
+// A retained page that is hidden holds its Changes and reloads none.
+const useShownOpen = (session: ChangedSession): boolean =>
+  use(RetainedPageVisibility) && isOpen(session);
 
 function useOpenChanges(
   session: ChangedSession,
@@ -76,7 +81,7 @@ function useOpenChanges(
   return {
     header: changesHeader(panels, feed),
     changes: useChanges(
-      { sessionId, open: isOpen(session), revision },
+      { sessionId, open: useShownOpen(session), revision },
       source,
       useSessionMemory(changesMemory, sessionId),
     ),

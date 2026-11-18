@@ -52,6 +52,26 @@ it('answers waiting once the browser opens, then adds the Account and keeps its 
   expect(provider.seen.changes).toBe(2);
 });
 
+it('keeps the fields a service names in its authorize URL, as Atlassian’s audience', async () => {
+  const provider = fakeProvider();
+
+  const flow = oauthFlow(provider.argo, {
+    ...linear,
+    authorizeUrl: `${linear.authorizeUrl}?audience=api.example&prompt=consent`,
+  });
+
+  await flow.start();
+
+  const authorize = new URL(provider.seen.authorize[0] ?? '');
+  expect(authorize.origin + authorize.pathname).toBe(linear.authorizeUrl);
+  expect(Object.fromEntries(authorize.searchParams)).toMatchObject({
+    audience: 'api.example',
+    prompt: 'consent',
+    client_id: 'client-1',
+    state: 'state-1',
+  });
+});
+
 it('reads the client ID when a sign-in starts and fails without one', async () => {
   const provider = fakeProvider();
   const flow = oauthFlow(provider.argo, { ...linear, clientId: () => null });

@@ -1,6 +1,7 @@
 import type { operations, OperationId } from '@repo/contracts/operations';
+import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { z } from 'zod';
-import type { NativeStartRequest } from '../sessions';
+import type { NativeStartRequest, SessionOperationCall } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
 import { createAppOperations } from './app';
 import { createDiagramOperations } from './diagram';
@@ -9,8 +10,9 @@ import type { OperationsDeps } from './operations';
 import { createPluginOperations } from './plugins';
 import { createProjectOperations } from './projects';
 import { createRegistryOperations } from './registry';
+import type { AppCaller, SessionCaller, UserCaller } from './session-tokens';
 import { sessionImplementations } from './sessions';
-import type { WorkExecution } from './work';
+import type { WorkExecution, UserAdmission } from './work';
 
 type ParamsById = {
   [Id in OperationId]: z.output<(typeof operations)[Id]['params']>;
@@ -89,3 +91,18 @@ export type SessionInvoke = <Id extends OperationId>(
   operation: { id: Id; params: ParamsById[Id] },
   start?: NewSessionId,
 ) => Promise<OperationResult<Id>>;
+
+type Operation = { id: OperationId; params: Json };
+
+// The App's procedure has parsed the params, and parses the result itself.
+export type AppRun<Id extends OperationId> = AppCaller & {
+  id: Id;
+  params: OperationParams<Id>;
+};
+
+export type UserRun = UserCaller & Operation & { admission: UserAdmission };
+
+export type SessionRun = SessionCaller &
+  Operation & {
+    call: SessionOperationCall;
+  };

@@ -13,9 +13,19 @@ export class ScopeCoverage {
     caller: SessionCaller,
     { id, target }: { id: OperationId; target: ScopeTarget },
   ): boolean {
+    if (id === 'session.archive') return this.archivesOwn(caller, target);
+
     return id === 'app.open'
       ? this.opens(caller, target)
       : this.covered(caller, { id, target });
+  }
+
+  private archivesOwn(caller: SessionCaller, target: ScopeTarget): boolean {
+    return (
+      target.kind === 'session' &&
+      target.sessionId === caller.sessionId &&
+      this.inProject(caller, target)
+    );
   }
 
   // Opening a Screen changes nothing: the caller's Project covers a Session or a Project; the rest asks.

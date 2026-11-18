@@ -44,3 +44,6 @@ export const Ended: Story = { args: step('ended') };
 
 // A redirect flow on a Device that is not the Server Device has nothing to press.
 export const ServerDevice: Story = { args: step('serverDevice') };
+
+// A token paste the service refused: its words lead, and the paste instructions stay under the field.
+export const TokenRejected: Story = { args: step('tokenRejected') };

@@ -1,10 +1,11 @@
 import type { Argo } from './argo-api';
 import type { OAuthFlow, OAuthFlowState } from './oauth-flow-api';
+import type { TokenPaste, TokenPasteState } from './token-paste-api';
 
 // What a device flow calls: the service, the Account it adds, the token it keeps, and the page it redraws.
 export type DeviceFlowArgo = Pick<Argo, 'fetch' | 'changed'> & {
   accounts: Pick<Argo['accounts'], 'add' | 'provide'>;
-  secrets: Pick<Argo['secrets'], 'set' | 'get'>;
+  secrets: Pick<Argo['secrets'], 'set' | 'get' | 'delete'>;
 };
 
 /*
@@ -69,7 +70,7 @@ export type DeviceFlowPattern = (
   options: DeviceFlowOptions,
 ) => DeviceFlow;
 
-// Either sign-in the kit offers; a gate and a sign-in page draw both.
-export type SignInFlow = DeviceFlow | OAuthFlow;
+// Any sign-in the kit offers; a gate and a sign-in page draw each.
+export type SignInFlow = DeviceFlow | OAuthFlow | TokenPaste;
 
-export type SignInState = DeviceFlowState | OAuthFlowState;
+export type SignInState = DeviceFlowState | OAuthFlowState | TokenPasteState;

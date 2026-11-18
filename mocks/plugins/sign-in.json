@@ -347,5 +347,167 @@
       }
     ],
     "slots": {}
+  },
+  "tokenPaste": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "Paste an API token you made at Jira. Argo keeps it in your computer’s secret store."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.SecretField",
+            "key": "token",
+            "props": {
+              "title": "API token",
+              "value": "",
+              "placeholder": "Paste a Jira API token",
+              "onChangeText": {
+                "operation": "signIn",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "tokenRefused": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "Paste an API token you made at Jira. Argo keeps it in your computer’s secret store.",
+          "footer": "Jira didn’t accept that token."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.SecretField",
+            "key": "token",
+            "props": {
+              "title": "API token",
+              "value": "",
+              "placeholder": "Paste a Jira API token",
+              "onChangeText": {
+                "operation": "signIn",
+                "args": {}
+              },
+              "error": "Jira didn’t accept that token."
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "tokenRejected": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connect your account",
+          "description": "Jira no longer accepts this token.",
+          "footer": "Paste an API token you made at Jira. Argo keeps it in your computer’s secret store."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.SecretField",
+            "key": "token",
+            "props": {
+              "title": "API token",
+              "value": "",
+              "placeholder": "Paste a Jira API token",
+              "onChangeText": {
+                "operation": "signIn",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "tokenSignedIn": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Jira"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Jira",
+          "title": "Connected",
+          "footer": "Sign out in Settings › Accounts, where every Plugin using this Account is listed.",
+          "signedIn": true
+        },
+        "children": [
+          {
+            "type": "FieldGroup.Value",
+            "key": "0",
+            "props": {
+              "title": "Account",
+              "value": "ada@example.com"
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "FieldGroup.Link",
+            "key": "1",
+            "props": {
+              "title": "Sign out…",
+              "action": true,
+              "destructive": true,
+              "onPress": {
+                "action": "openAccount",
+                "accountId": "account-2"
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
   }
 }

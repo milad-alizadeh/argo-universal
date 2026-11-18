@@ -26,6 +26,8 @@ export interface FeedDisclosureProps extends Omit<
   title?: ReactNode;
   failed?: boolean;
   initialOpen?: boolean;
+  // Drawn at the far end of the header row, outside the trigger, so it can take its own taps.
+  aside?: ReactNode;
   children: ReactNode;
 }
 
@@ -75,6 +77,22 @@ function FeedDisclosureHeader(
   );
 }
 
+function FeedDisclosureHeaderRow({
+  aside,
+  ...props
+}: Omit<FeedDisclosureProps, 'children'>): React.JSX.Element {
+  if (!aside) return <FeedDisclosureHeader {...props} />;
+
+  return (
+    <View className="flex-row items-center gap-2">
+      <View className="min-w-0 shrink">
+        <FeedDisclosureHeader {...props} />
+      </View>
+      <View className="ml-auto shrink-0 flex-row items-center">{aside}</View>
+    </View>
+  );
+}
+
 export function FeedDisclosure({
   children,
   ...props
@@ -83,7 +101,7 @@ export function FeedDisclosure({
 
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="w-full">
-      <FeedDisclosureHeader {...props} />
+      <FeedDisclosureHeaderRow {...props} />
       <CollapsibleContent className="pt-2">{children}</CollapsibleContent>
     </Collapsible>
   );

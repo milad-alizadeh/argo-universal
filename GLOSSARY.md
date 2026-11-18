@@ -154,6 +154,10 @@ _Avoid_: Wire tree, Plugin UI
 An items Slot only one source shows at a time, such as a Session row's Activity line. Every Plugin that declares it answers; the App shows the answer of the one Plugin the user chose in Settings on that Device, or Argo's own while none is chosen or the chosen Plugin is turned off or has no answer.
 _Avoid_: Part, takeover, exclusive Slot
 
+**Last good items**:
+The items a Plugin last answered in time for each context of an items Slot, kept by the Engine across change signals and restarts. While the Plugin's answer is late, fails or it is not running yet, a list draws these instead, so a Session row keeps its pull requests; they are dropped when the Plugin is turned off or removed.
+_Avoid_: Cached items, stale items
+
 **Replaceable Slot**:
 A Slot placed around a core component, a Tool call or a message in the Feed. A Plugin reaches one only through its `ui.render` Hook and may pass it through, change its props or draw its own; core draws its own when the Plugin's tree is refused.
 _Avoid_: Override, component override
@@ -171,7 +175,7 @@ What names one drawing of a Plugin page: the Plugin, the Page path, the Page sta
 _Avoid_: Query key, cache key, URL
 
 **Stale mark**:
-The Server telling every connected App that a Plugin's pages may have changed: all of them after a write, or the Page addresses that read a Query whose answer changed. An App asks again for the marked pages it shows, and asks for the rest when they are next opened.
+The Server telling every connected App that a Plugin's pages may have changed: all of them when a new worker of the Plugin runs, or the Page addresses that read a Query whose answer changed, which a write finds by reading the held Queries again. A write that changes no answer sends none, except to pages whose draws read nothing core can compare. An App asks again for the marked pages it shows, and asks for the rest when they are next opened.
 _Avoid_: Invalidation, refresh event, push update
 
 **Loader**:
@@ -266,6 +270,10 @@ _Avoid_: Credential, password, Keychain item
 The kit's ready-made sign-in for a service that signs in with OAuth: the Plugin names the service's authorize and token URLs, its client ID and the Account's host, and the flow opens the browser, waits for the person, keeps the token and adds the Account. It holds where the sign-in stands, such as waiting or failed, for the Plugin's sign-in page to draw, and a sign-in started can be cancelled. It runs on the Server Device only.
 _Avoid_: OAuth helper, login flow, auth handler
 
+**Token paste**:
+The kit's ready-made sign-in for a service that takes a personal API token: the Plugin names the Account's host, the header the token goes in and a check that names whose token it is, and the kit draws the field, checks a pasted token, keeps it and adds the Account. A refused token is shown beside the field. It runs on any Device.
+_Avoid_: API key login, token form, manual token
+
 ## Agents and Sessions
 
 **Agent**:
@@ -317,7 +325,7 @@ A Plugin's own record that a Session produced one pull request, named by its rep
 _Avoid_: PR link, attachment
 
 **Auto-fix**:
-A person's choice, per PR association, that the Session's Agent is prompted to fix each new failed Check, review comment or merge conflict on that pull request. It is off until turned on.
+A person's choice, per PR association, that the Session's Agent is prompted to fix each new failed Check run, review comment or merge conflict on that pull request; a re-run that fails again is new. One Prompt lists everything new on a head commit; its failed Checks wait until every Check has reported, so they come in one Prompt. When CI is still red on a head it already prompted about and the Session has been idle for 30 minutes, it prompts again to go on and push. A push, a close, or turning it off withdraws a Prompt that has not started. It is off until turned on.
 _Avoid_: Babysit, watch, auto-repair
 
 **Auto-merge**:
@@ -377,7 +385,7 @@ What is sent to a Session's Agent to start a Turn. It comes from the user, from 
 _Avoid_: Message (alone), input, instruction
 
 **Queued Prompt**:
-A user Prompt waiting in a Session’s ordered queue for a Turn of its own. It is future work, outside the Feed until it starts.
+A Prompt waiting in a Session’s ordered queue for a Turn of its own, the person’s or a Plugin’s. It is future work, outside the Feed until it starts. A Plugin may withdraw one it sent, never anyone else’s.
 _Avoid_: Pending message, draft Prompt
 
 **Turn**:

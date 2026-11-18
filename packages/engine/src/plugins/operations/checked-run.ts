@@ -100,7 +100,7 @@ type Need = {
 // What each need refuses a run without.
 const needed: Readonly<Record<PluginOperationNeed, Need>> = {
   session: {
-    lacks: ({ sessionId, person }): boolean => !sessionId || person === true,
+    lacks: ({ sessionId }): boolean => !sessionId,
     refusal: (name): string => `Only a Session can run ${name}`,
   },
   project: {

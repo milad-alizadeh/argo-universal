@@ -159,7 +159,14 @@ export declare const oauthFlow: OAuthFlowPattern;
 
 export type * from '@repo/contracts/plugins/oauth-flow-api';
 
-// The device flow and the sign-in pattern that draws either flow.
+// One service's sign-in by a pasted API token, on any Device; `TokenPaste` says what it does.
+export declare const tokenPaste: TokenPastePattern;
+
+export type * from '@repo/contracts/plugins/token-paste-api';
+
+import type { TokenPastePattern } from '@repo/contracts/plugins/token-paste-api';
+
+// The device flow and the sign-in pattern that draws each sign-in.
 export * from './sign-in';
 
 import type { OAuthFlowPattern } from '@repo/contracts/plugins/oauth-flow-api';

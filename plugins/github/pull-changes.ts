@@ -86,8 +86,11 @@ export async function readLink<Link extends PullKey>(
 const failureOfRead = ({ pull, checks }: LinkRead): Known<unknown> =>
   pull.failure ? pull : (checks ?? {});
 
+// The Change shows each Check's name and state; the run's id is Auto-fix's alone.
 const checksOf = ({ checks }: LinkRead): Pick<Refresh, 'checks'> =>
-  checks?.data ? { checks: checks.data } : {};
+  checks?.data
+    ? { checks: checks.data.map(({ name, state }) => ({ name, state })) }
+    : {};
 
 const staleOf = (read: LinkRead): Pick<Refresh, 'stale'> => {
   const { failure } = failureOfRead(read);

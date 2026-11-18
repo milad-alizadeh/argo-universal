@@ -82,6 +82,18 @@ export class PageAddresses {
   }
 
   /*
+   * The opening's tree drawn and kept before any screen shows it, so its first visit draws at once; an address
+   * already kept is left as it is, and a draw that fails is not reported, as the visit that needs it draws again.
+   */
+  public prefetch(opening: PageOpening): Promise<void> {
+    const address = this.addressOf(opening);
+
+    return this.keptAt(address)
+      ? Promise.resolve()
+      : this.client.prefetchQuery(this.treeAt(address));
+  }
+
+  /*
    * The opening's live subscription, naming the tree kept, so its first answer may be `unchanged`; `again` is
    * asked when it must start over from a whole tree. The answer unsubscribes.
    */

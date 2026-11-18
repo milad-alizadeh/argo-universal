@@ -5,6 +5,8 @@ import {
   type HashedTree,
 } from '@repo/contracts/plugins/page-draw';
 import type { WireNode } from '@repo/contracts/plugins/wire';
+import { findWireNodeEntry } from '@repo/contracts/plugins/wire-node-key';
+import { paged } from './page-nodes';
 
 /*
  * What an open page keeps of its address, as the App keeps it: the tree last drawn and its hash, how many pages
@@ -39,6 +41,17 @@ export class KeptTree {
   // The tree shown, patched or not; none before a draw.
   get shown(): WireNode | undefined {
     return this.patched ?? this.kept?.root;
+  }
+
+  // The last draw failed, and the tree kept from before it still offers a load more.
+  failedOfferingMore(): boolean {
+    const { shown } = this;
+
+    return (
+      this.failure !== undefined &&
+      shown !== undefined &&
+      findWireNodeEntry(shown, paged) !== undefined
+    );
   }
 
   keep(answer: DrawAnswer): void {

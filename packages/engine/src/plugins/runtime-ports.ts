@@ -8,19 +8,32 @@ type PortSources = {
   pluginNetwork?: PluginNetwork;
   pluginOAuth?: OAuthOptions;
   pluginClock?: PluginClock;
-  // What `argo.sessions.archive` and `prompt` reach; the Engine attaches the App's acts to it.
+  // What `argo.sessions.archive`, `prompt` and `withdraw` reach; the Engine attaches the App's acts to it.
   sessionActs?: SessionActs;
 };
 
+type RuntimeOptions = Parameters<typeof createPluginRuntime>[1];
+
+type ActPorts = Pick<
+  RuntimeOptions,
+  'archiveSession' | 'promptSession' | 'withdrawPrompt'
+>;
+
+// The Session acts a Plugin reaches; with none attached, a Plugin cannot act on Sessions.
+const actPorts = (acts?: SessionActs): ActPorts =>
+  acts
+    ? {
+        archiveSession: acts.archive,
+        promptSession: acts.prompt,
+        withdrawPrompt: acts.withdraw,
+      }
+    : {};
+
 export function runtimePorts(
   options: PortSources,
-): Pick<
-  Parameters<typeof createPluginRuntime>[1],
-  'network' | 'oauth' | 'clock' | 'archiveSession' | 'promptSession'
-> {
+): Pick<RuntimeOptions, 'network' | 'oauth' | 'clock'> & ActPorts {
   return {
-    archiveSession: options.sessionActs?.archive,
-    promptSession: options.sessionActs?.prompt,
+    ...actPorts(options.sessionActs),
     network: options.pluginNetwork,
     oauth: options.pluginOAuth,
     clock: options.pluginClock,

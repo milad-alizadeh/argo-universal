@@ -11,6 +11,8 @@ type TestControlInput = {
   tell: (command: Extract<HostCommand, { type: 'test' }>) => void;
   // The Plugins whose workers share the clock: every running one.
   running: () => string[];
+  // Resolves once the Plugins' changes are settled and their pages marked (ADR-0060).
+  changesSettled?: () => Promise<void>;
 };
 
 export function runtimeClockSource(start: number | undefined): PluginClock {
@@ -29,11 +31,26 @@ export class TestControl {
   // Plugin calls the runtime is still answering, and what waits for there to be none.
   private inFlight = 0;
   private drained: Array<() => void> = [];
+  private readonly changes: () => Promise<void>;
 
-  public constructor({ clock = realClock, tell, running }: TestControlInput) {
+  public constructor({
+    clock = realClock,
+    tell,
+    running,
+    changesSettled = (): Promise<void> => Promise.resolve(),
+  }: TestControlInput) {
     this.clock = clock;
     this.requests = new TestRequests(tell);
     this.running = running;
+    this.changes = changesSettled;
+  }
+
+  /*
+   * Waits, on the real clock, until the changes the Plugins said have been settled: their window ended, the Queries
+   * pages hold read again and the pages whose answer differs marked. An App draws a page again only once it is marked.
+   */
+  public changesSettled(): Promise<void> {
+    return this.changes();
   }
 
   public workerStart(): number | undefined {

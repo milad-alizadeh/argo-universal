@@ -12,34 +12,23 @@ import {
   type WireNode,
 } from '@repo/contracts/plugins/wire';
 import { KeptTree } from './kept-tree';
-import type { PageClock } from './page-clock';
 import {
   findByText,
   findEntry,
   findNode,
   madeEventCall,
   handlerOf,
+  paged,
   pageEventOf,
   type FoundNode,
   type NodeMatch,
 } from './page-nodes';
-import {
-  caller,
-  type Opened,
-  type PageOpening,
-  type PageServer,
-} from './page-server';
-
-// A node whose List loads more.
-const paged = (node: WireNode): boolean =>
-  handlerOf(node, 'onLoadMore') !== undefined;
+import { caller, type Opened, type PageOpening } from './page-server';
+import type { Showing } from './showing';
 
 const rejected = (error: Error): never => {
   throw error;
 };
-
-// Where an open page's draws and runs go, and the clock its edits wait on.
-export type Showing = { server: PageServer; clock: PageClock };
 
 /*
  * One Loader page as an App shows it (ADR-0050): its Page address, the tree the Server last drew there, and the
@@ -67,7 +56,7 @@ export class OpenPage {
   static async open(showing: Showing, opening: PageOpening): Promise<OpenPage> {
     const page = new OpenPage(showing, { platform: 'web', ...opening });
 
-    await page.draw();
+    await page.drawn();
     page.requireDrawn();
 
     return page;
@@ -106,8 +95,23 @@ export class OpenPage {
     return findNode(this.tree, match);
   }
 
-  // Draws the address again, naming the tree kept, as the App does when the page is marked stale; a pull says so.
-  async draw(pages = this.kept.pages, pull = false): Promise<void> {
+  /*
+   * Draws the address again, as the App does when the page is marked stale. A draw is served the answer kept while
+   * the read it is due runs behind it (ADR-0060), so once that read has landed, a page it marked draws again, as the
+   * App does on that mark.
+   */
+  async draw(pages = this.kept.pages): Promise<void> {
+    const { marks } = this.showing;
+    const heard = marks.heard;
+
+    await this.drawn(pages);
+    await this.showing.settled();
+
+    if (marks.reachedSince(heard, this.path)) await this.drawn(pages);
+  }
+
+  // One draw of the address, naming the tree kept; a pull says so.
+  private async drawn(pages = this.kept.pages, pull = false): Promise<void> {
     const request = {
       path: this.path,
       pageState: this.state,
@@ -125,8 +129,13 @@ export class OpenPage {
     return this.act(match, 'onPress');
   }
 
-  // The next page of the page's paged list, as a List's load more asks for it.
+  /*
+   * The next page of the page's paged list, as a List's load more asks for it. After a draw that failed, the App
+   * still shows the rows it kept, so the load more they offer asks again for the page the failed draw lacked.
+   */
   async loadMore(): Promise<void> {
+    if (this.kept.failedOfferingMore()) return this.drawn(this.kept.pages + 1);
+
     await this.act(paged, 'onLoadMore');
   }
 
@@ -178,25 +187,28 @@ export class OpenPage {
       failed: rejected,
       pageState: {
         change: (change) => this.change(change),
-        loadMore: () => this.draw(this.kept.pages + 1),
+        loadMore: () => this.drawn(this.kept.pages + 1),
       },
     };
   }
 
   private async run(run: ScopedRun): Promise<void> {
     await this.showing.server.run(run, this.opening);
-    await this.draw();
+
+    // The App draws again once the run's change window marks the page; by then the Queries it holds are read again.
+    await this.showing.settled();
+    await this.drawn();
   }
 
   // An empty change is a pull, which reads the first page again and keeps the pages loaded, as the App's does.
   private async change(change: PageState): Promise<void> {
     if (Object.keys(change).length === 0)
-      return this.draw(this.kept.pages, true);
+      return this.drawn(this.kept.pages, true);
 
     this.state = { ...this.state, ...change };
     this.kept.forget();
 
-    await this.draw(1);
+    await this.drawn(1);
   }
 
   private requireDrawn(): void {

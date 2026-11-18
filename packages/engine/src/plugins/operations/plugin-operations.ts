@@ -2,6 +2,7 @@ import { Json } from '@repo/contracts/plugins/hook-protocol';
 import {
   operationLimitMs,
   type PluginOperationCall,
+  type PluginOperationTier,
 } from '@repo/contracts/plugins/plugin-operations';
 import type { PluginEvent } from '@repo/contracts/plugins/wire';
 import { failed, type Failure } from '../protocol/runtime-status';
@@ -24,6 +25,8 @@ type OperationEvent = Extract<PluginEvent, { type: 'operation' }>;
 type Request = Omit<OperationEvent, 'type' | 'id'> & {
   serverDevice?: boolean;
   secrets?: readonly string[];
+  // The tier its manifest declares; a `read` run writes nothing, so it is not heard. A run with none may write.
+  tier?: PluginOperationTier;
 };
 
 // What a run's `argo` calls reach: the Project it acts in and whether it was asked from the Server Device.
@@ -55,11 +58,15 @@ function answerOf(
     : failed(call.error);
 }
 
+// A read-tier run no person made from a page.
+const unheard = ({ tier, caller }: Request): boolean =>
+  tier === 'read' && caller.person !== true;
+
 /*
  * The runtime side of a Plugin's own Operations (ADR-0044): one call per run, answered by the worker
  * generation it went to. A Plugin that is not running answers nothing, so the caller starts it first.
- * Every run is heard once it ends, whoever ran it and however it ended: a handler that wrote and then threw
- * leaves the Plugin's pages stale (ADR-0050).
+ * Every run but a read-tier one no person made is heard once it ends, whoever ran it and however it ended: a
+ * handler that wrote and then threw leaves the Plugin's pages stale (ADR-0050, ADR-0060).
  */
 export class PluginOperations {
   private readonly calls: KindCalls<Request, PluginOperationCall, Answer>;
@@ -85,9 +92,19 @@ export class PluginOperations {
       this.scrubbed(await this.calls.call(pluginId, request)),
     );
 
-    for (const listener of this.ranListeners) listener(pluginId);
+    this.heard(pluginId, request);
 
     return answer;
+  }
+
+  /*
+   * A read-tier run an Agent or a Hook makes wrote nothing, so no one hears of it. One a person makes from a page is
+   * heard whatever its tier: it is how a page's Try again asks its reads again (ADR-0060).
+   */
+  private heard(pluginId: string, request: Request): void {
+    if (unheard(request)) return;
+
+    for (const listener of this.ranListeners) listener(pluginId);
   }
 
   private scrubbed(answer: Answer): Answer {

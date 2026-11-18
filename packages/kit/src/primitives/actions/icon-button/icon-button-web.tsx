@@ -76,6 +76,7 @@ function WebGlyph(props: IconButtonProps): ReactElement {
     <Icon
       name={props.icon}
       size={webGlyphOf(sizeOf(props))}
+      filled={props.selected ?? false}
       className={glyph}
     />
   );
