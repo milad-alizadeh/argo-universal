@@ -5,6 +5,7 @@ import type * as React from 'react';
 import { expect, within, waitFor } from 'storybook/test';
 import { composerStatus } from '#features/sessions';
 import { SessionDetailView } from './session-detail-view';
+import { usageLimitsSession } from './session-detail-view-usage.mocks';
 import { idleSession } from './session-detail-view.mocks';
 
 const meta = {
@@ -139,3 +140,41 @@ export const PartialPhone = contextRing(layoutWidths.phone, lastCall, false);
 export const MissingDesktop = hidden(layoutWidths.wide);
 
 export const MissingPhone = hidden(layoutWidths.phone);
+
+const usageLabel = 'Usage';
+
+const renderUsageLimits = (): React.JSX.Element => (
+  <SessionDetailView state="open" {...usageLimitsSession} />
+);
+
+// The Usage control draws the Server's Usage limits, shortest window first, each with its reset still ahead.
+export const UsageLimitsDesktop: Story = {
+  render: renderUsageLimits,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout(layoutWidths.wide);
+    const trigger = canvas.getByRole('button', { name: usageLabel });
+    await expect(trigger).toHaveTextContent('54%');
+
+    await userEvent.click(trigger);
+    const panel = within(await within(document.body).findByRole('dialog'));
+    await waitFor(() => expect(panel.getByText('5-hour limit')).toBeVisible());
+    await expect(panel.getByText('Resets in 2h 14m')).toBeVisible();
+    await expect(panel.getByText('Weekly limit')).toBeVisible();
+    await expect(panel.getByText('31%')).toBeVisible();
+    await expect(panel.getByText('Resets in 3d 4h')).toBeVisible();
+  },
+};
+
+// A phone's Composer row keeps no room for Usage (owner, 2026-10-21).
+export const UsageLimitsPhone: Story = {
+  render: renderUsageLimits,
+  play: async ({ canvas }) => {
+    await settleLayout(layoutWidths.phone);
+    await expect(
+      canvas.queryByRole('button', { name: usageLabel }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.getByRole('button', { name: contextLabel }),
+    ).toBeVisible();
+  },
+};

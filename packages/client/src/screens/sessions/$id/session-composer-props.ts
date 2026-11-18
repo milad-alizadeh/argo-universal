@@ -1,10 +1,13 @@
 import {
-  type Plan,
   type SessionSnapshot,
   type SlashCommand,
   withArgoSlashCommands,
 } from '@repo/contracts';
-import { type InstalledAgents, loadedAgents } from '#features/agents';
+import {
+  type InstalledAgents,
+  loadedAgents,
+  type UsageLimitsRead,
+} from '#features/agents';
 import type {
   ComposerConfigurationProps,
   ComposerProps,
@@ -15,13 +18,10 @@ import type {
   ElicitationFormProps,
   PermissionRequestProps,
 } from '#features/requests';
-import {
-  composerStatus,
-  decodeOpenFailure,
-  toSendError,
-} from '#features/sessions';
+import { decodeOpenFailure, toSendError } from '#features/sessions';
 import { type Navigate } from '#lib/product/navigation/navigation';
 import { followUpProps } from './follow-up-composer-props';
+import { sessionStatusProps } from './session-status-props';
 import { queueComposerProps } from './use-prompt-queue';
 import type { SessionCommands } from './use-session-commands';
 
@@ -39,6 +39,7 @@ export interface OpenSession {
   connected: boolean;
   elicitation: ElicitationFormProps | undefined;
   permission: PermissionRequestProps | undefined;
+  usageLimits: UsageLimitsRead;
   options?: {
     configOptions: SessionSnapshot['configOptions'];
     loading: boolean;
@@ -70,9 +71,6 @@ const isSending = ({ commands }: OpenSession): boolean =>
 // A pending option change holds Send but leaves the Composer and its open configuration active.
 const isSendable = (open: OpenSession): boolean =>
   open.connected && !isConfiguring(open);
-
-const writtenPlan = (plan: Plan | null): ComposerProps['writtenPlan'] =>
-  plan && plan.type !== 'items' ? plan : undefined;
 
 // A refused open is the callout's to show, not the Composer's.
 const commandError = <Failure>(error: Failure | null): Failure | null =>
@@ -162,19 +160,4 @@ function sendingProps(
   open: OpenSession,
 ): Pick<ComposerProps, 'sending' | 'sendable'> {
   return { sending: isSending(open), sendable: isSendable(open) };
-}
-
-function sessionStatusProps({
-  permission,
-  view,
-  snapshot,
-}: OpenSession): Pick<
-  ComposerProps,
-  'permissionRequest' | 'writtenPlan' | 'status'
-> {
-  return {
-    permissionRequest: permission,
-    writtenPlan: writtenPlan(view.plan),
-    status: composerStatus(view.plan, snapshot.usage ?? undefined),
-  };
 }

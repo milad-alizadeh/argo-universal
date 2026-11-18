@@ -83,7 +83,7 @@ function CommandOutput(
         output={props.terminal.output}
         footer={<CommandFooter {...props.state.footer} />}
       />
-      <ToolOutput content={nonTerminalContent(props.row)} />
+      <ToolOutput content={nonTerminalContent(props.row)} row={props.row} />
     </>
   );
 }

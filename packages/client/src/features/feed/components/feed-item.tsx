@@ -137,7 +137,7 @@ function renderNonRow(
   if (item.type === 'child_reply') return <ChildReply row={item.row} />;
 
   if (item.type === 'parent_result')
-    return <ParentResult content={item.content} />;
+    return <ParentResult id={item.id} content={item.content} />;
 
   return renderRemaining(item, drawing);
 }

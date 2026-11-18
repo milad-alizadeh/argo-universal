@@ -12,6 +12,8 @@ import { createRejectionCounter } from '@repo/machine-log';
 import type { AgentLaunch } from '../..';
 import type { AuthChanges } from '../../auth/auth-changes';
 import { ConnectionAuthentication } from '../../auth/authenticate';
+import type { UsageLimits } from '../../usage-limits';
+import { vendorUsageLimits } from '../../vendor';
 import { authenticationMethods } from '../auth-methods';
 import {
   drainProcessExit,
@@ -52,6 +54,7 @@ type ConnectionHooks = {
   forget: () => void;
   idle: () => void;
   authChanges: AuthChanges;
+  usageLimits: UsageLimits;
 };
 
 type OpeningResponse = Extract<AnyMessage, { result: unknown }>;
@@ -246,6 +249,7 @@ export class AcpConnection {
       .catch((cause: unknown) => this.fail(asError(cause)));
   }
   private readonly update = (notification: SessionNotification): undefined => {
+    this.publishUsageLimits(notification);
     const owner = this.subagents.owner(notification.sessionId);
 
     if (!owner) return this.unknownUpdate(notification.sessionId);
@@ -253,6 +257,17 @@ export class AcpConnection {
     if (this.subagents.associate(notification, owner))
       owner.destination.update(notification);
   };
+  // Usage limits belong to the sign-in, so an update from any of the connection's sessions counts.
+  private publishUsageLimits(notification: SessionNotification): void {
+    const launch = this.initialized?.launch;
+
+    if (!launch) return;
+    const readings = vendorUsageLimits(notification.update._meta, new Date());
+    this.hooks.usageLimits.publish(
+      { agent: launch.agentId, projectId: launch.projectId },
+      readings,
+    );
+  }
   private unknownUpdate(id: string): undefined {
     if (!this.isLoading(id)) this.find(id);
 

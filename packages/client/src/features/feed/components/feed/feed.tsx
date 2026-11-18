@@ -10,6 +10,7 @@ import { View } from 'react-native';
 import { ComposerCover } from '#lib/product/composer-cover';
 import type { FeedViewItem } from '../../view/feed-view';
 import { drawnFeedItems } from '../drawn-feed-item';
+import { FeedImages } from '../feed-images';
 import { withoutDisclosedTurnEnds } from '../turn-end/turn-end';
 import { newestKeyOf, withLiveHeader } from './feed-entry';
 import { FeedList, type FeedListProps } from './feed-list';
@@ -105,7 +106,16 @@ export function Feed({
       />
     );
 
-  return <FeedWithCover {...props} {...feed} />;
+  return <FeedWithImages {...props} {...feed} />;
+}
+
+// The Feed's images open above its list, so one stays open when its row scrolls out and is no longer drawn.
+function FeedWithImages(props: FeedListProps & FeedProps): React.JSX.Element {
+  return (
+    <FeedImages items={props.items} imageUrl={props.imageUrl}>
+      <FeedWithCover {...props} />
+    </FeedImages>
+  );
 }
 
 // A Feed that opens at its start has no Composer at its end, so it keeps no room for one.

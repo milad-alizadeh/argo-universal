@@ -21,6 +21,7 @@ import {
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
+import { usageLimitsSession } from './session-detail-view-usage.mocks';
 import {
   emptySession,
   idleSession,
@@ -48,6 +49,11 @@ type Story = StoryObj<typeof meta>;
 
 // A Turn running: the header's clock, the Feed's live line, and the Composer offering Stop.
 export const Running: Story = { args: { state: 'open', ...runningSession } };
+
+// The Agent reported its Usage limits: the Composer's Usage control shows the 5-hour one, and opens on both.
+export const UsageLimits: Story = {
+  args: { state: 'open', ...usageLimitsSession },
+};
 
 // The last Turn ended in an error: the Retry card above the Composer, which keeps its prompt.
 export const StoppedTurn: Story = {

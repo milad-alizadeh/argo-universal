@@ -115,3 +115,5 @@ export function supportsOwnedSteering(
 
   return steering ? satisfies(info.version, steering.versions) : false;
 }
+
+export { vendorUsageLimits } from './vendor-usage-limits';
