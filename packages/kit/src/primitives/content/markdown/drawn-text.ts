@@ -10,14 +10,15 @@ function innerTokens(token: Token): Token[] | undefined {
   return drawnThroughInner.has(token.type) ? tokensOf(token) : undefined;
 }
 
-const ownText = (token: Token): string =>
+// The text a token carries itself, for one drawn as written.
+export const writtenText = (token: Token): string =>
   'text' in token ? String(token.text) : '';
 
 function tokenText(token: Token): string {
   if (token.type === 'br') return '\n';
   const inner = innerTokens(token);
 
-  return inner ? drawnText(inner) : ownText(token);
+  return inner ? drawnText(inner) : writtenText(token);
 }
 
 // The text a block's inline tokens put on screen, in order: what `InlineTokens` draws of them, without the marks.

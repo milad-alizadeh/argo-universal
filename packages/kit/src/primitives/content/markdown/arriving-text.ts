@@ -22,6 +22,29 @@ export const settledTrail = (text: string): Trail => ({ text, marks: [] });
 // A block that starts while its message streams is new from its first letter.
 export const arrivingTrail = (text: string): Trail => ({ text, marks: [0] });
 
+// Where a block stands as it is first drawn.
+export interface Start {
+  // Whether its Markdown was already on screen and streaming.
+  began: boolean;
+  // Whether the block is the one being written.
+  growing: boolean;
+}
+
+const restingTrail = (text: string, growing: boolean): Trail | null =>
+  growing ? settledTrail(text) : null;
+
+/*
+ * The trail a block starts with. One that starts in a Markdown already streaming is new, whether it
+ * is still being written or the chunk that brought it also finished it. One drawn with its Markdown
+ * was there to read: it fades nothing, and is followed only while it is written.
+ */
+export function firstTrail(
+  text: string,
+  { began, growing }: Start,
+): Trail | null {
+  return began ? arrivingTrail(text) : restingTrail(text, growing);
+}
+
 /*
  * Text that grew begins a run where the old text ended. Text that changed any other way, as when
  * `**bo` becomes bold, moved what is on screen, so nothing fades: a letter already read never fades twice.

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   arrivingTrail,
+  firstTrail,
   followText,
   maxRuns,
   piecesOf,
@@ -71,6 +72,23 @@ describe('the text a streaming block remembers', () => {
       text: helloWorld,
       marks: [5],
     });
+  });
+});
+
+describe('the trail a block starts with', () => {
+  it('fades nothing of a block drawn with its message, and follows it only while it is written', () => {
+    expect(firstTrail(hello, { began: false, growing: true })).toEqual(
+      settledTrail(hello),
+    );
+    expect(firstTrail(hello, { began: false, growing: false })).toBeNull();
+  });
+
+  it('fades the whole of a block that starts in a message already streaming, even one the same chunk has already finished', () => {
+    const whole = { text: hello, marks: [0] };
+
+    expect(firstTrail(hello, { began: true, growing: true })).toEqual(whole);
+    expect(firstTrail(hello, { began: true, growing: false })).toEqual(whole);
+    expect(followText(whole, hello, false)).toBe(whole);
   });
 });
 

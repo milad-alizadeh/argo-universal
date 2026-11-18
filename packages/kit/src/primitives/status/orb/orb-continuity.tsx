@@ -1,16 +1,21 @@
 import type { SkImage } from '@shopify/react-native-skia';
 import type * as React from 'react';
-import { type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useSharedValue } from 'react-native-reanimated';
 import { OrbBoundary } from './orb-boundary';
-import { joined, left, type OrbHolder } from './orb-holders';
+import {
+  displaced,
+  type OrbHolder,
+  withHolder,
+  withoutHolder,
+} from './orb-holders';
 import { OrbDriverLoader } from './orb-loader';
 import { useOrbSeat } from './orb-seat';
 import { type OrbAsks, type OrbShare, OrbShareContext } from './orb-share';
 
-interface Shared {
+interface SharedOrb {
   share: OrbShare;
-  // The look asked for last, while an orb that continues is on screen.
+  // The look the drawing takes; none while no orb shows it and none has for a moment.
   look: OrbHolder | undefined;
 }
 
@@ -19,8 +24,8 @@ function useHolders(): [OrbHolder[], OrbAsks] {
 
   const asks = useMemo<OrbAsks>(
     () => ({
-      join: (holder): void => setHolders((held) => joined(held, holder)),
-      leave: (id): void => setHolders((held) => left(held, id)),
+      join: (holder): void => setHolders((held) => withHolder(held, holder)),
+      leave: (id): void => setHolders((held) => withoutHolder(held, id)),
     }),
     [],
   );
@@ -28,23 +33,54 @@ function useHolders(): [OrbHolder[], OrbAsks] {
   return [holders, asks];
 }
 
-function useShared(): Shared {
+// How long the drawing outlives the last orb that showed it.
+const lingerMilliseconds = 1000;
+
+type Look = OrbHolder | undefined;
+
+// Lets go of the last look once no orb has shown the drawing for a moment.
+function useLetGo(look: Look, last: Look, setLast: (look: Look) => void): void {
+  useEffect(() => {
+    if (look || !last) return;
+
+    const timer = setTimeout(() => setLast(undefined), lingerMilliseconds);
+
+    return (): void => clearTimeout(timer);
+  }, [last, look, setLast]);
+}
+
+/*
+ * The look asked for last, kept for a moment after its orb leaves. A row that leaves before the next
+ * one mounts, or scrolls away and back, then finds the drawing where it left it; after longer with
+ * no orb the drawing stops, and the next orb fades in.
+ */
+function useLingeringLook(look: Look): Look {
+  const [last, setLast] = useState(look);
+  const shown = look ?? last;
+
+  if (shown !== last) setLast(shown);
+
+  useLetGo(look, last, setLast);
+
+  return shown;
+}
+
+function useSharedOrb(): SharedOrb {
   const image = useSharedValue<SkImage | null>(null);
   const seat = useOrbSeat();
   const [holders, asks] = useHolders();
-  const look = holders.at(-1);
-  const holder = look?.id;
+  const look = useLingeringLook(holders.at(-1));
 
   const share = useMemo<OrbShare>(
-    () => ({ ...asks, image, seat, holder }),
-    [asks, holder, image, seat],
+    () => ({ ...asks, image, seat, displaced: displaced(holders) }),
+    [asks, holders, image, seat],
   );
 
   return { share, look };
 }
 
 // Drawn only while an orb shows it. A window that cannot draw an orb draws none here either.
-function SharedDrawing({ share, look }: Shared): React.JSX.Element | null {
+function SharedDrawing({ share, look }: SharedOrb): React.JSX.Element | null {
   if (!look) return null;
 
   return (
@@ -69,7 +105,7 @@ export function OrbContinuity({
 }: {
   children: ReactNode;
 }): React.JSX.Element {
-  const shared = useShared();
+  const shared = useSharedOrb();
 
   return (
     <OrbShareContext value={shared.share}>

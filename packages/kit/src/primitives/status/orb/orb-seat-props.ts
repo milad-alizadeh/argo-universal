@@ -16,8 +16,6 @@ export interface SeatedOrbProps {
 export interface OrbSeatHostProps {
   seat: OrbSeat;
   pixels: number;
-  // Whether this orb asked for the drawing last, and so holds the seat.
-  seated: boolean;
   // The orb's own canvas, drawn where there is no seat to take.
   children: ReactNode;
 }

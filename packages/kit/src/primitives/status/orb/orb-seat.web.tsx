@@ -32,17 +32,12 @@ function seatIn(host: HTMLElement | null, seat: OrbSeat): void {
   if (host && seat) moveTo(host, seat);
 }
 
+// An orb takes the seat as it mounts, in the commit that removes the orb before it; one that gives way to a newer orb unmounts this, and takes the seat back when it mounts again.
 export function OrbSeatHost(props: OrbSeatHostProps): React.JSX.Element {
-  const { seat, pixels, seated } = props;
+  const { seat, pixels } = props;
   const host = useRef<Host>(null);
 
-  // A new orb takes the seat as it mounts, in the commit that removes the orb before it.
   useLayoutEffect(() => seatIn(elementOf(host.current), seat), [seat]);
-
-  // An orb still on screen takes the seat back when the newer orb that held it leaves.
-  useLayoutEffect(() => {
-    if (seated) seatIn(elementOf(host.current), seat);
-  }, [seat, seated]);
 
   return <View ref={host} style={{ width: pixels, height: pixels }} />;
 }

@@ -13,12 +13,30 @@ const lookOf = ({ id, state, size }: OrbHolder): string =>
 const asksTheSame = (held: OrbHolder | undefined, holder: OrbHolder): boolean =>
   held !== undefined && lookOf(held) === lookOf(holder);
 
-export const left = (holders: OrbHolder[], id: string): OrbHolder[] =>
+export const withoutHolder = (holders: OrbHolder[], id: string): OrbHolder[] =>
   holders.filter((holder) => holder.id !== id);
 
-// The holder that asked last comes last, and the shared drawing takes its look.
-export function joined(holders: OrbHolder[], holder: OrbHolder): OrbHolder[] {
-  if (asksTheSame(holders.at(-1), holder)) return holders;
+function replaced(holders: OrbHolder[], holder: OrbHolder): OrbHolder[] {
+  const held = holders.find(({ id }) => id === holder.id);
 
-  return [...left(holders, holder.id), holder];
+  if (asksTheSame(held, holder)) return holders;
+
+  return holders.map((other) => (other === held ? holder : other));
 }
+
+/*
+ * The orb that appeared last comes last, and the shared drawing takes its look. An orb that changes
+ * its look keeps its place, so two orbs on screen at once never trade the drawing between them.
+ */
+export function withHolder(
+  holders: OrbHolder[],
+  holder: OrbHolder,
+): OrbHolder[] {
+  return holders.some(({ id }) => id === holder.id)
+    ? replaced(holders, holder)
+    : [...holders, holder];
+}
+
+// The orbs the shared drawing is not shown in: all but the one that appeared last. Each draws an orb of its own, so none is left empty.
+export const displaced = (holders: OrbHolder[]): string[] =>
+  holders.slice(0, -1).map(({ id }) => id);

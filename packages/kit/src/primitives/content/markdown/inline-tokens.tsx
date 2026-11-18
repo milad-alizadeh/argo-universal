@@ -7,7 +7,7 @@ import { withOccurrenceKeys } from '#kit/occurrence-keys';
 import { Link } from '#primitives/content/link';
 import { ArrivingRun } from './arriving-run';
 import { type Piece, piecesOf } from './arriving-text';
-import { drawnText } from './drawn-text';
+import { drawnText, writtenText } from './drawn-text';
 import { byType } from './markdown-tokens';
 
 // Where a token's text starts in its block's drawn text, and where each run of newly arrived text begins there.
@@ -40,7 +40,7 @@ function pieceNode({ text, start, arriving }: Piece): ReactNode {
 }
 
 // A token's own text: whole at rest, and cut into the runs it arrived in while its block is written.
-function ownText(text: string, arriving: Arriving | undefined): ReactNode {
+function runsOf(text: string, arriving: Arriving | undefined): ReactNode {
   if (!arriving) return text;
 
   return piecesOf({ text, start: arriving.start }, arriving.marks).map(
@@ -53,7 +53,7 @@ function CodespanToken({
   codeClassName,
   arriving,
 }: InlineTokenProps<Tokens.Codespan>): React.JSX.Element {
-  return <Span className={codeClassName}>{ownText(token.text, arriving)}</Span>;
+  return <Span className={codeClassName}>{runsOf(token.text, arriving)}</Span>;
 }
 
 function MarkToken({
@@ -90,12 +90,12 @@ function InlineTextToken({
   return token.tokens ? (
     <InlineTokens tokens={token.tokens} {...drawing} />
   ) : (
-    ownText(token.text, drawing.arriving)
+    runsOf(token.text, drawing.arriving)
   );
 }
 
 function OtherInlineToken({ token, arriving }: InlineTokenProps): ReactNode {
-  return 'text' in token ? ownText(String(token.text), arriving) : null;
+  return runsOf(writtenText(token), arriving);
 }
 
 const inlineTokens = new Map<string, ComponentType<InlineTokenProps>>([

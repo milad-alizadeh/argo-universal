@@ -1,16 +1,11 @@
-import {
-  Canvas,
-  FilterMode,
-  Image,
-  MipmapMode,
-  type SkImage,
-} from '@shopify/react-native-skia';
+import type { SkImage } from '@shopify/react-native-skia';
 import { useCallback, useContext, useEffect, useId, useMemo } from 'react';
 import { PixelRatio } from 'react-native';
 import { type SharedValue, useSharedValue } from 'react-native-reanimated';
 import { scheduleOnUI } from 'react-native-worklets';
 import { useNativeTheme } from '../../../native-theme';
 import { useReducedMotionNow } from '../../../use-reduced-motion-now';
+import { OrbCanvas } from './orb-canvas';
 import { drawOrb, type OrbDrawing } from './orb-draw';
 import type { OrbDriverProps } from './orb-driver-props';
 import type { OrbFrame } from './orb-frame';
@@ -29,9 +24,6 @@ const stillSeconds = 0.6;
 // Drawn at up to twice its size, as the original draws on a 2× canvas.
 const density = Math.min(PixelRatio.get(), 2);
 
-// Scaled up smoothly, as a browser scales the original's canvas.
-const sampling = { filter: FilterMode.Linear, mipmap: MipmapMode.None };
-
 // What an orb shows and how it comes to show it.
 interface Look {
   state: OrbState;
@@ -39,11 +31,6 @@ interface Look {
   paused: boolean;
   // Whether it fades in on its first frame, rather than starting whole.
   fadesIn: boolean;
-}
-
-interface OrbCanvasProps {
-  image: SharedValue<SkImage | null>;
-  pixels: number;
 }
 
 // The orb's drawing, held still while paused or for a reduced-motion viewer.
@@ -121,19 +108,40 @@ function useHeldLook({ join, leave }: OrbAsks, look: Asked): string {
 
 type Asked = Pick<OrbHolder, 'state' | 'size'>;
 
-// Shows the orb its `OrbContinuity` draws: the drawing was running before this orb mounted, so it has no first frame to wait for.
-function ContinuedOrb({
+const askedOf = ({ state = 'working', size = 'md' }: OrbProps): Asked => ({
+  state,
+  size,
+});
+
+// The shared drawing, in this orb's place: it was running before this orb mounted, so it has no first frame to wait for.
+function SharedOrbCanvas({
   share,
-  state = 'working',
-  size = 'md',
-}: OrbProps & { share: OrbShare }): React.JSX.Element {
-  const id = useHeldLook(share, { state, size });
+  size,
+}: {
+  share: OrbShare;
+  size: OrbSize;
+}): React.JSX.Element {
   const pixels = orbPixels[size];
 
   return (
-    <OrbSeatHost seat={share.seat} pixels={pixels} seated={share.holder === id}>
+    <OrbSeatHost seat={share.seat} pixels={pixels}>
       <OrbCanvas image={share.image} pixels={pixels} />
     </OrbSeatHost>
+  );
+}
+
+// Shows the orb its `OrbContinuity` draws. While a newer orb shows it instead, this one draws an orb of its own, so two on screen at once both draw.
+function ContinuedOrb({
+  share,
+  ...orb
+}: OrbProps & { share: OrbShare }): React.JSX.Element {
+  const asked = askedOf(orb);
+  const id = useHeldLook(share, asked);
+
+  return share.displaced.includes(id) ? (
+    <OwnOrb {...orb} />
+  ) : (
+    <SharedOrbCanvas share={share} size={asked.size} />
   );
 }
 
@@ -157,20 +165,6 @@ export function OrbDriver(props: OrbDriverProps): React.JSX.Element {
     <SeatedOrb seat={props.seat}>
       <OrbCanvas image={image} pixels={orbPixels[size]} />
     </SeatedOrb>
-  );
-}
-
-function OrbCanvas({ image, pixels }: OrbCanvasProps): React.JSX.Element {
-  return (
-    <Canvas style={{ width: pixels, height: pixels }}>
-      <Image
-        image={image}
-        width={pixels}
-        height={pixels}
-        fit="fill"
-        sampling={sampling}
-      />
-    </Canvas>
   );
 }
 

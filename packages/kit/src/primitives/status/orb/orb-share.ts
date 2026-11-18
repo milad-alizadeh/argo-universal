@@ -14,8 +14,8 @@ export interface OrbAsks {
 export interface OrbShare extends OrbAsks {
   image: SharedValue<SkImage | null>;
   seat: OrbSeat;
-  // The orb that asked last.
-  holder: string | undefined;
+  // The orbs that draw an orb of their own, because a newer orb shows the shared drawing.
+  displaced: readonly string[];
 }
 
 export const OrbShareContext = createContext<OrbShare | null>(null);

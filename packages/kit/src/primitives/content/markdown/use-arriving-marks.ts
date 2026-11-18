@@ -2,8 +2,8 @@ import type { Token } from 'marked';
 import { useContext, useEffect, useState } from 'react';
 import { motionDuration } from '#kit/motion';
 import {
-  arrivingTrail,
   fadeMilliseconds,
+  firstTrail,
   followText,
   settledTrail,
   type Trail,
@@ -31,32 +31,43 @@ function useSettledAfterFade(trail: Trail | null, setTrail: SetTrail): void {
   }, [setTrail, trail]);
 }
 
-// A block that starts in a Markdown already streaming is new from its first letter; one drawn with its Markdown was there to read.
-function useFirstTrail(text: string, growing: boolean): Trail | null {
+type Tokens = readonly Token[] | undefined;
+
+function useFirstTrail(tokens: Tokens, growing: boolean): Trail | null {
   const { began } = useContext(ArrivalsContext);
 
-  if (!growing) return null;
-
-  return began() ? arrivingTrail(text) : settledTrail(text);
+  return useState(() =>
+    firstTrail(drawnText(tokens), { began: began(), growing }),
+  )[0];
 }
 
-/*
- * Where each run of newly arrived text begins in a block's drawn text, counted from its start, while
- * the block is being written or its last runs fade; `undefined` for a block at rest, which then does no work here.
- * The trail is state the block derives from its text as it renders, so a chunk costs no effect.
- */
-export function useArrivingMarks(
-  tokens: readonly Token[] | undefined,
-  growing: boolean,
-): Arriving | undefined {
-  const text = drawnText(tokens);
-  const first = useFirstTrail(text, growing);
-  const [trail, setTrail] = useState(first);
+// A block at rest has no text to follow, so its text is not read.
+const textToFollow = (tokens: Tokens, followed: boolean): string =>
+  followed ? drawnText(tokens) : '';
+
+// The trail is state the block derives from its text as it renders, so a chunk costs no effect.
+function useTrail(tokens: Tokens, growing: boolean): Trail | null {
+  const [trail, setTrail] = useState(useFirstTrail(tokens, growing));
+  const text = textToFollow(tokens, growing || trail !== null);
   const next = followText(trail, text, growing);
 
   if (next !== trail) setTrail(next);
 
   useSettledAfterFade(next, setTrail);
 
-  return next ? { marks: next.marks, start: 0 } : undefined;
+  return next;
+}
+
+/*
+ * Where each run of newly arrived text begins in a block's drawn text, counted from its start, while
+ * the block is being written or its last runs fade; `undefined` for a block at rest, which then does
+ * no work here.
+ */
+export function useArrivingMarks(
+  tokens: Tokens,
+  growing: boolean,
+): Arriving | undefined {
+  const trail = useTrail(tokens, growing);
+
+  return trail ? { marks: trail.marks, start: 0 } : undefined;
 }
