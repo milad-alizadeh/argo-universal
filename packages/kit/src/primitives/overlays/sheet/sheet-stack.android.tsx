@@ -1,5 +1,5 @@
-import { RNHostView } from '@expo/ui/jetpack-compose';
-import type { ReactElement } from 'react';
+import { Column, RNHostView } from '@expo/ui/jetpack-compose';
+import { useState, type ReactElement } from 'react';
 import { View, useWindowDimensions, type ViewStyle } from 'react-native';
 import { cn } from '#kit/utils';
 import { CompactScope } from '../../../use-size-class/compact-scope';
@@ -7,6 +7,7 @@ import { SheetBody } from './sheet-body';
 import type { SheetScreenEntry } from './sheet-screens';
 import {
   sheetModifiers,
+  viewportModifiers,
   sheetSizing,
   wrapsContents,
 } from './sheet-sizing.android';
@@ -31,13 +32,23 @@ export function SheetScreens(props: ScreensProps): ReactElement {
     window: useWindowDimensions().height,
   });
 
-  return (
-    <RNHostView
-      matchContents={wrapsContents(sizing)}
-      modifiers={sheetModifiers(sizing)}
-    >
-      <SheetFrame {...props} {...sizing} />
+  return <HostedSheet {...props} {...sizing} />;
+}
+
+function HostedSheet(props: Omit<FrameProps, 'width'>): ReactElement {
+  const [viewportHeight, setViewportHeight] = useState<number>();
+  const wrap = wrapsContents(props);
+
+  const host = (
+    <RNHostView matchContents={wrap} modifiers={sheetModifiers(props)}>
+      <SheetFrame {...props} height={wrap ? props.height : viewportHeight} />
     </RNHostView>
+  );
+
+  return wrap ? (
+    host
+  ) : (
+    <Column modifiers={viewportModifiers(setViewportHeight)}>{host}</Column>
   );
 }
 
@@ -51,7 +62,7 @@ function SheetFrame(props: Omit<FrameProps, 'width'>): ReactElement {
   return (
     <View
       style={{ width, height: props.height }}
-      className={cn(props.fill && 'flex-1')}
+      className={cn(props.fill && props.height === undefined && 'flex-1')}
     >
       <CompactScope>
         <SheetPane {...props} width={width} />
@@ -62,7 +73,11 @@ function SheetFrame(props: Omit<FrameProps, 'width'>): ReactElement {
 
 function SheetPane(props: FrameProps): ReactElement {
   if (props.stack.pages.length === 0)
-    return <SheetBody {...props}>{props.children}</SheetBody>;
+    return (
+      <SheetBody {...props} viewportHeight={props.height}>
+        {props.children}
+      </SheetBody>
+    );
 
   return <SlidingScreens {...props} />;
 }
@@ -117,5 +132,6 @@ const placed = (
 const rowStyle = (props: FrameProps, count: number): ViewStyle => ({
   flexDirection: 'row',
   width: props.width * count,
-  ...(props.fill && { flex: 1 }),
+  height: props.height,
+  ...(props.fill && props.height === undefined && { flex: 1 }),
 });

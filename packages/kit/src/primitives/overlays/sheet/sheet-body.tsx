@@ -1,5 +1,11 @@
-import type { ReactElement, ReactNode } from 'react';
-import { Platform, ScrollView, View, type ViewProps } from 'react-native';
+import { useState, type ReactElement, type ReactNode } from 'react';
+import {
+  Platform,
+  ScrollView,
+  View,
+  type LayoutChangeEvent,
+  type ViewProps,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollEndGapContext, SheetScrollContext } from '#kit/scroll-surface';
 import { cn } from '#kit/utils';
@@ -20,6 +26,7 @@ type BodyProps = Pick<
   // The page fills the sheet's height, as a sheet with detents gives it.
   fill: boolean;
   underHeader?: boolean;
+  viewportHeight?: number;
   children: ReactNode;
 };
 
@@ -31,19 +38,66 @@ type BodyProps = Pick<
  */
 export function SheetBody(props: BodyProps): ReactElement {
   const gap = useBottomGap(props);
+  const viewport = useScrollViewport(props);
 
   return (
     <ReactContent>
-      <SheetScrollContext value>
+      <SheetScrollContext value={viewport.context}>
         <ScrollEndGapContext value={gap.scrolled}>
-          <View {...bodyProps(props)} style={gap.padded}>
-            <ScreenContent {...props} gap={gap.scrolled} />
-            {props.footer}
-          </View>
+          {pageContent(props, viewport, gap)}
         </ScrollEndGapContext>
       </SheetScrollContext>
     </ReactContent>
   );
+}
+
+function pageContent(
+  props: BodyProps,
+  viewport: ScrollViewport,
+  gap: BottomGap,
+): ReactElement {
+  return (
+    <View {...bodyProps(props, gap.padded)}>
+      <ScreenContent {...props} {...viewport.context} gap={gap.scrolled} />
+      {viewport.footer}
+    </View>
+  );
+}
+
+interface ScrollViewport {
+  context: { viewportHeight?: number };
+  footer: ReactNode;
+}
+
+const unboundedViewport = {};
+
+function useScrollViewport({
+  viewportHeight,
+  footer,
+}: BodyProps): ScrollViewport {
+  const [footerHeight, setFooterHeight] = useState(0);
+
+  if (viewportHeight === undefined)
+    return { context: unboundedViewport, footer };
+
+  if (!footer) return { context: { viewportHeight }, footer };
+
+  return {
+    context: { viewportHeight: Math.max(0, viewportHeight - footerHeight) },
+    footer: (
+      <MeasuredFooter onHeight={setFooterHeight}>{footer}</MeasuredFooter>
+    ),
+  };
+}
+
+function MeasuredFooter(props: {
+  children: ReactNode;
+  onHeight: (height: number) => void;
+}): ReactElement {
+  const measure = (event: LayoutChangeEvent): void =>
+    props.onHeight(event.nativeEvent.layout.height);
+
+  return <View onLayout={measure}>{props.children}</View>;
 }
 
 interface BottomGap {
@@ -67,9 +121,10 @@ function useBottomGap(props: Pick<BodyProps, 'footer'>): BottomGap {
   return { scrolled: clear };
 }
 
-function bodyProps(props: BodyProps): Omit<ViewProps, 'style'> {
+function bodyProps(props: BodyProps, padding: BottomGap['padded']): ViewProps {
   return {
-    className: cn(props.fill && 'flex-1'),
+    className: cn(props.fill && props.viewportHeight === undefined && 'flex-1'),
+    style: { height: props.viewportHeight, ...padding },
     accessibilityLabel: props.label,
     accessibilityViewIsModal: true,
     onAccessibilityEscape: () => escape(props),
@@ -96,6 +151,7 @@ function ScreenScroll(props: BodyProps & { gap: number }): ReactElement {
   return (
     <ScrollView
       className={cn('min-h-0 shrink', props.fill && 'flex-1')}
+      style={{ maxHeight: props.viewportHeight }}
       contentContainerStyle={{ paddingBottom: props.gap }}
       contentInsetAdjustmentBehavior={props.underHeader ? 'automatic' : 'never'}
       keyboardShouldPersistTaps="handled"

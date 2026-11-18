@@ -10,7 +10,7 @@ import {
   useContext,
   useRef,
 } from 'react';
-import { Platform } from 'react-native';
+import { Platform, type ViewStyle } from 'react-native';
 import { useClaimColumn } from '#kit/content-column/content-column';
 import { SheetScrollContext } from '#kit/scroll-surface';
 import { assignRef, useLegendScrollRef } from './legend-scroll-ref';
@@ -20,7 +20,10 @@ import {
   type FrameSize,
   useFrameSize,
 } from './scroll-fade-frame-size';
-import { ScrollFadeFrame } from './scroll-fade-frame-view';
+import {
+  ScrollFadeFrame,
+  type ScrollFadeFrameProps,
+} from './scroll-fade-frame-view';
 import {
   type ScrollFadeListProps,
   useSizeClassListProps,
@@ -129,10 +132,32 @@ function useFrame(
   list: RefObject<LegendListRef | null>,
   caps: FrameCaps,
   horizontal: ScrollFadeListProps<unknown>['horizontal'],
-): FrameSize {
+): Pick<ScrollFadeFrameProps, 'className' | 'style'> {
+  const frame = useFrameSize(list, caps);
+
   useClaimColumn(horizontal || capped(caps) ? 'keep' : 'fill');
 
-  return useFrameSize(list, caps);
+  return { ...frame, style: useViewportStyle(frame.style, horizontal) };
+}
+
+function useViewportStyle(
+  style: FrameSize['style'],
+  horizontal: ScrollFadeListProps<unknown>['horizontal'],
+): ViewStyle | undefined {
+  const sheet = useContext(SheetScrollContext);
+
+  return keepInViewport(style, horizontal ? undefined : sheet?.viewportHeight);
+}
+
+function keepInViewport(
+  style: FrameSize['style'],
+  viewport: number | undefined,
+): ViewStyle | undefined {
+  if (viewport === undefined) return style;
+
+  return style
+    ? { ...style, maxHeight: Math.min(style.maxHeight, viewport) }
+    : { maxHeight: viewport };
 }
 
 // A Legend List whose content fades under each edge that hides more of it.
