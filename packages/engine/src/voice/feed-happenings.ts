@@ -44,9 +44,20 @@ const turnEndOf = (row: Row): SessionHappening | undefined =>
     ? endedHappening(endOf(row), row.turnId)
     : undefined;
 
+type PromptRow = Extract<Row, { sessionUpdate: 'prompt_message' }>;
+
+type Argo = NonNullable<PromptRow['_meta']>['argo'];
+
+const argoOf = (row: PromptRow): Argo => row._meta?.argo;
+
+const senderOf = (row: PromptRow): string | undefined =>
+  argoOf(row)?.sender?.type;
+
+const isVoicePrompt = (row: Row): row is PromptRow =>
+  row.sessionUpdate === 'prompt_message' && senderOf(row) === 'voice';
+
 const promptedOf = (row: Row): SessionHappening | undefined =>
-  row.sessionUpdate === 'prompt_message' &&
-  row._meta?.argo?.sender?.type === 'voice'
+  isVoicePrompt(row)
     ? { type: 'voice.prompted', turnId: row.turnId }
     : undefined;
 

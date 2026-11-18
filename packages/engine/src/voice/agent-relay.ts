@@ -73,12 +73,20 @@ export class AgentRelay {
   }
 
   public happened(happening: SessionHappening): void {
-    if (happening.type === 'agent.message') this.agentSaid(happening.text);
+    if (happening.type === 'turn.ended') this.turnEnded(happening);
     else if (happening.type === 'voice.prompted')
       this.prompted(happening.turnId);
-    else if (happening.type === 'person.typed')
-      this.personTyped(happening.text);
-    else this.turnEnded(happening);
+    else this.said(happening);
+  }
+
+  private said(
+    happening: Extract<
+      SessionHappening,
+      { type: 'agent.message' | 'person.typed' }
+    >,
+  ): void {
+    if (happening.type === 'agent.message') this.agentSaid(happening.text);
+    else this.personTyped(happening.text);
   }
 
   private get running(): boolean {
