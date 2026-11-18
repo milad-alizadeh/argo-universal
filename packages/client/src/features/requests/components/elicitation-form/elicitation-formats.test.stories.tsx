@@ -22,7 +22,10 @@ function emptyAnswers(width: number): Story {
     args: { request: emptyAnswersRequest },
     play: async ({ canvas, userEvent, args }) => {
       await settleLayout(width);
+      await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
       await userEvent.click(canvas.getByRole('radio', { name: /^None/ }));
+      await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
+      await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
       await expect(args.onAnswer).toHaveBeenCalledWith({
         action: 'accept',
@@ -42,13 +45,14 @@ function dateFormats(width: number): Story {
     play: async ({ canvas, userEvent, args }) => {
       await settleLayout(width);
       await expect(canvas.getByText(/Enter a valid date\./)).toBeVisible();
-      await expect(
-        canvas.getByText(/Enter a valid date and time\./),
-      ).toBeVisible();
       // The browser's own inputs take only whole dates, so a valid pick clears the message.
       const date = canvas.getByLabelText('Date *');
       await fireEvent.change(date, { target: { value: '2024-02-29' } });
       await expect(canvas.queryByText(/Enter a valid date\./)).toBeNull();
+      await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
+      await expect(
+        canvas.getByText(/Enter a valid date and time\./),
+      ).toBeVisible();
       const time = canvas.getByLabelText('Date and time *');
       await fireEvent.change(time, { target: { value: '2026-10-06T12:30' } });
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
