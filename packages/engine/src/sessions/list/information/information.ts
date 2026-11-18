@@ -1,3 +1,4 @@
+import { countPlanSteps } from '@repo/contracts';
 import type {
   AgentMessage,
   LiveHeader,
@@ -80,11 +81,11 @@ function visiblePlanSummary(
 function itemCounts(
   entries: Extract<PlanUpdate['plan'], { type: 'items' }>['entries'],
 ): NonNullable<SessionListState[number]['information']['plan']> {
-  return {
-    done: entries.filter((entry): boolean => entry.status === 'completed')
-      .length,
-    total: entries.length,
-  };
+  const { done, inProgress } = countPlanSteps(entries);
+
+  const counts = { done, total: entries.length };
+
+  return inProgress > 0 ? { ...counts, inProgress } : counts;
 }
 
 function subagentCounts(

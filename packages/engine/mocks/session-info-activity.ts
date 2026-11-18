@@ -64,7 +64,7 @@ export const rules: {
     expected: { information, running: false },
   },
   {
-    rule: 'an items Plan reports completed entries',
+    rule: 'an items Plan reports completed and active entries',
     input: {
       ...idle,
       plan: {
@@ -88,7 +88,10 @@ export const rules: {
       },
     },
     expected: {
-      information: { ...information, plan: { done: 1, total: 4 } },
+      information: {
+        ...information,
+        plan: { done: 1, inProgress: 1, total: 4 },
+      },
       running: false,
     },
   },

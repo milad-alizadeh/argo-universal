@@ -21,6 +21,31 @@ export const PlanEntry = z.strictObject({
 
 export type PlanEntry = z.infer<typeof PlanEntry>;
 
+interface PlanStepCounts {
+  done: number;
+  inProgress: number;
+}
+
+export function countPlanSteps(
+  entries: readonly Pick<PlanEntry, 'status'>[],
+): PlanStepCounts {
+  return {
+    done: entries.filter((entry) => entry.status === 'completed').length,
+    inProgress: entries.filter((entry) => entry.status === 'in_progress')
+      .length,
+  };
+}
+
+export function startedPlanSteps({
+  done,
+  inProgress = 0,
+}: {
+  done: number;
+  inProgress?: number;
+}): number {
+  return done + inProgress;
+}
+
 // The Plan: the Agent's live checklist.
 const PlanItems = z.strictObject({
   type: z.literal('items'),
