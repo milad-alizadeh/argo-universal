@@ -78,3 +78,8 @@ export const voiceSaying = {
     },
   },
 } satisfies TranscriptFixture;
+
+// The voice's words as the VoiceTranscript component takes them: final, then still being said.
+export const voiceSaidProps = { row: voiceSaid.item.row };
+
+export const voiceSayingProps = { row: voiceSaying.item.row, partial: true };
