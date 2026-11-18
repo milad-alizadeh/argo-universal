@@ -30,7 +30,7 @@ const swiftTextButtonFrame = createModifier('frame', {
 
 // SwiftUI's plain style only hits drawn content unless the label supplies an interaction shape.
 const swiftButtonHitArea = createModifier('contentShape', {
-  shape: 'rectangle',
+  ['shape']: 'rectangle',
   kind: ['interaction', 'accessibility'],
 });
 
