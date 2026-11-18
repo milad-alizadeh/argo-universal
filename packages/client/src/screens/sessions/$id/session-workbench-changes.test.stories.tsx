@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import {
   type MockInstance,
   expect,
+  fn,
   screen,
   spyOn,
   within,
@@ -249,5 +250,78 @@ export const ChecksPopoverOpensOnHover: Story = {
 
     await expect(listed).toEqual(runningFirst);
     await expect(opened).not.toHaveBeenCalled();
+  },
+};
+
+const createPR = { name: 'Create PR' };
+
+const onCreatePullRequest = fn();
+
+const checkoutOnly = {
+  ...idleSession.header,
+  pullRequests: [],
+  changes: {
+    summary: { files: 9, additions: 44, deletions: 12 },
+    open: false,
+    onOpenChange: fn(),
+  },
+};
+
+const createPullRequest = { onPress: onCreatePullRequest, disabled: false };
+
+export const CreatePullRequestFromChanges: Story = {
+  args: {
+    view: {
+      state: 'open',
+      ...idleSession,
+      header: checkoutOnly,
+      createPullRequest,
+    },
+  },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await workbench(canvas).findByRole('button', createPR),
+    );
+
+    await expect(onCreatePullRequest).toHaveBeenCalledTimes(1);
+    await expect(canvas.queryByRole('tab', { name: 'Changes' })).toBeNull();
+  },
+};
+
+export const NoCreatePullRequestWithAnAttachedPullRequest: Story = {
+  args: {
+    view: {
+      state: 'open',
+      ...withPullRequests(
+        { ...idleSession, header: checkoutOnly },
+        severalPullRequests,
+      ),
+      createPullRequest,
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole('button', firstChange)).toBeVisible();
+    await expect(workbench(canvas).queryByRole('button', createPR)).toBeNull();
+  },
+};
+
+export const NoCreatePullRequestWithACleanCheckout: Story = {
+  args: {
+    view: {
+      state: 'open',
+      ...idleSession,
+      header: {
+        ...checkoutOnly,
+        changes: {
+          ...checkoutOnly.changes,
+          summary: { files: 0, additions: 0, deletions: 0 },
+        },
+      },
+      createPullRequest,
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByTestId('workbench-changes')).toBeNull();
+    await expect(canvas.queryByRole('button', createPR)).toBeNull();
   },
 };

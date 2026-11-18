@@ -11,6 +11,7 @@ import {
   useSessionConfigChange,
 } from '#features/sessions';
 import { useFollowUpSuggestionsPreference } from '#features/settings';
+import { useCreatePullRequest } from './use-create-pull-request';
 import { useQueueCommand, type QueueCommandSender } from './use-prompt-queue';
 import { useRetryPrompt } from './use-retry-prompt';
 
@@ -28,6 +29,7 @@ export type SessionCommands = Omit<
   dismissedFollowUpTurnId?: string;
   dismissFollowUp?: (turnId: string) => void;
   promptSession: SessionMutation<'submit'>;
+  createPullRequest: ReturnType<typeof useCreatePullRequest>;
   cancelTurn: SessionMutation<'cancel'>;
   setConfigOption: SessionConfigChange['setConfigOption'];
   changeConfig: SessionConfigChange['change'];
@@ -45,7 +47,11 @@ interface SessionCommandTarget {
 
 type DraftCommands = Omit<
   SessionCommands,
-  'cancelTurn' | 'setConfigOption' | 'changeConfig' | 'queueCommand'
+  | 'cancelTurn'
+  | 'setConfigOption'
+  | 'changeConfig'
+  | 'queueCommand'
+  | 'createPullRequest'
 >;
 
 interface PromptFollowUp {
@@ -59,6 +65,10 @@ export function useSessionCommands(
 ): SessionCommands {
   return {
     ...useDraftCommands(target),
+    createPullRequest: useCreatePullRequest(
+      target.sessionId,
+      target.resumeAfterCommand,
+    ),
     queueCommand: useQueueCommand(target),
     cancelTurn: useCancelTurn(target.resumeAfterCommand),
     ...useConfigCommands(target),

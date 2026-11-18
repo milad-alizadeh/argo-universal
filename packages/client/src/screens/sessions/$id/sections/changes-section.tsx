@@ -1,3 +1,4 @@
+import { Button } from '@repo/kit/primitives/actions/button';
 import type { ReactNode } from 'react';
 import { Linking } from 'react-native';
 import { ChangesFiles, ChangesSheetHeader } from '#features/changes';
@@ -50,9 +51,17 @@ const changesSummary = (
 const changesCard: SessionSection['card'] = (content, tab): SectionCard => {
   const summary = changesSummary(content, tab);
 
-  return pullRequestsOf(content).length
-    ? { summary }
-    : { summary, onOpen: tab.open };
+  if (pullRequestsOf(content).length) return { summary };
+
+  const action = content.createPullRequest;
+
+  return {
+    summary,
+    onOpen: tab.open,
+    footer: action && (
+      <Button label="Create PR" variant="secondary" size="sm" {...action} />
+    ),
+  };
 };
 
 const pullRequestRows = (
