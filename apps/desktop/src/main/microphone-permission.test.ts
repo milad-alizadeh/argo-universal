@@ -24,7 +24,10 @@ describe('microphone permission', () => {
       ),
     ).toBe(false);
     expect(
-      allowsMicrophone({ ...own, permission: 'geolocation', audioOnly: true }, origin),
+      allowsMicrophone(
+        { ...own, permission: 'geolocation', audioOnly: true },
+        origin,
+      ),
     ).toBe(false);
   });
 });

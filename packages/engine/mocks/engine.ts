@@ -128,8 +128,6 @@ const baseInput = (
   startedAt: '2026-10-03T00:00:00.000Z',
   now: Date.now,
   createId: randomUUID,
-  // No test reaches Codex or the live voice service; a test that wants a provider passes one.
-  voiceProvider: null,
   ...scriptedEngineInput(),
   ...fixtureServices(options, home),
   home,

@@ -1,90 +1,90 @@
 import { z } from 'zod';
 import type { VoiceProviderEvent } from '../provider';
 
-const text = z.string();
+const speechFields = { id: z.string().default(''), transcript: z.string() };
 
-const transcript = z.looseObject({
-  id: text.optional(),
-  item_id: text.optional(),
-  transcript: text.optional(),
-  text: text.optional(),
+const speech =
+  (type: 'person.transcript' | 'voice.transcript') =>
+  ({
+    id,
+    transcript,
+  }: {
+    id: string;
+    transcript: string;
+  }): VoiceProviderEvent => ({
+    type,
+    id,
+    text: transcript,
+    final: true,
+  });
+
+const connected = (): VoiceProviderEvent => ({
+  type: 'status',
+  status: 'connected',
 });
 
-const delegation = z.looseObject({
-  delegation_id: text.optional(),
-  id: text.optional(),
-  text: text.optional(),
-  request: text.optional(),
+const closed = (): VoiceProviderEvent => ({ type: 'closed', reason: 'ended' });
+
+const requested = ({
+  delegation_id: requestId,
+  text,
+}: {
+  delegation_id: string;
+  text: string;
+}): VoiceProviderEvent => ({ type: 'work.requested', requestId, text });
+
+const counted = ({
+  usage,
+}: {
+  usage: { input_tokens: number; output_tokens: number };
+}): VoiceProviderEvent => ({
+  type: 'usage',
+  inputTokens: usage.input_tokens,
+  outputTokens: usage.output_tokens,
 });
 
-const usage = z.looseObject({
-  usage: z
+const usageFields = {
+  usage: z.looseObject({ input_tokens: z.number(), output_tokens: z.number() }),
+};
+
+// Audio never reaches this: binary frames are dropped before they are read, and events the provider does not report match nothing here.
+const reported = z.union([
+  z.looseObject({ type: z.literal('session.started') }).transform(connected),
+  z
+    .looseObject({ type: z.literal('input_transcript.added'), ...speechFields })
+    .transform(speech('person.transcript')),
+  z
     .looseObject({
-      input_tokens: z.number().optional(),
-      output_tokens: z.number().optional(),
+      type: z.literal('output_transcript.added'),
+      ...speechFields,
     })
-    .optional(),
-  input_tokens: z.number().optional(),
-  output_tokens: z.number().optional(),
-});
+    .transform(speech('voice.transcript')),
+  z
+    .looseObject({
+      type: z.literal('delegation.created'),
+      delegation_id: z.string(),
+      text: z.string(),
+    })
+    .transform(requested),
+  z
+    .looseObject({ type: z.literal('session.usage.updated'), ...usageFields })
+    .transform(counted),
+  z.looseObject({ type: z.literal('session.closed') }).transform(closed),
+]);
 
-const envelope = z.looseObject({ type: text });
-
-const speech = (
-  type: 'person.transcript' | 'voice.transcript',
-  data: z.infer<typeof transcript>,
-): VoiceProviderEvent => ({
-  type,
-  id: data.id ?? data.item_id ?? type,
-  text: data.transcript ?? data.text ?? '',
-  final: true,
-});
-
-/*
- * What one control-link text frame means to a call; null for events the provider does not report (turns, context echoes) and for anything unreadable.
- * Audio never reaches here: binary frames are dropped before they are read.
- */
+// What one control-link text frame means to a call; null for events not reported and for anything unreadable.
 export function eventOfFrame(frame: string): VoiceProviderEvent | null {
-  let raw: unknown;
-
   try {
-    raw = JSON.parse(frame);
+    const parsed = reported.safeParse(JSON.parse(frame));
+
+    return parsed.success ? parsed.data : null;
   } catch {
     return null;
   }
-  const head = envelope.safeParse(raw);
-
-  if (!head.success) return null;
-
-  switch (head.data.type) {
-    case 'session.started':
-      return { type: 'status', status: 'connected' };
-    case 'input_transcript.added':
-      return speech('person.transcript', transcript.parse(raw));
-    case 'output_transcript.added':
-      return speech('voice.transcript', transcript.parse(raw));
-    case 'delegation.created': {
-      const data = delegation.parse(raw);
-
-      return {
-        type: 'work.requested',
-        requestId: data.delegation_id ?? data.id ?? '',
-        text: data.text ?? data.request ?? '',
-      };
-    }
-    case 'session.usage.updated': {
-      const data = usage.parse(raw);
-      const counts = data.usage ?? data;
-
-      return {
-        type: 'usage',
-        inputTokens: counts.input_tokens ?? 0,
-        outputTokens: counts.output_tokens ?? 0,
-      };
-    }
-    case 'session.closed':
-      return { type: 'closed', reason: 'ended' };
-    default:
-      return null;
-  }
 }
+
+// Only a text frame is an event; audio frames are dropped unread.
+export const textOfFrame = (
+  data: Buffer | ArrayBuffer | Buffer[],
+  isBinary: boolean,
+): string => (Buffer.isBuffer(data) && !isBinary ? data.toString('utf8') : '');

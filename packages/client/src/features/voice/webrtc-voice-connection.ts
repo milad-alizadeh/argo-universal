@@ -57,11 +57,14 @@ class WebRtcVoiceConnection implements VoiceConnection {
 
   public async createOffer(): Promise<string> {
     this.close();
+
     const microphone = await this.environment.openMicrophone().catch(() => {
       throw new MicrophoneUnavailable();
     });
+
     const held = new HeldCall(microphone, this.environment.createPeer());
     this.held = held;
+
     held.peer.onVoice((voice) => {
       held.stopPlaying = this.environment.playVoice(voice);
     });

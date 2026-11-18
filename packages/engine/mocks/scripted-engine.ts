@@ -13,7 +13,7 @@ const scriptedGrace = { argoToolsGraceMs: Number.POSITIVE_INFINITY };
 
 type ScriptedEngineInput = Pick<
   EngineInput,
-  'acp' | 'cliEntry' | 'argoToolsGraceMs'
+  'acp' | 'cliEntry' | 'argoToolsGraceMs' | 'voiceProvider'
 > & {
   agent: ReturnType<typeof createScriptedAgentProcess>;
   fixtureAgents: AgentIdentity[];
@@ -30,6 +30,8 @@ export const scriptedEngineInput = (
     agent,
     fixtureAgents: [createAgentMetadata(identity)],
     acp: agent,
+    // No test reaches Codex or the live voice service; a test that wants a provider passes one.
+    voiceProvider: null,
     ...scriptedGrace,
   };
 };

@@ -49,6 +49,16 @@ function useReleaseWhenOver(
   }, [over, connection]);
 }
 
+// A refused microphone means no offer, so no call starts and the Composer stays where it was.
+const offerTo = (
+  connection: VoiceConnection | null,
+  send: (offer: string) => void,
+): Promise<void> | undefined =>
+  connection
+    ?.createOffer()
+    .then(send)
+    .catch(() => connection.close());
+
 // Starting a call: the offer goes to the Server, and its answer completes the connection.
 function useStartCall(
   sessionId: string,
@@ -61,12 +71,8 @@ function useStartCall(
     }),
   );
 
-  // A refused microphone means no offer, so no call starts and the Composer stays where it was.
   return () =>
-    void connection
-      ?.createOffer()
-      .then((offer) => start.mutate({ sessionId, offer }))
-      .catch(() => connection.close());
+    void offerTo(connection, (offer) => start.mutate({ sessionId, offer }));
 }
 
 function useEndCall(sessionId: string): ComposerVoice['onEnd'] {

@@ -1,10 +1,10 @@
-import type { WebSocket } from 'ws';
+import { WebSocket } from 'ws';
 import type {
   VoiceDelivery,
   VoiceProviderCall,
   VoiceProviderEvent,
 } from '../provider';
-import { eventOfFrame } from './link-events';
+import { eventOfFrame, textOfFrame } from './link-events';
 
 // Opens the call's control link again; rejects when the service will not have it.
 type RejoinLink = () => Promise<WebSocket>;
@@ -16,10 +16,24 @@ export type GptLiveCallOptions = {
   lostLinkMs: number;
 };
 
+// What the call says on the control link.
+type LinkMessage =
+  | {
+      type: 'delegation.context.append';
+      delegation_id: string;
+      channel: string;
+      text: string;
+    }
+  | { type: 'session.context.append'; channel: string; text: string }
+  | { type: 'session.close' };
+
 const channelOf = (delivery: VoiceDelivery): string =>
   delivery === 'speak' ? 'speakable' : 'commentary';
 
 const retryMs = 100;
+
+// Lets `session.close` leave before the link goes.
+const closeDelayMs = 50;
 
 /*
  * One GPT-Live call after the service answered: the control link it keeps for its whole life.
@@ -30,11 +44,13 @@ export class GptLiveCall implements VoiceProviderCall {
   public readonly answer: string;
   private readonly listeners = new Set<(event: VoiceProviderEvent) => void>();
   private readonly backlog: VoiceProviderEvent[] = [];
+  private link: WebSocket;
   private ended = false;
   private lostTimer: ReturnType<typeof setTimeout> | undefined;
 
   public constructor(private readonly options: GptLiveCallOptions) {
     this.answer = options.answer;
+    this.link = options.link;
     this.attach(options.link);
   }
 
@@ -71,42 +87,46 @@ export class GptLiveCall implements VoiceProviderCall {
 
   private emit(event: VoiceProviderEvent): void {
     if (this.ended) return;
-
-    if (this.listeners.size === 0) this.backlog.push(event);
-
-    for (const listener of this.listeners) listener(event);
+    this.deliver(event);
 
     if (event.type === 'closed') this.finish();
   }
 
-  private finish(): void {
-    this.ended = true;
-    clearTimeout(this.lostTimer);
-    // Let `session.close` leave before the link goes.
-    const link = this.currentLink;
-    setTimeout(() => link?.close(), 50);
+  private deliver(event: VoiceProviderEvent): void {
+    if (this.listeners.size === 0) this.backlog.push(event);
+
+    for (const listener of this.listeners) listener(event);
   }
 
-  private currentLink: WebSocket | undefined;
+  private finish(): void {
+    const { link } = this;
+    this.ended = true;
+    clearTimeout(this.lostTimer);
+    setTimeout(() => link.close(), closeDelayMs);
+  }
 
-  private sendOut(message: Record<string, unknown>): void {
-    if (this.currentLink?.readyState === 1)
-      this.currentLink.send(JSON.stringify(message));
+  private sendOut(message: LinkMessage): void {
+    if (this.link.readyState === WebSocket.OPEN)
+      this.link.send(JSON.stringify(message));
   }
 
   private attach(link: WebSocket): void {
-    this.currentLink = link;
-    link.on('message', (data, isBinary) => {
-      // Audio frames are dropped unread.
-      if (isBinary) return;
-      const event = eventOfFrame(data.toString());
-
-      if (event) this.emit(event);
-    });
-    link.on('close', () => {
-      if (this.currentLink === link) this.lose();
-    });
+    this.link = link;
+    link.on('message', (data, isBinary) =>
+      this.onFrame(textOfFrame(data, isBinary)),
+    );
+    link.on('close', () => this.onClose(link));
     link.on('error', () => {});
+  }
+
+  private onFrame(frame: string): void {
+    const event = eventOfFrame(frame);
+
+    if (event) this.emit(event);
+  }
+
+  private onClose(link: WebSocket): void {
+    if (this.link === link) this.lose();
   }
 
   private lose(): void {
@@ -121,12 +141,16 @@ export class GptLiveCall implements VoiceProviderCall {
 
   private rejoin(): void {
     setTimeout(() => {
-      if (this.ended) return;
-      this.options.rejoin().then(
-        (link) => this.rejoined(link),
-        () => this.rejoin(),
-      );
+      if (!this.ended) void this.joinAgain();
     }, retryMs);
+  }
+
+  private async joinAgain(): Promise<void> {
+    try {
+      this.rejoined(await this.options.rejoin());
+    } catch {
+      this.rejoin();
+    }
   }
 
   private rejoined(link: WebSocket): void {

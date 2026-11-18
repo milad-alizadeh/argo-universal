@@ -10,10 +10,9 @@ const iceGatheringLimitMs = 3000;
 function gathered(connection: RTCPeerConnection): Promise<void> {
   return new Promise((resolve) => {
     const check = (): void => {
-      if (connection.iceGatheringState !== 'complete') return;
-      connection.removeEventListener('icegatheringstatechange', check);
-      resolve();
+      if (connection.iceGatheringState === 'complete') resolve();
     };
+
     connection.addEventListener('icegatheringstatechange', check);
     setTimeout(resolve, iceGatheringLimitMs);
     check();
@@ -28,14 +27,21 @@ class BrowserMicrophone implements Microphone {
   }
 }
 
+function streamOf(microphone: Microphone): MediaStream {
+  if (!(microphone instanceof BrowserMicrophone))
+    throw new Error('Not a browser microphone.');
+
+  return microphone.stream;
+}
+
+const sdpOf = (connection: RTCPeerConnection): string =>
+  connection.localDescription?.sdp ?? '';
+
 class BrowserPeer implements VoicePeer {
   private readonly connection = new RTCPeerConnection();
 
   public async offer(microphone: Microphone): Promise<string> {
-    if (!(microphone instanceof BrowserMicrophone))
-      throw new Error('Not a browser microphone.');
-
-    this.sendUp(microphone.stream);
+    this.sendUp(streamOf(microphone));
     // The provider carries its events on this channel.
     this.connection.createDataChannel('oai-events');
     await this.connection.setLocalDescription(
@@ -43,11 +49,12 @@ class BrowserPeer implements VoicePeer {
     );
     await gathered(this.connection);
 
-    return this.connection.localDescription?.sdp ?? '';
+    return sdpOf(this.connection);
   }
 
   private sendUp(stream: MediaStream): void {
-    for (const track of stream.getTracks()) this.connection.addTrack(track, stream);
+    for (const track of stream.getTracks())
+      this.connection.addTrack(track, stream);
   }
 
   public async accept(answer: string): Promise<void> {

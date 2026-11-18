@@ -41,16 +41,28 @@ const audioOnly = (details: PermissionDetails): boolean =>
 
 const isAudio = (type: string): boolean => type === 'audio';
 
+const requestOf = (
+  permission: string,
+  details: PermissionDetails,
+): Request => ({
+  permission,
+  requestingOrigin: originOfUrl(details.requestingUrl),
+  audioOnly: audioOnly(details),
+});
+
+type Answer = (granted: boolean) => void;
+
+function decide(request: Request, windowOrigin: string, answer: Answer): void {
+  if (!allowsMicrophone(request, windowOrigin)) return answer(false);
+
+  void systemAllows().then(answer, () => answer(false));
+}
+
 export function handleMicrophone(
   appSession: Session,
   windowOrigin: string,
 ): void {
-  appSession.setPermissionRequestHandler((...[, permission, answer, details]) => {
-    const requestingOrigin = originOfUrl(details.requestingUrl);
-    const request = { permission, requestingOrigin, audioOnly: audioOnly(details) };
-
-    if (!allowsMicrophone(request, windowOrigin)) return answer(false);
-
-    void systemAllows().then(answer, () => answer(false));
-  });
+  appSession.setPermissionRequestHandler((...[, permission, answer, details]) =>
+    decide(requestOf(permission, details), windowOrigin, answer),
+  );
 }
