@@ -1,4 +1,5 @@
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { spawn, type ChildProcessByStdio } from 'node:child_process';
+import type { Readable, Writable } from 'node:stream';
 import { z } from 'zod';
 
 // What Codex's app-server says about the sign-in.
@@ -56,7 +57,7 @@ function replyOf(line: string): Reply {
  * The token goes no further than the answer.
  */
 class AppServerAsk {
-  private readonly child: ChildProcessWithoutNullStreams;
+  private readonly child: ChildProcessByStdio<Writable, Readable, null>;
   private buffer = '';
   private done = false;
   private readonly timer: ReturnType<typeof setTimeout>;
