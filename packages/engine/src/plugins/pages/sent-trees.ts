@@ -6,8 +6,12 @@ import type { DrawnFor } from './drawing-failures';
 type SentAt = { last: WireNode | undefined; keep: (root: WireNode) => void };
 
 // Two Apps showing one address with different page counts share one entry, so each may get whole trees.
-const sentKey = ({ pages: _pages, pull: _pull, ...address }: DrawAt): string =>
-  JSON.stringify(address);
+const sentKey = ({
+  pages: _pages,
+  pull: _pull,
+  retry: _retry,
+  ...address
+}: DrawAt): string => JSON.stringify(address);
 
 // The most addresses a Plugin keeps a sent tree for; the least recently drawn goes first.
 const maxAddresses = 100;

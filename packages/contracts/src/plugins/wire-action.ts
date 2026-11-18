@@ -103,7 +103,10 @@ export type PageStateChange = z.infer<typeof PageStateChange>;
 export type OperationCall = z.infer<typeof OperationCall>;
 
 // A paged list's next page: the App asks for one more page of the address it shows and appends what comes back.
-export const LoadMore = z.strictObject({ loadMore: z.literal(true) });
+export const LoadMore = z.strictObject({
+  loadMore: z.literal(true),
+  retry: z.literal(true).optional(),
+});
 
 export type LoadMore = z.infer<typeof LoadMore>;
 

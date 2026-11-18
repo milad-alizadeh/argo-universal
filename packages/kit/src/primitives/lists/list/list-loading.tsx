@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Spinner } from '#primitives/status/spinner';
 import { useListLook } from '../../../list-look-context';
 import { drawsNativeGroupedList } from './list-native-rows';
+import { ListPageFailure } from './list-page-failure';
 import type { ListProps } from './list-props';
 import { useListRefresh } from './list-refresh';
 import { useListRequest, type ListRequest } from './list-request';
@@ -22,32 +23,62 @@ function LoadingPage(): ReactElement {
 
 function loadingContent<Item>(
   props: ListProps<Item>,
-  loading: boolean,
+  request: ListRequest,
 ): Pick<ListProps<Item>, 'startContent' | 'endContent'> {
-  if (!loading)
-    return { startContent: props.startContent, endContent: props.endContent };
+  const edge = pageEdge(props.pagination, request);
 
-  return loadingAtEdge(props);
+  const { startContent, endContent } = props;
+
+  if (edge === null) return { startContent, endContent };
+
+  return props.anchor === 'end'
+    ? { startContent: joinEdge(edge, startContent), endContent }
+    : { startContent, endContent: joinEdge(endContent, edge) };
 }
 
-function loadingAtEdge<Item>(
-  props: ListProps<Item>,
-): Pick<ListProps<Item>, 'startContent' | 'endContent'> {
-  return {
-    startContent: loadingHeader(props),
-    endContent: loadingFooter(props),
-  };
+const joinEdge = (first: ReactNode, second: ReactNode): ReactNode => (
+  <>
+    {first}
+    {second}
+  </>
+);
+
+function pageEdge<Item>(
+  pagination: ListProps<Item>['pagination'],
+  request: ListRequest,
+): ReactNode {
+  if (request.loading) return <LoadingPage />;
+
+  return pagination ? failedPage(pagination, request) : null;
+}
+
+function failedPage<Item>(
+  pagination: NonNullable<ListProps<Item>['pagination']>,
+  request: ListRequest,
+): ReactNode {
+  if (pagination.failed === undefined) return null;
+
+  return (
+    <ListPageFailure
+      reason={pagination.failed}
+      retry={() => void request.run(pagination.onLoadMore)}
+    />
+  );
 }
 
 function loadMore<Item>(props: ListProps<Item>, request: ListRequest): void {
   if (props.pagination?.hasMore) void request.run(props.pagination.onLoadMore);
 }
 
+const autoPagination = <Item,>(
+  pagination: ListProps<Item>['pagination'],
+): boolean => pagination !== undefined && pagination.failed === undefined;
+
 function paginationEvents<Item>(
   props: ListProps<Item>,
   request: ListRequest,
 ): Pick<ListProps<Item>, 'onEndReached' | 'onStartReached'> {
-  if (!props.pagination)
+  if (!autoPagination(props.pagination))
     return {
       onEndReached: props.onEndReached,
       onStartReached: props.onStartReached,
@@ -92,41 +123,7 @@ export function useListLoading<Item>(props: ListProps<Item>): ListProps<Item> {
   return {
     ...props,
     refreshControl: refreshControl ?? props.refreshControl,
-    ...loadingContent(props, page.loading),
+    ...loadingContent(props, page),
     ...paginationEvents(props, page),
   };
-}
-
-function BeforeSpinner({ children }: { children: ReactNode }): ReactElement {
-  return (
-    <>
-      <LoadingPage />
-      {children}
-    </>
-  );
-}
-
-function AfterSpinner({ children }: { children: ReactNode }): ReactElement {
-  return (
-    <>
-      {children}
-      <LoadingPage />
-    </>
-  );
-}
-
-function loadingHeader<Item>(props: ListProps<Item>): ReactNode {
-  return props.anchor === 'end' ? (
-    <BeforeSpinner>{props.startContent}</BeforeSpinner>
-  ) : (
-    props.startContent
-  );
-}
-
-function loadingFooter<Item>(props: ListProps<Item>): ReactNode {
-  return props.anchor === 'end' ? (
-    props.endContent
-  ) : (
-    <AfterSpinner>{props.endContent}</AfterSpinner>
-  );
 }

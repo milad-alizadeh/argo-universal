@@ -95,6 +95,8 @@ export type PluginComponents = {
 
 export * from './components.gen';
 
+export { issueRow, issueStatusMark, type IssueCategory } from './issue-row';
+
 export type PluginWireNode = {
   [Name in WireComponentName]: {
     type: Name;

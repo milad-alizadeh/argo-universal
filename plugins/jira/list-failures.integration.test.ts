@@ -89,13 +89,20 @@ it(
     jira.jira.fail('search', rateLimited);
     await page.loadMore();
 
-    // The App keeps the rows it shows and says why the draw failed.
-    expect(page.error).toContain('Jira is limiting requests right now.');
+    expect(page.error).toBeUndefined();
+    expect(shownKeys(page)).toHaveLength(50);
+    expect(
+      page.find((node) => node.props.accessibilityLabel === 'Jira issues').props
+        .pagination,
+    ).toMatchObject({
+      failed: 'Jira is limiting requests right now. Try again in a minute.',
+      onLoadMore: { loadMore: true, retry: true },
+    });
 
     // The failed page kept no answer, so asking for it again reads Jira again.
     jira.jira.heal('search');
     await jira.test.clock.advance(rateLimitedFor);
-    await page.draw(2);
+    await page.loadMore();
 
     expect(page.error).toBeUndefined();
     expect(shownKeys(page)).toHaveLength(63);

@@ -361,10 +361,10 @@ A page opened from the Plugin's nav item has no `context.projectId`. A page that
 
 ## Paged lists
 
-A page with many rows gives its definition `list(input, cursor)`, which answers one page as `{ items, cursor }`, with `cursor: null` for the last. The Render reads the pages so far as `input.list` and hands the List `pagination={{ hasMore: list.hasMore, onLoadMore: list.loadMore }}`. Each page is kept as Argo's own Query of the address and its cursor.
+A page with many rows gives its definition `list(input, cursor)`, which answers one page as `{ items, cursor }`, with `cursor: null` for the last. The Render reads the pages so far as `input.list` and hands the List `pagination={list.pagination}`. Each page is kept as Argo's own Query of the address and its cursor.
 
 - A pull, the List's `onRefresh` or `to.set({})`, reads the first page fresh. It does not reach a named read: one that `list` or the Loader calls still answers its kept value. A list that must show the service's latest rows on a pull calls the service itself in `list`, page 1 included, and the Loader leaves the rows to it. A refused first page then comes back as an item the Render draws as the List's `empty`, as `plugins/jira/issue-pages.ts` does.
-- A later page that fails throws in `list`, which fails that draw: the App keeps the rows it shows, and the next load more asks again. A list has no row of its own for "couldn't load more" yet (#2242).
+- A later `list` call can return `{ items: [], failed: reason }` or throw. The App keeps the earlier rows and shows “Couldn't load more: <reason>” with **Try again**. The button and the harness method `page.loadMore()` both read the same cursor again.
 
 ## Page frames
 

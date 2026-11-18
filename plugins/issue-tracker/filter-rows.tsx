@@ -1,10 +1,9 @@
 import {
   Action,
   Label,
-  ListItem,
+  issueRow as kitIssueRow,
   Pill,
   type PageTo,
-  type PluginProps,
 } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import type { FilterState } from './filter-loader';
@@ -12,7 +11,7 @@ import type { Issue } from './github-issues';
 import type { Project } from './issue-client';
 import { issuePath } from './issue-paths';
 import type { SessionCounts } from './issue-session-counts';
-import { statusMark } from './issue-status-mark';
+import { issueCategory, statusMark } from './issue-status-mark';
 import { statuses } from './issue-status-view';
 import type { IssueNode } from './issue-tree';
 import { labelPills } from './label-pills';
@@ -26,41 +25,36 @@ export type RowSource = {
 
 // A keyed ListItem itself, as a List draws its children; its sub-Issues nest inside.
 export function issueRow(source: RowSource, node: IssueNode): JSX.Element {
-  return (
-    <ListItem
-      key={node.issue.number}
-      {...rowProps(source, node.issue)}
-      actions={[statusAction(source, node.issue)]}
-    >
-      {node.children.map((child) => issueRow(source, child))}
-    </ListItem>
+  return kitIssueRow(
+    {
+      ...issueFields(source, node.issue),
+      actions: [statusAction(source, node.issue)],
+      children: node.children.map((child) => issueRow(source, child)),
+    },
+    node.issue.number,
   );
 }
 
-type RowProps = Pick<
-  PluginProps['ListItem'],
-  'id' | 'leading' | 'title' | 'subtitle' | 'finished' | 'onPress' | 'meta'
->;
+type IssueFields = Parameters<typeof kitIssueRow>[0];
 
-const rowProps = (
-  { project, to, sessions }: RowSource,
-  issue: Issue,
-): RowProps => ({
-  id: String(issue.number),
-  leading: statusMark(issue, `mark-${issue.number}`),
-  title: issue.title,
-  subtitle: `#${issue.number}`,
-  finished: issue.status !== 'open',
-  onPress: to.go(issuePath(project.id, issue.number)),
-  meta: rowMeta(issue, sessions[issue.number] ?? 0),
-});
+function issueFields(source: RowSource, issue: Issue): IssueFields {
+  const { number } = issue;
 
-// What the row says about the work on the Issue and its relations, before its labels.
-const rowMeta = (issue: Issue, attached: number): JSX.Element[] => [
-  ...sessionMark(attached),
+  return {
+    id: String(number),
+    category: issueCategory(issue),
+    markKey: `mark-${number}`,
+    title: issue.title,
+    issueKey: `#${number}`,
+    onPress: source.to.go(issuePath(source.project.id, number)),
+    labels: issueLabels(issue, source.sessions[number] ?? 0),
+    pills: [...progressMark(issue), ...labelPills(issue.labels)],
+  };
+}
+
+const issueLabels = (issue: Issue, sessions: number): JSX.Element[] => [
+  ...sessionMark(sessions),
   ...blockedMark(issue),
-  ...progressMark(issue),
-  ...labelPills(issue.labels),
 ];
 
 /*
