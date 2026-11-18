@@ -1,4 +1,4 @@
-import { ProjectsBranchesInput } from '@repo/contracts';
+import { ProjectsBranchesInput, PromptQueue, type Turn } from '@repo/contracts';
 import type { PluginSessionInfo } from '@repo/contracts/plugins/argo-calls';
 import type { Database } from '@repo/db';
 import { readCurrentBranch } from '@repo/git';
@@ -8,7 +8,7 @@ import {
   readProjectPaths,
   watchProjectChanges,
 } from '../projects';
-import { readSessionRow } from '../sessions';
+import { readLatestTurn, readSessionRow } from '../sessions';
 import type { WriterActorRef } from '../storage';
 import type { createPluginRuntime } from './runtime/create-runtime';
 
@@ -30,15 +30,52 @@ export function projectPorts(
   };
 }
 
-// Only a Session's Project and branch reach a Plugin; null when there is no such Session.
+type SessionRow = NonNullable<ReturnType<typeof readSessionRow>>;
+
+type RowSources = { database: Database; writer: WriterActorRef };
+
+// A Prompt waits or the queue is paused; a queue that cannot be read counts as work too.
+function queueHasWork({ promptQueue }: SessionRow): boolean {
+  const queue = PromptQueue.safeParse(promptQueue);
+
+  return queue.success
+    ? [queue.data.items.length > 0, queue.data.pauseReason !== null].some(
+        Boolean,
+      )
+    : true;
+}
+
+// A Turn runs, or the queue has work.
+const busy = (row: SessionRow, latest?: Turn): boolean =>
+  [latest?.status === 'running', queueHasWork(row)].some(Boolean);
+
+const lastActivity = (row: SessionRow, latest?: Turn): number =>
+  Math.max(row.activityAt, latest?.endedAt ?? 0);
+
+/*
+ * How long the Session has had nothing happen, from its last Feed change or the end of its latest Turn, whichever is
+ * later; null while a Turn runs or its queue has work.
+ */
+function idleFor(sources: RowSources, row: SessionRow): number | null {
+  const latest = readLatestTurn(sources, row.id);
+
+  if (busy(row, latest)) return null;
+
+  return Math.max(Date.now() - lastActivity(row, latest), 0);
+}
+
+const sourcesOf = (options: ProjectSources): RowSources => ({
+  database: options.database,
+  writer: options.databaseWriter,
+});
+
+// A Session's Project, branch, title and idle time reach a Plugin; null when there is no such Session.
 async function pluginSession(
   options: ProjectSources,
   sessionId: string,
 ): Promise<PluginSessionInfo | null> {
-  const row = readSessionRow(
-    { database: options.database, writer: options.databaseWriter },
-    sessionId,
-  );
+  const sources = sourcesOf(options);
+  const row = readSessionRow(sources, sessionId);
 
   if (!row) return null;
 
@@ -46,6 +83,7 @@ async function pluginSession(
     projectId: row.projectId,
     branch: await checkoutBranch(row),
     title: row.title,
+    idleFor: idleFor(sources, row),
   };
 }
 

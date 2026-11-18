@@ -3,6 +3,7 @@ import type {
   PluginProjectInfo,
   PluginSettingValue,
 } from '@repo/contracts/plugins';
+import type { PluginSessionInfo } from '@repo/contracts/plugins/argo-calls';
 import type { TestAccounts } from '@repo/engine/mocks/test-accounts';
 import {
   createPluginRuntime,
@@ -12,7 +13,7 @@ import {
   type SecretStore,
 } from '@repo/engine/plugins';
 import { isSecretSetting, type ConfiguredTest } from './test-configuration';
-import type { PluginTestOptions } from './test-types';
+import type { PluginTestOptions, TestSession } from './test-types';
 
 export { configureTest, type ConfiguredTest } from './test-configuration';
 
@@ -83,8 +84,23 @@ function projectOptions(
       Object.values(options.projectPaths),
     projectPath: async (projectId) => options.projectPaths[projectId],
     projectInfo: async (): Promise<PluginProjectInfo[]> => options.projects,
-    sessionInfo: async (sessionId) => options.sessions?.[sessionId] ?? null,
+    sessionInfo: async (sessionId) => sessionOf(options, sessionId),
   };
+}
+
+// A test's Session is busy unless it says how long it has been idle.
+const withIdle = (session: TestSession): PluginSessionInfo => ({
+  ...session,
+  idleFor: session.idleFor ?? null,
+});
+
+function sessionOf(
+  options: ConfiguredTest,
+  sessionId: string,
+): PluginSessionInfo | null {
+  const session = options.sessions?.[sessionId];
+
+  return session ? withIdle(session) : null;
 }
 
 function testEnvironment(options: PluginTestOptions): NodeJS.ProcessEnv {
