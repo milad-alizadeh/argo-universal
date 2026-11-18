@@ -18,6 +18,8 @@ const cable = (last: number): ChannelAddress => ({
 
 const kept = lan(20);
 
+const tailnet: ChannelAddress = { host: `100.101.102.${7}`, port };
+
 const unreachable = 'The Server did not answer';
 
 const opened = 'channel';
@@ -48,21 +50,32 @@ const announcing = (
   vi.fn<LocateServer>(async () => addresses);
 
 describe('ChannelRoute', () => {
-  it('tries where the Server announces itself now before the address Pairing kept', async () => {
-    const now = lan(40);
-    const route = new ChannelRoute(kept, announcing(now));
-    const server = serverOn(now);
-
-    await expect(route.open(server.attempt)).resolves.toBe(opened);
-    expect(server.tried).toEqual([now]);
-  });
-
-  it('falls back to the kept address when nothing announces the Server', async () => {
-    const route = new ChannelRoute(kept, announcing());
+  it('tries the kept address first, so a phone off the network does not wait for Bonjour to time out', async () => {
+    const route = new ChannelRoute(kept, () => new Promise(() => {}));
     const server = serverOn(kept);
 
     await expect(route.open(server.attempt)).resolves.toBe(opened);
     expect(server.tried).toEqual([kept]);
+  });
+
+  it('tries the other kept addresses before Bonjour has answered, off the LAN included', async () => {
+    const route = new ChannelRoute(kept, () => new Promise(() => {}), [
+      tailnet,
+    ]);
+
+    const server = serverOn(tailnet);
+
+    await expect(route.open(server.attempt)).resolves.toBe(opened);
+    expect(server.tried).toEqual([kept, tailnet]);
+  });
+
+  it('then tries where the Server announces itself now, when none of the kept addresses answers', async () => {
+    const now = lan(40);
+    const route = new ChannelRoute(kept, announcing(now), [tailnet]);
+    const server = serverOn(now);
+
+    await expect(route.open(server.attempt)).resolves.toBe(opened);
+    expect(server.tried).toEqual([kept, tailnet, now]);
   });
 
   it('opens the next channel where the last one answered, without asking the network again', async () => {
@@ -75,7 +88,7 @@ describe('ChannelRoute', () => {
     await route.open(server.attempt);
 
     expect(locate).toHaveBeenCalledTimes(1);
-    expect(server.tried).toEqual([now, now]);
+    expect(server.tried).toEqual([kept, now, now]);
   });
 
   it('looks for the Server again when the address that answered last stops answering', async () => {
@@ -89,22 +102,11 @@ describe('ChannelRoute', () => {
     const moved = serverOn(after);
 
     await expect(route.open(moved.attempt)).resolves.toBe(opened);
-    expect(moved.tried).toEqual([before, after]);
+    expect(moved.tried).toEqual([before, kept, after]);
   });
 
-  it('tries the other addresses the invite carried after Bonjour and the kept one, off the LAN included', async () => {
-    const tailnet: ChannelAddress = { host: `100.101.102.${7}`, port };
-    const now = lan(40);
-    const route = new ChannelRoute(kept, announcing(now), [tailnet]);
-    const server = serverOn(tailnet);
-
-    await expect(route.open(server.attempt)).resolves.toBe(opened);
-    expect(server.tried).toEqual([now, kept, tailnet]);
-  });
-
-  it('still tries a link-local address last among the kept ones', async () => {
+  it('tries a kept link-local address after every other kept one', async () => {
     const wire = cable(90);
-    const tailnet: ChannelAddress = { host: `100.101.102.${7}`, port };
     const route = new ChannelRoute(kept, announcing(), [wire, tailnet]);
     const server = serverOn();
 
@@ -113,7 +115,7 @@ describe('ChannelRoute', () => {
     expect(server.tried).toEqual([kept, tailnet, wire]);
   });
 
-  it('tries a link-local address last, since it answers only while a cable joins the two', async () => {
+  it('tries a link-local address last of all, since it answers only while a cable joins the two', async () => {
     const wire = cable(90);
     const wifi = lan(172);
     const route = new ChannelRoute(kept, announcing(wire, wifi));
@@ -121,7 +123,7 @@ describe('ChannelRoute', () => {
 
     await route.open(server.attempt);
 
-    expect(server.tried).toEqual([wifi, kept, wire]);
+    expect(server.tried).toEqual([kept, wifi, wire]);
   });
 
   it('tries an address announced twice, or announced and kept, once', async () => {
@@ -143,7 +145,7 @@ describe('ChannelRoute', () => {
     });
 
     await expect(refused).rejects.toBeInstanceOf(PairingRefused);
-    expect(tried).toEqual([now]);
+    expect(tried).toEqual([kept]);
   });
 
   it('says the Server is unreachable when no address answers', async () => {
