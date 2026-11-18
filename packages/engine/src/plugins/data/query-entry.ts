@@ -2,7 +2,9 @@ import type { PluginDataState } from '@repo/contracts/plugins/argo-calls';
 import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import { runtimeError } from '../protocol/runtime';
 import { queryState, readQuery, type QueryReaders } from './query-answer';
+import { changed, shows, unreadable, waitsForDraw } from './query-changes';
 import { QueryHolders, reading } from './query-holders';
+import { QueryRest, restServices } from './query-rest';
 import { QueryTiming } from './query-timing';
 import type { QueryOwner, QueryRead, QueryServices } from './query-types';
 
@@ -15,34 +17,78 @@ export type EntryServices = QueryServices &
 export class QueryEntry {
   state: PluginDataState = { stale: false, revision: 0 };
   private readonly timing;
+  private readonly rest: QueryRest;
   private readonly holders = new QueryHolders();
   private flight: Promise<void> | undefined;
+  // Whether code outside a draw, such as a Slot's provider, read it, so a list's clock may make it due.
+  private readOutside = false;
 
   constructor(
     readonly owner: QueryOwner,
     private readonly services: EntryServices,
   ) {
     this.timing = new QueryTiming(services.clock);
+    this.rest = new QueryRest(restServices(owner, services), () => {
+      void this.refreshHeld();
+    });
   }
 
   /*
    * A Loader's read: the kept answer while it is current, or a read joined or begun. A read joined that
    * began before a write is not current when it lands, so the Loader waits for one more. A page drawn
-   * again on a clock reads again once the kept answer is as old as its interval.
+   * again on a clock reads again once the kept answer is as old as its interval. An address that already
+   * has a tree is served what was kept while the read it is due runs behind, and is marked if that read
+   * answers differently (ADR-0060); a first draw, a pull and a background pass wait for the read.
    */
-  async read({
-    holder,
-    fresh,
-    draw,
-    every,
-  }: QueryRead): Promise<PluginDataState> {
-    this.holders.hold(holder, reading);
+  async read(read: QueryRead): Promise<PluginDataState> {
+    const kept = this.serving(read);
+
+    if (read.outside) this.readOutside = true;
+
+    this.holders.hold(read.holder, reading);
+
+    if (kept) this.revalidate(read.every);
+    else await this.awaited(read);
+
+    this.holders.hold(read.holder, this.state.revision);
+
+    return this.state;
+  }
+
+  // Whether the draw is served what was kept: its address already has a tree and no one pulled it fresh.
+  private serving({ holder, fresh, every }: QueryRead): boolean {
+    return !fresh && this.holders.has(holder) && this.servable(every);
+  }
+
+  private async awaited(read: QueryRead): Promise<void> {
+    const { fresh, draw, every } = read;
+
+    this.rest.pulled(read);
 
     if (fresh || this.timing.olderThan(every)) await this.refresh(draw);
     await this.untilCurrent(draw, 2);
-    this.holders.hold(holder, this.state.revision);
+  }
 
-    return this.state;
+  /*
+   * An answer to serve while a fresh one is read: one the last read did not fail, and not a paged list's that is due
+   * or old, which only a draw can read.
+   */
+  private servable(every: number | undefined): boolean {
+    return (
+      this.state.data !== undefined &&
+      this.state.error === undefined &&
+      !waitsForDraw(this.owner, this.dueFor(every))
+    );
+  }
+
+  // Starts, behind the draw that was served, the read the entry is due or old enough for.
+  private revalidate(every: number | undefined): void {
+    if (this.dueFor(every)) void this.refresh();
+  }
+
+  // Due from a write, or as old as the page's `every`.
+  private dueFor(every: number | undefined): boolean {
+    return this.timing.overdue || this.timing.olderThan(every);
   }
 
   private async untilCurrent(
@@ -55,16 +101,37 @@ export class QueryEntry {
     return this.untilCurrent(draw, tries - 1);
   }
 
-  // Read since the last write, not past its due time, and read without failing.
+  // Read since the last write, not past its due time, and read without failing; a failed one resting counts as read.
   private current(): boolean {
-    return !this.timing.overdue && this.state.error === undefined;
+    return (
+      this.rest.resting ||
+      (!this.timing.overdue && this.state.error === undefined)
+    );
   }
 
+  /*
+   * A failed Query rests, exponentially longer for each failure in a row, and serves its last good answer with the
+   * failure until it is over: a rate-limited read is not made again at once, which would only double the load (#2197).
+   */
   private refresh(draw?: number): Promise<void> {
-    return this.flight ?? this.begin(draw);
+    return this.flight ?? this.unrested(draw);
+  }
+
+  private unrested(draw: number | undefined): Promise<void> {
+    if (unreadable(this.owner, draw)) return this.redraw();
+
+    return this.rest.resting ? Promise.resolve() : this.begin(draw);
+  }
+
+  // A paged list due outside a draw marks the pages that hold it, which read it again as they draw (ADR-0060).
+  private redraw(): Promise<void> {
+    this.services.marked(this.owner.pluginId, this.holders.before(reading));
+
+    return Promise.resolve();
   }
 
   private begin(draw: number | undefined): Promise<void> {
+    this.rest.began();
     this.timing.started();
     this.publish({ ...this.state, stale: this.state.data !== undefined });
     this.flight = this.execute(draw)
@@ -76,24 +143,25 @@ export class QueryEntry {
 
   private async execute(draw: number | undefined): Promise<void> {
     const reply = await readQuery(this.owner, this.services, draw);
-    const before = this.state.data;
+    const before = this.state;
 
     this.publish(queryState(this.state, reply));
+    this.rest.read(reply.ok, this.holders.any, this.timing.overtaken);
 
-    if (changed(before, this.state.data)) this.markHolders();
+    if (shows(before, this.state)) this.markHolders();
   }
 
-  // The addresses that drew the answer before this one are marked, so the Apps showing them draw again.
+  // Announce the changed answer even without page holders, so visible Slots ask again.
   private markHolders(): void {
     const addresses = this.holders.before(this.state.revision);
 
-    if (addresses.length > 0)
-      this.services.marked(this.owner.pluginId, addresses);
+    this.services.marked(this.owner.pluginId, addresses);
   }
 
   private failed(cause: unknown): void {
     const error = runtimeError(cause);
 
+    this.rest.read(false, this.holders.any, this.timing.overtaken);
     this.services.log(`Plugin ${this.owner.pluginId}: Query failed: ${error}`);
     this.publish({ ...this.state, error, stale: false });
   }
@@ -114,6 +182,7 @@ export class QueryEntry {
 
     this.timing.started();
     this.publish(queryState(this.state, { ok: true, value }));
+    this.rest.read(true, this.holders.any);
     this.timing.finished();
 
     if (changed(before, this.state.data)) this.markHolders();
@@ -121,7 +190,26 @@ export class QueryEntry {
 
   // A write makes the entry due: a read in flight lands still due, and the next Loader read waits for a fresh answer.
   written(): void {
+    this.rest.stop();
     this.timing.makeDue();
+  }
+
+  /*
+   * A write has made the entry due; one a page holds is read again now, so the addresses whose answer
+   * differs are marked and the rest hear nothing. One nobody holds waits to be read.
+   */
+  async refreshHeld(): Promise<void> {
+    if (this.holders.any) await this.untilCurrent(undefined, 2);
+  }
+
+  // The addresses whose draws hold the entry.
+  get heldKeys(): IteratorObject<string> {
+    return this.holders.keys;
+  }
+
+  // A list's clock makes due an entry a Slot read once it is as old as the list's interval.
+  dueWhenOlder(ms: number): void {
+    if (this.readOutside && this.timing.olderThan(ms)) this.timing.makeDue();
   }
 
   private publish(state: PluginDataState): void {
@@ -129,13 +217,7 @@ export class QueryEntry {
   }
 
   close(): void {
+    this.rest.stop();
     this.holders.clear();
   }
 }
-
-// A first answer changes nothing on screen; after that, a different answer does.
-const changed = (
-  before: PluginDataState['data'],
-  after: PluginDataState['data'],
-): boolean =>
-  before !== undefined && JSON.stringify(before) !== JSON.stringify(after);

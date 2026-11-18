@@ -12,7 +12,7 @@ export type QueryOwner = {
 
 // What Queries need of the Server: the one call that performs a described Query, its clock and its log.
 export type QueryServices = {
-  services: Pick<PluginServices, 'handle' | 'projectInfo'>;
+  services: Pick<PluginServices, 'handle' | 'projectIds' | 'limitedUntil'>;
   clock: PluginClock;
   log: (line: string) => void;
   during: <T>(call: () => Promise<T>) => Promise<T>;
@@ -28,4 +28,21 @@ export type QueryRead = {
   // The draw reading, which a paged list's page is read for; code outside a draw has none.
   draw?: number;
   every?: number;
+  // Read by code outside a draw, such as a Slot's provider, which a list's clock may age.
+  outside?: boolean;
+  // Asked for by someone, as an Operation run's read is, so a failed Query's rest does not hold it back (#2197).
+  asked?: boolean;
+};
+
+// The draw a Loader's read is for: its id, and the Page address holding the read, or none for a background pass.
+export type DrawnFor = { draw: number; holder?: PageAddress };
+
+/*
+ * Where a Loader's read came from: the Project its Query is for, and the draw or the Operation run, which someone
+ * asked for. The runtime works it out from what the call runs for, so the Query modules need no draws.
+ */
+export type QueryOrigin = {
+  projectId?: string;
+  drawn?: DrawnFor;
+  forRun?: true;
 };

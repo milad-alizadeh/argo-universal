@@ -5,8 +5,8 @@ let bundled: Promise<string> | null = null;
 
 /*
  * The kit (the JSX runtime and the kit components) and the Plugin API run inside each Plugin's
- * context, so no object from the worker's realm reaches Plugin code. They are bundled once per
- * worker, from source.
+ * context, so no object from the worker's realm reaches Plugin code. They are bundled once in the
+ * host, from source, and each worker is handed the result.
  */
 const options = {
   entryPoints: [

@@ -35,6 +35,13 @@ export { useOpenPluginPage, usePluginOpener } from './hooks/use-plugin-opener';
 export { usePluginPage } from './hooks/use-plugin-page';
 
 export {
+  usePrefetchNavPages,
+  usePrefetchRoutePage,
+} from './hooks/use-prefetch-pages';
+
+export { routeOpening } from './utils/plugin-page-route';
+
+export {
   pluginAt,
   pluginPath,
   type PluginSection,
@@ -59,7 +66,9 @@ export {
 
 export { useStaleMarks } from './hooks/use-stale-marks';
 
-export { useOperationRunner } from './hooks/use-tree-calls';
+export { useFireOperation } from './hooks/use-tree-calls';
+
+export { sayOperationFailed } from './utils/say-operation-failed';
 
 export { ConnectedReplaceableSlots } from './stores/connected-replaceable-slot';
 

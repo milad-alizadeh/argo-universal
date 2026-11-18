@@ -4,7 +4,7 @@ export const fullPercent = 100;
 
 export const smartZonePercent = 20;
 
-export const maximumPlanStepsHeight = 264;
+export const maximumTodoStepsHeight = 264;
 
 export interface ComposerStatusProps {
   plan?: PlanEntry[];

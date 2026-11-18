@@ -29,7 +29,7 @@ it('offers Check again on the Callout of an Issue it cannot read, and reads it a
   expect(page.findText(checkAgain)).toBeDefined();
   await page.press(checkAgain);
 
-  expect(issueReads(github)).toBeGreaterThan(before);
+  await expect.poll(() => issueReads(github)).toBeGreaterThan(before);
 }, 20_000);
 
 it('does not show the filter’s raw search as the Screen’s caption', async () => {

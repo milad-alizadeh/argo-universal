@@ -15,9 +15,14 @@ export interface ChangeRowProps {
   // Copy the Change's link, and take it off the Session; the menu leaves out an item with no handler.
   onCopyLink?: () => void;
   onDetach?: () => void;
+  // Opens the Checkout's Changes against main from the diff total; without it the total is plain text.
+  onOpenFiles?: () => void;
   // Ticks or unticks an automation the Change offers; the menu leaves the automation items out without it.
   onSetAutomation?: SessionPullRequest['onSetAutomation'];
 }
+
+// The total opens the Checkout's own Changes, never the pull request's files (ADR-0052), so it says so.
+export const checkoutChangesLabel = "Show the Checkout's Changes against main";
 
 const rowClassName = 'flex-row items-start gap-2 px-1 py-2';
 
@@ -34,12 +39,23 @@ export function ChangeRow(props: ChangeRowProps): ReactElement {
       <View className={rowClassName}>
         {stageCell(props.change)}
         <View className="min-w-0 flex-1 gap-0.5">
-          <ChangeTitle {...props} />
+          <ChangeHeading {...props} />
           <ChangeMeta {...props} />
         </View>
-        <ChangeMenu {...props} />
       </View>
     </ChangeContextMenu>
+  );
+}
+
+// The title and the menu on one line; the meta below spans both, so its checks sit under the menu.
+function ChangeHeading(props: ChangeRowProps): ReactElement {
+  return (
+    <View className="flex-row items-start gap-2">
+      <View className="min-w-0 flex-1">
+        <ChangeTitle {...props} />
+      </View>
+      <ChangeMenu {...props} />
+    </View>
   );
 }
 
@@ -93,14 +109,44 @@ function trailingPart(
   return change.checks && checksPart(change.checks, onOpen);
 }
 
-// The number and the diff total, with the checks at the trailing edge; the checks list each check on the web, and on a phone open the Change.
-function ChangeMeta({ change, onOpen }: ChangeRowProps): ReactElement {
+// The diff total on the Checkout's own Change opens the Checkout's Changes; a pointer over it underlines it as the title does.
+const pressableTotal = (
+  total: ReactElement,
+  onOpenFiles: () => void,
+): ReactElement => (
+  <Pressable
+    role="button"
+    accessibilityLabel={checkoutChangesLabel}
+    onPress={onOpenFiles}
+    className="web:hover:underline"
+  >
+    {total}
+  </Pressable>
+);
+
+function DiffTotalPart({
+  change,
+  onOpenFiles,
+}: Pick<ChangeRowProps, 'change' | 'onOpenFiles'>): ReactElement | undefined {
+  if (!change.summary) return undefined;
+
+  const total = <ChangeDiffTotal {...change.summary} icon />;
+
+  return onOpenFiles ? pressableTotal(total, onOpenFiles) : total;
+}
+
+// The number and the diff total, with the checks at the trailing edge, under the menu; the checks list each check on the web, and on a phone open the Change.
+function ChangeMeta({
+  change,
+  onOpen,
+  onOpenFiles,
+}: ChangeRowProps): ReactElement {
   return (
     <View className="min-h-6 flex-row flex-wrap items-center gap-2">
       <Text role="secondary" tone="muted">
         #{change.number}
       </Text>
-      {change.summary && <ChangeDiffTotal {...change.summary} icon />}
+      <DiffTotalPart change={change} onOpenFiles={onOpenFiles} />
       {trailingPart(change, onOpen)}
     </View>
   );

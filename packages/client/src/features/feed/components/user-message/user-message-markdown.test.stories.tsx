@@ -88,10 +88,10 @@ function rendersMarkdown(agent: MockAgent, width: number): Story {
       await settleLayout(width);
       const code = canvas.getByTestId('code-text');
       await expect(code).toHaveTextContent(fence.text);
-      await expect(isUncovered(code)).toBe(false);
-      await userEvent.click(
-        await canvas.findByRole('button', { name: 'Show more' }),
-      );
+      // The clamp lands once the bubble has measured itself, with Show more; until then the block can still be uncovered.
+      const showMore = await canvas.findByRole('button', { name: 'Show more' });
+      await waitFor(() => expect(isUncovered(code)).toBe(false));
+      await userEvent.click(showMore);
 
       for (const { text } of drawn)
         await showsWhenExpanded(canvas.getByText(text, { exact: true }));

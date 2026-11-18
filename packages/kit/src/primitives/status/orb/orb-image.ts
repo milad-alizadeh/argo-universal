@@ -9,7 +9,8 @@ import {
 import type { SharedValue } from 'react-native-reanimated';
 import { makeDotBuffer } from './engine/core';
 import type { Dot, DotBuffer } from './engine/types';
-import { inkLevel, minAlpha } from './orb-ink';
+import { defaultRMin, inkLevel, minAlpha } from './orb-ink';
+import { makeMorph, type OrbMorph } from './orb-morph';
 
 // Red, green and blue come first in a colour, then alpha.
 const alphaChannel = 3;
@@ -21,6 +22,10 @@ export interface OrbPen {
   // Made here, not captured: objects a worklet captures are frozen, so they could not be written.
   color: Float32Array;
   dots: DotBuffer;
+  // How the dots are inked, set with each frame's dots.
+  ink: OrbInk;
+  // Which state the orb shows, and the one it is leaving.
+  morph: OrbMorph;
   size: number;
   density: number;
 }
@@ -31,6 +36,14 @@ export interface OrbInk {
   rMin: number;
 }
 
+function makePaint(): SkPaint {
+  const paint = Skia.Paint();
+
+  paint.setAntiAlias(true);
+
+  return paint;
+}
+
 // A CPU surface: an orb is small, and a GPU one would take a graphics context per orb on web.
 function makePen(size: number, density: number): OrbPen {
   const side = Math.ceil(size * density);
@@ -38,15 +51,13 @@ function makePen(size: number, density: number): OrbPen {
 
   if (!surface) throw new Error('Could not make the orb surface');
 
-  const paint = Skia.Paint();
-
-  paint.setAntiAlias(true);
-
   return {
     surface,
-    paint,
+    paint: makePaint(),
     color: new Float32Array(alphaChannel + 1),
     dots: makeDotBuffer(),
+    ink: { dark: false, rMin: defaultRMin },
+    morph: makeMorph(),
     size,
     density,
   };
@@ -94,13 +105,13 @@ function paintDot(pen: OrbPen, dot: Dot, ink: OrbInk): void {
     .drawCircle(dot.x, dot.y, Math.max(ink.rMin, dot.r), paint);
 }
 
-function paintDots(pen: OrbPen, ink: OrbInk): void {
+function paintDots(pen: OrbPen): void {
   const { dots, count } = pen.dots;
 
   for (let i = 0; i < count; i++) {
     const dot = dots[i];
 
-    if (dot) paintDot(pen, dot, ink);
+    if (dot) paintDot(pen, dot, pen.ink);
   }
 }
 
@@ -116,18 +127,14 @@ function reusable(previous: SkImage | null, pen: OrbPen): SkImage | undefined {
 }
 
 // Draws the pen's dots into `previous` when it fits, so a frame makes no new image.
-export function drawImage(
-  pen: OrbPen,
-  ink: OrbInk,
-  previous: SkImage | null,
-): SkImage {
+export function drawImage(pen: OrbPen, previous: SkImage | null): SkImage {
   const { surface, color, density } = pen;
   const canvas = surface.getCanvas();
 
   canvas.clear(color.fill(0));
   canvas.save();
   canvas.scale(density, density);
-  paintDots(pen, ink);
+  paintDots(pen);
   canvas.restore();
   surface.flush();
 

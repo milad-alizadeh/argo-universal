@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { pluginSectionId } from '../../../lib/product/navigation/sections';
 import type { PluginSection } from '../hooks/use-plugin-sections';
 import {
+  navRootOpening,
   pluginPagePath,
   pluginPageRoute,
+  routeOpening,
   segmentsOf,
 } from './plugin-page-route';
 
@@ -87,5 +89,21 @@ describe('pluginPagePath', () => {
 
   it('names a nav item with a root path `/`', () => {
     expect(pluginPagePath(['example', 'example'])).toBe('/');
+  });
+});
+
+describe('routeOpening', () => {
+  it('names the page a route draws without the Plugin list', () => {
+    expect(
+      routeOpening(['tracker', 'issues', 'issues', '42'], {
+        projectId: 'argo',
+      }),
+    ).toEqual({ pluginId: 'tracker', path: '/issues/42', projectId: 'argo' });
+  });
+
+  it('is the page a nav item opens at, so a prefetch of the item is the draw its visit finds', () => {
+    expect(navRootOpening(nav('tracker', 'issues', '/issues'))).toEqual(
+      routeOpening(['tracker', 'issues', 'issues']),
+    );
   });
 });

@@ -125,9 +125,9 @@ it.each<[string, CallOrigin, ReturnType<typeof reachOf>]>([
     { projectId: 'drawn', serverDevice: true, drawn },
   ],
   [
-    'a waiting run reaches its Project and Server Device',
+    'a waiting run reaches its Project and Server Device, as a run someone asked for',
     { kind: 'operation', operation: 2 },
-    { projectId: 'ran', serverDevice: true },
+    { projectId: 'ran', serverDevice: true, forRun: true },
   ],
   [
     'an answered draw reaches nothing',

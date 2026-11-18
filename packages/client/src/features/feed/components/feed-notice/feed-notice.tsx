@@ -1,7 +1,8 @@
-import type {
-  CompactionUpdate,
-  Notice,
-  UnsupportedContent,
+import {
+  type CompactionUpdate,
+  type Notice,
+  runningCompactionStatus,
+  type UnsupportedContent,
 } from '@repo/contracts';
 import type * as React from 'react';
 import {
@@ -12,10 +13,10 @@ import {
 
 const compactionNotices = new Map<string, NoticeMessageProps>([
   [
-    'in_progress',
+    runningCompactionStatus,
     {
       severity: 'info',
-      title: 'Compacting context',
+      title: 'Compacting',
       icon: 'compaction',
       live: true,
     },

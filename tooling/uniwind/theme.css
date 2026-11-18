@@ -420,6 +420,8 @@
       /* 7.8:1, matching dark's 7.6:1, so secondary text reads the same strength
          in both themes. */
       --color-muted-foreground: var(--color-neutral-600);
+      /* An empty field's hint: well short of the value's ink, which neutral-600 is not on white. */
+      --color-placeholder: var(--color-neutral-400);
       /* A step quieter than muted-foreground: a grouped row's disclosure chevron,
          a diff's line numbers. Only ever marks that repeat an adjacent label. */
       --color-tertiary: var(--color-neutral-500);
@@ -600,6 +602,7 @@
       --color-muted-hover: var(--color-neutral-700);
       --color-muted-pressed: var(--color-neutral-600);
       --color-muted-foreground: var(--color-neutral-400);
+      --color-placeholder: var(--color-neutral-400);
       /* iOS's tertiary label on a dark card, a step up so it clears 3:1. */
       --color-tertiary: var(--color-neutral-500);
       --color-danger: var(--color-red-400);

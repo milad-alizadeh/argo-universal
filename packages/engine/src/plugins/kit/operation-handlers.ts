@@ -11,7 +11,10 @@ export type OperationSend = (call: PluginOperationCall) => Promise<void>;
 
 // How an invocation is answered: its handler runs `during` the invocation, and `send` answers it.
 export type OperationAnswering = {
-  during: <T>(id: number, run: () => Promise<T>) => Promise<T>;
+  during: <T>(
+    operation: Pick<OperationEvent, 'id' | 'tier'>,
+    run: () => Promise<T>,
+  ) => Promise<T>;
   send: OperationSend;
 };
 
@@ -45,7 +48,7 @@ async function answer(
   event: OperationEvent,
 ): Promise<void> {
   try {
-    const result = await during(event.id, () => resultOf(handler, event));
+    const result = await during(event, () => resultOf(handler, event));
 
     await send({ action: 'result', id: event.id, result });
   } catch (error) {

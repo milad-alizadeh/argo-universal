@@ -1,4 +1,4 @@
-import type { OpenPage } from '@argo/plugin-kit/testing';
+import type { WireNode } from '@argo/plugin-kit/testing';
 import { expect, it, vi } from 'vitest';
 import { fieldKeys } from './issue-keys';
 import {
@@ -14,13 +14,6 @@ import { statuses, transitions } from './mocks/jira-workflow';
 const timeoutMs = 20_000;
 
 const { todo, doing, review, done } = statuses;
-
-// The tone of the dot the issue's status row shows.
-function statusDot(page: OpenPage): string {
-  const { dot } = page.find(keyed(fieldKeys.status)).props;
-
-  return typeof dot === 'string' ? dot : '';
-}
 
 const moveTo = (id: string): ReturnType<typeof keyed> => keyed(`move-${id}`);
 
@@ -60,6 +53,31 @@ it(
 );
 
 it(
+  'paints the status dot in the tone of the status it leads to while Jira answers',
+  async () => {
+    const jira = await listed();
+    const page = await jira.list.press(argoThree);
+
+    const dot = (): WireNode['props'][string] | undefined =>
+      page.find(keyed(fieldKeys.status)).props.dot;
+
+    expect(dot()).toBe('info');
+
+    const release = jira.jira.hold('transition');
+    const moving = page.press(moveTo(transitions.finish.id));
+
+    await vi.waitFor(() =>
+      expect(jira.jira.calls('transition')).toHaveLength(1),
+    );
+    // Pending: Done's category, not In Progress's, before Jira answers.
+    expect(dot()).toBe('done');
+    release();
+    await moving;
+  },
+  timeoutMs,
+);
+
+it(
   'sends Jira the transition’s own id, not the id of the status it leads to',
   async () => {
     const jira = await listed();
@@ -73,31 +91,6 @@ it(
       transition: { id: transitions.finish.id },
     });
     expect(fixtureIssue(jira, 'ARGO-3').status.name).toBe(done.name);
-  },
-  timeoutMs,
-);
-
-it(
-  'colours the status’s dot by where it is going while Jira answers',
-  async () => {
-    const jira = await listed();
-    const page = await jira.list.press(argoThree);
-    const dot = (): string => statusDot(page);
-
-    expect(dot()).toBe('info');
-
-    const release = jira.jira.hold('transition');
-    const moving = page.press(moveTo(transitions.finish.id));
-
-    await vi.waitFor(() =>
-      expect(jira.jira.calls('transition')).toHaveLength(1),
-    );
-    // Pending: Done's dot shows before Jira answers.
-    expect(dot()).toBe('done');
-    release();
-    await moving;
-
-    expect(dot()).toBe('done');
   },
   timeoutMs,
 );

@@ -50,7 +50,7 @@ const focusProps = (
 });
 
 const base =
-  'min-w-0 flex-1 border-0 bg-transparent p-0 text-foreground type-body native:placeholder:text-muted-foreground/50 web:outline-none web:placeholder:text-muted-foreground';
+  'min-w-0 flex-1 border-0 bg-transparent p-0 text-foreground type-body native:placeholder:text-muted-foreground/50 web:outline-none web:placeholder:text-placeholder';
 
 const disabledClass = 'opacity-50 web:cursor-not-allowed';
 

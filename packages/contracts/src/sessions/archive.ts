@@ -11,7 +11,9 @@ export const SessionArchiveInput = z.strictObject({
 
 export type SessionArchiveInput = z.infer<typeof SessionArchiveInput>;
 
-export const SessionArchiveOutput = z.strictObject({});
+export const SessionArchiveOutput = z.strictObject({
+  scheduled: z.literal(true).optional(),
+});
 
 export type SessionArchiveOutput = z.infer<typeof SessionArchiveOutput>;
 

@@ -101,8 +101,8 @@ export class CallScope {
 // What a call may reach on the Server: a Project, and whether its App is the Server Device.
 type Reach = { projectId?: string; serverDevice: boolean };
 
-// A reach that also holds the draw the call is for.
-export type DrawReach<Draw> = Reach & { drawn?: Draw };
+// A reach that also holds the draw the call is for, or says it is for an Operation run.
+export type DrawReach<Draw> = Reach & { drawn?: Draw; forRun?: true };
 
 // The draws and Operation runs still waiting on the calling worker generation, by id.
 export type WaitingCalls<Draw extends Reach> = {
@@ -154,5 +154,5 @@ const reachOfDraw = <Draw extends Reach>(
 
 const reachOfRun = (run: Reach | undefined): DrawReach<never> =>
   run
-    ? { projectId: run.projectId, serverDevice: run.serverDevice }
+    ? { projectId: run.projectId, serverDevice: run.serverDevice, forRun: true }
     : reachesNothing;

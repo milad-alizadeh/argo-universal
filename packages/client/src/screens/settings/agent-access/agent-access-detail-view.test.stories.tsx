@@ -5,13 +5,19 @@ import { AgentAccessDetailView } from './agent-access-detail-view';
 
 const installLabel = 'Add Argo to your Agents';
 
+const accessSwitch = { name: 'Agent access to Argo' };
+
+const todoListSwitch = { name: 'Todo list' };
+
 const meta = {
   title: 'Tests/Screens/Settings/AgentAccess',
   component: AgentAccessDetailView,
   parameters: { screenPreview: true },
   args: {
     access: { status: 'loaded', enabled: true },
+    todoList: true,
     onEnabledChange: fn(),
+    onTodoListChange: fn(),
     onInstall: fn(),
     onRetry: fn(),
   },
@@ -25,12 +31,8 @@ type Story = StoryObj<typeof meta>;
 export const ChangesAccessAndInstallsOnlyWhenPressed: Story = {
   play: async ({ canvas, args, userEvent }) => {
     await expect(args.onInstall).not.toHaveBeenCalled();
-    await expect(
-      canvas.getByRole('switch', { name: 'Agent access to Argo' }),
-    ).toBeChecked();
-    await userEvent.click(
-      canvas.getByRole('switch', { name: 'Agent access to Argo' }),
-    );
+    await expect(canvas.getByRole('switch', accessSwitch)).toBeChecked();
+    await userEvent.click(canvas.getByRole('switch', accessSwitch));
     await expect(args.onEnabledChange).toHaveBeenCalledWith(false);
     await expect(args.onInstall).not.toHaveBeenCalled();
     await userEvent.click(canvas.getByRole('button', { name: installLabel }));
@@ -41,10 +43,26 @@ export const ChangesAccessAndInstallsOnlyWhenPressed: Story = {
 export const StartsWithoutAccess: Story = {
   args: { access: { status: 'loaded', enabled: false } },
   play: async ({ canvas, args, userEvent }) => {
-    await expect(canvas.getByRole('switch')).not.toBeChecked();
-    await userEvent.click(canvas.getByRole('switch'));
+    await expect(canvas.getByRole('switch', accessSwitch)).not.toBeChecked();
+    await userEvent.click(canvas.getByRole('switch', accessSwitch));
     await expect(args.onEnabledChange).toHaveBeenCalledWith(true);
     await expect(args.onInstall).not.toHaveBeenCalled();
+  },
+};
+
+export const TurnsTheTodoListOff: Story = {
+  play: async ({ canvas, args, userEvent }) => {
+    await expect(canvas.getByRole('switch', todoListSwitch)).toBeChecked();
+    await userEvent.click(canvas.getByRole('switch', todoListSwitch));
+    await expect(args.onTodoListChange).toHaveBeenCalledWith(false);
+    await expect(args.onEnabledChange).not.toHaveBeenCalled();
+  },
+};
+
+export const TodoListWaitsForTheServer: Story = {
+  args: { todoList: undefined },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('switch', todoListSwitch)).toBeDisabled();
   },
 };
 
@@ -63,7 +81,7 @@ export const WaitsForAnInstallation: Story = {
 export const DisconnectedControlsStayInactive: Story = {
   args: { access: { status: 'disconnected' } },
   play: async ({ canvas, args }) => {
-    await expect(canvas.getByRole('switch')).toBeDisabled();
+    await expect(canvas.getByRole('switch', accessSwitch)).toBeDisabled();
     await expect(
       canvas.getByRole('button', { name: installLabel }),
     ).toBeDisabled();
@@ -75,7 +93,7 @@ export const DisconnectedControlsStayInactive: Story = {
 export const RetriesLoading: Story = {
   args: { access: { status: 'error' } },
   play: async ({ canvas, args, userEvent }) => {
-    await expect(canvas.getByRole('switch')).toBeDisabled();
+    await expect(canvas.getByRole('switch', accessSwitch)).toBeDisabled();
     await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
     await expect(args.onRetry).toHaveBeenCalledOnce();
     await expect(args.onInstall).not.toHaveBeenCalled();

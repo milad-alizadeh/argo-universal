@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 import {
   attached,
   automationOf,
+  graphqlOrder,
   mergeOf,
   pullOf12,
   refresh,
@@ -12,6 +13,8 @@ import {
 import { openRepository } from './github-fixture-automation';
 import { restart } from './journey-fixture';
 import { openChanges } from './journey-watch-fixture';
+
+const pullRequestId = 'PR_owner/repository#12';
 
 it(
   'offers Auto-merge, Auto-fix and Auto-archive, all off, on an open pull request',
@@ -37,7 +40,7 @@ it(
     expect(run.github.autoMergeCalls()).toEqual([
       {
         kind: 'enable',
-        pullRequestId: 'PR_owner/repository#12',
+        pullRequestId,
         mergeMethod: 'SQUASH',
       },
     ]);
@@ -130,6 +133,48 @@ it(
       { pullRequest: { number: 12 }, automation: { merge: { on: false } } },
     ]);
     await changes.close();
+  },
+  slow,
+);
+
+it(
+  'asks GitHub again after turning auto-merge on or off, so the Change shows what GitHub now says',
+  async () => {
+    const run = await attached();
+
+    for (const on of [true, false]) {
+      await tap(run, { kind: 'merge', on });
+
+      const order = graphqlOrder(run);
+
+      expect(order.at(-1)).toBe('read');
+      expect(order.at(-2)).toBe('write');
+    }
+  },
+  slow,
+);
+
+it(
+  'merges a pull request GitHub could merge now, with the same method, when GitHub will not queue auto-merge on it',
+  async () => {
+    const run = await attached();
+
+    pullOf12(run).mergeable_state = 'clean';
+    await tap(run, { kind: 'merge', on: true });
+
+    expect(run.github.autoMergeCalls()).toEqual([
+      {
+        kind: 'enable',
+        pullRequestId,
+        mergeMethod: 'SQUASH',
+      },
+      {
+        kind: 'merge',
+        pullRequestId,
+        mergeMethod: 'SQUASH',
+      },
+    ]);
+    expect(pullOf12(run).merged).toBe(true);
   },
   slow,
 );

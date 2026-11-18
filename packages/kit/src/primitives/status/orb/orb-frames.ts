@@ -59,6 +59,25 @@ function useHeldFrame(frames: Frames, running: boolean): void {
   );
 }
 
+type ImageSlot = SharedValue<SkImage | null>;
+
+function useFreedImage(image: ImageSlot): void {
+  useEffect(() => (): void => scheduleOnUI(freeImage, image), [image]);
+}
+
+// The orb's own place for its image, unless something outside the orb shows it and gave one.
+function useImageSlot(slot?: ImageSlot): ImageSlot {
+  const own = useSharedValue<SkImage | null>(null);
+
+  return slot ?? own;
+}
+
+function useFrames(frame: OrbFrame, image: ImageSlot): Frames {
+  const elapsed = useSharedValue(0);
+
+  return useMemo(() => ({ image, elapsed, frame }), [elapsed, frame, image]);
+}
+
 /*
  * Draws on the UI thread, so a frame costs no React render and no round trip through the JS thread.
  * The image is freed there too, when the orb unmounts.
@@ -66,18 +85,13 @@ function useHeldFrame(frames: Frames, running: boolean): void {
 export function useOrbFrames(
   frame: OrbFrame,
   running: boolean,
-): SharedValue<SkImage | null> {
-  const image = useSharedValue<SkImage | null>(null);
-  const elapsed = useSharedValue(0);
-
-  const frames = useMemo(
-    () => ({ image, elapsed, frame }),
-    [elapsed, frame, image],
-  );
+  slot?: ImageSlot,
+): ImageSlot {
+  const frames = useFrames(frame, useImageSlot(slot));
 
   useTicker(frames, running);
   useHeldFrame(frames, running);
-  useEffect(() => (): void => scheduleOnUI(freeImage, image), [image]);
+  useFreedImage(frames.image);
 
-  return image;
+  return frames.image;
 }

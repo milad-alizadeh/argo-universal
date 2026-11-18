@@ -50,7 +50,13 @@ const drawsOrb = (group: FeedGroup): boolean =>
 function runningOrb(group: FeedGroup): React.JSX.Element | undefined {
   if (!drawsOrb(group)) return undefined;
 
-  return <Orb size="sm" state={toolCallOrb(liveToolCall(group)?.toolCall)} />;
+  return (
+    <Orb
+      size="sm"
+      state={toolCallOrb(liveToolCall(group)?.toolCall)}
+      continues
+    />
+  );
 }
 
 function groupSummaryProps(group: FeedGroup): GroupDisclosureProps {

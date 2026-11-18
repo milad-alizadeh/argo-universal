@@ -34,7 +34,7 @@ Its `tsconfig.json` extends the kit's settings, and its `tsconfig.test.json` the
 
 Plugin code runs without Node, so it is checked without Node's types; only `*.test.ts` files see them.
 
-`plugin.json` stays the manifest. Its `main` names the entry, which can be `.ts` or `.tsx`. The entry exports `register`, which receives the Plugin API:
+`plugin.json` stays the manifest. Its `main` names the entry, which can be `.ts` or `.tsx`. Its `icon` gives SF and Material names, which every Plugin needs, and `svg` may add an SVG file of the Plugin's own: the rail and the drawer draw it in one colour, every `fill` and `stroke` taking Argo's tint, and the names stay the fallback for native menus (ADR-0058). `argo plugin validate` refuses a file over 32 KB, a gradient or anything that is not SVG. The entry exports `register`, which receives the Plugin API:
 
 ```tsx
 import { Text, type Argo } from '@argo/plugin-kit';
@@ -273,7 +273,7 @@ A test file runs in Node, where `@argo/plugin-kit` is types only: a test cannot 
 | `settings` | Provides a Map with the manifest defaults. Changes reach `argo.settings.get`. |
 | `storage.execute(queries)` | Reads or seeds the isolated Plugin SQLite database through the production storage API. |
 | `session` | Provides test Session, Project, and Agent identifiers. |
-| `sessions` option | What `argo.sessions.get` answers, by Session id. |
+| `sessions` option | What `argo.sessions.get` answers, by Session id; a Session without `idleFor` reads as busy (`null`). |
 | `emit(name, event)` | Checks an event and raises it through the production Hook chain. |
 
 A text matches a node's label, title, subtitle, description, text, text content or accessible label, or the supporting text beside it: a caption, footer, error, message, detail or summary.
@@ -414,9 +414,9 @@ export function register(argo: Argo): void {
 
 An item is `{ icon?, text, tone?, tooltip?, action? }`: `text` is at most 40 characters, `tone` is a kit tone, and `action.path` opens one of the Plugin's own pages. Anything else fails the Slot's schema.
 A Session id left out of the answer has no items. One Plugin sends at most 8 items for one row; more fails the schema.
-The row context carries ids only (ADR-0030). Read a Session's `branch` and `projectId` with `argo.sessions.get(sessionId)`, which needs the `{ "kind": "sessions:read" }` Capability and answers `null` for an unknown Session. `argo.sessions.archive(sessionId)` archives a Session as the App's archive does (the branch is kept, the worktree removed) and needs the `{ "kind": "sessions:archive" }` Capability. It has no confirm tier: the person's earlier choice in the Plugin is the consent (ADR-0055). It is refused for a Session outside the Project the call runs for, while a Turn runs, while the Session's Checkout has uncommitted files, and for a Session that is not top level; the Plugin tries again on a later Watch. The App's own archive does not look at uncommitted files. Turning on the Plugin says it may archive Sessions in its Projects.
+The row context carries ids only (ADR-0030). Read a Session's `branch`, `projectId`, `title` and `idleFor` with `argo.sessions.get(sessionId)`, which needs the `{ "kind": "sessions:read" }` Capability and answers `null` for an unknown Session. `idleFor` is how many milliseconds nothing has happened in the Session, and `null` while a Turn runs, a Prompt waits or its queue is paused. `argo.sessions.archive(sessionId)` archives a Session as the App's archive does (the branch is kept, the worktree removed) and needs the `{ "kind": "sessions:archive" }` Capability. It has no confirm tier: the person's earlier choice in the Plugin is the consent (ADR-0055). It is refused for a Session outside the Project the call runs for, while a Turn runs, while the Session's Checkout has uncommitted files, and for a Session that is not top level; the Plugin tries again on a later Watch. The App's own archive does not look at uncommitted files. Turning on the Plugin says it may archive Sessions in its Projects.
 
-`argo.sessions.prompt(sessionId, text)` needs the `{ "kind": "sessions:prompt" }` Capability and sends `text` to a Session of the Project the call runs for, with the Plugin as sender (ADR-0055). It answers `{ status: 'started' }` when an idle Session starts a Turn, or `{ status: 'queued' }` when the Session is busy or its queue is paused: the Prompt waits behind the queued work and starts when the queue reaches it. A Plugin only appends; it never resumes, moves, edits or deletes the queue. Turning on the Plugin says it may start Turns in its Projects.
+`argo.sessions.prompt(sessionId, text)` needs the `{ "kind": "sessions:prompt" }` Capability and sends `text` to a Session of the Project the call runs for, with the Plugin as sender (ADR-0055). It answers `{ status: 'started' }` when an idle Session starts a Turn, or `{ status: 'queued', queuedId }` when the Session is busy or its queue is paused: the Prompt waits behind the queued work and starts when the queue reaches it. `argo.sessions.withdraw(sessionId, queuedId)`, under the same Capability, takes back a queued Prompt the Plugin sent, such as one about a commit a push replaced. It answers `{ withdrawn: true }` when it did, and `{ withdrawn: false }` when the Prompt had started, was gone, or the person is editing it; it is refused for a Prompt the Plugin did not send. A Plugin otherwise only appends: it never resumes, moves or edits the queue, and never deletes anyone else's Prompt. Turning on the Plugin says it may start Turns in its Projects.
 
 Argo keeps each answer per Plugin worker and Session until the Plugin calls `argo.changed()` or one of its Operations runs, so a Session's status changing asks the Plugin nothing. A restarted Plugin is asked again.
 Argo's own items come first, then each Plugin's in Slot order. A phone shows 1 item and a desktop or the web shows 3; the rest come with their Plugin id as overflow for "+N".

@@ -22,6 +22,18 @@ const promptOperation = {
   caller: ['project' as const],
 };
 
+const withdrawOperation = {
+  name: 'withdraw',
+  label: 'Withdraw a Prompt',
+  description: 'Takes back a Prompt it queued.',
+  tier: 'act' as const,
+  params: {
+    sessionId: { type: 'string' as const, description: 'Session.' },
+    queuedId: { type: 'string' as const, description: 'Queued Prompt.' },
+  },
+  caller: ['project' as const],
+};
+
 const prompter =
   (capabilities: PluginCapability[]) =>
   (home: string): Promise<void> =>
@@ -29,7 +41,7 @@ const prompter =
       id: 'prompter',
       name: 'Prompter',
       fixture: 'session-prompter',
-      operations: [promptOperation],
+      operations: [promptOperation, withdrawOperation],
       capabilities,
     });
 
@@ -49,6 +61,10 @@ export type PromptJourney = {
     sessionId: string,
     message: string,
     projectId?: string,
+  ) => ReturnType<Host['caller']['plugins']['run']>;
+  withdraw: (
+    sessionId: string,
+    queuedId: string,
   ) => ReturnType<Host['caller']['plugins']['run']>;
 };
 
@@ -82,6 +98,16 @@ const pluginPrompt =
       projectId: projectId ?? emptySessionInput.projectId,
     });
 
+const pluginWithdraw =
+  (host: Host): PromptJourney['withdraw'] =>
+  (sessionId, queuedId) =>
+    host.caller.plugins.run({
+      pluginId: 'prompter',
+      operation: 'withdraw',
+      args: { sessionId, queuedId },
+      projectId: emptySessionInput.projectId,
+    });
+
 const newGate = (): Gate => ({
   requests: [],
   release: Promise.withResolvers<void>(),
@@ -100,9 +126,19 @@ export async function busyJourney(
     installPlugins: prompter(capabilities),
   });
 
+  return journeyOf(gate, host);
+}
+
+async function journeyOf(gate: Gate, host: Host): Promise<PromptJourney> {
   const session = await host.caller.session.new(emptySessionInput);
 
-  return { ...gate, host, session, run: pluginPrompt(host) };
+  return {
+    ...gate,
+    host,
+    session,
+    run: pluginPrompt(host),
+    withdraw: pluginWithdraw(host),
+  };
 }
 
 type PromptEntry = [content: string, sender: PromptSender | undefined];

@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { drawnUntil } from './drawn-again';
 import {
   chooseGithub,
   signIn,
@@ -56,8 +57,7 @@ it('returns to the sign-in page when the person signs out, once the freshness wi
   expect(root.findText('Open')).toBeDefined();
   await tracked.test.accounts.signOut(account?.id ?? '');
   await tracked.test.clock.advance(61_000);
-  await root.draw();
+  await drawnUntil(root, signInLabel);
 
-  expect(root.findText(signInLabel)).toBeDefined();
   expect(root.findText('Open')).toBeUndefined();
 });

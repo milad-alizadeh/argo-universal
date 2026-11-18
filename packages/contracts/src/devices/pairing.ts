@@ -108,10 +108,18 @@ export const PairingRegistration = z.strictObject({
 export type PairingRegistration = z.infer<typeof PairingRegistration>;
 
 /*
- * The QR's own bytes: the invite as compact JSON. One writer and one reader, so the Server Device drawing the code and the Device scanning it cannot disagree about the format.
+ * The QR's own bytes: the invite as compact ASCII JSON. Escape Unicode because the QR encoder's default Byte mode truncates each UTF-16 code unit to one byte; even a curly apostrophe in the Server name would become an invalid JSON control character. JSON parsing restores the original name, including surrogate pairs.
  */
+const hexadecimal = 16;
+
+const unicodeEscapeLength = 4;
+
 export const writePairingInvite = (invite: PairingInvite): string =>
-  JSON.stringify(invite);
+  JSON.stringify(invite).replaceAll(
+    /[\u0080-\uffff]/g,
+    (character) =>
+      `\\u${character.charCodeAt(0).toString(hexadecimal).padStart(unicodeEscapeLength, '0')}`,
+  );
 
 // Whatever a camera read, as an invite, or nothing: a scan is untrusted input and most of what a camera sees is not an Argo code at all.
 export function readPairingInvite(scanned: string): PairingInvite | undefined {

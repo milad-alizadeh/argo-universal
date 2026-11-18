@@ -1,0 +1,1 @@
+ALTER TABLE `server_settings` ADD `todo_list` integer DEFAULT true NOT NULL;

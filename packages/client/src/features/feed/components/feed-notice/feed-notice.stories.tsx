@@ -7,6 +7,7 @@ import {
   compactionStoppedNotice,
   errorNotice,
   infoNotice,
+  missingArgoToolsNotice,
   unrecognisedNotice,
   warningNotice,
 } from './feed-notice-fixtures';
@@ -29,6 +30,9 @@ type Story = StoryObj<typeof meta>;
  */
 
 export const Info: Story = { args: infoNotice };
+
+// The Agent never loaded Argo's MCP server, so it can't keep a checklist.
+export const ArgoToolsMissing: Story = { args: missingArgoToolsNotice };
 
 export const Warning: Story = { args: warningNotice };
 

@@ -8,7 +8,6 @@ import type {
   SlashCommand,
   SessionOpenError,
   ShellRecord,
-  SubagentRole,
 } from '@repo/contracts';
 import type { CoreHooks } from '@repo/contracts/plugins';
 import type { createRejectionCounter } from '@repo/machine-log';
@@ -25,6 +24,7 @@ import type { AcpTurnOutcome } from './acp/prompts/prompt-outcome';
 import type { AcpPromptRequest as PromptRequest } from './acp/prompts/prompt-types';
 import type { LocalSubmission } from './acp/prompts/submission';
 import type { ElicitationAnswerContent } from './acp/requests/elicitation-types';
+import type { AgentWorkCommand, AgentWorkState } from './agent-work';
 import type {
   SessionCreationReceipt,
   SessionCreationSettled,
@@ -99,7 +99,7 @@ export type SessionCommand =
   | { type: 'session.archive' }
   | { type: 'session.unarchive' }
   | { type: 'session.cancel' }
-  | { type: 'session.declareSubagentRole'; role: SubagentRole }
+  | AgentWorkCommand
   | ClosingCommand;
 
 export type SessionEvent =
@@ -115,7 +115,7 @@ export type SessionEvent =
   | NativePermissionEvent
   | SessionCreationSettled;
 
-export interface SessionContext extends SessionData {
+export interface SessionContext extends SessionData, AgentWorkState {
   input: SessionMachineInput;
   promptQueue: PromptQueue;
   queueHolds: Record<string, string>;

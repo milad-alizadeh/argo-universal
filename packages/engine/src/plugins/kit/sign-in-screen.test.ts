@@ -76,11 +76,16 @@ const steps = {
     },
     pastesToken: true,
   }),
+  tokenRejected: draw({
+    flow: { kind: 'idle' },
+    pastesToken: true,
+    rejected: 'Jira no longer accepts this token.',
+  }),
   tokenSignedIn: draw({
     flow: {
       kind: 'signed-in',
       label: 'ada@example.com',
-      accountId: 'account-token',
+      accountId: 'account-2',
     },
     pastesToken: true,
   }),
@@ -109,13 +114,17 @@ it('signs out in Settings, opening the Account there, since other Plugins may bo
   );
 });
 
-it('opens the Account a pasted token signed in to, from the same Sign out row, and draws no field once signed in', () => {
-  const signedIn = JSON.stringify(steps.tokenSignedIn);
-
-  expect(signedIn).toContain(
-    '"onPress":{"action":"openAccount","accountId":"account-token"}',
+it('signs a pasted token out in Settings too, opening its Account there', () => {
+  expect(JSON.stringify(steps.tokenSignedIn)).toContain(
+    '"onPress":{"action":"openAccount","accountId":"account-2"}',
   );
-  expect(signedIn).not.toContain('"FieldGroup.SecretField"');
+});
+
+it('keeps the paste instructions beside the service’s refusal', () => {
+  const page = JSON.stringify(steps.tokenRejected);
+
+  expect(page).toContain('"description":"Jira no longer accepts this token."');
+  expect(page).toContain('"footer":"Paste an API token you made at Jira.');
 });
 
 it('gives a Device that cannot start nothing to press', () => {

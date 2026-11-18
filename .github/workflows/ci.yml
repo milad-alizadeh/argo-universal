@@ -120,6 +120,9 @@ jobs:
           git diff --exit-code
 
       - name: Type checks
+        env:
+          # A Contracts edit leaves every package uncached, and a type check takes up to 3 GB: Turborepo's ten at once ran the runner out of memory (#2340).
+          TURBO_CONCURRENCY: 4
         run: pnpm exec turbo run check-types --continue=dependencies-successful
 
   # Every package's tests but the Engine's, in three groups of about seven minutes each; run serially in one job they took twenty.

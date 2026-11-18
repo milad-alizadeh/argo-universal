@@ -19,11 +19,18 @@ const toolOutputIds = (
 ): string[] =>
   Object.values(meta?.fullOutput ?? {}).map((blob): string => blob.blobId);
 
+const toolImageIds = (content: ToolCallUpdate['content']): string[] =>
+  content.flatMap((block): string[] =>
+    block.type === 'content' && block.content.type === 'image'
+      ? [block.content.blob.blobId]
+      : [],
+  );
+
 const shownOutputIds = (rows: readonly SessionUpdate[]): Set<string> =>
   new Set(
     rows.flatMap((row): string[] =>
       row.sessionUpdate === 'tool_call_update'
-        ? toolOutputIds(row._meta?.argo)
+        ? [...toolOutputIds(row._meta?.argo), ...toolImageIds(row.content)]
         : [],
     ),
   );

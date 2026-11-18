@@ -95,12 +95,15 @@ const issuesData = (
     ),
   });
 
-const searchData = (variables: JsonObject): string => {
+// A search names the second person's Issues as the single read does, so a list's rows seed the same title.
+const searchData = (variables: JsonObject, token: string): string => {
   const closed = textOf(variables.query).includes('is:closed');
 
-  return JSON.stringify({
-    search: { nodes: closed ? [] : [parentIssue(), childIssue()] },
-  });
+  const nodes = [parentIssue(), childIssue()].map((node) =>
+    titledFor(node, token),
+  );
+
+  return JSON.stringify({ search: { nodes: closed ? [] : nodes } });
 };
 
 // One Issue, or several under their aliases, when the query asks for Issues by number.
@@ -128,7 +131,10 @@ function dataOf(
 
   if ('count0' in variables) return overviewData(variables);
 
-  return issuesAnswer(request, closedIssues) ?? searchData(variables);
+  return (
+    issuesAnswer(request, closedIssues) ??
+    searchData(variables, tokenOf(request))
+  );
 }
 
 export const tokenOf = (request: FixtureRequest): string =>
