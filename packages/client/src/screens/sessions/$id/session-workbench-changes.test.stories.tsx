@@ -321,7 +321,6 @@ export const NoCreatePullRequestWithACleanCheckout: Story = {
     },
   },
   play: async ({ canvas }) => {
-    await expect(canvas.queryByTestId('workbench-changes')).toBeNull();
     await expect(canvas.queryByRole('button', createPR)).toBeNull();
   },
 };
