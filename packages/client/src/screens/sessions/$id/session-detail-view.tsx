@@ -20,6 +20,7 @@ import {
   TerminalSignIn,
   type TerminalSignInProps,
 } from '#features/sessions';
+import { VoiceStageView, type VoiceStageViewProps } from '#features/voice';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { SessionLayout } from '#lib/product/session-layout';
 import { BlankSession } from './blank-session';
@@ -53,6 +54,8 @@ export interface OpenSessionViewProps extends SessionInspectorContent {
   preview?: boolean;
   // An archived Session reads only: a banner takes the Composer's place.
   archived?: boolean;
+  // The Voice call's orb, pinned above the Feed for the length of a call here.
+  stage?: VoiceStageViewProps;
 }
 
 export type SessionDetailViewProps =
@@ -145,6 +148,7 @@ const sessionParts = (
   header: bandClaim(props, panels),
   bar: sessionBar(props),
   feed: sessionFeed(props, panels),
+  stage: props.stage && <VoiceStageView {...props.stage} />,
   composer: sessionBottom(props),
   panel: props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />,
   onDropFiles: hasDraft(props) ? props.onDropFiles : undefined,

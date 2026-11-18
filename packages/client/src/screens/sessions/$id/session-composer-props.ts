@@ -21,6 +21,7 @@ import type {
   PermissionRequestProps,
 } from '#features/requests';
 import { decodeOpenFailure, toSendError } from '#features/sessions';
+import type { VoiceStageViewProps } from '#features/voice';
 import { type Navigate } from '#lib/product/navigation/navigation';
 import { followUpProps } from './follow-up-composer-props';
 import { sessionStatusProps } from './session-status-props';
@@ -46,6 +47,8 @@ export interface OpenSession {
   voice?: ComposerProps['voice'];
   // What is being said on this Session's Voice call, drawn at the tail of its Feed.
   partials?: VoicePartial[];
+  // The orb pinned above the Feed while this Session's Voice call runs.
+  stage?: VoiceStageViewProps;
   options?: {
     configOptions: SessionSnapshot['configOptions'];
     loading: boolean;
@@ -126,18 +129,14 @@ const draftProps = (commands: SessionCommands): DraftProps => ({
   onSend: (sent) => void commands.sendDraft(sent),
 });
 
-const callStates: ReadonlySet<ComposerVoiceCall> = new Set([
-  'connecting',
-  'connected',
-]);
+// What the field says while a call runs here: it invites typing as well as talking once connected, and says so while connecting.
+const callPlaceholders: Partial<Record<ComposerVoiceCall, string>> = {
+  connecting: 'Connecting…',
+  connected: 'Type, or keep talking',
+};
 
-// While a call runs here, the field invites typing as well as talking.
-const callingNow = (voice: ComposerProps['voice']): boolean =>
-  callStates.has(voice?.call ?? 'none');
-
-// While a call runs here, the field invites typing as well as talking.
 const placeholderOf = ({ voice }: OpenSession): string =>
-  callingNow(voice) ? 'Type, or keep talking' : 'Message the Agent';
+  callPlaceholders[voice?.call ?? 'none'] ?? 'Message the Agent';
 
 // An open Session always offers Argo's Slash commands, whether or not its Agent has reported any.
 const slashCommandsOf = (open: OpenSession): ComposerProps['slashCommands'] =>

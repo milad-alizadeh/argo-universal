@@ -78,7 +78,8 @@ type SessionSurroundings =
   | 'shells'
   | 'inspectorPanels'
   | 'voice'
-  | 'partials';
+  | 'partials'
+  | 'stage';
 
 // A Session's Usage limits are its Agent's, kept for the Agent and Project.
 const usageLimitsSubject = (

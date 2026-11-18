@@ -5,6 +5,8 @@ import { useEffect } from 'react';
 import type { ComposerVoice } from '#features/composer';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import { offerTo } from './offer-to';
+import { useCallPointer } from './use-call-pointer';
+import { useVoiceMutes } from './use-voice-mutes';
 import type { VoiceConnection } from './voice-connection';
 import { useVoiceConnection } from './voice-connection-context';
 import { composerVoice } from './voice-offer';
@@ -84,9 +86,11 @@ export function useVoiceCall(sessionId: string): ComposerVoice | undefined {
   const status = useVoiceStatus();
   const onStart = useStartCall(sessionId, connection);
   const onEnd = useEndCall(sessionId);
+  const mutes = useVoiceMutes(connection, status?.call?.callId);
+  const elsewhere = useCallPointer(status?.call?.sessionId, sessionId);
   useReleaseWhenOver(status, connection);
 
   if (!connection || !status) return undefined;
 
-  return composerVoice(status, sessionId, { onStart, onEnd });
+  return composerVoice(status, sessionId, { onStart, onEnd, mutes, elsewhere });
 }
