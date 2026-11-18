@@ -1,7 +1,8 @@
 import { FieldGroup as ExpoFieldGroup } from '@expo/ui';
 import type { ReactElement, ReactNode } from 'react';
+import { Platform, View } from 'react-native';
 import { flattenedChildren } from '#kit/flattened-children';
-import { useInMenu } from '#kit/list-place';
+import { useInMenu, useListPlace } from '#kit/list-place';
 import { NativeText } from '#primitives/content/native-text';
 import { expandInlinePickers } from '#primitives/fields/field-picker';
 import type { FieldGroupKitProps } from '../../kit-props';
@@ -56,9 +57,20 @@ function sectionTitle(title: string | undefined): ReactNode {
 
   return (
     <ExpoFieldGroup.SectionHeader>
-      <NativeText role={titleRole}>{title}</NativeText>
+      <SectionTitle title={title} />
     </ExpoFieldGroup.SectionHeader>
   );
+}
+
+// Expo's web header pads its title 16 in from the card; in a sheet's inset its title starts on the cards' edge instead.
+const onCardEdge = { marginLeft: -16 };
+
+function SectionTitle({ title }: { title: string }): ReactElement {
+  const place = useListPlace();
+  const text = <NativeText role={titleRole}>{title}</NativeText>;
+  const flush = Platform.OS === 'web' && place === 'inset';
+
+  return flush ? <View style={onCardEdge}>{text}</View> : text;
 }
 
 function sectionFooter(footer: string | undefined): ReactNode {

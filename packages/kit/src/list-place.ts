@@ -7,6 +7,7 @@ import { createContext, use } from 'react';
  */
 export type ListPlace =
   | 'tray'
+  | 'inset'
   | 'page'
   | 'detail'
   | 'aside'
@@ -47,6 +48,7 @@ const none = {
 const facts = {
   page: none,
   tray: { ...none, padded: true },
+  inset: { ...none, padded: true },
   detail: { ...none, padded: true },
   aside: { ...none, padded: true },
   card: { ...none, padded: true, ends: true, card: true },
@@ -68,6 +70,7 @@ export const choosingPlace = (place: ListPlace): ListPlace =>
 const popoverPlaces = {
   page: 'popover',
   tray: 'popover',
+  inset: 'popover',
   detail: 'popover',
   aside: 'popover',
   card: 'popover',
@@ -88,5 +91,11 @@ export const useListPlace = (): ListPlace => use(ListPlaceContext);
 // A web popover's rows are menu rows; a phone's popover is a Sheet and keeps the page place.
 export const useInMenu = (): boolean => listPlaceFacts(useListPlace()).menu;
 
-// A Screen's aside, its own column or the lead above the body: a FieldGroup there sizes to its rows and scrolls with what holds it.
-export const useInAside = (): boolean => useListPlace() === 'aside';
+/*
+ * A Screen's aside, its own column or the lead above the body, or a sheet that insets its content once, as a Plugin's
+ * or a page's options do: a FieldGroup there sizes to its rows, scrolls with what holds it, and draws no inset of its
+ * own, so its cards start on the edge the content beside it keeps.
+ */
+const fittedPlaces: ReadonlySet<ListPlace> = new Set(['aside', 'inset']);
+
+export const useInAside = (): boolean => fittedPlaces.has(useListPlace());

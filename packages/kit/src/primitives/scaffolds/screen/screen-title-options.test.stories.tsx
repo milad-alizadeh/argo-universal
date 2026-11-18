@@ -19,6 +19,8 @@ type Story = StoryObj<typeof meta>;
 
 type PlayContext = Parameters<NonNullable<Story['play']>>[0];
 
+const optionsButton = { name: 'Options, 1' };
+
 const body = ({ canvasElement }: PlayContext): ReturnType<typeof within> =>
   within(canvasElement.ownerDocument.body);
 
@@ -81,7 +83,7 @@ const options: Story = {
   play: async (context) => {
     const { canvas, userEvent } = context;
 
-    await userEvent.click(canvas.getByRole('button', { name: 'Options, 1' }));
+    await userEvent.click(canvas.getByRole('button', optionsButton));
 
     const dialog = await body(context).findByRole('dialog', {
       name: 'Options',
@@ -107,7 +109,7 @@ export const OptionsWide = atWidth(screenWidths.Wide, options);
 export const OptionsPopoverWide = atWidth(screenWidths.Wide, {
   play: async (context) => {
     const { canvas, userEvent } = context;
-    const button = canvas.getByRole('button', { name: 'Options, 1' });
+    const button = canvas.getByRole('button', optionsButton);
 
     await userEvent.click(button);
 
@@ -131,3 +133,43 @@ export const OptionsPopoverWide = atWidth(screenWidths.Wide, {
     );
   },
 });
+
+// The card a FieldGroup row sits on: the nearest box around it that draws a border.
+function cardOf(node: HTMLElement | null): HTMLElement {
+  if (!node) throw new Error('The row sits on no card');
+
+  return getComputedStyle(node).borderTopWidth === '0px'
+    ? cardOf(node.parentElement)
+    : node;
+}
+
+const leftOf = (element: Element): number =>
+  Math.round(element.getBoundingClientRect().left);
+
+/*
+ * The sheet insets its content once: the view switch, the Filter heading and the first FieldGroup card start on one
+ * edge, as an iOS sheet's controls and grouped cards do.
+ */
+const oneEdge: Story = {
+  play: async (context) => {
+    const { canvas, userEvent } = context;
+
+    await userEvent.click(canvas.getByRole('button', optionsButton));
+
+    const dialog = await body(context).findByRole('dialog', {
+      name: 'Options',
+    });
+
+    await settleOverlays();
+
+    const edge = leftOf(within(dialog).getByRole('group', { name: 'Show as' }));
+    const card = cardOf(within(dialog).getByText('Status'));
+
+    await expect(leftOf(card)).toBe(edge);
+    await expect(leftOf(within(dialog).getByText('Filter'))).toBe(edge);
+  },
+};
+
+export const OptionsOneEdgePhone = atWidth(screenWidths.Phone, oneEdge);
+
+export const OptionsOneEdgeWide = atWidth(screenWidths.Wide, oneEdge);
