@@ -1,5 +1,5 @@
 import type { ComponentProps, ReactElement } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { tintTransitionClassName } from '#kit/motion';
 import { cn } from '#kit/utils';
 import { ActionMenu, type ActionGroup } from '#primitives/actions/action';
@@ -22,21 +22,29 @@ interface TitleMenuProps {
  * Android. It opens below the title, from its start, as a scope picker under a leading title does.
  */
 export function TitleMenu(props: TitleMenuProps): ReactElement {
-  const trigger = (
-    <TitleTrigger title={props.title} inlineToolbar={props.inlineToolbar} />
-  );
-
   return (
     <View {...headingOf(props.level)}>
       <ActionMenu
         groups={props.groups}
         label={props.title}
-        trigger={trigger}
+        trigger={titleTriggerOf(props)}
         align="start"
+        toolbarTitle={props.inlineToolbar}
       />
     </View>
   );
 }
+
+const titleTriggerOf = ({
+  title,
+  inlineToolbar,
+}: TitleMenuProps): ReactElement => (
+  <TitleTrigger
+    title={title}
+    inlineToolbar={inlineToolbar}
+    focusable={inlineToolbar && Platform.OS === 'android' ? false : undefined}
+  />
+);
 
 const headingOf = (level: number) =>
   ({
@@ -81,16 +89,27 @@ type TitleLabelProps = Pick<TitleMenuProps, 'title' | 'inlineToolbar'>;
 function TitleLabel({ title, inlineToolbar }: TitleLabelProps): ReactElement {
   return (
     <Text
-      role={inlineToolbar ? 'nav-title' : 'title'}
+      {...titleAppearance(inlineToolbar)}
       className="shrink"
       numberOfLines={1}
-      maxFontSizeMultiplier={inlineToolbar ? toolbarTitleMaxScale : undefined}
       selectable={false}
     >
       {title}
     </Text>
   );
 }
+
+type TitleAppearance = Pick<
+  ComponentProps<typeof Text>,
+  'role' | 'maxFontSizeMultiplier'
+>;
+
+const titleAppearance = (
+  inlineToolbar: boolean | undefined,
+): TitleAppearance =>
+  inlineToolbar && Platform.OS === 'ios'
+    ? { role: 'nav-title', maxFontSizeMultiplier: toolbarTitleMaxScale }
+    : { role: 'title' };
 
 const titleProps = {
   role: 'title',
