@@ -433,6 +433,41 @@ export function generatedOperations(runner: OperationRunner) {
           }),
         ),
     }),
+    voice: router({
+      status: publicProcedure
+        .input(operations['voice.status'].params)
+        .output(operations['voice.status'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.status',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      start: publicProcedure
+        .input(operations['voice.start'].params)
+        .output(operations['voice.start'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.start',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      end: publicProcedure
+        .input(operations['voice.end'].params)
+        .output(operations['voice.end'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.end',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+    }),
     plugin: router({
       list: publicProcedure
         .input(operations['plugin.list'].params)

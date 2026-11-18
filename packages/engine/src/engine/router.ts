@@ -12,6 +12,7 @@ import { createPluginsRouter } from '../plugins';
 import { mergeRouters, router, routerFactory } from '../rpc';
 import { createShellRouter, Sessions } from '../sessions';
 import { createSystemRouter } from '../system';
+import { createVoiceRouter } from '../voice';
 import type { AppRouterDeps } from './router-deps';
 
 // Each router takes only the slice of the Engine's dependencies its type names.
@@ -59,6 +60,7 @@ const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
     ...operations,
     session: mergeRouters(sessions.router, operations.session),
     shell: mergeRouters(createShellRouter(deps), operations.shell),
+    voice: mergeRouters(createVoiceRouter(deps), operations.voice),
   });
 });
 

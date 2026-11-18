@@ -28,6 +28,7 @@ type AcpScenario = ScriptedScenario & { autoExit?: boolean } & Partial<
       | 'operationWaitClock'
       | 'slashCommandsWaitMs'
       | 'argoToolsGraceMs'
+      | 'voiceProvider'
     >
   > &
   Pick<
@@ -114,6 +115,7 @@ const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({
   operationWaitClock: scenario.operationWaitClock,
   slashCommandsWaitMs: scenario.slashCommandsWaitMs ?? 0,
   argoToolsGraceMs: scenario.argoToolsGraceMs ?? Number.POSITIVE_INFINITY,
+  voiceProvider: scenario.voiceProvider,
 });
 
 const fixtureAgents = (

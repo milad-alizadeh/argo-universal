@@ -12,6 +12,7 @@ import { createProjectOperations } from './projects';
 import { createRegistryOperations } from './registry';
 import type { AppCaller, SessionCaller, UserCaller } from './session-tokens';
 import { sessionImplementations } from './sessions';
+import { createVoiceOperations } from './voice';
 import type { WorkExecution, UserAdmission } from './work';
 
 type ParamsById = {
@@ -45,7 +46,7 @@ export type PlainOperationId = Exclude<OperationId, NativeStartId>;
 export type PlainImplementations = {
   [Id in PlainOperationId]: (
     params: ParamsById[Id],
-    ...connection: Id extends 'session.queue'
+    ...connection: Id extends 'session.queue' | 'voice.start'
       ? [connectionSignal?: AbortSignal]
       : []
   ) => Promise<ResultsById[Id]>;
@@ -80,6 +81,7 @@ export function createImplementations(
     ...createPluginOperations(deps.plugins.plugins),
     ...createRegistryOperations(deps),
     ...createProjectOperations(deps),
+    ...createVoiceOperations(deps.voice),
   };
 }
 

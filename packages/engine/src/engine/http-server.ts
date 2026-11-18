@@ -16,6 +16,7 @@ import type { Keypair } from '../pairing/x25519';
 import type { HookPort, PluginServerOptions, Plugins } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
+import type { VoiceCallsPort } from '../voice';
 import { announceServer } from './announce-server';
 import { createDoors, type Doors } from './doors';
 import { createHttpCaller, type HttpCaller } from './http-callers';
@@ -39,6 +40,7 @@ export interface HttpServerOptions extends PluginServerOptions {
   startedAt: string;
   database: Database;
   sessions: OpenSessionsActorRef;
+  voice?: VoiceCallsPort;
   databaseWriter: WriterActorRef;
   commandAdmission?: AbortController;
   acp?: AcpResourceInput;

@@ -148,6 +148,9 @@ const targetRules = {
   'plugin.setEnabled': global,
   'plugin.getSettings': global,
   'plugin.setSetting': global,
+  'voice.status': global,
+  'voice.start': sessionParam,
+  'voice.end': callerSessionParam,
 } satisfies TargetRules;
 
 const targets: TargetRules = targetRules;

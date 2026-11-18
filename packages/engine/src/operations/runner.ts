@@ -36,6 +36,7 @@ import {
 import { parseResult, validateParams } from './params';
 import type { PromptChains, SessionScope } from './session-scope';
 import type { SessionCaller } from './session-tokens';
+import { withoutConnection } from './without-connection';
 
 export type { AppRun, UserRun, SessionRun } from './implementations';
 
@@ -119,7 +120,7 @@ export class OperationRunner {
   private invokeSession(context: SessionContext): SessionInvoke {
     const implementations: CallerImplementations<[NewSessionId]> = {
       ...this.plain,
-      'session.queue': (params) => this.plain['session.queue'](params),
+      ...withoutConnection(this.plain),
       'session.archive': (params) =>
         params.sessionId === context.caller.sessionId
           ? this.ports.archiveOwn(params.sessionId)

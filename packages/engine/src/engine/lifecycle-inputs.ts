@@ -13,6 +13,11 @@ import {
   type OpenSessionsInput,
 } from '../sessions';
 import type { writerMachine } from '../storage';
+import {
+  defaultVoiceProvider,
+  sessionBriefing,
+  type VoiceCallInput,
+} from '../voice';
 import type { CloseAcpResourcesInput } from './agent-cleanup';
 import type { RecoveryInput } from './engine-recovery';
 import { requireRegistry } from './registry-input';
@@ -88,6 +93,18 @@ export const sessionsInput = ({
   installedAgents: installedAgentsInput({ context, self }),
   hooks: context.hookPort.hooks,
   writer: requireDatabaseWriter(self.system),
+});
+
+export const voiceInput = ({
+  context,
+}: {
+  context: Pick<EngineContext, 'database' | 'voiceProvider'>;
+}): VoiceCallInput => ({
+  provider:
+    context.voiceProvider === undefined
+      ? defaultVoiceProvider(process.env)
+      : context.voiceProvider,
+  briefing: sessionBriefing(openDatabaseOf(context)),
 });
 
 export { serverInput } from './server-input';

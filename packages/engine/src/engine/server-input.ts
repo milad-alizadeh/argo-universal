@@ -7,6 +7,7 @@ import {
   requireOpenSessions,
   type EngineContext,
 } from './setup.machine';
+import { requireVoiceCalls } from './voice-input';
 
 type ServerSource = {
   context: Pick<
@@ -39,12 +40,23 @@ type ServerSource = {
 
 type ServerInput = (source: ServerSource) => HttpServerOptions;
 
+// The actors the Server reaches the Engine through.
+const engineActors = (
+  system: AnyActorRef['system'],
+): Pick<
+  HttpServerOptions,
+  'sessions' | 'voice' | 'databaseWriter' | 'registry'
+> => ({
+  sessions: requireOpenSessions(system),
+  voice: requireVoiceCalls(system),
+  databaseWriter: requireDatabaseWriter(system),
+  registry: requireRegistry(system),
+});
+
 export const serverInput: ServerInput = ({ context, self }) => ({
   createId: context.createId,
   sessionTokens: context.sessionTokens,
-  sessions: requireOpenSessions(self.system),
-  databaseWriter: requireDatabaseWriter(self.system),
-  registry: requireRegistry(self.system),
+  ...engineActors(self.system),
   commandAdmission: context.commandAdmission,
   acp: context.acp,
   userHome: context.userHome,
