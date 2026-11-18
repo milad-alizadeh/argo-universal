@@ -1,4 +1,3 @@
-import { runPluginCommand } from '@argo/plugin-kit/cli';
 import {
   productName,
   productCompatibility,
@@ -27,20 +26,12 @@ export type CliIo = CommandIo & { writeError: Write };
 
 type Command = (args: string[], io: CliIo) => Promise<number>;
 
+// `server` and `plugin` are not here: the launcher starts each from its own entry.
 const commands = new Map<string, Command>([
   ['operations', runOperations],
   ['run', runOperation],
   ['wait', waitOperation],
   ['mcp', runMcp],
-  [
-    'plugin',
-    (args, io): Promise<number> =>
-      runPluginCommand(
-        args,
-        io.write,
-        `${productCompatibility.command} plugin`,
-      ),
-  ],
 ]);
 
 // Runs one `argo` command line and answers its exit code; a failure is written to standard error.
