@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { ComposerStatusControls } from '../composer-status/composer-status';
 import { TrayCheckout } from './composer-tray-checkout';
 import {
-  composerBottomTrayClipClass,
+  composerBottomTrayTuckClass,
   composerTrayClass,
 } from './composer-tray-class';
 import type {
@@ -34,8 +34,8 @@ const statusRowClass =
 
 const statusTrayClass = cn(
   composerTrayClass,
-  composerBottomTrayClipClass,
-  'h-11 -mt-3 pt-3 rounded-b-2xl',
+  composerBottomTrayTuckClass,
+  'h-11 rounded-b-2xl',
 );
 
 function ComposerWideStatus(
