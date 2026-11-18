@@ -12,7 +12,10 @@ export const usableVoice: VoiceSettings = {
       availability: { usable: true },
     },
   ],
-  voices: [{ id: 'cove', label: 'Cove' }],
+  voices: [
+    { id: 'cove', label: 'Cove' },
+    { id: 'marin', label: 'Marin' },
+  ],
 };
 
 export const unusableVoice: VoiceSettings = {
@@ -28,4 +31,12 @@ export const unusableVoice: VoiceSettings = {
       },
     },
   ],
+};
+
+export const stableVoice: VoiceSettings = {
+  ...usableVoice,
+  providers: usableVoice.providers.map((provider) => ({
+    ...provider,
+    experimental: false,
+  })),
 };

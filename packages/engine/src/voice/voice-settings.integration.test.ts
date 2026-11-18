@@ -54,6 +54,23 @@ describe('Voice settings', () => {
     expect((await host.caller.voice.status()).enabled).toBe(false);
   });
 
+  it('survives an Engine restart', async () => {
+    const { host } = await withTwoVoices();
+    await host.caller.voice.setSettings({ enabled: false, voice: 'second' });
+    await host.stop();
+
+    const restarted = await startAcpEngine({
+      steps: [],
+      restartOver: host.home,
+      voiceProvider: new FakeVoiceProvider({ voices: twoVoices }),
+    });
+
+    expect(await restarted.caller.voice.getSettings()).toMatchObject({
+      enabled: false,
+      voice: 'second',
+    });
+  });
+
   it('tells every Device watching the call when Voice calls go off', async () => {
     const { host } = await withTwoVoices();
     const stream = await host.caller.voice.watch();

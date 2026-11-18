@@ -44,6 +44,7 @@ describe('the Composer voice state', () => {
       sessionId: 's1',
       status: 'connected',
     } as const;
+
     const running = status(true, { usable: true }, call);
 
     expect(composerVoice(running, 's1', handlers).call).toBe('connected');

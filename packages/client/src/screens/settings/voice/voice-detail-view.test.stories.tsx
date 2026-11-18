@@ -1,8 +1,12 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import { VoiceDetailView } from './voice-detail-view';
-import { unusableVoice, usableVoice } from './voice-detail-view-fixtures';
+import {
+  stableVoice,
+  unusableVoice,
+  usableVoice,
+} from './voice-detail-view-fixtures';
 
 const meta = {
   title: 'Tests/Screens/Settings/Voice',
@@ -30,8 +34,8 @@ export const UsableProviderShowsItsChoicesAndNoReason: Story = {
     await expect(canvas.getByText('GPT-Live')).toBeVisible();
     await expect(canvas.getByText('Cove')).toBeVisible();
     await expect(canvas.queryByText(/signed in/)).toBeNull();
-    await expect(canvas.queryByText(/preview/i)).toBeNull();
-    await expect(canvas.queryByText(/microphone|speaker/i)).toBeNull();
+    await expect(canvas.getAllByRole('switch')).toHaveLength(1);
+    await expect(canvas.getAllByRole('button')).toHaveLength(2);
   },
 };
 
@@ -57,5 +61,44 @@ export const TurnsVoiceCallsOff: Story = {
   play: async ({ canvas, args, userEvent }) => {
     await userEvent.click(canvas.getByRole('switch', voiceCalls));
     await expect(args.onEnabledChange).toHaveBeenCalledWith(false);
+  },
+};
+
+// The choices a picker opened, which draw outside the canvas.
+const opened = (canvasElement: HTMLElement): ReturnType<typeof within> =>
+  within(canvasElement.ownerDocument.body);
+
+export const LabelsAnExperimentalProvider: Story = {
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: /^Voice provider/ }),
+    );
+    await expect(
+      await opened(canvasElement).findByText('Experimental'),
+    ).toBeVisible();
+  },
+};
+
+export const LeavesAStableProviderUnlabelled: Story = {
+  args: { voice: { status: 'loaded', settings: stableVoice } },
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: /^Voice provider/ }),
+    );
+    await expect(
+      await opened(canvasElement).findAllByText('GPT-Live'),
+    ).toHaveLength(2);
+    await expect(opened(canvasElement).queryByText('Experimental')).toBeNull();
+  },
+};
+
+export const ChoosesTheSecondVoice: Story = {
+  play: async ({ canvas, canvasElement, args, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: /^Voice(?! provider)/ }),
+    );
+    await userEvent.click(await opened(canvasElement).findByText('Marin'));
+    await expect(args.onVoiceChange).toHaveBeenCalledWith('marin');
+    await expect(args.onProviderChange).not.toHaveBeenCalled();
   },
 };
