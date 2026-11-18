@@ -2,7 +2,9 @@ import { Button } from '@repo/kit/primitives/actions/button';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 import { Feed } from '#features/feed';
+import { WideColumnGutter } from '#lib/product/session-column';
 import { SubagentFeedHeader } from './subagent-feed-header';
 import type { SubagentFeedProps } from './subagent-feed-props';
 
@@ -16,14 +18,19 @@ export type { SubagentFeedProps } from './subagent-feed-props';
  * task message, so it never draws the empty Session's heading.
  */
 export function SubagentFeed(props: SubagentFeedProps): React.JSX.Element {
+  // The Inspector tabs use spacing-3 for their leading inset.
+  const gutter = Number.parseFloat(String(useCSSVariable('--spacing-3')));
+
   return (
-    <View className="min-h-0 flex-1">
-      <SizeClass only="wide">
-        <SubagentFeedHeader {...props} />
-      </SizeClass>
-      <ReportControls {...props} />
-      {props.feed && <Feed {...props.feed} opensAtStart />}
-    </View>
+    <WideColumnGutter.Provider value={gutter}>
+      <View className="agent-feed min-h-0 flex-1">
+        <SizeClass only="wide">
+          <SubagentFeedHeader {...props} />
+        </SizeClass>
+        <ReportControls {...props} />
+        {props.feed && <Feed {...props.feed} opensAtStart />}
+      </View>
+    </WideColumnGutter.Provider>
   );
 }
 

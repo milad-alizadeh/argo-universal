@@ -136,6 +136,14 @@ export const InTheInspector: Story = {
     await expect(canvas.getByRole('heading', subagentHeading)).toBeVisible();
     await expect(canvas.getByText('Running · 34s')).toBeVisible();
     await expect(canvas.getAllByText(incomingMessage)[0]).toBeVisible();
+
+    const tabs = canvas.getByRole('tablist');
+    const back = canvas.getByRole('button', { name: subagentFeedBackLabel });
+    const row = await canvas.findByRole('status', liveRow);
+    const leadingEdge = tabs.getBoundingClientRect().left;
+
+    await expect(back.getBoundingClientRect().left).toBeCloseTo(leadingEdge);
+    await expect(row.getBoundingClientRect().left).toBeCloseTo(leadingEdge);
   },
 };
 

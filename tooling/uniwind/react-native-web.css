@@ -494,6 +494,18 @@ label input[role="switch"] {
     scrollbar-width: auto;
     scrollbar-color: auto;
   }
+  /* The Inspector's tab inset is also the Agent Feed's leading edge. Reserve the same
+     trailing scrollbar space in the header so the capped column stays aligned when expanded. */
+  .agent-feed .feed-scrollbar > * > .scroll-fade > *,
+  .agent-feed-heading {
+    scrollbar-gutter: stable;
+  }
+  .agent-feed-heading {
+    overflow: hidden;
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+  .agent-feed-heading::-webkit-scrollbar,
   .feed-scrollbar > * > .scroll-fade > *::-webkit-scrollbar {
     width: 12px;
     background: transparent;
