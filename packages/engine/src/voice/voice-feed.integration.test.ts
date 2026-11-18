@@ -1,6 +1,7 @@
 import type { FeedSubscribeOutput } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { promptText, startVoiceWork } from '#mocks/voice-work';
+import { relayWords } from './relay-words';
 
 const job = 'Run the tests';
 
@@ -86,7 +87,7 @@ describe('a Prompt typed during a call', () => {
     expect(promptText(work.prompts[1])).toBe(readme);
     expect(work.provider.call.sent).toContainEqual({
       kind: 'tell',
-      text: 'The person typed this to the Agent: Add a README',
+      text: relayWords.typed(readme),
       delivery: 'background',
     });
     expect(work.provider.call.sent).toContainEqual({

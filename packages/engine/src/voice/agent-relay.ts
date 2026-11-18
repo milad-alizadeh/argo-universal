@@ -1,6 +1,7 @@
 import { readVoiceMarker, type VoiceMarker } from '../feed';
 import type { VoiceSay } from './call-types';
 import { inPieces } from './pieces';
+import { relayWords } from './relay-words';
 import type {
   PromptOutcome,
   SessionHappening,
@@ -16,11 +17,6 @@ const voiceInstruction = [
   '[ANALYSIS] for notes that must stay silent.',
   'Keep spoken messages short and plain; do not read out code or tool output.',
 ].join('\n');
-
-const outcomeText: Record<PromptOutcome, string> = {
-  started: 'Sent to the Agent. It is working on it.',
-  queued: 'The Agent is busy. This waits until its current work is done.',
-};
 
 const spokenMarks = new Set<VoiceMarker | null>(['[COMPLETE]']);
 
@@ -50,8 +46,8 @@ export class AgentRelay {
     const answer = await this.sessions
       .prompt(this.sessionId, this.promptText(text))
       .then(
-        (outcome) => outcomeText[outcome],
-        (error: Error) => `That could not be sent: ${error.message}`,
+        (outcome: PromptOutcome) => relayWords[outcome],
+        (error: Error) => relayWords.unsent(error.message),
       );
 
     this.reply(requestId, answer);
@@ -98,7 +94,7 @@ export class AgentRelay {
   }
 
   private personTyped(text: string): void {
-    this.tell(`The person typed this to the Agent: ${text}`, 'background');
+    this.tell(relayWords.typed(text), 'background');
   }
 
   private turnEnded(
@@ -121,11 +117,11 @@ const finishedCleanly = ({ stopReason, error }: Omit<Ended, 'type'>): boolean =>
   error === null && stopReason === 'end_turn';
 
 function endingText({ stopReason, error }: Ended): string {
-  if (error !== null) return `The Agent's Turn failed: ${error}`;
+  if (error !== null) return relayWords.failed(error);
 
   return stopReason === 'end_turn'
-    ? 'The Agent finished its Turn.'
-    : `The Agent's Turn stopped: ${stopReason}.`;
+    ? relayWords.finished
+    : relayWords.stopped(stopReason);
 }
 
 // A Turn that failed, was stopped, or said nothing is spoken; one that ended with its result already told is background.

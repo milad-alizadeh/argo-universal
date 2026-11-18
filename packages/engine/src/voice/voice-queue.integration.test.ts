@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { promptText, startVoiceWork } from '#mocks/voice-work';
+import { relayWords } from './relay-words';
 
 const longJob = 'Long job';
 
@@ -21,13 +22,20 @@ describe('a request for work while a Turn runs', () => {
 
     await expect
       .poll(() => JSON.stringify(work.provider.call.sent))
-      .toContain('The Agent is busy');
+      .toContain(relayWords.queued);
     expect(work.prompts).toHaveLength(2);
 
     release.resolve();
     await expect.poll(() => work.prompts.length).toBe(3);
     expect(promptText(work.prompts[2])).toContain(extra);
     await expect.poll(work.turnEnds).toHaveLength(3);
+    expect(await work.promptRows()).toMatchObject([
+      { _meta: { argo: { sender: { type: 'voice' } } } },
+      {
+        content: [{ text: extra }],
+        _meta: { argo: { sender: { type: 'voice' } } },
+      },
+    ]);
   });
 
   it('steers the running Turn when the Agent supports it, stored from the Voice call and not as the person', async () => {
@@ -54,5 +62,6 @@ describe('a request for work while a Turn runs', () => {
     ]);
     expect(work.prompts).toHaveLength(2);
     release.resolve();
+    await expect.poll(work.turnEnds).toHaveLength(2);
   });
 });

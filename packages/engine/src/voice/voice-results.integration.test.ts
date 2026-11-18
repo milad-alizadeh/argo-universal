@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { startVoiceWork, type VoiceWork } from '#mocks/voice-work';
+import { relayWords } from './relay-words';
 
 const job = 'Run the tests';
 
@@ -69,6 +70,25 @@ describe('what the Agent says goes back to the voice', () => {
     expect(pieces.join(' ')).toBe(long);
   });
 
+  it('sends a long progress message in pieces of at most 500 bytes as background', async () => {
+    const long = Array.from({ length: 300 }, (_, i) => `step${i}`).join(' ');
+
+    const work = await startVoiceWork([
+      { prompt: job, messages: [`[STATUS] ${long}`, '[COMPLETE] Done'] },
+    ]);
+
+    await askAndWaitForEnd(work);
+
+    const pieces = background(work).filter((text) => text.startsWith('step'));
+    expect(pieces.length).toBeGreaterThan(1);
+
+    for (const piece of pieces)
+      expect(Buffer.byteLength(piece)).toBeLessThanOrEqual(500);
+
+    expect(pieces.join(' ')).toBe(long);
+    expect(spoken(work).some((text) => text.startsWith('step'))).toBe(false);
+  });
+
   it('counts an unmarked message as progress until the Turn ends, then speaks the last', async () => {
     const work = await startVoiceWork([
       { prompt: job, messages: [looking, fixedBug] },
@@ -104,9 +124,12 @@ describe('what the Agent says goes back to the voice', () => {
     ]);
 
     await askAndWaitForEnd(work);
-    expect(background(work)).toContain('The Agent finished its Turn.');
+    expect(background(work)).toContain(relayWords.finished);
 
     work.provider.call.requestWork('r2', 'Break it');
-    await expect.poll(() => spoken(work).join('\n')).toContain('Turn failed');
+    await expect
+      .poll(() => spoken(work).join('\n'))
+      .toContain(relayWords.failed('').trim());
+    expect(spoken(work).join('\n')).toContain('The Agent crashed');
   });
 });

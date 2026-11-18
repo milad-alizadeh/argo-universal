@@ -1,6 +1,6 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
 import type { FeedSubscribeOutput, SessionUpdate } from '@repo/contracts';
-import { feedRow } from '@repo/db/schema';
+import { feedRow, turn } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { FakeVoiceProvider } from '../src/voice/fake-provider';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
@@ -94,6 +94,15 @@ export class VoiceWork {
 
   public readonly turnEnds = async (): Promise<SessionUpdate[]> =>
     (await this.feed()).filter(hasTurnEnd);
+
+  // The stored Turn: when it started, and how it ended.
+  public turnRecord(turnId: string): typeof turn.$inferSelect | undefined {
+    return this.host.database
+      .select()
+      .from(turn)
+      .where(eq(turn.id, turnId))
+      .get();
+  }
 
   // The Agent messages as storage holds them, whatever the Feed shows.
   public storedMessages(): string {

@@ -28,7 +28,7 @@ describe('a request for work from the voice', () => {
     ]);
   });
 
-  it('starts a Turn with its own Prompt row and stop reason', async () => {
+  it('starts a Turn with its own start, Prompt row and stop reason', async () => {
     const work = await startVoiceWork([
       { prompt: fixBuild, messages: [fixed] },
     ]);
@@ -39,8 +39,16 @@ describe('a request for work from the voice', () => {
     await expect.poll(work.turnEnds).toHaveLength(2);
     const [prompt] = await work.promptRows();
     const ends = await work.turnEnds();
+    const turnId = String(prompt?.turnId);
+    const record = work.turnRecord(turnId);
+
+    expect(record).toMatchObject({
+      status: 'ended',
+      stopReason: 'end_turn',
+      startedAt: expect.anything(),
+    });
     expect(ends.at(-1)).toMatchObject({
-      turnId: prompt?.turnId,
+      turnId,
       _meta: { argo: { turnEnd: { stopReason: 'end_turn' } } },
     });
   });

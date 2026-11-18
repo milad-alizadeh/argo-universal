@@ -60,15 +60,35 @@ function drawn(events: FeedSubscribeOutput[]): string {
   return events.reduce((text, event) => apply(text, filter.output(event)), '');
 }
 
-it('hides a mark that arrives split across chunks, and the space after it', () => {
-  expect(
-    drawn([
-      opened(''),
-      appended('[STA', 0),
-      appended('TUS] ', 4),
-      appended('Looking', 9),
-    ]),
-  ).toBe('Looking');
+const marks = ['[STATUS]', '[COMPLETE]', '[ANALYSIS]'];
+
+it.each(marks)(
+  'hides %s that arrives split across chunks, and the space after it',
+  (mark) => {
+    const middle = Math.floor(mark.length / 2);
+
+    expect(
+      drawn([
+        opened(''),
+        appended(mark.slice(0, middle), 0),
+        appended(`${mark.slice(middle)} `, middle),
+        appended('Looking', mark.length + 1),
+      ]),
+    ).toBe('Looking');
+  },
+);
+
+it.each(marks)(
+  'hides %s that opens an upsert row, and the space after it',
+  (mark) => {
+    expect(
+      drawn([opened(`${mark} Looking`), appended(' on', mark.length + 8)]),
+    ).toBe('Looking on');
+  },
+);
+
+it('hides a mark whose last character arrives with the text after it', () => {
+  expect(drawn([opened('[STATUS'), appended('] Looking', 7)])).toBe('Looking');
 });
 
 it('shows text that only starts like a mark once it is known to be text', () => {
@@ -77,4 +97,10 @@ it('shows text that only starts like a mark once it is known to be text', () => 
 
 it('passes a message without a mark as it comes', () => {
   expect(drawn([opened('Hello'), appended(' there', 5)])).toBe('Hello there');
+});
+
+it('leaves a mark in the middle of a message alone', () => {
+  expect(drawn([opened('Done [COMPLETE]'), appended(' ok', 15)])).toBe(
+    'Done [COMPLETE] ok',
+  );
 });
