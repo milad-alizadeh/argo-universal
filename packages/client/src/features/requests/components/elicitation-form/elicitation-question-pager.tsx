@@ -5,7 +5,13 @@ import {
 import type { IconSymbol } from '@repo/kit/symbols/icon-symbol';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import type { QuestionModel } from '../../hooks/use-elicitation-questions';
+
+type QuestionModel = {
+  index: number;
+  last: boolean;
+  inactive: boolean;
+  navigate: (index: number) => void;
+};
 
 type ModelProps = { model: QuestionModel };
 

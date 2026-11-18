@@ -26,6 +26,67 @@ type Story = StoryObj<typeof meta>;
 
 const retainedDraft = 'keep-this-draft';
 
+const nextQuestion = 'Next question';
+
+export const MixedQuestionsArePaged: Story = {
+  args: {
+    request: {
+      ...configurationRequest,
+      requestedSchema: {
+        properties: {
+          work: { type: 'string', title: 'Work', enum: ['Build', 'Fix'] },
+          work_other: { type: 'string', title: 'Other' },
+          detail: { type: 'string', title: 'Detail', minLength: 3 },
+        },
+        required: ['detail'],
+      },
+    },
+  },
+  play: async ({ userEvent, args }) => {
+    const sheet = within(await within(document.body).findByRole('dialog'));
+    await expect(sheet.getByText('1 of 2', { exact: false })).toBeVisible();
+    await expect(sheet.queryByRole('textbox', { name: /^Detail/ })).toBeNull();
+    await userEvent.click(sheet.getByRole('radio', { name: /^Build/ }));
+    await userEvent.type(
+      sheet.getByRole('textbox', { name: 'Other' }),
+      'A note',
+    );
+    await userEvent.click(sheet.getByRole('button', { name: 'Next' }));
+    await expect(args.onAnswer).not.toHaveBeenCalled();
+    await expect(sheet.queryByRole('radio', { name: /^Build/ })).toBeNull();
+    await userEvent.type(
+      sheet.getByRole('textbox', { name: /^Detail/ }),
+      'Details',
+    );
+    await userEvent.click(
+      sheet.getByRole('button', { name: 'Previous question' }),
+    );
+    await expect(sheet.getByRole('textbox', { name: 'Other' })).toHaveValue(
+      'A note',
+    );
+    await userEvent.click(sheet.getByRole('button', { name: 'Next' }));
+    await userEvent.click(sheet.getByRole('button', { name: 'Submit' }));
+    await expect(args.onAnswer).toHaveBeenCalledWith({
+      action: 'accept',
+      content: { work: 'Build', work_other: 'A note', detail: 'Details' },
+    });
+  },
+};
+
+export const SubmitReturnsToUnansweredPage: Story = {
+  args: { request: configurationRequest },
+  play: async ({ userEvent, args }) => {
+    const sheet = within(await within(document.body).findByRole('dialog'));
+    await userEvent.click(sheet.getByRole('button', { name: nextQuestion }));
+    await userEvent.click(sheet.getByRole('button', { name: nextQuestion }));
+    await userEvent.click(sheet.getByRole('button', { name: 'Submit' }));
+    await expect(args.onAnswer).not.toHaveBeenCalled();
+    await expect(sheet.getByText('1 of 3', { exact: false })).toBeVisible();
+    await expect(sheet.getByRole('textbox', { name: /^Name/ })).toBeVisible();
+    await expect(sheet.getByRole('button', { name: 'Next' })).toBeDisabled();
+  },
+};
+
 export const DismissWithEscape: Story = {
   play: async ({ userEvent, args }) => {
     const page = within(document.body);
@@ -43,6 +104,8 @@ export const SubmitFields: Story = {
   },
   play: async ({ userEvent, args }) => {
     const sheet = within(await within(document.body).findByRole('dialog'));
+    await userEvent.click(sheet.getByRole('button', { name: 'Next' }));
+    await userEvent.click(sheet.getByRole('button', { name: 'Next' }));
     // Expo's web switch hides its input under the drawn track, so a press lands on its title.
     await userEvent.click(sheet.getByText('Enable logging'));
     await userEvent.click(sheet.getByRole('button', { name: 'Submit' }));
@@ -97,6 +160,8 @@ export const RetainFieldAnswersAcrossTrayTransition: Story = {
     await expect(tray.getByRole('textbox', { name: /^Name/ })).toHaveValue(
       retainedDraft,
     );
+    await userEvent.click(tray.getByRole('button', { name: 'Next' }));
+    await userEvent.click(tray.getByRole('button', { name: 'Next' }));
     await userEvent.click(tray.getByRole('button', { name: 'Submit' }));
     await expect(args.onAnswer).toHaveBeenCalledWith({
       action: 'accept',
@@ -121,7 +186,7 @@ export const QuestionShownOnce: Story = {
   args: { request: questionsRequest },
   play: async ({ userEvent }) => {
     const sheet = within(await within(document.body).findByRole('dialog'));
-    await userEvent.click(sheet.getByRole('button', { name: 'Next question' }));
+    await userEvent.click(sheet.getByRole('button', { name: nextQuestion }));
     await expect(sheet.getByText('2 of 3', { exact: false })).toBeVisible();
     await expect(
       sheet.getAllByRole('heading', { name: questionsRequest.message }),

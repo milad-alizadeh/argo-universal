@@ -1,12 +1,13 @@
 import type { ReactElement } from 'react';
 import {
-  useElicitationForm,
-  type ElicitationModel,
-} from '../../hooks/use-elicitation-form';
+  useElicitationFieldPages,
+  type ElicitationPagedModel,
+} from '../../hooks/use-elicitation-field-pages';
 import {
   useElicitationQuestions,
   type QuestionModel,
 } from '../../hooks/use-elicitation-questions';
+import { fieldsHeader } from './elicitation-field-header';
 import { ElicitationFields } from './elicitation-fields';
 import { ElicitationValidation } from './elicitation-form-body';
 import type { ElicitationFormProps } from './elicitation-form-props';
@@ -29,7 +30,6 @@ export type {
   ElicitationFormProps,
 } from './elicitation-form-props';
 
-// The request as a card, in a Feed's request frame.
 export function ElicitationForm(props: ElicitationFormProps): ReactElement {
   return (
     <ElicitationContent
@@ -44,7 +44,7 @@ type ContentProps = ElicitationFormProps & { placement: ElicitationPlacement };
 
 /*
  * Every form-mode request draws as the same card. Choices with nothing else to check page one
- * question at a time; any other form is one page of fields, headed by its message.
+ * question at a time; other forms page their fields with schema validation.
  */
 export function ElicitationContent(props: ContentProps): ReactElement {
   const questions = elicitationQuestions(props.request);
@@ -98,7 +98,6 @@ function questionActions(
   };
 }
 
-// A lone question is the message itself; several are each headed by their own.
 function questionHeader(model: QuestionModel): ElicitationView['header'] {
   if (model.count === 1) return { title: model.props.request.message };
 
@@ -110,7 +109,7 @@ function questionHeader(model: QuestionModel): ElicitationView['header'] {
 }
 
 function FieldsContent(props: ContentProps): ReactElement {
-  const model = useElicitationForm(props);
+  const model = useElicitationFieldPages(props);
 
   return (
     <ElicitationLayout
@@ -122,22 +121,22 @@ function FieldsContent(props: ContentProps): ReactElement {
 
 function fieldsView(
   props: ContentProps,
-  model: ElicitationModel,
+  model: ElicitationPagedModel,
 ): ElicitationView {
   return {
     props,
     ...requestState(model),
-    header: { title: props.request.message },
+    header: fieldsHeader(model),
     rows: <ElicitationFields model={model} />,
     validation: <FieldsValidation model={model} />,
     actions: fieldsActions(model),
     inactive: model.inactive,
-    onEnter: () => model.answer('accept'),
+    onEnter: model.advance,
   };
 }
 
 const requestState = (
-  model: ElicitationModel,
+  model: ElicitationPagedModel,
 ): Pick<ElicitationView, 'state' | 'error'> => ({
   state: model.state,
   error: model.error,
@@ -146,7 +145,7 @@ const requestState = (
 function FieldsValidation({
   model,
 }: {
-  model: ElicitationModel;
+  model: ElicitationPagedModel;
 }): ReactElement {
   return (
     <ElicitationValidation
@@ -156,13 +155,14 @@ function FieldsValidation({
   );
 }
 
-// Skip declines the form: there is nothing to page past.
-function fieldsActions(model: ElicitationModel): ElicitationView['actions'] {
+function fieldsActions(
+  model: ElicitationPagedModel,
+): ElicitationView['actions'] {
   return {
-    last: true,
+    last: model.last,
     submitting: model.submitting,
-    canSubmit: model.isValid,
-    onSubmit: () => model.answer('accept'),
-    onSkip: () => model.answer('decline'),
+    canSubmit: model.canAdvance,
+    onSubmit: model.advance,
+    onSkip: model.skip,
   };
 }
