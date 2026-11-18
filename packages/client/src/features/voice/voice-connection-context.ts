@@ -6,3 +6,6 @@ const VoiceConnectionContext = createContext<VoiceConnection | null>(null);
 
 export const useVoiceConnection = (): VoiceConnection | null =>
   useContext(VoiceConnectionContext);
+
+// Gives a subtree the connection that carries its Voice calls.
+export const VoiceConnectionProvider = VoiceConnectionContext.Provider;

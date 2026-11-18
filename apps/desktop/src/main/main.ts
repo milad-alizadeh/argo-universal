@@ -10,6 +10,7 @@ import {
 import { createWindow, originOf } from './app-window';
 import { applicationMenu } from './application-menu';
 import { handleExternalLinks } from './handle-external-links';
+import { handleAppMicrophone } from './microphone-permission';
 import { handleProjectFolder } from './project-folder';
 import { reportUnexpectedFailure } from './report-unexpected-failure';
 import { reportFailure } from './server-failure-dialog';
@@ -99,6 +100,9 @@ if (process.platform === 'darwin') handleSymbolImages(windowOrigin);
 const retryServer = (): void => server.send({ type: 'server.retry' });
 
 handleServerRetry(windowOrigin, retryServer);
+
+// The microphone a Voice call listens through: asked for on first use, and only by the App's own page.
+handleAppMicrophone(session.defaultSession, windowOrigin);
 
 let serverStarted = false;
 
