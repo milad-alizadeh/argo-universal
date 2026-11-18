@@ -89,6 +89,13 @@ export const PairingWelcome = z.discriminatedUnion('paired', [
 
 export type PairingWelcome = z.infer<typeof PairingWelcome>;
 
+// What the Server seals into its handshake answer when the owner's Allow prompt is up and the owner has not yet answered; the welcome then follows as the channel's first record (ADR-0045).
+export const PairingAsked = z.strictObject({ asked: z.literal(true) });
+
+export const PairingAnswer = z.union([PairingWelcome, PairingAsked]);
+
+export type PairingAnswer = z.infer<typeof PairingAnswer>;
+
 /*
  * What `pairing.mint` hands the pair sheet: the invite the QR carries, and when the Ticket inside it stops being good.
  * The sheet redraws before then, so the code on screen is still valid when the owner finally gets their phone out (ADR-0045).

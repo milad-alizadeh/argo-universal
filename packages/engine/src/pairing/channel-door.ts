@@ -5,8 +5,8 @@ import type { OpenChannels } from '../devices/open-channels';
 import { admitAs, type RpcIdentity } from '../rpc/identity';
 import type { ChannelCarrier } from './channel-carrier';
 import { ChannelSocket } from './channel-socket';
-import { frameRecord } from './frames';
 import { HandshakeBuffer, type FirstMessage } from './handshake-buffer';
+import { HandshakeReply } from './handshake-reply';
 import { receiveHandshake } from './handshake-responder';
 import { SeenHandshakes } from './seen-handshakes';
 import type { Keypair } from './x25519';
@@ -91,15 +91,14 @@ export class ChannelDoor {
     const received = receiveHandshake(this.deps.staticKey, message.handshake);
     const claim = PairingClaim.parse(JSON.parse(received.claim.toString()));
 
+    const reply = new HandshakeReply(received, socket);
+
     const admission = this.seen.accept(received.ephemeral)
-      ? await this.admit(received.deviceKey, claim, socket)
+      ? await this.admit(received.deviceKey, claim, { socket, reply })
       : replayed;
 
-    const answered = received.answer(
-      Buffer.from(JSON.stringify(admission.welcome)),
-    );
+    const answered = reply.welcome(admission.welcome);
 
-    socket.write(frameRecord(answered.message));
     this.open({ socket, message, answered }, admission.identity);
   }
 
@@ -107,13 +106,12 @@ export class ChannelDoor {
   private admit(
     deviceKey: Buffer,
     claim: PairingClaim,
-    socket: ChannelCarrier,
+    { socket, reply }: { socket: ChannelCarrier; reply: HandshakeReply },
   ): Promise<Admission> {
-    return this.deps.admission.admit(
-      deviceKey,
-      claim,
-      socket.remoteAddress ?? 'unknown',
-    );
+    return this.deps.admission.admit(deviceKey, claim, {
+      source: socket.remoteAddress ?? 'unknown',
+      onAsking: () => reply.asking(),
+    });
   }
 
   private open(

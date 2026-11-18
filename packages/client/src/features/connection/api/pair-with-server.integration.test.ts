@@ -1,5 +1,5 @@
 import { startEngineTestHost } from '@repo/engine/mocks';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import {
   endpointOf,
   nodeChannelPlatform,
@@ -43,6 +43,38 @@ it('pairs when the owner allows, and then connects with the Device Key alone', a
 
   expect(again.deviceId).toBe(paired.deviceId);
   again.stream.close();
+});
+
+it('says the request is with the owner before the owner has answered', async () => {
+  const host = await startEngineTestHost();
+  const endpoint = await endpointOf(host);
+  const onReached = vi.fn<() => void>();
+  const { ticket } = host.pairing.mint();
+
+  const pairing = pairWithServer(endpoint, ticket, {
+    platform: nodeChannelPlatform(),
+    onReached,
+  });
+
+  await vi.waitFor(() => expect(onReached).toHaveBeenCalledOnce());
+  await answer(host, 'allow');
+
+  await expect(pairing).resolves.toMatchObject({
+    deviceId: expect.any(String),
+  });
+});
+
+it('says nothing of the owner when the Server turns the code away', async () => {
+  const host = await startEngineTestHost();
+  const onReached = vi.fn<() => void>();
+
+  await expect(
+    pairWithServer(await endpointOf(host), '000000', {
+      platform: nodeChannelPlatform(),
+      onReached,
+    }),
+  ).rejects.toBeInstanceOf(PairingRefused);
+  expect(onReached).not.toHaveBeenCalled();
 });
 
 it("rejects with the Server's refusal when the owner says no", async () => {
