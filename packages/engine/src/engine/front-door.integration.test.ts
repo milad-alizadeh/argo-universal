@@ -1,5 +1,6 @@
 import { request } from 'node:http';
 import { connect, type Socket } from 'node:net';
+import { channelPath } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import {
@@ -143,7 +144,7 @@ describe.skipIf(!lanAddress)(
         await plainStatus({
           host: lanAddress,
           port,
-          path: '/channel',
+          path: channelPath,
           headers: await asServerDevice(host.home),
         }),
       ).toBe(404);
