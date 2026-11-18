@@ -53,7 +53,7 @@ const finished = (
   };
 };
 
-export const voiceCallSetup = setup({
+const voiceCallSetup = setup({
   // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
     input: {} as VoiceCallInput,
