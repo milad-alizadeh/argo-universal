@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { ChangesViewProps } from '#features/changes';
 import type { SessionPullRequest } from '#features/sessions';
 import { pullRequestMocks } from '../../../../features/sessions/components/session-pull-request.mocks';
 import { withCheckoutFiles } from './checkout-files';
@@ -12,8 +13,8 @@ const elsewhere: SessionPullRequest = pullRequestMocks.checksRunning;
 
 describe("a Change row's files", () => {
   it("open the Checkout's Changes against main for the Change on the Checkout", () => {
-    const onComparisonChange = vi.fn();
-    const open = vi.fn();
+    const onComparisonChange = vi.fn<ChangesViewProps['onComparisonChange']>();
+    const open = vi.fn<() => void>();
     const [change] = withCheckoutFiles([onCheckout], onComparisonChange, open);
 
     change?.onOpenFiles?.();

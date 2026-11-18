@@ -109,7 +109,21 @@ function trailingPart(
   return change.checks && checksPart(change.checks, onOpen);
 }
 
-// The diff total; on the Checkout's own Change it opens the Checkout's Changes, and a pointer over it underlines it as the title does.
+// The diff total on the Checkout's own Change opens the Checkout's Changes; a pointer over it underlines it as the title does.
+const pressableTotal = (
+  total: ReactElement,
+  onOpenFiles: () => void,
+): ReactElement => (
+  <Pressable
+    role="button"
+    accessibilityLabel={checkoutChangesLabel}
+    onPress={onOpenFiles}
+    className="web:hover:underline"
+  >
+    {total}
+  </Pressable>
+);
+
 function DiffTotalPart({
   change,
   onOpenFiles,
@@ -118,18 +132,7 @@ function DiffTotalPart({
 
   const total = <ChangeDiffTotal {...change.summary} icon />;
 
-  return onOpenFiles ? (
-    <Pressable
-      role="button"
-      accessibilityLabel={checkoutChangesLabel}
-      onPress={onOpenFiles}
-      className="web:hover:underline"
-    >
-      {total}
-    </Pressable>
-  ) : (
-    total
-  );
+  return onOpenFiles ? pressableTotal(total, onOpenFiles) : total;
 }
 
 // The number and the diff total, with the checks at the trailing edge, under the menu; the checks list each check on the web, and on a phone open the Change.
