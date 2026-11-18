@@ -10,7 +10,7 @@ import {
 } from '../scaffold-kit-props';
 
 const screenReader =
-  'Announces the title as the screen title, a button with its menu when it has a `titleMenu`, then the search field, the Options button and header Actions, then the content.';
+  'Announces the title as the screen title, then the search field, the Options button and header Actions, then the content. A title with a `titleMenu` is announced as a button with its menu, named by the title; only the web also keeps it a heading.';
 
 const listDetailReader =
   'Reads the list, then the selected item beside it on wide windows; on compact ones the list is the screen and opening a row moves to the item.';

@@ -86,15 +86,15 @@ const emptyOf = (
     ? refusedList(view, refused, framing)
     : emptyList(view.project.key, listing);
 
-// Under the rows the list names its Jira project and site, as the Issue tracker names its repository.
+/*
+ * The list's frame is its empty state: the header names the Jira project and site, in the caption on a wide window and
+ * at the head of the title's menu on every window, so no footer repeats them under the rows.
+ */
 const listFrame = (
   view: Issues,
   refused: JiraFailure | undefined,
   drawing: Drawing,
-): ListFrame => ({
-  footer: `${view.project.key} · ${view.site.host}`,
-  empty: emptyOf(view, refused, drawing),
-});
+): ListFrame => ({ empty: emptyOf(view, refused, drawing) });
 
 // The issues the filters leave as a list, whose load more reads Jira's next page.
 function listBody(

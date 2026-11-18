@@ -1,6 +1,10 @@
 import type { ReactElement } from 'react';
 import type { IconSymbol } from '#kit/symbols/icon-symbol';
-import { Menu, type MenuEntry } from '#primitives/overlays/menu';
+import {
+  Menu,
+  type MenuEntry,
+  type MenuProps,
+} from '#primitives/overlays/menu';
 import {
   submenuGroups,
   isSubmenu,
@@ -40,6 +44,8 @@ interface ActionMenuProps {
   groups: ActionGroup[];
   label: string;
   trigger: ReactElement;
+  // Which edge of the trigger the menu lines up with: the end, as right-hand header buttons need, unless said.
+  align?: MenuProps['align'];
 }
 
 // The one header menu: the overflow's and each submenu's.
@@ -49,6 +55,7 @@ export function ActionMenu(props: ActionMenuProps): ReactElement {
       accessibilityLabel={props.label}
       trigger={props.trigger}
       actions={headerMenuActions(props.groups)}
+      align={props.align}
     />
   );
 }

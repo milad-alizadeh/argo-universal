@@ -173,3 +173,32 @@ const oneEdge: Story = {
 export const OptionsOneEdgePhone = atWidth(screenWidths.Phone, oneEdge);
 
 export const OptionsOneEdgeWide = atWidth(screenWidths.Wide, oneEdge);
+
+// A wide window's Options pill shows its count beside its label, as well as saying it.
+export const OptionsPillCountWide = atWidth(screenWidths.Wide, {
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('button', optionsButton)).toHaveTextContent(
+      'Options · 1',
+    );
+  },
+});
+
+// The title's menu opens below the title, lined up with its start, not over what sits to its left.
+export const TitleMenuBelowWide = atWidth(screenWidths.Wide, {
+  play: async (context) => {
+    const { canvas, userEvent } = context;
+    const button = canvas.getByRole('button', { name: 'Group one' });
+
+    await userEvent.click(button);
+
+    const menu = await body(context).findByRole('menu');
+
+    await settleOverlays(menu);
+
+    const below = menu.getBoundingClientRect();
+    const title = button.getBoundingClientRect();
+
+    await expect(Math.round(below.left)).toBe(Math.round(title.left));
+    await expect(below.top).toBeGreaterThanOrEqual(title.bottom);
+  },
+});

@@ -46,6 +46,19 @@ function pageOptionsOf(
 }
 
 /*
+ * Whether the options are open. Options that go away, while a List selects or when a page draws without them, close
+ * with them, so they never come back already open.
+ */
+function useOptionsOpen(present: boolean): OpenState {
+  const [open, onOpenChange] = useState(false);
+  const shown = open && present;
+
+  if (open !== shown) onOpenChange(false);
+
+  return { open: shown, onOpenChange };
+}
+
+/*
  * The title's menu and the page's options, read once beside the header's Actions. A selecting List's header replaces
  * the Screen's, so neither is declared meanwhile. The App owns whether the options are open: a Plugin's choices inside
  * them change its Page state, and the sheet stays open across the redraws they cause.
@@ -56,11 +69,11 @@ function useScreenExtras(
 ): ScreenExtras {
   const declared = selection?.header ? nothingDeclared : props;
   const title = useDeclaredActions(declared.titleMenu);
-  const [open, onOpenChange] = useState(false);
+  const state = useOptionsOpen(Boolean(declared.options));
 
   return {
     titleGroups: title.groups,
-    pageOptions: pageOptionsOf(declared, { open, onOpenChange }, site),
+    pageOptions: pageOptionsOf(declared, state, site),
     anchor: title.id,
   };
 }

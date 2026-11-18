@@ -107,8 +107,7 @@
                   "pageState": {}
                 },
                 "appearance": "plain",
-                "density": "compact",
-                "footer": "ARGO · arena.atlassian.net"
+                "density": "compact"
               },
               "children": [
                 {

@@ -15,25 +15,32 @@ interface TitleMenuProps {
 
 /*
  * A title that opens a menu, such as a picker of what the page shows: the heading holds a WAI-ARIA menu button, the
- * title and a down chevron, so the title is still the page's heading and is announced as a button with its menu. The
+ * title and a down chevron. On the web the title is still the page's heading and is announced as a button with its
+ * menu; on iOS and Android the system menu's button is the one accessible element, so it is read as a button. The
  * menu is the header's own (`ActionMenu`): Radix on the web, a SwiftUI Menu on iOS and a Compose DropdownMenu on
- * Android.
+ * Android. It opens below the title, from its start, as a scope picker under a leading title does.
  */
 export function TitleMenu(props: TitleMenuProps): ReactElement {
+  const trigger = <TitleTrigger title={props.title} />;
+
   return (
-    <View
-      accessibilityRole="heading"
-      aria-level={props.level}
-      className="min-w-0 flex-row"
-    >
+    <View {...headingOf(props.level)}>
       <ActionMenu
         groups={props.groups}
         label={props.title}
-        trigger={<TitleTrigger title={props.title} />}
+        trigger={trigger}
+        align="start"
       />
     </View>
   );
 }
+
+const headingOf = (level: number) =>
+  ({
+    accessibilityRole: 'heading',
+    'aria-level': level,
+    className: 'min-w-0 flex-row',
+  }) as const;
 
 // The menu passes its press handlers and ref through these props.
 type TitleTriggerProps = Omit<

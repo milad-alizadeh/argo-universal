@@ -85,3 +85,40 @@ it(
   },
   timeoutMs,
 );
+
+const nodesIn = (node: WireNode): WireNode[] => [
+  node,
+  ...node.children.flatMap(nodesIn),
+];
+
+const isSwitch = (node: WireNode): boolean => node.type === 'SegmentedControl';
+
+it(
+  'keeps the List / Board switch in the Options, never in the page under the header',
+  async () => {
+    const jira = await startJira();
+    const page = await argoIssues(jira);
+    const shown = page.find(screen);
+    const options = (shown.slots.options ?? []).flatMap(nodesIn);
+
+    expect(options.filter(isSwitch)).toHaveLength(1);
+    expect(shown.children.flatMap(nodesIn).filter(isSwitch)).toEqual([]);
+  },
+  timeoutMs,
+);
+
+it(
+  'reads the most recently updated first when an address names no order it knows',
+  async () => {
+    const jira = await startJira();
+    const page = await argoIssues(jira);
+
+    await jira.test.pages.open({
+      path: page.path,
+      pageState: { sort: 'oldest' },
+    });
+
+    expect(lastJql(jira)).toMatch(/ ORDER BY updated DESC$/u);
+  },
+  timeoutMs,
+);

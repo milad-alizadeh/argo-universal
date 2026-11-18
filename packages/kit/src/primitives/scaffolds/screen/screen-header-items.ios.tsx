@@ -38,34 +38,35 @@ export function ScreenHeaderItems(
   );
 }
 
-// A narrow root, which ☰ opens from, has the system's large title; pushed pages keep the inline one.
-function RootTitle(): ReactElement | null {
-  if (useScreenMenu() === null) return null;
-
-  return <Stack.Screen options={{ headerLargeTitleEnabled: true }} />;
-}
-
 type TitleProps = { title?: string; groups: ActionGroup[] };
 
-/*
- * A title with a menu draws in the bar's title place as the menu's button, inline: a large title is UIKit's own text
- * and could not open the menu.
- */
-function TitleItem(props: TitleProps): ReactElement | null {
-  if (!props.groups.length) return <RootTitle />;
+type TitleDrawing = (() => ReactElement) | undefined;
 
-  return <TitleMenuItem {...props} />;
+// A title with a menu is the menu's button; with none, the bar draws its own title, so a menu set before goes.
+function titleDrawing({ title, groups }: TitleProps): TitleDrawing {
+  if (!title || !groups.length) return undefined;
+
+  return function TitleMenuDrawing() {
+    return <TitleMenu title={title} level={1} groups={groups} />;
+  };
 }
 
-function TitleMenuItem({ title, groups }: TitleProps): ReactElement | null {
-  if (!title) return null;
-
-  const headerTitle = (): ReactElement => (
-    <TitleMenu title={title} level={1} groups={groups} />
-  );
+/*
+ * Every draw sets the title's options, since a navigator keeps what an earlier draw set: a title with a menu draws in
+ * the bar's title place as the menu's button, inline, as a large title is UIKit's own text and could not open it; a
+ * narrow root without one, which ☰ opens from, has the system's large title, and pushed pages keep the inline one.
+ */
+function TitleItem(props: TitleProps): ReactElement {
+  const headerTitle = titleDrawing(props);
+  const root = useScreenMenu() !== null;
 
   return (
-    <Stack.Screen options={{ headerTitle, headerLargeTitleEnabled: false }} />
+    <Stack.Screen
+      options={{
+        headerTitle,
+        headerLargeTitleEnabled: root && headerTitle === undefined,
+      }}
+    />
   );
 }
 
