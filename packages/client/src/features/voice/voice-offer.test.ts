@@ -5,7 +5,13 @@ import { voiceOffered } from './voice-offer';
 const status = (
   enabled: boolean,
   availability: VoiceStatus['availability'],
-): VoiceStatus => ({ call: null, ended: null, availability, enabled });
+): VoiceStatus => ({
+  call: null,
+  ended: null,
+  partials: [],
+  availability,
+  enabled,
+});
 
 // What the Composer's `voice.usable` is set from; an unusable one draws no voice button (composer-conditions).
 describe('the voice button is offered', () => {
