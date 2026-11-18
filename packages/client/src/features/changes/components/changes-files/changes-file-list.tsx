@@ -56,19 +56,20 @@ const identity = {
  * more is coming.
  */
 export function FileList(props: FileListProps): React.JSX.Element {
-  const rows = useRows(props);
+  const { folded, ...rows } = useRows(props);
 
   return (
     <List<ChangesItem>
       {...rows}
       {...identity}
-      {...listEnd(props)}
+      {...listEnd(props, folded)}
       header={props.header}
     />
   );
 }
 
 interface Rows {
+  folded: ReadonlySet<string>;
   ref: FoldScroll['ref'];
   items: ChangesItem[];
   stickyHeaderIndices: number[];
@@ -103,6 +104,7 @@ function useRows(props: FileListProps): Rows {
   const context = useRowContext({ ...props, folded: open.folded, setOpen });
 
   return {
+    folded: open.folded,
     ref,
     items: lists.items,
     stickyHeaderIndices: lists.sticky,
@@ -127,15 +129,18 @@ function useListItems(
 
 type EndProps = Pick<FileListProps, 'moreFiles' | 'onLoadMoreFiles' | 'diffs'>;
 
-const isLoadingMore = (props: EndProps): boolean | undefined =>
-  props.moreFiles || diffsLoading(props.diffs);
+const isLoadingMore = (
+  props: EndProps,
+  folded: ReadonlySet<string>,
+): boolean | undefined => props.moreFiles || diffsLoading(props.diffs, folded);
 
 function listEnd(
   props: EndProps,
+  folded: ReadonlySet<string>,
 ): Pick<ListProps<ChangesItem>, 'onEndReached' | 'endContent'> {
   return {
     onEndReached: props.moreFiles ? props.onLoadMoreFiles : undefined,
-    endContent: isLoadingMore(props) ? <LoadingMore /> : undefined,
+    endContent: isLoadingMore(props, folded) ? <LoadingMore /> : undefined,
   };
 }
 
