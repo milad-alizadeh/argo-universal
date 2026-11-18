@@ -5,6 +5,7 @@ import { resourceIcon, resourceName } from '@repo/kit/primitives/content/code';
 import { Markdown } from '@repo/kit/primitives/content/markdown';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { imageKeyAt } from '../../view/keyed-image';
 import { FeedDisclosure } from '../feed-disclosure';
 import { FeedImage } from '../feed-image';
 import { UnsupportedFeedContent } from '../feed-notice/feed-notice';
@@ -62,8 +63,10 @@ const resourceLink = (block: ResourceLinkBlock): React.JSX.Element => (
 
 function FeedNonTextContent({
   block,
+  imageKey,
 }: {
   block: NonTextBlock;
+  imageKey?: string;
 }): React.JSX.Element {
   if (block.type === 'resource') {
     const { uri, text } = block.resource;
@@ -74,7 +77,7 @@ function FeedNonTextContent({
   if (block.type === 'unsupported')
     return <UnsupportedFeedContent block={block} />;
 
-  return <FeedImage image={block} />;
+  return <FeedImage image={block} imageKey={imageKey} />;
 }
 
 interface TextDrawing {
@@ -84,6 +87,8 @@ interface TextDrawing {
 
 interface FeedContentBlockProps extends TextDrawing {
   block: ContentBlock;
+  // Where the Feed holds the block, when it is an image of a row the Feed lists.
+  imageKey?: string;
 }
 
 const markdown = (
@@ -100,6 +105,7 @@ const markdown = (
 
 function FeedContentBlock({
   block,
+  imageKey,
   ...drawing
 }: FeedContentBlockProps): React.JSX.Element {
   if (block.type === 'text') return markdown(block.text, drawing);
@@ -107,37 +113,51 @@ function FeedContentBlock({
   return block.type === 'resource_link' ? (
     resourceLink(block)
   ) : (
-    <FeedNonTextContent block={block} />
+    <FeedNonTextContent block={block} imageKey={imageKey} />
   );
 }
 
 const blockType = (block: ContentBlock): ContentBlock['type'] => block.type;
 
-// Each block with its key; only the last block streams.
-const keyedBlocks = (
-  content: readonly ContentBlock[],
-  streaming: boolean,
-): { key: string; block: ContentBlock; streaming: boolean }[] =>
+interface KeyedBlocks {
+  content: readonly ContentBlock[];
+  streaming: boolean;
+  rowId?: string;
+}
+
+// Each block with its key; only the last block streams, and a listed row's blocks carry their place in it.
+const keyedBlocks = ({
+  content,
+  streaming,
+  rowId,
+}: KeyedBlocks): ({ key: string } & Omit<
+  FeedContentBlockProps,
+  'textVariant'
+>)[] =>
   withOccurrenceKeys(content, blockType).map(({ item, key }, index) => ({
     key,
     block: item,
     streaming: streaming && index === content.length - 1,
+    imageKey: rowId === undefined ? undefined : imageKeyAt(rowId, index),
   }));
 
 interface FeedContentProps {
   content: readonly ContentBlock[];
   streaming?: boolean;
   textVariant?: TextVariant;
+  // The row the blocks belong to, so its images open among the Feed's other images.
+  rowId?: string;
 }
 
 export function FeedContent({
   content,
   streaming = false,
   textVariant = 'feed',
+  rowId,
 }: FeedContentProps): React.JSX.Element {
   return (
     <View className="gap-2.5">
-      {keyedBlocks(content, streaming).map(({ key, ...block }) => (
+      {keyedBlocks({ content, streaming, rowId }).map(({ key, ...block }) => (
         <FeedContentBlock key={key} {...block} textVariant={textVariant} />
       ))}
     </View>

@@ -1,5 +1,6 @@
 import type { ContentBlock } from '@repo/contracts';
 import type { FeedViewItem } from '../view/feed-view';
+import { type FeedRow, isMessage } from '../view/message-row';
 import { turnEndNotice } from './turn-end/turn-end-notice';
 
 // Items the Feed draws whatever they hold; a row draws by its update (`drawsRow`).
@@ -18,16 +19,8 @@ const drawnItemTypes: Record<
 
 const drawnRows = new Set<string>(['notice', 'compaction_update']);
 
-const messageRows = new Set<string>([
-  'user_message',
-  'prompt_message',
-  'agent_message',
-]);
-
 const isBlankText = (block: ContentBlock): boolean =>
   block.type === 'text' && block.text.trim() === '';
-
-type FeedRow = Extract<FeedViewItem, { type: 'row' }>['row'];
 
 const hasVisibleContent = (
   row: Extract<FeedRow, { content: unknown }>,
@@ -39,13 +32,6 @@ const hasVisibleContent = (
  */
 const drawsMessage = (row: Extract<FeedRow, { content: unknown }>): boolean =>
   row.state === 'open' || hasVisibleContent(row);
-
-const isMessage = (
-  row: FeedRow,
-): row is Extract<
-  FeedRow,
-  { sessionUpdate: 'user_message' | 'prompt_message' | 'agent_message' }
-> => messageRows.has(row.sessionUpdate);
 
 // A row draws by its update: a Notice and a Compaction always, a message when it holds anything to see.
 const drawsRow = (row: FeedRow): boolean =>
