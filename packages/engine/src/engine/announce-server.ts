@@ -7,6 +7,12 @@ import type { HttpServerOptions, RoutedSetup } from './http-server';
 export const discoveryNameOf = (options: HttpServerOptions): string =>
   options.discoveryName ?? readSystemInfo(options).name;
 
+// Where the announcement is said to have happened: the Server's own log.
+const reportTo =
+  (options: HttpServerOptions) =>
+  (line: string): void =>
+    writeLog({ home: options.home, label: 'engine', line });
+
 // Announces the Server on the local network for as long as Local network access is on; answers a function that says goodbye.
 export const announceServer = (
   options: HttpServerOptions,
@@ -19,5 +25,5 @@ export const announceServer = (
       key: setup.serverPublicKey,
       port: options.port,
     },
-    (line): void => writeLog({ home: options.home, label: 'engine', line }),
+    { report: reportTo(options) },
   );

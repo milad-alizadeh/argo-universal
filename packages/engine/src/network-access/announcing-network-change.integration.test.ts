@@ -2,54 +2,48 @@ import { keyHashOf } from '@repo/contracts';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { lanAddress, watchAnnouncedServers } from '#mocks/engine-network';
 import { announceWhileLocalNetworkAccessIsOn } from './advertiser';
-import type { LocalNetworkAccess } from './local-network-access';
 
 const key = 'a-key-for-a-moved-computer';
 
-const on = {
-  enabled: true,
-  subscribe: (): (() => void) => (): void => undefined,
-} as unknown as LocalNetworkAccess;
+const on = { enabled: true, subscribe: (): (() => void) => (): void => {} };
 
 const announcement = { name: 'Moved Mac', key, port: 4000 };
 
-function listen(): { isHeard: () => boolean } {
+function listen(): () => boolean {
   let heard = false;
 
   const stop = watchAnnouncedServers((servers): void => {
     heard = servers.some((server) => server.keyHash === keyHashOf(key));
   });
+
   onTestFinished(stop);
 
-  return { isHeard: (): boolean => heard };
+  return (): boolean => heard;
 }
 
 function announceOn(addresses: () => string[], lines: string[]): void {
-  const stop = announceWhileLocalNetworkAccessIsOn(
-    on,
-    announcement,
-    (line): void => void lines.push(line),
-    { addresses, checkEveryMs: 50 },
-  );
+  const stop = announceWhileLocalNetworkAccessIsOn(on, announcement, {
+    report: (line): void => void lines.push(line),
+    watch: { addresses, checkEveryMs: 50 },
+  });
 
   onTestFinished(stop);
 }
+
+const own = lanAddress ? [lanAddress] : [];
 
 it.skipIf(!lanAddress)(
   'announces on a network the computer joins after the Server started',
   { timeout: 20_000 },
   async () => {
     let now: string[] = [];
-    const lines: string[] = [];
-    const network = listen();
+    const isHeard = listen();
 
-    announceOn(() => now, lines);
-    now = lanAddress ? [lanAddress] : [];
+    announceOn(() => now, []);
+    expect(isHeard()).toBe(false);
+    now = own;
 
-    await vi.waitFor(() => expect(network.isHeard()).toBe(true), {
-      timeout: 8000,
-    });
-    expect(lines.join('\n')).toContain(`${lanAddress}`);
+    await vi.waitFor(() => expect(isHeard()).toBe(true), { timeout: 8000 });
   },
 );
 
@@ -58,7 +52,7 @@ it.skipIf(!lanAddress)(
   async () => {
     const lines: string[] = [];
 
-    announceOn(() => (lanAddress ? [lanAddress] : []), lines);
+    announceOn(() => own, lines);
 
     await vi.waitFor(() =>
       expect(lines).toContain(

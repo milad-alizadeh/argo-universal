@@ -85,18 +85,22 @@ type Plain = (knocking: Knocking, opening: Buffer) => void;
 // Enough bytes to tell a channel, a typed code's ask and a channel's WebSocket apart; every HTTP request line is longer.
 const openingLength = Math.max(channelMagic.length, carrierOpeningLength);
 
-function peek(knocking: Knocking, received: Buffer): void {
-  const { socket } = knocking;
+// What has arrived so far, with whatever the socket holds now.
+function joined(socket: ChannelCarrier, received: Buffer): Buffer {
   const chunk: unknown = socket.read();
 
-  const opening = Buffer.isBuffer(chunk)
-    ? Buffer.concat([received, chunk])
-    : received;
+  return Buffer.isBuffer(chunk) ? Buffer.concat([received, chunk]) : received;
+}
 
-  // A channel or a typed code's ask is known by its first bytes; anything else waits until a WebSocket's request line could be read.
-  if (nameOf(opening) || opening.length >= openingLength)
-    return admit(knocking, opening);
-  socket.once('readable', (): void => peek(knocking, opening));
+// A channel or a typed code's ask is known by its first bytes; anything else waits until a WebSocket's request line could be read.
+const isTold = (opening: Buffer): boolean =>
+  Boolean(nameOf(opening)) || opening.length >= openingLength;
+
+function peek(knocking: Knocking, received: Buffer): void {
+  const opening = joined(knocking.socket, received);
+
+  if (isTold(opening)) return admit(knocking, opening);
+  knocking.socket.once('readable', (): void => peek(knocking, opening));
 }
 
 function admit(knocking: Knocking, opening: Buffer): void {

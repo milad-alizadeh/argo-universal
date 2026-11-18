@@ -29,6 +29,13 @@ export interface ChannelDoorDeps {
   readonly report: (subject: string, value: string | undefined) => void;
 }
 
+// A socket whose first message is still arriving.
+interface Reading {
+  readonly socket: ChannelCarrier;
+  readonly buffer: HandshakeBuffer;
+  readonly proven: () => void;
+}
+
 /*
  * The Server's side of the encrypted channel. Every Device beyond the Server Device's own App arrives here, proves which Device Key it holds, and is either given the Connection or told why it is not (ADR-0045).
  * Nothing it cannot authenticate reaches a router: a socket that fails here is closed, not passed on.
@@ -43,22 +50,24 @@ export class ChannelDoor {
     opening: Buffer,
     proven: () => void,
   ): void {
-    const buffer = new HandshakeBuffer();
+    this.read({ socket, buffer: new HandshakeBuffer(), proven }, opening);
+  }
 
-    const read = (chunk: Buffer): void => {
-      const message = this.received(socket, buffer, chunk);
+  private read(reading: Reading, chunk: Buffer): void {
+    const { socket, buffer, proven } = reading;
+    const message = this.received(socket, buffer, chunk);
 
-      if (!message) return;
+    if (!message) return;
 
-      if (message === 'waiting') return void socket.once('data', read);
-      proven();
-      socket.pause();
-      void this.answer(socket, message).catch((cause: unknown): void =>
-        this.refuseSocket(socket, cause),
+    if (message === 'waiting')
+      return void socket.once('data', (more: Buffer): void =>
+        this.read(reading, more),
       );
-    };
-
-    read(opening);
+    proven();
+    socket.pause();
+    void this.answer(socket, message).catch((cause: unknown): void =>
+      this.refuseSocket(socket, cause),
+    );
   }
 
   // A first message that is too large is refused where it stands, so the Server never waits for bytes that were claimed and will not come.

@@ -25,6 +25,13 @@ interface Asked {
   readonly offered: OfferedTicket[];
 }
 
+// A socket whose first message is still arriving.
+interface Reading {
+  readonly socket: ChannelCarrier;
+  readonly buffer: HandshakeBuffer;
+  readonly proven: () => void;
+}
+
 const turnedAway = frameRecord(Buffer.from(refuseRun('ticket-attempts')));
 
 /*
@@ -39,22 +46,25 @@ export class KeyDoor {
     opening: Buffer,
     proven: () => void,
   ): void {
-    const buffer = new HandshakeBuffer();
+    this.read({ socket, buffer: new HandshakeBuffer(), proven }, opening);
+  }
 
-    const read = (chunk: Buffer): void => {
-      try {
-        const message = buffer.push(chunk);
+  private read(reading: Reading, chunk: Buffer): void {
+    const { socket, buffer, proven } = reading;
 
-        if (!message) return void socket.once('data', read);
-        proven();
-        this.answer(socket, message.handshake);
-      } catch (cause) {
-        this.deps.report('key question', String(cause));
-        socket.destroy();
-      }
-    };
+    try {
+      const message = buffer.push(chunk);
 
-    read(opening);
+      if (!message)
+        return void socket.once('data', (more: Buffer): void =>
+          this.read(reading, more),
+        );
+      proven();
+      this.answer(socket, message.handshake);
+    } catch (cause) {
+      this.deps.report('key question', String(cause));
+      socket.destroy();
+    }
   }
 
   private answer(socket: ChannelCarrier, ask: Buffer): void {

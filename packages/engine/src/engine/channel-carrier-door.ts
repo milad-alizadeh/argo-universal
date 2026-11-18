@@ -1,4 +1,9 @@
-import { createServer, type IncomingMessage } from 'node:http';
+import {
+  createServer,
+  type IncomingMessage,
+  type Server,
+  type ServerResponse,
+} from 'node:http';
 import type { Socket } from 'node:net';
 import { channelPath } from '@repo/contracts';
 import { createWebSocketStream, type WebSocket, WebSocketServer } from 'ws';
@@ -33,32 +38,9 @@ export function createCarrierDoor(
   report: (subject: string, value: string | undefined) => void,
 ): CarrierDoor {
   const knocking = new WeakMap<object, () => void>();
-  const carriers = new WebSocketServer({
-    noServer: true,
-    perMessageDeflate: false,
-  });
+  const requests = createRequests(report);
 
-  const requests = createServer((_request, response): void => {
-    response.writeHead(notFound).end();
-  });
-
-  requests.on('clientError', (cause, socket): void => {
-    report('channel WebSocket that failed', String(cause));
-    socket.destroy();
-  });
-
-  requests.on(
-    'upgrade',
-    (request: IncomingMessage, socket: Socket, head: Buffer): void => {
-      const proven = knocking.get(socket);
-
-      if (!proven || pathOf(request) !== channelPath)
-        return void socket.destroy();
-      carriers.handleUpgrade(request, socket, head, (webSocket): void =>
-        arrive(carrierOf(webSocket, socket), proven),
-      );
-    },
-  );
+  requests.on('upgrade', upgrading(knocking, arrive, newCarriers()));
 
   return {
     accept: (socket, opening, proven): void => {
@@ -69,8 +51,51 @@ export function createCarrierDoor(
   };
 }
 
+const newCarriers = (): WebSocketServer =>
+  new WebSocketServer({ noServer: true, perMessageDeflate: false });
+
+const notAnswered = (
+  _request: IncomingMessage,
+  response: ServerResponse,
+): void => {
+  response.writeHead(notFound).end();
+};
+
+function createRequests(
+  report: (subject: string, value: string | undefined) => void,
+): Server {
+  const requests = createServer(notAnswered);
+
+  requests.on('clientError', (cause, socket): void => {
+    report('channel WebSocket that failed', String(cause));
+    socket.destroy();
+  });
+
+  return requests;
+}
+
+type Upgrade = (request: IncomingMessage, socket: Socket, head: Buffer) => void;
+
+// Only a socket that opened a channel here, asking for the channel path, becomes a carrier.
+function upgrading(
+  knocking: WeakMap<object, () => void>,
+  arrive: Arrive,
+  carriers: WebSocketServer,
+): Upgrade {
+  return (request, socket, head): void => {
+    const proven = knocking.get(socket);
+
+    if (!proven || pathOf(request) !== channelPath)
+      return void socket.destroy();
+    carriers.handleUpgrade(request, socket, head, (carrier): void =>
+      arrive(carrierOf(carrier, socket), proven),
+    );
+  };
+}
+
+// The path of the request line, without its query.
 const pathOf = (request: IncomingMessage): string =>
-  new URL(request.url ?? '/', 'http://channel').pathname;
+  (request.url ?? '/').split('?')[0] ?? '/';
 
 // The WebSocket's messages as one stream of bytes, knocking from where the socket under it did.
 const carrierOf = (webSocket: WebSocket, socket: Socket): ChannelCarrier =>
