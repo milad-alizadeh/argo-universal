@@ -16,3 +16,7 @@ The adapter maps each recognised wrapper to a typed Session update:
 - One compaction produces one `compaction_update`, from the vendor's compaction boundary.
 
 The adapter drops system reminders, records that the vendor flags as meta or synthetic, and Codex's injected AGENTS.md, environment, and plugin blocks. It never removes text from inside tool output. The adapter drops a message type it does not map. A change that does not match the contract is rejected, logged and counted by the Feed (ADR 0015).
+
+## Reviews under ADR-0061
+
+Owner amendment, 2026-11-18 (#2373): [ADR-0061](0061-reviews-belong-to-the-engine-and-change-providers-own-remote-writes.md) adds Review as a fourth authenticated Prompt sender. The Engine records its Review identity and the Feed draws “From Review”. Reviewer instructions and Finding Fix Prompts use this sender. Agent-supplied JSON cannot claim it.

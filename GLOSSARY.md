@@ -316,6 +316,34 @@ _Avoid_: Workspace, worktree (when the main checkout is also possible)
 One line of work in a Session, named by its branch, at one of five stages: Working, Branch, Open, Merged or Closed. A Session can have several at once.
 _Avoid_: PR, pull request, diff, branch (for the work)
 
+**Reviewer**:
+A repository definition of what to examine in a Change and whether to return Findings or a Score.
+_Avoid_: Review Agent (for the definition), review prompt
+
+**Reviewer run**:
+One execution of a Reviewer for one Review, represented by a Started Session.
+_Avoid_: Review (for one run), Subagent
+
+**Review**:
+The Reviewer runs and their results for one Change at one head commit. A later Review keeps the earlier one as history.
+_Avoid_: GitHub review (for Argo’s Review), report
+
+**Finding**:
+A located problem from a Reviewer run, with a severity and an open, resolved or dismissed state. An open high Finding blocks readiness.
+_Avoid_: Comment (for an Argo Finding), issue
+
+**Score**:
+A Reviewer run’s bounded assessment of a Change, with a reason and a direction that says whether higher or lower is better.
+_Avoid_: Rating, grade
+
+**Check**:
+A code host’s reported result for a commit. An unknown Check is not a passed Check.
+_Avoid_: Test (for every Check), CI status
+
+**Argo Approval**:
+A person’s consent to merge one Change at one head commit. It is separate from a GitHub review and clears when the head changes.
+_Avoid_: Approval (without Argo when ambiguous), Agent approval
+
 **Stage**:
 How far a Change has come: Working, Branch, Open, Merged or Closed. A draft or a conflict describes an Open Change; it is not a Stage of its own.
 _Avoid_: Status, state
