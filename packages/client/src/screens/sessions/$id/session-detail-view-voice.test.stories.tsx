@@ -45,7 +45,7 @@ export const FieldInvitesTyping: Story = {
   play: async ({ canvas }) => {
     await settleLayout(1440);
     await expect(
-      await canvas.findByPlaceholderText('Type, or keep talking'),
+      await canvas.findByText('Type, or keep talking'),
     ).toBeInTheDocument();
   },
 };
