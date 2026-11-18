@@ -4,7 +4,7 @@ import {
   type Server,
   type ServerResponse,
 } from 'node:http';
-import type { Socket } from 'node:net';
+import type { Duplex } from 'node:stream';
 import { text } from 'node:stream/consumers';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { z } from 'zod';
@@ -125,7 +125,7 @@ export class FakeGptLiveEndpoint {
 
   private upgrade(
     request: IncomingMessage,
-    socket: Socket,
+    socket: Duplex,
     head: Buffer,
   ): void {
     const token = bearerOf(request);
