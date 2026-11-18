@@ -175,9 +175,11 @@ export const ReopeningTheInspectorKeepsTheAgentFeed: Story = {
         name: `Open ${runningSubagent.title}`,
       }),
     );
+
     const feed = await within(
       await canvas.findByRole('tabpanel', agentFeed),
     ).findByTestId('feed-scroll');
+
     await waitFor(() =>
       expect(feed.scrollHeight - feed.clientHeight).toBeGreaterThan(20),
     );
@@ -196,9 +198,11 @@ export const ReopeningTheInspectorKeepsTheAgentFeed: Story = {
 
     await assertOpened(canvas, true);
     await assertFeedShown(canvas, true);
+
     const restoredFeed = within(
       canvas.getByRole('tabpanel', agentFeed),
     ).getByTestId('feed-scroll');
-    await expect(restoredFeed.scrollTop).toBeCloseTo(10, 0);
+
+    await waitFor(() => expect(restoredFeed.scrollTop).toBeCloseTo(10, 0));
   },
 };

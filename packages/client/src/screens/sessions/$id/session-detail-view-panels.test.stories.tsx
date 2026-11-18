@@ -36,6 +36,8 @@ const hideInspector = { name: 'Hide Inspector' };
 
 const showInspector = { name: 'Show Inspector' };
 
+const restoreInspector = { name: 'Restore Inspector' };
+
 const changesEntry = { name: 'Open Changes overview' };
 
 const subagentsEntry = { name: `Open ${firstTitle}` };
@@ -93,7 +95,7 @@ export const ExpandSelectedPanel: Story = {
       canvas.getByRole('button', { name: 'Expand Inspector' }),
     );
     await expect(
-      await canvas.findByRole('button', { name: 'Restore Inspector' }),
+      await canvas.findByRole('button', restoreInspector),
     ).toBeVisible();
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
       ...selected,
@@ -101,7 +103,7 @@ export const ExpandSelectedPanel: Story = {
     await userEvent.click(canvas.getByRole('button', hideInspector));
     await userEvent.click(canvas.getByRole('button', showInspector));
     await expect(
-      await canvas.findByRole('button', { name: 'Restore Inspector' }),
+      await canvas.findByRole('button', restoreInspector),
     ).toBeVisible();
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
       ...selected,
@@ -109,9 +111,7 @@ export const ExpandSelectedPanel: Story = {
     await expect(
       within(canvas.getByRole('tabpanel', subagentsName)).getByText(firstTitle),
     ).toBeVisible();
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Restore Inspector' }),
-    );
+    await userEvent.click(canvas.getByRole('button', restoreInspector));
     await waitFor(() => expect(inspectorWidth(canvas)).toBe(resizedWidth));
   },
 };
