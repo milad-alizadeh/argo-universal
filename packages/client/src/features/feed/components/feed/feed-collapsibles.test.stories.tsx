@@ -46,6 +46,7 @@ function CompletingTurn(args: FeedProps): ReactElement {
       row: {
         ...recordedAgentMessage('agent-1', 'edit-and-command'),
         id: 'finishing-answer',
+        content: [{ type: 'text', text: 'The release checks passed.' }],
         state: 'settled',
       },
     },
@@ -65,31 +66,29 @@ function CompletingTurn(args: FeedProps): ReactElement {
   );
 }
 
-export const EasesToEndWhenWorkingCloses: Story = {
+export const KeepsTheAnswerStillWhenWorkingCloses: Story = {
   render: (args) => <CompletingTurn {...args} />,
   play: async ({ canvas }) => {
     await settleLayout('phone');
     const scroll = await canvas.findByTestId(feedScrollId);
     const working = await canvas.findByRole('status', { name: workingLabel });
     await scrollToEnd(scroll);
-    const before = scroll.scrollTop;
+    const answer = await canvas.findByText('The release checks passed.');
+    const before = answer.getBoundingClientRect().top;
     const finish = canvas.getByRole('button', { name: 'Complete Turn' });
 
     const offsets = await sampleEachFrame(
       () => finish.click(),
-      () => scroll.scrollTop,
+      () => answer.getBoundingClientRect().top,
       closingFrames,
     );
 
     await expect(working).not.toBeInTheDocument();
 
-    const after = scroll.scrollTop;
-
-    await expect(after).toBeLessThan(before);
     await expect(scrolledToEnd(scroll)).toBe(true);
     await expect(
-      offsets.some((offset) => offset < before && offset > after),
-    ).toBe(true);
+      Math.max(...offsets, before) - Math.min(...offsets, before),
+    ).toBeLessThanOrEqual(1);
   },
 };
 

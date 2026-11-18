@@ -18,7 +18,6 @@ export interface LiveHeaderEntry {
   liveHeader: LiveHeaderValue;
   toolCall?: ToolCallUpdate;
   closing?: boolean;
-  onExit?: () => void;
 }
 
 export type FeedEntry = FeedViewItem | LiveHeaderEntry;
@@ -30,7 +29,7 @@ export const entryType = (
   | Extract<FeedEntry, { type: 'row' }>['row']['sessionUpdate'] =>
   entry.type === 'row' ? entry.row.sessionUpdate : entry.type;
 
-export const liveHeaderKey = 'live-header';
+const liveHeaderKey = 'live-header';
 
 export const entryKey = (entry: FeedEntry): string =>
   entry.type === 'live_header' ? liveHeaderKey : feedItemKey(entry);

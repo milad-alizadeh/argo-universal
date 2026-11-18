@@ -17,7 +17,6 @@ import {
 import { DrawFeedScroll, useFeedOnScroll } from './feed-scroll-drawing';
 import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
-import { useCloseUnrenderedLiveHeader } from './use-exiting-live-header';
 import { type FeedEndMotion, useFeedEndMotion } from './use-feed-end-motion';
 
 // Clears whatever of the Composer covers the Feed's end, and the pill above it, and leaves the Feed's gap above them.
@@ -167,7 +166,6 @@ export function FeedScroll(props: FeedScrollProps): React.JSX.Element {
   const { list, atEnd, sessionId, ...rest } = props;
   const listProps = useFeedListProps(list, rest);
   const onScroll = useFeedOnScroll(sessionId, list);
-  useCloseUnrenderedLiveHeader(list, rest.entries.at(-1));
 
   const drawing = {
     base: feedListProps,

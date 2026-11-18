@@ -8,6 +8,7 @@ import type { FeedEntry } from './feed-entry';
 import { JumpToLatestWhenAway } from './feed-overlays';
 import type { EntryDrawing } from './feed-row';
 import { FeedScroll, type FeedScrollProps } from './feed-scroll';
+import { LiveHeaderMeasurement } from './live-header-row';
 import { useFeedGrowth } from './use-feed-growth';
 import {
   type FeedScrollPosition,
@@ -39,7 +40,9 @@ function FeedBody(scroll: FeedScrollProps): React.JSX.Element {
   return (
     <FeedGrowthContext.Provider value={feedGrowth}>
       <OrbContinuity>
-        <FeedScroll {...scroll} />
+        <LiveHeaderMeasurement>
+          <FeedScroll {...scroll} />
+        </LiveHeaderMeasurement>
       </OrbContinuity>
     </FeedGrowthContext.Provider>
   );
