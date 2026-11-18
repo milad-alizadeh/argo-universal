@@ -23,7 +23,7 @@ const none: CallOrigin = { kind: 'none' };
 it('keeps kit timers real and apart from Plugin timers under a test clock', async () => {
   const clock = new PluginTestClock();
   const bridge = Object.assign(async () => 'null', { origin: () => none });
-  const { context } = createPluginRealm(bridge, kitSource, clock);
+  const { context } = createPluginRealm(bridge, kitSource, { clock });
   const fired: string[] = [];
 
   context.run((name: string) => fired.push(name));

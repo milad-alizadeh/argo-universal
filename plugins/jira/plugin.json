@@ -250,8 +250,8 @@
     },
     {
       "kind": "fetch",
-      "host": "*",
-      "reason": "Finds your Atlassian site's cloud id at <site>.atlassian.net, and tells an unscoped API token from a wrong one. The Plugin calls only *.atlassian.net hosts this way."
+      "host": "*.atlassian.net",
+      "reason": "Finds your Atlassian site's cloud ID and distinguishes an unscoped API token from an invalid one."
     }
   ]
 }

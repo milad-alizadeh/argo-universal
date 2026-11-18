@@ -94,7 +94,10 @@ Plugin code runs in a bare JavaScript realm, neither Node nor a browser. It has 
 - Base64 and UTF-8 bytes: by hand from `encodeURIComponent`, as `basicCredential` in `plugins/jira/atlassian.ts` does.
 - Work on a clock: a page's `every`, or a Watch.
 
-`console` exists and writes nothing: a Plugin's `console.log` reaches no log, terminal or test (#2238). To see a value while you work, draw it on a page and read it in a test.
+The Plugin log records calls to `console.log`, `console.info`, `console.warn`, `console.error`, and `console.debug`.
+The Server replaces known Secret values and active secret param values with `[secret]`.
+Each Plugin has a rate and size limit for console output.
+The test kit reads these lines through `await test.log()`.
 
 ## Repository gates
 
@@ -321,7 +324,12 @@ export function register(argo: Argo): void {
 Declare the command's Capability in `plugin.json`. A process Query uses the Project folder of the page it is read for unless the Query specifies `cwd`. A direct `argo.process.run` call does not select the Project folder. Use a Query for commands that belong in that folder.
 A fetch Query accepts the same fields as `argo.fetch`, including POST requests. A storage Query contains `queries`, each with a read method: `get`, `all`, or `values`. It answers one `{ rows }` for each, and a row is an array of its column values in the `SELECT`'s order, never an object: `all` and `values` answer every row, and `get` answers its one row as `rows` itself, or `[]` when there is none. Read columns by position, as `const [cloudId, host] = row`.
 
-A `fetch` Capability names one exact host, or `*` for any host; there is no subdomain form such as `*.atlassian.net` yet (#2239). A Plugin that only learns the host when the person types it, as Jira learns a person's `<site>.atlassian.net`, declares `"host": "*"` with a `reason` that names the hosts it calls and why, and checks the typed host in its own code before calling it. The consent screen shows that reason. Jira's reads `<site>.atlassian.net/_edge/tenant_info` to find the site's cloud id, and `<site>.atlassian.net/rest/api/3/myself` to tell an unscoped API token from a wrong one; it accepts only `[a-z0-9-]+.atlassian.net` hosts (`plugins/jira/atlassian.ts`). A Plugin that knows its hosts in advance names each one instead.
+A `fetch` Capability names an exact host, a single-label subdomain pattern, or `*` for any host.
+The consent screen shows the declared host or pattern.
+Jira declares `*.atlassian.net` for requests to a site such as `team.atlassian.net`.
+The pattern matches exactly one DNS label before the suffix and uses the default HTTPS port.
+The Server checks the destination addresses on every request and redirect.
+Account hosts must be exact.
 Other `argo` calls are not Queries. Storage Queries use a read-only connection; writes through another read method are also refused.
 
 `read` answers the Query's data and keeps the last successful value. It throws, failing the draw, only when the Query has no answer yet: a refused call, a transport failure, or Argo's timeout. An HTTP 401 remains fetch data. An unavailable Account Borrow fails the read until it has data.

@@ -7,23 +7,23 @@ import type { PluginRealmExports } from './plugin-api.ts';
 import { type PluginBridge } from './plugin-bridge.ts';
 import {
   createPluginRealm,
-  type PluginClock,
   type PluginRealm,
+  type RealmOptions,
 } from './realm.ts';
 
 /*
- * The context deliberately has no Node globals; the frozen `argo` object, built inside the context, is its only way out. This is a
+ * The context has no Node globals. The frozen `argo` object, built inside the context, gives it access to Server services. This is a
  * first-party execution boundary, not a security boundary for untrusted code.
  */
 export async function registerPlugin(
   entry: PluginEntry,
   bridge: PluginBridge,
-  startup: { kit: string; initialized: () => void; clock?: PluginClock },
+  startup: { kit: string; initialized: () => void } & RealmOptions,
 ): Promise<PluginInboxes> {
   const { context, inboxes, modules, validate } = createPluginRealm(
     bridge,
     startup.kit,
-    startup.clock,
+    startup,
   );
 
   startup.initialized();
