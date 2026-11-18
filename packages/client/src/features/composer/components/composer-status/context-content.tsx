@@ -2,12 +2,14 @@ import { Button } from '@repo/kit/primitives/actions/button';
 import { cn } from '@repo/kit/utils';
 import type { JSX } from 'react';
 import { View } from 'react-native';
-import { compactNumber, contextZone } from '../../utils/status';
-import type { ContextSheetContentProps } from './context-sheet-content';
 import {
-  ContextSheetContent,
   contextDescription,
-} from './context-sheet-content';
+  contextUsedLabel,
+  compactNumber,
+  contextZone,
+} from '../../utils/status';
+import type { ContextSheetContentProps } from './context-sheet-content';
+import { ContextSheetContent } from './context-sheet-content';
 import { ContextZones } from './context-zones';
 import { Meter } from './status-meter';
 import { phoneSheet, unselectableTextClassName } from './status-surface';
@@ -15,14 +17,16 @@ import { StatusText } from './status-text';
 
 type ContextContentProps = ContextSheetContentProps;
 
-function ContextHeading(): JSX.Element {
+function ContextHeading({
+  context,
+}: Pick<ContextContentProps, 'context'>): JSX.Element {
   return (
     <View className="px-0 gap-0.5">
       <StatusText role={'heading'} className="select-none">
         Context window
       </StatusText>
       <StatusText role="secondary" className="select-none">
-        {contextDescription}
+        {contextDescription(context)}
       </StatusText>
     </View>
   );
@@ -51,7 +55,7 @@ function ContextTokenValues({
   return (
     <>
       <StatusText role="title" className="select-none">
-        {compactNumber(context.used)}
+        {contextUsedLabel(context)}
       </StatusText>
       <StatusText role="body" className="select-none text-muted-foreground">
         / {compactNumber(context.size)} tokens
@@ -115,7 +119,7 @@ function ContextPopoverContent({
 }: ContextContentProps): JSX.Element {
   return (
     <View className="p-4 gap-3.5">
-      <ContextHeading />
+      <ContextHeading context={context} />
       <ContextTotals context={context} percent={percent} />
       <ContextZones />
       {context.onCompact && <CompactContext context={context} close={close} />}

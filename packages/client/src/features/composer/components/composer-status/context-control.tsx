@@ -1,6 +1,10 @@
 import type { JSX } from 'react';
 import type { ComposerContext } from '../../utils/status';
-import { compactNumber, contextPercent } from '../../utils/status';
+import {
+  contextUsedLabel,
+  compactNumber,
+  contextPercent,
+} from '../../utils/status';
 import { ComposerPopover } from '../composer-popover/composer-popover';
 import { ContextContent } from './context-content';
 import { ContextRing } from './context-ring';
@@ -21,7 +25,7 @@ function createContextTrigger(props: ContextControlProps): JSX.Element {
     label: 'Context',
     leading: <ContextRing percent={contextPercent(props.context)} />,
     detail: props.wide
-      ? `${compactNumber(props.context.used)} / ${compactNumber(props.context.size)}`
+      ? `${contextUsedLabel(props.context)} / ${compactNumber(props.context.size)}`
       : undefined,
   });
 }

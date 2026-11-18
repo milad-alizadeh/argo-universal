@@ -14,6 +14,10 @@ import {
   ElicitationPreview,
   elicitationSession,
 } from './session-detail-view-elicitation.mocks';
+import {
+  estimatedContext,
+  estimateSources,
+} from './session-detail-view-fixtures';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
@@ -161,4 +165,16 @@ export const PluginActionsOnPhone: Story = {
 export const ChangesPill: Story = {
   args: changedSession,
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
+};
+
+export const EstimatedContext: Story = {
+  args: estimatedContext,
+  argTypes: {
+    composer: {
+      name: 'Estimate source',
+      control: 'select',
+      options: Object.keys(estimateSources),
+      mapping: estimateSources,
+    },
+  },
 };

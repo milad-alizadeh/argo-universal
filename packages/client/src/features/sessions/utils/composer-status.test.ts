@@ -16,6 +16,8 @@ const filePlan: Plan = {
 
 const usage: ContextUsage = { used: 12_000, size: 200_000 };
 
+const modelCallUsage: ContextUsage = { ...usage, scope: 'model-call' };
+
 describe('composerStatus', () => {
   it.each<{
     case: string;
@@ -48,16 +50,16 @@ describe('composerStatus', () => {
       expected: { plan: undefined, context: usage },
     },
     {
-      case: 'nothing for a latest-model-call proxy',
+      case: 'the latest model-call estimate',
       plan: null,
-      usage: { ...usage, scope: 'model-call' },
-      expected: undefined,
+      usage: modelCallUsage,
+      expected: { plan: undefined, context: modelCallUsage },
     },
     {
-      case: 'nothing before upstream scope is verified',
+      case: 'the opening usage estimate',
       plan: null,
       usage: { ...usage, scope: 'unverified' },
-      expected: undefined,
+      expected: { plan: undefined, context: { ...usage, scope: 'unverified' } },
     },
     {
       case: 'nothing without a known context capacity',
@@ -66,10 +68,10 @@ describe('composerStatus', () => {
       expected: undefined,
     },
     {
-      case: 'a plan without presenting a model-call proxy as context',
+      case: 'a plan alongside the model-call estimate',
       plan: itemsPlan,
-      usage: { ...usage, scope: 'model-call' },
-      expected: { plan: entries, context: undefined },
+      usage: modelCallUsage,
+      expected: { plan: entries, context: modelCallUsage },
     },
   ])('shows $case', ({ plan, usage: contextUsage, expected }) => {
     expect(composerStatus(plan, contextUsage)).toEqual(expected);

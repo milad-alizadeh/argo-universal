@@ -8,14 +8,13 @@ type ComposerStatusProps = NonNullable<ComposerProps['status']>;
 const planEntries = (plan: Plan | null): PlanEntry[] | undefined =>
   plan?.type === 'items' ? plan.entries : undefined;
 
+const hasContextCounts = ({ used, size }: ContextUsage): boolean =>
+  used >= 0 && size > 0;
+
 const availableContext = (
   usage: ContextUsage | undefined,
-): ContextUsage | undefined => (usage && usage.size > 0 ? usage : undefined);
-
-const measuredContext = (
-  usage: ContextUsage | undefined,
 ): ContextUsage | undefined =>
-  usage?.scope === undefined ? availableContext(usage) : undefined;
+  usage && hasContextCounts(usage) ? usage : undefined;
 
 // A caller with no Usage limits to show, such as a story of the Plan or Context.
 const noUsageLimits: UsageLimitsRead = { limits: [], now: new Date(0) };
@@ -40,7 +39,7 @@ export function composerStatus(
 ): ComposerProps['status'] {
   const status = {
     plan: planEntries(plan),
-    context: measuredContext(usage),
+    context: availableContext(usage),
     usage: usageControl(usageLimits),
   };
 
