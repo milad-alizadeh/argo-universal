@@ -16,6 +16,8 @@ import {
   type DeclaredSubmenu,
 } from '#primitives/actions/action';
 import { countedTitle } from '#primitives/overlays/menu';
+import { optionsIcon, optionsSpoken } from './screen-page-options';
+import type { PageOptions } from './screen-props';
 
 type ToolbarButton = ComponentProps<typeof Stack.Toolbar.Button>;
 
@@ -178,5 +180,27 @@ function menuAction(action: DeclaredAction): ReactElement {
     <Stack.Toolbar.MenuAction key={action.id} {...props}>
       {action.label}
     </Stack.Toolbar.MenuAction>
+  );
+}
+
+/*
+ * The page's Options button, a bar item of its own as a submenu's is, its badge on the icon; it opens the sheet the
+ * Screen holds.
+ */
+export function toolbarOptionsButton(
+  options: PageOptions,
+  dotColor: string | undefined,
+): ReactElement {
+  return (
+    <Stack.Toolbar.Button
+      key="options"
+      {...tinted}
+      icon={toolbarIcon(optionsIcon)}
+      accessibilityLabel={optionsSpoken(options)}
+      separateBackground
+      onPress={() => options.onOpenChange(true)}
+    >
+      {toolbarBadge(submenuBadgeText(options.badge), dotColor)}
+    </Stack.Toolbar.Button>
   );
 }

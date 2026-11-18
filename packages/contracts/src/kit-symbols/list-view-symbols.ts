@@ -10,9 +10,6 @@ export const listViewSymbols = {
   'flat-view': { sf: 'list.bullet', material: 'view_list' },
   'structure-view': { sf: 'square.grid.2x2', material: 'grid_view' },
   'tree-view': { sf: 'list.bullet.indent', material: 'account_tree' },
-  // A page's items shown as a list of rows or as a board of columns, such as a Jira project's issues.
-  'list-view': { sf: 'list.bullet.rectangle', material: 'view_list' },
-  'board-view': { sf: 'rectangle.split.3x1', material: 'view_kanban' },
   // The Sessions list's View options: One list, the Regular and Compact layouts, and the Archived and All statuses.
   'one-list': { sf: 'list.bullet', material: 'list' },
   'regular-layout': { sf: 'rectangle.grid.1x2', material: 'view_agenda' },

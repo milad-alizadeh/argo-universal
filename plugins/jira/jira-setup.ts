@@ -28,6 +28,8 @@ export type ProjectView =
       project: JiraProject;
       chosen: boolean;
       people: JiraPerson[];
+      // The site's Jira projects the title's menu offers, the shown one among them.
+      projects: JiraProject[];
     };
 
 /*
@@ -130,13 +132,30 @@ const prioritiesFor = (
 ): Promise<JiraPriority[]> =>
   read(reads.priorities({ projectId, cloudId: site.cloudId }));
 
+/*
+ * The site's Jira projects for the title's menu, through the same kept Query the project picker reads; when Jira does
+ * not list them, the menu still names the one shown.
+ */
+async function projectsFor(
+  step: Step,
+  { site, project }: Listed,
+): Promise<JiraProject[]> {
+  const answer = await step.read(projectsOf(step, site));
+  const listed = answer.ok ? answer.value : [];
+
+  return listed.some(({ key }) => key === project.key)
+    ? listed
+    : [project, ...listed];
+}
+
 async function issuesFor(step: Step, listed: Listed): Promise<ProjectView> {
-  const [people] = await Promise.all([
+  const [people, projects] = await Promise.all([
     peopleFor(step, listed),
+    projectsFor(step, listed),
     prioritiesFor(step, listed),
   ]);
 
-  return { kind: 'issues', ...listed, people };
+  return { kind: 'issues', ...listed, people, projects };
 }
 
 const isView = (value: JiraProject | ProjectView): value is ProjectView =>

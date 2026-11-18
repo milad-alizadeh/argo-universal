@@ -3,7 +3,7 @@ import { startJira } from './mocks/journey';
 import {
   addIssues,
   argoIssues,
-  filterChoice,
+  filterBy,
   filterCount,
   grace,
   isChosen,
@@ -25,7 +25,7 @@ it(
     expect(isChosen(page, 'Any status')).toBe(true);
     expect(filterCount(page)).toBe(0);
 
-    await page.press(filterChoice('Done'));
+    await filterBy(page, 'Done');
 
     expect(shownKeys(page)).toEqual(['ARGO-2']);
     expect(isChosen(page, 'Done')).toBe(true);
@@ -34,7 +34,7 @@ it(
       'project = "ARGO" AND statusCategory = 3 ORDER BY updated DESC',
     );
 
-    await page.press(filterChoice('To Do'));
+    await filterBy(page, 'To Do');
 
     expect(shownKeys(page)).toEqual(['ARGO-1']);
   },
@@ -50,17 +50,17 @@ it(
 
     const page = await argoIssues(jira);
 
-    await page.press(filterChoice('Me'));
+    await filterBy(page, 'Me');
 
     expect(shownKeys(page)).toEqual(['ARGO-3', 'ARGO-2']);
     expect(lastJql(jira)).toContain('assignee = currentUser()');
 
-    await page.press(filterChoice('Unassigned'));
+    await filterBy(page, 'Unassigned');
 
     expect(shownKeys(page)).toEqual(['ARGO-1']);
 
     // The menu names the people the project can assign to.
-    await page.press(filterChoice(grace.displayName));
+    await filterBy(page, grace.displayName);
 
     expect(shownKeys(page)).toEqual(['ARGO-100']);
     expect(isChosen(page, grace.displayName)).toBe(true);
@@ -96,10 +96,10 @@ it(
     const page = await argoIssues(jira);
     const before = searchCount(jira);
 
-    await page.press(filterChoice('In Progress'));
+    await filterBy(page, 'In Progress');
     expect(searchCount(jira)).toBe(before + 1);
 
-    await page.press(filterChoice('Me'));
+    await filterBy(page, 'Me');
     expect(searchCount(jira)).toBe(before + 2);
 
     await search(jira, page, 'argo');
@@ -133,7 +133,7 @@ it(
     const jira = await startJira();
     const page = await argoIssues(jira);
 
-    await page.press(filterChoice('Done'));
+    await filterBy(page, 'Done');
     await search(jira, page, 'token');
 
     const filtered = page.pageState;
@@ -141,7 +141,7 @@ it(
     const before = searchCount(jira);
 
     // Away to another page, then back: the App opens the address it left, filters and all.
-    await page.press('Change Jira site');
+    await page.press('Change Jira site…');
 
     const back = await jira.test.pages.open({
       path: page.path,

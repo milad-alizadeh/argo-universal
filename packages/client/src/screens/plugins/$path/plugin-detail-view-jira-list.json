@@ -82,6 +82,7 @@
           "key": "0",
           "props": {
             "title": "Argo",
+            "caption": "ARGO · arena.atlassian.net",
             "search": {
               "label": "Search Issues"
             },
@@ -373,250 +374,243 @@
             }
           ],
           "slots": {
-            "actions": [
+            "titleMenu": [
               {
-                "type": "Action",
-                "key": "filter",
+                "type": "Action.Section",
+                "key": "projects",
                 "props": {
-                  "label": "Filter",
-                  "icon": "filters"
+                  "title": "arena.atlassian.net"
                 },
                 "children": [
                   {
-                    "type": "Action.Section",
-                    "key": "status",
+                    "type": "Action",
+                    "key": "ARGO",
                     "props": {
-                      "title": "Status"
-                    },
-                    "children": [
-                      {
-                        "type": "Action",
-                        "key": "all",
-                        "props": {
-                          "label": "Any status",
-                          "selected": true,
-                          "onPress": {
-                            "pageState": {
-                              "status": "all"
-                            }
-                          }
-                        },
-                        "children": [],
-                        "slots": {}
-                      },
-                      {
-                        "type": "Action",
-                        "key": "new",
-                        "props": {
-                          "label": "To Do",
-                          "selected": false,
-                          "onPress": {
-                            "pageState": {
-                              "status": "new"
-                            }
-                          }
-                        },
-                        "children": [],
-                        "slots": {}
-                      },
-                      {
-                        "type": "Action",
-                        "key": "indeterminate",
-                        "props": {
-                          "label": "In Progress",
-                          "selected": false,
-                          "onPress": {
-                            "pageState": {
-                              "status": "indeterminate"
-                            }
-                          }
-                        },
-                        "children": [],
-                        "slots": {}
-                      },
-                      {
-                        "type": "Action",
-                        "key": "done",
-                        "props": {
-                          "label": "Done",
-                          "selected": false,
-                          "onPress": {
-                            "pageState": {
-                              "status": "done"
-                            }
-                          }
-                        },
-                        "children": [],
-                        "slots": {}
+                      "label": "Argo",
+                      "selected": true,
+                      "onPress": {
+                        "operation": "chooseProject",
+                        "args": {
+                          "cloudId": "cloud-arena",
+                          "key": "ARGO",
+                          "projectId": "project-1"
+                        }
                       }
-                    ],
+                    },
+                    "children": [],
                     "slots": {}
                   },
                   {
-                    "type": "Action.Section",
-                    "key": "assignee",
+                    "type": "Action",
+                    "key": "QUIET",
                     "props": {
-                      "title": "Assignee"
-                    },
-                    "children": [
-                      {
-                        "type": "Action",
-                        "key": "anyone",
-                        "props": {
-                          "label": "Anyone",
-                          "selected": true,
-                          "onPress": {
-                            "pageState": {
-                              "assignee": "anyone"
-                            }
-                          }
-                        },
-                        "children": [],
-                        "slots": {}
-                      },
-                      {
-                        "type": "Action",
-                        "key": "me",
-                        "props": {
-                          "label": "Me",
-                          "selected": false,
-                          "onPress": {
-                            "pageState": {
-                              "assignee": "me"
-                            }
-                          }
-                        },
-                        "children": [],
-                        "slots": {}
-                      },
-                      {
-                        "type": "Action",
-                        "key": "none",
-                        "props": {
-                          "label": "Unassigned",
-                          "selected": false,
-                          "onPress": {
-                            "pageState": {
-                              "assignee": "none"
-                            }
-                          }
-                        },
-                        "children": [],
-                        "slots": {}
-                      },
-                      {
-                        "type": "Action",
-                        "key": "account-ada",
-                        "props": {
-                          "label": "Ada Lovelace",
-                          "selected": false,
-                          "onPress": {
-                            "pageState": {
-                              "assignee": "account-ada"
-                            }
-                          }
-                        },
-                        "children": [],
-                        "slots": {}
-                      },
-                      {
-                        "type": "Action",
-                        "key": "account-grace",
-                        "props": {
-                          "label": "Grace Hopper",
-                          "selected": false,
-                          "onPress": {
-                            "pageState": {
-                              "assignee": "account-grace"
-                            }
-                          }
-                        },
-                        "children": [],
-                        "slots": {}
+                      "label": "Quiet project",
+                      "selected": false,
+                      "onPress": {
+                        "operation": "chooseProject",
+                        "args": {
+                          "cloudId": "cloud-arena",
+                          "key": "QUIET",
+                          "projectId": "project-1"
+                        }
                       }
-                    ],
+                    },
+                    "children": [],
                     "slots": {}
                   }
                 ],
                 "slots": {}
               },
               {
-                "type": "Action",
-                "key": "view",
+                "type": "Action.Section",
+                "key": "site",
+                "props": {},
+                "children": [
+                  {
+                    "type": "Action",
+                    "key": "change-site",
+                    "props": {
+                      "label": "Change Jira site…",
+                      "onPress": {
+                        "action": "navigate",
+                        "path": "/projects/project-1/site"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "options": [
+              {
+                "type": "Stack",
+                "key": "options",
                 "props": {
-                  "label": "Show issues as",
-                  "icon": "list-view"
+                  "gap": 4,
+                  "direction": "column"
                 },
                 "children": [
                   {
-                    "type": "Action.Section",
-                    "key": "views",
+                    "type": "SegmentedControl",
+                    "key": "view",
+                    "props": {
+                      "label": "Show issues as",
+                      "options": [
+                        {
+                          "value": "list",
+                          "label": "List"
+                        },
+                        {
+                          "value": "board",
+                          "label": "Board"
+                        }
+                      ],
+                      "value": "list",
+                      "onValueChange": {
+                        "bind": "view"
+                      }
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "FieldGroup",
+                    "key": "rows",
                     "props": {},
                     "children": [
                       {
-                        "type": "Action",
-                        "key": "list",
+                        "type": "FieldGroup.Section",
+                        "key": "filter",
                         "props": {
-                          "label": "List",
-                          "icon": "list-view",
-                          "selected": true,
-                          "onPress": {
-                            "pageState": {
-                              "view": "list"
-                            }
-                          }
+                          "title": "Filter"
                         },
-                        "children": [],
+                        "children": [
+                          {
+                            "type": "FieldGroup.Picker",
+                            "key": "status",
+                            "props": {
+                              "title": "Status",
+                              "value": "all",
+                              "options": [
+                                {
+                                  "value": "all",
+                                  "label": "Any status"
+                                },
+                                {
+                                  "value": "new",
+                                  "label": "To Do"
+                                },
+                                {
+                                  "value": "indeterminate",
+                                  "label": "In Progress"
+                                },
+                                {
+                                  "value": "done",
+                                  "label": "Done"
+                                }
+                              ],
+                              "presentation": "menu",
+                              "onValueChange": {
+                                "pageState": {
+                                  "status": {
+                                    "$payload": true
+                                  }
+                                }
+                              }
+                            },
+                            "children": [],
+                            "slots": {}
+                          },
+                          {
+                            "type": "FieldGroup.Picker",
+                            "key": "assignee",
+                            "props": {
+                              "title": "Assignee",
+                              "value": "anyone",
+                              "options": [
+                                {
+                                  "value": "anyone",
+                                  "label": "Anyone"
+                                },
+                                {
+                                  "value": "me",
+                                  "label": "Me"
+                                },
+                                {
+                                  "value": "none",
+                                  "label": "Unassigned"
+                                },
+                                {
+                                  "value": "account-ada",
+                                  "label": "Ada Lovelace"
+                                },
+                                {
+                                  "value": "account-grace",
+                                  "label": "Grace Hopper"
+                                }
+                              ],
+                              "presentation": "page",
+                              "searchable": true,
+                              "onValueChange": {
+                                "pageState": {
+                                  "assignee": {
+                                    "$payload": true
+                                  }
+                                }
+                              }
+                            },
+                            "children": [],
+                            "slots": {}
+                          }
+                        ],
                         "slots": {}
                       },
                       {
-                        "type": "Action",
-                        "key": "board",
-                        "props": {
-                          "label": "Board",
-                          "icon": "board-view",
-                          "selected": false,
-                          "onPress": {
-                            "pageState": {
-                              "view": "board"
-                            }
+                        "type": "FieldGroup.Section",
+                        "key": "sort",
+                        "props": {},
+                        "children": [
+                          {
+                            "type": "FieldGroup.Picker",
+                            "key": "sort",
+                            "props": {
+                              "title": "Sort",
+                              "value": "updated",
+                              "options": [
+                                {
+                                  "value": "updated",
+                                  "label": "Recently updated"
+                                },
+                                {
+                                  "value": "created",
+                                  "label": "Newest"
+                                },
+                                {
+                                  "value": "priority",
+                                  "label": "Priority"
+                                }
+                              ],
+                              "presentation": "menu",
+                              "onValueChange": {
+                                "pageState": {
+                                  "sort": {
+                                    "$payload": true
+                                  }
+                                }
+                              }
+                            },
+                            "children": [],
+                            "slots": {}
                           }
-                        },
-                        "children": [],
+                        ],
                         "slots": {}
                       }
                     ],
                     "slots": {}
                   }
                 ],
-                "slots": {}
-              },
-              {
-                "type": "Action",
-                "key": "change-project",
-                "props": {
-                  "label": "Change Jira project",
-                  "onPress": {
-                    "operation": "forgetProject",
-                    "args": {
-                      "projectId": "project-1"
-                    }
-                  }
-                },
-                "children": [],
-                "slots": {}
-              },
-              {
-                "type": "Action",
-                "key": "change-site",
-                "props": {
-                  "label": "Change Jira site",
-                  "onPress": {
-                    "action": "navigate",
-                    "path": "/projects/project-1/site"
-                  }
-                },
-                "children": [],
                 "slots": {}
               }
             ]

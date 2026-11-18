@@ -3,7 +3,7 @@ import { startJira } from './mocks/journey';
 import {
   addIssues,
   argoIssues,
-  filterChoice,
+  filterBy,
   hasMore,
   lastCursor,
   lastJql,
@@ -57,7 +57,7 @@ it(
 
     const page = await argoIssues(jira);
 
-    await page.press(filterChoice('To Do'));
+    await filterBy(page, 'To Do');
 
     expect(shownKeys(page)).toHaveLength(pageSize);
 

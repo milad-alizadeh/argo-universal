@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import {
   isSubmenu,
+  type ActionGroup,
   type HeaderEntry,
   type ScreenHeader,
 } from '#primitives/actions/action';
@@ -11,12 +12,14 @@ import { Text } from '#primitives/content/text';
 import { ScreenActionButton } from './screen-action-button.android';
 import { drawerLeading } from './screen-drawer-button';
 import {
+  ScreenOptionsButton,
   ScreenOverflowButton,
   ScreenSubmenuButton,
 } from './screen-menu-button.android';
 import { useScreenMenu } from './screen-menu-context';
-import type { ScreenHeaderInput } from './screen-props';
+import type { PageOptions, ScreenHeaderInput } from './screen-props';
 import { ScreenSearchBar } from './screen-search-bar.android';
+import { TitleMenu } from './screen-title-menu';
 
 export const screenTitleOptions = { headerTitleAlign: 'left' } as const;
 
@@ -32,11 +35,15 @@ export function ScreenHeaderItems(
 
   if (header.selecting) return null;
 
-  const headerRight = (): ReactElement => <ToolbarActions header={header} />;
+  const headerRight = (): ReactElement => (
+    <ToolbarActions header={header} options={props.pageOptions} />
+  );
+
+  const title = titleOf(props.titleGroups);
 
   return (
     <>
-      <Stack.Screen options={toolbarOptions(headerRight, leading)} />
+      <Stack.Screen options={toolbarOptions({ headerRight, title, leading })} />
       {props.search ? <ScreenSearchBar {...props} /> : null}
     </>
   );
@@ -54,19 +61,38 @@ function ToolbarTitle(props: { children?: string }): ReactElement {
   );
 }
 
-const toolbarOptions = (
-  headerRight: () => ReactElement,
-  leading: ReturnType<typeof drawerLeading>,
-): NativeStackNavigationOptions => ({
-  headerRight,
-  headerTitle: ToolbarTitle,
-  ...leading,
+type TitleDrawing = (props: { children?: string }) => ReactElement;
+
+// A title with a menu is the menu's button, opening the stock DropdownMenu below it, as the header's own menus do.
+function titleOf(groups: ActionGroup[]): TitleDrawing {
+  if (!groups.length) return ToolbarTitle;
+
+  return function ToolbarTitleMenu(props) {
+    return <TitleMenu title={props.children ?? ''} level={1} groups={groups} />;
+  };
+}
+
+const toolbarOptions = (parts: {
+  headerRight: () => ReactElement;
+  title: TitleDrawing;
+  leading: ReturnType<typeof drawerLeading>;
+}): NativeStackNavigationOptions => ({
+  headerRight: parts.headerRight,
+  headerTitle: parts.title,
+  ...parts.leading,
 });
 
-// Direct Actions, submenus and the overflow menu are all stock Compose icon buttons, the menus stock DropdownMenus.
-function ToolbarActions({ header }: { header: ScreenHeader }): ReactElement {
+// The page's Options, direct Actions, submenus and the overflow menu are all stock Compose icon buttons, the menus stock DropdownMenus.
+function ToolbarActions({
+  header,
+  options,
+}: {
+  header: ScreenHeader;
+  options: PageOptions | null;
+}): ReactElement {
   return (
     <View className="flex-row items-center">
+      {options ? <ScreenOptionsButton options={options} /> : null}
       {header.direct.map(toolbarEntry)}
       <ScreenOverflowButton groups={header.overflow} label={header.label} />
     </View>

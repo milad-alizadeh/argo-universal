@@ -143,7 +143,6 @@ import material_vertical_align_center from '../assets/material-light/vertical_al
 import material_view_agenda from '../assets/material-light/view_agenda.xml';
 import material_view_headline from '../assets/material-light/view_headline.xml';
 import material_view_in_ar from '../assets/material-light/view_in_ar.xml';
-import material_view_kanban from '../assets/material-light/view_kanban.xml';
 import material_view_list from '../assets/material-light/view_list.xml';
 import material_volume_off from '../assets/material-light/volume_off.xml';
 import material_volume_up from '../assets/material-light/volume_up.xml';
@@ -292,7 +291,6 @@ import filled_material_vertical_align_center from '../assets/material-filled/ver
 import filled_material_view_agenda from '../assets/material-filled/view_agenda.xml';
 import filled_material_view_headline from '../assets/material-filled/view_headline.xml';
 import filled_material_view_in_ar from '../assets/material-filled/view_in_ar.xml';
-import filled_material_view_kanban from '../assets/material-filled/view_kanban.xml';
 import filled_material_view_list from '../assets/material-filled/view_list.xml';
 import filled_material_volume_off from '../assets/material-filled/volume_off.xml';
 import filled_material_volume_up from '../assets/material-filled/volume_up.xml';
@@ -448,7 +446,6 @@ export const materialImages = {
   view_agenda: material_view_agenda,
   view_headline: material_view_headline,
   view_in_ar: material_view_in_ar,
-  view_kanban: material_view_kanban,
   view_list: material_view_list,
   volume_off: material_volume_off,
   volume_up: material_volume_up,
@@ -601,7 +598,6 @@ export const materialFilledImages = {
   view_agenda: filled_material_view_agenda,
   view_headline: filled_material_view_headline,
   view_in_ar: filled_material_view_in_ar,
-  view_kanban: filled_material_view_kanban,
   view_list: filled_material_view_list,
   volume_off: filled_material_volume_off,
   volume_up: filled_material_volume_up,

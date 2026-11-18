@@ -3,7 +3,7 @@ import { View, type ViewStyle } from 'react-native';
 import { useHeadingInset } from '#kit/content-column/content-column';
 import { useEnlargedText } from '#kit/enlarged-text';
 import { useWide } from '#kit/use-wide/use-wide';
-import type { ScreenHeader } from '#primitives/actions/action';
+import type { ActionGroup, ScreenHeader } from '#primitives/actions/action';
 import {
   FixedSizeChrome,
   type IconButtonSize,
@@ -17,6 +17,7 @@ import { HeadingActions } from './screen-heading-actions';
 import { HeadingLayout, type HeadingContent } from './screen-heading-layout';
 import { SearchHeading } from './screen-heading-search';
 import type { ScreenHeaderInput, ScreenProps } from './screen-props';
+import { TitleMenu } from './screen-title-menu';
 
 /*
  * The Screen's own heading, drawn where its plan puts the header there. Wide, it starts at the body's top, which
@@ -123,8 +124,20 @@ function DeclaredHeading(props: DeclaredHeadingProps): ReactElement {
   const look = placements[placement];
 
   const content = {
-    title: <ScreenTitle title={props.title} level={look.titleLevel} />,
-    actions: <HeadingActions header={props.header} size={look.buttonSize} />,
+    title: (
+      <ScreenTitle
+        title={props.title}
+        level={look.titleLevel}
+        groups={props.titleGroups}
+      />
+    ),
+    actions: (
+      <HeadingActions
+        header={props.header}
+        size={look.buttonSize}
+        options={props.pageOptions}
+      />
+    ),
   };
 
   return (
@@ -171,11 +184,22 @@ const titleProps = {
   numberOfLines: 1,
 } as const;
 
+// A title with a menu is a menu button inside the heading; one without is the heading's text.
 function ScreenTitle(props: {
   title?: string;
   level: number;
+  groups: ActionGroup[];
 }): ReactElement | null {
   if (!props.title) return null;
+
+  if (props.groups.length)
+    return (
+      <TitleMenu
+        title={props.title}
+        level={props.level}
+        groups={props.groups}
+      />
+    );
 
   return (
     <Text {...titleProps} aria-level={props.level}>

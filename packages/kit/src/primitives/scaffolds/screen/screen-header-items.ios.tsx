@@ -3,14 +3,16 @@ import { Stack } from 'expo-router';
 import type { ReactElement } from 'react';
 import { useNativeTheme } from '#kit/native-theme';
 import { iconSymbols } from '#kit/symbols/icon-names';
-import type { ScreenHeader } from '#primitives/actions/action';
+import type { ActionGroup, ScreenHeader } from '#primitives/actions/action';
 import { useScreenMenu } from './screen-menu-context';
-import type { ScreenHeaderInput } from './screen-props';
+import type { PageOptions, ScreenHeaderInput } from './screen-props';
 import { ScreenSearchBar } from './screen-search-bar.ios';
+import { TitleMenu } from './screen-title-menu';
 import {
   overflowMenu,
   toolbarButton,
   toolbarEntry,
+  toolbarOptionsButton,
 } from './screen-toolbar-items.ios';
 
 export const screenTitleOptions = {
@@ -26,11 +28,14 @@ export function ScreenHeaderItems(
 
   if (header.selecting) return null;
 
+  const menuTitle = props.titleGroups.length > 0;
+
   return (
     <>
-      <RootTitle />
+      {menuTitle ? null : <RootTitle />}
+      <TitleMenuItem title={props.title} groups={props.titleGroups} />
       <MenuItem />
-      <HeaderItems header={header} />
+      <HeaderItems header={header} options={props.pageOptions} />
       {props.search ? <ScreenSearchBar {...props} /> : null}
     </>
   );
@@ -41,6 +46,27 @@ function RootTitle(): ReactElement | null {
   if (useScreenMenu() === null) return null;
 
   return <Stack.Screen options={{ headerLargeTitleEnabled: true }} />;
+}
+
+/*
+ * A title with a menu draws in the bar's title place as the menu's button, inline: a large title is UIKit's own text
+ * and could not open the menu.
+ */
+function TitleMenuItem(props: {
+  title?: string;
+  groups: ActionGroup[];
+}): ReactElement | null {
+  const { title, groups } = props;
+
+  if (!title || !groups.length) return null;
+
+  const headerTitle = (): ReactElement => (
+    <TitleMenu title={title} level={1} groups={groups} />
+  );
+
+  return (
+    <Stack.Screen options={{ headerTitle, headerLargeTitleEnabled: false }} />
+  );
 }
 
 // A narrow root leads with ☰ as a stock bar button item, which the system places like the back chevron, with the stock badge.
@@ -62,13 +88,21 @@ function MenuItem(): ReactElement | null {
   );
 }
 
-// The primary Action sits top right on every iPhone and iPad, wherever the search bar is.
-function HeaderItems({ header }: { header: ScreenHeader }): ReactElement {
-  const entry = toolbarEntry(useNativeTheme().colors.primary);
+// The primary Action sits top right on every iPhone and iPad, wherever the search bar is; the page's Options come first.
+function HeaderItems({
+  header,
+  options,
+}: {
+  header: ScreenHeader;
+  options: PageOptions | null;
+}): ReactElement {
+  const dotColor = useNativeTheme().colors.primary;
+  const entry = toolbarEntry(dotColor);
   const { primary } = header;
 
   return (
     <Stack.Toolbar placement="right">
+      {options ? toolbarOptionsButton(options, dotColor) : null}
       {header.direct.map(entry)}
       {overflowMenu(header.overflow, header.label)}
       {selectItem(header.select)}

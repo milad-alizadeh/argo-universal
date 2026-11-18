@@ -1,0 +1,118 @@
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { expect, waitFor, within } from 'storybook/test';
+import { settleOverlays } from '#mocks/settle-overlays';
+import { Screen } from './index';
+import { TitleAndOptionsExample } from './screen-title-options.mocks';
+import { atWidth, screenWidths } from './screen-widths.mocks';
+
+const meta = {
+  title: 'Tests/Design System/Primitives/Scaffolds/Screen/TitleOptions',
+  component: Screen,
+  args: { title: 'Group one' },
+  render: () => <TitleAndOptionsExample />,
+} satisfies Meta<typeof Screen>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+type PlayContext = Parameters<NonNullable<Story['play']>>[0];
+
+const body = ({ canvasElement }: PlayContext) =>
+  within(canvasElement.ownerDocument.body);
+
+// The title stays the page's heading and holds a menu button named by it, which opens the menu with the shown one checked.
+const titleMenu: Story = {
+  play: async (context) => {
+    const { canvas, userEvent } = context;
+    const heading = canvas.getByRole('heading', { level: 1 });
+    const button = within(heading).getByRole('button', { name: 'Group one' });
+
+    await expect(button).toHaveAttribute('aria-haspopup', 'menu');
+    await userEvent.click(button);
+    await expect(
+      await body(context).findByRole('menuitemradio', { name: 'Group one' }),
+    ).toHaveAttribute('aria-checked', 'true');
+    const other = await body(context).findByRole('menuitemradio', {
+      name: 'Group two',
+    });
+    await settleOverlays(other);
+    await userEvent.click(other);
+    await expect(
+      canvas.getByRole('button', { name: 'Group two' }),
+    ).toBeVisible();
+  },
+};
+
+export const TitleMenuPhone = atWidth(screenWidths.Phone, titleMenu);
+
+export const TitleMenuWide = atWidth(screenWidths.Wide, titleMenu);
+
+// The title's menu is reached and opened from the keyboard, and Escape gives focus back to it.
+export const TitleMenuKeyboard = atWidth(screenWidths.Wide, {
+  play: async (context) => {
+    const { canvas, userEvent } = context;
+    const button = canvas.getByRole('button', { name: 'Group one' });
+
+    button.focus();
+    await userEvent.keyboard('{Enter}');
+    const row = await body(context).findByRole('menuitem', {
+      name: 'Change place…',
+    });
+    await settleOverlays(row);
+    await expect(row).toBeVisible();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(button).toHaveFocus());
+  },
+});
+
+/*
+ * One Options button, its badge counting the filter in use, opens the view switch and the filter; a choice inside
+ * them applies at once and leaves them open.
+ */
+const options: Story = {
+  play: async (context) => {
+    const { canvas, userEvent } = context;
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Options, 1' }));
+    const dialog = await body(context).findByRole('dialog', {
+      name: 'Options',
+    });
+    await settleOverlays();
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Board' }),
+    );
+    await expect(canvas.getByText('Showing board, closed')).toBeVisible();
+    await expect(
+      body(context).getByRole('dialog', { name: 'Options' }),
+    ).toBeVisible();
+  },
+};
+
+export const OptionsPhone = atWidth(screenWidths.Phone, options);
+
+export const OptionsWide = atWidth(screenWidths.Wide, options);
+
+// A wide window opens the options as a popover below its button, kept inside the window; Escape closes it.
+export const OptionsPopoverWide = atWidth(screenWidths.Wide, {
+  play: async (context) => {
+    const { canvas, userEvent } = context;
+    const button = canvas.getByRole('button', { name: 'Options, 1' });
+
+    await userEvent.click(button);
+    const dialog = await body(context).findByRole('dialog', {
+      name: 'Options',
+    });
+    await settleOverlays();
+    const below = dialog.getBoundingClientRect();
+    const trigger = button.getBoundingClientRect();
+    await expect(below.top).toBeGreaterThanOrEqual(trigger.bottom);
+    await expect(below.right).toBeLessThanOrEqual(window.innerWidth);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(
+        body(context).queryByRole('dialog', { name: 'Options' }),
+      ).toBeNull(),
+    );
+  },
+});
