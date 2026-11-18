@@ -47,3 +47,12 @@ export function renderRecordedActivity(
     return <RecordedCommand activity={activity} />;
   throw new Error('This recording needs only commands and exploration');
 }
+
+export function renderOperationActivity(
+  activity: FeedActivity,
+): React.JSX.Element {
+  if (activity.type !== 'tool_call')
+    throw new Error('The Operation preview needs a Tool call');
+
+  return <ToolCallRow row={activity.row} />;
+}

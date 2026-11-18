@@ -1,4 +1,5 @@
 import {
+  discoveryOperation,
   operations,
   type OperationId,
   type OperationRow,
@@ -54,8 +55,8 @@ export const recordedOutput = (value: OperationRunResult): Json =>
   wireJson(value.kind === 'result' ? value.result : value);
 
 export const discoveryCall = (filter: string): CalledOperation => ({
-  name: 'operations.list',
-  label: 'Discover Operations',
+  name: discoveryOperation.id,
+  label: discoveryOperation.label,
   input: { filter },
 });
 

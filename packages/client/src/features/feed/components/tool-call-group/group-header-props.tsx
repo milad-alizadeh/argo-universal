@@ -1,6 +1,7 @@
-import type { LiveHeader } from '@repo/contracts';
+import type { LiveHeader, ToolCallUpdate } from '@repo/contracts';
 import { Orb } from '@repo/kit/primitives/status/orb';
 import type * as React from 'react';
+import { toolCallFacts } from '../../view/feed-row-facts';
 import type { FeedGroup } from '../../view/feed-view';
 import { SourceIcon } from '../live-header/live-header';
 import {
@@ -28,7 +29,7 @@ type GroupDisclosureProps = Pick<
 
 function groupDisclosureProps(group: FeedGroup): GroupDisclosureProps {
   const live = headerLiveCall(group);
-  const leading = runningOrb(group);
+  const leading = groupLeading(group, live?.toolCall);
 
   return live
     ? {
@@ -46,7 +47,16 @@ const waitsOnApproval = (group: FeedGroup): boolean =>
 const drawsOrb = (group: FeedGroup): boolean =>
   group.state === 'open' && !waitsOnApproval(group);
 
-// A running group leads with the Orb its live Tool call moves; one waiting on approval keeps the Tool's icon.
+function groupLeading(
+  group: FeedGroup,
+  toolCall?: ToolCallUpdate,
+): React.JSX.Element | undefined {
+  return toolCall && toolCallFacts(toolCall).operation
+    ? undefined
+    : runningOrb(group);
+}
+
+// A running group leads with the Orb unless its Tool call has an icon of its own or is waiting for approval.
 function runningOrb(group: FeedGroup): React.JSX.Element | undefined {
   if (!drawsOrb(group)) return undefined;
 

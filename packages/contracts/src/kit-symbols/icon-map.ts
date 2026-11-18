@@ -1,12 +1,12 @@
-import { fileSymbols } from './file-symbols';
-import { formatSymbols } from './format-symbols';
-import { gitSymbols } from './git-symbols';
-import { listViewSymbols } from './list-view-symbols';
-import { mediaSymbols } from './media-symbols';
-import { settingsSymbols } from './settings-symbols';
-import { statusSymbols } from './status-symbols';
-import { subagentSymbols } from './subagent-symbols';
-import { timeSymbols } from './time-symbols';
+import { fileSymbols } from '#kit-symbols/file-symbols';
+import { formatSymbols } from '#kit-symbols/format-symbols';
+import { gitSymbols } from '#kit-symbols/git-symbols';
+import { listViewSymbols } from '#kit-symbols/list-view-symbols';
+import { mediaSymbols } from '#kit-symbols/media-symbols';
+import { settingsSymbols } from '#kit-symbols/settings-symbols';
+import { statusSymbols } from '#kit-symbols/status-symbols';
+import { subagentSymbols } from '#kit-symbols/subagent-symbols';
+import { timeSymbols } from '#kit-symbols/time-symbols';
 
 export const iconSymbols = {
   ...fileSymbols,

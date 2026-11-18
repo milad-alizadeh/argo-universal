@@ -20,6 +20,7 @@ export const readerOperations = {
   'session.diff': {
     id: 'session.diff',
     label: 'Read Session diff',
+    icon: 'diff',
     description:
       'Read a changed file’s unified diff in a Session Checkout, paged by diff lines.',
     params: SessionDiffInput,
@@ -30,6 +31,7 @@ export const readerOperations = {
   'session.changes': {
     id: 'session.changes',
     label: 'List Session changes',
+    icon: 'changed-files',
     description:
       'Read changed files in a Session Checkout, paged by file, with totals for the whole comparison.',
     params: SessionChangesInput,
@@ -40,6 +42,7 @@ export const readerOperations = {
   'session.feed': {
     id: 'session.feed',
     label: 'Read Session messages',
+    icon: 'message',
     description:
       'Read recent Agent messages, with older pages by cursor; excludes thoughts, prompts and Tool calls.',
     params: SessionFeedInput,
@@ -50,6 +53,7 @@ export const readerOperations = {
   'session.get': {
     id: 'session.get',
     label: 'Read Session',
+    icon: 'message',
     description:
       'Read a Session snapshot, including its current Turn and pending input, without opening its Agent.',
     params: SessionGetInput,
@@ -60,6 +64,7 @@ export const readerOperations = {
   'session.list': {
     id: 'session.list',
     label: 'List Sessions',
+    icon: 'sessions',
     description:
       'List Sessions in a Project, ordered by most recent activity, with filters and paging.',
     params: SessionListInput,
@@ -70,6 +75,7 @@ export const readerOperations = {
   'session.listAgents': {
     id: 'session.listAgents',
     label: 'List Session Agents',
+    icon: 'agent',
     description:
       'List ACP-reported subagents for a Session with their latest Turn state and metrics.',
     params: SessionSubagentsInput,
@@ -80,6 +86,7 @@ export const readerOperations = {
   'session.listShells': {
     id: 'session.listShells',
     label: 'List Session Shells',
+    icon: 'terminal',
     description:
       'List the Shells recorded for a Session with their running state and whether they can be stopped.',
     params: SessionShellsInput,
@@ -90,6 +97,7 @@ export const readerOperations = {
   'session.listBranches': {
     id: 'session.listBranches',
     label: 'List Session branches',
+    icon: 'branch',
     description:
       'List local comparison branches for a Session Checkout with their full Git refs.',
     params: SessionBranchesInput,

@@ -16,6 +16,7 @@ export const projectOperations = {
   'project.list': {
     id: 'project.list',
     label: 'List Projects',
+    icon: 'folders',
     description: 'List registered Projects and their available Checkouts.',
     params: z.strictObject({}).default({}),
     result: z.array(ProjectInfo.extend({ inScope: z.boolean().optional() })),
@@ -25,6 +26,7 @@ export const projectOperations = {
   'project.add': {
     id: 'project.add',
     label: 'Add Project',
+    icon: 'folder',
     description:
       'Register the git repository that holds a folder on the Server as a Project.',
     params: z.strictObject({
@@ -37,6 +39,7 @@ export const projectOperations = {
   'project.clone': {
     id: 'project.clone',
     label: 'Clone Project',
+    icon: 'copy',
     description:
       "Clone a git repository from a URL into the Server's Projects folder and register it as a Project.",
     params: z.strictObject({ url: z.string().min(1) }),
@@ -47,6 +50,7 @@ export const projectOperations = {
   'project.create': {
     id: 'project.create',
     label: 'Create Project',
+    icon: 'folder',
     description:
       "Start a new git repository in the Server's Projects folder and register it as a Project.",
     params: z.strictObject({ name: z.string().min(1) }),
@@ -57,6 +61,7 @@ export const projectOperations = {
   'project.update': {
     id: 'project.update',
     label: 'Update Project',
+    icon: 'edit',
     description:
       "Change where a Project's next Session starts, and whether archiving its Sessions deletes their worktrees.",
     params: ProjectUpdateInput,
@@ -67,6 +72,7 @@ export const projectOperations = {
   'project.listBranches': {
     id: 'project.listBranches',
     label: 'List Project branches',
+    icon: 'branch',
     description:
       'List local branches in a Project and identify its current branch, or null for a detached HEAD.',
     params: ProjectsBranchesInput,
