@@ -78,7 +78,15 @@ function callSendState(props: ComposerProps): 'connecting' | 'end' | undefined {
 function idleSendState(props: ComposerProps): SendState {
   const state = baseSendState(props);
 
-  return state === 'blocked' && canStartVoice(props) ? 'voice' : state;
+  return state === 'blocked' ? emptyDraftState(props) : state;
+}
+
+// With nothing to send, the primary slot starts a call, or points at the one running in another Session.
+function emptyDraftState(props: ComposerProps): SendState {
+  if (voiceCall(props) === 'elsewhere' && !hasDraftContent(props))
+    return 'elsewhere';
+
+  return canStartVoice(props) ? 'voice' : 'blocked';
 }
 
 function baseSendState(props: ComposerProps): SendState {

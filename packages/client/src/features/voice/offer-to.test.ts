@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { offerTo } from './offer-to';
 import { FakeVoiceConnection } from '../../../mocks/voice/fake-voice-connection';
+import { offerTo } from './offer-to';
 
 describe('offering a call to the Server', () => {
   it('sends the offer on', async () => {

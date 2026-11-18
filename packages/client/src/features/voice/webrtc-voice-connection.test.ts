@@ -96,9 +96,7 @@ class FakeEnvironment implements VoiceEnvironment {
   }
 }
 
-async function started(
-  refuse = false,
-): Promise<{
+async function started(refuse = false): Promise<{
   environment: FakeEnvironment;
   connection: ReturnType<typeof createWebRtcVoiceConnection>;
 }> {
