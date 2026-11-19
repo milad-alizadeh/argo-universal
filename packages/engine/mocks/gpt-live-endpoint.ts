@@ -5,6 +5,7 @@ import {
   answer,
   bearerOf,
   callRequestOf,
+  hasAlpha,
   refused,
   wordsOf,
   type CallRequest,
@@ -134,7 +135,7 @@ export class FakeGptLiveEndpoint {
     this.linkTokens.push(bearerOf(request));
 
     // The service refuses a link without the alpha header the call was created with (#2406 probe, 2026-11-19).
-    if (request.headers['openai-alpha'] !== 'quicksilver=v2')
+    if (!hasAlpha(request))
       return void socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
 
     if (!this.linksAccept(request))
@@ -157,8 +158,19 @@ export class FakeGptLiveEndpoint {
     if (message) this.received.push(message);
   }
 
-  private async create(request: IncomingMessage): Promise<Reply> {
+  // The service refuses a call without the alpha header, as it refuses such a link, and one without an accepted token.
+  private creationRefusal(request: IncomingMessage): Reply | null {
+    if (!hasAlpha(request)) return refused(400, 'missing openai-alpha');
+
     if (!this.callsAccept(request)) return refused(401, 'unauthorized');
+
+    return null;
+  }
+
+  private async create(request: IncomingMessage): Promise<Reply> {
+    const refusal = this.creationRefusal(request);
+
+    if (refusal) return refusal;
     const form = await callRequestOf(request);
 
     if (!form) return refused(400, 'bad call request');

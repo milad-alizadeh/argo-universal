@@ -48,6 +48,16 @@ describe('Voice call', () => {
     expect(await callOf(host)).toMatchObject({ sessionId });
   });
 
+  it('refuses a Session that does not exist, and starts no call', async () => {
+    const { host, provider } = await startVoiceEngine();
+
+    await expect(
+      host.caller.voice.start({ sessionId: 'no-such-session', offer }),
+    ).rejects.toThrow('No Session no-such-session');
+    expect(provider.calls).toHaveLength(0);
+    expect(await callOf(host)).toBeNull();
+  });
+
   it('tells the voice which Session it speaks for', async () => {
     const voice = await startVoiceEngine();
     const { sessionId } = await openVoiceSession(voice);

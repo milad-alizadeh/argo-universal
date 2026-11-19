@@ -2,8 +2,9 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { RawData } from 'ws';
 import { z } from 'zod';
 
-// The session object a call is created with, as the service reads it. A `type` is refused: the service sets it.
-const session = z.strictObject({
+// The session object a call is created with, as the service reads it. A `type` is refused: the service sets it (#2406 probe, 2026-11-19).
+const session = z.looseObject({
+  type: z.never().optional(),
   model: z.string(),
   instructions: z.string(),
   audio: z.looseObject({ output: z.looseObject({ voice: z.string() }) }),
@@ -52,6 +53,10 @@ export const refused = (status: number, body: string): Reply => ({
   headers: {},
   body,
 });
+
+// Whether a request carries the alpha header the service requires on both the call and its link (#2406 probe, 2026-11-19).
+export const hasAlpha = (request: IncomingMessage): boolean =>
+  request.headers['openai-alpha'] === 'quicksilver=v2';
 
 export const bearerOf = (request: IncomingMessage): string | undefined =>
   request.headers.authorization?.replace(/^Bearer /, '');
