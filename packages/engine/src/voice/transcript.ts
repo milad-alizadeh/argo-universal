@@ -96,10 +96,7 @@ export const readOutAfter = (
   event: TranscriptEvent,
 ): ReadOut | null => (speakerOf(event) === 'person' ? null : readOut);
 
-const isReadOut = (
-  readOut: ReadOut | null,
-  event: TranscriptEvent,
-): boolean =>
+const isReadOut = (readOut: ReadOut | null, event: TranscriptEvent): boolean =>
   readOut !== null &&
   speakerOf(event) === 'voice' &&
   event.id !== readOut.spared;
