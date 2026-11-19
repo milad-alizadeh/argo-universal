@@ -33,7 +33,9 @@ export async function callRequestOf(
   try {
     if (!isJson(request)) return null;
 
-    return callRequest.parse(JSON.parse((await bodyOf(request)).toString('utf8')));
+    return callRequest.parse(
+      JSON.parse((await bodyOf(request)).toString('utf8')),
+    );
   } catch {
     return null;
   }

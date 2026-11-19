@@ -1,5 +1,6 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
 import { Platform } from 'react-native';
+import { loadingTree } from '#features/plugins';
 import paceTrees from './plugin-detail-view-development-pace.json' with { type: 'json' };
 import trees from './plugin-detail-view-issue-filters.json' with { type: 'json' };
 import pagedJiraBoard from './plugin-detail-view-jira-board-paged.json' with { type: 'json' };
@@ -39,6 +40,12 @@ export const jiraBoardMoving = { root: WireNode.parse(jiraBoards.pending) };
 export const jiraBoardEmpty = { root: WireNode.parse(jiraBoards.empty) };
 
 export const loading = { root: null };
+
+// The Jira list loading again on a Device that drew it before: its first rows, as they were, under the Skeleton.
+export const loadingJiraList = {
+  root: null,
+  loadingTree: loadingTree(jiraList.root),
+};
 
 // Recorded at the GitHub Plugin page boundary with the repository's November 18 development data.
 export const developmentPace = { root: WireNode.parse(paceTrees.loaded) };

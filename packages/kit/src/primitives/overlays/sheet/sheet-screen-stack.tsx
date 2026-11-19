@@ -19,6 +19,7 @@ import type { SheetScreenEntry, SheetStack } from './sheet-screens';
 
 interface StackProps {
   hideRootTitle?: boolean;
+  onRootClose?: () => void;
   inset?: boolean;
   contentScrolls?: boolean;
   stack: SheetStack;
@@ -159,6 +160,7 @@ function ScreenHeader(props: ScreenProps): ReactElement | null {
       stack={props.stack}
       hidden={hideHeader(props)}
       root={props.index === 0}
+      onClose={props.index === 0 ? props.onRootClose : undefined}
     />
   );
 }

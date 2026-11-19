@@ -19,8 +19,8 @@ export interface SectionFacts {
   icon: IconSymbol;
   // A Section that isn't offered has no Inspector tab, and an open one closes.
   offered: (items: SessionItems) => boolean;
-  // What its Workbench card counts; with nothing to count, the card isn't drawn.
-  count: (content: SessionInspectorContent) => number;
+  // What the Section counts. A Plugin can supply a card without a count.
+  count?: (content: SessionInspectorContent) => number;
 }
 
 // One Section's Inspector tab, bound to the Session's tabs.
@@ -57,15 +57,19 @@ type SectionDraw<Drawn> = (
 export interface SessionSection extends SectionFacts {
   card: SectionDraw<SectionCard>;
   tab: SectionDraw<SectionTab>;
-  // Absent where the Section draws its own phone sheet, as Agents and Shells do from the Composer's pills.
+  // Absent where the Section draws its own phone sheet, as Agents and Background Tasks do.
   phone?: SectionDraw<SectionPhonePage>;
 }
+
+export const offeredFacts = <Section extends SectionFacts>(
+  sections: readonly Section[],
+  items: SessionItems,
+): Section[] => sections.filter((section) => section.offered(items));
 
 export const offeredKeys = (
   sections: readonly SectionFacts[],
   items: SessionItems,
-): string[] =>
-  sections.flatMap((section) => (section.offered(items) ? [section.key] : []));
+): string[] => offeredFacts(sections, items).map((section) => section.key);
 
 // The page's props carry the same items the snapshot does.
 export const itemsOf = (content: SessionInspectorContent): SessionItems => ({
@@ -75,6 +79,6 @@ export const itemsOf = (content: SessionInspectorContent): SessionItems => ({
 
 // A Section draws a Workbench card only while it is offered and has something to count.
 export const drawsCard = (
-  section: SectionFacts,
+  { offered, count = () => 1 }: SectionFacts,
   content: SessionInspectorContent,
-): boolean => section.offered(itemsOf(content)) && section.count(content) > 0;
+): boolean => offered(itemsOf(content)) && count(content) > 0;

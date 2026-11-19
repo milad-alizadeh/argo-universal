@@ -1,3 +1,4 @@
+import { defaultMinSize } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import type { FieldGroupKitProps } from '../../kit-props';
@@ -6,15 +7,14 @@ import {
   rowListItemProps,
 } from '../field-row/field-row-list-item.android';
 import { FieldLinkMark } from './field-link-mark';
+import type { FieldLinkRowProps } from './field-link-props';
 import { linkTone } from './field-link-tone';
 
 /*
  * A pressable ListItem with what the page holds as its supporting line, as Android Settings' Preference summary.
  * Android's Settings draws no disclosure chevron on a row that opens a page.
  */
-export function FieldLink(
-  props: FieldGroupKitProps<'FieldGroup.Link'>,
-): ReactElement {
+export function FieldLink(props: FieldLinkRowProps): ReactElement {
   return (
     <RowListItem
       {...rowListItemProps(props)}
@@ -23,9 +23,13 @@ export function FieldLink(
       trailing={trailingValue(props)}
       leadingContent={leadingMark(props.leadingMark)}
       onPress={props.onPress}
+      modifiers={props.roomy ? roomyRowModifiers : undefined}
     />
   );
 }
+
+// Material's two-line item is 72dp. Leave six more dp at each edge of a roomy row.
+const roomyRowModifiers = [defaultMinSize({ minHeight: 84 })];
 
 const leadingMark = (
   mark: FieldGroupKitProps<'FieldGroup.Link'>['leadingMark'],
