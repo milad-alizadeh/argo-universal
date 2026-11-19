@@ -60,7 +60,7 @@ export const voiceOperations = {
     icon: 'voice-off',
     label: 'Hang up Voice call',
     description:
-      'End the Voice call of the calling Session, because the person clearly said they are done talking. Refused when the Session has no Voice call. Do not use it when the person only asks to stop work or pause.',
+      'End the Voice call of the calling Session, because the person clearly said they are done talking. Refused when the Session has no Voice call, and for any other Session. Do not use it when the person only asks to stop work or pause.',
     params: VoiceEndInput,
     result: VoiceEndOutput,
     tier: 'act',

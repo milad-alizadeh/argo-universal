@@ -54,6 +54,23 @@ describe('an Agent hangs up the Voice call', () => {
     expect(provider.call.ended).toBe(false);
   });
 
+  it("cannot end another Session's call", async () => {
+    const voice = await startVoiceEngine();
+    const { host, provider } = voice;
+    const first = await openVoiceSession(voice);
+    const second = await openVoiceSession(voice);
+    await host.caller.voice.start({ sessionId: first.sessionId, offer });
+
+    await expect(
+      runOperation(second.caller.operations, {
+        id: 'voice.hangUp',
+        params: { sessionId: first.sessionId },
+        wait: true,
+      }),
+    ).rejects.toThrow(/own Session/);
+    expect(provider.call.ended).toBe(false);
+  });
+
   it('is told, in the voice instruction, to hang up only when the person means to end the call', async () => {
     const work = await startVoiceWork([{ prompt: 'Job', messages: [] }]);
     await work.start();

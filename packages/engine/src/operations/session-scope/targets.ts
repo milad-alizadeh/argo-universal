@@ -1,6 +1,7 @@
 import type { OperationId } from '@repo/contracts/operations';
 import type { OperationParams } from '../implementations';
 import type { SessionCaller } from '../session-tokens';
+import { callerSessionParam, ownSessionOnly } from './caller-session-targets';
 
 // What an Operation reaches: nothing in particular, one Project, or one Session.
 export type ScopeTarget =
@@ -55,19 +56,6 @@ const listedProject: TargetRule<OperationParams<'session.list'>> = (
   return {
     target: { kind: 'project', projectId },
     params: { ...params, projectId },
-  };
-};
-
-// A Plugin's Checkout, or the Session that declares an Agent role: the calling Session unless the params name another.
-const callerSessionParam = <Params extends { sessionId?: string }>(
-  params: Params,
-  caller: SessionCaller,
-): Targeted<Params & { sessionId: string }> => {
-  const sessionId = params.sessionId ?? caller.sessionId;
-
-  return {
-    target: { kind: 'session', sessionId, opening: false },
-    params: { ...params, sessionId },
   };
 };
 
@@ -162,7 +150,7 @@ const targetRules = {
   'voice.setCallOptions': global,
   'voice.preview': global,
   'voice.end': callerSessionParam,
-  'voice.hangUp': callerSessionParam,
+  'voice.hangUp': ownSessionOnly,
 } satisfies TargetRules;
 
 const targets: TargetRules = targetRules;
