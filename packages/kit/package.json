@@ -12,6 +12,7 @@
     "./scroll-fade/scroll-fade": "./src/scroll-fade/scroll-fade.tsx",
     "./scroll-fade/scroll-fade-gradient": "./src/scroll-fade/scroll-fade-gradient.tsx",
     "./size-class/size-class": "./src/size-class/size-class.tsx",
+    "./fitted-row/fitted-row": "./src/fitted-row/fitted-row.tsx",
     "./symbols/assets/file-diff.xml": {
       "types": "./src/symbols/assets/file-diff.xml.d.ts",
       "default": "./src/symbols/assets/file-diff.xml"

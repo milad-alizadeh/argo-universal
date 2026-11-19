@@ -1,29 +1,28 @@
-import {
-  isValidElement,
-  type ReactElement,
-  type ReactNode,
-  useState,
-} from 'react';
+import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { type LayoutChangeEvent, View } from 'react-native';
 import { flattenedChildren } from '#kit/flattened-children';
 import { cn } from '#kit/utils';
-import { Pill } from '#primitives/status/pill';
-import { fitCount, naturalWidth } from './fitted-row-fit';
 import {
-  countKey,
+  type DrawMore,
+  drawPill,
   type Item,
-  type Measure,
   Measurements,
-  useWidths,
 } from './fitted-row-measurements';
+import { type Fit, useFit } from './fitted-row-use-fit';
 import { useOverflowWatch } from './overflow-watch';
 
-interface FittedRowProps {
+export type { DrawMore, Overflow } from './fitted-row-measurements';
+
+export interface FittedRowProps {
   children: ReactNode;
   // The space between items, in points.
   gap: number;
   className?: string;
   testID?: string;
+  // Items held back before they reached the line, such as a Slot's overflow: "+N" counts them and always shows.
+  hiddenElsewhere?: number;
+  // Draws "+N", such as a trigger listing what it holds; a Pill by default.
+  more?: DrawMore;
 }
 
 const itemsOf = (children: ReactNode): Item[] =>
@@ -44,10 +43,14 @@ const itemsOf = (children: ReactNode): Item[] =>
  */
 export function FittedRow(props: FittedRowProps): ReactNode {
   const items = itemsOf(props.children);
+  const hiddenElsewhere = props.hiddenElsewhere ?? 0;
 
-  if (items.length < 2) return <Line {...props}>{props.children}</Line>;
+  if (items.length + hiddenElsewhere < 2)
+    return <Line {...props}>{props.children}</Line>;
 
-  return <FittedItems {...props} items={items} />;
+  return (
+    <FittedItems {...props} items={items} hiddenElsewhere={hiddenElsewhere} />
+  );
 }
 
 // Every item, once, until they overflow the line; from then on the line fits them.
@@ -58,14 +61,39 @@ function FittedItems(props: FittingProps): ReactElement {
 
   return (
     <Line {...props} onLayout={onRoom}>
-      <View
-        className="shrink-0 flex-row items-center"
-        style={{ gap: props.gap }}
-        onLayout={onItems}
-      >
-        <ShownItems items={props.items} />
-      </View>
+      <EveryItem {...props} onLayout={onItems} />
     </Line>
+  );
+}
+
+// Every item, then "+N" for the items held back before the line, while they all fit; measured together.
+function EveryItem(
+  props: FittingProps & { onLayout: (event: LayoutChangeEvent) => void },
+): ReactElement {
+  return (
+    <View
+      pointerEvents="box-none"
+      className="shrink-0 flex-row items-center"
+      style={{ gap: props.gap }}
+      onLayout={props.onLayout}
+    >
+      <ShownItems items={props.items} />
+      <HeldBack {...props} />
+    </View>
+  );
+}
+
+// "+N" for the items held back before the line.
+function HeldBack(props: FittingProps): ReactNode {
+  if (props.hiddenElsewhere === 0) return null;
+
+  const more = props.more ?? drawPill;
+  const firstHidden = props.items.length;
+
+  return (
+    <View pointerEvents="box-none" className="shrink-0">
+      {more({ count: props.hiddenElsewhere, firstHidden })}
+    </View>
   );
 }
 
@@ -76,6 +104,9 @@ type LineProps = Omit<FittedRowProps, 'children'> & {
 };
 
 /*
+ * Every View the line draws only lays out its items, so a press between or on them reaches what is under the line,
+ * such as a row's own press, unless an item takes it.
+ *
  * The line clips at its sides, but leaves room above and below, so a mark an item draws past its own top, such as a
  * running count's dot, shows whole without making the line taller.
  */
@@ -88,6 +119,7 @@ const fittingClass = `max-w-full min-w-0 shrink flex-row overflow-hidden ${bleed
 function Line(props: LineProps): ReactElement {
   return (
     <View
+      pointerEvents="box-none"
       testID={props.testID}
       onLayout={props.onLayout}
       className={cn(lineClass, props.className)}
@@ -98,52 +130,41 @@ function Line(props: LineProps): ReactElement {
   );
 }
 
-type FittingProps = Omit<FittedRowProps, 'children'> & { items: Item[] };
-
-interface Fit {
-  shown: Item[];
-  hidden: number;
-  width: number | undefined;
-  onLayout: (event: LayoutChangeEvent) => void;
-  measure: Measure;
-}
-
-// What the line shows, from the widths its unseen copies measured and the room it has.
-function useFit(props: FittingProps): Fit {
-  const [available, setAvailable] = useState(0);
-  const { widths, measure } = useWidths();
-  const itemWidths = props.items.map((item) => widths[item.key]);
-  const counts = props.items.map((_, index) => widths[countKey(index + 1)]);
-  const { gap } = props;
-  const shown = fitCount({ widths: itemWidths, counts, available, gap });
-
-  return {
-    shown: props.items.slice(0, shown),
-    hidden: props.items.length - shown,
-    width: naturalWidth(itemWidths, gap),
-    onLayout: (event) => setAvailable(event.nativeEvent.layout.width),
-    measure,
-  };
-}
+export type FittingProps = Omit<FittedRowProps, 'children'> & {
+  items: Item[];
+  hiddenElsewhere: number;
+};
 
 // The unseen copies sit beside the line, not in it, so the line holds only what a reader sees.
 function FittingLine(props: FittingProps): ReactElement {
   const fit = useFit(props);
+  const more = props.more ?? drawPill;
 
   return (
-    <View className={fittingClass}>
+    <View pointerEvents="box-none" className={fittingClass}>
       <Line {...props} width={fit.width} onLayout={fit.onLayout}>
         <ShownItems items={fit.shown} />
-        {fit.hidden > 0 ? <Pill text={countKey(fit.hidden)} /> : null}
+        <ShownCount fit={fit} more={more} />
       </Line>
-      <Measurements items={props.items} measure={fit.measure} />
+      <Measurements {...props} more={more} measure={fit.measure} />
+    </View>
+  );
+}
+
+// "+N" last on the line, while it holds anything.
+function ShownCount({ fit, more }: { fit: Fit; more: DrawMore }): ReactNode {
+  if (fit.count === 0) return null;
+
+  return (
+    <View pointerEvents="box-none" className="shrink-0">
+      {more({ count: fit.count, firstHidden: fit.shown.length })}
     </View>
   );
 }
 
 function ShownItems({ items }: { items: Item[] }): ReactNode {
   return items.map((item) => (
-    <View key={item.key} className="shrink-0">
+    <View key={item.key} pointerEvents="box-none" className="shrink-0">
       {item.node}
     </View>
   ));

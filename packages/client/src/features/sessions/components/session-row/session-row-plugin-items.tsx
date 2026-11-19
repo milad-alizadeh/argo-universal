@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { SessionRowItem } from './session-row-item';
-import { SessionRowMore } from './session-row-more';
+import { pluginEntries, SessionRowMore } from './session-row-more';
 import type {
   OpenPluginItemPage,
   SessionRowPlugins,
@@ -16,7 +16,7 @@ export const hasPluginItems = (
   plugins?: SessionRowPlugins,
 ): plugins is SessionRowPlugins => Boolean(plugins?.items.length);
 
-// The Plugins' items after Argo's own, in the Plugins' order, then "+N" for the rest; both row layouts draw them.
+// A Compact row's Plugin items, in the Plugins' order, then "+N" for the rest.
 export function SessionRowPluginItems({
   plugins,
   onOpenPluginPage,
@@ -28,7 +28,7 @@ export function SessionRowPluginItems({
       {plugins.items.map((plugin) => (
         <SessionRowItem key={plugin.key} {...{ plugin, onOpenPluginPage }} />
       ))}
-      <SessionRowMore more={plugins.more} onOpenPluginPage={onOpenPluginPage} />
+      <SessionRowMore more={pluginEntries(plugins.more, onOpenPluginPage)} />
     </>
   );
 }

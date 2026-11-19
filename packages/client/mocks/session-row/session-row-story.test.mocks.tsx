@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import { expect, fn, within } from 'storybook/test';
 import { SessionRow } from '../../src/features/sessions/components/session-row/session-row';
 import type { SessionsLayout } from '../../src/features/sessions/stores/sessions-view';
+import { rowWith } from './session-row-whole.test.mocks';
 
 export const meta = {
   title: 'Tests/Sessions/SessionRow',
@@ -137,7 +138,7 @@ async function expectRowEnd(
   [name, label]: (typeof states)[number],
   layout: SessionsLayout,
 ): Promise<void> {
-  const row = within(
+  const row = rowWith(
     canvas.getByRole('button', {
       name: `${sessionRows[name].title}, ${label}`,
     }),

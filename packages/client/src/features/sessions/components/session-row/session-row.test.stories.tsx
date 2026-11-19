@@ -123,7 +123,7 @@ export const LiveRowNameDoesNotSayArchived: Story = {
   },
 };
 
-const morePluginItems = { name: /^\d+ more items? from Plugins$/ };
+const morePluginItems = { name: /^\d+ more items?$/ };
 
 function pluginItems(width: number): Story {
   return {
