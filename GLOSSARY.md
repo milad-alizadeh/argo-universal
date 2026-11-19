@@ -305,8 +305,8 @@ A Session that another Session started through an Operation, such as `session.cr
 _Avoid_: Agent, Subagent, child Session, delegated Session
 
 **Background Task**:
-A command an Agent started in the background, which keeps running while the Turn goes on. The owner renamed Shell to Background Task on 2026-11-02; the code still says `Shell`.
-_Avoid_: Shell, terminal, process
+A command an Agent started in the background, which keeps running while the Turn goes on. The owner renamed Shell to Background Task on 2026-11-02; the code still says `Shell`. It is never a Run or a Terminal.
+_Avoid_: Shell, terminal (that is a Terminal), process
 
 **Goal**:
 An objective that the Agent keeps working toward across Turns, starting the next Turn itself until the Goal is met.
@@ -315,6 +315,18 @@ _Avoid_: Target, loop
 **Checkout**:
 The git working tree that a Session runs in: its own worktree, or the Project's main checkout.
 _Avoid_: Workspace, worktree (when the main checkout is also possible)
+
+**Run Configuration**:
+A named way to run a Project's own app, such as its dev server, that the Project checks in for every Checkout to use. A group of Run Configurations starts and stops together.
+_Avoid_: Launch config, launch.json, task, script, profile
+
+**Run**:
+One live instance of a Run Configuration in one Checkout, shown as a Terminal. Every Session on that Checkout sees the same Run.
+_Avoid_: Dev server, process, job, Background Task
+
+**Terminal**:
+An interactive terminal that runs in a Checkout on the Server Device: a Run's own, or a shell a person opened. Each one is an Inspector tab.
+_Avoid_: Shell (that was the old name for a Background Task), console, PTY
 
 **Change**:
 One line of work in a Session, named by its branch, at one of five stages: Working, Branch, Open, Merged or Closed. A Session can have several at once.
@@ -665,7 +677,7 @@ Somewhere in the Frame that a page fills while it is shown: the window band, the
 _Avoid_: Host, slot (a Slot is a Plugin's)
 
 **Inspector**:
-The surface that shows a Workbench card's section in full, with a tab for its list and item details. Details include a Change's diff, an Agent's Feed or a Background Task's output; the Workbench stays open beside it.
+The surface that shows a Workbench card's section in full, with a tab for its list and item details. Details include a Change's diff, an Agent's Feed or a Background Task's output; each Terminal is a tab of its own. The Workbench stays open beside it.
 _Avoid_: Stage, detail pane, viewer
 
 **Section**:
