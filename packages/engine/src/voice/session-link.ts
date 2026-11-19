@@ -9,6 +9,8 @@ export type SessionHappening =
   | { type: 'agent.message'; id: string; text: string }
   // The person typed a Prompt to the Session.
   | { type: 'person.typed'; text: string }
+  // A Permission request is waiting for the person's answer; `title` says what it is for.
+  | { type: 'permission.waiting'; title: string }
   // A Turn ended; `error` is the message of a Turn that failed.
   | { type: 'turn.ended'; stopReason: string; error: string | null };
 

@@ -61,8 +61,14 @@ export class AgentRelay {
   }
 
   public happened(happening: SessionHappening): void {
-    if (happening.type === 'turn.ended') this.turnEnded(happening);
-    else this.said(happening);
+    switch (happening.type) {
+      case 'turn.ended':
+        return this.turnEnded(happening);
+      case 'permission.waiting':
+        return this.tell(relayWords.permissionWaiting(happening.title), 'speak');
+      default:
+        return this.said(happening);
+    }
   }
 
   // What the voice is told of a Prompt that reached the Session; it stays at work until the Session says its Turn ended.

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { FeedUpdate } from '@repo/contracts';
+import type { FeedSubscribeOutput, FeedUpdate } from '@repo/contracts';
 import type { FeedDeps, FeedEvent } from '../feed';
 import { FeedHappenings } from './feed-happenings';
 import type {
@@ -17,15 +17,22 @@ type Listener = (happening: SessionHappening) => void;
 
 type Stoppable = { unsubscribe: () => void };
 
+type SnapshotEvent = Extract<
+  FeedSubscribeOutput,
+  { type: 'snapshot' | 'closed' }
+>;
+
 // What a Session does with a Prompt from the Voice call.
 export type VoicePrompts = (
   sessionId: string,
   text: string,
 ) => Promise<PromptOutcome>;
 
-// Listens to one Session's Feed, following it when the Session replaces its Feed actor.
+// Listens to one Session's Feed, following it when the Session replaces its Feed actor, and to its Permission requests.
 class FeedWatch {
   private readonly happenings = new FeedHappenings();
+  // Each Permission request is reported once, however often the Session changes while it waits.
+  private readonly reportedRequests = new Set<string>();
   private feed: FeedActor | undefined;
   private batches: Stoppable | undefined;
   private readonly snapshots: Stoppable;
@@ -37,13 +44,30 @@ class FeedWatch {
   ) {
     this.follow();
     this.snapshots = sources.watchSessionSnapshot(sessionId, {
-      next: (): void => this.follow(),
+      next: (event): void => this.changed(event),
     });
   }
 
   public stop(): void {
     this.snapshots.unsubscribe();
     this.batches?.unsubscribe();
+  }
+
+  private changed(event: SnapshotEvent): void {
+    this.follow();
+
+    if (event.type === 'snapshot') this.permissionWaiting(event.snapshot);
+  }
+
+  private permissionWaiting({
+    pendingPermission,
+  }: Extract<SnapshotEvent, { type: 'snapshot' }>['snapshot']): void {
+    if (!pendingPermission) return;
+    const { requestId, title } = pendingPermission;
+
+    if (this.reportedRequests.has(requestId)) return;
+    this.reportedRequests.add(requestId);
+    this.listener({ type: 'permission.waiting', title });
   }
 
   private isNew(next: FeedActor | undefined): next is FeedActor {

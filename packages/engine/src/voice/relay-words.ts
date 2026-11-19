@@ -12,4 +12,6 @@ export const relayWords = {
   failed: (error: string): string => `The Agent's Turn failed: ${error}`,
   stopped: (stopReason: string): string =>
     `The Agent's Turn stopped: ${stopReason}.`,
+  permissionWaiting: (title: string): string =>
+    `The Agent is waiting for permission: ${title}. The person answers it on screen.`,
 };
