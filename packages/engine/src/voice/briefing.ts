@@ -4,9 +4,8 @@ import { feedRow } from '@repo/db/schema';
 import { and, desc, eq, inArray, type SQL } from 'drizzle-orm';
 import {
   type FeedRowWrite,
-  hydrateStoredFeedRow,
+  readStoredFeedRow,
   storedFeedColumns,
-  withoutVoiceMarkers,
 } from '../feed';
 
 // About 5,000 tokens at four characters a token.
@@ -27,10 +26,10 @@ const textOf = (row: SessionUpdate): string =>
         .trim()
     : '';
 
-// One line of the transcript: who said it and what, without voice marks.
+// One line of the transcript: who said it and what.
 const lineOf = (row: SessionUpdate): string | undefined => {
   const speaker = speakers[row.sessionUpdate];
-  const text = speaker && textOf(withoutVoiceMarkers(row));
+  const text = speaker && textOf(row);
 
   return text ? `${speaker}: ${text}` : undefined;
 };
@@ -72,7 +71,7 @@ const recentMessages = (
 // The Session's recent conversation, newest first.
 const recentLines = (database: Database, sessionId: string): string[] =>
   recentMessages(database, sessionId)
-    .map((row) => lineOf(hydrateStoredFeedRow(sessionId, row)))
+    .map((row) => lineOf(readStoredFeedRow(sessionId, row)))
     .filter((line): line is string => line !== undefined);
 
 // What the voice is told before it speaks: the title and working folder, then as much recent conversation as fits.

@@ -4,12 +4,9 @@ import { feedRow } from '@repo/db/schema';
 import { and, asc, eq, gt, lte, type SQL } from 'drizzle-orm';
 import type { WriterActorRef } from '../storage';
 import type { FeedActorRef } from './feed-machine';
-import {
-  hydrateStoredFeedRow,
-  newestRows,
-  storedFeedColumns,
-} from './feed-row';
+import { newestRows, storedFeedColumns } from './feed-row';
 import { readQueuedFeed } from './feed-storage';
+import { readStoredFeedRow } from './merged-rows';
 
 export interface FeedRowSources {
   database: Database;
@@ -71,7 +68,7 @@ export const readStoredRows = (
     .orderBy(asc(feedRow.revision))
     .limit(range.limit)
     .all()
-    .map((stored): SessionUpdate => hydrateStoredFeedRow(sessionId, stored));
+    .map((stored): SessionUpdate => readStoredFeedRow(sessionId, stored));
 
 // The newest copy of each row changed in the range, oldest change first; a row whose newest change is past `range.through` waits for a later read.
 export const readChangedRows = (

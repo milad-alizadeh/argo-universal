@@ -7,12 +7,8 @@ import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { and, desc, eq, lt, sql, type SQL } from 'drizzle-orm';
 import type { FeedDeps } from './feed';
-import {
-  hydrateStoredFeedRow,
-  storedFeedColumns,
-  type FeedRowWrite,
-} from './feed-row';
-import { withoutVoiceMarkers } from './voice-markers';
+import { storedFeedColumns, type FeedRowWrite } from './feed-row';
+import { readStoredFeedRow } from './merged-rows';
 
 const isStaleCursor = (input: FeedPageInput, epoch: number): boolean =>
   input.epoch !== undefined && input.epoch !== epoch;
@@ -69,9 +65,7 @@ const hydratePageRows = (
   stored
     .slice(0, input.limit)
     .reverse()
-    .map((row): SessionUpdate =>
-      withoutVoiceMarkers(hydrateStoredFeedRow(input.sessionId, row)),
-    );
+    .map((row): SessionUpdate => readStoredFeedRow(input.sessionId, row));
 
 function pageContent(
   stored: FeedRowWrite[],

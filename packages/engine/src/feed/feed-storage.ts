@@ -37,7 +37,7 @@ export type QueuedFeed = Omit<QueuedFeedRows, 'sessionId'> & {
   highestPosition: number;
 };
 
-// The Feed rows of one Session the Writer holds but has not committed, newest revision of each.
+// The Feed rows of one Session the Writer holds but has not committed, newest revision of each, as the Feed handed them over.
 export const readQueuedFeed = (
   writer: WriterActorRef | undefined,
   sessionId: string,
