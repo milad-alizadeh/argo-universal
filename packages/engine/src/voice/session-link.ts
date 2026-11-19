@@ -11,7 +11,9 @@ export type SessionHappening =
   // The person typed a Prompt to the Session.
   | { type: 'person.typed'; text: string }
   // A Permission request is waiting for the person's answer; `title` says what it is for.
-  | { type: 'permission.waiting'; title: string }
+  | { type: 'permission.waiting'; requestId: string; title: string }
+  // The waiting Permission request no longer waits: it was answered, or its Turn ended.
+  | { type: 'permission.settled'; requestId: string }
   // A Turn ended; `error` is the message of a Turn that failed.
   | { type: 'turn.ended'; stopReason: string; error: string | null };
 

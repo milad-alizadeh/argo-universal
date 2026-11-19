@@ -15,6 +15,12 @@ const spokenPermissions = (work: VoiceWork) => (): FakeVoiceMessage[] =>
     ({ text }) => text === relayWords.permissionWaiting(runDeploy),
   );
 
+const replyTo =
+  (work: VoiceWork, requestId: string) => (): FakeVoiceMessage | undefined =>
+    work.provider.call.sent.find(
+      (say) => say.kind === 'reply' && say.requestId === requestId,
+    );
+
 describe('a Permission request during a call', () => {
   it('is spoken to the person, saying what it is for', async () => {
     const work = await startVoiceWork([
@@ -56,5 +62,70 @@ describe('a Permission request during a call', () => {
     );
 
     expect(spokenPermissions(work)()).toHaveLength(1);
+  });
+
+  it('is never claimed answered when the person speaks while it waits', async () => {
+    const work = await startVoiceWork([
+      { prompt: deploy, asksPermission: runDeploy },
+    ]);
+
+    await work.start();
+    work.provider.call.requestWork('r1', deploy);
+    await expect.poll(spokenPermissions(work)).toHaveLength(1);
+
+    work.provider.call.personSays('Allow it');
+    work.provider.call.requestWork('r2', 'Allow it');
+
+    await expect
+      .poll(() => work.provider.call.sent)
+      .toContainEqual(
+        expect.objectContaining({
+          kind: 'reply',
+          requestId: 'r2',
+          text: expect.stringContaining(
+            relayWords.permissionStillWaiting(runDeploy),
+          ),
+        }),
+      );
+
+    const snapshot = await waitForAcpSnapshot(
+      work.host,
+      work.sessionId,
+      (next) => next.pendingPermission !== null,
+    );
+
+    expect(snapshot.pendingPermission?.title).toBe(runDeploy);
+  });
+
+  it('is answered by a click during a call, after which the voice is not told it waits', async () => {
+    const work = await startVoiceWork([
+      { prompt: deploy, asksPermission: runDeploy, messages: ['Deployed'] },
+      { prompt: later },
+    ]);
+
+    await work.start();
+    work.provider.call.requestWork('r1', deploy);
+
+    const { pendingPermission } = await waitForAcpSnapshot(
+      work.host,
+      work.sessionId,
+      (next) => next.pendingPermission !== null,
+    );
+
+    await work.host.caller.session.answerPermission({
+      sessionId: work.sessionId,
+      requestId: pendingPermission?.requestId ?? '',
+      optionId: 'allow',
+    });
+    await expect
+      .poll(() => work.provider.call.sent)
+      .toContainEqual(expect.objectContaining({ text: 'Deployed' }));
+
+    work.provider.call.requestWork('r2', later);
+
+    await expect.poll(replyTo(work, 'r2')).toBeDefined();
+    expect(JSON.stringify(work.provider.call.sent)).not.toContain(
+      relayWords.permissionStillWaiting(runDeploy),
+    );
   });
 });
