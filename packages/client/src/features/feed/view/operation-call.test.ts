@@ -57,6 +57,20 @@ it('names discovery and waiting calls', () => {
   expect(toolCallFacts(waiting).operation?.icon).toBe('clock');
 });
 
+it.each([
+  { name: `${server}: operation_run`, rawInput: { ...wrapped, arguments: {} } },
+  { name: 'operation_run', rawInput: { params: { limit: 2 } } },
+])('names an operation_run call without an Operation id', (fields) => {
+  const row = call({
+    ...fields,
+    title: `${server}: operation_run`,
+    kind: 'execute',
+  });
+
+  expect(toolCallTitle(row)).toBe('Run Operation');
+  expect(toolCallFacts(row).operation?.icon).toBe('tool');
+});
+
 it('shares a recorded Plugin Operation label and icon with its Agent call', () => {
   const name = 'github.discover';
 

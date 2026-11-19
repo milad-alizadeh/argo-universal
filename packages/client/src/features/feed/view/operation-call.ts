@@ -17,10 +17,14 @@ export interface OperationPresentation {
   icon: IconName;
 }
 
+// An operation_run call that names no Operation, such as one the Agent sent before loading its schema.
+const untargetedRun = 'operations.run';
+
 const presentations = new Map<string, OperationPresentation>([
   ...Object.entries(operations),
   [discoveryOperation.id, discoveryOperation],
   ['operations.wait', { label: 'Wait for Operation', icon: 'clock' }],
+  [untargetedRun, { label: 'Run Operation', icon: 'tool' }],
 ]);
 
 const RunTarget = z.union([
@@ -32,7 +36,7 @@ const WrappedTarget = z
   .object({ arguments: RunTarget })
   .transform(({ arguments: target }) => target);
 
-const Target = z.union([RunTarget, WrappedTarget]);
+const Target = z.union([RunTarget, WrappedTarget]).catch(untargetedRun);
 
 const McpTool = z.enum(['operation_run', 'operation_list']);
 
@@ -92,7 +96,7 @@ function operationIdentity(row: ToolCallUpdate): string | undefined {
 
   return call.tool === 'operation_list'
     ? discoveryOperation.id
-    : Target.safeParse(call.arguments).data;
+    : Target.parse(call.arguments);
 }
 
 export function operationPresentation(
