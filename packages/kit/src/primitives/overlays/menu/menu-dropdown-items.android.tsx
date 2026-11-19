@@ -1,10 +1,10 @@
 import Check from '@expo/material-symbols/check.xml';
 import {
-  Column,
   DropdownMenu,
   DropdownMenuItem,
   HorizontalDivider,
   Icon,
+  Row,
   Text,
 } from '@expo/ui/jetpack-compose';
 import { padding } from '@expo/ui/jetpack-compose/modifiers';
@@ -14,7 +14,11 @@ import type { MenuDropdownItemsProps } from './menu-dropdown-items-props';
 import { MenuDropdownShell } from './menu-dropdown-shell.android';
 import { useItemColors } from './menu-item-colors.android';
 import { ItemLeadingIcon } from './menu-item-icon.android';
-import { dividedItems, type NativeMenuItem } from './menu-native-items';
+import {
+  dividedItems,
+  nativeTitle,
+  type NativeMenuItem,
+} from './menu-native-items';
 import { SubmenuRow } from './menu-submenu-row.android';
 
 // The rows of a Compose DropdownMenu, shared by the Menu and the SplitButton's chevron.
@@ -112,27 +116,23 @@ function MenuItem({ item, onChoose }: MenuItemProps): React.JSX.Element {
     >
       <ItemLeadingIcon {...item} onPress={() => onChoose(item)} />
       <DropdownMenuItem.Text>
-        <MenuItemLabel {...item} />
+        <ActionTitle item={item} />
       </DropdownMenuItem.Text>
       <ItemCheck checked={item.checked} />
     </DropdownMenuItem>
   );
 }
 
-function MenuItemLabel(item: NativeMenuItem): React.JSX.Element {
-  const palette = useMaterialPalette();
+function ActionTitle({ item }: Pick<MenuItemProps, 'item'>): React.JSX.Element {
+  const muted = useMaterialPalette().roles.onSurfaceVariant;
 
-  const color = item.disabled
-    ? palette.menuItemColors.disabledTextColor
-    : palette.roles.onSurfaceVariant;
-
-  if (!item.subtitle) return <Text>{item.title}</Text>;
+  if (!item.count) return <Text>{nativeTitle(item)}</Text>;
 
   return (
-    <Column>
+    <Row verticalAlignment="center" horizontalArrangement={{ spacedBy: 6 }}>
       <Text>{item.title}</Text>
-      <Text color={color}>{item.subtitle}</Text>
-    </Column>
+      <Text color={muted}>{item.count}</Text>
+    </Row>
   );
 }
 

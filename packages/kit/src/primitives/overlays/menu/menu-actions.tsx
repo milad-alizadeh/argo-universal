@@ -1,7 +1,7 @@
 import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import { menuDefaults } from '@repo/contracts/kit-tokens';
 import type * as React from 'react';
-import { Fragment, useId } from 'react';
+import { Fragment } from 'react';
 import { View } from 'react-native';
 import { windowEdgeInset } from '#kit/menu-surface';
 import { Text, TextClassContext } from '#primitives/content/text';
@@ -18,6 +18,7 @@ import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';
 import {
   isMenuSubmenu,
+  menuActionTitle,
   type ActionMenuProps,
   type MenuAction,
   type MenuEntry,
@@ -127,29 +128,22 @@ function SubmenuCount({
 }
 
 function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {
-  const id = useId();
-  const subtitleId = action.subtitle ? id : undefined;
-
   return (
     <TextClassContext.Provider value={menuTextClass(action.tone)}>
-      <RadixMenu.Item {...actionItemProps(action, subtitleId)}>
+      <RadixMenu.Item {...actionItemProps(action)}>
         <View {...actionRow(action)}>
           <ChoiceCheck selected={action.selected} />
-          <MenuActionLabel {...action} subtitleId={subtitleId} />
+          <MenuActionLabel {...action} />
         </View>
       </RadixMenu.Item>
     </TextClassContext.Provider>
   );
 }
 
-function actionItemProps(
-  action: MenuAction,
-  subtitleId: string | undefined,
-): RadixMenu.DropdownMenuItemProps {
+function actionItemProps(action: MenuAction): RadixMenu.DropdownMenuItemProps {
   return {
     asChild: true,
-    'aria-label': action.label,
-    'aria-describedby': subtitleId,
+    'aria-label': menuActionTitle(action),
     disabled: action.disabled,
     onSelect: action.onPress,
     ...choiceRole(action.selected),

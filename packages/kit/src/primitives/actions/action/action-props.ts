@@ -6,8 +6,8 @@ export type ActionProps = PressActionProps | SubmenuActionProps;
 
 // A press Action runs `onPress`; an Action without one opens a submenu of its Section children.
 export type PressActionProps = Extract<KitAction, { onPress: unknown }> & {
-  // Secondary text shown with the label when this Action is drawn in a menu.
-  subtitle?: string;
+  // Count shown after the label in a menu.
+  count?: string;
 };
 
 export type SubmenuActionProps = Exclude<KitAction, PressActionProps>;

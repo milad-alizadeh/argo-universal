@@ -45,16 +45,32 @@ async function openWorkbench({
 export const ListsAvailableSectionsInOrder: Story = {
   play: async (context) => {
     const menu = await openWorkbench(context);
-    const labels = ['Changes', 'Agents', 'Background Tasks', 'Coverage'];
+
+    const labels = [
+      'Changes 4',
+      `Agents ${workbenchMenuSession.subagents.subagents.length}`,
+      `Background Tasks ${workbenchMenuSession.shells.shells.length}`,
+      'Coverage',
+    ];
+
     const entries = labels.map((name) => menu.getByRole('menuitem', { name }));
 
     await expect(menu.getAllByRole('menuitem')).toEqual(entries);
-    await expect(entries[0]).toHaveAccessibleDescription('4');
-    await expect(entries[1]).toHaveAccessibleDescription(
-      String(workbenchMenuSession.subagents.subagents.length),
+
+    const changes = menu.getByRole('menuitem', { name: 'Changes 4' });
+    const count = within(changes).getByText('4');
+    const title = count.parentElement?.firstChild;
+
+    if (!title) throw new Error('Expected an inline Changes label.');
+
+    const range = document.createRange();
+    range.selectNodeContents(title);
+    await expect(count.getBoundingClientRect().top).toBeCloseTo(
+      range.getBoundingClientRect().top,
+      0,
     );
-    await expect(entries[2]).toHaveAccessibleDescription(
-      String(workbenchMenuSession.shells.shells.length),
+    await expect(count.getBoundingClientRect().left).toBeGreaterThanOrEqual(
+      range.getBoundingClientRect().right,
     );
   },
 };
@@ -137,7 +153,7 @@ export const OpensAfterReturningToTheSession: Story = {
     );
 
     const menu = await openWorkbench(context);
-    const agents = menu.getByRole('menuitem', { name: 'Agents' });
+    const agents = menu.getByRole('menuitem', { name: /^Agents \d+$/ });
 
     await settleOverlays(agents);
     await userEvent.click(agents);

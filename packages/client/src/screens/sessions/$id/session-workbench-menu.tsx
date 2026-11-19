@@ -33,7 +33,7 @@ function sectionActions(
       key={key}
       label={title}
       icon={menuIcon(key, icon)}
-      subtitle={count && String(count(props))}
+      count={count && String(count(props))}
       onPress={() => select(key)}
     />
   ));
