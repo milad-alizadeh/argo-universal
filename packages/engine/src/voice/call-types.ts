@@ -1,8 +1,4 @@
-import type {
-  VoiceCallEnd,
-  VoiceLimit,
-  VoicePartial,
-} from '@repo/contracts';
+import type { VoiceCallEnd, VoiceLimit, VoicePartial } from '@repo/contracts';
 import type {
   VoiceDelivery,
   VoiceProvider,

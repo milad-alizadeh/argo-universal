@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createActor, type Actor } from 'xstate';
 import { start } from '#mocks/voice-call-events';
 import { modelInput, modelMachine } from '#mocks/voice-call-model';
-import { providerEvent } from './call-types';
 import { voiceCallOf } from './call-look';
+import { providerEvent } from './call-types';
 
 const { idleMs } = modelInput;
 
@@ -33,9 +33,7 @@ describe('a Voice call whose connection drops', () => {
     voice.send(connected);
     voice.send(disconnected);
 
-    expect(voice.getSnapshot().matches({ running: 'reconnecting' })).toBe(
-      true,
-    );
+    expect(voice.getSnapshot().matches({ running: 'reconnecting' })).toBe(true);
     expect(callNow()).toEqual({
       callId: 'call-1',
       sessionId: 'session-1',

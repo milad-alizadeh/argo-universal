@@ -205,7 +205,10 @@ const voiceCallSetup = setup({
       const call = runningCall(context);
 
       return {
-        call: { ...call, startedAt: call.startedAt ?? new Date().toISOString() },
+        call: {
+          ...call,
+          startedAt: call.startedAt ?? new Date().toISOString(),
+        },
       };
     }),
     foldTurn: assign(({ context, event }): Partial<VoiceCallContext> => {

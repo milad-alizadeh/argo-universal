@@ -1,3 +1,4 @@
+import type { VoiceCall } from '@repo/contracts';
 import {
   describeModel,
   modelTest,
@@ -8,8 +9,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createActor, type Actor, type SnapshotFrom } from 'xstate';
 import { events, start } from '#mocks/voice-call-events';
 import { modelInput as input, modelMachine } from '#mocks/voice-call-model';
-import type { VoiceCallEvent } from './call-types';
 import { voiceCallOf } from './call-look';
+import type { VoiceCallEvent } from './call-types';
 
 type Snapshot = SnapshotFrom<typeof modelMachine>;
 
@@ -52,23 +53,48 @@ const expectCall = (snapshot: Snapshot): void =>
 const expectAnswer = (snapshot: Snapshot): void =>
   expect(snapshot.context.call?.answer).toBe('answer');
 
-const joined = { startedAt: expect.any(String) };
+const joined: Partial<VoiceCall> = { startedAt: expect.any(String) };
 
 // The call the App is sent in each running state, read from the actor the model drives.
-const expectLook =
-  (look: Record<string, unknown>) =>
-  (): void =>
-    expect(voiceCallOf(voice.getSnapshot())).toMatchObject({
-      callId: 'call-1',
-      ...look,
-    });
+const expectLook = (look: Partial<VoiceCall>) => (): void =>
+  expect(voiceCallOf(voice.getSnapshot())).toMatchObject({
+    callId: 'call-1',
+    ...look,
+  });
 
-const notJoined = {
+const notJoined: Partial<VoiceCall> = {
   status: 'connecting',
   connection: 'connecting',
   orb: 'none',
   trouble: null,
   startedAt: null,
+};
+
+// A connected call shows what is happening on it; which of the three depends on who speaks and works.
+const live: Partial<VoiceCall> = {
+  status: 'connected',
+  connection: 'connected',
+  orb: expect.stringMatching(/^(listening|talking|thinking)$/),
+  trouble: null,
+  ...joined,
+};
+
+const reconnecting: Partial<VoiceCall> = {
+  status: 'connected',
+  connection: 'disconnected',
+  orb: 'none',
+  trouble: 'reconnecting',
+  ...joined,
+};
+
+const expectIdle = (snapshot: Snapshot): void => {
+  expectNoCall(snapshot);
+  expect(voiceCallOf(voice.getSnapshot())).toBeNull();
+};
+
+const expectConnecting = (snapshot: Snapshot): void => {
+  expectAnswer(snapshot);
+  expectLook(notJoined)();
 };
 
 const model = modelTest(
@@ -104,30 +130,12 @@ const model = modelTest(
     delays: { idle: input.idleMs },
     always: expectVoice,
     states: {
-      idle: (snapshot): void => {
-        expectNoCall(snapshot);
-        expect(voiceCallOf(voice.getSnapshot())).toBeNull();
-      },
+      idle: expectIdle,
       running: expectCall,
       'running.starting': expectLook(notJoined),
-      'running.connecting': (snapshot): void => {
-        expectAnswer(snapshot);
-        expectLook(notJoined)();
-      },
-      'running.connected': expectLook({
-        status: 'connected',
-        connection: 'connected',
-        orb: expect.not.stringMatching(/^none$/),
-        trouble: null,
-        ...joined,
-      }),
-      'running.reconnecting': expectLook({
-        status: 'connected',
-        connection: 'disconnected',
-        orb: 'none',
-        trouble: 'reconnecting',
-        ...joined,
-      }),
+      'running.connecting': expectConnecting,
+      'running.connected': expectLook(live),
+      'running.reconnecting': expectLook(reconnecting),
     },
   },
 );
