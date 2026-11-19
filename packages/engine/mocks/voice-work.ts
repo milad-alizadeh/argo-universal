@@ -154,9 +154,6 @@ type Play = Pick<WorkParts, 'provider' | 'prompts' | 'steered'> & {
   scenario: Scenario;
 };
 
-const steerOutcome = ({ steering }: VoiceWorkOptions): 'injected' | 'failed' =>
-  steering === 'refused' ? 'failed' : 'injected';
-
 // What the mock Agent is to do, and what is kept to read back what it saw.
 function playOf(
   replies: readonly VoiceAgentReply[],
@@ -168,12 +165,9 @@ function playOf(
   const provider =
     options.provider ?? new FakeVoiceProvider({ connect: 'manual' });
 
-  const base = scenarioOf(replies, { prompts, provider });
-
   const scenario: Scenario = {
-    ...(options.steering
-      ? { ...base, ...steeringScenario(steered, steerOutcome(options)) }
-      : base),
+    ...scenarioOf(replies, { prompts, provider }),
+    ...steeringScenario(steered, options.steering),
     voiceIdleMs: options.idleMs,
   };
 

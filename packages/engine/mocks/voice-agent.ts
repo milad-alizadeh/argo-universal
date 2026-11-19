@@ -57,10 +57,9 @@ const stepsOf = (reply: VoiceAgentReply): ScriptedStep[] => [
   ...endingSteps(reply),
 ];
 
-// An Agent that supports steering; `outcome` is how it answers each steer.
-export const steeringScenario = (
+const steeringAgent = (
   steered: PromiseWithResolvers<unknown>,
-  outcome: 'injected' | 'failed' = 'injected',
+  outcome: 'injected' | 'failed',
 ): Partial<Scenario> => ({
   initialize: {
     protocolVersion: 1,
@@ -69,6 +68,16 @@ export const steeringScenario = (
   },
   steering: { received: steered, result: { outcome } },
 });
+
+// An Agent that takes each steer, refuses each one, or does not support steering at all.
+export const steeringScenario = (
+  steered: PromiseWithResolvers<unknown>,
+  steering: boolean | 'refused' | undefined,
+): Partial<Scenario> => {
+  if (!steering) return {};
+
+  return steeringAgent(steered, steering === 'refused' ? 'failed' : 'injected');
+};
 
 type Recording = { prompts: PromptRequest[]; provider: FakeVoiceProvider };
 
