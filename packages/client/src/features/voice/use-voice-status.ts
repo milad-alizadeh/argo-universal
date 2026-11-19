@@ -2,6 +2,7 @@ import { defaultVoiceCallOptions, type VoiceStatus } from '@repo/contracts';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
+import { usePlacedCall, withPlacedCall } from './placed-call';
 
 // What the status says until the Server has answered: no call, and nothing to offer.
 const loadingStatus: VoiceStatus = {
@@ -14,7 +15,7 @@ const loadingStatus: VoiceStatus = {
   microphoneGain: defaultVoiceCallOptions.microphoneGain,
 };
 
-// The Voice call's standing: read once, then followed from the Server on every Device.
+// The Voice call's standing: read once, then followed from the Server on every Device, with a call this App is placing.
 export function useVoiceStatus(): VoiceStatus {
   const trpc = useTRPC();
   const cache = useQueryClient();
@@ -31,5 +32,5 @@ export function useVoiceStatus(): VoiceStatus {
 
   useResubscribeOnReconnect(subscription);
 
-  return read.data ?? loadingStatus;
+  return withPlacedCall(read.data ?? loadingStatus, usePlacedCall());
 }

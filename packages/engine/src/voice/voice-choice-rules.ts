@@ -92,9 +92,19 @@ function spokenWith(
   const custom = stored.customVoices.find(({ id }) => id === chosen);
 
   return custom
-    ? { voice: custom.baseVoice, style: custom.description }
+    ? { voice: baseOf(custom.baseVoice, builtIn), style: custom.description }
     : { voice: chosen ?? undefined };
 }
+
+// A base voice the provider no longer lists falls back to its first, as a chosen one does.
+export const baseOf = (baseVoice: string, builtIn: VoiceOption[]): string =>
+  listedOr(builtIn, baseVoice)?.id ?? baseVoice;
+
+const listedOr = (
+  builtIn: VoiceOption[],
+  id: string,
+): VoiceOption | undefined =>
+  builtIn.find((voice) => voice.id === id) ?? builtIn[0];
 
 // What the next call is set up with: its voice, what it is told, and how it hands work over.
 export const setupOf = (

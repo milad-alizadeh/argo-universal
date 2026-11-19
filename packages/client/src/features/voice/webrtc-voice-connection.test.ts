@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { FakeEnvironment } from '../../../mocks/voice/fake-voice-environment';
+import { spectrumBands } from './voice-connection';
 import { MicrophoneUnavailable } from './voice-environment';
 import { createWebRtcVoiceConnection } from './webrtc-voice-connection';
+
+// Float32 bands, rounded so a test reads them as the decimals the fakes set.
+const bandsOf = (bands: Float32Array): number[] =>
+  [...bands].map((band) => Math.round(band * 10) / 10);
+
+const allAt = (level: number): number[] => Array(spectrumBands).fill(level);
 
 async function started(refuse = false): Promise<{
   environment: FakeEnvironment;
@@ -66,6 +73,18 @@ describe('WebRTC voice connection', () => {
     expect(connection.levels()).toEqual({ input: 0.4, output: 0.7 });
     connection.close();
     expect(connection.levels()).toEqual({ input: 0, output: 0 });
+  });
+
+  it('reads the microphone and voice bands, silent while the microphone is muted and once closed', async () => {
+    const { environment, connection } = await started();
+    expect(bandsOf(connection.spectrum().input)).toEqual(allAt(0.4));
+    expect(bandsOf(connection.spectrum().output)).toEqual(allAt(0));
+    environment.peer.voiceArrives();
+    expect(bandsOf(connection.spectrum().output)).toEqual(allAt(0.7));
+    connection.setMicrophoneMuted(true);
+    expect(bandsOf(connection.spectrum().input)).toEqual(allAt(0));
+    connection.close();
+    expect(bandsOf(connection.spectrum().output)).toEqual(allAt(0));
   });
 
   it('holds the mutes itself, and tells whoever listens when they change', async () => {

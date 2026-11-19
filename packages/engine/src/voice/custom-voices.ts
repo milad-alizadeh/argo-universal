@@ -6,7 +6,7 @@ import type {
   VoiceOption,
   VoicePreviewInput,
 } from '@repo/contracts';
-import { refuse } from './voice-choice-rules';
+import { baseOf, refuse } from './voice-choice-rules';
 
 // The provider's voices, then the person's own.
 export const listedVoices = (
@@ -75,8 +75,11 @@ const builtInPreview = (id: string, builtIn: VoiceOption[]): PreviewedVoice => {
   return { voice: option.id, label: option.label };
 };
 
-const customPreview = (voice: CustomVoice): PreviewedVoice => ({
-  voice: voice.baseVoice,
+const customPreview = (
+  voice: CustomVoice,
+  builtIn: VoiceOption[],
+): PreviewedVoice => ({
+  voice: baseOf(voice.baseVoice, builtIn),
   label: voice.label,
   style: voice.description,
 });
@@ -102,7 +105,9 @@ export function previewedVoice(
 
   const saved = custom.find(({ id }) => id === input.voice);
 
-  return saved ? customPreview(saved) : builtInPreview(input.voice, builtIn);
+  return saved
+    ? customPreview(saved, builtIn)
+    : builtInPreview(input.voice, builtIn);
 }
 
 // The custom voices without the one `id` names.

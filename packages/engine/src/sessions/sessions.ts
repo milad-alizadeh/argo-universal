@@ -14,7 +14,7 @@ import {
   type SessionOperationCall,
 } from './operation-call';
 import { promptFromPlugin, withdrawFromPlugin } from './plugin-prompt';
-import type { NativeStartRequest } from './prompt-sender';
+import type { NativeStart, NativeStartRequest } from './prompt-sender';
 import { createSessionRouter } from './router';
 import {
   createSessionDirectory,
@@ -24,8 +24,12 @@ import {
   sessionOperationImplementations,
   type SessionOperationImplementations,
 } from './session-operations';
-import { startSessionPrompt } from './session-prompt';
+import {
+  startSessionPrompt,
+  type AcceptedSessionPrompt,
+} from './session-prompt';
 import type { SessionHandlerSources, SessionSources } from './session-sources';
+import { startSteeredPrompt } from './steered-prompt';
 import type { TurnHappening } from './turn-happenings';
 import { promptFromVoice } from './voice-prompt';
 import { createSessionWorkSource, type SessionWorkSource } from './work-source';
@@ -67,12 +71,19 @@ export class Sessions {
   ): ReturnType<typeof startSessionCreation> {
     return startSessionCreation(this.sources, input, request);
   }
-  // Starts a Prompt's Turn; the request's signal also stops its admission.
+  /*
+   * The user's Prompt starts a Turn; another Session's is steered into a running Turn or queued behind it (ADR-0054).
+   * The request's signal also stops its admission.
+   */
   public prompt(
     input: SessionPromptInput,
     request: NativeStartRequest,
-  ): ReturnType<typeof startSessionPrompt> {
-    return startSessionPrompt(this.sources, input, request);
+  ): NativeStart<AcceptedSessionPrompt> {
+    const { sender, signal } = request;
+
+    return sender.type === 'user'
+      ? startSessionPrompt(this.sources, input, request)
+      : startSteeredPrompt(this.sources, input, { sender, signal });
   }
   // A Plugin's Prompt: starts a Turn on an idle Session, else joins the end of its queue (ADR-0055).
   public promptFromPlugin(

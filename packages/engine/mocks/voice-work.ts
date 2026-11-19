@@ -23,6 +23,8 @@ type VoiceWorkOptions = {
   steering?: boolean | 'refused';
   // How long the call may pass without speech before it ends by itself, in milliseconds.
   idleMs?: number;
+  // The Session is opened with no Prompt, so it has no Turns when the call starts.
+  turnless?: boolean;
 };
 
 // What a test holds of the Session it drives.
@@ -49,7 +51,11 @@ export const promptText = (request: PromptRequest | undefined): string =>
     .map((block) => (block.type === 'text' ? block.text : ''))
     .join('\n');
 
-async function openSession(host: Host): Promise<string> {
+async function openSession(host: Host, turnless = false): Promise<string> {
+  if (turnless) {
+    return (await host.caller.session.new(emptySessionInput)).sessionId;
+  }
+
   const { sessionId } = await host.caller.session.new({
     ...emptySessionInput,
     prompt: [{ type: 'text', text: 'Hello' }],
@@ -182,5 +188,9 @@ export async function startVoiceWork(
   const { scenario, ...play } = playOf(replies, options);
   const host = await startAcpEngine(scenario);
 
-  return new VoiceWork({ ...play, host, sessionId: await openSession(host) });
+  return new VoiceWork({
+    ...play,
+    host,
+    sessionId: await openSession(host, options.turnless),
+  });
 }

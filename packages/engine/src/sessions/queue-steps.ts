@@ -9,9 +9,7 @@ import {
 } from './turn';
 import { promptTaken } from './turn-happenings';
 
-type QueueSelection = Pick<SessionContext, 'promptQueue'> & {
-  input: Pick<SessionContext['input'], 'createId'>;
-};
+type QueueSelection = Pick<SessionContext, 'promptQueue'>;
 
 export function selectQueuedPrompt(
   context: QueueSelection,
@@ -22,8 +20,9 @@ export function selectQueuedPrompt(
 
   return {
     dispatchingQueueId: row.id,
+    // The Turn takes the queued Prompt's id, so a caller that queued it follows that Turn before it starts.
     pendingSubmission: {
-      turnId: context.input.createId(),
+      turnId: row.id,
       content: row.prompt,
       sender: row.sender ?? { type: 'user' },
       followUpSuggestions: row.followUpSuggestions,

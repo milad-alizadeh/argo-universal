@@ -5,6 +5,7 @@ import {
 } from '@repo/contracts';
 import type { ComposerVoice } from '#features/composer';
 import type { SessionVoiceInput } from './session-voice';
+import { silentSpectrum } from './voice-connection';
 
 const startedAt = '2026-11-18T10:00:00.000Z';
 
@@ -51,6 +52,7 @@ export function inputOf(
     now,
     mutes: { microphone: false, speaker: false },
     levels: () => ({ input: 0, output: 0 }),
+    spectrum: silentSpectrum,
     titleOf: (id) => (id === 's-call' ? 'Fix the build' : undefined),
     actions: {
       start: () => asked.push('start'),

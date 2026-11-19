@@ -71,4 +71,9 @@ export class BrowserMicrophone implements Microphone {
   public level(): number {
     return this.muted ? 0 : this.meter.level();
   }
+
+  public spectrum(into: Float32Array): void {
+    if (this.muted) into.fill(0);
+    else this.meter.spectrum(into);
+  }
 }

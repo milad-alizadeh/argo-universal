@@ -1,8 +1,10 @@
-import type {
-  VoiceConnection,
-  VoiceLevels,
-  VoiceMutes,
-  VoiceSound,
+import {
+  silentSpectrum,
+  type VoiceConnection,
+  type VoiceLevels,
+  type VoiceMutes,
+  type VoiceSound,
+  type VoiceSpectrum,
 } from '../../src/features/voice/voice-connection';
 import type { VoiceDeviceChoice } from '../../src/features/voice/voice-device-choice';
 import { VoiceMuteStore } from '../../src/features/voice/voice-mute-store';
@@ -62,6 +64,15 @@ export class FakeVoiceConnection implements VoiceConnection {
 
   public levels(): VoiceLevels {
     return { input: this.input, output: this.output };
+  }
+
+  // Every band as loud as the level a test sets.
+  public spectrum(): VoiceSpectrum {
+    const spectrum = silentSpectrum();
+    spectrum.input.fill(this.input);
+    spectrum.output.fill(this.output);
+
+    return spectrum;
   }
 
   public async preview(

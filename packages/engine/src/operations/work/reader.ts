@@ -69,18 +69,21 @@ function turnObservation(
   return observation(
     workExecution(id, {
       status: turnStatus(turn, requiresInput),
-      turn,
+      turn: turn ?? undefined,
       result: { sessionId: work.sessionId },
     }),
     work,
   );
 }
 
+// A Turn whose Prompt still waits in the queue runs on, as one that has started does.
+const hasEnded = (turn: Turn | null): boolean => turn?.status === 'ended';
+
 function turnStatus(
-  turn: Turn,
+  turn: Turn | null,
   requiresInput: boolean,
 ): OperationExecution['status'] {
-  if (turn.status === 'ended') return 'settled';
+  if (hasEnded(turn)) return 'settled';
 
   return requiresInput ? 'waiting_for_user' : 'still_running';
 }

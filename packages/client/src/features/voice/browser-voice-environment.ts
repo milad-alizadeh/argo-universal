@@ -126,6 +126,10 @@ class BrowserPlayback implements VoicePlayback {
     return this.meter.level();
   }
 
+  public spectrum(into: Float32Array): void {
+    this.meter.spectrum(into);
+  }
+
   public stop(): void {
     this.meter.close();
     this.audio.pause();

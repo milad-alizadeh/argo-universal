@@ -45,8 +45,14 @@ export interface ComposerVoiceElsewhere {
  */
 export type ComposerVoice =
   | { kind: 'start'; onStart: () => void }
-  | { kind: 'connecting'; onEnd: () => void }
-  | { kind: 'connected'; onEnd: () => void; mutes: ComposerVoiceMutes }
+  | { kind: 'connecting'; onEnd: () => void; edge?: ReactNode }
+  | {
+      kind: 'connected';
+      onEnd: () => void;
+      mutes: ComposerVoiceMutes;
+      // A drawing of the call along the card's top edge, above the text box; absent while the stage draws it.
+      edge?: ReactNode;
+    }
   | ComposerVoiceElsewhere;
 
 export type SendState =

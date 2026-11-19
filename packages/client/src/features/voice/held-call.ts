@@ -1,4 +1,4 @@
-import type { VoiceLevels } from './voice-connection';
+import type { VoiceLevels, VoiceSpectrum } from './voice-connection';
 import type { VoiceDeviceChoice } from './voice-device-choice';
 import {
   MicrophoneUnavailable,
@@ -119,6 +119,14 @@ export class HeldCall {
       input: this.microphone.level(),
       output: this.playback?.level() ?? 0,
     };
+  }
+
+  // Fills the spectrum from the microphone and the voice; the voice's is silent until it arrives.
+  public spectrum(into: VoiceSpectrum): void {
+    this.microphone.spectrum(into.input);
+
+    if (this.playback) this.playback.spectrum(into.output);
+    else into.output.fill(0);
   }
 
   public release(): void {

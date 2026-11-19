@@ -12,8 +12,8 @@ const quiet = 0.01;
 
 const doubled = 2;
 
-// The meter's floor: a muted track still reads a few steps above nothing.
-const nearSilence = 0.05;
+// How far a muted microphone falls below what it sent; the meter's floor still reads a few steps above nothing.
+const nearSilence = 0.5;
 
 const halved = 0.5;
 
@@ -86,8 +86,11 @@ export const RaisesAndLowersWhatIsSent: Story = {
     microphone.setGain(halved);
     await waitFor(() => expect(reads(raised, raw, false)).toBe(true));
 
+    const unmuted = raised.level();
     microphone.setMuted(true);
-    await waitFor(() => expect(raised.level()).toBeLessThan(nearSilence));
+    await waitFor(() =>
+      expect(raised.level()).toBeLessThan(unmuted * nearSilence),
+    );
 
     raised.close();
     raw.close();

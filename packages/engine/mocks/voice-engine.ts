@@ -12,19 +12,26 @@ export type VoiceSession = Awaited<ReturnType<typeof openAccessSession>>;
 
 export const offer = 'offer-sdp';
 
-// The Engine with the mock ACP Agent and a fake Voice provider whose call connects only when a test says so.
-export async function startVoiceEngine(
-  provider: FakeVoiceProvider = new FakeVoiceProvider({ connect: 'manual' }),
-): Promise<{
+type VoiceEngineParts = {
   host: Host;
   provider: FakeVoiceProvider;
   outputs: TerminalOutputResponse[];
-}> {
+};
+
+/*
+ * The Engine with the mock ACP Agent and a fake Voice provider whose call connects only when a test says so.
+ * `restartOver` starts the Engine again over a stopped one's home, with what it stored.
+ */
+export async function startVoiceEngine(
+  provider: FakeVoiceProvider = new FakeVoiceProvider({ connect: 'manual' }),
+  restartOver?: string,
+): Promise<VoiceEngineParts> {
   const outputs: TerminalOutputResponse[] = [];
 
   const host = await startAcpEngine({
     steps: [sessionIdentityStep(outputs)],
     voiceProvider: provider,
+    restartOver,
   });
 
   return { host, provider, outputs };

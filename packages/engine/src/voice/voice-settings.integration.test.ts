@@ -109,6 +109,19 @@ describe('Voice settings', () => {
     expect(provider.call.request.voice).toBe('second');
   });
 
+  it('starts the next call in the first voice once the chosen one is no longer listed', async () => {
+    const { host } = await withTwoVoices();
+    await host.caller.voice.setSettings({ voice: 'second' });
+    await host.stop();
+    const provider = new FakeVoiceProvider({ voices: twoVoices.slice(0, 1) });
+
+    const restarted = await startVoiceEngine(provider, host.home);
+    const { sessionId } = await openVoiceSession(restarted);
+    await restarted.host.caller.voice.start({ sessionId, offer });
+
+    expect(provider.call.request.voice).toBe('first');
+  });
+
   it('starts no call while Voice calls are off', async () => {
     const voice = await withTwoVoices();
     const { host } = voice;

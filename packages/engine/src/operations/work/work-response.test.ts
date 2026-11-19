@@ -80,7 +80,9 @@ it('follows a Tool call to the Turn it started, in the Session that runs it', as
   const running = runFromSession(host, {
     id: 'session.prompt',
     wait: true,
-    result: Promise.resolve(answer({ messageId: 'message-1' })),
+    result: Promise.resolve(
+      answer({ status: 'started' as const, messageId: 'message-1' }),
+    ),
   });
 
   await expect.poll(() => host.source.watching('child')).toBe(1);
@@ -88,6 +90,7 @@ it('follows a Tool call to the Turn it started, in the Session that runs it', as
   const settled = OperationExecution.parse(await running);
   expect(settled).toMatchObject({
     status: 'settled',
+    result: { sessionId: 'child', status: 'started', messageId: 'message-1' },
     turn: { id: 'turn-1', sessionId: 'child', stopReason: 'end_turn' },
   });
   expect(settled.id).toMatch(/^turn:/);
@@ -112,7 +115,9 @@ async function startTurnWithoutWait(): Promise<StartedTurn> {
     await runFromSession(host, {
       id: 'session.prompt',
       wait: false,
-      result: Promise.resolve(answer({ messageId: 'message-1' })),
+      result: Promise.resolve(
+        answer({ status: 'started' as const, messageId: 'message-1' }),
+      ),
     }),
   );
 
