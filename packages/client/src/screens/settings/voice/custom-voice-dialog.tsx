@@ -1,5 +1,6 @@
 import type { VoiceOption } from '@repo/contracts';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
+import { FieldLabelScope } from '@repo/kit/primitives/fields/field-row';
 import { Dialog, DialogForm } from '@repo/kit/primitives/overlays/dialog';
 import { useState, type ReactElement } from 'react';
 import { draftOf, type CustomVoiceDraft } from './custom-voice-draft';
@@ -61,21 +62,20 @@ function CustomVoiceForm(props: FormProps): ReactElement {
       size="md"
       footer={<FormFooter {...props} draft={held.draft} />}
     >
-      {nameSection(held)}
-      {speechSection(props, held)}
+      {voiceSection(props, held)}
+      {descriptionSection(props, held)}
+      {deleteSection(props)}
     </DialogForm>
   );
 }
 
-const nameSection = ({ draft, change }: Draft): ReactElement => (
-  <FieldGroup.Section>
-    <FieldGroup.TextField
-      title="Name"
-      placeholder="Narrator"
-      value={draft.label}
-      onChangeText={(label) => change({ label })}
-    />
-  </FieldGroup.Section>
+const nameRow = ({ draft, change }: Draft): ReactElement => (
+  <FieldGroup.TextField
+    title="Name"
+    placeholder="Narrator"
+    value={draft.label}
+    onChangeText={(label) => change({ label })}
+  />
 );
 
 const voiceOptions = (
@@ -100,6 +100,14 @@ const baseVoiceRow = (
   />
 );
 
+// Called, not rendered, as a FieldGroup reads its rows off the elements it is given.
+const voiceSection = (props: FormProps, held: Draft): ReactElement => (
+  <FieldGroup.Section key="voice">
+    {nameRow(held)}
+    {baseVoiceRow(props, held)}
+  </FieldGroup.Section>
+);
+
 const descriptionRow = ({ draft, change }: Draft): ReactElement => (
   <FieldGroup.TextField
     title="How it speaks"
@@ -110,9 +118,28 @@ const descriptionRow = ({ draft, change }: Draft): ReactElement => (
   />
 );
 
-const speechSection = (props: FormProps, held: Draft): ReactElement => (
-  <FieldGroup.Section footer={speechFooter(props.providerLabel)}>
-    {baseVoiceRow(props, held)}
-    {descriptionRow(held)}
+// Its title sits above the field on a wide window, as the board draws it.
+const descriptionSection = (props: FormProps, held: Draft): ReactElement => (
+  <FieldGroup.Section
+    key="description"
+    footer={speechFooter(props.providerLabel)}
+  >
+    <FieldLabelScope>{descriptionRow(held)}</FieldLabelScope>
   </FieldGroup.Section>
 );
+
+// Only a saved voice can be deleted: a row of its own, under the description.
+function deleteSection(props: FormProps): ReactElement | null {
+  const { voice } = props.editor;
+
+  return voice ? (
+    <FieldGroup.Section key="delete">
+      <FieldGroup.Link
+        title="Delete custom voice"
+        action
+        destructive
+        onPress={() => props.onDelete(voice.id)}
+      />
+    </FieldGroup.Section>
+  ) : null;
+}

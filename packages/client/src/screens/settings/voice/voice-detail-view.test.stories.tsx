@@ -188,18 +188,32 @@ export const OpensTheEmptyForm: Story = {
   },
 };
 
+// Paper "3 · Form", option A: Save is the form's one action, and its X closes it.
 export const AddingWaitsForANameAndADescription: Story = {
   args: { ...withCustomVoices, editor: adding },
   play: async ({ canvasElement }) => {
     const page = opened(canvasElement);
-    await expect(await page.findByText('New custom voice')).toBeVisible();
+    await waitFor(() =>
+      expect(page.getByText('New custom voice')).toBeVisible(),
+    );
     await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Preview' })).toBeDisabled();
-    await expect(page.queryByRole('button', { name: 'Delete' })).toBeNull();
+    await expect(page.queryByRole('button', { name: 'Cancel' })).toBeNull();
+    await expect(page.queryByText('Delete custom voice')).toBeNull();
   },
 };
 
-export const EditingPreviewsSavesAndDeletes: Story = {
+export const ClosesTheFormFromItsX: Story = {
+  args: { ...withCustomVoices, editor: editing },
+  play: async ({ canvasElement, args, userEvent }) => {
+    const page = opened(canvasElement);
+    await userEvent.click(await page.findByRole('button', { name: 'Close' }));
+    await expect(args.onEditorChange).toHaveBeenCalledWith();
+    await expect(args.onSaveCustomVoice).not.toHaveBeenCalled();
+  },
+};
+
+export const EditingPreviewsAndSaves: Story = {
   args: { ...withCustomVoices, editor: editing },
   play: async ({ canvasElement, args, userEvent }) => {
     const page = opened(canvasElement);
@@ -207,7 +221,18 @@ export const EditingPreviewsSavesAndDeletes: Story = {
     await expect(args.onPreviewCustomVoice).toHaveBeenCalledWith(editing.voice);
     await userEvent.click(page.getByRole('button', { name: 'Save' }));
     await expect(args.onSaveCustomVoice).toHaveBeenCalledWith(editing.voice);
-    await userEvent.click(page.getByRole('button', { name: 'Delete' }));
+  },
+};
+
+// Deleting is a row of its own under the description, only while editing.
+export const EditingDeletesFromItsOwnRow: Story = {
+  args: { ...withCustomVoices, editor: editing },
+  play: async ({ canvasElement, args, userEvent }) => {
+    const page = opened(canvasElement);
+    await expect(page.queryByRole('button', { name: 'Delete' })).toBeNull();
+    await userEvent.click(
+      await page.findByRole('button', { name: 'Delete custom voice' }),
+    );
     await expect(args.onDeleteCustomVoice).toHaveBeenCalledWith('pirate');
   },
 };

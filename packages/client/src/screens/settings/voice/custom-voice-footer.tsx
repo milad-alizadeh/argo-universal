@@ -1,9 +1,6 @@
 import { Button } from '@repo/kit/primitives/actions/button';
 import { Text } from '@repo/kit/primitives/content/text';
-import {
-  DialogCancel,
-  DialogFooter,
-} from '@repo/kit/primitives/overlays/dialog';
+import { DialogFooter } from '@repo/kit/primitives/overlays/dialog';
 import type { ReactElement } from 'react';
 import { canSaveDraft, type CustomVoiceDraft } from './custom-voice-draft';
 import type { FormProps } from './custom-voice-props';
@@ -18,12 +15,14 @@ const failure = (error?: string): ReactElement | null =>
     </Text>
   ) : null;
 
-// The failure, then Delete when editing, Preview, Cancel and Save.
+/*
+ * The failure, then the form's actions at the end: Save, and Preview until the "Speaks with" row can hold the play
+ * button the board draws there. The header's X closes the form.
+ */
 export const FormFooter = (props: FooterProps): ReactElement => (
   <>
     {failure(props.error)}
     <DialogFooter>
-      <DeleteButton {...props} />
       <ReadyButtons {...props} />
     </DialogFooter>
   </>
@@ -36,7 +35,6 @@ function ReadyButtons(props: FooterProps): ReactElement {
   return (
     <>
       <PreviewButton {...props} disabled={disabled} />
-      <DialogCancel label="Cancel" />
       <SaveButton {...props} disabled={disabled} />
     </>
   );
@@ -63,15 +61,3 @@ const SaveButton = (
     onPress={() => props.onSave(props.draft)}
   />
 );
-
-function DeleteButton(props: FooterProps): ReactElement | null {
-  const { voice } = props.editor;
-
-  return voice ? (
-    <Button
-      variant="danger"
-      label="Delete"
-      onPress={() => props.onDelete(voice.id)}
-    />
-  ) : null;
-}
