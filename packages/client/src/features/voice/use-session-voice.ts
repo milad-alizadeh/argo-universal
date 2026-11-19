@@ -20,6 +20,16 @@ import { useVoiceConnection } from './voice-connection-context';
 
 const noLevels: VoiceLevels = { input: 0, output: 0 };
 
+// Starts the call in the Session the page shows.
+function useStartHere(
+  sessionId: string,
+  connection: VoiceConnection | null,
+): () => void {
+  const start = useStartCall(connection);
+
+  return () => start(sessionId);
+}
+
 function useActions(
   sessionId: string,
   connection: VoiceConnection | null,
@@ -27,10 +37,9 @@ function useActions(
 ): SessionVoiceActions {
   const end = useMutation(useTRPC().voice.end.mutationOptions());
   const navigate = useNavigateFromShown();
-  const start = useStartCall(connection);
 
   return {
-    start: () => start(sessionId),
+    start: useStartHere(sessionId, connection),
     end: () => end.mutate({ sessionId }),
     setMicrophoneMuted: mutes.setMicrophoneMuted,
     setSpeakerMuted: mutes.setSpeakerMuted,

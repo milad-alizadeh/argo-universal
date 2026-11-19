@@ -12,7 +12,6 @@ import { callPointerId } from './composer-call-pointer';
 import { connectingRingId } from './composer-connecting-ring';
 import { microphoneButtonId, speakerButtonId } from './composer-mute-buttons';
 import { endButtonId, voiceButtonId } from './composer-primary-action';
-import type { ComposerVoice } from './composer-types';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer/Voice' };
 
@@ -25,27 +24,26 @@ const noMutes = {
   onSpeaker: fn(),
 };
 
-// The handler each slot carries, so a story can ask whether it was called.
-const pressed = (voice: ComposerVoice | undefined): unknown => {
-  if (!voice) return undefined;
-  if (voice.kind === 'start') return voice.onStart;
+// What each slot's press asks for, so a story can ask whether it was called.
+const onStart = fn();
 
-  return voice.kind === 'elsewhere' ? voice.onOpen : voice.onEnd;
-};
+const onEnd = fn();
+
+const onOpen = fn();
 
 // With nothing written and no call, the primary slot is the voice button, Send's circle with the five bars.
 export const Idle: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
-  args: { voice: { kind: 'start', onStart: fn() } },
-  play: async ({ canvas, args }) => {
+  args: { voice: { kind: 'start', onStart } },
+  play: async ({ canvas }) => {
     await expect(
       canvas.queryByRole('button', { name: 'Send' }),
     ).not.toBeInTheDocument();
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(voiceButtonId));
-    await expect(pressed(args.voice)).toHaveBeenCalledOnce();
+    await expect(onStart).toHaveBeenCalledOnce();
   },
 };
 
@@ -54,8 +52,8 @@ export const Connecting: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
-  args: { voice: { kind: 'connecting', onEnd: fn() } },
-  play: async ({ canvas, args }) => {
+  args: { voice: { kind: 'connecting', onEnd } },
+  play: async ({ canvas }) => {
     await expect(
       canvas.queryByRole('button', { name: 'Send' }),
     ).not.toBeInTheDocument();
@@ -64,7 +62,7 @@ export const Connecting: Story = {
       canvas.queryByTestId(microphoneButtonId),
     ).not.toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(endButtonId));
-    await expect(pressed(args.voice)).toHaveBeenCalledOnce();
+    await expect(onEnd).toHaveBeenCalledOnce();
   },
 };
 
@@ -74,14 +72,14 @@ export const SendDuringCall: Story = {
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
   args: {
-    voice: { kind: 'connected', onEnd: fn(), mutes: noMutes },
+    voice: { kind: 'connected', onEnd, mutes: noMutes },
     draft: { text: 'A pasted stack trace.', attachments: [] },
   },
   play: async ({ canvas, args }) => {
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
     await expect(args.onSend).toHaveBeenCalledWith(args.draft);
-    await expect(pressed(args.voice)).not.toHaveBeenCalled();
+    await expect(onEnd).not.toHaveBeenCalled();
   },
 };
 
@@ -90,15 +88,15 @@ export const EndWithEmptyDraft: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
-  args: { voice: { kind: 'connected', onEnd: fn(), mutes: noMutes } },
-  play: async ({ canvas, args }) => {
+  args: { voice: { kind: 'connected', onEnd, mutes: noMutes } },
+  play: async ({ canvas }) => {
     await expect(
       canvas.queryByRole('button', { name: 'Send' }),
     ).not.toBeInTheDocument();
     await expect(canvas.getByTestId(microphoneButtonId)).toBeInTheDocument();
     await expect(canvas.getByTestId(speakerButtonId)).toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(endButtonId));
-    await expect(pressed(args.voice)).toHaveBeenCalledOnce();
+    await expect(onEnd).toHaveBeenCalledOnce();
   },
 };
 
@@ -200,13 +198,13 @@ export const PointerToTheCall: Story = {
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
   args: {
-    voice: { kind: 'elsewhere', title: 'Fix the build', onOpen: fn() },
+    voice: { kind: 'elsewhere', title: 'Fix the build', onOpen },
   },
-  play: async ({ canvas, args }) => {
+  play: async ({ canvas }) => {
     await expect(canvas.queryByTestId(voiceButtonId)).not.toBeInTheDocument();
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(callPointerId));
     await expect(canvas.getByText('Call in Fix the build')).toBeInTheDocument();
-    await expect(pressed(args.voice)).toHaveBeenCalledOnce();
+    await expect(onOpen).toHaveBeenCalledOnce();
   },
 };

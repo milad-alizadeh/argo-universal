@@ -98,7 +98,6 @@ const readyProps = (
   ...draftProps(wiring),
   ...openingProps(wiring),
   ...noticeProps(wiring),
-  voice: wiring.voice,
 });
 
 // What New Session shows: its load state, or the ready page over the reader's choices and draft.

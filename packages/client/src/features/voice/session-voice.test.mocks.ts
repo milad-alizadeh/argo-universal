@@ -56,8 +56,11 @@ export function inputOf(
   };
 }
 
-const handlerOf = (slot: ComposerVoice): (() => void) =>
-  'onStart' in slot ? slot.onStart : 'onEnd' in slot ? slot.onEnd : slot.onOpen;
+function handlerOf(slot: ComposerVoice): () => void {
+  if ('onStart' in slot) return slot.onStart;
+
+  return 'onEnd' in slot ? slot.onEnd : slot.onOpen;
+}
 
 // Presses what the voice slot offers: the voice button, End or the pointer.
 export const press = (slot: ComposerVoice | undefined): void =>

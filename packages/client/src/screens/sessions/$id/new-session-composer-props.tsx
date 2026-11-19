@@ -28,8 +28,7 @@ export const promptComposerProps = (
 ): ComposerProps => ({
   ...composerDraftProps(props),
   slashCommands: props.slashCommands,
-  onAttachImages: props.onAttachImages,
-  onAttachFiles: props.onAttachFiles,
+  ...attachOf(props),
   onSend: props.onSend,
   configuration: configurationOf(props),
   placeholder: placeholderOf(wide),
@@ -38,6 +37,14 @@ export const promptComposerProps = (
   voice: props.voice,
   ...attachmentErrorOf(props),
 });
+
+const attachOf = ({
+  onAttachImages,
+  onAttachFiles,
+}: ReadySessionNewViewProps): Pick<
+  ComposerProps,
+  'onAttachImages' | 'onAttachFiles'
+> => ({ onAttachImages, onAttachFiles });
 
 const attachmentErrorOf = (
   props: ReadySessionNewViewProps,
