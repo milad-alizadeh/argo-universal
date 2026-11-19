@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { attachAgain } from './attach-again-fixture';
 import { failChecks, watch } from './auto-fix-fixture';
 import {
   attached,
@@ -7,7 +8,7 @@ import {
   tap as tapAutomation,
 } from './auto-merge-fixture';
 import { sha } from './github-fixture';
-import { attach, detach } from './journey-calls-fixture';
+import { detach } from './journey-calls-fixture';
 import { journey, type Journey } from './journey-fixture';
 import { promptsSent } from './journey-prompts-fixture';
 
@@ -23,7 +24,7 @@ it(
 
     await tap(run, true);
     await detach(run, reference);
-    await attach(run, reference);
+    await attachAgain(run, reference);
 
     expect((await automationOf(run)).fix).toEqual({
       on: false,

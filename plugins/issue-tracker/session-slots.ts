@@ -10,7 +10,10 @@ const sessionRowSlot = 'argo/session/row/v1';
 
 const sessionBarSlot = 'argo/session/bar/v1';
 
-type Attachments = Pick<TrackerStorage, 'attachSession' | 'detachSession'>;
+type Attachments = Pick<
+  TrackerStorage,
+  'attachSession' | 'detachSession' | 'detachedSession'
+>;
 
 type Request = Readonly<{
   contexts: readonly Readonly<{ sessionId: string }>[];
@@ -140,5 +143,6 @@ function announcing(storage: Attachments, changed: () => void): Attachments {
       await storage.detachSession(link);
       changed();
     },
+    detachedSession: (link) => storage.detachedSession(link),
   };
 }

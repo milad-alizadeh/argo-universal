@@ -54,6 +54,19 @@ it('refuses a Session that is not in the Project the call runs for', async () =>
   expect(archivedAt(host, created.sessionId)).toBeNull();
 }, 20_000);
 
+it('answers a Session that is already archived as done, so a Plugin does not ask again', async () => {
+  const host = await startWith(canArchive);
+  const created = await promptedArchiveSession(host);
+
+  await archiveFor(host, created.sessionId);
+  const first = archivedAt(host, created.sessionId);
+
+  await expect(archiveFor(host, created.sessionId)).resolves.toEqual({
+    result: { archived: created.sessionId },
+  });
+  expect(archivedAt(host, created.sessionId)).toBe(first);
+}, 20_000);
+
 it('refuses a Session that is not top level', async () => {
   const host = await startWith(canArchive);
   const created = await promptedArchiveSession(host);
