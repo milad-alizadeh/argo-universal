@@ -4,7 +4,7 @@ import { feedRow } from '@repo/db/schema';
 import { and, desc, eq, inArray, type SQL } from 'drizzle-orm';
 import {
   type FeedRowWrite,
-  hydrateStoredFeedRow,
+  readStoredFeedRow,
   storedFeedColumns,
 } from '../feed';
 
@@ -71,7 +71,7 @@ const recentMessages = (
 // The Session's recent conversation, newest first.
 const recentLines = (database: Database, sessionId: string): string[] =>
   recentMessages(database, sessionId)
-    .map((row) => lineOf(hydrateStoredFeedRow(sessionId, row)))
+    .map((row) => lineOf(readStoredFeedRow(sessionId, row)))
     .filter((line): line is string => line !== undefined);
 
 // What the voice is told before it speaks: the title and working folder, then as much recent conversation as fits.

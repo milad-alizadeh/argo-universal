@@ -1,7 +1,7 @@
 import type { SessionUpdate } from '@repo/contracts';
 import { feedRow } from '@repo/db/schema';
 import { and, desc, eq, sql, type SQL } from 'drizzle-orm';
-import { hydrateStoredFeedRow, storedFeedColumns } from '../../../feed';
+import { readStoredFeedRow, storedFeedColumns } from '../../../feed';
 import type { ListReadInput } from './input';
 
 export function readStoredActivity(
@@ -55,9 +55,9 @@ function activityFilter(
 function readActivityRow(
   input: ListReadInput,
   sessionId: string,
-  stored: Parameters<typeof hydrateStoredFeedRow>[1],
+  stored: Parameters<typeof readStoredFeedRow>[1],
 ): SessionUpdate | undefined {
   return input.validate((): SessionUpdate =>
-    hydrateStoredFeedRow(sessionId, stored),
+    readStoredFeedRow(sessionId, stored),
   );
 }

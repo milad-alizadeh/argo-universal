@@ -26,7 +26,12 @@ export type { FeedDeps } from './feed';
 
 export { readFeedRow } from './feed';
 
-export { readFeedMemory, readFeedRows } from './merged-rows';
+export {
+  readFeedMemory,
+  readFeedRows,
+  readQueuedRows,
+  readStoredFeedRow,
+} from './merged-rows';
 
 export {
   committedTurnEndings,
@@ -85,5 +90,6 @@ export { nativePermissionOutcomeEvent } from './native-permission-outcome';
 export {
   readVoiceMessage,
   voiceInstruction,
+  VoiceMarkerStream,
   type VoiceMessage,
 } from './voice-markers';

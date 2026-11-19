@@ -5,7 +5,7 @@ import {
   type Turn,
   selectPlanRowWithLatestContent,
 } from '@repo/contracts';
-import { newestRows, readFeedMemory, readQueuedFeed } from '../../../feed';
+import { newestRows, readFeedMemory, readQueuedRows } from '../../../feed';
 import type { SessionActorRef } from '../../session-machine';
 import { latestTurnOf } from '../../stored-turn';
 import { isSubagentOf } from '../../subagents/subagent-of';
@@ -56,7 +56,7 @@ class SessionInformationRead {
 
     return [
       ...readStoredActivity(this.input, row.id),
-      ...readQueuedFeed(writer, row.id).rows,
+      ...readQueuedRows(writer, row.id),
       ...readFeedMemory(this.live?.children.feed),
     ];
   }

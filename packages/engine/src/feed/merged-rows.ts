@@ -1,4 +1,5 @@
 import type { SessionUpdate } from '@repo/contracts';
+import type { WriterActorRef } from '../storage';
 import type { FeedRowSources } from './feed-catch-up-rows';
 import {
   hydrateStoredFeedRow,
@@ -7,6 +8,12 @@ import {
 } from './feed-row';
 import { readQueuedFeed } from './feed-storage';
 import { withoutVoiceMarkers } from './voice-markers';
+
+/*
+ * Rows as their readers see them: Agent messages without Voice marks (ADR-0063). The Feed restores its own rows through
+ * `hydrateStoredFeedRow`, `readQueuedFeed` and `readWrittenRow`, which keep the marks; anything that reads rows for a
+ * person or another Agent reads them here.
+ */
 
 type FeedRowsRead<Kept extends SessionUpdate> = {
   // The rows the caller read from `feed_row`, not yet hydrated.
@@ -24,7 +31,20 @@ type FeedMemory = {
   getSnapshot: () => { context: { rows: Record<string, SessionUpdate> } };
 };
 
-// The rows a Feed actor holds in memory, read as stored and queued rows are: without Voice marks.
+// A stored row as it is read; a row that fails hydration throws.
+export const readStoredFeedRow = (
+  sessionId: string,
+  row: FeedRowWrite,
+): SessionUpdate => withoutVoiceMarkers(hydrateStoredFeedRow(sessionId, row));
+
+// The rows of one Session the Writer holds but has not committed, as they are read.
+export const readQueuedRows = (
+  writer: WriterActorRef | undefined,
+  sessionId: string,
+): SessionUpdate[] =>
+  readQueuedFeed(writer, sessionId).rows.map(withoutVoiceMarkers);
+
+// The rows a Feed actor holds in memory, as they are read.
 export const readFeedMemory = (feed: FeedMemory | undefined): SessionUpdate[] =>
   Object.values(feed?.getSnapshot().context.rows ?? {}).map(
     withoutVoiceMarkers,
@@ -37,7 +57,7 @@ export function readFeedRows<Kept extends SessionUpdate>(
   { stored, keep }: FeedRowsRead<Kept>,
 ): ReadRows<Kept> {
   const hydrated = hydrateRows(sessionId, stored);
-  const queued = readQueuedFeed(sources.findWriter(), sessionId).rows;
+  const queued = readQueuedRows(sources.findWriter(), sessionId);
   const live = readFeedMemory(sources.findFeed(sessionId));
   const rows = [...hydrated.rows, ...queued, ...live];
 
@@ -55,7 +75,7 @@ function hydrateRows(
 
   const rows = stored.flatMap((row): SessionUpdate[] => {
     try {
-      return [hydrateStoredFeedRow(sessionId, row)];
+      return [readStoredFeedRow(sessionId, row)];
     } catch (error) {
       rejected.push(error);
 
