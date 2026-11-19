@@ -12,7 +12,6 @@ import {
 import type {
   ComposerConfigurationProps,
   ComposerProps,
-  ComposerVoiceCall,
 } from '#features/composer';
 import type { useBlobUrl } from '#features/connection';
 import type { useSessionFeed } from '#features/feed';
@@ -129,11 +128,8 @@ const draftProps = (commands: SessionCommands): DraftProps => ({
   onSend: (sent) => void commands.sendDraft(sent),
 });
 
-const callHere = (voice: ComposerProps['voice']): ComposerVoiceCall =>
-  voice?.call ?? 'none';
-
 const placeholderOf = ({ voice }: OpenSession): string =>
-  voicePlaceholder(callHere(voice)) ?? 'Message the Agent';
+  voicePlaceholder(voice) ?? 'Message the Agent';
 
 // An open Session always offers Argo's Slash commands, whether or not its Agent has reported any.
 const slashCommandsOf = (open: OpenSession): ComposerProps['slashCommands'] =>

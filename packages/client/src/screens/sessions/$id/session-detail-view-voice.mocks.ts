@@ -1,4 +1,5 @@
 import { fn } from 'storybook/test';
+import type { ComposerVoice } from '#features/composer';
 import { voiceLabel, voicePlaceholder } from '#features/voice';
 import type { OpenSessionViewProps } from './session-detail-view';
 import { idleSession } from './session-detail-view.mocks';
@@ -21,19 +22,19 @@ const mutes = {
   onSpeaker: fn(),
 };
 
+const connectedHere = {
+  kind: 'connected',
+  onEnd: fn(),
+  mutes,
+} satisfies ComposerVoice;
+
 // A settled Session with a Voice call running in it: the orb pinned above the Feed, and the Composer on the call.
 export const voiceCallSession: OpenSessionViewProps = {
   ...idleSession,
   stage: listeningStage,
   composer: {
     ...idleSession.composer,
-    placeholder: voicePlaceholder('connected'),
-    voice: {
-      usable: true,
-      call: 'connected',
-      onStart: fn(),
-      onEnd: fn(),
-      mutes,
-    },
+    placeholder: voicePlaceholder(connectedHere),
+    voice: connectedHere,
   },
 };

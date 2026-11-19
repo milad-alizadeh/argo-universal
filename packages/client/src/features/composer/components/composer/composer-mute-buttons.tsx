@@ -50,7 +50,7 @@ const speakerOf = (mutes: ComposerVoiceMutes): MuteButton => ({
 const mutesOf = (
   voice: ComposerVoice | undefined,
 ): ComposerVoiceMutes | undefined =>
-  voice?.call === 'connected' ? voice.mutes : undefined;
+  voice?.kind === 'connected' ? voice.mutes : undefined;
 
 export function ComposerMuteButtons({
   voice,

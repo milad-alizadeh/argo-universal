@@ -1,5 +1,5 @@
 import type { VoiceCall, VoicePartial, VoiceStatus } from '@repo/contracts';
-import type { ComposerVoice, ComposerVoiceCall } from '#features/composer';
+import type { ComposerVoice, ComposerVoiceMutes } from '#features/composer';
 import { voiceLabel } from './components/voice-stage/voice-label';
 import type { VoiceStageViewProps } from './components/voice-stage/voice-stage-view';
 import type { VoiceLevels, VoiceMutes } from './voice-connection';
@@ -32,8 +32,8 @@ export interface SessionVoiceInput {
 
 // Everything a Session page draws of the Voice call.
 export interface SessionVoice {
-  // The Composer's voice button, mutes and pointer.
-  composer: ComposerVoice;
+  // The Composer's voice slot: the voice button, End with its mutes, or the pointer; absent with nothing to offer.
+  composer: ComposerVoice | undefined;
   // The orb pinned above the Feed; only in the Session the call runs in.
   stage: VoiceStageViewProps | undefined;
   // What is being said now, drawn at the tail of the Feed; only in the Session the call runs in.
@@ -43,16 +43,6 @@ export interface SessionVoice {
 const noPartials: VoicePartial[] = [];
 
 const fallbackTitle = 'another Session';
-
-// Where the call is, as this Session sees it: none, starting or running here, or running in another Session.
-function placementOf(
-  call: VoiceStatus['call'],
-  sessionId: string,
-): ComposerVoiceCall {
-  if (!call) return 'none';
-
-  return call.sessionId === sessionId ? call.status : 'elsewhere';
-}
 
 // Whether the Composer offers the voice button: Voice calls are on and the Voice provider can start one.
 const voiceOffered = (status: VoiceStatus): boolean =>
@@ -67,7 +57,7 @@ const hereOf = (
 function mutesOf(
   mutes: VoiceMutes,
   actions: SessionVoiceActions,
-): NonNullable<ComposerVoice['mutes']> {
+): ComposerVoiceMutes {
   return {
     ...mutes,
     onMicrophone: () => actions.setMicrophoneMuted(!mutes.microphone),
@@ -75,38 +65,40 @@ function mutesOf(
   };
 }
 
-function elsewhereOf(
+// The call runs in another Session: the slot names it and takes the person there.
+const elsewhereOf = (
   call: VoiceCall,
   input: SessionVoiceInput,
-): NonNullable<ComposerVoice['elsewhere']> {
-  return {
-    title: input.titleOf(call.sessionId) ?? fallbackTitle,
-    onOpen: () => input.actions.open(call.sessionId),
-  };
+): ComposerVoice => ({
+  kind: 'elsewhere',
+  title: input.titleOf(call.sessionId) ?? fallbackTitle,
+  onOpen: () => input.actions.open(call.sessionId),
+});
+
+// The call runs here: End, with the mutes once it is connected.
+function hereSlotOf(call: VoiceCall, input: SessionVoiceInput): ComposerVoice {
+  const onEnd = input.actions.end;
+
+  return call.status === 'connected'
+    ? { kind: 'connected', onEnd, mutes: mutesOf(input.mutes, input.actions) }
+    : { kind: 'connecting', onEnd };
 }
 
-// The pointer belongs to the call in another Session.
-const pointerOf = (
-  placement: ComposerVoiceCall,
-  input: SessionVoiceInput,
-): ComposerVoice['elsewhere'] =>
-  placement === 'elsewhere' && input.status.call
-    ? elsewhereOf(input.status.call, input)
+// No call runs: the voice button while one can start, and nothing otherwise.
+const idleSlotOf = (input: SessionVoiceInput): ComposerVoice | undefined =>
+  voiceOffered(input.status)
+    ? { kind: 'start', onStart: input.actions.start }
     : undefined;
 
-// The Composer's voice: the mute buttons belong to the connected call here, the pointer to the call in another Session.
-function composerOf(input: SessionVoiceInput): ComposerVoice {
-  const { status, sessionId, actions } = input;
-  const call = placementOf(status.call, sessionId);
+// The Composer's one voice slot, resolved here so the Composer only draws it.
+function composerOf(input: SessionVoiceInput): ComposerVoice | undefined {
+  const { call } = input.status;
 
-  return {
-    usable: voiceOffered(status),
-    call,
-    onStart: actions.start,
-    onEnd: actions.end,
-    mutes: call === 'connected' ? mutesOf(input.mutes, actions) : undefined,
-    elsewhere: pointerOf(call, input),
-  };
+  if (!call) return idleSlotOf(input);
+
+  return call.sessionId === input.sessionId
+    ? hereSlotOf(call, input)
+    : elsewhereOf(call, input);
 }
 
 function stageOf(
@@ -138,10 +130,11 @@ export function sessionVoice(input: SessionVoiceInput): SessionVoice {
 }
 
 // What the Composer's field says while a call runs here: it invites typing as well as talking once connected.
-const placeholders: Partial<Record<ComposerVoiceCall, string>> = {
+const placeholders: Partial<Record<ComposerVoice['kind'], string>> = {
   connecting: 'Connecting…',
   connected: 'Type, or keep talking',
 };
 
-export const voicePlaceholder = (call: ComposerVoiceCall): string | undefined =>
-  placeholders[call];
+export const voicePlaceholder = (
+  voice: ComposerVoice | undefined,
+): string | undefined => voice && placeholders[voice.kind];

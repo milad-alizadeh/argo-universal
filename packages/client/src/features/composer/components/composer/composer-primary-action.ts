@@ -2,6 +2,7 @@ import type { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import type * as React from 'react';
 import { sendsToQueue } from './composer-conditions';
 import type { SendLayout } from './composer-toolbar-types';
+import type { ComposerVoice } from './composer-types';
 
 export const endButtonId = 'composer-end';
 
@@ -25,9 +26,16 @@ function endAction(layout: SendLayout): IconButtonProps {
     accessibilityLabel: 'End',
     testID: endButtonId,
     icon: 'close',
-    onPress: (): void => layout.props.voice?.onEnd(),
+    onPress: (): void => endOf(layout.props.voice)?.(),
   };
 }
+
+// End belongs to a call connecting or connected here.
+const endOf = (voice: ComposerVoice | undefined): (() => void) | undefined =>
+  voice && 'onEnd' in voice ? voice.onEnd : undefined;
+
+const startOf = (voice: ComposerVoice | undefined): (() => void) | undefined =>
+  voice?.kind === 'start' ? voice.onStart : undefined;
 
 function stopButtonAction(layout: Pick<SendLayout, 'props'>): IconButtonProps {
   return {
@@ -44,15 +52,11 @@ function voiceAction(layout: SendLayout): IconButtonProps {
     accessibilityLabel: 'Start voice call',
     testID: voiceButtonId,
     icon: 'voice-bars',
-    onPress: (): void => layout.props.voice?.onStart(),
+    onPress: (): void => startOf(layout.props.voice)?.(),
   };
 }
 
-// The pointer to a call in another Session is no button action: the toolbar draws it, so it has no entry here.
-const primaryActions: Record<
-  Exclude<SendLayout['sendState'], 'elsewhere'>,
-  PrimaryAction
-> = {
+const primaryActions: Record<SendLayout['sendState'], PrimaryAction> = {
   stop: stopButtonAction,
   end: endAction,
   connecting: endAction,
@@ -62,11 +66,5 @@ const primaryActions: Record<
   voice: voiceAction,
 };
 
-export function sendButtonAction(layout: SendLayout): IconButtonProps {
-  const action =
-    layout.sendState === 'elsewhere'
-      ? sendAction
-      : primaryActions[layout.sendState];
-
-  return action(layout);
-}
+export const sendButtonAction = (layout: SendLayout): IconButtonProps =>
+  primaryActions[layout.sendState](layout);

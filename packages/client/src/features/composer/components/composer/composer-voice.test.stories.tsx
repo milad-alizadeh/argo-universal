@@ -18,13 +18,6 @@ const meta = { ...composerTestMeta, title: 'Tests/Composer/Voice' };
 
 export default meta;
 
-const voice = (call: ComposerVoice['call']): ComposerVoice => ({
-  usable: true,
-  call,
-  onStart: fn(),
-  onEnd: fn(),
-});
-
 const noMutes = {
   microphone: false,
   speaker: false,
@@ -32,19 +25,27 @@ const noMutes = {
   onSpeaker: fn(),
 };
 
+// The handler each slot carries, so a story can ask whether it was called.
+const pressed = (voice: ComposerVoice | undefined): unknown => {
+  if (!voice) return undefined;
+  if (voice.kind === 'start') return voice.onStart;
+
+  return voice.kind === 'elsewhere' ? voice.onOpen : voice.onEnd;
+};
+
 // With nothing written and no call, the primary slot is the voice button, Send's circle with the five bars.
 export const Idle: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
-  args: { voice: voice('none') },
+  args: { voice: { kind: 'start', onStart: fn() } },
   play: async ({ canvas, args }) => {
     await expect(
       canvas.queryByRole('button', { name: 'Send' }),
     ).not.toBeInTheDocument();
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(voiceButtonId));
-    await expect(args.voice?.onStart).toHaveBeenCalledOnce();
+    await expect(pressed(args.voice)).toHaveBeenCalledOnce();
   },
 };
 
@@ -53,7 +54,7 @@ export const Connecting: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
-  args: { voice: { ...voice('connecting'), mutes: noMutes } },
+  args: { voice: { kind: 'connecting', onEnd: fn() } },
   play: async ({ canvas, args }) => {
     await expect(
       canvas.queryByRole('button', { name: 'Send' }),
@@ -63,7 +64,7 @@ export const Connecting: Story = {
       canvas.queryByTestId(microphoneButtonId),
     ).not.toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(endButtonId));
-    await expect(args.voice?.onEnd).toHaveBeenCalledOnce();
+    await expect(pressed(args.voice)).toHaveBeenCalledOnce();
   },
 };
 
@@ -73,14 +74,14 @@ export const SendDuringCall: Story = {
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
   args: {
-    voice: { ...voice('connected'), mutes: noMutes },
+    voice: { kind: 'connected', onEnd: fn(), mutes: noMutes },
     draft: { text: 'A pasted stack trace.', attachments: [] },
   },
   play: async ({ canvas, args }) => {
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
     await expect(args.onSend).toHaveBeenCalledWith(args.draft);
-    await expect(args.voice?.onEnd).not.toHaveBeenCalled();
+    await expect(pressed(args.voice)).not.toHaveBeenCalled();
   },
 };
 
@@ -89,7 +90,7 @@ export const EndWithEmptyDraft: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
-  args: { voice: { ...voice('connected'), mutes: noMutes } },
+  args: { voice: { kind: 'connected', onEnd: fn(), mutes: noMutes } },
   play: async ({ canvas, args }) => {
     await expect(
       canvas.queryByRole('button', { name: 'Send' }),
@@ -97,7 +98,7 @@ export const EndWithEmptyDraft: Story = {
     await expect(canvas.getByTestId(microphoneButtonId)).toBeInTheDocument();
     await expect(canvas.getByTestId(speakerButtonId)).toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(endButtonId));
-    await expect(args.voice?.onEnd).toHaveBeenCalledOnce();
+    await expect(pressed(args.voice)).toHaveBeenCalledOnce();
   },
 };
 
@@ -123,7 +124,7 @@ function CallPage(): React.JSX.Element {
         onSend: fn(),
         sessionStarted: true,
         voice: {
-          ...voice('connected'),
+          kind: 'connected',
           onEnd: call.hungUp,
           mutes: {
             ...held.mutes,
@@ -199,16 +200,13 @@ export const PointerToTheCall: Story = {
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
   args: {
-    voice: {
-      ...voice('elsewhere'),
-      elsewhere: { title: 'Fix the build', onOpen: fn() },
-    },
+    voice: { kind: 'elsewhere', title: 'Fix the build', onOpen: fn() },
   },
   play: async ({ canvas, args }) => {
     await expect(canvas.queryByTestId(voiceButtonId)).not.toBeInTheDocument();
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(callPointerId));
     await expect(canvas.getByText('Call in Fix the build')).toBeInTheDocument();
-    await expect(args.voice?.elsewhere?.onOpen).toHaveBeenCalledOnce();
+    await expect(pressed(args.voice)).toHaveBeenCalledOnce();
   },
 };
