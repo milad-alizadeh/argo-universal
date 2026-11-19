@@ -60,5 +60,5 @@ export const VoiceBothMuted: Story = { args: voiceBothMutedComposer };
 // Text in the draft on a call: the primary button is Send.
 export const VoiceCallWithDraft: Story = { args: voiceCallDraftComposer };
 
-// The call runs in another Session: the voice button's slot points at it.
+// The call runs in another Session: in the voice button's place, the same round button with a live dot.
 export const CallInAnotherSession: Story = { args: callElsewhereComposer };

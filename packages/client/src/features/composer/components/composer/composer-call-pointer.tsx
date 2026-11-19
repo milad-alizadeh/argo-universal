@@ -1,24 +1,51 @@
-import { Button } from '@repo/kit/primitives/actions/button';
+import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { Tooltip } from '@repo/kit/primitives/overlays/tooltip';
+import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import type * as React from 'react';
+import { View } from 'react-native';
 import type { ComposerVoiceElsewhere } from './composer-types';
 
 export const callPointerId = 'composer-call-pointer';
 
-// The call runs in another Session: the voice button's slot says where, and takes the person there.
+// The voice button's own look: Send's circle with the voice bars.
 const pointerProps = (
   elsewhere: ComposerVoiceElsewhere,
-): React.ComponentProps<typeof Button> => ({
+): React.ComponentProps<typeof IconButton> => ({
   testID: callPointerId,
-  variant: 'secondary',
+  accessibilityLabel: `Call in ${elsewhere.title}`,
+  icon: 'voice-bars',
+  variant: 'primary',
   size: 'sm',
-  label: `Call in ${elsewhere.title}`,
+  control: true,
   onPress: elsewhere.onOpen,
 });
 
+// A live call, shown as the running Session's dot on the button's corner.
+function LiveDot(): React.JSX.Element {
+  return (
+    <View className="pointer-events-none absolute -top-0.5 -right-0.5">
+      <StatusDot tone="success" pulse />
+    </View>
+  );
+}
+
+/*
+ * The call runs in another Session: in the voice button's place, the same round button with a live dot, which takes
+ * the person to the call. It names the call only in its tooltip and spoken label.
+ */
 export function ComposerCallPointer({
   elsewhere,
 }: {
   elsewhere: ComposerVoiceElsewhere;
 }): React.JSX.Element {
-  return <Button {...pointerProps(elsewhere)} />;
+  const props = pointerProps(elsewhere);
+
+  return (
+    <View>
+      <Tooltip label={props.accessibilityLabel}>
+        <IconButton {...props} />
+      </Tooltip>
+      <LiveDot />
+    </View>
+  );
 }
