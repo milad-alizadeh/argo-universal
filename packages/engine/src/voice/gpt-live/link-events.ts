@@ -87,10 +87,9 @@ const turnDone =
     return [...turns.done(speaker, utteranceOf(fields)), ...after];
   };
 
-// The call closing keeps the words of every turn still open.
 // The service closed the call: the words still being said end first, then the close with the reason it gave.
 const closed =
-  ({ reason }: { reason?: string | undefined }): Step =>
+  ({ reason }: { reason?: string }): Step =>
   ({ turns }) => [...turns.closing(), serviceClosed(reason)];
 
 // Work the voice hands to the client, answered under the delegation item's id as Codex does.

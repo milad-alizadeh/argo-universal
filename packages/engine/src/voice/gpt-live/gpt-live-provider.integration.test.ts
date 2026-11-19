@@ -24,7 +24,7 @@ async function setup(
 }
 
 describe('GPT-Live provider starting a call', () => {
-  it('creates a call with the token, the offer and the session, then joins the control link', async () => {
+  it('creates a call with the token, the offer and the session, telling the voice its name is Argo, then joins the control link', async () => {
     const { endpoint, start } = await setup([signedIn('t1')], ['t1']);
 
     const call = await start(request);
@@ -38,23 +38,15 @@ describe('GPT-Live provider starting a call', () => {
       sdp: 'v=0 offer',
       session: {
         model: 'gpt-live-1.1-codex',
-        instructions: expect.stringContaining('Session: Fix the build'),
+        instructions: expect.stringMatching(
+          /^Your name is Argo\.[\s\S]*Session: Fix the build/,
+        ),
         audio: { output: { voice: 'cove' } },
         delegation: { type: 'client' },
       },
     });
     expect(endpoint.linkTokens).toEqual(['t1']);
     expect(endpoint.links).toHaveLength(1);
-  });
-
-  it('tells the voice its name is Argo', async () => {
-    const { endpoint, start } = await setup([signedIn('t1')], ['t1']);
-
-    await start(request);
-
-    expect(endpoint.created.at(0)?.session.instructions).toMatch(
-      /^Your name is Argo\./,
-    );
   });
 
   it('asks Codex for a new token once when the first is rejected', async () => {
