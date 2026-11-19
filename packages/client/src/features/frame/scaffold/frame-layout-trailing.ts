@@ -8,39 +8,33 @@ import type {
 } from './frame-layout-types';
 import { workbenchDrawn, workbenchState } from './frame-layout-workbench';
 
+// The page's trailing edge less the inset, which with the Inspector open leaves the pane gap before it.
+const trailingEdge = ({ measures }: FrameLayoutInput, page: PaneSpan): number =>
+  page.offset + page.width - measures.inset;
+
+// A card's width, or what the page has when a dragged Inspector left it narrower, so the cards never reach under the Inspector.
 function drawnWorkbenchWidth(
-  { width, measures }: FrameLayoutInput,
+  input: FrameLayoutInput,
   state: WorkbenchState,
+  page: PaneSpan,
 ): number {
   if (!workbenchDrawn(state)) return 0;
 
-  return Math.min(
-    measures.workbenchWidth,
-    Math.max(0, width - measures.inset * 2),
-  );
+  const room = Math.max(0, trailingEdge(input, page) - page.offset);
+
+  return Math.min(input.measures.workbenchWidth, room);
 }
 
-// Over the page's trailing edge, in its gutter or over its content; it never crosses the page's leading edge. A Workbench that is not drawn waits at the window's trailing inset, where it slides in from.
+// Over the page's trailing edge, in its gutter or over its content, between the page's leading edge and the Inspector. A Workbench that is not drawn waits at the page's trailing edge, where it slides in from, and never over the Inspector.
 export function workbenchRegion(
   input: FrameLayoutInput,
   page: PaneSpan,
 ): WorkbenchRegion {
   const state = workbenchState(input, page.width);
-  const width = drawnWorkbenchWidth(input, state);
+  const width = drawnWorkbenchWidth(input, state, page);
+  const offset = Math.max(page.offset, trailingEdge(input, page) - width);
 
-  return { state, width, offset: workbenchOffset(input, width, page) };
-}
-
-function workbenchOffset(
-  input: FrameLayoutInput,
-  width: number,
-  page: PaneSpan,
-): number {
-  if (width === 0) return input.width - input.measures.inset;
-
-  const trailingEdge = page.offset + page.width - input.measures.inset;
-
-  return Math.max(page.offset, trailingEdge - width);
+  return { state, width, offset };
 }
 
 // The widest the Inspector gets beside the page while the content keeps `floor`: its own floor, or the least a drag leaves it.
