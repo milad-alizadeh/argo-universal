@@ -15,7 +15,7 @@ const worktree = { type: 'worktree' as const, baseBranch: 'main' };
 const starter = { type: 'starter' as const };
 
 // The archive's real Undo window, after which an owned worktree is removed.
-const undoWindowMs = 5000;
+const undoWindowMs = 6_000;
 
 const startInStarterCheckout = {
   id: 'session.new' as const,

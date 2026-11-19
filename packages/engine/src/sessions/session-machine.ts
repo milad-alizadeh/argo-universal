@@ -1036,7 +1036,8 @@ const sessionSetup = setup({
   },
   delays: {
     checkoutLimit,
-    checkoutRemovalDelay: 5_000,
+    // Give Undo time to reach the Server after a click near the end of the 5-second toast.
+    checkoutRemovalDelay: 6_000,
     feedFlushLimit: 5_000,
   },
 });

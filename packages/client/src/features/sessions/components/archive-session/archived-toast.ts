@@ -5,6 +5,7 @@ const archivedToastCopy = { title: 'Session archived', undo: 'Undo' };
 // Desktop and the web: the row has already left the list; Undo puts it back while the toast shows.
 export const archivedToast = (onUndo: () => void): Toast => ({
   tone: 'success',
+  durationMs: 5_000,
   title: archivedToastCopy.title,
   action: { label: archivedToastCopy.undo, onPress: onUndo },
 });
