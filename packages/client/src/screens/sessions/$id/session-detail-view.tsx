@@ -20,7 +20,7 @@ import {
   TerminalSignIn,
   type TerminalSignInProps,
 } from '#features/sessions';
-import { VoiceStageView, type VoiceStageViewProps } from '#features/voice';
+import type { VoiceStageViewProps } from '#features/voice';
 import { useContentWide } from '#lib/product/content-layout';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { SessionLayout } from '#lib/product/session-layout';
@@ -28,6 +28,7 @@ import { BlankSession } from './blank-session';
 import { sessionWorkbench } from './sections/session-sections';
 import { phoneChangesPill, sessionFeed } from './session-changes-pill';
 import { SessionComposer } from './session-composer';
+import { voiceStage } from './session-voice-stage';
 import {
   SessionInspector,
   type SessionInspectorContent,
@@ -156,10 +157,6 @@ const sessionParts = (
   panel: props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />,
   onDropFiles: hasDraft(props) ? props.onDropFiles : undefined,
 });
-
-// The orb pinned above the Feed while a call runs in this Session.
-const voiceStage = (props: OpenSessionViewProps): React.ReactNode =>
-  props.stage && <VoiceStageView {...props.stage} />;
 
 const bandClaim = (
   props: OpenSessionViewProps,
