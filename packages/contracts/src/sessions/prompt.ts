@@ -17,9 +17,22 @@ export const SessionSubmitInput = SessionPromptInput.extend({
 
 export type SessionSubmitInput = z.infer<typeof SessionSubmitInput>;
 
-// Local acknowledgement after saving the prompt; Agent completion arrives through the Session Feed.
+/*
+ * Where the Prompt landed, acknowledged once saved; Agent completion arrives through the Session Feed. An idle Session
+ * starts a Turn. A Session's Prompt to a busy Session is steered into the running Turn when its Agent can be steered,
+ * and otherwise waits in the queue; `notSteered` says why one that could have steered waits (ADR-0054).
+ */
 export const SessionPromptOutput = z.union([
-  z.strictObject({ messageId: z.string() }),
+  z.strictObject({
+    status: z.enum(['started', 'steered']),
+    messageId: z.string(),
+  }),
+  // `messageId` is the Feed row the Prompt takes when its Turn starts.
+  z.strictObject({
+    status: z.literal('queued'),
+    messageId: z.string(),
+    notSteered: z.string().nullable(),
+  }),
   // A Plugin's `prompt.submit` Hook dropped the prompt, so no Turn started; `drop` says why.
   z.strictObject({ messageId: z.null(), drop: z.string() }),
 ]);

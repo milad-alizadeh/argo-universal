@@ -39,15 +39,29 @@ const runPromptHook = (
     prompt,
   });
 
+/*
+ * Where an admitted Prompt landed, with the Turn that holds it or will: a queued Prompt's Turn takes the Prompt's
+ * queued id, so its caller follows that Turn before it starts. A dropped one has no Turn.
+ */
 export type AcceptedSessionPrompt =
-  | { messageId: string; turnId: string }
+  | { status: 'started' | 'steered'; messageId: string; turnId: string }
+  | {
+      status: 'queued';
+      messageId: string;
+      turnId: string;
+      notSteered: string | null;
+    }
   | { messageId: null; drop: string };
+
+type StartedPrompt = { status: 'started'; messageId: string; turnId: string };
+
+type DroppedPrompt = Extract<AcceptedSessionPrompt, { messageId: null }>;
 
 async function submitAcceptedPrompt(
   sessionActor: SessionActorRef,
   { turnId, sender, followUpSuggestions }: PromptTurn,
   content: SessionPromptInput['prompt'],
-): Promise<AcceptedSessionPrompt> {
+): Promise<StartedPrompt> {
   await submitSessionPrompt(sessionActor, {
     turnId,
     content,
@@ -55,17 +69,21 @@ async function submitAcceptedPrompt(
     followUpSuggestions,
   });
 
-  return { messageId: promptMessageId(turnId, sender), turnId };
+  const messageId = promptMessageId(turnId, sender);
+
+  return { status: 'started', messageId, turnId };
 }
+
+type StartRequest = Pick<NativeStartRequest, 'sender' | 'signal'> & {
+  turnId?: string;
+};
 
 // The Turn id is allocated before admission, so a caller that stops waiting can still follow the Turn.
 export function startSessionPrompt(
   sources: PromptSources,
   input: SessionPromptInput,
-  { sender, signal }: Pick<NativeStartRequest, 'sender' | 'signal'>,
-): NativeStart<AcceptedSessionPrompt> {
-  const turnId = sources.createId();
-
+  { sender, signal, turnId = sources.createId() }: StartRequest,
+): NativeStart<StartedPrompt | DroppedPrompt> {
   return {
     sessionId: input.sessionId,
     turnId,
@@ -95,7 +113,7 @@ async function admitPrompt(
   sources: PromptSources,
   { sessionId, prompt, followUpSuggestions }: SessionPromptInput,
   { turnId, sender, signal }: PromptTurn,
-): Promise<AcceptedSessionPrompt> {
+): Promise<StartedPrompt | DroppedPrompt> {
   const sessionActor = await readyPromptSession(sources, sessionId, signal);
   const answer = await runPromptHook(sources, { sessionId, prompt });
 

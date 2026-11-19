@@ -6,7 +6,11 @@ import type { SessionContext } from '../session-context';
 import type { SessionActorRef } from '../session-machine';
 import type { QueueSteering, SteerCommand } from './types';
 
-export { finishQueueSteering, reserveQueueSteering } from './state';
+export {
+  finishQueueSteering,
+  reserveQueueSteering,
+  steeredMessageId,
+} from './state';
 
 // Takes a Prompt into the running Turn and answers with that Turn's id.
 export async function steerQueuedPrompt(
