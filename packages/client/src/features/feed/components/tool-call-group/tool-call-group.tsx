@@ -60,7 +60,7 @@ function GroupActivities({
   renderActivity,
 }: GroupActivitiesProps): React.JSX.Element {
   return (
-    <View className="gap-2 pb-1 wide-type:gap-1.5" onLayout={onLayout}>
+    <View className="gap-2 wide-type:gap-1.5" onLayout={onLayout}>
       {items.map((activity) => (
         <View key={activityKey(activity)}>{renderActivity(activity)}</View>
       ))}

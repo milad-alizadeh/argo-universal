@@ -8,7 +8,12 @@ import type { IconSymbol } from '../../../symbols/icon-symbol';
 import { NativeIcon } from '../../../symbols/native-icon';
 import type { ButtonProps } from './button';
 import { type LabelColor, labelColors } from './button-labels';
-import { sizes, variantOf, widthOf } from './button-layout';
+import {
+  buttonLabelModifiers,
+  sizes,
+  variantOf,
+  widthOf,
+} from './button-layout';
 
 /*
  * Expo UI's documented custom content: its Icon before its Text, the Text in the variant's colour, since the web's
@@ -19,7 +24,7 @@ export function ButtonLabel(props: ButtonProps): ReactElement {
   const width = widthOf(props);
 
   return (
-    <Row spacing={6} alignment="center" modifiers={[...width.label]}>
+    <Row spacing={6} alignment="center" modifiers={buttonLabelModifiers(props)}>
       {width.edge}
       {props.icon && (
         <LeadingIcon {...props} icon={props.icon} color={textStyle.color} />

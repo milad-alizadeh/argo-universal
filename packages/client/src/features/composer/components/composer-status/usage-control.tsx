@@ -33,9 +33,11 @@ function UsageLimitRow({ limit }: { limit: UsageLimit }): JSX.Element {
     <View className="px-4 py-3 gap-1.5">
       <UsageLimitValues limit={limit} />
       <Meter percent={limit.usedPercent} />
-      <StatusText role="secondary" className="select-none">
-        {limit.resets}
-      </StatusText>
+      {limit.resets && (
+        <StatusText role="secondary" className="select-none">
+          {limit.resets}
+        </StatusText>
+      )}
     </View>
   );
 }

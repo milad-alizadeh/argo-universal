@@ -21,11 +21,12 @@ import {
   type TerminalSignInProps,
 } from '#features/sessions';
 import { VoiceStageView, type VoiceStageViewProps } from '#features/voice';
+import { useContentWide } from '#lib/product/content-layout';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { SessionLayout } from '#lib/product/session-layout';
 import { BlankSession } from './blank-session';
 import { sessionWorkbench } from './sections/session-sections';
-import { sessionFeed } from './session-changes-pill';
+import { phoneChangesPill, sessionFeed } from './session-changes-pill';
 import { SessionComposer } from './session-composer';
 import {
   SessionInspector,
@@ -93,13 +94,14 @@ export function SessionDetailView(
 
 // The Workbench's cards open the Session's Sections as tabs in the Inspector beside it.
 function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
+  const wide = useContentWide();
   const phone = usePhoneSheet(useInspectorPanels(props));
   const { panels } = phone;
   const work = useWorkPanels(props, panels, phone.visible);
 
   return (
     <>
-      <SessionLayout {...sessionParts(withWork(props, work), panels)} />
+      <SessionLayout {...sessionParts(withWork(props, work), panels, wide)} />
       {sessionInspector(props, work, phone)}
       {work.sheets}
     </>
@@ -144,12 +146,13 @@ const withWork = (
 const sessionParts = (
   props: OpenSessionViewProps,
   panels: SessionPanels,
+  wide: boolean,
 ): React.ComponentProps<typeof SessionLayout> => ({
   header: bandClaim(props, panels),
   bar: sessionBar(props),
-  feed: sessionFeed(props, panels),
+  feed: sessionFeed(props, panels, wide),
   stage: voiceStage(props),
-  composer: sessionBottom(props),
+  composer: sessionBottom(props, phoneChangesPill(props, panels, wide)),
   panel: props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />,
   onDropFiles: hasDraft(props) ? props.onDropFiles : undefined,
 });
@@ -168,24 +171,23 @@ const bandClaim = (
   />
 );
 
-// A preview is the Feed alone, so its Workbench has no Session bar cards either.
 const barForWorkbench = (
   props: OpenSessionViewProps,
 ): SessionBarProps | undefined => (props.preview ? undefined : props.bar);
 
-// The Plugins' line under a phone's header; a preview is the Feed alone.
 const sessionBar = (props: OpenSessionViewProps): React.ReactNode =>
   props.preview || !props.bar ? null : <SessionBar {...props.bar} />;
 
-// A preview or an archived Session has no draft to attach files to.
 const hasDraft = (props: OpenSessionViewProps): boolean =>
   !props.preview && !props.archived;
 
-// The bottom slot: nothing in a preview, the banner for an archived Session, else the Composer.
-function sessionBottom(props: OpenSessionViewProps): React.ReactNode {
+function sessionBottom(
+  props: OpenSessionViewProps,
+  phonePill: React.ReactNode,
+): React.ReactNode {
   if (props.preview) return null;
 
   if (props.archived) return <ArchivedBanner />;
 
-  return <SessionComposer {...props} />;
+  return <SessionComposer {...props} phonePill={phonePill} />;
 }

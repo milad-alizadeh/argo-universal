@@ -33,10 +33,14 @@ type Story = StoryObj<typeof meta>;
 
 const modelLabel = 'Agent and model';
 
+const agentsLabel = 'Agents: 2';
+
+const tasksLabel = 'Background Tasks: 1';
+
 const names = [
   'Todos',
-  'Agents: 2',
-  'Background Tasks: 1',
+  agentsLabel,
+  tasksLabel,
   modelLabel,
   'Mode',
   'Context window',
@@ -47,8 +51,7 @@ function sharedGeometry(width: number): Story {
     ...SharedControls,
     beforeEach: () => settleLayout(width),
     play: async ({ canvas }) => {
-      for (const name of names)
-        await expectControlGeometry(canvas.getByRole('button', { name }));
+      await expectSharedGeometry(canvas, width);
       await expectMaterialPolicy(canvas, width === 390);
 
       if (width !== 390) {
@@ -62,8 +65,32 @@ function sharedGeometry(width: number): Story {
   };
 }
 
-async function expectControlGeometry(button: HTMLElement): Promise<void> {
-  await expect(button.getBoundingClientRect().height).toBeCloseTo(28, 0);
+const phonePills = new Set([agentsLabel, tasksLabel]);
+
+const compactPills = new Set([...phonePills, 'Todos']);
+
+function controlHeight(name: string, width: number): number {
+  const pills = width === 390 ? compactPills : phonePills;
+
+  return pills.has(name) ? 32 : 28;
+}
+
+async function expectSharedGeometry(
+  canvas: ReturnType<typeof within>,
+  width: number,
+): Promise<void> {
+  for (const name of names)
+    await expectControlGeometry(
+      canvas.getByRole('button', { name }),
+      controlHeight(name, width),
+    );
+}
+
+async function expectControlGeometry(
+  button: HTMLElement,
+  height = 28,
+): Promise<void> {
+  await expect(button.getBoundingClientRect().height).toBeCloseTo(height, 0);
   await expect(within(button).queryAllByRole('button')).toHaveLength(0);
 }
 
@@ -95,7 +122,7 @@ export const AgentCountRetainsItsAction: Story = {
     },
   },
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Agents: 2' }));
+    await userEvent.click(canvas.getByRole('button', { name: agentsLabel }));
     await expect(openAgents).toHaveBeenCalledOnce();
   },
 };
@@ -113,7 +140,7 @@ export const ModelRetainsItsConfigurationOverlay: Story = {
   },
 };
 
-const glassControls = ['Agents: 2', 'Background Tasks: 1'];
+const glassControls = [agentsLabel, tasksLabel];
 
 const plainControls = [modelLabel, 'Mode', 'Context window'];
 
@@ -130,11 +157,11 @@ async function expectMaterialPolicy(
   const [glass, plain] = materialGroups(compact);
 
   for (const name of glass)
-    await expect(
-      await within(canvas.getByRole('button', { name })).findByRole('group', {
-        name: nativeMaterialLabel,
-      }),
-    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('button', { name }).closest('[role="group"]'),
+      ).toHaveAttribute('aria-label', nativeMaterialLabel),
+    );
 
   for (const name of plain)
     await expect(

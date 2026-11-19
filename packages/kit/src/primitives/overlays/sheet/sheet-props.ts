@@ -63,6 +63,8 @@ export interface SheetLinkProps {
 
 // A caller can supply a page when its choices are only known when the field opens.
 export interface SheetDestination extends SheetScreenProps {
+  // Fixed controls such as a search field stay below the native header.
+  keepsHeaderInset?: boolean;
   contentScrolls?: boolean;
   /*
    * Whether the sheet carries the page from the moment it opens rather than mounting it on the way in.

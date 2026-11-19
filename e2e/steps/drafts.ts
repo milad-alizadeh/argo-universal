@@ -37,6 +37,7 @@ When(
   'I reload the App and open the Session {string}',
   async ({ page }, title: string): Promise<void> => {
     await reloadApp(page);
+    await expect(page).toHaveURL(/\/sessions$/);
     await openSession(page, title);
   },
 );

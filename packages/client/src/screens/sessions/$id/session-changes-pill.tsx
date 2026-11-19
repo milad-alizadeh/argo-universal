@@ -28,8 +28,15 @@ const changesPill = (
 export const sessionFeed = (
   props: OpenSessionViewProps,
   panels: SessionPanels,
+  wide: boolean,
 ): React.JSX.Element => (
-  <ComposerPillLayer pill={changesPill(props, panels)}>
+  <ComposerPillLayer pill={wide ? changesPill(props, panels) : null}>
     <Feed {...props.feed} />
   </ComposerPillLayer>
 );
+
+export const phoneChangesPill = (
+  props: OpenSessionViewProps,
+  panels: SessionPanels,
+  wide: boolean,
+): React.ReactNode => (wide ? null : changesPill(props, panels));
