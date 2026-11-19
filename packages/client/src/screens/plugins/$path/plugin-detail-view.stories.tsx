@@ -7,6 +7,7 @@ import { action } from 'storybook/actions';
 import { PluginDetailView } from './plugin-detail-view';
 import {
   loading,
+  loadingJiraList,
   issueFilters,
   issueFiltersUnavailable,
   jiraBoard,
@@ -81,3 +82,7 @@ export const JiraBoardEmpty: StoryObj<typeof meta> = {
 };
 
 export const Loading: StoryObj<typeof meta> = { args: loading };
+
+export const LoadingJiraList: StoryObj<typeof meta> = {
+  args: loadingJiraList,
+};

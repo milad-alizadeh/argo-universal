@@ -26,6 +26,8 @@ interface PluginPageCallbacks {
 export interface PluginDetailViewProps {
   // The page the Plugin draws; null until its first tree arrives.
   root: WireNode | null;
+  // What the page draws under its Skeleton until `root` arrives, as this Device last drew it.
+  loadingTree?: WireNode | null;
   title?: string;
   callbacks: PluginPageCallbacks;
   // The App's own Back for a pushed page; a Plugin declares no navigation (`ScreenDefaultBack`).
@@ -38,9 +40,18 @@ export function PluginDetailView(
 ): React.ReactNode {
   return (
     <ScreenDefaultBack value={props.onBack ?? null}>
-      <PluginPageBody {...props} />
+      <PageOrLoadingTree {...props} />
     </ScreenDefaultBack>
   );
+}
+
+// A page with no tree yet that this Device drew before loads as it was drawn.
+function PageOrLoadingTree(props: PluginDetailViewProps): React.ReactNode {
+  const { root, loadingTree: tree } = props;
+
+  if (root || !tree) return <PluginPageBody {...props} />;
+
+  return <LoadingTree tree={tree} title={props.title} />;
 }
 
 function PluginPageBody({
@@ -102,8 +113,41 @@ function PluginContent(props: PluginDetailViewProps): React.ReactNode {
   ) : null;
 }
 
-// Keep the previous sidebar while the destination waits for its first tree.
-export function PendingPage(): React.ReactElement {
+const doesNothing: PluginPageCallbacks = {};
+
+/*
+ * The page as this Device last drew it, drawn the way its tree will be, under a Skeleton, so the rows load in the
+ * places they will take. It does nothing while it loads.
+ */
+function LoadingTree({
+  tree,
+  title,
+}: {
+  tree: WireNode;
+  title?: string;
+}): React.ReactElement {
+  useKeepSidebarWhilePending();
+
+  return (
+    <Skeleton loading fill accessibilityLabel="Loading page">
+      <PluginPageBody root={tree} title={title} callbacks={doesNothing} />
+    </Skeleton>
+  );
+}
+
+/*
+ * Keep the previous sidebar while the destination waits for its first tree. A page this Device drew before loads
+ * in its own rows' places; one it never drew loads as a plain List.
+ */
+export function PendingPage({
+  tree,
+}: {
+  tree?: WireNode | null;
+}): React.ReactElement {
+  return tree ? <LoadingTree tree={tree} /> : <PlainPending />;
+}
+
+function PlainPending(): React.ReactElement {
   useKeepSidebarWhilePending();
 
   return (

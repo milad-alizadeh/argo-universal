@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import type { OnPageCall } from '../../../lib/product/plugin-registry';
+import { useKeepLoadingTree, useLoadingTree } from '../stores/loading-trees';
 import type {
   KeptPage,
   PageAddresses,
@@ -14,7 +15,12 @@ import { useLivePage } from './use-live-page';
 import { usePageAddresses } from './use-page-addresses';
 import { useOperationRunner, useTreeCalls } from './use-tree-calls';
 
-export type PluginPageState = { root: WireNode | null; onPageCall: OnPageCall };
+export type PluginPageState = {
+  root: WireNode | null;
+  // What the page draws under its Skeleton until `root` arrives: its first rows as this Device last drew them.
+  loadingTree: WireNode | null;
+  onPageCall: OnPageCall;
+};
 
 /*
  * One Loader page on the connected Server (ADR-0050): its Plugin tree is kept by its Page address, so a
@@ -32,11 +38,13 @@ export function usePluginPage(opening: PageOpening): PluginPageState {
 
   const root = useLastDrawn(answer);
 
+  useKeepLoadingTree(opening, root);
+
   const onPageCall = useTreeCalls(
     pageCallsPorts(addresses, opening, useOperationRunner()),
   );
 
-  return { root, onPageCall };
+  return { root, loadingTree: useLoadingTree(opening), onPageCall };
 }
 
 /*
