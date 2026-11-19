@@ -18,6 +18,7 @@ import { contentFocus } from './menu-content-focus';
 import { MenuLoadingRow } from './menu-loading';
 import {
   isMenuSubmenu,
+  menuActionTitle,
   type ActionMenuProps,
   type MenuAction,
   type MenuEntry,
@@ -112,7 +113,7 @@ function SubmenuTrigger({ submenu }: SubmenuProps): React.JSX.Element {
     <RadixMenu.SubTrigger asChild aria-label={label}>
       <View className={menuRowClass()}>
         <ChoiceCheck />
-        <MenuActionLabel {...submenu} />
+        <MenuActionLabel label={submenu.label} icon={submenu.icon} />
         <SubmenuCount count={submenu.count} />
         <Chevron direction="right" />
       </View>
@@ -142,7 +143,7 @@ function MenuActionItem({ action }: { action: MenuAction }): React.JSX.Element {
 function actionItemProps(action: MenuAction): RadixMenu.DropdownMenuItemProps {
   return {
     asChild: true,
-    'aria-label': action.label,
+    'aria-label': menuActionTitle(action),
     disabled: action.disabled,
     onSelect: action.onPress,
     ...choiceRole(action.selected),

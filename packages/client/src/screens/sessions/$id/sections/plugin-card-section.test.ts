@@ -70,7 +70,7 @@ describe("a Plugin's Workbench card", () => {
 
     expect(section.title).toBe('Issue');
     expect(section.offered({})).toBe(true);
-    expect(section.count(changes)).toBe(1);
+    expect(section.count).toBeUndefined();
   });
 
   it('opens its Inspector tab when it has a full view, and nothing when it has none', () => {

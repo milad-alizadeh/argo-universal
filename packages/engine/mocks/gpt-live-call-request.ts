@@ -2,23 +2,16 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { RawData } from 'ws';
 import { z } from 'zod';
 
-// The session object a call is created with, as the service reads it.
-const session = z.looseObject({
-  type: z.string(),
+// The session object a call is created with, as the service reads it. A `type` is refused: the service sets it.
+const session = z.strictObject({
   model: z.string(),
   instructions: z.string(),
   audio: z.looseObject({ output: z.looseObject({ voice: z.string() }) }),
   delegation: z.looseObject({ type: z.string() }),
 });
 
-// Both multipart fields must be present, and the session must read as JSON of that form.
-const callRequest = z.object({
-  sdp: z.string(),
-  session: z
-    .string()
-    .transform((text) => JSON.parse(text))
-    .pipe(session),
-});
+// The ChatGPT route reads one JSON body holding the offer and the session; it refuses multipart (#2406 probe, 2026-11-19).
+const callRequest = z.strictObject({ sdp: z.string(), session });
 
 export type CallRequest = z.infer<typeof callRequest>;
 
@@ -30,24 +23,19 @@ async function bodyOf(request: IncomingMessage): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
-async function fieldsOf(
-  request: IncomingMessage,
-): Promise<Record<string, string | File>> {
-  const contentType = request.headers['content-type'] ?? '';
-
-  const form = await new Response(await bodyOf(request), {
-    headers: { 'content-type': contentType },
-  }).formData();
-
-  return Object.fromEntries(form.entries());
-}
+const isJson = (request: IncomingMessage): boolean =>
+  (request.headers['content-type'] ?? '').startsWith('application/json');
 
 // What a call-creation request asks for; null when its form is not the one the service reads.
 export async function callRequestOf(
   request: IncomingMessage,
 ): Promise<CallRequest | null> {
   try {
-    return callRequest.parse(await fieldsOf(request));
+    if (!isJson(request)) return null;
+
+    return callRequest.parse(
+      JSON.parse((await bodyOf(request)).toString('utf8')),
+    );
   } catch {
     return null;
   }

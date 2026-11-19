@@ -1,7 +1,7 @@
 import type { Subagent } from '@repo/contracts';
 import { isStockIconName } from '@repo/contracts/kit-symbols';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
-import { List, phonesGrouped } from '@repo/kit/primitives/lists/list';
+import { List } from '@repo/kit/primitives/lists/list';
 import type { ComponentProps, JSX } from 'react';
 import { subagentMarkDescriptor } from '../../../../lib/product/subagents/subagent-role';
 import { workListSections } from '../work-list-sections';
@@ -19,8 +19,7 @@ function mark(subagent: Subagent): Mark {
 type PhoneProps = SubagentListProps & { now: number };
 
 const listProps = {
-  appearance: 'cards',
-  onPhones: phonesGrouped,
+  appearance: 'grouped',
   fit: false,
   accessibilityLabel: 'Agents',
 } as const;
@@ -31,6 +30,7 @@ const row = (agent: Subagent, props: PhoneProps): JSX.Element => (
     title={agent.title}
     titleTone={agent.state === 'idle' ? 'muted' : 'neutral'}
     subtitle={subagentSupporting(agent, props.now)}
+    roomy
     wrapSubtitle
     leadingMark={mark(agent)}
     disabled={!props.onSelect}

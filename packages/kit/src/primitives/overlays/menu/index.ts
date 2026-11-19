@@ -41,3 +41,5 @@ export {
   type NativeMenuItem,
   nativeMenuItems,
 } from './menu-native-items';
+
+export { menuActionTitle } from './menu-props';

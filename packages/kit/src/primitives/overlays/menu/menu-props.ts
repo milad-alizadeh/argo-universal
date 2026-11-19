@@ -18,6 +18,7 @@ export type MenuAction = Actions['actions'][number] & {
   tone?: 'danger';
   // A line under the label, such as why the action is disabled.
   subtitle?: string;
+  count?: string;
   // The subtitle in the warning tone instead of the muted one, such as why an automation stopped; system menus draw it plain.
   subtitleTone?: 'warning';
 };
@@ -38,6 +39,9 @@ export interface MenuSubmenu {
 // A system menu row's title where the row has no place of its own for a count, as iOS menus: the count after the label.
 export const countedTitle = (title: string, count?: string): string =>
   count ? `${title} (${count})` : title;
+
+export const menuActionTitle = ({ label, count }: MenuAction): string =>
+  count ? `${label} ${count}` : label;
 
 export type MenuEntry = MenuAction | MenuSubmenu;
 

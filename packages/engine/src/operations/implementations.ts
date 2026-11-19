@@ -81,7 +81,7 @@ export function createImplementations(
     ...createPluginOperations(deps.plugins.plugins),
     ...createRegistryOperations(deps),
     ...createProjectOperations(deps),
-    ...createVoiceOperations(deps.voice),
+    ...createVoiceOperations(deps.voice, deps.sessions),
   };
 }
 

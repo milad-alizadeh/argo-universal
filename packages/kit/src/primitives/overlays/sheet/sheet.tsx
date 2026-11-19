@@ -97,11 +97,15 @@ function DrawerContent({
 }
 
 function DrawerInner(props: PresentationProps): ReactElement {
+  const onRootClose = isDismissible(props.dismissible)
+    ? props.stack.reports.dismissed
+    : undefined;
+
   return (
     <>
       <SheetLabel label={props.label} />
       <Drawer.Handle />
-      <SheetPanel {...props} />
+      <SheetPanel {...props} onRootClose={onRootClose} />
     </>
   );
 }

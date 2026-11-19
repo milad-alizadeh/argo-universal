@@ -36,6 +36,17 @@ describe('Voice call', () => {
     expect(provider.call.ended).toBe(true);
   });
 
+  it('opens a Session that is not open, as after a Server restart, and starts the call in it', async () => {
+    const voice = await startVoiceEngine();
+    const { host } = voice;
+    const { sessionId } = await openVoiceSession(voice);
+    await host.caller.session.close({ sessionId });
+
+    await host.caller.voice.start({ sessionId, offer });
+
+    expect(await callOf(host)).toMatchObject({ sessionId });
+  });
+
   it('tells the voice which Session it speaks for', async () => {
     const voice = await startVoiceEngine();
     const { sessionId } = await openVoiceSession(voice);
