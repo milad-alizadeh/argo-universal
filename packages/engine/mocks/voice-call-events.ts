@@ -1,4 +1,5 @@
 import { providerEvent, type VoiceCallEvent } from '../src/voice/call-types';
+import { detachedSessions } from '../src/voice/session-link';
 
 export const start: Extract<VoiceCallEvent, { type: 'call.start' }> = {
   type: 'call.start',
@@ -22,6 +23,13 @@ export const events: VoiceCallEvent[] = [
   providerEvent({ type: 'closed', reason: 'ended' }),
   providerEvent({ type: 'closed', reason: 'limit' }),
   providerEvent({ type: 'limit', remaining: 0.1 }),
+  providerEvent({ type: 'usage', inputTokens: 9, outputTokens: 1 }),
+  providerEvent({
+    type: 'usage',
+    inputTokens: 900,
+    outputTokens: 100,
+    limit: { remaining: 0.05 },
+  }),
   providerEvent({
     type: 'person.transcript',
     id: 'p1',
@@ -33,4 +41,5 @@ export const events: VoiceCallEvent[] = [
   providerEvent({ type: 'speaking', speaking: true }),
   providerEvent({ type: 'trouble', trouble: 'microphone-blocked' }),
   { type: 'session.turn', running: true },
+  { type: 'sessions.attach', sessions: detachedSessions },
 ];

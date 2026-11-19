@@ -120,7 +120,7 @@ export class VoiceCalls implements VoiceCallsPort {
   }
 
   public attach(sessions: VoiceSessions): void {
-    this.actor.getSnapshot().context.sessions.attach(sessions);
+    this.actor.send({ type: 'sessions.attach', sessions });
   }
 
   public async *watch(signal: AbortSignal): AsyncGenerator<VoiceStatus> {

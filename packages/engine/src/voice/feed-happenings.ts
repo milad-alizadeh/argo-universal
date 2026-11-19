@@ -1,21 +1,16 @@
-import type { FeedStreamEvent } from '../feed';
+import { messageText, type FeedStreamEvent } from '../feed';
 import type { SessionHappening } from './session-link';
 
 type Row = Extract<FeedStreamEvent, { type: 'row.upsert' }>['row'];
 
 type Tracked = { kind: 'agent' | 'person'; text: string };
 
-const textOf = (row: Extract<Row, { content: unknown[] }>): string =>
-  row.content
-    .map((block) => (block.type === 'text' ? block.text : ''))
-    .join('');
-
 const tracked = (row: Row): Tracked | undefined => {
   if (row.sessionUpdate === 'agent_message')
-    return { kind: 'agent', text: textOf(row) };
+    return { kind: 'agent', text: messageText(row.content) };
 
   return row.sessionUpdate === 'user_message'
-    ? { kind: 'person', text: textOf(row) }
+    ? { kind: 'person', text: messageText(row.content) }
     : undefined;
 };
 

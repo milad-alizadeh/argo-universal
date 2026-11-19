@@ -84,6 +84,63 @@ describe('GPT-Live provider starting a call', () => {
     expect(endpoint.linkTokens).toEqual(['stale', 'fresh']);
     expect(auth.asked).toBe(2);
   });
+
+  it('asks Codex for a new token at most once in a start, even when the call and its link each reject one', async () => {
+    const { auth, provider } = await setup(
+      [signedIn('stale'), signedIn('fresh'), signedIn('third')],
+      ['fresh'],
+      { linkAccepts: ['third'] },
+    );
+
+    await expect(provider.start(request)).rejects.toThrow(/rejected/i);
+    expect(auth.asked).toBe(2);
+  });
+});
+
+describe('GPT-Live provider voices', () => {
+  it('offers the service’s voices, Cove first as the default', async () => {
+    const { provider } = await setup([signedIn('t1')], ['t1']);
+
+    const voices = await provider.voices();
+
+    expect(voices.map(({ id }) => id)).toEqual([
+      'cove',
+      'juniper',
+      'maple',
+      'spruce',
+      'ember',
+      'vale',
+      'breeze',
+      'arbor',
+      'sol',
+      'marin',
+      'aube',
+      'bubbie',
+      'haetsal',
+      'hanul',
+      'himari',
+      'leher',
+      'miko',
+      'neer',
+      'porto',
+      'rindo',
+      'rio',
+      'rivage',
+      'selva',
+      'sonna',
+      'tinta',
+      'viola',
+    ]);
+    expect(voices.find(({ id }) => id === 'haetsal')?.label).toBe('Haetsal');
+  });
+
+  it('creates the call with the chosen voice', async () => {
+    const { endpoint, start } = await setup([signedIn('t1')], ['t1']);
+
+    await start({ ...request, voice: 'marin' });
+
+    expect(endpoint.created.at(0)?.session.audio.output.voice).toBe('marin');
+  });
 });
 
 describe('GPT-Live provider availability', () => {

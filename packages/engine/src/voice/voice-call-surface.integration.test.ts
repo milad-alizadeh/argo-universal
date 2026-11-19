@@ -144,4 +144,30 @@ describe('the Voice call as the App draws it', () => {
         limit: { remaining: 0.1 },
       });
   });
+
+  it('shows the allowance warning when a usage report says how much is left', async () => {
+    const work = await startVoiceWork([]);
+    await work.start();
+
+    work.provider.call.emit({
+      type: 'usage',
+      inputTokens: 900,
+      outputTokens: 100,
+      limit: { remaining: 0.05 },
+    });
+    await expect
+      .poll(() => callOf(work))
+      .toMatchObject({ limit: { remaining: 0.05 } });
+  });
+
+  it('shows no allowance warning for a usage report that only counts tokens', async () => {
+    const work = await startVoiceWork([]);
+    await work.start();
+
+    work.provider.call.emit({ type: 'usage', inputTokens: 9, outputTokens: 1 });
+    work.provider.call.emit({ type: 'speaking', speaking: true });
+    await expect.poll(() => callOf(work)).toMatchObject({ orb: 'talking' });
+
+    expect(await callOf(work)).not.toHaveProperty('limit');
+  });
 });

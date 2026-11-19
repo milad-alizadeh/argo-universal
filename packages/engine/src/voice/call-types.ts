@@ -4,7 +4,7 @@ import type {
   VoiceProvider,
   VoiceProviderEvent,
 } from './provider';
-import type { SessionLink } from './session-link';
+import type { VoiceSessions } from './session-link';
 
 export type SessionGoneReason = Extract<
   VoiceCallEnd,
@@ -37,7 +37,9 @@ export type VoiceCallEvent =
   // Whether a Turn the call started is running.
   | { type: 'call.turns'; running: boolean }
   | { type: 'provider.event'; event: VoiceProviderEvent }
-  | { type: 'voice.say'; say: VoiceSay };
+  | { type: 'voice.say'; say: VoiceSay }
+  // The Sessions the call sends Prompts to and listens to, once they exist.
+  | { type: 'sessions.attach'; sessions: VoiceSessions };
 
 export type SendBack = (event: VoiceCallEvent) => void;
 
@@ -75,6 +77,8 @@ export interface RunningCall {
   microphoneBlocked: boolean;
   // What the provider last reported of its allowance.
   limit?: VoiceLimit;
+  // The tokens the provider last reported the call has used.
+  usage?: { inputTokens: number; outputTokens: number };
 }
 
 export interface EndedCall {
@@ -85,7 +89,7 @@ export interface EndedCall {
 
 export interface VoiceCallContext extends VoiceCallInput {
   // Where the call reaches its Session, filled in once Sessions exist.
-  sessions: SessionLink;
+  sessions: VoiceSessions;
   call: RunningCall | null;
   ended: EndedCall | null;
   // Why the last call failed, for the Notice that says so.
