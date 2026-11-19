@@ -1,3 +1,4 @@
+import type { VoicePreviewClip } from '@repo/contracts';
 import type { VoiceDeviceChoice } from '../../src/features/voice/stores/voice-device-choice';
 import { VoiceMuteStore } from '../../src/features/voice/stores/voice-mute-store';
 import {
@@ -79,6 +80,13 @@ export class FakeVoiceConnection implements VoiceConnection {
     answerFor: (offer: string) => Promise<string>,
   ): Promise<void> {
     await answerFor('v=0 listening offer');
+  }
+
+  // Every stored greeting played, oldest first.
+  public readonly clips: VoicePreviewClip[] = [];
+
+  public playClip(clip: VoicePreviewClip): void {
+    this.clips.push(clip);
   }
 
   public endPreview(): void {}

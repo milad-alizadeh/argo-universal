@@ -1,3 +1,5 @@
+import type { VoicePreviewClip } from '@repo/contracts';
+
 // The microphone as the connection uses it: something to let go of. The browser's own carries the sound.
 export interface Microphone {
   stop: () => void;
@@ -21,6 +23,14 @@ export interface VoicePlayback {
   spectrum: (into: Float32Array) => void;
 }
 
+// The voice being recorded, to keep as a preview's greeting (ADR-0064).
+export interface VoiceRecording {
+  // Stops recording and returns what was heard as a clip; null when nothing could be recorded.
+  finish: () => Promise<VoicePreviewClip | null>;
+  // Stops recording and throws what was heard away.
+  cancel: () => void;
+}
+
 // A peer connection reduced to what a call needs.
 export interface VoicePeer {
   // Sends the microphone up and opens the channel the provider expects; returns the complete offer.
@@ -41,6 +51,10 @@ export interface VoiceEnvironment {
   openSilence: () => Microphone;
   createPeer: () => VoicePeer;
   playVoice: (stream: MediaStream, speaker: string | null) => VoicePlayback;
+  // Records the voice as it arrives; null where the page cannot record.
+  recordVoice: (stream: MediaStream) => VoiceRecording | null;
+  // Plays a stored greeting on this speaker, or the system's for null.
+  playClip: (clip: VoicePreviewClip, speaker: string | null) => VoicePlayback;
 }
 
 // The microphone was refused or is missing; the call cannot start.

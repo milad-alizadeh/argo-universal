@@ -4,7 +4,7 @@ import type {
   VoiceCallOptions,
   VoiceCallOptionsChange,
   VoiceList,
-  VoicePreviewInput,
+  VoicePreviewClipInput,
   VoiceSettings,
   VoiceSettingsChange,
 } from '@repo/contracts';
@@ -118,7 +118,9 @@ export class VoiceChoices implements VoiceChoicesPort {
   }
 
   // The voice a preview plays, refused when it is not there.
-  public async previewed(input: VoicePreviewInput): Promise<PreviewedVoice> {
+  public async previewed(
+    input: VoicePreviewClipInput,
+  ): Promise<PreviewedVoice> {
     const builtIn = await voicesOf(this.provider());
 
     return previewedVoice(input, this.store.read().customVoices, builtIn);

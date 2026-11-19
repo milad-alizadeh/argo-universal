@@ -1,4 +1,4 @@
-import type { VoiceStatus } from '@repo/contracts';
+import type { VoicePreviewClip, VoiceStatus } from '@repo/contracts';
 import type { VoiceDeviceChoice } from '../stores/voice-device-choice';
 
 /*
@@ -32,7 +32,13 @@ export interface VoiceConnection {
    * Opens a connection that only listens, sending silence and never the microphone, and completes it with the answer
    * `answerFor` gets for its offer. It replaces an earlier preview, a call's offer ends it, and it lets go of itself after a while.
    */
-  preview: (answerFor: (offer: string) => Promise<string>) => Promise<void>;
+  preview: (
+    answerFor: (offer: string) => Promise<string>,
+    // Called with the greeting once the voice has said it whole, for the Server to keep; never for a preview let go of early.
+    onRecorded?: (clip: VoicePreviewClip) => void,
+  ) => Promise<void>;
+  // Plays a stored greeting with no peer connection, in place of any preview, until it ends or the preview is let go of.
+  playClip: (clip: VoicePreviewClip) => void;
   // Lets go of the preview's connection.
   endPreview: () => void;
 }

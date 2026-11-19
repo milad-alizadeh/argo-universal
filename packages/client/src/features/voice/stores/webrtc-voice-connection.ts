@@ -1,3 +1,4 @@
+import type { VoicePreviewClip } from '@repo/contracts';
 import {
   silentSpectrum,
   type VoiceConnection,
@@ -7,6 +8,7 @@ import {
   type VoiceSpectrum,
 } from '../types/voice-connection';
 import type { Microphone, VoiceEnvironment } from '../types/voice-environment';
+import { ConnectionPreview } from './connection-preview';
 import { HeldCall, openChosen, type HeldSound } from './held-call';
 import { systemDevices, type VoiceDeviceChoice } from './voice-device-choice';
 import { VoiceMuteStore } from './voice-mute-store';
@@ -20,17 +22,13 @@ const heldSoundOf = ({ volume, microphoneGain }: VoiceSound): HeldSound => ({
   gain: microphoneGain / percent,
 });
 
-// How long a preview may hold its connection; the Server hangs up sooner, once the greeting is said.
-const previewLimitMs = 30_000;
-
 /*
  * The App's side of a call on a browser or Electron page: the microphone goes up and the voice comes down.
- * Nothing is recorded or stored; audio only travels between the peer connection and the speaker.
+ * A call is never recorded or stored; only a preview's greeting may be, for the Server to keep (ADR-0064).
  */
 class WebRtcVoiceConnection implements VoiceConnection {
   private held: HeldCall | undefined;
-  private previewing: HeldCall | undefined;
-  private previewTimer: ReturnType<typeof setTimeout> | undefined;
+  private readonly previews = new ConnectionPreview();
   // The microphone and speaker this Device chose; every call starts on them.
   private devices = systemDevices;
   // The volume and gain the person chose; every call starts with them.
@@ -58,45 +56,60 @@ class WebRtcVoiceConnection implements VoiceConnection {
 
   public async preview(
     answerFor: (offer: string) => Promise<string>,
+    onRecorded?: (clip: VoicePreviewClip) => void,
   ): Promise<void> {
     const silence = this.environment.openSilence();
-    const held = this.startPreview(silence);
+    const held = this.hold(silence, this.recorder(onRecorded));
+    this.previews.adopt(held);
 
     try {
       await held.peer.accept(await answerFor(await held.peer.offer(silence)));
     } catch (error) {
-      if (this.previewing === held) this.endPreview();
+      if (this.previews.isLive(held)) this.endPreview();
       throw error;
     }
   }
 
-  // A new preview in place of any earlier one, let go of after a while.
-  private startPreview(silence: Microphone): HeldCall {
-    this.endPreview();
-    this.previewing = this.hold(silence);
-    this.previewTimer = setTimeout(() => this.endPreview(), previewLimitMs);
-
-    return this.previewing;
+  // A stored greeting in place of any preview, on the chosen speaker at the chosen volume.
+  public playClip(clip: VoicePreviewClip): void {
+    const playback = this.environment.playClip(clip, this.devices.speaker);
+    playback.setVolume(this.sound.volume);
+    this.previews.play(playback);
   }
 
   public endPreview(): void {
-    const { previewing } = this;
-    this.previewing = undefined;
-    clearTimeout(this.previewTimer);
-    previewing?.release();
+    this.previews.end();
+  }
+
+  // Records a preview's voice as it arrives, where the page can record.
+  private recorder(
+    onRecorded?: (clip: VoicePreviewClip) => void,
+  ): ((voice: MediaStream, held: HeldCall) => void) | undefined {
+    if (!onRecorded) return undefined;
+
+    return (voice, held) =>
+      this.previews.record(
+        held,
+        this.environment.recordVoice(voice),
+        onRecorded,
+      );
   }
 
   // A connection holding what it sends up, playing the voice on the chosen speaker when it arrives.
-  private hold(microphone: Microphone): HeldCall {
+  private hold(
+    microphone: Microphone,
+    heard?: (voice: MediaStream, held: HeldCall) => void,
+  ): HeldCall {
     const held = new HeldCall(
       microphone,
       this.environment.createPeer(),
       this.sound,
     );
 
-    held.peer.onVoice((voice) =>
-      held.play(this.environment.playVoice(voice, this.devices.speaker)),
-    );
+    held.peer.onVoice((voice) => {
+      held.play(this.environment.playVoice(voice, this.devices.speaker));
+      heard?.(voice, held);
+    });
 
     return held;
   }
@@ -126,7 +139,7 @@ class WebRtcVoiceConnection implements VoiceConnection {
   public setSound(sound: VoiceSound): void {
     this.sound = heldSoundOf(sound);
     void this.held?.setSound(this.sound);
-    void this.previewing?.setSound(this.sound);
+    this.previews.setSound(this.sound);
   }
 
   public mutes = (): VoiceMutes => this.store.read();
