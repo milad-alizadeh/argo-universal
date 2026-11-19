@@ -1,4 +1,4 @@
-import type { NonUserPromptSender, QueuedPrompt } from '@repo/contracts';
+import type { SentPromptSender, QueuedPrompt } from '@repo/contracts';
 import { promptMessageId } from '../../feed';
 import type { PromptSend } from '../prompt-sender';
 import { steeredMessageId, steerQueuedPrompt } from '../queue-steering';
@@ -7,10 +7,10 @@ import type { SessionActorRef } from '../session-machine';
 import type { PromptLanding } from '../session-prompt';
 
 // A queued Prompt: who sent it, and its queued id.
-type QueuedSend = Pick<PromptSend<NonUserPromptSender>, 'sender' | 'id'>;
+type QueuedSend = Pick<PromptSend<SentPromptSender>, 'sender' | 'id'>;
 
 // A Plugin's Prompt waits its turn (ADR-0055); the Voice call's and another Session's steer (ADR-0064, ADR-0054).
-const steers = ({ type }: NonUserPromptSender): boolean => type !== 'plugin';
+const steers = ({ type }: SentPromptSender): boolean => type !== 'plugin';
 
 const canSteer = ({
   acpLease,

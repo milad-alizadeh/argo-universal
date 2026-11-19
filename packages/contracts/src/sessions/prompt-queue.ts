@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { NonUserPromptSender } from '../feed/prompt-sender';
+import { SentPromptSender } from '../feed/prompt-sender';
 import { SessionPromptInput } from './prompt';
 
 export const QueuedPromptId = z.string().min(1).brand<'QueuedPromptId'>();
@@ -16,7 +16,7 @@ export const QueuedPrompt = z.strictObject({
   revision: z.int().nonnegative(),
   followUpSuggestions: SessionPromptInput.shape.followUpSuggestions,
   // A Plugin's Prompt keeps its sender (ADR-0055); the person's own Prompts carry none.
-  sender: NonUserPromptSender.optional(),
+  sender: SentPromptSender.optional(),
 });
 
 export type QueuedPrompt = z.infer<typeof QueuedPrompt>;

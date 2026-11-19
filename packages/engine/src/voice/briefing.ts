@@ -1,4 +1,4 @@
-import type { NonUserPromptSender, SessionUpdate } from '@repo/contracts';
+import type { SentPromptSender, SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { and, desc, eq, inArray, type SQL } from 'drizzle-orm';
@@ -43,7 +43,7 @@ const speakers = {
 >;
 
 // A Prompt the person did not send, named by its sender; the voice's carries no instruction to the Agent.
-const promptLine = (sender: NonUserPromptSender, text: string): string =>
+const promptLine = (sender: SentPromptSender, text: string): string =>
   sender.type === 'voice'
     ? `Voice call request: ${withoutVoiceInstruction(text)}`
     : `From ${sender.title}: ${text}`;

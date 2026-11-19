@@ -1,5 +1,5 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
-import type { NonUserPromptSender } from '@repo/contracts';
+import type { SentPromptSender } from '@repo/contracts';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { recordingSource, writeHookPlugins } from '#mocks/hook-plugins';
@@ -14,7 +14,7 @@ export const senders = {
   'the Voice call': { type: 'voice' },
   'another Session': { type: 'session', sessionId: 'caller', title: 'Caller' },
   'a Plugin': { type: 'plugin', pluginId: 'prompter', title: 'Prompter' },
-} satisfies Record<string, NonUserPromptSender>;
+} satisfies Record<string, SentPromptSender>;
 
 const longJob = 'Long job';
 
@@ -26,7 +26,7 @@ export type SendingJourney = {
   // Starts a Turn that runs until `release`, and answers with its id.
   busy: () => Promise<string>;
   release: () => void;
-  send: (text: string, sender: NonUserPromptSender) => Promise<SentPrompt>;
+  send: (text: string, sender: SentPromptSender) => Promise<SentPrompt>;
 };
 
 export type SendingOptions = {

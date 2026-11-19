@@ -1,5 +1,5 @@
 import type {
-  NonUserPromptSender,
+  SentPromptSender,
   SessionNewInput,
   SessionPromptInput,
 } from '@repo/contracts';
@@ -96,7 +96,7 @@ export class Sessions {
   // A Plugin's Prompt: starts a Turn on an idle Session, else joins the end of its queue (ADR-0055).
   public async promptFromPlugin(
     input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
-    sender: NonUserPromptSender,
+    sender: SentPromptSender,
   ): Promise<PluginPromptAnswer> {
     const sent = requireTaken(
       await sendPrompt(this.sources, input, { sender }),

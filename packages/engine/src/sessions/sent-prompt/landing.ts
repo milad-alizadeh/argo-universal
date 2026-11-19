@@ -1,4 +1,4 @@
-import type { NonUserPromptSender, SessionPromptInput } from '@repo/contracts';
+import type { SentPromptSender, SessionPromptInput } from '@repo/contracts';
 import type { PromptSend } from '../prompt-sender';
 import type { SessionContext } from '../session-context';
 import type { SessionActorRef } from '../session-machine';
@@ -13,7 +13,7 @@ export type SendSources = HandlerSources<
 >;
 
 // One Prompt on its way: what it says, and its send; its id is its Turn's id or, queued, its queued id.
-export type Sending = PromptSend<NonUserPromptSender> & {
+export type Sending = PromptSend<SentPromptSender> & {
   input: SessionPromptInput;
 };
 

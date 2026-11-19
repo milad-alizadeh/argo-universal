@@ -1,4 +1,4 @@
-import type { NonUserPromptSender, SessionPromptInput } from '@repo/contracts';
+import type { SentPromptSender, SessionPromptInput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import type { PromptSend } from '../prompt-sender';
 import {
@@ -13,7 +13,7 @@ import { queueEvent } from './queue';
 export { withdrawPrompt } from './withdraw';
 
 // A Sent Prompt's send; a new id is made for it when the caller has none.
-export type SendRequest = Omit<PromptSend<NonUserPromptSender>, 'id'> & {
+export type SendRequest = Omit<PromptSend<SentPromptSender>, 'id'> & {
   id?: string;
 };
 
