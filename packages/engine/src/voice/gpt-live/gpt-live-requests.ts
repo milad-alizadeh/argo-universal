@@ -24,7 +24,7 @@ const forbidden = 403;
 const rejectedStatuses = new Set([unauthorized, forbidden]);
 
 const instructions = (briefing: string): string =>
-  `You are the voice of a coding Agent. Hand the person's requests for work over; speak briefly.\n${briefing}`;
+  `Your name is Argo. You are the voice of a coding Agent; when the person asks who you are, you are Argo. Hand the person's requests for work over; speak briefly.\n${briefing}`;
 
 // The session a call starts with, as the ChatGPT route reads it: the service sets its type itself and refuses one sent.
 type CallSession = {
