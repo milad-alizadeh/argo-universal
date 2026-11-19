@@ -34,16 +34,32 @@ const hasWork = ({
     promptQueue.pauseReason !== null,
   ].some(Boolean);
 
-/*
- * A Plugin's Prompt (ADR-0055). An idle Session starts a Turn with the Plugin as sender; a busy or paused
- * one takes it at the end of the queue with that sender, behind everything already there. It only appends:
- * it never resumes a paused queue.
- */
+// Where a Prompt from a sender other than the person went: the Turn it started, or its place in the queue.
+export type SentPrompt =
+  | { status: 'started'; turnId: string }
+  | { status: 'queued'; queuedId: string };
+
+// A Plugin's Prompt (ADR-0055): it learns whether it started, or the queued id it may withdraw.
 export async function promptFromPlugin(
   sources: PluginPromptSources,
   input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
   sender: NonUserPromptSender,
 ): Promise<PluginPromptAnswer> {
+  const sent = await sendPromptAs(sources, input, sender);
+
+  return sent.status === 'started' ? { status: 'started' } : sent;
+}
+
+/*
+ * A Prompt from a sender other than the person. An idle Session starts a Turn with that sender; a busy or paused
+ * one takes it at the end of the queue with that sender, behind everything already there. It only appends:
+ * it never resumes a paused queue.
+ */
+export async function sendPromptAs(
+  sources: PluginPromptSources,
+  input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
+  sender: NonUserPromptSender,
+): Promise<SentPrompt> {
   const session = await sources.open.ready(input.sessionId, queueEvent);
   const context = sources.open.context(input.sessionId);
 
@@ -66,7 +82,7 @@ type QueuedPluginPrompt = Pick<SessionPromptInput, 'prompt'> & {
 async function queuePluginPrompt(
   session: SessionActorRef,
   { prompt, sender, queuedId }: QueuedPluginPrompt,
-): Promise<PluginPromptAnswer> {
+): Promise<SentPrompt> {
   await sendQueueCommand(session, {
     command: { action: 'append', prompt },
     sender,
@@ -102,10 +118,11 @@ async function startPluginPrompt(
   sources: PluginPromptSources,
   input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
   sender: NonUserPromptSender,
-): Promise<PluginPromptAnswer> {
+): Promise<SentPrompt> {
   const started = await startSessionPrompt(sources, input, { sender }).accepted;
 
-  if (started.messageId !== null) return { status: 'started' };
+  if (started.messageId !== null)
+    return { status: 'started', turnId: started.turnId };
 
   throw new TRPCError({
     code: 'CONFLICT',

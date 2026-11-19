@@ -19,8 +19,8 @@ type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 
 type VoiceWorkOptions = {
   provider?: FakeVoiceProvider;
-  // The Agent supports steering and takes what it is given into the running Turn.
-  steering?: boolean;
+  // The Agent supports steering and takes what it is given into the running Turn, or refuses each steer.
+  steering?: boolean | 'refused';
   // How long the call may pass without speech before it ends by itself, in milliseconds.
   idleMs?: number;
 };
@@ -165,10 +165,9 @@ function playOf(
   const provider =
     options.provider ?? new FakeVoiceProvider({ connect: 'manual' });
 
-  const base = scenarioOf(replies, { prompts, provider });
-
   const scenario: Scenario = {
-    ...(options.steering ? { ...base, ...steeringScenario(steered) } : base),
+    ...scenarioOf(replies, { prompts, provider }),
+    ...steeringScenario(steered, options.steering),
     voiceIdleMs: options.idleMs,
   };
 
