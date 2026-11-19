@@ -1,6 +1,5 @@
 import { Label } from '@repo/kit/primitives/content/label';
 import { StatusDot } from '@repo/kit/primitives/status/status-dot';
-import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
 import type { SessionRowMetadataProps } from './session-row-metadata-props';
@@ -10,23 +9,14 @@ interface RunningWorkCountProps {
   count: number;
   icon: 'agent' | 'terminal';
   label: string;
-  selected: boolean;
   testID: string;
 }
 
-function dotClassName(selected: boolean): string {
-  return cn(
-    'absolute right-0 -top-0.75 rounded-full border-2 border-card bg-card',
-    selected && 'web:wide:border-content web:wide:bg-content',
-  );
-}
-
 function RunningStatus({
-  selected,
   testID,
-}: Pick<RunningWorkCountProps, 'selected' | 'testID'>): React.ReactNode {
+}: Pick<RunningWorkCountProps, 'testID'>): React.ReactNode {
   return (
-    <View testID={testID} className={dotClassName(selected)}>
+    <View testID={testID} className="absolute right-0 -top-0.75">
       <StatusDot tone="success" pulse size="sm" />
     </View>
   );
@@ -47,7 +37,7 @@ function RunningWorkCount(props: RunningWorkCountProps): React.ReactNode {
         text={String(props.count)}
         sidebar={sidebarRows}
       />
-      <RunningStatus selected={props.selected} testID={props.testID} />
+      <RunningStatus testID={props.testID} />
     </View>
   ) : null;
 }
@@ -60,7 +50,6 @@ export function SubagentsCount(
       count={props.session.subagents.running}
       icon="agent"
       label="Agents"
-      selected={props.selected}
       testID="subagents-status"
     />
   );
@@ -72,7 +61,6 @@ export function ShellsCount(props: SessionRowMetadataProps): React.ReactNode {
       count={props.session.shells.running}
       icon="terminal"
       label="Background Tasks"
-      selected={props.selected}
       testID="shells-status"
     />
   );
