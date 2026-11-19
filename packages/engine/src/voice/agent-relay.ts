@@ -5,6 +5,7 @@ import {
 } from '../feed';
 import type { VoiceSay } from './call-types';
 import { inPieces } from './pieces';
+import type { VoiceDelivery } from './provider';
 import { relayWords } from './relay-words';
 import type {
   PromptOutcome,
@@ -119,7 +120,7 @@ export class AgentRelay {
     this.reports.speak({ kind: 'reply', requestId, text, delivery: 'speak' });
   }
 
-  private tell(text: string, delivery: 'speak' | 'background'): void {
+  private tell(text: string, delivery: VoiceDelivery): void {
     for (const piece of inPieces(text))
       this.reports.speak({ kind: 'tell', text: piece, delivery });
   }
@@ -174,7 +175,7 @@ function endingText({ stopReason, error }: Ended): string {
 function endingDelivery(
   { stopReason, error }: Ended,
   toldResult: boolean,
-): 'speak' | 'background' {
+): VoiceDelivery {
   return finishedCleanly({ stopReason, error }) && toldResult
     ? 'background'
     : 'speak';
