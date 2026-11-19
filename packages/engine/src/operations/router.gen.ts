@@ -489,6 +489,17 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      preview: publicProcedure
+        .input(operations['voice.preview'].params)
+        .output(operations['voice.preview'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.preview',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       hangUp: publicProcedure
         .input(operations['voice.hangUp'].params)
         .output(operations['voice.hangUp'].result)

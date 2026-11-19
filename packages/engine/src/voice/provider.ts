@@ -57,6 +57,14 @@ export interface VoiceStartRequest {
   voice?: string;
 }
 
+// A call that only lets the person hear a voice: it opens no microphone and its voice says `words` once.
+export interface VoicePreviewRequest {
+  // The App's connection offer; it carries no microphone.
+  offer: string;
+  voice: string;
+  words: string;
+}
+
 export interface VoiceProviderCall {
   // The connection answer the App completes its connection with.
   readonly answer: string;
@@ -73,6 +81,8 @@ export interface VoiceProviderCall {
 export interface VoiceOption {
   id: string;
   label: string;
+  // Only what the provider itself publishes about the voice.
+  description?: string;
 }
 
 export interface VoiceProvider {
@@ -84,4 +94,6 @@ export interface VoiceProvider {
   availability: () => Promise<VoiceAvailability>;
   voices: () => Promise<VoiceOption[]>;
   start: (request: VoiceStartRequest) => Promise<VoiceProviderCall>;
+  // A call whose voice speaks the request's words first; the caller ends it.
+  preview: (request: VoicePreviewRequest) => Promise<VoiceProviderCall>;
 }

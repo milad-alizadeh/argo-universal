@@ -1,5 +1,4 @@
 import { WebSocket } from 'ws';
-import type { VoiceStartRequest } from '../provider';
 
 // The service refused the ChatGPT token.
 export class TokenRejected extends Error {
@@ -23,8 +22,12 @@ const forbidden = 403;
 
 const rejectedStatuses = new Set([unauthorized, forbidden]);
 
-const instructions = (briefing: string): string =>
-  `Your name is Argo. You are the voice of a coding Agent; when the person asks who you are, you are Argo. Hand the person's requests for work over; speak briefly.\n${briefing}`;
+// What a call is created from: the App's offer, what the voice is told, and the voice.
+export type CallOpening = {
+  offer: string;
+  instructions: string;
+  voice?: string;
+};
 
 // The session a call starts with, as the ChatGPT route reads it: the service sets its type itself and refuses one sent.
 type CallSession = {
@@ -34,16 +37,16 @@ type CallSession = {
   delegation: { type: 'client' };
 };
 
-const sessionOf = (request: VoiceStartRequest): CallSession => ({
+const sessionOf = (opening: CallOpening): CallSession => ({
   model,
-  instructions: instructions(request.briefing),
-  audio: { output: { voice: request.voice ?? defaultVoice } },
+  instructions: opening.instructions,
+  audio: { output: { voice: opening.voice ?? defaultVoice } },
   delegation: { type: 'client' },
 });
 
 // The ChatGPT route reads one JSON body with the offer and the session, as Codex sends it; it refuses multipart.
-const bodyOf = (request: VoiceStartRequest): string =>
-  JSON.stringify({ sdp: request.offer, session: sessionOf(request) });
+const bodyOf = (opening: CallOpening): string =>
+  JSON.stringify({ sdp: opening.offer, session: sessionOf(opening) });
 
 const bearer = (token: string): string => `Bearer ${token}`;
 
@@ -80,12 +83,12 @@ export type CreatedCall = { answer: string; callId: string };
 export async function createCall(
   url: string,
   token: string,
-  request: VoiceStartRequest,
+  opening: CallOpening,
 ): Promise<CreatedCall> {
   const response = await fetch(`${url}${creationQuery}`, {
     method: 'POST',
     headers: creationHeaders(token),
-    body: bodyOf(request),
+    body: bodyOf(opening),
   });
 
   assertCreated(response);

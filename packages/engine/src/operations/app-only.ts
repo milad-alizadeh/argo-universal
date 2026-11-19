@@ -14,6 +14,7 @@ const appOnly: ReadonlySet<string> = new Set([
   'voice.end',
   'voice.getSettings',
   'voice.setSettings',
+  'voice.preview',
 ] satisfies OperationId[]);
 
 export const isAppOnly = (id: string): boolean => appOnly.has(id);

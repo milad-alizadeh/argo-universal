@@ -4,6 +4,8 @@ import type {
   VoiceSettings,
   VoiceSettingsChange,
   VoiceEndOutput,
+  VoicePreviewInput,
+  VoicePreviewOutput,
   VoiceStartInput,
   VoiceStartOutput,
   VoiceStatus,
@@ -17,8 +19,9 @@ import type { VoiceProvider } from './provider';
 import type { VoiceSessions } from './session-link';
 import { unavailable } from './unavailable';
 import { answerOf, startSettled } from './voice-call-answer';
-import { requireRoom } from './voice-call-room';
+import { requireNoCall, requireRoom } from './voice-call-room';
 import { VoiceChoices } from './voice-choices';
+import { VoicePreviews } from './voice-previews';
 import type { VoiceSettingsStore } from './voice-settings';
 
 type CallStart = Extract<VoiceCallEvent, { type: 'call.start' }>;
@@ -39,6 +42,8 @@ export interface VoiceCallsPort {
   // Settings › Voice: what the person chose and can choose from, and changing it.
   settings: () => Promise<VoiceSettings>;
   changeSettings: (change: VoiceSettingsChange) => Promise<VoiceSettings>;
+  // Settings › Voice: one greeting in a voice, played while no call runs.
+  preview: (input: VoicePreviewInput) => Promise<VoicePreviewOutput>;
 }
 
 const namesSession = (
@@ -49,6 +54,7 @@ const namesSession = (
 // The Voice call machine behind its Operations: it checks what can be refused before the machine is asked.
 export class VoiceCalls implements VoiceCallsPort {
   private readonly choices: VoiceChoices;
+  private readonly previews = new VoicePreviews();
 
   public constructor(
     private readonly actor: VoiceCallActorRef,
@@ -78,12 +84,20 @@ export class VoiceCalls implements VoiceCallsPort {
     return this.choices.change(change);
   }
 
+  public async preview(input: VoicePreviewInput): Promise<VoicePreviewOutput> {
+    await this.requireUsable();
+    requireNoCall(this.actor);
+
+    return this.previews.play(this.provider(), input);
+  }
+
   public async start(
     input: VoiceStartInput,
     connection?: AbortSignal,
   ): Promise<VoiceStartOutput> {
     await this.requireStartable(input.sessionId);
     connection?.throwIfAborted();
+    this.previews.end();
     const event = await this.callStart(input, connection);
     this.actor.send(event);
 
@@ -165,9 +179,14 @@ export class VoiceCalls implements VoiceCallsPort {
   // Voice calls are on, the provider can be used, and there is room for a call in this Session.
   private async requireStartable(sessionId: string): Promise<void> {
     if (!this.choices.enabled()) throw unavailable('Voice calls are off');
+    await this.requireUsable();
+    requireRoom(this.actor, sessionId);
+  }
+
+  // The provider can start a call now, or what asked is refused.
+  private async requireUsable(): Promise<void> {
     const availability = await this.availability();
 
     if (!availability.usable) throw unavailable(availability.reason);
-    requireRoom(this.actor, sessionId);
   }
 }

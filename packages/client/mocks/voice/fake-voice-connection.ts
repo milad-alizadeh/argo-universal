@@ -59,6 +59,14 @@ export class FakeVoiceConnection implements VoiceConnection {
     return { input: this.input, output: this.output };
   }
 
+  public async preview(
+    answerFor: (offer: string) => Promise<string>,
+  ): Promise<void> {
+    await answerFor('v=0 listening offer');
+  }
+
+  public endPreview(): void {}
+
   public close(): void {
     this.closed = true;
     this.store.reset();

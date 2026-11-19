@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import { VoiceDetailView } from './voice-detail-view';
 import {
+  describedVoice,
   stableVoice,
   unusableVoice,
   usableVoice,
@@ -101,5 +102,22 @@ export const ChoosesTheSecondVoice: Story = {
     await userEvent.keyboard('{ArrowDown}{Enter}');
     await expect(args.onVoiceChange).toHaveBeenCalledWith('marin');
     await expect(args.onProviderChange).not.toHaveBeenCalled();
+  },
+};
+
+export const DescribesTheChosenVoice: Story = {
+  args: { voice: { status: 'loaded', settings: describedVoice } },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByText('A sample description of Cove'),
+    ).toBeVisible();
+    await expect(canvas.queryByText(/next call speaks/)).toBeNull();
+  },
+};
+
+export const SaysWhatChoosingAVoiceWithoutADescriptionDoes: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/next call speaks/)).toBeVisible();
+    await expect(canvas.queryByText(/sample description/)).toBeNull();
   },
 };
