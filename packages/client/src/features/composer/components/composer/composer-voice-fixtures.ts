@@ -41,6 +41,24 @@ export const voiceCallComposer = {
   voice: { kind: 'connected', onEnd: noop, mutes: callMutes },
 } satisfies ComposerFixture;
 
+const mutedCall = (microphone: boolean, speaker: boolean): ComposerFixture => ({
+  ...voiceCallComposer,
+  voice: {
+    kind: 'connected',
+    onEnd: noop,
+    mutes: { ...callMutes, microphone, speaker },
+  },
+});
+
+// The microphone is muted: its button reads red, with the slashed glyph.
+export const voiceMicMutedComposer = mutedCall(true, false);
+
+// The speaker is muted: its button reads red, with the slashed glyph.
+export const voiceSpeakerMutedComposer = mutedCall(false, true);
+
+// Both muted: both buttons read red; End keeps its look.
+export const voiceBothMutedComposer = mutedCall(true, true);
+
 // Text in the draft on a call: the primary button is Send, and End waits until the draft is empty again.
 export const voiceCallDraftComposer = {
   ...voiceCallComposer,
