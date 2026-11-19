@@ -7,7 +7,7 @@ import { TRPCError } from '@trpc/server';
  * the Voice settings and change the voice and instructions the next call uses; turning Voice calls on or off and
  * choosing the provider stay the App's. No other caller sees these listed, and each refuses them.
  */
-const appOnly: ReadonlySet<string> = new Set([
+const appOnly: ReadonlySet<OperationId> = new Set<OperationId>([
   'session.submit',
   'session.queue',
   'voice.status',
@@ -15,9 +15,9 @@ const appOnly: ReadonlySet<string> = new Set([
   'voice.end',
   'voice.setSettings',
   'voice.preview',
-] satisfies OperationId[]);
+]);
 
-export const isAppOnly = (id: string): boolean => appOnly.has(id);
+export const isAppOnly = (id: OperationId): boolean => appOnly.has(id);
 
 export const appOnlyRefusal = (id: OperationId): TRPCError =>
   new TRPCError({ code: 'FORBIDDEN', message: `Only an App can run ${id}` });
