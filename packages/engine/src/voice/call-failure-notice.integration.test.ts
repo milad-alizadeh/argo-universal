@@ -38,10 +38,12 @@ let voice: Actor<typeof machine>;
 afterEach(() => voice?.stop());
 
 // Sessions whose Feed is a spy: every Notice written into it is a call to `notice`.
-function spySessions(): {
+type SpySessions = {
   sessions: VoiceSessions;
   notice: Mock<VoiceSessions['notice']>;
-} {
+};
+
+function spySessions(): SpySessions {
   const notice = vi.fn<VoiceSessions['notice']>();
 
   const sessions: VoiceSessions = {
