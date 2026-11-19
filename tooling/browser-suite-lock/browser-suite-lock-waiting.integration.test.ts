@@ -12,6 +12,36 @@ import {
 afterEach(stopOtherSuites);
 
 describe('what a waiting suite is told', () => {
+  it('hands the port to waiting processes in order, skipping one that exited', async () => {
+    const port = await freePort();
+    const release = await acquireBrowserSuiteLock({ port });
+    const first = holdInAnotherProcess(port, true);
+    await once(first.stdout, 'data');
+    const abandoned = holdInAnotherProcess(port, true);
+    await once(abandoned.stdout, 'data');
+    const last = holdInAnotherProcess(port, true);
+    await once(last.stdout, 'data');
+    const acquired: string[] = [];
+
+    const firstHeld = once(first.stdout, 'data').then(() =>
+      acquired.push('first'),
+    );
+
+    const lastHeld = once(last.stdout, 'data').then(() =>
+      acquired.push('last'),
+    );
+
+    abandoned.kill('SIGKILL');
+    await once(abandoned, 'exit');
+    release();
+    await firstHeld;
+    expect(acquired).toEqual(['first']);
+    first.stdin.end();
+    await lastHeld;
+    expect(acquired).toEqual(['first', 'last']);
+    last.stdin.end();
+  });
+
   it('says what the holder runs, so a waiter can tell one file from the suite', async () => {
     const port = await freePort();
     const other = holdInAnotherProcess(port);

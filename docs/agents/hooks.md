@@ -21,7 +21,7 @@ The lookup finds no PR before you open one, on a detached `HEAD`, for a PR from 
 
 - The Operation mutation gate, the generated Operation procedures check and the generated Registry validators check. A new hand-written tRPC mutation must become an Operation.
 - oxfmt `--check` and type-aware oxlint on the changed files, and `turbo run check-types --affected` when TypeScript changed.
-- The test files that import a changed file, found by `vitest list --changed`. Past `DEPENDENT_LIMIT` in `tools/verify-scope.mts` (a primitive's edit reaches most story files; a `package.json` or Vitest config edit reaches every test), it runs only those in the touched folders and below, and says how many it left to CI.
+- The test files that import a changed file, found by `vitest list --changed`. When more than 40 files depend on a change, verify selects tests under the touched folders. It keeps the changed Story files and at most 40 additional related Story files. Plain tests run first, then the browser tests. A failed static check exits immediately so the agent can fix it before entering the browser queue.
 
 Several agents share this Mac, and under load a test can fail for no fault of its own: a harness test with "Plugin host exited (SIGKILL)", or a worker or test past its timeout. Run each such file again alone, `pnpm exec vitest run <file>` from its package; say in the PR which files you re-ran and how they ended.
 
@@ -32,6 +32,14 @@ When the change touches only paths `verify` does not read (Markdown, for one), i
 Two of the story gates read what a story draws rather than what it says, so they open a browser: the duplicate-render gate and the parent-may-not-vary-a-child gate. `pnpm check:story-renders` (`tools/check-story-renders.mts`) draws every presentation story once and a candidate pair twice more, which takes about seven minutes on a Mac, over twenty on a CI runner, and holds the browser-suite lock, so it is CI-only — its own `Story render gates` job, in four shards beside the sharded story tests — and not part of `pnpm quality:lint`, which must stay fast enough to run on every change. Both gates compare a file's drawings with each other, never with another file's, so `--shard=<n>/<total>` hands a runner a weighted share of the files and that runner judges its own drawings; no merge step. Run it by hand when you change a story's drawing, and pass a path fragment to narrow it to one file.
 
 CI runs the full suites. Run `pnpm quality` locally only when the owner asks; it holds the browser-suite lock for its whole run ([storybook.md](storybook.md)).
+
+## Measuring verification and PR time
+
+Each local browser request records its arrival, acquisition and release in `~/.cache/argo-browser-suite/47291.log`. At release the suite prints its wait and hold times. Updated Checkouts take turns in arrival order and still share the port with older Checkouts.
+
+From the repository, run `python3 tools/pr-latency.py --since <rollout-time-in-UTC>` to measure the first 100 local browser requests and the first 100 PRs merged to main after rollout. Use the same timestamp on each run. Targets are a browser queue p90 below five minutes and a median open-to-merge below 70 minutes. Incomplete requests appear separately. GitHub provides the merged PRs, changed-file counts, failed workflow links and rerun counts. For each failure, check whether the failing test was deferred locally or caught a later revision.
+
+CI chooses unit-test groups for Plugin-only PRs from Turborepo's affected test tasks. It keeps the full matrix for shared changes, manifest changes, pushes and query failures. Keep a mergeable PR on its tested revision. Update its base when resolving a conflict or when the change needs something newly merged.
 
 ## Trust
 
