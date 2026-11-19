@@ -1,6 +1,6 @@
 /*
  * What the Voice call needs of its Session, and nothing else: it sends the Session Prompts and hears what happens in its Feed.
- * The Engine's router supplies it once Sessions exist; the machine reads it when a call starts.
+ * The Engine's router attaches it once Sessions exist, as an event to the call machine; a call reads it when it starts.
  */
 
 // What happened in the Session's Feed that the voice is told about.
@@ -42,20 +42,9 @@ export interface VoiceSessions {
   notice: (sessionId: string, notice: VoiceNotice) => void;
 }
 
-// A holder the Engine fills after the call machine exists, because Sessions are built later.
-export class SessionLink {
-  private sessions: VoiceSessions | null = null;
-
-  public attach(sessions: VoiceSessions): void {
-    this.sessions = sessions;
-  }
-
-  // Adds a Notice to the Session's Feed; nothing is told before Sessions are attached.
-  public notice(sessionId: string, notice: VoiceNotice): void {
-    this.sessions?.notice(sessionId, notice);
-  }
-
-  public get current(): VoiceSessions | null {
-    return this.sessions;
-  }
-}
+// What a call has before Sessions are attached: nothing to send to, nothing to hear, nowhere to write.
+export const detachedSessions: VoiceSessions = {
+  prompt: () => Promise.reject(new Error('The Session cannot be reached')),
+  watch: () => (): void => {},
+  notice: () => {},
+};

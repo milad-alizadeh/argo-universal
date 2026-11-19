@@ -1,16 +1,9 @@
 import { fromCallback } from 'xstate';
 import { AgentRelay } from './agent-relay';
 import type { VoiceCallEvent, VoiceSay } from './call-types';
-import type { SessionLink, VoiceSessions } from './session-link';
+import type { VoiceSessions } from './session-link';
 
-export type RelayInput = { sessions: SessionLink; sessionId: string };
-
-// What a call has before Sessions are attached: nothing to send to, nothing to hear.
-const detached: VoiceSessions = {
-  prompt: () => Promise.reject(new Error('The Session cannot be reached')),
-  watch: () => (): void => {},
-  notice: () => {},
-};
+export type RelayInput = { sessions: VoiceSessions; sessionId: string };
 
 type WorkRequest = { requestId: string; text: string };
 
@@ -25,8 +18,7 @@ const workRequestOf = (event: VoiceCallEvent): WorkRequest | undefined =>
  */
 export const agentRelay = fromCallback<VoiceCallEvent, RelayInput>(
   ({ input, sendBack, receive }) => {
-    const sessions = input.sessions.current ?? detached;
-
+    const { sessions } = input;
     const relay = new AgentRelay(sessions, input.sessionId, {
       speak: (say: VoiceSay): void => sendBack({ type: 'voice.say', say }),
       turnsRunning: (running: boolean): void =>

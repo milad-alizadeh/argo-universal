@@ -48,7 +48,7 @@ function runningCall(): Mock<VoiceSessions['notice']> {
     notice,
   };
 
-  voice.getSnapshot().context.sessions.attach(sessions);
+  voice.send({ type: 'sessions.attach', sessions });
   voice.send(start);
 
   return notice;

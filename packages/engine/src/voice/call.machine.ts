@@ -11,7 +11,7 @@ import {
 import { watchConnection, watchSession } from './call-watchers';
 import type { VoiceProvider, VoiceProviderEvent } from './provider';
 import { providerCall, type ProviderCallInput } from './provider-call';
-import { SessionLink, type VoiceNotice } from './session-link';
+import { detachedSessions, type VoiceNotice } from './session-link';
 import { isTranscript, storeTranscript, withTranscript } from './transcript';
 
 /*
@@ -149,6 +149,11 @@ const voiceCallSetup = setup({
 
       return { call: { ...runningCall(context), answer: event.answer } };
     }),
+    attachSessions: assign(({ event }): Partial<VoiceCallContext> => {
+      assertEvent(event, 'sessions.attach');
+
+      return { sessions: event.sessions };
+    }),
     noteTurns: assign(({ event }): Partial<VoiceCallContext> => {
       assertEvent(event, 'call.turns');
 
@@ -156,10 +161,7 @@ const voiceCallSetup = setup({
     }),
     // Tells the person, in the Session's Feed, why the call ended.
     noticeLimit: ({ context }): void =>
-      context.sessions.current?.notice(
-        runningCall(context).sessionId,
-        limitNotice,
-      ),
+      context.sessions.notice(runningCall(context).sessionId, limitNotice),
     finish: assign(({ context }, params: EndParameters) =>
       finished(context, params),
     ),
@@ -277,7 +279,7 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
   id: 'voiceCall',
   context: ({ input }): VoiceCallContext => ({
     ...input,
-    sessions: new SessionLink(),
+    sessions: detachedSessions,
     call: null,
     ended: null,
     failure: null,
@@ -285,6 +287,7 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
     partials: [],
   }),
   initial: 'idle',
+  on: { 'sessions.attach': { actions: 'attachSessions' } },
   states: {
     idle: {
       on: {
