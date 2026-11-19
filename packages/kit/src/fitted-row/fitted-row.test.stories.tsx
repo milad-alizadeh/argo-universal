@@ -6,7 +6,7 @@ import { Pill } from '#primitives/status/pill';
 import { FittedRow } from './fitted-row';
 
 const meta = {
-  title: 'Tests/Design System/Patterns/FittedRow',
+  title: 'Tests/FittedRow',
 } satisfies Meta;
 
 export default meta;
