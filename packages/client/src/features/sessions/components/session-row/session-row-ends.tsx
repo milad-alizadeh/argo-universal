@@ -2,7 +2,11 @@ import { Text } from '@repo/kit/primitives/content/text';
 import type { ListItemProps } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { SessionRowCallMark, type SessionRowCall } from './session-row-call';
+import {
+  type CalledRowProps,
+  SessionRowCallMark,
+  type SessionRowCall,
+} from './session-row-call';
 import type { SessionRowProps } from './session-row-props';
 import { sidebarRows } from './session-row-sidebar';
 import { rowStatusDot } from './session-row-status';
@@ -47,13 +51,13 @@ const statusEnds = (
 
 // While a Voice call is attached, its mark ends the title line in place of the status dot and, on a phone, the time.
 const callEnds = (call: SessionRowCall): RegularEnds => {
-  const mark = <SessionRowCallMark {...call} />;
+  const mark = <SessionRowCallMark call={call} />;
 
   return sidebarRows ? { trailing: mark } : { titleEnd: mark };
 };
 
 export const regularEnds = (
-  props: SessionRowProps,
+  props: SessionRowProps & CalledRowProps,
   subtitle: string | undefined,
-  call: SessionRowCall | undefined,
-): RegularEnds => (call ? callEnds(call) : statusEnds(props, subtitle));
+): RegularEnds =>
+  props.call ? callEnds(props.call) : statusEnds(props, subtitle);

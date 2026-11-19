@@ -8,9 +8,8 @@ import type * as React from 'react';
 import { SecondaryChangeStageIcon } from '../change-stage/change-stage';
 import { changeDescription } from '../change-stage/change-stage-model';
 import {
-  callOrStatus,
-  type SessionRowCall,
-  useSessionRowCall,
+  type CalledRowProps,
+  statusUnlessCalled,
   withCallLabel,
 } from './session-row-call';
 import { endParts } from './session-row-ends';
@@ -42,16 +41,21 @@ function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
   return age === undefined ? undefined : <Text role="row-detail">{age}</Text>;
 }
 
+// The status dot, or the Voice call's mark in its place while a call is attached.
+const compactStatus = (
+  props: CompactEndProps & CalledRowProps,
+): React.ReactNode =>
+  statusUnlessCalled(compactStatusDot(props.session.status), props.call);
+
 /*
  * A Compact row's end: its detail, then the status dot; a phone draws no dot while the Session is idle, a sidebar row
  * a muted one. With Plugin items, the dot follows them as the row's accessories.
  */
 function compactEnd(
-  props: CompactEndProps,
-  call: SessionRowCall | undefined,
+  props: CompactEndProps & CalledRowProps,
 ): Pick<ListItemProps, 'trailing' | 'trailingAccessories'> {
   const detail = compactDetail(props);
-  const status = callOrStatus(call, compactStatusDot(props.session.status));
+  const status = compactStatus(props);
 
   if (!hasPluginItems(props.plugins))
     return { trailing: endParts(detail, status) };
@@ -82,8 +86,10 @@ function CompactAccessories(props: CompactAccessoriesProps): React.JSX.Element {
   );
 }
 
+type CalledCompactRow = SessionRowProps & CalledRowProps;
+
 // The glyph carries no text, so the row's label names the Change's state.
-function compactLabel(props: SessionRowProps): string {
+function changeLabel(props: SessionRowProps): string {
   const label = sessionRowLabel(props.session);
   const { pullRequest } = props;
 
@@ -92,37 +98,27 @@ function compactLabel(props: SessionRowProps): string {
   return `${label}, ${changeDescription(pullRequest)} Change`;
 }
 
+// The label ends on the Voice call while one is attached.
+const compactLabel = (props: CalledCompactRow): string =>
+  withCallLabel(changeLabel(props), props.call);
+
 const compactPresses = (
   props: SessionRowProps,
 ): Pick<ListItemProps, 'onPress'> => ({
   onPress: () => props.onSelect(props.session.sessionId),
 });
 
-// The row's label and end; a Voice call attached to the Session takes the status's place and joins the label.
-function useCompactEnds(
-  props: SessionRowProps,
-): Pick<
-  ListItemProps,
-  'accessibilityLabel' | 'trailing' | 'trailingAccessories'
-> {
-  const call = useSessionRowCall(props.session.sessionId);
-
-  return {
-    accessibilityLabel: withCallLabel(compactLabel(props), call),
-    ...compactEnd(props, call),
-  };
-}
-
 // Compact: one line in its compact List, a row of its Project's grouped list on a phone.
-export function CompactSessionRow(props: SessionRowProps): React.JSX.Element {
+export function CompactSessionRow(props: CalledCompactRow): React.JSX.Element {
   return (
     <ListItem
       {...compactPresses(props)}
       {...sessionRowMenu(props)}
       title={props.session.title}
       {...sidebarDrawing(props.session.status)}
+      accessibilityLabel={compactLabel(props)}
       leading={<SessionMark {...props} />}
-      {...useCompactEnds(props)}
+      {...compactEnd(props)}
       selected={props.selected ?? false}
       finished={props.session.archivedAt !== null}
     />

@@ -17,6 +17,9 @@ export interface SessionRowCall {
   now?: number;
 }
 
+// A row's props with the call attached to its Session, if any.
+export type CalledRowProps = { call?: SessionRowCall };
+
 const SessionRowCallContext = createContext<SessionRowCall | null>(null);
 
 // Gives the Sessions list the one live Voice call, so the row it is attached to marks it.
@@ -40,18 +43,25 @@ export const withCallLabel = (
   call: SessionRowCall | undefined,
 ): string => (call ? `${label}, ${callWords(call)}` : label);
 
-function LiveCall({ startedAt, now }: SessionRowCall): React.JSX.Element {
-  const clock = useClock(true, now);
+// The call's running time; none while it connects, so the row never shows a clock stuck at 0:00.
+function CallTime({ startedAt, now }: SessionRowCall): React.ReactNode {
+  const clock = useClock(startedAt !== null, now);
 
   return (
-    <>
-      <Icon name="voice-bars" size="sm" />
+    startedAt !== null && (
       <Text role="row-detail" tone="muted">
         {formatCallTime(startedAt, clock)}
       </Text>
-    </>
+    )
   );
 }
+
+const LiveCall = (call: SessionRowCall): React.JSX.Element => (
+  <>
+    <Icon name="voice-bars" size="sm" />
+    <CallTime {...call} />
+  </>
+);
 
 const MutedCall = (): React.JSX.Element => (
   <>
@@ -67,7 +77,11 @@ const MutedCall = (): React.JSX.Element => (
  * was, in ink so it never shares a colour with an Agent's status; "Muted" and mic.slash in red while the mic is off.
  * Only this mark ticks, so the list does not redraw each second.
  */
-export function SessionRowCallMark(call: SessionRowCall): React.JSX.Element {
+export function SessionRowCallMark({
+  call,
+}: {
+  call: SessionRowCall;
+}): React.JSX.Element {
   return (
     <View testID="session-call" className="flex-row items-center gap-1">
       {call.muted ? <MutedCall /> : <LiveCall {...call} />}
@@ -75,8 +89,8 @@ export function SessionRowCallMark(call: SessionRowCall): React.JSX.Element {
   );
 }
 
-// The call's mark while one is attached, in place of the row's status.
-export const callOrStatus = (
-  call: SessionRowCall | undefined,
+// The row's status, or the call's mark in its place while a call is attached.
+export const statusUnlessCalled = (
   status: React.ReactNode,
-): React.ReactNode => (call ? <SessionRowCallMark {...call} /> : status);
+  call: SessionRowCall | undefined,
+): React.ReactNode => (call ? <SessionRowCallMark call={call} /> : status);
