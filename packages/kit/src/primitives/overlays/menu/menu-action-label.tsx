@@ -15,6 +15,7 @@ interface LabelProps {
   content?: ReactNode;
   shortcut?: ActionShortcut;
   subtitle?: string;
+  subtitleId?: string;
   subtitleTone?: 'warning';
 }
 
@@ -29,17 +30,17 @@ export function MenuActionLabel(props: LabelProps): React.JSX.Element {
 }
 
 // The label, with its subtitle under it in the muted tone, or the warning tone when it says something stopped.
-function LabelText({
-  label,
-  subtitle,
-  subtitleTone,
-}: Pick<LabelProps, 'label' | 'subtitle' | 'subtitleTone'>): React.JSX.Element {
+function LabelText(props: LabelProps): React.JSX.Element {
+  const { label, subtitle, subtitleId, subtitleTone } = props;
+
   if (!subtitle) return <Text className="flex-1">{label}</Text>;
+
+  const tone = subtitleTone ?? 'muted';
 
   return (
     <View className="flex-1">
       <Text>{label}</Text>
-      <Text role="secondary" tone={subtitleTone ?? 'muted'}>
+      <Text nativeID={subtitleId} role="secondary" tone={tone}>
         {subtitle}
       </Text>
     </View>

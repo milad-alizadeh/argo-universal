@@ -172,11 +172,9 @@ function menuAction(action: DeclaredAction): ReactElement {
     disabled: action.disabled,
     destructive: action.tone === 'danger',
     isOn: action.selected,
+    subtitle: action.subtitle,
+    children: action.label,
   };
 
-  return (
-    <Stack.Toolbar.MenuAction key={action.id} {...props}>
-      {action.label}
-    </Stack.Toolbar.MenuAction>
-  );
+  return <Stack.Toolbar.MenuAction key={action.id} {...props} />;
 }
