@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import type { VoiceLevels } from '../../voice-connection';
 import { type OrbColors, useOrbColors } from './orb-colors';
-import { orbOn, type OrbGl } from './orb-gl';
+import { type OrbGl, orbOn, type OrbStarting } from './orb-gl';
 import { OrbMotion } from './orb-motion';
 import {
   orbDisc,
@@ -24,9 +24,12 @@ class OrbLoop {
   private readonly motion = new OrbMotion();
   private last = performance.now();
   private frame = 0;
+  private drawing: OrbGl | undefined;
+  private starting: OrbStarting | null | undefined;
+  private painted = false;
 
   public constructor(
-    private readonly drawing: OrbGl,
+    private readonly canvas: HTMLCanvasElement,
     private readonly read: () => OrbCanvasProps,
   ) {}
 
@@ -36,27 +39,45 @@ class OrbLoop {
 
   public stop(): void {
     cancelAnimationFrame(this.frame);
-    this.drawing.dispose();
+    this.drawing?.dispose();
   }
 
+  /*
+   * The first frame paints the well and the page around it; the drawing starts on the next, and draws once its shaders
+   * are ready, so neither the context nor the compile holds the frame the call appears on.
+   */
   private readonly tick = (now: number): void => {
+    this.drawing ??= this.ready();
+    this.drawOrWait(now);
+
+    if (this.starting !== null) this.start();
+  };
+
+  private ready(): OrbGl | undefined {
+    if (this.starting === undefined) this.begin();
+    else return this.starting?.ready();
+
+    return undefined;
+  }
+
+  // Waits out the frame the orb appears on, then starts the drawing.
+  private begin(): void {
+    if (this.painted) this.starting = orbOn(this.canvas);
+    else this.painted = true;
+  }
+
+  // Until it draws, the orb's clock waits, so its motion and fade start with its first drawn frame.
+  private drawOrWait(now: number): void {
+    if (this.drawing) this.draw(this.drawing, now);
+    else this.last = now;
+  }
+
+  private draw(drawing: OrbGl, now: number): void {
     const { state, levels, colors } = this.read();
     const seconds = (now - this.last) / millisecondsPerSecond;
-    const drawn = this.motion.step(state, levels?.() ?? quiet, seconds);
-    this.drawing.draw(drawn, colors);
+    drawing.draw(this.motion.step(state, levels?.() ?? quiet, seconds), colors);
     this.last = now;
-    this.start();
-  };
-}
-
-// A loop on the canvas, or none where the window has no WebGL2.
-function loopOn(
-  canvas: HTMLCanvasElement | null,
-  read: () => OrbCanvasProps,
-): OrbLoop | undefined {
-  const drawing = canvas && orbOn(canvas);
-
-  return drawing ? new OrbLoop(drawing, read) : undefined;
+  }
 }
 
 // The orb runs for as long as the canvas is on the page, reading the props each frame without drawing the page again.
@@ -71,7 +92,9 @@ function useOrbLoop(
   });
 
   useEffect(() => {
-    const loop = loopOn(canvas.current, () => latest.current);
+    const loop =
+      canvas.current && new OrbLoop(canvas.current, () => latest.current);
+
     loop?.start();
 
     return (): void => loop?.stop();

@@ -19,6 +19,8 @@ export type { AudioDevice, AudioDevices } from './audio-devices';
 export type { VoiceDeviceChoice } from './voice-device-choice';
 
 export {
-  VoiceStageView,
-  type VoiceStageViewProps,
-} from './components/voice-stage/voice-stage-view';
+  VoiceStageReveal,
+  voiceStageRoomId,
+} from './components/voice-stage/voice-stage-reveal';
+
+export { type VoiceStageViewProps } from './components/voice-stage/voice-stage-view';

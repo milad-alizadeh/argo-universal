@@ -2,11 +2,13 @@ import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import {
   ComposerAgentModelControl,
   ComposerModeControl,
 } from '../composer-configuration/composer-configuration';
 import { ComposerStatusControls } from '../composer-status/composer-status';
+import { useCallGlyphMorph } from './composer-call-glyph-motion';
 import { ComposerCallPointer } from './composer-call-pointer';
 import { ConnectingRing } from './composer-connecting-ring';
 import { ComposerMuteButtons } from './composer-mute-buttons';
@@ -90,7 +92,7 @@ function ComposerRightControls(layout: RightControlsLayout): React.JSX.Element {
   return (
     <View className="pointer-events-box-none max-w-full shrink-0 flex-row items-center gap-2.5">
       <ComposerConfigurationActions {...layout} />
-      <ComposerMuteButtons voice={layout.props.voice} />
+      <ComposerMuteButtons voice={layout.props.voice} wide={layout.wide} />
       <View className="shrink-0">
         <ComposerSendButton {...layout} />
       </View>
@@ -120,11 +122,15 @@ function ComposerSendButton(layout: SendLayout): React.JSX.Element {
   );
 }
 
-// While the call connects, End carries the turning ring.
+// While the call connects, End carries the turning ring; the voice button and End turn into each other as a call starts and ends.
 function PrimaryButton(layout: SendLayout): React.JSX.Element {
+  const morph = useCallGlyphMorph(layout.sendState);
+
   return (
     <View>
-      <IconButton {...sendButtonProps(layout)} />
+      <Animated.View style={morph}>
+        <IconButton {...sendButtonProps(layout)} />
+      </Animated.View>
       {layout.sendState === 'connecting' && <ConnectingRing />}
     </View>
   );

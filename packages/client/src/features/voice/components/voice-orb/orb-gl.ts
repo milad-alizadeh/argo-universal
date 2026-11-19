@@ -1,4 +1,5 @@
 import type { OrbColors } from './orb-colors';
+import { startLinking } from './orb-linking';
 import type { OrbDrawn } from './orb-motion';
 import { noiseSize, noiseTexels } from './orb-noise';
 import { rgbOf } from './orb-rgb';
@@ -33,39 +34,6 @@ const offsets = Float32Array.from(
   { length: ovals },
   (_, index) => (index * goldenAngle) % (Math.PI * 2),
 );
-
-// A shader that failed to compile says why; one that compiled is returned as it is.
-function checked(gl: WebGL2RenderingContext, shader: WebGLShader): WebGLShader {
-  if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return shader;
-
-  throw new Error(gl.getShaderInfoLog(shader) ?? 'The orb shader failed');
-}
-
-function compiled(
-  gl: WebGL2RenderingContext,
-  type: number,
-  source: string,
-): WebGLShader {
-  const shader = gl.createShader(type);
-
-  if (!shader) throw new Error('The orb could not create a shader');
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-
-  return checked(gl, shader);
-}
-
-function linked(gl: WebGL2RenderingContext): WebGLProgram {
-  const program = gl.createProgram();
-  gl.attachShader(program, compiled(gl, gl.VERTEX_SHADER, vertexSource));
-  gl.attachShader(program, compiled(gl, gl.FRAGMENT_SHADER, fragmentSource));
-  gl.linkProgram(program);
-
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-    throw new Error(gl.getProgramInfoLog(program) ?? 'The orb did not link');
-
-  return program;
-}
 
 function upload(gl: WebGL2RenderingContext, texels: Uint8Array): void {
   const { TEXTURE_2D, RGBA, UNSIGNED_BYTE } = gl;
@@ -117,8 +85,11 @@ export class OrbGl {
 
   private painted = '';
 
-  public constructor(private readonly gl: WebGL2RenderingContext) {
-    this.program = linked(gl);
+  public constructor(
+    private readonly gl: WebGL2RenderingContext,
+    program: WebGLProgram,
+  ) {
+    this.program = program;
     gl.useProgram(this.program);
     corners(gl, this.program);
     noiseTexture(gl);
@@ -170,13 +141,31 @@ export class OrbGl {
   }
 }
 
-// A drawing on the canvas, or nothing where the window has no WebGL2.
-export function orbOn(canvas: HTMLCanvasElement): OrbGl | null {
+// The orb's drawing on its way: the shaders compile while the page goes on drawing frames.
+export interface OrbStarting {
+  // The drawing once the shaders are ready, and nothing before.
+  ready: () => OrbGl | undefined;
+}
+
+const startingOn = (gl: WebGL2RenderingContext): OrbStarting => {
+  const linking = startLinking(gl, {
+    vertex: vertexSource,
+    fragment: fragmentSource,
+  });
+
+  return {
+    ready: () =>
+      linking.done() ? new OrbGl(gl, linking.program()) : undefined,
+  };
+};
+
+// A drawing starting on the canvas, or nothing where the window has no WebGL2.
+export function orbOn(canvas: HTMLCanvasElement): OrbStarting | null {
   const gl = canvas.getContext('webgl2', {
     alpha: true,
     antialias: true,
     premultipliedAlpha: true,
   });
 
-  return gl ? new OrbGl(gl) : null;
+  return gl ? startingOn(gl) : null;
 }
