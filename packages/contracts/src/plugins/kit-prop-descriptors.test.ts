@@ -36,7 +36,7 @@ describe('a kit prop descriptor', () => {
   });
 
   it('offers a choice prop its values, in schema order', () => {
-    expect(prop('Button', 'size').options).toEqual(['sm', 'md']);
+    expect(prop('Button', 'size').options).toEqual(['xs', 'sm', 'md']);
   });
 
   it('leaves a free field without options', () => {
