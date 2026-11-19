@@ -38,6 +38,7 @@ export interface SheetScreenEntry {
   placeholder?: ReactNode;
   content: ReactNode;
   contentScrolls?: boolean;
+  keepsHeaderInset?: boolean;
   onExit?: () => void;
   // Drawn from the moment the sheet opens, so pushing it moves a page that is already there.
   standby?: boolean;

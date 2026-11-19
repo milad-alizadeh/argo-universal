@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { action } from 'storybook/actions';
 import { SessionsPreviewMock } from '../../../mocks/sessions-preview-mock';
 import { SessionListView } from './session-list-view';
+import { Sessions as sessions } from './session-list-view-fixtures';
 import {
   loadedSessionListView,
   loadingSessionListView,
@@ -36,7 +37,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // The Sessions of every Project, newest first, under the list's own search field.
-export const Sessions: Story = {};
+export const Sessions: Story = { args: sessions };
 
 export const Loading: Story = {
   args: { ...loadingSessionListView, loadState: 'loading' },
