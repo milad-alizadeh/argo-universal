@@ -1,5 +1,6 @@
 import Check from '@expo/material-symbols/check.xml';
 import {
+  Column,
   DropdownMenu,
   DropdownMenuItem,
   HorizontalDivider,
@@ -13,11 +14,7 @@ import type { MenuDropdownItemsProps } from './menu-dropdown-items-props';
 import { MenuDropdownShell } from './menu-dropdown-shell.android';
 import { useItemColors } from './menu-item-colors.android';
 import { ItemLeadingIcon } from './menu-item-icon.android';
-import {
-  dividedItems,
-  nativeTitle,
-  type NativeMenuItem,
-} from './menu-native-items';
+import { dividedItems, type NativeMenuItem } from './menu-native-items';
 import { SubmenuRow } from './menu-submenu-row.android';
 
 // The rows of a Compose DropdownMenu, shared by the Menu and the SplitButton's chevron.
@@ -115,10 +112,27 @@ function MenuItem({ item, onChoose }: MenuItemProps): React.JSX.Element {
     >
       <ItemLeadingIcon {...item} onPress={() => onChoose(item)} />
       <DropdownMenuItem.Text>
-        <Text>{nativeTitle(item)}</Text>
+        <MenuItemLabel {...item} />
       </DropdownMenuItem.Text>
       <ItemCheck checked={item.checked} />
     </DropdownMenuItem>
+  );
+}
+
+function MenuItemLabel(item: NativeMenuItem): React.JSX.Element {
+  const palette = useMaterialPalette();
+
+  const color = item.disabled
+    ? palette.menuItemColors.disabledTextColor
+    : palette.roles.onSurfaceVariant;
+
+  if (!item.subtitle) return <Text>{item.title}</Text>;
+
+  return (
+    <Column>
+      <Text>{item.title}</Text>
+      <Text color={color}>{item.subtitle}</Text>
+    </Column>
   );
 }
 

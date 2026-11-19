@@ -10,7 +10,6 @@ import { summaryOf } from './sections/changes-facts';
 import {
   type OpenSessionViewProps,
   type SessionDetailViewProps,
-  sessionPageTitle,
 } from './session-detail-view';
 import { sessionHeaderActions } from './session-header-actions';
 import { workbenchMenu } from './session-workbench-menu';
@@ -62,7 +61,7 @@ function stackHeader(
 ): React.JSX.Element {
   return (
     <ScreenStackHeader
-      title={sessionPageTitle(props)}
+      title={props.state === 'open' ? props.header.title : 'Session'}
       actions={sessionHeaderActions(
         headerMenuOf(props),
         pluginActionsOf(props),

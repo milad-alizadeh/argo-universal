@@ -7,30 +7,24 @@ import type { ComposerProps } from '#features/composer';
 import type { FeedProps } from '#features/feed';
 import type { ElicitationFormProps } from '#features/requests';
 import {
-  ArchivedBanner,
   serverSilentMessage,
-  SessionBandClaim,
-  SessionBar,
   type SessionBarProps,
   type SessionCalloutProps,
   type StoppedTurnCalloutProps,
   sessionOpenFailedTitle,
   type SessionHeaderProps,
   type SessionPanels,
-  TerminalSignIn,
   type TerminalSignInProps,
 } from '#features/sessions';
 import { useContentWide } from '#lib/product/content-layout';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { SessionLayout } from '#lib/product/session-layout';
 import { BlankSession } from './blank-session';
-import { sessionWorkbench } from './sections/session-sections';
-import { phoneChangesPill, sessionFeed } from './session-changes-pill';
-import { SessionComposer } from './session-composer';
 import {
   SessionInspector,
   type SessionInspectorContent,
 } from './session-inspector';
+import { sessionParts } from './session-layout-parts';
 import { useWorkPanels } from './session-work-panels';
 import { useInspectorPanels } from './use-inspector-panels';
 import { usePhoneSheet } from './use-phone-sheet';
@@ -74,31 +68,59 @@ function failureToast(props: SessionDetailViewProps): ErrorToast | undefined {
   };
 }
 
-// What a narrow window's header names the page: the open Session's title; until it opens, the page is a Session.
-export const sessionPageTitle = (props: SessionDetailViewProps): string =>
-  props.state === 'open' ? props.header.title : 'Session';
+type DrawHeader = (props: SessionDetailViewProps) => React.ReactNode;
 
-// One Session: its header, its Feed, and the Composer pinned below.
-export function SessionDetailView(
-  props: SessionDetailViewProps,
-): React.JSX.Element {
+const noHeader: DrawHeader = () => null;
+
+export function SessionDetailView({
+  drawHeader = noHeader,
+  ...props
+}: SessionDetailViewProps & { drawHeader?: DrawHeader }): React.JSX.Element {
   useErrorToast(failureToast(props));
 
-  if (props.state === 'open') return <OpenSessionView {...props} />;
-
-  return <BlankSession {...props} />;
-}
-
-// The Workbench's cards open the Session's Sections as tabs in the Inspector beside it.
-function OpenSessionView(props: OpenSessionViewProps): React.JSX.Element {
-  const wide = useContentWide();
-  const phone = usePhoneSheet(useInspectorPanels(props));
-  const { panels } = phone;
-  const work = useWorkPanels(props, panels, phone.visible);
+  if (props.state === 'open')
+    return <OpenSessionView {...props} drawHeader={drawHeader} />;
 
   return (
     <>
-      <SessionLayout {...sessionParts(withWork(props, work), panels, wide)} />
+      {drawHeader(props)}
+      <BlankSession {...props} />
+    </>
+  );
+}
+
+type HeadedSession = OpenSessionViewProps & { drawHeader: DrawHeader };
+
+type PhoneSheet = ReturnType<typeof usePhoneSheet>;
+
+// The header and the Session body share the phone sheet's presentation state.
+function OpenSessionView({
+  drawHeader,
+  ...props
+}: HeadedSession): React.JSX.Element {
+  const phone = usePhoneSheet(useInspectorPanels(props));
+
+  return (
+    <>
+      {drawHeader({ ...props, state: 'open', inspectorPanels: phone.panels })}
+      <OpenSessionBody {...props} phone={phone} />
+    </>
+  );
+}
+
+type SessionBodyProps = OpenSessionViewProps & { phone: PhoneSheet };
+
+function OpenSessionBody({
+  phone,
+  ...props
+}: SessionBodyProps): React.JSX.Element {
+  const wide = useContentWide();
+  const work = useWorkPanels(props, phone.panels, phone.visible);
+  const layout = sessionParts(withWork(props, work), phone.panels, wide);
+
+  return (
+    <>
+      <SessionLayout {...layout} />
       {sessionInspector(props, work, phone)}
       {work.sheets}
     </>
@@ -138,48 +160,3 @@ const withWork = (
   feed: work.feed,
   subagents: work.subagents,
 });
-
-// The Session bar's lines are Workbench cards where the page has a Workbench, and the layout draws them under a phone's header.
-const sessionParts = (
-  props: OpenSessionViewProps,
-  panels: SessionPanels,
-  wide: boolean,
-): React.ComponentProps<typeof SessionLayout> => ({
-  header: bandClaim(props, panels),
-  bar: sessionBar(props),
-  feed: sessionFeed(props, panels, wide),
-  composer: sessionBottom(props, phoneChangesPill(props, panels, wide)),
-  panel: props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />,
-  onDropFiles: hasDraft(props) ? props.onDropFiles : undefined,
-});
-
-const bandClaim = (
-  props: OpenSessionViewProps,
-  panels: SessionPanels,
-): React.JSX.Element => (
-  <SessionBandClaim
-    {...props.header}
-    workbench={sessionWorkbench(props, panels, barForWorkbench(props))}
-  />
-);
-
-const barForWorkbench = (
-  props: OpenSessionViewProps,
-): SessionBarProps | undefined => (props.preview ? undefined : props.bar);
-
-const sessionBar = (props: OpenSessionViewProps): React.ReactNode =>
-  props.preview || !props.bar ? null : <SessionBar {...props.bar} />;
-
-const hasDraft = (props: OpenSessionViewProps): boolean =>
-  !props.preview && !props.archived;
-
-function sessionBottom(
-  props: OpenSessionViewProps,
-  phonePill: React.ReactNode,
-): React.ReactNode {
-  if (props.preview) return null;
-
-  if (props.archived) return <ArchivedBanner />;
-
-  return <SessionComposer {...props} phonePill={phonePill} />;
-}

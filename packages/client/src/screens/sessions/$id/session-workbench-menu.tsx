@@ -1,7 +1,7 @@
 import { Action } from '@repo/kit/primitives/actions/action';
 import type { ReactElement } from 'react';
 import type { SessionPanels } from '#features/sessions';
-import { itemsOf, type SessionSection } from './sections/session-section';
+import { itemsOf, offeredFacts } from './sections/session-section';
 import { sessionSections } from './sections/session-sections';
 import type {
   OpenSessionViewProps,
@@ -24,7 +24,9 @@ function sectionActions(
   props: OpenSessionViewProps,
   select: SessionPanels['select'],
 ): ReactElement[] {
-  return offeredSections(props).map(({ key, title, icon, count }) => (
+  const sections = offeredFacts(sessionSections(props), itemsOf(props));
+
+  return sections.map(({ key, title, icon, count }) => (
     <Action
       key={key}
       label={title}
@@ -33,10 +35,4 @@ function sectionActions(
       onPress={() => select(key)}
     />
   ));
-}
-
-function offeredSections(content: OpenSessionViewProps): SessionSection[] {
-  const items = itemsOf(content);
-
-  return sessionSections(content).filter((section) => section.offered(items));
 }

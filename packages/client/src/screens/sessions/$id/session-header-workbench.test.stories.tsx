@@ -1,17 +1,24 @@
 import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
+import { Button } from '@repo/kit/primitives/actions/button';
+import { useStackPush, withStack } from '@repo/kit/story-stack';
+import { useRouter } from 'expo-router';
+import type { JSX } from 'react';
+import { View } from 'react-native';
 import { expect, screen, within } from 'storybook/test';
 import {
   meta as sessionViewMeta,
   type Story,
 } from '../../../../mocks/session-view/session-view-story.test.mocks';
 import { coverageCardSummary } from './sections/plugin-card.mocks';
+import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { workbenchMenuSession } from './session-detail-view-panels.test.mocks';
 import { idleSession } from './session-detail-view.mocks';
 
 const meta = {
   ...sessionViewMeta,
   title: 'Tests/Screens/Sessions/Session/HeaderWorkbench',
+  decorators: [withStack({ detail: OtherScreen })],
   args: { view: workbenchMenuSession },
   beforeEach: (): Promise<void> => settleLayout('phone'),
 };
@@ -97,5 +104,45 @@ export const UsesTheExistingWorkbenchOnWideWindows: Story = {
     await expect(
       canvas.queryByRole('button', { name: 'Workbench' }),
     ).toBeNull();
+  },
+};
+
+function OtherScreen(): JSX.Element {
+  const router = useRouter();
+
+  return <Button label="Return to Session" onPress={() => router.back()} />;
+}
+
+function NavigableSession(): JSX.Element {
+  const push = useStackPush();
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Button label="Open another screen" onPress={() => push('detail')} />
+      <FramedSessionPreview {...workbenchMenuSession} />
+    </View>
+  );
+}
+
+export const OpensAfterReturningToTheSession: Story = {
+  render: () => <NavigableSession />,
+  play: async (context) => {
+    const { canvas, userEvent } = context;
+
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Open another screen' }),
+    );
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Return to Session' }),
+    );
+
+    const menu = await openWorkbench(context);
+    const agents = menu.getByRole('menuitem', { name: 'Agents' });
+
+    await settleOverlays(agents);
+    await userEvent.click(agents);
+    await expect(
+      await screen.findByRole('dialog', { name: 'Agents' }),
+    ).toBeVisible();
   },
 };

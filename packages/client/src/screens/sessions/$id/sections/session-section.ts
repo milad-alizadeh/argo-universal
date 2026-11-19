@@ -61,11 +61,15 @@ export interface SessionSection extends SectionFacts {
   phone?: SectionDraw<SectionPhonePage>;
 }
 
+export const offeredFacts = <Section extends SectionFacts>(
+  sections: readonly Section[],
+  items: SessionItems,
+): Section[] => sections.filter((section) => section.offered(items));
+
 export const offeredKeys = (
   sections: readonly SectionFacts[],
   items: SessionItems,
-): string[] =>
-  sections.flatMap((section) => (section.offered(items) ? [section.key] : []));
+): string[] => offeredFacts(sections, items).map((section) => section.key);
 
 // The page's props carry the same items the snapshot does.
 export const itemsOf = (content: SessionInspectorContent): SessionItems => ({
