@@ -11,9 +11,7 @@ const described: readonly OperationDescription[] =
   Object.values(operations).map(describeOperation);
 
 // Only an App runs the App-only ones, and an App does not list.
-const descriptions = described.filter(
-  ({ id }) => !isAppOnly(id),
-);
+const descriptions = described.filter(({ id }) => !isAppOnly(id));
 
 function matches(operation: OperationDescription, search: string): boolean {
   return [operation.id, operation.label, ...operation.keywords].some((value) =>

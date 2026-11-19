@@ -19,6 +19,7 @@ const workRequestOf = (event: VoiceCallEvent): WorkRequest | undefined =>
 export const agentRelay = fromCallback<VoiceCallEvent, RelayInput>(
   ({ input, sendBack, receive }) => {
     const { sessions } = input;
+
     const relay = new AgentRelay(sessions, input.sessionId, {
       speak: (say: VoiceSay): void => sendBack({ type: 'voice.say', say }),
       turnsRunning: (running: boolean): void =>

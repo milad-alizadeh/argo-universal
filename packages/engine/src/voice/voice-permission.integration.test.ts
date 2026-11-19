@@ -32,14 +32,14 @@ describe('a Permission request during a call', () => {
 
     await work.start();
     work.provider.call.requestWork('r1', deploy);
-    await expect
-      .poll(() => work.provider.call.sent.length)
-      .toBeGreaterThan(1);
+    await expect.poll(() => work.provider.call.sent.length).toBeGreaterThan(1);
 
     work.provider.call.personSays('Anything new?');
-    await expect.poll(work.feed).toContainEqual(
-      expect.objectContaining({ sessionUpdate: 'person_transcript' }),
-    );
+    await expect
+      .poll(work.feed)
+      .toContainEqual(
+        expect.objectContaining({ sessionUpdate: 'person_transcript' }),
+      );
 
     expect(
       work.provider.call.sent.filter(

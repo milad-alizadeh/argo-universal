@@ -62,10 +62,13 @@ export class GptLiveProvider implements VoiceProvider {
   public async start(request: VoiceStartRequest): Promise<GptLiveCall> {
     const { callsUrl, linkUrl } = this.settings;
     const token = new StartToken(await this.token(), () => this.token());
+
     const created = await token.asking((fresh) =>
       createCall(callsUrl, fresh, request),
     );
+
     const url = `${linkUrl}/${created.callId}`;
+
     // A refusal at the link joins the same call again; it never creates a second one.
     const link = await token.asking((fresh) => joinLink(url, fresh));
 
@@ -110,12 +113,21 @@ class StartToken {
     try {
       return await attempt(this.token);
     } catch (error) {
-      if (!(error instanceof TokenRejected) || this.renewed) throw error;
-      this.renewed = true;
-      this.token = await this.ask();
+      if (!(error instanceof TokenRejected)) throw error;
 
-      return attempt(this.token);
+      return this.renewing(attempt, error);
     }
+  }
+
+  private async renewing<T>(
+    attempt: (token: string) => Promise<T>,
+    rejected: TokenRejected,
+  ): Promise<T> {
+    if (this.renewed) throw rejected;
+    this.renewed = true;
+    this.token = await this.ask();
+
+    return attempt(this.token);
   }
 }
 

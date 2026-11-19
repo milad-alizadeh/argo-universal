@@ -66,7 +66,10 @@ export class AgentRelay {
       case 'turn.ended':
         return this.turnEnded(happening);
       case 'permission.waiting':
-        return this.tell(relayWords.permissionWaiting(happening.title), 'speak');
+        return this.tell(
+          relayWords.permissionWaiting(happening.title),
+          'speak',
+        );
       default:
         return this.said(happening);
     }

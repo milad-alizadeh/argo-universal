@@ -60,7 +60,9 @@ export function readVoiceMessage(text: string): VoiceMessage {
 const stripVoiceMarker = (text: string): string => readVoiceMessage(text).body;
 
 // The text of a message's first block, when it is text.
-export const firstText = (content: readonly ContentBlock[]): string | undefined => {
+export const firstText = (
+  content: readonly ContentBlock[],
+): string | undefined => {
   const [first] = content;
 
   return first?.type === 'text' ? first.text : undefined;

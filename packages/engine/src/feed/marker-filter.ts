@@ -13,6 +13,8 @@ type OpenMessage = { stream: VoiceMarkerStream; shown: number };
 
 type Appended = Extract<FeedSubscribeOutput, { type: 'row.append' }>;
 
+const openText = (row: Message): string => firstText(row.content) ?? '';
+
 const isOpenMessage = (row: SessionUpdate): row is Message =>
   row.sessionUpdate === 'agent_message' && row.state === 'open';
 
@@ -47,7 +49,7 @@ export class VoiceMarkerFilter {
 
   private openRow(row: Message): Message {
     const stream = new VoiceMarkerStream();
-    const text = stream.push(firstText(row.content) ?? '');
+    const text = stream.push(openText(row));
     this.open.set(row.id, { stream, shown: text.length });
     const [first, ...rest] = row.content;
 

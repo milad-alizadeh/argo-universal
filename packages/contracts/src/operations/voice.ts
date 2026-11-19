@@ -38,8 +38,7 @@ export const voiceOperations = {
     id: 'voice.end',
     label: 'End Voice call',
     icon: 'voice-off',
-    description:
-      "End the Session's Voice call from the App's End button.",
+    description: "End the Session's Voice call from the App's End button.",
     params: VoiceEndInput,
     result: VoiceEndOutput,
     tier: 'act',

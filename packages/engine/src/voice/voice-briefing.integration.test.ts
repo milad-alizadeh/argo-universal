@@ -39,6 +39,7 @@ describe('the briefing of a call after an earlier one', () => {
     const work = await startVoiceWork([
       { prompt: fixBuild, messages: ['[COMPLETE] Fixed it'] },
     ]);
+
     await work.start();
     work.provider.call.personSays('Can you fix the build?');
     work.provider.call.voiceSays('On it.');
