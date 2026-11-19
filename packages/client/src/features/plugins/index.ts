@@ -34,6 +34,10 @@ export { useOpenPluginPage, usePluginOpener } from './hooks/use-plugin-opener';
 
 export { usePluginPage } from './hooks/use-plugin-page';
 
+export { type LoadingTreeRead, useLoadingTree } from './stores/loading-trees';
+
+export { loadingTree } from './utils/loading-tree';
+
 export {
   usePrefetchNavPages,
   usePrefetchRoutePage,

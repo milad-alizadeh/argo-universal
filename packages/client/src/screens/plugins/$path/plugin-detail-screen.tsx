@@ -9,6 +9,7 @@ import {
   type PluginSection,
   routeOpening,
   showsBack,
+  useLoadingTree,
   usePluginAt,
   usePluginOpener,
   usePrefetchRoutePage,
@@ -42,17 +43,17 @@ export function PluginDetailScreen(
 
 // The header is declared while the list loads, so a narrow root still has ☰ and a pushed page its Back. The page's draw starts from the route meanwhile, so only the title waits on the list.
 function PluginLoading(props: PluginDetailScreenProps): React.JSX.Element {
-  usePrefetchRoutePage(
-    routeOpening(props.path, {
-      projectId: props.projectId,
-      sessionId: props.sessionId,
-    }),
-  );
+  const opening = routeOpening(props.path, {
+    projectId: props.projectId,
+    sessionId: props.sessionId,
+  });
+
+  usePrefetchRoutePage(opening);
 
   return (
     <>
       <ScreenStackHeader />
-      <PendingPage />
+      <PendingPage tree={useLoadingTree(opening)} />
     </>
   );
 }
