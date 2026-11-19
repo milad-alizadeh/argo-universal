@@ -116,6 +116,7 @@ import {
   type SessionMachineInput,
   type SessionWrite,
 } from './session-context';
+import type { TurnHappening } from './turn-happenings';
 import type {
   NewSessionInput,
   SessionData,
@@ -290,9 +291,10 @@ const enqueueChangeAndWrites = (
 
 type TurnQueue = StepQueue & {
   sendTo: (target: FeedActorRef | 'feed', event: FeedEvent) => void;
+  emit: (happening: TurnHappening) => void;
 };
 
-// A Turn step: its change and writes, then its events for the Feeds; each Subagent's Feed hears its Turn end before its write, and the Session's own Feed after them.
+// A Turn step: its change and writes, then its events for the Feeds; each Subagent's Feed hears its Turn end before its write, and the Session's own Feed after them. Its Turn happenings are reported last.
 const enqueueTurnStep = (
   enqueue: TurnQueue,
   context: SessionContext,
@@ -306,6 +308,7 @@ const enqueueTurnStep = (
   }
 
   for (const event of step.feed) enqueue.sendTo('feed', event);
+  for (const happening of step.happenings) enqueue.emit(happening);
 };
 
 // What the Agent reported the Turn ended with: a Stop wins the reason, and a denial under it is carried on.
@@ -352,6 +355,7 @@ const sessionSetup = setup({
     context: {} as SessionContext,
     events: {} as SessionEvent,
     output: {} as Pick<SessionContext, 'failure'>,
+    emitted: {} as TurnHappening,
     tags: {} as SessionTag,
   },
   actors: {

@@ -7,6 +7,7 @@ import {
 import { queueWrite } from '../prompt-queue';
 import type { SessionContext } from '../session-context';
 import { turnStep, type TurnStep } from '../turn';
+import type { TurnHappening } from '../turn-happenings';
 import type { QueueSteering, QueueSteeringCommand } from './types';
 
 type Finish = Extract<
@@ -44,8 +45,16 @@ export function consumeQueueSteering(
   return turnStep({
     change: consumedChange(input),
     feed: [consumedMessage(input)],
+    happenings: takenHappenings(steering),
   });
 }
+
+// A steered queue item was taken into the running Turn; a steered draft was never queued.
+const takenHappenings = ({
+  queuedId,
+  turnId,
+}: QueueSteering): TurnHappening[] =>
+  queuedId ? [{ type: 'prompt.taken', queuedId, turnId }] : [];
 
 function remainingQueue(
   context: SessionContext,

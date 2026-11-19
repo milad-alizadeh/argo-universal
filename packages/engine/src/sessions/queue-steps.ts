@@ -70,6 +70,9 @@ export function startQueuedTurn(
     ...step,
     change: { ...step.change, promptQueue, dispatchingQueueId: null },
     writes: atomicStart(step, context.sessionId, promptQueue),
+    happenings: [
+      { type: 'prompt.taken', queuedId: context.dispatchingQueueId, turnId },
+    ],
   });
 }
 
