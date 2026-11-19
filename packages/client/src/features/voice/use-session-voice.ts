@@ -6,13 +6,13 @@ import type { ComposerVoice } from '#features/composer';
 import { useTRPC } from '#features/connection';
 import { sessionHref } from '#lib/product/navigation/navigation';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
-import { offerTo } from './offer-to';
 import {
   sessionVoice,
   type SessionVoice,
   type SessionVoiceActions,
   type SessionVoiceInput,
 } from './session-voice';
+import { startCall } from './start-call';
 import { type SessionMutes, useSessionMutes } from './use-session-mutes';
 import { useReleaseWhenOver, useVoiceStatus } from './use-voice-status';
 import type { VoiceConnection, VoiceLevels } from './voice-connection';
@@ -33,24 +33,22 @@ function useSessionTitle(sessionId: string | undefined): string | undefined {
   return listed.data?.sessions[0]?.title;
 }
 
-// Starting a call: the offer goes to the Server, and its answer completes the connection.
+// Starting a call, then resuming the page's Feed (see `startCall`).
 function useStartCall(
-  sessionId: string,
+  { sessionId, resumeFeed }: VoicePage,
   connection: VoiceConnection | null,
 ): () => void {
-  const start = useMutation(
-    useTRPC().voice.start.mutationOptions({
-      onSuccess: ({ answer }) => connection?.accept(answer),
-      onError: () => connection?.close(),
-    }),
-  );
+  const start = useMutation(useTRPC().voice.start.mutationOptions());
 
   return () =>
-    void offerTo(connection, (offer) => start.mutate({ sessionId, offer }));
+    void startCall(connection, {
+      send: (offer) => start.mutateAsync({ sessionId, offer }),
+      resumeFeed,
+    });
 }
 
 function useActions(
-  sessionId: string,
+  page: VoicePage,
   connection: VoiceConnection | null,
   mutes: SessionMutes,
 ): SessionVoiceActions {
@@ -58,8 +56,8 @@ function useActions(
   const navigate = useNavigateFromShown();
 
   return {
-    start: useStartCall(sessionId, connection),
-    end: () => end.mutate({ sessionId }),
+    start: useStartCall(page, connection),
+    end: () => end.mutate({ sessionId: page.sessionId }),
     setMicrophoneMuted: mutes.setMicrophoneMuted,
     setSpeakerMuted: mutes.setSpeakerMuted,
     open: (target) => navigate(sessionHref(target)),
@@ -107,8 +105,14 @@ function useLive(
   };
 }
 
+// The Session page a call is seen from, and how it opens its live Feed again after a start.
+export interface VoicePage {
+  sessionId: string;
+  resumeFeed: () => void;
+}
+
 function useInput(
-  sessionId: string,
+  { sessionId, resumeFeed }: VoicePage,
   connection: VoiceConnection | null,
   status: VoiceStatus,
 ): SessionVoiceInput {
@@ -120,7 +124,7 @@ function useInput(
     ...useLive(status, sessionId, connection),
     mutes: mutes.mutes,
     titleOf: useTitleOf(status, sessionId),
-    actions: useActions(sessionId, connection, mutes),
+    actions: useActions({ sessionId, resumeFeed }, connection, mutes),
   };
 }
 
@@ -129,11 +133,11 @@ function useInput(
  * through `sessionVoice`. The Composer, the orb and the Feed's partial words all come from here, so none of them needs
  * another to have subscribed first.
  */
-export function useSessionVoice(sessionId: string): View {
+export function useSessionVoice(page: VoicePage): View {
   const connection = useVoiceConnection();
   const status = useVoiceStatus();
   useReleaseWhenOver(status, connection);
-  const view = sessionVoice(useInput(sessionId, connection, status));
+  const view = sessionVoice(useInput(page, connection, status));
 
   return { ...view, voice: connection ? view.composer : undefined };
 }

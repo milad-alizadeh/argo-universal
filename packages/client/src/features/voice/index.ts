@@ -1,4 +1,4 @@
-export { useSessionVoice } from './use-session-voice';
+export { useSessionVoice, type VoicePage } from './use-session-voice';
 
 export { voicePlaceholder } from './session-voice';
 
