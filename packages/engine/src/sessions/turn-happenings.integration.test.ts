@@ -1,15 +1,19 @@
 import { expect, it } from 'vitest';
+import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { firstQueued, startSteeringFixture } from '#mocks/queue-steering';
+import { findMachineActor } from '../lib/machine-actor';
+import { sessionActorId } from './open-sessions-machine';
+import { sessionMachine, type SessionActorRef } from './session-machine';
 import type { TurnHappening } from './turn-happenings';
 
-type Fixture = Awaited<ReturnType<typeof startSteeringFixture>>;
+type Reporting = { actor: Pick<SessionActorRef, 'on'> };
 
 // Every Turn happening the Session reports from now on, in order.
-function heard(fixture: Fixture): TurnHappening[] {
+function heard({ actor }: Reporting): TurnHappening[] {
   const happenings: TurnHappening[] = [];
   const note = (happening: TurnHappening): number => happenings.push(happening);
 
-  fixture.actor.on('*', note);
+  actor.on('*', note);
 
   return happenings;
 }
@@ -57,4 +61,60 @@ it("reports a Turn's end with its Stop reason, then the Turn the queue starts fo
     turnId: expect.any(String),
   });
   expect(taken?.turnId).not.toBe(first);
+});
+
+it('reports no queued Prompt taken when a draft is steered into the running Turn', async () => {
+  const fixture = await startSteeringFixture();
+  const happenings = heard(fixture);
+
+  const sent = fixture.caller.session.submit({
+    sessionId: fixture.sessionId,
+    prompt: [{ type: 'text', text: 'Steer this draft' }],
+    steer: true,
+  });
+
+  await fixture.received.promise;
+  fixture.result.resolve({ outcome: 'injected' });
+  await sent;
+
+  expect(fixture.prompts).toHaveLength(1);
+  expect(happenings).toEqual([]);
+});
+
+const agentFailure = 'The provider refused this Prompt';
+
+it("reports a failed Turn's end with the Agent's error message", async () => {
+  const host = await startAcpEngine({
+    steps: [],
+    responses: {
+      'session/prompt': [{ error: { code: -32603, message: agentFailure } }],
+    },
+  });
+
+  const { sessionId } = await host.caller.session.new(emptySessionInput);
+  const actor = findMachineActor(
+    host.engine.system,
+    sessionActorId(sessionId),
+    sessionMachine,
+  );
+
+  if (!actor) throw new Error('The Session is missing');
+
+  const happenings = heard({ actor });
+
+  await host.caller.session.prompt({
+    sessionId,
+    prompt: [{ type: 'text', text: 'Fail' }],
+  });
+
+  await expect
+    .poll(() => happenings)
+    .toEqual([
+      {
+        type: 'turn.ended',
+        turnId: expect.any(String),
+        stopReason: 'error',
+        error: agentFailure,
+      },
+    ]);
 });

@@ -6,8 +6,10 @@ const onPath = '/usr/local/bin/codex';
 const inChatGpt =
   '/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex';
 
+const notFound = 'Executable not found in PATH: codex';
+
 const notOnPath = (): string => {
-  throw new Error('Executable not found in PATH: codex');
+  throw new Error(notFound);
 };
 
 // A Mac with the ChatGPT app installed, and no Codex on PATH unless a test says so.
@@ -34,11 +36,11 @@ describe('finding Codex', () => {
 
   it('finds none on a Mac without the ChatGPT app', () => {
     expect(() => findCodex(mac({ isExecutable: () => false }))).toThrow(
-      'codex',
+      notFound,
     );
   });
 
   it('looks for no Mac app on other platforms', () => {
-    expect(() => findCodex(mac({ platform: 'linux' }))).toThrow('codex');
+    expect(() => findCodex(mac({ platform: 'linux' }))).toThrow(notFound);
   });
 });
