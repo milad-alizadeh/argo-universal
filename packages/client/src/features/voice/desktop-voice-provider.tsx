@@ -7,6 +7,7 @@ import { followCall } from './follow-call';
 import { useVoiceStatus } from './use-voice-status';
 import type { VoiceConnection } from './voice-connection';
 import { VoiceConnectionProvider } from './voice-connection-context';
+import { useVoiceDeviceChoice } from './voice-device-choice';
 import { createWebRtcVoiceConnection } from './webrtc-voice-connection';
 
 // The desktop App carries a Voice call's audio itself; any other page offers no voice button.
@@ -21,6 +22,19 @@ function FollowsCall({ connection }: { connection: VoiceConnection }): null {
   const hear = useMemo(() => followCall(connection), [connection]);
 
   useEffect(() => hear(status), [hear, status]);
+
+  return null;
+}
+
+// Hands the connection this Device's chosen microphone and speaker, at start and whenever Settings changes them.
+function FollowsDeviceChoice({
+  connection,
+}: {
+  connection: VoiceConnection;
+}): null {
+  const { choice } = useVoiceDeviceChoice();
+
+  useEffect(() => void connection.chooseDevices(choice), [connection, choice]);
 
   return null;
 }
@@ -40,6 +54,7 @@ export function DesktopVoiceProvider({
   return (
     <VoiceConnectionProvider value={connection}>
       {connection && <FollowsCall connection={connection} />}
+      {connection && <FollowsDeviceChoice connection={connection} />}
       {children}
     </VoiceConnectionProvider>
   );

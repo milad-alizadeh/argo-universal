@@ -19,7 +19,7 @@ describe('the microphone and speaker this Device chose', () => {
   it('starts a call on the chosen microphone and plays the voice on the chosen speaker', async () => {
     const environment = new FakeEnvironment();
     const connection = createWebRtcVoiceConnection(environment);
-    connection.chooseDevices(chosen);
+    await connection.chooseDevices(chosen);
 
     await connection.createOffer();
     environment.peer.voiceArrives();
@@ -32,7 +32,7 @@ describe('the microphone and speaker this Device chose', () => {
     const environment = new FakeEnvironment();
     environment.missing.add('mic-b');
     const connection = createWebRtcVoiceConnection(environment);
-    connection.chooseDevices(chosen);
+    await connection.chooseDevices(chosen);
 
     await expect(connection.createOffer()).resolves.toBe('v=0 offer');
     expect(environment.microphone.device).toBeNull();
@@ -43,9 +43,9 @@ describe('the microphone and speaker this Device chose', () => {
     const before = environment.microphone;
     connection.setMicrophoneMuted(true);
 
-    connection.chooseDevices({ microphone: 'mic-b', speaker: null });
+    await connection.chooseDevices({ microphone: 'mic-b', speaker: null });
 
-    await expect.poll(() => environment.peer.sending).not.toBe(before);
+    expect(environment.peer.sending).not.toBe(before);
     expect(environment.peer.sending).toBe(environment.microphone);
     expect(environment.microphone.device).toBe('mic-b');
     expect(environment.microphone.muted).toBe(true);
