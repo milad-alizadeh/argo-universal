@@ -6,6 +6,8 @@ import type { ComposerVoice } from '#features/composer';
 import { useTRPC } from '#features/connection';
 import { sessionHref } from '#lib/product/navigation/navigation';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
+import { withEdge } from './components/voice-edge-band/voice-edge-slot';
+import type { VoiceVisualiserKind } from './components/voice-visualiser/voice-visualiser-kind';
 import {
   sessionVoice,
   type SessionVoice,
@@ -128,6 +130,13 @@ const withToggle = (
 ): NonNullable<SessionVoice['stage']> =>
   connection ? { ...stage, visualiser: { kind, onChange: choose } } : stage;
 
+// The Composer's slot, with the band along its edge when this Device chose to draw the call there.
+const composerOf = (
+  view: SessionVoice,
+  kind: VoiceVisualiserKind,
+): ComposerVoice | undefined =>
+  withEdge(view.composer, kind === 'band' ? view.band : undefined);
+
 /*
  * A Session page's view of the Voice call: the one place that follows the Server's status and the connection, read
  * through `sessionVoice`. The Composer, the orb and the Feed's partial words all come from here, so none of them needs
@@ -140,8 +149,8 @@ export function useSessionVoice(sessionId: string): View {
   const visualiser = useVoiceVisualiser();
 
   return {
-    ...view,
+    partials: view.partials,
     stage: view.stage && withToggle(view.stage, connection, visualiser),
-    voice: connection ? view.composer : undefined,
+    voice: connection ? composerOf(view, visualiser.kind) : undefined,
   };
 }

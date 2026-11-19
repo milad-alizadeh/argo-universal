@@ -75,6 +75,19 @@ describe("a Session's view of the Voice call", () => {
     });
   });
 
+  it('gives the edge band the call, its timer and whether the microphone is muted, only here', () => {
+    const input = inputOf(statusOf(callIn('s1', { orb: 'talking' })), 's1');
+    const muted = { ...input, mutes: { microphone: true, speaker: false } };
+
+    expect(sessionVoice(muted).band).toMatchObject({
+      call: { orb: 'talking', trouble: null, microphoneMuted: true },
+      elapsed: '4:12',
+    });
+    expect(
+      sessionVoice(inputOf(statusOf(callIn('s-call')), 's1')).band,
+    ).toBeUndefined();
+  });
+
   it('points a Session at the call in another Session, with that Session’s title, and draws no stage', () => {
     const asked: Asked = [];
     const view = sessionVoice(inputOf(statusOf(callIn('s-call')), 's1', asked));

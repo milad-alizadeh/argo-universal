@@ -27,7 +27,7 @@ type Story = StoryObj<typeof meta>;
 
 type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
 
-const kinds = ['orb', 'matrix', 'wave'] as const;
+const kinds = ['orb', 'matrix', 'wave', 'band'] as const;
 
 // Exactly one visualiser draws, and it is this one.
 async function expectShowing(canvas: Canvas, kind: string): Promise<void> {
@@ -102,5 +102,26 @@ export const OrbWithoutToggle: Story = {
     await expect(
       canvas.queryByRole('group', { name: 'Visualiser' }),
     ).not.toBeInTheDocument();
+  },
+};
+
+// The band draws along the Composer instead: the stage keeps only its toggle, so the Feed gets back its height.
+export const BandLeavesOnlyTheToggle: Story = {
+  play: async ({ canvas, userEvent, args }) => {
+    const tall = canvas
+      .getByTestId('voice-stage')
+      .getBoundingClientRect().height;
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Band' }));
+    await expect(args.visualiser?.onChange).toHaveBeenCalledWith('band');
+    await expect(
+      canvas.queryByTestId('voice-visualiser'),
+    ).not.toBeInTheDocument();
+    await expect(canvas.queryByText('Listening')).not.toBeInTheDocument();
+    await expect(
+      canvas.getByTestId('voice-stage').getBoundingClientRect().height,
+    ).toBeLessThan(tall / 2);
+    await userEvent.click(canvas.getByRole('button', { name: 'Orb' }));
+    await expectShowing(canvas, 'orb');
   },
 };

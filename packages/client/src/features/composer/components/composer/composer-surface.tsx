@@ -46,9 +46,14 @@ const acceptanceProps = ({
   onAccept: layout.field.insertWord,
 });
 
+// The call's drawing along the card's top edge, while a call here asks for one.
+const edgeOf = ({ voice }: CardLayout['props']): React.ReactNode =>
+  voice && 'edge' in voice ? voice.edge : null;
+
 export function ComposerSurface(props: SurfaceProps): React.JSX.Element {
   return (
     <LiquidGlass {...cardGlass}>
+      {edgeOf(props.layout.props)}
       <ComposerAttachments {...props.layout} />
       <ComposerText {...props} />
       <ComposerTypography compact={props.phone}>

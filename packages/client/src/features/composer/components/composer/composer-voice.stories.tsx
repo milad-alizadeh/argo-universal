@@ -5,6 +5,15 @@ import { SessionColumn } from '#lib/product/session-column';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import { Composer } from './composer';
 import {
+  bandConnectingComposer,
+  bandListeningComposer,
+  bandMutedComposer,
+  bandReconnectingComposer,
+  bandTalkingComposer,
+  bandThinkingComposer,
+  bandTypingComposer,
+} from './composer-voice-band-fixtures';
+import {
   callElsewhereComposer,
   voiceBothMutedComposer,
   voiceCallComposer,
@@ -62,3 +71,22 @@ export const VoiceCallWithDraft: Story = { args: voiceCallDraftComposer };
 
 // The call runs in another Session: the voice button's slot points at it.
 export const CallInAnotherSession: Story = { args: callElsewhereComposer };
+
+/*
+ * Paper's "Composer waveform — B · Edge band": a slim live waveform along the card's top edge, with the state and the
+ * timer at its right end, when this Device draws the call there instead of the stage above the Feed.
+ */
+export const BandConnecting: Story = { args: bandConnectingComposer };
+
+export const BandListening: Story = { args: bandListeningComposer };
+
+export const BandTalking: Story = { args: bandTalkingComposer };
+
+export const BandThinking: Story = { args: bandThinkingComposer };
+
+export const BandMuted: Story = { args: bandMutedComposer };
+
+export const BandReconnecting: Story = { args: bandReconnectingComposer };
+
+// Typing during a call: the band keeps moving over the draft, and the primary button is Send.
+export const BandTyping: Story = { args: bandTypingComposer };

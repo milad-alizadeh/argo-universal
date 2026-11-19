@@ -16,6 +16,7 @@ const options = [
   { value: 'orb', label: 'Orb' },
   { value: 'matrix', label: 'Matrix' },
   { value: 'wave', label: 'Wave' },
+  { value: 'band', label: 'Band' },
 ] satisfies { value: VoiceVisualiserKind; label: string }[];
 
 // The visualiser the stage draws: the one chosen, or the orb where there is no toggle.
@@ -47,6 +48,25 @@ function Segments({
         value={kind}
         onValueChange={(value) => onChange(voiceVisualiserKind.parse(value))}
       />
+    </View>
+  );
+}
+
+/*
+ * The stage while the band along the Composer draws the call: only the toggle, so the Feed keeps nearly all its
+ * height and the person can still switch back.
+ */
+export function BandStage({
+  toggle,
+}: {
+  toggle: VoiceVisualiserToggleProps | undefined;
+}): React.JSX.Element {
+  return (
+    <View
+      testID="voice-stage"
+      className="w-full shrink-0 items-center pb-1 pt-3"
+    >
+      <VoiceVisualiserToggle toggle={toggle} />
     </View>
   );
 }

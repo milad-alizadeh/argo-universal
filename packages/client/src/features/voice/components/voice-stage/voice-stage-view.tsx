@@ -5,6 +5,8 @@ import { ShimmerText } from '#features/feed';
 import { VoiceVisualiser } from '../voice-visualiser/voice-visualiser';
 import type { VoiceVisualiserProps } from '../voice-visualiser/voice-visualiser-props';
 import {
+  BandStage,
+  kindOf,
   VoiceVisualiserToggle,
   type VoiceVisualiserToggleProps,
 } from '../voice-visualiser/voice-visualiser-toggle';
@@ -31,7 +33,16 @@ function StageLabel({ label }: { label: VoiceLabel }): React.JSX.Element {
  * The Voice call on screen: the orb in its well, what the call is doing under it, and how long it has run. Trouble and
  * the allowance warning are words in that label, never a dialog. The page pins it above the Feed for the call's length.
  */
-export function VoiceStageView({
+export const VoiceStageView = (
+  props: VoiceStageViewProps,
+): React.JSX.Element =>
+  kindOf(props.visualiser) === 'band' ? (
+    <BandStage toggle={props.visualiser} />
+  ) : (
+    <CallStage {...props} />
+  );
+
+function CallStage({
   label,
   ...drawing
 }: VoiceStageViewProps): React.JSX.Element {

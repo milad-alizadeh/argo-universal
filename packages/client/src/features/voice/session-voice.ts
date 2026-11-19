@@ -1,6 +1,7 @@
 import type { VoiceCall, VoicePartial, VoiceStatus } from '@repo/contracts';
 import type { ComposerVoice, ComposerVoiceMutes } from '#features/composer';
-import { voiceLabel } from './components/voice-stage/voice-label';
+import type { VoiceEdgeBandProps } from './components/voice-edge-band/voice-edge-band';
+import { elapsedOf, voiceLabel } from './components/voice-stage/voice-label';
 import type { VoiceStageViewProps } from './components/voice-stage/voice-stage-view';
 import type {
   VoiceLevels,
@@ -42,6 +43,8 @@ export interface SessionVoice {
   composer: ComposerVoice | undefined;
   // The orb pinned above the Feed; only in the Session the call runs in.
   stage: VoiceStageViewProps | undefined;
+  // The band along the Composer's top edge, for when this Device draws the call there; only in the Session it runs in.
+  band: VoiceEdgeBandProps | undefined;
   // What is being said now, drawn at the tail of the Feed; only in the Session the call runs in.
   partials: VoicePartial[];
 }
@@ -138,6 +141,19 @@ function stageOf(
   );
 }
 
+function bandOf(
+  here: VoiceCall | undefined,
+  input: SessionVoiceInput,
+): VoiceEdgeBandProps | undefined {
+  return (
+    here && {
+      call: { ...here, microphoneMuted: input.mutes.microphone },
+      elapsed: elapsedOf(here.startedAt, input.now),
+      spectrum: input.spectrum,
+    }
+  );
+}
+
 /*
  * A Session's view of the Voice call: one answer, from the Server's status and the Session the page shows, to "is the
  * call here, elsewhere or none" and to everything drawn from it: the Composer's voice button, mutes and pointer, the
@@ -149,6 +165,7 @@ export function sessionVoice(input: SessionVoiceInput): SessionVoice {
   return {
     composer: composerOf(input),
     stage: stageOf(here, input),
+    band: bandOf(here, input),
     partials: here ? input.status.partials : noPartials,
   };
 }

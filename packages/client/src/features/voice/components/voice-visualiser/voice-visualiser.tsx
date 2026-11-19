@@ -17,6 +17,8 @@ const drawings: Record<
   orb: VoiceOrb,
   matrix: VoiceMatrix,
   wave: VoiceWave,
+  // The band draws along the Composer, not here; the stage shows only its toggle then.
+  band: VoiceOrb,
 };
 
 const wellClass = 'size-34 rounded-full bg-muted p-1 shadow-inner';

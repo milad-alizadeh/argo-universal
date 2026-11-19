@@ -20,3 +20,8 @@ export {
   VoiceStageView,
   type VoiceStageViewProps,
 } from './components/voice-stage/voice-stage-view';
+
+export {
+  VoiceEdgeBand,
+  type VoiceEdgeBandProps,
+} from './components/voice-edge-band/voice-edge-band';
