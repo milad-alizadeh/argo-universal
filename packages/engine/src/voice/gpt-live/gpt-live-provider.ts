@@ -2,6 +2,7 @@ import type { VoiceAvailability } from '@repo/contracts';
 import type { WebSocket } from 'ws';
 import type {
   VoiceOption,
+  VoicePreviewRequest,
   VoiceProvider,
   VoiceStartRequest,
 } from '../provider';
@@ -12,6 +13,7 @@ import {
   defaultVoice,
   joinLink,
   TokenRejected,
+  type CallOpening,
 } from './gpt-live-requests';
 
 export type GptLiveOptions = {
@@ -63,6 +65,15 @@ const serviceVoices = [
   'viola',
 ];
 
+const callInstructions = (briefing: string): string =>
+  `You are the voice of a coding Agent. Hand the person's requests for work over; speak briefly.\n${briefing}`;
+
+const previewInstructions =
+  'This call only lets the person hear your voice. Say what you are asked to say, exactly, and nothing more.';
+
+// The service speaks first only when asked on the control link; its instructions alone leave it silent (live probe, 2026-11-19).
+const sayExactly = (words: string): string => `Say exactly: "${words}"`;
+
 const labelOf = (id: string): string =>
   `${id.charAt(0).toUpperCase()}${id.slice(1)}`;
 
@@ -98,12 +109,32 @@ export class GptLiveProvider implements VoiceProvider {
     return Promise.resolve(voiceOptions);
   }
 
-  public async start(request: VoiceStartRequest): Promise<GptLiveCall> {
+  public start(request: VoiceStartRequest): Promise<GptLiveCall> {
+    return this.open({
+      offer: request.offer,
+      instructions: callInstructions(request.briefing),
+      voice: request.voice,
+    });
+  }
+
+  public async preview(request: VoicePreviewRequest): Promise<GptLiveCall> {
+    const call = await this.open({
+      offer: request.offer,
+      instructions: previewInstructions,
+      voice: request.voice,
+    });
+
+    call.tell(sayExactly(request.words), 'speak');
+
+    return call;
+  }
+
+  private async open(opening: CallOpening): Promise<GptLiveCall> {
     const { callsUrl, linkUrl } = this.settings;
     const token = new StartToken(await this.token(), () => this.token());
 
     const created = await token.asking((fresh) =>
-      createCall(callsUrl, fresh, request),
+      createCall(callsUrl, fresh, opening),
     );
 
     const url = `${linkUrl}/${created.callId}`;
