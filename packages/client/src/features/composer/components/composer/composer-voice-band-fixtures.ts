@@ -66,12 +66,6 @@ export const bandTalkingComposer = onCall(
   '2:51',
 );
 
-// Thinking: low bars breathing in a slow wave.
-export const bandThinkingComposer = onCall(
-  { ...connected, orb: 'thinking' },
-  '3:02',
-);
-
 // Muted: the line goes flat and red, with the mic button.
 export const bandMutedComposer = onCall(
   { ...connected, microphoneMuted: true },
@@ -83,12 +77,3 @@ export const bandReconnectingComposer = onCall(
   { ...connected, orb: 'none', trouble: 'reconnecting' },
   '3:14',
 );
-
-// Typing during a call: the text box under the band edits as it does today, and the band keeps moving.
-export const bandTypingComposer = {
-  ...onCall(connected, '3:20'),
-  draft: {
-    text: 'Also run the Inspector stories before the PR',
-    attachments: [],
-  },
-} satisfies ComposerFixture;
