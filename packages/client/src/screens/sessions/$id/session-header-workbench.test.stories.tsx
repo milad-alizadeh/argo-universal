@@ -5,7 +5,7 @@ import { useStackPush, withStack } from '@repo/kit/story-stack';
 import { useRouter } from 'expo-router';
 import type { JSX } from 'react';
 import { View } from 'react-native';
-import { expect, screen, within } from 'storybook/test';
+import { expect, screen, waitFor, within } from 'storybook/test';
 import {
   meta as sessionViewMeta,
   type Story,
@@ -74,17 +74,25 @@ export const OmitsSectionsWithoutWork: Story = {
 function opensSheet(label: string, body?: string): Story {
   return {
     play: async (context) => {
-      const menu = await openWorkbench(context);
-      const row = menu.getByRole('menuitem', { name: new RegExp(`^${label}`) });
-      await settleOverlays(row);
-      await context.userEvent.click(row);
+      const sheet = await openWorkbenchSheet(context, label);
 
-      const sheet = await screen.findByRole('dialog', { name: label });
       await expect(sheet).toBeVisible();
 
       if (body) await expect(within(sheet).getByText(body)).toBeVisible();
     },
   };
+}
+
+async function openWorkbenchSheet(
+  context: Parameters<NonNullable<Story['play']>>[0],
+  label: string,
+): Promise<HTMLElement> {
+  const menu = await openWorkbench(context);
+  const row = menu.getByRole('menuitem', { name: new RegExp(`^${label}`) });
+  await settleOverlays(row);
+  await context.userEvent.click(row);
+
+  return screen.findByRole('dialog', { name: label });
 }
 
 export const OpensChanges = opensSheet('Changes');
@@ -94,6 +102,19 @@ export const OpensAgents = opensSheet('Agents');
 export const OpensBackgroundTasks = opensSheet('Background Tasks');
 
 export const OpensPluginCard = opensSheet('Coverage', coverageCardSummary);
+
+export const ClosesAgentsFromTheHeader: Story = {
+  play: async (context) => {
+    const sheet = await openWorkbenchSheet(context, 'Agents');
+    const close = within(sheet).getByRole('button', { name: 'Close' });
+    await settleOverlays(close);
+    await context.userEvent.click(close);
+
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Agents' })).toBeNull(),
+    );
+  },
+};
 
 export const UsesTheExistingWorkbenchOnWideWindows: Story = {
   beforeEach: () => settleLayout('wide'),

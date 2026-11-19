@@ -101,7 +101,7 @@ function DrawerInner(props: PresentationProps): ReactElement {
     <>
       <SheetLabel label={props.label} />
       <Drawer.Handle />
-      <SheetPanel {...props} />
+      <SheetPanel {...props} onRootClose={props.stack.reports.dismissed} />
     </>
   );
 }
