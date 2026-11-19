@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { VoiceDetailView } from './voice-detail-view';
 import {
+  describedVoice,
   namedDevices,
   unnamedDevices,
   unusableVoice,
@@ -33,6 +34,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const UsableProvider: Story = {};
+
+export const DescribedVoice: Story = {
+  args: { voice: { status: 'loaded', settings: describedVoice } },
+};
 
 export const UnusableProvider: Story = {
   args: { voice: { status: 'loaded', settings: unusableVoice } },

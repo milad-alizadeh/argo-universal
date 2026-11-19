@@ -10,6 +10,7 @@ const appOnly = new Set([
   'voice.end',
   'voice.getSettings',
   'voice.setSettings',
+  'voice.preview',
 ]);
 
 it('lists every Operation but the App-only ones with its description, enabled', () => {

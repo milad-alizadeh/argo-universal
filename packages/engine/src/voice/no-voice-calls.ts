@@ -25,6 +25,7 @@ export const noVoiceCalls: VoiceCallsPort = {
   attach: () => {},
   settings: () => settingsOf(defaultVoiceSettings, null),
   changeSettings: () => Promise.reject(unavailable(notAvailable)),
+  preview: () => Promise.reject(unavailable(notAvailable)),
   watch: async function* () {
     await Promise.resolve();
     yield noStatus;

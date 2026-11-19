@@ -6,10 +6,12 @@ import {
   type ServerMutation,
   type TRPC,
 } from '#features/connection';
+import { useVoicePreview } from '#features/voice';
 import type {
   VoiceDetailViewProps,
   VoiceSettingsLoad,
 } from './voice-detail-view';
+import { controlsOf } from './voice-settings-controls';
 
 type Controls = Omit<VoiceDetailViewProps, 'onBack'>;
 
@@ -46,14 +48,16 @@ function useVoiceChange(): ServerMutation<TRPC['voice']['setSettings']> {
 export function useVoiceSettings(): Controls {
   const query = useQuery(useTRPC().voice.getSettings.queryOptions());
   const change = useVoiceChange();
+  const preview = useVoicePreview();
 
   return {
     voice: loadState(useConnectionState() === 'open', query),
     saving: change.isPending,
     error: change.error?.message,
-    onEnabledChange: (enabled) => change.mutate({ enabled }),
-    onProviderChange: (provider) => change.mutate({ provider }),
-    onVoiceChange: (voice) => change.mutate({ voice }),
-    onRetry: () => void query.refetch(),
+    ...controlsOf({
+      change: (changed) => change.mutate(changed),
+      preview,
+      retry: () => void query.refetch(),
+    }),
   };
 }
