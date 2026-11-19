@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  handleMicrophone,
+  answerPermissionRequests,
   type MicrophoneSystem,
   type PermissionPort,
   type RequestDetails,
@@ -22,7 +22,7 @@ async function ask(
   let systemAsked = 0;
   let listener: Parameters<PermissionPort['onRequest']>[0] | undefined;
 
-  handleMicrophone(
+  answerPermissionRequests(
     {
       onRequest: (given): void => {
         listener = given;
