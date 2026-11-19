@@ -1,7 +1,6 @@
 import { createServer, type IncomingMessage, type Server } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { WebSocketServer, type WebSocket } from 'ws';
-import { z } from 'zod';
 import {
   answer,
   bearerOf,
@@ -11,6 +10,7 @@ import {
   type CallRequest,
   type Reply,
 } from './gpt-live-call-request';
+import { sentMessageOf, type SentMessage } from './gpt-live-link-message';
 
 export type CreatedCall = CallRequest & {
   authorization: string | undefined;
@@ -28,9 +28,6 @@ export type FakeEndpointOptions = {
   callId?: string;
 };
 
-// What the control link carries out of a call: flat text fields.
-const sentMessage = z.record(z.string(), z.string());
-
 const recordOf = (
   request: IncomingMessage,
   form: CallRequest,
@@ -43,11 +40,11 @@ const recordOf = (
 
 /*
  * A local stand-in for the GPT-Live service: the call-creation POST and the control-link WebSocket.
- * Tests reply with recorded events through `send`; nothing here reaches the live service.
+ * Tests reply with recorded events (`gpt-live-frames.ts`) through `send`; nothing here reaches the live service.
  */
 export class FakeGptLiveEndpoint {
   public readonly created: CreatedCall[] = [];
-  public readonly received: Record<string, string>[] = [];
+  public readonly received: SentMessage[] = [];
   public readonly links: WebSocket[] = [];
   public readonly linkTokens: (string | undefined)[] = [];
   // While true the service turns every control link away, as when it is down.
@@ -153,15 +150,11 @@ export class FakeGptLiveEndpoint {
     link.on('message', (data, binary) => this.record(wordsOf(data, binary)));
   }
 
-  // A message that is not flat text fields is dropped, as the service would not understand it.
+  // A message not in the shape Codex sends is dropped, as the service would not understand it.
   private record(words: string): void {
-    try {
-      const message = sentMessage.safeParse(JSON.parse(words));
+    const message = sentMessageOf(words);
 
-      if (message.success) this.received.push(message.data);
-    } catch {
-      // Not JSON: nothing to record.
-    }
+    if (message) this.received.push(message);
   }
 
   private async create(request: IncomingMessage): Promise<Reply> {
