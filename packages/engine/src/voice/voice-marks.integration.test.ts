@@ -84,6 +84,7 @@ describe('Voice marks are stripped wherever an Agent message is read', () => {
     const work = await startVoiceWork([
       { prompt: job, messages: ['[STATUS] Running', allGreen] },
     ]);
+
     await work.start();
     const collecting = work.subscription(1);
     work.provider.call.requestWork('r1', job);
