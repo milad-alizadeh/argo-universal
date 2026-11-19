@@ -26,16 +26,16 @@ const kinds = {
 const rowIdOf = (callId: string, event: TranscriptEvent): string =>
   `${callId}:${speakerOf(event)}:${event.id}`;
 
-// What is being said now, one entry per speaker: a partial replaces its speaker's, a final clears it.
+// What is being said now, one entry per speaker: a partial replaces its speaker's, a final clears it. A read-out is never drawn.
 export function withTranscript(
   partials: VoicePartial[],
-  call: { callId: string },
+  call: { callId: string; readOut: ReadOut | null },
   event: TranscriptEvent,
 ): VoicePartial[] {
   const speaker = speakerOf(event);
   const others = partials.filter((partial) => partial.speaker !== speaker);
 
-  if (event.final) return others;
+  if (event.final || isReadOut(call.readOut, event)) return others;
   const { id, text } = event;
   const rowId = rowIdOf(call.callId, event);
 
@@ -73,12 +73,51 @@ const feedOf = (
 ): { send: (event: FeedEvent) => void } | undefined =>
   system.get(sessionActorId(sessionId))?.getSnapshot().children.feed;
 
-// Stores a final transcript in the Session's Feed; words still changing are live state and store nothing. A Session that is gone keeps nothing.
+/*
+ * The voice reading an Agent's result aloud (ADR-0064), from the hand-over until the person speaks again. The Agent's
+ * answer is the record and the read-out only says it again, so its words are neither stored nor drawn. The voice turn
+ * already under way at the hand-over, such as the filler line, is the voice's own and is kept.
+ */
+export type ReadOut = { spared: string | null };
+
+// The read-out that starts when the relay hands the voice a result; a result handed over during one continues it.
+export const readOutFrom = (
+  readOut: ReadOut | null,
+  partials: readonly VoicePartial[],
+): ReadOut => readOut ?? { spared: voiceSaying(partials) };
+
+// The id of the voice's words still being said, if any.
+const voiceSaying = (partials: readonly VoicePartial[]): string | null =>
+  partials.find(({ speaker }) => speaker === 'voice')?.id ?? null;
+
+// The person speaking ends the read-out.
+export const readOutAfter = (
+  readOut: ReadOut | null,
+  event: TranscriptEvent,
+): ReadOut | null => (speakerOf(event) === 'person' ? null : readOut);
+
+const isReadOut = (readOut: ReadOut | null, event: TranscriptEvent): boolean =>
+  readOut !== null &&
+  speakerOf(event) === 'voice' &&
+  event.id !== readOut.spared;
+
+// A running call as its transcript is kept: where it is stored, and whether the voice is reading out a result.
+export type HearingCall = {
+  callId: string;
+  sessionId: string;
+  readOut: ReadOut | null;
+};
+
+// Final words are kept; words still changing are live state, and a read-out is never kept.
+const kept = (call: HearingCall, event: TranscriptEvent): boolean =>
+  event.final && !isReadOut(call.readOut, event);
+
+// Stores a final transcript in the Session's Feed, unless it is a read-out. A Session that is gone keeps nothing.
 export function storeTranscript(
   system: ActorLookup,
-  call: { callId: string; sessionId: string },
+  call: HearingCall,
   event: TranscriptEvent,
 ): void {
-  if (event.final)
+  if (kept(call, event))
     feedOf(system, call.sessionId)?.send(transcriptRow(call.callId, event));
 }

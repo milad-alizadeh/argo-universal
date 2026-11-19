@@ -114,6 +114,8 @@ export class FakeVoiceCall<
   public readonly answer: string;
   public readonly sent: FakeVoiceMessage[] = [];
   public ended = false;
+  // What the provider reports as it hangs up, such as the words the voice said so far.
+  public readonly wordsAtEnd: VoiceProviderEvent[] = [];
   private readonly listeners = new Set<(event: VoiceProviderEvent) => void>();
 
   public constructor(public readonly request: Request) {
@@ -135,6 +137,7 @@ export class FakeVoiceCall<
   }
 
   public end(): void {
+    for (const event of this.wordsAtEnd.splice(0)) this.emit(event);
     this.ended = true;
   }
 

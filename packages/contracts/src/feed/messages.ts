@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ContentBlock } from './content-block';
 import { createFeedMetadataSchema } from './metadata';
-import { NonUserPromptSender } from './prompt-sender';
+import { SentPromptSender } from './prompt-sender';
 import { envelope, kind, message } from './update-fields';
 
 export const UserMessage = z.strictObject({
@@ -21,7 +21,7 @@ export const PromptMessage = z.strictObject({
   sessionUpdate: kind('prompt_message'),
   ...message,
   _meta: z.strictObject({
-    argo: z.strictObject({ sender: NonUserPromptSender }),
+    argo: z.strictObject({ sender: SentPromptSender }),
   }),
 });
 

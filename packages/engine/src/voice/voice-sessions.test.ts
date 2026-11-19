@@ -32,8 +32,8 @@ function sessionsHeard(): HeardSessions {
       watchSessionSnapshot: () => ({ unsubscribe: (): void => {} }),
     },
     {
-      prompt: () => Promise.reject(new Error('Not sent')),
-      stop: () => Promise.resolve(false),
+      promptFromVoice: () => Promise.reject(new Error('Not sent')),
+      stopFromVoice: () => Promise.resolve(false),
       watchTurns: (_sessionId, listener) => {
         listeners.add(listener);
 

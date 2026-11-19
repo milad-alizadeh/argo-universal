@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { join } from 'node:path';
+import { openDatabase } from '@repo/db';
+import { serverSettings } from '@repo/db/schema';
+import { describe, expect, it, vi } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { operationCaller, runOperation } from '#mocks/operations';
 import { offer, openVoiceSession, startVoiceEngine } from '#mocks/voice-engine';
@@ -108,4 +111,32 @@ describe('Voice call options', () => {
       }),
     ).rejects.toThrow(/readOut/);
   });
+});
+
+// Stores call options as an older or damaged Server might have left them, past what the App may set.
+function storeOptions(home: string, options: { volume: number }): void {
+  const database = openDatabase(join(home, 'argo.db'));
+
+  database.update(serverSettings).set({ voiceCallOptions: options }).run();
+  database.$client.close();
+}
+
+it('reports and counts stored call options it cannot read, then uses the defaults', async () => {
+  const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const { host } = await startVoiceEngine();
+
+  await host.caller.voice.setCallOptions({ volume: 40 });
+  await host.stop();
+  storeOptions(host.home, { volume: 999 });
+
+  const restarted = await startVoiceEngine(undefined, host.home);
+
+  expect((await restarted.host.caller.voice.getSettings()).options.volume).toBe(
+    100,
+  );
+  expect(reported).toHaveBeenCalledWith(
+    expect.stringMatching(/^Stored Voice call options: .* #\d+$/),
+    expect.anything(),
+  );
+  reported.mockRestore();
 });

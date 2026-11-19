@@ -112,7 +112,7 @@ describe('what the Agent says goes back to the voice', () => {
     expect(spoken(work)).not.toContain(looking);
   });
 
-  it('keeps silent analysis out of speech', async () => {
+  it('never tells the voice silent analysis', async () => {
     const work = await startVoiceWork([
       {
         prompt: job,
@@ -122,7 +122,9 @@ describe('what the Agent says goes back to the voice', () => {
 
     await askAndWaitForEnd(work);
 
-    expect(spoken(work)).not.toContain('The cache is stale');
+    expect(work.provider.call.sent.map(({ text }) => text)).not.toContain(
+      'The cache is stale',
+    );
     expect(spoken(work)).toContain('Cleared it');
   });
 
@@ -130,7 +132,7 @@ describe('what the Agent says goes back to the voice', () => {
     ['whole', undefined],
     ['in chunks', 7],
   ])(
-    'keeps an analysis paragraph inside a result out of speech, %s',
+    'never tells the voice an analysis paragraph inside a result, %s',
     async (_, chunkSize) => {
       const work = await startVoiceWork([
         { prompt: job, chunkSize, messages: [resultWithAnalysis] },
@@ -141,7 +143,9 @@ describe('what the Agent says goes back to the voice', () => {
       expect(spoken(work)).toEqual(
         expect.arrayContaining(['The page is ready.', 'Open it to look.']),
       );
-      expect(JSON.stringify(spoken(work))).not.toContain(weatherFile);
+      expect(JSON.stringify(work.provider.call.sent)).not.toContain(
+        weatherFile,
+      );
     },
   );
 

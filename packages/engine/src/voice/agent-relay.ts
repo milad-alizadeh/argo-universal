@@ -6,6 +6,7 @@ import {
 import type { RelayCall, VoiceSay } from './call-types';
 import { inPieces } from './pieces';
 import type { VoiceDelivery } from './provider';
+import { endingDelivery, endingText, told, type Ended } from './relay-ending';
 import { relayWords } from './relay-words';
 import type {
   PromptOutcome,
@@ -39,7 +40,7 @@ const freshTurn = (): TurnMemory => ({ resultSent: false, last: null });
 export class AgentRelay {
   private instructed = false;
   private turn = freshTurn();
-  // Prompts the call sent whose Turn has not ended, queued ones included; the Session says when each is done.
+  // Requests not yet answered, and Prompts the call sent whose Turn started and has not ended; a queued one counts from its Turn's start.
   private atWork = 0;
   private readonly permission = new WaitingPermission();
 
@@ -89,17 +90,33 @@ export class AgentRelay {
     if (announcement !== null) this.tell(announcement, 'speak');
   }
 
-  // What the voice is told of a Prompt that reached the Session; it stays at work until the Session says its Turn ended.
+  // What the voice is told of a Prompt that reached the Session; a queued one waits for its Turn before it counts.
   private sent(outcome: PromptOutcome): string {
-    // Only a Prompt the Session took has carried the voice instruction; a refused or dropped one has not.
-    this.instructed = true;
-    void outcome.ended.then(() => this.done());
+    if (outcome.status !== 'queued') {
+      this.working(outcome);
 
-    if (outcome.status !== 'queued') return relayWords[outcome.status];
+      return relayWords[outcome.status];
+    }
+
+    this.done();
+    void outcome.started.then(
+      (started) => started && this.startWorking(outcome),
+    );
 
     return outcome.notSteered === null
       ? relayWords.queued
       : relayWords.notSteered(outcome.notSteered);
+  }
+
+  private startWorking(outcome: PromptOutcome): void {
+    this.sentChanged(() => (this.atWork += 1));
+    this.working(outcome);
+  }
+
+  // Only a Prompt a Turn took has carried the voice instruction; a refused, dropped or withdrawn one has not.
+  private working({ ended }: PromptOutcome): void {
+    this.instructed = true;
+    void ended.then(() => this.done());
   }
 
   private done(): void {
@@ -136,21 +153,33 @@ export class AgentRelay {
     this.reports.speak({ kind: 'reply', requestId, text, delivery: 'speak' });
   }
 
-  private tell(text: string, delivery: VoiceDelivery): void {
+  private tell(
+    text: string,
+    delivery: VoiceDelivery,
+    kind: 'tell' | 'result' = 'tell',
+  ): void {
     for (const piece of inPieces(text))
-      this.reports.speak({ kind: 'tell', text: piece, delivery });
+      this.reports.speak({ kind, text: piece, delivery });
   }
 
+  // The Agent's answer, for the voice to read out.
+  private handOver(text: string): void {
+    this.tell(text, 'speak', 'result');
+  }
+
+  // Analysis stays silent, so the voice is never told it.
   private agentSaid(text: string): void {
-    for (const section of readVoiceSections(text)) {
-      this.pass(section);
-      this.remember(section);
-    }
+    for (const section of readVoiceSections(text))
+      if (section.kind !== 'analysis') {
+        this.pass(section);
+        this.remember(section);
+      }
   }
 
-  // A result is spoken; progress and analysis are background.
+  // A result is read out; progress is background.
   private pass({ kind, body }: VoiceMessage): void {
-    this.tell(body, kind === 'result' ? 'speak' : 'background');
+    if (kind === 'result') this.handOver(body);
+    else this.tell(body, 'background');
   }
 
   private remember({ kind, body }: VoiceMessage): void {
@@ -162,42 +191,11 @@ export class AgentRelay {
     this.tell(relayWords.typed(text), 'background');
   }
 
-  private turnEnded(
-    ended: Extract<SessionHappening, { type: 'turn.ended' }>,
-  ): void {
+  private turnEnded(ended: Ended): void {
     const { resultSent, last } = this.turn;
     this.turn = freshTurn();
 
-    if (!resultSent && last) this.tell(last, 'speak');
+    if (!resultSent && last) this.handOver(last);
     this.tell(endingText(ended), endingDelivery(ended, told(resultSent, last)));
   }
-}
-
-const told = (resultSent: boolean, last: string | null): boolean =>
-  resultSent || last !== null;
-
-type Ended = Extract<SessionHappening, { type: 'turn.ended' }>;
-
-const finishedCleanly = ({
-  stopReason,
-  error,
-}: Pick<Ended, 'stopReason' | 'error'>): boolean =>
-  error === null && stopReason === 'end_turn';
-
-function endingText({ stopReason, error }: Ended): string {
-  if (error !== null) return relayWords.failed(error);
-
-  return stopReason === 'end_turn'
-    ? relayWords.finished
-    : relayWords.stopped(stopReason);
-}
-
-// A Turn that failed, was stopped, or said nothing is spoken; one that ended with its result already told is background.
-function endingDelivery(
-  { stopReason, error }: Ended,
-  toldResult: boolean,
-): VoiceDelivery {
-  return finishedCleanly({ stopReason, error }) && toldResult
-    ? 'background'
-    : 'speak';
 }

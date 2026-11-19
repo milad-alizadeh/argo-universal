@@ -1,8 +1,18 @@
 import { relayWords } from './relay-words';
 import type { VoiceSessions } from './session-link';
 
-// "stop" alone, with at most a "please" before it and a few words after it that add no request of their own.
-const stopRequest = /^(?:please )?stop(?: (?:it|that|now|please|stop))*$/;
+const stopVerbs = 'stop|cancel|halt';
+
+// Words around a stop that add no request of their own: "No, let's stop working now, please". "let's" reads as "lets" once punctuation is dropped.
+const leadIns = '(?:no|ok|okay|hey|lets|please) ';
+
+const trailers = `it|that|this|there|working|work|now|please|everything|${stopVerbs}`;
+
+// A whole utterance that asks only to stop: a stop verb, with at most a few lead-in and trailing words that ask nothing else.
+const stopRequest = new RegExp(
+  `^(?:${leadIns})*(?:${stopVerbs})(?: (?:${trailers}))*$`,
+  'u',
+);
 
 // Lower case, with punctuation dropped and spaces collapsed, so "Stop!" and " stop, please." read the same.
 const normalised = (words: string): string =>
