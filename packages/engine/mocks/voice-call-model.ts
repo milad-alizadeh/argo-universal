@@ -27,4 +27,5 @@ export const voiceModelInput = (): VoiceCallInput => ({
   idleMs: voiceModelIdleMs,
   log: () => {},
   now: Date.now,
+  sessionOpen: () => true,
 });

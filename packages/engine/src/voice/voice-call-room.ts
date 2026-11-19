@@ -1,23 +1,21 @@
 import { TRPCError } from '@trpc/server';
-import { sessionActorId } from '../sessions';
-import type { VoiceCallActorRef } from './call.machine';
+import type { StartRefusal } from './call-types';
+import { noProviderReason, unavailable } from './unavailable';
 
-// No Voice call is running, or what asked is refused.
-export function requireNoCall(actor: VoiceCallActorRef): void {
-  if (!actor.getSnapshot().matches('idle'))
-    throw new TRPCError({
-      code: 'CONFLICT',
-      message: 'A Voice call is already running',
-    });
-}
+// A Voice call already runs: another cannot start, and no preview plays over it.
+export const callRunning = (): TRPCError =>
+  new TRPCError({
+    code: 'CONFLICT',
+    message: 'A Voice call is already running',
+  });
 
-// There is no call yet and the Session is open, or the start is refused.
-export function requireRoom(actor: VoiceCallActorRef, sessionId: string): void {
-  requireNoCall(actor);
+const refusals: Record<StartRefusal, () => TRPCError> = {
+  'call-running': callRunning,
+  'no-provider': () => unavailable(noProviderReason),
+  'session-not-open': () =>
+    new TRPCError({ code: 'NOT_FOUND', message: 'The Session is not open' }),
+};
 
-  if (!actor.system.get(sessionActorId(sessionId)))
-    throw new TRPCError({
-      code: 'NOT_FOUND',
-      message: 'The Session is not open',
-    });
-}
+// What the one who asked is told when the Voice call machine refused their start.
+export const refusalError = (refusal: StartRefusal): TRPCError =>
+  refusals[refusal]();

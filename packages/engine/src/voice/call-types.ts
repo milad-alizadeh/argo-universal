@@ -76,6 +76,8 @@ export interface VoiceCallInput {
   log: (line: string) => void;
   // The time now, in milliseconds since the epoch.
   now: () => number;
+  // Whether the Session is open, so a call can start in it.
+  sessionOpen: (sessionId: string) => boolean;
 }
 
 export interface RunningCall {
@@ -106,6 +108,15 @@ export interface EndedCall {
   reason: VoiceCallEnd;
 }
 
+// Why the machine refused a start: a call already runs, no Voice provider is configured, or the Session is not open.
+export type StartRefusal = 'call-running' | 'no-provider' | 'session-not-open';
+
+// The last start the machine refused; a start finds its own by its callId.
+interface RefusedStart {
+  callId: string;
+  refusal: StartRefusal;
+}
+
 export interface VoiceCallContext extends VoiceCallInput {
   // Where the call reaches its Session, filled in once Sessions exist.
   sessions: VoiceSessions;
@@ -113,6 +124,7 @@ export interface VoiceCallContext extends VoiceCallInput {
   ended: EndedCall | null;
   // Why the last call failed, for the Notice that says so.
   failure: string | null;
+  refused: RefusedStart | null;
   // Whether a Turn the call started is running; an idle call never ends while one is.
   turnRunning: boolean;
   // Words being said now that may still change; live state, never stored.

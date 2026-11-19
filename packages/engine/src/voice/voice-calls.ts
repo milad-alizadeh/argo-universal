@@ -11,14 +11,20 @@ import type {
 import { waitFor } from 'xstate';
 import { conductOf } from './call-conduct';
 import { voiceCallOf } from './call-look';
-import type { RunningCall, VoiceCallEvent } from './call-types';
+import type { VoiceCallEvent } from './call-types';
 import type { VoiceCallActorRef } from './call.machine';
 import { Changes } from './changes';
 import type { VoiceProvider } from './provider';
 import type { VoiceSessions } from './session-link';
 import { noProviderReason, noVoiceCall, unavailable } from './unavailable';
-import { answerOf, startSettled } from './voice-call-answer';
-import { requireNoCall, requireRoom } from './voice-call-room';
+import {
+  answerOf,
+  endedBetween,
+  requireBegun,
+  startSettled,
+  type CallSnapshot,
+} from './voice-call-answer';
+import { callRunning } from './voice-call-room';
 import type { VoiceCallsPort } from './voice-calls-port';
 import { VoiceChoices } from './voice-choices';
 import { VoiceDevices } from './voice-devices';
@@ -29,16 +35,16 @@ export type { VoiceCallsPort } from './voice-calls-port';
 
 type CallStart = Extract<VoiceCallEvent, { type: 'call.start' }>;
 
-const namesSession = (
-  sessionId: string | undefined,
-  call: RunningCall,
-): boolean => sessionId === undefined || sessionId === call.sessionId;
+type CallEnd = Extract<VoiceCallEvent, { type: 'call.end' }>;
 
-// The Voice call machine behind its Operations: it checks what can be refused before the machine is asked.
+/*
+ * The Voice call machine behind its Operations. Whether Voice calls are on and the provider is usable are asked here;
+ * whether a start or an end may act on the call, and why not, the machine alone decides when it is sent one.
+ */
 export class VoiceCalls implements VoiceCallsPort {
   public readonly choices: VoiceChoices;
   public readonly devices = new VoiceDevices(
-    () => this.actor.getSnapshot().context.call?.connection ?? null,
+    () => this.snapshot().context.call?.connection ?? null,
   );
   private readonly previews = new VoicePreviews();
 
@@ -50,7 +56,7 @@ export class VoiceCalls implements VoiceCallsPort {
   }
 
   public async status(): Promise<VoiceStatus> {
-    const snapshot = this.actor.getSnapshot();
+    const snapshot = this.snapshot();
     const { ended, partials } = snapshot.context;
     const { volume, microphoneGain } = this.choices.options();
 
@@ -67,7 +73,8 @@ export class VoiceCalls implements VoiceCallsPort {
 
   public async preview(input: VoicePreviewInput): Promise<VoicePreviewOutput> {
     await this.requireUsable();
-    requireNoCall(this.actor);
+
+    if (!this.snapshot().matches('idle')) throw callRunning();
     const previewed = await this.choices.previewed(input);
 
     return this.previews.play(this.provider(), input.offer, previewed);
@@ -77,42 +84,41 @@ export class VoiceCalls implements VoiceCallsPort {
     input: VoiceStartInput,
     connection?: AbortSignal,
   ): Promise<VoiceStartOutput> {
-    await this.requireStartable(input.sessionId);
+    await this.requireStartable();
     connection?.throwIfAborted();
     this.previews.end();
-    this.devices.used(connection);
     const event = await this.callStart(input, connection);
     this.actor.send(event);
+    requireBegun(this.snapshot(), event.callId);
+    this.devices.used(connection);
 
     return answerOf(await waitFor(this.actor, startSettled), event.callId);
   }
 
   public end(sessionId?: string): VoiceEndOutput {
-    const running = this.actor.getSnapshot().context.call !== null;
-    this.actor.send({ type: 'call.end', reason: 'person', sessionId });
-
-    return { ended: running && this.actor.getSnapshot().context.call === null };
+    return {
+      ended: this.ends({ type: 'call.end', reason: 'person', sessionId }),
+    };
   }
 
   public hangUp(sessionId?: string): VoiceEndOutput {
-    const call = this.callOfSession(sessionId);
+    if (!this.ends({ type: 'call.end', reason: 'agent', sessionId }))
+      throw noVoiceCall();
 
-    this.actor.send({
-      type: 'call.end',
-      reason: 'agent',
-      sessionId: call.sessionId,
-    });
-
-    return { ended: this.actor.getSnapshot().context.call === null };
+    return { ended: true };
   }
 
-  // The running call of the Session, or a refusal when the Session has none.
-  private callOfSession(sessionId?: string): RunningCall {
-    const { call } = this.actor.getSnapshot().context;
+  // Sends the end and answers whether the machine ended a call for it.
+  private ends(end: CallEnd): boolean {
+    const before = this.snapshot();
+    this.actor.send(end);
 
-    if (!call || !namesSession(sessionId, call)) throw noVoiceCall();
+    return endedBetween(before, this.snapshot());
+  }
 
-    return call;
+  // The machine's state now: the one place the call is read from.
+  private snapshot(): CallSnapshot {
+    return this.actor.getSnapshot();
   }
 
   public attach(sessions: VoiceSessions): void {
@@ -132,7 +138,7 @@ export class VoiceCalls implements VoiceCallsPort {
   }
 
   private provider(): VoiceProvider | null {
-    return this.actor.getSnapshot().context.provider;
+    return this.snapshot().context.provider;
   }
 
   private async availability(): Promise<VoiceAvailability> {
@@ -159,11 +165,10 @@ export class VoiceCalls implements VoiceCallsPort {
     };
   }
 
-  // Voice calls are on, the provider can be used, and there is room for a call in this Session.
-  private async requireStartable(sessionId: string): Promise<void> {
+  // Voice calls are on and the provider can be used; the machine decides the rest when it is sent the start.
+  private async requireStartable(): Promise<void> {
     if (!this.choices.enabled()) throw unavailable('Voice calls are off');
     await this.requireUsable();
-    requireRoom(this.actor, sessionId);
   }
 
   // The provider can start a call now, or what asked is refused.

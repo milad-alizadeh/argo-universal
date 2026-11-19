@@ -1,5 +1,12 @@
 import type { VoiceCallEnd } from '@repo/contracts';
-import { assertEvent, assign, sendTo, setup, type ActorRefFrom } from 'xstate';
+import {
+  assertEvent,
+  assign,
+  not,
+  sendTo,
+  setup,
+  type ActorRefFrom,
+} from 'xstate';
 import { agentRelay, type RelayInput } from './agent-relay-actor';
 import { defaultConduct } from './call-conduct';
 import {
@@ -12,6 +19,7 @@ import {
 import {
   runningCall,
   type RunningCall,
+  type StartRefusal,
   type VoiceCallContext,
   type VoiceCallEvent,
   type VoiceCallInput,
@@ -59,6 +67,12 @@ function providerEventOf(event: VoiceCallEvent): VoiceProviderEvent {
 }
 
 type CallStartEvent = Extract<VoiceCallEvent, { type: 'call.start' }>;
+
+function startOf(event: VoiceCallEvent): CallStartEvent {
+  assertEvent(event, 'call.start');
+
+  return event;
+}
 
 const callIdleMs = (call: RunningCall | null): number =>
   (call?.conduct ?? defaultConduct).idleMs;
@@ -151,16 +165,19 @@ const voiceCallSetup = setup({
   delays: { idle: ({ context }): number => idleOf(context) },
   actors: { providerCall, agentRelay, watchSession, watchConnection },
   actions: {
-    begin: assign(({ event }): Partial<VoiceCallContext> => {
-      assertEvent(event, 'call.start');
-
-      return {
-        call: newCall(event),
-        ended: null,
-        failure: null,
-        turnRunning: false,
-      };
-    }),
+    begin: assign(({ event }): Partial<VoiceCallContext> => ({
+      call: newCall(startOf(event)),
+      ended: null,
+      failure: null,
+      refused: null,
+      turnRunning: false,
+    })),
+    // Records why the start was refused, under its callId, for the one who asked.
+    refuseStart: assign(
+      ({ event }, refusal: StartRefusal): Partial<VoiceCallContext> => ({
+        refused: { callId: startOf(event).callId, refusal },
+      }),
+    ),
     answer: assign(({ context, event }): Partial<VoiceCallContext> => {
       assertEvent(event, 'call.answered');
 
@@ -247,6 +264,8 @@ const voiceCallSetup = setup({
   },
   guards: {
     hasProvider: ({ context }): boolean => context.provider !== null,
+    sessionOpen: ({ context, event }): boolean =>
+      context.sessionOpen(startOf(event).sessionId),
     endsThisCall: ({ context, event }): boolean => {
       assertEvent(event, 'call.end');
 
@@ -317,6 +336,9 @@ const providerInput = (context: VoiceCallContext): ProviderCallInput => {
   };
 };
 
+const refuseStart = (refusal: StartRefusal) =>
+  ({ type: 'refuseStart', params: refusal }) as const;
+
 // A Turn the call started began or ended: the idle period starts over.
 const turnsChanged = {
   target: 'connected',
@@ -332,19 +354,24 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
     call: null,
     ended: null,
     failure: null,
+    refused: null,
     turnRunning: false,
     partials: [],
   }),
   initial: 'idle',
   on: { 'sessions.attach': { actions: 'attachSessions' } },
   states: {
+    // The machine alone decides whether a start may begin a call; a refused start records why.
     idle: {
       on: {
-        'call.start': {
-          guard: 'hasProvider',
-          target: 'running',
-          actions: 'begin',
-        },
+        'call.start': [
+          { guard: not('hasProvider'), actions: refuseStart('no-provider') },
+          {
+            guard: not('sessionOpen'),
+            actions: refuseStart('session-not-open'),
+          },
+          { target: 'running', actions: 'begin' },
+        ],
       },
     },
     running: {
@@ -377,6 +404,8 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
       ],
       initial: 'starting',
       on: {
+        // One call runs at a time.
+        'call.start': { actions: refuseStart('call-running') },
         'call.end': {
           guard: 'endsThisCall',
           target: idleTarget,

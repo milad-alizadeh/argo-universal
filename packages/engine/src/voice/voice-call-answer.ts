@@ -1,10 +1,29 @@
 import type { VoiceStartOutput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import type { SnapshotFrom } from 'xstate';
-import type { EndedCall } from './call-types';
+import type { EndedCall, StartRefusal } from './call-types';
 import type { voiceCallMachine } from './call.machine';
+import { refusalError } from './voice-call-room';
 
-type CallSnapshot = SnapshotFrom<typeof voiceCallMachine>;
+export type CallSnapshot = SnapshotFrom<typeof voiceCallMachine>;
+
+const refusalOf = (
+  { context: { refused } }: CallSnapshot,
+  callId: string,
+): StartRefusal | null => (refused?.callId === callId ? refused.refusal : null);
+
+// The machine began a call for this start, or the error says why it refused.
+export function requireBegun(snapshot: CallSnapshot, callId: string): void {
+  const refusal = refusalOf(snapshot, callId);
+
+  if (refusal) throw refusalError(refusal);
+}
+
+// An end ended a call when the machine was running one before it and is idle after.
+export const endedBetween = (
+  before: CallSnapshot,
+  after: CallSnapshot,
+): boolean => before.matches('running') && after.matches('idle');
 
 // The start has settled once the provider answered or the call is over.
 export const startSettled = (snapshot: CallSnapshot): boolean =>

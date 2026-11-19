@@ -33,6 +33,7 @@ const input: VoiceCallInput = {
   idleMs: 60_000,
   log: () => {},
   now: Date.now,
+  sessionOpen: () => true,
 };
 
 let voice: Actor<typeof machine>;

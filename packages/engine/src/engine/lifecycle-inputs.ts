@@ -10,6 +10,7 @@ import { findMachineActor } from '../lib/machine-actor';
 import {
   openSessionsId,
   openSessionsMachine,
+  sessionActorId,
   type OpenSessionsInput,
 } from '../sessions';
 import type { writerMachine } from '../storage';
@@ -106,19 +107,30 @@ const voiceLogOf =
   (line: string): void =>
     writeLog({ home, label: 'voice', line });
 
-export const voiceInput = ({
-  context,
-}: {
+// A Session is open while its actor runs in the Engine's system.
+const sessionOpenIn =
+  (system: AnyActorRef['system']) =>
+  (sessionId: string): boolean =>
+    system.get(sessionActorId(sessionId)) !== undefined;
+
+type VoiceInputArgs = {
   context: Pick<
     EngineContext,
     'database' | 'home' | 'now' | 'voiceProvider' | 'voiceIdleMs'
   >;
-}): VoiceCallInput => ({
+  self: Pick<AnyActorRef, 'system'>;
+};
+
+export const voiceInput = ({
+  context,
+  self,
+}: VoiceInputArgs): VoiceCallInput => ({
   provider: voiceProviderOf(context.voiceProvider),
   briefing: sessionBriefing(openDatabaseOf(context)),
   idleMs: context.voiceIdleMs,
   log: voiceLogOf(context.home),
   now: context.now,
+  sessionOpen: sessionOpenIn(self.system),
 });
 
 export { serverInput } from './server-input';

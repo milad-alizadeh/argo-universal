@@ -46,7 +46,17 @@ afterEach(() => {
 function expectVoice(expected: Snapshot): void {
   expect(voice.getSnapshot().value).toEqual(expected.value);
   expect(voice.getSnapshot().context.ended).toEqual(expected.context.ended);
+  expect(voice.getSnapshot().context.refused).toEqual(expected.context.refused);
 }
+
+// A start sent while the call runs is refused, and the running call goes on.
+const expectRefusedWhileRunning = (snapshot: Snapshot): void => {
+  expectCall(snapshot);
+  expect(snapshot.context.refused).toBeOneOf([
+    null,
+    { callId: 'call-1', refusal: 'call-running' },
+  ]);
+};
 
 const expectNoCall = (snapshot: Snapshot): void =>
   expect(snapshot.context.call).toBeNull();
@@ -148,7 +158,7 @@ const model = modelTest(
     always: expectVoice,
     states: {
       idle: expectIdle,
-      running: expectCall,
+      running: expectRefusedWhileRunning,
       'running.starting': expectLook(notJoined),
       'running.connecting': expectConnecting,
       'running.connected': expectConnected,
