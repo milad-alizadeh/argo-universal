@@ -21,7 +21,13 @@ type DelegationOptions = {
   installPlugins?: NonNullable<
     Parameters<typeof startAcpEngine>[0]
   >['installPlugins'];
+  // Prompt replies keyed by the text they answer, played before the journey's own.
+  replies?: NonNullable<NonNullable<Scenario['responses']>['session/prompt']>;
+  // More of the Agent's scenario, such as steering support.
+  agent?: Partial<Scenario>;
 };
+
+type Scenario = NonNullable<Parameters<typeof startAcpEngine>[0]>;
 
 export async function delegationJourney(
   options: DelegationOptions = {},
@@ -51,11 +57,13 @@ const callerStart = ({
 const delegationScenario = (
   options: DelegationOptions,
   firstTurnSteps: ScriptedStep[],
-): NonNullable<Parameters<typeof startAcpEngine>[0]> => ({
+): Scenario => ({
+  ...options.agent,
   steps: [],
   installPlugins: options.installPlugins,
   responses: {
     'session/prompt': [
+      ...(options.replies ?? []),
       { steps: firstTurnSteps, requests: options.requests },
       { steps: [{ type: 'wait-for-cancel' }], requests: options.requests },
     ],

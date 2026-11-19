@@ -68,6 +68,10 @@ function requireFree(
   if (context.queueHolds[row.id]) conflict('Finish editing this Prompt first');
 }
 
+// The Feed row a queued Prompt takes in the Turn it was steered into.
+export const steeredMessageId = (turnId: string, queuedId: string): string =>
+  `${turnId}:steer:${queuedId}`;
+
 function reserveRow(
   context: SessionContext,
   revision: number,
@@ -79,7 +83,7 @@ function reserveRow(
     ...reservePrompt(context, row.prompt),
     ...senderOf(row),
     queuedId: row.id,
-    messageId: `${runningTurn(context)}:steer:${row.id}`,
+    messageId: steeredMessageId(runningTurn(context), row.id),
   };
 }
 

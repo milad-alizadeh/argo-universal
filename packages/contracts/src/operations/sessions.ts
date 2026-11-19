@@ -61,11 +61,12 @@ export const sessionOperations = {
     id: 'session.prompt',
     label: 'Prompt Session',
     icon: 'message',
-    description: 'Send a prompt to a Session to start its next Turn.',
+    description:
+      'Send a prompt to a Session. An idle Session starts a Turn; a busy one takes it into its running Turn when its Agent supports steering, and otherwise queues it. The result says which: started, steered or queued.',
     params: SessionPromptInput,
     result: SessionPromptOutput,
     tier: 'act',
-    keywords: ['message', 'steer', 'continue', 'agent'],
+    keywords: ['message', 'steer', 'queue', 'continue', 'agent'],
   },
   'session.cancel': {
     id: 'session.cancel',
