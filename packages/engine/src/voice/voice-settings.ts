@@ -73,8 +73,8 @@ const storedOf = (
 
 const storedCustomVoices = z.array(CustomVoice);
 
-// Options kept by an older Server may be fewer; the defaults fill in the rest.
-const storedOptions = VoiceCallOptionsChange.catch({});
+// Options kept by an older Server may be fewer, or name one Argo no longer offers; the defaults fill in the rest.
+const storedOptions = z.object(VoiceCallOptionsChange.shape).catch({});
 
 const rowOf = (
   settings: StoredVoiceSettings,

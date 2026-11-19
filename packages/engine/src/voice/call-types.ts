@@ -1,9 +1,4 @@
-import type {
-  VoiceCallEnd,
-  VoiceLimit,
-  VoicePartial,
-  VoiceReadOut,
-} from '@repo/contracts';
+import type { VoiceCallEnd, VoiceLimit, VoicePartial } from '@repo/contracts';
 import type {
   VoiceCallSetup,
   VoiceDelivery,
@@ -22,16 +17,14 @@ export type VoiceSay =
   | { kind: 'reply'; requestId: string; text: string; delivery: VoiceDelivery }
   | { kind: 'tell'; text: string; delivery: VoiceDelivery };
 
-// How Argo runs one call, whatever the provider: when silence ends it, and what of the Agent's work the voice is given.
+// How Argo runs one call, whatever the provider: when silence ends it.
 export interface CallConduct {
   idleMs: number;
-  readOut: VoiceReadOut;
 }
 
-// The call a relay serves: its Session, and whether the voice hears the Agent's progress during a Turn or only its answer.
+// The call a relay serves: its Session.
 export interface RelayCall {
   sessionId: string;
-  readOut?: VoiceReadOut;
 }
 
 export type VoiceCallEvent =

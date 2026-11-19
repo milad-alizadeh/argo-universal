@@ -1,4 +1,3 @@
-import type { VoiceReadOut } from '@repo/contracts';
 import { fromCallback } from 'xstate';
 import { AgentRelay, type RelayReports } from './agent-relay';
 import type { SendBack, VoiceCallEvent, VoiceSay } from './call-types';
@@ -7,7 +6,6 @@ import type { VoiceSessions } from './session-link';
 export type RelayInput = {
   sessions: VoiceSessions;
   sessionId: string;
-  readOut: VoiceReadOut;
 };
 
 type WorkRequest = { requestId: string; text: string };

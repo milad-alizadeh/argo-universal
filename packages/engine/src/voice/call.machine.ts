@@ -360,7 +360,6 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
           input: ({ context }): RelayInput => ({
             sessions: context.sessions,
             sessionId: runningCall(context).sessionId,
-            readOut: (runningCall(context).conduct ?? defaultConduct).readOut,
           }),
         },
         {

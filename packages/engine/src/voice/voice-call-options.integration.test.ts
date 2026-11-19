@@ -9,13 +9,12 @@ const greeting = 'Greet the person as Sam.';
 const setCallOptions = 'voice.setCallOptions';
 
 describe('Voice call options', () => {
-  it('start with the filler on, no opening, answers and progress read out, five idle minutes and full volume', async () => {
+  it('start with the filler on, no opening, five idle minutes and full volume', async () => {
     const { host } = await startVoiceEngine();
 
     expect((await host.caller.voice.getSettings()).options).toEqual({
       filler: true,
       opening: '',
-      readOut: 'answersAndProgress',
       idleSeconds: 300,
       volume: 100,
       microphoneGain: 100,
@@ -90,12 +89,22 @@ describe('Voice call options', () => {
 
     await runOperation(cli.operations, {
       id: setCallOptions,
-      params: { readOut: 'answers' },
+      params: { idleSeconds: 60 },
     });
 
     expect(listed.map(({ id }) => id)).toContain(setCallOptions);
-    expect((await voice.host.caller.voice.getSettings()).options.readOut).toBe(
-      'answers',
-    );
+    expect(
+      (await voice.host.caller.voice.getSettings()).options.idleSeconds,
+    ).toBe(60);
+  });
+
+  it('offer no choice of what the voice reads out', async () => {
+    const { host } = await startVoiceEngine();
+
+    await expect(
+      host.caller.voice.setCallOptions(
+        JSON.parse('{"readOut":"answers"}') as object,
+      ),
+    ).rejects.toThrow(/readOut/);
   });
 });

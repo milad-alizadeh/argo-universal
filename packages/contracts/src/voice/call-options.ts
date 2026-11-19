@@ -10,11 +10,6 @@ const loudest = 100;
 
 const strongestGain = 200;
 
-// What the voice reads out of the Agent's work: its answers only, or its progress as it works too.
-export const VoiceReadOut = z.enum(['answers', 'answersAndProgress']);
-
-export type VoiceReadOut = z.infer<typeof VoiceReadOut>;
-
 // How every Voice call behaves, whichever voice speaks.
 export const VoiceCallOptions = z.strictObject({
   filler: z
@@ -29,9 +24,6 @@ export const VoiceCallOptions = z.strictObject({
     .describe(
       'What the voice is given before the call starts, such as how to greet the person; empty for nothing.',
     ),
-  readOut: VoiceReadOut.describe(
-    "`answers`: the voice is given only the Agent's final message of a Turn. `answersAndProgress`: its progress too, as it works.",
-  ),
   idleSeconds: z
     .number()
     .int()
@@ -63,7 +55,6 @@ export type VoiceCallOptionsChange = z.infer<typeof VoiceCallOptionsChange>;
 export const defaultVoiceCallOptions: VoiceCallOptions = {
   filler: true,
   opening: '',
-  readOut: 'answersAndProgress',
   idleSeconds: 300,
   volume: 100,
   microphoneGain: 100,

@@ -96,7 +96,7 @@ export const voiceSettingsOperations = {
     icon: 'settings',
     label: 'Change Voice call options',
     description:
-      "Change how Voice calls behave: the filler line when work is handed over, the opening the voice is given, what of the Agent's work it reads out, the idle timeout, the voice's volume and the microphone's gain. What is left out stays. Volume and gain change a running call at once; the rest apply from the next call.",
+      "Change how Voice calls behave: the filler line when work is handed over, the opening the voice is given, the idle timeout, the voice's volume and the microphone's gain. What is left out stays. Volume and gain change a running call at once; the rest apply from the next call.",
     params: VoiceCallOptionsChange,
     result: VoiceSettings,
     tier: 'confirm',

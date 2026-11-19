@@ -8,10 +8,9 @@ const msPerSecond = 1000;
 
 // How Argo runs a call under the person's options.
 export const conductOf = (
-  options: Pick<VoiceCallOptions, 'idleSeconds' | 'readOut'>,
+  options: Pick<VoiceCallOptions, 'idleSeconds'>,
 ): CallConduct => ({
   idleMs: options.idleSeconds * msPerSecond,
-  readOut: options.readOut,
 });
 
 // What a call is run with when its start says nothing.

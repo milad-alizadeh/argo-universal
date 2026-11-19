@@ -148,10 +148,9 @@ export class AgentRelay {
     }
   }
 
-  // A result is spoken; progress and analysis are background, or held back when only answers are read out.
+  // A result is spoken; progress and analysis are background.
   private pass({ kind, body }: VoiceMessage): void {
-    if (kind === 'result') this.tell(body, 'speak');
-    else if (this.call.readOut !== 'answers') this.tell(body, 'background');
+    this.tell(body, kind === 'result' ? 'speak' : 'background');
   }
 
   private remember({ kind, body }: VoiceMessage): void {
