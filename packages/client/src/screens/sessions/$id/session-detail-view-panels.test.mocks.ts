@@ -1,4 +1,6 @@
 import { fn } from 'storybook/test';
+import { sessionShells } from '../../../features/sessions/components/shell-list/shell-list.mocks';
+import { coverageCard } from './sections/plugin-card.mocks';
 import type { SessionDetailViewProps } from './session-detail-view';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 
@@ -13,4 +15,10 @@ export const panelsSession = {
       onOpenChange: fn(),
     },
   },
+} satisfies SessionDetailViewProps;
+
+export const workbenchMenuSession = {
+  ...panelsSession,
+  shells: { shells: sessionShells, onStop: fn() },
+  pluginCards: [coverageCard],
 } satisfies SessionDetailViewProps;

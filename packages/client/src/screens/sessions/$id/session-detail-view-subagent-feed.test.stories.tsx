@@ -26,8 +26,9 @@ import type {
 } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { runningSession } from './session-detail-view.mocks';
-
 // The narrowest wide window whose page gutter shows the Workbench's cards.
+import { openWorkbenchSection } from './session-workbench-menu.test.mocks';
+
 const workbenchWide = 1856;
 
 const meta = {
@@ -110,7 +111,7 @@ function listRowOpensFeed(width: number): Story {
     beforeEach: () => settleLayout(width),
     args: { view: sessionWithSubagentFeed() },
     play: async ({ canvas, userEvent }) => {
-      // Wide, the card's row opens the Feed itself; below wide the Composer's pill opens the Sheet's list.
+      // Wide, the card's row opens the Feed itself; on a phone the Workbench menu opens the Sheet's list.
       if (wide)
         await userEvent.click(
           await canvas.findByRole('button', {
@@ -118,9 +119,7 @@ function listRowOpensFeed(width: number): Story {
           }),
         );
       else {
-        await userEvent.click(
-          await canvas.findByRole('button', { name: 'Agents: 1' }),
-        );
+        await openWorkbenchSection({ canvas, userEvent }, 'Agents 1');
         await userEvent.click(
           await within(document.body).findByRole('link', {
             name: new RegExp(`^${runningSubagent.title},`),

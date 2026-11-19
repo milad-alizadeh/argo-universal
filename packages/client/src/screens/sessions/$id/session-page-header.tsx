@@ -10,9 +10,9 @@ import { summaryOf } from './sections/changes-facts';
 import {
   type OpenSessionViewProps,
   type SessionDetailViewProps,
-  sessionPageTitle,
 } from './session-detail-view';
 import { sessionHeaderActions } from './session-header-actions';
+import { workbenchMenu } from './session-workbench-menu';
 import {
   type HeaderPlacement,
   type ToggleWorkbenchCard,
@@ -43,16 +43,29 @@ const noPluginActions: SessionPluginActions = { beside: [], menu: [] };
 const pluginActionsOf = (props: SessionDetailViewProps): SessionPluginActions =>
   (props.state === 'open' && props.header.pluginActions) || noPluginActions;
 
-// A narrow window's header: the Session's title, the Plugins' actions and its ⋯ menu. The page's body is the Session's own, so only the header is a Screen's.
+// The Session's header declares its Actions once. Compact widths also offer the Workbench's sections.
 export function SessionPageHeader(
   props: SessionDetailViewProps,
 ): React.JSX.Element {
   return (
+    <SizeClass
+      compact={stackHeader(props, workbenchMenu(props))}
+      wide={stackHeader(props)}
+    />
+  );
+}
+
+function stackHeader(
+  props: SessionDetailViewProps,
+  workbench?: React.JSX.Element,
+): React.JSX.Element {
+  return (
     <ScreenStackHeader
-      title={sessionPageTitle(props)}
+      title={props.state === 'open' ? props.header.title : 'Session'}
       actions={sessionHeaderActions(
         headerMenuOf(props),
         pluginActionsOf(props),
+        workbench,
       )}
     />
   );

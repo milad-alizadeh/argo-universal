@@ -12,19 +12,37 @@ function distances(
   return [offset, content - viewport - offset];
 }
 
-function updateFade(scroll: HTMLElement, horizontal: boolean): void {
+// Each edge's progress as last written, so a scroll that leaves it unchanged writes nothing.
+type Written = Map<string, string>;
+
+const progressAt = (distance: number): string =>
+  String(Math.max(0, Math.min(1, distance / scrollFadeRamp)));
+
+// A custom property set on the scroller restyles every row inside it, so one left unchanged is not written again.
+function write(
+  scroll: HTMLElement,
+  written: Written,
+  [name, progress]: readonly [string, string],
+): void {
+  if (written.get(name) === progress) return;
+
+  written.set(name, progress);
+  scroll.style.setProperty(name, progress);
+}
+
+// Away from both ends both edges stay at 1, so a scroll there costs no restyle.
+function updateFade(
+  scroll: HTMLElement,
+  horizontal: boolean,
+  written: Written,
+): void {
   const edges = fadeEdgesFor(horizontal);
 
-  for (const [index, distance] of distances(scroll, horizontal).entries()) {
-    const progress = String(
-      Math.max(0, Math.min(1, distance / scrollFadeRamp)),
-    );
-
-    scroll.style.setProperty(
+  for (const [index, distance] of distances(scroll, horizontal).entries())
+    write(scroll, written, [
       `--scroll-fade-${edges[index]}-progress`,
-      progress,
-    );
-  }
+      progressAt(distance),
+    ]);
 }
 
 function observeChildren(
@@ -68,7 +86,8 @@ function observeSize(scroll: HTMLElement, update: () => void): () => void {
 
 // Pixel distances keep growing content from restarting a scroll timeline's mask animation.
 function trackScrollFade(scroll: HTMLElement, horizontal: boolean): () => void {
-  const update = (): void => updateFade(scroll, horizontal);
+  const written: Written = new Map();
+  const update = (): void => updateFade(scroll, horizontal, written);
   const stopObserving = observeSize(scroll, update);
   scroll.addEventListener('scroll', update, { passive: true });
 

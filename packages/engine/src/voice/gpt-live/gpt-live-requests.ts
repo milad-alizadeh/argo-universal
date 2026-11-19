@@ -26,8 +26,15 @@ const rejectedStatuses = new Set([unauthorized, forbidden]);
 const instructions = (briefing: string): string =>
   `You are the voice of a coding Agent. Hand the person's requests for work over; speak briefly.\n${briefing}`;
 
-// The session the call starts with; the service sets its type itself and refuses one sent.
-const sessionOf = (request: VoiceStartRequest): object => ({
+// The session a call starts with, as the ChatGPT route reads it: the service sets its type itself and refuses one sent.
+type CallSession = {
+  model: string;
+  instructions: string;
+  audio: { output: { voice: string } };
+  delegation: { type: 'client' };
+};
+
+const sessionOf = (request: VoiceStartRequest): CallSession => ({
   model,
   instructions: instructions(request.briefing),
   audio: { output: { voice: request.voice ?? defaultVoice } },
@@ -39,6 +46,18 @@ const bodyOf = (request: VoiceStartRequest): string =>
   JSON.stringify({ sdp: request.offer, session: sessionOf(request) });
 
 const bearer = (token: string): string => `Bearer ${token}`;
+
+type CreationHeaders = {
+  Authorization: string;
+  'openai-alpha': typeof alpha;
+  'Content-Type': 'application/json';
+};
+
+const creationHeaders = (token: string): CreationHeaders => ({
+  Authorization: bearer(token),
+  'openai-alpha': alpha,
+  'Content-Type': 'application/json',
+});
 
 function assertCreated(response: Response): void {
   if (rejectedStatuses.has(response.status)) throw new TokenRejected();
@@ -65,11 +84,7 @@ export async function createCall(
 ): Promise<CreatedCall> {
   const response = await fetch(`${url}${creationQuery}`, {
     method: 'POST',
-    headers: {
-      Authorization: bearer(token),
-      'openai-alpha': alpha,
-      'Content-Type': 'application/json',
-    },
+    headers: creationHeaders(token),
     body: bodyOf(request),
   });
 

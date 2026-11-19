@@ -156,10 +156,13 @@ function headed(
   cards: OpenedSession['cards'],
   { props, dialogs }: SessionPageMenu,
 ): React.JSX.Element {
+  const drawHeader = (page: SessionDetailViewProps): React.JSX.Element => (
+    <ConnectedSessionHeader {...sessionHeader(sessionId, cards, page)} />
+  );
+
   return (
     <>
-      <ConnectedSessionHeader {...sessionHeader(sessionId, cards, props)} />
-      <SessionDetailView {...props} />
+      <SessionDetailView {...props} drawHeader={drawHeader} />
       {dialogs}
     </>
   );
