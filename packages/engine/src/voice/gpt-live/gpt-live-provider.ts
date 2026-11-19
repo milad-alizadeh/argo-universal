@@ -14,6 +14,10 @@ import {
   TokenRejected,
   type CallOpening,
 } from './gpt-live-requests';
+import {
+  callInstructions,
+  previewInstructionsOf,
+} from './gpt-live-instructions';
 import { gptLiveVoices } from './gpt-live-voices';
 
 export type GptLiveOptions = {
@@ -34,12 +38,6 @@ const settingsOf = (options: GptLiveOptions): Required<GptLiveOptions> => ({
   lostLinkMs: lostLinkLimitMs,
   ...options,
 });
-
-const callInstructions = (briefing: string): string =>
-  `Your name is Argo. You are the voice of a coding Agent; when the person asks who you are, you are Argo. Hand the person's requests for work over; speak briefly.\n${briefing}`;
-
-const previewInstructions =
-  'This call only lets the person hear your voice. Say what you are asked to say, exactly, and nothing more.';
 
 // The service speaks first only when asked on the control link; its instructions alone leave it silent (live probe, 2026-11-19).
 const sayExactly = (words: string): string => `Say exactly: "${words}"`;
@@ -73,7 +71,7 @@ export class GptLiveProvider implements VoiceProvider {
   public start(request: VoiceStartRequest): Promise<GptLiveCall> {
     return this.open({
       offer: request.offer,
-      instructions: callInstructions(request.briefing),
+      instructions: callInstructions(request),
       voice: request.voice,
     });
   }
@@ -81,7 +79,7 @@ export class GptLiveProvider implements VoiceProvider {
   public async preview(request: VoicePreviewRequest): Promise<GptLiveCall> {
     const call = await this.open({
       offer: request.offer,
-      instructions: previewInstructions,
+      instructions: previewInstructionsOf(request.style),
       voice: request.voice,
     });
 

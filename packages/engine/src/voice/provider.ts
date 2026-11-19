@@ -45,13 +45,21 @@ export type VoiceProviderEvent =
 // What the voice does with text it is given: say it aloud, or keep it as background it may use later.
 export type VoiceDelivery = 'speak' | 'background';
 
-export interface VoiceStartRequest {
-  // The App's connection offer.
-  offer: string;
-  // What the voice is told about the Session before it speaks.
-  briefing: string;
+// What the person chose for every call: the voice, how it speaks, and what it is told.
+export interface VoiceCallSetup {
   // A voice the provider lists; the provider's own default when left out.
   voice?: string;
+  // How a custom voice speaks; told to the voice after the provider's own instructions.
+  style?: string;
+  // The person's custom instructions; told after the style.
+  instructions?: string;
+}
+
+export interface VoiceStartRequest extends VoiceCallSetup {
+  // The App's connection offer.
+  offer: string;
+  // What the voice is told about the Session before it speaks; it comes last.
+  briefing: string;
 }
 
 // A call that only lets the person hear a voice: it opens no microphone and its voice says `words` once.
@@ -59,6 +67,8 @@ export interface VoicePreviewRequest {
   // The App's connection offer; it carries no microphone.
   offer: string;
   voice: string;
+  // How a custom voice speaks, so the person hears it before saving it.
+  style?: string;
   words: string;
 }
 

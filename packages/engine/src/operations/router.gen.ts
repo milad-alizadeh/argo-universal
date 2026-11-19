@@ -467,6 +467,28 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      preview: publicProcedure
+        .input(operations['voice.preview'].params)
+        .output(operations['voice.preview'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.preview',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      hangUp: publicProcedure
+        .input(operations['voice.hangUp'].params)
+        .output(operations['voice.hangUp'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.hangUp',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       getSettings: publicProcedure
         .input(operations['voice.getSettings'].params)
         .output(operations['voice.getSettings'].result)
@@ -489,24 +511,57 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
-      preview: publicProcedure
-        .input(operations['voice.preview'].params)
-        .output(operations['voice.preview'].result)
-        .mutation(({ input, ctx }) =>
+      listVoices: publicProcedure
+        .input(operations['voice.listVoices'].params)
+        .output(operations['voice.listVoices'].result)
+        .query(({ input, ctx }) =>
           runner.run({
             kind: 'app',
-            id: 'voice.preview',
+            id: 'voice.listVoices',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),
         ),
-      hangUp: publicProcedure
-        .input(operations['voice.hangUp'].params)
-        .output(operations['voice.hangUp'].result)
+      setVoice: publicProcedure
+        .input(operations['voice.setVoice'].params)
+        .output(operations['voice.setVoice'].result)
         .mutation(({ input, ctx }) =>
           runner.run({
             kind: 'app',
-            id: 'voice.hangUp',
+            id: 'voice.setVoice',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      saveCustomVoice: publicProcedure
+        .input(operations['voice.saveCustomVoice'].params)
+        .output(operations['voice.saveCustomVoice'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.saveCustomVoice',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      deleteCustomVoice: publicProcedure
+        .input(operations['voice.deleteCustomVoice'].params)
+        .output(operations['voice.deleteCustomVoice'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.deleteCustomVoice',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      setInstructions: publicProcedure
+        .input(operations['voice.setInstructions'].params)
+        .output(operations['voice.setInstructions'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.setInstructions',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),

@@ -4,15 +4,13 @@ import {
   VoiceEndOutput,
   VoicePreviewInput,
   VoicePreviewOutput,
-  VoiceSettings,
-  VoiceSettingsChange,
   VoiceStartInput,
   VoiceStartOutput,
   VoiceStatus,
 } from '../voice';
 import type { OperationDefinition } from './index';
 
-// The Voice call's Operations (ADR-0063): the App starts, ends, reads and sets up calls; an Agent only hangs up its own.
+// The Voice call's Operations (ADR-0063): the App starts, ends, reads and previews calls; an Agent only hangs up its own.
 export const voiceOperations = {
   'voice.status': {
     id: 'voice.status',
@@ -45,28 +43,6 @@ export const voiceOperations = {
     result: VoiceEndOutput,
     tier: 'act',
     keywords: ['voice', 'call', 'hang up', 'end', 'stop', 'microphone'],
-  },
-  'voice.getSettings': {
-    id: 'voice.getSettings',
-    icon: 'settings',
-    label: 'Read Voice settings',
-    description:
-      'Read whether Voice calls are on, the Voice provider and voice chosen, and the providers and voices to choose from.',
-    params: z.strictObject({}).default({}),
-    result: VoiceSettings,
-    tier: 'read',
-    keywords: ['voice', 'settings', 'provider', 'speak'],
-  },
-  'voice.setSettings': {
-    id: 'voice.setSettings',
-    icon: 'settings',
-    label: 'Change Voice settings',
-    description:
-      'Turn Voice calls on or off, or choose the Voice provider or the voice the next call uses.',
-    params: VoiceSettingsChange,
-    result: VoiceSettings,
-    tier: 'confirm',
-    keywords: ['voice', 'settings', 'provider', 'enable', 'disable'],
   },
   'voice.preview': {
     id: 'voice.preview',

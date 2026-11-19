@@ -14,6 +14,8 @@ const noStatus: VoiceStatus = {
   enabled: defaultVoiceSettings.enabled,
 };
 
+const refused = (): Promise<never> => Promise.reject(unavailable(notAvailable));
+
 // What the Server runs with when it was given no Voice call machine: a Voice call can never start.
 export const noVoiceCalls: VoiceCallsPort = {
   status: () => Promise.resolve(noStatus),
@@ -23,8 +25,14 @@ export const noVoiceCalls: VoiceCallsPort = {
     throw unavailable('The Session has no Voice call');
   },
   attach: () => {},
-  settings: () => settingsOf(defaultVoiceSettings, null),
-  changeSettings: () => Promise.reject(unavailable(notAvailable)),
+  choices: {
+    settings: () => settingsOf(defaultVoiceSettings, null),
+    change: refused,
+    voices: () => Promise.resolve({ voices: [] }),
+    saveCustomVoice: refused,
+    deleteCustomVoice: refused,
+    setInstructions: refused,
+  },
   preview: () => Promise.reject(unavailable(notAvailable)),
   watch: async function* () {
     await Promise.resolve();

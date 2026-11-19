@@ -38,6 +38,8 @@ describe('Voice settings', () => {
         },
       ],
       voices: twoVoices,
+      customVoices: [],
+      instructions: '',
     });
     expect((await host.caller.voice.status()).enabled).toBe(true);
   });
@@ -138,6 +140,8 @@ describe('Voice settings', () => {
       voice: null,
       providers: [],
       voices: [],
+      customVoices: [],
+      instructions: '',
     });
   });
 });

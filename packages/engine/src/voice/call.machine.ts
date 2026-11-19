@@ -51,7 +51,7 @@ function providerEventOf(event: VoiceCallEvent): VoiceProviderEvent {
 
 type CallStart = Pick<
   RunningCall,
-  'callId' | 'sessionId' | 'offer' | 'voice' | 'connection'
+  'callId' | 'sessionId' | 'offer' | 'setup' | 'connection'
 >;
 
 // A call that has only been asked for: not answered, not connected, nobody speaking.
@@ -139,10 +139,10 @@ const voiceCallSetup = setup({
   actions: {
     begin: assign(({ event }): Partial<VoiceCallContext> => {
       assertEvent(event, 'call.start');
-      const { callId, sessionId, offer, voice, connection } = event;
+      const { callId, sessionId, offer, connection } = event;
 
       return {
-        call: newCall({ callId, sessionId, offer, voice, connection }),
+        call: newCall({ callId, sessionId, offer, setup: event.setup, connection }),
         ended: null,
         failure: null,
         turnRunning: false,
@@ -261,14 +261,14 @@ const endsWith = (reason: VoiceCallEnd): FinishAction => ({
 });
 
 const providerInput = (context: VoiceCallContext): ProviderCallInput => {
-  const { offer, sessionId, voice } = runningCall(context);
+  const call = runningCall(context);
 
   return {
     // SAFETY: `call.start` is refused without a provider, so `running` always has one.
     provider: context.provider as VoiceProvider,
-    offer,
-    voice,
-    briefing: context.briefing(sessionId),
+    offer: call.offer,
+    setup: call.setup,
+    briefing: context.briefing(call.sessionId),
   };
 };
 

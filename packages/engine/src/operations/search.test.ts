@@ -8,7 +8,6 @@ const appOnly = new Set([
   'voice.status',
   'voice.start',
   'voice.end',
-  'voice.getSettings',
   'voice.setSettings',
   'voice.preview',
 ]);

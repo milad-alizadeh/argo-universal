@@ -15,6 +15,10 @@ export const serverSettings = snakeCase.table(
     // The Voice provider and voice the next call uses; null until chosen, when the Server's own default applies.
     voiceProvider: text(),
     voiceName: text(),
+    // The person's custom voices, as JSON: each a name, a built-in voice and a description of how it speaks.
+    voiceCustomVoices: text({ mode: 'json' }).notNull().default('[]'),
+    // What every Voice call is told after Argo's own instructions; empty when the person wrote none.
+    voiceInstructions: text().notNull().default(''),
   },
   (table) => [check('server_settings_singleton', sql`${table.singleton} = 1`)],
 );

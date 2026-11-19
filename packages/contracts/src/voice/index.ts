@@ -1,5 +1,8 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
+import { CustomVoice, VoiceOption } from './voices';
+
+export * from './voices';
 
 // How far a running Voice call has come: the Voice provider has the App's offer and answered, then reports the call joined.
 export const VoiceCallStatus = z.enum(['connecting', 'connected']);
@@ -138,15 +141,6 @@ export const VoiceEndOutput = z.strictObject({ ended: z.boolean() });
 
 export type VoiceEndOutput = z.infer<typeof VoiceEndOutput>;
 
-// A voice a Voice provider speaks with; `description` only where the provider publishes one.
-export const VoiceOption = z.strictObject({
-  id: z.string().min(1),
-  label: z.string().min(1),
-  description: z.string().min(1).optional(),
-});
-
-export type VoiceOption = z.infer<typeof VoiceOption>;
-
 // A Voice provider the Server lists, and whether it can be used now.
 export const VoiceProviderOption = z.strictObject({
   id: z.string().min(1),
@@ -157,21 +151,34 @@ export const VoiceProviderOption = z.strictObject({
 
 export type VoiceProviderOption = z.infer<typeof VoiceProviderOption>;
 
-// Settings › Voice: what the person chose, and what they can choose from. `provider` and `voice` are null while the Server has no provider.
+/*
+ * Settings › Voice: what the person chose, and what they can choose from. `provider` and `voice` are null while the
+ * Server has no provider; `voice` is a built-in voice's id or a custom voice's.
+ */
 export const VoiceSettings = z.strictObject({
   enabled: z.boolean(),
   provider: z.string().min(1).nullable(),
   voice: z.string().min(1).nullable(),
   providers: z.array(VoiceProviderOption),
   voices: z.array(VoiceOption),
+  customVoices: z.array(CustomVoice),
+  instructions: z.string(),
 });
 
 export type VoiceSettings = z.infer<typeof VoiceSettings>;
 
 // Input of `voice.preview`: the voice to hear, and the App's offer for a connection that only listens.
 export const VoicePreviewInput = z.strictObject({
-  voice: z.string().min(1),
+  voice: z
+    .string()
+    .min(1)
+    .describe(
+      'A built-in or custom voice; with `custom`, the built-in voice it speaks with.',
+    ),
   offer: z.string().min(1).describe("The App's connection offer."),
+  custom: CustomVoice.pick({ label: true, description: true })
+    .optional()
+    .describe('A custom voice not saved yet, heard before it is saved.'),
 });
 
 export type VoicePreviewInput = z.infer<typeof VoicePreviewInput>;

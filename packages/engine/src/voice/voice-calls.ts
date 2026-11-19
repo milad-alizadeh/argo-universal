@@ -1,8 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type {
   VoiceAvailability,
-  VoiceSettings,
-  VoiceSettingsChange,
   VoiceEndOutput,
   VoicePreviewInput,
   VoicePreviewOutput,
@@ -20,7 +18,7 @@ import type { VoiceSessions } from './session-link';
 import { unavailable } from './unavailable';
 import { answerOf, startSettled } from './voice-call-answer';
 import { requireNoCall, requireRoom } from './voice-call-room';
-import { VoiceChoices } from './voice-choices';
+import { VoiceChoices, type VoiceChoicesPort } from './voice-choices';
 import { VoicePreviews } from './voice-previews';
 import type { VoiceSettingsStore } from './voice-settings';
 
@@ -39,9 +37,8 @@ export interface VoiceCallsPort {
   watch: (signal: AbortSignal) => AsyncGenerator<VoiceStatus>;
   // Gives the call the Sessions it sends Prompts to and listens to.
   attach: (sessions: VoiceSessions) => void;
-  // Settings › Voice: what the person chose and can choose from, and changing it.
-  settings: () => Promise<VoiceSettings>;
-  changeSettings: (change: VoiceSettingsChange) => Promise<VoiceSettings>;
+  // Settings › Voice: what the person chose and can choose from, and changing it; the next call uses it.
+  choices: VoiceChoicesPort;
   // Settings › Voice: one greeting in a voice, played while no call runs.
   preview: (input: VoicePreviewInput) => Promise<VoicePreviewOutput>;
 }
@@ -53,7 +50,7 @@ const namesSession = (
 
 // The Voice call machine behind its Operations: it checks what can be refused before the machine is asked.
 export class VoiceCalls implements VoiceCallsPort {
-  private readonly choices: VoiceChoices;
+  public readonly choices: VoiceChoices;
   private readonly previews = new VoicePreviews();
 
   public constructor(
@@ -76,19 +73,12 @@ export class VoiceCalls implements VoiceCallsPort {
     };
   }
 
-  public settings(): Promise<VoiceSettings> {
-    return this.choices.settings();
-  }
-
-  public changeSettings(change: VoiceSettingsChange): Promise<VoiceSettings> {
-    return this.choices.change(change);
-  }
-
   public async preview(input: VoicePreviewInput): Promise<VoicePreviewOutput> {
     await this.requireUsable();
     requireNoCall(this.actor);
+    const previewed = await this.choices.previewed(input);
 
-    return this.previews.play(this.provider(), input);
+    return this.previews.play(this.provider(), input.offer, previewed);
   }
 
   public async start(
@@ -165,13 +155,13 @@ export class VoiceCalls implements VoiceCallsPort {
     input: VoiceStartInput,
     connection?: AbortSignal,
   ): Promise<CallStart> {
-    const voice = await this.choices.voice();
+    const setup = await this.choices.setup();
 
     return {
       type: 'call.start',
       callId: randomUUID(),
       ...input,
-      voice,
+      setup,
       connection,
     };
   }

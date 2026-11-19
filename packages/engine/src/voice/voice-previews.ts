@@ -1,7 +1,7 @@
-import type { VoicePreviewInput, VoicePreviewOutput } from '@repo/contracts';
-import { TRPCError } from '@trpc/server';
+import type { VoicePreviewOutput } from '@repo/contracts';
+import type { PreviewedVoice } from './custom-voices';
 import type {
-  VoiceOption,
+  VoicePreviewRequest,
   VoiceProvider,
   VoiceProviderCall,
   VoiceProviderEvent,
@@ -11,27 +11,22 @@ import { unavailable } from './unavailable';
 // The longest a preview may play when the voice never says it has finished.
 const previewLimitMs = 20_000;
 
-const greetingOf = ({ label }: VoiceOption): string =>
+const greetingOf = ({ label }: PreviewedVoice): string =>
   `Hi, I'm ${label}. This is how I'll sound on your calls.`;
 
 // The voice has finished its greeting, or the call is over.
 const finished = (event: VoiceProviderEvent): boolean =>
   (event.type === 'speaking' && !event.speaking) || event.type === 'closed';
 
-async function optionOf(
-  provider: VoiceProvider,
-  voice: string,
-): Promise<VoiceOption> {
-  const option = (await provider.voices()).find(({ id }) => id === voice);
-
-  if (!option)
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: `There is no voice ${voice}`,
-    });
-
-  return option;
-}
+const requestOf = (
+  offer: string,
+  previewed: PreviewedVoice,
+): VoicePreviewRequest => ({
+  offer,
+  voice: previewed.voice,
+  style: previewed.style,
+  words: greetingOf(previewed),
+});
 
 /*
  * Settings' voice previews: a call that says one greeting in the voice picked, then hangs up by itself.
@@ -45,13 +40,13 @@ export class VoicePreviews {
 
   public async play(
     provider: VoiceProvider | null,
-    input: VoicePreviewInput,
+    offer: string,
+    previewed: PreviewedVoice,
   ): Promise<VoicePreviewOutput> {
     if (!provider) throw unavailable('No Voice provider is configured');
     this.end();
     const ask = ++this.asked;
-    const words = greetingOf(await optionOf(provider, input.voice));
-    const call = await provider.preview({ ...input, words });
+    const call = await provider.preview(requestOf(offer, previewed));
 
     if (ask === this.asked) this.hold(call);
     else call.end();

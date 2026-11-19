@@ -5,13 +5,17 @@ import {
   type VoiceCallEvent,
   type VoiceSay,
 } from './call-types';
-import type { VoiceProvider, VoiceStartRequest } from './provider';
+import type {
+  VoiceCallSetup,
+  VoiceProvider,
+  VoiceStartRequest,
+} from './provider';
 
 export type ProviderCallInput = {
   provider: VoiceProvider;
   offer: string;
   briefing: string;
-  voice?: string;
+  setup?: VoiceCallSetup;
 };
 
 type StartedCall = Awaited<ReturnType<VoiceProvider['start']>>;
@@ -59,8 +63,8 @@ const asError = (error: Error | string): Error =>
 const requestOf = ({
   offer,
   briefing,
-  voice,
-}: ProviderCallInput): VoiceStartRequest => ({ offer, briefing, voice });
+  setup,
+}: ProviderCallInput): VoiceStartRequest => ({ ...setup, offer, briefing });
 
 // Starts the provider's call, passes its events on, and ends it when the machine leaves `running`.
 export const providerCall = fromCallback<VoiceCallEvent, ProviderCallInput>(

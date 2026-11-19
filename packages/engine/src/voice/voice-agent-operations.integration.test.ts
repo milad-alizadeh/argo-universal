@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { runOperation } from '#mocks/operations';
+import { operationCaller, runOperation } from '#mocks/operations';
 import {
   callOf,
   offer,
@@ -12,19 +12,67 @@ const appOnly = [
   'session.queue',
   'voice.status',
   'voice.end',
-  'voice.getSettings',
   'voice.setSettings',
+  'voice.preview',
 ];
 
 describe('the App-only Operations an Agent is refused', () => {
-  it('lists only voice.hangUp of the Voice call Operations to an Agent', async () => {
+  it('lists hanging up and what the next call speaks with to an Agent', async () => {
     const session = await openVoiceSession(await startVoiceEngine());
 
     const listed = await session.caller.operations.list.query({
       filter: 'voice',
     });
 
-    expect(listed.map(({ id }) => id)).toEqual(['voice.hangUp']);
+    expect(listed.map(({ id }) => id).sort()).toEqual([
+      'voice.deleteCustomVoice',
+      'voice.getSettings',
+      'voice.hangUp',
+      'voice.listVoices',
+      'voice.saveCustomVoice',
+      'voice.setInstructions',
+      'voice.setVoice',
+    ]);
+  });
+
+  it('lets an Agent read the voices and the Voice settings', async () => {
+    const session = await openVoiceSession(await startVoiceEngine());
+
+    const voices = await runOperation(session.caller.operations, {
+      id: 'voice.listVoices',
+      params: {},
+      wait: true,
+    });
+
+    const settings = await runOperation(session.caller.operations, {
+      id: 'voice.getSettings',
+      params: {},
+      wait: true,
+    });
+
+    expect(voices).toEqual({
+      voices: [{ kind: 'builtIn', id: 'fake', label: 'Fake voice' }],
+    });
+    expect(settings).toMatchObject({ voice: 'fake', instructions: '' });
+  });
+
+  it('lets the command line change the voice and the instructions', async () => {
+    const { host } = await startVoiceEngine();
+    const cli = await operationCaller(host);
+
+    await runOperation(cli.operations, {
+      id: 'voice.saveCustomVoice',
+      params: { label: 'Calm', baseVoice: 'fake', description: 'Slow, low.' },
+    });
+    await runOperation(cli.operations, {
+      id: 'voice.setInstructions',
+      params: { instructions: 'Call me Sam.' },
+    });
+
+    expect(await host.caller.voice.getSettings()).toMatchObject({
+      customVoices: [{ label: 'Calm' }],
+      instructions: 'Call me Sam.',
+    });
   });
 
   it.each(appOnly)('refuses %s run by an Agent', async (id) => {

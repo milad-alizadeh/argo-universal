@@ -1,3 +1,5 @@
+import { CustomVoice } from '@repo/contracts';
+import { z } from 'zod';
 import type { Database } from '@repo/db';
 import { serverSettings } from '@repo/db/schema';
 import {
@@ -11,7 +13,11 @@ import {
 export interface StoredVoiceSettings {
   enabled: boolean;
   provider: string | null;
+  // A built-in voice's id or a custom voice's.
   voice: string | null;
+  customVoices: CustomVoice[];
+  // What every call is told after Argo's own instructions; empty for none.
+  instructions: string;
 }
 
 // What a Server that was never set up holds: Voice calls on, nothing chosen.
@@ -19,6 +25,8 @@ export const defaultVoiceSettings: StoredVoiceSettings = {
   enabled: true,
   provider: null,
   voice: null,
+  customVoices: [],
+  instructions: '',
 };
 
 // Where the Voice settings are kept: the Server's own settings, so every Device reads the same answer.
@@ -48,6 +56,21 @@ const storedOf = (
   enabled: row.voiceCalls,
   provider: row.voiceProvider,
   voice: row.voiceName,
+  customVoices: storedCustomVoices.parse(row.voiceCustomVoices),
+  instructions: row.voiceInstructions,
+});
+
+const storedCustomVoices = z.array(CustomVoice);
+
+const rowOf = (
+  settings: StoredVoiceSettings,
+): typeof serverSettings.$inferInsert => ({
+  singleton: 1,
+  voiceCalls: settings.enabled,
+  voiceProvider: settings.provider,
+  voiceName: settings.voice,
+  voiceCustomVoices: settings.customVoices,
+  voiceInstructions: settings.instructions,
 });
 
 class VoiceSettingsJob implements WriterJob {
@@ -58,14 +81,7 @@ class VoiceSettingsJob implements WriterJob {
   }
 
   public commit(transaction: StorageTransaction): void {
-    const { enabled, provider, voice } = this.settings;
-
-    const row = {
-      singleton: 1,
-      voiceCalls: enabled,
-      voiceProvider: provider,
-      voiceName: voice,
-    };
+    const row = rowOf(this.settings);
 
     transaction
       .insert(serverSettings)

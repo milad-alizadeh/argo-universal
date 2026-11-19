@@ -10,6 +10,11 @@ type VoiceImplementations = Pick<
   | 'voice.hangUp'
   | 'voice.getSettings'
   | 'voice.setSettings'
+  | 'voice.listVoices'
+  | 'voice.saveCustomVoice'
+  | 'voice.setVoice'
+  | 'voice.deleteCustomVoice'
+  | 'voice.setInstructions'
   | 'voice.preview'
 >;
 
@@ -25,6 +30,31 @@ const startInOpenSession =
     return voice.start(input, connection);
   };
 
+type ChoiceImplementations = Pick<
+  VoiceImplementations,
+  | 'voice.getSettings'
+  | 'voice.setSettings'
+  | 'voice.listVoices'
+  | 'voice.saveCustomVoice'
+  | 'voice.setVoice'
+  | 'voice.deleteCustomVoice'
+  | 'voice.setInstructions'
+>;
+
+// What the next call speaks with and is told.
+const choiceOperations = ({
+  choices,
+}: VoiceCallsPort): ChoiceImplementations => ({
+  'voice.getSettings': () => choices.settings(),
+  'voice.setSettings': (change) => choices.change(change),
+  'voice.listVoices': () => choices.voices(),
+  'voice.setVoice': ({ voice }) => choices.change({ voice }),
+  'voice.saveCustomVoice': (input) => choices.saveCustomVoice(input),
+  'voice.deleteCustomVoice': ({ id }) => choices.deleteCustomVoice(id),
+  'voice.setInstructions': ({ instructions }) =>
+    choices.setInstructions(instructions),
+});
+
 export function createVoiceOperations(
   voice: VoiceCallsPort,
   sessions: Pick<Sessions, 'open'>,
@@ -32,10 +62,9 @@ export function createVoiceOperations(
   return {
     'voice.status': () => voice.status(),
     'voice.start': startInOpenSession(voice, sessions),
-    'voice.getSettings': () => voice.settings(),
-    'voice.setSettings': (change) => voice.changeSettings(change),
     'voice.preview': (input) => voice.preview(input),
     'voice.end': ({ sessionId }) => Promise.resolve(voice.end(sessionId)),
     'voice.hangUp': ({ sessionId }) => Promise.resolve(voice.hangUp(sessionId)),
+    ...choiceOperations(voice),
   };
 }

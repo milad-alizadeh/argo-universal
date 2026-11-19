@@ -12,6 +12,7 @@ import { operationJsonSchema } from './schema-json';
 import { sessionOperations } from './sessions';
 import { todoListOperations } from './todo-list';
 import { voiceOperations } from './voice';
+import { voiceSettingsOperations } from './voice-settings';
 
 export { AgentAccess } from './agent-access';
 
@@ -57,6 +58,7 @@ export const operations = {
   ...sessionOperations,
   ...todoListOperations,
   ...voiceOperations,
+  ...voiceSettingsOperations,
   ...pluginOperations,
   ...registryOperations,
   ...projectOperations,
