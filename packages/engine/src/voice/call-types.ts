@@ -6,16 +6,17 @@ import type {
   VoiceProviderEvent,
 } from './provider';
 import type { VoiceSessions } from './session-link';
+import type { ReadOut } from './transcript';
 
 export type SessionGoneReason = Extract<
   VoiceCallEnd,
   'session-closed' | 'session-archived'
 >;
 
-// Something the Engine tells the voice: the answer to a request for work, or a word it did not ask for.
+// Something the Engine tells the voice: the answer to a request for work, a word it did not ask for, or an Agent's result for it to read out.
 export type VoiceSay =
   | { kind: 'reply'; requestId: string; text: string; delivery: VoiceDelivery }
-  | { kind: 'tell'; text: string; delivery: VoiceDelivery };
+  | { kind: 'tell' | 'result'; text: string; delivery: VoiceDelivery };
 
 // How Argo runs one call, whatever the provider: when silence ends it.
 export interface CallConduct {
@@ -129,6 +130,8 @@ export interface VoiceCallContext extends VoiceCallInput {
   turnRunning: boolean;
   // Words being said now that may still change; live state, never stored.
   partials: VoicePartial[];
+  // The voice is reading out an Agent's result, which is neither stored nor drawn.
+  readOut: ReadOut | null;
 }
 
 // The provider a running call speaks through; `call.start` is refused without one.

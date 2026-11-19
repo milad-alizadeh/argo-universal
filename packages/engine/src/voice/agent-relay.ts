@@ -153,21 +153,33 @@ export class AgentRelay {
     this.reports.speak({ kind: 'reply', requestId, text, delivery: 'speak' });
   }
 
-  private tell(text: string, delivery: VoiceDelivery): void {
+  private tell(
+    text: string,
+    delivery: VoiceDelivery,
+    kind: 'tell' | 'result' = 'tell',
+  ): void {
     for (const piece of inPieces(text))
-      this.reports.speak({ kind: 'tell', text: piece, delivery });
+      this.reports.speak({ kind, text: piece, delivery });
   }
 
+  // The Agent's answer, for the voice to read out.
+  private handOver(text: string): void {
+    this.tell(text, 'speak', 'result');
+  }
+
+  // Analysis stays silent, so the voice is never told it.
   private agentSaid(text: string): void {
-    for (const section of readVoiceSections(text)) {
-      this.pass(section);
-      this.remember(section);
-    }
+    for (const section of readVoiceSections(text))
+      if (section.kind !== 'analysis') {
+        this.pass(section);
+        this.remember(section);
+      }
   }
 
-  // A result is spoken; progress and analysis are background.
+  // A result is read out; progress is background.
   private pass({ kind, body }: VoiceMessage): void {
-    this.tell(body, kind === 'result' ? 'speak' : 'background');
+    if (kind === 'result') this.handOver(body);
+    else this.tell(body, 'background');
   }
 
   private remember({ kind, body }: VoiceMessage): void {
@@ -183,7 +195,7 @@ export class AgentRelay {
     const { resultSent, last } = this.turn;
     this.turn = freshTurn();
 
-    if (!resultSent && last) this.tell(last, 'speak');
+    if (!resultSent && last) this.handOver(last);
     this.tell(endingText(ended), endingDelivery(ended, told(resultSent, last)));
   }
 }

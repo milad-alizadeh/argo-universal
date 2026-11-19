@@ -1,53 +1,25 @@
 import { z } from 'zod';
 import type { VoiceProviderEvent } from '../provider';
 import { usageUpdated } from './link-limit';
-import {
-  SpokenTurns,
-  transcriptType,
-  type Speaker,
-  type Utterance,
-} from './link-turns';
+import { SpokenTurns, type Speaker, type Utterance } from './link-turns';
 import { frameRejections, readFrame } from './read-frame';
 import { serviceClosed } from './service-close';
 
 /*
  * The control link's events as the service sends them ("frameless bidi"); Codex reads the same ones (codex-rs realtime_websocket/protocol_frameless_bidi.rs).
- * Words arrive a chunk at a time as `*_transcript.added` and show as partials; a turn's `turn.done` holds its whole transcript, which is what was said.
+ * Words arrive a chunk at a time, both as `*_transcript.added` under each chunk's own item id and as `turn.delta` under the turn's id. Partials are read from the turn,
+ * so a partial carries the id its final is stored under; the chunks are not read. A turn's `turn.done` holds its whole transcript, which is what was said.
  * A turn the person cut short is done with what was said up to then; one that ends without a transcript keeps the words heard in it (`link-turns.ts`).
  * `session.usage.updated` counts audio time, not tokens, so only its allowance is reported: a status there is a limit.
  */
 
-// What the call has heard so far: each speaker's words in the utterance under way, and the turns still open.
-type Heard = { saying: Map<Speaker, Utterance>; turns: SpokenTurns };
-
-// What one event does to the call: the events it reports, given what was heard so far.
-type Step = (heard: Heard) => VoiceProviderEvent[];
+// What one event does to the call: the events it reports, given the turns still open.
+type Step = (turns: SpokenTurns) => VoiceProviderEvent[];
 
 const report =
   (...events: VoiceProviderEvent[]): Step =>
   () =>
     events;
-
-const partial = (speaker: Speaker, now: Utterance): VoiceProviderEvent[] => {
-  const text = now.text.trimStart();
-
-  if (!text) return [];
-
-  return [{ type: transcriptType[speaker], id: now.id, text, final: false }];
-};
-
-// A partial carries the utterance up to now, under the id of its first chunk.
-const wordsAdded =
-  (speaker: Speaker) =>
-  ({ item }: { item: Utterance }): Step =>
-  ({ saying }) => {
-    const before = saying.get(speaker) ?? { id: item.id, text: '' };
-    const now = { id: before.id, text: before.text + item.text };
-
-    saying.set(speaker, now);
-
-    return partial(speaker, now);
-  };
 
 type TurnFields = { turn: { id: string; transcript: string } };
 
@@ -56,43 +28,27 @@ const utteranceOf = ({ turn }: TurnFields): Utterance => ({
   text: turn.transcript,
 });
 
-const speakerOf = (event: VoiceProviderEvent): Speaker =>
-  event.type === 'person.transcript' ? 'person' : 'voice';
-
-// A new turn settles the turns still open; a settled speaker's next words start afresh.
+// A new turn settles the turns still open, and shows its own words so far.
 const turnOpened =
   (speaker: Speaker, ...after: VoiceProviderEvent[]) =>
   (fields: TurnFields): Step =>
-  ({ saying, turns }) => {
-    const settled = turns.opened(speaker, utteranceOf(fields));
-
-    for (const event of settled) saying.delete(speakerOf(event));
-
-    return [...settled, ...after];
-  };
+  (turns) => [...turns.opened(speaker, utteranceOf(fields)), ...after];
 
 const turnGrew =
   ({ turn_id: turnId, delta }: { turn_id: string; delta: string }): Step =>
-  ({ turns }) => {
+  (turns) =>
     turns.grew(turnId, delta);
 
-    return [];
-  };
-
-// A done turn's transcript is the whole utterance; the speaker's next words start afresh.
+// A done turn's transcript is the whole utterance.
 const turnDone =
   (speaker: Speaker, ...after: VoiceProviderEvent[]) =>
   (fields: TurnFields): Step =>
-  ({ saying, turns }) => {
-    saying.delete(speaker);
-
-    return [...turns.done(speaker, utteranceOf(fields)), ...after];
-  };
+  (turns) => [...turns.done(speaker, utteranceOf(fields)), ...after];
 
 // The service closed the call: the words still being said end first, then the close with the reason it gave.
 const closed =
   ({ reason }: { reason?: string }): Step =>
-  ({ turns }) => [...turns.closing(), serviceClosed(reason)];
+  (turns) => [...turns.closing(), serviceClosed(reason)];
 
 // Work the voice hands to the client, answered under the delegation item's id as Codex does.
 const requested = ({
@@ -108,10 +64,6 @@ const requested = ({
       .map((part) => part.text)
       .join(''),
   });
-
-const wordsFields = {
-  item: z.looseObject({ id: z.string(), text: z.string() }),
-};
 
 const turnFields = { id: z.string(), transcript: z.string().default('') };
 
@@ -138,12 +90,6 @@ const reported = z.union([
   z
     .looseObject({ type: z.literal('session.started') })
     .transform(() => report({ type: 'status', status: 'connected' })),
-  z
-    .looseObject({ type: z.literal('input_transcript.added'), ...wordsFields })
-    .transform(wordsAdded('person')),
-  z
-    .looseObject({ type: z.literal('output_transcript.added'), ...wordsFields })
-    .transform(wordsAdded('voice')),
   z
     .looseObject({ type: z.literal('turn.created'), ...userTurn })
     .transform(turnOpened('person')),
@@ -175,16 +121,18 @@ const reported = z.union([
 
 const rejectFrame = frameRejections('GPT-Live control link');
 
-// Reads one call's control-link text frames, keeping what was heard across frames.
+// Reads one call's control-link text frames, keeping the turns still open across frames.
 export class LinkReader {
-  private readonly heard: Heard = {
-    saying: new Map(),
-    turns: new SpokenTurns(),
-  };
+  private readonly turns = new SpokenTurns();
 
   // What one text frame means to the call; nothing for events not reported, and for anything unreadable, which is reported.
   public read(frame: string): VoiceProviderEvent[] {
-    return readFrame(reported, frame, rejectFrame)?.(this.heard) ?? [];
+    return readFrame(reported, frame, rejectFrame)?.(this.turns) ?? [];
+  }
+
+  // The call ending here: every open turn keeps the words said so far.
+  public closing(): VoiceProviderEvent[] {
+    return this.turns.closing();
   }
 }
 

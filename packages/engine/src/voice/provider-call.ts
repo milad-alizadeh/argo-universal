@@ -8,14 +8,19 @@ import {
 import type {
   VoiceCallSetup,
   VoiceProvider,
+  VoiceProviderEvent,
   VoiceStartRequest,
 } from './provider';
+
+// What the provider reports as the call hangs up, once the machine no longer hears it, such as the words said so far.
+type LastWords = (event: VoiceProviderEvent) => void;
 
 export type ProviderCallInput = {
   provider: VoiceProvider;
   offer: string;
   briefing: string;
   setup?: VoiceCallSetup;
+  lastWords: LastWords;
 };
 
 type StartedCall = Awaited<ReturnType<VoiceProvider['start']>>;
@@ -31,12 +36,15 @@ class ProviderHold {
   private call: StartedCall | undefined;
   private unlisten: (() => void) | undefined;
 
-  public constructor(private readonly sendBack: SendBack) {}
+  public constructor(
+    private readonly sendBack: SendBack,
+    private readonly lastWords: LastWords,
+  ) {}
 
   public adopt(call: StartedCall): void {
     if (this.released) return call.end();
     this.call = call;
-    this.unlisten = call.listen((event) => this.sendBack(providerEvent(event)));
+    this.unlisten = call.listen((event) => this.heard(event));
     this.sendBack({ type: 'call.answered', answer: call.answer });
   }
 
@@ -50,10 +58,16 @@ class ProviderHold {
       this.sendBack({ type: 'call.failed', message: error.message });
   }
 
+  // Hangs up; what the call reports while it ends goes to `lastWords`.
   public release(): void {
     this.released = true;
-    this.unlisten?.();
     this.call?.end();
+    this.unlisten?.();
+  }
+
+  private heard(event: VoiceProviderEvent): void {
+    if (this.released) this.lastWords(event);
+    else this.sendBack(providerEvent(event));
   }
 }
 
@@ -69,7 +83,7 @@ const requestOf = ({
 // Starts the provider's call, passes its events on, and ends it when the machine leaves `running`.
 export const providerCall = fromCallback<VoiceCallEvent, ProviderCallInput>(
   ({ input, sendBack, receive }) => {
-    const hold = new ProviderHold(sendBack);
+    const hold = new ProviderHold(sendBack, input.lastWords);
     receive((event) => {
       if (event.type === 'voice.say') hold.say(event.say);
     });

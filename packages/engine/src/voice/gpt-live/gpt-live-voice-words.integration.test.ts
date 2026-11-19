@@ -6,13 +6,11 @@ import {
   voiceTurnOpens,
   voiceWords,
 } from '#mocks/gpt-live-frames';
-import { heard, startedCall, type GptLiveFixture } from '#mocks/gpt-live-setup';
+import { heard, startedCall } from '#mocks/gpt-live-setup';
 
-/*
- * Diagnosis (voice/feed-diagnosis): what becomes of the voice's words on GPT-Live, which the App draws as a row.
- */
+// What becomes of the voice's words on GPT-Live, which the App draws as a row.
 
-let fixture: GptLiveFixture | undefined;
+let fixture: Awaited<ReturnType<typeof startedCall>> | undefined;
 
 afterEach(async () => {
   await fixture?.close();
@@ -21,7 +19,9 @@ afterEach(async () => {
 
 const ids = (events: ReturnType<typeof heard>, final: boolean): string[] =>
   events.flatMap((event) =>
-    event.type === 'voice.transcript' && event.final === final ? [event.id] : [],
+    event.type === 'voice.transcript' && event.final === final
+      ? [event.id]
+      : [],
   );
 
 describe('GPT-Live voice words and their Feed row', () => {
@@ -29,7 +29,13 @@ describe('GPT-Live voice words and their Feed row', () => {
     fixture = await startedCall();
     const events = heard(fixture.call);
 
-    for (const frame of [voiceWords, voiceMoreWords, voiceTurnOpens, voiceTurnGrows, voiceTurnDone])
+    for (const frame of [
+      voiceWords,
+      voiceMoreWords,
+      voiceTurnOpens,
+      voiceTurnGrows,
+      voiceTurnDone,
+    ])
       fixture.endpoint.send(frame);
     await expect.poll(() => ids(events, true)).toHaveLength(1);
 
@@ -45,6 +51,8 @@ describe('GPT-Live voice words and their Feed row', () => {
     await expect.poll(() => ids(events, false).length).toBeGreaterThan(0);
     fixture.call.end();
 
-    await expect.poll(() => ids(events, true), { timeout: 1000 }).toHaveLength(1);
+    await expect
+      .poll(() => ids(events, true), { timeout: 1000 })
+      .toHaveLength(1);
   });
 });

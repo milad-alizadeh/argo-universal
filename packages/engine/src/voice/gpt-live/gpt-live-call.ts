@@ -112,8 +112,11 @@ export class GptLiveCall implements VoiceProviderCall {
       });
   }
 
+  // Hanging up keeps what was said so far: the turns still open are settled before the call ends.
   public end(): void {
     if (this.ended) return;
+
+    for (const event of this.reader.closing()) this.emit(event);
     this.sendOut({ type: 'session.close' });
     this.finish();
   }

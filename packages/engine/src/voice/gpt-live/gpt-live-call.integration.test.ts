@@ -54,10 +54,6 @@ const person = (id: string, text: string, final: boolean) =>
 const voice = (id: string, text: string, final: boolean) =>
   ({ type: 'voice.transcript', id, text, final }) as const;
 
-const personChunk = 'item_ElnYl1s1aVXniJngfZ2Sz';
-
-const voiceChunk = 'item_ElnYp73GvhRUuMawnfzrq';
-
 const typesOf = (events: VoiceProviderEvent[]): string[] =>
   events.map(({ type }) => type);
 
@@ -85,8 +81,8 @@ describe('GPT-Live call events', () => {
 
     await expect.poll(() => events.length).toBe(3);
     expect(events).toEqual([
-      person(personChunk, 'Hi, please', false),
-      person(personChunk, 'Hi, please list', false),
+      person(personTurnId, 'Hi, please', false),
+      person(personTurnId, 'Hi, please list', false),
       person(personTurnId, personSaid, true),
     ]);
   });
@@ -99,22 +95,21 @@ describe('GPT-Live call events', () => {
 
     await expect.poll(() => events.length).toBe(5);
     expect(events).toEqual([
-      voice(voiceChunk, 'Okay', false),
-      voice(voiceChunk, 'Okay,', false),
+      voice(voiceTurnId, 'Okay', false),
       { type: 'speaking', speaking: true },
+      voice(voiceTurnId, 'Okay,', false),
       voice(voiceTurnId, voiceSaid, true),
       { type: 'speaking', speaking: false },
     ]);
   });
 
-  it('starts the next utterance afresh once a turn is done', async () => {
+  it('shows no words before their turn opens, and none after it is done', async () => {
     const { send, events } = await listening();
 
-    send(personWords, personTurnDone, personMoreWords);
+    send(personWords, personTurnDone, personMoreWords, personTurnGrows);
+    await expect.poll(() => events.length).toBe(1);
 
-    await expect
-      .poll(() => events.at(-1))
-      .toEqual(person('item_ElnYlzPXvOktphQ09kM3T', 'list', false));
+    expect(events).toEqual([person(personTurnId, personSaid, true)]);
   });
 
   it('reports work the voice hands over under its delegation item', async () => {
