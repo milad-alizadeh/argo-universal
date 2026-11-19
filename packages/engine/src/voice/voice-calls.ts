@@ -16,7 +16,7 @@ import type { VoiceCallActorRef } from './call.machine';
 import { Changes } from './changes';
 import type { VoiceProvider } from './provider';
 import type { VoiceSessions } from './session-link';
-import { unavailable } from './unavailable';
+import { noProviderReason, noVoiceCall, unavailable } from './unavailable';
 import { answerOf, startSettled } from './voice-call-answer';
 import { requireNoCall, requireRoom } from './voice-call-room';
 import type { VoiceCallsPort } from './voice-calls-port';
@@ -110,8 +110,7 @@ export class VoiceCalls implements VoiceCallsPort {
   private callOfSession(sessionId?: string): RunningCall {
     const { call } = this.actor.getSnapshot().context;
 
-    if (!call || !namesSession(sessionId, call))
-      throw unavailable('The Session has no Voice call');
+    if (!call || !namesSession(sessionId, call)) throw noVoiceCall();
 
     return call;
   }
@@ -141,7 +140,7 @@ export class VoiceCalls implements VoiceCallsPort {
 
     return provider
       ? provider.availability()
-      : { usable: false, reason: 'No Voice provider is configured' };
+      : { usable: false, reason: noProviderReason };
   }
 
   private async callStart(

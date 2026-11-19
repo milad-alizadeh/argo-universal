@@ -6,7 +6,7 @@ import type {
   VoiceOption,
   VoicePreviewInput,
 } from '@repo/contracts';
-import { baseOf, refuse } from './voice-choice-rules';
+import { baseOf, noSuchVoice, refuse } from './voice-choice-rules';
 
 // The provider's voices, then the person's own.
 export const listedVoices = (
@@ -70,7 +70,7 @@ export interface PreviewedVoice {
 const builtInPreview = (id: string, builtIn: VoiceOption[]): PreviewedVoice => {
   const option = builtIn.find((voice) => voice.id === id);
 
-  if (!option) throw refuse(`There is no voice ${id}`);
+  if (!option) throw noSuchVoice(id);
 
   return { voice: option.id, label: option.label };
 };

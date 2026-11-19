@@ -6,7 +6,7 @@ import type {
   VoiceProviderCall,
   VoiceProviderEvent,
 } from './provider';
-import { unavailable } from './unavailable';
+import { noProviderReason, unavailable } from './unavailable';
 
 // The longest a preview may play when the voice never says it has finished.
 const previewLimitMs = 20_000;
@@ -43,7 +43,7 @@ export class VoicePreviews {
     offer: string,
     previewed: PreviewedVoice,
   ): Promise<VoicePreviewOutput> {
-    if (!provider) throw unavailable('No Voice provider is configured');
+    if (!provider) throw unavailable(noProviderReason);
     this.end();
     const ask = ++this.asked;
     const call = await provider.preview(requestOf(offer, previewed));

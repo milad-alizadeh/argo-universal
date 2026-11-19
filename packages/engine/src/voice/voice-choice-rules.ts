@@ -23,6 +23,10 @@ const noChoices: Offered = {
 export const refuse = (message: string): TRPCError =>
   new TRPCError({ code: 'BAD_REQUEST', message });
 
+// The refusal of a voice that neither the Voice provider nor the person's custom voices hold.
+export const noSuchVoice = (id: string): TRPCError =>
+  refuse(`There is no voice ${id}`);
+
 export const voicesOf = async (
   provider: VoiceProvider | null,
 ): Promise<VoiceOption[]> => (await provider?.voices()) ?? [];
@@ -134,7 +138,7 @@ function requireVoice(
   builtIn: VoiceOption[],
 ): void {
   if (id !== undefined && !choosable(stored, builtIn).includes(id))
-    throw refuse(`There is no voice ${id}`);
+    throw noSuchVoice(id);
 }
 
 // What is stored once the change is applied; a choice the Server does not list is refused.
