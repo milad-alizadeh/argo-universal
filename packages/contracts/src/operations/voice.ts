@@ -10,7 +10,7 @@ import {
 } from '../voice';
 import type { OperationDefinition } from './index';
 
-// The Voice call's Operations (ADR-0063): the App starts one with its connection offer and ends it; anyone reads its status.
+// The Voice call's Operations (ADR-0063): the App starts, ends, reads and sets up calls; an Agent only hangs up its own.
 export const voiceOperations = {
   'voice.status': {
     id: 'voice.status',
@@ -39,7 +39,7 @@ export const voiceOperations = {
     label: 'End Voice call',
     icon: 'voice-off',
     description:
-      "End the Session's Voice call from the App's End button. An Agent ends the call with voice.hangUp.",
+      "End the Session's Voice call from the App's End button.",
     params: VoiceEndInput,
     result: VoiceEndOutput,
     tier: 'act',

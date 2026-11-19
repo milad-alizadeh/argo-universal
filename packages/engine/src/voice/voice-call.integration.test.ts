@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
-import { runOperation } from '#mocks/operations';
 import {
   callOf,
   endedOf,
@@ -107,21 +106,6 @@ describe('Voice call', () => {
       { ended: false },
     );
     expect(await callOf(host)).toMatchObject({ sessionId });
-  });
-
-  it('lets an Agent end its own Session’s call as an Operation', async () => {
-    const voice = await startVoiceEngine();
-    const { host, provider } = voice;
-    const session = await openVoiceSession(voice);
-    await host.caller.voice.start({ sessionId: session.sessionId, offer });
-    expect(
-      await runOperation(session.caller.operations, {
-        id: 'voice.end',
-        params: {},
-        wait: true,
-      }),
-    ).toEqual({ ended: true });
-    expect(provider.call.ended).toBe(true);
   });
 
   it('fails a start the provider cannot make', async () => {
