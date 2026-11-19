@@ -53,6 +53,10 @@ export interface VoiceCallSetup {
   style?: string;
   // The person's custom instructions; told after the style.
   instructions?: string;
+  // Whether the voice says a short line when it hands a request over; the provider's own default when left out.
+  filler?: boolean;
+  // What the voice is given before the call starts, such as how to greet the person.
+  opening?: string;
 }
 
 export interface VoiceStartRequest extends VoiceCallSetup {

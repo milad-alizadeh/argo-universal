@@ -19,6 +19,8 @@ export const serverSettings = snakeCase.table(
     voiceCustomVoices: text({ mode: 'json' }).notNull().default('[]'),
     // What every Voice call is told after Argo's own instructions; empty when the person wrote none.
     voiceInstructions: text().notNull().default(''),
+    // How every Voice call behaves, as JSON: filler, opening, read-out, idle timeout, volume and gain; `{}` for the defaults.
+    voiceCallOptions: text({ mode: 'json' }).notNull().default('{}'),
   },
   (table) => [check('server_settings_singleton', sql`${table.singleton} = 1`)],
 );

@@ -1,4 +1,4 @@
-import type { VoiceSettings } from '@repo/contracts';
+import { defaultVoiceCallOptions, type VoiceSettings } from '@repo/contracts';
 import type { VoiceDevices } from './voice-devices-section';
 
 // This Device's microphones and speakers, named once the microphone was allowed; the USB microphone is chosen.
@@ -46,6 +46,7 @@ export const usableVoice: VoiceSettings = {
   ],
   customVoices: [],
   instructions: '',
+  options: defaultVoiceCallOptions,
 };
 
 export const unusableVoice: VoiceSettings = {

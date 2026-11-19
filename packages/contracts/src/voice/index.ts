@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
+import { VoiceCallOptions } from './call-options';
 import { CustomVoice, VoiceOption } from './voices';
+
+export * from './call-options';
 
 export * from './voices';
 
@@ -106,6 +109,9 @@ export const VoiceStatus = z.strictObject({
   enabled: z.boolean(),
   // What is being said now, at most one per speaker; drawn at the tail of the call's Session's Feed.
   partials: z.array(VoicePartial),
+  // The App plays the voice this loud and sends the microphone at this gain, a running call included.
+  volume: VoiceCallOptions.shape.volume,
+  microphoneGain: VoiceCallOptions.shape.microphoneGain,
 });
 
 export type VoiceStatus = z.infer<typeof VoiceStatus>;
@@ -163,6 +169,7 @@ export const VoiceSettings = z.strictObject({
   voices: z.array(VoiceOption),
   customVoices: z.array(CustomVoice),
   instructions: z.string(),
+  options: VoiceCallOptions,
 });
 
 export type VoiceSettings = z.infer<typeof VoiceSettings>;

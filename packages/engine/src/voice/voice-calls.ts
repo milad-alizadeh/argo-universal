@@ -9,6 +9,7 @@ import type {
   VoiceStatus,
 } from '@repo/contracts';
 import { waitFor } from 'xstate';
+import { conductOf } from './call-conduct';
 import { voiceCallOf } from './call-look';
 import type { RunningCall, VoiceCallEvent } from './call-types';
 import type { VoiceCallActorRef } from './call.machine';
@@ -63,6 +64,7 @@ export class VoiceCalls implements VoiceCallsPort {
   public async status(): Promise<VoiceStatus> {
     const snapshot = this.actor.getSnapshot();
     const { ended, partials } = snapshot.context;
+    const { volume, microphoneGain } = this.choices.options();
 
     return {
       call: voiceCallOf(snapshot),
@@ -70,6 +72,8 @@ export class VoiceCalls implements VoiceCallsPort {
       partials,
       availability: await this.availability(),
       enabled: this.choices.enabled(),
+      volume,
+      microphoneGain,
     };
   }
 
@@ -162,6 +166,7 @@ export class VoiceCalls implements VoiceCallsPort {
       callId: randomUUID(),
       ...input,
       setup,
+      conduct: conductOf(this.choices.options()),
       connection,
     };
   }

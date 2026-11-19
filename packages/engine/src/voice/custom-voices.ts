@@ -6,10 +6,7 @@ import type {
   VoiceOption,
   VoicePreviewInput,
 } from '@repo/contracts';
-import { TRPCError } from '@trpc/server';
-
-const refuse = (message: string): TRPCError =>
-  new TRPCError({ code: 'BAD_REQUEST', message });
+import { refuse } from './voice-choice-rules';
 
 // The provider's voices, then the person's own.
 export const listedVoices = (

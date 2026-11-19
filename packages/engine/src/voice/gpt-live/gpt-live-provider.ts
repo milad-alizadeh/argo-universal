@@ -9,15 +9,15 @@ import type {
 import { codexAppServerAuth, type CodexAuth } from './codex-auth';
 import { GptLiveCall } from './gpt-live-call';
 import {
+  callInstructions,
+  previewInstructionsOf,
+} from './gpt-live-instructions';
+import {
   createCall,
   joinLink,
   TokenRejected,
   type CallOpening,
 } from './gpt-live-requests';
-import {
-  callInstructions,
-  previewInstructionsOf,
-} from './gpt-live-instructions';
 import { gptLiveVoices } from './gpt-live-voices';
 
 export type GptLiveOptions = {
@@ -73,6 +73,8 @@ export class GptLiveProvider implements VoiceProvider {
       offer: request.offer,
       instructions: callInstructions(request),
       voice: request.voice,
+      filler: request.filler,
+      opening: request.opening,
     });
   }
 

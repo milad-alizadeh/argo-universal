@@ -14,7 +14,6 @@ import {
 } from '../sessions';
 import type { writerMachine } from '../storage';
 import {
-  defaultVoiceIdleMs,
   defaultVoiceProvider,
   sessionBriefing,
   type VoiceCallInput,
@@ -106,7 +105,7 @@ export const voiceInput = ({
       ? defaultVoiceProvider(process.env)
       : context.voiceProvider,
   briefing: sessionBriefing(openDatabaseOf(context)),
-  idleMs: context.voiceIdleMs ?? defaultVoiceIdleMs,
+  idleMs: context.voiceIdleMs,
 });
 
 export { serverInput } from './server-input';

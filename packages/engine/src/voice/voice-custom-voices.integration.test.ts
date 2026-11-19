@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
-import {
-  offer,
-  openVoiceSession,
-  startVoiceEngine,
-} from '#mocks/voice-engine';
+import { offer, openVoiceSession, startVoiceEngine } from '#mocks/voice-engine';
 import { FakeVoiceProvider } from './fake-provider';
 
 const builtIn = [
@@ -93,9 +89,9 @@ describe('Custom voices', () => {
     await expect(
       host.caller.voice.deleteCustomVoice({ id: gone }),
     ).rejects.toThrow(gone);
-    await expect(
-      host.caller.voice.setVoice({ voice: gone }),
-    ).rejects.toThrow(gone);
+    await expect(host.caller.voice.setVoice({ voice: gone })).rejects.toThrow(
+      gone,
+    );
   });
 
   it("gives the next call a custom voice's base voice, its description and the custom instructions", async () => {

@@ -30,6 +30,7 @@ describe('the App-only Operations an Agent is refused', () => {
       'voice.hangUp',
       'voice.listVoices',
       'voice.saveCustomVoice',
+      'voice.setCallOptions',
       'voice.setInstructions',
       'voice.setVoice',
     ]);

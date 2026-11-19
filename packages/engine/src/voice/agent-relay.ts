@@ -1,3 +1,4 @@
+import type { VoiceReadOut } from '@repo/contracts';
 import {
   readVoiceMessage,
   withVoiceInstruction,
@@ -21,6 +22,12 @@ export interface RelayReports {
   turnsRunning: (running: boolean) => void;
 }
 
+// The call a relay serves: its Session, and whether the voice hears the Agent's progress during a Turn or only its answer.
+export interface RelayCall {
+  sessionId: string;
+  readOut?: VoiceReadOut;
+}
+
 // What the Agent said during the running Turn that the voice may still need at its end.
 type TurnMemory = { resultSent: boolean; last: string | null };
 
@@ -38,7 +45,7 @@ export class AgentRelay {
 
   public constructor(
     private readonly sessions: VoiceSessions,
-    private readonly sessionId: string,
+    private readonly call: RelayCall,
     private readonly reports: RelayReports,
   ) {}
 
@@ -48,7 +55,7 @@ export class AgentRelay {
     this.sentChanged(() => (this.atWork += 1));
 
     const answer = await this.sessions
-      .prompt(this.sessionId, this.promptText(text))
+      .prompt(this.call.sessionId, this.promptText(text))
       .then(
         (outcome: PromptOutcome) => this.sent(outcome),
         (error: Error) => {
@@ -131,8 +138,16 @@ export class AgentRelay {
   private agentSaid(text: string): void {
     const message = readVoiceMessage(text);
 
-    this.tell(message.body, message.kind === 'result' ? 'speak' : 'background');
+    if (this.readsOut(message))
+      this.tell(
+        message.body,
+        message.kind === 'result' ? 'speak' : 'background',
+      );
     this.remember(message);
+  }
+
+  private readsOut({ kind }: VoiceMessage): boolean {
+    return kind === 'result' || this.call.readOut !== 'answers';
   }
 
   private remember({ kind, body }: VoiceMessage): void {

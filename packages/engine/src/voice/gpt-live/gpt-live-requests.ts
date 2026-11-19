@@ -27,22 +27,49 @@ export type CallOpening = {
   offer: string;
   instructions: string;
   voice?: string;
+  // Whether the voice says a short line when it hands work over; the service's own default when left out.
+  filler?: boolean;
+  // Given to the voice before the call starts.
+  opening?: string;
 };
 
-// The session a call starts with, as the ChatGPT route reads it: the service sets its type itself and refuses one sent.
+type SeededItem = {
+  type: 'message';
+  role: 'developer';
+  content: [{ type: 'input_text'; text: string }];
+};
+
+/*
+ * The session a call starts with, as the ChatGPT route reads it: the service sets its type itself and refuses one sent.
+ * `ack_filler` and `initial_items` are the only options it was seen to honour; noise reduction, turn detection and
+ * text output make it drop the call (live probe, 2026-11-19, #2469).
+ */
 type CallSession = {
   model: string;
   instructions: string;
   audio: { output: { voice: string } };
-  delegation: { type: 'client' };
+  delegation: { type: 'client'; ack_filler?: boolean };
+  initial_items?: SeededItem[];
 };
 
-const sessionOf = (opening: CallOpening): CallSession => ({
-  model,
-  instructions: opening.instructions,
-  audio: { output: { voice: opening.voice ?? defaultVoice } },
-  delegation: { type: 'client' },
+const seeded = (text: string): SeededItem => ({
+  type: 'message',
+  role: 'developer',
+  content: [{ type: 'input_text', text }],
 });
+
+function sessionOf(opening: CallOpening): CallSession {
+  const session: CallSession = {
+    model,
+    instructions: opening.instructions,
+    audio: { output: { voice: opening.voice ?? defaultVoice } },
+    delegation: { type: 'client', ack_filler: opening.filler },
+  };
+
+  if (opening.opening) session.initial_items = [seeded(opening.opening)];
+
+  return session;
+}
 
 // The ChatGPT route reads one JSON body with the offer and the session, as Codex sends it; it refuses multipart.
 const bodyOf = (opening: CallOpening): string =>

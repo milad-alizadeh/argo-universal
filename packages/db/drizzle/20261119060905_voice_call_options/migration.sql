@@ -1,0 +1,1 @@
+ALTER TABLE `server_settings` ADD `voice_call_options` text DEFAULT '{}' NOT NULL;

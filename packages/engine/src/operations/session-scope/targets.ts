@@ -157,6 +157,7 @@ const targetRules = {
   'voice.setVoice': global,
   'voice.deleteCustomVoice': global,
   'voice.setInstructions': global,
+  'voice.setCallOptions': global,
   'voice.preview': global,
   'voice.end': callerSessionParam,
   'voice.hangUp': callerSessionParam,

@@ -12,6 +12,8 @@ const noStatus: VoiceStatus = {
   partials: [],
   availability: { usable: false, reason: notAvailable },
   enabled: defaultVoiceSettings.enabled,
+  volume: defaultVoiceSettings.options.volume,
+  microphoneGain: defaultVoiceSettings.options.microphoneGain,
 };
 
 const refused = (): Promise<never> => Promise.reject(unavailable(notAvailable));
@@ -32,6 +34,7 @@ export const noVoiceCalls: VoiceCallsPort = {
     saveCustomVoice: refused,
     deleteCustomVoice: refused,
     setInstructions: refused,
+    setCallOptions: refused,
   },
   preview: () => Promise.reject(unavailable(notAvailable)),
   watch: async function* () {

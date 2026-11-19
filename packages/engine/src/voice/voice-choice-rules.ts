@@ -8,7 +8,10 @@ import { TRPCError } from '@trpc/server';
 import type { VoiceCallSetup, VoiceProvider } from './provider';
 import type { StoredVoiceSettings } from './voice-settings';
 
-type Offered = Pick<VoiceSettings, 'provider' | 'voice' | 'providers' | 'voices'>;
+type Offered = Pick<
+  VoiceSettings,
+  'provider' | 'voice' | 'providers' | 'voices'
+>;
 
 const noChoices: Offered = {
   provider: null,
@@ -73,29 +76,36 @@ export async function settingsOf(
   provider: VoiceProvider | null,
 ): Promise<VoiceSettings> {
   const choices = provider ? await offered(stored, provider) : noChoices;
-  const { enabled, customVoices, instructions } = stored;
+  const { enabled, customVoices, instructions, options } = stored;
 
-  return { enabled, ...choices, customVoices, instructions };
+  return { enabled, ...choices, customVoices, instructions, options };
 }
 
 const unless = (text: string): string | undefined => text || undefined;
 
-/*
- * What the next call is set up with: a built-in voice, and, for a custom voice, how it speaks. Left out, the provider's
- * own default applies.
- */
-export function setupOf(
+// The voice itself: a built-in voice, and, for a custom voice, how it speaks. Left out, the provider's default applies.
+function spokenWith(
   stored: StoredVoiceSettings,
   builtIn: VoiceOption[],
-): VoiceCallSetup {
+): Pick<VoiceCallSetup, 'voice' | 'style'> {
   const chosen = voiceChosen(stored, builtIn);
   const custom = stored.customVoices.find(({ id }) => id === chosen);
-  const instructions = unless(stored.instructions);
 
   return custom
-    ? { voice: custom.baseVoice, style: custom.description, instructions }
-    : { voice: chosen ?? undefined, instructions };
+    ? { voice: custom.baseVoice, style: custom.description }
+    : { voice: chosen ?? undefined };
 }
+
+// What the next call is set up with: its voice, what it is told, and how it hands work over.
+export const setupOf = (
+  stored: StoredVoiceSettings,
+  builtIn: VoiceOption[],
+): VoiceCallSetup => ({
+  ...spokenWith(stored, builtIn),
+  instructions: unless(stored.instructions),
+  filler: stored.options.filler,
+  opening: unless(stored.options.opening),
+});
 
 const listed = (id: string, provider: VoiceProvider | null): boolean =>
   id === provider?.id;

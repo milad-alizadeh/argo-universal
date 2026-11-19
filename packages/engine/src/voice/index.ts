@@ -2,11 +2,7 @@ export { voiceCallMachine, voiceCallSystemId } from './call.machine';
 
 export type { VoiceCallInput } from './call-types';
 
-export {
-  defaultVoiceIdleMs,
-  defaultVoiceProvider,
-  sessionBriefing,
-} from './engine-input';
+export { defaultVoiceProvider, sessionBriefing } from './engine-input';
 
 export type { VoiceProvider } from './provider';
 

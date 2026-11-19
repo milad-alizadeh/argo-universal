@@ -14,6 +14,10 @@ afterEach(async () => {
   fixture = undefined;
 });
 
+// The session the fake service was asked to create the call with.
+const createdSession = (): object | undefined =>
+  fixture?.endpoint.created.at(0)?.session;
+
 const style = 'Speaks like a cheerful pirate.';
 
 const custom = 'Call me Sam.';
@@ -69,6 +73,32 @@ describe('What a GPT-Live call is told', () => {
 
     expect(told).toContain(style);
     expect(told).not.toContain('coding Agent');
+  });
+
+  it('turns the filler off and seeds the opening as a developer message, as the service honours them', async () => {
+    await instructionsSent({ filler: false, opening: 'Greet me as Sam.' });
+
+    expect(fixture?.endpoint.created.at(0)?.session).toMatchObject({
+      delegation: { type: 'client', ack_filler: false },
+      initial_items: [
+        {
+          type: 'message',
+          role: 'developer',
+          content: [{ type: 'input_text', text: 'Greet me as Sam.' }],
+        },
+      ],
+    });
+  });
+
+  it('sends no opening when there is none', async () => {
+    await instructionsSent({ filler: true });
+
+    const session = createdSession();
+
+    expect(session).toMatchObject({
+      delegation: { type: 'client', ack_filler: true },
+    });
+    expect(session).not.toHaveProperty('initial_items');
   });
 
   it('adds nothing for a style or instructions the person did not give', async () => {

@@ -40,6 +40,7 @@ describe('Voice settings', () => {
       voices: twoVoices,
       customVoices: [],
       instructions: '',
+      options: expect.any(Object),
     });
     expect((await host.caller.voice.status()).enabled).toBe(true);
   });
@@ -142,6 +143,7 @@ describe('Voice settings', () => {
       voices: [],
       customVoices: [],
       instructions: '',
+      options: expect.any(Object),
     });
   });
 });

@@ -1,6 +1,7 @@
 import type { VoiceCallEnd } from '@repo/contracts';
 import { assertEvent, assign, sendTo, setup, type ActorRefFrom } from 'xstate';
 import { agentRelay, type RelayInput } from './agent-relay-actor';
+import { defaultConduct } from './call-conduct';
 import {
   runningCall,
   type RunningCall,
@@ -49,14 +50,23 @@ function providerEventOf(event: VoiceCallEvent): VoiceProviderEvent {
   return event.event;
 }
 
-type CallStart = Pick<
-  RunningCall,
-  'callId' | 'sessionId' | 'offer' | 'setup' | 'connection'
->;
+type CallStartEvent = Extract<VoiceCallEvent, { type: 'call.start' }>;
+
+const callIdleMs = (call: RunningCall | null): number =>
+  (call?.conduct ?? defaultConduct).idleMs;
+
+// The idle timeout the call started with, unless the Engine was started with one for every call.
+const idleOf = (context: VoiceCallContext): number =>
+  context.idleMs ?? callIdleMs(context.call);
 
 // A call that has only been asked for: not answered, not connected, nobody speaking.
-const newCall = (start: CallStart): RunningCall => ({
-  ...start,
+const newCall = (start: CallStartEvent): RunningCall => ({
+  callId: start.callId,
+  sessionId: start.sessionId,
+  offer: start.offer,
+  setup: start.setup,
+  conduct: start.conduct ?? defaultConduct,
+  connection: start.connection,
   answer: null,
   startedAt: null,
   speaking: false,
@@ -134,15 +144,14 @@ const voiceCallSetup = setup({
     context: {} as VoiceCallContext,
     events: {} as VoiceCallEvent,
   },
-  delays: { idle: ({ context }): number => context.idleMs },
+  delays: { idle: ({ context }): number => idleOf(context) },
   actors: { providerCall, agentRelay, watchSession, watchConnection },
   actions: {
     begin: assign(({ event }): Partial<VoiceCallContext> => {
       assertEvent(event, 'call.start');
-      const { callId, sessionId, offer, connection } = event;
 
       return {
-        call: newCall({ callId, sessionId, offer, setup: event.setup, connection }),
+        call: newCall(event),
         ended: null,
         failure: null,
         turnRunning: false,
@@ -315,6 +324,7 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
           input: ({ context }): RelayInput => ({
             sessions: context.sessions,
             sessionId: runningCall(context).sessionId,
+            readOut: (runningCall(context).conduct ?? defaultConduct).readOut,
           }),
         },
         {

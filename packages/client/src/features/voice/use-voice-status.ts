@@ -1,4 +1,4 @@
-import type { VoiceStatus } from '@repo/contracts';
+import { defaultVoiceCallOptions, type VoiceStatus } from '@repo/contracts';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
@@ -10,6 +10,8 @@ const loadingStatus: VoiceStatus = {
   partials: [],
   availability: { usable: false, reason: 'Loading' },
   enabled: false,
+  volume: defaultVoiceCallOptions.volume,
+  microphoneGain: defaultVoiceCallOptions.microphoneGain,
 };
 
 // The Voice call's standing: read once, then followed from the Server on every Device.

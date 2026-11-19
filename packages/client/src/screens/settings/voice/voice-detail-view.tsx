@@ -1,4 +1,8 @@
-import type { VoiceAvailability, VoiceSettings } from '@repo/contracts';
+import {
+  defaultVoiceCallOptions,
+  type VoiceAvailability,
+  type VoiceSettings,
+} from '@repo/contracts';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
@@ -48,6 +52,7 @@ const nothing: VoiceSettings = {
   voices: [],
   customVoices: [],
   instructions: '',
+  options: defaultVoiceCallOptions,
 };
 
 // What is chosen and offered; nothing until the Server has answered.

@@ -566,6 +566,17 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      setCallOptions: publicProcedure
+        .input(operations['voice.setCallOptions'].params)
+        .output(operations['voice.setCallOptions'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.setCallOptions',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
     }),
     plugin: router({
       list: publicProcedure

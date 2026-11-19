@@ -1,4 +1,9 @@
-import type { VoiceCallEnd, VoiceLimit, VoicePartial } from '@repo/contracts';
+import type {
+  VoiceCallEnd,
+  VoiceLimit,
+  VoicePartial,
+  VoiceReadOut,
+} from '@repo/contracts';
 import type {
   VoiceCallSetup,
   VoiceDelivery,
@@ -17,6 +22,12 @@ export type VoiceSay =
   | { kind: 'reply'; requestId: string; text: string; delivery: VoiceDelivery }
   | { kind: 'tell'; text: string; delivery: VoiceDelivery };
 
+// How Argo runs one call, whatever the provider: when silence ends it, and what of the Agent's work the voice is given.
+export interface CallConduct {
+  idleMs: number;
+  readOut: VoiceReadOut;
+}
+
 export type VoiceCallEvent =
   | {
       type: 'call.start';
@@ -25,6 +36,7 @@ export type VoiceCallEvent =
       offer: string;
       // The voice the call speaks with and what it is told; the provider's own when left out.
       setup?: VoiceCallSetup;
+      conduct?: CallConduct;
       // The App Connection that started the call; the call ends when it closes.
       connection?: AbortSignal;
     }
@@ -59,8 +71,8 @@ export interface VoiceCallInput {
   provider: VoiceProvider | null;
   // What the voice is told about a Session before it speaks.
   briefing: (sessionId: string) => string;
-  // How long a call may pass without speech before it ends by itself, in milliseconds.
-  idleMs: number;
+  // Overrides the idle timeout every call starts with, in milliseconds; tests shorten it.
+  idleMs?: number;
 }
 
 export interface RunningCall {
@@ -68,6 +80,7 @@ export interface RunningCall {
   sessionId: string;
   offer: string;
   setup?: VoiceCallSetup;
+  conduct?: CallConduct;
   connection?: AbortSignal;
   answer: string | null;
   // When the call first connected.

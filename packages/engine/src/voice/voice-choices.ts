@@ -1,6 +1,8 @@
 import type {
   CustomVoice,
   CustomVoiceInput,
+  VoiceCallOptions,
+  VoiceCallOptionsChange,
   VoiceList,
   VoicePreviewInput,
   VoiceSettings,
@@ -32,6 +34,7 @@ export interface VoiceChoicesPort {
   saveCustomVoice: (input: CustomVoiceInput) => Promise<CustomVoice>;
   deleteCustomVoice: (id: string) => Promise<VoiceList>;
   setInstructions: (instructions: string) => Promise<VoiceSettings>;
+  setCallOptions: (change: VoiceCallOptionsChange) => Promise<VoiceSettings>;
 }
 
 // The person's Voice settings against the Server's provider: read, changed, and heard when they change.
@@ -99,6 +102,19 @@ export class VoiceChoices implements VoiceChoicesPort {
     await this.keep({ ...this.store.read(), instructions });
 
     return this.settings();
+  }
+
+  public async setCallOptions(
+    change: VoiceCallOptionsChange,
+  ): Promise<VoiceSettings> {
+    const stored = this.store.read();
+    await this.keep({ ...stored, options: { ...stored.options, ...change } });
+
+    return this.settings();
+  }
+
+  public options(): VoiceCallOptions {
+    return this.store.read().options;
   }
 
   // The voice a preview plays, refused when it is not there.

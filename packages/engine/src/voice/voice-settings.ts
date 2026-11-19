@@ -1,7 +1,12 @@
-import { CustomVoice } from '@repo/contracts';
-import { z } from 'zod';
+import {
+  CustomVoice,
+  defaultVoiceCallOptions,
+  VoiceCallOptionsChange,
+  type VoiceCallOptions,
+} from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { serverSettings } from '@repo/db/schema';
+import { z } from 'zod';
 import {
   writeDatabaseJobAndWaitForCommit,
   type StorageTransaction,
@@ -18,6 +23,7 @@ export interface StoredVoiceSettings {
   customVoices: CustomVoice[];
   // What every call is told after Argo's own instructions; empty for none.
   instructions: string;
+  options: VoiceCallOptions;
 }
 
 // What a Server that was never set up holds: Voice calls on, nothing chosen.
@@ -27,6 +33,7 @@ export const defaultVoiceSettings: StoredVoiceSettings = {
   voice: null,
   customVoices: [],
   instructions: '',
+  options: defaultVoiceCallOptions,
 };
 
 // Where the Voice settings are kept: the Server's own settings, so every Device reads the same answer.
@@ -58,9 +65,16 @@ const storedOf = (
   voice: row.voiceName,
   customVoices: storedCustomVoices.parse(row.voiceCustomVoices),
   instructions: row.voiceInstructions,
+  options: {
+    ...defaultVoiceCallOptions,
+    ...storedOptions.parse(row.voiceCallOptions),
+  },
 });
 
 const storedCustomVoices = z.array(CustomVoice);
+
+// Options kept by an older Server may be fewer; the defaults fill in the rest.
+const storedOptions = VoiceCallOptionsChange.catch({});
 
 const rowOf = (
   settings: StoredVoiceSettings,
@@ -71,6 +85,7 @@ const rowOf = (
   voiceName: settings.voice,
   voiceCustomVoices: settings.customVoices,
   voiceInstructions: settings.instructions,
+  voiceCallOptions: settings.options,
 });
 
 class VoiceSettingsJob implements WriterJob {

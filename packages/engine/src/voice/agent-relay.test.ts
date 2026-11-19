@@ -18,10 +18,14 @@ function relayTo(answer: () => Promise<PromptOutcome>): Relayed {
     notice: () => {},
   };
 
-  const relay = new AgentRelay(sessions, 's1', {
-    speak: (say): number => heard.said.push(say),
-    turnsRunning: (running): number => heard.running.push(running),
-  });
+  const relay = new AgentRelay(
+    sessions,
+    { sessionId: 's1' },
+    {
+      speak: (say): number => heard.said.push(say),
+      turnsRunning: (running): number => heard.running.push(running),
+    },
+  );
 
   return { relay, heard };
 }

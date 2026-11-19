@@ -1,4 +1,8 @@
-import type { VoiceCall, VoiceStatus } from '@repo/contracts';
+import {
+  defaultVoiceCallOptions,
+  type VoiceCall,
+  type VoiceStatus,
+} from '@repo/contracts';
 import type { ComposerVoice } from '#features/composer';
 import type { SessionVoiceInput } from './session-voice';
 
@@ -28,6 +32,8 @@ export const statusOf = (
   partials: [],
   availability: { usable: true },
   enabled: true,
+  volume: defaultVoiceCallOptions.volume,
+  microphoneGain: defaultVoiceCallOptions.microphoneGain,
   ...changes,
 });
 

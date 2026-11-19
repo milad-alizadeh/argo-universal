@@ -6,9 +6,6 @@ import type { CodexAuth } from './gpt-live/codex-auth';
 import { createGptLiveProvider } from './gpt-live/gpt-live-provider';
 import type { VoiceProvider } from './provider';
 
-// How long a Voice call may pass without speech before it ends by itself.
-export const defaultVoiceIdleMs = 300_000;
-
 // The Voice provider a Server uses unless it is given one: the fake for development when asked for, otherwise GPT-Live.
 export function defaultVoiceProvider(
   environment: NodeJS.ProcessEnv,

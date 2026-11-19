@@ -15,6 +15,7 @@ type VoiceImplementations = Pick<
   | 'voice.setVoice'
   | 'voice.deleteCustomVoice'
   | 'voice.setInstructions'
+  | 'voice.setCallOptions'
   | 'voice.preview'
 >;
 
@@ -39,6 +40,7 @@ type ChoiceImplementations = Pick<
   | 'voice.setVoice'
   | 'voice.deleteCustomVoice'
   | 'voice.setInstructions'
+  | 'voice.setCallOptions'
 >;
 
 // What the next call speaks with and is told.
@@ -53,6 +55,7 @@ const choiceOperations = ({
   'voice.deleteCustomVoice': ({ id }) => choices.deleteCustomVoice(id),
   'voice.setInstructions': ({ instructions }) =>
     choices.setInstructions(instructions),
+  'voice.setCallOptions': (change) => choices.setCallOptions(change),
 });
 
 export function createVoiceOperations(
