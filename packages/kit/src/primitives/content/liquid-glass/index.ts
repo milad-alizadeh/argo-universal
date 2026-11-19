@@ -14,3 +14,9 @@ export {
   type TransparencySource,
   type TransparencyStore,
 } from './transparency-store';
+
+export {
+  glassMaterial,
+  glassMaterialClass,
+  plainGlassClass,
+} from './liquid-glass-material';

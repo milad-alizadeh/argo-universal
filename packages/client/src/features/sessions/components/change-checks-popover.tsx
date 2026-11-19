@@ -57,7 +57,7 @@ interface ChangeChecksProps {
   onOpen: () => void;
 }
 
-// The checks part of a Change row: on the web a pointer over it lists each check by name in a popover; a phone opens the Change.
+// The checks part of a Change row: on the web a click on it lists each check by name in a popover; a phone opens the Change.
 export function ChangeChecks(props: ChangeChecksProps): ReactElement {
   const { details } = props.checks;
 
@@ -80,7 +80,7 @@ type PopoverProps = ChangeChecksProps & { details: readonly CheckDetail[] };
 
 function ChecksPopover({ checks, details }: PopoverProps): ReactElement {
   return (
-    <Popover openOnHover>
+    <Popover>
       <PopoverTrigger>
         <ChangePart tone={checksState(checks)} aria-haspopup="dialog">
           <PullRequestChecks {...checks} compact />
