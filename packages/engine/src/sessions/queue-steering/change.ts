@@ -7,7 +7,7 @@ import {
 import { queueWrite } from '../prompt-queue';
 import type { SessionContext } from '../session-context';
 import { turnStep, type TurnStep } from '../turn';
-import type { TurnHappening } from '../turn-happenings';
+import { promptTaken, type TurnHappening } from '../turn-happenings';
 import type { QueueSteering, QueueSteeringCommand } from './types';
 
 type Finish = Extract<
@@ -54,7 +54,7 @@ const takenHappenings = ({
   queuedId,
   turnId,
 }: QueueSteering): TurnHappening[] =>
-  queuedId ? [{ type: 'prompt.taken', queuedId, turnId }] : [];
+  queuedId ? [promptTaken(queuedId, turnId)] : [];
 
 function remainingQueue(
   context: SessionContext,

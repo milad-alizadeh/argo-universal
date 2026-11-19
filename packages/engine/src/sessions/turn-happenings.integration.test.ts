@@ -7,11 +7,9 @@ type Fixture = Awaited<ReturnType<typeof startSteeringFixture>>;
 // Every Turn happening the Session reports from now on, in order.
 function heard(fixture: Fixture): TurnHappening[] {
   const happenings: TurnHappening[] = [];
-  const note = (happening: TurnHappening): number =>
-    happenings.push(happening);
+  const note = (happening: TurnHappening): number => happenings.push(happening);
 
-  fixture.actor.on('prompt.taken', note);
-  fixture.actor.on('turn.ended', note);
+  fixture.actor.on('*', note);
 
   return happenings;
 }

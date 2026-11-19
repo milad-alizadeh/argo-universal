@@ -116,7 +116,6 @@ import {
   type SessionMachineInput,
   type SessionWrite,
 } from './session-context';
-import type { TurnHappening } from './turn-happenings';
 import type {
   NewSessionInput,
   SessionData,
@@ -140,6 +139,7 @@ import {
   type StartTurnParameters,
   type TurnStep,
 } from './turn';
+import type { TurnHappening } from './turn-happenings';
 
 type AgentUpdateEvent = Extract<FeedEvent, { type: 'feed.acpUpdate' }>;
 
@@ -294,20 +294,29 @@ type TurnQueue = StepQueue & {
   emit: (happening: TurnHappening) => void;
 };
 
-// A Turn step: its change and writes, then its events for the Feeds; each Subagent's Feed hears its Turn end before its write, and the Session's own Feed after them. Its Turn happenings are reported last.
+// Each Subagent's Feed hears its Turn end before its write is queued.
+const enqueueSubagentTurns = (
+  enqueue: TurnQueue,
+  context: SessionContext,
+  step: TurnStep,
+): void => {
+  for (const { feed, event, write } of step.subagentTurns) {
+    enqueue.sendTo(feed, event);
+    enqueueWrites(enqueue, context, [write]);
+  }
+};
+
+// A Turn step: its change and writes, then its events for the Feeds, the Subagents' before the Session's own; its Turn happenings are reported last.
 const enqueueTurnStep = (
   enqueue: TurnQueue,
   context: SessionContext,
   step: TurnStep,
 ): void => {
   enqueueChangeAndWrites(enqueue, context, step);
-
-  for (const { feed, event, write } of step.subagentTurns) {
-    enqueue.sendTo(feed, event);
-    enqueueWrites(enqueue, context, [write]);
-  }
+  enqueueSubagentTurns(enqueue, context, step);
 
   for (const event of step.feed) enqueue.sendTo('feed', event);
+
   for (const happening of step.happenings) enqueue.emit(happening);
 };
 

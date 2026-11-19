@@ -74,12 +74,14 @@ export class StubSession implements FollowedSession {
   }
 
   private notify(): void {
-    for (const observer of this.observers)
-      observer.next?.(this.getSnapshot());
+    for (const observer of this.observers) observer.next?.(this.getSnapshot());
   }
 }
 
-export const ended = (turnId: string, stopReason = 'end_turn'): TurnHappening => ({
+export const ended = (
+  turnId: string,
+  stopReason = 'end_turn',
+): TurnHappening => ({
   type: 'turn.ended',
   turnId,
   stopReason,

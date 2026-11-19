@@ -7,6 +7,7 @@ import {
   type EndTurnParameters,
   type TurnStep,
 } from './turn';
+import { promptTaken } from './turn-happenings';
 
 type QueueSelection = Pick<SessionContext, 'promptQueue'> & {
   input: Pick<SessionContext['input'], 'createId'>;
@@ -63,16 +64,30 @@ export function startQueuedTurn(
 ): TurnStep {
   const step = sessionTurn.start(context, turnId, followUpSuggestions);
 
-  if (!context.dispatchingQueueId) return step;
+  const queuedId = context.dispatchingQueueId;
+
+  return queuedId
+    ? takeFromQueue({ ...context, dispatchingQueueId: queuedId }, step, turnId)
+    : step;
+}
+
+type Dispatching = Pick<SessionContext, 'sessionId' | 'promptQueue'> & {
+  dispatchingQueueId: string;
+};
+
+// The Turn the queue started takes its Prompt out of the queue, in the same write that stores the Turn.
+function takeFromQueue(
+  context: Dispatching,
+  step: TurnStep,
+  turnId: string,
+): TurnStep {
   const promptQueue = remainingQueue(context);
 
   return turnStep({
     ...step,
     change: { ...step.change, promptQueue, dispatchingQueueId: null },
     writes: atomicStart(step, context.sessionId, promptQueue),
-    happenings: [
-      { type: 'prompt.taken', queuedId: context.dispatchingQueueId, turnId },
-    ],
+    happenings: [promptTaken(context.dispatchingQueueId, turnId)],
   });
 }
 

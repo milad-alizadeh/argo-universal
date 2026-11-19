@@ -12,3 +12,9 @@ export type TurnHappening =
       stopReason: string;
       error: string | null;
     };
+
+// A queued Prompt was taken into a Turn: steered into the running one, or started by the queue.
+export const promptTaken = (
+  queuedId: string,
+  turnId: string,
+): TurnHappening => ({ type: 'prompt.taken', queuedId, turnId });
