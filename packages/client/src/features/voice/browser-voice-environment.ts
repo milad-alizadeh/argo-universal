@@ -3,7 +3,7 @@ import type {
   VoiceEnvironment,
   VoicePeer,
   VoicePlayback,
-} from './webrtc-voice-connection';
+} from './voice-environment';
 
 const iceGatheringLimitMs = 3000;
 
@@ -103,6 +103,17 @@ class BrowserPeer implements VoicePeer {
       this.connection.addTrack(track, stream);
   }
 
+  // The sender keeps its place in the offer, so the provider hears the new microphone with no renegotiation.
+  public async replaceMicrophone(microphone: Microphone): Promise<void> {
+    const [track] = streamOf(microphone).getAudioTracks();
+
+    const sender = this.connection
+      .getSenders()
+      .find((each) => each.track?.kind === 'audio');
+
+    await sender?.replaceTrack(track ?? null);
+  }
+
   public async accept(answer: string): Promise<void> {
     await this.connection.setRemoteDescription({ type: 'answer', sdp: answer });
   }
@@ -120,24 +131,42 @@ class BrowserPeer implements VoicePeer {
   }
 }
 
-async function openMicrophone(): Promise<Microphone> {
+// Exactly the chosen microphone, so a missing one fails here and the connection can fall back to the system's.
+const audioOf = (device: string | null): MediaTrackConstraints | true =>
+  device === null ? true : { deviceId: { exact: device } };
+
+async function openMicrophone(device: string | null): Promise<Microphone> {
   return new BrowserMicrophone(
-    await navigator.mediaDevices.getUserMedia({ audio: true }),
+    await navigator.mediaDevices.getUserMedia({ audio: audioOf(device) }),
   );
 }
+
+// The system's speaker, as `setSinkId` names it.
+const systemSpeaker = '';
 
 class BrowserPlayback implements VoicePlayback {
   private readonly audio = new Audio();
   private readonly meter: LevelMeter;
 
-  public constructor(stream: MediaStream) {
+  public constructor(stream: MediaStream, speaker: string | null) {
     this.audio.srcObject = stream;
     this.meter = new LevelMeter(stream);
+    this.setSpeaker(speaker);
     void this.audio.play();
   }
 
   public setVolume(volume: number): void {
     this.audio.volume = volume;
+  }
+
+  // A speaker that is gone plays on the system's instead, so the voice is never lost.
+  public setSpeaker(speaker: string | null): void {
+    this.audio
+      .setSinkId(speaker ?? systemSpeaker)
+      .catch(() => this.audio.setSinkId(systemSpeaker))
+      .catch((cause: unknown) =>
+        console.error('Could not play the voice on that speaker', cause),
+      );
   }
 
   // The meter reads the stream before the volume, so a silenced voice still moves the orb.
@@ -152,8 +181,10 @@ class BrowserPlayback implements VoicePlayback {
   }
 }
 
-const playVoice = (stream: MediaStream): VoicePlayback =>
-  new BrowserPlayback(stream);
+const playVoice = (
+  stream: MediaStream,
+  speaker: string | null,
+): VoicePlayback => new BrowserPlayback(stream, speaker);
 
 // The page's own pieces: the system microphone, a peer connection, and an audio element for the voice.
 export const browserVoiceEnvironment: VoiceEnvironment = {
