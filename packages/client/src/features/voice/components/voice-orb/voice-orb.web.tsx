@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import type { VoiceLevels } from '../../voice-connection';
 import { orbOn, type OrbGl } from './orb-gl';
 import { OrbMotion } from './orb-motion';
-import { voiceOrbSize, type VoiceOrbProps } from './voice-orb-props';
+import { orbName, voiceOrbSize, type VoiceOrbProps } from './voice-orb-props';
 
 const quiet: VoiceLevels = { input: 0, output: 0 };
 
@@ -92,7 +92,7 @@ export function VoiceOrb(props: VoiceOrbProps): React.JSX.Element {
   return (
     <View
       accessibilityRole="image"
-      accessibilityLabel={`Voice ${props.state}`}
+      accessibilityLabel={orbName(props.state)}
       className="overflow-hidden rounded-full bg-tone-info-200"
       style={{ width: voiceOrbSize, height: voiceOrbSize }}
     >

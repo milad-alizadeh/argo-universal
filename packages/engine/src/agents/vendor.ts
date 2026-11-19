@@ -2,7 +2,17 @@ import { join } from 'node:path';
 import type { SuggestionModelChoice } from '@repo/contracts';
 import { productCompatibility } from '@repo/contracts/product-identity';
 import { satisfies } from 'semver';
+import type { AccountUsageReader } from './account-usage-protocol';
 import type { AgentLaunch } from './agent-launch';
+import {
+  claudeAccountProtocol,
+  codexAccountProtocol,
+  supportsCodexAccount,
+} from './vendor-account-protocols';
+import { claudeAccountUsage } from './vendor-claude-account-usage';
+import { codexAccountUsage } from './vendor-codex-account-usage';
+
+export const codexUsageBucketId = 'codex';
 
 export const vendorRegistryIds = {
   claude: 'claude-acp',
@@ -117,3 +127,40 @@ export function supportsOwnedSteering(
 }
 
 export { vendorUsageLimits } from './vendor-usage-limits';
+
+type AccountReader = AccountUsageReader & {
+  supports: (env: AgentLaunch['env']) => boolean;
+};
+
+const accountUsage = new Map<string | undefined, AccountReader>([
+  [
+    vendorRegistryIds.claude,
+    {
+      protocol: claudeAccountProtocol,
+      decode: claudeAccountUsage,
+      supports: (env): boolean => !env.ANTHROPIC_BASE_URL,
+    },
+  ],
+  [
+    vendorRegistryIds.codex,
+    {
+      protocol: codexAccountProtocol,
+      decode: (
+        response,
+        observedAt,
+      ): ReturnType<AccountUsageReader['decode']> =>
+        codexAccountUsage(response, observedAt, codexUsageBucketId),
+      supports: supportsCodexAccount,
+    },
+  ],
+]);
+
+export function accountUsageOf(
+  launch: AgentLaunch,
+): AccountUsageReader | undefined {
+  const reader = accountUsage.get(launch.registryId);
+
+  if (!reader) return;
+
+  return reader.supports(launch.env) ? reader : undefined;
+}

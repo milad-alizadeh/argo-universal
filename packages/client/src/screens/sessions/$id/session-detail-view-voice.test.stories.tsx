@@ -2,6 +2,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, waitFor } from 'storybook/test';
+import { feedScrollId } from '../../../features/feed/components/feed/feed-reader.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { voiceCallSession } from './session-detail-view-voice.mocks';
 import { longSession } from './session-detail-view.mocks';
@@ -27,7 +28,7 @@ export const OrbStaysPinned: Story = {
   play: async ({ canvas }) => {
     await settleLayout(1440);
     const stage = await canvas.findByTestId('voice-stage');
-    const scroll = await canvas.findByTestId('feed-scroll');
+    const scroll = await canvas.findByTestId(feedScrollId);
     const pinned = stage.getBoundingClientRect().top;
     await expect(canvas.getByText('Listening')).toBeInTheDocument();
     await expect(canvas.getByText('Voice · 4:12')).toBeInTheDocument();

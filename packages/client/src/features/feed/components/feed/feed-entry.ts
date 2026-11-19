@@ -151,15 +151,22 @@ function rhythmKind(entry: FeedEntry): RhythmKind {
   return isAgentMessage(entry) ? 'agentMessage' : 'other';
 }
 
-/*
- * The space between two entries of the same kind; entries of different kinds take
- * the `other` space. One breakpoint for all three: the rhythm steps down where the
- * type does (`wide-type:`), not where the window happens to get wide.
- */
-const spaceBetween: Record<RhythmKind, string> = {
-  activity: 'pb-2 wide-type:pb-1.5',
-  agentMessage: 'pb-paragraph wide-type:pb-paragraph-wide',
-  other: 'pb-6 wide-type:pb-5',
+const promptGap = 'pb-6 wide-type:pb-5';
+
+const activityMessageGap = 'pb-4 wide-type:pb-3';
+
+const spaceBetween: Record<RhythmKind, Record<RhythmKind, string>> = {
+  activity: {
+    activity: 'pb-2 wide-type:pb-1.5',
+    agentMessage: activityMessageGap,
+    other: promptGap,
+  },
+  agentMessage: {
+    activity: activityMessageGap,
+    agentMessage: 'pb-paragraph wide-type:pb-paragraph-wide',
+    other: promptGap,
+  },
+  other: { activity: promptGap, agentMessage: promptGap, other: promptGap },
 };
 
 // The Feed's rhythm, set below a row by the row after it, so older rows paging in above never resize a row the reader sees.
@@ -167,8 +174,5 @@ export function spaceBelowEntry(
   entry: FeedEntry,
   next: FeedEntry | undefined,
 ): string {
-  if (!next) return '';
-  const kind = rhythmKind(entry);
-
-  return kind === rhythmKind(next) ? spaceBetween[kind] : spaceBetween.other;
+  return next ? spaceBetween[rhythmKind(entry)][rhythmKind(next)] : '';
 }

@@ -16,6 +16,14 @@ const notices = async (work: Work): Promise<unknown[]> =>
       JSON.stringify(row).includes(failedTitle),
   );
 
+// Lets the Engine take every report already sent: several round trips through the call and the Feed.
+async function settled(work: Work): Promise<void> {
+  for (let trip = 0; trip < 5; trip += 1) {
+    await work.host.caller.voice.status();
+    await work.feed();
+  }
+}
+
 describe('a Voice call that ends by failure', () => {
   it('adds exactly one Notice saying why when the provider errors', async () => {
     const work = await startVoiceWork([]);
@@ -24,8 +32,11 @@ describe('a Voice call that ends by failure', () => {
     await expect
       .poll(() => work.host.caller.voice.status())
       .toMatchObject({ ended: { reason: 'failed' } });
-    // A late second report cannot add a second Notice.
+    // Two more failure reports, arriving together after the call ended, cannot add a second Notice.
     work.provider.call.emit({ type: 'status', status: 'error' });
+    work.provider.call.close('error');
+    await expect.poll(() => notices(work)).toHaveLength(1);
+    await settled(work);
 
     const found = await notices(work);
     expect(found).toHaveLength(1);

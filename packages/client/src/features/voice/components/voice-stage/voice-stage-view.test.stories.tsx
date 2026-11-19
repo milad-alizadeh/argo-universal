@@ -56,14 +56,15 @@ export const ThinkingState: Story = {
 
 export const NoSoundYet: Story = {
   args: connectingStage,
-  play: ({ canvas }) => expectState(canvas, 'Voice none', 'Connecting…'),
+  play: ({ canvas }) =>
+    expectState(canvas, 'Voice not connected', 'Connecting…'),
 };
 
 // Trouble is words in the orb's label, in place of the state, and no dialog opens.
 export const ReconnectingLabel: Story = {
   args: reconnectingStage,
   play: async ({ canvas }) => {
-    await expectState(canvas, 'Voice none', 'Reconnecting…');
+    await expectState(canvas, 'Voice not connected', 'Reconnecting…');
     await expect(canvas.queryByRole('dialog')).not.toBeInTheDocument();
   },
 };

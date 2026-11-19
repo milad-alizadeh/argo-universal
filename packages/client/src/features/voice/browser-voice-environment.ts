@@ -142,7 +142,7 @@ class BrowserPlayback implements VoicePlayback {
 
   // The meter reads the stream before the volume, so a silenced voice still moves the orb.
   public level(): number {
-    return this.audio.volume === 0 ? 0 : this.meter.level();
+    return this.meter.level();
   }
 
   public stop(): void {

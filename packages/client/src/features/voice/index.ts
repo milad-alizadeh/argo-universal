@@ -1,10 +1,12 @@
-export { useVoiceCall, useVoicePartials } from './use-voice-call';
+export { useSessionVoice } from './use-session-voice';
+
+export { voicePlaceholder } from './session-voice';
+
+export { voiceLabel } from './components/voice-stage/voice-label';
+
+export { useConnectionMutes } from './use-connection-mutes';
 
 export { DesktopVoiceProvider } from './desktop-voice-provider';
-
-export { useVoiceMutes } from './use-voice-mutes';
-
-export { useVoiceStage } from './use-voice-stage';
 
 export {
   VoiceStageView,

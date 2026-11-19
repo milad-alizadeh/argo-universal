@@ -13,6 +13,7 @@ import type { AgentLaunch } from '../..';
 import type { AuthChanges } from '../../auth/auth-changes';
 import { ConnectionAuthentication } from '../../auth/authenticate';
 import type { UsageLimits } from '../../usage-limits';
+import type { AccountUsageRefresh } from '../../usage-limits/account-refresh';
 import { vendorUsageLimits } from '../../vendor';
 import { authenticationMethods } from '../auth-methods';
 import {
@@ -55,6 +56,7 @@ type ConnectionHooks = {
   idle: () => void;
   authChanges: AuthChanges;
   usageLimits: UsageLimits;
+  accountUsage: AccountUsageRefresh;
 };
 
 type OpeningResponse = Extract<AnyMessage, { result: unknown }>;
@@ -527,16 +529,29 @@ export class AcpConnection {
   private async lease(opening: LeaseOpening): Promise<AcpConnectionLease> {
     await this.releaseAbandoned(opening);
 
-    return this.registeredLease(opening);
-  }
-  private registeredLease(opening: LeaseOpening): AcpConnectionLease {
     this.requireRegistered(opening);
-    const { connection, initialization, launch } = this.requireReady();
 
+    const ready = this.requireReady();
+    const lease = this.registeredLease(opening, ready);
+
+    const refreshUsage: AcpSessionLease['refreshUsage'] = (reason) =>
+      this.hooks.accountUsage.request({
+        launch: lease.launch,
+        signal: ready.connection.signal,
+        reason,
+      });
+
+    if (opening.input.sessionId !== undefined) refreshUsage('open');
+
+    return { ...lease, authentication: this.authentication, refreshUsage };
+  }
+  private registeredLease(
+    opening: LeaseOpening,
+    { connection, initialization, launch }: Ready,
+  ): Omit<AcpConnectionLease, 'refreshUsage'> {
     return {
       ...opening.opened,
       launch,
-      authentication: this.authentication,
       agent: connection.agent,
       initialization,
       steering: supportsSteering(initialization),

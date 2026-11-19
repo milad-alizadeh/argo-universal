@@ -71,4 +71,28 @@ describe('the label under the orb', () => {
 
     expect(low.detail).toBe('Voice · 4:12 · 10% left');
   });
+
+  it('says the trouble over connecting, when the call is still connecting', () => {
+    const blocked = {
+      ...call,
+      connection: 'connecting',
+      orb: 'none',
+      trouble: 'microphone-blocked',
+    } as const;
+
+    expect(voiceLabel(blocked, at(5)).headline).toBe('Microphone blocked');
+  });
+
+  it('adds the allowance beside trouble, in the line under it', () => {
+    const both = {
+      ...call,
+      trouble: 'reconnecting',
+      limit: { remaining: 0.25 },
+    } as const;
+
+    expect(voiceLabel(both, at(252))).toEqual({
+      headline: 'Reconnecting…',
+      detail: 'Voice · 4:12 · 25% left',
+    });
+  });
 });

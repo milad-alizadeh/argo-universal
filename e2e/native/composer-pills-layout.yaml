@@ -1,0 +1,9 @@
+appId: dev.argo.app
+name: The phone pill row leaves room for the Composer
+---
+- openLink: "argo://storybook?STORYBOOK_STORY_ID=screens-sessions-session--changes-and-todos"
+- assertVisible: "Changes, 24 files, 12,000 lines added, 400 removed"
+- assertVisible: "Todos"
+- assertVisible: "Attach"
+- assertVisible: "Agent and model"
+- assertVisible: "Mode"

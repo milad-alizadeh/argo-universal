@@ -7,14 +7,23 @@ export interface VoiceConnection {
   createOffer: () => Promise<string>;
   // Completes the connection with the provider's answer.
   accept: (answer: string) => Promise<void>;
-  // Stops the microphone sending sound without ending the call.
+  // Stops the microphone sending sound without ending the call. A connection with no call running ignores it.
   setMicrophoneMuted: (muted: boolean) => void;
-  // Sets the voice's output volume to zero, or back, without ending the call.
+  // Sets the voice's output volume to zero, or back, without ending the call. A connection with no call running ignores it.
   setSpeakerMuted: (muted: boolean) => void;
+  // What is muted now. The connection is the only owner of this: every call starts unmuted, and so does the time after one.
+  mutes: () => VoiceMutes;
+  // Calls the listener when a mute changes; the returned function stops listening.
+  subscribe: (listener: () => void) => () => void;
   // How loud the microphone and the voice are right now, from 0 to 1. Levels stay in the App and never reach the Server.
   levels: () => VoiceLevels;
   // Hangs up and releases the microphone.
   close: () => void;
+}
+
+export interface VoiceMutes {
+  microphone: boolean;
+  speaker: boolean;
 }
 
 export interface VoiceLevels {

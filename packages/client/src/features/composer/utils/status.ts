@@ -23,7 +23,7 @@ export interface ComposerWork {
 export interface UsageLimit {
   label: string;
   usedPercent: number;
-  resets: string;
+  resets?: string;
 }
 
 export type ComposerContext = ContextUsage & { onCompact?: () => void };

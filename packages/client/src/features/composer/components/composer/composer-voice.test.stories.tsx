@@ -1,6 +1,8 @@
+import { Button } from '@repo/kit/primitives/actions/button';
 import type * as React from 'react';
-import { expect, fn, userEvent } from 'storybook/test';
-import { useVoiceMutes } from '#features/voice';
+import { useState } from 'react';
+import { expect, fn, userEvent, waitFor } from 'storybook/test';
+import { useConnectionMutes } from '#features/voice';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
@@ -65,7 +67,7 @@ export const Connecting: Story = {
   },
 };
 
-// Text in the draft makes the button Send, even on a call; with the draft empty again, End comes back.
+// Text in the draft makes the button Send, even on a call.
 export const SendDuringCall: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
@@ -100,14 +102,18 @@ export const EndWithEmptyDraft: Story = {
 };
 
 // The two mutes drive the App's own connection and never end the call: the mic stops sending, the speaker's volume goes to zero.
-function MutedCall({
-  connection,
-  onEnd,
-}: {
-  connection: FakeVoiceConnection;
-  onEnd: () => void;
-}): React.JSX.Element {
-  const mutes = useVoiceMutes(connection, 'call-1');
+const call = { connection: new FakeVoiceConnection(), hungUp: fn() };
+
+// Each story gets its own connection and its own End spy, so nothing leaks from one run into the next.
+const freshCall = (): void => {
+  call.connection = new FakeVoiceConnection();
+  call.hungUp = fn();
+};
+
+// A page of the call's Session: the mutes it draws are the connection's, and it writes none on mount.
+function CallPage(): React.JSX.Element {
+  const { connection } = call;
+  const mutes = useConnectionMutes(connection);
 
   return (
     <Composer
@@ -117,35 +123,75 @@ function MutedCall({
         onAttachImages: fn(),
         onSend: fn(),
         sessionStarted: true,
-        voice: { ...voice('connected'), onEnd, mutes },
+        voice: {
+          ...voice('connected'),
+          onEnd: call.hungUp,
+          mutes: {
+            ...mutes,
+            onMicrophone: () =>
+              connection.setMicrophoneMuted(!mutes.microphone),
+            onSpeaker: () => connection.setSpeakerMuted(!mutes.speaker),
+          },
+        },
       })}
     />
   );
 }
 
-const connection = new FakeVoiceConnection();
-
-const hungUp = fn();
-
 export const BothMutes: Story = {
-  render: () => <MutedCall connection={connection} onEnd={hungUp} />,
+  beforeEach: freshCall,
+  render: () => <CallPage />,
   play: async ({ canvas }) => {
+    const { connection } = call;
     await userEvent.click(
       canvas.getByRole('button', { name: 'Mute microphone' }),
     );
-    await expect(connection.microphoneMuted).toBe(true);
-    await expect(connection.speakerMuted).toBe(false);
+    await waitFor(() => expect(connection.mutes().microphone).toBe(true));
+    await expect(connection.mutes().speaker).toBe(false);
     await userEvent.click(canvas.getByRole('button', { name: 'Mute speaker' }));
-    await expect(connection.speakerMuted).toBe(true);
-    await expect(hungUp).not.toHaveBeenCalled();
+    await waitFor(() => expect(connection.mutes().speaker).toBe(true));
+    await expect(call.hungUp).not.toHaveBeenCalled();
     await userEvent.click(
       canvas.getByRole('button', { name: 'Unmute microphone' }),
     );
     await userEvent.click(
       canvas.getByRole('button', { name: 'Unmute speaker' }),
     );
-    await expect(connection.microphoneMuted).toBe(false);
-    await expect(connection.speakerMuted).toBe(false);
+    await waitFor(() =>
+      expect(connection.mutes()).toEqual({ microphone: false, speaker: false }),
+    );
+  },
+};
+
+// Opening another Session mounts another page on the same connection: it asks the connection for nothing, so a mute stays.
+function TwoPages(): React.JSX.Element {
+  const [page, setPage] = useState(1);
+
+  return (
+    <>
+      <Button label="Open another Session" onPress={() => setPage(2)} />
+      <CallPage key={page} />
+    </>
+  );
+}
+
+export const MutesSurviveAnotherSession: Story = {
+  beforeEach: freshCall,
+  render: () => <TwoPages />,
+  play: async ({ canvas }) => {
+    const { connection } = call;
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Mute microphone' }),
+    );
+    await waitFor(() => expect(connection.mutes().microphone).toBe(true));
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Open another Session' }),
+    );
+    await expect(
+      await canvas.findByRole('button', { name: 'Unmute microphone' }),
+    ).toBeInTheDocument();
+    await expect(connection.mutes().microphone).toBe(true);
+    await expect(connection.asked).toEqual(['microphone:true']);
   },
 };
 

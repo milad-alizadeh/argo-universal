@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import { View } from 'react-native';
-import { voiceOrbSize, type VoiceOrbProps } from './voice-orb-props';
+import { orbName, voiceOrbSize, type VoiceOrbProps } from './voice-orb-props';
 
 /*
  * The orb where the App has no WebGL to draw ElevenLabs' orb with, which is every phone for now: a still disc in the
@@ -10,7 +10,7 @@ export function VoiceOrb(props: VoiceOrbProps): React.JSX.Element {
   return (
     <View
       accessibilityRole="image"
-      accessibilityLabel={`Voice ${props.state}`}
+      accessibilityLabel={orbName(props.state)}
       className="rounded-full bg-tone-info-200"
       style={{ width: voiceOrbSize, height: voiceOrbSize }}
     />

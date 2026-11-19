@@ -15,7 +15,24 @@ type ButtonSize = NonNullable<ButtonProps['size']>;
  */
 const swiftControlSize = createModifier('controlSize', { size: 'small' });
 
+const swiftLargeControl = createModifier('controlSize', { size: 'large' });
+
+const swiftBorderless = createModifier('buttonStyle', { style: 'borderless' });
+
+const phoneButtonMinHeight = 44;
+
 const swiftFillWidth = createModifier('frame', { maxWidth: Infinity });
+
+const swiftTextButtonFrame = createModifier('frame', {
+  maxWidth: Infinity,
+  minHeight: phoneButtonMinHeight,
+});
+
+// SwiftUI's plain style only hits drawn content unless the label supplies an interaction shape.
+const swiftButtonHitArea = createModifier('contentShape', {
+  ['shape']: 'rectangle',
+  kind: ['interaction', 'accessibility'],
+});
 
 const smallHeight = 32;
 
@@ -61,3 +78,38 @@ export const widthOf = (
   props: ButtonProps,
 ): (typeof widths)[keyof typeof widths] =>
   widths[`${props.fullWidth === true}`];
+
+const regularFullWidth = (props: ButtonProps): boolean =>
+  props.fullWidth === true && (props.size ?? buttonDefaults.size) === 'md';
+
+const textButton = (props: ButtonProps): boolean =>
+  ['text', 'danger'].includes(variantOf(props));
+
+function regularButtonControls(
+  props: ButtonProps,
+): NonNullable<ExpoButtonProps['modifiers']> {
+  return textButton(props)
+    ? [swiftLargeControl, swiftBorderless]
+    : [swiftLargeControl];
+}
+
+export function nativeButtonModifiers(
+  props: ButtonProps,
+): NonNullable<ExpoButtonProps['modifiers']> {
+  const size = sizes[props.size ?? buttonDefaults.size];
+
+  const control = regularFullWidth(props)
+    ? regularButtonControls(props)
+    : size.modifiers;
+
+  return [...control, ...widthOf(props).modifiers];
+}
+
+// A full-width text action's interaction area includes the clear space around its label.
+export function buttonLabelModifiers(
+  props: ButtonProps,
+): NonNullable<ExpoButtonProps['modifiers']> {
+  return regularFullWidth(props) && textButton(props)
+    ? [swiftTextButtonFrame, swiftButtonHitArea]
+    : [...widthOf(props).label];
+}

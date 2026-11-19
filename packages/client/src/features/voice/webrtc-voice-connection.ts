@@ -1,4 +1,9 @@
-import type { VoiceConnection, VoiceLevels } from './voice-connection';
+import type {
+  VoiceConnection,
+  VoiceLevels,
+  VoiceMutes,
+} from './voice-connection';
+import { VoiceMuteStore } from './voice-mute-store';
 
 // The microphone as the connection uses it: something to let go of. The browser's own carries the sound.
 export interface Microphone {
@@ -82,6 +87,7 @@ class HeldCall {
  */
 class WebRtcVoiceConnection implements VoiceConnection {
   private held: HeldCall | undefined;
+  private readonly store = new VoiceMuteStore();
 
   public constructor(private readonly environment: VoiceEnvironment) {}
 
@@ -105,12 +111,21 @@ class WebRtcVoiceConnection implements VoiceConnection {
   }
 
   public setMicrophoneMuted(muted: boolean): void {
-    this.held?.microphone.setMuted(muted);
+    if (!this.held) return;
+    this.held.microphone.setMuted(muted);
+    this.store.change({ microphone: muted });
   }
 
   public setSpeakerMuted(muted: boolean): void {
-    this.held?.setSpeakerMuted(muted);
+    if (!this.held) return;
+    this.held.setSpeakerMuted(muted);
+    this.store.change({ speaker: muted });
   }
+
+  public mutes = (): VoiceMutes => this.store.read();
+
+  public subscribe = (listener: () => void): (() => void) =>
+    this.store.subscribe(listener);
 
   public levels(): VoiceLevels {
     return this.held?.levels() ?? noLevels;
@@ -119,6 +134,7 @@ class WebRtcVoiceConnection implements VoiceConnection {
   public close(): void {
     const { held } = this;
     this.held = undefined;
+    this.store.reset();
     held?.release();
   }
 }
