@@ -91,7 +91,7 @@ export {
   type SessionDirectory,
 } from './session-directory';
 
-export { type AcceptedSessionPrompt } from './session-prompt';
+export { type PromptLanding } from './session-prompt';
 
 export {
   sessionOrigin,
