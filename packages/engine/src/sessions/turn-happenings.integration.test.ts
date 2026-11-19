@@ -92,6 +92,7 @@ it("reports a failed Turn's end with the Agent's error message", async () => {
   });
 
   const { sessionId } = await host.caller.session.new(emptySessionInput);
+
   const actor = findMachineActor(
     host.engine.system,
     sessionActorId(sessionId),
