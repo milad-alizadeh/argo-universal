@@ -16,6 +16,7 @@ const meta = {
   argTypes: {
     label: { control: false },
     levels: { control: false },
+    reveal: { control: false },
   },
 } satisfies Meta<typeof VoiceStageView>;
 

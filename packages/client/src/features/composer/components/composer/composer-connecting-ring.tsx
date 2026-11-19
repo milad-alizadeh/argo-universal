@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
+import { ringEntering, ringExiting } from './composer-call-motion';
 
 export const connectingRingId = 'composer-connecting';
 
@@ -80,7 +81,7 @@ function useTurnStyle(): ReturnType<typeof useAnimatedStyle> {
 
 /*
  * Option B of the Voice page's connecting state: End's X is already there, and an arc turns round it inside the circle.
- * It sits over the End button and takes no press, so pressing End still cancels the call.
+ * It sits over the End button and takes no press, so pressing End still cancels the call. It fades in and out.
  */
 export function ConnectingRing(): React.JSX.Element {
   const style = useTurnStyle();
@@ -90,11 +91,19 @@ export function ConnectingRing(): React.JSX.Element {
       testID={connectingRingId}
       className="pointer-events-none absolute inset-0"
       style={style}
+      entering={ringEntering}
+      exiting={ringExiting}
     >
-      <Svg width={ringSize} height={ringSize} viewBox="0 0 28 28" fill="none">
-        <Track />
-        <Arc />
-      </Svg>
+      <RingDrawing />
     </Animated.View>
+  );
+}
+
+function RingDrawing(): React.JSX.Element {
+  return (
+    <Svg width={ringSize} height={ringSize} viewBox="0 0 28 28" fill="none">
+      <Track />
+      <Arc />
+    </Svg>
   );
 }

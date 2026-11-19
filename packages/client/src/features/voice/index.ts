@@ -11,6 +11,8 @@ export { useSessionMutes } from './use-session-mutes';
 export { DesktopVoiceProvider } from './desktop-voice-provider';
 
 export {
-  VoiceStageView,
-  type VoiceStageViewProps,
-} from './components/voice-stage/voice-stage-view';
+  VoiceStageReveal,
+  voiceStageRoomId,
+} from './components/voice-stage/voice-stage-reveal';
+
+export { type VoiceStageViewProps } from './components/voice-stage/voice-stage-view';

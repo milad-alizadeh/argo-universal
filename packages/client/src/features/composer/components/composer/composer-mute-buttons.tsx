@@ -1,5 +1,13 @@
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
+import { useCallback, useState } from 'react';
+import { View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import {
+  type CallControlsMotion,
+  useCallControlsMotion,
+} from './composer-call-controls-motion';
 import type { ComposerVoice, ComposerVoiceMutes } from './composer-types';
 
 export const microphoneButtonId = 'composer-microphone';
@@ -53,17 +61,70 @@ const mutesOf = (
 ): ComposerVoiceMutes | undefined =>
   voice?.kind === 'connected' ? voice.mutes : undefined;
 
+interface KeptMutes {
+  mutes: ComposerVoiceMutes | undefined;
+  leaving: boolean;
+  // Lets the buttons go once they have left.
+  forget: () => void;
+}
+
+const isNewMutes = (
+  mutes: ComposerVoiceMutes | undefined,
+  kept: ComposerVoiceMutes | undefined,
+): boolean => mutes !== undefined && mutes !== kept;
+
+// The last mutes the call offered: the buttons stay, as they were, while they leave.
+function useKeptMutes(mutes: ComposerVoiceMutes | undefined): KeptMutes {
+  const [kept, setKept] = useState(mutes);
+
+  if (isNewMutes(mutes, kept)) setKept(mutes);
+
+  const forget = useCallback(() => setKept(undefined), []);
+
+  return { mutes: mutes ?? kept, leaving: !mutes, forget };
+}
+
+type ShownMutes = Omit<KeptMutes, 'mutes'> & { mutes: ComposerVoiceMutes };
+
+// Leaving buttons take no press: the call they belonged to has ended.
+const muteRowClass = (leaving: boolean): string =>
+  cn(
+    'shrink-0 flex-row items-center gap-2.5',
+    leaving ? 'pointer-events-none' : 'pointer-events-box-none',
+  );
+
+function ShownMute(props: {
+  style: CallControlsMotion['room'];
+  button: MuteButton;
+}): React.JSX.Element {
+  return (
+    <Animated.View style={props.style}>
+      <MuteIconButton {...props.button} />
+    </Animated.View>
+  );
+}
+
+function AnimatedMuteButtons(props: ShownMutes): React.JSX.Element {
+  const motion = useCallControlsMotion(props.leaving, props.forget);
+  const [microphone, speaker] = motion.controls;
+
+  return (
+    <Animated.View className="flex-row" style={motion.room}>
+      <View className={muteRowClass(props.leaving)} onLayout={motion.measure}>
+        <ShownMute style={microphone} button={microphoneOf(props.mutes)} />
+        <ShownMute style={speaker} button={speakerOf(props.mutes)} />
+      </View>
+    </Animated.View>
+  );
+}
+
+// Once the call connects the mutes spring in beside End, and they go again as it ends.
 export function ComposerMuteButtons({
   voice,
 }: {
   voice: ComposerVoice | undefined;
 }): React.JSX.Element | null {
-  const mutes = mutesOf(voice);
+  const { mutes, ...kept } = useKeptMutes(mutesOf(voice));
 
-  return mutes ? (
-    <>
-      <MuteIconButton {...microphoneOf(mutes)} />
-      <MuteIconButton {...speakerOf(mutes)} />
-    </>
-  ) : null;
+  return mutes ? <AnimatedMuteButtons {...kept} mutes={mutes} /> : null;
 }

@@ -24,6 +24,7 @@ import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import { usageLimitsSession } from './session-detail-view-usage.mocks';
+import { VoiceCallRehearsal } from './session-detail-view-voice-call.mocks';
 import { voiceCallSession } from './session-detail-view-voice.mocks';
 import {
   emptySession,
@@ -131,6 +132,12 @@ export const DraggingFiles: Story = {
 export const OnAVoiceCall: Story = {
   args: { state: 'open', ...voiceCallSession },
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
+};
+
+// Press the voice button to start a call: the stage opens above the Feed while it connects, the orb settles into listening, and End takes it away.
+export const VoiceCallStartsAndEnds: Story = {
+  args: { state: 'open', ...idleSession },
+  render: (): React.JSX.Element => <VoiceCallRehearsal />,
 };
 
 export const Opening: Story = { args: { state: 'opening' } };
