@@ -18,8 +18,6 @@ const cardGlass = {
   // The web's card shares its trays' and the glass sidebar's radius; a phone keeps its sheet's.
   corners: Platform.OS === 'web' ? 'container' : 'sheet',
   interactive: true,
-  // Only the window's flat surface lies behind the web's card, since the Feed fades out above the Composer.
-  frosted: false,
   className: 'w-full min-h-0 shrink z-10',
 } as const;
 

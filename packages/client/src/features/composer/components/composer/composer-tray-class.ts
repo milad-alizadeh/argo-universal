@@ -3,15 +3,14 @@
  * Paper fills them with content at 80% in light and a white 3% tray in dark, ringed.
  * Each tray tucks under the card, so it is inset by the card's corner radius: any less and its side and hairline
  * show in the card's rounded corner. The web card is `rounded-2xl` (18px), a native one `rounded-sheet` (28px).
- * Neither a tray nor the card takes a backdrop blur. Only the window's flat surface lies behind the Composer, since
- * the Feed fades out above it, and a blurred surface there drew a band in dark mode: LiquidGlass's `frosted` says why.
+ * The card is the shared frosted glass; a tray takes no backdrop blur of its own.
  */
 export const composerTrayClass =
   'self-stretch mx-7 web:mx-4.5 bg-content/80 dark:bg-tray shadow-tray';
 
 /*
  * Each tray tucks 12px under the card, so its side and hairline never show in the card's rounded corner. The web's
- * card is unfrosted and its fill translucent, so on the web the tuck is clipped off at the card's edge: otherwise it
+ * card's fill is translucent, so on the web the tuck is clipped off at the card's edge: otherwise it
  * shows through the card as a band and a hairline. The 64px elsewhere keeps the tray's shadow, which reaches 44px.
  */
 export const composerTopTrayTuckClass =

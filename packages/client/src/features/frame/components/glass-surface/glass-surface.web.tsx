@@ -1,3 +1,5 @@
+import { glassMaterial } from '@repo/kit/primitives/content/liquid-glass';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { type Ref, type RefObject, useRef } from 'react';
 import {
@@ -114,13 +116,18 @@ function RailTint({
   );
 }
 
+// The shared glass material, split so the fill clips with the rail's tint and the edge draws outside the clip.
 function GlassFill({
   props,
   box,
 }: Pick<GlassMaskProps, 'props' | 'box'>): React.JSX.Element {
   return (
     <div
-      className="absolute bottom-0 left-0 top-0 bg-glass backdrop-blur-glass backdrop-saturate-180"
+      className={cn(
+        'absolute bottom-0 left-0 top-0',
+        glassMaterial.fill,
+        glassMaterial.frost,
+      )}
       style={{ width: Math.max(box.width, props.expandedWidth) }}
     />
   );
@@ -143,7 +150,10 @@ function GlassEdge({ ref, box }: GlassLayerProps): React.JSX.Element {
   return (
     <div
       ref={ref}
-      className="pointer-events-none absolute bottom-0 left-0 rounded-2xl shadow-glass"
+      className={cn(
+        'pointer-events-none absolute bottom-0 left-0 rounded-2xl',
+        glassMaterial.edge,
+      )}
       style={box}
     />
   );

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { feedRowColumns, sessionColumns } from '../columns';
-import { SessionUpdate } from './session-update';
+import { PlanUpdate, SessionUpdate } from './session-update';
 
 const maximumPageRows = 200;
 
@@ -32,6 +32,8 @@ export const FeedPageOutput = z.strictObject({
   hasOlder: z.boolean(),
   startCursor: feedRowColumns.shape.position.nullable(),
   staleCursor: z.boolean(),
+  // The Session's latest Plan row when it lies before `rows`: a Plan keeps its first position (ADR-0007), so a long Session's checklist falls out of the newest rows.
+  plan: PlanUpdate.optional(),
 });
 
 export type FeedPageOutput = z.infer<typeof FeedPageOutput>;

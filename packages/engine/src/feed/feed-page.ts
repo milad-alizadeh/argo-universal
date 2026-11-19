@@ -1,6 +1,7 @@
 import type {
   FeedPageInput,
   FeedPageOutput,
+  PlanUpdate,
   SessionUpdate,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
@@ -58,6 +59,59 @@ function reportFilter(childSessionId: string | undefined): SQL | undefined {
   );
 }
 
+// The Plan with the latest content, by `_meta.argo.contentRevision` (ADR-0007).
+const planContentOrder = sql`coalesce(json_extract(${feedRow.payload}, '$._meta.argo.contentRevision'), ${feedRow.revision})`;
+
+const planWhere = (sessionId: string): SQL | undefined =>
+  and(
+    eq(feedRow.sessionId, sessionId),
+    eq(feedRow.sessionUpdate, 'plan_update'),
+  );
+
+function readLatestPlan(
+  database: Database,
+  sessionId: string,
+): SessionUpdate | undefined {
+  const [stored] = database
+    .select(storedFeedColumns)
+    .from(feedRow)
+    .where(planWhere(sessionId))
+    .orderBy(desc(planContentOrder))
+    .limit(1)
+    .all();
+
+  return stored && hydrateStoredFeedRow(sessionId, stored);
+}
+
+type PageContent = Pick<FeedPageOutput, 'hasOlder' | 'startCursor'>;
+
+// Only the Session's own pages with older rows can start after its Plan.
+const mayStartAfterPlan = (
+  input: FeedPageInput & { childSessionId?: string },
+  content: PageContent,
+): boolean => input.childSessionId === undefined && content.hasOlder;
+
+const startsAfter = (position: number, { startCursor }: PageContent): boolean =>
+  position < (startCursor ?? Infinity);
+
+const isBefore = (
+  row: SessionUpdate | undefined,
+  content: PageContent,
+): row is PlanUpdate =>
+  row?.sessionUpdate === 'plan_update' && startsAfter(row.position, content);
+
+// A Plan keeps its first position, so a page that starts after it carries it beside its rows.
+function planBeforePage(
+  database: Database,
+  input: FeedPageInput & { childSessionId?: string },
+  content: PageContent,
+): Pick<FeedPageOutput, 'plan'> {
+  if (!mayStartAfterPlan(input, content)) return {};
+  const plan = readLatestPlan(database, input.sessionId);
+
+  return isBefore(plan, content) ? { plan } : {};
+}
+
 const hydratePageRows = (
   stored: FeedRowWrite[],
   input: FeedPageInput,
@@ -85,13 +139,14 @@ export function readFeedPage(
   input: FeedPageInput & { childSessionId?: string },
 ): FeedPageOutput {
   const { epoch, maxRevision } = readSession(input.sessionId);
-  const cursor = pageCursor(input, epoch);
-  const stored = readPageRows(database, input, cursor);
+  const stored = readPageRows(database, input, pageCursor(input, epoch));
+  const content = pageContent(stored, input);
 
   return {
     epoch,
     maxRevision,
-    ...pageContent(stored, input),
+    ...content,
     staleCursor: isStaleCursor(input, epoch),
+    ...planBeforePage(database, input, content),
   };
 }
