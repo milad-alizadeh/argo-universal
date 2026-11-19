@@ -31,10 +31,10 @@ const barRadius = 1.5;
 
 const shortestBar = 4;
 
-// A full bar stands 80% of the height; a bar's opacity runs from 40% when quiet to full.
+// A full bar stands 80% of the height; a bar's opacity runs from 65% when quiet to full, so every bar reads on the well.
 const tallest = 0.8;
 
-const faintest = 0.4;
+const faintest = 0.65;
 
 // LiveWaveform fades 24 points at each edge.
 const fadeWidth = 24;

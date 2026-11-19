@@ -35,11 +35,17 @@ function bandAt(
   return heard[Math.floor((fromMiddle / half) * heard.length)] ?? 0;
 }
 
+/*
+ * LiveWaveform multiplies each bar by its `sensitivity`; speech seldom fills a band, so the wave lifts it this much to
+ * read clearly at the stage's size.
+ */
+const sensitivity = 1.8;
+
 function speech(bars: Float32Array, heard: ArrayLike<number>): void {
   const half = Math.floor(bars.length / 2);
 
   for (let fromMiddle = 0; fromMiddle < half; fromMiddle++) {
-    const value = clampBar(bandAt(heard, fromMiddle, half));
+    const value = clampBar(bandAt(heard, fromMiddle, half) * sensitivity);
     bars[half - 1 - fromMiddle] = value;
     bars[half + fromMiddle] = value;
   }

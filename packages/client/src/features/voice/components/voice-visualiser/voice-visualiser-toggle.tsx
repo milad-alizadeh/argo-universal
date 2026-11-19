@@ -25,8 +25,8 @@ export const kindOf = (
 ): VoiceVisualiserKind => toggle?.kind ?? defaultVisualiser;
 
 /*
- * Switches what draws the call: the orb, the LED matrix or the waveform. The choice stays on this Device. Nothing shows
- * where the stage offers no toggle.
+ * Switches what draws the call: the orb, the LED matrix, the waveform or the Composer's band, in four equal segments as
+ * wide as the matrix and the wave. The choice stays on this Device. Nothing shows where the stage offers no toggle.
  */
 export function VoiceVisualiserToggle({
   toggle,
@@ -41,7 +41,7 @@ function Segments({
   onChange,
 }: VoiceVisualiserToggleProps): React.JSX.Element {
   return (
-    <View className="self-center">
+    <View className="w-80 max-w-full self-center">
       <SegmentedControl
         label="Visualiser"
         options={options}
@@ -53,8 +53,8 @@ function Segments({
 }
 
 /*
- * The stage while the band along the Composer draws the call: only the toggle, so the Feed keeps nearly all its
- * height and the person can still switch back.
+ * The stage while the band along the Composer draws the call: only the toggle, where the full stage puts it, evenly
+ * padded, so the Feed keeps nearly all its height and the person can still switch back.
  */
 export function BandStage({
   toggle,
@@ -62,10 +62,7 @@ export function BandStage({
   toggle: VoiceVisualiserToggleProps | undefined;
 }): React.JSX.Element {
   return (
-    <View
-      testID="voice-stage"
-      className="w-full shrink-0 items-center pb-1 pt-3"
-    >
+    <View testID="voice-stage" className="w-full shrink-0 items-center py-3">
       <VoiceVisualiserToggle toggle={toggle} />
     </View>
   );

@@ -1,4 +1,5 @@
 import { Text } from '@repo/kit/primitives/content/text';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { ShimmerText } from '#features/feed';
@@ -20,8 +21,8 @@ export type VoiceStageViewProps = VoiceVisualiserProps & {
 
 function StageLabel({ label }: { label: VoiceLabel }): React.JSX.Element {
   return (
-    <View className="items-center gap-0.5">
-      <ShimmerText text={label.headline} className="text-heading" />
+    <View className="items-center gap-1">
+      <ShimmerText text={label.headline} className="type-heading" />
       <Text role="secondary" tone="muted">
         {label.detail}
       </Text>
@@ -30,8 +31,9 @@ function StageLabel({ label }: { label: VoiceLabel }): React.JSX.Element {
 }
 
 /*
- * The Voice call on screen: the orb in its well, what the call is doing under it, and how long it has run. Trouble and
- * the allowance warning are words in that label, never a dialog. The page pins it above the Feed for the call's length.
+ * The Voice call on screen: the toggle on top, where it stays whatever it picks, the orb in its well, what the call is
+ * doing under it, and how long it has run. Trouble and the allowance warning are words in that label, never a dialog.
+ * The page pins it above the Feed for the call's length, on the 4-point grid with room before the Feed.
  */
 export const VoiceStageView = (
   props: VoiceStageViewProps,
@@ -42,18 +44,19 @@ export const VoiceStageView = (
     <CallStage {...props} />
   );
 
+// With a toggle on top the stage starts 12 down; without one, the orb keeps Paper's 36.
+const stageClass = (toggle: VoiceVisualiserToggleProps | undefined): string =>
+  cn('w-full shrink-0 items-center gap-4 pb-6', toggle ? 'pt-3' : 'pt-9');
+
 function CallStage({
   label,
   ...drawing
 }: VoiceStageViewProps): React.JSX.Element {
   return (
-    <View
-      testID="voice-stage"
-      className="w-full shrink-0 items-center gap-3.5 pb-2 pt-9"
-    >
+    <View testID="voice-stage" className={stageClass(drawing.visualiser)}>
+      <VoiceVisualiserToggle toggle={drawing.visualiser} />
       <VoiceVisualiser {...drawing} />
       <StageLabel label={label} />
-      <VoiceVisualiserToggle toggle={drawing.visualiser} />
     </View>
   );
 }

@@ -33,6 +33,12 @@ describe('the wave while someone speaks', () => {
     expect(bars).toEqual([...bars].reverse());
     expect(bars[0]).toBeCloseTo(quietestBar);
   });
+
+  it("lifts ordinary speech so the bars read clearly, as LiveWaveform's sensitivity does", () => {
+    const bars = barsOf({ heard: new Float32Array(8).fill(0.3) });
+
+    for (const bar of bars) expect(bar).toBeGreaterThanOrEqual(0.5);
+  });
 });
 
 describe('the wave while nobody speaks', () => {

@@ -2,11 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { fn } from 'storybook/test';
 import { syntheticVoiceAudio } from '../../../../../mocks/voice/synthetic-voice-audio';
+import { silentSpectrum } from '../../voice-connection';
 import type { VoiceVisualiserKind } from '../voice-visualiser/voice-visualiser-kind';
 import { VoiceStageView, type VoiceStageViewProps } from './voice-stage-view';
 import {
+  allowanceLowStage,
   connectingStage,
   listeningStage,
+  microphoneBlockedStage,
   reconnectingStage,
   talkingStage,
   thinkingStage,
@@ -43,6 +46,9 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+// A muted microphone sends no sound, so the drawing rests while the person is heard as silent.
+const mutedMicrophone = { ...listeningStage, spectrum: silentSpectrum };
 
 const showing = (
   kind: VoiceVisualiserKind,
@@ -109,4 +115,33 @@ export const WaveThinking: Story = {
 
 export const WaveReconnecting: Story = {
   args: { ...reconnectingStage, visualiser: showing('wave') },
+};
+
+export const MatrixMicrophoneBlocked: Story = {
+  args: { ...microphoneBlockedStage, visualiser: showing('matrix') },
+};
+
+export const MatrixAllowanceLow: Story = {
+  args: { ...allowanceLowStage, visualiser: showing('matrix') },
+};
+
+export const MatrixMuted: Story = {
+  args: { ...mutedMicrophone, visualiser: showing('matrix') },
+};
+
+export const WaveMicrophoneBlocked: Story = {
+  args: { ...microphoneBlockedStage, visualiser: showing('wave') },
+};
+
+export const WaveAllowanceLow: Story = {
+  args: { ...allowanceLowStage, visualiser: showing('wave') },
+};
+
+export const WaveMuted: Story = {
+  args: { ...mutedMicrophone, visualiser: showing('wave') },
+};
+
+// Band chosen: the call draws along the Composer, so the stage keeps only the toggle, where it always sits.
+export const BandChosen: Story = {
+  args: { ...listeningStage, visualiser: showing('band') },
 };

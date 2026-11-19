@@ -34,7 +34,7 @@ function EdgeLabel(props: LabelProps): React.JSX.Element {
 }
 
 const bandClass =
-  'h-7.5 w-full flex-row items-center gap-3 px-4 pt-2.5 wide:px-4.75';
+  'h-7.5 w-full flex-row items-center gap-3 pl-4 pr-2.5 pt-2.5 wide:px-4.75';
 
 /*
  * Paper's "Composer waveform — B · Edge band": the call drawn as a slim waveform along the Composer card's top edge,
