@@ -83,6 +83,12 @@ export type VoiceSpeaker = z.infer<typeof VoiceSpeaker>;
 export const VoicePartial = z.strictObject({
   speaker: VoiceSpeaker,
   id: z.string().min(1),
+  rowId: z
+    .string()
+    .min(1)
+    .describe(
+      'The Feed row the final words are stored as, so the App draws the partial and that row as one row.',
+    ),
   text: z.string(),
 });
 
@@ -138,10 +144,11 @@ export const VoiceEndOutput = z.strictObject({ ended: z.boolean() });
 
 export type VoiceEndOutput = z.infer<typeof VoiceEndOutput>;
 
-// A voice a Voice provider speaks with.
+// A voice a Voice provider speaks with; `description` only where the provider publishes one.
 export const VoiceOption = z.strictObject({
   id: z.string().min(1),
   label: z.string().min(1),
+  description: z.string().min(1).optional(),
 });
 
 export type VoiceOption = z.infer<typeof VoiceOption>;
@@ -166,6 +173,21 @@ export const VoiceSettings = z.strictObject({
 });
 
 export type VoiceSettings = z.infer<typeof VoiceSettings>;
+
+// Input of `voice.preview`: the voice to hear, and the App's offer for a connection that only listens.
+export const VoicePreviewInput = z.strictObject({
+  voice: z.string().min(1),
+  offer: z.string().min(1).describe("The App's connection offer."),
+});
+
+export type VoicePreviewInput = z.infer<typeof VoicePreviewInput>;
+
+// Output of `voice.preview`: the connection answer the voice's greeting plays through.
+export const VoicePreviewOutput = z.strictObject({
+  answer: z.string().min(1),
+});
+
+export type VoicePreviewOutput = z.infer<typeof VoicePreviewOutput>;
 
 // What `voice.setSettings` changes; what is left out stays.
 export const VoiceSettingsChange = z.strictObject({

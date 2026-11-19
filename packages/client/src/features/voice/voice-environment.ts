@@ -35,6 +35,8 @@ export interface VoicePeer {
 export interface VoiceEnvironment {
   // Opens this microphone, or the system's for null; fails when it is refused or gone.
   openMicrophone: (device: string | null) => Promise<Microphone>;
+  // Silence to send in place of the microphone, for a connection that only listens.
+  openSilence: () => Microphone;
   createPeer: () => VoicePeer;
   playVoice: (stream: MediaStream, speaker: string | null) => VoicePlayback;
 }

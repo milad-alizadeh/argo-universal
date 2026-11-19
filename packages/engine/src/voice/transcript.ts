@@ -22,9 +22,14 @@ const kinds = {
   voice: 'voice_transcript',
 } as const satisfies Record<VoiceSpeaker, FeedUpdate['sessionUpdate']>;
 
+// The Feed row a transcript's final words are stored as; its partials carry the same id, so the App draws them as one row.
+const rowIdOf = (callId: string, event: TranscriptEvent): string =>
+  `${callId}:${speakerOf(event)}:${event.id}`;
+
 // What is being said now, one entry per speaker: a partial replaces its speaker's, a final clears it.
 export function withTranscript(
   partials: VoicePartial[],
+  call: { callId: string },
   event: TranscriptEvent,
 ): VoicePartial[] {
   const speaker = speakerOf(event);
@@ -32,8 +37,9 @@ export function withTranscript(
 
   if (event.final) return others;
   const { id, text } = event;
+  const rowId = rowIdOf(call.callId, event);
 
-  return [...others, { speaker, id, text }].toSorted((a, b) =>
+  return [...others, { speaker, id, rowId, text }].toSorted((a, b) =>
     a.speaker.localeCompare(b.speaker),
   );
 }
@@ -43,7 +49,7 @@ const transcriptUpdate = (
   callId: string,
   event: TranscriptEvent,
 ): FeedUpdate => ({
-  id: `${callId}:${speakerOf(event)}:${event.id}`,
+  id: rowIdOf(callId, event),
   sessionUpdate: kinds[speakerOf(event)],
   messageId: event.id,
   state: 'settled',

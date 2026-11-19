@@ -9,7 +9,7 @@ export interface VoiceTranscriptProps {
   partial?: boolean;
 }
 
-// What the voice said, as plain text on the Feed with no bubble.
+// What the voice said, as plain text on the Feed with no bubble, drawn as an Agent message is.
 export const VoiceTranscript = memo(function VoiceTranscript({
   row,
   partial = false,
@@ -18,7 +18,7 @@ export const VoiceTranscript = memo(function VoiceTranscript({
     <FeedContent
       content={row.content}
       rowId={row.id}
-      textVariant={transcriptStyle(partial).textVariant}
+      {...transcriptStyle(partial)}
     />
   );
 });

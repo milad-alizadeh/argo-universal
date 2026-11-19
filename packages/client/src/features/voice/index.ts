@@ -1,4 +1,4 @@
-export { useSessionVoice } from './use-session-voice';
+export { useSessionVoice, type VoicePage } from './use-session-voice';
 
 export { useNewSessionVoice } from './use-new-session-voice';
 
@@ -7,6 +7,8 @@ export { voicePlaceholder } from './session-voice';
 export { voiceLabel } from './components/voice-stage/voice-label';
 
 export { useSessionMutes } from './use-session-mutes';
+
+export { useVoicePreview } from './use-voice-preview';
 
 export { DesktopVoiceProvider } from './desktop-voice-provider';
 
@@ -17,9 +19,11 @@ export type { AudioDevice, AudioDevices } from './audio-devices';
 export type { VoiceDeviceChoice } from './voice-device-choice';
 
 export {
-  VoiceStageView,
-  type VoiceStageViewProps,
-} from './components/voice-stage/voice-stage-view';
+  VoiceStageReveal,
+  voiceStageRoomId,
+} from './components/voice-stage/voice-stage-reveal';
+
+export { type VoiceStageViewProps } from './components/voice-stage/voice-stage-view';
 
 export {
   VoiceEdgeBand,

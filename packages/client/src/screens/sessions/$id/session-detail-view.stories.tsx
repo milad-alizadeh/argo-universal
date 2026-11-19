@@ -25,6 +25,7 @@ import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.moc
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import { usageLimitsSession } from './session-detail-view-usage.mocks';
 import { VisualiserChoosingPreview } from './session-detail-view-visualiser.mocks';
+import { VoiceCallRehearsal } from './session-detail-view-voice-call.mocks';
 import { voiceCallSession } from './session-detail-view-voice.mocks';
 import {
   emptySession,
@@ -144,6 +145,12 @@ export const OnAVoiceCallWithTheBand: Story = {
 export const OnAVoiceCallWithTheMatrix: Story = {
   args: { state: 'open', ...voiceCallSession },
   render: (): React.JSX.Element => <VisualiserChoosingPreview first="matrix" />,
+};
+
+// Press the voice button to start a call: the stage opens above the Feed while it connects, the orb settles into listening, and End takes it away.
+export const VoiceCallStartsAndEnds: Story = {
+  args: { state: 'open', ...idleSession },
+  render: (): React.JSX.Element => <VoiceCallRehearsal />,
 };
 
 export const Opening: Story = { args: { state: 'opening' } };

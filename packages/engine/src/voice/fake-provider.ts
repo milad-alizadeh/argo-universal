@@ -5,6 +5,7 @@ import type {
   VoiceOption,
   VoiceProvider,
   VoiceProviderCall,
+  VoicePreviewRequest,
   VoiceProviderEvent,
   VoiceStartRequest,
 } from './provider';
@@ -37,6 +38,7 @@ export class FakeVoiceProvider implements VoiceProvider {
   public readonly label = 'Fake voice provider';
   public readonly experimental = true;
   public readonly calls: FakeVoiceCall[] = [];
+  public readonly previews: FakeVoiceCall<VoicePreviewRequest>[] = [];
   private options: FakeVoiceOptions;
 
   public constructor(options: FakeVoiceOptions = {}) {
@@ -72,6 +74,15 @@ export class FakeVoiceProvider implements VoiceProvider {
     return Promise.resolve(call);
   }
 
+  public preview(
+    request: VoicePreviewRequest,
+  ): Promise<FakeVoiceCall<VoicePreviewRequest>> {
+    const preview = new FakeVoiceCall(request);
+    this.previews.push(preview);
+
+    return Promise.resolve(preview);
+  }
+
   private scheduleConnect(call: FakeVoiceCall): void {
     const { connect = defaultConnectDelay } = this.options;
 
@@ -86,15 +97,26 @@ export class FakeVoiceProvider implements VoiceProvider {
 
     return call;
   }
+
+  // The preview most recently started.
+  public get previewing(): FakeVoiceCall<VoicePreviewRequest> {
+    const preview = this.previews.at(-1);
+
+    if (!preview) throw new Error('No voice preview was started');
+
+    return preview;
+  }
 }
 
-export class FakeVoiceCall implements VoiceProviderCall {
+export class FakeVoiceCall<
+  Request extends { offer: string } = VoiceStartRequest,
+> implements VoiceProviderCall {
   public readonly answer: string;
   public readonly sent: FakeVoiceMessage[] = [];
   public ended = false;
   private readonly listeners = new Set<(event: VoiceProviderEvent) => void>();
 
-  public constructor(public readonly request: VoiceStartRequest) {
+  public constructor(public readonly request: Request) {
     this.answer = `fake-answer:${request.offer}`;
   }
 
@@ -138,7 +160,17 @@ export class FakeVoiceCall implements VoiceProviderCall {
     this.emit({ type: 'work.requested', requestId, text });
   }
 
-  public close(reason: VoiceClosedReason = 'ended'): void {
-    this.emit({ type: 'closed', reason });
+  // The provider closes the call; `why` is its own reason in plain words, when it gives one.
+  public close(reason: VoiceClosedReason = 'ended', why?: string): void {
+    this.emit(
+      why === undefined
+        ? { type: 'closed', reason }
+        : { type: 'closed', reason, why },
+    );
+  }
+
+  // Something the provider notes for the Server's log.
+  public note(note: string): void {
+    this.emit({ type: 'trail', note });
   }
 }

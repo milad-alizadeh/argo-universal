@@ -65,7 +65,7 @@ export const voiceCallDraftComposer = {
   draft: readyComposer.draft,
 } satisfies ComposerFixture;
 
-// The call runs in another Session: the voice button's slot names it and takes the person there.
+// The call runs in another Session: the voice button's place holds a round button with a live dot that takes the person there.
 export const callElsewhereComposer = {
   ...startedSessionComposer,
   voice: { kind: 'elsewhere', title: 'Fix flaky Feed sync test', onOpen: noop },

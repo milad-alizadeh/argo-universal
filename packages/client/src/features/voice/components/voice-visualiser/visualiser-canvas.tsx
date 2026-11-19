@@ -21,7 +21,7 @@ function PaintedCanvas({ painter, ...props }: Props): React.JSX.Element {
         ref={canvas}
         width={wideDrawing.width * window.devicePixelRatio}
         height={wideDrawing.height * window.devicePixelRatio}
-        className="block text-tone-info-500"
+        className="block text-tone-accent-400"
         style={wideDrawing}
       />
     </div>

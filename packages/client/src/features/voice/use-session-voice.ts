@@ -8,6 +8,7 @@ import { sessionHref } from '#lib/product/navigation/navigation';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
 import { withEdge } from './components/voice-edge-band/voice-edge-slot';
 import type { VoiceVisualiserKind } from './components/voice-visualiser/voice-visualiser-kind';
+import { placedCall } from './placed-call';
 import {
   sessionVoice,
   type SessionVoice,
@@ -15,6 +16,7 @@ import {
   type SessionVoiceInput,
 } from './session-voice';
 import { useSessionTitle, useStartCall } from './use-call-reads';
+import { useHeldPartials } from './use-held-partials';
 import { type SessionMutes, useSessionMutes } from './use-session-mutes';
 import { useVoiceStatus } from './use-voice-status';
 import {
@@ -30,18 +32,33 @@ const noLevels: VoiceLevels = { input: 0, output: 0 };
 
 const noSpectrum = silentSpectrum();
 
-// Starts the call in the Session the page shows.
+// The Session page a call is seen from, and how it opens its live Feed again after a start.
+export interface VoicePage {
+  sessionId: string;
+  resumeFeed: () => void;
+}
+
+// Starts the call in the Session the page shows, then resumes the page's Feed (see `startCall`).
 function useStartHere(
-  sessionId: string,
+  { sessionId, resumeFeed }: VoicePage,
   connection: VoiceConnection | null,
 ): () => void {
-  const start = useStartCall(connection);
+  const start = useStartCall(connection, resumeFeed);
 
   return () => start(sessionId);
 }
 
-function useActions(
+// Ending lets go of a call still being placed here, and ends the Server's call if it has one.
+function endHere(
   sessionId: string,
+  end: (input: { sessionId: string }) => void,
+): void {
+  placedCall.release(sessionId);
+  end({ sessionId });
+}
+
+function useActions(
+  page: VoicePage,
   connection: VoiceConnection | null,
   mutes: SessionMutes,
 ): SessionVoiceActions {
@@ -49,8 +66,8 @@ function useActions(
   const navigate = useNavigateFromShown();
 
   return {
-    start: useStartHere(sessionId, connection),
-    end: () => end.mutate({ sessionId }),
+    start: useStartHere(page, connection),
+    end: () => endHere(page.sessionId, end.mutate),
     setMicrophoneMuted: mutes.setMicrophoneMuted,
     setSpeakerMuted: mutes.setSpeakerMuted,
     open: (target) => navigate(sessionHref(target)),
@@ -106,7 +123,7 @@ function useLive(
 }
 
 function useInput(
-  sessionId: string,
+  { sessionId, resumeFeed }: VoicePage,
   connection: VoiceConnection | null,
   status: VoiceStatus,
 ): SessionVoiceInput {
@@ -118,7 +135,7 @@ function useInput(
     ...useLive(status, sessionId, connection),
     mutes: mutes.mutes,
     titleOf: useTitleOf(status, sessionId),
-    actions: useActions(sessionId, connection, mutes),
+    actions: useActions({ sessionId, resumeFeed }, connection, mutes),
   };
 }
 
@@ -142,14 +159,15 @@ const composerOf = (
  * through `sessionVoice`. The Composer, the orb and the Feed's partial words all come from here, so none of them needs
  * another to have subscribed first.
  */
-export function useSessionVoice(sessionId: string): View {
+export function useSessionVoice(page: VoicePage): View {
   const connection = useVoiceConnection();
   const status = useVoiceStatus();
-  const view = sessionVoice(useInput(sessionId, connection, status));
+  const view = sessionVoice(useInput(page, connection, status));
+  const partials = useHeldPartials(view.partials);
   const visualiser = useVoiceVisualiser();
 
   return {
-    partials: view.partials,
+    partials,
     stage: view.stage && withToggle(view.stage, connection, visualiser),
     voice: connection ? composerOf(view, visualiser.kind) : undefined,
   };

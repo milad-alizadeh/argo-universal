@@ -23,8 +23,15 @@ export interface VoiceConnection {
   levels: () => VoiceLevels;
   // How loud each band of speech is right now, for the microphone and the voice; the same buffers each read, refilled.
   spectrum: () => VoiceSpectrum;
-  // Hangs up and releases the microphone.
+  // Hangs up and releases the microphone. A preview plays on.
   close: () => void;
+  /*
+   * Opens a connection that only listens, sending silence and never the microphone, and completes it with the answer
+   * `answerFor` gets for its offer. It replaces an earlier preview, a call's offer ends it, and it lets go of itself after a while.
+   */
+  preview: (answerFor: (offer: string) => Promise<string>) => Promise<void>;
+  // Lets go of the preview's connection.
+  endPreview: () => void;
 }
 
 export interface VoiceMutes {

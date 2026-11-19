@@ -75,7 +75,7 @@ function valueAt(grids: ReturnType<typeof gridsOf>, index: number): number {
  * The smooth, tiling noise the orb's shader reads for its flow, as RGBA texels. ElevenLabs' orb loads a noise image from
  * its CDN; this makes the same kind of image locally, so the orb needs no network and no asset.
  */
-export function noiseTexels(): Uint8Array {
+function madeTexels(): Uint8Array {
   const grids = gridsOf();
   const texels = new Uint8Array(size * size * channels);
 
@@ -85,6 +85,15 @@ export function noiseTexels(): Uint8Array {
   }
 
   return texels;
+}
+
+let made: Uint8Array | undefined;
+
+// The noise is the same for every orb, so it is made once, the first time an orb draws.
+export function noiseTexels(): Uint8Array {
+  made ??= madeTexels();
+
+  return made;
 }
 
 export const noiseSize = size;

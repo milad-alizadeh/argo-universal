@@ -18,6 +18,8 @@ export class FakeVoiceConnection implements VoiceConnection {
   public output = 0;
   // Every mute the connection was asked for, in order, such as `microphone:true`.
   public readonly asked: string[] = [];
+  // Every answer the connection was completed with, in order.
+  public readonly accepted: string[] = [];
   private readonly store = new VoiceMuteStore();
 
   public constructor(private readonly offer = Promise.resolve('v=0 offer')) {}
@@ -28,7 +30,9 @@ export class FakeVoiceConnection implements VoiceConnection {
     return this.offer;
   }
 
-  public accept(): Promise<void> {
+  public accept(answer: string): Promise<void> {
+    this.accepted.push(answer);
+
     return Promise.resolve();
   }
 
@@ -65,6 +69,14 @@ export class FakeVoiceConnection implements VoiceConnection {
 
     return spectrum;
   }
+
+  public async preview(
+    answerFor: (offer: string) => Promise<string>,
+  ): Promise<void> {
+    await answerFor('v=0 listening offer');
+  }
+
+  public endPreview(): void {}
 
   public close(): void {
     this.closed = true;

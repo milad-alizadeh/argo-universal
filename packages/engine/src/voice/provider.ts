@@ -40,7 +40,10 @@ export type VoiceProviderEvent =
     }
   // How much of the provider's allowance is left, as a fraction from 0 to 1.
   | ({ type: 'limit' } & VoiceLimit)
-  | { type: 'closed'; reason: VoiceClosedReason };
+  // Something worth keeping in the Server's log about how the call goes, such as a dropped link; never shown, never audio or tokens.
+  | { type: 'trail'; note: string }
+  // `why` is the provider's own reason in plain words, for the Notice that says why the call ended.
+  | { type: 'closed'; reason: VoiceClosedReason; why?: string };
 
 // What the voice does with text it is given: say it aloud, or keep it as background it may use later.
 export type VoiceDelivery = 'speak' | 'background';
@@ -52,6 +55,14 @@ export interface VoiceStartRequest {
   briefing: string;
   // A voice the provider lists; the provider's own default when left out.
   voice?: string;
+}
+
+// A call that only lets the person hear a voice: it opens no microphone and its voice says `words` once.
+export interface VoicePreviewRequest {
+  // The App's connection offer; it carries no microphone.
+  offer: string;
+  voice: string;
+  words: string;
 }
 
 export interface VoiceProviderCall {
@@ -70,6 +81,8 @@ export interface VoiceProviderCall {
 export interface VoiceOption {
   id: string;
   label: string;
+  // Only what the provider itself publishes about the voice.
+  description?: string;
 }
 
 export interface VoiceProvider {
@@ -81,4 +94,6 @@ export interface VoiceProvider {
   availability: () => Promise<VoiceAvailability>;
   voices: () => Promise<VoiceOption[]>;
   start: (request: VoiceStartRequest) => Promise<VoiceProviderCall>;
+  // A call whose voice speaks the request's words first; the caller ends it.
+  preview: (request: VoicePreviewRequest) => Promise<VoiceProviderCall>;
 }

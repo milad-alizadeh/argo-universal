@@ -2,6 +2,8 @@ import { z } from 'zod';
 import {
   VoiceEndInput,
   VoiceEndOutput,
+  VoicePreviewInput,
+  VoicePreviewOutput,
   VoiceSettings,
   VoiceSettingsChange,
   VoiceStartInput,
@@ -65,6 +67,17 @@ export const voiceOperations = {
     result: VoiceSettings,
     tier: 'confirm',
     keywords: ['voice', 'settings', 'provider', 'enable', 'disable'],
+  },
+  'voice.preview': {
+    id: 'voice.preview',
+    icon: 'voice',
+    label: 'Preview voice',
+    description:
+      "Play a short greeting in a voice from the App's listening-only connection, then hang up. It ends an earlier preview and is refused while a Voice call runs.",
+    params: VoicePreviewInput,
+    result: VoicePreviewOutput,
+    tier: 'act',
+    keywords: ['voice', 'preview', 'listen', 'greeting', 'sample'],
   },
   'voice.hangUp': {
     id: 'voice.hangUp',

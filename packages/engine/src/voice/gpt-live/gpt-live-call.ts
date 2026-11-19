@@ -1,19 +1,17 @@
-import { WebSocket } from 'ws';
+import type { WebSocket } from 'ws';
 import type {
   VoiceDelivery,
   VoiceProviderCall,
   VoiceProviderEvent,
 } from '../provider';
-import { LinkReader, textOfFrame } from './link-events';
+import { ControlLink, type ControlLinkOptions } from './control-link';
+import { LinkReader } from './link-events';
+import { LinkTrail } from './link-trail';
+import { longestWhy } from './service-close';
 
-// Opens the call's control link again; rejects when the service will not have it.
-type RejoinLink = () => Promise<WebSocket>;
-
-export type GptLiveCallOptions = {
+export type GptLiveCallOptions = ControlLinkOptions & {
   answer: string;
   link: WebSocket;
-  rejoin: RejoinLink;
-  lostLinkMs: number;
 };
 
 type LinkContent = [{ type: 'input_text'; text: string }];
@@ -52,26 +50,39 @@ function piecesOf(text: string): LinkContent[] {
   return [...pieces, [{ type: 'input_text', text: piece }]];
 }
 
-const retryMs = 100;
+// A close on the call's expiry is the call reaching its longest, whatever the service called it.
+const onTime = (event: VoiceProviderEvent): VoiceProviderEvent =>
+  event.type === 'closed' && event.reason === 'ended'
+    ? { ...event, why: longestWhy }
+    : event;
 
 /*
- * One GPT-Live call after the service answered: the control link it keeps for its whole life.
+ * One GPT-Live call after the service answered, over the control link it keeps for its whole life.
  * The link also carries raw audio, which is dropped unread; audio travels between the App and the service, never through here.
- * A lost link is joined again until it has been down for `lostLinkMs`, then the call closes as lost.
+ * What happens to the link goes to the call's trail, for the Server's log.
  */
 export class GptLiveCall implements VoiceProviderCall {
   public readonly answer: string;
   private readonly listeners = new Set<(event: VoiceProviderEvent) => void>();
   private readonly backlog: VoiceProviderEvent[] = [];
   private readonly reader = new LinkReader();
-  private link: WebSocket;
+  private readonly trail = new LinkTrail();
+  private readonly link: ControlLink;
   private ended = false;
-  private lostTimer: ReturnType<typeof setTimeout> | undefined;
+  private lastNote: string | undefined;
 
-  public constructor(private readonly options: GptLiveCallOptions) {
+  public constructor(options: GptLiveCallOptions) {
     this.answer = options.answer;
-    this.link = options.link;
-    this.attach(options.link);
+    this.link = new ControlLink(
+      options.link,
+      {
+        frame: (frame): void => this.onFrame(frame),
+        event: (event): void => this.emit(event),
+        note: (note): void => this.note(note),
+        ended: (): boolean => this.ended,
+      },
+      options,
+    );
   }
 
   public listen(listener: (event: VoiceProviderEvent) => void): () => void {
@@ -120,64 +131,29 @@ export class GptLiveCall implements VoiceProviderCall {
     for (const listener of this.listeners) listener(event);
   }
 
+  // A note repeated back to back, as each refused join is, is kept once.
+  private note(note: string): void {
+    if (note === this.lastNote) return;
+    this.lastNote = note;
+    this.emit({ type: 'trail', note });
+  }
+
   private finish(): void {
     this.ended = true;
-    clearTimeout(this.lostTimer);
-    // Anything already sent leaves before the closing frame does.
     this.link.close();
   }
 
   private sendOut(message: LinkMessage): void {
-    if (this.link.readyState === WebSocket.OPEN)
-      this.link.send(JSON.stringify(message));
-  }
-
-  private attach(link: WebSocket): void {
-    this.link = link;
-    link.on('message', (data, isBinary) =>
-      this.onFrame(textOfFrame(data, isBinary)),
-    );
-    link.on('close', () => this.onClose(link));
-    link.on('error', () => {});
+    this.link.send(JSON.stringify(message));
   }
 
   private onFrame(frame: string): void {
-    for (const event of this.reader.read(frame)) this.emit(event);
+    for (const note of this.trail.read(frame)) this.note(note);
+
+    for (const event of this.reader.read(frame)) this.emit(this.timed(event));
   }
 
-  private onClose(link: WebSocket): void {
-    if (this.link === link) this.lose();
-  }
-
-  private lose(): void {
-    if (this.ended) return;
-    this.emit({ type: 'status', status: 'disconnected' });
-    this.lostTimer ??= setTimeout(
-      () => this.emit({ type: 'closed', reason: 'lost' }),
-      this.options.lostLinkMs,
-    );
-    this.rejoin();
-  }
-
-  private rejoin(): void {
-    setTimeout(() => {
-      if (!this.ended) void this.joinAgain();
-    }, retryMs);
-  }
-
-  private async joinAgain(): Promise<void> {
-    try {
-      this.rejoined(await this.options.rejoin());
-    } catch {
-      this.rejoin();
-    }
-  }
-
-  private rejoined(link: WebSocket): void {
-    if (this.ended) return link.close();
-    clearTimeout(this.lostTimer);
-    this.lostTimer = undefined;
-    this.attach(link);
-    this.emit({ type: 'status', status: 'connected' });
+  private timed(event: VoiceProviderEvent): VoiceProviderEvent {
+    return this.trail.expired(Date.now()) ? onTime(event) : event;
   }
 }

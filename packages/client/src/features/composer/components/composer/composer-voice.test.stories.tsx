@@ -1,3 +1,4 @@
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Button } from '@repo/kit/primitives/actions/button';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -216,9 +217,28 @@ export const PointerToTheCall: Story = {
   play: async ({ canvas, args }) => {
     await expect(canvas.queryByTestId(voiceButtonId)).not.toBeInTheDocument();
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByTestId(callPointerId));
-    await expect(canvas.getByText('Call in Fix the build')).toBeInTheDocument();
+    // A round icon button named for the call, not a pill with the words on it.
+    await expect(canvas.queryByText('Call in Fix the build')).toBeNull();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Call in Fix the build' }),
+    );
     await expect(openOf(args.voice)).toHaveBeenCalledOnce();
+  },
+};
+
+// Typing in another Session while a call runs elsewhere: Send works as in any Session, and the pointer steps aside.
+export const SendBesideACallElsewhere: Story = {
+  render: (args) => (
+    <Composer {...composerProps({ ...args, sessionStarted: true })} />
+  ),
+  args: {
+    voice: { kind: 'elsewhere', title: 'Fix the build', onOpen: fn() },
+    draft: { text: 'Check the logs.', attachments: [] },
+  },
+  play: async ({ canvas, args }) => {
+    await expect(canvas.queryByTestId(callPointerId)).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
+    await expect(args.onSend).toHaveBeenCalledWith(args.draft);
   },
 };
 
@@ -343,3 +363,25 @@ export const EdgeBandMuted: Story = {
     await expect(canvas.queryByText('Listening')).not.toBeInTheDocument();
   },
 };
+
+// A phone keeps only the microphone's mute beside End; a wide window keeps both mutes.
+const mutesAt = (width: number, speaker: boolean): Story => ({
+  render: (args) => (
+    <Composer {...composerProps({ ...args, sessionStarted: true })} />
+  ),
+  args: { voice: { kind: 'connected', onEnd: fn(), mutes: noMutes } },
+  play: async ({ canvas }) => {
+    await settleLayout(width);
+    await expect(
+      await canvas.findByTestId(microphoneButtonId),
+    ).toBeInTheDocument();
+    await expect(canvas.getByTestId(endButtonId)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(canvas.queryByTestId(speakerButtonId) !== null).toBe(speaker),
+    );
+  },
+});
+
+export const PhoneKeepsOnlyTheMicrophoneMute = mutesAt(390, false);
+
+export const WideKeepsBothMutes = mutesAt(1280, true);

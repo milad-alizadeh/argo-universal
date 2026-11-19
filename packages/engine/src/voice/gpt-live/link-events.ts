@@ -1,26 +1,25 @@
 import { z } from 'zod';
 import type { VoiceProviderEvent } from '../provider';
+import {
+  SpokenTurns,
+  transcriptType,
+  type Speaker,
+  type Utterance,
+} from './link-turns';
+import { serviceClosed } from './service-close';
 
 /*
  * The control link's events as the service sends them ("frameless bidi"); Codex reads the same ones (codex-rs realtime_websocket/protocol_frameless_bidi.rs).
- * Words arrive a chunk at a time as `*_transcript.added`; a turn's `turn.done` holds its whole transcript, which is what was said.
+ * Words arrive a chunk at a time as `*_transcript.added` and show as partials; a turn's `turn.done` holds its whole transcript, which is what was said.
+ * A turn the person cut short is done with what was said up to then; one that ends without a transcript keeps the words heard in it (`link-turns.ts`).
  * `session.usage.updated` counts audio time, not tokens, so it is not reported.
  */
 
-type Speaker = 'person' | 'voice';
+// What the call has heard so far: each speaker's words in the utterance under way, and the turns still open.
+type Heard = { saying: Map<Speaker, Utterance>; turns: SpokenTurns };
 
-type Utterance = { id: string; text: string };
-
-// Each speaker's words so far in the utterance under way.
-type Saying = Map<Speaker, Utterance>;
-
-// What one event does to the call: the events it reports, given the words so far.
-type Step = (saying: Saying) => VoiceProviderEvent[];
-
-const transcriptType = {
-  person: 'person.transcript',
-  voice: 'voice.transcript',
-} as const;
+// What one event does to the call: the events it reports, given what was heard so far.
+type Step = (heard: Heard) => VoiceProviderEvent[];
 
 const report =
   (...events: VoiceProviderEvent[]): Step =>
@@ -39,7 +38,7 @@ const partial = (speaker: Speaker, now: Utterance): VoiceProviderEvent[] => {
 const wordsAdded =
   (speaker: Speaker) =>
   ({ item }: { item: Utterance }): Step =>
-  (saying) => {
+  ({ saying }) => {
     const before = saying.get(speaker) ?? { id: item.id, text: '' };
     const now = { id: before.id, text: before.text + item.text };
 
@@ -48,22 +47,50 @@ const wordsAdded =
     return partial(speaker, now);
   };
 
+type TurnFields = { turn: { id: string; transcript: string } };
+
+const utteranceOf = ({ turn }: TurnFields): Utterance => ({
+  id: turn.id,
+  text: turn.transcript,
+});
+
+const speakerOf = (event: VoiceProviderEvent): Speaker =>
+  event.type === 'person.transcript' ? 'person' : 'voice';
+
+// A new turn settles the turns still open; a settled speaker's next words start afresh.
+const turnOpened =
+  (speaker: Speaker, ...after: VoiceProviderEvent[]) =>
+  (fields: TurnFields): Step =>
+  ({ saying, turns }) => {
+    const settled = turns.opened(speaker, utteranceOf(fields));
+
+    for (const event of settled) saying.delete(speakerOf(event));
+
+    return [...settled, ...after];
+  };
+
+const turnGrew =
+  ({ turn_id: turnId, delta }: { turn_id: string; delta: string }): Step =>
+  ({ turns }) => {
+    turns.grew(turnId, delta);
+
+    return [];
+  };
+
 // A done turn's transcript is the whole utterance; the speaker's next words start afresh.
 const turnDone =
   (speaker: Speaker, ...after: VoiceProviderEvent[]) =>
-  ({ turn }: { turn: { id: string; transcript: string } }): Step =>
-  (saying) => {
-    const text = turn.transcript.trim();
-
+  (fields: TurnFields): Step =>
+  ({ saying, turns }) => {
     saying.delete(speaker);
 
-    if (!text) return after;
-
-    return [
-      { type: transcriptType[speaker], id: turn.id, text, final: true },
-      ...after,
-    ];
+    return [...turns.done(speaker, utteranceOf(fields)), ...after];
   };
+
+// The service closed the call: the words still being said end first, then the close with the reason it gave.
+const closed =
+  ({ reason }: { reason?: string }): Step =>
+  ({ turns }) => [...turns.closing(), serviceClosed(reason)];
 
 // Work the voice hands to the client, answered under the delegation item's id as Codex does.
 const requested = ({
@@ -116,8 +143,18 @@ const reported = z.union([
     .looseObject({ type: z.literal('output_transcript.added'), ...wordsFields })
     .transform(wordsAdded('voice')),
   z
+    .looseObject({ type: z.literal('turn.created'), ...userTurn })
+    .transform(turnOpened('person')),
+  z
     .looseObject({ type: z.literal('turn.created'), ...assistantTurn })
-    .transform(() => report({ type: 'speaking', speaking: true })),
+    .transform(turnOpened('voice', { type: 'speaking', speaking: true })),
+  z
+    .looseObject({
+      type: z.literal('turn.delta'),
+      turn_id: z.string(),
+      delta: z.string(),
+    })
+    .transform(turnGrew),
   z
     .looseObject({ type: z.literal('turn.done'), ...userTurn })
     .transform(turnDone('person')),
@@ -126,8 +163,11 @@ const reported = z.union([
     .transform(turnDone('voice', { type: 'speaking', speaking: false })),
   delegation.transform(requested),
   z
-    .looseObject({ type: z.literal('session.closed') })
-    .transform(() => report({ type: 'closed', reason: 'ended' })),
+    .looseObject({
+      type: z.literal('session.closed'),
+      reason: z.string().optional(),
+    })
+    .transform(closed),
 ]);
 
 const stepOf = (frame: string): Step | null => {
@@ -140,13 +180,16 @@ const stepOf = (frame: string): Step | null => {
   }
 };
 
-// Reads one call's control-link text frames, keeping each speaker's words so far across frames.
+// Reads one call's control-link text frames, keeping what was heard across frames.
 export class LinkReader {
-  private readonly saying: Saying = new Map();
+  private readonly heard: Heard = {
+    saying: new Map(),
+    turns: new SpokenTurns(),
+  };
 
   // What one text frame means to the call; nothing for events not reported and for anything unreadable.
   public read(frame: string): VoiceProviderEvent[] {
-    return stepOf(frame)?.(this.saying) ?? [];
+    return stepOf(frame)?.(this.heard) ?? [];
   }
 }
 

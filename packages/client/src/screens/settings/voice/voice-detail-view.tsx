@@ -114,11 +114,16 @@ const voiceOptions = (
 ): React.ComponentProps<typeof FieldGroup.Picker>['options'] =>
   settings.voices.map(({ id, label }) => ({ value: id, label }));
 
+// The chosen voice as its provider describes it, else what choosing it does.
+const voiceFooter = (settings: VoiceSettings): string =>
+  settings.voices.find(({ id }) => id === settings.voice)?.description ??
+  'The next call speaks with this voice.';
+
 function voiceSection(props: VoiceDetailViewProps): React.JSX.Element {
   const settings = settingsOf(props);
 
   return (
-    <FieldGroup.Section footer="The next call speaks with this voice.">
+    <FieldGroup.Section footer={voiceFooter(settings)}>
       <FieldGroup.Picker
         title="Voice"
         presentation="menu"

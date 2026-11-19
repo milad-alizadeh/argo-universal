@@ -1,3 +1,4 @@
+import { BrowserSilence } from './browser-silence';
 import { LevelMeter } from './level-meter';
 import type {
   Microphone,
@@ -53,6 +54,8 @@ class BrowserMicrophone implements Microphone {
 }
 
 function streamOf(microphone: Microphone): MediaStream {
+  if (microphone instanceof BrowserSilence) return microphone.stream;
+
   if (!(microphone instanceof BrowserMicrophone))
     throw new Error('Not a browser microphone.');
 
@@ -172,6 +175,7 @@ const playVoice = (
 // The page's own pieces: the system microphone, a peer connection, and an audio element for the voice.
 export const browserVoiceEnvironment: VoiceEnvironment = {
   openMicrophone,
+  openSilence: () => new BrowserSilence(),
   createPeer: () => new BrowserPeer(),
   playVoice,
 };

@@ -1,17 +1,9 @@
+import type { OrbColors } from './orb-colors';
+import { startLinking } from './orb-linking';
 import type { OrbDrawn } from './orb-motion';
 import { noiseSize, noiseTexels } from './orb-noise';
+import { rgbOf } from './orb-rgb';
 import { orbFragmentShader } from './orb-shader';
-
-type Rgb = [number, number, number];
-
-type Blue = { red: number; green: number; blue: number };
-
-const rgbOf = ({ red, green, blue }: Blue): Rgb => [red, green, blue];
-
-// ElevenLabs' defaults: the darker and the lighter blue the shader ramps between, each channel from 0 to 1.
-const darker: Blue = { red: 0.792, green: 0.863, blue: 0.988 };
-
-const lighter: Blue = { red: 0.627, green: 0.725, blue: 0.82 };
 
 const vertexSource = `#version 300 es
 in vec2 position;
@@ -42,39 +34,6 @@ const offsets = Float32Array.from(
   { length: ovals },
   (_, index) => (index * goldenAngle) % (Math.PI * 2),
 );
-
-// A shader that failed to compile says why; one that compiled is returned as it is.
-function checked(gl: WebGL2RenderingContext, shader: WebGLShader): WebGLShader {
-  if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return shader;
-
-  throw new Error(gl.getShaderInfoLog(shader) ?? 'The orb shader failed');
-}
-
-function compiled(
-  gl: WebGL2RenderingContext,
-  type: number,
-  source: string,
-): WebGLShader {
-  const shader = gl.createShader(type);
-
-  if (!shader) throw new Error('The orb could not create a shader');
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-
-  return checked(gl, shader);
-}
-
-function linked(gl: WebGL2RenderingContext): WebGLProgram {
-  const program = gl.createProgram();
-  gl.attachShader(program, compiled(gl, gl.VERTEX_SHADER, vertexSource));
-  gl.attachShader(program, compiled(gl, gl.FRAGMENT_SHADER, fragmentSource));
-  gl.linkProgram(program);
-
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-    throw new Error(gl.getProgramInfoLog(program) ?? 'The orb did not link');
-
-  return program;
-}
 
 function upload(gl: WebGL2RenderingContext, texels: Uint8Array): void {
   const { TEXTURE_2D, RGBA, UNSIGNED_BYTE } = gl;
@@ -124,8 +83,13 @@ function corners(gl: WebGL2RenderingContext, program: WebGLProgram): void {
 export class OrbGl {
   private readonly program: WebGLProgram;
 
-  public constructor(private readonly gl: WebGL2RenderingContext) {
-    this.program = linked(gl);
+  private painted = '';
+
+  public constructor(
+    private readonly gl: WebGL2RenderingContext,
+    program: WebGLProgram,
+  ) {
+    this.program = program;
     gl.useProgram(this.program);
     corners(gl, this.program);
     noiseTexture(gl);
@@ -134,10 +98,12 @@ export class OrbGl {
     this.fixed();
   }
 
-  // What never changes during a call: the colours, the ovals' starting angles and the noise's place.
+  /*
+   * What never changes during a call: the ovals' starting angles and the noise's place. ElevenLabs sets `uInverted` on
+   * a dark page, which turns the white highlights and rings black; Argo leaves it off and lets the theme's own pair,
+   * which flips with the theme, carry dark mode instead.
+   */
   private fixed(): void {
-    this.gl.uniform3fv(this.at('uColor1'), rgbOf(darker));
-    this.gl.uniform3fv(this.at('uColor2'), rgbOf(lighter));
     this.gl.uniform1fv(this.at('uOffsets'), offsets);
     this.gl.uniform1f(this.at('uInverted'), 0);
     this.gl.uniform1i(this.at('uPerlinTexture'), 0);
@@ -147,8 +113,19 @@ export class OrbGl {
     return this.gl.getUniformLocation(this.program, name);
   }
 
-  public draw(drawn: OrbDrawn): void {
+  // ElevenLabs' `colors` pair into `uColor1` and `uColor2`, read again only when the pair changes.
+  private paint(colors: OrbColors): void {
+    const pair = colors.join(' ');
+
+    if (pair === this.painted) return;
+    this.gl.uniform3fv(this.at('uColor1'), rgbOf(colors[0]));
+    this.gl.uniform3fv(this.at('uColor2'), rgbOf(colors[1]));
+    this.painted = pair;
+  }
+
+  public draw(drawn: OrbDrawn, colors: OrbColors): void {
     const { gl } = this;
+    this.paint(colors);
     gl.uniform1f(this.at('uTime'), drawn.time);
     gl.uniform1f(this.at('uAnimation'), drawn.animation);
     gl.uniform1f(this.at('uInputVolume'), drawn.input);
@@ -164,13 +141,31 @@ export class OrbGl {
   }
 }
 
-// A drawing on the canvas, or nothing where the window has no WebGL2.
-export function orbOn(canvas: HTMLCanvasElement): OrbGl | null {
+// The orb's drawing on its way: the shaders compile while the page goes on drawing frames.
+export interface OrbStarting {
+  // The drawing once the shaders are ready, and nothing before.
+  ready: () => OrbGl | undefined;
+}
+
+const startingOn = (gl: WebGL2RenderingContext): OrbStarting => {
+  const linking = startLinking(gl, {
+    vertex: vertexSource,
+    fragment: fragmentSource,
+  });
+
+  return {
+    ready: () =>
+      linking.done() ? new OrbGl(gl, linking.program()) : undefined,
+  };
+};
+
+// A drawing starting on the canvas, or nothing where the window has no WebGL2.
+export function orbOn(canvas: HTMLCanvasElement): OrbStarting | null {
   const gl = canvas.getContext('webgl2', {
     alpha: true,
     antialias: true,
     premultipliedAlpha: true,
   });
 
-  return gl ? new OrbGl(gl) : null;
+  return gl ? startingOn(gl) : null;
 }

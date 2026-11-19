@@ -51,19 +51,3 @@ function Segments({
     </View>
   );
 }
-
-/*
- * The stage while the band along the Composer draws the call: only the toggle, where the full stage puts it, evenly
- * padded, so the Feed keeps nearly all its height and the person can still switch back.
- */
-export function BandStage({
-  toggle,
-}: {
-  toggle: VoiceVisualiserToggleProps | undefined;
-}): React.JSX.Element {
-  return (
-    <View testID="voice-stage" className="w-full shrink-0 items-center py-3">
-      <VoiceVisualiserToggle toggle={toggle} />
-    </View>
-  );
-}

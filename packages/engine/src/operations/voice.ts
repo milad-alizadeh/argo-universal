@@ -10,6 +10,7 @@ type VoiceImplementations = Pick<
   | 'voice.hangUp'
   | 'voice.getSettings'
   | 'voice.setSettings'
+  | 'voice.preview'
 >;
 
 // A call starts in its Session, opened first if it is not, as after a Server restart.
@@ -33,6 +34,7 @@ export function createVoiceOperations(
     'voice.start': startInOpenSession(voice, sessions),
     'voice.getSettings': () => voice.settings(),
     'voice.setSettings': (change) => voice.changeSettings(change),
+    'voice.preview': (input) => voice.preview(input),
     'voice.end': ({ sessionId }) => Promise.resolve(voice.end(sessionId)),
     'voice.hangUp': ({ sessionId }) => Promise.resolve(voice.hangUp(sessionId)),
   };

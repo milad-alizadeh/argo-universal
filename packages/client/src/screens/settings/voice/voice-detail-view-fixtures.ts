@@ -68,3 +68,12 @@ export const stableVoice: VoiceSettings = {
     experimental: false,
   })),
 };
+
+// The chosen voice has a description its provider publishes; sample words, not any provider's.
+export const describedVoice: VoiceSettings = {
+  ...usableVoice,
+  voices: [
+    { id: 'cove', label: 'Cove', description: 'A sample description of Cove' },
+    { id: 'marin', label: 'Marin' },
+  ],
+};

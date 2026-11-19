@@ -22,6 +22,15 @@ const personId = 'p1';
 
 const voiceId = 'v1';
 
+// The ids of the stored rows of what the voice said.
+const voiceRowIdsOf = async (
+  host: Parameters<typeof storedRows>[0],
+  sessionId: string,
+): Promise<string[]> =>
+  (await storedRows(host, sessionId))
+    .filter((row) => row.sessionUpdate === voiceKind)
+    .map((row) => row.id);
+
 describe('Voice call transcript', () => {
   it('stores what the person and the voice said as two kinds of Feed row, in the order spoken', async () => {
     const voice = await startVoiceEngine();
@@ -73,19 +82,32 @@ describe('Voice call transcript', () => {
     say(voice, said.person(personId, 'Is it', false));
     await expect
       .poll(() => partialsOf(voice.host))
-      .toEqual([{ speaker: 'person', id: personId, text: 'Is it' }]);
+      .toMatchObject([{ speaker: 'person', id: personId, text: 'Is it' }]);
     expect(await transcriptsOf(voice.host, sessionId)).toEqual([]);
 
     say(voice, said.person(personId, isItDone, false));
     await expect
       .poll(() => partialsOf(voice.host))
-      .toEqual([{ speaker: 'person', id: personId, text: isItDone }]);
+      .toMatchObject([{ speaker: 'person', id: personId, text: isItDone }]);
 
     say(voice, said.person(personId, isItDone, true));
     await expect.poll(() => partialsOf(voice.host)).toEqual([]);
     await expect
       .poll(() => transcriptsOf(voice.host, sessionId))
       .toEqual([{ kind: person, text: isItDone }]);
+  });
+
+  it('names each partial by the row its final words are stored under, so the App draws them as one', async () => {
+    const voice = await startVoiceEngine();
+    const sessionId = await startedCall(voice);
+    say(voice, said.voice(voiceId, 'Not', false));
+    await expect.poll(() => partialsOf(voice.host)).toHaveLength(1);
+    const [partial] = await partialsOf(voice.host);
+
+    say(voice, said.voice(voiceId, 'Not yet.', true));
+    await expect
+      .poll(() => voiceRowIdsOf(voice.host, sessionId))
+      .toEqual([partial?.rowId]);
   });
 
   it('holds one partial per speaker', async () => {
@@ -95,7 +117,7 @@ describe('Voice call transcript', () => {
     say(voice, said.voice(voiceId, 'Sure, I', false));
     await expect
       .poll(() => partialsOf(voice.host))
-      .toEqual([
+      .toMatchObject([
         { speaker: 'person', id: personId, text: 'Wait' },
         { speaker: 'voice', id: voiceId, text: 'Sure, I' },
       ]);
@@ -111,7 +133,7 @@ describe('Voice call transcript', () => {
       .toHaveLength(1);
     await expect
       .poll(() => partialsOf(voice.host))
-      .toEqual([{ speaker: 'voice', id: voiceId, text: 'Half a sen' }]);
+      .toMatchObject([{ speaker: 'voice', id: voiceId, text: 'Half a sen' }]);
     await voice.host.caller.voice.end({ sessionId });
 
     expect(await transcriptsOf(voice.host, sessionId)).toEqual([

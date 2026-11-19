@@ -99,9 +99,14 @@ class FakePeer implements VoicePeer {
 }
 
 export class FakeEnvironment implements VoiceEnvironment {
-  public readonly peer = new FakePeer();
+  // Every peer made, oldest first; the latest is `peer`.
+  public readonly peers: FakePeer[] = [];
   // Each call opens a new microphone, as the browser does, so the latest one is the call's.
   public microphone = new FakeMicrophone(null);
+  // How often the microphone was opened.
+  public microphonesOpened = 0;
+  // The silence a listening-only connection sends, the latest one made.
+  public silence = new FakeMicrophone(null);
   public readonly playback = new FakePlayback();
   // Microphones that were taken out: opening one fails, as the browser's exact constraint does.
   public readonly missing = new Set<string>();
@@ -112,8 +117,15 @@ export class FakeEnvironment implements VoiceEnvironment {
     if (this.refuses(device)) return Promise.reject(new Error('denied'));
 
     this.microphone = new FakeMicrophone(device);
+    this.microphonesOpened += 1;
 
     return Promise.resolve(this.microphone);
+  }
+
+  public openSilence(): Microphone {
+    this.silence = new FakeMicrophone(null);
+
+    return this.silence;
   }
 
   private refuses(device: string | null): boolean {
@@ -121,7 +133,18 @@ export class FakeEnvironment implements VoiceEnvironment {
   }
 
   public createPeer(): VoicePeer {
-    return this.peer;
+    const peer = new FakePeer();
+    this.peers.push(peer);
+
+    return peer;
+  }
+
+  public get peer(): FakePeer {
+    const peer = this.peers.at(-1);
+
+    if (!peer) throw new Error('No peer was made');
+
+    return peer;
   }
 
   public playVoice(_voice: MediaStream, speaker: string | null): VoicePlayback {
