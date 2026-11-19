@@ -5,6 +5,7 @@ import { connect, createServer, type Server } from 'node:net';
 import { homedir, tmpdir } from 'node:os';
 import path from 'node:path';
 import { z } from 'zod';
+import { predecessors } from './queue-journal.ts';
 
 const missingSocket = z.object({ code: z.enum(['ENOENT', 'ECONNREFUSED']) });
 
@@ -34,41 +35,6 @@ type Event = 'request' | 'acquire' | 'release' | 'gone';
 
 function record(file: string, token: string, event: Event): void {
   appendFileSync(file, `${Date.now()} ${token} ${event}\n`, { mode: 0o600 });
-}
-
-function updatePending(
-  pending: Set<string>,
-  token: string,
-  event: string,
-): void {
-  if (event === 'request') pending.add(z.uuid().parse(token));
-  else if (event !== 'acquire') pending.delete(token);
-}
-
-interface JournalEntry {
-  token: string;
-  event: string;
-}
-
-function entry(line: string): JournalEntry {
-  const [, token = '', event = ''] = line.split(' ');
-
-  return { token, event };
-}
-
-// One append registers a request across processes. Its offset orders even requests in the same millisecond.
-function predecessors(file: string, own: string): string[] {
-  const pending = new Set<string>();
-
-  for (const line of readFileSync(file, 'utf8').split('\n')) {
-    const { token, event } = entry(line);
-
-    if (token === own) break;
-
-    updatePending(pending, token, event);
-  }
-
-  return [...pending];
 }
 
 function discard(file: string, token: string): void {
@@ -107,7 +73,7 @@ export interface QueueTicket {
 
 function register(file: string, token: string, socket: Server): QueueTicket {
   record(file, token, 'request');
-  const earlier = predecessors(file, token);
+  const earlier = predecessors(readFileSync(file, 'utf8'), token);
 
   return {
     first: () => first(file, earlier),
