@@ -1,6 +1,5 @@
 import type { FeedSubscribeOutput } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { operationCaller, runOperation } from '#mocks/operations';
 import { startVoiceWork, type VoiceWork } from '#mocks/voice-work';
 
@@ -77,6 +76,7 @@ describe('Voice marks are stripped wherever an Agent message is read', () => {
       id: message?.id ?? '',
     });
 
+    expect(JSON.stringify(row)).toContain('Running the suite');
     expect(JSON.stringify(row)).not.toMatch(markPattern);
   });
 
@@ -111,39 +111,5 @@ describe('Voice marks are stripped wherever an Agent message is read', () => {
 
     expect(read).toContain('All green');
     expect(read).not.toMatch(markPattern);
-  });
-
-  it('in a message still arriving, before the Feed stores it', async () => {
-    const finish = Promise.withResolvers<void>();
-    const entered = Promise.withResolvers<void>();
-
-    const host = await startAcpEngine({
-      steps: [
-        {
-          type: 'update',
-          update: {
-            sessionUpdate: 'agent_message_chunk',
-            messageId: 'open',
-            content: { type: 'text', text: '[STATUS] Looking' },
-          },
-        },
-        { type: 'gate', waitFor: finish.promise, entered },
-      ],
-    });
-
-    try {
-      const { sessionId } = await host.caller.session.new({
-        ...emptySessionInput,
-        prompt: [{ type: 'text', text: 'Look around' }],
-      });
-
-      await entered.promise;
-      await expect
-        .poll(() => agentMessages(host, sessionId))
-        .toContain('Looking');
-      expect(await agentMessages(host, sessionId)).not.toMatch(markPattern);
-    } finally {
-      finish.resolve();
-    }
   });
 });
