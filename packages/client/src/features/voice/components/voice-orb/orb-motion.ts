@@ -1,5 +1,5 @@
 import type { VoiceOrbState } from '@repo/contracts';
-import type { VoiceLevels } from '../../voice-connection';
+import type { VoiceLevels } from '../../types/voice-connection';
 
 export interface OrbDrawn {
   // Seconds of motion, which the shader's noise runs on.

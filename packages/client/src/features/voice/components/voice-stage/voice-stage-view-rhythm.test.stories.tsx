@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
 import { FakeVoiceConnection } from '../../../../../mocks/voice/fake-voice-connection';
-import type { VoiceLevels, VoiceSpectrum } from '../../voice-connection';
+import type { VoiceLevels, VoiceSpectrum } from '../../types/voice-connection';
 import { VoiceStageView } from './voice-stage-view';
 import { listeningStage } from './voice-stage-view-fixtures';
 import presentation from './voice-stage-view-visualisers.stories';

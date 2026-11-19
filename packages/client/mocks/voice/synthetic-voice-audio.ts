@@ -3,7 +3,7 @@ import {
   silentSpectrum,
   type VoiceLevels,
   type VoiceSpectrum,
-} from '../../src/features/voice/voice-connection';
+} from '../../src/features/voice/types/voice-connection';
 
 const millisecondsPerSecond = 1000;
 

@@ -1,3 +1,5 @@
+import type { VoiceDeviceChoice } from '../../src/features/voice/stores/voice-device-choice';
+import { VoiceMuteStore } from '../../src/features/voice/stores/voice-mute-store';
 import {
   silentSpectrum,
   type VoiceConnection,
@@ -5,9 +7,7 @@ import {
   type VoiceMutes,
   type VoiceSound,
   type VoiceSpectrum,
-} from '../../src/features/voice/voice-connection';
-import type { VoiceDeviceChoice } from '../../src/features/voice/voice-device-choice';
-import { VoiceMuteStore } from '../../src/features/voice/voice-mute-store';
+} from '../../src/features/voice/types/voice-connection';
 
 /*
  * A Voice connection that carries no audio, for tests and stories: it holds its mutes as the real one does, records

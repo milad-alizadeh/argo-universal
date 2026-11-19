@@ -1,5 +1,5 @@
 import type { VoiceOrbState } from '@repo/contracts';
-import type { VoiceSpectrum } from '../../voice-connection';
+import type { VoiceSpectrum } from '../../types/voice-connection';
 
 // What a visualiser draws: sound while someone speaks, a calm pattern while the Agent works, and one while connecting.
 export type VisualiserPattern =
