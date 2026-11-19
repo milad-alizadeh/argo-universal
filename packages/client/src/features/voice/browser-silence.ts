@@ -21,6 +21,8 @@ export class BrowserSilence implements Microphone {
 
   public setMuted(): void {}
 
+  public setGain(): void {}
+
   public level(): number {
     return 0;
   }

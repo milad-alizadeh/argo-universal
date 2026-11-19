@@ -63,4 +63,16 @@ describe("the App's voice connection follows the Server's call", () => {
 
     expect(connection.mutes()).toEqual({ microphone: false, speaker: false });
   });
+
+  it('plays a running call at the volume the Server holds, as soon as it changes', async () => {
+    const { environment, connection, hear } = app();
+    await connection.createOffer();
+    environment.peer.voiceArrives();
+    hear(statusOf(callIn('s1')));
+
+    hear(statusOf(callIn('s1'), { volume: 30, microphoneGain: 120 }));
+
+    expect(environment.playback.volume).toBeCloseTo(0.3);
+    await expect.poll(() => environment.microphone.gain).toBeCloseTo(1.2);
+  });
 });

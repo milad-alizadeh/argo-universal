@@ -1,4 +1,6 @@
+import { BrowserMicrophone } from './browser-microphone';
 import { BrowserSilence } from './browser-silence';
+import { LevelMeter } from './level-meter';
 import type {
   Microphone,
   VoiceEnvironment,
@@ -19,59 +21,6 @@ function gathered(connection: RTCPeerConnection): Promise<void> {
     setTimeout(resolve, iceGatheringLimitMs);
     check();
   });
-}
-
-const fftSize = 256;
-
-const loudest = 255;
-
-// Reads how loud a stream is, from 0 to 1, as the loudest frequency's strength. The levels stay in the App: they only move the orb.
-class LevelMeter {
-  private readonly context = new AudioContext();
-  private readonly analyser = this.context.createAnalyser();
-  private readonly bins: Uint8Array<ArrayBuffer>;
-
-  public constructor(stream: MediaStream) {
-    this.analyser.fftSize = fftSize;
-    this.bins = new Uint8Array(this.analyser.frequencyBinCount);
-    this.context.createMediaStreamSource(stream).connect(this.analyser);
-  }
-
-  public level(): number {
-    this.analyser.getByteFrequencyData(this.bins);
-
-    return Math.max(...this.bins) / loudest;
-  }
-
-  public close(): void {
-    void this.context.close();
-  }
-}
-
-class BrowserMicrophone implements Microphone {
-  private readonly meter: LevelMeter;
-  private muted = false;
-
-  public constructor(public readonly stream: MediaStream) {
-    this.meter = new LevelMeter(stream);
-  }
-
-  public stop(): void {
-    this.meter.close();
-
-    for (const track of this.stream.getTracks()) track.stop();
-  }
-
-  // A muted track sends silence, so the call stays up.
-  public setMuted(muted: boolean): void {
-    this.muted = muted;
-
-    for (const track of this.stream.getAudioTracks()) track.enabled = !muted;
-  }
-
-  public level(): number {
-    return this.muted ? 0 : this.meter.level();
-  }
 }
 
 function streamOf(microphone: Microphone): MediaStream {

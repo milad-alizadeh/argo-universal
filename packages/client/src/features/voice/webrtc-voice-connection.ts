@@ -1,14 +1,22 @@
-import { HeldCall, openChosen } from './held-call';
+import { HeldCall, openChosen, type HeldSound } from './held-call';
 import type {
   VoiceConnection,
   VoiceLevels,
   VoiceMutes,
+  VoiceSound,
 } from './voice-connection';
 import { systemDevices, type VoiceDeviceChoice } from './voice-device-choice';
 import type { Microphone, VoiceEnvironment } from './voice-environment';
 import { VoiceMuteStore } from './voice-mute-store';
 
 const noLevels: VoiceLevels = { input: 0, output: 0 };
+
+const percent = 100;
+
+const heldSoundOf = ({ volume, microphoneGain }: VoiceSound): HeldSound => ({
+  volume: volume / percent,
+  gain: microphoneGain / percent,
+});
 
 // How long a preview may hold its connection; the Server hangs up sooner, once the greeting is said.
 const previewLimitMs = 30_000;
@@ -23,6 +31,8 @@ class WebRtcVoiceConnection implements VoiceConnection {
   private previewTimer: ReturnType<typeof setTimeout> | undefined;
   // The microphone and speaker this Device chose; every call starts on them.
   private devices = systemDevices;
+  // The volume and gain the person chose; every call starts with them.
+  private sound: HeldSound = { volume: 1, gain: 1 };
   private readonly store = new VoiceMuteStore();
 
   public constructor(private readonly environment: VoiceEnvironment) {}
@@ -74,7 +84,11 @@ class WebRtcVoiceConnection implements VoiceConnection {
 
   // A connection holding what it sends up, playing the voice on the chosen speaker when it arrives.
   private hold(microphone: Microphone): HeldCall {
-    const held = new HeldCall(microphone, this.environment.createPeer());
+    const held = new HeldCall(
+      microphone,
+      this.environment.createPeer(),
+      this.sound,
+    );
 
     held.peer.onVoice((voice) =>
       held.play(this.environment.playVoice(voice, this.devices.speaker)),
@@ -103,6 +117,12 @@ class WebRtcVoiceConnection implements VoiceConnection {
     const previous = this.devices;
     this.devices = choice;
     await this.held?.follow(previous, choice, this.environment);
+  }
+
+  public setSound(sound: VoiceSound): void {
+    this.sound = heldSoundOf(sound);
+    void this.held?.setSound(this.sound);
+    void this.previewing?.setSound(this.sound);
   }
 
   public mutes = (): VoiceMutes => this.store.read();

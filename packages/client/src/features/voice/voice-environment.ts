@@ -2,6 +2,8 @@
 export interface Microphone {
   stop: () => void;
   setMuted: (muted: boolean) => void;
+  // Raises or lowers the sound before it is sent; 1 sends it exactly as the microphone gives it.
+  setGain: (gain: number) => void;
   // How loud it is now, from 0 to 1.
   level: () => number;
 }

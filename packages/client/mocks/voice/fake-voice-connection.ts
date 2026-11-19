@@ -2,6 +2,7 @@ import type {
   VoiceConnection,
   VoiceLevels,
   VoiceMutes,
+  VoiceSound,
 } from '../../src/features/voice/voice-connection';
 import type { VoiceDeviceChoice } from '../../src/features/voice/voice-device-choice';
 import { VoiceMuteStore } from '../../src/features/voice/voice-mute-store';
@@ -48,6 +49,10 @@ export class FakeVoiceConnection implements VoiceConnection {
     this.asked.push(`devices:${choice.microphone}:${choice.speaker}`);
 
     return Promise.resolve();
+  }
+
+  public setSound(sound: VoiceSound): void {
+    this.asked.push(`sound:${sound.volume}:${sound.microphoneGain}`);
   }
 
   public mutes = (): VoiceMutes => this.store.read();

@@ -11,6 +11,8 @@ const voiceStream: MediaStream = Object.create(null);
 class FakeMicrophone implements Microphone {
   public stopped = false;
   public muted = false;
+  // How much the sound is raised or lowered before it is sent; 1 sends it as it is.
+  public gain = 1;
 
   // null is the system's microphone.
   public constructor(public readonly device: string | null) {}
@@ -21,6 +23,10 @@ class FakeMicrophone implements Microphone {
 
   public setMuted(muted: boolean): void {
     this.muted = muted;
+  }
+
+  public setGain(gain: number): void {
+    this.gain = gain;
   }
 
   public level(): number {
@@ -56,6 +62,8 @@ class FakePeer implements VoicePeer {
   public closed = false;
   // The microphone whose sound goes up now.
   public sending: Microphone | undefined;
+  // How often the sound sent up was replaced without a new offer.
+  public replaced = 0;
   private listener: ((stream: MediaStream) => void) | undefined;
 
   public offer(microphone: Microphone): Promise<string> {
@@ -66,6 +74,7 @@ class FakePeer implements VoicePeer {
 
   public replaceMicrophone(microphone: Microphone): Promise<void> {
     this.sending = microphone;
+    this.replaced += 1;
 
     return Promise.resolve();
   }
