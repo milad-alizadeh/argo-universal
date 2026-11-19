@@ -1,11 +1,12 @@
 import { useAnimatedStyle } from '@repo/kit/animated-hooks';
 import type * as React from 'react';
 import { useCallback, useState } from 'react';
-import { type LayoutChangeEvent, View } from 'react-native';
+import type { LayoutChangeEvent } from 'react-native';
 import Animated, {
   type SharedValue,
   useSharedValue,
 } from 'react-native-reanimated';
+import { SessionColumn } from '#lib/product/session-column';
 import { useStageReveal } from './voice-stage-motion';
 import { VoiceStageView, type VoiceStageViewProps } from './voice-stage-view';
 
@@ -75,15 +76,16 @@ function Stage({ leaving, onLeft, ...stage }: StageProps): React.JSX.Element {
       className="w-full shrink-0 overflow-hidden"
       style={room.style}
     >
-      <View onLayout={room.measure}>
+      <SessionColumn onLayout={room.measure}>
         <VoiceStageView {...stage} reveal={reveal} />
-      </View>
+      </SessionColumn>
     </Animated.View>
   );
 }
 
 /*
- * The stage coming and going with the call: the room above the Feed opens as the orb springs into it and its label
+ * The stage sits on the Feed's column, so the orb is over the Composer however the Workbench or the Inspector move the
+ * column aside. The stage coming and going with the call: the room above the Feed opens as the orb springs into it and its label
  * follows, and when the call ends the same moves run in reverse before the room closes. All of it runs on the UI
  * thread; reduced motion fades the orb and label and opens and closes the room in one step.
  */
