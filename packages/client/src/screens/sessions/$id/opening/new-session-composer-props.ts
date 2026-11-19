@@ -8,11 +8,13 @@ type DraftProps = ReadyProps<
   | 'onAttachFiles'
   | 'onDropFiles'
   | 'onSend'
+  | 'voice'
 >;
 
 export const draftProps = ({
   attachmentDraft,
   sessionOpening,
+  voice,
 }: NewSessionWiring): DraftProps => ({
   draft: attachmentDraft.draft,
   onDraftChange: attachmentDraft.changeDraft,
@@ -20,6 +22,7 @@ export const draftProps = ({
   onAttachFiles: () => void attachmentDraft.attachFiles(),
   onDropFiles: (dropped) => void attachmentDraft.attachDroppedFiles(dropped),
   onSend: (sent) => void sessionOpening.sendFirstPrompt(sent),
+  voice,
 });
 
 const canOpen = ({

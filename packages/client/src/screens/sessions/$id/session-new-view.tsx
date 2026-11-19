@@ -10,6 +10,7 @@ import {
   type ComposerConfigurationProps,
   type ComposerDraft,
   ComposerStack,
+  type ComposerVoice,
   StartSessionIn,
 } from '#features/composer';
 import {
@@ -65,6 +66,8 @@ export interface ReadySessionNewViewProps {
   calloutInConfiguration?: boolean;
   // A terminal sign-in method's panel or sheet.
   signInTerminal?: TerminalSignInProps;
+  // The voice button, which opens the Session and starts a call in it, or the pointer to a running call.
+  voice?: ComposerVoice;
 }
 
 export type SessionNewViewProps =

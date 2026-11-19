@@ -6,16 +6,6 @@ export const VoiceCallStatus = z.enum(['connecting', 'connected']);
 
 export type VoiceCallStatus = z.infer<typeof VoiceCallStatus>;
 
-// The connection's standing as the Voice provider reports it; `disconnected` is a call trying to reconnect.
-export const VoiceConnectionStatus = z.enum([
-  'connecting',
-  'connected',
-  'disconnected',
-  'error',
-]);
-
-export type VoiceConnectionStatus = z.infer<typeof VoiceConnectionStatus>;
-
 // What the call's orb shows: the person is heard, the voice talks, the Agent's Turn runs, or the call has no sound to show.
 export const VoiceOrbState = z.enum([
   'listening',
@@ -62,7 +52,6 @@ export const VoiceCall = z.strictObject({
   callId: z.string().min(1),
   sessionId: voiceSessionId,
   status: VoiceCallStatus,
-  connection: VoiceConnectionStatus,
   orb: VoiceOrbState,
   trouble: VoiceTrouble.nullable(),
   startedAt: z

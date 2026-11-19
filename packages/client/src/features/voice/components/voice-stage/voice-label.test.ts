@@ -6,7 +6,6 @@ const startedAt = '2026-11-18T10:00:00.000Z';
 const at = (seconds: number): number => Date.parse(startedAt) + seconds * 1000;
 
 const call: CallLook = {
-  connection: 'connected',
   orb: 'listening',
   trouble: null,
   startedAt,
@@ -45,7 +44,6 @@ describe('the label under the orb', () => {
   it('says connecting until the call has connected', () => {
     const connecting = {
       ...call,
-      connection: 'connecting',
       orb: 'none',
     } as const;
 
@@ -56,7 +54,6 @@ describe('the label under the orb', () => {
     const reconnecting = {
       ...call,
       orb: 'none',
-      connection: 'disconnected',
       trouble: 'reconnecting',
     } as const;
 
@@ -75,7 +72,6 @@ describe('the label under the orb', () => {
   it('says the trouble over connecting, when the call is still connecting', () => {
     const blocked = {
       ...call,
-      connection: 'connecting',
       orb: 'none',
       trouble: 'microphone-blocked',
     } as const;

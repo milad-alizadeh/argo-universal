@@ -22,13 +22,6 @@ export interface ComposerDraft {
   resources?: readonly SuggestionResource[];
 }
 
-// Where the Voice call is, seen from this Session's Composer: none, starting or running here, or running in another Session.
-export type ComposerVoiceCall =
-  | 'none'
-  | 'connecting'
-  | 'connected'
-  | 'elsewhere';
-
 // The mic and speaker buttons of a connected call: what each holds now and what pressing it asks.
 export interface ComposerVoiceMutes {
   microphone: boolean;
@@ -37,24 +30,24 @@ export interface ComposerVoiceMutes {
   onSpeaker: () => void;
 }
 
-// Where a call in another Session is, for the pointer that takes the person there.
+// The call runs in another Session: the pointer that names it and takes the person there.
 export interface ComposerVoiceElsewhere {
+  kind: 'elsewhere';
   // The Session the call is attached to.
   title: string;
   onOpen: () => void;
 }
 
-export interface ComposerVoice {
-  // Whether a Voice provider can start a call now.
-  usable: boolean;
-  call: ComposerVoiceCall;
-  onStart: () => void;
-  onEnd: () => void;
-  // Present while a call is connected here.
-  mutes?: ComposerVoiceMutes;
-  // Present while the call runs in another Session.
-  elsewhere?: ComposerVoiceElsewhere;
-}
+/*
+ * The Composer's voice slot, already resolved by the voice module: the voice button while no call runs and one can
+ * start, End while a call connects or runs here, with the mutes once it is connected, or the pointer to a call in
+ * another Session. Absent from the props while there is nothing to offer. Text in the draft still wins: Send.
+ */
+export type ComposerVoice =
+  | { kind: 'start'; onStart: () => void }
+  | { kind: 'connecting'; onEnd: () => void }
+  | { kind: 'connected'; onEnd: () => void; mutes: ComposerVoiceMutes }
+  | ComposerVoiceElsewhere;
 
 export type SendState =
   | 'stop'
@@ -63,8 +56,7 @@ export type SendState =
   | 'blocked'
   | 'voice'
   | 'connecting'
-  | 'end'
-  | 'elsewhere';
+  | 'end';
 
 export interface ComposerProps {
   draft: ComposerDraft;
@@ -121,6 +113,8 @@ export interface ComposerLayout {
   inactive: boolean;
   configurationInactive: boolean;
   sendState: SendState;
+  // The pointer to a call in another Session, while it takes the primary slot instead of a button.
+  callPointer: ComposerVoiceElsewhere | undefined;
   send: () => void;
   modifiedSend: () => void;
 }

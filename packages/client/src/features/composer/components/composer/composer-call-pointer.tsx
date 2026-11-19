@@ -18,7 +18,7 @@ const pointerProps = (
 export function ComposerCallPointer({
   elsewhere,
 }: {
-  elsewhere: ComposerVoiceElsewhere | undefined;
-}): React.JSX.Element | null {
-  return elsewhere ? <Button {...pointerProps(elsewhere)} /> : null;
+  elsewhere: ComposerVoiceElsewhere;
+}): React.JSX.Element {
+  return <Button {...pointerProps(elsewhere)} />;
 }

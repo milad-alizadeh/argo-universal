@@ -2,6 +2,7 @@ import type { ContentBlock } from '@repo/contracts';
 import type { FeedActorRef, FeedEvent, FeedTurnEnding } from '../../feed';
 import type { AcpTurnOutcome } from '../acp/prompts/prompt-outcome';
 import type { SessionContext, SessionWrite } from '../session-context';
+import type { TurnHappening } from '../turn-happenings';
 
 // What a Turn ended with, as the Agent reported it or as the Engine found it.
 export type EndTurnParameters = AcpTurnOutcome;
@@ -20,7 +21,7 @@ export type SubagentTurnEnd = {
 
 /*
  * What one Turn step does: its change to the Session (only the fields it sets), what it asks the writer to
- * store, and what it tells the Feeds. A Subagent's Feed hears its Turn end before the write is queued.
+ * store, what it tells the Feeds, and what it reports of its Turns. A Subagent's Feed hears its Turn end before the write is queued.
  */
 export type TurnStep<Change = Partial<SessionContext>> = {
   change?: Change;
@@ -28,6 +29,8 @@ export type TurnStep<Change = Partial<SessionContext>> = {
   // For the Session's own Feed.
   feed: FeedEvent[];
   subagentTurns: SubagentTurnEnd[];
+  // What the Session reports of its Turns once the step is applied.
+  happenings: TurnHappening[];
 };
 
 export const turnStep = <Change>(
@@ -36,5 +39,6 @@ export const turnStep = <Change>(
   writes: [],
   feed: [],
   subagentTurns: [],
+  happenings: [],
   ...step,
 });

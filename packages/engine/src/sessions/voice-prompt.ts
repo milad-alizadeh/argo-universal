@@ -3,8 +3,8 @@ import {
   type NonUserPromptSender,
   type SessionPromptInput,
 } from '@repo/contracts';
-import { sendPromptAs } from './plugin-prompt';
-import { promptTurnEnded } from './prompt-turn';
+import { sendPromptAs, type SentPrompt } from './plugin-prompt';
+import { PromptWatch } from './prompt-turn';
 import { steerQueuedPrompt } from './queue-steering';
 import type { SessionContext } from './session-context';
 import type { SessionActorRef } from './session-machine';
@@ -47,41 +47,56 @@ const canSteer = ({
   acpLease?.steering === true && activeTurnId !== null;
 
 const inTurn = (
-  session: SessionActorRef,
+  watch: PromptWatch,
   status: 'started' | 'steered',
   turnId: string,
 ): VoicePromptAnswer => ({
   status,
   turnId,
-  ended: promptTurnEnded(session, { turnId }),
+  ended: watch.ended({ turnId }),
 });
 
 const waiting = (
-  session: SessionActorRef,
+  watch: PromptWatch,
   queuedId: string,
   notSteered: string | null,
 ): VoicePromptAnswer => ({
   status: 'queued',
   notSteered,
-  ended: promptTurnEnded(session, { queuedId }),
+  ended: watch.ended({ queuedId }),
 });
 
 // A queued Prompt takes its place in a running Turn; a refusal leaves it queued, and says why.
 function steerOrWait(
   session: SessionActorRef,
+  watch: PromptWatch,
   queuedId: string,
 ): Promise<VoicePromptAnswer> | VoicePromptAnswer {
   const item = steerable(session, queuedId);
 
-  if (!item) return waiting(session, queuedId, null);
+  if (!item) return waiting(watch, queuedId, null);
 
   const { revision } = item;
   const id = QueuedPromptId.parse(item.id);
 
   return steerQueuedPrompt(session, { action: 'steer', id, revision }).then(
-    (turnId) => inTurn(session, 'steered', turnId),
-    (error: Error) => waiting(session, queuedId, error.message),
+    (turnId) => inTurn(watch, 'steered', turnId),
+    (error: Error) => waiting(watch, queuedId, error.message),
   );
+}
+
+// Sends the Prompt while the Session's Turn happenings are already heard, so a Turn that ends at once is not missed.
+async function sendWatched(
+  sources: VoicePromptSources,
+  input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
+  watch: PromptWatch,
+): Promise<SentPrompt> {
+  try {
+    return await sendPromptAs(sources, input, voiceSender);
+  } catch (error) {
+    watch.stop();
+    throw error;
+  }
 }
 
 /*
@@ -93,10 +108,11 @@ export async function promptFromVoice(
   sources: VoicePromptSources,
   input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
 ): Promise<VoicePromptAnswer> {
-  const sent = await sendPromptAs(sources, input, voiceSender);
   const session = await sources.open.ready(input.sessionId, 'session.queue');
+  const watch = new PromptWatch(session);
+  const sent = await sendWatched(sources, input, watch);
 
   return sent.status === 'started'
-    ? inTurn(session, 'started', sent.turnId)
-    : steerOrWait(session, sent.queuedId);
+    ? inTurn(watch, 'started', sent.turnId)
+    : steerOrWait(session, watch, sent.queuedId);
 }

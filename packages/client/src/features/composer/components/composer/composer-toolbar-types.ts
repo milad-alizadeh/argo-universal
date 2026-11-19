@@ -28,7 +28,10 @@ export type ConfigurationActionsLayout = Pick<ComposerLayout, 'inactive'> & {
   props: Pick<ComposerProps, 'configuration'>;
 };
 
-export type SendLayout = Pick<ComposerLayout, 'sendState' | 'send'> & {
+export type SendLayout = Pick<
+  ComposerLayout,
+  'sendState' | 'callPointer' | 'send'
+> & {
   props: Pick<
     ComposerProps,
     | 'disabled'

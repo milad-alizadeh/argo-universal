@@ -40,6 +40,8 @@ export { watchTurnActivity, watchTurnEnds } from './turn-activity';
 
 export type { EndedTurn } from './turn-activity';
 
+export type { TurnHappening } from './turn-happenings';
+
 export { createSessionReader, readSessionRow } from './session-record';
 
 export { sessionChangesSelection } from './changes-selection';

@@ -8,7 +8,6 @@ const now = Date.parse(startedAt) + 252_000;
 
 // A call that connected and has the person's voice coming in: the Paper frame's own state.
 const connected = {
-  connection: 'connected',
   orb: 'listening',
   trouble: null,
   startedAt,
@@ -30,7 +29,6 @@ export const thinkingStage = stageOf({ ...connected, orb: 'thinking' });
 
 // The call has not connected: the orb has no sound to show yet.
 export const connectingStage = stageOf({
-  connection: 'connecting',
   orb: 'none',
   trouble: null,
   startedAt: null,
@@ -39,7 +37,6 @@ export const connectingStage = stageOf({
 // The connection dropped and is coming back: trouble is words in the label, never a dialog.
 export const reconnectingStage = stageOf({
   ...connected,
-  connection: 'disconnected',
   orb: 'none',
   trouble: 'reconnecting',
 });

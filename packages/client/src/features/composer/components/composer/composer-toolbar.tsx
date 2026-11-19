@@ -113,8 +113,8 @@ function ComposerConfigurationActions(
 
 // The primary slot: Send, Stop, the voice button or End, or, with the call in another Session, the pointer to it.
 function ComposerSendButton(layout: SendLayout): React.JSX.Element {
-  return layout.sendState === 'elsewhere' ? (
-    <ComposerCallPointer elsewhere={layout.props.voice?.elsewhere} />
+  return layout.callPointer ? (
+    <ComposerCallPointer elsewhere={layout.callPointer} />
   ) : (
     <PrimaryButton {...layout} />
   );

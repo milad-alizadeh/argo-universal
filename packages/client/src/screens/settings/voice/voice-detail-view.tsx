@@ -3,6 +3,8 @@ import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
+import type { VoiceDeviceChoice } from '#features/voice';
+import { devicesSection, type VoiceDevices } from './voice-devices-section';
 
 export type VoiceSettingsLoad =
   | { status: 'loading' | 'error' | 'disconnected' }
@@ -10,11 +12,14 @@ export type VoiceSettingsLoad =
 
 export interface VoiceDetailViewProps {
   voice: VoiceSettingsLoad;
+  // Only where the App can hold a call; elsewhere there is nothing to choose.
+  devices?: VoiceDevices;
   saving?: boolean;
   error?: string;
   onEnabledChange: (enabled: boolean) => void;
   onProviderChange: (provider: string) => void;
   onVoiceChange: (voice: string) => void;
+  onDevicesChange?: (change: Partial<VoiceDeviceChoice>) => void;
   onRetry: () => void;
   onBack?: () => void;
 }
@@ -28,6 +33,7 @@ export function VoiceDetailView(
         {switchSection(props)}
         {providerSection(props)}
         {voiceSection(props)}
+        {devicesOf(props)}
         {statusSection(props)}
       </FieldGroup>
     </Screen>
@@ -124,6 +130,13 @@ function voiceSection(props: VoiceDetailViewProps): React.JSX.Element {
     </FieldGroup.Section>
   );
 }
+
+const ignore = (): void => undefined;
+
+const devicesOf = (props: VoiceDetailViewProps): React.JSX.Element | null =>
+  props.devices
+    ? devicesSection(props.devices, props.onDevicesChange ?? ignore)
+    : null;
 
 const messages = {
   loading: 'Loading Voice settings…',

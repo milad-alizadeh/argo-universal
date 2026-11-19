@@ -23,6 +23,7 @@ const owned = new Set([
   'variant',
   'selected',
   'muted',
+  'danger',
   'control',
   'accessibilityLabel',
   'disabled',
@@ -94,8 +95,11 @@ const ghostClass = (props: IconButtonProps): string =>
       )
     : '';
 
-const webGlyph = (props: IconButtonProps): string =>
-  props.muted ? 'text-muted-foreground' : webGlyphs[variantOf(props)];
+function webGlyph(props: IconButtonProps): string {
+  if (props.danger) return 'text-danger';
+
+  return props.muted ? 'text-muted-foreground' : webGlyphs[variantOf(props)];
+}
 
 const webGlyphs = {
   primary: 'text-primary-foreground',
