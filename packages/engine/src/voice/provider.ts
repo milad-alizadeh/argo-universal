@@ -1,15 +1,16 @@
-import type {
-  VoiceAvailability,
-  VoiceConnectionStatus as ContractConnectionStatus,
-} from '@repo/contracts';
+import type { VoiceAvailability } from '@repo/contracts';
 
 /*
  * The Voice provider interface (ADR-0063). It names no vendor: only a provider's own module does.
  * A provider starts a Voice call from the App's offer, reports what was said and asked for, accepts text to speak or to keep as background, and ends the call. Audio travels straight between the App and the provider; the Engine only relays the offer and the answer.
  */
 
-// The connection's standing as the provider sees it: the four values of the call's connection.
-type VoiceConnectionStatus = ContractConnectionStatus;
+// The connection's standing as the provider sees it; `disconnected` is a call trying to reconnect. It stays behind the provider seam: the App reads the call's status and trouble instead.
+export type VoiceConnectionStatus =
+  | 'connecting'
+  | 'connected'
+  | 'disconnected'
+  | 'error';
 
 // Why a provider closed a call; `limit` is a call closed because the person's allowance ran out.
 export type VoiceClosedReason = 'ended' | 'lost' | 'error' | 'limit';

@@ -1,10 +1,7 @@
 import type { VoiceCall, VoiceOrbState } from '@repo/contracts';
 
 // What the label needs of a call.
-export type CallLook = Pick<
-  VoiceCall,
-  'connection' | 'orb' | 'trouble' | 'startedAt'
-> &
+export type CallLook = Pick<VoiceCall, 'orb' | 'trouble' | 'startedAt'> &
   Partial<Pick<VoiceCall, 'limit'>>;
 
 export interface VoiceLabel {

@@ -9,7 +9,7 @@ const startedAt = '2026-11-18T10:00:00.000Z';
 const listeningStage = {
   state: 'listening',
   label: voiceLabel(
-    { connection: 'connected', orb: 'listening', trouble: null, startedAt },
+    { orb: 'listening', trouble: null, startedAt },
     Date.parse(startedAt) + 252_000,
   ),
 } satisfies NonNullable<OpenSessionViewProps['stage']>;

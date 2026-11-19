@@ -32,7 +32,6 @@ describe("a Session's view of the Voice call", () => {
   it('shows a call that is connecting here as connecting, with no mutes and a stage that says so', () => {
     const connecting = callIn('s1', {
       status: 'connecting',
-      connection: 'connecting',
       orb: 'none',
       startedAt: null,
     });

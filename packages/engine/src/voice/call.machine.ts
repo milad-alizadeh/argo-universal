@@ -1,8 +1,4 @@
-import type {
-  VoiceCallEnd,
-  VoiceConnectionStatus,
-  VoiceLimit,
-} from '@repo/contracts';
+import type { VoiceCallEnd, VoiceLimit } from '@repo/contracts';
 import { assertEvent, assign, sendTo, setup, type ActorRefFrom } from 'xstate';
 import { agentRelay, type RelayInput } from './agent-relay-actor';
 import {
@@ -13,7 +9,11 @@ import {
   type VoiceCallInput,
 } from './call-types';
 import { watchConnection, watchSession } from './call-watchers';
-import type { VoiceProvider, VoiceProviderEvent } from './provider';
+import type {
+  VoiceConnectionStatus,
+  VoiceProvider,
+  VoiceProviderEvent,
+} from './provider';
 import { providerCall, type ProviderCallInput } from './provider-call';
 import { SessionLink, type VoiceNotice } from './session-link';
 import { isTranscript, storeTranscript, withTranscript } from './transcript';

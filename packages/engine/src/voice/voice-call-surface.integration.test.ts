@@ -21,7 +21,6 @@ describe('the Voice call as the App draws it', () => {
 
     expect(await callOf(work)).toMatchObject({
       status: 'connecting',
-      connection: 'connecting',
       orb: 'none',
       trouble: null,
       startedAt: null,
@@ -34,7 +33,6 @@ describe('the Voice call as the App draws it', () => {
 
     const call = (await work.host.caller.voice.status()).call;
     expect(call).toMatchObject({
-      connection: 'connected',
       orb: 'listening',
       trouble: null,
     });
@@ -93,7 +91,6 @@ describe('the Voice call as the App draws it', () => {
       .poll(() => callOf(work))
       .toMatchObject({
         status: 'connected',
-        connection: 'disconnected',
         orb: 'none',
         trouble: 'reconnecting',
       });
@@ -101,7 +98,6 @@ describe('the Voice call as the App draws it', () => {
     await expect
       .poll(() => callOf(work))
       .toMatchObject({
-        connection: 'connected',
         orb: 'listening',
         trouble: null,
       });

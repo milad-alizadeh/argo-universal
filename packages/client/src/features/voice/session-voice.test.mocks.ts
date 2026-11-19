@@ -12,7 +12,6 @@ export const callIn = (
   callId: 'call-1',
   sessionId,
   status: 'connected',
-  connection: 'connected',
   orb: 'listening',
   trouble: null,
   startedAt,
