@@ -5,6 +5,7 @@ import { sessionVoice, type SessionVoice } from './session-voice';
 import {
   callIn,
   inputOf,
+  press,
   statusOf,
   type Asked,
 } from './session-voice.test.mocks';
@@ -83,7 +84,8 @@ describe("a Session's view of the Voice call", () => {
       onOpen: expect.any(Function),
     });
     expect(view.stage).toBeUndefined();
-    if (view.composer?.kind === 'elsewhere') view.composer.onOpen();
+    press(view.composer);
+
     expect(asked).toEqual(['open:s-call']);
   });
 
@@ -124,9 +126,9 @@ describe("a Session's view of the Voice call", () => {
   it('starts and ends the call as the person asks', () => {
     const asked: Asked = [];
     const idle = sessionVoice(inputOf(statusOf(null), 's1', asked)).composer;
-    if (idle?.kind === 'start') idle.onStart();
+    press(idle);
     const running = sessionVoice(inputOf(statusOf(callIn('s1')), 's1', asked));
-    if (running.composer?.kind === 'connected') running.composer.onEnd();
+    press(running.composer);
 
     expect(asked).toEqual(['start', 'end']);
   });

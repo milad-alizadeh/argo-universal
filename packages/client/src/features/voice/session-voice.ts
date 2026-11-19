@@ -68,7 +68,7 @@ function mutesOf(
 // The call runs in another Session: the slot names it and takes the person there.
 const elsewhereOf = (
   call: VoiceCall,
-  input: SessionVoiceInput,
+  input: NewSessionVoiceInput,
 ): ComposerVoice => ({
   kind: 'elsewhere',
   title: input.titleOf(call.sessionId) ?? fallbackTitle,
@@ -85,7 +85,7 @@ function hereSlotOf(call: VoiceCall, input: SessionVoiceInput): ComposerVoice {
 }
 
 // No call runs: the voice button while one can start, and nothing otherwise.
-const idleSlotOf = (input: SessionVoiceInput): ComposerVoice | undefined =>
+const idleSlotOf = (input: NewSessionVoiceInput): ComposerVoice | undefined =>
   voiceOffered(input.status)
     ? { kind: 'start', onStart: input.actions.start }
     : undefined;
@@ -99,6 +99,23 @@ function composerOf(input: SessionVoiceInput): ComposerVoice | undefined {
   return call.sessionId === input.sessionId
     ? hereSlotOf(call, input)
     : elsewhereOf(call, input);
+}
+
+// What New Session needs for its slot: there is no Session yet, so nothing runs here and nothing is muted.
+export type NewSessionVoiceInput = Pick<
+  SessionVoiceInput,
+  'status' | 'titleOf'
+> & {
+  actions: Pick<SessionVoiceActions, 'start' | 'open'>;
+};
+
+// New Session's voice slot: the voice button, or the pointer to a call that runs in a Session.
+export function newSessionVoice(
+  input: NewSessionVoiceInput,
+): ComposerVoice | undefined {
+  const { call } = input.status;
+
+  return call ? elsewhereOf(call, input) : idleSlotOf(input);
 }
 
 function stageOf(

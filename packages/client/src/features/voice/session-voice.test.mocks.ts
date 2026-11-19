@@ -1,4 +1,5 @@
 import type { VoiceCall, VoiceStatus } from '@repo/contracts';
+import type { ComposerVoice } from '#features/composer';
 import type { SessionVoiceInput } from './session-voice';
 
 const startedAt = '2026-11-18T10:00:00.000Z';
@@ -54,3 +55,10 @@ export function inputOf(
     },
   };
 }
+
+const handlerOf = (slot: ComposerVoice): (() => void) =>
+  'onStart' in slot ? slot.onStart : 'onEnd' in slot ? slot.onEnd : slot.onOpen;
+
+// Presses what the voice slot offers: the voice button, End or the pointer.
+export const press = (slot: ComposerVoice | undefined): void =>
+  slot && handlerOf(slot)();

@@ -35,6 +35,7 @@ export const promptComposerProps = (
   placeholder: placeholderOf(wide),
   sendable: props.canOpen,
   callout: props.calloutInConfiguration ? undefined : calloutOf(props),
+  voice: props.voice,
   ...attachmentErrorOf(props),
 });
 
