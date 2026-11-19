@@ -1,6 +1,11 @@
-import { readVoiceMessage, voiceInstruction, type VoiceMessage } from '../feed';
+import {
+  readVoiceMessage,
+  withVoiceInstruction,
+  type VoiceMessage,
+} from '../feed';
 import type { VoiceSay } from './call-types';
 import { inPieces } from './pieces';
+import type { VoiceDelivery } from './provider';
 import { relayWords } from './relay-words';
 import type {
   PromptOutcome,
@@ -57,8 +62,17 @@ export class AgentRelay {
   }
 
   public happened(happening: SessionHappening): void {
-    if (happening.type === 'turn.ended') this.turnEnded(happening);
-    else this.said(happening);
+    switch (happening.type) {
+      case 'turn.ended':
+        return this.turnEnded(happening);
+      case 'permission.waiting':
+        return this.tell(
+          relayWords.permissionWaiting(happening.title),
+          'speak',
+        );
+      default:
+        return this.said(happening);
+    }
   }
 
   // What the voice is told of a Prompt that reached the Session; it stays at work until the Session says its Turn ended.
@@ -102,14 +116,14 @@ export class AgentRelay {
     if (this.instructed) return request;
     this.instructed = true;
 
-    return `${voiceInstruction}\n\n${request}`;
+    return withVoiceInstruction(request);
   }
 
   private reply(requestId: string, text: string): void {
     this.reports.speak({ kind: 'reply', requestId, text, delivery: 'speak' });
   }
 
-  private tell(text: string, delivery: 'speak' | 'background'): void {
+  private tell(text: string, delivery: VoiceDelivery): void {
     for (const piece of inPieces(text))
       this.reports.speak({ kind: 'tell', text: piece, delivery });
   }
@@ -164,7 +178,7 @@ function endingText({ stopReason, error }: Ended): string {
 function endingDelivery(
   { stopReason, error }: Ended,
   toldResult: boolean,
-): 'speak' | 'background' {
+): VoiceDelivery {
   return finishedCleanly({ stopReason, error }) && toldResult
     ? 'background'
     : 'speak';

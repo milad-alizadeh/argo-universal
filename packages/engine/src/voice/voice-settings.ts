@@ -14,7 +14,8 @@ export interface StoredVoiceSettings {
   voice: string | null;
 }
 
-const defaults: StoredVoiceSettings = {
+// What a Server that was never set up holds: Voice calls on, nothing chosen.
+export const defaultVoiceSettings: StoredVoiceSettings = {
   enabled: true,
   provider: null,
   voice: null,
@@ -30,7 +31,7 @@ export class VoiceSettingsStore {
   public read(): StoredVoiceSettings {
     const row = this.database.select().from(serverSettings).get();
 
-    return row ? storedOf(row) : defaults;
+    return row ? storedOf(row) : defaultVoiceSettings;
   }
 
   public write(settings: StoredVoiceSettings): Promise<void> {

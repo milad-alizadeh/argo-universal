@@ -33,11 +33,9 @@ const settingsOf = (options: GptLiveOptions): Required<GptLiveOptions> => ({
   ...options,
 });
 
-type Held<T> = { value: T; token: string };
-
 /*
  * The GPT-Live Voice provider: a call on the person's ChatGPT subscription, with the token asked from the installed Codex each time.
- * The token lives in memory for the call and is never stored or refreshed here; a rejected one is asked for again once.
+ * The token lives in memory for the call and is never stored or refreshed here; a rejected one is asked for again once per start.
  */
 export class GptLiveProvider implements VoiceProvider {
   public readonly id = 'gpt-live';
@@ -63,50 +61,30 @@ export class GptLiveProvider implements VoiceProvider {
 
   public async start(request: VoiceStartRequest): Promise<GptLiveCall> {
     const { callsUrl, linkUrl } = this.settings;
-    const token = await this.token();
+    const token = new StartToken(await this.token(), () => this.token());
 
-    const created = await this.asking(
-      (fresh) => createCall(callsUrl, fresh, request),
-      token,
+    const created = await token.asking((fresh) =>
+      createCall(callsUrl, fresh, request),
     );
 
-    const url = `${linkUrl}/${created.value.callId}`;
+    const url = `${linkUrl}/${created.callId}`;
 
     // A refusal at the link joins the same call again; it never creates a second one.
-    const linked = await this.asking(
-      (token) => joinLink(url, token),
-      created.token,
-    );
+    const link = await token.asking((fresh) => joinLink(url, fresh));
 
-    return this.callOf(created.value.answer, url, linked);
+    return this.callOf({ answer: created.answer, url, link }, token.current);
   }
 
   private callOf(
-    answer: string,
-    url: string,
-    link: Held<WebSocket>,
+    { answer, url, link }: { answer: string; url: string; link: WebSocket },
+    token: string,
   ): GptLiveCall {
     return new GptLiveCall({
       answer,
-      link: link.value,
-      rejoin: () => joinLink(url, link.token),
+      link,
+      rejoin: () => joinLink(url, token),
       lostLinkMs: this.settings.lostLinkMs,
     });
-  }
-
-  // Runs `attempt` with the token; when the service rejects it, asks Codex once more and runs it again.
-  private async asking<T>(
-    attempt: (token: string) => Promise<T>,
-    token: string,
-  ): Promise<Held<T>> {
-    try {
-      return { value: await attempt(token), token };
-    } catch (error) {
-      if (!(error instanceof TokenRejected)) throw error;
-      const fresh = await this.token();
-
-      return { value: await attempt(fresh), token: fresh };
-    }
   }
 
   private async token(): Promise<string> {
@@ -115,6 +93,41 @@ export class GptLiveProvider implements VoiceProvider {
     if (!reading.signedIn) throw new Error(reading.reason);
 
     return reading.token;
+  }
+}
+
+// The token one call start holds: when the service rejects it, Codex is asked for a fresh one once in the whole start.
+class StartToken {
+  private renewed = false;
+
+  public constructor(
+    private token: string,
+    private readonly ask: () => Promise<string>,
+  ) {}
+
+  public get current(): string {
+    return this.token;
+  }
+
+  public async asking<T>(attempt: (token: string) => Promise<T>): Promise<T> {
+    try {
+      return await attempt(this.token);
+    } catch (error) {
+      if (!(error instanceof TokenRejected)) throw error;
+
+      return this.renewing(attempt, error);
+    }
+  }
+
+  private async renewing<T>(
+    attempt: (token: string) => Promise<T>,
+    rejected: TokenRejected,
+  ): Promise<T> {
+    if (this.renewed) throw rejected;
+    this.renewed = true;
+    this.token = await this.ask();
+
+    return attempt(this.token);
   }
 }
 

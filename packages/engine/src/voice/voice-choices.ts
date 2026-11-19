@@ -49,7 +49,7 @@ async function offered(
 }
 
 // The settings as the person sees them: what is stored, narrowed to what the Server's provider offers.
-async function settingsOf(
+export async function settingsOf(
   stored: StoredVoiceSettings,
   provider: VoiceProvider | null,
 ): Promise<VoiceSettings> {
