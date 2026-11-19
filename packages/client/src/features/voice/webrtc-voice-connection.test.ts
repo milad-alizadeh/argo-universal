@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FakeEnvironment } from '../../../mocks/voice/fake-voice-environment';
-import {
-  createWebRtcVoiceConnection,
-  MicrophoneUnavailable,
-} from './webrtc-voice-connection';
+import { MicrophoneUnavailable } from './voice-environment';
+import { createWebRtcVoiceConnection } from './webrtc-voice-connection';
 
 async function started(refuse = false): Promise<{
   environment: FakeEnvironment;
