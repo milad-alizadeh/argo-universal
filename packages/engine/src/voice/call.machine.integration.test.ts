@@ -112,6 +112,10 @@ const expectConnecting = (snapshot: Snapshot): void => {
   expectLook(notJoined)();
 };
 
+// The walk tells states apart by value alone, so it attaches Sessions only before any call ended, where the ending it checks cannot differ.
+const attachesOnce = (snapshot: Snapshot, event: StepEvent): boolean =>
+  event.type !== 'sessions.attach' || snapshot.context.ended === null;
+
 const model = modelTest(
   modelMachine,
   {
@@ -124,6 +128,7 @@ const model = modelTest(
       {
         name: 'shortest path',
         search: 'shortest',
+        permits: attachesOnce,
         arrival: (_, event, previous): string =>
           `${key(previous)} ${eventKey(event)}`,
       },

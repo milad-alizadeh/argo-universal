@@ -84,6 +84,17 @@ describe('GPT-Live provider starting a call', () => {
     expect(endpoint.linkTokens).toEqual(['stale', 'fresh']);
     expect(auth.asked).toBe(2);
   });
+
+  it('asks Codex for a new token at most once in a start, even when the call and its link each reject one', async () => {
+    const { auth, provider } = await setup(
+      [signedIn('stale'), signedIn('fresh'), signedIn('third')],
+      ['fresh'],
+      { linkAccepts: ['third'] },
+    );
+
+    await expect(provider.start(request)).rejects.toThrow(/rejected/i);
+    expect(auth.asked).toBe(2);
+  });
 });
 
 describe('GPT-Live provider voices', () => {

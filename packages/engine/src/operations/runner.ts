@@ -7,7 +7,7 @@ import {
   type SessionDirectory,
   type SessionOperationCall,
 } from '../sessions';
-import { requireAppQueueCaller } from './app-queue-access';
+import { requireAppCaller } from './app-only';
 import {
   answer,
   type CallerImplementations,
@@ -77,7 +77,7 @@ export class OperationRunner {
   public run<Id extends OperationId>(
     run: AppRun<Id> | UserRun | SessionRun,
   ): Promise<OperationResult<Id> | OperationRunResult> {
-    requireAppQueueCaller(run);
+    requireAppCaller(run);
 
     if (run.kind === 'app') return this.runApp(run);
 
@@ -120,7 +120,7 @@ export class OperationRunner {
   private invokeSession(context: SessionContext): SessionInvoke {
     const implementations: CallerImplementations<[NewSessionId]> = {
       ...this.plain,
-      ...withoutConnection(this.plain),
+      ...withoutConnection,
       'session.archive': (params) =>
         params.sessionId === context.caller.sessionId
           ? this.ports.archiveOwn(params.sessionId)

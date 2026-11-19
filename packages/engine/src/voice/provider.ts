@@ -1,15 +1,14 @@
 import type {
   VoiceAvailability,
-  VoiceConnectionStatus as ContractConnectionStatus,
+  VoiceConnectionStatus,
+  VoiceLimit,
+  VoiceTrouble,
 } from '@repo/contracts';
 
 /*
  * The Voice provider interface (ADR-0063). It names no vendor: only a provider's own module does.
  * A provider starts a Voice call from the App's offer, reports what was said and asked for, accepts text to speak or to keep as background, and ends the call. Audio travels straight between the App and the provider; the Engine only relays the offer and the answer.
  */
-
-// The connection's standing as the provider sees it: the four values of the call's connection.
-type VoiceConnectionStatus = ContractConnectionStatus;
 
 // Why a provider closed a call; `limit` is a call closed because the person's allowance ran out.
 export type VoiceClosedReason = 'ended' | 'lost' | 'error' | 'limit';
@@ -24,11 +23,17 @@ export type VoiceProviderEvent =
   | { type: 'work.requested'; requestId: string; text: string }
   // The voice started or stopped speaking.
   | { type: 'speaking'; speaking: boolean }
-  // Trouble on the person's side of the call, such as a microphone the App may not use; null once it clears.
-  | { type: 'trouble'; trouble: 'microphone-blocked' | null }
-  | { type: 'usage'; inputTokens: number; outputTokens: number }
+  // Trouble on the person's side of the call, such as a microphone the App may not use; null once it clears. Reconnecting is the Engine's to say.
+  | { type: 'trouble'; trouble: Exclude<VoiceTrouble, 'reconnecting'> | null }
+  // What the call has used so far; `limit` is the allowance left when the report says so.
+  | {
+      type: 'usage';
+      inputTokens: number;
+      outputTokens: number;
+      limit?: VoiceLimit;
+    }
   // How much of the provider's allowance is left, as a fraction from 0 to 1.
-  | { type: 'limit'; remaining: number; resetsAt?: string }
+  | ({ type: 'limit' } & VoiceLimit)
   | { type: 'closed'; reason: VoiceClosedReason };
 
 // What the voice does with text it is given: say it aloud, or keep it as background it may use later.

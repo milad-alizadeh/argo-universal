@@ -125,9 +125,9 @@ function useInput(
 }
 
 /*
- * A Session page's view of the Voice call: the one place that follows the Server's status and the connection, and the
- * one place that decides where the call is for this Session. The Composer, the orb and the Feed's partial words all
- * come from here, so none of them needs another to have subscribed first.
+ * A Session page's view of the Voice call: the one place that follows the Server's status and the connection, read
+ * through `sessionVoice`. The Composer, the orb and the Feed's partial words all come from here, so none of them needs
+ * another to have subscribed first.
  */
 export function useSessionVoice(sessionId: string): View {
   const connection = useVoiceConnection();

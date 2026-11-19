@@ -15,6 +15,8 @@ export type VoiceAgentReply = {
   holdUntil?: Promise<void>;
   // Ends the Turn with an error after its messages.
   fails?: string;
+  // Asks permission for a Tool call with this title before its messages, and waits for the answer.
+  asksPermission?: string;
 };
 
 const messageSteps = (messages: readonly string[]): ScriptedStep[] =>
@@ -51,7 +53,33 @@ const endingSteps = (reply: VoiceAgentReply): ScriptedStep[] => {
   return reply.fails ? [{ type: 'fail', message: reply.fails }] : [];
 };
 
+const askedToolCall = (title: string): ScriptedStep => ({
+  type: 'update',
+  update: {
+    sessionUpdate: 'tool_call',
+    toolCallId: 'asked',
+    title,
+    kind: 'execute',
+    status: 'pending',
+  },
+});
+
+const permissionRequest = (title: string): ScriptedStep => ({
+  type: 'permission',
+  request: {
+    toolCall: { toolCallId: 'asked', title },
+    options: [
+      { optionId: 'allow', name: 'Allow', kind: 'allow_once' },
+      { optionId: 'reject', name: 'Reject', kind: 'reject_once' },
+    ],
+  },
+});
+
+const permissionSteps = (title: string | undefined): ScriptedStep[] =>
+  title === undefined ? [] : [askedToolCall(title), permissionRequest(title)];
+
 const stepsOf = (reply: VoiceAgentReply): ScriptedStep[] => [
+  ...permissionSteps(reply.asksPermission),
   ...toolSteps(reply.toolOutput),
   ...messageSteps(reply.messages ?? []),
   ...endingSteps(reply),

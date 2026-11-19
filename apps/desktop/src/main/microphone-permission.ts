@@ -60,7 +60,12 @@ const systemAllows = (system: MicrophoneSystem): Promise<boolean> =>
 
 type Context = { windowOrigin: string; system: MicrophoneSystem };
 
-function decide(request: Request, context: Context, answer: Answer): void {
+// Allows the App's own page the microphone when the system does; refuses every other request.
+function answerRequest(
+  request: Request,
+  context: Context,
+  answer: Answer,
+): void {
   if (!allowsMicrophone(request, context.windowOrigin)) return answer(false);
 
   void systemAllows(context.system).then(answer, () => answer(false));
@@ -79,21 +84,21 @@ const electronPermissions = (appSession: Session): PermissionPort => ({
     ),
 });
 
-export function handleMicrophone(
+export function answerPermissionRequests(
   permissions: PermissionPort,
   context: Context,
 ): void {
   permissions.onRequest((permission, details, answer) =>
-    decide(requestOf(permission, details), context, answer),
+    answerRequest(requestOf(permission, details), context, answer),
   );
 }
 
 // The App's own session: microphone requests from its page, answered by Electron and the system.
-export const handleAppMicrophone = (
+export const answerAppPermissionRequests = (
   appSession: Session,
   windowOrigin: string,
 ): void =>
-  handleMicrophone(electronPermissions(appSession), {
+  answerPermissionRequests(electronPermissions(appSession), {
     windowOrigin,
     system: electronSystem,
   });

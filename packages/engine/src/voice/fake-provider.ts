@@ -130,6 +130,10 @@ export class FakeVoiceCall implements VoiceProviderCall {
     this.emit({ type: 'person.transcript', id, text, final: true });
   }
 
+  public voiceSays(text: string, id = 'voice'): void {
+    this.emit({ type: 'voice.transcript', id, text, final: true });
+  }
+
   public requestWork(requestId: string, text: string): void {
     this.emit({ type: 'work.requested', requestId, text });
   }
