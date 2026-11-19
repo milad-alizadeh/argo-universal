@@ -28,6 +28,23 @@ const stateOrder = {
 const byState = (details: readonly CheckDetail[]): CheckDetail[] =>
   [...details].sort((a, b) => stateOrder[a.state] - stateOrder[b.state]);
 
+/*
+ * Each check's row key: its name, and how many checks of that name came before it, since GitHub can report two
+ * checks of one name (the same job run for a push and for its pull request).
+ */
+const keyed = (
+  details: readonly CheckDetail[],
+): (CheckDetail & { key: string })[] => {
+  const seen = new Map<string, number>();
+
+  return details.map((check) => {
+    const count = seen.get(check.name) ?? 0;
+    seen.set(check.name, count + 1);
+
+    return { ...check, key: count ? `${check.name}#${count}` : check.name };
+  });
+};
+
 const stateLabel = {
   failing: 'Failing',
   running: 'Running',
@@ -91,8 +108,8 @@ function ChecksList(props: ChecksListProps): ReactElement {
   return (
     <List appearance="plain" fitHeight={320} testID="change-check-list">
       <ListSection>
-        {byState(props.details).map((check) => (
-          <CheckRow key={check.name} {...check} />
+        {keyed(byState(props.details)).map(({ key, ...check }) => (
+          <CheckRow key={key} {...check} />
         ))}
       </ListSection>
     </List>

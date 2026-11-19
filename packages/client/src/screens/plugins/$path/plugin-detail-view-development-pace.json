@@ -1,0 +1,1490 @@
+{
+  "picker": {
+    "type": "Screen",
+    "key": "0",
+    "props": { "title": "Development pace" },
+    "children": [
+      {
+        "type": "List",
+        "key": "0",
+        "props": { "accessibilityLabel": "Choose a repository" },
+        "children": [
+          {
+            "type": "ListItem",
+            "key": "project-1",
+            "props": {
+              "title": "milad-alizadeh/argo-universal",
+              "subtitle": "Argo",
+              "onPress": { "action": "navigate", "path": "/pace/project-1" }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {
+          "empty": [
+            {
+              "type": "EmptyState",
+              "key": "0",
+              "props": {
+                "title": "No GitHub repositories",
+                "description": "Add a Project with a GitHub remote to see its development."
+              },
+              "children": [],
+              "slots": {}
+            }
+          ]
+        }
+      }
+    ],
+    "slots": {}
+  },
+  "loaded": {
+    "type": "Screen",
+    "key": "0",
+    "props": { "title": "Development pace" },
+    "children": [
+      {
+        "type": "ScrollView",
+        "key": "0",
+        "props": { "accessibilityLabel": "Development analytics" },
+        "children": [
+          {
+            "type": "Stack",
+            "key": "0",
+            "props": { "gap": 4, "direction": "column" },
+            "children": [
+              {
+                "type": "Stack",
+                "key": "0",
+                "props": { "gap": 2, "direction": "column" },
+                "children": [
+                  {
+                    "type": "Surface",
+                    "key": "0",
+                    "props": { "kind": "muted", "padding": 2 },
+                    "children": [
+                      {
+                        "type": "Stack",
+                        "key": "0",
+                        "props": { "gap": 2, "direction": "column" },
+                        "children": [
+                          {
+                            "type": "Stack",
+                            "key": "0",
+                            "props": {
+                              "gap": 2,
+                              "align": "center",
+                              "direction": "row"
+                            },
+                            "children": [
+                              {
+                                "type": "Pill",
+                                "key": "0",
+                                "props": {
+                                  "text": "argo-universal",
+                                  "variant": "control",
+                                  "disclosure": "down",
+                                  "accessibilityLabel": "Choose repository, milad-alizadeh/argo-universal",
+                                  "onPress": {
+                                    "action": "navigate",
+                                    "path": "/pace"
+                                  }
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Pill",
+                                "key": "1",
+                                "props": {
+                                  "text": "Nov 12 – 18",
+                                  "variant": "control",
+                                  "disclosure": "down",
+                                  "accessibilityLabel": "Choose week",
+                                  "onPress": {
+                                    "pageState": { "choosingWeek": true }
+                                  }
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Stack",
+                    "key": "1",
+                    "props": {
+                      "gap": 2,
+                      "align": "center",
+                      "direction": "row"
+                    },
+                    "children": [
+                      {
+                        "type": "Text",
+                        "key": "0",
+                        "props": {
+                          "children": "main · partial",
+                          "role": "secondary",
+                          "tone": "muted"
+                        },
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Spacer",
+                        "key": "1",
+                        "props": {},
+                        "children": [],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Text",
+                        "key": "2",
+                        "props": {
+                          "children": "Nov 18, 2026 · UTC snapshot",
+                          "role": "secondary",
+                          "tone": "muted"
+                        },
+                        "children": [],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              },
+              {
+                "type": "Stack",
+                "key": "1",
+                "props": { "gap": 3, "direction": "column" },
+                "children": [
+                  {
+                    "type": "Surface",
+                    "key": "0",
+                    "props": { "kind": "card", "padding": 5 },
+                    "children": [
+                      {
+                        "type": "Stack",
+                        "key": "0",
+                        "props": { "gap": 3, "direction": "column" },
+                        "children": [
+                          {
+                            "type": "Stack",
+                            "key": "0",
+                            "props": {
+                              "gap": 2,
+                              "align": "center",
+                              "direction": "row"
+                            },
+                            "children": [
+                              {
+                                "type": "Text",
+                                "key": "0",
+                                "props": {
+                                  "children": "Cumulative merges",
+                                  "role": "title"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Spacer",
+                                "key": "1",
+                                "props": {},
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Text",
+                                "key": "2",
+                                "props": {
+                                  "children": "By weekday",
+                                  "role": "secondary",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "1",
+                            "props": { "gap": 3, "direction": "row" },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "0",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "●",
+                                      "tone": "info"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Text",
+                                    "key": "1",
+                                    "props": {
+                                      "children": "Nov 12 – 18 · 215",
+                                      "role": "control",
+                                      "tone": "neutral"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "1",
+                                "props": {
+                                  "gap": 1,
+                                  "align": "center",
+                                  "direction": "row"
+                                },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "●",
+                                      "tone": "muted"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Text",
+                                    "key": "1",
+                                    "props": {
+                                      "children": "Nov 5 – 11 · 24",
+                                      "role": "control",
+                                      "tone": "muted"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Canvas",
+                            "key": "2",
+                            "props": {
+                              "label": "Daily cumulative merges. Selected week: 5, 31, 60, 96, 128, 164, 215. Previous week: 0, 0, 0, 0, 2, 20, 24.",
+                              "width": 660,
+                              "height": 156,
+                              "camera": "fixed"
+                            },
+                            "children": [
+                              {
+                                "type": "Canvas.Path",
+                                "key": "area",
+                                "props": {
+                                  "tone": "info",
+                                  "intensity": 0.1,
+                                  "fill": true,
+                                  "d": "M7.0 145.7 L114.7 128.5 L222.3 109.4 L330.0 85.6 L437.7 64.5 L545.3 40.7 L653.0 7.0 L653 149 L7 149 Z"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "grid-7",
+                                "props": {
+                                  "tone": "muted",
+                                  "intensity": 0.22,
+                                  "stroke": true,
+                                  "x1": 0,
+                                  "y1": 7,
+                                  "x2": 660,
+                                  "y2": 7
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "grid-78",
+                                "props": {
+                                  "tone": "muted",
+                                  "intensity": 0.22,
+                                  "stroke": true,
+                                  "x1": 0,
+                                  "y1": 78,
+                                  "x2": 660,
+                                  "y2": 78
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "grid-149",
+                                "props": {
+                                  "tone": "muted",
+                                  "intensity": 0.22,
+                                  "stroke": true,
+                                  "x1": 0,
+                                  "y1": 149,
+                                  "x2": 660,
+                                  "y2": 149
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-muted-7",
+                                "props": {
+                                  "tone": "muted",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 7,
+                                  "y1": 149,
+                                  "x2": 114.66666666666667,
+                                  "y2": 149
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-muted-114.66666666666667",
+                                "props": {
+                                  "tone": "muted",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 114.66666666666667,
+                                  "y1": 149,
+                                  "x2": 222.33333333333334,
+                                  "y2": 149
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-muted-222.33333333333334",
+                                "props": {
+                                  "tone": "muted",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 222.33333333333334,
+                                  "y1": 149,
+                                  "x2": 330,
+                                  "y2": 149
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-muted-330",
+                                "props": {
+                                  "tone": "muted",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 330,
+                                  "y1": 149,
+                                  "x2": 437.6666666666667,
+                                  "y2": 147.67906976744186
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-muted-437.6666666666667",
+                                "props": {
+                                  "tone": "muted",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 437.6666666666667,
+                                  "y1": 147.67906976744186,
+                                  "x2": 545.3333333333334,
+                                  "y2": 135.7906976744186
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-muted-545.3333333333334",
+                                "props": {
+                                  "tone": "muted",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 545.3333333333334,
+                                  "y1": 135.7906976744186,
+                                  "x2": 653,
+                                  "y2": 133.14883720930231
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-info-7",
+                                "props": {
+                                  "tone": "info",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 7,
+                                  "y1": 145.69767441860466,
+                                  "x2": 114.66666666666667,
+                                  "y2": 128.52558139534884
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-info-114.66666666666667",
+                                "props": {
+                                  "tone": "info",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 114.66666666666667,
+                                  "y1": 128.52558139534884,
+                                  "x2": 222.33333333333334,
+                                  "y2": 109.37209302325581
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-info-222.33333333333334",
+                                "props": {
+                                  "tone": "info",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 222.33333333333334,
+                                  "y1": 109.37209302325581,
+                                  "x2": 330,
+                                  "y2": 85.5953488372093
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-info-330",
+                                "props": {
+                                  "tone": "info",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 330,
+                                  "y1": 85.5953488372093,
+                                  "x2": 437.6666666666667,
+                                  "y2": 64.46046511627907
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-info-437.6666666666667",
+                                "props": {
+                                  "tone": "info",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 437.6666666666667,
+                                  "y1": 64.46046511627907,
+                                  "x2": 545.3333333333334,
+                                  "y2": 40.68372093023255
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Line",
+                                "key": "line-info-545.3333333333334",
+                                "props": {
+                                  "tone": "info",
+                                  "stroke": true,
+                                  "strokeWidth": 3,
+                                  "x1": 545.3333333333334,
+                                  "y1": 40.68372093023255,
+                                  "x2": 653,
+                                  "y2": 7
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-muted-7",
+                                "props": {
+                                  "tone": "muted",
+                                  "fill": true,
+                                  "cx": 7,
+                                  "cy": 149,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-muted-114.66666666666667",
+                                "props": {
+                                  "tone": "muted",
+                                  "fill": true,
+                                  "cx": 114.66666666666667,
+                                  "cy": 149,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-muted-222.33333333333334",
+                                "props": {
+                                  "tone": "muted",
+                                  "fill": true,
+                                  "cx": 222.33333333333334,
+                                  "cy": 149,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-muted-330",
+                                "props": {
+                                  "tone": "muted",
+                                  "fill": true,
+                                  "cx": 330,
+                                  "cy": 149,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-muted-437.6666666666667",
+                                "props": {
+                                  "tone": "muted",
+                                  "fill": true,
+                                  "cx": 437.6666666666667,
+                                  "cy": 147.67906976744186,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-muted-545.3333333333334",
+                                "props": {
+                                  "tone": "muted",
+                                  "fill": true,
+                                  "cx": 545.3333333333334,
+                                  "cy": 135.7906976744186,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-muted-653",
+                                "props": {
+                                  "tone": "muted",
+                                  "fill": true,
+                                  "cx": 653,
+                                  "cy": 133.14883720930231,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-info-7",
+                                "props": {
+                                  "tone": "info",
+                                  "fill": true,
+                                  "cx": 7,
+                                  "cy": 145.69767441860466,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-info-114.66666666666667",
+                                "props": {
+                                  "tone": "info",
+                                  "fill": true,
+                                  "cx": 114.66666666666667,
+                                  "cy": 128.52558139534884,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-info-222.33333333333334",
+                                "props": {
+                                  "tone": "info",
+                                  "fill": true,
+                                  "cx": 222.33333333333334,
+                                  "cy": 109.37209302325581,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-info-330",
+                                "props": {
+                                  "tone": "info",
+                                  "fill": true,
+                                  "cx": 330,
+                                  "cy": 85.5953488372093,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-info-437.6666666666667",
+                                "props": {
+                                  "tone": "info",
+                                  "fill": true,
+                                  "cx": 437.6666666666667,
+                                  "cy": 64.46046511627907,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-info-545.3333333333334",
+                                "props": {
+                                  "tone": "info",
+                                  "fill": true,
+                                  "cx": 545.3333333333334,
+                                  "cy": 40.68372093023255,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Canvas.Circle",
+                                "key": "dot-info-653",
+                                "props": {
+                                  "tone": "info",
+                                  "fill": true,
+                                  "cx": 653,
+                                  "cy": 7,
+                                  "r": 3.5
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "3",
+                            "props": {
+                              "gap": 2,
+                              "align": "center",
+                              "direction": "row"
+                            },
+                            "children": [
+                              {
+                                "type": "Text",
+                                "key": "0",
+                                "props": {
+                                  "children": "Thursday",
+                                  "role": "secondary",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Spacer",
+                                "key": "1",
+                                "props": {},
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Text",
+                                "key": "2",
+                                "props": {
+                                  "children": "Wednesday · partial",
+                                  "role": "secondary",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Text",
+                            "key": "4",
+                            "props": {
+                              "children": "Each point is the running total of PRs merged into main.",
+                              "role": "secondary",
+                              "tone": "muted"
+                            },
+                            "children": [],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Surface",
+                    "key": "1",
+                    "props": { "kind": "card", "padding": 5 },
+                    "children": [
+                      {
+                        "type": "Stack",
+                        "key": "0",
+                        "props": { "gap": 3, "direction": "column" },
+                        "children": [
+                          {
+                            "type": "Text",
+                            "key": "0",
+                            "props": {
+                              "children": "How long PRs stayed open",
+                              "role": "title"
+                            },
+                            "children": [],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Text",
+                            "key": "1",
+                            "props": {
+                              "children": "Elapsed time from opening to merge · 215 merged pull requests",
+                              "role": "secondary",
+                              "tone": "muted"
+                            },
+                            "children": [],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "2",
+                            "props": { "gap": 1, "direction": "column" },
+                            "children": [
+                              {
+                                "type": "Svg",
+                                "key": "Under 30 min",
+                                "props": {
+                                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" x=\"0\" y=\"68%\"><![CDATA[Under 30 min]]></text><rect fill=\"currentColor\" height=\"60%\" opacity=\"0.83\" rx=\"3\" width=\"13.787234042553191%\" x=\"32%\" y=\"18%\"/><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"end\" x=\"98%\" y=\"68%\"><![CDATA[24]]></text></svg>",
+                                  "label": "Under 30 min, 24 pull requests",
+                                  "tone": "done",
+                                  "aspectRatio": 21
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Svg",
+                                "key": "30 min–2 hr",
+                                "props": {
+                                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" x=\"0\" y=\"68%\"><![CDATA[30 min–2 hr]]></text><rect fill=\"currentColor\" height=\"60%\" opacity=\"0.83\" rx=\"3\" width=\"54%\" x=\"32%\" y=\"18%\"/><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"end\" x=\"98%\" y=\"68%\"><![CDATA[94]]></text></svg>",
+                                  "label": "30 min–2 hr, 94 pull requests",
+                                  "tone": "done",
+                                  "aspectRatio": 21
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Svg",
+                                "key": "2–6 hr",
+                                "props": {
+                                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" x=\"0\" y=\"68%\"><![CDATA[2–6 hr]]></text><rect fill=\"currentColor\" height=\"60%\" opacity=\"0.83\" rx=\"3\" width=\"36.191489361702125%\" x=\"32%\" y=\"18%\"/><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"end\" x=\"98%\" y=\"68%\"><![CDATA[63]]></text></svg>",
+                                  "label": "2–6 hr, 63 pull requests",
+                                  "tone": "done",
+                                  "aspectRatio": 21
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Svg",
+                                "key": "6–24 hr",
+                                "props": {
+                                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" x=\"0\" y=\"68%\"><![CDATA[6–24 hr]]></text><rect fill=\"currentColor\" height=\"60%\" opacity=\"0.83\" rx=\"3\" width=\"16.085106382978722%\" x=\"32%\" y=\"18%\"/><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"end\" x=\"98%\" y=\"68%\"><![CDATA[28]]></text></svg>",
+                                  "label": "6–24 hr, 28 pull requests",
+                                  "tone": "done",
+                                  "aspectRatio": 21
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Svg",
+                                "key": "24 hr or more",
+                                "props": {
+                                  "xml": "<svg xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" x=\"0\" y=\"68%\"><![CDATA[24 hr or more]]></text><rect fill=\"currentColor\" height=\"60%\" opacity=\"0.83\" rx=\"3\" width=\"3.4468085106382977%\" x=\"32%\" y=\"18%\"/><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"13\" font-weight=\"bold\" text-anchor=\"end\" x=\"98%\" y=\"68%\"><![CDATA[6]]></text></svg>",
+                                  "label": "24 hr or more, 6 pull requests",
+                                  "tone": "done",
+                                  "aspectRatio": 21
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Svg",
+                            "key": "3",
+                            "props": {
+                              "xml": "<svg view-box=\"0 0 500 1\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M0 .5H500\" opacity=\"0.35\" stroke=\"currentColor\"/></svg>",
+                              "label": "Section divider",
+                              "tone": "muted"
+                            },
+                            "children": [],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "4",
+                            "props": {
+                              "gap": 2,
+                              "align": "center",
+                              "direction": "row"
+                            },
+                            "children": [
+                              {
+                                "type": "Text",
+                                "key": "0",
+                                "props": {
+                                  "children": "Median · 102 min",
+                                  "role": "control"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Spacer",
+                                "key": "1",
+                                "props": {},
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Text",
+                                "key": "2",
+                                "props": {
+                                  "children": "90th percentile · 15.5 hr",
+                                  "role": "control"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Grid",
+                    "key": "2",
+                    "props": {
+                      "columns": { "compact": 1, "medium": 3, "wide": 3 },
+                      "gap": 3
+                    },
+                    "children": [
+                      {
+                        "type": "Surface",
+                        "key": "0",
+                        "props": { "kind": "card", "padding": 4 },
+                        "children": [
+                          {
+                            "type": "Stack",
+                            "key": "0",
+                            "props": { "gap": 1, "direction": "column" },
+                            "children": [
+                              {
+                                "type": "Text",
+                                "key": "0",
+                                "props": {
+                                  "children": "Merged to main",
+                                  "role": "secondary",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Svg",
+                                "key": "1",
+                                "props": {
+                                  "xml": "<svg view-box=\"0 0 120 38\" xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"31\" font-weight=\"bold\" x=\"0\" y=\"31\"><![CDATA[215]]></text></svg>",
+                                  "label": "215",
+                                  "width": 120
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Text",
+                                "key": "2",
+                                "props": {
+                                  "children": "Previously 24",
+                                  "role": "secondary",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Surface",
+                        "key": "1",
+                        "props": { "kind": "card", "padding": 4 },
+                        "children": [
+                          {
+                            "type": "Stack",
+                            "key": "0",
+                            "props": { "gap": 1, "direction": "column" },
+                            "children": [
+                              {
+                                "type": "Text",
+                                "key": "0",
+                                "props": {
+                                  "children": "Median open to merge",
+                                  "role": "secondary",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Svg",
+                                "key": "1",
+                                "props": {
+                                  "xml": "<svg view-box=\"0 0 120 38\" xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"31\" font-weight=\"bold\" x=\"0\" y=\"31\"><![CDATA[102 min]]></text></svg>",
+                                  "label": "102 min",
+                                  "width": 120
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Text",
+                                "key": "2",
+                                "props": {
+                                  "children": "Previously 41 min",
+                                  "role": "secondary",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Surface",
+                        "key": "2",
+                        "props": { "kind": "card", "padding": 4 },
+                        "children": [
+                          {
+                            "type": "Stack",
+                            "key": "0",
+                            "props": { "gap": 1, "direction": "column" },
+                            "children": [
+                              {
+                                "type": "Text",
+                                "key": "0",
+                                "props": {
+                                  "children": "Open pull requests",
+                                  "role": "secondary",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Svg",
+                                "key": "1",
+                                "props": {
+                                  "xml": "<svg view-box=\"0 0 120 38\" xmlns=\"http://www.w3.org/2000/svg\"><text fill=\"currentColor\" font-family=\"sans-serif\" font-size=\"31\" font-weight=\"bold\" x=\"0\" y=\"31\"><![CDATA[5]]></text></svg>",
+                                  "label": "5",
+                                  "width": 120
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Text",
+                                "key": "2",
+                                "props": {
+                                  "children": "Including drafts · 1",
+                                  "role": "secondary",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Surface",
+                    "key": "3",
+                    "props": { "kind": "card", "padding": 5 },
+                    "children": [
+                      {
+                        "type": "Stack",
+                        "key": "0",
+                        "props": { "gap": 3, "direction": "column" },
+                        "children": [
+                          {
+                            "type": "Text",
+                            "key": "0",
+                            "props": {
+                              "children": "How capabilities evolved",
+                              "role": "title"
+                            },
+                            "children": [],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "Feed",
+                            "props": { "gap": 3, "direction": "column" },
+                            "children": [
+                              {
+                                "type": "Stack",
+                                "key": "Feed",
+                                "props": { "gap": 2, "direction": "column" },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Feed",
+                                      "role": "control"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Grid",
+                                    "key": "1",
+                                    "props": { "columns": 2, "gap": 4 },
+                                    "children": [
+                                      {
+                                        "type": "Stack",
+                                        "key": "0",
+                                        "props": {
+                                          "gap": 1,
+                                          "direction": "column"
+                                        },
+                                        "children": [
+                                          {
+                                            "type": "Text",
+                                            "key": "0",
+                                            "props": {
+                                              "children": "Nov 12 · #2003",
+                                              "role": "secondary",
+                                              "tone": "muted"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          },
+                                          {
+                                            "type": "Text",
+                                            "key": "1",
+                                            "props": {
+                                              "children": "Fit the Feed's pipe tables to the content column on wide windows",
+                                              "role": "control"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          }
+                                        ],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "Stack",
+                                        "key": "1",
+                                        "props": {
+                                          "gap": 1,
+                                          "direction": "column"
+                                        },
+                                        "children": [
+                                          {
+                                            "type": "Text",
+                                            "key": "0",
+                                            "props": {
+                                              "children": "→ Nov 18 · #2442",
+                                              "role": "secondary",
+                                              "tone": "muted"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          },
+                                          {
+                                            "type": "Text",
+                                            "key": "1",
+                                            "props": {
+                                              "children": "Shrink Agent role glyphs in the Feed",
+                                              "role": "control"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          }
+                                        ],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "Inspector",
+                            "props": { "gap": 3, "direction": "column" },
+                            "children": [
+                              {
+                                "type": "Svg",
+                                "key": "0",
+                                "props": {
+                                  "xml": "<svg view-box=\"0 0 500 1\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M0 .5H500\" opacity=\"0.35\" stroke=\"currentColor\"/></svg>",
+                                  "label": "Section divider",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "Inspector",
+                                "props": { "gap": 2, "direction": "column" },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Inspector",
+                                      "role": "control"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Grid",
+                                    "key": "1",
+                                    "props": { "columns": 2, "gap": 4 },
+                                    "children": [
+                                      {
+                                        "type": "Stack",
+                                        "key": "0",
+                                        "props": {
+                                          "gap": 1,
+                                          "direction": "column"
+                                        },
+                                        "children": [
+                                          {
+                                            "type": "Text",
+                                            "key": "0",
+                                            "props": {
+                                              "children": "Nov 13 · #2045",
+                                              "role": "secondary",
+                                              "tone": "muted"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          },
+                                          {
+                                            "type": "Text",
+                                            "key": "1",
+                                            "props": {
+                                              "children": "Let a drag of the Inspector narrow the page to 200 before it expands",
+                                              "role": "control"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          }
+                                        ],
+                                        "slots": {}
+                                      },
+                                      {
+                                        "type": "Stack",
+                                        "key": "1",
+                                        "props": {
+                                          "gap": 1,
+                                          "direction": "column"
+                                        },
+                                        "children": [
+                                          {
+                                            "type": "Text",
+                                            "key": "0",
+                                            "props": {
+                                              "children": "→ Nov 18 · #2436",
+                                              "role": "secondary",
+                                              "tone": "muted"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          },
+                                          {
+                                            "type": "Text",
+                                            "key": "1",
+                                            "props": {
+                                              "children": "Show Agent model in Inspector metadata",
+                                              "role": "control"
+                                            },
+                                            "children": [],
+                                            "slots": {}
+                                          }
+                                        ],
+                                        "slots": {}
+                                      }
+                                    ],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Text",
+                    "key": "4",
+                    "props": {
+                      "children": "Your contribution · 215 of 215 merged PRs authored by milad-alizadeh. Prior period: Nov 5 – 11.",
+                      "role": "secondary",
+                      "tone": "muted"
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Card",
+                    "key": "5",
+                    "props": {
+                      "title": "GitHub Actions timing",
+                      "subtitle": "PR workflows created in the selected week"
+                    },
+                    "children": [
+                      {
+                        "type": "Stack",
+                        "key": "0",
+                        "props": { "gap": 2, "direction": "column" },
+                        "children": [
+                          {
+                            "type": "Text",
+                            "key": "0",
+                            "props": {
+                              "children": "Average PR time · 4h 27m (previously 1h 29m)",
+                              "role": "control"
+                            },
+                            "children": [],
+                            "slots": {}
+                          },
+                          {
+                            "type": "Stack",
+                            "key": "1",
+                            "props": { "gap": 2, "direction": "column" },
+                            "children": [
+                              {
+                                "type": "Text",
+                                "key": "0",
+                                "props": {
+                                  "children": "52 min average elapsed · 0 min to start",
+                                  "role": "control"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Text",
+                                "key": "1",
+                                "props": {
+                                  "children": "24 first attempts among the latest 30 successful PR workflow runs. Elapsed includes the wait to start.",
+                                  "tone": "muted"
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "Stack",
+                                "key": "2",
+                                "props": { "gap": 1, "direction": "column" },
+                                "children": [
+                                  {
+                                    "type": "Text",
+                                    "key": "0",
+                                    "props": {
+                                      "children": "Average check time · 7 min"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Text",
+                                    "key": "1",
+                                    "props": {
+                                      "children": "20 successful jobs among the first 100 in the latest sampled run.",
+                                      "tone": "muted"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "Text",
+                                    "key": "2",
+                                    "props": {
+                                      "children": "Longest check · Story tests (1/3) · 17 min"
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "unavailable": {
+    "type": "Screen",
+    "key": "0",
+    "props": { "title": "Development pace" },
+    "children": [
+      {
+        "type": "ScrollView",
+        "key": "0",
+        "props": { "accessibilityLabel": "Development analytics" },
+        "children": [
+          {
+            "type": "Stack",
+            "key": "0",
+            "props": { "gap": 3, "direction": "column" },
+            "children": [
+              {
+                "type": "Button",
+                "key": "0",
+                "props": {
+                  "label": "Choose repository",
+                  "onPress": { "action": "navigate", "path": "/pace" }
+                },
+                "children": [],
+                "slots": {}
+              },
+              {
+                "type": "EmptyState",
+                "key": "1",
+                "props": {
+                  "title": "Development data unavailable",
+                  "description": "This Project has no GitHub repository."
+                },
+                "children": [],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  }
+}

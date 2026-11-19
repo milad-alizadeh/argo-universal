@@ -59,6 +59,23 @@ export const checksOverflowChangeRow = {
   },
 } satisfies ChangeRowFixture;
 
+// GitHub can name two checks alike, as when one job runs for a push and for its pull request.
+export const duplicateChecksChangeRow = {
+  change: {
+    ...checksPassedChangeRow.change,
+    checks: {
+      passed: 1,
+      failing: 1,
+      running: 0,
+      total: 2,
+      details: [
+        { name: 'End-to-end tests (Electron)', state: 'passed' as const },
+        { name: 'End-to-end tests (Electron)', state: 'failing' as const },
+      ],
+    },
+  },
+} satisfies ChangeRowFixture;
+
 const hiddenText = (row: Element): string[] =>
   [...row.querySelectorAll('[aria-hidden="true"]')].map(
     (node) => node.textContent,
