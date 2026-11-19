@@ -40,6 +40,13 @@ const recorded: ToolCallUpdate = {
   _meta: { argo: { operationIcon: 'pull-request' } },
 };
 
+// The Agent called operation_run before loading its schema and named no Operation.
+const untargeted: ToolCallUpdate = {
+  ...agentCall('untargeted-call', 3),
+  status: 'failed',
+  rawInput: { server, tool: 'operation_run', arguments: {} },
+};
+
 function operationGroup(rows: ToolCallUpdate[]): FeedGroup {
   const group = toFeedView(rows, snapshot).items.find(
     (item): item is FeedGroup => item.type === 'group',
@@ -56,7 +63,12 @@ type OperationStoryArgs = Pick<
 >;
 
 export const settledOperations = {
-  group: operationGroup([agentCall('session.feed', 0), plugin, recorded]),
+  group: operationGroup([
+    agentCall('session.feed', 0),
+    plugin,
+    recorded,
+    untargeted,
+  ]),
   initialOpen: true,
   renderActivity: renderOperationActivity,
 } satisfies OperationStoryArgs;
