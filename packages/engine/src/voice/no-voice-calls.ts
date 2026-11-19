@@ -39,6 +39,10 @@ export const noVoiceCalls: VoiceCallsPort = {
   },
   devices: new VoiceDevices(() => null),
   preview: () => Promise.reject(unavailable(notAvailable)),
+  previewClips: {
+    get: () => Promise.resolve({ clip: null }),
+    store: refused,
+  },
   watch: async function* () {
     await Promise.resolve();
     yield noStatus;

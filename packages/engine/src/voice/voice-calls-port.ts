@@ -8,6 +8,7 @@ import type {
 } from '@repo/contracts';
 import type { VoiceSessions } from './session-link';
 import type { VoiceChoicesPort } from './voice-choices';
+import type { VoiceClipDesk } from './voice-clip-desk';
 import type { VoiceDevices } from './voice-devices';
 
 // What the App and Operations ask of the Voice call: start it, end it, read it, watch it.
@@ -29,4 +30,6 @@ export interface VoiceCallsPort {
   devices: VoiceDevices;
   // Settings › Voice: one greeting in a voice, played while no call runs.
   preview: (input: VoicePreviewInput) => Promise<VoicePreviewOutput>;
+  // The greetings the App recorded from previews; later previews replay them with no provider call.
+  previewClips: Pick<VoiceClipDesk, 'get' | 'store'>;
 }

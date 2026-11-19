@@ -1,8 +1,10 @@
+import type { VoicePreviewClip } from '@repo/contracts';
 import type {
   Microphone,
   VoiceEnvironment,
   VoicePeer,
   VoicePlayback,
+  VoiceRecording,
 } from '../../src/features/voice/types/voice-environment';
 
 // The connection hands the stream straight to the environment, so a test never reads from it.
@@ -56,12 +58,30 @@ class FakePlayback implements VoicePlayback {
     this.speaker = speaker;
   }
 
+  // How loud the voice is now; a test lowers it to 0 when the voice falls silent.
+  public voiceLevel = 0.7;
+
   public level(): number {
-    return 0.7;
+    return this.voiceLevel;
   }
 
   public spectrum(into: Float32Array): void {
-    into.fill(0.7);
+    into.fill(this.voiceLevel);
+  }
+}
+
+// A recording that keeps what was asked of it, and answers `finish` with the clip a test chose.
+export class FakeRecording implements VoiceRecording {
+  public cancelled = false;
+
+  public constructor(private readonly clip: VoicePreviewClip | null) {}
+
+  public finish(): Promise<VoicePreviewClip | null> {
+    return Promise.resolve(this.clip);
+  }
+
+  public cancel(): void {
+    this.cancelled = true;
   }
 }
 
@@ -97,7 +117,6 @@ class FakePeer implements VoicePeer {
     this.listener = listener;
   }
 
-  // The voice's sound arrives.
   public voiceArrives(): void {
     this.listener?.(voiceStream);
   }
@@ -160,5 +179,34 @@ export class FakeEnvironment implements VoiceEnvironment {
     this.playback.speaker = speaker;
 
     return this.playback;
+  }
+
+  public recorded: VoicePreviewClip | null = {
+    mimeType: 'audio/webm',
+    data: 'AAEC',
+  };
+  public canRecord = true;
+  public readonly recordings: FakeRecording[] = [];
+  // Every stored greeting played, oldest first, and the playback of the latest.
+  public readonly clipsPlayed: VoicePreviewClip[] = [];
+  public clipPlayback = new FakePlayback();
+
+  public recordVoice(): VoiceRecording | null {
+    if (!this.canRecord) return null;
+    const recording = new FakeRecording(this.recorded);
+    this.recordings.push(recording);
+
+    return recording;
+  }
+
+  public playClip(
+    clip: VoicePreviewClip,
+    speaker: string | null,
+  ): VoicePlayback {
+    this.clipsPlayed.push(clip);
+    this.clipPlayback = new FakePlayback();
+    this.clipPlayback.speaker = speaker;
+
+    return this.clipPlayback;
   }
 }

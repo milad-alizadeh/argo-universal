@@ -149,6 +149,8 @@ const targetRules = {
   'voice.setInstructions': global,
   'voice.setCallOptions': global,
   'voice.preview': global,
+  'voice.getPreviewClip': global,
+  'voice.storePreviewClip': global,
   'voice.end': callerSessionParam,
   'voice.hangUp': ownSessionOnly,
 } satisfies TargetRules;
