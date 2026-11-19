@@ -54,10 +54,9 @@ describe('a request for work while a Turn runs', () => {
     expect(JSON.stringify(await work.steered)).toContain(extra);
     await expect
       .poll(() => work.provider.call.sent)
-      .toContainEqual(expect.objectContaining({ requestId: 'r2' }));
-    expect(work.provider.call.sent).toContainEqual(
-      expect.objectContaining({ requestId: 'r2', text: relayWords.steered }),
-    );
+      .toContainEqual(
+        expect.objectContaining({ requestId: 'r2', text: relayWords.steered }),
+      );
     await expect.poll(async () => (await work.promptRows()).length).toBe(2);
     expect(await work.promptRows()).toMatchObject([
       { _meta: { argo: { sender: { type: 'voice' } } } },
@@ -101,5 +100,13 @@ describe('a request for work while a Turn runs', () => {
     release.resolve();
     await expect.poll(() => work.prompts.length).toBe(3);
     expect(promptText(work.prompts[2])).toContain(extra);
+    await expect.poll(work.turnEnds).toHaveLength(3);
+    expect(await work.promptRows()).toMatchObject([
+      { _meta: { argo: { sender: { type: 'voice' } } } },
+      {
+        content: [{ text: extra }],
+        _meta: { argo: { sender: { type: 'voice' } } },
+      },
+    ]);
   });
 });
