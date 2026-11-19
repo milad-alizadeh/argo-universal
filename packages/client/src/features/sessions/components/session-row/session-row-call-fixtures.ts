@@ -16,3 +16,9 @@ export const mutedVoiceCall = {
   ...voiceCall,
   muted: true,
 } satisfies SessionRowCall;
+
+// The same call still connecting: it has no start time yet.
+export const connectingVoiceCall = {
+  ...voiceCall,
+  startedAt: null,
+} satisfies SessionRowCall;

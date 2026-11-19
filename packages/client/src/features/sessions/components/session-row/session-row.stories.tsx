@@ -10,7 +10,11 @@ import {
   type SessionRowCall,
   SessionRowCallProvider,
 } from './session-row-call';
-import { mutedVoiceCall, voiceCall } from './session-row-call-fixtures';
+import {
+  connectingVoiceCall,
+  mutedVoiceCall,
+  voiceCall,
+} from './session-row-call-fixtures';
 import {
   archivedSession,
   compactSession,
@@ -113,6 +117,12 @@ const onCall =
 export const OnVoiceCall: Story = {
   args: idleSession,
   decorators: [onCall(voiceCall)],
+};
+
+// The call is still connecting: the bars show without a time until it connects.
+export const VoiceCallConnecting: Story = {
+  args: idleSession,
+  decorators: [onCall(connectingVoiceCall)],
 };
 
 // The call's microphone is muted: mic.slash and "Muted" in red in the same place.
