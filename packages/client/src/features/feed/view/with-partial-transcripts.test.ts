@@ -18,9 +18,35 @@ const notice: FeedViewItem = {
   },
 };
 
-const person: VoicePartial = { speaker: 'person', id: 'p1', text: 'Is it' };
+const person: VoicePartial = {
+  speaker: 'person',
+  id: 'p1',
+  rowId: 'call-1:person:p1',
+  text: 'Is it',
+};
 
-const voice: VoicePartial = { speaker: 'voice', id: 'v1', text: 'Not ye' };
+const voice: VoicePartial = {
+  speaker: 'voice',
+  id: 'v1',
+  rowId: 'call-1:voice:v1',
+  text: 'Not ye',
+};
+
+// The row the person's words are stored as once final.
+const personFinal: FeedViewItem = {
+  type: 'row',
+  row: {
+    id: person.rowId,
+    messageId: person.id,
+    sessionId: 's',
+    position: 5,
+    revision: 5,
+    turnId: null,
+    state: 'settled',
+    sessionUpdate: 'person_transcript',
+    content: [{ type: 'text', text: 'Is it done?' }],
+  },
+};
 
 const keys = (partials: VoicePartial[]): string[] =>
   withPartialTranscripts([], partials, 's').map(feedItemKey);
@@ -57,10 +83,15 @@ describe('withPartialTranscripts', () => {
     ]);
   });
 
-  it('keeps the partial’s key while its words grow, and apart from the final row', () => {
-    expect(keys([person])).toEqual(['partial:person']);
-    expect(keys([{ ...person, text: 'Is it done?' }])).toEqual([
-      'partial:person',
-    ]);
+  it('keys a partial as the row its final words are stored as, so the Feed draws them as one row', () => {
+    expect(keys([person])).toEqual([person.rowId]);
+    expect(keys([{ ...person, text: 'Is it done?' }])).toEqual([person.rowId]);
+    expect(feedItemKey(personFinal)).toBe(person.rowId);
+  });
+
+  it('draws a partial no longer once the Feed holds its final row', () => {
+    const items = withPartialTranscripts([personFinal], [person, voice], 's');
+    expect(items.map(feedItemKey)).toEqual([person.rowId, voice.rowId]);
+    expect(items[0]).toBe(personFinal);
   });
 });

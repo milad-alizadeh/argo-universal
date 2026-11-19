@@ -63,7 +63,10 @@ export function UserMessageBubble({
 interface BubbleExpansion {
   clamped: boolean;
   expand: () => void;
-  markdown: Pick<MarkdownProps, 'numberOfLines' | 'onOverflowChange' | 'tone'>;
+  markdown: Pick<
+    MarkdownProps,
+    'numberOfLines' | 'onOverflowChange' | 'tone' | 'streaming'
+  >;
 }
 
 function useBubbleExpansion(partial: boolean): BubbleExpansion {
@@ -76,7 +79,7 @@ function useBubbleExpansion(partial: boolean): BubbleExpansion {
     clamped,
     expand: () => setExpanded(true),
     markdown: {
-      tone: transcriptStyle(partial).tone,
+      ...transcriptStyle(partial),
       numberOfLines: expanded ? undefined : clampedLines,
       onOverflowChange: setOverflowing,
     },

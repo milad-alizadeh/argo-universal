@@ -13,6 +13,7 @@ import {
   type SessionVoiceInput,
 } from './session-voice';
 import { useSessionTitle, useStartCall } from './use-call-reads';
+import { useHeldPartials } from './use-held-partials';
 import { type SessionMutes, useSessionMutes } from './use-session-mutes';
 import { useVoiceStatus } from './use-voice-status';
 import type { VoiceConnection, VoiceLevels } from './voice-connection';
@@ -120,6 +121,11 @@ export function useSessionVoice(page: VoicePage): View {
   const connection = useVoiceConnection();
   const status = useVoiceStatus();
   const view = sessionVoice(useInput(page, connection, status));
+  const partials = useHeldPartials(view.partials);
 
-  return { ...view, voice: connection ? view.composer : undefined };
+  return {
+    ...view,
+    partials,
+    voice: connection ? view.composer : undefined,
+  };
 }

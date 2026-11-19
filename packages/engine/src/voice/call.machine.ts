@@ -179,7 +179,13 @@ const voiceCallSetup = setup({
       const heard = providerEventOf(event);
 
       return isTranscript(heard)
-        ? { partials: withTranscript(context.partials, heard) }
+        ? {
+            partials: withTranscript(
+              context.partials,
+              runningCall(context),
+              heard,
+            ),
+          }
         : {};
     }),
     recordFailure: assign(({ event }): Partial<VoiceCallContext> => {
