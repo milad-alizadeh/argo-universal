@@ -6,6 +6,7 @@ import {
 } from '@repo/contracts';
 import { keepNewerRevisions } from './feed-revisions';
 import type { FeedState, SubscriptionEventResult } from './feed-state';
+import { laterPlan } from './held-plan';
 
 type Upsert = Extract<FeedSubscribeOutput, { type: 'row.upsert' }>;
 
@@ -46,6 +47,7 @@ export function upsertRow(
     revision: Math.max(feed.revision, rev),
     rows: upsertRows(feed, row, beforeWindow),
     startCursor: upsertCursor(feed, row, beforeWindow),
+    plan: beforeWindow ? laterPlan(feed.plan, row) : feed.plan,
   };
 }
 

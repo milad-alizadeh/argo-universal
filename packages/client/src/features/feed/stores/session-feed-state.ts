@@ -5,6 +5,7 @@ import type {
 } from '@repo/contracts';
 import { emptyFeed, type FeedState, syncPointOf } from '../view/feed-state';
 import type { FeedView } from '../view/feed-view';
+import { shownRows } from '../view/held-plan';
 import { keepUnchangedItems } from '../view/keep-unchanged-items';
 
 // What the App keeps of a Session's Feed, so the next screen that shows the Session starts from it.
@@ -76,7 +77,9 @@ export function changedState(
 }
 
 const sameShown = (state: KeptFeed, next: KeptFeed): boolean =>
-  state.feed.rows === next.feed.rows && state.snapshot === next.snapshot;
+  state.feed.rows === next.feed.rows &&
+  state.feed.plan === next.feed.plan &&
+  state.snapshot === next.snapshot;
 
 // Snapshots are plain data from the Server, so equal ones serialize alike.
 export const sameSnapshot = (
@@ -98,7 +101,7 @@ function viewOf(
 ): FeedView | null {
   if (!snapshot) return null;
 
-  return keepUnchangedItems(previous, translate(feed.rows, snapshot));
+  return keepUnchangedItems(previous, translate(shownRows(feed), snapshot));
 }
 
 interface Resume {

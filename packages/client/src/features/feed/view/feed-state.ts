@@ -2,10 +2,12 @@ import {
   type FeedPageOutput,
   type FeedSubscribeOutput,
   type FeedSyncPoint,
+  type PlanUpdate,
   type SessionUpdate,
 } from '@repo/contracts';
 import { keepNewerRevisions, startCursor } from './feed-revisions';
 import { applyHeldEvent, applyUpsert } from './feed-row-events';
+import { laterPlan } from './held-plan';
 
 // The rows an App holds for one Session: a window of the newest rows, kept in sync by revision (ADR 0007).
 export interface FeedState {
@@ -18,6 +20,8 @@ export interface FeedState {
   hasOlder: boolean;
   // The oldest held row's position, the next `before` cursor.
   startCursor: number | null;
+  // The Session's latest Plan row when it lies before `rows`, such as a long Session's checklist; it does not move `startCursor`.
+  plan: PlanUpdate | null;
 }
 
 export const emptyFeed: FeedState = {
@@ -26,6 +30,7 @@ export const emptyFeed: FeedState = {
   rows: [],
   hasOlder: false,
   startCursor: null,
+  plan: null,
 };
 
 export interface SubscriptionEventResult {
@@ -56,7 +61,15 @@ export function mergeNewestPage(
     rows,
     hasOlder: hasOlderRows(feed, page),
     startCursor: startCursor(rows),
+    plan: laterPlan(heldPagePlan(feed, page), page.plan),
   };
+}
+
+function heldPagePlan(
+  feed: FeedState,
+  page: FeedPageOutput,
+): PlanUpdate | null {
+  return page.epoch === feed.epoch ? feed.plan : null;
 }
 
 function newestRevision(feed: FeedState, page: FeedPageOutput): number {
