@@ -10,8 +10,8 @@ import {
   useRowPressable,
 } from '#primitives/fields/field-row';
 import { NativeIcon } from '../../../symbols/native-icon';
-import type { FieldGroupKitProps } from '../../kit-props';
 import { FieldLinkMark } from './field-link-mark';
+import type { FieldLinkRowProps } from './field-link-props';
 import { linkTone } from './field-link-tone';
 
 // Radix's Trigger hands its child the anchor ref and popup state, as a Drill's popover opens beside the row.
@@ -23,10 +23,7 @@ type Anchor = Pick<
   'aria-controls'?: string;
 };
 
-type FieldLinkProps = FieldGroupKitProps<'FieldGroup.Link'> &
-  Anchor & {
-    wrapSubtitle?: boolean;
-  };
+type FieldLinkProps = FieldLinkRowProps & Anchor;
 
 /*
  * A row that opens a page ends in what the page holds, muted, then the kit's disclosure chevron, which the web draws
@@ -56,11 +53,18 @@ const linkProps = (props: FieldLinkProps): Attributes => ({
   disabled: props.disabled,
   onPress: props.onPress,
   onKeyDown: (event) => followOnEnter(event, props),
-  className: cn(rowPressTargetClassName, props.disabled && disabledClassName),
+  className: rowClassName(props),
 });
 
 // A disabled row dims to half, as the web menu's disabled items do.
 const disabledClassName = 'opacity-50';
+
+const rowClassName = (props: FieldLinkRowProps): string =>
+  cn(
+    rowPressTargetClassName,
+    props.roomy && 'py-3.5',
+    props.disabled && disabledClassName,
+  );
 
 const LinkRow = (props: FieldLinkProps): ReactElement => (
   <Row alignment="center">

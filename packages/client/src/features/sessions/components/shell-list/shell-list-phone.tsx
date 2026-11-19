@@ -57,6 +57,7 @@ const row = (shell: ShellEntry, props: PhoneProps): JSX.Element => (
     title={shellTitle(shell)}
     subtitle={`${shellSupporting(shell)} · ${shellElapsed(shell, props.now)}`}
     subtitleTone={shellOutcome(shell).tone === 'danger' ? 'danger' : 'muted'}
+    roomy
     leadingMark={mark(shell)}
     disabled={!props.onSelect}
     onPress={() => props.onSelect?.(shell)}

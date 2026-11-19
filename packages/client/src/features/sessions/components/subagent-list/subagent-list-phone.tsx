@@ -30,6 +30,7 @@ const row = (agent: Subagent, props: PhoneProps): JSX.Element => (
     title={agent.title}
     titleTone={agent.state === 'idle' ? 'muted' : 'neutral'}
     subtitle={subagentSupporting(agent, props.now)}
+    roomy
     wrapSubtitle
     leadingMark={mark(agent)}
     disabled={!props.onSelect}
