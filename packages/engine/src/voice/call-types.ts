@@ -75,6 +75,8 @@ export interface RunningCall {
   microphoneBlocked: boolean;
   // What the provider last reported of its allowance.
   limit?: VoiceLimit;
+  // The tokens the provider last reported the call has used.
+  usage?: { inputTokens: number; outputTokens: number };
 }
 
 export interface EndedCall {

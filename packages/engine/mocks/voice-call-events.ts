@@ -22,6 +22,13 @@ export const events: VoiceCallEvent[] = [
   providerEvent({ type: 'closed', reason: 'ended' }),
   providerEvent({ type: 'closed', reason: 'limit' }),
   providerEvent({ type: 'limit', remaining: 0.1 }),
+  providerEvent({ type: 'usage', inputTokens: 9, outputTokens: 1 }),
+  providerEvent({
+    type: 'usage',
+    inputTokens: 900,
+    outputTokens: 100,
+    limit: { remaining: 0.05 },
+  }),
   providerEvent({
     type: 'person.transcript',
     id: 'p1',

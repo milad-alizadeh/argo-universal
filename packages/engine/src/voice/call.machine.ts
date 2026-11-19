@@ -1,8 +1,4 @@
-import type {
-  VoiceCallEnd,
-  VoiceConnectionStatus,
-  VoiceLimit,
-} from '@repo/contracts';
+import type { VoiceCallEnd, VoiceConnectionStatus } from '@repo/contracts';
 import { assertEvent, assign, sendTo, setup, type ActorRefFrom } from 'xstate';
 import { agentRelay, type RelayInput } from './agent-relay-actor';
 import {
@@ -82,6 +78,14 @@ type Reports = { [Type in VoiceProviderEvent['type']]?: Report<Type> };
 const reports: Reports = {
   speaking: (event) => ({ speaking: event.speaking }),
   trouble: (event) => ({ microphoneBlocked: event.trouble !== null }),
+  // A usage report that says how much allowance is left warns as a limit report does.
+  usage: ({ inputTokens, outputTokens, limit }) => ({
+    usage: { inputTokens, outputTokens },
+    ...(limit && { limit }),
+  }),
+  limit: ({ remaining, resetsAt }) => ({
+    limit: resetsAt === undefined ? { remaining } : { remaining, resetsAt },
+  }),
 };
 
 // Folds what the provider reported about the call into the running call.
@@ -94,15 +98,6 @@ function reported(call: RunningCall, event: VoiceProviderEvent): RunningCall {
 
 const isLimitClose = (event: VoiceProviderEvent): boolean =>
   event.type === 'closed' && event.reason === 'limit';
-
-function limitOf(event: VoiceCallEvent): VoiceLimit {
-  const reported = providerEventOf(event);
-
-  if (reported.type !== 'limit') throw new Error('Not a limit report');
-  const { remaining, resetsAt } = reported;
-
-  return resetsAt === undefined ? { remaining } : { remaining, resetsAt };
-}
 
 const limitNotice = {
   title: 'Voice call ended: usage limit reached',
@@ -154,9 +149,6 @@ const voiceCallSetup = setup({
 
       return { call: { ...runningCall(context), answer: event.answer } };
     }),
-    noteLimit: assign(({ context, event }): Partial<VoiceCallContext> => ({
-      call: { ...runningCall(context), limit: limitOf(event) },
-    })),
     noteTurns: assign(({ event }): Partial<VoiceCallContext> => {
       assertEvent(event, 'call.turns');
 
@@ -236,8 +228,6 @@ const voiceCallSetup = setup({
       return isErrorStatus(reported) || isErrorClose(reported);
     },
     noTurnRunning: ({ context }): boolean => !context.turnRunning,
-    reportsLimit: ({ event }): boolean =>
-      providerEventOf(event).type === 'limit',
     limitClosed: ({ event }): boolean => isLimitClose(providerEventOf(event)),
     providerClosed: ({ event }): boolean =>
       providerEventOf(event).type === 'closed',
@@ -381,7 +371,6 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
               endsWith('failed'),
             ],
           },
-          { guard: 'reportsLimit', actions: 'noteLimit' },
           {
             guard: 'limitClosed',
             target: idleTarget,
