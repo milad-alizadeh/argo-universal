@@ -11,7 +11,7 @@ import {
 import { watchConnection, watchSession } from './call-watchers';
 import type { VoiceProvider, VoiceProviderEvent } from './provider';
 import { providerCall, type ProviderCallInput } from './provider-call';
-import { SessionLink } from './session-link';
+import { SessionLink, type VoiceNotice } from './session-link';
 import { isTranscript, storeTranscript, withTranscript } from './transcript';
 
 /*
@@ -37,6 +37,60 @@ function providerEventOf(event: VoiceCallEvent): VoiceProviderEvent {
   assertEvent(event, 'provider.event');
 
   return event.event;
+}
+
+type CallStart = Pick<
+  RunningCall,
+  'callId' | 'sessionId' | 'offer' | 'voice' | 'connection'
+>;
+
+// A call that has only been asked for: not answered, not connected, nobody speaking.
+const newCall = (start: CallStart): RunningCall => ({
+  ...start,
+  answer: null,
+  providerConnection: 'connecting',
+  startedAt: null,
+  speaking: false,
+  agentWorking: false,
+  microphoneBlocked: false,
+});
+
+const failedNotice = (description: string): VoiceNotice => ({
+  title: 'Voice call failed',
+  description,
+});
+
+const providerFailure = 'The connection to the voice failed.';
+
+type Report<Type extends VoiceProviderEvent['type']> = (
+  event: Extract<VoiceProviderEvent, { type: Type }>,
+  call: RunningCall,
+) => Partial<RunningCall>;
+
+type Reports = { [Type in VoiceProviderEvent['type']]?: Report<Type> };
+
+// The timer starts the first time the call connects and keeps that time through any reconnecting.
+const startedAfter = (call: RunningCall, status: string): string | null =>
+  status === 'connected'
+    ? (call.startedAt ?? new Date().toISOString())
+    : call.startedAt;
+
+// What each provider report changes about the running call; reports not listed change nothing.
+const reports: Reports = {
+  status: (event, call) => ({
+    providerConnection: event.status,
+    startedAt: startedAfter(call, event.status),
+  }),
+  speaking: (event) => ({ speaking: event.speaking }),
+  trouble: (event) => ({ microphoneBlocked: event.trouble !== null }),
+};
+
+// Folds what the provider reported about the call into the running call.
+function reported(call: RunningCall, event: VoiceProviderEvent): RunningCall {
+  // SAFETY: `reports` keys each report by the event type it reads, so the report found for `event.type` takes `event`.
+  const report = reports[event.type] as Report<typeof event.type> | undefined;
+
+  return { ...call, ...report?.(event, call) };
 }
 
 const isLimitClose = (event: VoiceProviderEvent): boolean =>
@@ -90,7 +144,7 @@ const voiceCallSetup = setup({
       const { callId, sessionId, offer, voice, connection } = event;
 
       return {
-        call: { callId, sessionId, offer, voice, connection, answer: null },
+        call: newCall({ callId, sessionId, offer, voice, connection }),
         ended: null,
         failure: null,
         turnRunning: false,
@@ -136,6 +190,22 @@ const voiceCallSetup = setup({
 
       return { failure: event.message };
     }),
+    recordProviderFailure: assign({ failure: providerFailure }),
+    // Runs before `finish`, while the call and its Session are still known; a call ends once, so it says so once.
+    announceFailure: ({ context }): void => {
+      const { call, failure } = context;
+
+      if (call && failure !== null)
+        context.sessions.notice(call.sessionId, failedNotice(failure));
+    },
+    foldProvider: assign(({ context, event }): Partial<VoiceCallContext> => ({
+      call: reported(runningCall(context), providerEventOf(event)),
+    })),
+    foldTurn: assign(({ context, event }): Partial<VoiceCallContext> => {
+      assertEvent(event, 'session.turn');
+
+      return { call: { ...runningCall(context), agentWorking: event.running } };
+    }),
   },
   guards: {
     hasProvider: ({ context }): boolean => context.provider !== null,
@@ -159,6 +229,11 @@ const voiceCallSetup = setup({
     limitClosed: ({ event }): boolean => isLimitClose(providerEventOf(event)),
     providerClosed: ({ event }): boolean =>
       providerEventOf(event).type === 'closed',
+    turnChanged: ({ context, event }): boolean => {
+      assertEvent(event, 'session.turn');
+
+      return runningCall(context).agentWorking !== event.running;
+    },
     asksForWork: ({ event }): boolean =>
       providerEventOf(event).type === 'work.requested',
   },
@@ -277,7 +352,7 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
         },
         'call.failed': {
           target: idleTarget,
-          actions: ['recordFailure', endsWith('failed')],
+          actions: ['recordFailure', 'announceFailure', endsWith('failed')],
         },
         'call.turns': { actions: 'noteTurns' },
         'provider.event': [
@@ -288,7 +363,11 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
           {
             guard: 'providerErrored',
             target: idleTarget,
-            actions: endsWith('failed'),
+            actions: [
+              'recordProviderFailure',
+              'announceFailure',
+              endsWith('failed'),
+            ],
           },
           { guard: 'reportsLimit', actions: 'noteLimit' },
           {
@@ -305,7 +384,9 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
             guard: 'asksForWork',
             actions: sendTo('agentRelay', ({ event }) => event),
           },
+          { actions: 'foldProvider' },
         ],
+        'session.turn': { guard: 'turnChanged', actions: 'foldTurn' },
         'voice.say': {
           actions: sendTo('providerCall', ({ event }) => event),
         },
@@ -318,7 +399,11 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
         },
         connecting: {
           on: {
-            'provider.event': { guard: 'isConnected', target: 'connected' },
+            'provider.event': {
+              guard: 'isConnected',
+              target: 'connected',
+              actions: 'foldProvider',
+            },
           },
         },
         // Speech keeps the call alive; a call that hears none for the idle period ends, unless a Turn it started is running.

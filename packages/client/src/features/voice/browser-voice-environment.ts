@@ -2,6 +2,7 @@ import type {
   Microphone,
   VoiceEnvironment,
   VoicePeer,
+  VoicePlayback,
 } from './webrtc-voice-connection';
 
 const iceGatheringLimitMs = 3000;
@@ -19,11 +20,56 @@ function gathered(connection: RTCPeerConnection): Promise<void> {
   });
 }
 
+const fftSize = 256;
+
+const loudest = 255;
+
+// Reads how loud a stream is, from 0 to 1, as the loudest frequency's strength. The levels stay in the App: they only move the orb.
+class LevelMeter {
+  private readonly context = new AudioContext();
+  private readonly analyser = this.context.createAnalyser();
+  private readonly bins: Uint8Array<ArrayBuffer>;
+
+  public constructor(stream: MediaStream) {
+    this.analyser.fftSize = fftSize;
+    this.bins = new Uint8Array(this.analyser.frequencyBinCount);
+    this.context.createMediaStreamSource(stream).connect(this.analyser);
+  }
+
+  public level(): number {
+    this.analyser.getByteFrequencyData(this.bins);
+
+    return Math.max(...this.bins) / loudest;
+  }
+
+  public close(): void {
+    void this.context.close();
+  }
+}
+
 class BrowserMicrophone implements Microphone {
-  public constructor(public readonly stream: MediaStream) {}
+  private readonly meter: LevelMeter;
+  private muted = false;
+
+  public constructor(public readonly stream: MediaStream) {
+    this.meter = new LevelMeter(stream);
+  }
 
   public stop(): void {
+    this.meter.close();
+
     for (const track of this.stream.getTracks()) track.stop();
+  }
+
+  // A muted track sends silence, so the call stays up.
+  public setMuted(muted: boolean): void {
+    this.muted = muted;
+
+    for (const track of this.stream.getAudioTracks()) track.enabled = !muted;
+  }
+
+  public level(): number {
+    return this.muted ? 0 : this.meter.level();
   }
 }
 
@@ -80,16 +126,34 @@ async function openMicrophone(): Promise<Microphone> {
   );
 }
 
-function playVoice(stream: MediaStream): () => void {
-  const audio = new Audio();
-  audio.srcObject = stream;
-  void audio.play();
+class BrowserPlayback implements VoicePlayback {
+  private readonly audio = new Audio();
+  private readonly meter: LevelMeter;
 
-  return (): void => {
-    audio.pause();
-    audio.srcObject = null;
-  };
+  public constructor(stream: MediaStream) {
+    this.audio.srcObject = stream;
+    this.meter = new LevelMeter(stream);
+    void this.audio.play();
+  }
+
+  public setVolume(volume: number): void {
+    this.audio.volume = volume;
+  }
+
+  // The meter reads the stream before the volume, so a silenced voice still moves the orb.
+  public level(): number {
+    return this.meter.level();
+  }
+
+  public stop(): void {
+    this.meter.close();
+    this.audio.pause();
+    this.audio.srcObject = null;
+  }
 }
+
+const playVoice = (stream: MediaStream): VoicePlayback =>
+  new BrowserPlayback(stream);
 
 // The page's own pieces: the system microphone, a peer connection, and an audio element for the voice.
 export const browserVoiceEnvironment: VoiceEnvironment = {

@@ -24,6 +24,7 @@ import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import { usageLimitsSession } from './session-detail-view-usage.mocks';
+import { voiceCallSession } from './session-detail-view-voice.mocks';
 import {
   emptySession,
   idleSession,
@@ -124,6 +125,12 @@ export const DraggingFiles: Story = {
       new DragEvent('dragenter', { bubbles: true, dataTransfer: transfer }),
     );
   },
+};
+
+// A Voice call here: the orb pinned above the Feed with its label and timer, and the Composer with mic, speaker and End.
+export const OnAVoiceCall: Story = {
+  args: { state: 'open', ...voiceCallSession },
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 
 export const Opening: Story = { args: { state: 'opening' } };

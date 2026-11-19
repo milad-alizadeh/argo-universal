@@ -30,6 +30,7 @@ function subscribeSession(actor: AnyActorRef, sendBack: SendBack): () => void {
   const subscription = actor.subscribe({
     next: (snapshot: Tagged) => {
       const reason = reasonOf(snapshot);
+      sendBack({ type: 'session.turn', running: snapshot.hasTag('running') });
 
       if (reason) sendBack(sessionGone(reason));
     },

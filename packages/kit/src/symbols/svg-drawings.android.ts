@@ -9,6 +9,7 @@ import gitPullRequestConflict from './assets/svg-drawings/git-pull-request-confl
 import gitPullRequestDraft from './assets/svg-drawings/git-pull-request-draft.xml';
 import gitPullRequest from './assets/svg-drawings/git-pull-request.xml';
 import grip from './assets/svg-drawings/grip.xml';
+import voiceBars from './assets/svg-drawings/voice-bars.xml';
 import type { SvgSymbolName } from './svg-symbols';
 
 /*
@@ -19,6 +20,7 @@ import type { SvgSymbolName } from './svg-symbols';
  */
 const drawings = {
   grip,
+  'voice-bars': voiceBars,
   'chevron-right': chevronRight,
   'file-diff': fileDiff,
   'git-branch': gitBranch,

@@ -48,6 +48,11 @@ export class SessionLink {
     this.sessions = sessions;
   }
 
+  // Adds a Notice to the Session's Feed; nothing is told before Sessions are attached.
+  public notice(sessionId: string, notice: VoiceNotice): void {
+    this.sessions?.notice(sessionId, notice);
+  }
+
   public get current(): VoiceSessions | null {
     return this.sessions;
   }

@@ -29,4 +29,7 @@ export const events: VoiceCallEvent[] = [
   }),
   { type: 'call.turns', running: false },
   { type: 'call.turns', running: true },
+  providerEvent({ type: 'speaking', speaking: true }),
+  providerEvent({ type: 'trouble', trouble: 'microphone-blocked' }),
+  { type: 'session.turn', running: true },
 ];

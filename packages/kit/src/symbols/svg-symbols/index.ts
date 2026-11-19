@@ -10,16 +10,18 @@ import { GitPullRequestConflictIcon } from './git-pull-request-conflict';
 import { GitPullRequestDraftIcon } from './git-pull-request-draft';
 import { GripIcon } from './grip';
 import type { SvgSymbolProps } from './svg-symbol-frame';
+import { VoiceBarsIcon } from './voice-bars';
 
 export type { SvgSymbolProps } from './svg-symbol-frame';
 
 /*
  * The icons SF Symbols and Material Symbols cannot draw: git's branches and pull request states, and the web's
- * grouped-row chevron. Each is a small react-native-svg component with its own paths, drawn the same on every
+ * grouped-row chevron and the voice button's bars. Each is a small react-native-svg component with its own paths, drawn the same on every
  * platform (ADR-0041). `git-symbols.ts` and `list-view-symbols.ts` map Argo icon names to these names.
  */
 export const svgSymbols = {
   grip: GripIcon,
+  'voice-bars': VoiceBarsIcon,
   'chevron-right': ChevronRightIcon,
   'file-diff': FileDiffIcon,
   'git-branch': GitBranchIcon,

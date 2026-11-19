@@ -7,6 +7,9 @@ import {
   ComposerModeControl,
 } from '../composer-configuration/composer-configuration';
 import { ComposerStatusControls } from '../composer-status/composer-status';
+import { ComposerCallPointer } from './composer-call-pointer';
+import { ConnectingRing } from './composer-connecting-ring';
+import { ComposerMuteButtons } from './composer-mute-buttons';
 import { sendButtonAction } from './composer-primary-action';
 import { ComposerAttachmentOrCancel } from './composer-queue-cancel';
 import type {
@@ -87,6 +90,7 @@ function ComposerRightControls(layout: RightControlsLayout): React.JSX.Element {
   return (
     <View className="pointer-events-box-none max-w-full shrink-0 flex-row items-center gap-2.5">
       <ComposerConfigurationActions {...layout} />
+      <ComposerMuteButtons voice={layout.props.voice} />
       <View className="shrink-0">
         <ComposerSendButton {...layout} />
       </View>
@@ -107,8 +111,23 @@ function ComposerConfigurationActions(
   return <ComposerModeControl {...controls} />;
 }
 
+// The primary slot: Send, Stop, the voice button or End, or, with the call in another Session, the pointer to it.
 function ComposerSendButton(layout: SendLayout): React.JSX.Element {
-  return <IconButton {...sendButtonProps(layout)} />;
+  return layout.sendState === 'elsewhere' ? (
+    <ComposerCallPointer elsewhere={layout.props.voice?.elsewhere} />
+  ) : (
+    <PrimaryButton {...layout} />
+  );
+}
+
+// While the call connects, End carries the turning ring.
+function PrimaryButton(layout: SendLayout): React.JSX.Element {
+  return (
+    <View>
+      <IconButton {...sendButtonProps(layout)} />
+      {layout.sendState === 'connecting' && <ConnectingRing />}
+    </View>
+  );
 }
 
 function sendButtonProps(

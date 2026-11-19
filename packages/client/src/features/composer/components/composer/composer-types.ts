@@ -29,12 +29,31 @@ export type ComposerVoiceCall =
   | 'connected'
   | 'elsewhere';
 
+// The mic and speaker buttons of a connected call: what each holds now and what pressing it asks.
+export interface ComposerVoiceMutes {
+  microphone: boolean;
+  speaker: boolean;
+  onMicrophone: () => void;
+  onSpeaker: () => void;
+}
+
+// Where a call in another Session is, for the pointer that takes the person there.
+export interface ComposerVoiceElsewhere {
+  // The Session the call is attached to.
+  title: string;
+  onOpen: () => void;
+}
+
 export interface ComposerVoice {
   // Whether a Voice provider can start a call now.
   usable: boolean;
   call: ComposerVoiceCall;
   onStart: () => void;
   onEnd: () => void;
+  // Present while a call is connected here.
+  mutes?: ComposerVoiceMutes;
+  // Present while the call runs in another Session.
+  elsewhere?: ComposerVoiceElsewhere;
 }
 
 export type SendState =
@@ -44,7 +63,8 @@ export type SendState =
   | 'blocked'
   | 'voice'
   | 'connecting'
-  | 'end';
+  | 'end'
+  | 'elsewhere';
 
 export interface ComposerProps {
   draft: ComposerDraft;

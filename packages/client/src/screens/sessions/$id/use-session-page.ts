@@ -71,14 +71,12 @@ type SessionSurroundings =
   | 'agents'
   | 'navigate'
   | 'imageUrl'
-  | 'connected'
+  | keyof ReturnType<typeof useSessionLink>
   | 'elicitation'
   | 'permission'
   | 'onAtEndChange'
   | 'shells'
-  | 'inspectorPanels'
-  | 'voice'
-  | 'partials';
+  | 'inspectorPanels';
 
 // A Session's Usage limits are its Agent's, kept for the Agent and Project.
 const usageLimitsSubject = (

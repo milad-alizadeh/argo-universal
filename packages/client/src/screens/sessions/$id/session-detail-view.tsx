@@ -9,7 +9,6 @@ import type { ElicitationFormProps } from '#features/requests';
 import {
   ArchivedBanner,
   serverSilentMessage,
-  SessionBandClaim,
   SessionBar,
   type SessionBarProps,
   type SessionCalloutProps,
@@ -24,13 +23,14 @@ import { useContentWide } from '#lib/product/content-layout';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { SessionLayout } from '#lib/product/session-layout';
 import { BlankSession } from './blank-session';
-import { sessionWorkbench } from './sections/session-sections';
+import { bandClaim } from './session-band-claim';
 import { phoneChangesPill, sessionFeed } from './session-changes-pill';
 import { SessionComposer } from './session-composer';
 import {
   SessionInspector,
   type SessionInspectorContent,
 } from './session-inspector';
+import { voiceStage } from './session-voice-stage';
 import { useWorkPanels } from './session-work-panels';
 import { useInspectorPanels } from './use-inspector-panels';
 import { usePhoneSheet } from './use-phone-sheet';
@@ -54,6 +54,7 @@ export interface OpenSessionViewProps extends SessionInspectorContent {
   preview?: boolean;
   // An archived Session reads only: a banner takes the Composer's place.
   archived?: boolean;
+  stage?: Parameters<typeof voiceStage>[0]['stage'];
 }
 
 export type SessionDetailViewProps =
@@ -148,24 +149,11 @@ const sessionParts = (
   header: bandClaim(props, panels),
   bar: sessionBar(props),
   feed: sessionFeed(props, panels, wide),
+  stage: voiceStage(props),
   composer: sessionBottom(props, phoneChangesPill(props, panels, wide)),
   panel: props.signInTerminal && <TerminalSignIn {...props.signInTerminal} />,
   onDropFiles: hasDraft(props) ? props.onDropFiles : undefined,
 });
-
-const bandClaim = (
-  props: OpenSessionViewProps,
-  panels: SessionPanels,
-): React.JSX.Element => (
-  <SessionBandClaim
-    {...props.header}
-    workbench={sessionWorkbench(props, panels, barForWorkbench(props))}
-  />
-);
-
-const barForWorkbench = (
-  props: OpenSessionViewProps,
-): SessionBarProps | undefined => (props.preview ? undefined : props.bar);
 
 const sessionBar = (props: OpenSessionViewProps): React.ReactNode =>
   props.preview || !props.bar ? null : <SessionBar {...props.bar} />;

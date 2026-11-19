@@ -9,6 +9,7 @@ import type {
   VoiceStatus,
 } from '@repo/contracts';
 import { waitFor } from 'xstate';
+import { lookOf } from './call-look';
 import type { RunningCall, VoiceCallEvent } from './call-types';
 import type { VoiceCallActorRef } from './call.machine';
 import { Changes } from './changes';
@@ -133,18 +134,20 @@ export class VoiceCalls implements VoiceCallsPort {
     }
   }
 
-  private callOf({
-    callId,
-    sessionId,
-    limit,
-  }: RunningCall): NonNullable<VoiceStatus['call']> {
-    const status = this.actor.getSnapshot().matches({ running: 'connected' })
-      ? 'connected'
-      : 'connecting';
+  private callOf(call: RunningCall): NonNullable<VoiceStatus['call']> {
+    const { callId, sessionId, limit } = call;
 
-    return limit
-      ? { callId, sessionId, status, limit }
-      : { callId, sessionId, status };
+    const connected = this.actor
+      .getSnapshot()
+      .matches({ running: 'connected' });
+
+    return {
+      callId,
+      sessionId,
+      status: connected ? 'connected' : 'connecting',
+      ...lookOf(call),
+      ...(limit && { limit }),
+    };
   }
 
   private provider(): VoiceProvider | null {
