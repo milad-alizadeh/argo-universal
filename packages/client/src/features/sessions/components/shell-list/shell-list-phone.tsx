@@ -1,6 +1,6 @@
 import { isStockIconName } from '@repo/contracts/kit-symbols';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
-import { List, phonesGrouped } from '@repo/kit/primitives/lists/list';
+import { List } from '@repo/kit/primitives/lists/list';
 import type { ComponentProps, JSX } from 'react';
 import { workListSections } from '../work-list-sections';
 import {
@@ -46,8 +46,7 @@ const mark = (shell: ShellEntry): Mark =>
 type PhoneProps = ShellListProps & { now: number };
 
 const listProps = {
-  appearance: 'cards',
-  onPhones: phonesGrouped,
+  appearance: 'grouped',
   fit: false,
   accessibilityLabel: 'Background Tasks',
 } as const;
@@ -58,6 +57,7 @@ const row = (shell: ShellEntry, props: PhoneProps): JSX.Element => (
     title={shellTitle(shell)}
     subtitle={`${shellSupporting(shell)} · ${shellElapsed(shell, props.now)}`}
     subtitleTone={shellOutcome(shell).tone === 'danger' ? 'danger' : 'muted'}
+    roomy
     leadingMark={mark(shell)}
     disabled={!props.onSelect}
     onPress={() => props.onSelect?.(shell)}

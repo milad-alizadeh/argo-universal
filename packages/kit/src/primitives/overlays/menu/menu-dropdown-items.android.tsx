@@ -4,6 +4,7 @@ import {
   DropdownMenuItem,
   HorizontalDivider,
   Icon,
+  Row,
   Text,
 } from '@expo/ui/jetpack-compose';
 import { padding } from '@expo/ui/jetpack-compose/modifiers';
@@ -115,10 +116,23 @@ function MenuItem({ item, onChoose }: MenuItemProps): React.JSX.Element {
     >
       <ItemLeadingIcon {...item} onPress={() => onChoose(item)} />
       <DropdownMenuItem.Text>
-        <Text>{nativeTitle(item)}</Text>
+        <ActionTitle item={item} />
       </DropdownMenuItem.Text>
       <ItemCheck checked={item.checked} />
     </DropdownMenuItem>
+  );
+}
+
+function ActionTitle({ item }: Pick<MenuItemProps, 'item'>): React.JSX.Element {
+  const muted = useMaterialPalette().roles.onSurfaceVariant;
+
+  if (!item.count) return <Text>{nativeTitle(item)}</Text>;
+
+  return (
+    <Row verticalAlignment="center" horizontalArrangement={{ spacedBy: 6 }}>
+      <Text>{item.title}</Text>
+      <Text color={muted}>{item.count}</Text>
+    </Row>
   );
 }
 

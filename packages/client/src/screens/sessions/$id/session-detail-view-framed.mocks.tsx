@@ -12,8 +12,10 @@ export function FramedSessionPreview(
 ): React.JSX.Element {
   return (
     <HostedScaffoldMock>
-      <SessionPageHeader {...props} />
-      <SessionDetailView {...props} />
+      <SessionDetailView
+        {...props}
+        drawHeader={(page) => <SessionPageHeader {...page} />}
+      />
     </HostedScaffoldMock>
   );
 }

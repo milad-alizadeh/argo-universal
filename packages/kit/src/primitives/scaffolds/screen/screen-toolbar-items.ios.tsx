@@ -15,7 +15,7 @@ import {
   type DeclaredEntry,
   type DeclaredSubmenu,
 } from '#primitives/actions/action';
-import { countedTitle } from '#primitives/overlays/menu';
+import { countedTitle, menuActionTitle } from '#primitives/overlays/menu';
 
 type ToolbarButton = ComponentProps<typeof Stack.Toolbar.Button>;
 
@@ -172,11 +172,8 @@ function menuAction(action: DeclaredAction): ReactElement {
     disabled: action.disabled,
     destructive: action.tone === 'danger',
     isOn: action.selected,
+    children: menuActionTitle(action),
   };
 
-  return (
-    <Stack.Toolbar.MenuAction key={action.id} {...props}>
-      {action.label}
-    </Stack.Toolbar.MenuAction>
-  );
+  return <Stack.Toolbar.MenuAction key={action.id} {...props} />;
 }

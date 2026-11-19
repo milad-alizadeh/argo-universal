@@ -9,6 +9,14 @@ import { flattenedChildren } from '#kit/flattened-children';
 import { cn } from '#kit/utils';
 import { Pill } from '#primitives/status/pill';
 import { fitCount, naturalWidth } from './fitted-row-fit';
+import {
+  countKey,
+  type Item,
+  type Measure,
+  Measurements,
+  useWidths,
+} from './fitted-row-measurements';
+import { useOverflowWatch } from './overflow-watch';
 
 interface FittedRowProps {
   children: ReactNode;
@@ -16,11 +24,6 @@ interface FittedRowProps {
   gap: number;
   className?: string;
   testID?: string;
-}
-
-interface Item {
-  key: string;
-  node: ReactNode;
 }
 
 const itemsOf = (children: ReactNode): Item[] =>
@@ -32,16 +35,38 @@ const itemsOf = (children: ReactNode): Item[] =>
 
 /*
  * One line of items, such as a row's label Pills, that never cuts one: as many as fit whole, then a "+N" Pill for the
- * rest. Every item and every possible count is drawn unseen first, so the line knows their widths, through font
- * scaling and live updates, before it fits. Its own width is the width of every item shown, which it gives up as the
- * room around it narrows, so what it shows never decides the room it has. One item is drawn as it is.
+ * rest. Its own width is the width of every item shown, which it gives up as the room around it narrows, so what it
+ * shows never decides the room it has. One item is drawn as it is.
+ *
+ * Most lines fit whole, and a list draws one per row as it scrolls, so a line first draws its items once and measures
+ * only its room and their width together. Only a line they overflow draws every item and every possible count
+ * unseen, so it knows their widths, through font scaling and live updates, before it fits.
  */
 export function FittedRow(props: FittedRowProps): ReactNode {
   const items = itemsOf(props.children);
 
   if (items.length < 2) return <Line {...props}>{props.children}</Line>;
 
-  return <FittingLine {...props} items={items} />;
+  return <FittedItems {...props} items={items} />;
+}
+
+// Every item, once, until they overflow the line; from then on the line fits them.
+function FittedItems(props: FittingProps): ReactElement {
+  const { overflowed, onRoom, onItems } = useOverflowWatch();
+
+  if (overflowed) return <FittingLine {...props} />;
+
+  return (
+    <Line {...props} onLayout={onRoom}>
+      <View
+        className="shrink-0 flex-row items-center"
+        style={{ gap: props.gap }}
+        onLayout={onItems}
+      >
+        <ShownItems items={props.items} />
+      </View>
+    </Line>
+  );
 }
 
 type LineProps = Omit<FittedRowProps, 'children'> & {
@@ -122,66 +147,4 @@ function ShownItems({ items }: { items: Item[] }): ReactNode {
       {item.node}
     </View>
   ));
-}
-
-const countKey = (hidden: number): string => `+${hidden}`;
-
-type Measure = (key: string, width: number) => void;
-
-interface Widths {
-  widths: Record<string, number>;
-  measure: Measure;
-}
-
-function useWidths(): Widths {
-  const [widths, setWidths] = useState<Record<string, number>>({});
-
-  const measure: Measure = (key, width) => {
-    setWidths((current) =>
-      current[key] === width ? current : { ...current, [key]: width },
-    );
-  };
-
-  return { widths, measure };
-}
-
-const hiddenProps = {
-  'aria-hidden': true,
-  accessibilityElementsHidden: true,
-  importantForAccessibility: 'no-hide-descendants',
-  pointerEvents: 'none',
-} as const;
-
-const countItems = (items: Item[]): Item[] =>
-  items.map((_, index) => {
-    const key = countKey(index + 1);
-
-    return { key, node: <Pill text={key} /> };
-  });
-
-// Every item and every possible "+N", drawn unseen at their own widths.
-function Measurements(props: {
-  items: Item[];
-  measure: Measure;
-}): ReactElement {
-  return (
-    <View {...hiddenProps} className="absolute top-0 left-0 flex-row opacity-0">
-      {[...props.items, ...countItems(props.items)].map((item) => (
-        <Measured key={item.key} item={item} measure={props.measure} />
-      ))}
-    </View>
-  );
-}
-
-type MeasuredProps = { item: Item; measure: Measure };
-
-function Measured({ item, measure }: MeasuredProps): ReactElement {
-  return (
-    <View
-      className="shrink-0"
-      onLayout={(event) => measure(item.key, event.nativeEvent.layout.width)}
-    >
-      {item.node}
-    </View>
-  );
 }

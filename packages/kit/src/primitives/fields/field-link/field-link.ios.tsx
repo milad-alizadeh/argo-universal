@@ -6,14 +6,15 @@ import {
   font,
   foregroundStyle,
   layoutPriority,
+  padding,
   shapes,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ModifierConfig } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import { RowTitle } from '#primitives/fields/field-row';
-import type { FieldGroupKitProps } from '../../kit-props';
 import { FieldLinkMark } from './field-link-mark';
+import type { FieldLinkRowProps } from './field-link-props';
 import { linkTone } from './field-link-tone';
 
 // Settings' disclosure: chevron.forward at footnote size, semibold, in the tertiary label colour.
@@ -23,17 +24,21 @@ const disclosureStyle = [
   layoutPriority(1),
 ];
 
+const pressArea = contentShape(shapes.rectangle());
+
+const rowModifiers = [pressArea];
+
+const roomyRowModifiers = [padding({ vertical: 6 }), pressArea];
+
 /*
  * A pressable row that opens a page: a plain Button, so its title keeps the label colour, ending in what the page
  * holds in the secondary colour and the stock disclosure chevron, as Settings' General > About rows do. The content
  * shape lets the whole row take the press. A row that performs an action opens no page, so it ends in no chevron.
  */
-export function FieldLink(
-  props: FieldGroupKitProps<'FieldGroup.Link'> & { wrapSubtitle?: boolean },
-): ReactElement {
+export function FieldLink(props: FieldLinkRowProps): ReactElement {
   return (
     <Button onPress={props.onPress} modifiers={pressing(props.disabled)}>
-      <HStack modifiers={[contentShape(shapes.rectangle())]}>
+      <HStack modifiers={props.roomy ? roomyRowModifiers : rowModifiers}>
         {props.leadingMark ? <FieldLinkMark mark={props.leadingMark} /> : null}
         <LinkTitle {...props} />
         <Spacer />
@@ -44,7 +49,7 @@ export function FieldLink(
   );
 }
 
-function LinkTitle(props: Parameters<typeof FieldLink>[0]): ReactElement {
+function LinkTitle(props: FieldLinkRowProps): ReactElement {
   return (
     <RowTitle
       {...props}
