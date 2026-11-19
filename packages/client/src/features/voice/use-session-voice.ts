@@ -13,7 +13,7 @@ import {
   type SessionVoiceActions,
   type SessionVoiceInput,
 } from './session-voice';
-import { useConnectionMutes } from './use-connection-mutes';
+import { type SessionMutes, useSessionMutes } from './use-session-mutes';
 import { useReleaseWhenOver, useVoiceStatus } from './use-voice-status';
 import type { VoiceConnection, VoiceLevels } from './voice-connection';
 import { useVoiceConnection } from './voice-connection-context';
@@ -52,6 +52,7 @@ function useStartCall(
 function useActions(
   sessionId: string,
   connection: VoiceConnection | null,
+  mutes: SessionMutes,
 ): SessionVoiceActions {
   const end = useMutation(useTRPC().voice.end.mutationOptions());
   const navigate = useNavigateFromShown();
@@ -59,8 +60,8 @@ function useActions(
   return {
     start: useStartCall(sessionId, connection),
     end: () => end.mutate({ sessionId }),
-    setMicrophoneMuted: (muted) => connection?.setMicrophoneMuted(muted),
-    setSpeakerMuted: (muted) => connection?.setSpeakerMuted(muted),
+    setMicrophoneMuted: mutes.setMicrophoneMuted,
+    setSpeakerMuted: mutes.setSpeakerMuted,
     open: (target) => navigate(sessionHref(target)),
   };
 }
@@ -94,19 +95,32 @@ function useTitleOf(
   return (id) => (id === callSession ? title : undefined);
 }
 
+// What changes while the call runs: the timer's clock and the orb's levels.
+function useLive(
+  status: VoiceStatus,
+  sessionId: string,
+  connection: VoiceConnection | null,
+): Pick<SessionVoiceInput, 'now' | 'levels'> {
+  return {
+    now: useClock(callSessionOf(status) === sessionId),
+    levels: useLevels(connection),
+  };
+}
+
 function useInput(
   sessionId: string,
   connection: VoiceConnection | null,
   status: VoiceStatus,
 ): SessionVoiceInput {
+  const mutes = useSessionMutes(connection);
+
   return {
     status,
     sessionId,
-    now: useClock(callSessionOf(status) === sessionId),
-    mutes: useConnectionMutes(connection),
-    levels: useLevels(connection),
+    ...useLive(status, sessionId, connection),
+    mutes: mutes.mutes,
     titleOf: useTitleOf(status, sessionId),
-    actions: useActions(sessionId, connection),
+    actions: useActions(sessionId, connection, mutes),
   };
 }
 

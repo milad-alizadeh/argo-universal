@@ -32,7 +32,7 @@ describe('a Voice call that ends by failure', () => {
     await expect
       .poll(() => work.host.caller.voice.status())
       .toMatchObject({ ended: { reason: 'failed' } });
-    // Two more failure reports, arriving together after the call ended, cannot add a second Notice.
+    // Failure reports after the call ended add nothing; the machine-level test covers the reports that race while it runs.
     work.provider.call.emit({ type: 'status', status: 'error' });
     work.provider.call.close('error');
     await expect.poll(() => notices(work)).toHaveLength(1);

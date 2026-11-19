@@ -2,7 +2,7 @@ import { Button } from '@repo/kit/primitives/actions/button';
 import type * as React from 'react';
 import { useState } from 'react';
 import { expect, fn, userEvent, waitFor } from 'storybook/test';
-import { useConnectionMutes } from '#features/voice';
+import { useSessionMutes } from '#features/voice';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
@@ -110,10 +110,9 @@ const freshCall = (): void => {
   call.hungUp = fn();
 };
 
-// A page of the call's Session: the mutes it draws are the connection's, and it writes none on mount.
+// A page of the call's Session, mounting the same hook the real page does: the mutes it draws are the connection's, and it writes none on mount.
 function CallPage(): React.JSX.Element {
-  const { connection } = call;
-  const mutes = useConnectionMutes(connection);
+  const held = useSessionMutes(call.connection);
 
   return (
     <Composer
@@ -127,10 +126,9 @@ function CallPage(): React.JSX.Element {
           ...voice('connected'),
           onEnd: call.hungUp,
           mutes: {
-            ...mutes,
-            onMicrophone: () =>
-              connection.setMicrophoneMuted(!mutes.microphone),
-            onSpeaker: () => connection.setSpeakerMuted(!mutes.speaker),
+            ...held.mutes,
+            onMicrophone: () => held.setMicrophoneMuted(!held.mutes.microphone),
+            onSpeaker: () => held.setSpeakerMuted(!held.mutes.speaker),
           },
         },
       })}

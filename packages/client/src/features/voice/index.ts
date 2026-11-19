@@ -4,7 +4,7 @@ export { voicePlaceholder } from './session-voice';
 
 export { voiceLabel } from './components/voice-stage/voice-label';
 
-export { useConnectionMutes } from './use-connection-mutes';
+export { useSessionMutes } from './use-session-mutes';
 
 export { DesktopVoiceProvider } from './desktop-voice-provider';
 
