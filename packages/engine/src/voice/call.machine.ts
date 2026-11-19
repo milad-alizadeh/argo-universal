@@ -1,4 +1,8 @@
-import type { VoiceCallEnd, VoiceLimit } from '@repo/contracts';
+import type {
+  VoiceCallEnd,
+  VoiceConnectionStatus,
+  VoiceLimit,
+} from '@repo/contracts';
 import { assertEvent, assign, sendTo, setup, type ActorRefFrom } from 'xstate';
 import { agentRelay, type RelayInput } from './agent-relay-actor';
 import {
@@ -24,8 +28,14 @@ export const voiceCallSystemId = 'voice';
 
 type EndParameters = { reason: VoiceCallEnd };
 
-const isConnectedStatus = (event: VoiceProviderEvent): boolean =>
-  event.type === 'status' && event.status === 'connected';
+const reportsStatus =
+  (status: VoiceConnectionStatus) =>
+  (event: VoiceProviderEvent): boolean =>
+    event.type === 'status' && event.status === status;
+
+const isConnectedStatus = reportsStatus('connected');
+
+const isDisconnectedStatus = reportsStatus('disconnected');
 
 const isErrorStatus = (event: VoiceProviderEvent): boolean =>
   event.type === 'status' && event.status === 'error';
@@ -48,7 +58,6 @@ type CallStart = Pick<
 const newCall = (start: CallStart): RunningCall => ({
   ...start,
   answer: null,
-  providerConnection: 'connecting',
   startedAt: null,
   speaking: false,
   agentWorking: false,
@@ -69,18 +78,8 @@ type Report<Type extends VoiceProviderEvent['type']> = (
 
 type Reports = { [Type in VoiceProviderEvent['type']]?: Report<Type> };
 
-// The timer starts the first time the call connects and keeps that time through any reconnecting.
-const startedAfter = (call: RunningCall, status: string): string | null =>
-  status === 'connected'
-    ? (call.startedAt ?? new Date().toISOString())
-    : call.startedAt;
-
 // What each provider report changes about the running call; reports not listed change nothing.
 const reports: Reports = {
-  status: (event, call) => ({
-    providerConnection: event.status,
-    startedAt: startedAfter(call, event.status),
-  }),
   speaking: (event) => ({ speaking: event.speaking }),
   trouble: (event) => ({ microphoneBlocked: event.trouble !== null }),
 };
@@ -201,6 +200,17 @@ const voiceCallSetup = setup({
     foldProvider: assign(({ context, event }): Partial<VoiceCallContext> => ({
       call: reported(runningCall(context), providerEventOf(event)),
     })),
+    // The timer starts the first time the call connects and keeps that time through any reconnecting.
+    markStarted: assign(({ context }): Partial<VoiceCallContext> => {
+      const call = runningCall(context);
+
+      return {
+        call: {
+          ...call,
+          startedAt: call.startedAt ?? new Date().toISOString(),
+        },
+      };
+    }),
     foldTurn: assign(({ context, event }): Partial<VoiceCallContext> => {
       assertEvent(event, 'session.turn');
 
@@ -218,6 +228,8 @@ const voiceCallSetup = setup({
       isTranscript(providerEventOf(event)),
     isConnected: ({ event }): boolean =>
       isConnectedStatus(providerEventOf(event)),
+    isDisconnected: ({ event }): boolean =>
+      isDisconnectedStatus(providerEventOf(event)),
     providerErrored: ({ event }): boolean => {
       const reported = providerEventOf(event);
 
@@ -399,22 +411,22 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
         },
         connecting: {
           on: {
-            'provider.event': {
-              guard: 'isConnected',
-              target: 'connected',
-              actions: 'foldProvider',
-            },
+            'provider.event': { guard: 'isConnected', target: 'connected' },
           },
         },
         // Speech keeps the call alive; a call that hears none for the idle period ends, unless a Turn it started is running.
         connected: {
+          entry: 'markStarted',
           on: {
-            'provider.event': {
-              guard: 'hearsTranscript',
-              actions: ['storeTranscript', 'trackPartials'],
-              target: 'connected',
-              reenter: true,
-            },
+            'provider.event': [
+              {
+                guard: 'hearsTranscript',
+                actions: ['storeTranscript', 'trackPartials'],
+                target: 'connected',
+                reenter: true,
+              },
+              { guard: 'isDisconnected', target: 'reconnecting' },
+            ],
             'call.turns': turnsChanged,
           },
           after: {
@@ -423,6 +435,12 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
               target: idleTarget,
               actions: endsWith('idle'),
             },
+          },
+        },
+        // The provider lost its link and is joining again; the idle period waits, and starts over once the call is back.
+        reconnecting: {
+          on: {
+            'provider.event': { guard: 'isConnected', target: 'connected' },
           },
         },
       },

@@ -1,9 +1,4 @@
-import type {
-  VoiceCallEnd,
-  VoiceConnectionStatus,
-  VoiceLimit,
-  VoicePartial,
-} from '@repo/contracts';
+import type { VoiceCallEnd, VoiceLimit, VoicePartial } from '@repo/contracts';
 import type {
   VoiceDelivery,
   VoiceProvider,
@@ -72,8 +67,6 @@ export interface RunningCall {
   voice?: string;
   connection?: AbortSignal;
   answer: string | null;
-  // The provider's connection as last reported.
-  providerConnection: VoiceConnectionStatus;
   // When the call first connected.
   startedAt: string | null;
   speaking: boolean;

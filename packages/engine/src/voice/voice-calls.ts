@@ -9,7 +9,7 @@ import type {
   VoiceStatus,
 } from '@repo/contracts';
 import { waitFor } from 'xstate';
-import { lookOf } from './call-look';
+import { voiceCallOf } from './call-look';
 import type { RunningCall, VoiceCallEvent } from './call-types';
 import type { VoiceCallActorRef } from './call.machine';
 import { Changes } from './changes';
@@ -58,10 +58,11 @@ export class VoiceCalls implements VoiceCallsPort {
   }
 
   public async status(): Promise<VoiceStatus> {
-    const { call, ended, partials } = this.actor.getSnapshot().context;
+    const snapshot = this.actor.getSnapshot();
+    const { ended, partials } = snapshot.context;
 
     return {
-      call: call && this.callOf(call),
+      call: voiceCallOf(snapshot),
       ended,
       partials,
       availability: await this.availability(),
@@ -132,22 +133,6 @@ export class VoiceCalls implements VoiceCallsPort {
     } finally {
       changes.stop();
     }
-  }
-
-  private callOf(call: RunningCall): NonNullable<VoiceStatus['call']> {
-    const { callId, sessionId, limit } = call;
-
-    const connected = this.actor
-      .getSnapshot()
-      .matches({ running: 'connected' });
-
-    return {
-      callId,
-      sessionId,
-      status: connected ? 'connected' : 'connecting',
-      ...lookOf(call),
-      ...(limit && { limit }),
-    };
   }
 
   private provider(): VoiceProvider | null {

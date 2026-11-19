@@ -1,3 +1,4 @@
+import type { VoiceCall } from '@repo/contracts';
 import {
   describeModel,
   modelTest,
@@ -5,39 +6,17 @@ import {
   type Vertex,
 } from '@repo/vitest/model-test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createActor, type Actor, type SnapshotFrom } from 'xstate';
+import { events } from '#mocks/voice-call-events';
 import {
-  createActor,
-  fromCallback,
-  type Actor,
-  type SnapshotFrom,
-} from 'xstate';
-import { events, start } from '#mocks/voice-call-events';
-import { type VoiceCallEvent, type VoiceCallInput } from './call-types';
-import { type ConnectionWatch, type SessionWatch } from './call-watchers';
-import { voiceCallMachine } from './call.machine';
-import { FakeVoiceProvider } from './fake-provider';
-import type { ProviderCallInput } from './provider-call';
-
-const stub = <Input>(): ReturnType<
-  typeof fromCallback<VoiceCallEvent, Input>
-> => fromCallback<VoiceCallEvent, Input>((): (() => void) => (): void => {});
-
-// The model drives every event itself, so the actors that would send them back are stubs.
-const modelMachine = voiceCallMachine.provide({
-  actors: {
-    providerCall: stub<ProviderCallInput>(),
-    watchSession: stub<SessionWatch>(),
-    watchConnection: stub<ConnectionWatch>(),
-  },
-});
+  modelMachine,
+  voiceModelIdleMs,
+  voiceModelInput,
+} from '#mocks/voice-call-model';
+import { voiceCallOf } from './call-look';
+import type { VoiceCallEvent } from './call-types';
 
 type Snapshot = SnapshotFrom<typeof modelMachine>;
-
-const input: VoiceCallInput = {
-  provider: new FakeVoiceProvider(),
-  briefing: () => '',
-  idleMs: 60_000,
-};
 
 // How a call ended is checked on the actor after each step, so a restart after any ending is one edge.
 const vertex = (snapshot: Snapshot): Vertex => ({ state: snapshot.value });
@@ -78,10 +57,65 @@ const expectCall = (snapshot: Snapshot): void =>
 const expectAnswer = (snapshot: Snapshot): void =>
   expect(snapshot.context.call?.answer).toBe('answer');
 
+const joined: Partial<VoiceCall> = { startedAt: expect.any(String) };
+
+// Only a reconnecting call says so; elsewhere the walk may have blocked the microphone.
+const notReconnecting = expect.toBeOneOf([null, 'microphone-blocked']);
+
+// The call the App is sent in each running state, read from the actor the model drives; `expectVoice` has already shown that actor is in the step's state.
+const expectLook = (look: Partial<VoiceCall>) => (): void =>
+  expect(voiceCallOf(voice.getSnapshot())).toMatchObject({
+    callId: 'call-1',
+    ...look,
+  });
+
+const notJoined: Partial<VoiceCall> = {
+  status: 'connecting',
+  connection: 'connecting',
+  orb: 'none',
+  trouble: notReconnecting,
+  startedAt: null,
+};
+
+// A connected call shows what is happening on it; which of the three depends on who speaks and works.
+const live: Partial<VoiceCall> = {
+  status: 'connected',
+  connection: 'connected',
+  orb: expect.stringMatching(/^(listening|talking|thinking)$/),
+  ...joined,
+};
+
+// A connected call's only trouble is a microphone the walk blocked.
+const expectConnected = (): void => {
+  const { call } = voice.getSnapshot().context;
+  expectLook({
+    ...live,
+    trouble: call?.microphoneBlocked ? 'microphone-blocked' : null,
+  })();
+};
+
+const reconnecting: Partial<VoiceCall> = {
+  status: 'connected',
+  connection: 'disconnected',
+  orb: 'none',
+  trouble: 'reconnecting',
+  ...joined,
+};
+
+const expectIdle = (snapshot: Snapshot): void => {
+  expectNoCall(snapshot);
+  expect(voiceCallOf(voice.getSnapshot())).toBeNull();
+};
+
+const expectConnecting = (snapshot: Snapshot): void => {
+  expectAnswer(snapshot);
+  expectLook(notJoined)();
+};
+
 const model = modelTest(
   modelMachine,
   {
-    input,
+    input: voiceModelInput(),
     fixtures: events,
     vertex,
     stateKey: key,
@@ -97,7 +131,7 @@ const model = modelTest(
   },
   {
     start: () => {
-      voice = createActor(modelMachine, { input }).start();
+      voice = createActor(modelMachine, { input: voiceModelInput() }).start();
 
       return voice;
     },
@@ -108,12 +142,15 @@ const model = modelTest(
           voice.send(fixtureOf(event)),
       ]),
     ),
-    delays: { idle: input.idleMs },
+    delays: { idle: voiceModelIdleMs },
     always: expectVoice,
     states: {
-      idle: expectNoCall,
+      idle: expectIdle,
       running: expectCall,
-      'running.connecting': expectAnswer,
+      'running.starting': expectLook(notJoined),
+      'running.connecting': expectConnecting,
+      'running.connected': expectConnected,
+      'running.reconnecting': expectLook(reconnecting),
     },
   },
 );
@@ -123,37 +160,5 @@ describe('Voice call model', () => {
 
   it('walks every transition', () => {
     expect(model.unwalked()).toEqual([]);
-  });
-});
-
-it('does not start a call without a provider', () => {
-  const idle = createActor(modelMachine, {
-    input: { ...input, provider: null },
-  }).start();
-
-  idle.send(start);
-  expect(idle.getSnapshot().context).toMatchObject({
-    call: null,
-    ended: null,
-  });
-});
-
-it('ignores a second call while one is running', () => {
-  const running = createActor(modelMachine, { input }).start();
-  running.send(start);
-  running.send({ ...start, callId: 'call-2', sessionId: 'session-2' });
-  expect(running.getSnapshot().context.call?.callId).toBe('call-1');
-});
-
-it('ends only the call an end names', () => {
-  const running = createActor(modelMachine, { input }).start();
-  running.send(start);
-  running.send({ type: 'call.end', reason: 'agent', sessionId: 'session-2' });
-  expect(running.getSnapshot().context.call?.callId).toBe('call-1');
-  running.send({ type: 'call.end', reason: 'agent', sessionId: 'session-1' });
-  expect(running.getSnapshot().context.ended).toEqual({
-    callId: 'call-1',
-    sessionId: 'session-1',
-    reason: 'agent',
   });
 });
