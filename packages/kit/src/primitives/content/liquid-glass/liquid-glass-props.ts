@@ -6,13 +6,6 @@ export interface LiquidGlassProps {
   corners: 'container' | 'sheet' | 'pill';
   // Overrides the shared fallback on platforms without system Liquid Glass.
   fallbackClassName?: string;
-  /*
-   * False leaves the web's shared fallback unfrosted, for glass with only a flat surface behind it, where a
-   * backdrop blur shows nothing. Chromium also redraws a blurred surface wrongly when a redrawn part of the
-   * window cuts through it: it blurs pixels it has already drawn into the fresh ones, which shows on a dark
-   * surface as a soft band ending in a hard line.
-   */
-  frosted?: boolean;
   // Layout only (width, alignment, stacking), kept by both drawings.
   className?: string;
   // False draws the fallback surface even where glass is available.

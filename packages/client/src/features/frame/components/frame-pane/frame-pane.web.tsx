@@ -7,7 +7,7 @@ import {
   paneViewportClass,
   type PaneMaterialProps,
 } from './glass-pane.web';
-import { leftEdgeClip, useEdgeClip } from './pane-edge-clip.web';
+import { useEdgeClip } from './pane-edge-clip.web';
 import { type PaneGeometry, usePaneGeometry } from './pane-geometry';
 import type { PaneRefs } from './pane-motion.web';
 import { ReflowingText, SlidingText } from './pane-text.web';
@@ -36,12 +36,15 @@ function ReflowingContent({
   );
 }
 
-// The content takes its final width at once, or keeps its last one while it hides, and only slides and fades (FLIP), so it lays out once per change.
+/*
+ * The content takes its final width at once, or keeps its last one while it hides, and only slides and fades (FLIP),
+ * so it lays out once per change. The Web Animations that move it are composited while they run, so no viewport keeps
+ * a standing `will-change`: see BareFramePane.
+ */
 function reflowingStyle({ contentWidth, hidden }: PaneGeometry): CSSProperties {
   return {
     width: contentWidth,
     opacity: hidden ? 0 : 1,
-    willChange: 'transform, opacity',
   };
 }
 
@@ -62,10 +65,7 @@ function ReflowingViewport(input: PaneViewportProps): React.JSX.Element {
 }
 
 function slidingStyle({ width, contentWidth }: PaneGeometry): CSSProperties {
-  return {
-    ...slideStyle(width, contentWidth),
-    willChange: 'transform, opacity',
-  };
+  return slideStyle(width, contentWidth);
 }
 
 function SlidingContent({
@@ -87,7 +87,7 @@ function SlidingViewport(input: PaneViewportProps): React.JSX.Element {
       ref={viewportRef}
       data-testid={`${props.testID}-viewport`}
       className={paneViewportClass(props.surface, true)}
-      style={{ width: props.geometry.frameWidth, willChange: 'transform' }}
+      style={{ width: props.geometry.frameWidth }}
     >
       <PaneMaterial {...props}>
         <SlidingContent {...props} />
@@ -131,13 +131,18 @@ function PaneViewport(
   );
 }
 
+/*
+ * The edge clip is drawn only while the pane's edge moves. A resting clip, with a standing `will-change` on the
+ * viewport inside it, keeps Chromium from drawing the Feed into the backdrop of the glass floating over it, so the
+ * Changes pill and Jump to latest frosted nothing and the text behind showed through them sharp.
+ */
 function BareFramePane(props: FramePaneProps): React.JSX.Element {
   return (
     <div
       ref={useEdgeClip(props)}
       data-testid={props.testID}
       className="relative min-w-0 shrink-0"
-      style={{ width: props.width, clipPath: leftEdgeClip(0) }}
+      style={{ width: props.width }}
       aria-hidden={props.hidden}
       inert={props.hidden}
     >

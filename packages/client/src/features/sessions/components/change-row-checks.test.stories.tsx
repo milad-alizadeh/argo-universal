@@ -79,16 +79,18 @@ export const RateLimited: Story = {
   },
 };
 
-// Two checks of one name are two rows, each with its own state.
+// A click opens the checks, where two checks of one name are two rows, each with its own state.
 export const DuplicateNames: Story = {
   args: duplicateChecksChangeRow,
   beforeEach: async () => {
     await settleLayout(1280);
   },
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      canvas.getByRole('button', { name: /CI Checks 1\/2/ }),
-    );
+    const checks = canvas.getByRole('button', { name: /CI Checks 1\/2/ });
+    // The list opens on a click, not on a pointer passing over.
+    await userEvent.hover(checks);
+    await expect(screen.queryByRole('dialog')).toBeNull();
+    await userEvent.click(checks);
     const popover = await screen.findByRole('dialog', { name: 'CI Checks' });
     await settleOverlays(popover);
 

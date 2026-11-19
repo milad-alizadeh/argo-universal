@@ -230,9 +230,9 @@ if (
     'Recorded catalog needs a passed check listed before a running one',
   );
 
-export const ChecksPopoverOpensOnHover: Story = {
+export const ChecksPopoverOpensOnClick: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.hover(
+    await userEvent.click(
       await canvas.findByRole('button', { name: /CI Checks 3\/5/ }),
     );
 
