@@ -1,5 +1,5 @@
 import {
-  readVoiceMessage,
+  readVoiceSections,
   withVoiceInstruction,
   type VoiceMessage,
 } from '../feed';
@@ -128,11 +128,15 @@ export class AgentRelay {
       this.reports.speak({ kind: 'tell', text: piece, delivery });
   }
 
+  // Each section goes as its mark says: a result is spoken, progress and analysis are background.
   private agentSaid(text: string): void {
-    const message = readVoiceMessage(text);
-
-    this.tell(message.body, message.kind === 'result' ? 'speak' : 'background');
-    this.remember(message);
+    for (const section of readVoiceSections(text)) {
+      this.tell(
+        section.body,
+        section.kind === 'result' ? 'speak' : 'background',
+      );
+      this.remember(section);
+    }
   }
 
   private remember({ kind, body }: VoiceMessage): void {
