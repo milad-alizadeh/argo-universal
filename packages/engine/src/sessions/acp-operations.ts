@@ -112,11 +112,15 @@ export const promptAcp = async (
 
   const lease = context.acpLease;
 
-  return context.acpResponseReaders['session/prompt'].parse(
+  const response = context.acpResponseReaders['session/prompt'].parse(
     await lease.agent
       .request<unknown>('session/prompt', context.acpPrompt)
       .catch(lease.rejectRequest),
   );
+
+  lease.refreshUsage('turn');
+
+  return response;
 };
 
 export const openAcp = async (

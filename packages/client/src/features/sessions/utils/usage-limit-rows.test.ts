@@ -78,7 +78,6 @@ it.each([
     'an empty budget',
     { measure: { kind: 'budget', used: 0, entitled: 0, unit: 'credits' } },
   ],
-  ['no reset', { resetsAt: undefined }],
   ['a reset that passed', { resetsAt: minutesFromNow(-1) }],
 ] satisfies [string, Partial<UsageLimit>][])(
   'leaves out %s, which waits for a design',
@@ -86,6 +85,12 @@ it.each([
     expect(usageLimitRows([limit(overrides)], now)).toEqual([]);
   },
 );
+
+it('shows the reported percentage without a reset time', () => {
+  expect(usageLimitRows([limit({ resetsAt: undefined })], now)).toEqual([
+    { label: fiveHourLabel, usedPercent: 54 },
+  ]);
+});
 
 it('puts the shortest window first and a model limit after the plan limit', () => {
   const rows = usageLimitRows(

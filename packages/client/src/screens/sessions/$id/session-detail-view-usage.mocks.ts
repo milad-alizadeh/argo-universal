@@ -1,6 +1,6 @@
 import type { UsageLimit } from '@repo/contracts';
 import { composerStatus } from '#features/sessions';
-import { idleSession } from './session-detail-view.mocks';
+import { emptySession, idleSession } from './session-detail-view.mocks';
 
 const now = new Date('2026-11-18T10:00:00.000Z');
 
@@ -29,6 +29,12 @@ const reportedUsageLimits: UsageLimit[] = [
     used: 0.31,
   }),
   reading({
+    id: 'monthly_extra_usage',
+    label: 'Monthly extra usage',
+    window: 'month',
+    used: 0.12,
+  }),
+  reading({
     id: 'five_hour',
     label: '5-hour limit',
     window: 'five_hour',
@@ -42,6 +48,7 @@ export const usageLimitsSession = {
   ...idleSession,
   composer: {
     ...idleSession.composer,
+    configuration: emptySession.composer.configuration,
     status: composerStatus(
       null,
       { used: 34_000, size: 200_000 },

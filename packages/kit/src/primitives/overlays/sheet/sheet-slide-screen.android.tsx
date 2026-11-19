@@ -1,5 +1,5 @@
-import type { ReactElement } from 'react';
-import { View, type ViewStyle } from 'react-native';
+import { useState, type ReactElement } from 'react';
+import { View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { cn } from '#kit/utils';
 import { SheetBody } from './sheet-body';
@@ -30,13 +30,34 @@ const screenStyle = (width: number): ViewStyle => ({ width, flexShrink: 0 });
 
 export function SlideScreen(props: ScreenProps): ReactElement {
   const slide = useScreenSlide(props.motion, props.index, props.width);
+  const viewport = usePageViewport(props.height);
 
   return (
     <Animated.View style={[screenStyle(props.width), slide]}>
-      <ScreenHeader {...props} />
-      <ScreenContent {...props} />
+      <View onLayout={viewport.onHeaderLayout}>
+        <ScreenHeader {...props} />
+      </View>
+      <ScreenContent {...props} viewportHeight={viewport.height} />
     </Animated.View>
   );
+}
+
+interface PageViewport {
+  height?: number;
+  onHeaderLayout: (event: LayoutChangeEvent) => void;
+}
+
+function usePageViewport(pageHeight: number | undefined): PageViewport {
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  return {
+    height:
+      pageHeight === undefined
+        ? undefined
+        : Math.max(0, pageHeight - headerHeight),
+    onHeaderLayout: (event: LayoutChangeEvent) =>
+      setHeaderHeight(event.nativeEvent.layout.height),
+  };
 }
 
 // A root page with no title of its own draws no header; a pushed page always does, for its way back.
@@ -63,7 +84,9 @@ function ScreenHeader(props: ScreenProps): ReactElement | null {
  * A pushed page draws the rows it is about to hold until the slide has stopped, so the motion carries a page
  * of the right shape and the list's own layout lands on a row that is standing still.
  */
-function ScreenContent(props: ScreenProps): ReactElement {
+function ScreenContent(
+  props: ScreenProps & { viewportHeight?: number },
+): ReactElement {
   if (sliding(props)) return <ScreenPlaceholder {...props} />;
 
   return (

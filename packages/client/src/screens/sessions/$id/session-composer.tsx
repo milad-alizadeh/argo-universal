@@ -19,7 +19,7 @@ function composerCallout({
 type SessionComposerProps = Pick<
   OpenSessionViewProps,
   'elicitation' | 'composer' | 'callout' | 'stoppedTurn'
->;
+> & { phonePill?: React.ReactNode };
 
 export function SessionComposer(
   props: SessionComposerProps,
@@ -31,6 +31,7 @@ export function SessionComposer(
     <View className={cn('w-full items-center', filled && filledClass)}>
       <Composer
         {...composerUnderQuestion(props.composer, props.elicitation)}
+        phonePill={props.phonePill}
         callout={composerCallout(props)}
       />
     </View>

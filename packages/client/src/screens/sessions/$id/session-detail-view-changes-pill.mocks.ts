@@ -12,7 +12,7 @@ const manyChanges = {
 const withSummary = (
   session: typeof idleSession,
   summary?: ChangesSummary,
-): SessionDetailViewProps => ({
+): Extract<SessionDetailViewProps, { state: 'open' }> => ({
   state: 'open',
   ...session,
   header: {

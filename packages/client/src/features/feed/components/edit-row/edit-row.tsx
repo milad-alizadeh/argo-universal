@@ -55,15 +55,13 @@ function EditActivity({
 
 export function EditRow({ row }: EditRowProps): React.JSX.Element {
   const titleInGroup = use(GroupLiveId) === row.id;
+  const output = row.content.filter((block) => block.type !== 'diff');
 
   return (
     <View className="gap-2">
       <EditActivity row={row} titleInGroup={titleInGroup} />
       <FileEdits row={row} />
-      <ToolOutput
-        content={row.content.filter((block) => block.type !== 'diff')}
-        row={row}
-      />
+      {output.length > 0 && <ToolOutput content={output} row={row} />}
     </View>
   );
 }

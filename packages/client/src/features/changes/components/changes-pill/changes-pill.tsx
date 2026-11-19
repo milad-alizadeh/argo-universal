@@ -1,21 +1,10 @@
 import type { ChangesSummary } from '@repo/contracts';
 import { Icon } from '@repo/kit/primitives/content/icon';
-import { LiquidGlass } from '@repo/kit/primitives/content/liquid-glass';
 import { Text } from '@repo/kit/primitives/content/text';
+import { PhonePill } from '@repo/kit/primitives/status/pill';
 import type * as React from 'react';
 import type { ReactElement } from 'react';
 import { Pressable } from 'react-native';
-
-// The floating material Jump to latest draws, as a pill that grows to its content.
-const pillSurface = {
-  corners: 'pill',
-  interactive: true,
-  inherit: true,
-  className: 'h-8',
-} as const;
-
-const pillClassName =
-  'h-8 flex-row items-center gap-2 rounded-full pr-3.5 pl-3 active:opacity-70';
 
 const count = (value: number): string => value.toLocaleString('en-US');
 
@@ -58,20 +47,17 @@ const pressableProps = ({
   hitSlop: 6,
   accessibilityLabel: pillLabel(summary),
   onPress,
-  className: pillClassName,
 });
 
 // The Composer's entry to the Changes: the Checkout's files and line totals, one press from the Inspector's Changes tab.
 export function ChangesPill(props: ChangesPillProps): ReactElement {
   return (
-    <LiquidGlass {...pillSurface}>
-      <Pressable {...pressableProps(props)}>
-        <Icon name="diff" tone="neutral" />
-        <Text role="control" tone="muted">
-          {filesLabel(props.summary.files)}
-        </Text>
-        <LineTotals summary={props.summary} />
-      </Pressable>
-    </LiquidGlass>
+    <PhonePill {...pressableProps(props)}>
+      <Icon name="diff" tone="neutral" />
+      <Text role="control" tone="muted">
+        {filesLabel(props.summary.files)}
+      </Text>
+      <LineTotals summary={props.summary} />
+    </PhonePill>
   );
 }

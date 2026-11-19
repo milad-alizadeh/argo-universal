@@ -2,6 +2,7 @@ import {
   type ModifierConfig,
   fillMaxHeight,
   fillMaxWidth,
+  onSizeChanged,
 } from '@expo/ui/jetpack-compose/modifiers';
 import type { SheetProps } from './sheet-props';
 
@@ -39,13 +40,23 @@ export function sheetSizing(
   return { fill: false };
 }
 
-// Compose fills the window only where the height is its to decide; a height measured here it wraps.
 export function sheetModifiers(sizing: SheetSizing): ModifierConfig[] {
-  if (sizing.fill && sizing.height === undefined)
-    return [fillMaxWidth(), fillMaxHeight()];
-
-  return [fillMaxWidth()];
+  return wrapsContents(sizing)
+    ? [fillMaxWidth()]
+    : [fillMaxWidth(), fillMaxHeight()];
 }
+
+/*
+ * A filled Sheet's Compose slot excludes the drag handle and system bars. Use its measured height
+ * for the React Native page so its scroller can reach the same bottom edge.
+ */
+export const viewportModifiers = (
+  onHeight: (height: number) => void,
+): ModifierConfig[] => [
+  fillMaxWidth(),
+  fillMaxHeight(),
+  onSizeChanged(({ height }) => onHeight(height)),
+];
 
 export const wrapsContents = (sizing: SheetSizing): boolean =>
   !sizing.fill || sizing.height !== undefined;

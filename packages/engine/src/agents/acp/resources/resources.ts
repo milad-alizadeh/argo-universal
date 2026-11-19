@@ -2,6 +2,7 @@ import type { DeferredAgentLaunch } from '../..';
 import { AuthChanges } from '../../auth/auth-changes';
 import type { ConnectionAuthentication } from '../../auth/authenticate';
 import { UsageLimits } from '../../usage-limits';
+import { AccountUsageRefresh } from '../../usage-limits/account-refresh';
 import { awaitAcpOpening } from '../connection/client';
 import { AcpConnections } from './resource-connections';
 import { entryAuthentication } from './resource-entry';
@@ -23,6 +24,7 @@ class EngineAcpResources implements AcpResources {
     this.connections = new AcpConnections(input, {
       authChanges: this.authChanges,
       usageLimits: this.usageLimits,
+      accountUsage: new AccountUsageRefresh(this.usageLimits),
     });
   }
   public async open(input: AcpOpenInput): Promise<AcpSessionLease> {
