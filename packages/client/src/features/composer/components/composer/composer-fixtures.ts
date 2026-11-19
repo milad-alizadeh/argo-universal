@@ -83,6 +83,7 @@ export const runningTurnComposer = {
   running: true,
 } satisfies ComposerFixture;
 
+// A Session that queues while its Turn runs, with a written draft: Stop gives way to Queue.
 export const queueReadyComposer = {
   ...runningTurnComposer,
   draft: readyComposer.draft,

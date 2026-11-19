@@ -99,9 +99,10 @@ function GlassControlSurface({
   );
 }
 
+// Glass draws its own edge, so a glass Pill keeps its border transparent.
 const appearanceClass = {
   plain: 'bg-hover wide:bg-transparent',
-  glass: 'border-border',
+  glass: '',
 } as const;
 
 function surfaceContentClass(props: PillProps & { pressed: boolean }): string {

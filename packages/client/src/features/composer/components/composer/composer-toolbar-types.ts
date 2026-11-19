@@ -29,7 +29,15 @@ export type ConfigurationActionsLayout = Pick<ComposerLayout, 'inactive'> & {
 };
 
 export type SendLayout = Pick<ComposerLayout, 'sendState' | 'send'> & {
-  props: Pick<ComposerProps, 'disabled' | 'onStop' | 'queueWhileRunning'>;
+  props: Pick<
+    ComposerProps,
+    | 'disabled'
+    | 'onStop'
+    | 'queueWhileRunning'
+    | 'configuration'
+    | 'queueEdit'
+    | 'draft'
+  >;
 };
 
 export type LeftControlsLayout = AttachLayout &
