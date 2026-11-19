@@ -1,7 +1,8 @@
 import { accessSync, constants, statSync } from 'node:fs';
 import path from 'node:path';
 
-function executable(file: string): boolean {
+// Whether a file exists here as a program this process may run.
+export function isExecutable(file: string): boolean {
   try {
     accessSync(file, constants.X_OK);
 
@@ -27,7 +28,7 @@ export function resolveExecutable(command: string): string {
     ),
   );
 
-  const found = candidates.find(executable);
+  const found = candidates.find(isExecutable);
 
   if (!found) throw new Error(`Executable not found in PATH: ${command}`);
 
