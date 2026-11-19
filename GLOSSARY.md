@@ -444,6 +444,10 @@ _Avoid_: Run, request, exchange
 A live spoken exchange between the person and a voice model, attached to one Session. What the person asks for reaches that Session's Agent as Prompts.
 _Avoid_: Conversation, conversation mode, voice mode, live
 
+**Read-out**:
+The voice saying an Agent's result aloud on a Voice call, from the hand-over until the person speaks again. The Agent's message is the record, so a Read-out is never a Feed row.
+_Avoid_: Readback, voice summary
+
 **Voice provider**:
 A service or local model that runs a Voice call's voice.
 _Avoid_: Conversation provider, realtime provider, voice backend

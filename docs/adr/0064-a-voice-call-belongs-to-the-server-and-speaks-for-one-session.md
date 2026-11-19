@@ -15,9 +15,9 @@ A person can talk to a Session instead of typing. A Voice call is attached to on
 - **A Voice call is attached to one Session.** It stays with that Session when the person looks at another one. One Voice call runs per App. The Session's Agent already has Argo's Operations, so it can start, prompt and watch other Sessions with no voice-specific work.
 - **Voice providers sit behind one interface.** A provider starts a call from an offer, reports what the person and the voice said, reports each request for work, accepts text to speak or to keep as background, and ends the call. The interface names no vendor; only the provider module does.
 - **A request for work is a Prompt sent by the Voice call.** The Voice call is a Prompt sender (ADR-0012). The Prompt goes through the Server's prompt queue (ADR-0054) like any other: it steers a running Turn when the Agent supports that, and otherwise waits its turn. Because Argo sent the Prompt, the Turn has a start, a user side and a stop reason like every other Turn.
-- **The Feed is the transcript of the person and the voice, plus the Agent's work.** What the person said and what the voice said are stored as Feed rows. The Agent's Turn is drawn as usual. The text passed between the voice and the Agent is stored and never drawn.
+- **The Feed is the transcript of the person and the voice, plus the Agent's work.** What the person said and what the voice said in its own words are stored as Feed rows; the voice's Read-out of an Agent's result is not (amended below). The Agent's Turn is drawn as usual. The text passed between the voice and the Agent is stored and never drawn.
 - **The Session is the Voice call's memory.** A Voice call keeps nothing between calls. A new call is briefed from the Session's title, working folder and recent Feed, which includes the earlier call's transcript.
-- **Every Agent is told how to answer a voice.** The first Prompt of each Voice call carries an instruction to mark each message as progress, as a result, or as silent analysis. The Feed strips the marks. An unmarked message counts as progress until the Turn ends.
+- **Every Agent is told how to answer a voice.** The first Prompt of each Voice call carries an instruction to mark each message as progress, as a result, or as silent analysis. The Feed strips the marks, and drops silent analysis whole (amended below). An unmarked message counts as progress until the Turn ends.
 - **Spoken consent is the person's own.** The voice announces a Permission request in plain words from the request's title, kind and target. The person's spoken allow-once or reject is applied through the same path a click uses (ADR-0044), and only when a spoken turn of the person's arrived after the announcement. Always-allow stays a click. Saying "stop" cancels the Turn.
 - **GPT-Live is the first Voice provider and runs on the ChatGPT subscription.** The Engine asks the installed Codex for a ChatGPT token, holds it in memory for the length of a call, never stores it and never refreshes it (ADR-0004). The provider is usable only when Codex is installed and signed in. It uses a private ChatGPT endpoint, so Settings labels it experimental.
 - **Desktop first.** The first version runs in the desktop App only. Mobile needs a native audio module and its own drawing of the call.
@@ -37,6 +37,14 @@ A person can talk to a Session instead of typing. A Voice call is attached to on
 - The voice hands over work only while the Engine holds the control link. If the link drops and the call continues, the voice keeps saying it is working while nothing happens. Ending the call on a lost link is therefore a rule, not a nicety.
 - A person with a Claude Session and GPT-Live spends two subscriptions: voice on ChatGPT, work on Claude.
 - The Engine handles the person's voice in passing even though it stores none of it.
+
+## The Agent's answer is the record, so the Read-out is not stored
+
+Owner amendment, 2026-11-19. On live calls the Agent's answer showed twice: once as the Agent's message, and again as the voice saying it in its own words, first as live words at the Feed's tail and then as a stored row. Silent analysis also showed in the Agent's message, and the voice was told it.
+
+- **A Read-out is never a Feed row.** When the Engine hands the voice an Agent's result to speak, what the voice says next, until the person speaks again, is a Read-out: it is neither stored nor drawn as live words. The Agent's message is the record and the Read-out only repeats it. The person's words, the voice's own replies, and the voice turn already under way at the hand-over, such as its filler line, stay rows.
+- **Silent analysis is dropped whole.** A section marked as analysis, up to the next mark, is left out of the Agent's message wherever it is read, and the voice is never told it. The instruction already says analysis must stay silent; telling the voice in the background broke that.
+- **Hanging up keeps what was said.** Words the voice or the person had said when the call ended are stored like any others, unless they are a Read-out.
 
 ## Custom voices and instructions, open to Agents and the CLI
 
