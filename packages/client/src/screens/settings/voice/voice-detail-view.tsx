@@ -46,6 +46,8 @@ const nothing: VoiceSettings = {
   voice: null,
   providers: [],
   voices: [],
+  customVoices: [],
+  instructions: '',
 };
 
 // What is chosen and offered; nothing until the Server has answered.

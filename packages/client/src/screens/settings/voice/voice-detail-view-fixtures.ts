@@ -44,6 +44,8 @@ export const usableVoice: VoiceSettings = {
     { id: 'cove', label: 'Cove' },
     { id: 'marin', label: 'Marin' },
   ],
+  customVoices: [],
+  instructions: '',
 };
 
 export const unusableVoice: VoiceSettings = {
