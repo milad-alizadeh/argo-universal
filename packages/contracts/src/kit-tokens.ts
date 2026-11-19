@@ -52,7 +52,7 @@ export const buttonVariants = [
   'danger',
 ] as const;
 
-export const buttonSizes = ['sm', 'md'] as const;
+export const buttonSizes = ['xs', 'sm', 'md'] as const;
 
 /*
  * Where a kit component's defaults are declared. A schema marks a prop with

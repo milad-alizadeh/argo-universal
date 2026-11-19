@@ -20,7 +20,7 @@ type TriggerProps = ChevronProps &
   Omit<ComponentProps<typeof Pressable>, keyof ChevronProps>;
 
 // Narrower than the acting segment is wide: a button's height across, so it reads as a square-ish tab.
-const widths = { sm: 'w-8', md: 'w-10' } as const;
+const widths = { xs: 'w-7', sm: 'w-8', md: 'w-10' } as const;
 
 const glyphs = {
   true: 'text-primary-foreground',

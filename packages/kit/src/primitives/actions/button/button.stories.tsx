@@ -18,6 +18,12 @@ const dangerButton = {
   variant: 'danger',
 } satisfies ButtonProps;
 
+const extraSmallButton = {
+  label,
+  variant: 'secondary',
+  size: 'xs',
+} satisfies ButtonProps;
+
 const smallButton = { label, size: 'sm' } satisfies ButtonProps;
 
 const fullWidthButton = { label, fullWidth: true } satisfies ButtonProps;
@@ -56,6 +62,8 @@ export const Secondary: Story = { args: secondaryButton };
 export const Text: Story = { args: textButton };
 
 export const Danger: Story = { args: dangerButton };
+
+export const ExtraSmall: Story = { args: extraSmallButton };
 
 export const Small: Story = { args: smallButton };
 

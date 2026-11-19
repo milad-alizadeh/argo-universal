@@ -59,7 +59,7 @@ const changesCard: SessionSection['card'] = (content, tab): SectionCard => {
     summary,
     onOpen: tab.open,
     trailing: action && (
-      <Button label="Create PR" variant="secondary" size="sm" {...action} />
+      <Button label="Create PR" variant="secondary" size="xs" {...action} />
     ),
   };
 };
