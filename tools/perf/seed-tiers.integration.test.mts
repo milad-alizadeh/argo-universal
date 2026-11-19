@@ -37,14 +37,21 @@ function expectRecordedMixture(rows: SessionUpdate[]): void {
   ).toContain('The single patch attempt failed:');
 }
 
-it.each([
-  { sessions: 100, feedRows: 100 },
+const smallest = { sessions: 100, feedRows: 100 };
+
+const larger = [
   { sessions: 100, feedRows: 1000 },
   { sessions: 100, feedRows: 10_000 },
   { sessions: 1000, feedRows: 100 },
   { sessions: 1000, feedRows: 1000 },
   { sessions: 1000, feedRows: 10_000 },
-])(
+];
+
+// Every tier seeds the same way, so CI seeds the smallest; PERF_SEED_ALL_TIERS=1 seeds them all, after a change to seeding.
+const tiers =
+  process.env.PERF_SEED_ALL_TIERS === '1' ? [smallest, ...larger] : [smallest];
+
+it.each(tiers)(
   'provides $feedRows recorded Feed rows and $sessions visible Sessions',
   async (tier) => {
     const directory = await mkdtemp(

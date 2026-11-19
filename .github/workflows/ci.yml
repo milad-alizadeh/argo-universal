@@ -268,7 +268,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
-  # The render gates draw every story and judge each file against itself, so a runner takes a share of the files and judges its own drawings.
+  # The render gates judge each file against itself, so a runner takes a share of the files and judges its own drawings.
+  # A pull request draws the story files its change reaches; a push draws every story.
   story-renders:
     name: Story render gates (${{ matrix.shard }}/4)
     needs: changes
@@ -283,14 +284,18 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4]
     steps:
+      # The pull request's base commit must be present to list what the change reaches; blob:none fetches the history without file contents.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: blob:none
 
       - uses: ./.github/actions/setup
         with:
           turbo-team: ${{ vars.TURBO_TEAM }}
 
       - name: Story render gates
-        run: pnpm check:story-renders --shard=${{ matrix.shard }}/4
+        run: pnpm check:story-renders --shard=${{ matrix.shard }}/4 ${{ github.event_name == 'pull_request' && format('--changed={0}', github.event.pull_request.base.sha) || '' }}
 
   e2e-web:
     name: End-to-end tests (web ${{ matrix.shard }}/6)

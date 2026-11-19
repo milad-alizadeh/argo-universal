@@ -5,9 +5,11 @@
  * (docs/agents/hooks.md).
  */
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { lockBrowserSuite } from '@repo/browser-suite-lock';
+import { changedPaths } from './hook-checks.mts';
 import { readStory, testStory, type StoryFile } from './story-file.mts';
 import { loadStoryFiles } from './story-files.mts';
 import {
@@ -18,6 +20,7 @@ import {
   type FixturePair,
   type StoryRender,
 } from './story-render-rules.mts';
+import { renderScope, type RenderScope } from './story-render-scope.mts';
 import { parseShard, shardByWeight } from './story-render-shard.mts';
 import { root } from './tracked-files.mts';
 
@@ -63,6 +66,41 @@ const runStorybookProject = (): void => {
   );
 };
 
+const listInto = (base: string, listing: string): void => {
+  execFileSync(
+    resolve(root, 'node_modules/.bin/vitest'),
+    ['list', '--filesOnly', '--changed', base, `--json=${listing}`],
+    { cwd: root, stdio: ['ignore', 'ignore', 'inherit'] },
+  );
+};
+
+// Vitest's module graph names every story file that imports a changed file, without starting a browser.
+const dependentStories = (base: string): string[] => {
+  const scratch = mkdtempSync(join(tmpdir(), 'story-renders-'));
+  const listing = join(scratch, 'stories.json');
+
+  try {
+    listInto(base, listing);
+
+    const listed: { file: string }[] = JSON.parse(
+      readFileSync(listing, 'utf8'),
+    );
+
+    return listed.map(({ file }): string => file);
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
+};
+
+const scopeFor = (base: string | undefined): RenderScope =>
+  base === undefined
+    ? { all: true }
+    : renderScope({
+        changed: changedPaths(base),
+        dependents: dependentStories(base),
+        root,
+      });
+
 const readFingerprints = (): Fingerprints =>
   JSON.parse(readFileSync(fingerprintPath, 'utf8'));
 
@@ -78,6 +116,7 @@ const report = (problems: readonly string[], files: number): number => {
 
 /*
  * A path fragment narrows the plan to the files whose path contains it, for trying one gate by hand.
+ * `--changed=<ref>` draws only the files a change since that ref reaches; without it, every file.
  * `--shard=2/4` keeps that runner's share of the plan; both gates judge one file against itself, so
  * the shards need no merge and each judges its own drawings.
  */
@@ -86,6 +125,8 @@ const args = process.argv.slice(2);
 const only = args.find((arg): boolean => !arg.startsWith('--')) ?? '';
 
 const shardArg = args.find((arg): boolean => arg.startsWith('--shard='));
+
+const changedArg = args.find((arg): boolean => arg.startsWith('--changed='));
 
 const shard =
   shardArg === undefined
@@ -97,8 +138,14 @@ if (shardArg !== undefined && shard === undefined) {
   process.exit(2);
 }
 
+const scope = scopeFor(changedArg?.slice('--changed='.length));
+
+const inScope = ({ file }: StoryFile): boolean =>
+  scope.all || scope.files.has(file);
+
 const planned = presentationFiles()
   .filter(({ file }): boolean => file.includes(only))
+  .filter(inScope)
   .flatMap(planFor);
 
 const files: PlannedFile[] = (
@@ -106,6 +153,11 @@ const files: PlannedFile[] = (
     ? planned
     : shardByWeight(planned, ({ weight }): number => weight, shard)
 ).map(({ file, pairs }): PlannedFile => ({ file, pairs }));
+
+if (files.length === 0) {
+  console.log('check-story-renders: the change reaches no story file to draw.');
+  process.exit(0);
+}
 
 const release = await lockBrowserSuite();
 
