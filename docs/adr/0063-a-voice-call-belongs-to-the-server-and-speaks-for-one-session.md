@@ -37,3 +37,12 @@ A person can talk to a Session instead of typing. A Voice call is attached to on
 - The voice hands over work only while the Engine holds the control link. If the link drops and the call continues, the voice keeps saying it is working while nothing happens. Ending the call on a lost link is therefore a rule, not a nicety.
 - A person with a Claude Session and GPT-Live spends two subscriptions: voice on ChatGPT, work on Claude.
 - The Engine handles the person's voice in passing even though it stores none of it.
+
+## Custom voices and instructions, open to Agents and the CLI
+
+Owner amendment, 2026-11-19 (#2469). The Voice call's Operations stay App-only, with these exceptions beside `voice.hangUp`: `voice.getSettings`, `voice.listVoices`, `voice.setVoice`, `voice.saveCustomVoice`, `voice.deleteCustomVoice` and `voice.setInstructions`. Agents and the CLI run them like any other settings change: reading is `read`, changing is `confirm`. They change only what the next call speaks with and is told, never a running call, and grant nothing. Starting, ending and previewing a call, reading its status, turning Voice calls on or off and choosing the Voice provider stay the App's.
+
+- **A custom voice is a built-in voice plus a description.** GPT-Live cannot make a voice from a description; it has a fixed set of voices. A custom voice is therefore a name, one of the provider's built-in voices, and a description of how it speaks, which is sent with the call's instructions.
+- **Argo's own instructions always come first.** A call is told Argo's fixed instructions, then the custom voice's description, then the person's custom instructions, then the Session's briefing. Nothing the person writes comes before Argo's words.
+- **Settings are kept on the Server.** Custom voices, custom instructions and the chosen voice live in the Server's settings, so every Device reads the same values.
+- **A change applies from the next call.** GPT-Live refuses new instructions on a running call: a `session.update` sent on the control link is answered with `immutable_field_update`, "Instructions cannot be updated after initialization" (live probe, 2026-11-19, #2469). Codex never sends one on a WebRTC call either. So the voice, a custom voice and the instructions are read when a call is created.
