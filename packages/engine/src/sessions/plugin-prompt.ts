@@ -39,15 +39,39 @@ export type SentPrompt =
   | { status: 'started'; turnId: string }
   | { status: 'queued'; queuedId: string };
 
+// A Prompt a `prompt.submit` Hook dropped before its Turn started; `drop` says why.
+type DroppedPrompt = { status: 'dropped'; drop: string };
+
+/*
+ * Who sends the Prompt; the id it takes, as its Turn's id or, queued, as its queued id, which its Turn takes when the
+ * queue starts it; and the caller's budget, which also stops its admission.
+ */
+export type SendRequest = {
+  sender: NonUserPromptSender;
+  id: string;
+  signal?: AbortSignal;
+};
+
 // A Plugin's Prompt (ADR-0055): it learns whether it started, or the queued id it may withdraw.
 export async function promptFromPlugin(
   sources: PluginPromptSources,
   input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
   sender: NonUserPromptSender,
 ): Promise<PluginPromptAnswer> {
-  const sent = await sendPromptAs(sources, input, sender);
+  const request = { sender, id: sources.createId() };
+  const sent = requireSent(await sendPromptAs(sources, input, request));
 
   return sent.status === 'started' ? { status: 'started' } : sent;
+}
+
+// A Plugin's and the Voice call's Prompt that a Hook dropped is refused, saying why.
+export function requireSent(sent: SentPrompt | DroppedPrompt): SentPrompt {
+  if (sent.status !== 'dropped') return sent;
+
+  throw new TRPCError({
+    code: 'CONFLICT',
+    message: `A Hook dropped the Prompt: ${sent.drop}`,
+  });
 }
 
 /*
@@ -58,30 +82,26 @@ export async function promptFromPlugin(
 export async function sendPromptAs(
   sources: PluginPromptSources,
   input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
-  sender: NonUserPromptSender,
-): Promise<SentPrompt> {
-  const session = await sources.open.ready(input.sessionId, queueEvent);
-  const context = sources.open.context(input.sessionId);
+  request: SendRequest,
+): Promise<SentPrompt | DroppedPrompt> {
+  const { sessionId } = input;
+  const { signal } = request;
+  const session = await sources.open.ready(sessionId, queueEvent, signal);
+  const context = sources.open.context(sessionId);
 
   if (!context || !hasWork(context))
-    return startPluginPrompt(sources, input, sender);
+    return startPluginPrompt(sources, input, request);
 
-  sources.open.admit();
+  sources.open.admit(signal);
 
-  const queuedId = sources.createId();
-
-  return queuePluginPrompt(session, { prompt: input.prompt, sender, queuedId });
+  return queuePluginPrompt(session, input.prompt, request);
 }
 
-type QueuedPluginPrompt = Pick<SessionPromptInput, 'prompt'> & {
-  sender: NonUserPromptSender;
-  queuedId: string;
-};
-
-// Appends under an id the Server chose, so the Plugin can withdraw it.
+// Appends under an id the Server chose, so the Plugin can withdraw it, and the Turn that starts it takes it.
 async function queuePluginPrompt(
   session: SessionActorRef,
-  { prompt, sender, queuedId }: QueuedPluginPrompt,
+  prompt: SessionPromptInput['prompt'],
+  { sender, id: queuedId }: SendRequest,
 ): Promise<SentPrompt> {
   await sendQueueCommand(session, {
     command: { action: 'append', prompt },
@@ -117,17 +137,14 @@ export async function withdrawFromPlugin(
 async function startPluginPrompt(
   sources: PluginPromptSources,
   input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
-  sender: NonUserPromptSender,
-): Promise<SentPrompt> {
-  const started = await startSessionPrompt(sources, input, { sender }).accepted;
+  { sender, id, signal }: SendRequest,
+): Promise<SentPrompt | DroppedPrompt> {
+  const request = { sender, turnId: id, signal };
+  const started = await startSessionPrompt(sources, input, request).accepted;
 
-  if (started.messageId !== null)
-    return { status: 'started', turnId: started.turnId };
-
-  throw new TRPCError({
-    code: 'CONFLICT',
-    message: `A Hook dropped the Prompt: ${started.drop}`,
-  });
+  return started.messageId === null
+    ? { status: 'dropped', drop: started.drop }
+    : { status: 'started', turnId: started.turnId };
 }
 
 type ServerQueueEvent = Omit<

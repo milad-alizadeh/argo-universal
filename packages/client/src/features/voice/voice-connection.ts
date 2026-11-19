@@ -21,6 +21,8 @@ export interface VoiceConnection {
   chooseDevices: (choice: VoiceDeviceChoice) => Promise<void>;
   // How loud the microphone and the voice are right now, from 0 to 1. Levels stay in the App and never reach the Server.
   levels: () => VoiceLevels;
+  // How loud each band of speech is right now, for the microphone and the voice; the same buffers each read, refilled.
+  spectrum: () => VoiceSpectrum;
   // Hangs up and releases the microphone. A preview plays on.
   close: () => void;
   /*
@@ -41,3 +43,17 @@ export interface VoiceLevels {
   input: number;
   output: number;
 }
+
+// How many bands of speech a spectrum holds, low to high.
+export const spectrumBands = 16;
+
+// Each band from 0 to 1, low to high. Read each frame by a visualiser; never stored, never sent.
+export interface VoiceSpectrum {
+  input: Float32Array;
+  output: Float32Array;
+}
+
+export const silentSpectrum = (): VoiceSpectrum => ({
+  input: new Float32Array(spectrumBands),
+  output: new Float32Array(spectrumBands),
+});

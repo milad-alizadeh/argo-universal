@@ -56,13 +56,13 @@ function startPrompt(
   return startedWork('turn', sessions.prompt(input, request), acceptedPrompt);
 }
 
+// The work a Prompt is followed by is the Turn that holds it: the one it started, was steered into, or will start.
 function acceptedPrompt(
   accepted: AcceptedSessionPrompt,
 ): AcceptedWork<SessionPromptOutput> {
-  if (accepted.messageId === null) return { result: accepted };
+  if (!('status' in accepted)) return { result: accepted };
 
-  return {
-    result: { messageId: accepted.messageId },
-    turnId: accepted.turnId,
-  };
+  const { turnId, ...result } = accepted;
+
+  return { result, turnId };
 }

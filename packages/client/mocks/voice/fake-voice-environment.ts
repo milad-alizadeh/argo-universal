@@ -26,6 +26,10 @@ class FakeMicrophone implements Microphone {
   public level(): number {
     return 0.4;
   }
+
+  public spectrum(into: Float32Array): void {
+    into.fill(this.muted ? 0 : 0.4);
+  }
 }
 
 class FakePlayback implements VoicePlayback {
@@ -48,6 +52,10 @@ class FakePlayback implements VoicePlayback {
 
   public level(): number {
     return 0.7;
+  }
+
+  public spectrum(into: Float32Array): void {
+    into.fill(0.7);
   }
 }
 

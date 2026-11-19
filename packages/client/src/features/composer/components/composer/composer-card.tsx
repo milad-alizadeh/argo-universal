@@ -2,10 +2,12 @@ import {
   RichTextarea,
   SuggestionListHost,
 } from '@repo/kit/primitives/controls/rich-textarea';
+import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useFollowUpSuggestion } from '../../hooks/use-follow-up-suggestion';
 import type { CardLayout, TextLayout } from './composer-card-types';
+import { edgeOf } from './composer-edge';
 import { ComposerSurface } from './composer-surface';
 import { draftChanges, useSuggestionSources } from './composer-text-draft';
 import { ComposerBottomTray } from './composer-trays';
@@ -36,16 +38,18 @@ function useComposerText(layout: TextLayout): MessageField {
 }
 
 // The padding sits on the field, so a press anywhere in the white area focuses it.
-const textFieldLook = {
-  accessibilityLabel: 'Message',
-  fieldClassName: 'px-4 wide:px-4.75 pt-3 pb-2 type-body',
-} as const;
+const fieldClass = 'px-4 wide:px-4.75 pb-2 type-body';
+
+// Under a call's edge band the field starts 6 points down, as Paper draws it; otherwise 12.
+const fieldClassOf = (props: TextLayout['props']): string =>
+  cn(fieldClass, edgeOf(props) ? 'pt-1.5' : 'pt-3');
 
 function textInputProps(layout: Omit<TextLayout, 'field'>): MessageField {
   const { props, inactive, send, modifiedSend } = layout;
 
   return {
-    ...textFieldLook,
+    accessibilityLabel: 'Message',
+    fieldClassName: fieldClassOf(props),
     autoFocus: !inactive,
     placeholder: props.placeholder ?? '',
     value: props.draft.text,

@@ -37,16 +37,16 @@ function useComposerVariables(
   const control = useResolveClassNames('text-sm leading-5');
   const roles = compact ? ['control', 'badge'] : composerRoles;
 
-  return bodyVariables(compact ? control : body, roles);
+  return roleVariables(compact ? control : body, roles);
 }
 
-type BodyStyle = Pick<
+type RoleStyle = Pick<
   ReturnType<typeof useTextStyle>,
   'fontSize' | 'lineHeight'
 >;
 
-function bodyVariables(
-  { fontSize, lineHeight }: BodyStyle,
+export function roleVariables(
+  { fontSize, lineHeight }: RoleStyle,
   roles: string[],
 ): Record<string, string | number> {
   if (fontSize === undefined || lineHeight === undefined) return {};

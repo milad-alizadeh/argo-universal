@@ -24,3 +24,8 @@ export {
 } from './components/voice-stage/voice-stage-reveal';
 
 export { type VoiceStageViewProps } from './components/voice-stage/voice-stage-view';
+
+export {
+  VoiceEdgeBand,
+  type VoiceEdgeBandProps,
+} from './components/voice-edge-band/voice-edge-band';

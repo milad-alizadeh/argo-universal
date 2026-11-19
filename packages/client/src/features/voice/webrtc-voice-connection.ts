@@ -1,8 +1,10 @@
 import { HeldCall, openChosen } from './held-call';
-import type {
-  VoiceConnection,
-  VoiceLevels,
-  VoiceMutes,
+import {
+  silentSpectrum,
+  type VoiceConnection,
+  type VoiceLevels,
+  type VoiceMutes,
+  type VoiceSpectrum,
 } from './voice-connection';
 import { systemDevices, type VoiceDeviceChoice } from './voice-device-choice';
 import type { Microphone, VoiceEnvironment } from './voice-environment';
@@ -24,6 +26,8 @@ class WebRtcVoiceConnection implements VoiceConnection {
   // The microphone and speaker this Device chose; every call starts on them.
   private devices = systemDevices;
   private readonly store = new VoiceMuteStore();
+  // Refilled on every read, so a visualiser reading each frame makes no garbage.
+  private readonly bands = silentSpectrum();
 
   public constructor(private readonly environment: VoiceEnvironment) {}
 
@@ -112,6 +116,16 @@ class WebRtcVoiceConnection implements VoiceConnection {
 
   public levels(): VoiceLevels {
     return this.held?.levels() ?? noLevels;
+  }
+
+  public spectrum(): VoiceSpectrum {
+    if (this.held) this.held.spectrum(this.bands);
+    else {
+      this.bands.input.fill(0);
+      this.bands.output.fill(0);
+    }
+
+    return this.bands;
   }
 
   public close(): void {

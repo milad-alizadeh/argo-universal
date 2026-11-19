@@ -24,4 +24,9 @@ export class BrowserSilence implements Microphone {
   public level(): number {
     return 0;
   }
+
+  // Silence has no sound in any band.
+  public spectrum(into: Float32Array): void {
+    into.fill(0);
+  }
 }
