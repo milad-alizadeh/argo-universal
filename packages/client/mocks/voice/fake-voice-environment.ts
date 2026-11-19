@@ -45,9 +45,13 @@ class FakePlayback implements VoicePlayback {
 class FakePeer implements VoicePeer {
   public answered: string | undefined;
   public closed = false;
+  // What the peer sends up: the microphone, or silence.
+  public sent: Microphone | undefined;
   private listener: ((stream: MediaStream) => void) | undefined;
 
-  public offer(): Promise<string> {
+  public offer(microphone: Microphone): Promise<string> {
+    this.sent = microphone;
+
     return Promise.resolve('v=0 offer');
   }
 
@@ -72,9 +76,14 @@ class FakePeer implements VoicePeer {
 }
 
 export class FakeEnvironment implements VoiceEnvironment {
-  public readonly peer = new FakePeer();
+  // Every peer made, oldest first; the latest is `peer`.
+  public readonly peers: FakePeer[] = [];
   // Each call opens a new microphone, as the browser does, so the latest one is the call's.
   public microphone = new FakeMicrophone();
+  // How often the microphone was opened.
+  public microphonesOpened = 0;
+  // The silence a listening-only connection sends, the latest one made.
+  public silence = new FakeMicrophone();
   public readonly playback = new FakePlayback();
 
   public constructor(private readonly refuse = false) {}
@@ -83,12 +92,30 @@ export class FakeEnvironment implements VoiceEnvironment {
     if (this.refuse) return Promise.reject(new Error('denied'));
 
     this.microphone = new FakeMicrophone();
+    this.microphonesOpened += 1;
 
     return Promise.resolve(this.microphone);
   }
 
+  public openSilence(): Microphone {
+    this.silence = new FakeMicrophone();
+
+    return this.silence;
+  }
+
   public createPeer(): VoicePeer {
-    return this.peer;
+    const peer = new FakePeer();
+    this.peers.push(peer);
+
+    return peer;
+  }
+
+  public get peer(): FakePeer {
+    const peer = this.peers.at(-1);
+
+    if (!peer) throw new Error('No peer was made');
+
+    return peer;
   }
 
   public playVoice(): VoicePlayback {

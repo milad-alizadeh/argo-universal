@@ -6,6 +6,8 @@ export { voiceLabel } from './components/voice-stage/voice-label';
 
 export { useSessionMutes } from './use-session-mutes';
 
+export { useVoicePreview } from './use-voice-preview';
+
 export { DesktopVoiceProvider } from './desktop-voice-provider';
 
 export {

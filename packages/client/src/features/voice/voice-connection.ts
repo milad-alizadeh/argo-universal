@@ -17,8 +17,15 @@ export interface VoiceConnection {
   subscribe: (listener: () => void) => () => void;
   // How loud the microphone and the voice are right now, from 0 to 1. Levels stay in the App and never reach the Server.
   levels: () => VoiceLevels;
-  // Hangs up and releases the microphone.
+  // Hangs up and releases the microphone. A preview plays on.
   close: () => void;
+  /*
+   * Opens a connection that only listens, sending silence and never the microphone, and completes it with the answer
+   * `answerFor` gets for its offer. It replaces an earlier preview, a call's offer ends it, and it lets go of itself after a while.
+   */
+  preview: (answerFor: (offer: string) => Promise<string>) => Promise<void>;
+  // Lets go of the preview's connection.
+  endPreview: () => void;
 }
 
 export interface VoiceMutes {

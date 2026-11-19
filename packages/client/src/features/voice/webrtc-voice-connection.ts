@@ -34,6 +34,8 @@ export interface VoicePeer {
 // What the connection needs from the browser, so a test can stand in for it.
 export interface VoiceEnvironment {
   openMicrophone: () => Promise<Microphone>;
+  // Silence to send in place of the microphone, for a connection that only listens.
+  openSilence: () => Microphone;
   createPeer: () => VoicePeer;
   playVoice: (stream: MediaStream) => VoicePlayback;
 }
@@ -46,6 +48,9 @@ export class MicrophoneUnavailable extends Error {
 }
 
 const noLevels: VoiceLevels = { input: 0, output: 0 };
+
+// How long a preview may hold its connection; the Server hangs up sooner, once the greeting is said.
+const previewLimitMs = 30_000;
 
 // What one call holds until it is released: the microphone, the peer and the voice's playback.
 class HeldCall {
@@ -87,23 +92,64 @@ class HeldCall {
  */
 class WebRtcVoiceConnection implements VoiceConnection {
   private held: HeldCall | undefined;
+  private previewing: HeldCall | undefined;
+  private previewTimer: ReturnType<typeof setTimeout> | undefined;
   private readonly store = new VoiceMuteStore();
 
   public constructor(private readonly environment: VoiceEnvironment) {}
 
   public async createOffer(): Promise<string> {
     this.close();
+    this.endPreview();
 
     const microphone = await this.environment.openMicrophone().catch(() => {
       throw new MicrophoneUnavailable();
     });
 
-    const held = new HeldCall(microphone, this.environment.createPeer());
+    const held = this.hold(microphone);
     this.held = held;
+
+    return held.peer.offer(microphone);
+  }
+
+  public async preview(
+    answerFor: (offer: string) => Promise<string>,
+  ): Promise<void> {
+    const held = this.startPreview();
+
+    try {
+      await held.peer.accept(
+        await answerFor(await held.peer.offer(held.microphone)),
+      );
+    } catch (error) {
+      if (this.previewing === held) this.endPreview();
+      throw error;
+    }
+  }
+
+  // A new preview in place of any earlier one, let go of after a while.
+  private startPreview(): HeldCall {
+    this.endPreview();
+    this.previewing = this.hold(this.environment.openSilence());
+    this.previewTimer = setTimeout(() => this.endPreview(), previewLimitMs);
+
+    return this.previewing;
+  }
+
+  public endPreview(): void {
+    const { previewing } = this;
+    this.previewing = undefined;
+    clearTimeout(this.previewTimer);
+    previewing?.release();
+  }
+
+  // A connection holding what it sends up, playing the voice when it arrives.
+  private hold(microphone: Microphone): HeldCall {
+    const held = new HeldCall(microphone, this.environment.createPeer());
 
     held.peer.onVoice((voice) => held.play(this.environment.playVoice(voice)));
 
-    return held.peer.offer(microphone);
+    return held;
   }
 
   public async accept(answer: string): Promise<void> {
