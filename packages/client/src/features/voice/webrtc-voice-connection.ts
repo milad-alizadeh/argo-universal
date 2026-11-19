@@ -1,90 +1,17 @@
+import { HeldCall, openChosen } from './held-call';
 import type {
   VoiceConnection,
   VoiceLevels,
   VoiceMutes,
 } from './voice-connection';
+import { systemDevices, type VoiceDeviceChoice } from './voice-device-choice';
+import type { Microphone, VoiceEnvironment } from './voice-environment';
 import { VoiceMuteStore } from './voice-mute-store';
-
-// The microphone as the connection uses it: something to let go of. The browser's own carries the sound.
-export interface Microphone {
-  stop: () => void;
-  setMuted: (muted: boolean) => void;
-  // How loud it is now, from 0 to 1.
-  level: () => number;
-}
-
-// The voice as it plays: something to silence and to let go of.
-export interface VoicePlayback {
-  stop: () => void;
-  // 0 is silent and 1 is full.
-  setVolume: (volume: number) => void;
-  level: () => number;
-}
-
-// A peer connection reduced to what a call needs.
-export interface VoicePeer {
-  // Sends the microphone up and opens the channel the provider expects; returns the complete offer.
-  offer: (microphone: Microphone) => Promise<string>;
-  accept: (answer: string) => Promise<void>;
-  // Calls the listener with the voice's sound when it arrives.
-  onVoice: (listener: (stream: MediaStream) => void) => void;
-  close: () => void;
-}
-
-// What the connection needs from the browser, so a test can stand in for it.
-export interface VoiceEnvironment {
-  openMicrophone: () => Promise<Microphone>;
-  // Silence to send in place of the microphone, for a connection that only listens.
-  openSilence: () => Microphone;
-  createPeer: () => VoicePeer;
-  playVoice: (stream: MediaStream) => VoicePlayback;
-}
-
-// The microphone was refused or is missing; the call cannot start.
-export class MicrophoneUnavailable extends Error {
-  public constructor() {
-    super('Microphone access is needed to talk.');
-  }
-}
 
 const noLevels: VoiceLevels = { input: 0, output: 0 };
 
 // How long a preview may hold its connection; the Server hangs up sooner, once the greeting is said.
 const previewLimitMs = 30_000;
-
-// What one call holds until it is released: the microphone, the peer and the voice's playback.
-class HeldCall {
-  public playback: VoicePlayback | undefined;
-  public speakerMuted = false;
-
-  public constructor(
-    public readonly microphone: Microphone,
-    public readonly peer: VoicePeer,
-  ) {}
-
-  public play(playback: VoicePlayback): void {
-    this.playback = playback;
-    this.setSpeakerMuted(this.speakerMuted);
-  }
-
-  public setSpeakerMuted(muted: boolean): void {
-    this.speakerMuted = muted;
-    this.playback?.setVolume(muted ? 0 : 1);
-  }
-
-  public levels(): VoiceLevels {
-    return {
-      input: this.microphone.level(),
-      output: this.playback?.level() ?? 0,
-    };
-  }
-
-  public release(): void {
-    this.playback?.stop();
-    this.microphone.stop();
-    this.peer.close();
-  }
-}
 
 /*
  * The App's side of a call on a browser or Electron page: the microphone goes up and the voice comes down.
@@ -94,6 +21,8 @@ class WebRtcVoiceConnection implements VoiceConnection {
   private held: HeldCall | undefined;
   private previewing: HeldCall | undefined;
   private previewTimer: ReturnType<typeof setTimeout> | undefined;
+  // The microphone and speaker this Device chose; every call starts on them.
+  private devices = systemDevices;
   private readonly store = new VoiceMuteStore();
 
   public constructor(private readonly environment: VoiceEnvironment) {}
@@ -102,9 +31,10 @@ class WebRtcVoiceConnection implements VoiceConnection {
     this.close();
     this.endPreview();
 
-    const microphone = await this.environment.openMicrophone().catch(() => {
-      throw new MicrophoneUnavailable();
-    });
+    const microphone = await openChosen(
+      this.environment,
+      this.devices.microphone,
+    );
 
     const held = this.hold(microphone);
     this.held = held;
@@ -115,12 +45,11 @@ class WebRtcVoiceConnection implements VoiceConnection {
   public async preview(
     answerFor: (offer: string) => Promise<string>,
   ): Promise<void> {
-    const held = this.startPreview();
+    const silence = this.environment.openSilence();
+    const held = this.startPreview(silence);
 
     try {
-      await held.peer.accept(
-        await answerFor(await held.peer.offer(held.microphone)),
-      );
+      await held.peer.accept(await answerFor(await held.peer.offer(silence)));
     } catch (error) {
       if (this.previewing === held) this.endPreview();
       throw error;
@@ -128,9 +57,9 @@ class WebRtcVoiceConnection implements VoiceConnection {
   }
 
   // A new preview in place of any earlier one, let go of after a while.
-  private startPreview(): HeldCall {
+  private startPreview(silence: Microphone): HeldCall {
     this.endPreview();
-    this.previewing = this.hold(this.environment.openSilence());
+    this.previewing = this.hold(silence);
     this.previewTimer = setTimeout(() => this.endPreview(), previewLimitMs);
 
     return this.previewing;
@@ -143,11 +72,13 @@ class WebRtcVoiceConnection implements VoiceConnection {
     previewing?.release();
   }
 
-  // A connection holding what it sends up, playing the voice when it arrives.
+  // A connection holding what it sends up, playing the voice on the chosen speaker when it arrives.
   private hold(microphone: Microphone): HeldCall {
     const held = new HeldCall(microphone, this.environment.createPeer());
 
-    held.peer.onVoice((voice) => held.play(this.environment.playVoice(voice)));
+    held.peer.onVoice((voice) =>
+      held.play(this.environment.playVoice(voice, this.devices.speaker)),
+    );
 
     return held;
   }
@@ -158,7 +89,7 @@ class WebRtcVoiceConnection implements VoiceConnection {
 
   public setMicrophoneMuted(muted: boolean): void {
     if (!this.held) return;
-    this.held.microphone.setMuted(muted);
+    this.held.setMicrophoneMuted(muted);
     this.store.change({ microphone: muted });
   }
 
@@ -166,6 +97,12 @@ class WebRtcVoiceConnection implements VoiceConnection {
     if (!this.held) return;
     this.held.setSpeakerMuted(muted);
     this.store.change({ speaker: muted });
+  }
+
+  public async chooseDevices(choice: VoiceDeviceChoice): Promise<void> {
+    const previous = this.devices;
+    this.devices = choice;
+    await this.held?.follow(previous, choice, this.environment);
   }
 
   public mutes = (): VoiceMutes => this.store.read();

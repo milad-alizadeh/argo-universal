@@ -7,7 +7,7 @@ describe('offering a call to the Server', () => {
     const sent: string[] = [];
     const connection = new FakeVoiceConnection(Promise.resolve('v=0 offer'));
 
-    await offerTo(connection, (offer) => sent.push(offer));
+    await offerTo(connection, (offer) => void sent.push(offer));
 
     expect(sent).toEqual(['v=0 offer']);
     expect(connection.closed).toBe(false);
@@ -20,7 +20,7 @@ describe('offering a call to the Server', () => {
       Promise.reject(new Error('Microphone access is needed to talk.')),
     );
 
-    await offerTo(connection, (offer) => sent.push(offer));
+    await offerTo(connection, (offer) => void sent.push(offer));
 
     expect(sent).toEqual([]);
     expect(connection.closed).toBe(true);
@@ -29,7 +29,7 @@ describe('offering a call to the Server', () => {
   it('does nothing where the App carries no audio', async () => {
     const sent: string[] = [];
 
-    await offerTo(null, (offer) => sent.push(offer));
+    await offerTo(null, (offer) => void sent.push(offer));
 
     expect(sent).toEqual([]);
   });

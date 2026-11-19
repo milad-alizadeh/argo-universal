@@ -23,20 +23,25 @@ export type GptLiveOptions = {
   linkUrl?: string;
   // How long a lost control link may stay down before the call ends.
   lostLinkMs?: number;
+  // How often the control link is checked with a ping.
+  pingMs?: number;
 };
 
 const lostLinkLimitMs = 5000;
+
+const pingEveryMs = 15_000;
 
 const settingsOf = (options: GptLiveOptions): Required<GptLiveOptions> => ({
   auth: codexAppServerAuth(),
   callsUrl: 'https://chatgpt.com/backend-api/codex/realtime/calls',
   linkUrl: 'wss://api.openai.com/v1/live',
   lostLinkMs: lostLinkLimitMs,
+  pingMs: pingEveryMs,
   ...options,
 });
 
 const callInstructions = (briefing: string): string =>
-  `You are the voice of a coding Agent. Hand the person's requests for work over; speak briefly.\n${briefing}`;
+  `Your name is Argo. You are the voice of a coding Agent; when the person asks who you are, you are Argo. Hand the person's requests for work over; speak briefly.\n${briefing}`;
 
 const previewInstructions =
   'This call only lets the person hear your voice. Say what you are asked to say, exactly, and nothing more.';
@@ -115,6 +120,7 @@ export class GptLiveProvider implements VoiceProvider {
       link,
       rejoin: () => joinLink(url, token),
       lostLinkMs: this.settings.lostLinkMs,
+      pingMs: this.settings.pingMs,
     });
   }
 

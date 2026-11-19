@@ -160,7 +160,17 @@ export class FakeVoiceCall<
     this.emit({ type: 'work.requested', requestId, text });
   }
 
-  public close(reason: VoiceClosedReason = 'ended'): void {
-    this.emit({ type: 'closed', reason });
+  // The provider closes the call; `why` is its own reason in plain words, when it gives one.
+  public close(reason: VoiceClosedReason = 'ended', why?: string): void {
+    this.emit(
+      why === undefined
+        ? { type: 'closed', reason }
+        : { type: 'closed', reason, why },
+    );
+  }
+
+  // Something the provider notes for the Server's log.
+  public note(note: string): void {
+    this.emit({ type: 'trail', note });
   }
 }

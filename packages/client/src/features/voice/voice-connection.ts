@@ -1,3 +1,5 @@
+import type { VoiceDeviceChoice } from './voice-device-choice';
+
 /*
  * The App's side of a Voice call: the microphone, the speaker and the peer connection to the Voice provider (ADR-0063).
  * The Server only relays the offer and the answer, so this is all the audio the App needs.
@@ -15,6 +17,8 @@ export interface VoiceConnection {
   mutes: () => VoiceMutes;
   // Calls the listener when a mute changes; the returned function stops listening.
   subscribe: (listener: () => void) => () => void;
+  // Uses this microphone and speaker from the next call on, and moves a running call to them; null follows the system.
+  chooseDevices: (choice: VoiceDeviceChoice) => Promise<void>;
   // How loud the microphone and the voice are right now, from 0 to 1. Levels stay in the App and never reach the Server.
   levels: () => VoiceLevels;
   // Hangs up and releases the microphone. A preview plays on.

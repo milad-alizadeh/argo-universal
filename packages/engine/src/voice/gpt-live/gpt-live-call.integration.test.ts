@@ -146,6 +146,13 @@ describe('GPT-Live call events', () => {
 
     await expect
       .poll(() => events)
-      .toEqual([{ type: 'closed', reason: 'ended' }]);
+      .toEqual([
+        { type: 'trail', note: 'session.closed {}' },
+        {
+          type: 'closed',
+          reason: 'ended',
+          why: 'GPT-Live ended the call without saying why.',
+        },
+      ]);
   });
 });

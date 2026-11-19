@@ -6,10 +6,13 @@ import { composerProps } from '../../../../../mocks/composer-mock';
 import { Composer } from './composer';
 import {
   callElsewhereComposer,
+  voiceBothMutedComposer,
   voiceCallComposer,
   voiceCallDraftComposer,
   voiceConnectingComposer,
+  voiceMicMutedComposer,
   voiceReadyComposer,
+  voiceSpeakerMutedComposer,
 } from './composer-voice-fixtures';
 
 const meta = {
@@ -45,8 +48,17 @@ export const VoiceConnecting: Story = { args: voiceConnectingComposer };
 // A connected call with an empty draft: mic, speaker and End.
 export const VoiceCall: Story = { args: voiceCallComposer };
 
+// The microphone is muted: its button reads red.
+export const VoiceMicMuted: Story = { args: voiceMicMutedComposer };
+
+// The speaker is muted: its button reads red.
+export const VoiceSpeakerMuted: Story = { args: voiceSpeakerMutedComposer };
+
+// Both muted: both buttons read red, and End keeps its look.
+export const VoiceBothMuted: Story = { args: voiceBothMutedComposer };
+
 // Text in the draft on a call: the primary button is Send.
 export const VoiceCallWithDraft: Story = { args: voiceCallDraftComposer };
 
-// The call runs in another Session: the voice button's slot points at it.
+// The call runs in another Session: in the voice button's place, the same round button with a live dot.
 export const CallInAnotherSession: Story = { args: callElsewhereComposer };

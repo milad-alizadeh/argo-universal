@@ -1,6 +1,5 @@
 import type {
   VoiceAvailability,
-  VoiceConnectionStatus,
   VoiceLimit,
   VoiceTrouble,
 } from '@repo/contracts';
@@ -9,6 +8,13 @@ import type {
  * The Voice provider interface (ADR-0063). It names no vendor: only a provider's own module does.
  * A provider starts a Voice call from the App's offer, reports what was said and asked for, accepts text to speak or to keep as background, and ends the call. Audio travels straight between the App and the provider; the Engine only relays the offer and the answer.
  */
+
+// The connection's standing as the provider sees it; `disconnected` is a call trying to reconnect. It stays behind the provider seam: the App reads the call's status and trouble instead.
+export type VoiceConnectionStatus =
+  | 'connecting'
+  | 'connected'
+  | 'disconnected'
+  | 'error';
 
 // Why a provider closed a call; `limit` is a call closed because the person's allowance ran out.
 export type VoiceClosedReason = 'ended' | 'lost' | 'error' | 'limit';
@@ -34,7 +40,10 @@ export type VoiceProviderEvent =
     }
   // How much of the provider's allowance is left, as a fraction from 0 to 1.
   | ({ type: 'limit' } & VoiceLimit)
-  | { type: 'closed'; reason: VoiceClosedReason };
+  // Something worth keeping in the Server's log about how the call goes, such as a dropped link; never shown, never audio or tokens.
+  | { type: 'trail'; note: string }
+  // `why` is the provider's own reason in plain words, for the Notice that says why the call ended.
+  | { type: 'closed'; reason: VoiceClosedReason; why?: string };
 
 // What the voice does with text it is given: say it aloud, or keep it as background it may use later.
 export type VoiceDelivery = 'speak' | 'background';

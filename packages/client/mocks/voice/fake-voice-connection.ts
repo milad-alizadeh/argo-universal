@@ -3,6 +3,7 @@ import type {
   VoiceLevels,
   VoiceMutes,
 } from '../../src/features/voice/voice-connection';
+import type { VoiceDeviceChoice } from '../../src/features/voice/voice-device-choice';
 import { VoiceMuteStore } from '../../src/features/voice/voice-mute-store';
 
 /*
@@ -15,6 +16,8 @@ export class FakeVoiceConnection implements VoiceConnection {
   public output = 0;
   // Every mute the connection was asked for, in order, such as `microphone:true`.
   public readonly asked: string[] = [];
+  // Every answer the connection was completed with, in order.
+  public readonly accepted: string[] = [];
   private readonly store = new VoiceMuteStore();
 
   public constructor(private readonly offer = Promise.resolve('v=0 offer')) {}
@@ -25,7 +28,9 @@ export class FakeVoiceConnection implements VoiceConnection {
     return this.offer;
   }
 
-  public accept(): Promise<void> {
+  public accept(answer: string): Promise<void> {
+    this.accepted.push(answer);
+
     return Promise.resolve();
   }
 
@@ -37,6 +42,12 @@ export class FakeVoiceConnection implements VoiceConnection {
   public setSpeakerMuted(muted: boolean): void {
     this.asked.push(`speaker:${muted}`);
     this.store.change({ speaker: muted });
+  }
+
+  public chooseDevices(choice: VoiceDeviceChoice): Promise<void> {
+    this.asked.push(`devices:${choice.microphone}:${choice.speaker}`);
+
+    return Promise.resolve();
   }
 
   public mutes = (): VoiceMutes => this.store.read();

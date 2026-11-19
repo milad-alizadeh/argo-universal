@@ -1,4 +1,6 @@
-export { useSessionVoice } from './use-session-voice';
+export { useSessionVoice, type VoicePage } from './use-session-voice';
+
+export { useNewSessionVoice } from './use-new-session-voice';
 
 export { voicePlaceholder } from './session-voice';
 
@@ -9,6 +11,12 @@ export { useSessionMutes } from './use-session-mutes';
 export { useVoicePreview } from './use-voice-preview';
 
 export { DesktopVoiceProvider } from './desktop-voice-provider';
+
+export { useVoiceDevices } from './use-voice-devices';
+
+export type { AudioDevice, AudioDevices } from './audio-devices';
+
+export type { VoiceDeviceChoice } from './voice-device-choice';
 
 export {
   VoiceStageView,

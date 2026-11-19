@@ -1,7 +1,8 @@
 import { maxBlobUploadBytes } from '@repo/contracts';
 import type {
   ComposerProps,
-  ComposerVoiceCall,
+  ComposerVoice,
+  ComposerVoiceElsewhere,
   SendState,
 } from './composer-types';
 
@@ -62,35 +63,42 @@ export function sendButtonState(props: ComposerProps): SendState {
   return callSendState(props) ?? idleSendState(props);
 }
 
-const inCall: Partial<Record<ComposerVoiceCall, 'connecting' | 'end'>> = {
+const inCall: Partial<Record<ComposerVoice['kind'], 'connecting' | 'end'>> = {
   connecting: 'connecting',
   connected: 'end',
 };
 
-const voiceCall = (props: ComposerProps): ComposerVoiceCall =>
-  props.voice?.call ?? 'none';
-
 // While a call runs here and the draft is empty, the button is End: it comes back as Send once the person types.
 function callSendState(props: ComposerProps): 'connecting' | 'end' | undefined {
-  return hasDraftContent(props) ? undefined : inCall[voiceCall(props)];
+  if (hasDraftContent(props) || !props.voice) return undefined;
+
+  return inCall[props.voice.kind];
 }
 
 function idleSendState(props: ComposerProps): SendState {
   const state = baseSendState(props);
 
-  return state === 'blocked' ? emptyDraftState(props) : state;
+  return state === 'blocked' && canStartVoice(props) ? 'voice' : state;
 }
 
-// The call runs in another Session and there is nothing to send: the primary slot points at it.
+/*
+ * The pointer to a call in another Session: a small icon button exactly where the voice button would be, since a
+ * second call cannot start. Everywhere else the Composer is a normal Session's.
+ */
+export function callPointer(
+  props: ComposerProps,
+): ComposerVoiceElsewhere | undefined {
+  return pointsElsewhere(props) ? elsewhereOf(props.voice) : undefined;
+}
+
+// The voice button's place is free: nothing else takes the primary slot, and the Composer could start a call.
 const pointsElsewhere = (props: ComposerProps): boolean =>
-  voiceCall(props) === 'elsewhere' && !hasDraftContent(props);
+  sendButtonState(props) === 'blocked' && voiceSlotFree(props);
 
-// With nothing to send, the primary slot starts a call, or points at the one running in another Session.
-function emptyDraftState(props: ComposerProps): SendState {
-  if (pointsElsewhere(props)) return 'elsewhere';
-
-  return canStartVoice(props) ? 'voice' : 'blocked';
-}
+const elsewhereOf = (
+  voice: ComposerProps['voice'],
+): ComposerVoiceElsewhere | undefined =>
+  voice?.kind === 'elsewhere' ? voice : undefined;
 
 function baseSendState(props: ComposerProps): SendState {
   const candidates = [
@@ -102,18 +110,20 @@ function baseSendState(props: ComposerProps): SendState {
   return candidates.find(([, active]) => active)?.[0] ?? 'blocked';
 }
 
-// A call here, or in another Session, keeps a second from starting: one Voice call runs per App.
-const voiceStartConditions: ((props: ComposerProps) => boolean)[] = [
-  (props) => props.voice?.usable === true,
-  (props) => voiceCall(props) === 'none',
+// Where the voice button may stand: an idle, sendable Composer with nothing written and no Queued Prompt being edited.
+const voiceSlotConditions: ((props: ComposerProps) => boolean)[] = [
   (props) => !isInactive(props),
   (props) => props.sendable ?? true,
   (props) => !props.queueEdit,
   (props) => !hasDraftContent(props),
 ];
 
+const voiceSlotFree = (props: ComposerProps): boolean =>
+  voiceSlotConditions.every((condition) => condition(props));
+
+// The voice module offers the voice button only while no call runs anywhere: one Voice call runs per App.
 const canStartVoice = (props: ComposerProps): boolean =>
-  voiceStartConditions.every((condition) => condition(props));
+  props.voice?.kind === 'start' && voiceSlotFree(props);
 
 function isConnectionSendable(props: ComposerProps): boolean {
   return (props.sendable ?? true) && allowsSubmission(props);

@@ -1,7 +1,6 @@
-import type { InitialConfigOption, SessionNewInput } from '@repo/contracts';
+import type { SessionNewInput } from '@repo/contracts';
 import {
   type EmptySessionPorts,
-  type FirstPrompt,
   promptShowTimeoutMs,
 } from './empty-session-types';
 
@@ -14,6 +13,9 @@ export interface HandOffHost {
   // The prompt went nowhere: it goes back to the Composer.
   failed: (cause: unknown) => void;
 }
+
+// Starts a Voice call in the Session once it exists.
+export type CallStart = (sessionId: string) => void;
 
 // The first prompt's way from Send to the Session page.
 export class FirstPromptHandOff {
@@ -36,26 +38,26 @@ export class FirstPromptHandOff {
   }
 
   // The Server creates the selected checkout and Session, applies options and sends.
-  public create(
-    input: SessionNewInput,
-    configOptions: InitialConfigOption[],
-    prompt: FirstPrompt,
-  ): void {
+  public create(input: SessionNewInput, call?: CallStart): void {
     this.current = 'sending';
     this.host.emit();
 
     this.host
       .ports()
-      .open({ ...input, configOptions, prompt })
+      .open(input)
       .then(
-        ({ sessionId }) => this.created(sessionId),
+        ({ sessionId }) => this.created(sessionId, call),
         (cause: unknown) => this.failed(cause),
       );
   }
 
-  private created(sessionId: string): void {
+  // A Session opened for a call has no prompt to wait for: the page goes to it at once, and the call starts there.
+  private created(sessionId: string, call: CallStart | undefined): void {
     this.promptedId = sessionId;
+
+    if (call) this.promptShown = true;
     this.showPrompt();
+    call?.(sessionId);
   }
 
   // The opened Session's Feed holds the first prompt, so the Session page can show it from its first frame.

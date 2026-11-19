@@ -13,6 +13,8 @@ export type IconButtonDataProps = KitProps<'IconButton'>;
 export type IconButtonProps = IconButtonDataProps & {
   testID?: string;
   muted?: boolean;
+  // A glyph in the theme's danger red, as a control that is on and warns, such as a muted microphone.
+  danger?: boolean;
   // On the web, a 28 box on a line of 28 controls, such as the Composer's beside its Pills.
   control?: boolean;
 } & Omit<

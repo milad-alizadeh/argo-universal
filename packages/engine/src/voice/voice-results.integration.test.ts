@@ -8,6 +8,15 @@ const looking = 'Looking around';
 
 const fixedBug = 'Fixed the bug';
 
+const weatherFile = '~/Sites/london-weather/index.html';
+
+// A result whose middle paragraph is silent analysis, through to the next mark.
+const resultWithAnalysis = [
+  '[COMPLETE] The page is ready.',
+  `[ANALYSIS] The file is at ${weatherFile}.\nThe data comes from Open-Meteo.`,
+  '[COMPLETE] Open it to look.',
+].join('\n\n');
+
 const spoken = (work: VoiceWork): string[] =>
   work.provider.call.sent.flatMap((message) =>
     message.kind === 'tell' && message.delivery === 'speak'
@@ -116,6 +125,25 @@ describe('what the Agent says goes back to the voice', () => {
     expect(spoken(work)).not.toContain('The cache is stale');
     expect(spoken(work)).toContain('Cleared it');
   });
+
+  it.each([
+    ['whole', undefined],
+    ['in chunks', 7],
+  ])(
+    'keeps an analysis paragraph inside a result out of speech, %s',
+    async (_, chunkSize) => {
+      const work = await startVoiceWork([
+        { prompt: job, chunkSize, messages: [resultWithAnalysis] },
+      ]);
+
+      await askAndWaitForEnd(work);
+
+      expect(spoken(work)).toEqual(
+        expect.arrayContaining(['The page is ready.', 'Open it to look.']),
+      );
+      expect(JSON.stringify(spoken(work))).not.toContain(weatherFile);
+    },
+  );
 
   it('tells the voice when a Turn ends, and when it fails', async () => {
     const work = await startVoiceWork([

@@ -77,14 +77,22 @@ describe('a Voice call that ends by failure', () => {
     expect(await notices(work)).toHaveLength(0);
   });
 
-  it('adds none when the provider closes the call normally', async () => {
+  it('adds one saying the provider ended it when the provider closes the call normally', async () => {
     const work = await startVoiceWork([]);
     await work.start();
     work.provider.call.close('ended');
     await expect
       .poll(() => work.host.caller.voice.status())
       .toMatchObject({ ended: { reason: 'provider-closed' } });
+    await settled(work);
 
     expect(await notices(work)).toHaveLength(0);
+    expect(
+      (await work.feed()).filter(
+        (row) =>
+          row.sessionUpdate === 'notice' &&
+          JSON.stringify(row).includes('Voice call'),
+      ),
+    ).toEqual([expect.objectContaining({ title: 'Voice call ended' })]);
   });
 });

@@ -18,7 +18,7 @@ describe('WebRTC voice preview', () => {
     environment.peer.voiceArrives();
 
     expect(environment.microphonesOpened).toBe(0);
-    expect(environment.peer.sent).toBe(environment.silence);
+    expect(environment.peer.sending).toBe(environment.silence);
     expect(environment.peer.answered).toBe('answer to v=0 offer');
     expect(environment.playback.stopped).toBe(false);
   });

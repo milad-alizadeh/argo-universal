@@ -9,6 +9,8 @@ export type Scenario = NonNullable<Parameters<typeof startAcpEngine>[0]>;
 export type VoiceAgentReply = {
   prompt: string;
   messages?: readonly string[];
+  // Streams each message in chunks of this many characters; whole in one chunk without it.
+  chunkSize?: number;
   // A Tool call whose output the Agent produces before its messages; the voice must never hear it.
   toolOutput?: string;
   // Holds the Turn open, after its messages, until the test releases it.
@@ -19,18 +21,35 @@ export type VoiceAgentReply = {
   asksPermission?: string;
 };
 
-const messageSteps = (messages: readonly string[]): ScriptedStep[] =>
-  messages.flatMap((text, index): ScriptedStep[] => [
-    {
-      type: 'update',
-      update: {
-        sessionUpdate: 'agent_message_chunk',
-        messageId: `message-${index}-${text.length}`,
-        content: { type: 'text', text },
-      },
+// The text in pieces of `size` characters; whole without a size.
+const piecesOf = (text: string, size: number | undefined): string[] =>
+  size === undefined
+    ? [text]
+    : Array.from({ length: Math.ceil(text.length / size) }, (_, index) =>
+        text.slice(index * size, (index + 1) * size),
+      );
+
+const chunkSteps = (messageId: string, text: string): ScriptedStep[] => [
+  {
+    type: 'update',
+    update: {
+      sessionUpdate: 'agent_message_chunk',
+      messageId,
+      content: { type: 'text', text },
     },
-    { type: 'yield' },
-  ]);
+  },
+  { type: 'yield' },
+];
+
+const messageSteps = (
+  messages: readonly string[],
+  chunkSize: number | undefined,
+): ScriptedStep[] =>
+  messages.flatMap((text, index) =>
+    piecesOf(text, chunkSize).flatMap((piece) =>
+      chunkSteps(`message-${index}-${text.length}`, piece),
+    ),
+  );
 
 const toolCall = (output: string): ScriptedStep => ({
   type: 'update',
@@ -81,7 +100,7 @@ const permissionSteps = (title: string | undefined): ScriptedStep[] =>
 const stepsOf = (reply: VoiceAgentReply): ScriptedStep[] => [
   ...permissionSteps(reply.asksPermission),
   ...toolSteps(reply.toolOutput),
-  ...messageSteps(reply.messages ?? []),
+  ...messageSteps(reply.messages ?? [], reply.chunkSize),
   ...endingSteps(reply),
 ];
 

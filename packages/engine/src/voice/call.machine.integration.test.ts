@@ -71,7 +71,6 @@ const expectLook = (look: Partial<VoiceCall>) => (): void =>
 
 const notJoined: Partial<VoiceCall> = {
   status: 'connecting',
-  connection: 'connecting',
   orb: 'none',
   trouble: notReconnecting,
   startedAt: null,
@@ -80,7 +79,6 @@ const notJoined: Partial<VoiceCall> = {
 // A connected call shows what is happening on it; which of the three depends on who speaks and works.
 const live: Partial<VoiceCall> = {
   status: 'connected',
-  connection: 'connected',
   orb: expect.stringMatching(/^(listening|talking|thinking)$/),
   ...joined,
 };
@@ -96,7 +94,6 @@ const expectConnected = (): void => {
 
 const reconnecting: Partial<VoiceCall> = {
   status: 'connected',
-  connection: 'disconnected',
   orb: 'none',
   trouble: 'reconnecting',
   ...joined,

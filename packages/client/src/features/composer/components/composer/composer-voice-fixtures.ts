@@ -14,8 +14,6 @@ type ComposerFixture = Omit<
 
 const noop = (): void => {};
 
-const voiceHandlers = { usable: true, onStart: noop, onEnd: noop };
-
 const callMutes = {
   microphone: false,
   speaker: false,
@@ -26,22 +24,40 @@ const callMutes = {
 // No call, a usable Voice provider and an empty draft: the voice button, Send's circle with the five bars.
 export const voiceReadyComposer = {
   ...startedSessionComposer,
-  voice: { ...voiceHandlers, call: 'none' },
+  voice: { kind: 'start', onStart: noop },
 } satisfies ComposerFixture;
 
 // The call is connecting: End shows at once with its ring turning inside the circle, and the field says so.
 export const voiceConnectingComposer = {
   ...startedSessionComposer,
   placeholder: 'Connecting…',
-  voice: { ...voiceHandlers, call: 'connecting' },
+  voice: { kind: 'connecting', onEnd: noop },
 } satisfies ComposerFixture;
 
 // A connected call: the mic and speaker buttons beside End, and the field invites typing as well as talking.
 export const voiceCallComposer = {
   ...startedSessionComposer,
   placeholder: 'Type, or keep talking',
-  voice: { ...voiceHandlers, call: 'connected', mutes: callMutes },
+  voice: { kind: 'connected', onEnd: noop, mutes: callMutes },
 } satisfies ComposerFixture;
+
+const mutedCall = (microphone: boolean, speaker: boolean): ComposerFixture => ({
+  ...voiceCallComposer,
+  voice: {
+    kind: 'connected',
+    onEnd: noop,
+    mutes: { ...callMutes, microphone, speaker },
+  },
+});
+
+// The microphone is muted: its button reads red, with the slashed glyph.
+export const voiceMicMutedComposer = mutedCall(true, false);
+
+// The speaker is muted: its button reads red, with the slashed glyph.
+export const voiceSpeakerMutedComposer = mutedCall(false, true);
+
+// Both muted: both buttons read red; End keeps its look.
+export const voiceBothMutedComposer = mutedCall(true, true);
 
 // Text in the draft on a call: the primary button is Send, and End waits until the draft is empty again.
 export const voiceCallDraftComposer = {
@@ -49,12 +65,8 @@ export const voiceCallDraftComposer = {
   draft: readyComposer.draft,
 } satisfies ComposerFixture;
 
-// The call runs in another Session: the voice button's slot names it and takes the person there.
+// The call runs in another Session: the voice button's place holds a round button with a live dot that takes the person there.
 export const callElsewhereComposer = {
   ...startedSessionComposer,
-  voice: {
-    ...voiceHandlers,
-    call: 'elsewhere',
-    elsewhere: { title: 'Fix flaky Feed sync test', onOpen: noop },
-  },
+  voice: { kind: 'elsewhere', title: 'Fix flaky Feed sync test', onOpen: noop },
 } satisfies ComposerFixture;
