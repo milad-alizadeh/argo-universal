@@ -1,140 +1,115 @@
 import type { Observer, Subscription } from 'xstate';
+import type { TurnHappening } from './turn-happenings';
 
 // Where a Prompt is: in a Turn, or waiting in the queue.
 export type PromptPlace = { turnId: string } | { queuedId: string };
 
-// What following a Prompt reads of its Session's context.
-export type PromptSeen = {
-  activeTurnId: string | null;
-  pendingSubmission: { turnId: string } | null;
-  queueSteering: { queuedId?: string; turnId: string } | null;
-  dispatchingQueueId: string | null;
-  promptQueue: { items: readonly { id: string }[] };
-};
+type Settle = (turnId: string | null) => void;
 
-// The Session actor, as far as following a Prompt needs it.
+/*
+ * The Session actor, as far as following a Prompt needs it: the Turn happenings it reports, and its queue, which says
+ * whether a queued Prompt still waits.
+ */
 export type FollowedSession = {
-  getSnapshot: () => { context: PromptSeen };
+  on: (type: '*', listener: (happening: TurnHappening) => void) => Subscription;
+  getSnapshot: () => {
+    context: { promptQueue: { items: readonly { id: string }[] } };
+  };
   subscribe: (observer: Observer<unknown>) => Subscription;
 };
-
-// A Turn that is being admitted or runs.
-const running = (context: PromptSeen, turnId: string): boolean =>
-  context.activeTurnId === turnId ||
-  context.pendingSubmission?.turnId === turnId;
-
-const queued = (context: PromptSeen, queuedId: string): boolean =>
-  context.promptQueue.items.some(({ id }) => id === queuedId);
-
-const steeredTurn = (context: PromptSeen, queuedId: string): string | null =>
-  context.queueSteering?.queuedId === queuedId
-    ? context.queueSteering.turnId
-    : null;
-
-// A Turn started from the queue has the Prompt and the queue no longer does.
-const startedWith = (
-  context: PromptSeen,
-  turnId: string,
-  queuedId: string,
-): boolean => running(context, turnId) && !queued(context, queuedId);
-
-const dispatchTurn = (context: PromptSeen): string | null =>
-  context.pendingSubmission?.turnId ?? null;
 
 const turnOf = (place: PromptPlace): string | null =>
   'turnId' in place ? place.turnId : null;
 
-const queuedOf = (place: PromptPlace): string =>
-  'queuedId' in place ? place.queuedId : '';
-
-/*
- * Follows one Prompt through its Session until the Turn that holds it ends. A queued Prompt is followed into the Turn
- * that takes it in, steered or started from the queue.
- */
+// One Prompt, followed from its place into the Turn that holds it, until that Turn ends.
 class PromptTurn {
-  public turnId: string | null;
-  private readonly queuedId: string;
-  // The Turn a queued Prompt is being dispatched to, before that Turn starts.
-  private dispatchedTo: string | null = null;
+  public constructor(
+    private place: PromptPlace,
+    private readonly settle: Settle,
+  ) {}
 
-  public constructor(place: PromptPlace) {
-    this.turnId = turnOf(place);
-    this.queuedId = queuedOf(place);
+  public heard(happening: TurnHappening): void {
+    if (happening.type === 'prompt.taken') this.taken(happening);
+    else if (turnOf(this.place) === happening.turnId)
+      this.settle(happening.turnId);
   }
 
-  // The Turn id once the Prompt's Turn ended, null once it left the queue without one, undefined while it waits or runs.
-  public look(context: PromptSeen): string | null | undefined {
-    this.follow(context);
+  // A queued Prompt the queue no longer holds, and no Turn took, will never run.
+  public looked(queued: readonly { id: string }[]): void {
+    const { place } = this;
 
-    return this.turnId === null
-      ? this.waiting(context)
-      : this.ran(context, this.turnId);
+    if ('queuedId' in place && !queued.some(({ id }) => id === place.queuedId))
+      this.settle(null);
   }
 
-  private waiting(context: PromptSeen): null | undefined {
-    return queued(context, this.queuedId) ? undefined : null;
+  public closed(): void {
+    this.settle(turnOf(this.place));
   }
 
-  private ran(context: PromptSeen, turnId: string): string | undefined {
-    return running(context, turnId) ? undefined : turnId;
+  private taken({
+    queuedId,
+    turnId,
+  }: Extract<TurnHappening, { type: 'prompt.taken' }>): void {
+    if ('queuedId' in this.place && this.place.queuedId === queuedId)
+      this.place = { turnId };
   }
-
-  private follow(context: PromptSeen): void {
-    if (this.turnId !== null) return;
-    this.noteDispatch(context);
-    this.turnId =
-      steeredTurn(context, this.queuedId) ?? this.startedTurn(context);
-  }
-
-  private noteDispatch(context: PromptSeen): void {
-    if (context.dispatchingQueueId === this.queuedId)
-      this.dispatchedTo = dispatchTurn(context);
-  }
-
-  private startedTurn(context: PromptSeen): string | null {
-    const turnId = this.dispatchedTo;
-
-    if (turnId === null) return null;
-
-    return startedWith(context, turnId, this.queuedId) ? turnId : null;
-  }
-}
-
-type Ended = PromiseWithResolvers<string | null>;
-
-// Settles once a look at the Session finds the Prompt's Turn ended, or the Prompt gone.
-const lookAt =
-  (session: FollowedSession, prompt: PromptTurn, ended: Ended) => (): void => {
-    const turnId = prompt.look(session.getSnapshot().context);
-
-    if (turnId !== undefined) ended.resolve(turnId);
-  };
-
-function followSession(
-  session: FollowedSession,
-  prompt: PromptTurn,
-  ended: Ended,
-): void {
-  const look = lookAt(session, prompt, ended);
-  const closed = (): void => ended.resolve(prompt.turnId);
-  const observer = { next: look, error: closed, complete: closed };
-  const subscription = session.subscribe(observer);
-
-  look();
-  void ended.promise.then(() => subscription.unsubscribe());
 }
 
 /*
- * Settles with the Turn's id when the Turn that holds a Prompt ends. It settles with null when a queued Prompt leaves
- * the queue without a Turn, and with what it knows when the Session closes first. It never rejects.
+ * Hears a Session's Turn happenings from the moment it is made, so a Prompt sent after it can be followed even when its
+ * Turn moves on before anyone asks. Follow one Prompt with `ended`, or `stop` when none was sent.
  */
-export function promptTurnEnded(
-  session: FollowedSession,
-  place: PromptPlace,
-): Promise<string | null> {
-  const ended = Promise.withResolvers<string | null>();
+export class PromptWatch {
+  private readonly heard: TurnHappening[] = [];
+  private prompt: PromptTurn | null = null;
+  private closed = false;
+  private readonly happenings: Subscription;
+  private readonly changes: Subscription;
 
-  followSession(session, new PromptTurn(place), ended);
+  public constructor(private readonly session: FollowedSession) {
+    this.happenings = session.on('*', (happening) => this.hear(happening));
+    this.changes = session.subscribe({
+      next: (): void => this.look(),
+      error: (): void => this.close(),
+      complete: (): void => this.close(),
+    });
+  }
 
-  return ended.promise;
+  /*
+   * Settles with the Turn's id when the Turn that holds the Prompt ends. It settles with null when a queued Prompt
+   * leaves the queue without a Turn, and with what it knows when the Session closes first. It never rejects.
+   */
+  public ended(place: PromptPlace): Promise<string | null> {
+    const ended = Promise.withResolvers<string | null>();
+    const prompt = new PromptTurn(place, ended.resolve);
+
+    this.prompt = prompt;
+    void ended.promise.then(() => this.stop());
+
+    for (const happening of this.heard) prompt.heard(happening);
+    this.look();
+
+    if (this.closed) prompt.closed();
+
+    return ended.promise;
+  }
+
+  public stop(): void {
+    this.happenings.unsubscribe();
+    this.changes.unsubscribe();
+  }
+
+  private hear(happening: TurnHappening): void {
+    if (this.prompt) this.prompt.heard(happening);
+    else this.heard.push(happening);
+  }
+
+  private look(): void {
+    this.prompt?.looked(this.session.getSnapshot().context.promptQueue.items);
+  }
+
+  private close(): void {
+    this.closed = true;
+    this.prompt?.closed();
+  }
 }
