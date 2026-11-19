@@ -3,10 +3,10 @@ import type { VoiceSessions } from './session-link';
 
 const stopVerbs = 'stop|cancel|halt';
 
-// Words around a stop that add no request of their own: "OK, stop working now, please".
-const leadIns = '(?:ok|okay|hey|please) ';
+// Words around a stop that add no request of their own: "No, let's stop working now, please". "let's" reads as "lets" once punctuation is dropped.
+const leadIns = '(?:no|ok|okay|hey|lets|please) ';
 
-const trailers = `it|that|this|working|work|now|please|everything|${stopVerbs}`;
+const trailers = `it|that|this|there|working|work|now|please|everything|${stopVerbs}`;
 
 // A whole utterance that asks only to stop: a stop verb, with at most a few lead-in and trailing words that ask nothing else.
 const stopRequest = new RegExp(

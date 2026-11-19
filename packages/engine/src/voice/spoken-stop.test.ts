@@ -21,6 +21,11 @@ describe('what counts as a spoken "stop"', () => {
     'halt, please',
     'Please cancel that',
     'OK stop',
+    "No, let's stop",
+    "let's stop",
+    'ok stop',
+    "okay let's stop now",
+    'Stop there',
   ])('stops on %j', (words) => {
     expect(isStopRequest(words)).toBe(true);
   });
@@ -35,6 +40,8 @@ describe('what counts as a spoken "stop"', () => {
     'stop working on the tests and fix the build',
     'Halt the deploy on Friday',
     'cancellation policy',
+    "let's stop the server and restart it",
+    'No stopping now',
   ])('sends %j to the Agent instead', (words) => {
     expect(isStopRequest(words)).toBe(false);
   });
