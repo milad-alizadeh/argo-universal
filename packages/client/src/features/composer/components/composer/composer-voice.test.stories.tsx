@@ -1,3 +1,4 @@
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Button } from '@repo/kit/primitives/actions/button';
 import type * as React from 'react';
 import { useState } from 'react';
@@ -279,3 +280,25 @@ export const MicrophoneMutedReadsRed = muted(true, false);
 export const SpeakerMutedReadsRed = muted(false, true);
 
 export const BothMutedReadRed = muted(true, true);
+
+// A phone keeps only the microphone's mute beside End; a wide window keeps both mutes.
+const mutesAt = (width: number, speaker: boolean): Story => ({
+  render: (args) => (
+    <Composer {...composerProps({ ...args, sessionStarted: true })} />
+  ),
+  args: { voice: { kind: 'connected', onEnd: fn(), mutes: noMutes } },
+  play: async ({ canvas }) => {
+    await settleLayout(width);
+    await expect(
+      await canvas.findByTestId(microphoneButtonId),
+    ).toBeInTheDocument();
+    await expect(canvas.getByTestId(endButtonId)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(canvas.queryByTestId(speakerButtonId) !== null).toBe(speaker),
+    );
+  },
+});
+
+export const PhoneKeepsOnlyTheMicrophoneMute = mutesAt(390, false);
+
+export const WideKeepsBothMutes = mutesAt(1280, true);

@@ -48,6 +48,8 @@ export type LeftControlsLayout = AttachLayout &
   AgentControlLayout &
   PhoneStatusLayout;
 
-export type RightControlsLayout = ConfigurationActionsLayout & SendLayout;
+export type RightControlsLayout = ConfigurationActionsLayout &
+  SendLayout &
+  Pick<ComposerLayout, 'wide'>;
 
 export type ToolbarLayout = LeftControlsLayout & RightControlsLayout;

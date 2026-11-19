@@ -84,7 +84,11 @@ function useKeptMutes(mutes: ComposerVoiceMutes | undefined): KeptMutes {
   return { mutes: mutes ?? kept, leaving: !mutes, forget };
 }
 
-type ShownMutes = Omit<KeptMutes, 'mutes'> & { mutes: ComposerVoiceMutes };
+type ShownMutes = Omit<KeptMutes, 'mutes'> & {
+  mutes: ComposerVoiceMutes;
+  // A phone keeps only the microphone's mute beside End; a wide window keeps the speaker's too.
+  wide: boolean;
+};
 
 // Leaving buttons take no press: the call they belonged to has ended.
 const muteRowClass = (leaving: boolean): string =>
@@ -112,7 +116,9 @@ function AnimatedMuteButtons(props: ShownMutes): React.JSX.Element {
     <Animated.View className="flex-row" style={motion.room}>
       <View className={muteRowClass(props.leaving)} onLayout={motion.measure}>
         <ShownMute style={microphone} button={microphoneOf(props.mutes)} />
-        <ShownMute style={speaker} button={speakerOf(props.mutes)} />
+        {props.wide && (
+          <ShownMute style={speaker} button={speakerOf(props.mutes)} />
+        )}
       </View>
     </Animated.View>
   );
@@ -121,10 +127,14 @@ function AnimatedMuteButtons(props: ShownMutes): React.JSX.Element {
 // Once the call connects the mutes spring in beside End, and they go again as it ends.
 export function ComposerMuteButtons({
   voice,
+  wide,
 }: {
   voice: ComposerVoice | undefined;
+  wide: boolean;
 }): React.JSX.Element | null {
   const { mutes, ...kept } = useKeptMutes(mutesOf(voice));
 
-  return mutes ? <AnimatedMuteButtons {...kept} mutes={mutes} /> : null;
+  return mutes ? (
+    <AnimatedMuteButtons {...kept} mutes={mutes} wide={wide} />
+  ) : null;
 }
