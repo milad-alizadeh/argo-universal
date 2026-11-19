@@ -13,11 +13,13 @@
  * between frames in place of LiveWaveform's transition, and the colour comes from the App's tokens.
  */
 import type * as React from 'react';
-import { voiceOrbSize } from '../voice-orb/voice-orb-props';
 import { easing, type CanvasFrame, type CanvasPainter } from './canvas-loop';
 import { VisualiserCanvas } from './visualiser-canvas';
 import { heardOf } from './visualiser-pattern';
-import type { VoiceVisualiserProps } from './voice-visualiser-props';
+import {
+  wideDrawing,
+  type VoiceVisualiserProps,
+} from './voice-visualiser-props';
 import { quietestBar, waveBars } from './wave-bars';
 
 // LiveWaveform's defaults: a 3-point bar, a 1-point gap, a 1.5-point corner and bars never under 4 points tall.
@@ -42,17 +44,19 @@ const settleSeconds = 0.08;
 
 const step = barWidth + barGap;
 
-const barCount = Math.floor(voiceOrbSize / step);
+const { width, height } = wideDrawing;
 
-// The bars sit centred across the well.
-const inset = (voiceOrbSize - (barCount * step - barGap)) / 2;
+const barCount = Math.floor(width / step);
+
+// The bars sit centred across the drawing.
+const inset = (width - (barCount * step - barGap)) / 2;
 
 /*
  * How much of a bar the edge fade leaves, from 0 at either edge to 1 once a fade's width in: LiveWaveform clears its
  * edges with a `destination-out` gradient, which comes to the same thing for bars drawn one colour.
  */
 function edgeFade(x: number): number {
-  return Math.min(1, x / fadeWidth, (voiceOrbSize - x) / fadeWidth);
+  return Math.min(1, x / fadeWidth, (width - x) / fadeWidth);
 }
 
 const opacityOf = (value: number): number => faintest + value * (1 - faintest);
@@ -60,12 +64,12 @@ const opacityOf = (value: number): number => faintest + value * (1 - faintest);
 type Context = CanvasRenderingContext2D;
 
 function bar(context: Context, index: number, value: number): void {
-  const height = Math.max(shortestBar, value * voiceOrbSize * tallest);
+  const tall = Math.max(shortestBar, value * height * tallest);
   const x = inset + index * step;
-  const top = (voiceOrbSize - height) / 2;
+  const top = (height - tall) / 2;
   context.globalAlpha = opacityOf(value) * edgeFade(x + barWidth / 2);
   context.beginPath();
-  context.roundRect(x, top, barWidth, height, barRadius);
+  context.roundRect(x, top, barWidth, tall, barRadius);
   context.fill();
 }
 
@@ -96,7 +100,7 @@ class WavePainter implements CanvasPainter {
 
 const newPainter = (): CanvasPainter => new WavePainter();
 
-// The live waveform in the orb's footprint.
+// The live waveform, a horizontal row of bars as tall as the orb and wide.
 export function VoiceWave(props: VoiceVisualiserProps): React.JSX.Element {
   return <VisualiserCanvas {...props} painter={newPainter} />;
 }

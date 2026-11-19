@@ -7,7 +7,7 @@
  * included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY
  * OF ANY KIND. https://github.com/elevenlabs/ui
  *
- * Argo's changes: a square grid of any size written into one reused buffer rather than a new array per frame, a `vu`
+ * Argo's changes: a grid of any rows and columns written into one reused buffer rather than a new array per frame, a `vu`
  * that grows from the middle row and mirrors the bands out from the middle column, and frames read from a clock
  * rather than stepped through by React state.
  */
@@ -17,30 +17,34 @@ const turn = Math.PI * 2;
 
 const half = 0.5;
 
-// A square of dots, each a brightness from 0 to 1, row by row; one buffer, refilled each frame.
+// A rectangle of dots, each a brightness from 0 to 1, row by row; one buffer, refilled each frame.
 export class MatrixGrid {
   public readonly dots: Float32Array;
   // The middle row's and the middle column's index.
-  public readonly middle: number;
+  public readonly middleRow: number;
+  public readonly middleColumn: number;
 
-  public constructor(public readonly size: number) {
-    this.dots = new Float32Array(size * size);
-    this.middle = (size - 1) / 2;
+  public constructor(
+    public readonly rows: number,
+    public readonly columns: number,
+  ) {
+    this.dots = new Float32Array(rows * columns);
+    this.middleRow = (rows - 1) / 2;
+    this.middleColumn = (columns - 1) / 2;
   }
 
   public at(row: number, column: number): number {
-    return this.dots[row * this.size + column] ?? 0;
+    return this.dots[row * this.columns + column] ?? 0;
   }
 
   public set(row: number, column: number, value: number): void {
-    if (this.holds(row) && this.holds(column))
-      this.dots[row * this.size + column] = value;
-  }
-
-  private holds(index: number): boolean {
-    return index >= 0 && index < this.size;
+    if (holds(row, this.rows) && holds(column, this.columns))
+      this.dots[row * this.columns + column] = value;
   }
 }
+
+const holds = (index: number, count: number): boolean =>
+  index >= 0 && index < count;
 
 // What the matrix shows at one moment: the pattern, the sound it draws, if any, and the clock in seconds.
 export interface MatrixMoment {
@@ -82,7 +86,7 @@ function bandFor(
 }
 
 function vuColumn(grid: MatrixGrid, column: number, level: number): void {
-  const { middle } = grid;
+  const middle = grid.middleRow;
   const reach = Math.min(middle, Math.floor(level * (middle + 1)));
 
   if (level * (middle + 1) < 1) return grid.set(middle, column, quietDot);
@@ -95,8 +99,8 @@ function vuColumn(grid: MatrixGrid, column: number, level: number): void {
 }
 
 function vu(grid: MatrixGrid, levels: ArrayLike<number>): void {
-  for (let column = 0; column < grid.size; column++)
-    vuColumn(grid, column, bandFor(levels, column, grid.middle));
+  for (let column = 0; column < grid.columns; column++)
+    vuColumn(grid, column, bandFor(levels, column, grid.middleColumn));
 }
 
 // ElevenLabs' loader steps 12 frames a turn at 12 frames a second.
@@ -113,18 +117,18 @@ const tailFade = 1.2;
 const tailBrightness = (dot: number): number =>
   Math.max(faintestTail, 1 - dot / (loaderDots * tailFade));
 
-// A ring of dots with a fading tail, turning once a second.
+// A ring of dots with a fading tail in the middle of the grid, turning once a second.
 function loader(grid: MatrixGrid, time: number): void {
-  const { middle } = grid;
-  const radius = middle - half;
+  const { middleRow, middleColumn } = grid;
+  const radius = middleRow - half;
   const step = Math.floor(time * loaderSteps) % loaderSteps;
 
   for (let dot = 0; dot < loaderDots; dot++) {
     const angle = (step / loaderSteps + dot / loaderDots) * turn;
 
     grid.set(
-      Math.round(middle + Math.sin(angle) * radius),
-      Math.round(middle + Math.cos(angle) * radius),
+      Math.round(middleRow + Math.sin(angle) * radius),
+      Math.round(middleColumn + Math.cos(angle) * radius),
       tailBrightness(dot),
     );
   }
@@ -135,14 +139,14 @@ const wavePeriod = 3;
 
 // Where a column's wave sits, in rows from the top: one row in from either edge at its peaks.
 function waveHeight(grid: MatrixGrid, column: number, time: number): number {
-  const phase = (time / wavePeriod + column / grid.size) * turn;
+  const phase = (time / wavePeriod + column / grid.columns) * turn;
 
-  return Math.sin(phase) * (grid.middle - half) + grid.middle + half;
+  return Math.sin(phase) * (grid.middleRow - half) + grid.middleRow + half;
 }
 
 // A sine wave rolling across the columns, its dot shared with the rows either side by how far between them it falls.
 function wave(grid: MatrixGrid, time: number): void {
-  for (let column = 0; column < grid.size; column++) {
+  for (let column = 0; column < grid.columns; column++) {
     const height = waveHeight(grid, column, time);
     const row = Math.floor(height);
     const fraction = height - row;

@@ -21,7 +21,13 @@ const drawings: Record<
   band: VoiceOrb,
 };
 
-const wellClass = 'size-34 rounded-full bg-muted p-1 shadow-inner';
+// Only the orb is round; the matrix and the wave are wide rounded rectangles, as tall as the orb.
+const shapes: Record<VoiceVisualiserKind, { well: string; drawing: string }> = {
+  orb: { well: 'size-34 rounded-full', drawing: 'rounded-full' },
+  matrix: { well: 'h-34 w-80 rounded-3xl', drawing: 'rounded-2xl' },
+  wave: { well: 'h-34 w-80 rounded-3xl', drawing: 'rounded-2xl' },
+  band: { well: 'size-34 rounded-full', drawing: 'rounded-full' },
+};
 
 type Props = VoiceVisualiserProps & {
   // The visualiser this Device chose; the orb where the stage offers no toggle.
@@ -29,8 +35,8 @@ type Props = VoiceVisualiserProps & {
 };
 
 /*
- * The well every visualiser sits in, sunk into the page as Paper's "Voice stage" draws the orb's. Each visualiser is
- * the orb's size, so choosing another never moves the label or the Feed under it.
+ * The well every visualiser sits in, sunk into the page as Paper's "Voice stage" draws the orb's. Each stands as tall
+ * as the orb, so choosing another never moves the label or the Feed under it.
  */
 export function VoiceVisualiser({
   visualiser,
@@ -39,7 +45,10 @@ export function VoiceVisualiser({
   const kind = kindOf(visualiser);
 
   return (
-    <View testID="voice-visualiser" className={wellClass}>
+    <View
+      testID="voice-visualiser"
+      className={`${shapes[kind].well} bg-muted p-1 shadow-inner`}
+    >
       <Drawn kind={kind} {...props} />
     </View>
   );
@@ -54,7 +63,7 @@ function Drawn({
   return (
     <View
       testID={`voice-visualiser-${kind}`}
-      className="overflow-hidden rounded-full shadow-inner"
+      className={`overflow-hidden shadow-inner ${shapes[kind].drawing}`}
     >
       <Drawing {...props} />
     </View>

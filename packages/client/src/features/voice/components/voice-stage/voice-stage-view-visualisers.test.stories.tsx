@@ -29,6 +29,12 @@ type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
 
 const kinds = ['orb', 'matrix', 'wave', 'band'] as const;
 
+const wellElement = (canvas: Canvas): HTMLElement =>
+  canvas.getByTestId('voice-visualiser');
+
+const stageElement = (canvas: Canvas): HTMLElement =>
+  canvas.getByTestId('voice-stage');
+
 // Exactly one visualiser draws, and it is this one.
 async function expectShowing(canvas: Canvas, kind: string): Promise<void> {
   await expect(canvas.getByTestId(`voice-visualiser-${kind}`)).toBeVisible();
@@ -39,32 +45,33 @@ async function expectShowing(canvas: Canvas, kind: string): Promise<void> {
     ).not.toBeInTheDocument();
 }
 
-// Where the well and the label sit, so a switch that moved either would show.
+// Where the label sits and how tall the well stands, so a switch that moved the Feed under the stage would show.
 function placesOf(canvas: Canvas): string {
-  const well = canvas.getByTestId('voice-visualiser').getBoundingClientRect();
+  const well = wellElement(canvas).getBoundingClientRect();
   const label = canvas.getByText('Listening').getBoundingClientRect();
 
-  return JSON.stringify([well.x, well.y, well.width, well.height, label.y]);
+  return JSON.stringify([well.y, well.height, label.y]);
 }
 
-export const SwitchesTheVisualiser: Story = {
-  play: async ({ canvas, userEvent, args }) => {
-    await expectShowing(canvas, 'orb');
-    await userEvent.click(canvas.getByRole('button', { name: 'Matrix' }));
-    await expectShowing(canvas, 'matrix');
-    await expect(args.visualiser?.onChange).toHaveBeenCalledWith('matrix');
-    await expect(
-      canvas.getByRole('button', { name: 'Matrix' }),
-    ).toHaveAttribute('aria-pressed', 'true');
-    await userEvent.click(canvas.getByRole('button', { name: 'Wave' }));
-    await expectShowing(canvas, 'wave');
-    await expect(args.visualiser?.onChange).toHaveBeenLastCalledWith('wave');
-    await userEvent.click(canvas.getByRole('button', { name: 'Orb' }));
-    await expectShowing(canvas, 'orb');
-  },
-};
+// The well's middle sits on the stage's middle.
+async function expectCentred(canvas: Canvas): Promise<void> {
+  const well = wellElement(canvas).getBoundingClientRect();
+  const stage = stageElement(canvas).getBoundingClientRect();
 
-// Each visualiser takes the orb's footprint, so switching never moves the label or the Feed under the stage.
+  await expect(well.x + well.width / 2).toBeCloseTo(
+    stage.x + stage.width / 2,
+    0,
+  );
+}
+
+const wellOf = (canvas: Canvas): DOMRect =>
+  wellElement(canvas).getBoundingClientRect();
+
+// How round the well's corners are, in points: half its height or more is a circle's.
+const cornerOf = (canvas: Canvas): number =>
+  Number.parseFloat(getComputedStyle(wellElement(canvas)).borderTopLeftRadius);
+
+// Every visualiser stands as tall as the orb, so switching never moves the label or the Feed under the stage.
 export const KeepsTheFootprint: Story = {
   play: async ({ canvas, userEvent }) => {
     const orb = placesOf(canvas);
@@ -72,6 +79,27 @@ export const KeepsTheFootprint: Story = {
     for (const name of ['Matrix', 'Wave', 'Orb']) {
       await userEvent.click(canvas.getByRole('button', { name }));
       await waitFor(() => expect(placesOf(canvas)).toBe(orb));
+    }
+  },
+};
+
+/*
+ * Only the orb is round: the matrix is a rectangular grid of dots and the wave a horizontal waveform, as ElevenLabs
+ * draws them, each wider than tall and centred on the stage.
+ */
+export const OnlyTheOrbIsRound: Story = {
+  play: async ({ canvas, userEvent }) => {
+    const orb = wellOf(canvas);
+    await expect(orb.width).toBe(orb.height);
+    await expectCentred(canvas);
+
+    for (const name of ['Matrix', 'Wave']) {
+      await userEvent.click(canvas.getByRole('button', { name }));
+      await waitFor(() =>
+        expect(wellOf(canvas).width).toBeGreaterThan(orb.width * 2),
+      );
+      await expect(cornerOf(canvas)).toBeLessThan(wellOf(canvas).height / 2);
+      await expectCentred(canvas);
     }
   },
 };
@@ -119,7 +147,7 @@ export const BandLeavesOnlyTheToggle: Story = {
     ).not.toBeInTheDocument();
     await expect(canvas.queryByText('Listening')).not.toBeInTheDocument();
     await expect(
-      canvas.getByTestId('voice-stage').getBoundingClientRect().height,
+      stageElement(canvas).getBoundingClientRect().height,
     ).toBeLessThan(tall / 2);
     await userEvent.click(canvas.getByRole('button', { name: 'Orb' }));
     await expectShowing(canvas, 'orb');

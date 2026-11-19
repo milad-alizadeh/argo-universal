@@ -16,7 +16,7 @@ export type EdgeCall = Pick<VoiceCall, 'orb' | 'trouble'> & {
 export type EdgeMotion = 'sweep' | 'history' | 'breathe' | 'flat';
 
 // The bars' colour, each one of the App's colour tokens.
-export type EdgeTone =
+type EdgeTone =
   | 'tertiary'
   | 'foreground'
   | 'info'

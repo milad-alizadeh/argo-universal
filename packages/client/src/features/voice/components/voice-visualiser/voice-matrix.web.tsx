@@ -1,6 +1,6 @@
 /*
- * ElevenLabs UI's Matrix (`matrix.tsx`), drawn on a canvas in the App's tokens: a disc of LED dots that lights the
- * call's sound band by band, turns a ring while connecting and rolls a slow wave while the Agent works.
+ * ElevenLabs UI's Matrix (`matrix.tsx`), drawn on a canvas in the App's tokens: a wide rectangular grid of LED dots that
+ * lights the call's sound band by band, turns a ring while connecting and rolls a slow wave while the Agent works.
  *
  * MIT License, Copyright (c) 2025 Eleven Labs Inc. Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software
@@ -8,21 +8,28 @@
  * included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY
  * OF ANY KIND. https://github.com/elevenlabs/ui
  *
- * Argo's changes: a canvas painted each animation frame instead of SVG circles rendered by React state, the dots kept
- * to a disc so the matrix fills the orb's well, and colours from the App's tokens instead of ElevenLabs' palette.
+ * Argo's changes: a canvas painted each animation frame instead of SVG circles rendered by React state, and colours
+ * from the App's tokens instead of ElevenLabs' palette.
  */
 import type * as React from 'react';
-import { voiceOrbSize } from '../voice-orb/voice-orb-props';
 import { easing, type CanvasFrame, type CanvasPainter } from './canvas-loop';
 import { drawMatrix, MatrixGrid } from './matrix-frames';
 import { VisualiserCanvas } from './visualiser-canvas';
 import { heardOf } from './visualiser-pattern';
-import type { VoiceVisualiserProps } from './voice-visualiser-props';
+import {
+  wideDrawing,
+  type VoiceVisualiserProps,
+} from './voice-visualiser-props';
 
-// Eleven dots across the orb's 128 points: ElevenLabs' 10-point dot and 2-point gap, scaled to fit.
-const dotsAcross = 11;
+// Eleven rows down the drawing's 128 points, ElevenLabs' dot and gap scaled to fit, and as many columns as fit across.
+const rows = 11;
 
-const pitch = voiceOrbSize / dotsAcross;
+const pitch = wideDrawing.height / rows;
+
+const columns = Math.floor(wideDrawing.width / pitch);
+
+// The columns sit centred across the drawing.
+const inset = (wideDrawing.width - columns * pitch) / 2;
 
 // ElevenLabs' cell is a 10-point dot beside a 2-point gap, and it draws the dot at 90% of its own radius.
 const elevenLabsDot = 10;
@@ -52,20 +59,14 @@ const half = 0.5;
 
 const turn = Math.PI * 2;
 
-const radiusSquared = ((dotsAcross - 1) / 2) ** 2 + 1 / 2;
-
-// The dots the disc keeps: those whose centre falls inside the well's circle.
-const inDisc = (row: number, column: number, middle: number): boolean =>
-  (row - middle) ** 2 + (column - middle) ** 2 <= radiusSquared;
-
 type Context = CanvasRenderingContext2D;
 
 // The middle of the cell at this row or column, in points.
 const centre = (place: number): number => (place + half) * pitch;
 
 function dot(context: Context, index: number, radius: number): void {
-  const x = centre(index % dotsAcross);
-  const y = centre(Math.floor(index / dotsAcross));
+  const x = inset + centre(index % columns);
+  const y = centre(Math.floor(index / columns));
   context.beginPath();
   context.arc(x, y, radius, 0, turn);
   context.fill();
@@ -94,8 +95,8 @@ function lit(frame: CanvasFrame, index: number, value: number): void {
 
 // The matrix's dots, eased towards each frame the pattern asks for so they fade as ElevenLabs' do.
 class MatrixPainter implements CanvasPainter {
-  private readonly grid = new MatrixGrid(dotsAcross);
-  private readonly shown = new Float32Array(dotsAcross * dotsAcross);
+  private readonly grid = new MatrixGrid(rows, columns);
+  private readonly shown = new Float32Array(rows * columns);
 
   public paint(frame: CanvasFrame): void {
     const { pattern, spectrum, time } = frame;
@@ -117,10 +118,6 @@ class MatrixPainter implements CanvasPainter {
   }
 
   private paintDot(frame: CanvasFrame, index: number, value: number): void {
-    const row = Math.floor(index / dotsAcross);
-
-    if (!inDisc(row, index % dotsAcross, this.grid.middle)) return;
-
     if (value > offBelow) lit(frame, index, value);
     else unlit(frame.context, index, frame.colours.off);
   }
@@ -128,7 +125,7 @@ class MatrixPainter implements CanvasPainter {
 
 const newPainter = (): CanvasPainter => new MatrixPainter();
 
-// The LED matrix in the orb's footprint.
+// The LED matrix, as tall as the orb and wide.
 export function VoiceMatrix(props: VoiceVisualiserProps): React.JSX.Element {
   return <VisualiserCanvas {...props} painter={newPainter} />;
 }

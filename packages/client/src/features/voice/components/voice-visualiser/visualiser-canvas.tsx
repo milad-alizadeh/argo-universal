@@ -1,11 +1,12 @@
 import type * as React from 'react';
 import { useRef } from 'react';
 import { View } from 'react-native';
-import { orbName, voiceOrbSize } from '../voice-orb/voice-orb-props';
+import { orbName } from '../voice-orb/voice-orb-props';
 import { useCanvasLoop, type CanvasPainter } from './canvas-loop';
-import type { VoiceVisualiserProps } from './voice-visualiser-props';
-
-const footprint = { width: voiceOrbSize, height: voiceOrbSize };
+import {
+  wideDrawing,
+  type VoiceVisualiserProps,
+} from './voice-visualiser-props';
 
 type Props = VoiceVisualiserProps & { painter: () => CanvasPainter };
 
@@ -18,26 +19,26 @@ function PaintedCanvas({ painter, ...props }: Props): React.JSX.Element {
     <div className="text-muted-foreground">
       <canvas
         ref={canvas}
-        width={voiceOrbSize * window.devicePixelRatio}
-        height={voiceOrbSize * window.devicePixelRatio}
+        width={wideDrawing.width * window.devicePixelRatio}
+        height={wideDrawing.height * window.devicePixelRatio}
         className="block text-tone-info-500"
-        style={footprint}
+        style={wideDrawing}
       />
     </div>
   );
 }
 
 /*
- * A web canvas the matrix and the wave paint on, in the orb's footprint and named to assistive tech as the orb is. Only
- * `.web.tsx` drawings use it: a phone has no DOM canvas.
+ * The wide web canvas the matrix and the wave paint on, named to assistive tech as the orb is. Only `.web.tsx`
+ * drawings use it: a phone has no DOM canvas.
  */
 export function VisualiserCanvas(props: Props): React.JSX.Element {
   return (
     <View
       accessibilityRole="image"
       accessibilityLabel={orbName(props.state)}
-      className="overflow-hidden rounded-full bg-card"
-      style={footprint}
+      className="overflow-hidden rounded-2xl bg-card"
+      style={wideDrawing}
     >
       <PaintedCanvas {...props} />
     </View>

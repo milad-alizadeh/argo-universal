@@ -1,7 +1,6 @@
 import type * as React from 'react';
 import { useEffect, useRef } from 'react';
 import { silentSpectrum, type VoiceSpectrum } from '../../voice-connection';
-import { voiceOrbSize } from '../voice-orb/voice-orb-props';
 import { patternOf, type VisualiserPattern } from './visualiser-pattern';
 import type { VoiceVisualiserProps } from './voice-visualiser-props';
 
@@ -110,8 +109,9 @@ class CanvasLoop {
 // Clears the canvas and draws in points from here on, sharp at the screen's pixel ratio.
 function clear(context: CanvasRenderingContext2D): void {
   const ratio = window.devicePixelRatio;
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.clearRect(0, 0, context.canvas.width, context.canvas.height);
   context.setTransform(ratio, 0, 0, ratio, 0, 0);
-  context.clearRect(0, 0, voiceOrbSize, voiceOrbSize);
 }
 
 function useLatest<T>(value: T): React.RefObject<T> {
