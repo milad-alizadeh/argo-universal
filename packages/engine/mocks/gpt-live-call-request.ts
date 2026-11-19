@@ -69,3 +69,20 @@ export function answer(response: ServerResponse, reply: Reply): void {
   response.writeHead(reply.status, reply.headers);
   response.end(reply.body);
 }
+
+export type CreatedCall = CallRequest & {
+  authorization: string | undefined;
+  alpha: string | undefined;
+  url: string;
+};
+
+// What a test reads back of a call the fake service created.
+export const recordOf = (
+  request: IncomingMessage,
+  form: CallRequest,
+): CreatedCall => ({
+  authorization: request.headers.authorization,
+  alpha: request.headers['openai-alpha']?.toString(),
+  url: request.url ?? '',
+  ...form,
+});

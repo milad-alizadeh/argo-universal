@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { VoiceProviderEvent } from '../provider';
+import { serviceClosed } from './service-close';
 
 /*
  * The control link's events as the service sends them ("frameless bidi"); Codex reads the same ones (codex-rs realtime_websocket/protocol_frameless_bidi.rs).
@@ -126,8 +127,11 @@ const reported = z.union([
     .transform(turnDone('voice', { type: 'speaking', speaking: false })),
   delegation.transform(requested),
   z
-    .looseObject({ type: z.literal('session.closed') })
-    .transform(() => report({ type: 'closed', reason: 'ended' })),
+    .looseObject({
+      type: z.literal('session.closed'),
+      reason: z.string().optional(),
+    })
+    .transform(({ reason }) => report(serviceClosed(reason))),
 ]);
 
 const stepOf = (frame: string): Step | null => {

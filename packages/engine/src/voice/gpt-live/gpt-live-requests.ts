@@ -93,15 +93,31 @@ export async function createCall(
   return { answer: await response.text(), callId: callIdOf(response) };
 }
 
-const refusalOf = (status: number | undefined): Error =>
-  rejectedStatuses.has(status ?? 0)
+// The service no longer knows the call: it ended the call itself and answers its link with 404 `session_id_not_found` (#2405 probe, 2026-11-19).
+export class CallGone extends Error {
+  public constructor() {
+    super('GPT-Live no longer has the call (404)');
+  }
+}
+
+const notFound = 404;
+
+const tokenRefusalOf = (status: number): Error =>
+  rejectedStatuses.has(status)
     ? new TokenRejected()
     : new Error('GPT-Live refused the control link.');
+
+const refusalOf = (status: number | undefined): Error =>
+  status === notFound ? new CallGone() : tokenRefusalOf(status ?? 0);
+
+// How long joining the link may take before it counts as refused, so a join in flight never holds a lost call open.
+const joinTimeoutMs = 10_000;
 
 // Joins the call's control link with the same token.
 export function joinLink(url: string, token: string): Promise<WebSocket> {
   const link = new WebSocket(url, {
     headers: { Authorization: bearer(token), 'openai-alpha': alpha },
+    handshakeTimeout: joinTimeoutMs,
   });
 
   return new Promise((resolve, reject) => {
