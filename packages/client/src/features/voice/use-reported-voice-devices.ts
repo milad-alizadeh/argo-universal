@@ -5,7 +5,7 @@ import { useAudioDevices } from './use-voice-devices';
 import { useVoiceDeviceChoice } from './voice-device-choice';
 import { deviceReportOf, onDeviceRequest } from './voice-device-report';
 
-// Reports this Device's microphones and speakers to the Server again whenever they or the choice change (ADR-0063).
+// Reports this Device's microphones and speakers to the Server again whenever they or the choice change (ADR-0064).
 export function useReportedVoiceDevices(): void {
   const trpc = useTRPC();
   const devices = useAudioDevices(true);

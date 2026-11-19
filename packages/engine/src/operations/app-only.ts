@@ -3,7 +3,7 @@ import { TRPCError } from '@trpc/server';
 
 /*
  * Operations only an App runs: the person's own Queued Prompts, and the Voice call, which carries the App's sound
- * and ends when its Connection does (ADR-0063). An Agent hangs up with `voice.hangUp`, and Agents and the CLI read
+ * and ends when its Connection does (ADR-0064). An Agent hangs up with `voice.hangUp`, and Agents and the CLI read
  * the Voice settings and change the voice and instructions the next call uses; turning Voice calls on or off and
  * choosing the provider stay the App's. No other caller sees these listed, and each refuses them.
  */

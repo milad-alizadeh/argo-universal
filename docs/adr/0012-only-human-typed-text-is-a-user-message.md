@@ -21,6 +21,6 @@ The adapter drops system reminders, records that the vendor flags as meta or syn
 
 Owner amendment, 2026-11-18 (#2373): [ADR-0061](0061-reviews-belong-to-the-engine-and-change-providers-own-remote-writes.md) adds Review as a fourth authenticated Prompt sender. The Engine records its Review identity and the Feed draws “From Review”. Reviewer instructions and Finding Fix Prompts use this sender. Agent-supplied JSON cannot claim it.
 
-## Voice calls under ADR-0063
+## Voice calls under ADR-0064
 
-Owner amendment, 2026-11-18: [ADR-0063](0063-a-voice-call-belongs-to-the-server-and-speaks-for-one-session.md) adds the Voice call as a fifth authenticated Prompt sender. A voice model writes the Prompt from what the person said, so it is not the person's own message. Unlike every other sender's Prompt, it is stored and never drawn: the Feed shows what the person said and what the voice said as transcript rows instead. The person's spoken words are drawn as the person's, because the person said them; they are not a `user_message` and never reach the Agent as written.
+Owner amendment, 2026-11-18: [ADR-0064](0064-a-voice-call-belongs-to-the-server-and-speaks-for-one-session.md) adds the Voice call as a fifth authenticated Prompt sender. A voice model writes the Prompt from what the person said, so it is not the person's own message. Unlike every other sender's Prompt, it is stored and never drawn: the Feed shows what the person said and what the voice said as transcript rows instead. The person's spoken words are drawn as the person's, because the person said them; they are not a `user_message` and never reach the Agent as written.

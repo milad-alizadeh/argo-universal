@@ -48,7 +48,7 @@ const chosen = (
 });
 
 /*
- * The microphones and speakers of the Apps that can carry a Voice call (ADR-0063). Each App reports them over its own
+ * The microphones and speakers of the Apps that can carry a Voice call (ADR-0064). Each App reports them over its own
  * Connection and keeps its choice itself; an Agent or the CLI reads and changes them on one App: the one carrying the
  * running call, else the one that started the last call, else the one that connected last.
  */

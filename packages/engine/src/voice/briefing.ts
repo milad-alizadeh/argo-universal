@@ -15,7 +15,7 @@ const briefingCharacters = 20_000;
 
 const recentRows = 300;
 
-// The rows a briefing reads: what the person, the Agent, the voice and other senders said (ADR-0063).
+// The rows a briefing reads: what the person, the Agent, the voice and other senders said (ADR-0064).
 const spokenKinds = [
   'user_message',
   'agent_message',

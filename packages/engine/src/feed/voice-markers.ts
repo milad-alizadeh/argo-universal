@@ -1,7 +1,7 @@
 import type { ContentBlock, SessionUpdate } from '@repo/contracts';
 
 /*
- * The marks an Agent puts at the start of a message on a Voice call (ADR-0063): progress, a result, or silent analysis.
+ * The marks an Agent puts at the start of a message on a Voice call (ADR-0064): progress, a result, or silent analysis.
  * They are for the voice, not the reader. The Feed reads every stored, queued or in-memory row without them, so no
  * reader has to remember to; only the Feed's live changes, which the voice hears, still carry them.
  */

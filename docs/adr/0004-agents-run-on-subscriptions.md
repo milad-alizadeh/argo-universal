@@ -33,9 +33,9 @@ The Server accepts protocol version 1 or newer. `session/close` is optional. Clo
 - Argo-owned native adapters. Superseded by Spec 0009: public upstream adapters and the SDK own protocol behavior.
 - Off-the-shelf ACP adapters. Rejected earlier because paged history, the Agents a Session starts and usage were incomplete; Spec 0009 accepts upstream protocol support and defines honest product outcomes for unavailable capabilities instead of maintaining another native strategy.
 
-## Voice calls under ADR-0063
+## Voice calls under ADR-0064
 
-Owner amendment, 2026-11-18: [ADR-0063](0063-a-voice-call-belongs-to-the-server-and-speaks-for-one-session.md) lets the Engine use one Agent's sign-in for something other than that Agent's Sessions. The GPT-Live Voice provider asks the installed Codex for a ChatGPT token, holds it in memory for the length of a Voice call, and never stores or refreshes it. Argo still runs no sign-in of its own for ChatGPT and still checks no subscription: when Codex is not installed or not signed in, the provider is unavailable and says so. The vendor name stays inside the provider module.
+Owner amendment, 2026-11-18: [ADR-0064](0064-a-voice-call-belongs-to-the-server-and-speaks-for-one-session.md) lets the Engine use one Agent's sign-in for something other than that Agent's Sessions. The GPT-Live Voice provider asks the installed Codex for a ChatGPT token, holds it in memory for the length of a Voice call, and never stores or refreshes it. Argo still runs no sign-in of its own for ChatGPT and still checks no subscription: when Codex is not installed or not signed in, the provider is unavailable and says so. The vendor name stays inside the provider module.
 
 ## Composer Usage limits
 

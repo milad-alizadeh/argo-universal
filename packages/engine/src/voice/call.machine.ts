@@ -27,7 +27,7 @@ import { detachedSessions } from './session-link';
 import { isTranscript, storeTranscript, withTranscript } from './transcript';
 
 /*
- * The Voice call's lifecycle (ADR-0063): one machine for the one call a Server runs, attached to one Session for its whole life.
+ * The Voice call's lifecycle (ADR-0064): one machine for the one call a Server runs, attached to one Session for its whole life.
  * It is not part of the Session machine or the Agent machine; it watches its Session and the App's Connection from outside.
  * Provider events other than the connection's own pass through `provider.event` for the transcript, request and usage work that builds on this.
  */

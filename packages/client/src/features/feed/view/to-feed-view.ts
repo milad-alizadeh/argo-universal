@@ -18,7 +18,7 @@ interface Pass {
   snapshot: SessionSnapshot;
 }
 
-// A Voice call's Prompt is stored for the Agent and never drawn (ADR-0063).
+// A Voice call's Prompt is stored for the Agent and never drawn (ADR-0064).
 const isVoicePrompt = (row: SessionUpdate): boolean =>
   row.sessionUpdate === 'prompt_message' &&
   row._meta.argo.sender.type === 'voice';

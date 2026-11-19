@@ -2,7 +2,7 @@ import type { VoiceStatus } from '@repo/contracts';
 import type { VoiceDeviceChoice } from './voice-device-choice';
 
 /*
- * The App's side of a Voice call: the microphone, the speaker and the peer connection to the Voice provider (ADR-0063).
+ * The App's side of a Voice call: the microphone, the speaker and the peer connection to the Voice provider (ADR-0064).
  * The Server only relays the offer and the answer, so this is all the audio the App needs.
  */
 export interface VoiceConnection {

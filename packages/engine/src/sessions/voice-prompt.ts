@@ -7,7 +7,7 @@ import { steered, type SteeredPrompt } from './steered-prompt';
 type VoicePromptSources = Parameters<typeof sendPromptAs>[0] &
   HandlerSources<never, 'ready'>;
 
-// The Voice call as a Prompt sender (ADR-0063): stored with the Prompt and never drawn.
+// The Voice call as a Prompt sender (ADR-0064): stored with the Prompt and never drawn.
 const voiceSender: NonUserPromptSender = { type: 'voice' };
 
 /*

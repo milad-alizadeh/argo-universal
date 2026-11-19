@@ -12,7 +12,7 @@ export const NonUserPromptSender = z.discriminatedUnion('type', [
     pluginId: z.string(),
     title: z.string().min(1),
   }),
-  // The Voice call (ADR-0063): its Prompts are stored and never drawn.
+  // The Voice call (ADR-0064): its Prompts are stored and never drawn.
   z.strictObject({ type: z.literal('voice') }),
 ]);
 

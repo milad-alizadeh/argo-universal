@@ -10,7 +10,7 @@ import {
 } from '../voice';
 import type { OperationDefinition } from './index';
 
-// The Voice call's Operations (ADR-0063): the App starts, ends, reads and previews calls; an Agent only hangs up its own.
+// The Voice call's Operations (ADR-0064): the App starts, ends, reads and previews calls; an Agent only hangs up its own.
 export const voiceOperations = {
   'voice.status': {
     id: 'voice.status',

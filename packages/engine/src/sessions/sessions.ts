@@ -92,13 +92,13 @@ export class Sessions {
   ): ReturnType<typeof promptFromPlugin> {
     return promptFromPlugin(this.sources, input, sender);
   }
-  // The Voice call's request for work: a Plugin's Prompt with the Voice call as sender, steering a running Turn when it can (ADR-0063).
+  // The Voice call's request for work: a Plugin's Prompt with the Voice call as sender, steering a running Turn when it can (ADR-0064).
   public promptFromVoice(
     input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
   ): ReturnType<typeof promptFromVoice> {
     return promptFromVoice(this.sources, input);
   }
-  // A spoken "stop" (ADR-0063): cancels the running Turn as the Stop button does; resolves false when no Turn runs.
+  // A spoken "stop" (ADR-0064): cancels the running Turn as the Stop button does; resolves false when no Turn runs.
   public async stopFromVoice(sessionId: string): Promise<boolean> {
     const session = this.sources.open.session(sessionId);
 

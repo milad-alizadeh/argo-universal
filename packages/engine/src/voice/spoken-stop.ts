@@ -13,7 +13,7 @@ const normalised = (words: string): string =>
     .split(/\s+/)
     .join(' ');
 
-// Whether the person's handed-over words ask only to stop the Agent's work (ADR-0063: saying "stop" cancels the Turn).
+// Whether the person's handed-over words ask only to stop the Agent's work (ADR-0064: saying "stop" cancels the Turn).
 export const isStopRequest = (words: string): boolean =>
   stopRequest.test(normalised(words));
 

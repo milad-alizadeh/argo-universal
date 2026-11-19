@@ -324,7 +324,7 @@ Two surfaces, `main-thread` and `global-overlay` (`preferredPresentationSurface`
 
 ## 13. Pipeline findings from two spikes (2026-11-18)
 
-The sections above describe an older Codex build and were written before the pipeline was traced. This section records what was measured against ChatGPT.app 26.1111.21308 (bundled Codex 0.169) and the live service, on a ChatGPT Pro login. The decisions taken from it are in [ADR-0063](../adr/0063-a-voice-call-belongs-to-the-server-and-speaks-for-one-session.md); it answers open questions 1 to 4 and 9 above.
+The sections above describe an older Codex build and were written before the pipeline was traced. This section records what was measured against ChatGPT.app 26.1111.21308 (bundled Codex 0.169) and the live service, on a ChatGPT Pro login. The decisions taken from it are in [ADR-0064](../adr/0064-a-voice-call-belongs-to-the-server-and-speaks-for-one-session.md); it answers open questions 1 to 4 and 9 above.
 
 ### How Codex voice is wired
 

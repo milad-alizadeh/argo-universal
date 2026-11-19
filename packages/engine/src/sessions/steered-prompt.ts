@@ -116,7 +116,7 @@ async function sendSteered(
 }
 
 /*
- * Another Session's Prompt (ADR-0044) goes where a Plugin's and the Voice call's do (ADR-0055, ADR-0063): an idle
+ * Another Session's Prompt (ADR-0044) goes where a Plugin's and the Voice call's do (ADR-0055, ADR-0064): an idle
  * Session starts a Turn, a busy one takes it into the running Turn when its Agent can be steered, and otherwise
  * queues it. Its id is allocated first, as its Turn's or queued id, so its caller can follow the Turn it lands in.
  */

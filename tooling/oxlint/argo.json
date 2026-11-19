@@ -306,7 +306,7 @@
       "rules": { "argo/vendor-name": "off" }
     },
     {
-      // The GPT-Live provider is the one place that talks to Codex for a ChatGPT token (ADR-0063).
+      // The GPT-Live provider is the one place that talks to Codex for a ChatGPT token (ADR-0064).
       "files": [
         "packages/engine/src/voice/gpt-live/**",
         "packages/engine/mocks/fake-codex*",

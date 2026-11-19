@@ -10,7 +10,7 @@ export const serverSettings = snakeCase.table(
     keepRunningAfterQuit: integer({ mode: 'boolean' }).notNull().default(false),
     // Whether Sessions keep a checklist of their steps (ADR-0053).
     todoList: integer({ mode: 'boolean' }).notNull().default(true),
-    // Whether Voice calls are offered in the Composer (ADR-0063).
+    // Whether Voice calls are offered in the Composer (ADR-0064).
     voiceCalls: integer({ mode: 'boolean' }).notNull().default(true),
     // The Voice provider and voice the next call uses; null until chosen, when the Server's own default applies.
     voiceProvider: text(),

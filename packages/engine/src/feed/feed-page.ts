@@ -80,7 +80,7 @@ function readLatestPlan(
     .limit(1)
     .all();
 
-  return stored && hydrateStoredFeedRow(sessionId, stored);
+  return stored && readStoredFeedRow(sessionId, stored);
 }
 
 type PageContent = Pick<FeedPageOutput, 'hasOlder' | 'startCursor'>;

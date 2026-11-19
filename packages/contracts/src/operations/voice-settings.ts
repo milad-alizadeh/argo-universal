@@ -12,7 +12,7 @@ import {
 } from '../voice';
 import type { OperationDefinition } from './index';
 
-// What the next Voice call speaks with and is told (ADR-0063): the App, Agents and the CLI read and change it.
+// What the next Voice call speaks with and is told (ADR-0064): the App, Agents and the CLI read and change it.
 export const voiceSettingsOperations = {
   'voice.getSettings': {
     id: 'voice.getSettings',

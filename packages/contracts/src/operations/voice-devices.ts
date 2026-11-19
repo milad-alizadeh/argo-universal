@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { VoiceDeviceChange, VoiceDeviceList } from '../voice';
 import type { OperationDefinition } from './index';
 
-// The microphone and speaker of the App a Voice call uses (ADR-0063): the one carrying the call, else the one used last.
+// The microphone and speaker of the App a Voice call uses (ADR-0064): the one carrying the call, else the one used last.
 export const voiceDeviceOperations = {
   'voice.listDevices': {
     id: 'voice.listDevices',

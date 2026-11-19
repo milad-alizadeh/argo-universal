@@ -10,7 +10,7 @@ import { readQueuedFeed } from './feed-storage';
 import { withoutVoiceMarkers } from './voice-markers';
 
 /*
- * Rows as their readers see them: Agent messages without Voice marks (ADR-0063). The Feed restores its own rows through
+ * Rows as their readers see them: Agent messages without Voice marks (ADR-0064). The Feed restores its own rows through
  * `hydrateStoredFeedRow`, `readQueuedFeed` and `readWrittenRow`, which keep the marks; anything that reads rows for a
  * person or another Agent reads them here.
  */
