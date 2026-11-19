@@ -24,7 +24,6 @@ import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import { usageLimitsSession } from './session-detail-view-usage.mocks';
-import { bandCallSession } from './session-detail-view-visualiser.mocks';
 import { VoiceCallRehearsal } from './session-detail-view-voice-call.mocks';
 import { voiceCallSession } from './session-detail-view-voice.mocks';
 import {
@@ -132,12 +131,6 @@ export const DraggingFiles: Story = {
 // A Voice call here: the orb pinned above the Feed with its label and timer, and the Composer with mic, speaker and End.
 export const OnAVoiceCall: Story = {
   args: { state: 'open', ...voiceCallSession },
-  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
-};
-
-// The same call where this Device chose the band in Settings › Voice: no stage, and the band runs along the Composer.
-export const OnAVoiceCallWithTheBand: Story = {
-  args: { state: 'open', ...bandCallSession },
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 

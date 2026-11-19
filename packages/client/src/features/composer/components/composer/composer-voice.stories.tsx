@@ -13,8 +13,10 @@ import {
   voiceBothMutedComposer,
   voiceCallComposer,
   voiceCallDraftComposer,
+  voiceCallTurnRunningComposer,
   voiceConnectingComposer,
   voiceMicMutedComposer,
+  voiceMicMutedTurnRunningComposer,
   voiceReadyComposer,
   voiceSpeakerMutedComposer,
 } from './composer-voice-fixtures';
@@ -34,6 +36,7 @@ const meta = {
     onAttachImages: action('attach images'),
     onAttachFiles: action('attach files'),
     onSend: action('send prompt'),
+    onStop: action('stop turn'),
   },
   // ComposerProps is declared in composer-types.ts, which react-docgen cannot follow (docs/agents/storybook.md, "Docgen"); the main Composer story holds the prop descriptions.
   argTypes: { voice: { control: false } },
@@ -54,6 +57,16 @@ export const VoiceCall: Story = { args: voiceCallComposer };
 
 // The microphone is muted: its button reads red.
 export const VoiceMicMuted: Story = { args: voiceMicMutedComposer };
+
+// The Agent's Turn runs on the call: Stop sits between the mutes and End.
+export const VoiceCallTurnRunning: Story = {
+  args: voiceCallTurnRunningComposer,
+};
+
+// The microphone is muted while the Turn runs: Stop and End keep their look.
+export const VoiceMicMutedTurnRunning: Story = {
+  args: voiceMicMutedTurnRunningComposer,
+};
 
 // The speaker is muted: its button reads red.
 export const VoiceSpeakerMuted: Story = { args: voiceSpeakerMutedComposer };

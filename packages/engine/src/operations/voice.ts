@@ -17,6 +17,8 @@ type VoiceImplementations = Pick<
   | 'voice.setInstructions'
   | 'voice.setCallOptions'
   | 'voice.preview'
+  | 'voice.getPreviewClip'
+  | 'voice.storePreviewClip'
   | 'voice.listDevices'
   | 'voice.chooseDevices'
 >;
@@ -71,6 +73,17 @@ const deviceOperations = ({
   'voice.chooseDevices': (change) => Promise.resolve(devices.choose(change)),
 });
 
+// The greetings the App recorded from previews, and keeping them.
+const clipOperations = ({
+  previewClips,
+}: VoiceCallsPort): Pick<
+  VoiceImplementations,
+  'voice.getPreviewClip' | 'voice.storePreviewClip'
+> => ({
+  'voice.getPreviewClip': (input) => previewClips.get(input),
+  'voice.storePreviewClip': (input) => previewClips.store(input),
+});
+
 export function createVoiceOperations(
   voice: VoiceCallsPort,
   sessions: Pick<Sessions, 'open'>,
@@ -83,5 +96,6 @@ export function createVoiceOperations(
     'voice.hangUp': ({ sessionId }) => Promise.resolve(voice.hangUp(sessionId)),
     ...choiceOperations(voice),
     ...deviceOperations(voice),
+    ...clipOperations(voice),
   };
 }

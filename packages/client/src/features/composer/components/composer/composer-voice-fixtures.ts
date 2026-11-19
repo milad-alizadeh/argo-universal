@@ -53,6 +53,18 @@ const mutedCall = (microphone: boolean, speaker: boolean): ComposerFixture => ({
 // The microphone is muted: its button reads red, with the slashed glyph.
 export const voiceMicMutedComposer = mutedCall(true, false);
 
+// The Agent's Turn runs on the call: Stop joins the controls between the mutes and End, and stops the Turn without ending the call.
+export const voiceCallTurnRunningComposer = {
+  ...voiceCallComposer,
+  running: true,
+} satisfies ComposerFixture;
+
+// The same with the microphone muted: Stop and End keep their look.
+export const voiceMicMutedTurnRunningComposer = {
+  ...mutedCall(true, false),
+  running: true,
+} satisfies ComposerFixture;
+
 // The speaker is muted: its button reads red, with the slashed glyph.
 export const voiceSpeakerMutedComposer = mutedCall(false, true);
 

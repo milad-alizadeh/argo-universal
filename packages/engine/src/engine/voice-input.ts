@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import type { AnyActorRef } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
 import {
@@ -11,10 +12,11 @@ import {
 export function requireVoiceCalls(
   system: AnyActorRef['system'],
   settings: VoiceSettingsStore,
+  home: string,
 ): VoiceCalls {
   const actor = findMachineActor(system, voiceCallSystemId, voiceCallMachine);
 
   if (!actor) throw new Error('The Voice call machine is not running');
 
-  return new VoiceCalls(actor, settings);
+  return new VoiceCalls(actor, settings, join(home, 'voice-previews'));
 }

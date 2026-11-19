@@ -452,6 +452,10 @@ _Avoid_: Readback, voice summary
 A service or local model that runs a Voice call's voice.
 _Avoid_: Conversation provider, realtime provider, voice backend
 
+**Preview clip**:
+A voice's one-line greeting as the App recorded it from the voice's first preview, kept on the Server and replayed by the App with no Voice provider call. It is kept by the provider, the voice, its description and the name it greets with. It is the only audio the App hands to the Server.
+_Avoid_: Sample, voice recording, cached preview
+
 **Stored Turn**:
 A Turn as read back from storage, before the Writer's queued changes are laid over it.
 _Avoid_: Turn row, saved Turn

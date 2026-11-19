@@ -129,6 +129,18 @@ function isConnectionSendable(props: ComposerProps): boolean {
   return (props.sendable ?? true) && allowsSubmission(props);
 }
 
+// Stop beside End: a Turn runs while a connected call holds the primary slot as End, so the call's own Stop stands next to it.
+export function showsCallStop(layout: {
+  sendState: SendState;
+  props: Pick<ComposerProps, 'configuration' | 'onStop'>;
+}): boolean {
+  return (
+    layout.sendState === 'end' &&
+    isTurnRunning(layout.props) &&
+    Boolean(layout.props.onStop)
+  );
+}
+
 function isTurnRunning({
   configuration,
 }: Pick<ComposerProps, 'configuration'>): boolean {
