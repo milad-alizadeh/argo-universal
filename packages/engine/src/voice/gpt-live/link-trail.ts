@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { usageReport } from './link-limit';
+import { frameRejections, readFrame } from './read-frame';
 
 /*
  * What the control link says about how the call goes, for the Server's log: the close and error frames as sent, and the
@@ -45,15 +47,7 @@ const readings = z.union([
       session: z.looseObject({ expires_at: z.number() }),
     })
     .transform(started),
-  z
-    .looseObject({
-      type: z.literal('session.usage.updated'),
-      usage_limit: z
-        .looseObject({ status: z.string().nullable() })
-        .nullish()
-        .transform((limit) => limit ?? { status: null }),
-    })
-    .transform(usageLimit),
+  usageReport.transform(usageLimit),
   z
     .looseObject({ type: z.enum(['session.closed', 'error']) })
     .transform(asSent),
@@ -63,18 +57,10 @@ const readings = z.union([
 const leadingType =
   /^\{"type":"(session\.started|session\.closed|error|session\.usage\.updated)"/;
 
-const parsedReading = (frame: string): Reading | null => {
-  try {
-    const parsed = readings.safeParse(JSON.parse(frame));
-
-    return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
-  }
-};
+const rejectFrame = frameRejections('GPT-Live control link trail');
 
 const readingOf = (frame: string): Reading | null =>
-  leadingType.test(frame) ? parsedReading(frame) : null;
+  leadingType.test(frame) ? readFrame(readings, frame, rejectFrame) : null;
 
 // How far before `expires_at` a close still counts as the call reaching its longest.
 const onTimeSlackSeconds = 5;

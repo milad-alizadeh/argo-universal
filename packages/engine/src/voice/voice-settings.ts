@@ -6,6 +6,7 @@ import {
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { serverSettings } from '@repo/db/schema';
+import { createRejectionCounter } from '@repo/machine-log';
 import { z } from 'zod';
 import {
   writeDatabaseJobAndWaitForCommit,
@@ -73,8 +74,22 @@ const storedOf = (
 
 const storedCustomVoices = z.array(CustomVoice);
 
-// Options kept by an older Server may be fewer, or name one Argo no longer offers; the defaults fill in the rest.
-const storedOptions = z.object(VoiceCallOptionsChange.shape).catch({});
+const optionRejections = createRejectionCounter('Stored Voice call options');
+
+/*
+ * Options kept by an older Server may be fewer, or name one Argo no longer offers; the defaults fill in the rest.
+ * Options it cannot read are reported and counted, and the defaults stand in for all of them.
+ */
+const storedOptions = z
+  .object(VoiceCallOptionsChange.shape)
+  .catch(({ error }) => {
+    optionRejections.report(
+      'unreadable options, using the defaults',
+      error.issues,
+    );
+
+    return {};
+  });
 
 const rowOf = (
   settings: StoredVoiceSettings,

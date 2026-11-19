@@ -1,5 +1,5 @@
 import type {
-  NonUserPromptSender,
+  SentPromptSender,
   SessionNewInput,
   SessionPromptInput,
 } from '@repo/contracts';
@@ -33,7 +33,7 @@ import {
   sessionOperationImplementations,
   type SessionOperationImplementations,
 } from './session-operations';
-import { startSessionPrompt, type PromptLanding } from './session-prompt';
+import { admitSessionPrompt, type PromptLanding } from './session-prompt';
 import type { SessionHandlerSources, SessionSources } from './session-sources';
 import type { TurnHappening } from './turn-happenings';
 import { createSessionWorkSource, type SessionWorkSource } from './work-source';
@@ -82,26 +82,21 @@ export class Sessions {
    */
   public prompt(
     input: SessionPromptInput,
-    request: NativeStartRequest,
+    { sender, signal }: NativeStartRequest,
   ): NativeStart<PromptLanding> {
-    const { sender, signal } = request;
+    const id = this.sources.createId();
 
-    if (sender.type === 'user')
-      return startSessionPrompt(this.sources, input, request);
+    const accepted =
+      sender.type === 'user'
+        ? admitSessionPrompt(this.sources, input, { id, sender, signal })
+        : sendPrompt(this.sources, input, { id, sender, signal });
 
-    const turnId = this.sources.createId();
-    const sent = { sender, id: turnId, signal };
-
-    return {
-      sessionId: input.sessionId,
-      turnId,
-      accepted: sendPrompt(this.sources, input, sent),
-    };
+    return { sessionId: input.sessionId, turnId: id, accepted };
   }
   // A Plugin's Prompt: starts a Turn on an idle Session, else joins the end of its queue (ADR-0055).
   public async promptFromPlugin(
     input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
-    sender: NonUserPromptSender,
+    sender: SentPromptSender,
   ): Promise<PluginPromptAnswer> {
     const sent = requireTaken(
       await sendPrompt(this.sources, input, { sender }),
@@ -113,17 +108,17 @@ export class Sessions {
   }
   // The Voice call's request for work: a Sent Prompt that steers a running Turn when it can (ADR-0064).
   public async promptFromVoice(
-    input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
+    sessionId: string,
+    text: string,
   ): Promise<TakenPrompt> {
-    const sender = { type: 'voice' } as const;
+    const input = { sessionId, prompt: [{ type: 'text' as const, text }] };
+    const sent = await sendPrompt(this.sources, input, { sender: voiceSender });
 
-    return requireTaken(await sendPrompt(this.sources, input, { sender }));
+    return requireTaken(sent);
   }
   // A spoken "stop" (ADR-0064): cancels the running Turn as the Stop button does; resolves false when no Turn runs.
   public async stopFromVoice(sessionId: string): Promise<boolean> {
-    const session = this.sources.open.session(sessionId);
-
-    if (!session?.getSnapshot().hasTag('running')) return false;
+    if (!this.sources.open.isRunning(sessionId)) return false;
     await this.implementations['session.cancel']({ sessionId });
 
     return true;
@@ -133,11 +128,7 @@ export class Sessions {
     sessionId: string,
     listener: (happening: TurnHappening) => void,
   ): () => void {
-    const subscription = this.sources.open
-      .session(sessionId)
-      ?.on('*', listener);
-
-    return (): void => subscription?.unsubscribe();
+    return this.sources.open.watchTurns(sessionId, listener);
   }
   // Takes back a Queued Prompt the Plugin sent; one that started, is gone or is held for editing stays (ADR-0055).
   public async withdrawFromPlugin(
@@ -168,6 +159,8 @@ export class Sessions {
     return beginOperationCall(this.sources, sessionId, operation);
   }
 }
+
+const voiceSender = { type: 'voice' } as const;
 
 // Handlers reach the open Sessions' actor and command signal only through `OpenSessions`.
 const handlerSources = (sources: SessionSources): SessionHandlerSources => ({

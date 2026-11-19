@@ -19,10 +19,14 @@ export type SessionHappening =
 
 /*
  * How a request for work reached the Session: it started a Turn, was steered into the running one, or waits behind
- * running work; `notSteered` says why a Prompt that could have steered waits instead. `ended` settles, and never
- * rejects, once the Turn holding the Prompt ended or the Prompt left the queue without one.
+ * running work; `notSteered` says why a Prompt that could have steered waits instead. `started` settles true once a
+ * Turn holds the Prompt, or false when it left the queue without one; `ended` settles once the Turn holding it ended,
+ * with that Turn's id, or with null when none did. Neither rejects.
  */
-export type PromptOutcome = { ended: Promise<unknown> } & (
+export type PromptOutcome = {
+  started: Promise<boolean>;
+  ended: Promise<string | null>;
+} & (
   | { status: 'started' | 'steered' }
   | { status: 'queued'; notSteered: string | null }
 );

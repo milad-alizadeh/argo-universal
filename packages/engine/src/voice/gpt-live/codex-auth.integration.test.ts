@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { fakeCodex, type FakeCodexBehavior } from '#mocks/fake-codex';
 import { codexAppServerAuth, type CodexReading } from './codex-auth';
 
@@ -78,5 +78,23 @@ describe('Codex auth', () => {
     };
 
     expect(await readWith(noisy)).toEqual({ signedIn: true, token: 'tok-2' });
+  });
+
+  it('reports and counts a line that is not JSON', async () => {
+    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const noisy: FakeCodexBehavior = {
+      kind: 'noisy',
+      authMethod: 'chatgpt',
+      authToken: 'tok-3',
+    };
+
+    await readWith(noisy);
+
+    expect(reported).toHaveBeenCalledWith(
+      expect.stringMatching(/^Codex app-server: .* #\d+$/),
+      expect.anything(),
+    );
+    reported.mockRestore();
   });
 });

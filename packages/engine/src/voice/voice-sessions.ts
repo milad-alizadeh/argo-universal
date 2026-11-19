@@ -1,11 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import type { FeedSubscribeOutput, FeedUpdate } from '@repo/contracts';
 import type { FeedDeps, FeedEvent } from '../feed';
-import type { TurnHappening } from '../sessions';
+import type { Sessions, TurnHappening } from '../sessions';
 import { FeedHappenings } from './feed-happenings';
 import { PermissionWatch } from './permission-watch';
 import type {
-  PromptOutcome,
   SessionHappening,
   VoiceNotice,
   VoiceSessions,
@@ -24,18 +23,11 @@ type SnapshotEvent = Extract<
   { type: 'snapshot' | 'closed' }
 >;
 
-/*
- * What the Voice call reaches its Session's work through: where a Prompt from the call lands, and what the Session
- * reports of its Turns until the returned function is called.
- */
-export interface VoiceSessionWork {
-  prompt: (sessionId: string, text: string) => Promise<PromptOutcome>;
-  stop: VoiceSessions['stop'];
-  watchTurns: (
-    sessionId: string,
-    listener: (happening: TurnHappening) => void,
-  ) => () => void;
-}
+// What the Voice call reaches its Session's work through: the Engine's own Sessions.
+export type VoiceSessionWork = Pick<
+  Sessions,
+  'promptFromVoice' | 'stopFromVoice' | 'watchTurns'
+>;
 
 // Listens to one Session's Feed for the Agent's and the person's words, following it when the Session replaces its Feed actor, and to its Permission requests.
 class FeedWatch {
@@ -138,8 +130,8 @@ export const voiceSessions = (
   sources: FeedSources,
   work: VoiceSessionWork,
 ): VoiceSessions => ({
-  prompt: work.prompt,
-  stop: work.stop,
+  prompt: (sessionId, text) => work.promptFromVoice(sessionId, text),
+  stop: (sessionId) => work.stopFromVoice(sessionId),
   watch: watchOf(sources, work),
   notice: (sessionId, notice) =>
     sources.findFeed(sessionId)?.send(noticeEvent(notice)),

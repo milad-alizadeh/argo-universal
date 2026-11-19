@@ -6,6 +6,7 @@ import {
   sendTo,
   setup,
   type ActorRefFrom,
+  type AnyActorRef,
 } from 'xstate';
 import { agentRelay, type RelayInput } from './agent-relay-actor';
 import { defaultConduct } from './call-conduct';
@@ -17,6 +18,7 @@ import {
   type EndParameters,
 } from './call-endings';
 import {
+  callProvider,
   runningCall,
   type RunningCall,
   type StartRefusal,
@@ -25,14 +27,18 @@ import {
   type VoiceCallInput,
 } from './call-types';
 import { watchConnection, watchSession } from './call-watchers';
-import type {
-  VoiceConnectionStatus,
-  VoiceProvider,
-  VoiceProviderEvent,
-} from './provider';
+import type { VoiceConnectionStatus, VoiceProviderEvent } from './provider';
 import { providerCall, type ProviderCallInput } from './provider-call';
 import { detachedSessions } from './session-link';
-import { isTranscript, storeTranscript, withTranscript } from './transcript';
+import {
+  isTranscript,
+  readOutAfter,
+  readOutFrom,
+  storeTranscript,
+  withTranscript,
+  type HearingCall,
+  type TranscriptEvent,
+} from './transcript';
 
 /*
  * The Voice call's lifecycle (ADR-0064): one machine for the one call a Server runs, attached to one Session for its whole life.
@@ -105,12 +111,17 @@ const newCall = (start: CallStartEvent): RunningCall => ({
 
 const providerFailure = 'The connection to the voice failed.';
 
-type Report<Type extends VoiceProviderEvent['type']> = (
-  event: Extract<VoiceProviderEvent, { type: Type }>,
-  call: RunningCall,
-) => Partial<RunningCall>;
+// Each provider event, by its type.
+type ProviderEvents = {
+  [Event in VoiceProviderEvent as Event['type']]: Event;
+};
 
-type Reports = { [Type in VoiceProviderEvent['type']]?: Report<Type> };
+type Reports = {
+  [Type in keyof ProviderEvents]?: (
+    event: ProviderEvents[Type],
+    call: RunningCall,
+  ) => Partial<RunningCall>;
+};
 
 // What each provider report changes about the running call; reports not listed change nothing.
 const reports: Reports = {
@@ -131,10 +142,16 @@ const reports: Reports = {
 
 // Folds what the provider reported about the call into the running call.
 function reported(call: RunningCall, event: VoiceProviderEvent): RunningCall {
-  // SAFETY: `reports` keys each report by the event type it reads, so the report found for `event.type` takes `event`.
-  const report = reports[event.type] as Report<typeof event.type> | undefined;
+  return { ...call, ...reportOf(event.type, event, call) };
+}
 
-  return { ...call, ...report?.(event, call) };
+// The report kept for `type` reads the event of that type.
+function reportOf<Type extends keyof ProviderEvents>(
+  type: Type,
+  event: ProviderEvents[Type],
+  call: RunningCall,
+): Partial<RunningCall> | undefined {
+  return reports[type]?.(event, call);
 }
 
 const namesCall = (
@@ -152,8 +169,21 @@ const finished = (
     call: null,
     ended: call && { callId: call.callId, sessionId: call.sessionId, reason },
     partials: [],
+    readOut: null,
   };
 };
+
+// The running call as its transcript is kept: where, and whether the voice is reading out a result.
+const hearing = (context: VoiceCallContext): HearingCall => ({
+  ...runningCall(context),
+  readOut: context.readOut,
+});
+
+function transcriptOf(event: VoiceCallEvent): TranscriptEvent | undefined {
+  const heard = providerEventOf(event);
+
+  return isTranscript(heard) ? heard : undefined;
+}
 
 const voiceCallSetup = setup({
   // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
@@ -171,6 +201,7 @@ const voiceCallSetup = setup({
       failure: null,
       refused: null,
       turnRunning: false,
+      readOut: null,
     })),
     // Records why the start was refused, under its callId, for the one who asked.
     refuseStart: assign(
@@ -218,22 +249,26 @@ const voiceCallSetup = setup({
       finished(context, params),
     ),
     storeTranscript: ({ context, event, system }): void => {
-      const heard = providerEventOf(event);
+      const heard = transcriptOf(event);
 
-      if (isTranscript(heard))
-        storeTranscript(system, runningCall(context), heard);
+      if (heard) storeTranscript(system, hearing(context), heard);
     },
     trackPartials: assign(({ context, event }): Partial<VoiceCallContext> => {
-      const heard = providerEventOf(event);
+      const heard = transcriptOf(event);
 
-      return isTranscript(heard)
+      return heard
         ? {
-            partials: withTranscript(
-              context.partials,
-              runningCall(context),
-              heard,
-            ),
+            partials: withTranscript(context.partials, hearing(context), heard),
+            readOut: readOutAfter(context.readOut, heard),
           }
+        : {};
+    }),
+    // The relay handed the voice an Agent's result: what the voice says next is a read-out.
+    noteReadOut: assign(({ context, event }): Partial<VoiceCallContext> => {
+      assertEvent(event, 'voice.say');
+
+      return event.say.kind === 'result'
+        ? { readOut: readOutFrom(context.readOut, context.partials) }
         : {};
     }),
     recordFailure: assign(({ event }): Partial<VoiceCallContext> => {
@@ -324,15 +359,30 @@ const endsWith = (reason: VoiceCallEnd): EndingAction[] =>
 const providerClose = ({ event }: { event: VoiceCallEvent }): EndParameters =>
   closeEndingOf(providerEventOf(event));
 
-const providerInput = (context: VoiceCallContext): ProviderCallInput => {
+// The words the voice said up to a hang-up are kept as any others, unless they are a read-out.
+const lastWordsOf =
+  (self: AnyActorRef, call: RunningCall) =>
+  (event: VoiceProviderEvent): void => {
+    // SAFETY: `self` is this machine's own actor, whose snapshot's context is a VoiceCallContext.
+    const { readOut } = (self.getSnapshot() as { context: VoiceCallContext })
+      .context;
+
+    if (isTranscript(event))
+      storeTranscript(self.system, { ...call, readOut }, event);
+  };
+
+const providerInput = (
+  context: VoiceCallContext,
+  self: AnyActorRef,
+): ProviderCallInput => {
   const call = runningCall(context);
 
   return {
-    // SAFETY: `call.start` is refused without a provider, so `running` always has one.
-    provider: context.provider as VoiceProvider,
+    provider: callProvider(context),
     offer: call.offer,
     setup: call.setup,
     briefing: context.briefing(call.sessionId),
+    lastWords: lastWordsOf(self, call),
   };
 };
 
@@ -357,6 +407,7 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
     refused: null,
     turnRunning: false,
     partials: [],
+    readOut: null,
   }),
   initial: 'idle',
   on: { 'sessions.attach': { actions: 'attachSessions' } },
@@ -379,7 +430,8 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
         {
           id: 'providerCall',
           src: 'providerCall',
-          input: ({ context }): ProviderCallInput => providerInput(context),
+          input: ({ context, self }): ProviderCallInput =>
+            providerInput(context, self),
         },
         {
           id: 'agentRelay',
@@ -455,7 +507,10 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
         ],
         'session.turn': { guard: 'turnChanged', actions: 'foldTurn' },
         'voice.say': {
-          actions: sendTo('providerCall', ({ event }) => event),
+          actions: [
+            sendTo('providerCall', ({ event }) => event),
+            'noteReadOut',
+          ],
         },
       },
       states: {

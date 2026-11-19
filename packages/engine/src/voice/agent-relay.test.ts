@@ -56,6 +56,7 @@ it('keeps a sent Prompt running until the Session says its Turn ended', async ()
 
   const { relay, heard } = relayTo(async () => ({
     status: 'started',
+    started: Promise.resolve(true),
     ended: ended.promise,
   }));
 
@@ -77,11 +78,72 @@ it('carries the voice instruction in the next Prompt when the first one was not 
 
     if (refusal !== undefined) throw new Error(refusal);
 
-    return { status: 'started', ended: Promise.resolve('t1') };
+    return {
+      status: 'started',
+      started: Promise.resolve(true),
+      ended: Promise.resolve('t1'),
+    };
   });
 
   await relay.request('r1', 'First');
   await relay.request('r2', 'Second');
 
   expect(prompts[1]).toMatch(/\[STATUS\][\s\S]*Second/);
+});
+
+// A Prompt that waits in the queue until `started` says whether a Turn took it.
+const queuedUntil = (
+  started: Promise<boolean>,
+  ended: Promise<string | null> = Promise.resolve(null),
+): PromptOutcome => ({ status: 'queued', notSteered: null, started, ended });
+
+it('counts a queued Prompt as running only once its Turn starts', async () => {
+  const started = Promise.withResolvers<boolean>();
+  const ended = Promise.withResolvers<string | null>();
+
+  const { relay, heard } = relayTo(async () =>
+    queuedUntil(started.promise, ended.promise),
+  );
+
+  await relay.request('r1', 'Do it');
+  expect(heard.running).toEqual([true, false]);
+
+  started.resolve(true);
+  await expect.poll(() => heard.running).toEqual([true, false, true]);
+
+  ended.resolve('q1');
+  await expect.poll(() => heard.running).toEqual([true, false, true, false]);
+});
+
+it('carries the voice instruction in the next Prompt when the queued one that carried it never started', async () => {
+  const prompts: string[] = [];
+  const outcomes = [queuedUntil(Promise.resolve(false))];
+
+  const { relay } = relayTo(async (_sessionId, text) => {
+    prompts.push(text);
+
+    return outcomes.shift() ?? queuedUntil(Promise.resolve(true));
+  });
+
+  await relay.request('r1', 'First');
+  await Promise.resolve();
+  await relay.request('r2', 'Second');
+
+  expect(prompts[1]).toMatch(/\[STATUS\][\s\S]*Second/);
+});
+
+it('carries the voice instruction only until a Prompt carrying it starts', async () => {
+  const prompts: string[] = [];
+
+  const { relay } = relayTo(async (_sessionId, text) => {
+    prompts.push(text);
+
+    return queuedUntil(Promise.resolve(true));
+  });
+
+  await relay.request('r1', 'First');
+  await Promise.resolve();
+  await relay.request('r2', 'Second');
+
+  expect(prompts[1]).toBe('Second');
 });

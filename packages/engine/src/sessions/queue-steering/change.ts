@@ -1,6 +1,6 @@
 import type { FeedUpsert, PromptQueue, QueuedPromptId } from '@repo/contracts';
 import {
-  nonUserPromptChange,
+  sentPromptChange,
   userMessageChange,
   type FeedEvent,
 } from '../../feed';
@@ -86,7 +86,7 @@ const steeredChange = ({
   sender,
 }: QueueSteering): FeedUpsert =>
   sender
-    ? nonUserPromptChange(messageId, prompt, sender)
+    ? sentPromptChange(messageId, prompt, sender)
     : userMessageChange(turnId, prompt, messageId);
 
 function consumedMessage({

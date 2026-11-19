@@ -1,5 +1,5 @@
 export {
-  nonUserPromptChange,
+  sentPromptChange,
   promptMessageChange,
   promptMessageId,
   userMessageChange,

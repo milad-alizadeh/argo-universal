@@ -1,7 +1,7 @@
-import type { SessionPromptInput, PromptSender } from '@repo/contracts';
+import type { SessionPromptInput } from '@repo/contracts';
 import { requireInstalledAgent } from '../agents';
 import { promptMessageId } from '../feed';
-import type { NativeStart, NativeStartRequest } from './prompt-sender';
+import type { PromptSend } from './prompt-sender';
 import { submitSessionPrompt, waitForReadySession } from './session-command';
 import type { SessionActorRef } from './session-machine';
 import type { HandlerSources } from './session-sources';
@@ -10,13 +10,6 @@ type PromptSources = HandlerSources<
   'readSession' | 'createId' | 'installedAgents' | 'hooks',
   'admit' | 'ready'
 >;
-
-// A caller's budget also stops the Prompt it is waiting to admit.
-type PromptTurn = {
-  turnId: string;
-  sender: PromptSender;
-  signal?: AbortSignal;
-};
 
 /*
  * Where a Prompt landed, with the Feed row it takes: the Turn it started or was steered into, or its place in the
@@ -37,8 +30,8 @@ type StartedPrompt =
   | { status: 'started'; messageId: string; turnId: string }
   | Extract<PromptLanding, { status: 'dropped' }>;
 
-// The Prompt, and the Turn it starts.
-type PromptStart = { input: SessionPromptInput; turn: PromptTurn };
+// The Prompt, and the Turn it starts, under the send's id.
+type PromptStart = { input: SessionPromptInput; turn: PromptSend };
 
 const requirePromptAgent = (
   sources: PromptSources,
@@ -62,7 +55,7 @@ const runPromptHook = (
 
 async function submitAcceptedPrompt(
   sessionActor: SessionActorRef,
-  { input, turn: { turnId, sender } }: PromptStart,
+  { input, turn: { id: turnId, sender } }: PromptStart,
   content: SessionPromptInput['prompt'],
 ): Promise<StartedPrompt> {
   const { followUpSuggestions } = input;
@@ -79,29 +72,12 @@ async function submitAcceptedPrompt(
   return { status: 'started', messageId, turnId };
 }
 
-type StartRequest = Pick<NativeStartRequest, 'sender' | 'signal'> & {
-  turnId?: string;
-};
-
-// The Turn id is allocated before admission, so a caller that stops waiting can still follow the Turn.
-export function startSessionPrompt(
+// Admits the Prompt as the start of a Turn under the send's id, which the caller allocated so it can follow the Turn.
+export async function admitSessionPrompt(
   sources: PromptSources,
   input: SessionPromptInput,
-  { sender, signal, turnId = sources.createId() }: StartRequest,
-): NativeStart<StartedPrompt> {
-  return {
-    sessionId: input.sessionId,
-    turnId,
-    accepted: admitPrompt(sources, { input, turn: { turnId, sender, signal } }),
-  };
-}
-
-async function admitPrompt(
-  sources: PromptSources,
-  start: PromptStart,
+  turn: PromptSend,
 ): Promise<StartedPrompt> {
-  const { input, turn } = start;
-
   requirePromptAgent(sources, input.sessionId);
 
   const session = await sources.open.ready(
@@ -110,12 +86,12 @@ async function admitPrompt(
     turn.signal,
   );
 
-  return submitPromptTo(sources, session, start);
+  return submitPromptTo(sources, session, { input, turn });
 }
 
 /*
  * Starts a Turn with the Prompt on a Session that was readied for another command: it waits out the Session's
- * settling, as a Prompt does, then admits the Prompt as `startSessionPrompt` does.
+ * settling, as a Prompt does, then admits the Prompt as `admitSessionPrompt` does.
  */
 export async function startPromptOn(
   sources: PromptSources,
