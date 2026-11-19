@@ -1,6 +1,7 @@
 import type { DeferredAgentLaunch } from '../..';
 import type { AuthChanges } from '../../auth/auth-changes';
 import type { UsageLimits } from '../../usage-limits';
+import type { AccountUsageRefresh } from '../../usage-limits/account-refresh';
 import { AcpConnection } from '../connection/connection';
 import {
   createEntry,
@@ -26,6 +27,7 @@ export class AcpConnections {
     private readonly shared: {
       authChanges: AuthChanges;
       usageLimits: UsageLimits;
+      accountUsage: AccountUsageRefresh;
     },
   ) {}
   public authenticationEntry(

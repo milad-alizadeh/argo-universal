@@ -52,7 +52,7 @@ type Story = StoryObj<typeof meta>;
 // A Turn running: the header's clock, the Feed's live line, and the Composer offering Stop.
 export const Running: Story = { args: { state: 'open', ...runningSession } };
 
-// The Agent reported its Usage limits: the Composer's Usage control shows the 5-hour one, and opens on both.
+// The Agent reported a 5-hour window, a weekly window, and monthly spending.
 export const UsageLimits: Story = {
   args: { state: 'open', ...usageLimitsSession },
 };
