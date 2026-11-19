@@ -7,6 +7,11 @@ import { action } from 'storybook/actions';
 import { sessionsLayoutChoices } from '../../stores/sessions-view';
 import { SessionRow, type SessionRowProps } from './session-row';
 import {
+  type SessionRowCall,
+  SessionRowCallProvider,
+} from './session-row-call';
+import { mutedVoiceCall, voiceCall } from './session-row-call-fixtures';
+import {
   archivedSession,
   compactSession,
   failedSession,
@@ -95,6 +100,26 @@ export const Selected: Story = { args: selectedSession };
 
 // An archived Session ends its meta line on the Archived pill.
 export const Archived: Story = { args: archivedSession };
+
+const onCall =
+  (call: SessionRowCall) =>
+  (Row: React.ComponentType): React.JSX.Element => (
+    <SessionRowCallProvider value={call}>
+      <Row />
+    </SessionRowCallProvider>
+  );
+
+// A Voice call is attached: the bars and the call's time take the status's place at the end of the title line.
+export const OnVoiceCall: Story = {
+  args: idleSession,
+  decorators: [onCall(voiceCall)],
+};
+
+// The call's microphone is muted: mic.slash and "Muted" in red in the same place.
+export const VoiceCallMuted: Story = {
+  args: idleSession,
+  decorators: [onCall(mutedVoiceCall)],
+};
 
 /*
  * One line per Session: its PR's glyph in the PR's state colour, or with no PR how long ago it was active, then its

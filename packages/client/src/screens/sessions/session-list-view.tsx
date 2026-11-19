@@ -8,6 +8,7 @@ import { Skeleton } from '@repo/kit/primitives/status/skeleton';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
+  type SessionRowCall,
   type SessionsListPlugins,
   type SessionsLoadState,
   type SessionsView,
@@ -34,6 +35,8 @@ export interface SessionListViewProps {
   selectedSessionId?: string;
   // What the Plugins add to each row under this Device's choices, and the page an item opens.
   plugins?: SessionsListPlugins;
+  // The live Voice call, marked on the row of the Session it is attached to; none without a call.
+  call?: SessionRowCall | null;
   onSelect: (sessionId: string) => void;
   // Desktop and the web: a row's double-click or context menu asks to rename its Session.
   onRename?: (sessionId: string) => void;

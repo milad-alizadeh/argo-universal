@@ -1,5 +1,9 @@
 import type * as React from 'react';
-import { SessionsList, type SessionsListProps } from '#features/sessions';
+import {
+  SessionRowCallProvider,
+  SessionsList,
+  type SessionsListProps,
+} from '#features/sessions';
 import type { SessionListViewProps } from './session-list-view';
 
 type ListData = Pick<
@@ -55,5 +59,9 @@ function listActions(props: SessionListViewProps): ListActions {
 export function SessionsListContent(
   props: SessionListViewProps,
 ): React.JSX.Element {
-  return <SessionsList {...listData(props)} {...listActions(props)} />;
+  return (
+    <SessionRowCallProvider value={props.call ?? null}>
+      <SessionsList {...listData(props)} {...listActions(props)} />
+    </SessionRowCallProvider>
+  );
 }

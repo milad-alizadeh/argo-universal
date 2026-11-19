@@ -4,6 +4,7 @@ import {
 } from '@repo/kit/primitives/lists/list-item';
 import { memo } from 'react';
 import type * as React from 'react';
+import { useSessionRowCall, withCallLabel } from './session-row-call';
 import { CompactSessionRow } from './session-row-compact';
 import { regularEnds } from './session-row-ends';
 import { SessionMark } from './session-row-mark';
@@ -54,17 +55,26 @@ function rowIdentity(props: SessionRowProps): RowIdentity {
   };
 }
 
-// Regular: two lines with the Session's status and time, then a meta line while it has anything to show.
-function RegularRow(props: SessionRowProps): React.JSX.Element {
+// The row's lines and ends; a Voice call attached to the Session takes the status's place and joins the label.
+function useRowEnds(props: SessionRowProps): ListItemProps {
+  const call = useSessionRowCall(props.session.sessionId);
   const identity = rowIdentity(props);
 
+  return {
+    ...identity,
+    accessibilityLabel: withCallLabel(sessionRowLabel(props.session), call),
+    ...regularEnds(props, identity.subtitle, call),
+  };
+}
+
+// Regular: two lines with the Session's status and time, then a meta line while it has anything to show.
+function RegularRow(props: SessionRowProps): React.JSX.Element {
   return (
     <ListItem
-      {...identity}
+      {...useRowEnds(props)}
       {...sessionRowMenu(props)}
       {...sidebarDrawing(props.session.status)}
       leading={<SessionMark {...props} />}
-      {...regularEnds(props, identity.subtitle)}
       meta={sessionMetadata({ ...props, selected: props.selected ?? false })}
       metaAccessories={regularAccessories(props)}
       progress={sessionProgress(props.session)}

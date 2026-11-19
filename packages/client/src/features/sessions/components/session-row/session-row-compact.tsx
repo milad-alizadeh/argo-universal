@@ -7,6 +7,12 @@ import {
 import type * as React from 'react';
 import { SecondaryChangeStageIcon } from '../change-stage/change-stage';
 import { changeDescription } from '../change-stage/change-stage-model';
+import {
+  callOrStatus,
+  type SessionRowCall,
+  useSessionRowCall,
+  withCallLabel,
+} from './session-row-call';
 import { endParts } from './session-row-ends';
 import { SessionMark } from './session-row-mark';
 import { sessionRowMenu } from './session-row-menu';
@@ -42,9 +48,10 @@ function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
  */
 function compactEnd(
   props: CompactEndProps,
+  call: SessionRowCall | undefined,
 ): Pick<ListItemProps, 'trailing' | 'trailingAccessories'> {
   const detail = compactDetail(props);
-  const status = compactStatusDot(props.session.status);
+  const status = callOrStatus(call, compactStatusDot(props.session.status));
 
   if (!hasPluginItems(props.plugins))
     return { trailing: endParts(detail, status) };
@@ -91,6 +98,21 @@ const compactPresses = (
   onPress: () => props.onSelect(props.session.sessionId),
 });
 
+// The row's label and end; a Voice call attached to the Session takes the status's place and joins the label.
+function useCompactEnds(
+  props: SessionRowProps,
+): Pick<
+  ListItemProps,
+  'accessibilityLabel' | 'trailing' | 'trailingAccessories'
+> {
+  const call = useSessionRowCall(props.session.sessionId);
+
+  return {
+    accessibilityLabel: withCallLabel(compactLabel(props), call),
+    ...compactEnd(props, call),
+  };
+}
+
 // Compact: one line in its compact List, a row of its Project's grouped list on a phone.
 export function CompactSessionRow(props: SessionRowProps): React.JSX.Element {
   return (
@@ -99,9 +121,8 @@ export function CompactSessionRow(props: SessionRowProps): React.JSX.Element {
       {...sessionRowMenu(props)}
       title={props.session.title}
       {...sidebarDrawing(props.session.status)}
-      accessibilityLabel={compactLabel(props)}
       leading={<SessionMark {...props} />}
-      {...compactEnd(props)}
+      {...useCompactEnds(props)}
       selected={props.selected ?? false}
       finished={props.session.archivedAt !== null}
     />
