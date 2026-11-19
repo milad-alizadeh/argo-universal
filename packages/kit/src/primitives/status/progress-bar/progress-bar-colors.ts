@@ -1,6 +1,6 @@
 import type { Tone } from '#primitives/content/text';
 
-// A step bar's started step is its tone at 40%, the pale segment of Paper's step bar (Option A).
+// A step bar's started step is its tone at 40%, a pale segment beside the solid done ones.
 export const progressColors = {
   neutral: {
     track: 'bg-foreground/15',

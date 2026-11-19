@@ -28,9 +28,14 @@ function hasBackgroundWork({ shells, subagents }: SessionWork): boolean {
   return shells.running > 0 || subagents.running > 0;
 }
 
+// A Turn that ended while its Background Task or Agent still runs.
+function idleWithBackgroundWork(session: SessionWork): boolean {
+  return session.status === 'idle' && hasBackgroundWork(session);
+}
+
 // An idle Session whose Background Task or Agent still runs is not done: its bar stays green until that work ends.
 function barTone(session: SessionWork): Tone {
-  return session.status === 'idle' && hasBackgroundWork(session)
+  return idleWithBackgroundWork(session)
     ? statusTones.running
     : statusTones[session.status];
 }
@@ -41,11 +46,11 @@ function planSteps({ done, inProgress = 0, total }: Plan): ProgressSteps {
 
 // Work is live while the Session runs, or while its Background Task or Agent does after the Turn ends.
 function workIsLive(session: SessionWork): boolean {
-  return barTone(session) === statusTones.running;
+  return session.status === 'running' || idleWithBackgroundWork(session);
 }
 
 /*
- * Paper's step bar (Option A): one segment per plan step, so a last step underway reads 3 of 4, never a full bar. The
+ * One segment per plan step, so a last step underway reads 3 of 4, never a full bar. The
  * step underway glints only while work is live; a Session waiting on its reader holds still.
  */
 export function sessionProgress(

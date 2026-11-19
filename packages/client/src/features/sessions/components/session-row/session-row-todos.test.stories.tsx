@@ -70,7 +70,7 @@ export const AgentStill: Story = backgroundWorkStill(
   'subagents-status',
 );
 
-// Paper's step bar (Option A): the last plan step underway leaves its segment pale, so the bar never reads as full.
+// The last plan step underway leaves its segment pale, so the bar never reads as full.
 export const LastStepInProgress: Story = {
   args: {
     session: {

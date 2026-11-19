@@ -1,4 +1,3 @@
-import { Text } from '@repo/kit/primitives/content/text';
 import {
   ListItem,
   ListItemInert,
@@ -7,7 +6,7 @@ import {
 import type * as React from 'react';
 import { SecondaryChangeStageIcon } from '../change-stage/change-stage';
 import { changeDescription } from '../change-stage/change-stage-model';
-import { endParts } from './session-row-ends';
+import { endParts, timeOf } from './session-row-ends';
 import { SessionMark } from './session-row-mark';
 import { sessionRowMenu } from './session-row-menu';
 import {
@@ -35,9 +34,7 @@ function compactDetail(props: CompactEndProps): React.ReactNode {
   if (props.pullRequest)
     return <SecondaryChangeStageIcon {...props.pullRequest} />;
 
-  const age = quietAge(props);
-
-  return age === undefined ? undefined : <Text role="row-detail">{age}</Text>;
+  return timeOf(quietAge(props));
 }
 
 /*

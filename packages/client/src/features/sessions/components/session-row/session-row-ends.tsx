@@ -19,7 +19,8 @@ export const endParts = (
     </View>
   ) : undefined;
 
-const timeOf = (age: string | undefined): React.ReactNode =>
+// A row's time in its detail style: a phone row's title end, or a Compact row's detail.
+export const timeOf = (age: string | undefined): React.ReactNode =>
   age === undefined ? undefined : <Text role="row-detail">{age}</Text>;
 
 const sidebarTimeOf = (age: string | undefined): React.ReactNode =>

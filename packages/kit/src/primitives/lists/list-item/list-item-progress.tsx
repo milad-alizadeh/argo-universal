@@ -8,7 +8,7 @@ import type { ListItemProps } from './list-item-props';
 
 /*
  * Paper "SessionsList": a sidebar row's bar runs under its content, 4 above the row's end, on a hairline track.
- * Paper's step bar (Option A): a phone row's step bar runs under its content too, past the 24 leading slot and its
+ * A phone row's step bar runs under its content too, past the 24 leading slot and its
  * 16 gap, 8 above the row's end; a plain bar keeps the row's full width.
  */
 const barPlaces = {

@@ -36,10 +36,6 @@ function stepColor(state: StepState, props: ProgressBarProps): string {
   ];
 }
 
-/*
- * Paper's step bar (Option A): one rounded segment per step, 3 apart. Done steps take the tone, a started step its
- * pale tint, and the rest the hairline, so a last step underway never reads as a full bar.
- */
 function stepTestID(
   testID: string | undefined,
   state: StepState,
@@ -88,6 +84,10 @@ function Segment({
   );
 }
 
+/*
+ * One rounded segment per step, 3 apart. Done steps take the tone, a started step its
+ * pale tint, and the rest the hairline, so a last step underway never reads as a full bar.
+ */
 export function ProgressStepSegments({
   steps,
   ...props

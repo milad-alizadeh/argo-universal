@@ -6,7 +6,7 @@ export type ProgressBarProps = KitProps<'ProgressBar'> & {
   indeterminate?: boolean;
   // A rounded hairline track instead of the tone's tint (Paper "SessionsList").
   track?: 'hairline';
-  // One segment per step instead of one fill (Paper's step bar, Option A).
+  // One segment per step instead of one fill.
   steps?: ProgressSteps;
 };
 
