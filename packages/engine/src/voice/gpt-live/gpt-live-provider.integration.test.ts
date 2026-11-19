@@ -86,6 +86,52 @@ describe('GPT-Live provider starting a call', () => {
   });
 });
 
+describe('GPT-Live provider voices', () => {
+  it('offers the service’s voices, Cove first as the default', async () => {
+    const { provider } = await setup([signedIn('t1')], ['t1']);
+
+    const voices = await provider.voices();
+
+    expect(voices.map(({ id }) => id)).toEqual([
+      'cove',
+      'juniper',
+      'maple',
+      'spruce',
+      'ember',
+      'vale',
+      'breeze',
+      'arbor',
+      'sol',
+      'marin',
+      'aube',
+      'bubbie',
+      'haetsal',
+      'hanul',
+      'himari',
+      'leher',
+      'miko',
+      'neer',
+      'porto',
+      'rindo',
+      'rio',
+      'rivage',
+      'selva',
+      'sonna',
+      'tinta',
+      'viola',
+    ]);
+    expect(voices.find(({ id }) => id === 'haetsal')?.label).toBe('Haetsal');
+  });
+
+  it('creates the call with the chosen voice', async () => {
+    const { endpoint, start } = await setup([signedIn('t1')], ['t1']);
+
+    await start({ ...request, voice: 'marin' });
+
+    expect(endpoint.created.at(0)?.session.audio.output.voice).toBe('marin');
+  });
+});
+
 describe('GPT-Live provider availability', () => {
   it('is unusable, with the reason, when Codex is not signed in with ChatGPT', async () => {
     const reason = 'Sign in to Codex with ChatGPT';
