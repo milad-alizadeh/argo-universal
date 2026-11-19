@@ -15,49 +15,16 @@ const failure = (error?: string): ReactElement | null =>
     </Text>
   ) : null;
 
-/*
- * The failure, then the form's actions at the end: Save, and Preview until the "Speaks with" row can hold the play
- * button the board draws there. The header's X closes the form.
- */
+// The failure, then Save, the form's one action: the header's X closes the form, and Preview plays from the voice row.
 export const FormFooter = (props: FooterProps): ReactElement => (
   <>
     {failure(props.error)}
     <DialogFooter>
-      <ReadyButtons {...props} />
+      <Button
+        label="Save"
+        disabled={!canSaveDraft(props.draft)}
+        onPress={() => props.onSave(props.draft)}
+      />
     </DialogFooter>
   </>
-);
-
-// Hearing and saving need a name and a description.
-function ReadyButtons(props: FooterProps): ReactElement {
-  const disabled = !canSaveDraft(props.draft);
-
-  return (
-    <>
-      <PreviewButton {...props} disabled={disabled} />
-      <SaveButton {...props} disabled={disabled} />
-    </>
-  );
-}
-
-const PreviewButton = (
-  props: FooterProps & { disabled: boolean },
-): ReactElement => (
-  <Button
-    variant="secondary"
-    icon="play"
-    label="Preview"
-    disabled={props.disabled}
-    onPress={() => props.onPreview(props.draft)}
-  />
-);
-
-const SaveButton = (
-  props: FooterProps & { disabled: boolean },
-): ReactElement => (
-  <Button
-    label="Save"
-    disabled={props.disabled}
-    onPress={() => props.onSave(props.draft)}
-  />
 );

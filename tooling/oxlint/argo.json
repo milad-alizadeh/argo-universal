@@ -261,6 +261,7 @@
         "packages/kit/src/symbols/**",
         "packages/kit/src/primitives/fields/field-link/field-link.ios.tsx",
         "packages/kit/src/primitives/fields/field-picker/field-picker-screen-row.ios.tsx",
+        "packages/kit/src/primitives/fields/field-picker/field-picker-accessory.ios.tsx",
         "packages/kit/src/primitives/overlays/menu/context-menu-swift-items.ios.tsx",
         "packages/kit/src/primitives/overlays/sheet/sheet-screen-toolbar.ios.tsx",
         "packages/kit/src/primitives/actions/icon-button/icon-button.ios.tsx",

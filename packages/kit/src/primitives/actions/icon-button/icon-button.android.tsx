@@ -31,7 +31,8 @@ export function IconButton(props: IconButtonProps): ReactElement {
   );
 }
 
-function ComposeControl(props: IconButtonProps): ReactElement {
+// The button alone, for a row already inside a Compose host, such as a FieldGroup picker row's accessory.
+export function ComposeControl(props: IconButtonProps): ReactElement {
   const Control = controls[variantOf(props)];
 
   return (

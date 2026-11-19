@@ -3,7 +3,11 @@ import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { FieldLabelScope } from '@repo/kit/primitives/fields/field-row';
 import { Dialog, DialogForm } from '@repo/kit/primitives/overlays/dialog';
 import { useState, type ReactElement } from 'react';
-import { draftOf, type CustomVoiceDraft } from './custom-voice-draft';
+import {
+  canSaveDraft,
+  draftOf,
+  type CustomVoiceDraft,
+} from './custom-voice-draft';
 import { FormFooter } from './custom-voice-footer';
 import type {
   CustomVoiceDialogProps,
@@ -87,6 +91,17 @@ const voiceOptions = (
 const speechFooter = (provider: string): string =>
   `${provider} has fixed voices; this description is told to the voice you pick.`;
 
+// Hearing the voice needs a name and a description; the play button waits for them (ADR-0042, 2026-11-19).
+const previewOf = (
+  props: FormProps,
+  draft: CustomVoiceDraft,
+): React.ComponentProps<typeof FieldGroup.Picker>['accessory'] => ({
+  icon: 'play',
+  label: 'Preview',
+  disabled: !canSaveDraft(draft),
+  onPress: () => props.onPreview(draft),
+});
+
 const baseVoiceRow = (
   props: FormProps,
   { draft, change }: Draft,
@@ -96,6 +111,7 @@ const baseVoiceRow = (
     presentation="menu"
     value={draft.baseVoice}
     options={voiceOptions(props.voices)}
+    accessory={previewOf(props, draft)}
     onValueChange={(baseVoice) => change({ baseVoice })}
   />
 );

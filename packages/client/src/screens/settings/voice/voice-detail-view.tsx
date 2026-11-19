@@ -2,6 +2,7 @@ import type { VoiceAvailability, VoiceSettings } from '@repo/contracts';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
+import { useSizeClass } from '@repo/kit/use-size-class';
 import type * as React from 'react';
 import { callSection } from './voice-call-section';
 import { EditorDialog, voiceSection } from './voice-choice-section';
@@ -11,19 +12,24 @@ import { chosenProvider, settingsOf, waiting } from './voice-settings-state';
 
 export type { VoiceDetailViewProps } from './voice-detail-view-props';
 
+// The page as drawn: a phone, or the web App in a phone's browser, has no audio settings of its own.
+type Drawn = VoiceDetailViewProps & { audio: boolean };
+
 export function VoiceDetailView(
   props: VoiceDetailViewProps,
 ): React.JSX.Element {
+  const audio = useSizeClass() !== 'compact';
+
   return (
     <Screen title="Voice" onBack={props.onBack}>
-      <FieldGroup>{sectionsOf(props)}</FieldGroup>
+      <FieldGroup>{sectionsOf({ ...props, audio })}</FieldGroup>
       <EditorDialog {...props} />
     </Screen>
   );
 }
 
 // Called, not rendered: the FieldGroup reads its sections by element type.
-const sectionsOf = (props: VoiceDetailViewProps): React.ReactNode[] => [
+const sectionsOf = (props: Drawn): React.ReactNode[] => [
   switchSection(props),
   providerSection(props),
   voiceSection(props),
@@ -87,8 +93,9 @@ const providerPicker = (
   />
 );
 
-const callOf = (props: VoiceDetailViewProps): React.JSX.Element =>
+const callOf = (props: Drawn): React.JSX.Element =>
   callSection({
+    audio: props.audio,
     options: settingsOf(props).options,
     disabled: waiting(props),
     adjustsGain: props.adjustsGain,
@@ -98,9 +105,13 @@ const callOf = (props: VoiceDetailViewProps): React.JSX.Element =>
 
 const ignore = (): void => undefined;
 
-const devicesOf = (props: VoiceDetailViewProps): React.JSX.Element | null =>
-  props.devices
-    ? devicesSection(props.devices, props.onDevicesChange ?? ignore)
+const devicesOf = (props: Drawn): React.JSX.Element | null =>
+  props.devices && props.audio
+    ? devicesSection(
+        props.devices,
+        props.onDevicesChange ?? ignore,
+        props.meters,
+      )
     : null;
 
 const messages = {

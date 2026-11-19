@@ -1,4 +1,4 @@
-import type { FieldGroupKitProps } from '../../kit-props';
+import type { FieldGroupKitProps, KitProps } from '../../kit-props';
 import { createOf, reportToggle } from './field-picker-events';
 
 export type FieldPickerProps = FieldGroupKitProps<'FieldGroup.Picker'> & {
@@ -6,6 +6,25 @@ export type FieldPickerProps = FieldGroupKitProps<'FieldGroup.Picker'> & {
   emptyText?: string;
   // Offers to create what the search typed when no option has that name; the App's own, which a Plugin's `createLabel` sets.
   create?: { label: string; onCreate: (text: string) => void };
+  // One small round button at the row's end that tests or previews the row's own choice (ADR-0042, 2026-11-19). The App's own.
+  accessory?: FieldPickerAccessory;
+  // How loud the device the row chooses is, as a level glyph before the accessory's lane; drawn where the App measures audio, on the web.
+  meter?: FieldPickerMeter;
+};
+
+export type FieldPickerAccessory = {
+  icon: KitProps<'Icon'>['name'];
+  // The button's spoken name, such as "Play Sol".
+  label: string;
+  onPress: () => void;
+  // Not ready yet, such as a preview of a voice with no description.
+  disabled?: boolean;
+};
+
+// A level from 0 to 1 that changes on its own: the glyph reads it whenever the source says it moved.
+export type FieldPickerMeter = {
+  level: () => number;
+  subscribe: (onChange: () => void) => () => void;
 };
 
 /*

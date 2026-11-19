@@ -12,6 +12,8 @@ export interface VisualiserChoice {
 }
 
 export interface CallSectionProps {
+  // Volume and gain are set where the App plays a call's sound on a desktop window; a phone has neither row.
+  audio: boolean;
   options: VoiceCallOptions;
   disabled: boolean;
   // Only where this App carries a call's sound and can change the microphone's gain.
@@ -33,10 +35,22 @@ const visualiserOptions = [
 const isKind = (value: string): value is VoiceVisualiserKind =>
   visualiserOptions.some((option) => option.value === value);
 
+const footers = {
+  gain: 'Volume and gain change a running call at once; the rest apply from the next call.',
+  volume:
+    'Volume changes a running call at once; the rest apply from the next call.',
+  none: 'These apply from the next call.',
+};
+
 const footerOf = (props: CallSectionProps): string =>
-  props.adjustsGain
-    ? 'Volume and gain change a running call at once; the rest apply from the next call.'
-    : 'Volume changes a running call at once; the rest apply from the next call.';
+  footers[soundRowsOf(props)];
+
+// Which of volume and gain the section shows.
+const soundRowsOf = (props: CallSectionProps): keyof typeof footers => {
+  if (!props.audio) return 'none';
+
+  return props.adjustsGain ? 'gain' : 'volume';
+};
 
 const fillerRow = (props: CallSectionProps): ReactElement => (
   <FieldGroup.Toggle
@@ -77,19 +91,20 @@ const visualiserRow = (
     />
   ) : null;
 
-const volumeRow = (props: CallSectionProps): ReactElement => (
-  <HeldSliderRow
-    key="volume"
-    title="Volume"
-    value={props.options.volume}
-    max={loudest}
-    disabled={props.disabled}
-    onCommit={(volume) => props.onChange({ volume })}
-  />
-);
+const volumeRow = (props: CallSectionProps): ReactElement | null =>
+  props.audio ? (
+    <HeldSliderRow
+      key="volume"
+      title="Volume"
+      value={props.options.volume}
+      max={loudest}
+      disabled={props.disabled}
+      onCommit={(volume) => props.onChange({ volume })}
+    />
+  ) : null;
 
 const gainRow = (props: CallSectionProps): ReactElement | null =>
-  props.adjustsGain ? (
+  soundRowsOf(props) === 'gain' ? (
     <HeldSliderRow
       key="gain"
       title="Microphone gain"
