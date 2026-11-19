@@ -2,11 +2,20 @@ import type * as React from 'react';
 import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import type { VoiceLevels } from '../../voice-connection';
+import { type OrbColors, useOrbColors } from './orb-colors';
 import { orbOn, type OrbGl } from './orb-gl';
 import { OrbMotion } from './orb-motion';
-import { orbName, voiceOrbSize, type VoiceOrbProps } from './voice-orb-props';
+import {
+  orbDisc,
+  orbName,
+  voiceOrbSize,
+  type VoiceOrbProps,
+} from './voice-orb-props';
 
 const quiet: VoiceLevels = { input: 0, output: 0 };
+
+// The props as the canvas draws them: the colours already chosen, given or the theme's.
+type OrbCanvasProps = VoiceOrbProps & { colors: OrbColors };
 
 const millisecondsPerSecond = 1000;
 
@@ -18,7 +27,7 @@ class OrbLoop {
 
   public constructor(
     private readonly drawing: OrbGl,
-    private readonly read: () => VoiceOrbProps,
+    private readonly read: () => OrbCanvasProps,
   ) {}
 
   public start(): void {
@@ -31,9 +40,10 @@ class OrbLoop {
   }
 
   private readonly tick = (now: number): void => {
-    const { state, levels } = this.read();
+    const { state, levels, colors } = this.read();
     const seconds = (now - this.last) / millisecondsPerSecond;
-    this.drawing.draw(this.motion.step(state, levels?.() ?? quiet, seconds));
+    const drawn = this.motion.step(state, levels?.() ?? quiet, seconds);
+    this.drawing.draw(drawn, colors);
     this.last = now;
     this.start();
   };
@@ -42,7 +52,7 @@ class OrbLoop {
 // A loop on the canvas, or none where the window has no WebGL2.
 function loopOn(
   canvas: HTMLCanvasElement | null,
-  read: () => VoiceOrbProps,
+  read: () => OrbCanvasProps,
 ): OrbLoop | undefined {
   const drawing = canvas && orbOn(canvas);
 
@@ -52,7 +62,7 @@ function loopOn(
 // The orb runs for as long as the canvas is on the page, reading the props each frame without drawing the page again.
 function useOrbLoop(
   canvas: React.RefObject<HTMLCanvasElement | null>,
-  props: VoiceOrbProps,
+  props: OrbCanvasProps,
 ): void {
   const latest = useRef(props);
 
@@ -70,7 +80,7 @@ function useOrbLoop(
 
 const pixels = voiceOrbSize * window.devicePixelRatio;
 
-function OrbCanvas(props: VoiceOrbProps): React.JSX.Element {
+function OrbCanvas(props: OrbCanvasProps): React.JSX.Element {
   const canvas = useRef<HTMLCanvasElement>(null);
   useOrbLoop(canvas, props);
 
@@ -89,14 +99,16 @@ function OrbCanvas(props: VoiceOrbProps): React.JSX.Element {
  * Voice call's screen draws `VoiceOrb`, and a phone's own drawing replaces this file without the screen changing.
  */
 export function VoiceOrb(props: VoiceOrbProps): React.JSX.Element {
+  const colors = useOrbColors(props.colors);
+
   return (
     <View
       accessibilityRole="image"
       accessibilityLabel={orbName(props.state)}
-      className="overflow-hidden rounded-full bg-tone-info-200"
-      style={{ width: voiceOrbSize, height: voiceOrbSize }}
+      className="overflow-hidden rounded-full"
+      style={orbDisc(colors[0])}
     >
-      <OrbCanvas {...props} />
+      <OrbCanvas {...props} colors={colors} />
     </View>
   );
 }
