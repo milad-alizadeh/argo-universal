@@ -17,6 +17,7 @@ import {
   type EndParameters,
 } from './call-endings';
 import {
+  callProvider,
   runningCall,
   type RunningCall,
   type StartRefusal,
@@ -27,7 +28,6 @@ import {
 import { watchConnection, watchSession } from './call-watchers';
 import type {
   VoiceConnectionStatus,
-  VoiceProvider,
   VoiceProviderEvent,
 } from './provider';
 import { providerCall, type ProviderCallInput } from './provider-call';
@@ -105,12 +105,17 @@ const newCall = (start: CallStartEvent): RunningCall => ({
 
 const providerFailure = 'The connection to the voice failed.';
 
-type Report<Type extends VoiceProviderEvent['type']> = (
-  event: Extract<VoiceProviderEvent, { type: Type }>,
-  call: RunningCall,
-) => Partial<RunningCall>;
+// Each provider event, by its type.
+type ProviderEvents = {
+  [Event in VoiceProviderEvent as Event['type']]: Event;
+};
 
-type Reports = { [Type in VoiceProviderEvent['type']]?: Report<Type> };
+type Reports = {
+  [Type in keyof ProviderEvents]?: (
+    event: ProviderEvents[Type],
+    call: RunningCall,
+  ) => Partial<RunningCall>;
+};
 
 // What each provider report changes about the running call; reports not listed change nothing.
 const reports: Reports = {
@@ -131,10 +136,16 @@ const reports: Reports = {
 
 // Folds what the provider reported about the call into the running call.
 function reported(call: RunningCall, event: VoiceProviderEvent): RunningCall {
-  // SAFETY: `reports` keys each report by the event type it reads, so the report found for `event.type` takes `event`.
-  const report = reports[event.type] as Report<typeof event.type> | undefined;
+  return { ...call, ...reportOf(event.type, event, call) };
+}
 
-  return { ...call, ...report?.(event, call) };
+// The report kept for `type` reads the event of that type.
+function reportOf<Type extends keyof ProviderEvents>(
+  type: Type,
+  event: ProviderEvents[Type],
+  call: RunningCall,
+): Partial<RunningCall> | undefined {
+  return reports[type]?.(event, call);
 }
 
 const namesCall = (
@@ -328,8 +339,7 @@ const providerInput = (context: VoiceCallContext): ProviderCallInput => {
   const call = runningCall(context);
 
   return {
-    // SAFETY: `call.start` is refused without a provider, so `running` always has one.
-    provider: context.provider as VoiceProvider,
+    provider: callProvider(context),
     offer: call.offer,
     setup: call.setup,
     briefing: context.briefing(call.sessionId),

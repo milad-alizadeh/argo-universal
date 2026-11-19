@@ -131,7 +131,15 @@ export interface VoiceCallContext extends VoiceCallInput {
   partials: VoicePartial[];
 }
 
+// The provider a running call speaks through; `call.start` is refused without one.
+export function callProvider(context: VoiceCallContext): VoiceProvider {
+  if (!context.provider) throw new Error('No Voice provider is configured');
+
+  return context.provider;
+}
+
 // The call `running` was entered for; `running` is only entered by `call.start`, which sets it.
+
 export function runningCall(context: VoiceCallContext): RunningCall {
   if (!context.call) throw new Error('No Voice call is running');
 
