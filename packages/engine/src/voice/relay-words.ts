@@ -14,4 +14,7 @@ export const relayWords = {
     `The Agent's Turn stopped: ${stopReason}.`,
   permissionWaiting: (title: string): string =>
     `The Agent is waiting for permission: ${title}. The person answers it on screen.`,
+  // What a request for work is answered with while a Permission request waits: speech never answers it.
+  permissionStillWaiting: (title: string): string =>
+    `Nothing was allowed or rejected: the Agent is still waiting for permission: ${title}. The person answers it on screen.`,
 };
