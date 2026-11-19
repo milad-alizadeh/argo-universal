@@ -15,6 +15,8 @@ const appOnly: ReadonlySet<OperationId> = new Set<OperationId>([
   'voice.end',
   'voice.setSettings',
   'voice.preview',
+  'voice.getPreviewClip',
+  'voice.storePreviewClip',
 ]);
 
 export const isAppOnly = (id: OperationId): boolean => appOnly.has(id);

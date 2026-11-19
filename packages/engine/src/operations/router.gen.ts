@@ -478,6 +478,28 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      getPreviewClip: publicProcedure
+        .input(operations['voice.getPreviewClip'].params)
+        .output(operations['voice.getPreviewClip'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.getPreviewClip',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      storePreviewClip: publicProcedure
+        .input(operations['voice.storePreviewClip'].params)
+        .output(operations['voice.storePreviewClip'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.storePreviewClip',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       hangUp: publicProcedure
         .input(operations['voice.hangUp'].params)
         .output(operations['voice.hangUp'].result)

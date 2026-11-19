@@ -4,9 +4,11 @@ import type {
   VoicePeer,
   VoicePlayback,
 } from '../types/voice-environment';
+import { BrowserClipPlayback, BrowserRecording } from './browser-clips';
 import { BrowserMicrophone } from './browser-microphone';
 import { BrowserSilence } from './browser-silence';
 import { LevelMeter } from './level-meter';
+import { AudioElementPlayback } from './speaker-sink';
 
 const iceGatheringLimitMs = 3000;
 
@@ -93,32 +95,15 @@ async function openMicrophone(device: string | null): Promise<Microphone> {
   );
 }
 
-// The system's speaker, as `setSinkId` names it.
-const systemSpeaker = '';
-
-class BrowserPlayback implements VoicePlayback {
-  private readonly audio = new Audio();
+class BrowserPlayback extends AudioElementPlayback implements VoicePlayback {
   private readonly meter: LevelMeter;
 
   public constructor(stream: MediaStream, speaker: string | null) {
+    super(new Audio());
     this.audio.srcObject = stream;
     this.meter = new LevelMeter(stream);
     this.setSpeaker(speaker);
     void this.audio.play();
-  }
-
-  public setVolume(volume: number): void {
-    this.audio.volume = volume;
-  }
-
-  // A speaker that is gone plays on the system's instead, so the voice is never lost.
-  public setSpeaker(speaker: string | null): void {
-    this.audio
-      .setSinkId(speaker ?? systemSpeaker)
-      .catch(() => this.audio.setSinkId(systemSpeaker))
-      .catch((cause: unknown) =>
-        console.error('Could not play the voice on that speaker', cause),
-      );
   }
 
   // The meter reads the stream before the volume, so a silenced voice still moves the orb.
@@ -148,6 +133,9 @@ export const browserVoiceEnvironment: VoiceEnvironment = {
   openSilence: () => new BrowserSilence(),
   createPeer: () => new BrowserPeer(),
   playVoice,
+  recordVoice: (stream) =>
+    typeof MediaRecorder === 'undefined' ? null : new BrowserRecording(stream),
+  playClip: (clip, speaker) => new BrowserClipPlayback(clip, speaker),
 };
 
 // Whether this page can carry a call: it has a microphone to ask for and a peer connection to make.

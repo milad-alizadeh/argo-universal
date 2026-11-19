@@ -4,7 +4,7 @@ import type {
   CustomVoiceInput,
   ListedVoice,
   VoiceOption,
-  VoicePreviewInput,
+  VoicePreviewClipInput,
 } from '@repo/contracts';
 import { baseOf, noSuchVoice, refuse } from './voice-choice-rules';
 
@@ -93,7 +93,7 @@ const unsavedPreview = (
 
 // A custom voice not yet saved, a saved one, or a built-in one.
 export function previewedVoice(
-  input: VoicePreviewInput,
+  input: VoicePreviewClipInput,
   custom: CustomVoice[],
   builtIn: VoiceOption[],
 ): PreviewedVoice {

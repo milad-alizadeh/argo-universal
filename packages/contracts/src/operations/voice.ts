@@ -2,8 +2,12 @@ import { z } from 'zod';
 import {
   VoiceEndInput,
   VoiceEndOutput,
+  VoicePreviewClipInput,
+  VoicePreviewClipOutput,
   VoicePreviewInput,
   VoicePreviewOutput,
+  VoiceStorePreviewClipInput,
+  VoiceStorePreviewClipOutput,
   VoiceStartInput,
   VoiceStartOutput,
   VoiceStatus,
@@ -54,6 +58,28 @@ export const voiceOperations = {
     result: VoicePreviewOutput,
     tier: 'act',
     keywords: ['voice', 'preview', 'listen', 'greeting', 'sample'],
+  },
+  'voice.getPreviewClip': {
+    id: 'voice.getPreviewClip',
+    icon: 'voice',
+    label: 'Read stored voice greeting',
+    description:
+      "Read the greeting the Server stored for a voice, to play it with no provider call. Null until the App's first preview of that voice has been stored.",
+    params: VoicePreviewClipInput,
+    result: VoicePreviewClipOutput,
+    tier: 'read',
+    keywords: ['voice', 'preview', 'greeting', 'sample', 'clip', 'cache'],
+  },
+  'voice.storePreviewClip': {
+    id: 'voice.storePreviewClip',
+    icon: 'voice',
+    label: 'Store voice greeting',
+    description:
+      "Store the greeting the App recorded from a voice's first preview, so later previews replay it. It replaces a clip stored for the same voice and settings.",
+    params: VoiceStorePreviewClipInput,
+    result: VoiceStorePreviewClipOutput,
+    tier: 'act',
+    keywords: ['voice', 'preview', 'greeting', 'sample', 'clip', 'store'],
   },
   'voice.hangUp': {
     id: 'voice.hangUp',

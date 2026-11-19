@@ -27,6 +27,7 @@ import {
 import { callRunning } from './voice-call-room';
 import type { VoiceCallsPort } from './voice-calls-port';
 import { VoiceChoices } from './voice-choices';
+import { VoiceClipDesk } from './voice-clip-desk';
 import { VoiceDevices } from './voice-devices';
 import { VoicePreviews } from './voice-previews';
 import type { VoiceSettingsStore } from './voice-settings';
@@ -47,12 +48,19 @@ export class VoiceCalls implements VoiceCallsPort {
     () => this.snapshot().context.call?.connection ?? null,
   );
   private readonly previews = new VoicePreviews();
+  public readonly previewClips: VoiceClipDesk;
 
   public constructor(
     private readonly actor: VoiceCallActorRef,
     store: VoiceSettingsStore,
+    previewClipsDirectory: string,
   ) {
     this.choices = new VoiceChoices(store, () => this.provider());
+    this.previewClips = new VoiceClipDesk(
+      previewClipsDirectory,
+      this.choices,
+      () => this.provider(),
+    );
   }
 
   public async status(): Promise<VoiceStatus> {
