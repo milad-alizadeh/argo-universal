@@ -13,6 +13,7 @@ const written = [
 const bare = new RegExp(`^#?${number}$`);
 
 const origins = [
+  new RegExp(`^ssh://(?:git@)?github\\.com/${repository}(?:\\.git)?/?$`),
   new RegExp(`^git@github\\.com:${repository}(?:\\.git)?/?$`),
   new RegExp(`^https://github\\.com/${repository}(?:\\.git)?/?$`),
 ];

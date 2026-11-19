@@ -8,7 +8,7 @@ export type WrittenPlanLayout = Pick<ComposerLayout, 'composerId'> & {
 };
 
 export type LivePlanLayout = Pick<ComposerLayout, 'inactive'> & {
-  props: Pick<ComposerProps, 'status'>;
+  props: Pick<ComposerProps, 'status' | 'phonePill'>;
 };
 
 export type PlanLayout = WrittenPlanLayout & LivePlanLayout;

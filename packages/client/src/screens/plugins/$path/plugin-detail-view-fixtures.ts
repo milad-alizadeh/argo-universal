@@ -1,7 +1,9 @@
 import { WireNode } from '@repo/contracts/plugins/wire';
 import { Platform } from 'react-native';
 import { loadingTree } from '#features/plugins';
+import paceTrees from './plugin-detail-view-development-pace.json' with { type: 'json' };
 import trees from './plugin-detail-view-issue-filters.json' with { type: 'json' };
+import pagedJiraBoard from './plugin-detail-view-jira-board-paged.json' with { type: 'json' };
 import jiraBoards from './plugin-detail-view-jira-board.json' with { type: 'json' };
 import jiraTrees from './plugin-detail-view-jira-issue.json' with { type: 'json' };
 import jiraLists from './plugin-detail-view-jira-list.json' with { type: 'json' };
@@ -31,6 +33,8 @@ export const jiraList = { root: WireNode.parse(jiraLists.list) };
 // Recorded from the Jira Plugin's project page as a board: its issues, a card moving before Jira answers, and a project with no issues yet, whose statuses still draw as columns. Every platform draws the same tree.
 export const jiraBoard = { root: WireNode.parse(jiraBoards.board) };
 
+export const jiraBoardPaged = { root: WireNode.parse(pagedJiraBoard) };
+
 export const jiraBoardMoving = { root: WireNode.parse(jiraBoards.pending) };
 
 export const jiraBoardEmpty = { root: WireNode.parse(jiraBoards.empty) };
@@ -42,3 +46,10 @@ export const loadingJiraList = {
   root: null,
   loadingTree: loadingTree(jiraList.root),
 };
+
+// Recorded at the GitHub Plugin page boundary with the repository's November 18 development data.
+export const developmentPace = { root: WireNode.parse(paceTrees.loaded) };
+
+export const paceRepositories = { root: WireNode.parse(paceTrees.picker) };
+
+export const paceUnavailable = { root: WireNode.parse(paceTrees.unavailable) };

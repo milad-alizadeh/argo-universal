@@ -9,8 +9,18 @@ import {
 } from './composer-test-contract.test.mocks';
 import { expectPhoneFooter, expectWideFooter } from './work-status.test.mocks';
 
+const rounded = (element: Element): boolean =>
+  Number.parseFloat(getComputedStyle(element).borderTopLeftRadius) > 0;
+
+function roundedAncestor(element: Element | null): Element | null {
+  if (!element || rounded(element)) return element;
+
+  return roundedAncestor(element.parentElement);
+}
+
+// The card is the field's nearest rounded ancestor, however many rows lie between them.
 export function composerCard(input: HTMLElement): Element {
-  const card = input.parentElement?.parentElement;
+  const card = roundedAncestor(input.parentElement);
 
   if (!card) throw new Error('Composer card is missing.');
 

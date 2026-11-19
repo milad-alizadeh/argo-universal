@@ -30,6 +30,12 @@ export const fullHeightSheet = {
   contentScrolls: true,
 } satisfies SheetFixture;
 
+export const ScrollingList = {
+  ...fullHeightSheet,
+  label: 'Items',
+  items: Array.from({ length: 24 }, (_, index) => `Item ${index + 1}`),
+};
+
 type PagedSheetFixture = Pick<
   SheetProps,
   'label' | 'contentScrolls' | 'trigger'

@@ -1,6 +1,6 @@
 import { setTimeout as delay } from 'node:timers/promises';
 import { z } from 'zod';
-import { processGroupMembers } from './shell-group-members';
+import { hasLiveGroupMembers } from './shell-group-members';
 
 const releaseLimitMs = 1000;
 
@@ -20,7 +20,7 @@ export const releaseShellGroup = async (pid: number): Promise<void> => {
   killShellGroup(pid);
   const deadline = Date.now() + releaseLimitMs;
 
-  while (processGroupMembers(pid).length > 0) {
+  while (hasLiveGroupMembers(pid)) {
     if (Date.now() >= deadline)
       throw new Error('Shell process group did not close');
     await delay(observationIntervalMs);

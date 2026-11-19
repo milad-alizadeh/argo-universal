@@ -69,7 +69,7 @@ export type OAuthFlow = Readonly<{
   serverDevice: true;
   state: () => OAuthFlowState;
   start: () => Promise<OAuthFlowState>;
-  cancel: () => OAuthFlowState;
+  cancel: () => Promise<OAuthFlowState>;
   provide: () => Promise<void>;
 }>;
 

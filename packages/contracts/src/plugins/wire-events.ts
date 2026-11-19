@@ -77,6 +77,7 @@ export const PluginEvent = z.union([
     id: z.number().int().nonnegative(),
     pages: z.number().int().positive(),
     pull: z.literal(true).optional(),
+    retry: z.literal(true).optional(),
     serverDevice: z.boolean().optional(),
     surface: PluginSurface.optional(),
     loadOnly: z.literal(true).optional(),

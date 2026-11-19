@@ -46,3 +46,13 @@ export const refreshableList = {
   items: items.slice(0, 4),
   onRefresh: (): void => {},
 } satisfies ListProps<string>;
+
+export const interruptedList = {
+  ...pagedList,
+  items: items.slice(0, 4),
+} satisfies ListProps<string>;
+
+export const failedPagination = {
+  hasMore: false,
+  failed: 'The service is temporarily unavailable.',
+} satisfies Omit<NonNullable<ListProps<string>['pagination']>, 'onLoadMore'>;

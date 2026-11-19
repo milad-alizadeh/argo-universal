@@ -1,6 +1,6 @@
 import type { Database } from '@repo/db';
 import { project, session } from '@repo/db/schema';
-import { isSessionBranch, removeCheckout } from '@repo/git';
+import { removeCheckout } from '@repo/git';
 import { and, eq, isNotNull, isNull } from 'drizzle-orm';
 import { readProjectPath } from '../../projects';
 import {
@@ -9,6 +9,7 @@ import {
 } from '../../storage';
 import type { SessionData } from '../session-data';
 import type { SessionContext } from '../session-machine';
+import { ownsStoredWorktree } from '../session-record';
 import { readBorrowerIds } from './archive-borrowers';
 import { SessionArchiveJob } from './archive-storage';
 
@@ -95,7 +96,7 @@ export async function removeSessionCheckout(
   data: Pick<SessionData, 'projectId' | 'sessionId' | 'checkout'>,
   signal?: AbortSignal,
 ): Promise<void> {
-  if (!isSessionBranch(data.checkout.branch, data.sessionId)) return;
+  if (!ownsStoredWorktree(database, data.sessionId)) return;
 
   if (isCheckoutKept(database, data.sessionId)) return;
 

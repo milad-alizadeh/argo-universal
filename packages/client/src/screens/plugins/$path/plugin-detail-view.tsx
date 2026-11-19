@@ -19,6 +19,7 @@ import {
 // What a page's tree reports back: the page a `navigate` Action opens, and its Page calls.
 interface PluginPageCallbacks {
   onOpenPage?: OpenPluginPage;
+  pluginId?: string;
   // A Loader page's Page state changes and Operation calls (ADR-0050).
   onPageCall?: OnPageCall;
 }

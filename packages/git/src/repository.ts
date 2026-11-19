@@ -59,7 +59,12 @@ export interface Checkout {
 
 // Where a Session runs: a new worktree from a local branch, or the main checkout (ADR-0008).
 export type CheckoutChoice =
-  | { type: 'worktree'; baseBranch: string }
+  | {
+      type: 'worktree';
+      baseBranch: string;
+      branch?: string;
+      takenBranch?: { action: 'reuse' | 'remove'; path: string };
+    }
   | { type: 'main' };
 
 // A repository: the common directory that names it, and the main checkout it is registered at.

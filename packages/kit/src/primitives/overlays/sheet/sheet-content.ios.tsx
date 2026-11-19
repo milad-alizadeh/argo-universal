@@ -1,4 +1,5 @@
-import { RNHostView } from '@expo/ui/swift-ui';
+import { Group, RNHostView } from '@expo/ui/swift-ui';
+import { ignoreSafeArea } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement, ReactNode } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { SheetBody } from './sheet-body';
@@ -8,6 +9,7 @@ type ContentProps = SheetProps & {
   fill: boolean;
   // A popover's page width; a fitted sheet's page takes the screen's.
   width?: number;
+  underHeader?: boolean;
   children: ReactNode;
 };
 
@@ -17,6 +19,27 @@ type ContentProps = SheetProps & {
  * page under detents. A fitted page has no width to measure against, so it takes the screen's.
  */
 export function SheetContent(props: ContentProps): ReactElement {
+  const content = <HostedContent {...props} />;
+
+  if (!props.fill) return content;
+
+  return (
+    <Group modifiers={props.underHeader ? throughHeader : throughBottom}>
+      {content}
+    </Group>
+  );
+}
+
+// A filled sheet extends the viewport; the scroller keeps its own content clear of the edges.
+const throughBottom = [
+  ignoreSafeArea({ regions: 'container', edges: 'bottom' }),
+];
+
+const throughHeader = [
+  ignoreSafeArea({ regions: 'container', edges: 'vertical' }),
+];
+
+function HostedContent(props: ContentProps): ReactElement {
   const width = useScreenWidth(props.width);
 
   return (

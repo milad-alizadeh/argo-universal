@@ -1,9 +1,9 @@
 import {
   Action,
-  Icon,
+  issueRow,
   Label,
   List,
-  ListItem,
+  type IssueCategory,
   Pill,
   type PagedList,
   type PageTo,
@@ -29,23 +29,11 @@ export const categoryTones: Record<StatusCategory, 'muted' | 'info' | 'done'> =
     done: 'done',
   };
 
-const inProgressIcon = {
-  sf: 'circle.lefthalf.filled',
-  material: 'contrast',
-} as const;
-
-const statusMarks: Record<StatusCategory, JSX.Element> = {
-  new: <Icon name="pending" tone="muted" size="sm" filled={false} />,
-  indeterminate: <Icon name={inProgressIcon} tone="info" size="sm" />,
-  done: <Icon name="passed" tone="done" size="sm" filled />,
+const categories: Record<StatusCategory, IssueCategory> = {
+  new: 'open',
+  indeterminate: 'in-progress',
+  done: 'done',
 };
-
-/*
- * The row's leading mark, by status category, in the Issue tracker's marks for open and done
- * (`plugins/issue-tracker/issue-status-mark.tsx`); Jira's in progress has no GitHub state, so it is half filled.
- */
-const issueStatusMark = ({ status }: JiraIssue): JSX.Element =>
-  statusMarks[status.category];
 
 const personIcon = { sf: 'person', material: 'person' } as const;
 
@@ -69,13 +57,6 @@ const statusPill = ({ status }: JiraIssue): JSX.Element => (
   <Pill key="status" text={status.name} tone={categoryTones[status.category]} />
 );
 
-// What a row says after its title: who has it and how urgent it is, then its status.
-const rowMeta = (issue: JiraIssue): JSX.Element[] => [
-  assigneeLabel(issue),
-  ...priorityLabel(issue),
-  statusPill(issue),
-];
-
 type RowTo = PageTo<{ site: string }>;
 
 // Where a row goes: the issue's page in this Project, and Jira on its site from its menu.
@@ -91,19 +72,20 @@ const openInJira = (site: JiraSite, issue: JiraIssue): JSX.Element => (
 );
 
 // A keyed ListItem itself, as a List draws its children. It opens the issue's page; its menu opens it in Jira.
-const issueRow = (rows: Rows, issue: JiraIssue): JSX.Element => (
-  <ListItem
-    key={issue.key}
-    id={issue.key}
-    leading={issueStatusMark(issue)}
-    title={issue.summary || issue.key}
-    subtitle={issue.key}
-    finished={issue.status.category === 'done'}
-    meta={rowMeta(issue)}
-    onPress={rows.to.go(issuePath(rows.projectId, issue.key))}
-    actions={openInJira(rows.site, issue)}
-  />
-);
+const jiraRow = (rows: Rows, issue: JiraIssue): JSX.Element =>
+  issueRow(
+    {
+      id: issue.key,
+      category: categories[issue.status.category],
+      title: issue.summary || issue.key,
+      issueKey: issue.key,
+      labels: [assigneeLabel(issue), ...priorityLabel(issue)],
+      pills: [statusPill(issue)],
+      onPress: rows.to.go(issuePath(rows.projectId, issue.key)),
+      actions: openInJira(rows.site, issue),
+    },
+    issue.key,
+  );
 
 // What the list says in place of its rows when there are none.
 export type ListFrame = Pick<PluginProps['List'], 'empty'>;
@@ -116,11 +98,11 @@ const pagingProps = ({
   to,
 }: Paging): Pick<PluginProps['List'], 'onRefresh' | 'pagination'> => ({
   onRefresh: to.set({}),
-  pagination: { hasMore: list.hasMore, onLoadMore: list.loadMore },
+  pagination: list.pagination,
 });
 
 const issueRows = (rows: Rows, items: readonly ListedItem[]): JSX.Element[] =>
-  items.flatMap((item) => (isFailure(item) ? [] : [issueRow(rows, item)]));
+  items.flatMap((item) => (isFailure(item) ? [] : [jiraRow(rows, item)]));
 
 // The project's issues, one row each, in the Issue tracker's plain compact list.
 export const issueList = (

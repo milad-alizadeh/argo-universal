@@ -1,65 +1,26 @@
-import type { SignInFlow } from '@repo/contracts/plugins/device-flow-api';
-import type {
-  LoaderInput,
-  PageTo,
-} from '@repo/contracts/plugins/loader-page-api';
-import type {
-  OperationDeclaration,
-  OperationParams,
-} from '@repo/contracts/plugins/operations-api';
-import type { PageState } from '@repo/contracts/plugins/page-address';
 import type {
   AccountFetchPattern,
   Gated,
-  ProvideSignInPattern,
   SignInData,
+  SignInFlows,
   SignInGatePattern,
-  SignInOptions,
 } from '@repo/contracts/plugins/sign-in-api';
-import type { ReactElement } from 'react';
-import { z } from 'zod';
-import { signInScreen, type SignInParts } from './sign-in-screen';
+import { drawSignIn, signInData } from './sign-in-parts';
 
-// How long an answer is fresh unless the page says: a sign-out or a rejected token is noticed within it (ADR-0037).
+export { provideSignIn } from './provide-sign-in';
+
+// How long an answer is fresh unless the page says: a sign-out or a rejected token is noticed within it.
 const freshForMs = 60_000;
 
-/*
- * Thrown by a read that finds the person signed out, or no longer accepted: the gate answers it with the
- * sign-in. `message` says why, and is drawn on the page.
- */
 export class SignInRequired extends Error {
   override name = 'SignInRequired';
 }
 
-// Recognised by name, so a Plugin module that cannot import the kit, a pure one its unit tests load, may throw its own.
 const isSignInRequired = (cause: unknown): cause is Error =>
   cause instanceof Error && cause.name === 'SignInRequired';
 
-// A token the flow just reported as signed in, and the service then refused, is not signed in any more.
-function flowStateOf(
-  flow: SignInFlow,
-  rejected: string | null,
-): SignInData['flow'] {
-  const state = flow.state();
-
-  return rejected !== null && state.kind === 'signed-in'
-    ? { kind: 'idle' }
-    : state;
-}
-
-const signInData = (
-  flow: SignInFlow,
-  serverDevice: boolean,
-  rejected: string | null,
-): SignInData => ({
-  flow: flowStateOf(flow, rejected),
-  rejected,
-  needsServerDevice: flow.serverDevice && !serverDevice,
-  pastesToken: 'pastesToken' in flow,
-});
-
 async function loaded<Data>(
-  flow: SignInFlow,
+  flow: SignInFlows,
   serverDevice: boolean,
   run: () => Data | Promise<Data>,
 ): Promise<Gated<Data>> {
@@ -68,18 +29,25 @@ async function loaded<Data>(
   } catch (cause) {
     if (!isSignInRequired(cause)) throw cause;
 
-    return { signIn: signInData(flow, serverDevice, cause.message) };
+    return requireSignIn(flow, serverDevice, cause.message);
   }
 }
 
-type Runs = Pick<PageTo<PageState>, 'run' | 'payload'>;
+function requireSignIn(
+  flow: SignInFlows,
+  serverDevice: boolean,
+  message: string,
+): Gated<never> {
+  const [signIn, ...alternatives] = signInData(flow, serverDevice, message);
 
-// A pasted token goes only to `signIn`'s secret `token` param (ADR-0051).
-const runsOf = (to: Runs): Pick<SignInParts, 'start' | 'cancel' | 'paste'> => ({
-  start: to.run('signIn', {}),
-  cancel: to.run('cancelSignIn', {}),
-  paste: to.run('signIn', { token: to.payload() }),
-});
+  if (!signIn) throw new Error('A sign-in gate needs a flow');
+
+  return alternatives.length > 0 ? { signIn, alternatives } : { signIn };
+}
+
+const alternativesOf = (answer: {
+  alternatives?: readonly SignInData[];
+}): readonly SignInData[] => answer.alternatives ?? [];
 
 /*
  * A page that draws the sign-in until the person is signed in: its Loader's `SignInRequired` becomes the
@@ -92,40 +60,13 @@ export const signInGate: SignInGatePattern = (flow, options, page) => ({
     loaded(flow, input.context.serverDevice, () => page.load(input)),
   render: (answer, to, input) =>
     'signIn' in answer
-      ? signInScreen({ ...options, data: answer.signIn, ...runsOf(to) })
+      ? drawSignIn(flow, [answer.signIn, ...alternativesOf(answer)], {
+          ...options,
+          to,
+          state: input.state,
+        })
       : page.render(answer.data, to, input),
 });
-
-// The page `contributes.accounts` names: the flow where it stands, for a Device that has not signed in yet.
-type SignInPage = {
-  load: (input: LoaderInput<PageState>) => SignInData;
-  render: (data: SignInData, to: Runs) => ReactElement;
-};
-
-const signInPage = (flow: SignInFlow, options: SignInOptions): SignInPage => ({
-  load: ({ context }) => signInData(flow, context.serverDevice, null),
-  render: (data, to) => signInScreen({ ...options, data, ...runsOf(to) }),
-});
-
-// A token paste's `signIn` carries the pasted token; the other flows' carries nothing.
-const PastedToken = z.object({ token: z.string() });
-
-const tokenIn = (params: OperationParams<OperationDeclaration>): string =>
-  PastedToken.safeParse(params).data?.token ?? '';
-
-export const provideSignIn: ProvideSignInPattern = async (
-  argo,
-  flow,
-  options,
-) => {
-  argo.operations.register('signIn', async (params) => ({
-    ...(await flow.start(tokenIn(params))),
-  }));
-  argo.operations.register('cancelSignIn', () => ({ ...flow.cancel() }));
-  argo.pages.define(options.path ?? '/sign-in', signInPage(flow, options));
-
-  await flow.provide();
-};
 
 // Signing in is the way forward when no Account answers the borrow, or the service no longer accepts its token.
 export const accountFetch: AccountFetchPattern =

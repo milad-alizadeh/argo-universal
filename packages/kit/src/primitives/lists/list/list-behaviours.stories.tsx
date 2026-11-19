@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { action } from 'storybook/actions';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { List } from '../list';
 import {
+  failedPagination,
+  interruptedList,
   logList,
   pagedList,
   searchedList,
@@ -39,4 +42,11 @@ export const Search: Story = { args: searchedList };
 export const Log: Story = {
   args: logList,
   render: (args) => <LogExample {...args} />,
+};
+
+export const Interrupted: Story = {
+  args: {
+    ...interruptedList,
+    pagination: { ...failedPagination, onLoadMore: action('retry page') },
+  },
 };

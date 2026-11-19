@@ -8,8 +8,7 @@ import {
   type PluginEvent,
   type PluginReply,
 } from '../protocol/runtime';
-import { runtimeStartupLimitMs } from '../protocol/runtime-limits';
-import { hostCompletion } from './completion';
+import { hostCompletion, monitorStartup } from './completion';
 import { hostLifecycleMachine, hostBudgetExhausted } from './lifecycle.machine';
 import { readHostMessage } from './read-host-message';
 
@@ -99,9 +98,11 @@ export class HostConnection {
     child.once('spawn', () =>
       this.callbacks.log(`Plugin host started: ${child.pid}`),
     );
-    child.on('message', (value) =>
-      this.receive(readHostMessage(HostMessage.safeParse(value))),
-    );
+    child.on('message', (value) => {
+      const message = readHostMessage(HostMessage.safeParse(value));
+
+      if (message) this.receive(message);
+    });
     this.logOutput(child);
   }
 
@@ -114,14 +115,18 @@ export class HostConnection {
     );
   }
 
-  private receive(message: HostMessage | undefined): void {
-    if (!message) return;
-
+  private receive(message: HostMessage): void {
     if (message.type === 'call') void this.answerCall(message);
+    else if (message.type === 'console')
+      this.callbacks.log(
+        `Plugin ${message.pluginId}: console.${message.level} ${message.text}`,
+      );
     else this.report(message);
   }
 
-  private report(message: Exclude<HostMessage, { type: 'call' }>): void {
+  private report(
+    message: Exclude<HostMessage, { type: 'call' | 'console' }>,
+  ): void {
     if (message.type === 'status') this.callbacks.status(message);
     else if (message.type === 'test.done') this.callbacks.test(message);
   }
@@ -171,14 +176,4 @@ function hostEnvironment(): NodeJS.ProcessEnv {
   delete env.WATCH_REPORT_DEPENDENCIES;
 
   return env;
-}
-
-function monitorStartup(child: ChildProcess): void {
-  const deadline = setTimeout(
-    () => child.kill('SIGKILL'),
-    runtimeStartupLimitMs,
-  );
-
-  child.once('message', () => clearTimeout(deadline));
-  child.once('close', () => clearTimeout(deadline));
 }

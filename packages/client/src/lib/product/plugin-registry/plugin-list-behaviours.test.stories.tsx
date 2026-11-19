@@ -172,3 +172,35 @@ export const RefreshDrawsNothingOnWeb: Story = {
     await expect(canvas.queryByRole('button', { name: /refresh/i })).toBeNull();
   },
 };
+
+const failedPage = {
+  ...pages,
+  props: {
+    ...pages.props,
+    pagination: {
+      hasMore: false,
+      failed: 'Service unavailable.',
+      onLoadMore: { loadMore: true, retry: true },
+    },
+  },
+  children: pages.children.slice(0, 2),
+} satisfies WireNode;
+
+const retryPage = fn(async () => {});
+
+export const RetriesFailedPage: Story = {
+  render: () => <PluginTree root={failedPage} onPageCall={retryPage} />,
+  play: async ({ canvas, userEvent }) => {
+    await expect(await canvas.findByText('Item 1')).toBeVisible();
+    await expect(await canvas.findByText('Item 2')).toBeVisible();
+    await expect(await canvas.findByText(/Service unavailable/)).toBeVisible();
+    await expect(retryPage).not.toHaveBeenCalled();
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Try again' }),
+    );
+    await expect(retryPage).toHaveBeenCalledWith(
+      { loadMore: true, retry: true },
+      expect.objectContaining({ key: 'pages', name: 'onLoadMore' }),
+    );
+  },
+};

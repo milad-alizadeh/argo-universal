@@ -24,16 +24,18 @@ type PageViewProps = PageOpening & {
  */
 export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
   const { title, onOpenPage, onBack, ...opening } = props;
-  const page = usePluginPage(opening);
-  const callbacks = { onOpenPage, onPageCall: page.onPageCall };
+  const { root, onPageCall, loadingTree } = usePluginPage(opening);
+
   // Let the destination paint its loading state even when its first tree is already cached.
-  const root = useDeferredValue(page.root, null);
+  const deferredRoot = useDeferredValue(root, null);
 
   return (
     <PluginSymbol pluginId={opening.pluginId}>
       <PluginDetailView
         title={title}
-        {...{ root, callbacks, onBack, loadingTree: page.loadingTree }}
+        root={deferredRoot}
+        callbacks={{ onOpenPage, onPageCall, pluginId: opening.pluginId }}
+        {...{ onBack, loadingTree }}
       />
     </PluginSymbol>
   );

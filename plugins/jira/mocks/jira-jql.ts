@@ -1,4 +1,5 @@
 import type { FixtureIssue, FixtureToken } from './jira-data';
+import { statusOf } from './jira-workflow';
 
 /*
  * The JQL clauses the Plugin's filters send, as the fixture Jira reads them: a status category by its id, an
@@ -32,6 +33,11 @@ const categoryIs =
   ({ status }) =>
     categoryIds[status.category] === id;
 
+const statusIs =
+  (id: string): Matches =>
+  (issue) =>
+    statusOf(issue).id === id;
+
 const assignedTo =
   (accountId: string): Matches =>
   ({ assignee }) =>
@@ -57,6 +63,7 @@ const fixed = new Map<string, Matches>([
 
 const valued: [RegExp, (value: string) => Matches][] = [
   [/^statusCategory = (?<value>[234])$/u, categoryIs],
+  [/^status = "(?<value>\d+)"$/u, statusIs],
   [/^assignee = "(?<value>(?:[^"\\]|\\.)*)"$/u, assignedTo],
   [/^text ~ "(?<value>(?:[^"\\]|\\.)*)"$/u, summaryHolds],
 ];

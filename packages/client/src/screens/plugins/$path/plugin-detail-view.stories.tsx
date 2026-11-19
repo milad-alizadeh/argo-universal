@@ -8,11 +8,15 @@ import { PluginDetailView } from './plugin-detail-view';
 import {
   loading,
   loadingJiraList,
+  developmentPace,
+  paceRepositories,
+  paceUnavailable,
   issueFilters,
   issueFiltersUnavailable,
   jiraBoard,
   jiraBoardEmpty,
   jiraBoardMoving,
+  jiraBoardPaged,
   jiraIssue,
   jiraIssueMoving,
   jiraIssueUnreadable,
@@ -72,6 +76,10 @@ export const JiraBoard: StoryObj<typeof meta> = {
   args: jiraBoard,
 };
 
+export const JiraBoardPaged: StoryObj<typeof meta> = {
+  args: jiraBoardPaged,
+};
+
 // A card the App shows in its new column at once, pending, before Jira answers the move.
 export const JiraBoardMoving: StoryObj<typeof meta> = {
   args: jiraBoardMoving,
@@ -86,3 +94,11 @@ export const Loading: StoryObj<typeof meta> = { args: loading };
 export const LoadingJiraList: StoryObj<typeof meta> = {
   args: loadingJiraList,
 };
+
+export const DevelopmentPace: StoryObj<typeof meta> = { args: developmentPace };
+
+export const PaceRepositories: StoryObj<typeof meta> = {
+  args: paceRepositories,
+};
+
+export const PaceUnavailable: StoryObj<typeof meta> = { args: paceUnavailable };

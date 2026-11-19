@@ -27,6 +27,10 @@ export const accountApiCalls = {
         input: [],
         output: z.promise(OAuthStart.nullable()),
       }),
+      cancel: z.function({
+        input: [OAuthStart.shape.state],
+        output: z.promise(z.null()),
+      }),
       await: z.function({
         input: [OAuthStart.shape.state, WebUrl],
         output: z.promise(OAuthResult.nullable()),

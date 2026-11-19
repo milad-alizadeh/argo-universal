@@ -21,11 +21,11 @@ export type IssuesPage = Readonly<{
   limit?: number;
 }>;
 
-// The project's issues the filters leave, in the order they ask for: the most recently updated first unless they say.
-const jqlOf = (projectKey: string, filters: IssueFilters): string =>
-  [`project = ${quoted(projectKey)}`, ...filterClauses(filters)]
-    .join(' AND ')
-    .concat(` ORDER BY ${orderClauses[filters.sort]}`);
+// The project's issues that match the filters, shared by the search and status counts.
+const projectClauses = (
+  projectKey: string,
+  filters: IssueFilters,
+): string[] => [`project = ${quoted(projectKey)}`, ...filterClauses(filters)];
 
 // Jira's enhanced search body; a cursor goes in only when there is one.
 function searchBody(
@@ -33,7 +33,7 @@ function searchBody(
   { cursor, filters, limit = pageSize }: IssuesPage,
 ): JiraRequest['body'] {
   const body = {
-    jql: jqlOf(projectKey, filters),
+    jql: `${projectClauses(projectKey, filters).join(' AND ')} ORDER BY ${orderClauses[filters.sort]}`,
     // A row seeds its issue's page, so the search asks for what the page shows too.
     fields: issueFields,
     expand: 'transitions',
@@ -54,6 +54,20 @@ export const jiraRequests = {
     path: '/search/jql',
     method: 'POST',
     body: searchBody(projectKey, page),
+  }),
+  count: (
+    projectKey: string,
+    filters: IssueFilters,
+    statusId: string,
+  ): JiraRequest => ({
+    path: '/search/approximate-count',
+    method: 'POST',
+    body: {
+      jql: [
+        ...projectClauses(projectKey, filters),
+        `status = ${quoted(statusId)}`,
+      ].join(' AND '),
+    },
   }),
   // The people an issue in the project can be assigned to.
   people: (projectKey: string): JiraRequest => ({

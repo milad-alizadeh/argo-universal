@@ -16,6 +16,7 @@ export const DrawRequest = PageAddress.extend({
   pages: z.number().int().positive().max(maxPages),
   known: z.string().min(1).optional(),
   pull: z.literal(true).optional(),
+  retry: z.literal(true).optional(),
 });
 
 export type DrawRequest = z.infer<typeof DrawRequest>;

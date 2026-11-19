@@ -62,6 +62,15 @@ export class PluginOAuth {
     return exchange.lifecycle.answer;
   }
 
+  async cancel(caller: SpawnCaller, state: string): Promise<null> {
+    if (this.issued(caller, state)) {
+      this.finish(state, null);
+      await this.listener.closed();
+    }
+
+    return null;
+  }
+
   // Whether `state` names an exchange the caller's own worker generation started.
   issued(caller: SpawnCaller, state: string): boolean {
     const exchange = this.exchanges.get(state);

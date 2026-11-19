@@ -10,7 +10,7 @@ import type { AvatarProps } from './avatar-props';
 type StatusProps = Pick<
   AvatarProps,
   'size' | 'status' | 'statusSurface' | 'testID'
->;
+> & { inMeta?: boolean };
 
 const diameters = { xs: 24, sm: 24, md: 32, lg: 40, xl: 56 };
 
@@ -35,7 +35,7 @@ interface StatusPosition {
 
 export function AvatarStatus(props: StatusProps): React.JSX.Element | null {
   const hidden = useContext(StatusMarkHidden);
-  const position = useStatusPosition(props.size);
+  const position = useStatusPosition(props);
 
   if (!props.status || hidden) return null;
 
@@ -51,9 +51,9 @@ export function AvatarStatus(props: StatusProps): React.JSX.Element | null {
   );
 }
 
-function useStatusPosition(size: AvatarProps['size']): StatusPosition {
+function useStatusPosition({ size, inMeta }: StatusProps): StatusPosition {
   const wide = useSizeClass() === 'wide';
-  const diameter = avatarDiameter(size, wide);
+  const diameter = avatarDiameter(size, wide || inMeta === true);
   const slot = dotDiameters[size ?? avatarDefaults.size] + ringWidth * 2;
   const inset = (diameter * (1 - Math.SQRT1_2) - slot) / 2;
 

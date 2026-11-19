@@ -1,6 +1,7 @@
 import { Board, Label } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { boardColumns, boardLabel, movesOf } from './board-columns';
+import type { BoardStatus } from './board-view';
 import type { JiraStatus } from './issue-fields';
 import { isFailure } from './issue-pages';
 import { activeFilters } from './jira-filters';
@@ -47,17 +48,21 @@ const issueCard = ({ projectId, to }: Cards, issue: JiraIssue): JSX.Element => (
   />
 );
 
-const statusColumn = (
+const statusColumns = (
   cards: Cards,
-  status: JiraStatus,
   issues: JiraIssue[],
-): JSX.Element => (
-  <Board.Column key={status.id} id={status.id} title={status.name}>
-    {issues.flatMap((issue) =>
-      issue.status.id === status.id ? [issueCard(cards, issue)] : [],
-    )}
-  </Board.Column>
-);
+  statuses: BoardStatus[],
+) => {
+  const counts = new Map(statuses.map(({ id, count }) => [id, count]));
+
+  return ({ id, name }: JiraStatus): JSX.Element => (
+    <Board.Column key={id} id={id} title={name} count={counts.get(id)}>
+      {issues.flatMap((issue) =>
+        issue.status.id === id ? [issueCard(cards, issue)] : [],
+      )}
+    </Board.Column>
+  );
+};
 
 // A move runs `transition` with the card's issue and the column's status id, which the Operation takes as a status.
 const moveOf = ({ projectId, to }: Cards): ReturnType<IssuesTo['run']> =>
@@ -75,12 +80,10 @@ const moveOf = ({ projectId, to }: Cards): ReturnType<IssuesTo['run']> =>
 const issueBoard = (
   cards: Cards,
   issues: JiraIssue[],
-  statuses: JiraStatus[],
+  statuses: BoardStatus[],
 ): JSX.Element => (
   <Board key="board" accessibilityLabel={boardLabel} onMove={moveOf(cards)}>
-    {boardColumns(statuses, issues).map((status) =>
-      statusColumn(cards, status, issues),
-    )}
+    {boardColumns(statuses, issues).map(statusColumns(cards, issues, statuses))}
   </Board>
 );
 
