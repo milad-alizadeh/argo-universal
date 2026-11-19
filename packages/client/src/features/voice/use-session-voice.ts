@@ -15,10 +15,18 @@ import {
 import { useSessionTitle, useStartCall } from './use-call-reads';
 import { type SessionMutes, useSessionMutes } from './use-session-mutes';
 import { useVoiceStatus } from './use-voice-status';
-import type { VoiceConnection, VoiceLevels } from './voice-connection';
+import {
+  silentSpectrum,
+  type VoiceConnection,
+  type VoiceLevels,
+  type VoiceSpectrum,
+} from './voice-connection';
 import { useVoiceConnection } from './voice-connection-context';
+import { useVoiceVisualiser } from './voice-visualiser-choice';
 
 const noLevels: VoiceLevels = { input: 0, output: 0 };
+
+const noSpectrum = silentSpectrum();
 
 // Starts the call in the Session the page shows.
 function useStartHere(
@@ -51,6 +59,12 @@ function useActions(
 const useLevels = (connection: VoiceConnection | null): (() => VoiceLevels) =>
   useCallback(() => connection?.levels() ?? noLevels, [connection]);
 
+// The matrix and the wave read the App's own bands each frame, as the orb reads its levels.
+const useSpectrum = (
+  connection: VoiceConnection | null,
+): (() => VoiceSpectrum) =>
+  useCallback(() => connection?.spectrum() ?? noSpectrum, [connection]);
+
 type View = Pick<SessionVoice, 'stage' | 'partials'> & {
   // Absent where this App carries no audio, so the Composer offers no voice button.
   voice: ComposerVoice | undefined;
@@ -81,10 +95,11 @@ function useLive(
   status: VoiceStatus,
   sessionId: string,
   connection: VoiceConnection | null,
-): Pick<SessionVoiceInput, 'now' | 'levels'> {
+): Pick<SessionVoiceInput, 'now' | 'levels' | 'spectrum'> {
   return {
     now: useClock(callSessionOf(status) === sessionId),
     levels: useLevels(connection),
+    spectrum: useSpectrum(connection),
   };
 }
 
@@ -105,6 +120,14 @@ function useInput(
   };
 }
 
+// The visualiser toggle shows only where this App carries the call's audio: elsewhere there is no sound to draw.
+const withToggle = (
+  stage: NonNullable<SessionVoice['stage']>,
+  connection: VoiceConnection | null,
+  { kind, choose }: ReturnType<typeof useVoiceVisualiser>,
+): NonNullable<SessionVoice['stage']> =>
+  connection ? { ...stage, visualiser: { kind, onChange: choose } } : stage;
+
 /*
  * A Session page's view of the Voice call: the one place that follows the Server's status and the connection, read
  * through `sessionVoice`. The Composer, the orb and the Feed's partial words all come from here, so none of them needs
@@ -114,6 +137,11 @@ export function useSessionVoice(sessionId: string): View {
   const connection = useVoiceConnection();
   const status = useVoiceStatus();
   const view = sessionVoice(useInput(sessionId, connection, status));
+  const visualiser = useVoiceVisualiser();
 
-  return { ...view, voice: connection ? view.composer : undefined };
+  return {
+    ...view,
+    stage: view.stage && withToggle(view.stage, connection, visualiser),
+    voice: connection ? view.composer : undefined,
+  };
 }

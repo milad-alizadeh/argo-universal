@@ -2,26 +2,19 @@ import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { ShimmerText } from '#features/feed';
-import { VoiceOrb } from '../voice-orb/voice-orb';
-import type { VoiceOrbProps } from '../voice-orb/voice-orb-props';
+import { VoiceVisualiser } from '../voice-visualiser/voice-visualiser';
+import type { VoiceVisualiserProps } from '../voice-visualiser/voice-visualiser-props';
+import {
+  VoiceVisualiserToggle,
+  type VoiceVisualiserToggleProps,
+} from '../voice-visualiser/voice-visualiser-toggle';
 import type { VoiceLabel } from './voice-label';
 
-export type VoiceStageViewProps = Pick<VoiceOrbProps, 'state' | 'levels'> & {
+export type VoiceStageViewProps = VoiceVisualiserProps & {
   label: VoiceLabel;
+  // The visualiser this Device chose and the toggle that switches it; the orb, with no toggle, where it is absent.
+  visualiser?: VoiceVisualiserToggleProps;
 };
-
-// The well the orb sits in, and the surface it is clipped to: Paper's "Voice stage" draws both sunk into the page.
-function OrbWell(
-  props: Pick<VoiceOrbProps, 'state' | 'levels'>,
-): React.JSX.Element {
-  return (
-    <View className="size-34 rounded-full bg-muted p-1 shadow-inner">
-      <View className="overflow-hidden rounded-full shadow-inner">
-        <VoiceOrb {...props} />
-      </View>
-    </View>
-  );
-}
 
 function StageLabel({ label }: { label: VoiceLabel }): React.JSX.Element {
   return (
@@ -40,15 +33,16 @@ function StageLabel({ label }: { label: VoiceLabel }): React.JSX.Element {
  */
 export function VoiceStageView({
   label,
-  ...orb
+  ...drawing
 }: VoiceStageViewProps): React.JSX.Element {
   return (
     <View
       testID="voice-stage"
       className="w-full shrink-0 items-center gap-3.5 pb-2 pt-9"
     >
-      <OrbWell {...orb} />
+      <VoiceVisualiser {...drawing} />
       <StageLabel label={label} />
+      <VoiceVisualiserToggle toggle={drawing.visualiser} />
     </View>
   );
 }

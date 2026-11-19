@@ -2,7 +2,11 @@ import type { VoiceCall, VoicePartial, VoiceStatus } from '@repo/contracts';
 import type { ComposerVoice, ComposerVoiceMutes } from '#features/composer';
 import { voiceLabel } from './components/voice-stage/voice-label';
 import type { VoiceStageViewProps } from './components/voice-stage/voice-stage-view';
-import type { VoiceLevels, VoiceMutes } from './voice-connection';
+import type {
+  VoiceLevels,
+  VoiceMutes,
+  VoiceSpectrum,
+} from './voice-connection';
 
 // What the view asks of the App when the person presses something.
 export interface SessionVoiceActions {
@@ -25,6 +29,8 @@ export interface SessionVoiceInput {
   mutes: VoiceMutes;
   // The App's own levels, read by the orb each frame.
   levels: () => VoiceLevels;
+  // The App's own bands of speech, read by the matrix and the wave each frame.
+  spectrum: () => VoiceSpectrum;
   // A Session's title as the Sessions list reads it, when it is known.
   titleOf: (sessionId: string) => string | undefined;
   actions: SessionVoiceActions;
@@ -126,6 +132,7 @@ function stageOf(
     here && {
       state: here.orb,
       levels: input.levels,
+      spectrum: input.spectrum,
       label: voiceLabel(here, input.now),
     }
   );
