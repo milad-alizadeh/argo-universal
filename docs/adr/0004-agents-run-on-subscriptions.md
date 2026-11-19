@@ -36,3 +36,7 @@ The Server accepts protocol version 1 or newer. `session/close` is optional. Clo
 ## Voice calls under ADR-0063
 
 Owner amendment, 2026-11-18: [ADR-0063](0063-a-voice-call-belongs-to-the-server-and-speaks-for-one-session.md) lets the Engine use one Agent's sign-in for something other than that Agent's Sessions. The GPT-Live Voice provider asks the installed Codex for a ChatGPT token, holds it in memory for the length of a Voice call, and never stores or refreshes it. Argo still runs no sign-in of its own for ChatGPT and still checks no subscription: when Codex is not installed or not signed in, the provider is unavailable and says so. The vendor name stays inside the provider module.
+
+## Composer Usage limits
+
+The Engine can ask the installed Agent for a read-only account usage snapshot after a Session opens and after a Turn. Claude Code's experimental `get_usage` and Codex App Server's `account/rateLimits/read` fill in windows their ACP updates omit. The vendor module selects the launcher and translates its response. The read runs with the installed Agent's environment and without Session access, uses the Agent's existing sign-in, and sends no Prompt. ACP still owns Session traffic and sign-in. An unavailable snapshot leaves ACP Usage readings available. Remove each companion read when its ACP adapter exposes the same structured readings.

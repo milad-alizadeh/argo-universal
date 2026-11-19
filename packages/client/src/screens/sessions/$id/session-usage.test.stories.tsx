@@ -162,6 +162,8 @@ export const UsageLimitsDesktop: Story = {
     await expect(panel.getByText('Weekly limit')).toBeVisible();
     await expect(panel.getByText('31%')).toBeVisible();
     await expect(panel.getByText('Resets in 3d 4h')).toBeVisible();
+    await expect(panel.getByText('Monthly extra usage')).toBeVisible();
+    await expect(panel.getAllByText(/^Resets in /)).toHaveLength(2);
   },
 };
 

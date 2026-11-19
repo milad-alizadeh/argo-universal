@@ -1,4 +1,7 @@
+import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
 import { Pill } from '@repo/kit/primitives/status/pill';
+import { PhonePill } from '@repo/kit/primitives/status/pill';
 import type * as React from 'react';
 
 export interface WrittenPlanTriggerProps {
@@ -11,7 +14,26 @@ export interface WrittenPlanTriggerProps {
 export function WrittenPlanTrigger(
   props: WrittenPlanTriggerProps,
 ): React.JSX.Element {
-  return <Pill variant="control" appearance="glass" {...triggerProps(props)} />;
+  if (props.wide)
+    return (
+      <Pill variant="control" appearance="glass" {...triggerProps(props)} />
+    );
+
+  return <PhonePlanTrigger {...props} />;
+}
+
+function PhonePlanTrigger(props: WrittenPlanTriggerProps): React.JSX.Element {
+  return (
+    <PhonePill
+      role="button"
+      accessibilityLabel="Written plan"
+      aria-expanded={props.open}
+      onPress={() => props.setOpen(!props.open)}
+    >
+      <Icon name="file-text" />
+      <Text role="control">Written plan</Text>
+    </PhonePill>
+  );
 }
 
 function triggerProps(

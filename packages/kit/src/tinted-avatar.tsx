@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Icon } from '#primitives/content/icon';
 import { StatusDot } from '#primitives/status/status-dot';
 import type { IconName } from './symbols/icon-names';
@@ -18,6 +18,11 @@ const palettes = {
 
 const glyphSize = 'sm';
 
+const styles = StyleSheet.create({
+  // Leave room for SF Symbols whose drawing extends beyond their nominal size.
+  inlineGlyph: { transform: [{ scale: 0.65 }] },
+});
+
 interface TintedAvatarProps {
   icon: IconName;
   accessibilityLabel?: string;
@@ -29,7 +34,6 @@ interface TintedAvatarProps {
 
 // Inline avatars fit the same icon box as the Feed's adjacent Tool calls.
 export function TintedAvatar(props: TintedAvatarProps): ReactElement {
-  const { icon, tone } = props;
   const inlineBox = useIconBox(glyphSize);
 
   return (
@@ -38,9 +42,25 @@ export function TintedAvatar(props: TintedAvatarProps): ReactElement {
       accessibilityLabel={props.accessibilityLabel}
       style={props.size === 'inline' ? inlineBox : undefined}
     >
-      <Icon name={icon} size={glyphSize} className={palettes[tone].ink} />
+      <AvatarGlyph {...props} />
       <AvatarStatus status={props.status} />
     </View>
+  );
+}
+
+function AvatarGlyph({
+  icon,
+  size,
+  tone,
+}: Pick<TintedAvatarProps, 'icon' | 'size' | 'tone'>): ReactElement {
+  const glyph = (
+    <Icon name={icon} size={glyphSize} className={palettes[tone].ink} />
+  );
+
+  return size === 'inline' ? (
+    <View style={styles.inlineGlyph}>{glyph}</View>
+  ) : (
+    glyph
   );
 }
 

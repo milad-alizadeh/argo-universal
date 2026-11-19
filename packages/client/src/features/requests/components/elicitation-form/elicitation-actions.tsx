@@ -1,5 +1,6 @@
 import { Button, type ButtonProps } from '@repo/kit/primitives/actions/button';
 import type { ReactElement } from 'react';
+import { Platform } from 'react-native';
 import { useContentWide } from '#lib/product/content-layout';
 
 export type ElicitationActionsProps = {
@@ -30,7 +31,10 @@ export function ElicitationActions(
 }
 
 function actionProps(wide: boolean): Pick<ButtonProps, 'size' | 'fullWidth'> {
-  return { size: 'sm', fullWidth: !wide };
+  return {
+    size: wide || Platform.OS === 'web' ? 'sm' : 'md',
+    fullWidth: !wide,
+  };
 }
 
 function submitProps(

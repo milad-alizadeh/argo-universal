@@ -1,9 +1,8 @@
 import type { Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { heldPrefetchCount, releasePrefetches } from './feed-history-refresh';
+import { shownFeed } from './feed-history-scroll';
 import { When, Then } from './fixtures';
-
-const feedScroll = 'feed-scroll';
 
 // A row this far from its mark has moved, as a reader sees it.
 const movedPixels = 2;
@@ -25,9 +24,8 @@ interface AnchorReading {
 
 // Runs in the page, which these steps type without the DOM library. Reads back with the wheel, which stops the Feed following its end, marks the row in the middle of the view once it holds still, and watches it every frame.
 const watchAnchor = `(async () => {
-  const feed = document.querySelector('[data-testid="${feedScroll}"]');
+  const feed = [...document.querySelectorAll('[data-testid="feed-scroll"]')].find(element => element.clientHeight > 0);
   const frame = () => new Promise(requestAnimationFrame);
-  const heightBefore = feed.scrollHeight;
   const middle = () => {
     const box = feed.getBoundingClientRect();
     return document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
@@ -49,17 +47,14 @@ const watchAnchor = `(async () => {
     marked = next;
   }
   const text = marked.element.textContent;
-  const reading = { driftedFrames: 0, drift: 0, stillShown: true, settled: false };
+  const reading = { driftedFrames: 0, drift: 0, stillShown: true, pageLoaded: false, settled: false };
   window.argoAnchor = reading;
-  const landed = () =>
-    feed.scrollHeight - heightBefore > 1 &&
-    !document.querySelector('[role="progressbar"][aria-label="Loading earlier"]');
   let landedAt;
   const watch = (now) => {
     reading.drift = Math.abs(marked.element.getBoundingClientRect().top - marked.top);
     reading.driftedFrames += Number(reading.drift > ${movedPixels});
     reading.stillShown = marked.element.isConnected && marked.element.textContent === text;
-    landedAt ??= landed() ? now : undefined;
+    landedAt ??= reading.pageLoaded ? now : undefined;
     reading.settled = landedAt !== undefined && now - landedAt >= ${settleMilliseconds};
     if (!reading.settled) requestAnimationFrame(watch);
   };
@@ -75,7 +70,14 @@ When('I read back with an older history page held', async ({ page }) => {
 });
 
 When('the older history page lands', async ({ page }) => {
+  const loading = shownFeed(page).getByRole('progressbar', {
+    name: 'Loading earlier',
+  });
+
+  await expect(loading).toBeAttached();
   releasePrefetches(page);
+  await expect(loading).toHaveCount(0);
+  await page.evaluate('window.argoAnchor.pageLoaded = true');
   await page.waitForFunction('window.argoAnchor.settled');
 });
 

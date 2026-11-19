@@ -9,7 +9,12 @@ import { Host } from '#primitives/native/host';
 import { useWide } from '../../../use-wide/use-wide';
 import type { KitProps } from '../../kit-props';
 import { ButtonLabel } from './button-label';
-import { sizes, variantOf, widthOf } from './button-layout';
+import {
+  nativeButtonModifiers,
+  sizes,
+  variantOf,
+  widthOf,
+} from './button-layout';
 import { WebButton } from './button-web';
 
 // The schema's Button (variant defaults to primary, size to md), plus what only the kit draws.
@@ -65,7 +70,7 @@ function expoProps(props: ButtonProps): ExpoButtonProps {
     disabled: props.disabled,
     testID: props.testID,
     style: size.style,
-    modifiers: [...size.modifiers, ...widthOf(props).modifiers],
+    modifiers: nativeButtonModifiers(props),
   };
 }
 

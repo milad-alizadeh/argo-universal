@@ -81,6 +81,16 @@ function untilReset(limit: UsageLimit, now: Date): number | undefined {
   return left > 0 ? left : undefined;
 }
 
+function resetLabel(left: number | undefined): string | undefined {
+  return left === undefined
+    ? undefined
+    : resetsText(Math.floor(left / aMinute));
+}
+
+function hasPassed(limit: UsageLimit, left: number | undefined): boolean {
+  return limit.resetsAt !== undefined && left === undefined;
+}
+
 function usageLimitRow(
   limit: UsageLimit,
   now: Date,
@@ -88,16 +98,18 @@ function usageLimitRow(
   const share = usedShare(limit.measure);
   const left = untilReset(limit, now);
 
-  if (share === undefined || left === undefined) return undefined;
+  if (share === undefined) return;
+
+  if (hasPassed(limit, left)) return;
 
   return {
     label: limit.label,
     usedPercent: percentOf(share),
-    resets: resetsText(Math.floor(left / aMinute)),
+    resets: resetLabel(left),
   };
 }
 
-// The Usage control's rows: only limits with a percentage and a reset still ahead; the others wait for a design.
+// The Usage control's rows: limits with a reported percentage. A known reset must still be ahead.
 export function usageLimitRows(
   limits: readonly UsageLimit[],
   now: Date,

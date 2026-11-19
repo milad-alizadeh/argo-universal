@@ -114,7 +114,7 @@ const expansionItems: FeedViewItem[] = [
 
 // Recorded content, with expected spaces from the existing role/paragraph/activity hierarchy.
 export const rhythmAudits = {
-  transitions: { items: mixed, compact: [24, 24], wide: [20, 20] },
+  transitions: { items: mixed, compact: [24, 16], wide: [20, 12] },
   paragraphs: { items: agentMessages, compact: [12], wide: [10] },
   activity: { items: activities, compact: [8], wide: [6] },
   users: { items: users, compact: [24], wide: [20] },
@@ -122,8 +122,8 @@ export const rhythmAudits = {
   statuses: { items: statuses, compact: [8, 8, 8, 8], wide: [6, 6, 6, 6] },
   streaming: {
     items: streaming,
-    compact: [24, 24, 24],
-    wide: [20, 20, 20],
+    compact: [24, 16, 16],
+    wide: [20, 12, 12],
     liveHeader: thoughtHeader,
     now: liveHeaderNow,
   },

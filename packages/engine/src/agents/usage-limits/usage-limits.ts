@@ -9,7 +9,7 @@ type UsageLimitsEvent = { key: string; limits: AgentUsageLimits };
 
 type UsageLimitsEvents = EventEmitter<{ change: [UsageLimitsEvent] }>;
 
-const subjectKey = (subject: AgentAuthSubject): string =>
+export const subjectKey = (subject: AgentAuthSubject): string =>
   JSON.stringify([subject.agent, subject.projectId]);
 
 const limitKey = (limit: UsageLimit): string =>
@@ -21,52 +21,88 @@ const withoutObservedAt = ({
   ...limit
 }: UsageLimit): Omit<UsageLimit, 'observedAt'> => limit;
 
-const sameReading = (left: UsageLimit, right: UsageLimit): boolean =>
-  JSON.stringify(withoutObservedAt(left)) ===
-  JSON.stringify(withoutObservedAt(right));
+type Readings = Map<string, UsageLimit>;
 
-// Keeps the reading and says whether a Device would see a change.
-function replace(
-  limits: Map<string, UsageLimit>,
-  reading: UsageLimit,
-): boolean {
-  const key = limitKey(reading);
-  const previous = limits.get(key);
-  limits.set(key, reading);
+function combine(latest: UsageLimit, older: UsageLimit): UsageLimit {
+  if (latest.measure.kind !== 'none') return latest;
 
-  return !previous || !sameReading(previous, reading);
+  return { ...latest, measure: older.measure, resetsAt: older.resetsAt };
 }
+
+function prefer(account: UsageLimit, acp: UsageLimit | undefined): UsageLimit {
+  if (!acp) return account;
+
+  return account.observedAt >= acp.observedAt
+    ? combine(account, acp)
+    : combine(acp, account);
+}
+
+function readLimits(
+  acp: Readings | undefined,
+  account: Readings | undefined,
+): AgentUsageLimits {
+  const limits = new Map(acp);
+
+  for (const [name, reading] of account ?? [])
+    limits.set(name, prefer(reading, limits.get(name)));
+
+  return { limits: [...limits.values()] };
+}
+
+const content = ({ limits }: AgentUsageLimits): string =>
+  JSON.stringify(limits.map(withoutObservedAt));
 
 // One per Engine: every connection publishes here, so every Device watching an Agent and Project sees the same Usage limits.
 export class UsageLimits {
-  private readonly bySubject = new Map<string, Map<string, UsageLimit>>();
+  private readonly acp = new Map<string, Readings>();
+  private readonly account = new Map<string, Readings>();
   private readonly events: UsageLimitsEvents = new EventEmitter();
   public constructor() {
     // Each watching App holds one listener; the count is bounded by open subscriptions.
     this.events.setMaxListeners(0);
   }
-  // Each reading replaces the one with its id and model; the others stay.
   public publish(
     subject: AgentAuthSubject,
     readings: readonly UsageLimit[],
   ): void {
+    if (readings.length === 0) return;
+
     const key = subjectKey(subject);
-    const limits = this.limitsOf(key);
-    const changes = readings.map((reading) => replace(limits, reading));
+    const before = this.read(subject);
+    const limits = new Map(this.acp.get(key));
 
-    if (changes.includes(true))
-      this.events.emit('change', { key, limits: this.read(subject) });
+    for (const reading of readings) limits.set(limitKey(reading), reading);
+
+    this.acp.set(key, limits);
+    this.emitChange(subject, before);
   }
-  private limitsOf(key: string): Map<string, UsageLimit> {
-    const limits = this.bySubject.get(key) ?? new Map<string, UsageLimit>();
-    this.bySubject.set(key, limits);
+  public publishAccount(
+    subject: AgentAuthSubject,
+    readings: readonly UsageLimit[],
+  ): void {
+    const before = this.read(subject);
 
-    return limits;
+    const limits = new Map(
+      readings.map((reading) => [limitKey(reading), reading]),
+    );
+
+    this.account.set(subjectKey(subject), limits);
+    this.emitChange(subject, before);
+  }
+  private emitChange(
+    subject: AgentAuthSubject,
+    before: AgentUsageLimits,
+  ): void {
+    const limits = this.read(subject);
+
+    if (content(before) === content(limits)) return;
+
+    this.events.emit('change', { key: subjectKey(subject), limits });
   }
   public read(subject: AgentAuthSubject): AgentUsageLimits {
-    return {
-      limits: [...(this.bySubject.get(subjectKey(subject))?.values() ?? [])],
-    };
+    const key = subjectKey(subject);
+
+    return readLimits(this.acp.get(key), this.account.get(key));
   }
   public watch(
     subject: AgentAuthSubject,
