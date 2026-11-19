@@ -77,6 +77,7 @@ it('discards earlier pages when a stale cursor returns a new epoch', () => {
     rows: [replacement],
     hasOlder: false,
     startCursor: 0,
+    plan: null,
   });
 });
 
