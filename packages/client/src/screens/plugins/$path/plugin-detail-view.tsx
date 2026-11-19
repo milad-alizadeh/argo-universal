@@ -10,6 +10,7 @@ import { Skeleton } from '@repo/kit/primitives/status/skeleton';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { useKeepSidebarWhilePending } from '#features/frame';
+import type { LoadingTreeRead } from '#features/plugins';
 import type { OpenPluginPage } from '../../../lib/product/plugin-actions';
 import {
   BoundedPluginTree,
@@ -28,7 +29,7 @@ export interface PluginDetailViewProps {
   // The page the Plugin draws; null until its first tree arrives.
   root: WireNode | null;
   // What the page draws under its Skeleton until `root` arrives, as this Device last drew it.
-  loadingTree?: WireNode | null;
+  loadingTree?: LoadingTreeRead;
   title?: string;
   callbacks: PluginPageCallbacks;
   // The App's own Back for a pushed page; a Plugin declares no navigation (`ScreenDefaultBack`).
@@ -52,7 +53,7 @@ function PageOrLoadingTree(props: PluginDetailViewProps): React.ReactNode {
 
   if (root || !tree) return <PluginPageBody {...props} />;
 
-  return <LoadingTree tree={tree} title={props.title} />;
+  return <PendingPage tree={tree} title={props.title} />;
 }
 
 function PluginPageBody({
@@ -138,14 +139,25 @@ function LoadingTree({
 
 /*
  * Keep the previous sidebar while the destination waits for its first tree. A page this Device drew before loads
- * in its own rows' places; one it never drew loads as a plain List.
+ * in its own rows' places; one it never drew loads as a plain List. While this Device looks for its rows, which
+ * takes a storage read, it draws nothing rather than a plain List it would swap at once.
  */
 export function PendingPage({
   tree,
+  title,
 }: {
-  tree?: WireNode | null;
-}): React.ReactElement {
-  return tree ? <LoadingTree tree={tree} /> : <PlainPending />;
+  tree?: LoadingTreeRead;
+  title?: string;
+}): React.ReactElement | null {
+  if (tree === 'reading') return <ReadingPending />;
+
+  return tree ? <LoadingTree tree={tree} title={title} /> : <PlainPending />;
+}
+
+function ReadingPending(): null {
+  useKeepSidebarWhilePending();
+
+  return null;
 }
 
 function PlainPending(): React.ReactElement {

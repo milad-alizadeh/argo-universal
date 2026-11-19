@@ -5,7 +5,7 @@ import { Profiler } from 'react';
 import { View } from 'react-native';
 import { expect, fn, spyOn } from 'storybook/test';
 import { userEvent as browserUser } from 'vitest/browser';
-import { issueListTree } from './plugin-list-scrolling.mocks';
+import { issueListTree } from './plugin-list-scrolling-fixtures';
 import { PluginTree } from './plugin-registry';
 
 /*

@@ -1,17 +1,17 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 
 // Rows enough to fill a tall window; a skeleton of more is never seen and costs its draw.
-const keptRows = 12;
-
-// A loading tree larger than this, in characters, is a page with more than rows in it, and not worth a Device's storage.
-const largestLoadingTree = 65_536;
+const keptRows = 15;
 
 // Kinds that hold rows: a loading tree keeps their first few.
 const rowHolders = new Set(['List', 'ListSection', 'Board']);
 
-// What a loading tree never does: press, load more, refresh or show a row's menu.
+/*
+ * What a loading tree never does: press, load more, refresh or show a row's menu. A handler is `on` and a capital,
+ * so data such as `ongoing` stays.
+ */
 const isHandler = (name: string): boolean =>
-  name.startsWith('on') || name === 'pagination';
+  /^on[A-Z]/.test(name) || name === 'pagination';
 
 const drawnProps = (props: WireNode['props']): WireNode['props'] =>
   Object.fromEntries(
@@ -41,11 +41,6 @@ function stillOf(node: WireNode): WireNode {
 
 /*
  * What a Skeleton draws while a page loads next time: the page's tree as last drawn with only its first rows, so the
- * loading page has the rows' own marks, lines and Pills, and nothing they did when pressed. Null when the page is too
- * large to keep.
+ * loading page has the rows' own marks, lines and Pills, and nothing they did when pressed.
  */
-export function loadingTree(root: WireNode): WireNode | null {
-  const still = stillOf(root);
-
-  return JSON.stringify(still).length > largestLoadingTree ? null : still;
-}
+export const loadingTree = (root: WireNode): WireNode => stillOf(root);

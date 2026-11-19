@@ -4,7 +4,11 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import type { OnPageCall } from '../../../lib/product/plugin-registry';
-import { useKeepLoadingTree, useLoadingTree } from '../stores/loading-trees';
+import {
+  type LoadingTreeRead,
+  useKeepLoadingTree,
+  useLoadingTree,
+} from '../stores/loading-trees';
 import type {
   KeptPage,
   PageAddresses,
@@ -18,7 +22,7 @@ import { useOperationRunner, useTreeCalls } from './use-tree-calls';
 export type PluginPageState = {
   root: WireNode | null;
   // What the page draws under its Skeleton until `root` arrives: its first rows as this Device last drew them.
-  loadingTree: WireNode | null;
+  loadingTree: LoadingTreeRead;
   onPageCall: OnPageCall;
 };
 

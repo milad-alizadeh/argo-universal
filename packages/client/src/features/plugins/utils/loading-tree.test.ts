@@ -38,7 +38,7 @@ describe('loadingTree', () => {
 
     expect(tree).toMatchObject({ props: { density: 'compact' } });
     expect(tree).not.toHaveProperty('props.pagination');
-    expect(tree).toHaveProperty('children.length', 12);
+    expect(tree).toHaveProperty('children.length', 15);
     expect(tree).toHaveProperty(
       ['children', 0],
       node('ListItem', 'PROJ-0', {
@@ -56,14 +56,14 @@ describe('loadingTree', () => {
       node('Stack', 'page', { children: [node('Text', 'title'), list(20)] }),
     );
 
-    expect(tree?.children[1]?.children).toHaveLength(12);
+    expect(tree?.children[1]?.children).toHaveLength(15);
   });
 
-  it('keeps nothing of a page too large to keep', () => {
-    const body = node('Text', 'body', {
-      props: { text: 'x'.repeat(70_000) },
-    });
+  it('keeps data whose name only starts with "on"', () => {
+    const tree = loadingTree(
+      node('Pill', 'state', { props: { ongoing: true, onPress: {} } }),
+    );
 
-    expect(loadingTree(body)).toBeNull();
+    expect(tree.props).toEqual({ ongoing: true });
   });
 });

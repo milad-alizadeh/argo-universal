@@ -14,21 +14,32 @@ import { loadingTree } from '../utils/loading-tree';
 
 /*
  * The tree each Plugin page draws under its Skeleton while it loads, kept on this Device from the page's last
- * drawing, so a page opened again after a restart loads in its own rows' places. It is by Plugin and Page path
- * alone: the same page in another Project draws the same rows.
+ * drawing, so a page opened again after a restart loads in its own rows' places. It is kept by Server, Plugin,
+ * Project and Page path: one Project's rows never draw as another's, while a page opened in a new Session of the
+ * same Project still has them.
  */
-interface LoadingPage {
+export interface LoadingPage {
   pluginId: string;
   path: string;
+  projectId?: string;
 }
 
-const storageKey = (serverId: string, page: LoadingPage): string =>
-  `${serverId}:plugin-loading-tree:${page.pluginId}:${page.path}`;
+// One Server's page, as both its storage and its query are keyed.
+interface KeptAt {
+  serverId: string;
+  page: LoadingPage;
+}
 
-type TreeKey = readonly ['plugin-loading-tree', string, string, string];
+// What a loading page draws under: its kept tree, null when it has none, or `reading` while this Device looks.
+export type LoadingTreeRead = WireNode | null | 'reading';
 
-const queryKey = (serverId: string, page: LoadingPage): TreeKey =>
-  ['plugin-loading-tree', serverId, page.pluginId, page.path] as const;
+// A loading tree larger than this, in characters, is a page with more than rows in it, and not worth a Device's storage.
+const largestLoadingTree = 65_536;
+
+const storageKey = ({ serverId, page }: KeptAt): string =>
+  `${serverId}:plugin-loading-tree:${page.pluginId}:${page.projectId ?? ''}:${page.path}`;
+
+type TreeKey = readonly ['plugin-loading-tree', string];
 
 // Anything kept that does not read as a tree is as if nothing were kept.
 function keptTree(saved: string | null): WireNode | null {
@@ -54,63 +65,60 @@ type TreeQuery = UnusedSkipTokenOptions<
   TreeKey
 > & { queryKey: DataTag<TreeKey, WireNode | null, Error> };
 
-function loadingTreeQuery(serverId: string, page: LoadingPage): TreeQuery {
+function loadingTreeQuery(at: KeptAt): TreeQuery {
+  const key = storageKey(at);
+
   return queryOptions({
-    queryKey: queryKey(serverId, page),
-    queryFn: () =>
-      AsyncStorage.getItem(storageKey(serverId, page))
-        .then(keptTree)
-        .catch(readFailed),
+    queryKey: ['plugin-loading-tree', key] as const,
+    queryFn: () => AsyncStorage.getItem(key).then(keptTree).catch(readFailed),
     staleTime: Infinity,
     // This Device's storage answers while the Server is unreachable.
     networkMode: 'always',
   });
 }
 
-// The tree a loading page draws under its Skeleton; null until one is read, or when the page never drew.
-export function useLoadingTree(page: LoadingPage): WireNode | null {
+export function useLoadingTree(page: LoadingPage): LoadingTreeRead {
   const { id } = useServerScope();
-  const { data } = useQuery(loadingTreeQuery(id, page));
 
-  return data ?? null;
+  const { data, isPending } = useQuery(
+    loadingTreeQuery({ serverId: id, page }),
+  );
+
+  return isPending ? 'reading' : (data ?? null);
 }
 
 const keepFailed = (cause: unknown): void => {
   console.error('Could not keep a Plugin page loading tree', cause);
 };
 
-interface Keeping {
-  client: QueryClient;
-  serverId: string;
-  page: LoadingPage;
-}
+/*
+ * The text last kept for each page this run, so a page that redraws with the same first rows is compared as one
+ * string and written to storage only when they change.
+ */
+const lastKept = new Map<string, string>();
 
-const sameTree = (
-  first: WireNode | null | undefined,
-  second: WireNode,
-): boolean => JSON.stringify(first) === JSON.stringify(second);
-
-function keep({ client, serverId, page }: Keeping, root: WireNode): void {
+export function keep(client: QueryClient, at: KeptAt, root: WireNode): void {
   const tree = loadingTree(root);
-  const { queryKey: key } = loadingTreeQuery(serverId, page);
+  const text = JSON.stringify(tree);
+  const key = storageKey(at);
 
-  if (tree === null || sameTree(client.getQueryData(key), tree)) return;
+  if (text.length > largestLoadingTree || lastKept.get(key) === text) return;
 
-  client.setQueryData(key, tree);
-  AsyncStorage.setItem(storageKey(serverId, page), JSON.stringify(tree)).catch(
-    keepFailed,
-  );
+  lastKept.set(key, text);
+  client.setQueryData(loadingTreeQuery(at).queryKey, tree);
+  AsyncStorage.setItem(key, text).catch(keepFailed);
 }
 
 // Keeps the page's loading tree from each tree it draws, writing only when its first rows changed.
 export function useKeepLoadingTree(
-  { pluginId, path }: LoadingPage,
+  { pluginId, path, projectId }: LoadingPage,
   root: WireNode | null,
 ): void {
   const { id } = useServerScope();
   const client = useQueryClient();
 
   useEffect(() => {
-    if (root) keep({ client, serverId: id, page: { pluginId, path } }, root);
-  }, [client, id, pluginId, path, root]);
+    if (root)
+      keep(client, { serverId: id, page: { pluginId, path, projectId } }, root);
+  }, [client, id, pluginId, path, projectId, root]);
 }
