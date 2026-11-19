@@ -48,16 +48,32 @@ const kinds: Record<VoiceMarker, VoiceMessage['kind']> = {
 const markerOf = (text: string): VoiceMarker | undefined =>
   voiceMarkers.find((marker) => text.startsWith(marker));
 
-// What a message is to the voice; the body drops the mark and the space after it.
+// A mark that opens a line after the first, with the spaces after it; the line's indent stays.
+const lineMarker = /(^|\n)([ \t]*)\[(?:STATUS|COMPLETE|ANALYSIS)\][ \t]*/g;
+
+/*
+ * Text without its marks: the one that opens the message, with the space after it, and one that opens any later line,
+ * such as a paragraph of analysis after progress. A mark inside a line is the Agent's own words and stays. `opening`
+ * says the text starts the message, so a mark at its start is the message's own.
+ */
+function withoutMarks(text: string, opening: boolean): string {
+  const marker = opening ? markerOf(text) : undefined;
+  const body = marker ? text.slice(marker.length).trimStart() : text;
+
+  return body.replaceAll(lineMarker, '$1$2');
+}
+
+// What a message is to the voice; the body drops its marks and the space after each.
 export function readVoiceMessage(text: string): VoiceMessage {
   const marker = markerOf(text);
 
-  return marker
-    ? { kind: kinds[marker], body: text.slice(marker.length).trimStart() }
-    : { kind: 'progress', body: text };
+  return {
+    kind: marker ? kinds[marker] : 'progress',
+    body: withoutMarks(text, true),
+  };
 }
 
-const stripVoiceMarker = (text: string): string => readVoiceMessage(text).body;
+const stripVoiceMarker = (text: string): string => withoutMarks(text, true);
 
 // The text of a message's first block, when it is text.
 export const firstText = (
@@ -90,47 +106,50 @@ export function withoutVoiceMarkers<Row extends SessionUpdate>(row: Row): Row {
   };
 }
 
+const couldBecomeMark = (text: string): boolean =>
+  text.length > 0 &&
+  voiceMarkers.some((marker) => marker !== text && marker.startsWith(text));
+
+// How much of the text is known: all of it, unless its last line starts with what could still become a mark.
+function knownLength(text: string): number {
+  const lineStart = text.lastIndexOf('\n') + 1;
+  const line = text.slice(lineStart);
+  const start = lineStart + line.length - line.trimStart().length;
+
+  return couldBecomeMark(text.slice(start)) ? start : text.length;
+}
+
 /*
- * The visible text of a message that arrives in chunks. The start of a message that could still become a mark is held
- * back, so a mark split across chunks never shows; once the start is known the rest passes as it comes.
+ * The visible text of a message that arrives in chunks. A line whose start could still become a mark is held back, so
+ * a mark split across chunks never shows; once a line's start is known the rest of it passes as it comes. Only the
+ * last line is read again with each chunk: the lines before it are let go once the message's opening is known.
  */
 export class VoiceMarkerStream {
-  private held = '';
-  private mode: 'head' | 'trim' | 'pass' = 'head';
+  // The message's text from the start of a line on; the opening line until the opening is known.
+  private text = '';
+  private opening = true;
+  // How much of the visible text of `text` was already given out.
+  private shown = 0;
 
   public push(chunk: string): string {
-    if (this.mode === 'pass') return chunk;
+    this.text += chunk;
+    const known = this.text.slice(0, knownLength(this.text));
+    const visible = withoutMarks(known, this.opening);
+    const added = visible.slice(this.shown);
+    this.shown = visible.length;
+    this.letGoOfLines(visible);
 
-    if (this.mode === 'trim') return this.trim(chunk);
-
-    return this.decide(this.held + chunk);
+    return added;
   }
 
-  private trim(chunk: string): string {
-    const rest = chunk.trimStart();
+  // An opening that shows nothing yet may still be trimmed, so its lines are kept until it shows something.
+  private letGoOfLines(visible: string): void {
+    const lineStart = this.text.lastIndexOf('\n') + 1;
 
-    if (rest.length > 0) this.mode = 'pass';
-
-    return rest;
-  }
-
-  private decide(head: string): string {
-    if (markerOf(head)) {
-      this.mode = 'trim';
-      this.held = '';
-
-      return this.trim(stripVoiceMarker(head));
-    }
-
-    if (voiceMarkers.some((marker) => marker.startsWith(head))) {
-      this.held = head;
-
-      return '';
-    }
-
-    this.mode = 'pass';
-    this.held = '';
-
-    return head;
+    if (lineStart === 0 || visible.length === 0) return;
+    const before = this.text.slice(0, lineStart);
+    this.shown -= withoutMarks(before, this.opening).length;
+    this.text = this.text.slice(lineStart);
+    this.opening = false;
   }
 }
