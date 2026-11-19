@@ -136,6 +136,10 @@ export class FakeGptLiveEndpoint {
   ): void {
     this.linkTokens.push(bearerOf(request));
 
+    // The service refuses a link without the alpha header the call was created with (#2406 probe, 2026-11-19).
+    if (request.headers['openai-alpha'] !== 'quicksilver=v2')
+      return void socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
+
     if (!this.linksAccept(request))
       return void socket.end('HTTP/1.1 401 Unauthorized\r\n\r\n');
 

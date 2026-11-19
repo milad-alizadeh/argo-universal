@@ -7,6 +7,7 @@ import { action } from 'storybook/actions';
 import { PluginDetailView } from './plugin-detail-view';
 import {
   loading,
+  loadingJiraList,
   developmentPace,
   paceRepositories,
   paceUnavailable,
@@ -89,6 +90,10 @@ export const JiraBoardEmpty: StoryObj<typeof meta> = {
 };
 
 export const Loading: StoryObj<typeof meta> = { args: loading };
+
+export const LoadingJiraList: StoryObj<typeof meta> = {
+  args: loadingJiraList,
+};
 
 export const DevelopmentPace: StoryObj<typeof meta> = { args: developmentPace };
 

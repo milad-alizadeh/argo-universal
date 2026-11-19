@@ -32,20 +32,46 @@ function loadedBreakpoints(): Breakpoints | undefined {
 }
 
 /*
- * The tokens are empty until the stylesheet has loaded, so a store subscribed before then has no query to listen to, and a
+ * Everyone reading the size class, behind one set of window listeners: a row's every Text and Icon reads it, so
+ * listeners of their own would be added and removed by the thousand as a list scrolls rows in and out.
+ */
+const listeners = new Set<() => void>();
+
+const notify = (): void => {
+  for (const listener of listeners) listener();
+};
+
+let stopListening: (() => void) | undefined;
+
+/*
+ * The tokens are empty until the stylesheet has loaded, so listening started before then has no query to listen to, and a
  * viewport that settles afterwards would leave it on the size class it first read. A resize reads the snapshot again, which
  * loads the queries then, so it is listened to as well; the queries' own change events still say when a breakpoint is crossed.
  */
-function subscribe(listener: () => void): () => void {
+function listen(): () => void {
   const queries = loadedBreakpoints();
-  queries?.medium.addEventListener('change', listener);
-  queries?.wide.addEventListener('change', listener);
-  window.addEventListener('resize', listener);
+  queries?.medium.addEventListener('change', notify);
+  queries?.wide.addEventListener('change', notify);
+  window.addEventListener('resize', notify);
 
   return (): void => {
-    queries?.medium.removeEventListener('change', listener);
-    queries?.wide.removeEventListener('change', listener);
-    window.removeEventListener('resize', listener);
+    queries?.medium.removeEventListener('change', notify);
+    queries?.wide.removeEventListener('change', notify);
+    window.removeEventListener('resize', notify);
+  };
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  stopListening ??= listen();
+
+  return (): void => {
+    listeners.delete(listener);
+
+    if (listeners.size > 0) return;
+
+    stopListening?.();
+    stopListening = undefined;
   };
 }
 

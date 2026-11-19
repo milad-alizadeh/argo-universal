@@ -16,7 +16,7 @@ function BackButton({
 }: Pick<HeaderProps, 'onBack'>): React.JSX.Element {
   return (
     <IconButton
-      variant="ghost"
+      variant="secondary"
       size="sm"
       icon="back"
       accessibilityLabel={subagentFeedBackLabel}
@@ -49,9 +49,11 @@ function Meta({
   const clock = useClock(subagent.state === 'running', now);
 
   return (
-    <Text role="badge" tone="muted">
-      {subagentFeedMeta(subagent, clock)}
-    </Text>
+    <View className="max-w-3/5">
+      <Text role="badge" tone="muted" numberOfLines={1}>
+        {subagentFeedMeta(subagent, clock)}
+      </Text>
+    </View>
   );
 }
 
@@ -64,8 +66,8 @@ export function SubagentFeedHeader({
   return (
     <SessionColumn className="h-frame-control shrink-0 flex-row items-center gap-1.5">
       <BackButton onBack={onBack} />
-      <Meta subagent={subagent} now={now} />
       <Title title={subagent.title} />
+      <Meta subagent={subagent} now={now} />
     </SessionColumn>
   );
 }

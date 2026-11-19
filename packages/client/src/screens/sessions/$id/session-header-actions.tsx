@@ -56,15 +56,17 @@ function moreAction(
 }
 
 /*
- * The Session header's Actions: the Plugins' header actions, then ⋯. They sit before ⋯ so that ⋯ keeps its place at
- * the start of the trailing controls (docs/agents/layout.md).
+ * The Session header's Actions: the Plugins' header actions, then ⋯ and the compact Workbench menu. On wide
+ * windows ⋯ starts the Session's trailing band controls.
  */
 export function sessionHeaderActions(
   menu: SessionMenu | undefined,
   plugins: SessionPluginActions,
+  workbench?: React.JSX.Element,
 ): React.JSX.Element[] {
   return [
     ...plugins.beside.map(pluginAction),
     ...moreAction(menu, plugins.menu),
+    ...(workbench ? [workbench] : []),
   ];
 }
