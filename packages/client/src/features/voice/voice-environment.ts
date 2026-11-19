@@ -4,6 +4,8 @@ export interface Microphone {
   setMuted: (muted: boolean) => void;
   // How loud it is now, from 0 to 1.
   level: () => number;
+  // Writes how loud each band of speech is now into `into`, low to high, each from 0 to 1.
+  spectrum: (into: Float32Array) => void;
 }
 
 // The voice as it plays: something to silence, to move to another speaker, and to let go of.
@@ -14,6 +16,7 @@ export interface VoicePlayback {
   // null is the system's speaker.
   setSpeaker: (speaker: string | null) => void;
   level: () => number;
+  spectrum: (into: Float32Array) => void;
 }
 
 // A peer connection reduced to what a call needs.

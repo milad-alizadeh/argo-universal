@@ -2,7 +2,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Button } from '@repo/kit/primitives/actions/button';
 import type * as React from 'react';
 import { useState } from 'react';
-import { expect, fn, userEvent, waitFor } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { useSessionMutes } from '#features/voice';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
@@ -14,6 +14,15 @@ import { connectingRingId } from './composer-connecting-ring';
 import { microphoneButtonId, speakerButtonId } from './composer-mute-buttons';
 import { endButtonId, voiceButtonId } from './composer-primary-action';
 import type { ComposerVoice } from './composer-types';
+import {
+  bandConnectingComposer,
+  bandMutedComposer,
+  bandReconnectingComposer,
+  bandTalkingComposer,
+} from './composer-voice-band-fixtures';
+
+// The edge band's test id, as `VoiceEdgeBand` sets it.
+const bandId = 'voice-edge-band';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer/Voice' };
 
@@ -280,6 +289,80 @@ export const MicrophoneMutedReadsRed = muted(true, false);
 export const SpeakerMutedReadsRed = muted(false, true);
 
 export const BothMutedReadRed = muted(true, true);
+
+// The edge band sits inside the one card, above the text box, with the state and the timer at its right end.
+export const EdgeBandOnACall: Story = {
+  render: (args) => (
+    <Composer {...composerProps({ ...args, sessionStarted: true })} />
+  ),
+  args: bandTalkingComposer,
+  play: async ({ canvas }) => {
+    const band = canvas.getByTestId(bandId);
+    const field = canvas.getByRole('textbox', { name: 'Message' });
+
+    await expect(band).toBeVisible();
+    await expect(canvas.getByText('Talking')).toBeVisible();
+    await expect(canvas.getByText('2:51')).toBeVisible();
+    await expect(band.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      field.getBoundingClientRect().top + 1,
+    );
+  },
+};
+
+// The text box under the band is today's: the person can type throughout the call.
+export const TypingUnderTheBand: Story = {
+  render: (args) => (
+    <Composer {...composerProps({ ...args, sessionStarted: true })} />
+  ),
+  args: bandTalkingComposer,
+  play: async ({ canvas, args }) => {
+    await userEvent.click(canvas.getByRole('textbox', { name: 'Message' }));
+    await userEvent.keyboard('Also run the stories');
+    await waitFor(() =>
+      expect(args.onDraftChange).toHaveBeenLastCalledWith({
+        text: 'Also run the stories',
+        attachments: [],
+      }),
+    );
+    await expect(canvas.getByTestId(bandId)).toBeVisible();
+  },
+};
+
+// Connecting shows no timer; reconnecting keeps counting; a muted microphone says so in danger.
+export const EdgeBandLabels: Story = {
+  render: (args) => (
+    <Composer {...composerProps({ ...args, sessionStarted: true })} />
+  ),
+  args: bandConnectingComposer,
+  play: async ({ canvas }) => {
+    await expect(
+      within(canvas.getByTestId(bandId)).getByText('Connecting…'),
+    ).toBeVisible();
+    await expect(canvas.queryByText(/^\d+:\d\d$/)).not.toBeInTheDocument();
+  },
+};
+
+export const EdgeBandReconnecting: Story = {
+  render: (args) => (
+    <Composer {...composerProps({ ...args, sessionStarted: true })} />
+  ),
+  args: bandReconnectingComposer,
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Reconnecting…')).toBeVisible();
+    await expect(canvas.getByText('3:14')).toBeVisible();
+  },
+};
+
+export const EdgeBandMuted: Story = {
+  render: (args) => (
+    <Composer {...composerProps({ ...args, sessionStarted: true })} />
+  ),
+  args: bandMutedComposer,
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('Mic off')).toBeVisible();
+    await expect(canvas.queryByText('Listening')).not.toBeInTheDocument();
+  },
+};
 
 // A phone keeps only the microphone's mute beside End; a wide window keeps both mutes.
 const mutesAt = (width: number, speaker: boolean): Story => ({

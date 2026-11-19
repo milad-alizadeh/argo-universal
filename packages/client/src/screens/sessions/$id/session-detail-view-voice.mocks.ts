@@ -22,7 +22,7 @@ const mutes = {
   onSpeaker: fn(),
 };
 
-const connectedHere = {
+export const connectedHere = {
   kind: 'connected',
   onEnd: fn(),
   mutes,
