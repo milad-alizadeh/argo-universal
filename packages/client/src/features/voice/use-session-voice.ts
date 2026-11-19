@@ -1,52 +1,33 @@
 import type { VoiceStatus } from '@repo/contracts';
 import { useClock } from '@repo/kit/use-clock';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import type { ComposerVoice } from '#features/composer';
 import { useTRPC } from '#features/connection';
 import { sessionHref } from '#lib/product/navigation/navigation';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
-import { offerTo } from './offer-to';
 import {
   sessionVoice,
   type SessionVoice,
   type SessionVoiceActions,
   type SessionVoiceInput,
 } from './session-voice';
+import { useSessionTitle, useStartCall } from './use-call-reads';
 import { type SessionMutes, useSessionMutes } from './use-session-mutes';
-import { useReleaseWhenOver, useVoiceStatus } from './use-voice-status';
+import { useVoiceStatus } from './use-voice-status';
 import type { VoiceConnection, VoiceLevels } from './voice-connection';
 import { useVoiceConnection } from './voice-connection-context';
 
 const noLevels: VoiceLevels = { input: 0, output: 0 };
 
-// A Session's title as the Sessions list reads it; none until it loads, or without a Session.
-function useSessionTitle(sessionId: string | undefined): string | undefined {
-  const trpc = useTRPC();
-  const input = { sessionId, archived: false };
-
-  const listed = useQuery({
-    ...trpc.session.list.queryOptions(input),
-    enabled: sessionId !== undefined,
-  });
-
-  return listed.data?.sessions[0]?.title;
-}
-
-// Starting a call: the offer goes to the Server, and its answer completes the connection.
-function useStartCall(
+// Starts the call in the Session the page shows.
+function useStartHere(
   sessionId: string,
   connection: VoiceConnection | null,
 ): () => void {
-  const start = useMutation(
-    useTRPC().voice.start.mutationOptions({
-      onSuccess: ({ answer }) => connection?.accept(answer),
-      onError: () => connection?.close(),
-    }),
-  );
+  const start = useStartCall(connection);
 
-  return () =>
-    void offerTo(connection, (offer) => start.mutate({ sessionId, offer }));
+  return () => start(sessionId);
 }
 
 function useActions(
@@ -58,7 +39,7 @@ function useActions(
   const navigate = useNavigateFromShown();
 
   return {
-    start: useStartCall(sessionId, connection),
+    start: useStartHere(sessionId, connection),
     end: () => end.mutate({ sessionId }),
     setMicrophoneMuted: mutes.setMicrophoneMuted,
     setSpeakerMuted: mutes.setSpeakerMuted,
@@ -132,7 +113,6 @@ function useInput(
 export function useSessionVoice(sessionId: string): View {
   const connection = useVoiceConnection();
   const status = useVoiceStatus();
-  useReleaseWhenOver(status, connection);
   const view = sessionVoice(useInput(sessionId, connection, status));
 
   return { ...view, voice: connection ? view.composer : undefined };

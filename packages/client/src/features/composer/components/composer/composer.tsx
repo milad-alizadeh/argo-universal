@@ -21,7 +21,7 @@ export type {
   ComposerDraft,
   ComposerProps,
   ComposerVoice,
-  ComposerVoiceCall,
+  ComposerVoiceMutes,
 } from './composer-types';
 
 export type { ComposerAttachment } from '../composer-attachment-card/composer-attachment-card';

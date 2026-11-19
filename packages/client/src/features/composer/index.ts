@@ -4,7 +4,7 @@ export {
   type ComposerDraft,
   type ComposerProps,
   type ComposerVoice,
-  type ComposerVoiceCall,
+  type ComposerVoiceMutes,
 } from './components/composer/composer';
 
 export { type ComposerConfigurationProps } from './components/composer-configuration/composer-configuration';

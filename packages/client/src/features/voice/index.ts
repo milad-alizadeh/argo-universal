@@ -1,5 +1,7 @@
 export { useSessionVoice } from './use-session-voice';
 
+export { useNewSessionVoice } from './use-new-session-voice';
+
 export { voicePlaceholder } from './session-voice';
 
 export { voiceLabel } from './components/voice-stage/voice-label';

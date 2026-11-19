@@ -1,3 +1,4 @@
+import type { ComposerVoice } from '#features/composer';
 import type { useSessionOptions, SessionCallouts } from '#features/sessions';
 import type { Navigate } from '#lib/product/navigation/navigation';
 import type { ReadySessionNewViewProps } from '../session-new-view';
@@ -15,6 +16,8 @@ export interface NewSessionWiring {
   navigate: Navigate;
   attachmentDraft: AttachmentDraft;
   sessionOpening: SessionOpening;
+  // The voice button, or the pointer to a running call; absent where the App carries no audio.
+  voice: ComposerVoice | undefined;
   callout: SessionCallouts;
 }
 

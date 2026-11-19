@@ -1,7 +1,6 @@
 import type {
   VoiceCall,
   VoiceCallStatus,
-  VoiceConnectionStatus,
   VoiceOrbState,
 } from '@repo/contracts';
 import type { SnapshotFrom } from 'xstate';
@@ -14,14 +13,12 @@ const phases = ['starting', 'connecting', 'connected', 'reconnecting'] as const;
 
 type Phase = (typeof phases)[number];
 
-type PhaseLook = { status: VoiceCallStatus; connection: VoiceConnectionStatus };
-
-// How far the call has come, and its connection now, in each running state. A reconnecting call has joined, so the Composer keeps its End and mute buttons.
-const phaseLooks: Record<Phase, PhaseLook> = {
-  starting: { status: 'connecting', connection: 'connecting' },
-  connecting: { status: 'connecting', connection: 'connecting' },
-  connected: { status: 'connected', connection: 'connected' },
-  reconnecting: { status: 'connected', connection: 'disconnected' },
+// How far the call has come in each running state. A reconnecting call has joined, so the Composer keeps its End and mute buttons.
+const phaseStatuses: Record<Phase, VoiceCallStatus> = {
+  starting: 'connecting',
+  connecting: 'connecting',
+  connected: 'connected',
+  reconnecting: 'connected',
 };
 
 // The voice's own speech shows over the Agent's work, and the work over waiting for the person.
@@ -46,7 +43,7 @@ function lookOf(phase: Phase, call: RunningCall): VoiceCall {
   return {
     callId,
     sessionId,
-    ...phaseLooks[phase],
+    status: phaseStatuses[phase],
     orb: phase === 'connected' ? liveOrb(call) : 'none',
     trouble: troubleOf(phase, call),
     startedAt,

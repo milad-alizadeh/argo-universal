@@ -40,7 +40,6 @@ describe('a Voice call whose connection drops', () => {
       callId: 'call-1',
       sessionId: 'session-1',
       status: 'connected',
-      connection: 'disconnected',
       orb: 'none',
       trouble: 'reconnecting',
       startedAt: expect.any(String),
@@ -86,7 +85,6 @@ describe('a Voice call whose connection drops', () => {
     expect(voice.getSnapshot().matches({ running: 'connecting' })).toBe(true);
     expect(callNow()).toMatchObject({
       status: 'connecting',
-      connection: 'connecting',
       orb: 'none',
       trouble: null,
       startedAt: null,

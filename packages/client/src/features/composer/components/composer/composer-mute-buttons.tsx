@@ -14,7 +14,7 @@ type MuteButton = {
   onPress: () => void;
 };
 
-// Mic and speaker: Muted circles beside End, as the Voice page draws them. A muted one swaps to its slashed glyph.
+// Mic and speaker: Muted circles beside End, as the Voice page draws them. A muted one swaps to its slashed glyph, in red.
 function MuteIconButton(button: MuteButton): React.JSX.Element {
   return (
     <IconButton
@@ -24,6 +24,7 @@ function MuteIconButton(button: MuteButton): React.JSX.Element {
       testID={button.id}
       accessibilityLabel={button.label}
       aria-pressed={button.muted}
+      danger={button.muted}
       icon={button.icon}
       onPress={button.onPress}
     />
@@ -50,7 +51,7 @@ const speakerOf = (mutes: ComposerVoiceMutes): MuteButton => ({
 const mutesOf = (
   voice: ComposerVoice | undefined,
 ): ComposerVoiceMutes | undefined =>
-  voice?.call === 'connected' ? voice.mutes : undefined;
+  voice?.kind === 'connected' ? voice.mutes : undefined;
 
 export function ComposerMuteButtons({
   voice,

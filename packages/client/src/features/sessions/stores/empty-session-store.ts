@@ -14,7 +14,7 @@ import {
   type FirstPrompt,
   sameEmptySessionState,
 } from './empty-session-types';
-import { FirstPromptHandOff } from './first-prompt-hand-off';
+import { type CallStart, FirstPromptHandOff } from './first-prompt-hand-off';
 
 // Both checkout types create a Session only when the reader sends.
 export class EmptySessionStore {
@@ -81,6 +81,13 @@ export class EmptySessionStore {
     this.deliver(prompt);
   }
 
+  // A Voice call from New Session: the Session opens with no prompt, the page goes to it at once, and the call starts there.
+  public call(start: (sessionId: string) => void): void {
+    if (this.handOff.phase !== 'choosing') return;
+    this.pending = [];
+    this.deliver([], start);
+  }
+
   // Retry and completed sign-in resend the current draft. Reconnection never sends.
   public openAgain(cause: OpenAgain): void {
     this.createAgain(cause);
@@ -107,7 +114,7 @@ export class EmptySessionStore {
     if (cause.by === 'user') cause.sendDraft();
   }
 
-  private deliver(prompt: FirstPrompt): void {
+  private deliver(prompt: FirstPrompt, call?: CallStart): void {
     if (!this.input || this.stopped) {
       this.pending = undefined;
       this.emit();
@@ -116,7 +123,8 @@ export class EmptySessionStore {
     }
 
     this.outcome = openingAgain(this.outcome);
-    this.handOff.create(this.input, this.configuration.initial, prompt);
+    const configOptions = this.configuration.initial;
+    this.handOff.create({ ...this.input, configOptions, prompt }, call);
   }
 
   private fail(cause: unknown): void {

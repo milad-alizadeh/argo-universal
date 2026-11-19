@@ -1,88 +1,71 @@
 import { describe, expect, it } from 'vitest';
 import { composerProps } from '../../../../../mocks/composer-mock';
-import { sendButtonState } from './composer-conditions';
-import type {
-  ComposerProps,
-  ComposerVoiceCall,
-  SendState,
-} from './composer-types';
+import { callPointer, sendButtonState } from './composer-conditions';
+import type { ComposerProps, ComposerVoice, SendState } from './composer-types';
 
-type Provider = 'usable' | 'unusable' | 'absent';
+type Slot = ComposerVoice['kind'] | 'absent';
+
+// What the primary slot shows: a button in one of its states, or the pointer to the call in another Session.
+type Shown = SendState | 'pointer';
 
 type Row = [
   draft: 'empty' | 'text',
-  call: ComposerVoiceCall,
-  provider: Provider,
+  slot: Slot,
   turn: 'idle' | 'running',
-  expected: SendState,
+  expected: Shown,
 ];
 
-// Every combination of draft, call, provider and Turn, the Composer queueing while a Turn runs. Without a provider the Composer knows of no call. With nothing written, a running Turn's one button is Stop unless a call runs here.
+/*
+ * Every combination of draft, voice slot and Turn, the Composer queueing while a Turn runs. The slot is the voice
+ * module's answer: `start` while no call runs and the Voice provider can start one, `absent` while it cannot or where
+ * the App carries no audio. With nothing written, a running Turn's one button is Stop unless a call runs here.
+ */
 const rows: Row[] = [
-  ['text', 'none', 'usable', 'idle', 'ready'],
-  ['text', 'none', 'usable', 'running', 'ready'],
-  ['text', 'none', 'unusable', 'idle', 'ready'],
-  ['text', 'none', 'unusable', 'running', 'ready'],
-  ['text', 'none', 'absent', 'idle', 'ready'],
-  ['text', 'none', 'absent', 'running', 'ready'],
-  ['text', 'connecting', 'usable', 'idle', 'ready'],
-  ['text', 'connecting', 'usable', 'running', 'ready'],
-  ['text', 'connecting', 'unusable', 'idle', 'ready'],
-  ['text', 'connecting', 'unusable', 'running', 'ready'],
-  ['text', 'connecting', 'absent', 'idle', 'ready'],
-  ['text', 'connecting', 'absent', 'running', 'ready'],
-  ['text', 'connected', 'usable', 'idle', 'ready'],
-  ['text', 'connected', 'usable', 'running', 'ready'],
-  ['text', 'connected', 'unusable', 'idle', 'ready'],
-  ['text', 'connected', 'unusable', 'running', 'ready'],
-  ['text', 'connected', 'absent', 'idle', 'ready'],
-  ['text', 'connected', 'absent', 'running', 'ready'],
-  ['text', 'elsewhere', 'usable', 'idle', 'ready'],
-  ['text', 'elsewhere', 'usable', 'running', 'ready'],
-  ['text', 'elsewhere', 'unusable', 'idle', 'ready'],
-  ['text', 'elsewhere', 'unusable', 'running', 'ready'],
-  ['text', 'elsewhere', 'absent', 'idle', 'ready'],
-  ['text', 'elsewhere', 'absent', 'running', 'ready'],
-  ['empty', 'none', 'usable', 'idle', 'voice'],
-  ['empty', 'none', 'usable', 'running', 'stop'],
-  ['empty', 'none', 'unusable', 'idle', 'blocked'],
-  ['empty', 'none', 'unusable', 'running', 'stop'],
-  ['empty', 'none', 'absent', 'idle', 'blocked'],
-  ['empty', 'none', 'absent', 'running', 'stop'],
-  ['empty', 'connecting', 'usable', 'idle', 'connecting'],
-  ['empty', 'connecting', 'usable', 'running', 'connecting'],
-  ['empty', 'connecting', 'unusable', 'idle', 'connecting'],
-  ['empty', 'connecting', 'unusable', 'running', 'connecting'],
-  ['empty', 'connecting', 'absent', 'idle', 'blocked'],
-  ['empty', 'connecting', 'absent', 'running', 'stop'],
-  ['empty', 'connected', 'usable', 'idle', 'end'],
-  ['empty', 'connected', 'usable', 'running', 'end'],
-  ['empty', 'connected', 'unusable', 'idle', 'end'],
-  ['empty', 'connected', 'unusable', 'running', 'end'],
-  ['empty', 'connected', 'absent', 'idle', 'blocked'],
-  ['empty', 'connected', 'absent', 'running', 'stop'],
-  ['empty', 'elsewhere', 'usable', 'idle', 'elsewhere'],
-  ['empty', 'elsewhere', 'usable', 'running', 'stop'],
-  ['empty', 'elsewhere', 'unusable', 'idle', 'elsewhere'],
-  ['empty', 'elsewhere', 'unusable', 'running', 'stop'],
-  ['empty', 'elsewhere', 'absent', 'idle', 'blocked'],
-  ['empty', 'elsewhere', 'absent', 'running', 'stop'],
+  ['text', 'start', 'idle', 'ready'],
+  ['text', 'start', 'running', 'ready'],
+  ['text', 'connecting', 'idle', 'ready'],
+  ['text', 'connecting', 'running', 'ready'],
+  ['text', 'connected', 'idle', 'ready'],
+  ['text', 'connected', 'running', 'ready'],
+  ['text', 'elsewhere', 'idle', 'ready'],
+  ['text', 'elsewhere', 'running', 'ready'],
+  ['text', 'absent', 'idle', 'ready'],
+  ['text', 'absent', 'running', 'ready'],
+  ['empty', 'start', 'idle', 'voice'],
+  ['empty', 'start', 'running', 'stop'],
+  ['empty', 'connecting', 'idle', 'connecting'],
+  ['empty', 'connecting', 'running', 'connecting'],
+  ['empty', 'connected', 'idle', 'end'],
+  ['empty', 'connected', 'running', 'end'],
+  ['empty', 'elsewhere', 'idle', 'pointer'],
+  ['empty', 'elsewhere', 'running', 'stop'],
+  ['empty', 'absent', 'idle', 'blocked'],
+  ['empty', 'absent', 'running', 'stop'],
 ];
 
 const noop = (): void => {};
 
-const idle: Row = ['empty', 'none', 'usable', 'idle', 'voice'];
+const idle: Row = ['empty', 'start', 'idle', 'voice'];
 
-const voiceOf = (
-  provider: Provider,
-  call: ComposerVoiceCall,
-): ComposerProps['voice'] =>
-  provider === 'absent'
-    ? undefined
-    : { usable: provider === 'usable', call, onStart: noop, onEnd: noop };
+const mutes = {
+  microphone: false,
+  speaker: false,
+  onMicrophone: noop,
+  onSpeaker: noop,
+};
+
+const slots: Record<ComposerVoice['kind'], ComposerVoice> = {
+  start: { kind: 'start', onStart: noop },
+  connecting: { kind: 'connecting', onEnd: noop },
+  connected: { kind: 'connected', onEnd: noop, mutes },
+  elsewhere: { kind: 'elsewhere', title: 'Fix the build', onOpen: noop },
+};
+
+const voiceOf = (slot: Slot): ComposerProps['voice'] =>
+  slot === 'absent' ? undefined : slots[slot];
 
 function composer(
-  [draft, call, provider, turn]: Row,
+  [draft, slot, turn]: Row,
   queueWhileRunning = true,
 ): ComposerProps {
   return composerProps({
@@ -94,43 +77,38 @@ function composer(
     running: turn === 'running',
     sessionStarted: true,
     queueWhileRunning,
-    voice: voiceOf(provider, call),
+    voice: voiceOf(slot),
   });
 }
 
+const shown = (props: ComposerProps): Shown =>
+  callPointer(props) ? 'pointer' : sendButtonState(props);
+
 describe('send button', () => {
   it.each(rows)(
-    'with a %s draft, call %s, provider %s and Turn %s is %s',
+    'with a %s draft, voice slot %s and Turn %s shows %s',
     (...row) => {
-      expect(sendButtonState(composer(row))).toBe(row[4]);
+      expect(shown(composer(row))).toBe(row[3]);
     },
   );
 
   it('is Stop for a running Turn when the Composer does not queue, until a call runs', () => {
-    const running: Row = ['empty', 'none', 'usable', 'running', 'stop'];
-    const calling: Row = ['empty', 'connected', 'usable', 'running', 'end'];
+    const running: Row = ['empty', 'start', 'running', 'stop'];
+    const calling: Row = ['empty', 'connected', 'running', 'end'];
 
-    expect(sendButtonState(composer(running, false))).toBe('stop');
-    expect(sendButtonState(composer(calling, false))).toBe('end');
+    expect(shown(composer(running, false))).toBe('stop');
+    expect(shown(composer(calling, false))).toBe('end');
   });
 
   it('is not the voice button while a queued Prompt is edited or the Composer cannot send', () => {
     const editing = { id: 'queued', cancel: noop };
 
-    expect(sendButtonState({ ...composer(idle), queueEdit: editing })).toBe(
-      'blocked',
-    );
-    expect(sendButtonState({ ...composer(idle), sendable: false })).toBe(
-      'blocked',
-    );
+    expect(shown({ ...composer(idle), queueEdit: editing })).toBe('blocked');
+    expect(shown({ ...composer(idle), sendable: false })).toBe('blocked');
   });
 
   it('is not the voice button while sending or disabled', () => {
-    expect(sendButtonState({ ...composer(idle), sending: true })).toBe(
-      'sending',
-    );
-    expect(sendButtonState({ ...composer(idle), disabled: true })).toBe(
-      'blocked',
-    );
+    expect(shown({ ...composer(idle), sending: true })).toBe('sending');
+    expect(shown({ ...composer(idle), disabled: true })).toBe('blocked');
   });
 });
