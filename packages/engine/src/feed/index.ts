@@ -87,9 +87,12 @@ export { toolCallEvent } from './tool-call-event';
 
 export { nativePermissionOutcomeEvent } from './native-permission-outcome';
 
+export { messageText } from './message-text';
+
 export {
   readVoiceMessage,
-  voiceInstruction,
+  withVoiceInstruction,
+  withoutVoiceInstruction,
   VoiceMarkerStream,
   type VoiceMessage,
 } from './voice-markers';

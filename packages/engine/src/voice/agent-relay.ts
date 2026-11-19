@@ -1,4 +1,8 @@
-import { readVoiceMessage, voiceInstruction, type VoiceMessage } from '../feed';
+import {
+  readVoiceMessage,
+  withVoiceInstruction,
+  type VoiceMessage,
+} from '../feed';
 import type { VoiceSay } from './call-types';
 import { inPieces } from './pieces';
 import { relayWords } from './relay-words';
@@ -102,7 +106,7 @@ export class AgentRelay {
     if (this.instructed) return request;
     this.instructed = true;
 
-    return `${voiceInstruction}\n\n${request}`;
+    return withVoiceInstruction(request);
   }
 
   private reply(requestId: string, text: string): void {

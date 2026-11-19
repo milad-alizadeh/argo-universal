@@ -1,19 +1,17 @@
 import type { FeedSubscribeOutput, SessionUpdate } from '@repo/contracts';
-import { VoiceMarkerStream, withoutVoiceMarkers } from './voice-markers';
+import {
+  firstText,
+  VoiceMarkerStream,
+  withoutVoiceMarkers,
+} from './voice-markers';
 
-const messageText = 'content.0.text';
+const firstTextField = 'content.0.text';
 
 type Message = Extract<SessionUpdate, { sessionUpdate: 'agent_message' }>;
 
 type OpenMessage = { stream: VoiceMarkerStream; shown: number };
 
 type Appended = Extract<FeedSubscribeOutput, { type: 'row.append' }>;
-
-const openText = (row: Message): string => {
-  const [first] = row.content;
-
-  return first?.type === 'text' ? first.text : '';
-};
 
 const isOpenMessage = (row: SessionUpdate): row is Message =>
   row.sessionUpdate === 'agent_message' && row.state === 'open';
@@ -49,7 +47,7 @@ export class VoiceMarkerFilter {
 
   private openRow(row: Message): Message {
     const stream = new VoiceMarkerStream();
-    const text = stream.push(openText(row));
+    const text = stream.push(firstText(row.content) ?? '');
     this.open.set(row.id, { stream, shown: text.length });
     const [first, ...rest] = row.content;
 
@@ -61,7 +59,7 @@ export class VoiceMarkerFilter {
   private append(event: Appended): FeedSubscribeOutput {
     const message = this.open.get(event.id);
 
-    if (!message || event.field !== messageText) return event;
+    if (!message || event.field !== firstTextField) return event;
     const text = message.stream.push(event.text);
     const shown = message.shown;
     message.shown += text.length;

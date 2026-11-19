@@ -1,11 +1,13 @@
-import type { SessionUpdate } from '@repo/contracts';
+import type { NonUserPromptSender, SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { and, desc, eq, inArray, type SQL } from 'drizzle-orm';
 import {
   type FeedRowWrite,
+  messageText,
   readStoredFeedRow,
   storedFeedColumns,
+  withoutVoiceInstruction,
 } from '../feed';
 
 // About 5,000 tokens at four characters a token.
@@ -13,25 +15,50 @@ const briefingCharacters = 20_000;
 
 const recentRows = 300;
 
-const speakers: Partial<Record<SessionUpdate['sessionUpdate'], string>> = {
-  user_message: 'Person',
-  agent_message: 'Agent',
-};
+// The rows a briefing reads: what the person, the Agent, the voice and other senders said (ADR-0063).
+const spokenKinds = [
+  'user_message',
+  'agent_message',
+  'prompt_message',
+  'person_transcript',
+  'voice_transcript',
+] as const satisfies readonly SessionUpdate['sessionUpdate'][];
 
-const textOf = (row: SessionUpdate): string =>
-  'content' in row
-    ? row.content
-        .map((block) => (block.type === 'text' ? block.text : ''))
-        .join('')
-        .trim()
-    : '';
+type Spoken = Extract<
+  SessionUpdate,
+  { sessionUpdate: (typeof spokenKinds)[number] }
+>;
+
+const isSpoken = (row: SessionUpdate): row is Spoken =>
+  spokenKinds.some((kind) => kind === row.sessionUpdate);
+
+const speakers = {
+  user_message: 'Person',
+  person_transcript: 'Person',
+  agent_message: 'Agent',
+  voice_transcript: 'Voice',
+} as const satisfies Record<
+  Exclude<Spoken['sessionUpdate'], 'prompt_message'>,
+  string
+>;
+
+// A Prompt the person did not send, named by its sender; the voice's carries no instruction to the Agent.
+const promptLine = (sender: NonUserPromptSender, text: string): string =>
+  sender.type === 'voice'
+    ? `Voice call request: ${withoutVoiceInstruction(text)}`
+    : `From ${sender.title}: ${text}`;
+
+const labelled = (row: Spoken, text: string): string =>
+  row.sessionUpdate === 'prompt_message'
+    ? promptLine(row._meta.argo.sender, text)
+    : `${speakers[row.sessionUpdate]}: ${text}`;
 
 // One line of the transcript: who said it and what.
 const lineOf = (row: SessionUpdate): string | undefined => {
-  const speaker = speakers[row.sessionUpdate];
-  const text = speaker && textOf(row);
+  if (!isSpoken(row)) return undefined;
+  const text = messageText(row.content).trim();
 
-  return text ? `${speaker}: ${text}` : undefined;
+  return text ? labelled(row, text) : undefined;
 };
 
 // The newest lines that fit `room` characters, oldest first.
@@ -53,7 +80,7 @@ function newestFitting(lines: readonly string[], room: number): string[] {
 const conversation = (sessionId: string): SQL | undefined =>
   and(
     eq(feedRow.sessionId, sessionId),
-    inArray(feedRow.sessionUpdate, ['user_message', 'agent_message']),
+    inArray(feedRow.sessionUpdate, spokenKinds),
   );
 
 const recentMessages = (

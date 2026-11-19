@@ -10,7 +10,7 @@ const voiceMarkers = ['[STATUS]', '[COMPLETE]', '[ANALYSIS]'] as const;
 type VoiceMarker = (typeof voiceMarkers)[number];
 
 // What the first Prompt of a call asks of the Agent, so the voice can tell progress from a result.
-export const voiceInstruction = [
+const voiceInstruction = [
   'A person is talking to you through a voice, and the voice reads your messages aloud.',
   'Begin every message with one mark:',
   '[STATUS] for progress the person may hear while you work,',
@@ -20,6 +20,18 @@ export const voiceInstruction = [
   'End the call by running the Argo Operation voice.hangUp, but only when the person clearly says they are done with the call, such as goodbye or hang up.',
   'Do not end it when the person asks you to stop work, pause or wait: that is not the end of the call.',
 ].join('\n');
+
+const instructionBreak = `${voiceInstruction}\n\n`;
+
+// The first Prompt of a call: the instruction, then what the person asked for.
+export const withVoiceInstruction = (request: string): string =>
+  `${instructionBreak}${request}`;
+
+// What a call's Prompt asked for, without the instruction the first one carries.
+export const withoutVoiceInstruction = (prompt: string): string =>
+  prompt.startsWith(instructionBreak)
+    ? prompt.slice(instructionBreak.length)
+    : prompt;
 
 // What an Agent message is to the voice, and its text without the mark; a message without a mark is progress.
 export type VoiceMessage = {
@@ -47,7 +59,8 @@ export function readVoiceMessage(text: string): VoiceMessage {
 
 const stripVoiceMarker = (text: string): string => readVoiceMessage(text).body;
 
-const firstText = (content: readonly ContentBlock[]): string | undefined => {
+// The text of a message's first block, when it is text.
+export const firstText = (content: readonly ContentBlock[]): string | undefined => {
   const [first] = content;
 
   return first?.type === 'text' ? first.text : undefined;
