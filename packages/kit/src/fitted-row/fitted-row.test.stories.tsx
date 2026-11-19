@@ -74,3 +74,17 @@ export const OverflowingItemsFold: Story = {
       await expect(copy).not.toBeVisible();
   },
 };
+
+// Items held back before the line still end it on "+N", even when the line has no item of its own.
+export const HeldBackAloneShowsMore: Story = {
+  render: () => (
+    <View style={{ width: 600 }}>
+      <FittedRow gap={4} hiddenElsewhere={2}>
+        {[]}
+      </FittedRow>
+    </View>
+  ),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText('+2')).toBeVisible();
+  },
+};

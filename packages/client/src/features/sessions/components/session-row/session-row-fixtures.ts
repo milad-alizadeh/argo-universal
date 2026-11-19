@@ -148,7 +148,7 @@ export const moreIssueItem = {
 } satisfies SessionRowPluginItem;
 
 /*
- * Three Plugin items fit a desktop row after Argo's own; two more wait behind "+2", each with its Plugin's name. The
+ * Three Plugin items fit a desktop row after Argo's own; two more wait behind "+2". The
  * Issue opens the Issue tracker's page.
  */
 export const pluginItemsSession = {

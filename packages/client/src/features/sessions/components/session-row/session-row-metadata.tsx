@@ -34,7 +34,7 @@ function agePart({ age }: SessionRowMetadataProps): MetaPart[] {
 
   return [
     inertPart(
-      { key: 'age', text: age, source: 'Last active' },
+      { key: 'age', text: age },
       <Text role="secondary" tone="muted">
         {age}
       </Text>,
@@ -55,7 +55,6 @@ function pullRequestPart({ pullRequest }: SessionRowMetadataProps): MetaPart[] {
     key: 'pull-request',
     text: changeText(pullRequest),
     leading: <SecondaryChangeStageIcon {...pullRequest} />,
-    source: 'Change',
   };
 
   return [
@@ -70,7 +69,6 @@ function pullRequestPart({ pullRequest }: SessionRowMetadataProps): MetaPart[] {
 interface RunningWork {
   key: 'shells' | 'subagents';
   icon: 'agent' | 'terminal';
-  source: string;
   running: number;
 }
 
@@ -81,7 +79,6 @@ function runningPart(work: RunningWork, line: React.ReactNode): MetaPart[] {
     key: work.key,
     text: `${work.running} running`,
     leading: <Icon name={work.icon} />,
-    source: work.source,
   };
 
   return [inertPart(entry, line)];
@@ -90,13 +87,11 @@ function runningPart(work: RunningWork, line: React.ReactNode): MetaPart[] {
 const shellsWork = {
   key: 'shells',
   icon: 'terminal',
-  source: 'Background Tasks',
 } as const;
 
 const agentsWork = {
   key: 'subagents',
   icon: 'agent',
-  source: 'Agents',
 } as const;
 
 function archivedPart({ session }: SessionRowMetadataProps): MetaPart[] {

@@ -6,6 +6,7 @@ import { argoMetaParts, type MetaPart } from './session-row-metadata';
 import {
   type MoreEntry,
   pluginEntries,
+  MoreCount,
   pluginEntry,
   SessionRowMore,
 } from './session-row-more';
@@ -44,14 +45,17 @@ const heldEntries = ({
 }: SessionRowProps): MoreEntry[] =>
   pluginEntries(plugins?.more ?? [], onOpenPluginPage);
 
-// "+N" for the line's parts from `firstHidden` on, then the items held back before the line.
+// "+N" for the line's parts from `firstHidden` on, then the items held back before the line; measured as its count alone.
 const drawMore =
   ({ parts, held }: MetaLine): DrawMore =>
-  ({ firstHidden }) => (
-    <SessionRowMore
-      more={[...parts.slice(firstHidden).map((part) => part.entry), ...held]}
-    />
-  );
+  ({ count, firstHidden, unseen }) =>
+    unseen ? (
+      <MoreCount count={count} />
+    ) : (
+      <SessionRowMore
+        more={[...parts.slice(firstHidden).map((part) => part.entry), ...held]}
+      />
+    );
 
 /*
  * A Regular row's meta line: Argo's parts, then the Plugins' items, as many as fit whole; "+N" is always last and lists

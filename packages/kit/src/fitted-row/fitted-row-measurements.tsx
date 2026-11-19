@@ -35,10 +35,14 @@ const hiddenProps = {
   pointerEvents: 'none',
 } as const;
 
-// What "+N" stands for: how many it counts, and the first of the line's own items it holds.
+/*
+ * What "+N" stands for: how many it counts, and the first of the line's own items it holds. An unseen "+N" is only
+ * measured, so it draws its look alone, without what a reader's "+N" opens.
+ */
 export interface Overflow {
   count: number;
   firstHidden: number;
+  unseen: boolean;
 }
 
 export type DrawMore = (overflow: Overflow) => ReactNode;
@@ -55,7 +59,10 @@ function countItems(props: MeasurementsProps): Item[] {
     const count = index + 1;
     const firstHidden = Math.max(0, items.length - count + hiddenElsewhere);
 
-    return { key: countKey(count), node: more({ count, firstHidden }) };
+    return {
+      key: countKey(count),
+      node: more({ count, firstHidden, unseen: true }),
+    };
   });
 }
 

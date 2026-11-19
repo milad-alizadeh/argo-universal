@@ -45,13 +45,17 @@ export function FittedRow(props: FittedRowProps): ReactNode {
   const items = itemsOf(props.children);
   const hiddenElsewhere = props.hiddenElsewhere ?? 0;
 
-  if (items.length + hiddenElsewhere < 2)
+  if (drawsAsIs(items, hiddenElsewhere))
     return <Line {...props}>{props.children}</Line>;
 
   return (
     <FittedItems {...props} items={items} hiddenElsewhere={hiddenElsewhere} />
   );
 }
+
+// A lone item has nothing to fold into; a line with items held back always ends on "+N", even with no item of its own.
+const drawsAsIs = (items: Item[], hiddenElsewhere: number): boolean =>
+  hiddenElsewhere === 0 && items.length < 2;
 
 // Every item, once, until they overflow the line; from then on the line fits them.
 function FittedItems(props: FittingProps): ReactElement {
@@ -92,7 +96,7 @@ function HeldBack(props: FittingProps): ReactNode {
 
   return (
     <View pointerEvents="box-none" className="shrink-0">
-      {more({ count: props.hiddenElsewhere, firstHidden })}
+      {more({ count: props.hiddenElsewhere, firstHidden, unseen: false })}
     </View>
   );
 }
@@ -157,7 +161,7 @@ function ShownCount({ fit, more }: { fit: Fit; more: DrawMore }): ReactNode {
 
   return (
     <View pointerEvents="box-none" className="shrink-0">
-      {more({ count: fit.count, firstHidden: fit.shown.length })}
+      {more({ count: fit.count, firstHidden: fit.shown.length, unseen: false })}
     </View>
   );
 }

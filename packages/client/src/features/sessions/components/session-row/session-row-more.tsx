@@ -8,11 +8,9 @@ import {
 import {
   Popover,
   PopoverContent,
-  PopoverTitle,
   PopoverTrigger,
   usePopoverClose,
 } from '@repo/kit/primitives/overlays/popover';
-import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { Pressable } from 'react-native';
 import { pluginSymbol } from '../../../../lib/product/plugin-symbol';
@@ -24,13 +22,11 @@ import type {
 } from './session-row-props';
 import { sidebarRows } from './session-row-sidebar';
 
-// One part of the row as "+N" lists it: what it reads, its glyph, where it came from, and the page it opens.
+// One part of the row as "+N" lists it: its glyph, what it reads, and the page it opens.
 export interface MoreEntry {
   key: string;
   text: string;
   leading?: React.ReactNode;
-  // The Plugin an item came from, or what Argo's own part counts, such as Agents.
-  source?: string;
   onOpen?: () => void;
 }
 
@@ -45,7 +41,7 @@ const moreLabel = (count: number): string =>
 
 /*
  * "+N", always last on a row's meta line (ADR-0035): it lists every part of the row that did not fit, Argo's and the
- * Plugins', each with where it came from, in a popover a pointer opens on hover and a sheet on a phone. A part with a
+ * Plugins', each as its glyph and text, in a popover a pointer opens on hover and a sheet on a phone. A part with a
  * page opens it from there.
  */
 export function SessionRowMore(props: SessionRowMoreProps): React.ReactNode {
@@ -57,7 +53,6 @@ export function SessionRowMore(props: SessionRowMoreProps): React.ReactNode {
     <Popover openOnHover>
       <MoreTrigger count={count} />
       <PopoverContent align="start" accessibilityLabel={moreTitle(count)} list>
-        <PopoverTitle>{moreTitle(count)}</PopoverTitle>
         <MoreList {...props} />
       </PopoverContent>
     </Popover>
@@ -72,10 +67,15 @@ function MoreTrigger({ count }: { count: number }): React.JSX.Element {
         aria-haspopup="dialog"
         className={`shrink-0 ${pressTint}`}
       >
-        <Label text={`+${count}`} sidebar={sidebarRows} />
+        <MoreCount count={count} />
       </Pressable>
     </PopoverTrigger>
   );
+}
+
+// How "+N" reads on the line; a row measures it alone, without the popover it opens.
+export function MoreCount({ count }: { count: number }): React.JSX.Element {
+  return <Label text={`+${count}`} sidebar={sidebarRows} />;
 }
 
 function MoreList(props: SessionRowMoreProps): React.JSX.Element {
@@ -108,10 +108,7 @@ interface MoreRowProps {
   close: () => void;
 }
 
-function moreRow({
-  entry,
-  close,
-}: MoreRowProps): Omit<ListItemProps, 'subtitle' | 'value'> {
+function moreRow({ entry, close }: MoreRowProps): ListItemProps {
   const onOpen = closing(close, entry.onOpen);
 
   return {
@@ -122,17 +119,9 @@ function moreRow({
   };
 }
 
-// A desktop popover ends the row with where the part came from; a phone sheet puts it under the text.
+// Each part as its glyph and text alone, as the line draws it.
 function MoreRow(props: MoreRowProps): React.JSX.Element {
-  const row = moreRow(props);
-  const { source } = props.entry;
-
-  return (
-    <SizeClass
-      compact={<ListItem {...row} subtitle={source} />}
-      wide={<ListItem {...row} value={source} />}
-    />
-  );
+  return <ListItem {...moreRow(props)} />;
 }
 
 // As on the line: a pull request's Change stage mark, else the item's glyph in its tone.
@@ -155,7 +144,6 @@ export function pluginEntry(
     key: plugin.key,
     text: plugin.item.text,
     leading: itemLeading(plugin.item),
-    source: plugin.pluginName,
     onOpen: pageOpener(plugin, onOpenPluginPage),
   };
 }
