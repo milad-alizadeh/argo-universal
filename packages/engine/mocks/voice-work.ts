@@ -19,8 +19,8 @@ type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 
 type VoiceWorkOptions = {
   provider?: FakeVoiceProvider;
-  // The Agent supports steering and takes what it is given into the running Turn.
-  steering?: boolean;
+  // The Agent supports steering and takes what it is given into the running Turn, or refuses each steer.
+  steering?: boolean | 'refused';
   // How long the call may pass without speech before it ends by itself, in milliseconds.
   idleMs?: number;
 };
@@ -154,6 +154,9 @@ type Play = Pick<WorkParts, 'provider' | 'prompts' | 'steered'> & {
   scenario: Scenario;
 };
 
+const steerOutcome = ({ steering }: VoiceWorkOptions): 'injected' | 'failed' =>
+  steering === 'refused' ? 'failed' : 'injected';
+
 // What the mock Agent is to do, and what is kept to read back what it saw.
 function playOf(
   replies: readonly VoiceAgentReply[],
@@ -168,7 +171,9 @@ function playOf(
   const base = scenarioOf(replies, { prompts, provider });
 
   const scenario: Scenario = {
-    ...(options.steering ? { ...base, ...steeringScenario(steered) } : base),
+    ...(options.steering
+      ? { ...base, ...steeringScenario(steered, steerOutcome(options)) }
+      : base),
     voiceIdleMs: options.idleMs,
   };
 
