@@ -54,3 +54,13 @@ export const infoProgressBar = {
   value: 0.5,
   tone: 'info',
 } satisfies ProgressBarProps;
+
+// Paper's step bar (Option A): 3 of 4 steps done and the last underway, which must not read as a full bar.
+export const stepsProgressBar = {
+  value: 0.75,
+  steps: { done: 3, started: 1, total: 4 },
+  tone: 'success',
+  active: true,
+  accessibilityLabel: 'Todos',
+  testID: 'todos',
+} satisfies ProgressBarProps;

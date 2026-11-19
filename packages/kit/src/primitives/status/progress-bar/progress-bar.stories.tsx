@@ -10,6 +10,7 @@ import {
   neutralProgressBar,
   notStartedProgressBar,
   runningProgressBar,
+  stepsProgressBar,
   waitingProgressBar,
 } from './progress-bar-fixtures';
 
@@ -29,6 +30,9 @@ export const Waiting: Story = { args: waitingProgressBar };
 
 // A length nobody knows yet: the fill sweeps the track instead of reading a share of it.
 export const Indeterminate: Story = { args: indeterminateProgressBar };
+
+// One segment per step: done in the tone, the step underway pale, the rest on the hairline.
+export const Steps: Story = { args: stepsProgressBar };
 
 export const NotStarted: Story = { args: notStartedProgressBar };
 

@@ -19,6 +19,8 @@ const meta = {
 
 export default meta;
 
+const sweep = 'session-todos-sweep';
+
 // A failed checklist keeps its bar but does not sweep.
 export const FailedTodosStill: Story = {
   args: {
@@ -30,9 +32,7 @@ export const FailedTodosStill: Story = {
       await expect(
         canvas.getByLabelText('Todos: 2 of 3 complete'),
       ).toBeVisible();
-      await expect(
-        canvas.queryByTestId('session-todos-sweep'),
-      ).not.toBeInTheDocument();
+      await expect(canvas.queryByTestId(sweep)).not.toBeInTheDocument();
     }
   },
 };
@@ -48,9 +48,7 @@ function backgroundWorkStill(session: SessionInfo, runningDot: string): Story {
           canvas.getByLabelText('Todos: 3 of 5 complete'),
         ).toBeVisible();
         await expect(canvas.getByTestId(runningDot)).toBeVisible();
-        await expect(
-          canvas.queryByTestId('session-todos-sweep'),
-        ).not.toBeInTheDocument();
+        await expect(canvas.queryByTestId(sweep)).not.toBeInTheDocument();
         await expect(
           canvas.queryByTestId('session-status'),
         ).not.toBeInTheDocument();
@@ -72,6 +70,40 @@ export const AgentStill: Story = backgroundWorkStill(
   'subagents-status',
 );
 
+// Paper's step bar (Option A): the last plan step underway leaves its segment pale, so the bar never reads as full.
+export const LastStepInProgress: Story = {
+  args: {
+    session: {
+      ...sessionRows.running,
+      plan: { done: 3, inProgress: 1, total: 4 },
+    },
+  },
+  play: async ({ canvas }) => {
+    for (const width of [390, 1440]) {
+      await settleLayout(width);
+
+      const bar = canvas.getByRole('progressbar', {
+        name: 'Todos: 3 of 4 complete, 1 in progress',
+      });
+
+      await expect(bar).toHaveAttribute('aria-valuenow', '75');
+      await expect(
+        canvas.getAllByTestId('session-todos-step-done'),
+      ).toHaveLength(3);
+      await expect(
+        canvas.getByTestId('session-todos-step-started'),
+      ).toBeVisible();
+      // A running Session's step underway glints.
+      await expect(canvas.getByTestId(sweep)).toBeInTheDocument();
+    }
+  },
+};
+
+export const LastStepInProgressDark: Story = {
+  ...LastStepInProgress,
+  globals: { mode: 'dark' },
+};
+
 export const FirstStepInProgress: Story = {
   args: {
     session: {
@@ -82,10 +114,16 @@ export const FirstStepInProgress: Story = {
   },
   play: async ({ canvas }) => {
     const bar = canvas.getByRole('progressbar', {
-      name: 'Todos: 1 of 3 started',
+      name: 'Todos: 0 of 3 complete, 1 in progress',
     });
 
     await expect(bar).toBeVisible();
-    await expect(bar).toHaveAttribute('aria-valuenow', '33');
+    await expect(bar).toHaveAttribute('aria-valuenow', '0');
+    await expect(
+      canvas.getAllByTestId('session-todos-step-started'),
+    ).toHaveLength(1);
+    await expect(
+      canvas.getAllByTestId('session-todos-step-pending'),
+    ).toHaveLength(2);
   },
 };

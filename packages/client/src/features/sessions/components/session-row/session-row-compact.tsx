@@ -17,6 +17,7 @@ import {
   SessionRowPluginItems,
 } from './session-row-plugin-items';
 import {
+  quietAge,
   type SessionRowPlugins,
   type SessionRowProps,
   sessionRowLabel,
@@ -29,9 +30,12 @@ type CompactEndProps = Pick<
   'session' | 'pullRequest' | 'age' | 'plugins' | 'onOpenPluginPage'
 >;
 
-// Its Change's glyph, without the number; with no Change, how long ago the Session was active.
-function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
-  if (pullRequest) return <SecondaryChangeStageIcon {...pullRequest} />;
+// Its Change's glyph, without the number; with no Change, how long ago a quiet Session was active.
+function compactDetail(props: CompactEndProps): React.ReactNode {
+  if (props.pullRequest)
+    return <SecondaryChangeStageIcon {...props.pullRequest} />;
+
+  const age = quietAge(props);
 
   return age === undefined ? undefined : <Text role="row-detail">{age}</Text>;
 }
