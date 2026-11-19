@@ -55,6 +55,7 @@ describe('Audio devices on this Device', () => {
   it('lists again when a device is plugged in, and stops listening when asked', async () => {
     const media = new FakeMediaDevices([...named]);
     const heard: number[] = [];
+
     const stop = watchAudioDevices(media, (devices) =>
       heard.push(devices.microphones.length),
     );

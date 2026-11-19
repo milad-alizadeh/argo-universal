@@ -8,6 +8,7 @@ import { followCall } from './follow-call';
 import { useVoiceStatus } from './use-voice-status';
 import type { VoiceConnection } from './voice-connection';
 import { VoiceConnectionProvider } from './voice-connection-context';
+import { useVoiceDeviceChoice } from './voice-device-choice';
 import { createWebRtcVoiceConnection } from './webrtc-voice-connection';
 
 // The desktop App carries a Voice call's audio itself; any other page offers no voice button.
@@ -48,6 +49,19 @@ function ServerVoiceHost(props: Omit<HostProps, 'status'>): JSX.Element {
   return <VoiceConnectionHost {...props} status={useVoiceStatus()} />;
 }
 
+// Hands the connection this Device's chosen microphone and speaker, at start and whenever Settings changes them.
+function FollowsDeviceChoice({
+  connection,
+}: {
+  connection: VoiceConnection;
+}): null {
+  const { choice } = useVoiceDeviceChoice();
+
+  useEffect(() => void connection.chooseDevices(choice), [connection, choice]);
+
+  return null;
+}
+
 type Props = { desktop: boolean; children: ReactNode };
 
 export function DesktopVoiceProvider({
@@ -57,7 +71,10 @@ export function DesktopVoiceProvider({
   const connection = useMemo(() => connectionFor(desktop), [desktop]);
 
   return connection ? (
-    <ServerVoiceHost connection={connection}>{children}</ServerVoiceHost>
+    <ServerVoiceHost connection={connection}>
+      <FollowsDeviceChoice connection={connection} />
+      {children}
+    </ServerVoiceHost>
   ) : (
     <VoiceConnectionProvider value={null}>{children}</VoiceConnectionProvider>
   );

@@ -36,7 +36,7 @@ export class FakeMediaDevices {
       groupId: '',
       kind: 'audioinput',
       label: '',
-      toJSON: (): unknown => device,
+      toJSON: (): Partial<MediaDeviceInfo> => device,
       ...device,
     }));
   }

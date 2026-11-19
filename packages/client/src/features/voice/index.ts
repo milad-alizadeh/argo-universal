@@ -10,6 +10,12 @@ export { useSessionMutes } from './use-session-mutes';
 
 export { DesktopVoiceProvider } from './desktop-voice-provider';
 
+export { useVoiceDevices } from './use-voice-devices';
+
+export type { AudioDevice, AudioDevices } from './audio-devices';
+
+export type { VoiceDeviceChoice } from './voice-device-choice';
+
 export {
   VoiceStageView,
   type VoiceStageViewProps,
