@@ -15,6 +15,7 @@ import {
 import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { runningSession } from './session-detail-view.mocks';
+import { openWorkbenchSection } from './session-workbench-menu.test.mocks';
 
 // The narrowest wide window whose page gutter shows the Workbench's cards.
 const workbenchWide = 1856;
@@ -27,16 +28,14 @@ const cardRow = /^(Open (?!.*overview)|Show )/;
 
 const selected = ['aria-selected', 'true'] as const;
 
-// Wide, a card row (or its "done" footer, with none running) opens the Agents tab; below wide the Composer's pill opens the list.
+// Wide, a card row (or its "done" footer, with none running) opens the Agents tab; on a phone the Workbench menu opens the list.
 async function openList(
   { canvas, userEvent }: Interaction,
   wide: boolean,
   count: number,
 ): Promise<void> {
   if (!wide) {
-    await userEvent.click(
-      await canvas.findByRole('button', { name: `Agents: ${count}` }),
-    );
+    await openWorkbenchSection({ canvas, userEvent }, `Agents ${count}`);
 
     return;
   }
@@ -203,9 +202,7 @@ export const PhoneSheetDismissesOnSwitch: Story = {
   beforeEach: () => settleLayout(layoutWidths.phone),
   play: async ({ canvas, userEvent }) => {
     const body = within(document.body);
-    await userEvent.click(
-      await canvas.findByRole('button', { name: 'Agents: 1' }),
-    );
+    await openWorkbenchSection({ canvas, userEvent }, 'Agents 1');
     await expect(
       await body.findByRole('dialog', { name: subagentsName }),
     ).toBeVisible();
@@ -223,7 +220,7 @@ export const PhoneSheetDismissesOnSwitch: Story = {
     await expect(
       body.queryByRole('dialog', { name: subagentsName }),
     ).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('button', { name: 'Agents: 1' }));
+    await openWorkbenchSection({ canvas, userEvent }, 'Agents 1');
     await expect(
       await body.findByRole('dialog', { name: subagentsName }),
     ).toBeVisible();

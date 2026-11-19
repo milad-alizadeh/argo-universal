@@ -15,13 +15,22 @@ Given(
   },
 );
 
-// On a phone the Composer's pill; wide, the running tasks the Workbench card draws as rows.
+// On a phone the Workbench menu offers the tasks. Wide windows show them in the Workbench card.
 function shellEntry(page: Page): Locator {
   return onPhone(page)
-    ? page.getByRole('button', { name: /^Background Tasks:/ })
+    ? page.getByRole('menuitem', { name: /^Background Tasks/ })
     : page
         .getByTestId('workbench-shells')
         .getByRole('button', { name: /^Open / });
+}
+
+async function openShellMenu(page: Page): Promise<void> {
+  if (onPhone(page))
+    await page.getByRole('button', { name: 'Workbench', exact: true }).click();
+}
+
+async function closeShellMenu(page: Page): Promise<void> {
+  if (onPhone(page)) await page.keyboard.press('Escape');
 }
 
 const shellOutput = (page: Page): Locator =>
@@ -37,7 +46,9 @@ Then('the Session offers no Shells', async ({ page }) => {
   await expect(
     page.getByRole('button', { name: 'Stop', exact: true }),
   ).toBeVisible();
+  await openShellMenu(page);
   await expect(shellEntry(page)).toHaveCount(0);
+  await closeShellMenu(page);
   await expect(
     page.getByRole('tab', { name: /^Background Tasks/ }),
   ).toHaveCount(0);
@@ -48,11 +59,13 @@ When('the Agent starts its Shell', async ({ app }) => {
 });
 
 Then('the Session offers 1 Shell', async ({ page }) => {
+  await openShellMenu(page);
   await expect(shellEntry(page)).toBeVisible();
 
   await (onPhone(page)
-    ? expect(shellEntry(page)).toHaveAccessibleName('Background Tasks: 1')
+    ? expect(shellEntry(page)).toHaveAccessibleName('Background Tasks 1')
     : expect(shellEntry(page)).toHaveCount(1));
+  await closeShellMenu(page);
   await expect(
     page.getByRole('button', { name: 'Send', exact: true }),
   ).toBeVisible();
@@ -83,9 +96,10 @@ export async function openRunningShell(page: Page): Promise<void> {
   await expect(
     page.getByRole('button', { name: 'Send', exact: true }),
   ).toBeVisible();
+  await openShellMenu(page);
   await shellEntry(page).click();
 
-  // Wide, the card's row opens the output itself; on a phone the pill opens the list first.
+  // Wide, the card's row opens the output itself; on a phone the menu opens the list first.
   if (!onPhone(page)) return;
 
   const shell = page.getByRole('link', { name: /Shell ready/ });

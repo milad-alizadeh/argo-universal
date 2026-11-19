@@ -1,5 +1,4 @@
 import { type ReactNode, useCallback, useEffect, useRef } from 'react';
-import type { ComposerProps } from '#features/composer';
 import type { FeedProps } from '#features/feed';
 import type { SessionPanels, SubagentListProps } from '#features/sessions';
 import type {
@@ -9,12 +8,10 @@ import type {
 import {
   type OpenSubagent,
   selectSubagent,
-  shellsPanel,
+  shellsSheet,
   type SubagentWork,
-  subagentsPanel,
-  useWorkSheet,
-  type WorkHome,
-  type WorkPresentation,
+  subagentsSheet,
+  type WorkSheet,
 } from './session-work-sheet';
 import {
   type SubagentSelection,
@@ -23,7 +20,6 @@ import {
 import { bothSheets } from './work-sheets';
 
 interface WorkPanels {
-  composer: ComposerProps;
   feed: FeedProps;
   // The Subagents the Session lists, selecting one opens its Feed in the sheet or the Inspector tab.
   subagents: SubagentListProps | undefined;
@@ -32,7 +28,6 @@ interface WorkPanels {
 }
 
 type WorkProps = SessionInspectorContent & {
-  composer: ComposerProps;
   feed: FeedProps;
 };
 
@@ -61,29 +56,22 @@ const panelOpening =
   (open: boolean): void =>
     open ? panels.select(panel) : panels.close(panel);
 
-// Where a panel's pill and sheet live: this Composer, and the sheet the pill opens.
-const workHome = (
-  composer: ComposerProps,
+const sheetState = (
   panels: SessionPanels,
-  { panel, phoneVisible }: { panel: string; phoneVisible: boolean },
-): WorkHome => ({
-  composer,
-  sheet: {
-    open: phoneVisible && panels.state.shown === panel,
-    onOpenChange: panelOpening(panels, panel),
-  },
+  panel: string,
+  phoneVisible: boolean,
+): WorkSheet => ({
+  open: phoneVisible && panels.state.shown === panel,
+  onOpenChange: panelOpening(panels, panel),
 });
 
-// A sheet opens on its list, so closing it closes the Subagent's Feed too.
-const closingFeed = (home: WorkHome, closeFeed: () => void): WorkHome => ({
-  ...home,
-  sheet: {
-    ...home.sheet,
-    onOpenChange: (open) => {
-      home.sheet.onOpenChange(open);
+// A sheet opens on its list, so closing it closes the Agent's Feed too.
+const closingFeed = (sheet: WorkSheet, closeFeed: () => void): WorkSheet => ({
+  ...sheet,
+  onOpenChange: (open) => {
+    sheet.onOpenChange(open);
 
-      if (!open) closeFeed();
-    },
+    if (!open) closeFeed();
   },
 });
 
@@ -91,23 +79,12 @@ interface SubagentParts {
   selection: SubagentSelection;
   // What a Feed row asks for: the panel opened, then the Subagent it names.
   open: OpenSubagent;
-  sheet: WorkPresentation;
+  sheet: ReactNode;
 }
 
 // The Subagents list with the open Subagent's Feed, which the sheet pushes over it.
 const listWithFeed = (selection: SubagentSelection): SubagentWork | undefined =>
   selection.list && { ...selection.list, feed: selection.page };
-
-function subagentHome(
-  composer: ComposerProps,
-  panels: SessionPanels,
-  { close, phoneVisible }: { close: () => void; phoneVisible: boolean },
-): WorkHome {
-  return closingFeed(
-    workHome(composer, panels, { panel: 'subagents', phoneVisible }),
-    close,
-  );
-}
 
 function useSubagentWork(
   props: WorkProps,
@@ -116,64 +93,39 @@ function useSubagentWork(
 ): SubagentParts {
   const selection = useSubagentSelection(props);
 
-  const home = subagentHome(props.composer, panels, {
-    close: selection.close,
-    phoneVisible,
-  });
+  const state = closingFeed(
+    sheetState(panels, 'subagents', phoneVisible),
+    selection.close,
+  );
 
-  return useSubagentParts(selection, home);
-}
-
-function useSubagentParts(
-  selection: SubagentSelection,
-  home: WorkHome,
-): SubagentParts {
-  const sheet = useWorkSheet(subagentsPanel, listWithFeed(selection), home);
-  const open = useOpenSubagent(selectSubagent(selection.list, home.sheet));
+  const sheet = subagentsSheet(listWithFeed(selection), state);
+  const open = useOpenSubagent(selectSubagent(selection.list, state));
 
   return { selection, open, sheet };
 }
 
-/*
- * The Session's Subagents and Shells: a Composer pill and a sheet each on a phone, the Inspector's
- * tabs when wide. The pills chain, so the Composer carries both.
- */
+// Workbench and Feed entry points share the Session's Inspector panels.
 export function useWorkPanels(
   props: WorkProps,
   panels: SessionPanels,
   phoneVisible: boolean,
 ): WorkPanels {
-  const { selection, open, sheet } = useSubagentWork(
-    props,
-    panels,
-    phoneVisible,
+  const agents = useSubagentWork(props, panels, phoneVisible);
+
+  const shells = shellsSheet(
+    props.shells,
+    sheetState(panels, 'shells', phoneVisible),
   );
 
-  const shells = useShellWork(props, panels, { sheet, phoneVisible });
-
-  return workParts(props, { selection, open, sheet }, shells);
-}
-
-function useShellWork(
-  props: WorkProps,
-  panels: SessionPanels,
-  { sheet, phoneVisible }: { sheet: WorkPresentation; phoneVisible: boolean },
-): WorkPresentation {
-  const home = workHome(sheet.composer, panels, {
-    panel: 'shells',
-    phoneVisible,
-  });
-
-  return useWorkSheet(shellsPanel, props.shells, home);
+  return workParts(props, agents, shells);
 }
 
 function workParts(
   props: WorkProps,
   subagent: SubagentParts,
-  shells: WorkPresentation,
+  shells: ReactNode,
 ): WorkPanels {
   return {
-    composer: shells.composer,
     feed: feedWithSubagents(props.feed, props.subagents, subagent.open),
     subagents: subagent.selection.list,
     openSubagentFeed: subagent.selection.open,

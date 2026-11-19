@@ -33,7 +33,10 @@ const fullHeight = (detents: SheetProps['detents']): boolean =>
 
 // The web sheet's content, in a drawer or a popover: its pages, then the footer under them.
 export function SheetPanel(
-  props: PresentationProps & { hideRootTitle?: boolean },
+  props: PresentationProps & {
+    hideRootTitle?: boolean;
+    onRootClose?: () => void;
+  },
 ): ReactElement {
   return (
     <ReactContent>
