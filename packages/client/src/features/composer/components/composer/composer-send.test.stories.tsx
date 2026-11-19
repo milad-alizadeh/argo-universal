@@ -84,6 +84,48 @@ export const RunningWithoutStop: Story = {
   },
 };
 
+const queueingTurn = (text: string): Story['args'] => ({
+  draft: { text, attachments: [] },
+  queueWhileRunning: true,
+  onStop: fn(),
+});
+
+const renderRunning: Story['render'] = (args) => (
+  <Composer
+    {...composerProps({ ...args, sessionStarted: true, running: true })}
+  />
+);
+
+// While a turn runs with nothing written, the one button is Stop.
+export const RunningEmptyDraftShowsOnlyStop: Story = {
+  render: renderRunning,
+  args: queueingTurn(''),
+  play: async ({ canvas, args }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Stop' }));
+    await expect(args.onStop).toHaveBeenCalled();
+
+    for (const name of ['Send', 'Queue'])
+      await expect(
+        canvas.queryByRole('button', { name }),
+      ).not.toBeInTheDocument();
+  },
+};
+
+// A written draft turns the one button into Queue, with Send's arrow, in Stop's place.
+export const RunningDraftShowsOnlyQueue: Story = {
+  render: renderRunning,
+  args: queueingTurn('Then run the tests.'),
+  play: async ({ canvas, args }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Queue' }));
+    await expect(args.onSend).toHaveBeenCalledWith(args.draft);
+
+    for (const name of ['Send', 'Stop'])
+      await expect(
+        canvas.queryByRole('button', { name }),
+      ).not.toBeInTheDocument();
+  },
+};
+
 // With the queue paused and nothing written, Send resumes the queue rather than sending an empty Prompt.
 export const SendResumesPausedQueue: Story = {
   render: (args) => (

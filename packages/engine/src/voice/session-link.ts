@@ -9,18 +9,18 @@ export type SessionHappening =
   | { type: 'agent.message'; id: string; text: string }
   // The person typed a Prompt to the Session.
   | { type: 'person.typed'; text: string }
-  // A Prompt the Voice call sent reached the Feed, in the Turn it started or was steered into.
-  | { type: 'voice.prompted'; turnId: string | null }
   // A Turn ended; `error` is the message of a Turn that failed.
-  | {
-      type: 'turn.ended';
-      turnId: string | null;
-      stopReason: string;
-      error: string | null;
-    };
+  | { type: 'turn.ended'; stopReason: string; error: string | null };
 
-// How a request for work reached the Session: it started a Turn or waits behind running work.
-export type PromptOutcome = 'started' | 'queued';
+/*
+ * How a request for work reached the Session: it started a Turn, was steered into the running one, or waits behind
+ * running work; `notSteered` says why a Prompt that could have steered waits instead. `ended` settles, and never
+ * rejects, once the Turn holding the Prompt ended or the Prompt left the queue without one.
+ */
+export type PromptOutcome = { ended: Promise<unknown> } & (
+  | { status: 'started' | 'steered' }
+  | { status: 'queued'; notSteered: string | null }
+);
 
 // A Notice the call writes into its Session's Feed.
 export interface VoiceNotice {

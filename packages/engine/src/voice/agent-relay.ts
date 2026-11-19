@@ -10,7 +10,7 @@ import type {
 
 type Speak = (say: VoiceSay) => void;
 
-// What the relay reports back to the call: what the voice should be told, and whether a Turn it started is running.
+// What the relay reports back to the call: what the voice should be told, and whether a Prompt it sent is still at work.
 export interface RelayReports {
   speak: Speak;
   turnsRunning: (running: boolean) => void;
@@ -28,10 +28,8 @@ const freshTurn = (): TurnMemory => ({ resultSent: false, last: null });
 export class AgentRelay {
   private instructed = false;
   private turn = freshTurn();
-  // Prompts the call sent that have not reached the Feed yet.
-  private unseen = 0;
-  // The Turns the call's Prompts are in, until each ends; a Turn the person typed is never in it.
-  private readonly turns = new Set<string | null>();
+  // Prompts the call sent whose Turn has not ended, queued ones included; the Session says when each is done.
+  private atWork = 0;
 
   public constructor(
     private readonly sessions: VoiceSessions,
@@ -41,15 +39,15 @@ export class AgentRelay {
 
   // The person asked for work: the Agent gets it, and the voice an answer at once.
   public async request(requestId: string, text: string): Promise<void> {
-    // Counted before the Prompt settles: a quick Turn may end before the send is answered.
-    this.sentChanged(() => (this.unseen += 1));
+    // Counted before the Prompt is answered, so the call never idles between the request and its Turn.
+    this.sentChanged(() => (this.atWork += 1));
 
     const answer = await this.sessions
       .prompt(this.sessionId, this.promptText(text))
       .then(
-        (outcome: PromptOutcome) => relayWords[outcome],
+        (outcome: PromptOutcome) => this.sent(outcome),
         (error: Error) => {
-          this.sentChanged(() => (this.unseen -= 1));
+          this.done();
 
           return relayWords.unsent(error.message);
         },
@@ -60,9 +58,22 @@ export class AgentRelay {
 
   public happened(happening: SessionHappening): void {
     if (happening.type === 'turn.ended') this.turnEnded(happening);
-    else if (happening.type === 'voice.prompted')
-      this.prompted(happening.turnId);
     else this.said(happening);
+  }
+
+  // What the voice is told of a Prompt that reached the Session; it stays at work until the Session says its Turn ended.
+  private sent(outcome: PromptOutcome): string {
+    void outcome.ended.then(() => this.done());
+
+    if (outcome.status !== 'queued') return relayWords[outcome.status];
+
+    return outcome.notSteered === null
+      ? relayWords.queued
+      : relayWords.notSteered(outcome.notSteered);
+  }
+
+  private done(): void {
+    this.sentChanged(() => (this.atWork -= 1));
   }
 
   private said(
@@ -76,7 +87,7 @@ export class AgentRelay {
   }
 
   private get running(): boolean {
-    return this.unseen > 0 || this.turns.size > 0;
+    return this.atWork > 0;
   }
 
   // Applies a change to what the call has running and reports it when it flips.
@@ -85,13 +96,6 @@ export class AgentRelay {
     change();
 
     if (before !== this.running) this.reports.turnsRunning(this.running);
-  }
-
-  private prompted(turnId: string | null): void {
-    this.sentChanged(() => {
-      this.unseen = Math.max(0, this.unseen - 1);
-      this.turns.add(turnId);
-    });
   }
 
   private promptText(request: string): string {
@@ -131,7 +135,6 @@ export class AgentRelay {
   ): void {
     const { resultSent, last } = this.turn;
     this.turn = freshTurn();
-    this.sentChanged(() => this.turns.delete(ended.turnId));
 
     if (!resultSent && last) this.tell(last, 'speak');
     this.tell(endingText(ended), endingDelivery(ended, told(resultSent, last)));

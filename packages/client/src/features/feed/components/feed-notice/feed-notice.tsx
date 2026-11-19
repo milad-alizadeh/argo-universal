@@ -48,6 +48,7 @@ const noticeProps = (row: Notice): NoticeMessageProps => ({
   severity: row.severity,
   title: row.title,
   description: row.description,
+  markdownDescription: row.severity === 'warning',
   excerpt: isKnownSeverity(row.severity)
     ? undefined
     : `Unknown severity: ${row.severity}`,

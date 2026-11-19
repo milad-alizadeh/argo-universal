@@ -4,6 +4,7 @@ import { expect } from '../fixtures';
 import { expectListedAgent } from './agents';
 import { requests } from './conversation-requests';
 import { Given, Then, When } from './fixtures';
+import { submitButton } from './new-session';
 
 const promptMethod = 'session/prompt';
 
@@ -16,9 +17,7 @@ When(
   async ({ page }, text: string): Promise<void> => {
     const field = page.getByRole('textbox', messageField);
     await field.fill(text);
-    await expect(
-      page.getByRole('button', { name: 'Send', exact: true }),
-    ).toBeEnabled();
+    await expect(submitButton(page)).toBeEnabled();
     await field.press('Meta+Enter');
     await expect(field).toHaveText('');
   },
@@ -31,9 +30,7 @@ When(
   async ({ page }, text: string): Promise<void> => {
     const field = page.getByRole('textbox', messageField);
     await field.fill(text);
-    await expect(
-      page.getByRole('button', { name: 'Send', exact: true }),
-    ).toBeEnabled();
+    await expect(submitButton(page)).toBeEnabled();
     await field.press('Meta+Enter');
   },
 );
