@@ -89,7 +89,7 @@ function beforeStop(input: HookInput): number {
   if (files.length === 0) return 0;
   format(files);
 
-  return block(checkChanged(files));
+  return block([...checkChanged(files)]);
 }
 
 const COMMANDS = new Set(['after-edit', 'before-stop']);

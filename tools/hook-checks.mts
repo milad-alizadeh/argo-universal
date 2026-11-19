@@ -146,7 +146,7 @@ export const changedFiles = (base: string): string[] =>
   readableFiles(changedPaths(base));
 
 // Type-aware lint on the changed files, and the affected type checks when TypeScript changed.
-export function checkChanged(files: string[]): Result[] {
+export function* checkChanged(files: string[]): Generator<Result> {
   const linted = files.filter((name): boolean => LINTED_FILE.test(name));
 
   const lintRun = {
@@ -155,10 +155,10 @@ export function checkChanged(files: string[]): Result[] {
     skipped: new Set<string>(),
   };
 
-  const lints = linted.length > 0 ? [lint(lintRun)] : [];
+  if (linted.length > 0) yield lint(lintRun);
   const typed = files.some((name): boolean => TYPESCRIPT_FILE.test(name));
 
-  return typed ? [...lints, checkTypes()] : lints;
+  if (typed) yield checkTypes();
 }
 
 export const failedChecks = (results: Result[]): Result[] =>
