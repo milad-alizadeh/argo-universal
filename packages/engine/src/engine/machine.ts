@@ -172,8 +172,8 @@ export const engineMachine = engineSetup.createMachine({
         },
         stopping: {
           entry: [
-            'closeCommandAdmission',
             'stopVoice',
+            'closeCommandAdmission',
             'stopTurns',
             'stopRegistry',
           ],
