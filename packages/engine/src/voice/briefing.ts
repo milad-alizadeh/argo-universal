@@ -6,7 +6,6 @@ import {
   type FeedRowWrite,
   hydrateStoredFeedRow,
   storedFeedColumns,
-  withoutVoiceMarkers,
 } from '../feed';
 
 // About 5,000 tokens at four characters a token.
@@ -27,10 +26,10 @@ const textOf = (row: SessionUpdate): string =>
         .trim()
     : '';
 
-// One line of the transcript: who said it and what, without voice marks.
+// One line of the transcript: who said it and what.
 const lineOf = (row: SessionUpdate): string | undefined => {
   const speaker = speakers[row.sessionUpdate];
-  const text = speaker && textOf(withoutVoiceMarkers(row));
+  const text = speaker && textOf(row);
 
   return text ? `${speaker}: ${text}` : undefined;
 };

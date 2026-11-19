@@ -5,7 +5,7 @@ import type { Observer, Subscription } from 'xstate';
 import { type FeedRowSources } from './feed-catch-up';
 import { readWrittenRow } from './feed-row';
 import { readQueuedFeedRow } from './feed-storage';
-import { withoutVoiceMarkers } from './voice-markers';
+import { readFeedMemory } from './merged-rows';
 
 export { streamFeed } from './feed-stream';
 
@@ -44,15 +44,17 @@ export function readFeedRow(
       message: `No row ${id} in Session ${sessionId}`,
     });
 
-  return withoutVoiceMarkers(newest);
+  return newest;
 }
 
 function findNewestRow(
   resources: Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'>,
   { sessionId, id }: FeedRowInput,
 ): SessionUpdate | undefined {
+  const inMemory = readFeedMemory(resources.findFeed(sessionId));
+
   return (
-    resources.findFeed(sessionId)?.getSnapshot().context.rows[id] ??
+    inMemory.find((row) => row.id === id) ??
     readWrittenRow({
       database: resources.database,
       pending: readQueuedFeedRow(resources.findWriter(), { sessionId, id }),

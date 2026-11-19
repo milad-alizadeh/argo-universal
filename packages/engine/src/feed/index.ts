@@ -26,7 +26,7 @@ export type { FeedDeps } from './feed';
 
 export { readFeedRow } from './feed';
 
-export { readFeedRows } from './merged-rows';
+export { readFeedMemory, readFeedRows } from './merged-rows';
 
 export {
   committedTurnEndings,
@@ -83,7 +83,7 @@ export { toolCallEvent } from './tool-call-event';
 export { nativePermissionOutcomeEvent } from './native-permission-outcome';
 
 export {
-  readVoiceMarker,
-  withoutVoiceMarkers,
-  type VoiceMarker,
+  readVoiceMessage,
+  voiceInstruction,
+  type VoiceMessage,
 } from './voice-markers';

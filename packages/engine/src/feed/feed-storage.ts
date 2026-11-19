@@ -6,6 +6,7 @@ import {
 } from '../storage';
 import { newestRows } from './feed-row';
 import { turnEndingsOf, type CommittedTurnEnding } from './turn-settlement';
+import { withoutVoiceMarkers } from './voice-markers';
 
 // One Session's Feed rows a job writes, and the revision it advances that Session to.
 export type QueuedFeedRows = {
@@ -37,7 +38,7 @@ export type QueuedFeed = Omit<QueuedFeedRows, 'sessionId'> & {
   highestPosition: number;
 };
 
-// The Feed rows of one Session the Writer holds but has not committed, newest revision of each.
+// The Feed rows of one Session the Writer holds but has not committed, newest revision of each, without Voice marks.
 export const readQueuedFeed = (
   writer: WriterActorRef | undefined,
   sessionId: string,
@@ -49,7 +50,7 @@ export const readQueuedFeed = (
   const rows = batches.flatMap((batch): SessionUpdate[] => batch.rows);
 
   return {
-    rows: [...newestRows(rows).values()],
+    rows: [...newestRows(rows).values()].map(withoutVoiceMarkers),
     maxRevision: Math.max(0, ...batches.map((batch) => batch.maxRevision)),
     highestPosition: Math.max(-1, ...rows.map((row) => row.position)),
   };

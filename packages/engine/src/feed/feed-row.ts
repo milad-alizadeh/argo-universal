@@ -3,6 +3,7 @@ import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { and, eq, getTableColumns, max, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { withoutVoiceMarkers } from './voice-markers';
 
 export { outputBlobsOf, promptBlobIds } from './row-blobs';
 
@@ -69,7 +70,7 @@ function checkStoredRow(row: FeedRowWrite): void {
   JSON.parse(z.string().nullish().parse(row.sourceRef) ?? 'null');
 }
 
-// A stored row as a Session update, checked against its kind; a row from another payload version, or with envelope fields in its payload, fails.
+// A stored row as a Session update, checked against its kind and read without Voice marks; a row from another payload version, or with envelope fields in its payload, fails.
 export function hydrateStoredFeedRow(
   sessionId: string,
   row: FeedRowWrite,
@@ -87,7 +88,7 @@ export function hydrateStoredFeedRow(
 
   if (clash) throw new Error(`row ${row.id} has ${clash} in its payload`);
 
-  return SessionUpdate.parse({ ...payload, ...envelope });
+  return withoutVoiceMarkers(SessionUpdate.parse({ ...payload, ...envelope }));
 }
 
 // The newest version of a row the feed actor handed to the database writer, queued or stored.

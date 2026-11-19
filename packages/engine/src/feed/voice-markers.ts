@@ -2,27 +2,50 @@ import type { ContentBlock, SessionUpdate } from '@repo/contracts';
 
 /*
  * The marks an Agent puts at the start of a message on a Voice call (ADR-0063): progress, a result, or silent analysis.
- * They are for the voice, not the reader: the Feed strips them whenever it is read for drawing, and stored text keeps them.
+ * They are for the voice, not the reader. The Feed reads every stored, queued or in-memory row without them, so no
+ * reader has to remember to; only the Feed's live changes, which the voice hears, still carry them.
  */
 const voiceMarkers = ['[STATUS]', '[COMPLETE]', '[ANALYSIS]'] as const;
 
-export type VoiceMarker = (typeof voiceMarkers)[number];
+type VoiceMarker = (typeof voiceMarkers)[number];
 
-export type MarkedText = { marker: VoiceMarker | null; body: string };
+// What the first Prompt of a call asks of the Agent, so the voice can tell progress from a result.
+export const voiceInstruction = [
+  'A person is talking to you through a voice, and the voice reads your messages aloud.',
+  'Begin every message with one mark:',
+  '[STATUS] for progress the person may hear while you work,',
+  '[COMPLETE] for the result, a question, or a blocker once you are done,',
+  '[ANALYSIS] for notes that must stay silent.',
+  'Keep spoken messages short and plain; do not read out code or tool output.',
+  'End the call by running the Argo Operation voice.hangUp, but only when the person clearly says they are done with the call, such as goodbye or hang up.',
+  'Do not end it when the person asks you to stop work, pause or wait: that is not the end of the call.',
+].join('\n');
+
+// What an Agent message is to the voice, and its text without the mark; a message without a mark is progress.
+export type VoiceMessage = {
+  kind: 'progress' | 'result' | 'analysis';
+  body: string;
+};
+
+const kinds: Record<VoiceMarker, VoiceMessage['kind']> = {
+  '[STATUS]': 'progress',
+  '[COMPLETE]': 'result',
+  '[ANALYSIS]': 'analysis',
+};
 
 const markerOf = (text: string): VoiceMarker | undefined =>
   voiceMarkers.find((marker) => text.startsWith(marker));
 
-// The mark a message starts with, and the message without it and the space after it.
-export function readVoiceMarker(text: string): MarkedText {
+// What a message is to the voice; the body drops the mark and the space after it.
+export function readVoiceMessage(text: string): VoiceMessage {
   const marker = markerOf(text);
 
   return marker
-    ? { marker, body: text.slice(marker.length).trimStart() }
-    : { marker: null, body: text };
+    ? { kind: kinds[marker], body: text.slice(marker.length).trimStart() }
+    : { kind: 'progress', body: text };
 }
 
-const stripVoiceMarker = (text: string): string => readVoiceMarker(text).body;
+const stripVoiceMarker = (text: string): string => readVoiceMessage(text).body;
 
 const firstText = (content: readonly ContentBlock[]): string | undefined => {
   const [first] = content;
@@ -39,7 +62,7 @@ const withFirstText = (
   return first?.type === 'text' ? [{ ...first, text }, ...rest] : content;
 };
 
-// A row as the Feed draws it: an Agent message without its mark; any other row as it is.
+// A row as it is read: an Agent message without its mark; any other row as it is.
 export function withoutVoiceMarkers<Row extends SessionUpdate>(row: Row): Row {
   if (row.sessionUpdate !== 'agent_message') return row;
   const text = firstText(row.content);
@@ -81,7 +104,7 @@ export class VoiceMarkerStream {
       this.mode = 'trim';
       this.held = '';
 
-      return this.trim(readVoiceMarker(head).body);
+      return this.trim(stripVoiceMarker(head));
     }
 
     if (voiceMarkers.some((marker) => marker.startsWith(head))) {

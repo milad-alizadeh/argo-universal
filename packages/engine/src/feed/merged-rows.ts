@@ -6,6 +6,7 @@ import {
   type FeedRowWrite,
 } from './feed-row';
 import { readQueuedFeed } from './feed-storage';
+import { withoutVoiceMarkers } from './voice-markers';
 
 type FeedRowsRead<Kept extends SessionUpdate> = {
   // The rows the caller read from `feed_row`, not yet hydrated.
@@ -19,6 +20,18 @@ type ReadRows<Row extends SessionUpdate> = {
   rejected: unknown[];
 };
 
+type FeedMemory = {
+  getSnapshot: () => { context: { rows: Record<string, SessionUpdate> } };
+};
+
+// The rows a Feed actor holds in memory, read as stored and queued rows are: without Voice marks.
+export const readFeedMemory = (
+  feed: FeedMemory | undefined,
+): SessionUpdate[] =>
+  Object.values(feed?.getSnapshot().context.rows ?? {}).map(
+    withoutVoiceMarkers,
+  );
+
 // The newest copy of each kept row across stored, queued and live: the higher revision wins (ADR-0007).
 export function readFeedRows<Kept extends SessionUpdate>(
   sources: Pick<FeedRowSources, 'findFeed' | 'findWriter'>,
@@ -27,8 +40,8 @@ export function readFeedRows<Kept extends SessionUpdate>(
 ): ReadRows<Kept> {
   const hydrated = hydrateRows(sessionId, stored);
   const queued = readQueuedFeed(sources.findWriter(), sessionId).rows;
-  const live = sources.findFeed(sessionId)?.getSnapshot().context.rows ?? {};
-  const rows = [...hydrated.rows, ...queued, ...Object.values(live)];
+  const live = readFeedMemory(sources.findFeed(sessionId));
+  const rows = [...hydrated.rows, ...queued, ...live];
 
   return {
     rows: [...newestRows(rows).values()].filter(keep),
