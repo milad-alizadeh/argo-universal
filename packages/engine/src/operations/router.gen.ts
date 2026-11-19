@@ -577,6 +577,28 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      listDevices: publicProcedure
+        .input(operations['voice.listDevices'].params)
+        .output(operations['voice.listDevices'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.listDevices',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      chooseDevices: publicProcedure
+        .input(operations['voice.chooseDevices'].params)
+        .output(operations['voice.chooseDevices'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'voice.chooseDevices',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
     }),
     plugin: router({
       list: publicProcedure

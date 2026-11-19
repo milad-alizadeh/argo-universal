@@ -5,6 +5,7 @@ import {
   browserVoiceEnvironment,
 } from './browser-voice-environment';
 import { followCall } from './follow-call';
+import { useReportedVoiceDevices } from './use-reported-voice-devices';
 import { useVoiceStatus } from './use-voice-status';
 import type { VoiceConnection } from './voice-connection';
 import { VoiceConnectionProvider } from './voice-connection-context';
@@ -49,7 +50,7 @@ function ServerVoiceHost(props: Omit<HostProps, 'status'>): JSX.Element {
   return <VoiceConnectionHost {...props} status={useVoiceStatus()} />;
 }
 
-// Hands the connection this Device's chosen microphone and speaker, at start and whenever Settings changes them.
+// Hands the connection this Device's chosen microphone and speaker, at start and whenever Settings or the Server changes them.
 function FollowsDeviceChoice({
   connection,
 }: {
@@ -57,6 +58,7 @@ function FollowsDeviceChoice({
 }): null {
   const { choice } = useVoiceDeviceChoice();
 
+  useReportedVoiceDevices();
   useEffect(() => void connection.chooseDevices(choice), [connection, choice]);
 
   return null;

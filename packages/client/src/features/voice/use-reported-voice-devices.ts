@@ -1,0 +1,26 @@
+import { useSubscription } from '@trpc/tanstack-react-query';
+import { useMemo } from 'react';
+import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
+import { useAudioDevices } from './use-voice-devices';
+import { useVoiceDeviceChoice } from './voice-device-choice';
+import { deviceReportOf, onDeviceRequest } from './voice-device-report';
+
+// Reports this Device's microphones and speakers to the Server again whenever they or the choice change (ADR-0063).
+export function useReportedVoiceDevices(): void {
+  const trpc = useTRPC();
+  const devices = useAudioDevices(true);
+  const { choice, choose } = useVoiceDeviceChoice();
+
+  const report = useMemo(
+    () => deviceReportOf(devices, choice),
+    [devices, choice],
+  );
+
+  const subscription = useSubscription(
+    trpc.voice.devices.subscriptionOptions(report, {
+      onData: onDeviceRequest(choose),
+    }),
+  );
+
+  useResubscribeOnReconnect(subscription);
+}

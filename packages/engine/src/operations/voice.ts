@@ -17,6 +17,8 @@ type VoiceImplementations = Pick<
   | 'voice.setInstructions'
   | 'voice.setCallOptions'
   | 'voice.preview'
+  | 'voice.listDevices'
+  | 'voice.chooseDevices'
 >;
 
 // A call starts in its Session, opened first if it is not, as after a Server restart.
@@ -58,6 +60,17 @@ const choiceOperations = ({
   'voice.setCallOptions': (change) => choices.setCallOptions(change),
 });
 
+// The microphone and speaker of the App a call uses.
+const deviceOperations = ({
+  devices,
+}: VoiceCallsPort): Pick<
+  VoiceImplementations,
+  'voice.listDevices' | 'voice.chooseDevices'
+> => ({
+  'voice.listDevices': () => Promise.resolve(devices.list()),
+  'voice.chooseDevices': (change) => Promise.resolve(devices.choose(change)),
+});
+
 export function createVoiceOperations(
   voice: VoiceCallsPort,
   sessions: Pick<Sessions, 'open'>,
@@ -69,5 +82,6 @@ export function createVoiceOperations(
     'voice.end': ({ sessionId }) => Promise.resolve(voice.end(sessionId)),
     'voice.hangUp': ({ sessionId }) => Promise.resolve(voice.hangUp(sessionId)),
     ...choiceOperations(voice),
+    ...deviceOperations(voice),
   };
 }

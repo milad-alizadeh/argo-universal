@@ -149,6 +149,8 @@ const targetRules = {
   'plugin.getSettings': global,
   'plugin.setSetting': global,
   'voice.status': global,
+  'voice.listDevices': global,
+  'voice.chooseDevices': global,
   'voice.start': sessionParam,
   'voice.getSettings': global,
   'voice.setSettings': global,

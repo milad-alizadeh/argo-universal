@@ -19,30 +19,15 @@ import type { VoiceSessions } from './session-link';
 import { unavailable } from './unavailable';
 import { answerOf, startSettled } from './voice-call-answer';
 import { requireNoCall, requireRoom } from './voice-call-room';
-import { VoiceChoices, type VoiceChoicesPort } from './voice-choices';
+import type { VoiceCallsPort } from './voice-calls-port';
+import { VoiceChoices } from './voice-choices';
+import { VoiceDevices } from './voice-devices';
 import { VoicePreviews } from './voice-previews';
 import type { VoiceSettingsStore } from './voice-settings';
 
-type CallStart = Extract<VoiceCallEvent, { type: 'call.start' }>;
+export type { VoiceCallsPort } from './voice-calls-port';
 
-// What the App and Operations ask of the Voice call: start it, end it, read it, watch it.
-export interface VoiceCallsPort {
-  status: () => Promise<VoiceStatus>;
-  start: (
-    input: VoiceStartInput,
-    connection?: AbortSignal,
-  ) => Promise<VoiceStartOutput>;
-  end: (sessionId?: string) => VoiceEndOutput;
-  // An Agent ends its Session's call; refused when the Session has no call.
-  hangUp: (sessionId?: string) => VoiceEndOutput;
-  watch: (signal: AbortSignal) => AsyncGenerator<VoiceStatus>;
-  // Gives the call the Sessions it sends Prompts to and listens to.
-  attach: (sessions: VoiceSessions) => void;
-  // Settings › Voice: what the person chose and can choose from, and changing it; the next call uses it.
-  choices: VoiceChoicesPort;
-  // Settings › Voice: one greeting in a voice, played while no call runs.
-  preview: (input: VoicePreviewInput) => Promise<VoicePreviewOutput>;
-}
+type CallStart = Extract<VoiceCallEvent, { type: 'call.start' }>;
 
 const namesSession = (
   sessionId: string | undefined,
@@ -52,6 +37,9 @@ const namesSession = (
 // The Voice call machine behind its Operations: it checks what can be refused before the machine is asked.
 export class VoiceCalls implements VoiceCallsPort {
   public readonly choices: VoiceChoices;
+  public readonly devices = new VoiceDevices(
+    () => this.actor.getSnapshot().context.call?.connection ?? null,
+  );
   private readonly previews = new VoicePreviews();
 
   public constructor(
@@ -92,6 +80,7 @@ export class VoiceCalls implements VoiceCallsPort {
     await this.requireStartable(input.sessionId);
     connection?.throwIfAborted();
     this.previews.end();
+    this.devices.used(connection);
     const event = await this.callStart(input, connection);
     this.actor.send(event);
 

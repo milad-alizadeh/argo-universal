@@ -5,6 +5,8 @@ import { CustomVoice, VoiceOption } from './voices';
 
 export * from './call-options';
 
+export * from './devices';
+
 export * from './voices';
 
 // How far a running Voice call has come: the Voice provider has the App's offer and answered, then reports the call joined.

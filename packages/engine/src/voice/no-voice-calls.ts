@@ -2,6 +2,7 @@ import type { VoiceStatus } from '@repo/contracts';
 import { unavailable } from './unavailable';
 import type { VoiceCallsPort } from './voice-calls';
 import { settingsOf } from './voice-choices';
+import { VoiceDevices } from './voice-devices';
 import { defaultVoiceSettings } from './voice-settings';
 
 const notAvailable = 'Voice calls are not available';
@@ -36,6 +37,7 @@ export const noVoiceCalls: VoiceCallsPort = {
     setInstructions: refused,
     setCallOptions: refused,
   },
+  devices: new VoiceDevices(() => null),
   preview: () => Promise.reject(unavailable(notAvailable)),
   watch: async function* () {
     await Promise.resolve();

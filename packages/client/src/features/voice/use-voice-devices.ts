@@ -17,7 +17,7 @@ type VoiceDeviceControls = {
 };
 
 // The microphones and speakers plugged in now, listed again when one comes or goes.
-function useAudioDevices(watching: boolean): AudioDevices {
+export function useAudioDevices(watching: boolean): AudioDevices {
   const [devices, setDevices] = useState(noAudioDevices);
 
   useEffect(
