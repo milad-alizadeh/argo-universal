@@ -5,6 +5,7 @@ const stopVerbs = 'stop|cancel|halt';
 
 // Words around a stop that add no request of their own: "OK, stop working now, please".
 const leadIns = '(?:ok|okay|hey|please) ';
+
 const trailers = `it|that|this|working|work|now|please|everything|${stopVerbs}`;
 
 // A whole utterance that asks only to stop: a stop verb, with at most a few lead-in and trailing words that ask nothing else.
