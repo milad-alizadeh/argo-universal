@@ -8,6 +8,7 @@ import { page } from 'vitest/browser';
 import { ChangeRow } from './change-row';
 import {
   checksOverflowChangeRow,
+  duplicateChecksChangeRow,
   rateLimitedChangeRow,
 } from './change-row-fixtures';
 
@@ -75,6 +76,27 @@ export const RateLimited: Story = {
     await expect(await screen.findByRole('tooltip')).toHaveTextContent(
       'GitHub rate limit reached',
     );
+  },
+};
+
+// Two checks of one name are two rows, each with its own state.
+export const DuplicateNames: Story = {
+  args: duplicateChecksChangeRow,
+  beforeEach: async () => {
+    await settleLayout(1280);
+  },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: /CI Checks 1\/2/ }),
+    );
+    const popover = await screen.findByRole('dialog', { name: 'CI Checks' });
+    await settleOverlays(popover);
+
+    await expect(
+      within(popover).getAllByText('End-to-end tests (Electron)'),
+    ).toHaveLength(2);
+    await expect(within(popover).getByText('Failing')).toBeVisible();
+    await expect(within(popover).getByText('Passed')).toBeVisible();
   },
 };
 
