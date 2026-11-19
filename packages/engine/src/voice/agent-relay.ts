@@ -1,10 +1,9 @@
-import type { VoiceReadOut } from '@repo/contracts';
 import {
-  readVoiceMessage,
+  readVoiceSections,
   withVoiceInstruction,
   type VoiceMessage,
 } from '../feed';
-import type { VoiceSay } from './call-types';
+import type { RelayCall, VoiceSay } from './call-types';
 import { inPieces } from './pieces';
 import type { VoiceDelivery } from './provider';
 import { relayWords } from './relay-words';
@@ -13,6 +12,11 @@ import type {
   SessionHappening,
   VoiceSessions,
 } from './session-link';
+import {
+  isPermissionHappening,
+  WaitingPermission,
+  type PermissionHappening,
+} from './waiting-permission';
 
 type Speak = (say: VoiceSay) => void;
 
@@ -20,12 +24,6 @@ type Speak = (say: VoiceSay) => void;
 export interface RelayReports {
   speak: Speak;
   turnsRunning: (running: boolean) => void;
-}
-
-// The call a relay serves: its Session, and whether the voice hears the Agent's progress during a Turn or only its answer.
-export interface RelayCall {
-  sessionId: string;
-  readOut?: VoiceReadOut;
 }
 
 // What the Agent said during the running Turn that the voice may still need at its end.
@@ -42,6 +40,7 @@ export class AgentRelay {
   private turn = freshTurn();
   // Prompts the call sent whose Turn has not ended, queued ones included; the Session says when each is done.
   private atWork = 0;
+  private readonly permission = new WaitingPermission();
 
   public constructor(
     private readonly sessions: VoiceSessions,
@@ -65,21 +64,21 @@ export class AgentRelay {
         },
       );
 
-    this.reply(requestId, answer);
+    this.reply(requestId, this.permission.answering(answer));
   }
 
   public happened(happening: SessionHappening): void {
-    switch (happening.type) {
-      case 'turn.ended':
-        return this.turnEnded(happening);
-      case 'permission.waiting':
-        return this.tell(
-          relayWords.permissionWaiting(happening.title),
-          'speak',
-        );
-      default:
-        return this.said(happening);
-    }
+    if (happening.type === 'turn.ended') return this.turnEnded(happening);
+
+    if (isPermissionHappening(happening))
+      return this.permissionHeard(happening);
+    this.said(happening);
+  }
+
+  private permissionHeard(happening: PermissionHappening): void {
+    const announcement = this.permission.heard(happening);
+
+    if (announcement !== null) this.tell(announcement, 'speak');
   }
 
   // What the voice is told of a Prompt that reached the Session; it stays at work until the Session says its Turn ended.
@@ -136,18 +135,16 @@ export class AgentRelay {
   }
 
   private agentSaid(text: string): void {
-    const message = readVoiceMessage(text);
-
-    if (this.readsOut(message))
-      this.tell(
-        message.body,
-        message.kind === 'result' ? 'speak' : 'background',
-      );
-    this.remember(message);
+    for (const section of readVoiceSections(text)) {
+      this.pass(section);
+      this.remember(section);
+    }
   }
 
-  private readsOut({ kind }: VoiceMessage): boolean {
-    return kind === 'result' || this.call.readOut !== 'answers';
+  // A result is spoken; progress and analysis are background, or held back when only answers are read out.
+  private pass({ kind, body }: VoiceMessage): void {
+    if (kind === 'result') this.tell(body, 'speak');
+    else if (this.call.readOut !== 'answers') this.tell(body, 'background');
   }
 
   private remember({ kind, body }: VoiceMessage): void {

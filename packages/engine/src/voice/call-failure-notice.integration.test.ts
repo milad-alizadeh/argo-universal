@@ -31,6 +31,8 @@ const input: VoiceCallInput = {
   provider: new FakeVoiceProvider(),
   briefing: () => '',
   idleMs: 60_000,
+  log: () => {},
+  now: Date.now,
 };
 
 let voice: Actor<typeof machine>;

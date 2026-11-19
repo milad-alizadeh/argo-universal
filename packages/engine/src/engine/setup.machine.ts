@@ -28,7 +28,11 @@ import {
   type WriterActorRef,
   writerMachine,
 } from '../storage';
-import { voiceCallMachine, type VoiceProvider } from '../voice';
+import {
+  voiceCallMachine,
+  voiceCallSystemId,
+  type VoiceProvider,
+} from '../voice';
 import {
   closeAgentResources,
   type CloseAcpResourcesInput,
@@ -169,8 +173,12 @@ export const engineSetup = setup({
     stopTurns: sendTo('sessions', { type: 'sessions.stopTurns' }),
     drainWriter: sendTo('databaseWriter', { type: 'writer.drain' }),
     stopRegistry: sendTo('registry', { type: 'STOP' }),
-    // The microphone is never left open behind a stopping Engine.
-    stopVoice: sendTo('voice', { type: 'call.end', reason: 'engine-stopped' }),
+    // The microphone is never left open behind a stopping Engine. Sent at once, not deferred as `sendTo` is, so the call ends as stopped before closing admission reads as its App going away.
+    stopVoice: ({ system }): void =>
+      findMachineActor(system, voiceCallSystemId, voiceCallMachine)?.send({
+        type: 'call.end',
+        reason: 'engine-stopped',
+      }),
     closeCommandAdmission: ({ context }): void =>
       context.commandAdmission.abort(),
     sendToSupervisor: (_, message: EngineMessage): void => {

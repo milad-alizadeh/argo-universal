@@ -56,3 +56,19 @@ export const voiceTurnDone =
 // The service reports audio time used, not tokens, every fifteen seconds; the allowance fields were null throughout.
 export const usageUpdated =
   '{"type":"session.usage.updated","usage":{"audio_duration_ms":11800,"backend_model_usage":[]},"usage_limit":{"status":null,"reset_seconds":null}}';
+
+/*
+ * How the live service closed calls on its own (#2405 probes, 2026-11-19). With no audio reaching it, it sent
+ * `session.closed` with `expired` about 30 s in, then dropped the link without a close frame (1006); a dropped
+ * peer connection dropped the link the same way with no `session.closed` at all. A link asked for again after either
+ * was refused with 404 `session_id_not_found`.
+ */
+export const sessionClosedFor = (reason: string): string =>
+  `{"type":"session.closed","reason":"${reason}","usage":{"audio_duration_ms":0,"backend_model_usage":[]}}`;
+
+export const sessionClosedSilently =
+  '{"type":"session.closed","usage":{"audio_duration_ms":0,"backend_model_usage":[]}}';
+
+// A session that expires at `expiresAt`, in seconds since the epoch.
+export const sessionStartedUntil = (expiresAt: number): string =>
+  `{"type":"session.started","session":{"id":"rtc_u32_EloR0p3oNNKkPmpaqCjruZBPqJQOFvS1","status":"active","expires_at":${expiresAt}}}`;

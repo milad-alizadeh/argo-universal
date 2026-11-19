@@ -114,14 +114,14 @@ export class FakeEnvironment implements VoiceEnvironment {
     return Promise.resolve(this.microphone);
   }
 
-  private refuses(device: string | null): boolean {
-    return this.refuse || (device !== null && this.missing.has(device));
-  }
-
   public openSilence(): Microphone {
     this.silence = new FakeMicrophone(null);
 
     return this.silence;
+  }
+
+  private refuses(device: string | null): boolean {
+    return this.refuse || (device !== null && this.missing.has(device));
   }
 
   public createPeer(): VoicePeer {

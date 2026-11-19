@@ -28,6 +28,12 @@ export interface CallConduct {
   readOut: VoiceReadOut;
 }
 
+// The call a relay serves: its Session, and whether the voice hears the Agent's progress during a Turn or only its answer.
+export interface RelayCall {
+  sessionId: string;
+  readOut?: VoiceReadOut;
+}
+
 export type VoiceCallEvent =
   | {
       type: 'call.start';
@@ -73,6 +79,10 @@ export interface VoiceCallInput {
   briefing: (sessionId: string) => string;
   // Overrides the idle timeout every call starts with, in milliseconds; tests shorten it.
   idleMs?: number;
+  // Writes a line to the Server's log.
+  log: (line: string) => void;
+  // The time now, in milliseconds since the epoch.
+  now: () => number;
 }
 
 export interface RunningCall {
@@ -93,6 +103,8 @@ export interface RunningCall {
   limit?: VoiceLimit;
   // The tokens the provider last reported the call has used.
   usage?: { inputTokens: number; outputTokens: number };
+  // What the provider noted about the call for the Server's log, latest last.
+  trail: string[];
 }
 
 export interface EndedCall {

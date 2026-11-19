@@ -107,6 +107,18 @@ describe('send button', () => {
     expect(shown({ ...composer(idle), sendable: false })).toBe('blocked');
   });
 
+  it('shows the pointer to another Session’s call only where the voice button would show', () => {
+    const pointing: Row = ['empty', 'elsewhere', 'idle', 'pointer'];
+    const editing = { id: 'queued', cancel: noop };
+
+    expect(shown({ ...composer(pointing), queueEdit: editing })).toBe(
+      'blocked',
+    );
+    expect(shown({ ...composer(pointing), sendable: false })).toBe('blocked');
+    expect(shown({ ...composer(pointing), disabled: true })).toBe('blocked');
+    expect(shown({ ...composer(pointing), sending: true })).toBe('sending');
+  });
+
   it('is not the voice button while sending or disabled', () => {
     expect(shown({ ...composer(idle), sending: true })).toBe('sending');
     expect(shown({ ...composer(idle), disabled: true })).toBe('blocked');

@@ -95,17 +95,30 @@ export const sessionsInput = ({
   writer: requireDatabaseWriter(self.system),
 });
 
+// A Voice provider the Engine was given, null included, or the default one.
+const voiceProviderOf = (
+  given: EngineContext['voiceProvider'],
+): VoiceCallInput['provider'] =>
+  given === undefined ? defaultVoiceProvider(process.env) : given;
+
+const voiceLogOf =
+  (home: string) =>
+  (line: string): void =>
+    writeLog({ home, label: 'voice', line });
+
 export const voiceInput = ({
   context,
 }: {
-  context: Pick<EngineContext, 'database' | 'voiceProvider' | 'voiceIdleMs'>;
+  context: Pick<
+    EngineContext,
+    'database' | 'home' | 'now' | 'voiceProvider' | 'voiceIdleMs'
+  >;
 }): VoiceCallInput => ({
-  provider:
-    context.voiceProvider === undefined
-      ? defaultVoiceProvider(process.env)
-      : context.voiceProvider,
+  provider: voiceProviderOf(context.voiceProvider),
   briefing: sessionBriefing(openDatabaseOf(context)),
   idleMs: context.voiceIdleMs,
+  log: voiceLogOf(context.home),
+  now: context.now,
 });
 
 export { serverInput } from './server-input';

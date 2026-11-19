@@ -89,6 +89,12 @@ export type VoiceSpeaker = z.infer<typeof VoiceSpeaker>;
 export const VoicePartial = z.strictObject({
   speaker: VoiceSpeaker,
   id: z.string().min(1),
+  rowId: z
+    .string()
+    .min(1)
+    .describe(
+      'The Feed row the final words are stored as, so the App draws the partial and that row as one row.',
+    ),
   text: z.string(),
 });
 

@@ -33,7 +33,7 @@ export const withoutVoiceInstruction = (prompt: string): string =>
     ? prompt.slice(instructionBreak.length)
     : prompt;
 
-// What an Agent message is to the voice, and its text without the mark; a message without a mark is progress.
+// A part of an Agent message as the voice reads it, and its text without the mark; text before any mark is progress.
 export type VoiceMessage = {
   kind: 'progress' | 'result' | 'analysis';
   body: string;
@@ -63,15 +63,37 @@ function withoutMarks(text: string, opening: boolean): string {
   return body.replaceAll(lineMarker, '$1$2');
 }
 
-// What a message is to the voice; the body drops its marks and the space after each.
-export function readVoiceMessage(text: string): VoiceMessage {
+// A section being read: its kind, and its lines so far without the mark that opened it.
+type OpenSection = { kind: VoiceMessage['kind']; lines: string[] };
+
+// The section a line opens with its mark, or none when the line carries on the one before it.
+function opensSection(line: string): OpenSection | undefined {
+  const text = line.trimStart();
   const marker = markerOf(text);
 
-  return {
-    kind: marker ? kinds[marker] : 'progress',
-    body: withoutMarks(text, true),
-  };
+  return marker && { kind: kinds[marker], lines: [text.slice(marker.length)] };
 }
+
+function addLine(sections: OpenSection[], line: string): OpenSection[] {
+  const opened = opensSection(line);
+
+  if (opened) sections.push(opened);
+  else sections.at(-1)?.lines.push(line);
+
+  return sections;
+}
+
+/*
+ * What a message is to the voice, a section at a time. A mark that opens a line starts a section that runs to the next
+ * such mark or the end of the message, so a paragraph of analysis inside a result stays silent; text before any mark
+ * is progress. Sections with nothing to say are left out.
+ */
+export const readVoiceSections = (text: string): VoiceMessage[] =>
+  text
+    .split('\n')
+    .reduce(addLine, [{ kind: 'progress', lines: [] }])
+    .map(({ kind, lines }) => ({ kind, body: lines.join('\n').trim() }))
+    .filter(({ body }) => body.length > 0);
 
 const stripVoiceMarker = (text: string): string => withoutMarks(text, true);
 

@@ -3,6 +3,13 @@ import { assertEvent, assign, sendTo, setup, type ActorRefFrom } from 'xstate';
 import { agentRelay, type RelayInput } from './agent-relay-actor';
 import { defaultConduct } from './call-conduct';
 import {
+  closeEndingOf,
+  endLogLine,
+  endNoticeOf,
+  type EndingFacts,
+  type EndParameters,
+} from './call-endings';
+import {
   runningCall,
   type RunningCall,
   type VoiceCallContext,
@@ -16,7 +23,7 @@ import type {
   VoiceProviderEvent,
 } from './provider';
 import { providerCall, type ProviderCallInput } from './provider-call';
-import { detachedSessions, type VoiceNotice } from './session-link';
+import { detachedSessions } from './session-link';
 import { isTranscript, storeTranscript, withTranscript } from './transcript';
 
 /*
@@ -26,8 +33,6 @@ import { isTranscript, storeTranscript, withTranscript } from './transcript';
  */
 
 export const voiceCallSystemId = 'voice';
-
-type EndParameters = { reason: VoiceCallEnd };
 
 const reportsStatus =
   (status: VoiceConnectionStatus) =>
@@ -44,6 +49,9 @@ const isErrorStatus = (event: VoiceProviderEvent): boolean =>
 const isErrorClose = (event: VoiceProviderEvent): boolean =>
   event.type === 'closed' && event.reason === 'error';
 
+// The most notes a call keeps for its log line; older ones fall away.
+const trailLength = 10;
+
 function providerEventOf(event: VoiceCallEvent): VoiceProviderEvent {
   assertEvent(event, 'provider.event');
 
@@ -59,6 +67,12 @@ const callIdleMs = (call: RunningCall | null): number =>
 const idleOf = (context: VoiceCallContext): number =>
   context.idleMs ?? callIdleMs(context.call);
 
+// What an ending's notice and log line say of the call: why it failed, and the idle timeout it ran with.
+const endingFactsOf = (context: VoiceCallContext): EndingFacts => ({
+  failure: context.failure,
+  idleMs: idleOf(context),
+});
+
 // A call that has only been asked for: not answered, not connected, nobody speaking.
 const newCall = (start: CallStartEvent): RunningCall => ({
   callId: start.callId,
@@ -72,11 +86,7 @@ const newCall = (start: CallStartEvent): RunningCall => ({
   speaking: false,
   agentWorking: false,
   microphoneBlocked: false,
-});
-
-const failedNotice = (description: string): VoiceNotice => ({
-  title: 'Voice call failed',
-  description,
+  trail: [],
 });
 
 const providerFailure = 'The connection to the voice failed.';
@@ -100,6 +110,9 @@ const reports: Reports = {
   limit: ({ remaining, resetsAt }) => ({
     limit: resetsAt === undefined ? { remaining } : { remaining, resetsAt },
   }),
+  trail: ({ note }, { trail }) => ({
+    trail: [...trail, note].slice(-trailLength),
+  }),
 };
 
 // Folds what the provider reported about the call into the running call.
@@ -109,15 +122,6 @@ function reported(call: RunningCall, event: VoiceProviderEvent): RunningCall {
 
   return { ...call, ...report?.(event, call) };
 }
-
-const isLimitClose = (event: VoiceProviderEvent): boolean =>
-  event.type === 'closed' && event.reason === 'limit';
-
-const limitNotice = {
-  title: 'Voice call ended: usage limit reached',
-  description:
-    'The Voice provider closed the call because the allowance ran out. Start a new call once it resets.',
-};
 
 const namesCall = (
   sessionId: string | undefined,
@@ -172,9 +176,27 @@ const voiceCallSetup = setup({
 
       return { turnRunning: event.running };
     }),
-    // Tells the person, in the Session's Feed, why the call ended.
-    noticeLimit: ({ context }): void =>
-      context.sessions.notice(runningCall(context).sessionId, limitNotice),
+    // Tells the person, in the Session's Feed, why the call ended; runs before `finish`, while the call is known, and a call ends once.
+    announceEnd: ({ context }, params: EndParameters): void => {
+      const notice = endNoticeOf(params, endingFactsOf(context));
+
+      if (context.call && notice)
+        context.sessions.notice(context.call.sessionId, notice);
+    },
+    // Every end goes to the Server's log, so a call that stopped can be traced.
+    logEnd: ({ context }, params: EndParameters): void => {
+      const { call } = context;
+
+      if (call)
+        context.log(
+          endLogLine({
+            call,
+            params,
+            facts: endingFactsOf(context),
+            now: context.now(),
+          }),
+        );
+    },
     finish: assign(({ context }, params: EndParameters) =>
       finished(context, params),
     ),
@@ -188,7 +210,13 @@ const voiceCallSetup = setup({
       const heard = providerEventOf(event);
 
       return isTranscript(heard)
-        ? { partials: withTranscript(context.partials, heard) }
+        ? {
+            partials: withTranscript(
+              context.partials,
+              runningCall(context),
+              heard,
+            ),
+          }
         : {};
     }),
     recordFailure: assign(({ event }): Partial<VoiceCallContext> => {
@@ -197,13 +225,6 @@ const voiceCallSetup = setup({
       return { failure: event.message };
     }),
     recordProviderFailure: assign({ failure: providerFailure }),
-    // Runs before `finish`, while the call and its Session are still known; a call ends once, so it says so once.
-    announceFailure: ({ context }): void => {
-      const { call, failure } = context;
-
-      if (call && failure !== null)
-        context.sessions.notice(call.sessionId, failedNotice(failure));
-    },
     foldProvider: assign(({ context, event }): Partial<VoiceCallContext> => ({
       call: reported(runningCall(context), providerEventOf(event)),
     })),
@@ -243,7 +264,6 @@ const voiceCallSetup = setup({
       return isErrorStatus(reported) || isErrorClose(reported);
     },
     noTurnRunning: ({ context }): boolean => !context.turnRunning,
-    limitClosed: ({ event }): boolean => isLimitClose(providerEventOf(event)),
     providerClosed: ({ event }): boolean =>
       providerEventOf(event).type === 'closed',
     turnChanged: ({ context, event }): boolean => {
@@ -262,12 +282,28 @@ type ConnectionWatchInput = { signal: AbortSignal | undefined };
 
 const idleTarget = '#voiceCall.idle';
 
-type FinishAction = { type: 'finish'; params: EndParameters };
+type EndingParams =
+  | EndParameters
+  | ((args: { event: VoiceCallEvent }) => EndParameters);
 
-const endsWith = (reason: VoiceCallEnd): FinishAction => ({
-  type: 'finish',
-  params: { reason },
-});
+type EndingAction = {
+  type: 'announceEnd' | 'logEnd' | 'finish';
+  params: EndingParams;
+};
+
+// Every end says why where it should, is logged, and leaves the call: in that order, while the call is still known.
+const endingWith = (params: EndingParams): EndingAction[] => [
+  { type: 'announceEnd', params },
+  { type: 'logEnd', params },
+  { type: 'finish', params },
+];
+
+const endsWith = (reason: VoiceCallEnd): EndingAction[] =>
+  endingWith({ reason });
+
+// A close the provider reported, with its own reason and words.
+const providerClose = ({ event }: { event: VoiceCallEvent }): EndParameters =>
+  closeEndingOf(providerEventOf(event));
 
 const providerInput = (context: VoiceCallContext): ProviderCallInput => {
   const call = runningCall(context);
@@ -345,25 +381,19 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
         'call.end': {
           guard: 'endsThisCall',
           target: idleTarget,
-          actions: {
-            type: 'finish',
-            params: ({ event }): EndParameters => {
-              assertEvent(event, 'call.end');
+          actions: endingWith(({ event }): EndParameters => {
+            assertEvent(event, 'call.end');
 
-              return { reason: event.reason };
-            },
-          },
+            return { reason: event.reason };
+          }),
         },
         'call.sessionGone': {
           target: idleTarget,
-          actions: {
-            type: 'finish',
-            params: ({ event }): EndParameters => {
-              assertEvent(event, 'call.sessionGone');
+          actions: endingWith(({ event }): EndParameters => {
+            assertEvent(event, 'call.sessionGone');
 
-              return { reason: event.reason };
-            },
-          },
+            return { reason: event.reason };
+          }),
         },
         'call.appDisconnected': {
           target: idleTarget,
@@ -371,7 +401,7 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
         },
         'call.failed': {
           target: idleTarget,
-          actions: ['recordFailure', 'announceFailure', endsWith('failed')],
+          actions: ['recordFailure', ...endsWith('failed')],
         },
         'call.turns': { actions: 'noteTurns' },
         'provider.event': [
@@ -382,21 +412,12 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
           {
             guard: 'providerErrored',
             target: idleTarget,
-            actions: [
-              'recordProviderFailure',
-              'announceFailure',
-              endsWith('failed'),
-            ],
-          },
-          {
-            guard: 'limitClosed',
-            target: idleTarget,
-            actions: ['noticeLimit', endsWith('limit-reached')],
+            actions: ['recordProviderFailure', ...endsWith('failed')],
           },
           {
             guard: 'providerClosed',
             target: idleTarget,
-            actions: endsWith('provider-closed'),
+            actions: endingWith(providerClose),
           },
           {
             guard: 'asksForWork',

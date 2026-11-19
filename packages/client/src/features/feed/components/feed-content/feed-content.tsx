@@ -10,8 +10,6 @@ import { FeedDisclosure } from '../feed-disclosure';
 import { FeedImage } from '../feed-image';
 import { UnsupportedFeedContent } from '../feed-notice/feed-notice';
 
-type TextVariant = 'feed' | 'summary';
-
 type ResourceLinkBlock = Extract<ContentBlock, { type: 'resource_link' }>;
 
 type NonTextBlock = Exclude<ContentBlock, { type: 'text' | 'resource_link' }>;
@@ -82,7 +80,8 @@ function FeedNonTextContent({
 
 interface TextDrawing {
   streaming: boolean;
-  textVariant: TextVariant;
+  // Words a Voice call is still saying draw in the muted colour; nothing else about the text changes.
+  tone?: 'muted';
 }
 
 interface FeedContentBlockProps extends TextDrawing {
@@ -93,14 +92,9 @@ interface FeedContentBlockProps extends TextDrawing {
 
 const markdown = (
   text: string,
-  { streaming, textVariant }: TextDrawing,
+  { streaming, tone }: TextDrawing,
 ): React.JSX.Element => (
-  <Markdown
-    text={text}
-    streaming={streaming}
-    selectable
-    tone={textVariant === 'summary' ? 'muted' : undefined}
-  />
+  <Markdown text={text} streaming={streaming} selectable tone={tone} />
 );
 
 function FeedContentBlock({
@@ -130,10 +124,7 @@ const keyedBlocks = ({
   content,
   streaming,
   rowId,
-}: KeyedBlocks): ({ key: string } & Omit<
-  FeedContentBlockProps,
-  'textVariant'
->)[] =>
+}: KeyedBlocks): ({ key: string } & Omit<FeedContentBlockProps, 'tone'>)[] =>
   withOccurrenceKeys(content, blockType).map(({ item, key }, index) => ({
     key,
     block: item,
@@ -144,7 +135,7 @@ const keyedBlocks = ({
 interface FeedContentProps {
   content: readonly ContentBlock[];
   streaming?: boolean;
-  textVariant?: TextVariant;
+  tone?: 'muted';
   // The row the blocks belong to, so its images open among the Feed's other images.
   rowId?: string;
 }
@@ -152,13 +143,13 @@ interface FeedContentProps {
 export function FeedContent({
   content,
   streaming = false,
-  textVariant = 'feed',
+  tone,
   rowId,
 }: FeedContentProps): React.JSX.Element {
   return (
     <View className="gap-2.5">
       {keyedBlocks({ content, streaming, rowId }).map(({ key, ...block }) => (
-        <FeedContentBlock key={key} {...block} textVariant={textVariant} />
+        <FeedContentBlock key={key} {...block} tone={tone} />
       ))}
     </View>
   );
