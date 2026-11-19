@@ -3,18 +3,28 @@ import {
   type NonUserPromptSender,
   type SessionPromptInput,
 } from '@repo/contracts';
-import type { PluginPromptAnswer } from '@repo/contracts/plugins/argo-calls';
-import { promptFromPlugin } from './plugin-prompt';
+import { sendPromptAs } from './plugin-prompt';
+import { promptTurnEnded } from './prompt-turn';
 import { steerQueuedPrompt } from './queue-steering';
 import type { SessionContext } from './session-context';
 import type { SessionActorRef } from './session-machine';
 import type { HandlerSources } from './session-sources';
 
-type VoicePromptSources = Parameters<typeof promptFromPlugin>[0] &
+type VoicePromptSources = Parameters<typeof sendPromptAs>[0] &
   HandlerSources<never, 'ready'>;
 
 // The Voice call as a Prompt sender (ADR-0063): stored with the Prompt and never drawn.
 const voiceSender: NonUserPromptSender = { type: 'voice' };
+
+/*
+ * What became of a Prompt from the Voice call. `ended` settles with the Turn's id when the Turn that holds the Prompt
+ * ends, or with null when it left the queue without a Turn; it never rejects. A queued Prompt that could not steer
+ * the running Turn says why in `notSteered`.
+ */
+export type VoicePromptAnswer = { ended: Promise<string | null> } & (
+  | { status: 'started' | 'steered'; turnId: string }
+  | { status: 'queued'; notSteered: string | null }
+);
 
 type Steerable = { id: string; revision: number };
 
@@ -36,19 +46,42 @@ const canSteer = ({
 }: Pick<SessionContext, 'acpLease' | 'activeTurnId'>): boolean =>
   acpLease?.steering === true && activeTurnId !== null;
 
-// A queued Prompt takes its place in a running Turn; any refusal leaves it queued.
-async function steerWhenPossible(
+const inTurn = (
+  session: SessionActorRef,
+  status: 'started' | 'steered',
+  turnId: string,
+): VoicePromptAnswer => ({
+  status,
+  turnId,
+  ended: promptTurnEnded(session, { turnId }),
+});
+
+const waiting = (
   session: SessionActorRef,
   queuedId: string,
-): Promise<void> {
+  notSteered: string | null,
+): VoicePromptAnswer => ({
+  status: 'queued',
+  notSteered,
+  ended: promptTurnEnded(session, { queuedId }),
+});
+
+// A queued Prompt takes its place in a running Turn; a refusal leaves it queued, and says why.
+function steerOrWait(
+  session: SessionActorRef,
+  queuedId: string,
+): Promise<VoicePromptAnswer> | VoicePromptAnswer {
   const item = steerable(session, queuedId);
 
-  if (item)
-    await steerQueuedPrompt(session, {
-      action: 'steer',
-      id: QueuedPromptId.parse(item.id),
-      revision: item.revision,
-    }).catch(() => {});
+  if (!item) return waiting(session, queuedId, null);
+
+  const { revision } = item;
+  const id = QueuedPromptId.parse(item.id);
+
+  return steerQueuedPrompt(session, { action: 'steer', id, revision }).then(
+    (turnId) => inTurn(session, 'steered', turnId),
+    (error: Error) => waiting(session, queuedId, error.message),
+  );
 }
 
 /*
@@ -59,14 +92,11 @@ async function steerWhenPossible(
 export async function promptFromVoice(
   sources: VoicePromptSources,
   input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
-): Promise<PluginPromptAnswer> {
-  const answer = await promptFromPlugin(sources, input, voiceSender);
+): Promise<VoicePromptAnswer> {
+  const sent = await sendPromptAs(sources, input, voiceSender);
+  const session = await sources.open.ready(input.sessionId, 'session.queue');
 
-  if (answer.status === 'queued')
-    await steerWhenPossible(
-      await sources.open.ready(input.sessionId, 'session.queue'),
-      answer.queuedId,
-    );
-
-  return answer;
+  return sent.status === 'started'
+    ? inTurn(session, 'started', sent.turnId)
+    : steerOrWait(session, sent.queuedId);
 }

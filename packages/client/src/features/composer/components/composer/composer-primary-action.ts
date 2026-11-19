@@ -1,5 +1,6 @@
 import type { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import type * as React from 'react';
+import { sendsToQueue } from './composer-conditions';
 import type { SendLayout } from './composer-toolbar-types';
 
 export const endButtonId = 'composer-end';
@@ -12,7 +13,7 @@ type PrimaryAction = (layout: SendLayout) => IconButtonProps;
 
 function sendAction(layout: SendLayout): IconButtonProps {
   return {
-    accessibilityLabel: 'Send',
+    accessibilityLabel: sendsToQueue(layout.props) ? 'Queue' : 'Send',
     icon: 'arrow-up',
     disabled: layout.sendState !== 'ready',
     onPress: layout.send,
@@ -28,9 +29,7 @@ function endAction(layout: SendLayout): IconButtonProps {
   };
 }
 
-export function stopButtonAction(
-  layout: Pick<SendLayout, 'props'>,
-): IconButtonProps {
+function stopButtonAction(layout: Pick<SendLayout, 'props'>): IconButtonProps {
   return {
     accessibilityLabel: 'Stop',
     icon: 'cancelled',

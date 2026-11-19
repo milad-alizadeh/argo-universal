@@ -48,17 +48,12 @@ function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
   });
 }
 
-// The Voice call sends its Session Prompts through Sessions and hears the Session's Feed.
+// The Voice call sends its Session Prompts through Sessions, which say where each landed and when its Turn ended.
 function attachVoice(deps: AppRouterDeps, sessions: Sessions): void {
   deps.voice.attach(
-    voiceSessions(deps, async (sessionId, text) => {
-      const sent = await sessions.promptFromVoice({
-        sessionId,
-        prompt: [{ type: 'text', text }],
-      });
-
-      return sent.status;
-    }),
+    voiceSessions(deps, (sessionId, text) =>
+      sessions.promptFromVoice({ sessionId, prompt: [{ type: 'text', text }] }),
+    ),
   );
 }
 

@@ -37,7 +37,7 @@ function editableForSend(props: ComposerProps): boolean {
   return !isInactive(props) && isConnectionSendable(props);
 }
 
-function hasDraftContent({ draft }: ComposerProps): boolean {
+function hasDraftContent({ draft }: Pick<ComposerProps, 'draft'>): boolean {
   return draft.text.trim().length > 0 || draft.attachments.length > 0;
 }
 
@@ -119,15 +119,43 @@ function isConnectionSendable(props: ComposerProps): boolean {
   return (props.sendable ?? true) && allowsSubmission(props);
 }
 
-function isTurnRunning({ configuration }: ComposerProps): boolean {
+function isTurnRunning({
+  configuration,
+}: Pick<ComposerProps, 'configuration'>): boolean {
   return Boolean(configuration?.turnRunning);
 }
 
+// While a turn runs the one button is Stop, unless a written draft would queue behind it.
 function hasStopAction(props: ComposerProps): boolean {
-  return (
-    isTurnRunning(props) && Boolean(props.onStop) && !props.queueWhileRunning
-  );
+  return isTurnRunning(props) && Boolean(props.onStop) && !queuesDraft(props);
 }
+
+function queuesDraft(props: ComposerProps): boolean {
+  return props.queueWhileRunning === true && !isIdleDraft(props);
+}
+
+function isIdleDraft(props: ComposerProps): boolean {
+  return isEmptyDraft(props) && !sendResumesQueue(props);
+}
+
+type QueueingProps = Pick<
+  ComposerProps,
+  'configuration' | 'queueWhileRunning' | 'queueEdit' | 'draft'
+>;
+
+/*
+ * What Send does to a written draft: Queue it behind the running turn, or send it now. Editing a Queued Prompt
+ * saves it in place, and an empty draft resumes a paused queue, so both keep Send's name.
+ */
+export function sendsToQueue(props: QueueingProps): boolean {
+  return queuesWhileRunning(props) && writtenNewDraft(props);
+}
+
+const queuesWhileRunning = (props: QueueingProps): boolean =>
+  isTurnRunning(props) && props.queueWhileRunning === true;
+
+const writtenNewDraft = (props: QueueingProps): boolean =>
+  !props.queueEdit && hasDraftContent(props);
 
 function allowsSubmission(props: ComposerProps): boolean {
   return !isTurnRunning(props) || props.queueWhileRunning === true;

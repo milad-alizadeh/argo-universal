@@ -8,6 +8,7 @@ import { releaseAgent } from './agent-requests';
 import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
 import { onPhone } from './frame';
+import { submitButton } from './new-session';
 
 const updatedGreeting = 'Hello Argo';
 
@@ -55,13 +56,12 @@ Given(
   },
 );
 
+// With nothing written, a running Turn's one Composer button is Stop.
 async function expectRunning(page: Page): Promise<void> {
   await expect(
     page.getByRole('button', { name: 'Stop', exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Send', exact: true }),
-  ).toBeVisible();
+  await expect(submitButton(page)).toHaveCount(0);
 }
 
 Then(

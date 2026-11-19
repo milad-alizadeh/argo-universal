@@ -17,7 +17,7 @@ type Row = [
   expected: SendState,
 ];
 
-// Every combination of draft, call, provider and Turn, the Composer queueing while a Turn runs. Without a provider the Composer knows of no call.
+// Every combination of draft, call, provider and Turn, the Composer queueing while a Turn runs. Without a provider the Composer knows of no call. With nothing written, a running Turn's one button is Stop unless a call runs here.
 const rows: Row[] = [
   ['text', 'none', 'usable', 'idle', 'ready'],
   ['text', 'none', 'usable', 'running', 'ready'],
@@ -44,29 +44,29 @@ const rows: Row[] = [
   ['text', 'elsewhere', 'absent', 'idle', 'ready'],
   ['text', 'elsewhere', 'absent', 'running', 'ready'],
   ['empty', 'none', 'usable', 'idle', 'voice'],
-  ['empty', 'none', 'usable', 'running', 'voice'],
+  ['empty', 'none', 'usable', 'running', 'stop'],
   ['empty', 'none', 'unusable', 'idle', 'blocked'],
-  ['empty', 'none', 'unusable', 'running', 'blocked'],
+  ['empty', 'none', 'unusable', 'running', 'stop'],
   ['empty', 'none', 'absent', 'idle', 'blocked'],
-  ['empty', 'none', 'absent', 'running', 'blocked'],
+  ['empty', 'none', 'absent', 'running', 'stop'],
   ['empty', 'connecting', 'usable', 'idle', 'connecting'],
   ['empty', 'connecting', 'usable', 'running', 'connecting'],
   ['empty', 'connecting', 'unusable', 'idle', 'connecting'],
   ['empty', 'connecting', 'unusable', 'running', 'connecting'],
   ['empty', 'connecting', 'absent', 'idle', 'blocked'],
-  ['empty', 'connecting', 'absent', 'running', 'blocked'],
+  ['empty', 'connecting', 'absent', 'running', 'stop'],
   ['empty', 'connected', 'usable', 'idle', 'end'],
   ['empty', 'connected', 'usable', 'running', 'end'],
   ['empty', 'connected', 'unusable', 'idle', 'end'],
   ['empty', 'connected', 'unusable', 'running', 'end'],
   ['empty', 'connected', 'absent', 'idle', 'blocked'],
-  ['empty', 'connected', 'absent', 'running', 'blocked'],
+  ['empty', 'connected', 'absent', 'running', 'stop'],
   ['empty', 'elsewhere', 'usable', 'idle', 'elsewhere'],
-  ['empty', 'elsewhere', 'usable', 'running', 'elsewhere'],
+  ['empty', 'elsewhere', 'usable', 'running', 'stop'],
   ['empty', 'elsewhere', 'unusable', 'idle', 'elsewhere'],
-  ['empty', 'elsewhere', 'unusable', 'running', 'elsewhere'],
+  ['empty', 'elsewhere', 'unusable', 'running', 'stop'],
   ['empty', 'elsewhere', 'absent', 'idle', 'blocked'],
-  ['empty', 'elsewhere', 'absent', 'running', 'blocked'],
+  ['empty', 'elsewhere', 'absent', 'running', 'stop'],
 ];
 
 const noop = (): void => {};

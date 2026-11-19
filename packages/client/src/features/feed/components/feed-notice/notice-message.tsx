@@ -61,13 +61,19 @@ function NoticeIcon({ icon, color }: Appearance): React.JSX.Element {
   );
 }
 
-type NoticeTitleProps = Pick<NoticeMessageProps, 'title' | 'live'> & {
+type NoticeTitleProps = Pick<
+  NoticeMessageProps,
+  'title' | 'live' | 'severity'
+> & {
   color: string;
 };
 
 function NoticeTitle(props: NoticeTitleProps): React.JSX.Element {
   if (props.live)
     return <ShimmerText text={props.title} className="type-body" />;
+
+  if (props.severity === 'warning')
+    return <Markdown text={props.title} selectable />;
 
   return (
     <Text numberOfLines={1} className={props.color}>

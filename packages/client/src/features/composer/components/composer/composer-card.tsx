@@ -6,7 +6,6 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { useFollowUpSuggestion } from '../../hooks/use-follow-up-suggestion';
 import type { CardLayout, TextLayout } from './composer-card-types';
-import { FollowUpAcceptance } from './composer-follow-up-acceptance';
 import { ComposerSurface } from './composer-surface';
 import { draftChanges, useSuggestionSources } from './composer-text-draft';
 import { ComposerBottomTray } from './composer-trays';
@@ -19,16 +18,7 @@ function ComposerCard(layout: CardLayout): React.JSX.Element {
   const field = useComposerText(layout);
   const phone = !layout.wide;
 
-  return (
-    <>
-      <FollowUpAcceptance
-        suggestion={field.inlineSuggestion}
-        phone={phone}
-        onAccept={layout.field.insertWord}
-      />
-      <ComposerSurface layout={layout} field={field} phone={phone} />
-    </>
-  );
+  return <ComposerSurface layout={layout} field={field} phone={phone} />;
 }
 
 type MessageField = React.ComponentProps<typeof RichTextarea>;
