@@ -14,6 +14,12 @@ export { DesktopVoiceProvider } from './stores/desktop-voice-provider';
 
 export { useVoiceDevices } from './hooks/use-voice-devices';
 
+export { useVoiceVisualiser } from './stores/voice-visualiser-choice';
+
+export type { VoiceVisualiserKind } from './components/voice-visualiser/voice-visualiser-kind';
+
+export { useVoiceConnection } from './stores/voice-connection-context';
+
 export type { AudioDevice, AudioDevices } from './utils/audio-devices';
 
 export type { VoiceDeviceChoice } from './stores/voice-device-choice';

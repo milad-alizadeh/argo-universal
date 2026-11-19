@@ -1,4 +1,3 @@
-import type { VoiceStageViewProps } from '../../src/features/voice/components/voice-stage/voice-stage-view';
 import {
   silentSpectrum,
   type VoiceLevels,
@@ -47,8 +46,11 @@ const levels = (): VoiceLevels => ({
   output: envelopeAt(now() + voiceLag),
 });
 
-// What a visualiser reads of a call's sound.
-type VoiceAudio = Required<Pick<VoiceStageViewProps, 'levels' | 'spectrum'>>;
+// What the orb and the band read of a call's sound.
+interface VoiceAudio {
+  levels: () => VoiceLevels;
+  spectrum: () => VoiceSpectrum;
+}
 
 /*
  * Talking-like levels and bands with no microphone and no voice, for stories: the person's and the voice's sound move

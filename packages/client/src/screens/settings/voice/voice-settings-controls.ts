@@ -1,17 +1,64 @@
-import type { VoiceSettingsChange } from '@repo/contracts';
+import type {
+  CustomVoiceInput,
+  VoiceCallOptionsChange,
+  VoiceSettingsChange,
+} from '@repo/contracts';
+import {
+  previewOfDraft,
+  savedOfDraft,
+  type CustomVoicePreview,
+} from './custom-voice-draft';
 import type { VoiceDetailViewProps } from './voice-detail-view';
 
 // What the page can ask of the App: change a setting, hear a voice, load the settings again.
 export interface VoiceSettingsActions {
   change: (change: VoiceSettingsChange) => void;
-  preview: (voice: string) => void;
+  setInstructions: (instructions: string) => void;
+  setCallOptions: (change: VoiceCallOptionsChange) => void;
+  saveCustomVoice: (voice: CustomVoiceInput) => void;
+  deleteCustomVoice: (id: string) => void;
+  preview: (voice: string, custom?: CustomVoicePreview['custom']) => void;
   retry: () => void;
 }
 
 export type VoiceSettingsControls = Pick<
   VoiceDetailViewProps,
-  'onEnabledChange' | 'onProviderChange' | 'onVoiceChange' | 'onRetry'
+  | 'onEnabledChange'
+  | 'onProviderChange'
+  | 'onVoiceChange'
+  | 'onPreviewVoice'
+  | 'onInstructionsChange'
+  | 'onCallOptionsChange'
+  | 'onSaveCustomVoice'
+  | 'onDeleteCustomVoice'
+  | 'onPreviewCustomVoice'
+  | 'onRetry'
 >;
+
+const voiceControls = (
+  actions: VoiceSettingsActions,
+): Pick<VoiceSettingsControls, 'onVoiceChange' | 'onPreviewVoice'> => ({
+  onVoiceChange: (voice) => {
+    actions.change({ voice });
+    actions.preview(voice);
+  },
+  onPreviewVoice: (voice) => actions.preview(voice),
+});
+
+// A custom voice is saved trimmed, and heard before it is saved as its built-in voice told how to speak.
+const customVoiceControls = (
+  actions: VoiceSettingsActions,
+): Pick<
+  VoiceSettingsControls,
+  'onSaveCustomVoice' | 'onDeleteCustomVoice' | 'onPreviewCustomVoice'
+> => ({
+  onSaveCustomVoice: (draft) => actions.saveCustomVoice(savedOfDraft(draft)),
+  onDeleteCustomVoice: actions.deleteCustomVoice,
+  onPreviewCustomVoice: (draft) => {
+    const { voice, custom } = previewOfDraft(draft);
+    actions.preview(voice, custom);
+  },
+});
 
 // The page's controls: a picked voice is kept for the next call and heard at once.
 export const controlsOf = (
@@ -19,9 +66,9 @@ export const controlsOf = (
 ): VoiceSettingsControls => ({
   onEnabledChange: (enabled) => actions.change({ enabled }),
   onProviderChange: (provider) => actions.change({ provider }),
-  onVoiceChange: (voice) => {
-    actions.change({ voice });
-    actions.preview(voice);
-  },
+  onInstructionsChange: actions.setInstructions,
+  onCallOptionsChange: actions.setCallOptions,
   onRetry: actions.retry,
+  ...voiceControls(actions),
+  ...customVoiceControls(actions),
 });

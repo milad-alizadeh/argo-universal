@@ -78,7 +78,7 @@ function useActions(
 const useLevels = (connection: VoiceConnection | null): (() => VoiceLevels) =>
   useCallback(() => connection?.levels() ?? noLevels, [connection]);
 
-// The matrix and the wave read the App's own bands each frame, as the orb reads its levels.
+// The band reads the App's own bands each frame, as the orb reads its levels.
 const useSpectrum = (
   connection: VoiceConnection | null,
 ): (() => VoiceSpectrum) =>
@@ -139,13 +139,13 @@ function useInput(
   };
 }
 
-// The visualiser toggle shows only where this App carries the call's audio: elsewhere there is no sound to draw.
-const withToggle = (
-  stage: NonNullable<SessionVoice['stage']>,
+// The stage above the Feed, unless this App carries the call's audio and this Device chose the band in its place.
+const stageFor = (
+  view: SessionVoice,
   connection: VoiceConnection | null,
-  { kind, choose }: ReturnType<typeof useVoiceVisualiser>,
-): NonNullable<SessionVoice['stage']> =>
-  connection ? { ...stage, visualiser: { kind, onChange: choose } } : stage;
+  kind: VoiceVisualiserKind,
+): SessionVoice['stage'] =>
+  connection && kind === 'band' ? undefined : view.stage;
 
 // The Composer's slot, with the band along its edge when this Device chose to draw the call there.
 const composerOf = (
@@ -164,11 +164,11 @@ export function useSessionVoice(page: VoicePage): View {
   const status = useVoiceStatus();
   const view = sessionVoice(useInput(page, connection, status));
   const partials = useHeldPartials(view.partials);
-  const visualiser = useVoiceVisualiser();
+  const { kind } = useVoiceVisualiser();
 
   return {
     partials,
-    stage: view.stage && withToggle(view.stage, connection, visualiser),
-    voice: connection ? composerOf(view, visualiser.kind) : undefined,
+    stage: stageFor(view, connection, kind),
+    voice: connection ? composerOf(view, kind) : undefined,
   };
 }

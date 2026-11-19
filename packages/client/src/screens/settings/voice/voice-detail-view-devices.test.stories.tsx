@@ -1,12 +1,13 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, within } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 import { VoiceDetailView } from './voice-detail-view';
 import {
   namedDevices,
   unnamedDevices,
   usableVoice,
 } from './voice-detail-view-fixtures';
+import { voiceDetailSpies } from './voice-detail-view.mocks';
 
 const meta = {
   title: 'Tests/Screens/Settings/Voice/Devices',
@@ -15,11 +16,7 @@ const meta = {
   args: {
     voice: { status: 'loaded', settings: usableVoice },
     devices: namedDevices,
-    onEnabledChange: fn(),
-    onProviderChange: fn(),
-    onVoiceChange: fn(),
-    onDevicesChange: fn(),
-    onRetry: fn(),
+    ...voiceDetailSpies(),
   },
   beforeEach: (): Promise<void> => settleLayout(layoutWidths.wide),
 } satisfies Meta<typeof VoiceDetailView>;

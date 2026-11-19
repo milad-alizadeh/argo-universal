@@ -24,7 +24,7 @@ import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import { usageLimitsSession } from './session-detail-view-usage.mocks';
-import { VisualiserChoosingPreview } from './session-detail-view-visualiser.mocks';
+import { bandCallSession } from './session-detail-view-visualiser.mocks';
 import { VoiceCallRehearsal } from './session-detail-view-voice-call.mocks';
 import { voiceCallSession } from './session-detail-view-voice.mocks';
 import {
@@ -135,16 +135,10 @@ export const OnAVoiceCall: Story = {
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 
-// The same call with the visualiser toggle, on Band: the stage keeps only the toggle and the band runs along the Composer.
+// The same call where this Device chose the band in Settings › Voice: no stage, and the band runs along the Composer.
 export const OnAVoiceCallWithTheBand: Story = {
-  args: { state: 'open', ...voiceCallSession },
-  render: (): React.JSX.Element => <VisualiserChoosingPreview first="band" />,
-};
-
-// The same call with the visualiser toggle, on the Matrix: a wide grid of dots above the Feed.
-export const OnAVoiceCallWithTheMatrix: Story = {
-  args: { state: 'open', ...voiceCallSession },
-  render: (): React.JSX.Element => <VisualiserChoosingPreview first="matrix" />,
+  args: { state: 'open', ...bandCallSession },
+  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 
 // Press the voice button to start a call: the stage opens above the Feed while it connects, the orb settles into listening, and End takes it away.

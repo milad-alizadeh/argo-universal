@@ -72,11 +72,40 @@ export const stableVoice: VoiceSettings = {
   })),
 };
 
-// The chosen voice has a description its provider publishes; sample words, not any provider's.
-export const describedVoice: VoiceSettings = {
-  ...usableVoice,
-  voices: [
-    { id: 'cove', label: 'Cove', description: 'A sample description of Cove' },
-    { id: 'marin', label: 'Marin' },
-  ],
+// The provider's voices, each described; sample words, not any provider's.
+const describedVoices: VoiceSettings['voices'] = [
+  { id: 'cove', label: 'Cove', description: 'Calm and even, for long answers' },
+  { id: 'juniper', label: 'Juniper', description: 'Bright and quick' },
+  { id: 'maple', label: 'Maple', description: 'Warm and low' },
+  { id: 'sol', label: 'Sol', description: 'Clear and steady' },
+];
+
+const pirate = {
+  id: 'pirate',
+  label: 'Pirate',
+  baseVoice: 'sol',
+  description: 'Speaks like a cheerful pirate, slowly.',
 };
+
+// The person's own voices, one of them chosen, and instructions for every call.
+export const customVoices: VoiceSettings = {
+  ...usableVoice,
+  voice: 'pirate',
+  voices: describedVoices,
+  customVoices: [
+    pirate,
+    {
+      id: 'narrator',
+      label: 'Narrator',
+      baseVoice: 'cove',
+      description: 'A calm documentary narrator, unhurried and warm.',
+    },
+  ],
+  instructions: 'Call me Sam. Keep answers under two sentences.',
+};
+
+// The form open on a custom voice to edit it.
+export const editing = { voice: pirate };
+
+// The form open empty to add a custom voice.
+export const adding = {};

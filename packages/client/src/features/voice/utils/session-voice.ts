@@ -135,7 +135,6 @@ function stageOf(
     here && {
       state: here.orb,
       levels: input.levels,
-      spectrum: input.spectrum,
       label: voiceLabel(here, input.now),
     }
   );

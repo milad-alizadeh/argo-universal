@@ -3,7 +3,11 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, waitFor } from 'storybook/test';
 import { feedScrollId } from '../../../features/feed/components/feed/feed-reader.mocks';
-import { VisualiserChoosingPreview } from './session-detail-view-visualiser.mocks';
+import { FramedSessionPreview } from './session-detail-view-framed.mocks';
+import {
+  bandCallSession,
+  orbCallSession,
+} from './session-detail-view-visualiser.mocks';
 import { longSession } from './session-detail-view.mocks';
 
 // Wide enough that the Inspector docks beside the Feed, as the Panels tests set it.
@@ -26,20 +30,32 @@ const middleOf = (element: HTMLElement): number => {
   return box.x + box.width / 2;
 };
 
-// Choosing Band empties the stage but for the toggle and draws the call along the Composer; choosing back restores it.
+// With the band chosen the call draws along the Composer, with no stage and no toggle above the Feed.
 export const BandAlongTheComposer: Story = {
-  render: (): React.JSX.Element => <VisualiserChoosingPreview first="orb" />,
-  play: async ({ canvas, userEvent }) => {
+  render: (): React.JSX.Element => (
+    <FramedSessionPreview state="open" {...bandCallSession} />
+  ),
+  play: async ({ canvas }) => {
     await settleLayout(1440);
-    await userEvent.click(await canvas.findByRole('button', { name: 'Band' }));
     await expect(await canvas.findByTestId('voice-edge-band')).toBeVisible();
+    await expect(canvas.queryByTestId('voice-stage')).not.toBeInTheDocument();
     await expect(
-      canvas.queryByTestId('voice-visualiser'),
+      canvas.queryByRole('group', { name: 'Visualiser' }),
     ).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('button', { name: 'Matrix' }));
+  },
+};
+
+// With the orb, the stage holds the orb alone and no toggle, and the Composer draws no band.
+export const OrbAboveTheFeed: Story = {
+  render: (): React.JSX.Element => (
+    <FramedSessionPreview state="open" {...orbCallSession} />
+  ),
+  play: async ({ canvas }) => {
+    await settleLayout(1440);
+    await expect(await canvas.findByTestId('voice-visualiser')).toBeVisible();
     await expect(
-      await canvas.findByTestId('voice-visualiser-matrix'),
-    ).toBeVisible();
+      canvas.queryByRole('group', { name: 'Visualiser' }),
+    ).not.toBeInTheDocument();
     await expect(
       canvas.queryByTestId('voice-edge-band'),
     ).not.toBeInTheDocument();
@@ -57,10 +73,14 @@ async function expectOverTheFeed(canvas: Canvas): Promise<void> {
   );
 }
 
-// With the Inspector open beside it, the drawing stays centred over the Feed's column, not the window.
+// With the Inspector open beside it, the orb stays centred over the Feed's column, not the window.
 export const CentredBesideTheInspector: Story = {
   render: (): React.JSX.Element => (
-    <VisualiserChoosingPreview first="wave" feed={longSession.feed} />
+    <FramedSessionPreview
+      state="open"
+      {...orbCallSession}
+      feed={longSession.feed}
+    />
   ),
   play: async ({ canvas }) => {
     await settleLayout(desktopWithInspector);
