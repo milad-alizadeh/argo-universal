@@ -32,15 +32,16 @@ describe("a Session's view of the Voice call", () => {
     expect(sessionVoice(inputOf(unusable, 's1')).composer).toBeUndefined();
   });
 
-  it('keeps a running call in the slot even while the provider is no longer usable', () => {
-    const unusable = statusOf(callIn('s1'), {
-      availability: { usable: false, reason: 'No' },
-    });
+  it.each(['connecting', 'connected'] as const)(
+    'keeps a %s call in the slot even while the provider is no longer usable',
+    (status) => {
+      const unusable = statusOf(callIn('s1', { status }), {
+        availability: { usable: false, reason: 'No' },
+      });
 
-    expect(sessionVoice(inputOf(unusable, 's1')).composer?.kind).toBe(
-      'connected',
-    );
-  });
+      expect(sessionVoice(inputOf(unusable, 's1')).composer?.kind).toBe(status);
+    },
+  );
 
   it('shows a call that is connecting here as connecting, with no mutes and a stage that says so', () => {
     const connecting = callIn('s1', {

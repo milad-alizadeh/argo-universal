@@ -1,4 +1,8 @@
-import type { VoiceAvailability } from '@repo/contracts';
+import type {
+  VoiceAvailability,
+  VoiceLimit,
+  VoiceTrouble,
+} from '@repo/contracts';
 
 /*
  * The Voice provider interface (ADR-0063). It names no vendor: only a provider's own module does.
@@ -25,11 +29,17 @@ export type VoiceProviderEvent =
   | { type: 'work.requested'; requestId: string; text: string }
   // The voice started or stopped speaking.
   | { type: 'speaking'; speaking: boolean }
-  // Trouble on the person's side of the call, such as a microphone the App may not use; null once it clears.
-  | { type: 'trouble'; trouble: 'microphone-blocked' | null }
-  | { type: 'usage'; inputTokens: number; outputTokens: number }
+  // Trouble on the person's side of the call, such as a microphone the App may not use; null once it clears. Reconnecting is the Engine's to say.
+  | { type: 'trouble'; trouble: Exclude<VoiceTrouble, 'reconnecting'> | null }
+  // What the call has used so far; `limit` is the allowance left when the report says so.
+  | {
+      type: 'usage';
+      inputTokens: number;
+      outputTokens: number;
+      limit?: VoiceLimit;
+    }
   // How much of the provider's allowance is left, as a fraction from 0 to 1.
-  | { type: 'limit'; remaining: number; resetsAt?: string }
+  | ({ type: 'limit' } & VoiceLimit)
   | { type: 'closed'; reason: VoiceClosedReason };
 
 // What the voice does with text it is given: say it aloud, or keep it as background it may use later.

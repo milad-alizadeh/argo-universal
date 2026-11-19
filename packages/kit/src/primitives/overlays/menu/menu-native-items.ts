@@ -135,6 +135,7 @@ function actionItem(action: MenuAction): NativeMenuItem {
   return {
     id: action.id ?? action.label,
     title: action.label,
+    count: action.count,
     checked: action.selected,
     ...subtitleOf(action),
     disabled: Boolean(action.disabled),

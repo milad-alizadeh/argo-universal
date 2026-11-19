@@ -1,5 +1,26 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import {
+  delegationCreated,
+  delegationItem,
+  personMoreWords,
+  personSaid,
+  personTurnDone,
+  personTurnGrows,
+  personTurnId,
+  personTurnOpens,
+  personWords,
+  sessionStarted,
+  usageUpdated,
+  voiceMoreWords,
+  voiceSaid,
+  voiceTurnDone,
+  voiceTurnGrows,
+  voiceTurnId,
+  voiceTurnOpens,
+  voiceWords,
+} from '#mocks/gpt-live-frames';
 import { heard, startedCall, type GptLiveFixture } from '#mocks/gpt-live-setup';
+import type { VoiceProviderEvent } from '../provider';
 
 let fixture: GptLiveFixture | undefined;
 
@@ -8,139 +29,123 @@ afterEach(async () => {
   fixture = undefined;
 });
 
-async function startCall(
-  ...options: Parameters<typeof startedCall>
-): ReturnType<typeof startedCall> {
-  const started = await startedCall(...options);
+// A started call, with everything it reports from now on.
+async function listening(): Promise<{
+  send: (...frames: string[]) => void;
+  sendAudio: (frame: string) => void;
+  events: VoiceProviderEvent[];
+}> {
+  const started = await startedCall();
   fixture = started;
+  const { endpoint } = started;
 
-  return started;
+  return {
+    send: (...frames) => {
+      for (const frame of frames) endpoint.send(frame);
+    },
+    sendAudio: (frame) => endpoint.sendAudio(Buffer.from(frame)),
+    events: heard(started.call),
+  };
 }
 
-const requestText = 'fix the build';
+const person = (id: string, text: string, final: boolean) =>
+  ({ type: 'person.transcript', id, text, final }) as const;
 
-const connected = '{"type":"session.started"}';
+const voice = (id: string, text: string, final: boolean) =>
+  ({ type: 'voice.transcript', id, text, final }) as const;
 
-const personSaid = JSON.stringify({
-  type: 'input_transcript.added',
-  id: 'i1',
-  transcript: requestText,
-});
+const personChunk = 'item_ElnYl1s1aVXniJngfZ2Sz';
 
-const voiceSaid = JSON.stringify({
-  type: 'output_transcript.added',
-  id: 'o1',
-  transcript: 'On it',
-});
+const voiceChunk = 'item_ElnYp73GvhRUuMawnfzrq';
 
-const handedOver = JSON.stringify({
-  type: 'delegation.created',
-  delegation_id: 'd1',
-  text: requestText,
-});
-
-const usage = JSON.stringify({
-  type: 'session.usage.updated',
-  usage: { input_tokens: 12, output_tokens: 34 },
-});
+const typesOf = (events: VoiceProviderEvent[]): string[] =>
+  events.map(({ type }) => type);
 
 describe('GPT-Live call events', () => {
-  it('reports the call connected, what was said, work asked for and usage', async () => {
-    const { endpoint, call } = await startCall();
-    const events = heard(call);
+  it('reports the call connected', async () => {
+    const { send, events } = await listening();
 
-    for (const frame of [connected, personSaid, voiceSaid, handedOver, usage])
-      endpoint.send(frame);
-
-    await expect.poll(() => events.length).toBe(5);
-    expect(events).toEqual([
-      { type: 'status', status: 'connected' },
-      { type: 'person.transcript', id: 'i1', text: requestText, final: true },
-      { type: 'voice.transcript', id: 'o1', text: 'On it', final: true },
-      { type: 'work.requested', requestId: 'd1', text: requestText },
-      { type: 'usage', inputTokens: 12, outputTokens: 34 },
-    ]);
-  });
-
-  it('drops audio frames unread, even one whose bytes read as an event', async () => {
-    const { endpoint, call } = await startCall();
-    const events = heard(call);
-
-    endpoint.sendAudio(Buffer.from(connected));
-    endpoint.sendAudio(Buffer.from(handedOver));
-    endpoint.send(usage);
+    send(sessionStarted);
 
     await expect
       .poll(() => events)
-      .toEqual([{ type: 'usage', inputTokens: 12, outputTokens: 34 }]);
+      .toEqual([{ type: 'status', status: 'connected' }]);
+  });
+
+  it('reports the person’s words as they come, then the whole utterance when their turn is done', async () => {
+    const { send, events } = await listening();
+
+    send(
+      personWords,
+      personTurnOpens,
+      personMoreWords,
+      personTurnGrows,
+      personTurnDone,
+    );
+
+    await expect.poll(() => events.length).toBe(3);
+    expect(events).toEqual([
+      person(personChunk, 'Hi, please', false),
+      person(personChunk, 'Hi, please list', false),
+      person(personTurnId, personSaid, true),
+    ]);
+  });
+
+  it('reports the voice speaking and its words, then what it said when its turn is done', async () => {
+    const { send, events } = await listening();
+
+    send(voiceWords, voiceMoreWords, voiceTurnOpens, voiceTurnGrows);
+    send(voiceTurnDone);
+
+    await expect.poll(() => events.length).toBe(5);
+    expect(events).toEqual([
+      voice(voiceChunk, 'Okay', false),
+      voice(voiceChunk, 'Okay,', false),
+      { type: 'speaking', speaking: true },
+      voice(voiceTurnId, voiceSaid, true),
+      { type: 'speaking', speaking: false },
+    ]);
+  });
+
+  it('starts the next utterance afresh once a turn is done', async () => {
+    const { send, events } = await listening();
+
+    send(personWords, personTurnDone, personMoreWords);
+
+    await expect
+      .poll(() => events.at(-1))
+      .toEqual(person('item_ElnYlzPXvOktphQ09kM3T', 'list', false));
+  });
+
+  it('reports work the voice hands over under its delegation item', async () => {
+    const { send, events } = await listening();
+
+    send(delegationCreated);
+
+    await expect
+      .poll(() => events)
+      .toEqual([
+        { type: 'work.requested', requestId: delegationItem, text: personSaid },
+      ]);
+  });
+
+  it('drops audio frames unread, even one whose bytes read as an event, and usage that counts no tokens', async () => {
+    const { send, sendAudio, events } = await listening();
+
+    sendAudio(sessionStarted);
+    sendAudio(delegationCreated);
+    send(usageUpdated, delegationCreated);
+
+    await expect.poll(() => typesOf(events)).toEqual(['work.requested']);
   });
 
   it('reports the provider closing the call', async () => {
-    const { endpoint, call } = await startCall();
-    const events = heard(call);
+    const { send, events } = await listening();
 
-    endpoint.send('{"type":"session.closed"}');
+    send('{"type":"session.closed"}');
 
     await expect
       .poll(() => events)
       .toEqual([{ type: 'closed', reason: 'ended' }]);
-  });
-});
-
-describe('GPT-Live call speaking', () => {
-  it('answers a request and speaks unprompted, and says close when the call ends', async () => {
-    const { endpoint, call } = await startCall();
-
-    call.reply('d1', 'Done', 'speak');
-    call.tell('Tests are failing', 'background');
-    call.end();
-    call.end();
-
-    await expect.poll(() => endpoint.received.length).toBe(3);
-    expect(endpoint.received).toEqual([
-      {
-        type: 'delegation.context.append',
-        delegation_id: 'd1',
-        channel: 'speakable',
-        text: 'Done',
-      },
-      {
-        type: 'session.context.append',
-        channel: 'commentary',
-        text: 'Tests are failing',
-      },
-      { type: 'session.close' },
-    ]);
-  });
-});
-
-describe('GPT-Live call losing its link', () => {
-  it('ends the call as lost when the control link stays down past the grace period', async () => {
-    const { endpoint, call } = await startCall({ lostLinkMs: 300 });
-    const events = heard(call);
-
-    endpoint.refuseLinks = true;
-    endpoint.dropLink();
-
-    await expect
-      .poll(() => events.at(-1))
-      .toEqual({ type: 'closed', reason: 'lost' });
-    expect(events.at(0)).toEqual({ type: 'status', status: 'disconnected' });
-  });
-
-  it('keeps the call when the control link comes back, and it still works on the new link', async () => {
-    const { endpoint, call } = await startCall();
-    const events = heard(call);
-
-    endpoint.dropLink();
-    await expect
-      .poll(() => events.at(-1))
-      .toEqual({ type: 'status', status: 'connected' });
-    endpoint.send(usage);
-
-    await expect.poll(() => events.at(-1)).toMatchObject({ type: 'usage' });
-    expect(events.map(({ type }) => type)).not.toContain('closed');
-    call.tell('Back again', 'speak');
-    await expect.poll(() => endpoint.received.length).toBe(1);
   });
 });

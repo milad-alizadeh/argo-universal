@@ -31,8 +31,6 @@ export const pluginCardSection = (card: SessionPluginCard): SessionSection => ({
   icon: pluginSymbol(card.card.icon),
   // The App hands over only the cards the Plugins declare, this Device shows and whose page answered something.
   offered: () => true,
-  // A Plugin's card counts nothing of Argo's; it is drawn because its page has something to show.
-  count: () => 1,
   card: (_content, tab) => ({
     summary: card.page,
     onOpen: card.tab ? tab.open : undefined,

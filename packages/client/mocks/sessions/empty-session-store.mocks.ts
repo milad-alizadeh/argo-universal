@@ -40,6 +40,8 @@ interface Calls {
     call: PromiseWithResolvers<SessionNewOutput>;
   }[];
   handOff: string[];
+  // Hand-offs and whatever a test adds, in the order they happened.
+  happened: string[];
   clearDraft: number;
   forgetSentDraft: number;
   // The Connection's state, which the test drops and reopens.
@@ -59,7 +61,10 @@ function deferred<Input, Output>(
 
 const fakePorts = (calls: Calls): EmptySessionPorts => ({
   open: (input) => deferred(calls.open, input),
-  handOff: (sessionId) => void calls.handOff.push(sessionId),
+  handOff: (sessionId) => {
+    calls.handOff.push(sessionId);
+    calls.happened.push(`handOff:${sessionId}`);
+  },
   clearDraft: () => {
     calls.clearDraft += 1;
   },
@@ -90,6 +95,7 @@ export interface EmptySessionHarness {
 const noCalls = (): Calls => ({
   open: [],
   handOff: [],
+  happened: [],
   clearDraft: 0,
   forgetSentDraft: 0,
   connection: 'open',

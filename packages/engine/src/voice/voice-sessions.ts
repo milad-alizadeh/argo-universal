@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import type { FeedUpdate } from '@repo/contracts';
+import type { FeedSubscribeOutput, FeedUpdate } from '@repo/contracts';
 import type { FeedDeps, FeedEvent } from '../feed';
+import type { TurnHappening } from '../sessions';
 import { FeedHappenings } from './feed-happenings';
 import type {
   PromptOutcome,
@@ -17,15 +18,28 @@ type Listener = (happening: SessionHappening) => void;
 
 type Stoppable = { unsubscribe: () => void };
 
-// What a Session does with a Prompt from the Voice call.
-export type VoicePrompts = (
-  sessionId: string,
-  text: string,
-) => Promise<PromptOutcome>;
+type SnapshotEvent = Extract<
+  FeedSubscribeOutput,
+  { type: 'snapshot' | 'closed' }
+>;
 
-// Listens to one Session's Feed, following it when the Session replaces its Feed actor.
+/*
+ * What the Voice call reaches its Session's work through: where a Prompt from the call lands, and what the Session
+ * reports of its Turns until the returned function is called.
+ */
+export interface VoiceSessionWork {
+  prompt: (sessionId: string, text: string) => Promise<PromptOutcome>;
+  watchTurns: (
+    sessionId: string,
+    listener: (happening: TurnHappening) => void,
+  ) => () => void;
+}
+
+// Listens to one Session's Feed for the Agent's and the person's words, following it when the Session replaces its Feed actor, and to its Permission requests.
 class FeedWatch {
   private readonly happenings = new FeedHappenings();
+  // Each Permission request is reported once, however often the Session changes while it waits.
+  private readonly reportedRequests = new Set<string>();
   private feed: FeedActor | undefined;
   private batches: Stoppable | undefined;
   private readonly snapshots: Stoppable;
@@ -37,13 +51,30 @@ class FeedWatch {
   ) {
     this.follow();
     this.snapshots = sources.watchSessionSnapshot(sessionId, {
-      next: (): void => this.follow(),
+      next: (event): void => this.changed(event),
     });
   }
 
   public stop(): void {
     this.snapshots.unsubscribe();
     this.batches?.unsubscribe();
+  }
+
+  private changed(event: SnapshotEvent): void {
+    this.follow();
+
+    if (event.type === 'snapshot') this.permissionWaiting(event.snapshot);
+  }
+
+  private permissionWaiting({
+    pendingPermission,
+  }: Extract<SnapshotEvent, { type: 'snapshot' }>['snapshot']): void {
+    if (!pendingPermission) return;
+    const { requestId, title } = pendingPermission;
+
+    if (this.reportedRequests.has(requestId)) return;
+    this.reportedRequests.add(requestId);
+    this.listener({ type: 'permission.waiting', title });
   }
 
   private isNew(next: FeedActor | undefined): next is FeedActor {
@@ -82,21 +113,41 @@ const noticeEvent = (notice: VoiceNotice): FeedEvent => ({
   change: { type: 'upsert', update: noticeUpdate(notice) },
 });
 
-const watchOf =
-  (sources: FeedSources): VoiceSessions['watch'] =>
-  (sessionId, listener) => {
-    const watch = new FeedWatch(sources, sessionId, listener);
+// The Turn's end the voice is told of; which Prompt a Turn took stays with the Prompt's own answer.
+const endOf = (happening: TurnHappening): SessionHappening | undefined =>
+  happening.type === 'turn.ended'
+    ? {
+        type: 'turn.ended',
+        stopReason: happening.stopReason,
+        error: happening.error,
+      }
+    : undefined;
 
-    return (): void => watch.stop();
+// The Agent's words come from the Session's Feed, and each Turn's end from the Session itself.
+const watchOf =
+  (sources: FeedSources, work: VoiceSessionWork): VoiceSessions['watch'] =>
+  (sessionId, listener) => {
+    const words = new FeedWatch(sources, sessionId, listener);
+
+    const turns = work.watchTurns(sessionId, (happening) => {
+      const ended = endOf(happening);
+
+      if (ended) listener(ended);
+    });
+
+    return (): void => {
+      turns();
+      words.stop();
+    };
   };
 
-// The Session the Voice call speaks for, reached through the Engine's own Prompt path and Feed.
+// The Session the Voice call speaks for, reached through the Engine's own Prompt path, its Turn happenings and its Feed.
 export const voiceSessions = (
   sources: FeedSources,
-  prompt: VoicePrompts,
+  work: VoiceSessionWork,
 ): VoiceSessions => ({
-  prompt,
-  watch: watchOf(sources),
+  prompt: work.prompt,
+  watch: watchOf(sources, work),
   notice: (sessionId, notice) =>
     sources.findFeed(sessionId)?.send(noticeEvent(notice)),
 });

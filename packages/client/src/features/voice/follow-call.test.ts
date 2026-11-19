@@ -53,7 +53,7 @@ describe("the App's voice connection follows the Server's call", () => {
     expect(environment.microphone.stopped).toBe(false);
   });
 
-  it('starts the call after one unmuted', async () => {
+  it('starts the next call unmuted', async () => {
     const { connection, hear } = app();
     await connection.createOffer();
     hear(statusOf(callIn('s1')));

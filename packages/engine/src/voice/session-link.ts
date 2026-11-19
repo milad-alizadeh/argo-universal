@@ -1,14 +1,17 @@
 /*
- * What the Voice call needs of its Session, and nothing else: it sends the Session Prompts and hears what happens in its Feed.
- * The Engine's router supplies it once Sessions exist; the machine reads it when a call starts.
+ * What the Voice call needs of its Session, and nothing else: it sends the Session Prompts, hears the words and
+ * Permission requests in its Feed and hears from the Session when each Turn ends.
+ * The Engine's router attaches it once Sessions exist, as an event to the call machine; a call reads it when it starts.
  */
 
-// What happened in the Session's Feed that the voice is told about.
+// What happened in the Session that the voice is told about.
 export type SessionHappening =
   // An Agent message settled; its text is as stored, marks included.
   | { type: 'agent.message'; id: string; text: string }
   // The person typed a Prompt to the Session.
   | { type: 'person.typed'; text: string }
+  // A Permission request is waiting for the person's answer; `title` says what it is for.
+  | { type: 'permission.waiting'; title: string }
   // A Turn ended; `error` is the message of a Turn that failed.
   | { type: 'turn.ended'; stopReason: string; error: string | null };
 
@@ -31,7 +34,7 @@ export interface VoiceNotice {
 export interface VoiceSessions {
   // Sends the Session a Prompt from the Voice call.
   prompt: (sessionId: string, text: string) => Promise<PromptOutcome>;
-  // Listens to the Session's Feed; the returned function stops listening.
+  // Listens to the Session's Feed words and Turn ends; the returned function stops listening.
   watch: (
     sessionId: string,
     listener: (happening: SessionHappening) => void,
@@ -40,20 +43,9 @@ export interface VoiceSessions {
   notice: (sessionId: string, notice: VoiceNotice) => void;
 }
 
-// A holder the Engine fills after the call machine exists, because Sessions are built later.
-export class SessionLink {
-  private sessions: VoiceSessions | null = null;
-
-  public attach(sessions: VoiceSessions): void {
-    this.sessions = sessions;
-  }
-
-  // Adds a Notice to the Session's Feed; nothing is told before Sessions are attached.
-  public notice(sessionId: string, notice: VoiceNotice): void {
-    this.sessions?.notice(sessionId, notice);
-  }
-
-  public get current(): VoiceSessions | null {
-    return this.sessions;
-  }
-}
+// What a call has before Sessions are attached: nothing to send to, nothing to hear, nowhere to write.
+export const detachedSessions: VoiceSessions = {
+  prompt: () => Promise.reject(new Error('The Session cannot be reached')),
+  watch: () => (): void => {},
+  notice: () => {},
+};

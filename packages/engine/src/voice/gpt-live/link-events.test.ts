@@ -1,23 +1,31 @@
 import { describe, expect, it } from 'vitest';
-import { eventOfFrame } from './link-events';
-
-type Turn = { type: string; role: string };
-
-const frame = (event: Turn): string => JSON.stringify(event);
+import {
+  personTurnDone,
+  personTurnOpens,
+  voiceTurnDone,
+  voiceTurnOpens,
+} from '#mocks/gpt-live-frames';
+import { LinkReader } from './link-events';
 
 describe('the voice speaking, as the control link reports it', () => {
   it('starts when the assistant turn is created and stops when it is done', () => {
-    expect(
-      eventOfFrame(frame({ type: 'turn.created', role: 'assistant' })),
-    ).toEqual({ type: 'speaking', speaking: true });
-    expect(
-      eventOfFrame(frame({ type: 'turn.done', role: 'assistant' })),
-    ).toEqual({ type: 'speaking', speaking: false });
+    const reader = new LinkReader();
+
+    expect(reader.read(voiceTurnOpens)).toEqual([
+      { type: 'speaking', speaking: true },
+    ]);
+    expect(reader.read(voiceTurnDone)).toContainEqual({
+      type: 'speaking',
+      speaking: false,
+    });
   });
 
   it('is not reported for the person’s turns', () => {
-    expect(
-      eventOfFrame(frame({ type: 'turn.created', role: 'user' })),
-    ).toBeNull();
+    const reader = new LinkReader();
+
+    expect(reader.read(personTurnOpens)).toEqual([]);
+    expect(reader.read(personTurnDone)).not.toContainEqual(
+      expect.objectContaining({ type: 'speaking' }),
+    );
   });
 });

@@ -1,13 +1,12 @@
 import type { ReactNode } from 'react';
-import type { WorkPresentation } from './session-work-sheet';
 
-// Both work sheets mount together; each draws only at its own width and when its panel is shown.
+// Both work sheets mount together and follow the focused Inspector tab.
 export const bothSheets = (
-  subagents: WorkPresentation,
-  shells: WorkPresentation,
+  subagents: ReactNode,
+  shells: ReactNode,
 ): ReactNode => (
   <>
-    {subagents.sheet}
-    {shells.sheet}
+    {subagents}
+    {shells}
   </>
 );

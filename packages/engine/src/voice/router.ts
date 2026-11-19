@@ -3,7 +3,7 @@ import { publicProcedure, router, routerFactory, zAsyncIterable } from '../rpc';
 import type { VoiceCallsPort } from './voice-calls';
 
 export interface VoiceRouterDeps {
-  voice: VoiceCallsPort;
+  voice: Pick<VoiceCallsPort, 'watch'>;
 }
 
 // The App's stream of the Voice call's standing, which its Composer draws; the Operations start and end the call.

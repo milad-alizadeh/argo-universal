@@ -10,7 +10,7 @@ import {
 import { createWindow, originOf } from './app-window';
 import { applicationMenu } from './application-menu';
 import { handleExternalLinks } from './handle-external-links';
-import { handleAppMicrophone } from './microphone-permission';
+import { answerAppPermissionRequests } from './microphone-permission';
 import { handleProjectFolder } from './project-folder';
 import { reportUnexpectedFailure } from './report-unexpected-failure';
 import { reportFailure } from './server-failure-dialog';
@@ -144,7 +144,7 @@ const start = (): void => {
   if (!webDevelopmentUrl) handleAppProtocol(webExportDirectory);
 
   // The microphone a Voice call listens through: asked for on first use, and only by the App's own page. The session exists only once the app is ready.
-  handleAppMicrophone(session.defaultSession, windowOrigin);
+  answerAppPermissionRequests(session.defaultSession, windowOrigin);
 
   listenToServer();
   server.start();

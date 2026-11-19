@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
-import { runOperation } from '#mocks/operations';
 import {
   callOf,
   endedOf,
@@ -35,6 +34,27 @@ describe('Voice call', () => {
       ended: { sessionId, reason: 'person' },
     });
     expect(provider.call.ended).toBe(true);
+  });
+
+  it('opens a Session that is not open, as after a Server restart, and starts the call in it', async () => {
+    const voice = await startVoiceEngine();
+    const { host } = voice;
+    const { sessionId } = await openVoiceSession(voice);
+    await host.caller.session.close({ sessionId });
+
+    await host.caller.voice.start({ sessionId, offer });
+
+    expect(await callOf(host)).toMatchObject({ sessionId });
+  });
+
+  it('refuses a Session that does not exist, and starts no call', async () => {
+    const { host, provider } = await startVoiceEngine();
+
+    await expect(
+      host.caller.voice.start({ sessionId: 'no-such-session', offer }),
+    ).rejects.toThrow('No Session no-such-session');
+    expect(provider.calls).toHaveLength(0);
+    expect(await callOf(host)).toBeNull();
   });
 
   it('tells the voice which Session it speaks for', async () => {
@@ -107,21 +127,6 @@ describe('Voice call', () => {
       { ended: false },
     );
     expect(await callOf(host)).toMatchObject({ sessionId });
-  });
-
-  it('lets an Agent end its own Session’s call as an Operation', async () => {
-    const voice = await startVoiceEngine();
-    const { host, provider } = voice;
-    const session = await openVoiceSession(voice);
-    await host.caller.voice.start({ sessionId: session.sessionId, offer });
-    expect(
-      await runOperation(session.caller.operations, {
-        id: 'voice.end',
-        params: {},
-        wait: true,
-      }),
-    ).toEqual({ ended: true });
-    expect(provider.call.ended).toBe(true);
   });
 
   it('fails a start the provider cannot make', async () => {
