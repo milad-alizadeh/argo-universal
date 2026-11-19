@@ -47,6 +47,16 @@ describe('GPT-Live provider starting a call', () => {
     expect(endpoint.links).toHaveLength(1);
   });
 
+  it('tells the voice its name is Argo', async () => {
+    const { endpoint, start } = await setup([signedIn('t1')], ['t1']);
+
+    await start(request);
+
+    expect(endpoint.created.at(0)?.session.instructions).toMatch(
+      /^Your name is Argo\./,
+    );
+  });
+
   it('asks Codex for a new token once when the first is rejected', async () => {
     const { endpoint, auth, start } = await setup(
       [signedIn('stale'), signedIn('fresh')],
