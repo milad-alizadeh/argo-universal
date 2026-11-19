@@ -1,3 +1,4 @@
+import type { VoiceStatus } from '@repo/contracts';
 import { useEffect, useMemo, type JSX, type ReactNode } from 'react';
 import {
   browserCarriesAudio,
@@ -15,32 +16,49 @@ const connectionFor = (desktop: boolean): VoiceConnection | null =>
     ? createWebRtcVoiceConnection(browserVoiceEnvironment)
     : null;
 
-// Follows the Server's call App-wide, so the microphone is released when it ends on any screen.
-function FollowsCall({ connection }: { connection: VoiceConnection }): null {
-  const status = useVoiceStatus();
+interface HostProps {
+  connection: VoiceConnection;
+  // The Server's standing for the call, as `voice.watch` gives it.
+  status: VoiceStatus;
+  children: ReactNode;
+}
+
+/*
+ * The App's voice connection, given to every screen and closed when the Server's call ends, whatever screen is shown.
+ * Pages read it; none decides its lifetime.
+ */
+export function VoiceConnectionHost({
+  connection,
+  status,
+  children,
+}: HostProps): JSX.Element {
   const hear = useMemo(() => followCall(connection), [connection]);
 
   useEffect(() => hear(status), [hear, status]);
 
-  return null;
+  return (
+    <VoiceConnectionProvider value={connection}>
+      {children}
+    </VoiceConnectionProvider>
+  );
+}
+
+// The host, following the Server's call from the root of the App.
+function ServerVoiceHost(props: Omit<HostProps, 'status'>): JSX.Element {
+  return <VoiceConnectionHost {...props} status={useVoiceStatus()} />;
 }
 
 type Props = { desktop: boolean; children: ReactNode };
 
-/*
- * The App's voice connection: made once where the App carries audio, and closed when the Server's call ends, whatever
- * screen is shown. Pages read it; none decides its lifetime.
- */
 export function DesktopVoiceProvider({
   desktop,
   children,
 }: Props): JSX.Element {
   const connection = useMemo(() => connectionFor(desktop), [desktop]);
 
-  return (
-    <VoiceConnectionProvider value={connection}>
-      {connection && <FollowsCall connection={connection} />}
-      {children}
-    </VoiceConnectionProvider>
+  return connection ? (
+    <ServerVoiceHost connection={connection}>{children}</ServerVoiceHost>
+  ) : (
+    <VoiceConnectionProvider value={null}>{children}</VoiceConnectionProvider>
   );
 }

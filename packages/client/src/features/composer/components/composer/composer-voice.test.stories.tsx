@@ -12,6 +12,7 @@ import { callPointerId } from './composer-call-pointer';
 import { connectingRingId } from './composer-connecting-ring';
 import { microphoneButtonId, speakerButtonId } from './composer-mute-buttons';
 import { endButtonId, voiceButtonId } from './composer-primary-action';
+import type { ComposerVoice } from './composer-types';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer/Voice' };
 
@@ -24,26 +25,29 @@ const noMutes = {
   onSpeaker: fn(),
 };
 
-// What each slot's press asks for, so a story can ask whether it was called.
-const onStart = fn();
+// What a story's slot asks for when pressed, read from its own args so no spy is shared between stories.
+const startOf = (voice: ComposerVoice | undefined): (() => void) | undefined =>
+  voice?.kind === 'start' ? voice.onStart : undefined;
 
-const onEnd = fn();
+const endOf = (voice: ComposerVoice | undefined): (() => void) | undefined =>
+  voice && 'onEnd' in voice ? voice.onEnd : undefined;
 
-const onOpen = fn();
+const openOf = (voice: ComposerVoice | undefined): (() => void) | undefined =>
+  voice?.kind === 'elsewhere' ? voice.onOpen : undefined;
 
 // With nothing written and no call, the primary slot is the voice button, Send's circle with the five bars.
 export const Idle: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
-  args: { voice: { kind: 'start', onStart } },
-  play: async ({ canvas }) => {
+  args: { voice: { kind: 'start', onStart: fn() } },
+  play: async ({ canvas, args }) => {
     await expect(
       canvas.queryByRole('button', { name: 'Send' }),
     ).not.toBeInTheDocument();
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(voiceButtonId));
-    await expect(onStart).toHaveBeenCalledOnce();
+    await expect(startOf(args.voice)).toHaveBeenCalledOnce();
   },
 };
 
@@ -52,8 +56,8 @@ export const Connecting: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
-  args: { voice: { kind: 'connecting', onEnd } },
-  play: async ({ canvas }) => {
+  args: { voice: { kind: 'connecting', onEnd: fn() } },
+  play: async ({ canvas, args }) => {
     await expect(
       canvas.queryByRole('button', { name: 'Send' }),
     ).not.toBeInTheDocument();
@@ -62,7 +66,7 @@ export const Connecting: Story = {
       canvas.queryByTestId(microphoneButtonId),
     ).not.toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(endButtonId));
-    await expect(onEnd).toHaveBeenCalledOnce();
+    await expect(endOf(args.voice)).toHaveBeenCalledOnce();
   },
 };
 
@@ -72,14 +76,14 @@ export const SendDuringCall: Story = {
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
   args: {
-    voice: { kind: 'connected', onEnd, mutes: noMutes },
+    voice: { kind: 'connected', onEnd: fn(), mutes: noMutes },
     draft: { text: 'A pasted stack trace.', attachments: [] },
   },
   play: async ({ canvas, args }) => {
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
     await expect(args.onSend).toHaveBeenCalledWith(args.draft);
-    await expect(onEnd).not.toHaveBeenCalled();
+    await expect(endOf(args.voice)).not.toHaveBeenCalled();
   },
 };
 
@@ -88,15 +92,15 @@ export const EndWithEmptyDraft: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
-  args: { voice: { kind: 'connected', onEnd, mutes: noMutes } },
-  play: async ({ canvas }) => {
+  args: { voice: { kind: 'connected', onEnd: fn(), mutes: noMutes } },
+  play: async ({ canvas, args }) => {
     await expect(
       canvas.queryByRole('button', { name: 'Send' }),
     ).not.toBeInTheDocument();
     await expect(canvas.getByTestId(microphoneButtonId)).toBeInTheDocument();
     await expect(canvas.getByTestId(speakerButtonId)).toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(endButtonId));
-    await expect(onEnd).toHaveBeenCalledOnce();
+    await expect(endOf(args.voice)).toHaveBeenCalledOnce();
   },
 };
 
@@ -198,14 +202,14 @@ export const PointerToTheCall: Story = {
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
   args: {
-    voice: { kind: 'elsewhere', title: 'Fix the build', onOpen },
+    voice: { kind: 'elsewhere', title: 'Fix the build', onOpen: fn() },
   },
-  play: async ({ canvas }) => {
+  play: async ({ canvas, args }) => {
     await expect(canvas.queryByTestId(voiceButtonId)).not.toBeInTheDocument();
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(callPointerId));
     await expect(canvas.getByText('Call in Fix the build')).toBeInTheDocument();
-    await expect(onOpen).toHaveBeenCalledOnce();
+    await expect(openOf(args.voice)).toHaveBeenCalledOnce();
   },
 };
 
@@ -221,10 +225,13 @@ function dangerColor(): string {
 }
 
 // Whether a button draws its glyph in the danger red.
-const readsRed = (button: HTMLElement): boolean =>
-  [button, ...button.querySelectorAll('*')].some(
-    (element) => getComputedStyle(element).color === dangerColor(),
+function readsRed(button: HTMLElement): boolean {
+  const danger = dangerColor();
+
+  return [button, ...button.querySelectorAll('*')].some(
+    (element) => getComputedStyle(element).color === danger,
   );
+}
 
 const muted = (microphone: boolean, speaker: boolean): Story => ({
   render: (args) => (
@@ -233,7 +240,7 @@ const muted = (microphone: boolean, speaker: boolean): Story => ({
   args: {
     voice: {
       kind: 'connected',
-      onEnd,
+      onEnd: fn(),
       mutes: { ...noMutes, microphone, speaker },
     },
   },
