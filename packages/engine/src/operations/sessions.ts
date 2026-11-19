@@ -8,11 +8,7 @@ import type {
   readerOperations,
   sessionOperations,
 } from '@repo/contracts/operations';
-import type {
-  AcceptedSessionPrompt,
-  NativeStartRequest,
-  Sessions,
-} from '../sessions';
+import type { NativeStartRequest, PromptLanding, Sessions } from '../sessions';
 import {
   startedWork,
   type AcceptedWork,
@@ -58,11 +54,21 @@ function startPrompt(
 
 // The work a Prompt is followed by is the Turn that holds it: the one it started, was steered into, or will start.
 function acceptedPrompt(
-  accepted: AcceptedSessionPrompt,
+  landing: PromptLanding,
 ): AcceptedWork<SessionPromptOutput> {
-  if (!('status' in accepted)) return { result: accepted };
+  if (landing.status === 'dropped')
+    return { result: { messageId: null, drop: landing.drop } };
 
-  const { turnId, ...result } = accepted;
+  if (landing.status === 'queued') {
+    const { messageId, notSteered, queuedId } = landing;
 
-  return { result, turnId };
+    return {
+      result: { status: 'queued', messageId, notSteered },
+      turnId: queuedId,
+    };
+  }
+
+  const { status, messageId, turnId } = landing;
+
+  return { result: { status, messageId }, turnId };
 }

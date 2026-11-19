@@ -432,6 +432,10 @@ _Avoid_: Message (alone), input, instruction
 A Prompt waiting in a Session’s ordered queue for a Turn of its own: the person’s, a Plugin’s, the Voice call’s or another Session’s. It is future work, outside the Feed until it starts. A Plugin may withdraw one it sent, never anyone else’s.
 _Avoid_: Pending message, draft Prompt
 
+**Sent Prompt**:
+A Prompt from a sender other than the person: another Session, a Plugin or the Voice call. An idle Session starts a Turn with it; a busy or paused one takes it at the end of its queue with its sender, and never resumes a paused queue. When the Agent supports steering, the running Turn takes it in at once, unless a Plugin sent it. The person's own Prompt is typed, not sent, and keeps its own busy behaviour.
+_Avoid_: Plugin Prompt, non-user Prompt, steered Prompt
+
 **Turn**:
 A stretch of Agent work started by a Prompt or by the Agent, ending with a stop reason when the Agent finishes or the Session ends it.
 _Avoid_: Run, request, exchange
