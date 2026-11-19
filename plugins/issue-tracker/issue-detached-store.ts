@@ -13,7 +13,7 @@ const keyOf = ({
   sessionId,
 }: IssueLink): (string | number)[] => [projectId, number, sessionId];
 
-// Remembers that the Issue was detached from the Session; the store's tables are already in place.
+// Remembers that the Issue was detached from the Session; its caller has the tables in place.
 export async function markDetached(
   { argo }: SessionStore,
   link: IssueLink,

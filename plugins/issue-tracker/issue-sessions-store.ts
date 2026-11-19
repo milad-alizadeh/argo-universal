@@ -45,13 +45,14 @@ async function detachSession(
   { projectId, number, sessionId }: IssueLink,
 ): Promise<void> {
   await store.ensureTables();
+  // The mark comes first, so an Agent's attach that checks between the two statements is refused.
+  await markDetached(store, { projectId, number, sessionId });
 
   await store.argo.storage.execute({
     sql: 'DELETE FROM issue_sessions WHERE project_id = ? AND issue_number = ? AND session_id = ?',
     params: [projectId, number, sessionId],
     method: 'run',
   });
-  await markDetached(store, { projectId, number, sessionId });
 }
 
 // The Sessions attached to one Issue, the most recent first.

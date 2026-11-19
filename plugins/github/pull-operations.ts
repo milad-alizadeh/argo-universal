@@ -10,6 +10,7 @@ import { discover, type Checkout, type Discovered } from './pull-discovery';
 import { failureMessage } from './pull-known';
 import { fetchPull } from './pull-reads';
 import { parseReference, type PullReference } from './pull-reference';
+import type { PullLink } from './pull-store';
 import type { Pulls } from './pull-sync';
 import { sessionInProject, type SessionCaller } from './session-caller';
 
@@ -94,6 +95,18 @@ export type Attached = ReturnType<typeof changeOf>;
  */
 export type Attaching = { reference: string; again: boolean };
 
+async function attachLink(
+  { store }: Scope,
+  link: PullLink,
+  again: boolean,
+): Promise<void> {
+  if (again) return store.attachAgain(link);
+
+  if (await store.detached(link)) throw new Error(detachedRefusal);
+
+  return store.attach(link);
+}
+
 const detachedRefusal =
   'This pull request was detached from this Session. Attach it again only when the person asks, with again: true.';
 
@@ -112,10 +125,7 @@ export async function attach(
 
   const link = { ...caller, repository: pull.repository, number: pull.number };
 
-  if (!again && (await scope.store.detached(link)))
-    throw new Error(detachedRefusal);
-
-  await scope.store.attach(link);
+  await attachLink(scope, link, again);
   // The pull request and its Checks are kept before the answer, so every surface shows it at once.
   await scope.sync([caller.sessionId]);
   scope.changed();
