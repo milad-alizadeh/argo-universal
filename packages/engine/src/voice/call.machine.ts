@@ -26,10 +26,7 @@ import {
   type VoiceCallInput,
 } from './call-types';
 import { watchConnection, watchSession } from './call-watchers';
-import type {
-  VoiceConnectionStatus,
-  VoiceProviderEvent,
-} from './provider';
+import type { VoiceConnectionStatus, VoiceProviderEvent } from './provider';
 import { providerCall, type ProviderCallInput } from './provider-call';
 import { detachedSessions } from './session-link';
 import { isTranscript, storeTranscript, withTranscript } from './transcript';

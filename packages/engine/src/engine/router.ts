@@ -48,28 +48,12 @@ function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
   });
 }
 
-// The Voice call sends its Session Prompts through Sessions, which say where each landed and when each Turn ends.
-function attachVoice(deps: AppRouterDeps, sessions: Sessions): void {
-  deps.voice.attach(
-    voiceSessions(deps, {
-      prompt: (sessionId, text) =>
-        sessions.promptFromVoice({
-          sessionId,
-          prompt: [{ type: 'text', text }],
-        }),
-      stop: (sessionId) => sessions.stopFromVoice(sessionId),
-      watchTurns: (sessionId, listener) =>
-        sessions.watchTurns(sessionId, listener),
-    }),
-  );
-}
-
 // Operations share the session and shell nouns with the Session procedures that are not Operations.
 const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions(deps);
 
   attachSessionActs(deps, sessions);
-  attachVoice(deps, sessions);
+  deps.voice.attach(voiceSessions(deps, sessions));
 
   const operations = createOperationProcedures({ ...deps, sessions });
 

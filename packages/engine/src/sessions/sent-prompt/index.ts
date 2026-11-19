@@ -1,5 +1,6 @@
 import type { NonUserPromptSender, SessionPromptInput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
+import type { PromptSend } from '../prompt-sender';
 import {
   PromptWatch,
   type FollowedPrompt,
@@ -11,14 +12,9 @@ import { queueEvent } from './queue';
 
 export { withdrawPrompt } from './withdraw';
 
-/*
- * Who sends the Prompt; the id it takes, as its Turn's id or, queued, as its queued id, which a new one is made for
- * when the caller has none; and the caller's budget, which also stops its admission.
- */
-export type SendRequest = {
-  sender: NonUserPromptSender;
+// A Sent Prompt's send; a new id is made for it when the caller has none.
+export type SendRequest = Omit<PromptSend<NonUserPromptSender>, 'id'> & {
   id?: string;
-  signal?: AbortSignal;
 };
 
 /*

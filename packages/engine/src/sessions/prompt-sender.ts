@@ -12,6 +12,13 @@ export type NativeStartRequest = SessionOrigin & {
   signal?: AbortSignal;
 };
 
+// One Prompt on its way: who sends it, the id it takes, and the caller's budget, which also stops its admission.
+export type PromptSend<Sender extends PromptSender = PromptSender> = {
+  sender: Sender;
+  id: string;
+  signal?: AbortSignal;
+};
+
 // One Session's start or Prompt: its ids exist before it is admitted, so a caller can follow it.
 export type NativeStart<Accepted> = {
   sessionId: string;
