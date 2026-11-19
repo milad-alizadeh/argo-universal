@@ -19,7 +19,7 @@ const treatments = {
     fill: 'bg-tray shadow-tray web:backdrop-blur-glass web:backdrop-saturate-180',
   },
   // The shared glass material, as the sidebar, the Composer and the floating pills draw it.
-  glass: { radius: 'rounded-2xl', fill: glassMaterialClass() },
+  glass: { radius: 'rounded-2xl', fill: glassMaterialClass },
 } satisfies Record<SurfaceProps['kind'], { radius: string; fill: string }>;
 
 // System glass takes a radius role, not a class: the same container radius as the glass treatment above.

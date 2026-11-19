@@ -3,7 +3,7 @@ import { Pressable } from 'react-native';
 import { cn } from '#kit/utils';
 import { LiquidGlass } from '#primitives/content/liquid-glass';
 
-// One surface and touch target for the pills above the Composer. They float over the Feed, so their glass stays frosted.
+// One surface and touch target for the pills above the Composer.
 export function PhonePill({
   children,
   ...props
