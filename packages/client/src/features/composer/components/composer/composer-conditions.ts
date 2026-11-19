@@ -33,7 +33,7 @@ function editableForSend(props: ComposerProps): boolean {
   return !isInactive(props) && isConnectionSendable(props);
 }
 
-function hasDraftContent({ draft }: ComposerProps): boolean {
+function hasDraftContent({ draft }: Pick<ComposerProps, 'draft'>): boolean {
   return draft.text.trim().length > 0 || draft.attachments.length > 0;
 }
 
@@ -88,12 +88,24 @@ function isIdleDraft(props: ComposerProps): boolean {
   return isEmptyDraft(props) && !sendResumesQueue(props);
 }
 
-// What Send does to a written draft: Queue it behind the running turn, or send it now.
-export function sendsToQueue(
-  props: Pick<ComposerProps, 'configuration' | 'queueWhileRunning'>,
-): boolean {
-  return isTurnRunning(props) && props.queueWhileRunning === true;
+type QueueingProps = Pick<
+  ComposerProps,
+  'configuration' | 'queueWhileRunning' | 'queueEdit' | 'draft'
+>;
+
+/*
+ * What Send does to a written draft: Queue it behind the running turn, or send it now. Editing a Queued Prompt
+ * saves it in place, and an empty draft resumes a paused queue, so both keep Send's name.
+ */
+export function sendsToQueue(props: QueueingProps): boolean {
+  return queuesWhileRunning(props) && writtenNewDraft(props);
 }
+
+const queuesWhileRunning = (props: QueueingProps): boolean =>
+  isTurnRunning(props) && props.queueWhileRunning === true;
+
+const writtenNewDraft = (props: QueueingProps): boolean =>
+  !props.queueEdit && hasDraftContent(props);
 
 function allowsSubmission(props: ComposerProps): boolean {
   return !isTurnRunning(props) || props.queueWhileRunning === true;

@@ -31,7 +31,12 @@ export type ConfigurationActionsLayout = Pick<ComposerLayout, 'inactive'> & {
 export type SendLayout = Pick<ComposerLayout, 'sendState' | 'send'> & {
   props: Pick<
     ComposerProps,
-    'disabled' | 'onStop' | 'queueWhileRunning' | 'configuration'
+    | 'disabled'
+    | 'onStop'
+    | 'queueWhileRunning'
+    | 'configuration'
+    | 'queueEdit'
+    | 'draft'
   >;
 };
 
