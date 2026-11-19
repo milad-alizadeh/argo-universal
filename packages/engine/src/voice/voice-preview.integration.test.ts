@@ -73,7 +73,7 @@ describe('Voice preview', () => {
 
     await expect(
       voice.host.caller.voice.preview({ voice: 'cove', offer }),
-    ).rejects.toThrow(/Voice call is running/);
+    ).rejects.toThrow(/Voice call is already running/);
     expect(voice.provider.previews).toEqual([]);
   });
 

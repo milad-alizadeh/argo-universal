@@ -6,6 +6,7 @@ import type {
   VoiceProviderCall,
   VoiceProviderEvent,
 } from './provider';
+import { unavailable } from './unavailable';
 
 // The longest a preview may play when the voice never says it has finished.
 const previewLimitMs = 20_000;
@@ -43,9 +44,10 @@ export class VoicePreviews {
   private asked = 0;
 
   public async play(
-    provider: VoiceProvider,
+    provider: VoiceProvider | null,
     input: VoicePreviewInput,
   ): Promise<VoicePreviewOutput> {
+    if (!provider) throw unavailable('No Voice provider is configured');
     this.end();
     const ask = ++this.asked;
     const words = greetingOf(await optionOf(provider, input.voice));

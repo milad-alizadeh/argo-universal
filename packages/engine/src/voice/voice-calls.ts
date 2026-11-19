@@ -10,7 +10,6 @@ import type {
   VoiceStartOutput,
   VoiceStatus,
 } from '@repo/contracts';
-import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
 import { voiceCallOf } from './call-look';
 import type { RunningCall, VoiceCallEvent } from './call-types';
@@ -20,7 +19,7 @@ import type { VoiceProvider } from './provider';
 import type { VoiceSessions } from './session-link';
 import { unavailable } from './unavailable';
 import { answerOf, startSettled } from './voice-call-answer';
-import { requireRoom } from './voice-call-room';
+import { requireNoCall, requireRoom } from './voice-call-room';
 import { VoiceChoices } from './voice-choices';
 import { VoicePreviews } from './voice-previews';
 import type { VoiceSettingsStore } from './voice-settings';
@@ -86,15 +85,10 @@ export class VoiceCalls implements VoiceCallsPort {
   }
 
   public async preview(input: VoicePreviewInput): Promise<VoicePreviewOutput> {
-    const provider = await this.usableProvider();
+    await this.requireUsable();
+    requireNoCall(this.actor);
 
-    if (!this.actor.getSnapshot().matches('idle'))
-      throw new TRPCError({
-        code: 'CONFLICT',
-        message: 'A Voice call is running',
-      });
-
-    return this.previews.play(provider, input);
+    return this.previews.play(this.provider(), input);
   }
 
   public async start(
@@ -185,19 +179,14 @@ export class VoiceCalls implements VoiceCallsPort {
   // Voice calls are on, the provider can be used, and there is room for a call in this Session.
   private async requireStartable(sessionId: string): Promise<void> {
     if (!this.choices.enabled()) throw unavailable('Voice calls are off');
-    await this.usableProvider();
+    await this.requireUsable();
     requireRoom(this.actor, sessionId);
   }
 
-  // The provider when it can start a call now; refused otherwise.
-  private async usableProvider(): Promise<VoiceProvider> {
+  // The provider can start a call now, or what asked is refused.
+  private async requireUsable(): Promise<void> {
     const availability = await this.availability();
 
     if (!availability.usable) throw unavailable(availability.reason);
-    const provider = this.provider();
-
-    if (!provider) throw unavailable('No Voice provider is configured');
-
-    return provider;
   }
 }

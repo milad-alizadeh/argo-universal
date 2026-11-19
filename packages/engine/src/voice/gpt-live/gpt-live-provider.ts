@@ -10,11 +10,11 @@ import { codexAppServerAuth, type CodexAuth } from './codex-auth';
 import { GptLiveCall } from './gpt-live-call';
 import {
   createCall,
-  defaultVoice,
   joinLink,
   TokenRejected,
   type CallOpening,
 } from './gpt-live-requests';
+import { gptLiveVoices } from './gpt-live-voices';
 
 export type GptLiveOptions = {
   auth?: CodexAuth;
@@ -35,36 +35,6 @@ const settingsOf = (options: GptLiveOptions): Required<GptLiveOptions> => ({
   ...options,
 });
 
-// GPT-Live's voices as Codex lists them (codex-rs protocol.rs, RealtimeVoicesList::builtin(), v3); the ids are what the call is created with.
-const serviceVoices = [
-  'juniper',
-  'maple',
-  'spruce',
-  'ember',
-  'vale',
-  'breeze',
-  'arbor',
-  'sol',
-  'cove',
-  'marin',
-  'aube',
-  'bubbie',
-  'haetsal',
-  'hanul',
-  'himari',
-  'leher',
-  'miko',
-  'neer',
-  'porto',
-  'rindo',
-  'rio',
-  'rivage',
-  'selva',
-  'sonna',
-  'tinta',
-  'viola',
-];
-
 const callInstructions = (briefing: string): string =>
   `You are the voice of a coding Agent. Hand the person's requests for work over; speak briefly.\n${briefing}`;
 
@@ -73,15 +43,6 @@ const previewInstructions =
 
 // The service speaks first only when asked on the control link; its instructions alone leave it silent (live probe, 2026-11-19).
 const sayExactly = (words: string): string => `Say exactly: "${words}"`;
-
-const labelOf = (id: string): string =>
-  `${id.charAt(0).toUpperCase()}${id.slice(1)}`;
-
-// The default leads, as the first voice listed is the one chosen when none is.
-const voiceOptions: VoiceOption[] = [
-  defaultVoice,
-  ...serviceVoices.filter((id) => id !== defaultVoice),
-].map((id) => ({ id, label: labelOf(id) }));
 
 /*
  * The GPT-Live Voice provider: a call on the person's ChatGPT subscription, with the token asked from the installed Codex each time.
@@ -106,7 +67,7 @@ export class GptLiveProvider implements VoiceProvider {
   }
 
   public voices(): Promise<VoiceOption[]> {
-    return Promise.resolve(voiceOptions);
+    return Promise.resolve(gptLiveVoices);
   }
 
   public start(request: VoiceStartRequest): Promise<GptLiveCall> {
