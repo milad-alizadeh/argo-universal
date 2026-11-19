@@ -136,7 +136,7 @@ describe("a Session's view of the Voice call", () => {
 
   it('hands over what is being said only for the Session the call is in', () => {
     const partials: VoiceStatus['partials'] = [
-      { speaker: 'person', id: 'p1', text: 'Hello' },
+      { speaker: 'person', id: 'p1', rowId: 'call-1:person:p1', text: 'Hello' },
     ];
 
     const call = statusOf(callIn('s1'), { partials });

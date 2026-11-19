@@ -3,6 +3,7 @@ import type { FeedSubscribeOutput, FeedUpdate } from '@repo/contracts';
 import type { FeedDeps, FeedEvent } from '../feed';
 import type { TurnHappening } from '../sessions';
 import { FeedHappenings } from './feed-happenings';
+import { PermissionWatch } from './permission-watch';
 import type {
   PromptOutcome,
   SessionHappening,
@@ -38,8 +39,7 @@ export interface VoiceSessionWork {
 // Listens to one Session's Feed for the Agent's and the person's words, following it when the Session replaces its Feed actor, and to its Permission requests.
 class FeedWatch {
   private readonly happenings = new FeedHappenings();
-  // Each Permission request is reported once, however often the Session changes while it waits.
-  private readonly reportedRequests = new Set<string>();
+  private readonly permissions: PermissionWatch;
   private feed: FeedActor | undefined;
   private batches: Stoppable | undefined;
   private readonly snapshots: Stoppable;
@@ -49,6 +49,7 @@ class FeedWatch {
     private readonly sessionId: string,
     private readonly listener: Listener,
   ) {
+    this.permissions = new PermissionWatch(listener);
     this.follow();
     this.snapshots = sources.watchSessionSnapshot(sessionId, {
       next: (event): void => this.changed(event),
@@ -63,18 +64,8 @@ class FeedWatch {
   private changed(event: SnapshotEvent): void {
     this.follow();
 
-    if (event.type === 'snapshot') this.permissionWaiting(event.snapshot);
-  }
-
-  private permissionWaiting({
-    pendingPermission,
-  }: Extract<SnapshotEvent, { type: 'snapshot' }>['snapshot']): void {
-    if (!pendingPermission) return;
-    const { requestId, title } = pendingPermission;
-
-    if (this.reportedRequests.has(requestId)) return;
-    this.reportedRequests.add(requestId);
-    this.listener({ type: 'permission.waiting', title });
+    if (event.type === 'snapshot')
+      this.permissions.changed(event.snapshot.pendingPermission);
   }
 
   private isNew(next: FeedActor | undefined): next is FeedActor {

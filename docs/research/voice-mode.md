@@ -355,9 +355,58 @@ One `codex app-server` on a unix socket, shared by the Codex ACP adapter (throug
 - **Unprompted messages are spoken** when sent as `session.context.append`.
 - **`session.close`** ended the call with a final usage figure.
 
+### Probe 3: how the service ends a call on its own (2026-11-19)
+
+Calls from headless Chromium over real WebRTC, with the control link joined from Node and every non-audio frame recorded. One run each.
+
+- **`session.started`** carries `session.expires_at`, two hours after the start.
+- **`session.usage.updated`** arrives every 15 seconds with `usage.audio_duration_ms` and `usage_limit: {status, reset_seconds}`; both limit fields stayed null throughout.
+- **No audio reaching the service.** It sent `{"type":"session.closed","reason":"expired","usage":{…}}` about 30 seconds in, then dropped the link without a close frame (1006).
+- **The peer connection closed.** The link dropped (1006) about 4 seconds later, with no `session.closed`.
+- **WebRTC never completed.** The link dropped (1006) about 35 seconds in, with no `session.closed`.
+- **After any of these**, joining the link again is refused with 404 `session_id_not_found`, and each refusal took about 5 seconds to arrive.
+- **Argo's own `session.close`** brings `session.closed` with `reason: "client_request"`.
+- **No idle close.** With quiet audio flowing and no speech, the call stayed up past twenty minutes; with the track muted (`track.enabled = false`), past the ten minutes the run lasted. Usage kept counting while muted.
+- **Keepalive.** The service answered a WebSocket ping within about 40 ms and sent no pings of its own. Codex answers pings and sends none.
+
 ### Not tested
 
 - Token refresh, a long task, an interruption, and two requests at once.
-- Whether the voice reliably uses a fixed reply form, which spoken consent depends on.
 - A Permission request during a Turn the voice started.
 
+Whether the voice uses a fixed reply form is answered in section 14.
+
+
+## 14. Spike 3: does the voice use a fixed reply form for consent and stop? (2026-11-19, #2406)
+
+Real calls against the live service, one call per trial, from headless Chromium over WebRTC with `say` clips as the person and the Engine's control link recorded. Each trial asks for work, gets "Sent to the Agent", is told of a waiting Permission request (title, kind, target and Agent name, with the reply form), then plays one answer; a stop trial plays "stop" while the work runs instead. 43 calls in all.
+
+### The answer is no
+
+- **The voice never sends a reply form.** Across 19 hand-overs, 17 answering an announced request and 2 asking to stop, with the form in the instructions, in the announcement, and in a stricter wording that forbade handing over the person's words, the hand-over was a fixed form 0 times.
+- **A hand-over is the person's own words, as heard.** Every one of the 19, and every work request, was the transcript of the person's turn, word for word, and named that turn in `user_bidi_turn_id`. The voice model does not write it.
+- **There is no tool channel.** `tools` in the creation session gives a 201, then the control link answers 404 (two calls). `session.update` with `tools` is refused: `Unknown parameter: 'session.tools'`.
+
+### What was measured
+
+Hand-overs reaching Argo after the announcement, per spoken answer:
+
+| Answer | Clips | Trials | Handed over | Form exact |
+| --- | --- | --- | --- | --- |
+| Allow | "Yes, allow it", "Go ahead, allow it once", "Allow it" | 7 | 6 | 0 |
+| Reject | "No, reject that", "Don't allow it", "Reject it" | 7 | 6 | 0 |
+| Unclear | a question about the command, "I'm not sure, let me think" | 6 | 2 | 0 |
+| Off topic | "How long has it been running?", "Sounds good" | 6 | 3 | 0 |
+| Silence | nothing for 22 seconds | 6 | 0 | 0 |
+| Stop, while work runs | "Stop.", "Stop that, cancel the work", "Okay, stop" | 5 | 2 | 0 |
+
+- **False positives: none from Argo's side.** No hand-over ever arrived without a person's turn under it, and silence never produced one.
+- **The voice claims outcomes it was never told.** In 3 trials nothing reached Argo and the voice still said "Okay, allowing it once", "Got it, I'll reject that", and, after "Sounds good", "I'll allow it once and continue". After a hand-over it says "rejecting that now" before Argo answers. This is the live bug: the voice's speech is not evidence of anything.
+- **The voice does follow a truthful answer.** Told "Argo applied nothing; the request is still waiting", it said so and asked again, 4 times of 4.
+- **A lone "Stop" is not handed over.** The voice takes it as an interruption and goes quiet, 0 of 2; longer phrasings were handed over 2 of 3.
+- **The work request itself was dropped twice** in 41 calls: the voice said "On it" and handed nothing over.
+- **The person's final turn arrives after the hand-over**, 41 to 434 ms later with the default acknowledgement filler. With `delegation.ack_filler: false` it waits until Argo replies (1.3 and 4.5 s), so a rule that waits for the person's final turn before replying stalls.
+
+### What would work instead, for the owner to decide
+
+Argo, not the voice, would read the answer: a hand-over is accepted as an answer only when it names a person's turn heard after the announcement, while that one announced request still waits, and its words match a short list Argo owns (allow once, reject). Anything else leaves the request open and the voice is told so. Argo's reply tells the voice the outcome, and the voice repeats it. "Stop" would need the same reading, and a lone "stop" would still never arrive. The scripts and results are in `/tmp/argo-voice-dev/consent` on the spike machine.

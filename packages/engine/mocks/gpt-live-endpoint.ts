@@ -6,18 +6,15 @@ import {
   bearerOf,
   callRequestOf,
   hasAlpha,
+  recordOf,
   refused,
   wordsOf,
-  type CallRequest,
+  type CreatedCall,
   type Reply,
 } from './gpt-live-call-request';
 import { sentMessageOf, type SentMessage } from './gpt-live-link-message';
 
-export type CreatedCall = CallRequest & {
-  authorization: string | undefined;
-  alpha: string | undefined;
-  url: string;
-};
+export type { CreatedCall } from './gpt-live-call-request';
 
 export type FakeEndpointOptions = {
   // Tokens the call-creation endpoint accepts; any other bearer token is rejected with 401.
@@ -28,16 +25,6 @@ export type FakeEndpointOptions = {
   answer?: string;
   callId?: string;
 };
-
-const recordOf = (
-  request: IncomingMessage,
-  form: CallRequest,
-): CreatedCall => ({
-  authorization: request.headers.authorization,
-  alpha: request.headers['openai-alpha']?.toString(),
-  url: request.url ?? '',
-  ...form,
-});
 
 /*
  * A local stand-in for the GPT-Live service: the call-creation POST and the control-link WebSocket.
@@ -50,8 +37,15 @@ export class FakeGptLiveEndpoint {
   public readonly linkTokens: (string | undefined)[] = [];
   // While true the service turns every control link away, as when it is down.
   public refuseLinks = false;
+  // While true the service no longer knows the call and answers a link with 404, as after it ended the call itself.
+  public callGone = false;
+  // While true the service answers no ping, as a link gone quiet without closing.
+  public silent = false;
   private readonly http: Server;
-  private readonly sockets = new WebSocketServer({ noServer: true });
+  private readonly sockets = new WebSocketServer({
+    noServer: true,
+    autoPong: false,
+  });
   private port = 0;
 
   public constructor(private readonly options: FakeEndpointOptions) {
@@ -111,10 +105,6 @@ export class FakeGptLiveEndpoint {
     return link;
   }
 
-  private callsAccept(request: IncomingMessage): boolean {
-    return this.accepts(request, this.options.accepts);
-  }
-
   private linksAccept(request: IncomingMessage): boolean {
     const accepted = this.options.linkAccepts ?? this.options.accepts;
 
@@ -133,21 +123,30 @@ export class FakeGptLiveEndpoint {
     head: Buffer,
   ): void {
     this.linkTokens.push(bearerOf(request));
+    const refusal = this.linkRefusal(request);
 
-    // The service refuses a link without the alpha header the call was created with (#2406 probe, 2026-11-19).
-    if (!hasAlpha(request))
-      return void socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
-
-    if (!this.linksAccept(request))
-      return void socket.end('HTTP/1.1 401 Unauthorized\r\n\r\n');
-
+    if (refusal) return void socket.end(`HTTP/1.1 ${refusal}\r\n\r\n`);
     this.sockets.handleUpgrade(request, socket, head, (link) =>
       this.join(link),
     );
   }
 
+  // The service refuses a link without the alpha header the call was created with (#2406 probe, 2026-11-19).
+  private linkRefusal(request: IncomingMessage): string | undefined {
+    const refusals: [boolean, string][] = [
+      [!hasAlpha(request), '400 Bad Request'],
+      [this.callGone, '404 Not Found'],
+      [!this.linksAccept(request), '401 Unauthorized'],
+    ];
+
+    return refusals.find(([refusing]) => refusing)?.[1];
+  }
+
   private join(link: WebSocket): void {
     this.links.push(link);
+    link.on('ping', (data) => {
+      if (!this.silent) link.pong(data);
+    });
     link.on('message', (data, binary) => this.record(wordsOf(data, binary)));
   }
 
@@ -162,7 +161,8 @@ export class FakeGptLiveEndpoint {
   private creationRefusal(request: IncomingMessage): Reply | null {
     if (!hasAlpha(request)) return refused(400, 'missing openai-alpha');
 
-    if (!this.callsAccept(request)) return refused(401, 'unauthorized');
+    if (!this.accepts(request, this.options.accepts))
+      return refused(401, 'unauthorized');
 
     return null;
   }

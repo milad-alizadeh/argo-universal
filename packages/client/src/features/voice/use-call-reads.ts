@@ -1,8 +1,8 @@
 import type { VoiceStartInput } from '@repo/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
-import { offerTo } from './offer-to';
 import { placedCall } from './placed-call';
+import { startCall } from './start-call';
 import type { VoiceConnection } from './voice-connection';
 
 // A Session's title as the Sessions list reads it; none until it loads, or without a Session.
@@ -20,97 +20,79 @@ export function useSessionTitle(
   return listed.data?.sessions[0]?.title;
 }
 
-type Send = (input: VoiceStartInput) => void;
+const nothingToResume = (): void => {};
 
-interface Answering {
-  connection: VoiceConnection | null;
+type Start = (input: VoiceStartInput) => Promise<{ answer: string }>;
+
+interface Placing {
+  start: Start;
+  end: (sessionId: string) => void;
   // Reads the Server's status again, so it carries the call before the placed one gives way.
   refresh: () => Promise<void>;
-  end: (sessionId: string) => void;
+  resumeFeed: () => void;
 }
 
-function endUnwanted(
+const unwanted = (): Error => new Error('The call was ended before it began');
+
+/*
+ * Sends the offer while the call is still wanted. A call ended before the offer is never sent; one ended before the
+ * answer came is ended on the Server too, and either way the connection lets go of the microphone.
+ */
+function sendWhileWanted(
+  sessionId: string,
+  { start, end }: Pick<Placing, 'start' | 'end'>,
+): (offer: string) => Promise<{ answer: string }> {
+  return async (offer) => {
+    if (!placedCall.holds(sessionId)) throw unwanted();
+    const started = await start({ sessionId, offer });
+
+    if (placedCall.holds(sessionId)) return started;
+    end(sessionId);
+    throw unwanted();
+  };
+}
+
+// The placed call gives way once the status has been read again: to the Server's call, or to nothing if it failed.
+async function placeCall(
+  sessionId: string,
   connection: VoiceConnection | null,
-  end: Answering['end'],
-  sessionId: string,
-): void {
-  connection?.close();
-  end(sessionId);
-}
-
-// The Server's answer completes the connection; a call ended before it came is ended on the Server too.
-async function answered(
-  { connection, refresh, end }: Answering,
-  answer: string,
-  sessionId: string,
+  placing: Placing,
 ): Promise<void> {
-  if (!placedCall.holds(sessionId))
-    return endUnwanted(connection, end, sessionId);
-
-  await connection?.accept(answer);
-  await refresh();
+  await startCall(connection, {
+    send: sendWhileWanted(sessionId, placing),
+    resumeFeed: placing.resumeFeed,
+  });
+  await placing.refresh();
   placedCall.release(sessionId);
 }
 
-function useAnswering(connection: VoiceConnection | null): Answering {
+function usePlacing(resumeFeed: () => void): Placing {
   const trpc = useTRPC();
   const cache = useQueryClient();
+  const start = useMutation(trpc.voice.start.mutationOptions());
   const end = useMutation(trpc.voice.end.mutationOptions());
   const queryKey = trpc.voice.status.queryKey();
 
   return {
-    connection,
-    refresh: () => cache.invalidateQueries({ queryKey }),
+    start: start.mutateAsync,
     end: (sessionId) => end.mutate({ sessionId }),
+    refresh: () => cache.invalidateQueries({ queryKey }),
+    resumeFeed,
   };
-}
-
-// Sends the offer to the Server; a start that fails lets the placed call go.
-function useSend(connection: VoiceConnection | null): Send {
-  const answering = useAnswering(connection);
-
-  const start = useMutation(
-    useTRPC().voice.start.mutationOptions({
-      onSuccess: ({ answer }, { sessionId }) =>
-        answered(answering, answer, sessionId),
-      onError: (_, { sessionId }) => {
-        connection?.close();
-        placedCall.release(sessionId);
-      },
-    }),
-  );
-
-  return start.mutate;
-}
-
-// Sends the offer on while the call is still wanted; a refused microphone or an End first lets the placed call go.
-async function offerFor(
-  sessionId: string,
-  connection: VoiceConnection | null,
-  send: Send,
-): Promise<void> {
-  let sent = false;
-
-  await offerTo(connection, (offer) => {
-    if (!placedCall.holds(sessionId)) return connection?.close();
-    sent = true;
-    send({ sessionId, offer });
-  });
-
-  if (!sent) placedCall.release(sessionId);
 }
 
 /*
  * Starting a call in a Session: the call is placed at once, so its stage and End show on the frame the person
- * pressed, and the microphone, the offer and the Server's start follow.
+ * pressed, and the microphone, the offer and the Server's start follow; then the page's Feed resumes (see `startCall`).
  */
 export function useStartCall(
   connection: VoiceConnection | null,
+  resumeFeed: () => void = nothingToResume,
 ): (sessionId: string) => void {
-  const send = useSend(connection);
+  const placing = usePlacing(resumeFeed);
 
   return (sessionId) => {
     placedCall.place(sessionId);
-    void offerFor(sessionId, connection, send);
+    void placeCall(sessionId, connection, placing);
   };
 }

@@ -97,7 +97,7 @@ function useSessionSurroundings(
     agents: useInstalledAgents(),
     navigate: useNavigateFromShown(),
     imageUrl: useBlobUrl(),
-    ...useSessionLink(sessionId),
+    ...useSessionLink({ sessionId, resumeFeed: feed.resumeAfterCommand }),
     onAtEndChange: useMarkSeen(sessionId, feed.revision, preview),
   };
 }

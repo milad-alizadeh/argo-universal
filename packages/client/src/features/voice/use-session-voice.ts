@@ -14,6 +14,7 @@ import {
   type SessionVoiceInput,
 } from './session-voice';
 import { useSessionTitle, useStartCall } from './use-call-reads';
+import { useHeldPartials } from './use-held-partials';
 import { type SessionMutes, useSessionMutes } from './use-session-mutes';
 import { useVoiceStatus } from './use-voice-status';
 import type { VoiceConnection, VoiceLevels } from './voice-connection';
@@ -21,12 +22,18 @@ import { useVoiceConnection } from './voice-connection-context';
 
 const noLevels: VoiceLevels = { input: 0, output: 0 };
 
-// Starts the call in the Session the page shows.
+// The Session page a call is seen from, and how it opens its live Feed again after a start.
+export interface VoicePage {
+  sessionId: string;
+  resumeFeed: () => void;
+}
+
+// Starts the call in the Session the page shows, then resumes the page's Feed (see `startCall`).
 function useStartHere(
-  sessionId: string,
+  { sessionId, resumeFeed }: VoicePage,
   connection: VoiceConnection | null,
 ): () => void {
-  const start = useStartCall(connection);
+  const start = useStartCall(connection, resumeFeed);
 
   return () => start(sessionId);
 }
@@ -41,7 +48,7 @@ function endHere(
 }
 
 function useActions(
-  sessionId: string,
+  page: VoicePage,
   connection: VoiceConnection | null,
   mutes: SessionMutes,
 ): SessionVoiceActions {
@@ -49,8 +56,8 @@ function useActions(
   const navigate = useNavigateFromShown();
 
   return {
-    start: useStartHere(sessionId, connection),
-    end: () => endHere(sessionId, end.mutate),
+    start: useStartHere(page, connection),
+    end: () => endHere(page.sessionId, end.mutate),
     setMicrophoneMuted: mutes.setMicrophoneMuted,
     setSpeakerMuted: mutes.setSpeakerMuted,
     open: (target) => navigate(sessionHref(target)),
@@ -99,7 +106,7 @@ function useLive(
 }
 
 function useInput(
-  sessionId: string,
+  { sessionId, resumeFeed }: VoicePage,
   connection: VoiceConnection | null,
   status: VoiceStatus,
 ): SessionVoiceInput {
@@ -111,7 +118,7 @@ function useInput(
     ...useLive(status, sessionId, connection),
     mutes: mutes.mutes,
     titleOf: useTitleOf(status, sessionId),
-    actions: useActions(sessionId, connection, mutes),
+    actions: useActions({ sessionId, resumeFeed }, connection, mutes),
   };
 }
 
@@ -120,10 +127,15 @@ function useInput(
  * through `sessionVoice`. The Composer, the orb and the Feed's partial words all come from here, so none of them needs
  * another to have subscribed first.
  */
-export function useSessionVoice(sessionId: string): View {
+export function useSessionVoice(page: VoicePage): View {
   const connection = useVoiceConnection();
   const status = useVoiceStatus();
-  const view = sessionVoice(useInput(sessionId, connection, status));
+  const view = sessionVoice(useInput(page, connection, status));
+  const partials = useHeldPartials(view.partials);
 
-  return { ...view, voice: connection ? view.composer : undefined };
+  return {
+    ...view,
+    partials,
+    voice: connection ? view.composer : undefined,
+  };
 }

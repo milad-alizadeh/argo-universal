@@ -90,9 +90,12 @@ async function startAndEnd(canvas: Canvas): Promise<void> {
   await expectStageIn(canvas);
   await canvas.findByRole('img', { name: 'Voice listening' }, settled);
   await expectStageIn(canvas);
-  await expect(
-    await canvas.findByRole('button', { name: 'Mute microphone' }),
-  ).toBeVisible();
+
+  const microphone = await canvas.findByRole('button', {
+    name: 'Mute microphone',
+  });
+
+  await waitFor(() => expect(microphone).toBeVisible());
   await userEvent.click(canvas.getByRole('button', { name: 'End' }));
   await waitFor(() =>
     expect(canvas.queryByTestId(voiceStageRoomId)).not.toBeInTheDocument(),

@@ -52,14 +52,13 @@ export const voiceSaid = {
   },
 } satisfies TranscriptFixture;
 
-// Words not final yet: the same row, flagged, in place at the tail of the Feed.
+// Words not final yet: the same row, under the id its final words are stored with, flagged, in place at the tail of the Feed.
 export const personSaying = {
   item: {
     type: 'row',
     partial: true,
     row: {
       ...personSaid.item.row,
-      id: 'partial:person',
       state: 'open',
       content: text(words.personPartial),
     },
@@ -72,7 +71,6 @@ export const voiceSaying = {
     partial: true,
     row: {
       ...voiceSaid.item.row,
-      id: 'partial:voice',
       state: 'open',
       content: text(words.voicePartial),
     },

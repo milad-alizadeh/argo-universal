@@ -27,6 +27,8 @@ type FixtureOptions = {
   linkAccepts?: string[];
   // How long a lost control link may stay down; generous unless a test is about the loss.
   lostLinkMs?: number;
+  // How often the call checks its control link with a ping; the provider's own unless a test is about it.
+  pingMs?: number;
 };
 
 const generousGraceMs = 30_000;
@@ -41,16 +43,18 @@ export type GptLiveFixture = {
   close: () => Promise<void>;
 };
 
+type Timing = Pick<FixtureOptions, 'lostLinkMs' | 'pingMs'>;
+
 const providerFor = (
   endpoint: FakeGptLiveEndpoint,
   auth: ScriptedAuth,
-  lostLinkMs: number,
+  timing: Timing,
 ): GptLiveFixture['provider'] =>
   createGptLiveProvider({
     auth,
     callsUrl: `${endpoint.httpBase}/backend-api/codex/realtime/calls`,
     linkUrl: `${endpoint.linkBase}/v1/live`,
-    lostLinkMs,
+    ...timing,
   });
 
 class Fixture implements GptLiveFixture {
@@ -83,11 +87,15 @@ export async function fixtureOf(
   accepts: string[],
   options: FixtureOptions = {},
 ): Promise<GptLiveFixture> {
-  const { linkAccepts, lostLinkMs = generousGraceMs } = options;
+  const { linkAccepts, ...timing } = options;
   const endpoint = await startFakeEndpoint({ accepts, linkAccepts });
   const auth = new ScriptedAuth(readings);
 
-  return new Fixture(endpoint, auth, providerFor(endpoint, auth, lostLinkMs));
+  return new Fixture(
+    endpoint,
+    auth,
+    providerFor(endpoint, auth, { lostLinkMs: generousGraceMs, ...timing }),
+  );
 }
 
 // Everything the call reports from now on.
