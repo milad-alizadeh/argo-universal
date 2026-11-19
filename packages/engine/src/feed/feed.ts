@@ -44,6 +44,7 @@ export function readFeedRow(
       message: `No row ${id} in Session ${sessionId}`,
     });
 
+  // The memory copy and `readWrittenRow` are as the Feed holds them; the row is read without Voice marks.
   return withoutVoiceMarkers(newest);
 }
 

@@ -1,4 +1,4 @@
-import { readVoiceMarker, type VoiceMarker } from '../feed';
+import { readVoiceMessage, voiceInstruction, type VoiceMessage } from '../feed';
 import type { VoiceSay } from './call-types';
 import { inPieces } from './pieces';
 import { relayWords } from './relay-words';
@@ -7,20 +7,6 @@ import type {
   SessionHappening,
   VoiceSessions,
 } from './session-link';
-
-// What the first Prompt of a call asks of the Agent, so the voice can tell progress from a result.
-const voiceInstruction = [
-  'A person is talking to you through a voice, and the voice reads your messages aloud.',
-  'Begin every message with one mark:',
-  '[STATUS] for progress the person may hear while you work,',
-  '[COMPLETE] for the result, a question, or a blocker once you are done,',
-  '[ANALYSIS] for notes that must stay silent.',
-  'Keep spoken messages short and plain; do not read out code or tool output.',
-  'End the call by running the Argo Operation voice.hangUp, but only when the person clearly says they are done with the call, such as goodbye or hang up.',
-  'Do not end it when the person asks you to stop work, pause or wait: that is not the end of the call.',
-].join('\n');
-
-const spokenMarks = new Set<VoiceMarker | null>(['[COMPLETE]']);
 
 type Speak = (say: VoiceSay) => void;
 
@@ -129,20 +115,15 @@ export class AgentRelay {
   }
 
   private agentSaid(text: string): void {
-    const { marker, body } = readVoiceMarker(text);
-    const result = spokenMarks.has(marker);
+    const message = readVoiceMessage(text);
 
-    this.tell(body, result ? 'speak' : 'background');
-    this.remember(marker, body, result);
+    this.tell(message.body, message.kind === 'result' ? 'speak' : 'background');
+    this.remember(message);
   }
 
-  private remember(
-    marker: VoiceMarker | null,
-    body: string,
-    result: boolean,
-  ): void {
-    if (result) this.turn = { resultSent: true, last: null };
-    else if (marker !== '[ANALYSIS]') this.turn.last = body;
+  private remember({ kind, body }: VoiceMessage): void {
+    if (kind === 'result') this.turn = { resultSent: true, last: null };
+    else if (kind === 'progress') this.turn.last = body;
   }
 
   private personTyped(text: string): void {

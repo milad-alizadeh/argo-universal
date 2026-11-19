@@ -2,10 +2,10 @@ import type { SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { createRejectionCounter } from '@repo/machine-log';
 import {
-  hydrateStoredFeedRow,
+  readStoredFeedRow,
   newestRows,
   type FeedRowWrite,
-  readQueuedFeed,
+  readQueuedRows,
 } from '../../feed';
 import type { WriterActorRef } from '../../storage';
 import { readStoredHeaderRows } from './query';
@@ -71,10 +71,10 @@ class HeaderRowsRead {
       turnId,
     });
 
-    const queued = readQueuedFeed(
+    const queued = readQueuedRows(
       this.input.writer,
       this.input.sessionId,
-    ).rows.filter((row): boolean => row.turnId === turnId);
+    ).filter((row): boolean => row.turnId === turnId);
 
     return unseenRows([...stored, ...queued], this.input.rows);
   }
@@ -83,7 +83,7 @@ class HeaderRowsRead {
     if (!('payloadVersion' in row)) return [row];
 
     try {
-      return [hydrateStoredFeedRow(this.input.sessionId, row)];
+      return [readStoredFeedRow(this.input.sessionId, row)];
     } catch (error) {
       this.rejected = true;
       this.rejections.report('rejected live-header shape', error);

@@ -8,6 +8,7 @@ import {
   readQueuedFeed,
   readQueuedFeedRow,
 } from './feed-storage';
+import { readQueuedRows } from './merged-rows';
 
 // A job of a module Feed storage does not know: it shows only through the Feed rows it writes.
 const foreignRows = (
@@ -39,4 +40,17 @@ it('reads the newest queued Feed rows of one Session from jobs of any module', (
   expect(
     readQueuedFeedRow(writer, { sessionId: 'session-1', id: 'row-1' }),
   ).toEqual(newer);
+});
+
+it('reads queued Agent messages without Voice marks, and hands the Feed them as it wrote them', (): void => {
+  const marked = row({ content: [{ type: 'text', text: '[COMPLETE] Done' }] });
+  const { writer } = submitWrites([foreignRows('session-1', [marked], 1)]);
+
+  expect(readQueuedRows(writer, 'session-1')).toEqual([
+    { ...marked, content: [{ type: 'text', text: 'Done' }] },
+  ]);
+  expect(readQueuedFeed(writer, 'session-1').rows).toEqual([marked]);
+  expect(
+    readQueuedFeedRow(writer, { sessionId: 'session-1', id: 'row-1' }),
+  ).toEqual(marked);
 });
