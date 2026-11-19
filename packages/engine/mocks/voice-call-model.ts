@@ -18,8 +18,11 @@ export const modelMachine = voiceCallMachine.provide({
   },
 });
 
-export const modelInput: VoiceCallInput = {
+export const voiceModelIdleMs = 60_000;
+
+// A fresh input for each actor, so no two tests share one provider.
+export const voiceModelInput = (): VoiceCallInput => ({
   provider: new FakeVoiceProvider(),
   briefing: () => '',
-  idleMs: 60_000,
-};
+  idleMs: voiceModelIdleMs,
+});

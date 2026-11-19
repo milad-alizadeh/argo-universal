@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createActor, type Actor } from 'xstate';
 import { start } from '#mocks/voice-call-events';
-import { modelInput, modelMachine } from '#mocks/voice-call-model';
+import {
+  modelMachine,
+  voiceModelIdleMs as idleMs,
+  voiceModelInput,
+} from '#mocks/voice-call-model';
 import { voiceCallOf } from './call-look';
-import { providerEvent } from './call-types';
-
-const { idleMs } = modelInput;
+import { providerEvent, type VoiceCallEvent } from './call-types';
 
 const connected = providerEvent({ type: 'status', status: 'connected' });
 
@@ -15,7 +17,7 @@ let voice: Actor<typeof modelMachine>;
 
 beforeEach(() => {
   vi.useFakeTimers();
-  voice = createActor(modelMachine, { input: modelInput }).start();
+  voice = createActor(modelMachine, { input: voiceModelInput() }).start();
   voice.send(start);
   voice.send({ type: 'call.answered', answer: 'answer' });
 });
@@ -50,6 +52,7 @@ describe('a Voice call whose connection drops', () => {
     voice.send(disconnected);
     vi.advanceTimersByTime(idleMs * 2);
 
+    expect(voice.getSnapshot().matches({ running: 'reconnecting' })).toBe(true);
     expect(voice.getSnapshot().context.ended).toBeNull();
   });
 
@@ -80,6 +83,7 @@ describe('a Voice call whose connection drops', () => {
   it('is still connecting when the link drops before the call joined', () => {
     voice.send(disconnected);
 
+    expect(voice.getSnapshot().matches({ running: 'connecting' })).toBe(true);
     expect(callNow()).toMatchObject({
       status: 'connecting',
       connection: 'connecting',
@@ -87,5 +91,47 @@ describe('a Voice call whose connection drops', () => {
       trouble: null,
       startedAt: null,
     });
+    voice.send(connected);
+    expect(voice.getSnapshot().matches({ running: 'connected' })).toBe(true);
+    expect(callNow()).toMatchObject({ startedAt: expect.any(String) });
+  });
+});
+
+const endings: [string, VoiceCallEvent, string][] = [
+  ['the person', { type: 'call.end', reason: 'person' }, 'person'],
+  [
+    'a provider error',
+    providerEvent({ type: 'status', status: 'error' }),
+    'failed',
+  ],
+  [
+    'its Session closing',
+    { type: 'call.sessionGone', reason: 'session-closed' },
+    'session-closed',
+  ],
+];
+
+describe('a reconnecting Voice call', () => {
+  it.each(endings)('ends by %s', (_, ending, reason) => {
+    voice.send(connected);
+    voice.send(disconnected);
+    voice.send(ending);
+
+    expect(voice.getSnapshot().matches('idle')).toBe(true);
+    expect(voice.getSnapshot().context.ended).toEqual({
+      callId: 'call-1',
+      sessionId: 'session-1',
+      reason,
+    });
+  });
+
+  it('records why a provider error ended it', () => {
+    voice.send(connected);
+    voice.send(disconnected);
+    voice.send(providerEvent({ type: 'status', status: 'error' }));
+
+    expect(voice.getSnapshot().context.failure).toBe(
+      'The connection to the voice failed.',
+    );
   });
 });
