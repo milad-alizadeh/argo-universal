@@ -12,6 +12,9 @@ const model = 'gpt-live-1.1-codex';
 
 export const defaultVoice = 'cove';
 
+// Both the call's creation and its control link carry this, or the service refuses them.
+const alpha = 'quicksilver=v2';
+
 const creationQuery = '?intent=quicksilver&architecture=avas';
 
 const unauthorized = 401;
@@ -23,22 +26,17 @@ const rejectedStatuses = new Set([unauthorized, forbidden]);
 const instructions = (briefing: string): string =>
   `You are the voice of a coding Agent. Hand the person's requests for work over; speak briefly.\n${briefing}`;
 
-const sessionOf = (request: VoiceStartRequest): string =>
-  JSON.stringify({
-    type: 'realtime',
-    model,
-    instructions: instructions(request.briefing),
-    audio: { output: { voice: request.voice ?? defaultVoice } },
-    delegation: { type: 'client' },
-  });
+// The session the call starts with; the service sets its type itself and refuses one sent.
+const sessionOf = (request: VoiceStartRequest): object => ({
+  model,
+  instructions: instructions(request.briefing),
+  audio: { output: { voice: request.voice ?? defaultVoice } },
+  delegation: { type: 'client' },
+});
 
-function formOf(request: VoiceStartRequest): FormData {
-  const form = new FormData();
-  form.set('sdp', request.offer);
-  form.set('session', sessionOf(request));
-
-  return form;
-}
+// The ChatGPT route reads one JSON body with the offer and the session, as Codex sends it; it refuses multipart.
+const bodyOf = (request: VoiceStartRequest): string =>
+  JSON.stringify({ sdp: request.offer, session: sessionOf(request) });
 
 const bearer = (token: string): string => `Bearer ${token}`;
 
@@ -67,8 +65,12 @@ export async function createCall(
 ): Promise<CreatedCall> {
   const response = await fetch(`${url}${creationQuery}`, {
     method: 'POST',
-    headers: { Authorization: bearer(token), 'openai-alpha': 'quicksilver=v2' },
-    body: formOf(request),
+    headers: {
+      Authorization: bearer(token),
+      'openai-alpha': alpha,
+      'Content-Type': 'application/json',
+    },
+    body: bodyOf(request),
   });
 
   assertCreated(response);
@@ -84,7 +86,7 @@ const refusalOf = (status: number | undefined): Error =>
 // Joins the call's control link with the same token.
 export function joinLink(url: string, token: string): Promise<WebSocket> {
   const link = new WebSocket(url, {
-    headers: { Authorization: bearer(token) },
+    headers: { Authorization: bearer(token), 'openai-alpha': alpha },
   });
 
   return new Promise((resolve, reject) => {

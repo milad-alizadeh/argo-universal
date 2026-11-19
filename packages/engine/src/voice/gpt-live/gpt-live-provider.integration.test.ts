@@ -37,7 +37,6 @@ describe('GPT-Live provider starting a call', () => {
       url: expect.stringContaining('intent=quicksilver&architecture=avas'),
       sdp: 'v=0 offer',
       session: {
-        type: 'realtime',
         model: 'gpt-live-1.1-codex',
         instructions: expect.stringContaining('Session: Fix the build'),
         audio: { output: { voice: 'cove' } },
