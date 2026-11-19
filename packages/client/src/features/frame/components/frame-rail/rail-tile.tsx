@@ -35,7 +35,7 @@ type TileIconProps = Pick<RailTileProps, 'section' | 'selected'> & {
 // The hover, pressed and selected tints every ghost control in Argo takes.
 const tileClass = (selected: boolean): string =>
   cn(
-    'items-center justify-center web:transition-colors web:duration-150 web:hover-capable:hover:bg-hover web:active:bg-pressed web:outline-none web:focus-visible:ring-2 web:focus-visible:ring-focus',
+    'items-center justify-center web:transition-colors web:duration-150 web:hover-capable:hover:bg-hover web:active:bg-pressed',
     railTiles.size,
     railTiles.corners,
     selected && railTiles.selected,

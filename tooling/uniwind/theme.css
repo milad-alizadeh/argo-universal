@@ -213,7 +213,6 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --blur-glass: 28px;
   --blur-tray: 3px;
-  --radius-inherit: inherit;
   /* Sheets, dialogs and alerts on a wide window. */
   --radius-sheet: 28px;
   /* A phone's grouped card: iOS's inset-grouped section (26) and Material's
@@ -653,6 +652,18 @@
       --shadow-hairline: inset 0 0 0 1px var(--color-hairline);
     }
   }
+}
+
+/* A view takes its parent's corners. A --radius-inherit token cannot do this: CSS reads `inherit` through var() as
+   invalid, so the corners came out square. */
+@utility rounded-inherit {
+  border-radius: inherit;
+}
+
+/* The keyboard focus ring every focusable draws (react-native-web.css), for a control that draws it on an inner shape. */
+@utility focus-ring {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
 }
 
 /* Text roles: phone tokens first, the "-wide" tokens with the desktop type scale (`wide-type:`). */
