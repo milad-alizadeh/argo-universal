@@ -50,7 +50,7 @@ async function appMessage(
   input: HumanPrompt,
 ): Promise<FeedUpdate> {
   const result = await journey.host.caller.session.prompt(input);
-  expect(Object.keys(result)).toEqual(['messageId']);
+  expect(result).toEqual({ status: 'started', messageId: expect.any(String) });
 
   return journey.host.caller.feed.row({
     sessionId: input.sessionId,

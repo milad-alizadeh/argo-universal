@@ -1,4 +1,5 @@
 export {
+  nonUserPromptChange,
   promptMessageChange,
   promptMessageId,
   userMessageChange,
@@ -25,7 +26,12 @@ export type { FeedDeps } from './feed';
 
 export { readFeedRow } from './feed';
 
-export { readFeedRows } from './merged-rows';
+export {
+  readFeedMemory,
+  readFeedRows,
+  readQueuedRows,
+  readStoredFeedRow,
+} from './merged-rows';
 
 export {
   committedTurnEndings,
@@ -80,3 +86,13 @@ export { mapSupportedContentBlock } from './acp/content';
 export { toolCallEvent } from './tool-call-event';
 
 export { nativePermissionOutcomeEvent } from './native-permission-outcome';
+
+export { messageText } from './message-text';
+
+export {
+  readVoiceSections,
+  withVoiceInstruction,
+  withoutVoiceInstruction,
+  VoiceMarkerStream,
+  type VoiceMessage,
+} from './voice-markers';

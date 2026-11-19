@@ -7,6 +7,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { transcriptStyle } from '../transcript/transcript-style';
 
 const clampedLines = 4;
 
@@ -41,10 +42,15 @@ const bubbleClassName =
 
 interface BubbleProps {
   text: string;
+  // The words are still being said (a Voice call's transcript), so they are drawn as a partial.
+  partial?: boolean;
 }
 
-export function UserMessageBubble({ text }: BubbleProps): React.JSX.Element {
-  const { clamped, expand, markdown } = useBubbleExpansion();
+export function UserMessageBubble({
+  text,
+  partial = false,
+}: BubbleProps): React.JSX.Element {
+  const { clamped, expand, markdown } = useBubbleExpansion(partial);
 
   return (
     <View className={bubbleClassName}>
@@ -57,10 +63,13 @@ export function UserMessageBubble({ text }: BubbleProps): React.JSX.Element {
 interface BubbleExpansion {
   clamped: boolean;
   expand: () => void;
-  markdown: Pick<MarkdownProps, 'numberOfLines' | 'onOverflowChange'>;
+  markdown: Pick<
+    MarkdownProps,
+    'numberOfLines' | 'onOverflowChange' | 'tone' | 'streaming'
+  >;
 }
 
-function useBubbleExpansion(): BubbleExpansion {
+function useBubbleExpansion(partial: boolean): BubbleExpansion {
   const [expanded, setExpanded] = useState(false);
   const [overflowing, setOverflowing] = useState(false);
   const clamped = !expanded && overflowing;
@@ -70,6 +79,7 @@ function useBubbleExpansion(): BubbleExpansion {
     clamped,
     expand: () => setExpanded(true),
     markdown: {
+      ...transcriptStyle(partial),
       numberOfLines: expanded ? undefined : clampedLines,
       onOverflowChange: setOverflowing,
     },

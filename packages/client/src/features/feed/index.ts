@@ -2,6 +2,8 @@ export { Feed, type FeedProps } from './components/feed/feed';
 
 export { FeedItem } from './components/feed-item';
 
+export { ShimmerText } from './components/shimmer-text';
+
 export {
   useFeedHistoryPages,
   useFeedLiveChanges,
@@ -20,6 +22,8 @@ export { toParentResults } from './view/to-parent-results';
 export { toSubagentFeedView } from './view/to-subagent-feed-view';
 
 export { withParentResults } from './view/with-parent-results';
+
+export { withPartialTranscripts } from './view/with-partial-transcripts';
 
 export { DiffView } from './components/diff-view/diff-view';
 

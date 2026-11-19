@@ -16,6 +16,7 @@ import {
   type SessionPanels,
   type TerminalSignInProps,
 } from '#features/sessions';
+import type { VoiceStageViewProps } from '#features/voice';
 import { useContentWide } from '#lib/product/content-layout';
 import type { DroppedFiles } from '#lib/product/file-drop/file-drop-pane';
 import { SessionLayout } from '#lib/product/session-layout';
@@ -48,6 +49,8 @@ export interface OpenSessionViewProps extends SessionInspectorContent {
   preview?: boolean;
   // An archived Session reads only: a banner takes the Composer's place.
   archived?: boolean;
+  // The orb pinned above the Feed while a call runs in this Session.
+  stage?: VoiceStageViewProps;
 }
 
 export type SessionDetailViewProps =

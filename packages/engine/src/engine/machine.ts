@@ -2,6 +2,7 @@ import { type Database } from '@repo/db';
 import { assign } from 'xstate';
 import { openSessionsId } from '../sessions';
 import { databaseWriterId } from '../storage';
+import { voiceCallSystemId } from '../voice';
 import type { OpenDatabaseInput } from './engine-database';
 import { type HttpServer } from './http-server';
 import type { EngineMessage } from './ipc';
@@ -12,6 +13,7 @@ import {
   sessionsInput,
   serverInput,
   cleanupInput,
+  voiceInput,
 } from './lifecycle-inputs';
 import { registryInput } from './registry-input';
 import {
@@ -101,6 +103,12 @@ export const engineMachine = engineSetup.createMachine({
           input: sessionsInput,
         },
         {
+          id: 'voice',
+          systemId: voiceCallSystemId,
+          src: 'voice',
+          input: voiceInput,
+        },
+        {
           id: 'caffeinate',
           src: 'caffeinate',
           input: ({ context }): KeepAwakeInput => context,
@@ -163,7 +171,12 @@ export const engineMachine = engineSetup.createMachine({
           },
         },
         stopping: {
-          entry: ['closeCommandAdmission', 'stopTurns', 'stopRegistry'],
+          entry: [
+            'stopVoice',
+            'closeCommandAdmission',
+            'stopTurns',
+            'stopRegistry',
+          ],
           initial: 'closingHttp',
           on: { 'engine.stop': {} },
           states: {

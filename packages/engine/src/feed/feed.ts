@@ -5,6 +5,7 @@ import type { Observer, Subscription } from 'xstate';
 import { type FeedRowSources } from './feed-catch-up';
 import { readWrittenRow } from './feed-row';
 import { readQueuedFeedRow } from './feed-storage';
+import { withoutVoiceMarkers } from './voice-markers';
 
 export { streamFeed } from './feed-stream';
 
@@ -43,7 +44,8 @@ export function readFeedRow(
       message: `No row ${id} in Session ${sessionId}`,
     });
 
-  return newest;
+  // The memory copy and `readWrittenRow` are as the Feed holds them; the row is read without Voice marks.
+  return withoutVoiceMarkers(newest);
 }
 
 function findNewestRow(

@@ -137,6 +137,7 @@ export const iconSymbols = {
   triage: { sf: 'tray', material: 'inbox' },
   usage: { sf: 'gauge.medium', material: 'speed' },
   'view-3d': { sf: 'cube.transparent', material: 'view_in_ar' },
+  'voice-bars': { svg: 'voice-bars' },
   voice: { sf: 'mic', sfFilled: 'mic.fill', material: 'mic' },
   'voice-off': { sf: 'mic.slash', material: 'mic_off' },
   web: { sf: 'globe', material: 'language' },

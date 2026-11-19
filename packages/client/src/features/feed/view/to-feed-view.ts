@@ -18,9 +18,14 @@ interface Pass {
   snapshot: SessionSnapshot;
 }
 
+// A Voice call's Prompt is stored for the Agent and never drawn (ADR-0064).
+const isVoicePrompt = (row: SessionUpdate): boolean =>
+  row.sessionUpdate === 'prompt_message' &&
+  row._meta.argo.sender.type === 'voice';
+
 // The Composer shows the checklist, so neither its row nor the calls that keep it draw in the Feed.
 const drawsNothing = (row: SessionUpdate): boolean =>
-  row.sessionUpdate === 'plan_update' || isTodoCall(row);
+  row.sessionUpdate === 'plan_update' || isTodoCall(row) || isVoicePrompt(row);
 
 function appendRow(row: SessionUpdate, pass: Pass): void {
   if (drawsNothing(row)) return;

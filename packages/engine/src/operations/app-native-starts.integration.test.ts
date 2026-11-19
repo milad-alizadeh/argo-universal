@@ -22,7 +22,7 @@ it('starts and prompts a Session from the App as the user, with no Operation Too
     prompt: [{ type: 'text', text: 'App follow-up' }],
   });
 
-  expect(Object.keys(prompted)).toEqual(['messageId']);
+  expect(Object.keys(prompted)).toEqual(['status', 'messageId']);
   await waitForAcpSessionIdle(host, created.sessionId);
   expect(await host.caller.session.get(created)).toMatchObject({
     startedBySessionId: null,

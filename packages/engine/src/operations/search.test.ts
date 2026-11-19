@@ -2,13 +2,25 @@ import { describeOperation, operations } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { listOperations } from './search';
 
-it('lists every Operation with its description, enabled', () => {
+const appOnly = new Set([
+  'session.submit',
+  'session.queue',
+  'voice.status',
+  'voice.start',
+  'voice.end',
+  'voice.setSettings',
+  'voice.preview',
+]);
+
+it('lists every Operation but the App-only ones with its description, enabled', () => {
   expect(listOperations('')).toEqual(
-    Object.values(operations).map((operation) => ({
-      ...describeOperation(operation),
-      enabled: true,
-      disabledReason: null,
-    })),
+    Object.values(operations)
+      .filter(({ id }) => !appOnly.has(id))
+      .map((operation) => ({
+        ...describeOperation(operation),
+        enabled: true,
+        disabledReason: null,
+      })),
   );
 });
 

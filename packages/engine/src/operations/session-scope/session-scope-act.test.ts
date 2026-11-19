@@ -41,6 +41,27 @@ it.each(act)(
   },
 );
 
+it('hangs up only the calling Session, refusing voice.hangUp for any other Session', async () => {
+  const outcomes: Record<string, string> = {};
+
+  for (const target of targets)
+    outcomes[target] = (
+      await scoped({ id: 'voice.hangUp', params: sessionOnly(target) })
+    ).outcome;
+
+  expect(outcomes).toEqual({
+    caller: runs,
+    started: 'FORBIDDEN',
+    unrelated: 'FORBIDDEN',
+    foreign: 'FORBIDDEN',
+    opening: 'FORBIDDEN',
+  });
+});
+
+it('hangs up the calling Session when voice.hangUp names no Session', async () => {
+  expect((await scoped({ id: 'voice.hangUp', params: {} })).outcome).toBe(runs);
+});
+
 it('shows the Operation label and description on the card', async () => {
   expect(
     (await scoped({ id: 'session.cancel', params: sessionOnly('unrelated') }))

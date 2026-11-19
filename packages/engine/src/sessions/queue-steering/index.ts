@@ -6,12 +6,17 @@ import type { SessionContext } from '../session-context';
 import type { SessionActorRef } from '../session-machine';
 import type { QueueSteering, SteerCommand } from './types';
 
-export { finishQueueSteering, reserveQueueSteering } from './state';
+export {
+  finishQueueSteering,
+  reserveQueueSteering,
+  steeredMessageId,
+} from './state';
 
+// Takes a Prompt into the running Turn and answers with that Turn's id.
 export async function steerQueuedPrompt(
   session: SessionActorRef,
   command: SteerCommand,
-): Promise<void> {
+): Promise<string> {
   const steering = await reserve(session, command);
   let injected = false;
 
@@ -21,6 +26,8 @@ export async function steerQueuedPrompt(
   } finally {
     await finish(session, steering.token, injected);
   }
+
+  return steering.turnId;
 }
 
 function reserve(

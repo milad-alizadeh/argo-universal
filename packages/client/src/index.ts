@@ -112,6 +112,8 @@ export { PortalProvider } from '@repo/kit/primitives/overlays/portal';
 
 export { useNotifications } from './features/notifications';
 
+export { DesktopVoiceProvider } from './features/voice';
+
 export { PluginDetailScreen } from './screens/plugins/$path/plugin-detail-screen';
 
 export {
@@ -142,5 +144,7 @@ export {
 } from './lib/product/navigation/sections';
 
 export { AgentAccessDetailScreen } from './screens/settings/agent-access/agent-access-detail-screen';
+
+export { VoiceDetailScreen } from './screens/settings/voice/voice-detail-screen';
 
 export { PluginSignInDetailScreen } from './screens/settings/plugins/sign-in/$id/plugin-sign-in-detail-screen';

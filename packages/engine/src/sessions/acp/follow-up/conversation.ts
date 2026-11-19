@@ -1,10 +1,20 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
+import { VoiceMarkerStream } from '../../../feed';
 import type { LocalSubmission } from '../prompts/submission';
 
 const maximumContextLength = 20_000;
 
+// The Agent message being read, so its Voice mark stays out of the context even when split across chunks.
+type ReadMessage = { id: string | null; marks: VoiceMarkerStream };
+
+const freshMessage = (id: string | null): ReadMessage => ({
+  id,
+  marks: new VoiceMarkerStream(),
+});
+
 export class SuggestionConversation {
   private text = '';
+  private message = freshMessage(null);
 
   public begin(submission: LocalSubmission): void {
     const content = submission.content
@@ -12,13 +22,22 @@ export class SuggestionConversation {
       .map((block) => block.text)
       .join('\n');
 
+    this.message = freshMessage(null);
     this.append(`\nUSER: ${JSON.stringify(content)}\nASSISTANT: `);
   }
 
   public observe({ update }: SessionNotification): void {
     if (update.sessionUpdate !== 'agent_message_chunk') return;
 
-    if (update.content.type === 'text') this.append(update.content.text);
+    if (update.content.type === 'text')
+      this.said(update.messageId, update.content.text);
+  }
+
+  private said(messageId: string | null | undefined, text: string): void {
+    const id = messageId ?? null;
+
+    if (id !== this.message.id) this.message = freshMessage(id);
+    this.append(this.message.marks.push(text));
   }
 
   public read(): string {

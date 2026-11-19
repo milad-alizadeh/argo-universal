@@ -1,0 +1,58 @@
+import type { VoiceStartOutput } from '@repo/contracts';
+import { TRPCError } from '@trpc/server';
+import type { SnapshotFrom } from 'xstate';
+import type { EndedCall, StartRefusal } from './call-types';
+import type { voiceCallMachine } from './call.machine';
+import { refusalError } from './voice-call-room';
+
+export type CallSnapshot = SnapshotFrom<typeof voiceCallMachine>;
+
+const refusalOf = (
+  { context: { refused } }: CallSnapshot,
+  callId: string,
+): StartRefusal | null => (refused?.callId === callId ? refused.refusal : null);
+
+// The machine began a call for this start, or the error says why it refused.
+export function requireBegun(snapshot: CallSnapshot, callId: string): void {
+  const refusal = refusalOf(snapshot, callId);
+
+  if (refusal) throw refusalError(refusal);
+}
+
+// An end ended a call when the machine was running one before it and is idle after.
+export const endedBetween = (
+  before: CallSnapshot,
+  after: CallSnapshot,
+): boolean => before.matches('running') && after.matches('idle');
+
+// The start has settled once the provider answered or the call is over.
+export const startSettled = (snapshot: CallSnapshot): boolean =>
+  snapshot.matches('idle') || snapshot.context.call?.answer != null;
+
+const answerOfCall = (snapshot: CallSnapshot, callId: string): string | null =>
+  snapshot.context.call?.callId === callId
+    ? snapshot.context.call.answer
+    : null;
+
+const endedMessage = (ended: EndedCall | null): string =>
+  ended
+    ? `The Voice call ended: ${ended.reason}`
+    : 'The Voice call failed to start';
+
+// Why a start that settled without an answer did not get one.
+const failureOf = ({ context }: CallSnapshot): string =>
+  context.failure ?? endedMessage(context.ended);
+
+export function answerOf(
+  snapshot: CallSnapshot,
+  callId: string,
+): VoiceStartOutput {
+  const answer = answerOfCall(snapshot, callId);
+
+  if (answer !== null) return { callId, answer };
+
+  throw new TRPCError({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: failureOf(snapshot),
+  });
+}

@@ -2,12 +2,17 @@ import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import {
   ComposerAgentModelControl,
   ComposerModeControl,
 } from '../composer-configuration/composer-configuration';
 import { ComposerStatusControls } from '../composer-status/composer-status';
-import { sendsToQueue } from './composer-conditions';
+import { useCallGlyphMorph } from './composer-call-glyph-motion';
+import { ComposerCallPointer } from './composer-call-pointer';
+import { ConnectingRing } from './composer-connecting-ring';
+import { ComposerMuteButtons } from './composer-mute-buttons';
+import { sendButtonAction } from './composer-primary-action';
 import { ComposerAttachmentOrCancel } from './composer-queue-cancel';
 import type {
   ToolbarLayout,
@@ -87,6 +92,7 @@ function ComposerRightControls(layout: RightControlsLayout): React.JSX.Element {
   return (
     <View className="pointer-events-box-none max-w-full shrink-0 flex-row items-center gap-2.5">
       <ComposerConfigurationActions {...layout} />
+      <ComposerMuteButtons voice={layout.props.voice} wide={layout.wide} />
       <View className="shrink-0">
         <ComposerSendButton {...layout} />
       </View>
@@ -107,8 +113,27 @@ function ComposerConfigurationActions(
   return <ComposerModeControl {...controls} />;
 }
 
+// The primary slot: Send, Stop, the voice button or End, or, with the call in another Session, the pointer to it.
 function ComposerSendButton(layout: SendLayout): React.JSX.Element {
-  return <IconButton {...sendButtonProps(layout)} />;
+  return layout.callPointer ? (
+    <ComposerCallPointer elsewhere={layout.callPointer} />
+  ) : (
+    <PrimaryButton {...layout} />
+  );
+}
+
+// While the call connects, End carries the turning ring; the voice button and End turn into each other as a call starts and ends.
+function PrimaryButton(layout: SendLayout): React.JSX.Element {
+  const morph = useCallGlyphMorph(layout.sendState);
+
+  return (
+    <View>
+      <Animated.View style={morph}>
+        <IconButton {...sendButtonProps(layout)} />
+      </Animated.View>
+      {layout.sendState === 'connecting' && <ConnectingRing />}
+    </View>
+  );
 }
 
 function sendButtonProps(
@@ -120,30 +145,6 @@ function sendButtonProps(
     ...action,
     ...filledSendProps,
     'aria-busy': layout.sendState === 'sending',
-  };
-}
-
-function sendButtonAction(
-  layout: SendLayout,
-): React.ComponentProps<typeof IconButton> {
-  if (layout.sendState === 'stop') return stopButtonAction(layout);
-
-  return {
-    accessibilityLabel: sendsToQueue(layout.props) ? 'Queue' : 'Send',
-    icon: 'arrow-up',
-    disabled: layout.sendState !== 'ready',
-    onPress: layout.send,
-  };
-}
-
-function stopButtonAction(
-  layout: Pick<SendLayout, 'props'>,
-): React.ComponentProps<typeof IconButton> {
-  return {
-    accessibilityLabel: 'Stop',
-    icon: 'cancelled',
-    disabled: layout.props.disabled,
-    onPress: (): void => layout.props.onStop?.(),
   };
 }
 

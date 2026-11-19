@@ -22,6 +22,48 @@ export interface ComposerDraft {
   resources?: readonly SuggestionResource[];
 }
 
+// The mic and speaker buttons of a connected call: what each holds now and what pressing it asks.
+export interface ComposerVoiceMutes {
+  microphone: boolean;
+  speaker: boolean;
+  onMicrophone: () => void;
+  onSpeaker: () => void;
+}
+
+// The call runs in another Session: the pointer that names it and takes the person there.
+export interface ComposerVoiceElsewhere {
+  kind: 'elsewhere';
+  // The Session the call is attached to.
+  title: string;
+  onOpen: () => void;
+}
+
+/*
+ * The Composer's voice slot, already resolved by the voice module: the voice button while no call runs and one can
+ * start, End while a call connects or runs here, with the mutes once it is connected, or the pointer to a call in
+ * another Session. Absent from the props while there is nothing to offer. Text in the draft still wins: Send.
+ */
+export type ComposerVoice =
+  | { kind: 'start'; onStart: () => void }
+  | { kind: 'connecting'; onEnd: () => void; edge?: ReactNode }
+  | {
+      kind: 'connected';
+      onEnd: () => void;
+      mutes: ComposerVoiceMutes;
+      // A drawing of the call along the card's top edge, above the text box; absent while the stage draws it.
+      edge?: ReactNode;
+    }
+  | ComposerVoiceElsewhere;
+
+export type SendState =
+  | 'stop'
+  | 'sending'
+  | 'ready'
+  | 'blocked'
+  | 'voice'
+  | 'connecting'
+  | 'end';
+
 export interface ComposerProps {
   draft: ComposerDraft;
   promptQueue?: PromptQueueProps;
@@ -59,6 +101,8 @@ export interface ComposerProps {
   sending?: boolean;
   disabled?: boolean;
   sendable?: boolean;
+  // Absent where Voice calls are not offered.
+  voice?: ComposerVoice;
   error?: string;
   errorKey?: string;
 }
@@ -74,7 +118,9 @@ export interface ComposerLayout {
   wide: boolean;
   inactive: boolean;
   configurationInactive: boolean;
-  sendState: 'stop' | 'sending' | 'ready' | 'blocked';
+  sendState: SendState;
+  // The pointer to a call in another Session, while it takes the primary slot instead of a button.
+  callPointer: ComposerVoiceElsewhere | undefined;
   send: () => void;
   modifiedSend: () => void;
 }

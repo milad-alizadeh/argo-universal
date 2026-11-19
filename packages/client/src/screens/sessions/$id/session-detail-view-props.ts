@@ -15,6 +15,7 @@ import type {
   OpenSessionViewProps,
   SessionDetailViewProps,
 } from './session-detail-view';
+import { feedItems } from './session-feed-items';
 import { sessionHeaderProps } from './session-header-props-source';
 import { type StoppedTurn, stoppedTurn } from './stopped-turn';
 
@@ -89,7 +90,7 @@ const sessionFeedProps = (
   stoppedEnding: StoppedTurn['ending'] | undefined,
 ): FeedProps => ({
   sessionId: open.sessionId,
-  items: open.view.items.filter((item) => item !== stoppedEnding),
+  items: feedItems(open, stoppedEnding),
   liveHeader: open.snapshot.liveHeader,
   liveToolCall: open.feed.liveToolCall,
   ...pagingProps(open.feed),
@@ -155,6 +156,7 @@ const openSessionProps = (open: OpenSessionSources): OpenSessionViewProps => ({
   inspectorPanels: open.inspectorPanels,
   onDropFiles: (dropped) => void open.commands.attachDroppedFiles(dropped),
   archived: open.snapshot.archivedAt !== null,
+  stage: open.stage,
 });
 
 // What the Session view draws for the Feed's progress: failed, still opening, or open.

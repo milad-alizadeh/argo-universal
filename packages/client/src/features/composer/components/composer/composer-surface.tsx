@@ -4,6 +4,8 @@ import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { ComposerAttachments } from './composer-card-attachments';
 import type { CardLayout } from './composer-card-types';
+import { edgeOf } from './composer-edge';
+import { EdgeTypography } from './composer-edge-typography';
 import { FollowUpAcceptance } from './composer-follow-up-acceptance';
 import { ComposerToolbar } from './composer-toolbar';
 import { ComposerTypography } from './composer-typography';
@@ -44,9 +46,17 @@ const acceptanceProps = ({
   onAccept: layout.field.insertWord,
 });
 
+// The call's drawing along the card's top edge, in the kit's type rather than the prompt's, while a call asks for one.
+function ComposerEdge({ props }: CardLayout): React.ReactNode {
+  const edge = edgeOf(props);
+
+  return edge ? <EdgeTypography>{edge}</EdgeTypography> : null;
+}
+
 export function ComposerSurface(props: SurfaceProps): React.JSX.Element {
   return (
     <LiquidGlass {...cardGlass}>
+      <ComposerEdge {...props.layout} />
       <ComposerAttachments {...props.layout} />
       <ComposerText {...props} />
       <ComposerTypography compact={props.phone}>

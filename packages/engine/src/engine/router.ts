@@ -12,6 +12,7 @@ import { createPluginsRouter } from '../plugins';
 import { mergeRouters, router, routerFactory } from '../rpc';
 import { createShellRouter, Sessions } from '../sessions';
 import { createSystemRouter } from '../system';
+import { createVoiceRouter, voiceSessions } from '../voice';
 import type { AppRouterDeps } from './router-deps';
 
 // Each router takes only the slice of the Engine's dependencies its type names.
@@ -47,11 +48,28 @@ function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
   });
 }
 
+// The Voice call sends its Session Prompts through Sessions, which say where each landed and when each Turn ends.
+function attachVoice(deps: AppRouterDeps, sessions: Sessions): void {
+  deps.voice.attach(
+    voiceSessions(deps, {
+      prompt: (sessionId, text) =>
+        sessions.promptFromVoice({
+          sessionId,
+          prompt: [{ type: 'text', text }],
+        }),
+      stop: (sessionId) => sessions.stopFromVoice(sessionId),
+      watchTurns: (sessionId, listener) =>
+        sessions.watchTurns(sessionId, listener),
+    }),
+  );
+}
+
 // Operations share the session and shell nouns with the Session procedures that are not Operations.
 const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions(deps);
 
   attachSessionActs(deps, sessions);
+  attachVoice(deps, sessions);
 
   const operations = createOperationProcedures({ ...deps, sessions });
 
@@ -59,6 +77,7 @@ const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
     ...operations,
     session: mergeRouters(sessions.router, operations.session),
     shell: mergeRouters(createShellRouter(deps), operations.shell),
+    voice: mergeRouters(createVoiceRouter(deps), operations.voice),
   });
 });
 

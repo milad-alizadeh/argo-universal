@@ -29,6 +29,11 @@ import {
   writerMachine,
 } from '../storage';
 import {
+  voiceCallMachine,
+  voiceCallSystemId,
+  type VoiceProvider,
+} from '../voice';
+import {
   closeAgentResources,
   type CloseAcpResourcesInput,
 } from './agent-cleanup';
@@ -89,6 +94,10 @@ export interface EngineInput extends Pick<
   fetchAgents?: FetchAgents;
   installationPorts?: InstallPorts;
   caffeinate?: Caffeinate;
+  // Where Voice calls run; development's fake when `ARGO_VOICE_PROVIDER=fake`, and none otherwise.
+  voiceProvider?: VoiceProvider | null;
+  // How long a Voice call may pass without speech before it ends by itself; five minutes unless a test says otherwise.
+  voiceIdleMs?: number;
   notificationOptions?: NotificationOptions;
   // What an App lists this Server by; the computer's name unless a test says otherwise.
   discoveryName?: string;
@@ -142,6 +151,7 @@ export const engineSetup = setup({
     registry: registryMachine,
     databaseWriter: writerMachine,
     sessions: openSessionsMachine,
+    voice: voiceCallMachine,
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
       async ({ input, signal }): Promise<HttpServer> => {
         const server = await startHttpServer(input);
@@ -163,6 +173,12 @@ export const engineSetup = setup({
     stopTurns: sendTo('sessions', { type: 'sessions.stopTurns' }),
     drainWriter: sendTo('databaseWriter', { type: 'writer.drain' }),
     stopRegistry: sendTo('registry', { type: 'STOP' }),
+    // The microphone is never left open behind a stopping Engine. Sent at once, not deferred as `sendTo` is, so the call ends as stopped before closing admission reads as its App going away.
+    stopVoice: ({ system }): void =>
+      findMachineActor(system, voiceCallSystemId, voiceCallMachine)?.send({
+        type: 'call.end',
+        reason: 'engine-stopped',
+      }),
     closeCommandAdmission: ({ context }): void =>
       context.commandAdmission.abort(),
     sendToSupervisor: (_, message: EngineMessage): void => {

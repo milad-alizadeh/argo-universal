@@ -3,6 +3,10 @@ import type {
   SessionNewInput,
   SessionPromptInput,
 } from '@repo/contracts';
+import type {
+  PluginPromptAnswer,
+  PluginWithdrawAnswer,
+} from '@repo/contracts/plugins/argo-calls';
 import { OwnSessionArchive } from './archive/own-archive';
 import { archiveSessionFromPlugin } from './archive/plugin-archive';
 import { startSessionCreation } from './creation/session-creation';
@@ -13,9 +17,14 @@ import {
   type CalledOperation,
   type SessionOperationCall,
 } from './operation-call';
-import { promptFromPlugin, withdrawFromPlugin } from './plugin-prompt';
-import type { NativeStartRequest } from './prompt-sender';
+import type { NativeStart, NativeStartRequest } from './prompt-sender';
 import { createSessionRouter } from './router';
+import {
+  requireTaken,
+  sendPrompt,
+  withdrawPrompt,
+  type TakenPrompt,
+} from './sent-prompt';
 import {
   createSessionDirectory,
   type SessionDirectory,
@@ -24,8 +33,9 @@ import {
   sessionOperationImplementations,
   type SessionOperationImplementations,
 } from './session-operations';
-import { startSessionPrompt } from './session-prompt';
+import { startSessionPrompt, type PromptLanding } from './session-prompt';
 import type { SessionHandlerSources, SessionSources } from './session-sources';
+import type { TurnHappening } from './turn-happenings';
 import { createSessionWorkSource, type SessionWorkSource } from './work-source';
 
 /*
@@ -54,6 +64,10 @@ export class Sessions {
     this.router = createSessionRouter({ sources: this.sources, list });
     this.ownArchive = new OwnSessionArchive(this.sources);
   }
+  // Opens a Session from storage, or waits for its open, without a Turn.
+  public async open(sessionId: string): Promise<void> {
+    await this.sources.open.ready(sessionId, 'session.open');
+  }
   // Starts a new Session; the request's signal also stops its admission.
   public create(
     input: SessionNewInput,
@@ -61,27 +75,79 @@ export class Sessions {
   ): ReturnType<typeof startSessionCreation> {
     return startSessionCreation(this.sources, input, request);
   }
-  // Starts a Prompt's Turn; the request's signal also stops its admission.
+  /*
+   * The user's Prompt starts a Turn; another Session's is a Sent Prompt, steered into a running Turn or queued behind
+   * it (ADR-0054), under an id allocated first so its caller can follow the Turn it lands in. The request's signal
+   * also stops its admission.
+   */
   public prompt(
     input: SessionPromptInput,
     request: NativeStartRequest,
-  ): ReturnType<typeof startSessionPrompt> {
-    return startSessionPrompt(this.sources, input, request);
+  ): NativeStart<PromptLanding> {
+    const { sender, signal } = request;
+
+    if (sender.type === 'user')
+      return startSessionPrompt(this.sources, input, request);
+
+    const turnId = this.sources.createId();
+    const sent = { sender, id: turnId, signal };
+
+    return {
+      sessionId: input.sessionId,
+      turnId,
+      accepted: sendPrompt(this.sources, input, sent),
+    };
   }
   // A Plugin's Prompt: starts a Turn on an idle Session, else joins the end of its queue (ADR-0055).
-  public promptFromPlugin(
+  public async promptFromPlugin(
     input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
     sender: NonUserPromptSender,
-  ): ReturnType<typeof promptFromPlugin> {
-    return promptFromPlugin(this.sources, input, sender);
+  ): Promise<PluginPromptAnswer> {
+    const sent = requireTaken(
+      await sendPrompt(this.sources, input, { sender }),
+    );
+
+    return sent.status === 'queued'
+      ? { status: 'queued', queuedId: sent.queuedId }
+      : { status: 'started' };
+  }
+  // The Voice call's request for work: a Sent Prompt that steers a running Turn when it can (ADR-0064).
+  public async promptFromVoice(
+    input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
+  ): Promise<TakenPrompt> {
+    const sender = { type: 'voice' } as const;
+
+    return requireTaken(await sendPrompt(this.sources, input, { sender }));
+  }
+  // A spoken "stop" (ADR-0064): cancels the running Turn as the Stop button does; resolves false when no Turn runs.
+  public async stopFromVoice(sessionId: string): Promise<boolean> {
+    const session = this.sources.open.session(sessionId);
+
+    if (!session?.getSnapshot().hasTag('running')) return false;
+    await this.implementations['session.cancel']({ sessionId });
+
+    return true;
+  }
+  // Hears what an open Session reports of its Turns until the returned function is called; a closed Session reports none.
+  public watchTurns(
+    sessionId: string,
+    listener: (happening: TurnHappening) => void,
+  ): () => void {
+    const subscription = this.sources.open
+      .session(sessionId)
+      ?.on('*', listener);
+
+    return (): void => subscription?.unsubscribe();
   }
   // Takes back a Queued Prompt the Plugin sent; one that started, is gone or is held for editing stays (ADR-0055).
-  public withdrawFromPlugin(
+  public async withdrawFromPlugin(
     sessionId: string,
     queuedId: string,
     pluginId: string,
-  ): ReturnType<typeof withdrawFromPlugin> {
-    return withdrawFromPlugin(this.sources, { sessionId, queuedId, pluginId });
+  ): Promise<PluginWithdrawAnswer> {
+    const withdrawal = { sessionId, queuedId, pluginId };
+
+    return { withdrawn: await withdrawPrompt(this.sources, withdrawal) };
   }
   // A Plugin's archive: the App's, refused while the Checkout has uncommitted files (ADR-0055).
   public archiveFromPlugin(

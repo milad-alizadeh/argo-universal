@@ -1,6 +1,7 @@
 import {
   type SessionSnapshot,
   type SlashCommand,
+  type VoicePartial,
   withArgoSlashCommands,
 } from '@repo/contracts';
 import {
@@ -19,6 +20,7 @@ import type {
   PermissionRequestProps,
 } from '#features/requests';
 import { decodeOpenFailure, toSendError } from '#features/sessions';
+import { type VoiceStageViewProps, voicePlaceholder } from '#features/voice';
 import { type Navigate } from '#lib/product/navigation/navigation';
 import { followUpProps } from './follow-up-composer-props';
 import { sessionStatusProps } from './session-status-props';
@@ -40,6 +42,12 @@ export interface OpenSession {
   elicitation: ElicitationFormProps | undefined;
   permission: PermissionRequestProps | undefined;
   usageLimits: UsageLimitsRead;
+  // Where a Voice call is, and how to start or end it; absent where the App carries no audio.
+  voice?: ComposerProps['voice'];
+  // What is being said on this Session's Voice call, drawn at the tail of its Feed.
+  partials?: VoicePartial[];
+  // The orb pinned above the Feed while this Session's Voice call runs.
+  stage?: VoiceStageViewProps;
   options?: {
     configOptions: SessionSnapshot['configOptions'];
     loading: boolean;
@@ -51,12 +59,7 @@ export interface OpenSession {
 
 type DraftProps = Pick<
   ComposerProps,
-  | 'placeholder'
-  | 'draft'
-  | 'onDraftChange'
-  | 'onAttachImages'
-  | 'onAttachFiles'
-  | 'onSend'
+  'draft' | 'onDraftChange' | 'onAttachImages' | 'onAttachFiles' | 'onSend'
 >;
 
 const isTurnRunning = (snapshot: SessionSnapshot): boolean =>
@@ -118,13 +121,15 @@ function configurationProps(open: OpenSession): ComposerConfigurationProps {
 }
 
 const draftProps = (commands: SessionCommands): DraftProps => ({
-  placeholder: 'Message the Agent',
   draft: commands.draft,
   onDraftChange: commands.changeDraft,
   onAttachImages: () => void commands.attachImages(),
   onAttachFiles: () => void commands.attachFiles(),
   onSend: (sent) => void commands.sendDraft(sent),
 });
+
+const placeholderOf = ({ voice }: OpenSession): string =>
+  voicePlaceholder(voice) ?? 'Message the Agent';
 
 // An open Session always offers Argo's Slash commands, whether or not its Agent has reported any.
 const slashCommandsOf = (open: OpenSession): ComposerProps['slashCommands'] =>
@@ -136,6 +141,7 @@ export function sessionComposerProps(open: OpenSession): ComposerProps {
 
   return {
     ...draftProps(commands),
+    placeholder: placeholderOf(open),
     ...queueComposerProps(open),
     followUpSuggestion: followUpProps(open),
     slashCommands: slashCommandsOf(open),
@@ -158,6 +164,10 @@ function composerOptions({
 
 function sendingProps(
   open: OpenSession,
-): Pick<ComposerProps, 'sending' | 'sendable'> {
-  return { sending: isSending(open), sendable: isSendable(open) };
+): Pick<ComposerProps, 'sending' | 'sendable' | 'voice'> {
+  return {
+    sending: isSending(open),
+    sendable: isSendable(open),
+    voice: open.voice,
+  };
 }

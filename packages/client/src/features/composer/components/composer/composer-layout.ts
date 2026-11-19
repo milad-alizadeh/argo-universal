@@ -1,7 +1,11 @@
 import type { RichTextareaHandle } from '@repo/kit/primitives/controls/rich-textarea';
 import { useCallback, useId, useRef } from 'react';
 import { useContentWide } from '#lib/product/content-layout';
-import { isConfigurationInactive, isInactive } from './composer-conditions';
+import {
+  callPointer,
+  isConfigurationInactive,
+  isInactive,
+} from './composer-conditions';
 import type { ComposerLayout, ComposerProps } from './composer-types';
 
 export function useComposerLayout(
@@ -17,6 +21,7 @@ export function useComposerLayout(
 
   return Object.assign(
     { props, composerId, field, wide, sendState, send, modifiedSend },
+    { callPointer: callPointer(props) },
     composerActivity(props),
   );
 }

@@ -10,9 +10,15 @@ import { findMachineActor } from '../lib/machine-actor';
 import {
   openSessionsId,
   openSessionsMachine,
+  sessionActorId,
   type OpenSessionsInput,
 } from '../sessions';
 import type { writerMachine } from '../storage';
+import {
+  defaultVoiceProvider,
+  sessionBriefing,
+  type VoiceCallInput,
+} from '../voice';
 import type { CloseAcpResourcesInput } from './agent-cleanup';
 import type { RecoveryInput } from './engine-recovery';
 import { requireRegistry } from './registry-input';
@@ -88,6 +94,43 @@ export const sessionsInput = ({
   installedAgents: installedAgentsInput({ context, self }),
   hooks: context.hookPort.hooks,
   writer: requireDatabaseWriter(self.system),
+});
+
+// A Voice provider the Engine was given, null included, or the default one.
+const voiceProviderOf = (
+  given: EngineContext['voiceProvider'],
+): VoiceCallInput['provider'] =>
+  given === undefined ? defaultVoiceProvider(process.env) : given;
+
+const voiceLogOf =
+  (home: string) =>
+  (line: string): void =>
+    writeLog({ home, label: 'voice', line });
+
+// A Session is open while its actor runs in the Engine's system.
+const sessionOpenIn =
+  (system: AnyActorRef['system']) =>
+  (sessionId: string): boolean =>
+    system.get(sessionActorId(sessionId)) !== undefined;
+
+type VoiceInputArgs = {
+  context: Pick<
+    EngineContext,
+    'database' | 'home' | 'now' | 'voiceProvider' | 'voiceIdleMs'
+  >;
+  self: Pick<AnyActorRef, 'system'>;
+};
+
+export const voiceInput = ({
+  context,
+  self,
+}: VoiceInputArgs): VoiceCallInput => ({
+  provider: voiceProviderOf(context.voiceProvider),
+  briefing: sessionBriefing(openDatabaseOf(context)),
+  idleMs: context.voiceIdleMs,
+  log: voiceLogOf(context.home),
+  now: context.now,
+  sessionOpen: sessionOpenIn(self.system),
 });
 
 export { serverInput } from './server-input';

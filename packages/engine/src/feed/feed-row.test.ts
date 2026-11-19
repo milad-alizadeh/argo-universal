@@ -7,6 +7,7 @@ import {
   promptBlobIds,
   toFeedRowWrite,
 } from './feed-row';
+import { readStoredFeedRow } from './merged-rows';
 
 const message = storedMessage(0);
 
@@ -48,6 +49,23 @@ describe('hydrateStoredFeedRow', (): void => {
         payload: JSON.stringify({ ...payload, position: 9 }),
       }),
     ).toThrow('row message-0#0 has position in its payload');
+  });
+
+  it('keeps the Voice mark the Feed restores, while a read drops it', (): void => {
+    const marked = {
+      ...message,
+      state: 'open' as const,
+      content: [{ type: 'text' as const, text: '[COMPLETE] Done' }],
+    };
+
+    const row = toFeedRowWrite(marked);
+    const stored = { ...row, payload: JSON.stringify(row.payload) };
+
+    expect(hydrateStoredFeedRow('session-1', stored)).toEqual(marked);
+    expect(readStoredFeedRow('session-1', stored)).toEqual({
+      ...marked,
+      content: [{ type: 'text', text: 'Done' }],
+    });
   });
 });
 

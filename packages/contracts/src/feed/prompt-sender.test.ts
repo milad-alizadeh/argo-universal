@@ -20,18 +20,16 @@ it('reads existing human rows without sender metadata', () => {
 it.each([
   { type: 'session', sessionId: 'reviewer', title: 'Review changes' },
   { type: 'plugin', pluginId: 'automation', title: 'Automation' },
-])(
-  'reads a stored $type Prompt with its sender identity and title',
-  (sender) => {
-    const row = {
-      ...storedHuman,
-      sessionUpdate: 'prompt_message',
-      _meta: { argo: { sender } },
-    };
+  { type: 'voice' },
+])('reads a stored $type Prompt with its sender identity', (sender) => {
+  const row = {
+    ...storedHuman,
+    sessionUpdate: 'prompt_message',
+    _meta: { argo: { sender } },
+  };
 
-    expect(SessionUpdate.parse(row)).toEqual(row);
-  },
-);
+  expect(SessionUpdate.parse(row)).toEqual(row);
+});
 
 it('refuses missing or human sender metadata on a nonhuman Prompt row', () => {
   expect(

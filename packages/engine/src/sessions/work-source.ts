@@ -21,8 +21,13 @@ export type SessionWork =
 export const sessionWorkItem = (work: SessionWork): string =>
   work.kind === 'call' ? work.toolCallId : work.turnId;
 
-// A Turn that has not ended may wait for the user's answer to an Input request.
-type TurnRead = { turn: Turn; requiresInput: boolean };
+/*
+ * A Turn that has not ended may wait for the user's answer to an Input request. A Turn not started yet, whose Prompt
+ * still waits in the queue, reads as no Turn.
+ */
+type TurnRead =
+  | { turn: Turn; requiresInput: boolean }
+  | { turn: null; requiresInput: false };
 
 export type SessionWorkRead =
   | { kind: 'creation'; creation: CreationRead }
@@ -57,6 +62,16 @@ function readWork(
   return { kind: 'turn', ...readTurn(sources, sessionId, turnId) };
 }
 
+// A queued Prompt's Turn takes its queued id, so a Turn not started yet may still wait in the queue.
+const waitsInQueue = (
+  sources: SessionHandlerSources,
+  sessionId: string,
+  turnId: string,
+): boolean =>
+  sources.open
+    .context(sessionId)
+    ?.promptQueue.items.some(({ id }) => id === turnId) ?? false;
+
 const readCall = (
   sources: SessionHandlerSources,
   { sessionId, toolCallId }: Extract<SessionWork, { kind: 'call' }>,
@@ -70,6 +85,9 @@ function readTurn(
   sessionId: string,
   turnId: string,
 ): TurnRead {
+  if (waitsInQueue(sources, sessionId, turnId))
+    return { turn: null, requiresInput: false };
+
   const turn = readSessionTurn(sources, sessionId, turnId);
 
   const requiresInput =

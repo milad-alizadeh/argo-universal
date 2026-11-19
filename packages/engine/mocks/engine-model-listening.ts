@@ -2,6 +2,7 @@ import { expect } from 'vitest';
 import type { HttpServerOptions } from '../src/engine/http-server';
 import { SessionTokens } from '../src/operations';
 import { HookPort } from '../src/plugins';
+import { VoiceCalls } from '../src/voice';
 import { input } from './engine-model-fixtures';
 import * as model from './engine-model-state';
 
@@ -19,6 +20,7 @@ function listeningInput(): HttpServerOptions {
 
     database: model.mockDatabase,
     sessions: expect.anything(),
+    voice: expect.any(VoiceCalls),
     sessionTokens: expect.any(SessionTokens),
     databaseWriter: expect.anything(),
     registry: expect.anything(),

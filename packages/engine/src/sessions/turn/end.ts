@@ -2,6 +2,7 @@ import type { TurnEnd } from '@repo/contracts';
 import type { FeedEvent } from '../../feed';
 import type { SessionContext } from '../session-context';
 import { TurnUpdateJob } from '../session-storage';
+import type { TurnHappening } from '../turn-happenings';
 import { turnStep, type EndTurnParameters, type TurnStep } from './step';
 
 type EndingSession = Pick<
@@ -125,8 +126,19 @@ export const endTurn = (
   return turnStep({
     change,
     ...finishTurn({ context, params, endedAt, turnId }),
+    happenings: [endedHappening(turnId, params)],
   });
 };
+
+const endedHappening = (
+  turnId: string,
+  { stopReason, error }: EndTurnParameters,
+): TurnHappening => ({
+  type: 'turn.ended',
+  turnId,
+  stopReason,
+  error: error?.message ?? null,
+});
 
 function successfulEnding(params: EndTurnParameters): boolean {
   return params.stopReason === 'end_turn' && !params.error;

@@ -1,10 +1,16 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
 import { OperationExecution } from '@repo/contracts/operations';
 import { assert, expect, it } from 'vitest';
+import { z } from 'zod';
 import { runOperation } from '#mocks/operations';
 import { delegationJourney, startDelegated } from '#mocks/session-delegation';
 
-it('admits one concurrent Session-sent prompt to the same idle child with a matching acknowledgement', async () => {
+// Where each Prompt landed, as its execution says beside the Session it went to.
+const Landed = z.looseObject({
+  status: z.enum(['started', 'steered', 'queued']),
+});
+
+it('starts one of two concurrent Session-sent prompts to the same idle child and queues the other behind it', async () => {
   const requests: PromptRequest[] = [];
   const journey = await delegationJourney({ requests });
   const target = await startDelegated(journey);
@@ -14,30 +20,26 @@ it('admits one concurrent Session-sent prompt to the same idle child with a matc
     [{ type: 'text', text: 'Second steering prompt' }],
   ];
 
-  const outcomes = await Promise.allSettled(
-    prompts.map((prompt) =>
-      runOperation(journey.caller.caller.operations, {
-        id: 'session.prompt',
-        params: { sessionId: target.sessionId, prompt },
-      }),
+  const receipts = await Promise.all(
+    prompts.map(async (prompt) =>
+      OperationExecution.parse(
+        await runOperation(journey.caller.caller.operations, {
+          id: 'session.prompt',
+          params: { sessionId: target.sessionId, prompt },
+        }),
+      ),
     ),
   );
 
-  expect(outcomes.map((result) => result.status).sort()).toEqual([
-    'fulfilled',
-    'rejected',
-  ]);
-  expect(outcomes.find((result) => result.status === 'rejected')).toMatchObject(
-    { reason: { data: { code: 'CONFLICT' } } },
-  );
+  const landed = receipts.map((receipt) => Landed.parse(receipt.result).status);
 
-  const first = outcomes[0];
-  assert(first);
-  const admitted = first.status === 'fulfilled' ? prompts[0] : prompts[1];
-  const accepted = outcomes.find((result) => result.status === 'fulfilled');
-  assert(accepted?.status === 'fulfilled');
-  const receipt = OperationExecution.parse(accepted.value);
-  assert(receipt.turn);
+  expect(landed).toHaveLength(2);
+  expect(landed).toEqual(expect.arrayContaining(['started', 'queued']));
+
+  const startedAt = landed.indexOf('started');
+  const admitted = prompts[startedAt];
+  const receipt = receipts[startedAt];
+  assert(receipt?.turn);
 
   const admittedPage = await journey.host.caller.feed.page({
     sessionId: target.sessionId,

@@ -1,8 +1,13 @@
-import type { PromptQueue, QueuedPromptId } from '@repo/contracts';
-import { userMessageChange, type FeedEvent } from '../../feed';
+import type { FeedUpsert, PromptQueue, QueuedPromptId } from '@repo/contracts';
+import {
+  nonUserPromptChange,
+  userMessageChange,
+  type FeedEvent,
+} from '../../feed';
 import { queueWrite } from '../prompt-queue';
 import type { SessionContext } from '../session-context';
 import { turnStep, type TurnStep } from '../turn';
+import { promptTaken, type TurnHappening } from '../turn-happenings';
 import type { QueueSteering, QueueSteeringCommand } from './types';
 
 type Finish = Extract<
@@ -40,8 +45,16 @@ export function consumeQueueSteering(
   return turnStep({
     change: consumedChange(input),
     feed: [consumedMessage(input)],
+    happenings: takenHappenings(steering),
   });
 }
+
+// A steered queue item was taken into the running Turn; a steered draft was never queued.
+const takenHappenings = ({
+  queuedId,
+  turnId,
+}: QueueSteering): TurnHappening[] =>
+  queuedId ? [promptTaken(queuedId, turnId)] : [];
 
 function remainingQueue(
   context: SessionContext,
@@ -65,18 +78,27 @@ function consumedChange({
   };
 }
 
+// The steered Prompt is stored as its sender's: the person's own, or the Voice call's or a Plugin's.
+const steeredChange = ({
+  turnId,
+  prompt,
+  messageId,
+  sender,
+}: QueueSteering): FeedUpsert =>
+  sender
+    ? nonUserPromptChange(messageId, prompt, sender)
+    : userMessageChange(turnId, prompt, messageId);
+
 function consumedMessage({
   context,
   event,
   steering,
   queue,
 }: Consumption): FeedEvent {
-  const messageId = steering.messageId;
-
   return {
     type: 'feed.change',
     turnId: steering.turnId,
-    change: userMessageChange(steering.turnId, steering.prompt, messageId),
+    change: steeredChange(steering),
     commitWith: queueWrite(context.sessionId, queue),
     committed: event.committed,
   };

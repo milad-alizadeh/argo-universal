@@ -10,6 +10,8 @@ export * from './projects';
 
 export * from './sessions';
 
+export * from './voice';
+
 export * from './system';
 
 export * from './notifications';

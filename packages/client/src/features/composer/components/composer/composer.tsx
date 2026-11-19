@@ -11,23 +11,31 @@ import {
 } from '../prompt-queue/use-queue-composer';
 import { ComposerControls } from './composer-card';
 import { oversizedAttachmentIds, sendButtonState } from './composer-conditions';
+import { EdgeTypographySource } from './composer-edge-typography';
 import { useComposerLayout } from './composer-layout';
 import { ComposerTray } from './composer-tray';
 import { ComposerPhoneTray } from './composer-trays';
 import type { ComposerProps } from './composer-types';
 import { ComposerTypography } from './composer-typography';
 
-export type { ComposerDraft, ComposerProps } from './composer-types';
+export type {
+  ComposerDraft,
+  ComposerProps,
+  ComposerVoice,
+  ComposerVoiceMutes,
+} from './composer-types';
 
 export type { ComposerAttachment } from '../composer-attachment-card/composer-attachment-card';
 
 export function Composer(props: ComposerProps): React.JSX.Element {
   return (
-    <ComposerTypography>
-      <QueueEditorsProvider command={queueCommand(props.promptQueue)}>
-        <ComposerBody {...props} />
-      </QueueEditorsProvider>
-    </ComposerTypography>
+    <EdgeTypographySource>
+      <ComposerTypography>
+        <QueueEditorsProvider command={queueCommand(props.promptQueue)}>
+          <ComposerBody {...props} />
+        </QueueEditorsProvider>
+      </ComposerTypography>
+    </EdgeTypographySource>
   );
 }
 

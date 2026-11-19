@@ -3,6 +3,8 @@ export {
   type ComposerAttachment,
   type ComposerDraft,
   type ComposerProps,
+  type ComposerVoice,
+  type ComposerVoiceMutes,
 } from './components/composer/composer';
 
 export { type ComposerConfigurationProps } from './components/composer-configuration/composer-configuration';

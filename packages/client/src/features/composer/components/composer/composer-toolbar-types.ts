@@ -28,7 +28,10 @@ export type ConfigurationActionsLayout = Pick<ComposerLayout, 'inactive'> & {
   props: Pick<ComposerProps, 'configuration'>;
 };
 
-export type SendLayout = Pick<ComposerLayout, 'sendState' | 'send'> & {
+export type SendLayout = Pick<
+  ComposerLayout,
+  'sendState' | 'callPointer' | 'send'
+> & {
   props: Pick<
     ComposerProps,
     | 'disabled'
@@ -37,6 +40,7 @@ export type SendLayout = Pick<ComposerLayout, 'sendState' | 'send'> & {
     | 'configuration'
     | 'queueEdit'
     | 'draft'
+    | 'voice'
   >;
 };
 
@@ -44,6 +48,8 @@ export type LeftControlsLayout = AttachLayout &
   AgentControlLayout &
   PhoneStatusLayout;
 
-export type RightControlsLayout = ConfigurationActionsLayout & SendLayout;
+export type RightControlsLayout = ConfigurationActionsLayout &
+  SendLayout &
+  Pick<ComposerLayout, 'wide'>;
 
 export type ToolbarLayout = LeftControlsLayout & RightControlsLayout;

@@ -14,7 +14,7 @@ import { readEngineTestHost, type EngineConnections } from './engine-read';
 import { seedTestCommands } from './engine-seed';
 import { MemorySecretStore } from './memory-secret-store';
 import { shippedFolder } from './runtime-plugins';
-import { scriptedEngineInput } from './scripted-engine';
+import { decided, scriptedEngineInput } from './scripted-engine';
 
 // A module's test drives the Engine through here: modules never import engine/.
 export { engineMachine } from '../src/engine/machine';
@@ -111,12 +111,8 @@ const testEngineInput = (
   options: EngineTestOptions,
   home: string,
   port: number,
-): EngineInput => ({
-  ...baseInput(options, home),
-  ...options,
-  home,
-  port,
-});
+): EngineInput =>
+  decided({ ...baseInput(options, home), ...options, home, port });
 
 const baseInput = (
   options: EngineTestOptions,
