@@ -46,3 +46,11 @@ export const inspectorBudget = (input: FrameLayoutInput): number =>
   input.inspectorState === 'closed'
     ? 0
     : inspectorWidth(input) + input.measures.paneGap;
+
+// The room the Inspector holds against the list: its dragged width, or its minimum until a drag sets one.
+export const inspectorClaim = (input: FrameLayoutInput): number =>
+  inspectorBudget(
+    input.inspectorUndragged === true
+      ? { ...input, preferredInspectorWidth: 0 }
+      : input,
+  );

@@ -1,42 +1,52 @@
-import type * as React from 'react';
 import { useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import type { FrameMeasures } from './frame-layout';
 import { listWidthForText } from './frame-layout-measures';
+import { defaultInspector, type InspectorWidth } from './inspector-width';
+import type { ScaffoldProps } from './scaffold-props';
 
 export interface PreferredWidths {
   preferredListWidth: number;
   preferredInspectorWidth: number;
+  inspectorUndragged: boolean;
   setPreferredListWidth: (width: number) => void;
-  setPreferredInspectorWidth: React.Dispatch<React.SetStateAction<number>>;
   draggedContentFloor: number | undefined;
-  setDraggedContentFloor: (width: number | undefined) => void;
+  setInspectorWidth: (width: InspectorWidth) => void;
 }
 
 type InspectorWidths = Pick<
   PreferredWidths,
   | 'preferredInspectorWidth'
-  | 'setPreferredInspectorWidth'
+  | 'inspectorUndragged'
   | 'draggedContentFloor'
-  | 'setDraggedContentFloor'
+  | 'setInspectorWidth'
 >;
 
-// Keep the floor that goes with the dragged width. The layout uses its normal floor while the Inspector is closed.
-function useInspectorWidths(defaultWidth: number): InspectorWidths {
-  const [preferredInspectorWidth, setPreferredInspectorWidth] =
-    useState(defaultWidth);
+type InspectorWidthProps = Pick<
+  ScaffoldProps,
+  'inspectorWidth' | 'onInspectorWidthChange'
+>;
 
-  const [draggedContentFloor, setDraggedContentFloor] = useState<number>();
+// The caller's width when it keeps one, else the Scaffold's own. The floor goes with the dragged width; the layout uses its normal floor while the Inspector is closed.
+function useInspectorWidths(
+  { inspectorWidth, onInspectorWidthChange }: InspectorWidthProps,
+  minimum: number,
+): InspectorWidths {
+  const [local, setLocal] = useState(defaultInspector);
+  const held = inspectorWidth ?? local;
 
   return {
-    preferredInspectorWidth,
-    setPreferredInspectorWidth,
-    draggedContentFloor,
-    setDraggedContentFloor,
+    preferredInspectorWidth: Math.max(minimum, held.width),
+    inspectorUndragged: held === defaultInspector,
+    draggedContentFloor: held.contentFloor,
+    setInspectorWidth: onInspectorWidthChange ?? setLocal,
   };
 }
 
-export function usePreferredWidths(measures: FrameMeasures): PreferredWidths {
+export function usePreferredWidths(
+  measures: FrameMeasures,
+  scaffold: InspectorWidthProps,
+): PreferredWidths {
   const [draggedListWidth, setPreferredListWidth] = useState<number>();
   const fontScale = useWindowDimensions().fontScale;
 
@@ -46,6 +56,6 @@ export function usePreferredWidths(measures: FrameMeasures): PreferredWidths {
   return {
     preferredListWidth,
     setPreferredListWidth,
-    ...useInspectorWidths(measures.inspectorWidth),
+    ...useInspectorWidths(scaffold, measures.inspectorWidth),
   };
 }

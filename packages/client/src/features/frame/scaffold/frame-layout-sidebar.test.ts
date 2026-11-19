@@ -62,3 +62,36 @@ it('restores the Workbench when closing the Inspector frees enough room', () => 
   expect(closed.list.width).toBe(312);
   expect(closed.workbench.state).toBe('gutter');
 });
+
+it('opens an undragged Inspector into the room the list leaves, without folding the list', () => {
+  const open = {
+    ...input,
+    inspectorState: 'open' as const,
+    inspectorUndragged: true,
+  };
+
+  const layout = frameLayout({ ...open, preferredInspectorWidth: 600 });
+
+  expect(layout.list.folded).toBe(false);
+  expect(layout.page.width).toBe(688);
+  expect(layout.inspector.width).toBe(352);
+
+  const wide = frameLayout({
+    ...open,
+    width: 1800,
+    preferredInspectorWidth: 600,
+  });
+
+  expect(wide.inspector.width).toBe(600);
+});
+
+it('folds the list for an Inspector a drag widened', () => {
+  const layout = frameLayout({
+    ...input,
+    inspectorState: 'open',
+    preferredInspectorWidth: 600,
+  });
+
+  expect(layout.list.folded).toBe(true);
+  expect(layout.inspector.width).toBe(600);
+});

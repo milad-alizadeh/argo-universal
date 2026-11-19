@@ -36,7 +36,7 @@ The following examples use the default pane widths and an available Workbench. T
 | 1912 | Open | Shown | Gutter, content moved aside | 848 |
 | 2224 | Open | Shown | Gutter, content centred | 848 |
 
-The Inspector panel is 352px wide by default. Its region includes a 16px gap. The panel uses the sidebar's glass material, rounded corners, and an unclipped shadow. Its tabs sit below the window band.
+The Inspector panel opens 600px wide, narrowed to what the window holds while the content keeps its floor, and never below its 352px minimum. Its region includes a 16px gap. A drag of its divider sets the width every Session opens it at on this Device, kept across App starts. The panel uses the sidebar's glass material, rounded corners, and an unclipped shadow. Its tabs sit below the window band.
 
 **Medium remains a pending desktop exception.** The 900px Paper boards show a rail and floating panels. ADR-0026 requires the phone shell below 1100px on every platform. Production retains that rule until the owner decides whether Spec 0020 supersedes it.
 
@@ -44,7 +44,7 @@ The Inspector panel is 352px wide by default. Its region includes a 16px gap. Th
 
 ## Giving up width
 
-These thresholds use default pane widths with an available Workbench.
+These thresholds use the panes' minimum widths, the Inspector's 352, with an available Workbench.
 
 Two regions compete with the content column for width: the Sessions list and the Inspector while it is open. The Workbench is not one of them: it is drawn absolutely over the page, the region left of the Inspector, so it never narrows the page, and the Feed's scroll view and scrollbar run to the page's trailing edge whether the Workbench shows or not.
 
