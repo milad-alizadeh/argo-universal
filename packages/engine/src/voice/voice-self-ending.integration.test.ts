@@ -12,10 +12,11 @@ import { promptText, startVoiceWork, type VoiceWork } from '#mocks/voice-work';
 
 const hangUp = (
   session: Awaited<ReturnType<typeof openVoiceSession>>,
+  params: { sessionId?: string } = {},
 ): ReturnType<typeof runOperation> =>
   runOperation(session.caller.operations, {
     id: 'voice.hangUp',
-    params: {},
+    params,
     wait: true,
   });
 
@@ -62,11 +63,7 @@ describe('an Agent hangs up the Voice call', () => {
     await host.caller.voice.start({ sessionId: first.sessionId, offer });
 
     await expect(
-      runOperation(second.caller.operations, {
-        id: 'voice.hangUp',
-        params: { sessionId: first.sessionId },
-        wait: true,
-      }),
+      hangUp(second, { sessionId: first.sessionId }),
     ).rejects.toThrow(/own Session/);
     expect(provider.call.ended).toBe(false);
   });

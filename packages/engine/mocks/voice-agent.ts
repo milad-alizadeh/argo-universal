@@ -68,12 +68,15 @@ const toolCall = (output: string): ScriptedStep => ({
 const toolSteps = (output: string | undefined): ScriptedStep[] =>
   output === undefined ? [] : [toolCall(output), { type: 'yield' }];
 
+const failingSteps = (fails: string | undefined): ScriptedStep[] =>
+  fails ? [{ type: 'fail', message: fails }] : [];
+
 const endingSteps = (reply: VoiceAgentReply): ScriptedStep[] => {
   if (reply.holdUntil) return [{ type: 'gate', waitFor: reply.holdUntil }];
 
-  if (reply.untilCancelled) return [{ type: 'wait-for-cancel' }];
-
-  return reply.fails ? [{ type: 'fail', message: reply.fails }] : [];
+  return reply.untilCancelled
+    ? [{ type: 'wait-for-cancel' }]
+    : failingSteps(reply.fails);
 };
 
 const askedToolCall = (title: string): ScriptedStep => ({

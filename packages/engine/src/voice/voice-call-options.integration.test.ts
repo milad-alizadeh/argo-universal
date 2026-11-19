@@ -99,12 +99,13 @@ describe('Voice call options', () => {
   });
 
   it('offer no choice of what the voice reads out', async () => {
-    const { host } = await startVoiceEngine();
+    const cli = await operationCaller((await startVoiceEngine()).host);
 
     await expect(
-      host.caller.voice.setCallOptions(
-        JSON.parse('{"readOut":"answers"}') as object,
-      ),
+      runOperation(cli.operations, {
+        id: setCallOptions,
+        params: { readOut: 'answers' },
+      }),
     ).rejects.toThrow(/readOut/);
   });
 });
