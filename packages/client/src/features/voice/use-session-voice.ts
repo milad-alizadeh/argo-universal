@@ -14,7 +14,7 @@ import {
   type SessionVoiceInput,
 } from './session-voice';
 import { type SessionMutes, useSessionMutes } from './use-session-mutes';
-import { useReleaseWhenOver, useVoiceStatus } from './use-voice-status';
+import { useVoiceStatus } from './use-voice-status';
 import type { VoiceConnection, VoiceLevels } from './voice-connection';
 import { useVoiceConnection } from './voice-connection-context';
 
@@ -132,7 +132,6 @@ function useInput(
 export function useSessionVoice(sessionId: string): View {
   const connection = useVoiceConnection();
   const status = useVoiceStatus();
-  useReleaseWhenOver(status, connection);
   const view = sessionVoice(useInput(sessionId, connection, status));
 
   return { ...view, voice: connection ? view.composer : undefined };
