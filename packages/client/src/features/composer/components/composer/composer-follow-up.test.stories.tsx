@@ -10,7 +10,7 @@ import {
 import { FollowUpComposer, predictedPrompt } from './composer-follow-up.mocks';
 import type { ComposerProps } from './composer-types';
 
-const useSuggestionLabel = predictedPrompt;
+const useSuggestionLabel = `Use ${predictedPrompt}`;
 
 const meta = {
   ...composerMeta,
@@ -58,6 +58,9 @@ export const TapAcceptsOnAPhone: Story = {
   play: async ({ canvas, args }) => {
     await settleLayout('phone');
     await deliver(canvas);
+    await expect(
+      canvas.getByText(predictedPrompt, { exact: true }),
+    ).toBeVisible();
     await userEvent.click(
       canvas.getByRole('button', { name: useSuggestionLabel }),
     );

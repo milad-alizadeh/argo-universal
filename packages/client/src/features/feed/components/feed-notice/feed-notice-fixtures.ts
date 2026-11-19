@@ -37,7 +37,11 @@ export const missingArgoToolsNotice = {
 } satisfies FeedNoticeProps;
 
 export const warningNotice = {
-  row: noticeOf('warning'),
+  row: {
+    ...noticeOf('warning'),
+    title:
+      'This session was recorded with model `gpt-6.2-astra` but is resuming with `gpt-6.2-sol`. Consider switching back to the original model to continue.',
+  },
 } satisfies FeedNoticeProps;
 
 export const errorNotice = { row: noticeOf('error') } satisfies FeedNoticeProps;

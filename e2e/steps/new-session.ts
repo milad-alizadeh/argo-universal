@@ -132,10 +132,14 @@ When(
   },
 );
 
+// The Composer's one submit button: Send, or Queue while a Turn runs.
+export const submitButton = (page: Page): Locator =>
+  page.getByRole('button', { name: /^(Send|Queue)$/ });
+
 // From New Session, the first prompt opens the Session.
 export async function sendPrompt(page: Page, prompt: string): Promise<void> {
   await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
-  await page.getByRole('button', { name: 'Send', exact: true }).click();
+  await submitButton(page).click();
   await expect(page).toHaveURL(/\/sessions\/(?!new)[^/]+$/, sessionOpenTimeout);
   await expectMessage(page, '', true);
 }
@@ -180,7 +184,7 @@ When(
   'I try to send the prompt {string}',
   async ({ page }, prompt: string): Promise<void> => {
     await page.getByRole('textbox', { name: messageLabel }).fill(prompt);
-    await page.getByRole('button', { name: 'Send', exact: true }).click();
+    await submitButton(page).click();
   },
 );
 
