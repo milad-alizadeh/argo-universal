@@ -1,9 +1,10 @@
 /*
- * What the Voice call needs of its Session, and nothing else: it sends the Session Prompts and hears what happens in its Feed.
+ * What the Voice call needs of its Session, and nothing else: it sends the Session Prompts, hears the words and
+ * Permission requests in its Feed and hears from the Session when each Turn ends.
  * The Engine's router attaches it once Sessions exist, as an event to the call machine; a call reads it when it starts.
  */
 
-// What happened in the Session's Feed that the voice is told about.
+// What happened in the Session that the voice is told about.
 export type SessionHappening =
   // An Agent message settled; its text is as stored, marks included.
   | { type: 'agent.message'; id: string; text: string }
@@ -33,7 +34,7 @@ export interface VoiceNotice {
 export interface VoiceSessions {
   // Sends the Session a Prompt from the Voice call.
   prompt: (sessionId: string, text: string) => Promise<PromptOutcome>;
-  // Listens to the Session's Feed; the returned function stops listening.
+  // Listens to the Session's Feed words and Turn ends; the returned function stops listening.
   watch: (
     sessionId: string,
     listener: (happening: SessionHappening) => void,

@@ -139,6 +139,7 @@ import {
   type StartTurnParameters,
   type TurnStep,
 } from './turn';
+import type { TurnHappening } from './turn-happenings';
 
 type AgentUpdateEvent = Extract<FeedEvent, { type: 'feed.acpUpdate' }>;
 
@@ -290,22 +291,33 @@ const enqueueChangeAndWrites = (
 
 type TurnQueue = StepQueue & {
   sendTo: (target: FeedActorRef | 'feed', event: FeedEvent) => void;
+  emit: (happening: TurnHappening) => void;
 };
 
-// A Turn step: its change and writes, then its events for the Feeds; each Subagent's Feed hears its Turn end before its write, and the Session's own Feed after them.
+// Each Subagent's Feed hears its Turn end before its write is queued.
+const enqueueSubagentTurns = (
+  enqueue: TurnQueue,
+  context: SessionContext,
+  step: TurnStep,
+): void => {
+  for (const { feed, event, write } of step.subagentTurns) {
+    enqueue.sendTo(feed, event);
+    enqueueWrites(enqueue, context, [write]);
+  }
+};
+
+// A Turn step: its change and writes, then its events for the Feeds, the Subagents' before the Session's own; its Turn happenings are reported last.
 const enqueueTurnStep = (
   enqueue: TurnQueue,
   context: SessionContext,
   step: TurnStep,
 ): void => {
   enqueueChangeAndWrites(enqueue, context, step);
-
-  for (const { feed, event, write } of step.subagentTurns) {
-    enqueue.sendTo(feed, event);
-    enqueueWrites(enqueue, context, [write]);
-  }
+  enqueueSubagentTurns(enqueue, context, step);
 
   for (const event of step.feed) enqueue.sendTo('feed', event);
+
+  for (const happening of step.happenings) enqueue.emit(happening);
 };
 
 // What the Agent reported the Turn ended with: a Stop wins the reason, and a denial under it is carried on.
@@ -352,6 +364,7 @@ const sessionSetup = setup({
     context: {} as SessionContext,
     events: {} as SessionEvent,
     output: {} as Pick<SessionContext, 'failure'>,
+    emitted: {} as TurnHappening,
     tags: {} as SessionTag,
   },
   actors: {

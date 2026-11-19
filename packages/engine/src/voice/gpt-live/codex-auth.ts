@@ -1,6 +1,6 @@
-import { resolveExecutable } from '@repo/executables';
 import { askAppServer, notInstalled, unreadable } from './app-server-ask';
 import type { AuthAnswer } from './app-server-ask';
+import { findCodex } from './codex-program';
 
 // What the installed Codex says about the person's ChatGPT sign-in. The token is held by the caller for one call and never stored.
 export type CodexReading =
@@ -13,7 +13,7 @@ export interface CodexAuth {
 }
 
 export type CodexAppServerOptions = {
-  // The Codex program; found on PATH when left out.
+  // The Codex program; found by `findCodex`, the ChatGPT app's included, when left out.
   program?: () => string;
   timeoutMs?: number;
 };
@@ -22,8 +22,7 @@ const notSignedIn = 'Sign in to Codex with ChatGPT to talk with GPT-Live.';
 
 const defaultTimeoutMs = 10_000;
 
-const defaultProgram = (): string =>
-  process.env.CODEX_PATH ?? resolveExecutable('codex');
+const defaultProgram = (): string => findCodex();
 
 const signedOut = (reason: string): CodexReading => ({
   signedIn: false,

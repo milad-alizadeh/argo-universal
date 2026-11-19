@@ -14,33 +14,15 @@ const tracked = (row: Row): Tracked | undefined => {
     : undefined;
 };
 
-type Notice = Extract<Row, { sessionUpdate: 'notice' }>;
-
-type End = NonNullable<NonNullable<Notice['_meta']>['argo']>['turnEnd'];
-
-const endOf = (row: Notice): End => row._meta?.argo?.turnEnd;
-
-const errorOf = (end: NonNullable<End>): string | null =>
-  end.error?.message ?? null;
-
-const endedHappening = (end: End): SessionHappening | undefined =>
-  end && {
-    type: 'turn.ended',
-    stopReason: end.stopReason,
-    error: errorOf(end),
-  };
-
-const turnEndOf = (row: Row): SessionHappening | undefined =>
-  row.sessionUpdate === 'notice' ? endedHappening(endOf(row)) : undefined;
-
 const happeningOf = (id: string, { kind, text }: Tracked): SessionHappening =>
   kind === 'agent'
     ? { type: 'agent.message', id, text }
     : { type: 'person.typed', text };
 
 /*
- * Reads a Session's Feed changes as what the voice cares about: a settled Agent message, a Prompt the person typed, and a
- * Turn's end. Each row is reported once, when it settles; Tool calls and thoughts are not reported at all.
+ * Reads a Session's Feed changes as the words the voice cares about: a settled Agent message and a Prompt the person
+ * typed. Each row is reported once, when it settles; Tool calls, thoughts and Notices are not reported at all. A Turn's
+ * end comes from the Session, not from its Feed.
  */
 export class FeedHappenings {
   private readonly rows = new Map<string, Tracked>();
@@ -63,12 +45,6 @@ export class FeedHappenings {
   }
 
   private upsert(row: Row): SessionHappening[] {
-    const ended = turnEndOf(row);
-
-    return ended ? this.once(row.id, ended) : this.track(row);
-  }
-
-  private track(row: Row): SessionHappening[] {
     const seen = tracked(row);
 
     if (!seen) return [];
