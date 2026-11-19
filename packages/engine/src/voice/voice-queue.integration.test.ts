@@ -52,6 +52,12 @@ describe('a request for work while a Turn runs', () => {
     work.provider.call.requestWork('r2', extra);
 
     expect(JSON.stringify(await work.steered)).toContain(extra);
+    await expect
+      .poll(() => work.provider.call.sent)
+      .toContainEqual(expect.objectContaining({ requestId: 'r2' }));
+    expect(JSON.stringify(work.provider.call.sent)).not.toContain(
+      relayWords.queued,
+    );
     await expect.poll(async () => (await work.promptRows()).length).toBe(2);
     expect(await work.promptRows()).toMatchObject([
       { _meta: { argo: { sender: { type: 'voice' } } } },
