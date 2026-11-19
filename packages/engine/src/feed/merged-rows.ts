@@ -25,9 +25,7 @@ type FeedMemory = {
 };
 
 // The rows a Feed actor holds in memory, read as stored and queued rows are: without Voice marks.
-export const readFeedMemory = (
-  feed: FeedMemory | undefined,
-): SessionUpdate[] =>
+export const readFeedMemory = (feed: FeedMemory | undefined): SessionUpdate[] =>
   Object.values(feed?.getSnapshot().context.rows ?? {}).map(
     withoutVoiceMarkers,
   );
