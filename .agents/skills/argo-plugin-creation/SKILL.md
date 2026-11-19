@@ -30,6 +30,7 @@ Start from the closest executable example. Open only the reference sections need
 | Pages, navigation, lists and details | `plugins/issue-tracker/` and [Page frames](references/authoring.md#page-frames) |
 | Boards and card moves | `plugins/jira/issue-board.tsx` and [Boards](references/authoring.md#boards) |
 | Reads, writes and shared data | `plugins/issue-tracker/github-reads.ts`, [Declared data](references/authoring.md#declared-data) and [Operations](references/authoring.md#operations) |
+| Data that survives a worker restart | [Plugin storage](references/authoring.md#plugin-storage) |
 | Slot or Hook contributions | [Session Workbench card](references/authoring.md#session-workbench-card), the relevant Session surface section, or [Hooks](references/authoring.md#hooks) |
 | Service sign-in | `templates/plugins/github-sign-in/` for device flow and [Accounts and OAuth](references/authoring.md#accounts-and-oauth) for other flows |
 | Local or remote media | [Plugin assets](references/assets.md) |

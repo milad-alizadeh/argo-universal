@@ -57,6 +57,10 @@ argo.pages.define('/counter', {
 });
 ```
 
+When a page declares `state`, type a child component's action builder with that state, for example `PageTo<{ title: string }>`. The default `PageTo` is for a page without a specific state type. A stateful page's `bind` accepts only its declared keys.
+
+For a form, put fields inside `FieldGroup.Section`, inside `FieldGroup`. Place a standalone submit button beside the group. Copy the form in `packages/plugin-kit/mocks/kit-screens-source.ts` and use its harness pattern in `packages/plugin-kit/testing/kit-screens.integration.test.ts`. Exercise the field with `page.act('Title', 'onChangeText', value)` and then press the submit button.
+
 Some Component events report a payload: a Table's `onSortChange` reports the column and direction, and a List's `onMove` reports the moved row's `id`, the `section` it lands in and its `index` there. `to.payload(field)` stands for one field of it, or `to.payload()` for the whole payload, such as a Switch's value, anywhere `to.set` or `to.run` takes a value. The App fills it in when the event fires and acts at once, with no draw in between. Page state holds scalars and selections only, so an object payload goes into flat keys:
 
 ```tsx
@@ -340,6 +344,12 @@ Storage Queries are never polled. A committed Plugin storage write marks them du
 
 Entries belong to a Plugin and a Project. Equal Queries in that Project share one entry, including Queries from different pages.
 Object key order and header name case do not change the entry.
+
+## Plugin storage
+
+Use `argo.storage.execute` for a persistent write in an Operation. Initialise tables idempotently in the entrypoint so reopening the Plugin keeps existing data. Bind values through SQL parameters. When a loader reads rows directly, narrow the returned values before building typed page data. See `plugins/issue-tracker/issue-sessions-store.ts` for row guards.
+
+To verify that a write survives the Plugin worker stopping, use the harness's `plugins.setEnabled(id, false)` and `plugins.setEnabled(id, true)`, then reopen the page and assert the saved state.
 
 ## Named reads
 
