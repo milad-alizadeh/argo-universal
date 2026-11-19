@@ -89,19 +89,31 @@ async function isAttached(
 export type Attached = ReturnType<typeof changeOf>;
 
 /*
+ * What an attach names. `again` is set for a person's own attach, and by an Agent only when the person asks for a
+ * pull request they detached back (#2470).
+ */
+export type Attaching = { reference: string; again: boolean };
+
+const detachedRefusal =
+  'This pull request was detached from this Session. Attach it again only when the person asks, with again: true.';
+
+/*
  * Associates the calling Session with the pull request a reference names. GitHub is asked first, so a pull request
  * that does not exist, or that the Project's Account cannot see, is refused and nothing is stored. The association
  * is kept under the repository GitHub reports, so a renamed or differently cased reference is the same one.
  */
 export async function attach(
   scope: Scope,
-  reference: string,
+  { reference, again }: Attaching,
   caller: SessionCaller,
 ): Promise<Attached> {
   const named = await namedOf(scope, reference, caller);
   const pull = await fetchPull(scope.fetch, { ...named, ...caller });
 
   const link = { ...caller, repository: pull.repository, number: pull.number };
+
+  if (!again && (await scope.store.detached(link)))
+    throw new Error(detachedRefusal);
 
   await scope.store.attach(link);
   // The pull request and its Checks are kept before the answer, so every surface shows it at once.

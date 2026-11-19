@@ -8,6 +8,9 @@ declare module '@argo/plugin-kit' {
         "number": {
           "type": "number",
           "required": true
+        },
+        "again": {
+          "type": "boolean"
         }
       },
       "caller": [

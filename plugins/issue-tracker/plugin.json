@@ -39,6 +39,10 @@
             "type": "number",
             "description": "The Issue number to attach.",
             "required": true
+          },
+          "again": {
+            "type": "boolean",
+            "description": "Attach an Issue that was detached from the Session. Pass it only when the person asks for it back."
           }
         },
         "caller": ["project", "session"]

@@ -18,11 +18,20 @@ type Storage = Pick<Argo, 'storage'>;
 const table =
   'CREATE TABLE IF NOT EXISTS pull_associations (project_id TEXT NOT NULL, session_id TEXT NOT NULL, repository TEXT NOT NULL, number INTEGER NOT NULL, attached_at TEXT NOT NULL, PRIMARY KEY (project_id, session_id, repository, number))';
 
+/*
+ * One row per pull request detached from a Session, so a detach sticks: discovery never attaches it to that Session
+ * again, and an Agent attaches it again only when the person asks (#2470). Attaching it clears the row.
+ */
+const detachedTable =
+  'CREATE TABLE IF NOT EXISTS pull_detached (project_id TEXT NOT NULL, session_id TEXT NOT NULL, repository TEXT NOT NULL, number INTEGER NOT NULL, detached_at TEXT NOT NULL, PRIMARY KEY (project_id, session_id, repository, number))';
+
 export type PullStore = {
-  // Attaching twice is the same association, so the first time stands.
+  // Attaching twice is the same association, so the first time stands; it forgets that the pull request was detached.
   attach: (link: PullLink) => Promise<void>;
-  // Removes only this association; one that is not there is already detached.
+  // Removes only this association, and remembers it was detached; one that is not there is already detached.
   detach: (link: PullLink) => Promise<void>;
+  // Whether this pull request was detached from this Session and not attached since.
+  detached: (link: PullLink) => Promise<boolean>;
   // The pull requests these Sessions are associated with, the earliest attached first.
   forSessions: (sessionIds: readonly string[]) => Promise<PullLink[]>;
 };
@@ -44,11 +53,17 @@ const linkOf = ([projectId, sessionId, repository, number]: [
 const linksOf = ({ rows }: StorageResult): PullLink[] =>
   rows.filter(isLinkRow).map(linkOf);
 
-function readyTables({ storage }: Storage): () => Promise<StorageResult> {
+const created = async ({ storage }: Storage): Promise<StorageResult> => {
+  await storage.execute({ sql: table, params: [], method: 'run' });
+
+  return storage.execute({ sql: detachedTable, params: [], method: 'run' });
+};
+
+function readyTables(argo: Storage): () => Promise<StorageResult> {
   let ready: Promise<StorageResult> | undefined;
 
   return () => {
-    ready ??= storage.execute({ sql: table, params: [], method: 'run' });
+    ready ??= created(argo);
 
     return ready;
   };
@@ -71,6 +86,13 @@ const insertOf = (
   method: 'run',
 });
 
+const keyParams = (link: PullLink): (string | number)[] => [
+  link.projectId,
+  link.sessionId,
+  link.repository.toLowerCase(),
+  link.number,
+];
+
 const remove =
   'DELETE FROM pull_associations WHERE project_id = ? AND session_id = ? AND repository = ? AND number = ?';
 
@@ -78,13 +100,33 @@ const deleteOf = (
   link: PullLink,
 ): Parameters<Argo['storage']['execute']>[0] => ({
   sql: remove,
-  params: [
-    link.projectId,
-    link.sessionId,
-    link.repository.toLowerCase(),
-    link.number,
-  ],
+  params: keyParams(link),
   method: 'run',
+});
+
+const markDetached =
+  'INSERT INTO pull_detached (project_id, session_id, repository, number, detached_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(project_id, session_id, repository, number) DO UPDATE SET detached_at = excluded.detached_at';
+
+const markOf = (link: PullLink): Parameters<Argo['storage']['execute']>[0] => ({
+  sql: markDetached,
+  params: [...keyParams(link), new Date().toISOString()],
+  method: 'run',
+});
+
+const unmarkOf = (
+  link: PullLink,
+): Parameters<Argo['storage']['execute']>[0] => ({
+  sql: 'DELETE FROM pull_detached WHERE project_id = ? AND session_id = ? AND repository = ? AND number = ?',
+  params: keyParams(link),
+  method: 'run',
+});
+
+const markedOf = (
+  link: PullLink,
+): Parameters<Argo['storage']['execute']>[0] => ({
+  sql: 'SELECT 1 FROM pull_detached WHERE project_id = ? AND session_id = ? AND repository = ? AND number = ?',
+  params: keyParams(link),
+  method: 'all',
 });
 
 // Each statement waits for the table, then runs.
@@ -107,13 +149,36 @@ const reading =
     return linksOf(await argo.storage.execute(selectFor(sessionIds)));
   };
 
+type Write = ReturnType<typeof writing>;
+
+// Each write is two statements: the association and the detached mark, which never hold for the same link.
+const both =
+  (write: Write, first: StatementOf, second: StatementOf) =>
+  async (link: PullLink): Promise<void> => {
+    await write(first(link));
+    await write(second(link));
+  };
+
+type StatementOf = (
+  link: PullLink,
+) => Parameters<Argo['storage']['execute']>[0];
+
+const detachedReading =
+  (argo: Storage, ready: Ready) =>
+  async (link: PullLink): Promise<boolean> => {
+    await ready();
+
+    return (await argo.storage.execute(markedOf(link))).rows.length > 0;
+  };
+
 export function createPullStore(argo: Storage): PullStore {
   const ready = readyTables(argo);
   const write = writing(argo, ready);
 
   return {
-    attach: (link) => write(insertOf(link)),
-    detach: (link) => write(deleteOf(link)),
+    attach: both(write, unmarkOf, insertOf),
+    detach: both(write, deleteOf, markOf),
+    detached: detachedReading(argo, ready),
     forSessions: reading(argo, ready),
   };
 }
