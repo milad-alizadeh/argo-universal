@@ -1,18 +1,20 @@
 import { z } from 'zod';
 import type { VoiceProviderEvent } from '../provider';
+import { usageUpdated } from './link-limit';
 import {
   SpokenTurns,
   transcriptType,
   type Speaker,
   type Utterance,
 } from './link-turns';
+import { frameRejections, readFrame } from './read-frame';
 import { serviceClosed } from './service-close';
 
 /*
  * The control link's events as the service sends them ("frameless bidi"); Codex reads the same ones (codex-rs realtime_websocket/protocol_frameless_bidi.rs).
  * Words arrive a chunk at a time as `*_transcript.added` and show as partials; a turn's `turn.done` holds its whole transcript, which is what was said.
  * A turn the person cut short is done with what was said up to then; one that ends without a transcript keeps the words heard in it (`link-turns.ts`).
- * `session.usage.updated` counts audio time, not tokens, so it is not reported.
+ * `session.usage.updated` counts audio time, not tokens, so only its allowance is reported: a status there is a limit.
  */
 
 // What the call has heard so far: each speaker's words in the utterance under way, and the turns still open.
@@ -162,6 +164,7 @@ const reported = z.union([
     .looseObject({ type: z.literal('turn.done'), ...assistantTurn })
     .transform(turnDone('voice', { type: 'speaking', speaking: false })),
   delegation.transform(requested),
+  usageUpdated.transform((limits) => report(...limits)),
   z
     .looseObject({
       type: z.literal('session.closed'),
@@ -170,15 +173,7 @@ const reported = z.union([
     .transform(closed),
 ]);
 
-const stepOf = (frame: string): Step | null => {
-  try {
-    const parsed = reported.safeParse(JSON.parse(frame));
-
-    return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
-  }
-};
+const rejectFrame = frameRejections('GPT-Live control link');
 
 // Reads one call's control-link text frames, keeping what was heard across frames.
 export class LinkReader {
@@ -187,9 +182,9 @@ export class LinkReader {
     turns: new SpokenTurns(),
   };
 
-  // What one text frame means to the call; nothing for events not reported and for anything unreadable.
+  // What one text frame means to the call; nothing for events not reported, and for anything unreadable, which is reported.
   public read(frame: string): VoiceProviderEvent[] {
-    return stepOf(frame)?.(this.heard) ?? [];
+    return readFrame(reported, frame, rejectFrame)?.(this.heard) ?? [];
   }
 }
 

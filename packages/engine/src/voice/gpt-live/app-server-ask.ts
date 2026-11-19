@@ -1,6 +1,7 @@
 import { spawn, type ChildProcessByStdio } from 'node:child_process';
 import type { Readable, Writable } from 'node:stream';
 import { z } from 'zod';
+import { frameRejections, readFrame } from './read-frame';
 
 // What Codex's app-server says about the sign-in.
 export type AuthAnswer = {
@@ -41,16 +42,11 @@ const reply = z.looseObject({
 
 type Reply = z.infer<typeof reply>;
 
-// A line that is not a reply names no request, so it is answered by nothing.
-function replyOf(line: string): Reply {
-  try {
-    const parsed = reply.safeParse(JSON.parse(line));
+const rejectFrame = frameRejections('Codex app-server');
 
-    return parsed.success ? parsed.data : {};
-  } catch {
-    return {};
-  }
-}
+// A line that is not a reply names no request, so it is answered by nothing; one that is not JSON is also reported.
+const replyOf = (line: string): Reply =>
+  readFrame(reply, line, rejectFrame) ?? {};
 
 /*
  * One `codex app-server` over standard input and output, asked once: `getAuthStatus` with `includeToken`, then stopped.
