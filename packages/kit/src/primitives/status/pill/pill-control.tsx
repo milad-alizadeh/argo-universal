@@ -120,8 +120,7 @@ function interactionClass({
   pressed,
 }: PillProps & { pressed: boolean }): string {
   return cn(
-    !disabled &&
-      'web:group-hover:bg-hover web:group-focus-visible:ring-2 web:group-focus-visible:ring-focus',
+    !disabled && 'web:group-hover:bg-hover web:group-focus-visible:focus-ring',
     stateClass(selected, pressed),
   );
 }

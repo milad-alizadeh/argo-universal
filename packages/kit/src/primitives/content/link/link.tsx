@@ -65,8 +65,7 @@ function anchorProps(
   };
 }
 
-const anchorBase =
-  'rounded-sm underline-offset-2 focus-visible:outline-3 focus-visible:outline-primary/35';
+const anchorBase = 'rounded-sm underline-offset-2';
 
 type AnchorLook = Pick<
   AnchorHTMLAttributes<HTMLAnchorElement>,

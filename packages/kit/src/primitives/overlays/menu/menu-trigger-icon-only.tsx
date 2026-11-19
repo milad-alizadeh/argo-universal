@@ -26,7 +26,7 @@ function nativeProps(props: TriggerProps): ComponentProps<typeof Pressable> {
 }
 
 const ghostClass = cn(
-  'min-w-0 shrink flex-row items-center justify-center h-11 w-11 android:h-12 android:w-12 web:h-7 web:w-7 web:rounded-full web:outline-none web:hover:bg-hover web:focus-visible:bg-hover web:active:bg-pressed',
+  'min-w-0 shrink flex-row items-center justify-center h-11 w-11 android:h-12 android:w-12 web:h-7 web:w-7 web:rounded-full web:hover:bg-hover web:active:bg-pressed',
   tintTransitionClassName,
 );
 
