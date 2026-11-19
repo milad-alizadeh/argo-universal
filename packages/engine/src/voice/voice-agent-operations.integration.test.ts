@@ -8,15 +8,16 @@ import {
 } from '#mocks/voice-engine';
 
 const appOnly = [
+  'session.submit',
+  'session.queue',
   'voice.status',
-  'voice.start',
   'voice.end',
   'voice.getSettings',
   'voice.setSettings',
 ];
 
-describe('the Voice call Operations an Agent sees', () => {
-  it('lists only voice.hangUp to an Agent', async () => {
+describe('the App-only Operations an Agent is refused', () => {
+  it('lists only voice.hangUp of the Voice call Operations to an Agent', async () => {
     const session = await openVoiceSession(await startVoiceEngine());
 
     const listed = await session.caller.operations.list.query({
@@ -42,12 +43,13 @@ describe('the Voice call Operations an Agent sees', () => {
     const voice = await startVoiceEngine();
     const session = await openVoiceSession(voice);
 
-    await runOperation(session.caller.operations, {
-      id: 'voice.start',
-      params: { sessionId: session.sessionId, offer },
-      wait: true,
-    }).catch(() => null);
-
+    await expect(
+      runOperation(session.caller.operations, {
+        id: 'voice.start',
+        params: { sessionId: session.sessionId, offer },
+        wait: true,
+      }),
+    ).rejects.toThrow('Only an App');
     expect(await callOf(voice.host)).toBeNull();
   });
 });

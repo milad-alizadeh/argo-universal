@@ -37,10 +37,12 @@ let voice: Actor<typeof machine>;
 
 afterEach(() => voice?.stop());
 
-// A running call whose Session is a spy: every Notice written into its Feed is a call to `notice`.
-function runningCall(): Mock<VoiceSessions['notice']> {
+// Sessions whose Feed is a spy: every Notice written into it is a call to `notice`.
+function spySessions(): {
+  sessions: VoiceSessions;
+  notice: Mock<VoiceSessions['notice']>;
+} {
   const notice = vi.fn<VoiceSessions['notice']>();
-  voice = createActor(machine, { input }).start();
 
   const sessions: VoiceSessions = {
     prompt: () => Promise.reject(new Error('No Prompts in this test')),
@@ -48,6 +50,13 @@ function runningCall(): Mock<VoiceSessions['notice']> {
     notice,
   };
 
+  return { sessions, notice };
+}
+
+// A running call whose Session is a spy.
+function runningCall(): Mock<VoiceSessions['notice']> {
+  const { sessions, notice } = spySessions();
+  voice = createActor(machine, { input }).start();
   voice.send({ type: 'sessions.attach', sessions });
   voice.send(start);
 
@@ -82,5 +91,22 @@ describe('the Notice a failed call leaves', () => {
     voice.send({ type: 'call.end', reason: 'person' });
 
     expect(notice).not.toHaveBeenCalled();
+  });
+});
+
+describe('Sessions attached while a call runs', () => {
+  it('receive the Notice of a call the provider closes for a reached limit', () => {
+    runningCall();
+    const attached = spySessions();
+    voice.send({ type: 'sessions.attach', sessions: attached.sessions });
+
+    voice.send(providerEvent({ type: 'closed', reason: 'limit' }));
+
+    expect(attached.notice).toHaveBeenCalledWith(
+      start.sessionId,
+      expect.objectContaining({
+        title: 'Voice call ended: usage limit reached',
+      }),
+    );
   });
 });
