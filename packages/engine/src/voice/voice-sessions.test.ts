@@ -33,6 +33,7 @@ function sessionsHeard(): HeardSessions {
     },
     {
       prompt: () => Promise.reject(new Error('Not sent')),
+      stop: () => Promise.resolve(false),
       watchTurns: (_sessionId, listener) => {
         listeners.add(listener);
 

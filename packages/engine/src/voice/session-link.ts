@@ -36,6 +36,8 @@ export interface VoiceNotice {
 export interface VoiceSessions {
   // Sends the Session a Prompt from the Voice call.
   prompt: (sessionId: string, text: string) => Promise<PromptOutcome>;
+  // Cancels the Session's running Turn as the Stop button does; resolves false when no Turn runs.
+  stop: (sessionId: string) => Promise<boolean>;
   // Listens to the Session's Feed words and Turn ends; the returned function stops listening.
   watch: (
     sessionId: string,
@@ -45,9 +47,12 @@ export interface VoiceSessions {
   notice: (sessionId: string, notice: VoiceNotice) => void;
 }
 
+const unreachable = 'The Session cannot be reached';
+
 // What a call has before Sessions are attached: nothing to send to, nothing to hear, nowhere to write.
 export const detachedSessions: VoiceSessions = {
-  prompt: () => Promise.reject(new Error('The Session cannot be reached')),
+  prompt: () => Promise.reject(new Error(unreachable)),
+  stop: () => Promise.reject(new Error(unreachable)),
   watch: () => (): void => {},
   notice: () => {},
 };

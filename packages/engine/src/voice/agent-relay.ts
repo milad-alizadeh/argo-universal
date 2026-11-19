@@ -12,6 +12,7 @@ import type {
   SessionHappening,
   VoiceSessions,
 } from './session-link';
+import { isStopRequest, stopWork } from './spoken-stop';
 import {
   isPermissionHappening,
   WaitingPermission,
@@ -48,12 +49,21 @@ export class AgentRelay {
     private readonly reports: RelayReports,
   ) {}
 
-  // The person asked for work: the Agent gets it, and the voice an answer at once.
+  // The person asked for work, or said "stop": the Agent gets it or its Turn is cancelled, and the voice an answer at once.
   public async request(requestId: string, text: string): Promise<void> {
+    const answer = isStopRequest(text)
+      ? await stopWork(this.sessions, this.call.sessionId)
+      : this.permission.answering(await this.work(text));
+
+    this.reply(requestId, answer);
+  }
+
+  // Sends the Agent a Prompt and answers with what the voice is told of where it landed.
+  private work(text: string): Promise<string> {
     // Counted before the Prompt is answered, so the call never idles between the request and its Turn.
     this.sentChanged(() => (this.atWork += 1));
 
-    const answer = await this.sessions
+    return this.sessions
       .prompt(this.call.sessionId, this.promptText(text))
       .then(
         (outcome: PromptOutcome) => this.sent(outcome),
@@ -63,8 +73,6 @@ export class AgentRelay {
           return relayWords.unsent(error.message);
         },
       );
-
-    this.reply(requestId, this.permission.answering(answer));
   }
 
   public happened(happening: SessionHappening): void {
@@ -83,6 +91,8 @@ export class AgentRelay {
 
   // What the voice is told of a Prompt that reached the Session; it stays at work until the Session says its Turn ended.
   private sent(outcome: PromptOutcome): string {
+    // Only a Prompt the Session took has carried the voice instruction; a refused or dropped one has not.
+    this.instructed = true;
     void outcome.ended.then(() => this.done());
 
     if (outcome.status !== 'queued') return relayWords[outcome.status];
@@ -119,10 +129,7 @@ export class AgentRelay {
   }
 
   private promptText(request: string): string {
-    if (this.instructed) return request;
-    this.instructed = true;
-
-    return withVoiceInstruction(request);
+    return this.instructed ? request : withVoiceInstruction(request);
   }
 
   private reply(requestId: string, text: string): void {

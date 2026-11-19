@@ -5,6 +5,9 @@ export const relayWords = {
   queued: 'The Agent is busy. This waits until its current work is done.',
   notSteered: (reason: string): string =>
     `The Agent could not take this into its current work: ${reason}. This waits until that work is done.`,
+  stopping: 'Stopping the Agent. Its current work is cancelled.',
+  nothingToStop:
+    'The Agent is not working on anything, so nothing was stopped.',
   unsent: (reason: string): string => `That could not be sent: ${reason}`,
   typed: (text: string): string =>
     `The person typed this to the Agent: ${text}`,

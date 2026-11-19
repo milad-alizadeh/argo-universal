@@ -15,6 +15,8 @@ export type VoiceAgentReply = {
   toolOutput?: string;
   // Holds the Turn open, after its messages, until the test releases it.
   holdUntil?: Promise<void>;
+  // Holds the Turn open, after its messages, until it is cancelled.
+  untilCancelled?: boolean;
   // Ends the Turn with an error after its messages.
   fails?: string;
   // Asks permission for a Tool call with this title before its messages, and waits for the answer.
@@ -68,6 +70,8 @@ const toolSteps = (output: string | undefined): ScriptedStep[] =>
 
 const endingSteps = (reply: VoiceAgentReply): ScriptedStep[] => {
   if (reply.holdUntil) return [{ type: 'gate', waitFor: reply.holdUntil }];
+
+  if (reply.untilCancelled) return [{ type: 'wait-for-cancel' }];
 
   return reply.fails ? [{ type: 'fail', message: reply.fails }] : [];
 };

@@ -57,6 +57,7 @@ function attachVoice(deps: AppRouterDeps, sessions: Sessions): void {
           sessionId,
           prompt: [{ type: 'text', text }],
         }),
+      stop: (sessionId) => sessions.stopFromVoice(sessionId),
       watchTurns: (sessionId, listener) =>
         sessions.watchTurns(sessionId, listener),
     }),

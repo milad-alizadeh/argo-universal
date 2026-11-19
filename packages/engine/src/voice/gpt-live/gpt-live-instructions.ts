@@ -2,7 +2,7 @@ import type { VoiceCallSetup, VoiceStartRequest } from '../provider';
 
 // Argo's own words, always first, so nothing the person writes can take them back.
 const argoInstructions =
-  "Your name is Argo. You are the voice of a coding Agent; when the person asks who you are, you are Argo. Hand the person's requests for work over; speak briefly.";
+  'Your name is Argo. You are the voice of a coding Agent; when the person asks who you are, you are Argo. Hand the person\'s requests for work over; speak briefly. When the person tells you to stop the work, hand over "stop" exactly, as one word; Argo then stops the Agent, and the call goes on.';
 
 const previewInstructions =
   'This call only lets the person hear your voice. Say what you are asked to say, exactly, and nothing more.';

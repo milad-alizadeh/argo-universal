@@ -9,11 +9,14 @@ type Heard = { said: VoiceSay[]; running: boolean[] };
 type Relayed = { relay: AgentRelay; heard: Heard };
 
 // A relay whose Session answers each Prompt with `answer`.
-function relayTo(answer: () => Promise<PromptOutcome>): Relayed {
+function relayTo(
+  answer: (sessionId: string, text: string) => Promise<PromptOutcome>,
+): Relayed {
   const heard: Heard = { said: [], running: [] };
 
   const sessions: VoiceSessions = {
     prompt: answer,
+    stop: () => Promise.resolve(false),
     watch: () => (): void => {},
     notice: () => {},
   };
@@ -62,4 +65,23 @@ it('keeps a sent Prompt running until the Session says its Turn ended', async ()
 
   ended.resolve('t1');
   await expect.poll(() => heard.running).toEqual([true, false]);
+});
+
+it('carries the voice instruction in the next Prompt when the first one was not sent', async () => {
+  const prompts: string[] = [];
+  const refusals = ['A Hook dropped the Prompt: busy'];
+
+  const { relay } = relayTo(async (_sessionId, text) => {
+    prompts.push(text);
+    const refusal = refusals.shift();
+
+    if (refusal !== undefined) throw new Error(refusal);
+
+    return { status: 'started', ended: Promise.resolve('t1') };
+  });
+
+  await relay.request('r1', 'First');
+  await relay.request('r2', 'Second');
+
+  expect(prompts[1]).toMatch(/\[STATUS\][\s\S]*Second/);
 });

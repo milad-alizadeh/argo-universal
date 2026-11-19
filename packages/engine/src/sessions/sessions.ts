@@ -98,6 +98,15 @@ export class Sessions {
   ): ReturnType<typeof promptFromVoice> {
     return promptFromVoice(this.sources, input);
   }
+  // A spoken "stop" (ADR-0063): cancels the running Turn as the Stop button does; resolves false when no Turn runs.
+  public async stopFromVoice(sessionId: string): Promise<boolean> {
+    const session = this.sources.open.session(sessionId);
+
+    if (!session?.getSnapshot().hasTag('running')) return false;
+    await this.implementations['session.cancel']({ sessionId });
+
+    return true;
+  }
   // Hears what an open Session reports of its Turns until the returned function is called; a closed Session reports none.
   public watchTurns(
     sessionId: string,

@@ -50,6 +50,7 @@ function spySessions(): SpySessions {
 
   const sessions: VoiceSessions = {
     prompt: () => Promise.reject(new Error('No Prompts in this test')),
+    stop: () => Promise.resolve(false),
     watch: () => (): void => {},
     notice,
   };

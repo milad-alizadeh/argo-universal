@@ -49,6 +49,12 @@ describe('What a GPT-Live call is told', () => {
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
 
+  it('tells the voice to hand a "stop" over as it was said', async () => {
+    const told = await instructionsSent({});
+
+    expect(told).toMatch(/"stop"[^.]*exactly/i);
+  });
+
   it("speaks with a custom voice's base voice", async () => {
     await instructionsSent({ voice: 'sol', style });
 
