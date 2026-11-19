@@ -100,7 +100,8 @@ describe('GPT-Live provider starting a call', () => {
 });
 
 describe('GPT-Live provider voices', () => {
-  it('offers the service’s voices, Cove first as the default', async () => {
+  // Marin, Porto and Selva are listed by Codex, but GPT-Live creates their call and then answers its link 404 (#2405 probe, 2026-11-19).
+  it('offers the service’s voices it can hold a call in, Cove first as the default', async () => {
     const { provider } = await setup([signedIn('t1')], ['t1']);
 
     const voices = await provider.voices();
@@ -115,7 +116,6 @@ describe('GPT-Live provider voices', () => {
       'breeze',
       'arbor',
       'sol',
-      'marin',
       'aube',
       'bubbie',
       'haetsal',
@@ -124,11 +124,9 @@ describe('GPT-Live provider voices', () => {
       'leher',
       'miko',
       'neer',
-      'porto',
       'rindo',
       'rio',
       'rivage',
-      'selva',
       'sonna',
       'tinta',
       'viola',
@@ -139,9 +137,9 @@ describe('GPT-Live provider voices', () => {
   it('creates the call with the chosen voice', async () => {
     const { endpoint, start } = await setup([signedIn('t1')], ['t1']);
 
-    await start({ ...request, voice: 'marin' });
+    await start({ ...request, voice: 'sol' });
 
-    expect(endpoint.created.at(0)?.session.audio.output.voice).toBe('marin');
+    expect(endpoint.created.at(0)?.session.audio.output.voice).toBe('sol');
   });
 });
 
