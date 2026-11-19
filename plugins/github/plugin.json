@@ -11,7 +11,7 @@
     "material": "merge_type"
   },
   "contributes": {
-    "nav": [],
+    "nav": [{ "id": "pace", "title": "Development pace", "path": "/pace" }],
     "slots": [
       "argo/session/changes/v1",
       "argo/session/row/v1",

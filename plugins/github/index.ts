@@ -1,4 +1,5 @@
 import type { Argo } from '@argo/plugin-kit';
+import { definePace } from './pace-page';
 import { createAutoArchive } from './pull-auto-archive';
 import { createAutoFix } from './pull-auto-fix';
 import { defineAutomationReads } from './pull-automation-reads';
@@ -126,6 +127,7 @@ export function register(argo: Argo): void {
 
   const pulls = createPulls(source, () => argo.changed());
 
+  definePace(argo);
   registerOperations(argo, { source, pulls });
   registerReads(argo, pulls);
   registerFiles(argo, { source, pulls });
