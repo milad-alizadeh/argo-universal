@@ -55,6 +55,9 @@ const expectAnswer = (snapshot: Snapshot): void =>
 
 const joined: Partial<VoiceCall> = { startedAt: expect.any(String) };
 
+// Only a reconnecting call says so; elsewhere the walk may have blocked the microphone.
+const notReconnecting = expect.toBeOneOf([null, 'microphone-blocked']);
+
 // The call the App is sent in each running state, read from the actor the model drives.
 const expectLook = (look: Partial<VoiceCall>) => (): void =>
   expect(voiceCallOf(voice.getSnapshot())).toMatchObject({
@@ -66,7 +69,7 @@ const notJoined: Partial<VoiceCall> = {
   status: 'connecting',
   connection: 'connecting',
   orb: 'none',
-  trouble: null,
+  trouble: notReconnecting,
   startedAt: null,
 };
 
@@ -75,7 +78,7 @@ const live: Partial<VoiceCall> = {
   status: 'connected',
   connection: 'connected',
   orb: expect.stringMatching(/^(listening|talking|thinking)$/),
-  trouble: null,
+  trouble: notReconnecting,
   ...joined,
 };
 
