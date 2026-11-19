@@ -5,8 +5,17 @@ import { useEffect } from 'react';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
 import type { VoiceConnection } from './voice-connection';
 
+// What the status says until the Server has answered: no call, and nothing to offer.
+const loadingStatus: VoiceStatus = {
+  call: null,
+  ended: null,
+  partials: [],
+  availability: { usable: false, reason: 'Loading' },
+  enabled: false,
+};
+
 // The Voice call's standing: read once, then followed from the Server on every Device.
-export function useVoiceStatus(): VoiceStatus | undefined {
+export function useVoiceStatus(): VoiceStatus {
   const trpc = useTRPC();
   const cache = useQueryClient();
   const read = useQuery(trpc.voice.status.queryOptions());
@@ -22,15 +31,15 @@ export function useVoiceStatus(): VoiceStatus | undefined {
 
   useResubscribeOnReconnect(subscription);
 
-  return read.data;
+  return read.data ?? loadingStatus;
 }
 
 // The call's audio follows the call: once the Server has none, the microphone is released.
 export function useReleaseWhenOver(
-  status: VoiceStatus | undefined,
+  status: VoiceStatus,
   connection: VoiceConnection | null,
 ): void {
-  const over = status !== undefined && status.call === null;
+  const over = status.call === null;
 
   useEffect(() => {
     if (over) connection?.close();

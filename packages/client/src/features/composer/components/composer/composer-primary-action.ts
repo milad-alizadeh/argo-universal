@@ -49,8 +49,11 @@ function voiceAction(layout: SendLayout): IconButtonProps {
   };
 }
 
-// The pointer's slot is drawn by the toolbar, so this stands in only where an action is read without it.
-const primaryActions: Record<SendLayout['sendState'], PrimaryAction> = {
+// The pointer to a call in another Session is no button action: the toolbar draws it, so it has no entry here.
+const primaryActions: Record<
+  Exclude<SendLayout['sendState'], 'elsewhere'>,
+  PrimaryAction
+> = {
   stop: stopButtonAction,
   end: endAction,
   connecting: endAction,
@@ -58,9 +61,13 @@ const primaryActions: Record<SendLayout['sendState'], PrimaryAction> = {
   sending: sendAction,
   blocked: sendAction,
   voice: voiceAction,
-  elsewhere: sendAction,
 };
 
 export function sendButtonAction(layout: SendLayout): IconButtonProps {
-  return primaryActions[layout.sendState](layout);
+  const action =
+    layout.sendState === 'elsewhere'
+      ? sendAction
+      : primaryActions[layout.sendState];
+
+  return action(layout);
 }

@@ -1,61 +1,12 @@
-import type { VoiceCall, VoiceStatus } from '@repo/contracts';
+import type { VoiceStatus } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import { sessionVoice, type SessionVoiceInput } from './session-voice';
-
-const startedAt = '2026-11-18T10:00:00.000Z';
-
-const now = Date.parse(startedAt) + 252_000;
-
-const callIn = (
-  sessionId: string,
-  changes: Partial<VoiceCall> = {},
-): VoiceCall => ({
-  callId: 'call-1',
-  sessionId,
-  status: 'connected',
-  connection: 'connected',
-  orb: 'listening',
-  trouble: null,
-  startedAt,
-  ...changes,
-});
-
-const statusOf = (
-  call: VoiceCall | null,
-  changes: Partial<VoiceStatus> = {},
-): VoiceStatus => ({
-  call,
-  ended: null,
-  partials: [],
-  availability: { usable: true },
-  enabled: true,
-  ...changes,
-});
-
-type Asked = string[];
-
-// What the Session's view asks of the App, recorded in order.
-function inputOf(
-  status: VoiceStatus,
-  sessionId: string,
-  asked: Asked = [],
-): SessionVoiceInput {
-  return {
-    status,
-    sessionId,
-    now,
-    mutes: { microphone: false, speaker: false },
-    levels: () => ({ input: 0, output: 0 }),
-    titleOf: (id) => (id === 's-call' ? 'Fix the build' : undefined),
-    actions: {
-      start: () => asked.push('start'),
-      end: () => asked.push('end'),
-      setMicrophoneMuted: (muted) => asked.push(`microphone:${muted}`),
-      setSpeakerMuted: (muted) => asked.push(`speaker:${muted}`),
-      open: (id) => asked.push(`open:${id}`),
-    },
-  };
-}
+import { sessionVoice } from './session-voice';
+import {
+  callIn,
+  inputOf,
+  statusOf,
+  type Asked,
+} from './session-voice.test.mocks';
 
 describe("a Session's view of the Voice call", () => {
   it('has no call, and offers the voice button, while none runs', () => {
@@ -69,6 +20,7 @@ describe("a Session's view of the Voice call", () => {
 
   it('offers the voice button only while Voice calls are on and the provider is usable', () => {
     const off = statusOf(null, { enabled: false });
+
     const unusable = statusOf(null, {
       availability: { usable: false, reason: 'No' },
     });

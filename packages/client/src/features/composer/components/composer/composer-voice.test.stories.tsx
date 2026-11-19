@@ -1,7 +1,7 @@
-import type * as React from 'react';
-import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import { Button } from '@repo/kit/primitives/actions/button';
+import type * as React from 'react';
 import { useState } from 'react';
+import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import { useConnectionMutes } from '#features/voice';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
@@ -128,7 +128,8 @@ function CallPage(): React.JSX.Element {
           onEnd: call.hungUp,
           mutes: {
             ...mutes,
-            onMicrophone: () => connection.setMicrophoneMuted(!mutes.microphone),
+            onMicrophone: () =>
+              connection.setMicrophoneMuted(!mutes.microphone),
             onSpeaker: () => connection.setSpeakerMuted(!mutes.speaker),
           },
         },

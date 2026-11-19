@@ -74,38 +74,38 @@ type View = Pick<SessionVoice, 'stage' | 'partials'> & {
   voice: ComposerVoice | undefined;
 };
 
-const noStatus: VoiceStatus = {
-  call: null,
-  ended: null,
-  partials: [],
-  availability: { usable: false, reason: 'Loading' },
-  enabled: false,
-};
-
 // The Session the call runs in, when it runs in another one than the page shows.
 const elsewhereOf = (
   callSession: string | undefined,
   sessionId: string,
 ): string | undefined => (callSession === sessionId ? undefined : callSession);
 
-const callSessionOf = (status: VoiceStatus | undefined): string | undefined =>
-  status?.call?.sessionId;
+const callSessionOf = (status: VoiceStatus): string | undefined =>
+  status.call?.sessionId;
+
+// A Session's title when it is the one the call runs in, and the page shows another.
+function useTitleOf(
+  status: VoiceStatus,
+  sessionId: string,
+): SessionVoiceInput['titleOf'] {
+  const callSession = callSessionOf(status);
+  const title = useSessionTitle(elsewhereOf(callSession, sessionId));
+
+  return (id) => (id === callSession ? title : undefined);
+}
 
 function useInput(
   sessionId: string,
   connection: VoiceConnection | null,
-  status: VoiceStatus | undefined,
+  status: VoiceStatus,
 ): SessionVoiceInput {
-  const callSession = callSessionOf(status);
-  const title = useSessionTitle(elsewhereOf(callSession, sessionId));
-
   return {
-    status: status ?? noStatus,
+    status,
     sessionId,
-    now: useClock(callSession === sessionId),
+    now: useClock(callSessionOf(status) === sessionId),
     mutes: useConnectionMutes(connection),
     levels: useLevels(connection),
-    titleOf: (id) => (id === callSession ? title : undefined),
+    titleOf: useTitleOf(status, sessionId),
     actions: useActions(sessionId, connection),
   };
 }
@@ -121,5 +121,5 @@ export function useSessionVoice(sessionId: string): View {
   useReleaseWhenOver(status, connection);
   const view = sessionVoice(useInput(sessionId, connection, status));
 
-  return { ...view, voice: connection && status ? view.composer : undefined };
+  return { ...view, voice: connection ? view.composer : undefined };
 }
