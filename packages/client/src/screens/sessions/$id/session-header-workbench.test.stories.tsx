@@ -14,6 +14,7 @@ import { coverageCardSummary } from './sections/plugin-card.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { workbenchMenuSession } from './session-detail-view-panels.test.mocks';
 import { idleSession } from './session-detail-view.mocks';
+import { openWorkbench } from './session-workbench-menu.test.mocks';
 
 const meta = {
   ...sessionViewMeta,
@@ -24,23 +25,6 @@ const meta = {
 };
 
 export default meta;
-
-type PlayContext = Parameters<NonNullable<Story['play']>>[0];
-
-async function openWorkbench({
-  canvas,
-  userEvent,
-}: PlayContext): Promise<ReturnType<typeof within>> {
-  await userEvent.click(
-    await canvas.findByRole('button', { name: 'Workbench' }),
-  );
-
-  const menu = await screen.findByRole('menu');
-
-  await settleOverlays(menu);
-
-  return within(menu);
-}
 
 export const ListsAvailableSectionsInOrder: Story = {
   play: async (context) => {
@@ -160,5 +144,17 @@ export const OpensAfterReturningToTheSession: Story = {
     await expect(
       await screen.findByRole('dialog', { name: 'Agents' }),
     ).toBeVisible();
+  },
+};
+
+export const ComposerKeepsTheChangesShortcut: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole('button', { name: /^Changes,/ }),
+    ).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: /^Agents:/ })).toBeNull();
+    await expect(
+      canvas.queryByRole('button', { name: /^Background Tasks:/ }),
+    ).toBeNull();
   },
 };

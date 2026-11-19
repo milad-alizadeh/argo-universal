@@ -57,7 +57,7 @@ type SectionDraw<Drawn> = (
 export interface SessionSection extends SectionFacts {
   card: SectionDraw<SectionCard>;
   tab: SectionDraw<SectionTab>;
-  // Absent where the Section draws its own phone sheet, as Agents and Shells do from the Composer's pills.
+  // Absent where the Section draws its own phone sheet, as Agents and Background Tasks do.
   phone?: SectionDraw<SectionPhonePage>;
 }
 

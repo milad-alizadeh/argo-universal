@@ -113,7 +113,7 @@ function SubmenuTrigger({ submenu }: SubmenuProps): React.JSX.Element {
     <RadixMenu.SubTrigger asChild aria-label={label}>
       <View className={menuRowClass()}>
         <ChoiceCheck />
-        <MenuActionLabel {...submenu} />
+        <MenuActionLabel label={submenu.label} icon={submenu.icon} />
         <SubmenuCount count={submenu.count} />
         <Chevron direction="right" />
       </View>
