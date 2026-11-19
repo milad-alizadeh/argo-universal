@@ -17,6 +17,7 @@ export const events: VoiceCallEvent[] = [
   { type: 'call.appDisconnected' },
   { type: 'voice.say', say: { kind: 'tell', text: 'Done', delivery: 'speak' } },
   providerEvent({ type: 'status', status: 'connected' }),
+  providerEvent({ type: 'status', status: 'disconnected' }),
   providerEvent({ type: 'status', status: 'error' }),
   providerEvent({ type: 'closed', reason: 'ended' }),
   providerEvent({ type: 'closed', reason: 'limit' }),
