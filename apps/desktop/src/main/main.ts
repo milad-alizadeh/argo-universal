@@ -101,9 +101,6 @@ const retryServer = (): void => server.send({ type: 'server.retry' });
 
 handleServerRetry(windowOrigin, retryServer);
 
-// The microphone a Voice call listens through: asked for on first use, and only by the App's own page.
-handleAppMicrophone(session.defaultSession, windowOrigin);
-
 let serverStarted = false;
 
 let currentUrl: string | null = null;
@@ -145,6 +142,9 @@ const start = (): void => {
   );
 
   if (!webDevelopmentUrl) handleAppProtocol(webExportDirectory);
+
+  // The microphone a Voice call listens through: asked for on first use, and only by the App's own page. The session exists only once the app is ready.
+  handleAppMicrophone(session.defaultSession, windowOrigin);
 
   listenToServer();
   server.start();
