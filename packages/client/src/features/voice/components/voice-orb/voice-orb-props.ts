@@ -1,6 +1,6 @@
 import type { VoiceOrbState } from '@repo/contracts';
 import type { ViewStyle } from 'react-native';
-import type { VoiceLevels } from '../../voice-connection';
+import type { VoiceLevels } from '../../types/voice-connection';
 import type { OrbColors } from './orb-colors';
 
 export interface VoiceOrbProps {

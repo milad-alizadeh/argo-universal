@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { VoiceSpectrum } from '../../voice-connection';
+import type { VoiceSpectrum } from '../../types/voice-connection';
 import { heardOf, patternOf } from './visualiser-pattern';
 
 const spectrum: VoiceSpectrum = {

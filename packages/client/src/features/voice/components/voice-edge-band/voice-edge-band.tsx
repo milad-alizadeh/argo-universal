@@ -1,7 +1,7 @@
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
 import { View } from 'react-native';
-import type { VoiceSpectrum } from '../../voice-connection';
+import type { VoiceSpectrum } from '../../types/voice-connection';
 import { edgeLookOf, type EdgeCall, type EdgeLook } from './edge-band';
 import { EdgeWave } from './edge-wave';
 

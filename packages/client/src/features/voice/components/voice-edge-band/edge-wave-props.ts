@@ -1,4 +1,4 @@
-import type { VoiceSpectrum } from '../../voice-connection';
+import type { VoiceSpectrum } from '../../types/voice-connection';
 import type { EdgeLook } from './edge-band';
 
 export interface EdgeWaveProps {

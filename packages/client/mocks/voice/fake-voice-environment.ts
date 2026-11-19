@@ -3,7 +3,7 @@ import type {
   VoiceEnvironment,
   VoicePeer,
   VoicePlayback,
-} from '../../src/features/voice/voice-environment';
+} from '../../src/features/voice/types/voice-environment';
 
 // The connection hands the stream straight to the environment, so a test never reads from it.
 const voiceStream: MediaStream = Object.create(null);

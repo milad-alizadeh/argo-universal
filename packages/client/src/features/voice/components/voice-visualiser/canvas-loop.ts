@@ -1,6 +1,9 @@
 import type * as React from 'react';
 import { useEffect, useRef } from 'react';
-import { silentSpectrum, type VoiceSpectrum } from '../../voice-connection';
+import {
+  silentSpectrum,
+  type VoiceSpectrum,
+} from '../../types/voice-connection';
 import { patternOf, type VisualiserPattern } from './visualiser-pattern';
 import type { VoiceVisualiserProps } from './voice-visualiser-props';
 

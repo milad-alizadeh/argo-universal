@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
-import type { VoiceLevels } from '../../voice-connection';
+import type { VoiceLevels } from '../../types/voice-connection';
 import { type OrbColors, useOrbColors } from './orb-colors';
 import { type OrbGl, orbOn, type OrbStarting } from './orb-gl';
 import { OrbMotion } from './orb-motion';

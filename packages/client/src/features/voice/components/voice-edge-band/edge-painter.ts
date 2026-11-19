@@ -1,4 +1,4 @@
-import { silentSpectrum } from '../../voice-connection';
+import { silentSpectrum } from '../../types/voice-connection';
 import { edgeBars, edgeFade, EdgeHistory, type EdgeLook } from './edge-band';
 import type { EdgeWaveProps } from './edge-wave-props';
 

@@ -1,4 +1,4 @@
-import type { VoiceSpectrum } from '../../voice-connection';
+import type { VoiceSpectrum } from '../../types/voice-connection';
 import { voiceOrbSize, type VoiceOrbProps } from '../voice-orb/voice-orb-props';
 
 // What every visualiser draws from: the call's state, its levels for the orb, and its bands for the matrix and wave.

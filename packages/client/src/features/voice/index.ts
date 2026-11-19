@@ -1,22 +1,22 @@
-export { useSessionVoice, type VoicePage } from './use-session-voice';
+export { useSessionVoice, type VoicePage } from './hooks/use-session-voice';
 
-export { useNewSessionVoice } from './use-new-session-voice';
+export { useNewSessionVoice } from './hooks/use-new-session-voice';
 
-export { voicePlaceholder } from './session-voice';
+export { voicePlaceholder } from './utils/session-voice';
 
 export { voiceLabel } from './components/voice-stage/voice-label';
 
-export { useSessionMutes } from './use-session-mutes';
+export { useSessionMutes } from './hooks/use-session-mutes';
 
-export { useVoicePreview } from './use-voice-preview';
+export { useVoicePreview } from './hooks/use-voice-preview';
 
-export { DesktopVoiceProvider } from './desktop-voice-provider';
+export { DesktopVoiceProvider } from './stores/desktop-voice-provider';
 
-export { useVoiceDevices } from './use-voice-devices';
+export { useVoiceDevices } from './hooks/use-voice-devices';
 
-export type { AudioDevice, AudioDevices } from './audio-devices';
+export type { AudioDevice, AudioDevices } from './utils/audio-devices';
 
-export type { VoiceDeviceChoice } from './voice-device-choice';
+export type { VoiceDeviceChoice } from './stores/voice-device-choice';
 
 export {
   VoiceStageReveal,

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { fn } from 'storybook/test';
 import { syntheticVoiceAudio } from '../../../../../mocks/voice/synthetic-voice-audio';
-import { silentSpectrum } from '../../voice-connection';
+import { silentSpectrum } from '../../types/voice-connection';
 import type { VoiceVisualiserKind } from '../voice-visualiser/voice-visualiser-kind';
 import { VoiceStageView, type VoiceStageViewProps } from './voice-stage-view';
 import {
