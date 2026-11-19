@@ -75,10 +75,9 @@ class BrowserMicrophone implements Microphone {
 }
 
 function streamOf(microphone: Microphone): MediaStream {
-  if (
-    !(microphone instanceof BrowserMicrophone) &&
-    !(microphone instanceof BrowserSilence)
-  )
+  if (microphone instanceof BrowserSilence) return microphone.stream;
+
+  if (!(microphone instanceof BrowserMicrophone))
     throw new Error('Not a browser microphone.');
 
   return microphone.stream;
