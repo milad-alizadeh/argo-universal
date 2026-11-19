@@ -6,6 +6,7 @@ import type { ComposerVoice } from '#features/composer';
 import { useTRPC } from '#features/connection';
 import { sessionHref } from '#lib/product/navigation/navigation';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
+import { placedCall } from './placed-call';
 import {
   sessionVoice,
   type SessionVoice,
@@ -30,6 +31,15 @@ function useStartHere(
   return () => start(sessionId);
 }
 
+// Ending lets go of a call still being placed here, and ends the Server's call if it has one.
+function endHere(
+  sessionId: string,
+  end: (input: { sessionId: string }) => void,
+): void {
+  placedCall.release(sessionId);
+  end({ sessionId });
+}
+
 function useActions(
   sessionId: string,
   connection: VoiceConnection | null,
@@ -40,7 +50,7 @@ function useActions(
 
   return {
     start: useStartHere(sessionId, connection),
-    end: () => end.mutate({ sessionId }),
+    end: () => endHere(sessionId, end.mutate),
     setMicrophoneMuted: mutes.setMicrophoneMuted,
     setSpeakerMuted: mutes.setSpeakerMuted,
     open: (target) => navigate(sessionHref(target)),
