@@ -145,6 +145,8 @@ const stopCall = (width: 'wide' | 'phone'): Story => ({
     const stop = await canvas.findByTestId(callStopButtonId);
     await expect(canvas.getByTestId(endButtonId)).toBeInTheDocument();
     await expect(canvas.getByTestId(microphoneButtonId)).toBeInTheDocument();
+    // Stop is a plain button, never announced as a pressed toggle.
+    await expect(stop).not.toHaveAttribute('aria-pressed');
     await userEvent.click(stop);
     await expect(args.onStop).toHaveBeenCalledOnce();
     await expect(endOf(args.voice)).not.toHaveBeenCalled();
