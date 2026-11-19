@@ -76,13 +76,16 @@ class FakePeer implements VoicePeer {
 
 class FakeEnvironment implements VoiceEnvironment {
   public readonly peer = new FakePeer();
-  public readonly microphone = new FakeMicrophone();
+  // Each call opens a new microphone, as the browser does, so the latest one is the call's.
+  public microphone = new FakeMicrophone();
   public readonly playback = new FakePlayback();
 
   public constructor(private readonly refuse = false) {}
 
   public openMicrophone(): Promise<Microphone> {
     if (this.refuse) return Promise.reject(new Error('denied'));
+
+    this.microphone = new FakeMicrophone();
 
     return Promise.resolve(this.microphone);
   }
@@ -159,5 +162,65 @@ describe('WebRTC voice connection', () => {
     expect(connection.levels()).toEqual({ input: 0.4, output: 0.7 });
     connection.close();
     expect(connection.levels()).toEqual({ input: 0, output: 0 });
+  });
+
+  it('holds the mutes itself, and tells whoever listens when they change', async () => {
+    const { connection } = await started();
+    const heard: boolean[] = [];
+    connection.subscribe(() => heard.push(connection.mutes().microphone));
+
+    expect(connection.mutes()).toEqual({ microphone: false, speaker: false });
+    connection.setMicrophoneMuted(true);
+    connection.setSpeakerMuted(true);
+    expect(connection.mutes()).toEqual({ microphone: true, speaker: true });
+    expect(heard).toEqual([true, true]);
+  });
+
+  it('keeps the same mutes object until something changes, for a store to read', async () => {
+    const { connection } = await started();
+    const before = connection.mutes();
+    connection.setMicrophoneMuted(false);
+
+    expect(connection.mutes()).toBe(before);
+  });
+
+  it('stops telling a listener that unsubscribed', async () => {
+    const { connection } = await started();
+    const heard: number[] = [];
+    const stop = connection.subscribe(() => heard.push(1));
+    stop();
+    connection.setMicrophoneMuted(true);
+
+    expect(heard).toEqual([]);
+  });
+
+  it('starts every call unmuted, because a new call is a new connection', async () => {
+    const { environment, connection } = await started();
+    connection.setMicrophoneMuted(true);
+    connection.setSpeakerMuted(true);
+
+    await connection.createOffer();
+    expect(connection.mutes()).toEqual({ microphone: false, speaker: false });
+    expect(environment.microphone.muted).toBe(false);
+  });
+
+  it('is unmuted once the call is over', async () => {
+    const { connection } = await started();
+    connection.setMicrophoneMuted(true);
+    connection.close();
+
+    expect(connection.mutes()).toEqual({ microphone: false, speaker: false });
+  });
+
+  it('ignores a mute before there is a call, and the call still starts unmuted', async () => {
+    const environment = new FakeEnvironment();
+    const connection = createWebRtcVoiceConnection(environment);
+    connection.setMicrophoneMuted(true);
+    connection.setSpeakerMuted(true);
+    expect(connection.mutes()).toEqual({ microphone: false, speaker: false });
+
+    await connection.createOffer();
+    expect(environment.microphone.muted).toBe(false);
+    expect(connection.mutes()).toEqual({ microphone: false, speaker: false });
   });
 });

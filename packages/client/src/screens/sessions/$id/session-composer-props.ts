@@ -21,7 +21,7 @@ import type {
   PermissionRequestProps,
 } from '#features/requests';
 import { decodeOpenFailure, toSendError } from '#features/sessions';
-import type { VoiceStageViewProps } from '#features/voice';
+import { type VoiceStageViewProps, voicePlaceholder } from '#features/voice';
 import { type Navigate } from '#lib/product/navigation/navigation';
 import { followUpProps } from './follow-up-composer-props';
 import { sessionStatusProps } from './session-status-props';
@@ -129,17 +129,8 @@ const draftProps = (commands: SessionCommands): DraftProps => ({
   onSend: (sent) => void commands.sendDraft(sent),
 });
 
-// What the field says while a call runs here: it invites typing as well as talking once connected, and says so while connecting.
-const callPlaceholders: Partial<Record<ComposerVoiceCall, string>> = {
-  connecting: 'Connecting…',
-  connected: 'Type, or keep talking',
-};
-
-const callHere = (voice: ComposerProps['voice']): ComposerVoiceCall =>
-  voice?.call ?? 'none';
-
 const placeholderOf = ({ voice }: OpenSession): string =>
-  callPlaceholders[callHere(voice)] ?? 'Message the Agent';
+  voicePlaceholder(voice?.call ?? 'none') ?? 'Message the Agent';
 
 // An open Session always offers Argo's Slash commands, whether or not its Agent has reported any.
 const slashCommandsOf = (open: OpenSession): ComposerProps['slashCommands'] =>
