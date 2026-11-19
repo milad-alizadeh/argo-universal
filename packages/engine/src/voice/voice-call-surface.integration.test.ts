@@ -118,4 +118,32 @@ describe('the Voice call as the App draws it', () => {
     work.provider.call.emit({ type: 'trouble', trouble: null });
     await expect.poll(() => callOf(work)).toMatchObject({ trouble: null });
   });
+
+  it('still shows the voice talking while the microphone is blocked', async () => {
+    const work = await startVoiceWork([]);
+    await work.start();
+
+    work.provider.call.emit({ type: 'trouble', trouble: 'microphone-blocked' });
+    work.provider.call.emit({ type: 'speaking', speaking: true });
+    await expect
+      .poll(() => callOf(work))
+      .toMatchObject({
+        orb: 'talking',
+        trouble: 'microphone-blocked',
+      });
+  });
+
+  it('carries the provider allowance alongside trouble', async () => {
+    const work = await startVoiceWork([]);
+    await work.start();
+
+    work.provider.call.emit({ type: 'trouble', trouble: 'microphone-blocked' });
+    work.provider.call.emit({ type: 'limit', remaining: 0.1 });
+    await expect
+      .poll(() => callOf(work))
+      .toMatchObject({
+        trouble: 'microphone-blocked',
+        limit: { remaining: 0.1 },
+      });
+  });
 });
