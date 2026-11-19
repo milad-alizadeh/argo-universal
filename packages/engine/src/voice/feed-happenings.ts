@@ -28,39 +28,11 @@ const endOf = (row: Notice): End => row._meta?.argo?.turnEnd;
 const errorOf = (end: NonNullable<End>): string | null =>
   end.error?.message ?? null;
 
-const endedHappening = (
-  end: End,
-  turnId: string | null,
-): SessionHappening | undefined =>
-  end && {
-    type: 'turn.ended',
-    turnId,
-    stopReason: end.stopReason,
-    error: errorOf(end),
-  };
+const endedHappening = (end: End): SessionHappening | undefined =>
+  end && { type: 'turn.ended', stopReason: end.stopReason, error: errorOf(end) };
 
 const turnEndOf = (row: Row): SessionHappening | undefined =>
-  row.sessionUpdate === 'notice'
-    ? endedHappening(endOf(row), row.turnId)
-    : undefined;
-
-type PromptRow = Extract<Row, { sessionUpdate: 'prompt_message' }>;
-
-type Argo = NonNullable<PromptRow['_meta']>['argo'];
-
-const argoOf = (row: PromptRow): Argo => row._meta?.argo;
-
-const senderOf = (row: PromptRow): string | undefined =>
-  argoOf(row)?.sender?.type;
-
-const isVoicePrompt = (row: Row): row is PromptRow =>
-  row.sessionUpdate === 'prompt_message' && senderOf(row) === 'voice';
-
-// A Prompt row in a Turn; one with no Turn yet is not reported until it has one.
-const promptedOf = (row: Row): SessionHappening | undefined =>
-  isVoicePrompt(row) && row.turnId !== null
-    ? { type: 'voice.prompted', turnId: row.turnId }
-    : undefined;
+  row.sessionUpdate === 'notice' ? endedHappening(endOf(row)) : undefined;
 
 const happeningOf = (id: string, { kind, text }: Tracked): SessionHappening =>
   kind === 'agent'
@@ -74,8 +46,6 @@ const happeningOf = (id: string, { kind, text }: Tracked): SessionHappening =>
 export class FeedHappenings {
   private readonly rows = new Map<string, Tracked>();
   private readonly reported = new Set<string>();
-  // Voice Prompt rows that have no Turn yet, until a change gives them one.
-  private readonly turnless = new Set<string>();
 
   public read(events: readonly FeedStreamEvent[]): SessionHappening[] {
     return events.flatMap((event) => this.one(event));
@@ -90,34 +60,13 @@ export class FeedHappenings {
   private patch(
     event: Extract<FeedStreamEvent, { type: 'row.patch' }>,
   ): SessionHappening[] {
-    const given = this.givenTurn(event);
-
-    if (given) return given;
-
     return event.set['state'] === 'settled' ? this.settle(event.id) : [];
   }
 
-  // A voice Prompt that waited for its Turn has one now.
-  private givenTurn(
-    event: Extract<FeedStreamEvent, { type: 'row.patch' }>,
-  ): SessionHappening[] | undefined {
-    const { turnId } = event.set;
-
-    return typeof turnId === 'string' && this.turnless.delete(event.id)
-      ? this.once(event.id, { type: 'voice.prompted', turnId })
-      : undefined;
-  }
-
   private upsert(row: Row): SessionHappening[] {
-    const found = turnEndOf(row) ?? this.prompted(row);
+    const ended = turnEndOf(row);
 
-    return found ? this.once(row.id, found) : this.track(row);
-  }
-
-  private prompted(row: Row): SessionHappening | undefined {
-    if (isVoicePrompt(row) && row.turnId === null) this.turnless.add(row.id);
-
-    return promptedOf(row);
+    return ended ? this.once(row.id, ended) : this.track(row);
   }
 
   private track(row: Row): SessionHappening[] {

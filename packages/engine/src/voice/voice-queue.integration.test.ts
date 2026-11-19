@@ -55,8 +55,8 @@ describe('a request for work while a Turn runs', () => {
     await expect
       .poll(() => work.provider.call.sent)
       .toContainEqual(expect.objectContaining({ requestId: 'r2' }));
-    expect(JSON.stringify(work.provider.call.sent)).not.toContain(
-      relayWords.queued,
+    expect(work.provider.call.sent).toContainEqual(
+      expect.objectContaining({ requestId: 'r2', text: relayWords.steered }),
     );
     await expect.poll(async () => (await work.promptRows()).length).toBe(2);
     expect(await work.promptRows()).toMatchObject([
