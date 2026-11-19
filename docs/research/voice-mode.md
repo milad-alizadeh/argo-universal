@@ -355,6 +355,20 @@ One `codex app-server` on a unix socket, shared by the Codex ACP adapter (throug
 - **Unprompted messages are spoken** when sent as `session.context.append`.
 - **`session.close`** ended the call with a final usage figure.
 
+### Probe 3: how the service ends a call on its own (2026-11-19)
+
+Calls from headless Chromium over real WebRTC, with the control link joined from Node and every non-audio frame recorded. One run each.
+
+- **`session.started`** carries `session.expires_at`, two hours after the start.
+- **`session.usage.updated`** arrives every 15 seconds with `usage.audio_duration_ms` and `usage_limit: {status, reset_seconds}`; both limit fields stayed null throughout.
+- **No audio reaching the service.** It sent `{"type":"session.closed","reason":"expired","usage":{…}}` about 30 seconds in, then dropped the link without a close frame (1006).
+- **The peer connection closed.** The link dropped (1006) about 4 seconds later, with no `session.closed`.
+- **WebRTC never completed.** The link dropped (1006) about 35 seconds in, with no `session.closed`.
+- **After any of these**, joining the link again is refused with 404 `session_id_not_found`, and each refusal took about 5 seconds to arrive.
+- **Argo's own `session.close`** brings `session.closed` with `reason: "client_request"`.
+- **No idle close.** With quiet audio flowing and no speech, the call stayed up past twenty minutes; with the track muted (`track.enabled = false`), past the ten minutes the run lasted. Usage kept counting while muted.
+- **Keepalive.** The service answered a WebSocket ping within about 40 ms and sent no pings of its own. Codex answers pings and sends none.
+
 ### Not tested
 
 - Token refresh, a long task, an interruption, and two requests at once.

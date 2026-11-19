@@ -40,7 +40,10 @@ export type VoiceProviderEvent =
     }
   // How much of the provider's allowance is left, as a fraction from 0 to 1.
   | ({ type: 'limit' } & VoiceLimit)
-  | { type: 'closed'; reason: VoiceClosedReason };
+  // Something worth keeping in the Server's log about how the call goes, such as a dropped link; never shown, never audio or tokens.
+  | { type: 'trail'; note: string }
+  // `why` is the provider's own reason in plain words, for the Notice that says why the call ended.
+  | { type: 'closed'; reason: VoiceClosedReason; why?: string };
 
 // What the voice does with text it is given: say it aloud, or keep it as background it may use later.
 export type VoiceDelivery = 'speak' | 'background';

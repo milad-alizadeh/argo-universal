@@ -25,4 +25,6 @@ export const voiceModelInput = (): VoiceCallInput => ({
   provider: new FakeVoiceProvider(),
   briefing: () => '',
   idleMs: voiceModelIdleMs,
+  log: () => {},
+  now: Date.now,
 });

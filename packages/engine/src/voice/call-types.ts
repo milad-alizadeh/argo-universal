@@ -60,6 +60,10 @@ export interface VoiceCallInput {
   briefing: (sessionId: string) => string;
   // How long a call may pass without speech before it ends by itself, in milliseconds.
   idleMs: number;
+  // Writes a line to the Server's log.
+  log: (line: string) => void;
+  // The time now, in milliseconds since the epoch.
+  now: () => number;
 }
 
 export interface RunningCall {
@@ -79,6 +83,8 @@ export interface RunningCall {
   limit?: VoiceLimit;
   // The tokens the provider last reported the call has used.
   usage?: { inputTokens: number; outputTokens: number };
+  // What the provider noted about the call for the Server's log, latest last.
+  trail: string[];
 }
 
 export interface EndedCall {

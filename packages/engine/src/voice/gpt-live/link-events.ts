@@ -6,6 +6,7 @@ import {
   type Speaker,
   type Utterance,
 } from './link-turns';
+import { serviceClosed } from './service-close';
 
 /*
  * The control link's events as the service sends them ("frameless bidi"); Codex reads the same ones (codex-rs realtime_websocket/protocol_frameless_bidi.rs).
@@ -87,9 +88,10 @@ const turnDone =
   };
 
 // The call closing keeps the words of every turn still open.
+// The service closed the call: the words still being said end first, then the close with the reason it gave.
 const closed =
-  (): Step =>
-  ({ turns }) => [...turns.closing(), { type: 'closed', reason: 'ended' }];
+  ({ reason }: { reason?: string | undefined }): Step =>
+  ({ turns }) => [...turns.closing(), serviceClosed(reason)];
 
 // Work the voice hands to the client, answered under the delegation item's id as Codex does.
 const requested = ({
@@ -161,7 +163,12 @@ const reported = z.union([
     .looseObject({ type: z.literal('turn.done'), ...assistantTurn })
     .transform(turnDone('voice', { type: 'speaking', speaking: false })),
   delegation.transform(requested),
-  z.looseObject({ type: z.literal('session.closed') }).transform(closed),
+  z
+    .looseObject({
+      type: z.literal('session.closed'),
+      reason: z.string().optional(),
+    })
+    .transform(closed),
 ]);
 
 const stepOf = (frame: string): Step | null => {

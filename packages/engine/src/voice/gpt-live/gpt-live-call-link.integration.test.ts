@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { delegationCreated, delegationItem } from '#mocks/gpt-live-frames';
 import type { SentMessage } from '#mocks/gpt-live-link-message';
 import { heard, startedCall, type GptLiveFixture } from '#mocks/gpt-live-setup';
+import type { VoiceProviderEvent } from '../provider';
 
 let fixture: GptLiveFixture | undefined;
 
@@ -69,8 +70,8 @@ describe('GPT-Live call losing its link', () => {
 
     await expect
       .poll(() => events.at(-1))
-      .toEqual({ type: 'closed', reason: 'lost' });
-    expect(events.at(0)).toEqual({ type: 'status', status: 'disconnected' });
+      .toMatchObject({ type: 'closed', reason: 'lost' });
+    expect(events).toContainEqual({ type: 'status', status: 'disconnected' });
   });
 
   it('keeps the call when the control link comes back, and it still works on the new link', async () => {
@@ -89,5 +90,39 @@ describe('GPT-Live call losing its link', () => {
     expect(events.map(({ type }) => type)).not.toContain('closed');
     call.tell('Back again', 'speak');
     await expect.poll(() => endpoint.received.length).toBe(1);
+  });
+});
+
+const notesOf = (events: VoiceProviderEvent[]): string[] =>
+  events.flatMap((event) => (event.type === 'trail' ? [event.note] : []));
+
+describe('the GPT-Live control link’s keepalive', () => {
+  it('keeps a link that answers its pings', async () => {
+    const { endpoint, call } = await startCall({ pingMs: 50 });
+    const events = heard(call);
+
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    expect(events).toEqual([]);
+    expect(endpoint.links).toHaveLength(1);
+  });
+
+  it('drops a link that stops answering and joins the call again', async () => {
+    const { endpoint, call } = await startCall({ pingMs: 50 });
+    const events = heard(call);
+
+    endpoint.silent = true;
+    await expect
+      .poll(() => events)
+      .toContainEqual({ type: 'status', status: 'disconnected' });
+    endpoint.silent = false;
+
+    await expect
+      .poll(() => events.at(-1))
+      .toEqual({ type: 'status', status: 'connected' });
+    expect(endpoint.links.length).toBeGreaterThan(1);
+    expect(notesOf(events)).toContainEqual(
+      expect.stringContaining('answered no ping'),
+    );
   });
 });
