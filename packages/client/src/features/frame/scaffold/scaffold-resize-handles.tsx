@@ -20,11 +20,7 @@ type ListHandleReads = PartReads<
 
 type InspectorHandleReads = PartReads<
   'inspectorState' | 'onInspectorStateChange' | 'band' | 'inspectorAvailable',
-  | 'handles'
-  | 'inspector'
-  | 'setPreferredInspectorWidth'
-  | 'setDraggedContentFloor'
-  | 'setResizing'
+  'handles' | 'inspector' | 'setInspectorWidth' | 'setResizing'
 >;
 
 // The list never expands, so any outcome other than a width closes it.
@@ -51,10 +47,10 @@ function resizeInspector(
   layout: InspectorHandleReads['layout'],
 ): void {
   if (typeof outcome === 'number') {
-    layout.setPreferredInspectorWidth(outcome);
-    layout.setDraggedContentFloor(
-      floorLeftBy(layout.handles.inspector, outcome),
-    );
+    layout.setInspectorWidth({
+      width: outcome,
+      contentFloor: floorLeftBy(layout.handles.inspector, outcome),
+    });
   }
 
   moveInspector(scaffold, { dragged: outcome });
