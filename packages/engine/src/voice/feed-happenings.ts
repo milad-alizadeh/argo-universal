@@ -29,7 +29,11 @@ const errorOf = (end: NonNullable<End>): string | null =>
   end.error?.message ?? null;
 
 const endedHappening = (end: End): SessionHappening | undefined =>
-  end && { type: 'turn.ended', stopReason: end.stopReason, error: errorOf(end) };
+  end && {
+    type: 'turn.ended',
+    stopReason: end.stopReason,
+    error: errorOf(end),
+  };
 
 const turnEndOf = (row: Row): SessionHappening | undefined =>
   row.sessionUpdate === 'notice' ? endedHappening(endOf(row)) : undefined;

@@ -87,14 +87,16 @@ describe('a request for work while a Turn runs', () => {
     await expect.poll(() => work.prompts.length).toBe(2);
     work.provider.call.requestWork('r2', extra);
 
-    await expect.poll(() => work.provider.call.sent).toContainEqual(
-      expect.objectContaining({
-        requestId: 'r2',
-        text: relayWords.notSteered(
-          'The Agent did not accept steering; your Prompt was kept',
-        ),
-      }),
-    );
+    await expect
+      .poll(() => work.provider.call.sent)
+      .toContainEqual(
+        expect.objectContaining({
+          requestId: 'r2',
+          text: relayWords.notSteered(
+            'The Agent did not accept steering; your Prompt was kept',
+          ),
+        }),
+      );
 
     release.resolve();
     await expect.poll(() => work.prompts.length).toBe(3);

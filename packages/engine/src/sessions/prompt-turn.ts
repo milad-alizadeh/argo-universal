@@ -27,8 +27,11 @@ const steeredTurn = (context: Seen, queuedId: string): string | null =>
     : null;
 
 // A Turn started from the queue has the Prompt and the queue no longer does.
-const startedWith = (context: Seen, turnId: string, queuedId: string): boolean =>
-  running(context, turnId) && !queued(context, queuedId);
+const startedWith = (
+  context: Seen,
+  turnId: string,
+  queuedId: string,
+): boolean => running(context, turnId) && !queued(context, queuedId);
 
 const dispatchTurn = (context: Seen): string | null =>
   context.pendingSubmission?.turnId ?? null;
@@ -104,7 +107,11 @@ function followSession(
   };
 
   const closed = (): void => ended.resolve(prompt.turnId);
-  const subscription = session.subscribe({ next: look, error: closed, complete: closed });
+  const subscription = session.subscribe({
+    next: look,
+    error: closed,
+    complete: closed,
+  });
 
   look();
   void ended.promise.then(() => subscription.unsubscribe());
