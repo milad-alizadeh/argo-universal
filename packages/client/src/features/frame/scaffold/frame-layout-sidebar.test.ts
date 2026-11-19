@@ -26,7 +26,6 @@ it('clamps a wider sidebar preference while preserving room to show its minimum'
     preferredListWidth: 460,
   });
 
-  expect(layout.list.available).toBe(true);
   expect(layout.list.width).toBe(340);
   expect(layout.page.width).toBe(688);
 });
@@ -41,14 +40,14 @@ it('budgets no Workbench when resizing the sidebar to its end', () => {
   expect(resized.page.width).toBe(908);
 });
 
-it('keeps the list unavailable while the content and the Inspector need its room', () => {
+it('keeps a requested list folded while the content and the Inspector need its room', () => {
   const layout = frameLayout({
     ...input,
     width: 1300,
     inspectorState: 'open',
+    sidebarRequested: true,
   });
 
-  expect(layout.list.available).toBe(false);
   expect(layout.list.folded).toBe(true);
 });
 
