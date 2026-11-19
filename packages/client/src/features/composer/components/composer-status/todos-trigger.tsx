@@ -10,7 +10,7 @@ import {
 } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Chevron } from '@repo/kit/primitives/status/chevron';
-import { Pill } from '@repo/kit/primitives/status/pill';
+import { PhonePill } from '@repo/kit/primitives/status/pill';
 import { cn } from '@repo/kit/utils';
 import type { JSX } from 'react';
 import { Pressable, View } from 'react-native';
@@ -36,19 +36,19 @@ export function createTodosTrigger(props: TodosTriggerProps): JSX.Element {
   return props.wide ? (
     <TodosRow {...props} />
   ) : (
-    <Pill {...todosPillProps(props)} />
+    <PhonePill {...todosPillProps(props)}>
+      <TodosIcon />
+      <Text role="control">Todos</Text>
+    </PhonePill>
   );
 }
 
 const todosPillProps = (
   props: TodosTriggerProps,
-): React.ComponentProps<typeof Pill> => ({
-  variant: 'control',
-  appearance: 'glass',
+): React.ComponentProps<typeof PhonePill> => ({
   accessibilityLabel: 'Todos',
+  role: 'button',
   disabled: props.disabled,
-  text: 'Todos',
-  leading: <TodosIcon />,
 });
 
 const todosRowClass =

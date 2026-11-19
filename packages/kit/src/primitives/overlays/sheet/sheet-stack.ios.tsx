@@ -11,6 +11,7 @@ import {
   navigationTitle,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ReactElement } from 'react';
+import { hasLiquidGlass } from '#kit/native-header';
 import { useNativeTheme } from '#kit/native-theme';
 import { SheetContent } from './sheet-content.ios';
 import type { SheetProps } from './sheet-props';
@@ -84,6 +85,9 @@ function StackScreen(props: ScreenProps): ReactElement {
   );
 }
 
+const floatsHeader = ({ popoverWidth, page }: ScreenProps): boolean =>
+  hasLiquidGlass && popoverWidth === undefined && !page.keepsHeaderInset;
+
 function ScreenBody(props: ScreenProps): ReactElement {
   return (
     <Group modifiers={useScreenModifiers(props.page.title)}>
@@ -91,6 +95,7 @@ function ScreenBody(props: ScreenProps): ReactElement {
         {...props}
         contentScrolls={props.page.contentScrolls ?? props.contentScrolls}
         fill={!props.popoverWidth}
+        underHeader={floatsHeader(props)}
         width={props.popoverWidth}
       >
         {props.page.content}

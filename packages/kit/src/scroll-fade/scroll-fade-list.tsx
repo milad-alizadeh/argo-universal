@@ -3,9 +3,16 @@ import {
   type LegendListRef,
 } from '@legendapp/list/react-native';
 import type * as React from 'react';
-import { type Ref, type RefObject, useCallback, useRef } from 'react';
-import { Platform } from 'react-native';
+import {
+  type Ref,
+  type RefObject,
+  useCallback,
+  useContext,
+  useRef,
+} from 'react';
+import { Platform, type ViewStyle } from 'react-native';
 import { useClaimColumn } from '#kit/content-column/content-column';
+import { SheetScrollContext } from '#kit/scroll-surface';
 import { assignRef, useLegendScrollRef } from './legend-scroll-ref';
 import { MeasuredLegendList } from './remeasure-after-entrance';
 import {
@@ -13,7 +20,10 @@ import {
   type FrameSize,
   useFrameSize,
 } from './scroll-fade-frame-size';
-import { ScrollFadeFrame } from './scroll-fade-frame-view';
+import {
+  ScrollFadeFrame,
+  type ScrollFadeFrameProps,
+} from './scroll-fade-frame-view';
 import {
   type ScrollFadeListProps,
   useSizeClassListProps,
@@ -79,6 +89,13 @@ interface FadingList<T> {
   list: LegendListProps<T>;
 }
 
+const noEdgeFades = {
+  top: 'never',
+  bottom: 'never',
+  leading: 'never',
+  trailing: 'never',
+} as const;
+
 // The frame's props and the list's own, wired so the fade follows the scroll.
 function useFadingList<T>({
   refScrollView,
@@ -87,7 +104,7 @@ function useFadingList<T>({
   ScrollFadeListProps<T>,
   'ref' | 'maxHeight' | 'fitHeight'
 >): FadingList<T> {
-  const fade = useScrollFade(useSizeClassListProps(props));
+  const fade = useScrollFade(useSheetListProps(props));
   const scrollRef = useLegendScrollRef(fade.attachScrollView, refScrollView);
   const scroll = { ...fade.scroll, refScrollView: scrollRef };
 
@@ -95,6 +112,16 @@ function useFadingList<T>({
     frame: fade.frame,
     list: platformListProps({ ...listDefaults, ...scroll }),
   };
+}
+
+function useSheetListProps<T>(
+  props: ScrollFadeListProps<T>,
+): LegendListProps<T> {
+  const insideSheet = useContext(SheetScrollContext);
+
+  return useSizeClassListProps(
+    insideSheet ? { ...props, edges: noEdgeFades } : props,
+  );
 }
 
 const capped = (caps: FrameCaps): boolean =>
@@ -105,10 +132,32 @@ function useFrame(
   list: RefObject<LegendListRef | null>,
   caps: FrameCaps,
   horizontal: ScrollFadeListProps<unknown>['horizontal'],
-): FrameSize {
+): Pick<ScrollFadeFrameProps, 'className' | 'style'> {
+  const frame = useFrameSize(list, caps);
+
   useClaimColumn(horizontal || capped(caps) ? 'keep' : 'fill');
 
-  return useFrameSize(list, caps);
+  return { ...frame, style: useViewportStyle(frame.style, horizontal) };
+}
+
+function useViewportStyle(
+  style: FrameSize['style'],
+  horizontal: ScrollFadeListProps<unknown>['horizontal'],
+): ViewStyle | undefined {
+  const sheet = useContext(SheetScrollContext);
+
+  return keepInViewport(style, horizontal ? undefined : sheet?.viewportHeight);
+}
+
+function keepInViewport(
+  style: FrameSize['style'],
+  viewport: number | undefined,
+): ViewStyle | undefined {
+  if (viewport === undefined) return style;
+
+  return style
+    ? { ...style, maxHeight: Math.min(style.maxHeight, viewport) }
+    : { maxHeight: viewport };
 }
 
 // A Legend List whose content fades under each edge that hides more of it.

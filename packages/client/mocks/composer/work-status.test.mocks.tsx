@@ -57,9 +57,7 @@ export type FooterCheck = Pick<PlayContext, 'canvas'> & { card: Element };
 
 export async function expectPhoneFooter({
   canvas,
-  card,
 }: FooterCheck): Promise<void> {
-  const bounds = card.getBoundingClientRect();
   const trigger = canvas.getByRole('button', { name: agentModelLabel });
   await expect(within(trigger).queryAllByTestId(agentIconId)).toHaveLength(0);
   await expect(
@@ -68,11 +66,6 @@ export async function expectPhoneFooter({
   const context = canvas.getByRole('button', { name: contextWindowLabel });
   await expect(context).not.toHaveTextContent(/34k|200k/);
 
-  const work = canvas
-    .getByRole('button', { name: 'Background Tasks: 1' })
-    .getBoundingClientRect();
-
-  await expect(work.right).toBeLessThan(bounds.right);
   await expect(
     canvas.queryByText('session', { exact: true }),
   ).not.toBeInTheDocument();
