@@ -125,6 +125,7 @@ const infoOf = (
   branch,
   title: row.title,
   idleFor: idleFor(sources, row),
+  archived: row.archivedAt !== null,
 });
 
 type Checkout = { checkoutPath: string; checkoutBranch: string | null };
