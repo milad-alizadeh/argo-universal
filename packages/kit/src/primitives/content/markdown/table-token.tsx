@@ -8,9 +8,6 @@ import { InlineTokens } from './inline-tokens';
 import type { BlockTokenProps } from './markdown-tokens';
 import { columnWidths } from './table-widths';
 
-const rowKey = (cells: Tokens.TableCell[]): string =>
-  cells.map((cell) => cell.text).join('|');
-
 function Cells({ cells }: { cells: Tokens.TableCell[] }): ReactElement[] {
   return withOccurrenceKeys(cells, (cell) => cell.text).map(
     ({ item: cell, key }, column) => (
@@ -42,12 +39,15 @@ function tableColumns(token: Tokens.Table): TableProps['columns'] {
   }));
 }
 
+// A Markdown table grows in source order. Each successive row keeps its key as any cell changes.
 function tableRows(token: Tokens.Table): ReactElement[] {
-  return withOccurrenceKeys(token.rows, rowKey).map(({ item: cells, key }) => (
-    <Table.Row key={key} id={key}>
-      {Cells({ cells })}
-    </Table.Row>
-  ));
+  return withOccurrenceKeys(token.rows, () => 'row').map(
+    ({ item: cells, key }) => (
+      <Table.Row key={key} id={key}>
+        {Cells({ cells })}
+      </Table.Row>
+    ),
+  );
 }
 
 // Pipe tables use the same scrolling Table as Plugin content.
