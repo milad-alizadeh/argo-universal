@@ -1,6 +1,7 @@
 import { Button } from '@repo/kit/primitives/actions/button';
-import { Text } from '@repo/kit/primitives/content/text';
-import { View, ScrollView } from 'react-native';
+import { List, ListSection } from '@repo/kit/primitives/lists/list';
+import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { View } from 'react-native';
 import type { ScheduleControls } from '../hooks/use-schedules';
 
 type Schedules = ScheduleControls;
@@ -62,20 +63,24 @@ function ScheduleActions({ item, controls }: RowProps): React.JSX.Element {
   );
 }
 
+const description = (item: Schedule): string =>
+  scheduleInterval(item.intervalSeconds) +
+  ' · ' +
+  timing(item) +
+  '\n' +
+  last(item);
+
 function ScheduleEntry(props: RowProps): React.JSX.Element {
   const { item } = props;
 
   return (
-    <View className="gap-2 p-3">
-      <Text>{scheduleTitle(item)}</Text>
-      <Text role="secondary" tone="muted">
-        {scheduleInterval(item.intervalSeconds)} · {timing(item)}
-      </Text>
-      <Text role="secondary" tone="muted">
-        {last(item)}
-      </Text>
-      <ScheduleActions {...props} />
-    </View>
+    <ListItem
+      title={scheduleTitle(item)}
+      subtitle={description(item)}
+      subtitleLines={2}
+      multiline
+      control={<ScheduleActions {...props} />}
+    />
   );
 }
 
@@ -85,10 +90,12 @@ export function ScheduleList({
   schedules?: Schedules;
 }): React.JSX.Element {
   return (
-    <ScrollView>
-      {schedules?.items.map((item) => (
-        <ScheduleEntry key={item.id} item={item} controls={schedules} />
-      ))}
-    </ScrollView>
+    <List>
+      <ListSection>
+        {schedules?.items.map((item) => (
+          <ScheduleEntry key={item.id} item={item} controls={schedules} />
+        ))}
+      </ListSection>
+    </List>
   );
 }

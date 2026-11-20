@@ -5,7 +5,6 @@ import {
   decodeSchedule,
   deliveryWrite,
   ScheduleStore,
-  second,
   type ScheduleRow,
 } from './schedule-store';
 import { sendQueueCommand } from './sent-prompt/queue';
@@ -22,10 +21,10 @@ type Manage = z.output<Definitions['session.manageSchedule']['params']>;
 
 type Schedule = ReturnType<typeof decodeSchedule>;
 
-const maximumDelay = 2147483647;
+import { startSchedule, type ScheduleActor } from './schedule-machine';
 
 export class Schedules {
-  private readonly timers = new Map<string, NodeJS.Timeout>();
+  private readonly actors = new Map<string, ScheduleActor>();
   private readonly store: ScheduleStore;
   public constructor(
     private readonly sources: SessionHandlerSources,
@@ -48,49 +47,44 @@ export class Schedules {
   }
   public async manage(input: Manage): Promise<Record<string, never>> {
     await this.store.change(input);
-    this.scheduleNext(input.id, 0);
+    this.replace(input.id);
 
     return {};
   }
   private stop(): void {
-    for (const timer of this.timers.values()) clearTimeout(timer);
-    this.timers.clear();
+    for (const actor of this.actors.values()) actor.stop();
+    this.actors.clear();
   }
-  private scheduleNext(id: string, retryAfter: number): void {
-    if (this.stopping.aborted) return;
-    clearTimeout(this.timers.get(id));
-    this.timers.delete(id);
+  private replace(id: string): void {
+    this.actors.get(id)?.stop();
+    this.actors.delete(id);
     const row = this.store.get(id);
 
-    if (isActive(row)) this.arm(row, retryAfter);
+    if (isActive(row)) this.arm(row);
   }
-  private arm(row: ScheduleRow, retryAfter = 0): void {
+  private arm(row: ScheduleRow): void {
     if (this.stopping.aborted) return;
 
-    const delay = Math.min(
-      maximumDelay,
-      Math.max(retryAfter, row.nextAt - Date.now(), 0),
-    );
+    const actor = startSchedule({
+      now: Date.now,
+      nextAt: () => this.store.get(row.id)?.nextAt ?? Infinity,
+      deliver: (signal) => this.deliver(row.id, signal),
+    });
 
-    this.timers.set(
-      row.id,
-      setTimeout(() => void this.fire(row), delay).unref(),
-    );
+    this.actors.set(row.id, actor);
   }
-  private async fire(row: ScheduleRow): Promise<void> {
-    try {
-      if (row.nextAt <= Date.now()) await this.deliver(row);
-      this.scheduleNext(row.id, 0);
-    } catch {
-      this.scheduleNext(row.id, second);
-    }
-  }
-  private async deliver(row: ScheduleRow): Promise<void> {
+  private async deliver(id: string, signal: AbortSignal): Promise<void> {
+    const row = this.store.get(id);
+
+    if (!isActive(row)) return;
+
     const session = await this.sources.open.ready(
       row.sessionId,
       'session.queue',
-      this.stopping,
+      signal,
     );
+
+    signal.throwIfAborted();
 
     const current = this.store.get(row.id);
 
@@ -111,7 +105,7 @@ export class Schedules {
       commitWith: deliveryWrite(row, Date.now()),
     });
 
-    if (busy) await steerOrWait(session, { sender, id: queuedId });
+    if (busy) void steerOrWait(session, { sender, id: queuedId });
   }
 }
 

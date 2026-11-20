@@ -1,5 +1,6 @@
 import { Text } from '@repo/kit/primitives/content/text';
 import { View } from 'react-native';
+import type { ScheduleControls } from '#features/sessions';
 import {
   scheduleTitle,
   scheduleInterval,
@@ -15,18 +16,12 @@ export const schedulesSection: SessionSection = {
   count: (content) => content.schedules?.items.length ?? 0,
   card: ({ schedules }, tab) => ({
     onOpen: tab.open,
-    summary: (
-      <View>
-        {schedules?.items.slice(0, 2).map((item) => (
-          <View key={item.id}>
-            <Text numberOfLines={1}>{scheduleTitle(item)}</Text>
-            <Text role="secondary" tone="muted">
-              {item.paused ? 'Paused' : scheduleInterval(item.intervalSeconds)}
-            </Text>
-          </View>
-        ))}
-      </View>
+    trailing: (
+      <Text role="secondary" tone="muted">
+        {schedules?.items.length}
+      </Text>
     ),
+    summary: summary(schedules),
   }),
   tab: ({ schedules }) => ({
     body: <ScheduleList schedules={schedules} />,
@@ -37,3 +32,18 @@ export const schedulesSection: SessionSection = {
     body: <ScheduleList schedules={schedules} />,
   }),
 };
+
+const summary = (
+  schedules: ScheduleControls | undefined,
+): React.JSX.Element => (
+  <View>
+    {schedules?.items.slice(0, 2).map((item) => (
+      <View key={item.id}>
+        <Text numberOfLines={1}>{scheduleTitle(item)}</Text>
+        <Text role="secondary" tone="muted">
+          {item.paused ? 'Paused' : scheduleInterval(item.intervalSeconds)}
+        </Text>
+      </View>
+    ))}
+  </View>
+);

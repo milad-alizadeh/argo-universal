@@ -56,7 +56,9 @@ function useChangeSchedule(
   };
 }
 
-const scheduleError = (error: Error | null): ErrorToast | undefined =>
+const scheduleError = (
+  error: Pick<Error, 'message'> | null,
+): ErrorToast | undefined =>
   error
     ? { title: 'Could not update Schedule', message: error.message }
     : undefined;

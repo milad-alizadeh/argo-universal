@@ -1,7 +1,8 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { runOperation } from '#mocks/operations';
+import { startSteeringFixture } from '#mocks/queue-steering';
 import { delegationJourney, holdSession } from '#mocks/session-delegation';
 
 it('queues a scheduled Prompt while the Turn runs and delivers it when the Turn ends', async () => {
@@ -48,13 +49,16 @@ it('queues a scheduled Prompt while the Turn runs and delivers it when the Turn 
 
 it('restores the Schedule and sends its Prompt after the Engine restarts', async () => {
   const journey = await delegationJourney();
-  const { sessionId, caller } = journey.caller;
+  const { sessionId } = journey.caller;
   const text = 'Check after restart';
-  await runOperation(caller.operations, {
-    id: 'session.schedulePrompt',
-    params: { sessionId, intervalSeconds: 2, prompt: [{ type: 'text', text }] },
+  const original = await journey.host.caller.session.schedulePrompt({
+    sessionId,
+    intervalSeconds: 60,
+    prompt: [{ type: 'text', text }],
   });
   await journey.host.stop();
+  // Four deadlines passed while the Server was down; the fifth is still in the future.
+  const clock = vi.spyOn(Date, 'now').mockReturnValue(original.nextAt + 185000);
   const received: PromptRequest[] = [];
 
   const restored = await startAcpEngine({
@@ -65,11 +69,11 @@ it('restores the Schedule and sends its Prompt after the Engine restarts', async
     },
   });
 
-  await expect
-    .poll(() => received.length, { timeout: 10000 })
-    .toBeGreaterThan(0);
+  await expect.poll(() => received.length, { timeout: 10000 }).toBe(1);
   const [row] = await restored.caller.session.listSchedules({ sessionId });
-  expect(row?.lastQueuedAt).toEqual(expect.any(Number));
+  expect(row?.lastQueuedAt).toBe(original.nextAt + 185000);
+  expect(row?.nextAt).toBe(original.nextAt + 240000);
+  clock.mockRestore();
 }, 30000);
 
 it('pauses, resumes and deletes a Schedule through the public caller', async () => {
@@ -93,4 +97,28 @@ it('pauses, resumes and deletes a Schedule through the public caller', async () 
   ]);
   await session.manageSchedule({ sessionId, id, action: 'delete' });
   expect(await session.listSchedules({ sessionId })).toEqual([]);
+}, 30000);
+
+it('keeps enqueueing while a mock Agent holds the first steer', async () => {
+  const fixture = await startSteeringFixture();
+  const { sessionId } = fixture;
+  const session = fixture.caller.session;
+  await session.schedulePrompt({
+    sessionId,
+    intervalSeconds: 1,
+    prompt: [{ type: 'text', text: 'Check again' }],
+  });
+
+  try {
+    await fixture.received.promise;
+    await expect
+      .poll(
+        async () => (await session.get({ sessionId })).promptQueue.items.length,
+        { timeout: 8000 },
+      )
+      .toBeGreaterThanOrEqual(2);
+  } finally {
+    fixture.result.resolve({ outcome: 'injected' });
+    fixture.turnEnded.resolve();
+  }
 }, 30000);
