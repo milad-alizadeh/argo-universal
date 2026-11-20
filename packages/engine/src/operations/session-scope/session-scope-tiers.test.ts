@@ -72,3 +72,26 @@ it('never runs an Operation whose params fail to parse', async () => {
     (await scoped(operation('session.cancel', { sessionId: 7 }))).invoked,
   ).toEqual([]);
 });
+
+it.each([
+  ['caller', runs],
+  ['started', runs],
+  ['unrelated', runs],
+  ['foreign', asks],
+])('scopes Schedule operations in %s', async (sessionId, outcome) => {
+  const schedules = [
+    operation('session.schedulePrompt', {
+      sessionId,
+      intervalSeconds: 60,
+      prompt: [{ type: 'text', text: 'Check the build' }],
+    }),
+    operation('session.listSchedules', { sessionId }),
+    ...['pause', 'resume', 'delete'].map((action) =>
+      operation('session.manageSchedule', { sessionId, id: 'check', action }),
+    ),
+  ];
+
+  for (const schedule of schedules) {
+    expect((await scoped(schedule)).outcome).toBe(outcome);
+  }
+});

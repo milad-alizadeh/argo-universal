@@ -20,6 +20,7 @@ import {
 } from './operation-call';
 import type { NativeStart, NativeStartRequest } from './prompt-sender';
 import { createSessionRouter } from './router';
+import { Schedules } from './schedules';
 import { requireTaken, sendPrompt, withdrawPrompt } from './sent-prompt';
 import {
   createSessionDirectory,
@@ -55,7 +56,7 @@ export class Sessions {
     const list = createSessionList(sources);
 
     this.sources = handlerSources(sources);
-    this.implementations = sessionOperationImplementations(this.sources, list);
+    this.implementations = this.operations(sources, list);
     this.directory = createSessionDirectory(this.sources);
     this.work = createSessionWorkSource(this.sources);
     this.router = createSessionRouter({ sources: this.sources, list });
@@ -64,6 +65,14 @@ export class Sessions {
       this.sources,
       this.implementations,
     );
+  }
+  private operations(
+    { sessionCommandSignal }: SessionSources,
+    list: ReturnType<typeof createSessionList>,
+  ): SessionOperationImplementations {
+    const schedules = new Schedules(this.sources, sessionCommandSignal);
+
+    return sessionOperationImplementations(this.sources, list, schedules);
   }
   // Opens a Session from storage, or waits for its open, without a Turn.
   public async open(sessionId: string): Promise<void> {
@@ -139,13 +148,6 @@ export class Sessions {
 
 // Handlers reach the open Sessions' actor and command signal only through `OpenSessions`.
 const handlerSources = (sources: SessionSources): SessionHandlerSources => ({
-  database: sources.database,
-  readSession: sources.readSession,
-  findFeed: sources.findFeed,
-  findWriter: sources.findWriter,
-  createId: sources.createId,
-  installedAgents: sources.installedAgents,
-  hooks: sources.hooks,
-  slashCommandsWaitMs: sources.slashCommandsWaitMs,
+  ...sources,
   open: new OpenSessions(sources),
 });

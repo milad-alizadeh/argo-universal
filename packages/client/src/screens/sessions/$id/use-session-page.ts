@@ -1,10 +1,8 @@
-import type { UsageLimitsSubject } from '@repo/contracts';
 import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
 import { use } from 'react';
-import { useInstalledAgents, useUsageLimits } from '#features/agents';
+import { useInstalledAgents } from '#features/agents';
 import { useBlobUrl } from '#features/connection';
-import { useSessionFeed } from '#features/feed';
-import { useConnectionDropped, useSessionWork } from '#features/sessions';
+import { useSessionWork } from '#features/sessions';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
 import { renderSubagentFeed } from './connected-subagent-feed';
 import type { SessionPluginCard } from './sections/plugin-card-section';
@@ -14,14 +12,11 @@ import {
   toSessionViewProps,
 } from './session-detail-view-props';
 import { offeredWith, withPluginCards } from './session-plugin-cards';
+import { useConnectedFeed, type ConnectedFeed } from './use-connected-feed';
 import { useFeedRequests } from './use-feed-requests';
 import { useMarkSeen } from './use-mark-seen';
 import { useSessionCallout } from './use-session-callout';
 import { useChangedSession } from './use-session-changes';
-import {
-  type SessionCommands,
-  useSessionCommands,
-} from './use-session-commands';
 import { useSessionLink } from './use-session-link';
 import { useSessionReadOptions } from './use-session-read-options';
 import { useWithSessionBar } from './use-with-session-bar';
@@ -31,8 +26,6 @@ import {
   type WorkbenchCards,
   useWorkbenchCards,
 } from './use-workbench-cards';
-
-type SessionFeed = ReturnType<typeof useSessionFeed>;
 
 // The Session the page draws, and whether it draws as iOS's long-press preview.
 export interface SessionPage {
@@ -78,50 +71,19 @@ type SessionSurroundings =
   | 'shells'
   | 'inspectorPanels';
 
-// A Session's Usage limits are its Agent's, kept for the Agent and Project.
-const usageLimitsSubject = (
-  snapshot: SessionFeed['snapshot'],
-): UsageLimitsSubject | undefined =>
-  snapshot
-    ? { agent: snapshot.agent, projectId: snapshot.projectId }
-    : undefined;
-
 function useSessionSurroundings(
   { sessionId, preview }: SessionPage,
-  cards: readonly SessionPluginCard[],
-  feed: SessionFeed,
+  offered: ReturnType<typeof offeredWith>,
+  { feed }: ConnectedFeed,
 ): Pick<SessionDetailViewSources, SessionSurroundings> {
   return {
     ...useFeedRequests(sessionId, feed),
-    ...useSessionWork(sessionId, feed.snapshot, offeredWith(cards)),
+    ...useSessionWork(sessionId, feed.snapshot, offered),
     agents: useInstalledAgents(),
     navigate: useNavigateFromShown(),
     imageUrl: useBlobUrl(),
     ...useSessionLink({ sessionId, resumeFeed: feed.resumeAfterCommand }),
     onAtEndChange: useMarkSeen(sessionId, feed.revision, preview),
-  };
-}
-
-interface ConnectedFeed {
-  feed: SessionFeed;
-  // The Connection dropped the Feed's open: a toast says why, not a callout.
-  feedDropped: boolean;
-  commands: SessionCommands;
-  usageLimits: SessionDetailViewSources['usageLimits'];
-}
-
-function useConnectedFeed(sessionId: string, shown: boolean): ConnectedFeed {
-  const feed = useSessionFeed(sessionId, undefined, shown);
-
-  return {
-    feed,
-    feedDropped: useConnectionDropped(feed.openError),
-    usageLimits: useUsageLimits(usageLimitsSubject(feed.snapshot)),
-    commands: useSessionCommands({
-      sessionId,
-      resumeAfterCommand: feed.resumeAfterCommand,
-      agent: feed.snapshot?.agent,
-    }),
   };
 }
 
@@ -131,14 +93,13 @@ function useSessionViewProps(
   sources: ConnectedFeed,
 ): SessionDetailViewProps {
   const { sessionId } = page;
-  const surroundings = useSessionSurroundings(page, cards, sources.feed);
-  const reads = usePageCallout(sessionId, sources, surroundings.agents);
-  const props = pageProps(sessionId, sources, { ...surroundings, ...reads });
+
+  const props = usePageProps(page, cards, sources);
   const changed = useChangedSession({ sessionId, props, feed: sources.feed });
   const bar = useWithSessionBar(sessionId, sources.feed, changed);
   const changes = useWithSessionPullRequests(sessionId, sources.feed, bar);
 
-  return withPluginCards(withAgentFeed(changes), cards);
+  return withPluginCards(withAgentFeed(changes), cards, sources.schedules);
 }
 
 // What the view draws, from the Session's own sources and everything the page read around it.
@@ -173,3 +134,21 @@ const withAgentFeed = (
   props: SessionDetailViewProps,
 ): SessionDetailViewProps =>
   props.state === 'open' ? { ...props, renderSubagentFeed } : props;
+
+function usePageProps(
+  page: SessionPage,
+  cards: readonly SessionPluginCard[],
+  sources: ConnectedFeed,
+): SessionDetailViewProps {
+  const { sessionId } = page;
+
+  const surroundings = useSessionSurroundings(
+    page,
+    offeredWith(cards, sources.schedules.items.length),
+    sources,
+  );
+
+  const reads = usePageCallout(sessionId, sources, surroundings.agents);
+
+  return pageProps(sessionId, sources, { ...surroundings, ...reads });
+}
