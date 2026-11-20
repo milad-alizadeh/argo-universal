@@ -1,4 +1,5 @@
 import type { SentPromptSender, QueueCommand } from '@repo/contracts';
+import type { WriterJob } from '../storage';
 import type { QueueSteeringCommand } from './queue-steering/types';
 import type { SessionContext } from './session-context';
 
@@ -32,5 +33,7 @@ export type QueueSessionCommand =
       sender?: SentPromptSender;
       // The id a Plugin's appended Prompt takes, chosen by the Server so the Plugin can withdraw it.
       queuedId?: string;
+      // Stored atomically with admission of a scheduled Prompt.
+      commitWith?: WriterJob;
       committed: PromiseWithResolvers<void>;
     };

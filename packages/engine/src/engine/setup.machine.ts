@@ -96,6 +96,8 @@ export interface EngineInput extends Pick<
   caffeinate?: Caffeinate;
   // Where Conversations run; development's fake when `ARGO_CONVERSATION_PROVIDER=fake`, and none otherwise.
   conversationProvider?: ConversationProvider | null;
+  // How long an archived Session can be undone; five seconds unless a test says otherwise.
+  archiveUndoMs?: number;
   // How long a Conversation may pass without speech before it ends by itself; five minutes unless a test says otherwise.
   voiceIdleMs?: number;
   notificationOptions?: NotificationOptions;

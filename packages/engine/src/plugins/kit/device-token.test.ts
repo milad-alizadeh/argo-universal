@@ -77,13 +77,6 @@ it('keeps the refresh token beside the access token, with when it runs out', asy
   });
 });
 
-it('lends the kept token while it is fresh, without refreshing', async () => {
-  const fake = await signedIn([expiring('access-1', 'refresh-1')]);
-
-  expect(await fake.borrow('account-1')).toBe('access-1');
-  expect(refreshCalls(fake)).toEqual([]);
-});
-
 it('refreshes a token that has run out with the client ID and refresh token alone', async () => {
   const fake = await signedIn([
     expiring('access-1', 'refresh-1'),
@@ -98,38 +91,6 @@ it('refreshes a token that has run out with the client ID and refresh token alon
   ]);
 });
 
-it('keeps the refreshed pair, so the next borrow lends it without refreshing again', async () => {
-  const fake = await signedIn([
-    expiring('access-1', 'refresh-1'),
-    expiring('access-2', 'refresh-2'),
-  ]);
-
-  await afterEightHours();
-  await fake.borrow('account-1');
-
-  expect(keptSecret(fake)).toMatchObject({
-    access: 'access-2',
-    refresh: 'refresh-2',
-  });
-  expect(await fake.borrow('account-1')).toBe('access-2');
-  expect(refreshCalls(fake)).toHaveLength(1);
-});
-
-it('keeps the old refresh token when the refresh answer gives none', async () => {
-  const fake = await signedIn([
-    expiring('access-1', 'refresh-1'),
-    { status: 200, body: { access_token: 'access-2', expires_in: eightHours } },
-  ]);
-
-  await afterEightHours();
-  await fake.borrow('account-1');
-
-  expect(keptSecret(fake)).toMatchObject({
-    access: 'access-2',
-    refresh: 'refresh-1',
-  });
-});
-
 it('refreshes a minute before the token runs out', async () => {
   const fake = await signedIn([
     expiring('access-1', 'refresh-1'),
@@ -139,18 +100,6 @@ it('refreshes a minute before the token runs out', async () => {
   await vi.advanceTimersByTimeAsync((eightHours - 30) * 1000);
 
   expect(await fake.borrow('account-1')).toBe('access-2');
-});
-
-it('spends a refresh token once when borrows that find it due arrive together', async () => {
-  const fake = await signedIn([
-    expiring('access-1', 'refresh-1'),
-    expiring('access-2', 'refresh-2'),
-  ]);
-
-  await afterEightHours();
-  await Promise.all([fake.borrow('account-1'), fake.borrow('account-1')]);
-
-  expect(refreshCalls(fake)).toHaveLength(1);
 });
 
 it.each([

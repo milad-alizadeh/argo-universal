@@ -4,17 +4,21 @@ import { ComposerAttachmentCard } from '../composer-attachment-card/composer-att
 import type { AttachmentLayout } from './composer-card-types';
 import type { ComposerDraft } from './composer-types';
 
+const attachmentScroll = {
+  horizontal: true,
+  className: 'grow-0 shrink-0',
+  keyboardShouldPersistTaps: 'handled',
+  showsHorizontalScrollIndicator: false,
+  contentContainerClassName: 'gap-3 px-4 pt-3',
+} as const;
+
 export function ComposerAttachments(
   layout: AttachmentLayout,
 ): React.JSX.Element | null {
   if (layout.props.draft.attachments.length === 0) return null;
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerClassName="gap-3 px-4 pt-3"
-    >
+    <ScrollView {...attachmentScroll}>
       <ComposerAttachmentItems {...layout} />
     </ScrollView>
   );

@@ -11,6 +11,10 @@ type TurnMemory = { resultSent: boolean; last: string | null };
 
 const freshTurn = (): TurnMemory => ({ resultSent: false, last: null });
 
+// The sections of an Agent message the voice may hear: all but silent analysis.
+const sayable = (text: string): VoiceMessage[] =>
+  readConversationSections(text).filter(({ kind }) => kind !== 'analysis');
+
 export type Said = Extract<
   SessionHappening,
   { type: 'agent.message' | 'person.typed' }
@@ -26,7 +30,8 @@ export class AgentWords {
   public constructor(private readonly speak: (say: VoiceSay) => void) {}
 
   public said(happening: Said): void {
-    if (happening.type === 'agent.message') this.agentSaid(happening.text);
+    if (happening.type === 'agent.message')
+      this.agentSaid(happening.text, happening.turnless);
     else this.tell(relayWords.typed(happening.text), 'background');
   }
 
@@ -52,13 +57,16 @@ export class AgentWords {
     this.tell(text, 'speak', 'result');
   }
 
-  // Analysis stays silent, so the voice is never told it.
-  private agentSaid(text: string): void {
-    for (const section of readConversationSections(text))
-      if (section.kind !== 'analysis') {
-        this.pass(section);
-        this.remember(section);
-      }
+  /*
+   * Analysis stays silent, so the voice is never told it. A message outside any Turn has no Turn end to speak its
+   * progress at, so only its result is spoken (#2506).
+   */
+  private agentSaid(text: string, turnless: boolean): void {
+    for (const section of sayable(text)) {
+      this.pass(section);
+
+      if (!turnless) this.remember(section);
+    }
   }
 
   // A result is read out; progress is background.

@@ -8,7 +8,7 @@ import type { SessionInspectorContent } from '../session-inspector-content';
 // What decides which Sections a Session offers, read from its snapshot or from the page's props alike.
 export type SessionItems = Partial<
   Pick<SessionSnapshot, 'subagents' | 'shells'>
->;
+> & { scheduleCount?: number };
 
 // What a Section is, before anything draws it: its name, and what the Session has in it.
 export interface SectionFacts {
@@ -61,7 +61,7 @@ export interface SessionSection extends SectionFacts {
   phone?: SectionDraw<SectionPhonePage>;
 }
 
-export const offeredFacts = <Section extends SectionFacts>(
+const offeredFacts = <Section extends SectionFacts>(
   sections: readonly Section[],
   items: SessionItems,
 ): Section[] => sections.filter((section) => section.offered(items));
@@ -74,6 +74,7 @@ export const offeredKeys = (
 // The page's props carry the same items the snapshot does.
 export const itemsOf = (content: SessionInspectorContent): SessionItems => ({
   subagents: content.subagents?.subagents,
+  scheduleCount: scheduleCount(content),
   shells: content.shells?.shells,
 });
 
@@ -82,3 +83,6 @@ export const drawsCard = (
   { offered, count = () => 1 }: SectionFacts,
   content: SessionInspectorContent,
 ): boolean => offered(itemsOf(content)) && count(content) > 0;
+
+const scheduleCount = (content: SessionInspectorContent): number =>
+  content.schedules?.items.length ?? 0;

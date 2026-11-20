@@ -1,6 +1,7 @@
 import type { PluginTest } from '@argo/plugin-kit/testing';
 import { expect, it, onTestFinished } from 'vitest';
 import { project, signedInRoot } from './journey-fixture';
+import { until } from './session-slot-fixture';
 
 const markSlot = 'argo/link/mark/v1';
 
@@ -20,17 +21,22 @@ type Answer =
 function watchMarks(test: PluginTest): AsyncGenerator<Answer> {
   const controller = new AbortController();
 
-  onTestFinished(() => controller.abort());
-
   const contexts = [own, foreign].map((href) => ({
     href,
     projectId: project.id,
   }));
 
-  return test.slotItems(
+  const answers = test.slotItems(
     { slotId: markSlot, contexts },
     { signal: controller.signal },
   );
+
+  onTestFinished(async () => {
+    controller.abort();
+    await answers.return(null);
+  });
+
+  return answers;
 }
 
 const sentFor = (answer: Answer, href: string): Answer[string][] => {
@@ -42,26 +48,24 @@ const sentFor = (answer: Answer, href: string): Answer[string][] => {
 const marksOf = (answer: Answer, href: string): unknown[] =>
   sentFor(answer, href).flatMap(({ items }) => items.map(({ item }) => item));
 
+const hasOwnMark = (answer: Answer): boolean => marksOf(answer, own).length > 0;
+
 it('marks a link to an Issue of the Project with its state, follows GitHub closing it, and leaves another repository alone', async () => {
   const { test, github } = await signedInRoot();
   const answers = watchMarks(test);
-  let latest: Answer = {};
 
-  void (async (): Promise<void> => {
-    for await (const answer of answers) latest = answer;
-  })();
-
-  // The Issue was never read, so its mark arrives once the Tracker has answered behind the first ask.
-  await expect
-    .poll(() => marksOf(latest, own), { timeout: 5000 })
-    .toEqual([{ kind: 'issue', state: 'open' }]);
-  expect(marksOf(latest, foreign)).toEqual([]);
+  const open = await until(answers, hasOwnMark);
+  expect(marksOf(open, own)).toEqual([{ kind: 'issue', state: 'open' }]);
+  expect(marksOf(open, foreign)).toEqual([]);
 
   github.closeIssue(42);
+  /*
+   * Leave the iterator parked on the open mark until both clocks have advanced.
+   * A refresh read started during the advance can exhaust its worker budget.
+   */
   await test.clock.advance(refreshMs);
 
-  await expect
-    .poll(() => marksOf(latest, own), { timeout: 5000 })
-    .toEqual([{ kind: 'issue', state: 'closed' }]);
-  expect(marksOf(latest, foreign)).toEqual([]);
+  const closed = await until(answers, hasOwnMark);
+  expect(marksOf(closed, own)).toEqual([{ kind: 'issue', state: 'closed' }]);
+  expect(marksOf(closed, foreign)).toEqual([]);
 }, 30_000);

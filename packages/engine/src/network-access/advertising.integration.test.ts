@@ -12,11 +12,6 @@ const heardWithin = 8000;
 
 const computerName = 'Studio Mac';
 
-const settle = (milliseconds: number): Promise<void> =>
-  new Promise<void>((resolve): void => {
-    setTimeout(resolve, milliseconds);
-  });
-
 // A browser on the same network, told nothing about any Server; `announced` finds one by the key it was given at pairing, as the hash the announcement carries.
 interface Browser {
   announced: (key: string) => DiscoveredServer | undefined;
@@ -96,9 +91,14 @@ describe.skipIf(!lanAddress)(
 
     it('stays off the network while Local network access is off', async (): Promise<void> => {
       const { caller } = await startEngineTestHost();
+      const announcing = await startEngineTestHost();
+      const heard = await keyOf(announcing.caller);
       const network = browseTheNetwork();
 
-      await settle(1500);
+      await announcing.caller.network.setLocalAccess({ enabled: true });
+      await vi.waitFor(() => expect(network.announced(heard)).toBeDefined(), {
+        timeout: heardWithin,
+      });
 
       expect(network.announced(await keyOf(caller))).toBeUndefined();
     });

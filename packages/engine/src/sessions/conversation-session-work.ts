@@ -1,4 +1,5 @@
 import { readAgentServers } from '../agents';
+import { watchOpenedSessions, type OpenedListener } from './opened-sessions';
 import { requireTaken, sendPrompt, type TakenPrompt } from './sent-prompt';
 import {
   answerSessionPermissionBySpeech,
@@ -68,5 +69,10 @@ export class ConversationSessionWork {
     listener: (happening: TurnHappening) => void,
   ): () => void {
     return this.sources.open.watchTurns(sessionId, listener);
+  }
+
+  // Hears each Session as it opens, with the Session that started it, until the returned function is called.
+  public watchOpened(listener: OpenedListener): () => void {
+    return watchOpenedSessions(this.sources, listener);
   }
 }

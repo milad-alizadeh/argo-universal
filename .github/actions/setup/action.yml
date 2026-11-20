@@ -32,7 +32,7 @@ runs:
       working-directory: e2e
       run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
 
-    # The browser download is cached by Playwright version; the system libraries still come from apt every run.
+    # The browser download is cached by Playwright version.
     - name: Restore the Playwright browsers
       if: ${{ inputs.playwright == 'chromium' }}
       uses: actions/cache@v6
@@ -40,11 +40,21 @@ runs:
         path: ~/.cache/ms-playwright
         key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
 
-    # The headless shell serves the web e2e projects and the Storybook Vitest tests; --with-deps also installs xvfb.
+    # The headless shell serves the web e2e projects and the Storybook Vitest tests.
     - name: Install Playwright Chromium
       if: ${{ inputs.playwright == 'chromium' }}
       shell: bash
-      run: pnpm --filter @repo/e2e exec playwright install --with-deps --only-shell chromium
+      run: pnpm --filter @repo/e2e exec playwright install --only-shell chromium
+
+    # The runner image usually has every library the headless shell links and xvfb; apt runs only when one is missing.
+    - name: Install the libraries Chromium lacks
+      if: ${{ inputs.playwright == 'chromium' }}
+      shell: bash
+      run: |
+        shell=$(ls -d ~/.cache/ms-playwright/chromium_headless_shell-*/chrome-headless-shell-linux64/chrome-headless-shell | head -n 1)
+        if ! command -v xvfb-run > /dev/null || ldd "$shell" | grep -q 'not found'; then
+          pnpm --filter @repo/e2e exec playwright install-deps chromium
+        fi
 
     - name: Install the Playwright system libraries
       if: ${{ inputs.playwright == 'system-deps' }}

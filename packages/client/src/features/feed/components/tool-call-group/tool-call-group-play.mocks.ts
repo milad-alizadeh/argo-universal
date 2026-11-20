@@ -13,8 +13,6 @@ export const readFileTitle = 'Read /project/hello.txt';
 // A group's child is titled with its command line, running or settled.
 export const commandLine = 'cat hello.txt && git status --short';
 
-export const dark = { globals: { mode: 'dark' } };
-
 export const runningReadNow = startedAt(runningRead) + 23000;
 
 const terminalCommand = (row: ToolCallUpdate): string | undefined =>

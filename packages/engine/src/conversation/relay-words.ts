@@ -1,3 +1,7 @@
+// An Agent (a Session's delegate) by its title, when it has one.
+const agentNamed = (title: string | null): string =>
+  title ? `The Agent "${title}"` : 'An Agent';
+
 // A waiting Permission request, as the voice is told of it.
 export type SpokenRequest = {
   agent: string;
@@ -60,6 +64,24 @@ export const relayWords = {
   // A Permission request as the voice hears it: plain words from the request, never the request itself, and the two answers speech may give.
   permissionWaiting: ({ agent, title, kind, target }: SpokenRequest): string =>
     `${agent} is waiting for permission to ${doing(kind)}: ${title}${onTarget(target)}. Ask the person: allow once, or reject? Hand over their answer in their own words. Always allow is only on screen.`,
+  elicitationWaiting: (message: string): string =>
+    `The Agent is asking the person: ${message} The person answers it on screen, or a new request settles it.`,
+  startedFinished: (title: string, last: string | null): string =>
+    last
+      ? `The Session "${title}" finished. It said: ${last}`
+      : `The Session "${title}" finished.`,
+  startedFailed: (title: string, error: string): string =>
+    `The Session "${title}" failed: ${error}`,
+  startedStopped: (title: string, stopReason: string): string =>
+    `The Session "${title}" stopped: ${stopReason}.`,
+  startedWaitingPermission: (title: string, what: string): string =>
+    `The Session "${title}" is waiting for permission: ${what}. The person answers it on screen.`,
+  startedAsking: (title: string, question: string): string =>
+    `The Session "${title}" is asking the person: ${question} The person answers it on screen.`,
+  agentFinished: (title: string | null): string =>
+    `${agentNamed(title)} finished.`,
+  agentStopped: (title: string | null, stopReason: string): string =>
+    `${agentNamed(title)} stopped: ${stopReason}.`,
   // What a request for work is answered with while a Permission request waits: it was not an answer.
   permissionStillWaiting: (title: string): string =>
     `Nothing was allowed or rejected: the Agent is still waiting for permission: ${title}. Ask the person: allow once, or reject?`,

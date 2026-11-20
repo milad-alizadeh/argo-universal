@@ -1,5 +1,5 @@
 // The checks tools/agent-hook-run.mts and tools/verify.mts run; read docs/agents/hooks.md before changing them.
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -51,6 +51,8 @@ export interface LintRun {
   files: string[];
   typeAware: boolean;
   skipped: ReadonlySet<string>;
+  // Another oxlint config, such as after-edit's native-rules copy; the repository's by default.
+  config?: string;
 }
 
 const binary = (name: string): string =>
@@ -63,6 +65,24 @@ export function run(command: string, args: string[]): Result {
     status: result.status ?? 1,
     output: `${result.stdout}${result.stderr}`,
   };
+}
+
+// `run` without blocking, so independent checks can run side by side.
+export function runAsync(command: string, args: string[]): Promise<Result> {
+  return new Promise((resolve): void => {
+    const child = spawn(command, args, { cwd: root });
+    const chunks: Buffer[] = [];
+    const collect = (chunk: Buffer): number => chunks.push(chunk);
+
+    child.stdout.on('data', collect);
+    child.stderr.on('data', collect);
+    child.on('error', (error): void => {
+      resolve({ status: 1, output: error.message });
+    });
+    child.on('close', (code): void => {
+      resolve({ status: code ?? 1, output: Buffer.concat(chunks).toString() });
+    });
+  });
 }
 
 const jsonText = z.string().transform((text, context) => {
@@ -97,14 +117,32 @@ function findings(report: LintReport, skipped: ReadonlySet<string>): Result {
   return { status: kept.length > 0 ? 1 : 0, output: kept.join('\n') };
 }
 
-// Runs oxlint with the repository config and keeps the findings whose rule is not skipped.
-export function lint({ files, typeAware, skipped }: LintRun): Result {
-  const flags = typeAware ? ['--type-aware'] : [];
-  const args = [...flags, '--format=json', UNMATCHED, ...files];
-  const result = run(binary('oxlint'), args);
+const lintArgs = ({ files, typeAware, config }: LintRun): string[] => [
+  ...(typeAware ? ['--type-aware'] : []),
+  ...(config === undefined ? [] : ['--config', config]),
+  '--format=json',
+  UNMATCHED,
+  ...files,
+];
+
+function lintFindings(result: Result, skipped: ReadonlySet<string>): Result {
   const parsed = parseJson(lintReport, result.output);
 
   return parsed.success ? findings(parsed.data, skipped) : result;
+}
+
+// Runs oxlint and keeps the findings whose rule is not skipped.
+export function lint(lintRun: LintRun): Result {
+  return lintFindings(
+    run(binary('oxlint'), lintArgs(lintRun)),
+    lintRun.skipped,
+  );
+}
+
+async function lintAsync(lintRun: LintRun): Promise<Result> {
+  const result = await runAsync(binary('oxlint'), lintArgs(lintRun));
+
+  return lintFindings(result, lintRun.skipped);
 }
 
 export function format(files: string[]): Result {
@@ -115,7 +153,7 @@ export function checkFormat(files: string[]): Result {
   return run(binary('oxfmt'), ['--check', UNMATCHED, ...files]);
 }
 
-export function checkTypes(): Result {
+export function checkTypes(): Promise<Result> {
   const args = [
     'run',
     'check-types',
@@ -123,7 +161,7 @@ export function checkTypes(): Result {
     '--output-logs=errors-only',
   ];
 
-  return run(binary('turbo'), args);
+  return runAsync(binary('turbo'), args);
 }
 
 // Every path changed or untracked since `base`, whether or not the checks read it.
@@ -145,8 +183,8 @@ export const readableFiles = (paths: string[]): string[] =>
 export const changedFiles = (base: string): string[] =>
   readableFiles(changedPaths(base));
 
-// Type-aware lint on the changed files, and the affected type checks when TypeScript changed.
-export function* checkChanged(files: string[]): Generator<Result> {
+// Type-aware lint on the changed files, and the affected type checks when TypeScript changed, side by side.
+export function checkChanged(files: string[]): Promise<Result[]> {
   const linted = files.filter((name): boolean => LINTED_FILE.test(name));
 
   const lintRun = {
@@ -155,10 +193,10 @@ export function* checkChanged(files: string[]): Generator<Result> {
     skipped: new Set<string>(),
   };
 
-  if (linted.length > 0) yield lint(lintRun);
+  const lints = linted.length > 0 ? [lintAsync(lintRun)] : [];
   const typed = files.some((name): boolean => TYPESCRIPT_FILE.test(name));
 
-  if (typed) yield checkTypes();
+  return Promise.all(typed ? [...lints, checkTypes()] : lints);
 }
 
 export const failedChecks = (results: Result[]): Result[] =>

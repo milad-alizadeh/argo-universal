@@ -73,7 +73,7 @@ function preparedEvents(state: AcpModelSnapshot): Sent[] {
   ].map((event) => ({ state, event }));
 }
 
-function appendEvent(): AcpModelEvent {
+export function appendEvent(): AcpModelEvent {
   return {
     type: 'session.queue',
     command: { action: 'append', prompt: row.prompt },

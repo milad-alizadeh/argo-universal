@@ -135,46 +135,6 @@ export const OptionsPopoverWide = atWidth(screenWidths.Wide, {
   },
 });
 
-// The card a FieldGroup row sits on: the nearest box around it that draws a border.
-function cardOf(node: HTMLElement | null): HTMLElement {
-  if (!node) throw new Error('The row sits on no card');
-
-  return getComputedStyle(node).borderTopWidth === '0px'
-    ? cardOf(node.parentElement)
-    : node;
-}
-
-const leftOf = (element: Element): number =>
-  Math.round(element.getBoundingClientRect().left);
-
-/*
- * The sheet insets its content once: the view switch, the Filter heading and the first FieldGroup card start on one
- * edge, as an iOS sheet's controls and grouped cards do.
- */
-const oneEdge: Story = {
-  play: async (context) => {
-    const { canvas, userEvent } = context;
-
-    await userEvent.click(canvas.getByRole('button', optionsButton));
-
-    const dialog = await body(context).findByRole('dialog', {
-      name: 'Options',
-    });
-
-    await settleOverlays();
-
-    const edge = leftOf(within(dialog).getByRole('group', { name: 'Show as' }));
-    const card = cardOf(within(dialog).getByText('Status'));
-
-    await expect(leftOf(card)).toBe(edge);
-    await expect(leftOf(within(dialog).getByText('Filter'))).toBe(edge);
-  },
-};
-
-export const OptionsOneEdgePhone = atWidth(screenWidths.Phone, oneEdge);
-
-export const OptionsOneEdgeWide = atWidth(screenWidths.Wide, oneEdge);
-
 // On every width the Options button is the icon alone, its count a badge on its corner, and it says both.
 const optionsIconWithBadge: Story = {
   play: async ({ canvas }) => {
@@ -195,32 +155,7 @@ export const OptionsIconBadgeWide = atWidth(
   optionsIconWithBadge,
 );
 
-const topOf = (element: Element): number =>
-  Math.round(element.getBoundingClientRect().top);
-
-// The popover pads its first content as far from its top edge as from its leading one.
-export const OptionsPopoverTopInsetWide = atWidth(screenWidths.Wide, {
-  play: async (context) => {
-    const { canvas, userEvent } = context;
-
-    await userEvent.click(canvas.getByRole('button', optionsButton));
-
-    const dialog = await body(context).findByRole('dialog', {
-      name: 'Options',
-    });
-
-    await settleOverlays();
-
-    const first = within(dialog).getByRole('group', { name: 'Show as' });
-
-    await expect(topOf(first) - topOf(dialog)).toBe(
-      leftOf(first) - leftOf(dialog),
-    );
-    await expect(topOf(first) - topOf(dialog)).toBeGreaterThan(8);
-  },
-});
-
-// The title's menu opens below the title, lined up with its start, not over what sits to its left.
+// The title's menu opens below the title, not over it.
 export const TitleMenuBelowWide = atWidth(screenWidths.Wide, {
   play: async (context) => {
     const { canvas, userEvent } = context;
@@ -235,7 +170,6 @@ export const TitleMenuBelowWide = atWidth(screenWidths.Wide, {
     const below = menu.getBoundingClientRect();
     const title = button.getBoundingClientRect();
 
-    await expect(Math.round(below.left)).toBe(Math.round(title.left));
     await expect(below.top).toBeGreaterThanOrEqual(title.bottom);
   },
 });

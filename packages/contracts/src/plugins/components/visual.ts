@@ -1,5 +1,8 @@
+import { z } from 'zod';
+import { colourStops } from '../colour-data';
 import { svgProps } from '../core-kit-props';
 import { defineKitComponent } from '../define-kit-component';
+import { stringLabel } from '../kit-component-props';
 import { visualDataProps } from '../visual-props';
 
 const drawings = [
@@ -13,7 +16,28 @@ const drawings = [
 
 const svgReader = 'Reads the label as an image or button, based on `onPress`.';
 
+const swatchProps = z.object({
+  colors: colourStops
+    .optional()
+    .describe(
+      'The dot’s colours, which are data; left out, the dot is empty, as an off light’s.',
+    ),
+  accessibilityLabel: stringLabel.describe(
+    'What the colour is, such as “Warm white”.',
+  ),
+});
+
 export const visualComponents = {
+  Swatch: defineKitComponent(
+    'A round dot filled with a colour that is data, such as a light’s.',
+    swatchProps,
+    {
+      group: 'visual',
+      label: 'The accessibilityLabel says what the colour is.',
+      appearance:
+        'The dot draws its colours as a gradient with a soft glow, the same in light and dark mode; with no colours it is an empty muted dot.',
+    },
+  ),
   Svg: defineKitComponent(
     'Sanitized SVG artwork. Use Canvas for interactive drawing.',
     svgProps,

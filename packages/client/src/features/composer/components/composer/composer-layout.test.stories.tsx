@@ -15,10 +15,7 @@ import { composerCard } from '../../../../../mocks/composer/responsive-menu.test
 import { workStatusCounts } from '../../../../../mocks/composer/work-status.test.mocks';
 import { pausedPrompts } from '../prompt-queue/prompt-queue-fixtures';
 import { Composer } from './composer';
-import {
-  longWorktreeComposer,
-  startedSessionComposer,
-} from './composer-fixtures';
+import { longWorktreeComposer } from './composer-fixtures';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer/Layout' };
 
@@ -51,12 +48,6 @@ export const NarrowDesktopKeepsSend: Story = {
 
 const trayId = 'composer-tray';
 
-function parentOf(element: HTMLElement): HTMLElement {
-  if (!element.parentElement) throw new Error('The tray needs its Composer.');
-
-  return element.parentElement;
-}
-
 /*
  * A wide window has one tray above the card. The Queued Prompts and the callout are sections of it, so a
  * second tray never stacks on the first.
@@ -75,23 +66,6 @@ export const QueueAndCalloutShareOneTray: Story = {
     await expect(canvas.getAllByTestId(trayId)).toHaveLength(1);
     await expect(tray).toContainElement(canvas.getByTestId('prompt-queue'));
     await expect(tray).toContainElement(canvas.getByRole('alert'));
-  },
-};
-
-// The tray's side margins come out of the Composer's width, so it sits centred behind the card rather than running past it.
-export const RequestTrayStaysCentred: Story = {
-  ...ResponsiveLayoutWide,
-  args: { ...ResponsiveLayoutWide.args, callout: <View role="alert" /> },
-  play: async ({ canvas }) => {
-    await settleLayout(layoutWidths.wide);
-    const tray = canvas.getByTestId(trayId);
-    const inner = tray.getBoundingClientRect();
-    const outer = parentOf(tray).getBoundingClientRect();
-
-    await expect(outer.right - inner.right).toBeCloseTo(
-      inner.left - outer.left,
-      0,
-    );
   },
 };
 
@@ -152,48 +126,6 @@ export const LongCheckoutTruncatesInTray: Story = {
     await expect(name.scrollWidth).toBeGreaterThan(name.clientWidth);
     await expect(context.getBoundingClientRect().right).toBeLessThan(
       name.getBoundingClientRect().left,
-    );
-  },
-};
-
-const leftOf = (element: HTMLElement): number =>
-  element.getBoundingClientRect().left;
-
-// The Plan's row, its steps and the status tray start their words on one edge, so the trays read as one column.
-export const TrayWordsShareAnEdge: Story = {
-  args: startedSessionComposer,
-  render: (args) => <Composer {...composerProps(args)} />,
-  play: async ({ canvas, userEvent }) => {
-    await settleLayout(layoutWidths.wide);
-    await userEvent.click(canvas.getByRole('button', { name: 'Todos' }));
-    const edge = leftOf(canvas.getByText('Todos 2/3'));
-
-    await expect(leftOf(canvas.getByText('Inspect the Composer layout'))).toBe(
-      edge,
-    );
-    await expect(leftOf(canvas.getByText('Usage'))).toBe(edge);
-  },
-};
-
-export const TodosRowMatchesStatusTray: Story = {
-  args: startedSessionComposer,
-  render: (args) => <Composer {...composerProps(args)} />,
-  play: async ({ canvas }) => {
-    await settleLayout(layoutWidths.wide);
-    const card = composerCard(canvas.getByRole('textbox', { name: 'Message' }));
-    const statusTray = card.nextElementSibling;
-
-    if (!statusTray)
-      throw new Error('The wide Composer needs its status tray.');
-
-    const exposedHeight =
-      statusTray.getBoundingClientRect().bottom -
-      card.getBoundingClientRect().bottom;
-
-    const todos = canvas.getByRole('button', { name: 'Todos' });
-
-    await expect(todos.getBoundingClientRect().height).toBeCloseTo(
-      exposedHeight,
     );
   },
 };

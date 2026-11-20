@@ -62,6 +62,8 @@ export const buttonSizes = ['xs', 'sm', 'md'] as const;
  */
 export const buttonDefaults = { variant: 'primary', size: 'md' } as const;
 
+export const faderDefaults = { orientation: 'vertical' } as const;
+
 export const cardDefaults = { kind: 'card', density: 'regular' } as const;
 
 export const iconButtonSizes = ['sm', 'md', 'lg'] as const;

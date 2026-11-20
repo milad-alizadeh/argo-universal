@@ -50,6 +50,7 @@ export const mockHttpServer: HttpServer = {
     return expect.unreachable('Structural model mints no Pairing Ticket');
   },
   listeningOn: (): string => '127.0.0.1:7337',
+  port: (): number => 7337,
   createCaller: (): never =>
     expect.unreachable('Structural model does not call procedures'),
   close: (): never =>

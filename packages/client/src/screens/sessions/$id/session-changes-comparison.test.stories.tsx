@@ -100,17 +100,13 @@ export const SearchesBranchesInAPopover: Story = {
   },
 };
 
-// The phone sheet titles itself Changes and leads with its Git segments instead of the desktop comparison controls.
-export const PhoneHasTheGitHeader: Story = {
+// The phone sheet keeps its title above the scrolling files.
+export const PhoneKeepsTheChangesTitle: Story = {
   args: { catalog: manyChanges },
   play: async () => {
     await settleLayout('phone');
     await expect(
-      await screen.findByRole('button', { name: 'Files', pressed: true }),
-    ).toBeVisible();
-    await expect(screen.getByRole('button', { name: 'Change' })).toBeDisabled();
-    await expect(
-      screen.getByRole('heading', { name: 'Changes' }),
+      await screen.findByRole('heading', { name: 'Changes' }),
     ).toBeVisible();
     await expect(
       screen.queryByRole('button', { name: /^Comparison/ }),
@@ -118,7 +114,7 @@ export const PhoneHasTheGitHeader: Story = {
     const last = await scrollToFile('/repo/src/module-60/index.ts');
     await waitFor(() => expect(last).toBeVisible());
     await expect(
-      screen.getByRole('button', { name: 'Files', pressed: true }),
+      screen.getByRole('heading', { name: 'Changes' }),
     ).toBeVisible();
   },
 };

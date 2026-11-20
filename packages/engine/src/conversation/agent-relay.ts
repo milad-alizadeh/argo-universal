@@ -9,6 +9,7 @@ import type {
   ConversationSessions,
 } from './session-link';
 import { SpokenConsent } from './spoken-consent';
+import { isTold, speechOf } from './started-speech';
 import {
   isPermissionHappening,
   WaitingPermission,
@@ -102,7 +103,18 @@ export class AgentRelay {
 
     if (isPermissionHappening(happening))
       return this.permissionHeard(happening);
-    this.words.said(happening);
+    this.wordsHeard(happening);
+  }
+
+  // A question its Session asks, or news of a Session or Agent it started, is spoken as it comes.
+  private wordsHeard(
+    happening: Exclude<
+      SessionHappening,
+      { type: 'turn.ended' } | PermissionHappening
+    >,
+  ): void {
+    if (isTold(happening)) this.words.tell(speechOf(happening), 'speak');
+    else this.words.said(happening);
   }
 
   private permissionHeard(happening: PermissionHappening): void {

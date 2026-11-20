@@ -9,16 +9,35 @@ import type { SpokenRequest } from './relay-words';
 
 // What happened in the Session that the voice is told about.
 export type SessionHappening =
-  // An Agent message settled; its text is as stored, marks included.
-  | { type: 'agent.message'; id: string; text: string }
+  // An Agent message settled; its text is as stored, marks included. `turnless` is one said outside any Turn, which no Turn end follows.
+  | { type: 'agent.message'; id: string; text: string; turnless: boolean }
   // The person typed a Prompt to the Session.
   | { type: 'person.typed'; text: string }
   // A Permission request is waiting for the person's answer, described in plain words: never the request itself.
   | ({ type: 'permission.waiting'; requestId: string } & SpokenRequest)
+  // An Elicitation is waiting for the person's answer; `message` is what it asks.
+  | { type: 'elicitation.waiting'; requestId: string; message: string }
   // The waiting Permission request no longer waits: it was answered, or its Turn ended.
   | { type: 'permission.settled'; requestId: string }
   // A Turn ended; `error` is the message of a Turn that failed.
-  | { type: 'turn.ended'; stopReason: string; error: string | null };
+  | { type: 'turn.ended'; stopReason: string; error: string | null }
+  // A Turn of a Session the Conversation's Session started ended; `last` is what its Agent said last that the voice may say.
+  | {
+      type: 'started.ended';
+      title: string;
+      last: string | null;
+      stopReason: string;
+      error: string | null;
+    }
+  // A Session the Conversation's Session started waits on the person; `what` is the Permission request's title or the question.
+  | {
+      type: 'started.waiting';
+      title: string;
+      request: 'permission' | 'elicitation';
+      what: string;
+    }
+  // An Agent the Conversation's Session started finished.
+  | { type: 'agent.ended'; title: string | null; stopReason: string | null };
 
 /*
  * How a request for work reached the Session: it started a Turn, was steered into the running one, or waits behind

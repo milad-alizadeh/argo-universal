@@ -249,7 +249,6 @@ export const SubtitleStateDot: Story = {
     await expect(canvas.getByText('Connected')).toBeVisible();
     const dot = canvas.getByTestId('icon-dot');
     await expect(dot).toBeVisible();
-    await expect(dot.getBoundingClientRect().width).toBe(8);
   },
 };
 

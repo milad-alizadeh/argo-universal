@@ -1,3 +1,4 @@
+import { Action } from '@repo/kit/primitives/actions/action';
 import { ScreenStackHeader } from '@repo/kit/primitives/scaffolds/screen';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
@@ -12,7 +13,6 @@ import {
   type SessionDetailViewProps,
 } from './session-detail-view';
 import { sessionHeaderActions } from './session-header-actions';
-import { workbenchMenu } from './session-workbench-menu';
 import {
   type HeaderPlacement,
   type ToggleWorkbenchCard,
@@ -49,8 +49,22 @@ export function SessionPageHeader(
 ): React.JSX.Element {
   return (
     <SizeClass
-      compact={stackHeader(props, workbenchMenu(props))}
+      compact={stackHeader(props, workbenchAction(props))}
       wide={stackHeader(props)}
+    />
+  );
+}
+
+function workbenchAction(
+  props: SessionDetailViewProps,
+): React.JSX.Element | undefined {
+  if (props.state !== 'open' || !props.onOpenWorkbench) return undefined;
+
+  return (
+    <Action
+      label="Workbench"
+      icon="workbench"
+      onPress={props.onOpenWorkbench}
     />
   );
 }

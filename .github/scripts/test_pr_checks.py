@@ -45,6 +45,11 @@ class SelectionTests(unittest.TestCase):
         groups = select([{"name": "test", "package": {"name": "@repo/cli"}}])
         self.assertEqual([g["group"] for g in groups], ["plugins", "rest"])
 
+    def test_desktop_unit_group_provisions_chromium(self):
+        groups = select([{"name": "test", "package": {"name": "@repo/desktop"}}])
+        self.assertEqual([(g["group"], g["playwright"]) for g in groups],
+                         [("plugins", "none"), ("rest", "chromium")])
+
     def test_cli_task_hash_tracks_files_read_by_the_shipped_plugin_fixture(self):
         turbo = shutil.which("turbo") or ROOT / "node_modules/.bin/turbo"
         command = [turbo, "run", "test", "--filter=@repo/cli", "--dry=json"]

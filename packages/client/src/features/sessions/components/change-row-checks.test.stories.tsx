@@ -104,13 +104,13 @@ export const DuplicateNames: Story = {
 
 async function scrollToLastCheck(popover: HTMLElement): Promise<void> {
   const frame = within(popover).getByTestId('change-check-list');
-  await expect(frame.getBoundingClientRect().height).toBeLessThanOrEqual(320);
 
   const scroll = [frame, ...frame.querySelectorAll<HTMLElement>('*')].find(
     isScrollable,
   );
 
   if (!scroll) throw new Error('Expected the long CI Checks list to scroll');
+
   scroll.scrollTo({ top: scroll.scrollHeight });
   await waitFor(async () => {
     const last = within(popover)

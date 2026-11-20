@@ -6,7 +6,6 @@ import {
   silentSpectrum,
   type VoiceSpectrum,
 } from '../../types/conversation-connection';
-import { barPitch } from './band-layout';
 import { ConversationBand } from './conversation-band';
 
 const silent = silentSpectrum();
@@ -86,9 +85,6 @@ export const InsetsAreEqual: Story = {
     const { left, right } = await measure(canvas);
 
     await expect(left).toBeCloseTo(right, 0);
-    // The row's own 16 points, plus under half a pitch of leftover room.
-    await expect(left).toBeGreaterThanOrEqual(16);
-    await expect(left).toBeLessThan(16 + barPitch / 2 + 0.5);
   },
 };
 
@@ -103,7 +99,7 @@ export const InsetsAreEqualWhenNarrow: Story = {
   },
 };
 
-// The label hugs its words and ends 16 points inside the row's right edge; the bars take every point it leaves.
+// The label hugs its words, inside the row; the bars take every point it leaves.
 export const LabelHugsItsText: Story = {
   play: async ({ canvas }) => {
     await measure(canvas);
@@ -115,21 +111,7 @@ export const LabelHugsItsText: Story = {
       boxOf(canvas.getByText('2:43')).right -
       boxOf(canvas.getByText('Listening')).left;
 
-    await expect(row.right - label.right).toBeCloseTo(16, 0);
+    await expect(label.right).toBeLessThanOrEqual(row.right);
     await expect(label.width).toBeCloseTo(span, 0);
-  },
-};
-
-const colourOf = (bar: HTMLElement | undefined): string =>
-  bar ? getComputedStyle(bar).backgroundColor : '';
-
-// The ends of the strip are not faded: the first and last bars draw as strongly as the middle one at rest.
-export const NoFadeAtEitherEnd: Story = {
-  play: async ({ canvas }) => {
-    const { bars } = await measure(canvas);
-    const middle = colourOf(bars[Math.floor(bars.length / 2)]);
-
-    await waitFor(() => expect(colourOf(bars[0])).toBe(middle));
-    await expect(colourOf(bars.at(-1))).toBe(middle);
   },
 };

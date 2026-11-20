@@ -13,8 +13,10 @@ import { Link } from '@repo/kit/primitives/content/link';
 import { Markdown } from '@repo/kit/primitives/content/markdown';
 import { Text } from '@repo/kit/primitives/content/text';
 import { Video } from '@repo/kit/primitives/content/video';
+import { Fader } from '@repo/kit/primitives/controls/fader';
 import { SegmentedControl } from '@repo/kit/primitives/controls/segmented-control';
 import { Slider } from '@repo/kit/primitives/controls/slider';
+import { Switch } from '@repo/kit/primitives/controls/switch';
 import { TextArea } from '@repo/kit/primitives/controls/text-area';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { KitProps } from '@repo/kit/primitives/kit-props';
@@ -39,7 +41,7 @@ import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import { ProgressBar } from '@repo/kit/primitives/status/progress-bar';
 import { Spinner } from '@repo/kit/primitives/status/spinner';
-import { Canvas, Chart, Svg } from '@repo/kit/primitives/visual';
+import { Canvas, Chart, Svg, Swatch } from '@repo/kit/primitives/visual';
 import type { ComponentType } from 'react';
 import { PluginSignIn } from './plugin-sign-in';
 
@@ -72,6 +74,8 @@ export const pluginEntries = {
   Callout: PluginCallout,
   TextArea,
   Slider,
+  Fader,
+  Switch,
   SegmentedControl,
   FieldGroup,
   'FieldGroup.Section': FieldGroup.Section,
@@ -83,6 +87,7 @@ export const pluginEntries = {
   'FieldGroup.Slider': FieldGroup.Slider,
   'FieldGroup.TextField': FieldGroup.TextField,
   'FieldGroup.SecretField': FieldGroup.SecretField,
+  'FieldGroup.Row': FieldGroup.Row,
   IconButton,
   SplitButton,
   List: PluginList,
@@ -107,6 +112,7 @@ export const pluginEntries = {
   Surface,
   ScrollView,
   Svg,
+  Swatch,
   Chart,
   Canvas,
   'Canvas.Rect': Canvas.Rect,

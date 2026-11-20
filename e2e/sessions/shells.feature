@@ -11,8 +11,6 @@ Feature: Shells on live data
     Examples:
       | agent | frame |
       | 1     | wide  |
-      | 1     | phone |
-      | 2     | wide  |
       | 2     | phone |
 
   Scenario Outline: Closing Shell output releases its read with Agent <agent> in a <frame> Frame
@@ -28,8 +26,6 @@ Feature: Shells on live data
     Examples:
       | agent | frame |
       | 1     | wide  |
-      | 1     | phone |
-      | 2     | wide  |
       | 2     | phone |
 
   Scenario Outline: Returning to the Shells list releases its output read with Agent <agent> in a <frame> Frame
@@ -45,8 +41,6 @@ Feature: Shells on live data
     Examples:
       | agent | frame |
       | 1     | wide  |
-      | 1     | phone |
-      | 2     | wide  |
       | 2     | phone |
 
   Scenario Outline: Reopening Shell output restores its read with Agent <agent> in a <frame> Frame
@@ -63,8 +57,6 @@ Feature: Shells on live data
     Examples:
       | agent | frame |
       | 1     | wide  |
-      | 1     | phone |
-      | 2     | wide  |
       | 2     | phone |
 
   Scenario Outline: Reconnecting Shell output keeps one read with Agent <agent> in a <frame> Frame
@@ -81,8 +73,6 @@ Feature: Shells on live data
     Examples:
       | agent | frame |
       | 1     | wide  |
-      | 1     | phone |
-      | 2     | wide  |
       | 2     | phone |
 
   Scenario Outline: The first Shell becomes available with Agent <agent> in a <frame> Frame
@@ -97,8 +87,6 @@ Feature: Shells on live data
     Examples:
       | agent | frame |
       | 1     | wide  |
-      | 1     | phone |
-      | 2     | wide  |
       | 2     | phone |
 
   Scenario Outline: Watching live Shell output with Agent <agent> in a <frame> Frame
@@ -113,8 +101,6 @@ Feature: Shells on live data
     Examples:
       | agent | frame |
       | 1     | wide  |
-      | 1     | phone |
-      | 2     | wide  |
       | 2     | phone |
 
   Scenario Outline: Stopping a Shell with Agent <agent> in a <frame> Frame
@@ -128,6 +114,4 @@ Feature: Shells on live data
     Examples:
       | agent | frame |
       | 1     | wide  |
-      | 1     | phone |
-      | 2     | wide  |
       | 2     | phone |

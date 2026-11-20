@@ -36,14 +36,24 @@ import { TypeaheadPlugin } from './web/rich-textarea-typeahead-plugin';
 
 type MessageFieldProps = Pick<
   RichTextareaProps,
-  'accessibilityLabel' | 'placeholder' | 'fieldClassName'
+  'accessibilityLabel' | 'placeholder' | 'fieldClassName' | 'scrollWithParent'
 >;
 
 // Ten lines at the field's active line height, plus the Composer's vertical padding.
 const editableClassName = cn(
   plainFieldClassName,
-  'max-h-rich-textarea overflow-y-auto whitespace-pre-wrap break-words text-foreground outline-none',
+  'whitespace-pre-wrap break-words text-foreground outline-none',
 );
+
+const messageEditableClass = (
+  scrollWithParent?: boolean,
+  fieldClassName?: string,
+): string =>
+  cn(
+    editableClassName,
+    !scrollWithParent && 'max-h-rich-textarea overflow-y-auto',
+    fieldClassName,
+  );
 
 function MessageEditable(props: MessageFieldProps): React.JSX.Element {
   const { accessibilityLabel, placeholder = '', fieldClassName } = props;
@@ -55,7 +65,7 @@ function MessageEditable(props: MessageFieldProps): React.JSX.Element {
       aria-multiline
       aria-placeholder={placeholder}
       placeholder={hint}
-      className={cn(editableClassName, fieldClassName)}
+      className={messageEditableClass(props.scrollWithParent, fieldClassName)}
     />
   );
 }

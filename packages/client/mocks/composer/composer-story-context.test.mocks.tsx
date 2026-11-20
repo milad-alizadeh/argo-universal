@@ -42,8 +42,6 @@ export type Story = StoryObj<typeof meta>;
 
 export type PlayContext = Parameters<NonNullable<Story['play']>>[0];
 
-export const dark = { globals: { mode: 'dark' } };
-
 export function SendingComposer({
   onSend,
 }: {

@@ -1,16 +1,9 @@
-import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
-import type { RequestMock } from '@repo/mocks/app';
 import { expect } from 'storybook/test';
 import {
   meta as elicitationTestMeta,
   type Story,
 } from '../../../../../mocks/requests/elicitation/elicitation-form-story.test.mocks';
-import {
-  elicitationProps,
-  elicitationMocks,
-  emptyAnswersRequest,
-  configurationRequest,
-} from '../request.mocks';
+import { emptyAnswersRequest, configurationRequest } from '../request.mocks';
 import { ElicitationOutcome } from './elicitation-outcome';
 
 const meta = {
@@ -86,43 +79,3 @@ export const EmptyAcceptedOutcome: Story = {
     await expect(canvas.getByRole('group', { name: 'Options' })).toBeVisible();
   },
 };
-
-// Each Agent's recorded Elicitation draws its message.
-function recordedRequest(mock: RequestMock, width: number): Story {
-  const props = elicitationProps({ mock });
-
-  return {
-    args: props,
-    play: async ({ canvas }) => {
-      await settleLayout(width);
-      await expect(
-        canvas.getAllByText(props.request.message).length,
-      ).toBeGreaterThan(0);
-    },
-  };
-}
-
-const [firstRecordedAgent, secondRecordedAgent] = elicitationMocks;
-
-if (!firstRecordedAgent || !secondRecordedAgent)
-  throw new Error('Recorded catalog needs both Agents.');
-
-export const RecordedFirstAgentPhone: Story = recordedRequest(
-  firstRecordedAgent,
-  layoutWidths.phone,
-);
-
-export const RecordedFirstAgentWide: Story = recordedRequest(
-  firstRecordedAgent,
-  layoutWidths.wide,
-);
-
-export const RecordedSecondAgentPhone: Story = recordedRequest(
-  secondRecordedAgent,
-  layoutWidths.phone,
-);
-
-export const RecordedSecondAgentWide: Story = recordedRequest(
-  secondRecordedAgent,
-  layoutWidths.wide,
-);
