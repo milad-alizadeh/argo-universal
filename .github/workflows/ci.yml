@@ -165,17 +165,16 @@ jobs:
 
       - name: Tests
         env:
-          # Each test runner uses the available cores; overlapping runners distort timing budgets.
+          # Each package's runner uses every core and runs its `budget` project alone after the rest; one package at a time keeps another's tests off those cores.
           TURBO_CONCURRENCY: 1
-          VITEST_MAX_WORKERS: 1
         # set -f keeps the shell from expanding the ./plugins/* filter against the checkout.
         run: |
           set -f
           pnpm exec turbo run test ${{ matrix.filter }} --continue=dependencies-successful
 
-  # The Engine's suite alone takes minutes with one worker, so it runs beside Quality in shards.
+  # The Engine's suite takes minutes, so it runs beside Quality in shards.
   engine-tests:
-    name: Engine tests (${{ matrix.shard }}/3)
+    name: Engine tests (${{ matrix.shard }}/2)
     needs: changes
     if: ${{ needs.changes.outputs.engine-tests == 'true' }}
     runs-on: ubuntu-latest
@@ -186,7 +185,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@v7
 
@@ -195,11 +194,9 @@ jobs:
           playwright: none
           turbo-team: ${{ vars.TURBO_TEAM }}
 
-      # One worker keeps the Feed workload's event-loop budget honest; a shard's --shard argument feeds its hash.
+      # The Feed workload's event-loop budget runs in the serial `budget` project after the rest; a shard's --shard argument feeds its hash.
       - name: Engine tests
-        env:
-          VITEST_MAX_WORKERS: 1
-        run: pnpm exec turbo run test --filter=@repo/engine -- --shard=${{ matrix.shard }}/3
+        run: pnpm exec turbo run test --filter=@repo/engine -- --shard=${{ matrix.shard }}/2
 
   # The keyring adapter's contract test reads and writes the real OS secret store, and only a macOS runner has the Keychain (ADR-0051).
   secret-store:
