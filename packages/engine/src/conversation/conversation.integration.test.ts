@@ -28,7 +28,9 @@ describe('Conversation', () => {
       .poll(() => callOf(host))
       .toMatchObject({ status: 'connected' });
 
-    expect(await host.caller.conversation.end({ sessionId })).toEqual({ ended: true });
+    expect(await host.caller.conversation.end({ sessionId })).toEqual({
+      ended: true,
+    });
     expect(await host.caller.conversation.status()).toMatchObject({
       call: null,
       ended: { sessionId, reason: 'person' },
@@ -79,15 +81,17 @@ describe('Conversation', () => {
       usable: false,
       reason: signInReason,
     });
-    await expect(host.caller.conversation.start({ sessionId, offer })).rejects.toThrow(
-      signInReason,
-    );
+    await expect(
+      host.caller.conversation.start({ sessionId, offer }),
+    ).rejects.toThrow(signInReason);
     expect(await callOf(host)).toBeNull();
   });
 
   it('reports no usable provider when the Server has none', async () => {
     const host = await startAcpEngine({ steps: [] });
-    expect((await host.caller.conversation.status()).availability.usable).toBe(false);
+    expect((await host.caller.conversation.status()).availability.usable).toBe(
+      false,
+    );
   });
 
   it('refuses a second call while one is running, in the same or another Session', async () => {
@@ -123,9 +127,9 @@ describe('Conversation', () => {
     const { sessionId } = await openConversationSession(voice);
     const other = await openConversationSession(voice);
     await host.caller.conversation.start({ sessionId, offer });
-    expect(await host.caller.conversation.end({ sessionId: other.sessionId })).toEqual(
-      { ended: false },
-    );
+    expect(
+      await host.caller.conversation.end({ sessionId: other.sessionId }),
+    ).toEqual({ ended: false });
     expect(await callOf(host)).toMatchObject({ sessionId });
   });
 
@@ -134,9 +138,9 @@ describe('Conversation', () => {
     const { host, provider } = voice;
     const { sessionId } = await openConversationSession(voice);
     provider.configure({ failStart: 'The service said no' });
-    await expect(host.caller.conversation.start({ sessionId, offer })).rejects.toThrow(
-      'The service said no',
-    );
+    await expect(
+      host.caller.conversation.start({ sessionId, offer }),
+    ).rejects.toThrow('The service said no');
     expect(await callOf(host)).toBeNull();
     expect(await endedOf(host)).toMatchObject({ reason: 'failed' });
   });

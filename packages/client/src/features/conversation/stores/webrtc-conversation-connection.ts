@@ -7,11 +7,17 @@ import {
   type VoiceSound,
   type VoiceSpectrum,
 } from '../types/conversation-connection';
-import type { Microphone, ConversationEnvironment } from '../types/conversation-environment';
+import type {
+  Microphone,
+  ConversationEnvironment,
+} from '../types/conversation-environment';
 import { ConnectionPreview } from './connection-preview';
-import { HeldCall, openChosen, type HeldSound } from './held-conversation';
-import { systemDevices, type ConversationDeviceChoice } from './conversation-device-choice';
+import {
+  systemDevices,
+  type ConversationDeviceChoice,
+} from './conversation-device-choice';
 import { ConversationMuteStore } from './conversation-mute-store';
+import { HeldCall, openChosen, type HeldSound } from './held-conversation';
 
 const noLevels: VoiceLevels = { input: 0, output: 0 };
 

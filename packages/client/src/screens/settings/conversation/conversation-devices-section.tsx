@@ -7,8 +7,8 @@ import type {
   ConversationDeviceChoice,
 } from '#features/conversation';
 import type { ConversationDetailViewProps } from './conversation-detail-view-props';
-import { HeldSliderRow } from './voice-held-rows';
 import { settingsOf, waiting } from './conversation-settings-state';
+import { HeldSliderRow } from './voice-held-rows';
 
 // This Device's microphones and speakers, and the ones it chose; null follows the system.
 export type ConversationDevices = AudioDevices & ConversationDeviceChoice;
@@ -88,7 +88,9 @@ const loudest = 100;
 
 const strongestGain = 200;
 
-const gainRow = (props: ConversationDetailViewProps): React.JSX.Element | null =>
+const gainRow = (
+  props: ConversationDetailViewProps,
+): React.JSX.Element | null =>
   props.adjustsGain ? (
     <HeldSliderRow
       key="gain"
@@ -124,7 +126,9 @@ const microphoneRow = (
       )
     : null;
 
-const speakerRow = (props: ConversationDetailViewProps): React.JSX.Element | null =>
+const speakerRow = (
+  props: ConversationDetailViewProps,
+): React.JSX.Element | null =>
   props.devices
     ? speakerPicker(
         props.devices,

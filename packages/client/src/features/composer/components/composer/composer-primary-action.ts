@@ -31,10 +31,14 @@ function endAction(layout: SendLayout): IconButtonProps {
 }
 
 // End belongs to a call connecting or connected here.
-const endOf = (conversation: ComposerConversation | undefined): (() => void) | undefined =>
+const endOf = (
+  conversation: ComposerConversation | undefined,
+): (() => void) | undefined =>
   conversation && 'onEnd' in conversation ? conversation.onEnd : undefined;
 
-const startOf = (conversation: ComposerConversation | undefined): (() => void) | undefined =>
+const startOf = (
+  conversation: ComposerConversation | undefined,
+): (() => void) | undefined =>
   conversation?.kind === 'start' ? conversation.onStart : undefined;
 
 function stopButtonAction(layout: Pick<SendLayout, 'props'>): IconButtonProps {

@@ -12,7 +12,9 @@ afterEach(async () => {
 });
 
 // A started call that has been sent `frames`, with everything it reported.
-async function replayed(frames: string[]): Promise<ConversationProviderEvent[]> {
+async function replayed(
+  frames: string[],
+): Promise<ConversationProviderEvent[]> {
   const started = await startedCall();
   fixture = started;
   const events = heard(started.call);
@@ -41,7 +43,8 @@ const saidIn = (event: ConversationProviderEvent): Said[] => {
 };
 
 // What became a final row, and the call closing, in the order reported.
-const saidOf = (events: ConversationProviderEvent[]): Said[] => events.flatMap(saidIn);
+const saidOf = (events: ConversationProviderEvent[]): Said[] =>
+  events.flatMap(saidIn);
 
 const voiceTurn = 'turn_EloGjCCjDx5JEFpanncDe';
 

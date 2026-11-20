@@ -1,4 +1,7 @@
-import type { VoiceLevels, VoiceSpectrum } from '../types/conversation-connection';
+import type {
+  VoiceLevels,
+  VoiceSpectrum,
+} from '../types/conversation-connection';
 import {
   MicrophoneUnavailable,
   type Microphone,

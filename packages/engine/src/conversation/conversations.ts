@@ -9,14 +9,7 @@ import type {
   ConversationStatus,
 } from '@repo/contracts';
 import { waitFor } from 'xstate';
-import { conductOf } from './conversation-conduct';
-import { conversationOf } from './conversation-look';
-import type { ConversationEvent } from './conversation-types';
-import type { ConversationActorRef } from './conversation.machine';
 import { Changes } from './changes';
-import type { ConversationProvider } from './provider';
-import type { ConversationSessions } from './session-link';
-import { noProviderReason, noConversation, unavailable } from './unavailable';
 import {
   answerOf,
   endedBetween,
@@ -24,24 +17,26 @@ import {
   startSettled,
   type CallSnapshot,
 } from './conversation-answer';
+import { conductOf } from './conversation-conduct';
+import { ConversationDevices } from './conversation-devices';
+import { conversationOf } from './conversation-look';
 import { callRunning } from './conversation-room';
+import type { ConversationSettingsStore } from './conversation-settings';
+import type { ConversationEvent } from './conversation-types';
+import type { ConversationActorRef } from './conversation.machine';
 import type { ConversationsPort } from './conversations-port';
+import type { ConversationProvider } from './provider';
+import type { ConversationSessions } from './session-link';
+import { noProviderReason, noConversation, unavailable } from './unavailable';
 import { VoiceChoices } from './voice-choices';
 import { VoiceClipDesk } from './voice-clip-desk';
-import { ConversationDevices } from './conversation-devices';
 import { VoicePreviews } from './voice-previews';
-import type { ConversationSettingsStore } from './conversation-settings';
 
 export type { ConversationsPort } from './conversations-port';
 
 type CallStart = Extract<ConversationEvent, { type: 'call.start' }>;
 
-type CallEnd = Extract<ConversationEvent, { type: 'call.end' }>;
-
-/*
- * The Conversation machine behind its Operations. Whether Conversations are on and the provider is usable are asked here;
- * whether a start or an end may act on the call, and why not, the machine alone decides when it is sent one.
- */
+/* The Conversation machine behind its Operations: the machine alone decides whether a start or an end may act. */
 export class Conversations implements ConversationsPort {
   public readonly choices: VoiceChoices;
   public readonly devices = new ConversationDevices(
@@ -96,11 +91,12 @@ export class Conversations implements ConversationsPort {
     connection?.throwIfAborted();
     this.previews.end();
     const event = await this.callStart(input, connection);
+    const { conversationId } = event;
     this.actor.send(event);
-    requireBegun(this.snapshot(), event.conversationId);
+    requireBegun(this.snapshot(), conversationId);
     this.devices.used(connection);
 
-    return answerOf(await waitFor(this.actor, startSettled), event.conversationId);
+    return answerOf(await waitFor(this.actor, startSettled), conversationId);
   }
 
   public end(sessionId?: string): ConversationEndOutput {
@@ -117,7 +113,7 @@ export class Conversations implements ConversationsPort {
   }
 
   // Sends the end and answers whether the machine ended a call for it.
-  private ends(end: CallEnd): boolean {
+  private ends(end: Extract<ConversationEvent, { type: 'call.end' }>): boolean {
     const before = this.snapshot();
     this.actor.send(end);
 

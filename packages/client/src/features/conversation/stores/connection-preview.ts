@@ -1,5 +1,8 @@
 import type { VoicePreviewClip } from '@repo/contracts';
-import type { VoicePlayback, VoiceRecording } from '../types/conversation-environment';
+import type {
+  VoicePlayback,
+  VoiceRecording,
+} from '../types/conversation-environment';
 import type { HeldCall, HeldSound } from './held-conversation';
 import { PreviewTake } from './preview-take';
 

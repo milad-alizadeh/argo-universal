@@ -52,5 +52,7 @@ function lookOf(phase: Phase, call: RunningCall): Conversation {
 }
 
 // The Conversation as the App draws it, read from the machine's state in one place; null while no call runs.
-export const conversationOf = (snapshot: ConversationSnapshot): Conversation | null =>
+export const conversationOf = (
+  snapshot: ConversationSnapshot,
+): Conversation | null =>
   snapshot.context.call && lookOf(phaseOf(snapshot), snapshot.context.call);

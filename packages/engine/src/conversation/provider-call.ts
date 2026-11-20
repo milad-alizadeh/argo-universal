@@ -78,7 +78,11 @@ const requestOf = ({
   offer,
   briefing,
   setup,
-}: ProviderCallInput): ConversationStartRequest => ({ ...setup, offer, briefing });
+}: ProviderCallInput): ConversationStartRequest => ({
+  ...setup,
+  offer,
+  briefing,
+});
 
 // Starts the provider's call, passes its events on, and ends it when the machine leaves `running`.
 export const providerCall = fromCallback<ConversationEvent, ProviderCallInput>(

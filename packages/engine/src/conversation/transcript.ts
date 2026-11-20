@@ -1,4 +1,8 @@
-import type { FeedUpdate, ConversationPartial, VoiceSpeaker } from '@repo/contracts';
+import type {
+  FeedUpdate,
+  ConversationPartial,
+  VoiceSpeaker,
+} from '@repo/contracts';
 import type { AnyActorRef } from 'xstate';
 import type { FeedEvent } from '../feed';
 import { sessionActorId } from '../sessions';
@@ -56,7 +60,10 @@ const transcriptUpdate = (
   content: [{ type: 'text', text: event.text }],
 });
 
-const transcriptRow = (conversationId: string, event: TranscriptEvent): FeedEvent => ({
+const transcriptRow = (
+  conversationId: string,
+  event: TranscriptEvent,
+): FeedEvent => ({
   type: 'feed.change',
   turnId: null,
   blobs: [],
@@ -119,5 +126,7 @@ export function storeTranscript(
   event: TranscriptEvent,
 ): void {
   if (kept(call, event))
-    feedOf(system, call.sessionId)?.send(transcriptRow(call.conversationId, event));
+    feedOf(system, call.sessionId)?.send(
+      transcriptRow(call.conversationId, event),
+    );
 }

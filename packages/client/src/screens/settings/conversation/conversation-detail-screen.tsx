@@ -10,12 +10,12 @@ import {
   type DeviceMetersState,
 } from '#features/conversation';
 import { useNavigate } from '#lib/product/navigation/navigation';
-import { useConversationSettings } from './use-conversation-settings';
 import { ConversationDetailView } from './conversation-detail-view';
 import type {
   ConversationDetailViewProps,
   ConversationDetailViewState,
 } from './conversation-detail-view-props';
+import { useConversationSettings } from './use-conversation-settings';
 
 type DeviceRows = Pick<ConversationDetailViewState, 'adjustsGain'>;
 

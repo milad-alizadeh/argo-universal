@@ -99,7 +99,9 @@ export async function fixtureOf(
 }
 
 // Everything the call reports from now on.
-export function heard(call: ConversationProviderCall): ConversationProviderEvent[] {
+export function heard(
+  call: ConversationProviderCall,
+): ConversationProviderEvent[] {
   const events: ConversationProviderEvent[] = [];
   call.listen((event) => events.push(event));
 

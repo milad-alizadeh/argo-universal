@@ -8,7 +8,9 @@ const voices = [
 ];
 
 const withVoices = (): ReturnType<typeof startConversationEngine> =>
-  startConversationEngine(new FakeConversationProvider({ connect: 'manual', voices }));
+  startConversationEngine(
+    new FakeConversationProvider({ connect: 'manual', voices }),
+  );
 
 const clip = { mimeType: 'audio/webm', data: 'AAEC' };
 

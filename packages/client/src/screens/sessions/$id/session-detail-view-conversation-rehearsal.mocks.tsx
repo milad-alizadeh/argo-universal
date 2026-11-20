@@ -1,7 +1,13 @@
 import type * as React from 'react';
 import { createElement, useEffect, useState } from 'react';
-import type { ComposerConversation, ComposerConversationMutes } from '#features/composer';
-import { ConversationEdgeBand, conversationPlaceholder } from '#features/conversation';
+import type {
+  ComposerConversation,
+  ComposerConversationMutes,
+} from '#features/composer';
+import {
+  ConversationBand,
+  conversationPlaceholder,
+} from '#features/conversation';
 import { syntheticVoiceAudio } from '../../../../mocks/conversation/synthetic-voice-audio';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { idleSession } from './session-detail-view.mocks';
@@ -18,7 +24,7 @@ const idleComposer = idleSession.composer;
 const { spectrum } = syntheticVoiceAudio();
 
 const bandFor = (call: Exclude<RehearsedCall, 'none'>): React.ReactNode =>
-  createElement(ConversationEdgeBand, {
+  createElement(ConversationBand, {
     call: {
       state: call === 'connecting' ? 'none' : 'listening',
       trouble: null,
@@ -37,7 +43,10 @@ interface Rehearsal {
   setMutes: (mutes: Mutes) => void;
 }
 
-const mutesOf = ({ mutes, setMutes }: Rehearsal): ComposerConversationMutes => ({
+const mutesOf = ({
+  mutes,
+  setMutes,
+}: Rehearsal): ComposerConversationMutes => ({
   ...mutes,
   onMicrophone: () => setMutes({ ...mutes, microphone: !mutes.microphone }),
   onSpeaker: () => setMutes({ ...mutes, speaker: !mutes.speaker }),
@@ -87,7 +96,9 @@ export function ConversationRehearsal(): React.JSX.Element {
   const [mutes, setMutes] = useState({ microphone: false, speaker: false });
   useConnectAfterStart(call, setCall);
   const conversation = conversationOf({ call, setCall, mutes, setMutes });
-  const placeholder = conversationPlaceholder(conversation) ?? idleComposer.placeholder;
+
+  const placeholder =
+    conversationPlaceholder(conversation) ?? idleComposer.placeholder;
 
   return (
     <FramedSessionPreview

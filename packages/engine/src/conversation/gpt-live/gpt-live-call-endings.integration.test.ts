@@ -23,7 +23,9 @@ async function startCall(
   return started;
 }
 
-const closedOf = (events: ConversationProviderEvent[]): ConversationProviderEvent[] =>
+const closedOf = (
+  events: ConversationProviderEvent[],
+): ConversationProviderEvent[] =>
   events.filter(({ type }) => type === 'closed');
 
 const notesOf = (events: ConversationProviderEvent[]): string[] =>

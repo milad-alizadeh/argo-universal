@@ -7,15 +7,15 @@ import {
   type TRPC,
 } from '#features/connection';
 import { useVoicePreview } from '#features/conversation';
-import {
-  useCustomVoiceChanges,
-  type CustomVoiceChanges,
-} from './use-custom-voice-changes';
 import type {
   ConversationDetailViewProps,
   ConversationSettingsLoad,
 } from './conversation-detail-view-props';
 import { controlsOf } from './conversation-settings-controls';
+import {
+  useCustomVoiceChanges,
+  type CustomVoiceChanges,
+} from './use-custom-voice-changes';
 
 type Controls = Omit<
   ConversationDetailViewProps,
@@ -65,7 +65,9 @@ function useSettingsChanges(): SettingsChanges {
 
   return {
     change: useMutation(conversation.setSettings.mutationOptions(keep)),
-    instructions: useMutation(conversation.setInstructions.mutationOptions(keep)),
+    instructions: useMutation(
+      conversation.setInstructions.mutationOptions(keep),
+    ),
     options: useMutation(conversation.setOptions.mutationOptions(keep)),
   };
 }

@@ -2,10 +2,10 @@ import type { ChangesSummary, SessionUpdate } from '@repo/contracts';
 import type { FeedRowInput, FeedSubscribeOutput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import type { Observer, Subscription } from 'xstate';
+import { withoutVoiceMarkers } from './conversation-markers';
 import { type FeedRowSources } from './feed-catch-up';
 import { readWrittenRow } from './feed-row';
 import { readQueuedFeedRow } from './feed-storage';
-import { withoutVoiceMarkers } from './conversation-markers';
 
 export { streamFeed } from './feed-stream';
 

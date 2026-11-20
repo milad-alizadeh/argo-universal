@@ -48,19 +48,27 @@ type Story = StoryObj<typeof meta>;
 export const ConversationReady: Story = { args: conversationReadyComposer };
 
 // The call is connecting: End is already there with a ring turning inside it.
-export const ConversationConnecting: Story = { args: conversationConnectingComposer };
+export const ConversationConnecting: Story = {
+  args: conversationConnectingComposer,
+};
 
 // A connected call with an empty draft: mic, speaker and End.
 export const Conversation: Story = { args: conversationComposer };
 
 // The microphone is muted: its button reads red.
-export const ConversationMicMuted: Story = { args: conversationMicMutedComposer };
+export const ConversationMicMuted: Story = {
+  args: conversationMicMutedComposer,
+};
 
 // The speaker is muted: its button reads red.
-export const VoiceSpeakerMuted: Story = { args: conversationSpeakerMutedComposer };
+export const VoiceSpeakerMuted: Story = {
+  args: conversationSpeakerMutedComposer,
+};
 
 // Both muted: both buttons read red, and End keeps its look.
-export const ConversationBothMuted: Story = { args: conversationBothMutedComposer };
+export const ConversationBothMuted: Story = {
+  args: conversationBothMutedComposer,
+};
 
 // Text in the draft on a call: the primary button is Send.
 export const ConversationWithDraft: Story = { args: conversationDraftComposer };
@@ -70,7 +78,7 @@ export const CallInAnotherSession: Story = { args: callElsewhereComposer };
 
 /*
  * The Conversation band along the card's top edge, with the state and the timer at its right end. The band's own
- * states are in `Conversation/ConversationEdgeBand`.
+ * states are in `Conversation/ConversationBand`.
  */
 export const BandConnecting: Story = { args: bandConnectingComposer };
 

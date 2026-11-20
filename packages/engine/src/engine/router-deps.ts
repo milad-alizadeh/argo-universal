@@ -5,6 +5,7 @@ import type { AcpResourceInput } from '../agents';
 import { type AgentsRouterDeps } from '../agents';
 import type { AppNavigationDeps } from '../app-navigation';
 import type { BlobUploadDeps } from '../blob';
+import { noConversations, type ConversationsPort } from '../conversation';
 import type { DevicesDeps } from '../devices';
 import { type FeedDeps } from '../feed';
 import type { NetworkAccessDeps } from '../network-access';
@@ -20,7 +21,6 @@ import {
   type SessionSources,
 } from '../sessions';
 import type { SystemDeps } from '../system';
-import { noConversations, type ConversationsPort } from '../conversation';
 import {
   createFeedSources,
   type FeedSources,

@@ -1,6 +1,12 @@
 import { fromCallback } from 'xstate';
-import type { ConversationEvent, ConversationInput } from '../src/conversation/conversation-types';
-import type { ConnectionWatch, SessionWatch } from '../src/conversation/conversation-watchers';
+import type {
+  ConversationEvent,
+  ConversationInput,
+} from '../src/conversation/conversation-types';
+import type {
+  ConnectionWatch,
+  SessionWatch,
+} from '../src/conversation/conversation-watchers';
 import { conversationMachine } from '../src/conversation/conversation.machine';
 import { FakeConversationProvider } from '../src/conversation/fake-provider';
 import type { ProviderCallInput } from '../src/conversation/provider-call';

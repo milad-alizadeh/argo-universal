@@ -1,4 +1,7 @@
-import { defaultConversationOptions, type ConversationSettings } from '@repo/contracts';
+import {
+  defaultConversationOptions,
+  type ConversationSettings,
+} from '@repo/contracts';
 import type { DeviceMetersState } from '#features/conversation';
 import type { ConversationDevices } from './conversation-devices-section';
 

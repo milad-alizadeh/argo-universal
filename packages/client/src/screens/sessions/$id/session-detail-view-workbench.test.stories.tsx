@@ -5,12 +5,12 @@ import { expect, waitFor, within } from 'storybook/test';
 import { userEvent as browserUser } from 'vitest/browser';
 import { fewChanges, useMemoryChanges } from './session-changes.test.mocks';
 import type { SessionDetailViewProps } from './session-detail-view';
+import { conversationSession } from './session-detail-view-conversation.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import {
   pullRequestMocks,
   withPullRequests,
 } from './session-detail-view-pull-request.mocks';
-import { conversationSession } from './session-detail-view-conversation.mocks';
 import { idleSession } from './session-detail-view.mocks';
 
 const meta = {

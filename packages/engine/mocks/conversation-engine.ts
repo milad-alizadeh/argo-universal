@@ -1,5 +1,9 @@
 import type { TerminalOutputResponse } from '@agentclientprotocol/sdk';
-import type { SessionUpdate, Conversation, ConversationStatus } from '@repo/contracts';
+import type {
+  SessionUpdate,
+  Conversation,
+  ConversationStatus,
+} from '@repo/contracts';
 import { heldPrompt } from '@repo/mocks/agent/cancellable-scenarios';
 import { FakeConversationProvider } from '../src/conversation/fake-provider';
 import type { ConversationProviderEvent } from '../src/conversation/provider';
@@ -23,7 +27,9 @@ type ConversationEngineParts = {
  * `restartOver` starts the Engine again over a stopped one's home, with what it stored.
  */
 export async function startConversationEngine(
-  provider: FakeConversationProvider = new FakeConversationProvider({ connect: 'manual' }),
+  provider: FakeConversationProvider = new FakeConversationProvider({
+    connect: 'manual',
+  }),
   restartOver?: string,
 ): Promise<ConversationEngineParts> {
   const outputs: TerminalOutputResponse[] = [];
@@ -46,20 +52,30 @@ export const openConversationSession = (
 export const callOf = async (host: Host): Promise<Conversation | null> =>
   (await host.caller.conversation.status()).conversation;
 
-export const endedOf = async (host: Host): Promise<ConversationStatus['ended']> =>
+export const endedOf = async (
+  host: Host,
+): Promise<ConversationStatus['ended']> =>
   (await host.caller.conversation.status()).ended;
 
 type ConversationEngine = Awaited<ReturnType<typeof startConversationEngine>>;
 
 // What a speaker says; words not `final` may still change.
 export const said = {
-  person: (id: string, text: string, final: boolean): ConversationProviderEvent => ({
+  person: (
+    id: string,
+    text: string,
+    final: boolean,
+  ): ConversationProviderEvent => ({
     type: 'person.transcript',
     id,
     text,
     final,
   }),
-  voice: (id: string, text: string, final: boolean): ConversationProviderEvent => ({
+  voice: (
+    id: string,
+    text: string,
+    final: boolean,
+  ): ConversationProviderEvent => ({
     type: 'voice.transcript',
     id,
     text,
@@ -68,8 +84,10 @@ export const said = {
 };
 
 // The provider reports it on the running call.
-export const say = (voice: ConversationEngine, event: ConversationProviderEvent): void =>
-  voice.provider.call.emit(event);
+export const say = (
+  voice: ConversationEngine,
+  event: ConversationProviderEvent,
+): void => voice.provider.call.emit(event);
 
 export const partialsOf = async (
   host: Host,

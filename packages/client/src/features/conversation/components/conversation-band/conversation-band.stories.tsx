@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { syntheticVoiceAudio } from '../../../../../mocks/conversation/synthetic-voice-audio';
-import { ConversationEdgeBand } from './conversation-band';
+import { ConversationBand } from './conversation-band';
 
 // Sound with no microphone and no voice, so the bars move as they would on a call.
 const { spectrum } = syntheticVoiceAudio();
@@ -14,16 +14,16 @@ const connected = {
 } as const;
 
 const meta = {
-  title: 'Conversation/ConversationEdgeBand',
-  component: ConversationEdgeBand,
+  title: 'Conversation/ConversationBand',
+  component: ConversationBand,
   render: (args): React.JSX.Element => (
     <View className="w-160 bg-card">
-      <ConversationEdgeBand {...args} />
+      <ConversationBand {...args} />
     </View>
   ),
   args: { call: connected, elapsed: '2:43', spectrum },
   argTypes: { spectrum: { control: false } },
-} satisfies Meta<typeof ConversationEdgeBand>;
+} satisfies Meta<typeof ConversationBand>;
 
 export default meta;
 
@@ -72,7 +72,7 @@ export const Blocked: Story = {
 export const Narrow: Story = {
   render: (args): React.JSX.Element => (
     <View className="w-140 bg-card">
-      <ConversationEdgeBand {...args} />
+      <ConversationBand {...args} />
     </View>
   ),
 };

@@ -27,7 +27,10 @@ import {
   type ConversationInput,
 } from './conversation-types';
 import { watchConnection, watchSession } from './conversation-watchers';
-import type { ConversationConnectionStatus, ConversationProviderEvent } from './provider';
+import type {
+  ConversationConnectionStatus,
+  ConversationProviderEvent,
+} from './provider';
 import { providerCall, type ProviderCallInput } from './provider-call';
 import { detachedSessions } from './session-link';
 import {
@@ -141,7 +144,10 @@ const reports: Reports = {
 };
 
 // Folds what the provider reported about the call into the running call.
-function reported(call: RunningCall, event: ConversationProviderEvent): RunningCall {
+function reported(
+  call: RunningCall,
+  event: ConversationProviderEvent,
+): RunningCall {
   return { ...call, ...reportOf(event.type, event, call) };
 }
 
@@ -159,19 +165,25 @@ const namesCall = (
   call: RunningCall | null,
 ): boolean => sessionId === undefined || sessionId === call?.sessionId;
 
-const finished = (
-  context: ConversationContext,
-  { reason }: EndParameters,
-): Partial<ConversationContext> => {
-  const { call } = context;
-
-  return {
-    call: null,
-    ended: call && { conversationId: call.conversationId, sessionId: call.sessionId, reason },
-    partials: [],
-    readOut: null,
+const endedOf = (
+  call: RunningCall | null,
+  reason: EndParameters['reason'],
+): ConversationContext['ended'] =>
+  call && {
+    conversationId: call.conversationId,
+    sessionId: call.sessionId,
+    reason,
   };
-};
+
+const finished = (
+  { call }: ConversationContext,
+  { reason }: EndParameters,
+): Partial<ConversationContext> => ({
+  call: null,
+  ended: endedOf(call, reason),
+  partials: [],
+  readOut: null,
+});
 
 // The running call as its transcript is kept: where, and whether the voice is reading out a result.
 const hearing = (context: ConversationContext): HearingCall => ({
@@ -253,16 +265,22 @@ const conversationSetup = setup({
 
       if (heard) storeTranscript(system, hearing(context), heard);
     },
-    trackPartials: assign(({ context, event }): Partial<ConversationContext> => {
-      const heard = transcriptOf(event);
+    trackPartials: assign(
+      ({ context, event }): Partial<ConversationContext> => {
+        const heard = transcriptOf(event);
 
-      return heard
-        ? {
-            partials: withTranscript(context.partials, hearing(context), heard),
-            readOut: readOutAfter(context.readOut, heard),
-          }
-        : {};
-    }),
+        return heard
+          ? {
+              partials: withTranscript(
+                context.partials,
+                hearing(context),
+                heard,
+              ),
+              readOut: readOutAfter(context.readOut, heard),
+            }
+          : {};
+      },
+    ),
     // The relay handed the voice an Agent's result: what the voice says next is a read-out.
     noteReadOut: assign(({ context, event }): Partial<ConversationContext> => {
       assertEvent(event, 'voice.say');
@@ -277,9 +295,11 @@ const conversationSetup = setup({
       return { failure: event.message };
     }),
     recordProviderFailure: assign({ failure: providerFailure }),
-    foldProvider: assign(({ context, event }): Partial<ConversationContext> => ({
-      call: reported(runningCall(context), providerEventOf(event)),
-    })),
+    foldProvider: assign(
+      ({ context, event }): Partial<ConversationContext> => ({
+        call: reported(runningCall(context), providerEventOf(event)),
+      }),
+    ),
     // The timer starts the first time the call connects and keeps that time through any reconnecting.
     markStarted: assign(({ context }): Partial<ConversationContext> => {
       const call = runningCall(context);
@@ -356,8 +376,11 @@ const endsWith = (reason: ConversationEnd): EndingAction[] =>
   endingWith({ reason });
 
 // A close the provider reported, with its own reason and words.
-const providerClose = ({ event }: { event: ConversationEvent }): EndParameters =>
-  closeEndingOf(providerEventOf(event));
+const providerClose = ({
+  event,
+}: {
+  event: ConversationEvent;
+}): EndParameters => closeEndingOf(providerEventOf(event));
 
 // The words the voice said up to a hang-up are kept as any others, unless they are a read-out.
 const lastWordsOf =

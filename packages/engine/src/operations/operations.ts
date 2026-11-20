@@ -11,10 +11,10 @@ import type {
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { RegistryDeps } from '../agents';
 import type { AppNavigation } from '../app-navigation';
+import type { ConversationsPort } from '../conversation';
 import type { FeedDeps } from '../feed';
 import type { PluginsRouterDeps } from '../plugins';
 import type { Sessions } from '../sessions';
-import type { ConversationsPort } from '../conversation';
 import {
   discoveryCall,
   listedOutput,

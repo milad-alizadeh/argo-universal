@@ -72,7 +72,10 @@ export const BandTypePhone = bandType('phone');
 // The label sits inside the band, hugging its words, and ends the band's 16 points padding from its right edge, at every width.
 const bandEdges = (layout: 'wide' | 'phone'): Story =>
   onCall(layout, async (canvas) => {
-    const band = canvas.getByTestId('conversation-band').getBoundingClientRect();
+    const band = canvas
+      .getByTestId('conversation-band')
+      .getBoundingClientRect();
+
     const label = canvas.getByText('2:51').getBoundingClientRect();
 
     await expect(label.bottom).toBeLessThanOrEqual(band.bottom);

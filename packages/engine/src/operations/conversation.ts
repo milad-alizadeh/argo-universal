@@ -1,5 +1,5 @@
-import type { Sessions } from '../sessions';
 import type { ConversationsPort } from '../conversation';
+import type { Sessions } from '../sessions';
 import type { OperationImplementations } from './operations';
 
 type ConversationImplementations = Pick<
@@ -70,7 +70,8 @@ const deviceOperations = ({
   'conversation.listDevices' | 'conversation.chooseDevices'
 > => ({
   'conversation.listDevices': () => Promise.resolve(devices.list()),
-  'conversation.chooseDevices': (change) => Promise.resolve(devices.choose(change)),
+  'conversation.chooseDevices': (change) =>
+    Promise.resolve(devices.choose(change)),
 });
 
 // The greetings the App recorded from previews, and keeping them.
@@ -84,6 +85,19 @@ const clipOperations = ({
   'voice.storePreviewClip': (input) => previewClips.store(input),
 });
 
+// Ending a Conversation: the App's End button, and an Agent hanging up its own.
+const lifeOperations = (
+  conversation: ConversationsPort,
+): Pick<
+  ConversationImplementations,
+  'conversation.end' | 'conversation.hangUp'
+> => ({
+  'conversation.end': ({ sessionId }) =>
+    Promise.resolve(conversation.end(sessionId)),
+  'conversation.hangUp': ({ sessionId }) =>
+    Promise.resolve(conversation.hangUp(sessionId)),
+});
+
 export function createConversationOperations(
   conversation: ConversationsPort,
   sessions: Pick<Sessions, 'open'>,
@@ -92,8 +106,7 @@ export function createConversationOperations(
     'conversation.status': () => conversation.status(),
     'conversation.start': startInOpenSession(conversation, sessions),
     'voice.preview': (input) => conversation.preview(input),
-    'conversation.end': ({ sessionId }) => Promise.resolve(conversation.end(sessionId)),
-    'conversation.hangUp': ({ sessionId }) => Promise.resolve(conversation.hangUp(sessionId)),
+    ...lifeOperations(conversation),
     ...choiceOperations(conversation),
     ...deviceOperations(conversation),
     ...clipOperations(conversation),

@@ -1,4 +1,7 @@
-import { defaultConversationOptions, type ConversationSettings } from '@repo/contracts';
+import {
+  defaultConversationOptions,
+  type ConversationSettings,
+} from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { chosenVoiceLabel, voiceChoices } from './voice-choices';
 

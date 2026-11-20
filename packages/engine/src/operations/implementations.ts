@@ -4,6 +4,7 @@ import type { z } from 'zod';
 import type { NativeStartRequest, SessionOperationCall } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
 import { createAppOperations } from './app';
+import { createConversationOperations } from './conversation';
 import { createDiagramOperations } from './diagram';
 import type { NativeStartId, StartedWork } from './native-start';
 import type { OperationsDeps } from './operations';
@@ -12,7 +13,6 @@ import { createProjectOperations } from './projects';
 import { createRegistryOperations } from './registry';
 import type { AppCaller, SessionCaller, UserCaller } from './session-tokens';
 import { sessionImplementations } from './sessions';
-import { createConversationOperations } from './conversation';
 import type { WorkExecution, UserAdmission } from './work';
 
 type ParamsById = {

@@ -3,8 +3,12 @@ import { openDatabase } from '@repo/db';
 import { serverSettings } from '@repo/db/schema';
 import { describe, expect, it, vi } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
+import {
+  offer,
+  openConversationSession,
+  startConversationEngine,
+} from '#mocks/conversation-engine';
 import { operationCaller, runOperation } from '#mocks/operations';
-import { offer, openConversationSession, startConversationEngine } from '#mocks/conversation-engine';
 import { FakeConversationProvider } from './fake-provider';
 
 const greeting = 'Greet the person as Sam.';
@@ -37,7 +41,9 @@ describe('Conversation options', () => {
       conversationProvider: new FakeConversationProvider(),
     });
 
-    expect((await restarted.caller.conversation.getSettings()).options).toMatchObject({
+    expect(
+      (await restarted.caller.conversation.getSettings()).options,
+    ).toMatchObject({
       filler: false,
       volume: 40,
       opening: greeting,
@@ -65,7 +71,10 @@ describe('Conversation options', () => {
   it('tell every Device the volume, so a running call follows it at once', async () => {
     const { host } = await startConversationEngine();
 
-    await host.caller.conversation.setOptions({ volume: 25, microphoneGain: 150 });
+    await host.caller.conversation.setOptions({
+      volume: 25,
+      microphoneGain: 150,
+    });
 
     expect(await host.caller.conversation.status()).toMatchObject({
       volume: 25,
@@ -131,9 +140,9 @@ it('reports and counts stored call options it cannot read, then uses the default
 
   const restarted = await startConversationEngine(undefined, host.home);
 
-  expect((await restarted.host.caller.conversation.getSettings()).options.volume).toBe(
-    100,
-  );
+  expect(
+    (await restarted.host.caller.conversation.getSettings()).options.volume,
+  ).toBe(100);
   expect(reported).toHaveBeenCalledWith(
     expect.stringMatching(/^Stored Conversation options: .* #\d+$/),
     expect.anything(),

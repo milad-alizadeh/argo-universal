@@ -1,4 +1,7 @@
-export { useSessionConversation, type ConversationPage } from './hooks/use-session-conversation';
+export {
+  useSessionConversation,
+  type ConversationPage,
+} from './hooks/use-session-conversation';
 
 export { useNewSessionConversation } from './hooks/use-new-session-conversation';
 
@@ -19,8 +22,8 @@ export type { AudioDevice, AudioDevices } from './utils/audio-devices';
 export type { ConversationDeviceChoice } from './stores/conversation-device-choice';
 
 export {
-  ConversationEdgeBand,
-  type ConversationEdgeBandProps,
+  ConversationBand,
+  type ConversationBandProps,
 } from './components/conversation-band/conversation-band';
 
 export {

@@ -1,12 +1,11 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
-import { ConversationOptions } from './options';
 import { CustomVoice, VoiceOption } from '../voice/voices';
+import { ConversationOptions } from './options';
 
 export * from './options';
 
 export * from './devices';
-
 
 // How far a running Conversation has come: the Conversation provider has the App's offer and answered, then reports the Conversation joined.
 export const ConversationPhase = z.enum(['connecting', 'connected']);
@@ -24,7 +23,10 @@ export const ConversationState = z.enum([
 export type ConversationState = z.infer<typeof ConversationState>;
 
 // Trouble the Conversation shows in the band's label instead of a dialog.
-export const ConversationTrouble = z.enum(['reconnecting', 'microphone-blocked']);
+export const ConversationTrouble = z.enum([
+  'reconnecting',
+  'microphone-blocked',
+]);
 
 export type ConversationTrouble = z.infer<typeof ConversationTrouble>;
 
@@ -162,7 +164,9 @@ export const ConversationProviderOption = z.strictObject({
   availability: ConversationAvailability,
 });
 
-export type ConversationProviderOption = z.infer<typeof ConversationProviderOption>;
+export type ConversationProviderOption = z.infer<
+  typeof ConversationProviderOption
+>;
 
 /*
  * Settings › Conversation: what the person chose, and what they can choose from. `provider` and `voice` are null while the
@@ -188,4 +192,6 @@ export const ConversationSettingsChange = z.strictObject({
   voice: z.string().min(1).optional(),
 });
 
-export type ConversationSettingsChange = z.infer<typeof ConversationSettingsChange>;
+export type ConversationSettingsChange = z.infer<
+  typeof ConversationSettingsChange
+>;

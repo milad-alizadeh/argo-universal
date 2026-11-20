@@ -7,7 +7,7 @@ import {
   type VoiceSpectrum,
 } from '../../types/conversation-connection';
 import { barPitch } from './band-layout';
-import { ConversationEdgeBand } from './conversation-band';
+import { ConversationBand } from './conversation-band';
 
 const silent = silentSpectrum();
 
@@ -17,7 +17,7 @@ const connected = {
   microphoneMuted: false,
 } as const;
 
-type Props = React.ComponentProps<typeof ConversationEdgeBand>;
+type Props = React.ComponentProps<typeof ConversationBand>;
 
 type Render = (args: Props) => React.JSX.Element;
 
@@ -25,20 +25,20 @@ const inWidth =
   (width: number): Render =>
   (args) => (
     <View style={{ width }} className="bg-card">
-      <ConversationEdgeBand {...args} />
+      <ConversationBand {...args} />
     </View>
   );
 
 const meta = {
-  title: 'Tests/Conversation/ConversationEdgeBand',
-  component: ConversationEdgeBand,
+  title: 'Tests/Conversation/ConversationBand',
+  component: ConversationBand,
   render: inWidth(640),
   args: {
     call: connected,
     elapsed: '2:43',
     spectrum: (): VoiceSpectrum => silent,
   },
-} satisfies Meta<typeof ConversationEdgeBand>;
+} satisfies Meta<typeof ConversationBand>;
 
 export default meta;
 
@@ -64,7 +64,9 @@ interface Measured {
 // Waits for the strip to measure itself and draw its bars, then measures both gaps.
 async function measure(canvas: Canvas): Promise<Measured> {
   await waitFor(() =>
-    expect(canvas.queryAllByTestId('conversation-band-bar')).not.toHaveLength(0),
+    expect(canvas.queryAllByTestId('conversation-band-bar')).not.toHaveLength(
+      0,
+    ),
   );
 
   const bars = canvas.getAllByTestId('conversation-band-bar');

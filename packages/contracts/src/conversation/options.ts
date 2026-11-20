@@ -29,7 +29,9 @@ export const ConversationOptions = z.strictObject({
     .int()
     .min(shortestIdleSeconds)
     .max(longestIdleSeconds)
-    .describe('How long a Conversation may pass without speech before it ends.'),
+    .describe(
+      'How long a Conversation may pass without speech before it ends.',
+    ),
   volume: z
     .number()
     .int()
@@ -49,7 +51,9 @@ export type ConversationOptions = z.infer<typeof ConversationOptions>;
 // Input of `conversation.setOptions`: what is left out stays.
 export const ConversationOptionsChange = ConversationOptions.partial();
 
-export type ConversationOptionsChange = z.infer<typeof ConversationOptionsChange>;
+export type ConversationOptionsChange = z.infer<
+  typeof ConversationOptionsChange
+>;
 
 // What a Server that was never set up uses.
 export const defaultConversationOptions: ConversationOptions = {

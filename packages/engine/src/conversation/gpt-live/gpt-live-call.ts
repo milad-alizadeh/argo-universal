@@ -63,7 +63,9 @@ const onTime = (event: ConversationProviderEvent): ConversationProviderEvent =>
  */
 export class GptLiveCall implements ConversationProviderCall {
   public readonly answer: string;
-  private readonly listeners = new Set<(event: ConversationProviderEvent) => void>();
+  private readonly listeners = new Set<
+    (event: ConversationProviderEvent) => void
+  >();
   private readonly backlog: ConversationProviderEvent[] = [];
   private readonly reader = new LinkReader();
   private readonly trail = new LinkTrail();
@@ -85,7 +87,9 @@ export class GptLiveCall implements ConversationProviderCall {
     );
   }
 
-  public listen(listener: (event: ConversationProviderEvent) => void): () => void {
+  public listen(
+    listener: (event: ConversationProviderEvent) => void,
+  ): () => void {
     this.listeners.add(listener);
 
     for (const event of this.backlog.splice(0)) listener(event);

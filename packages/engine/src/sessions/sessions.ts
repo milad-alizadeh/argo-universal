@@ -112,7 +112,10 @@ export class Sessions {
     text: string,
   ): Promise<TakenPrompt> {
     const input = { sessionId, prompt: [{ type: 'text' as const, text }] };
-    const sent = await sendPrompt(this.sources, input, { sender: conversationSender });
+
+    const sent = await sendPrompt(this.sources, input, {
+      sender: conversationSender,
+    });
 
     return requireTaken(sent);
   }

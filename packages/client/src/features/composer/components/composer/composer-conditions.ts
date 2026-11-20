@@ -63,7 +63,9 @@ export function sendButtonState(props: ComposerProps): SendState {
   return callSendState(props) ?? idleSendState(props);
 }
 
-const inCall: Partial<Record<ComposerConversation['kind'], 'connecting' | 'end'>> = {
+const inCall: Partial<
+  Record<ComposerConversation['kind'], 'connecting' | 'end'>
+> = {
   connecting: 'connecting',
   connected: 'end',
 };
@@ -78,7 +80,9 @@ function callSendState(props: ComposerProps): 'connecting' | 'end' | undefined {
 function idleSendState(props: ComposerProps): SendState {
   const state = baseSendState(props);
 
-  return state === 'blocked' && canStartConversation(props) ? 'conversation' : state;
+  return state === 'blocked' && canStartConversation(props)
+    ? 'conversation'
+    : state;
 }
 
 /*

@@ -24,7 +24,10 @@ describe('Conversation refusals', () => {
       'rejected',
     ]);
     expect(starts[1]).toMatchObject({
-      reason: { code: 'CONFLICT', message: 'A Conversation is already running' },
+      reason: {
+        code: 'CONFLICT',
+        message: 'A Conversation is already running',
+      },
     });
     expect(provider.calls).toHaveLength(1);
     expect(await callOf(host)).toMatchObject({ sessionId: first.sessionId });

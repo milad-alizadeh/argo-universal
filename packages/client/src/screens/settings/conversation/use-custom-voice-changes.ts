@@ -2,8 +2,8 @@ import type { CustomVoice, CustomVoiceInput } from '@repo/contracts';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTRPC, type ServerMutation, type TRPC } from '#features/connection';
-import type { CustomVoiceEditor } from './custom-voice-props';
 import type { ConversationDetailViewProps } from './conversation-detail-view-props';
+import type { CustomVoiceEditor } from './custom-voice-props';
 
 type SaveMutation = ServerMutation<TRPC['voice']['saveCustomVoice']>;
 

@@ -1,6 +1,9 @@
 import type { ConversationEnd } from '@repo/contracts';
 import type { RunningCall } from './conversation-types';
-import type { ConversationClosedReason, ConversationProviderEvent } from './provider';
+import type {
+  ConversationClosedReason,
+  ConversationProviderEvent,
+} from './provider';
 import type { ConversationNotice } from './session-link';
 
 // How a Conversation ended: why, and when the provider closed it, the provider's own reason and its words for it.
@@ -52,7 +55,8 @@ const lostNotice: ConversationNotice = {
 
 const closedNotice: ConversationNotice = {
   title: ended,
-  description: 'The Conversation provider ended the Conversation without saying why.',
+  description:
+    'The Conversation provider ended the Conversation without saying why.',
 };
 
 // The provider's own words, when it gave some, say why under the title its kind of close has.
@@ -62,7 +66,10 @@ function providerNotice({ closed, why }: EndParameters): ConversationNotice {
   return why === undefined ? notice : { ...notice, description: why };
 }
 
-type NoticeOf = (params: EndParameters, facts: EndingFacts) => ConversationNotice;
+type NoticeOf = (
+  params: EndParameters,
+  facts: EndingFacts,
+) => ConversationNotice;
 
 const notices: Partial<Record<ConversationEnd, NoticeOf>> = {
   'provider-closed': providerNotice,

@@ -94,7 +94,9 @@ function RestoredApp(): React.JSX.Element | null {
 
   return (
     <AppProviders serverUrl={serverUrl}>
-      <DesktopConversationProvider desktop={globalThis.window?.argo !== undefined}>
+      <DesktopConversationProvider
+        desktop={globalThis.window?.argo !== undefined}
+      >
         <ShownServerSignal />
         <ThemedApp />
       </DesktopConversationProvider>

@@ -94,7 +94,10 @@ const addSection = (props: ConversationPageProps): ReactElement => (
   </List.Section>
 );
 
-const conversationRow = (props: ConversationPageProps, choice: VoiceChoice): ReactElement => (
+const conversationRow = (
+  props: ConversationPageProps,
+  choice: VoiceChoice,
+): ReactElement => (
   <ListItem
     key={choice.id}
     id={choice.id}

@@ -8,7 +8,10 @@ import {
   type CallControlsMotion,
   useCallControlsMotion,
 } from './composer-conversation-controls-motion';
-import type { ComposerConversation, ComposerConversationMutes } from './composer-types';
+import type {
+  ComposerConversation,
+  ComposerConversationMutes,
+} from './composer-types';
 
 export const microphoneButtonId = 'composer-microphone';
 

@@ -4,8 +4,12 @@ import type {
   ConversationDeviceRequest,
 } from '@repo/contracts';
 import { describe, expect, it, onTestFinished } from 'vitest';
+import {
+  offer,
+  openConversationSession,
+  startConversationEngine,
+} from '#mocks/conversation-engine';
 import { operationCaller, runOperation } from '#mocks/operations';
-import { offer, openConversationSession, startConversationEngine } from '#mocks/conversation-engine';
 
 type Conversation = Awaited<ReturnType<typeof startConversationEngine>>;
 
@@ -29,7 +33,9 @@ interface ListeningApp {
   asked: ConversationDeviceChange[];
 }
 
-const choiceOf = (event: ConversationDeviceRequest): ConversationDeviceChange | undefined =>
+const choiceOf = (
+  event: ConversationDeviceRequest,
+): ConversationDeviceChange | undefined =>
   event.type === 'choose' ? event.change : undefined;
 
 // An App Connection that reports its devices and keeps what the Server asks it to choose; it resolves once listening.
@@ -81,9 +87,9 @@ describe('choosing the microphone and speaker from an Agent or the CLI', () => {
   it('refuses when no App that can carry a call is connected', async () => {
     const voice = await startConversationEngine();
 
-    await expect(voice.host.caller.conversation.listDevices({})).rejects.toThrow(
-      noApp,
-    );
+    await expect(
+      voice.host.caller.conversation.listDevices({}),
+    ).rejects.toThrow(noApp);
     await expect(chooseFromCli(voice, headset)).rejects.toThrow(noApp);
   });
 

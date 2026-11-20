@@ -1,7 +1,10 @@
 import type { ConversationStatus } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import type { ComposerConversationMutes } from '#features/composer';
-import { sessionConversation, type SessionConversation } from './session-conversation';
+import {
+  sessionConversation,
+  type SessionConversation,
+} from './session-conversation';
 import {
   callIn,
   inputOf,
@@ -10,7 +13,9 @@ import {
   type Asked,
 } from './session-conversation.test.mocks';
 
-const mutesOf = ({ composer }: SessionConversation): ComposerConversationMutes | undefined =>
+const mutesOf = ({
+  composer,
+}: SessionConversation): ComposerConversationMutes | undefined =>
   composer?.kind === 'connected' ? composer.mutes : undefined;
 
 describe("a Session's view of the Conversation", () => {
@@ -29,7 +34,9 @@ describe("a Session's view of the Conversation", () => {
     });
 
     expect(sessionConversation(inputOf(off, 's1')).composer).toBeUndefined();
-    expect(sessionConversation(inputOf(unusable, 's1')).composer).toBeUndefined();
+    expect(
+      sessionConversation(inputOf(unusable, 's1')).composer,
+    ).toBeUndefined();
   });
 
   it.each(['connecting', 'connected'] as const)(
@@ -39,7 +46,9 @@ describe("a Session's view of the Conversation", () => {
         availability: { usable: false, reason: 'No' },
       });
 
-      expect(sessionConversation(inputOf(unusable, 's1')).composer?.kind).toBe(status);
+      expect(sessionConversation(inputOf(unusable, 's1')).composer?.kind).toBe(
+        status,
+      );
     },
   );
 
@@ -90,7 +99,10 @@ describe("a Session's view of the Conversation", () => {
 
   it('points a Session at the call in another Session, with that Session’s title, and draws no band', () => {
     const asked: Asked = [];
-    const view = sessionConversation(inputOf(statusOf(callIn('s-call')), 's1', asked));
+
+    const view = sessionConversation(
+      inputOf(statusOf(callIn('s-call')), 's1', asked),
+    );
 
     expect(view.composer).toEqual({
       kind: 'elsewhere',
@@ -103,7 +115,9 @@ describe("a Session's view of the Conversation", () => {
   });
 
   it('names the other Session plainly until its title is known', () => {
-    const view = sessionConversation(inputOf(statusOf(callIn('s-unknown')), 's1'));
+    const view = sessionConversation(
+      inputOf(statusOf(callIn('s-unknown')), 's1'),
+    );
 
     expect(view.composer).toMatchObject({ title: 'another Session' });
   });
@@ -138,9 +152,17 @@ describe("a Session's view of the Conversation", () => {
 
   it('starts and ends the call as the person asks', () => {
     const asked: Asked = [];
-    const idle = sessionConversation(inputOf(statusOf(null), 's1', asked)).composer;
+
+    const idle = sessionConversation(
+      inputOf(statusOf(null), 's1', asked),
+    ).composer;
+
     press(idle);
-    const running = sessionConversation(inputOf(statusOf(callIn('s1')), 's1', asked));
+
+    const running = sessionConversation(
+      inputOf(statusOf(callIn('s1')), 's1', asked),
+    );
+
     press(running.composer);
 
     expect(asked).toEqual(['start', 'end']);

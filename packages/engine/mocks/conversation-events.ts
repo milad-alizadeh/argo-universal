@@ -1,4 +1,7 @@
-import { providerEvent, type ConversationEvent } from '../src/conversation/conversation-types';
+import {
+  providerEvent,
+  type ConversationEvent,
+} from '../src/conversation/conversation-types';
 import { detachedSessions } from '../src/conversation/session-link';
 
 export const start: Extract<ConversationEvent, { type: 'call.start' }> = {

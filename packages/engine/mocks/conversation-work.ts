@@ -84,7 +84,10 @@ export class ConversationWork {
 
   // Starts the call and connects it.
   public async start(): Promise<void> {
-    await this.host.caller.conversation.start({ sessionId: this.sessionId, offer });
+    await this.host.caller.conversation.start({
+      sessionId: this.sessionId,
+      offer,
+    });
     this.provider.call.connect();
   }
 

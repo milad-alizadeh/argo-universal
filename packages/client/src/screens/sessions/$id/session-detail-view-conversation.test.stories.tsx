@@ -4,12 +4,12 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { cdp } from 'vitest/browser';
-import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import {
   rehearsedConnectMilliseconds,
   ConversationRehearsal,
 } from './session-detail-view-conversation-rehearsal.mocks';
 import { conversationSession } from './session-detail-view-conversation.mocks';
+import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { longSession } from './session-detail-view.mocks';
 
 const meta = {

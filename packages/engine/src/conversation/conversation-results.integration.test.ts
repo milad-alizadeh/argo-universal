@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { startConversationWork, type ConversationWork } from '#mocks/conversation-work';
+import {
+  startConversationWork,
+  type ConversationWork,
+} from '#mocks/conversation-work';
 import { relayWords } from './relay-words';
 
 const job = 'Run the tests';

@@ -5,8 +5,8 @@ import type {
   ConversationSettingsChange,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import type { ConversationSetup, ConversationProvider } from './provider';
 import type { StoredConversationSettings } from './conversation-settings';
+import type { ConversationSetup, ConversationProvider } from './provider';
 
 type Offered = Pick<
   ConversationSettings,

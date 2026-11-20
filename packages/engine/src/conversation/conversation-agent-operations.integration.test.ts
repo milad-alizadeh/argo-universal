@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { operationCaller, runOperation } from '#mocks/operations';
 import {
   callOf,
   offer,
   openConversationSession,
   startConversationEngine,
 } from '#mocks/conversation-engine';
+import { operationCaller, runOperation } from '#mocks/operations';
 
 const appOnly = [
   'session.submit',
@@ -18,7 +18,9 @@ const appOnly = [
 
 describe('the App-only Operations an Agent is refused', () => {
   it('lists hanging up and what the next call speaks with to an Agent', async () => {
-    const session = await openConversationSession(await startConversationEngine());
+    const session = await openConversationSession(
+      await startConversationEngine(),
+    );
 
     const listed = await session.caller.operations.list.query({
       filter: 'voice',
@@ -39,7 +41,9 @@ describe('the App-only Operations an Agent is refused', () => {
   });
 
   it('lets an Agent read the voices and the Conversation settings', async () => {
-    const session = await openConversationSession(await startConversationEngine());
+    const session = await openConversationSession(
+      await startConversationEngine(),
+    );
 
     const voices = await runOperation(session.caller.operations, {
       id: 'voice.listVoices',
@@ -79,7 +83,9 @@ describe('the App-only Operations an Agent is refused', () => {
   });
 
   it.each(appOnly)('refuses %s run by an Agent', async (id) => {
-    const session = await openConversationSession(await startConversationEngine());
+    const session = await openConversationSession(
+      await startConversationEngine(),
+    );
 
     await expect(
       runOperation(session.caller.operations, {

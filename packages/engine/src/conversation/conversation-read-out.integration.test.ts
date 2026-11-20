@@ -36,7 +36,10 @@ describe('the voice reading out an Agent result', () => {
       final: false,
     });
     await expect
-      .poll(async () => (await work.host.caller.conversation.status()).partials.length)
+      .poll(
+        async () =>
+          (await work.host.caller.conversation.status()).partials.length,
+      )
       .toBeGreaterThan(0);
 
     const { partials } = await work.host.caller.conversation.status();

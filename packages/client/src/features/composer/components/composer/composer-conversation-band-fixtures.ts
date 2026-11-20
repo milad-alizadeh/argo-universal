@@ -1,12 +1,15 @@
 import { createElement, type ReactNode } from 'react';
-import { ConversationEdgeBand, type ConversationEdgeBandProps } from '#features/conversation';
+import {
+  ConversationBand,
+  type ConversationBandProps,
+} from '#features/conversation';
 import type { ComposerMockProps } from '../../../../../mocks/composer-mock';
 import { syntheticVoiceAudio } from '../../../../../mocks/conversation/synthetic-voice-audio';
-import type { ComposerConversationMutes } from './composer-types';
 import {
   conversationComposer,
   conversationConnectingComposer,
 } from './composer-conversation-fixtures';
+import type { ComposerConversationMutes } from './composer-types';
 
 type ComposerFixture = Pick<
   ComposerMockProps,
@@ -24,8 +27,10 @@ const connected = {
   microphoneMuted: false,
 } as const;
 
-const band = (call: ConversationEdgeBandProps['call'], elapsed = '2:43'): ReactNode =>
-  createElement(ConversationEdgeBand, { call, elapsed, spectrum });
+const band = (
+  call: ConversationBandProps['call'],
+  elapsed = '2:43',
+): ReactNode => createElement(ConversationBand, { call, elapsed, spectrum });
 
 const mutes = (microphone: boolean): ComposerConversationMutes => ({
   microphone,
@@ -35,7 +40,7 @@ const mutes = (microphone: boolean): ComposerConversationMutes => ({
 });
 
 const onCall = (
-  call: ConversationEdgeBandProps['call'],
+  call: ConversationBandProps['call'],
   elapsed?: string,
 ): ComposerFixture => ({
   ...conversationComposer,

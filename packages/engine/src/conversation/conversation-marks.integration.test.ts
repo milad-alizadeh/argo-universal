@@ -1,7 +1,10 @@
 import type { FeedSubscribeOutput } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
+import {
+  startConversationWork,
+  type ConversationWork,
+} from '#mocks/conversation-work';
 import { operationCaller, runOperation } from '#mocks/operations';
-import { startConversationWork, type ConversationWork } from '#mocks/conversation-work';
 
 const job = 'Run the tests';
 
@@ -39,7 +42,9 @@ async function agentMessages(host: Host, sessionId: string): Promise<string> {
   );
 }
 
-const listedActivity = async (work: ConversationWork): Promise<string | undefined> =>
+const listedActivity = async (
+  work: ConversationWork,
+): Promise<string | undefined> =>
   (await work.host.caller.session.list({ archived: false })).sessions.find(
     (session) => session.sessionId === work.sessionId,
   )?.activity;

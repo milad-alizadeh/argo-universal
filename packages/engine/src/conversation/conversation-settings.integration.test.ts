@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
-import { finishSubscription } from '#mocks/list-observation';
 import {
   callOf,
   offer,
   openConversationSession,
   startConversationEngine,
 } from '#mocks/conversation-engine';
+import { finishSubscription } from '#mocks/list-observation';
 import { FakeConversationProvider } from './fake-provider';
 
 const twoVoices = [
@@ -48,7 +48,10 @@ describe('Conversation settings', () => {
   it('keeps what the person chose', async () => {
     const { host } = await withTwoVoices();
 
-    await host.caller.conversation.setSettings({ enabled: false, voice: 'second' });
+    await host.caller.conversation.setSettings({
+      enabled: false,
+      voice: 'second',
+    });
 
     expect(await host.caller.conversation.getSettings()).toMatchObject({
       enabled: false,
@@ -59,7 +62,10 @@ describe('Conversation settings', () => {
 
   it('survives an Engine restart', async () => {
     const { host } = await withTwoVoices();
-    await host.caller.conversation.setSettings({ enabled: false, voice: 'second' });
+    await host.caller.conversation.setSettings({
+      enabled: false,
+      voice: 'second',
+    });
     await host.stop();
 
     const restarted = await startAcpEngine({
@@ -113,7 +119,10 @@ describe('Conversation settings', () => {
     const { host } = await withTwoVoices();
     await host.caller.conversation.setSettings({ voice: 'second' });
     await host.stop();
-    const provider = new FakeConversationProvider({ voices: twoVoices.slice(0, 1) });
+
+    const provider = new FakeConversationProvider({
+      voices: twoVoices.slice(0, 1),
+    });
 
     const restarted = await startConversationEngine(provider, host.home);
     const { sessionId } = await openConversationSession(restarted);
@@ -129,9 +138,9 @@ describe('Conversation settings', () => {
 
     await host.caller.conversation.setSettings({ enabled: false });
 
-    await expect(host.caller.conversation.start({ sessionId, offer })).rejects.toThrow(
-      'Conversations are off',
-    );
+    await expect(
+      host.caller.conversation.start({ sessionId, offer }),
+    ).rejects.toThrow('Conversations are off');
     expect(await callOf(host)).toBeNull();
   });
 
@@ -140,7 +149,9 @@ describe('Conversation settings', () => {
       new FakeConversationProvider({ usable: false, reason: signInReason }),
     );
 
-    expect((await host.caller.conversation.getSettings()).providers).toMatchObject([
+    expect(
+      (await host.caller.conversation.getSettings()).providers,
+    ).toMatchObject([
       { availability: { usable: false, reason: signInReason } },
     ]);
   });

@@ -68,5 +68,9 @@ export const conversationDraftComposer = {
 // The call runs in another Session: the voice button's place holds a round button with a live dot that takes the person there.
 export const callElsewhereComposer = {
   ...startedSessionComposer,
-  conversation: { kind: 'elsewhere', title: 'Fix flaky Feed sync test', onOpen: noop },
+  conversation: {
+    kind: 'elsewhere',
+    title: 'Fix flaky Feed sync test',
+    onOpen: noop,
+  },
 } satisfies ComposerFixture;

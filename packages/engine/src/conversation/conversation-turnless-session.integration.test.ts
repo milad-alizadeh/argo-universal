@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { promptText, startConversationWork, type ConversationWork } from '#mocks/conversation-work';
+import {
+  promptText,
+  startConversationWork,
+  type ConversationWork,
+} from '#mocks/conversation-work';
 
 const fixBuild = 'Fix the build';
 
-const callStatus = async (work: ConversationWork): Promise<string | undefined> =>
+const callStatus = async (
+  work: ConversationWork,
+): Promise<string | undefined> =>
   (await work.host.caller.conversation.status()).conversation?.status;
 
 const rowKinds = async (work: ConversationWork): Promise<string[]> =>
@@ -29,7 +35,9 @@ describe('a Conversation in a Session with no Turns yet', () => {
       await expect.poll(work.turnEnds).toHaveLength(1);
       await expect
         .poll(work.promptRows)
-        .toMatchObject([{ _meta: { argo: { sender: { type: 'conversation' } } } }]);
+        .toMatchObject([
+          { _meta: { argo: { sender: { type: 'conversation' } } } },
+        ]);
     },
   );
 

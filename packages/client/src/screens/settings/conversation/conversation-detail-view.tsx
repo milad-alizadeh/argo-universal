@@ -3,11 +3,11 @@ import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
-import { callSection } from './conversation-section';
-import { EditorDialog, conversationSection } from './voice-choice-section';
 import type { ConversationDetailViewProps } from './conversation-detail-view-props';
 import { audioSection } from './conversation-devices-section';
+import { callSection } from './conversation-section';
 import { settingsOf, waiting } from './conversation-settings-state';
+import { EditorDialog, conversationSection } from './voice-choice-section';
 
 export type { ConversationDetailViewProps } from './conversation-detail-view-props';
 
@@ -71,12 +71,16 @@ const messages = {
   loaded: undefined,
 };
 
-const retryButton = (props: ConversationDetailViewProps): React.JSX.Element | null =>
+const retryButton = (
+  props: ConversationDetailViewProps,
+): React.JSX.Element | null =>
   props.voice.status === 'error' ? (
     <Button label="Retry" variant="text" onPress={props.onRetry} />
   ) : null;
 
-function statusSection(props: ConversationDetailViewProps): React.JSX.Element | null {
+function statusSection(
+  props: ConversationDetailViewProps,
+): React.JSX.Element | null {
   const message = props.error ?? messages[props.voice.status];
 
   return message ? (

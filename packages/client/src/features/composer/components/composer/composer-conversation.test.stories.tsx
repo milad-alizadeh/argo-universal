@@ -9,19 +9,19 @@ import type { Story } from '../../../../../mocks/composer/composer-story-context
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { FakeConversationConnection } from '../../../../../mocks/conversation/fake-conversation-connection';
 import { Composer } from './composer';
-import { callPointerId } from './composer-conversation-pointer';
 import { connectingRingId } from './composer-connecting-ring';
-import { microphoneButtonId, speakerButtonId } from './composer-mute-buttons';
-import { endButtonId, conversationButtonId } from './composer-primary-action';
-import type { ComposerConversation } from './composer-types';
 import {
   bandConnectingComposer,
   bandMutedComposer,
   bandReconnectingComposer,
   bandTalkingComposer,
 } from './composer-conversation-band-fixtures';
+import { callPointerId } from './composer-conversation-pointer';
+import { microphoneButtonId, speakerButtonId } from './composer-mute-buttons';
+import { endButtonId, conversationButtonId } from './composer-primary-action';
+import type { ComposerConversation } from './composer-types';
 
-// The edge band's test id, as `ConversationEdgeBand` sets it.
+// The edge band's test id, as `ConversationBand` sets it.
 const bandId = 'conversation-band';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer/Conversation' };
@@ -36,13 +36,19 @@ const noMutes = {
 };
 
 // What a story's slot asks for when pressed, read from its own args so no spy is shared between stories.
-const startOf = (conversation: ComposerConversation | undefined): (() => void) | undefined =>
+const startOf = (
+  conversation: ComposerConversation | undefined,
+): (() => void) | undefined =>
   conversation?.kind === 'start' ? conversation.onStart : undefined;
 
-const endOf = (conversation: ComposerConversation | undefined): (() => void) | undefined =>
+const endOf = (
+  conversation: ComposerConversation | undefined,
+): (() => void) | undefined =>
   conversation && 'onEnd' in conversation ? conversation.onEnd : undefined;
 
-const openOf = (conversation: ComposerConversation | undefined): (() => void) | undefined =>
+const openOf = (
+  conversation: ComposerConversation | undefined,
+): (() => void) | undefined =>
   conversation?.kind === 'elsewhere' ? conversation.onOpen : undefined;
 
 // With nothing written and no call, the primary slot is the voice button, Send's circle with the five bars.
@@ -215,7 +221,9 @@ export const PointerToTheCall: Story = {
     conversation: { kind: 'elsewhere', title: 'Fix the build', onOpen: fn() },
   },
   play: async ({ canvas, args }) => {
-    await expect(canvas.queryByTestId(conversationButtonId)).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByTestId(conversationButtonId),
+    ).not.toBeInTheDocument();
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
     // A round icon button named for the call, not a pill with the words on it.
     await expect(canvas.queryByText('Call in Fix the build')).toBeNull();

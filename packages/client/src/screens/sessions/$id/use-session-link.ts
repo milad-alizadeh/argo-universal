@@ -1,5 +1,8 @@
 import { useConnectionState } from '#features/connection';
-import { useSessionConversation, type ConversationPage } from '#features/conversation';
+import {
+  useSessionConversation,
+  type ConversationPage,
+} from '#features/conversation';
 import type { OpenSession } from './session-composer-props';
 
 // What links the page to the Device it runs on: whether its Connection is open, and the Conversation as this Session sees it.

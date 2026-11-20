@@ -1,7 +1,5 @@
 import { z } from 'zod';
-import {
-  ConversationSettings,
-} from '../conversation';
+import { ConversationSettings } from '../conversation';
 import {
   CustomVoice,
   CustomVoiceId,

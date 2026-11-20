@@ -7,8 +7,8 @@ import { useTRPC } from '#features/connection';
 import { sessionHref } from '#lib/product/navigation/navigation';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
 import { withEdge } from '../components/conversation-band/conversation-band-slot';
-import { placedCall } from '../stores/placed-conversation';
 import { useConversationConnection } from '../stores/conversation-connection-context';
+import { placedCall } from '../stores/placed-conversation';
 import {
   silentSpectrum,
   type ConversationConnection,
@@ -21,9 +21,9 @@ import {
   type SessionConversationInput,
 } from '../utils/session-conversation';
 import { useSessionTitle, useStartCall } from './use-conversation-reads';
+import { useConversationStatus } from './use-conversation-status';
 import { useHeldPartials } from './use-held-partials';
 import { type SessionMutes, useSessionMutes } from './use-session-mutes';
-import { useConversationStatus } from './use-conversation-status';
 
 const noSpectrum = silentSpectrum();
 

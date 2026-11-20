@@ -1,4 +1,7 @@
-import { defaultConversationOptions, type ConversationStatus } from '@repo/contracts';
+import {
+  defaultConversationOptions,
+  type ConversationStatus,
+} from '@repo/contracts';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';

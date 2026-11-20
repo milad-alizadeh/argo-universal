@@ -1,9 +1,9 @@
 import type { ConversationStatus } from '@repo/contracts';
-import { noConversation, unavailable } from './unavailable';
-import type { ConversationsPort } from './conversations';
-import { settingsOf } from './voice-choices';
 import { ConversationDevices } from './conversation-devices';
 import { defaultConversationSettings } from './conversation-settings';
+import type { ConversationsPort } from './conversations';
+import { noConversation, unavailable } from './unavailable';
+import { settingsOf } from './voice-choices';
 
 const notAvailable = 'Conversations are not available';
 

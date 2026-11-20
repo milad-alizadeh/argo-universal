@@ -1,4 +1,7 @@
-import type { ConversationOptions, ConversationOptionsChange } from '@repo/contracts';
+import type {
+  ConversationOptions,
+  ConversationOptionsChange,
+} from '@repo/contracts';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { ReactElement } from 'react';
 import { idleChoices } from './conversation-options';

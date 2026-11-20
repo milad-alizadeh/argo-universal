@@ -4,9 +4,7 @@ import {
   ConversationSettings,
   ConversationSettingsChange,
 } from '../conversation';
-import {
-  VoiceInstructions,
-} from '../voice';
+import { VoiceInstructions } from '../voice';
 import type { OperationDefinition } from './index';
 
 // What the next Conversation is told and runs with (ADR-0064): the App, Agents and the CLI read and change it.

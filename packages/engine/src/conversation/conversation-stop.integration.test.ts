@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { statusOf } from '#mocks/conversation-timing';
-import { startConversationWork, type ConversationWork } from '#mocks/conversation-work';
+import {
+  startConversationWork,
+  type ConversationWork,
+} from '#mocks/conversation-work';
 import { relayWords } from './relay-words';
 
 const longJob = 'Refactor everything';
@@ -8,7 +11,10 @@ const longJob = 'Refactor everything';
 const sentence = 'Stop using tabs in the config';
 
 // The answer the voice was given to a request for work.
-const replyTo = (work: ConversationWork, requestId: string): string | undefined =>
+const replyTo = (
+  work: ConversationWork,
+  requestId: string,
+): string | undefined =>
   work.provider.call.sent.find(
     (message) => message.kind === 'reply' && message.requestId === requestId,
   )?.text;

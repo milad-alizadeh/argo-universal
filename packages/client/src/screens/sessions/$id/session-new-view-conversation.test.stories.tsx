@@ -18,7 +18,9 @@ export default meta;
 const voiceLabel = 'Start Conversation';
 
 // Each story's own press spy, so nothing is shared between stories.
-const startOf = (conversation: ComposerConversation | undefined): (() => void) | undefined =>
+const startOf = (
+  conversation: ComposerConversation | undefined,
+): (() => void) | undefined =>
   conversation?.kind === 'start' ? conversation.onStart : undefined;
 
 // With nothing written, New Session offers the same voice button as a Session page; pressing it starts the call.

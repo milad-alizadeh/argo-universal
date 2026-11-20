@@ -30,7 +30,7 @@ export const holdPartials = (
 });
 
 // The partials to draw, in the order they were said.
-export const drawnPartials = ({ live, held }: HeldPartials): ConversationPartial[] => [
-  ...held,
-  ...live,
-];
+export const drawnPartials = ({
+  live,
+  held,
+}: HeldPartials): ConversationPartial[] => [...held, ...live];

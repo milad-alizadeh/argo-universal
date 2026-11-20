@@ -25,8 +25,9 @@ async function listening(): Promise<{
   };
 }
 
-const limitsOf = (events: ConversationProviderEvent[]): ConversationProviderEvent[] =>
-  events.filter(({ type }) => type === 'limit');
+const limitsOf = (
+  events: ConversationProviderEvent[],
+): ConversationProviderEvent[] => events.filter(({ type }) => type === 'limit');
 
 const quietly = (): ReturnType<typeof vi.spyOn> =>
   vi.spyOn(console, 'error').mockImplementation(() => {});

@@ -1,4 +1,8 @@
-import type { CustomVoice, VoiceOption, ConversationSettings } from '@repo/contracts';
+import type {
+  CustomVoice,
+  VoiceOption,
+  ConversationSettings,
+} from '@repo/contracts';
 
 // One row of the Voice popover: a voice to choose, hear and, when it is the person's own, edit.
 export interface VoiceChoice {

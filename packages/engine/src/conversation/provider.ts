@@ -30,7 +30,10 @@ export type ConversationProviderEvent =
   // The voice started or stopped speaking.
   | { type: 'speaking'; speaking: boolean }
   // Trouble on the person's side of the call, such as a microphone the App may not use; null once it clears. Reconnecting is the Engine's to say.
-  | { type: 'trouble'; trouble: Exclude<ConversationTrouble, 'reconnecting'> | null }
+  | {
+      type: 'trouble';
+      trouble: Exclude<ConversationTrouble, 'reconnecting'> | null;
+    }
   // What the call has used so far; `limit` is the allowance left when the report says so.
   | {
       type: 'usage';
@@ -107,7 +110,9 @@ export interface ConversationProvider {
   // Whether a call can start now, and if not, why.
   availability: () => Promise<ConversationAvailability>;
   voices: () => Promise<VoiceOption[]>;
-  start: (request: ConversationStartRequest) => Promise<ConversationProviderCall>;
+  start: (
+    request: ConversationStartRequest,
+  ) => Promise<ConversationProviderCall>;
   // A call whose voice speaks the request's words first; the caller ends it.
   preview: (request: VoicePreviewRequest) => Promise<ConversationProviderCall>;
 }

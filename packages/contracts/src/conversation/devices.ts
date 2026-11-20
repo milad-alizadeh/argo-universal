@@ -41,7 +41,12 @@ export type ConversationDeviceChange = z.infer<typeof ConversationDeviceChange>;
 // What the Server sends an App that reported its devices: that it listens, then each choice it is asked to make.
 export const ConversationDeviceRequest = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('ready') }),
-  z.strictObject({ type: z.literal('choose'), change: ConversationDeviceChange }),
+  z.strictObject({
+    type: z.literal('choose'),
+    change: ConversationDeviceChange,
+  }),
 ]);
 
-export type ConversationDeviceRequest = z.infer<typeof ConversationDeviceRequest>;
+export type ConversationDeviceRequest = z.infer<
+  typeof ConversationDeviceRequest
+>;

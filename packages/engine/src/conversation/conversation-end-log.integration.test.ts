@@ -2,13 +2,19 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { pause } from '#mocks/conversation-timing';
-import { startConversationWork, type ConversationWork } from '#mocks/conversation-work';
+import {
+  startConversationWork,
+  type ConversationWork,
+} from '#mocks/conversation-work';
 
 // What the Server's log says about Conversations.
 const conversationLog = (home: string): string =>
   readFileSync(join(home, 'logs', 'voice.log'), 'utf8');
 
-async function endedWith(work: ConversationWork, reason: string): Promise<void> {
+async function endedWith(
+  work: ConversationWork,
+  reason: string,
+): Promise<void> {
   await expect
     .poll(() => work.host.caller.conversation.status())
     .toMatchObject({ call: null, ended: { reason } });

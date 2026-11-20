@@ -8,6 +8,10 @@ import type {
   ConversationSettings,
   ConversationSettingsChange,
 } from '@repo/contracts';
+import type {
+  StoredConversationSettings,
+  ConversationSettingsStore,
+} from './conversation-settings';
 import {
   deletedCustomVoice,
   listedVoices,
@@ -22,7 +26,6 @@ import {
   setupOf,
   voicesOf,
 } from './voice-choice-rules';
-import type { StoredConversationSettings, ConversationSettingsStore } from './conversation-settings';
 
 export { settingsOf } from './voice-choice-rules';
 
@@ -34,7 +37,9 @@ export interface VoiceChoicesPort {
   saveCustomVoice: (input: CustomVoiceInput) => Promise<CustomVoice>;
   deleteCustomVoice: (id: string) => Promise<VoiceList>;
   setInstructions: (instructions: string) => Promise<ConversationSettings>;
-  setCallOptions: (change: ConversationOptionsChange) => Promise<ConversationSettings>;
+  setCallOptions: (
+    change: ConversationOptionsChange,
+  ) => Promise<ConversationSettings>;
 }
 
 // The person's Conversation settings against the Server's provider: read, changed, and heard when they change.
@@ -60,7 +65,9 @@ export class VoiceChoices implements VoiceChoicesPort {
     return settingsOf(this.store.read(), this.provider());
   }
 
-  public async change(change: ConversationSettingsChange): Promise<ConversationSettings> {
+  public async change(
+    change: ConversationSettingsChange,
+  ): Promise<ConversationSettings> {
     const stored = this.store.read();
     await this.keep(await changedSettings(stored, change, this.provider()));
 
@@ -98,7 +105,9 @@ export class VoiceChoices implements VoiceChoicesPort {
     return this.voices();
   }
 
-  public async setInstructions(instructions: string): Promise<ConversationSettings> {
+  public async setInstructions(
+    instructions: string,
+  ): Promise<ConversationSettings> {
     await this.keep({ ...this.store.read(), instructions });
 
     return this.settings();
@@ -123,7 +132,11 @@ export class VoiceChoices implements VoiceChoicesPort {
   ): Promise<PreviewedVoice> {
     const builtIn = await voicesOf(this.provider());
 
-    return previewedConversation(input, this.store.read().customVoices, builtIn);
+    return previewedConversation(
+      input,
+      this.store.read().customVoices,
+      builtIn,
+    );
   }
 
   // What the next call speaks with and is told.

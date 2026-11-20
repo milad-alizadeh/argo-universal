@@ -3,7 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { offer } from '#mocks/conversation-engine';
 import { pause } from '#mocks/conversation-timing';
-import { startConversationWork, type ConversationWork } from '#mocks/conversation-work';
+import {
+  startConversationWork,
+  type ConversationWork,
+} from '#mocks/conversation-work';
 import { FakeConversationProvider } from './fake-provider';
 
 // The Notices a call's endings left in its Session's Feed.
@@ -17,7 +20,10 @@ const endNotices = (rows: SessionUpdate[]): SessionUpdate[] =>
 const noticesOf = async (work: ConversationWork): Promise<SessionUpdate[]> =>
   endNotices(await work.feed());
 
-async function endedWith(work: ConversationWork, reason: string): Promise<void> {
+async function endedWith(
+  work: ConversationWork,
+  reason: string,
+): Promise<void> {
   await expect
     .poll(() => work.host.caller.conversation.status())
     .toMatchObject({ call: null, ended: { reason } });
@@ -46,7 +52,8 @@ describe('a Conversation nobody chose to end', () => {
       expect.objectContaining({
         severity: 'warning',
         title: plainEnd,
-        description: 'The Conversation provider ended the call without saying why.',
+        description:
+          'The Conversation provider ended the call without saying why.',
       }),
     ]);
   });

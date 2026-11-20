@@ -14,13 +14,13 @@ import type {
   ComposerProps,
 } from '#features/composer';
 import type { useBlobUrl } from '#features/connection';
+import { conversationPlaceholder } from '#features/conversation';
 import type { useSessionFeed } from '#features/feed';
 import type {
   ElicitationFormProps,
   PermissionRequestProps,
 } from '#features/requests';
 import { decodeOpenFailure, toSendError } from '#features/sessions';
-import { conversationPlaceholder } from '#features/conversation';
 import { type Navigate } from '#lib/product/navigation/navigation';
 import { followUpProps } from './follow-up-composer-props';
 import { sessionStatusProps } from './session-status-props';

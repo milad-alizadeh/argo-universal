@@ -1,7 +1,7 @@
 import type { ConversationStatus } from '@repo/contracts';
 import { useEffect, useMemo, type JSX, type ReactNode } from 'react';
-import { useReportedConversationDevices } from '../hooks/use-reported-conversation-devices';
 import { useConversationStatus } from '../hooks/use-conversation-status';
+import { useReportedConversationDevices } from '../hooks/use-reported-conversation-devices';
 import type { ConversationConnection } from '../types/conversation-connection';
 import { followCall } from '../utils/follow-conversation';
 import {
@@ -47,7 +47,9 @@ export function ConversationConnectionHost({
 
 // The host, following the Server's call from the root of the App.
 function ServerConversationHost(props: Omit<HostProps, 'status'>): JSX.Element {
-  return <ConversationConnectionHost {...props} status={useConversationStatus()} />;
+  return (
+    <ConversationConnectionHost {...props} status={useConversationStatus()} />
+  );
 }
 
 // Hands the connection this Device's chosen microphone and speaker, at start and whenever Settings or the Server changes them.
@@ -66,6 +68,18 @@ function FollowsDeviceChoice({
 
 type Props = { desktop: boolean; children: ReactNode };
 
+function Hosted(props: {
+  connection: ConversationConnection;
+  children: ReactNode;
+}): JSX.Element {
+  return (
+    <ServerConversationHost connection={props.connection}>
+      <FollowsDeviceChoice connection={props.connection} />
+      {props.children}
+    </ServerConversationHost>
+  );
+}
+
 export function DesktopConversationProvider({
   desktop,
   children,
@@ -73,11 +87,10 @@ export function DesktopConversationProvider({
   const connection = useMemo(() => connectionFor(desktop), [desktop]);
 
   return connection ? (
-    <ServerConversationHost connection={connection}>
-      <FollowsDeviceChoice connection={connection} />
-      {children}
-    </ServerConversationHost>
+    <Hosted connection={connection}>{children}</Hosted>
   ) : (
-    <ConversationConnectionProvider value={null}>{children}</ConversationConnectionProvider>
+    <ConversationConnectionProvider value={null}>
+      {children}
+    </ConversationConnectionProvider>
   );
 }

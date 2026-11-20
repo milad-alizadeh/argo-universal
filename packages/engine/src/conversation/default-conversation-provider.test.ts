@@ -6,7 +6,9 @@ import { GptLiveProvider } from './gpt-live/gpt-live-provider';
 
 describe('the Conversation provider a Server uses by default', () => {
   it('is the fake when ARGO_CONVERSATION_PROVIDER asks for it', () => {
-    const provider = defaultConversationProvider({ ARGO_CONVERSATION_PROVIDER: 'fake' });
+    const provider = defaultConversationProvider({
+      ARGO_CONVERSATION_PROVIDER: 'fake',
+    });
 
     expect(provider).toBeInstanceOf(FakeConversationProvider);
   });

@@ -1,7 +1,10 @@
 import { QueuedPromptId } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { pause, statusOf } from '#mocks/conversation-timing';
-import { startConversationWork, type ConversationWork } from '#mocks/conversation-work';
+import {
+  startConversationWork,
+  type ConversationWork,
+} from '#mocks/conversation-work';
 import { relayWords } from './relay-words';
 
 // Idle periods are seconds, not milliseconds, so a loaded Mac cannot make a timer race a step.

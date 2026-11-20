@@ -1,8 +1,14 @@
-import type { ConversationOptionsChange, ConversationSettings } from '@repo/contracts';
-import type { DeviceMetersState, ConversationDeviceChoice } from '#features/conversation';
+import type {
+  ConversationOptionsChange,
+  ConversationSettings,
+} from '@repo/contracts';
+import type {
+  DeviceMetersState,
+  ConversationDeviceChoice,
+} from '#features/conversation';
+import type { ConversationDevices } from './conversation-devices-section';
 import type { CustomVoiceDraft } from './custom-voice-draft';
 import type { CustomVoiceEditor } from './custom-voice-props';
-import type { ConversationDevices } from './conversation-devices-section';
 
 export type ConversationSettingsLoad =
   | { status: 'loading' | 'error' | 'disconnected' }

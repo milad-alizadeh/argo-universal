@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
-import { startConversationWork, type ConversationWork } from '#mocks/conversation-work';
+import {
+  startConversationWork,
+  type ConversationWork,
+} from '#mocks/conversation-work';
 import type { FakeVoiceMessage } from './fake-provider';
 import { relayWords } from './relay-words';
 
@@ -16,7 +19,8 @@ const spokenPermissions = (work: ConversationWork) => (): FakeVoiceMessage[] =>
   );
 
 const replyTo =
-  (work: ConversationWork, requestId: string) => (): FakeVoiceMessage | undefined =>
+  (work: ConversationWork, requestId: string) =>
+  (): FakeVoiceMessage | undefined =>
     work.provider.call.sent.find(
       (say) => say.kind === 'reply' && say.requestId === requestId,
     );

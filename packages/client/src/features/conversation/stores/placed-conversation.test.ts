@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { sessionConversation } from '../utils/session-conversation';
-import { callIn, inputOf, statusOf } from '../utils/session-conversation.test.mocks';
+import {
+  callIn,
+  inputOf,
+  statusOf,
+} from '../utils/session-conversation.test.mocks';
 import { placedCall, withPlacedCall } from './placed-conversation';
 
 const idle = statusOf(null);
@@ -21,7 +25,10 @@ describe('a call placed before the Server has it', () => {
   });
 
   it("gives way to the Server's call once the Server has one", () => {
-    const status = withPlacedCall({ ...idle, conversation: serverCall }, 'session-1');
+    const status = withPlacedCall(
+      { ...idle, conversation: serverCall },
+      'session-1',
+    );
 
     expect(status.conversation).toBe(serverCall);
   });

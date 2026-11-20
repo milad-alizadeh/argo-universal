@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { runOperation } from '#mocks/operations';
 import {
   callOf,
   endedOf,
@@ -8,7 +7,12 @@ import {
   startConversationEngine,
 } from '#mocks/conversation-engine';
 import { pause, statusOf } from '#mocks/conversation-timing';
-import { promptText, startConversationWork, type ConversationWork } from '#mocks/conversation-work';
+import {
+  promptText,
+  startConversationWork,
+  type ConversationWork,
+} from '#mocks/conversation-work';
+import { runOperation } from '#mocks/operations';
 
 const hangUp = (
   session: Awaited<ReturnType<typeof openConversationSession>>,
@@ -28,7 +32,10 @@ describe('an Agent hangs up the Conversation', () => {
     const voice = await startConversationEngine();
     const { host, provider } = voice;
     const session = await openConversationSession(voice);
-    await host.caller.conversation.start({ sessionId: session.sessionId, offer });
+    await host.caller.conversation.start({
+      sessionId: session.sessionId,
+      offer,
+    });
 
     expect(await hangUp(session)).toEqual({ ended: true });
     expect(await callOf(host)).toBeNull();

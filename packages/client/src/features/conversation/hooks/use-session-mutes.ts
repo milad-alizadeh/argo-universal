@@ -1,5 +1,8 @@
 import { useSyncExternalStore } from 'react';
-import type { ConversationConnection, ConversationMutes } from '../types/conversation-connection';
+import type {
+  ConversationConnection,
+  ConversationMutes,
+} from '../types/conversation-connection';
 
 const unmuted: ConversationMutes = { microphone: false, speaker: false };
 

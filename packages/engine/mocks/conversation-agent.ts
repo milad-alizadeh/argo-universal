@@ -133,7 +133,10 @@ export const steeringScenario = (
   return steeringAgent(steered, steering === 'refused' ? 'failed' : 'injected');
 };
 
-type Recording = { prompts: PromptRequest[]; provider: FakeConversationProvider };
+type Recording = {
+  prompts: PromptRequest[];
+  provider: FakeConversationProvider;
+};
 
 type PromptResponse = {
   prompt: string;

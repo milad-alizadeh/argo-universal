@@ -1,6 +1,9 @@
 import type { SessionUpdate } from '@repo/contracts';
 import { expect } from 'vitest';
-import { startConversationWork, type ConversationWork } from './conversation-work';
+import {
+  startConversationWork,
+  type ConversationWork,
+} from './conversation-work';
 
 const shown = new Set([
   'person_transcript',

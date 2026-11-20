@@ -10,7 +10,10 @@ import {
   unusableVoice,
   usableVoice,
 } from './conversation-detail-view-fixtures';
-import { inReadingOrder, conversationDetailSpies } from './conversation-detail-view.mocks';
+import {
+  inReadingOrder,
+  conversationDetailSpies,
+} from './conversation-detail-view.mocks';
 
 const meta = {
   title: 'Tests/Screens/Settings/Conversation',

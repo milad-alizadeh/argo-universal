@@ -133,7 +133,10 @@ interface Spoken {
   item: typeof personSaid.item | typeof voiceSaid.item;
 }
 
-const partialOf = ({ speaker, item }: Spoken, text: string): ConversationPartial => ({
+const partialOf = (
+  { speaker, item }: Spoken,
+  text: string,
+): ConversationPartial => ({
   speaker,
   id: item.row.messageId,
   rowId: item.row.id,

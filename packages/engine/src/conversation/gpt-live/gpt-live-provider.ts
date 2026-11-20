@@ -103,7 +103,7 @@ export class GptLiveProvider implements ConversationProvider {
       createCall(callsUrl, fresh, opening),
     );
 
-    const url = `${linkUrl}/${created.conversationId}`;
+    const url = `${linkUrl}/${created.callId}`;
 
     // A refusal at the link joins the same call again; it never creates a second one.
     const link = await token.asking((fresh) => joinLink(url, fresh));

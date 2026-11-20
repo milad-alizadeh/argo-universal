@@ -3,12 +3,12 @@ import type {
   ConversationOptionsChange,
   ConversationSettingsChange,
 } from '@repo/contracts';
+import type { ConversationDetailViewProps } from './conversation-detail-view';
 import {
   previewOfDraft,
   savedOfDraft,
   type CustomVoicePreview,
 } from './custom-voice-draft';
-import type { ConversationDetailViewProps } from './conversation-detail-view';
 
 // What the page can ask of the App: change a setting, hear a voice, load the settings again.
 export interface ConversationSettingsActions {

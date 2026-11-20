@@ -12,6 +12,8 @@ import { claudeDescribedRequest } from '../../../../mocks/requests/elicitation/c
 import { SessionDetailView } from './session-detail-view';
 import { sessionPageBar } from './session-detail-view-bar.mocks';
 import { changedSession } from './session-detail-view-changes-pill.mocks';
+import { ConversationRehearsal } from './session-detail-view-conversation-rehearsal.mocks';
+import { conversationSession } from './session-detail-view-conversation.mocks';
 import {
   ElicitationPreview,
   elicitationSession,
@@ -24,8 +26,6 @@ import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import { usageLimitsSession } from './session-detail-view-usage.mocks';
-import { ConversationRehearsal } from './session-detail-view-conversation-rehearsal.mocks';
-import { conversationSession } from './session-detail-view-conversation.mocks';
 import {
   emptySession,
   idleSession,

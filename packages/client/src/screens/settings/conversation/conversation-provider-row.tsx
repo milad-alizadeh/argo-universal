@@ -1,8 +1,15 @@
-import type { ConversationAvailability, ConversationSettings } from '@repo/contracts';
+import type {
+  ConversationAvailability,
+  ConversationSettings,
+} from '@repo/contracts';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
 import type { ConversationDetailViewProps } from './conversation-detail-view-props';
-import { chosenProvider, settingsOf, waiting } from './conversation-settings-state';
+import {
+  chosenProvider,
+  settingsOf,
+  waiting,
+} from './conversation-settings-state';
 
 const reasonOf = (
   availability: ConversationAvailability | undefined,
@@ -26,7 +33,9 @@ const providerOptions = (
   }));
 
 // Called, not rendered: the FieldGroup reads its rows by element type.
-export const providerRow = (props: ConversationDetailViewProps): React.JSX.Element => (
+export const providerRow = (
+  props: ConversationDetailViewProps,
+): React.JSX.Element => (
   <FieldGroup.Picker
     key="provider"
     title="Conversation provider"

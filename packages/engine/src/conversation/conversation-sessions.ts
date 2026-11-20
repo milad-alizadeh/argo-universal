@@ -80,7 +80,10 @@ class FeedWatch {
 
 type NoticeUpdate = Extract<FeedUpdate, { sessionUpdate: 'notice' }>;
 
-const noticeUpdate = ({ title, description }: ConversationNotice): NoticeUpdate => ({
+const noticeUpdate = ({
+  title,
+  description,
+}: ConversationNotice): NoticeUpdate => ({
   id: randomUUID(),
   sessionUpdate: 'notice',
   state: 'settled',
@@ -109,7 +112,10 @@ const endOf = (happening: TurnHappening): SessionHappening | undefined =>
 
 // The Agent's words come from the Session's Feed, and each Turn's end from the Session itself.
 const watchOf =
-  (sources: FeedSources, work: ConversationSessionWork): ConversationSessions['watch'] =>
+  (
+    sources: FeedSources,
+    work: ConversationSessionWork,
+  ): ConversationSessions['watch'] =>
   (sessionId, listener) => {
     const words = new FeedWatch(sources, sessionId, listener);
 

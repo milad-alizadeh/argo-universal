@@ -6,10 +6,10 @@ import type {
   ConversationStartOutput,
   ConversationStatus,
 } from '@repo/contracts';
+import type { ConversationDevices } from './conversation-devices';
 import type { ConversationSessions } from './session-link';
 import type { VoiceChoicesPort } from './voice-choices';
 import type { VoiceClipDesk } from './voice-clip-desk';
-import type { ConversationDevices } from './conversation-devices';
 
 // What the App and Operations ask of the Conversation: start it, end it, read it, watch it.
 export interface ConversationsPort {

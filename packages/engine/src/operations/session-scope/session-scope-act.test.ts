@@ -59,7 +59,9 @@ it('hangs up only the calling Session, refusing conversation.hangUp for any othe
 });
 
 it('hangs up the calling Session when conversation.hangUp names no Session', async () => {
-  expect((await scoped({ id: 'conversation.hangUp', params: {} })).outcome).toBe(runs);
+  expect(
+    (await scoped({ id: 'conversation.hangUp', params: {} })).outcome,
+  ).toBe(runs);
 });
 
 it('shows the Operation label and description on the card', async () => {

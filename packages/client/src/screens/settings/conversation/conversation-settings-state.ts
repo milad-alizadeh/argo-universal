@@ -1,4 +1,7 @@
-import { defaultConversationOptions, type ConversationSettings } from '@repo/contracts';
+import {
+  defaultConversationOptions,
+  type ConversationSettings,
+} from '@repo/contracts';
 import type { ConversationDetailViewProps } from './conversation-detail-view-props';
 
 const nothing: ConversationSettings = {
@@ -13,7 +16,9 @@ const nothing: ConversationSettings = {
 };
 
 // What is chosen and offered; nothing until the Server has answered.
-export const settingsOf = (props: ConversationDetailViewProps): ConversationSettings =>
+export const settingsOf = (
+  props: ConversationDetailViewProps,
+): ConversationSettings =>
   props.voice.status === 'loaded' ? props.voice.settings : nothing;
 
 export const waiting = (props: ConversationDetailViewProps): boolean =>

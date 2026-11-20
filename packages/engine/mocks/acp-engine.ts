@@ -111,8 +111,9 @@ type Fixture = OpenedStorage & {
 };
 
 // No Conversation provider unless a test supplies one, whatever the shell's ARGO_CONVERSATION_PROVIDER says.
-const conversationProviderOf = (scenario: AcpScenario): AcpScenario['conversationProvider'] =>
-  scenario.conversationProvider ?? null;
+const conversationProviderOf = (
+  scenario: AcpScenario,
+): AcpScenario['conversationProvider'] => scenario.conversationProvider ?? null;
 
 // Most tests have Agents that send no Slash command list; they must not wait for one.
 const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({

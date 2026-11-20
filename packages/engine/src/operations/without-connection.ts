@@ -9,5 +9,6 @@ type ConnectionOperations = Pick<
 // A Session caller has no App Connection, so the Operations that need one are refused rather than run without it.
 export const withoutConnection: ConnectionOperations = {
   'session.queue': () => Promise.reject(appOnlyRefusal('session.queue')),
-  'conversation.start': () => Promise.reject(appOnlyRefusal('conversation.start')),
+  'conversation.start': () =>
+    Promise.reject(appOnlyRefusal('conversation.start')),
 };

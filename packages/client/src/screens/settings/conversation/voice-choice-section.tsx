@@ -1,11 +1,15 @@
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
-import { CustomVoiceDialog } from './custom-voice-dialog';
 import type { ConversationDetailViewProps } from './conversation-detail-view-props';
+import { providerReason, providerRow } from './conversation-provider-row';
+import {
+  chosenProvider,
+  settingsOf,
+  waiting,
+} from './conversation-settings-state';
+import { CustomVoiceDialog } from './custom-voice-dialog';
 import { HeldTextRow } from './voice-held-rows';
 import { VoicePicker } from './voice-picker';
-import { providerReason, providerRow } from './conversation-provider-row';
-import { chosenProvider, settingsOf, waiting } from './conversation-settings-state';
 
 // While the chosen provider cannot be used, its reason takes the footnote: no call starts until it is fixed.
 const conversationFooter = (props: ConversationDetailViewProps): string =>
@@ -50,7 +54,9 @@ const pickerRow = (props: ConversationDetailViewProps): React.JSX.Element => (
   />
 );
 
-const instructionsRow = (props: ConversationDetailViewProps): React.JSX.Element => (
+const instructionsRow = (
+  props: ConversationDetailViewProps,
+): React.JSX.Element => (
   <HeldTextRow
     key="instructions"
     title="Instructions for every Conversation"
@@ -62,19 +68,24 @@ const instructionsRow = (props: ConversationDetailViewProps): React.JSX.Element 
 );
 
 // The custom voice form, over the page while it is open.
-export function EditorDialog(props: ConversationDetailViewProps): React.JSX.Element {
+export function EditorDialog(
+  props: ConversationDetailViewProps,
+): React.JSX.Element {
   const settings = settingsOf(props);
 
-  return (
-    <CustomVoiceDialog
-      editor={props.editor}
-      voices={settings.voices}
-      providerLabel={chosenProvider(settings)?.label ?? 'The provider'}
-      error={props.editorError}
-      onClose={() => props.onEditorChange()}
-      onSave={props.onSaveCustomVoice}
-      onDelete={props.onDeleteCustomVoice}
-      onPreview={props.onPreviewCustomVoice}
-    />
-  );
+  return <CustomVoiceDialog {...dialogProps(props, settings)} />;
 }
+
+const dialogProps = (
+  props: ConversationDetailViewProps,
+  settings: ReturnType<typeof settingsOf>,
+): React.ComponentProps<typeof CustomVoiceDialog> => ({
+  editor: props.editor,
+  voices: settings.voices,
+  providerLabel: chosenProvider(settings)?.label ?? 'The provider',
+  error: props.editorError,
+  onClose: () => props.onEditorChange(),
+  onSave: props.onSaveCustomVoice,
+  onDelete: props.onDeleteCustomVoice,
+  onPreview: props.onPreviewCustomVoice,
+});

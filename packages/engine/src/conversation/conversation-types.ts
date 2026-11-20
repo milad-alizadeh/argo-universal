@@ -1,4 +1,8 @@
-import type { ConversationEnd, ConversationLimit, ConversationPartial } from '@repo/contracts';
+import type {
+  ConversationEnd,
+  ConversationLimit,
+  ConversationPartial,
+} from '@repo/contracts';
 import type {
   ConversationSetup,
   VoiceDelivery,
@@ -61,7 +65,9 @@ export const sessionGone = (reason: SessionGoneReason): ConversationEvent => ({
   reason,
 });
 
-export const providerEvent = (event: ConversationProviderEvent): ConversationEvent => ({
+export const providerEvent = (
+  event: ConversationProviderEvent,
+): ConversationEvent => ({
   type: 'provider.event',
   event,
 });
@@ -135,8 +141,11 @@ export interface ConversationContext extends ConversationInput {
 }
 
 // The provider a running call speaks through; `call.start` is refused without one.
-export function callProvider(context: ConversationContext): ConversationProvider {
-  if (!context.provider) throw new Error('No Conversation provider is configured');
+export function callProvider(
+  context: ConversationContext,
+): ConversationProvider {
+  if (!context.provider)
+    throw new Error('No Conversation provider is configured');
 
   return context.provider;
 }

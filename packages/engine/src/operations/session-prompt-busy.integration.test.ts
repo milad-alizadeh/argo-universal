@@ -3,6 +3,7 @@ import { SessionPromptOutput } from '@repo/contracts';
 import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { z } from 'zod';
+import { steeringScenario } from '#mocks/conversation-agent';
 import { runOperation } from '#mocks/operations';
 import {
   delegationJourney,
@@ -10,7 +11,6 @@ import {
   startDelegated,
   type DelegationJourney,
 } from '#mocks/session-delegation';
-import { steeringScenario } from '#mocks/conversation-agent';
 
 const held = 'Keep working';
 

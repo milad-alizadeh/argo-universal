@@ -15,10 +15,17 @@ export function useOpeningWiring(
   const data = useNewSessionData(projectId);
   const attachmentDraft = useNewSessionDraft(data, draft);
   const sessionOpening = useSessionOpening(attachmentDraft, data, connected);
-  const { store } = sessionOpening.session;
-  const conversation = useNewSessionConversation((start) => store.call(start));
+  const base = { data, connected, navigate, attachmentDraft, sessionOpening };
 
-  return { data, connected, navigate, attachmentDraft, sessionOpening, conversation };
+  return { ...base, conversation: useOpeningConversation(sessionOpening) };
+}
+
+function useOpeningConversation(
+  opening: ReturnType<typeof useSessionOpening>,
+): ReturnType<typeof useNewSessionConversation> {
+  const { store } = opening.session;
+
+  return useNewSessionConversation((start) => store.call(start));
 }
 
 function useNewSessionDraft(

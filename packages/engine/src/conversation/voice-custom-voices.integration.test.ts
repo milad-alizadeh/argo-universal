@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
-import { offer, openConversationSession, startConversationEngine } from '#mocks/conversation-engine';
+import {
+  offer,
+  openConversationSession,
+  startConversationEngine,
+} from '#mocks/conversation-engine';
 import { FakeConversationProvider } from './fake-provider';
 
 const builtIn = [
@@ -123,7 +127,9 @@ describe('Custom voices', () => {
     expect(provider.call.request.voice).toBe('first');
     expect(provider.call.request.style).toBeUndefined();
     expect(provider.call.request.instructions).toBeUndefined();
-    expect((await host.caller.conversation.getSettings()).instructions).toBe('');
+    expect((await host.caller.conversation.getSettings()).instructions).toBe(
+      '',
+    );
   });
 
   it('previews a saved custom voice in its base voice and its style', async () => {

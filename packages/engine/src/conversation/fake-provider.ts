@@ -116,13 +116,17 @@ export class FakeConversation<
   public ended = false;
   // What the provider reports as it hangs up, such as the words the voice said so far.
   public readonly wordsAtEnd: ConversationProviderEvent[] = [];
-  private readonly listeners = new Set<(event: ConversationProviderEvent) => void>();
+  private readonly listeners = new Set<
+    (event: ConversationProviderEvent) => void
+  >();
 
   public constructor(public readonly request: Request) {
     this.answer = `fake-answer:${request.offer}`;
   }
 
-  public listen(listener: (event: ConversationProviderEvent) => void): () => void {
+  public listen(
+    listener: (event: ConversationProviderEvent) => void,
+  ): () => void {
     this.listeners.add(listener);
 
     return () => this.listeners.delete(listener);

@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import type { TurnHappening } from '../sessions';
-import type { SessionHappening } from './session-link';
 import { conversationSessions } from './conversation-sessions';
+import type { SessionHappening } from './session-link';
 
 type TurnListener = (happening: TurnHappening) => void;
 

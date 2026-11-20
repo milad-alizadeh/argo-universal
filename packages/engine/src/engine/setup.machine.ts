@@ -7,6 +7,11 @@ import {
   type InstallPorts,
   registryMachine,
 } from '../agents';
+import {
+  conversationMachine,
+  conversationSystemId,
+  type ConversationProvider,
+} from '../conversation';
 import { findMachineActor } from '../lib/machine-actor';
 import type { NotificationOptions } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
@@ -28,11 +33,6 @@ import {
   type WriterActorRef,
   writerMachine,
 } from '../storage';
-import {
-  conversationMachine,
-  conversationSystemId,
-  type ConversationProvider,
-} from '../conversation';
 import {
   closeAgentResources,
   type CloseAcpResourcesInput,
@@ -175,10 +175,12 @@ export const engineSetup = setup({
     stopRegistry: sendTo('registry', { type: 'STOP' }),
     // The microphone is never left open behind a stopping Engine. Sent at once, not deferred as `sendTo` is, so the call ends as stopped before closing admission reads as its App going away.
     stopVoice: ({ system }): void =>
-      findMachineActor(system, conversationSystemId, conversationMachine)?.send({
-        type: 'call.end',
-        reason: 'engine-stopped',
-      }),
+      findMachineActor(system, conversationSystemId, conversationMachine)?.send(
+        {
+          type: 'call.end',
+          reason: 'engine-stopped',
+        },
+      ),
     closeCommandAdmission: ({ context }): void =>
       context.commandAdmission.abort(),
     sendToSupervisor: (_, message: EngineMessage): void => {

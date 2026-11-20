@@ -309,7 +309,7 @@
     {
       // The GPT-Live provider is the one place that talks to Codex for a ChatGPT token (ADR-0064).
       "files": [
-        "packages/engine/src/voice/gpt-live/**",
+        "packages/engine/src/conversation/gpt-live/**",
         "packages/engine/mocks/fake-codex*",
         "packages/engine/mocks/gpt-live-*"
       ],
@@ -2480,7 +2480,7 @@
         "**/mocks/**",
         "packages/engine/src/system/info.ts",
         "packages/engine/src/engine/caffeinate.ts",
-        "packages/engine/src/voice/gpt-live/app-server-ask.ts",
+        "packages/engine/src/conversation/gpt-live/app-server-ask.ts",
         "packages/engine/src/plugins/host/connection.ts",
         "packages/engine/src/plugins/accounts/platform-opener.ts",
         "packages/engine/src/plugins/services/plugin-processes.ts",

@@ -5,7 +5,10 @@ import { offerTo } from './offer-to';
 describe('offering a call to the Server', () => {
   it('sends the offer on', async () => {
     const sent: string[] = [];
-    const connection = new FakeConversationConnection(Promise.resolve('v=0 offer'));
+
+    const connection = new FakeConversationConnection(
+      Promise.resolve('v=0 offer'),
+    );
 
     await offerTo(connection, (offer) => void sent.push(offer));
 

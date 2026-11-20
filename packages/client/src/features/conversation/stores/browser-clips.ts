@@ -1,5 +1,8 @@
 import type { VoicePreviewClip } from '@repo/contracts';
-import type { VoicePlayback, VoiceRecording } from '../types/conversation-environment';
+import type {
+  VoicePlayback,
+  VoiceRecording,
+} from '../types/conversation-environment';
 import { AudioElementPlayback } from './speaker-sink';
 
 // The largest slice `btoa` is given at once, so a long clip never overflows the call's arguments.

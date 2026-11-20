@@ -1,8 +1,8 @@
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { FieldLabelScope } from '@repo/kit/primitives/fields/field-row';
 import { useEffect, useState, type ReactElement } from 'react';
-import { SettledValue } from './settled-value';
 import { percentLabel } from './conversation-options';
+import { SettledValue } from './settled-value';
 
 /*
  * What a row shows while the person edits it: their own value until the Server's changes, so a save coming back, or

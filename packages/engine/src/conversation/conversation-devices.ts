@@ -16,6 +16,15 @@ interface ListeningApp {
   queue: Queue<ConversationDeviceRequest>;
 }
 
+const appOf = (
+  report: ConversationDeviceReport,
+  connection: AbortSignal,
+): ListeningApp => ({
+  connection,
+  report,
+  queue: new Queue<ConversationDeviceRequest>(),
+});
+
 const live = (app: ListeningApp): boolean => !app.connection.aborted;
 
 const on =
@@ -67,7 +76,8 @@ export class ConversationDevices {
     report: ConversationDeviceReport,
     connection: AbortSignal,
   ): AsyncGenerator<ConversationDeviceRequest> {
-    const app = { connection, report, queue: new Queue<ConversationDeviceRequest>() };
+    const app = appOf(report, connection);
+
     this.apps.push(app);
 
     try {

@@ -1,7 +1,17 @@
-import type { Conversation, ConversationPartial, ConversationStatus } from '@repo/contracts';
-import type { ComposerConversation, ComposerConversationMutes } from '#features/composer';
-import type { ConversationEdgeBandProps } from '../components/conversation-band/conversation-band';
-import type { ConversationMutes, VoiceSpectrum } from '../types/conversation-connection';
+import type {
+  Conversation,
+  ConversationPartial,
+  ConversationStatus,
+} from '@repo/contracts';
+import type {
+  ComposerConversation,
+  ComposerConversationMutes,
+} from '#features/composer';
+import type { ConversationBandProps } from '../components/conversation-band/conversation-band';
+import type {
+  ConversationMutes,
+  VoiceSpectrum,
+} from '../types/conversation-connection';
 import { elapsedOf } from './voice-label';
 
 // What the view asks of the App when the person presses something.
@@ -35,7 +45,7 @@ export interface SessionConversation {
   // The Composer's voice slot: the voice button, End with its mutes, or the pointer; absent with nothing to offer.
   composer: ComposerConversation | undefined;
   // The band along the Composer's top edge, drawn while a call here connects or runs; only in the Session it runs in.
-  band: ConversationEdgeBandProps | undefined;
+  band: ConversationBandProps | undefined;
   // What is being said now, drawn at the tail of the Feed; only in the Session the call runs in.
   partials: ConversationPartial[];
 }
@@ -52,7 +62,8 @@ const conversationOffered = (status: ConversationStatus): boolean =>
 const hereOf = (
   call: ConversationStatus['conversation'],
   sessionId: string,
-): Conversation | undefined => (call?.sessionId === sessionId ? call : undefined);
+): Conversation | undefined =>
+  call?.sessionId === sessionId ? call : undefined;
 
 function mutesOf(
   mutes: ConversationMutes,
@@ -76,7 +87,10 @@ const elsewhereOf = (
 });
 
 // The call runs here: End, with the mutes once it is connected.
-function hereSlotOf(call: Conversation, input: SessionConversationInput): ComposerConversation {
+function hereSlotOf(
+  call: Conversation,
+  input: SessionConversationInput,
+): ComposerConversation {
   const onEnd = input.actions.end;
 
   return call.status === 'connected'
@@ -85,13 +99,17 @@ function hereSlotOf(call: Conversation, input: SessionConversationInput): Compos
 }
 
 // No call runs: the voice button while one can start, and nothing otherwise.
-const idleSlotOf = (input: NewSessionConversationInput): ComposerConversation | undefined =>
+const idleSlotOf = (
+  input: NewSessionConversationInput,
+): ComposerConversation | undefined =>
   conversationOffered(input.status)
     ? { kind: 'start', onStart: input.actions.start }
     : undefined;
 
 // The Composer's one voice slot, resolved here so the Composer only draws it.
-function composerOf(input: SessionConversationInput): ComposerConversation | undefined {
+function composerOf(
+  input: SessionConversationInput,
+): ComposerConversation | undefined {
   const { conversation: call } = input.status;
 
   if (!call) return idleSlotOf(input);
@@ -121,7 +139,7 @@ export function newSessionConversation(
 function bandOf(
   here: Conversation | undefined,
   input: SessionConversationInput,
-): ConversationEdgeBandProps | undefined {
+): ConversationBandProps | undefined {
   return (
     here && {
       call: { ...here, microphoneMuted: input.mutes.microphone },
@@ -136,7 +154,9 @@ function bandOf(
  * call here, elsewhere or none" and to everything drawn from it: the Composer's voice button, mutes and pointer, the
  * band along its edge, and the words being said. Mutes are read from the connection and never written by a page.
  */
-export function sessionConversation(input: SessionConversationInput): SessionConversation {
+export function sessionConversation(
+  input: SessionConversationInput,
+): SessionConversation {
   const here = hereOf(input.status.conversation, input.sessionId);
 
   return {

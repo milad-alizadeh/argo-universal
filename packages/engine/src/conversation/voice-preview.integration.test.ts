@@ -13,7 +13,9 @@ const voices = [
 ];
 
 const withVoices = (): ReturnType<typeof startConversationEngine> =>
-  startConversationEngine(new FakeConversationProvider({ connect: 'manual', voices }));
+  startConversationEngine(
+    new FakeConversationProvider({ connect: 'manual', voices }),
+  );
 
 describe('Conversation preview', () => {
   it('speaks one greeting in the chosen voice from a listening-only offer and answers it', async () => {
@@ -100,6 +102,8 @@ describe('Conversation preview', () => {
   it('lists the description a provider publishes for a voice', async () => {
     const { host } = await withVoices();
 
-    expect((await host.caller.conversation.getSettings()).voices).toEqual(voices);
+    expect((await host.caller.conversation.getSettings()).voices).toEqual(
+      voices,
+    );
   });
 });

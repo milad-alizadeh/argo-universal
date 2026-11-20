@@ -27,7 +27,9 @@ const resetsAt = (resetSeconds: number): string =>
   new Date(Date.now() + resetSeconds * secondMs).toISOString();
 
 // The service gives the allowance's standing, not how much is left: any status means none to count on.
-const limitOf = ({ reset_seconds: seconds }: UsageLimit): ConversationProviderEvent =>
+const limitOf = ({
+  reset_seconds: seconds,
+}: UsageLimit): ConversationProviderEvent =>
   seconds === null
     ? { type: 'limit', remaining: 0 }
     : { type: 'limit', remaining: 0, resetsAt: resetsAt(seconds) };

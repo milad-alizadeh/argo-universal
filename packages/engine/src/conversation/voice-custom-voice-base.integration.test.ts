@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { offer, openConversationSession, startConversationEngine } from '#mocks/conversation-engine';
+import {
+  offer,
+  openConversationSession,
+  startConversationEngine,
+} from '#mocks/conversation-engine';
 import { FakeConversationProvider } from './fake-provider';
 
 const first = { id: 'first', label: 'First' };

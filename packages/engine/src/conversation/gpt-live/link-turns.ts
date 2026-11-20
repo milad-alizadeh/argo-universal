@@ -16,7 +16,12 @@ const transcriptOf = (
   { speaker, id }: OpenTurn,
   text: string,
   final: boolean,
-): ConversationProviderEvent => ({ type: transcriptType[speaker], id, text, final });
+): ConversationProviderEvent => ({
+  type: transcriptType[speaker],
+  id,
+  text,
+  final,
+});
 
 // An open turn's words so far, as a partial under the turn's id, which its final is stored under too.
 function partialOf(turn: OpenTurn): ConversationProviderEvent[] {
@@ -36,7 +41,10 @@ export class SpokenTurns {
   private readonly open = new Map<Speaker, OpenTurn>();
 
   // A new turn; it supersedes the speaker's open turn, and cuts the other speaker's short.
-  public opened(speaker: Speaker, turn: Utterance): ConversationProviderEvent[] {
+  public opened(
+    speaker: Speaker,
+    turn: Utterance,
+  ): ConversationProviderEvent[] {
     const said = this.others(turn.id).flatMap((open) => this.settle(open));
     const opened = { ...turn, speaker, reported: '' };
 

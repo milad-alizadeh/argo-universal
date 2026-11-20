@@ -7,7 +7,10 @@ import {
   type ConversationEvent,
   type ConversationInput,
 } from './conversation-types';
-import { type ConnectionWatch, type SessionWatch } from './conversation-watchers';
+import {
+  type ConnectionWatch,
+  type SessionWatch,
+} from './conversation-watchers';
 import { conversationMachine } from './conversation.machine';
 import { FakeConversationProvider } from './fake-provider';
 import type { ProviderCallInput } from './provider-call';

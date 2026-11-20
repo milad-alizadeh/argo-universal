@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import { callPointer, sendButtonState } from './composer-conditions';
-import type { ComposerProps, ComposerConversation, SendState } from './composer-types';
+import type {
+  ComposerProps,
+  ComposerConversation,
+  SendState,
+} from './composer-types';
 
 type Slot = ComposerConversation['kind'] | 'absent';
 

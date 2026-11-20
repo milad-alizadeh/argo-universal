@@ -1,19 +1,23 @@
 import type { ConversationStartOutput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import type { SnapshotFrom } from 'xstate';
+import { refusalError } from './conversation-room';
 import type { EndedCall, StartRefusal } from './conversation-types';
 import type { conversationMachine } from './conversation.machine';
-import { refusalError } from './conversation-room';
 
 export type CallSnapshot = SnapshotFrom<typeof conversationMachine>;
 
 const refusalOf = (
   { context: { refused } }: CallSnapshot,
   conversationId: string,
-): StartRefusal | null => (refused?.conversationId === conversationId ? refused.refusal : null);
+): StartRefusal | null =>
+  refused?.conversationId === conversationId ? refused.refusal : null;
 
 // The machine began a call for this start, or the error says why it refused.
-export function requireBegun(snapshot: CallSnapshot, conversationId: string): void {
+export function requireBegun(
+  snapshot: CallSnapshot,
+  conversationId: string,
+): void {
   const refusal = refusalOf(snapshot, conversationId);
 
   if (refusal) throw refusalError(refusal);
@@ -29,7 +33,10 @@ export const endedBetween = (
 export const startSettled = (snapshot: CallSnapshot): boolean =>
   snapshot.matches('idle') || snapshot.context.call?.answer != null;
 
-const answerOfCall = (snapshot: CallSnapshot, conversationId: string): string | null =>
+const answerOfCall = (
+  snapshot: CallSnapshot,
+  conversationId: string,
+): string | null =>
   snapshot.context.call?.conversationId === conversationId
     ? snapshot.context.call.answer
     : null;

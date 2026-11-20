@@ -16,7 +16,7 @@ import {
 import { bandLookOf, type BandLook, type EdgeCall } from './band-state';
 import { useBandFrame } from './use-band-frame';
 
-export interface ConversationEdgeBandProps {
+export interface ConversationBandProps {
   call: EdgeCall;
   // How long the call has run, as the timer reads it.
   elapsed: string;
@@ -148,7 +148,9 @@ const rowClass = 'h-11 w-full flex-row items-center px-4 pt-2.5';
  * the timer sit at the right end, 16 points from the last bar, as the first bar sits 16 points from the card's edge. The
  * Composer stays one card, and typing goes on under it throughout.
  */
-export function ConversationEdgeBand(props: ConversationEdgeBandProps): React.JSX.Element {
+export function ConversationBand(
+  props: ConversationBandProps,
+): React.JSX.Element {
   const look = bandLookOf(props.call);
 
   return (
