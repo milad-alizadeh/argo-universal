@@ -10,7 +10,7 @@ import { isStopRequest, stopWork } from './spoken-stop';
 import type { AnnouncedRequest, WaitingPermission } from './waiting-permission';
 
 // How long a hand-over waits for the final words of the person's turn it names; they arrive 41 to 434 ms after it (voice-mode.md §14).
-export const finalWordsWaitMs = 1000;
+const finalWordsWaitMs = 1000;
 
 type Applied = Exclude<SpokenAnswer, 'always'>;
 
