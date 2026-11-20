@@ -24,8 +24,8 @@ type Story = StoryObj<typeof meta>;
 
 function fullViewport(width: number, side: 'left' | 'right'): Story {
   return {
+    beforeEach: () => settleLayout(width),
     play: async ({ canvas }) => {
-      await settleLayout(width);
       const pane = await canvas.findByTestId('session-layout');
       const scroll = await canvas.findByTestId('feed-scroll');
       const composer = await canvas.findByTestId('composer-column');
