@@ -251,12 +251,6 @@ jobs:
           playwright: ${{ matrix.playwright }}
           turbo-team: ${{ vars.TURBO_TEAM }}
 
-      - name: Install Chromium when the desktop CSP test runs
-        if: ${{ matrix.group == 'rest' }}
-        run: |
-          status=$(pnpm exec turbo run test --filter=@repo/desktop --dry=json | node -e "let d='';process.stdin.on('data',(c)=>{d+=c}).on('end',()=>{console.log(JSON.parse(d).tasks.find((t)=>t.taskId==='@repo/desktop#test')?.cache.status??'MISS')})")
-          if [ "$status" != HIT ]; then pnpm --filter @repo/e2e exec playwright install --with-deps --only-shell chromium; fi
-
       - name: Tests
         env:
           # One package at a time, two workers each: integration tests start Servers and git processes, so a worker per core oversubscribes the runner's 4 and pushes tests past their timeouts. The `budget` project runs alone after the rest.
