@@ -1,3 +1,4 @@
+import type { AppScreenshotResult } from '@repo/contracts/operations';
 /*
  * What the Voice call needs of its Session, and nothing else: it sends the Session Prompts, hears the words and
  * Permission requests in its Feed and hears from the Session when each Turn ends.
@@ -64,6 +65,8 @@ export interface VoiceSessions {
   ) => () => void;
   // Writes a Notice into the Session's Feed.
   notice: (sessionId: string, notice: VoiceNotice) => void;
+  // Asks the App for a picture of the person's whole screen on the call's behalf; it writes the capture's Notice itself.
+  capture: (sessionId: string) => Promise<AppScreenshotResult>;
 }
 
 const unreachable = 'The Session cannot be reached';
@@ -74,4 +77,5 @@ export const detachedSessions: VoiceSessions = {
   stop: () => Promise.reject(new Error(unreachable)),
   watch: () => (): void => {},
   notice: () => {},
+  capture: () => Promise.reject(new Error(unreachable)),
 };

@@ -80,3 +80,16 @@ it('leaves the row unmarked when the attached Session has gone', async () => {
 
   expect(list.findText(mark)).toBeUndefined();
 }, 20_000);
+
+it('leaves the row unmarked when the attached Session is archived', async () => {
+  const sessions = { [first]: { ...session, archived: true } };
+  const tracked = await trackedGitHub([project], { sessions });
+
+  await signIn(tracked);
+  await chooseGithub(await trackerPage(tracked.test));
+  await attach(tracked.test, 'attach');
+
+  const list = await openList(tracked.test);
+
+  expect(list.findText(mark)).toBeUndefined();
+}, 20_000);

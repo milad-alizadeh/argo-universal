@@ -21,6 +21,7 @@ type Listener = (happening: SessionHappening) => void;
 export interface VoiceSessionWork extends StartedSources {
   prompt: (sessionId: string, text: string) => Promise<PromptOutcome>;
   stop: VoiceSessions['stop'];
+  capture: VoiceSessions['capture'];
 }
 
 type NoticeUpdate = Extract<FeedUpdate, { sessionUpdate: 'notice' }>;
@@ -102,6 +103,12 @@ const watchOf =
     };
   };
 
+// Writes a Notice into a Session's Feed, outside any Turn; the Voice call and a screen capture both write theirs this way.
+export const feedNotices =
+  (sources: Pick<FeedSources, 'findFeed'>): VoiceSessions['notice'] =>
+  (sessionId, notice) =>
+    sources.findFeed(sessionId)?.send(noticeEvent(notice));
+
 // The Session the Voice call speaks for, reached through the Engine's own Prompt path, its Turn happenings and its Feed.
 export const voiceSessions = (
   sources: FeedSources,
@@ -109,7 +116,7 @@ export const voiceSessions = (
 ): VoiceSessions => ({
   prompt: work.prompt,
   stop: work.stop,
+  capture: work.capture,
   watch: watchOf(sources, work),
-  notice: (sessionId, notice) =>
-    sources.findFeed(sessionId)?.send(noticeEvent(notice)),
+  notice: feedNotices(sources),
 });

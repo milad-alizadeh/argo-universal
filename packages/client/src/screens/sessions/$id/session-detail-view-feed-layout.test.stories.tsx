@@ -57,6 +57,9 @@ export const PhoneLeftGutter = fullViewport(390, 'left');
 
 export const PhoneRightGutter = fullViewport(390, 'right');
 
-export const DesktopLeftGutter = fullViewport(1920, 'left');
+// Wide enough that the Workbench's cards keep the column centred in the page, as Codex's thread is from each side keeping 400.
+const desktop = 2560;
 
-export const DesktopRightGutter = fullViewport(1920, 'right');
+export const DesktopLeftGutter = fullViewport(desktop, 'left');
+
+export const DesktopRightGutter = fullViewport(desktop, 'right');

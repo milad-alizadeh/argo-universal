@@ -1,6 +1,8 @@
 import { fromCallback } from 'xstate';
 import { AgentRelay, type RelayReports } from './agent-relay';
 import type { SendBack, VoiceCallEvent, VoiceSay } from './call-types';
+import type { VoiceProviderEvent } from './provider';
+import { ScreenLook } from './screen-look';
 import type { VoiceSessions } from './session-link';
 
 export type RelayInput = {
@@ -8,12 +10,24 @@ export type RelayInput = {
   sessionId: string;
 };
 
-type WorkRequest = { requestId: string; text: string };
+// What the relay hears from the voice: its requests for work and for a picture. What each side said reaches it from the machine too.
+export const asksTheRelay = (heard: VoiceProviderEvent): boolean =>
+  heard.type === 'work.requested' || heard.type === 'frame.requested';
 
-const workRequestOf = (event: VoiceCallEvent): WorkRequest | undefined =>
-  event.type === 'provider.event' && event.event.type === 'work.requested'
-    ? event.event
-    : undefined;
+type Hearers = { relay: AgentRelay; look: ScreenLook };
+
+function hear({ relay, look }: Hearers, heard: VoiceProviderEvent): void {
+  if (heard.type === 'work.requested')
+    void relay.request(heard.requestId, heard.text);
+  else look.hear(heard);
+}
+
+// What the machine forwards: the call being answered, then what the voice and the person said and asked for.
+function route(hearers: Hearers, event: VoiceCallEvent): void {
+  if (event.type === 'call.answered') hearers.look.answered(event.canLook);
+
+  if (event.type === 'provider.event') hear(hearers, event.event);
+}
 
 const reportsTo = (sendBack: SendBack): RelayReports => ({
   speak: (say: VoiceSay): void => sendBack({ type: 'voice.say', say }),
@@ -29,13 +43,11 @@ export const agentRelay = fromCallback<VoiceCallEvent, RelayInput>(
   ({ input, sendBack, receive }) => {
     const { sessions } = input;
 
-    const relay = new AgentRelay(sessions, input, reportsTo(sendBack));
+    const reports = reportsTo(sendBack);
+    const relay = new AgentRelay(sessions, input, reports);
+    const look = new ScreenLook(sessions, input, reports.speak);
 
-    receive((event) => {
-      const request = workRequestOf(event);
-
-      if (request) void relay.request(request.requestId, request.text);
-    });
+    receive((event) => route({ relay, look }, event));
 
     return sessions.watch(input.sessionId, (happening) =>
       relay.happened(happening),

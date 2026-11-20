@@ -115,19 +115,20 @@ it('reaches the open lists with each answer of a Plugin that runs late on every 
   expect(await run.calls.items('counter', input)).toEqual(answered('two'));
 });
 
-it('drops an answer that lands after a late call was given up on', async () => {
+it('drops an answer that lands after a late call was given up on, and asks again', async () => {
   const run = slotItems();
 
   await askedLate(run);
   run.clock.fire(slotItemsLateLimitMs);
-
-  const before = run.calls.changes.version;
-
+  await settled();
   run.calls.receive(caller, answer(0, 'too late'));
   await settled();
-  expect(run.calls.changes.version).toBe(before);
-  expect(await run.calls.items('counter', input)).toEqual(leftOutLate);
-  expect(run.sent).toHaveLength(1);
+
+  const again = run.calls.items('counter', input);
+
+  expect(run.sent).toHaveLength(2);
+  run.calls.receive(caller, answer(1, 'fresh'));
+  expect(await again).toEqual(answered('fresh'));
 });
 
 it('drops a late answer from a worker that has since restarted', async () => {

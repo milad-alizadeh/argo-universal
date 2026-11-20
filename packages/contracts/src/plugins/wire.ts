@@ -17,8 +17,6 @@ export {
   ProjectDetailsItem,
   projectDetailsRowLimit,
   projectDetailsSlotId,
-  sessionActivitySlotId,
-  SessionActivityItem,
   sessionBarSlotId,
   sessionChangesSlotId,
   sessionRowSlotId,

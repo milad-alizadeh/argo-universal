@@ -19,7 +19,6 @@ import {
   longPluginItemsCompactSession,
   moreIssue,
   moreIssueItem,
-  pluginActivitySession,
   pluginItemsCompactSession,
   pluginItemsSession,
   previewItem,
@@ -35,6 +34,26 @@ export default meta;
 export const RunningPhone = running(layoutWidths.phone);
 
 export const RunningWide = running(layoutWidths.wide);
+
+// A Regular row draws the title and its status, never the Session's activity.
+function noActivity(width: number): Story {
+  return {
+    args: pluginItemsSession,
+    play: async ({ canvas }) => {
+      await settleLayout(width);
+      await expect(
+        canvas.getByText(pluginItemsSession.session.title),
+      ).toBeVisible();
+      await expect(
+        canvas.queryByText(pluginItemsSession.session.activity),
+      ).not.toBeInTheDocument();
+    },
+  };
+}
+
+export const NoActivityPhone = noActivity(layoutWidths.phone);
+
+export const NoActivityWide = noActivity(layoutWidths.wide);
 
 function archived(width: number): Story {
   return {
@@ -211,39 +230,6 @@ function moreItems(width: number): Story {
 export const MorePluginItemsPhone = moreItems(layoutWidths.phone);
 
 export const MorePluginItemsWide = moreItems(layoutWidths.wide);
-
-// The chosen Plugin's line takes the place of Argo's; the status and title stay Argo's.
-function pluginActivityLine(width: number): Story {
-  return {
-    args: pluginActivitySession,
-    play: async ({ canvas }) => {
-      await settleLayout(width);
-      await expect(
-        canvas.getByText(pluginActivitySession.plugins.activity.text),
-      ).toBeVisible();
-      await expect(
-        canvas.queryByText(pluginActivitySession.session.activity),
-      ).not.toBeInTheDocument();
-      await expect(
-        canvas.getByRole('button', rowName(pluginActivitySession.session)),
-      ).toBeVisible();
-    },
-  };
-}
-
-export const PluginActivityLinePhone = pluginActivityLine(layoutWidths.phone);
-
-export const PluginActivityLineWide = pluginActivityLine(layoutWidths.wide);
-
-export const ArgosActivityLineWithoutAPluginLine: Story = {
-  args: pluginItemsSession,
-  play: async ({ canvas }) => {
-    await settleLayout('wide');
-    await expect(
-      canvas.getByText(pluginItemsSession.session.activity),
-    ).toBeVisible();
-  },
-};
 
 // A Compact row draws one item; the rest join "+N".
 export const PluginItemsCompact: Story = {

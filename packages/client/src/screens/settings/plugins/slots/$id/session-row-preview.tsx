@@ -7,7 +7,7 @@ import { useTRPC } from '#features/connection';
 import {
   type PluginLookup,
   rowDrawing,
-  type SentRowItems,
+  type SentItems,
   usePluginLookup,
   useSentRowItems,
 } from '#features/plugins';
@@ -19,7 +19,7 @@ import type { SlotPreviewProps } from './slot-detail';
 export interface SessionRowPreviewData {
   session: SessionInfo;
   age: string;
-  sent: SentRowItems;
+  sent: SentItems;
   lookup: PluginLookup;
 }
 
@@ -27,7 +27,7 @@ type PreviewProps = { data: SessionRowPreviewData; visibility: SlotVisibility };
 
 /*
  * The Sessions list's own row, under the page's choices, drawn by the same rules as the list: the Plugins left on fill
- * its items, and the chosen Plugin writes its Activity line. It is a preview, so pressing it, or an item, does nothing.
+ * its items. It is a preview, so pressing it, or an item, does nothing.
  */
 export const SessionRowPreview = ({
   data,
@@ -37,10 +37,7 @@ export const SessionRowPreview = ({
     session={data.session}
     logo=""
     age={data.age}
-    plugins={rowDrawing(visibility, data.lookup)(
-      data.sent.items,
-      data.sent.lines,
-    )}
+    plugins={rowDrawing(visibility, data.lookup)(data.sent)}
     onSelect={ignore}
   />
 );

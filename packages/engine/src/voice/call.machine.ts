@@ -7,7 +7,7 @@ import {
   setup,
   type ActorRefFrom,
 } from 'xstate';
-import { agentRelay, type RelayInput } from './agent-relay-actor';
+import { agentRelay, asksTheRelay, type RelayInput } from './agent-relay-actor';
 import { defaultConduct } from './call-conduct';
 import {
   closeEndingOf,
@@ -290,8 +290,7 @@ const voiceCallSetup = setup({
 
       return runningCall(context).agentWorking !== event.running;
     },
-    asksForWork: ({ event }): boolean =>
-      providerEventOf(event).type === 'work.requested',
+    asksRelay: ({ event }): boolean => asksTheRelay(providerEventOf(event)),
   },
 });
 
@@ -435,7 +434,11 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
         'provider.event': [
           {
             guard: 'hearsTranscript',
-            actions: ['storeTranscript', 'trackPartials'],
+            actions: [
+              'storeTranscript',
+              'trackPartials',
+              sendTo('agentRelay', ({ event }) => event),
+            ],
           },
           {
             guard: 'providerErrored',
@@ -448,7 +451,7 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
             actions: endingWith(providerClose),
           },
           {
-            guard: 'asksForWork',
+            guard: 'asksRelay',
             actions: sendTo('agentRelay', ({ event }) => event),
           },
           { actions: 'foldProvider' },
@@ -461,7 +464,10 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
       states: {
         starting: {
           on: {
-            'call.answered': { target: 'connecting', actions: 'answer' },
+            'call.answered': {
+              target: 'connecting',
+              actions: ['answer', sendTo('agentRelay', ({ event }) => event)],
+            },
           },
         },
         connecting: {
@@ -476,7 +482,11 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
             'provider.event': [
               {
                 guard: 'hearsTranscript',
-                actions: ['storeTranscript', 'trackPartials'],
+                actions: [
+                  'storeTranscript',
+                  'trackPartials',
+                  sendTo('agentRelay', ({ event }) => event),
+                ],
                 target: 'connected',
                 reenter: true,
               },

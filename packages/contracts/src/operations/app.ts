@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ScreenDestination } from '../navigation/screen-link';
 import type { OperationDefinition } from './index';
+import { AppScreenshotResult } from './screen-sight';
 
 /*
  * `delivered` means one local desktop App's Connection was handed the destination; the App still checks it and
@@ -25,5 +26,16 @@ export const appOperations = {
     result: AppOpenResult,
     tier: 'act',
     keywords: ['navigate', 'screen', 'link', 'show', 'focus'],
+  },
+  'app.screenshot': {
+    id: 'app.screenshot',
+    label: 'See the screen',
+    icon: 'app-window',
+    description:
+      'Take one picture of the person’s whole screen and return it as an image, so you can see what they see. It needs no permission, and works only when the person turned screen sight on for this Device. It answers captured with the image, refused with why (off), not_opened when no desktop App is reachable, or not_available with what to do. The picture is never stored; the Feed shows one Notice that a capture was taken.',
+    params: z.strictObject({}).default({}),
+    result: AppScreenshotResult,
+    tier: 'act',
+    keywords: ['screen', 'screenshot', 'see', 'look', 'capture', 'display'],
   },
 } as const satisfies Record<string, OperationDefinition>;

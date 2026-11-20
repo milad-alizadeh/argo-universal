@@ -150,10 +150,6 @@ _Avoid_: Contribution point, hook, outlet
 The kit components a Plugin's Render answers for one page or Slot, as a value the App fetches, keeps and draws. Everything drawn inside it is the Plugin's, so its Actions cannot claim Argo's reserved shortcuts. The App keeps a page's last one in memory and draws it while the page is fetched again. See ADR-0050.
 _Avoid_: Wire tree, Plugin UI
 
-**Single-owner Slot**:
-An items Slot only one source shows at a time, such as a Session row's Activity line. Every Plugin that declares it answers; the App shows the answer of the one Plugin the user chose in Settings on that Device, or Argo's own while none is chosen or the chosen Plugin is turned off or has no answer.
-_Avoid_: Part, takeover, exclusive Slot
-
 **Last good items**:
 The items a Plugin last answered for each context of an items Slot, kept by the Engine across change signals and restarts. While the Plugin's answer is late, fails or it is not running yet, a list draws these instead, so a Session row keeps its pull requests; a late answer that lands after all replaces them. They are dropped when the Plugin is turned off or removed.
 _Avoid_: Cached items, stale items
@@ -448,6 +444,10 @@ _Avoid_: Conversation, conversation mode, voice mode, live
 A service or local model that runs a Voice call's voice.
 _Avoid_: Conversation provider, realtime provider, voice backend
 
+**Screen sight**:
+Letting an Agent or the voice of a Voice call see the person's whole screen as one still picture, taken by the desktop App when asked. Nothing asks the person before a capture. Off until the person turns it on for the Device, shown to the person as one Notice, and never stored.
+_Avoid_: Screen share, screen capture, screenshot (for the feature; `app.screenshot` is the Operation)
+
 **Stored Turn**:
 A Turn as read back from storage, before the Writer's queued changes are laid over it.
 _Avoid_: Turn row, saved Turn
@@ -665,7 +665,7 @@ The App's chrome around its pages: the rail, the section sidebar and the panes. 
 _Avoid_: Shell, app shell, chrome
 
 **Frame layout**:
-Where every region of a wide window's Frame sits: the rail, the list, the page and its content column, the Workbench and the Inspector, with the dividers between them and how far each drags. It is worked out once from the window's width, the preferred pane widths and what the person asked of the sidebar, the Workbench and the Inspector; the content keeps its floor before the list folds, and the Workbench, drawn over the page, takes no width and shows where the page's gutters together hold it, the content column moving aside where the trailing one alone does not.
+Where every region of a wide window's Frame sits: the rail, the list, the page and its content column, the Workbench and the Inspector, with the dividers between them and how far each drags. It is worked out once from the window's width, the preferred pane widths and what the person asked of the sidebar, the Workbench and the Inspector; the content keeps its floor before the list folds, and the Workbench, drawn over the page, takes no width and shows where the page's gutters hold it by Codex's thresholds, the content column centring in the room beside it on a page too narrow to keep it centred.
 _Avoid_: Geometry, legacy layout
 
 **Scaffold**:

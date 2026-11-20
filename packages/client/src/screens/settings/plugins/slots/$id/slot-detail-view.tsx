@@ -6,27 +6,15 @@ import {
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import { SettingsLoading } from '#features/settings';
-import type { OwnerSlot, SlotDetail } from './slot-detail';
-import {
-  effectiveOwner,
-  fillingPlugins,
-  optionValueOf,
-  ownerOfOption,
-  ownerOptions,
-  type SlotOwner,
-  type SlotPlugin,
-  visibilityOf,
-} from './slot-detail-model';
+import type { SlotDetail } from './slot-detail';
+import { type SlotPlugin, visibilityOf } from './slot-detail-model';
 import type { SlotPluginsLoad } from './slot-plugins';
 import { SlotPreview } from './slot-preview';
 
 export interface SlotDetailViewProps {
   settings: SlotDetail;
   plugins: SlotPluginsLoad;
-  // The Plugin that writes the Slot's Single-owner Slot, or null while it is Argo's.
-  owner: SlotOwner;
   onShownChange: (pluginId: string, shown: boolean) => void;
-  onOwnerChange: (owner: SlotOwner) => void;
   onBack?: () => void;
 }
 
@@ -36,8 +24,8 @@ const loadFailed: ErrorToast = {
 };
 
 /*
- * Any Slot's page, drawn from its declaration: which Plugins fill it, and who writes its Single-owner Slot. The
- * preview is the Slot's own component, pinned below the rows that change it, and redraws as each one changes.
+ * Any Slot's page, drawn from its declaration: which Plugins fill it. The preview is the Slot's own component, pinned
+ * below the rows that change it, and redraws as each one changes.
  */
 export function SlotDetailView(props: SlotDetailViewProps): React.JSX.Element {
   useErrorToast(props.plugins.status === 'error' ? loadFailed : undefined);
@@ -63,15 +51,11 @@ type LoadedProps = Omit<SlotDetailViewProps, 'plugins'> & {
 
 const loaded = (props: LoadedProps): React.JSX.Element => (
   <>
-    <FieldGroup key="switches">
-      {showSection(props)}
-      {props.settings.ownerSlot &&
-        ownerSection(props, props.settings.ownerSlot)}
-    </FieldGroup>
+    <FieldGroup key="switches">{showSection(props)}</FieldGroup>
     <SlotPreview
       key="preview"
       settings={props.settings}
-      visibility={visibilityOf(props.plugins, props.owner)}
+      visibility={visibilityOf(props.plugins)}
     />
   </>
 );
@@ -83,7 +67,7 @@ const showSection = ({
   onShownChange,
 }: LoadedProps): React.JSX.Element => (
   <FieldGroup.Section title={settings.showTitle}>
-    {fillingPlugins(plugins).map((plugin) => switchRow(plugin, onShownChange))}
+    {plugins.map((plugin) => switchRow(plugin, onShownChange))}
   </FieldGroup.Section>
 );
 
@@ -98,22 +82,3 @@ const switchRow = (
     onValueChange={(shown) => onShownChange(plugin.pluginId, shown)}
   />
 );
-
-const ownerSection = (
-  props: LoadedProps,
-  ownerSlot: OwnerSlot,
-): React.JSX.Element => (
-  <FieldGroup.Section title={ownerSlot.title}>
-    <FieldGroup.Picker
-      title={ownerSlot.title}
-      presentation="inline"
-      value={chosenOption(props)}
-      options={ownerOptions(ownerSlot, props.plugins, props.owner)}
-      onValueChange={(value) => props.onOwnerChange(ownerOfOption(value))}
-    />
-  </FieldGroup.Section>
-);
-
-// A Plugin turned off gives the line back to Argo, so its option is not the chosen one.
-const chosenOption = ({ plugins, owner }: LoadedProps): string =>
-  optionValueOf(effectiveOwner(plugins, owner)?.pluginId ?? null);

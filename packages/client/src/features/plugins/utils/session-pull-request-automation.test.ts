@@ -37,7 +37,6 @@ const reading = (item: Change): SlotReading<Change> => ({
     },
   ],
   overflow: [],
-  owner: undefined,
 });
 
 describe('the automation a Change offers', () => {

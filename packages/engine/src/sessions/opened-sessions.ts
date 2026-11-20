@@ -8,10 +8,7 @@ type OpenedSources = Pick<SessionHandlerSources, 'findWriter' | 'open'>;
 type TurnListener = (happening: TurnHappening) => void;
 
 // A Session that opened, and the Session that started it through an Operation, or null.
-type OpenedListener = (
-  sessionId: string,
-  startedBy: string | null,
-) => void;
+type OpenedListener = (sessionId: string, startedBy: string | null) => void;
 
 type Row = ReturnType<OpenedSources['open']['queued']>;
 

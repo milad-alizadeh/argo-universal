@@ -13,11 +13,11 @@ export const firstAndLastRowsReachable: Story = {
   parameters: { screenPreview: true },
   render: (args) => (
     <View className="flex-1 w-full wide:w-frame-list" style={{ minHeight: 0 }}>
-      <SessionsList {...args} sessions={largeSessions.slice(0, 12)} />
+      <SessionsList {...args} sessions={largeSessions.slice(0, 24)} />
     </View>
   ),
   play: async ({ canvas }) => {
-    // At a phone's size twelve Sessions overflow the list, so it can scroll.
+    // At a phone's size twenty-four Sessions overflow the list, so it can scroll.
     if ('__vitest_browser__' in globalThis) await settleLayout('phone');
     const scroll = canvas.getByTestId(sessionsScrollId);
 
@@ -39,7 +39,7 @@ export const firstAndLastRowsReachable: Story = {
     scroll.scrollTop = scroll.scrollHeight;
 
     const last = await canvas.findByRole('button', {
-      name: 'Large Session 11, Idle',
+      name: 'Large Session 23, Idle',
     });
 
     await waitFor(async () => {

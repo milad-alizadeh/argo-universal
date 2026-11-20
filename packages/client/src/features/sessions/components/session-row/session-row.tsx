@@ -22,33 +22,14 @@ export type { SessionRowProps } from './session-row-props';
 
 type RowIdentity = Pick<
   ListItemProps,
-  | 'title'
-  | 'subtitle'
-  | 'subtitleIcon'
-  | 'accessibilityLabel'
-  | 'onPress'
-  | 'selected'
-  | 'finished'
+  'title' | 'accessibilityLabel' | 'onPress' | 'selected' | 'finished'
 >;
-
-// The chosen Plugin's Activity line, led by its glyph, when it has one for this Session; Argo's own, bare, otherwise.
-function activityLine({
-  plugins,
-  session,
-}: SessionRowProps): Pick<ListItemProps, 'subtitle' | 'subtitleIcon'> {
-  const activity = plugins?.activity;
-
-  if (!activity) return { subtitle: session.activity };
-
-  return { subtitle: activity.text, subtitleIcon: activity.icon };
-}
 
 type CalledRow = SessionRowProps & CalledRowProps;
 
 function rowIdentity(props: CalledRow): RowIdentity {
   return {
     title: props.session.title,
-    ...activityLine(props),
     accessibilityLabel: withCallLabel(
       sessionRowLabel(props.session),
       props.call,
@@ -59,17 +40,15 @@ function rowIdentity(props: CalledRow): RowIdentity {
   };
 }
 
-// Regular: two lines with the Session's status and time, then a meta line while it has anything to show.
+// Regular: the title line with the Session's status and time, then a meta line while it has anything to show.
 function RegularRow(props: CalledRow): React.JSX.Element {
-  const identity = rowIdentity(props);
-
   return (
     <ListItem
-      {...identity}
+      {...rowIdentity(props)}
       {...sessionRowMenu(props)}
       {...sidebarDrawing(props.session.status)}
       leading={<SessionMark {...props} />}
-      {...regularEnds(props, identity.subtitle)}
+      {...regularEnds(props)}
       metaAccessories={sessionMetaLine(props)}
       progress={sessionProgress(props.session)}
     />

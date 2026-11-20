@@ -71,7 +71,7 @@ export type ListItemProps = KitProps<'ListItem'> & {
    */
   metaAccessories?: ReactNode;
   trailingAccessories?: ReactNode;
-  // A glyph leading the subtitle in its tone, such as the Plugin that wrote a Session row's Activity line.
+  // A glyph leading the subtitle in its tone.
   subtitleIcon?: KitProps<'Icon'>['name'];
   // The colour of the subtitle's glyph alone, as a state dot beside words that stay muted; else the subtitle's tone.
   subtitleIconTone?: Tone;

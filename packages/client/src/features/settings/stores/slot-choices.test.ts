@@ -3,7 +3,6 @@ import { QueryClient } from '@tanstack/react-query';
 import { describe, expect, it, vi } from 'vitest';
 import { memoryStorage } from '../../../../mocks/memory-storage';
 import {
-  chooseSlotOwner,
   chooseSlotPluginShown,
   type SlotChoices,
   slotChoicesQuery,
@@ -39,7 +38,7 @@ describe('the Plugins hidden in a Slot on this Device', () => {
     useMemoryStorage();
     const choices = await loadChoices();
 
-    expect(choices).toEqual({ hidden: [], owner: null });
+    expect(choices).toEqual({ hidden: [] });
     expect(choices.hidden).not.toContain('issues');
   });
 
@@ -85,31 +84,25 @@ describe('the Plugins hidden in a Slot on this Device', () => {
   it('is read from this Device storage', async () => {
     useMemoryStorage().setItem(
       keptKey,
-      JSON.stringify({ hidden: ['coverage'], owner: null }),
+      JSON.stringify({ hidden: ['coverage'] }),
     );
     await expect(AsyncStorage.getItem(keptKey)).resolves.not.toBeNull();
     await expect(loadHidden()).resolves.toEqual(['coverage']);
   });
 
-  it('keeps the Single-owner Slot owner beside the switches', async () => {
-    useMemoryStorage();
-    const client = new QueryClient();
-    await chooseSlotPluginShown(client, server, {
-      pluginId: 'coverage',
-      shown: false,
-    });
-    await chooseSlotOwner(client, server, 'issue-tracker');
+  it('drops the Activity line owner an older App kept', async () => {
+    useMemoryStorage().setItem(
+      keptKey,
+      JSON.stringify({ hidden: ['coverage'], owner: 'issue-tracker' }),
+    );
 
-    await expect(loadChoices()).resolves.toEqual({
-      hidden: ['coverage'],
-      owner: 'issue-tracker',
-    });
+    await expect(loadChoices()).resolves.toEqual({ hidden: ['coverage'] });
   });
 
   it('keeps a choice made before the kept ones loaded', async () => {
     useMemoryStorage().setItem(
       keptKey,
-      JSON.stringify({ hidden: ['coverage'], owner: null }),
+      JSON.stringify({ hidden: ['coverage'] }),
     );
     await chooseSlotPluginShown(new QueryClient(), server, {
       pluginId: 'deploys',

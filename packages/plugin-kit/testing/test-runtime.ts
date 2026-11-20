@@ -102,6 +102,7 @@ function projectLists(
 const withIdle = (session: TestSession): PluginSessionInfo => ({
   ...session,
   idleFor: session.idleFor ?? null,
+  archived: session.archived ?? false,
 });
 
 function sessionOf(

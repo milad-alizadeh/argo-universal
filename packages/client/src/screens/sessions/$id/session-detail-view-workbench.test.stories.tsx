@@ -10,7 +10,6 @@ import {
   pullRequestMocks,
   withPullRequests,
 } from './session-detail-view-pull-request.mocks';
-import { voiceCallSession } from './session-detail-view-voice.mocks';
 import { idleSession } from './session-detail-view.mocks';
 
 const meta = {
@@ -77,12 +76,11 @@ function gutterBoundary(width: number): Story {
   };
 }
 
-// From 1856 with the Sessions list shown, the page's trailing gutter alone holds the cards beside the centred column.
-export const CardsStaySeparateAtTheIndependentBoundary = gutterBoundary(1856);
+export const CardsStaySeparateAtTheIndependentBoundary = gutterBoundary(1604);
 
-// Below it the trailing gutter no longer holds the cards, so they hide and the conversation stays centred in the page.
+// Below it the page's gutters together no longer hold the cards, so they hide and the conversation stays centred in the page.
 export const CardsAutoHideBelowTheIndependentBoundary: Story = {
-  beforeEach: (): Promise<void> => settleLayout(1855),
+  beforeEach: (): Promise<void> => settleLayout(1603),
   play: async ({ canvas }) => {
     const composer = await canvas.findByTestId(composerId);
     await waitFor(() =>
@@ -98,7 +96,7 @@ export const CardsAutoHideBelowTheIndependentBoundary: Story = {
 };
 
 export const InspectorAndNavigationKeepCardsOutsideTheConversation: Story = {
-  beforeEach: (): Promise<void> => settleLayout(2560),
+  beforeEach: (): Promise<void> => settleLayout(2224),
   play: async ({ canvas, userEvent }) => {
     await expectSeparateCards(canvas);
     await userEvent.click(await canvas.findByRole('button', inspectorToggle));
@@ -175,6 +173,9 @@ export const WideGuttersKeepTheConversationCentered: Story = {
   },
 };
 
+// On a page too narrow to keep the column centred beside the cards, it moves aside as Codex's thread does: half the card's 312 and the 8 inset.
+const asideOfTheCards = 160;
+
 const centreOf = (element: HTMLElement): number => {
   const box = element.getBoundingClientRect();
 
@@ -184,7 +185,33 @@ const centreOf = (element: HTMLElement): number => {
 const pageCentre = (canvas: Canvas): number =>
   centreOf(canvas.getByTestId(detailId));
 
-// Below the gutter width the cards hide; pressing Show floats them over the page, and the conversation stays centred under them.
+// Where the trailing gutter alone does not hold the cards, the conversation centres in the room beside them and returns to the page's centre when they hide.
+export const NarrowGuttersCentreTheConversationBesideTheCards: Story = {
+  beforeEach: (): Promise<void> => settleLayout(1604),
+  play: async ({ canvas, userEvent }) => {
+    const composer = await canvas.findByTestId(composerId);
+    await expectSeparateCards(canvas);
+    await waitFor(() =>
+      expect(centreOf(composer)).toBeCloseTo(
+        pageCentre(canvas) - asideOfTheCards,
+        1,
+      ),
+    );
+    const feed = lastFeedRow(canvas);
+    await expect(centreOf(feed)).toBeCloseTo(centreOf(composer), 1);
+    await userEvent.click(
+      canvas.getByRole('button', { name: toggleWorkbench }),
+    );
+    await waitFor(() =>
+      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
+    );
+    await waitFor(() =>
+      expect(centreOf(composer)).toBeCloseTo(pageCentre(canvas), 1),
+    );
+  },
+};
+
+// Below the gutter width the cards hide; the toggle opens them over the page as Codex's popover, the conversation stays centred under them, and a press outside closes them.
 export const ShownCardsFloatOverTheCentredConversation: Story = {
   beforeEach: (): Promise<void> => settleLayout(1500),
   play: async ({ canvas, userEvent }) => {
@@ -192,38 +219,63 @@ export const ShownCardsFloatOverTheCentredConversation: Story = {
     await waitFor(() =>
       expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
     );
-    const before = composer.getBoundingClientRect();
-    await expect(centreOf(composer)).toBeCloseTo(pageCentre(canvas), 1);
-    const rowTop = lastFeedRow(canvas).getBoundingClientRect().top;
+    await waitFor(() =>
+      expect(centreOf(composer)).toBeCloseTo(pageCentre(canvas), 1),
+    );
     await userEvent.click(
       canvas.getByRole('button', { name: toggleWorkbench }),
     );
     await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
-    await expect(composer.getBoundingClientRect().left).toBe(before.left);
-    await expect(composer.getBoundingClientRect().width).toBe(before.width);
-    await expect(lastFeedRow(canvas).getBoundingClientRect().top).toBeCloseTo(
-      rowTop,
-      1,
-    );
-    await expect(centreOf(lastFeedRow(canvas))).toBeCloseTo(
-      centreOf(composer),
-      1,
-    );
-  },
-};
-
-// A Session with no cards has no Workbench: it is not drawn, and the conversation sits in the page's centre at every width.
-export const NoCardsLeaveTheConversationCentred: Story = {
-  args: { view: { state: 'open', ...voiceCallSession } },
-  beforeEach: (): Promise<void> => settleLayout(1544),
-  play: async ({ canvas }) => {
-    const composer = await canvas.findByTestId(composerId);
-    await expect(canvas.queryByTestId(workbenchId)).toBeNull();
     await expect(centreOf(composer)).toBeCloseTo(pageCentre(canvas), 1);
     await expect(centreOf(lastFeedRow(canvas))).toBeCloseTo(
       pageCentre(canvas),
       1,
     );
+    await userEvent.click(canvas.getByTestId('workbench-dismiss'));
+    await waitFor(() =>
+      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
+    );
+  },
+};
+
+// A translucent ancestor stops a glass Surface blurring the page under it, so the cards slide in without fading and nothing above them is translucent.
+const frostedInside = (element: HTMLElement): HTMLElement[] =>
+  [...element.querySelectorAll<HTMLElement>('*')].filter(
+    (node) => getComputedStyle(node).backdropFilter !== 'none',
+  );
+
+// Shown and part way through its slide, so the check runs while the cards are coming in.
+const sliding = (element: HTMLElement): boolean => {
+  const style = getComputedStyle(element);
+
+  return new DOMMatrix(style.transform).m41 > 0 && Number(style.opacity) > 0;
+};
+
+function translucentAncestors(element: HTMLElement): HTMLElement[] {
+  const found: HTMLElement[] = [];
+
+  for (let node = element.parentElement; node; node = node.parentElement)
+    if (Number(getComputedStyle(node).opacity) < 1) found.push(node);
+
+  return found;
+}
+
+export const CardsKeepTheirFrostWhileTheySlideIn: Story = {
+  beforeEach: (): Promise<void> => settleLayout(1500),
+  play: async ({ canvas, userEvent }) => {
+    await canvas.findByTestId(composerId);
+    await userEvent.click(
+      canvas.getByRole('button', { name: toggleWorkbench }),
+    );
+
+    const workbench = canvas.getByTestId(workbenchId);
+    const frosted = frostedInside(workbench);
+
+    await expect(frosted.length).toBeGreaterThan(0);
+    await waitFor(() => expect(sliding(workbench)).toBe(true));
+
+    for (const glass of frosted)
+      await expect(translucentAncestors(glass)).toEqual([]);
   },
 };
 
