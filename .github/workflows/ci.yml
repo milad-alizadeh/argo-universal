@@ -34,6 +34,7 @@ jobs:
     outputs:
       quality: ${{ steps.choose.outputs.quality }}
       engine-tests: ${{ steps.choose.outputs.engine-tests }}
+      secret-store: ${{ steps.choose.outputs.secret-store }}
       stories: ${{ steps.choose.outputs.stories }}
       e2e-web: ${{ steps.choose.outputs.e2e-web }}
     steps:
@@ -57,6 +58,7 @@ jobs:
         run: |
           quality=true
           engine=true
+          secrets=true
           stories=true
           e2e=true
           # A new branch's push has an all-zero `before`, and a force push's may be gone from history.
@@ -76,6 +78,9 @@ jobs:
             outside=$(grep -E '^(\.github/|patches/|[^/]+$)' <<< "$files" | grep -v '\.md$' | grep -Ev "$qualityOnly" || true)
             engine=false
             if [ -n "$outside" ] || affected --tasks test --packages @repo/engine; then engine=true; fi
+            # The Keychain contract reads only the keyring adapter and the keyring package the lockfile pins.
+            secrets=false
+            if grep -qE '^(packages/engine/src/plugins/services/secret-store[^/]*\.ts|pnpm-lock\.yaml|\.github/workflows/ci\.yml)$' <<< "$files"; then secrets=true; fi
             stories=false
             if [ -n "$outside" ] || affected --tasks test:stories; then stories=true; fi
             e2e=false
@@ -84,9 +89,10 @@ jobs:
 
           echo "quality=$quality" >> "$GITHUB_OUTPUT"
           echo "engine-tests=$engine" >> "$GITHUB_OUTPUT"
+          echo "secret-store=$secrets" >> "$GITHUB_OUTPUT"
           echo "stories=$stories" >> "$GITHUB_OUTPUT"
           echo "e2e-web=$e2e" >> "$GITHUB_OUTPUT"
-          echo "Quality runs: $quality. Engine tests run: $engine. Story tests run: $stories. Web e2e runs: $e2e."
+          echo "Quality runs: $quality. Engine tests run: $engine. The secret store contract runs: $secrets. Story tests run: $stories. Web e2e runs: $e2e."
 
   quality:
     name: Quality
@@ -210,7 +216,7 @@ jobs:
   secret-store:
     name: Secret store contract (macOS)
     needs: changes
-    if: ${{ needs.changes.outputs.engine-tests == 'true' }}
+    if: ${{ needs.changes.outputs.secret-store == 'true' }}
     runs-on: macos-latest
     timeout-minutes: 20
     steps:
