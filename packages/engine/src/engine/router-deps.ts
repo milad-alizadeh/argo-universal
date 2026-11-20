@@ -12,6 +12,7 @@ import type { NotificationsDeps } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
 import type { PairingDeps } from '../pairing/router';
 import type { PluginsRouterDeps } from '../plugins';
+import { ScreenSight, type ScreenSightDeps } from '../screen-sight';
 import {
   createSessionConnections,
   createSessionReader,
@@ -20,7 +21,7 @@ import {
   type SessionSources,
 } from '../sessions';
 import type { SystemDeps } from '../system';
-import { noVoiceCalls, type VoiceCallsPort } from '../voice';
+import { feedNotices, noVoiceCalls, type VoiceCallsPort } from '../voice';
 import {
   createFeedSources,
   type FeedSources,
@@ -38,6 +39,7 @@ export type AppRouterDeps = SessionSources &
   NotificationsDeps &
   NetworkAccessDeps &
   AppNavigationDeps &
+  ScreenSightDeps &
   PairingDeps & {
     userHome: string;
     sessionTokens: SessionTokens;
@@ -53,21 +55,30 @@ type EngineSupplied =
   | 'createId'
   | 'userHome'
   | 'voice'
+  | 'screenSight'
   | 'dropAgentConnections'
   | 'sessionConnections'
   | 'installedAgents';
 
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
-  Partial<Pick<AppRouterDeps, 'createId' | 'userHome' | 'voice'>> & {
+  Partial<
+    Pick<AppRouterDeps, 'createId' | 'userHome' | 'voice' | 'screenSight'>
+  > & {
     acp?: AcpResourceInput;
   };
+
+// The Feed is where a capture's Notice is written.
+const screenSightOf = (
+  input: AppRouterInput,
+  sources: Pick<FeedSources, 'findFeed'>,
+): ScreenSight => input.screenSight ?? new ScreenSight(feedNotices(sources));
 
 export function createAppRouterDeps(
   input: AppRouterInput,
   sources: FeedSources = createFeedSources(input),
 ): AppRouterDeps {
-  const setup = createAgentSetup(input);
+  const setup = createAgentSetup(input, sources);
   const readSession = createSessionReader(input.database);
 
   return {
@@ -96,6 +107,7 @@ type AgentSetup = Pick<
   | 'createId'
   | 'userHome'
   | 'voice'
+  | 'screenSight'
   | 'dropAgentConnections'
   | 'sessionConnections'
   | 'installedAgents'
@@ -104,7 +116,19 @@ type AgentSetup = Pick<
 const voiceOf = (input: AppRouterInput): VoiceCallsPort =>
   input.voice ?? noVoiceCalls;
 
-function createAgentSetup(input: AppRouterInput): AgentSetup {
+// What the Engine's callers reach the Voice call and the screen through.
+const portsOf = (
+  input: AppRouterInput,
+  sources: Pick<FeedSources, 'findFeed'>,
+): Pick<AppRouterDeps, 'voice' | 'screenSight'> => ({
+  voice: voiceOf(input),
+  screenSight: screenSightOf(input, sources),
+});
+
+function createAgentSetup(
+  input: AppRouterInput,
+  sources: Pick<FeedSources, 'findFeed'>,
+): AgentSetup {
   const sessionConnections = createSessionConnections(input.sessions);
 
   const { dropAgentConnections } = sessionConnections.acpResources();
@@ -115,6 +139,6 @@ function createAgentSetup(input: AppRouterInput): AgentSetup {
     installedAgents: input.sessions.getSnapshot().context.installedAgents,
     createId: input.createId ?? randomUUID,
     userHome: input.userHome ?? homedir(),
-    voice: voiceOf(input),
+    ...portsOf(input, sources),
   };
 }

@@ -10,7 +10,7 @@ export const start: Extract<VoiceCallEvent, { type: 'call.start' }> = {
 
 export const events: VoiceCallEvent[] = [
   start,
-  { type: 'call.answered', answer: 'answer' },
+  { type: 'call.answered', answer: 'answer', canLook: false },
   { type: 'call.end', reason: 'person' },
   { type: 'call.failed', message: 'no' },
   { type: 'call.sessionGone', reason: 'session-closed' },

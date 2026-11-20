@@ -10,9 +10,14 @@ import { createOperationProcedures } from '../operations';
 import { createPairingRouter } from '../pairing/router';
 import { createPluginsRouter } from '../plugins';
 import { mergeRouters, router, routerFactory } from '../rpc';
+import { createScreenSightRouter } from '../screen-sight';
 import { createShellRouter, Sessions } from '../sessions';
 import { createSystemRouter } from '../system';
-import { createVoiceRouter, voiceSessions } from '../voice';
+import {
+  createVoiceRouter,
+  voiceSessions,
+  type VoiceSessionWork,
+} from '../voice';
 import type { AppRouterDeps } from './router-deps';
 
 // Each router takes only the slice of the Engine's dependencies its type names.
@@ -29,6 +34,7 @@ const createAppProcedures = routerFactory((deps: AppRouterDeps) =>
     network: createNetworkRouter(deps),
     pairing: createPairingRouter(deps),
     navigation: createAppNavigationRouter(deps),
+    screenSight: createScreenSightRouter(deps),
   }),
 );
 
@@ -48,20 +54,24 @@ function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
   });
 }
 
+// What the Voice call does through Sessions: send Prompts, stop a Turn, hear Turns end, and ask for a picture of the screen.
+const voiceWork = (
+  deps: AppRouterDeps,
+  sessions: Sessions,
+): VoiceSessionWork => ({
+  prompt: (sessionId, text) =>
+    sessions.promptFromVoice({ sessionId, prompt: [{ type: 'text', text }] }),
+  stop: (sessionId) => sessions.stopFromVoice(sessionId),
+  capture: (sessionId) =>
+    deps.screenSight.capture({ kind: 'voice', sessionId }),
+  watchTurns: (sessionId, listener) => sessions.watchTurns(sessionId, listener),
+});
+
 // The Voice call sends its Session Prompts through Sessions, which say where each landed and when each Turn ends.
 function attachVoice(deps: AppRouterDeps, sessions: Sessions): void {
-  deps.voice.attach(
-    voiceSessions(deps, {
-      prompt: (sessionId, text) =>
-        sessions.promptFromVoice({
-          sessionId,
-          prompt: [{ type: 'text', text }],
-        }),
-      stop: (sessionId) => sessions.stopFromVoice(sessionId),
-      watchTurns: (sessionId, listener) =>
-        sessions.watchTurns(sessionId, listener),
-    }),
-  );
+  const linked = voiceSessions(deps, voiceWork(deps, sessions));
+
+  deps.voice.attach(linked);
 }
 
 // Operations share the session and shell nouns with the Session procedures that are not Operations.

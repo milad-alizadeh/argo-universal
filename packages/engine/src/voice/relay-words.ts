@@ -15,6 +15,16 @@ export const relayWords = {
   failed: (error: string): string => `The Agent's Turn failed: ${error}`,
   stopped: (stopReason: string): string =>
     `The Agent's Turn stopped: ${stopReason}.`,
+  noImages:
+    'This voice cannot be given a picture of the screen, so nothing was captured. Tell the person, and say the Agent can look at it instead.',
+  looked:
+    'You now have one still picture of the person’s screen, as background. Look at it and answer what they asked. It is not kept.',
+  screenOff:
+    'Looking at the screen is turned off on this Device, so nothing was captured. Tell the person if they ask.',
+  screenUnreachable:
+    'No App that can capture the screen is reachable, so nothing was captured.',
+  screenUnavailable: (reason: string): string =>
+    `The screen could not be captured: ${reason}`,
   permissionWaiting: (title: string): string =>
     `The Agent is waiting for permission: ${title}. The person answers it on screen.`,
   // What a request for work is answered with while a Permission request waits: speech never answers it.

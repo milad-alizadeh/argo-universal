@@ -3,6 +3,7 @@ import type {
   VoiceLimit,
   VoiceTrouble,
 } from '@repo/contracts';
+import type { ScreenImage } from '@repo/contracts/operations';
 
 /*
  * The Voice provider interface (ADR-0064). It names no vendor: only a provider's own module does.
@@ -27,6 +28,8 @@ export type VoiceProviderEvent =
   | { type: 'voice.transcript'; id: string; text: string; final: boolean }
   // The person asked for work; answer it with `reply` under this id.
   | { type: 'work.requested'; requestId: string; text: string }
+  // The voice wants a still picture of the person's screen; answer it with `reply` under this id, and with `look` when the Engine takes one.
+  | { type: 'frame.requested'; requestId: string }
   // The voice started or stopped speaking.
   | { type: 'speaking'; speaking: boolean }
   // Trouble on the person's side of the call, such as a microphone the App may not use; null once it clears. Reconnecting is the Engine's to say.
@@ -88,6 +91,8 @@ export interface VoiceProviderCall {
   reply: (requestId: string, text: string, delivery: VoiceDelivery) => void;
   // Tell the voice something it did not ask for.
   tell: (text: string, delivery: VoiceDelivery) => void;
+  // Gives the voice one still picture of the person's screen as background it may look at. A call that cannot take images leaves it out, and the Engine never captures for it. Never stored.
+  look?: (image: ScreenImage) => void;
   // End the call; ending an ended call does nothing.
   end: () => void;
 }

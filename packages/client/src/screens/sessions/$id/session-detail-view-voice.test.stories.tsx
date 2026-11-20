@@ -1,9 +1,9 @@
 /// <reference types="@vitest/browser-playwright" />
+import { reduceMotion } from '@repo/kit/mocks/reduced-motion';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
-import { cdp } from 'vitest/browser';
 import { voiceStageRoomId } from '#features/voice';
 import { feedScrollId } from '../../../features/feed/components/feed/feed-reader.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
@@ -117,14 +117,6 @@ export const StageComesAndGoesWithTheCall: Story = {
 // Under reduced motion the stage and the mutes only fade, and still arrive and leave.
 export const StageComesAndGoesWithReducedMotion: Story = {
   render: (): React.JSX.Element => <VoiceCallRehearsal />,
-  beforeEach: async () => {
-    await cdp().send('Emulation.setEmulatedMedia', {
-      features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
-    });
-
-    return async (): Promise<void> => {
-      await cdp().send('Emulation.setEmulatedMedia', { features: [] });
-    };
-  },
+  beforeEach: reduceMotion,
   play: ({ canvas }) => startAndEnd(canvas),
 };
