@@ -169,8 +169,8 @@ const spinners = (): HTMLElement[] => screen.queryAllByRole('progressbar');
 const spinnersGone = (): Promise<void> =>
   waitFor(() => expect(spinners()).toHaveLength(0), { timeout: 10_000 });
 
-// Every header is drawn from the start, yet a far file's diff is asked for only as the reader nears it.
-export const FarDiffWaitsForTheReader: Story = {
+// The first diff page of a far file is ready before the reader scrolls to it.
+export const FarDiffLoadsWithItsHeader: Story = {
   args: { catalog: manyChanges },
   play: async () => {
     const lastFile = '/repo/src/module-60/index.ts';
@@ -180,9 +180,9 @@ export const FarDiffWaitsForTheReader: Story = {
     const scroller = scrollerOf(changedFiles());
 
     scroller.scrollTop = scroller.scrollHeight;
-    await waitFor(() => expect(spinners().length).toBeGreaterThan(0));
+    await nextFrames();
     await expect(fileHeader(lastFile)).toBeInTheDocument();
-    await spinnersGone();
+    await expect(spinners()).toHaveLength(0);
   },
 };
 
@@ -226,7 +226,7 @@ function overlapping(scroller: HTMLElement): string[] {
 // Steps of a third of a wheel's, so a header is caught partway through giving way.
 const fineStep = wheelStep / 3;
 
-// Past the first files' headers, stacked before their diffs land, and the handoff after a diff has: two frames a step is slow on a CI runner.
+// Far enough to cross several files and catch their headers handing off.
 const handoffReach = 2400;
 
 const walkingDown = (scroller: HTMLElement): boolean =>
