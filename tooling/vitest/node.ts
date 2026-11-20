@@ -17,11 +17,15 @@ const nodeTest = {
 type NodeTestOptions = Pick<
   TestUserConfig,
   'include' | 'testTimeout' | 'expect'
->;
+> & {
+  // Runs once before the integration tests, such as building what every one of them would build again.
+  integrationSetup?: string;
+};
 
-const createUnitProject = (
-  options: NodeTestOptions,
-): TestProjectInlineConfiguration => ({
+const createUnitProject = ({
+  integrationSetup: _unused,
+  ...options
+}: NodeTestOptions): TestProjectInlineConfiguration => ({
   extends: false,
   test: {
     ...nodeTest,
@@ -32,13 +36,15 @@ const createUnitProject = (
   },
 });
 
-const createIntegrationProject = (
-  options: NodeTestOptions,
-): TestProjectInlineConfiguration => ({
+const createIntegrationProject = ({
+  integrationSetup,
+  ...options
+}: NodeTestOptions): TestProjectInlineConfiguration => ({
   extends: false,
   test: {
     ...nodeTest,
     ...options,
+    globalSetup: integrationSetup === undefined ? [] : [integrationSetup],
     name: 'integration',
     include: ['**/*.integration.test.{ts,tsx,mts}'],
   },
