@@ -1,8 +1,13 @@
-import type { AgentMessage, SessionUpdate } from '@repo/contracts';
+import type {
+  SessionUpdate,
+  ToolCallUpdate,
+  VoiceTranscript,
+} from '@repo/contracts';
 import { operationFeedRowId } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { workMocks } from '../../../../mocks/feed-view.mocks';
 import { call } from './feed-row-facts.mocks';
+import type { OperationParams } from './operation-call';
 import { toFeedView } from './to-feed-view';
 
 const { snapshot } = workMocks[0];
@@ -12,7 +17,11 @@ const server = 'argo-688241988e5d4453b682b7a37ad4ac62';
 const turnId = 'turn-1';
 
 // The Agent's own ACP row for an operation_run call.
-const agentCall = (n: number, params: object, position: number) =>
+const agentCall = (
+  n: number,
+  params: OperationParams,
+  position: number,
+): ToolCallUpdate =>
   call({
     id: `["tool_call_update","acp",["upstream","toolu_${n}"]]`,
     toolCallId: `toolu_${n}`,
@@ -27,7 +36,11 @@ const agentCall = (n: number, params: object, position: number) =>
   });
 
 // The Engine's row for the same call: one id, the Operation's name and its params.
-const engineCall = (n: number, params: object, position: number) =>
+const engineCall = (
+  n: number,
+  params: OperationParams,
+  position: number,
+): ToolCallUpdate =>
   call({
     id: operationFeedRowId(`call-${n}`),
     toolCallId: `call-${n}`,
@@ -41,18 +54,17 @@ const engineCall = (n: number, params: object, position: number) =>
     rawInput: params,
   });
 
-const voiceLine = (position: number): SessionUpdate =>
-  ({
-    id: 'voice',
-    sessionId: 'session',
-    turnId: null,
-    position,
-    revision: 1,
-    state: 'settled',
-    sessionUpdate: 'voice_transcript',
-    messageId: 'voice',
-    content: [{ type: 'text', text: "I'll pull that up." }],
-  }) as unknown as AgentMessage;
+const voiceLine = (position: number): VoiceTranscript => ({
+  id: 'voice',
+  sessionId: 'session',
+  turnId: null,
+  position,
+  revision: 1,
+  state: 'settled',
+  sessionUpdate: 'voice_transcript',
+  messageId: 'voice',
+  content: [{ type: 'text', text: "I'll pull that up." }],
+});
 
 const calledRowIds = (rows: SessionUpdate[]): string[][] =>
   toFeedView(rows, snapshot).items.flatMap((item) => {

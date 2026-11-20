@@ -1,6 +1,6 @@
 import type { SessionUpdate, ToolCallUpdate } from '@repo/contracts';
 import { operationFeedRowId } from '@repo/contracts/operations';
-import { agentOperationCall } from './operation-call';
+import { agentOperationCall, OperationParams } from './operation-call';
 
 /*
  * An Operation call is stored twice: the Agent's own Tool call and the Engine's row for the
@@ -14,8 +14,11 @@ const isToolCall = (row: SessionUpdate): row is ToolCallUpdate =>
 const isEngineRow = (row: ToolCallUpdate): boolean =>
   row.id === operationFeedRowId(row.toolCallId);
 
-const callKey = (row: ToolCallUpdate, id: string, params: unknown): string =>
-  JSON.stringify([row.sessionId, row.turnId, id, params]);
+const callKey = (
+  row: ToolCallUpdate,
+  id: string,
+  params: OperationParams,
+): string => JSON.stringify([row.sessionId, row.turnId, id, params]);
 
 function unfoldedEngineRows(
   rows: readonly SessionUpdate[],
@@ -24,7 +27,12 @@ function unfoldedEngineRows(
 
   for (const row of rows) {
     if (!isToolCall(row) || !isEngineRow(row) || !row.name) continue;
-    const key = callKey(row, row.name, row.rawInput ?? {});
+
+    const key = callKey(
+      row,
+      row.name,
+      OperationParams.safeParse(row.rawInput).data ?? {},
+    );
 
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }

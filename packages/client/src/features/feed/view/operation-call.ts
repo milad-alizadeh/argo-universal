@@ -89,20 +89,27 @@ export function calledOperation(row: ToolCallUpdate): string | undefined {
   return id;
 }
 
+export const OperationParams = z.record(z.string(), z.unknown());
+
+export type OperationParams = z.infer<typeof OperationParams>;
+
+const RunCall = z.object({
+  id: z.string(),
+  params: OperationParams.optional(),
+});
+
 // The Operation an Agent's operation_run call names and the params it passes; the Engine's own row has the same two.
 export function agentOperationCall(
   row: ToolCallUpdate,
-): { id: string; params: unknown } | undefined {
+): { id: string; params: OperationParams } | undefined {
   if (row.id === operationFeedRowId(row.toolCallId)) return undefined;
   const call = mcpCall(row);
 
   if (call?.tool !== 'operation_run') return undefined;
-  const target = z
-    .object({ id: z.string(), params: z.unknown() })
-    .safeParse(call.arguments);
+  const run = RunCall.safeParse(call.arguments);
 
-  return target.success
-    ? { id: target.data.id, params: target.data.params ?? {} }
+  return run.success
+    ? { id: run.data.id, params: run.data.params ?? {} }
     : undefined;
 }
 
