@@ -7,6 +7,7 @@ import {
   type SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
 import { z } from 'zod';
+import type { Kept, SlotWorker } from './slot-worker';
 
 // Why a Plugin's items were left out; each is logged once per Plugin and Slot.
 export const itemsLeftOut = {
@@ -41,21 +42,6 @@ export type ItemsAnswer =
   | { ok: true; items: PluginItems; standingInFor: LeftOut['reason'] }
   | LeftOut;
 
-type Kept = Map<string, readonly ItemsSlotItem[]>;
-
-/*
- * One worker generation's items Slots: what it answered, by Slot id then context key, and why a Slot
- * left it out; both kept until the worker ends or says what it shows changed.
- */
-export type SlotWorker = {
-  generation: number;
-  // Bumped on every change signal, so an answer asked for before it is never kept.
-  epoch: number;
-  kept: Map<string, Kept>;
-  // A Plugin that threw, ran late or answered off-schema is not asked again, nor waited on, until it changes.
-  failed: Map<string, LeftOut>;
-};
-
 type Ask = (input: SlotItemsInput) => Promise<Reply>;
 
 // The context's key, as the Slot entry names it.
@@ -75,7 +61,7 @@ export function keptAnswer(
   const entry = entryOf(input);
   const failed = worker.failed.get(entry.id);
 
-  return failed
+  return failed && failed.reason !== itemsLeftOut.late
     ? Promise.resolve(failed)
     : knownAnswer({ worker, entry, ask }, input);
 }
@@ -86,7 +72,7 @@ async function knownAnswer(
 ): Promise<ItemsAnswer> {
   const { worker, entry } = asking;
   const kept = keptOf(worker, entry);
-  const asked = await askMissing(asking, missingOf(entry, kept, input));
+  const asked = await askOrWait(asking, missingOf(entry, kept, input));
 
   if (!asked.ok) return asked;
 
@@ -94,6 +80,15 @@ async function knownAnswer(
 
   return { ok: true, items: itemsFor(entry, known, input) };
 }
+
+// While a late call is out (the one failure `keptAnswer` lets by), the contexts it lacks wait for it; kept ones answer.
+const askOrWait = (
+  asking: Asking,
+  input: SlotItemsInput,
+): Promise<ItemsAnswer> =>
+  input.contexts.length > 0 && asking.worker.failed.has(asking.entry.id)
+    ? Promise.resolve(leftOut(itemsLeftOut.late))
+    : askMissing(asking, input);
 
 async function askMissing(
   { worker, entry, ask }: Asking,
@@ -105,6 +100,23 @@ async function askMissing(
   const answer = requested(entry, input, checked(entry, await ask(input)));
 
   if (worker.epoch === epoch) remember(worker, entry, answer);
+
+  return answer;
+}
+
+// A late call came to an end: kept or left out as one in time is, and asked again if it ran out at the late limit too.
+export function keepLate(
+  worker: SlotWorker,
+  input: SlotItemsInput,
+  reply: Reply,
+): ItemsAnswer {
+  const entry = entryOf(input);
+  const answer = requested(entry, input, checked(entry, reply));
+
+  worker.failed.delete(entry.id);
+
+  if (answer.ok || answer.reason !== itemsLeftOut.late)
+    remember(worker, entry, answer);
 
   return answer;
 }

@@ -5,21 +5,37 @@ import { PluginSlotItems } from './plugin-slot-items';
 
 const nothing = (): void => {};
 
-// A clock whose timers run only when the test fires them, so a call runs late exactly when the test says.
-const manualClock = (): PluginClock & { fire: () => void } => {
-  const timers = new Set<() => void>();
+type Timer = { callback: () => void; ms: number };
+
+type Timers = Set<Timer>;
+
+// Runs, once, each timer set for at most `ms`.
+function fireUpTo(timers: Timers, ms: number): void {
+  const due = [...timers].filter((timer) => timer.ms <= ms);
+
+  for (const timer of due) timers.delete(timer);
+
+  for (const timer of due) timer.callback();
+}
+
+/*
+ * A clock whose timers run only when the test fires them, so a call runs late exactly when the test says. `fire(ms)`
+ * runs only the timers set for at most `ms`; `fire()` runs them all.
+ */
+const manualClock = (): PluginClock & { fire: (ms?: number) => void } => {
+  const timers: Timers = new Set();
 
   return {
     now: () => 0,
     delay: async () => {},
-    schedule: (callback) => {
-      timers.add(callback);
+    schedule: (callback, ms) => {
+      const timer = { callback, ms };
 
-      return () => timers.delete(callback);
+      timers.add(timer);
+
+      return () => timers.delete(timer);
     },
-    fire: () => {
-      for (const timer of timers) timer();
-    },
+    fire: (ms = Infinity) => fireUpTo(timers, ms),
   };
 };
 

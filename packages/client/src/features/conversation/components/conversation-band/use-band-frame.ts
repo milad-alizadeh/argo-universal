@@ -17,17 +17,13 @@ import {
   type Palette,
 } from './band-frame';
 import type { BandState } from './band-motion';
+import type { Voices } from './band-voices';
 
 interface BandSettings {
   state: BandState;
   count: number;
   palette: Palette;
   reduced: boolean;
-}
-
-interface Voices {
-  user: number[];
-  agent: number[];
 }
 
 const noVoices: Voices = { user: [], agent: [] };

@@ -1,9 +1,9 @@
 import type { ConversationStartInput } from '@repo/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
-import { placedCall } from '../stores/placed-conversation';
+import { placedConversation } from '../stores/placed-conversation';
 import type { ConversationConnection } from '../types/conversation-connection';
-import { startCall } from '../utils/start-conversation';
+import { startConversation } from '../utils/start-conversation';
 
 // A Session's title as the Sessions list reads it; none until it loads, or without a Session.
 export function useSessionTitle(
@@ -32,7 +32,8 @@ interface Placing {
   resumeFeed: () => void;
 }
 
-const unwanted = (): Error => new Error('The call was ended before it began');
+const unwanted = (): Error =>
+  new Error('The Conversation was ended before it began');
 
 /*
  * Sends the offer while the call is still wanted. A call ended before the offer is never sent; one ended before the
@@ -43,10 +44,10 @@ function sendWhileWanted(
   { start, end }: Pick<Placing, 'start' | 'end'>,
 ): (offer: string) => Promise<{ answer: string }> {
   return async (offer) => {
-    if (!placedCall.holds(sessionId)) throw unwanted();
+    if (!placedConversation.holds(sessionId)) throw unwanted();
     const started = await start({ sessionId, offer });
 
-    if (placedCall.holds(sessionId)) return started;
+    if (placedConversation.holds(sessionId)) return started;
     end(sessionId);
     throw unwanted();
   };
@@ -58,12 +59,12 @@ async function placeCall(
   connection: ConversationConnection | null,
   placing: Placing,
 ): Promise<void> {
-  await startCall(connection, {
+  await startConversation(connection, {
     send: sendWhileWanted(sessionId, placing),
     resumeFeed: placing.resumeFeed,
   });
   await placing.refresh();
-  placedCall.release(sessionId);
+  placedConversation.release(sessionId);
 }
 
 function usePlacing(resumeFeed: () => void): Placing {
@@ -82,8 +83,8 @@ function usePlacing(resumeFeed: () => void): Placing {
 }
 
 /*
- * Starting a call in a Session: the call is placed at once, so its stage and End show on the frame the person
- * pressed, and the microphone, the offer and the Server's start follow; then the page's Feed resumes (see `startCall`).
+ * Starting a call in a Session: the call is placed at once, so its band and End show on the frame the person
+ * pressed, and the microphone, the offer and the Server's start follow; then the page's Feed resumes (see `startConversation`).
  */
 export function useStartCall(
   connection: ConversationConnection | null,
@@ -92,7 +93,7 @@ export function useStartCall(
   const placing = usePlacing(resumeFeed);
 
   return (sessionId) => {
-    placedCall.place(sessionId);
+    placedConversation.place(sessionId);
     void placeCall(sessionId, connection, placing);
   };
 }

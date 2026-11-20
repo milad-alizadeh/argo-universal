@@ -7,7 +7,7 @@ import type { ConversationConnection } from '../types/conversation-connection';
  * while a call is being started, before the Server has it, leaves the starting call alone. Each status the App hears
  * goes into the returned function, and so does the volume and gain the Server holds, which a running call takes at once.
  */
-export function followCall(
+export function followConversation(
   connection: ConversationConnection,
 ): (status: ConversationStatus) => void {
   let wasOver: boolean | undefined;

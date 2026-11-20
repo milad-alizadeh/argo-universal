@@ -11,7 +11,7 @@ afterEach(async () => {
   fixture = undefined;
 });
 
-async function startCall(
+async function startConversation(
   ...options: Parameters<typeof startedCall>
 ): ReturnType<typeof startedCall> {
   const started = await startedCall(...options);
@@ -25,7 +25,7 @@ const textOf = (message: SentMessage): string =>
 
 describe('GPT-Live call speaking', () => {
   it('answers a request and speaks unprompted, and says close when the call ends', async () => {
-    const { endpoint, call } = await startCall();
+    const { endpoint, call } = await startConversation();
 
     call.reply(delegationItem, 'Done', 'speak');
     call.tell('Tests are failing', 'background');
@@ -50,7 +50,7 @@ describe('GPT-Live call speaking', () => {
   });
 
   it('sends a long answer in pieces the service takes, which join back to the whole', async () => {
-    const { endpoint, call } = await startCall();
+    const { endpoint, call } = await startConversation();
     const long = `${'a'.repeat(499)}é${'b'.repeat(600)}`;
 
     call.reply(delegationItem, long, 'speak');
@@ -62,7 +62,7 @@ describe('GPT-Live call speaking', () => {
 
 describe('GPT-Live call losing its link', () => {
   it('ends the call as lost when the control link stays down past the grace period', async () => {
-    const { endpoint, call } = await startCall({ lostLinkMs: 300 });
+    const { endpoint, call } = await startConversation({ lostLinkMs: 300 });
     const events = heard(call);
 
     endpoint.refuseLinks = true;
@@ -75,7 +75,7 @@ describe('GPT-Live call losing its link', () => {
   });
 
   it('keeps the call when the control link comes back, and it still works on the new link', async () => {
-    const { endpoint, call } = await startCall();
+    const { endpoint, call } = await startConversation();
     const events = heard(call);
 
     endpoint.dropLink();
@@ -98,7 +98,7 @@ const notesOf = (events: ConversationProviderEvent[]): string[] =>
 
 describe('the GPT-Live control link’s keepalive', () => {
   it('keeps a link that answers its pings', async () => {
-    const { endpoint, call } = await startCall({ pingMs: 50 });
+    const { endpoint, call } = await startConversation({ pingMs: 50 });
     const events = heard(call);
 
     await new Promise((resolve) => setTimeout(resolve, 400));
@@ -108,7 +108,7 @@ describe('the GPT-Live control link’s keepalive', () => {
   });
 
   it('drops a link that stops answering and joins the call again', async () => {
-    const { endpoint, call } = await startCall({ pingMs: 50 });
+    const { endpoint, call } = await startConversation({ pingMs: 50 });
     const events = heard(call);
 
     endpoint.silent = true;

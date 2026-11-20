@@ -28,6 +28,7 @@ it(
 
     await attach(run, pullReference);
 
+    expect(run.github.pullReads()).toHaveLength(1);
     expect(await changesOf(run)).toEqual([openChange]);
     expect(await attributedChangesOf(run)).toEqual([
       { pluginId: 'github', item: openChange },

@@ -59,7 +59,7 @@ const choiceOperations = ({
   'voice.deleteCustomVoice': ({ id }) => choices.deleteCustomVoice(id),
   'conversation.setInstructions': ({ instructions }) =>
     choices.setInstructions(instructions),
-  'conversation.setOptions': (change) => choices.setCallOptions(change),
+  'conversation.setOptions': (change) => choices.setConversationOptions(change),
 });
 
 // The microphone and speaker of the App a call uses.

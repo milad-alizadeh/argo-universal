@@ -37,7 +37,7 @@ export interface VoiceChoicesPort {
   saveCustomVoice: (input: CustomVoiceInput) => Promise<CustomVoice>;
   deleteCustomVoice: (id: string) => Promise<VoiceList>;
   setInstructions: (instructions: string) => Promise<ConversationSettings>;
-  setCallOptions: (
+  setConversationOptions: (
     change: ConversationOptionsChange,
   ) => Promise<ConversationSettings>;
 }
@@ -113,7 +113,7 @@ export class VoiceChoices implements VoiceChoicesPort {
     return this.settings();
   }
 
-  public async setCallOptions(
+  public async setConversationOptions(
     change: ConversationOptionsChange,
   ): Promise<ConversationSettings> {
     const stored = this.store.read();

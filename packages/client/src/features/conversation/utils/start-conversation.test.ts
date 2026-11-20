@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FakeConversationConnection } from '../../../../mocks/conversation/fake-conversation-connection';
-import { startCall } from './start-conversation';
+import { startConversation } from './start-conversation';
 
 const answered = (): Promise<{ answer: string }> =>
   Promise.resolve({ answer: 'v=0 answer' });
@@ -17,7 +17,7 @@ describe('starting a call from a Session page', () => {
     const connection = new FakeConversationConnection();
     const resumed: string[] = [];
 
-    await startCall(connection, {
+    await startConversation(connection, {
       send: answered,
       resumeFeed: () => resumed.push('feed'),
     });
@@ -30,7 +30,7 @@ describe('starting a call from a Session page', () => {
     const connection = new FakeConversationConnection();
     const resumed: string[] = [];
 
-    await startCall(connection, {
+    await startConversation(connection, {
       send: refused,
       resumeFeed: () => resumed.push('feed'),
     });
@@ -46,7 +46,7 @@ describe('starting a call from a Session page', () => {
 
     const resumed: string[] = [];
 
-    await startCall(connection, {
+    await startConversation(connection, {
       send: answered,
       resumeFeed: () => resumed.push('feed'),
     });

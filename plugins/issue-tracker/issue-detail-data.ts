@@ -70,7 +70,7 @@ async function readChoices({
   }
 }
 
-// The Sessions this Plugin stored for the Issue, each named by the App; one that has since gone is left out.
+// The Sessions this Plugin stored for the Issue, each named by the App; one that has since gone or been archived is left out.
 async function attachedSessions({
   deps,
   project,
@@ -93,7 +93,7 @@ async function namedSession(
 ): Promise<AttachedSession[]> {
   const session = await getSession(sessionId).catch(() => null);
 
-  if (!session) return [];
+  if (!session || session.archived) return [];
 
   return [{ sessionId }];
 }

@@ -14,7 +14,7 @@ afterEach(async () => {
   fixture = undefined;
 });
 
-async function startCall(
+async function startConversation(
   ...options: Parameters<typeof startedCall>
 ): ReturnType<typeof startedCall> {
   const started = await startedCall(...options);
@@ -37,7 +37,7 @@ const hourMs = 3_600_000;
 
 describe('GPT-Live closing a call on its own', () => {
   it('says no audio reached it when it closes an expired call early', async () => {
-    const { endpoint, call } = await startCall();
+    const { endpoint, call } = await startConversation();
     const events = heard(call);
 
     endpoint.send(sessionStartedUntil(inSeconds(2 * hourMs)));
@@ -58,7 +58,7 @@ describe('GPT-Live closing a call on its own', () => {
   });
 
   it('says the call reached its longest when it expires on time', async () => {
-    const { endpoint, call } = await startCall();
+    const { endpoint, call } = await startConversation();
     const events = heard(call);
 
     endpoint.send(sessionStartedUntil(inSeconds(0)));
@@ -76,7 +76,7 @@ describe('GPT-Live closing a call on its own', () => {
   });
 
   it('passes on a reason it does not know, in its own words', async () => {
-    const { endpoint, call } = await startCall();
+    const { endpoint, call } = await startConversation();
     const events = heard(call);
 
     endpoint.send(sessionClosedFor('server_shutdown'));
@@ -93,7 +93,7 @@ describe('GPT-Live closing a call on its own', () => {
   });
 
   it('says it gave no reason when it gives none', async () => {
-    const { endpoint, call } = await startCall();
+    const { endpoint, call } = await startConversation();
     const events = heard(call);
 
     endpoint.send(sessionClosedSilently);
@@ -110,7 +110,7 @@ describe('GPT-Live closing a call on its own', () => {
   });
 
   it('closes for a reached limit when its reason names one', async () => {
-    const { endpoint, call } = await startCall();
+    const { endpoint, call } = await startConversation();
     const events = heard(call);
 
     endpoint.send(sessionClosedFor('usage_limit_reached'));
@@ -121,7 +121,7 @@ describe('GPT-Live closing a call on its own', () => {
   });
 
   it('ends the call at once when it no longer knows the call the link asks for', async () => {
-    const { endpoint, call } = await startCall({ lostLinkMs: 20_000 });
+    const { endpoint, call } = await startConversation({ lostLinkMs: 20_000 });
     const events = heard(call);
 
     endpoint.callGone = true;
@@ -143,7 +143,7 @@ describe('GPT-Live closing a call on its own', () => {
   });
 
   it('says the connection was lost when the link stays down', async () => {
-    const { endpoint, call } = await startCall({ lostLinkMs: 300 });
+    const { endpoint, call } = await startConversation({ lostLinkMs: 300 });
     const events = heard(call);
 
     endpoint.refuseLinks = true;

@@ -125,6 +125,7 @@ export const answerCall = <Name extends Api>(
       logCall: () =>
         reach.options.log(
           `Plugin ${reach.pluginId}: ${describeCall<Name>(request)}`,
+          'trace',
         ),
     },
     request,

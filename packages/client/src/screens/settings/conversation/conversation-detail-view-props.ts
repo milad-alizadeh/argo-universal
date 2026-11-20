@@ -37,7 +37,7 @@ export interface ConversationDetailViewActions {
   onVoiceChange: (voice: string) => void;
   onPreviewVoice: (voice: string) => void;
   onInstructionsChange: (instructions: string) => void;
-  onCallOptionsChange: (change: ConversationOptionsChange) => void;
+  onConversationOptionsChange: (change: ConversationOptionsChange) => void;
   // Opens the custom voice form, or closes it with nothing.
   onEditorChange: (editor?: CustomVoiceEditor) => void;
   onSaveCustomVoice: (draft: CustomVoiceDraft) => void;

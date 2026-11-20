@@ -2,7 +2,7 @@ import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { ScrollView, View, type ViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { bandWorkbench } from '#lib/product/window-band';
-import { useFrameOffset } from '../hooks/use-frame-offset';
+import { useFrameSlide } from '../hooks/use-frame-offset';
 import type { PartReads, ScaffoldLayout } from './use-scaffold-layout';
 
 type WorkbenchLayout = 'workbench' | 'motion' | 'measures';
@@ -30,26 +30,25 @@ function WorkbenchPanel({
   layout,
   children,
 }: WorkbenchPanelProps): ReactElement {
-  const placement = useWorkbenchPlacement(layout);
-
   return (
-    <Animated.View {...placement}>
+    <Animated.View {...useWorkbenchPlacement(layout)}>
       <WorkbenchScroll>{children}</WorkbenchScroll>
     </Animated.View>
   );
 }
 
-function useWorkbenchPlacement(
-  layout: WorkbenchLayoutReads,
-): ComponentProps<typeof Animated.View> & { inert: boolean } {
+type PanelProps = ComponentProps<typeof Animated.View> & { inert: boolean };
+
+// The panel slides without fading: a translucent panel would stop its cards' frost blurring the page under them.
+function useWorkbenchPlacement(layout: WorkbenchLayoutReads): PanelProps {
   const placement = workbenchPlacement(layout);
-  const visible = placement.motion.visible;
-  const motion = useFrameOffset({ ...layout.motion, ...placement.motion });
+  const { visible } = placement.motion;
+  const slide = useFrameSlide({ ...layout.motion, ...placement.motion });
 
   return {
     testID: 'desktop-workbench',
     className: placement.className,
-    style: [placement.style, motion, !visible && { opacity: 0 }],
+    style: [placement.style, slide, !visible && { opacity: 0 }],
     ...visibilityProps(visible),
   };
 }

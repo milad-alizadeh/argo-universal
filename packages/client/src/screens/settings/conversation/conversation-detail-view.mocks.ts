@@ -26,7 +26,7 @@ export const conversationDetailSpies = (): ConversationDetailViewActions => ({
   onVoiceChange: fn(),
   onPreviewVoice: fn(),
   onInstructionsChange: fn(),
-  onCallOptionsChange: fn(),
+  onConversationOptionsChange: fn(),
   onEditorChange: fn(),
   onSaveCustomVoice: fn(),
   onDeleteCustomVoice: fn(),

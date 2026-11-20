@@ -13,7 +13,8 @@ function recorded(): Recorded {
   const controls = controlsOf({
     change: (change) => asked.push(`change:${JSON.stringify(change)}`),
     setInstructions: (text) => asked.push(`instructions:${text}`),
-    setCallOptions: (change) => asked.push(`options:${JSON.stringify(change)}`),
+    setConversationOptions: (change) =>
+      asked.push(`options:${JSON.stringify(change)}`),
     saveCustomVoice: (voice) => asked.push(`save:${JSON.stringify(voice)}`),
     deleteCustomVoice: (id) => asked.push(`delete:${id}`),
     preview: (voice, custom) =>
@@ -68,7 +69,7 @@ describe('Conversation settings controls', () => {
     const { asked, controls } = recorded();
 
     controls.onInstructionsChange('Call me Sam.');
-    controls.onCallOptionsChange({ volume: 80 });
+    controls.onConversationOptionsChange({ volume: 80 });
 
     expect(asked).toEqual([
       'instructions:Call me Sam.',

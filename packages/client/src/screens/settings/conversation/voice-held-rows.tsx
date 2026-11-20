@@ -41,7 +41,7 @@ const textRowProps = (
 
 /*
  * A text the Server keeps, sent when the field is left and only when it changed. Its title sits above the field on a
- * wide window, as Paper's "1 · Page" draws it, so a long title is never cut short.
+ * wide window, so a long title is never cut short.
  */
 export function HeldTextRow(props: TextRowProps): ReactElement {
   return (

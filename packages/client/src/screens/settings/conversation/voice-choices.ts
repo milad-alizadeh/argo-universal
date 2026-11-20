@@ -23,7 +23,7 @@ export interface VoiceChoices {
 const labelOf = (voices: VoiceOption[], id: string): string =>
   voices.find((voice) => voice.id === id)?.label ?? id;
 
-// How it speaks, then the voice it speaks with, as Paper's "2 · Picker" draws it.
+// How it speaks, then the voice it speaks with.
 const customChoice = (
   voice: CustomVoice,
   voices: VoiceOption[],

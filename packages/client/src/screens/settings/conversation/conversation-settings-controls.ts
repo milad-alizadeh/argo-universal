@@ -14,7 +14,7 @@ import {
 export interface ConversationSettingsActions {
   change: (change: ConversationSettingsChange) => void;
   setInstructions: (instructions: string) => void;
-  setCallOptions: (change: ConversationOptionsChange) => void;
+  setConversationOptions: (change: ConversationOptionsChange) => void;
   saveCustomVoice: (voice: CustomVoiceInput) => void;
   deleteCustomVoice: (id: string) => void;
   preview: (voice: string, custom?: CustomVoicePreview['custom']) => void;
@@ -28,7 +28,7 @@ export type ConversationSettingsControls = Pick<
   | 'onVoiceChange'
   | 'onPreviewVoice'
   | 'onInstructionsChange'
-  | 'onCallOptionsChange'
+  | 'onConversationOptionsChange'
   | 'onSaveCustomVoice'
   | 'onDeleteCustomVoice'
   | 'onPreviewCustomVoice'
@@ -67,7 +67,7 @@ export const controlsOf = (
   onEnabledChange: (enabled) => actions.change({ enabled }),
   onProviderChange: (provider) => actions.change({ provider }),
   onInstructionsChange: actions.setInstructions,
-  onCallOptionsChange: actions.setCallOptions,
+  onConversationOptionsChange: actions.setConversationOptions,
   onRetry: actions.retry,
   ...conversationControls(actions),
   ...customVoiceControls(actions),

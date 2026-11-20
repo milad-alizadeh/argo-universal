@@ -4,7 +4,7 @@
  */
 import {
   clamp01,
-  lerp,
+  easeToward,
   liftOf,
   rmsOf,
   smoothLevel,
@@ -50,7 +50,7 @@ function voiceAt(bands: readonly number[], position: number): number {
   const at = clamp01(position) * Math.max(0, bands.length - 1);
   const low = Math.floor(at);
   const high = Math.min(bands.length - 1, low + 1);
-  const band = lerp(valueAt(bands, low), valueAt(bands, high), at - low);
+  const band = easeToward(valueAt(bands, low), valueAt(bands, high), at - low);
 
   return liftOf(band * bandShare + rmsOf(bands) * (1 - bandShare));
 }

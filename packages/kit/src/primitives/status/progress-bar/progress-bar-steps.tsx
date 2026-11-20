@@ -31,9 +31,11 @@ function stepsOf(steps: ProgressSteps): Step[] {
 function stepColor(state: StepState, props: ProgressBarProps): string {
   const colors = progressColors[props.tone ?? progressBarDefaults.tone];
 
-  return { done: colors.fill, started: colors.started, pending: 'bg-hairline' }[
-    state
-  ];
+  return {
+    done: colors.fill,
+    started: colors.started,
+    pending: colors.track,
+  }[state];
 }
 
 function stepTestID(
@@ -86,7 +88,7 @@ function Segment({
 
 /*
  * One rounded segment per step, 3 apart. Done steps take the tone, a started step its
- * pale tint, and the rest the hairline, so a last step underway never reads as a full bar.
+ * pale tint, and the rest the tone's track, so a last step underway never reads as a full bar.
  */
 export function ProgressStepSegments({
   steps,

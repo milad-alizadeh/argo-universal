@@ -8,7 +8,7 @@ import { sessionHref } from '#lib/product/navigation/navigation';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
 import { withEdge } from '../components/conversation-band/conversation-band-slot';
 import { useConversationConnection } from '../stores/conversation-connection-context';
-import { placedCall } from '../stores/placed-conversation';
+import { placedConversation } from '../stores/placed-conversation';
 import {
   silentSpectrum,
   type ConversationConnection,
@@ -33,7 +33,7 @@ export interface ConversationPage {
   resumeFeed: () => void;
 }
 
-// Starts the call in the Session the page shows, then resumes the page's Feed (see `startCall`).
+// Starts the call in the Session the page shows, then resumes the page's Feed (see `startConversation`).
 function useStartHere(
   { sessionId, resumeFeed }: ConversationPage,
   connection: ConversationConnection | null,
@@ -48,7 +48,7 @@ function endHere(
   sessionId: string,
   end: (input: { sessionId: string }) => void,
 ): void {
-  placedCall.release(sessionId);
+  placedConversation.release(sessionId);
   end({ sessionId });
 }
 

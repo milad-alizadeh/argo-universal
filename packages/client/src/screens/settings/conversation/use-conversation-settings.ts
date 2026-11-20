@@ -88,7 +88,7 @@ const askedOf = (
   change: (changed) => settings.change.mutate(changed),
   setInstructions: (text) =>
     settings.instructions.mutate({ instructions: text }),
-  setCallOptions: (changed) => settings.options.mutate(changed),
+  setConversationOptions: (changed) => settings.options.mutate(changed),
   saveCustomVoice: custom.save,
   deleteCustomVoice: custom.remove,
 });

@@ -102,6 +102,7 @@ function projectLists(
 const withIdle = (session: TestSession): PluginSessionInfo => ({
   ...session,
   idleFor: session.idleFor ?? null,
+  archived: session.archived ?? false,
 });
 
 function sessionOf(
@@ -116,6 +117,7 @@ function sessionOf(
 function testEnvironment(options: PluginTestOptions): NodeJS.ProcessEnv {
   return {
     ...process.env,
-    PATH: [...(options.path ?? []), process.env.PATH ?? ''].join(delimiter),
+    ARGO_PLUGIN_TRACE: options.tracePluginCalls === false ? '0' : '1',
+    PATH: [...(options.path ?? []), process.env.PATH].join(delimiter),
   };
 }
