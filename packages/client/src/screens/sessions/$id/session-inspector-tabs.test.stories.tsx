@@ -26,6 +26,8 @@ const firstFile = '/repo/src/module-1/index.ts';
 // Hidden tab pages stay mounted, so the Changes list keeps its scroll and its folded files.
 export const RemembersListPositionAcrossTabs: Story = {
   play: async ({ canvas, userEvent }) => {
+    await canvas.findByRole('button', fileHeader(firstFile));
+
     const list = within(
       await canvas.findByRole('tabpanel', { name: 'Changes' }),
     ).getByTestId(changesList);
@@ -188,6 +190,7 @@ export const KeepsComparisonAboveScrollingFiles: Story = {
       name: /^Comparison/,
     });
 
+    await page.findByRole('button', fileHeader(firstFile));
     const files = page.getByTestId(changesList);
 
     const top = comparison.getBoundingClientRect().top;
