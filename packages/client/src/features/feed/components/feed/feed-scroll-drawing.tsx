@@ -26,15 +26,13 @@ function useWebViewport(
   list: ListRef,
   sessionId: string | undefined,
   focused: boolean,
-): WebFeedViewport | undefined {
+): void {
   const [viewport] = useState(webViewport);
   useLayoutEffect(() => {
     if (!focused) return;
 
     return viewport?.watch(list.current);
   }, [focused, list, sessionId, viewport]);
-
-  return viewport;
 }
 
 export function useFeedOnScroll(
@@ -42,17 +40,13 @@ export function useFeedOnScroll(
   list: ListRef,
 ): OnScroll {
   const focused = useScreenFocused();
-  const viewport = useWebViewport(list, sessionId, focused);
+  useWebViewport(list, sessionId, focused);
 
-  return useCallback(
-    ({ nativeEvent }) => {
-      if (!focused) return;
+  return useCallback(() => {
+    if (!focused) return;
 
-      viewport?.scrolled(list.current, nativeEvent);
-      rememberFeedPosition(sessionId, list);
-    },
-    [focused, sessionId, list, viewport],
-  );
+    rememberFeedPosition(sessionId, list);
+  }, [focused, sessionId, list]);
 }
 
 interface Drawing {

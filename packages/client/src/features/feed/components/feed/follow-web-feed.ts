@@ -1,5 +1,4 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
-import type { NativeScrollEvent } from 'react-native';
 
 /*
  * The time constant of a critically damped spring, in milliseconds. Its closed form
@@ -95,6 +94,13 @@ interface FeedPosition extends FeedEnd {
   offset: number;
 }
 
+function shrankAtEnd(end: FeedEnd, node: ScrollBox): boolean {
+  return (
+    node.clientHeight < end.viewport &&
+    Math.abs(node.scrollTop + end.viewport - end.content) <= 1
+  );
+}
+
 export class WebFeedViewport {
   private end?: FeedEnd;
 
@@ -116,16 +122,27 @@ export class WebFeedViewport {
     return atPreviousEnd(previous, viewport, bottom);
   }
 
-  resized(node: ScrollBox, following: boolean): void {
-    if (!following) return;
+  resized(node: ScrollBox, following: boolean): boolean {
+    const viewport = node.clientHeight;
 
-    const { clientHeight: viewport, scrollHeight: content, scrollTop } = node;
+    // Layout can shrink the box before the list moves scrollTop to the new bottom.
+    if (this.end && shrankAtEnd(this.end, node)) {
+      this.end = { content: this.end.content, viewport };
 
-    if (Math.abs(scrollTop + viewport - content) <= 1)
-      this.end = { content, viewport };
+      return false;
+    }
+
+    return this.clamped(
+      { offset: node.scrollTop, viewport, content: node.scrollHeight },
+      following,
+    );
   }
 
-  // The browser can resize the Feed twice between forwarded scroll events.
+  // Correct the browser's measured end before LegendList processes the pending scroll.
+  sample(node: ScrollBox, following: boolean): void {
+    if (this.resized(node, following)) node.scrollTop = node.scrollHeight;
+  }
+
   watch(list: LegendListRef | null): (() => void) | undefined {
     if (!list) return;
 
@@ -133,28 +150,18 @@ export class WebFeedViewport {
 
     if (!(node instanceof HTMLElement)) return;
 
-    const observer = new ResizeObserver(() =>
-      this.resized(node, list.getState().isFollowingEnd),
-    );
+    const sample = (): void =>
+      this.sample(node, list.getState().isFollowingEnd);
+
+    const observer = new ResizeObserver(sample);
 
     observer.observe(node);
+    node.addEventListener('scroll', sample);
 
     return () => {
       observer.disconnect();
+      node.removeEventListener('scroll', sample);
       this.end = undefined;
     };
-  }
-
-  scrolled(list: LegendListRef | null, event: NativeScrollEvent): void {
-    if (!list) return;
-
-    const position = {
-      offset: event.contentOffset.y,
-      viewport: event.layoutMeasurement.height,
-      content: event.contentSize.height,
-    };
-
-    if (this.clamped(position, list.getState().isFollowingEnd))
-      void list.scrollToEnd({ animated: false });
   }
 }

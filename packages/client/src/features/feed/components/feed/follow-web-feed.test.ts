@@ -87,11 +87,38 @@ it('remembers the bottom of a resized Feed even when the list skips its scroll e
     { scrollTop: 18375, clientHeight: 646, scrollHeight: 19021 },
     true,
   );
+  expect(
+    viewport.resized(
+      { scrollTop: 18343, clientHeight: 678, scrollHeight: 19053 },
+      false,
+    ),
+  ).toBe(true);
+});
+
+it('recovers on layout when both tray scroll events are coalesced', () => {
+  const viewport = new WebFeedViewport();
+  viewport.clamped({ offset: 18343, viewport: 678, content: 19021 }, true);
   viewport.resized(
-    { scrollTop: 18343, clientHeight: 678, scrollHeight: 19053 },
+    { scrollTop: 18343, clientHeight: 646, scrollHeight: 19021 },
     true,
   );
   expect(
-    viewport.clamped({ offset: 18343, viewport: 678, content: 19053 }, false),
+    viewport.resized(
+      { scrollTop: 18343, clientHeight: 678, scrollHeight: 19053 },
+      false,
+    ),
   ).toBe(true);
+});
+
+it('writes the measured DOM end even when the list still reports that it follows', () => {
+  const viewport = new WebFeedViewport();
+  const node = { scrollTop: 18375, clientHeight: 646, scrollHeight: 19021 };
+  viewport.sample(node, true);
+  Object.assign(node, {
+    scrollTop: 18343,
+    clientHeight: 678,
+    scrollHeight: 19053,
+  });
+  viewport.sample(node, true);
+  expect(node.scrollTop).toBe(node.scrollHeight);
 });
