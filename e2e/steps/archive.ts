@@ -73,6 +73,18 @@ When(
   },
 );
 
+When(
+  'I confirm the archive after the Checkout warning',
+  async ({ page }): Promise<void> => {
+    const dialog = page.getByRole('dialog', { name: 'Archive Session?' });
+
+    await expect(
+      dialog.getByText(/Removing the Checkout will discard uncommitted files/),
+    ).toBeVisible();
+    await dialog.getByRole('button', { name: 'Archive', exact: true }).click();
+  },
+);
+
 Then(
   'the Sessions list no longer shows the live Session',
   async ({ page }): Promise<void> => {

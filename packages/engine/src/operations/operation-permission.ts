@@ -1,8 +1,7 @@
 import type { OperationPolicy, OperationRow } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
 
-export const needsPermissionTurn =
-  'A Permission request requires an active Turn';
+const needsPermissionTurn = 'A Permission request requires an active Turn';
 
 export function operationPermission(
   policy: OperationPolicy,
