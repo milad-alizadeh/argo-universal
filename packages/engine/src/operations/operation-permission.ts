@@ -7,8 +7,13 @@ export const needsPermissionTurn =
 export function operationPermission(
   policy: OperationPolicy,
   app: boolean,
+  outsideProject = false,
 ): 'allow' | 'ask' | 'person-only' | 'archive' {
-  return app ? 'allow' : policy;
+  if (app) return 'allow';
+
+  if (policy === 'ask-outside-project') return outsideProject ? 'ask' : 'allow';
+
+  return policy;
 }
 
 export function requirePermissionTurn(): never {
@@ -35,9 +40,7 @@ function withoutApproval(row: OperationRow): OperationRow {
 }
 
 function forCaller(row: OperationRow, canConfirm: boolean): OperationRow {
-  const policy = operationPermission(row.policy, false);
-
-  const visible = mayAsk(policy)
+  const visible = mayAsk(row.policy)
     ? { ...row, canRequestApproval: canConfirm }
     : row;
 
@@ -45,5 +48,7 @@ function forCaller(row: OperationRow, canConfirm: boolean): OperationRow {
 }
 
 function mayAsk(policy: OperationPolicy): boolean {
-  return policy === 'ask' || policy === 'archive';
+  return (
+    policy === 'ask' || policy === 'archive' || policy === 'ask-outside-project'
+  );
 }

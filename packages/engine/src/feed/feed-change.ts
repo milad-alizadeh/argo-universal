@@ -1,7 +1,7 @@
 import type {
   ContentBlock,
   PromptSender,
-  NonUserPromptSender,
+  SentPromptSender,
   FeedChange,
   FeedUpsert,
   RowAppend,
@@ -63,14 +63,14 @@ export function promptMessageChange(
 ): FeedUpsert {
   if (sender.type === 'user') return userMessageChange(turnId, content);
 
-  return nonUserPromptChange(promptMessageId(turnId, sender), content, sender);
+  return sentPromptChange(promptMessageId(turnId, sender), content, sender);
 }
 
 // A Prompt from a sender other than the person, stored under the id it is given.
-export const nonUserPromptChange = (
+export const sentPromptChange = (
   messageId: string,
   content: ContentBlock[],
-  sender: NonUserPromptSender,
+  sender: SentPromptSender,
 ): FeedUpsert => ({
   type: 'upsert',
   update: {

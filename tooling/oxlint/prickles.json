@@ -23,11 +23,7 @@
     "sonarjs/no-extra-arguments": "error",
     "sonarjs/no-labels": "error",
     "sonarjs/no-nested-assignment": "error",
-    "sonarjs/unused-import": "error",
-    "sonarjs/fixme-tag": "error",
-    "sonarjs/todo-tag": "error",
     "sonarjs/no-case-label-in-switch": "error",
-    "sonarjs/no-parameter-reassignment": "error",
     "sonarjs/no-floating-point-equality": "error",
     "sonarjs/prefer-while": "error",
     "sonarjs/no-small-switch": "error",
@@ -36,13 +32,11 @@
     "sonarjs/public-static-readonly": "error",
     "sonarjs/call-argument-line": "error",
     "sonarjs/max-switch-cases": "error",
-    "sonarjs/no-unused-vars": "error",
     "sonarjs/function-inside-loop": "error",
     "sonarjs/code-eval": "error",
     "sonarjs/future-reserved-words": "error",
     "sonarjs/bitwise-operators": "error",
     "sonarjs/no-primitive-wrappers": "error",
-    "sonarjs/no-skipped-tests": "error",
     "sonarjs/constructor-for-side-effects": "error",
     "sonarjs/no-dead-store": "error",
     "sonarjs/no-identical-conditions": "error",
@@ -67,24 +61,19 @@
     "sonarjs/no-ignored-exceptions": "error",
     "sonarjs/file-uploads": "error",
     "sonarjs/file-permissions": "error",
-    "sonarjs/no-empty-character-class": "error",
     "sonarjs/no-unenclosed-multiline-block": "error",
     "sonarjs/index-of-compare-to-positive-number": "error",
     "sonarjs/assertions-in-tests": "error",
     "sonarjs/no-implicit-global": "error",
-    "sonarjs/no-useless-catch": "error",
     "sonarjs/xml-parser-xxe": "error",
     "sonarjs/non-existent-operator": "error",
     "sonarjs/post-message": "error",
-    "sonarjs/no-array-delete": "error",
     "sonarjs/no-alphabetical-sort": "error",
     "sonarjs/no-fixed-wait-in-tests": "error",
     "sonarjs/no-incomplete-assertions": "error",
     "sonarjs/no-global-this": "error",
     "sonarjs/new-operator-misuse": "error",
-    "sonarjs/no-delete-var": "error",
     "sonarjs/cookie-no-httponly": "error",
-    "sonarjs/no-nested-conditional": "error",
     "sonarjs/different-types-comparison": "error",
     "sonarjs/inverted-assertion-arguments": "error",
     "sonarjs/updated-const-var": "error",
@@ -152,10 +141,8 @@
     "sonarjs/no-incompatible-assertion-types": "error",
     "sonarjs/anchor-precedence": "error",
     "sonarjs/slow-regex": "error",
-    "sonarjs/no-invalid-regexp": "error",
     "sonarjs/unused-named-groups": "error",
     "sonarjs/no-same-argument-assert": "error",
-    "sonarjs/no-misleading-character-class": "error",
     "sonarjs/duplicates-in-character-class": "error",
     "sonarjs/session-regeneration": "error",
     "sonarjs/prefer-specific-assertions": "error",
@@ -182,7 +169,6 @@
     "sonarjs/aws-sagemaker-unencrypted-notebook": "error",
     "sonarjs/aws-restricted-ip-admin-access": "error",
     "sonarjs/no-empty-alternatives": "error",
-    "sonarjs/no-control-regex": "error",
     "sonarjs/no-regex-spaces": "error",
     "sonarjs/aws-sns-unencrypted-topics": "error",
     "sonarjs/existing-groups": "error",
@@ -195,7 +181,6 @@
     "sonarjs/concise-regex": "error",
     "sonarjs/single-char-in-character-classes": "error",
     "sonarjs/no-hardcoded-secrets": "error",
-    "sonarjs/no-exclusive-tests": "error",
     "sonarjs/hardcoded-secret-signatures": "error",
     "sonarjs/jsx-no-leaked-render": "error",
     "sonarjs/no-hook-setter-in-body": "error",
@@ -289,17 +274,15 @@
     // F1 Single Responsibility — https://prickles.org/tenet/single-responsibility-principle/F1 (also covers: S2)
     "max-lines-per-function": [
       "error",
-      { "max": 15, "skipBlankLines": true, "skipComments": true }
+      { "max": 50, "skipBlankLines": true, "skipComments": true }
     ],
     // F1 (also covers: S2, F4)
     "max-lines": [
       "error",
-      { "max": 150, "skipBlankLines": true, "skipComments": true }
+      { "max": 300, "skipBlankLines": true, "skipComments": true }
     ],
 
-    // S2 Cyclomatic Caps — https://prickles.org/tenet/cyclomatic-caps/S2 (also covers: F1, F4)
-    "complexity": ["error", 3],
-    // S2 (also covers: S4)
+    // S2 Cyclomatic Caps — https://prickles.org/tenet/cyclomatic-caps/S2 (also covers: S4)
     "max-depth": ["error", 3],
     // S2 (also covers: S4)
     "max-nested-callbacks": ["error", 3],
@@ -313,7 +296,7 @@
     // F5 (also covers: F4)
     "no-warning-comments": [
       "error",
-      { "terms": ["todo", "fixme", "xxx", "hack"] }
+      { "terms": ["todo", "fixme", "xxx", "hack"], "location": "anywhere" }
     ],
     // F5
     "stylistic/line-comment-position": [

@@ -110,9 +110,9 @@ A Plugin in this repository is checked like the rest of it: its code, its `mocks
 
 | Rule | Cap |
 | --- | --- |
-| `complexity` | 3 per function |
-| `max-lines-per-function` | 15, or 150 in a test |
-| `max-lines` | 150 per file, tests included |
+| `sonarjs/cognitive-complexity` | 15 per function |
+| `max-lines-per-function` | 50, or 150 in a test |
+| `max-lines` | 300 per file; none in a test, but its mocks keep it |
 | `max-statements` | 10, or 30 in a test |
 | `max-params`, `max-depth`, `max-nested-callbacks` | 3 |
 | `no-magic-numbers` | outside tests, name each number |

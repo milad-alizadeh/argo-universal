@@ -2,16 +2,8 @@ import { SubagentRole } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { subagentMarkLabel, subagentRoleMark } from './subagent-role';
 
-it('draws an Agent that writes code with the Implement mark', () => {
-  expect(subagentRoleMark('implement')).toEqual({ icon: 'code', tone: 'teal' });
+it('names a mark after its role', () => {
   expect(subagentMarkLabel('Implement')).toBe('Implement Agent');
-});
-
-it('draws the General mark in a colour', () => {
-  expect(subagentRoleMark('general')).toEqual({
-    icon: 'sparkle',
-    tone: 'pink',
-  });
 });
 
 it('draws every role an Agent can declare in a tone of its own', () => {

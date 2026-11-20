@@ -47,7 +47,11 @@ it.each([
 ])(
   'keeps $operation owned through a Writer retry and acknowledges its eventual commit',
   async ({ operation, predicate, verify }) => {
-    const host = await startAcpEngine({ steps: [] });
+    const host = await startAcpEngine({
+      steps: [],
+      archiveUndoMs: operation === 'archive' ? 500 : undefined,
+    });
+
     const created = await promptedArchiveSession(host);
 
     if (operation === 'unarchive')

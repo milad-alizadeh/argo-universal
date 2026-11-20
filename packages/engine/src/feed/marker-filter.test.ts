@@ -1,70 +1,21 @@
-import type {
-  ContentBlock,
-  FeedSubscribeOutput,
-  SessionUpdate,
-} from '@repo/contracts';
+import type { FeedSubscribeOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
+import {
+  appended,
+  clientText,
+  opened,
+} from '#mocks/conversation-marker-drawing';
 import { VoiceMarkerFilter } from './marker-filter';
 
-const rowId = 'message-1';
-
-const sessionId = 'session-1';
-
-// The message whole, still arriving unless it is `settled`.
-const opened = (
-  text: string,
-  state: 'open' | 'settled' = 'open',
-): FeedSubscribeOutput => ({
-  type: 'row.upsert',
-  rev: 1,
-  row: {
-    id: rowId,
-    sessionId,
-    position: 1,
-    revision: 1,
-    turnId: 'turn-1',
-    state,
-    sessionUpdate: 'agent_message',
-    messageId: rowId,
-    content: [{ type: 'text', text }],
-  },
-});
-
-const appended = (text: string, off: number): FeedSubscribeOutput => ({
-  type: 'row.append',
-  rev: 2,
-  id: rowId,
-  field: 'content.0.text',
-  text,
-  off,
-});
-
-const textOfBlock = (block: ContentBlock | undefined): string =>
-  block?.type === 'text' ? block.text : '';
-
-const rowText = (row: SessionUpdate): string =>
-  row.sessionUpdate === 'agent_message' ? textOfBlock(row.content[0]) : '';
-
-// A client applies an append only when its offset is the length of the text it holds.
-const apply = (text: string, event: FeedSubscribeOutput): string => {
-  if (event.type === 'row.upsert') return rowText(event.row);
-
-  return event.type === 'row.append' ? append(text, event) : text;
-};
-
-const append = (
-  text: string,
-  event: Extract<FeedSubscribeOutput, { type: 'row.append' }>,
-): string => (event.off === text.length ? text + event.text : text);
-
-// What a client holds after it applies each event in turn.
+// What a client draws of the events through one subscriber's filter.
 function drawn(events: FeedSubscribeOutput[]): string {
   const filter = new VoiceMarkerFilter();
 
-  return events.reduce((text, event) => apply(text, filter.output(event)), '');
+  return clientText(events, (event) => filter.output(event));
 }
 
-const marks = ['[STATUS]', '[COMPLETE]', '[ANALYSIS]'];
+// The marks of what the voice may say; `[ANALYSIS]` hides what it marks too.
+const marks = ['[STATUS]', '[COMPLETE]'];
 
 it.each(marks)(
   'hides %s that arrives split across chunks, and the space after it',
@@ -90,6 +41,21 @@ it.each(marks)(
     ).toBe('Looking on');
   },
 );
+
+it('hides analysis that arrives split across chunks, with its mark', () => {
+  expect(
+    drawn([
+      opened(''),
+      appended('[ANAL', 0),
+      appended('YSIS] Looking', 5),
+      appended(' closer\n[COMPLETE] Found it.', 18),
+    ]),
+  ).toBe('Found it.');
+});
+
+it('hides analysis that opens an upsert row', () => {
+  expect(drawn([opened('[ANALYSIS] Looking'), appended(' on', 18)])).toBe('');
+});
 
 it('hides a mark whose last character arrives with the text after it', () => {
   expect(drawn([opened('[STATUS'), appended('] Looking', 7)])).toBe('Looking');
@@ -118,6 +84,20 @@ it.each(marks)(
   },
 );
 
+it('hides analysis that opens a later paragraph, up to the next mark', () => {
+  expect(
+    drawn([
+      opened(`Done.\n\n[ANALYSIS] ${file}\nStill silent.\n[STATUS] More.`),
+    ]),
+  ).toBe('Done.\n\nMore.');
+});
+
+it('hides analysis that opens a later paragraph of a settled row', () => {
+  expect(
+    drawn([opened(`[STATUS] Done.\n\n[ANALYSIS] ${file}`, 'settled')]),
+  ).toBe('Done.\n\n');
+});
+
 it.each(marks)(
   'hides %s that opens a later paragraph, split across chunks',
   (mark) => {
@@ -144,8 +124,7 @@ it('shows a later line that only starts like a mark once it is known to be text'
 const reported =
   '[STATUS] Found it.\n\n[ANALYSIS] The data comes from Open-Meteo.\n  [COMPLETE] Done [STATUS] now.';
 
-const shownReport =
-  'Found it.\n\nThe data comes from Open-Meteo.\n  Done [STATUS] now.';
+const shownReport = 'Found it.\n\n  Done [STATUS] now.';
 
 // The message in chunks of `size` characters, each appended where the last ended.
 const inChunks = (text: string, size: number): FeedSubscribeOutput[] => {

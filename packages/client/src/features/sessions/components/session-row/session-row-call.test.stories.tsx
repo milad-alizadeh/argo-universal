@@ -9,7 +9,10 @@ import {
   type SessionRowCall,
   SessionRowCallProvider,
 } from './session-row-call';
-import { mutedVoiceCall, voiceCall } from './session-row-call-fixtures';
+import {
+  mutedConversation,
+  liveConversation,
+} from './session-row-call-fixtures';
 import { idleSession } from './session-row-fixtures';
 
 const meta = {
@@ -30,32 +33,32 @@ const onCall =
 
 // A live call ends the row on its running time, and the row's name ends on the call.
 export const LiveCall: Story = {
-  decorators: [onCall(voiceCall)],
+  decorators: [onCall(liveConversation)],
   play: async ({ canvas }) => {
     await settleLayout(layoutWidths.wide);
     await expect(canvas.getByText('2:43')).toBeVisible();
     await expect(
-      canvas.getByRole('button', { name: /, on a Voice call$/ }),
+      canvas.getByRole('button', { name: /, in a Conversation$/ }),
     ).toBeVisible();
   },
 };
 
 // Muted, the time gives way to "Muted", and the name says the mic is muted.
 export const MutedCall: Story = {
-  decorators: [onCall(mutedVoiceCall)],
+  decorators: [onCall(mutedConversation)],
   play: async ({ canvas }) => {
     await settleLayout(layoutWidths.wide);
     await expect(canvas.getByText('Muted')).toBeVisible();
     await expect(canvas.queryByText('2:43')).toBeNull();
     await expect(
-      canvas.getByRole('button', { name: /, on a Voice call, mic muted$/ }),
+      canvas.getByRole('button', { name: /, in a Conversation, mic muted$/ }),
     ).toBeVisible();
   },
 };
 
 // A call still connecting is marked without a time, never a clock stuck at 0:00.
 export const ConnectingCall: Story = {
-  decorators: [onCall({ ...voiceCall, startedAt: null })],
+  decorators: [onCall({ ...liveConversation, startedAt: null })],
   play: async ({ canvas }) => {
     await settleLayout(layoutWidths.wide);
     await expect(canvas.getByTestId('session-call')).toBeVisible();
@@ -65,12 +68,12 @@ export const ConnectingCall: Story = {
 
 // A call attached to another Session leaves this row as it was.
 export const CallElsewhere: Story = {
-  decorators: [onCall({ ...voiceCall, sessionId: 'another-session' })],
+  decorators: [onCall({ ...liveConversation, sessionId: 'another-session' })],
   play: async ({ canvas }) => {
     await settleLayout(layoutWidths.wide);
     await expect(canvas.queryByTestId('session-call')).toBeNull();
     await expect(
-      canvas.queryByRole('button', { name: /Voice call/ }),
+      canvas.queryByRole('button', { name: /Conversation/ }),
     ).toBeNull();
   },
 };

@@ -17,6 +17,7 @@ import type { OpenSessions } from './open-sessions';
 import { managePromptQueue, submitAppPrompt } from './queue-commands';
 import { createSessionAgentReader, listSessionBranches } from './readers';
 import { restartSession } from './restart/restart-session';
+import type { Schedules } from './schedules';
 import { cancelSession } from './session-closure';
 import { declareSubagentRole } from './session-declare-subagent-role';
 import { createPlugin } from './session-new-plugin';
@@ -41,6 +42,11 @@ export type SessionOperationImplementations = {
   ) => Promise<z.output<(typeof operations)[Id]['result']>>;
 };
 
+type ScheduleId =
+  | 'session.schedulePrompt'
+  | 'session.listSchedules'
+  | 'session.manageSchedule';
+
 type ActId = Exclude<SessionOperationId, keyof typeof readerOperations>;
 
 type ReadId = Exclude<SessionOperationId, ActId>;
@@ -51,7 +57,11 @@ type FeedReadId = 'session.feed' | 'session.get' | 'session.listAgents';
 export const sessionOperationImplementations = (
   sources: SessionHandlerSources,
   list: SessionList,
+  schedules: Schedules,
 ): SessionOperationImplementations => ({
+  'session.schedulePrompt': (input) => schedules.create(input),
+  'session.manageSchedule': (input) => schedules.manage(input),
+  'session.listSchedules': async ({ sessionId }) => schedules.list(sessionId),
   ...actImplementations(sources),
   ...feedReads(sources),
   ...rowReads(sources, list),
@@ -59,7 +69,7 @@ export const sessionOperationImplementations = (
 
 const actImplementations = (
   sources: SessionHandlerSources,
-): Pick<SessionOperationImplementations, ActId> => ({
+): Pick<SessionOperationImplementations, Exclude<ActId, ScheduleId>> => ({
   ...queueImplementations(sources),
   'session.cancel': async ({ sessionId }) =>
     cancelSession(sources.open, sessionId),

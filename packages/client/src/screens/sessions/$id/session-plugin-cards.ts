@@ -2,7 +2,10 @@ import type { SessionPanels } from '#features/sessions';
 import type { SessionPluginCard } from './sections/plugin-card-section';
 import type { SessionItems } from './sections/session-section';
 import { offeredSections } from './sections/session-sections';
-import type { SessionDetailViewProps } from './session-detail-view';
+import type {
+  OpenSessionViewProps,
+  SessionDetailViewProps,
+} from './session-detail-view';
 import type { HeaderCards } from './session-page-header';
 import type { WorkbenchCards } from './use-workbench-cards';
 
@@ -26,11 +29,12 @@ export const sessionHeader = (
 export const withPluginCards = (
   props: SessionDetailViewProps,
   pluginCards: readonly SessionPluginCard[],
+  schedules?: OpenSessionViewProps['schedules'],
 ): SessionDetailViewProps =>
-  props.state === 'open' ? { ...props, pluginCards } : props;
+  props.state === 'open' ? { ...props, pluginCards, schedules } : props;
 
 // A Plugin card keeps its Inspector tab while the card is open, as a Section keeps its tab while the Session offers it.
 export const offeredWith =
-  (cards: readonly SessionPluginCard[]) =>
+  (cards: readonly SessionPluginCard[], scheduleCount = 0) =>
   (work: SessionItems): string[] =>
-    offeredSections(work, cards);
+    offeredSections({ ...work, scheduleCount }, cards);

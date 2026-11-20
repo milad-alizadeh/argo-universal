@@ -15,12 +15,13 @@ const defaults: Defaults = {
     ...params,
     projectId: params.projectId ?? caller.projectId,
   }),
+  'session.rename': callerSessionParam,
   'session.declareSubagentRole': callerSessionParam,
   'session.setTodos': callerSessionParam,
   'session.setTodoStep': callerSessionParam,
   'plugin.new': callerSessionParam,
-  'voice.end': callerSessionParam,
-  'voice.hangUp': ownSessionOnly,
+  'conversation.end': callerSessionParam,
+  'conversation.hangUp': ownSessionOnly,
 };
 
 export function scopedParams<Id extends OperationId>(

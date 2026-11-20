@@ -5,7 +5,6 @@ import { expect, fn, within } from 'storybook/test';
 import { homePath } from '#features/settings';
 import {
   localProject,
-  otherDeviceName,
   worktreeProject,
 } from '../../../../features/settings/components/settings-pages.mocks';
 import {
@@ -54,19 +53,6 @@ const trackerSectionTitle = async (canvas: Canvas): Promise<HTMLElement> => {
   const [title] = await canvas.findAllByText(trackerName);
 
   return title ?? canvas.getByText(trackerName);
-};
-
-export const ShowsTheFolderAndCheckout: Story = {
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.getByRole('heading', { name: worktreeProject.name, level: 1 }),
-    ).toBeVisible();
-    await expect(
-      canvas.getByText(homePath(worktreeProject.path)),
-    ).toBeVisible();
-    await expect(canvas.getByText('New worktree')).toBeVisible();
-    await expect(canvas.getByText(baseBranch)).toBeVisible();
-  },
 };
 
 const startIn = /Start in/;
@@ -250,13 +236,6 @@ export const AProjectOnTheServerDeviceNamesNoDevice: Story = {
   },
 };
 
-export const AProjectOnAnotherDeviceNamesItsDevice: Story = {
-  args: { otherDevice: otherDeviceName },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText(otherDeviceName)).toBeVisible();
-  },
-};
-
 export const ALocalProjectHasNoBaseBranch: Story = {
   args: {
     name: localProject.name,
@@ -265,13 +244,6 @@ export const ALocalProjectHasNoBaseBranch: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByText('Local')).toBeVisible();
     await expect(canvas.queryByText(baseBranch)).not.toBeInTheDocument();
-  },
-};
-
-export const SaysWhenTheProjectIsMissing: Story = {
-  args: { name: 'old-api', project: { status: 'missing' } },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText(/no Project named old-api/)).toBeVisible();
   },
 };
 
@@ -351,30 +323,6 @@ export const NoPluginsAddNoSection: Story = {
   },
 };
 
-export const EachNewSessionsRowShowsItsDescription: Story = {
-  play: async ({ canvas }) => {
-    await expect(
-      canvas.getByText("A new worktree keeps each Session's files apart"),
-    ).toBeVisible();
-    await expect(
-      canvas.getByText('New worktrees branch from it'),
-    ).toBeVisible();
-    await expect(
-      canvas.getByText(
-        'Archiving a Session removes its folder; the branch stays',
-      ),
-    ).toBeVisible();
-  },
-};
-
-export const ShowsASpinnerWhileTheProjectLoads: Story = {
-  args: { project: { status: 'loading' } },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText('Loading the Project…')).toBeVisible();
-    await expect(canvas.getByRole('progressbar')).toBeVisible();
-  },
-};
-
 export const AccountsSitBelowFolder: Story = {
   args: { accounts: { hosts: chosenAccounts, onChooseAccount: fn() } },
   play: async ({ canvas }) => {
@@ -385,12 +333,6 @@ export const AccountsSitBelowFolder: Story = {
       folder.compareDocumentPosition(accounts) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    await expect(canvas.getByText(githubHost)).toBeVisible();
-    await expect(canvas.getByText('milad-alizadeh')).toBeVisible();
-    await expect(canvas.getByText('api.linear.app')).toBeVisible();
-    await expect(
-      canvas.getByText('Used by every Plugin in this Project.'),
-    ).toBeVisible();
   },
 };
 

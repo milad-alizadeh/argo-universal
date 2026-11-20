@@ -93,7 +93,7 @@ it.each(['ask', 'person-only'] as const)(
     const row = expect.objectContaining({ id, policy, enabled: false });
     const expected = policy === 'person-only' ? [] : [row];
 
-    expect(rows).toEqual(expected);
+    expect(rows.filter((row) => row.id === id)).toEqual(expected);
 
     await expect(
       cli.operations.run.mutate({ id, params: { level: 1 } }),

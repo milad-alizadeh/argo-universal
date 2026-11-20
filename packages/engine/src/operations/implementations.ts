@@ -4,6 +4,7 @@ import type { z } from 'zod';
 import type { NativeStartRequest, SessionOperationCall } from '../sessions';
 import { createAgentAccessOperations } from './agent-access';
 import { createAppOperations } from './app';
+import { createConversationOperations } from './conversation';
 import { createDiagramOperations } from './diagram';
 import type { NativeStartId, StartedWork } from './native-start';
 import type { OperationsDeps } from './operations';
@@ -12,7 +13,6 @@ import { createProjectOperations } from './projects';
 import { createRegistryOperations } from './registry';
 import type { AppCaller, SessionCaller, UserCaller } from './session-tokens';
 import { sessionImplementations } from './sessions';
-import { createVoiceOperations } from './voice';
 import type { WorkExecution, UserAdmission } from './work';
 
 type ParamsById = {
@@ -46,7 +46,7 @@ export type PlainOperationId = Exclude<OperationId, NativeStartId>;
 export type PlainImplementations = {
   [Id in PlainOperationId]: (
     params: ParamsById[Id],
-    ...connection: Id extends 'session.queue' | 'voice.start'
+    ...connection: Id extends 'session.queue' | 'conversation.start'
       ? [connectionSignal?: AbortSignal]
       : []
   ) => Promise<ResultsById[Id]>;
@@ -81,7 +81,7 @@ export function createImplementations(
     ...createPluginOperations(deps.plugins.plugins),
     ...createRegistryOperations(deps),
     ...createProjectOperations(deps),
-    ...createVoiceOperations(deps.voice, deps.sessions),
+    ...createConversationOperations(deps.conversation, deps.sessions),
   };
 }
 

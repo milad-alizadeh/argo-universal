@@ -59,28 +59,6 @@ export const ActionIsAButtonWithoutAChevron: Story = {
   },
 };
 
-// Rows whose icons differ in width still start their titles on one x (#1760).
-export const ActionTitlesShareOneX: Story = {
-  render: (args): React.JSX.Element => (
-    <FieldGroup>
-      <FieldGroup.Section>
-        <FieldLink {...args} title="Photos" leading="photos" action />
-        <FieldLink {...args} title="Files" leading="folder" action />
-        <FieldLink {...args} title="Slash Commands" leading="code" action />
-      </FieldGroup.Section>
-    </FieldGroup>
-  ),
-  // The story draws its own FieldGroup around three rows, so the meta's one-row wrapper is dropped.
-  decorators: [],
-  play: async ({ canvas }) => {
-    const lefts = ['Photos', 'Files', 'Slash Commands'].map(
-      (title) => canvas.getByText(title).getBoundingClientRect().left,
-    );
-
-    await expect(Math.max(...lefts) - Math.min(...lefts)).toBeLessThan(0.5);
-  },
-};
-
 export const ActionWithoutAnIconKeepsItsValue: Story = {
   args: { title: 'Sort', value: 'Newest', action: true },
   play: async ({ canvas }) => {

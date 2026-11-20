@@ -52,10 +52,9 @@ export function describeNode(node: EventTarget | null): string {
   return [node.tagName.toLowerCase(), ...attributes].join(' ');
 }
 
+// Only the removed node itself: searching its subtree costs a query on every removal in a page that removes thousands.
 function isWorthReporting(node: Element): boolean {
-  return (
-    node.matches(REMOVAL_FILTER) || node.querySelector(REMOVAL_FILTER) !== null
-  );
+  return node.matches(REMOVAL_FILTER);
 }
 
 function recordRemoval(node: Node): void {

@@ -2,6 +2,7 @@ import { WireNode } from '@repo/contracts/plugins/wire';
 import { Platform } from 'react-native';
 import { loadingTree } from '#features/plugins';
 import paceTrees from './plugin-detail-view-development-pace.json' with { type: 'json' };
+import homeTrees from './plugin-detail-view-home.json' with { type: 'json' };
 import trees from './plugin-detail-view-issue-filters.json' with { type: 'json' };
 import pagedJiraBoard from './plugin-detail-view-jira-board-paged.json' with { type: 'json' };
 import jiraBoards from './plugin-detail-view-jira-board.json' with { type: 'json' };
@@ -53,3 +54,12 @@ export const developmentPace = { root: WireNode.parse(paceTrees.loaded) };
 export const paceRepositories = { root: WireNode.parse(paceTrees.picker) };
 
 export const paceUnavailable = { root: WireNode.parse(paceTrees.unavailable) };
+
+// Recorded from the Home Plugin's page through its public page boundary: the household's lights, the Bridge still to connect, Hue unreachable, and signed out. Every platform draws the same tree.
+export const homeLights = { root: WireNode.parse(homeTrees.lights) };
+
+export const homeConnect = { root: WireNode.parse(homeTrees.connect) };
+
+export const homeUnreachable = { root: WireNode.parse(homeTrees.failed) };
+
+export const homeSignedOut = { root: WireNode.parse(homeTrees.signedOut) };

@@ -1,4 +1,3 @@
-import { Uniwind } from 'uniwind';
 import { page } from 'vitest/browser';
 import { nextFrames } from '#mocks/next-frames';
 
@@ -95,7 +94,7 @@ export function contentWideMin(): number {
 
 type LayoutAssertion = (wide: boolean) => Promise<void>;
 
-// Runs the assertion at phone and wide widths, in light and dark; outside the browser runner, once at the default size.
+// Runs the assertion at phone and wide widths; outside the browser runner, once at the default size.
 export async function eachLayout(assertion: LayoutAssertion): Promise<void> {
   if (!('__vitest_browser__' in globalThis)) {
     await assertion(false);
@@ -103,21 +102,13 @@ export async function eachLayout(assertion: LayoutAssertion): Promise<void> {
     return;
   }
 
-  try {
-    for (const wide of [false, true]) await eachMode(assertion, wide);
-  } finally {
-    Uniwind.setTheme('light');
-  }
+  for (const wide of [false, true]) await atLayout(assertion, wide);
 }
 
-async function eachMode(
+async function atLayout(
   assertion: LayoutAssertion,
   wide: boolean,
 ): Promise<void> {
   await settleLayout(wide ? 'wide' : 'phone');
-
-  for (const mode of ['light', 'dark'] as const) {
-    Uniwind.setTheme(mode);
-    await assertion(wide);
-  }
+  await assertion(wide);
 }

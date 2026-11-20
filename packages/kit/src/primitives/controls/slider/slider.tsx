@@ -6,6 +6,8 @@ const fullPercent = 100;
 
 const progressProperty = '--slider-progress';
 
+const fillProperty = '--slider-fill';
+
 /*
  * Expo's universal web Slider hard-codes its palette, so web keeps this range input for the thumb and the full-width hit area.
  * The input's own track is hidden: a range input runs its track under the thumb at each end, so Argo draws the track across the content's width and widens the input by the thumb's radius at each end.
@@ -36,8 +38,26 @@ export function Slider(props: SliderProps): React.JSX.Element {
   );
 }
 
-function SliderTrack(props: SliderPosition): React.JSX.Element {
-  return <div className={trackClass} style={progressStyle(props)} />;
+function SliderTrack(
+  props: SliderPosition & Pick<SliderProps, 'fill'>,
+): React.JSX.Element {
+  return (
+    <div
+      className={trackClass}
+      style={{ ...progressStyle(props), ...fillStyle(props.fill) }}
+    />
+  );
+}
+
+// A gradient needs two stops, so a single colour is given twice.
+function fillStyle(
+  fill: SliderProps['fill'],
+): Partial<Record<typeof fillProperty, string>> {
+  if (!fill) return {};
+
+  return {
+    [fillProperty]: (fill.length === 1 ? [...fill, ...fill] : fill).join(', '),
+  };
 }
 
 function rangeAttributes(

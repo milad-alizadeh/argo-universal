@@ -1,5 +1,5 @@
 import type {
-  NonUserPromptSender,
+  SentPromptSender,
   PromptQueue,
   QueuedPrompt,
   QueueCommand,
@@ -30,7 +30,7 @@ const conflict = (message: string): never => {
 
 // A Plugin's append carries its sender and the id the Server chose for it.
 type QueueChangeCommand = Exclude<QueueCommand, { action: 'steer' }> & {
-  sender?: NonUserPromptSender;
+  sender?: SentPromptSender;
   queuedId?: string;
 };
 

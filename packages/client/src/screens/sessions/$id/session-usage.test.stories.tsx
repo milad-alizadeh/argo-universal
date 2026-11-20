@@ -22,17 +22,16 @@ type Story = StoryObj<typeof meta>;
 
 const contextLabel = 'Context window';
 
-const renderUsage =
-  (usage: ContextUsage | undefined) => (): React.JSX.Element => (
-    <SessionDetailView
-      state="open"
-      {...idleSession}
-      composer={{
-        ...idleSession.composer,
-        status: composerStatus(null, usage),
-      }}
-    />
-  );
+const renderUsage = (usage?: ContextUsage) => (): React.JSX.Element => (
+  <SessionDetailView
+    state="open"
+    {...idleSession}
+    composer={{
+      ...idleSession.composer,
+      status: composerStatus(null, usage),
+    }}
+  />
+);
 
 interface ContextLevel {
   usage: ContextUsage;
@@ -103,28 +102,13 @@ const contextRing = (
   },
 });
 
-const hidden = (width: number, usage?: ContextUsage): Story => ({
-  render: renderUsage(usage),
-  play: async ({ canvas }) => {
-    await settleLayout(width);
-    await expect(
-      canvas.queryByRole('button', { name: contextLabel }),
-    ).not.toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: 'Send' })).toBeVisible();
-  },
-});
-
 export const LowDesktop = contextRing(layoutWidths.wide, low, true);
 
 export const LowPhone = contextRing(layoutWidths.phone, low, false);
 
-export const HighDesktop = contextRing(layoutWidths.wide, high, true);
+export const High = contextRing(layoutWidths.wide, high, true);
 
-export const HighPhone = contextRing(layoutWidths.phone, high, false);
-
-export const FullDesktop = contextRing(layoutWidths.wide, full, true);
-
-export const FullPhone = contextRing(layoutWidths.phone, full, false);
+export const Full = contextRing(layoutWidths.wide, full, true);
 
 const lastCall: ContextLevel = {
   ...low,
@@ -133,13 +117,18 @@ const lastCall: ContextLevel = {
   usage: { ...low.usage, scope: 'model-call' },
 };
 
-export const PartialDesktop = contextRing(layoutWidths.wide, lastCall, true);
+export const Partial = contextRing(layoutWidths.wide, lastCall, true);
 
-export const PartialPhone = contextRing(layoutWidths.phone, lastCall, false);
-
-export const MissingDesktop = hidden(layoutWidths.wide);
-
-export const MissingPhone = hidden(layoutWidths.phone);
+export const Missing: Story = {
+  render: renderUsage(),
+  play: async ({ canvas }) => {
+    await settleLayout(layoutWidths.wide);
+    await expect(
+      canvas.queryByRole('button', { name: contextLabel }),
+    ).not.toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Send' })).toBeVisible();
+  },
+};
 
 const usageLabel = 'Usage';
 

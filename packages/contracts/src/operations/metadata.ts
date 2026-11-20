@@ -12,6 +12,7 @@ export const OperationPolicy = z.enum([
   'ask',
   'person-only',
   'archive',
+  'ask-outside-project',
 ]);
 
 export type OperationPolicy = z.infer<typeof OperationPolicy>;

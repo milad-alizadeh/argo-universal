@@ -1,5 +1,6 @@
 import type { PageEvent } from '@repo/contracts/plugins/page-calls';
 import { WireNode, type WireJson } from '@repo/contracts/plugins/wire';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import fixtures from '@repo/mocks/plugins/controls.json' with { type: 'json' };
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within, fireEvent } from 'storybook/test';
@@ -67,10 +68,11 @@ export const BinaryControls: Story = {
 };
 
 export const SelectPicker: Story = {
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole('button', { name: environment }));
     await userEvent.click(
-      within(document.body).getByRole('option', { name: 'Production' }),
+      await within(document.body).findByRole('option', { name: 'Production' }),
     );
     await expect(onPageCall).toHaveBeenCalledWith(
       { bind: 'environment' },

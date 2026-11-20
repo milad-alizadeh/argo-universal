@@ -73,7 +73,7 @@ export interface FeedSubagent {
 
 interface FeedStandaloneRow {
   type: 'row';
-  // The words are still being said on a Voice call: live, not stored. The Feed draws them in place at its tail.
+  // The words are still being said on a Conversation: live, not stored. The Feed draws them in place at its tail.
   partial?: boolean;
   row: Exclude<
     SessionUpdate,

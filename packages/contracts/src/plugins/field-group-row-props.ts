@@ -18,6 +18,11 @@ export const fieldGroupFieldProps = z.object({
   disabled: z.boolean().optional().describe('Whether the row is disabled.'),
 });
 
+// A composed row: its content is its children (ADR-0042, owner amendment 2026-11-20).
+export const fieldGroupComposedRowProps = z.object({
+  id: fieldGroupFieldProps.shape.id,
+});
+
 // A row that leads with an icon, as Expo UI's universal ListItem does.
 export const fieldGroupRowProps = fieldGroupFieldProps.extend({
   leading: stockIcon

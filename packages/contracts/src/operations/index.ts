@@ -2,6 +2,9 @@ import { z } from 'zod';
 import type { IconName } from '../kit-symbols';
 import { agentAccessOperations } from './agent-access';
 import { appOperations } from './app';
+import { conversationOperations } from './conversation';
+import { conversationDeviceOperations } from './conversation-devices';
+import { conversationSettingsOperations } from './conversation-settings';
 import { diagramOperations } from './diagram';
 import type { OperationTier, OperationPolicy } from './metadata';
 import { pluginOperations } from './plugins';
@@ -12,8 +15,6 @@ import { operationJsonSchema } from './schema-json';
 import { sessionOperations } from './sessions';
 import { todoListOperations } from './todo-list';
 import { voiceOperations } from './voice';
-import { voiceDeviceOperations } from './voice-devices';
-import { voiceSettingsOperations } from './voice-settings';
 
 export { AgentAccess } from './agent-access';
 
@@ -69,9 +70,10 @@ export const operations = {
   ...readerOperations,
   ...sessionOperations,
   ...todoListOperations,
+  ...conversationOperations,
+  ...conversationSettingsOperations,
+  ...conversationDeviceOperations,
   ...voiceOperations,
-  ...voiceSettingsOperations,
-  ...voiceDeviceOperations,
   ...pluginOperations,
   ...registryOperations,
   ...projectOperations,

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ContentBlock } from './content-block';
 import { createFeedMetadataSchema } from './metadata';
-import { NonUserPromptSender } from './prompt-sender';
+import { SentPromptSender } from './prompt-sender';
 import { envelope, kind, message } from './update-fields';
 
 export const UserMessage = z.strictObject({
@@ -21,7 +21,7 @@ export const PromptMessage = z.strictObject({
   sessionUpdate: kind('prompt_message'),
   ...message,
   _meta: z.strictObject({
-    argo: z.strictObject({ sender: NonUserPromptSender }),
+    argo: z.strictObject({ sender: SentPromptSender }),
   }),
 });
 
@@ -40,7 +40,7 @@ export const SessionMessage = z.strictObject({
   ),
 });
 
-// What the person said during a Voice call (ADR-0064). Drawn as the person's message, never sent to the Agent as written.
+// What the person said during a Conversation (ADR-0064). Drawn as the person's message, never sent to the Agent as written.
 export const PersonTranscript = z.strictObject({
   ...envelope,
   sessionUpdate: kind('person_transcript'),
@@ -49,7 +49,7 @@ export const PersonTranscript = z.strictObject({
 
 export type PersonTranscript = z.infer<typeof PersonTranscript>;
 
-// What the voice said during a Voice call. Drawn as plain text.
+// What the voice said during a Conversation. Drawn as plain text.
 export const VoiceTranscript = z.strictObject({
   ...envelope,
   sessionUpdate: kind('voice_transcript'),

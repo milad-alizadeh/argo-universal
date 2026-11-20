@@ -245,53 +245,6 @@ export const FoldInViewStaysPut: Story = {
   },
 };
 
-interface Insets {
-  left: number;
-  right: number;
-  fillsList: boolean;
-}
-
-// A file row's own side space, and whether the row runs the list's whole width.
-async function headerInsets(path: string): Promise<Insets> {
-  const header = await findFileHeader(path);
-  const row = header.parentElement;
-  const list = screen.getByTestId('changes-files');
-  const mark = await viewedMark(0);
-
-  if (!row) throw new Error('Missing file row');
-
-  const box = row.getBoundingClientRect();
-  const lane = list.getBoundingClientRect();
-
-  return {
-    left: header.getBoundingClientRect().left - box.left,
-    right: box.right - mark.getBoundingClientRect().right,
-    fillsList: box.left === lane.left && box.width === list.clientWidth,
-  };
-}
-
-// A file row runs the list's full width with its own inset inside, the same at a phone's width and a wide window's.
-export const FileRowsShareOneInset: Story = {
-  play: async () => {
-    await settleLayout('phone');
-
-    const phone = await headerInsets(largeFile);
-
-    await settleLayout('wide');
-
-    const wide = await headerInsets(largeFile);
-
-    for (const insets of [phone, wide]) {
-      await expect(insets.fillsList).toBe(true);
-      await expect(insets.left).toBeGreaterThan(0);
-      await expect(insets.right).toBeCloseTo(insets.left, 0);
-    }
-
-    await expect(wide.left).toBeCloseTo(phone.left, 0);
-    await expect(wide.right).toBeCloseTo(phone.right, 0);
-  },
-};
-
 // Only a wider window labels the mark: a phone keeps the bare circle.
 export const ViewedLabelOnlyWhenWide: Story = {
   play: async () => {

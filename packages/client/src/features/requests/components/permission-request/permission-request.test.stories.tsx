@@ -1,5 +1,4 @@
 import { settleLayout, wideBreakpoint } from '@repo/kit/mocks/story-layout';
-import type { RequestMock } from '@repo/mocks/app';
 import { expect, fn, within } from 'storybook/test';
 import {
   allow,
@@ -37,28 +36,14 @@ export const SubmittingPhone = submitting(390);
 
 export const SubmittingWide = submitting(1440);
 
-export const SecondAgentSubmittingPhone = submitting(390, permissionMocks[1]);
-
-export const SecondAgentSubmittingWide = submitting(1440, permissionMocks[1]);
-
 export const ResponseErrorPhone = responseError(390);
 
 export const ResponseErrorWide = responseError(1440);
 
-export const SecondAgentResponseErrorPhone = responseError(
-  390,
-  permissionMocks[1],
-);
-
-export const SecondAgentResponseErrorWide = responseError(
-  1440,
-  permissionMocks[1],
-);
-
-function conflict(width: number, mock?: RequestMock): Story {
+function conflict(width: number): Story {
   return {
     args: {
-      ...permissionProps({ mock, onAnswer: fn() }),
+      ...permissionProps({ onAnswer: fn() }),
       state: { kind: 'answered', reason: 'Already answered on another device' },
     },
     play: async ({ args }) => {
@@ -80,7 +65,3 @@ function conflict(width: number, mock?: RequestMock): Story {
 export const ConflictPhone = conflict(390);
 
 export const ConflictWide = conflict(1440);
-
-export const SecondAgentConflictPhone = conflict(390, permissionMocks[1]);
-
-export const SecondAgentConflictWide = conflict(1440, permissionMocks[1]);

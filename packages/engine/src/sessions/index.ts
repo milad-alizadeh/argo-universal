@@ -8,6 +8,8 @@ export {
 
 export { Sessions } from './sessions';
 
+export type { ConversationSessionWork } from './conversation-session-work';
+
 export type { SessionSources } from './session-sources';
 
 export { type SessionData } from './session-data';
@@ -103,3 +105,5 @@ export {
 export { OpenSessions } from './open-sessions';
 
 export { closeSession } from './session-closure';
+
+export { namedParam } from './named-param';

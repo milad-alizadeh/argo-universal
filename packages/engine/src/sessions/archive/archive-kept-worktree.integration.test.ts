@@ -28,12 +28,12 @@ const restart = async (host: Host): Promise<void> => {
 };
 
 it('keeps the worktree past the removal deadline when the Project keeps them', async () => {
-  const host = await startAcpEngine({ steps: [] });
+  const host = await startAcpEngine({ steps: [], archiveUndoMs: 500 });
   await setArchiveCleanup(host, false);
   const created = await promptedArchiveSession(host);
 
   await host.caller.session.archive({ sessionId: created.sessionId });
-  await setTimeout(5_500);
+  await setTimeout(1_000);
 
   expect(existsSync(created.path)).toBe(true);
 }, 15000);

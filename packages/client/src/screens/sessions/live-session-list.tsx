@@ -7,6 +7,7 @@ import {
   useInstalledAgents,
 } from '#features/agents';
 import { useConnectionState, useTRPC } from '#features/connection';
+import { useListedConversation } from '#features/conversation';
 import { useOpenPluginPage, useSessionRowPlugins } from '#features/plugins';
 import {
   ArchiveSessionAlert,
@@ -17,7 +18,6 @@ import {
   sessionsLoadState,
 } from '#features/sessions';
 import { useSessionListUpdates } from '#features/sessions';
-import { useListedCall } from '#features/voice';
 import {
   newSessionHref,
   projectHref,
@@ -113,11 +113,11 @@ function useRowPlugins(
   };
 }
 
-// What the rows carry beyond the Session: the Plugins' items and the live Voice call.
+// What the rows carry beyond the Session: the Plugins' items and the live Conversation.
 function useRowMarks(
   sessions: SessionListViewProps['sessions'],
 ): Pick<SessionListViewProps, 'plugins' | 'call'> {
-  return { ...useRowPlugins(sessions), call: useListedCall() };
+  return { ...useRowPlugins(sessions), call: useListedConversation() };
 }
 
 function useSessionsViewProps(

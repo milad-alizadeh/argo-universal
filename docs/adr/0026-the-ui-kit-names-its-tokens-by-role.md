@@ -27,7 +27,7 @@ An intensity of 0 selects 100; 1 selects 900. Intermediate values select the nea
 `neutral`, `muted` and `accent` use the neutral palette. `info`, `success`, `warning`, `danger` and `done` use blue, green, amber, red and violet.
 Light mode uses palette shades 100 through 900. Dark mode reverses that order, so stronger intensity remains easier to see.
 Without `intensity`, a drawing uses its existing semantic tone token.
-Plugins cannot set colours or add tokens.
+Plugins cannot set colours or add tokens, except a colour that is data (Colour as data, below).
 
 ## Hue tones
 
@@ -35,6 +35,15 @@ Owner amendment, 2026-11-14 (#2122): two tones are named by hue, `teal` and `pin
 Each has the nine shade tokens, `--color-tone-<tone>-100` through `-900`, reversed in dark mode as the others are.
 Only marks take them: the tinted avatar, the tone mark and the leading mark of `FieldGroup.Link`, which the phone's Agents list draws through. A Plugin can therefore choose either hue for a leading mark, as it chooses any other tone there. Canvas `intensity`, `Text` and `Icon` do not take them.
 Orange was rejected as too close to amber, and red stays `danger`.
+
+## Colour as data
+
+Owner amendment, 2026-11-20: a Plugin may pass a colour when the colour is the data itself, such as a light's colour, a calendar's or a label's. Tones still name meanings, and everything else still takes them. A second owner amendment the same day adds `Fader` `fill`: a Fader is a range control whose surface holds any kit content, its fill showing the value as a share of the range.
+- A colour is sRGB hex, `#RRGGBB`. Anything else is rejected with the node.
+- Only three props take one, each as one to four stops: `Swatch` `colors`, a dot filled with the colours; `Slider` `fill`, the filled part of its track; and `Fader` `fill`, the filled part of the Fader's surface.
+- The App draws a colour as given in light and dark mode and keeps what sits on it readable: a Swatch has no text on it, a Slider's thumb stays the platform's own, and the Fader picks a dark or a light foreground for the content on it from how light its fill is.
+- A `Swatch` draws its stops as a gradient on every platform. A `Slider` `fill` draws its stops as a gradient on the web; iOS and Android draw the first stop alone, since their native sliders take one colour. A `Fader` is the App's own view, not a native control, so it draws its stops as a gradient on every platform, along its direction.
+- `Text`, `Icon`, `Card` and `Surface` still take tones only, and `className` and `style` stay rejected (ADR-0025).
 
 ## States
 

@@ -15,6 +15,7 @@ import type {
   Sessions,
 } from '../sessions';
 import { recordOperation } from './call-recording';
+import { OperationIndex } from './operation-index';
 import type { SessionCaller, TokenCaller } from './session-tokens';
 
 // What the router needs of the Plugin Operations a Server runs.
@@ -71,12 +72,6 @@ function withoutSecrets(row: OperationRow, params: Json): Json {
   );
 }
 
-function matches(row: OperationRow, search: string): boolean {
-  return [row.id, row.label, ...row.keywords].some((value) =>
-    value.toLowerCase().includes(search),
-  );
-}
-
 /*
  * The Operations running Plugins add to the registry (ADR-0044). A Plugin reaches only the caller's own Project
  * and Project context; its declared policy is enforced by the Plugin Operation service.
@@ -93,10 +88,8 @@ export class PluginOperationRouter {
   }
 
   public async rows(filter: string): Promise<OperationRow[]> {
-    const rows = await this.deps.operations.rows();
-    const search = filter.toLowerCase();
-
-    return rows.filter((row) => matches(row, search));
+    // Ranked as core's are; a Plugin's few Operations are indexed on each listing.
+    return new OperationIndex(await this.deps.operations.rows()).ranked(filter);
   }
 
   // The Plugin Operation an id names, or nothing when no Plugin declares it.

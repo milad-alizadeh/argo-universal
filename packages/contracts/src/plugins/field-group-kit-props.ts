@@ -6,6 +6,7 @@ import {
   fieldGroupPickerProps,
 } from './field-group-choice-props';
 import {
+  fieldGroupComposedRowProps,
   fieldGroupFieldProps,
   fieldGroupRowProps,
 } from './field-group-row-props';
@@ -150,6 +151,7 @@ export const fieldGroupKitComponents = {
     props: fieldGroupPickerProps,
     events: fieldGroupPickerEvents,
   },
+  'FieldGroup.Row': { props: fieldGroupComposedRowProps, events: {} },
   'FieldGroup.Slider': {
     props: fieldGroupSliderProps,
     events: { onValueChange: echoes(fieldGroupSliderProps, 'value') },

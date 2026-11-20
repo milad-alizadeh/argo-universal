@@ -46,12 +46,12 @@ export const SecondAgentChoicePhone = choice(390, elicitationMocks[1]);
 
 export const SecondAgentChoiceWide = choice(1440, elicitationMocks[1]);
 
-function submitting(width: number, mock: RequestMock = elicitationMock): Story {
+function submitting(width: number): Story {
   return {
     args: {
-      ...elicitationProps({ mock, onAnswer: fn() }),
+      ...elicitationProps({ mock: elicitationMock, onAnswer: fn() }),
       state: { kind: 'submitting' },
-      initialValues: recordedValues(mock),
+      initialValues: recordedValues(elicitationMock),
     },
     play: async ({ canvas, userEvent, args }) => {
       await settleLayout(width);
@@ -69,19 +69,12 @@ export const SubmittingPhone = submitting(390);
 
 export const SubmittingWide = submitting(1440);
 
-export const SecondAgentSubmittingPhone = submitting(390, elicitationMocks[1]);
-
-export const SecondAgentSubmittingWide = submitting(1440, elicitationMocks[1]);
-
-function responseError(
-  width: number,
-  mock: RequestMock = elicitationMock,
-): Story {
+function responseError(width: number): Story {
   return {
     args: {
-      ...elicitationProps({ mock, onAnswer: fn() }),
+      ...elicitationProps({ mock: elicitationMock, onAnswer: fn() }),
       error: 'Could not send the answer. Try again.',
-      initialValues: recordedValues(mock),
+      initialValues: recordedValues(elicitationMock),
     },
     play: async ({ canvas }) => {
       await settleLayout(width);
@@ -98,20 +91,10 @@ export const ResponseErrorPhone = responseError(390);
 
 export const ResponseErrorWide = responseError(1440);
 
-export const SecondAgentResponseErrorPhone = responseError(
-  390,
-  elicitationMocks[1],
-);
-
-export const SecondAgentResponseErrorWide = responseError(
-  1440,
-  elicitationMocks[1],
-);
-
-function conflict(width: number, mock?: RequestMock): Story {
+function conflict(width: number): Story {
   return {
     args: {
-      ...elicitationProps({ mock, onAnswer: fn() }),
+      ...elicitationProps({ onAnswer: fn() }),
       state: { kind: 'answered', reason: 'Already answered on another device' },
     },
     play: async ({ canvas }) => {
@@ -137,7 +120,3 @@ function conflict(width: number, mock?: RequestMock): Story {
 export const ConflictPhone = conflict(390);
 
 export const ConflictWide = conflict(1440);
-
-export const SecondAgentConflictPhone = conflict(390, elicitationMocks[1]);
-
-export const SecondAgentConflictWide = conflict(1440, elicitationMocks[1]);

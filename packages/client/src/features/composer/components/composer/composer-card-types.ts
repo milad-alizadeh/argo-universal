@@ -18,7 +18,7 @@ export type TextLayout = Pick<
     | 'placeholder'
     | 'slashCommands'
     | 'suggestionSources'
-    | 'voice'
+    | 'conversation'
   >;
 };
 

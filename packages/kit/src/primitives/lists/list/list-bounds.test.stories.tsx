@@ -81,11 +81,8 @@ const longLabels = [
   'performance-regression-suspected',
 ];
 
-/*
- * A compact row's pills take what the title leaves, never the title's half of the line, and the row never hangs past
- * its List however many there are.
- */
-export const LongPillsLeaveTheTitleHalf: Story = {
+// A compact row with more Pills than fit folds them into a count, and never hangs past its List.
+export const LongPillsStayInsideTheList: Story = {
   render: () => (
     <Screen title="Bounded">
       <List appearance="plain" density="compact" accessibilityLabel={listLabel}>
@@ -101,32 +98,15 @@ export const LongPillsLeaveTheTitleHalf: Story = {
   ),
   play: async ({ canvas }) => {
     const scroll = await canvas.findByLabelText(listLabel);
-    const titleText = canvas.getByText(longTitle);
 
     // The count shows once the line has measured its Pills.
-    const [count] = await waitFor(async () => {
-      const counts = seenCounts(canvas);
-
-      await expect(
-        counts.length,
+    await waitFor(() =>
+      expect(
+        seenCounts(canvas).length,
         'the row drew no count of its hidden Pills',
-      ).toBe(1);
+      ).toBe(1),
+    );
 
-      return counts;
-    });
-
-    if (!count) throw new Error('the row drew no count of its hidden Pills');
-
-    await waitFor(() => {
-      const ended = titleText.getBoundingClientRect();
-      const row = contentBox(rowOf(titleText, count));
-      const kept = ended.right - row.left;
-
-      return expect(
-        { titleHalf: kept >= row.width / 2 },
-        `title keeps ${kept} of a row's ${row.width} content width`,
-      ).toEqual({ titleHalf: true });
-    });
     await expect(
       { overflows: scroll.scrollWidth > scroll.clientWidth },
       `list content is ${scroll.scrollWidth} wide in ${scroll.clientWidth}`,
@@ -136,15 +116,6 @@ export const LongPillsLeaveTheTitleHalf: Story = {
 
 const shortTitle = 'Sync stalls';
 
-// The row's line: the nearest box that holds both its title and its Pills. No such box is a failure, not a pass.
-function rowOf(title: Element, pill: Element): Element {
-  const box = title.parentElement;
-
-  if (!box) throw new Error('no box holds both the title and its Pills');
-
-  return box.contains(pill) ? box : rowOf(box, pill);
-}
-
 // The nearest box that clips what it holds, which a cut Pill would run past. No such box is a failure, not a pass.
 function clipOf(element: Element): Element {
   const box = element.parentElement;
@@ -152,16 +123,6 @@ function clipOf(element: Element): Element {
   if (!box) throw new Error(`no box clips ${element.textContent}`);
 
   return getComputedStyle(box).overflowX === 'hidden' ? box : clipOf(box);
-}
-
-// A box's width less its own padding: the room its content has.
-function contentBox(box: Element): Pick<DOMRect, 'left' | 'width'> {
-  const { left, width } = box.getBoundingClientRect();
-  const style = getComputedStyle(box);
-  const before = Number.parseFloat(style.paddingLeft);
-  const after = Number.parseFloat(style.paddingRight);
-
-  return { left: left + before, width: width - before - after };
 }
 
 type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];

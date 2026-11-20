@@ -36,6 +36,16 @@ export function useTextStyle(
 
 const TextClassContext = React.createContext<string | undefined>(undefined);
 
+// What text of the secondary role draws in over a coloured surface, where the muted token would not read; none leaves the role's own colour.
+const SecondaryTextClassContext = React.createContext<string | undefined>(
+  undefined,
+);
+
+const secondaryClass = (
+  role: TextRole | undefined,
+  inherited: string | undefined,
+): string | undefined => (role === 'secondary' ? inherited : undefined);
+
 type RoleTextProps = Omit<TextProps, 'role'> & { role?: TextRole };
 
 type RNTextProps = React.ComponentProps<typeof RNText> & {
@@ -50,6 +60,7 @@ type TextDrawing = Pick<
 function textClassName(
   { role, tone, dimmed, className }: TextDrawing,
   inherited?: string,
+  secondary?: string,
 ): string {
   return cn(
     'text-foreground web:[user-select:inherit]',
@@ -57,6 +68,7 @@ function textClassName(
     textRoles[textDefaults.role],
     inherited,
     role && textRoles[role],
+    secondaryClass(role, secondary),
     textToneClass(tone, dimmed),
     className,
   );
@@ -97,16 +109,22 @@ function useWords(
   return loading && isBlank(children) ? placeholderWords(role) : children;
 }
 
+// What a container hands its text: a class for all of it, and one for the secondary role.
+const useInheritedClasses = (): [string | undefined, string | undefined] => [
+  React.useContext(TextClassContext),
+  React.useContext(SecondaryTextClassContext),
+];
+
 function useDrawnProps(options: RoleTextProps): RNTextProps {
   const { className, role, tone, dimmed, accessibilityRole, ...props } =
     options;
 
   const key = useNativeTextKey();
-  const textClass = React.useContext(TextClassContext);
+  const inherited = useInheritedClasses();
 
   return {
     key,
-    className: textClassName({ role, tone, dimmed, className }, textClass),
+    className: textClassName({ role, tone, dimmed, className }, ...inherited),
     role: accessibilityRole,
     ...props,
   };
@@ -132,7 +150,7 @@ function Text(options: TextProps): ReactElement {
   );
 }
 
-export { Text, TextClassContext };
+export { SecondaryTextClassContext, Text, TextClassContext };
 
 const textToneClass = (
   tone: TextProps['tone'],

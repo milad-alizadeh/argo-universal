@@ -1,4 +1,4 @@
-import type { VoicePartial } from '@repo/contracts';
+import type { ConversationPartial } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { feedItemKey, type FeedViewItem } from './feed-view';
 import { withPartialTranscripts } from './with-partial-transcripts';
@@ -18,14 +18,14 @@ const notice: FeedViewItem = {
   },
 };
 
-const person: VoicePartial = {
+const person: ConversationPartial = {
   speaker: 'person',
   id: 'p1',
   rowId: 'call-1:person:p1',
   text: 'Is it',
 };
 
-const voice: VoicePartial = {
+const voice: ConversationPartial = {
   speaker: 'voice',
   id: 'v1',
   rowId: 'call-1:voice:v1',
@@ -48,7 +48,7 @@ const personFinal: FeedViewItem = {
   },
 };
 
-const keys = (partials: VoicePartial[]): string[] =>
+const keys = (partials: ConversationPartial[]): string[] =>
   withPartialTranscripts([], partials, 's').map(feedItemKey);
 
 describe('withPartialTranscripts', () => {

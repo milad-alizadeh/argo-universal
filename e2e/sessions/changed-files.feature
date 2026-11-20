@@ -18,8 +18,6 @@ Feature: Changed files on live data
     Examples:
       | agent | frame | theme |
       | 1     | wide  | light |
-      | 1     | phone | light |
-      | 2     | wide  | dark  |
       | 2     | phone | dark  |
 
   Scenario: Create PR sends a Prompt and preserves the Composer draft

@@ -2,10 +2,10 @@ import type { ChangesSummary, SessionUpdate } from '@repo/contracts';
 import type { FeedRowInput, FeedSubscribeOutput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import type { Observer, Subscription } from 'xstate';
+import { withoutVoiceMarkers } from './conversation-markers';
 import { type FeedRowSources } from './feed-catch-up';
 import { readWrittenRow } from './feed-row';
 import { readQueuedFeedRow } from './feed-storage';
-import { withoutVoiceMarkers } from './voice-markers';
 
 export { streamFeed } from './feed-stream';
 
@@ -44,7 +44,7 @@ export function readFeedRow(
       message: `No row ${id} in Session ${sessionId}`,
     });
 
-  // The memory copy and `readWrittenRow` are as the Feed holds them; the row is read without Voice marks.
+  // The memory copy and `readWrittenRow` are as the Feed holds them; the row is read without Conversation marks.
   return withoutVoiceMarkers(newest);
 }
 

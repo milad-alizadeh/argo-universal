@@ -109,7 +109,7 @@ export const PluginOperationContribution = z.strictObject({
   icon: OperationIcon.optional(),
   description: z.string().trim().min(1),
   tier: PluginOperationTier,
-  policy: OperationPolicy.exclude(['archive']),
+  policy: OperationPolicy.exclude(['archive', 'ask-outside-project']),
   params: z
     .record(PluginOperationName, PluginOperationParam)
     .refine(

@@ -1,5 +1,6 @@
 import { defineKitComponent } from '../define-kit-component';
 import { fieldGroupKitComponents } from '../field-group-kit-props';
+import { fieldRowComponents } from '../field-row-components';
 
 const rows = [
   'FieldGroup.Value',
@@ -10,6 +11,7 @@ const rows = [
   'FieldGroup.Slider',
   'FieldGroup.TextField',
   'FieldGroup.SecretField',
+  'FieldGroup.Row',
   // A Button sits in a Section as a row of its own, as an action below the fields.
   'Button',
 ] as const;
@@ -97,6 +99,16 @@ export const fieldsComponents = {
       group: 'fields',
       events: fieldGroupKitComponents['FieldGroup.SecretField'].events,
       label: rowLabel,
+    },
+  ),
+  'FieldGroup.Row': defineKitComponent(
+    'A row a Plugin composes from a Stack, Text, Swatch, Switch and Slider, for data no fixed row draws.',
+    fieldGroupKitComponents['FieldGroup.Row'].props,
+    {
+      group: 'fields',
+      children: fieldRowComponents,
+      label:
+        'The row adds no label; its Text, Switch and Slider name themselves.',
     },
   ),
 } as const;

@@ -93,7 +93,7 @@ const engine = composeEngine({
   createId: randomUUID,
   report: publishAddress,
   // The e2e Server never calls Codex or the live voice service.
-  voiceProvider: null,
+  conversationProvider: null,
   installationPorts: createInstallationPorts({
     packageName: 'example-agent',
     downloads: scriptedDownloads(options),

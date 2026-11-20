@@ -248,6 +248,9 @@ type LoadSessionInput = {
 
 export const checkoutLimit = 10_000;
 
+// How long an archived Session can be undone before its checkout is removed: the 5-second toast, plus time for an Undo clicked near its end to reach the Server.
+const archiveUndoMs = 6_000;
+
 const connectionLostBeforePrompt =
   'The Agent connection failed before the prompt was sent';
 
@@ -1050,8 +1053,8 @@ const sessionSetup = setup({
   },
   delays: {
     checkoutLimit,
-    // Give Undo time to reach the Server after a click near the end of the 5-second toast.
-    checkoutRemovalDelay: 6_000,
+    checkoutRemovalDelay: ({ context }) =>
+      context.input.archiveUndoMs ?? archiveUndoMs,
     feedFlushLimit: 5_000,
   },
 });

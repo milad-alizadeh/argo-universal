@@ -11,6 +11,7 @@ import type { EngineInput } from '../src/engine/machine';
 import { openTestDatabase } from './database';
 import { type EngineTestOptions, startEngineTestHost } from './engine';
 import { createScriptedAgentProcess } from './scripted-agent';
+import { keepNothingAwake } from './scripted-engine';
 
 export const emptySessionInput = {
   projectId: 'project-1',
@@ -29,8 +30,9 @@ type AcpScenario = ScriptedScenario & { autoExit?: boolean } & Partial<
       | 'operationWaitClock'
       | 'slashCommandsWaitMs'
       | 'argoToolsGraceMs'
-      | 'voiceProvider'
+      | 'conversationProvider'
       | 'voiceIdleMs'
+      | 'archiveUndoMs'
     >
   > &
   Pick<
@@ -111,19 +113,25 @@ type Fixture = OpenedStorage & {
   agentId?: string;
 };
 
-// No Voice provider unless a test supplies one, whatever the shell's ARGO_VOICE_PROVIDER says.
-const voiceProviderOf = (scenario: AcpScenario): AcpScenario['voiceProvider'] =>
-  scenario.voiceProvider ?? null;
+// No Conversation provider unless a test supplies one, whatever the shell's ARGO_CONVERSATION_PROVIDER says.
+const conversationProviderOf = (
+  scenario: AcpScenario,
+): AcpScenario['conversationProvider'] => scenario.conversationProvider ?? null;
+
+// Turns keep the Mac awake through nothing unless a test supplies its own caffeinate.
+const caffeinateOf = (scenario: AcpScenario): AcpScenario['caffeinate'] =>
+  scenario.caffeinate ?? keepNothingAwake;
 
 // Most tests have Agents that send no Slash command list; they must not wait for one.
 const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({
   pluginNetwork: scenario.pluginNetwork,
-  caffeinate: scenario.caffeinate,
+  caffeinate: caffeinateOf(scenario),
   operationWaitClock: scenario.operationWaitClock,
   slashCommandsWaitMs: scenario.slashCommandsWaitMs ?? 0,
   argoToolsGraceMs: scenario.argoToolsGraceMs ?? Number.POSITIVE_INFINITY,
-  voiceProvider: voiceProviderOf(scenario),
+  conversationProvider: conversationProviderOf(scenario),
   voiceIdleMs: scenario.voiceIdleMs,
+  archiveUndoMs: scenario.archiveUndoMs,
 });
 
 const fixtureAgents = (
