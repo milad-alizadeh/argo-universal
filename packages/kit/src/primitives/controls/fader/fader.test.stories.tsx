@@ -141,6 +141,25 @@ export const SecondaryTextTakesTheInkAtReducedEmphasis: Story = {
 
     // The ink at 70% reads as the primary's colour with an alpha.
     await expect(getComputedStyle(primary).color).not.toContain('/');
-    await expect(getComputedStyle(secondary).color).toContain('/ 0.7');
+    // The fill reaches under the lower line once the content has been measured.
+    await waitFor(() =>
+      expect(getComputedStyle(secondary).color).toContain('/ 0.7'),
+    );
+  },
+};
+
+export const ContentOverTheUnfilledPartKeepsTheNormalInk: Story = {
+  args: { value: 0, valueLabel: '0%' },
+  render: (args) => (
+    <HeldFader {...args}>
+      <Text role="row">Primary</Text>
+      <Text role="secondary">Secondary</Text>
+    </HeldFader>
+  ),
+  play: async ({ canvas }) => {
+    // Nothing is filled, so neither line takes the fill's ink, which would carry the ink-on-* alpha or colour.
+    const secondary = getComputedStyle(canvas.getByText('Secondary')).color;
+
+    await expect(secondary).not.toContain('/ 0.7');
   },
 };
