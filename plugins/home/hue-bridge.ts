@@ -8,14 +8,12 @@ import {
   linkButtonUrl,
 } from './hue';
 import type { HueCalls } from './hue-client';
-import { at, list, parseJson, text, type Json } from './json';
+import { at, jsonRequest, list, parseJson, text, type Json } from './json';
 
 /*
  * The Bridge's v1 API through Hue's cloud, where the Remote API presses the link button for the person and then gives
  * this Plugin an application key, which every CLIP v2 call carries. UNCONFIRMED against Hue's login-walled reference.
  */
-const jsonHeaders = { 'Content-Type': 'application/json' };
-
 // v1 answers a list of results, each a `success` or an `error`.
 const firstResult = (answer: Json | undefined): Json | undefined =>
   list(answer)[0];
@@ -42,17 +40,12 @@ async function keepKey(
 export async function connectBridge(argo: HueCalls): Promise<void> {
   const send = accountFetch(argo, hueHost);
 
-  await send(linkButtonUrl, {
-    method: 'PUT',
-    headers: jsonHeaders,
-    body: JSON.stringify({ linkbutton: true }),
-  });
+  await send(linkButtonUrl, jsonRequest('PUT', { linkbutton: true }));
 
-  const reply = await send(applicationKeyUrl, {
-    method: 'POST',
-    headers: jsonHeaders,
-    body: JSON.stringify({ devicetype: deviceType }),
-  });
+  const reply = await send(
+    applicationKeyUrl,
+    jsonRequest('POST', { devicetype: deviceType }),
+  );
 
   await keepKey(argo, parseJson(await reply.text()));
   argo.changed();

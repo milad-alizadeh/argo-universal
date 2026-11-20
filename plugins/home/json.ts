@@ -32,10 +32,22 @@ export const text = (value: Json | undefined): string | null =>
 export const list = (value: Json | undefined): Json[] =>
   Array.isArray(value) ? value : [];
 
-// What storage answers is JSON already; this lets a reader treat it so.
-export const isJson = (value: unknown): value is Json =>
-  value === null ||
-  ['string', 'number', 'boolean', 'object'].includes(typeof value);
-
 export const present = <Value>(value: Value | null): value is Value =>
   value !== null;
+
+export type JsonRequest = Readonly<{
+  method: 'PUT' | 'POST';
+  headers: Record<string, string>;
+  body: string;
+}>;
+
+// A request that sends a JSON body, beside any headers of its own.
+export const jsonRequest = (
+  method: JsonRequest['method'],
+  value: Json,
+  headers: Record<string, string> = {},
+): JsonRequest => ({
+  method,
+  headers: { ...headers, 'Content-Type': 'application/json' },
+  body: JSON.stringify(value),
+});

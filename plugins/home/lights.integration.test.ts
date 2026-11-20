@@ -140,6 +140,27 @@ it(
 );
 
 it(
+  'shows every light of a device that holds two, in its room',
+  async () => {
+    const home = await startHome();
+
+    home.hue.home.lights.push({
+      id: 'light-desk-2',
+      device: 'device-desk',
+      name: 'Desk strip',
+      on: false,
+      brightness: 30,
+    });
+    const page = await connected(home);
+
+    expect(page.find('Desk lamp').type).toBe('Card');
+    expect(page.find('Desk strip').type).toBe('Card');
+    expect(page.find(homeWords.allLights).props.subtitle).toBe('3 lights');
+  },
+  timeoutMs,
+);
+
+it(
   'says there are no lights yet for a Bridge with none',
   async () => {
     const home = await startHome();

@@ -37,15 +37,15 @@ const linked = (json: Json, key: string, rtype: string): string[] =>
     )
     .filter(present);
 
-type Index = { byDevice: Map<string, Switch>; groups: Map<string, Switch> };
+// Each light beside the device that owns it; one device may own several lights, and a light may have no owner.
+type Owned = Readonly<{ device: string | null; light: Switch }>;
 
-const deviceOf = (json: Json): string => text(at(json, 'owner', 'rid')) ?? '';
+type Index = { lights: Owned[]; groups: Map<string, Switch> };
 
-// Each light keyed by its device, as a room lists them.
-const lightEntry = (json: Json): [string, Switch][] => {
+const ownedOf = (json: Json): Owned[] => {
   const light = switchOf('light', json);
 
-  return light ? [[deviceOf(json), light]] : [];
+  return light ? [{ device: text(at(json, 'owner', 'rid')), light }] : [];
 };
 
 const groupEntry = (json: Json): [string, Switch][] => {
@@ -55,9 +55,15 @@ const groupEntry = (json: Json): [string, Switch][] => {
 };
 
 const indexOf = (lists: HueLists): Index => ({
-  byDevice: new Map(lists.lights.flatMap(lightEntry)),
+  lights: lists.lights.flatMap(ownedOf),
   groups: new Map(lists.groups.flatMap(groupEntry)),
 });
+
+// The lights of a room's devices, in Hue's order of lights.
+const lightsOf = (devices: string[], { lights }: Index): Switch[] =>
+  lights.flatMap(({ device, light }) =>
+    device !== null && devices.includes(device) ? [light] : [],
+  );
 
 const groupOf = (json: Json, { groups }: Index): Switch | null =>
   groups.get(linked(json, 'services', 'grouped_light')[0] ?? '') ?? null;
@@ -71,9 +77,7 @@ function roomOf(json: Json, index: Index): Room | null {
     id,
     name: text(at(json, 'metadata', 'name')) ?? '',
     group: groupOf(json, index),
-    lights: linked(json, 'children', 'device')
-      .map((device) => index.byDevice.get(device) ?? null)
-      .filter(present),
+    lights: lightsOf(linked(json, 'children', 'device'), index),
   };
 }
 
@@ -88,8 +92,8 @@ export function householdOf(lists: HueLists): Household {
 
   return {
     rooms,
-    others: [...index.byDevice.values()].filter(
-      (light) => !inRooms.has(light.id),
+    others: index.lights.flatMap(({ light }) =>
+      inRooms.has(light.id) ? [] : [light],
     ),
   };
 }

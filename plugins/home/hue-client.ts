@@ -9,7 +9,7 @@ import {
 } from './hue';
 import type { HomeData, Switchable } from './hue-model';
 import { householdOf } from './hue-readers';
-import { at, list, parseJson, text, type Json } from './json';
+import { at, jsonRequest, list, parseJson, text, type Json } from './json';
 
 /*
  * The CLIP API v2 through Hue's cloud, as the person signed in: the kit borrows the Account, which lends its Bearer
@@ -117,8 +117,14 @@ const reconnect = 'Hue no longer knows this Bridge’s key: connect it again.';
 const reasonOf = (read: Read): string =>
   read.kind === 'failed' ? read.reason : reconnect;
 
-const keyOf = async (argo: HueCalls): Promise<string> =>
-  (await argo.secrets.get(applicationKeySecret)) ?? '';
+// Without a key the Bridge must be connected again, so no call goes out with an empty one.
+async function keyOf(argo: HueCalls): Promise<string> {
+  const key = await argo.secrets.get(applicationKeySecret);
+
+  if (!key) throw new Error(reconnect);
+
+  return key;
+}
 
 // Switches or dims one light or a room's grouped light, then has the page read again.
 export async function change(
@@ -128,11 +134,10 @@ export async function change(
   const key = await keyOf(argo);
 
   const read = await answerOf(
-    await accountFetch(argo, hueHost)(resourceUrlOf(target.kind, target.id), {
-      method: 'PUT',
-      headers: { ...keyed(key), 'Content-Type': 'application/json' },
-      body: JSON.stringify(target.body),
-    }),
+    await accountFetch(argo, hueHost)(
+      resourceUrlOf(target.kind, target.id),
+      jsonRequest('PUT', target.body, keyed(key)),
+    ),
   );
 
   argo.changed();
