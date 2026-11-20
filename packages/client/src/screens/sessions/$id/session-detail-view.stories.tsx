@@ -25,7 +25,6 @@ import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.moc
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import { usageLimitsSession } from './session-detail-view-usage.mocks';
 import { VoiceCallRehearsal } from './session-detail-view-voice-call.mocks';
-import { voiceCallSession } from './session-detail-view-voice.mocks';
 import {
   emptySession,
   idleSession,
@@ -126,12 +125,6 @@ export const DraggingFiles: Story = {
       new DragEvent('dragenter', { bubbles: true, dataTransfer: transfer }),
     );
   },
-};
-
-// A Voice call here: the Composer with the band along its top edge, and the mic, speaker and End.
-export const OnAVoiceCall: Story = {
-  args: { state: 'open', ...voiceCallSession },
-  render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 
 // Press the voice button to start a call: the band opens along the Composer's edge while it connects, settles into listening, and End takes it away.
