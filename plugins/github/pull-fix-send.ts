@@ -144,7 +144,6 @@ export async function fixCurrent(
   if (sent >= fixTries) return false;
 
   return (
-    (await promptUnseen(step, facts, sent)) ||
-    promptStillRed(step, facts, sent)
+    (await promptUnseen(step, facts, sent)) || promptStillRed(step, facts, sent)
   );
 }
