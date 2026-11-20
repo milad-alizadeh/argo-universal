@@ -5,7 +5,6 @@ import {
   AddOnlySlotId,
   projectDetailsSlotId,
   ReplaceableSlotId,
-  sessionActivitySlotId,
   sessionBarSlotId,
   sessionChangesSlotId,
   linkMarkSlotId,
@@ -37,7 +36,6 @@ it('keeps every Slot id with its kind', () => {
   expect(slotRegistry.map(({ id, kind }) => [id, kind])).toEqual([
     [projectDetailsSlotId, 'add-only'],
     [sessionRowSlotId, 'add-only'],
-    [sessionActivitySlotId, 'add-only'],
     [sessionBarSlotId, 'add-only'],
     [sessionChangesSlotId, 'add-only'],
     [linkMarkSlotId, 'add-only'],
@@ -107,6 +105,14 @@ it('lets a manifest declare add-only Slots', () => {
   const slots = [projectDetailsSlotId, sessionRowSlotId];
 
   expect(manifestWith({ slots }).data?.contributes.slots).toEqual(slots);
+});
+
+it('drops the retired Activity line Slot from a manifest, so its Plugin still loads', () => {
+  const slots = ['argo/session/activity/v1', sessionRowSlotId];
+
+  expect(manifestWith({ slots }).data?.contributes.slots).toEqual([
+    sessionRowSlotId,
+  ]);
 });
 
 it('refuses a Replaceable Slot among a manifest Slots', () => {

@@ -34,11 +34,11 @@ function useRowPlugins(
 ): SessionRowPlugins | undefined {
   const choices = useSlotChoices(sessionRowSlotId);
   const lookup = usePluginLookup();
-  const { items, lines } = useSentRowItems(session);
+  const items = useSentRowItems(session);
 
   return useMemo(
-    () => sentDrawing(choices, lookup)(items, lines),
-    [choices, lookup, items, lines],
+    () => sentDrawing(choices, lookup)(items),
+    [choices, lookup, items],
   );
 }
 

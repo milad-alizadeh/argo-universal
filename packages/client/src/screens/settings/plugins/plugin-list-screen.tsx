@@ -9,7 +9,7 @@ import {
 import { useServerScope } from '#lib/product/server-scope';
 import { PluginListView, type SlotLink } from './plugin-list-view';
 import type { SlotDetail } from './slots/$id/slot-detail';
-import { fillingPlugins, shownCount } from './slots/$id/slot-detail-model';
+import { shownCount } from './slots/$id/slot-detail-model';
 import { slotDetails } from './slots/$id/slot-detail-registry';
 import { toSlotPlugins } from './slots/$id/slot-plugin-list';
 import { usePluginsLoad } from './use-plugins';
@@ -20,10 +20,10 @@ function slotLink(
   plugins: readonly PluginEntry[],
   hidden: readonly string[] = [],
 ): SlotLink[] {
-  const { shows } = slotVisibility({ hidden, owner: null });
+  const { shows } = slotVisibility({ hidden });
   const filling = toSlotPlugins(settings, plugins, shows);
 
-  if (fillingPlugins(filling).length === 0) return [];
+  if (filling.length === 0) return [];
 
   return [{ ...pick(settings), count: shownCount(filling) }];
 }

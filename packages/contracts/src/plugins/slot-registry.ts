@@ -5,15 +5,13 @@ import {
   projectDetailsRowLimit,
 } from '#plugin-project-details-item';
 import { SessionBarItem } from '#plugin-session-bar-item';
-import { SessionRowItem, sessionRowTextLimit } from '#plugin-session-row-item';
+import { SessionRowItem } from '#plugin-session-row-item';
 import { Change, sessionChangesSlot } from '#session-change';
 
 // A Slot id is versioned, so a later context shape gets a new id instead of breaking Plugins (Grafana's extension points).
 export const projectDetailsSlotId = 'argo/project/details/v1';
 
 export const sessionRowSlotId = 'argo/session/row/v1';
-
-export const sessionActivitySlotId = 'argo/session/activity/v1';
 
 export const sessionBarSlotId = 'argo/session/bar/v1';
 
@@ -42,11 +40,6 @@ export type ItemsContent<Key extends string, Item extends z.ZodObject> = {
   key: Key;
   item: Item;
   limit: SlotLimit;
-  /*
-   * 'one' makes a Single-owner Slot: every declaring Plugin answers, and the App shows only the answer of the Plugin
-   * the user chose, or Argo's own while none is chosen (ADR-0035).
-   */
-  owners?: 'one';
   /*
    * How often, in milliseconds, Argo asks the Plugins again while a list is open: the Plugin's Queries are made due and
    * its provider asked. The clock is Argo's and lasts as long as an App has the list open (ADR-0052); a Plugin runs none.
@@ -137,13 +130,6 @@ const replaceable = <Id extends string>(id: Id): ReplaceableSlot<Id> => ({
   kind: 'replaceable',
 });
 
-// A Session row's Activity line as one Plugin writes it: one short line of text in place of Argo's.
-export const SessionActivityItem = z.strictObject({
-  text: z.string().trim().min(1).max(sessionRowTextLimit),
-});
-
-export type SessionActivityItem = z.infer<typeof SessionActivityItem>;
-
 // A Session row's context: ids only (ADR-0030); a Plugin reads a Session's branch through `argo.sessions.get`.
 const SessionRowContext = z.strictObject({
   sessionId: z.string().min(1),
@@ -172,13 +158,6 @@ export const addOnlySlots = [
     item: SessionRowItem,
     limit: { phone: 1, desktop: 3, perPlugin: 8 },
     refreshMs: sessionChangesSlot.refreshMs,
-  }),
-  // Single-owner: each Plugin that asks answers one line per row; the App shows the chosen Plugin's.
-  itemsSlotEntry(sessionActivitySlotId, SessionRowContext, {
-    key: 'sessionId',
-    item: SessionActivityItem,
-    limit: { phone: 1, desktop: 1, perPlugin: 1 },
-    owners: 'one',
   }),
   // One Plugin card holds its lines on desktop; the phone strip keeps the rest behind "+N" (ADR-0035).
   itemsSlotEntry(sessionBarSlotId, SessionRowContext, {

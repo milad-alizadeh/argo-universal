@@ -2,10 +2,7 @@ import {
   type SessionHeaderAction,
   sessionHeaderSlotId,
 } from '@repo/contracts/plugins/declared-slots';
-import {
-  sessionActivitySlotId,
-  sessionRowSlotId,
-} from '@repo/contracts/plugins/wire';
+import { sessionRowSlotId } from '@repo/contracts/plugins/wire';
 import { describe, expect, it } from 'vitest';
 import type { PluginEntry } from '#features/plugins';
 import type { SlotDetail } from './slot-detail';
@@ -31,14 +28,7 @@ const entry = (
   error: null,
 });
 
-const settings: Pick<SlotDetail, 'slotId' | 'ownerSlot'> = {
-  slotId: sessionRowSlotId,
-  ownerSlot: {
-    slotId: sessionActivitySlotId,
-    title: 'Activity line',
-    argoSubtitle: '',
-  },
-};
+const settings: Pick<SlotDetail, 'slotId'> = { slotId: sessionRowSlotId };
 
 const headerAction: SessionHeaderAction = {
   id: 'issue',
@@ -51,32 +41,15 @@ const headerAction: SessionHeaderAction = {
 const allShown = (): boolean => true;
 
 describe('the Plugins on a Slot page', () => {
-  it('lists a Plugin that only asks for the line, with no switch of its own', () => {
+  it('lists each Plugin that fills the Slot, with its switch', () => {
     const plugins = toSlotPlugins(
       settings,
-      [
-        entry('status', [sessionActivitySlotId]),
-        entry('coverage', [sessionRowSlotId]),
-        entry('other', []),
-      ],
+      [entry('coverage', [sessionRowSlotId]), entry('other', [])],
       allShown,
     );
 
     expect(plugins).toEqual([
-      {
-        pluginId: 'status',
-        name: 'status',
-        fills: false,
-        shown: true,
-        asks: true,
-      },
-      {
-        pluginId: 'coverage',
-        name: 'coverage',
-        fills: true,
-        shown: true,
-        asks: false,
-      },
+      { pluginId: 'coverage', name: 'coverage', shown: true },
     ]);
   });
 
@@ -98,15 +71,7 @@ describe('the Plugins on a Slot page', () => {
         [tracker, entry('coverage', [sessionRowSlotId])],
         allShown,
       ),
-    ).toEqual([
-      {
-        pluginId: 'tracker',
-        name: 'tracker',
-        fills: true,
-        shown: true,
-        asks: false,
-      },
-    ]);
+    ).toEqual([{ pluginId: 'tracker', name: 'tracker', shown: true }]);
   });
 
   it('leaves out a Plugin that is turned off on the Server', () => {
