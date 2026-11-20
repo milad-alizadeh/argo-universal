@@ -23,14 +23,30 @@ const fileHeader = (path: string): Named => ({ name: `Diff for ${path}` });
 
 const firstFile = '/repo/src/module-1/index.ts';
 
+// The compact sheet can briefly show before the wide tab, and the first header waits for its diff.
+async function readyChanges(
+  canvas: ReturnType<typeof within>,
+): Promise<ReturnType<typeof within>> {
+  const timeout = { timeout: 10_000 };
+
+  const panel = await canvas.findByRole(
+    'tabpanel',
+    { name: 'Changes' },
+    timeout,
+  );
+
+  const changes = within(panel);
+
+  await changes.findByRole('button', fileHeader(firstFile), timeout);
+
+  return changes;
+}
+
 // Hidden tab pages stay mounted, so the Changes list keeps its scroll and its folded files.
 export const RemembersListPositionAcrossTabs: Story = {
   play: async ({ canvas, userEvent }) => {
-    await canvas.findByRole('button', fileHeader(firstFile));
-
-    const list = within(
-      await canvas.findByRole('tabpanel', { name: 'Changes' }),
-    ).getByTestId(changesList);
+    const changes = await readyChanges(canvas);
+    const list = changes.getByTestId(changesList);
 
     list.scrollTop = 500;
     await fireEvent.scroll(list);
@@ -54,19 +70,20 @@ export const RemembersListPositionAcrossTabs: Story = {
 
 export const RemembersFoldedFilesAcrossTabs: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      await canvas.findByRole('button', fileHeader(firstFile)),
-    );
+    const changes = await readyChanges(canvas);
+
+    await userEvent.click(changes.getByRole('button', fileHeader(firstFile)));
     await expect(
-      canvas.getByRole('button', fileHeader(firstFile)),
+      changes.getByRole('button', fileHeader(firstFile)),
     ).toHaveAttribute('aria-expanded', 'false');
     await userEvent.click(
       canvas.getByRole('tab', { name: /Background Tasks/ }),
     );
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
-    // The returning panel's rows can be briefly hidden to assistive queries right after the tab flips back.
+    const returned = await readyChanges(canvas);
+
     await expect(
-      await canvas.findByRole('button', fileHeader(firstFile)),
+      returned.getByRole('button', fileHeader(firstFile)),
     ).toHaveAttribute('aria-expanded', 'false');
   },
 };
@@ -182,15 +199,12 @@ export const HidesAgentsListBehindAnotherTab: Story = {
 
 export const KeepsComparisonAboveScrollingFiles: Story = {
   play: async ({ canvas }) => {
-    const page = within(
-      await canvas.findByRole('tabpanel', { name: 'Changes' }),
-    );
+    const page = await readyChanges(canvas);
 
     const comparison = page.getByRole('button', {
       name: /^Comparison/,
     });
 
-    await page.findByRole('button', fileHeader(firstFile));
     const files = page.getByTestId(changesList);
 
     const top = comparison.getBoundingClientRect().top;
