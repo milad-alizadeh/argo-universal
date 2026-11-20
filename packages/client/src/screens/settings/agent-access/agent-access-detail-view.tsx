@@ -18,6 +18,9 @@ export interface AgentAccessDetailViewProps {
   todoList?: boolean;
   onEnabledChange: (enabled: boolean) => void;
   onTodoListChange: (enabled: boolean) => void;
+  // This Device's Screen sight preference; the switch shows only where this App can capture, which is where the handler is given.
+  screenSight?: boolean;
+  onScreenSightChange?: (enabled: boolean) => void;
   onInstall: () => void;
   onRetry: () => void;
   onBack?: () => void;
@@ -31,6 +34,7 @@ export function AgentAccessDetailView(
       <FieldGroup>
         {accessSection(props)}
         {todoListSection(props)}
+        {screenSightSection(props)}
         {instructionsSection(props)}
         {statusSection(props)}
       </FieldGroup>
@@ -74,6 +78,24 @@ function todoListSection(props: AgentAccessDetailViewProps): React.JSX.Element {
         value={props.todoList === true}
         disabled={todoListWaits(props)}
         onValueChange={props.onTodoListChange}
+      />
+    </FieldGroup.Section>
+  );
+}
+
+function screenSightSection(
+  props: AgentAccessDetailViewProps,
+): React.JSX.Element | null {
+  const onChange = props.onScreenSightChange;
+
+  if (!onChange) return null;
+
+  return (
+    <FieldGroup.Section>
+      <FieldGroup.Toggle
+        title="Screen sight"
+        value={props.screenSight === true}
+        onValueChange={onChange}
       />
     </FieldGroup.Section>
   );
