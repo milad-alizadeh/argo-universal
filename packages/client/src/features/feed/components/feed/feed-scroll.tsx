@@ -8,6 +8,7 @@ import { feedRowViewability } from '../feed-row-visibility';
 import type { FeedEntry } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
 import {
+  androidRowType,
   type FeedRowData,
   rowKey,
   rowType,
@@ -65,7 +66,11 @@ export const feedListProps = {
   onStartReachedThreshold: startThreshold,
   ...Platform.select({
     // Keep rows ready across direction changes without mounting too many in one Android frame.
-    android: { drawDistance: 1600, decelerationRate: 'fast' as const },
+    android: {
+      drawDistance: 1600,
+      decelerationRate: 'fast' as const,
+      getItemType: androidRowType,
+    },
     ios: { drawDistance: 2400, viewabilityConfig: feedRowViewability },
     default: { drawDistance: 800 },
   }),

@@ -18,11 +18,25 @@ function closeEmphasis(text: string, line: string): string {
     : text.trimEnd() + completed.slice(line.length);
 }
 
+// Hold the delimiter’s first pipe below a possible table header until it resolves.
+function startsTableDelimiter(text: string, start: number): boolean {
+  const previous = text
+    .slice(text.lastIndexOf('\n', start - 2) + 1, start - 1)
+    .trim();
+
+  return (
+    /^\|.*\|$/.test(previous) && lexMarkdown(text).at(-1)?.type === 'paragraph'
+  );
+}
+
 function previewLastLine(text: string): string {
   const start = text.lastIndexOf('\n') + 1;
   const line = text.slice(start).trim();
 
-  if (marker.test(line)) return text.slice(0, start);
+  const hold =
+    line === '|' ? startsTableDelimiter(text, start) : marker.test(line);
+
+  if (hold) return text.slice(0, start);
 
   return closeEmphasis(text, line);
 }

@@ -1,7 +1,15 @@
 import type { AgentMessage } from '@repo/contracts';
 import { expect, it } from 'vitest';
-import { recordedAgentMessage } from '../../../../lib/product/feed-message.mocks';
-import { emptyMessageSize, type FeedRowData } from './feed-row-data';
+import {
+  recordedAgentMessage,
+  recordedUserMessage,
+} from '../../../../lib/product/feed-message.mocks';
+import {
+  androidRowType,
+  emptyMessageSize,
+  type FeedRowData,
+  rowKey,
+} from './feed-row-data';
 
 const answer = recordedAgentMessage('agent-1', 'markdown-answer');
 
@@ -26,4 +34,20 @@ it('only supplies a height until the first token of the streaming answer arrives
 it('lets Markdown measure the spacing between multiple blocks', () => {
   const block = { type: 'text', text: '' } as const;
   expect(emptyMessageSize(streamingRow([block, block]))).toBeUndefined();
+});
+
+it('keeps the same prompt identity when its Android height estimate changes', () => {
+  const prompt: FeedRowData = {
+    entry: {
+      type: 'row',
+      row: recordedUserMessage('agent-1', 'markdown-answer'),
+    },
+    spaceBelow: '',
+    streaming: false,
+  };
+
+  const followed = { ...prompt, spaceBelow: 'pb-6' };
+
+  expect(androidRowType(prompt)).not.toBe(androidRowType(followed));
+  expect(rowKey(prompt)).toBe(rowKey(followed));
 });

@@ -49,4 +49,24 @@ describe('incomplete streaming Markdown', () => {
   it('keeps a marker within prose', () => {
     expect(streamingText('Multiply by *')).toBe('Multiply by *');
   });
+
+  it('holds the first pipe of a table delimiter until the next chunk', () => {
+    const header = '| Row state | Redraws |\n';
+    expect(streamingText(header + '|')).toBe(header);
+    const table = header + '| --- | --- |';
+    expect(lexMarkdown(streamingText(table)).at(-1)?.type).toBe('table');
+    expect(streamingText(table + '\n|')).toBe(table + '\n|');
+    expect(streamingText(header + '| literal text')).toBe(
+      header + '| literal text',
+    );
+  });
+
+  it('preserves a lone pipe after prose and inside code', () => {
+    for (const text of [
+      'A paragraph\n|',
+      '```text\n| Row state | Redraws |\n|',
+    ]) {
+      expect(streamingText(text)).toBe(text);
+    }
+  });
 });

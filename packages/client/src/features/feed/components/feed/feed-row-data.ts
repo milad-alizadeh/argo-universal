@@ -46,6 +46,15 @@ export const rowKey = (row: FeedRowData): string => entryKey(row.entry);
 export const rowType = (row: FeedRowData): ReturnType<typeof entryType> =>
   entryType(row.entry);
 
+// A prompt at the end has no trailing padding. Give LegendList a separate height average for it.
+export function androidRowType(row: FeedRowData): string {
+  const type = rowType(row);
+
+  return type === 'user_message' && !row.spaceBelow
+    ? 'trailing_user_message'
+    : type;
+}
+
 const samePlace = (first: FeedRowData, second: FeedRowData): boolean =>
   first.spaceBelow === second.spaceBelow &&
   first.spaceBefore === second.spaceBefore &&
