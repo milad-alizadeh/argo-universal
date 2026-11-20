@@ -16,10 +16,14 @@ describe('screenSightOffered', () => {
   });
 
   it('is offered by the desktop App, whose preload can capture', () => {
-    vi.stubGlobal('window', {
-      argo: { links: { onOpen: () => 0 }, screen: {} },
-    });
+    vi.stubGlobal('window', { argo: { screen: { setEnabled: () => 0 } } });
 
     expect(web()).toBe(true);
+  });
+
+  it('is not offered by a bridge with no screen', () => {
+    vi.stubGlobal('window', { argo: { links: { onOpen: () => 0 } } });
+
+    expect(web()).toBe(false);
   });
 });
