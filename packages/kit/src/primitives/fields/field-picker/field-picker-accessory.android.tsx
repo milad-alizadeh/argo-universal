@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import { ComposeControl } from '../../actions/icon-button/icon-button.android';
+import { IconButtonControl } from '#primitives/actions/icon-button';
 import type {
   FieldPickerAccessory,
   FieldPickerMeter,
@@ -21,16 +21,20 @@ export function AccessoryButton(props: {
 }): ReactElement | undefined {
   const { accessory } = props;
 
-  if (!accessory) return undefined;
-
-  return (
-    <ComposeControl
-      icon={accessory.icon}
-      size="sm"
-      variant="secondary"
-      accessibilityLabel={accessory.label}
-      disabled={accessory.disabled}
-      onPress={accessory.onPress}
-    />
-  );
+  return accessory ? <ControlOf accessory={accessory} /> : undefined;
 }
+
+const ControlOf = ({
+  accessory,
+}: {
+  accessory: FieldPickerAccessory;
+}): ReactElement => (
+  <IconButtonControl
+    icon={accessory.icon}
+    size="sm"
+    variant="secondary"
+    accessibilityLabel={accessory.label}
+    disabled={accessory.disabled}
+    onPress={accessory.onPress}
+  />
+);

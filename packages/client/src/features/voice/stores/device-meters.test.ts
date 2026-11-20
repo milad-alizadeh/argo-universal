@@ -1,60 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type {
-  DeviceSound,
-  ListeningMicrophone,
-  PlayingChime,
-} from '../types/device-sound';
+import type { ListeningMicrophone } from '../types/device-sound';
 import { DeviceMeters } from './device-meters';
-
-type FakeMicrophone = ListeningMicrophone & { loud: number; gain: number };
-
-type FakeChime = PlayingChime & { finish: () => void };
-
-function fakeMicrophone(): FakeMicrophone {
-  const microphone: FakeMicrophone = {
-    loud: 0.5,
-    gain: 1,
-    level: () => microphone.loud,
-    setGain: (gain) => {
-      microphone.gain = gain;
-    },
-    stop: vi.fn<() => void>(),
-  };
-
-  return microphone;
-}
-
-function fakeChime(): FakeChime {
-  const done: { finish?: () => void } = {};
-  const ended = new Promise<void>((resolve) => {
-    done.finish = resolve;
-  });
-
-  return {
-    level: () => 0.75,
-    stop: vi.fn<() => void>(),
-    ended,
-    finish: () => done.finish?.(),
-  };
-}
-
-type Fakes = {
-  sound: DeviceSound;
-  microphone: FakeMicrophone;
-  chime: FakeChime;
-};
-
-function fakes(): Fakes {
-  const microphone = fakeMicrophone();
-  const chime = fakeChime();
-
-  const sound: DeviceSound = {
-    listen: vi.fn<DeviceSound['listen']>(() => Promise.resolve(microphone)),
-    chime: vi.fn<DeviceSound['chime']>(() => chime),
-  };
-
-  return { sound, microphone, chime };
-}
+import { fakes } from './device-meters.test.mocks';
 
 const sampleMs = 50;
 
@@ -171,6 +118,43 @@ describe('DeviceMeters', () => {
     await vi.runAllTimersAsync();
 
     expect(meters.testing()).toBe(false);
+  });
+
+  it('opens the wanted microphone only while a glyph shows it', async () => {
+    const { sound, microphone } = fakes();
+    const meters = new DeviceMeters(sound);
+
+    meters.want('mic-usb', true);
+    expect(sound.listen).not.toHaveBeenCalled();
+
+    const leave = meters.microphone.subscribe(() => {});
+    await vi.advanceTimersByTimeAsync(1);
+    expect(sound.listen).toHaveBeenCalledWith('mic-usb', 1);
+
+    leave();
+    expect(microphone.stop).toHaveBeenCalled();
+  });
+
+  it('never opens a microphone it may not', () => {
+    const { sound } = fakes();
+    const meters = new DeviceMeters(sound);
+
+    meters.microphone.subscribe(() => {});
+    meters.want(null, false);
+
+    expect(sound.listen).not.toHaveBeenCalled();
+  });
+
+  it('lets go of the microphone once it may not listen, as when a call starts', async () => {
+    const { sound, microphone } = fakes();
+    const meters = new DeviceMeters(sound);
+
+    meters.microphone.subscribe(() => {});
+    meters.want(null, true);
+    await vi.advanceTimersByTimeAsync(1);
+    meters.want(null, false);
+
+    expect(microphone.stop).toHaveBeenCalled();
   });
 
   it('lets go of everything when closed', async () => {

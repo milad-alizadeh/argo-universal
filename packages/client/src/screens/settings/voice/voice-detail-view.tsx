@@ -2,7 +2,7 @@ import type { VoiceAvailability, VoiceSettings } from '@repo/contracts';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
-import { useSizeClass } from '@repo/kit/use-size-class';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { callSection } from './voice-call-section';
 import { EditorDialog, voiceSection } from './voice-choice-section';
@@ -12,17 +12,20 @@ import { chosenProvider, settingsOf, waiting } from './voice-settings-state';
 
 export type { VoiceDetailViewProps } from './voice-detail-view-props';
 
-// The page as drawn: a phone, or the web App in a phone's browser, has no audio settings of its own.
+// The page as drawn: the phone layout, on a phone or a narrow web window, has no audio settings of its own (ADR-0026).
 type Drawn = VoiceDetailViewProps & { audio: boolean };
 
 export function VoiceDetailView(
   props: VoiceDetailViewProps,
 ): React.JSX.Element {
-  const audio = useSizeClass() !== 'compact';
-
   return (
     <Screen title="Voice" onBack={props.onBack}>
-      <FieldGroup>{sectionsOf({ ...props, audio })}</FieldGroup>
+      <SizeClass
+        compact={
+          <FieldGroup>{sectionsOf({ ...props, audio: false })}</FieldGroup>
+        }
+        wide={<FieldGroup>{sectionsOf({ ...props, audio: true })}</FieldGroup>}
+      />
       <EditorDialog {...props} />
     </Screen>
   );
@@ -105,14 +108,16 @@ const callOf = (props: Drawn): React.JSX.Element =>
 
 const ignore = (): void => undefined;
 
-const devicesOf = (props: Drawn): React.JSX.Element | null =>
-  props.devices && props.audio
-    ? devicesSection(
-        props.devices,
-        props.onDevicesChange ?? ignore,
-        props.meters,
-      )
-    : null;
+// The phone layout shows no devices.
+const shownDevices = (props: Drawn): Drawn['devices'] =>
+  props.audio ? props.devices : undefined;
+
+function devicesOf(props: Drawn): React.JSX.Element | null {
+  const devices = shownDevices(props);
+  const onChange = props.onDevicesChange ?? ignore;
+
+  return devices ? devicesSection(devices, onChange, props.meters) : null;
+}
 
 const messages = {
   loading: 'Loading Voice settings…',

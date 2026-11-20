@@ -6,7 +6,7 @@ import {
   disabled,
   labelStyle,
 } from '@expo/ui/swift-ui/modifiers';
-import type { ReactElement, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { nativeIconName } from '../../../symbols/native-icon-name';
 import type {
   FieldPickerAccessory,

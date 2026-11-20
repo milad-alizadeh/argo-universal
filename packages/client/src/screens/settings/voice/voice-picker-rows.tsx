@@ -2,7 +2,7 @@ import type { CustomVoice } from '@repo/contracts';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
-import { ScreenSearchField } from '@repo/kit/primitives/fields/field-picker';
+import { fieldPickerPageLook } from '@repo/kit/primitives/fields/field-picker';
 import { List } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import { useDrillBeside } from '@repo/kit/primitives/overlays/drill';
@@ -13,34 +13,13 @@ import {
   type VoicePageProps,
 } from './voice-picker-props';
 
-// How tall the popover's rows grow before they scroll.
-const popoverHeight = 360;
-
-// A popover holds a menu's plain rows that grow to fit; a pushed page the grouped rows of the Settings around it.
-const popoverLook = {
-  appearance: 'plain',
-  fit: true,
-  maxHeight: popoverHeight,
-} as const;
-
+// A popover holds the picker page's plain rows; a pushed page the grouped rows of the Settings around it.
 const pageLook = { appearance: 'grouped' } as const;
 
-const listLook = (beside: boolean): typeof popoverLook | typeof pageLook =>
-  beside ? popoverLook : pageLook;
-
-// The search heads the rows, where the List gives it the rows' inset; a pushed page's header holds it instead.
-function PageSearch(props: VoicePageProps): ReactElement | null {
-  if (!props.onQueryChange) return null;
-
-  return (
-    <ScreenSearchField
-      label={copy.search}
-      placeholder={copy.search}
-      value={props.query}
-      onChangeText={props.onQueryChange}
-    />
-  );
-}
+const listLook = (
+  beside: boolean,
+): typeof fieldPickerPageLook | typeof pageLook =>
+  beside ? fieldPickerPageLook : pageLook;
 
 export function VoiceList(props: VoicePageProps): ReactElement {
   const choices = voiceChoices(props.settings, props.query);
@@ -49,7 +28,6 @@ export function VoiceList(props: VoicePageProps): ReactElement {
     <List
       {...listLook(useDrillBeside())}
       accessibilityLabel={copy.title}
-      header={<PageSearch {...props} />}
       empty={<Text role="secondary">{copy.empty}</Text>}
     >
       {choiceSection(props, copy.custom, choices.custom)}
@@ -107,7 +85,7 @@ const addSection = (props: VoicePageProps): ReactElement => (
     <ListItem
       id="new-custom-voice"
       title={copy.add}
-      leading={<Icon name="add" size="md" />}
+      leading={<Icon name="add" size="sm" />}
       onPress={() => {
         props.close();
         props.onEditVoice();
@@ -129,18 +107,18 @@ const voiceRow = (props: VoicePageProps, choice: VoiceChoice): ReactElement => (
 
 type RowProps = VoicePageProps & { choice: VoiceChoice };
 
-// Play on every voice; edit on the person's own, which leaves the page for the form.
+// Play on every voice, always in the row's last lane; edit before it on the person's own, which leaves for the form.
 function RowActions(props: RowProps): ReactElement {
   const { choice } = props;
 
   return (
     <>
+      {choice.custom ? <EditButton {...props} voice={choice.custom} /> : null}
       <RowButton
         icon="play"
         label={`Play ${choice.label}`}
         onPress={() => props.onPreviewVoice(choice.id)}
       />
-      {choice.custom ? <EditButton {...props} voice={choice.custom} /> : null}
     </>
   );
 }

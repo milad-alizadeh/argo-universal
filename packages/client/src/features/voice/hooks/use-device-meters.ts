@@ -2,9 +2,10 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { browserDeviceSound } from '../stores/browser-device-sound';
 import { DeviceMeters, type DeviceMeter } from '../stores/device-meters';
 import type { DeviceSound } from '../types/device-sound';
+import { useVoiceStatus } from './use-voice-status';
 
 export interface DeviceMeterInputs {
-  // Whether the microphone may be opened: the page shows its devices, the browser has allowed it, and no call runs.
+  // Whether the microphone may be opened: the browser has allowed it.
   listening: boolean;
   // null follows the system's.
   microphone: string | null;
@@ -24,20 +25,25 @@ export interface DeviceMetersState {
   onTest: () => void;
 }
 
-// The microphone is open while the page may listen, follows the chosen one, and follows the saved gain.
+/*
+ * The microphone may be open while the page may listen and no call runs, so a call keeps its microphone to itself and
+ * the glyph stays unlit; it follows the chosen one and the saved gain.
+ */
 function useListening(meters: DeviceMeters, inputs: DeviceMeterInputs): void {
-  const { listening, microphone, gain } = inputs;
+  const { microphone, gain } = inputs;
+  const quiet = useVoiceStatus().call === null;
+  const allowed = inputs.listening && quiet;
 
   useEffect(() => meters.setGain(gain), [meters, gain]);
-
-  useEffect(() => {
-    if (!listening) return;
-
-    void meters.listen(microphone);
-
-    return (): void => meters.stopListening();
-  }, [meters, listening, microphone]);
+  useEffect(
+    () => meters.want(microphone, allowed),
+    [meters, microphone, allowed],
+  );
 }
+
+// Whether the test sound plays: the glyphs move many times a second, but this changes only when it starts or stops.
+const useTesting = (meters: DeviceMeters): boolean =>
+  useSyncExternalStore(meters.speaker.subscribe, () => meters.testing());
 
 // The meters this page keeps, let go of when it closes.
 function useMeters(sound: DeviceSound): DeviceMeters {
@@ -49,7 +55,7 @@ function useMeters(sound: DeviceSound): DeviceMeters {
 }
 
 /*
- * Settings › Voice's meters: the chosen microphone's level while the page is open, and a short test sound on the
+ * Settings › Voice's meters: the chosen microphone's level while its glyph is drawn, and a short test sound on the
  * chosen speaker at the saved volume. Leaving the page lets go of both.
  */
 export function useDeviceMeters(
@@ -57,9 +63,7 @@ export function useDeviceMeters(
   sound: DeviceSound = browserDeviceSound,
 ): DeviceMetersState {
   const meters = useMeters(sound);
-  const testing = useSyncExternalStore(meters.speaker.subscribe, () =>
-    meters.testing(),
-  );
+  const testing = useTesting(meters);
 
   useListening(meters, inputs);
 

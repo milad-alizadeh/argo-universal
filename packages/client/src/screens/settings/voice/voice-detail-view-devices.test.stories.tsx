@@ -104,8 +104,8 @@ export const LeavesDevicesOutWhereTheAppCannotHoldACall: Story = {
   },
 };
 
-const lit = (glyph: HTMLElement): number =>
-  glyph.querySelectorAll('[data-testid="field-picker-meter-lit"]').length;
+const lit = (glyph: HTMLElement | undefined): number | undefined =>
+  glyph?.querySelectorAll('[data-testid="field-picker-meter-lit"]').length;
 
 // Paper "Option D": a level glyph on each row, and a play button on the Speaker row alone.
 export const ShowsEachDevicesLevel: Story = {
@@ -113,6 +113,7 @@ export const ShowsEachDevicesLevel: Story = {
   play: async ({ canvas }) => {
     const [microphoneGlyph, speakerGlyph] =
       canvas.getAllByTestId('field-picker-meter');
+
     await expect(lit(microphoneGlyph)).toBe(5);
     await expect(lit(speakerGlyph)).toBe(0);
     await expect(

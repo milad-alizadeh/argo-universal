@@ -37,10 +37,14 @@ const footerOf = (devices: VoiceDevices): string =>
 type Accessory = React.ComponentProps<typeof FieldGroup.Picker>['accessory'];
 
 // The Speaker row's test sound: play, then stop while it plays (ADR-0042, 2026-11-19).
+const testLooks = {
+  idle: { icon: 'play', label: 'Play a test sound' },
+  playing: { icon: 'stop', label: 'Stop the test sound' },
+} as const;
+
 const testOf = (meters?: DeviceMetersState): Accessory =>
   meters && {
-    icon: meters.testing ? 'stop' : 'play',
-    label: meters.testing ? 'Stop the test sound' : 'Play a test sound',
+    ...testLooks[meters.testing ? 'playing' : 'idle'],
     onPress: meters.onTest,
   };
 

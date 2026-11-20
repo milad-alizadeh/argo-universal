@@ -1,5 +1,14 @@
-import type { FieldGroupKitProps, KitProps } from '../../kit-props';
+import type { FieldGroupKitProps } from '../../kit-props';
+import type {
+  FieldPickerAccessory,
+  FieldPickerMeter,
+} from './field-picker-accessory-props';
 import { createOf, reportToggle } from './field-picker-events';
+
+export type {
+  FieldPickerAccessory,
+  FieldPickerMeter,
+} from './field-picker-accessory-props';
 
 export type FieldPickerProps = FieldGroupKitProps<'FieldGroup.Picker'> & {
   // What the page says when there are no options at all, such as "No Agents installed"; a search that leaves none says so itself. The App's own: a Plugin's wire has no such prop.
@@ -10,21 +19,6 @@ export type FieldPickerProps = FieldGroupKitProps<'FieldGroup.Picker'> & {
   accessory?: FieldPickerAccessory;
   // How loud the device the row chooses is, as a level glyph before the accessory's lane; drawn where the App measures audio, on the web.
   meter?: FieldPickerMeter;
-};
-
-export type FieldPickerAccessory = {
-  icon: KitProps<'Icon'>['name'];
-  // The button's spoken name, such as "Play Sol".
-  label: string;
-  onPress: () => void;
-  // Not ready yet, such as a preview of a voice with no description.
-  disabled?: boolean;
-};
-
-// A level from 0 to 1 that changes on its own: the glyph reads it whenever the source says it moved.
-export type FieldPickerMeter = {
-  level: () => number;
-  subscribe: (onChange: () => void) => () => void;
 };
 
 /*
