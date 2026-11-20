@@ -49,7 +49,7 @@ export function runtimeFor(
     oauth: oauthOf(options),
     settings: settingsOf(options, parts.secretStore),
     ...projectOptions(options),
-    environment: { ARGO_PLUGIN_TRACE: '1', ...testEnvironment(options) },
+    environment: testEnvironment(options),
   });
 }
 
@@ -116,6 +116,7 @@ function sessionOf(
 function testEnvironment(options: PluginTestOptions): NodeJS.ProcessEnv {
   return {
     ...process.env,
-    PATH: [...(options.path ?? []), process.env.PATH ?? ''].join(delimiter),
+    ARGO_PLUGIN_TRACE: options.tracePluginCalls === false ? '0' : '1',
+    PATH: [...(options.path ?? []), process.env.PATH].join(delimiter),
   };
 }

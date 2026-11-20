@@ -26,11 +26,9 @@ it(
   async () => {
     const run = await journey();
 
-    const before = run.github.pullReads().length;
-
     await attach(run, pullReference);
 
-    expect(run.github.pullReads()).toHaveLength(before + 1);
+    expect(run.github.pullReads()).toHaveLength(1);
     expect(await changesOf(run)).toEqual([openChange]);
     expect(await attributedChangesOf(run)).toEqual([
       { pluginId: 'github', item: openChange },

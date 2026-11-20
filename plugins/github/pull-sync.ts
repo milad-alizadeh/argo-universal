@@ -1,16 +1,13 @@
 import { readLink, type ChangesSource, type LinkRead } from './pull-changes';
 import type { CheckInfo } from './pull-checks';
-import type { PullInfo } from './pull-info';
 import { keptShown } from './pull-kept';
-import { pullRecordKey } from './pull-records';
+import { PullRefreshes, type ValidatedPull } from './pull-refreshes';
 import type { PullKey } from './pull-store';
 
 // What one Slot answers for the pull requests it names: what is known now, with GitHub asked behind it.
 type Shown = <Link extends PullKey>(
   links: readonly Link[],
 ) => Promise<LinkRead<Link>[]>;
-
-type ValidatedPull = { link: PullKey; data: PullInfo };
 
 export type Pulls = {
   // The Sessions' pull requests as they were last read: the stored record with what the automations keep, never a wait on GitHub.
@@ -52,71 +49,26 @@ type Echo = { pending: boolean };
 
 type State = {
   source: ChangesSource;
-  say: () => void;
   echoes: Echo[];
-  inFlight: Map<string, Promise<boolean>>;
+  refreshes: PullRefreshes;
+  changed: () => void;
 };
 
-function sayChanged({ echoes, say }: State): void {
+function sayChanged(echoes: Echo[], say: () => void): void {
   for (const echo of echoes) echo.pending = true;
   say();
-}
-
-type Refresh = { kind: 'slot' | 'sync'; validated?: ValidatedPull };
-
-async function saveRead(
-  source: ChangesSource,
-  link: PullKey,
-  { validated }: Refresh,
-): Promise<boolean> {
-  const pull =
-    validated && pullRecordKey(validated.link) === pullRecordKey(link)
-      ? validated.data
-      : undefined;
-
-  return source.records.save(await readLink(source, link, pull));
-}
-
-// A Slot can receive a kept Query answer while it refreshes. A Watch or Operation waits for the current answer.
-function syncLink(
-  state: State,
-  link: PullKey,
-  refresh: Refresh,
-): Promise<boolean> {
-  const key = `${refresh.kind}:${pullRecordKey(link)}`;
-  const pending = state.inFlight.get(key);
-
-  if (pending) return pending.then(() => false);
-
-  const saved = saveRead(state.source, link, refresh);
-  state.inFlight.set(key, saved);
-
-  return saved.finally(() => {
-    state.inFlight.delete(key);
-  });
-}
-
-async function syncLinks(
-  state: State,
-  links: readonly PullKey[],
-  refresh: Refresh,
-): Promise<void> {
-  const saved = await Promise.all(
-    links.map((link) => syncLink(state, link, refresh)),
-  );
-
-  if (saved.includes(true)) sayChanged(state);
 }
 
 // GitHub is asked behind a Slot's answer for every pull request that can still change.
 function behind(state: State, reads: readonly Read[]): void {
   const open = reads.filter((read) => !settled(read));
 
-  void syncLinks(
-    state,
-    open.map(({ link }) => link),
-    { kind: 'slot' },
-  ).catch(leftAsItWas);
+  void state.refreshes
+    .run(
+      open.map(({ link }) => link),
+      { kind: 'slot' },
+    )
+    .catch(leftAsItWas);
 }
 
 async function shownBy<Link extends PullKey>(
@@ -140,6 +92,19 @@ function slotOf(state: State): Shown {
   return (links) => shownBy(state, echo, links);
 }
 
+function stateOf(source: ChangesSource, say: () => void): State {
+  const echoes: Echo[] = [];
+  const changed = (): void => sayChanged(echoes, say);
+
+  const refreshes = new PullRefreshes(
+    async (link, validated) =>
+      source.records.save(await readLink(source, link, validated)),
+    changed,
+  );
+
+  return { source, echoes, refreshes, changed };
+}
+
 /*
  * Every surface's pull requests (ADR-0052). GitHub is read in one place, `sync`, which keeps each answer in the
  * Plugin's storage and says so only when what is kept changed; the Session row, the Changes, a link's mark and the
@@ -149,14 +114,14 @@ function slotOf(state: State): Shown {
  * sync that caused it has just read GitHub, so reading it again would only find the same.
  */
 export function createPulls(source: ChangesSource, say: () => void): Pulls {
-  const state: State = { source, say, echoes: [], inFlight: new Map() };
   const { store, records } = source;
+  const state = stateOf(source, say);
 
   return {
     known: (sessionIds) => keptShown(source, sessionIds, records.of),
-    changed: () => sayChanged(state),
+    changed: state.changed,
     sync: async (sessionIds, validated) =>
-      syncLinks(state, await store.forSessions(sessionIds), {
+      state.refreshes.run(await store.forSessions(sessionIds), {
         kind: 'sync',
         validated,
       }),
