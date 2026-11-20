@@ -31,6 +31,7 @@ export const hookScripts = [
   'agent-hooks.mts',
   'agent-hook-run.mts',
   'hook-checks.mts',
+  'hook-native-config.mts',
   'verify-stamp.mts',
 ];
 
@@ -159,7 +160,10 @@ function initializeGit(): void {
   git('init', '-q');
   git('config', 'user.email', 'test@example.com');
   git('config', 'user.name', 'test');
-  writeFileSync(path.join(root, '.gitignore'), 'node_modules\n');
+  writeFileSync(
+    path.join(root, '.gitignore'),
+    'node_modules\n.oxlintrc.native.json\n',
+  );
   git('add', '.');
   git('commit', '-q', '-m', 'base');
 }

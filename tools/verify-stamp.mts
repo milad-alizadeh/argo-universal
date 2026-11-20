@@ -1,61 +1,51 @@
-// What `pnpm verify` last passed, so before-stop does not lint and type-check the same tree again (docs/agents/hooks.md).
-import { readFileSync, writeFileSync } from 'node:fs';
+// The last tree whose format, lint and type checks passed, so before-stop does not run them again on it (docs/agents/hooks.md).
+import { createHash } from 'node:crypto';
+import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { z } from 'zod';
-import { parseJson, root, run } from './hook-checks.mts';
+import { root, run } from './hook-checks.mts';
 
-const stampSchema = z.object({
-  head: z.string(),
-  files: z.record(z.string(), z.string()),
-});
+const git = (args: string[]): string => run('git', args).output;
 
-export type VerifiedStamp = z.infer<typeof stampSchema>;
+const untrackedStamp = (file: string): string => {
+  try {
+    return `${file} ${statSync(path.join(root, file)).mtimeMs}`;
+  } catch {
+    return file;
+  }
+};
 
-// The stamp holds HEAD, so a commit or checkout after verify voids it, and each checked file's content hash.
-export function covers(stamp: VerifiedStamp, current: VerifiedStamp): boolean {
-  return (
-    stamp.head === current.head &&
-    Object.entries(current.files).every(
-      ([file, hash]): boolean => stamp.files[file] === hash,
-    )
-  );
+// HEAD, every change against it, and each untracked file's path and modification time.
+export function treeFingerprint(): string {
+  const untracked = git(['ls-files', '--others', '--exclude-standard', '-z'])
+    .split('\0')
+    .filter(Boolean)
+    .map(untrackedStamp);
+
+  return createHash('sha256')
+    .update(git(['rev-parse', 'HEAD']))
+    .update('\0')
+    .update(git(['diff', 'HEAD', '--binary']))
+    .update('\0')
+    .update(untracked.join('\n'))
+    .digest('hex');
 }
-
-const git = (args: string[]): string => run('git', args).output.trim();
 
 // In .git, per worktree, so it is never committed and each worktree keeps its own.
 const stampPath = (): string =>
-  path.resolve(root, git(['rev-parse', '--git-path', 'argo-verified.json']));
+  path.resolve(
+    root,
+    git(['rev-parse', '--git-path', 'argo-checks-passed']).trim(),
+  );
 
-function snapshot(files: string[]): VerifiedStamp {
-  const hashes =
-    files.length === 0 ? [] : git(['hash-object', '--', ...files]).split('\n');
-
-  return {
-    head: git(['rev-parse', 'HEAD']),
-    files: Object.fromEntries(
-      files.map((file, index): [string, string] => [file, hashes[index] ?? '']),
-    ),
-  };
+// Written by `pnpm verify` and by before-stop once their checks pass.
+export function recordPassed(): void {
+  writeFileSync(stampPath(), treeFingerprint());
 }
 
-export function recordVerified(files: string[]): void {
-  writeFileSync(stampPath(), JSON.stringify(snapshot(files)));
-}
-
-function readStamp(): VerifiedStamp | undefined {
+export function passedAlready(): boolean {
   try {
-    const parsed = parseJson(stampSchema, readFileSync(stampPath(), 'utf8'));
-
-    return parsed.success ? parsed.data : undefined;
+    return readFileSync(stampPath(), 'utf8') === treeFingerprint();
   } catch {
-    return undefined;
+    return false;
   }
-}
-
-// Whether verify's lint and type checks already passed for these files as they are now.
-export function verifiedAlready(files: string[]): boolean {
-  const stamp = readStamp();
-
-  return stamp !== undefined && covers(stamp, snapshot(files));
 }

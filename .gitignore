@@ -57,3 +57,5 @@ apps/storybook/story-render-fingerprints.json
 
 # Plugin JSX declarations come from Contracts at install and before consumers.
 /packages/plugin-kit/src/components.gen.d.ts
+# after-edit's native-rules oxlint config, built from .oxlintrc.json (tools/hook-native-config.mts).
+.oxlintrc.native.json

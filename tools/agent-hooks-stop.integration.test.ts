@@ -9,7 +9,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { resolveExecutable } from '@repo/executables';
+import { pathToFileURL } from 'node:url';
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
   anyViolation,
@@ -26,27 +26,14 @@ import {
   unformattedJson,
 } from './agent-hooks.mocks';
 
-const readGit = (...args: string[]): string =>
-  execFileSync(resolveExecutable('git'), args, {
-    cwd: root,
-    encoding: 'utf8',
-  }).trim();
+// What `pnpm verify` records once its checks pass, for the scratch tree as it is now.
+function recordPassed(): void {
+  const stamp = pathToFileURL(path.join(root, 'tools/verify-stamp.mts')).href;
 
-// What `pnpm verify` records once it passes, for these files as they are now.
-function recordVerified(files: string[]): void {
-  const hashes = readGit('hash-object', '--', ...files).split('\n');
-
-  writeFileSync(
-    path.resolve(
-      root,
-      readGit('rev-parse', '--git-path', 'argo-verified.json'),
-    ),
-    JSON.stringify({
-      head: readGit('rev-parse', 'HEAD'),
-      files: Object.fromEntries(
-        files.map((file, index) => [file, hashes[index]]),
-      ),
-    }),
+  execFileSync(
+    process.execPath,
+    ['--input-type=module', '-e', `(await import('${stamp}')).recordPassed();`],
+    { cwd: root },
   );
 }
 
@@ -107,14 +94,8 @@ describe('before-stop', (): void => {
     ).toBe(0);
   });
 
-  it('skips the lint verify passed for the same files, until one changes', (): void => {
-    recordVerified([
-      blockedSourceFile,
-      scratchSourceFile,
-      'added.ts',
-      'unused.ts',
-      invalidJsonFile,
-    ]);
+  it('skips the checks for a tree that already passed, until it changes', (): void => {
+    recordPassed();
 
     expect(runHook(beforeStopHook, { cwd: root }).status).toBe(0);
 

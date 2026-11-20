@@ -22,7 +22,7 @@ import {
   nothingChecked,
   type TestScope,
 } from './verify-scope.mts';
-import { recordVerified } from './verify-stamp.mts';
+import { recordPassed } from './verify-stamp.mts';
 
 const vitest = path.join(root, 'node_modules/.bin/vitest');
 
@@ -56,8 +56,10 @@ function generatedChecks(): Result[] {
   ];
 }
 
-function staticChecks(changed: string[]): Result[] {
-  return [checkFormat(changed), ...checkChanged(changed), ...generatedChecks()];
+async function staticChecks(changed: string[]): Promise<Result[]> {
+  const changedChecks = checkChanged(changed);
+
+  return [checkFormat(changed), ...generatedChecks(), ...(await changedChecks)];
 }
 
 type Listing =
@@ -145,10 +147,10 @@ if (changed.length === 0) {
   process.exit(0);
 }
 
-const failed = failedChecks(staticChecks(changed));
+const failed = failedChecks(await staticChecks(changed));
 
 if (failed.length > 0) process.stderr.write(`${joinOutput(failed)}\n`);
-else recordVerified(changed);
+else recordPassed();
 
 say(
   failed.length === 0

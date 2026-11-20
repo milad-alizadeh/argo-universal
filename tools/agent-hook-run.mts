@@ -11,7 +11,8 @@ import {
   parseJson,
   root,
 } from './hook-checks.mts';
-import { verifiedAlready } from './verify-stamp.mts';
+import { nativeConfig } from './hook-native-config.mts';
+import { passedAlready, recordPassed } from './verify-stamp.mts';
 
 const PATCH_FILE_LINE = /^\*\*\* (?:Add File|Update File|Move to): (.+)$/;
 
@@ -77,17 +78,26 @@ function afterEdit(input: HookInput): number {
 
   if (files.length === 0) return 0;
 
-  return block([lint({ files, typeAware: false, skipped: UNUSED_RULES })]);
+  // Native rules only: loading the JS plugins costs more than a second per edit, and before-stop runs them.
+  const lintRun = { files, typeAware: false, skipped: UNUSED_RULES };
+
+  return block([lint({ ...lintRun, config: nativeConfig() })]);
 }
 
-function beforeStop(input: HookInput): number {
-  const files = input.stop_hook_active === true ? [] : changedFiles('HEAD');
+// A tree that already passed, here or in `pnpm verify`, exits at once; lint and type checks run side by side after formatting.
+async function beforeStop(input: HookInput): Promise<number> {
+  if (input.stop_hook_active === true || passedAlready()) return 0;
+
+  const files = changedFiles('HEAD');
 
   if (files.length === 0) return 0;
   format(files);
 
-  // A `pnpm verify` that passed for these files as they are already ran the same lint and type checks.
-  return verifiedAlready(files) ? 0 : block(checkChanged(files));
+  const status = block(await checkChanged(files));
+
+  if (status === 0) recordPassed();
+
+  return status;
 }
 
 const COMMANDS = new Set(['after-edit', 'before-stop']);
@@ -107,5 +117,7 @@ if (!parsed.success) {
 }
 
 process.exit(
-  command === 'after-edit' ? afterEdit(parsed.data) : beforeStop(parsed.data),
+  command === 'after-edit'
+    ? afterEdit(parsed.data)
+    : await beforeStop(parsed.data),
 );
