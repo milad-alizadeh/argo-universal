@@ -3,7 +3,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, waitFor } from 'storybook/test';
 import { gesture } from '../../../../mocks/feed/gutter-wheel.test.mocks';
-import { scrolledToEnd } from '../../../features/feed/components/feed/feed-reader.mocks';
+import {
+  scrolledToEnd,
+  settleWait,
+} from '../../../features/feed/components/feed/feed-reader.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { longSession } from './session-detail-view.mocks';
 
@@ -47,7 +50,7 @@ function fullViewport(width: number, side: 'left' | 'right'): Story {
         }
       });
       // A real wheel over the outer gutter must reach the pane's scroll viewport.
-      await waitFor(async () => await expect(scrolledToEnd(scroll)).toBe(true));
+      await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true), settleWait);
       await gesture(scroll, side);
     },
   };
