@@ -16,7 +16,7 @@ export const VoiceCallStatus = z.enum(['connecting', 'connected']);
 
 export type VoiceCallStatus = z.infer<typeof VoiceCallStatus>;
 
-// What the call's orb shows: the person is heard, the voice talks, the Agent's Turn runs, or the call has no sound to show.
+// What the call's band shows: the person is heard, the voice talks, the Agent's Turn runs, or the call has no sound to show.
 export const VoiceOrbState = z.enum([
   'listening',
   'talking',
@@ -26,7 +26,7 @@ export const VoiceOrbState = z.enum([
 
 export type VoiceOrbState = z.infer<typeof VoiceOrbState>;
 
-// Trouble the call shows in the orb's label instead of a dialog.
+// Trouble the call shows in the band's label instead of a dialog.
 export const VoiceTrouble = z.enum(['reconnecting', 'microphone-blocked']);
 
 export type VoiceTrouble = z.infer<typeof VoiceTrouble>;

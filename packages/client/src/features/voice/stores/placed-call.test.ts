@@ -26,12 +26,12 @@ describe('a call placed before the Server has it', () => {
     expect(status.call).toBe(serverCall);
   });
 
-  it('draws the stage and End in its Session at once', () => {
+  it('draws the band and End in its Session at once', () => {
     const view = sessionVoice(
       inputOf(withPlacedCall(idle, 'session-1'), 'session-1'),
     );
 
-    expect(view.stage?.label.headline).toBe('Connecting…');
+    expect(view.band?.call.orb).toBe('none');
     expect(view.composer?.kind).toBe('connecting');
   });
 

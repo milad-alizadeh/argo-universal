@@ -1,13 +1,8 @@
 import type { VoiceCall, VoicePartial, VoiceStatus } from '@repo/contracts';
 import type { ComposerVoice, ComposerVoiceMutes } from '#features/composer';
 import type { VoiceEdgeBandProps } from '../components/voice-edge-band/voice-edge-band';
-import { elapsedOf, voiceLabel } from '../components/voice-stage/voice-label';
-import type { VoiceStageViewProps } from '../components/voice-stage/voice-stage-view';
-import type {
-  VoiceLevels,
-  VoiceMutes,
-  VoiceSpectrum,
-} from '../types/voice-connection';
+import type { VoiceMutes, VoiceSpectrum } from '../types/voice-connection';
+import { elapsedOf } from './voice-label';
 
 // What the view asks of the App when the person presses something.
 export interface SessionVoiceActions {
@@ -28,9 +23,7 @@ export interface SessionVoiceInput {
   now: number;
   // What the connection holds muted; the connection is the only owner of it.
   mutes: VoiceMutes;
-  // The App's own levels, read by the orb each frame.
-  levels: () => VoiceLevels;
-  // The App's own bands of speech, read by the matrix and the wave each frame.
+  // The App's own bands of speech, read by the band each frame.
   spectrum: () => VoiceSpectrum;
   // A Session's title as the Sessions list reads it, when it is known.
   titleOf: (sessionId: string) => string | undefined;
@@ -41,9 +34,7 @@ export interface SessionVoiceInput {
 export interface SessionVoice {
   // The Composer's voice slot: the voice button, End with its mutes, or the pointer; absent with nothing to offer.
   composer: ComposerVoice | undefined;
-  // The orb pinned above the Feed; only in the Session the call runs in.
-  stage: VoiceStageViewProps | undefined;
-  // The band along the Composer's top edge, for when this Device draws the call there; only in the Session it runs in.
+  // The band along the Composer's top edge, drawn while a call here connects or runs; only in the Session it runs in.
   band: VoiceEdgeBandProps | undefined;
   // What is being said now, drawn at the tail of the Feed; only in the Session the call runs in.
   partials: VoicePartial[];
@@ -127,19 +118,6 @@ export function newSessionVoice(
   return call ? elsewhereOf(call, input) : idleSlotOf(input);
 }
 
-function stageOf(
-  here: VoiceCall | undefined,
-  input: SessionVoiceInput,
-): VoiceStageViewProps | undefined {
-  return (
-    here && {
-      state: here.orb,
-      levels: input.levels,
-      label: voiceLabel(here, input.now),
-    }
-  );
-}
-
 function bandOf(
   here: VoiceCall | undefined,
   input: SessionVoiceInput,
@@ -156,14 +134,13 @@ function bandOf(
 /*
  * A Session's view of the Voice call: one answer, from the Server's status and the Session the page shows, to "is the
  * call here, elsewhere or none" and to everything drawn from it: the Composer's voice button, mutes and pointer, the
- * orb pinned above the Feed, and the words being said. Mutes are read from the connection and never written by a page.
+ * band along its edge, and the words being said. Mutes are read from the connection and never written by a page.
  */
 export function sessionVoice(input: SessionVoiceInput): SessionVoice {
   const here = hereOf(input.status.call, input.sessionId);
 
   return {
     composer: composerOf(input),
-    stage: stageOf(here, input),
     band: bandOf(here, input),
     partials: here ? input.status.partials : noPartials,
   };

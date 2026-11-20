@@ -55,7 +55,7 @@ const headlineOf = (call: CallLook): string =>
 const allowanceOf = (call: CallLook): string =>
   call.limit ? ` · ${Math.round(call.limit.remaining * percent)}% left` : '';
 
-// The orb's two lines: trouble shows in the headline in place of the state, with no dialog.
+// The band's two lines: trouble shows in the headline in place of the state, with no dialog.
 export function voiceLabel(call: CallLook, now: number): VoiceLabel {
   return {
     headline: headlineOf(call),

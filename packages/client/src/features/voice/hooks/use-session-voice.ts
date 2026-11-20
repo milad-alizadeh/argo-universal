@@ -7,14 +7,11 @@ import { useTRPC } from '#features/connection';
 import { sessionHref } from '#lib/product/navigation/navigation';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
 import { withEdge } from '../components/voice-edge-band/voice-edge-slot';
-import type { VoiceVisualiserKind } from '../components/voice-visualiser/voice-visualiser-kind';
 import { placedCall } from '../stores/placed-call';
 import { useVoiceConnection } from '../stores/voice-connection-context';
-import { useVoiceVisualiser } from '../stores/voice-visualiser-choice';
 import {
   silentSpectrum,
   type VoiceConnection,
-  type VoiceLevels,
   type VoiceSpectrum,
 } from '../types/voice-connection';
 import {
@@ -27,8 +24,6 @@ import { useSessionTitle, useStartCall } from './use-call-reads';
 import { useHeldPartials } from './use-held-partials';
 import { type SessionMutes, useSessionMutes } from './use-session-mutes';
 import { useVoiceStatus } from './use-voice-status';
-
-const noLevels: VoiceLevels = { input: 0, output: 0 };
 
 const noSpectrum = silentSpectrum();
 
@@ -74,17 +69,13 @@ function useActions(
   };
 }
 
-// The orb reads the App's own levels each frame, so it moves without the page rendering again.
-const useLevels = (connection: VoiceConnection | null): (() => VoiceLevels) =>
-  useCallback(() => connection?.levels() ?? noLevels, [connection]);
-
-// The band reads the App's own bands each frame, as the orb reads its levels.
+// The band reads the App's own bands each frame, so it moves without the page rendering again.
 const useSpectrum = (
   connection: VoiceConnection | null,
 ): (() => VoiceSpectrum) =>
   useCallback(() => connection?.spectrum() ?? noSpectrum, [connection]);
 
-type View = Pick<SessionVoice, 'stage' | 'partials'> & {
+type View = Pick<SessionVoice, 'partials'> & {
   // Absent where this App carries no audio, so the Composer offers no voice button.
   voice: ComposerVoice | undefined;
 };
@@ -109,15 +100,14 @@ function useTitleOf(
   return (id) => (id === callSession ? title : undefined);
 }
 
-// What changes while the call runs: the timer's clock and the orb's levels.
+// What changes while the call runs: the timer's clock.
 function useLive(
   status: VoiceStatus,
   sessionId: string,
   connection: VoiceConnection | null,
-): Pick<SessionVoiceInput, 'now' | 'levels' | 'spectrum'> {
+): Pick<SessionVoiceInput, 'now' | 'spectrum'> {
   return {
     now: useClock(callSessionOf(status) === sessionId),
-    levels: useLevels(connection),
     spectrum: useSpectrum(connection),
   };
 }
@@ -139,36 +129,19 @@ function useInput(
   };
 }
 
-// The stage above the Feed, unless this App carries the call's audio and this Device chose the band in its place.
-const stageFor = (
-  view: SessionVoice,
-  connection: VoiceConnection | null,
-  kind: VoiceVisualiserKind,
-): SessionVoice['stage'] =>
-  connection && kind === 'band' ? undefined : view.stage;
-
-// The Composer's slot, with the band along its edge when this Device chose to draw the call there.
-const composerOf = (
-  view: SessionVoice,
-  kind: VoiceVisualiserKind,
-): ComposerVoice | undefined =>
-  withEdge(view.composer, kind === 'band' ? view.band : undefined);
-
 /*
  * A Session page's view of the Voice call: the one place that follows the Server's status and the connection, read
- * through `sessionVoice`. The Composer, the orb and the Feed's partial words all come from here, so none of them needs
- * another to have subscribed first.
+ * through `sessionVoice`. The Composer, with the band along its edge, and the Feed's partial words all come from here,
+ * so none of them needs another to have subscribed first.
  */
 export function useSessionVoice(page: VoicePage): View {
   const connection = useVoiceConnection();
   const status = useVoiceStatus();
   const view = sessionVoice(useInput(page, connection, status));
   const partials = useHeldPartials(view.partials);
-  const { kind } = useVoiceVisualiser();
 
   return {
     partials,
-    stage: stageFor(view, connection, kind),
-    voice: connection ? composerOf(view, kind) : undefined,
+    voice: connection ? withEdge(view.composer, view.band) : undefined,
   };
 }

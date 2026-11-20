@@ -92,7 +92,6 @@ const callOf = (props: VoiceDetailViewProps): React.JSX.Element =>
     options: settingsOf(props).options,
     disabled: waiting(props),
     adjustsGain: props.adjustsGain,
-    visualiser: props.visualiser,
     onChange: props.onCallOptionsChange,
   });
 

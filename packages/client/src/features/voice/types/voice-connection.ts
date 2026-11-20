@@ -59,7 +59,7 @@ export interface VoiceLevels {
 // How many bands of speech a spectrum holds, low to high.
 export const spectrumBands = 16;
 
-// Each band from 0 to 1, low to high. Read each frame by a visualiser; never stored, never sent.
+// Each band from 0 to 1, low to high. Read each frame by the band; never stored, never sent.
 export interface VoiceSpectrum {
   input: Float32Array;
   output: Float32Array;

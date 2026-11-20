@@ -156,7 +156,6 @@ const openSessionProps = (open: OpenSessionSources): OpenSessionViewProps => ({
   inspectorPanels: open.inspectorPanels,
   onDropFiles: (dropped) => void open.commands.attachDroppedFiles(dropped),
   archived: open.snapshot.archivedAt !== null,
-  stage: open.stage,
 });
 
 // What the Session view draws for the Feed's progress: failed, still opening, or open.

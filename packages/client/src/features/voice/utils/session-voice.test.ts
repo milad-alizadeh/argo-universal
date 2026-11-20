@@ -18,7 +18,7 @@ describe("a Session's view of the Voice call", () => {
     const view = sessionVoice(inputOf(statusOf(null), 's1'));
 
     expect(view.composer?.kind).toBe('start');
-    expect(view.stage).toBeUndefined();
+    expect(view.band).toBeUndefined();
   });
 
   it('offers the voice button only while Voice calls are on and the provider is usable', () => {
@@ -43,7 +43,7 @@ describe("a Session's view of the Voice call", () => {
     },
   );
 
-  it('shows a call that is connecting here as connecting, with no mutes and a stage that says so', () => {
+  it('shows a call that is connecting here as connecting, with no mutes and a band that says so', () => {
     const connecting = callIn('s1', {
       status: 'connecting',
       orb: 'none',
@@ -56,22 +56,22 @@ describe("a Session's view of the Voice call", () => {
       kind: 'connecting',
       onEnd: expect.any(Function),
     });
-    expect(view.stage).toMatchObject({
-      state: 'none',
-      label: { headline: 'Connecting…' },
+    expect(view.band).toMatchObject({
+      call: { orb: 'none', trouble: null },
+      elapsed: '0:00',
     });
   });
 
-  it('shows a connected call here with mutes, a stage and the call timer', () => {
+  it('shows a connected call here with mutes and a band that has its timer', () => {
     const view = sessionVoice(inputOf(statusOf(callIn('s1')), 's1'));
 
     expect(view.composer).toMatchObject({
       kind: 'connected',
       mutes: { microphone: false, speaker: false },
     });
-    expect(view.stage).toMatchObject({
-      state: 'listening',
-      label: { headline: 'Listening', detail: 'Voice · 4:12' },
+    expect(view.band).toMatchObject({
+      call: { orb: 'listening' },
+      elapsed: '4:12',
     });
   });
 
@@ -88,7 +88,7 @@ describe("a Session's view of the Voice call", () => {
     ).toBeUndefined();
   });
 
-  it('points a Session at the call in another Session, with that Session’s title, and draws no stage', () => {
+  it('points a Session at the call in another Session, with that Session’s title, and draws no band', () => {
     const asked: Asked = [];
     const view = sessionVoice(inputOf(statusOf(callIn('s-call')), 's1', asked));
 
@@ -97,7 +97,6 @@ describe("a Session's view of the Voice call", () => {
       title: 'Fix the build',
       onOpen: expect.any(Function),
     });
-    expect(view.stage).toBeUndefined();
     press(view.composer);
 
     expect(asked).toEqual(['open:s-call']);
@@ -156,20 +155,5 @@ describe("a Session's view of the Voice call", () => {
 
     expect(sessionVoice(inputOf(call, 's1')).partials).toBe(partials);
     expect(sessionVoice(inputOf(call, 's2')).partials).toEqual([]);
-  });
-
-  it('says trouble and the allowance in the stage label', () => {
-    const troubled = callIn('s1', {
-      trouble: 'microphone-blocked',
-      limit: { remaining: 0.1 },
-    });
-
-    const { label } =
-      sessionVoice(inputOf(statusOf(troubled), 's1')).stage ?? {};
-
-    expect(label).toEqual({
-      headline: 'Microphone blocked',
-      detail: 'Voice · 4:12 · 10% left',
-    });
   });
 });

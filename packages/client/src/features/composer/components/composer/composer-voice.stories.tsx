@@ -7,6 +7,7 @@ import { Composer } from './composer';
 import {
   bandConnectingComposer,
   bandListeningComposer,
+  bandTalkingComposer,
 } from './composer-voice-band-fixtures';
 import {
   callElsewhereComposer,
@@ -81,10 +82,11 @@ export const VoiceCallWithDraft: Story = { args: voiceCallDraftComposer };
 export const CallInAnotherSession: Story = { args: callElsewhereComposer };
 
 /*
- * Paper's "Composer waveform — B · Edge band": a slim live waveform along the card's top edge, with the state and the
- * timer at its right end, when this Device draws the call there instead of the stage above the Feed. The band's own
+ * The Conversation band along the card's top edge, with the state and the timer at its right end. The band's own
  * states are in `Voice/VoiceEdgeBand`.
  */
 export const BandConnecting: Story = { args: bandConnectingComposer };
 
 export const BandListening: Story = { args: bandListeningComposer };
+
+export const BandTalking: Story = { args: bandTalkingComposer };

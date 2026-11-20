@@ -51,7 +51,6 @@ export function inputOf(
     sessionId,
     now,
     mutes: { microphone: false, speaker: false },
-    levels: () => ({ input: 0, output: 0 }),
     spectrum: silentSpectrum,
     titleOf: (id) => (id === 's-call' ? 'Fix the build' : undefined),
     actions: {

@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { syntheticVoiceAudio } from '../../../../../mocks/voice/synthetic-voice-audio';
 import { VoiceEdgeBand } from './voice-edge-band';
 
-// Sound with no microphone and no voice, so the band scrolls as it would on a call.
+// Sound with no microphone and no voice, so the bars move as they would on a call.
 const { spectrum } = syntheticVoiceAudio();
 
 const connected = {
@@ -29,33 +29,50 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Connecting: a dim line with one soft highlight sweeping across, and no timer until the call connects.
-export const Connecting: Story = {
-  args: { call: { ...connected, orb: 'none' } },
-};
-
-// Listening: the person's microphone level, newest on the right, scrolling left.
+// Listening: the person's voice lights the bars from the left, in orange, and the colour front rests at the left.
 export const Listening: Story = {};
 
-// Talking: the voice's output, in info blue.
+// Talking: the Agent's voice lights the bars from the right, in blue. Coming from listening, the colour sweeps across in about 0.4 s.
 export const Talking: Story = {
   args: { call: { ...connected, orb: 'talking' }, elapsed: '2:51' },
 };
 
-// Thinking: low bars breathing in a slow wave.
+// Thinking: the Agent is working with no sound, so one soft blue dot pulse crosses the dots.
 export const Thinking: Story = {
   args: { call: { ...connected, orb: 'thinking' }, elapsed: '3:02' },
 };
 
-// Muted: the line goes flat and red.
+// Connecting: dim dots with one soft pulse crossing them, and no timer until the call connects.
+export const Connecting: Story = {
+  args: { call: { ...connected, orb: 'none' } },
+};
+
+// Muted: the bars go quiet and red, and the label says the microphone is off.
 export const Muted: Story = {
   args: { call: { ...connected, microphoneMuted: true }, elapsed: '3:10' },
 };
 
-// Reconnecting: a warning sweep, and the timer keeps counting.
+// Reconnecting: warning-coloured dots with a pulse crossing, and the timer keeps counting.
 export const Reconnecting: Story = {
   args: {
     call: { ...connected, orb: 'none', trouble: 'reconnecting' },
     elapsed: '3:14',
   },
+};
+
+// Blocked: the browser or system refuses the microphone, so the bars rest in red.
+export const Blocked: Story = {
+  args: {
+    call: { ...connected, trouble: 'microphone-blocked' },
+    elapsed: '3:20',
+  },
+};
+
+// The same band at a narrow Composer: fewer bars, the same gap on both sides.
+export const Narrow: Story = {
+  render: (args): React.JSX.Element => (
+    <View className="w-140 bg-card">
+      <VoiceEdgeBand {...args} />
+    </View>
+  ),
 };

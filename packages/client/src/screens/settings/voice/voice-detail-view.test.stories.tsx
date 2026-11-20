@@ -1,6 +1,6 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, waitFor, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import { VoiceDetailView } from './voice-detail-view';
 import {
   adding,
@@ -238,17 +238,6 @@ export const HidesTheGainWhereItCannotChange: Story = {
   args: { adjustsGain: false },
   play: async ({ canvas }) => {
     await expect(canvas.queryByText('Microphone gain')).toBeNull();
-    await expect(canvas.queryByText('Visualiser')).toBeNull();
     await expect(canvas.getByText(/^Volume changes/)).toBeVisible();
-  },
-};
-
-export const ChoosesTheBand: Story = {
-  args: { visualiser: { kind: 'orb', onChange: fn() } },
-  play: async ({ canvas, canvasElement, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: /^Visualiser/ }));
-    await opened(canvasElement).findAllByText('Band');
-    await userEvent.keyboard('{ArrowDown}{Enter}');
-    await expect(args.visualiser?.onChange).toHaveBeenCalledWith('band');
   },
 };

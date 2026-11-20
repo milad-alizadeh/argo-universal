@@ -1,11 +1,8 @@
 import type * as React from 'react';
-import { useEffect, useState } from 'react';
+import { createElement, useEffect, useState } from 'react';
 import type { ComposerVoice, ComposerVoiceMutes } from '#features/composer';
-import {
-  voiceLabel,
-  voicePlaceholder,
-  type VoiceStageViewProps,
-} from '#features/voice';
+import { VoiceEdgeBand, voicePlaceholder } from '#features/voice';
+import { syntheticVoiceAudio } from '../../../../mocks/voice/synthetic-voice-audio';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { idleSession } from './session-detail-view.mocks';
 
@@ -15,24 +12,21 @@ type RehearsedCall = 'none' | 'connecting' | 'connected';
 // How long the rehearsed call takes to connect, about as long as a Voice provider does.
 export const rehearsedConnectMilliseconds = 1800;
 
-const startedAt = '2026-11-18T10:00:00.000Z';
-
 const idleComposer = idleSession.composer;
 
-const stages: Record<RehearsedCall, VoiceStageViewProps | undefined> = {
-  none: undefined,
-  connecting: {
-    state: 'none',
-    label: voiceLabel({ orb: 'none', trouble: null, startedAt: null }, 0),
-  },
-  connected: {
-    state: 'listening',
-    label: voiceLabel(
-      { orb: 'listening', trouble: null, startedAt },
-      Date.parse(startedAt),
-    ),
-  },
-};
+// Sound with no microphone and no voice, so the band moves as it would on a call.
+const { spectrum } = syntheticVoiceAudio();
+
+const bandFor = (call: Exclude<RehearsedCall, 'none'>): React.ReactNode =>
+  createElement(VoiceEdgeBand, {
+    call: {
+      orb: call === 'connecting' ? 'none' : 'listening',
+      trouble: null,
+      microphoneMuted: false,
+    },
+    elapsed: '0:00',
+    spectrum,
+  });
 
 type Mutes = { microphone: boolean; speaker: boolean };
 
@@ -58,8 +52,13 @@ function voiceOf(rehearsal: Rehearsal): ComposerVoice {
   }
 
   return call === 'connecting'
-    ? { kind: 'connecting', onEnd }
-    : { kind: 'connected', onEnd, mutes: mutesOf(rehearsal) };
+    ? { kind: 'connecting', onEnd, edge: bandFor('connecting') }
+    : {
+        kind: 'connected',
+        onEnd,
+        mutes: mutesOf(rehearsal),
+        edge: bandFor('connected'),
+      };
 }
 
 // The call connects a moment after it starts, as the Server reports it; ending it first cancels that.
@@ -81,7 +80,7 @@ function useConnectAfterStart(
 
 /*
  * A Session page whose Voice call the person starts and ends with the Composer's own buttons: the voice button starts
- * it, it connects a moment later, and End takes it away, so the stage's entrance and exit can be watched.
+ * it, it connects a moment later, and End takes it away, so the band's entrance and exit can be watched.
  */
 export function VoiceCallRehearsal(): React.JSX.Element {
   const [call, setCall] = useState<RehearsedCall>('none');
@@ -94,7 +93,6 @@ export function VoiceCallRehearsal(): React.JSX.Element {
     <FramedSessionPreview
       state="open"
       {...idleSession}
-      stage={stages[call]}
       composer={{ ...idleComposer, placeholder, voice }}
     />
   );
