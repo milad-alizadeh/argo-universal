@@ -155,9 +155,6 @@ export const CloseInspector: Story = {
       ...selected,
     );
     await userEvent.click(canvas.getByRole('button', hideInspector));
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Toggle Workbench' }),
-    );
     await userEvent.click(await canvas.findByRole('button', subagentsEntry));
     await expect(canvas.getAllByRole('tab')).toHaveLength(2);
     await expect(canvas.getByRole('tab', subagentsTab)).toHaveAttribute(
