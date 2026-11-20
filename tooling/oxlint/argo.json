@@ -294,6 +294,20 @@
       "rules": { "argo/style-tokens": "off" }
     },
     {
+      // Colours that are data (ADR-0026, Colour as data): a light's, as a Plugin sends them to a Swatch, a Slider fill and a Fader.
+      "files": [
+        "packages/contracts/src/plugins/field-row.test.ts",
+        "packages/contracts/src/plugins/components/fader.test.ts",
+        "packages/kit/src/primitives/visual/swatch/swatch-fixtures.ts",
+        "packages/kit/src/primitives/controls/slider/slider-fixtures.ts",
+        "packages/kit/src/primitives/controls/fader/fader-fixtures.ts",
+        "packages/kit/src/primitives/fields/field-composed-row/field-composed-row-fixtures.ts",
+        "packages/client/src/lib/product/plugin-registry/plugin-field-row.test.stories.tsx",
+        "packages/client/src/lib/product/plugin-registry/plugin-fader.test.stories.tsx"
+      ],
+      "rules": { "argo/style-tokens": "off" }
+    },
+    {
       // Tracker label colours as GitHub sends them: a Plugin's data, which the Pill reads for its text and fill.
       "files": [
         "packages/kit/src/primitives/status/pill/pill-fixtures.ts",

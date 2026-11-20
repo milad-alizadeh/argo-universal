@@ -37,3 +37,16 @@ export const effortSlider = {
   step: 1,
   value: 2,
 } satisfies SliderFixture;
+
+// The fill is data, such as a light's colours; the label's words stand for its own value.
+export const solidFillSlider = {
+  ...speeds,
+  value: 1,
+  fill: ['#FFB45A'],
+} satisfies SliderFixture;
+
+export const gradientFillSlider = {
+  ...speeds,
+  value: 1.5,
+  fill: ['#FFB45A', '#FF4FA0', '#7A5CFF'],
+} satisfies SliderFixture;

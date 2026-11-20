@@ -1,3 +1,4 @@
+import { fieldRowComponents } from './field-row-components';
 import { listMediaComponents } from './list-media-components';
 import type { WireNode } from './wire';
 
@@ -12,7 +13,7 @@ export function acceptsSlots(node: WireNode, rules: SlotRules): boolean {
     validSlot(name, children, allowed),
   );
 
-  return valid && validMedia(node);
+  return valid && validMedia(node) && validRow(node);
 }
 
 export function acceptsChildren(
@@ -49,4 +50,17 @@ function validSlot(
   allowed: Map<string, readonly string[]>,
 ): boolean {
   return allowed.has(name) && acceptsChildren(children, allowed.get(name));
+}
+
+// A composed row's content stays within the row vocabulary at every depth.
+const rowComponents: ReadonlySet<string> = new Set(fieldRowComponents);
+
+function acceptsRowContent(node: WireNode): boolean {
+  return rowComponents.has(node.type) && node.children.every(acceptsRowContent);
+}
+
+function validRow(node: WireNode): boolean {
+  if (node.type !== 'FieldGroup.Row') return true;
+
+  return node.children.every(acceptsRowContent);
 }

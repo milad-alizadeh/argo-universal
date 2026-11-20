@@ -3,6 +3,7 @@ import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import {
   accessibilityLabel,
   accessibilityValue,
+  tint,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
@@ -37,22 +38,28 @@ function sliderRange(
   };
 }
 
-// Stock Compose semantics only take a content description, so TalkBack hears the name and readable value together.
-function sliderModifiers(
-  props: Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'>,
-): UniversalSliderProps['modifiers'] {
-  if (Platform.OS === 'android')
-    return [
-      semantics({
-        contentDescription: `${props.accessibilityLabel}, ${props.valueLabel}`,
-      }),
-    ];
+type Spoken = Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'>;
 
-  return [
-    accessibilityLabel(props.accessibilityLabel),
-    accessibilityValue(props.valueLabel),
-  ];
-}
+// Stock Compose semantics only take a content description, so TalkBack hears the name and readable value together.
+const composeModifiers = (props: Spoken): UniversalSliderProps['modifiers'] => [
+  semantics({
+    contentDescription: `${props.accessibilityLabel}, ${props.valueLabel}`,
+  }),
+];
+
+// SwiftUI's slider takes one colour, so a fill draws as its first stop (ADR-0026, Colour as data).
+const swiftModifiers = (
+  props: Spoken & Pick<SliderProps, 'fill'>,
+): UniversalSliderProps['modifiers'] => [
+  accessibilityLabel(props.accessibilityLabel),
+  accessibilityValue(props.valueLabel),
+  ...(props.fill?.slice(0, 1).map(tint) ?? []),
+];
+
+const sliderModifiers = (
+  props: Spoken & Pick<SliderProps, 'fill'>,
+): UniversalSliderProps['modifiers'] =>
+  Platform.OS === 'android' ? composeModifiers(props) : swiftModifiers(props);
 
 export type { SliderProps } from './slider-props';
 
