@@ -40,16 +40,30 @@ export async function startEngineTestHost(
   options: EngineTestOptions = {},
 ): Promise<EngineTestHost> {
   const { home, storage } = resolveTestStorage(options);
-  // Port 0 lets the Server bind a free port itself, so no other process can take it first.
-  const port = options.port ?? 0;
-  seedTestCommands(options, home, storage);
-
-  const engine = composeEngine(testEngineInput(options, home, port)).start();
+  const engine = composeTestEngine(options, home, storage);
 
   const stop = registerEngineCleanup(engine, storage);
   await waitFor(engine, (snapshot) => snapshot.matches({ live: 'running' }));
 
   return engineTestHost(readEngineTestHost(engine), home, stop);
+}
+
+// Storage opened for an Engine that never starts is removed at once; no cleanup is registered for it.
+function composeTestEngine(
+  options: EngineTestOptions,
+  home: string,
+  storage: TestStorage['storage'],
+): EngineActor {
+  try {
+    seedTestCommands(options, home, storage);
+    // Port 0 lets the Server bind a free port itself, so no other process can take it first.
+    const input = testEngineInput(options, home, options.port ?? 0);
+
+    return composeEngine(input).start();
+  } catch (error) {
+    storage?.remove();
+    throw error;
+  }
 }
 
 const engineTestHost = (
