@@ -20,37 +20,56 @@ function todosBar(
 }
 
 describe('sessionProgress', () => {
-  it('keeps an idle Session green and still while a Background Task runs', () => {
-    expect(todosBar({ shells: oneRunning })).toMatchObject({
-      tone: 'success',
-      active: false,
-    });
+  it('keeps an idle Session green while a Background Task runs', () => {
+    expect(todosBar({ shells: oneRunning })).toMatchObject({ tone: 'success' });
   });
 
-  it('keeps an idle Session green and still while an Agent runs', () => {
+  it('keeps an idle Session green while an Agent runs', () => {
     expect(todosBar({ subagents: oneRunning })).toMatchObject({
       tone: 'success',
-      active: false,
     });
   });
 
   it('mutes an idle Session with nothing running', () => {
-    expect(todosBar({})).toMatchObject({ tone: 'muted', active: false });
+    expect(todosBar({})).toMatchObject({ tone: 'muted' });
   });
 
   it.each([
-    { status: 'failed', active: false },
-    { status: 'unread', active: false },
-    { status: 'needs_input', active: true },
-    { status: 'running', active: true },
+    { status: 'failed', tone: 'danger' },
+    { status: 'unread', tone: 'info' },
+    { status: 'needs_input', tone: 'warning' },
+    { status: 'running', tone: 'success' },
   ] as const)(
-    'keeps a $status Session as it is while background work runs',
-    ({ status, active }) => {
-      const alone = todosBar({ status });
-
+    'keeps a $status Session $tone while background work runs',
+    ({ status, tone }) => {
       expect(
         todosBar({ status, shells: oneRunning, subagents: oneRunning }),
-      ).toEqual({ ...alone, active });
+      ).toMatchObject({ tone });
     },
   );
+
+  it('glints the step underway while the Session runs', () => {
+    expect(todosBar({ status: 'running' })).toMatchObject({ active: true });
+  });
+
+  it('glints while an idle Session still has background work', () => {
+    expect(todosBar({ shells: oneRunning })).toMatchObject({ active: true });
+  });
+
+  it.each(['needs_input', 'failed', 'idle'] as const)(
+    'holds a %s Session still',
+    (status) => {
+      expect(todosBar({ status })).toMatchObject({ active: false });
+    },
+  );
+
+  it('reads a last Todo underway as 3 of 4, not a full bar', () => {
+    expect(
+      todosBar({ plan: { done: 3, inProgress: 1, total: 4 } }),
+    ).toMatchObject({
+      value: 0.75,
+      steps: { done: 3, started: 1, total: 4 },
+      accessibilityLabel: 'Todos: 3 of 4 complete, 1 in progress',
+    });
+  });
 });

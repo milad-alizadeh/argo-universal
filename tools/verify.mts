@@ -8,8 +8,6 @@ import {
   changedPaths,
   checkChanged,
   checkFormat,
-  failedChecks,
-  joinOutput,
   parseJson,
   readableFiles,
   type Result,
@@ -56,10 +54,12 @@ function generatedChecks(): Result[] {
   ];
 }
 
+// Lint and the type checks run side by side; the others are quick.
 async function staticChecks(changed: string[]): Promise<Result[]> {
   const changedChecks = checkChanged(changed);
 
   return [checkFormat(changed), ...generatedChecks(), ...(await changedChecks)];
+}
 }
 
 type Listing =
@@ -98,7 +98,7 @@ function readListing(report: string): Listing {
 function announce({ files, dependents, narrowed }: TestScope): void {
   say(
     narrowed
-      ? `${dependents} test files depend on the change; running the ${files.length} in the folders you touched. CI runs the rest.`
+      ? `${dependents} test files depend on the change; running ${files.length} locally. CI covers the remaining ${dependents - files.length}.`
       : `running the ${files.length} test files that depend on the change.`,
   );
 }
@@ -106,9 +106,16 @@ function announce({ files, dependents, narrowed }: TestScope): void {
 function runScope(scope: TestScope): number {
   announce(scope);
 
-  if (scope.files.length === 0) return 0;
+  const plain = scope.files.filter((file) => !file.endsWith('.stories.tsx'));
+  const stories = scope.files.filter((file) => file.endsWith('.stories.tsx'));
 
-  const tests = spawnSync(vitest, ['run', ...scope.files], {
+  return runFiles(plain) || runFiles(stories);
+}
+
+function runFiles(files: string[]): number {
+  if (!files.length) return 0;
+
+  const tests = spawnSync(vitest, ['run', ...files], {
     cwd: root,
     stdio: 'inherit',
     env: { VITEST_MAX_WORKERS: LOCAL_WORKERS, ...process.env },
@@ -147,17 +154,15 @@ if (changed.length === 0) {
   process.exit(0);
 }
 
+// A static failure stops verify before its tests, which would only fail on the same cause.
 const failed = failedChecks(await staticChecks(changed));
 
-if (failed.length > 0) process.stderr.write(`${joinOutput(failed)}\n`);
-else recordPassed();
+if (failed.length > 0) {
+  process.stderr.write(`${joinOutput(failed)}\n`);
+  process.exit(failed[0]?.status ?? 1);
+}
 
-say(
-  failed.length === 0
-    ? 'format, lint and types pass.'
-    : 'format, lint or types failed.',
-);
+recordPassed();
+say('format, lint and types pass.');
 
-const testStatus = runTests(baseCommit, changed);
-
-process.exit(failed.length > 0 || testStatus !== 0 ? 1 : 0);
+process.exit(runTests(baseCommit, changed));

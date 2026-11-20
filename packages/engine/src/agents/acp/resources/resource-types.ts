@@ -82,6 +82,7 @@ export type EntryKind =
 
 export type AcpOpenInput = {
   sessionId?: string;
+  discardOnClose?: true;
   launch: DeferredAgentLaunch;
   opening: AcpSessionOpening;
   destination: AcpSessionDestination;

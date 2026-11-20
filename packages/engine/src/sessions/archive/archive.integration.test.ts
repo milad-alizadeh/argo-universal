@@ -6,7 +6,7 @@ import { listBranches, sessionBranch } from '@repo/git';
 import { describe, expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
-import { promptedArchiveSession, archiveProjectPath } from '#mocks/archive';
+import { archiveProjectPath, promptedArchiveSession } from '#mocks/archive';
 import { startEngineTestHost } from '#mocks/engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
@@ -16,12 +16,11 @@ const archiveUndoMs = 1500;
 
 describe('Session archive through the composed Engine', () => {
   it.each(['remove', 'undo'] as const)(
-    'keeps the branch and handles %s at the undo deadline',
+    'keeps the branch and handles %s during the Undo window',
     async (action) => {
       const host = await startAcpEngine({ steps: [], archiveUndoMs });
       const created = await promptedArchiveSession(host);
       writeFileSync(join(created.path, 'unsaved.txt'), 'uncommitted work');
-      const started = Date.now();
       await host.caller.session.archive({ sessionId: created.sessionId });
       expect(existsSync(created.path)).toBe(true);
       expect(
@@ -44,9 +43,6 @@ describe('Session archive through the composed Engine', () => {
       if (action === 'undo')
         await host.caller.session.unarchive({ sessionId: created.sessionId });
       expect(await closing).toBe('closed');
-      await setTimeout(
-        Math.max(0, archiveUndoMs + 200 - (Date.now() - started)),
-      );
       expect(existsSync(created.path)).toBe(action === 'undo');
       expect(
         (await host.caller.session.list({ archived: action === 'remove' }))

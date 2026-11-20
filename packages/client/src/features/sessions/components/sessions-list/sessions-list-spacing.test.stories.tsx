@@ -24,9 +24,18 @@ if (!selected) throw new Error('The spacing fixture needs a selected Session');
 const selectedTitle = selected.title;
 
 /*
- * Every row's content stays inside the row, whatever its status, Agent or title length. The age ends each row, so a
- * long title truncates instead of pushing it out.
+ * Every row's content stays inside the row, whatever its status, Agent or title length. A quiet Session's age ends its
+ * row, so a long title truncates instead of pushing it out.
  */
+// A working Session shows no time; a quiet one ends its title line on it.
+async function expectRowTime(row: HTMLElement, status: string): Promise<void> {
+  const time = expect(within(row).queryByText(/^(now|\d+[smhdw])$/));
+
+  await (status === 'running'
+    ? time.not.toBeInTheDocument()
+    : time.toBeVisible());
+}
+
 function rowsAt(args: typeof statusSessions, width: number): Story {
   return {
     args,
@@ -44,7 +53,7 @@ function rowsAt(args: typeof statusSessions, width: number): Story {
         await expect(title).toBeVisible();
         await expect(logo).toBeVisible();
         await expect(row.scrollWidth).toBeLessThanOrEqual(row.clientWidth + 1);
-        await expect(within(row).getByText(/^(now|\d+[smhdw])$/)).toBeVisible();
+        await expectRowTime(row, session.status);
       }
     },
   };

@@ -1,5 +1,4 @@
 import { existsSync } from 'node:fs';
-import { setTimeout } from 'node:timers/promises';
 import type {
   CloseSessionRequest,
   PromptRequest,
@@ -127,7 +126,7 @@ it('never removes the main Checkout during normal archive or restart, even when 
     .where(eq(session.id, created.sessionId))
     .run();
   await host.caller.session.archive({ sessionId: created.sessionId });
-  await setTimeout(700);
+  await host.caller.session.close({ sessionId: created.sessionId });
   expect(existsSync(created.path)).toBe(true);
   await expect(
     host.caller.session.unarchive({ sessionId: created.sessionId }),

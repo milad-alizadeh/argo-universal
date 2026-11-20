@@ -83,8 +83,6 @@ export interface ListRegion extends PaneSpan {
   folded: boolean;
   // The list's width while it shows, which its content keeps while it folds.
   openWidth: number;
-  // There is room to show the list.
-  available: boolean;
 }
 
 export interface WorkbenchRegion extends PaneSpan {

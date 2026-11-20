@@ -58,7 +58,7 @@ Two regions compete with the content column for width: the Sessions list and the
 
 **Opening another Session moves nothing.** A Session switch is a new page, not a pane toggle: the content column, the Workbench, the Inspector and the Sessions list take the new Session's places at once, as a resize does, including the changes its page makes as it mounts. Only the person's own toggles within a Session animate.
 
-**The Sessions list folds below 1440 with the Inspector open, and below 1072 without it.** Closing the Inspector frees 368px: its 352px panel and 16px gap. Opening the Inspector can auto-hide the Workbench; closing it restores the Workbench when enough room returns. Explicit Show or Hide intent survives these changes.
+**The Sessions list folds below 1440 with the Inspector open, and below 1072 without it.** Closing the Inspector frees 368px: its 352px panel and 16px gap. The sidebar toggle stays enabled while folded and can request that the list open when there is room. Opening the Inspector with its band toggle explicitly hides the Workbench. Opening it from a card can auto-hide the Workbench, which returns when enough room is available. Explicit Show or Hide intent survives resizing.
 
 The content floor is 688px: the Composer's 640px width and a 24px gutter on each side, unless a drag of the Inspector lowered it (see [The content column](#the-content-column)). Pane preferences change these thresholds. The sidebar and Inspector take priority over the Workbench.
 

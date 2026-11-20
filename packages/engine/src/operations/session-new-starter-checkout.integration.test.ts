@@ -1,5 +1,4 @@
 import { existsSync } from 'node:fs';
-import { setTimeout } from 'node:timers/promises';
 import { sessionBranch } from '@repo/git';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
@@ -92,7 +91,7 @@ it("archives a Session that borrowed its starter's worktree without removing it"
   });
 
   await journey.host.caller.session.archive({ sessionId: started.sessionId });
-  await setTimeout(archiveUndoMs + 500);
+  await journey.host.caller.session.close({ sessionId: started.sessionId });
 
   expect(existsSync(checkout.path)).toBe(true);
   expect(
