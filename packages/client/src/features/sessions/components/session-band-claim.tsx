@@ -5,18 +5,14 @@ import { SessionWorkbenchColumn } from './session-workbench';
 
 type Workbench = SessionHeaderProps['workbench'];
 
-/*
- * A Session's cards mount fresh, so another Session's cards take their height at once instead of folding or growing
- * from the last one's. A Session with no cards gives the band no Workbench: it is not drawn and the Frame lays the
- * page out as if it had none.
- */
+// A Session's cards mount fresh, so another Session's cards take their height at once instead of folding or growing from the last one's.
 const workbenchColumn = (
   workbench: Workbench,
   sessionId: string | undefined,
 ): ReactNode =>
-  workbench?.sections.length ? (
+  workbench && (
     <SessionWorkbenchColumn key={sessionId} sections={workbench.sections} />
-  ) : undefined;
+  );
 
 // Draws nothing itself. On a wide window the Session's overview claims the band; its title and menu are its Screen's header, which the kit draws there.
 export function SessionBandClaim({

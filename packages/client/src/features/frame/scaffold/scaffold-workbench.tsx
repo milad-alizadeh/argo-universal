@@ -66,17 +66,16 @@ type WorkbenchPlacement = Pick<ViewProps, 'style' | 'className'> & {
   motion: { offset: number; visible: boolean };
 };
 
-// The panel keeps a card's full width while it slides out, so its cards never reflow; only a page narrower than a card narrows it, so it never reaches under the Inspector.
+// The panel keeps its full width while it slides out, so its cards never reflow.
 function workbenchPlacement({
   workbench,
   measures,
 }: WorkbenchLayoutReads): WorkbenchPlacement {
   const { offset } = workbench;
-  const width = workbench.width || measures.workbenchWidth;
 
   return {
     className: 'absolute bottom-frame-inset',
-    style: { left: offset, width, top: 0 },
+    style: { left: offset, width: measures.workbenchWidth, top: 0 },
     motion: {
       offset,
       visible: workbench.width > 0,
