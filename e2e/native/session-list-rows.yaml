@@ -22,4 +22,3 @@ name: The Sessions list draws its Project and scrolls its rows
       - scrollUntilVisible:
           element: "^Build the settings screen$"
           direction: DOWN
-      - assertVisible: "^Running the tests$"

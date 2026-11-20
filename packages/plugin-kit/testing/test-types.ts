@@ -46,6 +46,7 @@ export interface PluginTestOptions {
   // Folders containing external executable fixtures, prepended only for this runtime.
   path?: string[];
   clockStart?: number;
+  tracePluginCalls?: boolean;
   network?: PluginNetwork;
   // Stands in for the browser `argo.oauth.await` opens: it is handed the authorize URL.
   openBrowser?: (url: string) => Promise<void>;
@@ -74,8 +75,8 @@ export interface PluginTestOptions {
 }
 
 // What a test says `argo.sessions.get` answers for one Session; `idleFor` may be left out.
-export type TestSession = Omit<PluginSessionInfo, 'idleFor'> &
-  Partial<Pick<PluginSessionInfo, 'idleFor'>>;
+export type TestSession = Omit<PluginSessionInfo, 'idleFor' | 'archived'> &
+  Partial<Pick<PluginSessionInfo, 'idleFor' | 'archived'>>;
 
 // The App an items Slot list is asked from; it decides how many items show before "+N".
 type SlotItemsOptions = {

@@ -91,6 +91,14 @@ it('lets a manifest declare add-only Slots', () => {
   expect(manifestWith({ slots }).data?.contributes.slots).toEqual(slots);
 });
 
+it('drops the retired Activity line Slot from a manifest, so its Plugin still loads', () => {
+  const slots = ['argo/session/activity/v1', sessionRowSlotId];
+
+  expect(manifestWith({ slots }).data?.contributes.slots).toEqual([
+    sessionRowSlotId,
+  ]);
+});
+
 it('refuses a Replaceable Slot among a manifest Slots', () => {
   expect(manifestWith({ slots: [toolCallSlotId] }).success).toBe(false);
 });

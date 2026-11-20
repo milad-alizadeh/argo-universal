@@ -46,29 +46,22 @@ describe('the answers a Sessions list keeps', () => {
 
   it('redraws only the rows whose answers changed', () => {
     const draw = vi.fn<DrawFromSent<string>>((items) => JSON.stringify(items));
-    const lines = noKeptAnswers;
 
     const before = redrawnRows(
       noRows,
-      {
-        items: new Map([
-          ['a', answer('1')],
-          ['b', answer('2')],
-        ]),
-        lines,
-      },
+      new Map([
+        ['a', answer('1')],
+        ['b', answer('2')],
+      ]),
       draw,
     );
 
     const after = redrawnRows(
       before,
-      {
-        items: new Map([
-          ['a', answer('1')],
-          ['b', answer('3')],
-        ]),
-        lines,
-      },
+      new Map([
+        ['a', answer('1')],
+        ['b', answer('3')],
+      ]),
       draw,
     );
 
@@ -78,11 +71,7 @@ describe('the answers a Sessions list keeps', () => {
   });
 
   it('leaves out a row with nothing to draw', () => {
-    const rows = redrawnRows(
-      noRows,
-      { items: new Map([['a', undefined]]), lines: noKeptAnswers },
-      () => {},
-    );
+    const rows = redrawnRows(noRows, new Map([['a', undefined]]), () => {});
 
     expect(cachedRows(rows).has('a')).toBe(false);
   });

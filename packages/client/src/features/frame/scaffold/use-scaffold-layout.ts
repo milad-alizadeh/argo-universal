@@ -19,6 +19,10 @@ import {
 } from './use-preferred-widths';
 import { useScaffoldMotion } from './use-scaffold-motion';
 import { useSidebarIntent, type SidebarIntent } from './use-sidebar-intent';
+import {
+  useWorkbenchPopover,
+  type WorkbenchPopover,
+} from './use-workbench-popover';
 
 interface WindowWidth {
   width: number;
@@ -33,6 +37,7 @@ export interface ScaffoldLayout extends FrameLayout, WindowWidth {
   setPreferredListWidth: PreferredWidths['setPreferredListWidth'];
   setInspectorWidth: PreferredWidths['setInspectorWidth'];
   requestSidebar: SidebarIntent['requestSidebar'];
+  setWorkbenchPopover: WorkbenchPopover['setWorkbenchPopover'];
   motion: FrameMotion;
   setResizing: (resizing: boolean) => void;
 }
@@ -88,7 +93,8 @@ function useWindowWidth(): WindowWidth {
   };
 }
 
-interface ScaffoldSizing extends PreferredWidths, SidebarIntent {
+interface ScaffoldSizing
+  extends PreferredWidths, SidebarIntent, WorkbenchPopover {
   measures: FrameMeasures;
   bandLeading: BandLeading;
 }
@@ -102,6 +108,7 @@ function useScaffoldSizing(scaffold: ScaffoldProps): ScaffoldSizing {
     measures,
     ...usePreferredWidths(measures, scaffold),
     ...useSidebarIntent(scaffold),
+    ...useWorkbenchPopover(scaffold),
   };
 }
 
@@ -121,6 +128,10 @@ export function useScaffoldLayout(scaffold: ScaffoldProps): ScaffoldLayout {
   const sizing = useScaffoldSizing(scaffold);
   const windowWidth = useWindowWidth();
   const layout = layoutOf(scaffold, sizing, windowWidth.width);
+
+  // A page that holds the Workbench closes the popover, so a narrower one later starts with it closed, as Codex's does.
+  if (sizing.workbenchPopover && layout.workbench.fits)
+    sizing.setWorkbenchPopover(false);
 
   return {
     ...sizing,

@@ -18,7 +18,6 @@ import {
   longPluginItemsCompactSession,
   moreIssue,
   moreIssueItem,
-  pluginActivitySession,
   pluginItemsCompactSession,
   pluginItemsSession,
   previewItem,
@@ -32,6 +31,18 @@ const meta = { ...sessionRowTestMeta, title: 'Tests/Sessions/SessionRow' };
 export default meta;
 
 export const Running = running;
+
+// A Regular row draws the title and its status, never the Session's activity.
+export const NoActivity: Story = {
+  args: pluginItemsSession,
+  play: async ({ canvas }) => {
+    await settleLayout('phone');
+    await expect(canvas.getByText(pluginItemsSession.session.title)).toBeVisible();
+    await expect(
+      canvas.queryByText(pluginItemsSession.session.activity),
+    ).not.toBeInTheDocument();
+  },
+};
 
 // A screen reader reads a row through its press target's name, so the name carries what the row's lanes only draw.
 const archivedName = { name: /, Archived$/ };
@@ -165,23 +176,6 @@ function moreItems(width: number): Story {
 export const MorePluginItemsPhone = moreItems(layoutWidths.phone);
 
 export const MorePluginItemsWide = moreItems(layoutWidths.wide);
-
-// The chosen Plugin's line takes the place of Argo's; the status and title stay Argo's.
-export const PluginActivityLine: Story = {
-  args: pluginActivitySession,
-  play: async ({ canvas }) => {
-    await settleLayout('phone');
-    await expect(
-      canvas.getByText(pluginActivitySession.plugins.activity.text),
-    ).toBeVisible();
-    await expect(
-      canvas.queryByText(pluginActivitySession.session.activity),
-    ).not.toBeInTheDocument();
-    await expect(
-      canvas.getByRole('button', rowName(pluginActivitySession.session)),
-    ).toBeVisible();
-  },
-};
 
 // A Compact row draws one item; the rest join "+N".
 export const PluginItemsCompact: Story = {

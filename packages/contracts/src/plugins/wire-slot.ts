@@ -24,8 +24,6 @@ export {
   replaceableSlots,
   messageSlotId,
   projectDetailsSlotId,
-  sessionActivitySlotId,
-  SessionActivityItem,
   sessionBarSlotId,
   sessionChangesSlotId,
   sessionRowSlotId,

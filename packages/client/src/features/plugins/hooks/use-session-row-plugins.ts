@@ -11,8 +11,8 @@ import { useSlotChoices } from '#features/settings';
 import {
   cachedRows,
   type DrawFromSent,
+  type KeptAnswers,
   keptAnswers,
-  type KeptRowAnswers,
   noKeptAnswers,
   redrawnRows,
   type RowCache,
@@ -24,16 +24,15 @@ import { usePluginLookup } from './use-plugin-names';
 import {
   type RowContexts,
   type RowSession,
-  type RowSnapshots,
   useKeyed,
-  useRowSnapshots,
+  useRowSnapshot,
 } from './use-session-row-answers';
 
 const bySessionId = (a: RowSession, b: RowSession): number =>
   a.sessionId.localeCompare(b.sessionId);
 
 /*
- * The drawn rows' Sessions for one batched call per Slot, in one order whatever order the rows take, so a row moving
+ * The drawn rows' Sessions for one batched call, in one order whatever order the rows take, so a row moving
  * up asks nothing again; one call names at most `slotItemsListLimit` of them.
  */
 function useWindowContexts(
@@ -71,7 +70,7 @@ function useFolded<Input, Value>(
   return next.value;
 }
 
-const useKept = (snapshot: RowSnapshot): KeptRowAnswers['items'] =>
+const useKept = (snapshot: RowSnapshot): KeptAnswers =>
   useFolded(snapshot, keptAnswers, noKeptAnswers);
 
 // This Device's choices and the Plugins' names: a change to either redraws every row.
@@ -94,24 +93,23 @@ const noDrawing: Drawing = { draw: drawNothing, cache: new Map() };
 
 const redraw = (
   held: Drawing,
-  input: KeptRowAnswers & Pick<Drawing, 'draw'>,
+  input: { kept: KeptAnswers } & Pick<Drawing, 'draw'>,
 ): Drawing => ({
   draw: input.draw,
   cache: redrawnRows(
     held.draw === input.draw ? held.cache : noDrawing.cache,
-    input,
+    input.kept,
     input.draw,
   ),
 });
 
 // Each Session's row content, the same object until that Session's answers, the choices or the Plugins' names change.
 function useRows(
-  snapshots: RowSnapshots,
+  snapshot: RowSnapshot,
 ): ReadonlyMap<string, SessionRowPlugins> {
-  const items = useKept(snapshots.items);
-  const lines = useKept(snapshots.lines);
+  const kept = useKept(snapshot);
   const draw = useDraw();
-  const input = useMemo(() => ({ items, lines, draw }), [items, lines, draw]);
+  const input = useMemo(() => ({ kept, draw }), [kept, draw]);
   const { cache } = useFolded(input, redraw, noDrawing);
 
   return useMemo(() => cachedRows(cache), [cache]);
@@ -127,8 +125,8 @@ export function useSessionRowPlugins(
   sessions: readonly RowSession[],
 ): RowPlugins {
   const { drawn, onRowsDrawn } = useDrawnSessions();
-  const snapshots = useRowSnapshots(useWindowContexts(sessions, drawn));
-  const rows = useRows(snapshots);
+  const snapshot = useRowSnapshot(useWindowContexts(sessions, drawn));
+  const rows = useRows(snapshot);
 
   return useMemo(() => ({ rows, onRowsDrawn }), [rows, onRowsDrawn]);
 }

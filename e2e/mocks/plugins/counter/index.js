@@ -100,7 +100,6 @@ export function register(argo) {
   defineCard(argo);
   argo.slots.register('argo/project/details/v1', projectRows);
   argo.slots.register('argo/session/row/v1', rowItems);
-  argo.slots.register('argo/session/activity/v1', activityLines);
   argo.slots.register('argo/session/bar/v1', barLines);
 }
 
@@ -124,9 +123,6 @@ const everySession =
 
 // One item on every Session row, which opens the Counter page.
 const rowItems = everySession({ text: 'Counter item', action: { path: '/' } });
-
-// An Activity line for every Session, shown only on a Device that picks Counter to write it.
-const activityLines = everySession({ text: 'Counter line' });
 
 // Every open Session's bar carries one line that opens the Counter page.
 const barLines = everySession({ text: 'Counter bar', action: { path: '/' } });

@@ -30,7 +30,7 @@ describe('withLiveHeader', () => {
     ]);
   });
 
-  // #1410: the Session row's activity line is the live header, so a settled group with the Turn still running must not draw a second, different line.
+  // #1410: a settled group with the Turn still running says the live header, so the Feed never draws a second, different line.
   it('gives a settled group the live header as its title while the Turn runs', () => {
     const settled: FeedViewItem = { ...openGroup, state: 'settled' };
 

@@ -9,7 +9,7 @@ type CountDeps = Pick<IssueDeps, 'getSession'> & {
 };
 
 /*
- * The Project's attachments, counted per Issue. A Session that has since gone is left out, as the Issue's own
+ * The Project's attachments, counted per Issue. A Session that has since gone or been archived is left out, as the Issue's own
  * page leaves it out, so a row never marks work its page does not list. Storage that cannot be read marks nothing.
  */
 export async function sessionCounts(
@@ -39,7 +39,8 @@ async function existingSessionIds(
 const exists = async (
   getSession: IssueDeps['getSession'],
   sessionId: string,
-): Promise<boolean> => (await getSession(sessionId).catch(() => null)) !== null;
+): Promise<boolean> =>
+  (await getSession(sessionId).catch(() => null))?.archived === false;
 
 function countByIssue(links: Pick<IssueLink, 'number'>[]): SessionCounts {
   const counts = new Map<number, number>();

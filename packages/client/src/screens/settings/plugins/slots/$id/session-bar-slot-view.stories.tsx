@@ -15,9 +15,7 @@ const meta = {
   args: {
     settings: fixtureSessionBarSlot,
     plugins: { status: 'loaded', plugins: slotPlugins },
-    owner: null,
     onShownChange: action('show on the Session bar'),
-    onOwnerChange: action('owner'),
     onBack: action('back'),
   },
 } satisfies Meta<typeof SlotDetailView>;

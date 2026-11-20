@@ -32,7 +32,6 @@ const read = (item: Change): ReadItem<Change> => ({
 const reading = (...items: Change[]): SlotReading<Change> => ({
   items: items.map(read),
   overflow: [],
-  owner: undefined,
 });
 
 describe('sessionPullRequests', () => {

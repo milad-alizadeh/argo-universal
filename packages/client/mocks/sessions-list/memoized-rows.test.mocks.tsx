@@ -52,11 +52,11 @@ export const memoizedRows: Story = {
         selectedSessionId: selectableSessionId,
         sessions: renderingSessions.map((session) =>
           session.sessionId === 'memo-updated'
-            ? { ...session, activity: 'Session activity updated' }
+            ? { ...session, title: 'Session title updated' }
             : session,
         ),
       });
-      await canvas.findByText('Session activity updated');
+      await canvas.findByText('Session title updated');
       await expect(
         canvas.getByRole('button', { name: unchangedSessionLabel }),
       ).toBe(unchanged);

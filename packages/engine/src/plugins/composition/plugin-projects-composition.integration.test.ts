@@ -1,13 +1,16 @@
 import { execFile } from 'node:child_process';
 import { basename } from 'node:path';
 import { promisify } from 'node:util';
-import { expect, it } from 'vitest';
+import { expect, it, onTestFinished, vi } from 'vitest';
 import { registeredProject } from '#mocks/probe-plugin';
 import { runProbe } from '#mocks/probe-run';
 
 const git = promisify(execFile);
 
 it('lets a Plugin list Project identities through the logged argo.projects API', async () => {
+  vi.stubEnv('ARGO_PLUGIN_TRACE', '1');
+  onTestFinished((): void => void vi.unstubAllEnvs());
+
   const projectPath = await registeredProject();
   const originUrl = 'git@github.com:fixture/issue-tracker.git';
 

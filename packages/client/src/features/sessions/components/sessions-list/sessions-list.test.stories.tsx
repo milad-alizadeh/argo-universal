@@ -35,7 +35,7 @@ export default meta;
 
 export const MemoizedRows: Story = {
   ...memoizedRows,
-  name: 'Controlled selection and activity',
+  name: 'Controlled selection and updates',
 };
 
 export const ProjectActions: Story = {

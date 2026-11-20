@@ -107,8 +107,8 @@ export const LiveHeaderTitle: Story = {
 const creatingConfig = 'Creating empty config';
 
 /*
- * The Session row's activity line is the live header, so a group whose Tool calls
- * have settled while the Turn runs says the same line rather than its summary (#1410).
+ * A group whose Tool calls have settled while the Turn runs says the live header
+ * rather than its summary, so the Feed never shows two different lines (#1410).
  */
 export const SettledGroupLiveHeader: Story = {
   args: {

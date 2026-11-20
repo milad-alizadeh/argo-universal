@@ -1,7 +1,4 @@
-import {
-  sessionActivitySlotId,
-  sessionRowSlotId,
-} from '@repo/contracts/plugins/wire';
+import { sessionRowSlotId } from '@repo/contracts/plugins/wire';
 import type { SessionRowPlugins } from '#features/sessions';
 import {
   type SlotChoices,
@@ -14,23 +11,14 @@ import { itemsSlotEntry, type PluginLookup, readSlotItems } from './slot-items';
 
 const rowSlot = itemsSlotEntry(sessionRowSlotId);
 
-const activitySlot = itemsSlotEntry(sessionActivitySlotId);
-
-/*
- * What a row draws from the two Session row Slots as the Server sent them, through the one Slot reader. Both Slots
- * follow the Session rows page's choices, so turning a Plugin off there takes its items and its Activity line at once.
- */
+// What a row draws from the Session row Slot as the Server sent it, through the one Slot reader.
 export function rowDrawing(
   visibility: SlotVisibility,
   lookup: PluginLookup,
 ): DrawFromSent<SessionRowPlugins> {
   const reader = { visibility, lookup };
 
-  return (items, lines) =>
-    sessionRowPlugins(
-      readSlotItems(rowSlot, items, reader),
-      readSlotItems(activitySlot, lines, reader),
-    );
+  return (items) => sessionRowPlugins(readSlotItems(rowSlot, items, reader));
 }
 
 // How every row draws under this Device's choices and the Plugins' names.

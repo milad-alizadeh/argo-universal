@@ -1,13 +1,7 @@
 import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
 import type { SlotItemsInput } from '@repo/contracts/plugins/wire';
 import type { PluginClock } from '../clock';
-import type {
-  Caller,
-  CallOutcome,
-  Ended,
-  KindCalls,
-  WorkerCalls,
-} from '../runtime/worker-calls';
+import type { Caller, KindCalls, WorkerCalls } from '../runtime/worker-calls';
 import { forget } from './forget-items';
 import {
   itemsLeftOut,
@@ -15,31 +9,19 @@ import {
   leftOut,
   type ItemsAnswer,
   type Reply,
-  type SlotWorker,
 } from './kept-items';
 import { LastGoodItems } from './last-good-items';
+import {
+  landedItems,
+  landingOf,
+  replyOf,
+  slotItemsLateLimitMs,
+  within,
+  type Landing,
+} from './late-items';
 import { SlotItemChanges } from './slot-item-changes';
 import { refreshFor, type Shown, type SlotRefresh } from './slot-refresh';
-
-// How long one batched call may take before its Plugin is left out of that answer.
-const slotItemsLimitMs = 2000;
-
-// A Plugin that is not running, or stops mid-call, is left out as not running.
-const endedReason: Record<Ended, Reply> = {
-  notRunning: leftOut(itemsLeftOut.notRunning),
-  stopped: leftOut(itemsLeftOut.notRunning),
-  late: leftOut(itemsLeftOut.late),
-};
-
-function replyOf(outcome: CallOutcome<SlotCall>): Reply {
-  if ('ended' in outcome) return endedReason[outcome.ended];
-
-  const answer = outcome.answered;
-
-  return answer.action === 'items'
-    ? { ok: true, items: answer.items }
-    : leftOut(itemsLeftOut.threw);
-}
+import type { SlotWorker } from './slot-worker';
 
 /*
  * The runtime side of items Slots (ADR-0035): one batched call per Plugin and list, answers kept per
@@ -56,13 +38,13 @@ export class PluginSlotItems {
 
   constructor(
     private readonly workers: WorkerCalls,
-    clock: PluginClock,
+    private readonly clock: PluginClock,
     data: Parameters<typeof refreshFor>[1]['data'],
   ) {
     this.refresh = refreshFor(workers, { clock, data, items: this });
     this.calls = workers.kind({
       event: (id, input) => ({ type: 'slotItems', id, input }),
-      limitMs: slotItemsLimitMs,
+      limitMs: slotItemsLateLimitMs,
       result: replyOf,
     });
     workers.watch((pluginId) => this.generationChanged(pluginId));
@@ -114,13 +96,36 @@ export class PluginSlotItems {
     const { epoch } = worker;
 
     const answer = await keptAnswer(worker, input, (missing) =>
-      this.calls.call(pluginId, missing),
+      this.ask(pluginId, worker, missing),
     );
 
     if (answer.ok && worker.epoch === epoch)
       this.lastGood.record(pluginId, input, answer.items);
 
     return answer;
+  }
+
+  // The call's reply within the limit; one that lands later is kept, and the open lists ask again.
+  private ask(
+    pluginId: string,
+    worker: SlotWorker,
+    input: SlotItemsInput,
+  ): Promise<Reply> {
+    const landing = landingOf(worker, input);
+
+    return within(this.clock, this.calls.call(pluginId, input), (reply) =>
+      this.landed(pluginId, landing, reply),
+    );
+  }
+
+  // A late call came to an end with no change since: open lists ask again, drawing its items if it answered.
+  private landed(pluginId: string, landing: Landing, reply: Reply): void {
+    const answer = landedItems(landing, reply);
+
+    if (!answer) return;
+
+    if (answer.ok) this.lastGood.record(pluginId, landing.input, answer.items);
+    this.changes.bump();
   }
 
   private worker(pluginId: string, generation: number): SlotWorker {
