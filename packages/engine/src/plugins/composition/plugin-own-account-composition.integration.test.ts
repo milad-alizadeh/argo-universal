@@ -23,7 +23,9 @@ const kitImports = `
     import { jsx } from '@argo/plugin-kit/jsx-runtime';`;
 
 // The provider adds one Account for api.github.com and lends it, as the fixture provider does.
-const providerSource = (labels: string[]): string => `${kitImports}${borrowingPage}
+const providerSource = (
+  labels: string[],
+): string => `${kitImports}${borrowingPage}
     export async function register(argo) {
       argo.pages.define('/', page(argo));
       for (const label of ${JSON.stringify(labels)}) {

@@ -3,12 +3,7 @@ import { expect, it } from 'vitest';
 import { homeWords } from './home-words';
 import { authorizeUrl, hueHost } from './hue';
 import { applicationKey, bridgeId, hueApp } from './mocks/hue-data';
-import {
-  firstAuthorize,
-  homePage,
-  signIn,
-  startHome,
-} from './mocks/journey';
+import { firstAuthorize, homePage, signIn, startHome } from './mocks/journey';
 
 serialiseOnOAuthPort();
 
@@ -92,7 +87,9 @@ it(
     await page.draw();
 
     expect(home.opened).toEqual([]);
-    expect(page.findText('This Plugin has no OAuth client ID yet.')).toBeDefined();
+    expect(
+      page.findText('This Plugin has no OAuth client ID yet.'),
+    ).toBeDefined();
   },
   timeoutMs,
 );

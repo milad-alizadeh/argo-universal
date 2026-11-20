@@ -28,7 +28,10 @@ const keyIn = (answer: Json | undefined): string | null =>
 const refusalIn = (answer: Json | undefined): string =>
   text(at(firstResult(answer), 'error', 'description')) ?? noKey;
 
-async function keepKey(argo: HueCalls, answer: Json | undefined): Promise<void> {
+async function keepKey(
+  argo: HueCalls,
+  answer: Json | undefined,
+): Promise<void> {
   const key = keyIn(answer);
 
   if (!key) throw new Error(refusalIn(answer));

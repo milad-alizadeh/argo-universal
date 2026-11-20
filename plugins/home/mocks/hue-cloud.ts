@@ -31,7 +31,8 @@ function token(cloud: HueCloud, request: FixtureRequest): FixtureAnswer {
 
   cloud.forms.push(form);
 
-  if (form.get('code') !== grantedCode) return json({ error: 'invalid_grant' }, 400);
+  if (form.get('code') !== grantedCode)
+    return json({ error: 'invalid_grant' }, 400);
 
   if (form.get('client_secret') !== hueApp.secret)
     return json({ error: 'invalid_client' }, 401);

@@ -32,7 +32,9 @@ function switchOf(kind: Switchable, json: Json): Switch | null {
 // The ids a resource links to of one type, such as a room's devices.
 const linked = (json: Json, key: string, rtype: string): string[] =>
   list(at(json, key))
-    .flatMap((link) => (at(link, 'rtype') === rtype ? [text(at(link, 'rid'))] : []))
+    .flatMap((link) =>
+      at(link, 'rtype') === rtype ? [text(at(link, 'rid'))] : [],
+    )
     .filter(present);
 
 type Index = { byDevice: Map<string, Switch>; groups: Map<string, Switch> };
@@ -79,10 +81,14 @@ function roomOf(json: Json, index: Index): Room | null {
 export function householdOf(lists: HueLists): Household {
   const index = indexOf(lists);
   const rooms = lists.rooms.map((json) => roomOf(json, index)).filter(present);
-  const inRooms = new Set(rooms.flatMap((room) => room.lights.map((light) => light.id)));
+  const inRooms = new Set(
+    rooms.flatMap((room) => room.lights.map((light) => light.id)),
+  );
 
   return {
     rooms,
-    others: [...index.byDevice.values()].filter((light) => !inRooms.has(light.id)),
+    others: [...index.byDevice.values()].filter(
+      (light) => !inRooms.has(light.id),
+    ),
   };
 }

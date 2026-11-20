@@ -15,7 +15,8 @@ import {
  * that switches one or sets its brightness. Every call needs the Account's Bearer token and the Bridge's application
  * key. The paths and bodies are the widely cited ones, UNCONFIRMED against Hue's login-walled reference.
  */
-const clipPath = /^\/route\/clip\/v2\/resource\/(light|room|grouped_light)(?:\/([^/]+))?$/;
+const clipPath =
+  /^\/route\/clip\/v2\/resource\/(light|room|grouped_light)(?:\/([^/]+))?$/;
 
 const answer = <Data>(data: Data, status = 200): FixtureAnswer => ({
   status,
@@ -67,7 +68,11 @@ function changed(
 ): FixtureAnswer {
   const target = targetOf(home, found);
 
-  if (!target) return { status: 404, json: { errors: [{ description: 'Not found' }], data: [] } };
+  if (!target)
+    return {
+      status: 404,
+      json: { errors: [{ description: 'Not found' }], data: [] },
+    };
   applied(target, JSON.parse(request.body));
 
   return answer([{ rid: found.id, rtype: found.kind }]);

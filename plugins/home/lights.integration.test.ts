@@ -1,8 +1,8 @@
 import { serialiseOnOAuthPort } from '@argo/plugin-kit/testing/oauth-port';
 import { expect, it } from 'vitest';
 import { homeWords } from './home-words';
-import { applicationKey } from './mocks/hue-data';
 import { shown, sliderOf, toggleOf } from './mocks/controls';
+import { applicationKey } from './mocks/hue-data';
 import { connected, homePage, startHome } from './mocks/journey';
 
 serialiseOnOAuthPort();
@@ -26,7 +26,11 @@ it(
     expect(shown(page, toggleOf(ceiling))).toBe('false');
     expect(shown(page, sliderOf('light-porch'))).toBe('100');
     expect(shown(page, toggleOf('group-office'))).toBe('true');
-    expect(page.find(sliderOf(desk)).props).toMatchObject({ min: 1, max: 100, valueLabel: '80%' });
+    expect(page.find(sliderOf(desk)).props).toMatchObject({
+      min: 1,
+      max: 100,
+      valueLabel: '80%',
+    });
   },
   timeoutMs,
 );
@@ -40,7 +44,11 @@ it(
     await page.act(toggleOf(desk), 'onValueChange', false);
 
     expect(home.hue.puts()).toEqual([
-      { path: '/route/clip/v2/resource/light/light-desk', body: { on: { on: false } }, key: applicationKey },
+      {
+        path: '/route/clip/v2/resource/light/light-desk',
+        body: { on: { on: false } },
+        key: applicationKey,
+      },
     ]);
     expect(shown(page, toggleOf(desk))).toBe('false');
   },
@@ -57,8 +65,14 @@ it(
     await page.act(toggleOf('group-office'), 'onValueChange', false);
 
     expect(home.hue.puts().map(({ path, body }) => ({ path, body }))).toEqual([
-      { path: '/route/clip/v2/resource/light/light-ceiling', body: { dimming: { brightness: 25 } } },
-      { path: '/route/clip/v2/resource/grouped_light/group-office', body: { on: { on: false } } },
+      {
+        path: '/route/clip/v2/resource/light/light-ceiling',
+        body: { dimming: { brightness: 25 } },
+      },
+      {
+        path: '/route/clip/v2/resource/grouped_light/group-office',
+        body: { on: { on: false } },
+      },
     ]);
     expect(shown(page, sliderOf(ceiling))).toBe('25');
   },
@@ -72,7 +86,9 @@ it(
     const page = await connected(home);
     const [deskLamp] = home.hue.home.lights;
 
-    expect(await home.test.pages.draw({ path: '/', serverDevice: true })).toMatchObject({ every: 10_000 });
+    expect(
+      await home.test.pages.draw({ path: '/', serverDevice: true }),
+    ).toMatchObject({ every: 10_000 });
 
     if (deskLamp) deskLamp.on = false;
     await page.draw();
@@ -88,10 +104,16 @@ it(
     const home = await startHome();
 
     await connected(home);
-    home.hue.fail({ status: 503, json: { errors: [{ description: 'Bridge is offline' }], data: [] } });
+    home.hue.fail({
+      status: 503,
+      json: { errors: [{ description: 'Bridge is offline' }], data: [] },
+    });
     const page = await homePage(home);
 
-    expect(page.find(homeWords.failed).props).toMatchObject({ tone: 'danger', description: 'Bridge is offline' });
+    expect(page.find(homeWords.failed).props).toMatchObject({
+      tone: 'danger',
+      description: 'Bridge is offline',
+    });
     home.hue.heal();
     const again = await page.press(homeWords.retry);
 
@@ -106,7 +128,10 @@ it(
     const home = await startHome();
 
     await connected(home);
-    home.hue.fail({ status: 403, json: { errors: [{ description: 'unauthorized user' }], data: [] } });
+    home.hue.fail({
+      status: 403,
+      json: { errors: [{ description: 'unauthorized user' }], data: [] },
+    });
     const page = await homePage(home);
 
     expect(page.findText(homeWords.connect)).toBeDefined();

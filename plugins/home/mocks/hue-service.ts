@@ -4,8 +4,8 @@ import {
   type FixtureRequest,
   type FixtureServices,
 } from '@argo/plugin-kit/testing';
-import { cloudAnswer, type HueCloud } from './hue-cloud';
 import { clipAnswer } from './hue-clip';
+import { cloudAnswer, type HueCloud } from './hue-cloud';
 import { household, type HueHousehold } from './hue-data';
 
 /*
@@ -22,15 +22,21 @@ export type HueService = Pick<FixtureServices, 'network' | 'requests'> & {
   puts: () => { path: string; body: unknown; key: unknown }[];
 };
 
-type Held = { home: HueHousehold; cloud: HueCloud; failing: FixtureAnswer | null };
+type Held = {
+  home: HueHousehold;
+  cloud: HueCloud;
+  failing: FixtureAnswer | null;
+};
 
 const missing: FixtureAnswer = { status: 404, text: 'Not found' };
 
 const isClip = (request: FixtureRequest): boolean =>
   request.path.startsWith('/route/clip/');
 
-const failingFor = (held: Held, request: FixtureRequest): FixtureAnswer | null =>
-  isClip(request) ? held.failing : null;
+const failingFor = (
+  held: Held,
+  request: FixtureRequest,
+): FixtureAnswer | null => (isClip(request) ? held.failing : null);
 
 const serviceAnswer = (held: Held, request: FixtureRequest): FixtureAnswer =>
   cloudAnswer(held.cloud, request) ?? clipAnswer(held.home, request) ?? missing;

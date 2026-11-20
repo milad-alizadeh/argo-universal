@@ -24,12 +24,35 @@ export type HueHousehold = {
 
 export const household = (): HueHousehold => ({
   lights: [
-    { id: 'light-desk', device: 'device-desk', name: 'Desk lamp', on: true, brightness: 80 },
-    { id: 'light-ceiling', device: 'device-ceiling', name: 'Ceiling', on: false, brightness: 40 },
-    { id: 'light-porch', device: 'device-porch', name: 'Porch', on: true, brightness: 100 },
+    {
+      id: 'light-desk',
+      device: 'device-desk',
+      name: 'Desk lamp',
+      on: true,
+      brightness: 80,
+    },
+    {
+      id: 'light-ceiling',
+      device: 'device-ceiling',
+      name: 'Ceiling',
+      on: false,
+      brightness: 40,
+    },
+    {
+      id: 'light-porch',
+      device: 'device-porch',
+      name: 'Porch',
+      on: true,
+      brightness: 100,
+    },
   ],
   rooms: [
-    { id: 'room-office', name: 'Office', devices: ['device-desk', 'device-ceiling'], group: 'group-office' },
+    {
+      id: 'room-office',
+      name: 'Office',
+      devices: ['device-desk', 'device-ceiling'],
+      group: 'group-office',
+    },
   ],
   groups: [{ id: 'group-office', on: true, brightness: 60 }],
 });

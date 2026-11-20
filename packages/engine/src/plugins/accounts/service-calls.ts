@@ -19,7 +19,8 @@ export async function accountCall(
   if (input.action === 'add')
     return accounts.add(call.pluginId, input.host, input.label);
 
-  if (input.action === 'get') return accounts.get(input.host, call.projectId, call.pluginId);
+  if (input.action === 'get')
+    return accounts.get(input.host, call.projectId, call.pluginId);
 
   await providerCall(call, input);
 

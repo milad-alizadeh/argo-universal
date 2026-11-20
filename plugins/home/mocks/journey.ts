@@ -65,7 +65,9 @@ export async function signIn({ test }: HomeJourney): Promise<void> {
   const page = await test.pages.open({ path: '/sign-in', serverDevice: true });
 
   await page.press(`Sign in to ${homeWords.service}`);
-  expect(await clockUntilShown(test, page, { text: 'Connected', ...pace })).toBe(true);
+  expect(
+    await clockUntilShown(test, page, { text: 'Connected', ...pace }),
+  ).toBe(true);
 }
 
 // The authorize URL the browser was first sent to, as Hue receives it.

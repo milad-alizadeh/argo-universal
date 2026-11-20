@@ -22,8 +22,15 @@ import type { HomeData, Household } from './hue-model';
  */
 const connect = (to: PageTo): JSX.Element => (
   <Stack direction="column" gap={4}>
-    <EmptyState icon="lightbulb" title={homeWords.connect} description={homeWords.connectDescription} />
-    <Button label={homeWords.connectButton} onPress={to.run('connectBridge', {})} />
+    <EmptyState
+      icon="lightbulb"
+      title={homeWords.connect}
+      description={homeWords.connectDescription}
+    />
+    <Button
+      label={homeWords.connectButton}
+      onPress={to.run('connectBridge', {})}
+    />
   </Stack>
 );
 
@@ -35,7 +42,11 @@ const failed = (reason: string, to: PageTo): JSX.Element => (
 );
 
 const empty = (
-  <EmptyState icon="lightbulb" title={homeWords.noLights} description={homeWords.noLightsDescription} />
+  <EmptyState
+    icon="lightbulb"
+    title={homeWords.noLights}
+    description={homeWords.noLightsDescription}
+  />
 );
 
 const isEmpty = ({ rooms, others }: Household): boolean =>
@@ -46,18 +57,24 @@ const lights = (household: Household, to: PageTo): JSX.Element =>
     empty
   ) : (
     <ScrollView>
-      <Stack direction="column" gap={6}>{householdSections(household, to)}</Stack>
+      <Stack direction="column" gap={6}>
+        {householdSections(household, to)}
+      </Stack>
     </ScrollView>
   );
 
 function body(data: HomeData, to: PageTo): JSX.Element {
   if (data.kind === 'connect') return connect(to);
 
-  return data.kind === 'failed' ? failed(data.reason, to) : lights(data.household, to);
+  return data.kind === 'failed'
+    ? failed(data.reason, to)
+    : lights(data.household, to);
 }
 
 export const homePage = (argo: HueCalls): GatedPage<PageState, HomeData> => ({
   every: pollMs,
   load: () => homeData(argo),
-  render: (data, to) => <Screen title={homeWords.title}>{body(data, to)}</Screen>,
+  render: (data, to) => (
+    <Screen title={homeWords.title}>{body(data, to)}</Screen>
+  ),
 });
