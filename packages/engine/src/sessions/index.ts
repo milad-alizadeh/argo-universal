@@ -101,3 +101,5 @@ export {
   type NativeStart,
   type NativeStartRequest,
 } from './prompt-sender';
+
+export { namedParam } from './named-param';

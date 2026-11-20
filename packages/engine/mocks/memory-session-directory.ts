@@ -6,6 +6,7 @@ export type MemorySession = DirectorySession & {
   opening?: true;
   running?: true;
   title?: string;
+  agent?: string;
 };
 
 const missing = (sessionId: string): TRPCError =>
@@ -28,6 +29,13 @@ const sessionFinder =
     return found;
   };
 
+// A Session still opening has no row yet, so reading it as a Session finds none.
+const opened = (found: MemorySession, sessionId: string): MemorySession => {
+  if (found.opening) throw missing(sessionId);
+
+  return found;
+};
+
 // The in-memory adapter for the Session directory: a fixed table of Sessions, read as the live directory reads them.
 export function memorySessionDirectory(
   sessions: Record<string, MemorySession>,
@@ -35,15 +43,10 @@ export function memorySessionDirectory(
   const find = sessionFinder(sessions);
 
   return {
-    session: (sessionId) => {
-      const found = find(sessionId);
-
-      if (found.opening) throw missing(sessionId);
-
-      return fields(found);
-    },
+    session: (sessionId) => fields(opened(find(sessionId), sessionId)),
     opening: (sessionId) => fields(find(sessionId)),
     title: (sessionId) => find(sessionId).title ?? sessionId,
+    agent: (sessionId) => find(sessionId).agent ?? 'mock',
     running: (callerId) => runningSessions(sessions, callerId),
   };
 }

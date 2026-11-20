@@ -5,6 +5,7 @@ import {
   type OperationRow,
 } from '@repo/contracts/operations';
 import { isAppOnly } from './app-only';
+import { OperationIndex } from './operation-index';
 
 /*
  * Described once as the Engine loads, so an Operation whose schema cannot be described fails at startup, not on every
@@ -18,20 +19,13 @@ const descriptions: readonly OperationDescription[] = Object.values(
   return isAppOnly(operation.id) ? [] : [description];
 });
 
-function matches(operation: OperationDescription, search: string): boolean {
-  return [operation.id, operation.label, ...operation.keywords].some((value) =>
-    value.toLowerCase().includes(search),
-  );
-}
+// Indexed once, as they are described.
+const index = new OperationIndex(descriptions);
 
 export function listOperations(filter: string): OperationRow[] {
-  return descriptions
-    .values()
-    .filter((operation) => matches(operation, filter.toLowerCase()))
-    .map((operation): OperationRow => ({
-      ...operation,
-      enabled: true,
-      disabledReason: null,
-    }))
-    .toArray();
+  return index.ranked(filter).map((operation): OperationRow => ({
+    ...operation,
+    enabled: true,
+    disabledReason: null,
+  }));
 }

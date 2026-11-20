@@ -6,12 +6,8 @@ import {
   type AccountChoice,
 } from '@repo/contracts/plugins/accounts';
 import type { Database } from '@repo/db';
-import {
-  pluginAccount,
-  pluginAccountGrant,
-  projectAccount,
-} from '@repo/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { pluginAccount, pluginAccountGrant } from '@repo/db/schema';
+import { eq } from 'drizzle-orm';
 import {
   writeDatabaseJobAndWaitForCommit,
   type WriterActorRef,
@@ -21,7 +17,14 @@ import {
   type SecretStore,
 } from '../services/secret-store';
 import { AccountJob, type AccountChange } from './account-job';
-import { requireAccount, requireChoice, sameAccount } from './account-records';
+import {
+  chosenAccount,
+  ownAccount,
+  projectChoice,
+  requireAccount,
+  requireChoice,
+  sameAccount,
+} from './account-records';
 
 type Dependencies = {
   database: Database;
@@ -79,28 +82,21 @@ export class PluginAccounts {
     return account.id;
   }
 
-  async get(host: string, projectId?: string): Promise<PluginAccount | null> {
-    if (!projectId) return null;
-
+  // The Project's Account; with no Project, the one its own Plugin provides for the host (ADR-0036).
+  async get(
+    host: string,
+    projectId?: string,
+    pluginId?: string,
+  ): Promise<PluginAccount | null> {
     const accounts = this.list().filter((account) => account.host === host);
-    const chosen = this.choice(host, projectId);
+
+    if (!projectId) return ownAccount(accounts, pluginId);
+
+    const chosen = projectChoice(this.deps.database, { host, projectId });
 
     if (chosen) return chosenAccount(accounts, chosen.account);
 
     return this.chooseOnly(accounts, projectId);
-  }
-
-  private choice(host: string, projectId: string): AccountChoice | undefined {
-    return this.deps.database
-      .select()
-      .from(projectAccount)
-      .where(
-        and(
-          eq(projectAccount.projectId, projectId),
-          eq(projectAccount.host, host),
-        ),
-      )
-      .get();
   }
 
   private async chooseOnly(
@@ -173,9 +169,3 @@ export class PluginAccounts {
     );
   }
 }
-
-const chosenAccount = (
-  accounts: PluginAccount[],
-  id: string,
-): PluginAccount | null =>
-  accounts.find((account) => account.id === id) ?? null;

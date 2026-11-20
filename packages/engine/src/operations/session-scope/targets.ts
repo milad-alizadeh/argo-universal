@@ -50,11 +50,11 @@ const openingSessionParam = <Params extends { sessionId: string }>(
   params,
 });
 
-// A Session lists its own Project's Sessions unless it names another Project.
-const listedProject: TargetRule<OperationParams<'session.list'>> = (
-  params,
-  caller,
-) => {
+// A Session lists and starts Sessions in its own Project unless it names another Project.
+const callerProject = <Params extends { projectId?: string }>(
+  params: Params,
+  caller: SessionCaller,
+): Targeted<Params & { projectId: string }> => {
   const projectId = params.projectId ?? caller.projectId;
 
   return {
@@ -94,7 +94,7 @@ const targetRules = {
   'project.create': global,
   'project.update': projectParam,
   'project.listBranches': projectParam,
-  'session.list': listedProject,
+  'session.list': callerProject,
   'session.get': sessionParam,
   'session.feed': sessionParam,
   'session.changes': sessionParam,
@@ -102,12 +102,12 @@ const targetRules = {
   'session.listAgents': sessionParam,
   'session.listShells': sessionParam,
   'session.listBranches': sessionParam,
-  'session.new': projectParam,
+  'session.new': callerProject,
   'session.queue': sessionParam,
   'session.submit': sessionParam,
   'session.prompt': sessionParam,
   'session.cancel': sessionParam,
-  'session.rename': sessionParam,
+  'session.rename': callerSessionParam,
   'session.setConfigOption': sessionParam,
   'session.savePlan': sessionParam,
   'session.declareSubagentRole': callerSessionParam,

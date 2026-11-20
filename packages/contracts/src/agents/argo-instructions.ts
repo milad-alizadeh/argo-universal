@@ -1,3 +1,6 @@
+import { operationCatalog } from '../operations/catalog';
+import { todoOperationIds } from '../sessions/todos';
+
 // Argo instructions (ADR-0053): core's own prose for every Session's Agent, sent before any Plugin's, in this order.
 export type ArgoInstruction = { name: string; text: string };
 
@@ -24,7 +27,8 @@ const agents: ArgoInstruction = {
     'test to write or run tests, implement to write or change code, or general for anything else. ' +
     'Declare one role per subagent, in the order you spawn them; leave sessionId out. ' +
     'Argo draws that role for the Agent in the Feed and the Agents list. ' +
-    'When you start a Session with session.new, wait for its result: it may wait for the person to allow it. ' +
+    'To start a Session, run session.new with params {"prompt":[{"type":"text","text":"The task"}]}; it starts in this Project with your Agent. ' +
+    'Wait for its result: it may wait for the person to allow it. ' +
     'Never wrap it in a timeout and never retry it, because each retry asks the person again and starts another Session.',
 };
 
@@ -69,10 +73,21 @@ export const chosenArgoInstructions = (
     ? argoInstructions
     : argoInstructions.filter((instruction) => instruction !== todoList);
 
-// Each chosen Argo instruction under its name, as one block of Markdown.
+// The Operation catalog, first, so an Agent runs an Operation without discovery calls; the checklist's leave with its instruction.
+export const operationsSection = (
+  choices: ArgoInstructionChoices = { todoList: true },
+): string =>
+  `## Operations\n\n${operationCatalog({
+    hidden: new Set(choices.todoList ? [] : todoOperationIds),
+  })}`;
+
+// The catalog, then each chosen Argo instruction under its name, as one block of Markdown.
 export const argoInstructionsMarkdown = (
   choices: ArgoInstructionChoices = { todoList: true },
 ): string =>
-  chosenArgoInstructions(choices)
-    .map(({ name, text }) => `## ${name}\n\n${text}`)
-    .join('\n\n');
+  [
+    operationsSection(choices),
+    ...chosenArgoInstructions(choices).map(
+      ({ name, text }) => `## ${name}\n\n${text}`,
+    ),
+  ].join('\n\n');
