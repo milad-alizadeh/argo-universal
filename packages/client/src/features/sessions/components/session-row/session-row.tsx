@@ -13,12 +13,7 @@ import { CompactSessionRow } from './session-row-compact';
 import { regularEnds } from './session-row-ends';
 import { SessionMark } from './session-row-mark';
 import { sessionRowMenu } from './session-row-menu';
-import { sessionMetadata } from './session-row-metadata';
-import {
-  hasPluginItems,
-  PluginAccessories,
-  SessionRowPluginItems,
-} from './session-row-plugin-items';
+import { sessionMetaLine } from './session-row-meta-line';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
 import { sidebarDrawing } from './session-row-sidebar';
 import { sessionProgress } from './session-row-todos';
@@ -75,24 +70,9 @@ function RegularRow(props: CalledRow): React.JSX.Element {
       {...sidebarDrawing(props.session.status)}
       leading={<SessionMark {...props} />}
       {...regularEnds(props, identity.subtitle)}
-      meta={sessionMetadata({ ...props, selected: props.selected ?? false })}
-      metaAccessories={regularAccessories(props)}
+      metaAccessories={sessionMetaLine(props)}
       progress={sessionProgress(props.session)}
     />
-  );
-}
-
-// The Plugins' items and "+N" after Argo's meta items, each with its own press beside the row's.
-function regularAccessories({
-  plugins,
-  onOpenPluginPage,
-}: SessionRowProps): React.ReactNode {
-  if (!hasPluginItems(plugins)) return undefined;
-
-  return (
-    <PluginAccessories className="min-w-0 shrink flex-row items-center gap-2.5">
-      <SessionRowPluginItems {...{ plugins, onOpenPluginPage }} />
-    </PluginAccessories>
   );
 }
 

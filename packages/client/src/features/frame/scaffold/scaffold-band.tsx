@@ -29,7 +29,6 @@ function SidebarBandToggle({ layout }: SidebarToggleProps): ReactElement {
       {...bandToggleAppearance(shown)}
       icon="sidebar"
       accessibilityLabel={shown ? 'Hide sidebar' : 'Show sidebar'}
-      disabled={!shown && !layout.list.available}
       onPress={() => layout.requestSidebar(!shown)}
     />
   );

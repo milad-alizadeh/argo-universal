@@ -45,6 +45,7 @@ async function openBackground(
 
   return context.input.acp.resources.open({
     launch,
+    discardOnClose: true,
     opening: opening(context.checkout.path),
     destination: destination(output, controller),
     signal: controller.signal,

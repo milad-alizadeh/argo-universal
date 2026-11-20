@@ -29,7 +29,10 @@ import {
   selectedSession,
   unreadSession,
 } from './session-row-fixtures';
-import { pullRequestItemsSession } from './session-row-pull-request-fixtures';
+import {
+  crowdedMetaSession,
+  pullRequestItemsSession,
+} from './session-row-pull-request-fixtures';
 import {
   backgroundWorkSession,
   todosLeftSession,
@@ -170,6 +173,20 @@ export const PluginItems: Story = {
 
 // A pull request item draws the Change stage mark and tone the Workbench draws, not its Plugin's glyph.
 export const PullRequestItems: Story = { args: pullRequestItemsSession };
+
+// A sidebar row just too narrow for every item: Argo's that do not fit beside the Plugin items join "+N" whole.
+const crowdedMetaWidth = 280;
+
+export const CrowdedMeta: Story = {
+  args: crowdedMetaSession,
+  decorators: [
+    (Row) => (
+      <View style={{ width: crowdedMetaWidth }}>
+        <Row />
+      </View>
+    ),
+  ],
+};
 
 // The chosen Plugin writes the Activity line in place of Argo's.
 export const PluginActivity: Story = { args: pluginActivitySession };

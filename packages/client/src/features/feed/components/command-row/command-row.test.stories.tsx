@@ -1,6 +1,7 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { scriptedToolCall } from '../tool-call-description.mocks';
 import {
   completedCommand,
@@ -63,6 +64,25 @@ function completed(width: number): Story {
 export const CompletedPhone = completed(layoutWidths.phone);
 
 export const CompletedWide = completed(layoutWidths.wide);
+
+export const CommandLabelRespondsToHover: Story = {
+  play: async ({ canvas }) => {
+    await settleLayout(layoutWidths.wide);
+    const label = canvas.getByText(commandTitle, { exact: false });
+    const target = page.elementLocator(label);
+    await target.unhover();
+    const restingColor = getComputedStyle(label).color;
+
+    await target.hover();
+    await waitFor(() =>
+      expect(getComputedStyle(label).color).not.toBe(restingColor),
+    );
+    await target.unhover();
+    await waitFor(() =>
+      expect(getComputedStyle(label).color).toBe(restingColor),
+    );
+  },
+};
 
 function outputDisclosure(width: number): Story {
   return {
