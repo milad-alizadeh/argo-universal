@@ -6,3 +6,5 @@ export type FeedEndMotion = MaintainScrollAtEndOptions;
 export const followEnd = {
   on: { layout: true, footerLayout: true, dataChange: true, itemLayout: true },
 };
+
+export const followViewport = { on: { layout: true, footerLayout: true } };

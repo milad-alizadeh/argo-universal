@@ -260,4 +260,5 @@ hoistPattern:
   - "*"
 
 patchedDependencies:
+  "react-native@0.88.0": patches/react-native@0.88.0.patch
   "@legendapp/list@3.7.3": patches/@legendapp__list@3.7.3.patch
