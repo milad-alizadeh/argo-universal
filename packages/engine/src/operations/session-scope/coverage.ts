@@ -4,6 +4,12 @@ import type { SessionCaller } from '../session-tokens';
 import { inCallerProject, mayPrompt, ownsSession } from './rules';
 import type { ScopeTarget } from './targets';
 
+const ownTarget = new Set<OperationId>([
+  'session.archive',
+  'session.schedulePrompt',
+  'session.manageSchedule',
+]);
+
 type SessionTarget = Extract<ScopeTarget, { kind: 'session' }>;
 
 // Whether the caller's scope covers an Operation's target, read through the Session directory.
@@ -13,14 +19,14 @@ export class ScopeCoverage {
     caller: SessionCaller,
     { id, target }: { id: OperationId; target: ScopeTarget },
   ): boolean {
-    if (id === 'session.archive') return this.archivesOwn(caller, target);
+    if (ownTarget.has(id)) return this.targetsItself(caller, target);
 
     return id === 'app.open'
       ? this.opens(caller, target)
       : this.covered(caller, { id, target });
   }
 
-  private archivesOwn(caller: SessionCaller, target: ScopeTarget): boolean {
+  private targetsItself(caller: SessionCaller, target: ScopeTarget): boolean {
     return (
       target.kind === 'session' &&
       target.sessionId === caller.sessionId &&

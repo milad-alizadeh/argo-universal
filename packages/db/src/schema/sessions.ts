@@ -95,3 +95,19 @@ export const turn = snakeCase.table(
     index('turn_session_id_started_at_index').on(sessionId, startedAt),
   ],
 );
+
+export const sessionSchedule = snakeCase.table(
+  'session_schedule',
+  {
+    id: text().primaryKey(),
+    sessionId: text()
+      .notNull()
+      .references(() => session.id, { onDelete: 'cascade' }),
+    prompt: text().notNull(),
+    intervalSeconds: integer().notNull(),
+    nextAt: integer().notNull(),
+    lastQueuedAt: integer(),
+    paused: integer({ mode: 'boolean' }).notNull().default(false),
+  },
+  (row) => [index('session_schedule_due').on(row.paused, row.nextAt)],
+);

@@ -1,5 +1,4 @@
-import { z } from 'zod';
-import { SessionQueueInput, SessionSubmitInput } from '../sessions';
+import { SessionPromptInput, SessionPromptOutput } from '../sessions';
 import {
   SessionArchiveInput,
   SessionArchiveOutput,
@@ -9,7 +8,6 @@ import {
 import { SessionCancelInput, SessionCancelOutput } from '../sessions/cancel';
 import { SessionCloseInput, SessionCloseOutput } from '../sessions/close';
 import { SessionNewInput, SessionNewOutput } from '../sessions/new';
-import { SessionPromptInput, SessionPromptOutput } from '../sessions/prompt';
 import { SessionRenameInput, SessionRenameOutput } from '../sessions/rename';
 import {
   SessionSavePlanInput,
@@ -20,32 +18,15 @@ import {
   SessionSetConfigOptionOutput,
 } from '../sessions/set-config-option';
 import type { OperationDefinition } from './index';
+import { scheduleOperations } from './schedules';
 import { sessionAgentOperations } from './session-agent-operations';
+import { queueOperations } from './session-queue-operations';
 import { sessionRestartOperations } from './session-restart-operations';
 import { shellOperations } from './shells';
 
 export const sessionOperations = {
-  'session.submit': {
-    id: 'session.submit',
-    label: 'Submit Prompt',
-    icon: 'message',
-    description:
-      'Submit a user Prompt from an App, queuing it while the Session is busy or paused.',
-    params: SessionSubmitInput,
-    result: z.strictObject({}),
-    tier: 'act',
-    keywords: ['prompt', 'queue'],
-  },
-  'session.queue': {
-    id: 'session.queue',
-    label: 'Manage Prompt queue',
-    icon: 'checklist',
-    description: 'Append, edit, delete, reorder or resume Queued Prompts.',
-    params: SessionQueueInput,
-    result: z.strictObject({}),
-    tier: 'act',
-    keywords: ['queue', 'prompt'],
-  },
+  ...scheduleOperations,
+  ...queueOperations,
   'session.new': {
     id: 'session.new',
     label: 'Start Session',

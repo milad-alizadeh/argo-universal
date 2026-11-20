@@ -1,0 +1,57 @@
+import { z } from 'zod';
+import { SessionPromptInput } from '../sessions/prompt';
+import type { OperationDefinition } from './index';
+
+const scheduleTarget = SessionPromptInput.pick({ sessionId: true });
+
+const scheduleInput = SessionPromptInput.pick({
+  sessionId: true,
+  prompt: true,
+}).extend({
+  intervalSeconds: z.int().positive(),
+});
+
+const schedule = scheduleInput.extend({
+  id: z.string(),
+  nextAt: z.number(),
+  lastQueuedAt: z.number().nullable(),
+  paused: z.boolean(),
+});
+
+export const scheduleOperations = {
+  'session.schedulePrompt': {
+    id: 'session.schedulePrompt',
+    label: 'Schedule Prompt',
+    icon: 'message',
+    description:
+      'Create a Schedule that sends a Prompt to the Session every intervalSeconds.',
+    params: scheduleInput,
+    result: schedule,
+    tier: 'act',
+    keywords: ['schedule', 'recurring'],
+  },
+  'session.listSchedules': {
+    id: 'session.listSchedules',
+    label: 'List Schedules',
+    icon: 'checklist',
+    description:
+      'Read the Schedules of a Session and their last delivery times.',
+    params: scheduleTarget,
+    result: z.array(schedule),
+    tier: 'read',
+    keywords: ['schedule'],
+  },
+  'session.manageSchedule': {
+    id: 'session.manageSchedule',
+    label: 'Manage Schedule',
+    icon: 'checklist',
+    description: 'Pause, resume or delete a Schedule.',
+    params: scheduleTarget.extend({
+      id: z.string(),
+      action: z.enum(['pause', 'resume', 'delete']),
+    }),
+    result: z.strictObject({}),
+    tier: 'act',
+    keywords: ['schedule'],
+  },
+} as const satisfies Record<string, OperationDefinition>;

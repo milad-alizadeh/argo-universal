@@ -243,6 +243,39 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      schedulePrompt: publicProcedure
+        .input(operations['session.schedulePrompt'].params)
+        .output(operations['session.schedulePrompt'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.schedulePrompt',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      listSchedules: publicProcedure
+        .input(operations['session.listSchedules'].params)
+        .output(operations['session.listSchedules'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.listSchedules',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      manageSchedule: publicProcedure
+        .input(operations['session.manageSchedule'].params)
+        .output(operations['session.manageSchedule'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.manageSchedule',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       submit: publicProcedure
         .input(operations['session.submit'].params)
         .output(operations['session.submit'].result)

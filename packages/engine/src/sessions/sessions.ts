@@ -19,6 +19,7 @@ import {
 } from './operation-call';
 import type { NativeStart, NativeStartRequest } from './prompt-sender';
 import { createSessionRouter } from './router';
+import { Schedules } from './schedules';
 import {
   requireTaken,
   sendPrompt,
@@ -58,7 +59,12 @@ export class Sessions {
     const list = createSessionList(sources);
 
     this.sources = handlerSources(sources);
-    this.implementations = sessionOperationImplementations(this.sources, list);
+    const schedules = new Schedules(this.sources, sources.sessionCommandSignal);
+    this.implementations = sessionOperationImplementations(
+      this.sources,
+      list,
+      schedules,
+    );
     this.directory = createSessionDirectory(this.sources);
     this.work = createSessionWorkSource(this.sources);
     this.router = createSessionRouter({ sources: this.sources, list });
@@ -171,13 +177,6 @@ export class Sessions {
 
 // Handlers reach the open Sessions' actor and command signal only through `OpenSessions`.
 const handlerSources = (sources: SessionSources): SessionHandlerSources => ({
-  database: sources.database,
-  readSession: sources.readSession,
-  findFeed: sources.findFeed,
-  findWriter: sources.findWriter,
-  createId: sources.createId,
-  installedAgents: sources.installedAgents,
-  hooks: sources.hooks,
-  slashCommandsWaitMs: sources.slashCommandsWaitMs,
+  ...sources,
   open: new OpenSessions(sources),
 });

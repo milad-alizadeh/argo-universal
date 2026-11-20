@@ -72,3 +72,21 @@ it('never runs an Operation whose params fail to parse', async () => {
     (await scoped(operation('session.cancel', { sessionId: 7 }))).invoked,
   ).toEqual([]);
 });
+
+it.each([
+  ['caller', runs],
+  ['started', asks],
+  ['foreign', asks],
+])('scopes a Schedule in %s', async (sessionId, outcome) => {
+  expect(
+    (
+      await scoped(
+        operation('session.schedulePrompt', {
+          sessionId,
+          intervalSeconds: 60,
+          prompt: [{ type: 'text', text: 'Check the build' }],
+        }),
+      )
+    ).outcome,
+  ).toBe(outcome);
+});
