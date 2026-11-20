@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { faderDefaults } from '../../kit-tokens';
 import { colourStops } from '../colour-data';
 import { handler, stringLabel } from '../kit-component-props';
 
@@ -34,14 +35,14 @@ export const switchProps = z.object({
   disabled: z.boolean().optional().describe('Whether interaction is disabled.'),
 });
 
-export const faderOrientations = ['vertical', 'horizontal'] as const;
+const faderOrientations = ['vertical', 'horizontal'] as const;
 
 // A range control whose surface holds any kit content: the fill shows the value as a share of the range.
 export const faderProps = sliderProps.omit({ fill: true }).extend({
   orientation: z
     .enum(faderOrientations)
     .optional()
-    .meta({ default: 'vertical' })
+    .meta({ default: faderDefaults.orientation })
     .describe(
       'The direction the fill grows and a drag moves the value: `vertical` fills from the bottom up, `horizontal` from the leading edge.',
     ),

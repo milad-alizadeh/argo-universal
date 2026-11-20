@@ -8,7 +8,7 @@ const node = (
   children: WireNode[] = [],
 ): WireNode => ({ type, key: type, props, children, slots: {} });
 
-const fader = (props: WireNode['props'], children: WireNode[] = []) =>
+const fader = (props: WireNode['props'], children: WireNode[] = []): WireNode =>
   node(
     'Fader',
     {
