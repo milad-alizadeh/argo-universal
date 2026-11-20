@@ -38,26 +38,28 @@ function sliderRange(
   };
 }
 
+type Spoken = Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'>;
+
 // Stock Compose semantics only take a content description, so TalkBack hears the name and readable value together.
-function sliderModifiers(
-  props: Pick<SliderProps, 'accessibilityLabel' | 'valueLabel' | 'fill'>,
-): UniversalSliderProps['modifiers'] {
-  if (Platform.OS === 'android')
-    return [
-      semantics({
-        contentDescription: `${props.accessibilityLabel}, ${props.valueLabel}`,
-      }),
-    ];
+const composeModifiers = (props: Spoken): UniversalSliderProps['modifiers'] => [
+  semantics({
+    contentDescription: `${props.accessibilityLabel}, ${props.valueLabel}`,
+  }),
+];
 
-  // SwiftUI's slider takes one colour, so a fill draws as its first stop (ADR-0026, Colour as data).
-  const [first] = props.fill ?? [];
+// SwiftUI's slider takes one colour, so a fill draws as its first stop (ADR-0026, Colour as data).
+const swiftModifiers = (
+  props: Spoken & Pick<SliderProps, 'fill'>,
+): UniversalSliderProps['modifiers'] => [
+  accessibilityLabel(props.accessibilityLabel),
+  accessibilityValue(props.valueLabel),
+  ...(props.fill?.slice(0, 1).map(tint) ?? []),
+];
 
-  return [
-    accessibilityLabel(props.accessibilityLabel),
-    accessibilityValue(props.valueLabel),
-    ...(first === undefined ? [] : [tint(first)]),
-  ];
-}
+const sliderModifiers = (
+  props: Spoken & Pick<SliderProps, 'fill'>,
+): UniversalSliderProps['modifiers'] =>
+  Platform.OS === 'android' ? composeModifiers(props) : swiftModifiers(props);
 
 export type { SliderProps } from './slider-props';
 

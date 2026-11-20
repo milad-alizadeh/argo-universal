@@ -1,5 +1,5 @@
-import type { ReactElement, ReactNode } from 'react';
 import { Column } from '@expo/ui';
+import type { ReactElement, ReactNode } from 'react';
 import { RowContent } from './field-composed-row-content';
 import { rowNodes } from './field-composed-row-nodes';
 

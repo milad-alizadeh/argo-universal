@@ -2,10 +2,12 @@ import { Column } from '@expo/ui';
 import { fillMaxWidth, weight } from '@expo/ui/jetpack-compose/modifiers';
 import type { ModifierConfig } from '@expo/ui/jetpack-compose/modifiers';
 import type { ReactElement, ReactNode } from 'react';
-import { NativeText, type NativeTextRole } from '#primitives/content/native-text';
+import {
+  NativeText,
+  type NativeTextRole,
+} from '#primitives/content/native-text';
 import type { TextProps, TextRole } from '#primitives/content/text';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
-
 
 // Compose's Column takes no more width than its content unless told, so a layout outside a row fills the row's width.
 export const stackModifiers = (inRow: boolean): ModifierConfig[] | undefined =>
@@ -16,7 +18,11 @@ export const Grow = (props: { children: ReactNode }): ReactElement => (
   <Column modifiers={[weight(1)]}>{props.children}</Column>
 );
 
-type LineProps = { text: string; role: TextProps['role']; tone: TextProps['tone'] };
+type LineProps = {
+  text: string;
+  role: TextProps['role'];
+  tone: TextProps['tone'];
+};
 
 const roles: Partial<Record<TextRole, NativeTextRole>> = {
   title: 'heading',

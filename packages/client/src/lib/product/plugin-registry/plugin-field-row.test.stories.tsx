@@ -9,7 +9,7 @@ const meta = {
   render: (): React.JSX.Element => (
     <PluginTree root={form} onPageCall={onPageCall} />
   ),
-  beforeEach: () => {
+  beforeEach: (): void => {
     onPageCall.mockClear();
   },
 } satisfies Meta;
@@ -18,9 +18,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// A node is its type and key, its props and its children.
 const node = (
-  type: string,
-  key: string,
+  [type, key]: [string, string],
   props: WireNode['props'],
   children: WireNode[] = [],
 ): WireNode => ({ type, key, props, children, slots: {} });
@@ -28,18 +28,18 @@ const node = (
 const warm = '#FFB45A';
 
 // A light's row as a Plugin sends it: a dot, a name and a switch on one line, its brightness under them.
-const lightRow = node('FieldGroup.Row', 'light', { id: 'desk' }, [
-  node('Stack', 'rows', { direction: 'column', gap: 3 }, [
-    node('Stack', 'head', { direction: 'row', gap: 3, align: 'center' }, [
-      node('Swatch', 'dot', { colors: [warm], accessibilityLabel: 'Warm' }),
-      node('Text', 'name', { children: 'Desk lamp', role: 'row' }),
-      node('Switch', 'power', {
+const lightRow = node(['FieldGroup.Row', 'light'], { id: 'desk' }, [
+  node(['Stack', 'rows'], { direction: 'column', gap: 3 }, [
+    node(['Stack', 'head'], { direction: 'row', gap: 3, align: 'center' }, [
+      node(['Swatch', 'dot'], { colors: [warm], accessibilityLabel: 'Warm' }),
+      node(['Text', 'name'], { children: 'Desk lamp', role: 'row' }),
+      node(['Switch', 'power'], {
         value: true,
         accessibilityLabel: 'Desk lamp power',
         onValueChange: { bind: 'on' },
       }),
     ]),
-    node('Slider', 'level', {
+    node(['Slider', 'level'], {
       value: 80,
       minimumValue: 1,
       maximumValue: 100,
@@ -53,8 +53,8 @@ const lightRow = node('FieldGroup.Row', 'light', { id: 'desk' }, [
 ]);
 
 const form = WireNode.parse(
-  node('FieldGroup', 'form', {}, [
-    node('FieldGroup.Section', 'section', { title: 'Office' }, [lightRow]),
+  node(['FieldGroup', 'form'], {}, [
+    node(['FieldGroup.Section', 'section'], { title: 'Office' }, [lightRow]),
   ]),
 );
 
@@ -81,6 +81,7 @@ export const SliderInsideRowDispatches: Story = {
     const slider = canvas.getByRole('slider', {
       name: 'Desk lamp brightness',
     });
+
     await fireEvent.change(slider, { target: { value: '35' } });
     await waitFor(() =>
       expect(onPageCall).toHaveBeenCalledWith(

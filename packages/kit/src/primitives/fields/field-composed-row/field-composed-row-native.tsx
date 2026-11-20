@@ -6,7 +6,6 @@ import { NativeText, useTextColor } from '#primitives/content/native-text';
 import type { TextProps, TextRole } from '#primitives/content/text';
 import { useSizeClassValue } from '../../../use-size-class/use-size-class-value';
 
-
 // The iOS drawing, which the Android file replaces. SwiftUI's Column fills the width its parent leaves, so a layout needs nothing more.
 export const stackModifiers = (_inRow: boolean): ModifierConfig[] | undefined =>
   undefined;
@@ -23,7 +22,11 @@ const detailRoles: ReadonlySet<TextRole | undefined> = new Set([
   'badge',
 ]);
 
-type LineProps = { text: string; role: TextProps['role']; tone: TextProps['tone'] };
+type LineProps = {
+  text: string;
+  role: TextProps['role'];
+  tone: TextProps['tone'];
+};
 
 // A row's second line as a stock row draws it: one text style down, in the secondary shade, unless a tone says otherwise.
 const roleModifiers = (role: TextRole | undefined): ModifierConfig[] =>

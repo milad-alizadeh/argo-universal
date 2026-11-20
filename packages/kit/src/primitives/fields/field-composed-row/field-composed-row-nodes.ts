@@ -1,4 +1,10 @@
-import { Children, isValidElement, type ReactElement, type ReactNode } from 'react';
+import { stackDefaults, type SpacingStep } from '@repo/contracts/kit-tokens';
+import {
+  Children,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { flattenedChildren } from '#kit/flattened-children';
 import { Text, type TextProps } from '#primitives/content/text';
 import { Slider } from '#primitives/controls/slider';
@@ -12,60 +18,97 @@ import { Swatch } from '#primitives/visual/swatch';
  * the Plugin's props, the echoed value and the event callbacks, and a kit component reads them by type, as a
  * FieldGroup.Section reads its rows. A native FieldGroup is a SwiftUI or Compose tree that cannot hold the React
  * Native views those elements draw, so the row reads them here and draws each one's native counterpart itself:
- * `layout` and `line` are drawn again, while `control` and `dot` stay the kit element, which already draws natively
- * (Switch, Slider) or is hosted from React Native (Swatch). The registry stays one component per wire name.
+ * `layout` and `line` are drawn again, while an `element` stays the kit element, which already draws natively
+ * (Switch, Slider) or is hosted from React Native (Swatch). The registry stays one component per wire name. A row reads its children by type, so a component of a story's own that wraps a
+ * Stack or a Switch is not seen: call a function that returns the element instead.
  */
-export type RowNode =
-  | {
-      kind: 'layout';
-      key: string;
-      direction: StackProps['direction'];
-      gap: StackProps['gap'];
-      align: StackProps['align'];
-      children: RowNode[];
-    }
-  | {
-      kind: 'line';
-      key: string;
-      text: string;
-      role: TextProps['role'];
-      tone: TextProps['tone'];
-    }
-  | { kind: 'control'; key: string; element: ReactElement; slider: boolean }
-  | { kind: 'dot'; key: string; element: ReactElement };
+export type LayoutNode = {
+  kind: 'layout';
+  key: string;
+  direction: StackProps['direction'];
+  gap: SpacingStep;
+  align: NonNullable<StackProps['align']>;
+  children: RowNode[];
+};
+
+export type LineNode = {
+  kind: 'line';
+  key: string;
+  text: string;
+  role: TextProps['role'];
+  tone: TextProps['tone'];
+};
+
+// `hosted`: React Native views, which a native row hosts rather than draws; `slider`: it takes the spare width.
+export type ElementNode = {
+  kind: 'element';
+  key: string;
+  element: ReactElement;
+  hosted: boolean;
+  slider: boolean;
+};
+
+export type RowNode = LayoutNode | LineNode | ElementNode;
+
+export const isLayout = (node: RowNode): node is LayoutNode =>
+  node.kind === 'layout';
+
+export const isLine = (node: RowNode): node is LineNode => node.kind === 'line';
+
+type Reader = (element: ReactElement<never>, key: string) => RowNode;
+
+const stackNode = (
+  element: ReactElement<StackProps>,
+  key: string,
+): RowNode => ({
+  kind: 'layout',
+  key,
+  direction: element.props.direction,
+  gap: element.props.gap ?? stackDefaults.gap,
+  align: element.props.align ?? stackDefaults.align,
+  children: rowNodes(element.props.children),
+});
+
+const textNode = (element: ReactElement<TextProps>, key: string): RowNode => ({
+  kind: 'line',
+  key,
+  text: Children.toArray(element.props.children).join(''),
+  role: element.props.role,
+  tone: element.props.tone,
+});
+
+const elementNode = (element: ReactElement, key: string): RowNode => ({
+  kind: 'element',
+  key,
+  element,
+  hosted: element.type === Swatch,
+  slider: element.type === Slider,
+});
+
+// The Contract allows nothing else in a row, so any other element is dropped.
+const readers = new Map<unknown, Reader>([
+  [Stack, stackNode],
+  [Text, textNode],
+  [Swatch, elementNode],
+  [Switch, elementNode],
+  [Slider, elementNode],
+]);
 
 const keyOf = (element: ReactElement, index: number): string =>
   String(element.key ?? index);
 
 function nodeOf(child: ReactNode, index: number): RowNode[] {
-  if (!isValidElement(child)) return [];
+  if (!isValidElement<never>(child)) return [];
 
-  const key = keyOf(child, index);
+  const read = readers.get(child.type);
 
-  if (child.type === Stack) return [stackNode(child as ReactElement<StackProps>, key)];
-  if (child.type === Text) return [textNode(child as ReactElement<TextProps>, key)];
-  if (child.type === Swatch) return [{ kind: 'dot', key, element: child }];
-  if (child.type === Switch || child.type === Slider)
-    return [{ kind: 'control', key, element: child, slider: child.type === Slider }];
-
-  // The Contract allows nothing else in a row.
-  return [];
-}
-
-function stackNode(element: ReactElement<StackProps>, key: string): RowNode {
-  const { direction, gap, align, children } = element.props;
-
-  return { kind: 'layout', key, direction, gap, align, children: rowNodes(children) };
-}
-
-function textNode(element: ReactElement<TextProps>, key: string): RowNode {
-  const { children, role, tone } = element.props;
-
-  return { kind: 'line', key, text: Children.toArray(children).join(''), role, tone };
+  return read ? [read(child, keyOf(child, index))] : [];
 }
 
 export const rowNodes = (children: ReactNode): RowNode[] =>
   flattenedChildren(children).flatMap(nodeOf);
+
+const takesSpace = (node: RowNode): boolean => node.kind !== 'element';
 
 /*
  * Which child of a row of children takes the width the others leave: the Slider, else the first line or layout, so a
@@ -73,7 +116,7 @@ export const rowNodes = (children: ReactNode): RowNode[] =>
  * unless asked; the web's Stack has none either.
  */
 export function growing(nodes: RowNode[]): string | undefined {
-  const flexible = nodes.find((node) => node.kind === 'control' && node.slider);
+  const slider = nodes.find((node) => node.kind === 'element' && node.slider);
 
-  return (flexible ?? nodes.find((node) => node.kind === 'layout' || node.kind === 'line'))?.key;
+  return (slider ?? nodes.find(takesSpace))?.key;
 }

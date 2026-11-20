@@ -2,7 +2,15 @@ import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/content/text';
 import { Stack } from '#primitives/layout/stack';
-import { growing, rowNodes, type RowNode } from './field-composed-row-nodes';
+import {
+  growing,
+  isLayout,
+  isLine,
+  rowNodes,
+  type LayoutNode,
+  type LineNode,
+  type RowNode,
+} from './field-composed-row-nodes';
 
 /*
  * The web draws the row's tree with the kit's own Stack and Text in Expo's universal FieldGroup row, which draws the
@@ -31,21 +39,25 @@ function drawnNodes(nodes: RowNode[], inRow: boolean): ReactElement[] {
 }
 
 function Drawn({ node }: { node: RowNode }): ReactElement {
-  switch (node.kind) {
-    case 'layout':
-      return (
-        <Stack direction={node.direction} gap={node.gap} align={node.align}>
-          {drawnNodes(node.children, node.direction === 'row')}
-        </Stack>
-      );
-    case 'line':
-      return (
-        <Text role={node.role} tone={node.tone}>
-          {node.text}
-        </Text>
-      );
-    case 'dot':
-    case 'control':
-      return node.element;
-  }
+  return isLayout(node) ? <Layout node={node} /> : <Leaf node={node} />;
+}
+
+function Leaf({ node }: { node: Exclude<RowNode, LayoutNode> }): ReactElement {
+  return isLine(node) ? <Line node={node} /> : node.element;
+}
+
+function Layout({ node }: { node: LayoutNode }): ReactElement {
+  return (
+    <Stack direction={node.direction} gap={node.gap} align={node.align}>
+      {drawnNodes(node.children, node.direction === 'row')}
+    </Stack>
+  );
+}
+
+function Line({ node }: { node: LineNode }): ReactElement {
+  return (
+    <Text role={node.role} tone={node.tone}>
+      {node.text}
+    </Text>
+  );
 }

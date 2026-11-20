@@ -7,6 +7,7 @@ import { livingRoom } from './field-composed-row-fixtures';
 import { LightRow } from './field-composed-row.mocks';
 
 const onPower = fn();
+
 const onBrightness = fn();
 
 const meta = {
@@ -26,7 +27,7 @@ const meta = {
       </FieldGroup.Section>
     </FieldGroup>
   ),
-  beforeEach: () => {
+  beforeEach: (): void => {
     onPower.mockClear();
     onBrightness.mockClear();
   },

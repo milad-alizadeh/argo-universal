@@ -7,7 +7,9 @@ import { ControlHost } from '#primitives/native/native-control';
 import type { SwitchProps } from './switch-props';
 
 // VoiceOver and TalkBack hear the name through each platform's own modifier.
-const spoken = (name: string): React.ComponentProps<typeof UniversalSwitch>['modifiers'] =>
+const spoken = (
+  name: string,
+): React.ComponentProps<typeof UniversalSwitch>['modifiers'] =>
   Platform.OS === 'android'
     ? [semantics({ contentDescription: name })]
     : [accessibilityLabel(name)];

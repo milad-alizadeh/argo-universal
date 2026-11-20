@@ -55,7 +55,9 @@ function fillStyle(
 ): Partial<Record<typeof fillProperty, string>> {
   if (!fill) return {};
 
-  return { [fillProperty]: (fill.length === 1 ? [...fill, ...fill] : fill).join(', ') };
+  return {
+    [fillProperty]: (fill.length === 1 ? [...fill, ...fill] : fill).join(', '),
+  };
 }
 
 function rangeAttributes(

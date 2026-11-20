@@ -1,8 +1,8 @@
 import { Column } from '@expo/ui';
 import type { ReactElement, ReactNode } from 'react';
 import { RowListItem } from '../field-row/field-row-list-item.android';
-import { stackModifiers } from './field-composed-row-native';
 import { RowContent } from './field-composed-row-content';
+import { stackModifiers } from './field-composed-row-native';
 import { rowNodes } from './field-composed-row-nodes';
 
 /*

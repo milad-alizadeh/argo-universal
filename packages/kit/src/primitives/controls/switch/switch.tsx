@@ -10,7 +10,6 @@ export type { SwitchProps } from './switch-props';
 
 export function Switch(props: SwitchProps): ReactElement {
   return (
-    /* oxlint-disable-next-line jsx-a11y/label-has-associated-control -- Expo's Switch draws the checkbox input inside it. */
     <label className="inline-flex">
       <span className="sr-only">{props.accessibilityLabel}</span>
       <UniversalSwitch
