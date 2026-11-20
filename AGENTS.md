@@ -5,12 +5,12 @@ Argo for iOS, Android, web, and macOS: one Expo app, an Electron shell, and a lo
 ## Where things are written down
 
 - Words: `GLOSSARY.md`. Use its terms in code, docs, and messages.
-- Decisions: `docs/adr/`. Ask before contradicting an ADR, and name it.
+- Decisions: `docs/adr/` records why a decision was made. Ask before contradicting an ADR, and name it.
+- Behavior: read the code and its tests. Update the tests when behavior changes.
 - Specs: GitHub Issues, as transient briefs; never commit one. Build a spec as written; when it is unclear or wrong, stop and ask.
-- Checks: several agents share one Mac, so run the test files you work on, then `pnpm verify` before you hand back. `docs/agents/hooks.md` says what `verify` runs and what is left to CI.
+- Checks: several agents share one Mac, so run the test files you work on, then `pnpm verify` before you hand back. See `docs/agents/hooks.md` for local check instructions.
 - Storybook: before authoring stories or testing UI components, read `docs/agents/storybook.md`.
 - Designs: Storybook owns how built UI looks; Paper is for exploring a design before it is built, and its board is deleted once the design ships. Before drawing in Paper, read `docs/agents/paper.md`.
-- Layout: before changing the rail, the content column, the Workbench or the Inspector, read `docs/agents/layout.md`. It holds the regions, the widths they give up in order, and the phone model.
 - Profiling: before chasing a slow screen or adding a render-count test, read `docs/agents/profiling.md`.
 - Android emulator: before booting or driving an Android emulator, read `docs/agents/android-emulator.md`.
 

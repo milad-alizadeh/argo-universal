@@ -10,7 +10,7 @@ The coding standard is the Prickles canon v2.0, verbatim in `docs/agents/prickle
 
 - Claude and Codex Sessions draw the same UI. Parity is part of every Session change.
 - Use LegendList (`@legendapp/list/react-native`) by default for lists in the App.
-- Name screens and views `<entity>-<list|detail|new|edit>-{screen,view}`. No two names may differ only by plural, and none may use a "settings" infix. Folders follow `docs/agents/screens.md`.
+- Name screens and views `<entity>-<list|detail|new|edit>-{screen,view}`. No two names may differ only by plural, and none may use a "settings" infix. Mirror the App routes in `packages/client/src/screens/`. Use `$param` folders for dynamic segments so tooling globs match them literally.
 - The product name lives only in app config, environment variables and UI text, so a rename stays small. The Session branch prefix in `packages/git` is stored data and stays as it is.
 
 ## Adapters
