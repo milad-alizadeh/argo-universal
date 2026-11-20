@@ -238,17 +238,17 @@ export const ShownCardsFloatOverTheCentredConversation: Story = {
   },
 };
 
-// A translucent ancestor stops a glass Surface blurring the page under it, so while the cards fade in each fades its own glass and nothing above them does.
+// A translucent ancestor stops a glass Surface blurring the page under it, so the cards slide in without fading and nothing above them is translucent.
 const frostedInside = (element: HTMLElement): HTMLElement[] =>
   [...element.querySelectorAll<HTMLElement>('*')].filter(
     (node) => getComputedStyle(node).backdropFilter !== 'none',
   );
 
-// Part way through its fade, so the check runs while the cards are coming in.
-const fading = (element: HTMLElement): boolean => {
-  const opacity = Number(getComputedStyle(element).opacity);
+// Shown and part way through its slide, so the check runs while the cards are coming in.
+const sliding = (element: HTMLElement): boolean => {
+  const style = getComputedStyle(element);
 
-  return opacity > 0 && opacity < 1;
+  return new DOMMatrix(style.transform).m41 > 0 && Number(style.opacity) > 0;
 };
 
 function translucentAncestors(element: HTMLElement): HTMLElement[] {
@@ -260,7 +260,7 @@ function translucentAncestors(element: HTMLElement): HTMLElement[] {
   return found;
 }
 
-export const CardsKeepTheirFrostWhileTheyFadeIn: Story = {
+export const CardsKeepTheirFrostWhileTheySlideIn: Story = {
   beforeEach: (): Promise<void> => settleLayout(1500),
   play: async ({ canvas, userEvent }) => {
     await canvas.findByTestId(composerId);
@@ -268,10 +268,11 @@ export const CardsKeepTheirFrostWhileTheyFadeIn: Story = {
       canvas.getByRole('button', { name: toggleWorkbench }),
     );
 
-    const frosted = frostedInside(canvas.getByTestId(workbenchId));
+    const workbench = canvas.getByTestId(workbenchId);
+    const frosted = frostedInside(workbench);
 
     await expect(frosted.length).toBeGreaterThan(0);
-    await waitFor(() => expect(frosted.some(fading)).toBe(true));
+    await waitFor(() => expect(sliding(workbench)).toBe(true));
 
     for (const glass of frosted)
       await expect(translucentAncestors(glass)).toEqual([]);

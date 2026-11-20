@@ -1,12 +1,8 @@
-import { SurfaceFade } from '@repo/kit/primitives/layout/surface';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { ScrollView, View, type ViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { bandWorkbench } from '#lib/product/window-band';
-import {
-  type FrameMotionStyles,
-  useFrameMotion,
-} from '../hooks/use-frame-offset';
+import { useFrameSlide } from '../hooks/use-frame-offset';
 import type { PartReads, ScaffoldLayout } from './use-scaffold-layout';
 
 type WorkbenchLayout = 'workbench' | 'motion' | 'measures';
@@ -34,37 +30,25 @@ function WorkbenchPanel({
   layout,
   children,
 }: WorkbenchPanelProps): ReactElement {
-  const { fade, ...placement } = useWorkbenchPlacement(layout);
-
   return (
-    <Animated.View {...placement}>
-      <SurfaceFade value={fade}>
-        <WorkbenchScroll>{children}</WorkbenchScroll>
-      </SurfaceFade>
+    <Animated.View {...useWorkbenchPlacement(layout)}>
+      <WorkbenchScroll>{children}</WorkbenchScroll>
     </Animated.View>
   );
 }
 
-type PanelProps = ComponentProps<typeof Animated.View> & {
-  inert: boolean;
-  fade: FrameMotionStyles['fade'];
-};
+type PanelProps = ComponentProps<typeof Animated.View> & { inert: boolean };
 
-// The panel slides; its cards fade their own glass, since a fading panel would stop their frost blurring the page under them.
+// The panel slides without fading: a translucent panel would stop its cards' frost blurring the page under them.
 function useWorkbenchPlacement(layout: WorkbenchLayoutReads): PanelProps {
   const placement = workbenchPlacement(layout);
   const { visible } = placement.motion;
-
-  const { slide, fade } = useFrameMotion({
-    ...layout.motion,
-    ...placement.motion,
-  });
+  const slide = useFrameSlide({ ...layout.motion, ...placement.motion });
 
   return {
     testID: 'desktop-workbench',
     className: placement.className,
     style: [placement.style, slide, !visible && { opacity: 0 }],
-    fade,
     ...visibilityProps(visible),
   };
 }

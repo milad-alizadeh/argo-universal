@@ -85,30 +85,18 @@ export function useFrameOffset(props: OffsetMotion): FrameStyle {
 }
 
 /*
- * The same motion as two styles: the slide for the container, and the fade for each glass Surface in it, so no
- * translucent ancestor stops their frost blurring the page. The container is fully opaque while anything in it shows
- * and transparent once it has faded out, never in between.
+ * The same motion with no fade: the container slides and is fully opaque while it shows or slides out, and
+ * transparent once it has gone. A translucent container would stop the glass in it blurring the page under it.
  */
-export interface FrameMotionStyles {
-  slide: FrameStyle;
-  fade: FrameStyle;
-}
-
-export function useFrameMotion(props: OffsetMotion): FrameMotionStyles {
+export function useFrameSlide(props: OffsetMotion): FrameStyle {
   const { shift, opacity } = useOffsetValues(props);
   const { visible } = props;
-  const slide = useAnimatedStyle<ViewStyle>(
+
+  return useAnimatedStyle<ViewStyle>(
     () => ({
       transform: [{ translateX: shift.get() }],
       opacity: visible || opacity.get() > 0 ? 1 : 0,
     }),
     [shift, opacity, visible],
   );
-
-  const fade = useAnimatedStyle<ViewStyle>(
-    () => ({ opacity: opacity.get() }),
-    [opacity],
-  );
-
-  return { slide, fade };
 }
