@@ -1,3 +1,4 @@
+import { formatCallTime } from '@repo/kit/format-elapsed';
 import type {
   Conversation,
   ConversationPartial,
@@ -12,7 +13,6 @@ import type {
   ConversationMutes,
   VoiceSpectrum,
 } from '../types/conversation-connection';
-import { elapsedOf } from './voice-label';
 
 // What the view asks of the App when the person presses something.
 export interface SessionConversationActions {
@@ -143,7 +143,7 @@ function bandOf(
   return (
     here && {
       call: { ...here, microphoneMuted: input.mutes.microphone },
-      elapsed: elapsedOf(here.startedAt, input.now),
+      elapsed: formatCallTime(here.startedAt, input.now),
       spectrum: input.spectrum,
     }
   );

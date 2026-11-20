@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { elapsedOf, voiceLabel, type CallLook } from './voice-label';
+import { voiceLabel, type CallLook } from './voice-label';
 
 const startedAt = '2026-11-18T10:00:00.000Z';
 
@@ -10,22 +10,6 @@ const call: CallLook = {
   trouble: null,
   startedAt,
 };
-
-describe('the call timer', () => {
-  it('reads minutes and seconds', () => {
-    expect(elapsedOf(startedAt, at(252))).toBe('4:12');
-    expect(elapsedOf(startedAt, at(5))).toBe('0:05');
-  });
-
-  it('reads hours once a call runs that long', () => {
-    expect(elapsedOf(startedAt, at(3600 + 61))).toBe('1:01:01');
-  });
-
-  it('reads zero before the call has connected, and never goes negative', () => {
-    expect(elapsedOf(null, at(10))).toBe('0:00');
-    expect(elapsedOf(startedAt, at(-4))).toBe('0:00');
-  });
-});
 
 describe('the label under the band', () => {
   it('names the band state and the elapsed time', () => {

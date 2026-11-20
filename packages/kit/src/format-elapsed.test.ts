@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatAge, formatElapsed } from './format-elapsed';
+import { formatAge, formatCallTime, formatElapsed } from './format-elapsed';
 
 describe('formatElapsed', () => {
   it.each([
@@ -36,5 +36,26 @@ describe('formatAge', () => {
     [3_628_800_000, '6w'],
   ])('shows %i ms ago as %s', (milliseconds, text) => {
     expect(formatAge(milliseconds)).toBe(text);
+  });
+});
+
+describe('formatCallTime', () => {
+  const startedAt = '2026-11-18T10:00:00.000Z';
+
+  const at = (seconds: number): number =>
+    Date.parse(startedAt) + seconds * 1000;
+
+  it('reads minutes and seconds', () => {
+    expect(formatCallTime(startedAt, at(252))).toBe('4:12');
+    expect(formatCallTime(startedAt, at(5))).toBe('0:05');
+  });
+
+  it('reads hours once a call runs that long', () => {
+    expect(formatCallTime(startedAt, at(3600 + 61))).toBe('1:01:01');
+  });
+
+  it('reads zero before the call has connected, and never goes negative', () => {
+    expect(formatCallTime(null, at(10))).toBe('0:00');
+    expect(formatCallTime(startedAt, at(-4))).toBe('0:00');
   });
 });

@@ -232,6 +232,11 @@ export { archivedToast } from './components/archive-session/archived-toast';
 export { SessionRow } from './components/session-row/session-row';
 
 export {
+  type SessionRowCall,
+  SessionRowCallProvider,
+} from './components/session-row/session-row-call';
+
+export {
   type OpenPluginItemPage,
   type SessionRowActivity,
   type SessionRowPluginItem,

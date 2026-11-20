@@ -4,6 +4,11 @@ import {
 } from '@repo/kit/primitives/lists/list-item';
 import { memo } from 'react';
 import type * as React from 'react';
+import {
+  type CalledRowProps,
+  useSessionRowCall,
+  withCallLabel,
+} from './session-row-call';
 import { CompactSessionRow } from './session-row-compact';
 import { regularEnds } from './session-row-ends';
 import { SessionMark } from './session-row-mark';
@@ -38,11 +43,16 @@ function activityLine({
   return { subtitle: activity.text, subtitleIcon: activity.icon };
 }
 
-function rowIdentity(props: SessionRowProps): RowIdentity {
+type CalledRow = SessionRowProps & CalledRowProps;
+
+function rowIdentity(props: CalledRow): RowIdentity {
   return {
     title: props.session.title,
     ...activityLine(props),
-    accessibilityLabel: sessionRowLabel(props.session),
+    accessibilityLabel: withCallLabel(
+      sessionRowLabel(props.session),
+      props.call,
+    ),
     onPress: () => props.onSelect(props.session.sessionId),
     selected: props.selected,
     finished: props.session.archivedAt !== null,
@@ -50,7 +60,7 @@ function rowIdentity(props: SessionRowProps): RowIdentity {
 }
 
 // Regular: two lines with the Session's status and time, then a meta line while it has anything to show.
-function RegularRow(props: SessionRowProps): React.JSX.Element {
+function RegularRow(props: CalledRow): React.JSX.Element {
   const identity = rowIdentity(props);
 
   return (
@@ -66,11 +76,14 @@ function RegularRow(props: SessionRowProps): React.JSX.Element {
   );
 }
 
+// A Conversation attached to the Session takes the status's place in either layout and joins the row's label.
 function SessionRowLayout(props: SessionRowProps): React.JSX.Element {
+  const call = useSessionRowCall(props.session.sessionId);
+
   return props.layout === 'compact' ? (
-    <CompactSessionRow {...props} />
+    <CompactSessionRow {...props} call={call} />
   ) : (
-    <RegularRow {...props} />
+    <RegularRow {...props} call={call} />
   );
 }
 

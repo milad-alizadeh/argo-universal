@@ -17,6 +17,7 @@ import {
   sessionsLoadState,
 } from '#features/sessions';
 import { useSessionListUpdates } from '#features/sessions';
+import { useListedConversation } from '#features/conversation';
 import {
   newSessionHref,
   projectHref,
@@ -112,6 +113,13 @@ function useRowPlugins(
   };
 }
 
+// What the rows carry beyond the Session: the Plugins' items and the live Conversation.
+function useRowMarks(
+  sessions: SessionListViewProps['sessions'],
+): Pick<SessionListViewProps, 'plugins' | 'call'> {
+  return { ...useRowPlugins(sessions), call: useListedConversation() };
+}
+
 function useSessionsViewProps(
   props: LiveSessionListProps,
 ): SessionListViewProps {
@@ -122,7 +130,7 @@ function useSessionsViewProps(
     ...props,
     ...lookups,
     ...pages,
-    ...useRowPlugins(pages.sessions),
+    ...useRowMarks(pages.sessions),
     ...useLiveUpdatesStatus(),
     ...useSessionsNavigation(),
     loadState: sessionsLoadState([...lookupProgress, pageProgress]),
