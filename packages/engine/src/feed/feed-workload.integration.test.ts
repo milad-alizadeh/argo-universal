@@ -9,7 +9,7 @@ import {
   readUntilIdle,
 } from '#mocks/feed-workload-observation';
 
-// Published budgets for 8 Sessions each streaming a 200 KB Agent message (measured alone: ~2.3 MiB, p95 ~10 ms, worst 30–80 ms; beside the whole test run: p95 ~31 ms, worst ~109 ms).
+// Published budgets for 8 Sessions each streaming a 200 KB Agent message (measured alone: ~2.3 MiB, p95 ~10 ms, worst 30–80 ms; beside the whole test run: p95 ~31 ms, worst ~109 ms). Work that reads a whole message again for each chunk, as #2425's voice-mark stream did, puts p95 near 60 ms on that same machine.
 const retainedByteBudget = 8_388_608;
 
 const eventLoopDelayP95BudgetMs = 50;
@@ -132,15 +132,16 @@ it('long Agent messages in several Sessions stay within the retained-byte and ev
   const { appended, retained, delayP95, delayWorst, slowdown } =
     await measureWorkload();
 
+  const p95Budget = eventLoopDelayP95BudgetMs * slowdown;
+  const worstBudget = eventLoopDelayWorstBudgetMs * slowdown;
+
   expect(
     {
       appended,
       withinRetainedBudget: retained <= retainedByteBudget,
-      withinDelayBudget:
-        delayP95 <= eventLoopDelayP95BudgetMs * slowdown &&
-        delayWorst <= eventLoopDelayWorstBudgetMs * slowdown,
+      withinDelayBudget: delayP95 <= p95Budget && delayWorst <= worstBudget,
     },
-    `retained ${retained} B, delay p95 ${delayP95} ms, worst ${delayWorst} ms, CPU slowdown ${slowdown}`,
+    `retained ${retained} B, delay p95 ${delayP95} ms of ${p95Budget} ms, worst ${delayWorst} ms of ${worstBudget} ms, CPU slowdown ${slowdown}`,
   ).toEqual({
     appended: Array.from(
       { length: sessionCount },

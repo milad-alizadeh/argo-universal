@@ -21,11 +21,10 @@ const loadingStatus: ConversationStatus = {
   microphoneGain: defaultConversationOptions.microphoneGain,
 };
 
-// The Conversation's standing: read once, then followed from the Server on every Device, with a call this App is placing.
-export function useConversationStatus(): ConversationStatus {
+// Keeps the read Conversation standing current from the Server on every Device.
+function useFollowConversationStatus(): void {
   const trpc = useTRPC();
   const cache = useQueryClient();
-  const read = useQuery(trpc.conversation.status.queryOptions());
   const key = trpc.conversation.status.queryKey();
 
   const subscription = useSubscription(
@@ -37,9 +36,14 @@ export function useConversationStatus(): ConversationStatus {
   );
 
   useResubscribeOnReconnect(subscription);
+}
 
-  return withPlacedConversation(
-    read.data ?? loadingStatus,
-    usePlacedConversation(),
-  );
+// The Conversation's standing: read once, then followed from the Server on every Device, with a call this App is placing.
+export function useConversationStatus(): ConversationStatus {
+  const trpc = useTRPC();
+  const read = useQuery(trpc.conversation.status.queryOptions());
+  const placed = usePlacedConversation();
+  useFollowConversationStatus();
+
+  return withPlacedConversation(read.data ?? loadingStatus, placed);
 }

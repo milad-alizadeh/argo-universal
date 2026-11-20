@@ -6,7 +6,7 @@ import type { ContentBlock, SessionUpdate } from '@repo/contracts';
  * without the analysis they mark, so no reader has to remember to; only the Feed's live changes, which the relay
  * reads, still carry them.
  */
-const voiceMarkers = ['[STATUS]', '[COMPLETE]', '[ANALYSIS]'] as const;
+export const voiceMarkers = ['[STATUS]', '[COMPLETE]', '[ANALYSIS]'] as const;
 
 type VoiceMarker = (typeof voiceMarkers)[number];
 
@@ -54,13 +54,13 @@ const kinds: Record<VoiceMarker, VoiceMessage['kind']> = {
   '[ANALYSIS]': 'analysis',
 };
 
-const markerOf = (text: string): VoiceMarker | undefined =>
+export const markerOf = (text: string): VoiceMarker | undefined =>
   voiceMarkers.find((marker) => text.startsWith(marker));
 
-type VoiceKind = VoiceMessage['kind'];
+export type VoiceKind = VoiceMessage['kind'];
 
 // The section a line leaves the message in: the one its mark opens, else the one it carries on.
-function kindAfter(kind: VoiceKind, line: string): VoiceKind {
+export function kindAfter(kind: VoiceKind, line: string): VoiceKind {
   const marker = markerOf(line.trimStart());
 
   return marker ? kinds[marker] : kind;
@@ -70,7 +70,7 @@ function kindAfter(kind: VoiceKind, line: string): VoiceKind {
 const linesOf = (text: string): string[] => text.split(/(?<=\n)/);
 
 // Text without its analysis: a line that opens with `[ANALYSIS]` and the lines after it, up to a line that opens with another mark. `kind` is the section the text starts in.
-function withoutAnalysis(text: string, kind: VoiceKind): string {
+export function withoutAnalysis(text: string, kind: VoiceKind): string {
   let section = kind;
 
   return linesOf(text)
@@ -83,7 +83,7 @@ function withoutAnalysis(text: string, kind: VoiceKind): string {
 }
 
 // The section the text leaves the message in, given the one it starts in.
-const kindAtEnd = (text: string, kind: VoiceKind): VoiceKind =>
+export const kindAtEnd = (text: string, kind: VoiceKind): VoiceKind =>
   linesOf(text).reduce(kindAfter, kind);
 
 // A mark that opens a line after the first, with the spaces after it; the line's indent stays.
@@ -94,7 +94,7 @@ const lineMarker = /(^|\n)([ \t]*)\[(?:STATUS|COMPLETE|ANALYSIS)\][ \t]*/g;
  * such as a paragraph of analysis after progress. A mark inside a line is the Agent's own words and stays. `opening`
  * says the text starts the message, so a mark at its start is the message's own.
  */
-function withoutMarks(text: string, opening: boolean): string {
+export function withoutMarks(text: string, opening: boolean): string {
   const marker = opening ? markerOf(text) : undefined;
   const body = marker ? text.slice(marker.length).trimStart() : text;
 
@@ -166,60 +166,4 @@ export function withoutVoiceMarkers<Row extends SessionUpdate>(row: Row): Row {
     ...row,
     content: withFirstText(row.content, readable(text)),
   };
-}
-
-const couldBecomeMark = (text: string): boolean =>
-  text.length > 0 &&
-  voiceMarkers.some((marker) => marker !== text && marker.startsWith(text));
-
-// How much of the text is known: all of it, unless its last line starts with what could still become a mark.
-function knownLength(text: string): number {
-  const lineStart = text.lastIndexOf('\n') + 1;
-  const line = text.slice(lineStart);
-  const start = lineStart + line.length - line.trimStart().length;
-
-  return couldBecomeMark(text.slice(start)) ? start : text.length;
-}
-
-/*
- * The visible text of a message that arrives in chunks. A line whose start could still become a mark is held back, so
- * a mark split across chunks never shows, and analysis never shows at all; once a line's start is known the rest of it
- * passes as it comes. Only the last line is read again with each chunk: the lines before it are let go once the
- * message's opening is known.
- */
-export class VoiceMarkerStream {
-  // The message's text from the start of a line on; the opening line until the opening is known.
-  private text = '';
-  private opening = true;
-  // The section `text` starts in.
-  private kind: VoiceKind = 'progress';
-  // How much of the visible text of `text` was already given out.
-  private shown = 0;
-
-  public push(chunk: string): string {
-    this.text += chunk;
-    const known = this.text.slice(0, knownLength(this.text));
-    const visible = this.visibleOf(known);
-    const added = visible.slice(this.shown);
-    this.shown = visible.length;
-    this.letGoOfLines(visible);
-
-    return added;
-  }
-
-  private visibleOf(text: string): string {
-    return withoutMarks(withoutAnalysis(text, this.kind), this.opening);
-  }
-
-  // An opening that shows nothing yet may still be trimmed, so its lines are kept until it shows something.
-  private letGoOfLines(visible: string): void {
-    const lineStart = this.text.lastIndexOf('\n') + 1;
-
-    if (lineStart === 0 || visible.length === 0) return;
-    const before = this.text.slice(0, lineStart);
-    this.shown -= this.visibleOf(before).length;
-    this.kind = kindAtEnd(before, this.kind);
-    this.text = this.text.slice(lineStart);
-    this.opening = false;
-  }
 }

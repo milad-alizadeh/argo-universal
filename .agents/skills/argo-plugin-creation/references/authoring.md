@@ -441,7 +441,7 @@ The row context carries ids only (ADR-0030). Read a Session's `branch`, `project
 
 Argo keeps each answer per Plugin worker and Session until the Plugin calls `argo.changed()` or one of its Operations runs, so a Session's status changing asks the Plugin nothing. A restarted Plugin is asked again.
 Argo's own items come first, then each Plugin's in Slot order. A phone shows 1 item and a desktop or the web shows 3; the rest come with their Plugin id as overflow for "+N". A Regular row then fits its whole meta line, Argo's items and the Plugins', by width: what does not fit whole joins "+N", which always ends the line and lists every item it holds by glyph and text, on hover on a wide window.
-A Plugin that throws, answers off-schema, or takes over two seconds is left out alone, and the Server logs it once per Plugin, Slot and reason. Argo does not ask it again, nor wait for it, until it calls `argo.changed()`, one of its Operations runs, or it restarts.
+A Plugin that throws, answers off-schema, or takes over two seconds is left out alone, and the Server logs it once per Plugin, Slot and reason. One that throws or answers off-schema is not asked again, nor waited for, until it calls `argo.changed()`, one of its Operations runs, or it restarts. One that takes over two seconds shows its last good items meanwhile; Argo waits up to 30 seconds more for its answer and draws it when it comes, and asks again if none comes.
 
 ## Session Activity line
 

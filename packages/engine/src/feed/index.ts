@@ -93,6 +93,7 @@ export {
   readConversationSections,
   withVoiceInstruction,
   withoutVoiceInstruction,
-  VoiceMarkerStream,
   type VoiceMessage,
 } from './conversation-markers';
+
+export { VoiceMarkerStream } from './conversation-marker-stream';
