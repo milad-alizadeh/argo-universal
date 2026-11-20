@@ -7,19 +7,14 @@ if (import.meta.env.ARGO_SHARD_PROBE === '1') installShardProbe();
 
 const STORY_CLEANUP_TIMEOUT_MS = 90_000;
 
-// A file's stories leave the page well under 500 MB; only a file that grows the heap this far needs a collection before the next one.
-const COLLECT_ABOVE_BYTES = 524_288_000;
-
 /*
- * Release memory between story files, but only when the page holds a lot of it. Collection can outlast
- * assertions on a loaded runner, so it has a separate cleanup budget.
+ * Release memory between story files. Collection can outlast assertions on a loaded runner,
+ * so it has a separate cleanup budget. It runs after every file: the JS heap size misses what CanvasKit and
+ * WebGL hold outside it, and skipping collection below a heap threshold let CI's pages grow until Chromium closed them.
  * Stories may emulate touch or resize the page; each starts with a mouse and the configured viewport.
  */
 afterAll(async () => {
-  const { usedSize } = await cdp().send('Runtime.getHeapUsage');
-
-  if (usedSize > COLLECT_ABOVE_BYTES)
-    await cdp().send('HeapProfiler.collectGarbage');
+  await cdp().send('HeapProfiler.collectGarbage');
 }, STORY_CLEANUP_TIMEOUT_MS);
 
 // A story that resized the page is put back; one that did not leaves the browser's own size alone.
