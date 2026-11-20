@@ -5,12 +5,12 @@ import type {
 } from '@repo/contracts';
 import { operationFeedRowId } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
-import { workMocks } from '../../../../mocks/feed-view.mocks';
+import { recordedAcpContent } from '../../../lib/product/acp-feed-content.mocks';
 import { call } from './feed-row-facts.mocks';
 import type { OperationParams } from './operation-call';
 import { toFeedView } from './to-feed-view';
 
-const { snapshot } = workMocks[0];
+const { snapshot } = recordedAcpContent('agent-1');
 
 const server = 'argo-688241988e5d4453b682b7a37ad4ac62';
 
