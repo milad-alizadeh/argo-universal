@@ -9,7 +9,6 @@ import {
   leftOut,
   type ItemsAnswer,
   type Reply,
-  type SlotWorker,
 } from './kept-items';
 import { LastGoodItems } from './last-good-items';
 import {
@@ -22,6 +21,7 @@ import {
 } from './late-items';
 import { SlotItemChanges } from './slot-item-changes';
 import { refreshFor, type Shown, type SlotRefresh } from './slot-refresh';
+import type { SlotWorker } from './slot-worker';
 
 /*
  * The runtime side of items Slots (ADR-0035): one batched call per Plugin and list, answers kept per
@@ -118,12 +118,13 @@ export class PluginSlotItems {
     );
   }
 
+  // A late call came to an end with no change since: open lists ask again, drawing its items if it answered.
   private landed(pluginId: string, landing: Landing, reply: Reply): void {
-    const items = landedItems(landing, reply);
+    const answer = landedItems(landing, reply);
 
-    if (!items) return;
+    if (!answer) return;
 
-    this.lastGood.record(pluginId, landing.input, items);
+    if (answer.ok) this.lastGood.record(pluginId, landing.input, answer.items);
     this.changes.bump();
   }
 
