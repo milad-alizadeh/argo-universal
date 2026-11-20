@@ -38,7 +38,8 @@ const paramsOf = ({
   number,
 }: Key): (string | number)[] => [projectId, repository.toLowerCase(), number];
 
-const keyOf = (key: Key): string => JSON.stringify(paramsOf(key));
+export const pullRecordKey = (key: Key): string =>
+  JSON.stringify(paramsOf(key));
 
 const withData = <Value>(data: Value | undefined): { data?: Value } =>
   data === undefined ? {} : { data };
@@ -119,7 +120,7 @@ const textsOf = ({ rows }: StorageResult): Map<string, string> =>
     rows
       .filter(isRecordRow)
       .map(([projectId, repository, number, known]) => [
-        keyOf({ projectId, repository, number }),
+        pullRecordKey({ projectId, repository, number }),
         known,
       ]),
   );
@@ -173,7 +174,10 @@ async function textsFor(
 }
 
 async function save(run: Run, read: Read): Promise<boolean> {
-  const before = (await textsFor(run, [read.link])).get(keyOf(read.link));
+  const before = (await textsFor(run, [read.link])).get(
+    pullRecordKey(read.link),
+  );
+
   const next = JSON.stringify(merged(parsed(before), read));
 
   if (next === before) return false;
@@ -189,7 +193,9 @@ async function readsOf<Link extends PullKey>(
 ): Promise<LinkRead<Link>[]> {
   const texts = await textsFor(run, links);
 
-  return links.map((link) => readOf(link, parsed(texts.get(keyOf(link)))));
+  return links.map((link) =>
+    readOf(link, parsed(texts.get(pullRecordKey(link)))),
+  );
 }
 
 export function createPullRecords(argo: Storage): PullRecords {

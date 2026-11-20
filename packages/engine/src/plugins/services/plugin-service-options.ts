@@ -29,13 +29,15 @@ export type WithdrawPrompt = (
   sender: PluginPromptSender,
 ) => Promise<PluginWithdrawAnswer>;
 
+export type PluginLog = (line: string, level?: 'trace') => void;
+
 export type PluginServiceOptions = {
   accounts?: PluginAccounts;
   wakePlugin?: (pluginId: string) => Promise<void>;
   oauth?: OAuthOptions;
   assets: PluginAssets;
   environment?: NodeJS.ProcessEnv;
-  log: (line: string) => void;
+  log: PluginLog;
   projects: () => Promise<readonly string[]>;
   // The registered Projects' ids; a registration check reads these, never an origin.
   projectIds: () => Promise<string[]>;

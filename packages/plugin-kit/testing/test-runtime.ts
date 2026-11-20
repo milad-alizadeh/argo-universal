@@ -49,7 +49,7 @@ export function runtimeFor(
     oauth: oauthOf(options),
     settings: settingsOf(options, parts.secretStore),
     ...projectOptions(options),
-    environment: testEnvironment(options),
+    environment: { ARGO_PLUGIN_TRACE: '1', ...testEnvironment(options) },
   });
 }
 

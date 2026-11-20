@@ -1,6 +1,7 @@
 import { readLink, type ChangesSource, type LinkRead } from './pull-changes';
 import type { CheckInfo } from './pull-checks';
 import { keptShown } from './pull-kept';
+import { pullRecordKey } from './pull-records';
 import type { PullKey } from './pull-store';
 
 // What one Slot answers for the pull requests it names: what is known now, with GitHub asked behind it.
@@ -43,7 +44,12 @@ const settled = (read: Read): boolean =>
 // Whether a Slot is being asked again only because the Plugin itself just said its records changed.
 type Echo = { pending: boolean };
 
-type State = { source: ChangesSource; say: () => void; echoes: Echo[] };
+type State = {
+  source: ChangesSource;
+  say: () => void;
+  echoes: Echo[];
+  inFlight: Map<string, Promise<boolean>>;
+};
 
 function sayChanged({ echoes, say }: State): void {
   for (const echo of echoes) echo.pending = true;
@@ -55,12 +61,34 @@ const saveRead = async (
   link: PullKey,
 ): Promise<boolean> => source.records.save(await readLink(source, link));
 
+type Refresh = 'slot' | 'sync';
+
+// A Slot can receive a kept Query answer while it refreshes. A Watch or Operation waits for the current answer.
+function syncLink(
+  state: State,
+  link: PullKey,
+  refresh: Refresh,
+): Promise<boolean> {
+  const key = `${refresh}:${pullRecordKey(link)}`;
+  const pending = state.inFlight.get(key);
+
+  if (pending) return pending.then(() => false);
+
+  const saved = saveRead(state.source, link);
+  state.inFlight.set(key, saved);
+
+  return saved.finally(() => {
+    state.inFlight.delete(key);
+  });
+}
+
 async function syncLinks(
   state: State,
   links: readonly PullKey[],
+  refresh: Refresh,
 ): Promise<void> {
   const saved = await Promise.all(
-    links.map((link) => saveRead(state.source, link)),
+    links.map((link) => syncLink(state, link, refresh)),
   );
 
   if (saved.includes(true)) sayChanged(state);
@@ -73,6 +101,7 @@ function behind(state: State, reads: readonly Read[]): void {
   void syncLinks(
     state,
     open.map(({ link }) => link),
+    'slot',
   ).catch(leftAsItWas);
 }
 
@@ -106,14 +135,14 @@ function slotOf(state: State): Shown {
  * sync that caused it has just read GitHub, so reading it again would only find the same.
  */
 export function createPulls(source: ChangesSource, say: () => void): Pulls {
-  const state: State = { source, say, echoes: [] };
+  const state: State = { source, say, echoes: [], inFlight: new Map() };
   const { store, records } = source;
 
   return {
     known: (sessionIds) => keptShown(source, sessionIds, records.of),
     changed: () => sayChanged(state),
     sync: async (sessionIds) =>
-      syncLinks(state, await store.forSessions(sessionIds)),
+      syncLinks(state, await store.forSessions(sessionIds), 'sync'),
     slot: () => slotOf(state),
   };
 }

@@ -1,7 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Contributions } from '@repo/engine/mocks/data-fixture';
-import { expect, it } from 'vitest';
+import { expect, it, onTestFinished, vi } from 'vitest';
 import { z } from 'zod';
 import { dataFixture, dataPluginId, processWait } from '../mocks/data-fixture';
 
@@ -70,6 +70,28 @@ it('runs a Watch once per Project each interval with no App connected, and lets 
     ['one', 'watched'],
     ['one', 'watched'],
   ]);
+});
+
+it('keeps Watch failures visible with routine Plugin traces off', async () => {
+  vi.stubEnv('ARGO_PLUGIN_TRACE', '0');
+  onTestFinished(() => {
+    vi.unstubAllEnvs();
+  });
+
+  const fixture = await dataFixture(
+    watchPlugin("if (projectId === 'two') throw new Error('watch broke');"),
+    watching(),
+  );
+
+  const kit = await fixture.start({
+    projectPaths: { one: fixture.directory, two: fixture.directory },
+  });
+
+  await expect
+    .poll(() => ran(fixture), processWait)
+    .toEqual([['one', 'watched']]);
+  await expect.poll(() => kit.log(), processWait).toContain('watch failed');
+  expect(await kit.log()).not.toMatch(/watch completed|argo\.process\.run/);
 });
 
 it('clamps a Watch interval and logs it', async () => {

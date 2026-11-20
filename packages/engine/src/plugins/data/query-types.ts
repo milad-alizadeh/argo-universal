@@ -1,6 +1,7 @@
 import type { PluginQuery } from '@repo/contracts/plugins/argo-calls';
 import type { PageAddress } from '@repo/contracts/plugins/page-address';
 import type { PluginClock } from '../clock';
+import type { PluginLog } from '../services/plugin-service-options';
 import type { PluginServices } from '../services/plugin-services';
 
 export type QueryOwner = {
@@ -14,7 +15,7 @@ export type QueryOwner = {
 export type QueryServices = {
   services: Pick<PluginServices, 'handle' | 'projectIds' | 'limitedUntil'>;
   clock: PluginClock;
-  log: (line: string) => void;
+  log: PluginLog;
   during: <T>(call: () => Promise<T>) => Promise<T>;
 };
 
