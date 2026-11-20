@@ -57,6 +57,12 @@ const notices = async (work: VoiceWork): Promise<SessionUpdate[]> =>
     (row) => row.sessionUpdate === 'notice' && row.title === 'Screen captured',
   );
 
+const missedNotices = async (work: VoiceWork): Promise<SessionUpdate[]> =>
+  (await work.feed()).filter(
+    (row) =>
+      row.sessionUpdate === 'notice' && row.title === 'Screen not captured',
+  );
+
 const storedFeed = (work: VoiceWork): string =>
   JSON.stringify(work.host.database.select().from(feedRow).all());
 
@@ -99,7 +105,10 @@ it('takes no picture until the person has spoken after the voice announced the r
   work.provider.call.voiceSays('May I look at your screen?');
   work.provider.call.requestFrame('f1');
 
-  await expect.poll(() => replyTo(work, 'f1')).toBeDefined();
+  // A missing ask waits a moment for the person's words to be written down before the voice is told to ask.
+  await expect
+    .poll(() => replyTo(work, 'f1'), { timeout: 5_000 })
+    .toBeDefined();
   expect(replyTo(work, 'f1')).toMatchObject({ text: relayWords.askFirst });
   expect(app?.asked).toEqual([]);
   expect(work.provider.call.images).toEqual([]);
@@ -117,7 +126,9 @@ it('counts a spoken ask for one capture only', async () => {
 
   work.provider.call.requestFrame('f2');
 
-  await expect.poll(() => replyTo(work, 'f2')).toBeDefined();
+  await expect
+    .poll(() => replyTo(work, 'f2'), { timeout: 5_000 })
+    .toBeDefined();
   expect(replyTo(work, 'f2')).toMatchObject({ text: relayWords.askFirst });
   expect(work.provider.call.images).toHaveLength(1);
 }, 30_000);
@@ -144,6 +155,7 @@ it('says it is off, and sends nothing, while screen sight is off', async () => {
   expect(app?.asked).toEqual([]);
   expect(work.provider.call.images).toEqual([]);
   expect(await notices(work)).toEqual([]);
+  await expect.poll(async () => (await missedNotices(work)).length).toBe(1);
 }, 30_000);
 
 it('says no App is reachable, and sends nothing', async () => {
@@ -172,4 +184,5 @@ it('sends nothing when the person declines the display prompt', async () => {
   });
   expect(work.provider.call.images).toEqual([]);
   expect(await notices(work)).toEqual([]);
+  await expect.poll(async () => (await missedNotices(work)).length).toBe(1);
 }, 30_000);

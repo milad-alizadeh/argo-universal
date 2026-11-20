@@ -13,12 +13,20 @@ export type RelayInput = {
   images: boolean;
 };
 
-const speakerOf = (words: TranscriptEvent): 'person' | 'voice' =>
-  words.type === 'person.transcript' ? 'person' : 'voice';
+const personSpoke = (words: TranscriptEvent): boolean =>
+  words.type === 'person.transcript';
+
+const finalWords = (heard: VoiceProviderEvent): TranscriptEvent | null =>
+  isTranscript(heard) && heard.final ? heard : null;
 
 // What each side said once it is final: the voice's own words reset the person's ask for a picture.
 function listen(look: ScreenLook, heard: VoiceProviderEvent): void {
-  if (isTranscript(heard) && heard.final) look.transcribed(speakerOf(heard));
+  const words = finalWords(heard);
+
+  if (!words) return;
+
+  if (personSpoke(words)) look.personSpoke();
+  else look.voiceSpoke();
 }
 
 type Hearers = { relay: AgentRelay; look: ScreenLook };

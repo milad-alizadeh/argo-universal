@@ -6,6 +6,9 @@ import type { RelayCall, VoiceSay } from './call-types';
 import { relayWords } from './relay-words';
 import type { VoiceSessions } from './session-link';
 
+// How long a spoken ask stays good, and how long the voice's request waits for the person's words to be written down.
+const timing = { askWindowMs: 30_000, lateWordsMs: 1_500 };
+
 type NotCaptured = Exclude<AppScreenshotResult, { status: 'captured' }>;
 
 const refusedWords = {
@@ -25,10 +28,13 @@ function whyNot(result: NotCaptured): string {
 /*
  * One Voice call's looking at the screen (ADR-0064's screen sight amendment). The voice may have one picture only when
  * the provider can take it and the person spoke after the voice last did, which is after the voice announced what it
- * wanted; that ask is spent by the capture it allowed.
+ * wanted, and recently: an ask goes stale, and words that arrive a moment after the request still count. That ask is
+ * spent by the capture it allowed.
  */
 export class ScreenLook {
-  private spokenAsk = false;
+  // When the person last finished speaking since the voice's last words; null when the voice spoke after them.
+  private askedAt: number | null = null;
+  private heardPerson: (() => void) | null = null;
 
   public constructor(
     private readonly sessions: VoiceSessions,
@@ -37,8 +43,13 @@ export class ScreenLook {
   ) {}
 
   // The person's words after the voice's last count as the ask; the voice's own words, announcing what it wants, reset it.
-  public transcribed(speaker: 'person' | 'voice'): void {
-    this.spokenAsk = speaker === 'person';
+  public personSpoke(): void {
+    this.askedAt = Date.now();
+    this.heardPerson?.();
+  }
+
+  public voiceSpoke(): void {
+    this.askedAt = null;
   }
 
   // Answers the voice's request for a picture; the picture itself goes to the provider, never into words.
@@ -49,18 +60,40 @@ export class ScreenLook {
   }
 
   private async look(): Promise<string> {
-    const refusal = this.refusal();
+    if (!this.call.images) return relayWords.noImages;
 
-    if (refusal) return refusal;
-    this.spokenAsk = false;
+    if (!(await this.asked())) return relayWords.askFirst;
+    this.askedAt = null;
 
     return this.capture();
   }
 
-  private refusal(): string | null {
-    if (!this.call.images) return relayWords.noImages;
+  private fresh(): boolean {
+    return (
+      this.askedAt !== null && Date.now() - this.askedAt <= timing.askWindowMs
+    );
+  }
 
-    return this.spokenAsk ? null : relayWords.askFirst;
+  // The person's transcript can be final a moment after the voice's request, so a missing ask waits briefly for it.
+  private async asked(): Promise<boolean> {
+    if (this.fresh()) return true;
+    await this.lateWords();
+
+    return this.fresh();
+  }
+
+  private lateWords(): Promise<void> {
+    return new Promise((resolve) => {
+      const done = (): void => {
+        clearTimeout(timer);
+        this.heardPerson = null;
+        resolve();
+      };
+
+      const timer = setTimeout(done, timing.lateWordsMs);
+
+      this.heardPerson = done;
+    });
   }
 
   private async capture(): Promise<string> {

@@ -27,12 +27,28 @@ interface Receiver {
 
 const live = ({ connection }: Receiver): boolean => !connection.signal.aborted;
 
+// Why no picture was taken, in the words the person reads in the Feed.
+const missWords = {
+  refused: 'No picture was taken: it was declined or screen sight is off.',
+  not_opened: 'No picture was taken: no Argo desktop App could be reached.',
+  not_available:
+    'No picture was taken: this computer would not let Argo capture the screen.',
+} as const;
+
 const noticeFor = (requester: ScreenRequester): ScreenNotice => ({
   title: 'Screen captured',
   description:
     requester.kind === 'voice'
       ? 'The voice looked at a picture of your screen.'
       : 'The Agent took a picture of your screen.',
+});
+
+const missedNoticeFor = (
+  requester: ScreenRequester,
+  result: Exclude<AppScreenshotResult, { status: 'captured' }>,
+): ScreenNotice => ({
+  title: 'Screen not captured',
+  description: `${requester.kind === 'voice' ? 'The voice' : 'The Agent'} asked to see your screen. ${missWords[result.status]}`,
 });
 
 const sessionOf = (requester: ScreenRequester): string | null =>
@@ -56,16 +72,21 @@ export class ScreenSight {
   public async capture(
     requester: ScreenRequester,
   ): Promise<AppScreenshotResult> {
-    const receiver = [...this.receivers].findLast(live);
-
-    if (!receiver) return { status: 'not_opened' };
-
-    if (!receiver.enabled) return { status: 'refused', reason: 'off' };
-
-    const result = await this.ask(receiver, requester);
+    const result = await this.take(requester);
     this.announce(requester, result);
 
     return result;
+  }
+
+  private take(requester: ScreenRequester): Promise<AppScreenshotResult> {
+    const receiver = [...this.receivers].findLast(live);
+
+    if (!receiver) return Promise.resolve({ status: 'not_opened' });
+
+    if (!receiver.enabled)
+      return Promise.resolve({ status: 'refused', reason: 'off' });
+
+    return this.ask(receiver, requester);
   }
 
   private ask(
@@ -83,8 +104,14 @@ export class ScreenSight {
   ): void {
     const sessionId = sessionOf(requester);
 
-    if (sessionId && result.status === 'captured')
-      this.notify(sessionId, noticeFor(requester));
+    if (!sessionId) return;
+
+    this.notify(
+      sessionId,
+      result.status === 'captured'
+        ? noticeFor(requester)
+        : missedNoticeFor(requester, result),
+    );
   }
 
   // What an App says to a request: only the Connection that was asked may answer it.
