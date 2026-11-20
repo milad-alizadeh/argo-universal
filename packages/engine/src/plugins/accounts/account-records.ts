@@ -3,7 +3,7 @@ import type {
   PluginAccount,
 } from '@repo/contracts/plugins/accounts';
 import type { Database } from '@repo/db';
-import { pluginAccount, project } from '@repo/db/schema';
+import { pluginAccount, project, projectAccount } from '@repo/db/schema';
 import { and, eq } from 'drizzle-orm';
 
 type AccountDatabase = Pick<Database, 'select'>;
@@ -67,3 +67,35 @@ export function requireChoice(
   if (!hasProject(database, choice.projectId))
     throw new Error('Project is unavailable');
 }
+
+export const chosenAccount = (
+  accounts: PluginAccount[],
+  id: string,
+): PluginAccount | null =>
+  accounts.find((account) => account.id === id) ?? null;
+
+// The one Account a Plugin provides for a host, which a call with no Project gets (ADR-0036).
+export function ownAccount(
+  accounts: PluginAccount[],
+  pluginId: string | undefined,
+): PluginAccount | null {
+  const own = accounts.filter((account) => account.providedBy === pluginId);
+
+  return own.length === 1 ? (own[0] ?? null) : null;
+}
+
+// The Account a Project chose for a host, if it chose one.
+export const projectChoice = (
+  database: AccountDatabase,
+  { host, projectId }: { host: string; projectId: string },
+): AccountChoice | undefined =>
+  database
+    .select()
+    .from(projectAccount)
+    .where(
+      and(
+        eq(projectAccount.projectId, projectId),
+        eq(projectAccount.host, host),
+      ),
+    )
+    .get();

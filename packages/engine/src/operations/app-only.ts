@@ -1,23 +1,9 @@
 import type { OperationId } from '@repo/contracts/operations';
+import { appOnlyOperationIds } from '@repo/contracts/operations/catalog';
 import { TRPCError } from '@trpc/server';
 
-/*
- * Operations only an App runs: the person's own Queued Prompts, and the Voice call, which carries the App's sound
- * and ends when its Connection does (ADR-0064). An Agent hangs up with `voice.hangUp`, and Agents and the CLI read
- * the Voice settings and change the voice and instructions the next call uses; turning Voice calls on or off and
- * choosing the provider stay the App's. No other caller sees these listed, and each refuses them.
- */
-const appOnly: ReadonlySet<string> = new Set([
-  'session.submit',
-  'session.queue',
-  'voice.status',
-  'voice.start',
-  'voice.end',
-  'voice.setSettings',
-  'voice.preview',
-] satisfies OperationId[]);
-
-export const isAppOnly = (id: string): boolean => appOnly.has(id);
+// No other caller sees an App-only Operation listed, and each refuses one; the catalog says which they are.
+export const isAppOnly = (id: string): boolean => appOnlyOperationIds.has(id);
 
 export const appOnlyRefusal = (id: OperationId): TRPCError =>
   new TRPCError({ code: 'FORBIDDEN', message: `Only an App can run ${id}` });

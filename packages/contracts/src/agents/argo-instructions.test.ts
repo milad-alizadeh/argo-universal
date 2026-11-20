@@ -26,6 +26,19 @@ it('tells the Agent to wait for session.new instead of timing it out or retrying
   expect(agents).toContain('retry');
 });
 
+// Agents spent 20 to 30 seconds finding session.new and their own Project before starting a Session.
+it('gives the Agent session.new with the one param it needs', () => {
+  const agents = argoInstructions.find(({ name }) => name === 'Agents')?.text;
+
+  expect(agents).toContain('session.new with params {"prompt"');
+});
+
+it('puts the Operation catalog before the Argo instructions', () => {
+  expect(argoInstructionsMarkdown()).toMatch(
+    /^## Operations\n\n[\s\S]*- session\.rename\(title, sessionId\?\)[\s\S]*## Todo list/,
+  );
+});
+
 it('names every Agent role the Agent can declare', () => {
   const agents = argoInstructions.find(({ name }) => name === 'Agents')?.text;
 

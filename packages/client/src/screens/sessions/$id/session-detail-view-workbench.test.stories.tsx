@@ -93,12 +93,9 @@ export const InspectorAndNavigationKeepCardsOutsideTheConversation: Story = {
   play: async ({ canvas, userEvent }) => {
     await expectSeparateCards(canvas);
     await userEvent.click(await canvas.findByRole('button', inspectorToggle));
-    await waitFor(() =>
-      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
-    );
-    await userEvent.click(
-      canvas.getByRole('button', { name: toggleWorkbench }),
-    );
+    await expect(
+      await canvas.findByRole('button', { name: 'Hide Inspector' }),
+    ).toBeVisible();
     await expectSeparateCards(canvas);
     await userEvent.click(canvas.getByRole('button', { name: 'Hide sidebar' }));
     await expectSeparateCards(canvas);

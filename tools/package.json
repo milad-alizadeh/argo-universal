@@ -7,7 +7,8 @@
     "check-types": "tsc --noEmit && tsc --noEmit -p perf",
     "test": "vitest run",
     "perf:seed": "node --import tsx perf/seed-run.mts",
-    "perf:runtime": "node --import tsx perf/runtime-run.mts"
+    "perf:runtime": "node --import tsx perf/runtime-run.mts",
+    "perf:operations": "node --import tsx perf/operation-eval-run.mts"
   },
   "dependencies": {
     "@repo/db": "workspace:*",

@@ -1,6 +1,9 @@
 import { cp, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { argoInstructions } from '@repo/contracts/agents/argo-instructions';
+import {
+  argoInstructions,
+  operationsSection,
+} from '@repo/contracts/agents/argo-instructions';
 import {
   createRuntimePlugins,
   shippedFolder,
@@ -9,13 +12,9 @@ import { expect, it, vi } from 'vitest';
 import { connectMcp, mcpStderr } from '../mocks/mcp-client';
 import { startCliHost } from '../mocks/operations-cli';
 
-const discoveryLine =
-  'Discover: call operation_list with a task-specific filter. ' +
-  'Read the matching params schema and availability before calling operation_run.';
-
-// What every Session gets before any Plugin's prose: the discovery line, then each Argo instruction under its name.
+// What every Session gets before any Plugin's prose: the Operation catalog, then each Argo instruction under its name.
 const head = [
-  discoveryLine,
+  operationsSection(),
   ...argoInstructions.map(({ name, text }) => `## ${name}\n\n${text}`),
 ].join('\n\n');
 
@@ -67,7 +66,7 @@ it('carries the shipped Issue tracker prose under its name', async () => {
   );
 }, 30_000);
 
-it('keeps the discovery line and Argo instructions when a bad token cannot read Plugin instructions', async () => {
+it('keeps the Operation catalog and Argo instructions when a bad token cannot read Plugin instructions', async () => {
   const home = await createRuntimePlugins([
     { id: 'tracker', name: 'Tracker', fixture: 'healthy', instructions: 'Hi.' },
   ]);
