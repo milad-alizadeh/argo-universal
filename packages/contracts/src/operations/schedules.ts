@@ -23,8 +23,7 @@ export const scheduleOperations = {
     id: 'session.schedulePrompt',
     label: 'Schedule Prompt',
     icon: 'message',
-    description:
-      'Create a Schedule that sends a Prompt to the Session every intervalSeconds.',
+    description: 'Send a Prompt to the Session at a fixed interval.',
     params: scheduleInput,
     result: schedule,
     tier: 'act',
@@ -34,8 +33,7 @@ export const scheduleOperations = {
     id: 'session.listSchedules',
     label: 'List Schedules',
     icon: 'checklist',
-    description:
-      'Read the Schedules of a Session and their last delivery times.',
+    description: 'List Schedules and their last delivery times.',
     params: scheduleTarget,
     result: z.array(schedule),
     tier: 'read',

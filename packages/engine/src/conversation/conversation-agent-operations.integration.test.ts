@@ -22,11 +22,15 @@ describe('the App-only Operations an Agent is refused', () => {
       await startConversationEngine(),
     );
 
-    const listed = await session.caller.operations.list.query({
-      filter: 'voice',
-    });
+    const listed = await session.caller.operations.list.query();
 
-    expect(listed.map(({ id }) => id).sort()).toEqual([
+    const conversationIds = listed
+      .map(({ id }) => id)
+      .filter(
+        (id) => id.startsWith('conversation.') || id.startsWith('voice.'),
+      );
+
+    expect(conversationIds.sort()).toEqual([
       'conversation.chooseDevices',
       'conversation.getSettings',
       'conversation.hangUp',
