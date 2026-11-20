@@ -47,6 +47,9 @@ const keyboardProps = Platform.select({
   default: {},
 } as const);
 
+// Keep rows ready on both sides so reversing a fling does not replace a screenful at once.
+const nativeRenderWindow = { drawDistance: 2400, symmetricDrawDistance: true };
+
 // What the Feed's list takes whatever the Session draws.
 export const feedListProps = {
   testID: 'feed-scroll',
@@ -62,10 +65,9 @@ export const feedListProps = {
   maintainScrollAtEndThreshold: endThreshold,
   // Page in older rows before the reader reaches the start.
   onStartReachedThreshold: startThreshold,
-  // Fast native scrolling can outrun recycled rows. Android also shortens the coast after release.
   ...Platform.select({
-    android: { drawDistance: 2400, decelerationRate: 'fast' as const },
-    ios: { drawDistance: 2400, viewabilityConfig: feedOrbViewability },
+    android: { ...nativeRenderWindow, decelerationRate: 'fast' as const },
+    ios: { ...nativeRenderWindow, viewabilityConfig: feedOrbViewability },
     default: { drawDistance: 800 },
   }),
   ...keyboardProps,

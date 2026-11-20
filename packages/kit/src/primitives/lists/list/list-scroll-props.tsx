@@ -52,6 +52,7 @@ function streamProps<Item>(
     onStartReached: props.onStartReached,
     onStartReachedThreshold: props.onStartReachedThreshold,
     drawDistance: props.drawDistance,
+    symmetricDrawDistance: props.symmetricDrawDistance,
     viewabilityConfig: props.viewabilityConfig,
     decelerationRate: props.decelerationRate,
   };

@@ -1,0 +1,89 @@
+diff --git a/react-native.d.ts b/react-native.d.ts
+index 620943910396c7336a5575a39b058e4a47b69ef5..a9488a6beb96f46d4a8c326667b856c939410585 100644
+--- a/react-native.d.ts
++++ b/react-native.d.ts
+@@ -182,6 +182,8 @@ interface LegendListSpecificProps<ItemT, TItemType extends string | undefined> {
+      * @default 250
+      */
+     drawDistance?: number;
++    /** On native, keep drawDistance on each side while scrolling in either direction. */
++    symmetricDrawDistance?: boolean;
+     /**
+      * Estimated size of each item in pixels, a hint for the first render. After some
+      * items are rendered, the average size of rendered items will be used instead.
+diff --git a/react-native.js b/react-native.js
+index 440b0ad0d8af34e5dc4ae9b2a21a7addd2d71efb..82bee954eee0a4e6d3d10e769d0648ddb44e0100 100644
+--- a/react-native.js
++++ b/react-native.js
+@@ -4965,14 +4965,14 @@ function calculateItemsInView(ctx, params = {}) {
+       state.scrollBufferDirection = speed > 0 ? 1 : -1;
+     }
+     const bufferForward = state.scrollBufferDirection === 1 || state.scrollBufferDirection === void 0 && scroll < Math.max(50, drawDistance);
+-    if (bufferForward) {
++    if (!state.props.symmetricDrawDistance && bufferForward) {
+       scrollBufferTop = drawDistance * 0.5;
+       scrollBufferBottom = drawDistance * 1.5;
+-    } else {
++    } else if (!state.props.symmetricDrawDistance) {
+       scrollBufferTop = drawDistance * 1.5;
+       scrollBufferBottom = drawDistance * 0.5;
+     }
+-    const shouldProjectRenderRange = !dataChanged && !forceFullItemPositions && !suppressInitialScrollSideEffects && !hasActiveInitialScroll(state) && !state.scrollingTo && !state.pendingNativeMVCPAdjust && !!peek$(ctx, "readyToRender");
++    const shouldProjectRenderRange = !state.props.symmetricDrawDistance && !dataChanged && !forceFullItemPositions && !suppressInitialScrollSideEffects && !hasActiveInitialScroll(state) && !state.scrollingTo && !state.pendingNativeMVCPAdjust && !!peek$(ctx, "readyToRender");
+     const projectedBufferAdjustment = shouldProjectRenderRange ? getProjectedBufferAdjustment(speed, Math.min(scrollBufferTop, scrollBufferBottom)) : 0;
+     const updateScrollRange = () => {
+       const scrollStart = state.props.hasExternalScroll ? scroll : Math.max(0, scroll);
+@@ -8582,6 +8582,7 @@ var LegendListInner = typedForwardRef(function LegendListInner2(props, forwarded
+     dataKey,
+     dataVersion,
+     drawDistance = 250,
++    symmetricDrawDistance = false,
+     contentInsetEndAdjustment,
+     estimatedItemSize = 100,
+     estimatedListSize,
+@@ -8881,6 +8882,7 @@ var LegendListInner = typedForwardRef(function LegendListInner2(props, forwarded
+     dataKey,
+     dataVersion,
+     drawDistance,
++    symmetricDrawDistance,
+     estimatedItemSize,
+     getFixedItemSize: useWrapIfItem(getFixedItemSize),
+     getItemType: useWrapIfItem(getItemType),
+diff --git a/react-native.mjs b/react-native.mjs
+index b95e1f86d2cd76d5dbaf1340fdc37f3f1990e9ee..a830e637227bb997170bbcd3b0c662b5bcded768 100644
+--- a/react-native.mjs
++++ b/react-native.mjs
+@@ -4944,14 +4944,14 @@ function calculateItemsInView(ctx, params = {}) {
+       state.scrollBufferDirection = speed > 0 ? 1 : -1;
+     }
+     const bufferForward = state.scrollBufferDirection === 1 || state.scrollBufferDirection === void 0 && scroll < Math.max(50, drawDistance);
+-    if (bufferForward) {
++    if (!state.props.symmetricDrawDistance && bufferForward) {
+       scrollBufferTop = drawDistance * 0.5;
+       scrollBufferBottom = drawDistance * 1.5;
+-    } else {
++    } else if (!state.props.symmetricDrawDistance) {
+       scrollBufferTop = drawDistance * 1.5;
+       scrollBufferBottom = drawDistance * 0.5;
+     }
+-    const shouldProjectRenderRange = !dataChanged && !forceFullItemPositions && !suppressInitialScrollSideEffects && !hasActiveInitialScroll(state) && !state.scrollingTo && !state.pendingNativeMVCPAdjust && !!peek$(ctx, "readyToRender");
++    const shouldProjectRenderRange = !state.props.symmetricDrawDistance && !dataChanged && !forceFullItemPositions && !suppressInitialScrollSideEffects && !hasActiveInitialScroll(state) && !state.scrollingTo && !state.pendingNativeMVCPAdjust && !!peek$(ctx, "readyToRender");
+     const projectedBufferAdjustment = shouldProjectRenderRange ? getProjectedBufferAdjustment(speed, Math.min(scrollBufferTop, scrollBufferBottom)) : 0;
+     const updateScrollRange = () => {
+       const scrollStart = state.props.hasExternalScroll ? scroll : Math.max(0, scroll);
+@@ -8561,6 +8561,7 @@ var LegendListInner = typedForwardRef(function LegendListInner2(props, forwarded
+     dataKey,
+     dataVersion,
+     drawDistance = 250,
++    symmetricDrawDistance = false,
+     contentInsetEndAdjustment,
+     estimatedItemSize = 100,
+     estimatedListSize,
+@@ -8860,6 +8861,7 @@ var LegendListInner = typedForwardRef(function LegendListInner2(props, forwarded
+     dataKey,
+     dataVersion,
+     drawDistance,
++    symmetricDrawDistance,
+     estimatedItemSize,
+     getFixedItemSize: useWrapIfItem(getFixedItemSize),
+     getItemType: useWrapIfItem(getItemType),
