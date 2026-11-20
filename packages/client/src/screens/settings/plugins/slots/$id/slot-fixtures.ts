@@ -9,26 +9,19 @@ export const issueRef = (number: number): string => `#${number}`;
 export const issueTracker: SlotPlugin = {
   pluginId: 'issue-tracker',
   name: 'Issue tracker',
-  fills: true,
   shown: true,
-  asks: true,
 };
 
 const deploys: SlotPlugin = {
   pluginId: 'deploys',
   name: 'Deploys',
-  fills: true,
   shown: true,
-  asks: true,
 };
 
-// Fills the Slot but does not ask for its Single-owner Slot.
 const coverage: SlotPlugin = {
   pluginId: 'coverage',
   name: 'Coverage',
-  fills: true,
   shown: true,
-  asks: false,
 };
 
 export const slotPlugins: SlotPlugin[] = [issueTracker, deploys, coverage];
@@ -47,10 +40,6 @@ export const issueTrackerOff: SlotPlugin[] = [
 
 export const previewReady = 'Preview ready';
 
-export const issueTrackerLine = 'Awaiting review · 1 of 2';
-
-export const deploysLine = 'Deploying preview';
-
 // What the three Plugins answer for the preview's Session, as the Server sends it.
 export const sessionRowPreviewData: SessionRowPreviewData = {
   session: previewSession,
@@ -62,26 +51,18 @@ export const sessionRowPreviewData: SessionRowPreviewData = {
     icon: pluginSymbol({}),
   }),
   sent: {
-    items: {
-      items: [
-        {
-          pluginId: issueTracker.pluginId,
-          item: { text: issueRef(412), tone: 'info' },
-        },
-        {
-          pluginId: deploys.pluginId,
-          item: { text: previewReady, tone: 'success' },
-        },
-        { pluginId: coverage.pluginId, item: { text: '78%' } },
-      ],
-      overflow: [],
-    },
-    lines: {
-      items: [
-        { pluginId: issueTracker.pluginId, item: { text: issueTrackerLine } },
-      ],
-      overflow: [{ pluginId: deploys.pluginId, item: { text: deploysLine } }],
-    },
+    items: [
+      {
+        pluginId: issueTracker.pluginId,
+        item: { text: issueRef(412), tone: 'info' },
+      },
+      {
+        pluginId: deploys.pluginId,
+        item: { text: previewReady, tone: 'success' },
+      },
+      { pluginId: coverage.pluginId, item: { text: '78%' } },
+    ],
+    overflow: [],
   },
 };
 

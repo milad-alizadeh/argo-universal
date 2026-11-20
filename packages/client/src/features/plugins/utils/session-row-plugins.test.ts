@@ -1,11 +1,8 @@
-import type {
-  SessionActivityItem,
-  SessionRowItem,
-} from '@repo/contracts/plugins/wire';
+import type { SessionRowItem } from '@repo/contracts/plugins/wire';
 import { iconSymbols } from '@repo/kit/symbols/icon-names';
 import { describe, expect, it } from 'vitest';
 import { sessionRowPlugins } from './session-row-plugins';
-import type { ReadItem, SlotReading } from './slot-items';
+import type { ReadItem } from './slot-items';
 
 const issueTracker = 'Issue tracker';
 
@@ -25,17 +22,10 @@ const coverage: ReadItem<SessionRowItem> = {
   item: { text: '78%' },
 };
 
-const nothingRead = { items: [], overflow: [], owner: undefined };
-
-const noLines: SlotReading<SessionActivityItem> = nothingRead;
-
 describe('a Session row’s Plugin content', () => {
   it('keeps each item’s Plugin name, behind "+N" too', () => {
     expect(
-      sessionRowPlugins(
-        { items: [issue], overflow: [coverage], owner: undefined },
-        noLines,
-      ),
+      sessionRowPlugins({ items: [issue], overflow: [coverage] }),
     ).toMatchObject({
       items: [
         {
@@ -56,26 +46,7 @@ describe('a Session row’s Plugin content', () => {
     });
   });
 
-  it('keeps the Activity line Argo’s when no Plugin writes it', () => {
-    const row = { items: [issue], overflow: [], owner: undefined };
-
-    expect(sessionRowPlugins(row, noLines)?.activity).toBeUndefined();
-  });
-
-  it('leads the chosen Plugin’s Activity line with that Plugin’s glyph', () => {
-    const owner: ReadItem<SessionActivityItem> = {
-      pluginId: 'issues',
-      pluginName: issueTracker,
-      pluginIcon: ticket,
-      item: { text: 'In review' },
-    };
-
-    expect(sessionRowPlugins(nothingRead, { ...noLines, owner })).toMatchObject(
-      { activity: { text: 'In review', icon: ticket } },
-    );
-  });
-
   it('adds nothing to a row no Plugin adds to', () => {
-    expect(sessionRowPlugins(nothingRead, noLines)).toBeUndefined();
+    expect(sessionRowPlugins({ items: [], overflow: [] })).toBeUndefined();
   });
 });

@@ -1,6 +1,5 @@
 import type { SessionInfo } from '@repo/contracts';
 import type { SessionRowItem } from '@repo/contracts/plugins/wire';
-import type { SystemSymbolSource } from '@repo/kit/symbols/symbol-source';
 import { sessionStatusLabels } from '../../session-status-dot';
 import type { SessionsLayout } from '../../stores/sessions-view';
 import type { ChangeStageProps } from '../change-stage/change-stage';
@@ -12,11 +11,11 @@ export interface SessionRowProps {
   pullRequest?: ChangeStageProps;
   // How long ago the Session was last active: it ends a quiet Session's title line, or a Compact row that has no PR.
   age?: string;
-  // What the Plugins add to the row: meta-line items after Argo's own, the rest behind "+N", and the chosen Activity line.
+  // What the Plugins add to the row: meta-line items after Argo's own, the rest behind "+N".
   plugins?: SessionRowPlugins;
   // Opens a Plugin's page, when one of its items is pressed.
   onOpenPluginPage?: OpenPluginItemPage;
-  // Regular: the activity, metadata and Plan bar. Compact: one line.
+  // Regular: the title, metadata and Plan bar. Compact: one line.
   layout?: SessionsLayout;
   onSelect: (sessionId: string) => void;
   onRename?: (sessionId: string) => void;
@@ -32,20 +31,10 @@ export interface SessionRowPluginItem {
   item: SessionRowItem;
 }
 
-/*
- * A Session row's Plugin content under this Device's choices (ADR-0035): the items that fit, the rest behind "+N",
- * and the chosen Plugin's Activity line in place of Argo's, when it has one for this Session.
- */
+// A Session row's Plugin content under this Device's choices (ADR-0035): the items that fit, the rest behind "+N".
 export interface SessionRowPlugins {
   items: readonly SessionRowPluginItem[];
   more: readonly SessionRowPluginItem[];
-  activity?: SessionRowActivity;
-}
-
-// The chosen Plugin's Activity line, led by that Plugin's glyph.
-export interface SessionRowActivity {
-  text: string;
-  icon: SystemSymbolSource;
 }
 
 export type OpenPluginItemPage = (pluginId: string, path: string) => void;

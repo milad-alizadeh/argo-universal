@@ -22,7 +22,6 @@ import {
   idleSession,
   longPluginItemsCompactSession,
   needsInputSession,
-  pluginActivitySession,
   pluginItemsCompactSession,
   pluginItemsSession,
   runningSession,
@@ -51,7 +50,7 @@ const meta = {
       control: 'select',
       options: sessionsLayoutChoices.map(({ value }) => value),
       description:
-        'Regular: the activity, metadata and Plan bar. Compact: one line.',
+        'Regular: the title, metadata and Plan bar. Compact: one line.',
     },
     selected: {
       control: 'boolean',
@@ -76,7 +75,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// A working Session shows no time, the activity reads in the foreground, and one segment per plan step runs under the row.
+// A working Session shows no time, and one segment per plan step runs under the row.
 export const Running: Story = {
   args: runningSession,
   play: async ({ canvas, userEvent }) => {
@@ -95,10 +94,10 @@ export const LastTodoUnderway: Story = {
   },
 };
 
-// Waiting on you: the time ends the title line, and the activity takes the warning tone.
+// Waiting on you: the time ends the title line, then the warning dot.
 export const NeedsInput: Story = { args: needsInputSession };
 
-// A failed Session reads red, and its failed Subagents show beside a closed Change.
+// A failed Session's dot reads red, and its failed Subagents show beside a closed Change.
 export const Failed: Story = { args: failedSession };
 
 // Nothing is running: no status dot ends the row, and a finished Plan draws no bar.
@@ -110,7 +109,7 @@ export const TodosLeft: Story = { args: todosLeftSession };
 // The Turn ended but a Background Task still runs: no status dot, the count keeps its own, and the bar stays green.
 export const BackgroundWork: Story = { args: backgroundWorkSession };
 
-// Unread: the title is semibold and the activity is muted.
+// Unread: the title is semibold.
 export const Unread: Story = { args: unreadSession };
 
 // The selected row on a wide layout.
@@ -187,9 +186,6 @@ export const CrowdedMeta: Story = {
     ),
   ],
 };
-
-// The chosen Plugin writes the Activity line in place of Argo's.
-export const PluginActivity: Story = { args: pluginActivitySession };
 
 // A Compact row draws one Plugin item after its own detail, the rest behind "+N", then the status dot.
 export const PluginItemsCompact: Story = {
