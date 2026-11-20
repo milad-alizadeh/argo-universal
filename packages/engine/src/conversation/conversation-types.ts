@@ -1,9 +1,9 @@
-import type { ScreenImage } from '@repo/contracts/operations';
 import type {
   ConversationEnd,
   ConversationLimit,
   ConversationPartial,
 } from '@repo/contracts';
+import type { ScreenImage } from '@repo/contracts/operations';
 import type {
   ConversationSetup,
   VoiceDelivery,

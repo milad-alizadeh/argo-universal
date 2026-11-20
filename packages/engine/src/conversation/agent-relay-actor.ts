@@ -20,7 +20,10 @@ export const asksTheRelay = (heard: ConversationProviderEvent): boolean =>
 
 type Hearers = { relay: AgentRelay; look: ScreenLook };
 
-function hear({ relay, look }: Hearers, heard: ConversationProviderEvent): void {
+function hear(
+  { relay, look }: Hearers,
+  heard: ConversationProviderEvent,
+): void {
   if (heard.type === 'work.requested')
     void relay.request(heard.requestId, heard.text);
   else look.hear(heard);

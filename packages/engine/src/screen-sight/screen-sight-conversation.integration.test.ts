@@ -2,12 +2,15 @@ import type { SessionUpdate } from '@repo/contracts';
 import { feedRow } from '@repo/db/schema';
 import { expect, it } from 'vitest';
 import {
+  startConversationWork,
+  type ConversationWork,
+} from '#mocks/conversation-work';
+import {
   capturedImage,
   connectScreenSightApp,
   type ScreenSightApp,
   type ScreenSightAppOptions,
 } from '#mocks/screen-sight-app';
-import { startConversationWork, type ConversationWork } from '#mocks/conversation-work';
 import {
   FakeConversationProvider,
   type FakeVoiceMessage,
@@ -57,7 +60,9 @@ const notices = async (work: ConversationWork): Promise<SessionUpdate[]> =>
     (row) => row.sessionUpdate === 'notice' && row.title === 'Screen captured',
   );
 
-const missedNotices = async (work: ConversationWork): Promise<SessionUpdate[]> =>
+const missedNotices = async (
+  work: ConversationWork,
+): Promise<SessionUpdate[]> =>
   (await work.feed()).filter(
     (row) =>
       row.sessionUpdate === 'notice' && row.title === 'Screen not captured',
@@ -93,9 +98,9 @@ it('keeps nothing after the call ends', async () => {
   await work.host.caller.conversation.end({ sessionId: work.sessionId });
 
   expect(storedFeed(work)).not.toContain(capturedImage.data);
-  expect(JSON.stringify(await work.host.caller.conversation.status())).not.toContain(
-    capturedImage.data,
-  );
+  expect(
+    JSON.stringify(await work.host.caller.conversation.status()),
+  ).not.toContain(capturedImage.data);
 }, 30_000);
 
 it('sends nothing to a provider that cannot take images, and captures nothing', async () => {

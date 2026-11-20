@@ -67,14 +67,19 @@ const conversationWork = (
   watchTurns: (sessionId, listener) => sessions.watchTurns(sessionId, listener),
 });
 
+// The Conversation sends its Session Prompts through Sessions, which say where each landed and when each Turn ends.
+function attachConversation(deps: AppRouterDeps, sessions: Sessions): void {
+  deps.conversation.attach(
+    conversationSessions(deps, conversationWork(deps, sessions)),
+  );
+}
+
 // Operations share the session and shell nouns with the Session procedures that are not Operations.
 const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions(deps);
 
   attachSessionActs(deps, sessions);
-  deps.conversation.attach(
-    conversationSessions(deps, conversationWork(deps, sessions)),
-  );
+  attachConversation(deps, sessions);
 
   const operations = createOperationProcedures({ ...deps, sessions });
 

@@ -67,7 +67,10 @@ type EngineSupplied =
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
   Partial<
-    Pick<AppRouterDeps, 'createId' | 'userHome' | 'conversation' | 'screenSight'>
+    Pick<
+      AppRouterDeps,
+      'createId' | 'userHome' | 'conversation' | 'screenSight'
+    >
   > & {
     acp?: AcpResourceInput;
   };
