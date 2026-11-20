@@ -49,9 +49,8 @@ async function openChoices(
 export const PageOpensBesideThePopover: Story = {
   play: async ({ canvas, userEvent }) => {
     const configure = await openConfigure(canvas, userEvent);
-    await expect(
-      await openChoices(configure, userEvent, /^Model,/),
-    ).toBeVisible();
+    const choices = await openChoices(configure, userEvent, /^Model,/);
+    await waitFor(() => expect(choices).toBeVisible());
     await expect(configure).toHaveAttribute(openState, 'open');
   },
 };
