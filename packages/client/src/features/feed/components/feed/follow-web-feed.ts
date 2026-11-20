@@ -2,7 +2,7 @@
  * The time constant of a critically damped spring, in milliseconds. Its closed form
  * keeps the same trajectory on 60 Hz and high-refresh displays.
  */
-const responseTime = 80;
+const responseTime = 40;
 
 // After a delayed paint, catch up over the next few frames.
 const maxFrameTime = 24;
