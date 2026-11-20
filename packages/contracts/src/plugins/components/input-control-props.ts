@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { colourStops } from '../colour-data';
 import { handler, stringLabel } from '../kit-component-props';
 
 export const sliderProps = z.object({
@@ -16,5 +17,19 @@ export const sliderProps = z.object({
   valueLabel: z
     .string()
     .describe('The displayed description of the current value.'),
+  disabled: z.boolean().optional().describe('Whether interaction is disabled.'),
+  fill: colourStops
+    .optional()
+    .describe(
+      'The filled part of the track in colours that are data, such as a light’s: a gradient on the web, the first colour on iOS and Android.',
+    ),
+});
+
+export const switchProps = z.object({
+  value: z.boolean().describe('Whether the switch is on.'),
+  onValueChange: handler('onValueChange').describe(
+    'Called with the new on or off value.',
+  ),
+  accessibilityLabel: stringLabel.describe('The spoken name of the switch.'),
   disabled: z.boolean().optional().describe('Whether interaction is disabled.'),
 });

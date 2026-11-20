@@ -25,6 +25,11 @@ const fieldGroupSectionProps = z.object({
   footer: z.string().optional().describe('Supporting text below the section.'),
 });
 
+// A composed row: its content is its children (ADR-0042, owner amendment 2026-11-20).
+const fieldGroupComposedRowProps = z.object({
+  id: fieldGroupFieldProps.shape.id,
+});
+
 const fieldGroupToggleProps = fieldGroupFieldProps.extend({
   value: z.boolean().describe('Whether the field is on.'),
   onValueChange: handler('onValueChange'),
@@ -150,6 +155,7 @@ export const fieldGroupKitComponents = {
     props: fieldGroupPickerProps,
     events: fieldGroupPickerEvents,
   },
+  'FieldGroup.Row': { props: fieldGroupComposedRowProps, events: {} },
   'FieldGroup.Slider': {
     props: fieldGroupSliderProps,
     events: { onValueChange: echoes(fieldGroupSliderProps, 'value') },
