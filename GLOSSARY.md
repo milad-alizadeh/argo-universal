@@ -155,7 +155,7 @@ An items Slot only one source shows at a time, such as a Session row's Activity 
 _Avoid_: Part, takeover, exclusive Slot
 
 **Last good items**:
-The items a Plugin last answered in time for each context of an items Slot, kept by the Engine across change signals and restarts. While the Plugin's answer is late, fails or it is not running yet, a list draws these instead, so a Session row keeps its pull requests; they are dropped when the Plugin is turned off or removed.
+The items a Plugin last answered for each context of an items Slot, kept by the Engine across change signals and restarts. While the Plugin's answer is late, fails or it is not running yet, a list draws these instead, so a Session row keeps its pull requests; a late answer that lands after all replaces them. They are dropped when the Plugin is turned off or removed.
 _Avoid_: Cached items, stale items
 
 **Replaceable Slot**:
