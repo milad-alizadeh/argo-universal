@@ -6,6 +6,7 @@ import type {
   VoiceSay,
 } from './conversation-types';
 import type { ConversationProviderEvent } from './provider';
+import { ScreenLook } from './screen-look';
 import type { ConversationSessions } from './session-link';
 
 export type RelayInput = {
@@ -13,28 +14,28 @@ export type RelayInput = {
   sessionId: string;
 };
 
-type Heard = Extract<
-  ConversationProviderEvent,
-  { type: 'work.requested' | 'person.transcript' }
->;
+// What the relay hears from the voice: its requests for work and for a picture. What each side said reaches it from the machine too.
+export const asksTheRelay = (heard: ConversationProviderEvent): boolean =>
+  heard.type === 'work.requested' || heard.type === 'frame.requested';
 
-const relayed = new Set<ConversationProviderEvent['type']>([
-  'work.requested',
-  'person.transcript',
-]);
+type Hearers = { relay: AgentRelay; look: ScreenLook };
 
-const isHeard = (event: ConversationProviderEvent): event is Heard =>
-  relayed.has(event.type);
+function hear(
+  { relay, look }: Hearers,
+  heard: ConversationProviderEvent,
+): void {
+  if (heard.type === 'work.requested')
+    void relay.request(heard.requestId, heard.text, heard.turnId);
+  else if (heard.type === 'person.transcript') relay.personSaid(heard);
+  else look.hear(heard);
+}
 
-const heardOf = (event: ConversationEvent): Heard | undefined =>
-  event.type === 'provider.event' && isHeard(event.event)
-    ? event.event
-    : undefined;
+// What the machine forwards: the call being answered, then what the voice and the person said and asked for.
+function route(hearers: Hearers, event: ConversationEvent): void {
+  if (event.type === 'call.answered') hearers.look.answered(event.canLook);
 
-const tell = (relay: AgentRelay, heard: Heard): void => {
-  if (heard.type === 'person.transcript') return relay.personSaid(heard);
-  void relay.request(heard.requestId, heard.text, heard.turnId);
-};
+  if (event.type === 'provider.event') hear(hearers, event.event);
+}
 
 const reportsTo = (sendBack: SendBack): RelayReports => ({
   speak: (say: VoiceSay): void => sendBack({ type: 'voice.say', say }),
@@ -50,13 +51,11 @@ export const agentRelay = fromCallback<ConversationEvent, RelayInput>(
   ({ input, sendBack, receive }) => {
     const { sessions } = input;
 
-    const relay = new AgentRelay(sessions, input, reportsTo(sendBack));
+    const reports = reportsTo(sendBack);
+    const relay = new AgentRelay(sessions, input, reports);
+    const look = new ScreenLook(sessions, input, reports.speak);
 
-    receive((event) => {
-      const heard = heardOf(event);
-
-      if (heard) tell(relay, heard);
-    });
+    receive((event) => route({ relay, look }, event));
 
     const unwatch = sessions.watch(input.sessionId, (happening) =>
       relay.happened(happening),

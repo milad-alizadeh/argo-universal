@@ -17,4 +17,8 @@ export { Conversations, type ConversationsPort } from './conversations';
 
 export { ConversationSettingsStore } from './conversation-settings';
 
-export { conversationSessions } from './conversation-sessions';
+export {
+  conversationSessions,
+  feedNotices,
+  type ConversationSessionWork,
+} from './conversation-sessions';

@@ -19,7 +19,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   voice = createActor(modelMachine, { input: voiceModelInput() }).start();
   voice.send(start);
-  voice.send({ type: 'call.answered', answer: 'answer' });
+  voice.send({ type: 'call.answered', answer: 'answer', canLook: false });
 });
 
 afterEach(() => {

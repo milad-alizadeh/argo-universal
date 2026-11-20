@@ -47,6 +47,16 @@ export const relayWords = {
   failed: (error: string): string => `The Agent's Turn failed: ${error}`,
   stopped: (stopReason: string): string =>
     `The Agent's Turn stopped: ${stopReason}.`,
+  noImages:
+    'This voice cannot be given a picture of the screen, so nothing was captured. Tell the person, and say the Agent can look at it instead.',
+  looked:
+    'You now have one still picture of the person’s screen, as background. Look at it and answer what they asked. It is not kept.',
+  screenOff:
+    'Looking at the screen is turned off on this Device, so nothing was captured. Tell the person if they ask.',
+  screenUnreachable:
+    'No App that can capture the screen is reachable, so nothing was captured.',
+  screenUnavailable: (reason: string): string =>
+    `The screen could not be captured: ${reason}`,
   // A Permission request as the voice hears it: plain words from the request, never the request itself, and the two answers speech may give.
   permissionWaiting: ({ agent, title, kind, target }: SpokenRequest): string =>
     `${agent} is waiting for permission to ${doing(kind)}: ${title}${onTarget(target)}. Ask the person: allow once, or reject? Hand over their answer in their own words. Always allow is only on screen.`,

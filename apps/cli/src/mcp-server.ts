@@ -1,5 +1,4 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import {
   chosenArgoInstructions,
   type ArgoInstructionChoices,
@@ -7,8 +6,6 @@ import {
 import {
   OperationWaitId,
   type PluginInstruction,
-  type OperationRow,
-  type OperationRunResponse,
 } from '@repo/contracts/operations/control';
 import {
   productName,
@@ -16,6 +13,7 @@ import {
 } from '@repo/contracts/product-identity';
 import { z } from 'zod';
 import type { ControlClient, RunRequest } from './control-client';
+import { result } from './mcp-result';
 
 const mcpWaitMs = 30_000;
 
@@ -42,12 +40,6 @@ function validRunInput(input: z.infer<typeof runFields>): boolean {
     (value) => value === undefined,
   );
 }
-
-const result = (
-  value: OperationRow[] | OperationRunResponse,
-): CallToolResult => ({
-  content: [{ type: 'text', text: JSON.stringify(value) }],
-});
 
 // What `argo mcp` tells the Agent beside the discovery line: the Plugins' prose, and which Argo instructions the person's settings leave.
 export type McpInstructions = {

@@ -97,7 +97,7 @@ export const compactSession = {
 
 const issueTracker = { pluginId: 'issue-tracker', pluginName: 'Issue tracker' };
 
-// The Issue tracker's glyph, which leads its items and its Activity line.
+// The Issue tracker's glyph, which leads its items.
 const ticket = { sf: 'ticket', material: 'confirmation_number' } as const;
 
 // The Issues the Issue tracker shows: one on the row, one behind "+2".
@@ -174,15 +174,5 @@ export const longPluginItemsCompactSession = {
       item: { ...plugin.item, text: plugin.item.text.padEnd(40, ' long') },
     })),
     more: pluginItemsSession.plugins.more,
-  },
-} satisfies SessionRowFixture;
-
-// The Issue tracker writes the Activity line in place of Argo's, led by its glyph.
-export const pluginActivitySession = {
-  ...runningSession,
-  plugins: {
-    items: [],
-    more: [],
-    activity: { text: 'Awaiting review · 1 of 2', icon: ticket },
   },
 } satisfies SessionRowFixture;

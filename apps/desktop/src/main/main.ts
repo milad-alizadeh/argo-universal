@@ -10,6 +10,7 @@ import {
 import { createWindow, originOf } from './app-window';
 import { applicationMenu } from './application-menu';
 import { handleExternalLinks } from './handle-external-links';
+import { handleScreenCapture } from './handle-screen-capture';
 import { answerAppPermissionRequests } from './microphone-permission';
 import { handleProjectFolder } from './project-folder';
 import { reportUnexpectedFailure } from './report-unexpected-failure';
@@ -145,6 +146,8 @@ const start = (): void => {
 
   // The microphone a Conversation listens through: asked for on first use, and only by the App's own page. The session exists only once the app is ready.
   answerAppPermissionRequests(session.defaultSession, windowOrigin);
+  // The screen picture for screen sight, taken here and handed to the App's own page only.
+  handleScreenCapture(windowOrigin);
 
   listenToServer();
   server.start();

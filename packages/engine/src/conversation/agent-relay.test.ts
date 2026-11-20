@@ -21,6 +21,7 @@ function relayTo(
     answer: () => Promise.resolve('settled'),
     watch: () => (): void => {},
     notice: () => {},
+    capture: () => Promise.reject(new Error('No capture in this test')),
     ...overrides,
   };
 

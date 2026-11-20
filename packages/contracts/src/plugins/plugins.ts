@@ -9,11 +9,12 @@ import {
   PluginPass,
   PluginPath,
 } from './manifest-fields';
+import { ManifestSlotIds } from './manifest-slot-ids';
 import { PluginOperationContributions } from './plugin-operations';
 import { PluginIdentifier, PluginSettingsSchema } from './plugin-settings';
 import { PluginStatus } from './runtime';
 import { uniqueIds } from './unique-ids';
-import { AddOnlySlotId, ReplaceableSlotId } from './wire';
+import { ReplaceableSlotId } from './wire';
 
 export { PluginProjectInfo } from './argo-calls';
 
@@ -93,7 +94,7 @@ export const PluginManifest = z
         // A function that runs for each Project on Argo's clock with no App open, and may act (ADR-0055).
         watch: PluginPass.optional(),
         // The add-only Slots the Plugin fills; core asks only these Plugins for a Slot's content.
-        slots: uniqueIds(AddOnlySlotId, 'Slot ids must be unique').optional(),
+        slots: ManifestSlotIds.optional(),
         // What the Plugin adds to a declared Slot, such as Session header actions, by Slot id; the App draws it without starting the Plugin (ADR-0035).
         declared: DeclaredContributions.optional(),
         // The Replaceable Slots the Plugin's `ui.render` Hook draws; core runs its chain only for these (ADR-0035).

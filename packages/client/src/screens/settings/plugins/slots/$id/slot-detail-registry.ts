@@ -5,7 +5,6 @@ import {
 import {
   linkMarkSlotId,
   projectDetailsSlotId,
-  sessionActivitySlotId,
   sessionBarSlotId,
   sessionChangesSlotId,
   sessionRowSlotId,
@@ -24,8 +23,6 @@ const declared = {
   // Plugin pages, drawn where they are declared; there is nothing to choose.
   [projectDetailsSlotId]: null,
   [sessionRowSlotId]: sessionRowSlot,
-  // Chosen on the Session rows page, as its Activity line.
-  [sessionActivitySlotId]: null,
   [sessionBarSlotId]: sessionBarSlot,
   // Argo's Changes card and Inspector draw these; there is nothing to choose.
   [sessionChangesSlotId]: null,

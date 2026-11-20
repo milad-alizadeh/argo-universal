@@ -1,12 +1,7 @@
 import type { SessionInfo } from '@repo/contracts';
-import {
-  sessionActivitySlotId,
-  sessionRowSlotId,
-} from '@repo/contracts/plugins/wire';
+import { sessionRowSlotId } from '@repo/contracts/plugins/wire';
 import { livePreview } from './session-row-preview';
 import type { SlotDetail } from './slot-detail';
-
-export const builtInActivity = 'Editing login.ts';
 
 const startedAt = Date.parse('2026-01-01T09:00:00.000Z');
 
@@ -23,7 +18,7 @@ export const previewSession: SessionInfo = {
   status: 'running',
   title: 'Fix login redirect',
   titleSource: 'agent',
-  activity: builtInActivity,
+  activity: '',
   activityAt: startedAt + workingFor,
   checkout: { type: 'worktree', path: '', branch: 'fix-login-redirect' },
   plan: null,
@@ -41,9 +36,4 @@ export const sessionRowSlot: SlotDetail = {
   showTitle: 'Show on Session rows',
   previewCaption: 'how a Session row looks with these settings',
   Preview: livePreview(previewSession),
-  ownerSlot: {
-    slotId: sessionActivitySlotId,
-    title: 'Activity line',
-    argoSubtitle: 'Status and time, as today.',
-  },
 };

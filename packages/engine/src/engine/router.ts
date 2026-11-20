@@ -1,10 +1,7 @@
 import { createAgentsRouter } from '../agents';
 import { createAppNavigationRouter } from '../app-navigation';
 import { createBlobRouter } from '../blob';
-import {
-  createConversationRouter,
-  conversationSessions,
-} from '../conversation';
+import { createConversationRouter } from '../conversation';
 import { createDevicesRouter } from '../devices';
 import { createFeedRouter } from '../feed';
 import { createServerLinkPreviewRouter } from '../link-preview';
@@ -14,8 +11,10 @@ import { createOperationProcedures } from '../operations';
 import { createPairingRouter } from '../pairing/router';
 import { createPluginsRouter } from '../plugins';
 import { mergeRouters, router, routerFactory } from '../rpc';
+import { createScreenSightRouter } from '../screen-sight';
 import { createShellRouter, Sessions } from '../sessions';
 import { createSystemRouter } from '../system';
+import { attachConversation } from './attach-conversation';
 import type { AppRouterDeps } from './router-deps';
 
 // Each router takes only the slice of the Engine's dependencies its type names.
@@ -32,6 +31,7 @@ const createAppProcedures = routerFactory((deps: AppRouterDeps) =>
     network: createNetworkRouter(deps),
     pairing: createPairingRouter(deps),
     navigation: createAppNavigationRouter(deps),
+    screenSight: createScreenSightRouter(deps),
   }),
 );
 
@@ -56,7 +56,7 @@ const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions(deps);
 
   attachSessionActs(deps, sessions);
-  deps.conversation.attach(conversationSessions(deps, sessions.conversation));
+  attachConversation(deps, sessions);
 
   const operations = createOperationProcedures({ ...deps, sessions });
 

@@ -1,9 +1,5 @@
 import type * as React from 'react';
-import {
-  PlaceholderDetailView,
-  useSlotChoices,
-  useSlotChoosers,
-} from '#features/settings';
+import { PlaceholderDetailView, useSlotChoosers } from '#features/settings';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import type { SlotDetail } from './slot-detail';
 import { findSlotDetail } from './slot-detail-registry';
@@ -26,15 +22,11 @@ export function SlotDetailScreen({
   return <DeclaredSlot settings={settings} />;
 }
 
-// The Slot's Plugins and both of this Device's choices; the Slot's own component reads them where it is drawn.
-type SlotState = Pick<
-  SlotDetailViewProps,
-  'plugins' | 'owner' | 'onShownChange' | 'onOwnerChange'
->;
+// The Slot's Plugins and this Device's switches; the Slot's own component reads them where it is drawn.
+type SlotState = Pick<SlotDetailViewProps, 'plugins' | 'onShownChange'>;
 
 const useSlotState = (settings: SlotDetail): SlotState => ({
   plugins: useSlotPlugins(settings),
-  owner: useSlotChoices(settings.slotId).owner,
   ...useSlotChoosers(settings.slotId),
 });
 

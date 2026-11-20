@@ -17,9 +17,9 @@ const lookup: PluginLookup = (pluginId) => ({
   icon: iconSymbols.plug,
 });
 
-const allOn: SlotVisibility = { shows: () => true, owner: null };
+const allOn: SlotVisibility = { shows: () => true };
 
-const noneOn: SlotVisibility = { shows: () => false, owner: null };
+const noneOn: SlotVisibility = { shows: () => false };
 
 const issues = 'issues';
 
@@ -72,7 +72,6 @@ describe('reading one context', () => {
   it('lets a hidden Plugin make room for the next in line', () => {
     const noIssues: SlotVisibility = {
       shows: (pluginId) => pluginId !== issues,
-      owner: null,
     };
 
     expect(shown('s1', noIssues)).toEqual([deploys]);

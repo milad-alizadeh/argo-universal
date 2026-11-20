@@ -36,6 +36,7 @@ function sessionsHeard(): HeardSessions {
       stopFromConversation: () => Promise.resolve(false),
       answerFromConversation: () => 'settled',
       agentName: (agentId) => agentId,
+      capture: () => Promise.reject(new Error('No capture in this test')),
       watchTurns: (_sessionId, listener) => {
         listeners.add(listener);
 

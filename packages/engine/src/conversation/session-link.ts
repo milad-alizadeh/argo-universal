@@ -1,3 +1,4 @@
+import type { AppScreenshotResult } from '@repo/contracts/operations';
 import type { SpokenRequest } from './relay-words';
 
 /*
@@ -63,6 +64,8 @@ export interface ConversationSessions {
   ) => () => void;
   // Writes a Notice into the Session's Feed.
   notice: (sessionId: string, notice: ConversationNotice) => void;
+  // Asks the App for a picture of the person's whole screen on the call's behalf; it writes the capture's Notice itself.
+  capture: (sessionId: string) => Promise<AppScreenshotResult>;
 }
 
 const unreachable = 'The Session cannot be reached';
@@ -74,4 +77,5 @@ export const detachedSessions: ConversationSessions = {
   answer: () => Promise.reject(new Error(unreachable)),
   watch: () => (): void => {},
   notice: () => {},
+  capture: () => Promise.reject(new Error(unreachable)),
 };

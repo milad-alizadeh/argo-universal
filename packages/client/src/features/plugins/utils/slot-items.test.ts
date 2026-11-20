@@ -1,5 +1,4 @@
 import {
-  sessionActivitySlotId,
   sessionBarSlotId,
   sessionRowSlotId,
 } from '@repo/contracts/plugins/wire';
@@ -10,7 +9,6 @@ import {
   itemsSlotEntry,
   type PluginLookup,
   readSlotItems,
-  type ReadItem,
   type SlotReader,
 } from './slot-items';
 
@@ -35,32 +33,19 @@ const identities = new Map([
 const lookup: PluginLookup = (pluginId) =>
   identities.get(pluginId) ?? { name: pluginId, icon: plug };
 
-/*
- * This Device's choices for the Slot, as the Settings store works them out: the Plugins left on, and the one chosen
- * to write a Single-owner line.
- */
-const on = (owner: string | null, hidden: string[] = []): SlotReader => ({
-  visibility: visibility(owner, hidden),
+// This Device's choices for the Slot, as the Settings store works them out: the Plugins left on.
+const on = (hidden: string[] = []): SlotReader => ({
+  visibility: visibility(hidden),
   lookup,
 });
 
-const visibility = (
-  owner: string | null,
-  hidden: string[],
-): SlotVisibility => ({
+const visibility = (hidden: string[]): SlotVisibility => ({
   shows: (pluginId) => !hidden.includes(pluginId),
-  owner,
 });
 
-const everyPluginOn = on(null);
+const everyPluginOn = on();
 
 const rowSlot = itemsSlotEntry(sessionRowSlotId);
-
-const activitySlot = itemsSlotEntry(sessionActivitySlotId);
-
-const reviewing = 'Awaiting review';
-
-const deploying = 'Deploying preview';
 
 const issueRef = 'Issue 412';
 
@@ -77,13 +62,10 @@ const rowItems = {
   overflow: [{ pluginId: coverage, item: { text: covered } }],
 };
 
-const activityLines = {
-  items: [{ pluginId: issues, item: { text: reviewing } }],
-  overflow: [{ pluginId: deploys, item: { text: deploying } }],
-};
-
 const textsOf = (items: readonly { item: { text: string } }[]): string[] =>
   items.map(({ item }) => item.text);
+
+const nothing = { items: [], overflow: [] };
 
 describe('reading an items Slot', () => {
   it('names each item’s Plugin, with its glyph, and keeps the Server’s split', () => {
@@ -115,7 +97,7 @@ describe('reading an items Slot', () => {
   });
 
   it('leaves out a Plugin this Device turned off, so the next in line moves up', () => {
-    const reading = readSlotItems(rowSlot, rowItems, on(null, [issues]));
+    const reading = readSlotItems(rowSlot, rowItems, on([issues]));
 
     expect(textsOf(reading.items)).toEqual([ready, covered]);
     expect(reading.overflow).toEqual([]);
@@ -162,29 +144,5 @@ describe('reading an items Slot', () => {
         item: bar.items[0]?.item,
       },
     ]);
-  });
-});
-
-const nothing = { items: [], overflow: [], owner: undefined };
-
-const owner = (chosen: string | null): ReadItem<unknown> | undefined =>
-  readSlotItems(activitySlot, activityLines, on(chosen)).owner;
-
-describe('reading a Single-owner Slot', () => {
-  it('picks the chosen Plugin’s line, wherever the Server put it', () => {
-    expect(owner(deploys)).toEqual({
-      pluginId: deploys,
-      pluginName: 'Deploys',
-      pluginIcon: plug,
-      item: { text: deploying },
-    });
-  });
-
-  it('reads no owner while no Plugin is chosen, so the row keeps Argo’s own line', () => {
-    expect(owner(null)).toBeUndefined();
-  });
-
-  it('reads no owner from a Slot that has no Single-owner line', () => {
-    expect(readSlotItems(rowSlot, rowItems, on(issues)).owner).toBeUndefined();
   });
 });

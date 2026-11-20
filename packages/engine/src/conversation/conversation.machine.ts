@@ -8,7 +8,7 @@ import {
   type ActorRefFrom,
   type AnyActorRef,
 } from 'xstate';
-import { agentRelay, type RelayInput } from './agent-relay-actor';
+import { agentRelay, asksTheRelay, type RelayInput } from './agent-relay-actor';
 import { defaultConduct } from './conversation-conduct';
 import {
   closeEndingOf,
@@ -260,8 +260,6 @@ const conversationSetup = setup({
     finish: assign(({ context }, params: EndParameters) =>
       finished(context, params),
     ),
-    // The relay hears the person's words, so a spoken answer is applied only for a turn of theirs (ADR-0064).
-    relayTranscript: sendTo('agentRelay', ({ event }) => event),
     storeTranscript: ({ context, event, system }): void => {
       const heard = transcriptOf(event);
 
@@ -347,8 +345,7 @@ const conversationSetup = setup({
 
       return runningCall(context).agentWorking !== event.running;
     },
-    asksForWork: ({ event }): boolean =>
-      providerEventOf(event).type === 'work.requested',
+    asksRelay: ({ event }): boolean => asksTheRelay(providerEventOf(event)),
   },
 });
 
@@ -512,7 +509,11 @@ export const conversationMachine = conversationSetup.createMachine({
         'provider.event': [
           {
             guard: 'hearsTranscript',
-            actions: ['storeTranscript', 'trackPartials', 'relayTranscript'],
+            actions: [
+              'storeTranscript',
+              'trackPartials',
+              sendTo('agentRelay', ({ event }) => event),
+            ],
           },
           {
             guard: 'providerErrored',
@@ -525,7 +526,7 @@ export const conversationMachine = conversationSetup.createMachine({
             actions: endingWith(providerClose),
           },
           {
-            guard: 'asksForWork',
+            guard: 'asksRelay',
             actions: sendTo('agentRelay', ({ event }) => event),
           },
           { actions: 'foldProvider' },
@@ -541,7 +542,10 @@ export const conversationMachine = conversationSetup.createMachine({
       states: {
         starting: {
           on: {
-            'call.answered': { target: 'connecting', actions: 'answer' },
+            'call.answered': {
+              target: 'connecting',
+              actions: ['answer', sendTo('agentRelay', ({ event }) => event)],
+            },
           },
         },
         connecting: {
@@ -559,7 +563,7 @@ export const conversationMachine = conversationSetup.createMachine({
                 actions: [
                   'storeTranscript',
                   'trackPartials',
-                  'relayTranscript',
+                  sendTo('agentRelay', ({ event }) => event),
                 ],
                 target: 'connected',
                 reenter: true,
