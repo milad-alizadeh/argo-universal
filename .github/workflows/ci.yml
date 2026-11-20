@@ -1,4 +1,4 @@
-# Quality, Engine tests, the macOS secret store contract, story tests, the story render gates and web e2e on every push, and on a pull request when its changes need them; the Electron smoke e2e on main and release/*.
+# Quality, Engine tests, the macOS secret store contract, story tests, the story render gates and web e2e on a push or pull request when its changes need them, and every job nightly; the Electron smoke e2e on main, release/* and nightly.
 # The jobs run in parallel and the Engine tests, the other packages' tests, story tests, render gates and web e2e are split into shards, so a run takes as long as its slowest job.
 name: CI
 
@@ -10,17 +10,21 @@ on:
       - main
       # Pushes to release branches run CI so the Electron job below can run there.
       - "release/**"
+  # A nightly full run on main catches what a narrowed push or pull request run skipped.
+  schedule:
+    - cron: "0 3 * * *"
 
 concurrency:
   # A merged PR's ref becomes main; its number keeps the closing event in the PR's group.
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/main' }}
+  # The nightly run has its own group, so a push to main never cancels it nor it a push.
+  group: ${{ github.workflow }}-${{ github.event_name == 'schedule' && 'nightly' || github.event.pull_request.number && format('refs/pull/{0}/merge', github.event.pull_request.number) || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' && github.ref == 'refs/heads/main' }}
 
 permissions:
   contents: read
 
 jobs:
-  # Skips the jobs a pull request's changes cannot affect; pushes run them all.
+  # Skips the jobs a change cannot affect: a pull request's since its base, a push's since the commit before it. The nightly run, a new branch and a force push run them all.
   changes:
     name: Choose the jobs
     # Closing a PR cancels its old run without starting another set of jobs.
@@ -31,10 +35,12 @@ jobs:
       unit-matrix: ${{ steps.choose.outputs.unit-matrix }}
       quality: ${{ steps.choose.outputs.quality }}
       engine-tests: ${{ steps.choose.outputs.engine-tests }}
+      secret-store: ${{ steps.choose.outputs.secret-store }}
+      plugin-generation: ${{ steps.choose.outputs.plugin-generation }}
       stories: ${{ steps.choose.outputs.stories }}
       e2e-web: ${{ steps.choose.outputs.e2e-web }}
     steps:
-      # The choice compares with the pull request's base commit; blob:none fetches the history without file contents.
+      # The choice compares with the pull request's base commit or the push's previous one; blob:none fetches the history without file contents.
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
@@ -53,12 +59,16 @@ jobs:
       - name: Choose the jobs
         id: choose
         env:
-          BASE: ${{ github.event.pull_request.base.sha }}
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || '' }}
         run: |
           quality=true
           engine=true
+          secrets=true
+          generation=true
           stories=true
           e2e=true
+          # A new branch's push has an all-zero `before`, and a force push's may be gone from history.
+          if [ -n "$BASE" ] && { [ -z "${BASE//0/}" ] || ! git cat-file -e "$BASE^{commit}" 2> /dev/null; }; then BASE=; fi
           if [ -n "$BASE" ]; then
             files=$(git diff --name-only "$BASE...HEAD")
             # turbo exits 0 when nothing is affected, 1 when something is and 2 on an error; an error counts as affected.
@@ -69,9 +79,17 @@ jobs:
             if grep -qv '\.md$' <<< "$files" || affected --tasks check-types test; then quality=true; fi
 
             # Turbo cannot see root files, .github/ or patches/. turbo.json gives every package a no-op test:web, so only @repo/e2e's counts.
-            outside=$(grep -E '^(\.github/|patches/|[^/]+$)' <<< "$files" | grep -v '\.md$' || true)
+            # The lint, format, duplication, dead-code and skills configs and .gitignore are read only by Quality.
+            qualityOnly='^(\.oxlintrc\.json|\.oxfmtrc\.json|\.jscpd[^/]*\.json|knip\.jsonc|skills-lock\.json|\.gitignore)$'
+            outside=$(grep -E '^(\.github/|patches/|[^/]+$)' <<< "$files" | grep -v '\.md$' | grep -Ev "$qualityOnly" || true)
             engine=false
             if [ -n "$outside" ] || affected --tasks test --packages @repo/engine; then engine=true; fi
+            # The Keychain contract reads only the keyring adapter and the keyring package the lockfile pins.
+            secrets=false
+            if grep -qE '^(packages/engine/src/plugins/services/secret-store[^/]*\.ts|pnpm-lock\.yaml|\.github/workflows/ci\.yml)$' <<< "$files"; then secrets=true; fi
+            # The Plugin generation check proves turbo.json's wiring of the generator and the Plugin type checks.
+            generation=false
+            if grep -qE '^(turbo\.json|packages/contracts/tools/generate-plugin-kit\.mts|tools/(plugin-typecheck|check-plugin-generation)\.mts)$' <<< "$files"; then generation=true; fi
             stories=false
             if [ -n "$outside" ] || affected --tasks test:stories; then stories=true; fi
             e2e=false
@@ -82,48 +100,126 @@ jobs:
           echo "unit-matrix=$unit_matrix" >> "$GITHUB_OUTPUT"
           echo "quality=$quality" >> "$GITHUB_OUTPUT"
           echo "engine-tests=$engine" >> "$GITHUB_OUTPUT"
+          echo "secret-store=$secrets" >> "$GITHUB_OUTPUT"
+          echo "plugin-generation=$generation" >> "$GITHUB_OUTPUT"
           echo "stories=$stories" >> "$GITHUB_OUTPUT"
           echo "e2e-web=$e2e" >> "$GITHUB_OUTPUT"
-          echo "Quality runs: $quality. Engine tests run: $engine. Story tests run: $stories. Web e2e runs: $e2e."
+          echo "Quality runs: $quality. Engine tests run: $engine. The secret store contract runs: $secrets. Story tests run: $stories. Web e2e runs: $e2e."
 
+  # Each gate is its own step and runs even when one before it failed, so one run reports every failing gate.
+  # The gates are `pnpm quality:lint`'s, less sherif, which the install's postinstall already ran, and check-canvaskit, which cannot fail after the install copied CanvasKit.
   quality:
     name: Quality
     needs: changes
     if: ${{ needs.changes.outputs.quality == 'true' }}
     runs-on: ubuntu-latest
-    # Lint, dead code, generated artifacts and type checks run about 5 minutes; the packages' tests run in their own jobs below.
     timeout-minutes: 20
     permissions:
       contents: read
       # The Vercel Remote Cache step trades GitHub's OIDC token for a short-lived Turborepo token.
       id-token: write
     steps:
+      # Full history brings every branch, so the rule allowlists find their merge base with origin/main.
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Fetch main for the waiver merge base
-        run: git fetch origin main:refs/remotes/origin/main
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          playwright: none
+          turbo-team: ${{ vars.TURBO_TEAM }}
+
+      - name: Operation mutations
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node tools/check-operation-mutations.mts
+
+      - name: Generated Operations
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node --import tsx tools/generate-operations.mts --check
+
+      - name: Generated registry validators
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node --import tsx packages/contracts/tools/registry/generate-validators.mts --check
+
+      - name: Format
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: pnpm exec oxfmt --check
+
+      - name: Lint and rule allowlists
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node tools/check-rule-allowlists.mts
+
+      - name: Comments
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node tools/check-comments.mts
+
+      - name: Test suffixes
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node tools/check-test-suffix.mts
+
+      - name: Test-only imports
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node tools/check-test-only-imports.mts
+
+      - name: Story titles
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node tools/check-story-titles.mts
+
+      - name: Story gates
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node --import tsx tools/check-story-gates.mts
+
+      - name: Kit pairing
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node --import tsx tools/check-kit-pairing.mts
+
+      - name: Duplication
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: pnpm quality:duplication
+
+      - name: Dead code
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: pnpm quality:dead-code
+
+      - name: Plugin reference docs
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: |
+          pnpm docs:build
+          pnpm --filter @repo/contracts check:plugin-reference
+
+      - name: Plugin generation
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' && needs.changes.outputs.plugin-generation == 'true' }}
+        run: pnpm check:plugin-generation
+
+      # Status, not diff, so a generated file that should exist but is not committed fails too.
+      - name: Generated files are committed
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: |
+          changed=$(git status --porcelain)
+          if [ -n "$changed" ]; then
+            echo "$changed"
+            git diff
+            exit 1
+          fi
+
+  # Type checks take minutes and memory of their own, so they run beside Quality.
+  types:
+    name: Type checks
+    needs: changes
+    if: ${{ needs.changes.outputs.quality == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
 
       - uses: ./.github/actions/setup
         with:
           playwright: none
           turbo-team: ${{ vars.TURBO_TEAM }}
-
-      - name: Lint
-        run: pnpm quality:lint
-
-      - name: Dead code
-        run: pnpm quality:dead-code
-
-      - name: Build Plugin reference docs
-        run: pnpm docs:build
-
-      - name: Check generated Plugin artifacts
-        run: |
-          pnpm --filter @repo/contracts check:plugin-reference
-          pnpm check:plugin-generation
-          git diff --exit-code
 
       - name: Type checks
         env:
@@ -150,27 +246,30 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch main for the waiver merge base
-        run: git fetch origin main:refs/remotes/origin/main
-
       - uses: ./.github/actions/setup
         with:
           playwright: ${{ matrix.playwright }}
           turbo-team: ${{ vars.TURBO_TEAM }}
 
+      - name: Install Chromium when the desktop CSP test runs
+        if: ${{ matrix.group == 'rest' }}
+        run: |
+          status=$(pnpm exec turbo run test --filter=@repo/desktop --dry=json | node -e "let d='';process.stdin.on('data',(c)=>{d+=c}).on('end',()=>{console.log(JSON.parse(d).tasks.find((t)=>t.taskId==='@repo/desktop#test')?.cache.status??'MISS')})")
+          if [ "$status" != HIT ]; then pnpm --filter @repo/e2e exec playwright install --with-deps --only-shell chromium; fi
+
       - name: Tests
         env:
-          # Each test runner uses the available cores; overlapping runners distort timing budgets.
+          # One package at a time, two workers each: integration tests start Servers and git processes, so a worker per core oversubscribes the runner's 4 and pushes tests past their timeouts. The `budget` project runs alone after the rest.
           TURBO_CONCURRENCY: 1
-          VITEST_MAX_WORKERS: 1
+          VITEST_MAX_WORKERS: 2
         # set -f keeps the shell from expanding the ./plugins/* filter against the checkout.
         run: |
           set -f
           pnpm exec turbo run test ${{ matrix.filter }} --continue=dependencies-successful
 
-  # The Engine's suite alone takes minutes with one worker, so it runs beside Quality in shards.
+  # The Engine's suite takes minutes, so it runs beside Quality in shards.
   engine-tests:
-    name: Engine tests (${{ matrix.shard }}/3)
+    name: Engine tests (${{ matrix.shard }}/2)
     needs: changes
     if: ${{ needs.changes.outputs.engine-tests == 'true' }}
     runs-on: ubuntu-latest
@@ -181,7 +280,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@v7
 
@@ -190,17 +289,18 @@ jobs:
           playwright: none
           turbo-team: ${{ vars.TURBO_TEAM }}
 
-      # One worker keeps the Feed workload's event-loop budget honest; a shard's --shard argument feeds its hash.
+      # The Feed workload's event-loop budget runs in the serial `budget` project after the rest; a shard's --shard argument feeds its hash.
       - name: Engine tests
         env:
-          VITEST_MAX_WORKERS: 1
-        run: pnpm exec turbo run test --filter=@repo/engine -- --shard=${{ matrix.shard }}/3
+          # Two workers: one per core oversubscribes the runner, since the tests start Servers and git processes.
+          VITEST_MAX_WORKERS: 2
+        run: pnpm exec turbo run test --filter=@repo/engine -- --shard=${{ matrix.shard }}/2
 
   # The keyring adapter's contract test reads and writes the real OS secret store, and only a macOS runner has the Keychain (ADR-0051).
   secret-store:
     name: Secret store contract (macOS)
     needs: changes
-    if: ${{ needs.changes.outputs.engine-tests == 'true' }}
+    if: ${{ needs.changes.outputs.secret-store == 'true' }}
     runs-on: macos-latest
     timeout-minutes: 20
     steps:
@@ -263,7 +363,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 30
 
-  # The render gates draw every story and judge each file against itself, so a runner takes a share of the files and judges its own drawings.
+  # The render gates judge each file against itself, so a runner takes a share of the files and judges its own drawings.
+  # A pull request draws the story files its change reaches; a push draws every story.
   story-renders:
     name: Story render gates (${{ matrix.shard }}/4)
     needs: changes
@@ -278,18 +379,43 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4]
     steps:
+      # The pull request's base commit must be present to list what the change reaches; blob:none fetches the history without file contents.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: blob:none
 
       - uses: ./.github/actions/setup
         with:
           turbo-team: ${{ vars.TURBO_TEAM }}
 
       - name: Story render gates
-        run: pnpm check:story-renders --shard=${{ matrix.shard }}/4
+        run: pnpm check:story-renders --shard=${{ matrix.shard }}/4 ${{ github.event_name == 'pull_request' && format('--changed={0}', github.event.pull_request.base.sha) || '' }}
+
+  # Builds what the web e2e shards run against once, into the Remote Cache, so six shards do not each build the Expo web export.
+  e2e-web-build:
+    name: Build for web e2e
+    needs: changes
+    if: ${{ needs.changes.outputs.e2e-web == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+        with:
+          playwright: none
+          turbo-team: ${{ vars.TURBO_TEAM }}
+
+      - name: Build @repo/e2e's dependencies
+        run: pnpm exec turbo run build --filter=@repo/e2e^...
 
   e2e-web:
     name: End-to-end tests (web ${{ matrix.shard }}/6)
-    needs: changes
+    needs: [changes, e2e-web-build]
     if: ${{ needs.changes.outputs.e2e-web == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -308,7 +434,7 @@ jobs:
         with:
           turbo-team: ${{ vars.TURBO_TEAM }}
 
-      # Builds or restores the Expo web export through turbo, then replays from cache when nothing @repo/e2e depends on changed.
+      # Restores the Expo web export the build job cached, then replays from cache when nothing @repo/e2e depends on changed.
       - name: End-to-end tests (web)
         run: pnpm test:e2e --log-order=stream
         env:
@@ -323,9 +449,10 @@ jobs:
           path: e2e/blob-report/
           retention-days: 1
 
+  # Only a failing run needs the report: it carries each failure's trace.
   e2e-web-report:
     name: Merge the web e2e report
-    if: ${{ !cancelled() && needs.e2e-web.result != 'skipped' }}
+    if: ${{ !cancelled() && needs.e2e-web.result == 'failure' }}
     needs: e2e-web
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -355,7 +482,7 @@ jobs:
 
   e2e-electron:
     name: End-to-end tests (Electron)
-    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')) }}
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -395,6 +522,43 @@ jobs:
             e2e/test-results/
           retention-days: 30
 
+  # The Dock, the native quit dialog and NSOpenPanel exist only on macOS, so the @mac-only Electron scenarios run there, nightly.
+  # The folder picker drives NSOpenPanel through System Events, which needs the runner's Accessibility permission.
+  e2e-electron-mac:
+    name: End-to-end tests (Electron, macOS)
+    if: ${{ github.event_name == 'schedule' }}
+    runs-on: macos-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+        with:
+          playwright: none
+          turbo-team: ${{ vars.TURBO_TEAM }}
+
+      - name: Install Electron
+        run: pnpm --filter @repo/desktop exec install-electron
+
+      # A macOS runner has a logged-in desktop, so the @needs-focus scenarios can take focus.
+      - name: End-to-end tests (Electron, macOS)
+        env:
+          ARGO_E2E_FOCUS: 1
+        run: pnpm test:e2e:electron -- --grep @mac-only
+
+      - name: Upload the macOS Electron e2e report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-electron-mac
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 30
+
   # Branch protection requires this one check, so splitting or renaming the jobs above never changes the required checks.
   # A skipped job passes it; a failed choice fails it.
   ci:
@@ -404,13 +568,16 @@ jobs:
       [
         changes,
         quality,
+        types,
         unit-tests,
         engine-tests,
         secret-store,
         stories,
         story-renders,
+        e2e-web-build,
         e2e-web,
         e2e-electron,
+        e2e-electron-mac,
       ]
     runs-on: ubuntu-latest
     timeout-minutes: 5

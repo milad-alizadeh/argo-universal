@@ -37,7 +37,7 @@ const wordBoundary = /[\n\r\p{Z}\p{P}]+/u;
 export const tokenize = (text: string): string[] =>
   text.split(wordBoundary).filter((word) => word !== '');
 
-// An Operation id's words: `session.setTodoStep` reads as "session set todo step".
+// An Operation id's words: `github.automationSet` reads as "github automation set".
 export const idWords = (id: string): string =>
   id.replaceAll('.', ' ').replaceAll(/([a-z])([A-Z])/g, '$1 $2');
 

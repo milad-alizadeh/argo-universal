@@ -117,7 +117,7 @@ it.each([
 );
 
 it('never removes the main Checkout during normal archive or restart, even when its stored branch looks owned', async () => {
-  const host = await startAcpEngine({ steps: [] });
+  const host = await startAcpEngine({ steps: [], archiveUndoMs: 500 });
   const created = await promptedArchiveSession(host, { type: 'main' });
   await host.caller.session.close({ sessionId: created.sessionId });
   host.database

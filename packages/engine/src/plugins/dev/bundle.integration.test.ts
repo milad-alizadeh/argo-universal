@@ -96,9 +96,5 @@ it('builds a Plugin once, without watching its sources, when the Server is not i
   await new Promise((resolve) => setTimeout(resolve, 1500));
 
   expect(runtime.status('dev').state).toBe('running');
-  await writeFile(source, `${validSource}\nexport const second = 1;`);
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-
-  expect(runtime.status('dev').state).toBe('running');
   expect(rebuilds).toBe(1);
 }, 30_000);

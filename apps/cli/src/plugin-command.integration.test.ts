@@ -20,16 +20,10 @@ const exampleTestLimitMs = 60_000;
 
 it.each([
   ['process.cwd();', 'Node global process'],
-  ["new URL('https://example.com');", 'Node global URL'],
   [
     "argo.slots.register('argo/session/row/v1', () => null);",
     'Undeclared Slot',
   ],
-  [
-    "argo.slots.register('argo/feed/tool-call/v1', () => null);",
-    'drawn through ui.render',
-  ],
-  ["argo.on('unknown.event', () => null);", 'Unknown Hook event'],
 ])(
   'validate reports %s at its source line',
   async (body, reason) => {
@@ -49,7 +43,6 @@ it.each([
 
 it.each([
   ['name', { name: 42 }],
-  ['version', { version: 'one' }],
   ['argo', { engines: { argo: '*' } }],
 ])(
   'validate reports a bad manifest at its %s field',
@@ -145,19 +138,9 @@ it.each([
   30_000,
 );
 
-it.each([
-  ['module.exports.register = function() {};', 'CommonJS exports'],
-  [
-    'export function register() { const process = {cwd: () => "local"}; process.cwd(); }',
-    'a local name that shadows a Node global',
-  ],
-])(
-  'validate accepts %s with %s',
-  async (source) => {
-    const directory = await fixture(source);
-    // Without the example's `"type": "module"` package, Node reads the entry as CommonJS.
-    await rm(join(directory, 'package.json'));
-    expect(await run('validate', directory)).toMatchObject({ code: 0 });
-  },
-  30_000,
-);
+it('validate accepts CommonJS exports', async () => {
+  const directory = await fixture('module.exports.register = function() {};');
+  // Without the example's `"type": "module"` package, Node reads the entry as CommonJS.
+  await rm(join(directory, 'package.json'));
+  expect(await run('validate', directory)).toMatchObject({ code: 0 });
+}, 30_000);

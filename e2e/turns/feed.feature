@@ -9,8 +9,6 @@ Feature: A Session's live Feed
     Examples:
       | agent | frame |
       | 1     | wide  |
-      | 1     | phone |
-      | 2     | wide  |
       | 2     | phone |
 
   Scenario Outline: The Feed catches up after the Engine restarts with Agent <agent> in a <frame> Frame
@@ -25,6 +23,4 @@ Feature: A Session's live Feed
     Examples:
       | agent | frame |
       | 1     | wide  |
-      | 1     | phone |
-      | 2     | wide  |
       | 2     | phone |

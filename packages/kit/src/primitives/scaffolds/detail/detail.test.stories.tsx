@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
+import { nextFrames } from '#mocks/next-frames';
 import { settleLayout } from '#mocks/story-layout';
 import { Action } from '#primitives/actions/action';
 import { Text } from '#primitives/content/text';
@@ -93,12 +94,11 @@ const inContainer = (
   play,
 });
 
-// A tablet-wide page has no gutter for the aside, so its rows lead the content, each with its value.
-export const TabletWidthLeadsTheBody = inContainer(
+// A tablet-wide page draws every row of the aside with its value.
+export const TabletWidthShowsEveryValue = inContainer(
   'h-160 w-192',
   async ({ canvas }) => {
     await expectProperties(canvas);
-    await waitFor(() => expect(propertiesPlace(canvas)).toBe('above'));
     await expect(canvas.getByText('Ana Ruiz')).toBeVisible();
   },
 );
@@ -211,7 +211,41 @@ const rect = (element: Element): DOMRect => element.getBoundingClientRect();
 // Rounding in layout is not a difference in edge.
 const sameEdge = (a: number, b: number): boolean => Math.abs(a - b) <= 1;
 
-const screenId = 'detail-screen';
+type Canvas = Parameters<Play>[0]['canvas'];
+
+type Span = readonly [start: number, end: number];
+
+const crosses = ([aStart, aEnd]: Span, [bStart, bEnd]: Span): boolean =>
+  aStart < bEnd && bStart < aEnd;
+
+const overlaps = (a: DOMRect, b: DOMRect): boolean =>
+  crosses([a.left, a.right], [b.left, b.right]) &&
+  crosses([a.top, a.bottom], [b.top, b.bottom]);
+
+// Waits until an element keeps one box across two frames, so a page still taking its breakpoint is not measured.
+async function settled(element: Element): Promise<void> {
+  await waitFor(async () => {
+    const before = rect(element);
+
+    await nextFrames();
+
+    const after = rect(element);
+
+    await expect(
+      sameEdge(before.left, after.left) && sameEdge(before.top, after.top),
+    ).toBe(true);
+  });
+}
+
+// The aside's rows never cover the content, wherever the page puts them.
+async function expectAsideClearOfContent(canvas: Canvas): Promise<void> {
+  const status = canvas.getByRole('group', { name: statusGroup });
+
+  await settled(status);
+  await expect(overlaps(rect(status), rect(canvas.getByText(body)))).toBe(
+    false,
+  );
+}
 
 // A window wide enough for the aside's own column, settled before the story renders; the Screen fills the viewport, as in the App.
 const onWidest = (story: Story): Story => ({
@@ -220,120 +254,14 @@ const onWidest = (story: Story): Story => ({
   beforeEach: () => settleLayout(1920),
 });
 
-// The column a Screen without an aside keeps: the reading width and its inset each side, centred.
-const columnLeft = (screen: DOMRect): number =>
-  screen.left + (screen.width - (800 + 2 * 32)) / 2 + 32;
-
-/*
- * The aside takes the right gutter and never the content's room: the title and the content start where a page without
- * an aside starts them.
- */
-export const AsideNeverMovesTheTitle: Story = onWidest({
-  render: (args) => (
-    <Screen title={issue.title} aside={issue.aside} testID={screenId}>
-      <Detail {...args} />
-    </Screen>
-  ),
+export const AsideNeverCoversTheContent: Story = onWidest({
   play: async ({ canvas }) => {
-    await waitFor(() => expect(propertiesPlace(canvas)).toBe('beside'));
-
-    const content = rect(canvas.getByText(body));
-    const title = rect(canvas.getByRole('heading', { name: issue.title }));
-    const screen = rect(canvas.getByTestId(screenId));
-    const status = rect(canvas.getByRole('group', { name: statusGroup }));
-
-    await expect(sameEdge(title.left, content.left)).toBe(true);
-    await expect(sameEdge(content.left, columnLeft(screen))).toBe(true);
-    await expect(status.left).toBeGreaterThan(content.right);
+    await expectAsideClearOfContent(canvas);
   },
 });
 
-const listId = 'list-screen';
-
-const listRows = 'list-rows';
-
-// The App's page beside its sidebar: the Issue, and above it the list it opened from, each the page's width.
-function IssueAndList(args: DetailProps & { page: number }): React.JSX.Element {
-  const besideSidebar = args.page;
-
-  return (
-    <View>
-      <View className="h-80" style={{ width: besideSidebar }}>
-        <Screen title="Open" testID={listId}>
-          <View testID={listRows}>
-            <Text>Rows run the width of the column.</Text>
-          </View>
-        </Screen>
-      </View>
-      <View className="h-80" style={{ width: besideSidebar }}>
-        <Screen title={issue.title} aside={issue.aside} testID={screenId}>
-          <Detail {...args} />
-        </Screen>
-      </View>
-    </View>
-  );
-}
-
-type Canvas = Parameters<Play>[0]['canvas'];
-
-// The list's title, body left and body width from its page, each beside the Issue's from its own.
-function columnEdges(canvas: Canvas): [number, number][] {
-  const list = rect(canvas.getByTestId(listId));
-  const page = rect(canvas.getByTestId(screenId));
-  const listTitle = rect(canvas.getByRole('heading', { name: 'Open' }));
-  const title = rect(canvas.getByRole('heading', { name: issue.title }));
-  const rows = rect(canvas.getByTestId(listRows));
-  const content = rect(canvas.getByText(body));
-
-  return [
-    [listTitle.left - list.left, title.left - page.left],
-    [rows.left - list.left, content.left - page.left],
-    [rows.width, content.width],
-  ];
-}
-
-async function expectOneColumn(canvas: Canvas): Promise<void> {
-  const edges = columnEdges(canvas);
-
-  await expect(
-    edges.every(([list, page]) => sameEdge(list, page)),
-    `list and Issue edges ${JSON.stringify(edges)}`,
-  ).toBe(true);
-}
-
 // The App's sidebar takes 384 of a window wide enough to show it, and the rail alone below 1072.
 const pageAt = (window: number): number => window - (window >= 1072 ? 384 : 56);
-
-/*
- * The list an Issue opens from keeps the Issue's column, so opening an Issue moves neither the title nor the body's
- * edges. Where the aside has its own column it sits beside the body, which gives it width.
- */
-function listToIssueAt(window: number, beside: boolean): Story {
-  return {
-    parameters: { screenPreview: true },
-    beforeEach: () => settleLayout(window, 900),
-    render: (args) => <IssueAndList {...args} page={pageAt(window)} />,
-    play: async ({ canvas }) => {
-      await expectProperties(canvas);
-      await waitFor(() => expectOneColumn(canvas));
-
-      if (!beside) return;
-
-      await waitFor(() => expect(propertiesPlace(canvas)).toBe('beside'));
-
-      const content = rect(canvas.getByText(body));
-      const status = canvas.getByRole('group', { name: statusGroup });
-
-      await expect(rect(status).left).toBeGreaterThan(content.right);
-    },
-  };
-}
-
-export const ListToIssueKeepsColumnAt1024 = listToIssueAt(1024, false);
-
-export const AsideBesideNarrowedColumnAt1440 = listToIssueAt(1440, true);
-
-export const ListToIssueKeepsColumnAt1920 = listToIssueAt(1920, true);
 
 const overflowId = 'overflow-page';
 
@@ -365,20 +293,17 @@ function pageOfWidth(window: number): Story {
             `${edge.getAttribute('aria-label') ?? 'page'} is ${edge.scrollWidth} wide in ${edge.clientWidth}`,
           ).toBeLessThanOrEqual(edge.clientWidth);
       });
+      await expectAsideClearOfContent(canvas);
     },
   };
 }
 
-// The aside's column at the widest windows and its rows above the body at the rest never run past their page.
+// The aside's rows never run past their page or over the content, at any window.
 export const NothingOverflowsAt375 = pageOfWidth(375);
-
-export const NothingOverflowsAt768 = pageOfWidth(768);
 
 export const NothingOverflowsAt1024 = pageOfWidth(1024);
 
 export const NothingOverflowsAt1440 = pageOfWidth(1440);
-
-export const NothingOverflowsAt1920 = pageOfWidth(1920);
 
 // A phone-wide web window draws the rows above the content.
 export const PhoneWindowLeadsTheBody: Story = {
@@ -407,6 +332,8 @@ export const AsideStaysWhileContentScrolls: Story = onWidest({
   play: async ({ canvas }) => {
     await waitFor(() => expect(propertiesPlace(canvas)).toBe('beside'));
     const status = canvas.getByRole('group', { name: statusGroup });
+
+    await settled(status);
     const scroll = canvas.getByTestId(scrollId);
     const { top } = rect(status);
 

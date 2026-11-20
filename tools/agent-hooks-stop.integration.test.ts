@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import {
   cpSync,
   mkdirSync,
@@ -9,6 +9,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
   anyViolation,
@@ -24,6 +25,17 @@ import {
   scratchSourceFile,
   unformattedJson,
 } from './agent-hooks.mocks';
+
+// What `pnpm verify` records once its checks pass, for the scratch tree as it is now.
+function recordPassed(): void {
+  const stamp = pathToFileURL(path.join(root, 'tools/verify-stamp.mts')).href;
+
+  execFileSync(
+    process.execPath,
+    ['--input-type=module', '-e', `(await import('${stamp}')).recordPassed();`],
+    { cwd: root },
+  );
+}
 
 // These files were made by the after-edit cases before the stop cases ran.
 beforeAll((): void => {
@@ -80,6 +92,18 @@ describe('before-stop', (): void => {
     expect(
       runHook(beforeStopHook, { cwd: root, stop_hook_active: true }).status,
     ).toBe(0);
+  });
+
+  it('skips the checks for a tree that already passed, until it changes', (): void => {
+    recordPassed();
+
+    expect(runHook(beforeStopHook, { cwd: root }).status).toBe(0);
+
+    writeFileSync(
+      path.join(root, blockedSourceFile),
+      `${anyViolation}export const other: any = 2;\n`,
+    );
+    expect(runHook(beforeStopHook, { cwd: root }).status).toBe(BLOCKED);
   });
 
   it('formats changed files', (): void => {

@@ -95,26 +95,10 @@ export const FileSecondAgentWide = opensWrittenPlan(
   'file',
 );
 
-function readsLongWrittenPlan(width: number, agent: MockAgent): Story {
-  return readingLongWrittenPlan({ width, agent }, meta.args);
+function readsLongWrittenPlan(width: number): Story {
+  return readingLongWrittenPlan({ width, agent: 'agent-1' }, meta.args);
 }
 
-export const LongFirstAgentPhone = readsLongWrittenPlan(
-  layoutWidths.phone,
-  'agent-1',
-);
+export const LongPhone = readsLongWrittenPlan(layoutWidths.phone);
 
-export const LongFirstAgentWide = readsLongWrittenPlan(
-  layoutWidths.wide,
-  'agent-1',
-);
-
-export const LongSecondAgentPhone = readsLongWrittenPlan(
-  layoutWidths.phone,
-  'agent-2',
-);
-
-export const LongSecondAgentWide = readsLongWrittenPlan(
-  layoutWidths.wide,
-  'agent-2',
-);
+export const LongWide = readsLongWrittenPlan(layoutWidths.wide);

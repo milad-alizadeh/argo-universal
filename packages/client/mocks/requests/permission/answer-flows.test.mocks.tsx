@@ -41,10 +41,10 @@ export function allow(width: number, mock?: RequestMock): Story {
   };
 }
 
-export function submitting(width: number, mock?: RequestMock): Story {
+export function submitting(width: number): Story {
   return {
     args: {
-      ...permissionProps({ mock, onAnswer: fn() }),
+      ...permissionProps({ onAnswer: fn() }),
       state: { kind: 'submitting' },
     },
     play: async ({ userEvent, args }) => {
@@ -60,10 +60,10 @@ export function submitting(width: number, mock?: RequestMock): Story {
   };
 }
 
-export function responseError(width: number, mock?: RequestMock): Story {
+export function responseError(width: number): Story {
   return {
     args: {
-      ...permissionProps({ mock, onAnswer: fn() }),
+      ...permissionProps({ onAnswer: fn() }),
       error: 'Could not send the answer. Try again.',
     },
     play: async () => {

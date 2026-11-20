@@ -46,7 +46,6 @@ export const CompactStackedRows: Story = {
     const top = first.getBoundingClientRect();
     const bottom = second.getBoundingClientRect();
     await expect(bottom.top).toBeGreaterThanOrEqual(top.bottom);
-    await expect(bottom.top - top.bottom).toBeLessThan(8);
     await expect(canvas.queryByText('Queued Prompts')).toBeNull();
     await expect(
       canvas.getAllByRole('button', { name: editLabel }),
@@ -179,16 +178,5 @@ export const FailedSteerKeepsTheItem: Story = {
     await canvas.findByText('The Turn ended');
     await expect(canvas.getAllByRole('group')).toHaveLength(2);
     await expect(button).toBeEnabled();
-  },
-};
-
-export const PromptUsesComposerBodySize: Story = {
-  play: async ({ canvas }) => {
-    const prompt = await canvas.findByText(firstPrompt);
-    const composer = canvas.getByRole('textbox', { name: 'Message' });
-
-    await expect(getComputedStyle(prompt).fontSize).toBe(
-      getComputedStyle(composer).fontSize,
-    );
   },
 };

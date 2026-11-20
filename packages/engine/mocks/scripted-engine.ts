@@ -11,9 +11,17 @@ const cliEntry = fileURLToPath(
 // A scripted Agent starts no `argo mcp`, so its grace never ends unless a test of that notice sets one.
 const scriptedGrace = { argoToolsGraceMs: Number.POSITIVE_INFINITY };
 
+// Test Turns keep the Mac awake through nothing; the keep-awake test passes its own.
+export const keepNothingAwake: NonNullable<EngineInput['caffeinate']> =
+  () => () => {};
+
 type ScriptedEngineInput = Pick<
   EngineInput,
-  'acp' | 'cliEntry' | 'argoToolsGraceMs' | 'conversationProvider'
+  | 'acp'
+  | 'cliEntry'
+  | 'argoToolsGraceMs'
+  | 'conversationProvider'
+  | 'caffeinate'
 > & {
   agent: ReturnType<typeof createScriptedAgentProcess>;
   fixtureAgents: AgentIdentity[];
@@ -32,6 +40,7 @@ export const scriptedEngineInput = (
     acp: agent,
     // No test reaches Codex or the live voice service; a test that wants a provider passes one.
     conversationProvider: null,
+    caffeinate: keepNothingAwake,
     ...scriptedGrace,
   };
 };
