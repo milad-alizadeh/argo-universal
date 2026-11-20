@@ -1,10 +1,10 @@
-import { bandsOf, levelOf } from '../utils/audio-bands';
+import { bandsOf, peakOf } from '../utils/analyser-bands';
 
-const fftSize = 256;
+const fftSize = 512;
 
 /*
  * Reads how loud a stream is, from 0 to 1, from an AnalyserNode on its track: as the loudest frequency's strength, and
- * band by band across speech. The levels stay in the App: they only move the orb and the visualisers.
+ * band by band across speech. The levels stay in the App: they only move the band.
  */
 export class LevelMeter {
   private readonly context = new AudioContext();
@@ -20,12 +20,12 @@ export class LevelMeter {
   public level(): number {
     this.analyser.getByteFrequencyData(this.bins);
 
-    return levelOf(this.bins);
+    return peakOf(this.bins);
   }
 
   public spectrum(into: Float32Array): void {
     this.analyser.getByteFrequencyData(this.bins);
-    bandsOf(this.bins, into);
+    bandsOf(this.bins, into, this.context.sampleRate / fftSize);
   }
 
   public close(): void {

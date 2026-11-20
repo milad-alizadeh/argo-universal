@@ -19,7 +19,7 @@ import { controlsOf } from './voice-settings-controls';
 
 type Controls = Omit<
   VoiceDetailViewProps,
-  'onBack' | 'devices' | 'onDevicesChange' | 'visualiser' | 'adjustsGain'
+  'onBack' | 'devices' | 'onDevicesChange' | 'adjustsGain'
 >;
 
 interface SettingsQuery {

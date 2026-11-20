@@ -1,45 +1,54 @@
-import type { VoiceAvailability, VoiceSettings } from '@repo/contracts';
 import { Button } from '@repo/kit/primitives/actions/button';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
+import { SizeClass } from '@repo/kit/size-class/size-class';
 import type * as React from 'react';
 import { callSection } from './voice-call-section';
 import { EditorDialog, voiceSection } from './voice-choice-section';
 import type { VoiceDetailViewProps } from './voice-detail-view-props';
-import { devicesSection } from './voice-devices-section';
-import { chosenProvider, settingsOf, waiting } from './voice-settings-state';
+import { audioSection } from './voice-devices-section';
+import { settingsOf, waiting } from './voice-settings-state';
 
 export type { VoiceDetailViewProps } from './voice-detail-view-props';
 
+/*
+ * The phone layout, on a phone or a narrow web window, sets no sound of its own, so it draws no Microphone and speaker
+ * section (ADR-0026).
+ */
 export function VoiceDetailView(
   props: VoiceDetailViewProps,
 ): React.JSX.Element {
   return (
-    <Screen title="Voice" onBack={props.onBack}>
-      <FieldGroup>{sectionsOf(props)}</FieldGroup>
+    <Screen title="Conversation" onBack={props.onBack}>
+      <SizeClass
+        compact={<FieldGroup>{sectionsOf(props)}</FieldGroup>}
+        wide={<FieldGroup>{sectionsOf(props, audioSection(props))}</FieldGroup>}
+      />
       <EditorDialog {...props} />
     </Screen>
   );
 }
 
 // Called, not rendered: the FieldGroup reads its sections by element type.
-const sectionsOf = (props: VoiceDetailViewProps): React.ReactNode[] => [
+const sectionsOf = (
+  props: VoiceDetailViewProps,
+  audio: React.JSX.Element | null = null,
+): React.ReactNode[] => [
   switchSection(props),
-  providerSection(props),
   voiceSection(props),
   callOf(props),
-  devicesOf(props),
+  audio,
   statusSection(props),
 ];
 
 const switchFooter =
-  'Talk to a Session from its Composer. With this off, the Composer never shows the voice button.';
+  'Talk to a Session from its Composer. With this off, the Composer never shows the Conversation button.';
 
 function switchSection(props: VoiceDetailViewProps): React.JSX.Element {
   return (
     <FieldGroup.Section key="switch" footer={switchFooter}>
       <FieldGroup.Toggle
-        title="Voice calls"
+        title="Conversations"
         value={settingsOf(props).enabled}
         disabled={waiting(props)}
         onValueChange={props.onEnabledChange}
@@ -48,65 +57,17 @@ function switchSection(props: VoiceDetailViewProps): React.JSX.Element {
   );
 }
 
-const reasonOf = (
-  availability: VoiceAvailability | undefined,
-): string | undefined =>
-  availability?.usable === false ? availability.reason : undefined;
-
-const providerOptions = (
-  settings: VoiceSettings,
-): React.ComponentProps<typeof FieldGroup.Picker>['options'] =>
-  settings.providers.map((provider) => ({
-    value: provider.id,
-    label: provider.experimental
-      ? `${provider.label} (experimental)`
-      : provider.label,
-  }));
-
-// Why the chosen provider cannot be used, when it cannot.
-const providerSection = (props: VoiceDetailViewProps): React.JSX.Element => (
-  <FieldGroup.Section
-    key="provider"
-    footer={reasonOf(chosenProvider(settingsOf(props))?.availability)}
-  >
-    {providerPicker(props, settingsOf(props))}
-  </FieldGroup.Section>
-);
-
-const providerPicker = (
-  props: VoiceDetailViewProps,
-  settings: VoiceSettings,
-): React.JSX.Element => (
-  <FieldGroup.Picker
-    title="Voice provider"
-    presentation="menu"
-    value={settings.provider ?? ''}
-    options={providerOptions(settings)}
-    disabled={waiting(props)}
-    onValueChange={props.onProviderChange}
-  />
-);
-
 const callOf = (props: VoiceDetailViewProps): React.JSX.Element =>
   callSection({
     options: settingsOf(props).options,
     disabled: waiting(props),
-    adjustsGain: props.adjustsGain,
-    visualiser: props.visualiser,
     onChange: props.onCallOptionsChange,
   });
 
-const ignore = (): void => undefined;
-
-const devicesOf = (props: VoiceDetailViewProps): React.JSX.Element | null =>
-  props.devices
-    ? devicesSection(props.devices, props.onDevicesChange ?? ignore)
-    : null;
-
 const messages = {
-  loading: 'Loading Voice settings…',
-  error: 'Could not load Voice settings.',
-  disconnected: 'Connect to the Server to change Voice settings.',
+  loading: 'Loading Conversation settings…',
+  error: 'Could not load Conversation settings.',
+  disconnected: 'Connect to the Server to change Conversation settings.',
   loaded: undefined,
 };
 

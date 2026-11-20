@@ -8,3 +8,5 @@ export {
   type IconButtonProps,
   type IconButtonSize,
 } from './icon-button';
+
+export { IconButtonControl } from './icon-button-control';

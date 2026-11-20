@@ -1,6 +1,6 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, waitFor, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import { VoiceDetailView } from './voice-detail-view';
 import {
   adding,
@@ -10,7 +10,7 @@ import {
   unusableVoice,
   usableVoice,
 } from './voice-detail-view-fixtures';
-import { voiceDetailSpies } from './voice-detail-view.mocks';
+import { inReadingOrder, voiceDetailSpies } from './voice-detail-view.mocks';
 
 const meta = {
   title: 'Tests/Screens/Settings/Voice',
@@ -30,7 +30,7 @@ type Story = StoryObj<typeof meta>;
 
 type Context = Parameters<NonNullable<Story['play']>>[0];
 
-const voiceCalls = { name: 'Voice calls' };
+const voiceCalls = { name: 'Conversations' };
 
 const withCustomVoices = {
   voice: { status: 'loaded', settings: customVoices },
@@ -188,18 +188,32 @@ export const OpensTheEmptyForm: Story = {
   },
 };
 
+// Paper "3 · Form", option A: Save is the form's one action, and its X closes it.
 export const AddingWaitsForANameAndADescription: Story = {
   args: { ...withCustomVoices, editor: adding },
   play: async ({ canvasElement }) => {
     const page = opened(canvasElement);
-    await expect(await page.findByText('New custom voice')).toBeVisible();
+    await waitFor(() =>
+      expect(page.getByText('New custom voice')).toBeVisible(),
+    );
     await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Preview' })).toBeDisabled();
-    await expect(page.queryByRole('button', { name: 'Delete' })).toBeNull();
+    await expect(page.queryByRole('button', { name: 'Cancel' })).toBeNull();
+    await expect(page.queryByText('Delete custom voice')).toBeNull();
   },
 };
 
-export const EditingPreviewsSavesAndDeletes: Story = {
+export const ClosesTheFormFromItsX: Story = {
+  args: { ...withCustomVoices, editor: editing },
+  play: async ({ canvasElement, args, userEvent }) => {
+    const page = opened(canvasElement);
+    await userEvent.click(await page.findByRole('button', { name: 'Close' }));
+    await expect(args.onEditorChange).toHaveBeenCalledWith();
+    await expect(args.onSaveCustomVoice).not.toHaveBeenCalled();
+  },
+};
+
+export const EditingPreviewsAndSaves: Story = {
   args: { ...withCustomVoices, editor: editing },
   play: async ({ canvasElement, args, userEvent }) => {
     const page = opened(canvasElement);
@@ -207,7 +221,18 @@ export const EditingPreviewsSavesAndDeletes: Story = {
     await expect(args.onPreviewCustomVoice).toHaveBeenCalledWith(editing.voice);
     await userEvent.click(page.getByRole('button', { name: 'Save' }));
     await expect(args.onSaveCustomVoice).toHaveBeenCalledWith(editing.voice);
-    await userEvent.click(page.getByRole('button', { name: 'Delete' }));
+  },
+};
+
+// Deleting is a row of its own under the description, only while editing.
+export const EditingDeletesFromItsOwnRow: Story = {
+  args: { ...withCustomVoices, editor: editing },
+  play: async ({ canvasElement, args, userEvent }) => {
+    const page = opened(canvasElement);
+    await expect(page.queryByRole('button', { name: 'Delete' })).toBeNull();
+    await userEvent.click(
+      await page.findByRole('button', { name: 'Delete custom voice' }),
+    );
     await expect(args.onDeleteCustomVoice).toHaveBeenCalledWith('pirate');
   },
 };
@@ -215,7 +240,7 @@ export const EditingPreviewsSavesAndDeletes: Story = {
 export const KeepsTheInstructionsWhenLeft: Story = {
   play: async ({ canvas, args, userEvent }) => {
     const field = canvas.getByRole('textbox', {
-      name: /Instructions for every call/,
+      name: /Instructions for every Conversation/,
     });
 
     await userEvent.type(field, 'Call me Sam.');
@@ -227,9 +252,11 @@ export const KeepsTheInstructionsWhenLeft: Story = {
   },
 };
 
+const gain = 'Microphone gain';
+
 export const ShowsTheGainWhereItCanChange: Story = {
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('Microphone gain')).toBeVisible();
+    await expect(canvas.getByText(gain)).toBeVisible();
     await expect(canvas.getByText('Volume')).toBeVisible();
   },
 };
@@ -237,18 +264,31 @@ export const ShowsTheGainWhereItCanChange: Story = {
 export const HidesTheGainWhereItCannotChange: Story = {
   args: { adjustsGain: false },
   play: async ({ canvas }) => {
-    await expect(canvas.queryByText('Microphone gain')).toBeNull();
-    await expect(canvas.queryByText('Visualiser')).toBeNull();
-    await expect(canvas.getByText(/^Volume changes/)).toBeVisible();
+    await expect(canvas.queryByText(gain)).toBeNull();
+    await expect(canvas.getByText('Volume')).toBeVisible();
   },
 };
 
-export const ChoosesTheBand: Story = {
-  args: { visualiser: { kind: 'orb', onChange: fn() } },
-  play: async ({ canvas, canvasElement, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: /^Visualiser/ }));
-    await opened(canvasElement).findAllByText('Band');
-    await userEvent.keyboard('{ArrowDown}{Enter}');
-    await expect(args.visualiser?.onChange).toHaveBeenCalledWith('band');
+// Four groups: the switch; the voice and what it is told; how a call behaves; this Device's sound.
+export const GroupsTheRowsByWhatTheyChange: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      inReadingOrder(canvas, [
+        'Conversations',
+        'Voice and instructions',
+        'Voice provider',
+        'Instructions for every Conversation',
+        'Opening note',
+        'The next Conversation uses this voice and these instructions.',
+        'Call behaviour',
+        'Say a short line when handing work over',
+        'End a silent Conversation after',
+        'These apply from the next Conversation.',
+        'Microphone and speaker',
+        gain,
+        'Volume',
+        'Kept on this Device. A running Conversation changes at once.',
+      ]),
+    ).toBe(true);
   },
 };

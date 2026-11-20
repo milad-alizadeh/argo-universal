@@ -4,7 +4,6 @@ import { composerProps } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { Composer } from './composer';
-import { endButtonId } from './composer-primary-action';
 import { bandTalkingComposer } from './composer-voice-band-fixtures';
 import { voiceCallComposer } from './composer-voice-fixtures';
 
@@ -70,23 +69,22 @@ export const BandTypeWide = bandType('wide');
 
 export const BandTypePhone = bandType('phone');
 
-// The label sits inside the band, and ends where End does, at every width.
+// The label sits inside the band, hugging its words, and ends the band's 16 points padding from its right edge, at every width.
 const bandEdges = (layout: 'wide' | 'phone'): Story =>
   onCall(layout, async (canvas) => {
     const band = canvas.getByTestId('voice-edge-band').getBoundingClientRect();
     const label = canvas.getByText('2:51').getBoundingClientRect();
-    const end = canvas.getByTestId(endButtonId).getBoundingClientRect();
 
     await expect(label.bottom).toBeLessThanOrEqual(band.bottom);
     await expect(label.top).toBeGreaterThanOrEqual(band.top);
-    await expect(label.right).toBeCloseTo(end.right, 0);
+    await expect(band.right - label.right).toBeCloseTo(16, 0);
   });
 
 export const BandEdgesWide = bandEdges('wide');
 
 export const BandEdgesPhone = bandEdges('phone');
 
-// Under the band the field's top padding is Paper's 6 points, so the card grows by 24, not the band's 30.
+// Under the band the field's top padding is 6 points, not the 12 it has without one.
 export const FieldUnderTheBand = onCall('wide', async (canvas) => {
   await expect(getComputedStyle(fieldOf(canvas)).paddingTop).toBe('6px');
 });

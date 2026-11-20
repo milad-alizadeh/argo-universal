@@ -50,7 +50,7 @@ export type ComposerVoice =
       kind: 'connected';
       onEnd: () => void;
       mutes: ComposerVoiceMutes;
-      // A drawing of the call along the card's top edge, above the text box; absent while the stage draws it.
+      // A drawing of the call along the card's top edge, above the text box.
       edge?: ReactNode;
     }
   | ComposerVoiceElsewhere;

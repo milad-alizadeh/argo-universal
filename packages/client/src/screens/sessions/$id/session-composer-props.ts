@@ -20,7 +20,7 @@ import type {
   PermissionRequestProps,
 } from '#features/requests';
 import { decodeOpenFailure, toSendError } from '#features/sessions';
-import { type VoiceStageViewProps, voicePlaceholder } from '#features/voice';
+import { voicePlaceholder } from '#features/voice';
 import { type Navigate } from '#lib/product/navigation/navigation';
 import { followUpProps } from './follow-up-composer-props';
 import { sessionStatusProps } from './session-status-props';
@@ -46,8 +46,6 @@ export interface OpenSession {
   voice?: ComposerProps['voice'];
   // What is being said on this Session's Voice call, drawn at the tail of its Feed.
   partials?: VoicePartial[];
-  // The orb pinned above the Feed while this Session's Voice call runs.
-  stage?: VoiceStageViewProps;
   options?: {
     configOptions: SessionSnapshot['configOptions'];
     loading: boolean;

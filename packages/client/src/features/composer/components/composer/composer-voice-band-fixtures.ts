@@ -15,7 +15,7 @@ type ComposerFixture = Pick<
 
 const noop = (): void => {};
 
-// Sound with no microphone and no voice, so the band scrolls as it would on a call.
+// Sound with no microphone and no voice, so the band moves as it would on a call.
 const { spectrum } = syntheticVoiceAudio();
 
 const connected = {
@@ -47,7 +47,7 @@ const onCall = (
   },
 });
 
-// Connecting: a dim line with one soft highlight sweeping across, and no timer until the call connects.
+// Connecting: dim dots with one soft pulse crossing them, and no timer until the call connects.
 export const bandConnectingComposer = {
   ...voiceConnectingComposer,
   voice: {
@@ -57,22 +57,22 @@ export const bandConnectingComposer = {
   },
 } satisfies ComposerFixture;
 
-// Listening: the person's microphone level, newest on the right, scrolling left.
+// Listening: the person's voice lights the bars from the left, in orange.
 export const bandListeningComposer = onCall(connected);
 
-// Talking: the voice's output, in info blue.
+// Talking: the Agent's voice lights the bars from the right, in blue.
 export const bandTalkingComposer = onCall(
   { ...connected, orb: 'talking' },
   '2:51',
 );
 
-// Muted: the line goes flat and red, with the mic button.
+// Muted: the bars go dim and red, with the mic button.
 export const bandMutedComposer = onCall(
   { ...connected, microphoneMuted: true },
   '3:10',
 );
 
-// Reconnecting: a warning sweep, and the timer keeps counting.
+// Reconnecting: warning-coloured dots with a pulse crossing, and the timer keeps counting.
 export const bandReconnectingComposer = onCall(
   { ...connected, orb: 'none', trouble: 'reconnecting' },
   '3:14',

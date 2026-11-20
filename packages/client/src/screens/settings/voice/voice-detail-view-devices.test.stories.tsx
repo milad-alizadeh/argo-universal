@@ -1,13 +1,16 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, within } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import { VoiceDetailView } from './voice-detail-view';
 import {
+  idleMeters,
   namedDevices,
+  speakingMeters,
+  testingMeters,
   unnamedDevices,
   usableVoice,
 } from './voice-detail-view-fixtures';
-import { voiceDetailSpies } from './voice-detail-view.mocks';
+import { inReadingOrder, voiceDetailSpies } from './voice-detail-view.mocks';
 
 const meta = {
   title: 'Tests/Screens/Settings/Voice/Devices',
@@ -16,6 +19,7 @@ const meta = {
   args: {
     voice: { status: 'loaded', settings: usableVoice },
     devices: namedDevices,
+    adjustsGain: true,
     ...voiceDetailSpies(),
   },
   beforeEach: (): Promise<void> => settleLayout(layoutWidths.wide),
@@ -34,6 +38,9 @@ const microphone = { name: /^Microphone/ };
 const speaker = { name: /^Speaker/ };
 
 const systemDefault = 'System default';
+
+const audioFooter =
+  'Kept on this Device. A running Conversation changes at once.';
 
 export const ShowsTheChosenMicrophoneAndTheSystemSpeaker: Story = {
   play: async ({ canvas }) => {
@@ -97,5 +104,81 @@ export const LeavesDevicesOutWhereTheAppCannotHoldACall: Story = {
     await expect(canvas.getByText('Cove')).toBeVisible();
     await expect(canvas.queryByRole('button', microphone)).toBeNull();
     await expect(canvas.queryByRole('button', speaker)).toBeNull();
+  },
+};
+
+const lit = (glyph: HTMLElement | undefined): number | undefined =>
+  glyph?.querySelectorAll('[data-testid="field-picker-meter-lit"]').length;
+
+// Paper "Option D": a level glyph on each row, and a play button on the Speaker row alone.
+export const ShowsEachDevicesLevel: Story = {
+  args: { meters: speakingMeters },
+  play: async ({ canvas }) => {
+    const [microphoneGlyph, speakerGlyph] =
+      canvas.getAllByTestId('field-picker-meter');
+
+    await expect(lit(microphoneGlyph)).toBe(5);
+    await expect(lit(speakerGlyph)).toBe(0);
+    await expect(
+      canvas.getAllByRole('button', { name: /test sound/ }),
+    ).toHaveLength(1);
+  },
+};
+
+export const PlaysTheTestSound: Story = {
+  args: { meters: { ...idleMeters, onTest: fn() } },
+  play: async ({ canvas, args, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Play a test sound' }),
+    );
+    await expect(args.meters?.onTest).toHaveBeenCalledOnce();
+    await expect(args.onDevicesChange).not.toHaveBeenCalled();
+  },
+};
+
+export const StopsTheTestSoundWhilePlaying: Story = {
+  args: { meters: { ...testingMeters, onTest: fn() } },
+  play: async ({ canvas, args, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Stop the test sound' }),
+    );
+    await expect(args.meters?.onTest).toHaveBeenCalledOnce();
+  },
+};
+
+// Each device's level sits under its picker: gain under the Microphone, volume under the Speaker.
+export const DesktopsShowTheMicrophoneAndSpeaker: Story = {
+  args: { meters: idleMeters },
+  play: async ({ canvas }) => {
+    await expect(
+      inReadingOrder(canvas, [
+        'Call behaviour',
+        'Microphone and speaker',
+        'Microphone',
+        'Microphone gain',
+        'Speaker',
+        'Volume',
+        audioFooter,
+      ]),
+    ).toBe(true);
+    await expect(canvas.queryByText('Devices')).toBeNull();
+  },
+};
+
+// A phone, or the web App in a phone's browser, draws none of the Microphone and speaker section, footnote included.
+export const PhonesShowNoMicrophoneAndSpeaker: Story = {
+  args: { meters: idleMeters },
+  beforeEach: (): Promise<void> => settleLayout(layoutWidths.phone),
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByText('End a silent Conversation after'),
+    ).toBeVisible();
+    await expect(canvas.queryByText('Microphone and speaker')).toBeNull();
+    await expect(canvas.queryByText(audioFooter)).toBeNull();
+    await expect(canvas.queryByRole('button', microphone)).toBeNull();
+    await expect(canvas.queryByRole('button', speaker)).toBeNull();
+    await expect(canvas.queryByText('Volume')).toBeNull();
+    await expect(canvas.queryByText('Microphone gain')).toBeNull();
+    await expect(canvas.queryByTestId('field-picker-meter')).toBeNull();
   },
 };

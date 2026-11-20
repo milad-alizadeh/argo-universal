@@ -4,19 +4,39 @@ import { CustomVoiceDialog } from './custom-voice-dialog';
 import type { VoiceDetailViewProps } from './voice-detail-view-props';
 import { HeldTextRow } from './voice-held-rows';
 import { VoicePicker } from './voice-picker';
+import { providerReason, providerRow } from './voice-provider-row';
 import { chosenProvider, settingsOf, waiting } from './voice-settings-state';
 
-const voiceFooter =
-  "The next call speaks with this voice and is told these instructions after Argo's own.";
+// While the chosen provider cannot be used, its reason takes the footnote: no call starts until it is fixed.
+const voiceFooter = (props: VoiceDetailViewProps): string =>
+  providerReason(props) ??
+  'The next Conversation uses this voice and these instructions.';
 
-// The voice the next call speaks with, and what every call is told after Argo's own instructions.
+// Who speaks on the next call, and what it is told: the provider, the voice, the instructions and the opening note.
 export const voiceSection = (
   props: VoiceDetailViewProps,
 ): React.JSX.Element => (
-  <FieldGroup.Section key="voice" footer={voiceFooter}>
+  <FieldGroup.Section
+    key="voice"
+    title="Voice and instructions"
+    footer={voiceFooter(props)}
+  >
+    {providerRow(props)}
     {pickerRow(props)}
     {instructionsRow(props)}
+    {openingRow(props)}
   </FieldGroup.Section>
+);
+
+const openingRow = (props: VoiceDetailViewProps): React.JSX.Element => (
+  <HeldTextRow
+    key="opening"
+    title="Opening note"
+    placeholder="What the voice knows when the Conversation starts"
+    value={settingsOf(props).options.opening}
+    disabled={waiting(props)}
+    onCommit={(opening) => props.onCallOptionsChange({ opening })}
+  />
 );
 
 const pickerRow = (props: VoiceDetailViewProps): React.JSX.Element => (
@@ -33,7 +53,7 @@ const pickerRow = (props: VoiceDetailViewProps): React.JSX.Element => (
 const instructionsRow = (props: VoiceDetailViewProps): React.JSX.Element => (
   <HeldTextRow
     key="instructions"
-    title="Instructions for every call"
+    title="Instructions for every Conversation"
     placeholder="Call me Sam. Keep answers short."
     value={settingsOf(props).instructions}
     disabled={waiting(props)}

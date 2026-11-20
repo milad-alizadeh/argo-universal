@@ -34,7 +34,7 @@ class WebRtcVoiceConnection implements VoiceConnection {
   // The volume and gain the person chose; every call starts with them.
   private sound: HeldSound = { volume: 1, gain: 1 };
   private readonly store = new VoiceMuteStore();
-  // Refilled on every read, so a visualiser reading each frame makes no garbage.
+  // Refilled on every read, so the band reading each frame makes no garbage.
   private readonly bands = silentSpectrum();
 
   public constructor(private readonly environment: VoiceEnvironment) {}

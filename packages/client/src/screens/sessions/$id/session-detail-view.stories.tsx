@@ -128,13 +128,13 @@ export const DraggingFiles: Story = {
   },
 };
 
-// A Voice call here: the orb pinned above the Feed with its label and timer, and the Composer with mic, speaker and End.
+// A Voice call here: the Composer with the band along its top edge, and the mic, speaker and End.
 export const OnAVoiceCall: Story = {
   args: { state: 'open', ...voiceCallSession },
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 
-// Press the voice button to start a call: the stage opens above the Feed while it connects, the orb settles into listening, and End takes it away.
+// Press the voice button to start a call: the band opens along the Composer's edge while it connects, settles into listening, and End takes it away.
 export const VoiceCallStartsAndEnds: Story = {
   args: { state: 'open', ...idleSession },
   render: (): React.JSX.Element => <VoiceCallRehearsal />,

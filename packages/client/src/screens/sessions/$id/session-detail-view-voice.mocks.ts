@@ -1,19 +1,20 @@
+import { createElement } from 'react';
 import { fn } from 'storybook/test';
 import type { ComposerVoice } from '#features/composer';
-import { voiceLabel, voicePlaceholder } from '#features/voice';
+import { VoiceEdgeBand, voicePlaceholder } from '#features/voice';
+import { syntheticVoiceAudio } from '../../../../mocks/voice/synthetic-voice-audio';
 import type { OpenSessionViewProps } from './session-detail-view';
 import { idleSession } from './session-detail-view.mocks';
 
-// The call has run 4 minutes 12 seconds, as Paper's "Electron window" shows it.
-const startedAt = '2026-11-18T10:00:00.000Z';
+// Sound with no microphone and no voice, so the band moves as it would on a call.
+const { spectrum } = syntheticVoiceAudio();
 
-const listeningStage = {
-  state: 'listening',
-  label: voiceLabel(
-    { orb: 'listening', trouble: null, startedAt },
-    Date.parse(startedAt) + 252_000,
-  ),
-} satisfies NonNullable<OpenSessionViewProps['stage']>;
+// The call has run 4 minutes 12 seconds, as Paper's "Electron window" shows it.
+const band = createElement(VoiceEdgeBand, {
+  call: { orb: 'listening', trouble: null, microphoneMuted: false },
+  elapsed: '4:12',
+  spectrum,
+});
 
 const mutes = {
   microphone: false,
@@ -22,16 +23,16 @@ const mutes = {
   onSpeaker: fn(),
 };
 
-export const connectedHere = {
+const connectedHere = {
   kind: 'connected',
   onEnd: fn(),
   mutes,
+  edge: band,
 } satisfies ComposerVoice;
 
-// A settled Session with a Voice call running in it: the orb pinned above the Feed, and the Composer on the call.
+// A settled Session with a Voice call running in it: the Composer on the call, with the band along its top edge.
 export const voiceCallSession: OpenSessionViewProps = {
   ...idleSession,
-  stage: listeningStage,
   composer: {
     ...idleSession.composer,
     placeholder: voicePlaceholder(connectedHere),

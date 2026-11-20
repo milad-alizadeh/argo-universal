@@ -4,6 +4,10 @@ import {
   useListPlace,
 } from '@repo/kit/list-place';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
+import {
+  FieldPickerPageFrame,
+  FieldPickerPageSearch,
+} from '@repo/kit/primitives/fields/field-picker';
 import { Drill, type DrillProps } from '@repo/kit/primitives/overlays/drill';
 import { useState, type ReactElement } from 'react';
 import { chosenVoiceLabel } from './voice-choices';
@@ -78,10 +82,22 @@ const pageOf = (
   />
 );
 
+// The search above the rows, inset as the picker's own page is; a pushed page's header holds it instead.
+const pageSearch = (props: VoicePageProps): ReactElement | null =>
+  props.onQueryChange ? (
+    <FieldPickerPageSearch
+      title="voices"
+      value={props.query}
+      onChange={props.onQueryChange}
+    />
+  ) : null;
+
 function VoicePage(props: VoicePageProps): ReactElement {
   return (
-    <ListPlaceContext value={choosingPlace(useListPlace())}>
-      <VoiceList {...props} />
-    </ListPlaceContext>
+    <FieldPickerPageFrame search={pageSearch(props)} footer={null}>
+      <ListPlaceContext value={choosingPlace(useListPlace())}>
+        <VoiceList {...props} />
+      </ListPlaceContext>
+    </FieldPickerPageFrame>
   );
 }

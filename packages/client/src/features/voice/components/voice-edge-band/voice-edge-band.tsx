@@ -1,57 +1,160 @@
+import { useAnimatedStyle } from '@repo/kit/animated-hooks';
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
-import { View } from 'react-native';
+import { useState } from 'react';
+import { type LayoutChangeEvent, View } from 'react-native';
+import Animated, { type SharedValue } from 'react-native-reanimated';
 import type { VoiceSpectrum } from '../../types/voice-connection';
-import { edgeLookOf, type EdgeCall, type EdgeLook } from './edge-band';
-import { EdgeWave } from './edge-wave';
+import type { BandFrame } from './band-frame';
+import {
+  type BarLayout,
+  barLayoutOf,
+  barLeft,
+  barWidth,
+  stripHeight,
+} from './band-layout';
+import { bandLookOf, type BandLook, type EdgeCall } from './band-state';
+import { useBandFrame } from './use-band-frame';
 
 export interface VoiceEdgeBandProps {
   call: EdgeCall;
-  // How long the call has run, as the stage's timer reads it.
+  // How long the call has run, as the timer reads it.
   elapsed: string;
+  // The call's bands of speech, read each frame. A phone carries no call audio yet, so it has none and the bars rest.
   spectrum?: () => VoiceSpectrum;
 }
 
-type LabelProps = { look: EdgeLook; elapsed: string };
+interface BarProps {
+  index: number;
+  left: number;
+  frame: SharedValue<BandFrame>;
+}
 
-// The timer is regular weight beside the medium label, as Paper sets it; it waits until the call connects.
-const Timer = ({ look, elapsed }: LabelProps): React.ReactNode =>
-  look.timer && (
-    <Text role="secondary" tone="muted">
-      {elapsed}
-    </Text>
-  );
+// A bar's height and colour, set on the UI thread from the shared frame.
+function useBarStyle({
+  index,
+  frame,
+}: Pick<BarProps, 'index' | 'frame'>): ReturnType<typeof useAnimatedStyle> {
+  return useAnimatedStyle(() => {
+    const height = frame.get().heights[index] ?? barWidth;
 
-function EdgeLabel(props: LabelProps): React.JSX.Element {
+    return {
+      height,
+      top: (stripHeight - height) / 2,
+      backgroundColor: frame.get().fills[index],
+    };
+  }, [frame, index]);
+}
+
+const barBox = {
+  position: 'absolute',
+  width: barWidth,
+  borderRadius: barWidth / 2,
+} as const;
+
+function Bar(props: BarProps): React.JSX.Element {
   return (
-    <View className="shrink-0 flex-row items-baseline gap-1.25">
-      <Text role="badge" tone={props.look.labelTone}>
-        {props.look.label}
-      </Text>
-      <Timer {...props} />
+    <Animated.View
+      testID="voice-band-bar"
+      style={[barBox, { left: props.left }, useBarStyle(props)]}
+    />
+  );
+}
+
+interface StripProps {
+  state: BandLook['state'];
+  spectrum?: () => VoiceSpectrum;
+}
+
+const measured = (event: LayoutChangeEvent): number =>
+  event.nativeEvent.layout.width;
+
+interface BarsProps extends StripProps {
+  width: number;
+}
+
+const barsOf = (
+  layout: BarLayout,
+  frame: SharedValue<BandFrame>,
+): React.JSX.Element[] =>
+  Array.from({ length: layout.count }, (_, index) => (
+    <Bar
+      key={index}
+      index={index}
+      left={barLeft(index, layout)}
+      frame={frame}
+    />
+  ));
+
+function Bars({ width, state, spectrum }: BarsProps): React.JSX.Element {
+  const layout = barLayoutOf(width);
+
+  return <>{barsOf(layout, useBandFrame(state, layout.count, spectrum))}</>;
+}
+
+// The bars fill the room the label leaves; their count follows its width.
+function BarStrip(props: StripProps): React.JSX.Element {
+  const [width, setWidth] = useState(0);
+
+  return (
+    <View
+      testID="voice-band-strip"
+      aria-hidden
+      className="min-w-0 flex-1"
+      style={{ height: stripHeight }}
+      onLayout={(event) => setWidth(measured(event))}
+    >
+      <Bars width={width} {...props} />
     </View>
   );
 }
 
-const bandClass =
-  'h-7.5 w-full flex-row items-center gap-3 pl-4 pr-2.5 pt-2.5 wide:px-4.75';
+// The timer waits until the call connects; its digits are tabular, so it does not shift the label as it counts.
+function Timer({ elapsed }: { elapsed: string }): React.JSX.Element {
+  return (
+    <View className="tabular-nums">
+      <Text role="secondary" tone="muted">
+        {elapsed}
+      </Text>
+    </View>
+  );
+}
+
+// The label hugs its words, so the bars take every point it leaves.
+interface LabelProps {
+  look: BandLook;
+  elapsed: string;
+}
+
+function BandLabel({ look, elapsed }: LabelProps): React.JSX.Element {
+  return (
+    <View
+      testID="voice-band-label"
+      className="ml-4 shrink-0 flex-row items-baseline gap-1.25"
+    >
+      <Text role="badge" tone={look.tone}>
+        {look.label}
+      </Text>
+      {look.timer && <Timer elapsed={elapsed} />}
+    </View>
+  );
+}
+
+const rowClass = 'h-11 w-full flex-row items-center px-4 pt-2.5';
 
 /*
- * Paper's "Composer waveform — B · Edge band": the call drawn as a slim waveform along the Composer card's top edge,
- * above the text box, with its state and timer at the right end. The Composer stays one card, and typing goes on under
- * it throughout.
+ * The Conversation band along the Composer card's top edge: a row of bars that rest as dots. The person's voice lights
+ * them from the left in orange and the Agent's from the right in blue; on a turn the colour sweeps across. The state and
+ * the timer sit at the right end, 16 points from the last bar, as the first bar sits 16 points from the card's edge. The
+ * Composer stays one card, and typing goes on under it throughout.
  */
-export function VoiceEdgeBand({
-  call,
-  elapsed,
-  spectrum,
-}: VoiceEdgeBandProps): React.JSX.Element {
-  const look = edgeLookOf(call);
+export function VoiceEdgeBand(props: VoiceEdgeBandProps): React.JSX.Element {
+  const look = bandLookOf(props.call);
 
   return (
-    <View testID="voice-edge-band" className={bandClass}>
-      <EdgeWave look={look} spectrum={spectrum} />
-      <EdgeLabel look={look} elapsed={elapsed} />
+    <View testID="voice-edge-band" className={rowClass}>
+      <BarStrip state={look.state} spectrum={props.spectrum} />
+      <BandLabel look={look} elapsed={props.elapsed} />
     </View>
   );
 }

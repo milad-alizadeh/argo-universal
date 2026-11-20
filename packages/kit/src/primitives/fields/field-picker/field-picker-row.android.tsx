@@ -1,11 +1,12 @@
 import type { ReactElement } from 'react';
 import { NativeText } from '#primitives/content/native-text';
 import { RowListItem } from '../field-row/field-row-list-item.android';
+import { AccessoryButton } from './field-picker-accessory.android';
 import type { FieldPickerProps } from './field-picker-model';
 
 type ChoiceRowProps = Pick<
   FieldPickerProps,
-  'title' | 'leading' | 'disabled'
+  'title' | 'leading' | 'disabled' | 'accessory'
 > & {
   logo?: string;
   summary: string;
@@ -24,6 +25,7 @@ export function ChoiceRow(props: ChoiceRowProps): ReactElement {
       logo={props.logo}
       disabled={props.disabled}
       supporting={supporting(props.summary)}
+      trailing={<AccessoryButton accessory={props.accessory} />}
       onPress={props.onPress}
     />
   );
