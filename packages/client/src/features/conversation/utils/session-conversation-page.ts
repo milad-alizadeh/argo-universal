@@ -5,11 +5,11 @@ import type { SessionConversation } from './session-conversation';
 
 // What a Session page takes of the Conversation, under the names its Composer props read.
 export type SessionPageConversation = Pick<SessionConversation, 'partials'> & {
-  // Absent where this App carries no audio, so the Composer offers no voice button.
+  // Absent where this App carries no audio, so the Composer offers no Conversation button.
   conversation: ComposerConversation | undefined;
 };
 
-// Puts the band along the voice slot's top edge while a call here connects or runs.
+// Puts the band along the Conversation slot's top edge while a call here connects or runs.
 export type DrawEdge = (
   slot: ComposerConversation | undefined,
   band: ConversationBandProps | undefined,

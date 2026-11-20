@@ -7,6 +7,8 @@ export { useNewSessionConversation } from './hooks/use-new-session-conversation'
 
 export { conversationPlaceholder } from './utils/session-conversation';
 
+export type { SessionPageConversation } from './utils/session-conversation-page';
+
 export { useSessionMutes } from './hooks/use-session-mutes';
 
 export { useVoicePreview } from './hooks/use-voice-preview';

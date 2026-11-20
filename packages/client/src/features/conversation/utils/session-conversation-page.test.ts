@@ -36,7 +36,6 @@ describe("the Session page's Conversation slot", () => {
     const page = pageOf(callIn('s1'));
 
     expect(page.conversation).toMatchObject({ kind: 'connected', edge });
-    expect(page).not.toHaveProperty('voice');
   });
 
   it('draws the band while the call connects', () => {

@@ -14,15 +14,17 @@ type CallSlot = Extract<
   { kind: 'connecting' | 'connected' }
 >;
 
-const runsHere = (voice: ComposerConversation | undefined): voice is CallSlot =>
-  voice !== undefined && callHere.has(voice.kind);
+const runsHere = (
+  conversation: ComposerConversation | undefined,
+): conversation is CallSlot =>
+  conversation !== undefined && callHere.has(conversation.kind);
 
-// The Composer's voice slot with the band along its top edge, while a call here connects or runs.
+// The Composer's Conversation slot with the band along its top edge, while a call here connects or runs.
 export function withEdge(
-  voice: ComposerConversation | undefined,
+  conversation: ComposerConversation | undefined,
   band: ConversationBandProps | undefined,
 ): ComposerConversation | undefined {
-  if (!band || !runsHere(voice)) return voice;
+  if (!band || !runsHere(conversation)) return conversation;
 
-  return { ...voice, edge: <ConversationBand {...band} /> };
+  return { ...conversation, edge: <ConversationBand {...band} /> };
 }

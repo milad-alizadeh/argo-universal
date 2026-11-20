@@ -173,5 +173,5 @@ const placeholders: Partial<Record<ComposerConversation['kind'], string>> = {
 };
 
 export const conversationPlaceholder = (
-  voice: ComposerConversation | undefined,
-): string | undefined => voice && placeholders[voice.kind];
+  conversation: ComposerConversation | undefined,
+): string | undefined => conversation && placeholders[conversation.kind];
