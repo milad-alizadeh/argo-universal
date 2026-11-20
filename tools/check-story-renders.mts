@@ -5,13 +5,13 @@
  * (docs/agents/hooks.md).
  */
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { lockBrowserSuite } from '@repo/browser-suite-lock';
 import { changedPaths } from './hook-checks.mts';
-import { readStory, testStory, type StoryFile } from './story-file.mts';
-import { loadStoryFiles } from './story-files.mts';
+import { dependentStories } from './story-dependents.mts';
+import { testStory, type StoryFile } from './story-file.mts';
+import { drawingCount, packageStories } from './story-files.mts';
 import {
   childStateProblems,
   duplicateRenderProblems,
@@ -43,23 +43,19 @@ const planPath = resolve(storybook, 'story-render-plan.json');
 const fingerprintPath = resolve(storybook, 'story-render-fingerprints.json');
 
 const presentationFiles = (): StoryFile[] =>
-  loadStoryFiles(['packages/*/src/**/*.stories.tsx']).filter(
-    ({ file }): boolean => !testStory.test(file),
-  );
+  packageStories().filter(({ file }): boolean => !testStory.test(file));
 
 /* What a file costs in the browser: each story is drawn once and each candidate pair twice more. */
 type Weighted = PlannedFile & { weight: number };
 
 const planFor = (story: StoryFile): Weighted[] => {
-  const { exports } = readStory(story);
+  const drawings = drawingCount(story);
 
-  if (exports.length < 2) return [];
+  if (!drawings) return [];
 
   const pairs = fixturePairs(story);
 
-  return [
-    { file: story.file, pairs, weight: exports.length + 2 * pairs.length },
-  ];
+  return [{ file: story.file, pairs, weight: drawings + 2 * pairs.length }];
 };
 
 const runStorybookProject = (): void => {
@@ -68,37 +64,6 @@ const runStorybookProject = (): void => {
     ['run', '--config', 'vitest.renders.config.ts'],
     { cwd: storybook, stdio: 'inherit' },
   );
-};
-
-const listInto = (base: string, listing: string): void => {
-  execFileSync(
-    resolve(root, 'node_modules/.bin/vitest'),
-    ['list', '--filesOnly', '--changed', base, `--json=${listing}`],
-    {
-      cwd: root,
-      // Under Vitest the Storybook project indexes test stories only; the gate draws presentation stories.
-      env: { ...process.env, ARGO_LIST_EVERY_STORY: '1' },
-      stdio: ['ignore', 'ignore', 'inherit'],
-    },
-  );
-};
-
-// Vitest's module graph names every story file that imports a changed file, without starting a browser.
-const dependentStories = (base: string): string[] => {
-  const scratch = mkdtempSync(join(tmpdir(), 'story-renders-'));
-  const listing = join(scratch, 'stories.json');
-
-  try {
-    listInto(base, listing);
-
-    const listed: { file: string }[] = JSON.parse(
-      readFileSync(listing, 'utf8'),
-    );
-
-    return listed.map(({ file }): string => file);
-  } finally {
-    rmSync(scratch, { recursive: true, force: true });
-  }
 };
 
 const scopeFor = (base: string | undefined, changed: string[]): RenderScope =>

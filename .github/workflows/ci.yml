@@ -251,12 +251,6 @@ jobs:
           playwright: ${{ matrix.playwright }}
           turbo-team: ${{ vars.TURBO_TEAM }}
 
-      - name: Install Chromium when the desktop CSP test runs
-        if: ${{ matrix.group == 'rest' }}
-        run: |
-          status=$(pnpm exec turbo run test --filter=@repo/desktop --dry=json | node -e "let d='';process.stdin.on('data',(c)=>{d+=c}).on('end',()=>{console.log(JSON.parse(d).tasks.find((t)=>t.taskId==='@repo/desktop#test')?.cache.status??'MISS')})")
-          if [ "$status" != HIT ]; then pnpm --filter @repo/e2e exec playwright install --with-deps --only-shell chromium; fi
-
       - name: Tests
         env:
           # One package at a time, two workers each: integration tests start Servers and git processes, so a worker per core oversubscribes the runner's 4 and pushes tests past their timeouts. The `budget` project runs alone after the rest.
@@ -322,11 +316,35 @@ jobs:
       - name: Secret store contract test
         run: pnpm --filter @repo/engine exec vitest run src/plugins/services/secret-store.integration.test.ts
 
+  story-plan:
+    name: Plan Storybook jobs (shadow)
+    if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - uses: ./.github/actions/setup
+        with:
+          playwright: none
+      - name: Record the proposed shards
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: node tools/plan-story-jobs.mts "$BASE" story-job-plan.json
+      - uses: actions/upload-artifact@v7
+        with:
+          name: story-job-plan-${{ github.run_attempt }}
+          path: story-job-plan.json
+          if-no-files-found: error
+
   # The story tests alone take minutes, so they run beside Quality in shards; each shard's one runner keeps the config's maxWorkers.
   stories:
     name: Story tests (${{ matrix.shard }}/3)
-    needs: changes
-    if: ${{ needs.changes.outputs.stories == 'true' }}
+    needs: [changes, story-plan]
+    # A failed or skipped shadow planner still admits every live shard.
+    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.changes.outputs.stories == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -364,11 +382,12 @@ jobs:
           retention-days: 30
 
   # The render gates judge each file against itself, so a runner takes a share of the files and judges its own drawings.
-  # A pull request draws the story files its change reaches; a push draws every story.
+  # Draw the full suite during validation so failures outside the proposed plan are visible.
   story-renders:
     name: Story render gates (${{ matrix.shard }}/4)
-    needs: changes
-    if: ${{ needs.changes.outputs.stories == 'true' }}
+    needs: [changes, story-plan]
+    # A failed or skipped shadow planner still admits every live shard.
+    if: ${{ !cancelled() && needs.changes.result == 'success' && needs.changes.outputs.stories == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -379,18 +398,46 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4]
     steps:
-      # The pull request's base commit must be present to list what the change reaches; blob:none fetches the history without file contents.
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          filter: blob:none
 
       - uses: ./.github/actions/setup
         with:
           turbo-team: ${{ vars.TURBO_TEAM }}
 
       - name: Story render gates
-        run: pnpm check:story-renders --shard=${{ matrix.shard }}/4 ${{ github.event_name == 'pull_request' && format('--changed={0}', github.event.pull_request.base.sha) || '' }}
+        run: pnpm check:story-renders --shard=${{ matrix.shard }}/4
+
+  story-shadow-results:
+    name: Record Storybook shadow results
+    needs: [story-plan, stories, story-renders]
+    if: ${{ !cancelled() && github.event_name == 'pull_request' && github.event.action != 'closed' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    steps:
+      - name: Record browser runner admissions, queue times and full-suite outcomes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TESTED_SHA: ${{ github.sha }}
+          CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
+          STORY_RESULT: ${{ needs.stories.result }}
+          RENDER_RESULT: ${{ needs.story-renders.result }}
+        shell: bash
+        run: |
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs?per_page=100" |
+            jq --arg sha "$TESTED_SHA" --argjson size "$CHANGED_FILES" --arg interaction "$STORY_RESULT" --arg render "$RENDER_RESULT" '
+              [.[] | .jobs[] | select(.name | test("^Story (tests|render gates)")) |
+                {name, conclusion, html_url, admitted: (.runner_id > 0),
+                 queueSeconds: (if .runner_id > 0 then ((.started_at|fromdateiso8601) - (.created_at|fromdateiso8601)) else null end)}] as $jobs |
+              {revision: $sha, changedFiles: $size, interaction: $interaction, render: $render,
+               admissions: ([$jobs[] | select(.admitted)] | length), jobs: $jobs}' > story-results.json
+          cat story-results.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: story-results-${{ github.run_attempt }}
+          path: story-results.json
+          if-no-files-found: error
 
   # Builds what the web e2e shards run against once, into the Remote Cache, so six shards do not each build the Expo web export.
   e2e-web-build:

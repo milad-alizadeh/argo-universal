@@ -17,8 +17,8 @@ def group(name, filters, browser="none"):
 GROUPS = [
     group("plugins", [PLUGIN_FILTER]),
     group("kits", KITS),
-    # The desktop CSP test's Chromium is installed by the workflow only when that test runs.
-    group("rest", [f"!{p}" for p in (ENGINE, PLUGIN_FILTER, *KITS)]),
+    # The desktop CSP test starts Chromium in the rest group.
+    group("rest", [f"!{p}" for p in (ENGINE, PLUGIN_FILTER, *KITS)], "chromium"),
 ]
 
 
