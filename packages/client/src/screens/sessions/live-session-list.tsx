@@ -7,6 +7,7 @@ import {
   useInstalledAgents,
 } from '#features/agents';
 import { useConnectionState, useTRPC } from '#features/connection';
+import { useListedConversation } from '#features/conversation';
 import { useOpenPluginPage, useSessionRowPlugins } from '#features/plugins';
 import {
   ArchiveSessionAlert,
@@ -17,7 +18,6 @@ import {
   sessionsLoadState,
 } from '#features/sessions';
 import { useSessionListUpdates } from '#features/sessions';
-import { useListedConversation } from '#features/conversation';
 import {
   newSessionHref,
   projectHref,
