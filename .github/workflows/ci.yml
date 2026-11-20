@@ -302,9 +302,30 @@ jobs:
       - name: Story render gates
         run: pnpm check:story-renders --shard=${{ matrix.shard }}/4 ${{ github.event_name == 'pull_request' && format('--changed={0}', github.event.pull_request.base.sha) || '' }}
 
+  # Builds what the web e2e shards run against once, into the Remote Cache, so six shards do not each build the Expo web export.
+  e2e-web-build:
+    name: Build for web e2e
+    needs: changes
+    if: ${{ needs.changes.outputs.e2e-web == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+        with:
+          playwright: none
+          turbo-team: ${{ vars.TURBO_TEAM }}
+
+      - name: Build @repo/e2e's dependencies
+        run: pnpm exec turbo run build --filter=@repo/e2e^...
+
   e2e-web:
     name: End-to-end tests (web ${{ matrix.shard }}/6)
-    needs: changes
+    needs: [changes, e2e-web-build]
     if: ${{ needs.changes.outputs.e2e-web == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -323,7 +344,7 @@ jobs:
         with:
           turbo-team: ${{ vars.TURBO_TEAM }}
 
-      # Builds or restores the Expo web export through turbo, then replays from cache when nothing @repo/e2e depends on changed.
+      # Restores the Expo web export the build job cached, then replays from cache when nothing @repo/e2e depends on changed.
       - name: End-to-end tests (web)
         run: pnpm test:e2e --log-order=stream
         env:
@@ -424,6 +445,7 @@ jobs:
         secret-store,
         stories,
         story-renders,
+        e2e-web-build,
         e2e-web,
         e2e-electron,
       ]
