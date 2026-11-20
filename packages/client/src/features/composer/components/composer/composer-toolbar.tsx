@@ -10,8 +10,6 @@ import {
 import { ComposerStatusControls } from '../composer-status/composer-status';
 import { useCallGlyphMorph } from './composer-call-glyph-motion';
 import { ComposerCallPointer } from './composer-call-pointer';
-import { ComposerCallStop } from './composer-call-stop';
-import { showsCallStop } from './composer-conditions';
 import { ConnectingRing } from './composer-connecting-ring';
 import { ComposerMuteButtons } from './composer-mute-buttons';
 import { sendButtonAction } from './composer-primary-action';
@@ -95,7 +93,6 @@ function ComposerRightControls(layout: RightControlsLayout): React.JSX.Element {
     <View className="pointer-events-box-none max-w-full shrink-0 flex-row items-center gap-2.5">
       <ComposerConfigurationActions {...layout} />
       <ComposerMuteButtons voice={layout.props.voice} wide={layout.wide} />
-      {showsCallStop(layout) && <ComposerCallStop props={layout.props} />}
       <View className="shrink-0">
         <ComposerSendButton {...layout} />
       </View>
