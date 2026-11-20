@@ -119,7 +119,7 @@ export class PluginSlotItems {
   }
 
   private landed(pluginId: string, landing: Landing, reply: Reply): void {
-    const items = landedItems(this.kept.get(pluginId), landing, reply);
+    const items = landedItems(landing, reply);
 
     if (!items) return;
 

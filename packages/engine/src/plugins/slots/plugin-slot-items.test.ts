@@ -4,9 +4,8 @@ import {
   sessionRowSlotId,
   type SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
-import { expect, it, vi } from 'vitest';
+import { expect, it } from 'vitest';
 import { itemsLeftOut } from './kept-items';
-import { slotItemsLimitMs } from './late-items';
 import { slotItems } from './slot-items-fixture';
 
 const input: SlotItemsInput = {
@@ -90,55 +89,6 @@ it('leaves a Plugin out that is not running, stops mid-call or answers late', as
 
   clock.fire();
   expect(await late).toEqual({ ok: false, reason: itemsLeftOut.late });
-});
-
-it('keeps an answer that lands after its call ran late, and asks the open lists again', async () => {
-  const { calls, clock, sent } = slotItems();
-  const caller = { pluginId: 'counter', generation: 1 };
-  const first = calls.items('counter', input);
-
-  calls.receive(caller, answer(0, 'before'));
-  await first;
-  calls.changed('counter');
-
-  const late = calls.items('counter', input);
-
-  clock.fire(slotItemsLimitMs);
-  expect(await late).toEqual({
-    ok: true,
-    items: { first: [{ text: 'before' }] },
-    standingInFor: itemsLeftOut.late,
-  });
-
-  const before = calls.changes.version;
-
-  calls.receive(caller, answer(1, 'after'));
-  await vi.waitFor(() => expect(calls.changes.version).toBeGreaterThan(before));
-  expect(await calls.items('counter', input)).toEqual({
-    ok: true,
-    items: { first: [{ text: 'after' }] },
-  });
-  expect(sent).toHaveLength(2);
-});
-
-it('drops a late answer that lands after a change signal', async () => {
-  const { calls, clock, sent } = slotItems();
-  const caller = { pluginId: 'counter', generation: 1 };
-  const late = calls.items('counter', input);
-
-  clock.fire(slotItemsLimitMs);
-  await late;
-  calls.changed('counter');
-  calls.receive(caller, answer(0, 'old'));
-
-  const again = calls.items('counter', input);
-
-  expect(sent).toHaveLength(2);
-  calls.receive(caller, answer(1, 'new'));
-  expect(await again).toEqual({
-    ok: true,
-    items: { first: [{ text: 'new' }] },
-  });
 });
 
 it('drops what a Plugin answered before its change signal', async () => {

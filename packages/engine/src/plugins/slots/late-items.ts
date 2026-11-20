@@ -38,29 +38,20 @@ export function replyOf(outcome: CallOutcome<SlotCall>): Reply {
     : leftOut(itemsLeftOut.threw);
 }
 
-type Resolve = (reply: Reply) => void;
-
-type Landed = (reply: Reply) => void;
-
-function late(resolve: Resolve, reply: Promise<Reply>, landed: Landed): void {
-  resolve(leftOut(itemsLeftOut.late));
-  void reply.then(landed);
-}
-
 // The call's reply, or late once it takes longer than the limit; a reply that lands after that goes to `landed`.
 export function within(
   clock: PluginClock,
   reply: Promise<Reply>,
-  landed: Landed,
+  landed: (reply: Reply) => void,
 ): Promise<Reply> {
   const { promise, resolve } = Promise.withResolvers<Reply>();
-  const ranLate = (): void => late(resolve, reply, landed);
-  const cancel = clock.schedule(ranLate, slotItemsLimitMs);
 
-  void reply.then((answered) => {
-    cancel();
-    resolve(answered);
-  });
+  const cancel = clock.schedule((): void => {
+    resolve(leftOut(itemsLeftOut.late));
+    void reply.then(landed);
+  }, slotItemsLimitMs);
+
+  void reply.finally(cancel).then(resolve);
 
   return promise;
 }
@@ -77,23 +68,16 @@ export const landingOf = (
   input: SlotItemsInput,
 ): Landing => ({ worker, epoch: worker.epoch, input });
 
-const stillAsked = (
-  current: SlotWorker | undefined,
-  { worker, epoch }: Landing,
-): boolean => current === worker && worker.epoch === epoch;
-
 /*
- * What a late reply adds, kept by its worker: only while that worker still runs and nothing changed since it was
- * asked, so a reply older than a change signal never stands in for the answer after it.
+ * What a late reply adds, kept by its worker: only while nothing changed since it was asked, so a reply older than a
+ * change signal never stands in for the answer after it. A reply from an ended worker never lands: its call ends with it.
  */
 export function landedItems(
-  current: SlotWorker | undefined,
-  landing: Landing,
+  { worker, epoch, input }: Landing,
   reply: Reply,
 ): PluginItems | undefined {
-  if (!stillAsked(current, landing)) return undefined;
+  if (worker.epoch !== epoch) return undefined;
 
-  const { worker, input } = landing;
   const answer = keepLate(worker, input, reply);
 
   return answer.ok ? answer.items : undefined;
