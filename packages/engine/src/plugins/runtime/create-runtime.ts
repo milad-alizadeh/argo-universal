@@ -37,7 +37,7 @@ export function createPluginRuntime(
   options: PluginRuntimeOptions,
 ): PluginRuntime {
   const { clockStart, locate, rebuilt, watch, ...rest } = options;
-  const held = heldLog(home, options.heldSecrets);
+  const held = heldLog(home, options);
   const clock = options.clock ?? runtimeClockSource(clockStart);
   const back = reachBack(() => runtime, locate);
   const services = createServices(home, { ...rest, ...back, ...held, clock });
@@ -81,12 +81,22 @@ function createServices(
   });
 }
 
+type LogOptions = Pick<PluginRuntimeOptions, 'environment' | 'heldSecrets'>;
+
 // The log never writes a held secret value (ADR-0051).
 function heldLog(
   home: string,
-  heldSecrets = new HeldSecrets(),
+  { environment = process.env, heldSecrets = new HeldSecrets() }: LogOptions,
 ): Required<Pick<PluginServiceOptions, 'heldSecrets' | 'log'>> {
-  return { heldSecrets, log: heldSecrets.scrubbing(pluginLog(home)) };
+  const trace = environment.ARGO_PLUGIN_TRACE === '1';
+  const write = heldSecrets.scrubbing(pluginLog(home));
+
+  return {
+    heldSecrets,
+    log: (line, level) => {
+      if (level !== 'trace' || trace) write(line);
+    },
+  };
 }
 
 function pluginLog(home: string): (line: string) => void {

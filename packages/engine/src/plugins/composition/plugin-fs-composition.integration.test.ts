@@ -1,6 +1,6 @@
 import { link, mkdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { expect, it } from 'vitest';
+import { expect, it, onTestFinished, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
 import {
   installed,
@@ -19,6 +19,9 @@ const secretFile = 'secret.txt';
 const secret = 'SYNTHETIC_SECRET';
 
 it('reads a registered Project and reads, writes, lists and stats the data folder, with caps', async () => {
+  vi.stubEnv('ARGO_PLUGIN_TRACE', '1');
+  onTestFinished((): void => void vi.unstubAllEnvs());
+
   const project = await registeredProject();
 
   await writeFile(join(project, 'notes.md'), 'project notes');

@@ -130,6 +130,7 @@ export class BackgroundPass {
   private line(message: string): void {
     this.services.log(
       `Plugin ${this.entry.pluginId}: ${this.services.kind} ${message} (Project ${this.projectId})`,
+      message === 'completed' || message === 'closed' ? 'trace' : undefined,
     );
   }
 }
