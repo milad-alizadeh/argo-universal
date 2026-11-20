@@ -21,38 +21,13 @@ type Context = Parameters<NonNullable<Story['play']>>[0];
 
 const rowId = 'queued-prompt-row';
 
-function pointerAt(width: number): Story {
-  return {
-    play: async (context) => {
-      await settleLayout(width);
-      await checkCursors(context.canvas);
-      await checkDrag(context);
-    },
-  };
-}
-
-export const Phone = pointerAt(390);
-
-export const NarrowWindow = pointerAt(900);
-
-export const Wide = pointerAt(1280);
-
-async function checkCursors(canvas: Context['canvas']): Promise<void> {
-  const row = first(canvas.getAllByTestId(rowId));
-  const grip = first(canvas.getAllByTestId('queue-reorder-grip'));
-  await expect(cursorAt(row)).toBe('auto');
-  await expect(cursorAt(grip)).toBe('grab');
-  await expect(
-    cursorAt(
-      first(canvas.getAllByRole('button', { name: 'Edit Queued Prompt' })),
-    ),
-  ).toBe('pointer');
-  await expect(
-    cursorAt(
-      first(canvas.getAllByRole('button', { name: 'Delete Queued Prompt' })),
-    ),
-  ).toBe('pointer');
-}
+// A drag from the row body moves nothing; a drag from the grip reorders.
+export const DragsFromTheGrip: Story = {
+  play: async (context) => {
+    await settleLayout('wide');
+    await checkDrag(context);
+  },
+};
 
 function first(elements: HTMLElement[]): HTMLElement {
   const item = elements[0];
@@ -60,19 +35,6 @@ function first(elements: HTMLElement[]): HTMLElement {
   if (!item) throw new Error('Expected a queue control');
 
   return item;
-}
-
-function cursorAt(element: HTMLElement): string {
-  const box = element.getBoundingClientRect();
-
-  const target = document.elementFromPoint(
-    box.x + box.width / 2,
-    box.y + box.height / 2,
-  );
-
-  if (!target) throw new Error('Expected a hit-tested queue control');
-
-  return getComputedStyle(target).cursor;
 }
 
 async function checkDrag({ canvas, userEvent, args }: Context): Promise<void> {

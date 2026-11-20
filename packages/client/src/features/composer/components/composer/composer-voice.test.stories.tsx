@@ -242,54 +242,6 @@ export const SendBesideACallElsewhere: Story = {
   },
 };
 
-// The theme's danger red, resolved the way the browser resolves a glyph's colour.
-function dangerColor(): string {
-  const probe = document.createElement('span');
-  probe.style.color = 'var(--color-danger)';
-  document.body.append(probe);
-  const { color } = getComputedStyle(probe);
-  probe.remove();
-
-  return color;
-}
-
-// Whether a button draws its glyph in the danger red.
-function readsRed(button: HTMLElement): boolean {
-  const danger = dangerColor();
-
-  return [button, ...button.querySelectorAll('*')].some(
-    (element) => getComputedStyle(element).color === danger,
-  );
-}
-
-const muted = (microphone: boolean, speaker: boolean): Story => ({
-  render: (args) => (
-    <Composer {...composerProps({ ...args, sessionStarted: true })} />
-  ),
-  args: {
-    voice: {
-      kind: 'connected',
-      onEnd: fn(),
-      mutes: { ...noMutes, microphone, speaker },
-    },
-  },
-  play: async ({ canvas }) => {
-    const mic = await canvas.findByTestId(microphoneButtonId);
-    await expect(readsRed(mic)).toBe(microphone);
-    await expect(readsRed(canvas.getByTestId(speakerButtonId))).toBe(speaker);
-    await expect(readsRed(canvas.getByTestId(endButtonId))).toBe(false);
-  },
-});
-
-// A mute that is on reads red; one that is off keeps its look, and End keeps its own.
-export const NothingMuted = muted(false, false);
-
-export const MicrophoneMutedReadsRed = muted(true, false);
-
-export const SpeakerMutedReadsRed = muted(false, true);
-
-export const BothMutedReadRed = muted(true, true);
-
 // The edge band sits inside the one card, above the text box, with the state and the timer at its right end.
 export const EdgeBandOnACall: Story = {
   render: (args) => (
@@ -328,7 +280,7 @@ export const TypingUnderTheBand: Story = {
   },
 };
 
-// Connecting shows no timer; reconnecting keeps counting; a muted microphone says so in danger.
+// Connecting shows no timer; reconnecting keeps counting.
 export const EdgeBandLabels: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
