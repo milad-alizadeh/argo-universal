@@ -37,22 +37,31 @@ type FeedAnchors = Pick<
   | 'endContent'
 >;
 
-// A Feed read from its start, or hidden behind another page, does not follow incoming rows.
-function useEndFollowing(opensAtStart: boolean | undefined): boolean {
-  return useScreenFocused() && !opensAtStart;
+// While hidden, suspend web follow triggers. Re-enabling the whole feature on return can flush a scroll inside React layout.
+const hiddenEndMotion = Platform.OS === 'web' ? { on: {} } : false;
+
+function endMotion(
+  opensAtStart: AnchorInput['opensAtStart'],
+  shown: boolean,
+  motion: ReturnType<typeof useFeedEndMotion>,
+): FeedAnchors['maintainScrollAtEnd'] {
+  if (opensAtStart) return false;
+
+  return shown ? motion : hiddenEndMotion;
 }
 
 const followsFeedEnd = (enabled: boolean, atEnd: boolean): boolean =>
   enabled && atEnd;
 
 export function useFeedAnchors(input: AnchorInput): FeedAnchors {
-  const enabled = useEndFollowing(input.opensAtStart);
+  const shown = useScreenFocused();
+  const enabled = shown && !input.opensAtStart;
   const animationEnabled = enabled ? input.turnRunning : false;
   const motion = useFeedEndMotion(input.list, animationEnabled);
   const follows = followsFeedEnd(enabled, input.atEnd);
 
   return {
-    maintainScrollAtEnd: enabled && motion,
+    maintainScrollAtEnd: endMotion(input.opensAtStart, shown, motion),
     maintainVisibleContentPosition: visibleContentPosition(follows),
     alignItemsAtEnd: false,
     renderScrollComponent: feedScrollRenderer(follows),
