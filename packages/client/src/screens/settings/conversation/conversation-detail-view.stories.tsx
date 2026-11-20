@@ -67,6 +67,7 @@ async function openVoices({
   return page;
 }
 
+// Paper "Option D", where the App holds the call: each device's level after its name, and the Speaker's test sound at the row's end.
 export const UsableProvider: Story = {};
 
 // The person's own voices, one of them chosen, and instructions for every call.
@@ -130,7 +131,6 @@ export const Disconnected: Story = {
   args: { voice: { status: 'disconnected' } },
 };
 
-// Paper "Option D", where the App holds the call: each device's level after its name, and the Speaker's test sound at the row's end.
 // Before the microphone was allowed once, the browser has not named its devices.
 export const UnnamedDevices: Story = { args: { devices: unnamedDevices } };
 
