@@ -20,7 +20,11 @@ import {
   type FixturePair,
   type StoryRender,
 } from './story-render-rules.mts';
-import { renderScope, type RenderScope } from './story-render-scope.mts';
+import {
+  capScope,
+  renderScope,
+  type RenderScope,
+} from './story-render-scope.mts';
 import { parseShard, shardByWeight } from './story-render-shard.mts';
 import { root } from './tracked-files.mts';
 
@@ -92,14 +96,34 @@ const dependentStories = (base: string): string[] => {
   }
 };
 
-const scopeFor = (base: string | undefined): RenderScope =>
+const scopeFor = (base: string | undefined, changed: string[]): RenderScope =>
   base === undefined
     ? { all: true }
-    : renderScope({
-        changed: changedPaths(base),
-        dependents: dependentStories(base),
-        root,
-      });
+    : renderScope({ changed, dependents: dependentStories(base), root });
+
+// Every file in a full run; past RENDER_LIMIT in a scoped one, those in the touched folders.
+const capped = (
+  stories: StoryFile[],
+  scope: RenderScope,
+  changed: string[],
+): StoryFile[] => {
+  if (scope.all) return stories;
+
+  const kept = capScope({
+    files: stories.map(({ file }): string => file),
+    changed,
+    root,
+  });
+
+  if (kept.narrowed)
+    console.log(
+      `check-story-renders: the change reaches ${kept.dependents} story files; drawing the ${kept.files.length} in the folders it touched. The push to main draws them all.`,
+    );
+
+  const files = new Set(kept.files);
+
+  return stories.filter(({ file }): boolean => files.has(file));
+};
 
 const readFingerprints = (): Fingerprints =>
   JSON.parse(readFileSync(fingerprintPath, 'utf8'));
@@ -138,15 +162,20 @@ if (shardArg !== undefined && shard === undefined) {
   process.exit(2);
 }
 
-const scope = scopeFor(changedArg?.slice('--changed='.length));
+const base = changedArg?.slice('--changed='.length);
+
+const changed = base === undefined ? [] : changedPaths(base);
+
+const scope = scopeFor(base, changed);
 
 const inScope = ({ file }: StoryFile): boolean =>
   scope.all || scope.files.has(file);
 
-const planned = presentationFiles()
+const reached = presentationFiles()
   .filter(({ file }): boolean => file.includes(only))
-  .filter(inScope)
-  .flatMap(planFor);
+  .filter(inScope);
+
+const planned = capped(reached, scope, changed).flatMap(planFor);
 
 const files: PlannedFile[] = (
   shard === undefined

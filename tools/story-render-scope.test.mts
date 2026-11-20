@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderScope } from './story-render-scope.mts';
+import { capScope, renderScope } from './story-render-scope.mts';
 
 const root = '/repo';
 
@@ -38,5 +38,26 @@ describe('renderScope', () => {
     expect(renderScope({ changed: [changed], dependents: [], root })).toEqual({
       all: true,
     });
+  });
+});
+
+describe('capScope', () => {
+  const near = 'packages/kit/src/primitives/lists/row/row-group.stories.tsx';
+
+  const far =
+    'packages/client/src/screens/sessions/session-list-view.stories.tsx';
+
+  const changed = ['packages/kit/src/primitives/lists/row/row.tsx'];
+
+  it('keeps every reached file within the limit', () => {
+    expect(
+      capScope({ files: [row, near, far], changed, root, limit: 3 }).files,
+    ).toEqual([row, near, far]);
+  });
+
+  it('keeps only the files in the touched folders past the limit', () => {
+    expect(
+      capScope({ files: [row, near, far], changed, root, limit: 2 }),
+    ).toEqual({ files: [row, near], dependents: 3, narrowed: true });
   });
 });
