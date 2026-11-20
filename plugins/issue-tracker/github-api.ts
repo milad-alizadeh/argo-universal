@@ -40,7 +40,7 @@ export type GitHubRequest = {
 
 export const graphqlRequest = (
   document: string,
-  variables: Record<string, string | number>,
+  variables: Record<string, string | number | null>,
 ): GitHubRequest => ({
   url: graphqlUrl,
   init: {

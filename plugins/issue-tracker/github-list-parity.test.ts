@@ -36,14 +36,22 @@ const fullIssue = {
 
 it('lists each Issue with the fields its own page reads, so one opened from a row is never cut short', async () => {
   const listed = trackerAnswering(
-    reply(200, { data: { search: { nodes: [fullIssue] } } }),
+    reply(200, {
+      data: {
+        search: {
+          pageInfo: { hasNextPage: false, endCursor: null },
+          nodes: [fullIssue],
+        },
+      },
+    }),
   );
 
   const single = trackerAnswering(
     reply(200, { data: { repository: { issue: fullIssue } } }),
   );
 
-  const [fromList] = await listed.tracker.listIssues('is:open', 30);
+  const page = await listed.tracker.listIssues('is:open', 30, null);
+  const [fromList] = page.items;
 
   expect(fromList).toEqual(await single.tracker.getIssue(8));
   expect(fromList).toMatchObject({
@@ -55,4 +63,21 @@ it('lists each Issue with the fields its own page reads, so one opened from a ro
   // The list asks GitHub for the same fields the page's own read does.
   for (const field of ['body', 'blockedBy', 'subIssues'])
     expect(JSON.stringify(bodyOf(listed.sent).query)).toContain(field);
+});
+
+it('rejects a continuation that would request the same page again', async () => {
+  const { tracker } = trackerAnswering(
+    reply(200, {
+      data: {
+        search: {
+          nodes: [fullIssue],
+          pageInfo: { hasNextPage: true, endCursor: 'same-page' },
+        },
+      },
+    }),
+  );
+
+  await expect(tracker.listIssues('is:open', 30, 'same-page')).rejects.toThrow(
+    'GitHub returned an invalid Issue list cursor.',
+  );
 });
