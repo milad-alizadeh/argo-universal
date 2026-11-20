@@ -1,0 +1,19 @@
+{
+  "name": "@argo/home",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "argo-plugin types . --check && tsc --noEmit && tsc --noEmit -p tsconfig.test.json && argo-plugin validate . && vitest run",
+    "check-types": "node ../../tools/plugin-typecheck.mts 'argo-plugin types . --check && tsc --noEmit && tsc --noEmit -p tsconfig.test.json'",
+    "test": "vitest run",
+    "types": "argo-plugin types .",
+    "validate": "argo-plugin validate ."
+  },
+  "devDependencies": {
+    "@argo/plugin-kit": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
