@@ -18,13 +18,10 @@ export const tokenUrl = `https://${hueHost}/v2/oauth2/token`;
 // UNCONFIRMED: the Bridge's v1 API through the cloud, where the virtual link button and the application key live.
 const routeApi = `https://${hueHost}/route/api`;
 
-// Pressing the link button over the Remote API, and asking for an application key while it is pressed.
-export const linkButtonUrl = `${routeApi}/0/config`;
+// The Bridge's config: a PUT presses the link button over the Remote API, and a GET says who the Bridge is, whose id names the Account.
+export const bridgeConfigUrl = `${routeApi}/0/config`;
 
 export const applicationKeyUrl = routeApi;
-
-// Who the Bridge is: its id names the Account.
-export const bridgeConfigUrl = linkButtonUrl;
 
 // UNCONFIRMED: CLIP API v2 through the cloud; each call also carries the application key in `hue-application-key`.
 const resourceUrl = `https://${hueHost}/route/clip/v2/resource`;

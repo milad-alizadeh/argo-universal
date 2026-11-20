@@ -5,7 +5,6 @@ import {
   bridgeConfigUrl,
   deviceType,
   hueHost,
-  linkButtonUrl,
 } from './hue';
 import type { HueCalls } from './hue-client';
 import { at, jsonRequest, list, parseJson, text, type Json } from './json';
@@ -40,7 +39,7 @@ async function keepKey(
 export async function connectBridge(argo: HueCalls): Promise<void> {
   const send = accountFetch(argo, hueHost);
 
-  await send(linkButtonUrl, jsonRequest('PUT', { linkbutton: true }));
+  await send(bridgeConfigUrl, jsonRequest('PUT', { linkbutton: true }));
 
   const reply = await send(
     applicationKeyUrl,
