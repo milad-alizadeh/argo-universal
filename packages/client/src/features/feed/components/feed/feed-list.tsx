@@ -2,9 +2,8 @@ import type { LegendListRef } from '@legendapp/list/react-native';
 import { OrbContinuity } from '@repo/kit/primitives/status/orb';
 import type * as React from 'react';
 import { useRef } from 'react';
-import { Platform, View } from 'react-native';
+import { View } from 'react-native';
 import { FeedGrowthContext } from '../feed-growth-context';
-import { ObserveFeedOrbs } from '../feed-orb';
 import type { FeedEntry } from './feed-entry';
 import { JumpToLatestWhenAway } from './feed-overlays';
 import type { EntryDrawing } from './feed-row';
@@ -42,9 +41,7 @@ function FeedBody(scroll: FeedScrollProps): React.JSX.Element {
     <FeedGrowthContext.Provider value={feedGrowth}>
       <OrbContinuity>
         <LiveHeaderMeasurement>
-          <ObserveFeedOrbs value={Platform.OS === 'ios'}>
-            <FeedScroll {...scroll} />
-          </ObserveFeedOrbs>
+          <FeedScroll {...scroll} />
         </LiveHeaderMeasurement>
       </OrbContinuity>
     </FeedGrowthContext.Provider>

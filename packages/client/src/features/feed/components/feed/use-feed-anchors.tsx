@@ -2,17 +2,15 @@ import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { useFeedEndClearance } from '#lib/product/composer-cover';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
-import { FeedEndView } from './feed-end-view';
 import type { FeedListProps, FeedScrollProps } from './feed-scroll';
+import { feedScrollRenderer } from './feed-scroll-renderer';
 import { useFeedEndMotion } from './use-feed-end-motion';
 
 // Clears whatever of the Composer covers the Feed's end, and the pill above it, and leaves the Feed's gap above them.
-function FeedEnd({ follows }: { follows: boolean }): React.JSX.Element {
+function FeedEnd(): React.JSX.Element {
   const { endSpace } = useFeedEndClearance();
 
-  const End = follows ? FeedEndView : View;
-
-  return <End style={{ height: endSpace }} />;
+  return <View style={{ height: endSpace }} />;
 }
 
 // Older rows paging in above keep the reader's place, and so do rows above that measure as the reader scrolls.
@@ -32,6 +30,7 @@ type AnchorInput = Pick<
 
 type FeedAnchors = Pick<
   FeedListProps,
+  | 'renderScrollComponent'
   | 'maintainScrollAtEnd'
   | 'alignItemsAtEnd'
   | 'maintainVisibleContentPosition'
@@ -56,6 +55,7 @@ export function useFeedAnchors(input: AnchorInput): FeedAnchors {
     maintainScrollAtEnd: enabled && motion,
     maintainVisibleContentPosition: visibleContentPosition(follows),
     alignItemsAtEnd: false,
-    endContent: <FeedEnd follows={follows} />,
+    renderScrollComponent: feedScrollRenderer(follows),
+    endContent: <FeedEnd />,
   };
 }

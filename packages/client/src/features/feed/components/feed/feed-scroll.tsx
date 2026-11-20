@@ -4,7 +4,7 @@ import type * as React from 'react';
 import { type RefObject, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { useFeedFade } from '#lib/product/feed-fade';
-import { feedOrbViewability } from '../feed-orb';
+import { feedRowViewability } from '../feed-row-visibility';
 import type { FeedEntry } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
 import {
@@ -67,7 +67,7 @@ export const feedListProps = {
   onStartReachedThreshold: startThreshold,
   ...Platform.select({
     android: { ...nativeRenderWindow, decelerationRate: 'fast' as const },
-    ios: { ...nativeRenderWindow, viewabilityConfig: feedOrbViewability },
+    ios: { ...nativeRenderWindow, viewabilityConfig: feedRowViewability },
     default: { drawDistance: 800 },
   }),
   ...keyboardProps,
@@ -118,6 +118,7 @@ export type FeedListProps = Pick<
   | 'items'
   | 'renderItem'
   | 'initialScrollIndex'
+  | 'renderScrollComponent'
   | 'maintainScrollAtEnd'
   | 'maintainVisibleContentPosition'
   | 'alignItemsAtEnd'

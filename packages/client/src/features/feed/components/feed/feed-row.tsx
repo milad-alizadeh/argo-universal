@@ -6,6 +6,7 @@ import type * as React from 'react';
 import { createContext, memo, useContext, useMemo } from 'react';
 import { SessionColumn } from '#lib/product/session-column';
 import { FeedItem } from '../feed-item';
+import { FeedRowVisibility } from '../feed-row-visibility';
 import { type FeedEntry, entryKey } from './feed-entry';
 import { LiveHeaderRow } from './live-header-row';
 
@@ -83,7 +84,9 @@ export const FeedRow = memo(function FeedRow(props: FeedRowProps) {
   return (
     <CollapsibleLayoutSyncContext.Provider value={layoutSync}>
       <SessionColumn testID="feed-column" className={cn(spaceBelow, inset)}>
-        <EntryContent key={contentKey(entry)} {...props} />
+        <FeedRowVisibility>
+          <EntryContent key={contentKey(entry)} {...props} />
+        </FeedRowVisibility>
       </SessionColumn>
     </CollapsibleLayoutSyncContext.Provider>
   );

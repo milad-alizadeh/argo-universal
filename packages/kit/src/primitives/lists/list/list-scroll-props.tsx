@@ -26,9 +26,9 @@ function scrollEvents<Item>(
   };
 }
 
-function testProps(
-  testID?: string,
-): ReturnType<typeof listTestIdProps> | Record<never, never> {
+type TestProps = ReturnType<typeof listTestIdProps> | Record<never, never>;
+
+function testProps(testID?: string): TestProps {
   return testID ? listTestIdProps(testID) : {};
 }
 
@@ -63,6 +63,7 @@ function anchorProps<Item>(
   props: ListProps<Item>,
 ): Partial<ScrollFadeListProps<Item>> {
   return {
+    renderScrollComponent: props.renderScrollComponent,
     initialScrollIndex: props.initialScrollIndex,
     initialScrollAtEnd: props.initialScrollAtEnd,
     alignItemsAtEnd: props.alignItemsAtEnd,
