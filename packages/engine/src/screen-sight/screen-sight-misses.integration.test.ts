@@ -1,14 +1,11 @@
 import { expect, it } from 'vitest';
-import { answerPermission, permissionJourney } from '#mocks/native-permission';
-import { askOperation } from '#mocks/operation-permissions';
-import { beginHeldTurn } from '#mocks/operation-race';
+import { permissionJourney } from '#mocks/native-permission';
 import { connectScreenSightApp } from '#mocks/screen-sight-app';
 import {
-  allowedScreenshot,
+  agentScreenshot,
   journeyWithApp,
   missedNoticesOf,
   noticesOf,
-  screenshot,
 } from '#mocks/screen-sight-journey';
 
 it('does not reach an App that is not the desktop App', async () => {
@@ -19,12 +16,7 @@ it('does not reach an App that is not the desktop App', async () => {
       .ready;
   }
 
-  await beginHeldTurn(journey.host, journey.session.sessionId);
-
-  const asked = await askOperation(journey, screenshot);
-  await answerPermission(journey, asked.request, 'allow_once');
-
-  expect(await asked.outcome).toEqual([
+  expect(await agentScreenshot(journey)).toEqual([
     { status: 'fulfilled', value: { status: 'not_opened' } },
   ]);
 }, 30_000);
@@ -34,7 +26,7 @@ it('tells the Agent why when the person declines the display prompt or the App c
     answer: () => ({ status: 'refused', reason: 'declined' }),
   });
 
-  expect(await allowedScreenshot(declined)).toEqual([
+  expect(await agentScreenshot(declined)).toEqual([
     { status: 'fulfilled', value: { status: 'refused', reason: 'declined' } },
   ]);
   await expect
@@ -48,7 +40,7 @@ it('tells the Agent why when the person declines the display prompt or the App c
     }),
   });
 
-  expect(await allowedScreenshot(missing)).toEqual([
+  expect(await agentScreenshot(missing)).toEqual([
     {
       status: 'fulfilled',
       value: {

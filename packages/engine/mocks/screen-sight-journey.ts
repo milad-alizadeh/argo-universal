@@ -1,12 +1,10 @@
 import type { SessionUpdate } from '@repo/contracts';
 import { feedRow } from '@repo/db/schema';
 import {
-  answerPermission,
   permissionJourney,
   type PermissionJourney,
 } from '#mocks/native-permission';
-import { askOperation } from '#mocks/operation-permissions';
-import { beginHeldTurn } from '#mocks/operation-race';
+import { runOperation } from '#mocks/operations';
 import {
   connectScreenSightApp,
   type ScreenSightApp,
@@ -23,19 +21,20 @@ export async function journeyWithApp(
   const journey = await permissionJourney();
   const app = connectScreenSightApp(journey.host.url, options);
   await app.ready;
-  await beginHeldTurn(journey.host, journey.session.sessionId);
 
   return { ...journey, app };
 }
 
-// Asks as the Agent and has the person allow it once.
-export async function allowedScreenshot(
-  journey: Journey,
+// Runs it as the Agent: no Permission request, so it just runs.
+export async function agentScreenshot(
+  journey: PermissionJourney,
 ): Promise<PromiseSettledResult<unknown>[]> {
-  const asked = await askOperation(journey, screenshot);
-  await answerPermission(journey, asked.request, 'allow_once');
-
-  return asked.outcome;
+  return Promise.allSettled([
+    runOperation(journey.session.caller.operations, {
+      ...screenshot,
+      wait: true,
+    }),
+  ]);
 }
 
 // Everything the Server stored: Feed rows, with the Notices and Tool calls among them.

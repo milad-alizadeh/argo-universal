@@ -98,41 +98,6 @@ it('keeps nothing after the call ends', async () => {
   );
 }, 30_000);
 
-it('takes no picture until the person has spoken after the voice announced the request', async () => {
-  const { work, app } = await callWith();
-
-  work.provider.call.personSays('Hello there');
-  work.provider.call.voiceSays('May I look at your screen?');
-  work.provider.call.requestFrame('f1');
-
-  // A missing ask waits a moment for the person's words to be written down before the voice is told to ask.
-  await expect
-    .poll(() => replyTo(work, 'f1'), { timeout: 5_000 })
-    .toBeDefined();
-  expect(replyTo(work, 'f1')).toMatchObject({ text: relayWords.askFirst });
-  expect(app?.asked).toEqual([]);
-  expect(work.provider.call.images).toEqual([]);
-
-  work.provider.call.personSays('Yes, go ahead', 'person-2');
-  work.provider.call.requestFrame('f2');
-
-  await expect.poll(() => work.provider.call.images).toHaveLength(1);
-}, 30_000);
-
-it('counts a spoken ask for one capture only', async () => {
-  const { work } = await callWith();
-  lookAtThis(work);
-  await expect.poll(() => work.provider.call.images).toHaveLength(1);
-
-  work.provider.call.requestFrame('f2');
-
-  await expect
-    .poll(() => replyTo(work, 'f2'), { timeout: 5_000 })
-    .toBeDefined();
-  expect(replyTo(work, 'f2')).toMatchObject({ text: relayWords.askFirst });
-  expect(work.provider.call.images).toHaveLength(1);
-}, 30_000);
-
 it('sends nothing to a provider that cannot take images, and captures nothing', async () => {
   const { work, app } = await callWith({ images: false });
 

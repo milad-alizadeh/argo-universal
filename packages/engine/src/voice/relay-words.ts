@@ -17,8 +17,6 @@ export const relayWords = {
     `The Agent's Turn stopped: ${stopReason}.`,
   noImages:
     'This voice cannot be given a picture of the screen, so nothing was captured. Tell the person, and say the Agent can look at it instead.',
-  askFirst:
-    'The person has not said you may look at their screen, so nothing was captured. Ask them, and when they say yes, try again.',
   looked:
     'You now have one still picture of the person’s screen, as background. Look at it and answer what they asked. It is not kept.',
   screenOff:

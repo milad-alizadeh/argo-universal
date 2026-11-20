@@ -1,12 +1,10 @@
 import { expect, it } from 'vitest';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
-import { answerPermission, permissionJourney } from '#mocks/native-permission';
-import { askOperation } from '#mocks/operation-permissions';
-import { beginHeldTurn } from '#mocks/operation-race';
+import { permissionJourney } from '#mocks/native-permission';
 import { operationCaller, runOperation } from '#mocks/operations';
 import { capturedImage } from '#mocks/screen-sight-app';
 import {
-  allowedScreenshot,
+  agentScreenshot,
   journeyWithApp,
   missedNoticesOf,
   noticesOf,
@@ -14,10 +12,10 @@ import {
   stored,
 } from '#mocks/screen-sight-journey';
 
-it('asks the person first, then hands the Agent the picture', async () => {
+it('hands the Agent the picture without a Permission request', async () => {
   const journey = await journeyWithApp();
 
-  expect(await allowedScreenshot(journey)).toEqual([
+  expect(await agentScreenshot(journey)).toEqual([
     {
       status: 'fulfilled',
       value: { status: 'captured', image: capturedImage },
@@ -32,27 +30,16 @@ it('asks the person first, then hands the Agent the picture', async () => {
 
 it('shows the Feed one Notice and never the picture', async () => {
   const journey = await journeyWithApp();
-  await allowedScreenshot(journey);
+  await agentScreenshot(journey);
 
   await expect.poll(async () => (await noticesOf(journey)).length).toBe(1);
   expect(stored(journey)).not.toContain(capturedImage.data);
 }, 30_000);
 
-it('takes no picture when the person declines', async () => {
-  const journey = await journeyWithApp();
-  const asked = await askOperation(journey, screenshot);
-  await answerPermission(journey, asked.request, 'reject_once');
-
-  expect(await asked.outcome).toMatchObject([{ status: 'rejected' }]);
-  expect(journey.app.asked).toEqual([]);
-  expect(await noticesOf(journey)).toEqual([]);
-  expect(await missedNoticesOf(journey)).toEqual([]);
-}, 30_000);
-
 it('refuses with off, because the App checks its own setting as each request arrives', async () => {
   const journey = await journeyWithApp({ enabled: false });
 
-  expect(await allowedScreenshot(journey)).toEqual([
+  expect(await agentScreenshot(journey)).toEqual([
     { status: 'fulfilled', value: { status: 'refused', reason: 'off' } },
   ]);
   expect(journey.app.asked).toHaveLength(1);
@@ -65,24 +52,20 @@ it('refuses with off, because the App checks its own setting as each request arr
 it('takes a picture once the person turns screen sight on, without the App reconnecting', async () => {
   const journey = await journeyWithApp({ enabled: false });
 
-  expect(await allowedScreenshot(journey)).toEqual([
+  expect(await agentScreenshot(journey)).toEqual([
     { status: 'fulfilled', value: { status: 'refused', reason: 'off' } },
   ]);
   journey.app.setEnabled(true);
 
-  expect(await allowedScreenshot(journey)).toMatchObject([
+  expect(await agentScreenshot(journey)).toMatchObject([
     { status: 'fulfilled', value: { status: 'captured' } },
   ]);
 }, 60_000);
 
 it('answers not_opened when no App is reachable, and never a stale picture', async () => {
   const journey = await permissionJourney();
-  await beginHeldTurn(journey.host, journey.session.sessionId);
 
-  const asked = await askOperation(journey, screenshot);
-  await answerPermission(journey, asked.request, 'allow_once');
-
-  expect(await asked.outcome).toEqual([
+  expect(await agentScreenshot(journey)).toEqual([
     { status: 'fulfilled', value: { status: 'not_opened' } },
   ]);
   await expect
