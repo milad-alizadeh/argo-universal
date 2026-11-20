@@ -1,3 +1,6 @@
+import type { LegendListRef } from '@legendapp/list/react-native';
+import type { NativeScrollEvent } from 'react-native';
+
 /*
  * The time constant of a critically damped spring, in milliseconds. Its closed form
  * keeps the same trajectory on 60 Hz and high-refresh displays.
@@ -70,4 +73,59 @@ export class WebFeedGlide {
     this.node.scrollTop = this.position;
     this.frame = settled ? 0 : requestAnimationFrame(this.tick);
   };
+}
+
+interface FeedEnd {
+  content: number;
+  viewport: number;
+}
+
+// A larger viewport can clamp scrollTop backwards before the arriving row grows the content.
+function atPreviousEnd(
+  end: FeedEnd | undefined,
+  viewport: number,
+  bottom: number,
+): boolean {
+  return (
+    !!end && viewport > end.viewport && Math.abs(bottom - end.content) <= 1
+  );
+}
+
+interface FeedPosition extends FeedEnd {
+  offset: number;
+}
+
+export class WebFeedViewport {
+  private end?: FeedEnd;
+
+  // Recover only the exact old bottom when the browser grew the viewport under a following reader.
+  clamped(
+    { offset, viewport, content }: FeedPosition,
+    following: boolean,
+  ): boolean {
+    const bottom = offset + viewport;
+    const previous = this.end;
+    this.end = undefined;
+
+    if (following && Math.abs(bottom - content) <= 1) {
+      this.end = { content, viewport };
+
+      return false;
+    }
+
+    return atPreviousEnd(previous, viewport, bottom);
+  }
+
+  scrolled(list: LegendListRef | null, event: NativeScrollEvent): void {
+    if (!list) return;
+
+    const position = {
+      offset: event.contentOffset.y,
+      viewport: event.layoutMeasurement.height,
+      content: event.contentSize.height,
+    };
+
+    if (this.clamped(position, list.getState().isFollowingEnd))
+      void list.scrollToEnd({ animated: false });
+  }
 }

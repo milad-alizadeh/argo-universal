@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { WebFeedGlide } from './follow-web-feed';
+import { WebFeedGlide, WebFeedViewport } from './follow-web-feed';
 
 const frame = 16;
 
@@ -59,4 +59,23 @@ it('respects an explicit move to the end between frames', () => {
   vi.advanceTimersByTime(frame);
   expect(node.scrollTop).toBe(68);
   expect(vi.getTimerCount()).toBe(0);
+});
+
+it('keeps following when the queue tray disappears and the next row arrives in the same frame', () => {
+  const viewport = new WebFeedViewport();
+  expect(
+    viewport.clamped({ offset: 18375, viewport: 646, content: 19021 }, true),
+  ).toBe(false);
+  expect(
+    viewport.clamped({ offset: 18343, viewport: 678, content: 19053 }, false),
+  ).toBe(true);
+});
+
+it('leaves a reader who scrolled away in place across the same resize', () => {
+  const viewport = new WebFeedViewport();
+  viewport.clamped({ offset: 18375, viewport: 646, content: 19021 }, true);
+  viewport.clamped({ offset: 18310, viewport: 646, content: 19021 }, false);
+  expect(
+    viewport.clamped({ offset: 18310, viewport: 678, content: 19053 }, false),
+  ).toBe(false);
 });
