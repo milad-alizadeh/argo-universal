@@ -17,7 +17,11 @@ export const keepNothingAwake: NonNullable<EngineInput['caffeinate']> =
 
 type ScriptedEngineInput = Pick<
   EngineInput,
-  'acp' | 'cliEntry' | 'argoToolsGraceMs' | 'conversationProvider' | 'caffeinate'
+  | 'acp'
+  | 'cliEntry'
+  | 'argoToolsGraceMs'
+  | 'conversationProvider'
+  | 'caffeinate'
 > & {
   agent: ReturnType<typeof createScriptedAgentProcess>;
   fixtureAgents: AgentIdentity[];
