@@ -7,6 +7,7 @@ import { useFeedFade } from '#lib/product/feed-fade';
 import { useScreenFocused } from '#lib/product/navigation/navigation';
 import type { FeedListProps, feedListProps } from './feed-scroll';
 import { rememberFeedPosition } from './feed-scroll-memory';
+import { useFeedWheel } from './scroll-web-feed';
 
 type ListRef = RefObject<LegendListRef | null>;
 
@@ -36,9 +37,11 @@ export function DrawFeedScroll({
   fade,
   onScroll,
 }: Drawing): React.JSX.Element {
+  const wheel = useFeedWheel(list);
+
   // On a wide window `feed-scrollbar` keeps the web scrollbar drawn while the Feed can scroll, rather than only while it moves.
   return (
-    <View className="feed-scrollbar min-h-0 flex-1">
+    <View ref={wheel} className="feed-scrollbar min-h-0 flex-1">
       <List ref={list} {...base} {...listProps} {...fade} onScroll={onScroll} />
     </View>
   );
