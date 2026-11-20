@@ -21,7 +21,7 @@ const meta = {
     screenSight: false,
     onEnabledChange: action('change Agent access'),
     onTodoListChange: action('change the Todo list setting'),
-    onScreenSightChange: action('change Screen sight'),
+    onScreenSightChange: action('change Screen sharing'),
     onInstall: action('add Argo instructions'),
     onRetry: action('retry loading Agent access'),
   },
