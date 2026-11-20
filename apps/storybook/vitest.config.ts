@@ -8,6 +8,9 @@ const STORY_TEST_TIMEOUT_MS = 30_000;
 // A loaded Mac took 237 s with 2 pages versus 292 s with 4, using 1.2 GB less memory; CI uses the same page budget.
 const BROWSER_WORKERS = 2;
 
+// The viewport most stories ask for: settleLayout('wide') in @repo/kit/mocks/story-layout, so the common story needs no resize.
+const STORY_VIEWPORT = { width: 1440, height: 844 };
+
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineProject({
   plugins: [
@@ -23,6 +26,8 @@ export default defineProject({
   ],
   test: {
     name: 'storybook',
+    // ARGO_SHARD_PROBE=1 turns on the failure probe in vitest.setup.ts.
+    env: { ARGO_SHARD_PROBE: process.env.ARGO_SHARD_PROBE ?? '' },
     maxWorkers: BROWSER_WORKERS,
     testTimeout: STORY_TEST_TIMEOUT_MS,
     // Zero retries: a flaky story fails like a flaky end-to-end test.
@@ -34,6 +39,7 @@ export default defineProject({
     browser: {
       enabled: true,
       headless: true,
+      viewport: STORY_VIEWPORT,
       // Audio and Video stories press play from synthetic events, which Chromium's autoplay policy refuses.
       provider: playwright({
         launchOptions: { args: ['--autoplay-policy=no-user-gesture-required'] },

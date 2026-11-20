@@ -50,7 +50,7 @@
     "test:stories": {
       "dependsOn": ["transit", "@repo/contracts#generate:plugin-kit"],
       "env": ["VITEST_MAX_WORKERS"],
-      "passThroughEnv": ["ARGO_BROWSER_SUITE_LOCK_HELD"],
+      "passThroughEnv": ["ARGO_BROWSER_SUITE_LOCK_HELD", "ARGO_SHARD_PROBE"],
       "inputs": ["$TURBO_DEFAULT$", "!**/README.md"],
       "outputs": []
     },
