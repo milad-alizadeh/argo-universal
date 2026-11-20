@@ -1,27 +1,17 @@
 import type { NonUserPromptSender } from '@repo/contracts';
-import type { operations } from '@repo/contracts/operations';
-import type { z } from 'zod';
+import { startSchedule, type ScheduleActor } from './schedule-machine';
 import {
-  decodeSchedule,
-  deliveryWrite,
   ScheduleStore,
-  type ScheduleRow,
+  type Schedule,
+  type ScheduleOccurrence,
+  type CreateSchedule,
+  type ManageSchedule,
 } from './schedule-store';
 import { sendQueueCommand } from './sent-prompt/queue';
 import { steerOrWait } from './sent-prompt/steering';
 import { requireWritableSession } from './session-command';
 import type { SessionActorRef } from './session-machine';
 import type { SessionHandlerSources } from './session-sources';
-
-type Definitions = typeof operations;
-
-type Create = z.output<Definitions['session.schedulePrompt']['params']>;
-
-type Manage = z.output<Definitions['session.manageSchedule']['params']>;
-
-type Schedule = ReturnType<typeof decodeSchedule>;
-
-import { startSchedule, type ScheduleActor } from './schedule-machine';
 
 export class Schedules {
   private readonly actors = new Map<string, ScheduleActor>();
@@ -38,16 +28,16 @@ export class Schedules {
   public list(sessionId: string): Schedule[] {
     return this.store.list(sessionId);
   }
-  public async create(input: Create): Promise<Schedule> {
+  public async create(input: CreateSchedule): Promise<Schedule> {
     requireWritableSession(this.sources.readSession(input.sessionId));
-    const row = await this.store.insert(input);
-    this.arm(row);
+    const schedule = await this.store.insert(input);
+    this.arm(schedule);
 
-    return decodeSchedule(row);
+    return schedule;
   }
-  public async manage(input: Manage): Promise<Record<string, never>> {
+  public async manage(input: ManageSchedule): Promise<Record<string, never>> {
     await this.store.change(input);
-    this.replace(input.id);
+    this.replace(input);
 
     return {};
   }
@@ -55,55 +45,50 @@ export class Schedules {
     for (const actor of this.actors.values()) actor.stop();
     this.actors.clear();
   }
-  private replace(id: string): void {
+  private replace({ id, sessionId }: ManageSchedule): void {
     this.actors.get(id)?.stop();
     this.actors.delete(id);
-    const row = this.store.get(id);
 
-    if (isActive(row)) this.arm(row);
+    if (this.store.deadline(id) !== undefined) this.arm({ id, sessionId });
   }
-  private arm(row: ScheduleRow): void {
+  private arm({ id, sessionId }: Pick<Schedule, 'id' | 'sessionId'>): void {
     if (this.stopping.aborted) return;
 
     const actor = startSchedule({
       now: Date.now,
-      nextAt: () => this.store.get(row.id)?.nextAt ?? Infinity,
-      deliver: (signal) => this.deliver(row.id, signal),
+      nextAt: () => this.store.deadline(id) ?? Infinity,
+      deliver: (signal) => this.deliver(id, sessionId, signal),
     });
 
-    this.actors.set(row.id, actor);
+    this.actors.set(id, actor);
   }
-  private async deliver(id: string, signal: AbortSignal): Promise<void> {
-    const row = this.store.get(id);
-
-    if (!isActive(row)) return;
-
+  private async deliver(
+    id: string,
+    sessionId: string,
+    signal: AbortSignal,
+  ): Promise<void> {
     const session = await this.sources.open.ready(
-      row.sessionId,
+      sessionId,
       'session.queue',
       signal,
     );
 
     signal.throwIfAborted();
+    const occurrence = this.store.occurrence(id);
 
-    const current = this.store.get(row.id);
-
-    if (!stillDue(current, row.nextAt)) return;
-    await this.enqueue(session, row);
+    if (!occurrence) return;
+    await this.enqueue(session, id, occurrence);
   }
   private async enqueue(
     session: SessionActorRef,
-    row: ScheduleRow,
+    id: string,
+    { prompt, commitWith }: ScheduleOccurrence,
   ): Promise<void> {
-    const sender = scheduleSender(row.id);
+    const sender = scheduleSender(id);
     const queuedId = this.sources.createId();
     const busy = session.getSnapshot().context.activeTurnId !== null;
-    await sendQueueCommand(session, {
-      command: { action: 'append', prompt: decodeSchedule(row).prompt },
-      sender,
-      queuedId,
-      commitWith: deliveryWrite(row, Date.now()),
-    });
+    const command = { action: 'append', prompt } as const;
+    await sendQueueCommand(session, { command, sender, queuedId, commitWith });
 
     if (busy) void steerOrWait(session, { sender, id: queuedId });
   }
@@ -116,9 +101,3 @@ const scheduleSender = (
   title: 'Schedule',
   scheduleId,
 });
-
-const stillDue = (row: ScheduleRow | undefined, at: number): boolean =>
-  row?.paused === false && row.nextAt === at;
-
-const isActive = (row: ScheduleRow | undefined): row is ScheduleRow =>
-  row?.paused === false;

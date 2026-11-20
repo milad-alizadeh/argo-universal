@@ -2,29 +2,40 @@ import { SessionPromptInput } from '@repo/contracts';
 import type { operations } from '@repo/contracts/operations';
 import { sessionSchedule as table } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, lte } from 'drizzle-orm';
 import type { z } from 'zod';
 import type { WriterJob } from '../storage';
-import type { SessionHandlerSources } from './session-sources';
+import type { HandlerSources } from './session-sources';
 
-export type ScheduleRow = typeof table.$inferSelect;
+type ScheduleRow = typeof table.$inferSelect;
 
 type Definitions = typeof operations;
 
-type Create = z.output<Definitions['session.schedulePrompt']['params']>;
+export type CreateSchedule = z.output<
+  Definitions['session.schedulePrompt']['params']
+>;
 
-type Manage = z.output<Definitions['session.manageSchedule']['params']>;
+export type ManageSchedule = z.output<
+  Definitions['session.manageSchedule']['params']
+>;
 
-type Schedule = z.output<Definitions['session.schedulePrompt']['result']>;
+export type Schedule = z.output<
+  Definitions['session.schedulePrompt']['result']
+>;
 
-export const second = 1000;
+export type ScheduleOccurrence = {
+  prompt: Schedule['prompt'];
+  commitWith: WriterJob;
+};
 
-export const decodeSchedule = ({ prompt, ...row }: ScheduleRow): Schedule => ({
+const second = 1000;
+
+const decodeSchedule = ({ prompt, ...row }: ScheduleRow): Schedule => ({
   ...row,
   prompt: SessionPromptInput.shape.prompt.parse(JSON.parse(prompt)),
 });
 
-export function deliveryWrite(row: ScheduleRow, now: number): WriterJob {
+function deliveryWrite(row: ScheduleRow, now: number): WriterJob {
   const period = row.intervalSeconds * second;
 
   const nextAt =
@@ -42,20 +53,40 @@ export function deliveryWrite(row: ScheduleRow, now: number): WriterJob {
 }
 
 export class ScheduleStore {
-  public constructor(private readonly sources: SessionHandlerSources) {}
-  public active(): ScheduleRow[] {
+  public constructor(
+    private readonly sources: HandlerSources<'database' | 'createId', 'write'>,
+  ) {}
+  public active(): Pick<Schedule, 'id' | 'sessionId'>[] {
     return this.sources.database
-      .select()
+      .select({ id: table.id, sessionId: table.sessionId })
       .from(table)
       .where(eq(table.paused, false))
       .all();
   }
-  public get(id: string): ScheduleRow | undefined {
+  public deadline(id: string): number | undefined {
     return this.sources.database
+      .select({ nextAt: table.nextAt })
+      .from(table)
+      .where(and(eq(table.id, id), eq(table.paused, false)))
+      .get()?.nextAt;
+  }
+  public occurrence(id: string): ScheduleOccurrence | undefined {
+    const now = Date.now();
+
+    const row = this.sources.database
       .select()
       .from(table)
-      .where(eq(table.id, id))
+      .where(
+        and(eq(table.id, id), eq(table.paused, false), lte(table.nextAt, now)),
+      )
       .get();
+
+    if (!row) return undefined;
+
+    return {
+      prompt: decodeSchedule(row).prompt,
+      commitWith: deliveryWrite(row, now),
+    };
   }
   public list(sessionId: string): Schedule[] {
     return this.sources.database
@@ -65,29 +96,29 @@ export class ScheduleStore {
       .all()
       .map(decodeSchedule);
   }
-  public async insert(input: Create): Promise<ScheduleRow> {
-    const row: ScheduleRow = {
+  public async insert(input: CreateSchedule): Promise<Schedule> {
+    const schedule: Schedule = {
       ...input,
       id: this.sources.createId(),
-      prompt: JSON.stringify(input.prompt),
       lastQueuedAt: null,
       nextAt: Date.now() + input.intervalSeconds * second,
       paused: false,
     };
 
+    const row = { ...schedule, prompt: JSON.stringify(schedule.prompt) };
     await this.sources.open.write({
       describe: () => 'Create Schedule',
       commit: (tx) => tx.insert(table).values(row).run(),
     });
 
-    return row;
+    return schedule;
   }
-  public async change(input: Manage): Promise<void> {
+  public async change(input: ManageSchedule): Promise<void> {
     const { sessionId, id, action } = input;
     const target = and(eq(table.sessionId, sessionId), eq(table.id, id));
-    const row = this.get(id);
+    const row = this.sources.database.select().from(table).where(target).get();
 
-    if (row?.sessionId !== sessionId)
+    if (!row)
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Schedule not found' });
     const update = this.update(row, action);
     await this.sources.open.write({
@@ -100,7 +131,7 @@ export class ScheduleStore {
   }
   private update(
     row: ScheduleRow,
-    action: Manage['action'],
+    action: ManageSchedule['action'],
   ): Partial<ScheduleRow> {
     if (action === 'pause') return { paused: true };
 
