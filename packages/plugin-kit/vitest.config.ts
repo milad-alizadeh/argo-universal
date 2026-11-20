@@ -11,6 +11,7 @@ export default defineProject({
         'testing/hook-budgets.integration.test.ts',
         'testing/hook-render-budget.integration.test.ts',
         'testing/loader-background-budget.integration.test.ts',
+        'testing/loader-every.integration.test.ts',
         'testing/loader-watch.integration.test.ts',
       ],
     }),

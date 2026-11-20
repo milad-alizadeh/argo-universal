@@ -20,7 +20,9 @@ export const running: Story = {
   play: async ({ canvas, userEvent, args }) => {
     await settleLayout('phone');
     await expect(canvas.getByText('Build the settings screen')).toBeVisible();
-    await expect(canvas.queryByText('Running the tests')).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByText('Running the tests'),
+    ).not.toBeInTheDocument();
 
     const row = canvas.getByRole('button', {
       name: 'Build the settings screen, Running',

@@ -37,7 +37,9 @@ export const NoActivity: Story = {
   args: pluginItemsSession,
   play: async ({ canvas }) => {
     await settleLayout('phone');
-    await expect(canvas.getByText(pluginItemsSession.session.title)).toBeVisible();
+    await expect(
+      canvas.getByText(pluginItemsSession.session.title),
+    ).toBeVisible();
     await expect(
       canvas.queryByText(pluginItemsSession.session.activity),
     ).not.toBeInTheDocument();
