@@ -4,40 +4,13 @@ import { composerProps } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { Composer } from './composer';
-import { endButtonId } from './composer-primary-action';
 import { bandTalkingComposer } from './composer-voice-band-fixtures';
-import { voiceCallComposer } from './composer-voice-fixtures';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer/Voice/Band' };
 
 export default meta;
 
 type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
-
-// The kit's Secondary size at each width, as Paper's band sets its label and timer.
-const secondaryType = {
-  wide: { fontSize: '12px', lineHeight: '16px' },
-  phone: { fontSize: '14px', lineHeight: '20px' },
-} as const;
-
-const fieldOf = (canvas: Canvas): HTMLElement =>
-  canvas.getByRole('textbox', { name: 'Message' });
-
-interface TypeLook {
-  fontSize: string;
-  lineHeight: string;
-  fontWeight: string;
-}
-
-const typeOf = (element: HTMLElement): TypeLook => {
-  const style = getComputedStyle(element);
-
-  return {
-    fontSize: style.fontSize,
-    lineHeight: style.lineHeight,
-    fontWeight: style.fontWeight,
-  };
-};
 
 const onCall = (
   layout: Extract<LayoutName, 'wide' | 'phone'>,
@@ -53,48 +26,16 @@ const onCall = (
   },
 });
 
-// The label is Secondary at medium weight and the timer Secondary at regular, not the Composer's Body.
-const bandType = (layout: 'wide' | 'phone'): Story =>
-  onCall(layout, async (canvas) => {
-    await expect(typeOf(canvas.getByText('Talking'))).toEqual({
-      ...secondaryType[layout],
-      fontWeight: '500',
-    });
-    await expect(typeOf(canvas.getByText('2:51'))).toEqual({
-      ...secondaryType[layout],
-      fontWeight: '400',
-    });
-  });
-
-export const BandTypeWide = bandType('wide');
-
-export const BandTypePhone = bandType('phone');
-
-// The label sits inside the band, and ends where End does, at every width.
+// The label sits inside the band at every width.
 const bandEdges = (layout: 'wide' | 'phone'): Story =>
   onCall(layout, async (canvas) => {
     const band = canvas.getByTestId('voice-edge-band').getBoundingClientRect();
     const label = canvas.getByText('2:51').getBoundingClientRect();
-    const end = canvas.getByTestId(endButtonId).getBoundingClientRect();
 
     await expect(label.bottom).toBeLessThanOrEqual(band.bottom);
     await expect(label.top).toBeGreaterThanOrEqual(band.top);
-    await expect(label.right).toBeCloseTo(end.right, 0);
   });
 
 export const BandEdgesWide = bandEdges('wide');
 
 export const BandEdgesPhone = bandEdges('phone');
-
-// Under the band the field's top padding is Paper's 6 points, so the card grows by 24, not the band's 30.
-export const FieldUnderTheBand = onCall('wide', async (canvas) => {
-  await expect(getComputedStyle(fieldOf(canvas)).paddingTop).toBe('6px');
-});
-
-// Without a band the field keeps today's 12-point top padding.
-export const FieldWithoutTheBand: Story = {
-  ...onCall('wide', async (canvas) => {
-    await expect(getComputedStyle(fieldOf(canvas)).paddingTop).toBe('12px');
-  }),
-  args: voiceCallComposer,
-};

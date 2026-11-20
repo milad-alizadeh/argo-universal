@@ -39,19 +39,18 @@ describe('sessionProgress', () => {
   });
 
   it.each([
-    { status: 'failed', tone: 'danger', active: false },
-    { status: 'unread', tone: 'info', active: false },
-    { status: 'needs_input', tone: 'warning', active: true },
-    { status: 'running', tone: 'success', active: true },
+    { status: 'failed', active: false },
+    { status: 'unread', active: false },
+    { status: 'needs_input', active: true },
+    { status: 'running', active: true },
   ] as const)(
-    'keeps a $status Session $tone while background work runs',
-    ({ status, tone, active }) => {
+    'keeps a $status Session as it is while background work runs',
+    ({ status, active }) => {
+      const alone = todosBar({ status });
+
       expect(
         todosBar({ status, shells: oneRunning, subagents: oneRunning }),
-      ).toMatchObject({
-        tone,
-        active,
-      });
+      ).toEqual({ ...alone, active });
     },
   );
 });

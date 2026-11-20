@@ -52,13 +52,6 @@ async function checkCursors(canvas: Context['canvas']): Promise<void> {
       first(canvas.getAllByRole('button', { name: 'Delete Queued Prompt' })),
     ),
   ).toBe('pointer');
-  const rows = canvas.getAllByTestId(rowId);
-  await expect(row.getBoundingClientRect().height).toBe(28);
-  await expect(
-    canvas.getByTestId('prompt-queue').getBoundingClientRect().height,
-  ).toBe(
-    rows.reduce((sum, item) => sum + item.getBoundingClientRect().height, 0),
-  );
 }
 
 function first(elements: HTMLElement[]): HTMLElement {

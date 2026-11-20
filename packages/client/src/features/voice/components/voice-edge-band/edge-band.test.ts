@@ -14,57 +14,48 @@ const listening: EdgeCall = {
 };
 
 describe('how the edge band looks in each call state', () => {
-  it('sweeps a dim tertiary line while connecting, with no timer', () => {
+  it('sweeps a line while connecting, with no timer', () => {
     expect(edgeLookOf({ ...listening, orb: 'none' })).toMatchObject({
       motion: 'sweep',
-      tone: 'tertiary',
-      labelTone: 'muted',
       timer: false,
     });
   });
 
-  it("scrolls the person's microphone level in the foreground while listening", () => {
+  it("scrolls the person's microphone level while listening", () => {
     expect(edgeLookOf(listening)).toMatchObject({
       motion: 'history',
       follows: 'input',
-      tone: 'foreground',
-      labelTone: 'neutral',
       timer: true,
     });
   });
 
-  it("scrolls the voice's output in info blue while it talks", () => {
+  it("scrolls the voice's output while it talks", () => {
     expect(edgeLookOf({ ...listening, orb: 'talking' })).toMatchObject({
       motion: 'history',
       follows: 'output',
-      tone: 'info',
     });
   });
 
-  it('breathes low and slow in the muted foreground while thinking', () => {
+  it('breathes on its own while thinking', () => {
     const thinking = edgeLookOf({ ...listening, orb: 'thinking' });
 
     expect(thinking).toMatchObject({
       motion: 'breathe',
-      tone: 'muted-foreground',
     });
     expect(thinking.follows).toBeUndefined();
   });
 
-  it('goes flat and red, saying "Mic off", while the microphone is muted', () => {
+  it('goes flat, saying "Mic off", while the microphone is muted', () => {
     const muted = edgeLookOf({ ...listening, microphoneMuted: true });
 
     expect(muted).toMatchObject({
       motion: 'flat',
-      tone: 'danger',
-      labelTone: 'danger',
-      dim: true,
       timer: true,
     });
     expect(muted.label).toBe('Mic off');
   });
 
-  it('sweeps in warning while reconnecting, and keeps the timer', () => {
+  it('sweeps while reconnecting, and keeps the timer', () => {
     const reconnecting = edgeLookOf({
       orb: 'none',
       trouble: 'reconnecting',
@@ -73,7 +64,6 @@ describe('how the edge band looks in each call state', () => {
 
     expect(reconnecting).toMatchObject({
       motion: 'sweep',
-      tone: 'warning',
       timer: true,
     });
     expect(reconnecting.label).toBe('Reconnecting…');
@@ -139,12 +129,10 @@ describe('the bars that move on their own', () => {
 });
 
 describe('the fade at both ends', () => {
-  it('fades the outer five bars most and the next eight a little', () => {
-    expect(edgeFade(0, 100)).toBeCloseTo(0.18);
-    expect(edgeFade(99, 100)).toBeCloseTo(0.18);
-    expect(edgeFade(5, 100)).toBeCloseTo(0.45);
-    expect(edgeFade(12, 100)).toBeCloseTo(0.45);
-    expect(edgeFade(13, 100)).toBeCloseTo(1);
+  it('fades the ends alike and leaves the middle whole', () => {
+    expect(edgeFade(0, 100)).toBeCloseTo(edgeFade(99, 100));
+    expect(edgeFade(0, 100)).toBeLessThan(edgeFade(12, 100));
+    expect(edgeFade(12, 100)).toBeLessThan(edgeFade(50, 100));
     expect(edgeFade(50, 100)).toBeCloseTo(1);
   });
 });

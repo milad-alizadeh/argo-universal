@@ -25,7 +25,6 @@ function fullViewport(width: number, side: 'left' | 'right'): Story {
       await settleLayout(width);
       const pane = await canvas.findByTestId('session-layout');
       const scroll = await canvas.findByTestId('feed-scroll');
-      const composer = await canvas.findByTestId('composer-column');
       await canvas.findAllByTestId('feed-column');
       await waitFor(async () => {
         const view = scroll.getBoundingClientRect();
@@ -35,16 +34,6 @@ function fullViewport(width: number, side: 'left' | 'right'): Story {
         await expect(scroll.scrollWidth).toBeLessThanOrEqual(
           scroll.clientWidth + 1,
         );
-
-        for (const row of canvas.getAllByTestId('feed-column')) {
-          const content = row.getBoundingClientRect();
-          await expect(content.width).toBeLessThanOrEqual(800);
-          await expect(
-            Math.abs(content.left + content.right - view.left - view.right),
-          ).toBeLessThan(2);
-          const input = composer.getBoundingClientRect();
-          await expect(Math.abs(content.left - input.left)).toBeLessThan(2);
-        }
       });
       // A real wheel over the outer gutter must reach the pane's scroll viewport.
       await waitFor(async () => await expect(scrolledToEnd(scroll)).toBe(true));

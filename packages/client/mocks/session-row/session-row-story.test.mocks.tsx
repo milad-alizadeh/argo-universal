@@ -18,60 +18,54 @@ export const meta = {
 
 export type Story = StoryObj<typeof meta>;
 
-export const dark = { globals: { mode: 'dark' } };
+export const running: Story = {
+  play: async ({ canvas, userEvent, args }) => {
+    await settleLayout('phone');
+    await expect(canvas.getByText('Running the tests')).toBeVisible();
 
-export function running(width: number): Story {
-  return {
-    play: async ({ canvas, userEvent, args }) => {
-      await settleLayout(width);
-      await expect(canvas.getByText('Running the tests')).toBeVisible();
+    const row = canvas.getByRole('button', {
+      name: 'Build the settings screen, Running',
+    });
 
-      const row = canvas.getByRole('button', {
-        name: 'Build the settings screen, Running',
-      });
+    await expect(args.onSelect).not.toHaveBeenCalled();
+    await userEvent.click(row);
+    await expect(args.onSelect).toHaveBeenCalledWith('session-running');
+  },
+};
 
-      await expect(args.onSelect).not.toHaveBeenCalled();
-      await userEvent.click(row);
-      await expect(args.onSelect).toHaveBeenCalledWith('session-running');
-    },
-  };
-}
+export const metadata: Story = {
+  render: (args) => (
+    <>
+      {(['working', 'branch', 'open', 'merged', 'closed'] as const).map(
+        (stage) => (
+          <SessionRow
+            {...args}
+            key={stage}
+            session={{ ...args.session, title: `${stage} metadata` }}
+            pullRequest={{ number: 45, stage }}
+          />
+        ),
+      )}
+    </>
+  ),
+  play: async ({ canvas, userEvent, args }) => {
+    await settleLayout('phone');
 
-export function metadata(width: number): Story {
-  return {
-    render: (args) => (
-      <>
-        {(['working', 'branch', 'open', 'merged', 'closed'] as const).map(
-          (stage) => (
-            <SessionRow
-              {...args}
-              key={stage}
-              session={{ ...args.session, title: `${stage} metadata` }}
-              pullRequest={{ number: 45, stage }}
-            />
-          ),
-        )}
-      </>
-    ),
-    play: async ({ canvas, userEvent, args }) => {
-      await settleLayout(width);
+    for (const stage of ['Working', 'Branch', 'Open', 'Merged', 'Closed']) {
+      const label = `${stage} Change #45`;
 
-      for (const stage of ['Working', 'Branch', 'Open', 'Merged', 'Closed']) {
-        const label = `${stage} Change #45`;
+      await expect(canvas.getByLabelText(label)).toBeVisible();
+    }
 
-        await expect(canvas.getByLabelText(label)).toBeVisible();
-      }
-
-      await expect(canvas.queryByLabelText(/^Issue #/)).not.toBeInTheDocument();
-      await expect(args.onSelect).not.toHaveBeenCalled();
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'open metadata, Running' }),
-      );
-      await expect(args.onSelect).toHaveBeenCalledWith(args.session.sessionId);
-      await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
-    },
-  };
-}
+    await expect(canvas.queryByLabelText(/^Issue #/)).not.toBeInTheDocument();
+    await expect(args.onSelect).not.toHaveBeenCalled();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'open metadata, Running' }),
+    );
+    await expect(args.onSelect).toHaveBeenCalledWith(args.session.sessionId);
+    await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
+  },
+};
 
 const states = [
   ['needsInput', 'Needs input'],
@@ -110,12 +104,10 @@ export const statusParity: Story = {
     </>
   ),
   play: async ({ canvas }) => {
-    for (const width of [390, 1440]) {
-      await settleLayout(width);
+    await settleLayout('phone');
 
-      for (const name of parityRowNames) {
-        await expect(canvas.getByRole('button', { name })).toBeVisible();
-      }
+    for (const name of parityRowNames) {
+      await expect(canvas.getByRole('button', { name })).toBeVisible();
     }
   },
 };

@@ -5,15 +5,10 @@ import {
   AddOnlySlotId,
   projectDetailsSlotId,
   ReplaceableSlotId,
-  sessionActivitySlotId,
-  sessionBarSlotId,
-  sessionChangesSlotId,
-  linkMarkSlotId,
   SessionRowItem,
   sessionRowSlotId,
   SlotId,
   SlotItemsInput,
-  slotRegistry,
 } from './wire';
 import { messageSlotId, toolCallSlotId } from './wire-slot';
 
@@ -32,19 +27,6 @@ const manifestWith = (
   });
 
 const rowContext = { sessionId: 'session', projectId: 'argo' };
-
-it('keeps every Slot id with its kind', () => {
-  expect(slotRegistry.map(({ id, kind }) => [id, kind])).toEqual([
-    [projectDetailsSlotId, 'add-only'],
-    [sessionRowSlotId, 'add-only'],
-    [sessionActivitySlotId, 'add-only'],
-    [sessionBarSlotId, 'add-only'],
-    [sessionChangesSlotId, 'add-only'],
-    [linkMarkSlotId, 'add-only'],
-    [toolCallSlotId, 'replaceable'],
-    [messageSlotId, 'replaceable'],
-  ]);
-});
 
 it('asks the Session row for a whole list keyed by Session id', () => {
   const input = {

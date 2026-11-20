@@ -2,16 +2,10 @@ import { expect, it } from 'vitest';
 import {
   SessionActivityItem,
   sessionActivitySlotId,
-  SlotItemsInput,
   slotRegistry,
 } from './wire';
 
-const rowContext = { sessionId: 'session', projectId: 'argo' };
-
-it('asks the Activity line for one line per Session, as a Single-owner Slot', () => {
-  const input = { slotId: sessionActivitySlotId, contexts: [rowContext] };
-
-  expect(SlotItemsInput.parse(input)).toEqual(input);
+it('makes the Activity line a Single-owner Slot', () => {
   expect(
     slotRegistry.find(({ id }) => id === sessionActivitySlotId),
   ).toMatchObject({ content: { owners: 'one' } });

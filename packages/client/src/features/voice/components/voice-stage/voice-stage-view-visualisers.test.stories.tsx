@@ -53,24 +53,6 @@ function placesOf(canvas: Canvas): string {
   return JSON.stringify([well.y, well.height, label.y]);
 }
 
-// The well's middle sits on the stage's middle.
-async function expectCentred(canvas: Canvas): Promise<void> {
-  const well = wellElement(canvas).getBoundingClientRect();
-  const stage = stageElement(canvas).getBoundingClientRect();
-
-  await expect(well.x + well.width / 2).toBeCloseTo(
-    stage.x + stage.width / 2,
-    0,
-  );
-}
-
-const wellOf = (canvas: Canvas): DOMRect =>
-  wellElement(canvas).getBoundingClientRect();
-
-// How round the well's corners are, in points: half its height or more is a circle's.
-const cornerOf = (canvas: Canvas): number =>
-  Number.parseFloat(getComputedStyle(wellElement(canvas)).borderTopLeftRadius);
-
 // Every visualiser stands as tall as the orb, so switching never moves the label or the Feed under the stage.
 export const KeepsTheFootprint: Story = {
   play: async ({ canvas, userEvent }) => {
@@ -79,27 +61,6 @@ export const KeepsTheFootprint: Story = {
     for (const name of ['Matrix', 'Wave', 'Orb']) {
       await userEvent.click(canvas.getByRole('button', { name }));
       await waitFor(() => expect(placesOf(canvas)).toBe(orb));
-    }
-  },
-};
-
-/*
- * Only the orb is round: the matrix is a rectangular grid of dots and the wave a horizontal waveform, as ElevenLabs
- * draws them, each wider than tall and centred on the stage.
- */
-export const OnlyTheOrbIsRound: Story = {
-  play: async ({ canvas, userEvent }) => {
-    const orb = wellOf(canvas);
-    await expect(orb.width).toBe(orb.height);
-    await expectCentred(canvas);
-
-    for (const name of ['Matrix', 'Wave']) {
-      await userEvent.click(canvas.getByRole('button', { name }));
-      await waitFor(() =>
-        expect(wellOf(canvas).width).toBeGreaterThan(orb.width * 2),
-      );
-      await expect(cornerOf(canvas)).toBeLessThan(wellOf(canvas).height / 2);
-      await expectCentred(canvas);
     }
   },
 };

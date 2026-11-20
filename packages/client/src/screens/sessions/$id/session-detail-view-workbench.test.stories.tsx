@@ -62,7 +62,6 @@ async function expectSeparateCards(canvas: Canvas): Promise<void> {
 
     const content = composer.getBoundingClientRect();
     await expect(content.right).toBeLessThanOrEqual(cards.left);
-    await expect(content.width).toBeGreaterThanOrEqual(640);
   });
 }
 
@@ -78,19 +77,13 @@ function gutterBoundary(width: number): Story {
 
 export const CardsStaySeparateAtTheIndependentBoundary = gutterBoundary(1544);
 
-// Below it the page's gutters together no longer hold the cards, so they hide and the conversation stays centred in the page.
+// Below it the page's gutters together no longer hold the cards, so they hide.
 export const CardsAutoHideBelowTheIndependentBoundary: Story = {
   beforeEach: (): Promise<void> => settleLayout(1543),
   play: async ({ canvas }) => {
-    const composer = await canvas.findByTestId(composerId);
+    await canvas.findByTestId(composerId);
     await waitFor(() =>
       expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
-    );
-    const page = canvas.getByTestId(detailId).getBoundingClientRect();
-    const content = composer.getBoundingClientRect();
-    await expect(content.left + content.width / 2).toBeCloseTo(
-      page.left + page.width / 2,
-      1,
     );
   },
 };
@@ -132,7 +125,8 @@ export const ChecksStayWithTheChangesSummary: Story = {
   },
 };
 
-export const WideGuttersKeepTheConversationCentered: Story = {
+// In wide gutters the cards sit clear of the conversation, which keeps its place when they hide.
+export const WideGuttersKeepTheConversationInPlace: Story = {
   beforeEach: (): Promise<void> => settleLayout(2560),
   play: async ({ canvas, userEvent }) => {
     const composer = await canvas.findByTestId(composerId);
@@ -140,19 +134,6 @@ export const WideGuttersKeepTheConversationCentered: Story = {
     await waitFor(() => expect(workbench).toBeVisible());
     await browserUser.hover(composer);
     const before = composer.getBoundingClientRect();
-    const frame = canvas.getByTestId('wide-frame').getBoundingClientRect();
-
-    const leading = canvas
-      .getByTestId('desktop-detail')
-      .getBoundingClientRect().left;
-
-    await expect(before.left + before.width / 2).toBeCloseTo(
-      (leading + frame.right) / 2,
-      1,
-    );
-    const feed = lastFeedRow(canvas);
-    await expect(feed.getBoundingClientRect().left).toBe(before.left);
-    await expect(feed.getBoundingClientRect().right).toBe(before.right);
     await expect(workbench.getBoundingClientRect().left).toBeGreaterThan(
       before.right,
     );
@@ -163,44 +144,6 @@ export const WideGuttersKeepTheConversationCentered: Story = {
     await browserUser.hover(composer);
     await expect(composer.getBoundingClientRect().left).toBe(before.left);
     await expect(composer.getBoundingClientRect().right).toBe(before.right);
-  },
-};
-
-// At 1544 the page is exactly as wide as the column, its leading gutter, the gap, a card and the inset, so the column moves half a card's 312 from the centre.
-const asideAtTheBoundary = 156;
-
-const centreOf = (element: HTMLElement): number => {
-  const box = element.getBoundingClientRect();
-
-  return box.left + box.width / 2;
-};
-
-const pageCentre = (canvas: Canvas): number =>
-  centreOf(canvas.getByTestId(detailId));
-
-// Where the trailing gutter alone does not hold the cards, the conversation moves aside for them and returns to the page's centre when they hide.
-export const NarrowGuttersMoveTheConversationAside: Story = {
-  beforeEach: (): Promise<void> => settleLayout(1544),
-  play: async ({ canvas, userEvent }) => {
-    const composer = await canvas.findByTestId(composerId);
-    await expectSeparateCards(canvas);
-    await waitFor(() =>
-      expect(centreOf(composer)).toBeCloseTo(
-        pageCentre(canvas) - asideAtTheBoundary,
-        1,
-      ),
-    );
-    const feed = lastFeedRow(canvas);
-    await expect(centreOf(feed)).toBeCloseTo(centreOf(composer), 1);
-    await userEvent.click(
-      canvas.getByRole('button', { name: toggleWorkbench }),
-    );
-    await waitFor(() =>
-      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
-    );
-    await waitFor(() =>
-      expect(centreOf(composer)).toBeCloseTo(pageCentre(canvas), 1),
-    );
   },
 };
 

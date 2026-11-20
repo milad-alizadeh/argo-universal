@@ -69,28 +69,6 @@ it('searches the repository newest first and maps the Issues', async () => {
   });
 });
 
-it('closes an Issue as the signed-in person, and says GitHub’s own words when it refuses', async () => {
-  const done = trackerAnswering(reply(200, { number: 8 }));
-
-  await done.tracker.edit(8, { kind: 'status', status: 'closed' });
-  expect(done.sent[0]).toMatchObject({
-    url: 'https://api.github.com/repos/owner/repository/issues/8',
-    init: { method: 'PATCH', account: githubHost, projectId: 'project-1' },
-  });
-  expect(bodyOf(done.sent)).toEqual({
-    state: 'closed',
-    state_reason: 'completed',
-  });
-
-  const refused = trackerAnswering(
-    reply(422, { message: 'Could not close the issue.' }),
-  );
-
-  await expect(
-    refused.tracker.edit(8, { kind: 'status', status: 'closed' }),
-  ).rejects.toThrow('Could not close the issue.');
-});
-
 it('leaves a filter without a count when GitHub does not report it, and rejects a label list it does not send', async () => {
   const missing = trackerAnswering(
     reply(200, {

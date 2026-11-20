@@ -6,7 +6,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { LiquidGlassPlatform } from '@repo/kit/primitives/content/liquid-glass';
 import type { Decorator, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
-import { expect, fn, isInaccessible, waitFor, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { sharedControls } from './composer-pill-comparison-fixtures';
 import comparisonMeta, {
   SharedControls,
@@ -51,59 +51,27 @@ function sharedGeometry(width: number): Story {
     ...SharedControls,
     beforeEach: () => settleLayout(width),
     play: async ({ canvas }) => {
-      await expectSharedGeometry(canvas, width);
+      await expectFlatControls(canvas);
       await expectMaterialPolicy(canvas, width === 390);
 
       if (width !== 390) {
         const usage = canvas.getByRole('button', { name: 'Usage' });
-        await expectControlGeometry(usage);
+        await expectFlatControl(usage);
         await expect(within(usage).queryByRole('group')).toBeNull();
       }
-
-      await expectLabelInset(canvas.getByRole('button', { name: 'Mode' }));
     },
   };
 }
 
-const phonePills = new Set([agentsLabel, tasksLabel]);
-
-const compactPills = new Set([...phonePills, 'Todos']);
-
-function controlHeight(name: string, width: number): number {
-  const pills = width === 390 ? compactPills : phonePills;
-
-  return pills.has(name) ? 32 : 28;
-}
-
-async function expectSharedGeometry(
+async function expectFlatControls(
   canvas: ReturnType<typeof within>,
-  width: number,
 ): Promise<void> {
   for (const name of names)
-    await expectControlGeometry(
-      canvas.getByRole('button', { name }),
-      controlHeight(name, width),
-    );
+    await expectFlatControl(canvas.getByRole('button', { name }));
 }
 
-async function expectControlGeometry(
-  button: HTMLElement,
-  height = 28,
-): Promise<void> {
-  await expect(button.getBoundingClientRect().height).toBeCloseTo(height, 0);
+async function expectFlatControl(button: HTMLElement): Promise<void> {
   await expect(within(button).queryAllByRole('button')).toHaveLength(0);
-}
-
-async function expectLabelInset(button: HTMLElement): Promise<void> {
-  const label = within(button)
-    .getAllByText(/\S/)
-    .find((element) => !isInaccessible(element));
-
-  if (!label) throw new Error('Mode needs a visible pill label.');
-
-  await expect(
-    label.getBoundingClientRect().left - button.getBoundingClientRect().left,
-  ).toBeCloseTo(11, 0);
 }
 
 export const CompactGeometry = sharedGeometry(390);

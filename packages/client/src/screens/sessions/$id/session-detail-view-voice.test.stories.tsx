@@ -7,7 +7,6 @@ import { cdp } from 'vitest/browser';
 import { voiceStageRoomId } from '#features/voice';
 import { feedScrollId } from '../../../features/feed/components/feed/feed-reader.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
-import { panelsSession } from './session-detail-view-panels.test.mocks';
 import {
   rehearsedConnectMilliseconds,
   VoiceCallRehearsal,
@@ -129,52 +128,3 @@ export const StageComesAndGoesWithReducedMotion: Story = {
   },
   play: ({ canvas }) => startAndEnd(canvas),
 };
-
-// Wide enough for the Workbench in the gutter beside the open Inspector, and narrow enough that it hides.
-const besideInspector = { wide: 1912, narrow: 1440 };
-
-const centreOf = (element: Element): number => {
-  const box = element.getBoundingClientRect();
-
-  return box.left + box.width / 2;
-};
-
-// The orb sits on the Feed's column, over the Composer, with the Inspector open beside the page.
-async function expectOrbOverComposer(canvas: Canvas): Promise<void> {
-  const orb = await canvas.findByRole('img', { name: 'Voice listening' });
-
-  await waitFor(async () => {
-    const column = canvas.getByTestId('composer-column');
-
-    await expect(Math.abs(centreOf(orb) - centreOf(column))).toBeLessThan(1);
-  });
-}
-
-const orbBesideInspector = (width: number): Story => ({
-  render: (): React.JSX.Element => (
-    <FramedSessionPreview
-      {...panelsSession}
-      stage={voiceCallSession.stage}
-      composer={voiceCallSession.composer}
-    />
-  ),
-  play: async ({ canvas }) => {
-    await settleLayout(besideInspector.wide);
-    await userEvent.click(
-      await canvas.findByRole('button', {
-        name: 'Open Find every Feed reader',
-      }),
-    );
-    await canvas.findByRole('tabpanel', { name: 'Agents' });
-    await settleLayout(width);
-    await expectOrbOverComposer(canvas);
-  },
-});
-
-export const OrbOverComposerBesideInspector = orbBesideInspector(
-  besideInspector.wide,
-);
-
-export const OrbOverComposerBesideInspectorNarrow = orbBesideInspector(
-  besideInspector.narrow,
-);

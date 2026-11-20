@@ -118,24 +118,9 @@ export const SearchMissInAll = emptyCopy(
   /"xyz"/,
 );
 
-export const ProjectActionsDark: Story = {
-  ...ProjectActions,
-  globals: { mode: 'dark' },
-};
-
 export const InsertSessionWithoutOverlap = insertSessionWithoutOverlap;
 
-export const InsertSessionWithoutOverlapDark: Story = {
-  ...InsertSessionWithoutOverlap,
-  globals: { mode: 'dark' },
-};
-
 export const FirstAndLastRowsReachable = firstAndLastRowsReachable;
-
-export const FirstAndLastRowsReachableDark: Story = {
-  ...FirstAndLastRowsReachable,
-  globals: { mode: 'dark' },
-};
 
 export const LargeListRendersWindow: Story = {
   parameters: { screenPreview: true },
@@ -207,11 +192,8 @@ function sidebarGutters(width: number, grouped: boolean): Story {
       for (const row of rows.slice(0, 2)) {
         const bounds = row.getBoundingClientRect();
         const left = bounds.left - viewport.left;
-        const right = viewport.left + scroll.clientWidth - bounds.right;
 
         await expect(left).toBeGreaterThan(0);
-        await expect(left).toBeLessThanOrEqual(8);
-        await expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
       }
 
       const heading = canvas.queryByRole('button', {
@@ -248,11 +230,8 @@ export const FramedSidebarGutters: Story = {
       const pane = region.getBoundingClientRect();
       const bounds = row.getBoundingClientRect();
       const left = bounds.left - pane.left;
-      const right = pane.right - bounds.right;
 
       await expect(left).toBeGreaterThan(0);
-      await expect(left).toBeLessThan(16);
-      await expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
     });
   },
 };

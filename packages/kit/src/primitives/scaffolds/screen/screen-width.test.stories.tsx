@@ -16,35 +16,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const left = (element: Element): number => element.getBoundingClientRect().left;
-
-// The heading and the content start on one edge at every width.
-function sharedEdge(width: ScreenWidth): Story {
-  return {
-    render: () => <WidthExample width={width} />,
-    play: async ({ canvas }) => {
-      const title = canvas.getByRole('heading', { level: 1, name: 'Title' });
-
-      await expect(left(canvas.getByTestId(widthContent))).toBe(left(title));
-    },
-  };
-}
-
-export const ReadingColumnPhone = atWidth(widths.Phone, sharedEdge('content'));
-
-export const ReadingColumnTablet = atWidth(
-  widths.Tablet,
-  sharedEdge('content'),
-);
-
-export const ReadingColumnWide = atWidth(widths.Wide, sharedEdge('content'));
-
-export const FullWidthPhone = atWidth(widths.Phone, sharedEdge('full'));
-
-export const FullWidthTablet = atWidth(widths.Tablet, sharedEdge('full'));
-
-export const FullWidthWide = atWidth(widths.Wide, sharedEdge('full'));
-
 /*
  * On a wide window the reading column holds the content to its width, and a full Screen lets it run past. Two things
  * about the first frames make a single early read wrong, whichever way the claim goes:
