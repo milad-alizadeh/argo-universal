@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import type { Database } from '@repo/db';
 import type { AgentIdentity } from '@repo/mocks/agent';
-import { findFreePort } from '@repo/mocks/network/free-port';
 import { createInstallationPorts } from '@repo/mocks/registry/installation';
 import { onTestFinished } from 'vitest';
 import { waitFor } from 'xstate';
@@ -41,7 +40,8 @@ export async function startEngineTestHost(
   options: EngineTestOptions = {},
 ): Promise<EngineTestHost> {
   const { home, storage } = resolveTestStorage(options);
-  const port = options.port ?? (await findFreePort());
+  // Port 0 lets the Server bind a free port itself, so no other process can take it first.
+  const port = options.port ?? 0;
   seedTestCommands(options, home, storage);
 
   const engine = composeEngine(testEngineInput(options, home, port)).start();
@@ -49,19 +49,19 @@ export async function startEngineTestHost(
   const stop = registerEngineCleanup(engine, storage);
   await waitFor(engine, (snapshot) => snapshot.matches({ live: 'running' }));
 
-  return engineTestHost(engine, home, { port, stop });
+  return engineTestHost(readEngineTestHost(engine), home, stop);
 }
 
 const engineTestHost = (
-  engine: EngineActor,
+  connections: EngineConnections,
   home: string,
-  control: { port: number; stop: () => Promise<void> },
+  stop: () => Promise<void>,
 ): EngineTestHost => ({
-  ...readEngineTestHost(engine),
+  ...connections,
   home,
   blobsFolder: join(home, 'blobs'),
-  url: `http://127.0.0.1:${control.port}`,
-  stop: control.stop,
+  url: `http://127.0.0.1:${connections.port}`,
+  stop,
 });
 
 type TestStorage = {

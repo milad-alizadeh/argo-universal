@@ -1,4 +1,4 @@
-import type { Server, Socket } from 'node:net';
+import type { AddressInfo, Server, Socket } from 'node:net';
 
 const loopbackAddress = '127.0.0.1';
 
@@ -8,6 +8,8 @@ const networkAddress = '0.0.0.0';
 export interface ServerListener {
   // Where the Server is listening now, as `address:port`.
   readonly where: () => string;
+  // The port it bound, which the system chose when it was asked for port 0.
+  readonly port: () => number;
   // Moves to the local network (true) or back to loopback (false) without closing the Server. Back to loopback drops every Connection that came in from the network.
   readonly rebind: (network: boolean) => Promise<void>;
   // After this the listener never binds again, so a change racing the Server's close cannot reopen the port.
@@ -67,6 +69,7 @@ export async function listenForNetworkAccess(
 
   return {
     where: (): string => listener.where(),
+    port: (): number => listener.boundPort(),
     rebind: (next): Promise<void> => listener.rebind(next),
     stop: (): void => listener.stop(),
     close: (): Promise<void> => closed(server),
@@ -86,15 +89,21 @@ class NetworkListener {
 
   public constructor(
     private readonly server: Server,
-    private readonly port: number,
+    private port: number,
     network: boolean,
   ) {
     this.address = addressFor(network);
     this.dropNetworkConnections = trackConnections(server);
   }
 
-  public start(): Promise<void> {
-    return listenAt(this.server, this.port, this.address);
+  // Port 0 asks the system for a free port; a later rebind keeps the one it gave.
+  public async start(): Promise<void> {
+    await listenAt(this.server, this.port, this.address);
+    this.port = (this.server.address() as AddressInfo).port;
+  }
+
+  public boundPort(): number {
+    return this.port;
   }
 
   public where(): string {

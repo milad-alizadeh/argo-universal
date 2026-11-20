@@ -57,6 +57,8 @@ export interface HttpServer {
   localNetworkAccess: LocalNetworkAccess;
   // Where the Server is listening now, as `address:port`.
   listeningOn: () => string;
+  // The port it bound: the one it was given, or the system's choice for port 0.
+  port: () => number;
   notifications: Notifications;
   createCaller: HttpCaller;
   // The Pairing Tickets this Server has outstanding; the pair sheet mints one and a connecting Device spends it.
@@ -92,7 +94,8 @@ export type RoutedSetup = HttpSetup & {
 export async function startHttpServer(
   options: HttpServerOptions,
 ): Promise<HttpServer> {
-  const setup = await prepareHttpServer(options);
+  const bound = { port: options.port };
+  const setup = await prepareHttpServer(options, () => bound.port);
   const guard = createRequestGuard(recognisedTokens(setup, options));
   const doors = createDoors(setup, guard);
 
@@ -102,9 +105,10 @@ export async function startHttpServer(
     setup,
   );
 
+  bound.port = listener.port();
   setup.localNetworkAccess.useBinding(listener.rebind);
 
-  const stopAnnouncing = announceServer(options, setup);
+  const stopAnnouncing = announceServer({ ...options, ...bound }, setup);
 
   return connectHttpServer(setup, doors, { guard, listener, stopAnnouncing });
 }
@@ -133,6 +137,7 @@ function connectHttpServer(
   return {
     ...served(setup),
     listeningOn: listening.listener.where,
+    port: listening.listener.port,
     close: closeWith(setup, listening, connectWebSockets(connections)),
   };
 }
@@ -149,7 +154,7 @@ const connectionsOf = (
 
 const served = (
   setup: RoutedSetup,
-): Omit<HttpServer, 'listeningOn' | 'close'> => ({
+): Omit<HttpServer, 'listeningOn' | 'port' | 'close'> => ({
   localNetworkAccess: setup.localNetworkAccess,
   notifications: setup.notifications,
   pairing: setup.tickets,

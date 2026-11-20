@@ -19,13 +19,14 @@ import { createAppRouterDeps } from './router-deps';
 // Everything the Server holds for its whole life: its storage, its Plugins, its identity and the Pairing Tickets it has outstanding.
 export async function prepareHttpServer(
   options: HttpServerOptions,
+  port: () => number,
 ): Promise<RoutedSetup> {
   const setup = await prepareHttpSetup(options);
   const controlToken = await ensureControlToken(options.home);
   const identity = await ensureServerIdentity(options);
   const pairing = preparePairing(options);
 
-  return routed({ options, setup, controlToken, pairing }, identity);
+  return routed({ options, setup, controlToken, pairing, port }, identity);
 }
 
 type ServerIdentity = Awaited<ReturnType<typeof ensureServerIdentity>>;
@@ -49,6 +50,8 @@ interface RouterSources {
   readonly controlToken: string;
   readonly publicKey: string;
   readonly pairing: Pairing;
+  // The port the Server bound, read once it listens.
+  readonly port: () => number;
 }
 
 const routerFor = (sources: RouterSources): RoutedSetup['appRouter'] =>
@@ -61,21 +64,23 @@ const routerInput = ({
   controlToken,
   publicKey,
   pairing,
+  port,
 }: RouterSources): Parameters<typeof createAppRouterDeps>[0] => ({
   ...httpRouterInput(options, setup, controlToken),
-  ...pairingInput(options, pairing),
+  ...pairingInput(options, pairing, port),
   serverPublicKey: publicKey,
 });
 
 const pairingInput = (
   options: HttpServerOptions,
   pairing: Pairing,
+  port: () => number,
 ): Pick<
   Parameters<typeof createAppRouterDeps>[0],
   'discoveryName' | 'addresses' | 'tickets' | 'registrations' | 'channels'
 > => ({
   discoveryName: discoveryNameOf(options),
-  addresses: (): string[] => listeningAddresses(options.port),
+  addresses: (): string[] => listeningAddresses(port()),
   tickets: pairing.tickets,
   registrations: pairing.registrations,
   channels: pairing.channels,
