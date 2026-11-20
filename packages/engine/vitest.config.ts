@@ -9,10 +9,7 @@ const integrationSetup = fileURLToPath(
 export default defineProject({
   test: {
     projects: createNodeTestProjects({
-      budget: [
-        'src/feed/feed-workload.integration.test.ts',
-        'src/plugins/host/worker-deadlines.integration.test.ts',
-      ],
+      budget: ['src/feed/feed-workload.integration.test.ts'],
       integrationSetup,
     }),
   },

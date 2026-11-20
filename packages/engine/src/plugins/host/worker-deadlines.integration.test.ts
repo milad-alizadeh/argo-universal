@@ -4,7 +4,7 @@ import type { HostMessage, PluginEntry } from '../protocol/runtime';
 import type { WorkerRecord } from './start-worker';
 import { HostWorkers } from './workers';
 
-// Says what the test tells it to the host, then a console line the host reports, and answers pings while the test lets it.
+// Says what the test tells it to the host, then a console line the host reports, and answers pings while the test lets it; it acknowledges each change to that.
 const scriptedWorker = `
 const { parentPort, workerData } = require('node:worker_threads');
 const control = workerData.control;
@@ -18,7 +18,10 @@ control.on('message', (message) => {
     parentPort.postMessage(message.say);
     parentPort.postMessage({ type: 'console', level: 'log', text: 'said' });
   }
-  if ('answering' in message) answering = message.answering;
+  if ('answering' in message) {
+    answering = message.answering;
+    control.postMessage({ heard: message });
+  }
 });
 `;
 
@@ -54,7 +57,7 @@ interface Host {
   reported: HostMessage[];
   heard: unknown[];
   say: (message: string) => Promise<void>;
-  answer: (answering: boolean) => void;
+  answer: (answering: boolean) => Promise<void>;
 }
 
 function startHost(): Host {
@@ -102,7 +105,19 @@ function startHost(): Host {
       port1.postMessage({ say: message });
       await until(() => said(reported) > before);
     },
-    answer: (answering): void => port1.postMessage({ answering }),
+    // Waits for the worker to take it, so no ping already in flight is answered under the old setting.
+    answer: async (answering): Promise<void> => {
+      port1.postMessage({ answering });
+      await until(() =>
+        heard.some(
+          (message) =>
+            typeof message === 'object' &&
+            message !== null &&
+            'answering' in message &&
+            message.answering === answering,
+        ),
+      );
+    },
   };
 }
 
@@ -143,7 +158,7 @@ it('flags a Plugin hanging when it does not answer within 3 seconds of starting'
 it('keeps a running Plugin whose pong comes after one answer limit but inside the heartbeat window', async () => {
   const host = startHost();
   await running(host);
-  host.answer(false);
+  await host.answer(false);
   await pinged(host, 1);
 
   await vi.advanceTimersByTimeAsync(5000);
@@ -156,7 +171,7 @@ it('keeps a running Plugin whose pong comes after one answer limit but inside th
 it('flags a running Plugin hanging when it answers no heartbeat for 6 seconds', async () => {
   const host = startHost();
   await running(host);
-  host.answer(false);
+  await host.answer(false);
   await pinged(host, 1);
 
   await vi.advanceTimersByTimeAsync(5999);
