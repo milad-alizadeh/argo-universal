@@ -62,7 +62,7 @@ const HeaderTrigger = (props: HeaderProps): ReactElement => (
 );
 
 const triggerClass =
-  'min-h-6 min-w-0 flex-1 flex-row items-center gap-1 rounded-md web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:outline-offset-2';
+  'min-h-6 min-w-0 flex-1 flex-row items-center gap-1 rounded-md';
 
 // The trigger names what pressing it does, as its state reads from aria-expanded.
 function triggerLabel(props: HeaderProps): string {

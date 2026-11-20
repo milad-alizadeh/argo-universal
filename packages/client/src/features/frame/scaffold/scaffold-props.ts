@@ -2,6 +2,7 @@ import type { SizeClass } from '@repo/kit/use-size-class/size-class';
 import type { ReactNode } from 'react';
 import type { WindowBandView } from '#lib/product/window-band';
 import type { InspectorState, WorkbenchIntent } from './frame-layout';
+import type { InspectorWidth } from './inspector-width';
 
 // What the Scaffold places: its Slots, and the sidebar's and the Inspector's state, which the caller holds.
 export interface ScaffoldProps {
@@ -24,4 +25,7 @@ export interface ScaffoldProps {
   onSidebarShownChange: (shown: boolean) => void;
   inspectorState: InspectorState;
   onInspectorStateChange: (state: InspectorState) => void;
+  // The Inspector's dragged width, when the caller keeps it beyond this Scaffold; otherwise the Scaffold holds it.
+  inspectorWidth?: InspectorWidth;
+  onInspectorWidthChange?: (width: InspectorWidth) => void;
 }

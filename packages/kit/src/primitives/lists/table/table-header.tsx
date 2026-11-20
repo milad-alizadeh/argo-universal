@@ -44,8 +44,7 @@ export function HeaderCell(props: HeaderCellProps): ReactElement {
   );
 }
 
-const sortButtonClass =
-  'max-w-full rounded-sm web:focus-visible:outline-2 web:focus-visible:outline-focus';
+const sortButtonClass = 'max-w-full rounded-sm';
 
 type TitleCellProps = HeaderProps & { column: TableColumn };
 

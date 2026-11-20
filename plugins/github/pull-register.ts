@@ -44,7 +44,11 @@ function registerAttach(argo: Argo, { source, pulls }: Parts): void {
     attached: true,
     change: await attach(
       scopeOf(argo, source, pulls),
-      params.reference,
+      // A person attaching is asking for it, so only an Agent's run is held back by an earlier detach.
+      {
+        reference: params.reference,
+        again: params.again === true || caller.person === true,
+      },
       await sessionCaller(argo, params, caller),
     ),
   }));

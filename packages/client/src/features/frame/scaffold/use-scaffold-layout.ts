@@ -31,8 +31,7 @@ export interface ScaffoldLayout extends FrameLayout, WindowWidth {
   bandLeading: BandLeading;
   safeTop: number;
   setPreferredListWidth: PreferredWidths['setPreferredListWidth'];
-  setPreferredInspectorWidth: PreferredWidths['setPreferredInspectorWidth'];
-  setDraggedContentFloor: PreferredWidths['setDraggedContentFloor'];
+  setInspectorWidth: PreferredWidths['setInspectorWidth'];
   requestSidebar: SidebarIntent['requestSidebar'];
   motion: FrameMotion;
   setResizing: (resizing: boolean) => void;
@@ -101,7 +100,7 @@ function useScaffoldSizing(scaffold: ScaffoldProps): ScaffoldSizing {
   return {
     bandLeading,
     measures,
-    ...usePreferredWidths(measures),
+    ...usePreferredWidths(measures, scaffold),
     ...useSidebarIntent(scaffold),
   };
 }

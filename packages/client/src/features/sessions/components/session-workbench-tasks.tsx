@@ -56,7 +56,7 @@ const rowPressable = ({ shell, onOpen }: RowProps) =>
     accessibilityLabel: `Open ${shellTitle(shell)}`,
     onPress: () => onOpen(shell),
     className:
-      'flex-row items-center gap-2 rounded-control px-1 py-2 web:hover:bg-hover web:focus-visible:bg-hover',
+      'flex-row items-center gap-2 rounded-control px-1 py-2 web:hover:bg-hover',
   }) as const;
 
 function TaskRow(props: RowProps): ReactElement {

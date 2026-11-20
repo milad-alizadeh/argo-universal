@@ -28,6 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
+      unit-matrix: ${{ steps.choose.outputs.unit-matrix }}
       quality: ${{ steps.choose.outputs.quality }}
       engine-tests: ${{ steps.choose.outputs.engine-tests }}
       stories: ${{ steps.choose.outputs.stories }}
@@ -45,6 +46,9 @@ jobs:
           version=$(sed -nE 's/^  turbo: ([0-9]+\.[0-9]+\.[0-9]+)$/\1/p' pnpm-workspace.yaml)
           test -n "$version"
           npm install --global "turbo@$version"
+
+      - name: Test CI selection and timing reports
+        run: python3 -B -m unittest discover -s .github/scripts
 
       - name: Choose the jobs
         id: choose
@@ -74,6 +78,8 @@ jobs:
             if [ -n "$outside" ] || affected --tasks test:web --packages @repo/e2e; then e2e=true; fi
           fi
 
+          unit_matrix=$(python3 .github/scripts/unit-matrix.py "$BASE")
+          echo "unit-matrix=$unit_matrix" >> "$GITHUB_OUTPUT"
           echo "quality=$quality" >> "$GITHUB_OUTPUT"
           echo "engine-tests=$engine" >> "$GITHUB_OUTPUT"
           echo "stories=$stories" >> "$GITHUB_OUTPUT"
@@ -138,18 +144,7 @@ jobs:
       id-token: write
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - group: plugins
-            filter: --filter=./plugins/*
-            playwright: none
-          - group: kits
-            filter: --filter=@argo/plugin-kit --filter=@repo/client
-            playwright: none
-          # The desktop CSP test checks the policy in real Chromium.
-          - group: rest
-            filter: --filter=!@repo/engine --filter=!./plugins/* --filter=!@argo/plugin-kit --filter=!@repo/client
-            playwright: chromium
+      matrix: ${{ fromJSON(needs.changes.outputs.unit-matrix) }}
     steps:
       - uses: actions/checkout@v7
         with:

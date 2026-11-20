@@ -5,7 +5,7 @@ import { showActionToast } from './toast-action';
 import { toastTitle } from './toast-title';
 
 // Kit-only: identity for suppressing repeated notifications.
-export type Toast = KitProps<'Toast'> & { key?: string };
+export type Toast = KitProps<'Toast'> & { key?: string; durationMs?: number };
 
 export type ErrorToast = Pick<Toast, 'title' | 'message' | 'key'>;
 

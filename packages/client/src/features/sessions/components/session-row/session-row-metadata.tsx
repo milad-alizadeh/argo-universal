@@ -1,5 +1,4 @@
 import { Icon } from '@repo/kit/primitives/content/icon';
-import { Text } from '@repo/kit/primitives/content/text';
 import { ListItemInert } from '@repo/kit/primitives/lists/list-item';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import type * as React from 'react';
@@ -12,7 +11,6 @@ import { changeDescription } from '../change-stage/change-stage-model';
 import { ShellsCount, SubagentsCount } from './session-row-meta-counts';
 import type { SessionRowMetadataProps } from './session-row-metadata-props';
 import type { MoreEntry } from './session-row-more';
-import { sidebarRows } from './session-row-sidebar';
 
 export type { SessionRowMetadataProps } from './session-row-metadata-props';
 
@@ -27,20 +25,6 @@ const inertPart = (entry: MoreEntry, line: React.ReactNode): MetaPart => ({
   line: <ListItemInert key={entry.key}>{line}</ListItemInert>,
   entry,
 });
-
-// How long ago the Session was active leads a sidebar row's line; a phone's row ends its title line with it.
-function agePart({ age }: SessionRowMetadataProps): MetaPart[] {
-  if (!sidebarRows || age === undefined) return [];
-
-  return [
-    inertPart(
-      { key: 'age', text: age },
-      <Text role="secondary" tone="muted">
-        {age}
-      </Text>,
-    ),
-  ];
-}
 
 const changeText = (change: ChangeStageProps): string =>
   change.text ??
@@ -117,10 +101,9 @@ function runningParts(props: SessionRowMetadataProps): MetaPart[] {
   ];
 }
 
-// Time and Change lead the active Background Task and Agent counts; the Plugins' items follow them on the line.
+// The Change leads the active Background Task and Agent counts; the Plugins' items follow them on the line.
 export function argoMetaParts(props: SessionRowMetadataProps): MetaPart[] {
   return [
-    ...agePart(props),
     ...pullRequestPart(props),
     ...runningParts(props),
     ...archivedPart(props),

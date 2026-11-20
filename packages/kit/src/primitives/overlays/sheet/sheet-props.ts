@@ -37,6 +37,8 @@ export interface SheetScreenProps {
   title?: string;
   // The page's one header action, at the trailing end of its title row.
   action?: SheetScreenAction;
+  // Fixed controls stay below the native header.
+  keepsHeaderInset?: boolean;
   /*
    * The rows the page stands in for while it slides in, as bars of the width its own rows will take.
    * Android draws it; the platforms whose pages are drawn before they move never need it.
@@ -63,8 +65,6 @@ export interface SheetLinkProps {
 
 // A caller can supply a page when its choices are only known when the field opens.
 export interface SheetDestination extends SheetScreenProps {
-  // Fixed controls such as a search field stay below the native header.
-  keepsHeaderInset?: boolean;
   contentScrolls?: boolean;
   /*
    * Whether the sheet carries the page from the moment it opens rather than mounting it on the way in.

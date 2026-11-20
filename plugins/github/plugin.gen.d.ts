@@ -11,6 +11,9 @@ declare module '@argo/plugin-kit' {
         },
         "sessionId": {
           "type": "string"
+        },
+        "again": {
+          "type": "boolean"
         }
       },
       "caller": [

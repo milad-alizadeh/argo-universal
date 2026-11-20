@@ -24,12 +24,16 @@ async function requireNothingUncommitted(
 
 /*
  * A Plugin's archive, refused beside the Turn that runs while the Checkout has uncommitted files, so no Plugin can
- * lose a person's unsaved work (ADR-0055). One `git status` per call; the App's own archive does not ask.
+ * lose a person's unsaved work (ADR-0055). One `git status` per call; the App's own archive does not ask. A Session
+ * already archived, such as one the person archived first, is done: a refusal would have the Plugin ask again on
+ * every Watch (#2470).
  */
 export async function archiveSessionFromPlugin(
   sources: PluginArchiveSources,
   sessionId: string,
 ): Promise<SessionArchiveOutput> {
+  if (sources.readSession(sessionId).archivedAt !== null) return {};
+
   requireArchivable(sources, sessionId);
   await requireNothingUncommitted(sources, sessionId);
 

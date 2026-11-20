@@ -5,7 +5,7 @@ import { cn } from '#kit/utils';
 const pressableDefaults = { variant: 'default', size: 'md' } as const;
 
 const actionClasses = cva(
-  'group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none web:whitespace-nowrap web:outline-none web:transition-all web:focus-visible:border-focus web:focus-visible:ring-3 web:focus-visible:ring-focus/50 disabled:pointer-events-none',
+  'group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none web:whitespace-nowrap web:transition-all disabled:pointer-events-none',
   {
     variants: {
       variant: {

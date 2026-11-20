@@ -36,7 +36,14 @@ const swiftButtonHitArea = createModifier('contentShape', {
 
 const smallHeight = 32;
 
+const extraSmallHeight = 28;
+
 export const sizes = {
+  xs: {
+    modifiers: [swiftControlSize],
+    style: { height: extraSmallHeight, paddingHorizontal: 12 },
+    iconSize: 'sm',
+  },
   sm: {
     modifiers: [swiftControlSize],
     style: { height: smallHeight },

@@ -61,7 +61,7 @@ type TitleTriggerProps = Omit<
   Pick<TitleMenuProps, 'title' | 'inlineToolbar'>;
 
 const triggerClassName = cn(
-  'min-w-0 flex-row items-center gap-1 self-start rounded-control -mx-1 px-1 web:outline-none web:hover:bg-hover web:focus-visible:bg-hover',
+  'min-w-0 flex-row items-center gap-1 self-start rounded-control -mx-1 px-1 web:hover:bg-hover',
   tintTransitionClassName,
 );
 

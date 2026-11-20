@@ -2,12 +2,12 @@ import { pressTarget } from '@repo/kit/mocks/press-target';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { sessionRows } from '@repo/mocks/app';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { statusDots } from '../../../../../mocks/session-row/session-row-status-dots.test.mocks';
 import {
   dark,
   metadata,
   meta as sessionRowTestMeta,
   running,
-  statusDots,
   statusParity,
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
@@ -312,7 +312,7 @@ export const PullRequestWithoutOtherMetadataDark: Story = {
 
 export const StatusParity = statusParity;
 
-// Time leads the meta line; a dot ends every row but an idle one's.
+// A quiet Session's time ends its title line; a dot ends every row but an idle one's.
 export const StatusDots = statusDots('regular');
 
 export const PlanAndSubagents: Story = {
@@ -325,8 +325,10 @@ export const PlanAndSubagents: Story = {
       await expect(
         canvas.getByLabelText('Todos: 2 of 5 complete'),
       ).toBeVisible();
-      // A running Plan sweeps; a Regular row's Plan is a bar, with no step count.
-      await expect(canvas.getByTestId('session-todos-sweep')).toBeVisible();
+      // A running Plan with no step underway is a still bar, with no step count.
+      await expect(
+        canvas.queryByTestId('session-todos-sweep'),
+      ).not.toBeInTheDocument();
       await expect(canvas.queryByText('2/5')).not.toBeInTheDocument();
       await expect(
         canvas.getByLabelText('Agents: 2 running'),

@@ -4,9 +4,9 @@ import {
   settleLayout,
 } from '@repo/kit/mocks/story-layout';
 import { expect } from 'storybook/test';
+import { statusDots } from '../../../../../mocks/session-row/session-row-status-dots.test.mocks';
 import {
   meta as sessionRowTestMeta,
-  statusDots,
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
 import { sessionRowMocks } from './session-row.mocks';
@@ -62,15 +62,29 @@ export const SelectsCompactRowPhone = selectsCompactRow(layoutWidths.phone);
 
 export const SelectsCompactRowWide = selectsCompactRow(layoutWidths.wide);
 
-// With no PR, a Compact row ends with how long ago the Session was active.
+const waitingSession = { ...session, status: 'needs_input' as const };
+
+// With no PR, a quiet Compact row ends with how long ago the Session was active.
 export const CompactAge: Story = {
-  args: { session, layout: 'compact', age: '12m' },
+  args: { session: waitingSession, layout: 'compact', age: '12m' },
   play: async ({ canvas }) =>
     eachLayout(async () => {
       await expect(canvas.getByText('12m')).toBeVisible();
       await expect(
+        canvas.getByRole('button', { name: `${session.title}, Needs input` }),
+      ).toBeVisible();
+    }),
+};
+
+// A working Compact row shows no time; its dot already says it is live.
+export const CompactRunningHasNoAge: Story = {
+  args: { session, layout: 'compact', age: '12m' },
+  play: async ({ canvas }) =>
+    eachLayout(async () => {
+      await expect(
         canvas.getByRole('button', { name: `${session.title}, Running` }),
       ).toBeVisible();
+      await expect(canvas.queryByText('12m')).not.toBeInTheDocument();
     }),
 };
 
