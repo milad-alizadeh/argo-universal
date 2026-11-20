@@ -11,6 +11,7 @@ import {
   parseJson,
   root,
 } from './hook-checks.mts';
+import { verifiedAlready } from './verify-stamp.mts';
 
 const PATCH_FILE_LINE = /^\*\*\* (?:Add File|Update File|Move to): (.+)$/;
 
@@ -85,7 +86,8 @@ function beforeStop(input: HookInput): number {
   if (files.length === 0) return 0;
   format(files);
 
-  return block(checkChanged(files));
+  // A `pnpm verify` that passed for these files as they are already ran the same lint and type checks.
+  return verifiedAlready(files) ? 0 : block(checkChanged(files));
 }
 
 const COMMANDS = new Set(['after-edit', 'before-stop']);

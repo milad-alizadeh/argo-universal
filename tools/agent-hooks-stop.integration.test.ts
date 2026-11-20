@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import {
   cpSync,
   mkdirSync,
@@ -9,6 +9,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { resolveExecutable } from '@repo/executables';
 import { beforeAll, describe, expect, it } from 'vitest';
 import {
   anyViolation,
@@ -24,6 +25,30 @@ import {
   scratchSourceFile,
   unformattedJson,
 } from './agent-hooks.mocks';
+
+const readGit = (...args: string[]): string =>
+  execFileSync(resolveExecutable('git'), args, {
+    cwd: root,
+    encoding: 'utf8',
+  }).trim();
+
+// What `pnpm verify` records once it passes, for these files as they are now.
+function recordVerified(files: string[]): void {
+  const hashes = readGit('hash-object', '--', ...files).split('\n');
+
+  writeFileSync(
+    path.resolve(
+      root,
+      readGit('rev-parse', '--git-path', 'argo-verified.json'),
+    ),
+    JSON.stringify({
+      head: readGit('rev-parse', 'HEAD'),
+      files: Object.fromEntries(
+        files.map((file, index) => [file, hashes[index]]),
+      ),
+    }),
+  );
+}
 
 // These files were made by the after-edit cases before the stop cases ran.
 beforeAll((): void => {
@@ -80,6 +105,24 @@ describe('before-stop', (): void => {
     expect(
       runHook(beforeStopHook, { cwd: root, stop_hook_active: true }).status,
     ).toBe(0);
+  });
+
+  it('skips the lint verify passed for the same files, until one changes', (): void => {
+    recordVerified([
+      blockedSourceFile,
+      scratchSourceFile,
+      'added.ts',
+      'unused.ts',
+      invalidJsonFile,
+    ]);
+
+    expect(runHook(beforeStopHook, { cwd: root }).status).toBe(0);
+
+    writeFileSync(
+      path.join(root, blockedSourceFile),
+      `${anyViolation}export const other: any = 2;\n`,
+    );
+    expect(runHook(beforeStopHook, { cwd: root }).status).toBe(BLOCKED);
   });
 
   it('formats changed files', (): void => {

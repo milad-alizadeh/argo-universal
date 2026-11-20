@@ -22,6 +22,7 @@ import {
   nothingChecked,
   type TestScope,
 } from './verify-scope.mts';
+import { recordVerified } from './verify-stamp.mts';
 
 const vitest = path.join(root, 'node_modules/.bin/vitest');
 
@@ -147,6 +148,7 @@ if (changed.length === 0) {
 const failed = failedChecks(staticChecks(changed));
 
 if (failed.length > 0) process.stderr.write(`${joinOutput(failed)}\n`);
+else recordVerified(changed);
 
 say(
   failed.length === 0

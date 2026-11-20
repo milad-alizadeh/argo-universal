@@ -31,6 +31,7 @@ export const hookScripts = [
   'agent-hooks.mts',
   'agent-hook-run.mts',
   'hook-checks.mts',
+  'verify-stamp.mts',
 ];
 
 export const anyViolation = 'export const value: any = 1;\n';
