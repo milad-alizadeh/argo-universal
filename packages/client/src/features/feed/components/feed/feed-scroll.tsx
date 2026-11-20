@@ -48,9 +48,6 @@ const keyboardProps = Platform.select({
   default: {},
 } as const);
 
-// Mount nearby rows ahead of native flings.
-const nativeRenderWindow = { drawDistance: 2400 };
-
 // What the Feed's list takes whatever the Session draws.
 export const feedListProps = {
   testID: 'feed-scroll',
@@ -67,8 +64,9 @@ export const feedListProps = {
   // Page in older rows before the reader reaches the start.
   onStartReachedThreshold: startThreshold,
   ...Platform.select({
-    android: { ...nativeRenderWindow, decelerationRate: 'fast' as const },
-    ios: { ...nativeRenderWindow, viewabilityConfig: feedRowViewability },
+    // Keep rows ready across direction changes without mounting too many in one Android frame.
+    android: { drawDistance: 1600, decelerationRate: 'fast' as const },
+    ios: { drawDistance: 2400, viewabilityConfig: feedRowViewability },
     default: { drawDistance: 800 },
   }),
   ...keyboardProps,
