@@ -25,6 +25,6 @@ export const faderComponent = defineKitComponent(
         'TalkBack exposes a seek control named by accessibilityLabel that reads valueLabel; the volume keys or a swipe move it by a step. Its content is read after it.',
     },
     appearance:
-      'A rounded surface, as tall or wide as its parent gives it, filled from the bottom (vertical) or the leading edge (horizontal) to the value, in the fill colours or the accent tone. Dragging anywhere on it moves the value by the distance dragged, not to the touch, so a tap on its content does not change it. Content draws over the fill in a dark or light foreground the App picks from how light the fill is.',
+      'A rounded surface, as tall or wide as its parent gives it, filled from the bottom (vertical) or the leading edge (horizontal) to the value, in the fill colours or the accent tone. Dragging anywhere on it moves the value by the distance dragged, not to the touch, so a tap on its content does not change it. Content draws over the fill in a dark or light foreground the App picks from how light the fill is, spread along the direction: the first child at the start (top, or leading edge), the last at the end.',
   },
 );
