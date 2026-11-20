@@ -33,6 +33,13 @@ const unofferedOption = (): TRPCError =>
     message: 'The Agent did not offer that option',
   });
 
+// The Permission request under `requestId` while it is the one waiting for an answer.
+export const waitingPermission = (
+  actor: SessionActorRef | undefined,
+  requestId: string,
+): PendingPermission | undefined =>
+  answeredRequest(permissionQueue(actor), requestId);
+
 function pendingPermission(
   actor: SessionActorRef | undefined,
   requestId: string,

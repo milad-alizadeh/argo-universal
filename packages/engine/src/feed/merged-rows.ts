@@ -1,5 +1,6 @@
 import type { SessionUpdate } from '@repo/contracts';
 import type { WriterActorRef } from '../storage';
+import { withoutVoiceMarkers } from './conversation-markers';
 import type { FeedRowSources } from './feed-catch-up-rows';
 import {
   hydrateStoredFeedRow,
@@ -7,10 +8,9 @@ import {
   type FeedRowWrite,
 } from './feed-row';
 import { readQueuedFeed } from './feed-storage';
-import { withoutVoiceMarkers } from './voice-markers';
 
 /*
- * Rows as their readers see them: Agent messages without Voice marks (ADR-0064). The Feed restores its own rows through
+ * Rows as their readers see them: Agent messages without Conversation marks (ADR-0064). The Feed restores its own rows through
  * `hydrateStoredFeedRow`, `readQueuedFeed` and `readWrittenRow`, which keep the marks; anything that reads rows for a
  * person or another Agent reads them here.
  */

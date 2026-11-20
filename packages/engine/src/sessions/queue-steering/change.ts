@@ -1,6 +1,6 @@
 import type { FeedUpsert, PromptQueue, QueuedPromptId } from '@repo/contracts';
 import {
-  nonUserPromptChange,
+  sentPromptChange,
   userMessageChange,
   type FeedEvent,
 } from '../../feed';
@@ -78,7 +78,7 @@ function consumedChange({
   };
 }
 
-// The steered Prompt is stored as its sender's: the person's own, or the Voice call's or a Plugin's.
+// The steered Prompt is stored as its sender's: the person's own, or the Conversation's or a Plugin's.
 const steeredChange = ({
   turnId,
   prompt,
@@ -86,7 +86,7 @@ const steeredChange = ({
   sender,
 }: QueueSteering): FeedUpsert =>
   sender
-    ? nonUserPromptChange(messageId, prompt, sender)
+    ? sentPromptChange(messageId, prompt, sender)
     : userMessageChange(turnId, prompt, messageId);
 
 function consumedMessage({

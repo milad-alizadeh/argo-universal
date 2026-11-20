@@ -69,7 +69,7 @@ function checkStoredRow(row: FeedRowWrite): void {
   JSON.parse(z.string().nullish().parse(row.sourceRef) ?? 'null');
 }
 
-// A stored row as a Session update, as the Feed wrote it (Voice marks kept, for the Feed to restore), checked against its kind; a row from another payload version, or with envelope fields in its payload, fails.
+// A stored row as a Session update, as the Feed wrote it (Conversation marks kept, for the Feed to restore), checked against its kind; a row from another payload version, or with envelope fields in its payload, fails.
 export function hydrateStoredFeedRow(
   sessionId: string,
   row: FeedRowWrite,

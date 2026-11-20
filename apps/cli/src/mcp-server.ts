@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
   chosenArgoInstructions,
+  operationsSection,
   type ArgoInstructionChoices,
 } from '@repo/contracts/agents/argo-instructions';
 import {
@@ -53,7 +54,7 @@ function mcpInstructions({
   argo = { todoList: true },
 }: McpInstructions): string {
   return [
-    discoveryInstructions,
+    operationsSection(argo),
     ...[...chosenArgoInstructions(argo), ...plugins].map(
       ({ name, text }) => `## ${name}\n\n${text}`,
     ),
@@ -75,10 +76,6 @@ export function createOperationMcpServer(
 
   return server;
 }
-
-const discoveryInstructions =
-  'Discover: call operation_list with a task-specific filter. ' +
-  'Read the matching params schema and availability before calling operation_run.';
 
 const discoveryTool = {
   description: `Find ${productName} Operations by id, label or keyword. Returns matching argument schemas, tiers and availability.`,

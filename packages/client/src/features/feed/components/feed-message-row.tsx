@@ -38,7 +38,7 @@ function noticeRow(
   ) : null;
 }
 
-// A row the Feed draws itself, with no slot a Plugin can replace: a Prompt, and what was said on a Voice call. `partial` marks words still being said.
+// A row the Feed draws itself, with no slot a Plugin can replace: a Prompt, and what was said on a Conversation. `partial` marks words still being said.
 function renderOwnRow(
   row: Exclude<FeedRowItem, StandardRow>,
   drawing: Drawing,

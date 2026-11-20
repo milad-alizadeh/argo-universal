@@ -4,7 +4,7 @@ import type { LocalSubmission } from '../prompts/submission';
 
 const maximumContextLength = 20_000;
 
-// The Agent message being read, so its Voice mark stays out of the context even when split across chunks.
+// The Agent message being read, so its Conversation mark stays out of the context even when split across chunks.
 type ReadMessage = { id: string | null; marks: VoiceMarkerStream };
 
 const freshMessage = (id: string | null): ReadMessage => ({

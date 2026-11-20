@@ -1,5 +1,5 @@
 import type {
-  NonUserPromptSender,
+  SentPromptSender,
   SessionNewInput,
   SessionPromptInput,
 } from '@repo/contracts';
@@ -9,10 +9,10 @@ import type {
 } from '@repo/contracts/plugins/argo-calls';
 import { OwnSessionArchive } from './archive/own-archive';
 import { archiveSessionFromPlugin } from './archive/plugin-archive';
+import { ConversationSessionWork } from './conversation-session-work';
 import { startSessionCreation } from './creation/session-creation';
 import { createSessionList } from './list/session-list';
 import { OpenSessions } from './open-sessions';
-import { sessionWatches, type SessionWatches } from './opened-sessions';
 import {
   beginOperationCall,
   type CalledOperation,
@@ -20,12 +20,7 @@ import {
 } from './operation-call';
 import type { NativeStart, NativeStartRequest } from './prompt-sender';
 import { createSessionRouter } from './router';
-import {
-  requireTaken,
-  sendPrompt,
-  withdrawPrompt,
-  type TakenPrompt,
-} from './sent-prompt';
+import { requireTaken, sendPrompt, withdrawPrompt } from './sent-prompt';
 import {
   createSessionDirectory,
   type SessionDirectory,
@@ -34,7 +29,7 @@ import {
   sessionOperationImplementations,
   type SessionOperationImplementations,
 } from './session-operations';
-import { startSessionPrompt, type PromptLanding } from './session-prompt';
+import { admitSessionPrompt, type PromptLanding } from './session-prompt';
 import type { SessionHandlerSources, SessionSources } from './session-sources';
 import { createSessionWorkSource, type SessionWorkSource } from './work-source';
 
@@ -51,6 +46,8 @@ export class Sessions {
   public readonly directory: SessionDirectory;
   // The native Session work an Operation waits for.
   public readonly work: SessionWorkSource;
+  // What a Conversation reaches its Session's work through.
+  public readonly conversation: ConversationSessionWork;
   // The Session procedures that are not Operations.
   public readonly router: ReturnType<typeof createSessionRouter>;
   private readonly sources: SessionHandlerSources;
@@ -63,6 +60,10 @@ export class Sessions {
     this.work = createSessionWorkSource(this.sources);
     this.router = createSessionRouter({ sources: this.sources, list });
     this.ownArchive = new OwnSessionArchive(this.sources);
+    this.conversation = new ConversationSessionWork(
+      this.sources,
+      this.implementations,
+    );
   }
   // Opens a Session from storage, or waits for its open, without a Turn.
   public async open(sessionId: string): Promise<void> {
@@ -82,26 +83,21 @@ export class Sessions {
    */
   public prompt(
     input: SessionPromptInput,
-    request: NativeStartRequest,
+    { sender, signal }: NativeStartRequest,
   ): NativeStart<PromptLanding> {
-    const { sender, signal } = request;
+    const id = this.sources.createId();
 
-    if (sender.type === 'user')
-      return startSessionPrompt(this.sources, input, request);
+    const accepted =
+      sender.type === 'user'
+        ? admitSessionPrompt(this.sources, input, { id, sender, signal })
+        : sendPrompt(this.sources, input, { id, sender, signal });
 
-    const turnId = this.sources.createId();
-    const sent = { sender, id: turnId, signal };
-
-    return {
-      sessionId: input.sessionId,
-      turnId,
-      accepted: sendPrompt(this.sources, input, sent),
-    };
+    return { sessionId: input.sessionId, turnId: id, accepted };
   }
   // A Plugin's Prompt: starts a Turn on an idle Session, else joins the end of its queue (ADR-0055).
   public async promptFromPlugin(
     input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
-    sender: NonUserPromptSender,
+    sender: SentPromptSender,
   ): Promise<PluginPromptAnswer> {
     const sent = requireTaken(
       await sendPrompt(this.sources, input, { sender }),
@@ -110,27 +106,6 @@ export class Sessions {
     return sent.status === 'queued'
       ? { status: 'queued', queuedId: sent.queuedId }
       : { status: 'started' };
-  }
-  // The Voice call's request for work: a Sent Prompt that steers a running Turn when it can (ADR-0064).
-  public async promptFromVoice(
-    input: Pick<SessionPromptInput, 'sessionId' | 'prompt'>,
-  ): Promise<TakenPrompt> {
-    const sender = { type: 'voice' } as const;
-
-    return requireTaken(await sendPrompt(this.sources, input, { sender }));
-  }
-  // A spoken "stop" (ADR-0064): cancels the running Turn as the Stop button does; resolves false when no Turn runs.
-  public async stopFromVoice(sessionId: string): Promise<boolean> {
-    const session = this.sources.open.session(sessionId);
-
-    if (!session?.getSnapshot().hasTag('running')) return false;
-    await this.implementations['session.cancel']({ sessionId });
-
-    return true;
-  }
-  // What the Voice call hears of Sessions: an open Session's Turns, and each Session as it opens.
-  public watches(): SessionWatches {
-    return sessionWatches(this.sources);
   }
   // Takes back a Queued Prompt the Plugin sent; one that started, is gone or is held for editing stays (ADR-0055).
   public async withdrawFromPlugin(

@@ -6,7 +6,7 @@ status: accepted
 
 Accepted by the owner, 2026-11-17. This supersedes [ADR-0055](0055-argo-generates-follow-up-suggestions-in-background-agent-sessions.md) and takes up the direction of [ADR-0052](0052-agents-provide-follow-up-suggestions-through-a-shared-capability.md), which was set aside because no shared contract existed. One exists now.
 
-ADR-0055 opens a hidden ACP session for every prediction, copies up to 20,000 characters of the conversation into it and runs a full Turn on the Suggestion model. In use, a suggestion takes seconds to tens of seconds and is often missing. A prediction is dropped without a word when it hits the 30-second limit, when the Agent calls a tool, when the reply is not clean JSON, or when the next Prompt arrives first. With six or seven Sessions running, every Turn end starts one more Agent session at the same moment, and none of them reuse the conversation's prompt cache.
+ADR-0055 opens a hidden ACP session for every prediction, copies up to 20,000 characters of the Session context into it and runs a full Turn on the Suggestion model. In use, a suggestion takes seconds to tens of seconds and is often missing. A prediction is dropped without a word when it hits the 30-second limit, when the Agent calls a tool, when the reply is not clean JSON, or when the next Prompt arrives first. With six or seven Sessions running, every Turn end starts one more Agent session at the same moment, and none of them reuse the conversation's prompt cache.
 
 Since then, ACP has drafted [Prompt Suggestions](https://agentclientprotocol.com/rfds/prompt-suggestions). In it the Agent sends `prompt_suggestions_update` to a Client that opts in with `session.promptSuggestions`, and each update replaces the Session's list. The update is in ACP's unstable schema behind `unstable_prompt_suggestions`. Claude Code already makes such a prediction after each Turn: a small request on the Session's own model that reuses its prompt cache. claude-agent-acp from 0.92 forwards it, but only to JetBrains AIR clients, as `_meta.promptSuggestions` on `session_info_update`.
 
@@ -31,8 +31,8 @@ Since then, ACP has drafted [Prompt Suggestions](https://agentclientprotocol.com
 ## Considered options
 
 - **Keep ADR-0055 and only tune it.** Rejected as the main path: every prediction still opens a cold session with no prompt cache. Tuning it is kept as the fallback.
-- **Fork the Session with `session/fork` for each prediction.** Rejected: it avoids copying the conversation, but it still opens a new session and runs a Turn. It is a draft too, and codex-acp does not offer it.
-- **Keep one warm prediction session per Session.** Rejected: six or seven more Agent sessions are held open the whole time, and each needs the conversation fed into it.
+- **Fork the Session with `session/fork` for each prediction.** Rejected: it avoids copying the Session context, but it still opens a new session and runs a Turn. It is a draft too, and codex-acp does not offer it.
+- **Keep one warm prediction session per Session.** Rejected: six or seven more Agent sessions are held open the whole time, and each needs the Session context fed into it.
 - **Claim AIR's capability to receive Claude's `_meta`.** Rejected: it is another client's private extension, and it can change with any adapter release.
 - **Call a vendor's model API directly.** Rejected for the reasons in [ADR-0004](0004-agents-run-on-subscriptions.md) and ADR-0055: it needs a separate identity and provider-specific code.
 

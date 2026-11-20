@@ -93,3 +93,26 @@ it('announces saved records even when a sibling save fails', async () => {
 
   expect(changed).toHaveBeenCalledTimes(1);
 });
+
+it('reads again for a Slot ask that arrives while an earlier read is in flight', async () => {
+  const first = Promise.withResolvers<boolean>();
+
+  const save = vi
+    .fn<Save>()
+    .mockReturnValueOnce(first.promise)
+    .mockResolvedValue(true);
+
+  const refreshes = new PullRefreshes(save, () => {});
+  const slot = { kind: 'slot' } as const;
+
+  const asks = Promise.all([
+    refreshes.run([link], slot),
+    refreshes.run([link], slot),
+    refreshes.run([link], slot),
+  ]);
+
+  first.resolve(false);
+  await asks;
+
+  expect(save).toHaveBeenCalledTimes(2);
+});

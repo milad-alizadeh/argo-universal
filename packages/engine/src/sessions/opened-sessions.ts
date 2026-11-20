@@ -1,14 +1,14 @@
 import type { Subscription } from 'xstate';
 import type { SessionHandlerSources } from './session-sources';
-import type { TurnHappening } from './turn-happenings';
 import { onWriterChange } from './writer-changes';
 
 type OpenedSources = Pick<SessionHandlerSources, 'findWriter' | 'open'>;
 
-type TurnListener = (happening: TurnHappening) => void;
-
 // A Session that opened, and the Session that started it through an Operation, or null.
-type OpenedListener = (sessionId: string, startedBy: string | null) => void;
+export type OpenedListener = (
+  sessionId: string,
+  startedBy: string | null,
+) => void;
 
 type Row = ReturnType<OpenedSources['open']['queued']>;
 
@@ -87,22 +87,12 @@ class OpenedSessions {
   }
 }
 
-export type SessionWatches = {
-  // Hears what an open Session reports of its Turns until the returned function is called; a closed Session reports none.
-  watchTurns: (sessionId: string, listener: TurnListener) => () => void;
-  // Hears each Session as it opens, with the Session that started it, once its row can be read.
-  watchOpened: (listener: OpenedListener) => () => void;
-};
+// Hears each Session as it opens, with the Session that started it, once its row can be read, until the returned function is called.
+export function watchOpenedSessions(
+  sources: OpenedSources,
+  listener: OpenedListener,
+): () => void {
+  const opened = new OpenedSessions(sources, listener);
 
-export const sessionWatches = (sources: OpenedSources): SessionWatches => ({
-  watchTurns: (sessionId, listener) => {
-    const subscription = sources.open.session(sessionId)?.on('*', listener);
-
-    return (): void => subscription?.unsubscribe();
-  },
-  watchOpened: (listener) => {
-    const opened = new OpenedSessions(sources, listener);
-
-    return (): void => opened.stop();
-  },
-});
+  return (): void => opened.stop();
+}

@@ -52,6 +52,11 @@ export type Journey = {
   keep: Keep;
 };
 
+// Wait for the Plugin calls already in progress without moving the test clock.
+export async function settled(run: Journey): Promise<void> {
+  await run.test.clock.until(() => true, { stepMs: 0, steps: 0 });
+}
+
 export type Caller = { sessionId: string; projectId: string };
 
 export const caller: Caller = { sessionId, projectId: project.id };

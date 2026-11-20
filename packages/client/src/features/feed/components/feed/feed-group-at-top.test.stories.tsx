@@ -1,7 +1,7 @@
 /// <reference types="@vitest/browser-playwright" />
+import { reduceMotion } from '@repo/kit/mocks/reduced-motion';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
-import { cdp } from 'vitest/browser';
 import { Feed } from './feed';
 import {
   expandedAttribute,
@@ -29,17 +29,6 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
-
-// The browser prefers reduced motion for one story, and no longer once it ends.
-async function reduceMotion(): Promise<() => Promise<void>> {
-  await cdp().send('Emulation.setEmulatedMedia', {
-    features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
-  });
-
-  return async () => {
-    await cdp().send('Emulation.setEmulatedMedia', { features: [] });
-  };
-}
 
 // Resolves on the first animation frame where the condition holds.
 function untilFrame(condition: () => boolean): Promise<void> {

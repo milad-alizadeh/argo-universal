@@ -53,8 +53,20 @@ export const GutterWorkbenchSlidesWhenTheInspectorCloses: Story =
   closesAt(2560);
 
 // Beside the open Inspector the gutter is too narrow; closing it frees the room.
-export const AutoHiddenWorkbenchSlidesWhenTheInspectorCloses: Story =
-  closesAt(1856);
+export const AutoHiddenWorkbenchSlidesWhenTheInspectorCloses: Story = {
+  args: { inspectorOpen: false, initialWorkbenchIntent: 'shown' },
+  beforeEach: (): Promise<void> => settleLayout(1856),
+  play: async ({ canvas, userEvent }) => {
+    await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Show Inspector' }),
+    );
+    await waitFor(() =>
+      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
+    );
+    await assertSliding(canvas, 'Hide Inspector');
+  },
+};
 
 export const WorkbenchSlidesWhenTheExpandedInspectorRestores: Story = {
   play: async ({ canvas, userEvent }) => {

@@ -8,7 +8,7 @@ Cancel sends `session/cancel`, cancels pending Permissions and Elicitations, and
 
 ## A Prompt settles a waiting Elicitation
 
-Owner amendment, 2026-11-20 (#2507). A Session that waits on an Elicitation and is then sent a Prompt, typed, from another Session or from a Voice call, cancels each Elicitation it waits on, as Cancel does, and keeps its Turn: the Prompt then steers the Turn or waits in the queue as any Prompt does. Before, the Session stayed waiting until Cancel ended the whole Turn, and the Prompt had to be sent again. Cancel itself is unchanged. A waiting Permission request is not settled by a Prompt; it waits for its answer.
+Owner amendment, 2026-11-20 (#2507). A Session that waits on an Elicitation and is then sent a Prompt, typed, from another Session or from a Conversation, cancels each Elicitation it waits on, as Cancel does, and keeps its Turn: the Prompt then steers the Turn or waits in the queue as any Prompt does. Before, the Session stayed waiting until Cancel ended the whole Turn, and the Prompt had to be sent again. Cancel itself is unchanged. A waiting Permission request is not settled by a Prompt; it waits for its answer.
 
 ## Considered Options
 

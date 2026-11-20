@@ -42,7 +42,7 @@ it('reads the newest queued Feed rows of one Session from jobs of any module', (
   ).toEqual(newer);
 });
 
-it('reads queued Agent messages without Voice marks, and hands the Feed them as it wrote them', (): void => {
+it('reads queued Agent messages without Conversation marks, and hands the Feed them as it wrote them', (): void => {
   const marked = row({ content: [{ type: 'text', text: '[COMPLETE] Done' }] });
   const { writer } = submitWrites([foreignRows('session-1', [marked], 1)]);
 

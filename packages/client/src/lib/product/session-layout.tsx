@@ -30,8 +30,6 @@ export interface SessionLayoutProps {
   bar?: ReactNode;
   // Full pane width, so it scrolls from anywhere in the pane; its rows sit in SessionColumns.
   feed: ReactNode;
-  // The Voice call's orb: pinned between the header and the Feed, so the Feed scrolls beneath it for the length of the call.
-  stage?: ReactNode;
   composer: ReactNode;
   // Under the Composer at full pane width, such as a sign-in terminal; a phone presents it as a sheet.
   panel?: ReactNode;
@@ -80,7 +78,6 @@ function OverlapContent(props: SessionLayoutProps): React.JSX.Element {
   return (
     <SessionFillProvider value={fill}>
       <KeyboardAvoidingContent inset={bottom}>
-        {props.stage}
         <OverlapPane {...props} />
         {props.panel}
       </KeyboardAvoidingContent>
@@ -142,7 +139,6 @@ function GlassComposerLayout(props: SessionLayoutProps): React.JSX.Element {
       {props.header}
       <SessionBarRow>{props.bar}</SessionBarRow>
       <KeyboardAvoidingContent>
-        {props.stage}
         <GlassComposerStage {...props} top={top} />
         {props.panel}
       </KeyboardAvoidingContent>

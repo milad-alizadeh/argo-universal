@@ -14,7 +14,7 @@ export interface HandOffHost {
   failed: (cause: unknown) => void;
 }
 
-// Starts a Voice call in the Session once it exists.
+// Starts a Conversation in the Session once it exists.
 export type CallStart = (sessionId: string) => void;
 
 // The first prompt's way from Send to the Session page.
