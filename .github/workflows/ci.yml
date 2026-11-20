@@ -259,8 +259,9 @@ jobs:
 
       - name: Tests
         env:
-          # Each package's runner uses every core and runs its `budget` project alone after the rest; one package at a time keeps another's tests off those cores.
+          # One package at a time, two workers each: integration tests start Servers and git processes, so a worker per core oversubscribes the runner's 4 and pushes tests past their timeouts. The `budget` project runs alone after the rest.
           TURBO_CONCURRENCY: 1
+          VITEST_MAX_WORKERS: 2
         # set -f keeps the shell from expanding the ./plugins/* filter against the checkout.
         run: |
           set -f
@@ -290,6 +291,9 @@ jobs:
 
       # The Feed workload's event-loop budget runs in the serial `budget` project after the rest; a shard's --shard argument feeds its hash.
       - name: Engine tests
+        env:
+          # Two workers: one per core oversubscribes the runner, since the tests start Servers and git processes.
+          VITEST_MAX_WORKERS: 2
         run: pnpm exec turbo run test --filter=@repo/engine -- --shard=${{ matrix.shard }}/2
 
   # The keyring adapter's contract test reads and writes the real OS secret store, and only a macOS runner has the Keychain (ADR-0051).
