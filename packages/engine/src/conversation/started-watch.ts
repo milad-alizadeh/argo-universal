@@ -9,7 +9,7 @@ type Listener = (happening: SessionHappening) => void;
 type TurnEnded = Extract<TurnHappening, { type: 'turn.ended' }>;
 
 // What the call needs to find the Sessions its Session started and follow their Turns.
-export interface StartedSources {
+interface StartedSources {
   watchTurns: (
     sessionId: string,
     listener: (happening: TurnHappening) => void,
