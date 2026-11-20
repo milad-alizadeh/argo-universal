@@ -1,5 +1,6 @@
 import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
 import { Button } from '@repo/kit/primitives/actions/button';
+import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
 import { recordedDeepFeed } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
@@ -21,6 +22,7 @@ import {
 } from './feed-reader.mocks';
 import { settledTopOf } from './feed-settled-top.mocks';
 import {
+  arrivingRow,
   longRows,
   olderPromptRows,
   oldestMessage,
@@ -28,7 +30,12 @@ import {
   splitGroupLastStep,
   splitGroupStepInTail,
 } from './feed.mocks';
-import { feedArgs, PagedFeed, sendOlderPage } from './paged-feed.mocks';
+import {
+  feedArgs,
+  PagedFeed,
+  sendOlderPage,
+  sendRow,
+} from './paged-feed.mocks';
 
 const meta = {
   title: 'Tests/Feed',
@@ -236,6 +243,63 @@ export const UserScrollStopsRestoring: Story = {
 };
 
 const switchSessionLabel = 'Switch Session';
+
+function RetainedFeed(): React.JSX.Element {
+  const [visible, setVisible] = useState(true);
+
+  return (
+    <>
+      <Button
+        label={switchSessionLabel}
+        onPress={() => setVisible((current) => !current)}
+      />
+      <RetainedPageVisibility value={visible}>
+        <PagedFeed {...feedArgs} rows={longRows} />
+      </RetainedPageVisibility>
+    </>
+  );
+}
+
+function returningToRetainedFeed(readingHistory: boolean): Story {
+  return {
+    render: () => <RetainedFeed />,
+    play: async ({ canvas, userEvent }) => {
+      await settleLayout('wide');
+      const scroll = await canvas.findByTestId(feedScrollId);
+      await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+
+      if (readingHistory) {
+        scrollUp(scroll, scroll.clientHeight);
+        await waitFor(() => expect(scrolledToEnd(scroll)).toBe(false));
+      }
+
+      await afterTwoFrames();
+      const height = scroll.scrollHeight;
+      const offset = scroll.scrollTop;
+
+      const switchSession = canvas.getByRole('button', {
+        name: switchSessionLabel,
+      });
+
+      await userEvent.click(switchSession);
+      sendRow(arrivingRow);
+      await waitFor(() => expect(scroll.scrollHeight).toBeGreaterThan(height));
+      await expect(scrolledToEnd(scroll)).toBe(false);
+      await userEvent.click(switchSession);
+
+      if (readingHistory) {
+        await afterTwoFrames();
+        await expect(Math.abs(scroll.scrollTop - offset)).toBeLessThan(2);
+      } else {
+        await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+      }
+    },
+  };
+}
+
+export const FollowsEndOnReturn = returningToRetainedFeed(false);
+
+export const KeepsReadingPlaceOnReturn = returningToRetainedFeed(true);
 
 function ReopenedPagedFeed(): React.JSX.Element {
   const [open, setOpen] = useState(true);

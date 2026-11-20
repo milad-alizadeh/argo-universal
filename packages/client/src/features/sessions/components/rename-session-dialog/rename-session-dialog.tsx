@@ -25,7 +25,6 @@ export type RenameSessionDialogProps = {
 
 const copy = {
   title: 'Rename Session',
-  description: 'Keep it short and easy to find in the list.',
   field: 'Title',
   placeholder: 'Session title',
   save: 'Save',
@@ -65,7 +64,6 @@ function RenameForm(props: RenameSessionDialogProps): ReactElement {
   return (
     <DialogForm
       title={copy.title}
-      description={copy.description}
       size="sm"
       footer={footer(props, useCentresOverlays(), save)}
     >

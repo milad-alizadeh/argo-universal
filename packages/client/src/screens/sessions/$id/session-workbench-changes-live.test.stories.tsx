@@ -11,7 +11,7 @@ import {
   turnStarted,
 } from './session-changes-live.test.mocks';
 
-// Wide enough for the Sessions list, the content column, the Workbench and the Inspector at once (layout.md).
+// Wide enough for the Sessions list, the content column, the Workbench and the Inspector at once.
 const workbenchAndInspector = 2224;
 
 const meta = {
