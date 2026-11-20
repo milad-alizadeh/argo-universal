@@ -2,7 +2,6 @@ import type { ConversationStatus } from '@repo/contracts';
 import { useClock } from '@repo/kit/use-clock';
 import { useMutation } from '@tanstack/react-query';
 import { useCallback } from 'react';
-import type { ComposerConversation } from '#features/composer';
 import { useTRPC } from '#features/connection';
 import { sessionHref } from '#lib/product/navigation/navigation';
 import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
@@ -16,10 +15,13 @@ import {
 } from '../types/conversation-connection';
 import {
   sessionConversation,
-  type SessionConversation,
   type SessionConversationActions,
   type SessionConversationInput,
 } from '../utils/session-conversation';
+import {
+  sessionPageConversation,
+  type SessionPageConversation,
+} from '../utils/session-conversation-page';
 import { useSessionTitle, useStartCall } from './use-conversation-reads';
 import { useConversationStatus } from './use-conversation-status';
 import { useHeldPartials } from './use-held-partials';
@@ -75,11 +77,6 @@ const useSpectrum = (
 ): (() => VoiceSpectrum) =>
   useCallback(() => connection?.spectrum() ?? noSpectrum, [connection]);
 
-type View = Pick<SessionConversation, 'partials'> & {
-  // Absent where this App carries no audio, so the Composer offers no voice button.
-  voice: ComposerConversation | undefined;
-};
-
 // The Session the call runs in, when it runs in another one than the page shows.
 const elsewhereOf = (
   callSession: string | undefined,
@@ -134,14 +131,13 @@ function useInput(
  * through `sessionConversation`. The Composer, with the band along its edge, and the Feed's partial words all come from here,
  * so none of them needs another to have subscribed first.
  */
-export function useSessionConversation(page: ConversationPage): View {
+export function useSessionConversation(
+  page: ConversationPage,
+): SessionPageConversation {
   const connection = useConversationConnection();
   const status = useConversationStatus();
   const view = sessionConversation(useInput(page, connection, status));
   const partials = useHeldPartials(view.partials);
 
-  return {
-    partials,
-    voice: connection ? withEdge(view.composer, view.band) : undefined,
-  };
+  return sessionPageConversation(connection, { ...view, partials }, withEdge);
 }
