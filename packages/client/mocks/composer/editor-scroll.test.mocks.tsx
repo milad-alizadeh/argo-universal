@@ -2,6 +2,7 @@ import { shownText } from '@repo/kit/mocks/shown-text';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { fn, waitFor, expect } from 'storybook/test';
 import { userEvent as browserUserEvent } from 'vitest/browser';
+import { composerImages } from '../composer-mock';
 import {
   type Story,
   SendingComposer,
@@ -35,3 +36,29 @@ export function editorScrollsAfterTenLines(width: number): Story {
     },
   };
 }
+
+export const attachmentsScrollWithDraft: Story = {
+  args: {
+    draft: {
+      text: Array.from({ length: 24 }, (_, index) => `Line ${index + 1}`).join(
+        '\n',
+      ),
+      attachments: composerImages.slice(0, 1),
+    },
+  },
+  play: async ({ canvas }) => {
+    await settleLayout('phone');
+    const input = await canvas.findByRole('textbox', { name: 'Message' });
+    const attachment = canvas.getByRole('img', { name: 'screenshot.png' });
+    const send = canvas.getByRole('button', { name: 'Send' });
+
+    const attachmentOffset = (): number =>
+      attachment.getBoundingClientRect().top - send.getBoundingClientRect().top;
+
+    const initialOffset = attachmentOffset();
+
+    await browserUserEvent.wheel(input, { delta: { y: 150 } });
+    await waitFor(() => expect(attachmentOffset()).toBeLessThan(initialOffset));
+    await expectSendUnobscured(send);
+  },
+};

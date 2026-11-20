@@ -68,7 +68,10 @@ Then('no Shell output read remains open', async ({ page }) => {
 
 When('I return to the Shells list', async ({ page }) => {
   await page
-    .getByRole('button', { name: 'Back to Background Tasks', exact: true })
+    .getByRole('button', {
+      name: onPhone(page) ? 'Back to Workbench' : 'Back to Background Tasks',
+      exact: true,
+    })
     .click();
 });
 

@@ -15,20 +15,9 @@ export async function openWorkbench({
     await canvas.findByRole('button', { name: 'Workbench' }),
   );
 
-  const menu = await screen.findByRole('menu');
+  const sheet = await screen.findByRole('dialog', { name: 'Workbench' });
 
-  await settleOverlays(menu);
+  await settleOverlays(sheet);
 
-  return within(menu);
-}
-
-export async function openWorkbenchSection(
-  context: WorkbenchInteraction,
-  name: string,
-): Promise<void> {
-  const menu = await openWorkbench(context);
-  const row = menu.getByRole('menuitem', { name });
-
-  await settleOverlays(row);
-  await context.userEvent.click(row);
+  return within(sheet);
 }

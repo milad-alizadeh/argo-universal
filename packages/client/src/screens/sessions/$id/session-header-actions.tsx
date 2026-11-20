@@ -56,7 +56,7 @@ function moreAction(
 }
 
 /*
- * The Session header's Actions: the Plugins' header actions, then ⋯ and the compact Workbench menu. On wide
+ * The Session header's Actions: the Plugins' header actions, then ⋯ and the compact Workbench button. On wide
  * windows ⋯ starts the Session's trailing band controls.
  */
 export function sessionHeaderActions(

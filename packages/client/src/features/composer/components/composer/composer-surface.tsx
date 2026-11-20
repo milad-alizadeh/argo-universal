@@ -4,6 +4,7 @@ import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { ComposerAttachments } from './composer-card-attachments';
 import type { CardLayout } from './composer-card-types';
+import { ComposerDraftScroll } from './composer-draft-scroll';
 import { edgeOf } from './composer-edge';
 import { EdgeTypography } from './composer-edge-typography';
 import { FollowUpAcceptance } from './composer-follow-up-acceptance';
@@ -53,12 +54,24 @@ function ComposerEdge({ props }: CardLayout): React.ReactNode {
   return edge ? <EdgeTypography>{edge}</EdgeTypography> : null;
 }
 
+// Keep the editor mounted across widths so crossing the breakpoint preserves keyboard focus.
+function ComposerDraftBody(props: SurfaceProps): React.JSX.Element {
+  const scrollWithParent =
+    props.phone && props.layout.props.draft.attachments.length > 0;
+
+  return (
+    <ComposerDraftScroll followsCaret={scrollWithParent}>
+      <ComposerAttachments {...props.layout} />
+      <ComposerText {...props} field={{ ...props.field, scrollWithParent }} />
+    </ComposerDraftScroll>
+  );
+}
+
 export function ComposerSurface(props: SurfaceProps): React.JSX.Element {
   return (
     <LiquidGlass {...cardGlass}>
       <ComposerEdge {...props.layout} />
-      <ComposerAttachments {...props.layout} />
-      <ComposerText {...props} />
+      <ComposerDraftBody {...props} />
       <ComposerTypography compact={props.phone}>
         <ComposerToolbar {...props.layout} />
       </ComposerTypography>

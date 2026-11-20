@@ -19,11 +19,8 @@ async function reviewDesktopComparison(page: Page): Promise<void> {
 async function inspectPhoneSheet(page: Page): Promise<void> {
   await openChangedFiles(page);
   await expect(
-    page.getByRole('button', { name: 'Files', pressed: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Change', exact: true }),
-  ).toBeDisabled();
+    page.getByRole('group', { name: 'Git', exact: true }),
+  ).toHaveCount(0);
   await expectNoExtraHeader(page);
 }
 

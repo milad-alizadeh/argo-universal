@@ -22,7 +22,7 @@ export interface ShellSheetProps extends ShellViewProps {
 }
 
 // A running Shell the Server can stop offers Stop; an ended one offers nothing.
-function stopAction(
+export function shellStopAction(
   shell: ShellEntry,
   onStop: ShellSheetProps['onStop'],
 ): SheetScreenAction | undefined {
@@ -65,7 +65,7 @@ function outputHeading(
 ): Pick<SheetScreenProps, 'title' | 'action' | 'onExit'> {
   return {
     title: shell && shellTitle(shell),
-    action: shell && stopAction(shell, onStop),
+    action: shell && shellStopAction(shell, onStop),
     onExit,
   };
 }

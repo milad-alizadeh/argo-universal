@@ -61,7 +61,7 @@ export interface SessionSection extends SectionFacts {
   phone?: SectionDraw<SectionPhonePage>;
 }
 
-export const offeredFacts = <Section extends SectionFacts>(
+const offeredFacts = <Section extends SectionFacts>(
   sections: readonly Section[],
   items: SessionItems,
 ): Section[] => sections.filter((section) => section.offered(items));

@@ -1,6 +1,6 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, screen } from 'storybook/test';
+import { expect, fn, screen, within } from 'storybook/test';
 import { severalPullRequests } from '../../../features/sessions/components/session-pull-request.mocks';
 import { ChangesSheet, changedFiles } from './session-changes-sheet.mocks';
 import { withPullRequests } from './session-detail-view-pull-request.mocks';
@@ -38,6 +38,16 @@ export const ListsPullRequests: Story = {
     });
 
     await expect(rows).toHaveLength(severalPullRequests.length);
+  },
+};
+
+export const NoChangeFilesSwitcher: Story = {
+  play: async () => {
+    const sheet = await screen.findByRole('dialog', { name: 'Changes' });
+
+    await expect(
+      within(sheet).queryByRole('group', { name: 'Git' }),
+    ).toBeNull();
   },
 };
 

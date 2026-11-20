@@ -12,7 +12,10 @@ import { ShellOutput } from './shell-output';
 import { ShellOutputHeader } from './shell-output-header';
 import { useOpenShell } from './use-open-shell';
 
-export type ShellPanelProps = ShellViewProps & { listScrolls?: boolean };
+export type ShellPanelProps = ShellViewProps & {
+  listScrolls?: boolean;
+  onSelectFromWorkbench?: NonNullable<ShellViewProps['onSelect']>;
+};
 
 type OpenProps = ShellPanelProps & { shell: ShellEntry; onBack: () => void };
 

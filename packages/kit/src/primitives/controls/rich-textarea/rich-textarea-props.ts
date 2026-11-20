@@ -47,6 +47,8 @@ export interface RichTextareaProps {
   onResourcesChange?: (resources: readonly SuggestionResource[]) => void;
   // Padding for the field itself, so a press anywhere in its padded area focuses the editor.
   fieldClassName?: string;
+  // Let the parent scroll the field together with adjacent content.
+  scrollWithParent?: boolean;
   // Focus the field when it mounts; the web editor only, as a phone keyboard should not open unasked.
   autoFocus?: boolean;
   ref?: React.Ref<RichTextareaHandle>;

@@ -36,13 +36,14 @@ function useFieldMaxHeight(props: RichTextareaProps): number | undefined {
     cn(plainFieldClassName, props.fieldClassName),
   );
 
-  return lineHeight === undefined
+  return props.scrollWithParent || lineHeight === undefined
     ? undefined
     : maximumVisibleLines * lineHeight * Math.max(1, fontScale);
 }
 
 // What the text field takes: the drawing's own props stay out of it.
-function textFieldProps({
+const textFieldProps = ({
+  scrollWithParent: _scrollWithParent,
   onSubmit: _onSubmit,
   onModifiedSubmit: _onModifiedSubmit,
   disabled: _disabled,
@@ -54,9 +55,7 @@ function textFieldProps({
   inlineSuggestion: _inlineSuggestion,
   ref: _ref,
   ...field
-}: RichTextareaProps): TextInputProps {
-  return field;
-}
+}: RichTextareaProps): TextInputProps => field;
 
 const plainFieldProps = (props: RichTextareaProps): TextInputProps => ({
   ...textFieldProps(props),
@@ -84,6 +83,7 @@ const fieldLook = {
 
 const useFieldLook = (props: RichTextareaProps): TextInputProps => ({
   ...fieldLook,
+  scrollEnabled: !props.scrollWithParent,
   style: { maxHeight: useFieldMaxHeight(props) },
 });
 

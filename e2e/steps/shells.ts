@@ -15,21 +15,23 @@ Given(
   },
 );
 
-// On a phone the Workbench menu offers the tasks. Wide windows show them in the Workbench card.
+// The Shell opens from the Workbench sheet on phones and from its card on wide windows.
 function shellEntry(page: Page): Locator {
   return onPhone(page)
-    ? page.getByRole('menuitem', { name: /^Background Tasks/ })
+    ? page
+        .getByRole('dialog', { name: 'Workbench' })
+        .getByRole('link', { name: /Shell ready/ })
     : page
         .getByTestId('workbench-shells')
         .getByRole('button', { name: /^Open / });
 }
 
-async function openShellMenu(page: Page): Promise<void> {
+async function openWorkbenchSheet(page: Page): Promise<void> {
   if (onPhone(page))
     await page.getByRole('button', { name: 'Workbench', exact: true }).click();
 }
 
-async function closeShellMenu(page: Page): Promise<void> {
+async function closeWorkbenchSheet(page: Page): Promise<void> {
   if (onPhone(page)) await page.keyboard.press('Escape');
 }
 
@@ -46,9 +48,9 @@ Then('the Session offers no Shells', async ({ page }) => {
   await expect(
     page.getByRole('button', { name: 'Stop', exact: true }),
   ).toBeVisible();
-  await openShellMenu(page);
+  await openWorkbenchSheet(page);
   await expect(shellEntry(page)).toHaveCount(0);
-  await closeShellMenu(page);
+  await closeWorkbenchSheet(page);
   await expect(
     page.getByRole('tab', { name: /^Background Tasks/ }),
   ).toHaveCount(0);
@@ -59,13 +61,11 @@ When('the Agent starts its Shell', async ({ app }) => {
 });
 
 Then('the Session offers 1 Shell', async ({ page }) => {
-  await openShellMenu(page);
+  await openWorkbenchSheet(page);
   await expect(shellEntry(page)).toBeVisible();
 
-  await (onPhone(page)
-    ? expect(shellEntry(page)).toHaveAccessibleName('Background Tasks 1')
-    : expect(shellEntry(page)).toHaveCount(1));
-  await closeShellMenu(page);
+  await expect(shellEntry(page)).toHaveCount(1);
+  await closeWorkbenchSheet(page);
   await expect(
     page.getByRole('button', { name: 'Send', exact: true }),
   ).toBeVisible();
@@ -96,16 +96,8 @@ export async function openRunningShell(page: Page): Promise<void> {
   await expect(
     page.getByRole('button', { name: 'Send', exact: true }),
   ).toBeVisible();
-  await openShellMenu(page);
+  await openWorkbenchSheet(page);
   await shellEntry(page).click();
-
-  // Wide, the card's row opens the output itself; on a phone the menu opens the list first.
-  if (!onPhone(page)) return;
-
-  const shell = page.getByRole('link', { name: /Shell ready/ });
-
-  await expect(shell).toBeVisible();
-  await shell.click();
 }
 
 Then('the Shell output shows {string}', async ({ page }, text: string) => {
