@@ -74,7 +74,7 @@ async function borrowHop(
 
   if (!accounts) return null;
 
-  return chosenHop(call, hop, await accounts.get(host, call.projectId));
+  return chosenHop(call, hop, await accounts.get(host, call.projectId, call.pluginId));
 }
 
 function chosenHop(

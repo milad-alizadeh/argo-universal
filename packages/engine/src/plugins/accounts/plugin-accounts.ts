@@ -79,10 +79,19 @@ export class PluginAccounts {
     return account.id;
   }
 
-  async get(host: string, projectId?: string): Promise<PluginAccount | null> {
-    if (!projectId) return null;
-
+  /*
+   * The Project's Account for the host. A call with no Project, such as a household page's, gets only the Account
+   * its own Plugin provides for the host, and only when it provides exactly one (ADR-0036).
+   */
+  async get(
+    host: string,
+    projectId?: string,
+    pluginId?: string,
+  ): Promise<PluginAccount | null> {
     const accounts = this.list().filter((account) => account.host === host);
+
+    if (!projectId) return ownAccount(accounts, pluginId);
+
     const chosen = this.choice(host, projectId);
 
     if (chosen) return chosenAccount(accounts, chosen.account);
@@ -179,3 +188,12 @@ const chosenAccount = (
   id: string,
 ): PluginAccount | null =>
   accounts.find((account) => account.id === id) ?? null;
+
+function ownAccount(
+  accounts: PluginAccount[],
+  pluginId: string | undefined,
+): PluginAccount | null {
+  const own = accounts.filter((account) => account.providedBy === pluginId);
+
+  return own.length === 1 ? (own[0] ?? null) : null;
+}
