@@ -17,6 +17,7 @@ import { DrawFeedScroll, useFeedOnScroll } from './feed-scroll-drawing';
 import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
 import { useFeedAnchors } from './use-feed-anchors';
+import { useFeedRowSize } from './use-feed-row-size';
 
 // In screens from the end: only a reader at the very end is at the end, and follows the Composer.
 const endThreshold = 0.02;
@@ -117,6 +118,7 @@ export type FeedListProps = Pick<
   Extract<ListProps<FeedRowData>, { items: readonly FeedRowData[] }>,
   | 'items'
   | 'renderItem'
+  | 'getFixedItemSize'
   | 'initialScrollIndex'
   | 'renderScrollComponent'
   | 'maintainScrollAtEnd'
@@ -135,6 +137,7 @@ function useFeedListProps(input: FeedScrollProps): FeedListProps {
 
   return {
     items,
+    getFixedItemSize: useFeedRowSize(),
     renderItem: useRenderEntry({ ...props, ...motion }),
     initialScrollIndex: props.initialIndex,
     ...anchors,

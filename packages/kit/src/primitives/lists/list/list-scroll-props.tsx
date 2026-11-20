@@ -20,7 +20,6 @@ function scrollEvents<Item>(
     onEndReachedThreshold: props.onEndReachedThreshold,
     contentInsetAdjustmentBehavior:
       props.contentInsetAdjustmentBehavior ?? 'automatic',
-    estimatedItemSize: props.estimatedItemSize,
     keyExtractor: props.keyExtractor,
     getItemType: props.getItemType,
   };
@@ -52,6 +51,8 @@ function streamProps<Item>(
     onStartReached: props.onStartReached,
     onStartReachedThreshold: props.onStartReachedThreshold,
     drawDistance: props.drawDistance,
+    estimatedItemSize: props.estimatedItemSize,
+    getFixedItemSize: props.getFixedItemSize,
     viewabilityConfig: props.viewabilityConfig,
     decelerationRate: props.decelerationRate,
   };

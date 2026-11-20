@@ -1,3 +1,4 @@
+import type { ContentBlock } from '@repo/contracts';
 import { useState } from 'react';
 import {
   type FeedEntry,
@@ -13,6 +14,26 @@ export interface FeedRowData {
   spaceBelow: string;
   spaceBefore?: string;
   streaming: boolean;
+}
+
+const emptyTextBlock = (block: ContentBlock): boolean =>
+  block.type === 'text' && block.text === '';
+
+const emptyContent = (content: readonly ContentBlock[]): boolean =>
+  content.length <= 1 && content.every(emptyTextBlock);
+
+function emptyAnswer(entry: FeedEntry): boolean {
+  if (entry.type !== 'row') return false;
+
+  return (
+    entry.row.sessionUpdate === 'agent_message' &&
+    emptyContent(entry.row.content)
+  );
+}
+
+// A streaming answer has no trailing gap. Its opening event can arrive before the first token.
+export function emptyMessageSize(row: FeedRowData): number | undefined {
+  return row.streaming && emptyAnswer(row.entry) ? 0 : undefined;
 }
 
 interface HeldRows {
