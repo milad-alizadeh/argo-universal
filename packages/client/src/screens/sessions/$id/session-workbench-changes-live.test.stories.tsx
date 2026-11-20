@@ -11,8 +11,8 @@ import {
   turnStarted,
 } from './session-changes-live.test.mocks';
 
-// Wide enough for the Sessions list, the content column, the Workbench and the Inspector at once.
-const workbenchAndInspector = 2224;
+// Room for the Sessions list, the content column, the Workbench and the Inspector at once: 2224 is the exact boundary, where rounding can hide the cards.
+const workbenchAndInspector = 2560;
 
 const meta = {
   title: 'Tests/Screens/Sessions/Session/WorkbenchChangesLive',
@@ -41,9 +41,6 @@ const totalsText = ({
   `−${deletions}`,
 ];
 
-// The card's totals follow a Checkout read, which a loaded CI runner can take past waitFor's default second to finish.
-const readingWithin = 5000;
-
 const card = (canvas: Canvas): ReturnType<typeof within> =>
   within(canvas.getByTestId('workbench-changes'));
 
@@ -51,13 +48,10 @@ async function expectCardTotals(
   canvas: Canvas,
   totals: ChangesSummary,
 ): Promise<void> {
-  await waitFor(
-    async () => {
-      for (const text of totalsText(totals))
-        await expect(card(canvas).getByText(text)).toBeVisible();
-    },
-    { timeout: readingWithin },
-  );
+  await waitFor(async () => {
+    for (const text of totalsText(totals))
+      await expect(card(canvas).getByText(text)).toBeVisible();
+  });
 }
 
 /*
