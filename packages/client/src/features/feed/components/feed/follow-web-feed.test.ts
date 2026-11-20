@@ -79,3 +79,19 @@ it('leaves a reader who scrolled away in place across the same resize', () => {
     viewport.clamped({ offset: 18310, viewport: 678, content: 19053 }, false),
   ).toBe(false);
 });
+
+it('remembers the bottom of a resized Feed even when the list skips its scroll event', () => {
+  const viewport = new WebFeedViewport();
+  viewport.clamped({ offset: 18343, viewport: 678, content: 19021 }, true);
+  viewport.resized(
+    { scrollTop: 18375, clientHeight: 646, scrollHeight: 19021 },
+    true,
+  );
+  viewport.resized(
+    { scrollTop: 18343, clientHeight: 678, scrollHeight: 19053 },
+    true,
+  );
+  expect(
+    viewport.clamped({ offset: 18343, viewport: 678, content: 19053 }, false),
+  ).toBe(true);
+});

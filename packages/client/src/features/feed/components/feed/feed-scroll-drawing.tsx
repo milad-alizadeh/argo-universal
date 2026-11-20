@@ -1,6 +1,6 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import { List } from '@repo/kit/primitives/lists/list';
-import { type RefObject, useCallback, useState } from 'react';
+import { type RefObject, useCallback, useLayoutEffect, useState } from 'react';
 import type * as React from 'react';
 import {
   type NativeScrollEvent,
@@ -22,12 +22,27 @@ type OnScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 const webViewport = (): WebFeedViewport | undefined =>
   Platform.OS === 'web' ? new WebFeedViewport() : undefined;
 
+function useWebViewport(
+  list: ListRef,
+  sessionId: string | undefined,
+  focused: boolean,
+): WebFeedViewport | undefined {
+  const [viewport] = useState(webViewport);
+  useLayoutEffect(() => {
+    if (!focused) return;
+
+    return viewport?.watch(list.current);
+  }, [focused, list, sessionId, viewport]);
+
+  return viewport;
+}
+
 export function useFeedOnScroll(
   sessionId: string | undefined,
   list: ListRef,
 ): OnScroll {
-  const [viewport] = useState(webViewport);
   const focused = useScreenFocused();
+  const viewport = useWebViewport(list, sessionId, focused);
 
   return useCallback(
     ({ nativeEvent }) => {

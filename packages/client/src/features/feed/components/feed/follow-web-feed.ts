@@ -116,6 +116,35 @@ export class WebFeedViewport {
     return atPreviousEnd(previous, viewport, bottom);
   }
 
+  resized(node: ScrollBox, following: boolean): void {
+    if (!following) return;
+
+    const { clientHeight: viewport, scrollHeight: content, scrollTop } = node;
+
+    if (Math.abs(scrollTop + viewport - content) <= 1)
+      this.end = { content, viewport };
+  }
+
+  // The browser can resize the Feed twice between forwarded scroll events.
+  watch(list: LegendListRef | null): (() => void) | undefined {
+    if (!list) return;
+
+    const node: unknown = list.getScrollableNode();
+
+    if (!(node instanceof HTMLElement)) return;
+
+    const observer = new ResizeObserver(() =>
+      this.resized(node, list.getState().isFollowingEnd),
+    );
+
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+      this.end = undefined;
+    };
+  }
+
   scrolled(list: LegendListRef | null, event: NativeScrollEvent): void {
     if (!list) return;
 
