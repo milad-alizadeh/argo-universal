@@ -11,6 +11,7 @@ import {
   createAcpSessionModel,
   type AcpModelSnapshot,
 } from '#mocks/acp-session-model';
+import { closeTestSession } from '#mocks/close-session';
 import { findMachineActor } from '../lib/machine-actor';
 import { sessionActorId } from './open-sessions-machine';
 import { checkoutLimit, sessionMachine } from './session-machine';
@@ -53,7 +54,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
 
       expect(states.some((state) => state.matches('archived'))).toBe(true);
       expect(paths.length).toBeGreaterThan(0);
-      await host.caller.session.close(created);
+      await closeTestSession(host, created);
     },
     15_000,
   );

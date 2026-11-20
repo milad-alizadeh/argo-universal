@@ -5,7 +5,6 @@ import {
   SessionUnarchiveOutput,
 } from '../sessions/archive';
 import { SessionCancelInput, SessionCancelOutput } from '../sessions/cancel';
-import { SessionCloseInput, SessionCloseOutput } from '../sessions/close';
 import { SessionNewOutput, SessionNewParams } from '../sessions/new';
 import { SessionPromptInput, SessionPromptOutput } from '../sessions/prompt';
 import { SessionRenameOutput, SessionRenameParams } from '../sessions/rename';
@@ -36,6 +35,7 @@ export const sessionOperations = {
     params: SessionNewParams,
     result: SessionNewOutput,
     tier: 'act',
+    policy: 'allow',
     keywords: ['create', 'delegate', 'agent', 'parallel', 'subagent'],
   },
   'session.prompt': {
@@ -47,6 +47,7 @@ export const sessionOperations = {
     params: SessionPromptInput,
     result: SessionPromptOutput,
     tier: 'act',
+    policy: 'allow',
     keywords: ['message', 'steer', 'queue', 'continue', 'agent'],
   },
   'session.cancel': {
@@ -57,6 +58,7 @@ export const sessionOperations = {
     params: SessionCancelInput,
     result: SessionCancelOutput,
     tier: 'act',
+    policy: 'allow',
     keywords: ['stop', 'interrupt', 'turn'],
   },
   'session.archive': {
@@ -64,10 +66,11 @@ export const sessionOperations = {
     label: 'Archive Session',
     icon: 'archive',
     description:
-      'Archive a Session and remove its Checkout after the Undo window. When the user asks an Agent to archive its own Session, schedule it for when the Session is idle without another confirmation.',
+      'Archive a Session and remove its Checkout after the Undo window when safe. Work that would be lost needs approval.',
     params: SessionArchiveInput,
     result: SessionArchiveOutput,
     tier: 'act',
+    policy: 'archive',
     keywords: ['archive', 'remove', 'checkout'],
   },
   'session.unarchive': {
@@ -78,7 +81,8 @@ export const sessionOperations = {
       'Restore an archived Session during its Undo window, before its Checkout is removed.',
     params: SessionUnarchiveInput,
     result: SessionUnarchiveOutput,
-    tier: 'confirm',
+    tier: 'act',
+    policy: 'allow',
     keywords: ['restore', 'undo', 'archive'],
   },
   ...shellOperations,
@@ -91,18 +95,8 @@ export const sessionOperations = {
     params: SessionSetConfigOptionInput,
     result: SessionSetConfigOptionOutput,
     tier: 'act',
+    policy: 'allow',
     keywords: ['model', 'mode', 'effort', 'configuration', 'switch'],
-  },
-  'session.close': {
-    id: 'session.close',
-    label: 'Close Session',
-    icon: 'close',
-    description:
-      'Close the live Agent Session while keeping its Feed and Checkout for later.',
-    params: SessionCloseInput,
-    result: SessionCloseOutput,
-    tier: 'act',
-    keywords: ['close', 'release'],
   },
   'session.savePlan': {
     id: 'session.savePlan',
@@ -114,6 +108,7 @@ export const sessionOperations = {
     result: SessionSavePlanOutput,
     // An Agent that calls it asks the person first: a checklist saved here was committed with the work (ADR-0053).
     tier: 'confirm',
+    policy: 'ask',
     keywords: ['written plan', 'markdown', 'file'],
   },
   ...sessionAgentOperations,
@@ -127,6 +122,7 @@ export const sessionOperations = {
     params: SessionRenameParams,
     result: SessionRenameOutput,
     tier: 'act',
+    policy: 'allow',
     keywords: ['title', 'name'],
   },
 } as const satisfies Record<string, OperationDefinition>;

@@ -2,6 +2,7 @@ import type { PromptRequest } from '@agentclientprotocol/sdk';
 import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { runOperation } from '#mocks/operations';
 import { delegationJourney, startDelegated } from '#mocks/session-delegation';
 
@@ -80,7 +81,7 @@ it('stores the authenticated Session sender for initial and subsequent ordinary 
     sessionId: journey.caller.sessionId,
     title: 'Renamed source',
   });
-  await journey.host.caller.session.close({ sessionId: target.sessionId });
+  await closeTestSession(journey.host, { sessionId: target.sessionId });
 
   const stored = await journey.host.caller.feed.page({
     sessionId: target.sessionId,

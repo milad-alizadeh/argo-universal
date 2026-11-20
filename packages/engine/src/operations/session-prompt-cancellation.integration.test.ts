@@ -1,15 +1,15 @@
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { finishTestTurn } from '#mocks/close-session';
 import { askOperation } from '#mocks/operation-permissions';
 import { addOtherProject } from '#mocks/session-access';
 import { delegationJourney, holdSession } from '#mocks/session-delegation';
 
 it.each(['cancel', 'close'] as const)(
-  'cancels an unanswered prompt Permission when the calling Session %ss, without target work',
+  'cancels an unanswered context-clear Permission when the calling Session %ss, without target work',
   async (ending) => {
     const journey = await delegationJourney();
-    // A Prompt inside the caller's own Project no longer asks, so the unanswered request needs another Project.
     const projectId = await addOtherProject(journey.host);
 
     const target = await journey.host.caller.session.new({
@@ -23,15 +23,12 @@ it.each(['cancel', 'close'] as const)(
     const asked = await askOperation(
       { host: journey.host, session: journey.caller },
       {
-        id: 'session.prompt',
-        params: {
-          ...target,
-          prompt: [{ type: 'text', text: 'Unapproved work' }],
-        },
+        id: 'session.clear',
+        params: target,
       },
     );
 
-    await journey.host.caller.session[ending]({
+    await finishTestTurn(journey.host, ending, {
       sessionId: journey.caller.sessionId,
     });
 

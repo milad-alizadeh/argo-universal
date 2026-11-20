@@ -4,6 +4,7 @@ import { agentTitle } from '@repo/mocks/agent/title-scenarios';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 
 const userTitle = 'Sessions list redesign';
 
@@ -105,7 +106,7 @@ it('renames a stored Session without starting its Agent', async () => {
   const { host, sessionId } = await startTitledSession(agentTitleScenario);
   const processes = host.agent.processes.length;
 
-  await host.caller.session.close({ sessionId });
+  await closeTestSession(host, { sessionId });
   await host.caller.session.rename({ sessionId, title: userTitle });
 
   expect(await listedTitle(host)).toEqual([

@@ -2,24 +2,6 @@ import type { z } from 'zod';
 import { operations, type OperationDefinition } from '.';
 import { operationJsonSchema } from './schema-json';
 
-/*
- * Operations only an App runs: the person's own Queued Prompts, and the Conversation, which carries the App's sound
- * and ends when its Connection does (ADR-0064). An Agent hangs up with `conversation.hangUp`, and Agents and the CLI read
- * the Conversation settings and change the voice and instructions the next call uses; turning Conversations on or off and
- * choosing the provider stay the App's.
- */
-export const appOnlyOperationIds: ReadonlySet<string> = new Set([
-  'session.submit',
-  'session.queue',
-  'conversation.status',
-  'conversation.start',
-  'conversation.end',
-  'conversation.setSettings',
-  'voice.preview',
-  'voice.getPreviewClip',
-  'voice.storePreviewClip',
-] satisfies (keyof typeof operations)[]);
-
 type JsonSchema = z.core.JSONSchema.JSONSchema;
 
 type Param = { name: string; required: boolean };
@@ -80,6 +62,6 @@ export const operationCatalog = ({
   [
     catalogIntroduction,
     ...Object.values(operations)
-      .filter(({ id }) => !appOnlyOperationIds.has(id) && !hidden.has(id))
+      .filter(({ id, policy }) => policy !== 'person-only' && !hidden.has(id))
       .map(catalogLine),
   ].join('\n');

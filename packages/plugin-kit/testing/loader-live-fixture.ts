@@ -5,6 +5,7 @@ const change = {
   label: 'Change the rows',
   description: 'Changes the live rows one way.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {
     how: { type: 'string' as const, description: 'The change', required: true },
   },
@@ -15,6 +16,7 @@ const append = {
   label: 'Append a line',
   description: 'Appends one line to the log.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {
     line: { type: 'string' as const, description: 'The line', required: true },
   },

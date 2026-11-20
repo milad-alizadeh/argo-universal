@@ -5,6 +5,7 @@ import type {
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 
 it.each(['prompt', 'close'] as const)(
   'cancels background prediction on session.%s',
@@ -84,7 +85,7 @@ async function replaceOrClose(
   action: 'prompt' | 'close',
 ): Promise<void> {
   await (action === 'close'
-    ? host.caller.session.close({ sessionId })
+    ? closeTestSession(host, { sessionId })
     : host.caller.session.prompt({
         sessionId,
         prompt: [{ type: 'text', text: 'Do something else' }],

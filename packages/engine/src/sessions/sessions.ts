@@ -7,8 +7,8 @@ import type {
   PluginPromptAnswer,
   PluginWithdrawAnswer,
 } from '@repo/contracts/plugins/argo-calls';
-import { OwnSessionArchive } from './archive/own-archive';
 import { archiveSessionFromPlugin } from './archive/plugin-archive';
+import { SessionArchives } from './archive/session-archives';
 import { ConversationSessionWork } from './conversation-session-work';
 import { startSessionCreation } from './creation/session-creation';
 import { createSessionList } from './list/session-list';
@@ -19,9 +19,11 @@ import {
   type SessionOperationCall,
 } from './operation-call';
 import type { NativeStart, NativeStartRequest } from './prompt-sender';
+import { requireNoTurn } from './restart/restart-session';
 import { createSessionRouter } from './router';
 import { Schedules } from './schedules';
 import { requireTaken, sendPrompt, withdrawPrompt } from './sent-prompt';
+import { requireWritableSession } from './session-command';
 import {
   createSessionDirectory,
   type SessionDirectory,
@@ -40,7 +42,7 @@ import { createSessionWorkSource, type SessionWorkSource } from './work-source';
  * with stays behind this interface.
  */
 export class Sessions {
-  private readonly ownArchive: OwnSessionArchive;
+  public readonly archives: SessionArchives;
   // The Session Operations that answer with their result, keyed by Operation id.
   public readonly implementations: SessionOperationImplementations;
   // The Sessions a Session caller's scope can see.
@@ -60,7 +62,7 @@ export class Sessions {
     this.directory = createSessionDirectory(this.sources);
     this.work = createSessionWorkSource(this.sources);
     this.router = createSessionRouter({ sources: this.sources, list });
-    this.ownArchive = new OwnSessionArchive(this.sources);
+    this.archives = new SessionArchives(this.sources);
     this.conversation = new ConversationSessionWork(
       this.sources,
       this.implementations,
@@ -132,10 +134,11 @@ export class Sessions {
   ): ReturnType<typeof archiveSessionFromPlugin> {
     return archiveSessionFromPlugin(this.sources, sessionId);
   }
-  public archiveOwn(
-    sessionId: string,
-  ): ReturnType<OwnSessionArchive['request']> {
-    return this.ownArchive.request(sessionId);
+  public requireClearTarget(sessionId: string): void {
+    requireWritableSession(this.sources.readSession(sessionId));
+    const live = this.sources.open.session(sessionId);
+
+    if (live) requireNoTurn(live);
   }
   // Begins the Tool call of an Operation that a Session calls.
   public call(

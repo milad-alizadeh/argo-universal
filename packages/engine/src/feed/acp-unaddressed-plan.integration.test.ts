@@ -5,6 +5,7 @@ import {
   waitForAcpSessionIdle,
   type AcpFeedUpdates,
 } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 
 it('unaddressed Plans reuse their local identity through successive Turns and close/reopen', async () => {
   const updates: AcpFeedUpdates = [
@@ -33,7 +34,7 @@ it('unaddressed Plans reuse their local identity through successive Turns and cl
     prompt: [{ type: 'text', text: 'Replace the checklist' }],
   });
   await waitForAcpSessionIdle(host, sessionId);
-  await host.caller.session.close({ sessionId });
+  await closeTestSession(host, { sessionId });
   await host.caller.session.prompt({
     sessionId,
     prompt: [{ type: 'text', text: 'Resume this Session' }],

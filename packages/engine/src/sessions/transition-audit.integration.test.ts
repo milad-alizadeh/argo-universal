@@ -9,6 +9,7 @@ import { automaticWalks } from '#mocks/acp-auto-witnesses';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { createAcpSessionModel } from '#mocks/acp-session-model';
 import { extraTransitionWitnesses } from '#mocks/acp-transition-witnesses';
+import { closeTestSession } from '#mocks/close-session';
 import { findMachineActor } from '../lib/machine-actor';
 import { sessionActorId } from './open-sessions-machine';
 import { sessionMachine } from './session-machine';
@@ -49,5 +50,5 @@ it('walks every declared Session event transition, including guarded branches', 
       witnesses: extraTransitionWitnesses(paths, actor.getSnapshot()),
     }),
   ).toEqual([]);
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
 }, 15_000);

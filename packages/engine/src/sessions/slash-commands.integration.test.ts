@@ -6,6 +6,7 @@ import type { AgentOptionsUpdate, SlashCommand } from '@repo/contracts';
 import { slashCommandsUpdate } from '@repo/mocks/agent/slash-commands-update';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const reviewDescription = 'Review changes';
@@ -102,7 +103,7 @@ it('streams the saved commands for a resumed Session before its Agent reports an
     reviewCommandUpdate,
     'owned-1',
   );
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
   await host.caller.session.prompt({
     ...created,
     prompt: [{ type: 'text', text: 'Resume this Session' }],
@@ -213,7 +214,7 @@ it('retains live commands while a discovery that started earlier finishes', asyn
   liveReader.abort();
   await closeStream(live);
   await closeStream(discovery);
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
 
   const saved = (
     await host.caller.session.agentOptions({ ...owner, ...created })
@@ -260,7 +261,7 @@ it.each(['ready', 'discovering'])(
       prompt: keptPrompt,
     });
 
-    await host.caller.session.close(created);
+    await closeTestSession(host, created);
     const reader = new AbortController();
 
     const stream = (

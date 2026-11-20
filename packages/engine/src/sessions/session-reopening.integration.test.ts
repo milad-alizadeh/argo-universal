@@ -1,16 +1,18 @@
 import { RequestError } from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import { startSessionJourney, newSession } from '#mocks/session-journey';
 
 it('removes a closed Session and resumes its stored Agent identity on the next prompt', async (): Promise<void> => {
-  const { caller, openings, resumes, prompts } = await startSessionJourney();
+  const host = await startSessionJourney();
+  const { caller, openings, resumes, prompts } = host;
   const { sessionId } = await caller.session.new(newSession);
   const opening = openings[0];
 
   if (!opening) throw new Error('No opened Agent Session');
   await expect.poll(() => prompts).toHaveLength(1);
-  await caller.session.close({ sessionId });
+  await closeTestSession(host, { sessionId });
   await caller.session.prompt({
     sessionId,
     prompt: [{ type: 'text', text: 'Continue' }],
@@ -37,13 +39,14 @@ it('removes a closed Session and resumes its stored Agent identity on the next p
 });
 
 it('opens a stored Session without a Turn, so a Retry never resends one', async (): Promise<void> => {
-  const { caller, openings, resumes, prompts } = await startSessionJourney();
+  const host = await startSessionJourney();
+  const { caller, openings, resumes, prompts } = host;
   const { sessionId } = await caller.session.new(newSession);
   const opening = openings[0];
 
   if (!opening) throw new Error('No opened Agent Session');
   await expect.poll(() => prompts).toHaveLength(1);
-  await caller.session.close({ sessionId });
+  await closeTestSession(host, { sessionId });
   await expect(caller.session.open({ sessionId })).resolves.toEqual({});
   expect(resumes).toEqual([
     {

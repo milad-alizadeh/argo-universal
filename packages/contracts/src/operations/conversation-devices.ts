@@ -16,6 +16,7 @@ export const conversationDeviceOperations = {
     params: z.strictObject({}).default({}),
     result: ConversationDeviceList,
     tier: 'read',
+    policy: 'allow',
     keywords: [
       'conversation',
       'voice',
@@ -34,6 +35,7 @@ export const conversationDeviceOperations = {
     params: ConversationDeviceChange,
     result: ConversationDeviceList,
     tier: 'confirm',
+    policy: 'ask',
     keywords: [
       'conversation',
       'voice',

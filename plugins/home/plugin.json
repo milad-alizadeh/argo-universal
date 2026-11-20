@@ -29,6 +29,7 @@
         "label": "Sign in to Philips Hue",
         "description": "Opens Philips Hue's sign-in in the browser on the Server Device, with the Remote API app set in the Plugin's settings.",
         "tier": "act",
+        "policy": "allow",
         "keywords": ["hue", "lights", "account", "sign in"]
       },
       {
@@ -37,6 +38,7 @@
         "label": "Cancel signing in to Philips Hue",
         "description": "Stops waiting for the browser's Philips Hue sign-in.",
         "tier": "act",
+        "policy": "allow",
         "keywords": ["hue", "sign in", "cancel"]
       },
       {
@@ -44,6 +46,7 @@
         "label": "Connect the Hue Bridge",
         "description": "Presses the Hue Bridge's link button through Hue's cloud and keeps the application key it gives, so Argo can control the lights.",
         "tier": "act",
+        "policy": "person-only",
         "keywords": ["hue", "bridge", "link button", "pair"]
       },
       {
@@ -51,6 +54,7 @@
         "label": "Switch a light or room",
         "description": "Turns one Hue light, or every light in a room, on or off.",
         "tier": "act",
+        "policy": "allow",
         "keywords": ["hue", "light", "room", "on", "off"],
         "params": {
           "kind": {
@@ -76,6 +80,7 @@
         "label": "Dim a light or room",
         "description": "Sets the brightness of one Hue light, or of every light in a room, as a percentage.",
         "tier": "act",
+        "policy": "allow",
         "keywords": ["hue", "light", "room", "brightness", "dim"],
         "params": {
           "kind": {

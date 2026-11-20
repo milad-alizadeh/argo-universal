@@ -18,6 +18,7 @@ export const conversationSettingsOperations = {
     params: z.strictObject({}).default({}),
     result: ConversationSettings,
     tier: 'read',
+    policy: 'allow',
     keywords: ['conversation', 'voice', 'settings', 'provider', 'speak'],
   },
   'conversation.setSettings': {
@@ -29,6 +30,7 @@ export const conversationSettingsOperations = {
     params: ConversationSettingsChange,
     result: ConversationSettings,
     tier: 'confirm',
+    policy: 'person-only',
     keywords: [
       'conversation',
       'voice',
@@ -47,6 +49,7 @@ export const conversationSettingsOperations = {
     params: VoiceInstructions,
     result: ConversationSettings,
     tier: 'confirm',
+    policy: 'ask',
     keywords: [
       'conversation',
       'voice',
@@ -65,6 +68,7 @@ export const conversationSettingsOperations = {
     params: ConversationOptionsChange,
     result: ConversationSettings,
     tier: 'confirm',
+    policy: 'ask',
     keywords: [
       'voice',
       'options',

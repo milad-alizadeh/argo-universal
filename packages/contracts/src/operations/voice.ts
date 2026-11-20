@@ -15,6 +15,8 @@ import {
 } from '../voice';
 import type { OperationDefinition } from './index';
 
+const personOnly = 'person-only';
+
 // The Operations of one voice (ADR-0064): listing, choosing and keeping voices, and previewing them.
 export const voiceOperations = {
   'voice.listVoices': {
@@ -26,6 +28,7 @@ export const voiceOperations = {
     params: z.strictObject({}).default({}),
     result: VoiceList,
     tier: 'read',
+    policy: 'allow',
     keywords: ['voice', 'voices', 'custom', 'list', 'speak'],
   },
   'voice.setVoice': {
@@ -37,6 +40,7 @@ export const voiceOperations = {
     params: VoiceChoice,
     result: ConversationSettings,
     tier: 'confirm',
+    policy: 'ask',
     keywords: ['voice', 'choose', 'pick', 'speak', 'sound'],
   },
   'voice.saveCustomVoice': {
@@ -48,6 +52,7 @@ export const voiceOperations = {
     params: CustomVoiceInput,
     result: CustomVoice,
     tier: 'confirm',
+    policy: 'ask',
     keywords: ['voice', 'custom', 'add', 'edit', 'describe', 'style'],
   },
   'voice.deleteCustomVoice': {
@@ -59,6 +64,7 @@ export const voiceOperations = {
     params: CustomVoiceId,
     result: VoiceList,
     tier: 'confirm',
+    policy: 'ask',
     keywords: ['voice', 'custom', 'delete', 'remove'],
   },
   'voice.preview': {
@@ -70,6 +76,7 @@ export const voiceOperations = {
     params: VoicePreviewInput,
     result: VoicePreviewOutput,
     tier: 'act',
+    policy: personOnly,
     keywords: ['voice', 'preview', 'listen', 'greeting', 'sample'],
   },
   'voice.getPreviewClip': {
@@ -81,6 +88,7 @@ export const voiceOperations = {
     params: VoicePreviewClipInput,
     result: VoicePreviewClipOutput,
     tier: 'read',
+    policy: personOnly,
     keywords: ['voice', 'preview', 'greeting', 'sample', 'clip', 'cache'],
   },
   'voice.storePreviewClip': {
@@ -92,6 +100,7 @@ export const voiceOperations = {
     params: VoiceStorePreviewClipInput,
     result: VoiceStorePreviewClipOutput,
     tier: 'act',
+    policy: personOnly,
     keywords: ['voice', 'preview', 'greeting', 'sample', 'clip', 'store'],
   },
 } as const satisfies Record<string, OperationDefinition>;

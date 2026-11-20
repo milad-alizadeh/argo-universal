@@ -60,10 +60,8 @@ import {
   admitsPermissionAnswer,
   answeredRequest,
 } from './admission/answer-admission';
-import {
-  saveSessionArchive,
-  removeSessionCheckout,
-} from './archive/archive-operations';
+import { saveSessionArchive } from './archive/archive-operations';
+import { removeSessionCheckout } from './archive/checkout-cleanup';
 import { archiveFailure } from './archive/own-archive';
 import { type ClosureStep, nextClosureStep } from './closure/closure-step';
 import { sessionConfiguration, type ConfigurationStep } from './configuration';
@@ -384,7 +382,10 @@ const sessionSetup = setup({
       { context: SessionContext; writer: WriterActorRef | undefined }
     >(({ input }) => saveSessionArchive(input.context, input.writer, null)),
     removeCheckout: fromPromise<void, SessionContext>(({ input, signal }) =>
-      removeSessionCheckout(input.input.database, input, signal),
+      removeSessionCheckout(input.input.database, input, {
+        signal,
+        writer: input.input.writer,
+      }),
     ),
     cancelAcp: fromPromise<void, SessionContext>(({ input }) =>
       cancelAcp(input),

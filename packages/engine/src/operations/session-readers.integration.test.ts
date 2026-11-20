@@ -4,6 +4,7 @@ import { SessionChangesOutput, SessionDiffOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { operationCaller, runOperation } from '#mocks/operations';
 import { startSessionJourney } from '#mocks/session-journey';
 
@@ -26,6 +27,8 @@ async function changedFilesHost(): Promise<
 
   return { ...host, ...created, checkout: project.path };
 }
+
+const getSession = 'session.get';
 
 it('lists Sessions through the user-token Operation and the generated App query', async () => {
   const host = await startSessionJourney();
@@ -54,7 +57,7 @@ it('reads a stored Session snapshot without opening its Agent', async () => {
   const caller = await operationCaller(host);
 
   const result = await runOperation(caller.operations, {
-    id: 'session.get',
+    id: getSession,
     params: { sessionId: 'session-1' },
   });
 
@@ -66,7 +69,10 @@ it('reads a stored Session snapshot without opening its Agent', async () => {
     checkout: { type: 'main' },
   });
   expect(result).toEqual(
-    await caller.session.get.query({ sessionId: 'session-1' }),
+    await runOperation(caller.operations, {
+      id: getSession,
+      params: { sessionId: 'session-1' },
+    }),
   );
   expect(host.agent.processes).toHaveLength(0);
 });
@@ -142,13 +148,13 @@ it('reads a closed Session snapshot with its current Checkout totals without reo
   });
   await host.caller.session.cancel({ sessionId: host.sessionId });
   await waitForAcpSessionIdle(host, host.sessionId);
-  await host.caller.session.close({ sessionId: host.sessionId });
+  await closeTestSession(host, { sessionId: host.sessionId });
   const launches = host.agent.processes.length;
   const caller = await operationCaller(host);
 
   expect(
     await runOperation(caller.operations, {
-      id: 'session.get',
+      id: getSession,
       params: { sessionId: host.sessionId },
     }),
   ).toMatchObject({

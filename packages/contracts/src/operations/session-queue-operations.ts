@@ -12,6 +12,7 @@ export const queueOperations = {
     params: SessionSubmitInput,
     result: z.strictObject({}),
     tier: 'act',
+    policy: 'person-only',
     keywords: ['prompt', 'queue'],
   },
   'session.queue': {
@@ -22,6 +23,7 @@ export const queueOperations = {
     params: SessionQueueInput,
     result: z.strictObject({}),
     tier: 'act',
+    policy: 'person-only',
     keywords: ['queue', 'prompt'],
   },
 } as const satisfies Record<string, OperationDefinition>;

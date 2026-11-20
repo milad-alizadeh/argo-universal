@@ -6,6 +6,7 @@ import {
 import { expect, it, assert } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { collectShellOutput } from '#mocks/shell-output';
 import { descendantPid, processIsRunning } from '#mocks/shell-process';
@@ -73,7 +74,7 @@ const finishShell = async (
       await host.caller.shell.stop(input);
     },
     close: async (): Promise<void> => {
-      await host.caller.session.close(scope);
+      await closeTestSession(host, scope);
     },
     archive: async (): Promise<void> => {
       await host.caller.session.archive(scope);
@@ -115,7 +116,7 @@ it('reaps descendants after their launcher exits without affecting another Shell
   expect(processIsRunning(pid)).toBe(false);
   expect(finished).toMatchObject({ exitCode: 0, canStop: false });
   expect(sibling.canStop).toBe(true);
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
   const shells = await host.caller.session.listShells(created);
 
   expect(shells).toHaveLength(2);

@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import { expect, it } from 'vitest';
+import { assert, expect, it } from 'vitest';
 import { promptedArchiveSession } from '#mocks/archive';
 import {
   archiveFor,
@@ -45,7 +45,7 @@ it('refuses an archive while the Checkout has an untracked file, then archives o
   expect(archivedAt(host, created.sessionId)).toBeTypeOf('number');
 }, 30_000);
 
-it('refuses an archive while a tracked file is modified, and lets the App archive it', async () => {
+it('refuses a Plugin archive of tracked edits and lets the person approve it', async () => {
   const host = await startWith(canArchive);
   const created = await promptedArchiveSession(host);
   const file = join(created.path, 'tracked.txt');
@@ -60,6 +60,14 @@ it('refuses an archive while a tracked file is modified, and lets the App archiv
   );
   expect(archivedAt(host, created.sessionId)).toBeNull();
 
-  await host.caller.session.archive({ sessionId: created.sessionId });
+  const { checkoutConfirmation } = await host.caller.session.archive({
+    sessionId: created.sessionId,
+  });
+
+  assert(checkoutConfirmation);
+  await host.caller.session.archive({
+    sessionId: created.sessionId,
+    checkoutApproval: checkoutConfirmation.fingerprint,
+  });
   expect(archivedAt(host, created.sessionId)).toBeTypeOf('number');
 }, 30_000);

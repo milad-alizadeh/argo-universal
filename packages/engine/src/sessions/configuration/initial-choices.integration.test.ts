@@ -3,6 +3,7 @@ import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
 import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 
 const configuredSessionId = 'configured-session';
 
@@ -73,7 +74,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
 
     const settled = Promise.allSettled([setting]);
     await started.promise;
-    await host.caller.session.close(created);
+    await closeTestSession(host, created);
     completion.resolve();
     expect(await settled).toMatchObject([
       {

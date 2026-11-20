@@ -13,6 +13,7 @@ import {
 import { expect, it, describe, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import {
   permissionSteps,
@@ -403,7 +404,7 @@ describe.each(appFixtureAgentIds)(
       ]);
 
       await waitForPermission(host, sessionId);
-      await host.caller.session.close({ sessionId });
+      await closeTestSession(host, { sessionId });
       await vi.waitFor(() => expect(responses[0]).toEqual(cancelled));
       expect(
         (await readToolCallUpdate(host, sessionId, 'tool-a'))?._meta?.argo,

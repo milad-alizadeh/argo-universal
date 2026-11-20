@@ -17,6 +17,7 @@
         "name": "readItems",
         "label": "Read the items",
         "description": "Reads the items as the Account another Plugin provides.",
+        "policy": "allow",
         "tier": "read"
       }
     ]

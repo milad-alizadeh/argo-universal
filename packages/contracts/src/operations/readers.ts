@@ -26,6 +26,7 @@ export const readerOperations = {
     params: SessionDiffInput,
     result: SessionDiffOutput,
     tier: 'read',
+    policy: 'allow',
     keywords: ['git', 'patch', 'review', 'comparison'],
   },
   'session.changes': {
@@ -37,6 +38,7 @@ export const readerOperations = {
     params: SessionChangesInput,
     result: SessionChangesOutput,
     tier: 'read',
+    policy: 'allow',
     keywords: ['git', 'files', 'review', 'comparison'],
   },
   'session.feed': {
@@ -48,6 +50,7 @@ export const readerOperations = {
     params: SessionFeedInput,
     result: SessionFeedOutput,
     tier: 'read',
+    policy: 'allow',
     keywords: ['feed', 'history', 'messages', 'review'],
   },
   'session.get': {
@@ -59,6 +62,7 @@ export const readerOperations = {
     params: SessionGetInput,
     result: SessionGetOutput,
     tier: 'read',
+    policy: 'allow',
     keywords: ['snapshot', 'status', 'progress'],
   },
   'session.list': {
@@ -70,6 +74,7 @@ export const readerOperations = {
     params: SessionListInput,
     result: SessionListOutput,
     tier: 'read',
+    policy: 'allow',
     keywords: ['conversations', 'history', 'search'],
   },
   'session.listAgents': {
@@ -81,6 +86,7 @@ export const readerOperations = {
     params: SessionSubagentsInput,
     result: SessionSubagentsOutput,
     tier: 'read',
+    policy: 'allow',
     keywords: ['acp', 'subagents', 'children'],
   },
   'session.listShells': {
@@ -92,6 +98,7 @@ export const readerOperations = {
     params: SessionShellsInput,
     result: SessionShellsOutput,
     tier: 'read',
+    policy: 'allow',
     keywords: ['terminal', 'command', 'process'],
   },
   'session.listBranches': {
@@ -103,6 +110,7 @@ export const readerOperations = {
     params: SessionBranchesInput,
     result: SessionBranchesOutput,
     tier: 'read',
+    policy: 'allow',
     keywords: ['git', 'compare', 'diff'],
   },
 } as const satisfies Record<string, OperationDefinition>;

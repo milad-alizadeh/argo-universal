@@ -33,6 +33,7 @@ export const pluginOperations = {
     params: z.strictObject({}).default({}),
     result: PluginList,
     tier: 'read',
+    policy: 'allow',
     keywords: ['extensions', 'settings', 'status'],
   },
   'plugin.activate': {
@@ -43,7 +44,8 @@ export const pluginOperations = {
       'Start an enabled Plugin and report its running or failed status.',
     params: PluginActivation.strict(),
     result: PluginStatus,
-    tier: 'confirm',
+    tier: 'act',
+    policy: 'allow',
     keywords: ['extensions', 'start', 'load'],
   },
   'plugin.setEnabled': {
@@ -54,7 +56,8 @@ export const pluginOperations = {
       'Enable or disable a Plugin. Disabling stops its worker and open views.',
     params: PluginEnablement.strict(),
     result: z.strictObject({ ok: z.literal(true) }),
-    tier: 'confirm',
+    tier: 'act',
+    policy: 'allow',
     keywords: ['extensions', 'enable', 'disable', 'settings'],
   },
   'plugin.getSettings': {
@@ -66,6 +69,7 @@ export const pluginOperations = {
     params: PluginActivation.strict(),
     result: PluginSettings,
     tier: 'read',
+    policy: 'allow',
     keywords: ['extensions', 'settings', 'configuration'],
   },
   'plugin.setSetting': {
@@ -76,7 +80,8 @@ export const pluginOperations = {
       'Save one Plugin setting. An empty secret clears it from the secret store.',
     params: PluginSettingChange.strict(),
     result: z.strictObject({ ok: z.literal(true) }),
-    tier: 'confirm',
+    tier: 'act',
+    policy: 'allow',
     keywords: ['extensions', 'settings', 'configuration', 'secret'],
   },
   'plugin.guide': {
@@ -88,6 +93,7 @@ export const pluginOperations = {
     params: PluginGuideInput,
     result: PluginGuide,
     tier: 'read',
+    policy: 'allow',
     keywords: [
       'plugin',
       'build',
@@ -109,6 +115,7 @@ export const pluginOperations = {
     params: PluginNewInput,
     result: PluginNewOutput,
     tier: 'act',
+    policy: 'allow',
     keywords: ['plugin', 'build', 'create', 'scaffold', 'template', 'new'],
   },
 } as const;

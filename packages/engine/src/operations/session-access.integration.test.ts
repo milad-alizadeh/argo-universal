@@ -12,6 +12,7 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { agentCredentials } from '#mocks/agent-credentials';
 import { fixtureRegistry } from '#mocks/agent-fixtures';
+import { closeTestSession } from '#mocks/close-session';
 import { publishControlAddress } from '#mocks/operations';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { addOtherProject, discoverOptions } from '#mocks/session-access';
@@ -131,8 +132,8 @@ it('shares sign-in for isolated Sessions without giving its process a Session to
       )
     ).ARGO_TOKEN,
   ).toBeUndefined();
-  await host.caller.session.close(first);
-  await host.caller.session.close(second);
+  await closeTestSession(host, first);
+  await closeTestSession(host, second);
   expect(requireScriptedProcessAt(host.agent.processes, 2).terminations).toBe(
     0,
   );

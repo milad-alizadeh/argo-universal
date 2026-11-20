@@ -11,7 +11,7 @@ type RestartTarget = { sessionId: string };
 
 const restartEvent = 'session.restart';
 
-const requireNoTurn = (session: SessionActorRef): void => {
+export const requireNoTurn = (session: SessionActorRef): void => {
   if (session.getSnapshot().hasTag('running'))
     throw new TRPCError({
       code: 'CONFLICT',

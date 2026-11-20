@@ -11,7 +11,7 @@ Use `pnpm --filter @repo/tools perf:runtime --help` for options.
 
 1. Start a Server with a disposable home and Project through the normal CLI.
 2. Create an idle Session with the required Agent, model, effort, and mode.
-3. If you use `--reopen`, complete one initial Turn first. Closing an empty Session removes it.
+3. With `--reopen`, Argo reloads the idle Agent before each trial.
 4. Record the actual Server source commit and the host conditions.
 5. Run the observer from the repository root:
 

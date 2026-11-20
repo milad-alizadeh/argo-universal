@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { operations } from '.';
-import { appOnlyOperationIds, operationCatalog } from './catalog';
+import { operationCatalog } from './catalog';
 
 const lines = operationCatalog()
   .split('\n')
@@ -15,9 +15,9 @@ const lineOf = (id: string): string | undefined =>
 it('lists every Operation an Agent may run on its own line, and no App-only one', () => {
   const listed = lines.map((line) => line.slice(2).split('(', 1).join(''));
 
-  const runnable = Object.keys(operations).filter(
-    (id) => !appOnlyOperationIds.has(id),
-  );
+  const runnable = Object.values(operations)
+    .filter(({ policy }) => policy !== 'person-only')
+    .map(({ id }) => id);
 
   expect(sorted(listed)).toEqual(sorted(runnable));
 });

@@ -21,6 +21,7 @@ it('discovers Operations and their schemas from a terminal outside the repositor
         label: 'List Projects',
         description: expect.any(String),
         tier: 'read',
+        policy: 'allow',
         params: expect.objectContaining({ type: 'object' }),
         result: expect.objectContaining({ type: 'array' }),
         enabled: true,

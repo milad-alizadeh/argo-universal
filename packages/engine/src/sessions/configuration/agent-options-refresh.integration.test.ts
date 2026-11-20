@@ -4,6 +4,7 @@ import { agentOptions, session } from '@repo/db/schema';
 import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import {
   collectOptions,
   readySessionOptions,
@@ -85,7 +86,7 @@ it('reads a closed Session configuration without resuming it or replacing New Se
     prompt: [{ type: 'text', text: 'Keep this Session' }],
   });
 
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
   // Another Session changed the Agent's most recent preferences.
   await collectOptions(
     host.caller.session.agentOptions({

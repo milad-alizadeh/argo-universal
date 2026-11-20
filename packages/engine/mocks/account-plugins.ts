@@ -58,6 +58,7 @@ const borrowOperation = {
   label: 'Borrow the Account',
   description: 'Makes the call that borrows the Account.',
   tier: 'act' as const,
+  policy: 'allow' as const,
 };
 
 // The run makes the call and writes its value or error to the borrower's data folder.

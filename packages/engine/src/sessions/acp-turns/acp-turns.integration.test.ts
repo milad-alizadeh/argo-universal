@@ -4,6 +4,7 @@ import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { describe, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const isIdleRow = (
@@ -178,7 +179,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       prompt: [{ type: 'text', text: 'Start' }],
     });
     await received.promise;
-    await host.caller.session.close(created);
+    await closeTestSession(host, created);
     const page = await host.caller.feed.page({ ...created, direction: 'tail' });
     expect(page.rows).toMatchObject([
       { sessionUpdate: 'user_message', turnId: expect.any(String) },
@@ -240,7 +241,7 @@ describe.each(appFixtureAgentIds)('%s ACP lifecycle', (agentId) => {
       prompt: [{ type: 'text', text: 'Start' }],
     });
     await received.promise;
-    await expect(host.caller.session.close(created)).resolves.toEqual({});
+    await expect(closeTestSession(host, created)).resolves.toEqual({});
     const process = host.agent.processes[0];
 
     if (!process) throw new Error('Owned lifetime is missing');

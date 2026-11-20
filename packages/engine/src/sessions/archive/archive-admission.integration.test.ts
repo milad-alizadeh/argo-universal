@@ -11,6 +11,7 @@ import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { promptedArchiveSession, archiveProjectPath } from '#mocks/archive';
+import { closeTestSession } from '#mocks/close-session';
 import { startEngineTestHost } from '#mocks/engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
@@ -119,14 +120,14 @@ it.each([
 it('never removes the main Checkout during normal archive or restart, even when its stored branch looks owned', async () => {
   const host = await startAcpEngine({ steps: [], archiveUndoMs: 500 });
   const created = await promptedArchiveSession(host, { type: 'main' });
-  await host.caller.session.close({ sessionId: created.sessionId });
+  await closeTestSession(host, { sessionId: created.sessionId });
   host.database
     .update(session)
     .set({ checkoutBranch: sessionBranch(created.sessionId) })
     .where(eq(session.id, created.sessionId))
     .run();
   await host.caller.session.archive({ sessionId: created.sessionId });
-  await host.caller.session.close({ sessionId: created.sessionId });
+  await closeTestSession(host, { sessionId: created.sessionId });
   expect(existsSync(created.path)).toBe(true);
   await expect(
     host.caller.session.unarchive({ sessionId: created.sessionId }),

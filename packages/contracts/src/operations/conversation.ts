@@ -8,6 +8,8 @@ import {
 } from '../conversation';
 import type { OperationDefinition } from './index';
 
+const personOnly = 'person-only';
+
 // The Conversation's Operations (ADR-0064): the App starts, ends and reads them; an Agent only hangs up its own.
 export const conversationOperations = {
   'conversation.status': {
@@ -19,6 +21,7 @@ export const conversationOperations = {
     params: z.strictObject({}).default({}),
     result: ConversationStatus,
     tier: 'read',
+    policy: personOnly,
     keywords: ['conversation', 'voice', 'call', 'talk', 'speak', 'microphone'],
   },
   'conversation.start': {
@@ -30,6 +33,7 @@ export const conversationOperations = {
     params: ConversationStartInput,
     result: ConversationStartOutput,
     tier: 'confirm',
+    policy: personOnly,
     keywords: [
       'conversation',
       'voice',
@@ -48,6 +52,7 @@ export const conversationOperations = {
     params: ConversationEndInput,
     result: ConversationEndOutput,
     tier: 'act',
+    policy: personOnly,
     keywords: [
       'conversation',
       'voice',
@@ -67,6 +72,7 @@ export const conversationOperations = {
     params: ConversationEndInput,
     result: ConversationEndOutput,
     tier: 'act',
+    policy: 'allow',
     keywords: [
       'conversation',
       'voice',

@@ -18,7 +18,7 @@ import { managePromptQueue, submitAppPrompt } from './queue-commands';
 import { createSessionAgentReader, listSessionBranches } from './readers';
 import { restartSession } from './restart/restart-session';
 import type { Schedules } from './schedules';
-import { cancelSession, closeSession } from './session-closure';
+import { cancelSession } from './session-closure';
 import { declareSubagentRole } from './session-declare-subagent-role';
 import { createPlugin } from './session-new-plugin';
 import { renameSession } from './session-rename';
@@ -88,9 +88,8 @@ const agentSessionImplementations = (
   sources: SessionHandlerSources,
 ): Pick<
   SessionOperationImplementations,
-  'session.close' | 'session.reload' | 'session.clear'
+  'session.reload' | 'session.clear'
 > => ({
-  'session.close': ({ sessionId }) => closeSession(sources.open, sessionId),
   'session.reload': (input) => restartSession(sources.open, input, 'reload'),
   'session.clear': (input) => restartSession(sources.open, input, 'clear'),
 });

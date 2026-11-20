@@ -1,7 +1,12 @@
 import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
-import { permissionJourney, answerPermission } from '#mocks/native-permission';
+import { closeTestSession } from '#mocks/close-session';
+import {
+  permissionJourney,
+  protectArchiveTarget,
+  answerPermission,
+} from '#mocks/native-permission';
 import { beginHeldTurn } from '#mocks/operation-race';
 import { TestOperationWaitClock } from '#mocks/operation-wait-clock';
 import { operationCaller, runOperation } from '#mocks/operations';
@@ -12,6 +17,7 @@ const archiveOperation = 'session.archive';
 it('returns a native waiting id at ninety seconds and resumes the same Permission call', async () => {
   const clock = new TestOperationWaitClock();
   const journey = await permissionJourney(clock);
+  await protectArchiveTarget(journey);
   await beginHeldTurn(journey.host, journey.session.sessionId);
   let settled = false;
 
@@ -63,6 +69,7 @@ it('returns a native waiting id at ninety seconds and resumes the same Permissio
 it('detaches a disconnected wait without cancelling the Permission or retaining its deadline', async () => {
   const clock = new TestOperationWaitClock();
   const journey = await permissionJourney(clock);
+  await protectArchiveTarget(journey);
   await beginHeldTurn(journey.host, journey.session.sessionId);
 
   const pending = OperationExecution.parse(
@@ -102,6 +109,7 @@ it('detaches a disconnected wait without cancelling the Permission or retaining 
 
 it('returns at the Permission request without wait and refuses borrowed or tampered ids', async () => {
   const journey = await permissionJourney();
+  await protectArchiveTarget(journey);
   await beginHeldTurn(journey.host, journey.session.sessionId);
 
   const pending = OperationExecution.parse(
@@ -133,7 +141,7 @@ it('returns at the Permission request without wait and refuses borrowed or tampe
     status: 'settled',
     cancelled: true,
   });
-  await journey.host.caller.session.close({
+  await closeTestSession(journey.host, {
     sessionId: journey.session.sessionId,
   });
   await expect(

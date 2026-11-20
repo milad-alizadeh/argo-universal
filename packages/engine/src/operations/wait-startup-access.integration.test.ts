@@ -3,6 +3,7 @@ import { expect, it } from 'vitest';
 import { z } from 'zod';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { openingWaitHost } from '#mocks/operation-opening';
 import { operationCaller, runOperation } from '#mocks/operations';
 
@@ -62,7 +63,7 @@ it('admits discovery while a stored Session reopens, but expires an unadmitted P
     title: storedPrompt,
     state: 'idle',
   });
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
 
   const pending = Promise.allSettled([
     runOperation(host.user.operations, {

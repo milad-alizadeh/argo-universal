@@ -10,6 +10,7 @@ const note = {
   label: 'Note',
   description: 'Writes a note.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {
     text: { type: 'string' as const, description: 'The note', required: true },
   },

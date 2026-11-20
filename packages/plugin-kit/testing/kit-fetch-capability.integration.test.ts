@@ -98,6 +98,7 @@ it('fetches only one label under the declared suffix on the default port', async
           label: 'Check hosts',
           description: 'Fetch the fixture hosts.',
           tier: 'read',
+          policy: 'allow',
           params: {},
         },
       ],

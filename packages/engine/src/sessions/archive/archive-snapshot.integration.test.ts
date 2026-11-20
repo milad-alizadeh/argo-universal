@@ -3,6 +3,7 @@ import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { promptedArchiveSession } from '#mocks/archive';
+import { closeTestSession } from '#mocks/close-session';
 import { startEngineTestHost } from '#mocks/engine';
 
 const mainCheckout = { type: 'main' as const };
@@ -48,7 +49,7 @@ it('republishes an open Session page snapshot when its Session is archived and u
 it('streams a stored archived Session read-only after an Engine restart', async () => {
   const host = await startAcpEngine({ steps: [] });
   const { sessionId } = await promptedArchiveSession(host, mainCheckout);
-  await host.caller.session.close({ sessionId });
+  await closeTestSession(host, { sessionId });
   await host.caller.session.archive({ sessionId });
   await host.stop();
   const restarted = await startEngineTestHost({ home: host.home });

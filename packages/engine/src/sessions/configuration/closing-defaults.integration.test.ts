@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { configuration } from './restore.test.mocks';
 
 it('keeps selected Read-only mode when the Agent reports defaults while closing', async () => {
@@ -36,7 +37,7 @@ it('keeps selected Read-only mode when the Agent reports defaults while closing'
     type: 'id',
     value: 'read-only',
   });
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
   await host.caller.session.open(created);
   expect((await host.caller.session.get(created)).configOptions).toContainEqual(
     expect.objectContaining({ configId: 'mode', currentValue: 'read-only' }),

@@ -1,0 +1,52 @@
+import type { SessionUpdate } from '@repo/contracts';
+import { session } from '@repo/db/schema';
+import { eq } from 'drizzle-orm';
+import type { StorageTransaction } from '../storage';
+import { nextFeedRevision } from './feed-revision';
+import { highestFeedPosition } from './feed-row';
+import { writeFeedRowsInTransaction } from './feed-rows-write';
+
+type StoredNotice = Pick<
+  Extract<SessionUpdate, { sessionUpdate: 'notice' }>,
+  'id' | 'severity' | 'title' | 'description'
+>;
+
+// Used after a Feed has closed and its live rows have settled.
+export function appendStoredNotice(
+  transaction: StorageTransaction,
+  sessionId: string,
+  notice: StoredNotice,
+): void {
+  const row = storedRevision(transaction, sessionId);
+
+  if (!row) return;
+
+  const revision = nextFeedRevision(row.maxRevision);
+
+  const position = highestFeedPosition(transaction, sessionId) + 1;
+  const rows = [noticeRow(notice, { sessionId, revision, position })];
+
+  const write = { sessionId, maxRevision: revision, rows };
+  writeFeedRowsInTransaction(transaction, write);
+}
+
+const noticeRow = (
+  notice: StoredNotice,
+  location: { sessionId: string; revision: number; position: number },
+): SessionUpdate => ({
+  ...notice,
+  ...location,
+  turnId: null,
+  sessionUpdate: 'notice',
+  state: 'settled',
+});
+
+const storedRevision = (
+  transaction: StorageTransaction,
+  id: string,
+): { maxRevision: number } | undefined =>
+  transaction
+    .select({ maxRevision: session.maxRevision })
+    .from(session)
+    .where(eq(session.id, id))
+    .get();

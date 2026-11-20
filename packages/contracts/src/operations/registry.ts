@@ -18,6 +18,7 @@ export const registryOperations = {
     params: z.strictObject({}).default({}),
     result: RegistryResult,
     tier: 'read',
+    policy: 'allow',
     keywords: ['agents', 'catalog', 'available'],
   },
   'registry.refresh': {
@@ -28,7 +29,8 @@ export const registryOperations = {
       'Fetch the latest ACP Registry and replace the cached available Agents.',
     params: z.strictObject({}).default({}),
     result: RegistryResult,
-    tier: 'confirm',
+    tier: 'act',
+    policy: 'allow',
     keywords: ['agents', 'catalog', 'reload'],
   },
   'registry.sync': {
@@ -39,7 +41,8 @@ export const registryOperations = {
       'Fetch the ACP Registry when the cached copy is stale, then list available Agents.',
     params: z.strictObject({}).default({}),
     result: RegistryResult,
-    tier: 'confirm',
+    tier: 'act',
+    policy: 'allow',
     keywords: ['agents', 'catalog', 'cache'],
   },
   'agent.list': {
@@ -50,6 +53,7 @@ export const registryOperations = {
     params: z.strictObject({}).default({}),
     result: z.array(InstalledAgentResult),
     tier: 'read',
+    policy: 'allow',
     keywords: ['installed', 'saved', 'models'],
   },
   'agent.install': {
@@ -60,7 +64,8 @@ export const registryOperations = {
       'Install a Registry Agent by id so it is available for new Sessions.',
     params: RegistryAgentId,
     result: z.null(),
-    tier: 'confirm',
+    tier: 'act',
+    policy: 'allow',
     keywords: ['registry', 'add', 'download'],
   },
   'agent.remove': {
@@ -72,6 +77,7 @@ export const registryOperations = {
     params: RegistryAgentId,
     result: z.null(),
     tier: 'confirm',
+    policy: 'ask',
     keywords: ['uninstall', 'delete', 'registry'],
   },
   'agent.setEnvironment': {
@@ -82,7 +88,8 @@ export const registryOperations = {
       'Replace an Installed Agent’s saved launch environment and close its pooled Agent connections, so its next Session starts with it.',
     params: RegistryAgentId.extend({ env: AgentServerEnvironment }),
     result: z.null(),
-    tier: 'confirm',
+    tier: 'act',
+    policy: 'allow',
     keywords: ['env', 'variables', 'launch', 'settings'],
   },
   'agent.getSuggestionModels': {
@@ -94,6 +101,7 @@ export const registryOperations = {
     params: z.strictObject({}).default({}),
     result: z.array(AgentSuggestionModel),
     tier: 'read',
+    policy: 'allow',
     keywords: ['follow-up', 'prediction', 'model', 'settings'],
   },
   'agent.setSuggestionModel': {
@@ -104,7 +112,8 @@ export const registryOperations = {
       'Choose the model an Installed Agent predicts Follow-up suggestions with.',
     params: RegistryAgentId.extend({ choice: SuggestionModelChoice }),
     result: z.null(),
-    tier: 'confirm',
+    tier: 'act',
+    policy: 'allow',
     keywords: ['follow-up', 'prediction', 'model', 'settings'],
   },
 } as const satisfies Record<string, OperationDefinition>;

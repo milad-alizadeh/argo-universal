@@ -102,4 +102,8 @@ export {
   type NativeStartRequest,
 } from './prompt-sender';
 
+export { OpenSessions } from './open-sessions';
+
+export { closeSession } from './session-closure';
+
 export { namedParam } from './named-param';

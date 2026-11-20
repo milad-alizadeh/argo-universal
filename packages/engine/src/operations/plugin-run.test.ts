@@ -20,6 +20,7 @@ const row: OperationRow = {
   params: {},
   result: {},
   tier: 'act',
+  policy: 'allow',
   keywords: [],
   enabled: true,
   disabledReason: null,
@@ -69,15 +70,15 @@ class Fakes {
 
 const session = { kind: 'session', sessionId: 's1', projectId: 'p1' } as const;
 
-it("runs the user's own Plugin Operation as a person, as a tap does", async () => {
+it('runs a Plugin Operation from the CLI without App identity', async () => {
   const fakes = new Fakes();
 
   await fakes.router().runFor({ kind: 'user' }, plugin, { number: 1 });
 
-  expect(fakes.first().caller).toEqual({ person: true });
+  expect(fakes.first().caller).toEqual({});
 });
 
-it('hands a Session’s run the way to ask the user, for a Project it names past its own', async () => {
+it('makes Permission available to a Session’s Plugin Operation', async () => {
   const fakes = new Fakes();
 
   await fakes.router().runFor(session, plugin, { projectId: 'p2' });

@@ -4,6 +4,7 @@ export const transition = {
   label: 'Transition an issue',
   description: 'Moves an issue to another status.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {
     issue: {
       type: 'string' as const,

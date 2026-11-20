@@ -8,6 +8,7 @@ type Declared = {
   label: string;
   description: string;
   tier: 'act' | 'read';
+  policy: 'allow';
   params: Record<never, never>;
 };
 
@@ -16,6 +17,7 @@ const operation = (name: string, description: string): Declared => ({
   label: description,
   description,
   tier: 'act',
+  policy: 'allow',
   params: {},
 });
 

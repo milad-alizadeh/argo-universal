@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { SessionPromptInput } from '../sessions/prompt';
 import type { OperationDefinition } from './index';
 
+const askOutsideProject = 'ask-outside-project';
+
 const scheduleTarget = SessionPromptInput.pick({ sessionId: true });
 
 const scheduleInput = SessionPromptInput.pick({
@@ -27,6 +29,7 @@ export const scheduleOperations = {
     params: scheduleInput,
     result: schedule,
     tier: 'act',
+    policy: askOutsideProject,
     keywords: ['schedule', 'recurring'],
   },
   'session.listSchedules': {
@@ -37,6 +40,7 @@ export const scheduleOperations = {
     params: scheduleTarget,
     result: z.array(schedule),
     tier: 'read',
+    policy: askOutsideProject,
     keywords: ['schedule'],
   },
   'session.manageSchedule': {
@@ -50,6 +54,7 @@ export const scheduleOperations = {
     }),
     result: z.strictObject({}),
     tier: 'act',
+    policy: askOutsideProject,
     keywords: ['schedule'],
   },
 } as const satisfies Record<string, OperationDefinition>;

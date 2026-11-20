@@ -97,3 +97,5 @@ export {
 } from './conversation-markers';
 
 export { VoiceMarkerStream } from './conversation-marker-stream';
+
+export { appendStoredNotice } from './stored-notice';

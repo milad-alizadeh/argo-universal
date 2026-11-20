@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { closeTestSession } from '#mocks/close-session';
 import { operationCaller } from '#mocks/operations';
 import { sessionAccessHost, openAccessSession } from '#mocks/session-access';
 
@@ -18,7 +19,7 @@ it('answers the user and a live Session, and refuses no token and a closed Sessi
     unauthorized,
   );
 
-  await fixture.host.caller.session.close({ sessionId: closed.sessionId });
+  await closeTestSession(fixture.host, { sessionId: closed.sessionId });
   await expect(
     closed.caller.operations.instructions.query(),
   ).rejects.toMatchObject(unauthorized);

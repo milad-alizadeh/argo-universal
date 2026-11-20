@@ -4,6 +4,7 @@ import { expect, it, onTestFinished, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { fixtureRegistry } from '#mocks/agent-fixtures';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { withoutSessionAccess } from '#mocks/session-access';
 
@@ -61,7 +62,7 @@ it('clears inherited and Registry Argo credentials when launch policy denies Ses
     { token: null, home: null },
   ]);
   expect(host.agent.processes).toHaveLength(1);
-  await host.caller.session.close(first);
+  await closeTestSession(host, first);
   expect(requireScriptedProcessAt(host.agent.processes).terminations).toBe(0);
   await host.caller.session.prompt({
     ...second,

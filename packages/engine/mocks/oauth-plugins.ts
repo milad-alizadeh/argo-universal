@@ -69,6 +69,7 @@ const probe = {
   label: 'Start a sign-in',
   description: 'Starts an OAuth exchange and waits for its callback.',
   tier: 'act' as const,
+  policy: 'allow' as const,
 };
 
 async function writeOAuthPlugins(ids: string[]): Promise<string> {

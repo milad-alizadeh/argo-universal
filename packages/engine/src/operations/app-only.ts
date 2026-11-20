@@ -1,16 +1,17 @@
-import type { OperationId } from '@repo/contracts/operations';
-import { appOnlyOperationIds } from '@repo/contracts/operations/catalog';
+import { operations, type OperationId } from '@repo/contracts/operations';
 import { TRPCError } from '@trpc/server';
+import { operationPermission } from './operation-permission';
 
-// No other caller sees an App-only Operation listed, and each refuses one; the catalog says which they are.
-export const isAppOnly = (id: string): boolean => appOnlyOperationIds.has(id);
-
-export const appOnlyRefusal = (id: OperationId): TRPCError =>
+export const appOnlyRefusal = (id: string): TRPCError =>
   new TRPCError({ code: 'FORBIDDEN', message: `Only an App can run ${id}` });
 
-type Caller = { kind: string; id: OperationId };
-
-export function requireAppCaller(caller: Caller): void {
-  if (caller.kind !== 'app' && isAppOnly(caller.id))
+export function requireAppCaller(caller: {
+  kind: string;
+  id: OperationId;
+}): void {
+  if (
+    operationPermission(operations[caller.id].policy, caller.kind === 'app') ===
+    'person-only'
+  )
     throw appOnlyRefusal(caller.id);
 }

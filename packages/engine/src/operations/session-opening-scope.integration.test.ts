@@ -6,6 +6,7 @@ import { SessionNewOutput } from '@repo/contracts';
 import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import { operationCaller, runOperation } from '#mocks/operations';
 import { openAccessSession, sessionIdentityStep } from '#mocks/session-access';
 
@@ -46,7 +47,7 @@ it('refuses cancel, rename and Shell stop on a still-opening Session for every c
 it('closes a still-opening Session', async () => {
   const { host, sessionId, release } = await openingDelegation();
 
-  expect(await host.caller.session.close({ sessionId })).toEqual({});
+  expect(await closeTestSession(host, { sessionId })).toEqual({});
   release.resolve();
 }, 30_000);
 

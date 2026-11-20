@@ -15,6 +15,7 @@ const bump = {
   label: 'Bump the count',
   description: 'Adds one to the count.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {},
 };
 

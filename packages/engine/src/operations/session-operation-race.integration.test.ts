@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { closeTestSession } from '#mocks/close-session';
 import { holdProjectReads } from '#mocks/git-read-gate';
 import {
   operationRaceHost,
@@ -73,7 +74,7 @@ it('cancels an idle Operation on Session close and ignores its late successful r
   await gate.started();
   const row = await pendingOperation(host, session.sessionId);
 
-  await host.caller.session.close({ sessionId: session.sessionId });
+  await closeTestSession(host, { sessionId: session.sessionId });
 
   const settled = await host.caller.feed.row({
     sessionId: session.sessionId,

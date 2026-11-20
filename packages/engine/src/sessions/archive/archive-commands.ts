@@ -8,6 +8,7 @@ import type { SessionActorRef } from '../session-machine';
 import type { HandlerSources } from '../session-sources';
 import { closeBorrowers } from './archive-borrowers';
 import { settleWithin, type Snapshot } from './archive-settle';
+import { approveCheckoutCleanup } from './checkout-cleanup';
 
 type ArchiveSources = HandlerSources<
   'readSession' | 'database' | 'findWriter',
@@ -64,12 +65,27 @@ const openArchiving = (
 async function prepareArchive(
   sources: ArchiveSources,
   sessionId: string,
+  fingerprint?: string,
 ): Promise<SessionActorRef> {
   sources.open.admit();
   requireArchivable(sources, sessionId);
   await closeBorrowers(sources, sessionId);
+  requireArchivable(sources, sessionId);
 
-  return startArchive(sources, sessionId);
+  return startApprovedArchive(sources, sessionId, fingerprint);
+}
+
+function startApprovedArchive(
+  sources: ArchiveSources,
+  sessionId: string,
+  fingerprint?: string,
+): SessionActorRef {
+  // Actor admission is synchronous. Store the approval only after it accepts the command.
+  const actor = startArchive(sources, sessionId);
+
+  approveCheckoutCleanup(sources.database, sessionId, fingerprint);
+
+  return actor;
 }
 
 function requireArchived(outcome: Snapshot): void {
@@ -83,10 +99,12 @@ function requireArchived(outcome: Snapshot): void {
 export async function archiveSession(
   sources: ArchiveSources,
   sessionId: string,
-  limitMs: number = archiveSettleLimitMs,
+  options: { limitMs?: number; fingerprint?: string } = {},
 ): Promise<SessionArchiveOutput> {
+  const { limitMs = archiveSettleLimitMs, fingerprint } = options;
+
   const outcome = await settleWithin(
-    await prepareArchive(sources, sessionId),
+    await prepareArchive(sources, sessionId, fingerprint),
     (snapshot) => snapshot.hasTag('archived') || snapshot.status !== 'active',
     limitMs,
   );

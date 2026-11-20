@@ -1,8 +1,7 @@
 import { expect } from '../fixtures';
-import { type FeedRows, readFeed, sessionId } from './feed';
+import { type FeedRows, readFeed } from './feed';
 import { Given, When, Then } from './fixtures';
 import { startSession } from './live-session';
-import { mutate } from './server-query';
 
 const userMessage = 'user_message';
 
@@ -66,18 +65,6 @@ Given('a Session with one completed Turn', async ({ page }): Promise<void> => {
     page.getByTestId(feedScroll).getByText(fixtureReply, { exact: true }),
   ).toBeVisible();
 });
-
-Given(
-  'the Server closes the Session quietly',
-  async ({ page, server }): Promise<void> => {
-    await mutate({
-      page,
-      httpUrl: server.httpUrl,
-      procedure: 'session.close',
-      input: { sessionId: sessionId(page) },
-    });
-  },
-);
 
 Then('no alert is shown', async ({ page }): Promise<void> => {
   await expect(page.getByRole('alert')).toHaveCount(0);

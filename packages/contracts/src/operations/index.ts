@@ -6,7 +6,7 @@ import { conversationOperations } from './conversation';
 import { conversationDeviceOperations } from './conversation-devices';
 import { conversationSettingsOperations } from './conversation-settings';
 import { diagramOperations } from './diagram';
-import type { OperationTier } from './metadata';
+import type { OperationTier, OperationPolicy } from './metadata';
 import { pluginOperations } from './plugins';
 import { projectOperations } from './projects';
 import { readerOperations } from './readers';
@@ -41,6 +41,7 @@ export {
   discoveryOperation,
   operationFeedRowId,
   OperationRow,
+  OperationPolicy,
   OperationTier,
 } from './metadata';
 
@@ -58,6 +59,7 @@ export interface OperationDefinition {
   params: z.ZodType;
   result: z.ZodType;
   tier: OperationTier;
+  policy: OperationPolicy;
   keywords: readonly string[];
 }
 

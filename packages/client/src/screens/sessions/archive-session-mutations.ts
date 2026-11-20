@@ -2,7 +2,7 @@
 export interface ArchivePort {
   // The rows leave every cached list at once, before the Server answers.
   dropRows: (ids: readonly string[]) => void;
-  archive: (sessionId: string) => Promise<void>;
+  archive: (sessionId: string, checkoutApproval?: string) => Promise<void>;
   unarchive: (sessionId: string) => Promise<void>;
   // Once the Server has answered, the list reloads without the rows, or with them again.
   refresh: () => Promise<void>;
@@ -16,6 +16,7 @@ export interface ArchiveOptions {
   // Phones ask first and offer no Undo; desktop and the web archive at once and do.
   offerUndo: boolean;
   onArchived?: () => void;
+  approvals?: ReadonlyMap<string, string>;
 }
 
 const sessions = (count: number): string =>
@@ -30,43 +31,37 @@ const failedTitle = (action: 'archive' | 'restore', count: number): string =>
 
 // One call per id, so a refused Session leaves the others alone. Returns the ids that went through; the rest share one failure toast.
 async function sendEach(
-  port: ArchivePort,
   action: 'archive' | 'restore',
   ids: readonly string[],
+  calls: { send: (id: string) => Promise<void>; fail: ArchivePort['fail'] },
 ): Promise<string[]> {
-  const send = action === 'archive' ? port.archive : port.unarchive;
-  const results = await Promise.allSettled(ids.map((id) => send(id)));
+  const results = await Promise.allSettled(ids.map(calls.send));
   const failed = results.filter((result) => result.status === 'rejected');
   const [first] = failed;
 
-  if (first) port.fail(failedTitle(action, failed.length), first.reason);
+  if (first) calls.fail(failedTitle(action, failed.length), first.reason);
 
   return ids.filter((_, index) => results[index]?.status === 'fulfilled');
 }
 
-// Undo while the archived toast shows: only the Sessions that archived come back.
-async function restore(
-  port: ArchivePort,
-  archived: Promise<string[]>,
-): Promise<void> {
-  const ids = await archived;
-
-  if (ids.length === 0) return;
-
-  await sendEach(port, 'restore', ids);
+async function restore(port: ArchivePort, archived: string[]): Promise<void> {
+  await sendEach('restore', archived, {
+    send: port.unarchive,
+    fail: port.fail,
+  });
   await port.refresh();
 }
 
 // The archived toast on desktop and the web, and the caller told once the Sessions are sent.
 function announceArchived(
   port: ArchivePort,
-  sent: { count: number; archived: Promise<string[]> },
+  archived: string[],
   { offerUndo, onArchived }: ArchiveOptions,
 ): void {
   if (offerUndo) {
-    const undo = (): void => void restore(port, sent.archived);
+    const undo = (): void => void restore(port, archived);
 
-    port.announce(archivedTitle(sent.count), undo);
+    port.announce(archivedTitle(archived.length), undo);
   }
 
   onArchived?.();
@@ -84,8 +79,22 @@ export function archiveSessions(
 
   port.dropRows(ids);
 
-  const archived = sendEach(port, 'archive', ids);
+  const archived = sendEach('archive', ids, {
+    send: (id) => port.archive(id, options.approvals?.get(id)),
+    fail: port.fail,
+  });
 
-  void archived.then(port.refresh);
-  announceArchived(port, { count: ids.length, archived }, options);
+  void archived.then((confirmed) =>
+    refreshAfterArchive(port, confirmed, options),
+  );
+}
+
+function refreshAfterArchive(
+  port: ArchivePort,
+  confirmed: string[],
+  options: ArchiveOptions,
+): Promise<void> {
+  if (confirmed.length > 0) announceArchived(port, confirmed, options);
+
+  return port.refresh();
 }

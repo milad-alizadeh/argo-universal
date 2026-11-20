@@ -2,6 +2,7 @@ import type { SessionConfigOption } from '@agentclientprotocol/sdk';
 import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
 import type { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import type { startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import { startEngineTestHost } from '#mocks/engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
@@ -55,7 +56,7 @@ export async function recoverSession(
 
   await (recovery.kind === 'exit'
     ? exit(host, recovery.sessionId)
-    : host.caller.session.close({ sessionId: recovery.sessionId }));
+    : closeTestSession(host, { sessionId: recovery.sessionId }));
 
   return host;
 }

@@ -10,6 +10,7 @@ import {
   waitForAcpSessionIdle,
   waitForAcpSnapshot,
 } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { startEngineTestHost } from '#mocks/engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
@@ -106,7 +107,7 @@ it.each(
         .all(),
     ).toHaveLength(turns);
     await expectLiveChildMessage(host, child.sessionId);
-    await host.caller.session.close({ sessionId });
+    await closeTestSession(host, { sessionId });
     await vi.waitFor(async () => {
       const saved = await host.caller.feed.page({
         sessionId: child.sessionId,

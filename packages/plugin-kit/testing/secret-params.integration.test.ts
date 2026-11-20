@@ -8,6 +8,7 @@ const saveToken = {
   label: 'Save the token',
   description: 'Keeps a pasted API token.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {
     token: {
       type: 'string' as const,

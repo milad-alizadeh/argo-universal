@@ -7,6 +7,16 @@ export type OperationTier = z.infer<typeof OperationTier>;
 
 export const OperationIcon = z.enum(iconNames);
 
+export const OperationPolicy = z.enum([
+  'allow',
+  'ask',
+  'person-only',
+  'archive',
+  'ask-outside-project',
+]);
+
+export type OperationPolicy = z.infer<typeof OperationPolicy>;
+
 export const OperationRow = z.object({
   id: z.string(),
   label: z.string(),
@@ -15,6 +25,8 @@ export const OperationRow = z.object({
   params: z.record(z.string(), z.unknown()),
   result: z.record(z.string(), z.unknown()),
   tier: OperationTier,
+  policy: OperationPolicy,
+  canRequestApproval: z.boolean().optional(),
   keywords: z.array(z.string()).readonly(),
   enabled: z.boolean(),
   disabledReason: z.string().nullable(),

@@ -2,6 +2,7 @@ import type { PromptRequest } from '@agentclientprotocol/sdk';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { describe, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 
 const commitFailureMessage = 'could not be saved';
 
@@ -201,7 +202,7 @@ describe.each(appFixtureAgentIds)('%s ACP prompt admission', (agentId) => {
       ...created,
       prompt: [{ type: 'text', text: 'Explicit retry' }],
     });
-    await expect(host.caller.session.close(created)).resolves.toEqual({});
+    await expect(closeTestSession(host, created)).resolves.toEqual({});
     expect(requests.map((request) => request.prompt)).toEqual([
       [{ type: 'text', text: 'Explicit retry' }],
     ]);

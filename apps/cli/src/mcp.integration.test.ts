@@ -38,7 +38,7 @@ it('discovers matching Operation argument schemas on demand', async () => {
     expect.objectContaining({
       id: projectList,
       params: expect.any(Object),
-      tier: 'read',
+      policy: 'allow',
       enabled: true,
     }),
   );

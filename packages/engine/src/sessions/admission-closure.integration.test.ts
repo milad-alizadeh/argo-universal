@@ -6,6 +6,7 @@ import { session } from '@repo/db/schema';
 import { fixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { expect, it, onTestFinished } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 
 it.each(fixtureAgents.map(({ agent }) => agent))(
   'rejects a %s prompt while Agent closure remains pending',
@@ -37,7 +38,7 @@ it.each(fixtureAgents.map(({ agent }) => agent))(
       type: 'boolean',
       value: false,
     });
-    const closure = host.caller.session.close({ sessionId: 'session-1' });
+    const closure = closeTestSession(host, { sessionId: 'session-1' });
     await began.promise;
     await expect(
       host.caller.session.prompt({

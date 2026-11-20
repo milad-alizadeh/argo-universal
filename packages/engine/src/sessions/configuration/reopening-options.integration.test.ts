@@ -3,6 +3,7 @@ import type { AgentOptionsUpdate } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { configuration } from './restore.test.mocks';
 
 async function firstUpdate(
@@ -51,7 +52,7 @@ it('offers a reopened Session its saved options and choices while its Agent sess
     type: 'id',
     value: 'small',
   });
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
   const opening = host.caller.session.open(created);
   await resuming.promise;
 

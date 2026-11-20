@@ -21,6 +21,7 @@ export const projectOperations = {
     params: z.strictObject({}).default({}),
     result: z.array(ProjectInfo.extend({ inScope: z.boolean().optional() })),
     tier: 'read',
+    policy: 'allow',
     keywords: ['repositories', 'folders', 'workspaces'],
   },
   'project.add': {
@@ -33,7 +34,8 @@ export const projectOperations = {
       path: z.string().min(1).describe('A folder inside the repository.'),
     }),
     result: ProjectAdded,
-    tier: 'confirm',
+    tier: 'act',
+    policy: 'allow',
     keywords: ['register', 'repository', 'folder', 'new'],
   },
   'project.clone': {
@@ -44,7 +46,8 @@ export const projectOperations = {
       "Clone a git repository from a URL into the Server's Projects folder and register it as a Project.",
     params: z.strictObject({ url: z.string().min(1) }),
     result: ProjectAdded,
-    tier: 'confirm',
+    tier: 'act',
+    policy: 'allow',
     keywords: ['github', 'git clone', 'repository', 'new'],
   },
   'project.create': {
@@ -55,7 +58,8 @@ export const projectOperations = {
       "Start a new git repository in the Server's Projects folder and register it as a Project.",
     params: z.strictObject({ name: z.string().min(1) }),
     result: ProjectAdded,
-    tier: 'confirm',
+    tier: 'act',
+    policy: 'allow',
     keywords: ['new', 'init', 'repository', 'folder'],
   },
   'project.update': {
@@ -66,7 +70,8 @@ export const projectOperations = {
       "Change where a Project's next Session starts, and whether archiving its Sessions deletes their worktrees.",
     params: ProjectUpdateInput,
     result: ProjectInfo,
-    tier: 'confirm',
+    tier: 'act',
+    policy: 'allow',
     keywords: ['settings', 'worktree', 'base branch', 'archive', 'checkout'],
   },
   'project.listBranches': {
@@ -78,6 +83,7 @@ export const projectOperations = {
     params: ProjectsBranchesInput,
     result: ProjectsBranchesOutput,
     tier: 'read',
+    policy: 'allow',
     keywords: ['git', 'checkout', 'branch'],
   },
 } as const satisfies Record<string, OperationDefinition>;

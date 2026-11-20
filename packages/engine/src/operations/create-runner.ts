@@ -1,4 +1,5 @@
 import { createImplementations } from './implementations';
+import { OperationArchive } from './operation-archive';
 import type { OperationsDeps } from './operations';
 import { OperationRunner } from './runner';
 import { PromptChains, SessionScope } from './session-scope';
@@ -13,7 +14,9 @@ export function createRunner(deps: OperationsDeps): OperationRunner {
     directory,
     chains,
     screenSight: deps.screenSight,
-    archiveOwn: (sessionId) => deps.sessions.archiveOwn(sessionId),
+    requireClearTarget: (sessionId) =>
+      deps.sessions.requireClearTarget(sessionId),
+    archive: new OperationArchive(deps.sessions.archives),
     scope: new SessionScope({ directory, createId: deps.createId, chains }),
   });
 }

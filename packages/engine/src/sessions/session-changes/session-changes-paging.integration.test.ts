@@ -1,5 +1,6 @@
 import { expect, it, onTestFinished } from 'vitest';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { startEngineTestHost } from '#mocks/engine';
 import {
   secondFileName,
@@ -36,7 +37,7 @@ it('pages one file diff by its lines', async () => {
 it('keeps Checkout totals in a stored Session snapshot after close', async () => {
   const { host, sessionId } = await mainCheckoutSession();
 
-  await host.caller.session.close({ sessionId });
+  await closeTestSession(host, { sessionId });
 
   expect(
     (

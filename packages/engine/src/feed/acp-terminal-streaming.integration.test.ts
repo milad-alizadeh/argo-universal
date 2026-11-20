@@ -7,6 +7,7 @@ import {
   streamedTerminals,
   terminalUpdate,
 } from '#mocks/acp-terminal-output';
+import { closeTestSession } from '#mocks/close-session';
 import {
   closeStream,
   isTurnComplete,
@@ -59,7 +60,7 @@ it('streams equal chunks once per message, ignores mismatched or malformed chunk
   finish.resolve();
   await readThrough(stream, isTurnComplete);
   await closeStream(stream);
-  await host.caller.session.close({ sessionId });
+  await closeTestSession(host, { sessionId });
 
   const replay = (
     await host.caller.feed.subscribe({

@@ -29,12 +29,14 @@
         "name": "fillNotes",
         "label": "Fill the Notes card",
         "description": "Gives the Notes card something to show.",
+        "policy": "allow",
         "tier": "act"
       },
       {
         "name": "emptyNotes",
         "label": "Empty the Notes card",
         "description": "Leaves the Notes card nothing to show.",
+        "policy": "allow",
         "tier": "act"
       }
     ],

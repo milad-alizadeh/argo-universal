@@ -142,16 +142,14 @@ it('resumes an actual CLI Session opening from exit75 to its exact settled first
 it('prints the complete resumed JSON through argo wait while retaining its native Blob reference and executing once', async () => {
   const host = await startRegistryWaitHost();
 
-  const started = await runCli(
-    host.home,
-    ['run', 'registry.refresh'],
-    host.token,
-  );
+  const running = runCli(host.home, ['run', 'registry.refresh'], host.token);
+  await host.waitStarted();
+  host.advance(90_000);
+  const started = await running;
 
   expect(started.code).toBe(75);
-  expect(host.calls()).toBe(0);
   const pending = OperationExecution.parse(JSON.parse(started.stdout));
-  await host.answer();
+  host.release();
   const completed = await runCli(host.home, ['wait', pending.id], host.token);
   expect(completed.code).toBe(0);
   const settled = OperationExecution.parse(JSON.parse(completed.stdout));

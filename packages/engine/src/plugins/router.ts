@@ -11,7 +11,13 @@ import {
   RenderFailureInput,
 } from '@repo/contracts/plugins/replaceable';
 import { SlotItemsInput } from '@repo/contracts/plugins/wire';
-import { mergeRouters, publicProcedure, router, routerFactory } from '../rpc';
+import {
+  authenticatedAppProcedure,
+  mergeRouters,
+  publicProcedure,
+  router,
+  routerFactory,
+} from '../rpc';
 import type { PluginAccounts } from './accounts/plugin-accounts';
 import { accountsRouter } from './accounts/router';
 import type { PluginListChanges } from './list-changes';
@@ -90,7 +96,7 @@ const createLoaderPagesRouter = routerFactory((pages: LoaderPages) =>
     draw: publicProcedure
       .input(DrawRequest)
       .query(({ input, ctx }) => pages.draw(input, ctx.connection)),
-    run: publicProcedure
+    run: authenticatedAppProcedure
       .input(PageRun)
       .output(PageRunAnswer)
       .mutation(({ input, ctx }) => pages.run(input, ctx.connection)),

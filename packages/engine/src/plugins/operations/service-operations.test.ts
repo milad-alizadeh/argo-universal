@@ -18,6 +18,7 @@ const operation = (
     label: name,
     description: `The ${name} Operation.`,
     tier,
+    policy: 'allow',
   });
 
 const list = PluginList.parse({
