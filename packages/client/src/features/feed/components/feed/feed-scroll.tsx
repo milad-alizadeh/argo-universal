@@ -4,6 +4,7 @@ import type * as React from 'react';
 import { type RefObject, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { useFeedFade } from '#lib/product/feed-fade';
+import { feedOrbViewability } from '../feed-orb';
 import type { FeedEntry } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
 import {
@@ -64,7 +65,7 @@ export const feedListProps = {
   // Fast native scrolling can outrun recycled rows. Android also shortens the coast after release.
   ...Platform.select({
     android: { drawDistance: 2400, decelerationRate: 'fast' as const },
-    ios: { drawDistance: 2400 },
+    ios: { drawDistance: 2400, viewabilityConfig: feedOrbViewability },
     default: { drawDistance: 800 },
   }),
   ...keyboardProps,

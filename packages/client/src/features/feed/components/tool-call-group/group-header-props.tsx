@@ -1,8 +1,8 @@
 import type { LiveHeader, ToolCallUpdate } from '@repo/contracts';
-import { Orb } from '@repo/kit/primitives/status/orb';
 import type * as React from 'react';
 import { toolCallFacts } from '../../view/feed-row-facts';
 import type { FeedGroup } from '../../view/feed-view';
+import { FeedOrb } from '../feed-orb';
 import { SourceIcon } from '../live-header/live-header';
 import {
   type ToolCallDisclosure,
@@ -61,7 +61,7 @@ function runningOrb(group: FeedGroup): React.JSX.Element | undefined {
   if (!drawsOrb(group)) return undefined;
 
   return (
-    <Orb
+    <FeedOrb
       size="sm"
       state={toolCallOrb(liveToolCall(group)?.toolCall)}
       continues
