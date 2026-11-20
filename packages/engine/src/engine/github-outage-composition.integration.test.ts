@@ -45,24 +45,28 @@ it('serves Sessions across Agents while Turn-end discovery waits and fails', asy
   const release = Promise.withResolvers<void>();
   let requests = 0;
   let failures = 0;
+
   const port = await httpsServer((_req, res) => {
     requests++;
     res.once('finish', () => failures++);
     void release.promise.then(() => res.writeHead(503).end());
   });
+
   const host = await startAcpEngine({
     steps: [],
     otherAgents: ['second'],
     pluginNetwork: await fixtureNetwork(),
     installPlugins: (home) => installDiscovery(home, port),
   });
+
   const sessions = await Promise.all(
     ['mock', 'second'].map((agent) =>
       host.caller.session.new({ ...emptySessionInput, agent }),
     ),
   );
+
   const send = async (text: string): Promise<void> => {
-    await Promise.all(
+    const answers = await Promise.all(
       sessions.map((session) =>
         host.caller.session.prompt({
           ...session,
@@ -70,11 +74,16 @@ it('serves Sessions across Agents while Turn-end discovery waits and fails', asy
         }),
       ),
     );
+
+    for (const answer of answers)
+      expect(answer.messageId).toEqual(expect.any(String));
   };
-  const idle = () =>
+
+  const idle = (): Promise<void[]> =>
     Promise.all(
       sessions.map(({ sessionId }) => waitForAcpSessionIdle(host, sessionId)),
     );
+
   try {
     await send('First');
     await idle();
@@ -83,11 +92,13 @@ it('serves Sessions across Agents while Turn-end discovery waits and fails', asy
       .toBeGreaterThanOrEqual(2);
     await send('While pending');
     await idle();
+
     for (const session of sessions) {
       const page = await host.caller.feed.page({
         ...session,
         direction: 'tail',
       });
+
       expect(
         page.rows.filter((row) => row.sessionUpdate === 'user_message'),
       ).toHaveLength(2);
@@ -95,6 +106,7 @@ it('serves Sessions across Agents while Turn-end discovery waits and fails', asy
   } finally {
     release.resolve();
   }
+
   await expect
     .poll(() => failures, { timeout: 5000 })
     .toBeGreaterThanOrEqual(2);
