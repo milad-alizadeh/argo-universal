@@ -42,13 +42,13 @@ function validRunInput(input: z.infer<typeof runFields>): boolean {
   );
 }
 
-// What `argo mcp` tells the Agent beside the discovery line: the Plugins' prose, and which Argo instructions the person's settings leave.
+// What `argo mcp` tells the Agent beside the Operation catalog: the Plugins' prose, and which Argo instructions the person's settings leave.
 export type McpInstructions = {
   plugins?: PluginInstruction[];
   argo?: ArgoInstructionChoices;
 };
 
-// Argo's discovery line, then each Argo instruction and each Plugin's prose under its name, in the order given (the Server sends Plugin id order).
+// The Operation catalog, then each Argo instruction and each Plugin's prose under its name, in the order given (the Server sends Plugin id order).
 export function mcpInstructions({
   plugins = [],
   argo = { todoList: true },
