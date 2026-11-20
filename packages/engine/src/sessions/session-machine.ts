@@ -250,6 +250,9 @@ type LoadSessionInput = {
 
 export const checkoutLimit = 10_000;
 
+// How long an archived Session can be undone before its checkout is removed.
+export const archiveUndoMs = 5_000;
+
 const connectionLostBeforePrompt =
   'The Agent connection failed before the prompt was sent';
 
@@ -1049,7 +1052,8 @@ const sessionSetup = setup({
   },
   delays: {
     checkoutLimit,
-    checkoutRemovalDelay: 5_000,
+    checkoutRemovalDelay: ({ context }) =>
+      context.input.archiveUndoMs ?? archiveUndoMs,
     feedFlushLimit: 5_000,
   },
 });

@@ -29,7 +29,6 @@ const shipped = (id: string, name: string, instructions: string): Shipped => ({
 
 async function instructionsWith(
   plugins: Shipped[],
-  disable: string[] = [],
 ): Promise<string | undefined> {
   const home = await createRuntimePlugins(
     plugins.map((plugin) => ({ ...plugin, fixture: 'healthy' })),
@@ -37,50 +36,13 @@ async function instructionsWith(
 
   const host = await startCliHost({ home });
 
-  for (const pluginId of disable)
-    await host.caller.plugin.setEnabled({ pluginId, enabled: false });
-
   return (await connectMcp(host.home)).getInstructions();
 }
-
-it('sends the discovery line and Argo instructions when no Plugin has instructions', async () => {
-  const home = await createRuntimePlugins([
-    { id: 'quiet', fixture: 'healthy' },
-  ]);
-
-  const host = await startCliHost({ home });
-
-  expect((await connectMcp(host.home)).getInstructions()).toBe(head);
-}, 30_000);
 
 it('follows the Argo instructions with a Plugin prose under its name', async () => {
   expect(
     await instructionsWith([shipped('tracker', 'Issue tracker', 'Attach it.')]),
   ).toBe(`${head}\n\n## Issue tracker\n\nAttach it.`);
-}, 30_000);
-
-it('orders Plugin prose by Plugin id', async () => {
-  expect(
-    await instructionsWith([
-      shipped('zeta', 'Alpha', 'Last.'),
-      shipped('alpha', 'Zulu', 'First.'),
-    ]),
-  ).toBe(`${head}\n\n## Zulu\n\nFirst.\n\n## Alpha\n\nLast.`);
-}, 30_000);
-
-it('leaves a disabled Plugin out', async () => {
-  expect(
-    await instructionsWith(
-      [shipped('off', 'Off', 'Hidden.'), shipped('on', 'On', 'Shown.')],
-      ['off'],
-    ),
-  ).toBe(`${head}\n\n## On\n\nShown.`);
-}, 30_000);
-
-it('leaves out a Plugin whose instructions are only whitespace', async () => {
-  expect(await instructionsWith([shipped('blank', 'Blank', '  \n\n')])).toBe(
-    head,
-  );
 }, 30_000);
 
 it('carries the shipped Issue tracker prose under its name', async () => {

@@ -12,11 +12,13 @@ import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const prompt = [{ type: 'text' as const, text: 'Keep this Session' }];
 
+const archiveUndoMs = 1500;
+
 describe('Session archive through the composed Engine', () => {
   it.each(['remove', 'undo'] as const)(
-    'keeps the branch and handles %s at the real five-second deadline',
+    'keeps the branch and handles %s at the undo deadline',
     async (action) => {
-      const host = await startAcpEngine({ steps: [] });
+      const host = await startAcpEngine({ steps: [], archiveUndoMs });
       const created = await promptedArchiveSession(host);
       writeFileSync(join(created.path, 'unsaved.txt'), 'uncommitted work');
       const started = Date.now();
@@ -36,13 +38,15 @@ describe('Session archive through the composed Engine', () => {
           () => 'rejected',
         );
 
-      await setTimeout(4500);
+      await setTimeout(archiveUndoMs - 200);
       expect(existsSync(created.path)).toBe(true);
 
       if (action === 'undo')
         await host.caller.session.unarchive({ sessionId: created.sessionId });
       expect(await closing).toBe('closed');
-      await setTimeout(Math.max(0, 5100 - (Date.now() - started)));
+      await setTimeout(
+        Math.max(0, archiveUndoMs + 200 - (Date.now() - started)),
+      );
       expect(existsSync(created.path)).toBe(action === 'undo');
       expect(
         (await host.caller.session.list({ archived: action === 'remove' }))

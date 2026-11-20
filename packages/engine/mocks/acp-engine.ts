@@ -11,6 +11,7 @@ import type { EngineInput } from '../src/engine/machine';
 import { openTestDatabase } from './database';
 import { type EngineTestOptions, startEngineTestHost } from './engine';
 import { createScriptedAgentProcess } from './scripted-agent';
+import { keepNothingAwake } from './scripted-engine';
 
 export const emptySessionInput = {
   projectId: 'project-1',
@@ -30,6 +31,7 @@ type AcpScenario = ScriptedScenario & { autoExit?: boolean } & Partial<
       | 'argoToolsGraceMs'
       | 'voiceProvider'
       | 'voiceIdleMs'
+      | 'archiveUndoMs'
     >
   > &
   Pick<
@@ -114,14 +116,19 @@ type Fixture = OpenedStorage & {
 const voiceProviderOf = (scenario: AcpScenario): AcpScenario['voiceProvider'] =>
   scenario.voiceProvider ?? null;
 
+// Turns keep the Mac awake through nothing unless a test supplies its own caffeinate.
+const caffeinateOf = (scenario: AcpScenario): AcpScenario['caffeinate'] =>
+  scenario.caffeinate ?? keepNothingAwake;
+
 // Most tests have Agents that send no Slash command list; they must not wait for one.
 const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({
-  caffeinate: scenario.caffeinate,
+  caffeinate: caffeinateOf(scenario),
   operationWaitClock: scenario.operationWaitClock,
   slashCommandsWaitMs: scenario.slashCommandsWaitMs ?? 0,
   argoToolsGraceMs: scenario.argoToolsGraceMs ?? Number.POSITIVE_INFINITY,
   voiceProvider: voiceProviderOf(scenario),
   voiceIdleMs: scenario.voiceIdleMs,
+  archiveUndoMs: scenario.archiveUndoMs,
 });
 
 const fixtureAgents = (

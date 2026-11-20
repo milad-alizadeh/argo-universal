@@ -140,10 +140,10 @@ export const engineMachine = engineSetup.createMachine({
                 {
                   type: 'sendToSupervisor',
                   params: ({
-                    context,
+                    event,
                   }): Extract<EngineMessage, { type: 'ready' }> => ({
                     type: 'ready',
-                    port: context.port,
+                    port: event.output.port(),
                   }),
                 },
               ],
