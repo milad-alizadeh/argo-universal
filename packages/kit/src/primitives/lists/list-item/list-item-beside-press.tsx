@@ -109,7 +109,7 @@ function BesidePress({ props, press }: BesidePressProps): ReactElement {
   const accessories = usePassThrough(props);
 
   return (
-    <View className="relative">
+    <View className="relative web:rounded-inherit">
       <Pressable {...press} className={pressClassName(press, accessories)}>
         {pressContent(props, accessories)}
       </Pressable>

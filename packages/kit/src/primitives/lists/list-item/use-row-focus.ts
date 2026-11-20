@@ -23,8 +23,6 @@ export function useRowFocus(): RowFocus {
         setVisible(event.currentTarget.matches(':focus-visible'));
     },
     onBlur: (): void => setVisible(false),
-    className: visible
-      ? 'outline-2 outline-focus -outline-offset-2'
-      : 'outline-none',
+    className: visible ? 'focus-ring' : 'outline-none',
   };
 }

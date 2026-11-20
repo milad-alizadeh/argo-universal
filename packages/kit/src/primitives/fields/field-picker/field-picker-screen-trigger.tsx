@@ -76,5 +76,5 @@ const triggerProps = (props: TriggerProps): Attributes => ({
 
 const triggerClassName = cn(
   rowPressTargetClassName,
-  'flex flex-row items-center justify-between web:whitespace-nowrap web:outline-none web:focus-visible:-outline-offset-2 web:focus-visible:outline-2 web:focus-visible:outline-focus web:disabled:cursor-not-allowed',
+  'flex flex-row items-center justify-between web:whitespace-nowrap web:disabled:cursor-not-allowed',
 );

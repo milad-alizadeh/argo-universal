@@ -8,7 +8,6 @@ import { reloadApp } from './frame';
 const connections = new WeakMap<Page, WebSocketRoute[]>();
 
 // Pages whose Connection stays down: each new WebSocket closes at once.
-const heldDown = new WeakSet<Page>();
 
 // The ids of each page's `session.new` calls the Server has not answered yet.
 const unansweredOpens = new WeakMap<Page, Set<number>>();
@@ -71,12 +70,6 @@ Given(
     connections.set(page, []);
     unansweredOpens.set(page, new Set());
     await page.routeWebSocket(/ws:\/\//, (route): void => {
-      if (heldDown.has(page)) {
-        void route.close();
-
-        return;
-      }
-
       relay(page, route);
       connections.get(page)?.push(route);
     });
@@ -107,16 +100,6 @@ export async function awaitReconnection(page: Page): Promise<void> {
 
 When('the Connection drops and comes back', async ({ page }): Promise<void> => {
   await dropConnection(page);
-  await awaitReconnection(page);
-});
-
-When('the Connection drops and stays down', async ({ page }): Promise<void> => {
-  heldDown.add(page);
-  await dropConnection(page);
-});
-
-When('the Connection comes back', async ({ page }): Promise<void> => {
-  heldDown.delete(page);
   await awaitReconnection(page);
 });
 

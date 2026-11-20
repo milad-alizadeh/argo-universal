@@ -85,6 +85,6 @@ const labelledClass = contentActionClass({
 
 const markClass = (viewed: boolean): string =>
   cn(
-    'size-5.5 shrink-0 items-center justify-center rounded-full border border-border bg-card web:focus-visible:outline-2 web:focus-visible:outline-focus',
+    'size-5.5 shrink-0 items-center justify-center rounded-full border border-border bg-card',
     viewed && 'border-primary bg-primary',
   );

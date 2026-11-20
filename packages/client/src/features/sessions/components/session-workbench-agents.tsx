@@ -57,7 +57,7 @@ const rowPressable = (
     'aria-describedby': descriptionId,
     onPress: () => onOpen(agent),
     className:
-      'flex-row items-start gap-2 rounded-control px-1 py-2 web:hover:bg-hover web:focus-visible:bg-hover',
+      'flex-row items-start gap-2 rounded-control px-1 py-2 web:hover:bg-hover',
   }) as const;
 
 function AgentRow(props: RowProps): ReactElement {

@@ -18,7 +18,7 @@ type RowProps = Pick<ShellListProps, 'onSelect'> & {
 };
 
 const rowClasses =
-  'flex-row items-start gap-2.5 rounded-md p-2 web:hover:bg-hover web:active:bg-pressed web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2';
+  'flex-row items-start gap-2.5 rounded-md p-2 web:hover:bg-hover web:active:bg-pressed';
 
 // The supporting line reads in the same type as an Agent's.
 const supportingProps = (shell: ShellEntry) =>
