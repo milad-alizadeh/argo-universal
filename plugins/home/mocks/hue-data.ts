@@ -22,38 +22,36 @@ export type HueHousehold = {
   groups: FixtureGroup[];
 };
 
+// Each light as its id's stem, its name, whether it is on and its brightness.
+const lightRows: [string, string, boolean, number][] = [
+  ['desk', 'Desk lamp', true, 80],
+  ['ceiling', 'Ceiling', false, 40],
+  ['porch', 'Porch', true, 100],
+];
+
+const lightOf = ([
+  stem,
+  name,
+  on,
+  brightness,
+]: (typeof lightRows)[number]): FixtureLight => ({
+  id: `light-${stem}`,
+  device: `device-${stem}`,
+  name,
+  on,
+  brightness,
+});
+
+const office: FixtureRoom = {
+  id: 'room-office',
+  name: 'Office',
+  devices: ['device-desk', 'device-ceiling'],
+  group: 'group-office',
+};
+
 export const household = (): HueHousehold => ({
-  lights: [
-    {
-      id: 'light-desk',
-      device: 'device-desk',
-      name: 'Desk lamp',
-      on: true,
-      brightness: 80,
-    },
-    {
-      id: 'light-ceiling',
-      device: 'device-ceiling',
-      name: 'Ceiling',
-      on: false,
-      brightness: 40,
-    },
-    {
-      id: 'light-porch',
-      device: 'device-porch',
-      name: 'Porch',
-      on: true,
-      brightness: 100,
-    },
-  ],
-  rooms: [
-    {
-      id: 'room-office',
-      name: 'Office',
-      devices: ['device-desk', 'device-ceiling'],
-      group: 'group-office',
-    },
-  ],
+  lights: lightRows.map(lightOf),
+  rooms: [{ ...office, devices: [...office.devices] }],
   groups: [{ id: 'group-office', on: true, brightness: 60 }],
 });
 

@@ -23,33 +23,36 @@ const target = ({ kind, id }: Switch): Pick<Switch, 'kind' | 'id'> => ({
   id,
 });
 
-function controls(light: Switch, to: PageTo): JSX.Element {
-  return (
-    <FieldGroup>
-      <FieldGroup.Section>
-        <FieldGroup.Toggle
-          title={homeWords.power}
-          value={light.on}
-          onValueChange={to.run('setPower', {
-            ...target(light),
-            on: to.payload(),
-          })}
-        />
-        <FieldGroup.Slider
-          title={homeWords.brightness}
-          value={light.brightness}
-          {...brightnessRange}
-          step={1}
-          valueLabel={`${light.brightness}%`}
-          onValueChange={to.run('setBrightness', {
-            ...target(light),
-            brightness: to.payload(),
-          })}
-        />
-      </FieldGroup.Section>
-    </FieldGroup>
-  );
-}
+const power = (light: Switch, to: PageTo): JSX.Element => (
+  <FieldGroup.Toggle
+    title={homeWords.power}
+    value={light.on}
+    onValueChange={to.run('setPower', { ...target(light), on: to.payload() })}
+  />
+);
+
+const brightness = (light: Switch, to: PageTo): JSX.Element => (
+  <FieldGroup.Slider
+    title={homeWords.brightness}
+    value={light.brightness}
+    {...brightnessRange}
+    step={1}
+    valueLabel={`${light.brightness}%`}
+    onValueChange={to.run('setBrightness', {
+      ...target(light),
+      brightness: to.payload(),
+    })}
+  />
+);
+
+const controls = (light: Switch, to: PageTo): JSX.Element => (
+  <FieldGroup>
+    <FieldGroup.Section>
+      {power(light, to)}
+      {brightness(light, to)}
+    </FieldGroup.Section>
+  </FieldGroup>
+);
 
 type Shown = { light: Switch; title: string; subtitle?: string };
 

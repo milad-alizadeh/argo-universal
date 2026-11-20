@@ -81,6 +81,7 @@ function roomOf(json: Json, index: Index): Room | null {
 export function householdOf(lists: HueLists): Household {
   const index = indexOf(lists);
   const rooms = lists.rooms.map((json) => roomOf(json, index)).filter(present);
+
   const inRooms = new Set(
     rooms.flatMap((room) => room.lights.map((light) => light.id)),
   );

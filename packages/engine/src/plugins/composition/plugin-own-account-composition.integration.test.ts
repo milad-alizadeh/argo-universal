@@ -44,17 +44,20 @@ async function drawWithoutProject(
 ): Promise<{ shown: unknown; received: unknown[] }> {
   await registeredProject();
   const fixture = await accountPlugins('null');
+
   await writeFile(fixture.entry, providerSource(labels));
   await writeFile(
     join(fixture.home, 'shipped/borrower/index.mjs'),
     borrowerSource,
   );
   const network = await accountNetwork();
+
   const host = await startEngineTestHost({
     home: fixture.home,
     pluginNetwork: network.pluginNetwork,
     pluginClock: new PluginTestClock(0),
   });
+
   await host.caller.plugin.activate({ pluginId: 'probe' });
 
   const root = await drawnRoot(host.caller, pageAt(pluginId, '/'));

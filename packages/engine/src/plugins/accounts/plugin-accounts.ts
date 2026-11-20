@@ -6,12 +6,8 @@ import {
   type AccountChoice,
 } from '@repo/contracts/plugins/accounts';
 import type { Database } from '@repo/db';
-import {
-  pluginAccount,
-  pluginAccountGrant,
-  projectAccount,
-} from '@repo/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { pluginAccount, pluginAccountGrant } from '@repo/db/schema';
+import { eq } from 'drizzle-orm';
 import {
   writeDatabaseJobAndWaitForCommit,
   type WriterActorRef,
@@ -21,7 +17,14 @@ import {
   type SecretStore,
 } from '../services/secret-store';
 import { AccountJob, type AccountChange } from './account-job';
-import { requireAccount, requireChoice, sameAccount } from './account-records';
+import {
+  chosenAccount,
+  ownAccount,
+  projectChoice,
+  requireAccount,
+  requireChoice,
+  sameAccount,
+} from './account-records';
 
 type Dependencies = {
   database: Database;
@@ -79,10 +82,7 @@ export class PluginAccounts {
     return account.id;
   }
 
-  /*
-   * The Project's Account for the host. A call with no Project, such as a household page's, gets only the Account
-   * its own Plugin provides for the host, and only when it provides exactly one (ADR-0036).
-   */
+  // The Project's Account; with no Project, the one its own Plugin provides for the host (ADR-0036).
   async get(
     host: string,
     projectId?: string,
@@ -92,24 +92,11 @@ export class PluginAccounts {
 
     if (!projectId) return ownAccount(accounts, pluginId);
 
-    const chosen = this.choice(host, projectId);
+    const chosen = projectChoice(this.deps.database, { host, projectId });
 
     if (chosen) return chosenAccount(accounts, chosen.account);
 
     return this.chooseOnly(accounts, projectId);
-  }
-
-  private choice(host: string, projectId: string): AccountChoice | undefined {
-    return this.deps.database
-      .select()
-      .from(projectAccount)
-      .where(
-        and(
-          eq(projectAccount.projectId, projectId),
-          eq(projectAccount.host, host),
-        ),
-      )
-      .get();
   }
 
   private async chooseOnly(
@@ -181,19 +168,4 @@ export class PluginAccounts {
       true,
     );
   }
-}
-
-const chosenAccount = (
-  accounts: PluginAccount[],
-  id: string,
-): PluginAccount | null =>
-  accounts.find((account) => account.id === id) ?? null;
-
-function ownAccount(
-  accounts: PluginAccount[],
-  pluginId: string | undefined,
-): PluginAccount | null {
-  const own = accounts.filter((account) => account.providedBy === pluginId);
-
-  return own.length === 1 ? (own[0] ?? null) : null;
 }

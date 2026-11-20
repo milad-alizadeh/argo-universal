@@ -70,15 +70,23 @@ async function borrowHop(
     throw new CapabilityRefusal(
       `Account ${host} cannot be sent to ${hop.url.host}`,
     );
+
+  return accountHop(call, hop, host);
+}
+
+// The Account the call reaches: its Project's, or with no Project its own Plugin's (ADR-0036).
+async function accountHop(
+  call: BorrowContext,
+  hop: Hop,
+  host: string,
+): Promise<Hop | null> {
   const accounts = call.accounts;
 
   if (!accounts) return null;
 
-  return chosenHop(
-    call,
-    hop,
-    await accounts.get(host, call.projectId, call.pluginId),
-  );
+  const { projectId, pluginId } = call;
+
+  return chosenHop(call, hop, await accounts.get(host, projectId, pluginId));
 }
 
 function chosenHop(
