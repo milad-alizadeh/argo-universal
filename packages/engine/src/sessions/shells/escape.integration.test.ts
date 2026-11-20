@@ -2,6 +2,7 @@ import { escapedShellStep } from '@repo/mocks/agent/shell-scenarios';
 import { assert, expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { descendantPid, processIsRunning } from '#mocks/shell-process';
 
 it('closes a Shell whose descendant left its group and holds its output open', async () => {
@@ -28,7 +29,7 @@ it('closes a Shell whose descendant left its group and holds its output open', a
   onTestFinished(() => {
     if (processIsRunning(pid)) process.kill(pid, 'SIGKILL');
   });
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
 
   expect(await host.caller.session.listShells(created)).toMatchObject([
     { id: shellId, status: 'lost', canStop: false },

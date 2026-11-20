@@ -23,6 +23,7 @@
         "name": "ready",
         "label": "Wake the fixture account",
         "description": "Starts this Plugin, so its Account exists before another Plugin borrows it.",
+        "policy": "allow",
         "tier": "read"
       }
     ]

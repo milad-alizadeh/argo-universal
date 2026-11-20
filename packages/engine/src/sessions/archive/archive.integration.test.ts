@@ -3,10 +3,11 @@ import { join } from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 import type { ResumeSessionRequest } from '@agentclientprotocol/sdk';
 import { listBranches, sessionBranch } from '@repo/git';
-import { describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { archiveProjectPath, promptedArchiveSession } from '#mocks/archive';
+import { closeTestSession } from '#mocks/close-session';
 import { startEngineTestHost } from '#mocks/engine';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
@@ -19,7 +20,19 @@ describe('Session archive through the composed Engine', () => {
       const host = await startAcpEngine({ steps: [] });
       const created = await promptedArchiveSession(host);
       writeFileSync(join(created.path, 'unsaved.txt'), 'uncommitted work');
-      await host.caller.session.archive({ sessionId: created.sessionId });
+
+      const { checkoutConfirmation } = await host.caller.session.archive({
+        sessionId: created.sessionId,
+      });
+
+      expect(checkoutConfirmation).toMatchObject({
+        reason: expect.stringContaining('uncommitted'),
+      });
+      assert(checkoutConfirmation);
+      await host.caller.session.archive({
+        sessionId: created.sessionId,
+        checkoutApproval: checkoutConfirmation.fingerprint,
+      });
       expect(existsSync(created.path)).toBe(true);
       expect(
         (await host.caller.session.list({ archived: true })).sessions,
@@ -28,12 +41,12 @@ describe('Session archive through the composed Engine', () => {
         host.caller.session.prompt({ sessionId: created.sessionId, prompt }),
       ).rejects.toMatchObject({ code: 'CONFLICT' });
 
-      const closing = host.caller.session
-        .close({ sessionId: created.sessionId })
-        .then(
-          () => 'closed',
-          () => 'rejected',
-        );
+      const closing = closeTestSession(host, {
+        sessionId: created.sessionId,
+      }).then(
+        () => 'closed',
+        () => 'rejected',
+      );
 
       await setTimeout(4500);
       expect(existsSync(created.path)).toBe(true);
@@ -77,7 +90,7 @@ describe('Session archive through the composed Engine', () => {
     });
 
     const created = await promptedArchiveSession(host);
-    await host.caller.session.close({ sessionId: created.sessionId });
+    await closeTestSession(host, { sessionId: created.sessionId });
     await host.caller.session.archive({ sessionId: created.sessionId });
     expect(resumes).toEqual([]);
     expect(host.agent.processes).toHaveLength(1);

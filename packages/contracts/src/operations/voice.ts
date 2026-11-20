@@ -11,6 +11,8 @@ import {
 import type { OperationDefinition } from './index';
 
 // The Voice call's Operations (ADR-0064): the App starts, ends, reads and previews calls; an Agent only hangs up its own.
+const personOnly = 'person-only';
+
 export const voiceOperations = {
   'voice.status': {
     id: 'voice.status',
@@ -21,6 +23,7 @@ export const voiceOperations = {
     params: z.strictObject({}).default({}),
     result: VoiceStatus,
     tier: 'read',
+    policy: personOnly,
     keywords: ['voice', 'call', 'talk', 'speak', 'microphone'],
   },
   'voice.start': {
@@ -32,6 +35,7 @@ export const voiceOperations = {
     params: VoiceStartInput,
     result: VoiceStartOutput,
     tier: 'confirm',
+    policy: personOnly,
     keywords: ['voice', 'call', 'talk', 'speak', 'microphone', 'start'],
   },
   'voice.end': {
@@ -42,6 +46,7 @@ export const voiceOperations = {
     params: VoiceEndInput,
     result: VoiceEndOutput,
     tier: 'act',
+    policy: personOnly,
     keywords: ['voice', 'call', 'hang up', 'end', 'stop', 'microphone'],
   },
   'voice.preview': {
@@ -53,6 +58,7 @@ export const voiceOperations = {
     params: VoicePreviewInput,
     result: VoicePreviewOutput,
     tier: 'act',
+    policy: personOnly,
     keywords: ['voice', 'preview', 'listen', 'greeting', 'sample'],
   },
   'voice.hangUp': {
@@ -64,6 +70,7 @@ export const voiceOperations = {
     params: VoiceEndInput,
     result: VoiceEndOutput,
     tier: 'act',
+    policy: 'allow',
     keywords: ['voice', 'call', 'hang up', 'goodbye', 'done', 'end'],
   },
 } as const satisfies Record<string, OperationDefinition>;

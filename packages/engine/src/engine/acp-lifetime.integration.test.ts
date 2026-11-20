@@ -1,6 +1,7 @@
 import { expect, it, vi } from 'vitest';
 import { waitFor } from 'xstate';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { withoutSessionAccess } from '#mocks/session-access';
 
@@ -29,7 +30,7 @@ it('without Agent access, Engine owns shared empty Sessions across App disconnec
   const process = requireScriptedProcessAt(host.agent.processes);
   expect(host.agent.processes).toHaveLength(1);
   expect(process.terminations).toBe(0);
-  await host.caller.session.close({ sessionId: first.sessionId });
+  await closeTestSession(host, { sessionId: first.sessionId });
   expect(process.terminations).toBe(0);
   host.engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
   await vi.waitFor(() => expect(process.terminations).toBe(1));
@@ -56,7 +57,7 @@ it('a failed private Session close stops its process, and Engine shutdown observ
   });
 
   const created = await host.caller.session.new(emptySessionInput);
-  await expect(host.caller.session.close(created)).resolves.toEqual({});
+  await expect(closeTestSession(host, created)).resolves.toEqual({});
   expect(closes).toHaveLength(1);
   const process = requireScriptedProcessAt(host.agent.processes);
   expect(process.terminations).toBe(1);

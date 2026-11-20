@@ -5,6 +5,7 @@ import { scenarios } from '@repo/mocks/agent/scenarios';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { openAcpFeedSession, waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 
 const backgroundScenario = 'subagent-background';
 
@@ -99,7 +100,7 @@ it.each(
         .all(),
     ).toHaveLength(turns);
     await expectLiveChildMessage(host, child.sessionId);
-    await host.caller.session.close({ sessionId });
+    await closeTestSession(host, { sessionId });
     await vi.waitFor(async () => {
       const saved = await host.caller.feed.page({
         sessionId: child.sessionId,

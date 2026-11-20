@@ -3,6 +3,7 @@ import { expect, it } from 'vitest';
 import { z } from 'zod';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import {
   requireScriptedProcessAt,
   type ScriptedProcess,
@@ -68,7 +69,7 @@ it('appends the Argo instructions to the system prompt of an Agent that takes on
     sentSystemPrompt(firstProcess(host), newSession),
   ).resolves.toEqual(argoSystemPrompt);
 
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
 }, 30_000);
 
 it('sends no system prompt to an Agent that does not take one', async () => {
@@ -79,7 +80,7 @@ it('sends no system prompt to an Agent that does not take one', async () => {
     sentSystemPrompt(firstProcess(host), newSession),
   ).resolves.toBeUndefined();
 
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
 }, 30_000);
 
 it('sends no system prompt when Agent access is disabled', async () => {
@@ -93,7 +94,7 @@ it('sends no system prompt when Agent access is disabled', async () => {
     sentSystemPrompt(firstProcess(host), newSession),
   ).resolves.toBeUndefined();
 
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
 }, 30_000);
 
 it('leaves the Todo list out of the system prompt when the person turned the Todo list off', async () => {
@@ -112,7 +113,7 @@ it('leaves the Todo list out of the system prompt when the person turned the Tod
     ],
   });
 
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
 }, 30_000);
 
 it('appends the Argo instructions again when a Session resumes on a new process', async () => {

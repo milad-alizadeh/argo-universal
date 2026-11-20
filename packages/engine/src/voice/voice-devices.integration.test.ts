@@ -55,17 +55,7 @@ async function connectApp(voice: Voice): Promise<ListeningApp> {
   return { caller, asked };
 }
 
-const chooseFromCli = async (
-  voice: Voice,
-  change: VoiceDeviceChange,
-): Promise<void> => {
-  await runOperation((await operationCaller(voice.host)).operations, {
-    id: 'voice.chooseDevices',
-    params: change,
-  });
-};
-
-describe('choosing the microphone and speaker from an Agent or the CLI', () => {
+describe('choosing the microphone and speaker', () => {
   it('lists the devices of the App that would carry a call', async () => {
     const voice = await startVoiceEngine();
     await connectApp(voice);
@@ -84,7 +74,9 @@ describe('choosing the microphone and speaker from an Agent or the CLI', () => {
     await expect(voice.host.caller.voice.listDevices({})).rejects.toThrow(
       noApp,
     );
-    await expect(chooseFromCli(voice, headset)).rejects.toThrow(noApp);
+    await expect(
+      voice.host.caller.voice.chooseDevices(headset),
+    ).rejects.toThrow(noApp);
   });
 
   it('asks the App carrying the call, not one that connected after it', async () => {
@@ -94,7 +86,7 @@ describe('choosing the microphone and speaker from an Agent or the CLI', () => {
     await carrying.caller.voice.start({ sessionId, offer });
     const later = await connectApp(voice);
 
-    await chooseFromCli(voice, headset);
+    await voice.host.caller.voice.chooseDevices(headset);
 
     await expect.poll(() => carrying.asked).toEqual([headset]);
     expect(later.asked).toEqual([]);
@@ -112,7 +104,7 @@ describe('choosing the microphone and speaker from an Agent or the CLI', () => {
     await used.caller.voice.end({ sessionId });
     const later = await connectApp(voice);
 
-    await chooseFromCli(voice, { speaker: 'spk-a' });
+    await voice.host.caller.voice.chooseDevices({ speaker: 'spk-a' });
 
     await expect.poll(() => used.asked).toEqual([{ speaker: 'spk-a' }]);
     expect(later.asked).toEqual([]);
@@ -123,7 +115,7 @@ describe('choosing the microphone and speaker from an Agent or the CLI', () => {
     const first = await connectApp(voice);
     const last = await connectApp(voice);
 
-    await chooseFromCli(voice, { microphone: null });
+    await voice.host.caller.voice.chooseDevices({ microphone: null });
 
     await expect.poll(() => last.asked).toEqual([{ microphone: null }]);
     expect(first.asked).toEqual([]);
@@ -133,9 +125,9 @@ describe('choosing the microphone and speaker from an Agent or the CLI', () => {
     const voice = await startVoiceEngine();
     const app = await connectApp(voice);
 
-    await expect(chooseFromCli(voice, { microphone: 'mic-z' })).rejects.toThrow(
-      /mic-z/,
-    );
+    await expect(
+      voice.host.caller.voice.chooseDevices({ microphone: 'mic-z' }),
+    ).rejects.toThrow(/mic-z/);
     expect(app.asked).toEqual([]);
   });
 });

@@ -44,6 +44,7 @@ it('reports a worker that crashes in an Operation as stopped', async () => {
           label: 'Crash',
           description: 'Crashes the worker.',
           tier: 'act',
+          policy: 'allow',
           params: {},
         },
       ],

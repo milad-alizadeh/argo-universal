@@ -17,7 +17,7 @@ const diffOperationId = 'session.diff';
 
 const reviewPath = 'review.txt';
 
-it('pages messages, changed files and diff lines with a Session token and checks scope on later pages', async () => {
+it('pages messages, changed files and diff lines with a Session token and reads later pages across Projects', async () => {
   const { calling, target, foreign } = await sessionReadScope();
 
   const run = {
@@ -121,8 +121,5 @@ it('pages messages, changed files and diff lines with a Session token and checks
         id: operation.id,
         params: { ...operation.params, sessionId: foreign.sessionId },
       }),
-    ).rejects.toMatchObject({
-      data: { code: 'CONFLICT' },
-      message: 'A Permission request requires an active Turn',
-    });
+    ).resolves.toMatchObject({ nextCursor: null });
 }, 30_000);

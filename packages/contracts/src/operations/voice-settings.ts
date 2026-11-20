@@ -23,6 +23,7 @@ export const voiceSettingsOperations = {
     params: z.strictObject({}).default({}),
     result: VoiceSettings,
     tier: 'read',
+    policy: 'allow',
     keywords: ['voice', 'settings', 'provider', 'speak'],
   },
   'voice.setSettings': {
@@ -34,6 +35,7 @@ export const voiceSettingsOperations = {
     params: VoiceSettingsChange,
     result: VoiceSettings,
     tier: 'confirm',
+    policy: 'person-only',
     keywords: ['voice', 'settings', 'provider', 'enable', 'disable'],
   },
   'voice.listVoices': {
@@ -45,6 +47,7 @@ export const voiceSettingsOperations = {
     params: z.strictObject({}).default({}),
     result: VoiceList,
     tier: 'read',
+    policy: 'allow',
     keywords: ['voice', 'voices', 'custom', 'list', 'speak'],
   },
   'voice.setVoice': {
@@ -56,6 +59,7 @@ export const voiceSettingsOperations = {
     params: VoiceChoice,
     result: VoiceSettings,
     tier: 'confirm',
+    policy: 'ask',
     keywords: ['voice', 'choose', 'pick', 'speak', 'sound'],
   },
   'voice.saveCustomVoice': {
@@ -67,6 +71,7 @@ export const voiceSettingsOperations = {
     params: CustomVoiceInput,
     result: CustomVoice,
     tier: 'confirm',
+    policy: 'ask',
     keywords: ['voice', 'custom', 'add', 'edit', 'describe', 'style'],
   },
   'voice.deleteCustomVoice': {
@@ -78,6 +83,7 @@ export const voiceSettingsOperations = {
     params: CustomVoiceId,
     result: VoiceList,
     tier: 'confirm',
+    policy: 'ask',
     keywords: ['voice', 'custom', 'delete', 'remove'],
   },
   'voice.setInstructions': {
@@ -89,6 +95,7 @@ export const voiceSettingsOperations = {
     params: VoiceInstructions,
     result: VoiceSettings,
     tier: 'confirm',
+    policy: 'ask',
     keywords: ['voice', 'instructions', 'prompt', 'persona', 'custom'],
   },
   'voice.setCallOptions': {
@@ -100,6 +107,7 @@ export const voiceSettingsOperations = {
     params: VoiceCallOptionsChange,
     result: VoiceSettings,
     tier: 'confirm',
+    policy: 'ask',
     keywords: [
       'voice',
       'options',

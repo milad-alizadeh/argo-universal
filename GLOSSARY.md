@@ -77,7 +77,7 @@ _Avoid_: Ticket, task
 ## Operations
 
 **Operation**:
-A named thing Argo can do, such as listing Projects or starting a Session, defined once with typed arguments and a tier. Agents, the command line and Apps all call the same Operation.
+A named thing Argo can do, such as listing Projects or starting a Session, defined once with typed arguments, a tier and a permission policy. Agents, the command line and Apps all call the same Operation.
 _Avoid_: Command (a Slash command or a shell command), tool, action, capability
 
 **Caller**:
@@ -85,7 +85,7 @@ Who an Operation runs for, with the scope it may act within: an Agent in its Ses
 _Avoid_: Actor, principal, user (for an Agent)
 
 **Operation tier**:
-How far an Operation may go without asking the user: `read` never asks, `act` stays within the caller's own scope and never asks, and `confirm` always asks first, whatever mode the Agent is in.
+An Operation's read or write classification. Its permission policy determines whether a caller can run it, must ask, or must use an authenticated App action.
 _Avoid_: Permission level, risk level
 
 **Prompt chain**:

@@ -37,19 +37,43 @@ export const publicProcedure = t.procedure.use(async ({ ctx, next }) => {
   return next({ ctx: { identity } });
 });
 
+export const authenticatedAppProcedure = publicProcedure.use(
+  async ({ ctx, next }) => {
+    if (ctx.token !== undefined)
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: 'This action requires an authenticated App',
+      });
+
+    return next();
+  },
+);
+
 /*
  * The actions that are the Server Device's alone (ADR-0022, ADR-0045): pairing a Device, unpairing another one, the Local network access switch, keeping the Server running after the desktop app quits, and the Devices list, which a Paired Device never sees.
  * The Server decides this itself, from the identity the handshake proved rather than from the address a Connection came from, because hiding a row in the App is not the check. The refusal is a `FORBIDDEN` the App draws, the same shape as every other refusal it renders.
  */
+function requireServerDevice(identity: { serverDevice: boolean }): void {
+  if (!identity.serverDevice)
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Only the Server Device may do this',
+    });
+}
+
 export const serverDeviceProcedure = publicProcedure.use(
   async ({ ctx, next }) => {
-    if (!ctx.identity.serverDevice)
-      throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'Only the Server Device may do this',
-      });
+    requireServerDevice(ctx.identity);
 
-    return next({ ctx: { identity: ctx.identity } });
+    return next();
+  },
+);
+
+export const serverDeviceAppProcedure = authenticatedAppProcedure.use(
+  async ({ ctx, next }) => {
+    requireServerDevice(ctx.identity);
+
+    return next();
   },
 );
 

@@ -74,7 +74,7 @@ it('prompts a Started Session from a Session that did not start it', async () =>
   });
 }, 30_000);
 
-it('asks before a Session prompts itself, which its own live Turn cannot answer', async () => {
+it('blocks a Session from prompting itself', async () => {
   const journey = await delegationJourney();
   await expect(
     runOperation(journey.caller.caller.operations, {
@@ -85,6 +85,6 @@ it('asks before a Session prompts itself, which its own live Turn cannot answer'
       },
     }),
   ).rejects.toMatchObject({
-    message: 'A Permission request requires an active Turn',
+    message: 'A Session cannot send an Operation Prompt to itself',
   });
 });

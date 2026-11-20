@@ -12,40 +12,38 @@ type Sources = Parameters<typeof archiveSession>[0] &
 export class OwnSessionArchive {
   private readonly pending = new WeakSet<SessionActorRef>();
   public constructor(private readonly sources: Sources) {}
-  public async request(sessionId: string): Promise<SessionArchiveOutput> {
+  public async request(
+    sessionId: string,
+    fingerprint?: string,
+  ): Promise<SessionArchiveOutput> {
     this.sources.open.admit();
     requireArchivable(this.sources, sessionId);
     const actor = this.sources.open.session(sessionId);
 
-    if (!actor) return archiveSession(this.sources, sessionId);
-    this.schedule(actor, sessionId);
+    if (!actor) return archiveSession(this.sources, sessionId, { fingerprint });
+    this.schedule(actor, sessionId, fingerprint);
 
     return { scheduled: true };
   }
-  private schedule(actor: SessionActorRef, sessionId: string): void {
+  private schedule(
+    actor: SessionActorRef,
+    sessionId: string,
+    fingerprint?: string,
+  ): void {
     if (this.pending.has(actor)) return;
     this.pending.add(actor);
-    void this.whenIdle(actor, sessionId)
+    void this.whenIdle(actor, sessionId, fingerprint)
       .catch((cause: unknown) => this.failed(sessionId, cause))
       .finally(() => this.pending.delete(actor));
   }
   private async whenIdle(
     actor: SessionActorRef,
     sessionId: string,
+    fingerprint?: string,
   ): Promise<void> {
-    const signal = actor.getSnapshot().context.acpLifetime.signal;
+    const idle = await whenArchivable(actor);
 
-    const idle = await waitFor(
-      actor,
-      (snapshot) => snapshot.can({ type: 'session.archive' }),
-      { signal },
-    ).catch((cause: unknown) => {
-      if (!signal.aborted) throw cause;
-
-      return null;
-    });
-
-    if (idle) await archiveSession(this.sources, sessionId);
+    if (idle) await archiveSession(this.sources, sessionId, { fingerprint });
   }
 
   private failed(sessionId: string, cause: unknown): void {
@@ -72,3 +70,21 @@ export const archiveFailure = (id: string, cause: unknown): FeedEvent => ({
   blobs: [],
   change: { type: 'upsert', update: archiveNotice(id, cause) },
 });
+
+async function whenArchivable(
+  actor: SessionActorRef,
+): Promise<ReturnType<SessionActorRef['getSnapshot']> | null> {
+  const signal = actor.getSnapshot().context.acpLifetime.signal;
+
+  try {
+    return await waitFor(
+      actor,
+      (snapshot) => snapshot.can({ type: 'session.archive' }),
+      { signal },
+    );
+  } catch (cause) {
+    if (!signal.aborted) throw cause;
+
+    return null;
+  }
+}

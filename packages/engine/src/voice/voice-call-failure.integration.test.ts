@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { closeTestSession } from '#mocks/close-session';
 import { offer } from '#mocks/voice-engine';
 import { startVoiceWork } from '#mocks/voice-work';
 import { FakeVoiceProvider } from './fake-provider';
@@ -72,7 +73,7 @@ describe('a Voice call that ends by failure', () => {
     const work = await startVoiceWork([]);
     await work.start();
     await work.host.caller.voice.end({ sessionId: work.sessionId });
-    await work.host.caller.session.close({ sessionId: work.sessionId });
+    await closeTestSession(work.host, { sessionId: work.sessionId });
 
     expect(await notices(work)).toHaveLength(0);
   });

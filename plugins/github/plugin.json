@@ -25,6 +25,7 @@
         "icon": "attach",
         "label": "Attach a pull request to Session",
         "description": "Connect the calling Session to a GitHub pull request it produced, so the Session's Changes show it. Attaching it again changes nothing.",
+        "policy": "allow",
         "tier": "act",
         "keywords": ["github", "pull request", "pr", "change", "session"],
         "params": {
@@ -49,6 +50,7 @@
         "icon": "search",
         "label": "Find the pull requests of the Session's branch",
         "description": "Look on GitHub for the pull requests, open, merged or closed, opened from the calling Session's current branch, and attach each one found that was not detached from the Session. Safe to repeat: earlier attached pull requests stay. Answers found, detached (every one found was detached from the Session, so none was attached), no-match, branchless, not-github or unavailable.",
+        "policy": "allow",
         "tier": "act",
         "keywords": [
           "github",
@@ -76,6 +78,7 @@
         "icon": "close",
         "label": "Detach a pull request from Session",
         "description": "Remove one pull request from the calling Session's Changes, for one that does not belong to it. The Session's other pull requests stay, and the pull request itself is untouched on GitHub.",
+        "policy": "allow",
         "tier": "act",
         "keywords": [
           "github",
@@ -103,6 +106,7 @@
         "icon": "mode",
         "label": "Turn an automation on or off for a pull request",
         "description": "Turn Auto-fix, Auto-merge or Auto-archive on or off for one pull request attached to the calling Session. Auto-fix prompts the Session once for each failed Check, merge conflict and review comment from a trusted author on the pull request, and turns itself off after three Prompts on one commit with no new push; it is only for pull requests the signed-in account opened. Auto-merge is GitHub's own: it merges when the pull request is ready, or at once when it is ready already, with the first method the repository allows (squash, merge, rebase), and shows whatever GitHub reports. Auto-archive archives the Session once the pull request is merged or closed and no other attached pull request is open, waiting while a Turn runs. An Agent's call asks the person first.",
+        "policy": "ask",
         "tier": "act",
         "keywords": [
           "github",
@@ -138,14 +142,14 @@
             "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
           }
         },
-        "caller": ["project"],
-        "confirmAgent": true
+        "caller": ["project"]
       },
       {
         "name": "list",
         "icon": "pull-request",
         "label": "List the Session's pull requests",
         "description": "Read the pull requests attached to the calling Session, with their title, stage, branch and totals as GitHub reports them.",
+        "policy": "allow",
         "tier": "read",
         "keywords": ["github", "pull request", "pr", "change", "session"],
         "caller": ["project"],
@@ -161,6 +165,7 @@
         "icon": "changed-files",
         "label": "Read the files of an attached pull request",
         "description": "Read one page of the files a pull request attached to the calling Session changes, against that pull request's own base and head on GitHub, never the Session's Checkout. Answers the files, the pull request's totals and the cursor of the next page.",
+        "policy": "allow",
         "tier": "read",
         "keywords": [
           "github",
@@ -192,6 +197,7 @@
         "icon": "diff",
         "label": "Read one file's patch of an attached pull request",
         "description": "Read the patch of one file a pull request attached to the calling Session changes, as a git patch against that pull request's own base, never the Session's Checkout.",
+        "policy": "allow",
         "tier": "read",
         "keywords": [
           "github",
@@ -225,6 +231,7 @@
         "icon": "retry",
         "label": "Read the Session's pull requests again",
         "description": "Ask GitHub again for the pull requests attached to the calling Session, now: the retry after signing in again or after a failed read. Returns what list does.",
+        "policy": "allow",
         "tier": "read",
         "keywords": [
           "github",

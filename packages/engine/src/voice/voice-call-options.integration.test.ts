@@ -78,7 +78,7 @@ describe('Voice call options', () => {
     ).rejects.toThrow(/100/);
   });
 
-  it('can be read and changed by an Agent and the command line', async () => {
+  it('shows the approval policy and lets the App change call options', async () => {
     const voice = await startVoiceEngine();
     const session = await openVoiceSession(voice);
     const cli = await operationCaller(voice.host);
@@ -87,25 +87,32 @@ describe('Voice call options', () => {
       filter: setCallOptions,
     });
 
-    await runOperation(cli.operations, {
-      id: setCallOptions,
-      params: { idleSeconds: 60 },
-    });
+    await expect(
+      runOperation(cli.operations, {
+        id: setCallOptions,
+        params: { idleSeconds: 60 },
+      }),
+    ).rejects.toThrow('active Turn');
+    await voice.host.caller.voice.setCallOptions({ idleSeconds: 60 });
 
-    expect(listed.map(({ id }) => id)).toContain(setCallOptions);
+    expect(listed).toContainEqual(
+      expect.objectContaining({
+        id: setCallOptions,
+        policy: 'ask',
+        enabled: false,
+      }),
+    );
     expect(
       (await voice.host.caller.voice.getSettings()).options.idleSeconds,
     ).toBe(60);
   });
 
   it('offer no choice of what the voice reads out', async () => {
-    const cli = await operationCaller((await startVoiceEngine()).host);
+    const { host } = await startVoiceEngine();
+    const invalid = { readOut: 'answers', filler: false };
 
     await expect(
-      runOperation(cli.operations, {
-        id: setCallOptions,
-        params: { readOut: 'answers' },
-      }),
+      host.caller.voice.setCallOptions({ ...invalid }),
     ).rejects.toThrow(/readOut/);
   });
 });

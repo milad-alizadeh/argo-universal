@@ -262,7 +262,7 @@ Feature: Agent sign-in and launch callouts
     And a New Session with Agent 1
     And I send the prompt "First prompt"
     And the Agent replies "The shared fixture completed this Turn."
-    And the Server closes the Session quietly
+    And the Engine restarts
     When I reload the App and open the Session "First prompt"
     And I try to send the prompt "Second prompt"
     Then the App says the Agent failed to launch

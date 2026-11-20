@@ -7,7 +7,6 @@ import {
   type PluginOperationParam,
 } from '@repo/contracts/plugins/plugin-operations';
 import { z } from 'zod';
-import { isAgentCaller } from './agent-caller';
 
 // The params one Operation declares, by name.
 type Params = NonNullable<PluginOperationContribution['params']>;
@@ -33,14 +32,10 @@ type ParamValue = string | number | boolean;
 
 type CheckedParams = Readonly<Record<string, ParamValue>>;
 
-/*
- * What the handler is handed: the checked params, and the Caller with the Project it acts in. `outside` says a
- * Session names a Project other than its own, which is `confirm` tier (ADR-0044) and so asks the user first.
- */
+// The checked params and the Caller with the Project the Operation acts in.
 export type CheckedRun = {
   params: CheckedParams;
   caller: PluginOperationCaller;
-  outside: boolean;
 };
 
 // Params arrive as JSON from the CLI or the App, so their shape is parsed before it is read.
@@ -58,8 +53,7 @@ const givenParams = (given: Json): Record<string, Json> => {
  * What core passes a Plugin's handler: exactly the params it declared, each of the declared type and one
  * of its choices, with every required one given, so a Plugin never sees a param it did not ask for. An
  * Operation that needs a Session runs only for one; one that needs a Project acts in the `projectId` the
- * run names, or else the Caller's own Project, and runs only when there is one. A Session that names another
- * Project is `outside`; a person is never.
+ * run names, or else the Caller's own Project, and runs only when there is one.
  */
 export function checkRun(
   operation: PluginOperationContribution,
@@ -74,17 +68,8 @@ export function checkRun(
   return {
     params,
     caller: checkedCaller(operation, inProject(caller, named)),
-    outside: namesOtherProject(caller, named),
   };
 }
-
-const namesOtherProject = (
-  caller: PluginOperationCaller,
-  named: ParamValue | undefined,
-): boolean =>
-  isAgentCaller(caller) &&
-  typeof named === 'string' &&
-  named !== caller.projectId;
 
 const inProject = (
   caller: PluginOperationCaller,

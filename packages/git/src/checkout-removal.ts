@@ -98,3 +98,27 @@ export async function removeCheckout(
 
   await removeLinkedCheckout(projectPath, checkout.path, signal);
 }
+
+// Git checks again for edits when removing an unapproved Checkout.
+export async function removeArchivedCheckout(
+  projectPath: string,
+  checkout: Checkout,
+  options: { signal?: AbortSignal; force: boolean },
+): Promise<void> {
+  if (!existsSync(checkout.path)) return;
+
+  if (await isMainCheckout(projectPath, checkout, options.signal)) return;
+
+  await git(
+    projectPath,
+    archiveRemovalArgs(checkout.path, options.force),
+    options.signal,
+  );
+}
+
+const archiveRemovalArgs = (path: string, force: boolean): string[] => [
+  'worktree',
+  'remove',
+  ...(force ? ['--force'] : []),
+  path,
+];

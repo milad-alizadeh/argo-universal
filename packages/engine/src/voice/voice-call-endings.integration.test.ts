@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import {
   callOf,
   endedOf,
@@ -46,7 +47,7 @@ describe('Voice call endings', () => {
 
   it('ends when its Session is closed', async () => {
     const { host, provider, sessionId } = await runningCall();
-    await host.caller.session.close({ sessionId });
+    await closeTestSession(host, { sessionId });
     await expect.poll(() => callOf(host)).toBeNull();
     expect(provider.call.ended).toBe(true);
     expect(await endedOf(host)).toMatchObject({ reason: 'session-closed' });

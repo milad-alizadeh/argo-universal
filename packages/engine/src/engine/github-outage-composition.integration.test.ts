@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { fixtureNetwork, httpsServer } from '#mocks/probe-plugin';
 import { writePlugin } from '#mocks/runtime-plugins';
 
@@ -19,6 +20,7 @@ async function installDiscovery(home: string, port: number): Promise<void> {
         label: 'Discover',
         description: 'Find pull requests',
         tier: 'act',
+        policy: 'allow',
         params: {
           unlessAttached: {
             type: 'boolean',
@@ -112,7 +114,5 @@ it('serves Sessions across Agents while Turn-end discovery waits and fails', asy
     .toBeGreaterThanOrEqual(2);
   await send('After failure');
   await idle();
-  await Promise.all(
-    sessions.map((session) => host.caller.session.close(session)),
-  );
+  await Promise.all(sessions.map((session) => closeTestSession(host, session)));
 }, 20_000);

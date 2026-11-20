@@ -6,11 +6,11 @@ import {
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import {
+  serverDeviceAppProcedure,
   liveConnection,
   mergeRouters,
   router,
   routerFactory,
-  serverDeviceProcedure,
   zAsyncIterable,
 } from '../rpc';
 import type { WriterActorRef } from '../storage';
@@ -59,10 +59,10 @@ const mintedTicket = (deps: PairingDeps): MintedPairingTicket => {
  */
 const ticketRouter = routerFactory((deps: PairingDeps) =>
   router({
-    mint: serverDeviceProcedure
+    mint: serverDeviceAppProcedure
       .output(MintedPairingTicket)
       .mutation((): MintedPairingTicket => mintedTicket(deps)),
-    revoke: serverDeviceProcedure.output(z.void()).mutation((): void => {
+    revoke: serverDeviceAppProcedure.output(z.void()).mutation((): void => {
       deps.tickets.revoke();
       deps.registrations.clear();
     }),
@@ -77,7 +77,7 @@ const watchingNeeds = 'Watching for a Device needs a live App Connection';
  */
 const registeredRouter = routerFactory((deps: PairingDeps) =>
   router({
-    registered: serverDeviceProcedure
+    registered: serverDeviceAppProcedure
       .output(zAsyncIterable({ yield: PairingRegistration }))
       .subscription(({ signal, ctx }) =>
         watching(
@@ -90,13 +90,13 @@ const registeredRouter = routerFactory((deps: PairingDeps) =>
 
 const answerRouter = routerFactory((deps: PairingDeps) =>
   router({
-    allow: serverDeviceProcedure
+    allow: serverDeviceAppProcedure
       .input(Answered)
       .output(z.void())
       .mutation(async ({ input }): Promise<void> => {
         notAsking(await deps.registrations.allow(input.deviceId));
       }),
-    decline: serverDeviceProcedure
+    decline: serverDeviceAppProcedure
       .input(Answered)
       .output(z.void())
       .mutation(({ input }): void => {

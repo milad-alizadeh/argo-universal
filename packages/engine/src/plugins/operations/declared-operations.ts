@@ -34,6 +34,7 @@ export const operationRow = (declared: DeclaredOperation): OperationRow => ({
   params: paramsSchema(runParams(declared.operation)),
   result: { description: `What ${declared.pluginName} answers.` },
   tier: declared.operation.tier,
+  policy: declared.operation.policy,
   keywords: operationKeywords(declared),
   enabled: declared.enabled,
   disabledReason: disabledReason(declared),

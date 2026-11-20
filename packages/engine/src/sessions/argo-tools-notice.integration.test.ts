@@ -5,6 +5,7 @@ import {
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 
 type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 
@@ -46,7 +47,7 @@ it("tells the person once that the Agent didn't load Argo's tools, also after th
   const sessionId = await openPrompted(host);
 
   await prompt(host, sessionId);
-  await host.caller.session.close({ sessionId });
+  await closeTestSession(host, { sessionId });
   await prompt(host, sessionId);
 
   expect(await toolNotices(host, sessionId)).toMatchObject([

@@ -12,6 +12,7 @@ export const todoListOperations = {
     params: z.strictObject({}).default({}),
     result: TodoListSetting,
     tier: 'read',
+    policy: 'allow',
     keywords: ['settings', 'todo', 'checklist', 'progress'],
   },
   'agent.setTodoList': {
@@ -22,7 +23,8 @@ export const todoListOperations = {
       'Turn the Todo list on or off. Off, new Sessions are not asked to keep one and none is shown.',
     params: TodoListSetting,
     result: TodoListSetting,
-    tier: 'confirm',
+    tier: 'act',
+    policy: 'allow',
     keywords: ['settings', 'todo', 'checklist', 'enable', 'disable'],
   },
 } as const satisfies Record<string, OperationDefinition>;

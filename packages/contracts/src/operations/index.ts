@@ -3,7 +3,7 @@ import type { IconName } from '../kit-symbols';
 import { agentAccessOperations } from './agent-access';
 import { appOperations } from './app';
 import { diagramOperations } from './diagram';
-import type { OperationTier } from './metadata';
+import type { OperationTier, OperationPolicy } from './metadata';
 import { pluginOperations } from './plugins';
 import { projectOperations } from './projects';
 import { readerOperations } from './readers';
@@ -40,6 +40,7 @@ export {
   discoveryOperation,
   operationFeedRowId,
   OperationRow,
+  OperationPolicy,
   OperationTier,
 } from './metadata';
 
@@ -57,6 +58,7 @@ export interface OperationDefinition {
   params: z.ZodType;
   result: z.ZodType;
   tier: OperationTier;
+  policy: OperationPolicy;
   keywords: readonly string[];
 }
 

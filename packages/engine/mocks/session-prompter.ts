@@ -15,6 +15,7 @@ const promptOperation = {
   label: 'Prompt a Session',
   description: 'Prompts the Session it is given.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {
     sessionId: { type: 'string' as const, description: 'Session.' },
     text: { type: 'string' as const, description: 'Text.' },
@@ -27,6 +28,7 @@ const withdrawOperation = {
   label: 'Withdraw a Prompt',
   description: 'Takes back a Prompt it queued.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {
     sessionId: { type: 'string' as const, description: 'Session.' },
     queuedId: { type: 'string' as const, description: 'Queued Prompt.' },

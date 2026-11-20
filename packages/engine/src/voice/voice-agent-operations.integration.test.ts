@@ -59,22 +59,28 @@ describe('the App-only Operations an Agent is refused', () => {
     expect(settings).toMatchObject({ voice: 'fake', instructions: '' });
   });
 
-  it('lets the command line change the voice and the instructions', async () => {
+  it('requires approval to change the voice and instructions and allows the App action', async () => {
     const { host } = await startVoiceEngine();
     const cli = await operationCaller(host);
+    const instructions = 'Call me Sam.';
 
-    await runOperation(cli.operations, {
-      id: 'voice.saveCustomVoice',
-      params: { label: 'Calm', baseVoice: 'fake', description: 'Slow, low.' },
+    await expect(
+      runOperation(cli.operations, {
+        id: 'voice.setInstructions',
+        params: { instructions },
+      }),
+    ).rejects.toThrow('active Turn');
+
+    await host.caller.voice.saveCustomVoice({
+      label: 'Calm',
+      baseVoice: 'fake',
+      description: 'Slow, low.',
     });
-    await runOperation(cli.operations, {
-      id: 'voice.setInstructions',
-      params: { instructions: 'Call me Sam.' },
-    });
+    await host.caller.voice.setInstructions({ instructions });
 
     expect(await host.caller.voice.getSettings()).toMatchObject({
       customVoices: [{ label: 'Calm' }],
-      instructions: 'Call me Sam.',
+      instructions,
     });
   });
 

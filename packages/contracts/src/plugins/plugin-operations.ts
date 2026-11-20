@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { OperationIcon } from '#operation-metadata';
+import { OperationIcon, OperationPolicy } from '#operation-metadata';
 import { WireJson } from '#plugin-wire-json';
 
 /*
@@ -109,6 +109,7 @@ export const PluginOperationContribution = z.strictObject({
   icon: OperationIcon.optional(),
   description: z.string().trim().min(1),
   tier: PluginOperationTier,
+  policy: OperationPolicy.exclude(['archive']),
   params: z
     .record(PluginOperationName, PluginOperationParam)
     .refine(
@@ -124,8 +125,6 @@ export const PluginOperationContribution = z.strictObject({
     )
     .optional(),
   keywords: z.array(z.string().trim().min(1)).optional(),
-  // A Session's run asks the user first, as a `confirm` tier Operation does; a person's own run applies at once.
-  confirmAgent: z.boolean().optional(),
 });
 
 export type PluginOperationContribution = z.infer<

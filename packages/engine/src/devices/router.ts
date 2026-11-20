@@ -5,10 +5,11 @@ import { TRPCError } from '@trpc/server';
 import { asc, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import {
-  publicProcedure,
+  authenticatedAppProcedure,
   router,
   routerFactory,
   serverDeviceProcedure,
+  serverDeviceAppProcedure,
 } from '../rpc';
 import type { RpcIdentity } from '../rpc/identity';
 import type { WriterActorRef } from '../storage';
@@ -79,11 +80,11 @@ async function unpairSelf(
   setTimeout(() => deps.channels.closeAll(deviceId), selfUnpairGraceMs);
 }
 
-const unpairProcedure = serverDeviceProcedure
+const unpairProcedure = serverDeviceAppProcedure
   .input(z.strictObject({ deviceId: z.string() }))
   .output(z.void());
 
-const unpairSelfProcedure = publicProcedure.output(z.void());
+const unpairSelfProcedure = authenticatedAppProcedure.output(z.void());
 
 /*
  * Server-Device-only (ADR-0022, ADR-0045): a Paired Device never sees the other Devices, and the Server refuses to tell it rather than trusting the App to hide the page.

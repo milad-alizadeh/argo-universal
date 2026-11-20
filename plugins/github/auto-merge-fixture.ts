@@ -45,15 +45,15 @@ export const set = (
     confirm: () => Promise.resolve(),
   });
 
-// A person's tap in the App: a person in the Project, naming the Session.
+// A person's tap uses the App's authenticated Page action.
 export const tap = (
   run: Journey,
   params: { kind: string; on: boolean },
-): ReturnType<Journey['test']['operations']['run']> =>
-  run.test.operations.run({
-    name: 'automationSet',
-    params: { reference, sessionId, ...params },
-    caller: { projectId: project.id, person: true },
+): ReturnType<Journey['test']['pages']['run']> =>
+  run.test.pages.run({
+    operation: 'automationSet',
+    sessionId,
+    args: { reference, projectId: project.id, sessionId, ...params },
   });
 
 export async function refresh(run: Journey): Promise<void> {

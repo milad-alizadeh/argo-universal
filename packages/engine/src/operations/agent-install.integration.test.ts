@@ -9,12 +9,11 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { operations } from '@repo/contracts/operations';
 import { expect, it, onTestFinished } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
-import { operationCaller, runOperation } from '#mocks/operations';
-
-const installOperation = 'agent.installInstructions';
+import { operationCaller } from '#mocks/operations';
 
 const skillPath = '.agents/skills/argo/SKILL.md';
 
@@ -26,16 +25,10 @@ it('writes Agent instructions only on explicit execution and repairs them on the
   const host = await startEngineTestHost({ userHome });
   const caller = await operationCaller(host);
   await caller.operations.list.query({ filter: 'access' });
-  await runOperation(caller.operations, {
-    id: 'agent.setAccess',
-    params: { enabled: false },
-  });
+  await host.caller.agent.setAccess({ enabled: false });
   expect(await readdir(userHome)).toEqual([]);
 
-  const installed = await runOperation(caller.operations, {
-    id: installOperation,
-    params: {},
-  });
+  const installed = await host.caller.agent.installInstructions({});
 
   expect(installed).toEqual({ updated: false });
   const skill = join(userHome, skillPath);
@@ -57,12 +50,9 @@ it('writes Agent instructions only on explicit execution and repairs them on the
   await writeFile(unrelated, 'keep this skill');
   await writeFile(skill, 'outdated instructions');
   await writeFile(rule, 'outdated rule');
-  expect(
-    await runOperation(caller.operations, {
-      id: installOperation,
-      params: {},
-    }),
-  ).toEqual({ updated: true });
+  expect(await host.caller.agent.installInstructions({})).toEqual({
+    updated: true,
+  });
   expect(await readFile(skill, 'utf8')).toBe(content);
   expect(await readFile(rule, 'utf8')).toContain('decision="allow"');
   expect(await readFile(unrelated, 'utf8')).toBe('keep this skill');
@@ -78,13 +68,9 @@ it('refuses a redirected instructions directory without touching a Project', asy
   await writeFile(join(project, 'keep.txt'), 'Project data');
   await symlink(project, join(userHome, '.claude'));
   const host = await startEngineTestHost({ userHome });
-  const caller = await operationCaller(host);
-  await expect(
-    runOperation(caller.operations, {
-      id: installOperation,
-      params: {},
-    }),
-  ).rejects.toThrow('symbolic link');
+  await expect(host.caller.agent.installInstructions({})).rejects.toThrow(
+    'symbolic link',
+  );
   expect(await readdir(project)).toEqual(['keep.txt']);
   expect(await readFile(join(project, 'keep.txt'), 'utf8')).toBe(
     'Project data',
@@ -97,20 +83,13 @@ it('reports incomplete writes honestly and repairs the installation on retry', a
   onTestFinished(() => rm(userHome, { recursive: true, force: true }));
   await mkdir(join(userHome, rulesPath), { recursive: true });
   const host = await startEngineTestHost({ userHome });
-  const caller = await operationCaller(host);
-  await expect(
-    runOperation(caller.operations, {
-      id: installOperation,
-      params: {},
-    }),
-  ).rejects.toThrow('2 of 3 files updated');
+  await expect(host.caller.agent.installInstructions({})).rejects.toThrow(
+    '2 of 3 files updated',
+  );
   await rm(join(userHome, rulesPath), { recursive: true });
-  expect(
-    await runOperation(caller.operations, {
-      id: installOperation,
-      params: {},
-    }),
-  ).toEqual({ updated: true });
+  expect(await host.caller.agent.installInstructions({})).toEqual({
+    updated: true,
+  });
   expect(await readFile(join(userHome, rulesPath), 'utf8')).toBe(
     'prefix_rule(pattern=["argo"], decision="allow")\n',
   );
@@ -130,19 +109,12 @@ it('refuses destinations inside a registered Project and accepts no custom desti
     userHome,
   });
 
-  const caller = await operationCaller(host);
-  await expect(
-    runOperation(caller.operations, {
-      id: installOperation,
-      params: {},
-    }),
-  ).rejects.toThrow('inside a Project');
-  await expect(
-    runOperation(caller.operations, {
-      id: installOperation,
-      params: { path: projectPath },
-    }),
-  ).rejects.toThrow('Unrecognized key');
+  await expect(host.caller.agent.installInstructions({})).rejects.toThrow(
+    'inside a Project',
+  );
+  expect(() =>
+    operations['agent.installInstructions'].params.parse({ path: projectPath }),
+  ).toThrow('Unrecognized key');
   expect(await readdir(projectPath)).toEqual([]);
   expect(await readdir(userHome)).toEqual(['.agents']);
 });

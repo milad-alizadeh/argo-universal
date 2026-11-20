@@ -25,6 +25,7 @@ export const appOperations = {
     params: z.strictObject({ destination: ScreenDestination }),
     result: AppOpenResult,
     tier: 'act',
+    policy: 'allow',
     keywords: ['navigate', 'screen', 'link', 'show', 'focus'],
   },
   'app.screenshot': {
@@ -36,6 +37,7 @@ export const appOperations = {
     params: z.strictObject({}).default({}),
     result: AppScreenshotResult,
     tier: 'act',
+    policy: 'allow',
     keywords: ['screen', 'screenshot', 'see', 'look', 'capture', 'display'],
   },
 } as const satisfies Record<string, OperationDefinition>;

@@ -9,6 +9,7 @@ import { assert, expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { resourceInitialization } from '#mocks/acp-resource';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { discoverOptions } from '#mocks/session-access';
 
@@ -68,8 +69,8 @@ it('supplies isolated MCP credentials to each new Session', async () => {
   expect(firstServer.name).not.toBe('argo');
   expect(secondServer.name).not.toBe(firstServer.name);
   expect(secondServer.env).not.toEqual(firstServer.env);
-  await host.caller.session.close(first);
-  await host.caller.session.close(second);
+  await closeTestSession(host, first);
+  await closeTestSession(host, second);
 }, 30_000);
 
 it('keeps Argo MCP credentials out of configuration discovery', async () => {
@@ -87,7 +88,7 @@ it('does not supply Argo MCP when Agent access is disabled', async () => {
   const disabled = await host.caller.session.new(emptySessionInput);
 
   expect(requestAt(openings, 0).mcpServers).toEqual([]);
-  await host.caller.session.close(disabled);
+  await closeTestSession(host, disabled);
 }, 30_000);
 
 function initializationFor(

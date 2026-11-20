@@ -5,6 +5,7 @@ import type {
 import type { AgentOptionsUpdate, SlashCommand } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const reviewDescription = 'Review changes';
@@ -55,7 +56,7 @@ it.each(['ready', 'discovering'])(
       prompt: [{ type: 'text', text: 'Keep this Session' }],
     });
 
-    await host.caller.session.close(created);
+    await closeTestSession(host, created);
     const reader = new AbortController();
 
     const stream = (

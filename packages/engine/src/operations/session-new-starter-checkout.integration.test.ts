@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { sessionBranch } from '@repo/git';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import { operationCaller, runOperation } from '#mocks/operations';
 import {
   delegationJourney,
@@ -84,7 +85,7 @@ it("archives a Session that borrowed its starter's worktree without removing it"
   });
 
   await journey.host.caller.session.archive({ sessionId: started.sessionId });
-  await journey.host.caller.session.close({ sessionId: started.sessionId });
+  await closeTestSession(journey.host, { sessionId: started.sessionId });
 
   expect(existsSync(checkout.path)).toBe(true);
   expect(

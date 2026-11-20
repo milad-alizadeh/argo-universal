@@ -2,6 +2,7 @@ import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { delegatedTurnWaitHost } from '#mocks/delegated-turn-wait';
 import { runOperation } from '#mocks/operations';
 
@@ -62,7 +63,7 @@ it('reauthorizes an active native Turn wait when its calling Session closes, whi
   expect(child).toMatchObject({ startedBySessionId: caller.sessionId });
 
   if (!child) throw new Error('No admitted Agent');
-  await host.caller.session.close({ sessionId: caller.sessionId });
+  await closeTestSession(host, { sessionId: caller.sessionId });
   await expect.poll(() => clock.activeDeadlines()).toBe(0);
   expect(await outcome).toMatchObject([
     { status: 'rejected', reason: { data: { code: 'UNAUTHORIZED' } } },

@@ -15,12 +15,9 @@ it('defaults Agent access on and keeps an explicit choice after Engine restart',
   expect(
     await runOperation(caller.operations, { id: readAccess, params: {} }),
   ).toEqual({ enabled: true });
-  expect(
-    await runOperation(caller.operations, {
-      id: 'agent.setAccess',
-      params: { enabled: false },
-    }),
-  ).toEqual({ enabled: false });
+  expect(await host.caller.agent.setAccess({ enabled: false })).toEqual({
+    enabled: false,
+  });
   await host.stop();
   const restarted = await startEngineTestHost({ home });
   const afterRestart = await operationCaller(restarted);
@@ -42,7 +39,7 @@ it('discovers global Agent settings writes as confirm Operations', async () => {
       expect.objectContaining({ id: 'agent.setAccess', tier: 'confirm' }),
       expect.objectContaining({
         id: 'agent.installInstructions',
-        tier: 'confirm',
+        policy: 'ask',
       }),
     ]),
   );

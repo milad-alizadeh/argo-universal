@@ -3,15 +3,14 @@ import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
-import { askOperation } from '#mocks/operation-permissions';
+import { runOperation } from '#mocks/operations';
 import { addOtherProject } from '#mocks/session-access';
 import { delegationJourney, holdSession } from '#mocks/session-delegation';
 
-it('asks for another Project even when the calling Session owns the started Agent', async () => {
+it('starts a Session in another Project and cancels its Turn without approval', async () => {
   const journey = await delegationJourney();
   const projectId = await addOtherProject(journey.host);
-  await holdSession(journey, journey.caller.sessionId);
-  const calling = { host: journey.host, session: journey.caller };
+  const operations = journey.caller.caller.operations;
 
   const operation = {
     id: 'session.new' as const,
@@ -22,30 +21,9 @@ it('asks for another Project even when the calling Session owns the started Agen
     },
   };
 
-  const denied = await askOperation(calling, operation);
-  await journey.host.caller.session.answerPermission({
-    sessionId: journey.caller.sessionId,
-    requestId: denied.request.requestId,
-    optionId: 'reject_once',
-  });
-  expect(await denied.outcome).toMatchObject([
-    { status: 'rejected', reason: { message: 'The user refused' } },
-  ]);
-  expect(await journey.host.caller.session.list({ projectId })).toMatchObject({
-    sessions: [],
-  });
-
-  const allowed = await askOperation(calling, operation);
-  await journey.host.caller.session.answerPermission({
-    sessionId: journey.caller.sessionId,
-    requestId: allowed.request.requestId,
-    optionId: 'allow_once',
-  });
-  const [result] = await allowed.outcome;
-
   const created = SessionNewOutput.parse(
     OperationExecution.parse(
-      result?.status === 'fulfilled' ? result.value : null,
+      await runOperation(operations, { ...operation, wait: true }),
     ).result,
   );
 
@@ -56,18 +34,6 @@ it('asks for another Project even when the calling Session owns the started Agen
   await waitForAcpSessionIdle(journey.host, created.sessionId);
   await holdSession(journey, created.sessionId);
 
-  const cancel = await askOperation(calling, {
-    id: 'session.cancel',
-    params: created,
-  });
-
-  await journey.host.caller.session.answerPermission({
-    sessionId: journey.caller.sessionId,
-    requestId: cancel.request.requestId,
-    optionId: 'reject_once',
-  });
-  expect(await cancel.outcome).toMatchObject([{ status: 'rejected' }]);
-  expect(await journey.host.caller.session.get(created)).toMatchObject({
-    state: 'running',
-  });
+  await runOperation(operations, { id: 'session.cancel', params: created });
+  await waitForAcpSessionIdle(journey.host, created.sessionId);
 });

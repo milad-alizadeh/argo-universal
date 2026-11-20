@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import {
   callOf,
   endedOf,
@@ -40,7 +41,7 @@ describe('Voice call', () => {
     const voice = await startVoiceEngine();
     const { host } = voice;
     const { sessionId } = await openVoiceSession(voice);
-    await host.caller.session.close({ sessionId });
+    await closeTestSession(host, { sessionId });
 
     await host.caller.voice.start({ sessionId, offer });
 

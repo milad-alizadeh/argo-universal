@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
+import { operationCaller } from '#mocks/operations';
 import { drawnRoot, pageAt } from '#mocks/plugin-pages';
 import { createRuntimePlugins } from '#mocks/runtime-plugins';
 
@@ -8,16 +9,21 @@ const refuse = {
   label: 'Refuse',
   description: 'Fails, as a Plugin Operation can.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {
     level: { type: 'number' as const, description: 'The level.' },
   },
 };
 
-async function controls(): Promise<
-  Awaited<ReturnType<typeof startEngineTestHost>>
-> {
+async function controls(
+  policy: 'allow' | 'ask' | 'person-only' = 'allow',
+): Promise<Awaited<ReturnType<typeof startEngineTestHost>>> {
   const home = await createRuntimePlugins([
-    { id: 'controls', fixture: 'control-actions', operations: [refuse] },
+    {
+      id: 'controls',
+      fixture: 'control-actions',
+      operations: [{ ...refuse, policy }],
+    },
   ]);
 
   return startEngineTestHost({ home });
@@ -75,3 +81,30 @@ it('answers a failed Operation with its error and refuses args of the wrong type
     plugins: [{ state: 'running', error: null }],
   });
 }, 20_000);
+
+it.each(['ask', 'person-only'] as const)(
+  'enforces the Plugin’s %s policy for a CLI caller',
+  async (policy) => {
+    const host = await controls(policy);
+    const cli = await operationCaller(host);
+    const id = 'controls.refuse';
+    const rows = await cli.operations.list.query({ filter: id });
+
+    const row = expect.objectContaining({ id, policy, enabled: false });
+    const expected = policy === 'person-only' ? [] : [row];
+
+    expect(rows).toEqual(expected);
+
+    await expect(
+      cli.operations.run.mutate({ id, params: { level: 1 } }),
+    ).rejects.toThrow(policy === 'ask' ? 'active Turn' : 'Only an App');
+    await expect(
+      host.caller.plugins.run({
+        pluginId: 'controls',
+        operation: 'refuse',
+        args: { level: 1 },
+      }),
+    ).rejects.toThrow('Secondary refused');
+  },
+  20_000,
+);

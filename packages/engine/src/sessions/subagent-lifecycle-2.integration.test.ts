@@ -2,6 +2,7 @@ import { session } from '@repo/db/schema';
 import { inArray } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const missingChild = 'No Subagent was persisted';
@@ -48,7 +49,7 @@ it('discards an Empty Session with all its Subagents instead of promoting them t
   });
 
   if (!nested) throw new Error(missingChild);
-  await host.caller.session.close({ sessionId });
+  await closeTestSession(host, { sessionId });
   expect(
     host.database
       .select()

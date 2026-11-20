@@ -2,6 +2,7 @@ import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import { createResourceOpening } from '#mocks/acp-resource';
+import { closeTestSession } from '#mocks/close-session';
 import { installEntry, installationPorts } from '#mocks/installation';
 import {
   installedAgentsOf,
@@ -107,6 +108,6 @@ it('a Registry refresh starts New Sessions on the new version while the older ru
     prompt: [{ type: 'text', text: 'Continue' }],
   });
   expect(terminationsOf(agent)).toEqual([0, 0]);
-  await host.caller.session.close({ sessionId: older.sessionId });
+  await closeTestSession(host, { sessionId: older.sessionId });
   await vi.waitFor(() => expect(terminationsOf(agent)).toEqual([1, 0]));
 });

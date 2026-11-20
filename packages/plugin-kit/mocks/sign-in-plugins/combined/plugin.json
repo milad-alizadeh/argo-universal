@@ -29,6 +29,7 @@
         "name": "signIn",
         "label": "Sign in",
         "description": "Checks a pasted token and signs in with it.",
+        "policy": "allow",
         "tier": "act",
         "params": {
           "token": {
@@ -51,6 +52,7 @@
         "name": "cancelSignIn",
         "label": "Cancel sign-in",
         "description": "Cancels the selected sign-in.",
+        "policy": "allow",
         "tier": "act",
         "params": {
           "flow": {

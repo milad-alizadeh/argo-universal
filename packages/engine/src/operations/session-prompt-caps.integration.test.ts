@@ -1,6 +1,6 @@
 import { OperationExecution } from '@repo/contracts/operations';
 import { assert, expect, it } from 'vitest';
-import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
+import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { runOperation } from '#mocks/operations';
 import {
   delegationJourney,
@@ -32,35 +32,17 @@ it('reserves the last running slot across concurrent child prompts and releases 
       : value;
   };
 
-  const outcomes = Promise.allSettled([
+  const results = await Promise.allSettled([
     prompt(first.sessionId),
     prompt(second.sessionId),
   ]);
 
-  const pending = waitForAcpSnapshot(
-    journey.host,
-    journey.caller.sessionId,
-    (snapshot) =>
-      snapshot.pendingPermission?.operation?.id === 'session.prompt',
-  );
-
-  expect(await Promise.race([pending.then(() => 'permission'), outcomes])).toBe(
-    'permission',
-  );
-  const { pendingPermission } = await pending;
-  assert(pendingPermission);
-  await journey.host.caller.session.answerPermission({
-    sessionId: journey.caller.sessionId,
-    requestId: pendingPermission.requestId,
-    optionId: 'reject_once',
-  });
-  const results = await outcomes;
   expect(results.map((result) => result.status).sort()).toEqual([
     'fulfilled',
     'rejected',
   ]);
   expect(results.find((result) => result.status === 'rejected')).toMatchObject({
-    reason: { message: 'The user refused' },
+    reason: { message: 'The Session delegation limit has been reached' },
   });
   const stopped = running[0];
   assert(stopped);

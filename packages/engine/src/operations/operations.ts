@@ -9,13 +9,6 @@ import type {
   OperationWaitRequest,
 } from '@repo/contracts/operations/control';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import type { RegistryDeps } from '../agents';
-import type { AppNavigation } from '../app-navigation';
-import type { FeedDeps } from '../feed';
-import type { PluginsRouterDeps } from '../plugins';
-import type { ScreenSight } from '../screen-sight';
-import type { Sessions } from '../sessions';
-import type { VoiceCallsPort } from '../voice';
 import {
   discoveryCall,
   listedOutput,
@@ -28,86 +21,69 @@ import {
   operationConnection,
   type OperationConnection,
 } from './operation-connection';
+import { availableOperations } from './operation-permission';
+import type { OperationsDeps } from './operations-deps';
 import { requireOperationId } from './params';
 import { PluginOperationRouter } from './plugin-run';
 import { OperationResponses, storedOutputBlobs } from './responses';
 import type { OperationRunner } from './runner';
 import { listOperations } from './search';
-import { scopedOperations } from './session-scope';
-import type {
-  SessionCaller,
-  SessionTokens,
-  TokenCaller,
-} from './session-tokens';
+import type { SessionCaller, TokenCaller } from './session-tokens';
 import { authenticate } from './tokens';
-import { liveWorkDeps, OperationWork, type OperationWaitClock } from './work';
+import { liveWorkDeps, OperationWork } from './work';
+
+export type { OperationsDeps } from './operations-deps';
 
 export type {
   OperationImplementations,
   OperationRunResult,
 } from './implementations';
 
-// What Operations read: Sessions only through their one interface, and the Engine's own deps.
-export type OperationsDeps = RegistryDeps &
-  Pick<FeedDeps, 'findWriter'> & {
-    sessions: Sessions;
-    voice: VoiceCallsPort;
-    appNavigation: AppNavigation;
-    screenSight: ScreenSight;
-    controlToken: string;
-    userHome: string;
-    sessionTokens: SessionTokens;
-    blobsFolder: string;
-    plugins: PluginsRouterDeps;
-    operationWaitClock?: OperationWaitClock;
-    // The Engine's Session command signal: stopping it ends every wait.
-    sessionCommandSignal?: AbortSignal;
-    // Allocates a new Session's id before its start.
-    createId: () => string;
-  };
-
 type Operation = { id: OperationId; params: Json };
 
 // A token caller's Operations: the user's run and admit under the deadline; a Session's are recorded as its Tool calls.
 export class Operations {
   private readonly work: OperationWork;
-  private readonly sessions: Sessions;
   private readonly responses: OperationResponses;
   private readonly pluginOperations: PluginOperationRouter;
   public constructor(
     private readonly deps: OperationsDeps,
     private readonly runner: OperationRunner,
   ) {
-    this.sessions = deps.sessions;
     this.pluginOperations = new PluginOperationRouter(
       deps.plugins,
       deps.sessions,
     );
     this.work = new OperationWork(liveWorkDeps(deps), (token) =>
-      this.caller(token),
+      authenticate(this.deps, token),
     );
     this.responses = new OperationResponses(storedOutputBlobs(deps));
   }
-  /*
-   * The core registry, then the Operations running Plugins add to it. A Plugin's Operation reaches only
-   * the caller's own Project unless the user confirms another, so a Session sees it as it is.
-   */
   public async list(
     token: string | undefined,
     filter = '',
   ): Promise<OperationRow[]> {
-    const caller = this.caller(token);
-    const plugins = await this.pluginOperations.listed(filter);
+    const caller = authenticate(this.deps, token);
 
-    if (caller.kind === 'user') return [...listOperations(filter), ...plugins];
-    const call = this.sessions.call(caller.sessionId, discoveryCall(filter));
+    const rows = await this.rows(filter);
 
-    const listed = async (): Promise<OperationRow[]> => [
-      ...scopedOperations(listOperations(filter), call),
-      ...plugins,
-    ];
+    if (caller.kind === 'user') return availableOperations(rows, false);
+
+    const call = this.deps.sessions.call(
+      caller.sessionId,
+      discoveryCall(filter),
+    );
+
+    const listed = async (): Promise<OperationRow[]> =>
+      availableOperations(rows, call.canConfirm);
 
     return recordOperation(call, listed, listedOutput).result;
+  }
+
+  private async rows(filter: string): Promise<OperationRow[]> {
+    const plugins = await this.pluginOperations.listed(filter);
+
+    return [...listOperations(filter), ...plugins];
   }
 
   public async run(
@@ -115,16 +91,15 @@ export class Operations {
     request: OperationRunRequest,
     signal?: AbortSignal,
   ): Promise<OperationRunResponse> {
-    const caller = this.caller(token);
-    const { params } = request;
+    const caller = authenticate(this.deps, token);
     const plugin = await this.pluginOperations.find(request.id);
 
     // One of a running Plugin's own Operations, which the Plugin answers itself (ADR-0044).
-    if (plugin) return this.pluginOperations.runFor(caller, plugin, params);
+    if (plugin)
+      return this.pluginOperations.runFor(caller, plugin, request.params);
 
-    const operation = { id: requireOperationId(request.id), params };
     const connection = operationConnection(token, request, signal);
-    const value = await this.answer(caller, connection, operation);
+    const value = await this.answer(caller, connection, operationFor(request));
 
     return this.responses.run(value, signal);
   }
@@ -158,7 +133,8 @@ export class Operations {
     connection: OperationConnection,
     operation: Operation,
   ): Promise<OperationRunResult> {
-    const call = this.sessions.call(caller.sessionId, operationCall(operation));
+    const action = operationCall(operation);
+    const call = this.deps.sessions.call(caller.sessionId, action);
 
     const run = (): Promise<OperationRunResult> =>
       this.runner.run({ ...caller, ...operation, call });
@@ -170,7 +146,9 @@ export class Operations {
       started,
     );
   }
-  private caller(token: string | undefined): TokenCaller {
-    return authenticate(this.deps, token);
-  }
 }
+
+const operationFor = ({ id, params }: OperationRunRequest): Operation => ({
+  id: requireOperationId(id),
+  params,
+});

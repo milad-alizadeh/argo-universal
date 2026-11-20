@@ -2,6 +2,7 @@ import type { RequestPermissionResponse } from '@agentclientprotocol/sdk';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { describe, expect, it, vi } from 'vitest';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import {
   readNotices,
   permissionSteps,
@@ -36,7 +37,7 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
     ]);
 
     await waitForPermission(host, sessionId);
-    await host.caller.session.close({ sessionId });
+    await closeTestSession(host, { sessionId });
     await vi.waitFor(() => expect(responses[0]).toEqual(cancelled));
     expect(
       (await readToolCallUpdate(host, sessionId, 'tool-a'))?._meta?.argo,

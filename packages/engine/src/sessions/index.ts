@@ -99,3 +99,7 @@ export {
   type NativeStart,
   type NativeStartRequest,
 } from './prompt-sender';
+
+export { OpenSessions } from './open-sessions';
+
+export { closeSession } from './session-closure';

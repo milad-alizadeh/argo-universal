@@ -97,3 +97,5 @@ export {
 } from './voice-markers';
 
 export { VoiceMarkerStream } from './voice-marker-stream';
+
+export { appendStoredNotice } from './stored-notice';

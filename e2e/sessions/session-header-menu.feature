@@ -6,7 +6,7 @@ Feature: Session header menu
 
   Scenario: Renaming a closed Session from the header shows its new title
     Given a Session named "Check the live list"
-    And the Server closes the Session quietly
+    And the Engine restarts
     When I rename the open Session to "Check the renamed list" from its header
     Then the Session page and its row are titled "Check the renamed list"
 

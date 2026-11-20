@@ -36,6 +36,7 @@ export const diagramOperations = {
     params: DiagramValidateInput,
     result: DiagramValidateResult,
     tier: 'read',
+    policy: 'allow',
     keywords: ['mermaid', 'flowchart', 'sequence', 'lint', 'check', 'chart'],
   },
 } as const satisfies Record<string, OperationDefinition>;

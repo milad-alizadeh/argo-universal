@@ -7,12 +7,23 @@ import { sessionColumns } from '../columns';
  */
 export const SessionArchiveInput = z.strictObject({
   sessionId: sessionColumns.shape.id,
+  inspectCheckout: z.literal(true).optional(),
+  checkoutApproval: z
+    .string()
+    .regex(/^[0-9a-f]{64}$/)
+    .optional(),
 });
 
 export type SessionArchiveInput = z.infer<typeof SessionArchiveInput>;
 
 export const SessionArchiveOutput = z.strictObject({
   scheduled: z.literal(true).optional(),
+  checkoutConfirmation: z
+    .strictObject({
+      fingerprint: z.string(),
+      reason: z.string(),
+    })
+    .optional(),
 });
 
 export type SessionArchiveOutput = z.infer<typeof SessionArchiveOutput>;

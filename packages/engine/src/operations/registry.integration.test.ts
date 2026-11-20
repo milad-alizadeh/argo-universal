@@ -90,15 +90,12 @@ it('lists Installed Agents through an Operation', async () => {
   expect(result).toEqual(await host.caller.agent.list());
 });
 
-it('removes an Installed Agent through an Operation', async () => {
-  const { host, caller } = await operationHost();
+it('removes an Installed Agent through an App action', async () => {
+  const { host } = await operationHost();
   await host.caller.registry.refresh();
   await host.caller.agent.install({ id: exampleAgentId });
 
-  await runOperation(caller.operations, {
-    id: 'agent.remove',
-    params: { id: exampleAgentId },
-  });
+  await host.caller.agent.remove({ id: exampleAgentId });
 
   expect(await host.caller.agent.list()).toEqual([]);
 });
@@ -111,9 +108,9 @@ it('discovers Registry mutations as confirm Operations', async () => {
     expect.arrayContaining([
       expect.objectContaining({ id: 'registry.get', tier: 'read' }),
       expect.objectContaining({ id: 'agent.list', tier: 'read' }),
-      expect.objectContaining({ id: 'registry.refresh', tier: 'confirm' }),
-      expect.objectContaining({ id: 'registry.sync', tier: 'confirm' }),
-      expect.objectContaining({ id: 'agent.install', tier: 'confirm' }),
+      expect.objectContaining({ id: 'registry.refresh', policy: 'allow' }),
+      expect.objectContaining({ id: 'registry.sync', policy: 'allow' }),
+      expect.objectContaining({ id: 'agent.install', policy: 'allow' }),
       expect.objectContaining({ id: 'agent.remove', tier: 'confirm' }),
     ]),
   );

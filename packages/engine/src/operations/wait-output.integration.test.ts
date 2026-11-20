@@ -1,8 +1,8 @@
 import { OperationExecution } from '@repo/contracts/operations';
 import { assert, expect, it } from 'vitest';
-import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { fixtureRegistry } from '#mocks/agent-fixtures';
 import { operationRaceHost, beginHeldTurn } from '#mocks/operation-race';
+import { TestOperationWaitClock } from '#mocks/operation-wait-clock';
 import { runOperation } from '#mocks/operations';
 
 it('keeps the native full JSON Blob reference when a resumed Operation result needs a Feed preview', async () => {
@@ -10,31 +10,28 @@ it('keeps the native full JSON Blob reference when a resumed Operation result ne
     { agent: 'mock', label: 'Registry '.repeat(10_000), logo: '' },
   ]);
 
-  const { host, session } = await operationRaceHost(undefined, async () =>
-    JSON.stringify(registry),
+  const clock = new TestOperationWaitClock();
+  const release = Promise.withResolvers<string>();
+  let holding = false;
+
+  const { host, session } = await operationRaceHost(clock, async () =>
+    holding ? release.promise : JSON.stringify(registry),
   );
 
   await beginHeldTurn(host, session.sessionId);
 
-  const pending = OperationExecution.parse(
-    await runOperation(session.caller.operations, {
-      id: 'registry.refresh',
-      params: {},
-    }),
-  );
+  holding = true;
 
-  const snapshot = await waitForAcpSnapshot(
-    host,
-    session.sessionId,
-    (value) => value.pendingPermission !== null,
-  );
-
-  assert(snapshot.pendingPermission);
-  await host.caller.session.answerPermission({
-    sessionId: session.sessionId,
-    requestId: snapshot.pendingPermission.requestId,
-    optionId: 'allow_once',
+  const run = runOperation(session.caller.operations, {
+    id: 'registry.refresh',
+    params: {},
+    timeoutMs: 10,
   });
+
+  await clock.waitUntilScheduled();
+  clock.advance(10);
+  const pending = OperationExecution.parse(await run);
+  release.resolve(JSON.stringify(registry));
 
   const settled = await session.caller.operations.wait.mutate({
     id: pending.id,

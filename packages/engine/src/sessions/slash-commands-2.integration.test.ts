@@ -2,6 +2,7 @@ import type { NewSessionRequest } from '@agentclientprotocol/sdk';
 import type { AgentOptionsUpdate } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const reviewDescription = 'Review changes';
@@ -95,7 +96,7 @@ it('retains live commands while a discovery that started earlier finishes', asyn
   liveReader.abort();
   await closeStream(live);
   await closeStream(discovery);
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
 
   const saved = (
     await host.caller.session.agentOptions({ ...owner, ...created })

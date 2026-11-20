@@ -16,6 +16,7 @@ const startTimer = {
   label: 'Start timer',
   description: 'Starts a timer.',
   tier: 'act',
+  policy: 'allow',
   params: {},
   caller: [],
 };

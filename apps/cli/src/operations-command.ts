@@ -35,5 +35,5 @@ function describe(row: OperationRow): string {
     ? ''
     : ` (unavailable: ${row.disabledReason})`;
 
-  return `${row.id} [${row.tier}] — ${row.description}${availability}`;
+  return `${row.id} [${row.policy}] — ${row.description}${availability}`;
 }

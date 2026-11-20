@@ -79,8 +79,7 @@ function matches(row: OperationRow, search: string): boolean {
 
 /*
  * The Operations running Plugins add to the registry (ADR-0044). A Plugin reaches only the caller's own Project
- * and Session, so its Operations are `read` or `act` and need no scope of their own; a Session that names
- * another Project asks the user first, as any Operation outside its Project does.
+ * and Project context; its declared policy is enforced by the Plugin Operation service.
  */
 export class PluginOperationRouter {
   public constructor(
@@ -122,7 +121,7 @@ export class PluginOperationRouter {
 
   /*
    * A Plugin's Operation for the caller that asked: the Plugin checks nothing of the caller, so core hands it
-   * only the caller's own Session and Project, or the Project a Session names once the user confirms, and a
+   * the caller's Session and selected Project, and a
    * Session's run is a Tool call like any other.
    * A Plugin answers JSON, which needs no stored Blob, so its result is returned as it came.
    */
@@ -173,11 +172,11 @@ export class PluginOperationRouter {
   }
 }
 
-// The user's own run is a person's, as a tap is; a Session's names it and the Project it works in.
+// A Session token names its Session and Project. The shared control token carries no personal identity.
 const callerOf = (caller: TokenCaller): PluginOperationCaller =>
   caller.kind === 'session'
     ? { sessionId: caller.sessionId, projectId: caller.projectId }
-    : { person: true };
+    : {};
 
 const resulted = async (run: Promise<Json>): Promise<OperationRunResponse> => ({
   kind: 'result',

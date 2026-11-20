@@ -1,22 +1,19 @@
-import type { OperationId } from '@repo/contracts/operations';
+import { operations, type OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { OperationCard } from '../../sessions';
 import type { OperationParams, OperationResult } from '../implementations';
 import { isNativeStartOperation, type NativeStartId } from '../native-start';
+import { operationPermission } from '../operation-permission';
 import { validateParams } from '../params';
-import type { SessionCaller } from '../session-tokens';
 import {
   cardUnless,
   confirmed,
   unreserved,
   type ScopedRun,
 } from './confirmation';
-import { ScopeCoverage } from './coverage';
 import { Delegation, type ScopePorts } from './delegation';
 import { operationCard } from './rules';
-import { scopeTarget, type ScopeTarget } from './targets';
-
-export { scopedOperations } from './listing';
+import { scopedParams } from './targets';
 
 export { PromptChains } from './prompt-chain';
 
@@ -35,13 +32,11 @@ const parsed = <Id extends TargetedId>(
   params: Json,
 ): ParsedOperation<Id> => ({ id, params: validateParams(id, params) });
 
-// A Session token's Operation runs within the caller's scope, or asks the user first (ADR-0044).
+// The registry policy decides whether a Session token’s Operation asks first (ADR-0044).
 export class SessionScope {
   private readonly delegation: Delegation;
-  private readonly coverage: ScopeCoverage;
   public constructor(ports: ScopePorts) {
     this.delegation = new Delegation(ports);
-    this.coverage = new ScopeCoverage(ports.directory);
   }
   // Params are parsed once here, and the Operation runs with exactly these; every failure rejects.
   public async run(
@@ -49,7 +44,9 @@ export class SessionScope {
     { id, params }: { id: OperationId; params: Json },
   ): Promise<OperationResult> {
     if (isNativeStartOperation(id))
-      return this.delegation.run(context, { id, params });
+      return this.permitted(context, id, () =>
+        this.delegation.run(context, { id, params }),
+      );
 
     return this.runTargeted(context, { id, params });
   }
@@ -66,29 +63,28 @@ export class SessionScope {
       context.invoke({ id, params: scoped }),
     );
   }
-  // The target table names what the Operation reaches; its tier says what the caller's scope covers.
+  // Caller defaults are applied before the Operation policy is evaluated.
   private admit<Id extends TargetedId, Result>(
     context: ScopedRun,
     { id, params }: ParsedOperation<Id>,
     invoke: (params: OperationParams<Id>) => Promise<Result>,
   ): Promise<Result> {
-    const scoped = scopeTarget(id, params, context.caller);
+    const scoped = scopedParams(id, params, context.caller);
 
-    const card = (): OperationCard | undefined =>
-      this.card(context.caller, { id, target: scoped.target });
-
-    return confirmed(context, { card, release: unreserved }, () =>
-      invoke(scoped.params),
-    );
+    return this.permitted(context, id, () => invoke(scoped));
   }
-  private card(
-    caller: SessionCaller,
-    operation: { id: OperationId; target: ScopeTarget },
-  ): OperationCard | undefined {
-    return cardUnless(
-      this.coverage.covers(caller, operation),
-      operationCard(operation.id),
-    );
+  private permitted<Result>(
+    context: ScopedRun,
+    id: OperationId,
+    invoke: () => Promise<Result>,
+  ): Promise<Result> {
+    const card = (): OperationCard | undefined =>
+      cardUnless(
+        operationPermission(operations[id].policy, false) !== 'ask',
+        operationCard(id),
+      );
+
+    return confirmed(context, { card, release: unreserved }, invoke);
   }
 }
 

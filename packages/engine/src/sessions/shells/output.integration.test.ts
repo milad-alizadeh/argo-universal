@@ -7,6 +7,7 @@ import {
 import { expect, it, assert } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { collectShellOutput, readShellOutputUntil } from '#mocks/shell-output';
 
@@ -98,7 +99,7 @@ it('rejects output and Stop for a Shell belonging to another Session', async () 
   await expect(
     host.caller.shell.stop({ ...other, shellId }),
   ).rejects.toMatchObject({ code: 'NOT_FOUND' });
-  await host.caller.session.close(created);
+  await closeTestSession(host, created);
 });
 
 it.each(['\uFEFFdone', '\uFEFF'])(

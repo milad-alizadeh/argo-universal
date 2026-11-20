@@ -39,7 +39,7 @@ it.each(['App', 'Operations'])(
 
     const applied =
       transport === 'App'
-        ? await caller.session.setConfigOption.mutate(params)
+        ? await host.caller.session.setConfigOption(params)
         : await runOperation(caller.operations, {
             id: 'session.setConfigOption',
             params,

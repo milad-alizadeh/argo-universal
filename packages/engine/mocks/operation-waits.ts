@@ -3,6 +3,7 @@ import { waitForAcpSnapshot } from './acp-feed';
 import { fixtureRegistry } from './agent-fixtures';
 import {
   permissionJourney,
+  protectArchiveTarget,
   answerPermission,
   type PermissionJourney,
 } from './native-permission';
@@ -25,6 +26,7 @@ type PermissionWaitHost = {
 export async function startPermissionWaitHost(): Promise<PermissionWaitHost> {
   const clock = new TestOperationWaitClock();
   const journey = await permissionJourney(clock);
+  await protectArchiveTarget(journey);
   await beginHeldTurn(journey.host, journey.session.sessionId);
   publishControlAddress(journey.host);
 
@@ -87,7 +89,9 @@ type RegistryWaitHost = {
   home: string;
   token: string;
   calls: () => number;
-  answer: () => Promise<void>;
+  release: () => void;
+  waitStarted: () => Promise<void>;
+  advance: (milliseconds: number) => void;
   result: () => ReturnType<
     Awaited<
       ReturnType<typeof operationRaceHost>
@@ -96,73 +100,69 @@ type RegistryWaitHost = {
 };
 
 export async function startRegistryWaitHost(): Promise<RegistryWaitHost> {
-  const counter = registryCounter();
-  const { host, session } = await operationRaceHost(undefined, counter.fetch);
-  await beginHeldTurn(host, session.sessionId);
+  const clock = new TestOperationWaitClock();
+  const fetch = registryWaitFetch();
+  const { host, session } = await operationRaceHost(clock, fetch.read);
+
   publishControlAddress(host);
-
-  return registryWaitHost(host, session, counter);
-}
-
-type RegistryCounter = { fetch: () => Promise<string>; calls: () => number };
-
-const registryCounter = (): RegistryCounter => {
-  let calls = 0;
-
-  const registry = fixtureRegistry([
-    { agent: 'mock', label: 'Registry '.repeat(10_000), logo: '' },
-  ]);
-
-  return {
-    calls: () => calls,
-    fetch: async (): Promise<string> => {
-      calls++;
-
-      return JSON.stringify(registry);
-    },
-  };
-};
-
-const registryWaitHost = (
-  host: PermissionJourney['host'],
-  session: PermissionJourney['session'],
-  counter: RegistryCounter,
-): RegistryWaitHost => {
-  const initialCalls = counter.calls();
+  fetch.begin();
 
   return {
     home: host.home,
     token: session.token,
-    calls: () => counter.calls() - initialCalls,
+    calls: fetch.calls,
     result: () => host.caller.registry.get(),
-    answer: () => answerRegistry(host, session.sessionId),
+    release: fetch.release,
+    ...waitClockActions(clock),
   };
+}
+
+type RegistryFetch = {
+  read: () => Promise<string>;
+  begin: () => void;
+  calls: () => number;
+  release: () => void;
 };
 
-const answerRegistry = async (
-  host: PermissionJourney['host'],
-  sessionId: string,
-): Promise<void> => {
-  const request = await registryPermission(host, sessionId);
+function registryWaitFetch(): RegistryFetch {
+  const held = Promise.withResolvers<void>();
 
-  await host.caller.session.answerPermission({
-    sessionId,
-    requestId: request.requestId,
-    optionId: 'allow_once',
-  });
-};
+  const state = { calls: 0, holding: false };
 
-const registryPermission = async (
-  host: PermissionJourney['host'],
-  sessionId: string,
-): Promise<PendingPermission> => {
-  const snapshot = await waitForAcpSnapshot(
-    host,
-    sessionId,
-    (value) => value.pendingPermission !== null,
-  );
+  return {
+    read: () => heldRegistry(state, held.promise, largeRegistry),
+    begin: () => {
+      state.holding = true;
+    },
+    calls: () => state.calls,
+    release: () => held.resolve(),
+  };
+}
 
-  if (!snapshot.pendingPermission) throw new Error('No Registry Permission');
+async function heldRegistry(
+  state: { calls: number; holding: boolean },
+  gate: Promise<void>,
+  registry: string,
+): Promise<string> {
+  if (state.holding) {
+    state.calls++;
+    await gate;
+  }
 
-  return snapshot.pendingPermission;
-};
+  return registry;
+}
+
+const largeRegistry = JSON.stringify(
+  fixtureRegistry([
+    { agent: 'mock', label: 'Registry '.repeat(10_000), logo: '' },
+  ]),
+);
+
+function waitClockActions(
+  clock: TestOperationWaitClock,
+): Pick<RegistryWaitHost, 'waitStarted' | 'advance'> {
+  return {
+    waitStarted: () => clock.waitUntilScheduled(),
+    advance: (milliseconds) => clock.advance(milliseconds),
+  };
+}

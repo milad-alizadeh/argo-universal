@@ -6,6 +6,7 @@ import type {
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { lastNoticeTitle, startIdleSession } from '#mocks/session-restart';
 
 it('clear opens a new Agent session for the same Session and leaves a Notice', async () => {
@@ -74,7 +75,7 @@ it('resumes the new Agent session, not the cleared one, when the Session is clos
 
   const session = await startIdleSession(host);
   await host.caller.session.clear(session);
-  await host.caller.session.close(session);
+  await closeTestSession(host, session);
   await host.caller.session.prompt({
     ...session,
     prompt: [{ type: 'text', text: 'Again' }],

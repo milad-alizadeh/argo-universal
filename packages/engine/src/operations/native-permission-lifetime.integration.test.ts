@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { finishTestTurn } from '#mocks/close-session';
 import {
   answerPermission,
   askArchive,
@@ -15,7 +16,7 @@ it.each(['completion', 'cancel', 'close'] as const)(
     const { host, session } = journey;
 
     if (ending === 'completion') journey.release.resolve();
-    else await host.caller.session[ending]({ sessionId: session.sessionId });
+    else await finishTestTurn(host, ending, { sessionId: session.sessionId });
     expect(await outcome).toMatchObject([
       {
         status: 'rejected',

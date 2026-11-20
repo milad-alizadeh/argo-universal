@@ -11,6 +11,7 @@ import {
   parentSubagentUpdates,
   waitForAcpSessionIdle,
 } from '#mocks/acp-feed';
+import { closeTestSession } from '#mocks/close-session';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { onTranscript } from '#mocks/subagent-steps';
 
@@ -62,7 +63,7 @@ async function resumeBackgroundParent(): Promise<ResumedParent> {
   const [child] = await host.caller.session.listAgents({ sessionId });
 
   if (!child) throw new Error(missingChild);
-  await host.caller.session.close({ sessionId });
+  await closeTestSession(host, { sessionId });
   await host.caller.session.prompt({
     sessionId,
     prompt: [{ type: 'text', text: 'Resume' }],

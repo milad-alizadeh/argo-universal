@@ -7,6 +7,7 @@ const write = {
   label: 'Write a row',
   description: 'Adds the second row.',
   tier: 'act' as const,
+  policy: 'allow' as const,
   params: {},
 };
 

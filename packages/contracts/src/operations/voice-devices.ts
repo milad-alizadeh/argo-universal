@@ -13,6 +13,7 @@ export const voiceDeviceOperations = {
     params: z.strictObject({}).default({}),
     result: VoiceDeviceList,
     tier: 'read',
+    policy: 'allow',
     keywords: ['voice', 'microphone', 'speaker', 'audio', 'devices'],
   },
   'voice.chooseDevices': {
@@ -24,6 +25,7 @@ export const voiceDeviceOperations = {
     params: VoiceDeviceChange,
     result: VoiceDeviceList,
     tier: 'confirm',
+    policy: 'ask',
     keywords: ['voice', 'microphone', 'speaker', 'audio', 'devices'],
   },
 } as const satisfies Record<string, OperationDefinition>;
