@@ -12,6 +12,7 @@ import { useScreenFocused } from '#lib/product/navigation/navigation';
 import { type FeedEntry, entryKey } from './feed-entry';
 import { type FeedAnchor, scrollMemory } from './feed-scroll-memory';
 import { useRestoreFeedAnchor } from './use-restore-feed-anchor';
+import { useResumeFollowing } from './use-resume-following';
 import { useSeekFeedAnchor } from './use-seek-feed-anchor';
 
 type ListRef = RefObject<LegendListRef | null>;
@@ -70,6 +71,8 @@ function useScrollsToEndWhenShown(
   const cancelSeek = useSeekFeedAnchor(
     seekInput({ ...input, shown }, anchor, restoration.open),
   );
+
+  useResumeFollowing(list, shown, restoration.open);
 
   return useCancelRestoration(cancelSeek, cancelRestoration);
 }
