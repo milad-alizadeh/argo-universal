@@ -1,5 +1,4 @@
 import type { DesktopBridge } from '@repo/contracts';
-import type { ScreenCaptureAnswer } from '@repo/contracts/operations';
 import { productCompatibility } from '@repo/contracts/product-identity';
 /*
  * See the Electron documentation for details on how to use preload scripts:
@@ -91,10 +90,6 @@ const desktopBridge = {
         linkListeners.delete(listener);
       };
     },
-  },
-  screen: {
-    capture: (): Promise<ScreenCaptureAnswer> =>
-      ipcRenderer.invoke('screen:capture'),
   },
   symbols,
 } satisfies DesktopBridge;

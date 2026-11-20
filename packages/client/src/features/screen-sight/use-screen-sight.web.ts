@@ -12,17 +12,10 @@ const bridge = (): Window['argo'] => globalThis.window?.argo;
 const isDesktopApp = (): boolean =>
   typeof bridge()?.links?.onOpen === 'function';
 
-// The desktop App takes its own picture; a page without that falls back to the browser's share prompt.
-const desktopCapture = (): Promise<ScreenCaptureAnswer> | undefined =>
-  bridge()?.screen?.capture();
-
-const capture = (): Promise<ScreenCaptureAnswer> =>
-  desktopCapture() ?? captureScreen(browserScreenCapture);
-
 // This Device's own setting, read as each request arrives, so turning it on or off needs no new subscription.
 const answerFor = async (): Promise<ScreenCaptureAnswer> =>
   (await loadScreenSightEnabled())
-    ? capture()
+    ? captureScreen(browserScreenCapture)
     : { status: 'refused', reason: 'off' };
 
 // Takes one capture, if this Device allows it, and answers the request with it.
