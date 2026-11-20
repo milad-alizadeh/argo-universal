@@ -1,3 +1,5 @@
+/// <reference lib="dom" />
+
 import type { DesktopBridge } from '@repo/contracts';
 import type { ScreenCaptureAnswer } from '@repo/contracts/operations';
 import { productCompatibility } from '@repo/contracts/product-identity';
@@ -5,7 +7,21 @@ import { productCompatibility } from '@repo/contracts/product-identity';
  * See the Electron documentation for details on how to use preload scripts:
  * https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
  */
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webFrame } from 'electron';
+
+// Page zoom resizes the CSS viewport, while native traffic lights keep their size.
+function reportBandHeight(): void {
+  const height = getComputedStyle(document.documentElement).getPropertyValue(
+    '--spacing-frame-control',
+  );
+
+  ipcRenderer.send('window:band-height', Number.parseFloat(height));
+}
+
+if (process.platform === 'darwin') {
+  window.addEventListener('load', reportBandHeight);
+  window.addEventListener('resize', reportBandHeight);
+}
 
 // Main passes the Server URL in additionalArguments; a sandboxed preload can read only process.argv.
 const serverUrlPrefix = '--server-url=';
@@ -67,6 +83,7 @@ const desktopBridge = {
       : undefined,
   retryServer: (): void => ipcRenderer.send('server:retry'),
   window: {
+    getZoomFactor: (): number => webFrame.getZoomFactor(),
     show: (): void => ipcRenderer.send('window:show'),
     minimize: (): void => ipcRenderer.send('window:minimize'),
     maximize: (): void => ipcRenderer.send('window:maximize'),

@@ -67,7 +67,19 @@ export const SidebarToggleLivesInTheWindowBand: ScaffoldStory = {
     await controlled.render({});
     const band = canvas.getByTestId(windowBand);
     const toggle = canvas.getByRole('button', { name: 'Hide sidebar' });
+    const appRegion = 'app-region';
     await expect(band).toContainElement(toggle);
+    await expect(getComputedStyle(band).getPropertyValue(appRegion)).toBe(
+      'drag',
+    );
+    await expect(
+      getComputedStyle(canvas.getByTestId('band-title')).getPropertyValue(
+        appRegion,
+      ),
+    ).toBe('drag');
+    await expect(getComputedStyle(toggle).getPropertyValue(appRegion)).toBe(
+      'no-drag',
+    );
     await expect(canvas.getByTestId('desktop-rail')).not.toContainElement(
       toggle,
     );
