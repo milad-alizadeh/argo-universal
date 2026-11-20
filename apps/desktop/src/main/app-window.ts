@@ -7,6 +7,7 @@ import {
   type WindowOpenHandlerResponse,
   type WebPreferences,
 } from 'electron';
+import { z } from 'zod';
 import { appOrigin } from './app-protocol';
 import { reportWindowMinimized } from './window-minimized';
 import {
@@ -52,8 +53,10 @@ function makeWindow(
 
 const trafficLightPosition = { x: 20, y: 15 };
 
-// Matches --spacing-frame-control in the renderer at 100% zoom.
-const windowBandHeight = 44;
+// Electron positions the top of the 14-point traffic lights.
+const trafficLightRadius = 7;
+
+const BandHeight = z.number().positive();
 
 function windowChrome():
   | { titleBarStyle: 'hidden'; trafficLightPosition: { x: number; y: number } }
@@ -66,12 +69,21 @@ function windowChrome():
 function alignTrafficLights(window: BrowserWindow): void {
   if (process.platform !== 'darwin') return;
 
-  window.webContents.on('did-finish-load', () => {
+  window.webContents.ipc.on('window:band-height', (event, input) => {
+    if (event.senderFrame !== window.webContents.mainFrame) return;
+
+    const height = BandHeight.safeParse(input);
+
+    if (!height.success) return;
+
     const zoom = window.webContents.getZoomFactor();
-    const offset = Math.round((windowBandHeight / 2) * (zoom - 1));
+    const center = Math.round((height.data / 2) * zoom);
+
+    if (center > window.getContentBounds().height / 2) return;
+
     window.setWindowButtonPosition({
       x: trafficLightPosition.x,
-      y: trafficLightPosition.y + offset,
+      y: Math.max(0, center - trafficLightRadius),
     });
   });
 }
