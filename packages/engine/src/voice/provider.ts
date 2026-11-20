@@ -28,7 +28,7 @@ export type VoiceProviderEvent =
   | { type: 'voice.transcript'; id: string; text: string; final: boolean }
   // The person asked for work; answer it with `reply` under this id.
   | { type: 'work.requested'; requestId: string; text: string }
-  // The voice wants a still picture of the person's screen; answer it with `reply` under this id, and with `sendImage` when the Engine takes one.
+  // The voice wants a still picture of the person's screen; answer it with `reply` under this id, and with `look` when the Engine takes one.
   | { type: 'frame.requested'; requestId: string }
   // The voice started or stopped speaking.
   | { type: 'speaking'; speaking: boolean }
@@ -91,8 +91,8 @@ export interface VoiceProviderCall {
   reply: (requestId: string, text: string, delivery: VoiceDelivery) => void;
   // Tell the voice something it did not ask for.
   tell: (text: string, delivery: VoiceDelivery) => void;
-  // Gives the voice one still picture of the person's screen as background it may look at; present only when the provider reports `images`. Never stored.
-  sendImage?: (image: ScreenImage) => void;
+  // Gives the voice one still picture of the person's screen as background it may look at. A call that cannot take images leaves it out, and the Engine never captures for it. Never stored.
+  look?: (image: ScreenImage) => void;
   // End the call; ending an ended call does nothing.
   end: () => void;
 }
@@ -109,8 +109,6 @@ export interface VoiceProvider {
   readonly id: string;
   readonly label: string;
   readonly experimental: boolean;
-  // Whether its calls can be given an image (`sendImage`). A provider that cannot changes nothing else: Agents still see the screen.
-  readonly images: boolean;
   // Whether a call can start now, and if not, why.
   availability: () => Promise<VoiceAvailability>;
   voices: () => Promise<VoiceOption[]>;

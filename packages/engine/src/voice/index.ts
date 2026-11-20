@@ -14,4 +14,8 @@ export { VoiceCalls, type VoiceCallsPort } from './voice-calls';
 
 export { VoiceSettingsStore } from './voice-settings';
 
-export { voiceSessions, type VoiceSessionWork } from './voice-sessions';
+export {
+  feedNotices,
+  voiceSessions,
+  type VoiceSessionWork,
+} from './voice-sessions';

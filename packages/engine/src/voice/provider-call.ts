@@ -21,9 +21,9 @@ export type ProviderCallInput = {
 
 type StartedCall = Awaited<ReturnType<VoiceProvider['start']>>;
 
-// A provider that takes no images is never given one: the Engine does not capture for it.
+// A call that cannot look is never given an image: the Engine does not capture for it.
 const deliverImage = (call: StartedCall, image: ScreenImage): void =>
-  call.sendImage?.(image);
+  call.look?.(image);
 
 function deliver(call: StartedCall, say: VoiceSay): void {
   if (say.kind === 'reply') call.reply(say.requestId, say.text, say.delivery);
@@ -43,7 +43,11 @@ class ProviderHold {
     if (this.released) return call.end();
     this.call = call;
     this.unlisten = call.listen((event) => this.sendBack(providerEvent(event)));
-    this.sendBack({ type: 'call.answered', answer: call.answer });
+    this.sendBack({
+      type: 'call.answered',
+      answer: call.answer,
+      canLook: call.look !== undefined,
+    });
   }
 
   // Tells the voice something; a call that is gone hears nothing.

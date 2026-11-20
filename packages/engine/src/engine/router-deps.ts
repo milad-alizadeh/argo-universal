@@ -21,7 +21,7 @@ import {
   type SessionSources,
 } from '../sessions';
 import type { SystemDeps } from '../system';
-import { noVoiceCalls, type VoiceCallsPort } from '../voice';
+import { feedNotices, noVoiceCalls, type VoiceCallsPort } from '../voice';
 import {
   createFeedSources,
   type FeedSources,
@@ -68,11 +68,17 @@ export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
     acp?: AcpResourceInput;
   };
 
+// The Feed is where a capture's Notice is written.
+const screenSightOf = (
+  input: AppRouterInput,
+  sources: Pick<FeedSources, 'findFeed'>,
+): ScreenSight => input.screenSight ?? new ScreenSight(feedNotices(sources));
+
 export function createAppRouterDeps(
   input: AppRouterInput,
   sources: FeedSources = createFeedSources(input),
 ): AppRouterDeps {
-  const setup = createAgentSetup(input);
+  const setup = createAgentSetup(input, sources);
   const readSession = createSessionReader(input.database);
 
   return {
@@ -107,13 +113,22 @@ type AgentSetup = Pick<
   | 'installedAgents'
 >;
 
-const screenSightOf = (input: AppRouterInput): ScreenSight =>
-  input.screenSight ?? new ScreenSight();
-
 const voiceOf = (input: AppRouterInput): VoiceCallsPort =>
   input.voice ?? noVoiceCalls;
 
-function createAgentSetup(input: AppRouterInput): AgentSetup {
+// What the Engine's callers reach the Voice call and the screen through.
+const portsOf = (
+  input: AppRouterInput,
+  sources: Pick<FeedSources, 'findFeed'>,
+): Pick<AppRouterDeps, 'voice' | 'screenSight'> => ({
+  voice: voiceOf(input),
+  screenSight: screenSightOf(input, sources),
+});
+
+function createAgentSetup(
+  input: AppRouterInput,
+  sources: Pick<FeedSources, 'findFeed'>,
+): AgentSetup {
   const sessionConnections = createSessionConnections(input.sessions);
 
   const { dropAgentConnections } = sessionConnections.acpResources();
@@ -124,7 +139,6 @@ function createAgentSetup(input: AppRouterInput): AgentSetup {
     installedAgents: input.sessions.getSnapshot().context.installedAgents,
     createId: input.createId ?? randomUUID,
     userHome: input.userHome ?? homedir(),
-    voice: voiceOf(input),
-    screenSight: screenSightOf(input),
+    ...portsOf(input, sources),
   };
 }

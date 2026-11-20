@@ -48,10 +48,6 @@ export class FakeVoiceProvider implements VoiceProvider {
     this.options = options;
   }
 
-  public get images(): boolean {
-    return this.options.images === true;
-  }
-
   public configure(options: FakeVoiceOptions): void {
     this.options = { ...this.options, ...options };
   }
@@ -76,7 +72,7 @@ export class FakeVoiceProvider implements VoiceProvider {
     if (failStart !== undefined) return Promise.reject(new Error(failStart));
     const call = new FakeVoiceCall(request);
 
-    if (this.images) call.takeImages();
+    if (this.options.images === true) call.takeImages();
     this.calls.push(call);
     this.scheduleConnect(call);
 
@@ -124,11 +120,11 @@ export class FakeVoiceCall<
   public readonly sent: FakeVoiceMessage[] = [];
   // The images the Engine gave the voice, when the provider takes them.
   public readonly images: ScreenImage[] = [];
-  public sendImage?: (image: ScreenImage) => void;
+  public look?: (image: ScreenImage) => void;
 
   // The call can be given images, as a provider with the capability allows.
   public takeImages(): void {
-    this.sendImage = (image: ScreenImage): void => {
+    this.look = (image: ScreenImage): void => {
       this.images.push(image);
     };
   }

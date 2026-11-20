@@ -1,5 +1,4 @@
 import {
-  AppScreenshotResult,
   discoveryOperation,
   operations,
   type OperationId,
@@ -52,17 +51,25 @@ function failed(call: SessionOperationCall, cause: unknown): never {
 export const listedOutput = (value: OperationRow[]): Json => wireJson(value);
 
 // A captured screen is for the one reader that asked: its Tool call says one was taken and never holds the picture.
-const shownResult = (result: OperationResult): Json => {
-  const capture = AppScreenshotResult.safeParse(result);
+const shownScreenshot = (result: OperationResult): Json => {
+  const capture = operations['app.screenshot'].result.safeParse(result);
 
   return capture.data?.status === 'captured'
     ? { status: 'captured' }
     : wireJson(result);
 };
 
-// A Session's Tool call shows the Operation's own result.
-export const recordedOutput = (value: OperationRunResult): Json =>
-  value.kind === 'result' ? shownResult(value.result) : wireJson(value);
+// What an Operation's Tool call shows of its result where that is less than the whole of it; the rest show their own result.
+const shownBy: Partial<Record<OperationId, (result: OperationResult) => Json>> =
+  { 'app.screenshot': shownScreenshot };
+
+// A Session's Tool call shows the Operation's own result, as its Operation says it may.
+export const recordedOutput =
+  (id: OperationId) =>
+  (value: OperationRunResult): Json =>
+    value.kind === 'result'
+      ? (shownBy[id] ?? wireJson)(value.result)
+      : wireJson(value);
 
 export const discoveryCall = (filter: string): CalledOperation => ({
   name: discoveryOperation.id,

@@ -33,14 +33,23 @@ function lookWith(): Looking {
     },
   };
 
-  const look = new ScreenLook(
-    sessions,
-    { sessionId: 's1', images: true },
-    (say) => said.push(say),
+  const look = new ScreenLook(sessions, { sessionId: 's1' }, (say) =>
+    said.push(say),
   );
+
+  look.answered(true);
 
   return { look, said, taken: () => takes };
 }
+
+const person = (look: ScreenLook): void =>
+  look.hear({ type: 'person.transcript', id: 'p', text: 'Look', final: true });
+
+const voice = (look: ScreenLook): void =>
+  look.hear({ type: 'voice.transcript', id: 'v', text: 'May I?', final: true });
+
+const frame = (look: ScreenLook): void =>
+  look.hear({ type: 'frame.requested', requestId: 'f1' });
 
 const replyText = (said: VoiceSay[]): string | undefined =>
   said.find((say) => say.kind === 'reply')?.text;
@@ -48,11 +57,10 @@ const replyText = (said: VoiceSay[]): string | undefined =>
 it('refuses an ask the person made long before the voice requested the picture', async () => {
   const { look, said, taken } = lookWith();
 
-  look.personSpoke();
+  person(look);
   await vi.advanceTimersByTimeAsync(60_000);
-  const answered = look.answer('f1');
+  frame(look);
   await vi.runAllTimersAsync();
-  await answered;
 
   expect(replyText(said)).toBe(relayWords.askFirst);
   expect(taken()).toBe(0);
@@ -61,10 +69,10 @@ it('refuses an ask the person made long before the voice requested the picture',
 it('counts the person’s words that arrive just after the voice asked for the picture', async () => {
   const { look, said, taken } = lookWith();
 
-  const answered = look.answer('f1');
+  frame(look);
   await vi.advanceTimersByTimeAsync(300);
-  look.personSpoke();
-  await answered;
+  person(look);
+  await vi.advanceTimersByTimeAsync(0);
 
   expect(replyText(said)).toBe(relayWords.looked);
   expect(taken()).toBe(1);
@@ -73,9 +81,32 @@ it('counts the person’s words that arrive just after the voice asked for the p
 it('stops waiting for late words and asks the person first', async () => {
   const { look, said, taken } = lookWith();
 
-  const answered = look.answer('f1');
+  frame(look);
   await vi.runAllTimersAsync();
-  await answered;
+
+  expect(replyText(said)).toBe(relayWords.askFirst);
+  expect(taken()).toBe(0);
+});
+
+it('says nothing can be captured when the provider’s call cannot look', async () => {
+  const { look, said, taken } = lookWith();
+  look.answered(false);
+
+  person(look);
+  frame(look);
+  await vi.runAllTimersAsync();
+
+  expect(replyText(said)).toBe(relayWords.noImages);
+  expect(taken()).toBe(0);
+});
+
+it('asks again after the voice speaks, even if the person had spoken before', async () => {
+  const { look, said, taken } = lookWith();
+
+  person(look);
+  voice(look);
+  frame(look);
+  await vi.runAllTimersAsync();
 
   expect(replyText(said)).toBe(relayWords.askFirst);
   expect(taken()).toBe(0);

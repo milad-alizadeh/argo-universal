@@ -140,19 +140,19 @@ it('sends nothing to a provider that cannot take images, and captures nothing', 
 
   await expect.poll(() => replyTo(work, 'f1')).toBeDefined();
   expect(replyTo(work, 'f1')).toMatchObject({ text: relayWords.noImages });
-  expect(work.provider.call.sendImage).toBeUndefined();
+  expect(work.provider.call.look).toBeUndefined();
   expect(app?.asked).toEqual([]);
   expect(await notices(work)).toEqual([]);
 }, 30_000);
 
-it('says it is off, and sends nothing, while screen sight is off', async () => {
+it('says it is off, and sends nothing, when the App says screen sight is off', async () => {
   const { work, app } = await callWith({ app: { enabled: false } });
 
   lookAtThis(work);
 
   await expect.poll(() => replyTo(work, 'f1')).toBeDefined();
   expect(replyTo(work, 'f1')).toMatchObject({ text: relayWords.screenOff });
-  expect(app?.asked).toEqual([]);
+  expect(app?.asked).toHaveLength(1);
   expect(work.provider.call.images).toEqual([]);
   expect(await notices(work)).toEqual([]);
   await expect.poll(async () => (await missedNotices(work)).length).toBe(1);

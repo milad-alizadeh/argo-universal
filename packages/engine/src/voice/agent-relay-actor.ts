@@ -4,43 +4,28 @@ import type { SendBack, VoiceCallEvent, VoiceSay } from './call-types';
 import type { VoiceProviderEvent } from './provider';
 import { ScreenLook } from './screen-look';
 import type { VoiceSessions } from './session-link';
-import { isTranscript, type TranscriptEvent } from './transcript';
 
 export type RelayInput = {
   sessions: VoiceSessions;
   sessionId: string;
-  // Whether the call's provider can be given an image.
-  images: boolean;
 };
 
-const personSpoke = (words: TranscriptEvent): boolean =>
-  words.type === 'person.transcript';
-
-const finalWords = (heard: VoiceProviderEvent): TranscriptEvent | null =>
-  isTranscript(heard) && heard.final ? heard : null;
-
-// What each side said once it is final: the voice's own words reset the person's ask for a picture.
-function listen(look: ScreenLook, heard: VoiceProviderEvent): void {
-  const words = finalWords(heard);
-
-  if (!words) return;
-
-  if (personSpoke(words)) look.personSpoke();
-  else look.voiceSpoke();
-}
+// What the relay hears from the voice: its requests for work and for a picture. What each side said reaches it from the machine too.
+export const asksTheRelay = (heard: VoiceProviderEvent): boolean =>
+  heard.type === 'work.requested' || heard.type === 'frame.requested';
 
 type Hearers = { relay: AgentRelay; look: ScreenLook };
 
 function hear({ relay, look }: Hearers, heard: VoiceProviderEvent): void {
   if (heard.type === 'work.requested')
     void relay.request(heard.requestId, heard.text);
-
-  if (heard.type === 'frame.requested') void look.answer(heard.requestId);
-  listen(look, heard);
+  else look.hear(heard);
 }
 
-// What the machine forwards: the person's requests for work, the voice's for a picture, and what each side said.
+// What the machine forwards: the call being answered, then what the voice and the person said and asked for.
 function route(hearers: Hearers, event: VoiceCallEvent): void {
+  if (event.type === 'call.answered') hearers.look.answered(event.canLook);
+
   if (event.type === 'provider.event') hear(hearers, event.event);
 }
 

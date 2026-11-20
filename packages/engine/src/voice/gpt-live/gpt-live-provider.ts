@@ -55,8 +55,6 @@ export class GptLiveProvider implements VoiceProvider {
   public readonly id = 'gpt-live';
   public readonly label = 'GPT-Live';
   public readonly experimental = true;
-  // Whether GPT-Live accepts an image is not verified (docs/research/voice-mode.md), so it reports that it cannot until a still frame is sent to the live service and the voice describes it.
-  public readonly images = false;
   private readonly settings: Required<GptLiveOptions>;
 
   public constructor(options: GptLiveOptions = {}) {

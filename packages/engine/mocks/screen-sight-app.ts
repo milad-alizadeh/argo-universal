@@ -28,14 +28,16 @@ export interface ScreenSightApp {
   // The capture requests the Server sent, in order.
   asked: CaptureRequest[];
   ready: Promise<void>;
+  // The person turning screen sight on or off in this App while it stays connected.
+  setEnabled: (enabled: boolean) => void;
   close: () => Promise<void>;
 }
 
 export interface ScreenSightAppOptions {
   surface?: Partial<PluginSurface>;
-  // Whether the person turned screen sight on for this Device.
+  // Whether the person turned screen sight on for this Device; the App checks it as each request arrives, and refuses with `off` when it is not.
   enabled?: boolean;
-  // What the App answers each request with; a picture by default.
+  // What the App answers each request with once screen sight is on; a picture by default.
   answer?: (request: CaptureRequest) => ScreenCaptureAnswer;
 }
 
@@ -81,7 +83,9 @@ const onEvent =
 
     void client.screenSight.answer.mutate({
       requestId: event.requestId,
-      answer: options.answer(event),
+      answer: options.enabled
+        ? options.answer(event)
+        : { status: 'refused', reason: 'off' },
     });
   };
 
@@ -92,16 +96,27 @@ function listen(
 ): Listening {
   const ready = Promise.withResolvers<void>();
 
-  const subscription = client.screenSight.requests.subscribe(
-    { enabled: options.enabled },
-    {
-      onData: onEvent({ client, options, asked, ready }),
-      onError: ready.reject,
-    },
-  );
+  const subscription = client.screenSight.requests.subscribe(undefined, {
+    onData: onEvent({ client, options, asked, ready }),
+    onError: ready.reject,
+  });
 
   return { ready: ready.promise, stop: () => subscription.unsubscribe() };
 }
+
+const closing =
+  (stop: () => void, socket: ReturnType<typeof createWSClient>) =>
+  async (): Promise<void> => {
+    stop();
+    await socket.close();
+  };
+
+// Turns screen sight on or off in the fake App; each request reads it as it arrives.
+const enabling =
+  (options: Required<ScreenSightAppOptions>) =>
+  (enabled: boolean): void => {
+    options.enabled = enabled;
+  };
 
 // An App Connection that reports its platform, listens for capture requests and answers them.
 export function connectScreenSightApp(
@@ -112,13 +127,9 @@ export function connectScreenSightApp(
   const socket = socketTo(url, options.surface);
   const asked: CaptureRequest[] = [];
   const { ready, stop } = listen(clientOver(socket), options, asked);
-
-  const close = async (): Promise<void> => {
-    stop();
-    await socket.close();
-  };
+  const close = closing(stop, socket);
 
   onTestFinished(close);
 
-  return { asked, ready, close };
+  return { asked, ready, setEnabled: enabling(options), close };
 }

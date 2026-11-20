@@ -1,6 +1,5 @@
 import {
   ScreenSightReply,
-  ScreenSightReport,
   ScreenSightStreamEvent,
 } from '@repo/contracts/operations';
 import { z } from 'zod';
@@ -16,10 +15,9 @@ export const createScreenSightRouter = routerFactory(
   ({ screenSight }: ScreenSightDeps) =>
     router({
       requests: publicProcedure
-        .input(ScreenSightReport)
         .output(zAsyncIterable({ yield: ScreenSightStreamEvent }))
-        .subscription(({ ctx, input, signal }) =>
-          screenSight.requests(ctx.connection, input, signal),
+        .subscription(({ ctx, signal }) =>
+          screenSight.requests(ctx.connection, signal),
         ),
       answer: publicProcedure
         .input(ScreenSightReply)

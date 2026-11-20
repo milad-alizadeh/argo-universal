@@ -3,8 +3,10 @@ import type {
   ScreenImage,
 } from '@repo/contracts/operations';
 import type { RelayCall, VoiceSay } from './call-types';
+import type { VoiceProviderEvent } from './provider';
 import { relayWords } from './relay-words';
 import type { VoiceSessions } from './session-link';
+import { isTranscript, type TranscriptEvent } from './transcript';
 
 // How long a spoken ask stays good, and how long the voice's request waits for the person's words to be written down.
 const timing = { askWindowMs: 30_000, lateWordsMs: 1_500 };
@@ -15,6 +17,9 @@ const refusedWords = {
   off: relayWords.screenOff,
   declined: relayWords.screenDeclined,
 };
+
+const finalWords = (heard: VoiceProviderEvent): TranscriptEvent | null =>
+  isTranscript(heard) && heard.final ? heard : null;
 
 // What the voice is told when no picture was taken.
 function whyNot(result: NotCaptured): string {
@@ -35,6 +40,8 @@ export class ScreenLook {
   // When the person last finished speaking since the voice's last words; null when the voice spoke after them.
   private askedAt: number | null = null;
   private heardPerson: (() => void) | null = null;
+  // Whether the provider's call can be given a picture; known once it answers.
+  private canLook = false;
 
   public constructor(
     private readonly sessions: VoiceSessions,
@@ -42,25 +49,44 @@ export class ScreenLook {
     private readonly give: (say: VoiceSay) => void,
   ) {}
 
-  // The person's words after the voice's last count as the ask; the voice's own words, announcing what it wants, reset it.
-  public personSpoke(): void {
+  // The call was answered, and so is known to take a picture or not.
+  public answered(canLook: boolean): void {
+    this.canLook = canLook;
+  }
+
+  // What the voice asked for and what each side said once it is final: the person's words after the voice's last count as the ask, and the voice's own words, announcing what it wants, reset it.
+  public hear(heard: VoiceProviderEvent): void {
+    if (heard.type === 'frame.requested') void this.answer(heard.requestId);
+    else this.listen(heard);
+  }
+
+  private listen(heard: VoiceProviderEvent): void {
+    const words = finalWords(heard);
+
+    if (!words) return;
+
+    if (words.type === 'person.transcript') this.personSpoke();
+    else this.voiceSpoke();
+  }
+
+  private personSpoke(): void {
     this.askedAt = Date.now();
     this.heardPerson?.();
   }
 
-  public voiceSpoke(): void {
+  private voiceSpoke(): void {
     this.askedAt = null;
   }
 
   // Answers the voice's request for a picture; the picture itself goes to the provider, never into words.
-  public async answer(requestId: string): Promise<void> {
+  private async answer(requestId: string): Promise<void> {
     const text = await this.look();
 
     this.give({ kind: 'reply', requestId, text, delivery: 'speak' });
   }
 
   private async look(): Promise<string> {
-    if (!this.call.images) return relayWords.noImages;
+    if (!this.canLook) return relayWords.noImages;
 
     if (!(await this.asked())) return relayWords.askFirst;
     this.askedAt = null;

@@ -163,7 +163,7 @@ export class Operations {
     const run = (): Promise<OperationRunResult> =>
       this.runner.run({ ...caller, ...operation, call });
 
-    const started = recordOperation(call, run, recordedOutput);
+    const started = recordOperation(call, run, recordedOutput(operation.id));
 
     return this.work.runRecorded(
       { ...connection, caller, id: operation.id },

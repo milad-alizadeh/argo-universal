@@ -24,7 +24,7 @@ function relayTo(
 
   const relay = new AgentRelay(
     sessions,
-    { sessionId: 's1', images: false },
+    { sessionId: 's1' },
     {
       speak: (say): number => heard.said.push(say),
       turnsRunning: (running): number => heard.running.push(running),

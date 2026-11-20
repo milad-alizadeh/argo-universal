@@ -35,5 +35,4 @@ export const browserScreenCapture: ScreenCapturePort<MediaStream> = {
   getDisplayMedia: () =>
     navigator.mediaDevices.getDisplayMedia({ video: true, audio: false }),
   frameOf,
-  onMac: /Mac/.test(navigator.platform),
 };

@@ -49,18 +49,31 @@ it('takes no picture when the person declines', async () => {
   expect(await missedNoticesOf(journey)).toEqual([]);
 }, 30_000);
 
-it('refuses with off, and asks the App for nothing, while screen sight is off', async () => {
+it('refuses with off, because the App checks its own setting as each request arrives', async () => {
   const journey = await journeyWithApp({ enabled: false });
 
   expect(await allowedScreenshot(journey)).toEqual([
     { status: 'fulfilled', value: { status: 'refused', reason: 'off' } },
   ]);
-  expect(journey.app.asked).toEqual([]);
+  expect(journey.app.asked).toHaveLength(1);
   expect(await noticesOf(journey)).toEqual([]);
   await expect
     .poll(async () => (await missedNoticesOf(journey)).length)
     .toBe(1);
 }, 30_000);
+
+it('takes a picture once the person turns screen sight on, without the App reconnecting', async () => {
+  const journey = await journeyWithApp({ enabled: false });
+
+  expect(await allowedScreenshot(journey)).toEqual([
+    { status: 'fulfilled', value: { status: 'refused', reason: 'off' } },
+  ]);
+  journey.app.setEnabled(true);
+
+  expect(await allowedScreenshot(journey)).toMatchObject([
+    { status: 'fulfilled', value: { status: 'captured' } },
+  ]);
+}, 60_000);
 
 it('answers not_opened when no App is reachable, and never a stale picture', async () => {
   const journey = await permissionJourney();

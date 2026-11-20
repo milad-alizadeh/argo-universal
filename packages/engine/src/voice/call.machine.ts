@@ -7,7 +7,7 @@ import {
   setup,
   type ActorRefFrom,
 } from 'xstate';
-import { agentRelay, type RelayInput } from './agent-relay-actor';
+import { agentRelay, asksTheRelay, type RelayInput } from './agent-relay-actor';
 import { defaultConduct } from './call-conduct';
 import {
   closeEndingOf,
@@ -290,10 +290,7 @@ const voiceCallSetup = setup({
 
       return runningCall(context).agentWorking !== event.running;
     },
-    asksForFrame: ({ event }): boolean =>
-      providerEventOf(event).type === 'frame.requested',
-    asksForWork: ({ event }): boolean =>
-      providerEventOf(event).type === 'work.requested',
+    asksRelay: ({ event }): boolean => asksTheRelay(providerEventOf(event)),
   },
 });
 
@@ -389,7 +386,6 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
           input: ({ context }): RelayInput => ({
             sessions: context.sessions,
             sessionId: runningCall(context).sessionId,
-            images: context.provider?.images === true,
           }),
         },
         {
@@ -455,11 +451,7 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
             actions: endingWith(providerClose),
           },
           {
-            guard: 'asksForFrame',
-            actions: sendTo('agentRelay', ({ event }) => event),
-          },
-          {
-            guard: 'asksForWork',
+            guard: 'asksRelay',
             actions: sendTo('agentRelay', ({ event }) => event),
           },
           { actions: 'foldProvider' },
@@ -472,7 +464,10 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
       states: {
         starting: {
           on: {
-            'call.answered': { target: 'connecting', actions: 'answer' },
+            'call.answered': {
+              target: 'connecting',
+              actions: ['answer', sendTo('agentRelay', ({ event }) => event)],
+            },
           },
         },
         connecting: {

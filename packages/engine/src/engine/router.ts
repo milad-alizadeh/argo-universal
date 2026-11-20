@@ -67,12 +67,11 @@ const voiceWork = (
   watchTurns: (sessionId, listener) => sessions.watchTurns(sessionId, listener),
 });
 
-// The Voice call sends its Session Prompts through Sessions, which say where each landed and when each Turn ends; its Notices are the capture's too.
+// The Voice call sends its Session Prompts through Sessions, which say where each landed and when each Turn ends.
 function attachVoice(deps: AppRouterDeps, sessions: Sessions): void {
   const linked = voiceSessions(deps, voiceWork(deps, sessions));
 
   deps.voice.attach(linked);
-  deps.screenSight.attach(linked.notice);
 }
 
 // Operations share the session and shell nouns with the Session procedures that are not Operations.

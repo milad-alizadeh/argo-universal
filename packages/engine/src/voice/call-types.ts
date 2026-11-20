@@ -28,8 +28,6 @@ export interface CallConduct {
 // The call a relay serves: its Session.
 export interface RelayCall {
   sessionId: string;
-  // Whether the call's provider can be given an image.
-  images: boolean;
 }
 
 export type VoiceCallEvent =
@@ -45,7 +43,8 @@ export type VoiceCallEvent =
       connection?: AbortSignal;
     }
   | { type: 'call.end'; reason: VoiceCallEnd; sessionId?: string }
-  | { type: 'call.answered'; answer: string }
+  // `canLook`: whether the provider's call can be given a picture of the screen.
+  | { type: 'call.answered'; answer: string; canLook: boolean }
   | { type: 'call.failed'; message: string }
   | { type: 'call.sessionGone'; reason: SessionGoneReason }
   // The Session's Turn started or stopped running.
