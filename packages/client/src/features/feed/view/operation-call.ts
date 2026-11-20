@@ -98,11 +98,15 @@ const RunCall = z.object({
   params: OperationParams.optional(),
 });
 
-// The Operation an Agent's operation_run call names and the params it passes; the Engine's own row has the same two.
+// Whether a row is the Engine's own for an Operation call, not the Agent's.
+export const isEngineRow = (row: ToolCallUpdate): boolean =>
+  row.id === operationFeedRowId(row.toolCallId);
+
+// The Operation an Agent's operation_run call names and the params it passes.
 export function agentOperationCall(
   row: ToolCallUpdate,
 ): { id: string; params: OperationParams } | undefined {
-  if (row.id === operationFeedRowId(row.toolCallId)) return undefined;
+  if (isEngineRow(row)) return undefined;
   const call = mcpCall(row);
 
   if (call?.tool !== 'operation_run') return undefined;

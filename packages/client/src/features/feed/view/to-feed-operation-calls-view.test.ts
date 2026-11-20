@@ -1,7 +1,8 @@
-import type {
-  SessionUpdate,
-  ToolCallUpdate,
-  VoiceTranscript,
+import {
+  permissionOptions,
+  type SessionUpdate,
+  type ToolCallUpdate,
+  type VoiceTranscript,
 } from '@repo/contracts';
 import { operationFeedRowId } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
@@ -76,33 +77,52 @@ const calledRowIds = (rows: SessionUpdate[]): string[][] =>
     return item.type === 'tool_call' ? [[item.row.id]] : [];
   });
 
-it('draws one row per Operation call, though the Agent and the Engine each stored one', () => {
-  const first = { sessionId: 'a', limit: 3 };
-  const second = { sessionId: 'b', limit: 3 };
+const first = { sessionId: 'a', limit: 3 };
 
+const second = { sessionId: 'b', limit: 3 };
+
+const engineIds = [operationFeedRowId('call-1'), operationFeedRowId('call-2')];
+
+it.each([
+  { name: 'stored together', between: [] },
+  { name: 'split by a Voice line', between: [voiceLine(3)] },
+])('draws a pair of parallel calls once when $name', ({ between }) => {
   expect(
     calledRowIds([
       agentCall(1, first, 1),
       agentCall(2, second, 2),
-      engineCall(1, first, 3),
-      engineCall(2, second, 4),
-    ]),
-  ).toEqual([[operationFeedRowId('call-1'), operationFeedRowId('call-2')]]);
-});
-
-it('draws a pair of parallel calls once when a Voice line lands between the two stored pairs', () => {
-  const first = { sessionId: 'a', limit: 3 };
-  const second = { sessionId: 'b', limit: 3 };
-
-  expect(
-    calledRowIds([
-      agentCall(1, first, 1),
-      agentCall(2, second, 2),
-      voiceLine(3),
+      ...between,
       engineCall(1, first, 4),
       engineCall(2, second, 5),
     ]),
-  ).toEqual([[operationFeedRowId('call-1'), operationFeedRowId('call-2')]]);
+  ).toEqual([engineIds]);
+});
+
+it('matches params whatever their key order', () => {
+  expect(
+    calledRowIds([
+      agentCall(1, { limit: 3, sessionId: 'a' }, 1),
+      engineCall(1, first, 2),
+    ]),
+  ).toEqual([[operationFeedRowId('call-1')]]);
+});
+
+it('keeps the Agent call a Permission request waits on', () => {
+  const waiting = agentCall(1, first, 1);
+
+  const pending = {
+    ...snapshot,
+    pendingPermission: {
+      requestId: 'request-1',
+      toolCallId: waiting.toolCallId,
+      title: 'Allow call?',
+      options: permissionOptions,
+    },
+  };
+
+  const items = toFeedView([waiting, engineCall(1, first, 2)], pending).items;
+
+  expect(JSON.stringify(items)).toContain(waiting.id);
 });
 
 it('keeps an Agent call the Engine never recorded, and one whose params differ', () => {

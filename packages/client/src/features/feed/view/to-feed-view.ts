@@ -77,10 +77,10 @@ export function toFeedView(
   rows: readonly SessionUpdate[],
   snapshot: SessionSnapshot,
 ): FeedView {
-  const drawn = withoutRecordedAgentCalls(rows);
-  const pass = newPass(drawn, snapshot);
+  const folded = withoutRecordedAgentCalls(rows, snapshot);
+  const pass = newPass(folded, snapshot);
 
-  appendRows(drawn, pass);
+  appendRows(folded, pass);
   pass.items.push(...pass.group.flush());
 
   return { items: pass.items, plan: selectActivePlan(rows) };
