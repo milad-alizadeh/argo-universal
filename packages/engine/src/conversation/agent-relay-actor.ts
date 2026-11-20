@@ -58,8 +58,13 @@ export const agentRelay = fromCallback<ConversationEvent, RelayInput>(
       if (heard) tell(relay, heard);
     });
 
-    return sessions.watch(input.sessionId, (happening) =>
+    const unwatch = sessions.watch(input.sessionId, (happening) =>
       relay.happened(happening),
     );
+
+    return (): void => {
+      relay.close();
+      unwatch();
+    };
   },
 );

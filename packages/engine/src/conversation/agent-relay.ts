@@ -57,16 +57,23 @@ export class AgentRelay {
     text: string,
     turnId?: string,
   ): Promise<void> {
-    const spoken = this.spoken.answer(text, turnId);
+    const control = this.spoken.answer(text, turnId);
 
     this.reply(
       requestId,
-      spoken ? await spoken : this.permission.answering(await this.work(text)),
+      control
+        ? await control
+        : this.permission.answering(await this.work(text)),
     );
   }
 
   public personSaid(words: PersonWords): void {
     this.spoken.heard(words);
+  }
+
+  // The call ended: nothing the person said applies any more.
+  public close(): void {
+    this.spoken.close();
   }
 
   // Sends the Agent a Prompt and answers with what the voice is told of where it landed.

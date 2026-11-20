@@ -16,13 +16,20 @@ export const isPermissionHappening = (
 export type AnnouncedRequest = { requestId: string; about: SpokenRequest };
 
 /*
- * The Permission request the voice was told is waiting, and the last one it was told of, which a late spoken answer may
- * still name once it no longer waits. Whatever else the voice is told while one waits starts with the truth that nothing
+ * The Permission request the voice was told is waiting, and the last one it was told of, which a spoken answer said as
+ * the person clicked may still name for a moment after it settles. Whatever else the voice is told while one waits starts with the truth that nothing
  * was allowed or rejected; the voice never claims an outcome Argo did not apply.
  */
+// How long a settled request can still be named by a spoken answer, one said as the person clicked; after it, "yes" is a request for work again.
+const settledGraceMs = 5000;
+
 export class WaitingPermission {
   private waiting: AnnouncedRequest | null = null;
   private last: AnnouncedRequest | null = null;
+  // When the last request settled; null while it waits.
+  private settledAt: number | null = null;
+
+  public constructor(private readonly now: () => number = Date.now) {}
 
   // Notes what happened to the Session's Permission request; returns what the voice is to be told, if anything.
   public heard(happening: PermissionHappening): string | null {
@@ -35,13 +42,20 @@ export class WaitingPermission {
     const { requestId, agent, title, kind, target } = happening;
     this.waiting = { requestId, about: { agent, title, kind, target } };
     this.last = this.waiting;
+    this.settledAt = null;
 
     return relayWords.permissionWaiting(this.waiting.about);
   }
 
-  // The request the voice was last told of, waiting or not, until the Turn that asked it ends.
+  // The request the voice was last told of: while it waits, and for a moment after it settles.
   public get announced(): AnnouncedRequest | null {
-    return this.last;
+    return this.recentlyAsked() ? this.last : null;
+  }
+
+  private recentlyAsked(): boolean {
+    return (
+      this.settledAt === null || this.now() - this.settledAt < settledGraceMs
+    );
   }
 
   public isWaiting(requestId: string): boolean {
@@ -62,6 +76,8 @@ export class WaitingPermission {
   }
 
   private settled(requestId: string): void {
-    if (this.isWaiting(requestId)) this.waiting = null;
+    if (!this.isWaiting(requestId)) return;
+    this.waiting = null;
+    this.settledAt = this.now();
   }
 }

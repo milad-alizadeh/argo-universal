@@ -56,11 +56,17 @@ type ConsentCall = {
  */
 export class SpokenConsent {
   private readonly turns = new PersonTurns();
+  private ended = false;
 
   public constructor(private readonly call: ConsentCall) {}
 
   public heard(words: PersonWords): void {
     this.turns.heard(words);
+  }
+
+  // The call ended: a spoken answer still waiting for the person's final words applies nothing.
+  public close(): void {
+    this.ended = true;
   }
 
   // The voice announced a Permission request: only what the person says from now on can answer it.
@@ -103,7 +109,7 @@ export class SpokenConsent {
     if (refused !== null) return refused;
     const heard = await this.personsAnswer(turnId);
 
-    return this.waits(asked)
+    return this.answerable(asked)
       ? this.applyHeard(asked, heard)
       : relayWords.alreadySettled(asked.about.title);
   }
@@ -152,6 +158,11 @@ export class SpokenConsent {
     );
 
     return outcomeWords(outcome, heard, asked.about.title);
+  }
+
+  // The request still waits, and the call that heard the answer is still up.
+  private answerable(asked: AnnouncedRequest): boolean {
+    return this.waits(asked) && !this.ended;
   }
 
   private waits(asked: AnnouncedRequest): boolean {
