@@ -1,5 +1,5 @@
 import type { VoiceCallOptionsChange, VoiceSettings } from '@repo/contracts';
-import type { VoiceDeviceChoice } from '#features/voice';
+import type { DeviceMetersState, VoiceDeviceChoice } from '#features/voice';
 import type { CustomVoiceDraft } from './custom-voice-draft';
 import type { CustomVoiceEditor } from './custom-voice-props';
 import type { VoiceDevices } from './voice-devices-section';
@@ -13,6 +13,8 @@ export interface VoiceDetailViewState {
   voice: VoiceSettingsLoad;
   // Only where the App can hold a call; elsewhere there is nothing to choose.
   devices?: VoiceDevices;
+  // The microphone's and speaker's levels and the speaker's test sound, beside the devices (Paper "Option D").
+  meters?: DeviceMetersState;
   // Only where the App can change the microphone's gain.
   adjustsGain?: boolean;
   // The custom voice form, while it is open.

@@ -6,7 +6,10 @@ import {
   adding,
   customVoices,
   editing,
+  idleMeters,
   namedDevices,
+  speakingMeters,
+  testingMeters,
   unnamedDevices,
   unusableVoice,
   usableVoice,
@@ -18,6 +21,7 @@ const meta = {
   argTypes: {
     voice: { control: false },
     devices: { control: false },
+    meters: { control: false },
     editor: { control: false },
     adjustsGain: { control: 'boolean' },
     saving: { control: 'boolean' },
@@ -99,7 +103,7 @@ export const Editing: Story = {
   },
 };
 
-// Where this App carries no call's sound, it cannot change the microphone's gain.
+// Where this App carries no call's sound, it cannot change the microphone's gain or draw a call.
 export const GainHidden: Story = {
   args: { adjustsGain: false },
 };
@@ -132,4 +136,17 @@ export const UnnamedDevices: Story = { args: { devices: unnamedDevices } };
 
 export const ChangeError: Story = {
   args: { error: 'There is no voice nobody' },
+};
+
+// Paper "Option D": each device's level after its name, and the Speaker's test sound at the row's end.
+export const MetersIdle: Story = {
+  args: { devices: namedDevices, meters: idleMeters },
+};
+
+export const MicrophoneMidSpeech: Story = {
+  args: { devices: namedDevices, meters: speakingMeters },
+};
+
+export const TestSoundPlaying: Story = {
+  args: { devices: namedDevices, meters: testingMeters },
 };

@@ -22,3 +22,8 @@ export {
   VoiceEdgeBand,
   type VoiceEdgeBandProps,
 } from './components/voice-edge-band/voice-edge-band';
+
+export {
+  useDeviceMeters,
+  type DeviceMetersState,
+} from './hooks/use-device-meters';

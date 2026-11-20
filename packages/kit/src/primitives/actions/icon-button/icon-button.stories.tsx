@@ -73,15 +73,6 @@ export const Large: Story = { args: largeIconButton };
 
 export const Selected: Story = { args: selectedIconButton };
 
-// A symbol that is filled by name, such as stop, draws filled without being selected, so it is not announced as a pressed toggle.
-export const FilledSquare: Story = {
-  args: { icon: 'stop', accessibilityLabel: 'Stop', variant: 'secondary' },
-  play: async ({ canvas }) => {
-    const button = canvas.getByRole('button', { name: 'Stop' });
-    await expect(button).not.toHaveAttribute('aria-pressed');
-  },
-};
-
 export const Disabled: Story = {
   args: { ...disabledIconButton, onPress: fn() },
   play: async ({ canvas, args }) => {

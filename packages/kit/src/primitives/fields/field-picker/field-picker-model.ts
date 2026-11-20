@@ -1,11 +1,24 @@
 import type { FieldGroupKitProps } from '../../kit-props';
+import type {
+  FieldPickerAccessory,
+  FieldPickerMeter,
+} from './field-picker-accessory-props';
 import { createOf, reportToggle } from './field-picker-events';
+
+export type {
+  FieldPickerAccessory,
+  FieldPickerMeter,
+} from './field-picker-accessory-props';
 
 export type FieldPickerProps = FieldGroupKitProps<'FieldGroup.Picker'> & {
   // What the page says when there are no options at all, such as "No Agents installed"; a search that leaves none says so itself. The App's own: a Plugin's wire has no such prop.
   emptyText?: string;
   // Offers to create what the search typed when no option has that name; the App's own, which a Plugin's `createLabel` sets.
   create?: { label: string; onCreate: (text: string) => void };
+  // One small round button at the row's end that tests or previews the row's own choice (ADR-0042, 2026-11-19). The App's own.
+  accessory?: FieldPickerAccessory;
+  // How loud the device the row chooses is, as a level glyph before the accessory's lane; drawn where the App measures audio, on the web.
+  meter?: FieldPickerMeter;
 };
 
 /*

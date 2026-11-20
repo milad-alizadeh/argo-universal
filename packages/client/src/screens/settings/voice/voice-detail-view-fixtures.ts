@@ -1,4 +1,5 @@
 import { defaultVoiceCallOptions, type VoiceSettings } from '@repo/contracts';
+import type { DeviceMetersState } from '#features/voice';
 import type { VoiceDevices } from './voice-devices-section';
 
 // This Device's microphones and speakers, named once the microphone was allowed; the USB microphone is chosen.
@@ -109,3 +110,27 @@ export const editing = { voice: pirate };
 
 // The form open empty to add a custom voice.
 export const adding = {};
+
+// A level that holds still, so a story draws the same glyph every time.
+const heldAt = (level: number): DeviceMetersState['microphone'] => ({
+  level: () => level,
+  subscribe: () => () => {},
+});
+
+const metersOf = (
+  microphone: number,
+  speaker: number,
+  testing: boolean,
+): DeviceMetersState => ({
+  microphone: heldAt(microphone),
+  speaker: heldAt(speaker),
+  testing,
+  onTest: () => {},
+});
+
+// Paper "Option D": nothing said and no test sound, the person mid-speech, and the test sound playing.
+export const idleMeters = metersOf(0.1, 0, false);
+
+export const speakingMeters = metersOf(0.65, 0, false);
+
+export const testingMeters = metersOf(0.1, 0.6, true);
