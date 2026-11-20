@@ -1,5 +1,6 @@
 import {
   permissionOptions,
+  type SessionSnapshot,
   type SessionUpdate,
   type ToolCallUpdate,
   type VoiceTranscript,
@@ -67,8 +68,11 @@ const voiceLine = (position: number): VoiceTranscript => ({
   content: [{ type: 'text', text: "I'll pull that up." }],
 });
 
-const calledRowIds = (rows: SessionUpdate[]): string[][] =>
-  toFeedView(rows, snapshot).items.flatMap((item) => {
+const calledRowIds = (
+  rows: SessionUpdate[],
+  shown: SessionSnapshot = snapshot,
+): string[][] =>
+  toFeedView(rows, shown).items.flatMap((item) => {
     if (item.type === 'group')
       return [
         item.items.flatMap((a) => (a.type === 'tool_call' ? [a.row.id] : [])),
@@ -120,9 +124,9 @@ it('keeps the Agent call a Permission request waits on', () => {
     },
   };
 
-  const items = toFeedView([waiting, engineCall(1, first, 2)], pending).items;
-
-  expect(JSON.stringify(items)).toContain(waiting.id);
+  expect(
+    calledRowIds([waiting, engineCall(1, first, 2)], pending).flat(),
+  ).toContain(waiting.id);
 });
 
 it('keeps an Agent call the Engine never recorded, and one whose params differ', () => {
