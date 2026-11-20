@@ -429,6 +429,7 @@ jobs:
           CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
           STORY_RESULT: ${{ needs.stories.result }}
           RENDER_RESULT: ${{ needs.story-renders.result }}
+        shell: bash
         run: |
           gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs?per_page=100" |
             jq --arg sha "$TESTED_SHA" --argjson size "$CHANGED_FILES" --arg interaction "$STORY_RESULT" --arg render "$RENDER_RESULT" '

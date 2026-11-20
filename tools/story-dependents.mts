@@ -1,7 +1,8 @@
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { isAbsolute, join, relative, resolve } from 'node:path';
+import { z } from 'zod';
 import { root } from './tracked-files.mts';
 
 const listInto = (base: string, listing: string): void => {
@@ -33,11 +34,21 @@ export const dependentStories = (base: string): string[] => {
   try {
     listInto(base, listing);
 
-    const listed: { file: string }[] = JSON.parse(
-      readFileSync(listing, 'utf8'),
-    );
+    const listed = z
+      .array(z.object({ file: z.string() }))
+      .parse(JSON.parse(readFileSync(listing, 'utf8')));
 
-    return listed.map(({ file }): string => file);
+    return listed.map(({ file }): string => {
+      if (
+        !isAbsolute(file) ||
+        !/^packages\/(kit|client)\/src\/.+\.stories\.tsx$/.test(
+          relative(root, file),
+        )
+      )
+        throw new Error('Invalid Storybook file in Vitest listing');
+
+      return file;
+    });
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }

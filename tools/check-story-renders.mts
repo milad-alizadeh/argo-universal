@@ -10,8 +10,8 @@ import { resolve } from 'node:path';
 import { lockBrowserSuite } from '@repo/browser-suite-lock';
 import { changedPaths } from './hook-checks.mts';
 import { dependentStories } from './story-dependents.mts';
-import { readStory, testStory, type StoryFile } from './story-file.mts';
-import { loadStoryFiles } from './story-files.mts';
+import { testStory, type StoryFile } from './story-file.mts';
+import { drawingCount, packageStories } from './story-files.mts';
 import {
   childStateProblems,
   duplicateRenderProblems,
@@ -43,23 +43,19 @@ const planPath = resolve(storybook, 'story-render-plan.json');
 const fingerprintPath = resolve(storybook, 'story-render-fingerprints.json');
 
 const presentationFiles = (): StoryFile[] =>
-  loadStoryFiles(['packages/*/src/**/*.stories.tsx']).filter(
-    ({ file }): boolean => !testStory.test(file),
-  );
+  packageStories().filter(({ file }): boolean => !testStory.test(file));
 
 /* What a file costs in the browser: each story is drawn once and each candidate pair twice more. */
 type Weighted = PlannedFile & { weight: number };
 
 const planFor = (story: StoryFile): Weighted[] => {
-  const { exports } = readStory(story);
+  const drawings = drawingCount(story);
 
-  if (exports.length < 2) return [];
+  if (!drawings) return [];
 
   const pairs = fixturePairs(story);
 
-  return [
-    { file: story.file, pairs, weight: exports.length + 2 * pairs.length },
-  ];
+  return [{ file: story.file, pairs, weight: drawings + 2 * pairs.length }];
 };
 
 const runStorybookProject = (): void => {
