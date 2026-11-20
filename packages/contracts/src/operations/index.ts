@@ -20,6 +20,15 @@ export { AgentAccess } from './agent-access';
 export { appOperations, AppOpenResult } from './app';
 
 export {
+  AppScreenshotResult,
+  ScreenCaptureAnswer,
+  ScreenImage,
+  ScreenRequester,
+  ScreenSightReply,
+  ScreenSightStreamEvent,
+} from './screen-sight';
+
+export {
   OperationExecution,
   OperationRunResponse,
   OperationWaitId,

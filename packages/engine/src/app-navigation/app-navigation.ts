@@ -17,7 +17,7 @@ export interface AppNavigationInput {
 }
 
 // Only the App on the Server Device's own desktop is driven from here: never a phone, a browser or a paired Device (ADR-0022).
-const isLocalDesktop = (connection: RpcConnection): boolean =>
+export const isLocalDesktop = (connection: RpcConnection): boolean =>
   isServerDevice(connection) && connection.surface?.platform === 'desktop';
 
 const isServerDevice = ({ identity }: RpcConnection): boolean =>

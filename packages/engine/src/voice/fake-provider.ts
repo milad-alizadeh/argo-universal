@@ -1,4 +1,5 @@
 import type { VoiceAvailability } from '@repo/contracts';
+import type { ScreenImage } from '@repo/contracts/operations';
 import type {
   VoiceClosedReason,
   VoiceDelivery,
@@ -20,6 +21,8 @@ export interface FakeVoiceOptions {
   failStart?: string;
   // The voices it lists; one by default.
   voices?: VoiceOption[];
+  // Whether its calls take images, as a provider with the capability does; off by default.
+  images?: boolean;
 }
 
 // Something the Engine told the voice, as a test reads it back.
@@ -68,6 +71,8 @@ export class FakeVoiceProvider implements VoiceProvider {
 
     if (failStart !== undefined) return Promise.reject(new Error(failStart));
     const call = new FakeVoiceCall(request);
+
+    if (this.options.images === true) call.takeImages();
     this.calls.push(call);
     this.scheduleConnect(call);
 
@@ -113,6 +118,16 @@ export class FakeVoiceCall<
 > implements VoiceProviderCall {
   public readonly answer: string;
   public readonly sent: FakeVoiceMessage[] = [];
+  // The images the Engine gave the voice, when the provider takes them.
+  public readonly images: ScreenImage[] = [];
+  public look?: (image: ScreenImage) => void;
+
+  // The call can be given images, as a provider with the capability allows.
+  public takeImages(): void {
+    this.look = (image: ScreenImage): void => {
+      this.images.push(image);
+    };
+  }
   public ended = false;
   private readonly listeners = new Set<(event: VoiceProviderEvent) => void>();
 
@@ -158,6 +173,11 @@ export class FakeVoiceCall<
 
   public requestWork(requestId: string, text: string): void {
     this.emit({ type: 'work.requested', requestId, text });
+  }
+
+  // The voice asks to look at the person's screen.
+  public requestFrame(requestId: string): void {
+    this.emit({ type: 'frame.requested', requestId });
   }
 
   // The provider closes the call; `why` is its own reason in plain words, when it gives one.

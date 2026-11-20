@@ -61,6 +61,8 @@ export { OpenLinkScreen } from './screens/open/open-link-screen';
 
 export { useDesktopNavigation } from './features/app-navigation';
 
+export { useScreenSight, useScreenSightEnabled } from './features/screen-sight';
+
 export { ProjectDetailScreen } from './screens/settings/projects/$name/project-detail-screen';
 
 export { AddServerScreen } from './screens/settings/servers/add/add-server-screen';

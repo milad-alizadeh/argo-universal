@@ -444,6 +444,10 @@ _Avoid_: Conversation, conversation mode, voice mode, live
 A service or local model that runs a Voice call's voice.
 _Avoid_: Conversation provider, realtime provider, voice backend
 
+**Screen sight**:
+Letting an Agent or the voice of a Voice call see the person's whole screen as one still picture, taken by the desktop App when asked. Nothing asks the person before a capture. Off until the person turns it on for the Device, shown to the person as one Notice, and never stored.
+_Avoid_: Screen share, screen capture, screenshot (for the feature; `app.screenshot` is the Operation)
+
 **Stored Turn**:
 A Turn as read back from storage, before the Writer's queued changes are laid over it.
 _Avoid_: Turn row, saved Turn
