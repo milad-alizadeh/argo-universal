@@ -1,4 +1,5 @@
 import { Button } from '@repo/kit/primitives/actions/button';
+import { Icon } from '@repo/kit/primitives/content/icon';
 import { List, ListSection } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import { View } from 'react-native';
@@ -8,16 +9,39 @@ type Schedules = ScheduleControls;
 
 type Schedule = Schedules['items'][number];
 
-export const scheduleTitle = (schedule: Schedule): string =>
+const scheduleTitle = (schedule: Schedule): string =>
   schedule.prompt.find((block) => block.type === 'text')?.text ??
   'Scheduled Prompt';
 
 const minute = 60;
 
-export const scheduleInterval = (seconds: number): string =>
+const scheduleInterval = (seconds: number): string =>
   seconds % minute === 0
     ? `Every ${seconds / minute} min`
     : `Every ${seconds} s`;
+
+function previewRow(item: Schedule): React.JSX.Element {
+  return (
+    <ListItem
+      key={item.id}
+      leading={<Icon name={item.paused ? 'pause' : 'clock'} tone="muted" />}
+      title={scheduleTitle(item)}
+      subtitle={item.paused ? 'Paused' : scheduleInterval(item.intervalSeconds)}
+    />
+  );
+}
+
+export function SchedulePreview({
+  schedules,
+}: {
+  schedules?: Schedules;
+}): React.JSX.Element {
+  return (
+    <List appearance="plain" padding={0} fit>
+      {schedules?.items.slice(0, 2).map(previewRow)}
+    </List>
+  );
+}
 
 const time = (stamp: number): string =>
   new Date(stamp).toLocaleTimeString([], {

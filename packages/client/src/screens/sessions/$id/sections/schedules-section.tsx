@@ -1,11 +1,5 @@
 import { Text } from '@repo/kit/primitives/content/text';
-import { View } from 'react-native';
-import type { ScheduleControls } from '#features/sessions';
-import {
-  scheduleTitle,
-  scheduleInterval,
-  ScheduleList,
-} from '#features/sessions';
+import { ScheduleList, SchedulePreview } from '#features/sessions';
 import type { SessionSection } from './session-section';
 
 export const schedulesSection: SessionSection = {
@@ -21,7 +15,7 @@ export const schedulesSection: SessionSection = {
         {schedules?.items.length}
       </Text>
     ),
-    summary: summary(schedules),
+    summary: <SchedulePreview schedules={schedules} />,
   }),
   tab: ({ schedules }) => ({
     body: <ScheduleList schedules={schedules} />,
@@ -32,18 +26,3 @@ export const schedulesSection: SessionSection = {
     body: <ScheduleList schedules={schedules} />,
   }),
 };
-
-const summary = (
-  schedules: ScheduleControls | undefined,
-): React.JSX.Element => (
-  <View>
-    {schedules?.items.slice(0, 2).map((item) => (
-      <View key={item.id}>
-        <Text numberOfLines={1}>{scheduleTitle(item)}</Text>
-        <Text role="secondary" tone="muted">
-          {item.paused ? 'Paused' : scheduleInterval(item.intervalSeconds)}
-        </Text>
-      </View>
-    ))}
-  </View>
-);
