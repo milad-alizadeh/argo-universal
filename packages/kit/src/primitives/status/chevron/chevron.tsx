@@ -85,7 +85,7 @@ function useTurn(open: boolean): TurnStyle {
   );
 
   return useAnimatedStyle<ViewStyle>(
-    () => ({ transform: [{ rotate: `${rotation.value}deg` }] }),
+    () => ({ transform: [{ rotate: `${rotation.get()}deg` }] }),
     [rotation],
   );
 }
