@@ -51,11 +51,13 @@ it('restores the Schedule and sends its Prompt after the Engine restarts', async
   const journey = await delegationJourney();
   const { sessionId } = journey.caller;
   const text = 'Check after restart';
+
   const original = await journey.host.caller.session.schedulePrompt({
     sessionId,
     intervalSeconds: 60,
     prompt: [{ type: 'text', text }],
   });
+
   await journey.host.stop();
   // Four deadlines passed while the Server was down; the fifth is still in the future.
   const clock = vi.spyOn(Date, 'now').mockReturnValue(original.nextAt + 185000);
