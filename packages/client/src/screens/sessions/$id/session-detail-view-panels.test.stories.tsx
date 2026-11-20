@@ -6,7 +6,7 @@ import type { SessionDetailViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { panelsSession } from './session-detail-view-panels.test.mocks';
 
-const desktopWithInspector = 2224;
+const desktopWithInspector = 2560;
 
 const meta = {
   title: 'Tests/Screens/Sessions/Session/Panels',

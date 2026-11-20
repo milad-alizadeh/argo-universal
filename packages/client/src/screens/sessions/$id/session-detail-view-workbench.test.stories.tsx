@@ -98,7 +98,7 @@ export const CardsAutoHideBelowTheIndependentBoundary: Story = {
 };
 
 export const InspectorAndNavigationKeepCardsOutsideTheConversation: Story = {
-  beforeEach: (): Promise<void> => settleLayout(2224),
+  beforeEach: (): Promise<void> => settleLayout(2560),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(await canvas.findByRole('button', inspectorToggle));
     await expectSeparateCards(canvas);
