@@ -145,10 +145,10 @@ export const StopsTheTestSoundWhilePlaying: Story = {
 
 // A phone, or the web App in a phone's browser, has no audio settings: no devices, meters, volume or gain.
 export const PhonesShowNoAudioRows: Story = {
-  args: { meters: idleMeters, visualiser: { kind: 'orb', onChange: fn() } },
+  args: { meters: idleMeters },
   beforeEach: (): Promise<void> => settleLayout(layoutWidths.phone),
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('Visualiser')).toBeVisible();
+    await expect(canvas.getByText('End a silent call after')).toBeVisible();
     await expect(canvas.queryByText('Devices')).toBeNull();
     await expect(canvas.queryByRole('button', microphone)).toBeNull();
     await expect(canvas.queryByRole('button', speaker)).toBeNull();
