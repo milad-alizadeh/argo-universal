@@ -1,4 +1,9 @@
-import { idleSession, type SessionRowFixture } from './session-row-fixtures';
+import {
+  idleSession,
+  issueItem,
+  runningSession,
+  type SessionRowFixture,
+} from './session-row-fixtures';
 import type { SessionRowPluginItem } from './session-row-props';
 
 const github = { pluginId: 'github', pluginName: 'GitHub' };
@@ -24,6 +29,27 @@ export const pullRequestItemsSession = {
       pullItem(9, { stage: 'merged' }),
       pullItem(7, { stage: 'open', draft: true }),
     ],
+    more: [],
+  },
+} satisfies SessionRowFixture;
+
+/*
+ * A sidebar row whose counts, pull request and Issue overflow its meta line: Argo's items that fit show whole and the
+ * rest join "+N", so no count's running dot is cut at the edge.
+ */
+export const crowdedMetaSession = {
+  ...runningSession,
+  session: {
+    ...runningSession.session,
+    title: 'Voice calls spec #2405',
+    activity: 'Working',
+    shells: { running: 1, total: 1 },
+    subagents: { running: 4, total: 4 },
+  },
+  pullRequest: undefined,
+  age: 'now',
+  plugins: {
+    items: [pullItem(325, { stage: 'open' }), issueItem],
     more: [],
   },
 } satisfies SessionRowFixture;

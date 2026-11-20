@@ -4,9 +4,9 @@ import {
   settleLayout,
 } from '@repo/kit/mocks/story-layout';
 import { expect } from 'storybook/test';
+import { statusDots } from '../../../../../mocks/session-row/session-row-status-dots.test.mocks';
 import {
   meta as sessionRowTestMeta,
-  statusDots,
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
 import { sessionRowMocks } from './session-row.mocks';
