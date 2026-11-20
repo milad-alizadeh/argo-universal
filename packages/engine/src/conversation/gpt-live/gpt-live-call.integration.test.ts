@@ -112,7 +112,7 @@ describe('GPT-Live call events', () => {
     expect(events).toEqual([person(personTurnId, personSaid, true)]);
   });
 
-  it('reports work the voice hands over under its delegation item', async () => {
+  it("reports work the voice hands over under its delegation item, naming the person's turn it heard", async () => {
     const { send, events } = await listening();
 
     send(delegationCreated);
@@ -120,7 +120,12 @@ describe('GPT-Live call events', () => {
     await expect
       .poll(() => events)
       .toEqual([
-        { type: 'work.requested', requestId: delegationItem, text: personSaid },
+        {
+          type: 'work.requested',
+          requestId: delegationItem,
+          text: personSaid,
+          turnId: personTurnId,
+        },
       ]);
   });
 

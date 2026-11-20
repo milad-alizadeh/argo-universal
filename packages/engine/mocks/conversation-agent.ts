@@ -87,6 +87,7 @@ const askedToolCall = (title: string): ScriptedStep => ({
     title,
     kind: 'execute',
     status: 'pending',
+    rawInput: { command: 'npm run deploy' },
   },
 });
 

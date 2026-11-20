@@ -34,6 +34,8 @@ function sessionsHeard(): HeardSessions {
     {
       promptFromConversation: () => Promise.reject(new Error('Not sent')),
       stopFromConversation: () => Promise.resolve(false),
+      answerFromConversation: () => 'settled',
+      agentName: (agentId) => agentId,
       watchTurns: (_sessionId, listener) => {
         listeners.add(listener);
 

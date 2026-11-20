@@ -260,6 +260,8 @@ const conversationSetup = setup({
     finish: assign(({ context }, params: EndParameters) =>
       finished(context, params),
     ),
+    // The relay hears the person's words, so a spoken answer is applied only for a turn of theirs (ADR-0064).
+    relayTranscript: sendTo('agentRelay', ({ event }) => event),
     storeTranscript: ({ context, event, system }): void => {
       const heard = transcriptOf(event);
 
@@ -510,7 +512,7 @@ export const conversationMachine = conversationSetup.createMachine({
         'provider.event': [
           {
             guard: 'hearsTranscript',
-            actions: ['storeTranscript', 'trackPartials'],
+            actions: ['storeTranscript', 'trackPartials', 'relayTranscript'],
           },
           {
             guard: 'providerErrored',
@@ -554,7 +556,11 @@ export const conversationMachine = conversationSetup.createMachine({
             'provider.event': [
               {
                 guard: 'hearsTranscript',
-                actions: ['storeTranscript', 'trackPartials'],
+                actions: [
+                  'storeTranscript',
+                  'trackPartials',
+                  'relayTranscript',
+                ],
                 target: 'connected',
                 reenter: true,
               },

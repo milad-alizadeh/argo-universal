@@ -1,14 +1,20 @@
 import { randomUUID } from 'node:crypto';
 import type { FeedSubscribeOutput, FeedUpdate } from '@repo/contracts';
+import type { PendingPermission } from '@repo/contracts';
 import type { FeedDeps, FeedEvent } from '../feed';
-import type { Sessions, TurnHappening } from '../sessions';
+import type {
+  ConversationSessionWork as SessionWork,
+  TurnHappening,
+} from '../sessions';
 import { FeedHappenings } from './feed-happenings';
 import { PermissionWatch } from './permission-watch';
+import type { SpokenRequest } from './relay-words';
 import type {
   SessionHappening,
   ConversationNotice,
   ConversationSessions,
 } from './session-link';
+import { askedToolRow, spokenRequest } from './spoken-request';
 
 type FeedSources = Pick<FeedDeps, 'findFeed' | 'watchSessionSnapshot'>;
 
@@ -25,26 +31,39 @@ type SnapshotEvent = Extract<
 
 // What the Conversation reaches its Session's work through: the Engine's own Sessions.
 export type ConversationSessionWork = Pick<
-  Sessions,
-  'promptFromConversation' | 'stopFromConversation' | 'watchTurns'
+  SessionWork,
+  | 'promptFromConversation'
+  | 'stopFromConversation'
+  | 'answerFromConversation'
+  | 'watchTurns'
+  | 'agentName'
 >;
+
+// The Session a Feed watch listens to, and how it names the Session's Agent.
+type WatchedSession = {
+  sessionId: string;
+  work: Pick<ConversationSessionWork, 'agentName'>;
+};
 
 // Listens to one Session's Feed for the Agent's and the person's words, following it when the Session replaces its Feed actor, and to its Permission requests.
 class FeedWatch {
   private readonly happenings = new FeedHappenings();
   private readonly permissions: PermissionWatch;
   private feed: FeedActor | undefined;
+  private agent = '';
   private batches: Stoppable | undefined;
   private readonly snapshots: Stoppable;
 
   public constructor(
     private readonly sources: FeedSources,
-    private readonly sessionId: string,
+    private readonly session: WatchedSession,
     private readonly listener: Listener,
   ) {
-    this.permissions = new PermissionWatch(listener);
+    this.permissions = new PermissionWatch(listener, (pending) =>
+      this.describe(pending),
+    );
     this.follow();
-    this.snapshots = sources.watchSessionSnapshot(sessionId, {
+    this.snapshots = sources.watchSessionSnapshot(session.sessionId, {
       next: (event): void => this.changed(event),
     });
   }
@@ -57,8 +76,19 @@ class FeedWatch {
   private changed(event: SnapshotEvent): void {
     this.follow();
 
-    if (event.type === 'snapshot')
-      this.permissions.changed(event.snapshot.pendingPermission);
+    if (event.type !== 'snapshot') return;
+    this.agent = event.snapshot.agent;
+    this.permissions.changed(event.snapshot.pendingPermission);
+  }
+
+  private describe(pending: PendingPermission): SpokenRequest {
+    const rows = this.feed?.getSnapshot().context.rows ?? {};
+
+    return spokenRequest(
+      pending,
+      askedToolRow(rows, pending.toolCallId),
+      this.session.work.agentName(this.agent),
+    );
   }
 
   private isNew(next: FeedActor | undefined): next is FeedActor {
@@ -66,7 +96,7 @@ class FeedWatch {
   }
 
   private follow(): void {
-    const next = this.sources.findFeed(this.sessionId);
+    const next = this.sources.findFeed(this.session.sessionId);
 
     if (!this.isNew(next)) return;
     this.batches?.unsubscribe();
@@ -117,7 +147,7 @@ const watchOf =
     work: ConversationSessionWork,
   ): ConversationSessions['watch'] =>
   (sessionId, listener) => {
-    const words = new FeedWatch(sources, sessionId, listener);
+    const words = new FeedWatch(sources, { sessionId, work }, listener);
 
     const turns = work.watchTurns(sessionId, (happening) => {
       const ended = endOf(happening);
@@ -138,6 +168,8 @@ export const conversationSessions = (
 ): ConversationSessions => ({
   prompt: (sessionId, text) => work.promptFromConversation(sessionId, text),
   stop: (sessionId) => work.stopFromConversation(sessionId),
+  answer: async (sessionId, requestId, answer) =>
+    work.answerFromConversation(sessionId, requestId, answer),
   watch: watchOf(sources, work),
   notice: (sessionId, notice) =>
     sources.findFeed(sessionId)?.send(noticeEvent(notice)),

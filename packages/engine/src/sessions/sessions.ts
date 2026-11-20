@@ -9,6 +9,7 @@ import type {
 } from '@repo/contracts/plugins/argo-calls';
 import { OwnSessionArchive } from './archive/own-archive';
 import { archiveSessionFromPlugin } from './archive/plugin-archive';
+import { ConversationSessionWork } from './conversation-session-work';
 import { startSessionCreation } from './creation/session-creation';
 import { createSessionList } from './list/session-list';
 import { OpenSessions } from './open-sessions';
@@ -19,12 +20,7 @@ import {
 } from './operation-call';
 import type { NativeStart, NativeStartRequest } from './prompt-sender';
 import { createSessionRouter } from './router';
-import {
-  requireTaken,
-  sendPrompt,
-  withdrawPrompt,
-  type TakenPrompt,
-} from './sent-prompt';
+import { requireTaken, sendPrompt, withdrawPrompt } from './sent-prompt';
 import {
   createSessionDirectory,
   type SessionDirectory,
@@ -35,7 +31,6 @@ import {
 } from './session-operations';
 import { admitSessionPrompt, type PromptLanding } from './session-prompt';
 import type { SessionHandlerSources, SessionSources } from './session-sources';
-import type { TurnHappening } from './turn-happenings';
 import { createSessionWorkSource, type SessionWorkSource } from './work-source';
 
 /*
@@ -51,6 +46,8 @@ export class Sessions {
   public readonly directory: SessionDirectory;
   // The native Session work an Operation waits for.
   public readonly work: SessionWorkSource;
+  // What a Conversation reaches its Session's work through.
+  public readonly conversation: ConversationSessionWork;
   // The Session procedures that are not Operations.
   public readonly router: ReturnType<typeof createSessionRouter>;
   private readonly sources: SessionHandlerSources;
@@ -63,6 +60,10 @@ export class Sessions {
     this.work = createSessionWorkSource(this.sources);
     this.router = createSessionRouter({ sources: this.sources, list });
     this.ownArchive = new OwnSessionArchive(this.sources);
+    this.conversation = new ConversationSessionWork(
+      this.sources,
+      this.implementations,
+    );
   }
   // Opens a Session from storage, or waits for its open, without a Turn.
   public async open(sessionId: string): Promise<void> {
@@ -106,33 +107,6 @@ export class Sessions {
       ? { status: 'queued', queuedId: sent.queuedId }
       : { status: 'started' };
   }
-  // The Conversation's request for work: a Sent Prompt that steers a running Turn when it can (ADR-0064).
-  public async promptFromConversation(
-    sessionId: string,
-    text: string,
-  ): Promise<TakenPrompt> {
-    const input = { sessionId, prompt: [{ type: 'text' as const, text }] };
-
-    const sent = await sendPrompt(this.sources, input, {
-      sender: conversationSender,
-    });
-
-    return requireTaken(sent);
-  }
-  // A spoken "stop" (ADR-0064): cancels the running Turn as the Stop button does; resolves false when no Turn runs.
-  public async stopFromConversation(sessionId: string): Promise<boolean> {
-    if (!this.sources.open.isRunning(sessionId)) return false;
-    await this.implementations['session.cancel']({ sessionId });
-
-    return true;
-  }
-  // Hears what an open Session reports of its Turns until the returned function is called; a closed Session reports none.
-  public watchTurns(
-    sessionId: string,
-    listener: (happening: TurnHappening) => void,
-  ): () => void {
-    return this.sources.open.watchTurns(sessionId, listener);
-  }
   // Takes back a Queued Prompt the Plugin sent; one that started, is gone or is held for editing stays (ADR-0055).
   public async withdrawFromPlugin(
     sessionId: string,
@@ -162,8 +136,6 @@ export class Sessions {
     return beginOperationCall(this.sources, sessionId, operation);
   }
 }
-
-const conversationSender = { type: 'conversation' } as const;
 
 // Handlers reach the open Sessions' actor and command signal only through `OpenSessions`.
 const handlerSources = (sources: SessionSources): SessionHandlerSources => ({

@@ -56,7 +56,7 @@ const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions(deps);
 
   attachSessionActs(deps, sessions);
-  deps.conversation.attach(conversationSessions(deps, sessions));
+  deps.conversation.attach(conversationSessions(deps, sessions.conversation));
 
   const operations = createOperationProcedures({ ...deps, sessions });
 

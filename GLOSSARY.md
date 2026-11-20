@@ -452,6 +452,10 @@ _Avoid_: Persona, speaker
 The voice saying an Agent's result aloud in a Conversation, from the hand-over until the person speaks again. The Agent's message is the record, so a Read-out is never a Feed row.
 _Avoid_: Readback, voice summary
 
+**Spoken answer**:
+The person's allow-once or reject to a Permission request, said in a Conversation. Argo reads it from the person's own words, heard after the voice announced the request, and applies it as a click would. Always-allow is never a Spoken answer.
+_Avoid_: Voice consent, reply form, voice approval
+
 **Conversation provider**:
 A service or local model that runs a Conversation.
 _Avoid_: Voice provider, realtime provider, voice backend

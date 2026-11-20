@@ -5,6 +5,7 @@ import type {
   ConversationEvent,
   VoiceSay,
 } from './conversation-types';
+import type { ConversationProviderEvent } from './provider';
 import type { ConversationSessions } from './session-link';
 
 export type RelayInput = {
@@ -12,12 +13,28 @@ export type RelayInput = {
   sessionId: string;
 };
 
-type WorkRequest = { requestId: string; text: string };
+type Heard = Extract<
+  ConversationProviderEvent,
+  { type: 'work.requested' | 'person.transcript' }
+>;
 
-const workRequestOf = (event: ConversationEvent): WorkRequest | undefined =>
-  event.type === 'provider.event' && event.event.type === 'work.requested'
+const relayed = new Set<ConversationProviderEvent['type']>([
+  'work.requested',
+  'person.transcript',
+]);
+
+const isHeard = (event: ConversationProviderEvent): event is Heard =>
+  relayed.has(event.type);
+
+const heardOf = (event: ConversationEvent): Heard | undefined =>
+  event.type === 'provider.event' && isHeard(event.event)
     ? event.event
     : undefined;
+
+const tell = (relay: AgentRelay, heard: Heard): void => {
+  if (heard.type === 'person.transcript') return relay.personSaid(heard);
+  void relay.request(heard.requestId, heard.text, heard.turnId);
+};
 
 const reportsTo = (sendBack: SendBack): RelayReports => ({
   speak: (say: VoiceSay): void => sendBack({ type: 'voice.say', say }),
@@ -26,7 +43,7 @@ const reportsTo = (sendBack: SendBack): RelayReports => ({
 });
 
 /*
- * The go-between of one Conversation and its Session. The machine forwards the person's requests for work to it; it sends
+ * The go-between of one Conversation and its Session. The machine forwards the person's requests for work and words to it; it sends
  * back what the voice should be told, as `voice.say`.
  */
 export const agentRelay = fromCallback<ConversationEvent, RelayInput>(
@@ -36,9 +53,9 @@ export const agentRelay = fromCallback<ConversationEvent, RelayInput>(
     const relay = new AgentRelay(sessions, input, reportsTo(sendBack));
 
     receive((event) => {
-      const request = workRequestOf(event);
+      const heard = heardOf(event);
 
-      if (request) void relay.request(request.requestId, request.text);
+      if (heard) tell(relay, heard);
     });
 
     return sessions.watch(input.sessionId, (happening) =>

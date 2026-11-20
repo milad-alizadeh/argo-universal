@@ -17,6 +17,7 @@ function relayTo(
   const sessions: ConversationSessions = {
     prompt: answer,
     stop: () => Promise.resolve(false),
+    answer: () => Promise.resolve('settled'),
     watch: () => (): void => {},
     notice: () => {},
   };

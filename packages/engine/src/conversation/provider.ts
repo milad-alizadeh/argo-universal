@@ -25,8 +25,8 @@ export type ConversationProviderEvent =
   | { type: 'person.transcript'; id: string; text: string; final: boolean }
   // What the voice said; `final` is false while it is still speaking.
   | { type: 'voice.transcript'; id: string; text: string; final: boolean }
-  // The person asked for work; answer it with `reply` under this id.
-  | { type: 'work.requested'; requestId: string; text: string }
+  // The person asked for work; answer it with `reply` under this id. `turnId` is the person's turn it was heard in, when the provider names one: the id their transcript comes under.
+  | { type: 'work.requested'; requestId: string; text: string; turnId?: string }
   // The voice started or stopped speaking.
   | { type: 'speaking'; speaking: boolean }
   // Trouble on the person's side of the call, such as a microphone the App may not use; null once it clears. Reconnecting is the Engine's to say.

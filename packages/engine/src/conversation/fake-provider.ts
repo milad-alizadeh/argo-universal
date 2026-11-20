@@ -163,8 +163,13 @@ export class FakeConversation<
     this.emit({ type: 'voice.transcript', id, text, final: true });
   }
 
-  public requestWork(requestId: string, text: string): void {
-    this.emit({ type: 'work.requested', requestId, text });
+  // `turnId` names the person's turn the voice heard the request in, as GPT-Live's hand-over does.
+  public requestWork(requestId: string, text: string, turnId?: string): void {
+    this.emit(
+      turnId === undefined
+        ? { type: 'work.requested', requestId, text }
+        : { type: 'work.requested', requestId, text, turnId },
+    );
   }
 
   // The provider closes the call; `why` is its own reason in plain words, when it gives one.
