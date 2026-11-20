@@ -109,6 +109,26 @@ async function askMissing(
   return answer;
 }
 
+/*
+ * A call that ran late answered after all: what it answered for the contexts it was asked is kept, and its Slot is no
+ * longer left out, so the next ask draws it in place of the last good items.
+ */
+export function keepLate(
+  worker: SlotWorker,
+  input: SlotItemsInput,
+  reply: Reply,
+): ItemsAnswer {
+  const entry = entryOf(input);
+  const answer = requested(entry, input, checked(entry, reply));
+
+  if (answer.ok) {
+    worker.failed.delete(entry.id);
+    keep(keptOf(worker, entry), answer.items);
+  }
+
+  return answer;
+}
+
 // What a Plugin may answer: items of the Slot's shape, at most `perPlugin` for one context.
 function checked(entry: AnyItemsSlot, reply: Reply): ItemsAnswer {
   if (!reply.ok) return reply;

@@ -22,8 +22,9 @@ const watching = (interval = 60000): Contributions => ({
 });
 
 // A Watch acts through its own Operation; the Loader beside it records whether it was given a way to act.
-const watchPlugin = (extra = ''): string => `
+const watchPlugin = (extra = '', setup = ''): string => `
 import { Text } from '@argo/plugin-kit';
+${setup}
 export function register(argo) {
   argo.operations.register('note', async ({ text }, { projectId }) => {
     await argo.process.run(['query-fixture', projectId ?? 'none', text]);
@@ -70,6 +71,26 @@ it('runs a Watch once per Project each interval with no App connected, and lets 
     ['one', 'watched'],
     ['one', 'watched'],
   ]);
+});
+
+it('keeps Watch failures visible with routine Plugin traces off', async () => {
+  const source = watchPlugin(
+    "if (ranOnce) throw new Error('watch broke'); ranOnce = true;",
+    'let ranOnce = false;',
+  );
+
+  const fixture = await dataFixture(source, watching());
+
+  const kit = await fixture.start({
+    projectPaths: { one: fixture.directory },
+    tracePluginCalls: false,
+  });
+
+  const failed = async (): Promise<boolean> =>
+    (await kit.log()).includes('watch failed: watch broke');
+
+  expect(await kit.clock.until(failed, { stepMs: 60000, steps: 2 })).toBe(true);
+  expect(await kit.log()).not.toMatch(/watch completed|argo\.process\.run/);
 });
 
 it('clamps a Watch interval and logs it', async () => {

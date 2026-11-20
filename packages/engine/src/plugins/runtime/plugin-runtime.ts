@@ -8,6 +8,7 @@ import type {
   HostMessage,
   PluginStatus,
 } from '../protocol/runtime';
+import type { PluginLog } from '../services/plugin-service-options';
 import type { PluginServices } from '../services/plugin-services';
 import { answerPluginCall } from './calls';
 import type { PluginLocation } from './plugin-location';
@@ -34,7 +35,7 @@ export class PluginRuntime {
   private hostError: string | null = null;
 
   constructor(
-    private readonly log: (line: string) => void,
+    private readonly log: PluginLog,
     readonly services: PluginServices,
     private readonly extras: RuntimeExtras,
   ) {

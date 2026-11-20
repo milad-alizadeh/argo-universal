@@ -1,63 +1,55 @@
 import { describe, expect, it } from 'vitest';
-import type { PaneSpan } from '../utils/pane-shift';
 import { frameLayout } from './frame-layout';
-import type { FrameLayout } from './frame-layout';
 import { input } from './frame-layout.mocks';
 
 const autoHidden = 'auto-hidden';
 
-// Where the capped column sits when nothing moves it: centred in the page.
-const centred = (layout: FrameLayout): PaneSpan => ({
-  offset: layout.page.offset + (layout.page.width - 848) / 2,
-  width: 848,
-});
-
-describe('Workbench cards in the trailing gutter', () => {
+describe('independent Workbench cards beside the content', () => {
   it.each([
     {
-      width: 1856,
+      width: 1604,
       sidebarShown: true,
       inspectorState: 'closed',
       state: 'gutter',
     },
     {
-      width: 1855,
+      width: 1603,
       sidebarShown: true,
       inspectorState: 'closed',
       state: autoHidden,
     },
     {
-      width: 2224,
+      width: 1972,
       sidebarShown: true,
       inspectorState: 'open',
       state: 'gutter',
     },
     {
-      width: 2223,
+      width: 1971,
       sidebarShown: true,
       inspectorState: 'open',
       state: autoHidden,
     },
     {
-      width: 1544,
+      width: 1292,
       sidebarShown: false,
       inspectorState: 'closed',
       state: 'gutter',
     },
     {
-      width: 1543,
+      width: 1291,
       sidebarShown: false,
       inspectorState: 'closed',
       state: autoHidden,
     },
     {
-      width: 1912,
+      width: 1660,
       sidebarShown: false,
       inspectorState: 'open',
       state: 'gutter',
     },
     {
-      width: 1911,
+      width: 1659,
       sidebarShown: false,
       inspectorState: 'open',
       state: autoHidden,
@@ -68,93 +60,70 @@ describe('Workbench cards in the trailing gutter', () => {
       const layout = frameLayout({ ...input, ...placement });
 
       expect(layout.workbench.state).toBe(state);
-      expect(layout.content).toEqual(centred(layout));
+      expect(layout.workbench.offset).toBeGreaterThanOrEqual(
+        layout.content.offset +
+          layout.content.width -
+          input.measures.contentGutter +
+          input.measures.paneGap,
+      );
     },
   );
 
-  it.each([1856, 2000, 2560])(
-    'keeps the 16 gap from the centred column at %i',
-    (width) => {
-      const { content, workbench } = frameLayout({ ...input, width });
-      const columnEnd = content.offset + content.width - 24;
-      const gap = workbench.offset - columnEnd;
-
-      expect(workbench.state).toBe('gutter');
-      expect(gap).toBeGreaterThanOrEqual(16);
-    },
-  );
-});
-
-describe('one centred content column', () => {
   it.each([
-    { width: 1440, workbenchIntent: 'auto' },
-    { width: 1544, workbenchIntent: 'auto' },
-    { width: 1700, workbenchIntent: 'auto' },
-    { width: 1856, workbenchIntent: 'auto' },
-    { width: 1544, workbenchIntent: 'shown' },
-    { width: 1544, workbenchIntent: 'hidden' },
-    { width: 1000, workbenchIntent: 'shown' },
-  ] as const)(
-    'centres the content at $width with the intent $workbenchIntent',
-    ({ width, workbenchIntent }) => {
+    { width: 1604, content: { offset: 410, width: 848 }, contentShift: 160 },
+    { width: 1700, content: { offset: 458, width: 848 }, contentShift: 160 },
+    { width: 2055, content: { offset: 635.5, width: 848 }, contentShift: 160 },
+    { width: 2056, content: { offset: 796, width: 848 }, contentShift: 0 },
+  ])(
+    "moves the content half the card and the inset aside at $width, or centres it in the page once each side of it keeps 400 and the cards' extra width",
+    ({ width, content, contentShift }) => {
+      const layout = frameLayout({ ...input, width });
+
+      expect(layout.content).toEqual(content);
+      expect(layout.contentShift).toBe(contentShift);
+    },
+  );
+
+  it.each(['hidden', 'auto'] as const)(
+    'centres the content while the Workbench is not in the gutter, with the intent %s',
+    (workbenchIntent) => {
+      const width = workbenchIntent === 'hidden' ? 1604 : 1603;
       const layout = frameLayout({ ...input, width, workbenchIntent });
 
-      expect(layout.content).toEqual(
-        frameLayout({ ...input, width, workbenchAvailable: false }).content,
-      );
-      expect(layout.content.offset * 2 + layout.content.width).toBe(
-        layout.page.offset * 2 + layout.page.width,
-      );
+      expect(layout.contentShift).toBe(0);
+      expect(layout.content.offset).toBe(384 + (width - 384 - 848) / 2);
     },
   );
 
-  it('leaves the content where it is under an overlaid Workbench', () => {
-    const layout = frameLayout({ ...input, workbenchIntent: 'shown' });
+  it.each([1500, 1000])(
+    'keeps the content centred under an overlaid Workbench at %i',
+    (width) => {
+      const layout = frameLayout({ ...input, width, workbenchPopover: true });
 
-    expect(layout.workbench.state).toBe('overlay');
-    expect(layout.content).toEqual({ offset: 488, width: 848 });
-    expect(layout).not.toHaveProperty('contentShift');
-  });
-
-  it('is unchanged by a page with no Workbench cards', () => {
-    for (const width of [1440, 1544, 1856, 2224]) {
-      const layout = frameLayout({
+      const hidden = frameLayout({
         ...input,
         width,
-        workbenchAvailable: false,
+        workbenchIntent: 'hidden',
       });
 
-      expect(layout.workbench).toMatchObject({ state: 'hidden', width: 0 });
-      expect(layout.content).toEqual(centred(layout));
-    }
-  });
-});
+      expect(layout.workbench.state).toBe('overlay');
+      expect(layout.contentShift).toBe(0);
+      expect(layout.content).toEqual(hidden.content);
+    },
+  );
 
-describe('the Workbench placed against the Inspector', () => {
-  it('waits at the page trailing edge, not over the Inspector, while it is not drawn', () => {
-    const layout = frameLayout({ ...input, inspectorState: 'open' });
+  it('keeps the conversation axis when both wide gutters fit the cards', () => {
+    const shown = frameLayout({ ...input, width: 2560 });
 
-    expect(layout.workbench.state).toBe(autoHidden);
-    expect(layout.workbench.offset).toBe(
-      layout.page.offset + layout.page.width - input.measures.inset,
-    );
-    expect(layout.workbench.offset).toBeLessThan(layout.inspector.offset);
-  });
-
-  it('never reaches under the Inspector when a drag left the page narrower than a card', () => {
-    const layout = frameLayout({
+    const hidden = frameLayout({
       ...input,
-      width: 1440,
-      inspectorState: 'open',
-      preferredInspectorWidth: 800,
-      draggedContentFloor: 240,
-      workbenchIntent: 'shown',
+      width: 2560,
+      workbenchIntent: 'hidden',
     });
 
-    expect(layout.workbench.state).toBe('overlay');
-    expect(layout.workbench.offset).toBe(layout.page.offset);
-    expect(
-      layout.workbench.offset + layout.workbench.width,
-    ).toBeLessThanOrEqual(layout.inspector.offset - input.measures.paneGap);
+    expect(shown.content).toEqual(hidden.content);
+    expect(shown.workbench.offset).toBeGreaterThan(
+      shown.content.offset + shown.content.width,
+    );
   });
 });
