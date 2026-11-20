@@ -1,5 +1,5 @@
-import { reduceMotion } from '@repo/kit/mocks/reduced-motion';
 /// <reference types="@vitest/browser-playwright" />
+import { reduceMotion } from '@repo/kit/mocks/reduced-motion';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
 import { Feed } from './feed';
