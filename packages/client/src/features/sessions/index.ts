@@ -23,7 +23,10 @@ export {
 
 export { ShellOutput } from './components/shell-list/shell-output';
 
-export { ShellSheet } from './components/shell-list/shell-sheet';
+export {
+  ShellSheet,
+  shellStopAction,
+} from './components/shell-list/shell-sheet';
 
 export {
   shellsRunning,

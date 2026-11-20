@@ -4,6 +4,7 @@ import { skipToken, useMutation } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useCallback, useRef, useState } from 'react';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
+import { useScreenFocused } from '#lib/product/navigation/navigation';
 import {
   appendShellOutput,
   createShellOutputStore,
@@ -52,20 +53,49 @@ function useReceivedOutput(
   };
 }
 
+type ShellSelection = { id: string; inWorkbench: boolean };
+
+const noSelection: ShellSelection = { id: '', inWorkbench: false };
+
+type ShellSelectionProps = Pick<
+  ShellPanelProps,
+  'openId' | 'onSelect' | 'onSelectFromWorkbench' | 'onDeselect'
+>;
+
+function useShellSelection(): [ShellSelection, ShellSelectionProps] {
+  const [selection, select] = useState(noSelection);
+
+  return [
+    selection,
+    {
+      openId: selection.id || undefined,
+      onSelect: (shell) => select({ id: shell.id, inWorkbench: false }),
+      onSelectFromWorkbench: (shell) =>
+        select({ id: shell.id, inWorkbench: true }),
+      onDeselect: useCallback(() => select(noSelection), []),
+    },
+  ];
+}
+
+const workbenchStream = (
+  { id, inWorkbench }: ShellSelection,
+  focused: boolean,
+): string => (focused && inWorkbench ? id : '');
+
 export function useSessionShells(
   sessionId: string,
   shells: Shell[],
   active: boolean,
 ): ShellPanelProps {
-  const [shellId, setShellId] = useState('');
+  const focused = useScreenFocused();
+  const [selected, selection] = useShellSelection();
+  const streamId = active ? selected.id : workbenchStream(selected, focused);
 
   return {
     shells,
-    outputSource: useShellOutput(sessionId, active ? shellId : ''),
-    openId: shellId || undefined,
-    onSelect: (shell) => setShellId(shell.id),
+    ...selection,
+    outputSource: useShellOutput(sessionId, streamId),
     onStop: useStopShell(sessionId),
-    onDeselect: useCallback(() => setShellId(''), []),
   };
 }
 

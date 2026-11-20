@@ -1,7 +1,10 @@
 import { Sheet } from '@repo/kit/primitives/overlays/sheet';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { useState, type ComponentProps, type ReactElement } from 'react';
+import { agentsFacts } from './sections/agents-facts';
+import { changesFacts } from './sections/changes-facts';
 import { pluginCardKey } from './sections/plugin-card-section';
+import { shellsFacts } from './sections/shells-facts';
 import type { SessionInspectorContent } from './session-inspector-content';
 import { changeRows, agentRows, taskRows } from './session-workbench-details';
 import {
@@ -74,9 +77,9 @@ const detailScreen = ({ key, page }: WorkbenchRow): ReactElement[] =>
 
 function workbenchGroups(content: SessionInspectorContent): WorkbenchGroup[] {
   const groups = [
-    { key: 'changes', title: 'Changes', rows: changeRows(content) },
-    { key: 'subagents', title: 'Agents', rows: agentRows(content) },
-    { key: 'shells', title: 'Background Tasks', rows: taskRows(content) },
+    { ...changesFacts, rows: changeRows(content) },
+    { ...agentsFacts, rows: agentRows(content) },
+    { ...shellsFacts, rows: taskRows(content) },
   ];
 
   return [...groups, ...(content.pluginCards ?? []).map(pluginGroup)].filter(

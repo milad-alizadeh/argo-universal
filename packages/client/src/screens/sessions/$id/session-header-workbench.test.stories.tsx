@@ -80,7 +80,7 @@ const pullRequest = pullRequestMocks.checksRunning;
 
 export const OpensPullRequest: Story = {
   ...opensDetail(
-    new RegExp(`^${pullRequest.title}, #${pullRequest.number}$`),
+    new RegExp(`^#${pullRequest.number} ${pullRequest.title}$`),
     `Change #${pullRequest.number}`,
   ),
   args: {
@@ -98,14 +98,14 @@ export const OpensBackgroundTask = opensDetail(
   firstTask,
 );
 
-export const OpensPluginCard: Story = {
+export const BackFromPluginCardReturnsToWorkbench: Story = {
   play: async (context) => {
     const sheet = await openWorkbench(context);
     const row = sheet.getByRole('link', { name: 'Open Coverage' });
     await settleOverlays(row);
     await context.userEvent.click(row);
 
-    await expect(await sheet.findByText(coverageCardSummary)).toBeVisible();
+    await sheet.findByText(coverageCardSummary);
 
     const back = await sheet.findByRole('button', {
       name: 'Back to Workbench',

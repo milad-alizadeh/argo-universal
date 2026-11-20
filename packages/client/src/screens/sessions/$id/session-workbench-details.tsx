@@ -2,18 +2,20 @@ import type { Subagent } from '@repo/contracts';
 import { useSheet } from '@repo/kit/primitives/overlays/sheet';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import type { ReactNode } from 'react';
-import { Linking, ScrollView } from 'react-native';
+import { ScrollView } from 'react-native';
 import { ChangesFiles } from '#features/changes';
 import {
   ChangeRows,
   ShellOutput,
   type SessionPullRequest,
   shellTitle,
+  shellStopAction,
   shellSupporting,
   subagentStateLabel,
 } from '#features/sessions';
 import { pullRequestsOf, summaryOf } from './sections/changes-facts';
 import { withCheckoutFiles } from './sections/checkout-files';
+import { openPullRequest } from './sections/open-pull-request';
 import type { AgentFeedSlot } from './session-agents-tab';
 import type { SessionInspectorContent } from './session-inspector-content';
 import type { WorkbenchRow } from './session-workbench-sheet-rows';
@@ -55,17 +57,12 @@ const changeRow = (
   changes: Changes,
 ): WorkbenchRow => ({
   key: `change:${change.id ?? change.number}`,
-  label: change.title,
-  value: `#${change.number}`,
+  label: `#${change.number} ${change.title}`,
   page: {
     title: `Change #${change.number}`,
     children: <ChangeDetail change={change} changes={changes} />,
   },
 });
-
-function openOnGitHub(change: SessionPullRequest): void {
-  if (change.url) void Linking.openURL(change.url);
-}
 
 type PullRequestDetail = { change: SessionPullRequest; changes: Changes };
 
@@ -78,7 +75,7 @@ function ChangeDetail({ change, changes }: PullRequestDetail): ReactNode {
 
   return (
     <ScrollView className="flex-1">
-      <ChangeRows changes={rows} onOpenChange={openOnGitHub} />
+      <ChangeRows changes={rows} onOpenChange={openPullRequest} />
     </ScrollView>
   );
 }
@@ -130,10 +127,10 @@ const taskRow = (
   key: `task:${shell.id}`,
   label: shellTitle(shell),
   value: shellSupporting(shell),
-  onPress: () => props.onSelect?.(shell),
+  onPress: () => (props.onSelectFromWorkbench ?? props.onSelect)?.(shell),
   page: {
     title: shellTitle(shell),
-    action: stopAction(shell, props.onStop),
+    action: shellStopAction(shell, props.onStop),
     onExit: props.onDeselect,
     children: taskOutput(shell, props),
   },
@@ -150,11 +147,3 @@ const taskOutput = (
     now={now}
   />
 );
-
-const stopAction = (
-  shell: Tasks['shells'][number],
-  stop: Tasks['onStop'],
-): NonNullable<WorkbenchRow['page']>['action'] =>
-  shell.status === 'running' && shell.canStop
-    ? { label: 'Stop', destructive: true, onPress: () => stop(shell) }
-    : undefined;

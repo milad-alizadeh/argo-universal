@@ -1,6 +1,5 @@
 import { Button } from '@repo/kit/primitives/actions/button';
 import type { ReactNode } from 'react';
-import { Linking } from 'react-native';
 import { ChangesFiles } from '#features/changes';
 import {
   ChangeRows,
@@ -11,16 +10,12 @@ import { SessionChangesTab } from '../session-changes-tab';
 import type { SessionInspectorContent } from '../session-inspector-content';
 import { changesFacts, pullRequestsOf, summaryOf } from './changes-facts';
 import { withCheckoutFiles } from './checkout-files';
+import { openPullRequest } from './open-pull-request';
 import type {
   SectionCard,
   SectionTabHandle,
   SessionSection,
 } from './session-section';
-
-// A pull request's row opens it on its code host, through the App's external-link opener.
-const openPullRequest = ({ url }: SessionPullRequest): void => {
-  if (url) void Linking.openURL(url);
-};
 
 // The pull requests as rows draw them: the one on the Checkout opens its files in the Changes tab.
 const checkoutRowsOf = (
