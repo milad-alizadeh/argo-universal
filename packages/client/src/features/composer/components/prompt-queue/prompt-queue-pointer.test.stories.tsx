@@ -53,7 +53,7 @@ async function checkCursors(canvas: Context['canvas']): Promise<void> {
     ),
   ).toBe('pointer');
   const rows = canvas.getAllByTestId(rowId);
-  await expect(row.getBoundingClientRect().height).toBe(28);
+  await expect(row.getBoundingClientRect().height).toBe(32);
   await expect(
     canvas.getByTestId('prompt-queue').getBoundingClientRect().height,
   ).toBe(

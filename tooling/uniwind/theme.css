@@ -230,6 +230,7 @@
   --spacing-frame-list: 312px;
   --spacing-frame-inspector: 352px;
   --spacing-frame-inset: 8px;
+  --spacing-composer-tray-row: 32px;
   /* Shadow colours (6%, 8% and 14% black) for every light drop shadow; the
      glass highlights and dark-mode edges keep their own. Hex, because
      Uniwind's native box-shadow parser adds px to the bare numbers in

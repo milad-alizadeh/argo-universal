@@ -68,14 +68,6 @@ const statusItems = (file: ChangedFile, diff: FileDiffPages): ChangesItem[] =>
     ? [{ kind: 'status', key: `status:${file.path}`, file, diff }]
     : [];
 
-// A file not asked for yet holds its place with a `more` row, which asks for its first page.
-const firstPageItem = (file: ChangedFile): ChangesItem => ({
-  kind: 'more',
-  key: `more:${file.path}`,
-  file,
-  nextPages: 1,
-});
-
 const diffItems = (file: ChangedFile, diff?: FileDiffPages): ChangesItem[] =>
   diff
     ? [
@@ -83,7 +75,7 @@ const diffItems = (file: ChangedFile, diff?: FileDiffPages): ChangesItem[] =>
         ...moreItems(file, diff),
         ...statusItems(file, diff),
       ]
-    : [firstPageItem(file)];
+    : [];
 
 export const headerKey = (path: string): string => `header:${path}`;
 
@@ -99,6 +91,19 @@ const headerItem = (file: ChangedFile): ChangesItem => ({
 const openedItems = (file: ChangedFile, lists: Lists): ChangesItem[] =>
   lists.folded.has(file.path) ? [] : diffItems(file, lists.diffs[file.path]);
 
+// Open files enter the list with their first diff page or its error.
+function readyFile({ path }: ChangedFile, { folded, diffs }: Lists): boolean {
+  if (folded.has(path)) return true;
+
+  return Object.hasOwn(diffs, path) && firstPageReady(diffs[path]);
+}
+
+function firstPageReady(diff: FileDiffPages | undefined): boolean {
+  if (!diff) return false;
+
+  return !diff.loading || diff.pages.length > 0;
+}
+
 const allItems = (files: readonly ChangedFile[], lists: Lists): ChangesItem[] =>
   files.flatMap((file, index): ChangesItem[] => [
     ...separatorBefore(file, index),
@@ -111,12 +116,14 @@ export function changesItems(
   folded: ReadonlySet<string>,
   diffs: Diffs,
 ): ChangesItems {
-  const items = allItems(files, { folded, diffs });
+  const lists = { folded, diffs };
+  const ready = files.filter((file) => readyFile(file, lists));
+  const items = allItems(ready, lists);
 
   return {
     items,
     sticky: headerIndices(items),
-    headers: files.map((file) => headerKey(file.path)),
+    headers: ready.map((file) => headerKey(file.path)),
   };
 }
 

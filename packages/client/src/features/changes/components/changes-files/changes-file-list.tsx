@@ -1,7 +1,7 @@
 import { List, type ListProps } from '@repo/kit/primitives/lists/list';
 import { Spinner } from '@repo/kit/primitives/status/spinner';
 import type * as React from 'react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import {
   type ChangesItem,
@@ -51,12 +51,13 @@ const identity = {
 
 /*
  * One flat list: each file's header sticks to the top while its diff scrolls under it. Every header stays drawn, because
- * the list only makes a drawn row stick, and a header scrolled back to may not be drawn yet (#1895). Files and each
- * opened file's diff arrive a page at a time, as the end of each comes into view; one spinner at the list's end says
- * more is coming.
+ * the list only makes a drawn row stick, and a header scrolled back to may not be drawn yet (#1895). Each open file
+ * arrives with its first diff page. Later pages load as the end comes into view, with one spinner at the list's end.
  */
 export function FileList(props: FileListProps): React.JSX.Element {
   const { folded, ...rows } = useRows(props);
+
+  useFirstDiffPages(props, folded);
 
   return (
     <List<ChangesItem>
@@ -66,6 +67,23 @@ export function FileList(props: FileListProps): React.JSX.Element {
       header={props.header}
     />
   );
+}
+
+function useFirstDiffPages(
+  {
+    files,
+    diffs,
+    onLoadDiff,
+  }: Pick<FileListProps, 'files' | 'diffs' | 'onLoadDiff'>,
+  folded: ReadonlySet<string>,
+): void {
+  useEffect(() => {
+    const unread = files.filter(
+      ({ path }) => !folded.has(path) && !Object.hasOwn(diffs, path),
+    );
+
+    for (const { path } of unread) onLoadDiff(path, 1);
+  }, [files, diffs, folded, onLoadDiff]);
 }
 
 interface Rows {

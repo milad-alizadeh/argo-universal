@@ -25,7 +25,6 @@ import type {
 } from './composer-toolbar-types';
 
 /*
- * The order the toolbar gives its width up in, as the layout's regions have one (docs/agents/layout.md).
  * Attach and Send keep theirs, so a fixed glyph is never squeezed out of its box and painted over the pill
  * beside it. The two pills keep theirs next: the row wraps to a second line before either is narrowed, which
  * is what the largest Dynamic Type sizes need. Only once a whole line is too narrow does a pill truncate.
