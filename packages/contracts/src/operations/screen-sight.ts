@@ -14,10 +14,10 @@ export type ScreenImage = z.infer<typeof ScreenImage>;
 // What the App answers a capture request with. It never claims a picture it did not take.
 export const ScreenCaptureAnswer = z.discriminatedUnion('status', [
   z.strictObject({ status: z.literal('captured'), image: ScreenImage }),
-  // The person turned screen sight off on this Device, or declined the display prompt.
+  // The person has not turned screen sight on for this Device.
   z.strictObject({
     status: z.literal('refused'),
-    reason: z.enum(['off', 'declined']),
+    reason: z.literal('off'),
   }),
   // The App cannot capture now; `reason` says what to do, such as granting Screen Recording on macOS.
   z.strictObject({
@@ -29,7 +29,7 @@ export const ScreenCaptureAnswer = z.discriminatedUnion('status', [
 export type ScreenCaptureAnswer = z.infer<typeof ScreenCaptureAnswer>;
 
 /*
- * `captured` carries the image. `refused` says why: `off` (this Device's screen sight is turned off) or `declined` (the person said no). `not_opened`
+ * `captured` carries the image. `refused` says why: `off` (this Device's screen sight is turned off). `not_opened`
  * means no App that can capture was reachable. `not_available` means the App could not capture, and says what to do.
  */
 export const AppScreenshotResult = z.discriminatedUnion('status', [

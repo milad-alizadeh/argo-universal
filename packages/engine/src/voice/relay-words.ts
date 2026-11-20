@@ -20,8 +20,7 @@ export const relayWords = {
   looked:
     'You now have one still picture of the person’s screen, as background. Look at it and answer what they asked. It is not kept.',
   screenOff:
-    'Looking at the screen is turned off in the person’s Settings, so nothing was captured. Tell them how to turn it on if they want it.',
-  screenDeclined: 'The person declined, so nothing was captured.',
+    'Looking at the screen is turned off on this Device, so nothing was captured. Tell the person if they ask.',
   screenUnreachable:
     'No App that can capture the screen is reachable, so nothing was captured.',
   screenUnavailable: (reason: string): string =>

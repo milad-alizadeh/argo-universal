@@ -136,16 +136,18 @@ it('says no App is reachable, and sends nothing', async () => {
   expect(work.provider.call.images).toEqual([]);
 }, 30_000);
 
-it('sends nothing when the person declines the display prompt', async () => {
+it('sends nothing when the App cannot capture', async () => {
   const { work } = await callWith({
-    app: { answer: () => ({ status: 'refused', reason: 'declined' }) },
+    app: {
+      answer: () => ({ status: 'not_available', reason: 'No picture came back.' }),
+    },
   });
 
   lookAtThis(work);
 
   await expect.poll(() => replyTo(work, 'f1')).toBeDefined();
   expect(replyTo(work, 'f1')).toMatchObject({
-    text: relayWords.screenDeclined,
+    text: relayWords.screenUnavailable('No picture came back.'),
   });
   expect(work.provider.call.images).toEqual([]);
   expect(await notices(work)).toEqual([]);

@@ -18,7 +18,7 @@ const capturedAnswer = z.looseObject({
 });
 
 // The picture a captured screen holds, when the answer is one.
-function pictureOf(value: Answer): { data: string; mimeType: string } | null {
+function capturedImage(value: Answer): { data: string; mimeType: string } | null {
   const answer = capturedAnswer.safeParse(value);
 
   return answer.success ? answer.data.result.image : null;
@@ -31,7 +31,7 @@ const capturedText = JSON.stringify({
 
 // A captured screen reaches the Agent as an image it can look at, not as base64 text in its context.
 export function result(value: Answer): CallToolResult {
-  const picture = pictureOf(value);
+  const picture = capturedImage(value);
 
   if (!picture)
     return { content: [{ type: 'text', text: JSON.stringify(value) }] };

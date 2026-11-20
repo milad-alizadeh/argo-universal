@@ -32,7 +32,7 @@ export const appOperations = {
     label: 'See the screen',
     icon: 'app-window',
     description:
-      'Take one picture of the person’s whole screen and return it as an image, so you can see what they see. It needs no permission, and works only when the person turned screen sight on for this Device. It answers captured with the image, refused with why (off, or declined when the person closed a share prompt), not_opened when no desktop App is reachable, or not_available with what to do. The picture is never stored; the Feed shows one Notice that a capture was taken.',
+      'Take one picture of the person’s whole screen and return it as an image, so you can see what they see. It needs no permission, and works only when the person turned screen sight on for this Device. It answers captured with the image, refused with why (off), not_opened when no desktop App is reachable, or not_available with what to do. The picture is never stored; the Feed shows one Notice that a capture was taken.',
     params: z.strictObject({}).default({}),
     result: AppScreenshotResult,
     tier: 'act',

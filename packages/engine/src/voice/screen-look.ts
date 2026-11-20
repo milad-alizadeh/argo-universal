@@ -9,14 +9,9 @@ import type { VoiceSessions } from './session-link';
 
 type NotCaptured = Exclude<AppScreenshotResult, { status: 'captured' }>;
 
-const refusedWords = {
-  off: relayWords.screenOff,
-  declined: relayWords.screenDeclined,
-};
-
 // What the voice is told when no picture was taken.
 function whyNot(result: NotCaptured): string {
-  if (result.status === 'refused') return refusedWords[result.reason];
+  if (result.status === 'refused') return relayWords.screenOff;
 
   return result.status === 'not_available'
     ? relayWords.screenUnavailable(result.reason)

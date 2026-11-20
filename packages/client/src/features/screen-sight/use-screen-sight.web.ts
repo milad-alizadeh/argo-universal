@@ -2,8 +2,6 @@ import type { ScreenCaptureAnswer } from '@repo/contracts/operations';
 import { useMutation } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
-import { browserScreenCapture } from './browser-screen-capture';
-import { captureScreen } from './capture-screen';
 import { loadScreenSightEnabled } from './screen-sight-preference';
 
 const bridge = (): Window['argo'] => globalThis.window?.argo;
@@ -12,12 +10,13 @@ const bridge = (): Window['argo'] => globalThis.window?.argo;
 const isDesktopApp = (): boolean =>
   typeof bridge()?.links?.onOpen === 'function';
 
-// The desktop App takes its own picture; a page without that falls back to the browser's share prompt.
-const desktopCapture = (): Promise<ScreenCaptureAnswer> | undefined =>
-  bridge()?.screen?.capture();
-
+// The desktop App takes its own picture, through its preload; a page without one cannot capture.
 const capture = (): Promise<ScreenCaptureAnswer> =>
-  desktopCapture() ?? captureScreen(browserScreenCapture);
+  bridge()?.screen?.capture() ??
+  Promise.resolve({
+    status: 'not_available',
+    reason: 'This App has no way to capture the screen.',
+  });
 
 // This Device's own setting, read as each request arrives, so turning it on or off needs no new subscription.
 const answerFor = async (): Promise<ScreenCaptureAnswer> =>

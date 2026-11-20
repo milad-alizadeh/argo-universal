@@ -21,18 +21,7 @@ it('does not reach an App that is not the desktop App', async () => {
   ]);
 }, 30_000);
 
-it('tells the Agent why when the person declines the display prompt or the App cannot capture', async () => {
-  const declined = await journeyWithApp({
-    answer: () => ({ status: 'refused', reason: 'declined' }),
-  });
-
-  expect(await agentScreenshot(declined)).toEqual([
-    { status: 'fulfilled', value: { status: 'refused', reason: 'declined' } },
-  ]);
-  await expect
-    .poll(async () => (await missedNoticesOf(declined)).length)
-    .toBe(1);
-
+it('tells the Agent why when the App cannot capture', async () => {
   const missing = await journeyWithApp({
     answer: () => ({
       status: 'not_available',

@@ -29,9 +29,13 @@ const unreadable = ({ platform }: ScreenPort): ScreenCaptureAnswer =>
   );
 
 // The main display's picture; any display's when the main one is not among them.
-const pictureOf = (sources: ScreenSource[], mainId: string): string =>
-  [...sources.filter(({ displayId }) => displayId === mainId), ...sources][0]
-    ?.png ?? '';
+const pictureOf = (
+  sources: ScreenSource[],
+  mainId: string,
+): string | undefined =>
+  [...sources.filter(({ displayId }) => displayId === mainId), ...sources].find(
+    ({ png }) => png,
+  )?.png;
 
 const failedWith = (error: Error | string): ScreenCaptureAnswer =>
   unavailable(
@@ -48,7 +52,7 @@ async function take(port: ScreenPort): Promise<ScreenCaptureAnswer> {
 
 /*
  * One still picture of the main display (screen sight, ADR-0064). The desktop App owns the capture: it knows the
- * system, so the page is told only what came of it. The person has already been asked by the Operation's `confirm`.
+ * system, so the page is told only what came of it.
  */
 export function captureMainScreen(
   port: ScreenPort,
