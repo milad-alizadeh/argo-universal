@@ -1,7 +1,7 @@
 import { InspectorControlsContext } from '@repo/kit/primitives/scaffolds/inspector';
 import type * as React from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
-import { View, type ViewProps, type ViewStyle } from 'react-native';
+import { Pressable, View, type ViewProps, type ViewStyle } from 'react-native';
 import {
   FramePane,
   type FramePaneProps,
@@ -89,10 +89,27 @@ function bannerPlacement({
   return { left: layout.content.offset, width: layout.content.width };
 }
 
+// A press anywhere outside the Workbench opened over the content closes it, as Codex's popover does.
+function WorkbenchDismiss({
+  layout,
+}: Pick<ScaffoldParts, 'layout'>): React.JSX.Element | null {
+  if (layout.workbench.state !== 'overlay') return null;
+
+  return (
+    <Pressable
+      testID="workbench-dismiss"
+      accessibilityLabel="Close Workbench"
+      className="absolute inset-0"
+      onPress={() => layout.setWorkbenchPopover(false)}
+    />
+  );
+}
+
 function OverlayContents(parts: ScaffoldParts): React.JSX.Element {
   return (
     <>
       <FramedInspector {...parts} />
+      <WorkbenchDismiss layout={parts.layout} />
       <ScaffoldWorkbench {...parts} />
       <ScaffoldResizeHandles {...parts} />
       <PaneBanner {...bannerPlacement(parts)}>

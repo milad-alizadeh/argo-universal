@@ -9,52 +9,20 @@ describe('Workbench states from one toggle', () => {
     { width: 1856, workbenchIntent: 'auto', state: 'gutter' },
     { width: 1440, workbenchIntent: 'auto', state: autoHidden },
     { width: 900, workbenchIntent: 'auto', state: autoHidden },
-    { width: 900, workbenchIntent: 'shown', state: 'overlay' },
+    { width: 900, workbenchIntent: 'shown', state: autoHidden },
     { width: 900, workbenchIntent: 'hidden', state: 'hidden' },
     { width: 1440, workbenchIntent: 'hidden', state: 'hidden' },
-    { width: 1440, workbenchIntent: 'shown', state: 'overlay' },
+    { width: 1440, workbenchIntent: 'shown', state: autoHidden },
     { width: 1856, workbenchIntent: 'shown', state: 'gutter' },
+    { width: 1856, workbenchIntent: 'hidden', state: 'hidden' },
   ] as const)(
     'at $width with the intent $workbenchIntent is $state',
-    ({ width, workbenchIntent, state }) => {
-      expect(
-        frameLayout({ ...input, width, workbenchIntent }).workbench.state,
-      ).toBe(state);
+    ({ state, ...placement }) => {
+      expect(frameLayout({ ...input, ...placement }).workbench.state).toBe(
+        state,
+      );
     },
   );
-
-  it('overlays the content when explicit Show cannot fit a separate region', () => {
-    const layout = frameLayout({
-      ...input,
-      inspectorState: 'open',
-      workbenchIntent: 'shown',
-    });
-
-    expect(layout.page).toEqual({ offset: 384, width: 688, hidden: false });
-    expect(layout.workbench).toEqual({
-      state: 'overlay',
-      offset: 752,
-      width: 312,
-    });
-    expect(layout.workbench.offset + layout.workbench.width).toBeLessThan(
-      layout.inspector.offset,
-    );
-  });
-
-  it("overlays the content's trailing edge with the Inspector closed", () => {
-    const layout = frameLayout({
-      ...input,
-      width: 900,
-      workbenchIntent: 'shown',
-    });
-
-    expect(layout.page).toEqual({ offset: 72, width: 828, hidden: false });
-    expect(layout.workbench).toEqual({
-      state: 'overlay',
-      offset: 580,
-      width: 312,
-    });
-  });
 
   it('auto-hides beside an open Inspector at 1440', () => {
     const layout = frameLayout({ ...input, inspectorState: 'open' });
@@ -74,7 +42,12 @@ describe('Workbench states from one toggle', () => {
   it('waits at the trailing inset while it is not drawn', () => {
     const { workbench } = frameLayout({ ...input, workbenchIntent: 'hidden' });
 
-    expect(workbench).toEqual({ state: 'hidden', offset: 1432, width: 0 });
+    expect(workbench).toEqual({
+      state: 'hidden',
+      offset: 1432,
+      width: 0,
+      fits: false,
+    });
   });
 });
 

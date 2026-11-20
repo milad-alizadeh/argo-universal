@@ -6,7 +6,11 @@ import type {
   WorkbenchRegion,
   WorkbenchState,
 } from './frame-layout-types';
-import { workbenchDrawn, workbenchState } from './frame-layout-workbench';
+import {
+  workbenchDrawn,
+  workbenchFits,
+  workbenchState,
+} from './frame-layout-workbench';
 
 function drawnWorkbenchWidth(
   { width, measures }: FrameLayoutInput,
@@ -28,7 +32,12 @@ export function workbenchRegion(
   const state = workbenchState(input, page.width);
   const width = drawnWorkbenchWidth(input, state);
 
-  return { state, width, offset: workbenchOffset(input, width, page) };
+  return {
+    state,
+    width,
+    offset: workbenchOffset(input, width, page),
+    fits: workbenchFits(input, page.width),
+  };
 }
 
 function workbenchOffset(

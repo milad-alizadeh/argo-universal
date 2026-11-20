@@ -7,9 +7,9 @@ describe('frameLayout thresholds', () => {
     {
       inspectorState: 'closed' as const,
       listFold: 1072,
-      workbenchGutter: 1544,
+      workbenchGutter: 1604,
     },
-    { inspectorState: 'open' as const, listFold: 1440, workbenchGutter: 1912 },
+    { inspectorState: 'open' as const, listFold: 1440, workbenchGutter: 1972 },
   ])(
     'derives the thresholds with the Inspector $inspectorState',
     ({ inspectorState, listFold, workbenchGutter }) => {
@@ -23,29 +23,29 @@ describe('frameLayout thresholds', () => {
   it('needs no room for the list in the gutter threshold while it is hidden', () => {
     expect(
       frameLayout({ ...input, sidebarShown: false }).thresholds.workbenchGutter,
-    ).toBe(1232);
+    ).toBe(1292);
   });
 
   it.each([
-    { measure: 'listWidth', value: 340, listFold: 1100, workbenchGutter: 1572 },
-    { measure: 'railWidth', value: 80, listFold: 1096, workbenchGutter: 1568 },
+    { measure: 'listWidth', value: 340, listFold: 1100, workbenchGutter: 1632 },
+    { measure: 'railWidth', value: 80, listFold: 1096, workbenchGutter: 1628 },
     {
       measure: 'workbenchWidth',
       value: 336,
       listFold: 1072,
-      workbenchGutter: 1568,
+      workbenchGutter: 1628,
     },
     {
       measure: 'composerWidth',
       value: 600,
       listFold: 1032,
-      workbenchGutter: 1544,
+      workbenchGutter: 1604,
     },
     {
       measure: 'contentMaximum',
       value: 1000,
       listFold: 1072,
-      workbenchGutter: 1744,
+      workbenchGutter: 1804,
     },
   ])(
     'responds to the declared $measure',
@@ -63,28 +63,28 @@ describe('frameLayout thresholds', () => {
 describe('frameLayout gives up width in order', () => {
   it.each([
     {
-      width: 1544,
+      width: 1604,
       inspectorState: 'closed',
       folded: false,
       gutter: true,
       content: 848,
     },
     {
-      width: 1543,
+      width: 1603,
       inspectorState: 'closed',
       folded: false,
       gutter: false,
       content: 848,
     },
     {
-      width: 1912,
+      width: 1972,
       inspectorState: 'open',
       folded: false,
       gutter: true,
       content: 848,
     },
     {
-      width: 1911,
+      width: 1971,
       inspectorState: 'open',
       folded: false,
       gutter: false,

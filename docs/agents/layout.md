@@ -31,10 +31,10 @@ The following examples use the default pane widths and an available Workbench. T
 | --- | --- | --- | --- | --- |
 | 1440 | Closed | Shown | Auto-hidden | 848 |
 | 1440 | Open | Shown | Auto-hidden | 688 |
-| 1544 | Closed | Shown | Gutter, content moved aside | 848 |
-| 1856 | Closed | Shown | Gutter, content centred | 848 |
-| 1912 | Open | Shown | Gutter, content moved aside | 848 |
-| 2224 | Open | Shown | Gutter, content centred | 848 |
+| 1604 | Closed | Shown | Gutter, content centred beside it | 848 |
+| 2056 | Closed | Shown | Gutter, content centred | 848 |
+| 1972 | Open | Shown | Gutter, content centred beside it | 848 |
+| 2424 | Open | Shown | Gutter, content centred | 848 |
 
 The Inspector panel opens 600px wide, narrowed to what the window holds while the content keeps its floor, and never below its 352px minimum. Its region includes a 16px gap. A drag of its divider sets the width every Session opens it at on this Device, kept across App starts. The panel uses the sidebar's glass material, rounded corners, and an unclipped shadow. Its tabs sit below the window band.
 
@@ -48,25 +48,27 @@ These thresholds use the panes' minimum widths, the Inspector's 352, with an ava
 
 Two regions compete with the content column for width: the Sessions list and the Inspector while it is open. The Workbench is not one of them: it is drawn absolutely over the page, the region left of the Inspector, so it never narrows the page, and the Feed's scroll view and scrollbar run to the page's trailing edge whether the Workbench shows or not.
 
-1. **The Workbench hides first.** It shows only while the page's two gutters beside the capped content together hold it; below that it auto-hides. An explicit Show floats it over the content.
+1. **The Workbench hides first.** It shows only while each side of the centred content keeps Codex's 180 plus half the card's width beyond Codex's 300; below that it auto-hides, and its toggle opens it over the content as a popover.
 2. **Then the Sessions list collapses**, folding into the rail. The rail itself never collapses.
 3. **The content column gives last**, and is capped at 800 however much room there is.
 
-**The Workbench fits in the gutter when the page is at least `24 + 800 + 16 + 312 + 8 = 1160`:** the column's leading gutter, the column, the gap, a card and the inset. That is from 1544 with the Sessions list shown and from 1232 with it hidden, or 1912 and 1600 with the Inspector open.
+The thresholds are Codex's summary panel's, for its 300-wide panel, raised for our 312 card as Codex raises them for a wider panel (owner, 2026-11-20).
 
-**The content moves aside only as far as the cards need.** From a page of `800 + 2 × (312 + 16 + 8) = 1472` (1856 with the list shown, 2224 with the Inspector open too) the trailing gutter alone holds the cards and the content stays centred. Below that the Feed and the Composer move together towards the page's leading edge, just far enough to keep the 16px gap from the cards, and return to the centre when the Workbench hides. The move slides with the Workbench; a resize moves it at once. The Feed's scroll view still runs the page's width, so its scrollbar rests at the page's trailing edge either way.
+**The Workbench fits in the gutter when the page is at least `848 + 2 × 180 + (312 − 300) = 1220`:** the capped content with its gutters, and 180 beside it on each side plus half the card's extra width. That is from 1604 with the Sessions list shown and from 1292 with it hidden, or 1972 and 1660 with the Inspector open.
+
+**The content is always centred in the room it has.** From a page of `848 + 2 × (400 + 312 − 300) = 1672` (2056 with the list shown, 2424 with the Inspector open too) the content stays centred in the page, with the cards in its trailing gutter. Below that, while the cards sit in the gutter, the Feed and the Composer move together towards the page's leading edge by Codex's half of the card and the inset, `(312 + 8) / 2 = 160`, narrowing under the cap where that leaves less than 848 so the cards never cover them, and return to the page's centre when the Workbench hides. This is Codex's summary panel: centred in the page, centred beside the panel, or the panel over a centred thread (owner, 2026-11-20). The move slides with the Workbench; a resize moves it at once. The Feed's scroll view still runs the page's width, so its scrollbar rests at the page's trailing edge either way.
 
 **Opening another Session moves nothing.** A Session switch is a new page, not a pane toggle: the content column, the Workbench, the Inspector and the Sessions list take the new Session's places at once, as a resize does, including the changes its page makes as it mounts. Only the person's own toggles within a Session animate.
 
-**The Sessions list folds below 1440 with the Inspector open, and below 1072 without it.** Closing the Inspector frees 368px: its 352px panel and 16px gap. The sidebar toggle stays enabled while folded and can request that the list open when there is room. Opening the Inspector with its band toggle explicitly hides the Workbench. Opening it from a card can auto-hide the Workbench, which returns when enough room is available. Explicit Show or Hide intent survives resizing.
+**The Sessions list folds below 1440 with the Inspector open, and below 1072 without it.** Closing the Inspector frees 368px: its 352px panel and 16px gap. The sidebar toggle stays enabled while folded and can request that the list open when there is room. Opening the Inspector with its band toggle explicitly hides the Workbench. Opening it from a card can auto-hide the Workbench, which returns when enough room is available. Explicit Show or Hide intent survives resizing; the popover does not.
 
 The content floor is 688px: the Composer's 640px width and a 24px gutter on each side, unless a drag of the Inspector lowered it (see [The content column](#the-content-column)). Pane preferences change these thresholds. The sidebar and Inspector take priority over the Workbench.
 
-The Workbench has four effective states. One toggle drives the person’s Show or Hide intent without rewriting it during a resize. Showing or hiding it never narrows the Feed or Composer, and never covers them where the gutters hold it.
+The Workbench has four effective states. On a page that holds it, the one toggle sets the person’s Show or Hide intent, which a resize never rewrites; on a narrower page it opens and closes the popover and leaves the intent alone, as Codex's summary panel does. Showing or hiding it never narrows the Feed or Composer, and never covers them where the gutters hold it.
 
-- **Gutter** — the page's two gutters together fit a card and its gaps, so the cards sit at the page's trailing edge and the content, moved aside where the trailing gutter alone is too narrow, never sits under them.
-- **Auto-hidden** — the gutters are too narrow and the toggle is unpressed: the Workbench is not drawn.
-- **Overlay** — the gutters are too narrow and the person pressed Show: the Workbench is drawn over the trailing edge of the content, left of the Inspector when it is open. The column moves aside as in the gutter, keeping its 16px gap from the cards, and narrows as it goes, no further than the Composer's width, so the cards cover no text unless the page is narrower than both. The column has no backing, so the Feed shows faintly through the cards' glass and nothing clips them. The page stays mounted and interactive underneath; the same band toggle hides it.
+- **Gutter** — the page is at least 1220, so the cards sit at the page's trailing edge and the content, centred in the room left of them below a page of 1672, never sits under them.
+- **Auto-hidden** — the page is under 1220 and the popover is closed: the Workbench is not drawn, whatever the intent.
+- **Overlay** — the page is under 1220 and the person opened the popover with the toggle: the Workbench is drawn over the trailing edge of the content, left of the Inspector when it is open. The column does not move: it stays centred in the page, and the cards float over its trailing edge. The column has no backing, so the Feed shows faintly through the cards' glass and nothing clips them. The page stays mounted underneath. A press anywhere outside the cards, the band toggle, a Session switch or a page wide enough for the gutter closes it, so a later narrow page starts with it closed.
 - **Hidden** — explicit Hide persists across resize. An expanded Inspector temporarily hides the Workbench without changing that intent.
 
 ## The Workbench
@@ -88,14 +90,14 @@ The Workbench has four effective states. One toggle drives the person’s Show o
 - **A Workbench card opens it** — pressing the card, or a Plugin's `header` action for its own card. The Workbench stays; the Inspector is a surface, not a section.
 - **A tab shows a section's full list:** the branch's changed files, its Agents, its Shells, or a Plugin's items.
 - **A row in that list opens the item's detail in the same tab:** one file's diff, an Agent's Feed, or a Shell's output. Back returns to the list. Each tab retains its selected detail and scroll position across tab switches.
-- **Wide:** its own region beside the page. At 1440 the Workbench auto-hides. Both show from 1912 with the list shown, or from 1600 when the user hides the list.
+- **Wide:** its own region beside the page. At 1440 the Workbench auto-hides. Both show from 1972 with the list shown, or from 1660 when the user hides the list.
 - **Medium:** the desktop floating design remains pending the ADR-0026 decision above.
 - **Size-class changes retain open tabs.** Returning to wide restores the selected tab.
 - **Closing the Inspector keeps its tabs.** The band's toggle restores the previous width, docked or expanded mode, selected tab and its content. A card opened meanwhile adds its tab to them. Only closing every tab by hand empties it; the next opening then starts with the first Section offered.
 
 ## The content column
 
-- `--container-column` is 800. The Feed viewport and the Composer take the same column: `max-width` 848 at a 24 gutter on each side, centred in the page, or moved aside together for a Workbench the trailing gutter alone does not hold.
+- `--container-column` is 800. The Feed viewport and the Composer take the same column: `max-width` 848 at a 24 gutter on each side, centred in the page, or centred together in the room beside a Workbench in the gutter that the trailing gutter alone does not hold.
 - The region caps at 848, including its two 24px gutters. Its default protected floor is 688: the 640px Composer plus those gutters. Window resizing and pane toggles respect the current floor.
 - Dragging the Inspector's divider is the one way under that floor. The page keeps narrowing with the drag down to 200, and a drag past that expands the Inspector over the page. The list does not fold during the drag. While the Inspector is open, the width the drag left is the content's floor. A narrower window folds the list before the page gives more, and expanding the Inspector keeps the list. Closing the Inspector restores the 688 floor while it is hidden. Reopening it uses the dragged width and floor again. The Sessions list keeps its dragged width across a close the same way. A divider moved while the Inspector is at its default width lowers nothing.
 - The Workbench and the Inspector sit outside the cap. The Inspector is its own region of the window; the Workbench is drawn over the page's gutter.

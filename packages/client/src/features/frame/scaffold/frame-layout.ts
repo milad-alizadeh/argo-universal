@@ -26,7 +26,7 @@ export { workbenchDrawn } from './frame-layout-workbench';
 
 export type * from './frame-layout-types';
 
-// The list folds when the page would go below the content's floor; the Workbench, which takes no width, hides when the page's two gutters together no longer hold it.
+// The list folds when the page would go below the content's floor; the Workbench, which takes no width, hides when the page is too narrow for it in the gutter.
 function budgetThresholds(input: FrameLayoutInput): FrameLayout['thresholds'] {
   const base = railZone(input.measures) + inspectorBudget(input);
   const list = preferredListWidth(input);
@@ -126,7 +126,7 @@ const arrangement = (
 /*
  * A wide window's Frame: the window's width, the Frame's measures, the preferred pane widths and what the
  * person asked of the sidebar, the Workbench and the Inspector in; every region, divider and resize limit out.
- * The content keeps its floor before the list folds; the Workbench takes no width and shows where the page's gutters hold it, the content moving aside where the trailing one alone does not.
+ * The content keeps its floor before the list folds; the Workbench takes no width and shows where the page's gutters hold it, the content centring beside it on a page too narrow to keep it centred.
  */
 export function frameLayout(input: FrameLayoutInput): FrameLayout {
   const thresholds = requestedThresholds(input, budgetThresholds(input));

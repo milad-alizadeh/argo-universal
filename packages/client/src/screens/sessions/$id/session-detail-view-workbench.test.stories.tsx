@@ -76,11 +76,11 @@ function gutterBoundary(width: number): Story {
   };
 }
 
-export const CardsStaySeparateAtTheIndependentBoundary = gutterBoundary(1544);
+export const CardsStaySeparateAtTheIndependentBoundary = gutterBoundary(1604);
 
 // Below it the page's gutters together no longer hold the cards, so they hide and the conversation stays centred in the page.
 export const CardsAutoHideBelowTheIndependentBoundary: Story = {
-  beforeEach: (): Promise<void> => settleLayout(1543),
+  beforeEach: (): Promise<void> => settleLayout(1603),
   play: async ({ canvas }) => {
     const composer = await canvas.findByTestId(composerId);
     await waitFor(() =>
@@ -173,8 +173,8 @@ export const WideGuttersKeepTheConversationCentered: Story = {
   },
 };
 
-// At 1544 the page is exactly as wide as the column, its leading gutter, the gap, a card and the inset, so the column moves half a card's 312 from the centre.
-const asideAtTheBoundary = 156;
+// On a page too narrow to keep the column centred beside the cards, it moves aside as Codex's thread does: half the card's 312 and the 8 inset.
+const asideOfTheCards = 160;
 
 const centreOf = (element: HTMLElement): number => {
   const box = element.getBoundingClientRect();
@@ -185,15 +185,15 @@ const centreOf = (element: HTMLElement): number => {
 const pageCentre = (canvas: Canvas): number =>
   centreOf(canvas.getByTestId(detailId));
 
-// Where the trailing gutter alone does not hold the cards, the conversation moves aside for them and returns to the page's centre when they hide.
-export const NarrowGuttersMoveTheConversationAside: Story = {
-  beforeEach: (): Promise<void> => settleLayout(1544),
+// Where the trailing gutter alone does not hold the cards, the conversation centres in the room beside them and returns to the page's centre when they hide.
+export const NarrowGuttersCentreTheConversationBesideTheCards: Story = {
+  beforeEach: (): Promise<void> => settleLayout(1604),
   play: async ({ canvas, userEvent }) => {
     const composer = await canvas.findByTestId(composerId);
     await expectSeparateCards(canvas);
     await waitFor(() =>
       expect(centreOf(composer)).toBeCloseTo(
-        pageCentre(canvas) - asideAtTheBoundary,
+        pageCentre(canvas) - asideOfTheCards,
         1,
       ),
     );
@@ -211,23 +211,30 @@ export const NarrowGuttersMoveTheConversationAside: Story = {
   },
 };
 
-// Below the gutter width the cards hide; pressing Show draws them over the page, and the conversation moves clear of them rather than running under.
-export const ShownCardsCoverNoText: Story = {
+// Below the gutter width the cards hide; the toggle opens them over the page as Codex's popover, the conversation stays centred under them, and a press outside closes them.
+export const ShownCardsFloatOverTheCentredConversation: Story = {
   beforeEach: (): Promise<void> => settleLayout(1500),
   play: async ({ canvas, userEvent }) => {
     const composer = await canvas.findByTestId(composerId);
     await waitFor(() =>
       expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
     );
+    await waitFor(() =>
+      expect(centreOf(composer)).toBeCloseTo(pageCentre(canvas), 1),
+    );
     await userEvent.click(
       canvas.getByRole('button', { name: toggleWorkbench }),
     );
-    await expectSeparateCards(canvas);
-    const feed = lastFeedRow(canvas);
-    await expect(feed.getBoundingClientRect().right).toBeLessThanOrEqual(
-      canvas.getByTestId(workbenchId).getBoundingClientRect().left,
+    await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
+    await expect(centreOf(composer)).toBeCloseTo(pageCentre(canvas), 1);
+    await expect(centreOf(lastFeedRow(canvas))).toBeCloseTo(
+      pageCentre(canvas),
+      1,
     );
-    await browserUser.hover(composer);
+    await userEvent.click(canvas.getByTestId('workbench-dismiss'));
+    await waitFor(() =>
+      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
+    );
   },
 };
 
