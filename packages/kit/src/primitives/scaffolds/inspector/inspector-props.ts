@@ -25,7 +25,7 @@ export interface InspectorTabsProps {
  * tabs in place of the title, for an Inspector that shows one of several panels.
  */
 export type InspectorProps = KitProps<'Inspector'> & {
-  // A phone Inspector can own its header, such as the Git sheet's PR / File changes switcher.
+  // Extra header content for a fitted phone sheet. Pass null to draw only the sheet's own title.
   sheetHeader?: ReactNode;
   // The caller can retain a tab or drill-in page's scroll position while it is unmounted.
   scrollState?: {

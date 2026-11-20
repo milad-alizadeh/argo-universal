@@ -4,6 +4,7 @@ import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { ComposerAttachments } from './composer-card-attachments';
 import type { CardLayout } from './composer-card-types';
+import { ComposerDraftScroll } from './composer-draft-scroll';
 import { edgeOf } from './composer-edge';
 import { EdgeTypography } from './composer-edge-typography';
 import { FollowUpAcceptance } from './composer-follow-up-acceptance';
@@ -53,12 +54,32 @@ function ComposerEdge({ props }: CardLayout): React.ReactNode {
   return edge ? <EdgeTypography>{edge}</EdgeTypography> : null;
 }
 
+function ComposerDraftBody(props: SurfaceProps): React.JSX.Element {
+  const scrollWithParent =
+    props.phone && props.layout.props.draft.attachments.length > 0;
+
+  const draft = (
+    <>
+      <ComposerAttachments {...props.layout} />
+      <ComposerText {...props} field={{ ...props.field, scrollWithParent }} />
+    </>
+  );
+
+  return props.phone ? scrollDraft(scrollWithParent, draft) : draft;
+}
+
+const scrollDraft = (
+  followsCaret: boolean,
+  draft: React.ReactNode,
+): React.JSX.Element => (
+  <ComposerDraftScroll followsCaret={followsCaret}>{draft}</ComposerDraftScroll>
+);
+
 export function ComposerSurface(props: SurfaceProps): React.JSX.Element {
   return (
     <LiquidGlass {...cardGlass}>
       <ComposerEdge {...props.layout} />
-      <ComposerAttachments {...props.layout} />
-      <ComposerText {...props} />
+      <ComposerDraftBody {...props} />
       <ComposerTypography compact={props.phone}>
         <ComposerToolbar {...props.layout} />
       </ComposerTypography>

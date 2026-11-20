@@ -1,7 +1,7 @@
 import { Button } from '@repo/kit/primitives/actions/button';
 import type { ReactNode } from 'react';
 import { Linking } from 'react-native';
-import { ChangesFiles, ChangesSheetHeader } from '#features/changes';
+import { ChangesFiles } from '#features/changes';
 import {
   ChangeRows,
   type SessionPullRequest,
@@ -96,10 +96,9 @@ export const changesSection: SessionSection = {
   card: changesCard,
   tab: ({ changes }) => ({
     body: <SessionChangesTab changes={changes} />,
-    sheetHeader: <ChangesSheetHeader />,
   }),
   phone: (content, tab) => ({
-    sheetHeader: <ChangesSheetHeader />,
+    sheetHeader: null,
     body: phoneBody(content, tab),
   }),
 };

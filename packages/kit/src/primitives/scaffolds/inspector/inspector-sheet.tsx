@@ -11,7 +11,7 @@ export function InspectorSheet(props: InspectorProps): ReactElement {
   return (
     <InspectorSheetFrame
       inspector={props}
-      screenTitle={props.sheetHeader ? props.title : undefined}
+      screenTitle={props.sheetHeader === undefined ? undefined : props.title}
     >
       <InspectorPane {...props} inSheet />
     </InspectorSheetFrame>

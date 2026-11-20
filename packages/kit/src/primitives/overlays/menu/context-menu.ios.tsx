@@ -1,6 +1,6 @@
 import { ContextMenu as SwiftContextMenu, RNHostView } from '@expo/ui/swift-ui';
 import { type Href, Link } from 'expo-router';
-import type { ComponentType, ReactElement } from 'react';
+import { useState, type ComponentType, type ReactElement } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { Host } from '#primitives/native/host';
 import { contextMenuSections } from './context-menu-native-items';
@@ -26,19 +26,31 @@ export function ContextMenu(props: ContextMenuProps): ReactElement {
 
 /*
  * Expo UI's ContextMenu around the element, hosted as MenuView `shouldOpenOnLongPress` hosts it but matching only the
- * element's height: MenuView matches both axes, so a row drew only as wide as its content. `{ vertical: true }` on the
- * Host and the RNHostView takes the width from the parent and the height from the element.
+ * element's height at the outer Host. Take the trigger width from its React Native parent to keep SwiftUI's
+ * proposed width from sending the row's trailing controls past the edge of a nested sheet.
  *
  * On a movable row, SwiftUI's .contextMenu takes the touch from the row's Pan once it opens, and Expo UI exposes no
  * draggable or onOpenMenu on iOS, so a row drags only when the finger moves before the menu opens; dragging on from
  * an open menu, as on Android, waits on upstream.
  */
 function LiftMenu(props: ContextMenuProps): ReactElement {
+  const [width, setWidth] = useState(0);
+
+  return (
+    <View onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
+      <LiftMenuHost {...props} width={width} />
+    </View>
+  );
+}
+
+type LiftMenuProps = ContextMenuProps & { width: number };
+
+function LiftMenuHost(props: LiftMenuProps): ReactElement {
   return (
     <Host matchContents={heightOnly} ignoreSafeArea="all">
       <SwiftContextMenu>
         <SwiftContextMenu.Trigger>
-          {hosted(props.children)}
+          {hosted(props.children, props.width)}
         </SwiftContextMenu.Trigger>
         <SwiftContextMenu.Items>
           {swiftMenuSections(contextMenuSections(props))}
@@ -48,14 +60,13 @@ function LiftMenu(props: ContextMenuProps): ReactElement {
   );
 }
 
-const heightOnly = { vertical: true };
-
-// The element as SwiftUI hosts it: as wide as the Host, as tall as itself.
-const hosted = (element: ReactElement): ReactElement => (
-  <RNHostView matchContents={heightOnly}>
-    <View>{element}</View>
+const hosted = (element: ReactElement, width: number): ReactElement => (
+  <RNHostView matchContents>
+    <View style={{ width }}>{element}</View>
   </RNHostView>
 );
+
+const heightOnly = { vertical: true };
 
 type PreviewMenuProps = ContextMenuProps & { href: Href };
 

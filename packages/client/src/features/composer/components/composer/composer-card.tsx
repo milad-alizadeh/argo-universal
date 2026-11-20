@@ -14,7 +14,7 @@ import { ComposerBottomTray } from './composer-trays';
 
 /*
  * `min-h-0 shrink`, so the card gives height up to the room left above the keyboard rather than running on
- * past it. Inside the card only the draft field gives any up; the toolbar keeps its own (#1529).
+ * past it. Inside the card the draft body shrinks; the toolbar keeps its height (#1529).
  */
 function ComposerCard(layout: CardLayout): React.JSX.Element {
   const field = useComposerText(layout);
