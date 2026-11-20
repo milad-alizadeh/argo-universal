@@ -244,6 +244,13 @@ const frostedInside = (element: HTMLElement): HTMLElement[] =>
     (node) => getComputedStyle(node).backdropFilter !== 'none',
   );
 
+// Part way through its fade, so the check runs while the cards are coming in.
+const fading = (element: HTMLElement): boolean => {
+  const opacity = Number(getComputedStyle(element).opacity);
+
+  return opacity > 0 && opacity < 1;
+};
+
 function translucentAncestors(element: HTMLElement): HTMLElement[] {
   const found: HTMLElement[] = [];
 
@@ -264,6 +271,7 @@ export const CardsKeepTheirFrostWhileTheyFadeIn: Story = {
     const frosted = frostedInside(canvas.getByTestId(workbenchId));
 
     await expect(frosted.length).toBeGreaterThan(0);
+    await waitFor(() => expect(frosted.some(fading)).toBe(true));
 
     for (const glass of frosted)
       await expect(translucentAncestors(glass)).toEqual([]);
