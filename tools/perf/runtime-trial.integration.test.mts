@@ -10,6 +10,7 @@ import { observeRuntimeTurn } from './runtime-trial.mts';
 beforeAll(bundleEngine);
 
 const greetingOutput = 'Greeting check passed';
+
 const observationTimeoutMs = 10_000;
 
 it('times one new Turn through the public Server wire without treating earlier reply replay as new content', async () => {
