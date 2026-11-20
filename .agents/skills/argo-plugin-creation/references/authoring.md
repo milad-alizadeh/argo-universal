@@ -1,36 +1,37 @@
 # Write, validate and test a Plugin
 
-An Agent asked to build a Plugin starts from the Operations `plugin.guide`, which answers the blueprint and a component reference read from the kit's schemas, and `plugin.new`, which writes a working Plugin into the Session's Checkout. This page is the API they point to. `pnpm check` in a Plugin's folder runs every check on that Plugin alone: its Operation types, `tsc`, validation and its harness tests.
+The scaffold's package scripts and current API declarations come from `packages/contracts/src/plugins/plugin-template.ts` and `packages/plugin-kit/src/`. Use the examples here to choose a pattern.
 
-A Plugin is a TypeScript project. Its `package.json` depends on `@argo/plugin-kit` alone, which provides the components, the `Argo` type of the Plugin API, the test kit and the `argo-plugin` command. Plugins in this repository take the kit from the workspace:
+## Scaffold without a Session
 
-```json
-{
-  "name": "@argo/my-plugin",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "check-types": "argo-plugin types . --check && tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
-    "test": "argo-plugin test .",
-    "validate": "argo-plugin validate ."
-  },
-  "devDependencies": {
-    "@argo/plugin-kit": "workspace:*",
-    "@types/node": "catalog:",
-    "typescript": "catalog:"
-  }
+From the repository root with dependencies installed, use the same template as the `plugin.new` Operation. Replace `my-plugin` and `My Plugin` with the intended id and name. Choose an id that is unused as both a directory and a workspace package.
+
+```sh
+node --import tsx --input-type=module - my-plugin 'My Plugin' <<'JS'
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { PluginNewInput } from './packages/contracts/src/operations/plugin-guide.ts';
+import { pluginTemplate } from './packages/contracts/src/plugins/plugin-template.ts';
+
+const { id, name } = PluginNewInput.parse({
+  id: process.argv[2],
+  name: process.argv[3],
+});
+const files = pluginTemplate(id, name);
+const root = join('plugins', id);
+mkdirSync(root);
+for (const [path, content] of files) {
+  const file = join(root, path);
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, content, { flag: 'wx' });
 }
+JS
+pnpm install
 ```
 
-Its `tsconfig.json` extends the kit's settings, and its `tsconfig.test.json` the kit's test settings:
+The folder creation fails if the target already exists. Continue from the scaffold check in the skill.
 
-```json
-{ "extends": "@argo/plugin-kit/tsconfig.json" }
-```
-
-```json
-{ "extends": "@argo/plugin-kit/tsconfig.test.json" }
-```
+## Manifest and entrypoint
 
 Plugin code runs without Node, so it is checked without Node's types; only `*.test.ts` files see them.
 
@@ -55,6 +56,10 @@ argo.pages.define('/counter', {
   ),
 });
 ```
+
+When a page declares `state`, type a child component's action builder with that state, for example `PageTo<{ title: string }>`. The default `PageTo` is for a page without a specific state type. A stateful page's `bind` accepts only its declared keys.
+
+For a form, put fields inside `FieldGroup.Section`, inside `FieldGroup`. Place a standalone submit button beside the group. Copy the form in `packages/plugin-kit/mocks/kit-screens-source.ts` and use its harness pattern in `packages/plugin-kit/testing/kit-screens.integration.test.ts`. Exercise the field with `page.act('Title', 'onChangeText', value)` and then press the submit button.
 
 Some Component events report a payload: a Table's `onSortChange` reports the column and direction, and a List's `onMove` reports the moved row's `id`, the `section` it lands in and its `index` there. `to.payload(field)` stands for one field of it, or `to.payload()` for the whole payload, such as a Switch's value, anywhere `to.set` or `to.run` takes a value. The App fills it in when the event fires and acts at once, with no draw in between. Page state holds scalars and selections only, so an object payload goes into flat keys:
 
@@ -340,6 +345,12 @@ Storage Queries are never polled. A committed Plugin storage write marks them du
 Entries belong to a Plugin and a Project. Equal Queries in that Project share one entry, including Queries from different pages.
 Object key order and header name case do not change the entry.
 
+## Plugin storage
+
+Use `argo.storage.execute` for a persistent write in an Operation. Initialise tables idempotently in the entrypoint so reopening the Plugin keeps existing data. Bind values through SQL parameters. When a loader reads rows directly, narrow the returned values before building typed page data. See `plugins/issue-tracker/issue-sessions-store.ts` for row guards.
+
+To verify that a write survives the Plugin worker stopping, use the harness's `plugins.setEnabled(id, false)` and `plugins.setEnabled(id, true)`, then reopen the page and assert the saved state.
+
 ## Named reads
 
 `argo.queries.define(name, read, { projectOf })` makes a named read (ADR-0037): a read the Plugin writes and Argo keeps like a Query, for data that a list and its item's page, or a page and a Slot, share. A Loader reads it with `read(query(args))`; code outside a draw reads it with `argo.queries.read`, or `argo.queries.readState` to have a failure as an answer. `plugins/jira/jira-reads.ts` is a worked example.
@@ -612,6 +623,15 @@ A crash, malformed answer, or Plugin startup failure also leaves core free to co
 Plugins refuse by returning an event's refusal answer. `argo.on` accepts a Hook alone or a matcher and Hook, with no options.
 
 ## Dev reload
+
+To preview a Plugin on a development Server, link its folder into that Server's Plugin directory. For the default Server home, run from the repository root:
+
+```sh
+mkdir -p ~/.argo/plugins
+ln -s "$PWD/plugins/my-plugin" ~/.argo/plugins/my-plugin
+```
+
+Use the Server's configured home if it differs. If the destination exists, use the existing link only if it points to this checkout. Open the Plugin in the App and check the affected states.
 
 While any Turn runs, including a subagent's, the Server keeps the current Plugin worker and defers source rebuild results.
 After active Turns end, the Server rebuilds the latest source once. Intermediate syntax errors do not stop the current worker.

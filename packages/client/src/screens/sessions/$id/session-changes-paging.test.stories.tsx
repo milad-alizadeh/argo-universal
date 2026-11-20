@@ -67,19 +67,21 @@ export const FilesArriveInPages: Story = {
   },
 };
 
-// While diffs load, the list shows one spinner, after its files, and none under any file; the diffs appear as they land.
-export const OneSpinnerWhileDiffsLoad: Story = {
+// The first diff page appears with its file header after the loading spinner.
+export const HeaderArrivesWithFirstDiffPage: Story = {
   args: { catalog: fewChanges },
   play: async () => {
-    await findFileHeader(largeFile);
-
     const spinners = await screen.findAllByRole('progressbar');
 
     await expect(spinners).toHaveLength(1);
     await expect(spinners[0]).toHaveAccessibleName(
       expect.stringMatching(loadingMore),
     );
-    await waitFor(() => expect(diffLines().length).toBeGreaterThan(0));
+    await expect(
+      screen.queryByRole('button', { name: `Diff for ${largeFile}` }),
+    ).toBeNull();
+    await findFileHeader(largeFile);
+    await expect(largeFileLines().length).toBeGreaterThan(0);
     await waitFor(() =>
       expect(screen.queryAllByRole('progressbar')).toHaveLength(0),
     );

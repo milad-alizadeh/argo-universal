@@ -10,6 +10,7 @@ import {
   pullRequestMocks,
   withPullRequests,
 } from './session-detail-view-pull-request.mocks';
+import { voiceCallSession } from './session-detail-view-voice.mocks';
 import { idleSession } from './session-detail-view.mocks';
 
 const meta = {
@@ -76,11 +77,12 @@ function gutterBoundary(width: number): Story {
   };
 }
 
-export const CardsStaySeparateAtTheIndependentBoundary = gutterBoundary(1544);
+// From 1856 with the Sessions list shown, the page's trailing gutter alone holds the cards beside the centred column.
+export const CardsStaySeparateAtTheIndependentBoundary = gutterBoundary(1856);
 
-// Below it the page's gutters together no longer hold the cards, so they hide and the conversation stays centred in the page.
+// Below it the trailing gutter no longer holds the cards, so they hide and the conversation stays centred in the page.
 export const CardsAutoHideBelowTheIndependentBoundary: Story = {
-  beforeEach: (): Promise<void> => settleLayout(1543),
+  beforeEach: (): Promise<void> => settleLayout(1855),
   play: async ({ canvas }) => {
     const composer = await canvas.findByTestId(composerId);
     await waitFor(() =>
@@ -96,7 +98,7 @@ export const CardsAutoHideBelowTheIndependentBoundary: Story = {
 };
 
 export const InspectorAndNavigationKeepCardsOutsideTheConversation: Story = {
-  beforeEach: (): Promise<void> => settleLayout(2224),
+  beforeEach: (): Promise<void> => settleLayout(2560),
   play: async ({ canvas, userEvent }) => {
     await expectSeparateCards(canvas);
     await userEvent.click(await canvas.findByRole('button', inspectorToggle));
@@ -173,9 +175,6 @@ export const WideGuttersKeepTheConversationCentered: Story = {
   },
 };
 
-// At 1544 the page is exactly as wide as the column, its leading gutter, the gap, a card and the inset, so the column moves half a card's 312 from the centre.
-const asideAtTheBoundary = 156;
-
 const centreOf = (element: HTMLElement): number => {
   const box = element.getBoundingClientRect();
 
@@ -185,49 +184,46 @@ const centreOf = (element: HTMLElement): number => {
 const pageCentre = (canvas: Canvas): number =>
   centreOf(canvas.getByTestId(detailId));
 
-// Where the trailing gutter alone does not hold the cards, the conversation moves aside for them and returns to the page's centre when they hide.
-export const NarrowGuttersMoveTheConversationAside: Story = {
-  beforeEach: (): Promise<void> => settleLayout(1544),
-  play: async ({ canvas, userEvent }) => {
-    const composer = await canvas.findByTestId(composerId);
-    await expectSeparateCards(canvas);
-    await waitFor(() =>
-      expect(centreOf(composer)).toBeCloseTo(
-        pageCentre(canvas) - asideAtTheBoundary,
-        1,
-      ),
-    );
-    const feed = lastFeedRow(canvas);
-    await expect(centreOf(feed)).toBeCloseTo(centreOf(composer), 1);
-    await userEvent.click(
-      canvas.getByRole('button', { name: toggleWorkbench }),
-    );
-    await waitFor(() =>
-      expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
-    );
-    await waitFor(() =>
-      expect(centreOf(composer)).toBeCloseTo(pageCentre(canvas), 1),
-    );
-  },
-};
-
-// Below the gutter width the cards hide; pressing Show draws them over the page, and the conversation moves clear of them rather than running under.
-export const ShownCardsCoverNoText: Story = {
+// Below the gutter width the cards hide; pressing Show floats them over the page, and the conversation stays centred under them.
+export const ShownCardsFloatOverTheCentredConversation: Story = {
   beforeEach: (): Promise<void> => settleLayout(1500),
   play: async ({ canvas, userEvent }) => {
     const composer = await canvas.findByTestId(composerId);
     await waitFor(() =>
       expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
     );
+    const before = composer.getBoundingClientRect();
+    await expect(centreOf(composer)).toBeCloseTo(pageCentre(canvas), 1);
+    const rowTop = lastFeedRow(canvas).getBoundingClientRect().top;
     await userEvent.click(
       canvas.getByRole('button', { name: toggleWorkbench }),
     );
-    await expectSeparateCards(canvas);
-    const feed = lastFeedRow(canvas);
-    await expect(feed.getBoundingClientRect().right).toBeLessThanOrEqual(
-      canvas.getByTestId(workbenchId).getBoundingClientRect().left,
+    await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
+    await expect(composer.getBoundingClientRect().left).toBe(before.left);
+    await expect(composer.getBoundingClientRect().width).toBe(before.width);
+    await expect(lastFeedRow(canvas).getBoundingClientRect().top).toBeCloseTo(
+      rowTop,
+      1,
     );
-    await browserUser.hover(composer);
+    await expect(centreOf(lastFeedRow(canvas))).toBeCloseTo(
+      centreOf(composer),
+      1,
+    );
+  },
+};
+
+// A Session with no cards has no Workbench: it is not drawn, and the conversation sits in the page's centre at every width.
+export const NoCardsLeaveTheConversationCentred: Story = {
+  args: { view: { state: 'open', ...voiceCallSession } },
+  beforeEach: (): Promise<void> => settleLayout(1544),
+  play: async ({ canvas }) => {
+    const composer = await canvas.findByTestId(composerId);
+    await expect(canvas.queryByTestId(workbenchId)).toBeNull();
+    await expect(centreOf(composer)).toBeCloseTo(pageCentre(canvas), 1);
+    await expect(centreOf(lastFeedRow(canvas))).toBeCloseTo(
+      pageCentre(canvas),
+      1,
+    );
   },
 };
 

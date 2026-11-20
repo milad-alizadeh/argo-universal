@@ -35,7 +35,7 @@ export type GatedPage<
 > = ContractsGatedPage<State, Data, Item, PluginOperations>;
 
 /*
- * The sign-in the kit draws for either flow (docs/plugins/authoring.md). A read that finds no Account throws
+ * A read that finds no Account throws
  * `SignInRequired`, and `signInGate` draws the sign-in in the page's place.
  */
 export declare class SignInRequired extends Error {}

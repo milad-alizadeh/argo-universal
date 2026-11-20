@@ -151,7 +151,7 @@ The kit components a Plugin's Render answers for one page or Slot, as a value th
 _Avoid_: Wire tree, Plugin UI
 
 **Last good items**:
-The items a Plugin last answered in time for each context of an items Slot, kept by the Engine across change signals and restarts. While the Plugin's answer is late, fails or it is not running yet, a list draws these instead, so a Session row keeps its pull requests; they are dropped when the Plugin is turned off or removed.
+The items a Plugin last answered for each context of an items Slot, kept by the Engine across change signals and restarts. While the Plugin's answer is late, fails or it is not running yet, a list draws these instead, so a Session row keeps its pull requests; a late answer that lands after all replaces them. They are dropped when the Plugin is turned off or removed.
 _Avoid_: Cached items, stale items
 
 **Replaceable Slot**:

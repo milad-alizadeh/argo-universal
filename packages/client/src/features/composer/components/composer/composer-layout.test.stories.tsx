@@ -175,6 +175,29 @@ export const TrayWordsShareAnEdge: Story = {
   },
 };
 
+export const TodosRowMatchesStatusTray: Story = {
+  args: startedSessionComposer,
+  render: (args) => <Composer {...composerProps(args)} />,
+  play: async ({ canvas }) => {
+    await settleLayout(layoutWidths.wide);
+    const card = composerCard(canvas.getByRole('textbox', { name: 'Message' }));
+    const statusTray = card.nextElementSibling;
+
+    if (!statusTray)
+      throw new Error('The wide Composer needs its status tray.');
+
+    const exposedHeight =
+      statusTray.getBoundingClientRect().bottom -
+      card.getBoundingClientRect().bottom;
+
+    const todos = canvas.getByRole('button', { name: 'Todos' });
+
+    await expect(todos.getBoundingClientRect().height).toBeCloseTo(
+      exposedHeight,
+    );
+  },
+};
+
 export const WorkSettledFirstAgent = workStatusCounts(0, false);
 
 export const WorkSettledSecondAgent = workStatusCounts(1, false);

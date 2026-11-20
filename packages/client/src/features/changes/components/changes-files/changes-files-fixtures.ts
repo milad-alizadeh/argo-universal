@@ -72,7 +72,7 @@ export const deletedFiles = {
   },
 } satisfies ChangesViewProps;
 
-// Diffs still on their way: their files show as headers alone, over one spinner at the end of the list.
+// One spinner shows while the first diff pages are on their way.
 export const loadingDiffs = {
   ...base,
   files: ['src/app.ts', 'src/list.ts', 'src/row.ts'].map((path) => ({

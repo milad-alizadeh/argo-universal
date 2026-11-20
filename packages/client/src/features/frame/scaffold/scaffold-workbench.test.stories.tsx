@@ -111,7 +111,7 @@ export const ShowOverlaysTheContentAndKeepsTheDraftMounted: Story = {
 export const NarrowingAutoHidesTheGutterWorkbench: Story = {
   args: { inspectorOpen: true },
   play: async ({ canvas }) => {
-    await settleLayout(2224);
+    await settleLayout(2560);
     await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
     await settleLayout('wide');
     await waitFor(() =>
@@ -126,7 +126,7 @@ export const ShownIntentReturnsToTheGutter: Story = {
   play: async ({ canvas }) => {
     const draft = await canvas.findByLabelText(draftLabel);
     await expect(canvas.getByTestId(detailId)).not.toHaveAttribute('inert');
-    await settleLayout(2224);
+    await settleLayout(2560);
     await browserUser.hover(draft);
     await expect(canvas.getByRole(textboxRole, { name: draftLabel })).toBe(
       draft,
