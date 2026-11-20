@@ -1,9 +1,9 @@
 /// <reference types="@vitest/browser-playwright" />
+import { reduceMotion } from '@repo/kit/mocks/reduced-motion';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
-import { cdp } from 'vitest/browser';
 import {
   rehearsedConnectMilliseconds,
   ConversationRehearsal,
@@ -99,14 +99,6 @@ export const BandComesAndGoesWithTheConversation: Story = {
 // Under reduced motion the band and the mutes only fade, and still arrive and leave.
 export const BandComesAndGoesWithReducedMotion: Story = {
   render: (): React.JSX.Element => <ConversationRehearsal />,
-  beforeEach: async () => {
-    await cdp().send('Emulation.setEmulatedMedia', {
-      features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
-    });
-
-    return async (): Promise<void> => {
-      await cdp().send('Emulation.setEmulatedMedia', { features: [] });
-    };
-  },
+  beforeEach: reduceMotion,
   play: ({ canvas }) => startAndEnd(canvas),
 };
