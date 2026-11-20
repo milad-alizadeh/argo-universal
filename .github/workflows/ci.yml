@@ -113,12 +113,10 @@ jobs:
       # The Vercel Remote Cache step trades GitHub's OIDC token for a short-lived Turborepo token.
       id-token: write
     steps:
+      # Full history brings every branch, so the rule allowlists find their merge base with origin/main.
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-
-      - name: Fetch main for the waiver merge base
-        run: git fetch origin main:refs/remotes/origin/main
 
       - id: setup
         uses: ./.github/actions/setup
@@ -244,22 +242,25 @@ jobs:
           - group: kits
             filter: --filter=@argo/plugin-kit --filter=@repo/client
             playwright: none
-          # The desktop CSP test checks the policy in real Chromium.
+          # The desktop CSP test checks the policy in real Chromium, which the step below installs only when that test runs.
           - group: rest
             filter: --filter=!@repo/engine --filter=!./plugins/* --filter=!@argo/plugin-kit --filter=!@repo/client
-            playwright: chromium
+            playwright: none
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Fetch main for the waiver merge base
-        run: git fetch origin main:refs/remotes/origin/main
-
       - uses: ./.github/actions/setup
         with:
           playwright: ${{ matrix.playwright }}
           turbo-team: ${{ vars.TURBO_TEAM }}
+
+      - name: Install Chromium when the desktop CSP test runs
+        if: ${{ matrix.group == 'rest' }}
+        run: |
+          status=$(pnpm exec turbo run test --filter=@repo/desktop --dry=json | node -e "let d='';process.stdin.on('data',(c)=>{d+=c}).on('end',()=>{console.log(JSON.parse(d).tasks.find((t)=>t.taskId==='@repo/desktop#test')?.cache.status??'MISS')})")
+          if [ "$status" != HIT ]; then pnpm --filter @repo/e2e exec playwright install --with-deps --only-shell chromium; fi
 
       - name: Tests
         env:
@@ -449,9 +450,10 @@ jobs:
           path: e2e/blob-report/
           retention-days: 1
 
+  # Only a failing run needs the report: it carries each failure's trace.
   e2e-web-report:
     name: Merge the web e2e report
-    if: ${{ !cancelled() && needs.e2e-web.result != 'skipped' }}
+    if: ${{ !cancelled() && needs.e2e-web.result == 'failure' }}
     needs: e2e-web
     runs-on: ubuntu-latest
     timeout-minutes: 10
