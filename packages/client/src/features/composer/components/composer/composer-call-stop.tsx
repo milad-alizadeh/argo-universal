@@ -17,7 +17,9 @@ export function ComposerCallStop({ props }: CallStopLayout): React.JSX.Element {
       control
       testID={callStopButtonId}
       accessibilityLabel="Stop"
-      icon="stop"
+      icon="cancelled"
+      // `selected` is how an IconButton draws a symbol filled: the board's filled square. Stop is not a toggle.
+      selected
       disabled={props.disabled}
       onPress={(): void => props.onStop?.()}
     />
