@@ -108,7 +108,7 @@ export function conversationRow(props: SettingsListViewProps): SettingsRow {
   return {
     label: 'Conversation',
     icon: 'voice',
-    href: '/settings/voice',
+    href: '/settings/conversation',
     disabled: serverDisabled(props),
   };
 }

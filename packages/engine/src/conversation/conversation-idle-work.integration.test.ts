@@ -56,7 +56,7 @@ async function deleteQueued(work: ConversationWork): Promise<void> {
 const idled = async (work: ConversationWork): Promise<void> => {
   await expect
     .poll(() => statusOf(work), waitForEnd)
-    .toMatchObject({ call: null, ended: { reason: 'idle' } });
+    .toMatchObject({ conversation: null, ended: { reason: 'idle' } });
 };
 
 describe('an idle call and a queued Prompt that never runs', () => {

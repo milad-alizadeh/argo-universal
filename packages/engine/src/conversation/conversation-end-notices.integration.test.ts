@@ -26,7 +26,7 @@ async function endedWith(
 ): Promise<void> {
   await expect
     .poll(() => work.host.caller.conversation.status())
-    .toMatchObject({ call: null, ended: { reason } });
+    .toMatchObject({ conversation: null, ended: { reason } });
 }
 
 // Exactly one Notice arrives, and no second one follows it.
@@ -53,7 +53,7 @@ describe('a Conversation nobody chose to end', () => {
         severity: 'warning',
         title: plainEnd,
         description:
-          'The Conversation provider ended the call without saying why.',
+          'The Conversation provider ended the Conversation without saying why.',
       }),
     ]);
   });
@@ -100,7 +100,7 @@ describe('a Conversation nobody chose to end', () => {
       expect.objectContaining({
         title: 'Conversation ended: the App disconnected',
         description:
-          'The App carrying the call closed, reloaded or lost its connection to the Server, so the call ended with it.',
+          'The App carrying the Conversation closed, reloaded or lost its connection to the Server, so the Conversation ended with it.',
       }),
     ]);
   });
@@ -110,13 +110,13 @@ describe('a Conversation nobody chose to end', () => {
     await work.start();
     await expect
       .poll(() => work.host.caller.conversation.status(), { timeout: 10_000 })
-      .toMatchObject({ call: null, ended: { reason: 'idle' } });
+      .toMatchObject({ conversation: null, ended: { reason: 'idle' } });
 
     expect(await oneNotice(work)).toEqual([
       expect.objectContaining({
         title: 'Conversation ended: no one spoke',
         description:
-          'The call heard no speech for 1 second and ended by itself, so the microphone was not left open.',
+          'The Conversation heard no speech for 1 second and ended by itself, so the microphone was not left open.',
       }),
     ]);
   });
@@ -140,7 +140,8 @@ describe('a Conversation nobody chose to end', () => {
     expect(endNotices(page.rows)).toEqual([
       expect.objectContaining({
         title: 'Conversation ended: the Server stopped',
-        description: 'The Argo Server stopped, so the call ended with it.',
+        description:
+          'The Argo Server stopped, so the Conversation ended with it.',
       }),
     ]);
   });

@@ -23,7 +23,7 @@ describe('an idle Conversation', () => {
 
       await expect
         .poll(() => statusOf(work), waitForEnd)
-        .toMatchObject({ call: null, ended: { reason: 'idle' } });
+        .toMatchObject({ conversation: null, ended: { reason: 'idle' } });
       expect(Date.now() - startedAt).toBeGreaterThanOrEqual(idleMs);
       expect(work.provider.call.ended).toBe(true);
     },
@@ -83,7 +83,7 @@ describe('an idle Conversation', () => {
 
       await expect
         .poll(() => statusOf(work), waitForEnd)
-        .toMatchObject({ call: null, ended: { reason: 'idle' } });
+        .toMatchObject({ conversation: null, ended: { reason: 'idle' } });
       expect(Date.now() - resolvedAt).toBeGreaterThanOrEqual(idleMs);
     },
     slow,
@@ -125,7 +125,7 @@ describe('an idle call and a Turn the person typed', () => {
       ownGate.resolve();
       await expect
         .poll(() => statusOf(work), waitForEnd)
-        .toMatchObject({ call: null, ended: { reason: 'idle' } });
+        .toMatchObject({ conversation: null, ended: { reason: 'idle' } });
     },
     slow,
   );
@@ -161,7 +161,7 @@ describe('an idle call and a steered Prompt', () => {
 
       await expect
         .poll(() => statusOf(work), waitForEnd)
-        .toMatchObject({ call: null, ended: { reason: 'idle' } });
+        .toMatchObject({ conversation: null, ended: { reason: 'idle' } });
       expect(Date.now() - resolvedAt).toBeGreaterThanOrEqual(idleMs);
     },
     slow,

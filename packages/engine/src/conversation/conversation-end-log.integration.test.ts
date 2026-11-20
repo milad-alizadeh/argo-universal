@@ -9,7 +9,7 @@ import {
 
 // What the Server's log says about Conversations.
 const conversationLog = (home: string): string =>
-  readFileSync(join(home, 'logs', 'voice.log'), 'utf8');
+  readFileSync(join(home, 'logs', 'conversation.log'), 'utf8');
 
 async function endedWith(
   work: ConversationWork,
@@ -17,7 +17,7 @@ async function endedWith(
 ): Promise<void> {
   await expect
     .poll(() => work.host.caller.conversation.status())
-    .toMatchObject({ call: null, ended: { reason } });
+    .toMatchObject({ conversation: null, ended: { reason } });
 }
 
 describe('the Server’s log of a call’s end', () => {

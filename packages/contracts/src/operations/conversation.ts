@@ -19,7 +19,7 @@ export const conversationOperations = {
     params: z.strictObject({}).default({}),
     result: ConversationStatus,
     tier: 'read',
-    keywords: ['voice', 'call', 'talk', 'speak', 'microphone'],
+    keywords: ['conversation', 'voice', 'call', 'talk', 'speak', 'microphone'],
   },
   'conversation.start': {
     id: 'conversation.start',
@@ -30,7 +30,15 @@ export const conversationOperations = {
     params: ConversationStartInput,
     result: ConversationStartOutput,
     tier: 'confirm',
-    keywords: ['voice', 'call', 'talk', 'speak', 'microphone', 'start'],
+    keywords: [
+      'conversation',
+      'voice',
+      'call',
+      'talk',
+      'speak',
+      'microphone',
+      'start',
+    ],
   },
   'conversation.end': {
     id: 'conversation.end',
@@ -40,7 +48,15 @@ export const conversationOperations = {
     params: ConversationEndInput,
     result: ConversationEndOutput,
     tier: 'act',
-    keywords: ['voice', 'call', 'hang up', 'end', 'stop', 'microphone'],
+    keywords: [
+      'conversation',
+      'voice',
+      'call',
+      'hang up',
+      'end',
+      'stop',
+      'microphone',
+    ],
   },
   'conversation.hangUp': {
     id: 'conversation.hangUp',
@@ -51,6 +67,14 @@ export const conversationOperations = {
     params: ConversationEndInput,
     result: ConversationEndOutput,
     tier: 'act',
-    keywords: ['voice', 'call', 'hang up', 'goodbye', 'done', 'end'],
+    keywords: [
+      'conversation',
+      'voice',
+      'call',
+      'hang up',
+      'goodbye',
+      'done',
+      'end',
+    ],
   },
 } as const satisfies Record<string, OperationDefinition>;

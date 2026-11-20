@@ -18,7 +18,7 @@ describe('the idle timeout the person chose', () => {
 
       await expect
         .poll(() => statusOf(work), { timeout: 15_000 })
-        .toMatchObject({ call: null, ended: { reason: 'idle' } });
+        .toMatchObject({ conversation: null, ended: { reason: 'idle' } });
       expect(Date.now() - startedAt).toBeGreaterThanOrEqual(
         chosenSeconds * 1000,
       );

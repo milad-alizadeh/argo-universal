@@ -16,7 +16,14 @@ export const conversationDeviceOperations = {
     params: z.strictObject({}).default({}),
     result: ConversationDeviceList,
     tier: 'read',
-    keywords: ['voice', 'microphone', 'speaker', 'audio', 'devices'],
+    keywords: [
+      'conversation',
+      'voice',
+      'microphone',
+      'speaker',
+      'audio',
+      'devices',
+    ],
   },
   'conversation.chooseDevices': {
     id: 'conversation.chooseDevices',
@@ -27,6 +34,13 @@ export const conversationDeviceOperations = {
     params: ConversationDeviceChange,
     result: ConversationDeviceList,
     tier: 'confirm',
-    keywords: ['voice', 'microphone', 'speaker', 'audio', 'devices'],
+    keywords: [
+      'conversation',
+      'voice',
+      'microphone',
+      'speaker',
+      'audio',
+      'devices',
+    ],
   },
 } as const satisfies Record<string, OperationDefinition>;

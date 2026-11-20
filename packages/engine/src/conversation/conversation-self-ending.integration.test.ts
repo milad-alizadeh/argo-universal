@@ -104,7 +104,7 @@ describe('the provider reports its allowance', () => {
     await expect
       .poll(() => statusOf(work))
       .toMatchObject({
-        call: {
+        conversation: {
           limit: { remaining: 0.1, resetsAt: '2026-11-19T00:00:00.000Z' },
         },
       });
@@ -119,7 +119,10 @@ describe('the provider reports its allowance', () => {
 
     await expect
       .poll(() => statusOf(work))
-      .toMatchObject({ call: null, ended: { reason: 'limit-reached' } });
+      .toMatchObject({
+        conversation: null,
+        ended: { reason: 'limit-reached' },
+      });
     await expect
       .poll(async () => (await notices(work)).length)
       .toBe(before + 1);

@@ -18,7 +18,7 @@ export const conversationSettingsOperations = {
     params: z.strictObject({}).default({}),
     result: ConversationSettings,
     tier: 'read',
-    keywords: ['voice', 'settings', 'provider', 'speak'],
+    keywords: ['conversation', 'voice', 'settings', 'provider', 'speak'],
   },
   'conversation.setSettings': {
     id: 'conversation.setSettings',
@@ -29,7 +29,14 @@ export const conversationSettingsOperations = {
     params: ConversationSettingsChange,
     result: ConversationSettings,
     tier: 'confirm',
-    keywords: ['voice', 'settings', 'provider', 'enable', 'disable'],
+    keywords: [
+      'conversation',
+      'voice',
+      'settings',
+      'provider',
+      'enable',
+      'disable',
+    ],
   },
   'conversation.setInstructions': {
     id: 'conversation.setInstructions',
@@ -40,7 +47,14 @@ export const conversationSettingsOperations = {
     params: VoiceInstructions,
     result: ConversationSettings,
     tier: 'confirm',
-    keywords: ['voice', 'instructions', 'prompt', 'persona', 'custom'],
+    keywords: [
+      'conversation',
+      'voice',
+      'instructions',
+      'prompt',
+      'persona',
+      'custom',
+    ],
   },
   'conversation.setOptions': {
     id: 'conversation.setOptions',

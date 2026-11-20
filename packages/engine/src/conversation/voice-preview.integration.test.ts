@@ -62,7 +62,7 @@ describe('Conversation preview', () => {
     provider.previewing.voiceSays("Hi, I'm Cove.");
 
     expect(await host.caller.conversation.status()).toMatchObject({
-      call: null,
+      conversation: null,
       ended: null,
       partials: [],
     });

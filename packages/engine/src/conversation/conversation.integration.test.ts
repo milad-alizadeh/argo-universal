@@ -32,7 +32,7 @@ describe('Conversation', () => {
       ended: true,
     });
     expect(await host.caller.conversation.status()).toMatchObject({
-      call: null,
+      conversation: null,
       ended: { sessionId, reason: 'person' },
     });
     expect(provider.call.ended).toBe(true);

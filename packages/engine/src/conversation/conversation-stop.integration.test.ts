@@ -53,7 +53,7 @@ describe('a spoken "stop"', () => {
     await expect.poll(() => replyTo(work, 'r2')).toBe(relayWords.stopping);
     await expect.poll(work.turnEnds).toHaveLength(2);
     expect(await statusOf(work)).toMatchObject({
-      call: { sessionId: work.sessionId },
+      conversation: { sessionId: work.sessionId },
     });
   });
 

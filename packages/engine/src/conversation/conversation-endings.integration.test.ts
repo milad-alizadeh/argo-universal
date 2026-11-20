@@ -27,7 +27,7 @@ describe('Conversation endings', () => {
     await expect
       .poll(() => host.caller.conversation.status())
       .toMatchObject({
-        call: null,
+        conversation: null,
         ended: { reason: 'provider-closed' },
       });
   });
@@ -38,7 +38,7 @@ describe('Conversation endings', () => {
     await expect
       .poll(() => host.caller.conversation.status())
       .toMatchObject({
-        call: null,
+        conversation: null,
         ended: { reason: 'failed' },
       });
     expect(provider.call.ended).toBe(true);
@@ -58,7 +58,7 @@ describe('Conversation endings', () => {
     await expect
       .poll(() => host.caller.conversation.status())
       .toMatchObject({
-        call: null,
+        conversation: null,
         ended: { reason: 'session-archived' },
       });
     expect(provider.call.ended).toBe(true);

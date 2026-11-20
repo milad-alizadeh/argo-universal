@@ -28,14 +28,14 @@ describe('the App-only Operations an Agent is refused', () => {
 
     expect(listed.map(({ id }) => id).sort()).toEqual([
       'conversation.chooseDevices',
-      'voice.deleteCustomVoice',
       'conversation.getSettings',
       'conversation.hangUp',
       'conversation.listDevices',
+      'conversation.setInstructions',
+      'conversation.setOptions',
+      'voice.deleteCustomVoice',
       'voice.listVoices',
       'voice.saveCustomVoice',
-      'conversation.setOptions',
-      'conversation.setInstructions',
       'voice.setVoice',
     ]);
   });
