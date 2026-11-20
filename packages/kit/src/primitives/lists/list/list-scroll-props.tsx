@@ -20,15 +20,14 @@ function scrollEvents<Item>(
     onEndReachedThreshold: props.onEndReachedThreshold,
     contentInsetAdjustmentBehavior:
       props.contentInsetAdjustmentBehavior ?? 'automatic',
-    estimatedItemSize: props.estimatedItemSize,
     keyExtractor: props.keyExtractor,
     getItemType: props.getItemType,
   };
 }
 
-function testProps(
-  testID?: string,
-): ReturnType<typeof listTestIdProps> | Record<never, never> {
+type TestProps = ReturnType<typeof listTestIdProps> | Record<never, never>;
+
+function testProps(testID?: string): TestProps {
   return testID ? listTestIdProps(testID) : {};
 }
 
@@ -52,6 +51,10 @@ function streamProps<Item>(
     onStartReached: props.onStartReached,
     onStartReachedThreshold: props.onStartReachedThreshold,
     drawDistance: props.drawDistance,
+    estimatedItemSize: props.estimatedItemSize,
+    getFixedItemSize: props.getFixedItemSize,
+    viewabilityConfig: props.viewabilityConfig,
+    decelerationRate: props.decelerationRate,
   };
 }
 
@@ -60,6 +63,7 @@ function anchorProps<Item>(
   props: ListProps<Item>,
 ): Partial<ScrollFadeListProps<Item>> {
   return {
+    renderScrollComponent: props.renderScrollComponent,
     initialScrollIndex: props.initialScrollIndex,
     initialScrollAtEnd: props.initialScrollAtEnd,
     alignItemsAtEnd: props.alignItemsAtEnd,

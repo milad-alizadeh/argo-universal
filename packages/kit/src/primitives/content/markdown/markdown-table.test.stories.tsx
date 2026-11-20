@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
+import { useState } from 'react';
 import { expect, waitFor } from 'storybook/test';
 import { settleLayout } from '#mocks/story-layout';
+import { Button } from '#primitives/actions/button';
 import { canPointAt } from '../../../../mocks/point-hit';
 import { Markdown } from './index';
 
@@ -117,5 +120,27 @@ export const ShortHeadersAreNeverCut: Story = {
     await waitFor(() =>
       expect(headers.flatMap((header) => truncatedTexts(header))).toEqual([]),
     );
+  },
+};
+
+function StreamingTable(): React.JSX.Element {
+  const [value, setValue] = useState('One');
+  const text = `| Name | Value |\n| --- | --- |\n| [Details](https://example.com) ${value}`;
+
+  return (
+    <>
+      <Button label="Append text" onPress={() => setValue('One more')} />
+      <Markdown text={text} streaming />
+    </>
+  );
+}
+
+export const GrowingCellKeepsItsRow: Story = {
+  render: () => <StreamingTable />,
+  play: async ({ canvas, userEvent }) => {
+    const link = await canvas.findByRole('link', { name: 'Details' });
+    await userEvent.click(canvas.getByRole('button', { name: 'Append text' }));
+    await canvas.findByText(/One more/);
+    await expect(canvas.getByRole('link', { name: 'Details' })).toBe(link);
   },
 };

@@ -30,19 +30,18 @@ export interface Start {
   growing: boolean;
 }
 
-const restingTrail = (text: string, growing: boolean): Trail | null =>
-  growing ? settledTrail(text) : null;
-
 /*
  * The trail a block starts with. One that starts in a Markdown already streaming is new, whether it
  * is still being written or the chunk that brought it also finished it. One drawn with its Markdown
  * was there to read: it fades nothing, and is followed only while it is written.
  */
 export function firstTrail(
-  text: string,
+  readText: () => string,
   { began, growing }: Start,
 ): Trail | null {
-  return began ? arrivingTrail(text) : restingTrail(text, growing);
+  if (began) return arrivingTrail(readText());
+
+  return growing ? settledTrail(readText()) : null;
 }
 
 // Keep a word and its ligatures or joined glyphs in the run that already draws it.

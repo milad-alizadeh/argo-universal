@@ -361,11 +361,7 @@ export const RestoresOlderReadingAfterRemount: Story = {
         ).toBeGreaterThan(0),
       scrollAwayWait,
     );
-    await waitFor(
-      () => expect(restored.scrollTop).toBeGreaterThan(250),
-      scrollAwayWait,
-    );
-    await expect(restored.scrollTop).toBeLessThan(350);
+    // Earlier rows can remeasure on remount. The reader keeps the same text at the same height in the viewport.
     await waitFor(async () => {
       const after = await markSettledMiddleOfView(restored);
       await expect(after.element.textContent).toBe(text);

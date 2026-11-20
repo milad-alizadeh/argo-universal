@@ -9,6 +9,7 @@ export type ChildrenOptions = Omit<
   | 'getSectionKey'
   | 'keyExtractor'
   | 'getItemType'
+  | 'getFixedItemSize'
   | 'maintainVisibleContentPosition'
 >;
 
@@ -19,6 +20,7 @@ export function childrenOptions<Item>({
   getSelectionId: _selection,
   keyExtractor: _key,
   getItemType: _type,
+  getFixedItemSize: _size,
   maintainVisibleContentPosition: _position,
   ...props
 }: ListProps<Item>): ChildrenOptions {

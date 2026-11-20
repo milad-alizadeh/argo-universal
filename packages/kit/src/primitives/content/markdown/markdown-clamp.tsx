@@ -25,7 +25,7 @@ function LineClamp({
   children,
 }: ClampProps): ReactElement {
   const clamp = useWholeLineClamp(lines);
-  const overflowing = clamp.clipHeight !== undefined;
+  const { overflowing } = clamp;
 
   useEffect(
     () => onOverflowChange?.(overflowing),

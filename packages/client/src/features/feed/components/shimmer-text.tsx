@@ -1,8 +1,10 @@
 import { Text } from '@repo/kit/primitives/content/text';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
+import { useContext } from 'react';
 import { Platform } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
+import { FeedRowVisible } from './feed-row-visibility';
 import { piecesOf, shimmered, useBandSweep } from './shimmer-sweep';
 
 interface ShimmerTextProps {
@@ -49,13 +51,13 @@ function SweptShimmer({
   emphasized,
 }: ShimmerProps): React.JSX.Element {
   const reducedMotion = useReducedMotion();
-  const sweep = useBandSweep(reducedMotion, text.length);
+  const visible = useContext(FeedRowVisible);
+  const paused = reducedMotion || !visible;
+  const sweep = useBandSweep(paused, text.length);
 
   return (
     <Text numberOfLines={1} selectable={false} className={className}>
-      {reducedMotion
-        ? text
-        : shimmered({ pieces: piecesOf(text), sweep, emphasized })}
+      {paused ? text : shimmered({ pieces: piecesOf(text), sweep, emphasized })}
     </Text>
   );
 }

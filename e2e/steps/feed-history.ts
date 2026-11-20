@@ -1,4 +1,8 @@
 import type { Page } from '@playwright/test';
+import {
+  continuedHistoryPrompt,
+  continuedHistoryReply,
+} from '@repo/mocks/agent/feed-history-scenario';
 import { z } from 'zod';
 import { expect } from '../fixtures';
 import { readAgent } from './agents';
@@ -54,15 +58,13 @@ async function historyIsStored(page: Page, httpUrl: string): Promise<boolean> {
 function endsTurn(row: FeedRow | undefined, turnId: string): boolean {
   if (!row) return false;
 
-  return row.turnId === turnId && hasText(row, lastMessage);
+  return row.turnId === turnId && hasText(row, continuedHistoryReply);
 }
 
 async function nextTurnIsStored(page: Page, httpUrl: string): Promise<boolean> {
   const { rows } = await storedPage(page, httpUrl);
 
-  const prompt = rows.find((row) =>
-    hasText(row, 'Continue after paging history'),
-  );
+  const prompt = rows.find((row) => hasText(row, continuedHistoryPrompt));
 
   const turnId = prompt?.turnId;
 
@@ -128,7 +130,7 @@ Then(
       .poll(() => nextTurnIsStored(page, server.httpUrl), agentWork)
       .toBe(true);
     await expect(
-      feed.getByText(lastMessage, { exact: true }).last(),
+      feed.getByText(continuedHistoryReply, { exact: true }),
     ).toBeInViewport();
   },
 );

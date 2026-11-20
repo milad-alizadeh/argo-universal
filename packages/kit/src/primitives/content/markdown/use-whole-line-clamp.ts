@@ -46,8 +46,9 @@ export interface WholeLineClamp {
   leafRegistry: ClampLeafRegistry;
   content: React.RefObject<ContentView | null>;
   onContentLayout: (event: LayoutChangeEvent) => void;
-  // Where to cut the markdown, or undefined when it fits within the lines.
+  // Bound the first layout, then refine the cut to a whole line after measuring the content.
   clipHeight: number | undefined;
+  overflowing: boolean;
 }
 
 // The limit, when content of this height runs past it.
@@ -58,7 +59,10 @@ function passedLimit(
   return limit !== undefined && height > limit + 1 ? limit : undefined;
 }
 
-type ClipOnLayout = Pick<WholeLineClamp, 'onContentLayout' | 'clipHeight'>;
+type ClipOnLayout = Pick<
+  WholeLineClamp,
+  'onContentLayout' | 'clipHeight' | 'overflowing'
+>;
 
 type Leaves = React.RefObject<Set<ClampLeaf>>;
 
@@ -102,7 +106,7 @@ function useMeasuredCut(
     [passed, height, leaves, content],
   );
 
-  return cut;
+  return passed === undefined ? undefined : cut;
 }
 
 function useLayoutHeight(): [number, (event: LayoutChangeEvent) => void] {
@@ -115,7 +119,7 @@ function useLayoutHeight(): [number, (event: LayoutChangeEvent) => void] {
   return [height, onLayout];
 }
 
-// Content that runs past the limit draws in full until its cut is measured, then clips to it in one step.
+// A recycled prompt must not contribute its full expanded height while the line measurements arrive.
 function useClipOnLayout(
   limit: number | undefined,
   leaves: Leaves,
@@ -125,9 +129,12 @@ function useClipOnLayout(
   const passed = passedLimit(height, limit);
   const cut = useMeasuredCut(passed, { leaves, content, height });
 
+  const initialBound = height === 0 ? limit : passed;
+
   return {
     onContentLayout,
-    clipHeight: passed === undefined ? undefined : cut,
+    clipHeight: cut ?? initialBound,
+    overflowing: cut !== undefined,
   };
 }
 

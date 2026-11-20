@@ -1,6 +1,7 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, waitFor } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
+import { FeedRowVisible } from '../feed-row-visibility';
 import { LiveHeader } from './live-header';
 import {
   liveHeaderElapsed,
@@ -104,5 +105,28 @@ export const NoTurnHidesTime: Story = {
     await expect(canvas.getByRole('status')).toHaveAccessibleName(
       requestHeader.text,
     );
+  },
+};
+
+export const BufferedWorkingHeader: Story = {
+  args: { liveHeader: workingHeader },
+  render: (args) => (
+    <>
+      <FeedRowVisible value={false}>
+        <LiveHeader {...args} />
+      </FeedRowVisible>
+      <FeedRowVisible value>
+        <LiveHeader {...args} />
+      </FeedRowVisible>
+    </>
+  ),
+  play: async ({ canvas }) => {
+    const [buffered, visible] = canvas.getAllByRole('status');
+
+    if (!buffered || !visible) throw new Error('Missing Working header.');
+    await expect(buffered).toHaveTextContent(workingHeader.text);
+    await expect(visible).toHaveTextContent(workingHeader.text);
+    await expect(within(buffered).queryByRole('img')).toBeNull();
+    await expect(within(visible).getByRole('img')).toBeVisible();
   },
 };

@@ -1,15 +1,28 @@
 import { useCallback } from 'react';
-import { fadeEdgesFor, scrollFadeRamp } from './scroll-fade-options';
+import {
+  type ScrollFadeEdgeName,
+  type ScrollFadeOptions,
+  edgeMode,
+  fadeEdgesFor,
+  scrollFadeRamp,
+} from './scroll-fade-options';
 
-function distances(
+interface TrackedEdges {
+  start?: ScrollFadeEdgeName;
+  end?: ScrollFadeEdgeName;
+}
+
+const scrollOffset = (scroll: HTMLElement, horizontal: boolean): number =>
+  horizontal ? Math.abs(scroll.scrollLeft) : scroll.scrollTop;
+
+function endDistance(
   scroll: HTMLElement,
   horizontal: boolean,
-): readonly number[] {
-  const [offset, content, viewport] = horizontal
-    ? [Math.abs(scroll.scrollLeft), scroll.scrollWidth, scroll.clientWidth]
-    : [scroll.scrollTop, scroll.scrollHeight, scroll.clientHeight];
-
-  return [offset, content - viewport - offset];
+  offset: number,
+): number {
+  return horizontal
+    ? scroll.scrollWidth - scroll.clientWidth - offset
+    : scroll.scrollHeight - scroll.clientHeight - offset;
 }
 
 // Each edge's progress as last written, so a scroll that leaves it unchanged writes nothing.
@@ -22,8 +35,11 @@ const progressAt = (distance: number): string =>
 function write(
   scroll: HTMLElement,
   written: Written,
-  [name, progress]: readonly [string, string],
+  [edge, distance]: readonly [ScrollFadeEdgeName, number],
 ): void {
+  const name = `--scroll-fade-${edge}-progress`;
+  const progress = progressAt(distance);
+
   if (written.get(name) === progress) return;
 
   written.set(name, progress);
@@ -33,16 +49,15 @@ function write(
 // Away from both ends both edges stay at 1, so a scroll there costs no restyle.
 function updateFade(
   scroll: HTMLElement,
-  horizontal: boolean,
   written: Written,
+  { horizontal, start, end }: TrackOptions,
 ): void {
-  const edges = fadeEdgesFor(horizontal);
+  const offset = scrollOffset(scroll, horizontal);
 
-  for (const [index, distance] of distances(scroll, horizontal).entries())
-    write(scroll, written, [
-      `--scroll-fade-${edges[index]}-progress`,
-      progressAt(distance),
-    ]);
+  if (start) write(scroll, written, [start, offset]);
+
+  if (end)
+    write(scroll, written, [end, endDistance(scroll, horizontal, offset)]);
 }
 
 function observeChildren(
@@ -61,21 +76,27 @@ function observeChildren(
 function watchContent(
   scroll: HTMLElement,
   update: () => void,
+  virtualized: boolean,
 ): MutationObserver {
   const mutations = new MutationObserver(update);
+  // Replacing rows inside a virtualized list leaves its size to the ResizeObserver.
   mutations.observe(scroll, {
     childList: true,
-    characterData: true,
-    subtree: true,
+    characterData: !virtualized,
+    subtree: !virtualized,
   });
 
   return mutations;
 }
 
-function observeSize(scroll: HTMLElement, update: () => void): () => void {
+function observeSize(
+  scroll: HTMLElement,
+  update: () => void,
+  virtualized: boolean,
+): () => void {
   const resize = new ResizeObserver(update);
   const observe = (): void => observeChildren(scroll, resize, update);
-  const mutations = watchContent(scroll, observe);
+  const mutations = watchContent(scroll, observe, virtualized);
   observe();
 
   return (): void => {
@@ -84,30 +105,83 @@ function observeSize(scroll: HTMLElement, update: () => void): () => void {
   };
 }
 
+interface TrackOptions extends TrackedEdges {
+  horizontal: boolean;
+  virtualized: boolean;
+}
+
+// The start depends only on the scroll offset. The end also depends on content layout.
+function observeTrackedSize(
+  scroll: HTMLElement,
+  update: () => void,
+  { end, virtualized }: TrackOptions,
+): (() => void) | undefined {
+  if (end) return observeSize(scroll, update, virtualized);
+
+  update();
+
+  return undefined;
+}
+
 // Pixel distances keep growing content from restarting a scroll timeline's mask animation.
-function trackScrollFade(scroll: HTMLElement, horizontal: boolean): () => void {
+function trackScrollFade(
+  scroll: HTMLElement,
+  options: TrackOptions,
+): () => void {
   const written: Written = new Map();
-  const update = (): void => updateFade(scroll, horizontal, written);
-  const stopObserving = observeSize(scroll, update);
+  const update = (): void => updateFade(scroll, written, options);
+  const stopObserving = observeTrackedSize(scroll, update, options);
+
   scroll.addEventListener('scroll', update, { passive: true });
 
   return (): void => {
-    stopObserving();
+    stopObserving?.();
     scroll.removeEventListener('scroll', update);
   };
 }
 
 type FadeRef = (frame: HTMLDivElement | null) => (() => void) | undefined;
 
-export function useTrackScrollFade(horizontal: boolean): FadeRef {
-  return useCallback(
-    (frame: HTMLDivElement | null): (() => void) | undefined => {
-      const scroll = frame?.firstElementChild;
+interface FadeTrackingOptions extends Pick<ScrollFadeOptions, 'edges'> {
+  horizontal?: boolean;
+  virtualized?: boolean;
+}
 
-      return scroll instanceof HTMLElement
-        ? trackScrollFade(scroll, horizontal)
-        : undefined;
-    },
-    [horizontal],
+const trackedEdge = (
+  edge: ScrollFadeEdgeName,
+  edges: ScrollFadeOptions['edges'],
+): ScrollFadeEdgeName | undefined =>
+  edgeMode(edge, edges) === 'scrolled' ? edge : undefined;
+
+const canTrack = (
+  scroll: Element | null | undefined,
+  { start, end }: TrackedEdges,
+): scroll is HTMLElement =>
+  scroll instanceof HTMLElement && Boolean(start ?? end);
+
+function attachFade(
+  frame: HTMLDivElement | null,
+  options: TrackOptions,
+): (() => void) | undefined {
+  const scroll = frame?.firstElementChild;
+
+  return canTrack(scroll, options)
+    ? trackScrollFade(scroll, options)
+    : undefined;
+}
+
+export function useTrackScrollFade({
+  edges,
+  horizontal = false,
+  virtualized = false,
+}: FadeTrackingOptions): FadeRef {
+  const [startEdge, endEdge] = fadeEdgesFor(horizontal);
+  const start = trackedEdge(startEdge, edges);
+  const end = trackedEdge(endEdge, edges);
+
+  return useCallback(
+    (frame: HTMLDivElement | null) =>
+      attachFade(frame, { horizontal, virtualized, start, end }),
+    [horizontal, virtualized, start, end],
   );
 }
