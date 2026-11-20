@@ -11,7 +11,6 @@ import {
 import { attached, tap as tapAutomation } from './auto-merge-fixture';
 import { sha } from './github-fixture';
 import type { Journey } from './journey-fixture';
-import { promptsSent } from './journey-prompts-fixture';
 import { changePull } from './journey-watch-fixture';
 
 const slow = 120_000;
