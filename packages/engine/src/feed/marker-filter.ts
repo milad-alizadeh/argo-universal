@@ -3,7 +3,7 @@ import {
   firstText,
   VoiceMarkerStream,
   withoutVoiceMarkers,
-} from './voice-markers';
+} from './conversation-markers';
 
 const firstTextField = 'content.0.text';
 

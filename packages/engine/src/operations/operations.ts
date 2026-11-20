@@ -14,7 +14,7 @@ import type { AppNavigation } from '../app-navigation';
 import type { FeedDeps } from '../feed';
 import type { PluginsRouterDeps } from '../plugins';
 import type { Sessions } from '../sessions';
-import type { VoiceCallsPort } from '../voice';
+import type { VoiceCallsPort } from '../conversation';
 import {
   discoveryCall,
   listedOutput,

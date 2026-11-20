@@ -1,6 +1,6 @@
 import type { Database } from '@repo/db';
 import type { AnyActorRef } from 'xstate';
-import { VoiceSettingsStore } from '../voice';
+import { VoiceSettingsStore } from '../conversation';
 import type { HttpServerOptions } from './http-server';
 import { requireRegistry } from './registry-input';
 import {
@@ -9,7 +9,7 @@ import {
   requireOpenSessions,
   type EngineContext,
 } from './setup.machine';
-import { requireVoiceCalls } from './voice-input';
+import { requireVoiceCalls } from './conversation-input';
 
 type ServerSource = {
   context: Pick<

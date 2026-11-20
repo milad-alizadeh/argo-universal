@@ -32,7 +32,7 @@ import {
   voiceCallMachine,
   voiceCallSystemId,
   type VoiceProvider,
-} from '../voice';
+} from '../conversation';
 import {
   closeAgentResources,
   type CloseAcpResourcesInput,

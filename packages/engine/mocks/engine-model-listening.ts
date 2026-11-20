@@ -2,7 +2,7 @@ import { expect } from 'vitest';
 import type { HttpServerOptions } from '../src/engine/http-server';
 import { SessionTokens } from '../src/operations';
 import { HookPort } from '../src/plugins';
-import { VoiceCalls } from '../src/voice';
+import { VoiceCalls } from '../src/conversation';
 import { input } from './engine-model-fixtures';
 import * as model from './engine-model-state';
 

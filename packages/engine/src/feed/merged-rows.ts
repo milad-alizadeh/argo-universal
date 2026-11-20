@@ -7,7 +7,7 @@ import {
   type FeedRowWrite,
 } from './feed-row';
 import { readQueuedFeed } from './feed-storage';
-import { withoutVoiceMarkers } from './voice-markers';
+import { withoutVoiceMarkers } from './conversation-markers';
 
 /*
  * Rows as their readers see them: Agent messages without Voice marks (ADR-0064). The Feed restores its own rows through

@@ -10,7 +10,7 @@ import {
   startDelegated,
   type DelegationJourney,
 } from '#mocks/session-delegation';
-import { steeringScenario } from '#mocks/voice-agent';
+import { steeringScenario } from '#mocks/conversation-agent';
 
 const held = 'Keep working';
 

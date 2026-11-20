@@ -7,7 +7,7 @@ import Animated from 'react-native-reanimated';
 import {
   type CallControlsMotion,
   useCallControlsMotion,
-} from './composer-call-controls-motion';
+} from './composer-conversation-controls-motion';
 import type { ComposerVoice, ComposerVoiceMutes } from './composer-types';
 
 export const microphoneButtonId = 'composer-microphone';

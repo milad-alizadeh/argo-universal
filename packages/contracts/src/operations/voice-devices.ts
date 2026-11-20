@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { VoiceDeviceChange, VoiceDeviceList } from '../voice';
+import { VoiceDeviceChange, VoiceDeviceList } from '../conversation';
 import type { OperationDefinition } from './index';
 
 // The microphone and speaker of the App a Voice call uses (ADR-0064): the one carrying the call, else the one used last.

@@ -20,7 +20,7 @@ import {
   type SessionSources,
 } from '../sessions';
 import type { SystemDeps } from '../system';
-import { noVoiceCalls, type VoiceCallsPort } from '../voice';
+import { noVoiceCalls, type VoiceCallsPort } from '../conversation';
 import {
   createFeedSources,
   type FeedSources,

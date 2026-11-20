@@ -9,7 +9,7 @@ import {
   VoiceList,
   VoiceSettings,
   VoiceSettingsChange,
-} from '../voice';
+} from '../conversation';
 import type { OperationDefinition } from './index';
 
 // What the next Voice call speaks with and is told (ADR-0064): the App, Agents and the CLI read and change it.

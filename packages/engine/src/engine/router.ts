@@ -12,7 +12,7 @@ import { createPluginsRouter } from '../plugins';
 import { mergeRouters, router, routerFactory } from '../rpc';
 import { createShellRouter, Sessions } from '../sessions';
 import { createSystemRouter } from '../system';
-import { createVoiceRouter, voiceSessions } from '../voice';
+import { createVoiceRouter, voiceSessions } from '../conversation';
 import type { AppRouterDeps } from './router-deps';
 
 // Each router takes only the slice of the Engine's dependencies its type names.

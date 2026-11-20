@@ -1,6 +1,6 @@
 import { useAttachmentDraft } from '#features/composer';
 import { useConnectionState } from '#features/connection';
-import { useNewSessionVoice } from '#features/voice';
+import { useNewSessionVoice } from '#features/conversation';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import type { NewSessionWiring } from './new-session-wiring';
 import { type NewSessionData, useNewSessionData } from './use-new-session-data';

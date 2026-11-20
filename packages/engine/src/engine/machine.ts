@@ -2,7 +2,7 @@ import { type Database } from '@repo/db';
 import { assign } from 'xstate';
 import { openSessionsId } from '../sessions';
 import { databaseWriterId } from '../storage';
-import { voiceCallSystemId } from '../voice';
+import { voiceCallSystemId } from '../conversation';
 import type { OpenDatabaseInput } from './engine-database';
 import { type HttpServer } from './http-server';
 import type { EngineMessage } from './ipc';

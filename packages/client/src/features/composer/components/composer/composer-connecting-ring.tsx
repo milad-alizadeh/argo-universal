@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
-import { ringEntering, ringExiting } from './composer-call-motion';
+import { ringEntering, ringExiting } from './composer-conversation-motion';
 
 export const connectingRingId = 'composer-connecting';
 

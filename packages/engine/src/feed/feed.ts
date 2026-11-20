@@ -5,7 +5,7 @@ import type { Observer, Subscription } from 'xstate';
 import { type FeedRowSources } from './feed-catch-up';
 import { readWrittenRow } from './feed-row';
 import { readQueuedFeedRow } from './feed-storage';
-import { withoutVoiceMarkers } from './voice-markers';
+import { withoutVoiceMarkers } from './conversation-markers';
 
 export { streamFeed } from './feed-stream';
 

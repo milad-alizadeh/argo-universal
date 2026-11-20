@@ -24,8 +24,8 @@ import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import { usageLimitsSession } from './session-detail-view-usage.mocks';
-import { VoiceCallRehearsal } from './session-detail-view-voice-call.mocks';
-import { voiceCallSession } from './session-detail-view-voice.mocks';
+import { VoiceCallRehearsal } from './session-detail-view-conversation.mocks';
+import { voiceCallSession } from './session-detail-view-conversation.mocks';
 import {
   emptySession,
   idleSession,

@@ -11,7 +11,7 @@ import {
   VoiceStartInput,
   VoiceStartOutput,
   VoiceStatus,
-} from '../voice';
+} from '../conversation';
 import type { OperationDefinition } from './index';
 
 // The Voice call's Operations (ADR-0064): the App starts, ends, reads and previews calls; an Agent only hangs up its own.

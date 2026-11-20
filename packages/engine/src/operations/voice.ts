@@ -1,5 +1,5 @@
 import type { Sessions } from '../sessions';
-import type { VoiceCallsPort } from '../voice';
+import type { VoiceCallsPort } from '../conversation';
 import type { OperationImplementations } from './operations';
 
 type VoiceImplementations = Pick<

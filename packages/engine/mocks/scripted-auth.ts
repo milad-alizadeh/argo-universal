@@ -1,4 +1,4 @@
-import type { CodexAuth, CodexReading } from '../src/voice/gpt-live/codex-auth';
+import type { CodexAuth, CodexReading } from '../src/conversation/gpt-live/codex-auth';
 
 // A Codex that hands out these readings in turn, and counts how often it was asked.
 export class ScriptedAuth implements CodexAuth {

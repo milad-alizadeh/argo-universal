@@ -1,11 +1,11 @@
-import type { CodexReading } from '../src/voice/gpt-live/codex-auth';
-import type { GptLiveCall } from '../src/voice/gpt-live/gpt-live-call';
-import { createGptLiveProvider } from '../src/voice/gpt-live/gpt-live-provider';
+import type { CodexReading } from '../src/conversation/gpt-live/codex-auth';
+import type { GptLiveCall } from '../src/conversation/gpt-live/gpt-live-call';
+import { createGptLiveProvider } from '../src/conversation/gpt-live/gpt-live-provider';
 import type {
   VoiceProviderCall,
   VoiceProviderEvent,
   VoiceStartRequest,
-} from '../src/voice/provider';
+} from '../src/conversation/provider';
 import {
   startFakeEndpoint,
   type FakeGptLiveEndpoint,

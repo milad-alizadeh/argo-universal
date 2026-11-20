@@ -10,7 +10,7 @@ import {
   pullRequestMocks,
   withPullRequests,
 } from './session-detail-view-pull-request.mocks';
-import { voiceCallSession } from './session-detail-view-voice.mocks';
+import { voiceCallSession } from './session-detail-view-conversation.mocks';
 import { idleSession } from './session-detail-view.mocks';
 
 const meta = {

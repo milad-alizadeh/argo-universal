@@ -8,8 +8,8 @@ import {
   ComposerModeControl,
 } from '../composer-configuration/composer-configuration';
 import { ComposerStatusControls } from '../composer-status/composer-status';
-import { useCallGlyphMorph } from './composer-call-glyph-motion';
-import { ComposerCallPointer } from './composer-call-pointer';
+import { useCallGlyphMorph } from './composer-conversation-glyph-motion';
+import { ComposerCallPointer } from './composer-conversation-pointer';
 import { ConnectingRing } from './composer-connecting-ring';
 import { ComposerMuteButtons } from './composer-mute-buttons';
 import { sendButtonAction } from './composer-primary-action';

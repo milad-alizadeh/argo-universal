@@ -4,7 +4,7 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
 import { recordingSource, writeHookPlugins } from '#mocks/hook-plugins';
 import { sessionSources } from '#mocks/session-sources';
-import { steeringScenario, type Scenario } from '#mocks/voice-agent';
+import { steeringScenario, type Scenario } from '#mocks/conversation-agent';
 import { OpenSessions } from '../open-sessions';
 import { sendPrompt, type SentPrompt } from '.';
 

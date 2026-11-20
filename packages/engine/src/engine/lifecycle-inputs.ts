@@ -18,7 +18,7 @@ import {
   defaultVoiceProvider,
   sessionBriefing,
   type VoiceCallInput,
-} from '../voice';
+} from '../conversation';
 import type { CloseAcpResourcesInput } from './agent-cleanup';
 import type { RecoveryInput } from './engine-recovery';
 import { requireRegistry } from './registry-input';
