@@ -1,5 +1,5 @@
 // A sound being measured: how loud it is now, from 0 to 1, and how to let go of it.
-export interface MeasuredSound {
+interface MeasuredSound {
   level: () => number;
   stop: () => void;
 }
