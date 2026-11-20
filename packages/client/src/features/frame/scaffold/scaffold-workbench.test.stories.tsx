@@ -16,6 +16,8 @@ type Story = StoryObj<typeof meta>;
 
 const workbenchId = 'desktop-workbench';
 
+const overviewLabel = 'Workbench overview';
+
 const toggleLabel = 'Toggle Workbench';
 
 const buttonRole = 'button';
@@ -157,12 +159,15 @@ export const HiddenIntentSurvivesNarrowingAndWidening: Story = {
 };
 
 export const CardOpensTheInspectorWithoutClosingTheOverview: Story = {
+  // Leave enough gutter for the Workbench beside the open Inspector.
+  beforeEach: (): Promise<void> => settleLayout(2560),
   play: async ({ canvas, userEvent }) => {
-    await settleLayout(1920);
     await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
     await userEvent.click(canvas.getByRole(buttonRole, { name: 'Changes' }));
     await expect(await canvas.findByText('Branch files')).toBeVisible();
-    await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
+    await expect(
+      canvas.getByRole('region', { name: overviewLabel }),
+    ).toBeVisible();
   },
 };
 
@@ -173,7 +178,7 @@ export const CardsGlassSeesTheContentBehindTheWorkbench: Story = {
     await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
     const frame = canvas.getByTestId('wide-frame');
     const masked: string[] = [];
-    const scroll = canvas.getByRole('region', { name: 'Workbench overview' });
+    const scroll = canvas.getByRole('region', { name: overviewLabel });
 
     for (let node: Element | null = scroll; node && node !== frame;)
       node = recordMask(node, masked);
@@ -194,7 +199,7 @@ export const OverflowCardsKeepTheirOwnScrollTarget: Story = {
   beforeEach: (): Promise<void> => settleLayout(1920),
   play: async ({ canvas }) => {
     const scroll = await canvas.findByRole('region', {
-      name: 'Workbench overview',
+      name: overviewLabel,
     });
 
     const card = canvas.getByRole(buttonRole, { name: 'Section 1' });
