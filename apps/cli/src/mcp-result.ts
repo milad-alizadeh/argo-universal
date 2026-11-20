@@ -18,7 +18,9 @@ const capturedAnswer = z.looseObject({
 });
 
 // The picture a captured screen holds, when the answer is one.
-function capturedImage(value: Answer): { data: string; mimeType: string } | null {
+function capturedImage(
+  value: Answer,
+): { data: string; mimeType: string } | null {
   const answer = capturedAnswer.safeParse(value);
 
   return answer.success ? answer.data.result.image : null;

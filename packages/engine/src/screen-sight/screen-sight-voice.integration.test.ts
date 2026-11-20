@@ -139,7 +139,10 @@ it('says no App is reachable, and sends nothing', async () => {
 it('sends nothing when the App cannot capture', async () => {
   const { work } = await callWith({
     app: {
-      answer: () => ({ status: 'not_available', reason: 'No picture came back.' }),
+      answer: () => ({
+        status: 'not_available',
+        reason: 'No picture came back.',
+      }),
     },
   });
 
