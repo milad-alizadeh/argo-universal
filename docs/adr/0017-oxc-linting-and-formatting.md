@@ -16,6 +16,11 @@ Where the pack could not run as written:
 - `unicorn/no-for-each`, `unicorn/no-for-loop` and `unicorn/prefer-switch` run from eslint-plugin-unicorn, and `line-comment-position` and `multiline-comment-style` from @stylistic/eslint-plugin, as JS plugins. The sonarjs rules run the same way, without the type information a few of them read under ESLint.
 - `import/namespace` and `jsx-a11y/prefer-tag-over-role` are off: oxlint cannot follow the re-exports of `@rn-primitives`, and React Native has no semantic tags.
 
+Where Argo departs from the pack on purpose (owner, 2026-11-20):
+
+- The caps are 50 lines per function and 300 per file, and `complexity` is off; `sonarjs/cognitive-complexity` measures the same thing in a way that reads closer to the code (ADR-0016).
+- One rule per check: native `no-unused-vars` replaces `sonarjs/no-unused-vars` and `sonarjs/unused-import`; `no-warning-comments`, read anywhere in a comment, replaces `sonarjs/todo-tag`, `sonarjs/fixme-tag` and `tools/check-comments.mts`'s marker rule; `unicorn/no-nested-ternary` replaces `sonarjs/no-nested-conditional`; `no-param-reassign` replaces `sonarjs/no-parameter-reassignment`; `vitest/no-focused-tests` and `vitest/no-disabled-tests` replace `sonarjs/no-exclusive-tests` and `sonarjs/no-skipped-tests`; and the native rules of the same name replace `sonarjs/no-empty-character-class`, `no-useless-catch`, `no-array-delete`, `no-delete-var`, `no-invalid-regexp`, `no-misleading-character-class` and `no-control-regex`.
+
 CSS and JSON have no lint checks. The exact pins are oxlint 1.87.0, oxlint-tsgolint 7.0.2003, @oxlint/plugins 1.87.0, oxfmt 0.72.0, eslint-plugin-sonarjs 4.2.2, eslint-plugin-unicorn 77.0.0, @stylistic/eslint-plugin 5.10.0 and eslint-plugin-playwright 2.12.1. JS plugins are alpha and outside semver, and oxfmt is before 1.0, so an upgrade is its own pull request that shows the lint and format output does not change.
 
 ## Ownership moves

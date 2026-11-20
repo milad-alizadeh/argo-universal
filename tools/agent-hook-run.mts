@@ -15,11 +15,7 @@ import {
 const PATCH_FILE_LINE = /^\*\*\* (?:Add File|Update File|Move to): (.+)$/;
 
 // The next edit often adds the use, so after-edit leaves unused names to before-stop.
-const UNUSED_RULES = new Set([
-  'eslint(no-unused-vars)',
-  'sonarjs(no-unused-vars)',
-  'sonarjs(unused-import)',
-]);
+const UNUSED_RULES = new Set(['eslint(no-unused-vars)']);
 
 const hookInput = z.looseObject({
   cwd: z.string().optional(),

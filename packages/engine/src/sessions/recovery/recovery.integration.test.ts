@@ -1,5 +1,11 @@
-import { feedRow, session } from '@repo/db/schema';
-import { describe, expect, it } from 'vitest';
+import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { feedRow, session, blob, blobRef } from '@repo/db/schema';
+import { sql } from 'drizzle-orm';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { openTestDatabase } from '#mocks/database';
+import { storedFeedColumns } from '../../feed';
+import { recoverAfterRestart } from '../recovery';
 import { expectedTool } from './recovery-expect.test.mocks';
 import {
   runningTurnId,
@@ -10,6 +16,7 @@ import {
   settledCompletedToolId,
   settledRunningToolId,
   messageRow,
+  toolRow,
 } from './recovery-rows.test.mocks';
 import { seedInterruptedTurn } from './recovery-seed.test.mocks';
 import {
@@ -20,6 +27,7 @@ import {
   interruptEngine,
   readyRows,
   engineDatabase,
+  home,
 } from './recovery.test.mocks';
 
 describe('Engine restart recovery', (): void => {
@@ -139,4 +147,98 @@ describe('Engine restart recovery', (): void => {
     await startEngine();
     expect(rowsAtReady.at(-1)).toEqual(repaired);
   });
+
+  it('deletes blobs no prompt refers to once they are over a day old', async (): Promise<void> => {
+    const database = engineDatabase();
+    const blobsFolder = join(home, 'blobs');
+    mkdirSync(blobsFolder);
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+
+    for (const [id, createdAt] of [
+      ['old-unused', dayAgo - 60_000],
+      ['old-used', dayAgo - 60_000],
+      ['new-unused', Date.now()],
+    ] as const) {
+      writeFileSync(join(blobsFolder, id), id);
+      database
+        .insert(blob)
+        .values({ id, mime: 'image/png', bytes: 2, createdAt })
+        .run();
+    }
+
+    database
+      .insert(blobRef)
+      .values({ blobId: 'old-used', sessionId: 'session-1' })
+      .run();
+    await interruptEngine();
+    await startEngine();
+
+    expect(readdirSync(blobsFolder).sort()).toEqual(['new-unused', 'old-used']);
+  });
 });
+
+it.each(
+  (['open', 'settled'] as const).flatMap(
+    (
+      state,
+    ): [
+      {
+        state: 'open' | 'settled';
+        column: typeof feedRow.payload;
+        field: string;
+      },
+      {
+        state: 'open' | 'settled';
+        column: typeof feedRow.sourceRef;
+        field: string;
+      },
+    ] => [
+      { state, column: feedRow.payload, field: 'payload' },
+      { state, column: feedRow.sourceRef, field: 'source reference' },
+    ],
+  ),
+)(
+  'keeps recovery available with unreadable $field JSON on a $state row',
+  ({ state, column }): void => {
+    const { database, remove } = openTestDatabase();
+    onTestFinished(remove);
+
+    const reported = vi
+      .spyOn(console, 'error')
+      .mockImplementation((): void => {});
+
+    onTestFinished((): void => reported.mockRestore());
+    database
+      .insert(feedRow)
+      .values({
+        ...toolRow({
+          id: 'bad-json',
+          position: 0,
+          revision: 1,
+          status: 'in_progress',
+          state,
+        }),
+        sessionId: 'session-1',
+      })
+      .run();
+    database.run(
+      sql`update ${feedRow} set ${sql.identifier(column.name)} = 'broken-json' where ${feedRow.id} = 'bad-json'`,
+    );
+    expect((): void => recoverAfterRestart(database)).not.toThrow();
+    const repaired = database.select(storedFeedColumns).from(feedRow).get();
+    expect(repaired).toMatchObject({
+      id: 'bad-json',
+      state: 'settled',
+      revision: 1,
+    });
+    expect(repaired).toMatchObject(
+      column === feedRow.payload
+        ? { payload: 'broken-json' }
+        : { sourceRef: 'broken-json' },
+    );
+    expect(reported).toHaveBeenCalledWith(
+      'recovery: rejected Feed shape (session-1/bad-json) #1',
+      expect.anything(),
+    );
+  },
+);
