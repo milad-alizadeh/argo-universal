@@ -1,6 +1,7 @@
 import type { Database } from '@repo/db';
 import type { AcpResourceInput, RegistryActor } from '../agents';
 import type { AppNavigation } from '../app-navigation';
+import type { ConversationsPort } from '../conversation';
 import type { DeviceAdmission } from '../devices/admit-device';
 import type { OpenChannels } from '../devices/open-channels';
 import type { LocalNetworkAccess } from '../network-access';
@@ -16,7 +17,6 @@ import type { Keypair } from '../pairing/x25519';
 import type { HookPort, PluginServerOptions, Plugins } from '../plugins';
 import type { OpenSessionsActorRef } from '../sessions';
 import type { WriterActorRef } from '../storage';
-import type { VoiceCallsPort } from '../voice';
 import { announceServer } from './announce-server';
 import { createDoors, type Doors } from './doors';
 import { createHttpCaller, type HttpCaller } from './http-callers';
@@ -40,7 +40,7 @@ export interface HttpServerOptions extends PluginServerOptions {
   startedAt: string;
   database: Database;
   sessions: OpenSessionsActorRef;
-  voice?: VoiceCallsPort;
+  conversation?: ConversationsPort;
   databaseWriter: WriterActorRef;
   commandAdmission?: AbortController;
   acp?: AcpResourceInput;

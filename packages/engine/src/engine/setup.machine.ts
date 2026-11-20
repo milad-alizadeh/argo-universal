@@ -7,6 +7,11 @@ import {
   type InstallPorts,
   registryMachine,
 } from '../agents';
+import {
+  conversationMachine,
+  conversationSystemId,
+  type ConversationProvider,
+} from '../conversation';
 import { findMachineActor } from '../lib/machine-actor';
 import type { NotificationOptions } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
@@ -28,11 +33,6 @@ import {
   type WriterActorRef,
   writerMachine,
 } from '../storage';
-import {
-  voiceCallMachine,
-  voiceCallSystemId,
-  type VoiceProvider,
-} from '../voice';
 import {
   closeAgentResources,
   type CloseAcpResourcesInput,
@@ -94,11 +94,11 @@ export interface EngineInput extends Pick<
   fetchAgents?: FetchAgents;
   installationPorts?: InstallPorts;
   caffeinate?: Caffeinate;
-  // Where Voice calls run; development's fake when `ARGO_VOICE_PROVIDER=fake`, and none otherwise.
-  voiceProvider?: VoiceProvider | null;
+  // Where Conversations run; development's fake when `ARGO_CONVERSATION_PROVIDER=fake`, and none otherwise.
+  conversationProvider?: ConversationProvider | null;
   // How long an archived Session can be undone; five seconds unless a test says otherwise.
   archiveUndoMs?: number;
-  // How long a Voice call may pass without speech before it ends by itself; five minutes unless a test says otherwise.
+  // How long a Conversation may pass without speech before it ends by itself; five minutes unless a test says otherwise.
   voiceIdleMs?: number;
   notificationOptions?: NotificationOptions;
   // What an App lists this Server by; the computer's name unless a test says otherwise.
@@ -153,7 +153,7 @@ export const engineSetup = setup({
     registry: registryMachine,
     databaseWriter: writerMachine,
     sessions: openSessionsMachine,
-    voice: voiceCallMachine,
+    conversation: conversationMachine,
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
       async ({ input, signal }): Promise<HttpServer> => {
         const server = await startHttpServer(input);
@@ -177,10 +177,12 @@ export const engineSetup = setup({
     stopRegistry: sendTo('registry', { type: 'STOP' }),
     // The microphone is never left open behind a stopping Engine. Sent at once, not deferred as `sendTo` is, so the call ends as stopped before closing admission reads as its App going away.
     stopVoice: ({ system }): void =>
-      findMachineActor(system, voiceCallSystemId, voiceCallMachine)?.send({
-        type: 'call.end',
-        reason: 'engine-stopped',
-      }),
+      findMachineActor(system, conversationSystemId, conversationMachine)?.send(
+        {
+          type: 'call.end',
+          reason: 'engine-stopped',
+        },
+      ),
     closeCommandAdmission: ({ context }): void =>
       context.commandAdmission.abort(),
     sendToSupervisor: (_, message: EngineMessage): void => {

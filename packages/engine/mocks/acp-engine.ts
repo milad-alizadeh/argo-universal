@@ -30,7 +30,7 @@ type AcpScenario = ScriptedScenario & { autoExit?: boolean } & Partial<
       | 'operationWaitClock'
       | 'slashCommandsWaitMs'
       | 'argoToolsGraceMs'
-      | 'voiceProvider'
+      | 'conversationProvider'
       | 'voiceIdleMs'
       | 'archiveUndoMs'
     >
@@ -113,9 +113,10 @@ type Fixture = OpenedStorage & {
   agentId?: string;
 };
 
-// No Voice provider unless a test supplies one, whatever the shell's ARGO_VOICE_PROVIDER says.
-const voiceProviderOf = (scenario: AcpScenario): AcpScenario['voiceProvider'] =>
-  scenario.voiceProvider ?? null;
+// No Conversation provider unless a test supplies one, whatever the shell's ARGO_CONVERSATION_PROVIDER says.
+const conversationProviderOf = (
+  scenario: AcpScenario,
+): AcpScenario['conversationProvider'] => scenario.conversationProvider ?? null;
 
 // Turns keep the Mac awake through nothing unless a test supplies its own caffeinate.
 const caffeinateOf = (scenario: AcpScenario): AcpScenario['caffeinate'] =>
@@ -128,7 +129,7 @@ const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({
   operationWaitClock: scenario.operationWaitClock,
   slashCommandsWaitMs: scenario.slashCommandsWaitMs ?? 0,
   argoToolsGraceMs: scenario.argoToolsGraceMs ?? Number.POSITIVE_INFINITY,
-  voiceProvider: voiceProviderOf(scenario),
+  conversationProvider: conversationProviderOf(scenario),
   voiceIdleMs: scenario.voiceIdleMs,
   archiveUndoMs: scenario.archiveUndoMs,
 });

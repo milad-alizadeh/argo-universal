@@ -1,13 +1,13 @@
 import { QueuedPromptId } from '@repo/contracts';
 import type {
-  NonUserPromptSender,
+  SentPromptSender,
   QueuedPrompt,
   QueueCommand,
 } from '@repo/contracts';
 
 // An append may carry the sender of a Prompt that did not come from the user, such as a Plugin's.
 export type AppendCommand = Extract<QueueCommand, { action: 'append' }> & {
-  sender?: NonUserPromptSender;
+  sender?: SentPromptSender;
 };
 
 export const appendedPrompt = (

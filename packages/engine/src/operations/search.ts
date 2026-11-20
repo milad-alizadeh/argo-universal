@@ -7,12 +7,17 @@ import {
 import { isAppOnly } from './app-only';
 import { OperationIndex } from './operation-index';
 
-// Described once as the Engine loads, so an Operation whose schema cannot be described fails at startup, not on every listing.
-const described: readonly OperationDescription[] =
-  Object.values(operations).map(describeOperation);
+/*
+ * Described once as the Engine loads, so an Operation whose schema cannot be described fails at startup, not on every
+ * listing. Only an App runs the App-only ones, and an App does not list.
+ */
+const descriptions: readonly OperationDescription[] = Object.values(
+  operations,
+).flatMap((operation) => {
+  const description = describeOperation(operation);
 
-// Only an App runs the App-only ones, and an App does not list.
-const descriptions = described.filter(({ id }) => !isAppOnly(id));
+  return isAppOnly(operation.id) ? [] : [description];
+});
 
 // Indexed once, as they are described.
 const index = new OperationIndex(descriptions);

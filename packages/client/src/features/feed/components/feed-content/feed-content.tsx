@@ -80,7 +80,7 @@ function FeedNonTextContent({
 
 interface TextDrawing {
   streaming: boolean;
-  // Words a Voice call is still saying draw in the muted colour; nothing else about the text changes.
+  // Words a Conversation is still saying draw in the muted colour; nothing else about the text changes.
   tone?: 'muted';
 }
 

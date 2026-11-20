@@ -5,7 +5,7 @@ import { StubSession, ended, queue, taken } from './prompt-turn.test.mocks';
 const stillRunning = 'still running';
 
 // What the Prompt's Turn settled with, or `stillRunning` while it has not ended.
-const settled = (end: Promise<string | null>): Promise<string | null> =>
+const settled = <Value>(end: Promise<Value>): Promise<Value | string> =>
   Promise.race([
     end,
     new Promise<string>((resolve) =>
@@ -16,7 +16,7 @@ const settled = (end: Promise<string | null>): Promise<string | null> =>
 describe('a Prompt in a Turn', () => {
   it('ends with its Turn, and not while the Turn runs', async () => {
     const session = new StubSession();
-    const end = new PromptWatch(session).ended({ turnId: 't1' });
+    const end = new PromptWatch(session).follow({ turnId: 't1' }).ended;
 
     session.changeQueue(queue('other'));
     expect(await settled(end)).toBe(stillRunning);
@@ -28,7 +28,7 @@ describe('a Prompt in a Turn', () => {
 
   it("keeps running through another Turn's end", async () => {
     const session = new StubSession();
-    const end = new PromptWatch(session).ended({ turnId: 't1' });
+    const end = new PromptWatch(session).follow({ turnId: 't1' }).ended;
 
     session.report(ended('t0'));
     expect(await settled(end)).toBe(stillRunning);
@@ -42,7 +42,7 @@ describe('a Prompt in a Turn', () => {
     const watch = new PromptWatch(session);
 
     session.report(ended('t1'));
-    expect(await watch.ended({ turnId: 't1' })).toBe('t1');
+    expect(await watch.follow({ turnId: 't1' }).ended).toBe('t1');
     expect(session.watched).toBe(false);
   });
 });
@@ -50,7 +50,7 @@ describe('a Prompt in a Turn', () => {
 describe('a queued Prompt', () => {
   it('settles with no Turn when it leaves the queue without one', async () => {
     const session = new StubSession(queue('q1'));
-    const end = new PromptWatch(session).ended({ queuedId: 'q1' });
+    const end = new PromptWatch(session).follow({ queuedId: 'q1' }).ended;
 
     session.report(ended('t0'));
     expect(await settled(end)).toBe(stillRunning);
@@ -61,7 +61,7 @@ describe('a queued Prompt', () => {
 
   it('follows a steer into the running Turn and ends with it', async () => {
     const session = new StubSession(queue('q1'));
-    const end = new PromptWatch(session).ended({ queuedId: 'q1' });
+    const end = new PromptWatch(session).follow({ queuedId: 'q1' }).ended;
 
     session.report(taken('q1', 't0'), queue());
     expect(await settled(end)).toBe(stillRunning);
@@ -72,7 +72,7 @@ describe('a queued Prompt', () => {
 
   it('follows the Turn the queue starts for it and ends with it', async () => {
     const session = new StubSession(queue('q1'));
-    const end = new PromptWatch(session).ended({ queuedId: 'q1' });
+    const end = new PromptWatch(session).follow({ queuedId: 'q1' }).ended;
 
     session.report(taken('q1', 't1'), queue());
     expect(await settled(end)).toBe(stillRunning);
@@ -83,7 +83,7 @@ describe('a queued Prompt', () => {
 
   it("keeps waiting while another Prompt's Turn starts and it stays queued", async () => {
     const session = new StubSession(queue('q0', 'q1'));
-    const end = new PromptWatch(session).ended({ queuedId: 'q1' });
+    const end = new PromptWatch(session).follow({ queuedId: 'q1' }).ended;
 
     session.report(taken('q0', 't1'), queue('q1'));
     session.report(ended('t1'));
@@ -98,7 +98,7 @@ describe('a queued Prompt', () => {
     const watch = new PromptWatch(session);
 
     session.report(taken('q1', 't1'), queue());
-    const end = watch.ended({ queuedId: 'q1' });
+    const end = watch.follow({ queuedId: 'q1' }).ended;
     expect(await settled(end)).toBe(stillRunning);
 
     session.report(ended('t1'));
@@ -109,7 +109,7 @@ describe('a queued Prompt', () => {
 describe('a Session that closes first', () => {
   it('settles with the Turn it knew when the Session completes', async () => {
     const session = new StubSession();
-    const end = new PromptWatch(session).ended({ turnId: 't1' });
+    const end = new PromptWatch(session).follow({ turnId: 't1' }).ended;
 
     session.complete();
     expect(await end).toBe('t1');
@@ -117,7 +117,7 @@ describe('a Session that closes first', () => {
 
   it('settles, and never rejects, when the Session fails', async () => {
     const session = new StubSession(queue('q1'));
-    const end = new PromptWatch(session).ended({ queuedId: 'q1' });
+    const end = new PromptWatch(session).follow({ queuedId: 'q1' }).ended;
 
     session.fail();
     await expect(end).resolves.toBeNull();
@@ -128,5 +128,34 @@ describe('a Session that closes first', () => {
 
     new PromptWatch(session).stop();
     expect(session.watched).toBe(false);
+  });
+});
+
+describe('when a followed Prompt starts', () => {
+  it('has started already in a Turn', async () => {
+    const session = new StubSession();
+
+    expect(
+      await new PromptWatch(session).follow({ turnId: 't1' }).started,
+    ).toBe(true);
+  });
+
+  it('starts once a Turn takes it from the queue, not before', async () => {
+    const session = new StubSession(queue('q0', 'q1'));
+    const { started } = new PromptWatch(session).follow({ queuedId: 'q1' });
+
+    session.report(taken('q0', 't0'), queue('q1'));
+    expect(await settled(started)).toBe(stillRunning);
+
+    session.report(taken('q1', 't1'), queue());
+    expect(await started).toBe(true);
+  });
+
+  it('never starts when it leaves the queue without a Turn', async () => {
+    const session = new StubSession(queue('q1'));
+    const { started } = new PromptWatch(session).follow({ queuedId: 'q1' });
+
+    session.changeQueue(queue());
+    expect(await started).toBe(false);
   });
 });

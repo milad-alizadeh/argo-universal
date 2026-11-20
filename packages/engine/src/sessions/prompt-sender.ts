@@ -1,4 +1,4 @@
-import type { NonUserPromptSender, PromptSender } from '@repo/contracts';
+import type { SentPromptSender, PromptSender } from '@repo/contracts';
 
 // Who starts native work: the Session that started a new Session, and who sent its Prompt.
 export type SessionOrigin = {
@@ -9,6 +9,13 @@ export type SessionOrigin = {
 // A caller's origin, with a new Session's pre-allocated id and the signal that stops its admission.
 export type NativeStartRequest = SessionOrigin & {
   sessionId?: string;
+  signal?: AbortSignal;
+};
+
+// One Prompt on its way: who sends it, the id it takes, and the caller's budget, which also stops its admission.
+export type PromptSend<Sender extends PromptSender = PromptSender> = {
+  sender: Sender;
+  id: string;
   signal?: AbortSignal;
 };
 
@@ -23,7 +30,7 @@ export type NativeStart<Accepted> = {
 function sessionPromptSender(
   sessionId: string,
   title: string,
-): NonUserPromptSender {
+): SentPromptSender {
   return { type: 'session', sessionId, title: title.trim() || 'Session' };
 }
 
