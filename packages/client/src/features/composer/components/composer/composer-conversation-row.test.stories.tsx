@@ -48,13 +48,13 @@ const oneLine = async (canvas: Canvas): Promise<void> => {
 };
 
 // On a phone's call, Mode, the microphone's mute and End share Attach's line rather than wrapping under it.
-export const PhoneCallKeepsOneLine: Story = {
+export const PhoneConversationKeepsOneLine: Story = {
   args: conversationComposer,
   play: async ({ canvas }) => oneLine(canvas),
 };
 
 // The same with the band along the card's top edge.
-export const PhoneBandCallKeepsOneLine: Story = {
+export const PhoneBandConversationKeepsOneLine: Story = {
   args: bandListeningComposer,
   play: async ({ canvas }) => oneLine(canvas),
 };

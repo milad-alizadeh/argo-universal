@@ -73,7 +73,7 @@ export const CustomVoices: Story = {
 };
 
 // The Conversation row's popover: the person's voices with play and edit, a row to add one, then the provider's.
-export const ConversationPopover: Story = {
+export const VoicePopover: Story = {
   args: { voice: { status: 'loaded', settings: customVoices } },
   play: async (context) => {
     await openVoices(context);

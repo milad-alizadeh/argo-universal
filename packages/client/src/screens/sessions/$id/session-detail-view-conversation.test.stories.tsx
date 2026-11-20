@@ -91,7 +91,7 @@ async function startAndEnd(canvas: Canvas): Promise<void> {
   ).toBeInTheDocument();
 }
 
-export const BandComesAndGoesWithTheCall: Story = {
+export const BandComesAndGoesWithTheConversation: Story = {
   render: (): React.JSX.Element => <ConversationRehearsal />,
   play: ({ canvas }) => startAndEnd(canvas),
 };

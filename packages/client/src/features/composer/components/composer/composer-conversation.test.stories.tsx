@@ -87,7 +87,7 @@ export const Connecting: Story = {
 };
 
 // Text in the draft makes the button Send, even on a call.
-export const SendDuringCall: Story = {
+export const SendDuringConversation: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
@@ -213,7 +213,7 @@ export const MutesSurviveAnotherSession: Story = {
 };
 
 // The call runs in another Session: the voice button's slot says where, and takes the person there.
-export const PointerToTheCall: Story = {
+export const PointerToTheConversation: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
@@ -235,7 +235,7 @@ export const PointerToTheCall: Story = {
 };
 
 // Typing in another Session while a call runs elsewhere: Send works as in any Session, and the pointer steps aside.
-export const SendBesideACallElsewhere: Story = {
+export const SendBesideAConversationElsewhere: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
@@ -299,7 +299,7 @@ export const SpeakerMutedReadsRed = muted(false, true);
 export const BothMutedReadRed = muted(true, true);
 
 // The edge band sits inside the one card, above the text box, with the state and the timer at its right end.
-export const EdgeBandOnACall: Story = {
+export const BandOnAConversation: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),

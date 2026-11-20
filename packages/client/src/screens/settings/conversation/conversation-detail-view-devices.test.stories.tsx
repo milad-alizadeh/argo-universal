@@ -91,7 +91,7 @@ export const ChoosesTheSystemMicrophoneAgain: Story = {
   },
 };
 
-export const SaysNamesAppearAfterTheFirstCall: Story = {
+export const SaysNamesAppearAfterTheFirstConversation: Story = {
   args: { devices: unnamedDevices },
   play: async ({ canvas }) => {
     await expect(canvas.getByText(/names appear/i)).toBeVisible();

@@ -61,7 +61,7 @@ export const ConversationMicMuted: Story = {
 };
 
 // The speaker is muted: its button reads red.
-export const VoiceSpeakerMuted: Story = {
+export const ConversationSpeakerMuted: Story = {
   args: conversationSpeakerMutedComposer,
 };
 
@@ -74,7 +74,9 @@ export const ConversationBothMuted: Story = {
 export const ConversationWithDraft: Story = { args: conversationDraftComposer };
 
 // The call runs in another Session: in the voice button's place, the same round button with a live dot.
-export const CallInAnotherSession: Story = { args: callElsewhereComposer };
+export const ConversationInAnotherSession: Story = {
+  args: callElsewhereComposer,
+};
 
 /*
  * The Conversation band along the card's top edge, with the state and the timer at its right end. The band's own
