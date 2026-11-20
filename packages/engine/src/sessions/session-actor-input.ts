@@ -58,6 +58,7 @@ export const createSessionActorInput = ({
   acp: createAcpSessionDependencies(context),
   hooks: context.hooks,
   writer: context.writer,
+  archiveUndoMs: context.archiveUndoMs,
   sessionId: event.sessionId,
   ...sessionInput(event),
 });

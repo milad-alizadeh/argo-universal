@@ -30,6 +30,7 @@ type AcpScenario = ScriptedScenario & { autoExit?: boolean } & Partial<
       | 'argoToolsGraceMs'
       | 'voiceProvider'
       | 'voiceIdleMs'
+      | 'archiveUndoMs'
     >
   > &
   Pick<
@@ -122,6 +123,7 @@ const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({
   argoToolsGraceMs: scenario.argoToolsGraceMs ?? Number.POSITIVE_INFINITY,
   voiceProvider: voiceProviderOf(scenario),
   voiceIdleMs: scenario.voiceIdleMs,
+  archiveUndoMs: scenario.archiveUndoMs,
 });
 
 const fixtureAgents = (

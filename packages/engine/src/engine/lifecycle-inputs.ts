@@ -62,6 +62,7 @@ type SessionsSource = {
     | 'acpResources'
     | 'installationPorts'
     | 'hookPort'
+    | 'archiveUndoMs'
   >;
 };
 
@@ -92,8 +93,15 @@ export const sessionsInput = ({
   createId: context.createId,
   acpResources: context.acpResources,
   installedAgents: installedAgentsInput({ context, self }),
-  hooks: context.hookPort.hooks,
   writer: requireDatabaseWriter(self.system),
+  ...sessionPolicies(context),
+});
+
+const sessionPolicies = (
+  context: SessionsSource['context'],
+): Pick<OpenSessionsInput, 'hooks' | 'archiveUndoMs'> => ({
+  hooks: context.hookPort.hooks,
+  archiveUndoMs: context.archiveUndoMs,
 });
 
 // A Voice provider the Engine was given, null included, or the default one.
