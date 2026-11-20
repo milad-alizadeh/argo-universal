@@ -523,6 +523,43 @@ jobs:
             e2e/test-results/
           retention-days: 30
 
+  # The Dock, the native quit dialog and NSOpenPanel exist only on macOS, so the @mac-only Electron scenarios run there, nightly.
+  # The folder picker drives NSOpenPanel through System Events, which needs the runner's Accessibility permission.
+  e2e-electron-mac:
+    name: End-to-end tests (Electron, macOS)
+    if: ${{ github.event_name == 'schedule' }}
+    runs-on: macos-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+        with:
+          playwright: none
+          turbo-team: ${{ vars.TURBO_TEAM }}
+
+      - name: Install Electron
+        run: pnpm --filter @repo/desktop exec install-electron
+
+      # A macOS runner has a logged-in desktop, so the @needs-focus scenarios can take focus.
+      - name: End-to-end tests (Electron, macOS)
+        env:
+          ARGO_E2E_FOCUS: 1
+        run: pnpm test:e2e:electron -- --grep @mac-only
+
+      - name: Upload the macOS Electron e2e report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-electron-mac
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 30
+
   # Branch protection requires this one check, so splitting or renaming the jobs above never changes the required checks.
   # A skipped job passes it; a failed choice fails it.
   ci:
@@ -541,6 +578,7 @@ jobs:
         e2e-web-build,
         e2e-web,
         e2e-electron,
+        e2e-electron-mac,
       ]
     runs-on: ubuntu-latest
     timeout-minutes: 5
