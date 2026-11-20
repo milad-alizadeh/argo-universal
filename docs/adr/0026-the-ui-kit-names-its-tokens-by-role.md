@@ -38,11 +38,11 @@ Orange was rejected as too close to amber, and red stays `danger`.
 
 ## Colour as data
 
-Owner amendment, 2026-11-20: a Plugin may pass a colour when the colour is the data itself, such as a light's colour, a calendar's or a label's. Tones still name meanings, and everything else still takes them.
+Owner amendment, 2026-11-20: a Plugin may pass a colour when the colour is the data itself, such as a light's colour, a calendar's or a label's. Tones still name meanings, and everything else still takes them. A second owner amendment the same day adds `Fader` `fill`: a Fader is a range control whose surface holds any kit content, its fill showing the value as a share of the range.
 - A colour is sRGB hex, `#RRGGBB`. Anything else is rejected with the node.
-- Only two props take one, each as one to four stops: `Swatch` `colors`, a dot filled with the colours, and `Slider` `fill`, the filled part of its track.
-- The App draws a colour as given in light and dark mode and keeps what sits on it readable: a Swatch has no text on it, and a Slider's thumb stays the platform's own.
-- A `Swatch` draws its stops as a gradient on every platform. A `Slider` `fill` draws its stops as a gradient on the web; iOS and Android draw the first stop alone, since their native sliders take one colour.
+- Only three props take one, each as one to four stops: `Swatch` `colors`, a dot filled with the colours; `Slider` `fill`, the filled part of its track; and `Fader` `fill`, the filled part of the Fader's surface.
+- The App draws a colour as given in light and dark mode and keeps what sits on it readable: a Swatch has no text on it, a Slider's thumb stays the platform's own, and the Fader picks a dark or a light foreground for the content on it from how light its fill is.
+- A `Swatch` draws its stops as a gradient on every platform. A `Slider` `fill` draws its stops as a gradient on the web; iOS and Android draw the first stop alone, since their native sliders take one colour. A `Fader` is the App's own view, not a native control, so it draws its stops as a gradient on every platform, along its direction.
 - `Text`, `Icon`, `Card` and `Surface` still take tones only, and `className` and `style` stay rejected (ADR-0025).
 
 ## States
