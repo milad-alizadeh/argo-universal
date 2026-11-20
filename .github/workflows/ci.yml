@@ -35,6 +35,7 @@ jobs:
       quality: ${{ steps.choose.outputs.quality }}
       engine-tests: ${{ steps.choose.outputs.engine-tests }}
       secret-store: ${{ steps.choose.outputs.secret-store }}
+      plugin-generation: ${{ steps.choose.outputs.plugin-generation }}
       stories: ${{ steps.choose.outputs.stories }}
       e2e-web: ${{ steps.choose.outputs.e2e-web }}
     steps:
@@ -59,6 +60,7 @@ jobs:
           quality=true
           engine=true
           secrets=true
+          generation=true
           stories=true
           e2e=true
           # A new branch's push has an all-zero `before`, and a force push's may be gone from history.
@@ -81,6 +83,9 @@ jobs:
             # The Keychain contract reads only the keyring adapter and the keyring package the lockfile pins.
             secrets=false
             if grep -qE '^(packages/engine/src/plugins/services/secret-store[^/]*\.ts|pnpm-lock\.yaml|\.github/workflows/ci\.yml)$' <<< "$files"; then secrets=true; fi
+            # The Plugin generation check proves turbo.json's wiring of the generator and the Plugin type checks.
+            generation=false
+            if grep -qE '^(turbo\.json|packages/contracts/tools/generate-plugin-kit\.mts|tools/(plugin-typecheck|check-plugin-generation)\.mts)$' <<< "$files"; then generation=true; fi
             stories=false
             if [ -n "$outside" ] || affected --tasks test:stories; then stories=true; fi
             e2e=false
@@ -90,16 +95,18 @@ jobs:
           echo "quality=$quality" >> "$GITHUB_OUTPUT"
           echo "engine-tests=$engine" >> "$GITHUB_OUTPUT"
           echo "secret-store=$secrets" >> "$GITHUB_OUTPUT"
+          echo "plugin-generation=$generation" >> "$GITHUB_OUTPUT"
           echo "stories=$stories" >> "$GITHUB_OUTPUT"
           echo "e2e-web=$e2e" >> "$GITHUB_OUTPUT"
           echo "Quality runs: $quality. Engine tests run: $engine. The secret store contract runs: $secrets. Story tests run: $stories. Web e2e runs: $e2e."
 
+  # Each gate is its own step and runs even when one before it failed, so one run reports every failing gate.
+  # The gates are `pnpm quality:lint`'s, less sherif, which the install's postinstall already ran, and check-canvaskit, which cannot fail after the install copied CanvasKit.
   quality:
     name: Quality
     needs: changes
     if: ${{ needs.changes.outputs.quality == 'true' }}
     runs-on: ubuntu-latest
-    # Lint, dead code, generated artifacts and type checks run about 5 minutes; the packages' tests run in their own jobs below.
     timeout-minutes: 20
     permissions:
       contents: read
@@ -113,25 +120,102 @@ jobs:
       - name: Fetch main for the waiver merge base
         run: git fetch origin main:refs/remotes/origin/main
 
-      - uses: ./.github/actions/setup
+      - id: setup
+        uses: ./.github/actions/setup
         with:
           playwright: none
           turbo-team: ${{ vars.TURBO_TEAM }}
 
-      - name: Lint
-        run: pnpm quality:lint
+      - name: Operation mutations
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node tools/check-operation-mutations.mts
+
+      - name: Generated Operations
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node --import tsx tools/generate-operations.mts --check
+
+      - name: Generated registry validators
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node --import tsx packages/contracts/tools/registry/generate-validators.mts --check
+
+      - name: Format
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: pnpm exec oxfmt --check
+
+      - name: Lint and rule allowlists
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node tools/check-rule-allowlists.mts
+
+      - name: Comments
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node tools/check-comments.mts
+
+      - name: Test suffixes
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node tools/check-test-suffix.mts
+
+      - name: Test-only imports
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node tools/check-test-only-imports.mts
+
+      - name: Story titles
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node tools/check-story-titles.mts
+
+      - name: Story gates
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node --import tsx tools/check-story-gates.mts
+
+      - name: Kit pairing
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: node --import tsx tools/check-kit-pairing.mts
+
+      - name: Duplication
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: pnpm quality:duplication
 
       - name: Dead code
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: pnpm quality:dead-code
 
-      - name: Build Plugin reference docs
-        run: pnpm docs:build
-
-      - name: Check generated Plugin artifacts
+      - name: Plugin reference docs
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         run: |
+          pnpm docs:build
           pnpm --filter @repo/contracts check:plugin-reference
-          pnpm check:plugin-generation
-          git diff --exit-code
+
+      - name: Plugin generation
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' && needs.changes.outputs.plugin-generation == 'true' }}
+        run: pnpm check:plugin-generation
+
+      # Status, not diff, so a generated file that should exist but is not committed fails too.
+      - name: Generated files are committed
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: |
+          changed=$(git status --porcelain)
+          if [ -n "$changed" ]; then
+            echo "$changed"
+            git diff
+            exit 1
+          fi
+
+  # Type checks take minutes and memory of their own, so they run beside Quality.
+  types:
+    name: Type checks
+    needs: changes
+    if: ${{ needs.changes.outputs.quality == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+        with:
+          playwright: none
+          turbo-team: ${{ vars.TURBO_TEAM }}
 
       - name: Type checks
         env:
@@ -446,6 +530,7 @@ jobs:
       [
         changes,
         quality,
+        types,
         unit-tests,
         engine-tests,
         secret-store,
