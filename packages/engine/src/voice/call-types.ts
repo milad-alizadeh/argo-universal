@@ -1,4 +1,5 @@
 import type { VoiceCallEnd, VoiceLimit, VoicePartial } from '@repo/contracts';
+import type { ScreenImage } from '@repo/contracts/operations';
 import type {
   VoiceCallSetup,
   VoiceDelivery,
@@ -15,7 +16,9 @@ export type SessionGoneReason = Extract<
 // Something the Engine tells the voice: the answer to a request for work, or a word it did not ask for.
 export type VoiceSay =
   | { kind: 'reply'; requestId: string; text: string; delivery: VoiceDelivery }
-  | { kind: 'tell'; text: string; delivery: VoiceDelivery };
+  | { kind: 'tell'; text: string; delivery: VoiceDelivery }
+  // One still picture of the screen, given to the voice as background and never kept.
+  | { kind: 'image'; image: ScreenImage };
 
 // How Argo runs one call, whatever the provider: when silence ends it.
 export interface CallConduct {
@@ -25,6 +28,8 @@ export interface CallConduct {
 // The call a relay serves: its Session.
 export interface RelayCall {
   sessionId: string;
+  // Whether the call's provider can be given an image.
+  images: boolean;
 }
 
 export type VoiceCallEvent =

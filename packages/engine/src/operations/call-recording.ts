@@ -1,4 +1,5 @@
 import {
+  AppScreenshotResult,
   discoveryOperation,
   operations,
   type OperationId,
@@ -6,7 +7,7 @@ import {
 } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import type { CalledOperation, SessionOperationCall } from '../sessions';
-import type { OperationRunResult } from './implementations';
+import type { OperationResult, OperationRunResult } from './implementations';
 import { wireJson } from './wire-json';
 
 // A Session's Operation, shown as its Tool call until its result or failure settles it.
@@ -50,9 +51,18 @@ function failed(call: SessionOperationCall, cause: unknown): never {
 
 export const listedOutput = (value: OperationRow[]): Json => wireJson(value);
 
+// A captured screen is for the one reader that asked: its Tool call says one was taken and never holds the picture.
+const shownResult = (result: OperationResult): Json => {
+  const capture = AppScreenshotResult.safeParse(result);
+
+  return capture.data?.status === 'captured'
+    ? { status: 'captured' }
+    : wireJson(result);
+};
+
 // A Session's Tool call shows the Operation's own result.
 export const recordedOutput = (value: OperationRunResult): Json =>
-  wireJson(value.kind === 'result' ? value.result : value);
+  value.kind === 'result' ? shownResult(value.result) : wireJson(value);
 
 export const discoveryCall = (filter: string): CalledOperation => ({
   name: discoveryOperation.id,

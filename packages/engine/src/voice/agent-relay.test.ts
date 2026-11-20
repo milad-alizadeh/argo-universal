@@ -19,11 +19,12 @@ function relayTo(
     stop: () => Promise.resolve(false),
     watch: () => (): void => {},
     notice: () => {},
+    capture: () => Promise.reject(new Error('No capture in this test')),
   };
 
   const relay = new AgentRelay(
     sessions,
-    { sessionId: 's1' },
+    { sessionId: 's1', images: false },
     {
       speak: (say): number => heard.said.push(say),
       turnsRunning: (running): number => heard.running.push(running),

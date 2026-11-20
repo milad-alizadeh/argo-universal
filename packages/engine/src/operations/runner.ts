@@ -1,5 +1,6 @@
 import type { OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
+import type { ScreenSight } from '../screen-sight';
 import {
   sessionOrigin,
   userOrigin,
@@ -34,9 +35,9 @@ import {
   type StartedWork,
 } from './native-start';
 import { parseResult, validateParams } from './params';
+import { sessionOnly } from './session-only';
 import type { PromptChains, SessionScope } from './session-scope';
 import type { SessionCaller } from './session-tokens';
-import { withoutConnection } from './without-connection';
 
 export type { AppRun, UserRun, SessionRun } from './implementations';
 
@@ -49,6 +50,7 @@ type RunnerPorts = {
   scope: SessionScope;
   directory: SessionDirectory;
   chains: PromptChains;
+  screenSight: ScreenSight;
 };
 
 // Every caller runs an Operation here; its kind picks its steps before the implementation runs and its result is parsed.
@@ -120,7 +122,7 @@ export class OperationRunner {
   private invokeSession(context: SessionContext): SessionInvoke {
     const implementations: CallerImplementations<[NewSessionId]> = {
       ...this.plain,
-      ...withoutConnection,
+      ...sessionOnly(this.ports.screenSight, context.caller),
       'session.archive': (params) =>
         params.sessionId === context.caller.sessionId
           ? this.ports.archiveOwn(params.sessionId)

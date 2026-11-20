@@ -9,6 +9,7 @@ import {
 } from './app-protocol';
 import { createWindow, originOf } from './app-window';
 import { applicationMenu } from './application-menu';
+import { answerAppDisplayRequests } from './display-media';
 import { handleExternalLinks } from './handle-external-links';
 import { answerAppPermissionRequests } from './microphone-permission';
 import { handleProjectFolder } from './project-folder';
@@ -145,6 +146,8 @@ const start = (): void => {
 
   // The microphone a Voice call listens through: asked for on first use, and only by the App's own page. The session exists only once the app is ready.
   answerAppPermissionRequests(session.defaultSession, windowOrigin);
+  // The screen picture for screen sight: the system's own picker where there is one, asked for only by the App's own page.
+  answerAppDisplayRequests(session.defaultSession, windowOrigin);
 
   listenToServer();
   server.start();

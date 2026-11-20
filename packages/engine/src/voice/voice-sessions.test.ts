@@ -34,6 +34,7 @@ function sessionsHeard(): HeardSessions {
     {
       prompt: () => Promise.reject(new Error('Not sent')),
       stop: () => Promise.resolve(false),
+      capture: () => Promise.reject(new Error('No capture in this test')),
       watchTurns: (_sessionId, listener) => {
         listeners.add(listener);
 

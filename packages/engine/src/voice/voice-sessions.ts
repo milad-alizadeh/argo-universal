@@ -31,6 +31,7 @@ type SnapshotEvent = Extract<
 export interface VoiceSessionWork {
   prompt: (sessionId: string, text: string) => Promise<PromptOutcome>;
   stop: VoiceSessions['stop'];
+  capture: VoiceSessions['capture'];
   watchTurns: (
     sessionId: string,
     listener: (happening: TurnHappening) => void,
@@ -140,6 +141,7 @@ export const voiceSessions = (
 ): VoiceSessions => ({
   prompt: work.prompt,
   stop: work.stop,
+  capture: work.capture,
   watch: watchOf(sources, work),
   notice: (sessionId, notice) =>
     sources.findFeed(sessionId)?.send(noticeEvent(notice)),

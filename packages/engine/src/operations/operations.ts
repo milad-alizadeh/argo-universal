@@ -13,6 +13,7 @@ import type { RegistryDeps } from '../agents';
 import type { AppNavigation } from '../app-navigation';
 import type { FeedDeps } from '../feed';
 import type { PluginsRouterDeps } from '../plugins';
+import type { ScreenSight } from '../screen-sight';
 import type { Sessions } from '../sessions';
 import type { VoiceCallsPort } from '../voice';
 import {
@@ -52,6 +53,7 @@ export type OperationsDeps = RegistryDeps &
     sessions: Sessions;
     voice: VoiceCallsPort;
     appNavigation: AppNavigation;
+    screenSight: ScreenSight;
     controlToken: string;
     userHome: string;
     sessionTokens: SessionTokens;
@@ -65,8 +67,6 @@ export type OperationsDeps = RegistryDeps &
   };
 
 type Operation = { id: OperationId; params: Json };
-
-type RunRequest = OperationRunRequest;
 
 // A token caller's Operations: the user's run and admit under the deadline; a Session's are recorded as its Tool calls.
 export class Operations {
@@ -112,7 +112,7 @@ export class Operations {
 
   public async run(
     token: string | undefined,
-    request: RunRequest,
+    request: OperationRunRequest,
     signal?: AbortSignal,
   ): Promise<OperationRunResponse> {
     const caller = this.caller(token);

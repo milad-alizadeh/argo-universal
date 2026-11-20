@@ -17,7 +17,17 @@ import { voiceSettingsOperations } from './voice-settings';
 
 export { AgentAccess } from './agent-access';
 
-export { appOperations, AppOpenResult } from './app';
+export {
+  appOperations,
+  AppOpenResult,
+  AppScreenshotResult,
+  ScreenCaptureAnswer,
+  ScreenImage,
+  ScreenRequester,
+  ScreenSightReply,
+  ScreenSightReport,
+  ScreenSightStreamEvent,
+} from './app';
 
 export {
   OperationExecution,

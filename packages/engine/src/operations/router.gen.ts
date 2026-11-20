@@ -140,6 +140,17 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      screenshot: publicProcedure
+        .input(operations['app.screenshot'].params)
+        .output(operations['app.screenshot'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'app.screenshot',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
     }),
     diagram: router({
       validate: publicProcedure

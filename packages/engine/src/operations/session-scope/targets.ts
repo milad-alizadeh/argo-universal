@@ -83,6 +83,7 @@ const openedScreen: TargetRule<OperationParams<'app.open'>> = (params) => ({
 // Every Operation names its target when it enters the registry.
 const targetRules = {
   'app.open': openedScreen,
+  'app.screenshot': global,
   'project.list': global,
   'project.add': global,
   'project.clone': global,

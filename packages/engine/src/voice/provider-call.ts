@@ -1,3 +1,4 @@
+import type { ScreenImage } from '@repo/contracts/operations';
 import { fromCallback } from 'xstate';
 import {
   providerEvent,
@@ -20,9 +21,14 @@ export type ProviderCallInput = {
 
 type StartedCall = Awaited<ReturnType<VoiceProvider['start']>>;
 
+// A provider that takes no images is never given one: the Engine does not capture for it.
+const deliverImage = (call: StartedCall, image: ScreenImage): void =>
+  call.sendImage?.(image);
+
 function deliver(call: StartedCall, say: VoiceSay): void {
   if (say.kind === 'reply') call.reply(say.requestId, say.text, say.delivery);
-  else call.tell(say.text, say.delivery);
+  else if (say.kind === 'tell') call.tell(say.text, say.delivery);
+  else deliverImage(call, say.image);
 }
 
 // The provider's call, from the moment it answers to the moment the machine stops wanting it.

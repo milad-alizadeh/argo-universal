@@ -12,6 +12,7 @@ import type { NotificationsDeps } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
 import type { PairingDeps } from '../pairing/router';
 import type { PluginsRouterDeps } from '../plugins';
+import { ScreenSight, type ScreenSightDeps } from '../screen-sight';
 import {
   createSessionConnections,
   createSessionReader,
@@ -38,6 +39,7 @@ export type AppRouterDeps = SessionSources &
   NotificationsDeps &
   NetworkAccessDeps &
   AppNavigationDeps &
+  ScreenSightDeps &
   PairingDeps & {
     userHome: string;
     sessionTokens: SessionTokens;
@@ -53,13 +55,16 @@ type EngineSupplied =
   | 'createId'
   | 'userHome'
   | 'voice'
+  | 'screenSight'
   | 'dropAgentConnections'
   | 'sessionConnections'
   | 'installedAgents';
 
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
-  Partial<Pick<AppRouterDeps, 'createId' | 'userHome' | 'voice'>> & {
+  Partial<
+    Pick<AppRouterDeps, 'createId' | 'userHome' | 'voice' | 'screenSight'>
+  > & {
     acp?: AcpResourceInput;
   };
 
@@ -96,10 +101,14 @@ type AgentSetup = Pick<
   | 'createId'
   | 'userHome'
   | 'voice'
+  | 'screenSight'
   | 'dropAgentConnections'
   | 'sessionConnections'
   | 'installedAgents'
 >;
+
+const screenSightOf = (input: AppRouterInput): ScreenSight =>
+  input.screenSight ?? new ScreenSight();
 
 const voiceOf = (input: AppRouterInput): VoiceCallsPort =>
   input.voice ?? noVoiceCalls;
@@ -116,5 +125,6 @@ function createAgentSetup(input: AppRouterInput): AgentSetup {
     createId: input.createId ?? randomUUID,
     userHome: input.userHome ?? homedir(),
     voice: voiceOf(input),
+    screenSight: screenSightOf(input),
   };
 }

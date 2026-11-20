@@ -290,6 +290,8 @@ const voiceCallSetup = setup({
 
       return runningCall(context).agentWorking !== event.running;
     },
+    asksForFrame: ({ event }): boolean =>
+      providerEventOf(event).type === 'frame.requested',
     asksForWork: ({ event }): boolean =>
       providerEventOf(event).type === 'work.requested',
   },
@@ -387,6 +389,7 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
           input: ({ context }): RelayInput => ({
             sessions: context.sessions,
             sessionId: runningCall(context).sessionId,
+            images: context.provider?.images === true,
           }),
         },
         {
@@ -435,7 +438,11 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
         'provider.event': [
           {
             guard: 'hearsTranscript',
-            actions: ['storeTranscript', 'trackPartials'],
+            actions: [
+              'storeTranscript',
+              'trackPartials',
+              sendTo('agentRelay', ({ event }) => event),
+            ],
           },
           {
             guard: 'providerErrored',
@@ -446,6 +453,10 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
             guard: 'providerClosed',
             target: idleTarget,
             actions: endingWith(providerClose),
+          },
+          {
+            guard: 'asksForFrame',
+            actions: sendTo('agentRelay', ({ event }) => event),
           },
           {
             guard: 'asksForWork',
@@ -476,7 +487,11 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
             'provider.event': [
               {
                 guard: 'hearsTranscript',
-                actions: ['storeTranscript', 'trackPartials'],
+                actions: [
+                  'storeTranscript',
+                  'trackPartials',
+                  sendTo('agentRelay', ({ event }) => event),
+                ],
                 target: 'connected',
                 reenter: true,
               },
