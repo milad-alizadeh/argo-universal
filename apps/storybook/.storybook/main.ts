@@ -142,11 +142,14 @@ const config: Config = {
       to: '/canvaskit.wasm',
     },
   ],
-  // Screens live in @repo/client and the kit in @repo/kit (ADR 0009); globs resolve from this .storybook folder.
+  /*
+   * Screens live in @repo/client and the kit in @repo/kit (ADR 0009); globs resolve from this .storybook folder.
+   * The story tests run only `*.test.stories.tsx`: the render gate and Chromatic already draw every presentation story.
+   */
   stories: process.env.VITEST
     ? [
-        '../../../packages/client/src/**/*.stories.tsx',
-        '../../../packages/kit/src/**/*.stories.tsx',
+        '../../../packages/client/src/**/*.test.stories.tsx',
+        '../../../packages/kit/src/**/*.test.stories.tsx',
       ]
     : [
         '../../../packages/client/src/**/!(*.test).stories.tsx',

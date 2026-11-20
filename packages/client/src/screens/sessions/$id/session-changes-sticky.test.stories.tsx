@@ -1,3 +1,4 @@
+import { nextFrames } from '@repo/kit/mocks/next-frames';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { JSX } from 'react';
@@ -55,11 +56,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // A wheel's steps at a wheel's pace, far enough to cross several long files inside a story's time limit.
-const wheelStep = 120;
+const wheelStep = 240;
 
 const downPauseMs = 25;
 
-const upPauseMs = 60;
+const upPauseMs = 40;
 
 const reach = 8000;
 
@@ -128,14 +129,6 @@ async function walk(
 const pause = (ms: number): Promise<void> =>
   new Promise((resolve) => {
     setTimeout(resolve, ms);
-  });
-
-// Two frames: a scroll's event, and what it moves, are drawn by the second.
-const nextFrames = (): Promise<void> =>
-  new Promise((resolve) => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => resolve());
-    });
   });
 
 const walkDown = (scroller: HTMLElement): Promise<number[]> =>
@@ -223,8 +216,8 @@ function overlapping(scroller: HTMLElement): string[] {
   });
 }
 
-// Steps of a third of a wheel's, so a header is caught partway through giving way.
-const fineStep = wheelStep / 3;
+// Steps of a sixth of a wheel's, so a header is caught partway through giving way.
+const fineStep = 40;
 
 // Past the first files' headers, stacked before their diffs land, and the handoff after a diff has: two frames a step is slow on a CI runner.
 const handoffReach = 2400;

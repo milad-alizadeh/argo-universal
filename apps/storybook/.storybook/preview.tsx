@@ -30,6 +30,13 @@ const withDesktopSymbols: Decorator = (Story) => (
   </SymbolImagesProvider>
 );
 
+/*
+ * The Vitest browser runner sets this global; the Storybook UI does not. The a11y addon runs axe after every story and,
+ * at its default 'todo' level, only warns, so under Vitest it costs a scan per test and fails nothing. The story tests
+ * load test stories only, and the presentation stories, which cover every state, keep their axe results in the UI panel.
+ */
+const runsInVitest = '__vitest_browser__' in globalThis;
+
 const preview: Preview = {
   // Every story file gets a Docs page; a file with nothing to document opts out with '!autodocs'.
   tags: ['autodocs'],
@@ -42,6 +49,7 @@ const preview: Preview = {
   globalTypes: previewGlobalTypes,
   parameters: {
     ...previewParameters,
+    a11y: { test: runsInVitest ? 'off' : 'todo' },
     standalonePreview: true,
     /*
      * Storybook reads `storySort` from this file without evaluating it, so it must stay an inline literal here:
