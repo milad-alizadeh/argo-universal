@@ -46,6 +46,7 @@ export interface PluginTestOptions {
   // Folders containing external executable fixtures, prepended only for this runtime.
   path?: string[];
   clockStart?: number;
+  tracePluginCalls?: boolean;
   network?: PluginNetwork;
   // Stands in for the browser `argo.oauth.await` opens: it is handed the authorize URL.
   openBrowser?: (url: string) => Promise<void>;

@@ -127,7 +127,7 @@ export async function attach(
 
   await attachLink(scope, link, again);
   // The pull request and its Checks are kept before the answer, so every surface shows it at once.
-  await scope.sync([caller.sessionId]);
+  await scope.sync([caller.sessionId], { link, data: pull });
   scope.changed();
 
   return changeOf(pull);

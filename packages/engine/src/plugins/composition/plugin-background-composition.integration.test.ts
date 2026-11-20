@@ -7,7 +7,7 @@ import type {
 } from '@repo/contracts/plugins/runtime';
 import { project } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
-import { expect, it, onTestFinished } from 'vitest';
+import { expect, it, onTestFinished, vi } from 'vitest';
 import { dataFixture, dataPluginId } from '#mocks/data-fixture';
 import { startEngineTestHost } from '#mocks/engine';
 import { writeDatabaseJobAndWaitForCommit } from '../../storage';
@@ -74,6 +74,9 @@ it('starts Project background passes at Server startup and after Writer membersh
 });
 
 it('runs the Loader to its end before announcing the pass completed', async () => {
+  vi.stubEnv('ARGO_PLUGIN_TRACE', '1');
+  onTestFinished((): void => void vi.unstubAllEnvs());
+
   const fixture = await backgroundFixture(50);
 
   const host = await startEngineTestHost({
