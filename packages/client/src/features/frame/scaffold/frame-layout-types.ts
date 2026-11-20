@@ -4,10 +4,10 @@ import type { PaneSpan } from '../utils/pane-shift';
 export type InspectorState = 'closed' | 'open' | 'expanded';
 
 /*
- * The Workbench never takes width from the page and never moves the content: it is drawn over the page's trailing
- * edge, in the trailing gutter beside the centred content when that gutter alone holds it, over the content when the
- * person shows it anyway, or not at all. Effective placement follows the width budget; the separate intent survives
- * automatic hiding.
+ * The Workbench never takes width from the page: it is drawn over the page's trailing edge, in the gutter beside the
+ * content when the page is wide enough by Codex's thresholds (the content centring beside it on a page too narrow to
+ * keep it centred), over the centred content while its toggle holds it open on a narrower page, or not at all.
+ * Effective placement follows the width budget; the separate intent survives automatic hiding.
  */
 export type WorkbenchState = 'gutter' | 'auto-hidden' | 'overlay' | 'hidden';
 
@@ -36,9 +36,11 @@ interface FrameIntent {
   // The sidebar toggle was pressed, so the list takes the Workbench's room instead of folding first.
   sidebarRequested?: boolean;
   inspectorState: InspectorState;
-  // The page has Workbench cards to show; a Workbench with none is not drawn and changes nothing.
+  // The page has Workbench cards to show.
   workbenchAvailable: boolean;
   workbenchIntent: WorkbenchIntent;
+  // The toggle opened the Workbench over the content on a page too narrow for it in the gutter, as Codex's popover; it closes again when the page holds it.
+  workbenchPopover?: boolean;
 }
 
 export interface FrameLayoutInput extends FrameIntent {
@@ -87,6 +89,8 @@ export interface ListRegion extends PaneSpan {
 
 export interface WorkbenchRegion extends PaneSpan {
   state: WorkbenchState;
+  // The page is wide enough for the Workbench in its gutter, so its toggle sets the person's intent rather than opening it over the content.
+  fits: boolean;
 }
 
 export interface InspectorRegion extends PaneSpan {
@@ -98,15 +102,17 @@ export interface InspectorRegion extends PaneSpan {
 export interface FrameLayout {
   // The panes start under the window band.
   panesTop: number;
-  // The window widths below which the list folds and the Workbench no longer fits in the page's trailing gutter.
+  // The window widths below which the list folds and the Workbench no longer fits in the content's gutters.
   thresholds: { listFold: number; workbenchGutter: number };
   rail: PaneSpan;
   list: ListRegion;
   // The rail and the list with their insets: the permanent drawer's width.
   sidebarWidth: number;
   page: PaneSpan & { hidden: boolean };
-  // The page's content column, with its two gutters, always centred in the page.
+  // The page's content column, with its two gutters: centred in the page, or in the room beside a Workbench in the gutter.
   content: PaneSpan;
+  // How far the Workbench moved the content column from the page's centre, towards its leading edge.
+  contentShift: number;
   workbench: WorkbenchRegion;
   inspector: InspectorRegion;
   handles: { list: ResizeHandle | null; inspector: ResizeHandle };

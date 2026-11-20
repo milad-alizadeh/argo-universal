@@ -6,7 +6,11 @@ import type {
   WorkbenchRegion,
   WorkbenchState,
 } from './frame-layout-types';
-import { workbenchDrawn, workbenchState } from './frame-layout-workbench';
+import {
+  workbenchDrawn,
+  workbenchFits,
+  workbenchState,
+} from './frame-layout-workbench';
 
 // The page's trailing edge less the inset, which with the Inspector open leaves the pane gap before it.
 const trailingEdge = ({ measures }: FrameLayoutInput, page: PaneSpan): number =>
@@ -34,7 +38,7 @@ export function workbenchRegion(
   const width = drawnWorkbenchWidth(input, state, page);
   const offset = Math.max(page.offset, trailingEdge(input, page) - width);
 
-  return { state, width, offset };
+  return { state, width, offset, fits: workbenchFits(input, page.width) };
 }
 
 // The widest the Inspector gets beside the page while the content keeps `floor`: its own floor, or the least a drag leaves it.
