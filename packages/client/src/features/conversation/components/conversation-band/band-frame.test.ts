@@ -35,11 +35,21 @@ describe('speech', () => {
     );
   });
 
-  it('lifts normal speech to a visible bar: over 60% of the tallest bar at the loud end', () => {
+  it('lifts normal speech to a visible bar: some bar at the loud end over 60% of the tallest', () => {
     const quarter = run(1, { state: 'listening', user: speech(0.25) });
+    const loudEnd = heightsOf(quarter).slice(0, 5);
 
-    expect(heightsOf(quarter)[0]).toBeGreaterThan(barReach * 0.6);
+    expect(Math.max(...loudEnd)).toBeGreaterThan(barReach * 0.6);
     expect(Math.max(...heightsOf(quarter))).toBeLessThanOrEqual(barReach);
+  });
+
+  it('is irregular: bars at one level differ, and move from one moment to the next', () => {
+    const over = { state: 'listening', user: speech(0.25) } as const;
+    const now = heightsOf(run(1, over));
+    const later = heightsOf(run(1.4, over));
+
+    expect(new Set(now.slice(0, 8).map(Math.round)).size).toBeGreaterThan(3);
+    expect(later).not.toEqual(now);
   });
 
   it('is orange for the person and blue for the Agent', () => {

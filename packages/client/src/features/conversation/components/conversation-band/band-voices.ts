@@ -55,12 +55,50 @@ function voiceAt(bands: readonly number[], position: number): number {
   return liftOf(band * bandShare + rmsOf(bands) * (1 - bandShare));
 }
 
-// What the bar at `position` (0 left, 1 right) reaches for, 0 to 1: the person's voice from the left, the Agent's from the right.
-export function reachAt(voices: Voices, pose: Pose, position: number): number {
+// Each bar's wobble is three sines at rates no two share, phased by where the bar stands, so neighbours peak and dip apart.
+const wobbles = [
+  { hertz: 1.17, phase: 12.9, weight: 0.5 },
+  { hertz: 1.86, phase: 78.2, weight: 0.3 },
+  { hertz: 0.65, phase: 37.7, weight: 0.2 },
+];
+
+const wobbleRadians = 2 * Math.PI;
+
+// How much of its voice's level a bar shows at a dip and at a peak; a peak above 1 lets a loud voice fill the bar.
+const dipFloor = 0.2;
+
+const peakCeiling = 1.3;
+
+const half = 0.5;
+
+/*
+ * How much of the voice's level the bar at `position` shows at `time`, `dipFloor` to `peakCeiling`. It only scales a level, so a
+ * silent voice stays flat however the bars wobble.
+ */
+export function texturedBy(time: number, position: number): number {
   'worklet';
 
+  let sum = 0;
+
+  for (const { hertz, phase, weight } of wobbles) {
+    sum += weight * Math.sin(wobbleRadians * hertz * time + position * phase);
+  }
+
+  return dipFloor + (peakCeiling - dipFloor) * (half + half * sum);
+}
+
+// What the bar at `position` (0 left, 1 right) reaches for, 0 to 1: the person's voice from the left, the Agent's from the right.
+export function reachAt(
+  voices: Voices,
+  pose: Pose,
+  place: { position: number; time: number },
+): number {
+  'worklet';
+
+  const { position, time } = place;
   const user = voiceAt(voices.user, position) * (1 - position) ** reachFalloff;
   const agent = voiceAt(voices.agent, 1 - position) * position ** reachFalloff;
+  const voice = user * pose.user + agent * pose.agent;
 
-  return (user * pose.user + agent * pose.agent) * (1 - pose.mute);
+  return voice * texturedBy(time, position) * (1 - pose.mute);
 }
