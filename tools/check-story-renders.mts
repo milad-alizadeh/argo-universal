@@ -74,7 +74,12 @@ const listInto = (base: string, listing: string): void => {
   execFileSync(
     resolve(root, 'node_modules/.bin/vitest'),
     ['list', '--filesOnly', '--changed', base, `--json=${listing}`],
-    { cwd: root, stdio: ['ignore', 'ignore', 'inherit'] },
+    {
+      cwd: root,
+      // Under Vitest the Storybook project indexes test stories only; the gate draws presentation stories.
+      env: { ...process.env, ARGO_LIST_EVERY_STORY: '1' },
+      stdio: ['ignore', 'ignore', 'inherit'],
+    },
   );
 };
 
