@@ -18,6 +18,9 @@ export interface AgentAccessDetailViewProps {
   todoList?: boolean;
   onEnabledChange: (enabled: boolean) => void;
   onTodoListChange: (enabled: boolean) => void;
+  // This Device's Screen sharing preference (Screen sight in code); the switch shows only where this App can capture, which is where the handler is given.
+  screenSight?: boolean;
+  onScreenSightChange?: (enabled: boolean) => void;
   onInstall: () => void;
   onRetry: () => void;
   onBack?: () => void;
@@ -31,6 +34,7 @@ export function AgentAccessDetailView(
       <FieldGroup>
         {accessSection(props)}
         {todoListSection(props)}
+        {screenSightSection(props)}
         {instructionsSection(props)}
         {statusSection(props)}
       </FieldGroup>
@@ -74,6 +78,27 @@ function todoListSection(props: AgentAccessDetailViewProps): React.JSX.Element {
         value={props.todoList === true}
         disabled={todoListWaits(props)}
         onValueChange={props.onTodoListChange}
+      />
+    </FieldGroup.Section>
+  );
+}
+
+const screenSightFooter =
+  'When on, Agents and the voice can take a picture of your whole screen when they need to see it. Each capture shows a Notice, and pictures are never saved. When off, nothing is captured.';
+
+function screenSightSection(
+  props: AgentAccessDetailViewProps,
+): React.JSX.Element | null {
+  const onChange = props.onScreenSightChange;
+
+  if (!onChange) return null;
+
+  return (
+    <FieldGroup.Section footer={screenSightFooter}>
+      <FieldGroup.Toggle
+        title="Screen sharing"
+        value={props.screenSight === true}
+        onValueChange={onChange}
       />
     </FieldGroup.Section>
   );
