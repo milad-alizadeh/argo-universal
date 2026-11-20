@@ -22,7 +22,7 @@ import {
 } from './composer-conversation-band-fixtures';
 
 // The edge band's test id, as `ConversationEdgeBand` sets it.
-const bandId = 'voice-edge-band';
+const bandId = 'conversation-band';
 
 const meta = { ...composerTestMeta, title: 'Tests/Composer/Conversation' };
 
@@ -36,28 +36,28 @@ const noMutes = {
 };
 
 // What a story's slot asks for when pressed, read from its own args so no spy is shared between stories.
-const startOf = (voice: ComposerConversation | undefined): (() => void) | undefined =>
-  voice?.kind === 'start' ? voice.onStart : undefined;
+const startOf = (conversation: ComposerConversation | undefined): (() => void) | undefined =>
+  conversation?.kind === 'start' ? conversation.onStart : undefined;
 
-const endOf = (voice: ComposerConversation | undefined): (() => void) | undefined =>
-  voice && 'onEnd' in voice ? voice.onEnd : undefined;
+const endOf = (conversation: ComposerConversation | undefined): (() => void) | undefined =>
+  conversation && 'onEnd' in conversation ? conversation.onEnd : undefined;
 
-const openOf = (voice: ComposerConversation | undefined): (() => void) | undefined =>
-  voice?.kind === 'elsewhere' ? voice.onOpen : undefined;
+const openOf = (conversation: ComposerConversation | undefined): (() => void) | undefined =>
+  conversation?.kind === 'elsewhere' ? conversation.onOpen : undefined;
 
 // With nothing written and no call, the primary slot is the voice button, Send's circle with the five bars.
 export const Idle: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
-  args: { voice: { kind: 'start', onStart: fn() } },
+  args: { conversation: { kind: 'start', onStart: fn() } },
   play: async ({ canvas, args }) => {
     await expect(
       canvas.queryByRole('button', { name: 'Send' }),
     ).not.toBeInTheDocument();
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(conversationButtonId));
-    await expect(startOf(args.voice)).toHaveBeenCalledOnce();
+    await expect(startOf(args.conversation)).toHaveBeenCalledOnce();
   },
 };
 
@@ -66,7 +66,7 @@ export const Connecting: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
-  args: { voice: { kind: 'connecting', onEnd: fn() } },
+  args: { conversation: { kind: 'connecting', onEnd: fn() } },
   play: async ({ canvas, args }) => {
     await expect(
       canvas.queryByRole('button', { name: 'Send' }),
@@ -76,7 +76,7 @@ export const Connecting: Story = {
       canvas.queryByTestId(microphoneButtonId),
     ).not.toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(endButtonId));
-    await expect(endOf(args.voice)).toHaveBeenCalledOnce();
+    await expect(endOf(args.conversation)).toHaveBeenCalledOnce();
   },
 };
 
@@ -86,14 +86,14 @@ export const SendDuringCall: Story = {
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
   args: {
-    voice: { kind: 'connected', onEnd: fn(), mutes: noMutes },
+    conversation: { kind: 'connected', onEnd: fn(), mutes: noMutes },
     draft: { text: 'A pasted stack trace.', attachments: [] },
   },
   play: async ({ canvas, args }) => {
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
     await expect(args.onSend).toHaveBeenCalledWith(args.draft);
-    await expect(endOf(args.voice)).not.toHaveBeenCalled();
+    await expect(endOf(args.conversation)).not.toHaveBeenCalled();
   },
 };
 
@@ -102,7 +102,7 @@ export const EndWithEmptyDraft: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
-  args: { voice: { kind: 'connected', onEnd: fn(), mutes: noMutes } },
+  args: { conversation: { kind: 'connected', onEnd: fn(), mutes: noMutes } },
   play: async ({ canvas, args }) => {
     await expect(
       canvas.queryByRole('button', { name: 'Send' }),
@@ -110,7 +110,7 @@ export const EndWithEmptyDraft: Story = {
     await expect(canvas.getByTestId(microphoneButtonId)).toBeInTheDocument();
     await expect(canvas.getByTestId(speakerButtonId)).toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(endButtonId));
-    await expect(endOf(args.voice)).toHaveBeenCalledOnce();
+    await expect(endOf(args.conversation)).toHaveBeenCalledOnce();
   },
 };
 
@@ -135,7 +135,7 @@ function CallPage(): React.JSX.Element {
         onAttachImages: fn(),
         onSend: fn(),
         sessionStarted: true,
-        voice: {
+        conversation: {
           kind: 'connected',
           onEnd: call.hungUp,
           mutes: {
@@ -212,7 +212,7 @@ export const PointerToTheCall: Story = {
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
   args: {
-    voice: { kind: 'elsewhere', title: 'Fix the build', onOpen: fn() },
+    conversation: { kind: 'elsewhere', title: 'Fix the build', onOpen: fn() },
   },
   play: async ({ canvas, args }) => {
     await expect(canvas.queryByTestId(conversationButtonId)).not.toBeInTheDocument();
@@ -222,7 +222,7 @@ export const PointerToTheCall: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: 'Call in Fix the build' }),
     );
-    await expect(openOf(args.voice)).toHaveBeenCalledOnce();
+    await expect(openOf(args.conversation)).toHaveBeenCalledOnce();
   },
 };
 
@@ -232,7 +232,7 @@ export const SendBesideACallElsewhere: Story = {
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
   args: {
-    voice: { kind: 'elsewhere', title: 'Fix the build', onOpen: fn() },
+    conversation: { kind: 'elsewhere', title: 'Fix the build', onOpen: fn() },
     draft: { text: 'Check the logs.', attachments: [] },
   },
   play: async ({ canvas, args }) => {
@@ -267,7 +267,7 @@ const muted = (microphone: boolean, speaker: boolean): Story => ({
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
   args: {
-    voice: {
+    conversation: {
       kind: 'connected',
       onEnd: fn(),
       mutes: { ...noMutes, microphone, speaker },
@@ -369,7 +369,7 @@ const mutesAt = (width: number, speaker: boolean): Story => ({
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
-  args: { voice: { kind: 'connected', onEnd: fn(), mutes: noMutes } },
+  args: { conversation: { kind: 'connected', onEnd: fn(), mutes: noMutes } },
   play: async ({ canvas }) => {
     await settleLayout(width);
     await expect(

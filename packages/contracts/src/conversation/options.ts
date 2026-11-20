@@ -22,14 +22,14 @@ export const ConversationOptions = z.strictObject({
     .trim()
     .max(openingLimit)
     .describe(
-      'What the voice is given before the call starts, such as how to greet the person; empty for nothing.',
+      'What the voice is given before the Conversation starts, such as how to greet the person; empty for nothing.',
     ),
   idleSeconds: z
     .number()
     .int()
     .min(shortestIdleSeconds)
     .max(longestIdleSeconds)
-    .describe('How long a call may pass without speech before it ends.'),
+    .describe('How long a Conversation may pass without speech before it ends.'),
   volume: z
     .number()
     .int()

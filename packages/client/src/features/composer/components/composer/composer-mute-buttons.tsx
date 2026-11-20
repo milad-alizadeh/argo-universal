@@ -57,9 +57,9 @@ const speakerOf = (mutes: ComposerConversationMutes): MuteButton => ({
 
 // Only a connected call can be muted: while it connects, End alone shows.
 const mutesOf = (
-  voice: ComposerConversation | undefined,
+  conversation: ComposerConversation | undefined,
 ): ComposerConversationMutes | undefined =>
-  voice?.kind === 'connected' ? voice.mutes : undefined;
+  conversation?.kind === 'connected' ? conversation.mutes : undefined;
 
 interface KeptMutes {
   mutes: ComposerConversationMutes | undefined;
@@ -126,13 +126,13 @@ function AnimatedMuteButtons(props: ShownMutes): React.JSX.Element {
 
 // Once the call connects the mutes spring in beside End, and they go again as it ends.
 export function ComposerMuteButtons({
-  voice,
+  conversation,
   wide,
 }: {
-  voice: ComposerConversation | undefined;
+  conversation: ComposerConversation | undefined;
   wide: boolean;
 }): React.JSX.Element | null {
-  const { mutes, ...kept } = useKeptMutes(mutesOf(voice));
+  const { mutes, ...kept } = useKeptMutes(mutesOf(conversation));
 
   return mutes ? (
     <AnimatedMuteButtons {...kept} mutes={mutes} wide={wide} />

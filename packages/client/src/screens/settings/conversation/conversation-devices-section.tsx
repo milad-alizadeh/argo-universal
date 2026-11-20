@@ -25,7 +25,7 @@ const optionsOf = (devices: AudioDevice[]): Options => [
   ...devices.map(({ id, label }) => ({ value: id, label })),
 ];
 
-// A chosen device that is not plugged in now shows as the system's, which is what a call would use.
+// A chosen device that is not plugged in now shows as the system's, which is what a Conversation would use.
 const valueOf = (devices: AudioDevice[], chosen: string | null): string =>
   devices.some(({ id }) => id === chosen) ? (chosen ?? '') : systemDefault;
 
@@ -80,7 +80,7 @@ const speakerPicker = (
 const footerOf = (devices: ConversationDevices | undefined): string =>
   devices?.named === false
     ? 'Microphone and speaker names appear after the first Conversation.'
-    : 'Kept on this Device. A running Conversation changes at once.';
+    : 'The microphone and speaker are kept on this Device. A running Conversation changes at once.';
 
 const ignore = (): void => undefined;
 
@@ -134,8 +134,8 @@ const speakerRow = (props: ConversationDetailViewProps): React.JSX.Element | nul
     : null;
 
 /*
- * This Device's sound on a call: each device with its level, gain under the microphone and volume under the speaker.
- * Where the App holds no call there are no devices, and only the sliders it can set show. Called, not rendered, like
+ * This Device's sound on a Conversation: each device with its level, gain under the microphone and volume under the speaker.
+ * Where the App holds no Conversation there are no devices, and only the sliders it can set show. Called, not rendered, like
  * the page's other sections.
  */
 export const audioSection = (

@@ -24,26 +24,26 @@ const callMutes = {
 // No call, a usable Conversation provider and an empty draft: the voice button, Send's circle with the five bars.
 export const conversationReadyComposer = {
   ...startedSessionComposer,
-  voice: { kind: 'start', onStart: noop },
+  conversation: { kind: 'start', onStart: noop },
 } satisfies ComposerFixture;
 
 // The call is connecting: End shows at once with its ring turning inside the circle, and the field says so.
 export const conversationConnectingComposer = {
   ...startedSessionComposer,
   placeholder: 'Connecting…',
-  voice: { kind: 'connecting', onEnd: noop },
+  conversation: { kind: 'connecting', onEnd: noop },
 } satisfies ComposerFixture;
 
 // A connected call: the mic and speaker buttons beside End, and the field invites typing as well as talking.
 export const conversationComposer = {
   ...startedSessionComposer,
   placeholder: 'Type, or keep talking',
-  voice: { kind: 'connected', onEnd: noop, mutes: callMutes },
+  conversation: { kind: 'connected', onEnd: noop, mutes: callMutes },
 } satisfies ComposerFixture;
 
 const mutedCall = (microphone: boolean, speaker: boolean): ComposerFixture => ({
   ...conversationComposer,
-  voice: {
+  conversation: {
     kind: 'connected',
     onEnd: noop,
     mutes: { ...callMutes, microphone, speaker },
@@ -68,5 +68,5 @@ export const conversationDraftComposer = {
 // The call runs in another Session: the voice button's place holds a round button with a live dot that takes the person there.
 export const callElsewhereComposer = {
   ...startedSessionComposer,
-  voice: { kind: 'elsewhere', title: 'Fix flaky Feed sync test', onOpen: noop },
+  conversation: { kind: 'elsewhere', title: 'Fix flaky Feed sync test', onOpen: noop },
 } satisfies ComposerFixture;

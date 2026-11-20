@@ -73,7 +73,7 @@ class LiveConnection extends FakeConversationConnection {
   }
 }
 
-describe('Conversation previewer', () => {
+describe('Voice previewer', () => {
   it('plays the live preview the first time and keeps the greeting it recorded', async () => {
     const connection = new LiveConnection();
     const server = new FakeServer();

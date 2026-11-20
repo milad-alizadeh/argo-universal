@@ -31,7 +31,7 @@ const rows: Row[] = [
   ['text', 'elsewhere', 'running', 'ready'],
   ['text', 'absent', 'idle', 'ready'],
   ['text', 'absent', 'running', 'ready'],
-  ['empty', 'start', 'idle', 'voice'],
+  ['empty', 'start', 'idle', 'conversation'],
   ['empty', 'start', 'running', 'stop'],
   ['empty', 'connecting', 'idle', 'connecting'],
   ['empty', 'connecting', 'running', 'connecting'],
@@ -45,7 +45,7 @@ const rows: Row[] = [
 
 const noop = (): void => {};
 
-const idle: Row = ['empty', 'start', 'idle', 'voice'];
+const idle: Row = ['empty', 'start', 'idle', 'conversation'];
 
 const mutes = {
   microphone: false,
@@ -61,7 +61,7 @@ const slots: Record<ComposerConversation['kind'], ComposerConversation> = {
   elsewhere: { kind: 'elsewhere', title: 'Fix the build', onOpen: noop },
 };
 
-const conversationOf = (slot: Slot): ComposerProps['voice'] =>
+const conversationOf = (slot: Slot): ComposerProps['conversation'] =>
   slot === 'absent' ? undefined : slots[slot];
 
 function composer(
@@ -77,7 +77,7 @@ function composer(
     running: turn === 'running',
     sessionStarted: true,
     queueWhileRunning,
-    voice: conversationOf(slot),
+    conversation: conversationOf(slot),
   });
 }
 
@@ -86,7 +86,7 @@ const shown = (props: ComposerProps): Shown =>
 
 describe('send button', () => {
   it.each(rows)(
-    'with a %s draft, voice slot %s and Turn %s shows %s',
+    'with a %s draft, conversation slot %s and Turn %s shows %s',
     (...row) => {
       expect(shown(composer(row))).toBe(row[3]);
     },
@@ -100,14 +100,14 @@ describe('send button', () => {
     expect(shown(composer(calling, false))).toBe('end');
   });
 
-  it('is not the voice button while a queued Prompt is edited or the Composer cannot send', () => {
+  it('is not the conversation button while a queued Prompt is edited or the Composer cannot send', () => {
     const editing = { id: 'queued', cancel: noop };
 
     expect(shown({ ...composer(idle), queueEdit: editing })).toBe('blocked');
     expect(shown({ ...composer(idle), sendable: false })).toBe('blocked');
   });
 
-  it('shows the pointer to another Session’s call only where the voice button would show', () => {
+  it('shows the pointer to another Session’s call only where the conversation button would show', () => {
     const pointing: Row = ['empty', 'elsewhere', 'idle', 'pointer'];
     const editing = { id: 'queued', cancel: noop };
 
@@ -119,7 +119,7 @@ describe('send button', () => {
     expect(shown({ ...composer(pointing), sending: true })).toBe('sending');
   });
 
-  it('is not the voice button while sending or disabled', () => {
+  it('is not the conversation button while sending or disabled', () => {
     expect(shown({ ...composer(idle), sending: true })).toBe('sending');
     expect(shown({ ...composer(idle), disabled: true })).toBe('blocked');
   });

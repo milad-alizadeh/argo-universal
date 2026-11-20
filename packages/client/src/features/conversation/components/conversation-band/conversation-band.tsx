@@ -55,7 +55,7 @@ const barBox = {
 function Bar(props: BarProps): React.JSX.Element {
   return (
     <Animated.View
-      testID="voice-band-bar"
+      testID="conversation-band-bar"
       style={[barBox, { left: props.left }, useBarStyle(props)]}
     />
   );
@@ -98,7 +98,7 @@ function BarStrip(props: StripProps): React.JSX.Element {
 
   return (
     <View
-      testID="voice-band-strip"
+      testID="conversation-band-strip"
       aria-hidden
       className="min-w-0 flex-1"
       style={{ height: stripHeight }}
@@ -129,7 +129,7 @@ interface LabelProps {
 function BandLabel({ look, elapsed }: LabelProps): React.JSX.Element {
   return (
     <View
-      testID="voice-band-label"
+      testID="conversation-band-label"
       className="ml-4 shrink-0 flex-row items-baseline gap-1.25"
     >
       <Text role="badge" tone={look.tone}>
@@ -152,7 +152,7 @@ export function ConversationEdgeBand(props: ConversationEdgeBandProps): React.JS
   const look = bandLookOf(props.call);
 
   return (
-    <View testID="voice-edge-band" className={rowClass}>
+    <View testID="conversation-band" className={rowClass}>
       <BarStrip state={look.state} spectrum={props.spectrum} />
       <BandLabel look={look} elapsed={props.elapsed} />
     </View>

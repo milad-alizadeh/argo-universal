@@ -18,7 +18,7 @@ export const conversationSection = (
 ): React.JSX.Element => (
   <FieldGroup.Section
     key="voice"
-    title="Conversation and instructions"
+    title="Voice and instructions"
     footer={conversationFooter(props)}
   >
     {providerRow(props)}

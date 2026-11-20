@@ -8,10 +8,10 @@ export type ConversationSettingsLoad =
   | { status: 'loading' | 'error' | 'disconnected' }
   | { status: 'loaded'; settings: ConversationSettings };
 
-// What the page shows: the Server's Conversation settings, and this Device's own where it carries a call's sound.
+// What the page shows: the Server's Conversation settings, and this Device's own where it carries a Conversation's sound.
 export interface ConversationDetailViewState {
   voice: ConversationSettingsLoad;
-  // Only where the App can hold a call; elsewhere there is nothing to choose.
+  // Only where the App can hold a Conversation; elsewhere there is nothing to choose.
   devices?: ConversationDevices;
   // The microphone's and speaker's levels and the speaker's test sound, beside the devices (Paper "Option D").
   meters?: DeviceMetersState;

@@ -16,9 +16,9 @@ export function useOpeningWiring(
   const attachmentDraft = useNewSessionDraft(data, draft);
   const sessionOpening = useSessionOpening(attachmentDraft, data, connected);
   const { store } = sessionOpening.session;
-  const voice = useNewSessionConversation((start) => store.call(start));
+  const conversation = useNewSessionConversation((start) => store.call(start));
 
-  return { data, connected, navigate, attachmentDraft, sessionOpening, voice };
+  return { data, connected, navigate, attachmentDraft, sessionOpening, conversation };
 }
 
 function useNewSessionDraft(

@@ -1,6 +1,6 @@
 import type { CustomVoice, VoiceOption, ConversationSettings } from '@repo/contracts';
 
-// One row of the Conversation popover: a voice to choose, hear and, when it is the person's own, edit.
+// One row of the Voice popover: a voice to choose, hear and, when it is the person's own, edit.
 export interface VoiceChoice {
   id: string;
   label: string;
@@ -9,7 +9,7 @@ export interface VoiceChoice {
   custom?: CustomVoice;
 }
 
-// What the Conversation popover lists for a search: the person's voices, then the provider's under its name.
+// What the Voice popover lists for a search: the person's voices, then the provider's under its name.
 export interface VoiceChoices {
   custom: VoiceChoice[];
   builtIn: VoiceChoice[];

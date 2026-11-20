@@ -18,7 +18,7 @@ import type { SendLayout } from './composer-toolbar-types';
 type CallPhase = 'offer' | 'call' | 'other';
 
 const callPhases: Partial<Record<SendLayout['sendState'], CallPhase>> = {
-  voice: 'offer',
+  conversation: 'offer',
   connecting: 'call',
   end: 'call',
 };

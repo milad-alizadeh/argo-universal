@@ -39,8 +39,8 @@ const idleRow = (props: CallSectionProps): ReactElement => (
  */
 export const callSection = (props: CallSectionProps): ReactElement => (
   <FieldGroup.Section
-    key="call"
-    title="Call behaviour"
+    key="conversation"
+    title="During a Conversation"
     footer="These apply from the next Conversation."
   >
     {fillerRow(props)}

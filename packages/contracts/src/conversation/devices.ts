@@ -18,7 +18,7 @@ export const ConversationDeviceReport = z.strictObject({
 
 export type ConversationDeviceReport = z.infer<typeof ConversationDeviceReport>;
 
-// The devices of the App a call uses, and whether it carries the running call.
+// The devices of the App a Conversation uses, and whether it carries the running call.
 export const ConversationDeviceList = ConversationDeviceReport.extend({
   carriesCall: z.boolean(),
 });

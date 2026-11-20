@@ -46,9 +46,9 @@ type Story = StoryObj<typeof meta>;
 
 type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
 
-const rowId = 'voice-edge-band';
+const rowId = 'conversation-band';
 
-const labelId = 'voice-band-label';
+const labelId = 'conversation-band-label';
 
 const boxOf = (element: Element | undefined): DOMRect =>
   element?.getBoundingClientRect() ?? new DOMRect();
@@ -64,10 +64,10 @@ interface Measured {
 // Waits for the strip to measure itself and draw its bars, then measures both gaps.
 async function measure(canvas: Canvas): Promise<Measured> {
   await waitFor(() =>
-    expect(canvas.queryAllByTestId('voice-band-bar')).not.toHaveLength(0),
+    expect(canvas.queryAllByTestId('conversation-band-bar')).not.toHaveLength(0),
   );
 
-  const bars = canvas.getAllByTestId('voice-band-bar');
+  const bars = canvas.getAllByTestId('conversation-band-bar');
   const row = boxOf(canvas.getByTestId(rowId));
   const label = boxOf(canvas.getByTestId(labelId));
 

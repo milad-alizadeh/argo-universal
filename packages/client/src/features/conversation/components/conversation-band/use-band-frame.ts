@@ -35,11 +35,11 @@ const noVoices: Voices = { user: [], agent: [] };
 const emptyFrame: BandFrame = { heights: [], fills: [] };
 
 /*
- * The theme's colours the band draws with. The Agent's blue is the `info` token and the rest are tokens too; there is
- * no token yet for the person's voice, so it takes the palette's orange.
+ * The theme's colours the band draws with. The Agent's blue is the `info` token, the person's voice is the `speech`
+ * token, and the rest are tokens too.
  */
 const tokens = [
-  '--color-orange-500',
+  '--color-speech',
   '--color-info',
   '--color-tertiary',
   '--color-warning',

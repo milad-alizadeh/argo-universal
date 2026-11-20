@@ -30,7 +30,7 @@ type Story = StoryObj<typeof meta>;
 
 const composerColumnId = 'composer-column';
 
-const bandId = 'voice-edge-band';
+const bandId = 'conversation-band';
 
 // The band runs along the Composer's top edge for the length of the call, and the Feed scrolls above it.
 export const BandStaysInTheComposer: Story = {

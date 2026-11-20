@@ -18,12 +18,12 @@ export default meta;
 const voiceLabel = 'Start Conversation';
 
 // Each story's own press spy, so nothing is shared between stories.
-const startOf = (voice: ComposerConversation | undefined): (() => void) | undefined =>
-  voice?.kind === 'start' ? voice.onStart : undefined;
+const startOf = (conversation: ComposerConversation | undefined): (() => void) | undefined =>
+  conversation?.kind === 'start' ? conversation.onStart : undefined;
 
 // With nothing written, New Session offers the same voice button as a Session page; pressing it starts the call.
 export const OffersVoice: Story = {
-  args: readyArgs({ voice: { kind: 'start', onStart: fn() } }),
+  args: readyArgs({ conversation: { kind: 'start', onStart: fn() } }),
   play: async ({ args, canvas, userEvent }) => {
     await settleLayout(1440);
     await expect(canvas.queryByRole('button', { name: 'Send' })).toBeNull();
@@ -32,14 +32,14 @@ export const OffersVoice: Story = {
     );
 
     if (args.view.state !== 'ready') throw new Error('The view is not ready.');
-    await expect(startOf(args.view.voice)).toHaveBeenCalledOnce();
+    await expect(startOf(args.view.conversation)).toHaveBeenCalledOnce();
   },
 };
 
 // Text in the draft keeps Send.
 export const TextKeepsSend: Story = {
   args: readyArgs({
-    voice: { kind: 'start', onStart: fn() },
+    conversation: { kind: 'start', onStart: fn() },
     draft: typedDraft,
   }),
   play: async ({ canvas }) => {

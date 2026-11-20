@@ -8,12 +8,12 @@ export * from './options';
 export * from './devices';
 
 
-// How far a running Conversation has come: the Conversation provider has the App's offer and answered, then reports the call joined.
+// How far a running Conversation has come: the Conversation provider has the App's offer and answered, then reports the Conversation joined.
 export const ConversationPhase = z.enum(['connecting', 'connected']);
 
 export type ConversationPhase = z.infer<typeof ConversationPhase>;
 
-// What the call's band shows: the person is heard, the voice talks, the Agent's Turn runs, or the call has no sound to show.
+// What the Conversation's band shows: the person is heard, the voice talks, the Agent's Turn runs, or the Conversation has no sound to show.
 export const ConversationState = z.enum([
   'listening',
   'talking',
@@ -23,7 +23,7 @@ export const ConversationState = z.enum([
 
 export type ConversationState = z.infer<typeof ConversationState>;
 
-// Trouble the call shows in the band's label instead of a dialog.
+// Trouble the Conversation shows in the band's label instead of a dialog.
 export const ConversationTrouble = z.enum(['reconnecting', 'microphone-blocked']);
 
 export type ConversationTrouble = z.infer<typeof ConversationTrouble>;
@@ -46,7 +46,7 @@ export type ConversationEnd = z.infer<typeof ConversationEnd>;
 
 const conversationSessionId = sessionColumns.shape.id;
 
-// The provider's allowance, reported while the call runs: how much is left as a fraction from 0 to 1.
+// The provider's allowance, reported while the Conversation runs: how much is left as a fraction from 0 to 1.
 export const ConversationLimit = z.strictObject({
   remaining: z.number().min(0).max(1),
   resetsAt: z.string().min(1).optional(),
@@ -66,7 +66,7 @@ export const Conversation = z.strictObject({
     .min(1)
     .nullable()
     .describe(
-      'When the call first connected, as a date and time; null until then.',
+      'When the Conversation first connected, as a date and time; null until then.',
     ),
   // Set once the provider reports its allowance running low; absent until then.
   limit: ConversationLimit.optional(),
@@ -74,7 +74,7 @@ export const Conversation = z.strictObject({
 
 export type Conversation = z.infer<typeof Conversation>;
 
-// Whether the Conversation provider can start a call now, and if not, why.
+// Whether the Conversation provider can start a Conversation now, and if not, why.
 export const ConversationAvailability = z.discriminatedUnion('usable', [
   z.strictObject({ usable: z.literal(true) }),
   z.strictObject({ usable: z.literal(false), reason: z.string().min(1) }),
@@ -86,7 +86,7 @@ export const VoiceSpeaker = z.enum(['person', 'voice']);
 
 export type VoiceSpeaker = z.infer<typeof VoiceSpeaker>;
 
-// Words that may still change: live state of the running call, never a stored Feed row. A final transcript replaces it.
+// Words that may still change: live state of the running Conversation, never a stored Feed row. A final transcript replaces it.
 export const ConversationPartial = z.strictObject({
   speaker: VoiceSpeaker,
   id: z.string().min(1),
@@ -101,7 +101,7 @@ export const ConversationPartial = z.strictObject({
 
 export type ConversationPartial = z.infer<typeof ConversationPartial>;
 
-// What the App draws its Composer from: the running call, how the last one ended, and whether a new one can start.
+// What the App draws its Composer from: the running Conversation, how the last one ended, and whether a new one can start.
 export const ConversationStatus = z.strictObject({
   conversation: Conversation.nullable(),
   ended: z
@@ -114,16 +114,16 @@ export const ConversationStatus = z.strictObject({
   availability: ConversationAvailability,
   // Whether the person keeps Conversations on; with them off no Composer offers the voice button.
   enabled: z.boolean(),
-  // What is being said now, at most one per speaker; drawn at the tail of the call's Session's Feed.
+  // What is being said now, at most one per speaker; drawn at the tail of the Conversation's Session's Feed.
   partials: z.array(ConversationPartial),
-  // The App plays the voice this loud and sends the microphone at this gain, a running call included.
+  // The App plays the voice this loud and sends the microphone at this gain, a running Conversation included.
   volume: ConversationOptions.shape.volume,
   microphoneGain: ConversationOptions.shape.microphoneGain,
 });
 
 export type ConversationStatus = z.infer<typeof ConversationStatus>;
 
-// Input of `conversation.start`: the App's connection offer for the Session the call speaks for.
+// Input of `conversation.start`: the App's connection offer for the Session the Conversation speaks for.
 export const ConversationStartInput = z.strictObject({
   sessionId: conversationSessionId,
   offer: z.string().min(1).describe("The App's connection offer."),

@@ -18,7 +18,7 @@ export type ConversationPageProps = VoicePickerProps & {
 };
 
 export const voicePickerCopy = {
-  title: 'Conversation',
+  title: 'Voice',
   search: 'Search voices',
   custom: 'Your voices',
   add: 'New custom voice…',

@@ -60,7 +60,7 @@ export type SendState =
   | 'sending'
   | 'ready'
   | 'blocked'
-  | 'voice'
+  | 'conversation'
   | 'connecting'
   | 'end';
 
@@ -102,7 +102,7 @@ export interface ComposerProps {
   disabled?: boolean;
   sendable?: boolean;
   // Absent where Conversations are not offered.
-  voice?: ComposerConversation;
+  conversation?: ComposerConversation;
   error?: string;
   errorKey?: string;
 }

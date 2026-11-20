@@ -40,13 +40,13 @@ const withCustomVoices = {
 const opened = (canvasElement: HTMLElement): ReturnType<typeof within> =>
   within(canvasElement.ownerDocument.body);
 
-// Opens the Conversation row's popover and waits for it to finish appearing.
+// Opens the Voice row's popover and waits for it to finish appearing.
 async function openVoices({
   canvas,
   canvasElement,
   userEvent,
 }: Context): Promise<ReturnType<typeof within>> {
-  await userEvent.click(canvas.getByRole('link', { name: /^Conversation/ }));
+  await userEvent.click(canvas.getByRole('link', { name: /^Voice/ }));
   const page = opened(canvasElement);
   await waitFor(() =>
     expect(
@@ -275,19 +275,19 @@ export const GroupsTheRowsByWhatTheyChange: Story = {
     await expect(
       inReadingOrder(canvas, [
         'Conversations',
-        'Conversation and instructions',
+        'Voice and instructions',
         'Conversation provider',
         'Instructions for every Conversation',
         'Opening note',
         'The next Conversation uses this voice and these instructions.',
-        'Call behaviour',
+        'During a Conversation',
         'Say a short line when handing work over',
         'End a silent Conversation after',
         'These apply from the next Conversation.',
         'Microphone and speaker',
         gain,
         'Volume',
-        'Kept on this Device. A running Conversation changes at once.',
+        'The microphone and speaker are kept on this Device. A running Conversation changes at once.',
       ]),
     ).toBe(true);
   },

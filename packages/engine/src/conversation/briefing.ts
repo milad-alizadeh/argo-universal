@@ -36,7 +36,7 @@ const speakers = {
   user_message: 'Person',
   person_transcript: 'Person',
   agent_message: 'Agent',
-  voice_transcript: 'Conversation',
+  voice_transcript: 'Voice',
 } as const satisfies Record<
   Exclude<Spoken['sessionUpdate'], 'prompt_message'>,
   string

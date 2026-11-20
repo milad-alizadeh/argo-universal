@@ -55,7 +55,7 @@ describe('the briefing of a call after an earlier one', () => {
     const briefing = await secondBriefing();
 
     expect(briefing).toContain('Person: Can you fix the build?');
-    expect(briefing).toContain('Conversation: On it.');
+    expect(briefing).toContain('Voice: On it.');
   });
 
   it('names a request the voice sent as the voice’s, without the instruction to the Agent', async () => {

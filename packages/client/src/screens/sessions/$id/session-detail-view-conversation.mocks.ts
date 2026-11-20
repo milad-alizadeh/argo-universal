@@ -36,6 +36,6 @@ export const conversationSession: OpenSessionViewProps = {
   composer: {
     ...idleSession.composer,
     placeholder: conversationPlaceholder(connectedHere),
-    voice: connectedHere,
+    conversation: connectedHere,
   },
 };

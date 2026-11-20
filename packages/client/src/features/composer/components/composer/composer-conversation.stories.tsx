@@ -37,7 +37,7 @@ const meta = {
     onSend: action('send prompt'),
   },
   // ComposerProps is declared in composer-types.ts, which react-docgen cannot follow (docs/agents/storybook.md, "Docgen"); the main Composer story holds the prop descriptions.
-  argTypes: { voice: { control: false } },
+  argTypes: { conversation: { control: false } },
 } satisfies Meta<typeof Composer>;
 
 export default meta;

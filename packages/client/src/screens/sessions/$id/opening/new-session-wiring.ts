@@ -17,7 +17,7 @@ export interface NewSessionWiring {
   attachmentDraft: AttachmentDraft;
   sessionOpening: SessionOpening;
   // The voice button, or the pointer to a running call; absent where the App carries no audio.
-  voice: ComposerConversation | undefined;
+  conversation: ComposerConversation | undefined;
   callout: SessionCallouts;
 }
 

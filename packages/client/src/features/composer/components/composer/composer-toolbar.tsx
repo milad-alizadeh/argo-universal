@@ -92,7 +92,7 @@ function ComposerRightControls(layout: RightControlsLayout): React.JSX.Element {
   return (
     <View className="pointer-events-box-none max-w-full shrink-0 flex-row items-center gap-2.5">
       <ComposerConfigurationActions {...layout} />
-      <ComposerMuteButtons voice={layout.props.voice} wide={layout.wide} />
+      <ComposerMuteButtons conversation={layout.props.conversation} wide={layout.wide} />
       <View className="shrink-0">
         <ComposerSendButton {...layout} />
       </View>

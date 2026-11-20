@@ -40,7 +40,7 @@ const speaker = { name: /^Speaker/ };
 const systemDefault = 'System default';
 
 const audioFooter =
-  'Kept on this Device. A running Conversation changes at once.';
+  'The microphone and speaker are kept on this Device. A running Conversation changes at once.';
 
 export const ShowsTheChosenMicrophoneAndTheSystemSpeaker: Story = {
   play: async ({ canvas }) => {
@@ -152,7 +152,7 @@ export const DesktopsShowTheMicrophoneAndSpeaker: Story = {
   play: async ({ canvas }) => {
     await expect(
       inReadingOrder(canvas, [
-        'Call behaviour',
+        'During a Conversation',
         'Microphone and speaker',
         'Microphone',
         'Microphone gain',

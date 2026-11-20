@@ -52,13 +52,13 @@ type Story = StoryObj<typeof meta>;
 
 type Canvas = Parameters<NonNullable<Story['play']>>[0];
 
-// Opens the Conversation row's popover, which draws outside the canvas.
+// Opens the Voice row's popover, which draws outside the canvas.
 async function openVoices({
   canvas,
   canvasElement,
   userEvent,
 }: Canvas): Promise<ReturnType<typeof within>> {
-  await userEvent.click(canvas.getByRole('link', { name: /^Conversation/ }));
+  await userEvent.click(canvas.getByRole('link', { name: /^Voice/ }));
   const page = within(canvasElement.ownerDocument.body);
   await page.findByRole('searchbox', { name: 'Search voices' });
 

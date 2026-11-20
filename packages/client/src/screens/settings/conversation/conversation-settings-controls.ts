@@ -60,7 +60,7 @@ const customVoiceControls = (
   },
 });
 
-// The page's controls: a picked voice is kept for the next call and heard at once.
+// The page's controls: a picked voice is kept for the next Conversation and heard at once.
 export const controlsOf = (
   actions: ConversationSettingsActions,
 ): ConversationSettingsControls => ({

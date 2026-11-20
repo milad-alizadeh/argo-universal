@@ -3,7 +3,7 @@ import type { RunningCall } from './conversation-types';
 import type { ConversationClosedReason, ConversationProviderEvent } from './provider';
 import type { ConversationNotice } from './session-link';
 
-// How a call ended: why, and when the provider closed it, the provider's own reason and its words for it.
+// How a Conversation ended: why, and when the provider closed it, the provider's own reason and its words for it.
 export type EndParameters = {
   reason: ConversationEnd;
   closed?: ConversationClosedReason;
@@ -16,7 +16,7 @@ const endOfClose = (closed: ConversationClosedReason): ConversationEnd =>
 const whyOf = (why: string | undefined): { why?: string } =>
   why === undefined ? {} : { why };
 
-// How a provider's close ends the call: a reached limit is its own ending, any other close is the provider's.
+// How a provider's close ends the Conversation: a reached limit is its own ending, any other close is the provider's.
 export function closeEndingOf(event: ConversationProviderEvent): EndParameters {
   if (event.type !== 'closed') return { reason: 'provider-closed' };
 
@@ -27,7 +27,7 @@ export function closeEndingOf(event: ConversationProviderEvent): EndParameters {
   };
 }
 
-// What the ending knows besides its parameters: the failure a failed call recorded, and the idle period.
+// What the ending knows besides its parameters: the failure a failed Conversation recorded, and the idle period.
 export type EndingFacts = { failure: string | null; idleMs: number };
 
 const ended = 'Conversation ended';
@@ -52,7 +52,7 @@ const lostNotice: ConversationNotice = {
 
 const closedNotice: ConversationNotice = {
   title: ended,
-  description: 'The Conversation provider ended the call without saying why.',
+  description: 'The Conversation provider ended the Conversation without saying why.',
 };
 
 // The provider's own words, when it gave some, say why under the title its kind of close has.
@@ -69,7 +69,7 @@ const notices: Partial<Record<ConversationEnd, NoticeOf>> = {
   'limit-reached': () => ({
     title: `${ended}: usage limit reached`,
     description:
-      'The Conversation provider closed the call because the allowance ran out. Start a new call once it resets.',
+      'The Conversation provider closed the Conversation because the allowance ran out. Start a new Conversation once it resets.',
   }),
   failed: (_, { failure }) => ({
     title: 'Conversation failed',
@@ -78,20 +78,20 @@ const notices: Partial<Record<ConversationEnd, NoticeOf>> = {
   'app-disconnected': () => ({
     title: `${ended}: the App disconnected`,
     description:
-      'The App carrying the call closed, reloaded or lost its connection to the Server, so the call ended with it.',
+      'The App carrying the Conversation closed, reloaded or lost its connection to the Server, so the Conversation ended with it.',
   }),
   'engine-stopped': () => ({
     title: `${ended}: the Server stopped`,
-    description: 'The Argo Server stopped, so the call ended with it.',
+    description: 'The Argo Server stopped, so the Conversation ended with it.',
   }),
   idle: (_, { idleMs }) => ({
     title: `${ended}: no one spoke`,
-    description: `The call heard no speech for ${spanOf(idleMs)} and ended by itself, so the microphone was not left open.`,
+    description: `The Conversation heard no speech for ${spanOf(idleMs)} and ended by itself, so the microphone was not left open.`,
   }),
 };
 
 /*
- * The Notice an ending leaves in the call's Session, or null for an ending the person or the Agent chose: hanging up,
+ * The Notice an ending leaves in the Conversation's Session, or null for an ending the person or the Agent chose: hanging up,
  * the Agent's Operation, or closing or archiving the Session. Every other ending says why.
  */
 export const endNoticeOf = (
@@ -139,6 +139,6 @@ export type EndingLog = {
   now: number;
 };
 
-// The Server's log line for a call's end: which call, why, how long it ran, and what the provider noted on the way.
+// The Server's log line for a Conversation's end: which Conversation, why, how long it ran, and what the provider noted on the way.
 export const endLogLine = ({ call, params, facts, now }: EndingLog): string =>
   [headOf(call, params, now), ...parts(call, params, facts)].join('; ');

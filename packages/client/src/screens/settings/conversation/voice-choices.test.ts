@@ -88,7 +88,7 @@ describe('The voices Settings › Conversation offers', () => {
   });
 });
 
-describe('The chosen voice, as the Conversation row shows it', () => {
+describe('The chosen voice, as the Voice row shows it', () => {
   it('names a custom voice by its own name', () => {
     expect(chosenVoiceLabel(settings)).toBe('Pirate');
   });

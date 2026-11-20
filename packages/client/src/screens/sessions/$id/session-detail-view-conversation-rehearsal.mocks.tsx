@@ -86,14 +86,14 @@ export function ConversationRehearsal(): React.JSX.Element {
   const [call, setCall] = useState<RehearsedCall>('none');
   const [mutes, setMutes] = useState({ microphone: false, speaker: false });
   useConnectAfterStart(call, setCall);
-  const voice = conversationOf({ call, setCall, mutes, setMutes });
-  const placeholder = conversationPlaceholder(voice) ?? idleComposer.placeholder;
+  const conversation = conversationOf({ call, setCall, mutes, setMutes });
+  const placeholder = conversationPlaceholder(conversation) ?? idleComposer.placeholder;
 
   return (
     <FramedSessionPreview
       state="open"
       {...idleSession}
-      composer={{ ...idleComposer, placeholder, voice }}
+      composer={{ ...idleComposer, placeholder, conversation }}
     />
   );
 }

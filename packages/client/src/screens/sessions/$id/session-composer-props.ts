@@ -43,7 +43,7 @@ export interface OpenSession {
   permission: PermissionRequestProps | undefined;
   usageLimits: UsageLimitsRead;
   // Where a Conversation is, and how to start or end it; absent where the App carries no audio.
-  voice?: ComposerProps['voice'];
+  conversation?: ComposerProps['conversation'];
   // What is being said on this Session's Conversation, drawn at the tail of its Feed.
   partials?: ConversationPartial[];
   options?: {
@@ -126,8 +126,8 @@ const draftProps = (commands: SessionCommands): DraftProps => ({
   onSend: (sent) => void commands.sendDraft(sent),
 });
 
-const placeholderOf = ({ voice }: OpenSession): string =>
-  conversationPlaceholder(voice) ?? 'Message the Agent';
+const placeholderOf = ({ conversation }: OpenSession): string =>
+  conversationPlaceholder(conversation) ?? 'Message the Agent';
 
 // An open Session always offers Argo's Slash commands, whether or not its Agent has reported any.
 const slashCommandsOf = (open: OpenSession): ComposerProps['slashCommands'] =>
@@ -162,10 +162,10 @@ function composerOptions({
 
 function sendingProps(
   open: OpenSession,
-): Pick<ComposerProps, 'sending' | 'sendable' | 'voice'> {
+): Pick<ComposerProps, 'sending' | 'sendable' | 'conversation'> {
   return {
     sending: isSending(open),
     sendable: isSendable(open),
-    voice: open.voice,
+    conversation: open.conversation,
   };
 }

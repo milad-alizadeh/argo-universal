@@ -6,7 +6,7 @@ import type { ComposerConversation } from './composer-types';
 
 export const endButtonId = 'composer-end';
 
-export const conversationButtonId = 'composer-voice';
+export const conversationButtonId = 'composer-conversation';
 
 type IconButtonProps = React.ComponentProps<typeof IconButton>;
 
@@ -26,16 +26,16 @@ function endAction(layout: SendLayout): IconButtonProps {
     accessibilityLabel: 'End',
     testID: endButtonId,
     icon: 'close',
-    onPress: (): void => endOf(layout.props.voice)?.(),
+    onPress: (): void => endOf(layout.props.conversation)?.(),
   };
 }
 
 // End belongs to a call connecting or connected here.
-const endOf = (voice: ComposerConversation | undefined): (() => void) | undefined =>
-  voice && 'onEnd' in voice ? voice.onEnd : undefined;
+const endOf = (conversation: ComposerConversation | undefined): (() => void) | undefined =>
+  conversation && 'onEnd' in conversation ? conversation.onEnd : undefined;
 
-const startOf = (voice: ComposerConversation | undefined): (() => void) | undefined =>
-  voice?.kind === 'start' ? voice.onStart : undefined;
+const startOf = (conversation: ComposerConversation | undefined): (() => void) | undefined =>
+  conversation?.kind === 'start' ? conversation.onStart : undefined;
 
 function stopButtonAction(layout: Pick<SendLayout, 'props'>): IconButtonProps {
   return {
@@ -52,7 +52,7 @@ function conversationAction(layout: SendLayout): IconButtonProps {
     accessibilityLabel: 'Start Conversation',
     testID: conversationButtonId,
     icon: 'voice-bars',
-    onPress: (): void => startOf(layout.props.voice)?.(),
+    onPress: (): void => startOf(layout.props.conversation)?.(),
   };
 }
 
@@ -63,7 +63,7 @@ const primaryActions: Record<SendLayout['sendState'], PrimaryAction> = {
   ready: sendAction,
   sending: sendAction,
   blocked: sendAction,
-  voice: conversationAction,
+  conversation: conversationAction,
 };
 
 export const sendButtonAction = (layout: SendLayout): IconButtonProps =>

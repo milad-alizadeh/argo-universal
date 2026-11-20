@@ -27,7 +27,7 @@ export const conversationSettingsOperations = {
     icon: 'settings',
     label: 'Change Conversation settings',
     description:
-      'Turn Conversations on or off, or choose the Conversation provider or the voice the next call uses.',
+      'Turn Conversations on or off, or choose the Conversation provider or the voice the next Conversation uses.',
     params: ConversationSettingsChange,
     result: ConversationSettings,
     tier: 'confirm',
@@ -38,7 +38,7 @@ export const conversationSettingsOperations = {
     icon: 'voice',
     label: 'Set Conversation instructions',
     description:
-      "Set the custom instructions every Conversation is told after Argo's own, such as how to address the person or what to stress. Empty removes them. A running call keeps the instructions it started with.",
+      "Set the custom instructions every Conversation is told after Argo's own, such as how to address the person or what to stress. Empty removes them. A running Conversation keeps the instructions it started with.",
     params: VoiceInstructions,
     result: ConversationSettings,
     tier: 'confirm',
@@ -49,7 +49,7 @@ export const conversationSettingsOperations = {
     icon: 'settings',
     label: 'Change Conversation options',
     description:
-      "Change how Conversations behave: the filler line when work is handed over, the opening the voice is given, the idle timeout, the voice's volume and the microphone's gain. What is left out stays. Volume and gain change a running call at once; the rest apply from the next call.",
+      "Change how Conversations behave: the filler line when work is handed over, the opening the voice is given, the idle timeout, the voice's volume and the microphone's gain. What is left out stays. Volume and gain change a running Conversation at once; the rest apply from the next call.",
     params: ConversationOptionsChange,
     result: ConversationSettings,
     tier: 'confirm',

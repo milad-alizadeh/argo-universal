@@ -35,7 +35,7 @@ type Done = {
   choose: (voice: string) => void;
 };
 
-// A new voice is chosen at once, as the person made it from the Conversation picker; an edited one keeps the choice.
+// A new voice is chosen at once, as the person made it from the Voice picker; an edited one keeps the choice.
 const savedThen =
   (done: Done) =>
   (saved: CustomVoice, input: CustomVoiceInput): void => {

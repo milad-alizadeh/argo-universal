@@ -70,15 +70,15 @@ const inCall: Partial<Record<ComposerConversation['kind'], 'connecting' | 'end'>
 
 // While a call runs here and the draft is empty, the button is End: it comes back as Send once the person types.
 function callSendState(props: ComposerProps): 'connecting' | 'end' | undefined {
-  if (hasDraftContent(props) || !props.voice) return undefined;
+  if (hasDraftContent(props) || !props.conversation) return undefined;
 
-  return inCall[props.voice.kind];
+  return inCall[props.conversation.kind];
 }
 
 function idleSendState(props: ComposerProps): SendState {
   const state = baseSendState(props);
 
-  return state === 'blocked' && canStartConversation(props) ? 'voice' : state;
+  return state === 'blocked' && canStartConversation(props) ? 'conversation' : state;
 }
 
 /*
@@ -88,7 +88,7 @@ function idleSendState(props: ComposerProps): SendState {
 export function callPointer(
   props: ComposerProps,
 ): ComposerConversationElsewhere | undefined {
-  return pointsElsewhere(props) ? elsewhereOf(props.voice) : undefined;
+  return pointsElsewhere(props) ? elsewhereOf(props.conversation) : undefined;
 }
 
 // The voice button's place is free: nothing else takes the primary slot, and the Composer could start a call.
@@ -96,9 +96,9 @@ const pointsElsewhere = (props: ComposerProps): boolean =>
   sendButtonState(props) === 'blocked' && conversationSlotFree(props);
 
 const elsewhereOf = (
-  voice: ComposerProps['voice'],
+  conversation: ComposerProps['conversation'],
 ): ComposerConversationElsewhere | undefined =>
-  voice?.kind === 'elsewhere' ? voice : undefined;
+  conversation?.kind === 'elsewhere' ? conversation : undefined;
 
 function baseSendState(props: ComposerProps): SendState {
   const candidates = [
@@ -123,7 +123,7 @@ const conversationSlotFree = (props: ComposerProps): boolean =>
 
 // The voice module offers the voice button only while no call runs anywhere: one Conversation runs per App.
 const canStartConversation = (props: ComposerProps): boolean =>
-  props.voice?.kind === 'start' && conversationSlotFree(props);
+  props.conversation?.kind === 'start' && conversationSlotFree(props);
 
 function isConnectionSendable(props: ComposerProps): boolean {
   return (props.sendable ?? true) && allowsSubmission(props);

@@ -10,7 +10,7 @@ import {
 
 type ComposerFixture = Pick<
   ComposerMockProps,
-  'draft' | 'placeholder' | 'voice'
+  'draft' | 'placeholder' | 'conversation'
 >;
 
 const noop = (): void => {};
@@ -39,7 +39,7 @@ const onCall = (
   elapsed?: string,
 ): ComposerFixture => ({
   ...conversationComposer,
-  voice: {
+  conversation: {
     kind: 'connected',
     onEnd: noop,
     mutes: mutes(call.microphoneMuted),
@@ -50,7 +50,7 @@ const onCall = (
 // Connecting: dim dots with one soft pulse crossing them, and no timer until the call connects.
 export const bandConnectingComposer = {
   ...conversationConnectingComposer,
-  voice: {
+  conversation: {
     kind: 'connecting',
     onEnd: noop,
     edge: band({ ...connected, state: 'none' }),

@@ -2,7 +2,7 @@ const minute = 60;
 
 const hour = 3600;
 
-// The waits Settings offers before a silent call ends, in minutes; five is the Server's default.
+// The waits Settings offers before a silent Conversation ends, in minutes; five is the Server's default.
 const defaultMinutes = 5;
 
 const halfHourMinutes = 30;

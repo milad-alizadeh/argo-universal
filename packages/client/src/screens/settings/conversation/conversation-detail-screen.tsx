@@ -19,7 +19,7 @@ import type {
 
 type DeviceRows = Pick<ConversationDetailViewState, 'adjustsGain'>;
 
-// Where this App carries a call's sound it sets the microphone's gain; elsewhere the row does not show.
+// Where this App carries a Conversation's sound it sets the microphone's gain; elsewhere the row does not show.
 function useDeviceRows(): DeviceRows {
   const carries = useConversationConnection() !== null;
 
@@ -34,7 +34,7 @@ const optionsOf = (page: ConversationDetailViewProps): ConversationOptions =>
     ? page.voice.settings.options
     : defaultConversationOptions;
 
-// Where the App holds no call it lists no devices, and the meters never listen.
+// Where the App holds no Conversation it lists no devices, and the meters never listen.
 const noDevices = { named: false, microphone: null, speaker: null };
 
 // The meters listen once the browser has named its devices: it has been allowed the microphone, so opening it asks nothing.
