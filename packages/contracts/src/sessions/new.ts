@@ -60,6 +60,20 @@ export const SessionNewInput = z.strictObject({
 
 export type SessionNewInput = z.infer<typeof SessionNewInput>;
 
+// What `session.new` runs with: a Session that runs it gives its own Project and Agent, and the main Checkout is the default.
+export const SessionNewParams = SessionNewInput.extend({
+  projectId: SessionNewInput.shape.projectId
+    .optional()
+    .describe('The Project; a Session that runs this starts in its own.'),
+  agent: SessionNewInput.shape.agent
+    .optional()
+    .describe('The Agent; a Session that runs this starts its own.'),
+  checkout: NewSessionCheckout.default({ type: 'main' }),
+  configOptions: z.array(InitialConfigOption).default([]),
+});
+
+export type SessionNewParams = z.infer<typeof SessionNewParams>;
+
 export const SessionNewOutput = z.strictObject({
   sessionId: sessionColumns.shape.id,
 });

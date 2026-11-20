@@ -44,6 +44,8 @@ export interface OpenSessionsInput {
   hooks: CoreHooks;
   // Handed to every Session: the Engine starts the writer before the open Sessions.
   writer: WriterActorRef;
+  // Overrides how long an archive can be undone (tests).
+  archiveUndoMs?: number;
 }
 
 interface OpenSessionsContext extends OpenSessionsInput {

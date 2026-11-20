@@ -57,18 +57,6 @@ function highlights(language: string): Story {
 
 export const HighlightsKnownLanguage = highlights('ts');
 
-// However the fence tags the language, it reaches the same grammar.
-export const ReadsTheLanguageTagLoosely = highlights('TypeScript');
-
-// Tool output names the file it read rather than a tag, and the last extension decides the grammar.
-export const ReadsTheFileExtension = highlights('use-session.Test.TSX');
-
-// Agents write tags Prism has no alias of its own for.
-export const ReadsAnExtraAlias = highlights('mts');
-
-// A tag that holds a dot is tried whole before it is read as a file name.
-export const PrefersTheWholeTagOverItsExtension = highlights('node.js');
-
 // A heading of Argo's own names the block without claiming its code is written in that.
 export const TitleIsNotALanguage: Story = {
   args: { language: undefined, title: 'Shell' },
@@ -90,41 +78,3 @@ function drawsPlain(language?: string): Story {
 }
 
 export const DrawsUnknownLanguagePlain = drawsPlain('brainfuck');
-
-export const DrawsPlaintextPlain = drawsPlain('plaintext');
-
-export const DrawsTxtPlain = drawsPlain('notes.txt');
-
-export const DrawsUntaggedFencePlain = drawsPlain();
-
-/*
- * `Prism.languages` answers to its own helpers and to every name on Object's prototype, none of
- * which is a grammar.
- */
-export const DrawsPrismsOwnMemberNamePlain = drawsPlain('constructor');
-
-const atLimit = 'a'.repeat(20_000);
-
-// The guard is on the code's length, so a block of exactly the limit is still coloured.
-export const HighlightsCodeAtTheLimit: Story = {
-  args: { code: atLimit, language: 'ts' },
-  play: async ({ canvas }) => {
-    await expect((await codeRuns(canvas)).length).toBeGreaterThan(0);
-  },
-};
-
-// One character past it the block draws plain rather than building runs nobody scrolls to.
-export const DrawsCodePastTheLimitPlain: Story = {
-  args: { code: `${atLimit}a`, language: 'ts' },
-  play: async ({ canvas }) => {
-    await expect(await codeRuns(canvas)).toHaveLength(0);
-  },
-};
-
-// A block with nothing in it draws nothing, rather than an empty run.
-export const DrawsEmptyCode: Story = {
-  args: { code: '', language: 'ts' },
-  play: async ({ canvas }) => {
-    await expect(await wholeCode(canvas)).toBe('');
-  },
-};

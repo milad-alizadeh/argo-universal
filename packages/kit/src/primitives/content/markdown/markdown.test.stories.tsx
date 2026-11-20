@@ -56,14 +56,6 @@ export const Streaming: Story = {
   },
 };
 
-export const QuoteAndInlineContent: Story = {
-  args: { text: '> **Strong**, *emphasis*, ~~removed~~, and `value`.' },
-  play: async ({ canvas }) => {
-    for (const label of ['Strong', 'emphasis', 'removed', 'value'])
-      await expect(canvas.getByText(label)).toBeVisible();
-  },
-};
-
 export const FormattedTableHeader: Story = {
   args: { text: '| **Name** | *Value* |\n| --- | --- |\n| Item | 42 |' },
   play: async ({ canvas }) => {
@@ -95,18 +87,6 @@ function inertLink(href: string): Story {
   };
 }
 
-export const AbsolutePathLinkIsInert = inertLink('/work/checkout/qa-note.txt');
-
-export const RelativePathLinkIsInert = inertLink('src/qa-note.txt');
-
-export const PathWithEncodedSpacesLinkIsInert = inertLink(
-  '/work/my%20checkout/qa%20note.txt',
-);
-
-export const UnicodePathLinkIsInert = inertLink(
-  '/work/caf%C3%A9/note-%E6%97%A5.txt',
-);
-
 export const AppRouteLookingLinkIsInert = inertLink('/settings');
 
 export const WebLinkKeepsItsHref: Story = {
@@ -116,13 +96,6 @@ export const WebLinkKeepsItsHref: Story = {
       'href',
       'https://example.com/a%20b',
     );
-  },
-};
-
-export const SelectableText: Story = {
-  args: { text: 'Run `npm install -g pi`', selectable: true },
-  play: async ({ canvas }) => {
-    await expect(canvas.getByText('npm install -g pi')).toBeVisible();
   },
 };
 

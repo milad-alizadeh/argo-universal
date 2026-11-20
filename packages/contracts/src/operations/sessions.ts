@@ -1,5 +1,3 @@
-import { z } from 'zod';
-import { SessionQueueInput, SessionSubmitInput } from '../sessions';
 import {
   SessionArchiveInput,
   SessionArchiveOutput,
@@ -8,9 +6,9 @@ import {
 } from '../sessions/archive';
 import { SessionCancelInput, SessionCancelOutput } from '../sessions/cancel';
 import { SessionCloseInput, SessionCloseOutput } from '../sessions/close';
-import { SessionNewInput, SessionNewOutput } from '../sessions/new';
+import { SessionNewOutput, SessionNewParams } from '../sessions/new';
 import { SessionPromptInput, SessionPromptOutput } from '../sessions/prompt';
-import { SessionRenameInput, SessionRenameOutput } from '../sessions/rename';
+import { SessionRenameOutput, SessionRenameParams } from '../sessions/rename';
 import {
   SessionSavePlanInput,
   SessionSavePlanOutput,
@@ -20,39 +18,22 @@ import {
   SessionSetConfigOptionOutput,
 } from '../sessions/set-config-option';
 import type { OperationDefinition } from './index';
+import { scheduleOperations } from './schedules';
 import { sessionAgentOperations } from './session-agent-operations';
+import { queueOperations } from './session-queue-operations';
 import { sessionRestartOperations } from './session-restart-operations';
 import { shellOperations } from './shells';
 
 export const sessionOperations = {
-  'session.submit': {
-    id: 'session.submit',
-    label: 'Submit Prompt',
-    icon: 'message',
-    description:
-      'Submit a user Prompt from an App, queuing it while the Session is busy or paused.',
-    params: SessionSubmitInput,
-    result: z.strictObject({}),
-    tier: 'act',
-    keywords: ['prompt', 'queue'],
-  },
-  'session.queue': {
-    id: 'session.queue',
-    label: 'Manage Prompt queue',
-    icon: 'checklist',
-    description: 'Append, edit, delete, reorder or resume Queued Prompts.',
-    params: SessionQueueInput,
-    result: z.strictObject({}),
-    tier: 'act',
-    keywords: ['queue', 'prompt'],
-  },
+  ...scheduleOperations,
+  ...queueOperations,
   'session.new': {
     id: 'session.new',
     label: 'Start Session',
     icon: 'new-session',
     description:
       'Start a Session with an Agent, Checkout and optional first prompt. A Session may pass the `starter` Checkout to run the new Session in its own working tree, uncommitted changes included. A worktree Checkout can name its branch. If that branch is held by a clean unowned linked worktree, the conflict reports its path and offers a retry with checkout.takenBranch.',
-    params: SessionNewInput,
+    params: SessionNewParams,
     result: SessionNewOutput,
     tier: 'act',
     keywords: ['create', 'delegate', 'agent', 'parallel', 'subagent'],
@@ -110,7 +91,7 @@ export const sessionOperations = {
     params: SessionSetConfigOptionInput,
     result: SessionSetConfigOptionOutput,
     tier: 'act',
-    keywords: ['model', 'mode', 'effort', 'configuration'],
+    keywords: ['model', 'mode', 'effort', 'configuration', 'switch'],
   },
   'session.close': {
     id: 'session.close',
@@ -143,7 +124,7 @@ export const sessionOperations = {
     icon: 'rename',
     description:
       'Set the title shown for a Session in the Sessions list and Feed.',
-    params: SessionRenameInput,
+    params: SessionRenameParams,
     result: SessionRenameOutput,
     tier: 'act',
     keywords: ['title', 'name'],

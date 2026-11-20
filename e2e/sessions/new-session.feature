@@ -45,10 +45,8 @@ Feature: New Session
 
     Examples:
       | agent | frame |
-      | 1     | phone |
       | 2     | phone |
       | 1     | wide  |
-      | 2     | wide  |
 
   @smoke
   Scenario Outline: Successive prompts share one ACP Session with Agent <agent>

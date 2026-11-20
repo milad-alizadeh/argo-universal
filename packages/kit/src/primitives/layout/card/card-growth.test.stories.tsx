@@ -31,9 +31,27 @@ function seekNearEnd(animation: Animation): void {
   animation.currentTime = timing.duration - 1;
 }
 
-function pauseAnimations(card: HTMLElement): void {
-  for (const animation of card.getAnimations({ subtree: true }))
-    animation.pause();
+function heightTransition(card: HTMLElement): Animation {
+  const transition = card
+    .getAnimations({ subtree: true })
+    .find(
+      (animation) =>
+        animation instanceof CSSTransition &&
+        animation.transitionProperty === 'height',
+    );
+
+  if (!transition) throw new Error('The Card height must be transitioning');
+
+  return transition;
+}
+
+function retargetedHeight(card: HTMLElement, opening: Animation): Animation {
+  const transition = heightTransition(card);
+
+  if (transition === opening)
+    throw new Error('The height transition must include the loaded content');
+
+  return transition;
 }
 
 // Newly loaded content must be part of the animated target, rather than snapping into place at the end.
@@ -47,23 +65,17 @@ export const ContentArrivesWhileOpening: Story = {
     const initial = trigger.getBoundingClientRect();
 
     trigger.click();
-    await waitFor(() =>
-      expect(card.getAnimations({ subtree: true }).length).toBeGreaterThan(0),
-    );
-    pauseAnimations(card);
+    const opening = await waitFor(() => heightTransition(card));
+    opening.pause();
     await userEvent.click(canvas.getByRole('button', { name: 'Load content' }));
     await expect(canvas.getByText(arrivingCopy.trim())).toBeInTheDocument();
-    await nextFrame();
-    await nextFrame();
-    const animations = card.getAnimations({ subtree: true });
+    const grown = await waitFor(() => retargetedHeight(card, opening));
 
-    await expect(animations.length).toBeGreaterThan(0);
-
-    for (const animation of animations) seekNearEnd(animation);
+    seekNearEnd(grown);
 
     const before = neighbour.getBoundingClientRect().top;
 
-    for (const animation of animations) animation.finish();
+    grown.finish();
     await nextFrame();
     const after = neighbour.getBoundingClientRect().top;
 

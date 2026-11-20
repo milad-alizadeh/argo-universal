@@ -11,9 +11,9 @@ import {
   SessionRowCallProvider,
 } from './session-row-call';
 import {
-  connectingVoiceCall,
-  mutedVoiceCall,
-  voiceCall,
+  connectingConversation,
+  mutedConversation,
+  liveConversation,
 } from './session-row-call-fixtures';
 import {
   archivedSession,
@@ -126,22 +126,22 @@ const onCall =
     </SessionRowCallProvider>
   );
 
-// A Voice call is attached: the bars and the call's time take the status's place at the end of the title line.
-export const OnVoiceCall: Story = {
+// A Conversation is attached: the bars and the call's time take the status's place at the end of the title line.
+export const InAConversation: Story = {
   args: idleSession,
-  decorators: [onCall(voiceCall)],
+  decorators: [onCall(liveConversation)],
 };
 
 // The call is still connecting: the bars show without a time until it connects.
-export const VoiceCallConnecting: Story = {
+export const ConversationConnecting: Story = {
   args: idleSession,
-  decorators: [onCall(connectingVoiceCall)],
+  decorators: [onCall(connectingConversation)],
 };
 
 // The call's microphone is muted: mic.slash and "Muted" in red in the same place.
-export const VoiceCallMuted: Story = {
+export const ConversationMuted: Story = {
   args: idleSession,
-  decorators: [onCall(mutedVoiceCall)],
+  decorators: [onCall(mutedConversation)],
 };
 
 /*

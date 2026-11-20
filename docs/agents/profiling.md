@@ -10,6 +10,8 @@ Look at which components render and why. Those counts stay the same on a busy ma
    PERF_FEED_ROWS=1000 PERF_SESSIONS=100 pnpm --filter @repo/tools perf:seed
    ```
 
+   CI seeds only the smallest tier in `tools/perf/seed-tiers.integration.test.mts`. After a change to seeding, run that file with `PERF_SEED_ALL_TIERS=1` to seed every tier.
+
 2. Build for that URL, then serve the build. `build:profiling` uses `react-dom/profiling`, the one production React whose Profiler reports timings, and leaves names unminified so components are readable.
 
    ```sh

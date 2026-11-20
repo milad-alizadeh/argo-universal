@@ -41,12 +41,12 @@ it.each(act)(
   },
 );
 
-it('hangs up only the calling Session, refusing voice.hangUp for any other Session', async () => {
+it('hangs up only the calling Session, refusing conversation.hangUp for any other Session', async () => {
   const outcomes: Record<string, string> = {};
 
   for (const target of targets)
     outcomes[target] = (
-      await scoped({ id: 'voice.hangUp', params: sessionOnly(target) })
+      await scoped({ id: 'conversation.hangUp', params: sessionOnly(target) })
     ).outcome;
 
   expect(outcomes).toEqual({
@@ -58,8 +58,10 @@ it('hangs up only the calling Session, refusing voice.hangUp for any other Sessi
   });
 });
 
-it('hangs up the calling Session when voice.hangUp names no Session', async () => {
-  expect((await scoped({ id: 'voice.hangUp', params: {} })).outcome).toBe(runs);
+it('hangs up the calling Session when conversation.hangUp names no Session', async () => {
+  expect(
+    (await scoped({ id: 'conversation.hangUp', params: {} })).outcome,
+  ).toBe(runs);
 });
 
 it('shows the Operation label and description on the card', async () => {

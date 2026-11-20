@@ -1,6 +1,6 @@
 import type { FeedItemProps } from '../feed-item';
 
-// What was said on a Voice call, as the Feed draws it: the person's words in a bubble, the voice's as plain text.
+// What was said on a Conversation, as the Feed draws it: the person's words in a bubble, the voice's as plain text.
 type TranscriptFixture = Pick<FeedItemProps, 'item'>;
 
 const envelope = {
@@ -11,13 +11,13 @@ const envelope = {
 } as const;
 
 // The words each fixture says, so a test reads them from here and not from the drawing.
-export const words = {
+const words = {
   person:
     'Build the Session layout from spec 0003. Use the Reusables primitives and only theme tokens — stop and ask if something is missing.',
   voice:
     "The shell already switches at 720 px, so the Session screen only needs a wide and a phone tree. I'll keep the Plan in the composer tray, under the card.",
   personPartial: 'Build the Session layout from spec 0003. Use the',
-  voicePartial: 'The shell already switches at 720 px, so the Session',
+  conversationPartial: 'The shell already switches at 720 px, so the Session',
 };
 
 const text = (said: string): { type: 'text'; text: string }[] => [
@@ -65,14 +65,14 @@ export const personSaying = {
   },
 } satisfies TranscriptFixture;
 
-export const voiceSaying = {
+const voiceSaying = {
   item: {
     type: 'row',
     partial: true,
     row: {
       ...voiceSaid.item.row,
       state: 'open',
-      content: text(words.voicePartial),
+      content: text(words.conversationPartial),
     },
   },
 } satisfies TranscriptFixture;

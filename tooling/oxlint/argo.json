@@ -150,12 +150,6 @@
       "rules": { "no-restricted-globals": "off" }
     },
     {
-      // A feature's barrel only re-exports, so its length counts the feature's surface, not anything to read or follow.
-      // Features are drawn around what a screen needs, never around a line count; the owner exempted barrels on 2026-10-20.
-      "files": ["packages/client/src/features/*/index.ts"],
-      "rules": { "max-lines": "off" }
-    },
-    {
       // #717 keeps the connection in one file; the owner approved this length exception on 2026-10-15.
       "files": ["packages/engine/src/agents/acp/connection/connection.ts"],
       "rules": { "max-lines": "off" }
@@ -185,11 +179,6 @@
       "rules": { "no-magic-numbers": "off" }
     },
     {
-      // A story file lists every state of its component as a fixture, so its length follows the component's states, never a line count; the owner exempted stories on 2026-10-22.
-      "files": ["**/*.stories.*"],
-      "rules": { "max-lines": "off", "max-lines-per-function": "off" }
-    },
-    {
       // Tests, mocks, tools, app scripts and the four log sinks print to the terminal on purpose.
       "files": [
         "**/*.test.*",
@@ -208,14 +197,25 @@
       "rules": { "typescript/no-require-imports": "off" }
     },
     {
-      // ADR-0016 (1): one global cap for test files. A describe callback holds its cases, so a test function may run to the 150-line file cap with 30 statements.
+      // ADR-0016 (1): a test file holds every case of its subject, so it has no length cap; a describe callback holds its cases, so a test function may run to 150 lines with 30 statements.
       "files": ["**/*.test.*"],
       "rules": {
+        "max-lines": "off",
         "max-lines-per-function": [
           "error",
           { "max": 150, "skipBlankLines": true, "skipComments": true }
         ],
         "max-statements": ["error", 30]
+      }
+    },
+    {
+      // A test's mocks are code other tests import, so they keep the file cap.
+      "files": ["**/*.test.mocks.*"],
+      "rules": {
+        "max-lines": [
+          "error",
+          { "max": 300, "skipBlankLines": true, "skipComments": true }
+        ]
       }
     },
     {
@@ -261,6 +261,7 @@
         "packages/kit/src/symbols/**",
         "packages/kit/src/primitives/fields/field-link/field-link.ios.tsx",
         "packages/kit/src/primitives/fields/field-picker/field-picker-screen-row.ios.tsx",
+        "packages/kit/src/primitives/fields/field-picker/field-picker-accessory.ios.tsx",
         "packages/kit/src/primitives/overlays/menu/context-menu-swift-items.ios.tsx",
         "packages/kit/src/primitives/overlays/sheet/sheet-screen-toolbar.ios.tsx",
         "packages/kit/src/primitives/actions/icon-button/icon-button.ios.tsx",
@@ -308,7 +309,7 @@
     {
       // The GPT-Live provider is the one place that talks to Codex for a ChatGPT token (ADR-0064).
       "files": [
-        "packages/engine/src/voice/gpt-live/**",
+        "packages/engine/src/conversation/gpt-live/**",
         "packages/engine/mocks/fake-codex*",
         "packages/engine/mocks/gpt-live-*"
       ],
@@ -2479,7 +2480,7 @@
         "**/mocks/**",
         "packages/engine/src/system/info.ts",
         "packages/engine/src/engine/caffeinate.ts",
-        "packages/engine/src/voice/gpt-live/app-server-ask.ts",
+        "packages/engine/src/conversation/gpt-live/app-server-ask.ts",
         "packages/engine/src/plugins/host/connection.ts",
         "packages/engine/src/plugins/accounts/platform-opener.ts",
         "packages/engine/src/plugins/services/plugin-processes.ts",

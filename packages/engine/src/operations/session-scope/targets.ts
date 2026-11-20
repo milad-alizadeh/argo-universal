@@ -1,7 +1,12 @@
 import type { OperationId } from '@repo/contracts/operations';
 import type { OperationParams } from '../implementations';
 import type { SessionCaller } from '../session-tokens';
-import { callerSessionParam, ownSessionOnly } from './caller-session-targets';
+import {
+  callerSessionParam,
+  ownSession,
+  ownSessionOnly,
+} from './caller-session-targets';
+import { openedScreen } from './opened-screen-target';
 
 // What an Operation reaches: nothing in particular, one Project, or one Session.
 export type ScopeTarget =
@@ -46,20 +51,11 @@ const openingSessionParam = <Params extends { sessionId: string }>(
   params,
 });
 
-// The picture is the calling Session's own: it takes no params and reaches nothing but that Session, so an Agent's call needs no ask.
-const ownSession = <Params>(
+// A Session lists and starts Sessions in its own Project unless it names another Project.
+const callerProject = <Params extends { projectId?: string }>(
   params: Params,
   caller: SessionCaller,
-): Targeted<Params> => ({
-  target: { kind: 'session', sessionId: caller.sessionId, opening: false },
-  params,
-});
-
-// A Session lists its own Project's Sessions unless it names another Project.
-const listedProject: TargetRule<OperationParams<'session.list'>> = (
-  params,
-  caller,
-) => {
+): Targeted<Params & { projectId: string }> => {
   const projectId = params.projectId ?? caller.projectId;
 
   return {
@@ -67,27 +63,6 @@ const listedProject: TargetRule<OperationParams<'session.list'>> = (
     params: { ...params, projectId },
   };
 };
-
-type OpenedDestination = OperationParams<'app.open'>['destination'];
-
-// A Session's or a Project's Screen reaches that one; the lists, Agents, Settings and Plugin Pages reach nothing in particular.
-const openedTarget = (destination: OpenedDestination): ScopeTarget => {
-  if (destination.screen === 'session')
-    return {
-      kind: 'session',
-      sessionId: destination.sessionId,
-      opening: false,
-    };
-
-  return destination.screen === 'project'
-    ? { kind: 'project', projectId: destination.projectId }
-    : { kind: 'global' };
-};
-
-const openedScreen: TargetRule<OperationParams<'app.open'>> = (params) => ({
-  target: openedTarget(params.destination),
-  params,
-});
 
 // Every Operation names its target when it enters the registry.
 const targetRules = {
@@ -99,7 +74,7 @@ const targetRules = {
   'project.create': global,
   'project.update': projectParam,
   'project.listBranches': projectParam,
-  'session.list': listedProject,
+  'session.list': callerProject,
   'session.get': sessionParam,
   'session.feed': sessionParam,
   'session.changes': sessionParam,
@@ -107,12 +82,15 @@ const targetRules = {
   'session.listAgents': sessionParam,
   'session.listShells': sessionParam,
   'session.listBranches': sessionParam,
-  'session.new': projectParam,
+  'session.new': callerProject,
+  'session.schedulePrompt': sessionParam,
+  'session.manageSchedule': sessionParam,
+  'session.listSchedules': sessionParam,
   'session.queue': sessionParam,
   'session.submit': sessionParam,
   'session.prompt': sessionParam,
   'session.cancel': sessionParam,
-  'session.rename': sessionParam,
+  'session.rename': callerSessionParam,
   'session.setConfigOption': sessionParam,
   'session.savePlan': sessionParam,
   'session.declareSubagentRole': callerSessionParam,
@@ -146,21 +124,23 @@ const targetRules = {
   'plugin.setEnabled': global,
   'plugin.getSettings': global,
   'plugin.setSetting': global,
-  'voice.status': global,
-  'voice.listDevices': global,
-  'voice.chooseDevices': global,
-  'voice.start': sessionParam,
-  'voice.getSettings': global,
-  'voice.setSettings': global,
+  'conversation.status': global,
+  'conversation.listDevices': global,
+  'conversation.chooseDevices': global,
+  'conversation.start': sessionParam,
+  'conversation.getSettings': global,
+  'conversation.setSettings': global,
   'voice.listVoices': global,
   'voice.saveCustomVoice': global,
   'voice.setVoice': global,
   'voice.deleteCustomVoice': global,
-  'voice.setInstructions': global,
-  'voice.setCallOptions': global,
+  'conversation.setInstructions': global,
+  'conversation.setOptions': global,
   'voice.preview': global,
-  'voice.end': callerSessionParam,
-  'voice.hangUp': ownSessionOnly,
+  'voice.getPreviewClip': global,
+  'voice.storePreviewClip': global,
+  'conversation.end': callerSessionParam,
+  'conversation.hangUp': ownSessionOnly,
 } satisfies TargetRules;
 
 const targets: TargetRules = targetRules;

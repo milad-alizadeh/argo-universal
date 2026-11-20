@@ -6,7 +6,7 @@ import type * as React from 'react';
 import { createContext, useContext } from 'react';
 import { View } from 'react-native';
 
-// The Voice call attached to a Session, as its row marks it.
+// The Conversation attached to a Session, as its row marks it.
 export interface SessionRowCall {
   sessionId: string;
   // When the call connected; null while it connects.
@@ -22,7 +22,7 @@ export type CalledRowProps = { call?: SessionRowCall };
 
 const SessionRowCallContext = createContext<SessionRowCall | null>(null);
 
-// Gives the Sessions list the one live Voice call, so the row it is attached to marks it.
+// Gives the Sessions list the one live Conversation, so the row it is attached to marks it.
 export const SessionRowCallProvider = SessionRowCallContext.Provider;
 
 // The live call when it is attached to this Session; none otherwise.
@@ -35,7 +35,7 @@ export function useSessionRowCall(
 }
 
 const callWords = (call: SessionRowCall): string =>
-  call.muted ? 'on a Voice call, mic muted' : 'on a Voice call';
+  call.muted ? 'in a Conversation, mic muted' : 'in a Conversation';
 
 // The row's label, ending on the call while one is attached.
 export const withCallLabel = (

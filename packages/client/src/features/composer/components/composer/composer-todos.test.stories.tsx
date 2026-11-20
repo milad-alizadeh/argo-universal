@@ -3,7 +3,6 @@ import { expect } from 'storybook/test';
 import { waitFor } from 'storybook/test';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
-import { dark } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { todoStepsId } from '../../../../../mocks/composer/composer-test-contract.test.mocks';
 import { expandedAttribute } from '../../../../../mocks/composer/composer-test-contract.test.mocks';
@@ -25,10 +24,6 @@ export const SessionControlsWide = sessionControls(layoutWidths.wide);
 export const TodosDonePhone = todosDone(layoutWidths.phone);
 
 export const TodosDoneWide = todosDone(layoutWidths.wide);
-
-export const TodosDonePhoneDark: Story = { ...TodosDonePhone, ...dark };
-
-export const TodosDoneWideDark: Story = { ...TodosDoneWide, ...dark };
 
 export const EqualTodoStepsPhoneFirstAgent = equalTodoSteps(
   layoutWidths.phone,
@@ -67,8 +62,6 @@ export const NoTodos: Story = {
     }
   },
 };
-
-export const NoTodosDark: Story = { ...NoTodos, ...dark };
 
 export const TodosOpenAndClose: Story = {
   render: (args) => (

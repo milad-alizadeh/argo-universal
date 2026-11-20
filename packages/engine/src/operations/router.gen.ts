@@ -254,6 +254,39 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      schedulePrompt: publicProcedure
+        .input(operations['session.schedulePrompt'].params)
+        .output(operations['session.schedulePrompt'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.schedulePrompt',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      listSchedules: publicProcedure
+        .input(operations['session.listSchedules'].params)
+        .output(operations['session.listSchedules'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.listSchedules',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      manageSchedule: publicProcedure
+        .input(operations['session.manageSchedule'].params)
+        .output(operations['session.manageSchedule'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.manageSchedule',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       submit: publicProcedure
         .input(operations['session.submit'].params)
         .output(operations['session.submit'].result)
@@ -444,84 +477,119 @@ export function generatedOperations(runner: OperationRunner) {
           }),
         ),
     }),
-    voice: router({
+    conversation: router({
       status: publicProcedure
-        .input(operations['voice.status'].params)
-        .output(operations['voice.status'].result)
+        .input(operations['conversation.status'].params)
+        .output(operations['conversation.status'].result)
         .query(({ input, ctx }) =>
           runner.run({
             kind: 'app',
-            id: 'voice.status',
+            id: 'conversation.status',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),
         ),
       start: publicProcedure
-        .input(operations['voice.start'].params)
-        .output(operations['voice.start'].result)
+        .input(operations['conversation.start'].params)
+        .output(operations['conversation.start'].result)
         .mutation(({ input, ctx }) =>
           runner.run({
             kind: 'app',
-            id: 'voice.start',
+            id: 'conversation.start',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),
         ),
       end: publicProcedure
-        .input(operations['voice.end'].params)
-        .output(operations['voice.end'].result)
+        .input(operations['conversation.end'].params)
+        .output(operations['conversation.end'].result)
         .mutation(({ input, ctx }) =>
           runner.run({
             kind: 'app',
-            id: 'voice.end',
-            params: input,
-            connectionSignal: ctx.connection.signal,
-          }),
-        ),
-      preview: publicProcedure
-        .input(operations['voice.preview'].params)
-        .output(operations['voice.preview'].result)
-        .mutation(({ input, ctx }) =>
-          runner.run({
-            kind: 'app',
-            id: 'voice.preview',
+            id: 'conversation.end',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),
         ),
       hangUp: publicProcedure
-        .input(operations['voice.hangUp'].params)
-        .output(operations['voice.hangUp'].result)
+        .input(operations['conversation.hangUp'].params)
+        .output(operations['conversation.hangUp'].result)
         .mutation(({ input, ctx }) =>
           runner.run({
             kind: 'app',
-            id: 'voice.hangUp',
+            id: 'conversation.hangUp',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),
         ),
       getSettings: publicProcedure
-        .input(operations['voice.getSettings'].params)
-        .output(operations['voice.getSettings'].result)
+        .input(operations['conversation.getSettings'].params)
+        .output(operations['conversation.getSettings'].result)
         .query(({ input, ctx }) =>
           runner.run({
             kind: 'app',
-            id: 'voice.getSettings',
+            id: 'conversation.getSettings',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),
         ),
       setSettings: publicProcedure
-        .input(operations['voice.setSettings'].params)
-        .output(operations['voice.setSettings'].result)
+        .input(operations['conversation.setSettings'].params)
+        .output(operations['conversation.setSettings'].result)
         .mutation(({ input, ctx }) =>
           runner.run({
             kind: 'app',
-            id: 'voice.setSettings',
+            id: 'conversation.setSettings',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      setInstructions: publicProcedure
+        .input(operations['conversation.setInstructions'].params)
+        .output(operations['conversation.setInstructions'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'conversation.setInstructions',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      setOptions: publicProcedure
+        .input(operations['conversation.setOptions'].params)
+        .output(operations['conversation.setOptions'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'conversation.setOptions',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      listDevices: publicProcedure
+        .input(operations['conversation.listDevices'].params)
+        .output(operations['conversation.listDevices'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'conversation.listDevices',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      chooseDevices: publicProcedure
+        .input(operations['conversation.chooseDevices'].params)
+        .output(operations['conversation.chooseDevices'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'conversation.chooseDevices',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+    }),
+    voice: router({
       listVoices: publicProcedure
         .input(operations['voice.listVoices'].params)
         .output(operations['voice.listVoices'].result)
@@ -566,46 +634,35 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
-      setInstructions: publicProcedure
-        .input(operations['voice.setInstructions'].params)
-        .output(operations['voice.setInstructions'].result)
+      preview: publicProcedure
+        .input(operations['voice.preview'].params)
+        .output(operations['voice.preview'].result)
         .mutation(({ input, ctx }) =>
           runner.run({
             kind: 'app',
-            id: 'voice.setInstructions',
+            id: 'voice.preview',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),
         ),
-      setCallOptions: publicProcedure
-        .input(operations['voice.setCallOptions'].params)
-        .output(operations['voice.setCallOptions'].result)
-        .mutation(({ input, ctx }) =>
-          runner.run({
-            kind: 'app',
-            id: 'voice.setCallOptions',
-            params: input,
-            connectionSignal: ctx.connection.signal,
-          }),
-        ),
-      listDevices: publicProcedure
-        .input(operations['voice.listDevices'].params)
-        .output(operations['voice.listDevices'].result)
+      getPreviewClip: publicProcedure
+        .input(operations['voice.getPreviewClip'].params)
+        .output(operations['voice.getPreviewClip'].result)
         .query(({ input, ctx }) =>
           runner.run({
             kind: 'app',
-            id: 'voice.listDevices',
+            id: 'voice.getPreviewClip',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),
         ),
-      chooseDevices: publicProcedure
-        .input(operations['voice.chooseDevices'].params)
-        .output(operations['voice.chooseDevices'].result)
+      storePreviewClip: publicProcedure
+        .input(operations['voice.storePreviewClip'].params)
+        .output(operations['voice.storePreviewClip'].result)
         .mutation(({ input, ctx }) =>
           runner.run({
             kind: 'app',
-            id: 'voice.chooseDevices',
+            id: 'voice.storePreviewClip',
             params: input,
             connectionSignal: ctx.connection.signal,
           }),

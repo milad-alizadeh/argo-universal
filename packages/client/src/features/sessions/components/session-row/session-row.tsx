@@ -55,7 +55,7 @@ function RegularRow(props: CalledRow): React.JSX.Element {
   );
 }
 
-// A Voice call attached to the Session takes the status's place in either layout and joins the row's label.
+// A Conversation attached to the Session takes the status's place in either layout and joins the row's label.
 function SessionRowLayout(props: SessionRowProps): React.JSX.Element {
   const call = useSessionRowCall(props.session.sessionId);
 

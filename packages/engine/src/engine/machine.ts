@@ -1,8 +1,8 @@
 import { type Database } from '@repo/db';
 import { assign } from 'xstate';
+import { conversationSystemId } from '../conversation';
 import { openSessionsId } from '../sessions';
 import { databaseWriterId } from '../storage';
-import { voiceCallSystemId } from '../voice';
 import type { OpenDatabaseInput } from './engine-database';
 import { type HttpServer } from './http-server';
 import type { EngineMessage } from './ipc';
@@ -13,7 +13,7 @@ import {
   sessionsInput,
   serverInput,
   cleanupInput,
-  voiceInput,
+  conversationInput,
 } from './lifecycle-inputs';
 import { registryInput } from './registry-input';
 import {
@@ -103,10 +103,10 @@ export const engineMachine = engineSetup.createMachine({
           input: sessionsInput,
         },
         {
-          id: 'voice',
-          systemId: voiceCallSystemId,
-          src: 'voice',
-          input: voiceInput,
+          id: 'conversation',
+          systemId: conversationSystemId,
+          src: 'conversation',
+          input: conversationInput,
         },
         {
           id: 'caffeinate',
@@ -140,10 +140,10 @@ export const engineMachine = engineSetup.createMachine({
                 {
                   type: 'sendToSupervisor',
                   params: ({
-                    context,
+                    event,
                   }): Extract<EngineMessage, { type: 'ready' }> => ({
                     type: 'ready',
-                    port: context.port,
+                    port: event.output.port(),
                   }),
                 },
               ],

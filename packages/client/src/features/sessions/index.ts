@@ -265,3 +265,7 @@ export {
 } from './components/session-bar/session-bar';
 
 export { sessionBarCards } from './components/session-bar/session-bar-cards';
+
+export { useSchedules, type ScheduleControls } from './hooks/use-schedules';
+
+export { SchedulePreview, ScheduleList } from './components/schedule-list';

@@ -13,7 +13,6 @@ import { ComposerModeControl } from './composer-configuration';
 import type { ComposerConfigurationProps } from './configuration-types';
 import type { SelectConfiguration } from './configuration-values';
 import { configuration } from './picker-story-fixtures';
-import { holdChoice } from './use-pending-choices';
 
 const recorded = recordedSessionOptions(configuration.agent?.id ?? '');
 
@@ -50,8 +49,10 @@ const otherMode = foundOther;
  */
 const namesTheMode = /change Mode$/;
 
-// Longer than the wait a choice stands, so each story sees that wait end.
-const pastTheHold = holdChoice + 1500;
+// A short wait for a choice to stand, so each story sees it end without waiting out the product's.
+const shortHold = 300;
+
+const pastTheHold = shortHold * 3;
 
 const unresponsive = fn();
 
@@ -60,6 +61,7 @@ const unresponsiveConfiguration = {
   ...configuration,
   configOptions: recorded,
   onConfigChange: unresponsive,
+  holdChoiceMs: shortHold,
 } satisfies ComposerConfigurationProps;
 
 const meta = {

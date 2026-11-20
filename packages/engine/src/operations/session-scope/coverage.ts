@@ -4,6 +4,12 @@ import type { SessionCaller } from '../session-tokens';
 import { inCallerProject, mayPrompt, ownsSession } from './rules';
 import type { ScopeTarget } from './targets';
 
+const projectScoped = new Set<OperationId>([
+  'app.open',
+  'session.schedulePrompt',
+  'session.manageSchedule',
+]);
+
 type SessionTarget = Extract<ScopeTarget, { kind: 'session' }>;
 
 // Whether the caller's scope covers an Operation's target, read through the Session directory.
@@ -13,14 +19,14 @@ export class ScopeCoverage {
     caller: SessionCaller,
     { id, target }: { id: OperationId; target: ScopeTarget },
   ): boolean {
-    if (id === 'session.archive') return this.archivesOwn(caller, target);
+    if (id === 'session.archive') return this.targetsItself(caller, target);
 
-    return id === 'app.open'
-      ? this.opens(caller, target)
+    return projectScoped.has(id)
+      ? this.inCallerProject(caller, target)
       : this.covered(caller, { id, target });
   }
 
-  private archivesOwn(caller: SessionCaller, target: ScopeTarget): boolean {
+  private targetsItself(caller: SessionCaller, target: ScopeTarget): boolean {
     return (
       target.kind === 'session' &&
       target.sessionId === caller.sessionId &&
@@ -28,8 +34,8 @@ export class ScopeCoverage {
     );
   }
 
-  // Opening a Screen changes nothing: the caller's Project covers a Session or a Project; the rest asks.
-  private opens(caller: SessionCaller, target: ScopeTarget): boolean {
+  // Screen navigation and Schedule changes can target any Session in the caller’s Project.
+  private inCallerProject(caller: SessionCaller, target: ScopeTarget): boolean {
     return target.kind !== 'global' && this.inProject(caller, target);
   }
 

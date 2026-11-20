@@ -1,4 +1,4 @@
-import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { StatementSync } from 'node:sqlite';
@@ -12,13 +12,36 @@ interface TestDatabase {
   remove: () => void;
 }
 
+let migratedTemplate: string | undefined;
+
+// One migrated database per worker; each test opens its own copy.
+function templateDatabase(): string {
+  if (migratedTemplate) return migratedTemplate;
+  const directory = mkdtempSync(join(tmpdir(), 'argo-db-template-'));
+  const file = join(directory, 'argo.db');
+
+  openDatabase(file).$client.close();
+  process.once('exit', () =>
+    rmSync(directory, { recursive: true, force: true }),
+  );
+  migratedTemplate = file;
+
+  return file;
+}
+
+const openTemplateCopy = (file: string): Database => {
+  copyFileSync(templateDatabase(), file);
+
+  return openDatabase(file);
+};
+
 // A database in a new temp directory holding `project-1` and its Session `session-1`; `remove` closes and deletes it.
 export function openTestDatabase(
   sessionValues: Partial<typeof session.$inferInsert> = {},
   projectPath = '/project',
 ): TestDatabase {
   const directory = realpathSync(mkdtempSync(join(tmpdir(), 'argo-server-')));
-  const database = openDatabase(join(directory, 'argo.db'));
+  const database = openTemplateCopy(join(directory, 'argo.db'));
   insertProject(database, projectPath);
   insertSession(database, sessionValues);
 

@@ -16,7 +16,7 @@ export type Pending = Record<string, OptionValue>;
  * carries it, and let go of after this, which leaves the reader looking at what the Server really has
  * rather than at a change it refused (owner, 2026-10-21).
  */
-export const holdChoice = 3000;
+const holdChoice = 3000;
 
 export interface PendingChoices {
   // The choices still waiting for the Server, for a control that draws them before they land.
@@ -39,7 +39,7 @@ export function usePendingChoices(
 
   if (open !== pending) setPending(open);
 
-  useForgetChoices(open, setPending, setDropped);
+  useForgetChoices(held(open, configuration), setPending, setDropped);
   useErrorToast(droppedChoiceToast(dropped, configuration.configOptions));
 
   return {
@@ -47,6 +47,17 @@ export function usePendingChoices(
     choose: choosing(configuration.onConfigChange, setPending, setDropped),
   };
 }
+
+interface Held {
+  pending: Pending;
+  // How long each choice stands before it is let go of.
+  hold: number;
+}
+
+const held = (
+  pending: Pending,
+  configuration: ComposerConfigurationProps,
+): Held => ({ pending, hold: configuration.holdChoiceMs ?? holdChoice });
 
 // A choice the options now carry is no longer this hook's to hold: the subscription speaks for it again.
 function unconfirmed(
@@ -87,7 +98,7 @@ const choosing =
  * again.
  */
 function useForgetChoices(
-  pending: Pending,
+  { pending, hold }: Held,
   setPending: (pending: Pending) => void,
   setDropped: (dropped: readonly string[]) => void,
 ): void {
@@ -99,8 +110,8 @@ function useForgetChoices(
     const timer = setTimeout(() => {
       setDropped(Object.keys(pending));
       setPending({});
-    }, holdChoice);
+    }, hold);
 
     return (): void => clearTimeout(timer);
-  }, [waiting, pending, setPending, setDropped]);
+  }, [waiting, pending, hold, setPending, setDropped]);
 }

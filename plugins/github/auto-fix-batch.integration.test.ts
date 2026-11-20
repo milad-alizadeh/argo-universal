@@ -11,7 +11,6 @@ import {
 import { attached, tap as tapAutomation } from './auto-merge-fixture';
 import { sha } from './github-fixture';
 import type { Journey } from './journey-fixture';
-import { promptsSent } from './journey-prompts-fixture';
 import { changePull } from './journey-watch-fixture';
 
 const slow = 120_000;
@@ -40,41 +39,37 @@ it(
 );
 
 it(
-  'waits for a head’s running Checks before it prompts, so the Prompt lists them all',
+  'prompts a failed Check without waiting for the head’s running Checks, then the ones that fail later',
   async () => {
     const run = await attached();
 
     await tap(run, true);
     checksRunning(run, sha, { failed: [quality], running: [storyTests] });
     await watch(run);
-    expect(promptsSent(run)).toEqual([]);
+    expect(texts(run)).toEqual([fixPrompt(sha, [failedItem(quality)])]);
 
     failChecks(run, sha, quality, storyTests);
     await watch(run);
 
     expect(texts(run)).toEqual([
-      fixPrompt(sha, [failedItem(quality), failedItem(storyTests)]),
+      fixPrompt(sha, [failedItem(quality)]),
+      fixPrompt(sha, [failedItem(storyTests)]),
     ]);
   },
   slow,
 );
 
 it(
-  'prompts a conflict while Checks still run, and the failed Checks once they have all reported',
+  'prompts a conflict and a failed Check together while other Checks still run',
   async () => {
     const run = await attached();
 
     checksRunning(run, sha, { failed: [quality], running: [storyTests] });
     changePull(run, 12, { mergeable_state: 'dirty' });
     await tap(run, true);
-    expect(texts(run)).toEqual([fixPrompt(sha, [conflictItem])]);
-
-    failChecks(run, sha, quality, storyTests);
-    await watch(run);
 
     expect(texts(run)).toEqual([
-      fixPrompt(sha, [conflictItem]),
-      fixPrompt(sha, [failedItem(quality), failedItem(storyTests)]),
+      fixPrompt(sha, [failedItem(quality), conflictItem]),
     ]);
   },
   slow,

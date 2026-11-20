@@ -1,0 +1,108 @@
+{
+  "id": "home",
+  "name": "Home",
+  "version": "0.0.1",
+  "engines": { "argo": ">=0.0.0 <1.0.0" },
+  "main": "index.tsx",
+  "icon": { "sf": "lightbulb", "material": "lightbulb" },
+  "contributes": {
+    "nav": [{ "id": "home", "title": "Home", "path": "/" }],
+    "accounts": [{ "host": "api.meethue.com", "page": "/sign-in" }],
+    "settings": [
+      {
+        "key": "hue-client-id",
+        "label": "Hue Remote API client ID",
+        "type": "secret",
+        "description": "From your Remote Hue API app at developers.meethue.com, whose callback URL is http://127.0.0.1:51789/callback. Set it with the client secret to sign in to Philips Hue."
+      },
+      {
+        "key": "hue-client-secret",
+        "label": "Hue Remote API client secret",
+        "type": "secret",
+        "description": "The secret of the same Hue app. Argo keeps it in your computer’s secret store and sends it only to api.meethue.com."
+      }
+    ],
+    "operations": [
+      {
+        "name": "signIn",
+        "icon": "key",
+        "label": "Sign in to Philips Hue",
+        "description": "Opens Philips Hue's sign-in in the browser on the Server Device, with the Remote API app set in the Plugin's settings.",
+        "tier": "act",
+        "keywords": ["hue", "lights", "account", "sign in"]
+      },
+      {
+        "name": "cancelSignIn",
+        "icon": "close",
+        "label": "Cancel signing in to Philips Hue",
+        "description": "Stops waiting for the browser's Philips Hue sign-in.",
+        "tier": "act",
+        "keywords": ["hue", "sign in", "cancel"]
+      },
+      {
+        "name": "connectBridge",
+        "label": "Connect the Hue Bridge",
+        "description": "Presses the Hue Bridge's link button through Hue's cloud and keeps the application key it gives, so Argo can control the lights.",
+        "tier": "act",
+        "keywords": ["hue", "bridge", "link button", "pair"]
+      },
+      {
+        "name": "setPower",
+        "label": "Switch a light or room",
+        "description": "Turns one Hue light, or every light in a room, on or off.",
+        "tier": "act",
+        "keywords": ["hue", "light", "room", "on", "off"],
+        "params": {
+          "kind": {
+            "type": "string",
+            "description": "light for one light, grouped_light for a room's lights.",
+            "required": true,
+            "choices": ["light", "grouped_light"]
+          },
+          "id": {
+            "type": "string",
+            "description": "The Hue id of the light or the room's grouped light.",
+            "required": true
+          },
+          "on": {
+            "type": "boolean",
+            "description": "Whether to turn it on.",
+            "required": true
+          }
+        }
+      },
+      {
+        "name": "setBrightness",
+        "label": "Dim a light or room",
+        "description": "Sets the brightness of one Hue light, or of every light in a room, as a percentage.",
+        "tier": "act",
+        "keywords": ["hue", "light", "room", "brightness", "dim"],
+        "params": {
+          "kind": {
+            "type": "string",
+            "description": "light for one light, grouped_light for a room's lights.",
+            "required": true,
+            "choices": ["light", "grouped_light"]
+          },
+          "id": {
+            "type": "string",
+            "description": "The Hue id of the light or the room's grouped light.",
+            "required": true
+          },
+          "brightness": {
+            "type": "number",
+            "description": "The brightness from 1 to 100.",
+            "required": true
+          }
+        }
+      }
+    ]
+  },
+  "capabilities": [
+    {
+      "kind": "fetch",
+      "host": "api.meethue.com",
+      "reason": "Signs in to Philips Hue and controls the lights through Hue's Remote API, the host of the Account this Plugin provides."
+    }
+  ]
+}

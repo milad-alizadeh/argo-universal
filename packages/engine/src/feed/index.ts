@@ -1,5 +1,5 @@
 export {
-  nonUserPromptChange,
+  sentPromptChange,
   promptMessageChange,
   promptMessageId,
   userMessageChange,
@@ -90,10 +90,10 @@ export { nativePermissionOutcomeEvent } from './native-permission-outcome';
 export { messageText } from './message-text';
 
 export {
-  readVoiceSections,
+  readConversationSections,
   withVoiceInstruction,
   withoutVoiceInstruction,
   type VoiceMessage,
-} from './voice-markers';
+} from './conversation-markers';
 
-export { VoiceMarkerStream } from './voice-marker-stream';
+export { VoiceMarkerStream } from './conversation-marker-stream';

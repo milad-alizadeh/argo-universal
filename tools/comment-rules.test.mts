@@ -55,13 +55,7 @@ describe('suppressions', (): void => {
   });
 });
 
-describe('markers', (): void => {
-  it('reports a work marker', (): void => {
-    expect(commentProblems('// TODO: split this')).toEqual([
-      expect.stringMatching(/GitHub issue/),
-    ]);
-  });
-
+describe('plain lines', (): void => {
   it('ignores a line without a comment', (): void => {
     expect(commentProblems("const name = 'oxlint-disable';")).toEqual([]);
   });

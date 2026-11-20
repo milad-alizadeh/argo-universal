@@ -44,7 +44,7 @@ const statusEnds = (props: SessionRowProps): RegularEnds => {
     : { titleEnd: endParts(timeOf(quietAge(props)), dot) };
 };
 
-// While a Voice call is attached, its mark ends the title line in place of the status dot and the time.
+// While a Conversation is attached, its mark ends the title line in place of the status dot and the time.
 const callEnds = (call: SessionRowCall): RegularEnds => {
   const mark = <SessionRowCallMark call={call} />;
 

@@ -13,6 +13,9 @@ const worktree = { type: 'worktree' as const, baseBranch: 'main' };
 
 const starter = { type: 'starter' as const };
 
+// A short Undo window, after which an owned worktree is removed.
+const archiveUndoMs = 500;
+
 const startInStarterCheckout = {
   id: 'session.new' as const,
   params: { ...emptySessionInput, checkout: starter },
@@ -76,7 +79,11 @@ it("refuses the starter's Checkout to a caller that is not a Session", async () 
 });
 
 it("archives a Session that borrowed its starter's worktree without removing it", async () => {
-  const journey = await delegationJourney({ checkout: worktree });
+  const journey = await delegationJourney({
+    checkout: worktree,
+    agent: { archiveUndoMs },
+  });
+
   const started = await startDelegated(journey, journey.caller, starter);
 
   const { checkout } = await journey.host.caller.session.get({

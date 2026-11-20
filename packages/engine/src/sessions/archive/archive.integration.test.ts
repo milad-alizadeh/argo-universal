@@ -12,11 +12,13 @@ import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const prompt = [{ type: 'text' as const, text: 'Keep this Session' }];
 
+const archiveUndoMs = 1500;
+
 describe('Session archive through the composed Engine', () => {
   it.each(['remove', 'undo'] as const)(
     'keeps the branch and handles %s during the Undo window',
     async (action) => {
-      const host = await startAcpEngine({ steps: [] });
+      const host = await startAcpEngine({ steps: [], archiveUndoMs });
       const created = await promptedArchiveSession(host);
       writeFileSync(join(created.path, 'unsaved.txt'), 'uncommitted work');
       await host.caller.session.archive({ sessionId: created.sessionId });
@@ -35,7 +37,7 @@ describe('Session archive through the composed Engine', () => {
           () => 'rejected',
         );
 
-      await setTimeout(4500);
+      await setTimeout(archiveUndoMs - 200);
       expect(existsSync(created.path)).toBe(true);
 
       if (action === 'undo')

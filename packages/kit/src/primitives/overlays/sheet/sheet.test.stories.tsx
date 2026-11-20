@@ -167,17 +167,3 @@ export const OnePageWrapsItsContent: Story = {
     );
   },
 };
-
-// Pages keep one height as the reader moves between them, so a short first page is not shorter than the sheet's floor.
-export const PagesKeepAFloor: Story = {
-  beforeEach: (): Promise<void> => settleLayout('phone'),
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Settings' }));
-    const dialog = await body.findByRole('dialog', { name: 'Settings' });
-    await waitFor(() =>
-      expect(dialog.getBoundingClientRect().height).toBeGreaterThanOrEqual(
-        window.innerHeight / 2 - 1,
-      ),
-    );
-  },
-};

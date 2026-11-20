@@ -12,6 +12,7 @@ import {
   type FieldPickerOption,
   type OptionSection,
 } from './field-picker-model';
+import { fieldPickerPageLook } from './field-picker-page-look';
 import type { FieldPickerScreenProps } from './field-picker-screen';
 import { change } from './field-picker-screen-choice';
 import { screenEmpty } from './field-picker-screen-parts';
@@ -20,8 +21,6 @@ type ListProps = Omit<
   React.ComponentProps<typeof List>,
   'items' | 'renderItem' | 'children'
 >;
-
-const maximumHeight = 320;
 
 // A tracker label's own colour, as a dot before its name.
 function ColorDot({ color }: { color: string }): ReactElement {
@@ -36,20 +35,9 @@ function ColorDot({ color }: { color: string }): ReactElement {
   );
 }
 
-// The web page is a menu's plain rows that grow to fit.
-const look = {
-  fit: true,
-  maxHeight: maximumHeight,
-  appearance: 'plain',
-  // The page frame holds the popover's one inset around the search, the rows and the action.
-  padding: 0,
-  paddingTop: 0,
-  paddingBottom: 0,
-} as const;
-
 function listProps(props: FieldPickerScreenProps): Omit<ListProps, 'onMove'> {
   return {
-    ...look,
+    ...fieldPickerPageLook,
     accessibilityRole: props.multiple ? 'list' : 'radiogroup',
     accessibilityLabel: props.title,
     drawDistance: Number.MAX_SAFE_INTEGER,

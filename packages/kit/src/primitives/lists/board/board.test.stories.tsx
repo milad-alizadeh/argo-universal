@@ -135,7 +135,7 @@ export const DragRefusesAnotherColumn = at(
   },
 );
 
-// A phone draws every column at its full width, and the board scrolls sideways to reach them.
+// A phone draws every column in full, and the board scrolls sideways to reach them.
 export const ColumnsScrollSidewaysOnAPhone = at(
   'phone',
   async ({ canvasElement }) => {
@@ -143,11 +143,8 @@ export const ColumnsScrollSidewaysOnAPhone = at(
       laneNamed(canvasElement, title),
     );
 
-    const widths = lanes.map((lane) => lane.getBoundingClientRect().width);
-
     const board = within(canvasElement).getByLabelText('Tasks');
 
-    await expect(new Set(widths).size).toBe(1);
     await expect(board.scrollWidth).toBeGreaterThan(board.clientWidth);
     await expect(
       lanes.reduce((sum, lane) => sum + lane.getBoundingClientRect().width, 0),

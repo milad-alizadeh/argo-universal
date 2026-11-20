@@ -20,6 +20,8 @@ export type EngineConnections = {
   pairing: HttpServer['pairing'];
   createCaller: HttpServer['createCaller'];
   caller: ReturnType<HttpServer['createCaller']>;
+  // The port the Server bound.
+  port: number;
 };
 
 export function readEngineTestHost(engine: EngineActor): EngineConnections {
@@ -35,6 +37,7 @@ export function readEngineTestHost(engine: EngineActor): EngineConnections {
     pairing: readyServer.pairing,
     createCaller: readyServer.createCaller,
     caller: readyServer.createCaller(),
+    port: readyServer.port(),
   };
 }
 

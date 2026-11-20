@@ -8,6 +8,8 @@ export {
 
 export { Sessions } from './sessions';
 
+export type { ConversationSessionWork } from './conversation-session-work';
+
 export type { SessionSources } from './session-sources';
 
 export { type SessionData } from './session-data';
@@ -99,3 +101,5 @@ export {
   type NativeStart,
   type NativeStartRequest,
 } from './prompt-sender';
+
+export { namedParam } from './named-param';

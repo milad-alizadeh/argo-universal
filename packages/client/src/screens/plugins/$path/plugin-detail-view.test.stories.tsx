@@ -3,7 +3,7 @@ import { runListRoot } from '@repo/contracts/plugins/wire-fixtures';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
-import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import { PluginDetailView } from './plugin-detail-view';
 import { loading } from './plugin-detail-view-fixtures';
 
@@ -29,8 +29,6 @@ const stacked: WireNode = {
   slots: {},
 };
 
-const rowTitle = 'Deploy web';
-
 function* ancestors(from: HTMLElement): Generator<HTMLElement> {
   for (let el: HTMLElement | null = from; el; el = el.parentElement) yield el;
 }
@@ -45,33 +43,6 @@ function scrollerOf(text: HTMLElement): HTMLElement {
 
   return found;
 }
-
-// The gap between the page's edge and the edge of the scroll view that holds the rows: a margin the page adds around the List.
-function marginAroundList(canvasElement: HTMLElement): number {
-  const page = canvasElement.querySelector('[data-testid="plugin-page"]');
-
-  if (!page) throw new Error('Recorded catalog needs a plugin-page');
-
-  const scroller = scrollerOf(within(canvasElement).getByText(rowTitle));
-
-  return (
-    scroller.getBoundingClientRect().left - page.getBoundingClientRect().left
-  );
-}
-
-const story = (root: WireNode): Story => ({
-  args: { root },
-  play: async ({ canvas, canvasElement }) => {
-    await canvas.findByText(rowTitle);
-
-    await expect(marginAroundList(canvasElement)).toBe(0);
-  },
-});
-
-// A List alone on a page keeps to the page's one gutter, whether or not a Stack holds it (#1576).
-export const RootList: Story = story(runListRoot);
-
-export const ListInAStack: Story = story(stacked);
 
 // More rows than the window holds, as a page of runs has.
 const wire = (

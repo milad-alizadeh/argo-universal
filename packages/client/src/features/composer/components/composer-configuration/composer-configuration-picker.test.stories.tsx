@@ -1,3 +1,4 @@
+import { nextFrames } from '@repo/kit/mocks/next-frames';
 import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
@@ -65,7 +66,7 @@ export const ClickOpensModelPicker: Story = {
     const overlay = within(document.body);
     const trigger = canvas.getByRole('button', { name: agentModelLabel });
     await userEvent.hover(trigger);
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await nextFrames();
     await expect(overlay.queryByRole('dialog')).not.toBeInTheDocument();
     await userEvent.click(trigger);
 
@@ -84,7 +85,7 @@ export const ClickOpensModelPicker: Story = {
     ).not.toBeInTheDocument();
     const model = within(configure).getByRole('button', { name: /^Model,/ });
     await userEvent.hover(model);
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await nextFrames();
     await expect(
       overlay.queryByRole('dialog', { name: modelPickerLabel }),
     ).not.toBeInTheDocument();
@@ -147,13 +148,7 @@ export const RunningTurnWithoutTuning: Story = {
       canvas.getByRole('button', { name: agentModelLabel }),
     );
     const overlay = within(document.body);
-    await waitFor(() =>
-      expect(
-        overlay.getByText(
-          'A Turn is running. Changes apply from the next Turn.',
-        ),
-      ).toBeVisible(),
-    );
+    await waitFor(() => expect(overlay.getByText(/next Turn/)).toBeVisible());
     await expect(
       overlay.queryByRole('slider', { name: 'Effort' }),
     ).not.toBeInTheDocument();

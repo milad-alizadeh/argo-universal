@@ -10,6 +10,7 @@ Argo for iOS, Android, web, and macOS: one Expo app, an Electron shell, and a lo
 - Specs: GitHub Issues, as transient briefs; never commit one. Build a spec as written; when it is unclear or wrong, stop and ask.
 - Checks: several agents share one Mac, so run the test files you work on, then `pnpm verify` before you hand back. See `docs/agents/hooks.md` for local check instructions.
 - Storybook: before authoring stories or testing UI components, read `docs/agents/storybook.md`.
+- Appearance: a test-first or regression-test step covers behaviour and layout invariants only. How the UI looks is proved by before and after screenshots, not by a test (`docs/agents/storybook.md`, Tests).
 - Designs: Storybook owns how built UI looks; Paper is for exploring a design before it is built, and its board is deleted once the design ships. Before drawing in Paper, read `docs/agents/paper.md`.
 - Profiling: before chasing a slow screen or adding a render-count test, read `docs/agents/profiling.md`.
 - Android emulator: before booting or driving an Android emulator, read `docs/agents/android-emulator.md`.

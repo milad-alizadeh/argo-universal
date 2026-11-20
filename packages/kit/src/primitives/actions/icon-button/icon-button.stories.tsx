@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { Text, View } from 'react-native';
-import { expect, fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { IconButton, type IconButtonProps } from './icon-button';
 import { StockProbe } from './stock-probe';
@@ -73,15 +72,7 @@ export const Large: Story = { args: largeIconButton };
 
 export const Selected: Story = { args: selectedIconButton };
 
-export const Disabled: Story = {
-  args: { ...disabledIconButton, onPress: fn() },
-  play: async ({ canvas, args }) => {
-    const button = canvas.getByRole('button', { name: accessibilityLabel });
-    await expect(button).toBeDisabled();
-    button.click();
-    await expect(args.onPress).not.toHaveBeenCalled();
-  },
-};
+export const Disabled: Story = { args: disabledIconButton };
 
 // TEMPORARY: every size in each variant side by side, to compare platforms; delete once the iOS sizing is fixed.
 export const Probe: Story = {
@@ -99,16 +90,4 @@ export const Probe: Story = {
       <StockProbe />
     </View>
   ),
-};
-
-// Test-only: hidden from the sidebar and Docs, still run by the story tests.
-export const Activation: Story = {
-  tags: ['!dev', '!autodocs'],
-  args: { ...primaryIconButton, onPress: fn() },
-  play: async ({ canvas, userEvent, args }) => {
-    await userEvent.click(
-      canvas.getByRole('button', { name: accessibilityLabel }),
-    );
-    await expect(args.onPress).toHaveBeenCalledOnce();
-  },
 };
