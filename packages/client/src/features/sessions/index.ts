@@ -2,6 +2,8 @@ export { SessionBandClaim } from './components/session-band-claim';
 
 export { SubagentList } from './components/subagent-list/subagent-list';
 
+export { subagentStateLabel } from './components/subagent-list/subagent-format';
+
 export { type SubagentListProps } from './components/subagent-list/subagent-list';
 
 export {
@@ -19,9 +21,15 @@ export {
   type ShellPanelProps,
 } from './components/shell-list/shell-panel';
 
+export { ShellOutput } from './components/shell-list/shell-output';
+
 export { ShellSheet } from './components/shell-list/shell-sheet';
 
-export { shellsRunning } from './components/shell-list/shell-format';
+export {
+  shellsRunning,
+  shellSupporting,
+  shellTitle,
+} from './components/shell-list/shell-format';
 
 export {
   type SessionWorkbench,

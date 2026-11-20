@@ -17,7 +17,7 @@ export const panelsSession = {
   },
 } satisfies SessionDetailViewProps;
 
-export const workbenchMenuSession = {
+export const workbenchSheetSession = {
   ...panelsSession,
   shells: { shells: sessionShells, onStop: fn() },
   pluginCards: [coverageCard],
