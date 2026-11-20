@@ -1,89 +1,26 @@
 import { randomUUID } from 'node:crypto';
-import type { FeedSubscribeOutput, FeedUpdate } from '@repo/contracts';
-import type { FeedDeps, FeedEvent } from '../feed';
+import type { FeedUpdate } from '@repo/contracts';
+import type { FeedEvent } from '../feed';
 import type { TurnHappening } from '../sessions';
-import { FeedHappenings } from './feed-happenings';
-import { PermissionWatch } from './permission-watch';
+import { FeedWatch, type FeedSources } from './feed-watch';
 import type {
   PromptOutcome,
   SessionHappening,
   VoiceNotice,
   VoiceSessions,
 } from './session-link';
-
-type FeedSources = Pick<FeedDeps, 'findFeed' | 'watchSessionSnapshot'>;
-
-type FeedActor = NonNullable<ReturnType<FeedSources['findFeed']>>;
+import { StartedAgents } from './started-agents';
+import { StartedSessions, type StartedSources } from './started-watch';
 
 type Listener = (happening: SessionHappening) => void;
-
-type Stoppable = { unsubscribe: () => void };
-
-type SnapshotEvent = Extract<
-  FeedSubscribeOutput,
-  { type: 'snapshot' | 'closed' }
->;
 
 /*
  * What the Voice call reaches its Session's work through: where a Prompt from the call lands, and what the Session
  * reports of its Turns until the returned function is called.
  */
-export interface VoiceSessionWork {
+export interface VoiceSessionWork extends StartedSources {
   prompt: (sessionId: string, text: string) => Promise<PromptOutcome>;
   stop: VoiceSessions['stop'];
-  watchTurns: (
-    sessionId: string,
-    listener: (happening: TurnHappening) => void,
-  ) => () => void;
-}
-
-// Listens to one Session's Feed for the Agent's and the person's words, following it when the Session replaces its Feed actor, and to its Permission requests.
-class FeedWatch {
-  private readonly happenings = new FeedHappenings();
-  private readonly permissions: PermissionWatch;
-  private feed: FeedActor | undefined;
-  private batches: Stoppable | undefined;
-  private readonly snapshots: Stoppable;
-
-  public constructor(
-    private readonly sources: FeedSources,
-    private readonly sessionId: string,
-    private readonly listener: Listener,
-  ) {
-    this.permissions = new PermissionWatch(listener);
-    this.follow();
-    this.snapshots = sources.watchSessionSnapshot(sessionId, {
-      next: (event): void => this.changed(event),
-    });
-  }
-
-  public stop(): void {
-    this.snapshots.unsubscribe();
-    this.batches?.unsubscribe();
-  }
-
-  private changed(event: SnapshotEvent): void {
-    this.follow();
-
-    if (event.type === 'snapshot')
-      this.permissions.changed(event.snapshot.pendingPermission);
-  }
-
-  private isNew(next: FeedActor | undefined): next is FeedActor {
-    return next !== undefined && next !== this.feed;
-  }
-
-  private follow(): void {
-    const next = this.sources.findFeed(this.sessionId);
-
-    if (!this.isNew(next)) return;
-    this.batches?.unsubscribe();
-    this.feed = next;
-    this.batches = next.on('feed.batch', (batch): void => {
-      for (const happening of this.happenings.read(batch.events))
-        this.listener(happening);
-    });
-  }
 }
 
 type NoticeUpdate = Extract<FeedUpdate, { sessionUpdate: 'notice' }>;
@@ -115,19 +52,51 @@ const endOf = (happening: TurnHappening): SessionHappening | undefined =>
       }
     : undefined;
 
-// The Agent's words come from the Session's Feed, and each Turn's end from the Session itself.
+// The call's Session's words and Input requests, and the Agents it started, read from its Feed and snapshots.
+function watchWords(
+  sources: FeedSources,
+  sessionId: string,
+  listener: Listener,
+): FeedWatch {
+  const agents = new StartedAgents(listener);
+
+  return new FeedWatch(sources, {
+    sessionId,
+    listener,
+    snapshotted: (snapshot) => agents.changed(snapshot),
+  });
+}
+
+// Each Turn's end, from the Session itself.
+const watchEnds = (
+  work: VoiceSessionWork,
+  sessionId: string,
+  listener: Listener,
+): (() => void) =>
+  work.watchTurns(sessionId, (happening) => {
+    const ended = endOf(happening);
+
+    if (ended) listener(ended);
+  });
+
+/*
+ * The Agent's words come from the Session's Feed, and each Turn's end from the Session itself. The Agents and Sessions
+ * it started are watched as well, so the voice hears when one finishes, fails or waits on the person (ADR-0064).
+ */
 const watchOf =
   (sources: FeedSources, work: VoiceSessionWork): VoiceSessions['watch'] =>
   (sessionId, listener) => {
-    const words = new FeedWatch(sources, sessionId, listener);
+    const words = watchWords(sources, sessionId, listener);
+    const turns = watchEnds(work, sessionId, listener);
 
-    const turns = work.watchTurns(sessionId, (happening) => {
-      const ended = endOf(happening);
-
-      if (ended) listener(ended);
-    });
+    const started = new StartedSessions(
+      { ...sources, ...work },
+      sessionId,
+      listener,
+    );
 
     return (): void => {
+      started.stop();
       turns();
       words.stop();
     };

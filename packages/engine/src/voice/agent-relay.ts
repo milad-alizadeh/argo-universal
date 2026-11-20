@@ -13,6 +13,8 @@ import type {
   VoiceSessions,
 } from './session-link';
 import { isStopRequest, stopWork } from './spoken-stop';
+import { isTold, speechOf } from './started-speech';
+import { endingDelivery, endingText, told } from './turn-ending';
 import {
   isPermissionHappening,
   WaitingPermission,
@@ -80,7 +82,18 @@ export class AgentRelay {
 
     if (isPermissionHappening(happening))
       return this.permissionHeard(happening);
-    this.said(happening);
+    this.heard(happening);
+  }
+
+  // A question its Session asks, or news of a Session or Agent it started, is spoken as it comes (ADR-0064).
+  private heard(
+    happening: Exclude<
+      SessionHappening,
+      { type: 'turn.ended' } | PermissionHappening
+    >,
+  ): void {
+    if (isTold(happening)) this.tell(speechOf(happening), 'speak');
+    else this.said(happening);
   }
 
   private permissionHeard(happening: PermissionHappening): void {
@@ -112,8 +125,9 @@ export class AgentRelay {
       { type: 'agent.message' | 'person.typed' }
     >,
   ): void {
-    if (happening.type === 'agent.message') this.agentSaid(happening.text);
-    else this.personTyped(happening.text);
+    if (happening.type === 'person.typed')
+      return this.personTyped(happening.text);
+    this.agentSaid(happening.text, happening.turnless);
   }
 
   private get running(): boolean {
@@ -141,10 +155,12 @@ export class AgentRelay {
       this.reports.speak({ kind: 'tell', text: piece, delivery });
   }
 
-  private agentSaid(text: string): void {
+  // A message outside any Turn has no Turn end to speak its progress at, so only its result is spoken (#2506).
+  private agentSaid(text: string, turnless: boolean): void {
     for (const section of readVoiceSections(text)) {
       this.pass(section);
-      this.remember(section);
+
+      if (!turnless) this.remember(section);
     }
   }
 
@@ -171,33 +187,4 @@ export class AgentRelay {
     if (!resultSent && last) this.tell(last, 'speak');
     this.tell(endingText(ended), endingDelivery(ended, told(resultSent, last)));
   }
-}
-
-const told = (resultSent: boolean, last: string | null): boolean =>
-  resultSent || last !== null;
-
-type Ended = Extract<SessionHappening, { type: 'turn.ended' }>;
-
-const finishedCleanly = ({
-  stopReason,
-  error,
-}: Pick<Ended, 'stopReason' | 'error'>): boolean =>
-  error === null && stopReason === 'end_turn';
-
-function endingText({ stopReason, error }: Ended): string {
-  if (error !== null) return relayWords.failed(error);
-
-  return stopReason === 'end_turn'
-    ? relayWords.finished
-    : relayWords.stopped(stopReason);
-}
-
-// A Turn that failed, was stopped, or said nothing is spoken; one that ended with its result already told is background.
-function endingDelivery(
-  { stopReason, error }: Ended,
-  toldResult: boolean,
-): VoiceDelivery {
-  return finishedCleanly({ stopReason, error }) && toldResult
-    ? 'background'
-    : 'speak';
 }

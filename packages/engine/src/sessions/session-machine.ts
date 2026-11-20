@@ -882,6 +882,12 @@ const sessionSetup = setup({
       elicitationQueue: ({ context }): SessionContext['elicitationQueue'] =>
         context.elicitationQueue.slice(1),
     }),
+    // A Prompt reached the Session while it waits on Elicitations: each is cancelled, so the Agent can act on the Prompt (#2507).
+    cancelElicitations: enqueueActions(({ context, enqueue }) => {
+      for (const { requestId } of context.elicitationQueue)
+        context.acpLifetime.answerElicitation(requestId, { action: 'cancel' });
+      enqueue.assign({ elicitationQueue: [] });
+    }),
     rememberCancellation: assign({
       turnEnding: ({ context }): FeedTurnEnding => ({
         ...context.turnEnding,
@@ -1037,6 +1043,8 @@ const sessionSetup = setup({
       pendingInputRequest(context)?.kind === 'permission',
     hasElicitation: ({ context }): boolean =>
       pendingInputRequest(context)?.kind === 'elicitation',
+    appendsPrompt: ({ event }): boolean =>
+      event.type === 'session.queue' && event.command.action === 'append',
     isPendingElicitation: ({ context, event }): boolean =>
       event.type === answerElicitationEvent &&
       answeredRequest(context.elicitationQueue, event.requestId) !== undefined,
@@ -1712,7 +1720,17 @@ export const sessionMachine = sessionSetup.createMachine({
                   tags: ['running', 'requiresAction'],
                   entry: 'answerHookedPermission',
                 },
-                awaitingElicitation: { tags: ['running', 'requiresAction'] },
+                // A Prompt settles the Elicitations it waits on; a Permission request waits for its answer whatever arrives.
+                awaitingElicitation: {
+                  tags: ['running', 'requiresAction'],
+                  on: {
+                    'session.queue': {
+                      guard: 'appendsPrompt',
+                      target: 'working',
+                      actions: ['changePromptQueue', 'cancelElicitations'],
+                    },
+                  },
+                },
                 cancelling: {
                   tags: ['settling'],
                   on: {

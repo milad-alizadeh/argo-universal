@@ -12,6 +12,7 @@ import { archiveSessionFromPlugin } from './archive/plugin-archive';
 import { startSessionCreation } from './creation/session-creation';
 import { createSessionList } from './list/session-list';
 import { OpenSessions } from './open-sessions';
+import { sessionWatches, type SessionWatches } from './opened-sessions';
 import {
   beginOperationCall,
   type CalledOperation,
@@ -35,7 +36,6 @@ import {
 } from './session-operations';
 import { startSessionPrompt, type PromptLanding } from './session-prompt';
 import type { SessionHandlerSources, SessionSources } from './session-sources';
-import type { TurnHappening } from './turn-happenings';
 import { createSessionWorkSource, type SessionWorkSource } from './work-source';
 
 /*
@@ -128,16 +128,9 @@ export class Sessions {
 
     return true;
   }
-  // Hears what an open Session reports of its Turns until the returned function is called; a closed Session reports none.
-  public watchTurns(
-    sessionId: string,
-    listener: (happening: TurnHappening) => void,
-  ): () => void {
-    const subscription = this.sources.open
-      .session(sessionId)
-      ?.on('*', listener);
-
-    return (): void => subscription?.unsubscribe();
+  // What the Voice call hears of Sessions: an open Session's Turns, and each Session as it opens.
+  public watches(): SessionWatches {
+    return sessionWatches(this.sources);
   }
   // Takes back a Queued Prompt the Plugin sent; one that started, is gone or is held for editing stays (ADR-0055).
   public async withdrawFromPlugin(

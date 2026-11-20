@@ -39,6 +39,7 @@ function sessionsHeard(): HeardSessions {
 
         return (): boolean => listeners.delete(listener);
       },
+      watchOpened: () => (): void => {},
     },
   );
 

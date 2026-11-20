@@ -21,6 +21,8 @@ export type VoiceAgentReply = {
   fails?: string;
   // Asks permission for a Tool call with this title before its messages, and waits for the answer.
   asksPermission?: string;
+  // Asks the person this question, as an Elicitation, before its messages, and waits for the answer.
+  asks?: string;
 };
 
 // The text in pieces of `size` characters; whole without a size.
@@ -104,8 +106,24 @@ const permissionRequest = (title: string): ScriptedStep => ({
 const permissionSteps = (title: string | undefined): ScriptedStep[] =>
   title === undefined ? [] : [askedToolCall(title), permissionRequest(title)];
 
+const question = (message: string): ScriptedStep => ({
+  type: 'elicitation',
+  request: {
+    mode: 'form',
+    message,
+    requestedSchema: {
+      type: 'object',
+      properties: { answer: { type: 'string', title: 'Answer' } },
+    },
+  },
+});
+
+const questionSteps = (message: string | undefined): ScriptedStep[] =>
+  message === undefined ? [] : [question(message)];
+
 const stepsOf = (reply: VoiceAgentReply): ScriptedStep[] => [
   ...permissionSteps(reply.asksPermission),
+  ...questionSteps(reply.asks),
   ...toolSteps(reply.toolOutput),
   ...messageSteps(reply.messages ?? [], reply.chunkSize),
   ...endingSteps(reply),
