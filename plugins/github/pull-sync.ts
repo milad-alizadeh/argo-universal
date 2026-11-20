@@ -1,5 +1,6 @@
 import { readLink, type ChangesSource, type LinkRead } from './pull-changes';
 import type { CheckInfo } from './pull-checks';
+import type { PullInfo } from './pull-info';
 import { keptShown } from './pull-kept';
 import { pullRecordKey } from './pull-records';
 import type { PullKey } from './pull-store';
@@ -9,11 +10,16 @@ type Shown = <Link extends PullKey>(
   links: readonly Link[],
 ) => Promise<LinkRead<Link>[]>;
 
+type ValidatedPull = { link: PullKey; data: PullInfo };
+
 export type Pulls = {
   // The Sessions' pull requests as they were last read: the stored record with what the automations keep, never a wait on GitHub.
   known: (sessionIds: readonly string[]) => Promise<LinkRead[]>;
   // Asks GitHub for the Sessions' pull requests and keeps what it answers; the one place a read is stored.
-  sync: (sessionIds: readonly string[]) => Promise<void>;
+  sync: (
+    sessionIds: readonly string[],
+    validated?: ValidatedPull,
+  ) => Promise<void>;
   // Says what the Slots show changed, after a sync that already read all there is to read.
   changed: () => void;
   // One Slot's answers. A Slot answers at once and is asked again when a sync changed what is kept.
@@ -56,12 +62,20 @@ function sayChanged({ echoes, say }: State): void {
   say();
 }
 
-const saveRead = async (
+type Refresh = { kind: 'slot' | 'sync'; validated?: ValidatedPull };
+
+async function saveRead(
   source: ChangesSource,
   link: PullKey,
-): Promise<boolean> => source.records.save(await readLink(source, link));
+  { validated }: Refresh,
+): Promise<boolean> {
+  const pull =
+    validated && pullRecordKey(validated.link) === pullRecordKey(link)
+      ? validated.data
+      : undefined;
 
-type Refresh = 'slot' | 'sync';
+  return source.records.save(await readLink(source, link, pull));
+}
 
 // A Slot can receive a kept Query answer while it refreshes. A Watch or Operation waits for the current answer.
 function syncLink(
@@ -69,12 +83,12 @@ function syncLink(
   link: PullKey,
   refresh: Refresh,
 ): Promise<boolean> {
-  const key = `${refresh}:${pullRecordKey(link)}`;
+  const key = `${refresh.kind}:${pullRecordKey(link)}`;
   const pending = state.inFlight.get(key);
 
   if (pending) return pending.then(() => false);
 
-  const saved = saveRead(state.source, link);
+  const saved = saveRead(state.source, link, refresh);
   state.inFlight.set(key, saved);
 
   return saved.finally(() => {
@@ -101,7 +115,7 @@ function behind(state: State, reads: readonly Read[]): void {
   void syncLinks(
     state,
     open.map(({ link }) => link),
-    'slot',
+    { kind: 'slot' },
   ).catch(leftAsItWas);
 }
 
@@ -141,8 +155,11 @@ export function createPulls(source: ChangesSource, say: () => void): Pulls {
   return {
     known: (sessionIds) => keptShown(source, sessionIds, records.of),
     changed: () => sayChanged(state),
-    sync: async (sessionIds) =>
-      syncLinks(state, await store.forSessions(sessionIds), 'sync'),
+    sync: async (sessionIds, validated) =>
+      syncLinks(state, await store.forSessions(sessionIds), {
+        kind: 'sync',
+        validated,
+      }),
     slot: () => slotOf(state),
   };
 }

@@ -55,12 +55,13 @@ const readChecks = (
     readState(reads.checks({ projectId, repository, head }), { projectId }),
   );
 
-// One pull request with what GitHub says of it now, read through the named Queries; only `sync` asks (see `pull-sync.ts`).
+// Attach already validated the pull request. Its answer can supply the head for the named Checks read.
 export async function readLink<Link extends PullKey>(
   source: ChangesSource,
   link: Link,
+  validated?: PullInfo,
 ): Promise<LinkRead<Link>> {
-  const pull = await readPull(source, link);
+  const pull = validated ? { data: validated } : await readPull(source, link);
 
   if (!pull.data) return { link, pull };
 
