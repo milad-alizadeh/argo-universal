@@ -1,0 +1,510 @@
+{
+  "signedOut": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Philips Hue"
+    },
+    "children": [
+      {
+        "type": "SignIn",
+        "key": "0",
+        "props": {
+          "service": "Philips Hue",
+          "title": "Connect your account",
+          "description": "",
+          "footer": "Opens your browser. The token stays on the Server Device."
+        },
+        "children": [
+          {
+            "type": "FieldGroup.Link",
+            "key": "0",
+            "props": {
+              "title": "Sign in to Philips Hue",
+              "action": true,
+              "onPress": {
+                "operation": "signIn",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "connect": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Home"
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "gap": 4,
+          "direction": "column"
+        },
+        "children": [
+          {
+            "type": "EmptyState",
+            "key": "0",
+            "props": {
+              "icon": "lightbulb",
+              "title": "Connect your Hue Bridge",
+              "description": "Argo presses your Bridge’s link button through Hue’s cloud and keeps the key it gives."
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "Button",
+            "key": "1",
+            "props": {
+              "label": "Connect Bridge",
+              "onPress": {
+                "operation": "connectBridge",
+                "args": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "lights": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Home"
+    },
+    "children": [
+      {
+        "type": "ScrollView",
+        "key": "0",
+        "props": {},
+        "children": [
+          {
+            "type": "Stack",
+            "key": "0",
+            "props": {
+              "gap": 6,
+              "direction": "column"
+            },
+            "children": [
+              {
+                "type": "Stack",
+                "key": "Office",
+                "props": {
+                  "gap": 3,
+                  "direction": "column"
+                },
+                "children": [
+                  {
+                    "type": "Text",
+                    "key": "0",
+                    "props": {
+                      "children": "Office",
+                      "role": "title"
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Grid",
+                    "key": "1",
+                    "props": {
+                      "columns": {
+                        "compact": 1,
+                        "medium": 2,
+                        "wide": 3
+                      },
+                      "gap": 3
+                    },
+                    "children": [
+                      {
+                        "type": "Card",
+                        "key": "group-office",
+                        "props": {
+                          "title": "All lights",
+                          "subtitle": "2 lights"
+                        },
+                        "children": [
+                          {
+                            "type": "FieldGroup",
+                            "key": "0",
+                            "props": {},
+                            "children": [
+                              {
+                                "type": "FieldGroup.Section",
+                                "key": "0",
+                                "props": {},
+                                "children": [
+                                  {
+                                    "type": "FieldGroup.Toggle",
+                                    "key": "0",
+                                    "props": {
+                                      "title": "On",
+                                      "value": true,
+                                      "onValueChange": {
+                                        "operation": "setPower",
+                                        "args": {
+                                          "kind": "grouped_light",
+                                          "id": "group-office",
+                                          "on": {
+                                            "$payload": true
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "FieldGroup.Slider",
+                                    "key": "1",
+                                    "props": {
+                                      "title": "Brightness",
+                                      "value": 60,
+                                      "min": 1,
+                                      "max": 100,
+                                      "step": 1,
+                                      "valueLabel": "60%",
+                                      "onValueChange": {
+                                        "operation": "setBrightness",
+                                        "args": {
+                                          "kind": "grouped_light",
+                                          "id": "group-office",
+                                          "brightness": {
+                                            "$payload": true
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Card",
+                        "key": "light-desk",
+                        "props": {
+                          "title": "Desk lamp"
+                        },
+                        "children": [
+                          {
+                            "type": "FieldGroup",
+                            "key": "0",
+                            "props": {},
+                            "children": [
+                              {
+                                "type": "FieldGroup.Section",
+                                "key": "0",
+                                "props": {},
+                                "children": [
+                                  {
+                                    "type": "FieldGroup.Toggle",
+                                    "key": "0",
+                                    "props": {
+                                      "title": "On",
+                                      "value": true,
+                                      "onValueChange": {
+                                        "operation": "setPower",
+                                        "args": {
+                                          "kind": "light",
+                                          "id": "light-desk",
+                                          "on": {
+                                            "$payload": true
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "FieldGroup.Slider",
+                                    "key": "1",
+                                    "props": {
+                                      "title": "Brightness",
+                                      "value": 80,
+                                      "min": 1,
+                                      "max": 100,
+                                      "step": 1,
+                                      "valueLabel": "80%",
+                                      "onValueChange": {
+                                        "operation": "setBrightness",
+                                        "args": {
+                                          "kind": "light",
+                                          "id": "light-desk",
+                                          "brightness": {
+                                            "$payload": true
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      },
+                      {
+                        "type": "Card",
+                        "key": "light-ceiling",
+                        "props": {
+                          "title": "Ceiling"
+                        },
+                        "children": [
+                          {
+                            "type": "FieldGroup",
+                            "key": "0",
+                            "props": {},
+                            "children": [
+                              {
+                                "type": "FieldGroup.Section",
+                                "key": "0",
+                                "props": {},
+                                "children": [
+                                  {
+                                    "type": "FieldGroup.Toggle",
+                                    "key": "0",
+                                    "props": {
+                                      "title": "On",
+                                      "value": false,
+                                      "onValueChange": {
+                                        "operation": "setPower",
+                                        "args": {
+                                          "kind": "light",
+                                          "id": "light-ceiling",
+                                          "on": {
+                                            "$payload": true
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "FieldGroup.Slider",
+                                    "key": "1",
+                                    "props": {
+                                      "title": "Brightness",
+                                      "value": 40,
+                                      "min": 1,
+                                      "max": 100,
+                                      "step": 1,
+                                      "valueLabel": "40%",
+                                      "onValueChange": {
+                                        "operation": "setBrightness",
+                                        "args": {
+                                          "kind": "light",
+                                          "id": "light-ceiling",
+                                          "brightness": {
+                                            "$payload": true
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              },
+              {
+                "type": "Stack",
+                "key": "Other lights",
+                "props": {
+                  "gap": 3,
+                  "direction": "column"
+                },
+                "children": [
+                  {
+                    "type": "Text",
+                    "key": "0",
+                    "props": {
+                      "children": "Other lights",
+                      "role": "title"
+                    },
+                    "children": [],
+                    "slots": {}
+                  },
+                  {
+                    "type": "Grid",
+                    "key": "1",
+                    "props": {
+                      "columns": {
+                        "compact": 1,
+                        "medium": 2,
+                        "wide": 3
+                      },
+                      "gap": 3
+                    },
+                    "children": [
+                      {
+                        "type": "Card",
+                        "key": "light-porch",
+                        "props": {
+                          "title": "Porch"
+                        },
+                        "children": [
+                          {
+                            "type": "FieldGroup",
+                            "key": "0",
+                            "props": {},
+                            "children": [
+                              {
+                                "type": "FieldGroup.Section",
+                                "key": "0",
+                                "props": {},
+                                "children": [
+                                  {
+                                    "type": "FieldGroup.Toggle",
+                                    "key": "0",
+                                    "props": {
+                                      "title": "On",
+                                      "value": true,
+                                      "onValueChange": {
+                                        "operation": "setPower",
+                                        "args": {
+                                          "kind": "light",
+                                          "id": "light-porch",
+                                          "on": {
+                                            "$payload": true
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  },
+                                  {
+                                    "type": "FieldGroup.Slider",
+                                    "key": "1",
+                                    "props": {
+                                      "title": "Brightness",
+                                      "value": 100,
+                                      "min": 1,
+                                      "max": 100,
+                                      "step": 1,
+                                      "valueLabel": "100%",
+                                      "onValueChange": {
+                                        "operation": "setBrightness",
+                                        "args": {
+                                          "kind": "light",
+                                          "id": "light-porch",
+                                          "brightness": {
+                                            "$payload": true
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "children": [],
+                                    "slots": {}
+                                  }
+                                ],
+                                "slots": {}
+                              }
+                            ],
+                            "slots": {}
+                          }
+                        ],
+                        "slots": {}
+                      }
+                    ],
+                    "slots": {}
+                  }
+                ],
+                "slots": {}
+              }
+            ],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  },
+  "failed": {
+    "type": "Screen",
+    "key": "0",
+    "props": {
+      "title": "Home"
+    },
+    "children": [
+      {
+        "type": "Stack",
+        "key": "0",
+        "props": {
+          "gap": 4,
+          "direction": "column"
+        },
+        "children": [
+          {
+            "type": "Callout",
+            "key": "0",
+            "props": {
+              "tone": "danger",
+              "title": "Couldn’t reach your Hue Bridge",
+              "description": "The Hue Bridge is offline."
+            },
+            "children": [],
+            "slots": {}
+          },
+          {
+            "type": "Button",
+            "key": "1",
+            "props": {
+              "label": "Try again",
+              "onPress": {
+                "pageState": {}
+              }
+            },
+            "children": [],
+            "slots": {}
+          }
+        ],
+        "slots": {}
+      }
+    ],
+    "slots": {}
+  }
+}
