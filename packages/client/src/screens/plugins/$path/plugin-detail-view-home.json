@@ -132,68 +132,60 @@
                     },
                     "children": [
                       {
-                        "type": "Card",
+                        "type": "FieldGroup",
                         "key": "group-office",
-                        "props": {
-                          "title": "All lights",
-                          "subtitle": "2 lights"
-                        },
+                        "props": {},
                         "children": [
                           {
-                            "type": "FieldGroup",
+                            "type": "FieldGroup.Section",
                             "key": "0",
-                            "props": {},
+                            "props": {
+                              "title": "All lights",
+                              "footer": "2 lights"
+                            },
                             "children": [
                               {
-                                "type": "FieldGroup.Section",
+                                "type": "FieldGroup.Toggle",
                                 "key": "0",
-                                "props": {},
-                                "children": [
-                                  {
-                                    "type": "FieldGroup.Toggle",
-                                    "key": "0",
-                                    "props": {
-                                      "title": "On",
-                                      "value": true,
-                                      "onValueChange": {
-                                        "operation": "setPower",
-                                        "args": {
-                                          "kind": "grouped_light",
-                                          "id": "group-office",
-                                          "on": {
-                                            "$payload": true
-                                          }
-                                        }
+                                "props": {
+                                  "title": "On",
+                                  "value": true,
+                                  "onValueChange": {
+                                    "operation": "setPower",
+                                    "args": {
+                                      "kind": "grouped_light",
+                                      "id": "group-office",
+                                      "on": {
+                                        "$payload": true
                                       }
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  },
-                                  {
-                                    "type": "FieldGroup.Slider",
-                                    "key": "1",
-                                    "props": {
-                                      "title": "Brightness",
-                                      "value": 60,
-                                      "min": 1,
-                                      "max": 100,
-                                      "step": 1,
-                                      "valueLabel": "60%",
-                                      "onValueChange": {
-                                        "operation": "setBrightness",
-                                        "args": {
-                                          "kind": "grouped_light",
-                                          "id": "group-office",
-                                          "brightness": {
-                                            "$payload": true
-                                          }
-                                        }
-                                      }
-                                    },
-                                    "children": [],
-                                    "slots": {}
+                                    }
                                   }
-                                ],
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "FieldGroup.Slider",
+                                "key": "1",
+                                "props": {
+                                  "title": "Brightness",
+                                  "value": 60,
+                                  "min": 1,
+                                  "max": 100,
+                                  "step": 1,
+                                  "valueLabel": "60%",
+                                  "onValueChange": {
+                                    "operation": "setBrightness",
+                                    "args": {
+                                      "kind": "grouped_light",
+                                      "id": "group-office",
+                                      "brightness": {
+                                        "$payload": true
+                                      }
+                                    }
+                                  }
+                                },
+                                "children": [],
                                 "slots": {}
                               }
                             ],
@@ -203,67 +195,59 @@
                         "slots": {}
                       },
                       {
-                        "type": "Card",
+                        "type": "FieldGroup",
                         "key": "light-desk",
-                        "props": {
-                          "title": "Desk lamp"
-                        },
+                        "props": {},
                         "children": [
                           {
-                            "type": "FieldGroup",
+                            "type": "FieldGroup.Section",
                             "key": "0",
-                            "props": {},
+                            "props": {
+                              "title": "Desk lamp"
+                            },
                             "children": [
                               {
-                                "type": "FieldGroup.Section",
+                                "type": "FieldGroup.Toggle",
                                 "key": "0",
-                                "props": {},
-                                "children": [
-                                  {
-                                    "type": "FieldGroup.Toggle",
-                                    "key": "0",
-                                    "props": {
-                                      "title": "On",
-                                      "value": true,
-                                      "onValueChange": {
-                                        "operation": "setPower",
-                                        "args": {
-                                          "kind": "light",
-                                          "id": "light-desk",
-                                          "on": {
-                                            "$payload": true
-                                          }
-                                        }
+                                "props": {
+                                  "title": "On",
+                                  "value": true,
+                                  "onValueChange": {
+                                    "operation": "setPower",
+                                    "args": {
+                                      "kind": "light",
+                                      "id": "light-desk",
+                                      "on": {
+                                        "$payload": true
                                       }
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  },
-                                  {
-                                    "type": "FieldGroup.Slider",
-                                    "key": "1",
-                                    "props": {
-                                      "title": "Brightness",
-                                      "value": 80,
-                                      "min": 1,
-                                      "max": 100,
-                                      "step": 1,
-                                      "valueLabel": "80%",
-                                      "onValueChange": {
-                                        "operation": "setBrightness",
-                                        "args": {
-                                          "kind": "light",
-                                          "id": "light-desk",
-                                          "brightness": {
-                                            "$payload": true
-                                          }
-                                        }
-                                      }
-                                    },
-                                    "children": [],
-                                    "slots": {}
+                                    }
                                   }
-                                ],
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "FieldGroup.Slider",
+                                "key": "1",
+                                "props": {
+                                  "title": "Brightness",
+                                  "value": 80,
+                                  "min": 1,
+                                  "max": 100,
+                                  "step": 1,
+                                  "valueLabel": "80%",
+                                  "onValueChange": {
+                                    "operation": "setBrightness",
+                                    "args": {
+                                      "kind": "light",
+                                      "id": "light-desk",
+                                      "brightness": {
+                                        "$payload": true
+                                      }
+                                    }
+                                  }
+                                },
+                                "children": [],
                                 "slots": {}
                               }
                             ],
@@ -273,67 +257,59 @@
                         "slots": {}
                       },
                       {
-                        "type": "Card",
+                        "type": "FieldGroup",
                         "key": "light-ceiling",
-                        "props": {
-                          "title": "Ceiling"
-                        },
+                        "props": {},
                         "children": [
                           {
-                            "type": "FieldGroup",
+                            "type": "FieldGroup.Section",
                             "key": "0",
-                            "props": {},
+                            "props": {
+                              "title": "Ceiling"
+                            },
                             "children": [
                               {
-                                "type": "FieldGroup.Section",
+                                "type": "FieldGroup.Toggle",
                                 "key": "0",
-                                "props": {},
-                                "children": [
-                                  {
-                                    "type": "FieldGroup.Toggle",
-                                    "key": "0",
-                                    "props": {
-                                      "title": "On",
-                                      "value": false,
-                                      "onValueChange": {
-                                        "operation": "setPower",
-                                        "args": {
-                                          "kind": "light",
-                                          "id": "light-ceiling",
-                                          "on": {
-                                            "$payload": true
-                                          }
-                                        }
+                                "props": {
+                                  "title": "On",
+                                  "value": false,
+                                  "onValueChange": {
+                                    "operation": "setPower",
+                                    "args": {
+                                      "kind": "light",
+                                      "id": "light-ceiling",
+                                      "on": {
+                                        "$payload": true
                                       }
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  },
-                                  {
-                                    "type": "FieldGroup.Slider",
-                                    "key": "1",
-                                    "props": {
-                                      "title": "Brightness",
-                                      "value": 40,
-                                      "min": 1,
-                                      "max": 100,
-                                      "step": 1,
-                                      "valueLabel": "40%",
-                                      "onValueChange": {
-                                        "operation": "setBrightness",
-                                        "args": {
-                                          "kind": "light",
-                                          "id": "light-ceiling",
-                                          "brightness": {
-                                            "$payload": true
-                                          }
-                                        }
-                                      }
-                                    },
-                                    "children": [],
-                                    "slots": {}
+                                    }
                                   }
-                                ],
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "FieldGroup.Slider",
+                                "key": "1",
+                                "props": {
+                                  "title": "Brightness",
+                                  "value": 40,
+                                  "min": 1,
+                                  "max": 100,
+                                  "step": 1,
+                                  "valueLabel": "40%",
+                                  "onValueChange": {
+                                    "operation": "setBrightness",
+                                    "args": {
+                                      "kind": "light",
+                                      "id": "light-ceiling",
+                                      "brightness": {
+                                        "$payload": true
+                                      }
+                                    }
+                                  }
+                                },
+                                "children": [],
                                 "slots": {}
                               }
                             ],
@@ -379,67 +355,59 @@
                     },
                     "children": [
                       {
-                        "type": "Card",
+                        "type": "FieldGroup",
                         "key": "light-porch",
-                        "props": {
-                          "title": "Porch"
-                        },
+                        "props": {},
                         "children": [
                           {
-                            "type": "FieldGroup",
+                            "type": "FieldGroup.Section",
                             "key": "0",
-                            "props": {},
+                            "props": {
+                              "title": "Porch"
+                            },
                             "children": [
                               {
-                                "type": "FieldGroup.Section",
+                                "type": "FieldGroup.Toggle",
                                 "key": "0",
-                                "props": {},
-                                "children": [
-                                  {
-                                    "type": "FieldGroup.Toggle",
-                                    "key": "0",
-                                    "props": {
-                                      "title": "On",
-                                      "value": true,
-                                      "onValueChange": {
-                                        "operation": "setPower",
-                                        "args": {
-                                          "kind": "light",
-                                          "id": "light-porch",
-                                          "on": {
-                                            "$payload": true
-                                          }
-                                        }
+                                "props": {
+                                  "title": "On",
+                                  "value": true,
+                                  "onValueChange": {
+                                    "operation": "setPower",
+                                    "args": {
+                                      "kind": "light",
+                                      "id": "light-porch",
+                                      "on": {
+                                        "$payload": true
                                       }
-                                    },
-                                    "children": [],
-                                    "slots": {}
-                                  },
-                                  {
-                                    "type": "FieldGroup.Slider",
-                                    "key": "1",
-                                    "props": {
-                                      "title": "Brightness",
-                                      "value": 100,
-                                      "min": 1,
-                                      "max": 100,
-                                      "step": 1,
-                                      "valueLabel": "100%",
-                                      "onValueChange": {
-                                        "operation": "setBrightness",
-                                        "args": {
-                                          "kind": "light",
-                                          "id": "light-porch",
-                                          "brightness": {
-                                            "$payload": true
-                                          }
-                                        }
-                                      }
-                                    },
-                                    "children": [],
-                                    "slots": {}
+                                    }
                                   }
-                                ],
+                                },
+                                "children": [],
+                                "slots": {}
+                              },
+                              {
+                                "type": "FieldGroup.Slider",
+                                "key": "1",
+                                "props": {
+                                  "title": "Brightness",
+                                  "value": 100,
+                                  "min": 1,
+                                  "max": 100,
+                                  "step": 1,
+                                  "valueLabel": "100%",
+                                  "onValueChange": {
+                                    "operation": "setBrightness",
+                                    "args": {
+                                      "kind": "light",
+                                      "id": "light-porch",
+                                      "brightness": {
+                                        "$payload": true
+                                      }
+                                    }
+                                  }
+                                },
+                                "children": [],
                                 "slots": {}
                               }
                             ],

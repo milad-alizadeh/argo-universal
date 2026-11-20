@@ -13,14 +13,16 @@ const desk = 'light-desk';
 
 const ceiling = 'light-ceiling';
 
+const lightSection = 'FieldGroup.Section';
+
 it(
   'shows each room with its own card and its lights’ cards, then the lights in no room, each with power and brightness',
   async () => {
     const page = await connected(await startHome());
 
     expect(page.find('Office').type).toBe('Text');
-    expect(page.find(homeWords.allLights).props.subtitle).toBe('2 lights');
-    expect(page.find('Desk lamp').type).toBe('Card');
+    expect(page.find(homeWords.allLights).props.footer).toBe('2 lights');
+    expect(page.find('Desk lamp').type).toBe(lightSection);
     expect(page.find(homeWords.otherLights).type).toBe('Text');
     expect(shown(page, toggleOf(desk))).toBe('true');
     expect(shown(page, toggleOf(ceiling))).toBe('false');
@@ -153,9 +155,9 @@ it(
     });
     const page = await connected(home);
 
-    expect(page.find('Desk lamp').type).toBe('Card');
-    expect(page.find('Desk strip').type).toBe('Card');
-    expect(page.find(homeWords.allLights).props.subtitle).toBe('3 lights');
+    expect(page.find('Desk lamp').type).toBe(lightSection);
+    expect(page.find('Desk strip').type).toBe(lightSection);
+    expect(page.find(homeWords.allLights).props.footer).toBe('3 lights');
   },
   timeoutMs,
 );

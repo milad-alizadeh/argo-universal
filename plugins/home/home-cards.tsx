@@ -1,19 +1,11 @@
-import {
-  Card,
-  FieldGroup,
-  Grid,
-  Stack,
-  Text,
-  type PageTo,
-} from '@argo/plugin-kit';
+import { FieldGroup, Grid, Stack, Text, type PageTo } from '@argo/plugin-kit';
 import type { JSX } from '@argo/plugin-kit/jsx-runtime';
 import { roomSubtitle, homeWords } from './home-words';
 import { brightnessRange } from './hue';
 import type { Household, Room, Switch } from './hue-model';
 
 /*
- * The household as a Grid of Cards: each room under its name, its own card switching every light in it, then a card
- * for each of its lights; the lights no room holds come last. Each card has a power Toggle and a brightness Slider.
+ * The household as a Grid of FieldGroups: each room under its name, its own card switching every light in it, then one for each of its lights; the lights no room holds come last. Each has a power Toggle and a brightness Slider.
  * There is no colour control: the kit has no colour picker.
  */
 const columns = { compact: 1, medium: 2, wide: 3 };
@@ -45,42 +37,37 @@ const brightness = (light: Switch, to: PageTo): JSX.Element => (
   />
 );
 
-const controls = (light: Switch, to: PageTo): JSX.Element => (
-  <FieldGroup>
-    <FieldGroup.Section>
+type Shown = { light: Switch; title: string; footer?: string };
+
+// One light as its own FieldGroup Section: the name is the Section's title, so no Card wraps it.
+const switchSection = (
+  { light, title, footer }: Shown,
+  to: PageTo,
+): JSX.Element => (
+  <FieldGroup key={light.id}>
+    <FieldGroup.Section title={title} {...(footer && { footer })}>
       {power(light, to)}
       {brightness(light, to)}
     </FieldGroup.Section>
   </FieldGroup>
 );
 
-type Shown = { light: Switch; title: string; subtitle?: string };
-
-const switchCard = (
-  { light, title, subtitle }: Shown,
-  to: PageTo,
-): JSX.Element => (
-  <Card key={light.id} title={title} {...(subtitle && { subtitle })}>
-    {controls(light, to)}
-  </Card>
-);
-
-const roomCard = (room: Room, to: PageTo): JSX.Element[] =>
+const roomSwitch = (room: Room, to: PageTo): JSX.Element[] =>
   room.group
     ? [
-        switchCard(
+        switchSection(
           {
             light: room.group,
             title: homeWords.allLights,
-            subtitle: roomSubtitle(room.lights.length),
+            footer: roomSubtitle(room.lights.length),
           },
           to,
         ),
       ]
     : [];
 
-const lightCards = (lights: readonly Switch[], to: PageTo): JSX.Element[] =>
-  lights.map((light) => switchCard({ light, title: light.name }, to));
+const lightSections = (lights: readonly Switch[], to: PageTo): JSX.Element[] =>
+  lights.map((light) => switchSection({ light, title: light.name }, to));
 
 function section(title: string, cards: JSX.Element[]): JSX.Element {
   return (
@@ -94,11 +81,14 @@ function section(title: string, cards: JSX.Element[]): JSX.Element {
 }
 
 const roomSection = (room: Room, to: PageTo): JSX.Element =>
-  section(room.name, [...roomCard(room, to), ...lightCards(room.lights, to)]);
+  section(room.name, [
+    ...roomSwitch(room, to),
+    ...lightSections(room.lights, to),
+  ]);
 
 const otherSection = (others: readonly Switch[], to: PageTo): JSX.Element[] =>
   others.length > 0
-    ? [section(homeWords.otherLights, lightCards(others, to))]
+    ? [section(homeWords.otherLights, lightSections(others, to))]
     : [];
 
 export const householdSections = (
