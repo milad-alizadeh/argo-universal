@@ -134,6 +134,19 @@ export const storybookVite = (config: InlineConfig): InlineConfig =>
 type Config = StorybookConfig &
   Record<'reactNativeServerOptions', ReturnType<typeof storybookServerOptions>>;
 
+// The render gate's `vitest list` sets ARGO_LIST_EVERY_STORY=1 to find the presentation stories a change reaches.
+function storyGlobs(): string[] {
+  const roots = ['../../../packages/client/src', '../../../packages/kit/src'];
+
+  if (process.env.ARGO_LIST_EVERY_STORY === '1')
+    return roots.map((root) => `${root}/**/*.stories.tsx`);
+
+  if (process.env.VITEST)
+    return roots.map((root) => `${root}/**/*.test.stories.tsx`);
+
+  return roots.map((root) => `${root}/**/!(*.test).stories.tsx`);
+}
+
 const config: Config = {
   staticDirs: [
     { from: '../../universal-app/public/fonts', to: '/fonts' },
@@ -142,16 +155,11 @@ const config: Config = {
       to: '/canvaskit.wasm',
     },
   ],
-  // Screens live in @repo/client and the kit in @repo/kit (ADR 0009); globs resolve from this .storybook folder.
-  stories: process.env.VITEST
-    ? [
-        '../../../packages/client/src/**/*.stories.tsx',
-        '../../../packages/kit/src/**/*.stories.tsx',
-      ]
-    : [
-        '../../../packages/client/src/**/!(*.test).stories.tsx',
-        '../../../packages/kit/src/**/!(*.test).stories.tsx',
-      ],
+  /*
+   * Screens live in @repo/client and the kit in @repo/kit (ADR 0009); globs resolve from this .storybook folder.
+   * The story tests run only `*.test.stories.tsx`: the render gate and Chromatic already draw every presentation story.
+   */
+  stories: storyGlobs(),
   addons: [
     getAbsolutePath('@chromatic-com/storybook'),
     getAbsolutePath('@storybook/addon-vitest'),

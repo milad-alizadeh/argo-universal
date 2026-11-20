@@ -19,6 +19,8 @@ export interface ComposerConfigurationProps {
   turnRunning?: boolean;
   // True while New Session's Session opens and takes this device's last choices.
   opening?: boolean;
+  // How long an unconfirmed choice stands, in ms; holdChoice unless a story shortens the wait.
+  holdChoiceMs?: number;
   checkout: {
     branch: string;
     newWorktree: boolean;

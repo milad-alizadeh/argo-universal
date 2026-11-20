@@ -1,7 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
-import { onPhone, phone, wide } from './frame';
+import { onPhone } from './frame';
 import { expectMessage } from './new-session';
 
 const sectionNames = ['Sessions', 'Settings', 'Counter', 'Lists', 'Issues'];
@@ -22,13 +22,6 @@ When('I open the {} Plugin', async ({ page }, title: string): Promise<void> => {
     .getByRole('button', { name: title, exact: true })
     .click();
 });
-
-When(
-  'I resize to a {word} Frame',
-  async ({ page }, frame: string): Promise<void> => {
-    await page.setViewportSize(frame === 'phone' ? phone : wide);
-  },
-);
 
 Then(
   'the Plugin page shows {}',

@@ -80,6 +80,6 @@
     "./pairing-vector": "./src/pairing/noise-vector-fixtures.ts",
     "./mocks/acp-engine": "./mocks/acp-engine.ts",
     "./mocks/acp-feed": "./mocks/acp-feed.ts",
-    "./voice-prompt": "./src/feed/voice-markers.ts"
+    "./voice-prompt": "./src/feed/conversation-markers.ts"
   }
 }

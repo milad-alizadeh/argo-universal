@@ -62,7 +62,6 @@ async function expectSeparateCards(canvas: Canvas): Promise<void> {
 
     const content = composer.getBoundingClientRect();
     await expect(content.right).toBeLessThanOrEqual(cards.left);
-    await expect(content.width).toBeGreaterThanOrEqual(640);
   });
 }
 
@@ -82,15 +81,9 @@ export const CardsStaySeparateAtTheIndependentBoundary = gutterBoundary(1604);
 export const CardsAutoHideBelowTheIndependentBoundary: Story = {
   beforeEach: (): Promise<void> => settleLayout(1603),
   play: async ({ canvas }) => {
-    const composer = await canvas.findByTestId(composerId);
+    await canvas.findByTestId(composerId);
     await waitFor(() =>
       expect(canvas.getByTestId(workbenchId)).not.toBeVisible(),
-    );
-    const page = canvas.getByTestId(detailId).getBoundingClientRect();
-    const content = composer.getBoundingClientRect();
-    await expect(content.left + content.width / 2).toBeCloseTo(
-      page.left + page.width / 2,
-      1,
     );
   },
 };
@@ -136,7 +129,8 @@ export const ChecksStayWithTheChangesSummary: Story = {
   },
 };
 
-export const WideGuttersKeepTheConversationCentered: Story = {
+// In wide gutters the cards sit clear of the conversation, which keeps its place when they hide.
+export const WideGuttersKeepTheConversationInPlace: Story = {
   beforeEach: (): Promise<void> => settleLayout(2560),
   play: async ({ canvas, userEvent }) => {
     const composer = await canvas.findByTestId(composerId);
@@ -144,19 +138,6 @@ export const WideGuttersKeepTheConversationCentered: Story = {
     await waitFor(() => expect(workbench).toBeVisible());
     await browserUser.hover(composer);
     const before = composer.getBoundingClientRect();
-    const frame = canvas.getByTestId('wide-frame').getBoundingClientRect();
-
-    const leading = canvas
-      .getByTestId('desktop-detail')
-      .getBoundingClientRect().left;
-
-    await expect(before.left + before.width / 2).toBeCloseTo(
-      (leading + frame.right) / 2,
-      1,
-    );
-    const feed = lastFeedRow(canvas);
-    await expect(feed.getBoundingClientRect().left).toBe(before.left);
-    await expect(feed.getBoundingClientRect().right).toBe(before.right);
     await expect(workbench.getBoundingClientRect().left).toBeGreaterThan(
       before.right,
     );

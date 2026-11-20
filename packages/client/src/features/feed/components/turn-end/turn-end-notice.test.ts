@@ -33,6 +33,22 @@ describe('turnEndNotice', () => {
     ).toMatchObject({ severity: 'error', description: 'Boom' });
   });
 
+  it.each([
+    ['max_tokens', 'warning'],
+    ['max_turn_requests', 'warning'],
+    ['refusal', 'info'],
+    ['auth_required', 'warning'],
+  ] as const)('reads a %s ending as %s', (stopReason, severity) => {
+    expect(turnEndNotice({ ...end, stopReason })).toMatchObject({ severity });
+  });
+
+  it('reads an error ending without details as an error with no description', () => {
+    expect(turnEndNotice({ ...end, stopReason: 'error' })).toMatchObject({
+      severity: 'error',
+      description: undefined,
+    });
+  });
+
   it('draws nothing for a Turn that completed', () => {
     expect(turnEndNotice({ ...end, stopReason: 'end_turn' })).toBeNull();
   });

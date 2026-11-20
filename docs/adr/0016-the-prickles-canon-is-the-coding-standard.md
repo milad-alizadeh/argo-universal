@@ -1,10 +1,10 @@
 # The Prickles canon is the coding standard
 
-The Prickles canon v2.0, kept verbatim in `docs/agents/prickles/`, is Argo's coding standard. Where it conflicts with `AGENTS.md`, another ADR or a `docs/agents/` doc, the canon wins, including its literal caps: 15-line functions, cyclomatic complexity 3, depth 3, 10 statements, 3 parameters and 150-line files (owner, 2026-10-07). Debt lists and per-occurrence suppressions go; a cap that is wrong changes globally, with the reason written down, as S2 says.
+The Prickles canon v2.0, kept verbatim in `docs/agents/prickles/`, is Argo's coding standard. Where it conflicts with `AGENTS.md`, another ADR or a `docs/agents/` doc, the canon wins, including its literal caps: 15-line functions, cyclomatic complexity 3, depth 3, 10 statements, 3 parameters and 150-line files (owner, 2026-10-07). On 2026-11-20 the owner raised the function cap to 50 lines and the file cap to 300, and dropped the cyclomatic cap for `sonarjs/cognitive-complexity`, which the pack also runs: the narrow caps split code that reads as one piece, and tests most of all. Debt lists and per-occurrence suppressions go; a cap that is wrong changes globally, with the reason written down, as S2 says.
 
 Where the canon cannot apply as written, these are the recorded applications (owner, 2026-10-07):
 
-1. **Tests.** Test files get one documented global cap in the linter config, not a list of exempt files.
+1. **Tests.** Test files get one documented global cap in the linter config, not a list of exempt files. A test file has no file cap, so one subject's tests stay in one file; a test's mocks keep it (owner, 2026-11-20).
 2. **XState.** `setup({ types: {} as … })` has no cast-free form in XState v5. An override for `*machine.ts` files permits that cast. Machine files have no line cap (owner, 2026-10-29). A cap would force statecharts apart when their lifecycle needs more states and transitions.
 
    Keep each machine's statechart together: states, transitions, guard references and timeout ordering stay readable in one file (owner, 2026-10-13). Extract invoked operations, action implementations and input construction where they improve clarity. Introduce child actors when they own a distinct lifecycle or responsibility. Do not split a statechart across files solely to satisfy lint limits.

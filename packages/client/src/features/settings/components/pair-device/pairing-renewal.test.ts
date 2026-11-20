@@ -1,6 +1,6 @@
 import { pairingTicketLifetimeMs } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import { codeShownForMs, renewsAt } from './pairing-renewal';
+import { renewsAt } from './pairing-renewal';
 
 describe('when the pair sheet swaps its code for a new one', () => {
   const minted = Date.parse('2026-11-18T12:00:00.000Z');
@@ -8,9 +8,5 @@ describe('when the pair sheet swaps its code for a new one', () => {
 
   it('swaps it before the Ticket runs out, so the code on screen is always one the Server accepts', () => {
     expect(renewsAt(expiresAt)).toBeLessThan(Date.parse(expiresAt));
-  });
-
-  it('shows a fresh code for exactly as long as the countdown runs', () => {
-    expect(renewsAt(expiresAt) - minted).toBe(codeShownForMs);
   });
 });

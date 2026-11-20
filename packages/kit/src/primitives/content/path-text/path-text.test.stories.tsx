@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, within } from 'storybook/test';
+import { nextFrames } from '#mocks/next-frames';
 import { settleLayout } from '#mocks/story-layout';
 import { PathText } from './path-text';
 import { longPath, rootFilePath, shortPath } from './path-text-fixtures';
@@ -22,9 +23,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const settleTooltipDelay = (): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, 1000));
-
 export const CutPathShowsWholePathInTooltip: Story = {
   args: longPath,
   play: async ({ canvas, userEvent }) => {
@@ -41,7 +39,8 @@ export const UncutPathShowsNoTooltip: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
     await userEvent.hover(canvas.getByLabelText(shortPath.path));
-    await settleTooltipDelay();
+    // A tooltip opens on hover with no delay, so two frames are what a hover that opened one would need.
+    await nextFrames();
     await expect(
       within(document.body).queryByRole('tooltip'),
     ).not.toBeInTheDocument();

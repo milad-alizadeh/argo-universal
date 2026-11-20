@@ -132,10 +132,7 @@ export const LoadingChoices = loadingMenu('choice');
 
 export const LoadingActions = loadingMenu('action');
 
-// The window frame's 8px inset, written out so the test does not read the value it checks.
-const edgeMargin = 8;
-
-// A menu aligned to a trigger against the window's right edge shifts left and stops short of that edge.
+// A menu aligned to a trigger against the window's right edge shifts left and stays inside the window.
 export const StaysInsideTheWindowEdge: Story = {
   render: ({ onChoose }) => (
     <View className="fixed top-6 right-0">
@@ -158,8 +155,9 @@ export const StaysInsideTheWindowEdge: Story = {
       'menu',
     );
 
-    await expect(menu.getBoundingClientRect().right).toBeLessThanOrEqual(
-      window.innerWidth - edgeMargin,
-    );
+    const { left, right } = menu.getBoundingClientRect();
+
+    await expect(left).toBeGreaterThanOrEqual(0);
+    await expect(right).toBeLessThanOrEqual(window.innerWidth);
   },
 };

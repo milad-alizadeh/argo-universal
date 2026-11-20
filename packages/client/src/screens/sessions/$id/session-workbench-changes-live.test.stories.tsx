@@ -11,8 +11,8 @@ import {
   turnStarted,
 } from './session-changes-live.test.mocks';
 
-// Wide enough for the Sessions list, the content column, the Workbench and the Inspector at once.
-const workbenchAndInspector = 2224;
+// Room for the Sessions list, the content column, the Workbench and the Inspector at once: 2224 is the exact boundary, where rounding can hide the cards.
+const workbenchAndInspector = 2560;
 
 const meta = {
   title: 'Tests/Screens/Sessions/Session/WorkbenchChangesLive',

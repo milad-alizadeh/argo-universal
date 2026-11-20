@@ -70,9 +70,15 @@ export const PluginSearchKeepsLoadedRows: Story = {
   },
 };
 
-const loadPage = fn(async () => {
-  await new Promise((resolve) => setTimeout(resolve, 600));
-});
+// The Plugin's page call stays open until the story ends it, so the loading row can be seen before it does.
+const pageLoad = { finish: (): void => undefined };
+
+const loadPage = fn(
+  () =>
+    new Promise<void>((resolve) => {
+      pageLoad.finish = resolve;
+    }),
+);
 
 const pages: WireNode = {
   type: 'List',
@@ -104,6 +110,7 @@ export const PaginationWaitsForThePlugin: Story = {
       { loadMore: true },
       expect.objectContaining({ key: 'pages', name: 'onLoadMore' }),
     );
+    pageLoad.finish();
     await waitFor(() =>
       expect(canvas.queryByLabelText('Loading more')).toBeNull(),
     );

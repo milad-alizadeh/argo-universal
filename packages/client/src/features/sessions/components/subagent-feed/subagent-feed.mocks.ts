@@ -65,11 +65,6 @@ const turnStartedAt = liveToolCallHeader.startedAt;
 // 34s into the Subagent's Turn, as the Paper design draws it.
 export const subagentFeedNow = turnStartedAt + 34_000;
 
-const elapsedLabel = '34s';
-
-// The live row the recording ends on, named as the Feed reads it out.
-export const liveRowName = `${liveToolCallHeader.text} ${elapsedLabel}`;
-
 const feedOf = (
   rows: readonly SessionUpdate[],
   liveHeader: LiveHeader | null,
@@ -135,14 +130,6 @@ export const startingSubagent: Subagent = {
   startedAt: subagentFeedNow - 2_000,
   model: null,
   tokens: null,
-};
-
-export const cancelledSubagent: Subagent = {
-  ...subagent,
-  state: 'idle',
-  stopReason: 'cancelled',
-  endedAt: turnStartedAt + 34_000,
-  durationMs: 34_000,
 };
 
 export const finishedSubagent: Subagent = {

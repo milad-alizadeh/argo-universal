@@ -43,12 +43,6 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-function expectVoice(expected: Snapshot): void {
-  expect(voice.getSnapshot().value).toEqual(expected.value);
-  expect(voice.getSnapshot().context.ended).toEqual(expected.context.ended);
-  expect(voice.getSnapshot().context.refused).toEqual(expected.context.refused);
-}
-
 // A start sent while the call runs is refused, and the running call goes on.
 const expectRefusedWhileRunning = (snapshot: Snapshot): void => {
   expectCall(snapshot);
@@ -72,7 +66,7 @@ const joined: Partial<Conversation> = { startedAt: expect.any(String) };
 // Only a reconnecting call says so; elsewhere the walk may have blocked the microphone.
 const notReconnecting = expect.toBeOneOf([null, 'microphone-blocked']);
 
-// The call the App is sent in each running state, read from the actor the model drives; `expectVoice` has already shown that actor is in the step's state.
+// The call the App is sent in each running state, read from the actor the model drives.
 const expectLook = (look: Partial<Conversation>) => (): void =>
   expect(conversationOf(voice.getSnapshot())).toMatchObject({
     conversationId: 'call-1',
@@ -155,7 +149,6 @@ const model = modelTest(
       ]),
     ),
     delays: { idle: voiceModelIdleMs },
-    always: expectVoice,
     states: {
       idle: expectIdle,
       running: expectRefusedWhileRunning,

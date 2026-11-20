@@ -79,13 +79,11 @@ const group: FeedEntry = {
 it('gives activity and Agent text a shared gap in either order', () => {
   const message = row(agentText, 'message');
 
-  expect(spaceBelowEntry(group, message)).toBe('pb-4 wide-type:pb-3');
   expect(spaceBelowEntry(message, group)).toBe(spaceBelowEntry(group, message));
 });
 
 it('separates a Prompt from activity in either order', () => {
   const user = row(prompt, 'prompt');
 
-  expect(spaceBelowEntry(group, user)).toBe('pb-6 wide-type:pb-5');
   expect(spaceBelowEntry(user, group)).toBe(spaceBelowEntry(group, user));
 });

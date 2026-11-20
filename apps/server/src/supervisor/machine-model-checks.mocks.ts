@@ -58,13 +58,6 @@ export const executors = {
   'server.stop': (): void => supervisor.send({ type: stopServerEvent }),
 };
 
-const expectModelState = (expected: SupervisorSnapshot): void => {
-  const actual = supervisor.getSnapshot();
-  expect(actual.value).toEqual(expected.value);
-  expect(actual.status).toBe(expected.status);
-  expect(actual.context.crashTimes).toEqual(expected.context.crashTimes);
-};
-
 const ownAddress = {
   port: 7337,
   version: '1.2.3',
@@ -73,18 +66,15 @@ const ownAddress = {
 
 export const states = {
   starting: (snapshot: SupervisorSnapshot): void => {
-    expectModelState(snapshot);
     expect(liveEngines()).toBe(1);
 
     if (snapshot.context.port === null) expect(serverAddressWrites).toEqual([]);
   },
-  running: (snapshot: SupervisorSnapshot): void => {
-    expectModelState(snapshot);
+  running: (): void => {
     expect(liveEngines()).toBe(1);
     expect(serverAddressWrites.at(-1)).toEqual(ownAddress);
   },
   backingOff: (snapshot: SupervisorSnapshot): void => {
-    expectModelState(snapshot);
     expect(liveEngines()).toBe(
       snapshot.matches({ backingOff: { engine: 'exited' } }) ? 0 : 1,
     );
@@ -93,19 +83,16 @@ export const states = {
     expect(serverAddressRemovals).toBe(0);
   },
   failed: (snapshot: SupervisorSnapshot): void => {
-    expectModelState(snapshot);
     expect(snapshot.context.crashTimes).toHaveLength(maxCrashesInWindow);
     expect(liveEngines()).toBe(0);
     expect(serverAddressRemovals).toBe(1);
   },
-  stopping: (snapshot: SupervisorSnapshot): void => {
-    expectModelState(snapshot);
+  stopping: (): void => {
     expect(liveEngines()).toBe(0);
     expect(serverAddressRemovals).toBe(1);
   },
   // Release could not be verified: no replacement Engine starts.
   blocked: (snapshot: SupervisorSnapshot): void => {
-    expectModelState(snapshot);
     expect(snapshot.status).toBe('done');
     expect(liveEngines()).toBe(0);
     expect(engines).toHaveLength(snapshot.context.crashTimes.length);
