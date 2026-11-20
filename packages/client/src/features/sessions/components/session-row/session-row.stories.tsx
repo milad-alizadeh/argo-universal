@@ -58,7 +58,7 @@ const meta = {
     age: {
       control: 'text',
       description:
-        'How long ago the Session was last active: it leads a Regular row\u2019s meta line, and ends a Compact row that has no PR.',
+        'How long ago the Session was last active: it ends a quiet Session\u2019s title line, and a Compact row that has no PR.',
     },
     session: { control: false, description: 'The Session the row draws.' },
     pullRequest: {
@@ -73,7 +73,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// The time leads the meta line, the activity reads in the foreground, and a Plan bar fills under the row.
+// A working Session shows no time, the activity reads in the foreground, and one segment per plan step runs under the row.
 export const Running: Story = {
   args: runningSession,
   play: async ({ canvas, userEvent }) => {
@@ -81,7 +81,18 @@ export const Running: Story = {
   },
 };
 
-// Waiting on you: the activity takes the warning tone.
+// The last plan step underway: three solid segments and a pale one that glints, never a full bar.
+export const LastTodoUnderway: Story = {
+  args: {
+    ...runningSession,
+    session: {
+      ...runningSession.session,
+      plan: { done: 3, inProgress: 1, total: 4 },
+    },
+  },
+};
+
+// Waiting on you: the time ends the title line, and the activity takes the warning tone.
 export const NeedsInput: Story = { args: needsInputSession };
 
 // A failed Session reads red, and its failed Subagents show beside a closed Change.
@@ -93,7 +104,7 @@ export const Idle: Story = { args: idleSession };
 // The Turn ended with Todos left and nothing running: no status dot, and the bar is muted.
 export const TodosLeft: Story = { args: todosLeftSession };
 
-// The Turn ended but a Background Task still runs: no status dot, the count keeps its own, and the bar stays green without sweeping.
+// The Turn ended but a Background Task still runs: no status dot, the count keeps its own, and the bar stays green.
 export const BackgroundWork: Story = { args: backgroundWorkSession };
 
 // Unread: the title is semibold and the activity is muted.
@@ -195,7 +206,9 @@ function useSteppingDone(): number {
 }
 
 function SteppingPlanRow(args: SessionRowProps): React.JSX.Element {
-  const plan = { done: useSteppingDone(), total: planTotal };
+  const done = useSteppingDone();
+  // The next step is always underway, so its segment glints while the Session runs.
+  const plan = { done, inProgress: done < planTotal ? 1 : 0, total: planTotal };
 
   return <SessionRow {...args} session={{ ...args.session, plan }} />;
 }

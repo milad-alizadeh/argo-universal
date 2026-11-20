@@ -5,6 +5,7 @@ import { resizeHandles } from './frame-layout-handles';
 import {
   contentFloor,
   inspectorBudget,
+  inspectorClaim,
   occupied,
   preferredListWidth,
   railZone,
@@ -35,7 +36,11 @@ function budgetThresholds(input: FrameLayoutInput): FrameLayout['thresholds'] {
   const list = preferredListWidth(input);
 
   return {
-    listFold: base + contentFloor(input) + list,
+    listFold:
+      railZone(input.measures) +
+      inspectorClaim(input) +
+      contentFloor(input) +
+      list,
     workbenchGutter:
       base + (input.sidebarShown ? list : 0) + pageWidthForGutter(input),
   };

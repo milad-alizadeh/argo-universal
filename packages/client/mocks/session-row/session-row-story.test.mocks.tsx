@@ -144,8 +144,11 @@ async function expectRowEnd(
   );
 
   const dot = row.queryByTestId('session-status');
+  const time = expect(row.queryByText('12m'));
+  const quiet = name !== 'running';
 
-  await expect(row.getByText('12m')).toBeVisible();
+  // A working Session shows no time; its dot already says it is live.
+  await (quiet ? time.toBeVisible() : time.not.toBeInTheDocument());
   await (dotted(layout)[name]
     ? expect(dot).toBeVisible()
     : expect(dot).not.toBeInTheDocument());

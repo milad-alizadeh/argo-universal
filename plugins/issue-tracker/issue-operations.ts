@@ -3,7 +3,10 @@ import type { IssueLink, TrackerStorage } from './tracker-storage';
 
 // What the Operations need of the Plugin: the attachments they store.
 export type OperationsSource = {
-  storage: Pick<TrackerStorage, 'attachSession' | 'detachSession'>;
+  storage: Pick<
+    TrackerStorage,
+    'attachSession' | 'detachSession' | 'detachedSession'
+  >;
 };
 
 type Storage = OperationsSource['storage'];
@@ -25,6 +28,7 @@ export const issueOperations = ({
   attach: async (params, caller) => {
     const link = issueLink(params, caller);
 
+    await requireAsked(storage, link, asked(params, caller));
     await storage.attachSession(link);
 
     return { attached: true, ...link };
@@ -32,6 +36,25 @@ export const issueOperations = ({
   detach: async (params, caller) =>
     detached(storage, issueLink(params, caller)),
 });
+
+// A person attaching is asking for it; an Agent asks with `again`, which it passes only when the person asks.
+const asked = (
+  { again }: Parameters<IssueOperations['attach']>[0],
+  { person }: Parameters<IssueOperations['attach']>[1],
+): boolean => again === true || person === true;
+
+// A detach sticks: an Agent attaches the Issue again only when the person asks for it back (#2470).
+async function requireAsked(
+  storage: Storage,
+  link: IssueLink,
+  isAsked: boolean,
+): Promise<void> {
+  if (!isAsked && (await storage.detachedSession(link)))
+    throw new Error(detachedRefusal);
+}
+
+const detachedRefusal =
+  'This Issue was detached from this Session. Attach it again only when the person asks, with again: true.';
 
 async function detached(
   storage: Storage,

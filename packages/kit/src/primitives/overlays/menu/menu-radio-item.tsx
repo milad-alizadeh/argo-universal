@@ -64,8 +64,7 @@ function choiceItemClassName(keyboardFocus: boolean): string {
     choiceRowClassName,
     'cursor-default outline-0 hover:bg-hover focus:bg-hover active:bg-pressed web:data-disabled:pointer-events-none web:data-disabled:opacity-50',
     tintTransitionClassName,
-    keyboardFocus &&
-      'focus-visible:outline-2 focus-visible:outline-foreground focus-visible:-outline-offset-2',
+    keyboardFocus && 'focus-visible:focus-ring',
   );
 }
 

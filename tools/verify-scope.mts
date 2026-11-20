@@ -21,14 +21,26 @@ export interface TestScope {
 const isWithin = (file: string, folder: string): boolean =>
   file.startsWith(`${folder}${path.sep}`);
 
-// Runs every test that depends on the change while they fit the limit; past it, only the tests in the touched folders, and CI runs the rest.
-export function chooseTests({
+// A new Story test can be absent from the changed-module graph until git tracks it.
+function listedAndChangedStories({
   tests,
   changed,
   root,
-  limit = DEPENDENT_LIMIT,
-}: ScopeInput): TestScope {
-  const files = [...new Set(tests)];
+}: ScopeInput): string[] {
+  const storyTests = changed.filter((file) =>
+    /^packages\/(?:kit|client)\/src\/.*\.test\.stories\.tsx$/.test(file),
+  );
+
+  return [
+    ...new Set([...tests, ...storyTests.map((file) => path.join(root, file))]),
+  ];
+}
+
+// Runs every test that depends on the change while they fit the limit; past it, only the tests in the touched folders, and CI runs the rest.
+export function chooseTests(input: ScopeInput): TestScope {
+  const { changed, root, limit = DEPENDENT_LIMIT } = input;
+  const files = listedAndChangedStories(input);
+  const edited = new Set(changed.map((file) => path.join(root, file)));
 
   if (files.length <= limit)
     return { files, dependents: files.length, narrowed: false };
@@ -39,7 +51,26 @@ export function chooseTests({
     folders.some((folder): boolean => isWithin(file, folder)),
   );
 
-  return { files: inTouchedFolders, dependents: files.length, narrowed: true };
+  const selected = boundStories(inTouchedFolders, edited, limit);
+
+  return { files: selected, dependents: files.length, narrowed: true };
+}
+
+function boundStories(
+  inTouchedFolders: string[],
+  edited: Set<string>,
+  limit: number,
+): string[] {
+  const relatedStories = inTouchedFolders
+    .filter((file) => file.endsWith('.stories.tsx') && !edited.has(file))
+    .sort()
+    .slice(0, limit);
+
+  const selectedStories = new Set([...edited, ...relatedStories]);
+
+  return inTouchedFolders.filter(
+    (file) => !file.endsWith('.stories.tsx') || selectedStories.has(file),
+  );
 }
 
 // A root file, such as the lockfile, sits in every folder, so it narrows to nothing.

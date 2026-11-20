@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { chooseTests, nothingChecked } from './verify-scope.mts';
 
@@ -53,6 +54,35 @@ describe('chooseTests', () => {
       dependents: 3,
       narrowed: true,
     });
+  });
+
+  it('keeps changed stories and plain tests when related stories exceed the budget', () => {
+    const plain = `${root}/${rowFolder}/row.test.ts`;
+    const changedStory = path.relative(root, rowStory);
+
+    const scope = chooseTests({
+      root,
+      changed: [changedStory],
+      limit: 1,
+      tests: [
+        rowStory,
+        nestedStory,
+        plain,
+        `${root}/${rowFolder}/z.stories.tsx`,
+      ],
+    });
+
+    expect(scope.files).toEqual([rowStory, nestedStory, plain]);
+  });
+
+  it('includes a directly changed Story test missing from the discovered graph', () => {
+    const scope = chooseTests({
+      tests: [],
+      changed: [path.relative(root, rowStory)],
+      root,
+    });
+
+    expect(scope.files).toEqual([rowStory]);
   });
 
   it('selects nothing for a change at the repository root, such as the lockfile', () => {

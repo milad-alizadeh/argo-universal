@@ -57,9 +57,6 @@ function Poster({ poster }: { poster: MediaAsset }): React.JSX.Element {
   );
 }
 
-const focusRing =
-  'web:outline-none web:focus-visible:ring-3 web:focus-visible:ring-focus/50';
-
 const errorClass = 'items-center justify-center border border-border bg-muted';
 
 // A muted frame with a broken image; pressing it loads the video again.
@@ -71,7 +68,7 @@ export function VideoError(props: VideoErrorProps): React.JSX.Element {
     <Pressable
       {...retryLabels(props.accessibilityLabel)}
       onPress={props.onRetry}
-      className={cn(frameClass(props), errorClass, focusRing)}
+      className={cn(frameClass(props), errorClass)}
     >
       <Icon name="image-broken" size="md" tone="muted" />
     </Pressable>
@@ -116,7 +113,7 @@ function RevealControls(props: {
       accessibilityLabel={props.label}
       accessibilityHint="Shows the video controls"
       onPress={props.onPress}
-      className={cn('absolute inset-0', focusRing)}
+      className="absolute inset-0"
     />
   );
 }

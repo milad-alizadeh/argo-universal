@@ -87,6 +87,10 @@ const expandedState = (expanded: boolean): ExpandedState => ({
   'aria-expanded': expanded,
 });
 
+// Rounded like every control, so its focus ring has corners.
+const headerButtonClassName = (props: DrawnHeaderProps): string =>
+  cn(labelClassName(props), 'web:select-none web:rounded-control');
+
 function HeaderButton(props: DrawnHeaderProps): ReactElement {
   const isExpanded = props.isExpanded ?? true;
 
@@ -96,7 +100,7 @@ function HeaderButton(props: DrawnHeaderProps): ReactElement {
       accessibilityLabel={props.title}
       {...expandedState(isExpanded)}
       onPress={() => props.onExpandedChange?.(!isExpanded)}
-      className={cn(labelClassName(props), 'web:select-none')}
+      className={headerButtonClassName(props)}
     >
       <HeaderLabel {...props} />
     </Pressable>

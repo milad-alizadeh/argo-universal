@@ -13,27 +13,33 @@ export type OtherSuite = ChildProcessByStdio<Writable, Readable, null>;
 
 const others: OtherSuite[] = [];
 
-const holderScript = (port: number): string =>
+const holderScript = (port: number, announceWait: boolean): string =>
   `const { acquireBrowserSuiteLock } = await import(${JSON.stringify(lockModule)});
-   const release = await acquireBrowserSuiteLock({ port: ${port} });
+   const release = await acquireBrowserSuiteLock({ port: ${port}, pollMs: ${POLL_MS},
+     onWait: () => { if (${announceWait}) process.stdout.write('waiting'); } });
    process.stdout.write('held');
    process.stdin.on('end', release).resume();`;
 
 // What the other suite appears to run, as `process.argv` shows it.
 export const OTHER_COMMAND = 'vitest run turn-end.test';
 
+const childArgs = (script: string): string[] => [
+  '--input-type=module',
+  '-e',
+  script,
+  ...OTHER_COMMAND.split(' '),
+];
+
 // Another suite: holds the lock, says so on stdout, and releases when its stdin closes.
-export const holdInAnotherProcess = (port: number): OtherSuite => {
-  const other = spawn(
-    process.execPath,
-    [
-      '--input-type=module',
-      '-e',
-      holderScript(port),
-      ...OTHER_COMMAND.split(' '),
-    ],
-    { stdio: ['pipe', 'pipe', 'inherit'] },
-  );
+export const holdInAnotherProcess = (
+  port: number,
+  announceWait = false,
+): OtherSuite => {
+  const script = holderScript(port, announceWait);
+
+  const other = spawn(process.execPath, childArgs(script), {
+    stdio: ['pipe', 'pipe', 'inherit'],
+  });
 
   others.push(other);
 

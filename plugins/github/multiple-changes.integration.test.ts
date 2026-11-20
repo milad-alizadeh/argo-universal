@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { attachAgain } from './attach-again-fixture';
 import { pullOf } from './github-fixture';
 import {
   attach,
@@ -71,7 +72,7 @@ it(
 
     expect(await idsOf(run)).toEqual([]);
 
-    await attach(run, '12');
+    await attachAgain(run, '12');
     await detach(run, '#12');
 
     expect(await idsOf(run)).toEqual([]);

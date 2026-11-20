@@ -9,6 +9,8 @@ import {
   reorderedSum,
 } from './verify.mocks.mts';
 
+const testAnnouncement = 'running the';
+
 let checkout: Checkout;
 
 beforeEach((): void => {
@@ -72,7 +74,7 @@ describe('pnpm verify', (): void => {
       'Add an Operation instead of the hand-written mutation erase.',
     );
     expect(result.output).not.toContain('Operation procedures are stale.');
-    expect(result.output).toContain('1 passed');
+    expect(result.output).not.toContain(testAnnouncement);
   });
 
   it('fails when generated Operation procedures are stale before another file changes', (): void => {
@@ -91,7 +93,7 @@ describe('pnpm verify', (): void => {
     expect(result.status).toBe(1);
     expect(result.output).toContain('Operation procedures are stale.');
     expect(result.output).not.toContain('Add an Operation instead');
-    expect(result.output).toContain('1 passed');
+    expect(result.output).not.toContain(testAnnouncement);
   });
 
   it('fails when the Registry validators are stale', (): void => {
@@ -100,12 +102,14 @@ describe('pnpm verify', (): void => {
       registryValidatorGenerator,
       "if (process.argv.includes('--check')) throw new Error('Registry validators are stale.');\n",
     );
+    checkout.git('add', registryValidatorGenerator);
+    checkout.git('commit', '-q', '-m', 'install stale validator fixture');
     checkout.write('sum.mjs', reorderedSum);
 
     const result = checkout.verify();
 
     expect(result.status).toBe(1);
     expect(result.output).toContain('Registry validators are stale.');
-    expect(result.output).toContain('1 passed');
+    expect(result.output).not.toContain(testAnnouncement);
   });
 });

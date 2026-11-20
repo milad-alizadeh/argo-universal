@@ -1,4 +1,3 @@
-import { Text } from '@repo/kit/primitives/content/text';
 import {
   ListItem,
   ListItemInert,
@@ -12,7 +11,7 @@ import {
   statusUnlessCalled,
   withCallLabel,
 } from './session-row-call';
-import { endParts } from './session-row-ends';
+import { endParts, timeOf } from './session-row-ends';
 import { SessionMark } from './session-row-mark';
 import { sessionRowMenu } from './session-row-menu';
 import {
@@ -22,6 +21,7 @@ import {
   SessionRowPluginItems,
 } from './session-row-plugin-items';
 import {
+  quietAge,
   type SessionRowPlugins,
   type SessionRowProps,
   sessionRowLabel,
@@ -34,11 +34,12 @@ type CompactEndProps = Pick<
   'session' | 'pullRequest' | 'age' | 'plugins' | 'onOpenPluginPage'
 >;
 
-// Its Change's glyph, without the number; with no Change, how long ago the Session was active.
-function compactDetail({ pullRequest, age }: CompactEndProps): React.ReactNode {
-  if (pullRequest) return <SecondaryChangeStageIcon {...pullRequest} />;
+// Its Change's glyph, without the number; with no Change, how long ago a quiet Session was active.
+function compactDetail(props: CompactEndProps): React.ReactNode {
+  if (props.pullRequest)
+    return <SecondaryChangeStageIcon {...props.pullRequest} />;
 
-  return age === undefined ? undefined : <Text role="row-detail">{age}</Text>;
+  return timeOf(quietAge(props));
 }
 
 // The status dot, or the Voice call's mark in its place while a call is attached.

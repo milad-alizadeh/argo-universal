@@ -2,6 +2,7 @@ import type { ComponentProps, ReactNode } from 'react';
 import type { Pressable } from 'react-native';
 import type { ContextMenuMeta } from '#primitives/actions/action';
 import type { Tone } from '#primitives/content/text';
+import type { ProgressBarProps } from '#primitives/status/progress-bar';
 import type { KitProps } from '../../kit-props';
 
 export type RowBadge = Exclude<
@@ -11,6 +12,8 @@ export type RowBadge = Exclude<
 
 // Kit-only: native selection semantics, long press and test identity.
 export type ListItemProps = KitProps<'ListItem'> & {
+  // A Plugin's bar, or Argo's own with kit-only parts such as one segment per step.
+  progress?: ProgressBarProps;
   // What the row's context menu shows around its `actions`: a title, a page previewed above it, a double-click.
   contextMenu?: ContextMenuMeta;
   // A control under the title, such as a Slider, spanning the row's content width.

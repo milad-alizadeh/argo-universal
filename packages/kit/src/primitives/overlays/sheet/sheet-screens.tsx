@@ -52,6 +52,7 @@ function sheetScreens(children: ReactNode): SheetScreenEntry[] {
       name: page.props.name,
       title: page.props.title,
       action: page.props.action,
+      keepsHeaderInset: page.props.keepsHeaderInset,
       placeholder: page.props.placeholder,
       onExit: page.props.onExit,
       content: page.props.children,

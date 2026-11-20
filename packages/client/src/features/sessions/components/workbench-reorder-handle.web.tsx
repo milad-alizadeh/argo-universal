@@ -78,7 +78,7 @@ const pointerHandlers = (
 });
 
 const handleClass =
-  'flex h-6 w-8 cursor-grab touch-none select-none items-center justify-center rounded-control outline-none transition-opacity duration-150 hover:bg-hover focus-visible:bg-hover active:cursor-grabbing';
+  'flex h-6 w-8 cursor-grab touch-none select-none items-center justify-center rounded-control transition-opacity duration-150 hover:bg-hover active:cursor-grabbing';
 
 /*
  * The handle's class and focus handlers: it shows while its card says so or while it has focus. Only the keyboard

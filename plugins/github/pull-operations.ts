@@ -10,6 +10,7 @@ import { discover, type Checkout, type Discovered } from './pull-discovery';
 import { failureMessage } from './pull-known';
 import { fetchPull } from './pull-reads';
 import { parseReference, type PullReference } from './pull-reference';
+import type { PullLink } from './pull-store';
 import type { Pulls } from './pull-sync';
 import { sessionInProject, type SessionCaller } from './session-caller';
 
@@ -89,13 +90,34 @@ async function isAttached(
 export type Attached = ReturnType<typeof changeOf>;
 
 /*
+ * What an attach names. `again` is set for a person's own attach, and by an Agent only when the person asks for a
+ * pull request they detached back (#2470).
+ */
+export type Attaching = { reference: string; again: boolean };
+
+async function attachLink(
+  { store }: Scope,
+  link: PullLink,
+  again: boolean,
+): Promise<void> {
+  if (again) return store.attachAgain(link);
+
+  if (await store.detached(link)) throw new Error(detachedRefusal);
+
+  return store.attach(link);
+}
+
+const detachedRefusal =
+  'This pull request was detached from this Session. Attach it again only when the person asks, with again: true.';
+
+/*
  * Associates the calling Session with the pull request a reference names. GitHub is asked first, so a pull request
  * that does not exist, or that the Project's Account cannot see, is refused and nothing is stored. The association
  * is kept under the repository GitHub reports, so a renamed or differently cased reference is the same one.
  */
 export async function attach(
   scope: Scope,
-  reference: string,
+  { reference, again }: Attaching,
   caller: SessionCaller,
 ): Promise<Attached> {
   const named = await namedOf(scope, reference, caller);
@@ -103,7 +125,7 @@ export async function attach(
 
   const link = { ...caller, repository: pull.repository, number: pull.number };
 
-  await scope.store.attach(link);
+  await attachLink(scope, link, again);
   // The pull request and its Checks are kept before the answer, so every surface shows it at once.
   await scope.sync([caller.sessionId]);
   scope.changed();
