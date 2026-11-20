@@ -11,10 +11,24 @@ export function Slider(props: SliderProps): ReactElement {
     <ControlHost matchContents={{ vertical: true }} style={{ width: '100%' }}>
       <MaterialSlider
         {...controlProps(props)}
-        colors={useMaterialPalette().sliderColors}
+        colors={filledColors(useMaterialPalette().sliderColors, props.fill)}
       />
     </ControlHost>
   );
+}
+
+type SliderColors = React.ComponentProps<typeof MaterialSlider>['colors'];
+
+// Compose's slider takes one colour, so a fill draws as its first stop, track and thumb (ADR-0026, Colour as data).
+function filledColors(
+  palette: SliderColors,
+  fill: SliderProps['fill'],
+): SliderColors {
+  const [first] = fill ?? [];
+
+  if (first === undefined) return palette;
+
+  return { ...palette, activeTrackColor: first, thumbColor: first };
 }
 
 function controlProps(

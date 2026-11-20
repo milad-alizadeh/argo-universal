@@ -42,6 +42,7 @@ export const exemptFolders = {
   'content/native-text': 'The platform fork of Text.',
   'content/path-text':
     'The file path a code block, a resource or a diff heads with; a Plugin sends the CodeBlock or Resource.',
+  'fields/field-composed-row': fieldRow,
   'fields/field-date-picker': fieldRow,
   'fields/field-link': fieldRow,
   'fields/field-picker': fieldRow,

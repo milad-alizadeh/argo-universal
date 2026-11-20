@@ -8,10 +8,12 @@ import { Slider, type SliderProps } from './slider';
 import {
   defaultSlider,
   disabledSlider,
+  gradientFillSlider,
   maximumSlider,
   minimumSlider,
   noSelectionSlider,
   sixStopsSlider,
+  solidFillSlider,
 } from './slider-fixtures';
 
 // The value is held by the caller, so each state drags against local state and its label follows.
@@ -67,3 +69,7 @@ export const SixStops: Story = { args: sixStopsSlider };
 export const NoSelection: Story = { args: noSelectionSlider };
 
 export const Disabled: Story = { args: disabledSlider };
+
+export const SolidFill: Story = { args: solidFillSlider };
+
+export const GradientFill: Story = { args: gradientFillSlider };

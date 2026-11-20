@@ -3,6 +3,7 @@ import { semantics } from '@expo/ui/jetpack-compose/modifiers';
 import {
   accessibilityLabel,
   accessibilityValue,
+  tint,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { Platform } from 'react-native';
@@ -39,7 +40,7 @@ function sliderRange(
 
 // Stock Compose semantics only take a content description, so TalkBack hears the name and readable value together.
 function sliderModifiers(
-  props: Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'>,
+  props: Pick<SliderProps, 'accessibilityLabel' | 'valueLabel' | 'fill'>,
 ): UniversalSliderProps['modifiers'] {
   if (Platform.OS === 'android')
     return [
@@ -48,9 +49,13 @@ function sliderModifiers(
       }),
     ];
 
+  // SwiftUI's slider takes one colour, so a fill draws as its first stop (ADR-0026, Colour as data).
+  const [first] = props.fill ?? [];
+
   return [
     accessibilityLabel(props.accessibilityLabel),
     accessibilityValue(props.valueLabel),
+    ...(first === undefined ? [] : [tint(first)]),
   ];
 }
 

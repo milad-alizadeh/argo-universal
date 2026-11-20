@@ -460,12 +460,15 @@
 .slider-range-unset::-moz-range-thumb {
   opacity: 0;
 }
+/* A Plugin's --slider-fill (colours that are data, ADR-0026) spreads across the filled part alone, ending where the value does. */
 .slider-track {
-  background: linear-gradient(
-    to right,
-    var(--color-primary) var(--slider-progress),
-    var(--color-border) var(--slider-progress)
-  );
+  background:
+    linear-gradient(
+        to right,
+        var(--slider-fill, var(--color-primary), var(--color-primary))
+      )
+      left / var(--slider-progress) 100% no-repeat,
+    var(--color-border);
 }
 
 /* Burnt's web toast draws its done icon itself; the Toaster's icon slot is danger-coloured for errors. */
