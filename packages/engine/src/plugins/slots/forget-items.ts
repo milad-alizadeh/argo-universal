@@ -3,7 +3,8 @@ import {
   type AnyItemsSlot,
   type SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
-import { contextKey, type SlotWorker } from './kept-items';
+import { contextKey } from './kept-items';
+import type { SlotWorker } from './slot-worker';
 
 // Drops what the worker kept for the contexts one list shows, and the failure that left its Slot out; other contexts stay.
 export function forget(
