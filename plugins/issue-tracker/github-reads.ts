@@ -1,5 +1,6 @@
 import type { Argo, NamedQuery } from '@argo/plugin-kit';
 import { SignInRequired } from './github-api';
+import type { IssuePage } from './github-documents';
 import type { Choices } from './github-edits';
 import type { Issue } from './github-issues';
 import type { TrackerClient } from './github-tracker';
@@ -60,9 +61,11 @@ type Source = Pick<ClientSource, 'storage' | 'trackers'> & {
 
 type Target = { projectId: string };
 
-type IssuesTarget = Target & { search: string; limit: number };
-
-type IssueTarget = Target & { number: number };
+type IssuesTarget = Target & {
+  search: string;
+  limit: number;
+  cursor: string | null;
+};
 
 type AttachedTarget = Target & { numbers: number[] };
 
@@ -70,8 +73,8 @@ export type GitHubReads = {
   // A Project's labels and counts: one GitHub call.
   overview: (args: Target) => NamedQuery<Settled<Overview>>;
   // One page of a Project's Issues for a search, newest first.
-  issues: (args: IssuesTarget) => NamedQuery<Settled<Issue[]>>;
-  issue: (args: IssueTarget) => NamedQuery<Settled<Issue>>;
+  issues: (args: IssuesTarget) => NamedQuery<Settled<IssuePage>>;
+  issue: (args: Target & { number: number }) => NamedQuery<Settled<Issue>>;
   // The Issues a Project's Sessions are attached to, in one GitHub call: the numbers GitHub still has.
   attached: (args: AttachedTarget) => NamedQuery<Settled<number[]>>;
   // The labels and people an Issue in the Project can be given.
@@ -93,14 +96,14 @@ async function clientFor(
 async function listed(
   source: Source,
   seed: (issue: Issue) => Promise<void>,
-  { projectId, search, limit }: IssuesTarget,
-): Promise<Issue[]> {
+  { projectId, search, limit, cursor }: IssuesTarget,
+): Promise<IssuePage> {
   const client = await clientFor(source, projectId);
-  const issues = await client.listIssues(search, limit);
+  const page = await client.listIssues(search, limit, cursor);
 
-  await Promise.all(issues.map(seed));
+  await Promise.all(page.items.map(seed));
 
-  return issues;
+  return page;
 }
 
 // Read together and in full, so each seeds the entry its own page, or a Slot's summary, reads next.
@@ -127,7 +130,7 @@ const byProject = { projectOf: ({ projectId }: Target): string => projectId };
 const issueRead = (argo: Argo, source: Source): GitHubReads['issue'] =>
   argo.queries.define(
     'issue',
-    ({ projectId, number }: IssueTarget) =>
+    ({ projectId, number }: Parameters<GitHubReads['issue']>[0]) =>
       settle(async () => (await clientFor(source, projectId)).getIssue(number)),
     byProject,
   );

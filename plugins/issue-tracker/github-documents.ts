@@ -2,7 +2,7 @@ import { graphqlRequest, type GitHubRequest } from './github-api';
 import type { GitHubIssue, Issue } from './github-issues';
 import { mapIssue } from './github-issues';
 import { builtInFilters } from './issue-filters';
-import { at, isObject, pick, type Json } from './json';
+import { at, isObject, nonEmpty, pick, type Json } from './json';
 import type { Overview } from './overview';
 
 // The most labels a repository's grouping shows.
@@ -97,19 +97,22 @@ function countsOf(data: Json): Overview['counts'] {
   return Object.fromEntries(entries);
 }
 
+const listDocument = `query ($query: String!, $first: Int!, $after: String) {
+  search(query: $query, type: ISSUE, first: $first, after: $after) {
+    pageInfo { hasNextPage endCursor }
+    nodes { ... on Issue { ${detailFields} } }
+  }
+}`;
+
 export const listQuery = (
   repository: string,
   search: string,
-  first: number,
+  page: { first: number; after: string | null },
 ): GitHubRequest =>
-  graphqlRequest(
-    `query ($query: String!, $first: Int!) {
-      search(query: $query, type: ISSUE, first: $first) {
-        nodes { ... on Issue { ${detailFields} } }
-      }
-    }`,
-    { query: `repo:${repository} is:issue ${search} sort:created-desc`, first },
-  );
+  graphqlRequest(listDocument, {
+    query: `repo:${repository} is:issue ${search} sort:created-desc`,
+    ...page,
+  });
 
 export const issueQuery = (
   repository: string,
@@ -151,13 +154,35 @@ const issueNode = (node: Json): Issue[] =>
     ? [mapIssue(flatten(node))]
     : [];
 
-export function mapIssueList(data: Json): Issue[] {
+export type IssuePage = { items: Issue[]; cursor: string | null };
+
+export function mapIssueList(data: Json, after: string | null): IssuePage {
   const nodes = at(data, 'search', 'nodes');
 
   if (!Array.isArray(nodes))
     throw new Error('GitHub returned an invalid Issue list.');
 
-  return nodes.flatMap(issueNode);
+  return {
+    items: nodes.flatMap(issueNode),
+    cursor: nextIssueCursor(data, after),
+  };
+}
+
+function nextIssueCursor(data: Json, after: string | null): string | null {
+  const info = at(data, 'search', 'pageInfo');
+  const hasNextPage = pick(info, 'hasNextPage');
+  const cursor = nonEmpty(pick(info, 'endCursor'));
+
+  if (hasNextPage === false) return null;
+
+  return advancingCursor(hasNextPage === true ? cursor : null, after);
+}
+
+function advancingCursor(cursor: string | null, after: string | null): string {
+  if (cursor === null || cursor === after)
+    throw new Error('GitHub returned an invalid Issue list cursor.');
+
+  return cursor;
 }
 
 export function mapIssueDetail(data: Json): Issue {

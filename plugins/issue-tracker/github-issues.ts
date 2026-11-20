@@ -41,7 +41,7 @@ export type Issue = {
   children?: IssueRelation[];
   // The sub-Issue tally, absent when this Issue has no sub-Issues.
   progress?: IssueProgress;
-  // When GitHub created it, as ISO 8601: a list's cursor; absent when GitHub did not send it.
+  // When GitHub created it, as ISO 8601, when supplied.
   createdAt?: string;
 };
 
