@@ -94,7 +94,7 @@ function TabButton({ tab, selected, tabs, focus }: TabProps): ReactElement {
       ref={selected ? focus.selected : undefined}
       accessibilityLabel={tabName(tab)}
       onPress={() => tabs.onSelect(tab.key)}
-      className="h-full flex-row items-center gap-1.5 rounded-md web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2"
+      className="h-full flex-row items-center gap-1.5 rounded-md"
     >
       <TabLabel tab={tab} selected={selected} />
     </Pressable>

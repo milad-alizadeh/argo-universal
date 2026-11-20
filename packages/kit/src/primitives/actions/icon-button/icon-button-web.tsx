@@ -84,7 +84,7 @@ function WebGlyph(props: IconButtonProps): ReactElement {
 }
 
 const webClass =
-  'shrink-0 items-center justify-center rounded-full web:transition-all web:duration-150 web:outline-none web:focus-visible:outline-solid web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:outline-offset-2';
+  'shrink-0 items-center justify-center rounded-full web:transition-all web:duration-150';
 
 // Ghost has no fill, so it takes the hover and pressed tints, and the theme's selected tint when selected; the lit looks carry their own.
 const ghostClass = (props: IconButtonProps): string =>

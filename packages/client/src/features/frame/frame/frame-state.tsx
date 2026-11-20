@@ -20,8 +20,10 @@ import {
   hostedInspectorState,
   moveInspector,
 } from '../scaffold/inspector-column';
+import type { InspectorWidth } from '../scaffold/inspector-width';
 import type { InspectorState, WorkbenchIntent } from '../scaffold/scaffold';
 import { useExpanded } from './frame-session-expansion';
+import { useKeptInspectorWidth } from './kept-inspector-width';
 
 // The Scaffold's props that the Frame holds, as state: the rest come from the shown section.
 interface HeldScaffoldProps {
@@ -34,6 +36,8 @@ interface HeldScaffoldProps {
   inspectorState: InspectorState;
   onInspectorStateChange: (state: InspectorState) => void;
   inspector: (expanded: boolean) => ReactNode;
+  inspectorWidth: InspectorWidth;
+  onInspectorWidthChange: (width: InspectorWidth) => void;
 }
 
 type ShownInspector = Pick<
@@ -125,7 +129,23 @@ function useFrameScaffold(
   const hosted = useClaimed(inspectorPlace) ?? null;
   const inspector = useShownInspector(hosted, bandSessionId(band.band));
 
-  return { ...band, sidebarShown, onSidebarShownChange, ...inspector };
+  return {
+    ...band,
+    sidebarShown,
+    onSidebarShownChange,
+    ...inspector,
+    ...useInspectorWidth(),
+  };
+}
+
+// The width the person last dragged the Inspector to, the same in every Session.
+function useInspectorWidth(): Pick<
+  HeldScaffoldProps,
+  'inspectorWidth' | 'onInspectorWidthChange'
+> {
+  const [inspectorWidth, onInspectorWidthChange] = useKeptInspectorWidth();
+
+  return { inspectorWidth, onInspectorWidthChange };
 }
 
 const workbenchMemory = new SessionMemory<WorkbenchIntent>('auto');

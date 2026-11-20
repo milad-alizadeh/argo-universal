@@ -60,18 +60,20 @@ export const WideningSidebarDoesNotHideIt: Story = {
 };
 
 export const UnavailableSidebarWaitsForSpaceBesideTheInspector: Story = {
+  beforeEach: (): Promise<void> => settleLayout('wide'),
   args: { inspectorOpen: true },
-  play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByRole('button', { name: showSidebar }),
-    ).toBeDisabled();
-    await settleLayout('wide');
-    // The sidebar re-enables on the next layout pass, which a slow runner reaches after the resize.
-    await waitFor(() =>
-      expect(canvas.getByRole('button', { name: hideSidebar })).toBeEnabled(),
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: hideSidebar }),
     );
+    await settleLayout(1180);
+    const toggle = await canvas.findByRole('button', { name: showSidebar });
+    await expect(toggle).toBeEnabled();
+    await userEvent.click(toggle);
+    await expect(toggle).toBeVisible();
+    await settleLayout('wide');
     await expect(
-      canvas.getByRole('button', { name: hideSidebar }),
+      await canvas.findByRole('button', { name: hideSidebar }),
     ).toBeVisible();
     await expect(canvas.getByText('Branch files')).toBeVisible();
     await waitFor(() =>

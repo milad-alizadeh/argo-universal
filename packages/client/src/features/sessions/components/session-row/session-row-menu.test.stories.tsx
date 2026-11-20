@@ -1,4 +1,5 @@
 import type { SessionInfo } from '@repo/contracts';
+import { pressTarget } from '@repo/kit/mocks/press-target';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
@@ -148,7 +149,9 @@ export const ArchivedHasNoMenu: Story = {
   args: { session: sessionRows.archived },
   beforeEach: atWidth('wide'),
   play: async ({ canvas, userEvent }) => {
-    const title = canvas.getByText(sessionRows.archived.title);
+    // The Archived pill gives the row a meta line, so its press sits under the title.
+    const title = pressTarget(canvas.getByText(sessionRows.archived.title));
+
     await rightClick(userEvent, title);
     await userEvent.dblClick(title);
     await expect(body.queryByRole('menu')).toBeNull();

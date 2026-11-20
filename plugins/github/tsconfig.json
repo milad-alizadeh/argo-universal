@@ -4,6 +4,7 @@
   "exclude": [
     "**/*.test.ts",
     "**/node_modules",
+    "attach-again-fixture.ts",
     "auto-fix-fixture.ts",
     "auto-archive-fixture.ts",
     "auto-merge-fixture.ts",

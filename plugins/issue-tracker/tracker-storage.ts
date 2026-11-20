@@ -1,4 +1,5 @@
 import type { Argo, StorageResult } from '@argo/plugin-kit';
+import { issueDetachedTable } from './issue-detached-store';
 import {
   issueSessionsTable,
   sessionMethods,
@@ -20,6 +21,8 @@ export type TrackerStorage = {
   // Connecting a Session to an Issue again leaves the first time it was attached.
   attachSession: (link: IssueLink) => Promise<void>;
   detachSession: (link: IssueLink) => Promise<void>;
+  // Whether the Issue was detached from the Session and not attached since.
+  detachedSession: (link: IssueLink) => Promise<boolean>;
   issueSessions: (
     issue: Omit<IssueLink, 'sessionId'>,
   ) => Promise<IssueSession[]>;
@@ -58,6 +61,7 @@ const tableStatements = [
   'DROP TABLE IF EXISTS issue_cache',
   'CREATE TABLE IF NOT EXISTS view_cache (project_id TEXT NOT NULL, view TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (project_id, view))',
   issueSessionsTable,
+  issueDetachedTable,
 ];
 
 function createTables(argo: Argo): Store['ensureTables'] {

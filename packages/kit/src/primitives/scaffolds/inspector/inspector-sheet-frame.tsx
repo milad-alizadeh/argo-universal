@@ -17,7 +17,7 @@ export function InspectorSheetFrame({
 }: InspectorSheetFrameProps): ReactElement {
   return (
     <Sheet {...sheetProps(inspector)}>
-      <Sheet.Screen name="inspector" title={screenTitle}>
+      <Sheet.Screen name="inspector" title={screenTitle} keepsHeaderInset>
         {children}
       </Sheet.Screen>
     </Sheet>

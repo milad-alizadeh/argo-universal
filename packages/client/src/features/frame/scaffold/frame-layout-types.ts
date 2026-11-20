@@ -46,6 +46,8 @@ export interface FrameLayoutInput extends FrameIntent {
   measures: FrameMeasures;
   preferredListWidth: number;
   preferredInspectorWidth: number;
+  // Whether the Inspector's width is its default, which no drag set: it widens into room the list leaves and never folds the list for it.
+  inspectorUndragged?: boolean;
   // The page's width a drag of the Inspector left, which lowers the content's floor until the Inspector closes.
   draggedContentFloor?: number;
 }
@@ -81,8 +83,6 @@ export interface ListRegion extends PaneSpan {
   folded: boolean;
   // The list's width while it shows, which its content keeps while it folds.
   openWidth: number;
-  // There is room to show the list.
-  available: boolean;
 }
 
 export interface WorkbenchRegion extends PaneSpan {

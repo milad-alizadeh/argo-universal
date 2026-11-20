@@ -45,8 +45,17 @@ const selectedTitle = selected.title;
 
 /*
  * Every row's logo sits `expectedGap` from its title, whatever its status, Agent or title length, and its content stays
- * inside the row. The age ends each row, so a long title truncates instead of pushing it out.
+ * inside the row. A quiet Session's age ends its row, so a long title truncates instead of pushing it out.
  */
+// A working Session shows no time; a quiet one ends its title line on it.
+async function expectRowTime(row: HTMLElement, status: string): Promise<void> {
+  const time = expect(within(row).queryByText(/^(now|\d+[smhdw])$/));
+
+  await (status === 'running'
+    ? time.not.toBeInTheDocument()
+    : time.toBeVisible());
+}
+
 function rowsAt(
   args: typeof statusSessions,
   width: number,
@@ -68,7 +77,7 @@ function rowsAt(
         await expect(title).toBeVisible();
         await expect(logo).toBeVisible();
         await expect(row.scrollWidth).toBeLessThanOrEqual(row.clientWidth + 1);
-        await expect(within(row).getByText(/^(now|\d+[smhdw])$/)).toBeVisible();
+        await expectRowTime(row, session.status);
         await expectLogoGap(title, logo, expectedGap);
       }
     },

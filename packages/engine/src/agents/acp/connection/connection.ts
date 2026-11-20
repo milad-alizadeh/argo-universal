@@ -42,6 +42,7 @@ import { vendorInitialization } from './vendor-initialization';
 
 type AgentSession = {
   destination: AcpSessionDestination;
+  discardOnClose: boolean;
   pending: Set<Promise<unknown>>;
   controller: AbortController;
   released: PromiseWithResolvers<void>;
@@ -120,10 +121,12 @@ const cancelledResponse = <Result>(
 const asError = (cause: unknown): Error =>
   cause instanceof Error ? cause : new Error(String(cause));
 
-const createAgentSession = (
-  destination: AcpSessionDestination,
-): AgentSession => ({
+const createAgentSession = ({
   destination,
+  discardOnClose,
+}: AcpOpenInput): AgentSession => ({
+  destination,
+  discardOnClose: discardOnClose === true,
   pending: new Set(),
   controller: new AbortController(),
   released: Promise.withResolvers<void>(),
@@ -464,7 +467,7 @@ export class AcpConnection {
   }
   public async open(input: AcpOpenInput): Promise<AcpConnectionLease> {
     this.requireAvailable(input);
-    const session = createAgentSession(input.destination);
+    const session = createAgentSession(input);
     this.openings.push({ opening: input, session });
     const opened = this.openProtocol(input);
 
@@ -622,14 +625,35 @@ export class AcpConnection {
     id: string,
     session: AgentSession,
   ): Promise<void> {
-    await this.closeProtocolSession(id);
+    await this.closeProtocolSession(id, session.discardOnClose);
     session.controller.abort();
     await Promise.allSettled(session.pending);
   }
-  private async closeProtocolSession(id: string): Promise<void> {
-    if (!this.supportsClose()) return;
-    this.readers['session/close'].parse(
-      await this.connection?.agent.request('session/close', { sessionId: id }),
+  private async closeProtocolSession(
+    id: string,
+    discard: boolean,
+  ): Promise<void> {
+    const method = this.closingMethod(discard && this.supportsDiscard());
+
+    if (!method) return;
+
+    this.readers[method].parse(
+      await this.requireReady().connection.agent.request(method, {
+        sessionId: id,
+      }),
+    );
+  }
+  private closingMethod(
+    discard: boolean,
+  ): 'session/close' | 'session/delete' | undefined {
+    if (discard) return 'session/delete';
+
+    return this.supportsClose() ? 'session/close' : undefined;
+  }
+  private supportsDiscard(): boolean {
+    return (
+      !this.failure &&
+      !!sessionCapabilities(this.requireReady().initialization)?.delete
     );
   }
   private supportsClose(): boolean {

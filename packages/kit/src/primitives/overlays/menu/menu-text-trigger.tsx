@@ -8,7 +8,7 @@ import { useSizeClassValue } from '../../../use-size-class/use-size-class-value'
 import type { MenuProps } from './menu-props';
 
 const textTriggerClassName = cn(
-  'h-5 flex-row items-center gap-1 rounded-sm px-1 web:outline-none web:hover:bg-hover web:focus-visible:bg-hover',
+  'h-5 flex-row items-center gap-1 rounded-sm px-1 web:hover:bg-hover',
   tintTransitionClassName,
 );
 

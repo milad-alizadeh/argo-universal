@@ -2,7 +2,6 @@ import { toast as sonner } from 'sonner';
 import { Icon } from '#primitives/content/icon';
 import type { Toast, ToastAction } from './toast';
 
-// An action's toast stays 4 seconds: long enough to press Undo, inside the Server's 5-second window.
 const actionToastMilliseconds = 4000;
 
 /*
@@ -16,7 +15,7 @@ export function showActionToast(toast: Toast, action: ToastAction): boolean {
     description: toast.message,
     icon: <ToneIcon tone={toast.tone} />,
     action: { label: action.label, onClick: action.onPress },
-    duration: actionToastMilliseconds,
+    duration: toast.durationMs ?? actionToastMilliseconds,
   });
 
   return true;

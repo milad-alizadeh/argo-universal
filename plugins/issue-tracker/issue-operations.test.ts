@@ -7,12 +7,18 @@ function registered(): ReturnType<typeof issueOperations> & {
   attached: IssueLink[];
 } {
   const attached: IssueLink[] = [];
+  const detached = new Set<number>();
 
   const storage: OperationsSource['storage'] = {
     attachSession: async (link) => {
+      detached.delete(link.number);
       attached.push(link);
     },
-    detachSession: async (link) => drop(attached, link),
+    detachSession: async (link) => {
+      detached.add(link.number);
+      drop(attached, link);
+    },
+    detachedSession: async (link) => detached.has(link.number),
   };
 
   return { ...issueOperations({ storage }), attached };
@@ -53,4 +59,29 @@ it.each([0, -3, 1.5])('refuses the Issue number %s', async (number) => {
   await expect(plugin.attach({ number }, session)).rejects.toThrow(
     'number must be a positive Issue number.',
   );
+});
+
+it("refuses an Agent's attach of an Issue detached from its Session unless it asks again", async () => {
+  const plugin = registered();
+
+  await plugin.attach({ number: 1320 }, session);
+  await plugin.detach({ number: 1320 }, session);
+
+  await expect(plugin.attach({ number: 1320 }, session)).rejects.toThrow(
+    /detached from this Session/,
+  );
+  expect(plugin.attached).toEqual([]);
+
+  await plugin.attach({ number: 1320, again: true }, session);
+
+  expect(plugin.attached).toHaveLength(1);
+});
+
+it('lets a person attach an Issue they detached', async () => {
+  const plugin = registered();
+
+  await plugin.detach({ number: 1320 }, session);
+  await plugin.attach({ number: 1320 }, { ...session, person: true });
+
+  expect(plugin.attached).toHaveLength(1);
 });

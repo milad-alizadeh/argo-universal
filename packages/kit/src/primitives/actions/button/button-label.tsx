@@ -59,5 +59,7 @@ function useButtonTextStyle(
   if (props.control)
     return { fontSize: body.fontSize, lineHeight: body.lineHeight, color };
 
+  if (props.size === 'xs') return { fontSize: 12, lineHeight: 16, color };
+
   return { color };
 }

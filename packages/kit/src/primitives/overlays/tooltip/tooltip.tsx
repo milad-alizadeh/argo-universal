@@ -17,6 +17,7 @@ import {
   usePopoverClose,
 } from '#primitives/overlays/popover';
 import type { KitProps } from '../../kit-props';
+import { useTooltipOpen } from './use-tooltip-open';
 
 // Kit-only: the interactive trigger.
 type TooltipProps = KitProps<'Tooltip'> & {
@@ -54,13 +55,13 @@ export function Tooltip(props: TooltipProps): ReactElement {
 }
 
 function useTooltipState(props: TooltipProps): TooltipState {
-  const [open, setOpen] = useState(false);
+  const [open, changeOpen] = useTooltipOpen();
   const [dismissed, setDismissed] = useState(false);
 
   return {
     popover: {
       open: props.active !== false && open && !dismissed,
-      onOpenChange: setOpen,
+      onOpenChange: changeOpen,
       openOnHover: true,
       frameless: props.frameless,
       // A tooltip names what the pointer is on; it closes no popover or menu the reader has open.

@@ -95,8 +95,9 @@ function rowSurface(
   drawing: ItemDrawing,
   { selected, tone }: SurfaceState,
 ): string {
+  // On the web the row's corners come from the frame around it; its press inherits them, so its focus ring follows.
   return cn(
-    'relative overflow-hidden',
+    'relative overflow-hidden web:rounded-inherit',
     tone !== 'muted' && surfaceClasses(drawing.look),
     corners(drawing, tone),
     selected && 'web:wide:shadow-none',

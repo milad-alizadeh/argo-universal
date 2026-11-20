@@ -58,7 +58,7 @@ export const joinedClasses = {
 };
 
 export const webClass =
-  'h-10 shrink-0 items-center justify-center rounded-lg px-4 web:whitespace-nowrap web:transition-all web:duration-150 web:outline-none web:focus-visible:outline-solid web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:outline-offset-2';
+  'h-10 shrink-0 items-center justify-center rounded-lg px-4 web:whitespace-nowrap web:transition-all web:duration-150';
 
 interface WebState {
   pressed: boolean;

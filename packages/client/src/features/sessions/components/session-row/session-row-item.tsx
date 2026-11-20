@@ -126,8 +126,7 @@ function RowPart(props: SessionRowItemProps): React.JSX.Element {
 const itemClass = 'min-w-0 shrink';
 
 // A pressable part of the row's meta line: its tint on hover and keyboard focus, in the row's control radius.
-export const pressTint =
-  'rounded-control web:hover:bg-hover web:focus-visible:bg-hover';
+export const pressTint = 'rounded-control web:hover:bg-hover';
 
 const itemPressClass = `${itemClass} ${pressTint}`;
 
@@ -142,7 +141,7 @@ const modifiersOf = ({
 ];
 
 // Both facts are kept; the Change stage model picks the one mark, a draft ahead of a conflict.
-const changeState = (change: RowChange): ChangeState =>
+export const changeState = (change: RowChange): ChangeState =>
   change.stage === 'open'
     ? { stage: 'open', modifiers: modifiersOf(change) }
     : { stage: change.stage };

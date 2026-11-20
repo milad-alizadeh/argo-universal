@@ -96,10 +96,11 @@ const serveResume = (
 const serveClose = (
   app: AgentApp,
   { sessions, player }: Pick<Script, 'sessions' | 'player'>,
+  method: 'session/close' | 'session/delete',
 ): AgentApp => {
-  const close = player.respond('session/close');
+  const close = player.respond(method);
 
-  return app.onRequest('session/close', (context) => {
+  return app.onRequest(method, (context) => {
     sessions.close(context.params.sessionId);
 
     return close(context, {});
@@ -147,21 +148,19 @@ const observeCancellation = (
 };
 
 const receiveCancellation = (
-  notification: Pick<
-    NonNullable<ScriptedNotifications['session/cancel']>,
-    'received'
-  >,
+  notification: NonNullable<ScriptedNotifications['session/cancel']>,
   params: CancelNotification,
 ): void => {
   notification.received?.resolve(params);
 };
 
-const registrations = [
+const registrations: ((app: AgentApp, script: Script) => AgentApp)[] = [
   serveInitialization,
   serveNewSession,
   serveLoad,
   serveResume,
-  serveClose,
+  (app, script): AgentApp => serveClose(app, script, 'session/close'),
+  (app, script): AgentApp => serveClose(app, script, 'session/delete'),
   serveConfiguration,
   serveCancellation,
   serveOtherMethods,

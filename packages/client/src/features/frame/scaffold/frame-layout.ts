@@ -5,15 +5,12 @@ import { resizeHandles } from './frame-layout-handles';
 import {
   contentFloor,
   inspectorBudget,
+  inspectorClaim,
   occupied,
   preferredListWidth,
   railZone,
 } from './frame-layout-measures';
-import {
-  listAvailable,
-  listOpenWidth,
-  requestedThresholds,
-} from './frame-layout-sidebar';
+import { listOpenWidth, requestedThresholds } from './frame-layout-sidebar';
 import { inspectorRegion, workbenchRegion } from './frame-layout-trailing';
 import type {
   FrameArrangement,
@@ -35,7 +32,11 @@ function budgetThresholds(input: FrameLayoutInput): FrameLayout['thresholds'] {
   const list = preferredListWidth(input);
 
   return {
-    listFold: base + contentFloor(input) + list,
+    listFold:
+      railZone(input.measures) +
+      inspectorClaim(input) +
+      contentFloor(input) +
+      list,
     workbenchGutter:
       base + (input.sidebarShown ? list : 0) + pageWidthForGutter(input),
   };
@@ -50,7 +51,6 @@ function listRegion(input: FrameLayoutInput, listFold: number): ListRegion {
     width: folded ? 0 : openWidth,
     folded,
     openWidth,
-    available: listAvailable(input),
   };
 }
 

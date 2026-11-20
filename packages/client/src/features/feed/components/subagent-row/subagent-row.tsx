@@ -42,8 +42,7 @@ function RowBody({ item, opens }: RowBodyProps): React.JSX.Element {
   );
 }
 
-const rowClassName =
-  'max-w-full self-start web:focus-visible:outline-2 web:focus-visible:outline-focus web:focus-visible:-outline-offset-2';
+const rowClassName = 'max-w-full self-start';
 
 interface RowPressProps extends SubagentRowProps {
   onHoveredChange: (hovered: boolean) => void;

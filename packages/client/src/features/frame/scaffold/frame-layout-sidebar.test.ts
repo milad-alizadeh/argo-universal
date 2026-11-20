@@ -26,7 +26,6 @@ it('clamps a wider sidebar preference while preserving room to show its minimum'
     preferredListWidth: 460,
   });
 
-  expect(layout.list.available).toBe(true);
   expect(layout.list.width).toBe(340);
   expect(layout.page.width).toBe(688);
 });
@@ -41,14 +40,14 @@ it('budgets no Workbench when resizing the sidebar to its end', () => {
   expect(resized.page.width).toBe(908);
 });
 
-it('keeps the list unavailable while the content and the Inspector need its room', () => {
+it('keeps a requested list folded while the content and the Inspector need its room', () => {
   const layout = frameLayout({
     ...input,
     width: 1300,
     inspectorState: 'open',
+    sidebarRequested: true,
   });
 
-  expect(layout.list.available).toBe(false);
   expect(layout.list.folded).toBe(true);
 });
 
@@ -61,4 +60,37 @@ it('restores the Workbench when closing the Inspector frees enough room', () => 
   expect(open.workbench.state).toBe(autoHidden);
   expect(closed.list.width).toBe(312);
   expect(closed.workbench.state).toBe('gutter');
+});
+
+it('opens an undragged Inspector into the room the list leaves, without folding the list', () => {
+  const open = {
+    ...input,
+    inspectorState: 'open' as const,
+    inspectorUndragged: true,
+  };
+
+  const layout = frameLayout({ ...open, preferredInspectorWidth: 600 });
+
+  expect(layout.list.folded).toBe(false);
+  expect(layout.page.width).toBe(688);
+  expect(layout.inspector.width).toBe(352);
+
+  const wide = frameLayout({
+    ...open,
+    width: 1800,
+    preferredInspectorWidth: 600,
+  });
+
+  expect(wide.inspector.width).toBe(600);
+});
+
+it('folds the list for an Inspector a drag widened', () => {
+  const layout = frameLayout({
+    ...input,
+    inspectorState: 'open',
+    preferredInspectorWidth: 600,
+  });
+
+  expect(layout.list.folded).toBe(true);
+  expect(layout.inspector.width).toBe(600);
 });

@@ -59,6 +59,15 @@ Proposed for owner approval, 2026-11-14, spec #2107. Where this section conflict
 
 Considered and rejected: running it on a branch push or `gh pr create`, which needs a watcher on the Checkout or on shell commands.
 
+## A detach sticks
+
+Owner, 2026-11-19, #2470. A person detached a pull request and the Turn-end run attached it again a second later, because a detach left nothing behind and the Session then had none. Where this section conflicts with the sections above, this section holds.
+
+- **A detach is remembered.** `github.detach` deletes the association and keeps a detached mark for that Session and pull request in the Plugin's own storage. `github.attach` clears it.
+- **Discovery never attaches a detached pull request.** `github.discover`, the Turn-end run included, leaves out every pull request detached from the Session. When every one it found was detached it attaches nothing and answers `detached` with them, a seventh answer.
+- **An Agent attaches a detached pull request only when the person asks.** An Agent's `github.attach` of one is refused unless it passes `again: true`. A person's attach is always the person asking.
+- The Issue tracker keeps the same mark for an Issue detached from a Session, and its `attach` takes the same `again`.
+
 ## The Plugin stores each pull request's last read
 
 Decided by the owner on 2026-11-14. The Session row and the Changes read the same pull request through two paths, each with its own in-memory last answer and its own rule for a slow or failed read, so the row could say Open while the Workbench drew nothing. Where this section conflicts with the decisions above, this section holds.

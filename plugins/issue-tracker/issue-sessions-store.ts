@@ -1,4 +1,9 @@
 import type { Argo, StorageResult } from '@argo/plugin-kit';
+import {
+  detachedSession,
+  markDetached,
+  unmarkDetached,
+} from './issue-detached-store';
 
 // A Session an Agent attached to one Issue, as the Issue's page lists it.
 export type IssueSession = { sessionId: string; attachedAt: string };
@@ -20,12 +25,13 @@ export type SessionStore = {
 export const issueSessionsTable =
   'CREATE TABLE IF NOT EXISTS issue_sessions (project_id TEXT NOT NULL, issue_number INTEGER NOT NULL, session_id TEXT NOT NULL, attached_at TEXT NOT NULL, PRIMARY KEY (project_id, issue_number, session_id))';
 
-// Attaching twice is the same attachment, so the first time it happened stands.
+// Attaching twice is the same attachment, so the first time it happened stands; it forgets that the Issue was detached.
 async function attachSession(
   store: SessionStore,
   { projectId, number, sessionId }: IssueLink,
 ): Promise<void> {
   await store.ensureTables();
+  await unmarkDetached(store, { projectId, number, sessionId });
 
   await store.argo.storage.execute({
     sql: 'INSERT INTO issue_sessions (project_id, issue_number, session_id, attached_at) VALUES (?, ?, ?, ?) ON CONFLICT(project_id, issue_number, session_id) DO NOTHING',
@@ -39,6 +45,8 @@ async function detachSession(
   { projectId, number, sessionId }: IssueLink,
 ): Promise<void> {
   await store.ensureTables();
+  // The mark comes first, so an Agent's attach that checks between the two statements is refused.
+  await markDetached(store, { projectId, number, sessionId });
 
   await store.argo.storage.execute({
     sql: 'DELETE FROM issue_sessions WHERE project_id = ? AND issue_number = ? AND session_id = ?',
@@ -134,6 +142,7 @@ type SessionMethods = {
   ) => Promise<{ projectId: string; number: number }[]>;
   attachSession: (link: IssueLink) => Promise<void>;
   detachSession: (link: IssueLink) => Promise<void>;
+  detachedSession: (link: IssueLink) => Promise<boolean>;
   issueSessions: (
     issue: Omit<IssueLink, 'sessionId'>,
   ) => Promise<IssueSession[]>;
@@ -163,6 +172,7 @@ export const sessionMethods = (store: SessionStore): SessionMethods => ({
   projectIssues: projectIssues(store),
   attachSession: (link: IssueLink) => attachSession(store, link),
   detachSession: (link: IssueLink) => detachSession(store, link),
+  detachedSession: (link: IssueLink) => detachedSession(store, link),
   issueSessions: (issue: Omit<IssueLink, 'sessionId'>) =>
     issueSessions(store, issue),
   sessionLinks: (sessionIds: readonly string[]) =>
