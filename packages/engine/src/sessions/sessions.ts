@@ -56,12 +56,7 @@ export class Sessions {
     const list = createSessionList(sources);
 
     this.sources = handlerSources(sources);
-    const schedules = new Schedules(this.sources, sources.sessionCommandSignal);
-    this.implementations = sessionOperationImplementations(
-      this.sources,
-      list,
-      schedules,
-    );
+    this.implementations = this.operations(sources, list);
     this.directory = createSessionDirectory(this.sources);
     this.work = createSessionWorkSource(this.sources);
     this.router = createSessionRouter({ sources: this.sources, list });
@@ -70,6 +65,14 @@ export class Sessions {
       this.sources,
       this.implementations,
     );
+  }
+  private operations(
+    { sessionCommandSignal }: SessionSources,
+    list: ReturnType<typeof createSessionList>,
+  ): SessionOperationImplementations {
+    const schedules = new Schedules(this.sources, sessionCommandSignal);
+
+    return sessionOperationImplementations(this.sources, list, schedules);
   }
   // Opens a Session from storage, or waits for its open, without a Turn.
   public async open(sessionId: string): Promise<void> {
