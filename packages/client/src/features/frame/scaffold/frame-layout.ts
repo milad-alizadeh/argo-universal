@@ -10,11 +10,7 @@ import {
   preferredListWidth,
   railZone,
 } from './frame-layout-measures';
-import {
-  listAvailable,
-  listOpenWidth,
-  requestedThresholds,
-} from './frame-layout-sidebar';
+import { listOpenWidth, requestedThresholds } from './frame-layout-sidebar';
 import { inspectorRegion, workbenchRegion } from './frame-layout-trailing';
 import type {
   FrameArrangement,
@@ -55,7 +51,6 @@ function listRegion(input: FrameLayoutInput, listFold: number): ListRegion {
     width: folded ? 0 : openWidth,
     folded,
     openWidth,
-    available: listAvailable(input),
   };
 }
 

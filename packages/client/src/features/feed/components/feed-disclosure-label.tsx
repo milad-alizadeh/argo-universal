@@ -15,7 +15,6 @@ export interface FeedDisclosureLabelProps {
 const disclosureTitle = (label: string, trailing?: string): string =>
   trailing ? `${label} ${trailing}` : label;
 
-// Every settled label keeps the same typography and tone, including on hover.
 const plainLabelClassName = (props: FeedDisclosureLabelProps): string =>
   cn('min-w-0 shrink font-sans', {
     'line-through': props.denied,
@@ -27,7 +26,7 @@ function PlainLabel(
   return (
     <Text
       role="body"
-      tone="muted"
+      tone={props.hovered ? 'neutral' : 'muted'}
       numberOfLines={1}
       selectable={false}
       className={plainLabelClassName(props)}
