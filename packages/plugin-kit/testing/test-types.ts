@@ -75,8 +75,8 @@ export interface PluginTestOptions {
 }
 
 // What a test says `argo.sessions.get` answers for one Session; `idleFor` may be left out.
-export type TestSession = Omit<PluginSessionInfo, 'idleFor'> &
-  Partial<Pick<PluginSessionInfo, 'idleFor'>>;
+export type TestSession = Omit<PluginSessionInfo, 'idleFor' | 'archived'> &
+  Partial<Pick<PluginSessionInfo, 'idleFor' | 'archived'>>;
 
 // The App an items Slot list is asked from; it decides how many items show before "+N".
 type SlotItemsOptions = {

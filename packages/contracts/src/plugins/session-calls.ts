@@ -20,6 +20,8 @@ export const PluginSessionInfo = z.object({
    * changed. Null while a Turn runs, a Prompt waits or the queue is paused (ADR-0055).
    */
   idleFor: z.number().nonnegative().nullable(),
+  // True once the Session is archived: it stays readable, but is no longer listed as work in progress.
+  archived: z.boolean(),
 });
 
 export type PluginSessionInfo = z.infer<typeof PluginSessionInfo>;
