@@ -1,6 +1,9 @@
-import { startedPlanSteps, type SessionInfo } from '@repo/contracts';
+import type { SessionInfo } from '@repo/contracts';
 import type { Tone } from '@repo/kit/primitives/content/text';
-import type { ProgressBarProps } from '@repo/kit/primitives/status/progress-bar';
+import type {
+  ProgressBarProps,
+  ProgressSteps,
+} from '@repo/kit/primitives/status/progress-bar';
 
 const statusTones = {
   needs_input: 'warning',
@@ -10,14 +13,11 @@ const statusTones = {
   idle: 'muted',
 } satisfies Record<SessionInfo['status'], Tone>;
 
-function unfinished(plan: NonNullable<SessionInfo['plan']>): boolean {
+type Plan = NonNullable<SessionInfo['plan']>;
+
+function unfinished(plan: Plan): boolean {
   return plan.total > 0 && plan.done < plan.total;
 }
-
-const activeStatuses: ReadonlySet<SessionInfo['status']> = new Set([
-  'running',
-  'needs_input',
-]);
 
 type SessionWork = Pick<
   SessionInfo,
@@ -28,31 +28,50 @@ function hasBackgroundWork({ shells, subagents }: SessionWork): boolean {
   return shells.running > 0 || subagents.running > 0;
 }
 
-// An idle Session whose Background Task or Agent still runs is not done: its bar stays green, and still, until that work ends.
+// A Turn that ended while its Background Task or Agent still runs.
+function idleWithBackgroundWork(session: SessionWork): boolean {
+  return session.status === 'idle' && hasBackgroundWork(session);
+}
+
+// An idle Session whose Background Task or Agent still runs is not done: its bar stays green until that work ends.
 function barTone(session: SessionWork): Tone {
-  return session.status === 'idle' && hasBackgroundWork(session)
+  return idleWithBackgroundWork(session)
     ? statusTones.running
     : statusTones[session.status];
 }
 
+function planSteps({ done, inProgress = 0, total }: Plan): ProgressSteps {
+  return { done, started: inProgress, total };
+}
+
+// Work is live while the Session runs, or while its Background Task or Agent does after the Turn ends.
+function workIsLive(session: SessionWork): boolean {
+  return session.status === 'running' || idleWithBackgroundWork(session);
+}
+
+/*
+ * One segment per plan step, so a last step underway reads 3 of 4, never a full bar. The
+ * step underway glints only while work is live; a Session waiting on its reader holds still.
+ */
 export function sessionProgress(
   session: SessionWork,
 ): ProgressBarProps | undefined {
-  const { plan, status } = session;
+  const { plan } = session;
 
   if (!plan || !unfinished(plan)) return undefined;
 
-  const started = startedPlanSteps(plan);
-
   return {
-    value: started / plan.total,
+    value: plan.done / plan.total,
+    steps: planSteps(plan),
     tone: barTone(session),
-    active: activeStatuses.has(status),
-    accessibilityLabel: `Todos: ${started} of ${plan.total} ${progressStatus(plan)}`,
+    active: workIsLive(session),
+    accessibilityLabel: progressLabel(plan),
     testID: 'session-todos',
   };
 }
 
-function progressStatus(plan: NonNullable<SessionInfo['plan']>): string {
-  return (plan.inProgress ?? 0) > 0 ? 'started' : 'complete';
+function progressLabel({ done, inProgress = 0, total }: Plan): string {
+  const complete = `Todos: ${done} of ${total} complete`;
+
+  return inProgress > 0 ? `${complete}, ${inProgress} in progress` : complete;
 }

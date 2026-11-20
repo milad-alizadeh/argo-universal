@@ -5,5 +5,4 @@ export interface SessionRowMetadataProps {
   session: SessionInfo;
   selected: boolean;
   pullRequest?: ChangeStageProps;
-  age?: string;
 }

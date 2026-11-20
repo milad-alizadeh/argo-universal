@@ -25,7 +25,7 @@ function listCapacity(input: FrameLayoutInput): number {
   );
 }
 
-export const listAvailable = (input: FrameLayoutInput): boolean =>
+const listAvailable = (input: FrameLayoutInput): boolean =>
   listCapacity(input) >= input.measures.listWidth;
 
 const requested = (input: FrameLayoutInput): boolean =>

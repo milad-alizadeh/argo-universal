@@ -28,7 +28,11 @@ type ExpandReads = PartReads<
 >;
 
 type InspectorToggleReads = PartReads<
-  'inspectorState' | 'onInspectorStateChange' | 'band' | 'inspectorAvailable',
+  | 'inspectorState'
+  | 'onInspectorStateChange'
+  | 'band'
+  | 'inspectorAvailable'
+  | 'onWorkbenchIntentChange',
   'inspector'
 >;
 
@@ -61,10 +65,13 @@ function expandProps({ scaffold, layout }: ExpandReads): IconButtonProps {
   };
 }
 
-function inspectorToggleProps({
-  scaffold,
-  layout,
-}: InspectorToggleReads): IconButtonProps {
+function toggleInspector({ scaffold, layout }: InspectorToggleReads): void {
+  if (!layout.inspector.open) scaffold.onWorkbenchIntentChange('hidden');
+  moveInspector(scaffold, 'toggle');
+}
+
+function inspectorToggleProps(parts: InspectorToggleReads): IconButtonProps {
+  const { scaffold, layout } = parts;
   const open = layout.inspector.open;
 
   return {
@@ -72,7 +79,7 @@ function inspectorToggleProps({
     icon: 'stage',
     accessibilityLabel: open ? 'Hide Inspector' : 'Show Inspector',
     disabled: !open && !inspectorOffered(scaffold),
-    onPress: () => moveInspector(scaffold, 'toggle'),
+    onPress: () => toggleInspector(parts),
   };
 }
 

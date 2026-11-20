@@ -10,7 +10,7 @@ export interface SessionRowProps {
   logo: string;
   selected?: boolean;
   pullRequest?: ChangeStageProps;
-  // How long ago the Session was last active: it leads a Regular row's meta line, and ends a Compact row that has no PR.
+  // How long ago the Session was last active: it ends a quiet Session's title line, or a Compact row that has no PR.
   age?: string;
   // What the Plugins add to the row: meta-line items after Argo's own, the rest behind "+N", and the chosen Activity line.
   plugins?: SessionRowPlugins;
@@ -49,6 +49,13 @@ export interface SessionRowActivity {
 }
 
 export type OpenPluginItemPage = (pluginId: string, path: string) => void;
+
+// A working Session shows no time: its dot already says it is live, so "now" would only repeat it.
+export const quietAge = ({
+  session,
+  age,
+}: Pick<SessionRowProps, 'session' | 'age'>): string | undefined =>
+  session.status === 'running' ? undefined : age;
 
 /*
  * What a screen reader says for the row: its press target is named by this label and reads no text from its lanes, so

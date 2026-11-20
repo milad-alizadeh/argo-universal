@@ -2,7 +2,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import type { ListItemProps } from '@repo/kit/primitives/lists/list-item';
 import type * as React from 'react';
 import { View } from 'react-native';
-import type { SessionRowProps } from './session-row-props';
+import { quietAge, type SessionRowProps } from './session-row-props';
 import { sidebarRows } from './session-row-sidebar';
 import { rowStatusDot } from './session-row-status';
 
@@ -19,27 +19,40 @@ export const endParts = (
     </View>
   ) : undefined;
 
-const timeOf = (age: string | undefined): React.ReactNode =>
+// A row's time in its detail style: a phone row's title end, or a Compact row's detail.
+export const timeOf = (age: string | undefined): React.ReactNode =>
   age === undefined ? undefined : <Text role="row-detail">{age}</Text>;
+
+const sidebarTimeOf = (age: string | undefined): React.ReactNode =>
+  age === undefined ? undefined : (
+    <Text role="secondary" tone="muted">
+      {age}
+    </Text>
+  );
 
 // A phone's row ends its title line on the time and its subtitle on the dot; with no subtitle, the dot follows the time.
 function phoneEnds(
-  { session, age }: SessionRowProps,
+  props: SessionRowProps,
   subtitle: string | undefined,
 ): RegularEnds {
-  const time = timeOf(age);
-  const dot = rowStatusDot(session.status);
+  const time = timeOf(quietAge(props));
+  const dot = rowStatusDot(props.session.status);
 
   return subtitle === undefined
     ? { titleEnd: endParts(time, dot) }
     : { titleEnd: time, subtitleEnd: dot };
 }
 
-// A sidebar row's status dot ends its title line, and its time leads the meta line.
+// A sidebar row ends its title line on the time, while the Session is quiet, then the status dot.
 export const regularEnds = (
   props: SessionRowProps,
   subtitle: string | undefined,
 ): RegularEnds =>
   sidebarRows
-    ? { trailing: rowStatusDot(props.session.status) }
+    ? {
+        trailing: endParts(
+          sidebarTimeOf(quietAge(props)),
+          rowStatusDot(props.session.status),
+        ),
+      }
     : phoneEnds(props, subtitle);
