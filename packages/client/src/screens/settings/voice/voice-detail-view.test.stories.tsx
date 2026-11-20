@@ -10,7 +10,7 @@ import {
   unusableVoice,
   usableVoice,
 } from './voice-detail-view-fixtures';
-import { voiceDetailSpies } from './voice-detail-view.mocks';
+import { inReadingOrder, voiceDetailSpies } from './voice-detail-view.mocks';
 
 const meta = {
   title: 'Tests/Screens/Settings/Voice',
@@ -30,7 +30,7 @@ type Story = StoryObj<typeof meta>;
 
 type Context = Parameters<NonNullable<Story['play']>>[0];
 
-const voiceCalls = { name: 'Voice calls' };
+const voiceCalls = { name: 'Conversations' };
 
 const withCustomVoices = {
   voice: { status: 'loaded', settings: customVoices },
@@ -240,7 +240,7 @@ export const EditingDeletesFromItsOwnRow: Story = {
 export const KeepsTheInstructionsWhenLeft: Story = {
   play: async ({ canvas, args, userEvent }) => {
     const field = canvas.getByRole('textbox', {
-      name: /Instructions for every call/,
+      name: /Instructions for every Conversation/,
     });
 
     await userEvent.type(field, 'Call me Sam.');
@@ -252,9 +252,11 @@ export const KeepsTheInstructionsWhenLeft: Story = {
   },
 };
 
+const gain = 'Microphone gain';
+
 export const ShowsTheGainWhereItCanChange: Story = {
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('Microphone gain')).toBeVisible();
+    await expect(canvas.getByText(gain)).toBeVisible();
     await expect(canvas.getByText('Volume')).toBeVisible();
   },
 };
@@ -262,9 +264,33 @@ export const ShowsTheGainWhereItCanChange: Story = {
 export const HidesTheGainWhereItCannotChange: Story = {
   args: { adjustsGain: false },
   play: async ({ canvas }) => {
-    await expect(canvas.queryByText('Microphone gain')).toBeNull();
+    await expect(canvas.queryByText(gain)).toBeNull();
     await expect(canvas.queryByText('Visualiser')).toBeNull();
-    await expect(canvas.getByText(/^Volume changes/)).toBeVisible();
+    await expect(canvas.getByText('Volume')).toBeVisible();
+  },
+};
+
+// Four groups: the switch; the voice and what it is told; how a call behaves; this Device's sound.
+export const GroupsTheRowsByWhatTheyChange: Story = {
+  play: async ({ canvas }) => {
+    await expect(
+      inReadingOrder(canvas, [
+        'Conversations',
+        'Voice and instructions',
+        'Voice provider',
+        'Instructions for every Conversation',
+        'Opening note',
+        'The next Conversation uses this voice and these instructions.',
+        'Call behaviour',
+        'Say a short line when handing work over',
+        'End a silent Conversation after',
+        'These apply from the next Conversation.',
+        'Microphone and speaker',
+        gain,
+        'Volume',
+        'Kept on this Device. A running Conversation changes at once.',
+      ]),
+    ).toBe(true);
   },
 };
 

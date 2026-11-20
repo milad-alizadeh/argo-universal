@@ -10,7 +10,7 @@ import {
   unnamedDevices,
   usableVoice,
 } from './voice-detail-view-fixtures';
-import { voiceDetailSpies } from './voice-detail-view.mocks';
+import { inReadingOrder, voiceDetailSpies } from './voice-detail-view.mocks';
 
 const meta = {
   title: 'Tests/Screens/Settings/Voice/Devices',
@@ -38,6 +38,9 @@ const microphone = { name: /^Microphone/ };
 const speaker = { name: /^Speaker/ };
 
 const systemDefault = 'System default';
+
+const audioFooter =
+  'Kept on this Device. A running Conversation changes at once.';
 
 export const ShowsTheChosenMicrophoneAndTheSystemSpeaker: Story = {
   play: async ({ canvas }) => {
@@ -143,13 +146,35 @@ export const StopsTheTestSoundWhilePlaying: Story = {
   },
 };
 
-// A phone, or the web App in a phone's browser, has no audio settings: no devices, meters, volume or gain.
-export const PhonesShowNoAudioRows: Story = {
+// Each device's level sits under its picker: gain under the Microphone, volume under the Speaker.
+export const DesktopsShowTheMicrophoneAndSpeaker: Story = {
+  args: { meters: idleMeters },
+  play: async ({ canvas }) => {
+    await expect(
+      inReadingOrder(canvas, [
+        'Call behaviour',
+        'Microphone and speaker',
+        'Microphone',
+        'Microphone gain',
+        'Speaker',
+        'Volume',
+        audioFooter,
+      ]),
+    ).toBe(true);
+    await expect(canvas.queryByText('Devices')).toBeNull();
+  },
+};
+
+// A phone, or the web App in a phone's browser, draws none of the Microphone and speaker section, footnote included.
+export const PhonesShowNoMicrophoneAndSpeaker: Story = {
   args: { meters: idleMeters },
   beforeEach: (): Promise<void> => settleLayout(layoutWidths.phone),
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('End a silent call after')).toBeVisible();
-    await expect(canvas.queryByText('Devices')).toBeNull();
+    await expect(
+      canvas.getByText('End a silent Conversation after'),
+    ).toBeVisible();
+    await expect(canvas.queryByText('Microphone and speaker')).toBeNull();
+    await expect(canvas.queryByText(audioFooter)).toBeNull();
     await expect(canvas.queryByRole('button', microphone)).toBeNull();
     await expect(canvas.queryByRole('button', speaker)).toBeNull();
     await expect(canvas.queryByText('Volume')).toBeNull();
