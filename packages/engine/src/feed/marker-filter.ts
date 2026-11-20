@@ -1,9 +1,6 @@
 import type { FeedSubscribeOutput, SessionUpdate } from '@repo/contracts';
-import {
-  firstText,
-  VoiceMarkerStream,
-  withoutVoiceMarkers,
-} from './voice-markers';
+import { VoiceMarkerStream } from './voice-marker-stream';
+import { firstText, withoutVoiceMarkers } from './voice-markers';
 
 const firstTextField = 'content.0.text';
 
