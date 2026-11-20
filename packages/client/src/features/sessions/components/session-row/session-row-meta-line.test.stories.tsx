@@ -39,7 +39,7 @@ const rightOf = (element: Element): number =>
 export const CrowdedEndsOnMore: Story = {
   args: crowdedMetaSession,
   render: (args) => (
-    <View style={{ width: 280 }}>
+    <View style={{ width: 230 }}>
       <SessionRow {...args} />
     </View>
   ),
