@@ -26,10 +26,15 @@ describe('the App-only Operations an Agent is refused', () => {
       filter: 'voice',
     });
 
+    // Ranked search keeps only strong matches, and hanging up now reads as a Conversation's, so it is asked for by its own words.
+    const hangingUp = await session.caller.operations.list.query({
+      filter: 'hang up',
+    });
+
+    expect(hangingUp.map(({ id }) => id)).toContain('conversation.hangUp');
     expect(listed.map(({ id }) => id).sort()).toEqual([
       'conversation.chooseDevices',
       'conversation.getSettings',
-      'conversation.hangUp',
       'conversation.listDevices',
       'conversation.setInstructions',
       'conversation.setOptions',
