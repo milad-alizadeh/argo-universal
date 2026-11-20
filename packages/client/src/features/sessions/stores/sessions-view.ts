@@ -40,7 +40,7 @@ type SessionsGroup = ChoiceValue<typeof sessionsGroupChoices>;
 
 export type SessionsStatus = ChoiceValue<typeof sessionsStatusChoices>;
 
-// Regular rows show the activity, metadata and Plan bar; Compact rows show one line each.
+// Regular rows show the title, metadata and Plan bar; Compact rows show one line each.
 export type SessionsLayout = ChoiceValue<typeof sessionsLayoutChoices>;
 
 // How the Sessions list groups, filters and lays out its rows; it always lists the most recently active Sessions first.

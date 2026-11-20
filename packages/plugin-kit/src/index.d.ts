@@ -143,7 +143,6 @@ export type {
 // The items a Plugin answers an add-only Slot with: Argo draws each one as a row (ADR-0046).
 export type {
   ProjectDetailsItem,
-  SessionActivityItem,
   SessionBarItem,
   SessionRowItem,
 } from '@repo/contracts/plugins/wire';

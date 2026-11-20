@@ -410,3 +410,7 @@ Hand-overs reaching Argo after the announcement, per spoken answer:
 ### What would work instead, for the owner to decide
 
 Argo, not the voice, would read the answer: a hand-over is accepted as an answer only when it names a person's turn heard after the announcement, while that one announced request still waits, and its words match a short list Argo owns (allow once, reject). Anything else leaves the request open and the voice is told so. Argo's reply tells the voice the outcome, and the voice repeats it. "Stop" would need the same reading, and a lone "stop" would still never arrive. The scripts and results are in `/tmp/argo-voice-dev/consent` on the spike machine.
+
+## 15. Spike 4: does GPT-Live take an image? (2026-11-19, #2473)
+
+Not yet answered. The screen-sight slice (#2473) built the optional provider capability for sending an image frame and left GPT-Live reporting that it cannot, because the service was not called while building it. To find out, send one still frame on a live call, marked as background context, and check that the voice describes it. Record here what the service accepted (the item type and the field names it took), what it refused, and what the voice said. When it describes the frame, add `look` to `GptLiveCall`; until then the Voice half of screen sight waits and Agents see the screen through the Operation `app.screenshot` alone.

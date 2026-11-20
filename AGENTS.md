@@ -31,6 +31,7 @@ Single-context: the root `GLOSSARY.md` and `docs/adr/`. See `docs/agents/domain.
 ## PR rules
 
 - One round of agent reviews per PR; another only when the user explicitly asks. Follow-up fixes, conflict resolution and CI failures do not start one.
+- Run the `code-review` skill before you open a PR. If you have not run it yet, run it first, fix the real findings, then raise the PR.
 - A PR that changes how the UI looks carries a before and an after screenshot of each changed state; `docs/agents/storybook.md` says how to capture them. When a capture fails, stop and tell the user before opening the PR.
 - Put all evidence and images in the PR body; upload images with `gh pr create --attach` or `gh pr edit --attach`, never commit them.
 

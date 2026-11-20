@@ -4,6 +4,7 @@ import { createBlobRouter } from '../blob';
 import {
   createConversationRouter,
   conversationSessions,
+  type ConversationSessionWork,
 } from '../conversation';
 import { createDevicesRouter } from '../devices';
 import { createFeedRouter } from '../feed';
@@ -14,6 +15,7 @@ import { createOperationProcedures } from '../operations';
 import { createPairingRouter } from '../pairing/router';
 import { createPluginsRouter } from '../plugins';
 import { mergeRouters, router, routerFactory } from '../rpc';
+import { createScreenSightRouter } from '../screen-sight';
 import { createShellRouter, Sessions } from '../sessions';
 import { createSystemRouter } from '../system';
 import type { AppRouterDeps } from './router-deps';
@@ -32,6 +34,7 @@ const createAppProcedures = routerFactory((deps: AppRouterDeps) =>
     network: createNetworkRouter(deps),
     pairing: createPairingRouter(deps),
     navigation: createAppNavigationRouter(deps),
+    screenSight: createScreenSightRouter(deps),
   }),
 );
 
@@ -51,12 +54,27 @@ function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
   });
 }
 
+// What the Conversation does through Sessions: send Prompts, stop a Turn, hear Turns end, and ask for a picture of the screen.
+const conversationWork = (
+  deps: AppRouterDeps,
+  sessions: Sessions,
+): ConversationSessionWork => ({
+  promptFromConversation: (sessionId, text) =>
+    sessions.promptFromConversation(sessionId, text),
+  stopFromConversation: (sessionId) => sessions.stopFromConversation(sessionId),
+  capture: (sessionId) =>
+    deps.screenSight.capture({ kind: 'voice', sessionId }),
+  watchTurns: (sessionId, listener) => sessions.watchTurns(sessionId, listener),
+});
+
 // Operations share the session and shell nouns with the Session procedures that are not Operations.
 const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions(deps);
 
   attachSessionActs(deps, sessions);
-  deps.conversation.attach(conversationSessions(deps, sessions));
+  deps.conversation.attach(
+    conversationSessions(deps, conversationWork(deps, sessions)),
+  );
 
   const operations = createOperationProcedures({ ...deps, sessions });
 

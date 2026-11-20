@@ -34,13 +34,11 @@ const coverage = read('coverage', 'coverage', { text: covered });
 const reading: SlotReading<SessionBarItem> = {
   items: [issues],
   overflow: [deploys, coverage],
-  owner: undefined,
 };
 
 const nothingRead: SlotReading<SessionBarItem> = {
   items: [],
   overflow: [],
-  owner: undefined,
 };
 
 describe('sessionBarLines', () => {

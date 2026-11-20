@@ -8,11 +8,13 @@ type AppImplementations = Pick<
 >;
 
 export function createAppOperations(
-  deps: Pick<OperationsDeps, 'appNavigation'>,
+  deps: Pick<OperationsDeps, 'appNavigation' | 'screenSight'>,
 ): AppImplementations {
   const navigation: AppNavigation = deps.appNavigation;
 
   return {
     'app.open': async ({ destination }) => navigation.open(destination),
+    // The person's own run; a Session's goes through the runner, which names the Agent as the one asking.
+    'app.screenshot': () => deps.screenSight.capture({ kind: 'person' }),
   };
 }

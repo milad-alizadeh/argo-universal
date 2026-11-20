@@ -1,3 +1,4 @@
+import type { ScreenImage } from '@repo/contracts/operations';
 import { fromCallback } from 'xstate';
 import {
   providerEvent,
@@ -25,8 +26,13 @@ export type ProviderCallInput = {
 
 type StartedCall = Awaited<ReturnType<ConversationProvider['start']>>;
 
+// A call that cannot look is never given an image: the Engine does not capture for it.
+const deliverImage = (call: StartedCall, image: ScreenImage): void =>
+  call.look?.(image);
+
 function deliver(call: StartedCall, say: VoiceSay): void {
   if (say.kind === 'reply') call.reply(say.requestId, say.text, say.delivery);
+  else if (say.kind === 'image') deliverImage(call, say.image);
   else call.tell(say.text, say.delivery);
 }
 
@@ -45,7 +51,11 @@ class ProviderHold {
     if (this.released) return call.end();
     this.call = call;
     this.unlisten = call.listen((event) => this.heard(event));
-    this.sendBack({ type: 'call.answered', answer: call.answer });
+    this.sendBack({
+      type: 'call.answered',
+      answer: call.answer,
+      canLook: call.look !== undefined,
+    });
   }
 
   // Tells the voice something; a call that is gone hears nothing.

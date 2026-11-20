@@ -34,6 +34,7 @@ function sessionsHeard(): HeardSessions {
     {
       promptFromConversation: () => Promise.reject(new Error('Not sent')),
       stopFromConversation: () => Promise.resolve(false),
+      capture: () => Promise.reject(new Error('No capture in this test')),
       watchTurns: (_sessionId, listener) => {
         listeners.add(listener);
 

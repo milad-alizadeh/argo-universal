@@ -11,7 +11,7 @@ import { quietAge, type SessionRowProps } from './session-row-props';
 import { sidebarRows } from './session-row-sidebar';
 import { rowStatusDot } from './session-row-status';
 
-type RegularEnds = Pick<ListItemProps, 'trailing' | 'titleEnd' | 'subtitleEnd'>;
+type RegularEnds = Pick<ListItemProps, 'trailing' | 'titleEnd'>;
 
 export const endParts = (
   detail: React.ReactNode,
@@ -35,32 +35,14 @@ const sidebarTimeOf = (age: string | undefined): React.ReactNode =>
     </Text>
   );
 
-// A phone's row ends its title line on the time and its subtitle on the dot; with no subtitle, the dot follows the time.
-function phoneEnds(
-  props: SessionRowProps,
-  subtitle: string | undefined,
-): RegularEnds {
-  const time = timeOf(quietAge(props));
+// A row ends its title line on the time, while the Session is quiet, then the status dot.
+const statusEnds = (props: SessionRowProps): RegularEnds => {
   const dot = rowStatusDot(props.session.status);
 
-  return subtitle === undefined
-    ? { titleEnd: endParts(time, dot) }
-    : { titleEnd: time, subtitleEnd: dot };
-}
-
-// A sidebar row ends its title line on the time, while the Session is quiet, then the status dot.
-const statusEnds = (
-  props: SessionRowProps,
-  subtitle: string | undefined,
-): RegularEnds =>
-  sidebarRows
-    ? {
-        trailing: endParts(
-          sidebarTimeOf(quietAge(props)),
-          rowStatusDot(props.session.status),
-        ),
-      }
-    : phoneEnds(props, subtitle);
+  return sidebarRows
+    ? { trailing: endParts(sidebarTimeOf(quietAge(props)), dot) }
+    : { titleEnd: endParts(timeOf(quietAge(props)), dot) };
+};
 
 // While a Conversation is attached, its mark ends the title line in place of the status dot and the time.
 const callEnds = (call: SessionRowCall): RegularEnds => {
@@ -71,6 +53,4 @@ const callEnds = (call: SessionRowCall): RegularEnds => {
 
 export const regularEnds = (
   props: SessionRowProps & CalledRowProps,
-  subtitle: string | undefined,
-): RegularEnds =>
-  props.call ? callEnds(props.call) : statusEnds(props, subtitle);
+): RegularEnds => (props.call ? callEnds(props.call) : statusEnds(props));

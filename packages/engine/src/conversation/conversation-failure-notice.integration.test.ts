@@ -57,6 +57,7 @@ function spySessions(): SpySessions {
     stop: () => Promise.resolve(false),
     watch: () => (): void => {},
     notice,
+    capture: () => Promise.reject(new Error('No capture in this test')),
   };
 
   return { sessions, notice };

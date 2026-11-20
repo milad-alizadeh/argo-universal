@@ -1,4 +1,5 @@
 import type { DesktopShare } from './desktop-share';
+import type { ScreenCaptureAnswer } from './operations';
 
 export interface DesktopBridge {
   serverUrl: string | null;
@@ -23,6 +24,12 @@ export interface DesktopBridge {
   links: {
     // Calls the listener with each link, the ones that arrived before the page could listen first; returns the unsubscribe.
     onOpen(listener: (link: string) => void): () => void;
+  };
+  // One still picture of the main display for screen sight: the desktop App owns the capture and says why when it cannot.
+  screen?: {
+    capture(): Promise<ScreenCaptureAnswer>;
+    // Tells the desktop App whether this Device turned screen sight on; it refuses every capture until told yes.
+    setEnabled(enabled: boolean): void;
   };
   symbols?: {
     render: (request: {

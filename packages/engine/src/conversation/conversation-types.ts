@@ -1,3 +1,4 @@
+import type { ScreenImage } from '@repo/contracts/operations';
 import type {
   ConversationEnd,
   ConversationLimit,
@@ -20,7 +21,9 @@ export type SessionGoneReason = Extract<
 // Something the Engine tells the voice: the answer to a request for work, a word it did not ask for, or an Agent's result for it to read out.
 export type VoiceSay =
   | { kind: 'reply'; requestId: string; text: string; delivery: VoiceDelivery }
-  | { kind: 'tell' | 'result'; text: string; delivery: VoiceDelivery };
+  | { kind: 'tell' | 'result'; text: string; delivery: VoiceDelivery }
+  // One still picture of the screen, given to the voice as background and never kept.
+  | { kind: 'image'; image: ScreenImage };
 
 // How Argo runs one call, whatever the provider: when silence ends it.
 export interface CallConduct {
@@ -45,7 +48,8 @@ export type ConversationEvent =
       connection?: AbortSignal;
     }
   | { type: 'call.end'; reason: ConversationEnd; sessionId?: string }
-  | { type: 'call.answered'; answer: string }
+  // `canLook`: whether the provider's call can be given a picture of the screen.
+  | { type: 'call.answered'; answer: string; canLook: boolean }
   | { type: 'call.failed'; message: string }
   | { type: 'call.sessionGone'; reason: SessionGoneReason }
   // The Session's Turn started or stopped running.

@@ -150,10 +150,6 @@ _Avoid_: Contribution point, hook, outlet
 The kit components a Plugin's Render answers for one page or Slot, as a value the App fetches, keeps and draws. Everything drawn inside it is the Plugin's, so its Actions cannot claim Argo's reserved shortcuts. The App keeps a page's last one in memory and draws it while the page is fetched again. See ADR-0050.
 _Avoid_: Wire tree, Plugin UI
 
-**Single-owner Slot**:
-An items Slot only one source shows at a time, such as a Session row's Activity line. Every Plugin that declares it answers; the App shows the answer of the one Plugin the user chose in Settings on that Device, or Argo's own while none is chosen or the chosen Plugin is turned off or has no answer.
-_Avoid_: Part, takeover, exclusive Slot
-
 **Last good items**:
 The items a Plugin last answered for each context of an items Slot, kept by the Engine across change signals and restarts. While the Plugin's answer is late, fails or it is not running yet, a list draws these instead, so a Session row keeps its pull requests; a late answer that lands after all replaces them. They are dropped when the Plugin is turned off or removed.
 _Avoid_: Cached items, stale items
@@ -459,6 +455,10 @@ _Avoid_: Voice provider, realtime provider, voice backend
 **Preview clip**:
 A voice's one-line greeting as the App recorded it from the voice's first preview, kept on the Server and replayed by the App with no Conversation provider call. It is kept by the provider, the voice, its description and the name it greets with. It is the only audio the App hands to the Server.
 _Avoid_: Sample, voice recording, cached preview
+
+**Screen sight**:
+Letting an Agent or the voice of a Voice call see the person's whole screen as one still picture, taken by the desktop App when asked. Nothing asks the person before a capture. Off until the person turns it on for the Device, shown to the person as one Notice, and never stored.
+_Avoid_: Screen share, screen capture, screenshot (for the feature; `app.screenshot` is the Operation)
 
 **Stored Turn**:
 A Turn as read back from storage, before the Writer's queued changes are laid over it.

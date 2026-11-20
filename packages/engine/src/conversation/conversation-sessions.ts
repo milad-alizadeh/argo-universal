@@ -23,11 +23,12 @@ type SnapshotEvent = Extract<
   { type: 'snapshot' | 'closed' }
 >;
 
-// What the Conversation reaches its Session's work through: the Engine's own Sessions.
+// What the Conversation reaches its Session's work through: the Engine's own Sessions, and a picture of the screen.
 export type ConversationSessionWork = Pick<
   Sessions,
   'promptFromConversation' | 'stopFromConversation' | 'watchTurns'
->;
+> &
+  Pick<ConversationSessions, 'capture'>;
 
 // Listens to one Session's Feed for the Agent's and the person's words, following it when the Session replaces its Feed actor, and to its Permission requests.
 class FeedWatch {
@@ -131,6 +132,12 @@ const watchOf =
     };
   };
 
+// Writes a Notice into a Session's Feed, outside any Turn; the Conversation and a screen capture both write theirs this way.
+export const feedNotices =
+  (sources: Pick<FeedSources, 'findFeed'>): ConversationSessions['notice'] =>
+  (sessionId, notice) =>
+    sources.findFeed(sessionId)?.send(noticeEvent(notice));
+
 // The Session the Conversation speaks for, reached through the Engine's own Prompt path, its Turn happenings and its Feed.
 export const conversationSessions = (
   sources: FeedSources,
@@ -138,7 +145,7 @@ export const conversationSessions = (
 ): ConversationSessions => ({
   prompt: (sessionId, text) => work.promptFromConversation(sessionId, text),
   stop: (sessionId) => work.stopFromConversation(sessionId),
+  capture: (sessionId) => work.capture(sessionId),
   watch: watchOf(sources, work),
-  notice: (sessionId, notice) =>
-    sources.findFeed(sessionId)?.send(noticeEvent(notice)),
+  notice: feedNotices(sources),
 });

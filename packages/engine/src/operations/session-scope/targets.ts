@@ -46,6 +46,15 @@ const openingSessionParam = <Params extends { sessionId: string }>(
   params,
 });
 
+// The picture is the calling Session's own: it takes no params and reaches nothing but that Session, so an Agent's call needs no ask.
+const ownSession = <Params>(
+  params: Params,
+  caller: SessionCaller,
+): Targeted<Params> => ({
+  target: { kind: 'session', sessionId: caller.sessionId, opening: false },
+  params,
+});
+
 // A Session lists its own Project's Sessions unless it names another Project.
 const listedProject: TargetRule<OperationParams<'session.list'>> = (
   params,
@@ -83,6 +92,7 @@ const openedScreen: TargetRule<OperationParams<'app.open'>> = (params) => ({
 // Every Operation names its target when it enters the registry.
 const targetRules = {
   'app.open': openedScreen,
+  'app.screenshot': ownSession,
   'project.list': global,
   'project.add': global,
   'project.clone': global,

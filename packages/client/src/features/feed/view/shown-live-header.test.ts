@@ -61,7 +61,7 @@ describe('shownLiveHeader', () => {
     },
   );
 
-  // A settled group has only a counts summary, so it takes the header as its title and says what the Session row's activity line says (#1410).
+  // A settled group has only a counts summary, so it takes the header as its title while the Turn runs (#1410).
   it.each([
     { source: { type: 'tool_call', toolCallId: 'tool' } as const },
     { source: { type: 'working' } as const },
