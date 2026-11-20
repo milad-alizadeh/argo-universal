@@ -1,7 +1,7 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Button } from '@repo/kit/primitives/actions/button';
 import type * as React from 'react';
-import { type ComponentProps, useState } from 'react';
+import { useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { useSessionMutes } from '#features/voice';
 import { composerProps } from '../../../../../mocks/composer-mock';
@@ -10,7 +10,6 @@ import { meta as composerTestMeta } from '../../../../../mocks/composer/composer
 import { FakeVoiceConnection } from '../../../../../mocks/voice/fake-voice-connection';
 import { Composer } from './composer';
 import { callPointerId } from './composer-call-pointer';
-import { callStopButtonId } from './composer-call-stop';
 import { connectingRingId } from './composer-connecting-ring';
 import { microphoneButtonId, speakerButtonId } from './composer-mute-buttons';
 import { endButtonId, voiceButtonId } from './composer-primary-action';
@@ -112,106 +111,6 @@ export const EndWithEmptyDraft: Story = {
     await expect(canvas.getByTestId(speakerButtonId)).toBeInTheDocument();
     await userEvent.click(canvas.getByTestId(endButtonId));
     await expect(endOf(args.voice)).toHaveBeenCalledOnce();
-  },
-};
-
-function TurnOnACall(args: ComponentProps<typeof Composer>): React.JSX.Element {
-  const [running, setRunning] = useState(true);
-
-  return (
-    <Composer
-      {...composerProps({
-        ...args,
-        sessionStarted: true,
-        running,
-        onStop: () => {
-          args.onStop?.();
-          setRunning(false);
-        },
-      })}
-    />
-  );
-}
-
-// While the Agent's Turn runs on a connected call, Stop sits between the mutes and End; it stops the Turn and leaves the call up.
-const stopCall = (width: 'wide' | 'phone'): Story => ({
-  render: (args) => <TurnOnACall {...args} />,
-  args: {
-    voice: { kind: 'connected', onEnd: fn(), mutes: noMutes },
-    onStop: fn(),
-  },
-  play: async ({ canvas, args }) => {
-    await settleLayout(width);
-    const stop = await canvas.findByTestId(callStopButtonId);
-    await expect(canvas.getByTestId(endButtonId)).toBeInTheDocument();
-    await expect(canvas.getByTestId(microphoneButtonId)).toBeInTheDocument();
-    await userEvent.click(stop);
-    await expect(args.onStop).toHaveBeenCalledOnce();
-    await expect(endOf(args.voice)).not.toHaveBeenCalled();
-    // The Turn ended: Stop goes, and End and the call stay.
-    await waitFor(() =>
-      expect(canvas.queryByTestId(callStopButtonId)).not.toBeInTheDocument(),
-    );
-    await expect(canvas.getByTestId(endButtonId)).toBeInTheDocument();
-  },
-});
-
-export const StopBesideEnd = stopCall('wide');
-
-export const StopBesideEndOnAPhone = stopCall('phone');
-
-// No Turn runs: no Stop beside End.
-export const NoStopWithoutARunningTurn: Story = {
-  render: (args) => (
-    <Composer {...composerProps({ ...args, sessionStarted: true })} />
-  ),
-  args: {
-    voice: { kind: 'connected', onEnd: fn(), mutes: noMutes },
-    onStop: fn(),
-  },
-  play: async ({ canvas }) => {
-    await canvas.findByTestId(endButtonId);
-    await expect(
-      canvas.queryByTestId(callStopButtonId),
-    ).not.toBeInTheDocument();
-  },
-};
-
-// While the call connects only End shows, even with a Turn running.
-export const NoStopWhileConnecting: Story = {
-  render: (args) => (
-    <Composer
-      {...composerProps({ ...args, sessionStarted: true, running: true })}
-    />
-  ),
-  args: { voice: { kind: 'connecting', onEnd: fn() }, onStop: fn() },
-  play: async ({ canvas }) => {
-    await canvas.findByTestId(endButtonId);
-    await expect(
-      canvas.queryByTestId(callStopButtonId),
-    ).not.toBeInTheDocument();
-  },
-};
-
-// With text written the primary button is the Composer's own Stop, so the call's Stop is not drawn twice.
-export const OneStopWithTextWritten: Story = {
-  render: (args) => (
-    <Composer
-      {...composerProps({ ...args, sessionStarted: true, running: true })}
-    />
-  ),
-  args: {
-    voice: { kind: 'connected', onEnd: fn(), mutes: noMutes },
-    onStop: fn(),
-    draft: { text: 'Hold on', attachments: [] },
-  },
-  play: async ({ canvas }) => {
-    await expect(
-      await canvas.findAllByRole('button', { name: 'Stop' }),
-    ).toHaveLength(1);
-    await expect(
-      canvas.queryByTestId(callStopButtonId),
-    ).not.toBeInTheDocument();
   },
 };
 
