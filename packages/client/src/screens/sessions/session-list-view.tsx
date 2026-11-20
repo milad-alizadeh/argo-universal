@@ -35,7 +35,7 @@ export interface SessionListViewProps {
   selectedSessionId?: string;
   // What the Plugins add to each row under this Device's choices, and the page an item opens.
   plugins?: SessionsListPlugins;
-  // The live Voice call, marked on the row of the Session it is attached to; none without a call.
+  // The live Conversation, marked on the row of the Session it is attached to; none without a call.
   call?: SessionRowCall | null;
   onSelect: (sessionId: string) => void;
   // Desktop and the web: a row's double-click or context menu asks to rename its Session.

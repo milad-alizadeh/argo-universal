@@ -10,4 +10,6 @@ export const mediaSymbols = {
   play: { sf: 'play.fill', material: 'play_arrow' },
   speaker: { sf: 'speaker.wave.2', material: 'volume_up' },
   'speaker-off': { sf: 'speaker.slash', material: 'volume_off' },
+  // The filled square that stops a sound playing, such as the Speaker's test sound, drawn filled as play is.
+  stop: { sf: 'stop.fill', material: 'stop' },
 } as const;

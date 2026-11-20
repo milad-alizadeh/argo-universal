@@ -144,7 +144,7 @@ const start = (): void => {
 
   if (!webDevelopmentUrl) handleAppProtocol(webExportDirectory);
 
-  // The microphone a Voice call listens through: asked for on first use, and only by the App's own page. The session exists only once the app is ready.
+  // The microphone a Conversation listens through: asked for on first use, and only by the App's own page. The session exists only once the app is ready.
   answerAppPermissionRequests(session.defaultSession, windowOrigin);
   // The screen picture for screen sight, taken here and handed to the App's own page only.
   handleScreenCapture(windowOrigin);

@@ -42,7 +42,7 @@ function compactDetail(props: CompactEndProps): React.ReactNode {
   return timeOf(quietAge(props));
 }
 
-// The status dot, or the Voice call's mark in its place while a call is attached.
+// The status dot, or the Conversation's mark in its place while a call is attached.
 const compactStatus = (
   props: CompactEndProps & CalledRowProps,
 ): React.ReactNode =>
@@ -99,7 +99,7 @@ function changeLabel(props: SessionRowProps): string {
   return `${label}, ${changeDescription(pullRequest)} Change`;
 }
 
-// The label ends on the Voice call while one is attached.
+// The label ends on the Conversation while one is attached.
 const compactLabel = (props: CalledCompactRow): string =>
   withCallLabel(changeLabel(props), props.call);
 

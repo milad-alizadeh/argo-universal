@@ -5,7 +5,7 @@ const descriptionLimit = 2000;
 
 const labelLimit = 60;
 
-// A voice a Voice provider speaks with; `description` only where the provider publishes one.
+// A voice a Conversation provider speaks with; `description` only where the provider publishes one.
 export const VoiceOption = z.strictObject({
   id: z.string().min(1),
   label: z.string().min(1),
@@ -74,14 +74,14 @@ export type CustomVoiceId = z.infer<typeof CustomVoiceId>;
 // Longest custom instructions kept; they are sent with every call.
 const instructionsLimit = 4000;
 
-// Input of `voice.setInstructions`: an empty text removes them.
+// Input of `conversation.setInstructions`: an empty text removes them.
 export const VoiceInstructions = z.strictObject({
   instructions: z
     .string()
     .trim()
     .max(instructionsLimit)
     .describe(
-      "What every Voice call is told after Argo's own instructions; empty for none.",
+      "What every Conversation is told after Argo's own instructions; empty for none.",
     ),
 });
 

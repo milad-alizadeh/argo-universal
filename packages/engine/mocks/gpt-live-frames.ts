@@ -58,6 +58,13 @@ export const usageUpdated =
   '{"type":"session.usage.updated","usage":{"audio_duration_ms":11800,"backend_model_usage":[]},"usage_limit":{"status":null,"reset_seconds":null}}';
 
 /*
+ * The allowance running out, as the usage report would carry it. The recorded calls never had a limit status, so the
+ * status and reset time here are stand-ins in the recorded shape.
+ */
+export const usageLimited =
+  '{"type":"session.usage.updated","usage":{"audio_duration_ms":11800,"backend_model_usage":[]},"usage_limit":{"status":"limit_reached","reset_seconds":3600}}';
+
+/*
  * How the live service closed calls on its own (#2405 probes, 2026-11-19). With no audio reaching it, it sent
  * `session.closed` with `expired` about 30 s in, then dropped the link without a close frame (1006); a dropped
  * peer connection dropped the link the same way with no `session.closed` at all. A link asked for again after either

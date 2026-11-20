@@ -42,7 +42,7 @@ const bubbleClassName =
 
 interface BubbleProps {
   text: string;
-  // The words are still being said (a Voice call's transcript), so they are drawn as a partial.
+  // The words are still being said (a Conversation's transcript), so they are drawn as a partial.
   partial?: boolean;
 }
 

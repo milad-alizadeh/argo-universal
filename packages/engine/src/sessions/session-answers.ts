@@ -1,4 +1,6 @@
 import type {
+  PendingPermission,
+  PermissionOptionKind,
   SessionAnswerElicitationInput,
   SessionAnswerElicitationOutput,
   SessionAnswerPermissionInput,
@@ -8,6 +10,7 @@ import {
   acceptedElicitationContent,
   validateElicitationAnswer,
   validatePermissionAnswer,
+  waitingPermission,
 } from './session-admission';
 import { requireWritableSession, sendSessionCommand } from './session-command';
 import type { SessionActorRef } from './session-machine';
@@ -38,6 +41,45 @@ export const answerSessionPermission = (
   });
 
   return {};
+};
+
+// How a spoken answer landed: applied, too late because the request no longer waits, or not an option the Agent offered.
+export type SpokenPermissionOutcome = 'answered' | 'settled' | 'not-offered';
+
+type SpokenPermissionAnswer = {
+  sessionId: string;
+  requestId: string;
+  kind: Extract<PermissionOptionKind, 'allow_once' | 'reject_once'>;
+};
+
+// The waiting request's option of the spoken kind, applied through the click's own procedure.
+const answerWaiting = (
+  sources: AnswerSources,
+  request: PendingPermission,
+  { sessionId, kind }: SpokenPermissionAnswer,
+): SpokenPermissionOutcome => {
+  const option = request.options.find((offered) => offered.kind === kind);
+
+  if (!option) return 'not-offered';
+
+  answerSessionPermission(sources, {
+    sessionId,
+    requestId: request.requestId,
+    optionId: option.optionId,
+  });
+
+  return 'answered';
+};
+
+// A spoken answer (ADR-0064), for the request while it is the one waiting.
+export const answerSessionPermissionBySpeech = (
+  sources: AnswerSources,
+  answer: SpokenPermissionAnswer,
+): SpokenPermissionOutcome => {
+  const { sessionId, requestId } = answer;
+  const request = waitingPermission(sources.open.session(sessionId), requestId);
+
+  return request ? answerWaiting(sources, request, answer) : 'settled';
 };
 
 export const answerSessionElicitation = (

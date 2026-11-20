@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { fn, within } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
+import { FieldGroup } from '#primitives/fields/field-group';
 import { FieldPicker } from './field-picker';
+import { fixedMeter } from './field-picker-accessory-fixtures';
 import {
   ControlledScreen,
   ControlledPicker,
@@ -102,4 +104,34 @@ export const ScreenRows: Story = {
   name: 'Screen rows',
   args: { ...screenWithSearch, onValueChange: fn() },
   render: (args) => <ControlledScreen {...args} />,
+};
+
+/*
+ * A row that tests its own choice ends in one small round button, and a row that measures its device shows a level
+ * glyph before it; a glyph's row with no button keeps the button's lane, so the glyphs line up (ADR-0042, 2026-11-19).
+ */
+export const TestButtonAndLevel: Story = {
+  name: 'Test button and level',
+  args: { ...menu, onValueChange: fn() },
+  render: (args) => (
+    <FieldGroup>
+      <FieldGroup.Section title="Devices">
+        <ControlledPicker
+          {...args}
+          title="Microphone"
+          meter={fixedMeter(0.6)}
+        />
+        <ControlledPicker
+          {...args}
+          title="Speaker"
+          meter={fixedMeter(0)}
+          accessory={{
+            icon: 'play',
+            label: 'Play a test sound',
+            onPress: fn(),
+          }}
+        />
+      </FieldGroup.Section>
+    </FieldGroup>
+  ),
 };

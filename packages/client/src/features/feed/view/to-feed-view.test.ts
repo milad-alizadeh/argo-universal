@@ -117,7 +117,7 @@ describe.each(workMocks)('command actions for $agent', ({ rows, snapshot }) => {
 });
 
 it.each(workMocks)(
-  'draws a Prompt from a Plugin but never one from a Voice call for $agent',
+  'draws a Prompt from a Plugin but never one from a Conversation for $agent',
   ({ rows, snapshot }) => {
     const source = commandRow(rows);
 
@@ -131,7 +131,7 @@ it.each(workMocks)(
       sessionUpdate: 'prompt_message',
       messageId: 'prompt',
       content: [{ type: 'text', text: 'Fix the build' }],
-      _meta: { argo: { sender: { type: 'voice' } } },
+      _meta: { argo: { sender: { type: 'conversation' } } },
     };
 
     const plugin: PromptMessage = {

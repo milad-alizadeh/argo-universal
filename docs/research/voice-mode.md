@@ -409,6 +409,8 @@ Hand-overs reaching Argo after the announcement, per spoken answer:
 
 ### What would work instead, for the owner to decide
 
+Decided 2026-11-20 (#2412): Argo reads the answer, as below. ADR-0064's amendment "Argo reads a Spoken answer" records the rules.
+
 Argo, not the voice, would read the answer: a hand-over is accepted as an answer only when it names a person's turn heard after the announcement, while that one announced request still waits, and its words match a short list Argo owns (allow once, reject). Anything else leaves the request open and the voice is told so. Argo's reply tells the voice the outcome, and the voice repeats it. "Stop" would need the same reading, and a lone "stop" would still never arrive. The scripts and results are in `/tmp/argo-voice-dev/consent` on the spike machine.
 
 ## 15. Spike 4: does GPT-Live take an image? (2026-11-19, #2473)
