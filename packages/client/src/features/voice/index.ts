@@ -30,4 +30,4 @@ export {
   type VoiceEdgeBandProps,
 } from './components/voice-edge-band/voice-edge-band';
 
-export { type ListedCall, useListedCall } from './use-listed-call';
+export { useListedCall } from './use-listed-call';
