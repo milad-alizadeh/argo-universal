@@ -2,6 +2,7 @@ import type { ComponentType, ReactElement, ReactNode } from 'react';
 import { isMarkedElement, markedComponent } from '#kit/component-mark';
 import { useInMenu } from '#kit/list-place';
 import { useRowPressable } from '#primitives/fields/field-row';
+import { PickerRowEnd } from './field-picker-accessory';
 import { pickerDrawing } from './field-picker-drawing';
 import { FieldPickerDrill } from './field-picker-drill';
 import { pickerKind, rowProps, type PickerKind } from './field-picker-kind';
@@ -39,7 +40,11 @@ export function FieldPicker(
 
   useRowPressable(!props.disabled && kind !== 'inline');
 
-  return <Drawing {...props} />;
+  return (
+    <PickerRowEnd accessory={props.accessory} meter={props.meter}>
+      <Drawing {...props} />
+    </PickerRowEnd>
+  );
 }
 
 const mark = 'FieldPicker';

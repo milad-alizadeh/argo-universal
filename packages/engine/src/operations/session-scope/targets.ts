@@ -1,7 +1,11 @@
 import type { OperationId } from '@repo/contracts/operations';
 import type { OperationParams } from '../implementations';
 import type { SessionCaller } from '../session-tokens';
-import { callerSessionParam, ownSessionOnly } from './caller-session-targets';
+import {
+  callerSessionParam,
+  ownSession,
+  ownSessionOnly,
+} from './caller-session-targets';
 import { openedScreen } from './opened-screen-target';
 
 // What an Operation reaches: nothing in particular, one Project, or one Session.
@@ -44,15 +48,6 @@ const openingSessionParam = <Params extends { sessionId: string }>(
   params: Params,
 ): Targeted<Params> => ({
   target: { kind: 'session', sessionId: params.sessionId, opening: true },
-  params,
-});
-
-// The picture is the calling Session's own: it takes no params and reaches nothing but that Session, so an Agent's call needs no ask.
-const ownSession = <Params>(
-  params: Params,
-  caller: SessionCaller,
-): Targeted<Params> => ({
-  target: { kind: 'session', sessionId: caller.sessionId, opening: false },
   params,
 });
 
@@ -129,21 +124,23 @@ const targetRules = {
   'plugin.setEnabled': global,
   'plugin.getSettings': global,
   'plugin.setSetting': global,
-  'voice.status': global,
-  'voice.listDevices': global,
-  'voice.chooseDevices': global,
-  'voice.start': sessionParam,
-  'voice.getSettings': global,
-  'voice.setSettings': global,
+  'conversation.status': global,
+  'conversation.listDevices': global,
+  'conversation.chooseDevices': global,
+  'conversation.start': sessionParam,
+  'conversation.getSettings': global,
+  'conversation.setSettings': global,
   'voice.listVoices': global,
   'voice.saveCustomVoice': global,
   'voice.setVoice': global,
   'voice.deleteCustomVoice': global,
-  'voice.setInstructions': global,
-  'voice.setCallOptions': global,
+  'conversation.setInstructions': global,
+  'conversation.setOptions': global,
   'voice.preview': global,
-  'voice.end': callerSessionParam,
-  'voice.hangUp': ownSessionOnly,
+  'voice.getPreviewClip': global,
+  'voice.storePreviewClip': global,
+  'conversation.end': callerSessionParam,
+  'conversation.hangUp': ownSessionOnly,
 } satisfies TargetRules;
 
 const targets: TargetRules = targetRules;

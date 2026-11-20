@@ -5,11 +5,13 @@ import { listOperations } from './search';
 const appOnly = new Set([
   'session.submit',
   'session.queue',
-  'voice.status',
-  'voice.start',
-  'voice.end',
-  'voice.setSettings',
+  'conversation.status',
+  'conversation.start',
+  'conversation.end',
+  'conversation.setSettings',
   'voice.preview',
+  'voice.getPreviewClip',
+  'voice.storePreviewClip',
 ]);
 
 it('lists every Operation but the App-only ones with its description, enabled', () => {

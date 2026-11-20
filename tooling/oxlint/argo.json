@@ -261,6 +261,7 @@
         "packages/kit/src/symbols/**",
         "packages/kit/src/primitives/fields/field-link/field-link.ios.tsx",
         "packages/kit/src/primitives/fields/field-picker/field-picker-screen-row.ios.tsx",
+        "packages/kit/src/primitives/fields/field-picker/field-picker-accessory.ios.tsx",
         "packages/kit/src/primitives/overlays/menu/context-menu-swift-items.ios.tsx",
         "packages/kit/src/primitives/overlays/sheet/sheet-screen-toolbar.ios.tsx",
         "packages/kit/src/primitives/actions/icon-button/icon-button.ios.tsx",
@@ -308,7 +309,7 @@
     {
       // The GPT-Live provider is the one place that talks to Codex for a ChatGPT token (ADR-0064).
       "files": [
-        "packages/engine/src/voice/gpt-live/**",
+        "packages/engine/src/conversation/gpt-live/**",
         "packages/engine/mocks/fake-codex*",
         "packages/engine/mocks/gpt-live-*"
       ],
@@ -2479,7 +2480,7 @@
         "**/mocks/**",
         "packages/engine/src/system/info.ts",
         "packages/engine/src/engine/caffeinate.ts",
-        "packages/engine/src/voice/gpt-live/app-server-ask.ts",
+        "packages/engine/src/conversation/gpt-live/app-server-ask.ts",
         "packages/engine/src/plugins/host/connection.ts",
         "packages/engine/src/plugins/accounts/platform-opener.ts",
         "packages/engine/src/plugins/services/plugin-processes.ts",

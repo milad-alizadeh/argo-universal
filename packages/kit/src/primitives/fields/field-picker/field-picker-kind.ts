@@ -37,7 +37,7 @@ const kindOfPresentation = (
 
 export type PickerRowProps = Pick<
   FieldPickerProps,
-  'title' | 'leading' | 'disabled'
+  'title' | 'leading' | 'disabled' | 'accessory'
 > & {
   // The chosen option's logo, which the row leads with in place of `leading`.
   logo?: string;
@@ -83,4 +83,5 @@ export const rowProps = (props: PickerProps): PickerRowProps => ({
   logo: chosenLogo(props),
   summary: choiceSummary(props),
   disabled: props.disabled,
+  accessory: props.accessory,
 });

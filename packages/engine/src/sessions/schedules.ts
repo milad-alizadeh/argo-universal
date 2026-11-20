@@ -1,4 +1,4 @@
-import type { NonUserPromptSender } from '@repo/contracts';
+import type { SentPromptSender } from '@repo/contracts';
 import { startSchedule, type ScheduleActor } from './schedule-machine';
 import {
   ScheduleStore,
@@ -96,7 +96,7 @@ export class Schedules {
 
 const scheduleSender = (
   scheduleId: string,
-): Extract<NonUserPromptSender, { type: 'schedule' }> => ({
+): Extract<SentPromptSender, { type: 'schedule' }> => ({
   type: 'schedule',
   title: 'Schedule',
   scheduleId,

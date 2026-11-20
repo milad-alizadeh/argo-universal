@@ -21,8 +21,8 @@ import { ComposerTypography } from './composer-typography';
 export type {
   ComposerDraft,
   ComposerProps,
-  ComposerVoice,
-  ComposerVoiceMutes,
+  ComposerConversation,
+  ComposerConversationMutes,
 } from './composer-types';
 
 export type { ComposerAttachment } from '../composer-attachment-card/composer-attachment-card';

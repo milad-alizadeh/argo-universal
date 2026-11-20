@@ -16,6 +16,7 @@ import type { SessionContext } from './session-context';
 import type { SessionActorRef } from './session-machine';
 import { createQueuedSessionReader } from './session-record';
 import type { SessionSources } from './session-sources';
+import type { TurnHappening } from './turn-happenings';
 
 type SessionOpening = Exclude<
   OpenSessionsCommand,
@@ -76,6 +77,19 @@ export class OpenSessions {
     const actor = openSessionActor(this.actor.getSnapshot().context, sessionId);
 
     return actor?.getSnapshot().status === 'active' ? actor : undefined;
+  }
+  // Whether the Session has a Turn running; a Session that is not open runs none.
+  public isRunning(sessionId: string): boolean {
+    return this.session(sessionId)?.getSnapshot().hasTag('running') ?? false;
+  }
+  // Hears what an open Session reports of its Turns until the returned function is called; a closed Session reports none.
+  public watchTurns(
+    sessionId: string,
+    listener: (happening: TurnHappening) => void,
+  ): () => void {
+    const subscription = this.session(sessionId)?.on('*', listener);
+
+    return (): void => subscription?.unsubscribe();
   }
   public context(sessionId: string): SessionContext | undefined {
     return this.session(sessionId)?.getSnapshot().context;

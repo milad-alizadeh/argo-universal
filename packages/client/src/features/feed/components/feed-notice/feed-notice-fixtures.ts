@@ -36,11 +36,11 @@ export const missingArgoToolsNotice = {
   },
 } satisfies FeedNoticeProps;
 
-// The Engine's one Notice when a Voice call ends by failure, written outside any Turn.
-export const voiceCallFailedNotice = {
+// The Engine's one Notice when a Conversation ends by failure, written outside any Turn.
+export const conversationFailedNotice = {
   row: {
     ...noticeOf('warning'),
-    title: 'Voice call failed',
+    title: 'Conversation failed',
     description: 'The connection to the voice failed.',
   },
 } satisfies FeedNoticeProps;

@@ -10,6 +10,8 @@ Expo UI's universal `List` doesn't replace LegendList for data: on web it is a p
 
 ## Decision
 
+**Owner amendment, 2026-11-19:** a `FieldGroup.Picker` row may end in one small round icon button, after its value: its `accessory` (an icon, a label and a press). It is for a direct test or preview of the row's own choice, such as hearing the voice a custom voice speaks with or a speaker's test sound, so the person need not leave the row to check what they chose. The row's own press still opens the picker; the button is a second target beside it, reached by keyboard and named for screen readers on its own. A row that measures the device it chooses, such as Settings › Voice's Microphone and Speaker, may also show a small level glyph before the button, and keeps the button's lane when it has no button so its glyph lines up with the next row's. Both are the App's own, added as `emptyText` and `create` are: a Plugin's wire has no such props, so the contract and its version do not change (ADR-0034). No other row takes either. This amends "A row has no free Slots" below and ADR-0033's "Settings rows never take a `Button`" for this one case.
+
 **Owner amendment, 2026-11-02:** Agent and Background Task grouped data rows may use `FieldGroup.Link` with a secondary line and a reusable badged leading symbol. This keeps their status and supporting information in native grouped lists on iOS and Android; web uses the grouped List fallback. Settings rows keep the one-line default below.
 
 - **`FieldGroup`** holds a page's fixed set of rows: Project details, Connection, Plugin settings and short choice sheets.

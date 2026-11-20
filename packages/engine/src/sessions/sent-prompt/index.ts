@@ -1,27 +1,28 @@
-import type { NonUserPromptSender, SessionPromptInput } from '@repo/contracts';
+import type { SentPromptSender, SessionPromptInput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
-import { PromptWatch, type PromptPlace } from '../prompt-turn';
+import type { PromptSend } from '../prompt-sender';
+import {
+  PromptWatch,
+  type FollowedPrompt,
+  type PromptPlace,
+} from '../prompt-turn';
 import type { PromptLanding } from '../session-prompt';
 import { landPrompt, type SendSources } from './landing';
 import { queueEvent } from './queue';
 
 export { withdrawPrompt } from './withdraw';
 
-/*
- * Who sends the Prompt; the id it takes, as its Turn's id or, queued, as its queued id, which a new one is made for
- * when the caller has none; and the caller's budget, which also stops its admission.
- */
-export type SendRequest = {
-  sender: NonUserPromptSender;
+// A Sent Prompt's send; a new id is made for it when the caller has none.
+export type SendRequest = Omit<PromptSend<SentPromptSender>, 'id'> & {
   id?: string;
-  signal?: AbortSignal;
 };
 
 /*
- * Where a Sent Prompt landed, followed into the Turn that holds it. `ended` settles with that Turn's id when it
- * ends, or with null when the Prompt left the queue, or was dropped, without a Turn; it never rejects.
+ * Where a Sent Prompt landed, followed into the Turn that holds it. `started` settles once a Turn holds it, true, or
+ * false when it left the queue, or was dropped, without one. `ended` settles with that Turn's id when it ends, or
+ * with null when no Turn held it. Neither rejects.
  */
-export type SentPrompt = PromptLanding & { ended: Promise<string | null> };
+export type SentPrompt = PromptLanding & FollowedPrompt;
 
 // A Sent Prompt that no Hook dropped.
 export type TakenPrompt = Exclude<SentPrompt, { status: 'dropped' }>;
@@ -34,16 +35,18 @@ const placeOf = (landing: PromptLanding): PromptPlace | null => {
     : { turnId: landing.turnId };
 };
 
-function followed(
-  watch: PromptWatch,
-  landing: PromptLanding,
-): Promise<string | null> {
+const neverHeld: FollowedPrompt = {
+  started: Promise.resolve(false),
+  ended: Promise.resolve(null),
+};
+
+function followed(watch: PromptWatch, landing: PromptLanding): FollowedPrompt {
   const place = placeOf(landing);
 
-  if (place) return watch.ended(place);
+  if (place) return watch.follow(place);
   watch.stop();
 
-  return Promise.resolve(null);
+  return neverHeld;
 }
 
 // Lands the Prompt; a refusal stops hearing the Session, since no Prompt is left to follow.
@@ -76,10 +79,10 @@ export async function sendPrompt(
   const sending = { ...request, input, id };
   const landing = await landWatched(watch, sources, session, sending);
 
-  return { ...landing, ended: followed(watch, landing) };
+  return { ...landing, ...followed(watch, landing) };
 }
 
-// A Plugin's and the Voice call's Prompt that a Hook dropped is refused, saying why; another Session's says it was dropped.
+// A Plugin's and the Conversation's Prompt that a Hook dropped is refused, saying why; another Session's says it was dropped.
 export function requireTaken(sent: SentPrompt): TakenPrompt {
   if (sent.status !== 'dropped') return sent;
 

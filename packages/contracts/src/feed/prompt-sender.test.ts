@@ -20,7 +20,7 @@ it('reads existing human rows without sender metadata', () => {
 it.each([
   { type: 'session', sessionId: 'reviewer', title: 'Review changes' },
   { type: 'plugin', pluginId: 'automation', title: 'Automation' },
-  { type: 'voice' },
+  { type: 'conversation' },
 ])('reads a stored $type Prompt with its sender identity', (sender) => {
   const row = {
     ...storedHuman,

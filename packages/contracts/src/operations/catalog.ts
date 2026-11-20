@@ -3,19 +3,21 @@ import { operations, type OperationDefinition } from '.';
 import { operationJsonSchema } from './schema-json';
 
 /*
- * Operations only an App runs: the person's own Queued Prompts, and the Voice call, which carries the App's sound
- * and ends when its Connection does (ADR-0064). An Agent hangs up with `voice.hangUp`, and Agents and the CLI read
- * the Voice settings and change the voice and instructions the next call uses; turning Voice calls on or off and
+ * Operations only an App runs: the person's own Queued Prompts, and the Conversation, which carries the App's sound
+ * and ends when its Connection does (ADR-0064). An Agent hangs up with `conversation.hangUp`, and Agents and the CLI read
+ * the Conversation settings and change the voice and instructions the next call uses; turning Conversations on or off and
  * choosing the provider stay the App's.
  */
 export const appOnlyOperationIds: ReadonlySet<string> = new Set([
   'session.submit',
   'session.queue',
-  'voice.status',
-  'voice.start',
-  'voice.end',
-  'voice.setSettings',
+  'conversation.status',
+  'conversation.start',
+  'conversation.end',
+  'conversation.setSettings',
   'voice.preview',
+  'voice.getPreviewClip',
+  'voice.storePreviewClip',
 ] satisfies (keyof typeof operations)[]);
 
 type JsonSchema = z.core.JSONSchema.JSONSchema;

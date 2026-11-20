@@ -5,6 +5,11 @@ import type { AcpResourceInput } from '../agents';
 import { type AgentsRouterDeps } from '../agents';
 import type { AppNavigationDeps } from '../app-navigation';
 import type { BlobUploadDeps } from '../blob';
+import {
+  feedNotices,
+  noConversations,
+  type ConversationsPort,
+} from '../conversation';
 import type { DevicesDeps } from '../devices';
 import { type FeedDeps } from '../feed';
 import type { NetworkAccessDeps } from '../network-access';
@@ -21,7 +26,6 @@ import {
   type SessionSources,
 } from '../sessions';
 import type { SystemDeps } from '../system';
-import { feedNotices, noVoiceCalls, type VoiceCallsPort } from '../voice';
 import {
   createFeedSources,
   type FeedSources,
@@ -45,7 +49,7 @@ export type AppRouterDeps = SessionSources &
     sessionTokens: SessionTokens;
     controlToken: string;
     plugins: PluginsRouterDeps;
-    voice: VoiceCallsPort;
+    conversation: ConversationsPort;
     operationWaitClock?: OperationWaitClock;
   };
 
@@ -54,7 +58,7 @@ type EngineSupplied =
   | keyof FeedDeps
   | 'createId'
   | 'userHome'
-  | 'voice'
+  | 'conversation'
   | 'screenSight'
   | 'dropAgentConnections'
   | 'sessionConnections'
@@ -63,7 +67,10 @@ type EngineSupplied =
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
   Partial<
-    Pick<AppRouterDeps, 'createId' | 'userHome' | 'voice' | 'screenSight'>
+    Pick<
+      AppRouterDeps,
+      'createId' | 'userHome' | 'conversation' | 'screenSight'
+    >
   > & {
     acp?: AcpResourceInput;
   };
@@ -106,22 +113,22 @@ type AgentSetup = Pick<
   AppRouterDeps,
   | 'createId'
   | 'userHome'
-  | 'voice'
+  | 'conversation'
   | 'screenSight'
   | 'dropAgentConnections'
   | 'sessionConnections'
   | 'installedAgents'
 >;
 
-const voiceOf = (input: AppRouterInput): VoiceCallsPort =>
-  input.voice ?? noVoiceCalls;
+const conversationOf = (input: AppRouterInput): ConversationsPort =>
+  input.conversation ?? noConversations;
 
-// What the Engine's callers reach the Voice call and the screen through.
+// What the Engine's callers reach the Conversation and the screen through.
 const portsOf = (
   input: AppRouterInput,
   sources: Pick<FeedSources, 'findFeed'>,
-): Pick<AppRouterDeps, 'voice' | 'screenSight'> => ({
-  voice: voiceOf(input),
+): Pick<AppRouterDeps, 'conversation' | 'screenSight'> => ({
+  conversation: conversationOf(input),
   screenSight: screenSightOf(input, sources),
 });
 

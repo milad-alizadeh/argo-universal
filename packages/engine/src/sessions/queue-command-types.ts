@@ -1,4 +1,4 @@
-import type { NonUserPromptSender, QueueCommand } from '@repo/contracts';
+import type { SentPromptSender, QueueCommand } from '@repo/contracts';
 import type { WriterJob } from '../storage';
 import type { QueueSteeringCommand } from './queue-steering/types';
 import type { SessionContext } from './session-context';
@@ -30,7 +30,7 @@ export type QueueSessionCommand =
       connectionSignal?: AbortSignal;
       command: ServerQueueCommand;
       // Set by the Server for a Plugin's Prompt; an App's command never carries one (ADR-0055).
-      sender?: NonUserPromptSender;
+      sender?: SentPromptSender;
       // The id a Plugin's appended Prompt takes, chosen by the Server so the Plugin can withdraw it.
       queuedId?: string;
       // Stored atomically with admission of a scheduled Prompt.
