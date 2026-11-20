@@ -4,6 +4,7 @@ import {
   recordedAgentMessage,
   recordedUserMessage,
 } from '../../../../lib/product/feed-message.mocks';
+import { workingHeader } from '../live-header/live-header.mocks';
 import {
   androidRowType,
   emptyMessageSize,
@@ -50,4 +51,27 @@ it('keeps the same prompt identity when its Android height estimate changes', ()
 
   expect(androidRowType(prompt)).not.toBe(androidRowType(followed));
   expect(rowKey(prompt)).toBe(rowKey(followed));
+});
+
+it('reuses the Working line estimate when an active group takes its place', () => {
+  const header: FeedRowData = {
+    entry: { type: 'live_header', liveHeader: workingHeader },
+    spaceBelow: '',
+    streaming: false,
+  };
+
+  const group: FeedRowData = {
+    ...header,
+    entry: {
+      type: 'group',
+      id: 'tools',
+      title: 'Editing',
+      items: [],
+      state: 'open',
+    },
+  };
+
+  expect(androidRowType(group)).toBe(androidRowType(header));
+  expect(rowKey(group)).not.toBe(rowKey(header));
+  expect(androidRowType({ ...group, spaceBelow: 'pb-4' })).toBe('group');
 });

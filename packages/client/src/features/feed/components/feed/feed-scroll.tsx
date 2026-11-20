@@ -12,12 +12,12 @@ import {
   type FeedRowData,
   rowKey,
   rowType,
-  useFeedRowData,
 } from './feed-row-data';
 import { DrawFeedScroll, useFeedOnScroll } from './feed-scroll-drawing';
 import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
 import { useFeedAnchors } from './use-feed-anchors';
+import { useFeedRowData } from './use-feed-row-data';
 import { useFeedRowSize } from './use-feed-row-size';
 
 // In screens from the end: only a reader at the very end is at the end, and follows the Composer.

@@ -4,6 +4,7 @@ import { CollapsibleLayoutSyncContext } from '@repo/kit/primitives/layout/collap
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
 import { createContext, memo, useContext, useMemo } from 'react';
+import { View } from 'react-native';
 import { SessionColumn } from '#lib/product/session-column';
 import { FeedItem } from '../feed-item';
 import { FeedRowVisibility } from '../feed-row-visibility';
@@ -69,6 +70,16 @@ const contentKey = (entry: FeedEntry): string | undefined =>
     ? undefined
     : entryKey(entry);
 
+function groupGap({
+  entry,
+  spaceBefore,
+}: FeedRowProps): React.JSX.Element | undefined {
+  if (entry.type === 'group' && spaceBefore)
+    return <View className={spaceBefore} />;
+
+  return undefined;
+}
+
 /*
  * A row's collapsibles resize it in the list each frame they move, so the rows below move in the
  * same frame. The list data keeps unchanged entries, their gap and streaming state, so a row draws
@@ -76,14 +87,14 @@ const contentKey = (entry: FeedEntry): string | undefined =>
  */
 export const FeedRow = memo(function FeedRow(props: FeedRowProps) {
   const { entry, spaceBelow } = props;
-  const itemKey = entryKey(entry);
-  const layoutSync = useLayoutSync(itemKey, props);
+  const layoutSync = useLayoutSync(entryKey(entry), props);
   // Match the tray's outer inset plus its 12px callout padding.
   const inset = useContext(FeedTrayInset) && 'px-10 web:px-7.5';
 
   return (
     <CollapsibleLayoutSyncContext.Provider value={layoutSync}>
       <SessionColumn testID="feed-column" className={cn(spaceBelow, inset)}>
+        {groupGap(props)}
         <FeedRowVisibility>
           <EntryContent key={contentKey(entry)} {...props} />
         </FeedRowVisibility>

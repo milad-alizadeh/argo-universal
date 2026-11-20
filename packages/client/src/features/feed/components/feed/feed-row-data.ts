@@ -1,13 +1,5 @@
 import type { ContentBlock } from '@repo/contracts';
-import { useState } from 'react';
-import {
-  type FeedEntry,
-  entryKey,
-  entryType,
-  isStreamingEntry,
-  liveHeaderEntry,
-  spaceBelowEntry,
-} from './feed-entry';
+import { type FeedEntry, entryKey, entryType } from './feed-entry';
 
 export interface FeedRowData {
   entry: FeedEntry;
@@ -36,85 +28,26 @@ export function emptyMessageSize(row: FeedRowData): number | undefined {
   return row.streaming && emptyAnswer(row.entry) ? 0 : undefined;
 }
 
-interface HeldRows {
-  entries: FeedEntry[];
-  rows: FeedRowData[];
-}
-
 export const rowKey = (row: FeedRowData): string => entryKey(row.entry);
 
 export const rowType = (row: FeedRowData): ReturnType<typeof entryType> =>
   entryType(row.entry);
 
-// A prompt at the end has no trailing padding. Give LegendList a separate height average for it.
-export function androidRowType(row: FeedRowData): string {
-  const type = rowType(row);
+// A prompt at the end has no trailing padding and measures shorter.
+const promptType = (
+  type: ReturnType<typeof rowType>,
+  spaceBelow: string,
+): string =>
+  type === 'user_message' && !spaceBelow ? 'trailing_user_message' : type;
 
-  return type === 'user_message' && !row.spaceBelow
-    ? 'trailing_user_message'
-    : type;
-}
+const activeGroup = (entry: FeedEntry): boolean =>
+  entry.type === 'group' && (entry.state === 'open' || !!entry.liveHeader);
 
-const samePlace = (first: FeedRowData, second: FeedRowData): boolean =>
-  first.spaceBelow === second.spaceBelow &&
-  first.spaceBefore === second.spaceBefore &&
-  first.streaming === second.streaming;
+// The first Tool group takes the Working line's place with the same leading gap.
+const showsActivityTitle = ({ entry, spaceBelow }: FeedRowData): boolean =>
+  entry.type === 'live_header' || (!spaceBelow && activeGroup(entry));
 
-const reuseRow = (placed: FeedRowData, held?: FeedRowData): FeedRowData =>
-  held && samePlace(held, placed) ? held : placed;
-
-// The standalone live header closes with its gap, so no other row loses height when it leaves.
-const spaceBelow = (entry: FeedEntry, next?: FeedEntry): string =>
-  liveHeaderEntry(next) ? '' : spaceBelowEntry(entry, next);
-
-const spaceBefore = (
-  entry: FeedEntry,
-  previous?: FeedEntry,
-): string | undefined =>
-  liveHeaderEntry(entry) && previous
-    ? spaceBelowEntry(previous, entry)
-    : undefined;
-
-function placedRow(
-  entry: FeedEntry,
-  previous: FeedEntry | undefined,
-  next: FeedEntry | undefined,
-): FeedRowData {
-  return {
-    entry,
-    spaceBelow: spaceBelow(entry, next),
-    spaceBefore: spaceBefore(entry, previous),
-    streaming: isStreamingEntry(entry, next),
-  };
-}
-
-function rowData(entries: FeedEntry[], previous?: HeldRows): HeldRows {
-  const held = new Map(previous?.rows.map((row) => [row.entry, row]));
-
-  return {
-    entries,
-    rows: entries.map((entry, index) =>
-      reuseRow(
-        placedRow(entry, entries[index - 1], entries[index + 1]),
-        held.get(entry),
-      ),
-    ),
-  };
-}
-
-/*
- * Legend List caches a cell by its data, not renderItem's closure. A changed gap or streaming state must
- * change that data. Keep other rows and their expansion state, without redrawing every row per chunk.
- */
-export function useFeedRowData(entries: FeedEntry[]): FeedRowData[] {
-  const [held, setHeld] = useState(() => rowData(entries));
-
-  if (held.entries !== entries) {
-    const next = rowData(entries, held);
-    setHeld(next);
-
-    return next.rows;
-  }
-
-  return held.rows;
-}
+export const androidRowType = (row: FeedRowData): string =>
+  showsActivityTitle(row)
+    ? 'activity_title'
+    : promptType(rowType(row), row.spaceBelow);
