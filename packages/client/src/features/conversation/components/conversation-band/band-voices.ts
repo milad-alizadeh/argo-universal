@@ -57,9 +57,9 @@ function voiceAt(bands: readonly number[], position: number): number {
 
 // Each bar's wobble is three sines at rates no two share, phased by where the bar stands, so neighbours peak and dip apart.
 const wobbles = [
-  { hertz: 1.17, phase: 12.9, weight: 0.5 },
-  { hertz: 1.86, phase: 78.2, weight: 0.3 },
-  { hertz: 0.65, phase: 37.7, weight: 0.2 },
+  { hertz: 1.9, phase: 71.3, weight: 0.5 },
+  { hertz: 1.3, phase: 137.9, weight: 0.3 },
+  { hertz: 2.7, phase: 96.1, weight: 0.2 },
 ];
 
 const wobbleRadians = 2 * Math.PI;
@@ -69,13 +69,8 @@ const dipFloor = 0.2;
 
 const peakCeiling = 1.3;
 
-const half = 0.5;
-
-/*
- * How much of the voice's level the bar at `position` shows at `time`, `dipFloor` to `peakCeiling`. It only scales a level, so a
- * silent voice stays flat however the bars wobble.
- */
-export function texturedBy(time: number, position: number): number {
+// Scales a level and never lifts silence, so a silent voice stays flat however the bars wobble.
+function texturedBy(time: number, position: number): number {
   'worklet';
 
   let sum = 0;
@@ -84,7 +79,9 @@ export function texturedBy(time: number, position: number): number {
     sum += weight * Math.sin(wobbleRadians * hertz * time + position * phase);
   }
 
-  return dipFloor + (peakCeiling - dipFloor) * (half + half * sum);
+  const unit = (1 + sum) / 2;
+
+  return dipFloor + (peakCeiling - dipFloor) * unit;
 }
 
 // What the bar at `position` (0 left, 1 right) reaches for, 0 to 1: the person's voice from the left, the Agent's from the right.

@@ -107,7 +107,7 @@ export function rmsOf(bands: readonly number[]): number {
 }
 
 // The analyser's bands sit low for ordinary speech; this soft curve lifts them so speech fills the bars and silence stays a dot.
-const liftRate = 6;
+const liftRate = 4;
 
 export function liftOf(level: number): number {
   'worklet';
