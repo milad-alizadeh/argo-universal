@@ -7,7 +7,7 @@ import { shortHead } from './pull-reads';
 // One thing on a pull request Auto-fix tells the Agent about once: its key in the events table, and its item in the Prompt.
 export type FixEvent = { key: string; item: string; comment?: true };
 
-// What one read of a pull request says Auto-fix may prompt about. `running` holds the Prompt until every Check reports.
+// What one read of a pull request says Auto-fix may prompt about. `running` only gates the still-red nudge.
 export type FixFacts = {
   pull: PullInfo;
   failed: readonly FailedCheck[];
