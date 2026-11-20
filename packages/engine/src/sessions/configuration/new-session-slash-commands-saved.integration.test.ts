@@ -99,7 +99,7 @@ it('stops waiting for a list when the reader leaves', async () => {
 
 it('saves a list that arrives well after the options were read', async () => {
   const host = await startAcpEngine({ steps: [], slashCommandsWaitMs });
-  const stream = await discoverWith(host, [review], { delayMs: 2500 });
+  const stream = await discoverWith(host, [review], { delayMs: 200 });
 
   expect(await nextWithSlashCommands(stream)).toMatchObject({
     commands: [review],
