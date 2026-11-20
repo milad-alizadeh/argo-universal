@@ -61,9 +61,10 @@ export const feedListProps = {
   maintainScrollAtEndThreshold: endThreshold,
   // Page in older rows before the reader reaches the start.
   onStartReachedThreshold: startThreshold,
-  // Android flings can outrun recycled rows. Draw farther ahead and shorten the coast after release.
+  // Fast native scrolling can outrun recycled rows. Android also shortens the coast after release.
   ...Platform.select({
     android: { drawDistance: 2400, decelerationRate: 'fast' as const },
+    ios: { drawDistance: 2400 },
     default: { drawDistance: 800 },
   }),
   ...keyboardProps,
