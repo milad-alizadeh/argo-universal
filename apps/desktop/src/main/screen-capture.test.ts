@@ -11,6 +11,7 @@ const other: ScreenSource = { displayId: '2', png: 'b3RoZXI=' };
 
 const port = (overrides: Partial<ScreenPort> = {}): ScreenPort => ({
   platform: 'darwin',
+  enabled: () => true,
   access: () => 'granted',
   mainDisplayId: () => '1',
   sources: () => Promise.resolve([other, main]),
@@ -59,4 +60,22 @@ it('says why when the system refuses the capture', async () => {
     status: 'not_available',
     reason: expect.stringContaining('Failed to get sources'),
   });
+});
+
+it('refuses with off, and reads nothing, until the person turned screen sight on', async () => {
+  let read = false;
+
+  const answer = await captureMainScreen(
+    port({
+      enabled: () => false,
+      sources: () => {
+        read = true;
+
+        return Promise.resolve([main]);
+      },
+    }),
+  );
+
+  expect(answer).toEqual({ status: 'refused', reason: 'off' });
+  expect(read).toBe(false);
 });

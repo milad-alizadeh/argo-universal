@@ -95,6 +95,8 @@ const desktopBridge = {
   screen: {
     capture: (): Promise<ScreenCaptureAnswer> =>
       ipcRenderer.invoke('screen:capture'),
+    setEnabled: (enabled: boolean): void =>
+      ipcRenderer.send('screen:enabled', enabled),
   },
   symbols,
 } satisfies DesktopBridge;

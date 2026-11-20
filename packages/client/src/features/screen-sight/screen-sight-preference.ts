@@ -14,7 +14,16 @@ export async function loadScreenSightEnabled(): Promise<boolean> {
   }
 }
 
+// The desktop App refuses every capture until told this Device turned screen sight on, so it hears each change.
+const desktopScreen = (): NonNullable<Window['argo']>['screen'] =>
+  globalThis.window?.argo?.screen;
+
+export const tellDesktop = (enabled: boolean): void =>
+  desktopScreen()?.setEnabled(enabled);
+
 export async function saveScreenSightEnabled(enabled: boolean): Promise<void> {
+  tellDesktop(enabled);
+
   try {
     await AsyncStorage.setItem(storageKey, String(enabled));
   } catch (cause) {

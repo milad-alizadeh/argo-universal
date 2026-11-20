@@ -28,6 +28,8 @@ export interface DesktopBridge {
   // One still picture of the main display for screen sight: the desktop App owns the capture and says why when it cannot.
   screen?: {
     capture(): Promise<ScreenCaptureAnswer>;
+    // Tells the desktop App whether this Device turned screen sight on; it refuses every capture until told yes.
+    setEnabled(enabled: boolean): void;
   };
   symbols?: {
     render: (request: {

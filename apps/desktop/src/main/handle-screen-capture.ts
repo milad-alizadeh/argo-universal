@@ -4,6 +4,7 @@ import {
   ipcMain,
   screen,
   systemPreferences,
+  type IpcMainEvent,
   type IpcMainInvokeEvent,
 } from 'electron';
 import {
@@ -40,8 +41,12 @@ async function thumbnails(): Promise<ScreenSource[]> {
   }));
 }
 
+// Whether the person turned screen sight on for this Device, as the App last reported it; off until it does.
+let enabled = false;
+
 const electronScreen: ScreenPort = {
   platform: process.platform,
+  enabled: () => enabled,
   access,
   mainDisplayId: () => String(screen.getPrimaryDisplay().id),
   sources: thumbnails,
@@ -49,6 +54,10 @@ const electronScreen: ScreenPort = {
 
 // The App's own page asks for a picture of the screen; nothing else may.
 export function handleScreenCapture(origin: string): void {
+  ipcMain.on('screen:enabled', (event: IpcMainEvent, next: boolean): void => {
+    if (isTrustedWindow(event, origin)) enabled = next === true;
+  });
+
   ipcMain.handle(
     'screen:capture',
     (event: IpcMainInvokeEvent): Promise<ScreenCaptureAnswer> => {
