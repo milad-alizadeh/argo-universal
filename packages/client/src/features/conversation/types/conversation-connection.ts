@@ -1,12 +1,12 @@
-import type { VoicePreviewClip, VoiceStatus } from '@repo/contracts';
-import type { VoiceDeviceChoice } from '../stores/conversation-device-choice';
+import type { VoicePreviewClip, ConversationStatus } from '@repo/contracts';
+import type { ConversationDeviceChoice } from '../stores/conversation-device-choice';
 
 /*
- * The App's side of a Voice call: the microphone, the speaker and the peer connection to the Voice provider (ADR-0064).
+ * The App's side of a Conversation: the microphone, the speaker and the peer connection to the Conversation provider (ADR-0064).
  * The Server only relays the offer and the answer, so this is all the audio the App needs.
  */
-export interface VoiceConnection {
-  // Opens the connection and returns the offer the Voice provider answers.
+export interface ConversationConnection {
+  // Opens the connection and returns the offer the Conversation provider answers.
   createOffer: () => Promise<string>;
   // Completes the connection with the provider's answer.
   accept: (answer: string) => Promise<void>;
@@ -15,11 +15,11 @@ export interface VoiceConnection {
   // Sets the voice's output volume to zero, or back, without ending the call. A connection with no call running ignores it.
   setSpeakerMuted: (muted: boolean) => void;
   // What is muted now. The connection is the only owner of this: every call starts unmuted, and so does the time after one.
-  mutes: () => VoiceMutes;
+  mutes: () => ConversationMutes;
   // Calls the listener when a mute changes; the returned function stops listening.
   subscribe: (listener: () => void) => () => void;
   // Uses this microphone and speaker from the next call on, and moves a running call to them; null follows the system.
-  chooseDevices: (choice: VoiceDeviceChoice) => Promise<void>;
+  chooseDevices: (choice: ConversationDeviceChoice) => Promise<void>;
   // Plays the voice at this volume and sends the microphone at this gain, from the next call on and in a running one at once.
   setSound: (sound: VoiceSound) => void;
   // How loud the microphone and the voice are right now, from 0 to 1. Levels stay in the App and never reach the Server.
@@ -44,9 +44,9 @@ export interface VoiceConnection {
 }
 
 // The volume and microphone gain the person chose, in percent, as the Server keeps them.
-export type VoiceSound = Pick<VoiceStatus, 'volume' | 'microphoneGain'>;
+export type VoiceSound = Pick<ConversationStatus, 'volume' | 'microphoneGain'>;
 
-export interface VoiceMutes {
+export interface ConversationMutes {
   microphone: boolean;
   speaker: boolean;
 }

@@ -7,13 +7,13 @@ import { useSessionMutes } from '#features/conversation';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import type { Story } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
-import { FakeVoiceConnection } from '../../../../../mocks/conversation/fake-conversation-connection';
+import { FakeConversationConnection } from '../../../../../mocks/conversation/fake-conversation-connection';
 import { Composer } from './composer';
 import { callPointerId } from './composer-conversation-pointer';
 import { connectingRingId } from './composer-connecting-ring';
 import { microphoneButtonId, speakerButtonId } from './composer-mute-buttons';
-import { endButtonId, voiceButtonId } from './composer-primary-action';
-import type { ComposerVoice } from './composer-types';
+import { endButtonId, conversationButtonId } from './composer-primary-action';
+import type { ComposerConversation } from './composer-types';
 import {
   bandConnectingComposer,
   bandMutedComposer,
@@ -21,10 +21,10 @@ import {
   bandTalkingComposer,
 } from './composer-conversation-band-fixtures';
 
-// The edge band's test id, as `VoiceEdgeBand` sets it.
+// The edge band's test id, as `ConversationEdgeBand` sets it.
 const bandId = 'voice-edge-band';
 
-const meta = { ...composerTestMeta, title: 'Tests/Composer/Voice' };
+const meta = { ...composerTestMeta, title: 'Tests/Composer/Conversation' };
 
 export default meta;
 
@@ -36,13 +36,13 @@ const noMutes = {
 };
 
 // What a story's slot asks for when pressed, read from its own args so no spy is shared between stories.
-const startOf = (voice: ComposerVoice | undefined): (() => void) | undefined =>
+const startOf = (voice: ComposerConversation | undefined): (() => void) | undefined =>
   voice?.kind === 'start' ? voice.onStart : undefined;
 
-const endOf = (voice: ComposerVoice | undefined): (() => void) | undefined =>
+const endOf = (voice: ComposerConversation | undefined): (() => void) | undefined =>
   voice && 'onEnd' in voice ? voice.onEnd : undefined;
 
-const openOf = (voice: ComposerVoice | undefined): (() => void) | undefined =>
+const openOf = (voice: ComposerConversation | undefined): (() => void) | undefined =>
   voice?.kind === 'elsewhere' ? voice.onOpen : undefined;
 
 // With nothing written and no call, the primary slot is the voice button, Send's circle with the five bars.
@@ -56,7 +56,7 @@ export const Idle: Story = {
       canvas.queryByRole('button', { name: 'Send' }),
     ).not.toBeInTheDocument();
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByTestId(voiceButtonId));
+    await userEvent.click(canvas.getByTestId(conversationButtonId));
     await expect(startOf(args.voice)).toHaveBeenCalledOnce();
   },
 };
@@ -115,11 +115,11 @@ export const EndWithEmptyDraft: Story = {
 };
 
 // The two mutes drive the App's own connection and never end the call: the mic stops sending, the speaker's volume goes to zero.
-const call = { connection: new FakeVoiceConnection(), hungUp: fn() };
+const call = { connection: new FakeConversationConnection(), hungUp: fn() };
 
 // Each story gets its own connection and its own End spy, so nothing leaks from one run into the next.
 const freshCall = (): void => {
-  call.connection = new FakeVoiceConnection();
+  call.connection = new FakeConversationConnection();
   call.hungUp = fn();
 };
 
@@ -215,7 +215,7 @@ export const PointerToTheCall: Story = {
     voice: { kind: 'elsewhere', title: 'Fix the build', onOpen: fn() },
   },
   play: async ({ canvas, args }) => {
-    await expect(canvas.queryByTestId(voiceButtonId)).not.toBeInTheDocument();
+    await expect(canvas.queryByTestId(conversationButtonId)).not.toBeInTheDocument();
     await expect(canvas.queryByTestId(endButtonId)).not.toBeInTheDocument();
     // A round icon button named for the call, not a pill with the words on it.
     await expect(canvas.queryByText('Call in Fix the build')).toBeNull();

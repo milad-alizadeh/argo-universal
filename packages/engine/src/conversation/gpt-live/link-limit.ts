@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { VoiceProviderEvent } from '../provider';
+import type { ConversationProviderEvent } from '../provider';
 
 // The allowance's standing in a usage report; both fields stayed null on every recorded call (#2405).
 const usageLimit = z
@@ -27,13 +27,13 @@ const resetsAt = (resetSeconds: number): string =>
   new Date(Date.now() + resetSeconds * secondMs).toISOString();
 
 // The service gives the allowance's standing, not how much is left: any status means none to count on.
-const limitOf = ({ reset_seconds: seconds }: UsageLimit): VoiceProviderEvent =>
+const limitOf = ({ reset_seconds: seconds }: UsageLimit): ConversationProviderEvent =>
   seconds === null
     ? { type: 'limit', remaining: 0 }
     : { type: 'limit', remaining: 0, resetsAt: resetsAt(seconds) };
 
 // A usage report reads as a limit while its allowance has a status, and as nothing otherwise.
 export const usageUpdated = usageReport.transform(
-  ({ usage_limit: limit }): VoiceProviderEvent[] =>
+  ({ usage_limit: limit }): ConversationProviderEvent[] =>
     limit.status === null ? [] : [limitOf(limit)],
 );

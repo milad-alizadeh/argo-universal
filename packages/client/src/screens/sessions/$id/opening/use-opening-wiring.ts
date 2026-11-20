@@ -1,6 +1,6 @@
 import { useAttachmentDraft } from '#features/composer';
 import { useConnectionState } from '#features/connection';
-import { useNewSessionVoice } from '#features/conversation';
+import { useNewSessionConversation } from '#features/conversation';
 import { useNavigate } from '#lib/product/navigation/navigation';
 import type { NewSessionWiring } from './new-session-wiring';
 import { type NewSessionData, useNewSessionData } from './use-new-session-data';
@@ -16,7 +16,7 @@ export function useOpeningWiring(
   const attachmentDraft = useNewSessionDraft(data, draft);
   const sessionOpening = useSessionOpening(attachmentDraft, data, connected);
   const { store } = sessionOpening.session;
-  const voice = useNewSessionVoice((start) => store.call(start));
+  const voice = useNewSessionConversation((start) => store.call(start));
 
   return { data, connected, navigate, attachmentDraft, sessionOpening, voice };
 }

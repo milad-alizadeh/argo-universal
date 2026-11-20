@@ -73,7 +73,7 @@ function usePalette(): Palette {
  * each frame, so the UI thread reads it without React rendering. Without a source the bands stay silent: a phone
  * carries no call audio yet.
  */
-function useVoices(spectrum?: () => VoiceSpectrum): SharedValue<Voices> {
+function useConversations(spectrum?: () => VoiceSpectrum): SharedValue<Voices> {
   const voices = useSharedValue(noVoices);
 
   useEffect(() => {
@@ -165,7 +165,7 @@ export function useBandFrame(
   spectrum?: () => VoiceSpectrum,
 ): SharedValue<BandFrame> {
   const settings = useSettings(state, count);
-  const voices = useVoices(spectrum);
+  const voices = useConversations(spectrum);
   const frame = useSharedValue(emptyFrame);
   const sim = useSharedValue(newSim());
 

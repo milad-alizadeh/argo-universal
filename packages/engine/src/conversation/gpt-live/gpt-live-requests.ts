@@ -97,14 +97,14 @@ function assertCreated(response: Response): void {
 }
 
 function callIdOf(response: Response): string {
-  const callId = response.headers.get('location')?.split('/').pop();
+  const conversationId = response.headers.get('location')?.split('/').pop();
 
-  if (!callId) throw new Error('GPT-Live gave no call id.');
+  if (!conversationId) throw new Error('GPT-Live gave no call id.');
 
-  return callId;
+  return conversationId;
 }
 
-export type CreatedCall = { answer: string; callId: string };
+export type CreatedCall = { answer: string; conversationId: string };
 
 // Asks the service for a call from the App's offer; the answer is the body and the call id is in `Location`.
 export async function createCall(
@@ -120,7 +120,7 @@ export async function createCall(
 
   assertCreated(response);
 
-  return { answer: await response.text(), callId: callIdOf(response) };
+  return { answer: await response.text(), conversationId: callIdOf(response) };
 }
 
 // The service no longer knows the call: it ended the call itself and answers its link with 404 `session_id_not_found` (#2405 probe, 2026-11-19).

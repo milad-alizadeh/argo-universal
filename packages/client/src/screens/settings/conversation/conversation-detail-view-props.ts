@@ -1,18 +1,18 @@
-import type { VoiceCallOptionsChange, VoiceSettings } from '@repo/contracts';
-import type { DeviceMetersState, VoiceDeviceChoice } from '#features/conversation';
+import type { ConversationOptionsChange, ConversationSettings } from '@repo/contracts';
+import type { DeviceMetersState, ConversationDeviceChoice } from '#features/conversation';
 import type { CustomVoiceDraft } from './custom-voice-draft';
 import type { CustomVoiceEditor } from './custom-voice-props';
-import type { VoiceDevices } from './conversation-devices-section';
+import type { ConversationDevices } from './conversation-devices-section';
 
-export type VoiceSettingsLoad =
+export type ConversationSettingsLoad =
   | { status: 'loading' | 'error' | 'disconnected' }
-  | { status: 'loaded'; settings: VoiceSettings };
+  | { status: 'loaded'; settings: ConversationSettings };
 
-// What the page shows: the Server's Voice settings, and this Device's own where it carries a call's sound.
-export interface VoiceDetailViewState {
-  voice: VoiceSettingsLoad;
+// What the page shows: the Server's Conversation settings, and this Device's own where it carries a call's sound.
+export interface ConversationDetailViewState {
+  voice: ConversationSettingsLoad;
   // Only where the App can hold a call; elsewhere there is nothing to choose.
-  devices?: VoiceDevices;
+  devices?: ConversationDevices;
   // The microphone's and speaker's levels and the speaker's test sound, beside the devices (Paper "Option D").
   meters?: DeviceMetersState;
   // Only where the App can change the microphone's gain.
@@ -25,22 +25,22 @@ export interface VoiceDetailViewState {
   error?: string;
 }
 
-export interface VoiceDetailViewActions {
+export interface ConversationDetailViewActions {
   onEnabledChange: (enabled: boolean) => void;
   onProviderChange: (provider: string) => void;
   onVoiceChange: (voice: string) => void;
   onPreviewVoice: (voice: string) => void;
   onInstructionsChange: (instructions: string) => void;
-  onCallOptionsChange: (change: VoiceCallOptionsChange) => void;
+  onCallOptionsChange: (change: ConversationOptionsChange) => void;
   // Opens the custom voice form, or closes it with nothing.
   onEditorChange: (editor?: CustomVoiceEditor) => void;
   onSaveCustomVoice: (draft: CustomVoiceDraft) => void;
   onDeleteCustomVoice: (id: string) => void;
   onPreviewCustomVoice: (draft: CustomVoiceDraft) => void;
-  onDevicesChange?: (change: Partial<VoiceDeviceChoice>) => void;
+  onDevicesChange?: (change: Partial<ConversationDeviceChoice>) => void;
   onRetry: () => void;
   onBack?: () => void;
 }
 
-export type VoiceDetailViewProps = VoiceDetailViewState &
-  VoiceDetailViewActions;
+export type ConversationDetailViewProps = ConversationDetailViewState &
+  ConversationDetailViewActions;

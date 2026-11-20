@@ -61,7 +61,7 @@ async function arriving(finish: Promise<void>): Promise<{
   return { host, sessionId };
 }
 
-it('strips Voice marks from a message still arriving, before the Feed stores it', async () => {
+it('strips Conversation marks from a message still arriving, before the Feed stores it', async () => {
   const finish = Promise.withResolvers<void>();
 
   try {

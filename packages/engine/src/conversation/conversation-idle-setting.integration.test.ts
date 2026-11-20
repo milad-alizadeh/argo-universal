@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { statusOf } from '#mocks/conversation-timing';
-import { startVoiceWork } from '#mocks/conversation-work';
+import { startConversationWork } from '#mocks/conversation-work';
 
 const slow = 30_000;
 
@@ -9,8 +9,8 @@ describe('the idle timeout the person chose', () => {
     'ends a silent call after it',
     async () => {
       const chosenSeconds = 5;
-      const work = await startVoiceWork([]);
-      await work.host.caller.voice.setCallOptions({
+      const work = await startConversationWork([]);
+      await work.host.caller.conversation.setOptions({
         idleSeconds: chosenSeconds,
       });
       await work.start();

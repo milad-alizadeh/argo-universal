@@ -1,5 +1,5 @@
 import { fn, type within } from 'storybook/test';
-import type { VoiceDetailViewActions } from './conversation-detail-view-props';
+import type { ConversationDetailViewActions } from './conversation-detail-view-props';
 
 type Canvas = ReturnType<typeof within>;
 
@@ -19,8 +19,8 @@ export function inReadingOrder(canvas: Canvas, texts: string[]): boolean {
   return drawn.slice(1).every((row, at) => follows(drawn[at], row));
 }
 
-// A spy for every action the Voice page takes, for its test stories.
-export const voiceDetailSpies = (): VoiceDetailViewActions => ({
+// A spy for every action the Conversation page takes, for its test stories.
+export const conversationDetailSpies = (): ConversationDetailViewActions => ({
   onEnabledChange: fn(),
   onProviderChange: fn(),
   onVoiceChange: fn(),

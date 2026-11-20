@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { VoiceProviderEvent } from '../provider';
+import type { ConversationProviderEvent } from '../provider';
 import { usageUpdated } from './link-limit';
 import { SpokenTurns, type Speaker, type Utterance } from './link-turns';
 import { frameRejections, readFrame } from './read-frame';
@@ -14,10 +14,10 @@ import { serviceClosed } from './service-close';
  */
 
 // What one event does to the call: the events it reports, given the turns still open.
-type Step = (turns: SpokenTurns) => VoiceProviderEvent[];
+type Step = (turns: SpokenTurns) => ConversationProviderEvent[];
 
 const report =
-  (...events: VoiceProviderEvent[]): Step =>
+  (...events: ConversationProviderEvent[]): Step =>
   () =>
     events;
 
@@ -30,7 +30,7 @@ const utteranceOf = ({ turn }: TurnFields): Utterance => ({
 
 // A new turn settles the turns still open, and shows its own words so far.
 const turnOpened =
-  (speaker: Speaker, ...after: VoiceProviderEvent[]) =>
+  (speaker: Speaker, ...after: ConversationProviderEvent[]) =>
   (fields: TurnFields): Step =>
   (turns) => [...turns.opened(speaker, utteranceOf(fields)), ...after];
 
@@ -41,7 +41,7 @@ const turnGrew =
 
 // A done turn's transcript is the whole utterance.
 const turnDone =
-  (speaker: Speaker, ...after: VoiceProviderEvent[]) =>
+  (speaker: Speaker, ...after: ConversationProviderEvent[]) =>
   (fields: TurnFields): Step =>
   (turns) => [...turns.done(speaker, utteranceOf(fields)), ...after];
 
@@ -126,12 +126,12 @@ export class LinkReader {
   private readonly turns = new SpokenTurns();
 
   // What one text frame means to the call; nothing for events not reported, and for anything unreadable, which is reported.
-  public read(frame: string): VoiceProviderEvent[] {
+  public read(frame: string): ConversationProviderEvent[] {
     return readFrame(reported, frame, rejectFrame)?.(this.turns) ?? [];
   }
 
   // The call ending here: every open turn keeps the words said so far.
-  public closing(): VoiceProviderEvent[] {
+  public closing(): ConversationProviderEvent[] {
     return this.turns.closing();
   }
 }

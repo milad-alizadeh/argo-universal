@@ -1,12 +1,12 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
 import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
-import type { FakeVoiceProvider } from '../src/conversation/fake-provider';
+import type { FakeConversationProvider } from '../src/conversation/fake-provider';
 import type { startAcpEngine } from './acp-engine';
 
 export type Scenario = NonNullable<Parameters<typeof startAcpEngine>[0]>;
 
 // What the mock Agent does when a Prompt containing `prompt` arrives: says each message, one row apiece, then ends.
-export type VoiceAgentReply = {
+export type ConversationAgentReply = {
   prompt: string;
   messages?: readonly string[];
   // Streams each message in chunks of this many characters; whole in one chunk without it.
@@ -71,7 +71,7 @@ const toolSteps = (output: string | undefined): ScriptedStep[] =>
 const failingSteps = (fails: string | undefined): ScriptedStep[] =>
   fails ? [{ type: 'fail', message: fails }] : [];
 
-const endingSteps = (reply: VoiceAgentReply): ScriptedStep[] => {
+const endingSteps = (reply: ConversationAgentReply): ScriptedStep[] => {
   if (reply.holdUntil) return [{ type: 'gate', waitFor: reply.holdUntil }];
 
   return reply.untilCancelled
@@ -104,7 +104,7 @@ const permissionRequest = (title: string): ScriptedStep => ({
 const permissionSteps = (title: string | undefined): ScriptedStep[] =>
   title === undefined ? [] : [askedToolCall(title), permissionRequest(title)];
 
-const stepsOf = (reply: VoiceAgentReply): ScriptedStep[] => [
+const stepsOf = (reply: ConversationAgentReply): ScriptedStep[] => [
   ...permissionSteps(reply.asksPermission),
   ...toolSteps(reply.toolOutput),
   ...messageSteps(reply.messages ?? [], reply.chunkSize),
@@ -133,7 +133,7 @@ export const steeringScenario = (
   return steeringAgent(steered, steering === 'refused' ? 'failed' : 'injected');
 };
 
-type Recording = { prompts: PromptRequest[]; provider: FakeVoiceProvider };
+type Recording = { prompts: PromptRequest[]; provider: FakeConversationProvider };
 
 type PromptResponse = {
   prompt: string;
@@ -142,7 +142,7 @@ type PromptResponse = {
 };
 
 const responseOf = (
-  reply: VoiceAgentReply,
+  reply: ConversationAgentReply,
   prompts: PromptRequest[],
 ): PromptResponse => ({
   prompt: reply.prompt,
@@ -152,11 +152,11 @@ const responseOf = (
 
 // A mock Agent that answers the Prompts the replies name, and records every Prompt it receives.
 export const scenarioOf = (
-  replies: readonly VoiceAgentReply[],
+  replies: readonly ConversationAgentReply[],
   { prompts, provider }: Recording,
 ): Scenario => ({
   steps: [],
-  voiceProvider: provider,
+  conversationProvider: provider,
   responses: {
     'session/prompt': [
       ...replies.map((reply) => responseOf(reply, prompts)),

@@ -1,16 +1,16 @@
 import { fromCallback } from 'xstate';
 import { AgentRelay, type RelayReports } from './agent-relay';
-import type { SendBack, VoiceCallEvent, VoiceSay } from './conversation-types';
-import type { VoiceSessions } from './session-link';
+import type { SendBack, ConversationEvent, VoiceSay } from './conversation-types';
+import type { ConversationSessions } from './session-link';
 
 export type RelayInput = {
-  sessions: VoiceSessions;
+  sessions: ConversationSessions;
   sessionId: string;
 };
 
 type WorkRequest = { requestId: string; text: string };
 
-const workRequestOf = (event: VoiceCallEvent): WorkRequest | undefined =>
+const workRequestOf = (event: ConversationEvent): WorkRequest | undefined =>
   event.type === 'provider.event' && event.event.type === 'work.requested'
     ? event.event
     : undefined;
@@ -22,10 +22,10 @@ const reportsTo = (sendBack: SendBack): RelayReports => ({
 });
 
 /*
- * The go-between of one Voice call and its Session. The machine forwards the person's requests for work to it; it sends
+ * The go-between of one Conversation and its Session. The machine forwards the person's requests for work to it; it sends
  * back what the voice should be told, as `voice.say`.
  */
-export const agentRelay = fromCallback<VoiceCallEvent, RelayInput>(
+export const agentRelay = fromCallback<ConversationEvent, RelayInput>(
   ({ input, sendBack, receive }) => {
     const { sessions } = input;
 

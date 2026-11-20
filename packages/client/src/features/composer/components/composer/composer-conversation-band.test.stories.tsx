@@ -5,9 +5,9 @@ import type { Story } from '../../../../../mocks/composer/composer-story-context
 import { meta as composerTestMeta } from '../../../../../mocks/composer/composer-story-context.test.mocks';
 import { Composer } from './composer';
 import { bandTalkingComposer } from './composer-conversation-band-fixtures';
-import { voiceCallComposer } from './composer-conversation-fixtures';
+import { conversationComposer } from './composer-conversation-fixtures';
 
-const meta = { ...composerTestMeta, title: 'Tests/Composer/Voice/Band' };
+const meta = { ...composerTestMeta, title: 'Tests/Composer/Conversation/Band' };
 
 export default meta;
 
@@ -94,5 +94,5 @@ export const FieldWithoutTheBand: Story = {
   ...onCall('wide', async (canvas) => {
     await expect(getComputedStyle(fieldOf(canvas)).paddingTop).toBe('12px');
   }),
-  args: voiceCallComposer,
+  args: conversationComposer,
 };

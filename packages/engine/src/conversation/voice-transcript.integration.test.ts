@@ -7,7 +7,7 @@ import {
   say,
   startCallInHeldSession,
   startedCall,
-  startVoiceEngine,
+  startConversationEngine,
   storedRows,
   transcriptsOf,
 } from '#mocks/conversation-engine';
@@ -23,7 +23,7 @@ const personId = 'p1';
 const voiceId = 'v1';
 
 // The ids of the stored rows of what the voice said.
-const voiceRowIdsOf = async (
+const conversationRowIdsOf = async (
   host: Parameters<typeof storedRows>[0],
   sessionId: string,
 ): Promise<string[]> =>
@@ -31,9 +31,9 @@ const voiceRowIdsOf = async (
     .filter((row) => row.sessionUpdate === voiceKind)
     .map((row) => row.id);
 
-describe('Voice call transcript', () => {
+describe('Conversation transcript', () => {
   it('stores what the person and the voice said as two kinds of Feed row, in the order spoken', async () => {
-    const voice = await startVoiceEngine();
+    const voice = await startConversationEngine();
     const sessionId = await startedCall(voice);
     say(voice, said.person(personId, isItDone, true));
     say(voice, said.voice(voiceId, 'Not yet.', true));
@@ -77,7 +77,7 @@ describe('Voice call transcript', () => {
   );
 
   it('keeps words that are not final as live state of the call, not as rows', async () => {
-    const voice = await startVoiceEngine();
+    const voice = await startConversationEngine();
     const sessionId = await startedCall(voice);
     say(voice, said.person(personId, 'Is it', false));
     await expect
@@ -98,7 +98,7 @@ describe('Voice call transcript', () => {
   });
 
   it('names each partial by the row its final words are stored under, so the App draws them as one', async () => {
-    const voice = await startVoiceEngine();
+    const voice = await startConversationEngine();
     const sessionId = await startedCall(voice);
     say(voice, said.voice(voiceId, 'Not', false));
     await expect.poll(() => partialsOf(voice.host)).toHaveLength(1);
@@ -106,12 +106,12 @@ describe('Voice call transcript', () => {
 
     say(voice, said.voice(voiceId, 'Not yet.', true));
     await expect
-      .poll(() => voiceRowIdsOf(voice.host, sessionId))
+      .poll(() => conversationRowIdsOf(voice.host, sessionId))
       .toEqual([partial?.rowId]);
   });
 
   it('holds one partial per speaker', async () => {
-    const voice = await startVoiceEngine();
+    const voice = await startConversationEngine();
     await startedCall(voice);
     say(voice, said.person(personId, 'Wait', false));
     say(voice, said.voice(voiceId, 'Sure, I', false));
@@ -124,7 +124,7 @@ describe('Voice call transcript', () => {
   });
 
   it('keeps the transcript after the call ends, and drops a partial that never became final', async () => {
-    const voice = await startVoiceEngine();
+    const voice = await startConversationEngine();
     const sessionId = await startedCall(voice);
     say(voice, said.person(personId, 'Keep this', true));
     say(voice, said.voice(voiceId, 'Half a sen', false));
@@ -134,7 +134,7 @@ describe('Voice call transcript', () => {
     await expect
       .poll(() => partialsOf(voice.host))
       .toMatchObject([{ speaker: 'voice', id: voiceId, text: 'Half a sen' }]);
-    await voice.host.caller.voice.end({ sessionId });
+    await voice.host.caller.conversation.end({ sessionId });
 
     expect(await transcriptsOf(voice.host, sessionId)).toEqual([
       { kind: person, text: 'Keep this' },

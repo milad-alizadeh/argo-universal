@@ -1,15 +1,15 @@
-import type { VoiceCallEnd, VoiceLimit, VoicePartial } from '@repo/contracts';
+import type { ConversationEnd, ConversationLimit, ConversationPartial } from '@repo/contracts';
 import type {
-  VoiceCallSetup,
+  ConversationSetup,
   VoiceDelivery,
-  VoiceProvider,
-  VoiceProviderEvent,
+  ConversationProvider,
+  ConversationProviderEvent,
 } from './provider';
-import type { VoiceSessions } from './session-link';
+import type { ConversationSessions } from './session-link';
 import type { ReadOut } from './transcript';
 
 export type SessionGoneReason = Extract<
-  VoiceCallEnd,
+  ConversationEnd,
   'session-closed' | 'session-archived'
 >;
 
@@ -28,19 +28,19 @@ export interface RelayCall {
   sessionId: string;
 }
 
-export type VoiceCallEvent =
+export type ConversationEvent =
   | {
       type: 'call.start';
-      callId: string;
+      conversationId: string;
       sessionId: string;
       offer: string;
       // The voice the call speaks with and what it is told; the provider's own when left out.
-      setup?: VoiceCallSetup;
+      setup?: ConversationSetup;
       conduct?: CallConduct;
       // The App Connection that started the call; the call ends when it closes.
       connection?: AbortSignal;
     }
-  | { type: 'call.end'; reason: VoiceCallEnd; sessionId?: string }
+  | { type: 'call.end'; reason: ConversationEnd; sessionId?: string }
   | { type: 'call.answered'; answer: string }
   | { type: 'call.failed'; message: string }
   | { type: 'call.sessionGone'; reason: SessionGoneReason }
@@ -49,26 +49,26 @@ export type VoiceCallEvent =
   | { type: 'call.appDisconnected' }
   // Whether a Turn the call started is running.
   | { type: 'call.turns'; running: boolean }
-  | { type: 'provider.event'; event: VoiceProviderEvent }
+  | { type: 'provider.event'; event: ConversationProviderEvent }
   | { type: 'voice.say'; say: VoiceSay }
   // The Sessions the call sends Prompts to and listens to, once they exist.
-  | { type: 'sessions.attach'; sessions: VoiceSessions };
+  | { type: 'sessions.attach'; sessions: ConversationSessions };
 
-export type SendBack = (event: VoiceCallEvent) => void;
+export type SendBack = (event: ConversationEvent) => void;
 
-export const sessionGone = (reason: SessionGoneReason): VoiceCallEvent => ({
+export const sessionGone = (reason: SessionGoneReason): ConversationEvent => ({
   type: 'call.sessionGone',
   reason,
 });
 
-export const providerEvent = (event: VoiceProviderEvent): VoiceCallEvent => ({
+export const providerEvent = (event: ConversationProviderEvent): ConversationEvent => ({
   type: 'provider.event',
   event,
 });
 
-export interface VoiceCallInput {
-  // Absent when no Voice provider is configured.
-  provider: VoiceProvider | null;
+export interface ConversationInput {
+  // Absent when no Conversation provider is configured.
+  provider: ConversationProvider | null;
   // What the voice is told about a Session before it speaks.
   briefing: (sessionId: string) => string;
   // Overrides the idle timeout every call starts with, in milliseconds; tests shorten it.
@@ -82,10 +82,10 @@ export interface VoiceCallInput {
 }
 
 export interface RunningCall {
-  callId: string;
+  conversationId: string;
   sessionId: string;
   offer: string;
-  setup?: VoiceCallSetup;
+  setup?: ConversationSetup;
   conduct?: CallConduct;
   connection?: AbortSignal;
   answer: string | null;
@@ -96,7 +96,7 @@ export interface RunningCall {
   agentWorking: boolean;
   microphoneBlocked: boolean;
   // What the provider last reported of its allowance.
-  limit?: VoiceLimit;
+  limit?: ConversationLimit;
   // The tokens the provider last reported the call has used.
   usage?: { inputTokens: number; outputTokens: number };
   // What the provider noted about the call for the Server's log, latest last.
@@ -104,23 +104,23 @@ export interface RunningCall {
 }
 
 export interface EndedCall {
-  callId: string;
+  conversationId: string;
   sessionId: string;
-  reason: VoiceCallEnd;
+  reason: ConversationEnd;
 }
 
-// Why the machine refused a start: a call already runs, no Voice provider is configured, or the Session is not open.
+// Why the machine refused a start: a call already runs, no Conversation provider is configured, or the Session is not open.
 export type StartRefusal = 'call-running' | 'no-provider' | 'session-not-open';
 
-// The last start the machine refused; a start finds its own by its callId.
+// The last start the machine refused; a start finds its own by its conversationId.
 interface RefusedStart {
-  callId: string;
+  conversationId: string;
   refusal: StartRefusal;
 }
 
-export interface VoiceCallContext extends VoiceCallInput {
+export interface ConversationContext extends ConversationInput {
   // Where the call reaches its Session, filled in once Sessions exist.
-  sessions: VoiceSessions;
+  sessions: ConversationSessions;
   call: RunningCall | null;
   ended: EndedCall | null;
   // Why the last call failed, for the Notice that says so.
@@ -129,22 +129,22 @@ export interface VoiceCallContext extends VoiceCallInput {
   // Whether a Turn the call started is running; an idle call never ends while one is.
   turnRunning: boolean;
   // Words being said now that may still change; live state, never stored.
-  partials: VoicePartial[];
+  partials: ConversationPartial[];
   // The voice is reading out an Agent's result, which is neither stored nor drawn.
   readOut: ReadOut | null;
 }
 
 // The provider a running call speaks through; `call.start` is refused without one.
-export function callProvider(context: VoiceCallContext): VoiceProvider {
-  if (!context.provider) throw new Error('No Voice provider is configured');
+export function callProvider(context: ConversationContext): ConversationProvider {
+  if (!context.provider) throw new Error('No Conversation provider is configured');
 
   return context.provider;
 }
 
 // The call `running` was entered for; `running` is only entered by `call.start`, which sets it.
 
-export function runningCall(context: VoiceCallContext): RunningCall {
-  if (!context.call) throw new Error('No Voice call is running');
+export function runningCall(context: ConversationContext): RunningCall {
+  if (!context.call) throw new Error('No Conversation is running');
 
   return context.call;
 }

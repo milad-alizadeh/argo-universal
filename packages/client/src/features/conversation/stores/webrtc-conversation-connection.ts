@@ -1,17 +1,17 @@
 import type { VoicePreviewClip } from '@repo/contracts';
 import {
   silentSpectrum,
-  type VoiceConnection,
+  type ConversationConnection,
   type VoiceLevels,
-  type VoiceMutes,
+  type ConversationMutes,
   type VoiceSound,
   type VoiceSpectrum,
 } from '../types/conversation-connection';
-import type { Microphone, VoiceEnvironment } from '../types/conversation-environment';
+import type { Microphone, ConversationEnvironment } from '../types/conversation-environment';
 import { ConnectionPreview } from './connection-preview';
 import { HeldCall, openChosen, type HeldSound } from './held-conversation';
-import { systemDevices, type VoiceDeviceChoice } from './conversation-device-choice';
-import { VoiceMuteStore } from './conversation-mute-store';
+import { systemDevices, type ConversationDeviceChoice } from './conversation-device-choice';
+import { ConversationMuteStore } from './conversation-mute-store';
 
 const noLevels: VoiceLevels = { input: 0, output: 0 };
 
@@ -26,18 +26,18 @@ const heldSoundOf = ({ volume, microphoneGain }: VoiceSound): HeldSound => ({
  * The App's side of a call on a browser or Electron page: the microphone goes up and the voice comes down.
  * A call is never recorded or stored; only a preview's greeting may be, for the Server to keep (ADR-0064).
  */
-class WebRtcVoiceConnection implements VoiceConnection {
+class WebRtcConversationConnection implements ConversationConnection {
   private held: HeldCall | undefined;
   private readonly previews = new ConnectionPreview();
   // The microphone and speaker this Device chose; every call starts on them.
   private devices = systemDevices;
   // The volume and gain the person chose; every call starts with them.
   private sound: HeldSound = { volume: 1, gain: 1 };
-  private readonly store = new VoiceMuteStore();
+  private readonly store = new ConversationMuteStore();
   // Refilled on every read, so the band reading each frame makes no garbage.
   private readonly bands = silentSpectrum();
 
-  public constructor(private readonly environment: VoiceEnvironment) {}
+  public constructor(private readonly environment: ConversationEnvironment) {}
 
   public async createOffer(): Promise<string> {
     this.close();
@@ -130,7 +130,7 @@ class WebRtcVoiceConnection implements VoiceConnection {
     this.store.change({ speaker: muted });
   }
 
-  public async chooseDevices(choice: VoiceDeviceChoice): Promise<void> {
+  public async chooseDevices(choice: ConversationDeviceChoice): Promise<void> {
     const previous = this.devices;
     this.devices = choice;
     await this.held?.follow(previous, choice, this.environment);
@@ -142,7 +142,7 @@ class WebRtcVoiceConnection implements VoiceConnection {
     this.previews.setSound(this.sound);
   }
 
-  public mutes = (): VoiceMutes => this.store.read();
+  public mutes = (): ConversationMutes => this.store.read();
 
   public subscribe = (listener: () => void): (() => void) =>
     this.store.subscribe(listener);
@@ -169,6 +169,6 @@ class WebRtcVoiceConnection implements VoiceConnection {
   }
 }
 
-export const createWebRtcVoiceConnection = (
-  environment: VoiceEnvironment,
-): VoiceConnection => new WebRtcVoiceConnection(environment);
+export const createWebRtcConversationConnection = (
+  environment: ConversationEnvironment,
+): ConversationConnection => new WebRtcConversationConnection(environment);

@@ -1,6 +1,6 @@
-import type { CustomVoice, VoiceOption, VoiceSettings } from '@repo/contracts';
+import type { CustomVoice, VoiceOption, ConversationSettings } from '@repo/contracts';
 
-// One row of the Voice popover: a voice to choose, hear and, when it is the person's own, edit.
+// One row of the Conversation popover: a voice to choose, hear and, when it is the person's own, edit.
 export interface VoiceChoice {
   id: string;
   label: string;
@@ -9,7 +9,7 @@ export interface VoiceChoice {
   custom?: CustomVoice;
 }
 
-// What the Voice popover lists for a search: the person's voices, then the provider's under its name.
+// What the Conversation popover lists for a search: the person's voices, then the provider's under its name.
 export interface VoiceChoices {
   custom: VoiceChoice[];
   builtIn: VoiceChoice[];
@@ -43,13 +43,13 @@ const matches =
       .toLocaleLowerCase()
       .includes(query.trim().toLocaleLowerCase());
 
-const providerLabel = (settings: VoiceSettings): string =>
+const providerLabel = (settings: ConversationSettings): string =>
   settings.providers.find(({ id }) => id === settings.provider)?.label ??
   'Provider';
 
 // The voices to choose from that match the search, by name or by description.
 export function voiceChoices(
-  settings: VoiceSettings,
+  settings: ConversationSettings,
   query: string,
 ): VoiceChoices {
   const shown = matches(query);
@@ -64,7 +64,7 @@ export function voiceChoices(
 }
 
 // The chosen voice's name, a custom one's own; nothing while none is chosen or it is gone.
-export function chosenVoiceLabel(settings: VoiceSettings): string {
+export function chosenVoiceLabel(settings: ConversationSettings): string {
   const all = [...settings.customVoices, ...settings.voices];
 
   return all.find(({ id }) => id === settings.voice)?.label ?? '';

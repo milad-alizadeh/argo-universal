@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import type { TurnHappening } from '../sessions';
 import type { SessionHappening } from './session-link';
-import { voiceSessions } from './conversation-sessions';
+import { conversationSessions } from './conversation-sessions';
 
 type TurnListener = (happening: TurnHappening) => void;
 
@@ -26,14 +26,14 @@ function sessionsHeard(): HeardSessions {
   const listeners = new Set<TurnListener>();
   const heard: SessionHappening[] = [];
 
-  const sessions = voiceSessions(
+  const sessions = conversationSessions(
     {
       findFeed: noFeed,
       watchSessionSnapshot: () => ({ unsubscribe: (): void => {} }),
     },
     {
-      promptFromVoice: () => Promise.reject(new Error('Not sent')),
-      stopFromVoice: () => Promise.resolve(false),
+      promptFromConversation: () => Promise.reject(new Error('Not sent')),
+      stopFromConversation: () => Promise.resolve(false),
       watchTurns: (_sessionId, listener) => {
         listeners.add(listener);
 

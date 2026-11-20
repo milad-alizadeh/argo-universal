@@ -1,8 +1,8 @@
-import type { VoiceConnection } from '../types/conversation-connection';
+import type { ConversationConnection } from '../types/conversation-connection';
 import { offerTo } from './offer-to';
 
 interface CallStart {
-  // Asks the Server to start the call with the offer; resolves with the Voice provider's answer.
+  // Asks the Server to start the call with the offer; resolves with the Conversation provider's answer.
   send: (offer: string) => Promise<{ answer: string }>;
   // Opens the page's live Feed again when the Server had closed it.
   resumeFeed: () => void;
@@ -14,7 +14,7 @@ interface CallStart {
  * resumed after the start as after any command, whether it started or failed with a Notice.
  */
 export const startCall = (
-  connection: VoiceConnection | null,
+  connection: ConversationConnection | null,
   { send, resumeFeed }: CallStart,
 ): Promise<void> | undefined =>
   offerTo(connection, (offer) =>

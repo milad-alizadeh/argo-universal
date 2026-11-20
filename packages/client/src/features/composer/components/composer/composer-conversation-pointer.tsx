@@ -3,13 +3,13 @@ import { Tooltip } from '@repo/kit/primitives/overlays/tooltip';
 import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import type * as React from 'react';
 import { View } from 'react-native';
-import type { ComposerVoiceElsewhere } from './composer-types';
+import type { ComposerConversationElsewhere } from './composer-types';
 
 export const callPointerId = 'composer-call-pointer';
 
 // The voice button's own look: Send's circle with the voice bars.
 const pointerProps = (
-  elsewhere: ComposerVoiceElsewhere,
+  elsewhere: ComposerConversationElsewhere,
 ): React.ComponentProps<typeof IconButton> => ({
   testID: callPointerId,
   accessibilityLabel: `Call in ${elsewhere.title}`,
@@ -36,7 +36,7 @@ function LiveDot(): React.JSX.Element {
 export function ComposerCallPointer({
   elsewhere,
 }: {
-  elsewhere: ComposerVoiceElsewhere;
+  elsewhere: ComposerConversationElsewhere;
 }): React.JSX.Element {
   const props = pointerProps(elsewhere);
 

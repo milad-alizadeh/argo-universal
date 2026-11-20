@@ -78,7 +78,7 @@ function consumedChange({
   };
 }
 
-// The steered Prompt is stored as its sender's: the person's own, or the Voice call's or a Plugin's.
+// The steered Prompt is stored as its sender's: the person's own, or the Conversation's or a Plugin's.
 const steeredChange = ({
   turnId,
   prompt,

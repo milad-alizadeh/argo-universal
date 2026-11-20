@@ -1,8 +1,8 @@
 import type { WebSocket } from 'ws';
 import type {
   VoiceDelivery,
-  VoiceProviderCall,
-  VoiceProviderEvent,
+  ConversationProviderCall,
+  ConversationProviderEvent,
 } from '../provider';
 import { ControlLink, type ControlLinkOptions } from './control-link';
 import { LinkReader } from './link-events';
@@ -51,7 +51,7 @@ function piecesOf(text: string): LinkContent[] {
 }
 
 // A close on the call's expiry is the call reaching its longest, whatever the service called it.
-const onTime = (event: VoiceProviderEvent): VoiceProviderEvent =>
+const onTime = (event: ConversationProviderEvent): ConversationProviderEvent =>
   event.type === 'closed' && event.reason === 'ended'
     ? { ...event, why: longestWhy }
     : event;
@@ -61,10 +61,10 @@ const onTime = (event: VoiceProviderEvent): VoiceProviderEvent =>
  * The link also carries raw audio, which is dropped unread; audio travels between the App and the service, never through here.
  * What happens to the link goes to the call's trail, for the Server's log.
  */
-export class GptLiveCall implements VoiceProviderCall {
+export class GptLiveCall implements ConversationProviderCall {
   public readonly answer: string;
-  private readonly listeners = new Set<(event: VoiceProviderEvent) => void>();
-  private readonly backlog: VoiceProviderEvent[] = [];
+  private readonly listeners = new Set<(event: ConversationProviderEvent) => void>();
+  private readonly backlog: ConversationProviderEvent[] = [];
   private readonly reader = new LinkReader();
   private readonly trail = new LinkTrail();
   private readonly link: ControlLink;
@@ -85,7 +85,7 @@ export class GptLiveCall implements VoiceProviderCall {
     );
   }
 
-  public listen(listener: (event: VoiceProviderEvent) => void): () => void {
+  public listen(listener: (event: ConversationProviderEvent) => void): () => void {
     this.listeners.add(listener);
 
     for (const event of this.backlog.splice(0)) listener(event);
@@ -121,14 +121,14 @@ export class GptLiveCall implements VoiceProviderCall {
     this.finish();
   }
 
-  private emit(event: VoiceProviderEvent): void {
+  private emit(event: ConversationProviderEvent): void {
     if (this.ended) return;
     this.deliver(event);
 
     if (event.type === 'closed') this.finish();
   }
 
-  private deliver(event: VoiceProviderEvent): void {
+  private deliver(event: ConversationProviderEvent): void {
     if (this.listeners.size === 0) this.backlog.push(event);
 
     for (const listener of this.listeners) listener(event);
@@ -156,7 +156,7 @@ export class GptLiveCall implements VoiceProviderCall {
     for (const event of this.reader.read(frame)) this.emit(this.timed(event));
   }
 
-  private timed(event: VoiceProviderEvent): VoiceProviderEvent {
+  private timed(event: ConversationProviderEvent): ConversationProviderEvent {
     return this.trail.expired(Date.now()) ? onTime(event) : event;
   }
 }

@@ -1,7 +1,7 @@
 import {
   type SessionSnapshot,
   type SlashCommand,
-  type VoicePartial,
+  type ConversationPartial,
   withArgoSlashCommands,
 } from '@repo/contracts';
 import {
@@ -20,7 +20,7 @@ import type {
   PermissionRequestProps,
 } from '#features/requests';
 import { decodeOpenFailure, toSendError } from '#features/sessions';
-import { voicePlaceholder } from '#features/conversation';
+import { conversationPlaceholder } from '#features/conversation';
 import { type Navigate } from '#lib/product/navigation/navigation';
 import { followUpProps } from './follow-up-composer-props';
 import { sessionStatusProps } from './session-status-props';
@@ -42,10 +42,10 @@ export interface OpenSession {
   elicitation: ElicitationFormProps | undefined;
   permission: PermissionRequestProps | undefined;
   usageLimits: UsageLimitsRead;
-  // Where a Voice call is, and how to start or end it; absent where the App carries no audio.
+  // Where a Conversation is, and how to start or end it; absent where the App carries no audio.
   voice?: ComposerProps['voice'];
-  // What is being said on this Session's Voice call, drawn at the tail of its Feed.
-  partials?: VoicePartial[];
+  // What is being said on this Session's Conversation, drawn at the tail of its Feed.
+  partials?: ConversationPartial[];
   options?: {
     configOptions: SessionSnapshot['configOptions'];
     loading: boolean;
@@ -127,7 +127,7 @@ const draftProps = (commands: SessionCommands): DraftProps => ({
 });
 
 const placeholderOf = ({ voice }: OpenSession): string =>
-  voicePlaceholder(voice) ?? 'Message the Agent';
+  conversationPlaceholder(voice) ?? 'Message the Agent';
 
 // An open Session always offers Argo's Slash commands, whether or not its Agent has reported any.
 const slashCommandsOf = (open: OpenSession): ComposerProps['slashCommands'] =>

@@ -36,7 +36,7 @@ const speakers = {
   user_message: 'Person',
   person_transcript: 'Person',
   agent_message: 'Agent',
-  voice_transcript: 'Voice',
+  voice_transcript: 'Conversation',
 } as const satisfies Record<
   Exclude<Spoken['sessionUpdate'], 'prompt_message'>,
   string
@@ -44,8 +44,8 @@ const speakers = {
 
 // A Prompt the person did not send, named by its sender; the voice's carries no instruction to the Agent.
 const promptLine = (sender: SentPromptSender, text: string): string =>
-  sender.type === 'voice'
-    ? `Voice call request: ${withoutVoiceInstruction(text)}`
+  sender.type === 'conversation'
+    ? `Conversation request: ${withoutVoiceInstruction(text)}`
     : `From ${sender.title}: ${text}`;
 
 const labelled = (row: Spoken, text: string): string =>

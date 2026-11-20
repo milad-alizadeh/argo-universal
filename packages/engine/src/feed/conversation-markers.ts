@@ -1,7 +1,7 @@
 import type { ContentBlock, SessionUpdate } from '@repo/contracts';
 
 /*
- * The marks an Agent puts at the start of a message on a Voice call (ADR-0064): progress, a result, or silent analysis.
+ * The marks an Agent puts at the start of a message on a Conversation (ADR-0064): progress, a result, or silent analysis.
  * They are for the voice, not the reader. The Feed reads every stored, queued or in-memory row without them, and
  * without the analysis they mark, so no reader has to remember to; only the Feed's live changes, which the relay
  * reads, still carry them.
@@ -18,7 +18,7 @@ const voiceInstruction = [
   '[COMPLETE] for the result, a question, or a blocker once you are done,',
   '[ANALYSIS] for notes that must stay silent.',
   'Keep spoken messages short and plain; do not read out code or tool output.',
-  'End the call by running the Argo Operation voice.hangUp, but only when the person clearly says they are done with the call, such as goodbye or hang up.',
+  'End the call by running the Argo Operation conversation.hangUp, but only when the person clearly says they are done with the call, such as goodbye or hang up.',
   'Do not end it when the person asks you to stop work, pause or wait: that is not the end of the call.',
 ].join('\n');
 
@@ -118,7 +118,7 @@ function addLine(sections: OpenSection[], line: string): OpenSection[] {
  * such mark or the end of the message, so a paragraph of analysis inside a result stays silent; text before any mark
  * is progress. Sections with nothing to say are left out.
  */
-export const readVoiceSections = (text: string): VoiceMessage[] =>
+export const readConversationSections = (text: string): VoiceMessage[] =>
   text
     .split('\n')
     .reduce(addLine, [{ kind: 'progress', lines: [] }])

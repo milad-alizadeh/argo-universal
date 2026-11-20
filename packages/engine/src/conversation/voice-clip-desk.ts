@@ -4,7 +4,7 @@ import type {
   VoiceStorePreviewClipInput,
   VoiceStorePreviewClipOutput,
 } from '@repo/contracts';
-import type { VoiceProvider } from './provider';
+import type { ConversationProvider } from './provider';
 import { noProviderReason, unavailable } from './unavailable';
 import type { VoiceChoices } from './voice-choices';
 import { VoicePreviewClips, type PreviewClipKey } from './voice-preview-clips';
@@ -19,7 +19,7 @@ export class VoiceClipDesk {
   public constructor(
     directory: string,
     private readonly choices: Pick<VoiceChoices, 'previewed'>,
-    private readonly provider: () => VoiceProvider | null,
+    private readonly provider: () => ConversationProvider | null,
   ) {
     this.clips = new VoicePreviewClips(directory);
   }

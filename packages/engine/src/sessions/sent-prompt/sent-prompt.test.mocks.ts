@@ -11,7 +11,7 @@ import { sendPrompt, type SentPrompt } from '.';
 type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 
 export const senders = {
-  'the Voice call': { type: 'voice' },
+  'the Conversation': { type: 'conversation' },
   'another Session': { type: 'session', sessionId: 'caller', title: 'Caller' },
   'a Plugin': { type: 'plugin', pluginId: 'prompter', title: 'Prompter' },
 } satisfies Record<string, SentPromptSender>;

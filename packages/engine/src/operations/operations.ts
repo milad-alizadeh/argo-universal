@@ -14,7 +14,7 @@ import type { AppNavigation } from '../app-navigation';
 import type { FeedDeps } from '../feed';
 import type { PluginsRouterDeps } from '../plugins';
 import type { Sessions } from '../sessions';
-import type { VoiceCallsPort } from '../conversation';
+import type { ConversationsPort } from '../conversation';
 import {
   discoveryCall,
   listedOutput,
@@ -50,7 +50,7 @@ export type {
 export type OperationsDeps = RegistryDeps &
   Pick<FeedDeps, 'findWriter'> & {
     sessions: Sessions;
-    voice: VoiceCallsPort;
+    conversation: ConversationsPort;
     appNavigation: AppNavigation;
     controlToken: string;
     userHome: string;

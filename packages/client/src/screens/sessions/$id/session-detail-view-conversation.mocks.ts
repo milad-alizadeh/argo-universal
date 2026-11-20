@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { fn } from 'storybook/test';
-import type { ComposerVoice } from '#features/composer';
-import { VoiceEdgeBand, voicePlaceholder } from '#features/conversation';
+import type { ComposerConversation } from '#features/composer';
+import { ConversationEdgeBand, conversationPlaceholder } from '#features/conversation';
 import { syntheticVoiceAudio } from '../../../../mocks/conversation/synthetic-voice-audio';
 import type { OpenSessionViewProps } from './session-detail-view';
 import { idleSession } from './session-detail-view.mocks';
@@ -10,8 +10,8 @@ import { idleSession } from './session-detail-view.mocks';
 const { spectrum } = syntheticVoiceAudio();
 
 // The call has run 4 minutes 12 seconds, as Paper's "Electron window" shows it.
-const band = createElement(VoiceEdgeBand, {
-  call: { orb: 'listening', trouble: null, microphoneMuted: false },
+const band = createElement(ConversationEdgeBand, {
+  call: { state: 'listening', trouble: null, microphoneMuted: false },
   elapsed: '4:12',
   spectrum,
 });
@@ -28,14 +28,14 @@ const connectedHere = {
   onEnd: fn(),
   mutes,
   edge: band,
-} satisfies ComposerVoice;
+} satisfies ComposerConversation;
 
-// A settled Session with a Voice call running in it: the Composer on the call, with the band along its top edge.
-export const voiceCallSession: OpenSessionViewProps = {
+// A settled Session with a Conversation running in it: the Composer on the call, with the band along its top edge.
+export const conversationSession: OpenSessionViewProps = {
   ...idleSession,
   composer: {
     ...idleSession.composer,
-    placeholder: voicePlaceholder(connectedHere),
+    placeholder: conversationPlaceholder(connectedHere),
     voice: connectedHere,
   },
 };

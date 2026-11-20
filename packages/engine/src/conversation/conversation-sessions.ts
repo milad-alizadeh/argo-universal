@@ -6,8 +6,8 @@ import { FeedHappenings } from './feed-happenings';
 import { PermissionWatch } from './permission-watch';
 import type {
   SessionHappening,
-  VoiceNotice,
-  VoiceSessions,
+  ConversationNotice,
+  ConversationSessions,
 } from './session-link';
 
 type FeedSources = Pick<FeedDeps, 'findFeed' | 'watchSessionSnapshot'>;
@@ -23,10 +23,10 @@ type SnapshotEvent = Extract<
   { type: 'snapshot' | 'closed' }
 >;
 
-// What the Voice call reaches its Session's work through: the Engine's own Sessions.
-export type VoiceSessionWork = Pick<
+// What the Conversation reaches its Session's work through: the Engine's own Sessions.
+export type ConversationSessionWork = Pick<
   Sessions,
-  'promptFromVoice' | 'stopFromVoice' | 'watchTurns'
+  'promptFromConversation' | 'stopFromConversation' | 'watchTurns'
 >;
 
 // Listens to one Session's Feed for the Agent's and the person's words, following it when the Session replaces its Feed actor, and to its Permission requests.
@@ -80,7 +80,7 @@ class FeedWatch {
 
 type NoticeUpdate = Extract<FeedUpdate, { sessionUpdate: 'notice' }>;
 
-const noticeUpdate = ({ title, description }: VoiceNotice): NoticeUpdate => ({
+const noticeUpdate = ({ title, description }: ConversationNotice): NoticeUpdate => ({
   id: randomUUID(),
   sessionUpdate: 'notice',
   state: 'settled',
@@ -90,7 +90,7 @@ const noticeUpdate = ({ title, description }: VoiceNotice): NoticeUpdate => ({
 });
 
 // A settled warning Notice, written outside any Turn.
-const noticeEvent = (notice: VoiceNotice): FeedEvent => ({
+const noticeEvent = (notice: ConversationNotice): FeedEvent => ({
   type: 'feed.change',
   turnId: null,
   blobs: [],
@@ -109,7 +109,7 @@ const endOf = (happening: TurnHappening): SessionHappening | undefined =>
 
 // The Agent's words come from the Session's Feed, and each Turn's end from the Session itself.
 const watchOf =
-  (sources: FeedSources, work: VoiceSessionWork): VoiceSessions['watch'] =>
+  (sources: FeedSources, work: ConversationSessionWork): ConversationSessions['watch'] =>
   (sessionId, listener) => {
     const words = new FeedWatch(sources, sessionId, listener);
 
@@ -125,13 +125,13 @@ const watchOf =
     };
   };
 
-// The Session the Voice call speaks for, reached through the Engine's own Prompt path, its Turn happenings and its Feed.
-export const voiceSessions = (
+// The Session the Conversation speaks for, reached through the Engine's own Prompt path, its Turn happenings and its Feed.
+export const conversationSessions = (
   sources: FeedSources,
-  work: VoiceSessionWork,
-): VoiceSessions => ({
-  prompt: (sessionId, text) => work.promptFromVoice(sessionId, text),
-  stop: (sessionId) => work.stopFromVoice(sessionId),
+  work: ConversationSessionWork,
+): ConversationSessions => ({
+  prompt: (sessionId, text) => work.promptFromConversation(sessionId, text),
+  stop: (sessionId) => work.stopFromConversation(sessionId),
   watch: watchOf(sources, work),
   notice: (sessionId, notice) =>
     sources.findFeed(sessionId)?.send(noticeEvent(notice)),

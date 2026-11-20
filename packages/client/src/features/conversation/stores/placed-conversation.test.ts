@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { sessionVoice } from '../utils/session-conversation';
+import { sessionConversation } from '../utils/session-conversation';
 import { callIn, inputOf, statusOf } from '../utils/session-conversation.test.mocks';
 import { placedCall, withPlacedCall } from './placed-conversation';
 
@@ -13,25 +13,25 @@ describe('a call placed before the Server has it', () => {
   it('shows as connecting in its Session from the press', () => {
     const status = withPlacedCall(idle, 'session-1');
 
-    expect(status.call).toMatchObject({
+    expect(status.conversation).toMatchObject({
       sessionId: 'session-1',
       status: 'connecting',
-      orb: 'none',
+      state: 'none',
     });
   });
 
   it("gives way to the Server's call once the Server has one", () => {
-    const status = withPlacedCall({ ...idle, call: serverCall }, 'session-1');
+    const status = withPlacedCall({ ...idle, conversation: serverCall }, 'session-1');
 
-    expect(status.call).toBe(serverCall);
+    expect(status.conversation).toBe(serverCall);
   });
 
   it('draws the band and End in its Session at once', () => {
-    const view = sessionVoice(
+    const view = sessionConversation(
       inputOf(withPlacedCall(idle, 'session-1'), 'session-1'),
     );
 
-    expect(view.band?.call.orb).toBe('none');
+    expect(view.band?.call.state).toBe('none');
     expect(view.composer?.kind).toBe('connecting');
   });
 

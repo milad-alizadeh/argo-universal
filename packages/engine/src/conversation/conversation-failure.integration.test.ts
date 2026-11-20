@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { offer } from '#mocks/conversation-engine';
-import { startVoiceWork } from '#mocks/conversation-work';
-import { FakeVoiceProvider } from './fake-provider';
+import { startConversationWork } from '#mocks/conversation-work';
+import { FakeConversationProvider } from './fake-provider';
 
 const noQuota = 'No quota left';
 
-const failedTitle = 'Voice call failed';
+const failedTitle = 'Conversation failed';
 
-type Work = Awaited<ReturnType<typeof startVoiceWork>>;
+type Work = Awaited<ReturnType<typeof startConversationWork>>;
 
 const notices = async (work: Work): Promise<unknown[]> =>
   (await work.feed()).filter(
@@ -19,18 +19,18 @@ const notices = async (work: Work): Promise<unknown[]> =>
 // Lets the Engine take every report already sent: several round trips through the call and the Feed.
 async function settled(work: Work): Promise<void> {
   for (let trip = 0; trip < 5; trip += 1) {
-    await work.host.caller.voice.status();
+    await work.host.caller.conversation.status();
     await work.feed();
   }
 }
 
-describe('a Voice call that ends by failure', () => {
+describe('a Conversation that ends by failure', () => {
   it('adds exactly one Notice saying why when the provider errors', async () => {
-    const work = await startVoiceWork([]);
+    const work = await startConversationWork([]);
     await work.start();
     work.provider.call.emit({ type: 'status', status: 'error' });
     await expect
-      .poll(() => work.host.caller.voice.status())
+      .poll(() => work.host.caller.conversation.status())
       .toMatchObject({ ended: { reason: 'failed' } });
     // Failure reports after the call ended add nothing; the machine-level test covers the reports that race while it runs.
     work.provider.call.emit({ type: 'status', status: 'error' });
@@ -49,14 +49,14 @@ describe('a Voice call that ends by failure', () => {
   });
 
   it('says why a call that could not start failed', async () => {
-    const provider = new FakeVoiceProvider({
+    const provider = new FakeConversationProvider({
       connect: 'manual',
       failStart: noQuota,
     });
 
-    const work = await startVoiceWork([], { provider });
+    const work = await startConversationWork([], { provider });
     await expect(
-      work.host.caller.voice.start({
+      work.host.caller.conversation.start({
         sessionId: work.sessionId,
         offer,
       }),
@@ -69,20 +69,20 @@ describe('a Voice call that ends by failure', () => {
   });
 
   it('adds none when the person or the Session ends the call', async () => {
-    const work = await startVoiceWork([]);
+    const work = await startConversationWork([]);
     await work.start();
-    await work.host.caller.voice.end({ sessionId: work.sessionId });
+    await work.host.caller.conversation.end({ sessionId: work.sessionId });
     await work.host.caller.session.close({ sessionId: work.sessionId });
 
     expect(await notices(work)).toHaveLength(0);
   });
 
   it('adds one saying the provider ended it when the provider closes the call normally', async () => {
-    const work = await startVoiceWork([]);
+    const work = await startConversationWork([]);
     await work.start();
     work.provider.call.close('ended');
     await expect
-      .poll(() => work.host.caller.voice.status())
+      .poll(() => work.host.caller.conversation.status())
       .toMatchObject({ ended: { reason: 'provider-closed' } });
     await settled(work);
 
@@ -91,8 +91,8 @@ describe('a Voice call that ends by failure', () => {
       (await work.feed()).filter(
         (row) =>
           row.sessionUpdate === 'notice' &&
-          JSON.stringify(row).includes('Voice call'),
+          JSON.stringify(row).includes('Conversation'),
       ),
-    ).toEqual([expect.objectContaining({ title: 'Voice call ended' })]);
+    ).toEqual([expect.objectContaining({ title: 'Conversation ended' })]);
   });
 });

@@ -1,18 +1,18 @@
 import type { Database } from '@repo/db';
 import { createSessionReader } from '../sessions';
 import { briefingOf } from './briefing';
-import { FakeVoiceProvider } from './fake-provider';
+import { FakeConversationProvider } from './fake-provider';
 import type { CodexAuth } from './gpt-live/codex-auth';
 import { createGptLiveProvider } from './gpt-live/gpt-live-provider';
-import type { VoiceProvider } from './provider';
+import type { ConversationProvider } from './provider';
 
-// The Voice provider a Server uses unless it is given one: the fake for development when asked for, otherwise GPT-Live.
-export function defaultVoiceProvider(
+// The Conversation provider a Server uses unless it is given one: the fake for development when asked for, otherwise GPT-Live.
+export function defaultConversationProvider(
   environment: NodeJS.ProcessEnv,
   auth?: CodexAuth,
-): VoiceProvider | null {
-  return environment.ARGO_VOICE_PROVIDER === 'fake'
-    ? new FakeVoiceProvider()
+): ConversationProvider | null {
+  return environment.ARGO_CONVERSATION_PROVIDER === 'fake'
+    ? new FakeConversationProvider()
     : createGptLiveProvider(auth && { auth });
 }
 

@@ -1,11 +1,11 @@
 import { createContext, useContext } from 'react';
-import type { VoiceConnection } from '../types/conversation-connection';
+import type { ConversationConnection } from '../types/conversation-connection';
 
-// What carries a Voice call's audio where the App runs; null where none can, so no voice button is offered.
-const VoiceConnectionContext = createContext<VoiceConnection | null>(null);
+// What carries a Conversation's audio where the App runs; null where none can, so no voice button is offered.
+const ConversationConnectionContext = createContext<ConversationConnection | null>(null);
 
-export const useVoiceConnection = (): VoiceConnection | null =>
-  useContext(VoiceConnectionContext);
+export const useConversationConnection = (): ConversationConnection | null =>
+  useContext(ConversationConnectionContext);
 
-// Gives a subtree the connection that carries its Voice calls.
-export const VoiceConnectionProvider = VoiceConnectionContext.Provider;
+// Gives a subtree the connection that carries its Conversations.
+export const ConversationConnectionProvider = ConversationConnectionContext.Provider;

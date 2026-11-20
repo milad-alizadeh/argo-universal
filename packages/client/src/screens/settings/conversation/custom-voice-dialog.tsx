@@ -66,7 +66,7 @@ function CustomVoiceForm(props: FormProps): ReactElement {
       size="md"
       footer={<FormFooter {...props} draft={held.draft} />}
     >
-      {voiceSection(props, held)}
+      {conversationSection(props, held)}
       {descriptionSection(props, held)}
       {deleteSection(props)}
     </DialogForm>
@@ -82,7 +82,7 @@ const nameRow = ({ draft, change }: Draft): ReactElement => (
   />
 );
 
-const voiceOptions = (
+const conversationOptions = (
   voices: VoiceOption[],
 ): React.ComponentProps<typeof FieldGroup.Picker>['options'] =>
   voices.map(({ id, label }) => ({ value: id, label }));
@@ -110,14 +110,14 @@ const baseVoiceRow = (
     title="Speaks with"
     presentation="menu"
     value={draft.baseVoice}
-    options={voiceOptions(props.voices)}
+    options={conversationOptions(props.voices)}
     accessory={previewOf(props, draft)}
     onValueChange={(baseVoice) => change({ baseVoice })}
   />
 );
 
 // Called, not rendered, as a FieldGroup reads its rows off the elements it is given.
-const voiceSection = (props: FormProps, held: Draft): ReactElement => (
+const conversationSection = (props: FormProps, held: Draft): ReactElement => (
   <FieldGroup.Section key="voice">
     {nameRow(held)}
     {baseVoiceRow(props, held)}

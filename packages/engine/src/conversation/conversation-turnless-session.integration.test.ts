@@ -1,20 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { promptText, startVoiceWork, type VoiceWork } from '#mocks/conversation-work';
+import { promptText, startConversationWork, type ConversationWork } from '#mocks/conversation-work';
 
 const fixBuild = 'Fix the build';
 
-const callStatus = async (work: VoiceWork): Promise<string | undefined> =>
-  (await work.host.caller.voice.status()).call?.status;
+const callStatus = async (work: ConversationWork): Promise<string | undefined> =>
+  (await work.host.caller.conversation.status()).conversation?.status;
 
-const rowKinds = async (work: VoiceWork): Promise<string[]> =>
+const rowKinds = async (work: ConversationWork): Promise<string[]> =>
   (await work.feed()).map((row) => row.sessionUpdate);
 
-describe('a Voice call in a Session with no Turns yet', () => {
+describe('a Conversation in a Session with no Turns yet', () => {
   it(
     'starts, and the first spoken request reaches the Agent and starts the first Turn',
     { timeout: 30000 },
     async () => {
-      const work = await startVoiceWork(
+      const work = await startConversationWork(
         [{ prompt: fixBuild, messages: ['[COMPLETE] Fixed it'] }],
         { turnless: true },
       );
@@ -29,12 +29,12 @@ describe('a Voice call in a Session with no Turns yet', () => {
       await expect.poll(work.turnEnds).toHaveLength(1);
       await expect
         .poll(work.promptRows)
-        .toMatchObject([{ _meta: { argo: { sender: { type: 'voice' } } } }]);
+        .toMatchObject([{ _meta: { argo: { sender: { type: 'conversation' } } } }]);
     },
   );
 
   it('stores what the person says in the Feed it had none of', async () => {
-    const work = await startVoiceWork([], { turnless: true });
+    const work = await startConversationWork([], { turnless: true });
 
     await work.start();
     work.provider.call.personSays('Hello there');

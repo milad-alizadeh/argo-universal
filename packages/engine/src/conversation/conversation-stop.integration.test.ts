@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { statusOf } from '#mocks/conversation-timing';
-import { startVoiceWork, type VoiceWork } from '#mocks/conversation-work';
+import { startConversationWork, type ConversationWork } from '#mocks/conversation-work';
 import { relayWords } from './relay-words';
 
 const longJob = 'Refactor everything';
@@ -8,14 +8,14 @@ const longJob = 'Refactor everything';
 const sentence = 'Stop using tabs in the config';
 
 // The answer the voice was given to a request for work.
-const replyTo = (work: VoiceWork, requestId: string): string | undefined =>
+const replyTo = (work: ConversationWork, requestId: string): string | undefined =>
   work.provider.call.sent.find(
     (message) => message.kind === 'reply' && message.requestId === requestId,
   )?.text;
 
 // Starts the call and a Turn from it that runs until it is cancelled.
-async function runLongJob(): Promise<VoiceWork> {
-  const work = await startVoiceWork([
+async function runLongJob(): Promise<ConversationWork> {
+  const work = await startConversationWork([
     { prompt: longJob, messages: ['[STATUS] Working'], untilCancelled: true },
   ]);
 
@@ -52,7 +52,7 @@ describe('a spoken "stop"', () => {
   });
 
   it('tells the voice there is nothing to stop when no Turn runs', async () => {
-    const work = await startVoiceWork([]);
+    const work = await startConversationWork([]);
 
     await work.start();
     work.provider.call.requestWork('r1', 'Stop.');
@@ -62,7 +62,7 @@ describe('a spoken "stop"', () => {
   });
 
   it('sends a sentence that only mentions stopping as a Prompt', async () => {
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: sentence, messages: ['[COMPLETE] Done'] },
     ]);
 

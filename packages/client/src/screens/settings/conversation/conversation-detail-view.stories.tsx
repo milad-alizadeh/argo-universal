@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { within } from 'storybook/test';
-import { VoiceDetailView } from './conversation-detail-view';
+import { ConversationDetailView } from './conversation-detail-view';
 import {
   adding,
   customVoices,
@@ -16,8 +16,8 @@ import {
 } from './conversation-detail-view-fixtures';
 
 const meta = {
-  title: 'Screens/Settings/Voice',
-  component: VoiceDetailView,
+  title: 'Screens/Settings/Conversation',
+  component: ConversationDetailView,
   argTypes: {
     voice: { control: false },
     devices: { control: false },
@@ -31,8 +31,8 @@ const meta = {
   args: {
     voice: { status: 'loaded', settings: usableVoice },
     adjustsGain: true,
-    onEnabledChange: action('turn Voice calls on or off'),
-    onProviderChange: action('choose the Voice provider'),
+    onEnabledChange: action('turn Conversations on or off'),
+    onProviderChange: action('choose the Conversation provider'),
     onVoiceChange: action('choose the voice'),
     onPreviewVoice: action('play a voice'),
     onInstructionsChange: action('keep the instructions'),
@@ -42,9 +42,9 @@ const meta = {
     onDeleteCustomVoice: action('delete a custom voice'),
     onPreviewCustomVoice: action('play a custom voice'),
     onDevicesChange: action('choose the microphone or speaker'),
-    onRetry: action('retry loading Voice settings'),
+    onRetry: action('retry loading Conversation settings'),
   },
-} satisfies Meta<typeof VoiceDetailView>;
+} satisfies Meta<typeof ConversationDetailView>;
 
 export default meta;
 
@@ -52,13 +52,13 @@ type Story = StoryObj<typeof meta>;
 
 type Canvas = Parameters<NonNullable<Story['play']>>[0];
 
-// Opens the Voice row's popover, which draws outside the canvas.
+// Opens the Conversation row's popover, which draws outside the canvas.
 async function openVoices({
   canvas,
   canvasElement,
   userEvent,
 }: Canvas): Promise<ReturnType<typeof within>> {
-  await userEvent.click(canvas.getByRole('link', { name: /^Voice/ }));
+  await userEvent.click(canvas.getByRole('link', { name: /^Conversation/ }));
   const page = within(canvasElement.ownerDocument.body);
   await page.findByRole('searchbox', { name: 'Search voices' });
 
@@ -72,8 +72,8 @@ export const CustomVoices: Story = {
   args: { voice: { status: 'loaded', settings: customVoices } },
 };
 
-// The Voice row's popover: the person's voices with play and edit, a row to add one, then the provider's.
-export const VoicePopover: Story = {
+// The Conversation row's popover: the person's voices with play and edit, a row to add one, then the provider's.
+export const ConversationPopover: Story = {
   args: { voice: { status: 'loaded', settings: customVoices } },
   play: async (context) => {
     await openVoices(context);

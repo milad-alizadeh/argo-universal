@@ -2,9 +2,9 @@ import type { VoicePreviewOutput } from '@repo/contracts';
 import type { PreviewedVoice } from './custom-voices';
 import type {
   VoicePreviewRequest,
-  VoiceProvider,
-  VoiceProviderCall,
-  VoiceProviderEvent,
+  ConversationProvider,
+  ConversationProviderCall,
+  ConversationProviderEvent,
 } from './provider';
 import { noProviderReason, unavailable } from './unavailable';
 
@@ -15,7 +15,7 @@ const greetingOf = ({ label }: PreviewedVoice): string =>
   `Hi, I'm ${label}. This is how I'll sound on your calls.`;
 
 // The voice has finished its greeting, or the call is over.
-const finished = (event: VoiceProviderEvent): boolean =>
+const finished = (event: ConversationProviderEvent): boolean =>
   (event.type === 'speaking' && !event.speaking) || event.type === 'closed';
 
 const requestOf = (
@@ -30,16 +30,16 @@ const requestOf = (
 
 /*
  * Settings' voice previews: a call that says one greeting in the voice picked, then hangs up by itself.
- * A preview is no Voice call: it has no Session, no orb and no Feed rows, and only one plays at a time.
+ * A preview is no Conversation: it has no Session, no orb and no Feed rows, and only one plays at a time.
  */
 export class VoicePreviews {
-  private playing: VoiceProviderCall | null = null;
+  private playing: ConversationProviderCall | null = null;
   private timer: ReturnType<typeof setTimeout> | undefined;
   // Counts the previews asked for, so one that answers after a later one was asked for is ended at once.
   private asked = 0;
 
   public async play(
-    provider: VoiceProvider | null,
+    provider: ConversationProvider | null,
     offer: string,
     previewed: PreviewedVoice,
   ): Promise<VoicePreviewOutput> {
@@ -62,7 +62,7 @@ export class VoicePreviews {
     this.playing = null;
   }
 
-  private hold(call: VoiceProviderCall): void {
+  private hold(call: ConversationProviderCall): void {
     this.playing = call;
     this.timer = setTimeout(() => this.endCall(call), previewLimitMs);
     call.listen((event) => {
@@ -70,7 +70,7 @@ export class VoicePreviews {
     });
   }
 
-  private endCall(call: VoiceProviderCall): void {
+  private endCall(call: ConversationProviderCall): void {
     if (call === this.playing) this.end();
     else call.end();
   }

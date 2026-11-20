@@ -12,6 +12,8 @@ export * from './sessions';
 
 export * from './conversation';
 
+export * from './voice';
+
 export * from './system';
 
 export * from './notifications';

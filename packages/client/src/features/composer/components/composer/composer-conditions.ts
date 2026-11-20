@@ -1,8 +1,8 @@
 import { maxBlobUploadBytes } from '@repo/contracts';
 import type {
   ComposerProps,
-  ComposerVoice,
-  ComposerVoiceElsewhere,
+  ComposerConversation,
+  ComposerConversationElsewhere,
   SendState,
 } from './composer-types';
 
@@ -63,7 +63,7 @@ export function sendButtonState(props: ComposerProps): SendState {
   return callSendState(props) ?? idleSendState(props);
 }
 
-const inCall: Partial<Record<ComposerVoice['kind'], 'connecting' | 'end'>> = {
+const inCall: Partial<Record<ComposerConversation['kind'], 'connecting' | 'end'>> = {
   connecting: 'connecting',
   connected: 'end',
 };
@@ -78,7 +78,7 @@ function callSendState(props: ComposerProps): 'connecting' | 'end' | undefined {
 function idleSendState(props: ComposerProps): SendState {
   const state = baseSendState(props);
 
-  return state === 'blocked' && canStartVoice(props) ? 'voice' : state;
+  return state === 'blocked' && canStartConversation(props) ? 'voice' : state;
 }
 
 /*
@@ -87,17 +87,17 @@ function idleSendState(props: ComposerProps): SendState {
  */
 export function callPointer(
   props: ComposerProps,
-): ComposerVoiceElsewhere | undefined {
+): ComposerConversationElsewhere | undefined {
   return pointsElsewhere(props) ? elsewhereOf(props.voice) : undefined;
 }
 
 // The voice button's place is free: nothing else takes the primary slot, and the Composer could start a call.
 const pointsElsewhere = (props: ComposerProps): boolean =>
-  sendButtonState(props) === 'blocked' && voiceSlotFree(props);
+  sendButtonState(props) === 'blocked' && conversationSlotFree(props);
 
 const elsewhereOf = (
   voice: ComposerProps['voice'],
-): ComposerVoiceElsewhere | undefined =>
+): ComposerConversationElsewhere | undefined =>
   voice?.kind === 'elsewhere' ? voice : undefined;
 
 function baseSendState(props: ComposerProps): SendState {
@@ -111,19 +111,19 @@ function baseSendState(props: ComposerProps): SendState {
 }
 
 // Where the voice button may stand: an idle, sendable Composer with nothing written and no Queued Prompt being edited.
-const voiceSlotConditions: ((props: ComposerProps) => boolean)[] = [
+const conversationSlotConditions: ((props: ComposerProps) => boolean)[] = [
   (props) => !isInactive(props),
   (props) => props.sendable ?? true,
   (props) => !props.queueEdit,
   (props) => !hasDraftContent(props),
 ];
 
-const voiceSlotFree = (props: ComposerProps): boolean =>
-  voiceSlotConditions.every((condition) => condition(props));
+const conversationSlotFree = (props: ComposerProps): boolean =>
+  conversationSlotConditions.every((condition) => condition(props));
 
-// The voice module offers the voice button only while no call runs anywhere: one Voice call runs per App.
-const canStartVoice = (props: ComposerProps): boolean =>
-  props.voice?.kind === 'start' && voiceSlotFree(props);
+// The voice module offers the voice button only while no call runs anywhere: one Conversation runs per App.
+const canStartConversation = (props: ComposerProps): boolean =>
+  props.voice?.kind === 'start' && conversationSlotFree(props);
 
 function isConnectionSendable(props: ComposerProps): boolean {
   return (props.sendable ?? true) && allowsSubmission(props);

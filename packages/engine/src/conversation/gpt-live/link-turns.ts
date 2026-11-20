@@ -1,4 +1,4 @@
-import type { VoiceProviderEvent } from '../provider';
+import type { ConversationProviderEvent } from '../provider';
 
 export type Speaker = 'person' | 'voice';
 
@@ -16,10 +16,10 @@ const transcriptOf = (
   { speaker, id }: OpenTurn,
   text: string,
   final: boolean,
-): VoiceProviderEvent => ({ type: transcriptType[speaker], id, text, final });
+): ConversationProviderEvent => ({ type: transcriptType[speaker], id, text, final });
 
 // An open turn's words so far, as a partial under the turn's id, which its final is stored under too.
-function partialOf(turn: OpenTurn): VoiceProviderEvent[] {
+function partialOf(turn: OpenTurn): ConversationProviderEvent[] {
   const said = turn.text.trimStart();
 
   return said ? [transcriptOf(turn, said, false)] : [];
@@ -36,7 +36,7 @@ export class SpokenTurns {
   private readonly open = new Map<Speaker, OpenTurn>();
 
   // A new turn; it supersedes the speaker's open turn, and cuts the other speaker's short.
-  public opened(speaker: Speaker, turn: Utterance): VoiceProviderEvent[] {
+  public opened(speaker: Speaker, turn: Utterance): ConversationProviderEvent[] {
     const said = this.others(turn.id).flatMap((open) => this.settle(open));
     const opened = { ...turn, speaker, reported: '' };
 
@@ -45,7 +45,7 @@ export class SpokenTurns {
     return [...said, ...partialOf(opened)];
   }
 
-  public grew(turnId: string, delta: string): VoiceProviderEvent[] {
+  public grew(turnId: string, delta: string): ConversationProviderEvent[] {
     return [...this.open.values()]
       .filter((turn) => turn.id === turnId)
       .flatMap((turn) => {
@@ -56,7 +56,7 @@ export class SpokenTurns {
   }
 
   // The turn as done: its own transcript, else the words heard in it.
-  public done(speaker: Speaker, turn: Utterance): VoiceProviderEvent[] {
+  public done(speaker: Speaker, turn: Utterance): ConversationProviderEvent[] {
     const open = this.matching(speaker, turn.id);
 
     this.open.delete(speaker);
@@ -68,7 +68,7 @@ export class SpokenTurns {
   }
 
   // The call closing: every open turn keeps what it said so far.
-  public closing(): VoiceProviderEvent[] {
+  public closing(): ConversationProviderEvent[] {
     const said = this.others('').flatMap((open) => this.settle(open));
 
     this.open.clear();
@@ -89,7 +89,7 @@ export class SpokenTurns {
       : { id: turnId, text: '', speaker, reported: '' };
   }
 
-  private settle(turn: OpenTurn): VoiceProviderEvent[] {
+  private settle(turn: OpenTurn): ConversationProviderEvent[] {
     const text = turn.text.trim();
 
     if (!text || text === turn.reported) return [];

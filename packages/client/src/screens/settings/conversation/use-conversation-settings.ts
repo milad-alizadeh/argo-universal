@@ -1,4 +1,4 @@
-import type { VoiceSettings } from '@repo/contracts';
+import type { ConversationSettings } from '@repo/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   useConnectionState,
@@ -12,23 +12,23 @@ import {
   type CustomVoiceChanges,
 } from './use-custom-voice-changes';
 import type {
-  VoiceDetailViewProps,
-  VoiceSettingsLoad,
+  ConversationDetailViewProps,
+  ConversationSettingsLoad,
 } from './conversation-detail-view-props';
 import { controlsOf } from './conversation-settings-controls';
 
 type Controls = Omit<
-  VoiceDetailViewProps,
+  ConversationDetailViewProps,
   'onBack' | 'devices' | 'onDevicesChange' | 'adjustsGain'
 >;
 
 interface SettingsQuery {
-  data?: VoiceSettings;
+  data?: ConversationSettings;
   isError: boolean;
   refetch: () => void;
 }
 
-const settledState = (query: SettingsQuery): VoiceSettingsLoad =>
+const settledState = (query: SettingsQuery): ConversationSettingsLoad =>
   query.data
     ? { status: 'loaded', settings: query.data }
     : { status: query.isError ? 'error' : 'loading' };
@@ -36,10 +36,10 @@ const settledState = (query: SettingsQuery): VoiceSettingsLoad =>
 const loadState = (
   connected: boolean,
   query: SettingsQuery,
-): VoiceSettingsLoad =>
+): ConversationSettingsLoad =>
   connected ? settledState(query) : { status: 'disconnected' };
 
-type SettingsAnswer = { onSuccess: (settings: VoiceSettings) => void };
+type SettingsAnswer = { onSuccess: (settings: ConversationSettings) => void };
 
 // What the Server answers to a change is the page's new state.
 function useKeepAnswer(): SettingsAnswer {
@@ -48,25 +48,25 @@ function useKeepAnswer(): SettingsAnswer {
 
   return {
     onSuccess: (settings) =>
-      cache.setQueryData(trpc.voice.getSettings.queryKey(), settings),
+      cache.setQueryData(trpc.conversation.getSettings.queryKey(), settings),
   };
 }
 
 // The changes the Server answers with the whole settings.
 interface SettingsChanges {
-  change: ServerMutation<TRPC['voice']['setSettings']>;
-  instructions: ServerMutation<TRPC['voice']['setInstructions']>;
-  options: ServerMutation<TRPC['voice']['setCallOptions']>;
+  change: ServerMutation<TRPC['conversation']['setSettings']>;
+  instructions: ServerMutation<TRPC['conversation']['setInstructions']>;
+  options: ServerMutation<TRPC['conversation']['setOptions']>;
 }
 
 function useSettingsChanges(): SettingsChanges {
-  const { voice } = useTRPC();
+  const { conversation } = useTRPC();
   const keep = useKeepAnswer();
 
   return {
-    change: useMutation(voice.setSettings.mutationOptions(keep)),
-    instructions: useMutation(voice.setInstructions.mutationOptions(keep)),
-    options: useMutation(voice.setCallOptions.mutationOptions(keep)),
+    change: useMutation(conversation.setSettings.mutationOptions(keep)),
+    instructions: useMutation(conversation.setInstructions.mutationOptions(keep)),
+    options: useMutation(conversation.setOptions.mutationOptions(keep)),
   };
 }
 
@@ -112,8 +112,8 @@ const shownOf = (
   ...editorOf(custom),
 });
 
-export function useVoiceSettings(): Controls {
-  const query = useQuery(useTRPC().voice.getSettings.queryOptions());
+export function useConversationSettings(): Controls {
+  const query = useQuery(useTRPC().conversation.getSettings.queryOptions());
   const settings = useSettingsChanges();
   const pick = (voice: string): void => settings.change.mutate({ voice });
   const custom = useCustomVoiceChanges(pick);

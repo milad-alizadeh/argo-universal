@@ -2,9 +2,9 @@ import type { CodexReading } from '../src/conversation/gpt-live/codex-auth';
 import type { GptLiveCall } from '../src/conversation/gpt-live/gpt-live-call';
 import { createGptLiveProvider } from '../src/conversation/gpt-live/gpt-live-provider';
 import type {
-  VoiceProviderCall,
-  VoiceProviderEvent,
-  VoiceStartRequest,
+  ConversationProviderCall,
+  ConversationProviderEvent,
+  ConversationStartRequest,
 } from '../src/conversation/provider';
 import {
   startFakeEndpoint,
@@ -38,7 +38,7 @@ export type GptLiveFixture = {
   auth: ScriptedAuth;
   provider: ReturnType<typeof createGptLiveProvider>;
   // Starts a call that the fixture ends when it closes.
-  start: (request: VoiceStartRequest) => Promise<GptLiveCall>;
+  start: (request: ConversationStartRequest) => Promise<GptLiveCall>;
   // Ends every call it started, then the fake service, and waits until both are gone.
   close: () => Promise<void>;
 };
@@ -67,7 +67,7 @@ class Fixture implements GptLiveFixture {
   ) {}
 
   public readonly start = async (
-    started: VoiceStartRequest,
+    started: ConversationStartRequest,
   ): Promise<GptLiveCall> => {
     const call = await this.provider.start(started);
     this.calls.push(call);
@@ -99,8 +99,8 @@ export async function fixtureOf(
 }
 
 // Everything the call reports from now on.
-export function heard(call: VoiceProviderCall): VoiceProviderEvent[] {
-  const events: VoiceProviderEvent[] = [];
+export function heard(call: ConversationProviderCall): ConversationProviderEvent[] {
+  const events: ConversationProviderEvent[] = [];
   call.listen((event) => events.push(event));
 
   return events;

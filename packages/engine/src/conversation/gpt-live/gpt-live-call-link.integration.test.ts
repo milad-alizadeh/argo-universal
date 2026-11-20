@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { delegationCreated, delegationItem } from '#mocks/gpt-live-frames';
 import type { SentMessage } from '#mocks/gpt-live-link-message';
 import { heard, startedCall, type GptLiveFixture } from '#mocks/gpt-live-setup';
-import type { VoiceProviderEvent } from '../provider';
+import type { ConversationProviderEvent } from '../provider';
 
 let fixture: GptLiveFixture | undefined;
 
@@ -93,7 +93,7 @@ describe('GPT-Live call losing its link', () => {
   });
 });
 
-const notesOf = (events: VoiceProviderEvent[]): string[] =>
+const notesOf = (events: ConversationProviderEvent[]): string[] =>
   events.flatMap((event) => (event.type === 'trail' ? [event.note] : []));
 
 describe('the GPT-Live control link’s keepalive', () => {

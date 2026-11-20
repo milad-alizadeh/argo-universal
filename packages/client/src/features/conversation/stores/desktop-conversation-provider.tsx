@@ -1,27 +1,27 @@
-import type { VoiceStatus } from '@repo/contracts';
+import type { ConversationStatus } from '@repo/contracts';
 import { useEffect, useMemo, type JSX, type ReactNode } from 'react';
-import { useReportedVoiceDevices } from '../hooks/use-reported-conversation-devices';
-import { useVoiceStatus } from '../hooks/use-conversation-status';
-import type { VoiceConnection } from '../types/conversation-connection';
+import { useReportedConversationDevices } from '../hooks/use-reported-conversation-devices';
+import { useConversationStatus } from '../hooks/use-conversation-status';
+import type { ConversationConnection } from '../types/conversation-connection';
 import { followCall } from '../utils/follow-conversation';
 import {
   browserCarriesAudio,
-  browserVoiceEnvironment,
+  browserConversationEnvironment,
 } from './browser-conversation-environment';
-import { VoiceConnectionProvider } from './conversation-connection-context';
-import { useVoiceDeviceChoice } from './conversation-device-choice';
-import { createWebRtcVoiceConnection } from './webrtc-conversation-connection';
+import { ConversationConnectionProvider } from './conversation-connection-context';
+import { useConversationDeviceChoice } from './conversation-device-choice';
+import { createWebRtcConversationConnection } from './webrtc-conversation-connection';
 
-// The desktop App carries a Voice call's audio itself; any other page offers no voice button.
-const connectionFor = (desktop: boolean): VoiceConnection | null =>
+// The desktop App carries a Conversation's audio itself; any other page offers no voice button.
+const connectionFor = (desktop: boolean): ConversationConnection | null =>
   desktop && browserCarriesAudio()
-    ? createWebRtcVoiceConnection(browserVoiceEnvironment)
+    ? createWebRtcConversationConnection(browserConversationEnvironment)
     : null;
 
 interface HostProps {
-  connection: VoiceConnection;
-  // The Server's standing for the call, as `voice.watch` gives it.
-  status: VoiceStatus;
+  connection: ConversationConnection;
+  // The Server's standing for the call, as `conversation.watch` gives it.
+  status: ConversationStatus;
   children: ReactNode;
 }
 
@@ -29,7 +29,7 @@ interface HostProps {
  * The App's voice connection, given to every screen and closed when the Server's call ends, whatever screen is shown.
  * Pages read it; none decides its lifetime.
  */
-export function VoiceConnectionHost({
+export function ConversationConnectionHost({
   connection,
   status,
   children,
@@ -39,26 +39,26 @@ export function VoiceConnectionHost({
   useEffect(() => hear(status), [hear, status]);
 
   return (
-    <VoiceConnectionProvider value={connection}>
+    <ConversationConnectionProvider value={connection}>
       {children}
-    </VoiceConnectionProvider>
+    </ConversationConnectionProvider>
   );
 }
 
 // The host, following the Server's call from the root of the App.
-function ServerVoiceHost(props: Omit<HostProps, 'status'>): JSX.Element {
-  return <VoiceConnectionHost {...props} status={useVoiceStatus()} />;
+function ServerConversationHost(props: Omit<HostProps, 'status'>): JSX.Element {
+  return <ConversationConnectionHost {...props} status={useConversationStatus()} />;
 }
 
 // Hands the connection this Device's chosen microphone and speaker, at start and whenever Settings or the Server changes them.
 function FollowsDeviceChoice({
   connection,
 }: {
-  connection: VoiceConnection;
+  connection: ConversationConnection;
 }): null {
-  const { choice } = useVoiceDeviceChoice();
+  const { choice } = useConversationDeviceChoice();
 
-  useReportedVoiceDevices();
+  useReportedConversationDevices();
   useEffect(() => void connection.chooseDevices(choice), [connection, choice]);
 
   return null;
@@ -66,18 +66,18 @@ function FollowsDeviceChoice({
 
 type Props = { desktop: boolean; children: ReactNode };
 
-export function DesktopVoiceProvider({
+export function DesktopConversationProvider({
   desktop,
   children,
 }: Props): JSX.Element {
   const connection = useMemo(() => connectionFor(desktop), [desktop]);
 
   return connection ? (
-    <ServerVoiceHost connection={connection}>
+    <ServerConversationHost connection={connection}>
       <FollowsDeviceChoice connection={connection} />
       {children}
-    </ServerVoiceHost>
+    </ServerConversationHost>
   ) : (
-    <VoiceConnectionProvider value={null}>{children}</VoiceConnectionProvider>
+    <ConversationConnectionProvider value={null}>{children}</ConversationConnectionProvider>
   );
 }

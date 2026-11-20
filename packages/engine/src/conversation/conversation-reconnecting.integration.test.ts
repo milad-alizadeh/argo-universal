@@ -6,8 +6,8 @@ import {
   voiceModelIdleMs as idleMs,
   voiceModelInput,
 } from '#mocks/conversation-model';
-import { voiceCallOf } from './conversation-look';
-import { providerEvent, type VoiceCallEvent } from './conversation-types';
+import { conversationOf } from './conversation-look';
+import { providerEvent, type ConversationEvent } from './conversation-types';
 
 const connected = providerEvent({ type: 'status', status: 'connected' });
 
@@ -27,20 +27,20 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-const callNow = (): ReturnType<typeof voiceCallOf> =>
-  voiceCallOf(voice.getSnapshot());
+const callNow = (): ReturnType<typeof conversationOf> =>
+  conversationOf(voice.getSnapshot());
 
-describe('a Voice call whose connection drops', () => {
+describe('a Conversation whose connection drops', () => {
   it('is reconnecting, and says so without contradicting itself', () => {
     voice.send(connected);
     voice.send(disconnected);
 
     expect(voice.getSnapshot().matches({ running: 'reconnecting' })).toBe(true);
     expect(callNow()).toEqual({
-      callId: 'call-1',
+      conversationId: 'call-1',
       sessionId: 'session-1',
       status: 'connected',
-      orb: 'none',
+      state: 'none',
       trouble: 'reconnecting',
       startedAt: expect.any(String),
     });
@@ -85,7 +85,7 @@ describe('a Voice call whose connection drops', () => {
     expect(voice.getSnapshot().matches({ running: 'connecting' })).toBe(true);
     expect(callNow()).toMatchObject({
       status: 'connecting',
-      orb: 'none',
+      state: 'none',
       trouble: null,
       startedAt: null,
     });
@@ -95,7 +95,7 @@ describe('a Voice call whose connection drops', () => {
   });
 });
 
-const endings: [string, VoiceCallEvent, string][] = [
+const endings: [string, ConversationEvent, string][] = [
   ['the person', { type: 'call.end', reason: 'person' }, 'person'],
   [
     'a provider error',
@@ -109,7 +109,7 @@ const endings: [string, VoiceCallEvent, string][] = [
   ],
 ];
 
-describe('a reconnecting Voice call', () => {
+describe('a reconnecting Conversation', () => {
   it.each(endings)('ends by %s', (_, ending, reason) => {
     voice.send(connected);
     voice.send(disconnected);
@@ -117,7 +117,7 @@ describe('a reconnecting Voice call', () => {
 
     expect(voice.getSnapshot().matches('idle')).toBe(true);
     expect(voice.getSnapshot().context.ended).toEqual({
-      callId: 'call-1',
+      conversationId: 'call-1',
       sessionId: 'session-1',
       reason,
     });

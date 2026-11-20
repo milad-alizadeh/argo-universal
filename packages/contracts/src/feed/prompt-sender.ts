@@ -12,8 +12,8 @@ export const SentPromptSender = z.discriminatedUnion('type', [
     pluginId: z.string(),
     title: z.string().min(1),
   }),
-  // The Voice call (ADR-0064): its Prompts are stored and never drawn.
-  z.strictObject({ type: z.literal('voice') }),
+  // The Conversation (ADR-0064): its Prompts are stored and never drawn.
+  z.strictObject({ type: z.literal('conversation') }),
 ]);
 
 export type SentPromptSender = z.infer<typeof SentPromptSender>;

@@ -5,14 +5,14 @@ import {
   rowsDrawn,
   untilHandedOver,
 } from '#mocks/conversation-feed-rows';
-import { startVoiceWork } from '#mocks/conversation-work';
+import { startConversationWork } from '#mocks/conversation-work';
 
 /*
- * The rows a Session's Feed holds during a Voice call (ADR-0064), replayed from the owner's recording with the fake
+ * The rows a Session's Feed holds during a Conversation (ADR-0064), replayed from the owner's recording with the fake
  * provider. The fake voice says what GPT-Live said; the mock Agent answers as Opus did.
  */
 
-describe('Feed rows during a Voice call', () => {
+describe('Feed rows during a Conversation', () => {
   it("draws the Agent's answer once, not also the voice reading it out", async () => {
     const answer = 'Nothing was running and nothing was changed.';
     const work = await callAnswering('anything running', answer);
@@ -33,7 +33,7 @@ describe('Feed rows during a Voice call', () => {
   it("neither draws the Agent's silent [ANALYSIS] notes nor hands them to the voice", async () => {
     const analysis = 'The person may be stressed; keep the answer brief.';
 
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       {
         prompt: 'what day',
         messages: [
@@ -57,7 +57,7 @@ describe('Feed rows during a Voice call', () => {
   });
 
   it('keeps chit-chat the voice answers itself as person and voice rows, with no Prompt or Agent row', async () => {
-    const work = await startVoiceWork([]);
+    const work = await startConversationWork([]);
 
     await work.start();
     const { call } = work.provider;
@@ -78,7 +78,7 @@ describe('Feed rows during a Voice call', () => {
   });
 
   it('keeps what the voice said so far when the person hangs up', async () => {
-    const work = await startVoiceWork([]);
+    const work = await startConversationWork([]);
 
     await work.start();
     const { call } = work.provider;
@@ -96,7 +96,7 @@ describe('Feed rows during a Voice call', () => {
       text: 'Once upon a time',
       final: true,
     });
-    await work.host.caller.voice.end({ sessionId: work.sessionId });
+    await work.host.caller.conversation.end({ sessionId: work.sessionId });
     await rowsDrawn(work, 2);
 
     expect(await messageRows(work)).toEqual([

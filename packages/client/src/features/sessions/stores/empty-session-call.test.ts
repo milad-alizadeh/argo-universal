@@ -21,7 +21,7 @@ afterEach(() => {
 
 const initial = [{ configId: 'model', value: 'small' }];
 
-describe('a Voice call started from New Session', () => {
+describe('a Conversation started from New Session', () => {
   it('creates the Session with no prompt, goes to it, then starts the call for its id', async () => {
     h.choose(worktree);
     h.store.configure({ initial });

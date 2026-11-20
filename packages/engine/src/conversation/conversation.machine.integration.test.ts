@@ -1,4 +1,4 @@
-import type { VoiceCall } from '@repo/contracts';
+import type { Conversation } from '@repo/contracts';
 import {
   describeModel,
   modelTest,
@@ -13,8 +13,8 @@ import {
   voiceModelIdleMs,
   voiceModelInput,
 } from '#mocks/conversation-model';
-import { voiceCallOf } from './conversation-look';
-import type { VoiceCallEvent } from './conversation-types';
+import { conversationOf } from './conversation-look';
+import type { ConversationEvent } from './conversation-types';
 
 type Snapshot = SnapshotFrom<typeof modelMachine>;
 
@@ -23,12 +23,12 @@ const vertex = (snapshot: Snapshot): Vertex => ({ state: snapshot.value });
 
 const key = (snapshot: Snapshot): string => JSON.stringify(vertex(snapshot));
 
-type StepEvent = VoiceCallEvent | DelayEvent;
+type StepEvent = ConversationEvent | DelayEvent;
 
 const eventKey = (event: StepEvent): string => JSON.stringify(event);
 
 // The step's own fixture: events of one type differ in their data.
-const fixtureOf = (event: VoiceCallEvent | DelayEvent): VoiceCallEvent =>
+const fixtureOf = (event: ConversationEvent | DelayEvent): ConversationEvent =>
   events.find((fixture) => eventKey(fixture) === eventKey(event)) ??
   expect.unreachable(`${event.type} is not a fixture`);
 
@@ -54,7 +54,7 @@ const expectRefusedWhileRunning = (snapshot: Snapshot): void => {
   expectCall(snapshot);
   expect(snapshot.context.refused).toBeOneOf([
     null,
-    { callId: 'call-1', refusal: 'call-running' },
+    { conversationId: 'call-1', refusal: 'call-running' },
   ]);
 };
 
@@ -62,34 +62,34 @@ const expectNoCall = (snapshot: Snapshot): void =>
   expect(snapshot.context.call).toBeNull();
 
 const expectCall = (snapshot: Snapshot): void =>
-  expect(snapshot.context.call?.callId).toBe('call-1');
+  expect(snapshot.context.call?.conversationId).toBe('call-1');
 
 const expectAnswer = (snapshot: Snapshot): void =>
   expect(snapshot.context.call?.answer).toBe('answer');
 
-const joined: Partial<VoiceCall> = { startedAt: expect.any(String) };
+const joined: Partial<Conversation> = { startedAt: expect.any(String) };
 
 // Only a reconnecting call says so; elsewhere the walk may have blocked the microphone.
 const notReconnecting = expect.toBeOneOf([null, 'microphone-blocked']);
 
 // The call the App is sent in each running state, read from the actor the model drives; `expectVoice` has already shown that actor is in the step's state.
-const expectLook = (look: Partial<VoiceCall>) => (): void =>
-  expect(voiceCallOf(voice.getSnapshot())).toMatchObject({
-    callId: 'call-1',
+const expectLook = (look: Partial<Conversation>) => (): void =>
+  expect(conversationOf(voice.getSnapshot())).toMatchObject({
+    conversationId: 'call-1',
     ...look,
   });
 
-const notJoined: Partial<VoiceCall> = {
+const notJoined: Partial<Conversation> = {
   status: 'connecting',
-  orb: 'none',
+  state: 'none',
   trouble: notReconnecting,
   startedAt: null,
 };
 
 // A connected call shows what is happening on it; which of the three depends on who speaks and works.
-const live: Partial<VoiceCall> = {
+const live: Partial<Conversation> = {
   status: 'connected',
-  orb: expect.stringMatching(/^(listening|talking|thinking)$/),
+  state: expect.stringMatching(/^(listening|talking|thinking)$/),
   ...joined,
 };
 
@@ -102,16 +102,16 @@ const expectConnected = (): void => {
   })();
 };
 
-const reconnecting: Partial<VoiceCall> = {
+const reconnecting: Partial<Conversation> = {
   status: 'connected',
-  orb: 'none',
+  state: 'none',
   trouble: 'reconnecting',
   ...joined,
 };
 
 const expectIdle = (snapshot: Snapshot): void => {
   expectNoCall(snapshot);
-  expect(voiceCallOf(voice.getSnapshot())).toBeNull();
+  expect(conversationOf(voice.getSnapshot())).toBeNull();
 };
 
 const expectConnecting = (snapshot: Snapshot): void => {
@@ -150,7 +150,7 @@ const model = modelTest(
     executors: Object.fromEntries(
       [...new Set(events.map(({ type }) => type))].map((type) => [
         type,
-        ({ event }: { event: VoiceCallEvent | DelayEvent }): void =>
+        ({ event }: { event: ConversationEvent | DelayEvent }): void =>
           voice.send(fixtureOf(event)),
       ]),
     ),
@@ -167,7 +167,7 @@ const model = modelTest(
   },
 );
 
-describe('Voice call model', () => {
+describe('Conversation model', () => {
   describeModel(model);
 
   it('walks every transition', () => {

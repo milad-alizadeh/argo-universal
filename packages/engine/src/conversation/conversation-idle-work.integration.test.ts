@@ -1,7 +1,7 @@
 import { QueuedPromptId } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { pause, statusOf } from '#mocks/conversation-timing';
-import { startVoiceWork, type VoiceWork } from '#mocks/conversation-work';
+import { startConversationWork, type ConversationWork } from '#mocks/conversation-work';
 import { relayWords } from './relay-words';
 
 // Idle periods are seconds, not milliseconds, so a loaded Mac cannot make a timer race a step.
@@ -16,7 +16,7 @@ const typedJob = 'Typed job';
 const ownJob = 'Own job';
 
 // Types a Prompt to the Session, as the person does, and waits until the Agent has it.
-async function typeJob(work: VoiceWork): Promise<void> {
+async function typeJob(work: ConversationWork): Promise<void> {
   await work.host.caller.session.prompt({
     sessionId: work.sessionId,
     prompt: [{ type: 'text', text: typedJob }],
@@ -26,7 +26,7 @@ async function typeJob(work: VoiceWork): Promise<void> {
 
 // The Session's queue, as an App subscribed to its Feed first reads it.
 async function queuedPrompts(
-  work: VoiceWork,
+  work: ConversationWork,
 ): Promise<{ id: string; revision: number }[]> {
   const events = await work.subscription(0);
 
@@ -37,7 +37,7 @@ async function queuedPrompts(
 }
 
 // Deletes the first queued Prompt, as the person does from the App.
-async function deleteQueued(work: VoiceWork): Promise<void> {
+async function deleteQueued(work: ConversationWork): Promise<void> {
   const [queued] = await queuedPrompts(work);
 
   if (!queued) throw new Error('Nothing is queued');
@@ -50,7 +50,7 @@ async function deleteQueued(work: VoiceWork): Promise<void> {
   });
 }
 
-const idled = async (work: VoiceWork): Promise<void> => {
+const idled = async (work: ConversationWork): Promise<void> => {
   await expect
     .poll(() => statusOf(work), waitForEnd)
     .toMatchObject({ call: null, ended: { reason: 'idle' } });
@@ -62,7 +62,7 @@ describe('an idle call and a queued Prompt that never runs', () => {
     async () => {
       const typedGate = Promise.withResolvers<void>();
 
-      const work = await startVoiceWork(
+      const work = await startConversationWork(
         [{ prompt: typedJob, holdUntil: typedGate.promise }],
         { idleMs },
       );
@@ -84,7 +84,7 @@ describe('an idle call and a Turn that does not finish cleanly', () => {
   it(
     'idles after its Turn fails',
     async () => {
-      const work = await startVoiceWork(
+      const work = await startConversationWork(
         [{ prompt: 'Break it', fails: 'The Agent crashed' }],
         { idleMs },
       );
@@ -107,7 +107,7 @@ describe('an idle call and a Prompt the Agent refused to be steered with', () =>
       const typedGate = Promise.withResolvers<void>();
       const ownGate = Promise.withResolvers<void>();
 
-      const work = await startVoiceWork(
+      const work = await startConversationWork(
         [
           { prompt: typedJob, holdUntil: typedGate.promise },
           { prompt: ownJob, holdUntil: ownGate.promise },
@@ -129,7 +129,7 @@ describe('an idle call and a Prompt the Agent refused to be steered with', () =>
       typedGate.resolve();
       await expect.poll(() => work.prompts.length).toBe(3);
       await pause(idleMs * 1.5);
-      expect((await statusOf(work)).call).not.toBeNull();
+      expect((await statusOf(work)).conversation).not.toBeNull();
 
       ownGate.resolve();
       await idled(work);

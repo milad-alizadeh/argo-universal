@@ -1,5 +1,5 @@
-import type { VoiceStatus } from '@repo/contracts';
-import type { VoiceConnection } from '../types/conversation-connection';
+import type { ConversationStatus } from '@repo/contracts';
+import type { ConversationConnection } from '../types/conversation-connection';
 
 /*
  * The connection's lifetime follows the Server's call, wherever the App is: once the Server has no call, the
@@ -8,12 +8,12 @@ import type { VoiceConnection } from '../types/conversation-connection';
  * goes into the returned function, and so does the volume and gain the Server holds, which a running call takes at once.
  */
 export function followCall(
-  connection: VoiceConnection,
-): (status: VoiceStatus) => void {
+  connection: ConversationConnection,
+): (status: ConversationStatus) => void {
   let wasOver: boolean | undefined;
 
   return (status) => {
-    const over = status.call === null;
+    const over = status.conversation === null;
     connection.setSound(status);
 
     if (over && wasOver !== true) connection.close();

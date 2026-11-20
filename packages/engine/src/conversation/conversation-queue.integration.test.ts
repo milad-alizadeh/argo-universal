@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { promptText, startVoiceWork } from '#mocks/conversation-work';
+import { promptText, startConversationWork } from '#mocks/conversation-work';
 import { relayWords } from './relay-words';
 
 const longJob = 'Long job';
@@ -10,7 +10,7 @@ describe('a request for work while a Turn runs', () => {
   it('waits in the queue when the Agent cannot be steered, as a typed Prompt does', async () => {
     const release = Promise.withResolvers<void>();
 
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: longJob, holdUntil: release.promise },
       { prompt: extra, messages: ['[COMPLETE] Did the extra'] },
     ]);
@@ -30,18 +30,18 @@ describe('a request for work while a Turn runs', () => {
     expect(promptText(work.prompts[2])).toContain(extra);
     await expect.poll(work.turnEnds).toHaveLength(3);
     expect(await work.promptRows()).toMatchObject([
-      { _meta: { argo: { sender: { type: 'voice' } } } },
+      { _meta: { argo: { sender: { type: 'conversation' } } } },
       {
         content: [{ text: extra }],
-        _meta: { argo: { sender: { type: 'voice' } } },
+        _meta: { argo: { sender: { type: 'conversation' } } },
       },
     ]);
   });
 
-  it('steers the running Turn when the Agent supports it, stored from the Voice call and not as the person', async () => {
+  it('steers the running Turn when the Agent supports it, stored from the Conversation and not as the person', async () => {
     const release = Promise.withResolvers<void>();
 
-    const work = await startVoiceWork(
+    const work = await startConversationWork(
       [{ prompt: longJob, holdUntil: release.promise }],
       { steering: true },
     );
@@ -59,10 +59,10 @@ describe('a request for work while a Turn runs', () => {
       );
     await expect.poll(async () => (await work.promptRows()).length).toBe(2);
     expect(await work.promptRows()).toMatchObject([
-      { _meta: { argo: { sender: { type: 'voice' } } } },
+      { _meta: { argo: { sender: { type: 'conversation' } } } },
       {
         content: [{ text: extra }],
-        _meta: { argo: { sender: { type: 'voice' } } },
+        _meta: { argo: { sender: { type: 'conversation' } } },
       },
     ]);
     expect(work.prompts).toHaveLength(2);
@@ -73,7 +73,7 @@ describe('a request for work while a Turn runs', () => {
   it('waits in the queue when the Agent refuses to be steered, and the voice is told why', async () => {
     const release = Promise.withResolvers<void>();
 
-    const work = await startVoiceWork(
+    const work = await startConversationWork(
       [
         { prompt: longJob, holdUntil: release.promise },
         { prompt: extra, messages: ['[COMPLETE] Did the extra'] },
@@ -102,10 +102,10 @@ describe('a request for work while a Turn runs', () => {
     expect(promptText(work.prompts[2])).toContain(extra);
     await expect.poll(work.turnEnds).toHaveLength(3);
     expect(await work.promptRows()).toMatchObject([
-      { _meta: { argo: { sender: { type: 'voice' } } } },
+      { _meta: { argo: { sender: { type: 'conversation' } } } },
       {
         content: [{ text: extra }],
-        _meta: { argo: { sender: { type: 'voice' } } },
+        _meta: { argo: { sender: { type: 'conversation' } } },
       },
     ]);
   });

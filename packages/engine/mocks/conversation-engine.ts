@@ -1,36 +1,36 @@
 import type { TerminalOutputResponse } from '@agentclientprotocol/sdk';
-import type { SessionUpdate, VoiceCall, VoiceStatus } from '@repo/contracts';
+import type { SessionUpdate, Conversation, ConversationStatus } from '@repo/contracts';
 import { heldPrompt } from '@repo/mocks/agent/cancellable-scenarios';
-import { FakeVoiceProvider } from '../src/conversation/fake-provider';
-import type { VoiceProviderEvent } from '../src/conversation/provider';
+import { FakeConversationProvider } from '../src/conversation/fake-provider';
+import type { ConversationProviderEvent } from '../src/conversation/provider';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
 import { openAccessSession, sessionIdentityStep } from './session-access';
 
 type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 
-export type VoiceSession = Awaited<ReturnType<typeof openAccessSession>>;
+export type ConversationSession = Awaited<ReturnType<typeof openAccessSession>>;
 
 export const offer = 'offer-sdp';
 
-type VoiceEngineParts = {
+type ConversationEngineParts = {
   host: Host;
-  provider: FakeVoiceProvider;
+  provider: FakeConversationProvider;
   outputs: TerminalOutputResponse[];
 };
 
 /*
- * The Engine with the mock ACP Agent and a fake Voice provider whose call connects only when a test says so.
+ * The Engine with the mock ACP Agent and a fake Conversation provider whose call connects only when a test says so.
  * `restartOver` starts the Engine again over a stopped one's home, with what it stored.
  */
-export async function startVoiceEngine(
-  provider: FakeVoiceProvider = new FakeVoiceProvider({ connect: 'manual' }),
+export async function startConversationEngine(
+  provider: FakeConversationProvider = new FakeConversationProvider({ connect: 'manual' }),
   restartOver?: string,
-): Promise<VoiceEngineParts> {
+): Promise<ConversationEngineParts> {
   const outputs: TerminalOutputResponse[] = [];
 
   const host = await startAcpEngine({
     steps: [sessionIdentityStep(outputs)],
-    voiceProvider: provider,
+    conversationProvider: provider,
     restartOver,
   });
 
@@ -38,28 +38,28 @@ export async function startVoiceEngine(
 }
 
 // A settled Session, with the caller its Agent has.
-export const openVoiceSession = (
-  voice: Awaited<ReturnType<typeof startVoiceEngine>>,
+export const openConversationSession = (
+  voice: Awaited<ReturnType<typeof startConversationEngine>>,
   text = 'Hello',
-): Promise<VoiceSession> => openAccessSession(voice, text);
+): Promise<ConversationSession> => openAccessSession(voice, text);
 
-export const callOf = async (host: Host): Promise<VoiceCall | null> =>
-  (await host.caller.voice.status()).call;
+export const callOf = async (host: Host): Promise<Conversation | null> =>
+  (await host.caller.conversation.status()).conversation;
 
-export const endedOf = async (host: Host): Promise<VoiceStatus['ended']> =>
-  (await host.caller.voice.status()).ended;
+export const endedOf = async (host: Host): Promise<ConversationStatus['ended']> =>
+  (await host.caller.conversation.status()).ended;
 
-type VoiceEngine = Awaited<ReturnType<typeof startVoiceEngine>>;
+type ConversationEngine = Awaited<ReturnType<typeof startConversationEngine>>;
 
 // What a speaker says; words not `final` may still change.
 export const said = {
-  person: (id: string, text: string, final: boolean): VoiceProviderEvent => ({
+  person: (id: string, text: string, final: boolean): ConversationProviderEvent => ({
     type: 'person.transcript',
     id,
     text,
     final,
   }),
-  voice: (id: string, text: string, final: boolean): VoiceProviderEvent => ({
+  voice: (id: string, text: string, final: boolean): ConversationProviderEvent => ({
     type: 'voice.transcript',
     id,
     text,
@@ -68,18 +68,18 @@ export const said = {
 };
 
 // The provider reports it on the running call.
-export const say = (voice: VoiceEngine, event: VoiceProviderEvent): void =>
+export const say = (voice: ConversationEngine, event: ConversationProviderEvent): void =>
   voice.provider.call.emit(event);
 
 export const partialsOf = async (
   host: Host,
-): Promise<VoiceStatus['partials']> =>
-  (await host.caller.voice.status()).partials;
+): Promise<ConversationStatus['partials']> =>
+  (await host.caller.conversation.status()).partials;
 
 // A Session with a running, connected call.
-export async function startedCall(voice: VoiceEngine): Promise<string> {
-  const { sessionId } = await openVoiceSession(voice);
-  await voice.host.caller.voice.start({ sessionId, offer });
+export async function startedCall(voice: ConversationEngine): Promise<string> {
+  const { sessionId } = await openConversationSession(voice);
+  await voice.host.caller.conversation.start({ sessionId, offer });
   voice.provider.call.connect();
 
   return sessionId;
@@ -121,19 +121,19 @@ const heldScenario = {
 
 // An Engine with a Session open and a connected call on it, whose Agent can be made to hold a Turn.
 export async function startCallInHeldSession(): Promise<{
-  voice: VoiceEngine;
+  voice: ConversationEngine;
   sessionId: string;
 }> {
-  const provider = new FakeVoiceProvider({ connect: 'manual' });
+  const provider = new FakeConversationProvider({ connect: 'manual' });
 
   const host = await startAcpEngine({
     ...heldScenario,
-    voiceProvider: provider,
+    conversationProvider: provider,
   });
 
   const { sessionId } = await host.caller.session.new(emptySessionInput);
 
-  await host.caller.voice.start({ sessionId, offer });
+  await host.caller.conversation.start({ sessionId, offer });
   provider.call.connect();
 
   return { voice: { host, provider, outputs: [] }, sessionId };

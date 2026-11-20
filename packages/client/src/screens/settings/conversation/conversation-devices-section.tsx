@@ -4,18 +4,18 @@ import type {
   AudioDevice,
   AudioDevices,
   DeviceMetersState,
-  VoiceDeviceChoice,
+  ConversationDeviceChoice,
 } from '#features/conversation';
-import type { VoiceDetailViewProps } from './conversation-detail-view-props';
+import type { ConversationDetailViewProps } from './conversation-detail-view-props';
 import { HeldSliderRow } from './voice-held-rows';
 import { settingsOf, waiting } from './conversation-settings-state';
 
 // This Device's microphones and speakers, and the ones it chose; null follows the system.
-export type VoiceDevices = AudioDevices & VoiceDeviceChoice;
+export type ConversationDevices = AudioDevices & ConversationDeviceChoice;
 
 type Options = React.ComponentProps<typeof FieldGroup.Picker>['options'];
 
-type Chooser = (change: Partial<VoiceDeviceChoice>) => void;
+type Chooser = (change: Partial<ConversationDeviceChoice>) => void;
 
 // The picker's value for following the system; a browser never names a device this.
 const systemDefault = 'system-default';
@@ -47,7 +47,7 @@ const testOf = (meters?: DeviceMetersState): Accessory =>
   };
 
 const microphonePicker = (
-  devices: VoiceDevices,
+  devices: ConversationDevices,
   onChange: Chooser,
   meters?: DeviceMetersState,
 ): React.JSX.Element => (
@@ -62,7 +62,7 @@ const microphonePicker = (
 );
 
 const speakerPicker = (
-  devices: VoiceDevices,
+  devices: ConversationDevices,
   onChange: Chooser,
   meters?: DeviceMetersState,
 ): React.JSX.Element => (
@@ -77,7 +77,7 @@ const speakerPicker = (
   />
 );
 
-const footerOf = (devices: VoiceDevices | undefined): string =>
+const footerOf = (devices: ConversationDevices | undefined): string =>
   devices?.named === false
     ? 'Microphone and speaker names appear after the first Conversation.'
     : 'Kept on this Device. A running Conversation changes at once.';
@@ -88,7 +88,7 @@ const loudest = 100;
 
 const strongestGain = 200;
 
-const gainRow = (props: VoiceDetailViewProps): React.JSX.Element | null =>
+const gainRow = (props: ConversationDetailViewProps): React.JSX.Element | null =>
   props.adjustsGain ? (
     <HeldSliderRow
       key="gain"
@@ -102,7 +102,7 @@ const gainRow = (props: VoiceDetailViewProps): React.JSX.Element | null =>
     />
   ) : null;
 
-const volumeRow = (props: VoiceDetailViewProps): React.JSX.Element => (
+const volumeRow = (props: ConversationDetailViewProps): React.JSX.Element => (
   <HeldSliderRow
     key="volume"
     title="Volume"
@@ -114,7 +114,7 @@ const volumeRow = (props: VoiceDetailViewProps): React.JSX.Element => (
 );
 
 const microphoneRow = (
-  props: VoiceDetailViewProps,
+  props: ConversationDetailViewProps,
 ): React.JSX.Element | null =>
   props.devices
     ? microphonePicker(
@@ -124,7 +124,7 @@ const microphoneRow = (
       )
     : null;
 
-const speakerRow = (props: VoiceDetailViewProps): React.JSX.Element | null =>
+const speakerRow = (props: ConversationDetailViewProps): React.JSX.Element | null =>
   props.devices
     ? speakerPicker(
         props.devices,
@@ -139,7 +139,7 @@ const speakerRow = (props: VoiceDetailViewProps): React.JSX.Element | null =>
  * the page's other sections.
  */
 export const audioSection = (
-  props: VoiceDetailViewProps,
+  props: ConversationDetailViewProps,
 ): React.JSX.Element => (
   <FieldGroup.Section
     key="audio"

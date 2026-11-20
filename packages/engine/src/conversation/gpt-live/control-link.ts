@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import type { VoiceProviderEvent } from '../provider';
+import type { ConversationProviderEvent } from '../provider';
 import { CallGone } from './gpt-live-requests';
 import { textOfFrame } from './link-events';
 import { keepAlive } from './link-keepalive';
@@ -19,7 +19,7 @@ export type ControlLinkOptions = {
 // What the link tells the call it belongs to: each text frame, what it does to the call, and notes for the log.
 export interface LinkHost {
   frame: (frame: string) => void;
-  event: (event: VoiceProviderEvent) => void;
+  event: (event: ConversationProviderEvent) => void;
   note: (note: string) => void;
   ended: () => boolean;
 }

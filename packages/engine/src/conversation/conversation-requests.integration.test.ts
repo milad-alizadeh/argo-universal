@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { promptText, startVoiceWork } from '#mocks/conversation-work';
+import { promptText, startConversationWork } from '#mocks/conversation-work';
 
 const fixBuild = 'Fix the build';
 
@@ -10,8 +10,8 @@ const secondJob = 'Second job';
 const fixed = '[COMPLETE] Fixed it';
 
 describe('a request for work from the voice', () => {
-  it('reaches the Agent as a Prompt from the Voice call, stored in the Feed', async () => {
-    const work = await startVoiceWork([
+  it('reaches the Agent as a Prompt from the Conversation, stored in the Feed', async () => {
+    const work = await startConversationWork([
       { prompt: fixBuild, messages: [fixed] },
     ]);
 
@@ -23,13 +23,13 @@ describe('a request for work from the voice', () => {
     await expect.poll(work.promptRows).toMatchObject([
       {
         content: [{ type: 'text', text: expect.stringContaining(fixBuild) }],
-        _meta: { argo: { sender: { type: 'voice' } } },
+        _meta: { argo: { sender: { type: 'conversation' } } },
       },
     ]);
   });
 
   it('starts a Turn with its own start, Prompt row and stop reason', async () => {
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: fixBuild, messages: [fixed] },
     ]);
 
@@ -54,7 +54,7 @@ describe('a request for work from the voice', () => {
   });
 
   it('carries the voice instruction in the first Prompt of a call and not the later ones', async () => {
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: firstJob, messages: ['[COMPLETE] One'] },
       { prompt: secondJob, messages: ['[COMPLETE] Two'] },
     ]);

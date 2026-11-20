@@ -1,4 +1,4 @@
-import type { VoiceProviderEvent } from '../provider';
+import type { ConversationProviderEvent } from '../provider';
 
 /*
  * What GPT-Live's own close of a call means, in plain words for the Notice. Measured live (#2405 probes, 2026-11-19):
@@ -7,7 +7,7 @@ import type { VoiceProviderEvent } from '../provider';
  * `session.started` gives it an `expires_at` two hours on.
  */
 
-type Closed = Extract<VoiceProviderEvent, { type: 'closed' }>;
+type Closed = Extract<ConversationProviderEvent, { type: 'closed' }>;
 
 const noAudioWhy =
   'GPT-Live ended the call because no audio reached it from the App.';

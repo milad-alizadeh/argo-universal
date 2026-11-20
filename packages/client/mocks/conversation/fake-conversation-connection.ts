@@ -1,20 +1,20 @@
 import type { VoicePreviewClip } from '@repo/contracts';
-import type { VoiceDeviceChoice } from '../../src/features/conversation/stores/conversation-device-choice';
-import { VoiceMuteStore } from '../../src/features/conversation/stores/conversation-mute-store';
+import type { ConversationDeviceChoice } from '../../src/features/conversation/stores/conversation-device-choice';
+import { ConversationMuteStore } from '../../src/features/conversation/stores/conversation-mute-store';
 import {
   silentSpectrum,
-  type VoiceConnection,
+  type ConversationConnection,
   type VoiceLevels,
-  type VoiceMutes,
+  type ConversationMutes,
   type VoiceSound,
   type VoiceSpectrum,
 } from '../../src/features/conversation/types/conversation-connection';
 
 /*
- * A Voice connection that carries no audio, for tests and stories: it holds its mutes as the real one does, records
+ * A Conversation connection that carries no audio, for tests and stories: it holds its mutes as the real one does, records
  * every mute it was asked for, and reports the levels a test sets.
  */
-export class FakeVoiceConnection implements VoiceConnection {
+export class FakeConversationConnection implements ConversationConnection {
   public closed = false;
   public input = 0;
   public output = 0;
@@ -22,7 +22,7 @@ export class FakeVoiceConnection implements VoiceConnection {
   public readonly asked: string[] = [];
   // Every answer the connection was completed with, in order.
   public readonly accepted: string[] = [];
-  private readonly store = new VoiceMuteStore();
+  private readonly store = new ConversationMuteStore();
 
   public constructor(private readonly offer = Promise.resolve('v=0 offer')) {}
 
@@ -48,7 +48,7 @@ export class FakeVoiceConnection implements VoiceConnection {
     this.store.change({ speaker: muted });
   }
 
-  public chooseDevices(choice: VoiceDeviceChoice): Promise<void> {
+  public chooseDevices(choice: ConversationDeviceChoice): Promise<void> {
     this.asked.push(`devices:${choice.microphone}:${choice.speaker}`);
 
     return Promise.resolve();
@@ -58,7 +58,7 @@ export class FakeVoiceConnection implements VoiceConnection {
     this.asked.push(`sound:${sound.volume}:${sound.microphoneGain}`);
   }
 
-  public mutes = (): VoiceMutes => this.store.read();
+  public mutes = (): ConversationMutes => this.store.read();
 
   public subscribe = (listener: () => void): (() => void) =>
     this.store.subscribe(listener);

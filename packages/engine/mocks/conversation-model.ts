@@ -1,16 +1,16 @@
 import { fromCallback } from 'xstate';
-import type { VoiceCallEvent, VoiceCallInput } from '../src/conversation/conversation-types';
+import type { ConversationEvent, ConversationInput } from '../src/conversation/conversation-types';
 import type { ConnectionWatch, SessionWatch } from '../src/conversation/conversation-watchers';
-import { voiceCallMachine } from '../src/conversation/conversation.machine';
-import { FakeVoiceProvider } from '../src/conversation/fake-provider';
+import { conversationMachine } from '../src/conversation/conversation.machine';
+import { FakeConversationProvider } from '../src/conversation/fake-provider';
 import type { ProviderCallInput } from '../src/conversation/provider-call';
 
 const stub = <Input>(): ReturnType<
-  typeof fromCallback<VoiceCallEvent, Input>
-> => fromCallback<VoiceCallEvent, Input>((): (() => void) => (): void => {});
+  typeof fromCallback<ConversationEvent, Input>
+> => fromCallback<ConversationEvent, Input>((): (() => void) => (): void => {});
 
-// The Voice call machine with the actors that would send events back stubbed, so a test sends every event itself.
-export const modelMachine = voiceCallMachine.provide({
+// The Conversation machine with the actors that would send events back stubbed, so a test sends every event itself.
+export const modelMachine = conversationMachine.provide({
   actors: {
     providerCall: stub<ProviderCallInput>(),
     watchSession: stub<SessionWatch>(),
@@ -21,8 +21,8 @@ export const modelMachine = voiceCallMachine.provide({
 export const voiceModelIdleMs = 60_000;
 
 // A fresh input for each actor, so no two tests share one provider.
-export const voiceModelInput = (): VoiceCallInput => ({
-  provider: new FakeVoiceProvider(),
+export const voiceModelInput = (): ConversationInput => ({
+  provider: new FakeConversationProvider(),
   briefing: () => '',
   idleMs: voiceModelIdleMs,
   log: () => {},

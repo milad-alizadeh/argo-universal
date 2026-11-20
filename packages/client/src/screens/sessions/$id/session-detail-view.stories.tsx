@@ -24,8 +24,8 @@ import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import { usageLimitsSession } from './session-detail-view-usage.mocks';
-import { VoiceCallRehearsal } from './session-detail-view-conversation.mocks';
-import { voiceCallSession } from './session-detail-view-conversation.mocks';
+import { ConversationRehearsal } from './session-detail-view-conversation-rehearsal.mocks';
+import { conversationSession } from './session-detail-view-conversation.mocks';
 import {
   emptySession,
   idleSession,
@@ -128,16 +128,16 @@ export const DraggingFiles: Story = {
   },
 };
 
-// A Voice call here: the Composer with the band along its top edge, and the mic, speaker and End.
-export const OnAVoiceCall: Story = {
-  args: { state: 'open', ...voiceCallSession },
+// A Conversation here: the Composer with the band along its top edge, and the mic, speaker and End.
+export const OnAConversation: Story = {
+  args: { state: 'open', ...conversationSession },
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
 };
 
 // Press the voice button to start a call: the band opens along the Composer's edge while it connects, settles into listening, and End takes it away.
-export const VoiceCallStartsAndEnds: Story = {
+export const ConversationStartsAndEnds: Story = {
   args: { state: 'open', ...idleSession },
-  render: (): React.JSX.Element => <VoiceCallRehearsal />,
+  render: (): React.JSX.Element => <ConversationRehearsal />,
 };
 
 export const Opening: Story = { args: { state: 'opening' } };

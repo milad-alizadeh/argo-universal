@@ -1,23 +1,23 @@
-import type { VoiceCallEnd } from '@repo/contracts';
+import type { ConversationEnd } from '@repo/contracts';
 import type { RunningCall } from './conversation-types';
-import type { VoiceClosedReason, VoiceProviderEvent } from './provider';
-import type { VoiceNotice } from './session-link';
+import type { ConversationClosedReason, ConversationProviderEvent } from './provider';
+import type { ConversationNotice } from './session-link';
 
 // How a call ended: why, and when the provider closed it, the provider's own reason and its words for it.
 export type EndParameters = {
-  reason: VoiceCallEnd;
-  closed?: VoiceClosedReason;
+  reason: ConversationEnd;
+  closed?: ConversationClosedReason;
   why?: string;
 };
 
-const endOfClose = (closed: VoiceClosedReason): VoiceCallEnd =>
+const endOfClose = (closed: ConversationClosedReason): ConversationEnd =>
   closed === 'limit' ? 'limit-reached' : 'provider-closed';
 
 const whyOf = (why: string | undefined): { why?: string } =>
   why === undefined ? {} : { why };
 
 // How a provider's close ends the call: a reached limit is its own ending, any other close is the provider's.
-export function closeEndingOf(event: VoiceProviderEvent): EndParameters {
+export function closeEndingOf(event: ConversationProviderEvent): EndParameters {
   if (event.type !== 'closed') return { reason: 'provider-closed' };
 
   return {
@@ -30,7 +30,7 @@ export function closeEndingOf(event: VoiceProviderEvent): EndParameters {
 // What the ending knows besides its parameters: the failure a failed call recorded, and the idle period.
 export type EndingFacts = { failure: string | null; idleMs: number };
 
-const ended = 'Voice call ended';
+const ended = 'Conversation ended';
 
 const plural = (count: number, unit: string): string =>
   `${count} ${unit}${count === 1 ? '' : 's'}`;
@@ -44,35 +44,35 @@ const spanOf = (ms: number): string =>
     ? plural(ms / minuteMs, 'minute')
     : plural(Math.round(ms / secondMs), 'second');
 
-const lostNotice: VoiceNotice = {
+const lostNotice: ConversationNotice = {
   title: `${ended}: connection lost`,
   description:
-    'Argo lost its connection to the Voice provider and could not get it back.',
+    'Argo lost its connection to the Conversation provider and could not get it back.',
 };
 
-const closedNotice: VoiceNotice = {
+const closedNotice: ConversationNotice = {
   title: ended,
-  description: 'The Voice provider ended the call without saying why.',
+  description: 'The Conversation provider ended the call without saying why.',
 };
 
 // The provider's own words, when it gave some, say why under the title its kind of close has.
-function providerNotice({ closed, why }: EndParameters): VoiceNotice {
+function providerNotice({ closed, why }: EndParameters): ConversationNotice {
   const notice = closed === 'lost' ? lostNotice : closedNotice;
 
   return why === undefined ? notice : { ...notice, description: why };
 }
 
-type NoticeOf = (params: EndParameters, facts: EndingFacts) => VoiceNotice;
+type NoticeOf = (params: EndParameters, facts: EndingFacts) => ConversationNotice;
 
-const notices: Partial<Record<VoiceCallEnd, NoticeOf>> = {
+const notices: Partial<Record<ConversationEnd, NoticeOf>> = {
   'provider-closed': providerNotice,
   'limit-reached': () => ({
     title: `${ended}: usage limit reached`,
     description:
-      'The Voice provider closed the call because the allowance ran out. Start a new call once it resets.',
+      'The Conversation provider closed the call because the allowance ran out. Start a new call once it resets.',
   }),
   failed: (_, { failure }) => ({
-    title: 'Voice call failed',
+    title: 'Conversation failed',
     description: failure ?? 'The connection to the voice failed.',
   }),
   'app-disconnected': () => ({
@@ -97,7 +97,7 @@ const notices: Partial<Record<VoiceCallEnd, NoticeOf>> = {
 export const endNoticeOf = (
   params: EndParameters,
   facts: EndingFacts,
-): VoiceNotice | null => notices[params.reason]?.(params, facts) ?? null;
+): ConversationNotice | null => notices[params.reason]?.(params, facts) ?? null;
 
 const tenths = (ms: number): string => (ms / secondMs).toFixed(1);
 
@@ -129,7 +129,7 @@ const headOf = (
 ): string => {
   const closed = params.closed === undefined ? '' : ` (${params.closed})`;
 
-  return `call ${call.callId} in Session ${call.sessionId} ended: ${params.reason}${closed} ${ranFor(call, now)}`;
+  return `call ${call.conversationId} in Session ${call.sessionId} ended: ${params.reason}${closed} ${ranFor(call, now)}`;
 };
 
 export type EndingLog = {

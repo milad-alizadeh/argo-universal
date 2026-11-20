@@ -26,7 +26,7 @@ const key: PreviewClipKey = {
 
 const clip = { mimeType: 'audio/webm', data: 'AAEC' };
 
-describe('Voice preview clips', () => {
+describe('Conversation preview clips', () => {
   it('holds nothing until a clip is stored, then returns it, even to a new Server over the same folder', async () => {
     const directory = join(freshDirectory(), 'voice-previews');
     const clips = new VoicePreviewClips(directory);

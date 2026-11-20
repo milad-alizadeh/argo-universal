@@ -1,20 +1,20 @@
-import type { VoiceStartOutput } from '@repo/contracts';
+import type { ConversationStartOutput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import type { SnapshotFrom } from 'xstate';
 import type { EndedCall, StartRefusal } from './conversation-types';
-import type { voiceCallMachine } from './conversation.machine';
+import type { conversationMachine } from './conversation.machine';
 import { refusalError } from './conversation-room';
 
-export type CallSnapshot = SnapshotFrom<typeof voiceCallMachine>;
+export type CallSnapshot = SnapshotFrom<typeof conversationMachine>;
 
 const refusalOf = (
   { context: { refused } }: CallSnapshot,
-  callId: string,
-): StartRefusal | null => (refused?.callId === callId ? refused.refusal : null);
+  conversationId: string,
+): StartRefusal | null => (refused?.conversationId === conversationId ? refused.refusal : null);
 
 // The machine began a call for this start, or the error says why it refused.
-export function requireBegun(snapshot: CallSnapshot, callId: string): void {
-  const refusal = refusalOf(snapshot, callId);
+export function requireBegun(snapshot: CallSnapshot, conversationId: string): void {
+  const refusal = refusalOf(snapshot, conversationId);
 
   if (refusal) throw refusalError(refusal);
 }
@@ -29,15 +29,15 @@ export const endedBetween = (
 export const startSettled = (snapshot: CallSnapshot): boolean =>
   snapshot.matches('idle') || snapshot.context.call?.answer != null;
 
-const answerOfCall = (snapshot: CallSnapshot, callId: string): string | null =>
-  snapshot.context.call?.callId === callId
+const answerOfCall = (snapshot: CallSnapshot, conversationId: string): string | null =>
+  snapshot.context.call?.conversationId === conversationId
     ? snapshot.context.call.answer
     : null;
 
 const endedMessage = (ended: EndedCall | null): string =>
   ended
-    ? `The Voice call ended: ${ended.reason}`
-    : 'The Voice call failed to start';
+    ? `The Conversation ended: ${ended.reason}`
+    : 'The Conversation failed to start';
 
 // Why a start that settled without an answer did not get one.
 const failureOf = ({ context }: CallSnapshot): string =>
@@ -45,11 +45,11 @@ const failureOf = ({ context }: CallSnapshot): string =>
 
 export function answerOf(
   snapshot: CallSnapshot,
-  callId: string,
-): VoiceStartOutput {
-  const answer = answerOfCall(snapshot, callId);
+  conversationId: string,
+): ConversationStartOutput {
+  const answer = answerOfCall(snapshot, conversationId);
 
-  if (answer !== null) return { callId, answer };
+  if (answer !== null) return { conversationId, answer };
 
   throw new TRPCError({
     code: 'INTERNAL_SERVER_ERROR',

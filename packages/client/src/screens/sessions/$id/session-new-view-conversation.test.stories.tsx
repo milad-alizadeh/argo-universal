@@ -1,6 +1,6 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { expect, fn } from 'storybook/test';
-import type { ComposerVoice } from '#features/composer';
+import type { ComposerConversation } from '#features/composer';
 import { readyArgs } from '../../../../mocks/new-session-view/new-session-send.test.mocks';
 import {
   meta as sessionNewViewTestMeta,
@@ -10,15 +10,15 @@ import { typedDraft } from './session-new-view.mocks';
 
 const meta = {
   ...sessionNewViewTestMeta,
-  title: 'Tests/Screens/Sessions/New Session/Voice',
+  title: 'Tests/Screens/Sessions/New Session/Conversation',
 };
 
 export default meta;
 
-const voiceLabel = 'Start voice call';
+const voiceLabel = 'Start Conversation';
 
 // Each story's own press spy, so nothing is shared between stories.
-const startOf = (voice: ComposerVoice | undefined): (() => void) | undefined =>
+const startOf = (voice: ComposerConversation | undefined): (() => void) | undefined =>
   voice?.kind === 'start' ? voice.onStart : undefined;
 
 // With nothing written, New Session offers the same voice button as a Session page; pressing it starts the call.

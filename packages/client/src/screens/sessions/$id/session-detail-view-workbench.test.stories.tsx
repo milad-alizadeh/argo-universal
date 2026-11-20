@@ -10,7 +10,7 @@ import {
   pullRequestMocks,
   withPullRequests,
 } from './session-detail-view-pull-request.mocks';
-import { voiceCallSession } from './session-detail-view-conversation.mocks';
+import { conversationSession } from './session-detail-view-conversation.mocks';
 import { idleSession } from './session-detail-view.mocks';
 
 const meta = {
@@ -202,7 +202,7 @@ export const ShownCardsFloatOverTheCentredConversation: Story = {
 
 // A Session with no cards has no Workbench: it is not drawn, and the conversation sits in the page's centre at every width.
 export const NoCardsLeaveTheConversationCentred: Story = {
-  args: { view: { state: 'open', ...voiceCallSession } },
+  args: { view: { state: 'open', ...conversationSession } },
   beforeEach: (): Promise<void> => settleLayout(1544),
   play: async ({ canvas }) => {
     const composer = await canvas.findByTestId(composerId);

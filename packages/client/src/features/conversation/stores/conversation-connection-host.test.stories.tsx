@@ -5,18 +5,18 @@ import { Pressable, Text } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { FakeEnvironment } from '../../../../mocks/conversation/fake-conversation-environment';
 import { callIn, statusOf } from '../utils/session-conversation.test.mocks';
-import { VoiceConnectionHost } from './desktop-conversation-provider';
-import { createWebRtcVoiceConnection } from './webrtc-conversation-connection';
+import { ConversationConnectionHost } from './desktop-conversation-provider';
+import { createWebRtcConversationConnection } from './webrtc-conversation-connection';
 
 // Each story gets its own browser stand-in and connection, so nothing leaks from one run into the next.
 const app = {
   environment: new FakeEnvironment(),
-  connection: createWebRtcVoiceConnection(new FakeEnvironment()),
+  connection: createWebRtcConversationConnection(new FakeEnvironment()),
 };
 
 const freshApp = (): void => {
   app.environment = new FakeEnvironment();
-  app.connection = createWebRtcVoiceConnection(app.environment);
+  app.connection = createWebRtcConversationConnection(app.environment);
 };
 
 const endLabel = 'End the call on the Server';
@@ -26,7 +26,7 @@ function AppOnSettings(): React.JSX.Element {
   const [status, setStatus] = useState(statusOf(callIn('s1')));
 
   return (
-    <VoiceConnectionHost connection={app.connection} status={status}>
+    <ConversationConnectionHost connection={app.connection} status={status}>
       <Text>Settings</Text>
       <Pressable
         accessibilityRole="button"
@@ -34,12 +34,12 @@ function AppOnSettings(): React.JSX.Element {
       >
         <Text>{endLabel}</Text>
       </Pressable>
-    </VoiceConnectionHost>
+    </ConversationConnectionHost>
   );
 }
 
 const meta = {
-  title: 'Tests/Voice/VoiceConnectionHost',
+  title: 'Tests/Conversation/ConversationConnectionHost',
   component: AppOnSettings,
   beforeEach: freshApp,
 } satisfies Meta<typeof AppOnSettings>;

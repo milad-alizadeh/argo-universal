@@ -1,8 +1,8 @@
-import { defaultVoiceCallOptions, type VoiceSettings } from '@repo/contracts';
+import { defaultConversationOptions, type ConversationSettings } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { chosenVoiceLabel, voiceChoices } from './voice-choices';
 
-const settings: VoiceSettings = {
+const settings: ConversationSettings = {
   enabled: true,
   provider: 'gpt-live',
   voice: 'pirate',
@@ -28,7 +28,7 @@ const settings: VoiceSettings = {
     },
   ],
   instructions: '',
-  options: defaultVoiceCallOptions,
+  options: defaultConversationOptions,
 };
 
 // The names each part of the list shows for a search.
@@ -46,7 +46,7 @@ const titles = (query: string): Titles => {
   };
 };
 
-describe('The voices Settings › Voice offers', () => {
+describe('The voices Settings › Conversation offers', () => {
   it("lists the person's voices, then the provider's, under the provider's name", () => {
     const choices = voiceChoices(settings, '');
 
@@ -88,7 +88,7 @@ describe('The voices Settings › Voice offers', () => {
   });
 });
 
-describe('The chosen voice, as the Voice row shows it', () => {
+describe('The chosen voice, as the Conversation row shows it', () => {
   it('names a custom voice by its own name', () => {
     expect(chosenVoiceLabel(settings)).toBe('Pirate');
   });

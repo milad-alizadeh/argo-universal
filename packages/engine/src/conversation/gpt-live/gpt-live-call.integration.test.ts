@@ -20,7 +20,7 @@ import {
   voiceWords,
 } from '#mocks/gpt-live-frames';
 import { heard, startedCall, type GptLiveFixture } from '#mocks/gpt-live-setup';
-import type { VoiceProviderEvent } from '../provider';
+import type { ConversationProviderEvent } from '../provider';
 
 let fixture: GptLiveFixture | undefined;
 
@@ -33,7 +33,7 @@ afterEach(async () => {
 async function listening(): Promise<{
   send: (...frames: string[]) => void;
   sendAudio: (frame: string) => void;
-  events: VoiceProviderEvent[];
+  events: ConversationProviderEvent[];
 }> {
   const started = await startedCall();
   fixture = started;
@@ -54,7 +54,7 @@ const person = (id: string, text: string, final: boolean) =>
 const voice = (id: string, text: string, final: boolean) =>
   ({ type: 'voice.transcript', id, text, final }) as const;
 
-const typesOf = (events: VoiceProviderEvent[]): string[] =>
+const typesOf = (events: ConversationProviderEvent[]): string[] =>
   events.map(({ type }) => type);
 
 describe('GPT-Live call events', () => {

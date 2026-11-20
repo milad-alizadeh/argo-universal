@@ -7,17 +7,17 @@ import {
   type VoiceSpectrum,
 } from '../../types/conversation-connection';
 import { barPitch } from './band-layout';
-import { VoiceEdgeBand } from './conversation-band';
+import { ConversationEdgeBand } from './conversation-band';
 
 const silent = silentSpectrum();
 
 const connected = {
-  orb: 'listening',
+  state: 'listening',
   trouble: null,
   microphoneMuted: false,
 } as const;
 
-type Props = React.ComponentProps<typeof VoiceEdgeBand>;
+type Props = React.ComponentProps<typeof ConversationEdgeBand>;
 
 type Render = (args: Props) => React.JSX.Element;
 
@@ -25,20 +25,20 @@ const inWidth =
   (width: number): Render =>
   (args) => (
     <View style={{ width }} className="bg-card">
-      <VoiceEdgeBand {...args} />
+      <ConversationEdgeBand {...args} />
     </View>
   );
 
 const meta = {
-  title: 'Tests/Voice/VoiceEdgeBand',
-  component: VoiceEdgeBand,
+  title: 'Tests/Conversation/ConversationEdgeBand',
+  component: ConversationEdgeBand,
   render: inWidth(640),
   args: {
     call: connected,
     elapsed: '2:43',
     spectrum: (): VoiceSpectrum => silent,
   },
-} satisfies Meta<typeof VoiceEdgeBand>;
+} satisfies Meta<typeof ConversationEdgeBand>;
 
 export default meta;
 

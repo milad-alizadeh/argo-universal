@@ -46,7 +46,7 @@ const levels = (): VoiceLevels => ({
   output: envelopeAt(now() + voiceLag),
 });
 
-// What the orb and the band read of a call's sound.
+// What the band and the band read of a call's sound.
 interface VoiceAudio {
   levels: () => VoiceLevels;
   spectrum: () => VoiceSpectrum;

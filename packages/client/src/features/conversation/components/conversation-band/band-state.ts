@@ -1,9 +1,9 @@
-import type { VoiceCall } from '@repo/contracts';
+import type { Conversation } from '@repo/contracts';
 import { voiceLabel } from '../../utils/voice-label';
 import type { BandState } from './band-motion';
 
 // What the band needs of the call: its state, its trouble and whether the person's microphone is muted.
-export type EdgeCall = Pick<VoiceCall, 'orb' | 'trouble'> & {
+export type EdgeCall = Pick<Conversation, 'state' | 'trouble'> & {
   microphoneMuted: boolean;
 };
 
@@ -15,23 +15,23 @@ export interface BandLook {
   timer: boolean;
 }
 
-const orbStates = {
+const bandStates = {
   none: 'connecting',
   listening: 'listening',
   talking: 'talking',
   thinking: 'thinking',
-} as const satisfies Record<VoiceCall['orb'], BandState>;
+} as const satisfies Record<Conversation['state'], BandState>;
 
 const troubleStates = {
   reconnecting: 'reconnecting',
   'microphone-blocked': 'blocked',
-} as const satisfies Record<NonNullable<VoiceCall['trouble']>, BandState>;
+} as const satisfies Record<NonNullable<Conversation['trouble']>, BandState>;
 
 // Trouble first, then a muted microphone, then what the call is doing.
 function stateOf(call: EdgeCall): BandState {
   if (call.trouble) return troubleStates[call.trouble];
 
-  return call.microphoneMuted ? 'muted' : orbStates[call.orb];
+  return call.microphoneMuted ? 'muted' : bandStates[call.state];
 }
 
 const words: Partial<Record<BandState, string>> = {

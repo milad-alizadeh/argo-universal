@@ -7,18 +7,18 @@ import { cdp } from 'vitest/browser';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import {
   rehearsedConnectMilliseconds,
-  VoiceCallRehearsal,
-} from './session-detail-view-conversation.mocks';
-import { voiceCallSession } from './session-detail-view-conversation.mocks';
+  ConversationRehearsal,
+} from './session-detail-view-conversation-rehearsal.mocks';
+import { conversationSession } from './session-detail-view-conversation.mocks';
 import { longSession } from './session-detail-view.mocks';
 
 const meta = {
-  title: 'Tests/Screens/Sessions/Session/Voice',
+  title: 'Tests/Screens/Sessions/Session/Conversation',
   parameters: { screenPreview: true },
   render: (): React.JSX.Element => (
     <FramedSessionPreview
       state="open"
-      {...voiceCallSession}
+      {...conversationSession}
       feed={longSession.feed}
     />
   ),
@@ -65,7 +65,7 @@ async function startAndEnd(canvas: Canvas): Promise<void> {
   await settleLayout(1440);
   await expect(canvas.queryByTestId(bandId)).not.toBeInTheDocument();
   await userEvent.click(
-    await canvas.findByRole('button', { name: 'Start voice call' }),
+    await canvas.findByRole('button', { name: 'Start Conversation' }),
   );
   const band = within(await canvas.findByTestId(bandId));
 
@@ -87,18 +87,18 @@ async function startAndEnd(canvas: Canvas): Promise<void> {
     ).not.toBeInTheDocument(),
   );
   await expect(
-    canvas.getByRole('button', { name: 'Start voice call' }),
+    canvas.getByRole('button', { name: 'Start Conversation' }),
   ).toBeInTheDocument();
 }
 
 export const BandComesAndGoesWithTheCall: Story = {
-  render: (): React.JSX.Element => <VoiceCallRehearsal />,
+  render: (): React.JSX.Element => <ConversationRehearsal />,
   play: ({ canvas }) => startAndEnd(canvas),
 };
 
 // Under reduced motion the band and the mutes only fade, and still arrive and leave.
 export const BandComesAndGoesWithReducedMotion: Story = {
-  render: (): React.JSX.Element => <VoiceCallRehearsal />,
+  render: (): React.JSX.Element => <ConversationRehearsal />,
   beforeEach: async () => {
     await cdp().send('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FakeEnvironment } from '../../../../mocks/conversation/fake-conversation-environment';
-import { createWebRtcVoiceConnection } from './webrtc-conversation-connection';
+import { createWebRtcConversationConnection } from './webrtc-conversation-connection';
 
 const answerFor = (offer: string): Promise<string> =>
   Promise.resolve(`answer to ${offer}`);
@@ -12,7 +12,7 @@ afterEach(() => {
 describe('WebRTC voice preview', () => {
   it('only listens: it sends silence, never opens the microphone, and plays the voice', async () => {
     const environment = new FakeEnvironment();
-    const connection = createWebRtcVoiceConnection(environment);
+    const connection = createWebRtcConversationConnection(environment);
 
     await connection.preview(answerFor);
     environment.peer.voiceArrives();
@@ -25,7 +25,7 @@ describe('WebRTC voice preview', () => {
 
   it('lets go of the first preview when another starts', async () => {
     const environment = new FakeEnvironment();
-    const connection = createWebRtcVoiceConnection(environment);
+    const connection = createWebRtcConversationConnection(environment);
 
     await connection.preview(answerFor);
     const first = { peer: environment.peer, silence: environment.silence };
@@ -38,7 +38,7 @@ describe('WebRTC voice preview', () => {
 
   it('lets go of the preview when a call starts, and not when a call ends', async () => {
     const environment = new FakeEnvironment();
-    const connection = createWebRtcVoiceConnection(environment);
+    const connection = createWebRtcConversationConnection(environment);
     await connection.preview(answerFor);
     const preview = environment.peer;
 
@@ -52,7 +52,7 @@ describe('WebRTC voice preview', () => {
   it('lets go of the preview when asked, or by itself once it has had time to play', async () => {
     vi.useFakeTimers();
     const environment = new FakeEnvironment();
-    const connection = createWebRtcVoiceConnection(environment);
+    const connection = createWebRtcConversationConnection(environment);
 
     await connection.preview(answerFor);
     connection.endPreview();
@@ -66,7 +66,7 @@ describe('WebRTC voice preview', () => {
 
   it('lets go of the preview when the Server gives no answer', async () => {
     const environment = new FakeEnvironment();
-    const connection = createWebRtcVoiceConnection(environment);
+    const connection = createWebRtcConversationConnection(environment);
 
     await expect(
       connection.preview(() => Promise.reject(new Error('A call is running'))),

@@ -143,7 +143,7 @@ class Chime extends AudioElementPlayback implements PlayingChime {
   }
 }
 
-// The browser's own microphone and speakers, for Settings › Voice's meters.
+// The browser's own microphone and speakers, for Settings › Conversation's meters.
 export const browserDeviceSound: DeviceSound = {
   listen: async (microphone, gain) =>
     new MeteredMicrophone(

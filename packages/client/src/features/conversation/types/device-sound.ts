@@ -15,7 +15,7 @@ export interface PlayingChime extends MeasuredSound {
   ended: Promise<void>;
 }
 
-// What Settings › Voice's meters need from the browser, so a test can stand in for it.
+// What Settings › Conversation's meters need from the browser, so a test can stand in for it.
 export interface DeviceSound {
   // Opens this microphone, or the system's for null; fails when it is refused or gone.
   listen: (

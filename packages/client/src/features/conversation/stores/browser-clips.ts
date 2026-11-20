@@ -61,7 +61,7 @@ export class BrowserRecording implements VoiceRecording {
   }
 }
 
-// A stored greeting playing on an audio element; it has no level to show, as the orb is not drawn for a preview.
+// A stored greeting playing on an audio element; it has no level to show, as the band is not drawn for a preview.
 export class BrowserClipPlayback
   extends AudioElementPlayback
   implements VoicePlayback

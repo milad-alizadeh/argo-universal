@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { startVoiceWork } from '#mocks/conversation-work';
+import { startConversationWork } from '#mocks/conversation-work';
 
 const briefingOf = async (messages: readonly string[]): Promise<string> => {
-  const work = await startVoiceWork([{ prompt: 'Hello', messages }]);
+  const work = await startConversationWork([{ prompt: 'Hello', messages }]);
   await work.start();
 
   return work.provider.call.request.briefing;
@@ -36,7 +36,7 @@ describe('the briefing of a call after an earlier one', () => {
   const fixBuild = 'Fix the build';
 
   const secondBriefing = async (): Promise<string> => {
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: fixBuild, messages: ['[COMPLETE] Fixed it'] },
     ]);
 
@@ -45,7 +45,7 @@ describe('the briefing of a call after an earlier one', () => {
     work.provider.call.voiceSays('On it.');
     work.provider.call.requestWork('r1', fixBuild);
     await expect.poll(work.turnEnds).toHaveLength(2);
-    await work.host.caller.voice.end({ sessionId: work.sessionId });
+    await work.host.caller.conversation.end({ sessionId: work.sessionId });
     await work.start();
 
     return work.provider.call.request.briefing;
@@ -55,13 +55,13 @@ describe('the briefing of a call after an earlier one', () => {
     const briefing = await secondBriefing();
 
     expect(briefing).toContain('Person: Can you fix the build?');
-    expect(briefing).toContain('Voice: On it.');
+    expect(briefing).toContain('Conversation: On it.');
   });
 
   it('names a request the voice sent as the voice’s, without the instruction to the Agent', async () => {
     const briefing = await secondBriefing();
 
-    expect(briefing).toContain(`Voice call request: ${fixBuild}`);
+    expect(briefing).toContain(`Conversation request: ${fixBuild}`);
     expect(briefing).not.toContain(`Person: ${fixBuild}`);
     expect(briefing).not.toContain('Begin every message with one mark');
   });

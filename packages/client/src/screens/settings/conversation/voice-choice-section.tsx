@@ -1,25 +1,25 @@
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
 import { CustomVoiceDialog } from './custom-voice-dialog';
-import type { VoiceDetailViewProps } from './conversation-detail-view-props';
+import type { ConversationDetailViewProps } from './conversation-detail-view-props';
 import { HeldTextRow } from './voice-held-rows';
 import { VoicePicker } from './voice-picker';
 import { providerReason, providerRow } from './conversation-provider-row';
 import { chosenProvider, settingsOf, waiting } from './conversation-settings-state';
 
 // While the chosen provider cannot be used, its reason takes the footnote: no call starts until it is fixed.
-const voiceFooter = (props: VoiceDetailViewProps): string =>
+const conversationFooter = (props: ConversationDetailViewProps): string =>
   providerReason(props) ??
   'The next Conversation uses this voice and these instructions.';
 
 // Who speaks on the next call, and what it is told: the provider, the voice, the instructions and the opening note.
-export const voiceSection = (
-  props: VoiceDetailViewProps,
+export const conversationSection = (
+  props: ConversationDetailViewProps,
 ): React.JSX.Element => (
   <FieldGroup.Section
     key="voice"
-    title="Voice and instructions"
-    footer={voiceFooter(props)}
+    title="Conversation and instructions"
+    footer={conversationFooter(props)}
   >
     {providerRow(props)}
     {pickerRow(props)}
@@ -28,7 +28,7 @@ export const voiceSection = (
   </FieldGroup.Section>
 );
 
-const openingRow = (props: VoiceDetailViewProps): React.JSX.Element => (
+const openingRow = (props: ConversationDetailViewProps): React.JSX.Element => (
   <HeldTextRow
     key="opening"
     title="Opening note"
@@ -39,7 +39,7 @@ const openingRow = (props: VoiceDetailViewProps): React.JSX.Element => (
   />
 );
 
-const pickerRow = (props: VoiceDetailViewProps): React.JSX.Element => (
+const pickerRow = (props: ConversationDetailViewProps): React.JSX.Element => (
   <VoicePicker
     key="voice"
     settings={settingsOf(props)}
@@ -50,7 +50,7 @@ const pickerRow = (props: VoiceDetailViewProps): React.JSX.Element => (
   />
 );
 
-const instructionsRow = (props: VoiceDetailViewProps): React.JSX.Element => (
+const instructionsRow = (props: ConversationDetailViewProps): React.JSX.Element => (
   <HeldTextRow
     key="instructions"
     title="Instructions for every Conversation"
@@ -62,7 +62,7 @@ const instructionsRow = (props: VoiceDetailViewProps): React.JSX.Element => (
 );
 
 // The custom voice form, over the page while it is open.
-export function EditorDialog(props: VoiceDetailViewProps): React.JSX.Element {
+export function EditorDialog(props: ConversationDetailViewProps): React.JSX.Element {
   const settings = settingsOf(props);
 
   return (

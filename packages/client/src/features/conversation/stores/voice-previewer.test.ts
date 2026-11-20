@@ -1,6 +1,6 @@
 import type { VoicePreviewClip, VoicePreviewClipInput } from '@repo/contracts';
 import { describe, expect, it, vi } from 'vitest';
-import { FakeVoiceConnection } from '../../../../mocks/conversation/fake-conversation-connection';
+import { FakeConversationConnection } from '../../../../mocks/conversation/fake-conversation-connection';
 import { VoicePreviewer, type PreviewServer } from './voice-previewer';
 
 const clip = { mimeType: 'audio/webm', data: 'AAEC' };
@@ -55,7 +55,7 @@ class FakeServer implements PreviewServer {
 }
 
 // A connection whose live preview asks for its answer at once and hands its recording over when a test says so.
-class LiveConnection extends FakeVoiceConnection {
+class LiveConnection extends FakeConversationConnection {
   public readonly live: string[] = [];
   public ended = 0;
   public recorded: ((clip: VoicePreviewClip) => void) | undefined;
@@ -73,7 +73,7 @@ class LiveConnection extends FakeVoiceConnection {
   }
 }
 
-describe('Voice previewer', () => {
+describe('Conversation previewer', () => {
   it('plays the live preview the first time and keeps the greeting it recorded', async () => {
     const connection = new LiveConnection();
     const server = new FakeServer();
@@ -176,7 +176,7 @@ describe('Voice previewer', () => {
     server.failAnswer = true;
 
     await expect(
-      new VoicePreviewer(new FakeVoiceConnection(), server).play({
+      new VoicePreviewer(new FakeConversationConnection(), server).play({
         voice: 'cove',
       }),
     ).resolves.toBeUndefined();

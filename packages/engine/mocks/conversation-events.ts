@@ -1,14 +1,14 @@
-import { providerEvent, type VoiceCallEvent } from '../src/conversation/conversation-types';
+import { providerEvent, type ConversationEvent } from '../src/conversation/conversation-types';
 import { detachedSessions } from '../src/conversation/session-link';
 
-export const start: Extract<VoiceCallEvent, { type: 'call.start' }> = {
+export const start: Extract<ConversationEvent, { type: 'call.start' }> = {
   type: 'call.start',
-  callId: 'call-1',
+  conversationId: 'call-1',
   sessionId: 'session-1',
   offer: 'offer',
 };
 
-export const events: VoiceCallEvent[] = [
+export const events: ConversationEvent[] = [
   start,
   { type: 'call.answered', answer: 'answer' },
   { type: 'call.end', reason: 'person' },

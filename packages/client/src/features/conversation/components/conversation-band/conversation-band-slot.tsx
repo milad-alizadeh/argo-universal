@@ -1,22 +1,22 @@
-import type { ComposerVoice } from '#features/composer';
-import { VoiceEdgeBand, type VoiceEdgeBandProps } from './conversation-band';
+import type { ComposerConversation } from '#features/composer';
+import { ConversationEdgeBand, type ConversationEdgeBandProps } from './conversation-band';
 
-const callHere: ReadonlySet<ComposerVoice['kind']> = new Set([
+const callHere: ReadonlySet<ComposerConversation['kind']> = new Set([
   'connecting',
   'connected',
 ]);
 
-type CallSlot = Extract<ComposerVoice, { kind: 'connecting' | 'connected' }>;
+type CallSlot = Extract<ComposerConversation, { kind: 'connecting' | 'connected' }>;
 
-const runsHere = (voice: ComposerVoice | undefined): voice is CallSlot =>
+const runsHere = (voice: ComposerConversation | undefined): voice is CallSlot =>
   voice !== undefined && callHere.has(voice.kind);
 
 // The Composer's voice slot with the band along its top edge, while a call here connects or runs.
 export function withEdge(
-  voice: ComposerVoice | undefined,
-  band: VoiceEdgeBandProps | undefined,
-): ComposerVoice | undefined {
+  voice: ComposerConversation | undefined,
+  band: ConversationEdgeBandProps | undefined,
+): ComposerConversation | undefined {
   if (!band || !runsHere(voice)) return voice;
 
-  return { ...voice, edge: <VoiceEdgeBand {...band} /> };
+  return { ...voice, edge: <ConversationEdgeBand {...band} /> };
 }

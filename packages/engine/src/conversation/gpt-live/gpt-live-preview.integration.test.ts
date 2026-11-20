@@ -6,11 +6,11 @@ import {
   signedIn,
   type GptLiveFixture,
 } from '#mocks/gpt-live-setup';
-import type { VoiceProviderCall } from '../provider';
+import type { ConversationProviderCall } from '../provider';
 
 let fixture: GptLiveFixture | undefined;
 
-let preview: VoiceProviderCall | undefined;
+let preview: ConversationProviderCall | undefined;
 
 afterEach(async () => {
   preview?.end();
@@ -24,7 +24,7 @@ const words = "Hi, I'm Sol. This is how I'll sound on your calls.";
 // A preview of Sol from a listening-only offer, on a fake service that accepts the token Codex gives.
 async function previewed(): Promise<{
   fixture: GptLiveFixture;
-  preview: VoiceProviderCall;
+  preview: ConversationProviderCall;
 }> {
   fixture = await fixtureOf([signedIn('t1')], ['t1']);
   preview = await fixture.provider.preview({

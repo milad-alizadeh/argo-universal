@@ -1,7 +1,7 @@
 import type * as React from 'react';
 import { createElement, useEffect, useState } from 'react';
-import type { ComposerVoice, ComposerVoiceMutes } from '#features/composer';
-import { VoiceEdgeBand, voicePlaceholder } from '#features/conversation';
+import type { ComposerConversation, ComposerConversationMutes } from '#features/composer';
+import { ConversationEdgeBand, conversationPlaceholder } from '#features/conversation';
 import { syntheticVoiceAudio } from '../../../../mocks/conversation/synthetic-voice-audio';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { idleSession } from './session-detail-view.mocks';
@@ -9,7 +9,7 @@ import { idleSession } from './session-detail-view.mocks';
 // Where the rehearsed call is: none, connecting, or connected.
 type RehearsedCall = 'none' | 'connecting' | 'connected';
 
-// How long the rehearsed call takes to connect, about as long as a Voice provider does.
+// How long the rehearsed call takes to connect, about as long as a Conversation provider does.
 export const rehearsedConnectMilliseconds = 1800;
 
 const idleComposer = idleSession.composer;
@@ -18,9 +18,9 @@ const idleComposer = idleSession.composer;
 const { spectrum } = syntheticVoiceAudio();
 
 const bandFor = (call: Exclude<RehearsedCall, 'none'>): React.ReactNode =>
-  createElement(VoiceEdgeBand, {
+  createElement(ConversationEdgeBand, {
     call: {
-      orb: call === 'connecting' ? 'none' : 'listening',
+      state: call === 'connecting' ? 'none' : 'listening',
       trouble: null,
       microphoneMuted: false,
     },
@@ -37,13 +37,13 @@ interface Rehearsal {
   setMutes: (mutes: Mutes) => void;
 }
 
-const mutesOf = ({ mutes, setMutes }: Rehearsal): ComposerVoiceMutes => ({
+const mutesOf = ({ mutes, setMutes }: Rehearsal): ComposerConversationMutes => ({
   ...mutes,
   onMicrophone: () => setMutes({ ...mutes, microphone: !mutes.microphone }),
   onSpeaker: () => setMutes({ ...mutes, speaker: !mutes.speaker }),
 });
 
-function voiceOf(rehearsal: Rehearsal): ComposerVoice {
+function conversationOf(rehearsal: Rehearsal): ComposerConversation {
   const { call, setCall } = rehearsal;
   const onEnd = (): void => setCall('none');
 
@@ -79,15 +79,15 @@ function useConnectAfterStart(
 }
 
 /*
- * A Session page whose Voice call the person starts and ends with the Composer's own buttons: the voice button starts
+ * A Session page whose Conversation the person starts and ends with the Composer's own buttons: the voice button starts
  * it, it connects a moment later, and End takes it away, so the band's entrance and exit can be watched.
  */
-export function VoiceCallRehearsal(): React.JSX.Element {
+export function ConversationRehearsal(): React.JSX.Element {
   const [call, setCall] = useState<RehearsedCall>('none');
   const [mutes, setMutes] = useState({ microphone: false, speaker: false });
   useConnectAfterStart(call, setCall);
-  const voice = voiceOf({ call, setCall, mutes, setMutes });
-  const placeholder = voicePlaceholder(voice) ?? idleComposer.placeholder;
+  const voice = conversationOf({ call, setCall, mutes, setMutes });
+  const placeholder = conversationPlaceholder(voice) ?? idleComposer.placeholder;
 
   return (
     <FramedSessionPreview

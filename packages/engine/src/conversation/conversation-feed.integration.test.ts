@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { promptText, startVoiceWork } from '#mocks/conversation-work';
+import { promptText, startConversationWork } from '#mocks/conversation-work';
 import { relayWords } from './relay-words';
 
 const readme = 'Add a README';
 
 describe('a Prompt typed during a call', () => {
   it('goes to the Session as normal, and the voice is told what was sent and what came back', async () => {
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: readme, messages: ['[COMPLETE] Added it'] },
     ]);
 

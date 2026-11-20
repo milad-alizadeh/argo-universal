@@ -2,7 +2,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { browserDeviceSound } from '../stores/browser-device-sound';
 import { DeviceMeters, type DeviceMeter } from '../stores/device-meters';
 import type { DeviceSound } from '../types/device-sound';
-import { useVoiceStatus } from './use-conversation-status';
+import { useConversationStatus } from './use-conversation-status';
 
 export interface DeviceMeterInputs {
   // Whether the microphone may be opened: the browser has allowed it.
@@ -31,7 +31,7 @@ export interface DeviceMetersState {
  */
 function useListening(meters: DeviceMeters, inputs: DeviceMeterInputs): void {
   const { microphone, gain } = inputs;
-  const quiet = useVoiceStatus().call === null;
+  const quiet = useConversationStatus().conversation === null;
   const allowed = inputs.listening && quiet;
 
   useEffect(() => meters.setGain(gain), [meters, gain]);
@@ -55,7 +55,7 @@ function useMeters(sound: DeviceSound): DeviceMeters {
 }
 
 /*
- * Settings › Voice's meters: the chosen microphone's level while its glyph is drawn, and a short test sound on the
+ * Settings › Conversation's meters: the chosen microphone's level while its glyph is drawn, and a short test sound on the
  * chosen speaker at the saved volume. Leaving the page lets go of both.
  */
 export function useDeviceMeters(

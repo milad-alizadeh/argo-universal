@@ -82,7 +82,7 @@ export async function sendPrompt(
   return { ...landing, ...followed(watch, landing) };
 }
 
-// A Plugin's and the Voice call's Prompt that a Hook dropped is refused, saying why; another Session's says it was dropped.
+// A Plugin's and the Conversation's Prompt that a Hook dropped is refused, saying why; another Session's says it was dropped.
 export function requireTaken(sent: SentPrompt): TakenPrompt {
   if (sent.status !== 'dropped') return sent;
 

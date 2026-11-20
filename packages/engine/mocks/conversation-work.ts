@@ -2,23 +2,23 @@ import type { PromptRequest } from '@agentclientprotocol/sdk';
 import type { FeedSubscribeOutput, SessionUpdate } from '@repo/contracts';
 import { feedRow, turn } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
-import { FakeVoiceProvider } from '../src/conversation/fake-provider';
+import { FakeConversationProvider } from '../src/conversation/fake-provider';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
 import { waitForAcpSessionIdle } from './acp-feed';
 import {
   scenarioOf,
   steeringScenario,
   type Scenario,
-  type VoiceAgentReply,
+  type ConversationAgentReply,
 } from './conversation-agent';
 import { offer } from './conversation-engine';
 
-export type { VoiceAgentReply } from './conversation-agent';
+export type { ConversationAgentReply } from './conversation-agent';
 
 type Host = Awaited<ReturnType<typeof startAcpEngine>>;
 
-type VoiceWorkOptions = {
-  provider?: FakeVoiceProvider;
+type ConversationWorkOptions = {
+  provider?: FakeConversationProvider;
   // The Agent supports steering and takes what it is given into the running Turn, or refuses each steer.
   steering?: boolean | 'refused';
   // How long the call may pass without speech before it ends by itself, in milliseconds.
@@ -30,7 +30,7 @@ type VoiceWorkOptions = {
 // What a test holds of the Session it drives.
 type WorkParts = {
   host: Host;
-  provider: FakeVoiceProvider;
+  provider: FakeConversationProvider;
   sessionId: string;
   // Every Prompt the mock Agent received, in order.
   prompts: PromptRequest[];
@@ -66,10 +66,10 @@ async function openSession(host: Host, turnless = false): Promise<string> {
   return sessionId;
 }
 
-// A Session with a mock Agent and a fake Voice provider: what a test drives and what it reads back.
-export class VoiceWork {
+// A Session with a mock Agent and a fake Conversation provider: what a test drives and what it reads back.
+export class ConversationWork {
   public readonly host: Host;
-  public readonly provider: FakeVoiceProvider;
+  public readonly provider: FakeConversationProvider;
   public readonly sessionId: string;
   public readonly prompts: PromptRequest[];
   public readonly steered: Promise<unknown>;
@@ -84,7 +84,7 @@ export class VoiceWork {
 
   // Starts the call and connects it.
   public async start(): Promise<void> {
-    await this.host.caller.voice.start({ sessionId: this.sessionId, offer });
+    await this.host.caller.conversation.start({ sessionId: this.sessionId, offer });
     this.provider.call.connect();
   }
 
@@ -162,14 +162,14 @@ type Play = Pick<WorkParts, 'provider' | 'prompts' | 'steered'> & {
 
 // What the mock Agent is to do, and what is kept to read back what it saw.
 function playOf(
-  replies: readonly VoiceAgentReply[],
-  options: VoiceWorkOptions,
+  replies: readonly ConversationAgentReply[],
+  options: ConversationWorkOptions,
 ): Play {
   const prompts: PromptRequest[] = [];
   const steered = Promise.withResolvers<unknown>();
 
   const provider =
-    options.provider ?? new FakeVoiceProvider({ connect: 'manual' });
+    options.provider ?? new FakeConversationProvider({ connect: 'manual' });
 
   const scenario: Scenario = {
     ...scenarioOf(replies, { prompts, provider }),
@@ -180,15 +180,15 @@ function playOf(
   return { provider, prompts, steered: steered.promise, scenario };
 }
 
-// The Engine with a fake Voice provider and a mock Agent that answers the Prompts a test names.
-export async function startVoiceWork(
-  replies: readonly VoiceAgentReply[],
-  options: VoiceWorkOptions = {},
-): Promise<VoiceWork> {
+// The Engine with a fake Conversation provider and a mock Agent that answers the Prompts a test names.
+export async function startConversationWork(
+  replies: readonly ConversationAgentReply[],
+  options: ConversationWorkOptions = {},
+): Promise<ConversationWork> {
   const { scenario, ...play } = playOf(replies, options);
   const host = await startAcpEngine(scenario);
 
-  return new VoiceWork({
+  return new ConversationWork({
     ...play,
     host,
     sessionId: await openSession(host, options.turnless),

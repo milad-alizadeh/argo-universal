@@ -1,5 +1,5 @@
 import type { VoicePreviewClip, VoicePreviewClipInput } from '@repo/contracts';
-import type { VoiceConnection } from '../types/conversation-connection';
+import type { ConversationConnection } from '../types/conversation-connection';
 
 // What a preview asks of the Server, for the voice and the unsaved custom voice the input names.
 export interface PreviewServer {
@@ -24,7 +24,7 @@ export class VoicePreviewer {
   private taps = 0;
 
   public constructor(
-    private readonly connection: VoiceConnection,
+    private readonly connection: ConversationConnection,
     private readonly server: PreviewServer,
   ) {}
 

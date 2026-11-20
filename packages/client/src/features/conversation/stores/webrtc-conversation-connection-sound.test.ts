@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { FakeEnvironment } from '../../../../mocks/conversation/fake-conversation-environment';
-import { createWebRtcVoiceConnection } from './webrtc-conversation-connection';
+import { createWebRtcConversationConnection } from './webrtc-conversation-connection';
 
 const unchanged = { volume: 100, microphoneGain: 100 };
 
 describe('the volume and microphone gain the person chose', () => {
   it('plays the voice at the chosen volume, silent while the speaker is muted', async () => {
     const environment = new FakeEnvironment();
-    const connection = createWebRtcVoiceConnection(environment);
+    const connection = createWebRtcConversationConnection(environment);
     connection.setSound({ ...unchanged, volume: 40 });
 
     await connection.createOffer();
@@ -22,7 +22,7 @@ describe('the volume and microphone gain the person chose', () => {
 
   it('changes the volume of a running call at once', async () => {
     const environment = new FakeEnvironment();
-    const connection = createWebRtcVoiceConnection(environment);
+    const connection = createWebRtcConversationConnection(environment);
     await connection.createOffer();
     environment.peer.voiceArrives();
 
@@ -33,7 +33,7 @@ describe('the volume and microphone gain the person chose', () => {
 
   it('sends the microphone up as it is at full gain, never replacing what the peer sends', async () => {
     const environment = new FakeEnvironment();
-    const connection = createWebRtcVoiceConnection(environment);
+    const connection = createWebRtcConversationConnection(environment);
     connection.setSound(unchanged);
 
     await connection.createOffer();
@@ -44,7 +44,7 @@ describe('the volume and microphone gain the person chose', () => {
 
   it('starts a call with the chosen gain, and changes a running call and a swapped microphone to a new one', async () => {
     const environment = new FakeEnvironment();
-    const connection = createWebRtcVoiceConnection(environment);
+    const connection = createWebRtcConversationConnection(environment);
     connection.setSound({ ...unchanged, microphoneGain: 150 });
 
     await connection.createOffer();

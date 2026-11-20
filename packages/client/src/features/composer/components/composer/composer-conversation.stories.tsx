@@ -11,17 +11,17 @@ import {
 } from './composer-conversation-band-fixtures';
 import {
   callElsewhereComposer,
-  voiceBothMutedComposer,
-  voiceCallComposer,
-  voiceCallDraftComposer,
-  voiceConnectingComposer,
-  voiceMicMutedComposer,
-  voiceReadyComposer,
-  voiceSpeakerMutedComposer,
+  conversationBothMutedComposer,
+  conversationComposer,
+  conversationDraftComposer,
+  conversationConnectingComposer,
+  conversationMicMutedComposer,
+  conversationReadyComposer,
+  conversationSpeakerMutedComposer,
 } from './composer-conversation-fixtures';
 
 const meta = {
-  title: 'Composer/Composer/Voice',
+  title: 'Composer/Composer/Conversation',
   component: Composer,
   render: (args): React.JSX.Element => (
     <SessionColumn>
@@ -30,7 +30,7 @@ const meta = {
   ),
   parameters: { previewPadding: false },
   args: {
-    ...voiceReadyComposer,
+    ...conversationReadyComposer,
     onDraftChange: action('edit draft'),
     onAttachImages: action('attach images'),
     onAttachFiles: action('attach files'),
@@ -45,32 +45,32 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Nothing written and no call: the voice button is the primary button.
-export const VoiceReady: Story = { args: voiceReadyComposer };
+export const ConversationReady: Story = { args: conversationReadyComposer };
 
 // The call is connecting: End is already there with a ring turning inside it.
-export const VoiceConnecting: Story = { args: voiceConnectingComposer };
+export const ConversationConnecting: Story = { args: conversationConnectingComposer };
 
 // A connected call with an empty draft: mic, speaker and End.
-export const VoiceCall: Story = { args: voiceCallComposer };
+export const Conversation: Story = { args: conversationComposer };
 
 // The microphone is muted: its button reads red.
-export const VoiceMicMuted: Story = { args: voiceMicMutedComposer };
+export const ConversationMicMuted: Story = { args: conversationMicMutedComposer };
 
 // The speaker is muted: its button reads red.
-export const VoiceSpeakerMuted: Story = { args: voiceSpeakerMutedComposer };
+export const VoiceSpeakerMuted: Story = { args: conversationSpeakerMutedComposer };
 
 // Both muted: both buttons read red, and End keeps its look.
-export const VoiceBothMuted: Story = { args: voiceBothMutedComposer };
+export const ConversationBothMuted: Story = { args: conversationBothMutedComposer };
 
 // Text in the draft on a call: the primary button is Send.
-export const VoiceCallWithDraft: Story = { args: voiceCallDraftComposer };
+export const ConversationWithDraft: Story = { args: conversationDraftComposer };
 
 // The call runs in another Session: in the voice button's place, the same round button with a live dot.
 export const CallInAnotherSession: Story = { args: callElsewhereComposer };
 
 /*
  * The Conversation band along the card's top edge, with the state and the timer at its right end. The band's own
- * states are in `Voice/VoiceEdgeBand`.
+ * states are in `Conversation/ConversationEdgeBand`.
  */
 export const BandConnecting: Story = { args: bandConnectingComposer };
 

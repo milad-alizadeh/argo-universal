@@ -9,7 +9,7 @@ import type { PromptLanding } from '../session-prompt';
 // A queued Prompt: who sent it, and its queued id.
 type QueuedSend = Pick<PromptSend<SentPromptSender>, 'sender' | 'id'>;
 
-// A Plugin's Prompt waits its turn (ADR-0055); the Voice call's and another Session's steer (ADR-0064, ADR-0054).
+// A Plugin's Prompt waits its turn (ADR-0055); the Conversation's and another Session's steer (ADR-0064, ADR-0054).
 const steers = ({ type }: SentPromptSender): boolean => type !== 'plugin';
 
 const canSteer = ({

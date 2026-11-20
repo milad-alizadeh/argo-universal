@@ -1,17 +1,17 @@
 import { useSyncExternalStore } from 'react';
-import type { VoiceConnection, VoiceMutes } from '../types/conversation-connection';
+import type { ConversationConnection, ConversationMutes } from '../types/conversation-connection';
 
-const unmuted: VoiceMutes = { microphone: false, speaker: false };
+const unmuted: ConversationMutes = { microphone: false, speaker: false };
 
 // What there is to follow when the App carries no audio: nothing is ever muted.
-const nobody: Pick<VoiceConnection, 'mutes' | 'subscribe'> = {
+const nobody: Pick<ConversationConnection, 'mutes' | 'subscribe'> = {
   mutes: () => unmuted,
   subscribe: () => (): void => {},
 };
 
 export interface SessionMutes {
   // What the connection holds muted.
-  mutes: VoiceMutes;
+  mutes: ConversationMutes;
   setMicrophoneMuted: (muted: boolean) => void;
   setSpeakerMuted: (muted: boolean) => void;
 }
@@ -22,7 +22,7 @@ export interface SessionMutes {
  * Composer's stories both mount this one.
  */
 export function useSessionMutes(
-  connection: VoiceConnection | null,
+  connection: ConversationConnection | null,
 ): SessionMutes {
   const source = connection ?? nobody;
   const mutes = useSyncExternalStore(source.subscribe, source.mutes);

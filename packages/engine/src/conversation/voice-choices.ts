@@ -1,49 +1,49 @@
 import type {
   CustomVoice,
   CustomVoiceInput,
-  VoiceCallOptions,
-  VoiceCallOptionsChange,
+  ConversationOptions,
+  ConversationOptionsChange,
   VoiceList,
   VoicePreviewClipInput,
-  VoiceSettings,
-  VoiceSettingsChange,
+  ConversationSettings,
+  ConversationSettingsChange,
 } from '@repo/contracts';
 import {
   deletedCustomVoice,
   listedVoices,
-  previewedVoice,
+  previewedConversation,
   savedCustomVoices,
   type PreviewedVoice,
 } from './custom-voices';
-import type { VoiceCallSetup, VoiceProvider } from './provider';
+import type { ConversationSetup, ConversationProvider } from './provider';
 import {
   changedSettings,
   settingsOf,
   setupOf,
   voicesOf,
 } from './voice-choice-rules';
-import type { StoredVoiceSettings, VoiceSettingsStore } from './conversation-settings';
+import type { StoredConversationSettings, ConversationSettingsStore } from './conversation-settings';
 
 export { settingsOf } from './voice-choice-rules';
 
 // What Operations read and change about the next call: its voice, the person's custom voices, and its instructions.
 export interface VoiceChoicesPort {
-  settings: () => Promise<VoiceSettings>;
-  change: (change: VoiceSettingsChange) => Promise<VoiceSettings>;
+  settings: () => Promise<ConversationSettings>;
+  change: (change: ConversationSettingsChange) => Promise<ConversationSettings>;
   voices: () => Promise<VoiceList>;
   saveCustomVoice: (input: CustomVoiceInput) => Promise<CustomVoice>;
   deleteCustomVoice: (id: string) => Promise<VoiceList>;
-  setInstructions: (instructions: string) => Promise<VoiceSettings>;
-  setCallOptions: (change: VoiceCallOptionsChange) => Promise<VoiceSettings>;
+  setInstructions: (instructions: string) => Promise<ConversationSettings>;
+  setCallOptions: (change: ConversationOptionsChange) => Promise<ConversationSettings>;
 }
 
-// The person's Voice settings against the Server's provider: read, changed, and heard when they change.
+// The person's Conversation settings against the Server's provider: read, changed, and heard when they change.
 export class VoiceChoices implements VoiceChoicesPort {
   private readonly listeners = new Set<() => void>();
 
   public constructor(
-    private readonly store: VoiceSettingsStore,
-    private readonly provider: () => VoiceProvider | null,
+    private readonly store: ConversationSettingsStore,
+    private readonly provider: () => ConversationProvider | null,
   ) {}
 
   public listen(listener: () => void): () => void {
@@ -56,11 +56,11 @@ export class VoiceChoices implements VoiceChoicesPort {
     return this.store.read().enabled;
   }
 
-  public settings(): Promise<VoiceSettings> {
+  public settings(): Promise<ConversationSettings> {
     return settingsOf(this.store.read(), this.provider());
   }
 
-  public async change(change: VoiceSettingsChange): Promise<VoiceSettings> {
+  public async change(change: ConversationSettingsChange): Promise<ConversationSettings> {
     const stored = this.store.read();
     await this.keep(await changedSettings(stored, change, this.provider()));
 
@@ -98,22 +98,22 @@ export class VoiceChoices implements VoiceChoicesPort {
     return this.voices();
   }
 
-  public async setInstructions(instructions: string): Promise<VoiceSettings> {
+  public async setInstructions(instructions: string): Promise<ConversationSettings> {
     await this.keep({ ...this.store.read(), instructions });
 
     return this.settings();
   }
 
   public async setCallOptions(
-    change: VoiceCallOptionsChange,
-  ): Promise<VoiceSettings> {
+    change: ConversationOptionsChange,
+  ): Promise<ConversationSettings> {
     const stored = this.store.read();
     await this.keep({ ...stored, options: { ...stored.options, ...change } });
 
     return this.settings();
   }
 
-  public options(): VoiceCallOptions {
+  public options(): ConversationOptions {
     return this.store.read().options;
   }
 
@@ -123,17 +123,17 @@ export class VoiceChoices implements VoiceChoicesPort {
   ): Promise<PreviewedVoice> {
     const builtIn = await voicesOf(this.provider());
 
-    return previewedVoice(input, this.store.read().customVoices, builtIn);
+    return previewedConversation(input, this.store.read().customVoices, builtIn);
   }
 
   // What the next call speaks with and is told.
-  public async setup(): Promise<VoiceCallSetup> {
+  public async setup(): Promise<ConversationSetup> {
     const builtIn = await voicesOf(this.provider());
 
     return setupOf(this.store.read(), builtIn);
   }
 
-  private async keep(stored: StoredVoiceSettings): Promise<void> {
+  private async keep(stored: StoredConversationSettings): Promise<void> {
     await this.store.write(stored);
 
     for (const listener of this.listeners) listener();

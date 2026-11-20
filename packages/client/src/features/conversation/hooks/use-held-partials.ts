@@ -1,4 +1,4 @@
-import type { VoicePartial } from '@repo/contracts';
+import type { ConversationPartial } from '@repo/contracts';
 import { useEffect, useState } from 'react';
 import {
   drawnPartials,
@@ -20,7 +20,7 @@ const released = (state: HeldPartials): HeldPartials => ({
 });
 
 // The words being said on the call, with those it has just made final held until their row is drawn.
-export function useHeldPartials(live: readonly VoicePartial[]): VoicePartial[] {
+export function useHeldPartials(live: readonly ConversationPartial[]): ConversationPartial[] {
   const [state, setState] = useState(() => holdPartials(noHeldPartials, live));
   const current = state.live === live ? state : holdPartials(state, live);
 

@@ -1,13 +1,13 @@
-import type { VoiceCall, VoiceOrbState } from '@repo/contracts';
+import type { Conversation, ConversationState } from '@repo/contracts';
 
 // What the label needs of a call.
-export type CallLook = Pick<VoiceCall, 'orb' | 'trouble' | 'startedAt'> &
-  Partial<Pick<VoiceCall, 'limit'>>;
+export type CallLook = Pick<Conversation, 'state' | 'trouble' | 'startedAt'> &
+  Partial<Pick<Conversation, 'limit'>>;
 
 export interface VoiceLabel {
-  // The big line under the orb.
+  // The big line under the band.
   headline: string;
-  // The small line: that this is a Voice call, how long it has run, and any allowance warning.
+  // The small line: that this is a Conversation, how long it has run, and any allowance warning.
   detail: string;
 }
 
@@ -35,7 +35,7 @@ export function elapsedOf(startedAt: string | null, now: number): string {
   return hours > 0 ? `${hours}:${two(minutes)}:${rest}` : `${minutes}:${rest}`;
 }
 
-const stateLabels: Record<VoiceOrbState, string> = {
+const stateLabels: Record<ConversationState, string> = {
   listening: 'Listening',
   talking: 'Talking',
   thinking: 'Thinking',
@@ -50,7 +50,7 @@ const troubleLabels = {
 const percent = 100;
 
 const headlineOf = (call: CallLook): string =>
-  call.trouble ? troubleLabels[call.trouble] : stateLabels[call.orb];
+  call.trouble ? troubleLabels[call.trouble] : stateLabels[call.state];
 
 const allowanceOf = (call: CallLook): string =>
   call.limit ? ` · ${Math.round(call.limit.remaining * percent)}% left` : '';
@@ -59,6 +59,6 @@ const allowanceOf = (call: CallLook): string =>
 export function voiceLabel(call: CallLook, now: number): VoiceLabel {
   return {
     headline: headlineOf(call),
-    detail: `Voice · ${elapsedOf(call.startedAt, now)}${allowanceOf(call)}`,
+    detail: `Conversation · ${elapsedOf(call.startedAt, now)}${allowanceOf(call)}`,
   };
 }

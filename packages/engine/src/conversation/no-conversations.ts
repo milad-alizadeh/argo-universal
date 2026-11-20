@@ -1,35 +1,35 @@
-import type { VoiceStatus } from '@repo/contracts';
-import { noVoiceCall, unavailable } from './unavailable';
-import type { VoiceCallsPort } from './conversations';
+import type { ConversationStatus } from '@repo/contracts';
+import { noConversation, unavailable } from './unavailable';
+import type { ConversationsPort } from './conversations';
 import { settingsOf } from './voice-choices';
-import { VoiceDevices } from './conversation-devices';
-import { defaultVoiceSettings } from './conversation-settings';
+import { ConversationDevices } from './conversation-devices';
+import { defaultConversationSettings } from './conversation-settings';
 
-const notAvailable = 'Voice calls are not available';
+const notAvailable = 'Conversations are not available';
 
-const noStatus: VoiceStatus = {
-  call: null,
+const noStatus: ConversationStatus = {
+  conversation: null,
   ended: null,
   partials: [],
   availability: { usable: false, reason: notAvailable },
-  enabled: defaultVoiceSettings.enabled,
-  volume: defaultVoiceSettings.options.volume,
-  microphoneGain: defaultVoiceSettings.options.microphoneGain,
+  enabled: defaultConversationSettings.enabled,
+  volume: defaultConversationSettings.options.volume,
+  microphoneGain: defaultConversationSettings.options.microphoneGain,
 };
 
 const refused = (): Promise<never> => Promise.reject(unavailable(notAvailable));
 
-// What the Server runs with when it was given no Voice call machine: a Voice call can never start.
-export const noVoiceCalls: VoiceCallsPort = {
+// What the Server runs with when it was given no Conversation machine: a Conversation can never start.
+export const noConversations: ConversationsPort = {
   status: () => Promise.resolve(noStatus),
   start: () => Promise.reject(unavailable(notAvailable)),
   end: () => ({ ended: false }),
   hangUp: () => {
-    throw noVoiceCall();
+    throw noConversation();
   },
   attach: () => {},
   choices: {
-    settings: () => settingsOf(defaultVoiceSettings, null),
+    settings: () => settingsOf(defaultConversationSettings, null),
     change: refused,
     voices: () => Promise.resolve({ voices: [] }),
     saveCustomVoice: refused,
@@ -37,7 +37,7 @@ export const noVoiceCalls: VoiceCallsPort = {
     setInstructions: refused,
     setCallOptions: refused,
   },
-  devices: new VoiceDevices(() => null),
+  devices: new ConversationDevices(() => null),
   preview: () => Promise.reject(unavailable(notAvailable)),
   previewClips: {
     get: () => Promise.resolve({ clip: null }),

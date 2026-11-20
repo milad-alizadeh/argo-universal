@@ -1,6 +1,6 @@
-import type { VoiceCallActorRef } from './conversation.machine';
+import type { ConversationActorRef } from './conversation.machine';
 
-// Where a change of the Voice settings is heard, which no Voice call's own change tells.
+// Where a change of the Conversation settings is heard, which no Conversation's own change tells.
 export interface SettingsChanges {
   listen: (listener: () => void) => () => void;
 }
@@ -13,7 +13,7 @@ export class Changes {
   private readonly unlisten: () => void;
 
   public constructor(
-    actor: VoiceCallActorRef,
+    actor: ConversationActorRef,
     private readonly signal: AbortSignal,
     settings: SettingsChanges,
   ) {

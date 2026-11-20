@@ -1,8 +1,8 @@
 import {
   CustomVoice,
-  defaultVoiceCallOptions,
-  VoiceCallOptionsChange,
-  type VoiceCallOptions,
+  defaultConversationOptions,
+  ConversationOptionsChange,
+  type ConversationOptions,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { serverSettings } from '@repo/db/schema';
@@ -15,8 +15,8 @@ import {
   type WriterJob,
 } from '../storage';
 
-// What the person chose in Settings › Voice; `null` is not chosen yet, when the provider's own default applies.
-export interface StoredVoiceSettings {
+// What the person chose in Settings › Conversation; `null` is not chosen yet, when the provider's own default applies.
+export interface StoredConversationSettings {
   enabled: boolean;
   provider: string | null;
   // A built-in voice's id or a custom voice's.
@@ -24,64 +24,64 @@ export interface StoredVoiceSettings {
   customVoices: CustomVoice[];
   // What every call is told after Argo's own instructions; empty for none.
   instructions: string;
-  options: VoiceCallOptions;
+  options: ConversationOptions;
 }
 
-// What a Server that was never set up holds: Voice calls on, nothing chosen.
-export const defaultVoiceSettings: StoredVoiceSettings = {
+// What a Server that was never set up holds: Conversations on, nothing chosen.
+export const defaultConversationSettings: StoredConversationSettings = {
   enabled: true,
   provider: null,
   voice: null,
   customVoices: [],
   instructions: '',
-  options: defaultVoiceCallOptions,
+  options: defaultConversationOptions,
 };
 
-// Where the Voice settings are kept: the Server's own settings, so every Device reads the same answer.
-export class VoiceSettingsStore {
+// Where the Conversation settings are kept: the Server's own settings, so every Device reads the same answer.
+export class ConversationSettingsStore {
   public constructor(
     private readonly database: Database,
     private readonly writer: WriterActorRef,
   ) {}
 
-  public read(): StoredVoiceSettings {
+  public read(): StoredConversationSettings {
     const row = this.database.select().from(serverSettings).get();
 
-    return row ? storedOf(row) : defaultVoiceSettings;
+    return row ? storedOf(row) : defaultConversationSettings;
   }
 
-  public write(settings: StoredVoiceSettings): Promise<void> {
+  public write(settings: StoredConversationSettings): Promise<void> {
     return writeDatabaseJobAndWaitForCommit(
       this.writer,
-      new VoiceSettingsJob(settings),
+      new ConversationSettingsJob(settings),
     );
   }
 }
 
 const storedOf = (
   row: typeof serverSettings.$inferSelect,
-): StoredVoiceSettings => ({
-  enabled: row.voiceCalls,
-  provider: row.voiceProvider,
+): StoredConversationSettings => ({
+  enabled: row.conversations,
+  provider: row.conversationProvider,
   voice: row.voiceName,
   customVoices: storedCustomVoices.parse(row.voiceCustomVoices),
-  instructions: row.voiceInstructions,
+  instructions: row.conversationInstructions,
   options: {
-    ...defaultVoiceCallOptions,
-    ...storedOptions.parse(row.voiceCallOptions),
+    ...defaultConversationOptions,
+    ...storedOptions.parse(row.conversationOptions),
   },
 });
 
 const storedCustomVoices = z.array(CustomVoice);
 
-const optionRejections = createRejectionCounter('Stored Voice call options');
+const optionRejections = createRejectionCounter('Stored Conversation options');
 
 /*
  * Options kept by an older Server may be fewer, or name one Argo no longer offers; the defaults fill in the rest.
  * Options it cannot read are reported and counted, and the defaults stand in for all of them.
  */
 const storedOptions = z
-  .object(VoiceCallOptionsChange.shape)
+  .object(ConversationOptionsChange.shape)
   .catch(({ error }) => {
     optionRejections.report(
       'unreadable options, using the defaults',
@@ -92,22 +92,22 @@ const storedOptions = z
   });
 
 const rowOf = (
-  settings: StoredVoiceSettings,
+  settings: StoredConversationSettings,
 ): typeof serverSettings.$inferInsert => ({
   singleton: 1,
-  voiceCalls: settings.enabled,
-  voiceProvider: settings.provider,
+  conversations: settings.enabled,
+  conversationProvider: settings.provider,
   voiceName: settings.voice,
   voiceCustomVoices: settings.customVoices,
-  voiceInstructions: settings.instructions,
-  voiceCallOptions: settings.options,
+  conversationInstructions: settings.instructions,
+  conversationOptions: settings.options,
 });
 
-class VoiceSettingsJob implements WriterJob {
-  public constructor(private readonly settings: StoredVoiceSettings) {}
+class ConversationSettingsJob implements WriterJob {
+  public constructor(private readonly settings: StoredConversationSettings) {}
 
   public describe(): string {
-    return 'change the Voice settings';
+    return 'change the Conversation settings';
   }
 
   public commit(transaction: StorageTransaction): void {

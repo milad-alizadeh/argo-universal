@@ -92,7 +92,7 @@ const unsavedPreview = (
 });
 
 // A custom voice not yet saved, a saved one, or a built-in one.
-export function previewedVoice(
+export function previewedConversation(
   input: VoicePreviewClipInput,
   custom: CustomVoice[],
   builtIn: VoiceOption[],

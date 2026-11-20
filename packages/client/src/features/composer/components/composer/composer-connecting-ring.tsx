@@ -80,7 +80,7 @@ function useTurnStyle(): ReturnType<typeof useAnimatedStyle> {
 }
 
 /*
- * Option B of the Voice page's connecting state: End's X is already there, and an arc turns round it inside the circle.
+ * Option B of the Conversation page's connecting state: End's X is already there, and an arc turns round it inside the circle.
  * It sits over the End button and takes no press, so pressing End still cancels the call. It fades in and out.
  */
 export function ConnectingRing(): React.JSX.Element {

@@ -1,5 +1,5 @@
 /*
- * What the Voice call needs of its Session, and nothing else: it sends the Session Prompts, hears the words and
+ * What the Conversation needs of its Session, and nothing else: it sends the Session Prompts, hears the words and
  * Permission requests in its Feed and hears from the Session when each Turn ends.
  * The Engine's router attaches it once Sessions exist, as an event to the call machine; a call reads it when it starts.
  */
@@ -32,13 +32,13 @@ export type PromptOutcome = {
 );
 
 // A Notice the call writes into its Session's Feed.
-export interface VoiceNotice {
+export interface ConversationNotice {
   title: string;
   description: string;
 }
 
-export interface VoiceSessions {
-  // Sends the Session a Prompt from the Voice call.
+export interface ConversationSessions {
+  // Sends the Session a Prompt from the Conversation.
   prompt: (sessionId: string, text: string) => Promise<PromptOutcome>;
   // Cancels the Session's running Turn as the Stop button does; resolves false when no Turn runs.
   stop: (sessionId: string) => Promise<boolean>;
@@ -48,13 +48,13 @@ export interface VoiceSessions {
     listener: (happening: SessionHappening) => void,
   ) => () => void;
   // Writes a Notice into the Session's Feed.
-  notice: (sessionId: string, notice: VoiceNotice) => void;
+  notice: (sessionId: string, notice: ConversationNotice) => void;
 }
 
 const unreachable = 'The Session cannot be reached';
 
 // What a call has before Sessions are attached: nothing to send to, nothing to hear, nowhere to write.
-export const detachedSessions: VoiceSessions = {
+export const detachedSessions: ConversationSessions = {
   prompt: () => Promise.reject(new Error(unreachable)),
   stop: () => Promise.reject(new Error(unreachable)),
   watch: () => (): void => {},

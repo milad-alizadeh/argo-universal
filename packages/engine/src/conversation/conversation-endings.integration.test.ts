@@ -4,28 +4,28 @@ import {
   callOf,
   endedOf,
   offer,
-  openVoiceSession,
-  startVoiceEngine,
+  openConversationSession,
+  startConversationEngine,
 } from '#mocks/conversation-engine';
-import { FakeVoiceProvider } from './fake-provider';
+import { FakeConversationProvider } from './fake-provider';
 
 // A call running in a settled Session, and what ends it.
 async function runningCall(): Promise<
-  Awaited<ReturnType<typeof startVoiceEngine>> & { sessionId: string }
+  Awaited<ReturnType<typeof startConversationEngine>> & { sessionId: string }
 > {
-  const voice = await startVoiceEngine();
-  const { sessionId } = await openVoiceSession(voice);
-  await voice.host.caller.voice.start({ sessionId, offer });
+  const voice = await startConversationEngine();
+  const { sessionId } = await openConversationSession(voice);
+  await voice.host.caller.conversation.start({ sessionId, offer });
 
   return { ...voice, sessionId };
 }
 
-describe('Voice call endings', () => {
+describe('Conversation endings', () => {
   it('ends when the provider closes the call', async () => {
     const { host, provider } = await runningCall();
     provider.call.close('ended');
     await expect
-      .poll(() => host.caller.voice.status())
+      .poll(() => host.caller.conversation.status())
       .toMatchObject({
         call: null,
         ended: { reason: 'provider-closed' },
@@ -36,7 +36,7 @@ describe('Voice call endings', () => {
     const { host, provider } = await runningCall();
     provider.call.emit({ type: 'status', status: 'error' });
     await expect
-      .poll(() => host.caller.voice.status())
+      .poll(() => host.caller.conversation.status())
       .toMatchObject({
         call: null,
         ended: { reason: 'failed' },
@@ -56,7 +56,7 @@ describe('Voice call endings', () => {
     const { host, provider, sessionId } = await runningCall();
     await host.caller.session.archive({ sessionId });
     await expect
-      .poll(() => host.caller.voice.status())
+      .poll(() => host.caller.conversation.status())
       .toMatchObject({
         call: null,
         ended: { reason: 'session-archived' },
@@ -65,12 +65,12 @@ describe('Voice call endings', () => {
   });
 
   it('ends when the App that started it disconnects', async () => {
-    const voice = await startVoiceEngine();
+    const voice = await startConversationEngine();
     const { host, provider } = voice;
-    const { sessionId } = await openVoiceSession(voice);
+    const { sessionId } = await openConversationSession(voice);
     const connection = new AbortController();
     const app = host.createCaller({ signal: connection.signal });
-    await app.voice.start({ sessionId, offer });
+    await app.conversation.start({ sessionId, offer });
     connection.abort();
     await expect.poll(() => callOf(host)).toBeNull();
     expect(provider.call.ended).toBe(true);
@@ -85,7 +85,7 @@ describe('Voice call endings', () => {
     const restarted = await startAcpEngine({
       steps: [],
       restartOver: host.home,
-      voiceProvider: new FakeVoiceProvider(),
+      conversationProvider: new FakeConversationProvider(),
     });
 
     expect(await callOf(restarted)).toBeNull();

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { usageLimited, usageUpdated } from '#mocks/gpt-live-frames';
 import { heard, startedCall, type GptLiveFixture } from '#mocks/gpt-live-setup';
-import type { VoiceProviderEvent } from '../provider';
+import type { ConversationProviderEvent } from '../provider';
 
 let fixture: GptLiveFixture | undefined;
 
@@ -14,7 +14,7 @@ afterEach(async () => {
 // A started call: what the fake service sends it, and everything it reports from now on.
 async function listening(): Promise<{
   send: (frame: string) => void;
-  events: VoiceProviderEvent[];
+  events: ConversationProviderEvent[];
 }> {
   const started = await startedCall();
   fixture = started;
@@ -25,7 +25,7 @@ async function listening(): Promise<{
   };
 }
 
-const limitsOf = (events: VoiceProviderEvent[]): VoiceProviderEvent[] =>
+const limitsOf = (events: ConversationProviderEvent[]): ConversationProviderEvent[] =>
   events.filter(({ type }) => type === 'limit');
 
 const quietly = (): ReturnType<typeof vi.spyOn> =>

@@ -36,7 +36,7 @@ const labelOf = (id: string): string =>
   `${id.charAt(0).toUpperCase()}${id.slice(1)}`;
 
 // The default leads, as the first voice listed is the one chosen when none is.
-export const gptLiveVoices: VoiceOption[] = [
+export const gptLiveConversations: VoiceOption[] = [
   defaultVoice,
   ...serviceVoices.filter((id) => id !== defaultVoice),
 ].map((id) => ({ id, label: labelOf(id) }));

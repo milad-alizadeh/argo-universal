@@ -6,7 +6,7 @@ const startedAt = '2026-11-18T10:00:00.000Z';
 const at = (seconds: number): number => Date.parse(startedAt) + seconds * 1000;
 
 const call: CallLook = {
-  orb: 'listening',
+  state: 'listening',
   trouble: null,
   startedAt,
 };
@@ -27,16 +27,16 @@ describe('the call timer', () => {
   });
 });
 
-describe('the label under the orb', () => {
-  it('names the orb state and the elapsed time', () => {
+describe('the label under the band', () => {
+  it('names the band state and the elapsed time', () => {
     expect(voiceLabel(call, at(252))).toEqual({
       headline: 'Listening',
-      detail: 'Voice · 4:12',
+      detail: 'Conversation · 4:12',
     });
-    expect(voiceLabel({ ...call, orb: 'talking' }, at(0)).headline).toBe(
+    expect(voiceLabel({ ...call, state: 'talking' }, at(0)).headline).toBe(
       'Talking',
     );
-    expect(voiceLabel({ ...call, orb: 'thinking' }, at(0)).headline).toBe(
+    expect(voiceLabel({ ...call, state: 'thinking' }, at(0)).headline).toBe(
       'Thinking',
     );
   });
@@ -44,7 +44,7 @@ describe('the label under the orb', () => {
   it('says connecting until the call has connected', () => {
     const connecting = {
       ...call,
-      orb: 'none',
+      state: 'none',
     } as const;
 
     expect(voiceLabel(connecting, at(0)).headline).toBe('Connecting…');
@@ -53,7 +53,7 @@ describe('the label under the orb', () => {
   it('says the trouble in place of the state, with no dialog', () => {
     const reconnecting = {
       ...call,
-      orb: 'none',
+      state: 'none',
       trouble: 'reconnecting',
     } as const;
 
@@ -66,13 +66,13 @@ describe('the label under the orb', () => {
   it('adds what is left of the provider allowance once it reports low', () => {
     const low = voiceLabel({ ...call, limit: { remaining: 0.1 } }, at(252));
 
-    expect(low.detail).toBe('Voice · 4:12 · 10% left');
+    expect(low.detail).toBe('Conversation · 4:12 · 10% left');
   });
 
   it('says the trouble over connecting, when the call is still connecting', () => {
     const blocked = {
       ...call,
-      orb: 'none',
+      state: 'none',
       trouble: 'microphone-blocked',
     } as const;
 
@@ -88,7 +88,7 @@ describe('the label under the orb', () => {
 
     expect(voiceLabel(both, at(252))).toEqual({
       headline: 'Reconnecting…',
-      detail: 'Voice · 4:12 · 25% left',
+      detail: 'Conversation · 4:12 · 25% left',
     });
   });
 });

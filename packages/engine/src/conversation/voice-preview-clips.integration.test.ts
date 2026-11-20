@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { offer, startVoiceEngine } from '#mocks/conversation-engine';
-import { FakeVoiceProvider } from './fake-provider';
+import { offer, startConversationEngine } from '#mocks/conversation-engine';
+import { FakeConversationProvider } from './fake-provider';
 
 const voices = [
   { id: 'cove', label: 'Cove' },
   { id: 'sol', label: 'Sol' },
 ];
 
-const withVoices = (): ReturnType<typeof startVoiceEngine> =>
-  startVoiceEngine(new FakeVoiceProvider({ connect: 'manual', voices }));
+const withVoices = (): ReturnType<typeof startConversationEngine> =>
+  startConversationEngine(new FakeConversationProvider({ connect: 'manual', voices }));
 
 const clip = { mimeType: 'audio/webm', data: 'AAEC' };
 
-describe('Voice preview clips', () => {
+describe('Conversation preview clips', () => {
   it('has no clip until the App stores one, then returns it with no provider call', async () => {
     const { host, provider } = await withVoices();
     expect(await host.caller.voice.getPreviewClip({ voice: 'cove' })).toEqual({

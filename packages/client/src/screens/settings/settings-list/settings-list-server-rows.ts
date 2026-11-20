@@ -104,9 +104,9 @@ export function devicesRow(props: SettingsListViewProps): SettingsRow {
   };
 }
 
-export function voiceRow(props: SettingsListViewProps): SettingsRow {
+export function conversationRow(props: SettingsListViewProps): SettingsRow {
   return {
-    label: 'Voice',
+    label: 'Conversation',
     icon: 'voice',
     href: '/settings/voice',
     disabled: serverDisabled(props),

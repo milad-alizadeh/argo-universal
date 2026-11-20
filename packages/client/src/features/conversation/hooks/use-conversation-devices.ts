@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useVoiceConnection } from '../stores/conversation-connection-context';
+import { useConversationConnection } from '../stores/conversation-connection-context';
 import {
-  useVoiceDeviceChoice,
-  type VoiceDeviceChoice,
+  useConversationDeviceChoice,
+  type ConversationDeviceChoice,
 } from '../stores/conversation-device-choice';
 import {
   type AudioDevices,
@@ -10,10 +10,10 @@ import {
   watchAudioDevices,
 } from '../utils/audio-devices';
 
-type VoiceDeviceControls = {
+type ConversationDeviceControls = {
   // Absent where the App cannot hold a call, so there is nothing to choose.
-  devices?: AudioDevices & VoiceDeviceChoice;
-  onDevicesChange: (change: Partial<VoiceDeviceChoice>) => void;
+  devices?: AudioDevices & ConversationDeviceChoice;
+  onDevicesChange: (change: Partial<ConversationDeviceChoice>) => void;
 };
 
 // The microphones and speakers plugged in now, listed again when one comes or goes.
@@ -31,11 +31,11 @@ export function useAudioDevices(watching: boolean): AudioDevices {
   return devices;
 }
 
-// What Settings › Voice shows and changes about this Device's microphone and speaker.
-export function useVoiceDevices(): VoiceDeviceControls {
-  const holdsCalls = useVoiceConnection() !== null;
+// What Settings › Conversation shows and changes about this Device's microphone and speaker.
+export function useConversationDevices(): ConversationDeviceControls {
+  const holdsCalls = useConversationConnection() !== null;
   const devices = useAudioDevices(holdsCalls);
-  const { choice, choose } = useVoiceDeviceChoice();
+  const { choice, choose } = useConversationDeviceChoice();
 
   return {
     devices: holdsCalls ? { ...devices, ...choice } : undefined,

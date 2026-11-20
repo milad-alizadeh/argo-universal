@@ -1,7 +1,7 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
-import { VoiceDetailView } from './conversation-detail-view';
+import { ConversationDetailView } from './conversation-detail-view';
 import {
   adding,
   customVoices,
@@ -10,19 +10,19 @@ import {
   unusableVoice,
   usableVoice,
 } from './conversation-detail-view-fixtures';
-import { inReadingOrder, voiceDetailSpies } from './conversation-detail-view.mocks';
+import { inReadingOrder, conversationDetailSpies } from './conversation-detail-view.mocks';
 
 const meta = {
-  title: 'Tests/Screens/Settings/Voice',
-  component: VoiceDetailView,
+  title: 'Tests/Screens/Settings/Conversation',
+  component: ConversationDetailView,
   parameters: { screenPreview: true },
   args: {
     voice: { status: 'loaded', settings: usableVoice },
     adjustsGain: true,
-    ...voiceDetailSpies(),
+    ...conversationDetailSpies(),
   },
   beforeEach: (): Promise<void> => settleLayout(layoutWidths.wide),
-} satisfies Meta<typeof VoiceDetailView>;
+} satisfies Meta<typeof ConversationDetailView>;
 
 export default meta;
 
@@ -30,7 +30,7 @@ type Story = StoryObj<typeof meta>;
 
 type Context = Parameters<NonNullable<Story['play']>>[0];
 
-const voiceCalls = { name: 'Conversations' };
+const conversations = { name: 'Conversations' };
 
 const withCustomVoices = {
   voice: { status: 'loaded', settings: customVoices },
@@ -40,13 +40,13 @@ const withCustomVoices = {
 const opened = (canvasElement: HTMLElement): ReturnType<typeof within> =>
   within(canvasElement.ownerDocument.body);
 
-// Opens the Voice row's popover and waits for it to finish appearing.
+// Opens the Conversation row's popover and waits for it to finish appearing.
 async function openVoices({
   canvas,
   canvasElement,
   userEvent,
 }: Context): Promise<ReturnType<typeof within>> {
-  await userEvent.click(canvas.getByRole('link', { name: /^Voice/ }));
+  await userEvent.click(canvas.getByRole('link', { name: /^Conversation/ }));
   const page = opened(canvasElement);
   await waitFor(() =>
     expect(
@@ -59,7 +59,7 @@ async function openVoices({
 
 export const UsableProviderShowsItsChoicesAndNoReason: Story = {
   play: async ({ canvas }) => {
-    await expect(canvas.getByRole('switch', voiceCalls)).toBeChecked();
+    await expect(canvas.getByRole('switch', conversations)).toBeChecked();
     await expect(canvas.getByText(/GPT-Live/)).toBeVisible();
     await expect(canvas.getByText('Cove')).toBeVisible();
     await expect(canvas.queryByText(/signed in/)).toBeNull();
@@ -79,15 +79,15 @@ export const SwitchOffTurnsOnAgain: Story = {
     voice: { status: 'loaded', settings: { ...usableVoice, enabled: false } },
   },
   play: async ({ canvas, args, userEvent }) => {
-    await expect(canvas.getByRole('switch', voiceCalls)).not.toBeChecked();
-    await userEvent.click(canvas.getByRole('switch', voiceCalls));
+    await expect(canvas.getByRole('switch', conversations)).not.toBeChecked();
+    await userEvent.click(canvas.getByRole('switch', conversations));
     await expect(args.onEnabledChange).toHaveBeenCalledWith(true);
   },
 };
 
-export const TurnsVoiceCallsOff: Story = {
+export const TurnsConversationsOff: Story = {
   play: async ({ canvas, args, userEvent }) => {
-    await userEvent.click(canvas.getByRole('switch', voiceCalls));
+    await userEvent.click(canvas.getByRole('switch', conversations));
     await expect(args.onEnabledChange).toHaveBeenCalledWith(false);
   },
 };
@@ -95,7 +95,7 @@ export const TurnsVoiceCallsOff: Story = {
 export const LabelsAnExperimentalProvider: Story = {
   play: async ({ canvas, canvasElement, userEvent }) => {
     await userEvent.click(
-      canvas.getByRole('button', { name: /^Voice provider/ }),
+      canvas.getByRole('button', { name: /^Conversation provider/ }),
     );
     await expect(
       await opened(canvasElement).findAllByText(/GPT-Live.*experimental/i),
@@ -107,7 +107,7 @@ export const LeavesAStableProviderUnlabelled: Story = {
   args: { voice: { status: 'loaded', settings: stableVoice } },
   play: async ({ canvas, canvasElement, userEvent }) => {
     await userEvent.click(
-      canvas.getByRole('button', { name: /^Voice provider/ }),
+      canvas.getByRole('button', { name: /^Conversation provider/ }),
     );
     await expect(
       await opened(canvasElement).findAllByText('GPT-Live'),
@@ -275,8 +275,8 @@ export const GroupsTheRowsByWhatTheyChange: Story = {
     await expect(
       inReadingOrder(canvas, [
         'Conversations',
-        'Voice and instructions',
-        'Voice provider',
+        'Conversation and instructions',
+        'Conversation provider',
         'Instructions for every Conversation',
         'Opening note',
         'The next Conversation uses this voice and these instructions.',

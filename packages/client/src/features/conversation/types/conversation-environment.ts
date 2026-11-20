@@ -44,7 +44,7 @@ export interface VoicePeer {
 }
 
 // What the connection needs from the browser, so a test can stand in for it.
-export interface VoiceEnvironment {
+export interface ConversationEnvironment {
   // Opens this microphone, or the system's for null; fails when it is refused or gone.
   openMicrophone: (device: string | null) => Promise<Microphone>;
   // Silence to send in place of the microphone, for a connection that only listens.

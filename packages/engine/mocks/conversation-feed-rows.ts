@@ -1,6 +1,6 @@
 import type { SessionUpdate } from '@repo/contracts';
 import { expect } from 'vitest';
-import { startVoiceWork, type VoiceWork } from './conversation-work';
+import { startConversationWork, type ConversationWork } from './conversation-work';
 
 const shown = new Set([
   'person_transcript',
@@ -18,7 +18,7 @@ const textOf = (row: SessionUpdate): string =>
     : '';
 
 // The rows the Feed draws as messages, after the Session's opening Turn: who said them and what.
-export async function messageRows(work: VoiceWork): Promise<string[]> {
+export async function messageRows(work: ConversationWork): Promise<string[]> {
   const rows = (await work.feed()).filter((row) =>
     shown.has(row.sessionUpdate),
   );
@@ -30,13 +30,13 @@ export async function messageRows(work: VoiceWork): Promise<string[]> {
 
 // Waits until the Feed draws `count` message rows.
 export const rowsDrawn = async (
-  work: VoiceWork,
+  work: ConversationWork,
   count: number,
 ): Promise<void> => {
   await expect.poll(async () => (await messageRows(work)).length).toBe(count);
 };
 
-const handedOver = (work: VoiceWork, text: string): boolean =>
+const handedOver = (work: ConversationWork, text: string): boolean =>
   work.provider.call.sent.some(
     (message) => message.kind === 'tell' && message.text === text,
   );
@@ -45,8 +45,8 @@ const handedOver = (work: VoiceWork, text: string): boolean =>
 export async function callAnswering(
   prompt: string,
   answer: string,
-): Promise<VoiceWork> {
-  const work = await startVoiceWork([
+): Promise<ConversationWork> {
+  const work = await startConversationWork([
     { prompt, messages: [`[COMPLETE] ${answer}`] },
   ]);
 
@@ -57,7 +57,7 @@ export async function callAnswering(
 
 // The person's request, sent as a Prompt, until the voice is handed the Agent's answer.
 export async function untilHandedOver(
-  work: VoiceWork,
+  work: ConversationWork,
   request: string,
   answer: string,
 ): Promise<void> {

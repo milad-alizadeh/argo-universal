@@ -1,4 +1,4 @@
-import type { VoicePartial } from '@repo/contracts';
+import type { ConversationPartial } from '@repo/contracts';
 import { Text } from '@repo/kit/primitives/content/text';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
@@ -80,13 +80,13 @@ export const PersonWordsMuteUntilFinal: Story = {
     }),
 };
 
-export const VoiceWordsMuteUntilFinal: Story = {
+export const ConversationWordsMuteUntilFinal: Story = {
   args: voiceSaid,
   render: withMutedProbe(voiceSaid, voiceSaying),
   play: ({ canvas }) =>
     expectMutedUntilFinal(canvas, {
       final: words.voice,
-      partial: words.voicePartial,
+      partial: words.conversationPartial,
     }),
 };
 
@@ -129,11 +129,11 @@ const spoken = {
 
 // One speaker's row, as the fixtures store it.
 interface Spoken {
-  speaker: VoicePartial['speaker'];
+  speaker: ConversationPartial['speaker'];
   item: typeof personSaid.item | typeof voiceSaid.item;
 }
 
-const partialOf = ({ speaker, item }: Spoken, text: string): VoicePartial => ({
+const partialOf = ({ speaker, item }: Spoken, text: string): ConversationPartial => ({
   speaker,
   id: item.row.messageId,
   rowId: item.row.id,
@@ -211,7 +211,7 @@ async function expectFadeThenOneRow({
   await expect(final.texts).toEqual([]);
 }
 
-export const VoiceWordsFadeInAndStayOneRowWhenFinal: Story = {
+export const ConversationWordsFadeInAndStayOneRowWhenFinal: Story = {
   args: voiceSaid,
   render: speaking({ speaker: 'voice', ...voiceSaid }),
   play: expectFadeThenOneRow,

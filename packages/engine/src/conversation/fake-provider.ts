@@ -1,13 +1,13 @@
-import type { VoiceAvailability } from '@repo/contracts';
+import type { ConversationAvailability } from '@repo/contracts';
 import type {
-  VoiceClosedReason,
+  ConversationClosedReason,
   VoiceDelivery,
   VoiceOption,
-  VoiceProvider,
-  VoiceProviderCall,
+  ConversationProvider,
+  ConversationProviderCall,
   VoicePreviewRequest,
-  VoiceProviderEvent,
-  VoiceStartRequest,
+  ConversationProviderEvent,
+  ConversationStartRequest,
 } from './provider';
 
 export interface FakeVoiceOptions {
@@ -30,15 +30,15 @@ export type FakeVoiceMessage =
 const defaultConnectDelay = 400;
 
 /*
- * A Voice provider that carries no audio, for Engine tests and for development (`ARGO_VOICE_PROVIDER=fake`).
+ * A Conversation provider that carries no audio, for Engine tests and for development (`ARGO_CONVERSATION_PROVIDER=fake`).
  * It implements the real interface; a test drives what the person says through the call it returns.
  */
-export class FakeVoiceProvider implements VoiceProvider {
+export class FakeConversationProvider implements ConversationProvider {
   public readonly id = 'fake';
-  public readonly label = 'Fake voice provider';
+  public readonly label = 'Fake Conversation provider';
   public readonly experimental = true;
-  public readonly calls: FakeVoiceCall[] = [];
-  public readonly previews: FakeVoiceCall<VoicePreviewRequest>[] = [];
+  public readonly calls: FakeConversation[] = [];
+  public readonly previews: FakeConversation<VoicePreviewRequest>[] = [];
   private options: FakeVoiceOptions;
 
   public constructor(options: FakeVoiceOptions = {}) {
@@ -49,7 +49,7 @@ export class FakeVoiceProvider implements VoiceProvider {
     this.options = { ...this.options, ...options };
   }
 
-  public availability(): Promise<VoiceAvailability> {
+  public availability(): Promise<ConversationAvailability> {
     return Promise.resolve(
       this.options.usable === false
         ? { usable: false, reason: this.options.reason ?? 'Not available' }
@@ -63,11 +63,11 @@ export class FakeVoiceProvider implements VoiceProvider {
     );
   }
 
-  public start(request: VoiceStartRequest): Promise<FakeVoiceCall> {
+  public start(request: ConversationStartRequest): Promise<FakeConversation> {
     const { failStart } = this.options;
 
     if (failStart !== undefined) return Promise.reject(new Error(failStart));
-    const call = new FakeVoiceCall(request);
+    const call = new FakeConversation(request);
     this.calls.push(call);
     this.scheduleConnect(call);
 
@@ -76,30 +76,30 @@ export class FakeVoiceProvider implements VoiceProvider {
 
   public preview(
     request: VoicePreviewRequest,
-  ): Promise<FakeVoiceCall<VoicePreviewRequest>> {
-    const preview = new FakeVoiceCall(request);
+  ): Promise<FakeConversation<VoicePreviewRequest>> {
+    const preview = new FakeConversation(request);
     this.previews.push(preview);
 
     return Promise.resolve(preview);
   }
 
-  private scheduleConnect(call: FakeVoiceCall): void {
+  private scheduleConnect(call: FakeConversation): void {
     const { connect = defaultConnectDelay } = this.options;
 
     if (connect !== 'manual') setTimeout(() => call.connect(), connect);
   }
 
   // The call most recently started.
-  public get call(): FakeVoiceCall {
+  public get call(): FakeConversation {
     const call = this.calls.at(-1);
 
-    if (!call) throw new Error('No Voice call was started');
+    if (!call) throw new Error('No Conversation was started');
 
     return call;
   }
 
   // The preview most recently started.
-  public get previewing(): FakeVoiceCall<VoicePreviewRequest> {
+  public get previewing(): FakeConversation<VoicePreviewRequest> {
     const preview = this.previews.at(-1);
 
     if (!preview) throw new Error('No voice preview was started');
@@ -108,21 +108,21 @@ export class FakeVoiceProvider implements VoiceProvider {
   }
 }
 
-export class FakeVoiceCall<
-  Request extends { offer: string } = VoiceStartRequest,
-> implements VoiceProviderCall {
+export class FakeConversation<
+  Request extends { offer: string } = ConversationStartRequest,
+> implements ConversationProviderCall {
   public readonly answer: string;
   public readonly sent: FakeVoiceMessage[] = [];
   public ended = false;
   // What the provider reports as it hangs up, such as the words the voice said so far.
-  public readonly wordsAtEnd: VoiceProviderEvent[] = [];
-  private readonly listeners = new Set<(event: VoiceProviderEvent) => void>();
+  public readonly wordsAtEnd: ConversationProviderEvent[] = [];
+  private readonly listeners = new Set<(event: ConversationProviderEvent) => void>();
 
   public constructor(public readonly request: Request) {
     this.answer = `fake-answer:${request.offer}`;
   }
 
-  public listen(listener: (event: VoiceProviderEvent) => void): () => void {
+  public listen(listener: (event: ConversationProviderEvent) => void): () => void {
     this.listeners.add(listener);
 
     return () => this.listeners.delete(listener);
@@ -142,7 +142,7 @@ export class FakeVoiceCall<
   }
 
   // What a test makes the provider report.
-  public emit(event: VoiceProviderEvent): void {
+  public emit(event: ConversationProviderEvent): void {
     for (const listener of this.listeners) listener(event);
   }
 
@@ -164,7 +164,7 @@ export class FakeVoiceCall<
   }
 
   // The provider closes the call; `why` is its own reason in plain words, when it gives one.
-  public close(reason: VoiceClosedReason = 'ended', why?: string): void {
+  public close(reason: ConversationClosedReason = 'ended', why?: string): void {
     this.emit(
       why === undefined
         ? { type: 'closed', reason }

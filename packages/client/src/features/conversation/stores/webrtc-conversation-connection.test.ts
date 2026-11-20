@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { FakeEnvironment } from '../../../../mocks/conversation/fake-conversation-environment';
 import { spectrumBands } from '../types/conversation-connection';
 import { MicrophoneUnavailable } from '../types/conversation-environment';
-import { createWebRtcVoiceConnection } from './webrtc-conversation-connection';
+import { createWebRtcConversationConnection } from './webrtc-conversation-connection';
 
 // Float32 bands, rounded so a test reads them as the decimals the fakes set.
 const bandsOf = (bands: Float32Array): number[] =>
@@ -12,10 +12,10 @@ const allAt = (level: number): number[] => Array(spectrumBands).fill(level);
 
 async function started(refuse = false): Promise<{
   environment: FakeEnvironment;
-  connection: ReturnType<typeof createWebRtcVoiceConnection>;
+  connection: ReturnType<typeof createWebRtcConversationConnection>;
 }> {
   const environment = new FakeEnvironment(refuse);
-  const connection = createWebRtcVoiceConnection(environment);
+  const connection = createWebRtcConversationConnection(environment);
   await connection.createOffer();
 
   return { environment, connection };
@@ -137,7 +137,7 @@ describe('WebRTC voice connection', () => {
 
   it('ignores a mute before there is a call, and the call still starts unmuted', async () => {
     const environment = new FakeEnvironment();
-    const connection = createWebRtcVoiceConnection(environment);
+    const connection = createWebRtcConversationConnection(environment);
     connection.setMicrophoneMuted(true);
     connection.setSpeakerMuted(true);
     expect(connection.mutes()).toEqual({ microphone: false, speaker: false });

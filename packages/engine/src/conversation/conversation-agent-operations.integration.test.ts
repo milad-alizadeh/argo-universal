@@ -3,43 +3,43 @@ import { operationCaller, runOperation } from '#mocks/operations';
 import {
   callOf,
   offer,
-  openVoiceSession,
-  startVoiceEngine,
+  openConversationSession,
+  startConversationEngine,
 } from '#mocks/conversation-engine';
 
 const appOnly = [
   'session.submit',
   'session.queue',
-  'voice.status',
-  'voice.end',
-  'voice.setSettings',
+  'conversation.status',
+  'conversation.end',
+  'conversation.setSettings',
   'voice.preview',
 ];
 
 describe('the App-only Operations an Agent is refused', () => {
   it('lists hanging up and what the next call speaks with to an Agent', async () => {
-    const session = await openVoiceSession(await startVoiceEngine());
+    const session = await openConversationSession(await startConversationEngine());
 
     const listed = await session.caller.operations.list.query({
       filter: 'voice',
     });
 
     expect(listed.map(({ id }) => id).sort()).toEqual([
-      'voice.chooseDevices',
+      'conversation.chooseDevices',
       'voice.deleteCustomVoice',
-      'voice.getSettings',
-      'voice.hangUp',
-      'voice.listDevices',
+      'conversation.getSettings',
+      'conversation.hangUp',
+      'conversation.listDevices',
       'voice.listVoices',
       'voice.saveCustomVoice',
-      'voice.setCallOptions',
-      'voice.setInstructions',
+      'conversation.setOptions',
+      'conversation.setInstructions',
       'voice.setVoice',
     ]);
   });
 
-  it('lets an Agent read the voices and the Voice settings', async () => {
-    const session = await openVoiceSession(await startVoiceEngine());
+  it('lets an Agent read the voices and the Conversation settings', async () => {
+    const session = await openConversationSession(await startConversationEngine());
 
     const voices = await runOperation(session.caller.operations, {
       id: 'voice.listVoices',
@@ -48,7 +48,7 @@ describe('the App-only Operations an Agent is refused', () => {
     });
 
     const settings = await runOperation(session.caller.operations, {
-      id: 'voice.getSettings',
+      id: 'conversation.getSettings',
       params: {},
       wait: true,
     });
@@ -60,7 +60,7 @@ describe('the App-only Operations an Agent is refused', () => {
   });
 
   it('lets the command line change the voice and the instructions', async () => {
-    const { host } = await startVoiceEngine();
+    const { host } = await startConversationEngine();
     const cli = await operationCaller(host);
 
     await runOperation(cli.operations, {
@@ -68,18 +68,18 @@ describe('the App-only Operations an Agent is refused', () => {
       params: { label: 'Calm', baseVoice: 'fake', description: 'Slow, low.' },
     });
     await runOperation(cli.operations, {
-      id: 'voice.setInstructions',
+      id: 'conversation.setInstructions',
       params: { instructions: 'Call me Sam.' },
     });
 
-    expect(await host.caller.voice.getSettings()).toMatchObject({
+    expect(await host.caller.conversation.getSettings()).toMatchObject({
       customVoices: [{ label: 'Calm' }],
       instructions: 'Call me Sam.',
     });
   });
 
   it.each(appOnly)('refuses %s run by an Agent', async (id) => {
-    const session = await openVoiceSession(await startVoiceEngine());
+    const session = await openConversationSession(await startConversationEngine());
 
     await expect(
       runOperation(session.caller.operations, {
@@ -91,12 +91,12 @@ describe('the App-only Operations an Agent is refused', () => {
   });
 
   it('starts no call for an Agent that asks for one', async () => {
-    const voice = await startVoiceEngine();
-    const session = await openVoiceSession(voice);
+    const voice = await startConversationEngine();
+    const session = await openConversationSession(voice);
 
     await expect(
       runOperation(session.caller.operations, {
-        id: 'voice.start',
+        id: 'conversation.start',
         params: { sessionId: session.sessionId, offer },
         wait: true,
       }),

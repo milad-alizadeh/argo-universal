@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { pause, statusOf } from '#mocks/conversation-timing';
-import { startVoiceWork } from '#mocks/conversation-work';
+import { startConversationWork } from '#mocks/conversation-work';
 import { relayWords } from './relay-words';
 
 // Idle periods are seconds, not milliseconds, so a loaded Mac cannot make a timer race a step.
@@ -10,16 +10,16 @@ const slow = 30_000;
 
 const waitForEnd = { timeout: 10_000 };
 
-describe('an idle Voice call', () => {
+describe('an idle Conversation', () => {
   it(
     'ends by itself after the idle period without speech, and not before',
     async () => {
-      const work = await startVoiceWork([], { idleMs });
+      const work = await startConversationWork([], { idleMs });
       await work.start();
       const startedAt = Date.now();
 
       await pause(idleMs / 4);
-      expect((await statusOf(work)).call).not.toBeNull();
+      expect((await statusOf(work)).conversation).not.toBeNull();
 
       await expect
         .poll(() => statusOf(work), waitForEnd)
@@ -33,7 +33,7 @@ describe('an idle Voice call', () => {
   it(
     'stays while either side keeps speaking, past the idle period',
     async () => {
-      const work = await startVoiceWork([], { idleMs });
+      const work = await startConversationWork([], { idleMs });
       await work.start();
 
       for (let spoken = 0; spoken < 10; spoken += 1) {
@@ -49,7 +49,7 @@ describe('an idle Voice call', () => {
           });
       }
 
-      expect((await statusOf(work)).call).not.toBeNull();
+      expect((await statusOf(work)).conversation).not.toBeNull();
       await expect
         .poll(() => statusOf(work), waitForEnd)
         .toMatchObject({ ended: { reason: 'idle' } });
@@ -62,7 +62,7 @@ describe('an idle Voice call', () => {
     async () => {
       const gate = Promise.withResolvers<void>();
 
-      const work = await startVoiceWork(
+      const work = await startConversationWork(
         [{ prompt: 'Long job', holdUntil: gate.promise }],
         { idleMs },
       );
@@ -73,13 +73,13 @@ describe('an idle Voice call', () => {
       await expect.poll(() => work.prompts.length).toBe(2);
 
       await pause(idleMs * 1.5);
-      expect((await statusOf(work)).call).not.toBeNull();
+      expect((await statusOf(work)).conversation).not.toBeNull();
 
       gate.resolve();
       const resolvedAt = Date.now();
 
       await pause(idleMs / 2);
-      expect((await statusOf(work)).call).not.toBeNull();
+      expect((await statusOf(work)).conversation).not.toBeNull();
 
       await expect
         .poll(() => statusOf(work), waitForEnd)
@@ -97,7 +97,7 @@ describe('an idle call and a Turn the person typed', () => {
       const typedGate = Promise.withResolvers<void>();
       const ownGate = Promise.withResolvers<void>();
 
-      const work = await startVoiceWork(
+      const work = await startConversationWork(
         [
           { prompt: 'Typed job', holdUntil: typedGate.promise },
           { prompt: 'Own job', holdUntil: ownGate.promise },
@@ -120,7 +120,7 @@ describe('an idle call and a Turn the person typed', () => {
       typedGate.resolve();
       await expect.poll(() => work.prompts.length).toBe(3);
       await pause(idleMs * 1.5);
-      expect((await statusOf(work)).call).not.toBeNull();
+      expect((await statusOf(work)).conversation).not.toBeNull();
 
       ownGate.resolve();
       await expect
@@ -137,7 +137,7 @@ describe('an idle call and a steered Prompt', () => {
     async () => {
       const typedGate = Promise.withResolvers<void>();
 
-      const work = await startVoiceWork(
+      const work = await startConversationWork(
         [{ prompt: 'Typed job', holdUntil: typedGate.promise }],
         { idleMs, steering: true },
       );
@@ -154,7 +154,7 @@ describe('an idle call and a steered Prompt', () => {
       await expect.poll(async () => (await work.promptRows()).length).toBe(1);
 
       await pause(idleMs * 1.5);
-      expect((await statusOf(work)).call).not.toBeNull();
+      expect((await statusOf(work)).conversation).not.toBeNull();
 
       typedGate.resolve();
       const resolvedAt = Date.now();

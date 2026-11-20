@@ -1,7 +1,7 @@
-import type { CustomVoice, VoiceSettings } from '@repo/contracts';
+import type { CustomVoice, ConversationSettings } from '@repo/contracts';
 
 export interface VoicePickerProps {
-  settings: VoiceSettings;
+  settings: ConversationSettings;
   disabled: boolean;
   onVoiceChange: (voice: string) => void;
   onPreviewVoice: (voice: string) => void;
@@ -10,7 +10,7 @@ export interface VoicePickerProps {
 }
 
 // The voices page, in a popover or pushed: the search, and `close`, which every choice and edit calls first.
-export type VoicePageProps = VoicePickerProps & {
+export type ConversationPageProps = VoicePickerProps & {
   query: string;
   // Absent where the page's header holds the search.
   onQueryChange?: (query: string) => void;
@@ -18,7 +18,7 @@ export type VoicePageProps = VoicePickerProps & {
 };
 
 export const voicePickerCopy = {
-  title: 'Voice',
+  title: 'Conversation',
   search: 'Search voices',
   custom: 'Your voices',
   add: 'New custom voice…',

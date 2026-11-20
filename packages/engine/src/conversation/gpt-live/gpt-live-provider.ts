@@ -1,10 +1,10 @@
-import type { VoiceAvailability } from '@repo/contracts';
+import type { ConversationAvailability } from '@repo/contracts';
 import type { WebSocket } from 'ws';
 import type {
   VoiceOption,
   VoicePreviewRequest,
-  VoiceProvider,
-  VoiceStartRequest,
+  ConversationProvider,
+  ConversationStartRequest,
 } from '../provider';
 import { codexAppServerAuth, type CodexAuth } from './codex-auth';
 import { GptLiveCall } from './gpt-live-call';
@@ -18,7 +18,7 @@ import {
   TokenRejected,
   type CallOpening,
 } from './gpt-live-requests';
-import { gptLiveVoices } from './gpt-live-voices';
+import { gptLiveConversations } from './gpt-live-voices';
 
 export type GptLiveOptions = {
   auth?: CodexAuth;
@@ -48,10 +48,10 @@ const settingsOf = (options: GptLiveOptions): Required<GptLiveOptions> => ({
 const sayExactly = (words: string): string => `Say exactly: "${words}"`;
 
 /*
- * The GPT-Live Voice provider: a call on the person's ChatGPT subscription, with the token asked from the installed Codex each time.
+ * The GPT-Live Conversation provider: a call on the person's ChatGPT subscription, with the token asked from the installed Codex each time.
  * The token lives in memory for the call and is never stored or refreshed here; a rejected one is asked for again once per start.
  */
-export class GptLiveProvider implements VoiceProvider {
+export class GptLiveProvider implements ConversationProvider {
   public readonly id = 'gpt-live';
   public readonly label = 'GPT-Live';
   public readonly experimental = true;
@@ -61,7 +61,7 @@ export class GptLiveProvider implements VoiceProvider {
     this.settings = settingsOf(options);
   }
 
-  public async availability(): Promise<VoiceAvailability> {
+  public async availability(): Promise<ConversationAvailability> {
     const reading = await this.settings.auth.read();
 
     return reading.signedIn
@@ -70,10 +70,10 @@ export class GptLiveProvider implements VoiceProvider {
   }
 
   public voices(): Promise<VoiceOption[]> {
-    return Promise.resolve(gptLiveVoices);
+    return Promise.resolve(gptLiveConversations);
   }
 
-  public start(request: VoiceStartRequest): Promise<GptLiveCall> {
+  public start(request: ConversationStartRequest): Promise<GptLiveCall> {
     return this.open({
       offer: request.offer,
       instructions: callInstructions(request),
@@ -103,7 +103,7 @@ export class GptLiveProvider implements VoiceProvider {
       createCall(callsUrl, fresh, opening),
     );
 
-    const url = `${linkUrl}/${created.callId}`;
+    const url = `${linkUrl}/${created.conversationId}`;
 
     // A refusal at the link joins the same call again; it never creates a second one.
     const link = await token.asking((fresh) => joinLink(url, fresh));

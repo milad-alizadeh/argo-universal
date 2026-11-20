@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { FakeVoiceConnection } from '../../../../mocks/conversation/fake-conversation-connection';
+import { FakeConversationConnection } from '../../../../mocks/conversation/fake-conversation-connection';
 import { offerTo } from './offer-to';
 
 describe('offering a call to the Server', () => {
   it('sends the offer on', async () => {
     const sent: string[] = [];
-    const connection = new FakeVoiceConnection(Promise.resolve('v=0 offer'));
+    const connection = new FakeConversationConnection(Promise.resolve('v=0 offer'));
 
     await offerTo(connection, (offer) => void sent.push(offer));
 
@@ -16,7 +16,7 @@ describe('offering a call to the Server', () => {
   it('starts no call and lets go of the connection when the microphone is refused', async () => {
     const sent: string[] = [];
 
-    const connection = new FakeVoiceConnection(
+    const connection = new FakeConversationConnection(
       Promise.reject(new Error('Microphone access is needed to talk.')),
     );
 

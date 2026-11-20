@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTRPC, type ServerMutation, type TRPC } from '#features/connection';
 import type { CustomVoiceEditor } from './custom-voice-props';
-import type { VoiceDetailViewProps } from './conversation-detail-view-props';
+import type { ConversationDetailViewProps } from './conversation-detail-view-props';
 
 type SaveMutation = ServerMutation<TRPC['voice']['saveCustomVoice']>;
 
@@ -11,7 +11,7 @@ type DeleteMutation = ServerMutation<TRPC['voice']['deleteCustomVoice']>;
 
 // The custom voice form and what it asks of the Server.
 export type CustomVoiceChanges = Pick<
-  VoiceDetailViewProps,
+  ConversationDetailViewProps,
   'editor' | 'editorError' | 'onEditorChange'
 > & {
   save: (voice: CustomVoiceInput) => void;
@@ -25,7 +25,7 @@ function useReread(): () => void {
 
   return () =>
     void cache.invalidateQueries({
-      queryKey: trpc.voice.getSettings.queryKey(),
+      queryKey: trpc.conversation.getSettings.queryKey(),
     });
 }
 
@@ -35,7 +35,7 @@ type Done = {
   choose: (voice: string) => void;
 };
 
-// A new voice is chosen at once, as the person made it from the Voice picker; an edited one keeps the choice.
+// A new voice is chosen at once, as the person made it from the Conversation picker; an edited one keeps the choice.
 const savedThen =
   (done: Done) =>
   (saved: CustomVoice, input: CustomVoiceInput): void => {

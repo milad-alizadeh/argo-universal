@@ -1,8 +1,8 @@
-import type { VoicePartial } from '@repo/contracts';
+import type { ConversationPartial } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { drawnPartials, holdPartials, noHeldPartials } from './held-partials';
 
-const saying = (id: string, text: string): VoicePartial => ({
+const saying = (id: string, text: string): ConversationPartial => ({
   speaker: 'voice',
   id,
   rowId: `call-1:voice:${id}`,

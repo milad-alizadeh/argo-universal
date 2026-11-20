@@ -1,7 +1,7 @@
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
-import { VoiceDetailView } from './conversation-detail-view';
+import { ConversationDetailView } from './conversation-detail-view';
 import {
   idleMeters,
   namedDevices,
@@ -10,20 +10,20 @@ import {
   unnamedDevices,
   usableVoice,
 } from './conversation-detail-view-fixtures';
-import { inReadingOrder, voiceDetailSpies } from './conversation-detail-view.mocks';
+import { inReadingOrder, conversationDetailSpies } from './conversation-detail-view.mocks';
 
 const meta = {
-  title: 'Tests/Screens/Settings/Voice/Devices',
-  component: VoiceDetailView,
+  title: 'Tests/Screens/Settings/Conversation/Devices',
+  component: ConversationDetailView,
   parameters: { screenPreview: true },
   args: {
     voice: { status: 'loaded', settings: usableVoice },
     devices: namedDevices,
     adjustsGain: true,
-    ...voiceDetailSpies(),
+    ...conversationDetailSpies(),
   },
   beforeEach: (): Promise<void> => settleLayout(layoutWidths.wide),
-} satisfies Meta<typeof VoiceDetailView>;
+} satisfies Meta<typeof ConversationDetailView>;
 
 export default meta;
 

@@ -2,21 +2,21 @@ import { join } from 'node:path';
 import type { AnyActorRef } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
 import {
-  voiceCallMachine,
-  voiceCallSystemId,
-  VoiceCalls,
-  type VoiceSettingsStore,
+  conversationMachine,
+  conversationSystemId,
+  Conversations,
+  type ConversationSettingsStore,
 } from '../conversation';
 
-// The Voice call the Engine runs, behind the calls the App and Operations make of it.
-export function requireVoiceCalls(
+// The Conversation the Engine runs, behind the calls the App and Operations make of it.
+export function requireConversations(
   system: AnyActorRef['system'],
-  settings: VoiceSettingsStore,
+  settings: ConversationSettingsStore,
   home: string,
-): VoiceCalls {
-  const actor = findMachineActor(system, voiceCallSystemId, voiceCallMachine);
+): Conversations {
+  const actor = findMachineActor(system, conversationSystemId, conversationMachine);
 
-  if (!actor) throw new Error('The Voice call machine is not running');
+  if (!actor) throw new Error('The Conversation machine is not running');
 
-  return new VoiceCalls(actor, settings, join(home, 'voice-previews'));
+  return new Conversations(actor, settings, join(home, 'voice-previews'));
 }

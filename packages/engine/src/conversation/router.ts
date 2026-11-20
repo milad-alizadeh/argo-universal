@@ -1,29 +1,29 @@
 import {
-  VoiceDeviceReport,
-  VoiceDeviceRequest,
-  VoiceStatus,
+  ConversationDeviceReport,
+  ConversationDeviceRequest,
+  ConversationStatus,
 } from '@repo/contracts';
 import { publicProcedure, router, routerFactory, zAsyncIterable } from '../rpc';
-import type { VoiceCallsPort } from './conversations';
+import type { ConversationsPort } from './conversations';
 
-export interface VoiceRouterDeps {
-  voice: Pick<VoiceCallsPort, 'watch' | 'devices'>;
+export interface ConversationRouterDeps {
+  conversation: Pick<ConversationsPort, 'watch' | 'devices'>;
 }
 
-// The App's stream of the Voice call's standing, which its Composer draws; the Operations start and end the call.
-export const createVoiceRouter = routerFactory((deps: VoiceRouterDeps) =>
+// The App's stream of the Conversation's standing, which its Composer draws; the Operations start and end the call.
+export const createConversationRouter = routerFactory((deps: ConversationRouterDeps) =>
   router({
     watch: publicProcedure
-      .output(zAsyncIterable({ yield: VoiceStatus }))
+      .output(zAsyncIterable({ yield: ConversationStatus }))
       .subscription(({ ctx, signal }) =>
-        deps.voice.watch(signal ?? ctx.connection.signal),
+        deps.conversation.watch(signal ?? ctx.connection.signal),
       ),
     // App plumbing: the App reports its microphones and speakers and hears which to use; it subscribes again when they change.
     devices: publicProcedure
-      .input(VoiceDeviceReport)
-      .output(zAsyncIterable({ yield: VoiceDeviceRequest }))
+      .input(ConversationDeviceReport)
+      .output(zAsyncIterable({ yield: ConversationDeviceRequest }))
       .subscription(({ ctx, input }) =>
-        deps.voice.devices.listen(input, ctx.connection.signal),
+        deps.conversation.devices.listen(input, ctx.connection.signal),
       ),
   }),
 );

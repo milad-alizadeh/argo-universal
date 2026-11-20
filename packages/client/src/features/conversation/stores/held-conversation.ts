@@ -2,15 +2,15 @@ import type { VoiceLevels, VoiceSpectrum } from '../types/conversation-connectio
 import {
   MicrophoneUnavailable,
   type Microphone,
-  type VoiceEnvironment,
+  type ConversationEnvironment,
   type VoicePeer,
   type VoicePlayback,
 } from '../types/conversation-environment';
-import type { VoiceDeviceChoice } from './conversation-device-choice';
+import type { ConversationDeviceChoice } from './conversation-device-choice';
 
 // The chosen microphone, or the system's when the chosen one is gone, so a missing device never fails the call.
 export const openChosen = (
-  environment: VoiceEnvironment,
+  environment: ConversationEnvironment,
   device: string | null,
 ): Promise<Microphone> =>
   environment
@@ -76,9 +76,9 @@ export class HeldCall {
 
   // Moves the running call to the devices just chosen, live.
   public async follow(
-    previous: VoiceDeviceChoice,
-    choice: VoiceDeviceChoice,
-    environment: VoiceEnvironment,
+    previous: ConversationDeviceChoice,
+    choice: ConversationDeviceChoice,
+    environment: ConversationEnvironment,
   ): Promise<void> {
     if (choice.speaker !== previous.speaker) this.moveSpeaker(choice.speaker);
 
@@ -92,7 +92,7 @@ export class HeldCall {
 
   // When the new microphone cannot open, the call keeps the one it has.
   private async moveMicrophone(
-    environment: VoiceEnvironment,
+    environment: ConversationEnvironment,
     device: string | null,
   ): Promise<void> {
     const microphone = await environment

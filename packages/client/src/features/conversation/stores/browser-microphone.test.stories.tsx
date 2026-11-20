@@ -46,7 +46,7 @@ function Microphone(): React.JSX.Element {
 }
 
 const meta = {
-  title: 'Tests/Voice/BrowserMicrophone',
+  title: 'Tests/Conversation/BrowserMicrophone',
   component: Microphone,
 } satisfies Meta<typeof Microphone>;
 

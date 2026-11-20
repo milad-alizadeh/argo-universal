@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { bandLookOf } from './band-state';
 
 const call = {
-  orb: 'listening',
+  state: 'listening',
   trouble: null,
   microphoneMuted: false,
 } as const;
@@ -14,15 +14,15 @@ describe('what the band shows of a call', () => {
       label: 'Listening',
       timer: true,
     });
-    expect(bandLookOf({ ...call, orb: 'talking' })).toMatchObject({
+    expect(bandLookOf({ ...call, state: 'talking' })).toMatchObject({
       state: 'talking',
       label: 'Talking',
     });
-    expect(bandLookOf({ ...call, orb: 'thinking' })).toMatchObject({
+    expect(bandLookOf({ ...call, state: 'thinking' })).toMatchObject({
       state: 'thinking',
       label: 'Thinking',
     });
-    expect(bandLookOf({ ...call, orb: 'none' })).toMatchObject({
+    expect(bandLookOf({ ...call, state: 'none' })).toMatchObject({
       state: 'connecting',
       label: 'Connecting…',
       timer: false,
@@ -31,7 +31,7 @@ describe('what the band shows of a call', () => {
 
   it('puts a muted microphone before what the call is doing, and trouble before both', () => {
     expect(
-      bandLookOf({ ...call, orb: 'talking', microphoneMuted: true }),
+      bandLookOf({ ...call, state: 'talking', microphoneMuted: true }),
     ).toMatchObject({ state: 'muted', label: 'Mic off', tone: 'danger' });
     expect(
       bandLookOf({ ...call, microphoneMuted: true, trouble: 'reconnecting' }),

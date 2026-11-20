@@ -1,9 +1,9 @@
 import type {
-  VoiceAudioDevice,
-  VoiceDeviceChange,
-  VoiceDeviceList,
-  VoiceDeviceReport,
-  VoiceDeviceRequest,
+  ConversationAudioDevice,
+  ConversationDeviceChange,
+  ConversationDeviceList,
+  ConversationDeviceReport,
+  ConversationDeviceRequest,
 } from '@repo/contracts';
 import { Queue } from '../app-navigation/queue';
 import { unavailable } from './unavailable';
@@ -12,8 +12,8 @@ import { refuse } from './voice-choice-rules';
 // One App listening for device choices: the Connection it is on, what it reported, and where its requests go.
 interface ListeningApp {
   connection: AbortSignal;
-  report: VoiceDeviceReport;
-  queue: Queue<VoiceDeviceRequest>;
+  report: ConversationDeviceReport;
+  queue: Queue<ConversationDeviceRequest>;
 }
 
 const live = (app: ListeningApp): boolean => !app.connection.aborted;
@@ -25,7 +25,7 @@ const on =
 
 // A device id the App has, or null for the system's; anything else is refused.
 function requireDevice(
-  devices: VoiceAudioDevice[],
+  devices: ConversationAudioDevice[],
   id: string | null | undefined,
 ): void {
   if (id && !devices.some((device) => device.id === id))
@@ -39,20 +39,20 @@ const kept = (
 ): string | null => (next === undefined ? current : next);
 
 const chosen = (
-  report: VoiceDeviceReport,
-  change: VoiceDeviceChange,
-): VoiceDeviceReport => ({
+  report: ConversationDeviceReport,
+  change: ConversationDeviceChange,
+): ConversationDeviceReport => ({
   ...report,
   microphone: kept(change.microphone, report.microphone),
   speaker: kept(change.speaker, report.speaker),
 });
 
 /*
- * The microphones and speakers of the Apps that can carry a Voice call (ADR-0064). Each App reports them over its own
+ * The microphones and speakers of the Apps that can carry a Conversation (ADR-0064). Each App reports them over its own
  * Connection and keeps its choice itself; an Agent or the CLI reads and changes them on one App: the one carrying the
  * running call, else the one that started the last call, else the one that connected last.
  */
-export class VoiceDevices {
+export class ConversationDevices {
   private readonly apps: ListeningApp[] = [];
   private lastUsed: AbortSignal | null = null;
 
@@ -64,10 +64,10 @@ export class VoiceDevices {
   }
 
   public async *listen(
-    report: VoiceDeviceReport,
+    report: ConversationDeviceReport,
     connection: AbortSignal,
-  ): AsyncGenerator<VoiceDeviceRequest> {
-    const app = { connection, report, queue: new Queue<VoiceDeviceRequest>() };
+  ): AsyncGenerator<ConversationDeviceRequest> {
+    const app = { connection, report, queue: new Queue<ConversationDeviceRequest>() };
     this.apps.push(app);
 
     try {
@@ -78,11 +78,11 @@ export class VoiceDevices {
     }
   }
 
-  public list(): VoiceDeviceList {
+  public list(): ConversationDeviceList {
     return this.listOf(this.target());
   }
 
-  public choose(change: VoiceDeviceChange): VoiceDeviceList {
+  public choose(change: ConversationDeviceChange): ConversationDeviceList {
     const app = this.target();
     requireDevice(app.report.microphones, change.microphone);
     requireDevice(app.report.speakers, change.speaker);
@@ -92,7 +92,7 @@ export class VoiceDevices {
     return this.listOf(app);
   }
 
-  private listOf(app: ListeningApp): VoiceDeviceList {
+  private listOf(app: ListeningApp): ConversationDeviceList {
     return { ...app.report, carriesCall: on(this.carrier())(app) };
   }
 
@@ -110,7 +110,7 @@ export class VoiceDevices {
     const app = this.candidate();
 
     if (!app)
-      throw unavailable('No App that can carry a Voice call is connected');
+      throw unavailable('No App that can carry a Conversation is connected');
 
     return app;
   }

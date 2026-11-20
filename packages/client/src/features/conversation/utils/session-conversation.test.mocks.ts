@@ -1,11 +1,11 @@
 import {
-  defaultVoiceCallOptions,
-  type VoiceCall,
-  type VoiceStatus,
+  defaultConversationOptions,
+  type Conversation,
+  type ConversationStatus,
 } from '@repo/contracts';
-import type { ComposerVoice } from '#features/composer';
+import type { ComposerConversation } from '#features/composer';
 import { silentSpectrum } from '../types/conversation-connection';
-import type { SessionVoiceInput } from './session-conversation';
+import type { SessionConversationInput } from './session-conversation';
 
 const startedAt = '2026-11-18T10:00:00.000Z';
 
@@ -13,28 +13,28 @@ const now = Date.parse(startedAt) + 252_000;
 
 export const callIn = (
   sessionId: string,
-  changes: Partial<VoiceCall> = {},
-): VoiceCall => ({
-  callId: 'call-1',
+  changes: Partial<Conversation> = {},
+): Conversation => ({
+  conversationId: 'call-1',
   sessionId,
   status: 'connected',
-  orb: 'listening',
+  state: 'listening',
   trouble: null,
   startedAt,
   ...changes,
 });
 
 export const statusOf = (
-  call: VoiceCall | null,
-  changes: Partial<VoiceStatus> = {},
-): VoiceStatus => ({
-  call,
+  call: Conversation | null,
+  changes: Partial<ConversationStatus> = {},
+): ConversationStatus => ({
+  conversation: call,
   ended: null,
   partials: [],
   availability: { usable: true },
   enabled: true,
-  volume: defaultVoiceCallOptions.volume,
-  microphoneGain: defaultVoiceCallOptions.microphoneGain,
+  volume: defaultConversationOptions.volume,
+  microphoneGain: defaultConversationOptions.microphoneGain,
   ...changes,
 });
 
@@ -42,10 +42,10 @@ export type Asked = string[];
 
 // What the Session's view asks of the App, recorded in order.
 export function inputOf(
-  status: VoiceStatus,
+  status: ConversationStatus,
   sessionId: string,
   asked: Asked = [],
-): SessionVoiceInput {
+): SessionConversationInput {
   return {
     status,
     sessionId,
@@ -63,12 +63,12 @@ export function inputOf(
   };
 }
 
-function handlerOf(slot: ComposerVoice): () => void {
+function handlerOf(slot: ComposerConversation): () => void {
   if ('onStart' in slot) return slot.onStart;
 
   return 'onEnd' in slot ? slot.onEnd : slot.onOpen;
 }
 
 // Presses what the voice slot offers: the voice button, End or the pointer.
-export const press = (slot: ComposerVoice | undefined): void =>
+export const press = (slot: ComposerConversation | undefined): void =>
   slot && handlerOf(slot)();

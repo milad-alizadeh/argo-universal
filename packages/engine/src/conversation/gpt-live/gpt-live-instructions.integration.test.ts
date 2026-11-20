@@ -5,7 +5,7 @@ import {
   signedIn,
   type GptLiveFixture,
 } from '#mocks/gpt-live-setup';
-import type { VoiceStartRequest } from '../provider';
+import type { ConversationStartRequest } from '../provider';
 
 let fixture: GptLiveFixture | undefined;
 
@@ -24,7 +24,7 @@ const custom = 'Call me Sam.';
 
 // What the voice was told when its call was created.
 async function instructionsSent(
-  setup: Partial<VoiceStartRequest>,
+  setup: Partial<ConversationStartRequest>,
 ): Promise<string> {
   fixture = await fixtureOf([signedIn('t1')], ['t1']);
   await fixture.start({ ...request, ...setup });

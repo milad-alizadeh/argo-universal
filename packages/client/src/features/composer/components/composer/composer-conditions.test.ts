@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { composerProps } from '../../../../../mocks/composer-mock';
 import { callPointer, sendButtonState } from './composer-conditions';
-import type { ComposerProps, ComposerVoice, SendState } from './composer-types';
+import type { ComposerProps, ComposerConversation, SendState } from './composer-types';
 
-type Slot = ComposerVoice['kind'] | 'absent';
+type Slot = ComposerConversation['kind'] | 'absent';
 
 // What the primary slot shows: a button in one of its states, or the pointer to the call in another Session.
 type Shown = SendState | 'pointer';
@@ -17,7 +17,7 @@ type Row = [
 
 /*
  * Every combination of draft, voice slot and Turn, the Composer queueing while a Turn runs. The slot is the voice
- * module's answer: `start` while no call runs and the Voice provider can start one, `absent` while it cannot or where
+ * module's answer: `start` while no call runs and the Conversation provider can start one, `absent` while it cannot or where
  * the App carries no audio. With nothing written, a running Turn's one button is Stop unless a call runs here.
  */
 const rows: Row[] = [
@@ -54,14 +54,14 @@ const mutes = {
   onSpeaker: noop,
 };
 
-const slots: Record<ComposerVoice['kind'], ComposerVoice> = {
+const slots: Record<ComposerConversation['kind'], ComposerConversation> = {
   start: { kind: 'start', onStart: noop },
   connecting: { kind: 'connecting', onEnd: noop },
   connected: { kind: 'connected', onEnd: noop, mutes },
   elsewhere: { kind: 'elsewhere', title: 'Fix the build', onOpen: noop },
 };
 
-const voiceOf = (slot: Slot): ComposerProps['voice'] =>
+const conversationOf = (slot: Slot): ComposerProps['voice'] =>
   slot === 'absent' ? undefined : slots[slot];
 
 function composer(
@@ -77,7 +77,7 @@ function composer(
     running: turn === 'running',
     sessionStarted: true,
     queueWhileRunning,
-    voice: voiceOf(slot),
+    voice: conversationOf(slot),
   });
 }
 

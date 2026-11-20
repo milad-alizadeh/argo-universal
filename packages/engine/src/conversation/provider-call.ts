@@ -2,28 +2,28 @@ import { fromCallback } from 'xstate';
 import {
   providerEvent,
   type SendBack,
-  type VoiceCallEvent,
+  type ConversationEvent,
   type VoiceSay,
 } from './conversation-types';
 import type {
-  VoiceCallSetup,
-  VoiceProvider,
-  VoiceProviderEvent,
-  VoiceStartRequest,
+  ConversationSetup,
+  ConversationProvider,
+  ConversationProviderEvent,
+  ConversationStartRequest,
 } from './provider';
 
 // What the provider reports as the call hangs up, once the machine no longer hears it, such as the words said so far.
-type LastWords = (event: VoiceProviderEvent) => void;
+type LastWords = (event: ConversationProviderEvent) => void;
 
 export type ProviderCallInput = {
-  provider: VoiceProvider;
+  provider: ConversationProvider;
   offer: string;
   briefing: string;
-  setup?: VoiceCallSetup;
+  setup?: ConversationSetup;
   lastWords: LastWords;
 };
 
-type StartedCall = Awaited<ReturnType<VoiceProvider['start']>>;
+type StartedCall = Awaited<ReturnType<ConversationProvider['start']>>;
 
 function deliver(call: StartedCall, say: VoiceSay): void {
   if (say.kind === 'reply') call.reply(say.requestId, say.text, say.delivery);
@@ -65,7 +65,7 @@ class ProviderHold {
     this.unlisten?.();
   }
 
-  private heard(event: VoiceProviderEvent): void {
+  private heard(event: ConversationProviderEvent): void {
     if (this.released) this.lastWords(event);
     else this.sendBack(providerEvent(event));
   }
@@ -78,10 +78,10 @@ const requestOf = ({
   offer,
   briefing,
   setup,
-}: ProviderCallInput): VoiceStartRequest => ({ ...setup, offer, briefing });
+}: ProviderCallInput): ConversationStartRequest => ({ ...setup, offer, briefing });
 
 // Starts the provider's call, passes its events on, and ends it when the machine leaves `running`.
-export const providerCall = fromCallback<VoiceCallEvent, ProviderCallInput>(
+export const providerCall = fromCallback<ConversationEvent, ProviderCallInput>(
   ({ input, sendBack, receive }) => {
     const hold = new ProviderHold(sendBack, input.lastWords);
     receive((event) => {

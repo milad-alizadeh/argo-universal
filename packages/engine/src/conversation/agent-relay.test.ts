@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 import { AgentRelay } from './agent-relay';
 import type { VoiceSay } from './conversation-types';
 import { relayWords } from './relay-words';
-import type { PromptOutcome, VoiceSessions } from './session-link';
+import type { PromptOutcome, ConversationSessions } from './session-link';
 
 type Heard = { said: VoiceSay[]; running: boolean[] };
 
@@ -14,7 +14,7 @@ function relayTo(
 ): Relayed {
   const heard: Heard = { said: [], running: [] };
 
-  const sessions: VoiceSessions = {
+  const sessions: ConversationSessions = {
     prompt: answer,
     stop: () => Promise.resolve(false),
     watch: () => (): void => {},

@@ -2,20 +2,20 @@ import { describe, expect, it } from 'vitest';
 import {
   callOf,
   offer,
-  openVoiceSession,
-  startVoiceEngine,
+  openConversationSession,
+  startConversationEngine,
 } from '#mocks/conversation-engine';
-import { FakeVoiceProvider } from './fake-provider';
+import { FakeConversationProvider } from './fake-provider';
 
 const voices = [
   { id: 'cove', label: 'Cove' },
   { id: 'sol', label: 'Sol', description: 'Savvy and relaxed' },
 ];
 
-const withVoices = (): ReturnType<typeof startVoiceEngine> =>
-  startVoiceEngine(new FakeVoiceProvider({ connect: 'manual', voices }));
+const withVoices = (): ReturnType<typeof startConversationEngine> =>
+  startConversationEngine(new FakeConversationProvider({ connect: 'manual', voices }));
 
-describe('Voice preview', () => {
+describe('Conversation preview', () => {
   it('speaks one greeting in the chosen voice from a listening-only offer and answers it', async () => {
     const { host, provider } = await withVoices();
 
@@ -59,30 +59,30 @@ describe('Voice preview', () => {
     provider.previewing.connect();
     provider.previewing.voiceSays("Hi, I'm Cove.");
 
-    expect(await host.caller.voice.status()).toMatchObject({
+    expect(await host.caller.conversation.status()).toMatchObject({
       call: null,
       ended: null,
       partials: [],
     });
   });
 
-  it('is refused while a Voice call runs', async () => {
+  it('is refused while a Conversation runs', async () => {
     const voice = await withVoices();
-    const { sessionId } = await openVoiceSession(voice);
-    await voice.host.caller.voice.start({ sessionId, offer });
+    const { sessionId } = await openConversationSession(voice);
+    await voice.host.caller.conversation.start({ sessionId, offer });
 
     await expect(
       voice.host.caller.voice.preview({ voice: 'cove', offer }),
-    ).rejects.toThrow(/Voice call is already running/);
+    ).rejects.toThrow(/Conversation is already running/);
     expect(voice.provider.previews).toEqual([]);
   });
 
-  it('ends when a Voice call starts', async () => {
+  it('ends when a Conversation starts', async () => {
     const voice = await withVoices();
-    const { sessionId } = await openVoiceSession(voice);
+    const { sessionId } = await openConversationSession(voice);
     await voice.host.caller.voice.preview({ voice: 'cove', offer });
 
-    await voice.host.caller.voice.start({ sessionId, offer });
+    await voice.host.caller.conversation.start({ sessionId, offer });
 
     expect(voice.provider.previewing.ended).toBe(true);
     expect(await callOf(voice.host)).not.toBeNull();
@@ -100,6 +100,6 @@ describe('Voice preview', () => {
   it('lists the description a provider publishes for a voice', async () => {
     const { host } = await withVoices();
 
-    expect((await host.caller.voice.getSettings()).voices).toEqual(voices);
+    expect((await host.caller.conversation.getSettings()).voices).toEqual(voices);
   });
 });

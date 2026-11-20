@@ -4,21 +4,21 @@ import { start } from '#mocks/conversation-events';
 import type { RelayInput } from './agent-relay-actor';
 import {
   providerEvent,
-  type VoiceCallEvent,
-  type VoiceCallInput,
+  type ConversationEvent,
+  type ConversationInput,
 } from './conversation-types';
 import { type ConnectionWatch, type SessionWatch } from './conversation-watchers';
-import { voiceCallMachine } from './conversation.machine';
-import { FakeVoiceProvider } from './fake-provider';
+import { conversationMachine } from './conversation.machine';
+import { FakeConversationProvider } from './fake-provider';
 import type { ProviderCallInput } from './provider-call';
-import type { VoiceSessions } from './session-link';
+import type { ConversationSessions } from './session-link';
 
 // The actors that would send events back are stubs: a test sends every event itself, and the machine's own rules decide.
 const stub = <Input>(): ReturnType<
-  typeof fromCallback<VoiceCallEvent, Input>
-> => fromCallback<VoiceCallEvent, Input>((): (() => void) => (): void => {});
+  typeof fromCallback<ConversationEvent, Input>
+> => fromCallback<ConversationEvent, Input>((): (() => void) => (): void => {});
 
-const machine = voiceCallMachine.provide({
+const machine = conversationMachine.provide({
   actors: {
     providerCall: stub<ProviderCallInput>(),
     agentRelay: stub<RelayInput>(),
@@ -27,8 +27,8 @@ const machine = voiceCallMachine.provide({
   },
 });
 
-const input: VoiceCallInput = {
-  provider: new FakeVoiceProvider(),
+const input: ConversationInput = {
+  provider: new FakeConversationProvider(),
   briefing: () => '',
   idleMs: 60_000,
   log: () => {},
@@ -42,14 +42,14 @@ afterEach(() => voice?.stop());
 
 // Sessions whose Feed is a spy: every Notice written into it is a call to `notice`.
 type SpySessions = {
-  sessions: VoiceSessions;
-  notice: Mock<VoiceSessions['notice']>;
+  sessions: ConversationSessions;
+  notice: Mock<ConversationSessions['notice']>;
 };
 
 function spySessions(): SpySessions {
-  const notice = vi.fn<VoiceSessions['notice']>();
+  const notice = vi.fn<ConversationSessions['notice']>();
 
-  const sessions: VoiceSessions = {
+  const sessions: ConversationSessions = {
     prompt: () => Promise.reject(new Error('No Prompts in this test')),
     stop: () => Promise.resolve(false),
     watch: () => (): void => {},
@@ -60,7 +60,7 @@ function spySessions(): SpySessions {
 }
 
 // A running call whose Session is a spy.
-function runningCall(): Mock<VoiceSessions['notice']> {
+function runningCall(): Mock<ConversationSessions['notice']> {
   const { sessions, notice } = spySessions();
   voice = createActor(machine, { input }).start();
   voice.send({ type: 'sessions.attach', sessions });
@@ -79,7 +79,7 @@ describe('the Notice a failed call leaves', () => {
     expect(notice).toHaveBeenCalledTimes(1);
     expect(notice).toHaveBeenCalledWith(
       start.sessionId,
-      expect.objectContaining({ title: 'Voice call failed' }),
+      expect.objectContaining({ title: 'Conversation failed' }),
     );
   });
 
@@ -111,7 +111,7 @@ describe('Sessions attached while a call runs', () => {
     expect(attached.notice).toHaveBeenCalledWith(
       start.sessionId,
       expect.objectContaining({
-        title: 'Voice call ended: usage limit reached',
+        title: 'Conversation ended: usage limit reached',
       }),
     );
   });

@@ -1,7 +1,7 @@
 import type { FeedSubscribeOutput } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { operationCaller, runOperation } from '#mocks/operations';
-import { startVoiceWork, type VoiceWork } from '#mocks/conversation-work';
+import { startConversationWork, type ConversationWork } from '#mocks/conversation-work';
 
 const job = 'Run the tests';
 
@@ -9,11 +9,11 @@ const allGreen = '[COMPLETE] All green';
 
 const markPattern = /\[(STATUS|COMPLETE|ANALYSIS)\]/;
 
-type Host = VoiceWork['host'];
+type Host = ConversationWork['host'];
 
 // A call whose Agent marked both its messages, after its Turn has ended.
-async function markedWork(): Promise<VoiceWork> {
-  const work = await startVoiceWork([
+async function markedWork(): Promise<ConversationWork> {
+  const work = await startConversationWork([
     {
       prompt: job,
       messages: ['[STATUS] Running the suite', allGreen],
@@ -39,7 +39,7 @@ async function agentMessages(host: Host, sessionId: string): Promise<string> {
   );
 }
 
-const listedActivity = async (work: VoiceWork): Promise<string | undefined> =>
+const listedActivity = async (work: ConversationWork): Promise<string | undefined> =>
   (await work.host.caller.session.list({ archived: false })).sessions.find(
     (session) => session.sessionId === work.sessionId,
   )?.activity;
@@ -54,7 +54,7 @@ const messagesIn = (events: FeedSubscribeOutput[]): string =>
     events.filter((event) => !JSON.stringify(event).includes('prompt_message')),
   );
 
-describe('Voice marks are stripped wherever an Agent message is read', () => {
+describe('Conversation marks are stripped wherever an Agent message is read', () => {
   it('in a Feed page, while stored text keeps them', async () => {
     const work = await markedWork();
 
@@ -81,7 +81,7 @@ describe('Voice marks are stripped wherever an Agent message is read', () => {
   });
 
   it('in what a subscriber is sent, live and in catch-up', async () => {
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: job, messages: ['[STATUS] Running', allGreen] },
     ]);
 

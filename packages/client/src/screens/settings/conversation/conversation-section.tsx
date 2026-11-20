@@ -1,12 +1,12 @@
-import type { VoiceCallOptions, VoiceCallOptionsChange } from '@repo/contracts';
+import type { ConversationOptions, ConversationOptionsChange } from '@repo/contracts';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type { ReactElement } from 'react';
 import { idleChoices } from './conversation-options';
 
 export interface CallSectionProps {
-  options: VoiceCallOptions;
+  options: ConversationOptions;
   disabled: boolean;
-  onChange: (change: VoiceCallOptionsChange) => void;
+  onChange: (change: ConversationOptionsChange) => void;
 }
 
 const fillerRow = (props: CallSectionProps): ReactElement => (

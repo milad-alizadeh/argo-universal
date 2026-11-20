@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { startVoiceWork, type VoiceWork } from '#mocks/conversation-work';
+import { startConversationWork, type ConversationWork } from '#mocks/conversation-work';
 import { relayWords } from './relay-words';
 
 const job = 'Run the tests';
@@ -17,21 +17,21 @@ const resultWithAnalysis = [
   '[COMPLETE] Open it to look.',
 ].join('\n\n');
 
-const spoken = (work: VoiceWork): string[] =>
+const spoken = (work: ConversationWork): string[] =>
   work.provider.call.sent.flatMap((message) =>
     message.kind === 'tell' && message.delivery === 'speak'
       ? [message.text]
       : [],
   );
 
-const background = (work: VoiceWork): string[] =>
+const background = (work: ConversationWork): string[] =>
   work.provider.call.sent.flatMap((message) =>
     message.kind === 'tell' && message.delivery === 'background'
       ? [message.text]
       : [],
   );
 
-const askAndWaitForEnd = async (work: VoiceWork): Promise<void> => {
+const askAndWaitForEnd = async (work: ConversationWork): Promise<void> => {
   await work.start();
   work.provider.call.requestWork('r1', job);
   await expect.poll(work.turnEnds).toHaveLength(2);
@@ -39,7 +39,7 @@ const askAndWaitForEnd = async (work: VoiceWork): Promise<void> => {
 
 describe('what the Agent says goes back to the voice', () => {
   it('answers the request at once, sends progress as background and the result as speech, and never Tool output', async () => {
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       {
         prompt: job,
         toolOutput: 'SECRET-TOOL-OUTPUT',
@@ -64,7 +64,7 @@ describe('what the Agent says goes back to the voice', () => {
     const words = Array.from({ length: 300 }, (_, index) => `word${index}`);
     const long = words.join(' ');
 
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: job, messages: [`[COMPLETE] ${long}`] },
     ]);
 
@@ -82,7 +82,7 @@ describe('what the Agent says goes back to the voice', () => {
   it('sends a long progress message in pieces of at most 500 bytes as background', async () => {
     const long = Array.from({ length: 300 }, (_, i) => `step${i}`).join(' ');
 
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: job, messages: [`[STATUS] ${long}`, '[COMPLETE] Done'] },
     ]);
 
@@ -99,7 +99,7 @@ describe('what the Agent says goes back to the voice', () => {
   });
 
   it('counts an unmarked message as progress until the Turn ends, then speaks the last', async () => {
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: job, messages: [looking, fixedBug] },
     ]);
 
@@ -113,7 +113,7 @@ describe('what the Agent says goes back to the voice', () => {
   });
 
   it('never tells the voice silent analysis', async () => {
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       {
         prompt: job,
         messages: ['[ANALYSIS] The cache is stale', '[COMPLETE] Cleared it'],
@@ -134,7 +134,7 @@ describe('what the Agent says goes back to the voice', () => {
   ])(
     'never tells the voice an analysis paragraph inside a result, %s',
     async (_, chunkSize) => {
-      const work = await startVoiceWork([
+      const work = await startConversationWork([
         { prompt: job, chunkSize, messages: [resultWithAnalysis] },
       ]);
 
@@ -150,7 +150,7 @@ describe('what the Agent says goes back to the voice', () => {
   );
 
   it('tells the voice when a Turn ends, and when it fails', async () => {
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: job, messages: ['[COMPLETE] Done'] },
       { prompt: 'Break it', fails: 'The Agent crashed' },
     ]);

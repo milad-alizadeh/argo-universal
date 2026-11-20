@@ -4,7 +4,7 @@ import {
   sessionGone,
   type SendBack,
   type SessionGoneReason,
-  type VoiceCallEvent,
+  type ConversationEvent,
 } from './conversation-types';
 
 export type SessionWatch = { sessionId: string };
@@ -51,7 +51,7 @@ function watchSessionActor(
 }
 
 // Ends the call when its Session closes or is archived.
-export const watchSession = fromCallback<VoiceCallEvent, SessionWatch>(
+export const watchSession = fromCallback<ConversationEvent, SessionWatch>(
   ({ input, sendBack, system }) =>
     watchSessionActor(system.get(sessionActorId(input.sessionId)), sendBack),
 );
@@ -59,7 +59,7 @@ export const watchSession = fromCallback<VoiceCallEvent, SessionWatch>(
 export type ConnectionWatch = { signal: AbortSignal | undefined };
 
 // Ends the call when the App Connection that started it goes away: the App quit or lost its link.
-export const watchConnection = fromCallback<VoiceCallEvent, ConnectionWatch>(
+export const watchConnection = fromCallback<ConversationEvent, ConnectionWatch>(
   ({ input, sendBack }) => {
     const { signal } = input;
     const gone = (): void => sendBack({ type: 'call.appDisconnected' });

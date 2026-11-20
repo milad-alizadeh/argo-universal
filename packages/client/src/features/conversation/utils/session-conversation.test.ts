@@ -1,7 +1,7 @@
-import type { VoiceStatus } from '@repo/contracts';
+import type { ConversationStatus } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import type { ComposerVoiceMutes } from '#features/composer';
-import { sessionVoice, type SessionVoice } from './session-conversation';
+import type { ComposerConversationMutes } from '#features/composer';
+import { sessionConversation, type SessionConversation } from './session-conversation';
 import {
   callIn,
   inputOf,
@@ -10,26 +10,26 @@ import {
   type Asked,
 } from './session-conversation.test.mocks';
 
-const mutesOf = ({ composer }: SessionVoice): ComposerVoiceMutes | undefined =>
+const mutesOf = ({ composer }: SessionConversation): ComposerConversationMutes | undefined =>
   composer?.kind === 'connected' ? composer.mutes : undefined;
 
-describe("a Session's view of the Voice call", () => {
+describe("a Session's view of the Conversation", () => {
   it('has no call, and offers the voice button, while none runs', () => {
-    const view = sessionVoice(inputOf(statusOf(null), 's1'));
+    const view = sessionConversation(inputOf(statusOf(null), 's1'));
 
     expect(view.composer?.kind).toBe('start');
     expect(view.band).toBeUndefined();
   });
 
-  it('offers the voice button only while Voice calls are on and the provider is usable', () => {
+  it('offers the voice button only while Conversations are on and the provider is usable', () => {
     const off = statusOf(null, { enabled: false });
 
     const unusable = statusOf(null, {
       availability: { usable: false, reason: 'No' },
     });
 
-    expect(sessionVoice(inputOf(off, 's1')).composer).toBeUndefined();
-    expect(sessionVoice(inputOf(unusable, 's1')).composer).toBeUndefined();
+    expect(sessionConversation(inputOf(off, 's1')).composer).toBeUndefined();
+    expect(sessionConversation(inputOf(unusable, 's1')).composer).toBeUndefined();
   });
 
   it.each(['connecting', 'connected'] as const)(
@@ -39,58 +39,58 @@ describe("a Session's view of the Voice call", () => {
         availability: { usable: false, reason: 'No' },
       });
 
-      expect(sessionVoice(inputOf(unusable, 's1')).composer?.kind).toBe(status);
+      expect(sessionConversation(inputOf(unusable, 's1')).composer?.kind).toBe(status);
     },
   );
 
   it('shows a call that is connecting here as connecting, with no mutes and a band that says so', () => {
     const connecting = callIn('s1', {
       status: 'connecting',
-      orb: 'none',
+      state: 'none',
       startedAt: null,
     });
 
-    const view = sessionVoice(inputOf(statusOf(connecting), 's1'));
+    const view = sessionConversation(inputOf(statusOf(connecting), 's1'));
 
     expect(view.composer).toEqual({
       kind: 'connecting',
       onEnd: expect.any(Function),
     });
     expect(view.band).toMatchObject({
-      call: { orb: 'none', trouble: null },
+      call: { state: 'none', trouble: null },
       elapsed: '0:00',
     });
   });
 
   it('shows a connected call here with mutes and a band that has its timer', () => {
-    const view = sessionVoice(inputOf(statusOf(callIn('s1')), 's1'));
+    const view = sessionConversation(inputOf(statusOf(callIn('s1')), 's1'));
 
     expect(view.composer).toMatchObject({
       kind: 'connected',
       mutes: { microphone: false, speaker: false },
     });
     expect(view.band).toMatchObject({
-      call: { orb: 'listening' },
+      call: { state: 'listening' },
       elapsed: '4:12',
     });
   });
 
   it('gives the edge band the call, its timer and whether the microphone is muted, only here', () => {
-    const input = inputOf(statusOf(callIn('s1', { orb: 'talking' })), 's1');
+    const input = inputOf(statusOf(callIn('s1', { state: 'talking' })), 's1');
     const muted = { ...input, mutes: { microphone: true, speaker: false } };
 
-    expect(sessionVoice(muted).band).toMatchObject({
-      call: { orb: 'talking', trouble: null, microphoneMuted: true },
+    expect(sessionConversation(muted).band).toMatchObject({
+      call: { state: 'talking', trouble: null, microphoneMuted: true },
       elapsed: '4:12',
     });
     expect(
-      sessionVoice(inputOf(statusOf(callIn('s-call')), 's1')).band,
+      sessionConversation(inputOf(statusOf(callIn('s-call')), 's1')).band,
     ).toBeUndefined();
   });
 
   it('points a Session at the call in another Session, with that Session’s title, and draws no band', () => {
     const asked: Asked = [];
-    const view = sessionVoice(inputOf(statusOf(callIn('s-call')), 's1', asked));
+    const view = sessionConversation(inputOf(statusOf(callIn('s-call')), 's1', asked));
 
     expect(view.composer).toEqual({
       kind: 'elsewhere',
@@ -103,7 +103,7 @@ describe("a Session's view of the Voice call", () => {
   });
 
   it('names the other Session plainly until its title is known', () => {
-    const view = sessionVoice(inputOf(statusOf(callIn('s-unknown')), 's1'));
+    const view = sessionConversation(inputOf(statusOf(callIn('s-unknown')), 's1'));
 
     expect(view.composer).toMatchObject({ title: 'another Session' });
   });
@@ -116,7 +116,7 @@ describe("a Session's view of the Voice call", () => {
       mutes: { microphone: true, speaker: false },
     };
 
-    const mutes = mutesOf(sessionVoice(muted));
+    const mutes = mutesOf(sessionConversation(muted));
     mutes?.onMicrophone();
     mutes?.onSpeaker();
     expect(mutes).toMatchObject({ microphone: true, speaker: false });
@@ -127,9 +127,9 @@ describe("a Session's view of the Voice call", () => {
     const muted = { microphone: true, speaker: true };
 
     const call = statusOf(callIn('s1'));
-    const here = sessionVoice({ ...inputOf(call, 's1'), mutes: muted });
-    const away = sessionVoice({ ...inputOf(call, 's2'), mutes: muted });
-    const back = sessionVoice({ ...inputOf(call, 's1'), mutes: muted });
+    const here = sessionConversation({ ...inputOf(call, 's1'), mutes: muted });
+    const away = sessionConversation({ ...inputOf(call, 's2'), mutes: muted });
+    const back = sessionConversation({ ...inputOf(call, 's1'), mutes: muted });
 
     expect(mutesOf(here)).toMatchObject(muted);
     expect(away.composer?.kind).toBe('elsewhere');
@@ -138,22 +138,22 @@ describe("a Session's view of the Voice call", () => {
 
   it('starts and ends the call as the person asks', () => {
     const asked: Asked = [];
-    const idle = sessionVoice(inputOf(statusOf(null), 's1', asked)).composer;
+    const idle = sessionConversation(inputOf(statusOf(null), 's1', asked)).composer;
     press(idle);
-    const running = sessionVoice(inputOf(statusOf(callIn('s1')), 's1', asked));
+    const running = sessionConversation(inputOf(statusOf(callIn('s1')), 's1', asked));
     press(running.composer);
 
     expect(asked).toEqual(['start', 'end']);
   });
 
   it('hands over what is being said only for the Session the call is in', () => {
-    const partials: VoiceStatus['partials'] = [
+    const partials: ConversationStatus['partials'] = [
       { speaker: 'person', id: 'p1', rowId: 'call-1:person:p1', text: 'Hello' },
     ];
 
     const call = statusOf(callIn('s1'), { partials });
 
-    expect(sessionVoice(inputOf(call, 's1')).partials).toBe(partials);
-    expect(sessionVoice(inputOf(call, 's2')).partials).toEqual([]);
+    expect(sessionConversation(inputOf(call, 's1')).partials).toBe(partials);
+    expect(sessionConversation(inputOf(call, 's2')).partials).toEqual([]);
   });
 });

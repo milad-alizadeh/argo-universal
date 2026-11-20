@@ -1,8 +1,8 @@
-import type { VoiceMutes } from '../types/conversation-connection';
+import type { ConversationMutes } from '../types/conversation-connection';
 
-const unmuted: VoiceMutes = { microphone: false, speaker: false };
+const unmuted: ConversationMutes = { microphone: false, speaker: false };
 
-const same = (left: VoiceMutes, right: VoiceMutes): boolean =>
+const same = (left: ConversationMutes, right: ConversationMutes): boolean =>
   left.microphone === right.microphone && left.speaker === right.speaker;
 
 /*
@@ -10,11 +10,11 @@ const same = (left: VoiceMutes, right: VoiceMutes): boolean =>
  * on mount, so opening another Session cannot change a mute. Each change makes a new object, so a store hook can tell
  * a change from a re-read.
  */
-export class VoiceMuteStore {
+export class ConversationMuteStore {
   private current = unmuted;
   private readonly listeners = new Set<() => void>();
 
-  public read = (): VoiceMutes => this.current;
+  public read = (): ConversationMutes => this.current;
 
   public subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
@@ -24,7 +24,7 @@ export class VoiceMuteStore {
     };
   };
 
-  public change(change: Partial<VoiceMutes>): void {
+  public change(change: Partial<ConversationMutes>): void {
     const next = { ...this.current, ...change };
 
     if (same(next, this.current)) return;

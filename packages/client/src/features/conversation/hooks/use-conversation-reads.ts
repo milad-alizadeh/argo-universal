@@ -1,8 +1,8 @@
-import type { VoiceStartInput } from '@repo/contracts';
+import type { ConversationStartInput } from '@repo/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTRPC } from '#features/connection';
 import { placedCall } from '../stores/placed-conversation';
-import type { VoiceConnection } from '../types/conversation-connection';
+import type { ConversationConnection } from '../types/conversation-connection';
 import { startCall } from '../utils/start-conversation';
 
 // A Session's title as the Sessions list reads it; none until it loads, or without a Session.
@@ -22,7 +22,7 @@ export function useSessionTitle(
 
 const nothingToResume = (): void => {};
 
-type Start = (input: VoiceStartInput) => Promise<{ answer: string }>;
+type Start = (input: ConversationStartInput) => Promise<{ answer: string }>;
 
 interface Placing {
   start: Start;
@@ -55,7 +55,7 @@ function sendWhileWanted(
 // The placed call gives way once the status has been read again: to the Server's call, or to nothing if it failed.
 async function placeCall(
   sessionId: string,
-  connection: VoiceConnection | null,
+  connection: ConversationConnection | null,
   placing: Placing,
 ): Promise<void> {
   await startCall(connection, {
@@ -69,9 +69,9 @@ async function placeCall(
 function usePlacing(resumeFeed: () => void): Placing {
   const trpc = useTRPC();
   const cache = useQueryClient();
-  const start = useMutation(trpc.voice.start.mutationOptions());
-  const end = useMutation(trpc.voice.end.mutationOptions());
-  const queryKey = trpc.voice.status.queryKey();
+  const start = useMutation(trpc.conversation.start.mutationOptions());
+  const end = useMutation(trpc.conversation.end.mutationOptions());
+  const queryKey = trpc.conversation.status.queryKey();
 
   return {
     start: start.mutateAsync,
@@ -86,7 +86,7 @@ function usePlacing(resumeFeed: () => void): Placing {
  * pressed, and the microphone, the offer and the Server's start follow; then the page's Feed resumes (see `startCall`).
  */
 export function useStartCall(
-  connection: VoiceConnection | null,
+  connection: ConversationConnection | null,
   resumeFeed: () => void = nothingToResume,
 ): (sessionId: string) => void {
   const placing = usePlacing(resumeFeed);

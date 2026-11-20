@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { ComposerVoice } from '#features/composer';
-import { voicePlaceholder } from './session-conversation';
+import type { ComposerConversation } from '#features/composer';
+import { conversationPlaceholder } from './session-conversation';
 
 const noop = (): void => {};
 
@@ -12,7 +12,7 @@ const mutes = {
 };
 
 describe('the Composer field during a call', () => {
-  it.each<[string, ComposerVoice | undefined, string | undefined]>([
+  it.each<[string, ComposerConversation | undefined, string | undefined]>([
     ['connecting', { kind: 'connecting', onEnd: noop }, 'Connecting…'],
     [
       'connected',
@@ -23,6 +23,6 @@ describe('the Composer field during a call', () => {
     ['absent', undefined, undefined],
     ['elsewhere', { kind: 'elsewhere', title: 'T', onOpen: noop }, undefined],
   ])('is %s -> %s', (_name, voice, expected) => {
-    expect(voicePlaceholder(voice)).toBe(expected);
+    expect(conversationPlaceholder(voice)).toBe(expected);
   });
 });

@@ -1,17 +1,17 @@
-export { voiceCallMachine, voiceCallSystemId } from './conversation.machine';
+export { conversationMachine, conversationSystemId } from './conversation.machine';
 
-export type { VoiceCallInput } from './conversation-types';
+export type { ConversationInput } from './conversation-types';
 
-export { defaultVoiceProvider, sessionBriefing } from './engine-input';
+export { defaultConversationProvider, sessionBriefing } from './engine-input';
 
-export type { VoiceProvider } from './provider';
+export type { ConversationProvider } from './provider';
 
-export { createVoiceRouter } from './router';
+export { createConversationRouter } from './router';
 
-export { noVoiceCalls } from './no-conversations';
+export { noConversations } from './no-conversations';
 
-export { VoiceCalls, type VoiceCallsPort } from './conversations';
+export { Conversations, type ConversationsPort } from './conversations';
 
-export { VoiceSettingsStore } from './conversation-settings';
+export { ConversationSettingsStore } from './conversation-settings';
 
-export { voiceSessions } from './conversation-sessions';
+export { conversationSessions } from './conversation-sessions';

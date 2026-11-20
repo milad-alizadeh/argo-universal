@@ -1,4 +1,4 @@
-import type { VoiceCallEnd } from '@repo/contracts';
+import type { ConversationEnd } from '@repo/contracts';
 import {
   assertEvent,
   assign,
@@ -22,12 +22,12 @@ import {
   runningCall,
   type RunningCall,
   type StartRefusal,
-  type VoiceCallContext,
-  type VoiceCallEvent,
-  type VoiceCallInput,
+  type ConversationContext,
+  type ConversationEvent,
+  type ConversationInput,
 } from './conversation-types';
 import { watchConnection, watchSession } from './conversation-watchers';
-import type { VoiceConnectionStatus, VoiceProviderEvent } from './provider';
+import type { ConversationConnectionStatus, ConversationProviderEvent } from './provider';
 import { providerCall, type ProviderCallInput } from './provider-call';
 import { detachedSessions } from './session-link';
 import {
@@ -41,40 +41,40 @@ import {
 } from './transcript';
 
 /*
- * The Voice call's lifecycle (ADR-0064): one machine for the one call a Server runs, attached to one Session for its whole life.
+ * The Conversation's lifecycle (ADR-0064): one machine for the one call a Server runs, attached to one Session for its whole life.
  * It is not part of the Session machine or the Agent machine; it watches its Session and the App's Connection from outside.
  * Provider events other than the connection's own pass through `provider.event` for the transcript, request and usage work that builds on this.
  */
 
-export const voiceCallSystemId = 'voice';
+export const conversationSystemId = 'conversation';
 
 const reportsStatus =
-  (status: VoiceConnectionStatus) =>
-  (event: VoiceProviderEvent): boolean =>
+  (status: ConversationConnectionStatus) =>
+  (event: ConversationProviderEvent): boolean =>
     event.type === 'status' && event.status === status;
 
 const isConnectedStatus = reportsStatus('connected');
 
 const isDisconnectedStatus = reportsStatus('disconnected');
 
-const isErrorStatus = (event: VoiceProviderEvent): boolean =>
+const isErrorStatus = (event: ConversationProviderEvent): boolean =>
   event.type === 'status' && event.status === 'error';
 
-const isErrorClose = (event: VoiceProviderEvent): boolean =>
+const isErrorClose = (event: ConversationProviderEvent): boolean =>
   event.type === 'closed' && event.reason === 'error';
 
 // The most notes a call keeps for its log line; older ones fall away.
 const trailLength = 10;
 
-function providerEventOf(event: VoiceCallEvent): VoiceProviderEvent {
+function providerEventOf(event: ConversationEvent): ConversationProviderEvent {
   assertEvent(event, 'provider.event');
 
   return event.event;
 }
 
-type CallStartEvent = Extract<VoiceCallEvent, { type: 'call.start' }>;
+type CallStartEvent = Extract<ConversationEvent, { type: 'call.start' }>;
 
-function startOf(event: VoiceCallEvent): CallStartEvent {
+function startOf(event: ConversationEvent): CallStartEvent {
   assertEvent(event, 'call.start');
 
   return event;
@@ -84,18 +84,18 @@ const callIdleMs = (call: RunningCall | null): number =>
   (call?.conduct ?? defaultConduct).idleMs;
 
 // The idle timeout the call started with, unless the Engine was started with one for every call.
-const idleOf = (context: VoiceCallContext): number =>
+const idleOf = (context: ConversationContext): number =>
   context.idleMs ?? callIdleMs(context.call);
 
 // What an ending's notice and log line say of the call: why it failed, and the idle timeout it ran with.
-const endingFactsOf = (context: VoiceCallContext): EndingFacts => ({
+const endingFactsOf = (context: ConversationContext): EndingFacts => ({
   failure: context.failure,
   idleMs: idleOf(context),
 });
 
 // A call that has only been asked for: not answered, not connected, nobody speaking.
 const newCall = (start: CallStartEvent): RunningCall => ({
-  callId: start.callId,
+  conversationId: start.conversationId,
   sessionId: start.sessionId,
   offer: start.offer,
   setup: start.setup,
@@ -113,7 +113,7 @@ const providerFailure = 'The connection to the voice failed.';
 
 // Each provider event, by its type.
 type ProviderEvents = {
-  [Event in VoiceProviderEvent as Event['type']]: Event;
+  [Event in ConversationProviderEvent as Event['type']]: Event;
 };
 
 type Reports = {
@@ -141,7 +141,7 @@ const reports: Reports = {
 };
 
 // Folds what the provider reported about the call into the running call.
-function reported(call: RunningCall, event: VoiceProviderEvent): RunningCall {
+function reported(call: RunningCall, event: ConversationProviderEvent): RunningCall {
   return { ...call, ...reportOf(event.type, event, call) };
 }
 
@@ -160,42 +160,42 @@ const namesCall = (
 ): boolean => sessionId === undefined || sessionId === call?.sessionId;
 
 const finished = (
-  context: VoiceCallContext,
+  context: ConversationContext,
   { reason }: EndParameters,
-): Partial<VoiceCallContext> => {
+): Partial<ConversationContext> => {
   const { call } = context;
 
   return {
     call: null,
-    ended: call && { callId: call.callId, sessionId: call.sessionId, reason },
+    ended: call && { conversationId: call.conversationId, sessionId: call.sessionId, reason },
     partials: [],
     readOut: null,
   };
 };
 
 // The running call as its transcript is kept: where, and whether the voice is reading out a result.
-const hearing = (context: VoiceCallContext): HearingCall => ({
+const hearing = (context: ConversationContext): HearingCall => ({
   ...runningCall(context),
   readOut: context.readOut,
 });
 
-function transcriptOf(event: VoiceCallEvent): TranscriptEvent | undefined {
+function transcriptOf(event: ConversationEvent): TranscriptEvent | undefined {
   const heard = providerEventOf(event);
 
   return isTranscript(heard) ? heard : undefined;
 }
 
-const voiceCallSetup = setup({
+const conversationSetup = setup({
   // SAFETY: XState v5 reads these as type-only declarations; the empty objects are never used as runtime values.
   types: {
-    input: {} as VoiceCallInput,
-    context: {} as VoiceCallContext,
-    events: {} as VoiceCallEvent,
+    input: {} as ConversationInput,
+    context: {} as ConversationContext,
+    events: {} as ConversationEvent,
   },
   delays: { idle: ({ context }): number => idleOf(context) },
   actors: { providerCall, agentRelay, watchSession, watchConnection },
   actions: {
-    begin: assign(({ event }): Partial<VoiceCallContext> => ({
+    begin: assign(({ event }): Partial<ConversationContext> => ({
       call: newCall(startOf(event)),
       ended: null,
       failure: null,
@@ -203,23 +203,23 @@ const voiceCallSetup = setup({
       turnRunning: false,
       readOut: null,
     })),
-    // Records why the start was refused, under its callId, for the one who asked.
+    // Records why the start was refused, under its conversationId, for the one who asked.
     refuseStart: assign(
-      ({ event }, refusal: StartRefusal): Partial<VoiceCallContext> => ({
-        refused: { callId: startOf(event).callId, refusal },
+      ({ event }, refusal: StartRefusal): Partial<ConversationContext> => ({
+        refused: { conversationId: startOf(event).conversationId, refusal },
       }),
     ),
-    answer: assign(({ context, event }): Partial<VoiceCallContext> => {
+    answer: assign(({ context, event }): Partial<ConversationContext> => {
       assertEvent(event, 'call.answered');
 
       return { call: { ...runningCall(context), answer: event.answer } };
     }),
-    attachSessions: assign(({ event }): Partial<VoiceCallContext> => {
+    attachSessions: assign(({ event }): Partial<ConversationContext> => {
       assertEvent(event, 'sessions.attach');
 
       return { sessions: event.sessions };
     }),
-    noteTurns: assign(({ event }): Partial<VoiceCallContext> => {
+    noteTurns: assign(({ event }): Partial<ConversationContext> => {
       assertEvent(event, 'call.turns');
 
       return { turnRunning: event.running };
@@ -253,7 +253,7 @@ const voiceCallSetup = setup({
 
       if (heard) storeTranscript(system, hearing(context), heard);
     },
-    trackPartials: assign(({ context, event }): Partial<VoiceCallContext> => {
+    trackPartials: assign(({ context, event }): Partial<ConversationContext> => {
       const heard = transcriptOf(event);
 
       return heard
@@ -264,24 +264,24 @@ const voiceCallSetup = setup({
         : {};
     }),
     // The relay handed the voice an Agent's result: what the voice says next is a read-out.
-    noteReadOut: assign(({ context, event }): Partial<VoiceCallContext> => {
+    noteReadOut: assign(({ context, event }): Partial<ConversationContext> => {
       assertEvent(event, 'voice.say');
 
       return event.say.kind === 'result'
         ? { readOut: readOutFrom(context.readOut, context.partials) }
         : {};
     }),
-    recordFailure: assign(({ event }): Partial<VoiceCallContext> => {
+    recordFailure: assign(({ event }): Partial<ConversationContext> => {
       assertEvent(event, 'call.failed');
 
       return { failure: event.message };
     }),
     recordProviderFailure: assign({ failure: providerFailure }),
-    foldProvider: assign(({ context, event }): Partial<VoiceCallContext> => ({
+    foldProvider: assign(({ context, event }): Partial<ConversationContext> => ({
       call: reported(runningCall(context), providerEventOf(event)),
     })),
     // The timer starts the first time the call connects and keeps that time through any reconnecting.
-    markStarted: assign(({ context }): Partial<VoiceCallContext> => {
+    markStarted: assign(({ context }): Partial<ConversationContext> => {
       const call = runningCall(context);
 
       return {
@@ -291,7 +291,7 @@ const voiceCallSetup = setup({
         },
       };
     }),
-    foldTurn: assign(({ context, event }): Partial<VoiceCallContext> => {
+    foldTurn: assign(({ context, event }): Partial<ConversationContext> => {
       assertEvent(event, 'session.turn');
 
       return { call: { ...runningCall(context), agentWorking: event.running } };
@@ -334,11 +334,11 @@ type SessionWatchInput = { sessionId: string };
 
 type ConnectionWatchInput = { signal: AbortSignal | undefined };
 
-const idleTarget = '#voiceCall.idle';
+const idleTarget = '#conversation.idle';
 
 type EndingParams =
   | EndParameters
-  | ((args: { event: VoiceCallEvent }) => EndParameters);
+  | ((args: { event: ConversationEvent }) => EndParameters);
 
 type EndingAction = {
   type: 'announceEnd' | 'logEnd' | 'finish';
@@ -352,19 +352,19 @@ const endingWith = (params: EndingParams): EndingAction[] => [
   { type: 'finish', params },
 ];
 
-const endsWith = (reason: VoiceCallEnd): EndingAction[] =>
+const endsWith = (reason: ConversationEnd): EndingAction[] =>
   endingWith({ reason });
 
 // A close the provider reported, with its own reason and words.
-const providerClose = ({ event }: { event: VoiceCallEvent }): EndParameters =>
+const providerClose = ({ event }: { event: ConversationEvent }): EndParameters =>
   closeEndingOf(providerEventOf(event));
 
 // The words the voice said up to a hang-up are kept as any others, unless they are a read-out.
 const lastWordsOf =
   (self: AnyActorRef, call: RunningCall) =>
-  (event: VoiceProviderEvent): void => {
-    // SAFETY: `self` is this machine's own actor, whose snapshot's context is a VoiceCallContext.
-    const { readOut } = (self.getSnapshot() as { context: VoiceCallContext })
+  (event: ConversationProviderEvent): void => {
+    // SAFETY: `self` is this machine's own actor, whose snapshot's context is a ConversationContext.
+    const { readOut } = (self.getSnapshot() as { context: ConversationContext })
       .context;
 
     if (isTranscript(event))
@@ -372,7 +372,7 @@ const lastWordsOf =
   };
 
 const providerInput = (
-  context: VoiceCallContext,
+  context: ConversationContext,
   self: AnyActorRef,
 ): ProviderCallInput => {
   const call = runningCall(context);
@@ -396,9 +396,9 @@ const turnsChanged = {
   actions: 'noteTurns',
 } as const;
 
-export const voiceCallMachine = voiceCallSetup.createMachine({
-  id: 'voiceCall',
-  context: ({ input }): VoiceCallContext => ({
+export const conversationMachine = conversationSetup.createMachine({
+  id: 'conversation',
+  context: ({ input }): ConversationContext => ({
     ...input,
     sessions: detachedSessions,
     call: null,
@@ -558,4 +558,4 @@ export const voiceCallMachine = voiceCallSetup.createMachine({
   },
 });
 
-export type VoiceCallActorRef = ActorRefFrom<typeof voiceCallMachine>;
+export type ConversationActorRef = ActorRefFrom<typeof conversationMachine>;

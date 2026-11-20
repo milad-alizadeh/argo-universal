@@ -1,21 +1,21 @@
-import type { VoiceStatus } from '@repo/contracts';
+import type { ConversationStatus } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { FakeEnvironment } from '../../../../mocks/conversation/fake-conversation-environment';
-import { createWebRtcVoiceConnection } from '../stores/webrtc-conversation-connection';
-import type { VoiceConnection } from '../types/conversation-connection';
+import { createWebRtcConversationConnection } from '../stores/webrtc-conversation-connection';
+import type { ConversationConnection } from '../types/conversation-connection';
 import { followCall } from './follow-conversation';
 import { callIn, statusOf } from './session-conversation.test.mocks';
 
 interface App {
   environment: FakeEnvironment;
-  connection: VoiceConnection;
+  connection: ConversationConnection;
   // Where the statuses the App hears from the Server go.
-  hear: (status: VoiceStatus) => void;
+  hear: (status: ConversationStatus) => void;
 }
 
 function app(): App {
   const environment = new FakeEnvironment();
-  const connection = createWebRtcVoiceConnection(environment);
+  const connection = createWebRtcConversationConnection(environment);
 
   return { environment, connection, hear: followCall(connection) };
 }
@@ -38,7 +38,7 @@ describe("the App's voice connection follows the Server's call", () => {
     await connection.createOffer();
 
     hear(statusOf(callIn('s1')));
-    hear(statusOf(callIn('s1', { orb: 'talking' })));
+    hear(statusOf(callIn('s1', { state: 'talking' })));
 
     expect(environment.microphone.stopped).toBe(false);
   });

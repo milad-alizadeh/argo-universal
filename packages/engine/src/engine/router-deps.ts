@@ -20,7 +20,7 @@ import {
   type SessionSources,
 } from '../sessions';
 import type { SystemDeps } from '../system';
-import { noVoiceCalls, type VoiceCallsPort } from '../conversation';
+import { noConversations, type ConversationsPort } from '../conversation';
 import {
   createFeedSources,
   type FeedSources,
@@ -43,7 +43,7 @@ export type AppRouterDeps = SessionSources &
     sessionTokens: SessionTokens;
     controlToken: string;
     plugins: PluginsRouterDeps;
-    voice: VoiceCallsPort;
+    conversation: ConversationsPort;
     operationWaitClock?: OperationWaitClock;
   };
 
@@ -52,14 +52,14 @@ type EngineSupplied =
   | keyof FeedDeps
   | 'createId'
   | 'userHome'
-  | 'voice'
+  | 'conversation'
   | 'dropAgentConnections'
   | 'sessionConnections'
   | 'installedAgents';
 
 export type AppRouterInput = Omit<AppRouterDeps, EngineSupplied> &
   FeedSourcesInput &
-  Partial<Pick<AppRouterDeps, 'createId' | 'userHome' | 'voice'>> & {
+  Partial<Pick<AppRouterDeps, 'createId' | 'userHome' | 'conversation'>> & {
     acp?: AcpResourceInput;
   };
 
@@ -95,14 +95,14 @@ type AgentSetup = Pick<
   AppRouterDeps,
   | 'createId'
   | 'userHome'
-  | 'voice'
+  | 'conversation'
   | 'dropAgentConnections'
   | 'sessionConnections'
   | 'installedAgents'
 >;
 
-const voiceOf = (input: AppRouterInput): VoiceCallsPort =>
-  input.voice ?? noVoiceCalls;
+const conversationOf = (input: AppRouterInput): ConversationsPort =>
+  input.conversation ?? noConversations;
 
 function createAgentSetup(input: AppRouterInput): AgentSetup {
   const sessionConnections = createSessionConnections(input.sessions);
@@ -115,6 +115,6 @@ function createAgentSetup(input: AppRouterInput): AgentSetup {
     installedAgents: input.sessions.getSnapshot().context.installedAgents,
     createId: input.createId ?? randomUUID,
     userHome: input.userHome ?? homedir(),
-    voice: voiceOf(input),
+    conversation: conversationOf(input),
   };
 }

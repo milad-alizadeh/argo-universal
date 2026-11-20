@@ -1,22 +1,22 @@
 import { randomUUID } from 'node:crypto';
 import type {
-  VoiceAvailability,
-  VoiceEndOutput,
+  ConversationAvailability,
+  ConversationEndOutput,
   VoicePreviewInput,
   VoicePreviewOutput,
-  VoiceStartInput,
-  VoiceStartOutput,
-  VoiceStatus,
+  ConversationStartInput,
+  ConversationStartOutput,
+  ConversationStatus,
 } from '@repo/contracts';
 import { waitFor } from 'xstate';
 import { conductOf } from './conversation-conduct';
-import { voiceCallOf } from './conversation-look';
-import type { VoiceCallEvent } from './conversation-types';
-import type { VoiceCallActorRef } from './conversation.machine';
+import { conversationOf } from './conversation-look';
+import type { ConversationEvent } from './conversation-types';
+import type { ConversationActorRef } from './conversation.machine';
 import { Changes } from './changes';
-import type { VoiceProvider } from './provider';
-import type { VoiceSessions } from './session-link';
-import { noProviderReason, noVoiceCall, unavailable } from './unavailable';
+import type { ConversationProvider } from './provider';
+import type { ConversationSessions } from './session-link';
+import { noProviderReason, noConversation, unavailable } from './unavailable';
 import {
   answerOf,
   endedBetween,
@@ -25,34 +25,34 @@ import {
   type CallSnapshot,
 } from './conversation-answer';
 import { callRunning } from './conversation-room';
-import type { VoiceCallsPort } from './conversations-port';
+import type { ConversationsPort } from './conversations-port';
 import { VoiceChoices } from './voice-choices';
 import { VoiceClipDesk } from './voice-clip-desk';
-import { VoiceDevices } from './conversation-devices';
+import { ConversationDevices } from './conversation-devices';
 import { VoicePreviews } from './voice-previews';
-import type { VoiceSettingsStore } from './conversation-settings';
+import type { ConversationSettingsStore } from './conversation-settings';
 
-export type { VoiceCallsPort } from './conversations-port';
+export type { ConversationsPort } from './conversations-port';
 
-type CallStart = Extract<VoiceCallEvent, { type: 'call.start' }>;
+type CallStart = Extract<ConversationEvent, { type: 'call.start' }>;
 
-type CallEnd = Extract<VoiceCallEvent, { type: 'call.end' }>;
+type CallEnd = Extract<ConversationEvent, { type: 'call.end' }>;
 
 /*
- * The Voice call machine behind its Operations. Whether Voice calls are on and the provider is usable are asked here;
+ * The Conversation machine behind its Operations. Whether Conversations are on and the provider is usable are asked here;
  * whether a start or an end may act on the call, and why not, the machine alone decides when it is sent one.
  */
-export class VoiceCalls implements VoiceCallsPort {
+export class Conversations implements ConversationsPort {
   public readonly choices: VoiceChoices;
-  public readonly devices = new VoiceDevices(
+  public readonly devices = new ConversationDevices(
     () => this.snapshot().context.call?.connection ?? null,
   );
   private readonly previews = new VoicePreviews();
   public readonly previewClips: VoiceClipDesk;
 
   public constructor(
-    private readonly actor: VoiceCallActorRef,
-    store: VoiceSettingsStore,
+    private readonly actor: ConversationActorRef,
+    store: ConversationSettingsStore,
     previewClipsDirectory: string,
   ) {
     this.choices = new VoiceChoices(store, () => this.provider());
@@ -63,13 +63,13 @@ export class VoiceCalls implements VoiceCallsPort {
     );
   }
 
-  public async status(): Promise<VoiceStatus> {
+  public async status(): Promise<ConversationStatus> {
     const snapshot = this.snapshot();
     const { ended, partials } = snapshot.context;
     const { volume, microphoneGain } = this.choices.options();
 
     return {
-      call: voiceCallOf(snapshot),
+      conversation: conversationOf(snapshot),
       ended,
       partials,
       availability: await this.availability(),
@@ -89,29 +89,29 @@ export class VoiceCalls implements VoiceCallsPort {
   }
 
   public async start(
-    input: VoiceStartInput,
+    input: ConversationStartInput,
     connection?: AbortSignal,
-  ): Promise<VoiceStartOutput> {
+  ): Promise<ConversationStartOutput> {
     await this.requireStartable();
     connection?.throwIfAborted();
     this.previews.end();
     const event = await this.callStart(input, connection);
     this.actor.send(event);
-    requireBegun(this.snapshot(), event.callId);
+    requireBegun(this.snapshot(), event.conversationId);
     this.devices.used(connection);
 
-    return answerOf(await waitFor(this.actor, startSettled), event.callId);
+    return answerOf(await waitFor(this.actor, startSettled), event.conversationId);
   }
 
-  public end(sessionId?: string): VoiceEndOutput {
+  public end(sessionId?: string): ConversationEndOutput {
     return {
       ended: this.ends({ type: 'call.end', reason: 'person', sessionId }),
     };
   }
 
-  public hangUp(sessionId?: string): VoiceEndOutput {
+  public hangUp(sessionId?: string): ConversationEndOutput {
     if (!this.ends({ type: 'call.end', reason: 'agent', sessionId }))
-      throw noVoiceCall();
+      throw noConversation();
 
     return { ended: true };
   }
@@ -129,11 +129,11 @@ export class VoiceCalls implements VoiceCallsPort {
     return this.actor.getSnapshot();
   }
 
-  public attach(sessions: VoiceSessions): void {
+  public attach(sessions: ConversationSessions): void {
     this.actor.send({ type: 'sessions.attach', sessions });
   }
 
-  public async *watch(signal: AbortSignal): AsyncGenerator<VoiceStatus> {
+  public async *watch(signal: AbortSignal): AsyncGenerator<ConversationStatus> {
     const changes = new Changes(this.actor, signal, this.choices);
 
     try {
@@ -145,11 +145,11 @@ export class VoiceCalls implements VoiceCallsPort {
     }
   }
 
-  private provider(): VoiceProvider | null {
+  private provider(): ConversationProvider | null {
     return this.snapshot().context.provider;
   }
 
-  private async availability(): Promise<VoiceAvailability> {
+  private async availability(): Promise<ConversationAvailability> {
     const provider = this.provider();
 
     return provider
@@ -158,14 +158,14 @@ export class VoiceCalls implements VoiceCallsPort {
   }
 
   private async callStart(
-    input: VoiceStartInput,
+    input: ConversationStartInput,
     connection?: AbortSignal,
   ): Promise<CallStart> {
     const setup = await this.choices.setup();
 
     return {
       type: 'call.start',
-      callId: randomUUID(),
+      conversationId: randomUUID(),
       ...input,
       setup,
       conduct: conductOf(this.choices.options()),
@@ -173,9 +173,9 @@ export class VoiceCalls implements VoiceCallsPort {
     };
   }
 
-  // Voice calls are on and the provider can be used; the machine decides the rest when it is sent the start.
+  // Conversations are on and the provider can be used; the machine decides the rest when it is sent the start.
   private async requireStartable(): Promise<void> {
-    if (!this.choices.enabled()) throw unavailable('Voice calls are off');
+    if (!this.choices.enabled()) throw unavailable('Conversations are off');
     await this.requireUsable();
   }
 

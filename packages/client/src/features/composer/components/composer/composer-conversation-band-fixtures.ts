@@ -1,11 +1,11 @@
 import { createElement, type ReactNode } from 'react';
-import { VoiceEdgeBand, type VoiceEdgeBandProps } from '#features/conversation';
+import { ConversationEdgeBand, type ConversationEdgeBandProps } from '#features/conversation';
 import type { ComposerMockProps } from '../../../../../mocks/composer-mock';
 import { syntheticVoiceAudio } from '../../../../../mocks/conversation/synthetic-voice-audio';
-import type { ComposerVoiceMutes } from './composer-types';
+import type { ComposerConversationMutes } from './composer-types';
 import {
-  voiceCallComposer,
-  voiceConnectingComposer,
+  conversationComposer,
+  conversationConnectingComposer,
 } from './composer-conversation-fixtures';
 
 type ComposerFixture = Pick<
@@ -19,15 +19,15 @@ const noop = (): void => {};
 const { spectrum } = syntheticVoiceAudio();
 
 const connected = {
-  orb: 'listening',
+  state: 'listening',
   trouble: null,
   microphoneMuted: false,
 } as const;
 
-const band = (call: VoiceEdgeBandProps['call'], elapsed = '2:43'): ReactNode =>
-  createElement(VoiceEdgeBand, { call, elapsed, spectrum });
+const band = (call: ConversationEdgeBandProps['call'], elapsed = '2:43'): ReactNode =>
+  createElement(ConversationEdgeBand, { call, elapsed, spectrum });
 
-const mutes = (microphone: boolean): ComposerVoiceMutes => ({
+const mutes = (microphone: boolean): ComposerConversationMutes => ({
   microphone,
   speaker: false,
   onMicrophone: noop,
@@ -35,10 +35,10 @@ const mutes = (microphone: boolean): ComposerVoiceMutes => ({
 });
 
 const onCall = (
-  call: VoiceEdgeBandProps['call'],
+  call: ConversationEdgeBandProps['call'],
   elapsed?: string,
 ): ComposerFixture => ({
-  ...voiceCallComposer,
+  ...conversationComposer,
   voice: {
     kind: 'connected',
     onEnd: noop,
@@ -49,11 +49,11 @@ const onCall = (
 
 // Connecting: dim dots with one soft pulse crossing them, and no timer until the call connects.
 export const bandConnectingComposer = {
-  ...voiceConnectingComposer,
+  ...conversationConnectingComposer,
   voice: {
     kind: 'connecting',
     onEnd: noop,
-    edge: band({ ...connected, orb: 'none' }),
+    edge: band({ ...connected, state: 'none' }),
   },
 } satisfies ComposerFixture;
 
@@ -62,7 +62,7 @@ export const bandListeningComposer = onCall(connected);
 
 // Talking: the Agent's voice lights the bars from the right, in blue.
 export const bandTalkingComposer = onCall(
-  { ...connected, orb: 'talking' },
+  { ...connected, state: 'talking' },
   '2:51',
 );
 
@@ -74,6 +74,6 @@ export const bandMutedComposer = onCall(
 
 // Reconnecting: warning-coloured dots with a pulse crossing, and the timer keeps counting.
 export const bandReconnectingComposer = onCall(
-  { ...connected, orb: 'none', trouble: 'reconnecting' },
+  { ...connected, state: 'none', trouble: 'reconnecting' },
   '3:14',
 );

@@ -1,9 +1,9 @@
-import { defaultVoiceCallOptions, type VoiceSettings } from '@repo/contracts';
+import { defaultConversationOptions, type ConversationSettings } from '@repo/contracts';
 import type { DeviceMetersState } from '#features/conversation';
-import type { VoiceDevices } from './conversation-devices-section';
+import type { ConversationDevices } from './conversation-devices-section';
 
 // This Device's microphones and speakers, named once the microphone was allowed; the USB microphone is chosen.
-export const namedDevices: VoiceDevices = {
+export const namedDevices: ConversationDevices = {
   microphones: [
     { id: 'mic-built-in', label: 'MacBook Pro Microphone' },
     { id: 'mic-usb', label: 'USB Microphone' },
@@ -18,7 +18,7 @@ export const namedDevices: VoiceDevices = {
 };
 
 // Before the microphone was allowed once, the browser lists devices without names.
-export const unnamedDevices: VoiceDevices = {
+export const unnamedDevices: ConversationDevices = {
   microphones: [
     { id: 'mic-built-in', label: 'Microphone 1' },
     { id: 'mic-usb', label: 'Microphone 2' },
@@ -29,7 +29,7 @@ export const unnamedDevices: VoiceDevices = {
   speaker: null,
 };
 
-export const usableVoice: VoiceSettings = {
+export const usableVoice: ConversationSettings = {
   enabled: true,
   provider: 'gpt-live',
   voice: 'cove',
@@ -47,10 +47,10 @@ export const usableVoice: VoiceSettings = {
   ],
   customVoices: [],
   instructions: '',
-  options: defaultVoiceCallOptions,
+  options: defaultConversationOptions,
 };
 
-export const unusableVoice: VoiceSettings = {
+export const unusableVoice: ConversationSettings = {
   ...usableVoice,
   providers: [
     {
@@ -65,7 +65,7 @@ export const unusableVoice: VoiceSettings = {
   ],
 };
 
-export const stableVoice: VoiceSettings = {
+export const stableVoice: ConversationSettings = {
   ...usableVoice,
   providers: usableVoice.providers.map((provider) => ({
     ...provider,
@@ -74,7 +74,7 @@ export const stableVoice: VoiceSettings = {
 };
 
 // The provider's voices, each described; sample words, not any provider's.
-const describedVoices: VoiceSettings['voices'] = [
+const describedVoices: ConversationSettings['voices'] = [
   { id: 'cove', label: 'Cove', description: 'Calm and even, for long answers' },
   { id: 'juniper', label: 'Juniper', description: 'Bright and quick' },
   { id: 'maple', label: 'Maple', description: 'Warm and low' },
@@ -89,7 +89,7 @@ const pirate = {
 };
 
 // The person's own voices, one of them chosen, and instructions for every call.
-export const customVoices: VoiceSettings = {
+export const customVoices: ConversationSettings = {
   ...usableVoice,
   voice: 'pirate',
   voices: describedVoices,

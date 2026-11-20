@@ -1,6 +1,6 @@
 import type {
   Microphone,
-  VoiceEnvironment,
+  ConversationEnvironment,
   VoicePeer,
   VoicePlayback,
 } from '../types/conversation-environment';
@@ -106,7 +106,7 @@ class BrowserPlayback extends AudioElementPlayback implements VoicePlayback {
     void this.audio.play();
   }
 
-  // The meter reads the stream before the volume, so a silenced voice still moves the orb.
+  // The meter reads the stream before the volume, so a silenced voice still moves the band.
   public level(): number {
     return this.meter.level();
   }
@@ -128,7 +128,7 @@ const playVoice = (
 ): VoicePlayback => new BrowserPlayback(stream, speaker);
 
 // The page's own pieces: the system microphone, a peer connection, and an audio element for the voice.
-export const browserVoiceEnvironment: VoiceEnvironment = {
+export const browserConversationEnvironment: ConversationEnvironment = {
   openMicrophone,
   openSilence: () => new BrowserSilence(),
   createPeer: () => new BrowserPeer(),

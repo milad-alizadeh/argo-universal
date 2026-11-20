@@ -10,7 +10,7 @@ import type { ReactElement } from 'react';
 import { voiceChoices, type VoiceChoice } from './voice-choices';
 import {
   voicePickerCopy as copy,
-  type VoicePageProps,
+  type ConversationPageProps,
 } from './voice-picker-props';
 
 // A popover holds the picker page's plain rows; a pushed page the grouped rows of the Settings around it.
@@ -21,7 +21,7 @@ const listLook = (
 ): typeof fieldPickerPageLook | typeof pageLook =>
   beside ? fieldPickerPageLook : pageLook;
 
-export function VoiceList(props: VoicePageProps): ReactElement {
+export function VoiceList(props: ConversationPageProps): ReactElement {
   const choices = voiceChoices(props.settings, props.query);
 
   return (
@@ -37,7 +37,7 @@ export function VoiceList(props: VoicePageProps): ReactElement {
   );
 }
 
-function choose(props: VoicePageProps, next: readonly string[]): void {
+function choose(props: ConversationPageProps, next: readonly string[]): void {
   const [pressed] = next;
 
   if (pressed === undefined) return;
@@ -46,7 +46,7 @@ function choose(props: VoicePageProps, next: readonly string[]): void {
   props.close();
 }
 
-const selectionOf = (props: VoicePageProps): string[] =>
+const selectionOf = (props: ConversationPageProps): string[] =>
   props.settings.voice ? [props.settings.voice] : [];
 
 /*
@@ -54,7 +54,7 @@ const selectionOf = (props: VoicePageProps): string[] =>
  * page, and the chosen row carries the check. A section the search empties is left out.
  */
 function choiceSection(
-  props: VoicePageProps,
+  props: ConversationPageProps,
   title: string,
   choices: VoiceChoice[],
 ): ReactElement | null {
@@ -62,13 +62,13 @@ function choiceSection(
 
   return choices.length > 0 ? (
     <List.Section key={title} title={title} {...singleChoice(props, select)}>
-      {choices.map((choice) => voiceRow(props, choice))}
+      {choices.map((choice) => conversationRow(props, choice))}
     </List.Section>
   ) : null;
 }
 
 const singleChoice = (
-  props: VoicePageProps,
+  props: ConversationPageProps,
   select: (next: readonly string[]) => void,
 ): Pick<
   React.ComponentProps<typeof List.Section>,
@@ -80,7 +80,7 @@ const singleChoice = (
 });
 
 // The row that adds a custom voice: it leaves the page and opens the empty form.
-const addSection = (props: VoicePageProps): ReactElement => (
+const addSection = (props: ConversationPageProps): ReactElement => (
   <List.Section key="add">
     <ListItem
       id="new-custom-voice"
@@ -94,7 +94,7 @@ const addSection = (props: VoicePageProps): ReactElement => (
   </List.Section>
 );
 
-const voiceRow = (props: VoicePageProps, choice: VoiceChoice): ReactElement => (
+const conversationRow = (props: ConversationPageProps, choice: VoiceChoice): ReactElement => (
   <ListItem
     key={choice.id}
     id={choice.id}
@@ -105,7 +105,7 @@ const voiceRow = (props: VoicePageProps, choice: VoiceChoice): ReactElement => (
   />
 );
 
-type RowProps = VoicePageProps & { choice: VoiceChoice };
+type RowProps = ConversationPageProps & { choice: VoiceChoice };
 
 // Play on every voice, always in the row's last lane; edit before it on the person's own, which leaves for the form.
 function RowActions(props: RowProps): ReactElement {

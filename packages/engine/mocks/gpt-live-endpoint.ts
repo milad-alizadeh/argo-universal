@@ -23,7 +23,7 @@ export type FakeEndpointOptions = {
   linkAccepts?: string[];
   // The SDP answer the call is created with.
   answer?: string;
-  callId?: string;
+  conversationId?: string;
 };
 
 /*
@@ -180,12 +180,12 @@ export class FakeGptLiveEndpoint {
   }
 
   private createdReply(): Reply {
-    const { callId = 'call_1', answer: body = 'v=0 answer' } = this.options;
+    const { conversationId = 'call_1', answer: body = 'v=0 answer' } = this.options;
 
     return {
       status: 201,
       headers: {
-        Location: `/v1/live/${callId}`,
+        Location: `/v1/live/${conversationId}`,
         'Content-Type': 'application/sdp',
       },
       body,

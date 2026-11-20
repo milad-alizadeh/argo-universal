@@ -1,7 +1,7 @@
-import { defaultVoiceCallOptions, type VoiceSettings } from '@repo/contracts';
-import type { VoiceDetailViewProps } from './conversation-detail-view-props';
+import { defaultConversationOptions, type ConversationSettings } from '@repo/contracts';
+import type { ConversationDetailViewProps } from './conversation-detail-view-props';
 
-const nothing: VoiceSettings = {
+const nothing: ConversationSettings = {
   enabled: false,
   provider: null,
   voice: null,
@@ -9,17 +9,17 @@ const nothing: VoiceSettings = {
   voices: [],
   customVoices: [],
   instructions: '',
-  options: defaultVoiceCallOptions,
+  options: defaultConversationOptions,
 };
 
 // What is chosen and offered; nothing until the Server has answered.
-export const settingsOf = (props: VoiceDetailViewProps): VoiceSettings =>
+export const settingsOf = (props: ConversationDetailViewProps): ConversationSettings =>
   props.voice.status === 'loaded' ? props.voice.settings : nothing;
 
-export const waiting = (props: VoiceDetailViewProps): boolean =>
+export const waiting = (props: ConversationDetailViewProps): boolean =>
   props.voice.status !== 'loaded' || props.saving === true;
 
 export const chosenProvider = (
-  settings: VoiceSettings,
-): VoiceSettings['providers'][number] | undefined =>
+  settings: ConversationSettings,
+): ConversationSettings['providers'][number] | undefined =>
   settings.providers.find(({ id }) => id === settings.provider);

@@ -20,7 +20,7 @@ export interface DeviceMeter {
 }
 
 /*
- * Settings › Voice's microphone and speaker meters (Paper "Option D"): the chosen microphone's level while the page is
+ * Settings › Conversation's microphone and speaker meters (Paper "Option D"): the chosen microphone's level while the page is
  * open, and the speaker's short test sound with its level while it plays. It reads the levels about 20 times a second
  * only while one of them sounds, and lets go of both when closed. A microphone that is refused or gone reads nothing.
  */

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { FakeVoiceConnection } from '../../../../mocks/conversation/fake-conversation-connection';
+import { FakeConversationConnection } from '../../../../mocks/conversation/fake-conversation-connection';
 import { startCall } from './start-conversation';
 
 const answered = (): Promise<{ answer: string }> =>
   Promise.resolve({ answer: 'v=0 answer' });
 
 const refused = (): Promise<{ answer: string }> =>
-  Promise.reject(new Error('Voice calls are off'));
+  Promise.reject(new Error('Conversations are off'));
 
 describe('starting a call from a Session page', () => {
   /*
@@ -14,7 +14,7 @@ describe('starting a call from a Session page', () => {
    * opens the Session on the Server, which then starts Turns the page never asked for, so the page resumes its Feed.
    */
   it("resumes the page's Feed once the Server started the call", async () => {
-    const connection = new FakeVoiceConnection();
+    const connection = new FakeConversationConnection();
     const resumed: string[] = [];
 
     await startCall(connection, {
@@ -27,7 +27,7 @@ describe('starting a call from a Session page', () => {
   });
 
   it('resumes it after a refused start too, so the Notice saying why arrives', async () => {
-    const connection = new FakeVoiceConnection();
+    const connection = new FakeConversationConnection();
     const resumed: string[] = [];
 
     await startCall(connection, {
@@ -40,7 +40,7 @@ describe('starting a call from a Session page', () => {
   });
 
   it('leaves the Feed alone when the microphone was refused and nothing was sent', async () => {
-    const connection = new FakeVoiceConnection(
+    const connection = new FakeConversationConnection(
       Promise.reject(new Error('Microphone access is needed to talk.')),
     );
 

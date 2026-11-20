@@ -23,7 +23,7 @@ export interface ComposerDraft {
 }
 
 // The mic and speaker buttons of a connected call: what each holds now and what pressing it asks.
-export interface ComposerVoiceMutes {
+export interface ComposerConversationMutes {
   microphone: boolean;
   speaker: boolean;
   onMicrophone: () => void;
@@ -31,7 +31,7 @@ export interface ComposerVoiceMutes {
 }
 
 // The call runs in another Session: the pointer that names it and takes the person there.
-export interface ComposerVoiceElsewhere {
+export interface ComposerConversationElsewhere {
   kind: 'elsewhere';
   // The Session the call is attached to.
   title: string;
@@ -43,17 +43,17 @@ export interface ComposerVoiceElsewhere {
  * start, End while a call connects or runs here, with the mutes once it is connected, or the pointer to a call in
  * another Session. Absent from the props while there is nothing to offer. Text in the draft still wins: Send.
  */
-export type ComposerVoice =
+export type ComposerConversation =
   | { kind: 'start'; onStart: () => void }
   | { kind: 'connecting'; onEnd: () => void; edge?: ReactNode }
   | {
       kind: 'connected';
       onEnd: () => void;
-      mutes: ComposerVoiceMutes;
+      mutes: ComposerConversationMutes;
       // A drawing of the call along the card's top edge, above the text box.
       edge?: ReactNode;
     }
-  | ComposerVoiceElsewhere;
+  | ComposerConversationElsewhere;
 
 export type SendState =
   | 'stop'
@@ -101,8 +101,8 @@ export interface ComposerProps {
   sending?: boolean;
   disabled?: boolean;
   sendable?: boolean;
-  // Absent where Voice calls are not offered.
-  voice?: ComposerVoice;
+  // Absent where Conversations are not offered.
+  voice?: ComposerConversation;
   error?: string;
   errorKey?: string;
 }
@@ -120,7 +120,7 @@ export interface ComposerLayout {
   configurationInactive: boolean;
   sendState: SendState;
   // The pointer to a call in another Session, while it takes the primary slot instead of a button.
-  callPointer: ComposerVoiceElsewhere | undefined;
+  callPointer: ComposerConversationElsewhere | undefined;
   send: () => void;
   modifiedSend: () => void;
 }

@@ -1,14 +1,14 @@
 import type { VoicePreviewClip } from '@repo/contracts';
 import type {
   Microphone,
-  VoiceEnvironment,
+  ConversationEnvironment,
   VoicePeer,
   VoicePlayback,
   VoiceRecording,
 } from '../../src/features/conversation/types/conversation-environment';
 
 // The connection hands the stream straight to the environment, so a test never reads from it.
-const voiceStream: MediaStream = Object.create(null);
+const conversationStream: MediaStream = Object.create(null);
 
 class FakeMicrophone implements Microphone {
   public stopped = false;
@@ -118,7 +118,7 @@ class FakePeer implements VoicePeer {
   }
 
   public voiceArrives(): void {
-    this.listener?.(voiceStream);
+    this.listener?.(conversationStream);
   }
 
   public close(): void {
@@ -126,7 +126,7 @@ class FakePeer implements VoicePeer {
   }
 }
 
-export class FakeEnvironment implements VoiceEnvironment {
+export class FakeEnvironment implements ConversationEnvironment {
   // Every peer made, oldest first; the latest is `peer`.
   public readonly peers: FakePeer[] = [];
   // Each call opens a new microphone, as the browser does, so the latest one is the call's.

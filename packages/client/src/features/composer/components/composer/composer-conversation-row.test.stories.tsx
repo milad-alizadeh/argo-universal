@@ -5,12 +5,12 @@ import { Composer } from './composer';
 import { microphoneButtonId } from './composer-mute-buttons';
 import { endButtonId } from './composer-primary-action';
 import { bandListeningComposer } from './composer-conversation-band-fixtures';
-import { voiceCallComposer } from './composer-conversation-fixtures';
+import { conversationComposer } from './composer-conversation-fixtures';
 import presentation from './composer-conversation.stories';
 
 // Drawn as the Composer's voice stories draw it, in the Session column, so the row has the width it has there.
 const meta = {
-  title: 'Tests/Composer/Voice/Row',
+  title: 'Tests/Composer/Conversation/Row',
   component: Composer,
   render: presentation.render,
   parameters: presentation.parameters,
@@ -49,7 +49,7 @@ const oneLine = async (canvas: Canvas): Promise<void> => {
 
 // On a phone's call, Mode, the microphone's mute and End share Attach's line rather than wrapping under it.
 export const PhoneCallKeepsOneLine: Story = {
-  args: voiceCallComposer,
+  args: conversationComposer,
   play: async ({ canvas }) => oneLine(canvas),
 };
 

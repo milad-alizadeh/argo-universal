@@ -1,5 +1,5 @@
 import { relayWords } from './relay-words';
-import type { VoiceSessions } from './session-link';
+import type { ConversationSessions } from './session-link';
 
 const stopVerbs = 'stop|cancel|halt';
 
@@ -29,7 +29,7 @@ export const isStopRequest = (words: string): boolean =>
 
 // Cancels the Session's running Turn as the Stop button does, and answers with what the voice is told of it.
 export const stopWork = (
-  sessions: VoiceSessions,
+  sessions: ConversationSessions,
   sessionId: string,
 ): Promise<string> =>
   sessions.stop(sessionId).then(

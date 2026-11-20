@@ -10,8 +10,8 @@ const loudest = 100;
 
 const strongestGain = 200;
 
-// How every Voice call behaves, whichever voice speaks.
-export const VoiceCallOptions = z.strictObject({
+// How every Conversation behaves, whichever voice speaks.
+export const ConversationOptions = z.strictObject({
   filler: z
     .boolean()
     .describe(
@@ -44,15 +44,15 @@ export const VoiceCallOptions = z.strictObject({
     .describe("The microphone's gain as a percentage; 100 leaves it as it is."),
 });
 
-export type VoiceCallOptions = z.infer<typeof VoiceCallOptions>;
+export type ConversationOptions = z.infer<typeof ConversationOptions>;
 
-// Input of `voice.setCallOptions`: what is left out stays.
-export const VoiceCallOptionsChange = VoiceCallOptions.partial();
+// Input of `conversation.setOptions`: what is left out stays.
+export const ConversationOptionsChange = ConversationOptions.partial();
 
-export type VoiceCallOptionsChange = z.infer<typeof VoiceCallOptionsChange>;
+export type ConversationOptionsChange = z.infer<typeof ConversationOptionsChange>;
 
 // What a Server that was never set up uses.
-export const defaultVoiceCallOptions: VoiceCallOptions = {
+export const defaultConversationOptions: ConversationOptions = {
   filler: true,
   opening: '',
   idleSeconds: 300,

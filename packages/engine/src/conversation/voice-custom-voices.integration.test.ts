@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
-import { offer, openVoiceSession, startVoiceEngine } from '#mocks/conversation-engine';
-import { FakeVoiceProvider } from './fake-provider';
+import { offer, openConversationSession, startConversationEngine } from '#mocks/conversation-engine';
+import { FakeConversationProvider } from './fake-provider';
 
 const builtIn = [
   { id: 'first', label: 'First', description: 'Bright and quick' },
@@ -25,9 +25,9 @@ const gone = 'custom-gone';
 
 const callMeSam = 'Call me Sam.';
 
-const withVoices = (): ReturnType<typeof startVoiceEngine> =>
-  startVoiceEngine(
-    new FakeVoiceProvider({ connect: 'manual', voices: builtIn }),
+const withVoices = (): ReturnType<typeof startConversationEngine> =>
+  startConversationEngine(
+    new FakeConversationProvider({ connect: 'manual', voices: builtIn }),
   );
 
 describe('Custom voices', () => {
@@ -74,7 +74,7 @@ describe('Custom voices', () => {
     await host.caller.voice.deleteCustomVoice({ id: saved.id });
 
     expect((await host.caller.voice.listVoices()).voices).toHaveLength(2);
-    expect((await host.caller.voice.getSettings()).voice).toBe('first');
+    expect((await host.caller.conversation.getSettings()).voice).toBe('first');
   });
 
   it('refuses a base voice the provider does not have, and a custom voice that is not there', async () => {
@@ -97,12 +97,12 @@ describe('Custom voices', () => {
   it("gives the next call a custom voice's base voice, its description and the custom instructions", async () => {
     const voice = await withVoices();
     const { host, provider } = voice;
-    const { sessionId } = await openVoiceSession(voice);
+    const { sessionId } = await openConversationSession(voice);
     const saved = await host.caller.voice.saveCustomVoice(pirate);
     await host.caller.voice.setVoice({ voice: saved.id });
-    await host.caller.voice.setInstructions({ instructions: callMeSam });
+    await host.caller.conversation.setInstructions({ instructions: callMeSam });
 
-    await host.caller.voice.start({ sessionId, offer });
+    await host.caller.conversation.start({ sessionId, offer });
 
     expect(provider.call.request).toMatchObject({
       voice: 'second',
@@ -114,16 +114,16 @@ describe('Custom voices', () => {
   it('gives a built-in voice with no style, and no instructions once they are cleared', async () => {
     const voice = await withVoices();
     const { host, provider } = voice;
-    const { sessionId } = await openVoiceSession(voice);
-    await host.caller.voice.setInstructions({ instructions: callMeSam });
-    await host.caller.voice.setInstructions({ instructions: '  ' });
+    const { sessionId } = await openConversationSession(voice);
+    await host.caller.conversation.setInstructions({ instructions: callMeSam });
+    await host.caller.conversation.setInstructions({ instructions: '  ' });
 
-    await host.caller.voice.start({ sessionId, offer });
+    await host.caller.conversation.start({ sessionId, offer });
 
     expect(provider.call.request.voice).toBe('first');
     expect(provider.call.request.style).toBeUndefined();
     expect(provider.call.request.instructions).toBeUndefined();
-    expect((await host.caller.voice.getSettings()).instructions).toBe('');
+    expect((await host.caller.conversation.getSettings()).instructions).toBe('');
   });
 
   it('previews a saved custom voice in its base voice and its style', async () => {
@@ -156,7 +156,7 @@ describe('Custom voices', () => {
     const restarted = await startAcpEngine({
       steps: [],
       restartOver: host.home,
-      voiceProvider: new FakeVoiceProvider({ voices: builtIn }),
+      conversationProvider: new FakeConversationProvider({ voices: builtIn }),
     });
 
     expect((await restarted.caller.voice.listVoices()).voices).toContainEqual({

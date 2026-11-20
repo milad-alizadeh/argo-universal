@@ -1,38 +1,35 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
-import { VoiceCallOptions } from './call-options';
+import { ConversationOptions } from './options';
 import { CustomVoice, VoiceOption } from '../voice/voices';
 
-export * from './call-options';
+export * from './options';
 
 export * from './devices';
 
-export * from '../voice/preview';
 
-export * from '../voice/voices';
+// How far a running Conversation has come: the Conversation provider has the App's offer and answered, then reports the call joined.
+export const ConversationPhase = z.enum(['connecting', 'connected']);
 
-// How far a running Voice call has come: the Voice provider has the App's offer and answered, then reports the call joined.
-export const VoiceCallStatus = z.enum(['connecting', 'connected']);
-
-export type VoiceCallStatus = z.infer<typeof VoiceCallStatus>;
+export type ConversationPhase = z.infer<typeof ConversationPhase>;
 
 // What the call's band shows: the person is heard, the voice talks, the Agent's Turn runs, or the call has no sound to show.
-export const VoiceOrbState = z.enum([
+export const ConversationState = z.enum([
   'listening',
   'talking',
   'thinking',
   'none',
 ]);
 
-export type VoiceOrbState = z.infer<typeof VoiceOrbState>;
+export type ConversationState = z.infer<typeof ConversationState>;
 
 // Trouble the call shows in the band's label instead of a dialog.
-export const VoiceTrouble = z.enum(['reconnecting', 'microphone-blocked']);
+export const ConversationTrouble = z.enum(['reconnecting', 'microphone-blocked']);
 
-export type VoiceTrouble = z.infer<typeof VoiceTrouble>;
+export type ConversationTrouble = z.infer<typeof ConversationTrouble>;
 
-// Why a Voice call stopped (ADR-0064).
-export const VoiceCallEnd = z.enum([
+// Why a Conversation stopped (ADR-0064).
+export const ConversationEnd = z.enum([
   'person',
   'agent',
   'idle',
@@ -45,25 +42,25 @@ export const VoiceCallEnd = z.enum([
   'failed',
 ]);
 
-export type VoiceCallEnd = z.infer<typeof VoiceCallEnd>;
+export type ConversationEnd = z.infer<typeof ConversationEnd>;
 
-const voiceSessionId = sessionColumns.shape.id;
+const conversationSessionId = sessionColumns.shape.id;
 
 // The provider's allowance, reported while the call runs: how much is left as a fraction from 0 to 1.
-export const VoiceLimit = z.strictObject({
+export const ConversationLimit = z.strictObject({
   remaining: z.number().min(0).max(1),
   resetsAt: z.string().min(1).optional(),
 });
 
-export type VoiceLimit = z.infer<typeof VoiceLimit>;
+export type ConversationLimit = z.infer<typeof ConversationLimit>;
 
-// The one Voice call a Server runs, and the Session it is attached to for its whole life.
-export const VoiceCall = z.strictObject({
-  callId: z.string().min(1),
-  sessionId: voiceSessionId,
-  status: VoiceCallStatus,
-  orb: VoiceOrbState,
-  trouble: VoiceTrouble.nullable(),
+// The one Conversation a Server runs, and the Session it is attached to for its whole life.
+export const Conversation = z.strictObject({
+  conversationId: z.string().min(1),
+  sessionId: conversationSessionId,
+  status: ConversationPhase,
+  state: ConversationState,
+  trouble: ConversationTrouble.nullable(),
   startedAt: z
     .string()
     .min(1)
@@ -72,25 +69,25 @@ export const VoiceCall = z.strictObject({
       'When the call first connected, as a date and time; null until then.',
     ),
   // Set once the provider reports its allowance running low; absent until then.
-  limit: VoiceLimit.optional(),
+  limit: ConversationLimit.optional(),
 });
 
-export type VoiceCall = z.infer<typeof VoiceCall>;
+export type Conversation = z.infer<typeof Conversation>;
 
-// Whether the Voice provider can start a call now, and if not, why.
-export const VoiceAvailability = z.discriminatedUnion('usable', [
+// Whether the Conversation provider can start a call now, and if not, why.
+export const ConversationAvailability = z.discriminatedUnion('usable', [
   z.strictObject({ usable: z.literal(true) }),
   z.strictObject({ usable: z.literal(false), reason: z.string().min(1) }),
 ]);
 
-export type VoiceAvailability = z.infer<typeof VoiceAvailability>;
+export type ConversationAvailability = z.infer<typeof ConversationAvailability>;
 
 export const VoiceSpeaker = z.enum(['person', 'voice']);
 
 export type VoiceSpeaker = z.infer<typeof VoiceSpeaker>;
 
 // Words that may still change: live state of the running call, never a stored Feed row. A final transcript replaces it.
-export const VoicePartial = z.strictObject({
+export const ConversationPartial = z.strictObject({
   speaker: VoiceSpeaker,
   id: z.string().min(1),
   rowId: z
@@ -102,93 +99,93 @@ export const VoicePartial = z.strictObject({
   text: z.string(),
 });
 
-export type VoicePartial = z.infer<typeof VoicePartial>;
+export type ConversationPartial = z.infer<typeof ConversationPartial>;
 
 // What the App draws its Composer from: the running call, how the last one ended, and whether a new one can start.
-export const VoiceStatus = z.strictObject({
-  call: VoiceCall.nullable(),
+export const ConversationStatus = z.strictObject({
+  conversation: Conversation.nullable(),
   ended: z
     .strictObject({
-      callId: z.string().min(1),
-      sessionId: voiceSessionId,
-      reason: VoiceCallEnd,
+      conversationId: z.string().min(1),
+      sessionId: conversationSessionId,
+      reason: ConversationEnd,
     })
     .nullable(),
-  availability: VoiceAvailability,
-  // Whether the person keeps Voice calls on; with them off no Composer offers the voice button.
+  availability: ConversationAvailability,
+  // Whether the person keeps Conversations on; with them off no Composer offers the voice button.
   enabled: z.boolean(),
   // What is being said now, at most one per speaker; drawn at the tail of the call's Session's Feed.
-  partials: z.array(VoicePartial),
+  partials: z.array(ConversationPartial),
   // The App plays the voice this loud and sends the microphone at this gain, a running call included.
-  volume: VoiceCallOptions.shape.volume,
-  microphoneGain: VoiceCallOptions.shape.microphoneGain,
+  volume: ConversationOptions.shape.volume,
+  microphoneGain: ConversationOptions.shape.microphoneGain,
 });
 
-export type VoiceStatus = z.infer<typeof VoiceStatus>;
+export type ConversationStatus = z.infer<typeof ConversationStatus>;
 
-// Input of `voice.start`: the App's connection offer for the Session the call speaks for.
-export const VoiceStartInput = z.strictObject({
-  sessionId: voiceSessionId,
+// Input of `conversation.start`: the App's connection offer for the Session the call speaks for.
+export const ConversationStartInput = z.strictObject({
+  sessionId: conversationSessionId,
   offer: z.string().min(1).describe("The App's connection offer."),
 });
 
-export type VoiceStartInput = z.infer<typeof VoiceStartInput>;
+export type ConversationStartInput = z.infer<typeof ConversationStartInput>;
 
-// Output of `voice.start`: the connection answer the App completes its connection with.
-export const VoiceStartOutput = z.strictObject({
-  callId: z.string().min(1),
+// Output of `conversation.start`: the connection answer the App completes its connection with.
+export const ConversationStartOutput = z.strictObject({
+  conversationId: z.string().min(1),
   answer: z.string().min(1),
 });
 
-export type VoiceStartOutput = z.infer<typeof VoiceStartOutput>;
+export type ConversationStartOutput = z.infer<typeof ConversationStartOutput>;
 
-// Input of `voice.end`: the calling Session's Voice call unless the params name another Session.
-export const VoiceEndInput = z.strictObject({
-  sessionId: voiceSessionId
+// Input of `conversation.end`: the calling Session's Conversation unless the params name another Session.
+export const ConversationEndInput = z.strictObject({
+  sessionId: conversationSessionId
     .optional()
     .describe(
-      'The Session whose Voice call ends; the calling Session when left out.',
+      'The Session whose Conversation ends; the calling Session when left out.',
     ),
 });
 
-export type VoiceEndInput = z.infer<typeof VoiceEndInput>;
+export type ConversationEndInput = z.infer<typeof ConversationEndInput>;
 
-export const VoiceEndOutput = z.strictObject({ ended: z.boolean() });
+export const ConversationEndOutput = z.strictObject({ ended: z.boolean() });
 
-export type VoiceEndOutput = z.infer<typeof VoiceEndOutput>;
+export type ConversationEndOutput = z.infer<typeof ConversationEndOutput>;
 
-// A Voice provider the Server lists, and whether it can be used now.
-export const VoiceProviderOption = z.strictObject({
+// A Conversation provider the Server lists, and whether it can be used now.
+export const ConversationProviderOption = z.strictObject({
   id: z.string().min(1),
   label: z.string().min(1),
   experimental: z.boolean(),
-  availability: VoiceAvailability,
+  availability: ConversationAvailability,
 });
 
-export type VoiceProviderOption = z.infer<typeof VoiceProviderOption>;
+export type ConversationProviderOption = z.infer<typeof ConversationProviderOption>;
 
 /*
- * Settings › Voice: what the person chose, and what they can choose from. `provider` and `voice` are null while the
+ * Settings › Conversation: what the person chose, and what they can choose from. `provider` and `voice` are null while the
  * Server has no provider; `voice` is a built-in voice's id or a custom voice's.
  */
-export const VoiceSettings = z.strictObject({
+export const ConversationSettings = z.strictObject({
   enabled: z.boolean(),
   provider: z.string().min(1).nullable(),
   voice: z.string().min(1).nullable(),
-  providers: z.array(VoiceProviderOption),
+  providers: z.array(ConversationProviderOption),
   voices: z.array(VoiceOption),
   customVoices: z.array(CustomVoice),
   instructions: z.string(),
-  options: VoiceCallOptions,
+  options: ConversationOptions,
 });
 
-export type VoiceSettings = z.infer<typeof VoiceSettings>;
+export type ConversationSettings = z.infer<typeof ConversationSettings>;
 
-// What `voice.setSettings` changes; what is left out stays.
-export const VoiceSettingsChange = z.strictObject({
+// What `conversation.setSettings` changes; what is left out stays.
+export const ConversationSettingsChange = z.strictObject({
   enabled: z.boolean().optional(),
   provider: z.string().min(1).optional(),
   voice: z.string().min(1).optional(),
 });
 
-export type VoiceSettingsChange = z.infer<typeof VoiceSettingsChange>;
+export type ConversationSettingsChange = z.infer<typeof ConversationSettingsChange>;

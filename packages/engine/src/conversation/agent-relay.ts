@@ -1,5 +1,5 @@
 import {
-  readVoiceSections,
+  readConversationSections,
   withVoiceInstruction,
   type VoiceMessage,
 } from '../feed';
@@ -11,7 +11,7 @@ import { relayWords } from './relay-words';
 import type {
   PromptOutcome,
   SessionHappening,
-  VoiceSessions,
+  ConversationSessions,
 } from './session-link';
 import { isStopRequest, stopWork } from './spoken-stop';
 import {
@@ -34,7 +34,7 @@ type TurnMemory = { resultSent: boolean; last: string | null };
 const freshTurn = (): TurnMemory => ({ resultSent: false, last: null });
 
 /*
- * One Voice call's go-between for its Session (ADR-0064): what the person asks for becomes a Prompt, and what the Agent
+ * One Conversation's go-between for its Session (ADR-0064): what the person asks for becomes a Prompt, and what the Agent
  * says, and when its Turn ends or fails, goes back to the voice. Tool output never does.
  */
 export class AgentRelay {
@@ -45,7 +45,7 @@ export class AgentRelay {
   private readonly permission = new WaitingPermission();
 
   public constructor(
-    private readonly sessions: VoiceSessions,
+    private readonly sessions: ConversationSessions,
     private readonly call: RelayCall,
     private readonly reports: RelayReports,
   ) {}
@@ -169,7 +169,7 @@ export class AgentRelay {
 
   // Analysis stays silent, so the voice is never told it.
   private agentSaid(text: string): void {
-    for (const section of readVoiceSections(text))
+    for (const section of readConversationSections(text))
       if (section.kind !== 'analysis') {
         this.pass(section);
         this.remember(section);

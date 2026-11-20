@@ -13,7 +13,7 @@ import { useState, type ReactElement } from 'react';
 import { chosenVoiceLabel } from './voice-choices';
 import {
   voicePickerCopy,
-  type VoicePageProps,
+  type ConversationPageProps,
   type VoicePickerProps,
 } from './voice-picker-props';
 import { VoiceList } from './voice-picker-rows';
@@ -54,7 +54,7 @@ const searchOf = (typed: Typed): DrillProps['search'] => ({
 });
 
 /*
- * The Voice row and the voices it opens (Paper "2 · Picker", option A): a search over names and descriptions, the
+ * The Conversation row and the voices it opens (Paper "2 · Picker", option A): a search over names and descriptions, the
  * person's voices with play and edit, a row to add one, then the provider's voices with play. A desktop window opens
  * them in a popover under the row; a phone pushes them as a page with the search in its header.
  */
@@ -75,7 +75,7 @@ const pageOf = (
   typed: Typed,
   inHeader: boolean,
 ): ReactElement => (
-  <VoicePage
+  <ConversationPage
     {...props}
     query={typed.query}
     onQueryChange={inHeader ? undefined : typed.setQuery}
@@ -83,7 +83,7 @@ const pageOf = (
 );
 
 // The search above the rows, inset as the picker's own page is; a pushed page's header holds it instead.
-const pageSearch = (props: VoicePageProps): ReactElement | null =>
+const pageSearch = (props: ConversationPageProps): ReactElement | null =>
   props.onQueryChange ? (
     <FieldPickerPageSearch
       title="voices"
@@ -92,7 +92,7 @@ const pageSearch = (props: VoicePageProps): ReactElement | null =>
     />
   ) : null;
 
-function VoicePage(props: VoicePageProps): ReactElement {
+function ConversationPage(props: ConversationPageProps): ReactElement {
   return (
     <FieldPickerPageFrame search={pageSearch(props)} footer={null}>
       <ListPlaceContext value={choosingPlace(useListPlace())}>

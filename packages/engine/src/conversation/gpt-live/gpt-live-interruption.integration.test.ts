@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { interruptedCall } from '#mocks/gpt-live-interruption-frames';
 import { heard, startedCall, type GptLiveFixture } from '#mocks/gpt-live-setup';
-import type { VoiceProviderEvent } from '../provider';
+import type { ConversationProviderEvent } from '../provider';
 import { isTranscript, type TranscriptEvent } from '../transcript';
 
 let fixture: GptLiveFixture | undefined;
@@ -12,7 +12,7 @@ afterEach(async () => {
 });
 
 // A started call that has been sent `frames`, with everything it reported.
-async function replayed(frames: string[]): Promise<VoiceProviderEvent[]> {
+async function replayed(frames: string[]): Promise<ConversationProviderEvent[]> {
   const started = await startedCall();
   fixture = started;
   const events = heard(started.call);
@@ -34,14 +34,14 @@ const finalIn = (event: TranscriptEvent): Said[] =>
       ]
     : [];
 
-const saidIn = (event: VoiceProviderEvent): Said[] => {
+const saidIn = (event: ConversationProviderEvent): Said[] => {
   if (event.type === 'closed') return [{ speaker: 'closed', text: '' }];
 
   return isTranscript(event) ? finalIn(event) : [];
 };
 
 // What became a final row, and the call closing, in the order reported.
-const saidOf = (events: VoiceProviderEvent[]): Said[] => events.flatMap(saidIn);
+const saidOf = (events: ConversationProviderEvent[]): Said[] => events.flatMap(saidIn);
 
 const voiceTurn = 'turn_EloGjCCjDx5JEFpanncDe';
 

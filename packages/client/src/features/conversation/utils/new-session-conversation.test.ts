@@ -1,7 +1,7 @@
-import type { VoiceStatus } from '@repo/contracts';
+import type { ConversationStatus } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import type { ComposerVoice } from '#features/composer';
-import { newSessionVoice } from './session-conversation';
+import type { ComposerConversation } from '#features/composer';
+import { newSessionConversation } from './session-conversation';
 import {
   callIn,
   inputOf,
@@ -12,10 +12,10 @@ import {
 
 // New Session has no Session yet, so a running call is always in another one.
 const newSession = (
-  status: VoiceStatus,
+  status: ConversationStatus,
   asked: Asked = [],
-): ComposerVoice | undefined =>
-  newSessionVoice(inputOf(status, 'no-session-yet', asked));
+): ComposerConversation | undefined =>
+  newSessionConversation(inputOf(status, 'no-session-yet', asked));
 
 describe("New Session's voice slot", () => {
   it('offers the voice button while no call runs and the provider is usable, and starts as asked', () => {
@@ -28,7 +28,7 @@ describe("New Session's voice slot", () => {
     expect(asked).toEqual(['start']);
   });
 
-  it('offers nothing while Voice calls are off or the provider is not usable', () => {
+  it('offers nothing while Conversations are off or the provider is not usable', () => {
     const unusable = statusOf(null, {
       availability: { usable: false, reason: 'No' },
     });

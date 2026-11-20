@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   controlsOf,
-  type VoiceSettingsControls,
+  type ConversationSettingsControls,
 } from './conversation-settings-controls';
 
-type Recorded = { asked: string[]; controls: VoiceSettingsControls };
+type Recorded = { asked: string[]; controls: ConversationSettingsControls };
 
 // What the page asked of the App, in order.
 function recorded(): Recorded {
@@ -35,7 +35,7 @@ const pirate = {
   description: 'Speaks like a pirate.',
 };
 
-describe('Voice settings controls', () => {
+describe('Conversation settings controls', () => {
   it('keeps a picked voice for the next call and plays its greeting', () => {
     const { asked, controls } = recorded();
 
@@ -44,7 +44,7 @@ describe('Voice settings controls', () => {
     expect(asked).toEqual(['change:{"voice":"sol"}', 'preview:sol']);
   });
 
-  it('plays nothing when Voice calls or the provider change', () => {
+  it('plays nothing when Conversations or the provider change', () => {
     const { asked, controls } = recorded();
 
     controls.onEnabledChange(false);

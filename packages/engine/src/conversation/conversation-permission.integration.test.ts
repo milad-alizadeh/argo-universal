@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { waitForAcpSnapshot } from '#mocks/acp-feed';
-import { startVoiceWork, type VoiceWork } from '#mocks/conversation-work';
+import { startConversationWork, type ConversationWork } from '#mocks/conversation-work';
 import type { FakeVoiceMessage } from './fake-provider';
 import { relayWords } from './relay-words';
 
@@ -10,20 +10,20 @@ const runDeploy = 'Run npm run deploy';
 
 const later = 'Then tidy up';
 
-const spokenPermissions = (work: VoiceWork) => (): FakeVoiceMessage[] =>
+const spokenPermissions = (work: ConversationWork) => (): FakeVoiceMessage[] =>
   work.provider.call.sent.filter(
     ({ text }) => text === relayWords.permissionWaiting(runDeploy),
   );
 
 const replyTo =
-  (work: VoiceWork, requestId: string) => (): FakeVoiceMessage | undefined =>
+  (work: ConversationWork, requestId: string) => (): FakeVoiceMessage | undefined =>
     work.provider.call.sent.find(
       (say) => say.kind === 'reply' && say.requestId === requestId,
     );
 
 describe('a Permission request during a call', () => {
   it('is spoken to the person, saying what it is for', async () => {
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: deploy, asksPermission: runDeploy },
     ]);
 
@@ -41,7 +41,7 @@ describe('a Permission request during a call', () => {
   });
 
   it('is spoken once while it waits, however the Session changes', async () => {
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: deploy, asksPermission: runDeploy },
     ]);
 
@@ -65,7 +65,7 @@ describe('a Permission request during a call', () => {
   });
 
   it('is never claimed answered when the person speaks while it waits', async () => {
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: deploy, asksPermission: runDeploy },
     ]);
 
@@ -98,7 +98,7 @@ describe('a Permission request during a call', () => {
   });
 
   it('is answered by a click during a call, after which the voice is not told it waits', async () => {
-    const work = await startVoiceWork([
+    const work = await startConversationWork([
       { prompt: deploy, asksPermission: runDeploy, messages: ['Deployed'] },
       { prompt: later },
     ]);

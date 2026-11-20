@@ -5,7 +5,7 @@ import {
   sessionStartedUntil,
 } from '#mocks/gpt-live-frames';
 import { heard, startedCall, type GptLiveFixture } from '#mocks/gpt-live-setup';
-import type { VoiceProviderEvent } from '../provider';
+import type { ConversationProviderEvent } from '../provider';
 
 let fixture: GptLiveFixture | undefined;
 
@@ -23,10 +23,10 @@ async function startCall(
   return started;
 }
 
-const closedOf = (events: VoiceProviderEvent[]): VoiceProviderEvent[] =>
+const closedOf = (events: ConversationProviderEvent[]): ConversationProviderEvent[] =>
   events.filter(({ type }) => type === 'closed');
 
-const notesOf = (events: VoiceProviderEvent[]): string[] =>
+const notesOf = (events: ConversationProviderEvent[]): string[] =>
   events.flatMap((event) => (event.type === 'trail' ? [event.note] : []));
 
 const inSeconds = (ms: number): number => Math.floor((Date.now() + ms) / 1000);

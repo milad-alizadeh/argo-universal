@@ -1,8 +1,8 @@
-import type { VoiceConnection } from '../types/conversation-connection';
+import type { ConversationConnection } from '../types/conversation-connection';
 
 // A refused microphone means no offer, so no call starts and the Composer stays where it was.
 export const offerTo = (
-  connection: VoiceConnection | null,
+  connection: ConversationConnection | null,
   send: (offer: string) => Promise<void> | void,
 ): Promise<void> | undefined =>
   connection
