@@ -99,11 +99,7 @@ export async function startHttpServer(
   const guard = createRequestGuard(recognisedTokens(setup, options));
   const doors = createDoors(setup, guard);
 
-  const listener = await listenWithPlugins(
-    doors.frontDoor,
-    options.port,
-    setup,
-  );
+  const listener = await listenWithPlugins(doors.frontDoor, bound.port, setup);
 
   bound.port = listener.port();
   setup.localNetworkAccess.useBinding(listener.rebind);

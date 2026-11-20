@@ -1,4 +1,4 @@
-import type { AddressInfo, Server, Socket } from 'node:net';
+import type { Server, Socket } from 'node:net';
 
 const loopbackAddress = '127.0.0.1';
 
@@ -99,7 +99,9 @@ class NetworkListener {
   // Port 0 asks the system for a free port; a later rebind keeps the one it gave.
   public async start(): Promise<void> {
     await listenAt(this.server, this.port, this.address);
-    this.port = (this.server.address() as AddressInfo).port;
+    const bound = this.server.address();
+
+    if (bound !== null && typeof bound === 'object') this.port = bound.port;
   }
 
   public boundPort(): number {

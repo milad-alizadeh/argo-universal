@@ -116,9 +116,13 @@ type Fixture = OpenedStorage & {
 const voiceProviderOf = (scenario: AcpScenario): AcpScenario['voiceProvider'] =>
   scenario.voiceProvider ?? null;
 
+// Turns keep the Mac awake through nothing unless a test supplies its own caffeinate.
+const caffeinateOf = (scenario: AcpScenario): AcpScenario['caffeinate'] =>
+  scenario.caffeinate ?? keepNothingAwake;
+
 // Most tests have Agents that send no Slash command list; they must not wait for one.
 const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({
-  caffeinate: scenario.caffeinate ?? keepNothingAwake,
+  caffeinate: caffeinateOf(scenario),
   operationWaitClock: scenario.operationWaitClock,
   slashCommandsWaitMs: scenario.slashCommandsWaitMs ?? 0,
   argoToolsGraceMs: scenario.argoToolsGraceMs ?? Number.POSITIVE_INFINITY,

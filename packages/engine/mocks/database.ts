@@ -29,16 +29,19 @@ function templateDatabase(): string {
   return file;
 }
 
+const openTemplateCopy = (file: string): Database => {
+  copyFileSync(templateDatabase(), file);
+
+  return openDatabase(file);
+};
+
 // A database in a new temp directory holding `project-1` and its Session `session-1`; `remove` closes and deletes it.
 export function openTestDatabase(
   sessionValues: Partial<typeof session.$inferInsert> = {},
   projectPath = '/project',
 ): TestDatabase {
   const directory = realpathSync(mkdtempSync(join(tmpdir(), 'argo-server-')));
-  const file = join(directory, 'argo.db');
-
-  copyFileSync(templateDatabase(), file);
-  const database = openDatabase(file);
+  const database = openTemplateCopy(join(directory, 'argo.db'));
   insertProject(database, projectPath);
   insertSession(database, sessionValues);
 
