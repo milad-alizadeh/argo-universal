@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
+import { nextFrames } from '#mocks/next-frames';
 import { IconButton } from '#primitives/actions/icon-button';
 import { Fader } from './fader';
 import { verticalFader } from './fader-fixtures';
@@ -78,6 +79,10 @@ async function dragBy(
   share: number,
 ): Promise<void> {
   const fader = slider(canvas);
+
+  // The surface measures itself after its first layout; a drag before that has no length to be a share of.
+  await nextFrames();
+
   const box = fader.getBoundingClientRect();
   const x = box.left + box.width / 2;
   const y = box.top + box.height / 2;
