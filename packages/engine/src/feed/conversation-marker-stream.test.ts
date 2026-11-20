@@ -1,9 +1,12 @@
 import { expect, it } from 'vitest';
 import { VoiceMarkerStream } from './conversation-marker-stream';
 
-// What a reader shows once every chunk has arrived.
-// A word of a long line.
+/* A word of a long line. */
 const word = ' x';
+
+const writing = '[STATUS] Writing';
+
+// What a reader shows once every chunk has arrived.
 
 const shown = (chunks: string[]): string => {
   const stream = new VoiceMarkerStream();
@@ -14,7 +17,7 @@ const shown = (chunks: string[]): string => {
 it('passes the chunks of a long line as they come', () => {
   const stream = new VoiceMarkerStream();
 
-  expect(stream.push('[STATUS] Writing')).toBe('Writing');
+  expect(stream.push(writing)).toBe('Writing');
   expect(stream.push(word)).toBe(word);
   expect(stream.push(word)).toBe(word);
 });
@@ -22,7 +25,7 @@ it('passes the chunks of a long line as they come', () => {
 it('hides the mark of a line that follows a long line', () => {
   expect(
     shown([
-      '[STATUS] Writing',
+      writing,
       ...Array.from({ length: 2000 }, () => word),
       ' done.\n[COMP',
       'LETE] Done.',
@@ -43,7 +46,7 @@ it('gives out each character once after an opening mark and blank lines', () => 
 it('keeps analysis silent around a long line that passes as it comes', () => {
   expect(
     shown([
-      '[STATUS] Writing',
+      writing,
       ' a',
       ' b\n[ANALY',
       'SIS] the plan',
