@@ -92,8 +92,11 @@ export const ChoosesTheSystemMicrophoneAgain: Story = {
 };
 
 export const SaysNamesAppearAfterTheFirstConversation: Story = {
-  args: { devices: unnamedDevices },
+  args: { devices: unnamedDevices, meters: idleMeters },
   play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole('button', { name: 'Play a test sound' }),
+    ).toBeVisible();
     await expect(canvas.getByText(/names appear/i)).toBeVisible();
     await expect(canvas.getByRole('button', microphone)).toHaveTextContent(
       systemDefault,

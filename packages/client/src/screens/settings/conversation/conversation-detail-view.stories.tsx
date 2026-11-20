@@ -31,6 +31,7 @@ const meta = {
   args: {
     voice: { status: 'loaded', settings: usableVoice },
     adjustsGain: true,
+    meters: idleMeters,
     onEnabledChange: action('turn Conversations on or off'),
     onProviderChange: action('choose the Conversation provider'),
     onVoiceChange: action('choose the voice'),
@@ -128,7 +129,7 @@ export const Disconnected: Story = {
   args: { voice: { status: 'disconnected' } },
 };
 
-// Where the App holds the call: the desktop App chooses its microphone and speaker.
+// Paper "Option D", where the App holds the call: each device's level after its name, and the Speaker's test sound at the row's end.
 export const MicrophoneAndSpeaker: Story = { args: { devices: namedDevices } };
 
 // Before the microphone was allowed once, the browser has not named its devices.
@@ -136,11 +137,6 @@ export const UnnamedDevices: Story = { args: { devices: unnamedDevices } };
 
 export const ChangeError: Story = {
   args: { error: 'There is no voice nobody' },
-};
-
-// Paper "Option D": each device's level after its name, and the Speaker's test sound at the row's end.
-export const MetersIdle: Story = {
-  args: { devices: namedDevices, meters: idleMeters },
 };
 
 export const MicrophoneMidSpeech: Story = {
