@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
-import { cdp } from 'vitest/browser';
+import { reduceMotion } from '#mocks/reduced-motion';
 import { settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
@@ -47,15 +47,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const ReducedMotionClosesInOneStep: Story = {
-  beforeEach: async () => {
-    await cdp().send('Emulation.setEmulatedMedia', {
-      features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
-    });
-
-    return async (): Promise<void> => {
-      await cdp().send('Emulation.setEmulatedMedia', { features: [] });
-    };
-  },
+  beforeEach: reduceMotion,
   play: async ({ canvas }) => {
     await settleLayout('wide');
     const trigger = canvas.getByRole('button', { name: toggle });
