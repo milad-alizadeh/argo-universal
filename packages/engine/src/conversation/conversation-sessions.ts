@@ -1,33 +1,20 @@
 import { randomUUID } from 'node:crypto';
-import type { FeedSubscribeOutput, FeedUpdate } from '@repo/contracts';
-import type { PendingPermission } from '@repo/contracts';
-import type { FeedDeps, FeedEvent } from '../feed';
+import type { FeedUpdate } from '@repo/contracts';
+import type { FeedEvent } from '../feed';
 import type {
   ConversationSessionWork as SessionWork,
   TurnHappening,
 } from '../sessions';
-import { FeedHappenings } from './feed-happenings';
-import { PermissionWatch } from './permission-watch';
-import type { SpokenRequest } from './relay-words';
+import { FeedWatch, type FeedSources, type WatchSources } from './feed-watch';
 import type {
   SessionHappening,
   ConversationNotice,
   ConversationSessions,
 } from './session-link';
-import { askedToolRow, spokenRequest } from './spoken-request';
-
-type FeedSources = Pick<FeedDeps, 'findFeed' | 'watchSessionSnapshot'>;
-
-type FeedActor = NonNullable<ReturnType<FeedSources['findFeed']>>;
+import { StartedAgents } from './started-agents';
+import { StartedSessions } from './started-watch';
 
 type Listener = (happening: SessionHappening) => void;
-
-type Stoppable = { unsubscribe: () => void };
-
-type SnapshotEvent = Extract<
-  FeedSubscribeOutput,
-  { type: 'snapshot' | 'closed' }
->;
 
 // What the Conversation reaches its Session's work through: the Engine's own Sessions, and a picture of the screen.
 export type ConversationSessionWork = Pick<
@@ -36,78 +23,10 @@ export type ConversationSessionWork = Pick<
   | 'stopFromConversation'
   | 'answerFromConversation'
   | 'watchTurns'
+  | 'watchOpened'
   | 'agentName'
 > &
   Pick<ConversationSessions, 'capture'>;
-
-// The Session a Feed watch listens to, and how it names the Session's Agent.
-type WatchedSession = {
-  sessionId: string;
-  work: Pick<ConversationSessionWork, 'agentName'>;
-};
-
-// Listens to one Session's Feed for the Agent's and the person's words, following it when the Session replaces its Feed actor, and to its Permission requests.
-class FeedWatch {
-  private readonly happenings = new FeedHappenings();
-  private readonly permissions: PermissionWatch;
-  private feed: FeedActor | undefined;
-  private agent = '';
-  private batches: Stoppable | undefined;
-  private readonly snapshots: Stoppable;
-
-  public constructor(
-    private readonly sources: FeedSources,
-    private readonly session: WatchedSession,
-    private readonly listener: Listener,
-  ) {
-    this.permissions = new PermissionWatch(listener, (pending) =>
-      this.describe(pending),
-    );
-    this.follow();
-    this.snapshots = sources.watchSessionSnapshot(session.sessionId, {
-      next: (event): void => this.changed(event),
-    });
-  }
-
-  public stop(): void {
-    this.snapshots.unsubscribe();
-    this.batches?.unsubscribe();
-  }
-
-  private changed(event: SnapshotEvent): void {
-    this.follow();
-
-    if (event.type !== 'snapshot') return;
-    this.agent = event.snapshot.agent;
-    this.permissions.changed(event.snapshot.pendingPermission);
-  }
-
-  private describe(pending: PendingPermission): SpokenRequest {
-    const rows = this.feed?.getSnapshot().context.rows ?? {};
-
-    return spokenRequest(
-      pending,
-      askedToolRow(rows, pending.toolCallId),
-      this.session.work.agentName(this.agent),
-    );
-  }
-
-  private isNew(next: FeedActor | undefined): next is FeedActor {
-    return next !== undefined && next !== this.feed;
-  }
-
-  private follow(): void {
-    const next = this.sources.findFeed(this.session.sessionId);
-
-    if (!this.isNew(next)) return;
-    this.batches?.unsubscribe();
-    this.feed = next;
-    this.batches = next.on('feed.batch', (batch): void => {
-      for (const happening of this.happenings.read(batch.events))
-        this.listener(happening);
-    });
-  }
-}
 
 type NoticeUpdate = Extract<FeedUpdate, { sessionUpdate: 'notice' }>;
 
@@ -141,22 +60,50 @@ const endOf = (happening: TurnHappening): SessionHappening | undefined =>
       }
     : undefined;
 
-// The Agent's words come from the Session's Feed, and each Turn's end from the Session itself.
+// The call's Session's words and Input requests, and the Agents it started, read from its Feed and snapshots.
+function watchWords(
+  sources: WatchSources,
+  sessionId: string,
+  listener: Listener,
+): FeedWatch {
+  const agents = new StartedAgents(listener);
+
+  return new FeedWatch(sources, {
+    sessionId,
+    listener,
+    snapshotted: (snapshot) => agents.changed(snapshot),
+  });
+}
+
+// Each Turn's end, from the Session itself.
+const watchEnds = (
+  work: ConversationSessionWork,
+  sessionId: string,
+  listener: Listener,
+): (() => void) =>
+  work.watchTurns(sessionId, (happening) => {
+    const ended = endOf(happening);
+
+    if (ended) listener(ended);
+  });
+
+/*
+ * The Agent's words come from the Session's Feed, and each Turn's end from the Session itself. The Agents and Sessions
+ * it started are watched as well, so the voice hears when one finishes, fails or waits on the person (ADR-0064).
+ */
 const watchOf =
   (
     sources: FeedSources,
     work: ConversationSessionWork,
   ): ConversationSessions['watch'] =>
   (sessionId, listener) => {
-    const words = new FeedWatch(sources, { sessionId, work }, listener);
-
-    const turns = work.watchTurns(sessionId, (happening) => {
-      const ended = endOf(happening);
-
-      if (ended) listener(ended);
-    });
+    const watching = { ...sources, ...work };
+    const words = watchWords(watching, sessionId, listener);
+    const turns = watchEnds(work, sessionId, listener);
+    const started = new StartedSessions(watching, sessionId, listener);
 
     return (): void => {
+      started.stop();
       turns();
       words.stop();
     };

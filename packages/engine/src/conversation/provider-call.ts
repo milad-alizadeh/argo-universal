@@ -40,6 +40,8 @@ function deliver(call: StartedCall, say: VoiceSay): void {
 class ProviderHold {
   private released = false;
   private call: StartedCall | undefined;
+  // What the voice was told before the provider answered, such as a Started Session already waiting on the person.
+  private readonly early: VoiceSay[] = [];
   private unlisten: (() => void) | undefined;
 
   public constructor(
@@ -56,11 +58,16 @@ class ProviderHold {
       answer: call.answer,
       canLook: call.look !== undefined,
     });
+
+    for (const say of this.early.splice(0)) deliver(call, say);
   }
 
-  // Tells the voice something; a call that is gone hears nothing.
+  // Tells the voice something, once the provider has answered; a call that is gone hears nothing.
   public say(say: VoiceSay): void {
-    if (!this.released && this.call) deliver(this.call, say);
+    if (this.released) return;
+
+    if (this.call) deliver(this.call, say);
+    else this.early.push(say);
   }
 
   public fail(error: Error): void {

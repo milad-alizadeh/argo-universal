@@ -2,6 +2,7 @@ import type { PromptRequest } from '@agentclientprotocol/sdk';
 import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
 import type { FakeConversationProvider } from '../src/conversation/fake-provider';
 import type { startAcpEngine } from './acp-engine';
+import { questionSteps } from './elicitation-steps';
 
 export type Scenario = NonNullable<Parameters<typeof startAcpEngine>[0]>;
 
@@ -21,6 +22,8 @@ export type ConversationAgentReply = {
   fails?: string;
   // Asks permission for a Tool call with this title before its messages, and waits for the answer.
   asksPermission?: string;
+  // Asks the person this question, as an Elicitation, before its messages, and waits for the answer.
+  asks?: string;
 };
 
 // The text in pieces of `size` characters; whole without a size.
@@ -107,6 +110,7 @@ const permissionSteps = (title: string | undefined): ScriptedStep[] =>
 
 const stepsOf = (reply: ConversationAgentReply): ScriptedStep[] => [
   ...permissionSteps(reply.asksPermission),
+  ...questionSteps(reply.asks),
   ...toolSteps(reply.toolOutput),
   ...messageSteps(reply.messages ?? [], reply.chunkSize),
   ...endingSteps(reply),

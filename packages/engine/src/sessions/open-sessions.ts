@@ -110,6 +110,10 @@ export class OpenSessions {
       fail('INTERNAL_SERVER_ERROR', `Session ${command.sessionId} did not open`)
     );
   }
+  // The ids of the Sessions open now.
+  public ids(): string[] {
+    return Object.keys(this.actor.getSnapshot().context.sessions);
+  }
   public subscribe(observer: Observer<unknown>): Subscription {
     return this.actor.subscribe(observer);
   }
