@@ -54,26 +54,18 @@ function ComposerEdge({ props }: CardLayout): React.ReactNode {
   return edge ? <EdgeTypography>{edge}</EdgeTypography> : null;
 }
 
+// Keep the editor mounted across widths so crossing the breakpoint preserves keyboard focus.
 function ComposerDraftBody(props: SurfaceProps): React.JSX.Element {
   const scrollWithParent =
     props.phone && props.layout.props.draft.attachments.length > 0;
 
-  const draft = (
-    <>
+  return (
+    <ComposerDraftScroll followsCaret={scrollWithParent}>
       <ComposerAttachments {...props.layout} />
       <ComposerText {...props} field={{ ...props.field, scrollWithParent }} />
-    </>
+    </ComposerDraftScroll>
   );
-
-  return props.phone ? scrollDraft(scrollWithParent, draft) : draft;
 }
-
-const scrollDraft = (
-  followsCaret: boolean,
-  draft: React.ReactNode,
-): React.JSX.Element => (
-  <ComposerDraftScroll followsCaret={followsCaret}>{draft}</ComposerDraftScroll>
-);
 
 export function ComposerSurface(props: SurfaceProps): React.JSX.Element {
   return (

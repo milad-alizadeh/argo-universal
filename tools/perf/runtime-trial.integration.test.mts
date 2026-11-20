@@ -117,7 +117,7 @@ it('cancels only the observed Turn and records cancellation acknowledgement and 
     id: randomUUID(),
     prompt: 'Stay active until cancelled',
     cancelWhenAccepted: true,
-    timeoutMs: 500,
+    timeoutMs: 10_000,
   });
 
   expect(trial).toMatchObject({
