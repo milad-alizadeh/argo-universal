@@ -11,10 +11,7 @@ export { rowDrawing } from './utils/session-row-drawing';
 
 export { usePluginLookup } from './hooks/use-plugin-names';
 
-export {
-  type SentRowItems,
-  useSentRowItems,
-} from './hooks/use-session-row-answers';
+export { useSentRowItems } from './hooks/use-session-row-answers';
 
 export { useSessionRowPlugins } from './hooks/use-session-row-plugins';
 

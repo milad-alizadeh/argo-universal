@@ -30,7 +30,7 @@ const pullRequestArgs: Story['args'] = {
 
 const rowName = { name: `${session.title}, Running, Open Change` };
 
-// The PR's state, without its number; no Plan, activity, metadata or time.
+// The PR's state, without its number; no Plan, metadata or time.
 export const CompactPullRequest: Story = {
   args: pullRequestArgs,
   play: async ({ canvas }) =>
@@ -40,9 +40,6 @@ export const CompactPullRequest: Story = {
       await expect(canvas.getByTestId('session-status')).toBeVisible();
       await expect(canvas.queryByText('12m')).not.toBeInTheDocument();
       await expect(canvas.queryByLabelText(/^Todos:/)).not.toBeInTheDocument();
-      await expect(
-        canvas.queryByText(session.activity),
-      ).not.toBeInTheDocument();
       await expect(canvas.queryByLabelText(/^Agents:/)).not.toBeInTheDocument();
     }),
 };

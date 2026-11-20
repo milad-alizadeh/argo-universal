@@ -1,4 +1,3 @@
-import { SessionPromptInput, SessionPromptOutput } from '../sessions';
 import {
   SessionArchiveInput,
   SessionArchiveOutput,
@@ -7,8 +6,9 @@ import {
 } from '../sessions/archive';
 import { SessionCancelInput, SessionCancelOutput } from '../sessions/cancel';
 import { SessionCloseInput, SessionCloseOutput } from '../sessions/close';
-import { SessionNewInput, SessionNewOutput } from '../sessions/new';
-import { SessionRenameInput, SessionRenameOutput } from '../sessions/rename';
+import { SessionNewOutput, SessionNewParams } from '../sessions/new';
+import { SessionPromptInput, SessionPromptOutput } from '../sessions/prompt';
+import { SessionRenameOutput, SessionRenameParams } from '../sessions/rename';
 import {
   SessionSavePlanInput,
   SessionSavePlanOutput,
@@ -33,7 +33,7 @@ export const sessionOperations = {
     icon: 'new-session',
     description:
       'Start a Session with an Agent, Checkout and optional first prompt. A Session may pass the `starter` Checkout to run the new Session in its own working tree, uncommitted changes included. A worktree Checkout can name its branch. If that branch is held by a clean unowned linked worktree, the conflict reports its path and offers a retry with checkout.takenBranch.',
-    params: SessionNewInput,
+    params: SessionNewParams,
     result: SessionNewOutput,
     tier: 'act',
     keywords: ['create', 'delegate', 'agent', 'parallel', 'subagent'],
@@ -91,7 +91,7 @@ export const sessionOperations = {
     params: SessionSetConfigOptionInput,
     result: SessionSetConfigOptionOutput,
     tier: 'act',
-    keywords: ['model', 'mode', 'effort', 'configuration'],
+    keywords: ['model', 'mode', 'effort', 'configuration', 'switch'],
   },
   'session.close': {
     id: 'session.close',
@@ -124,7 +124,7 @@ export const sessionOperations = {
     icon: 'rename',
     description:
       'Set the title shown for a Session in the Sessions list and Feed.',
-    params: SessionRenameInput,
+    params: SessionRenameParams,
     result: SessionRenameOutput,
     tier: 'act',
     keywords: ['title', 'name'],

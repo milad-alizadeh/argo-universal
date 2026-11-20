@@ -20,9 +20,7 @@ const meta = {
   args: {
     settings: fixtureSessionBarSlot,
     plugins: { status: 'loaded', plugins: slotPlugins },
-    owner: null,
     onShownChange: fn(),
-    onOwnerChange: fn(),
   },
   beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta<typeof SlotDetailView>;
@@ -39,8 +37,6 @@ function Live(): React.JSX.Element {
     <SlotDetailView
       settings={fixtureSessionBarSlot}
       plugins={{ status: 'loaded', plugins }}
-      owner={null}
-      onOwnerChange={fn()}
       onShownChange={(pluginId, shown) =>
         setPlugins((all) =>
           all.map((plugin) =>
@@ -61,7 +57,7 @@ export const PreviewsACardForEachPlugin: Story = {
   },
 };
 
-// The Session bar has no Single-owner Slot to choose: only a switch per Plugin.
+// The Session bar page has only a switch per Plugin.
 export const HasASwitchPerPluginAndNoOwnerChoice: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getAllByRole('switch')).toHaveLength(3);

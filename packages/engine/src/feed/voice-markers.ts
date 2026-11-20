@@ -5,7 +5,7 @@ import type { ContentBlock, SessionUpdate } from '@repo/contracts';
  * They are for the voice, not the reader. The Feed reads every stored, queued or in-memory row without them, so no
  * reader has to remember to; only the Feed's live changes, which the voice hears, still carry them.
  */
-const voiceMarkers = ['[STATUS]', '[COMPLETE]', '[ANALYSIS]'] as const;
+export const voiceMarkers = ['[STATUS]', '[COMPLETE]', '[ANALYSIS]'] as const;
 
 type VoiceMarker = (typeof voiceMarkers)[number];
 
@@ -45,7 +45,7 @@ const kinds: Record<VoiceMarker, VoiceMessage['kind']> = {
   '[ANALYSIS]': 'analysis',
 };
 
-const markerOf = (text: string): VoiceMarker | undefined =>
+export const markerOf = (text: string): VoiceMarker | undefined =>
   voiceMarkers.find((marker) => text.startsWith(marker));
 
 // A mark that opens a line after the first, with the spaces after it; the line's indent stays.
@@ -56,7 +56,7 @@ const lineMarker = /(^|\n)([ \t]*)\[(?:STATUS|COMPLETE|ANALYSIS)\][ \t]*/g;
  * such as a paragraph of analysis after progress. A mark inside a line is the Agent's own words and stays. `opening`
  * says the text starts the message, so a mark at its start is the message's own.
  */
-function withoutMarks(text: string, opening: boolean): string {
+export function withoutMarks(text: string, opening: boolean): string {
   const marker = opening ? markerOf(text) : undefined;
   const body = marker ? text.slice(marker.length).trimStart() : text;
 
@@ -126,52 +126,4 @@ export function withoutVoiceMarkers<Row extends SessionUpdate>(row: Row): Row {
     ...row,
     content: withFirstText(row.content, stripVoiceMarker(text)),
   };
-}
-
-const couldBecomeMark = (text: string): boolean =>
-  text.length > 0 &&
-  voiceMarkers.some((marker) => marker !== text && marker.startsWith(text));
-
-// How much of the text is known: all of it, unless its last line starts with what could still become a mark.
-function knownLength(text: string): number {
-  const lineStart = text.lastIndexOf('\n') + 1;
-  const line = text.slice(lineStart);
-  const start = lineStart + line.length - line.trimStart().length;
-
-  return couldBecomeMark(text.slice(start)) ? start : text.length;
-}
-
-/*
- * The visible text of a message that arrives in chunks. A line whose start could still become a mark is held back, so
- * a mark split across chunks never shows; once a line's start is known the rest of it passes as it comes. Only the
- * last line is read again with each chunk: the lines before it are let go once the message's opening is known.
- */
-export class VoiceMarkerStream {
-  // The message's text from the start of a line on; the opening line until the opening is known.
-  private text = '';
-  private opening = true;
-  // How much of the visible text of `text` was already given out.
-  private shown = 0;
-
-  public push(chunk: string): string {
-    this.text += chunk;
-    const known = this.text.slice(0, knownLength(this.text));
-    const visible = withoutMarks(known, this.opening);
-    const added = visible.slice(this.shown);
-    this.shown = visible.length;
-    this.letGoOfLines(visible);
-
-    return added;
-  }
-
-  // An opening that shows nothing yet may still be trimmed, so its lines are kept until it shows something.
-  private letGoOfLines(visible: string): void {
-    const lineStart = this.text.lastIndexOf('\n') + 1;
-
-    if (lineStart === 0 || visible.length === 0) return;
-    const before = this.text.slice(0, lineStart);
-    this.shown -= withoutMarks(before, this.opening).length;
-    this.text = this.text.slice(lineStart);
-    this.opening = false;
-  }
 }

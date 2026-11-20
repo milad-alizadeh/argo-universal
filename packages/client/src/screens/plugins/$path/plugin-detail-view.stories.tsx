@@ -9,6 +9,10 @@ import {
   loading,
   loadingJiraList,
   developmentPace,
+  homeConnect,
+  homeLights,
+  homeSignedOut,
+  homeUnreachable,
   paceRepositories,
   paceUnavailable,
   issueFilters,
@@ -102,3 +106,12 @@ export const PaceRepositories: StoryObj<typeof meta> = {
 };
 
 export const PaceUnavailable: StoryObj<typeof meta> = { args: paceUnavailable };
+
+// The Home Plugin's Philips Hue lights: a Grid of Cards per room and light, each with power and brightness.
+export const HomeLights: StoryObj<typeof meta> = { args: homeLights };
+
+export const HomeConnect: StoryObj<typeof meta> = { args: homeConnect };
+
+export const HomeUnreachable: StoryObj<typeof meta> = { args: homeUnreachable };
+
+export const HomeSignedOut: StoryObj<typeof meta> = { args: homeSignedOut };

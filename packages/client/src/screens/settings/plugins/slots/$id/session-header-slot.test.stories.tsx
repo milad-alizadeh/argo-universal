@@ -17,9 +17,7 @@ const meta = {
   args: {
     settings: fixtureSessionHeaderSlot,
     plugins: { status: 'loaded', plugins: slotPlugins },
-    owner: null,
     onShownChange: fn(),
-    onOwnerChange: fn(),
   },
   beforeEach: (): Promise<void> => settleLayout('wide'),
 } satisfies Meta<typeof SlotDetailView>;
@@ -36,8 +34,6 @@ function Live(props: { plugins: SlotPlugin[] }): React.JSX.Element {
     <SlotDetailView
       settings={fixtureSessionHeaderSlot}
       plugins={{ status: 'loaded', plugins }}
-      owner={null}
-      onOwnerChange={fn()}
       onShownChange={(pluginId, shown) =>
         setPlugins((all) =>
           all.map((plugin) =>

@@ -10,15 +10,12 @@ const meta = {
   argTypes: {
     plugins: { control: false },
     settings: { control: false },
-    owner: { control: false },
   },
   parameters: { screenPreview: true },
   args: {
     settings: fixtureSessionWorkbenchSlot,
     plugins: { status: 'loaded', plugins: slotPlugins },
-    owner: null,
     onShownChange: action('show in the Slot'),
-    onOwnerChange: action('owner'),
     onBack: action('back'),
   },
 } satisfies Meta<typeof SlotDetailView>;

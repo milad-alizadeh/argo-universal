@@ -1,6 +1,7 @@
 import type {
   SessionNewInput,
   SessionNewOutput,
+  SessionNewParams,
   SessionPromptInput,
   SessionPromptOutput,
 } from '@repo/contracts';
@@ -8,7 +9,12 @@ import type {
   readerOperations,
   sessionOperations,
 } from '@repo/contracts/operations';
-import type { NativeStartRequest, PromptLanding, Sessions } from '../sessions';
+import {
+  namedParam,
+  type NativeStartRequest,
+  type PromptLanding,
+  type Sessions,
+} from '../sessions';
 import {
   startedWork,
   type AcceptedWork,
@@ -25,10 +31,24 @@ type SessionImplementations = Pick<
 export const sessionImplementations = (
   sessions: Sessions,
 ): SessionImplementations => ({
-  'session.new': (input, request) => startCreation(sessions, input, request),
+  'session.new': (input, request) =>
+    startCreation(sessions, named(input), request),
   'session.prompt': async (input, request) =>
     startPrompt(sessions, input, request),
   ...sessions.implementations,
+});
+
+// A Session that runs session.new has its Project and Agent filled by its scope; any other caller names both.
+const named = (input: SessionNewParams): SessionNewInput => ({
+  ...input,
+  projectId: namedParam(
+    input.projectId,
+    'Pass projectId: the Project the new Session runs in. A Session that runs this starts in its own.',
+  ),
+  agent: namedParam(
+    input.agent,
+    'Pass agent: the Agent of the new Session. A Session that runs this starts its own Agent.',
+  ),
 });
 
 async function startCreation(

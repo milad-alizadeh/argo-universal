@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { headFrom, sha } from './github-fixture';
 import { changesOf, listed } from './journey-calls-fixture';
-import { restart } from './journey-fixture';
+import { restart, settled } from './journey-fixture';
 import {
   attached,
   changePull,
@@ -16,8 +16,6 @@ import {
 const slow = 60_000;
 
 const build = 'build';
-
-const wait = 10_000;
 
 const checksOf = (head: string): string => `${repository}@${head}`;
 
@@ -83,38 +81,32 @@ it(
     ]);
     await refreshed(run);
 
-    // An open list holds Argo's clock, which is what makes a read due.
-    await openChanges(run).next();
-
     // Only the first pull request's Checks cannot be read; the second keeps reading its own.
     run.github.checksFailWith.set(checksOf(sha), 500);
     run.github.checks.set(checksOf(otherHead), [
       { name: 'lint', status: 'in_progress', conclusion: null },
     ]);
-    await tick(run);
+    await refreshed(run);
 
-    await expect
-      .poll(() => changesOf(run), { timeout: wait })
-      .toMatchObject([
-        { stale: 'failed', checks: [{ name: build, state: 'passed' }] },
-        { checks: [{ name: 'lint', state: 'running' }] },
-      ]);
+    const failed = await changesOf(run);
 
-    const [, second] = await changesOf(run);
+    expect(failed).toMatchObject([
+      { stale: 'failed', checks: [{ name: build, state: 'passed' }] },
+      { checks: [{ name: 'lint', state: 'running' }] },
+    ]);
+    expect(failed[1]).not.toHaveProperty('stale');
 
-    expect(second).not.toHaveProperty('stale');
+    // The Slot answers from storage and can still be reading the old head.
+    await settled(run);
 
     // A push to a head whose Checks were never read leaves none to claim, never passing ones.
     run.github.checksFailWith.set(checksOf(newHead), 500);
     changePull(run, 1, { head: pushed(1) });
-    await tick(run);
-
-    await expect
-      .poll(() => changesOf(run), { timeout: wait })
-      .toMatchObject([{ head: newHead, stale: 'failed' }, {}]);
+    await refreshed(run);
 
     const [moved] = await changesOf(run);
 
+    expect(moved).toMatchObject({ head: newHead, stale: 'failed' });
     expect(moved).not.toHaveProperty('checks');
 
     // Nothing can be read after a restart: each is listed as it was last read and says so, and no Checks are made up.

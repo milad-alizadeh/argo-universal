@@ -150,10 +150,6 @@ _Avoid_: Contribution point, hook, outlet
 The kit components a Plugin's Render answers for one page or Slot, as a value the App fetches, keeps and draws. Everything drawn inside it is the Plugin's, so its Actions cannot claim Argo's reserved shortcuts. The App keeps a page's last one in memory and draws it while the page is fetched again. See ADR-0050.
 _Avoid_: Wire tree, Plugin UI
 
-**Single-owner Slot**:
-An items Slot only one source shows at a time, such as a Session row's Activity line. Every Plugin that declares it answers; the App shows the answer of the one Plugin the user chose in Settings on that Device, or Argo's own while none is chosen or the chosen Plugin is turned off or has no answer.
-_Avoid_: Part, takeover, exclusive Slot
-
 **Last good items**:
 The items a Plugin last answered for each context of an items Slot, kept by the Engine across change signals and restarts. While the Plugin's answer is late, fails or it is not running yet, a list draws these instead, so a Session row keeps its pull requests; a late answer that lands after all replaces them. They are dropped when the Plugin is turned off or removed.
 _Avoid_: Cached items, stale items
@@ -372,7 +368,7 @@ A Plugin's own record that a Session produced one pull request, named by its rep
 _Avoid_: PR link, attachment
 
 **Auto-fix**:
-A person's choice, per PR association, that the Session's Agent is prompted to fix each new failed Check run, review comment or merge conflict on that pull request; a re-run that fails again is new. One Prompt lists everything new on a head commit; its failed Checks wait until every Check has reported, so they come in one Prompt. When CI is still red on a head it already prompted about and the Session has been idle for 30 minutes, it prompts again to go on and push. A push, a close, or turning it off withdraws a Prompt that has not started. It is off until turned on.
+A person's choice, per PR association, that the Session's Agent is prompted to fix each new failed Check run, review comment or merge conflict on that pull request; a re-run that fails again is new. One Prompt lists everything new on a head commit at the time it is read; a failed Check is prompted as soon as it fails, without waiting for the other Checks, so Checks that fail at different times come in separate Prompts. When CI is still red on a head it already prompted about and the Session has been idle for 30 minutes, it prompts again to go on and push. A push, a close, or turning it off withdraws a Prompt that has not started. It is off until turned on.
 _Avoid_: Babysit, watch, auto-repair
 
 **Auto-merge**:
@@ -450,6 +446,10 @@ _Avoid_: Conversation, conversation mode, voice mode, live
 **Voice provider**:
 A service or local model that runs a Voice call's voice.
 _Avoid_: Conversation provider, realtime provider, voice backend
+
+**Screen sight**:
+Letting an Agent or the voice of a Voice call see the person's whole screen as one still picture, taken by the desktop App when asked. Nothing asks the person before a capture. Off until the person turns it on for the Device, shown to the person as one Notice, and never stored.
+_Avoid_: Screen share, screen capture, screenshot (for the feature; `app.screenshot` is the Operation)
 
 **Stored Turn**:
 A Turn as read back from storage, before the Writer's queued changes are laid over it.

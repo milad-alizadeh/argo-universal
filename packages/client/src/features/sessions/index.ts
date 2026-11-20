@@ -238,7 +238,6 @@ export {
 
 export {
   type OpenPluginItemPage,
-  type SessionRowActivity,
   type SessionRowPluginItem,
   type SessionRowPlugins,
 } from './components/session-row/session-row-props';

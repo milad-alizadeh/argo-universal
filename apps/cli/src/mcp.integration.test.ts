@@ -1,5 +1,9 @@
 import { OperationExecution } from '@repo/contracts/operations/control';
 import { startPermissionWaitHost } from '@repo/engine/mocks/operation-waits';
+import {
+  capturedImage,
+  connectScreenSightApp,
+} from '@repo/engine/mocks/screen-sight-app';
 import { expect, it } from 'vitest';
 import { callMcp, connectMcp, mcpValue } from '../mocks/mcp-client';
 import { startCliHost } from '../mocks/operations-cli';
@@ -157,4 +161,21 @@ it('returns resumable work at thirty seconds without cancelling the Operation', 
       result: {},
     },
   );
+}, 30_000);
+
+it('hands an Agent a captured screen as an image, not as text', async () => {
+  const host = await startCliHost();
+  const app = connectScreenSightApp(host.url);
+  await app.ready;
+  const client = await connectMcp(host.home);
+
+  const seen = await callMcp(client, { id: 'app.screenshot', params: {} });
+
+  expect(seen.content).toEqual([
+    {
+      type: 'text',
+      text: JSON.stringify({ kind: 'result', result: { status: 'captured' } }),
+    },
+    { type: 'image', data: capturedImage.data, mimeType: 'image/png' },
+  ]);
 }, 30_000);

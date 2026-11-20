@@ -53,14 +53,10 @@ export interface ReadItem<Item> {
   item: Item;
 }
 
-/*
- * What one context of an items Slot shows on this Device: the items that fit, the rest behind "+N", and, in a
- * Single-owner Slot, the chosen Plugin's item. There is no owner while the Slot's line is Argo's own.
- */
+// What one context of an items Slot shows on this Device: the items that fit, and the rest behind "+N".
 export interface SlotReading<Item> {
   items: readonly ReadItem<Item>[];
   overflow: readonly ReadItem<Item>[];
-  owner: ReadItem<Item> | undefined;
 }
 
 type Attributed<Item> = { pluginId: string; item: Item };
@@ -71,10 +67,9 @@ type KeptPage<Item> = {
   overflow: readonly Attributed<Item>[];
 };
 
-// What the reader needs of an items Slot's registry entry: the schema it parses with, and who may own its line.
+// What the reader needs of an items Slot's registry entry: the schema it parses with.
 export type SlotEntry<Item> = {
   merged: z.ZodType<KeptPage<Item>>;
-  content: { owners?: 'one' };
 };
 
 const noAnswer: KeptPage<never> = { items: [], overflow: [] };
@@ -115,27 +110,9 @@ const namedBy =
     return { pluginId, pluginName: name, pluginIcon: icon, item };
   };
 
-/*
- * The chosen Plugin's item in a Single-owner Slot, shown or not, so the Plugin that writes the line keeps it however
- * many items came before it. None in any other Slot, and none while the line is Argo's: a Plugin turned off is no
- * longer the owner, so it never writes the line.
- */
-function ownerOf<Item>(
-  slot: SlotEntry<Item>,
-  answer: KeptPage<Item>,
-  { owner }: SlotVisibility,
-): Attributed<Item> | undefined {
-  const writer = slot.content.owners === 'one' ? owner : null;
-
-  return [...answer.items, ...answer.overflow].find(
-    ({ pluginId }) => pluginId === writer,
-  );
-}
-
 // Every item the reading carries, with its Plugin named.
 const namedReading = <Item>(
   shown: KeptPage<Item>,
-  owner: Attributed<Item> | undefined,
   lookup: PluginLookup,
 ): SlotReading<Item> => {
   const named = namedBy<Item>(lookup);
@@ -143,27 +120,20 @@ const namedReading = <Item>(
   return {
     items: shown.items.map((item) => named(item)),
     overflow: shown.overflow.map((item) => named(item)),
-    owner: owner && named(owner),
   };
 };
 
 /*
  * The one reader of an items Slot: it parses the Server's answer with the Slot's own schema, leaves out the Plugins
- * this Device turned off — one hidden making room for the next in line — names every Plugin left, and picks the
- * chosen Plugin's item in a Single-owner Slot. A Slot's screen then only draws what comes back.
+ * this Device turned off — one hidden making room for the next in line — and names every Plugin left. A Slot's screen
+ * then only draws what comes back.
  */
 export function readSlotItems<Item>(
   slot: SlotEntry<Item>,
   sent: SentItems,
   { visibility, lookup }: SlotReader,
 ): SlotReading<Item> {
-  const answer = sentAnswer(slot, sent);
-
-  return namedReading(
-    shownItems(answer, visibility),
-    ownerOf(slot, answer, visibility),
-    lookup,
-  );
+  return namedReading(shownItems(sentAnswer(slot, sent), visibility), lookup);
 }
 
 // What the Server sent for one context; none while there is no context to read.

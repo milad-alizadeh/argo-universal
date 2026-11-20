@@ -30,6 +30,7 @@
     "esbuild": "catalog:",
     "fflate": "catalog:",
     "jsonc-parser": "catalog:",
+    "minisearch": "catalog:",
     "multicast-dns": "catalog:",
     "node-pty": "catalog:",
     "oxc-parser": "catalog:",
@@ -60,6 +61,7 @@
     "./router": "./src/engine/router.ts",
     "./mocks": "./mocks/engine.ts",
     "./mocks/operation-waits": "./mocks/operation-waits.ts",
+    "./mocks/screen-sight-app": "./mocks/screen-sight-app.ts",
     "./mocks/runtime-plugins": "./mocks/runtime-plugins.ts",
     "./mocks/fixture-tls": "./mocks/fixture-tls.ts",
     "./ipc": "./src/engine/ipc.ts",
@@ -77,6 +79,7 @@
     "./mocks/data-fixture": "./mocks/data-fixture.ts",
     "./pairing-vector": "./src/pairing/noise-vector-fixtures.ts",
     "./mocks/acp-engine": "./mocks/acp-engine.ts",
-    "./mocks/acp-feed": "./mocks/acp-feed.ts"
+    "./mocks/acp-feed": "./mocks/acp-feed.ts",
+    "./voice-prompt": "./src/feed/voice-markers.ts"
   }
 }

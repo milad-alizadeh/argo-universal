@@ -71,13 +71,6 @@ async function unseenOf(
   return eventsOf(facts).filter(({ key }) => !seen.has(key));
 }
 
-/*
- * While a Check of the head still runs, its failed Checks wait, so one Prompt lists them all once every Check has
- * reported. A conflict and review comments do not wait for the Checks.
- */
-const promptable = (facts: FixFacts): FixFacts =>
-  facts.running ? { ...facts, failed: [] } : facts;
-
 async function promptUnseen(
   step: Step,
   facts: FixFacts,
@@ -151,7 +144,6 @@ export async function fixCurrent(
   if (sent >= fixTries) return false;
 
   return (
-    (await promptUnseen(step, promptable(facts), sent)) ||
-    promptStillRed(step, facts, sent)
+    (await promptUnseen(step, facts, sent)) || promptStillRed(step, facts, sent)
   );
 }

@@ -2,7 +2,7 @@ import { expect } from 'vitest';
 import { reference, repository } from './auto-merge-fixture';
 import { sha } from './github-fixture';
 import type { FixtureComment } from './github-fixture-types';
-import { project, type Journey } from './journey-fixture';
+import { project, settled, type Journey } from './journey-fixture';
 import { promptsSent } from './journey-prompts-fixture';
 import { shortHead } from './pull-reads';
 
@@ -59,11 +59,6 @@ const completed = async (run: Journey): Promise<number> =>
     .filter((line) => watchEnded.test(line) && line.includes(ofProject)).length;
 
 const watchIntervalMs = 60_000;
-
-// What the Plugin is already doing has finished, such as the Watch it runs as it starts, so it is not taken for the next.
-const settled = async (run: Journey): Promise<void> => {
-  await run.test.clock.until(() => true, { stepMs: 0, steps: 0 });
-};
 
 // Argo's Watch clock ticks once, and the run it starts has finished.
 export async function watch(run: Journey): Promise<void> {
