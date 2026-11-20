@@ -35,7 +35,7 @@ const settledResult = (execution: OperationExecution): Json => {
 };
 
 // What an Operation answered, at once or once its native work settled.
-export const resultOf = (response: OperationRunResponse): Json =>
+const resultOf = (response: OperationRunResponse): Json =>
   response.kind === 'result' ? response.result : settledResult(response);
 
 const waited = async (

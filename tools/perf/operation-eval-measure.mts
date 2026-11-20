@@ -25,7 +25,7 @@ export type FirstTurn = {
   totalTokens: number | null;
 };
 
-export type RunOutcome = 'found' | 'missed' | TurnStop;
+type RunOutcome = 'found' | 'missed' | TurnStop;
 
 export type RunMeasure = {
   outcome: RunOutcome;

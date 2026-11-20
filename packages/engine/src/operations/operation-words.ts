@@ -62,7 +62,7 @@ const alsoMeant = new Map(
 );
 
 // What one query word searches for: itself, or every word of its group.
-export const sameActTerms = (word: string): readonly string[] =>
+const sameActTerms = (word: string): readonly string[] =>
   alsoMeant.get(word) ?? [word];
 
 export const queriedTerms = (term: string): string[] | null => {
