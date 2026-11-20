@@ -71,7 +71,9 @@ jobs:
             if grep -qv '\.md$' <<< "$files" || affected --tasks check-types test; then quality=true; fi
 
             # Turbo cannot see root files, .github/ or patches/. turbo.json gives every package a no-op test:web, so only @repo/e2e's counts.
-            outside=$(grep -E '^(\.github/|patches/|[^/]+$)' <<< "$files" | grep -v '\.md$' || true)
+            # The lint, format, duplication, dead-code and skills configs and .gitignore are read only by Quality.
+            qualityOnly='^(\.oxlintrc\.json|\.oxfmtrc\.json|\.jscpd[^/]*\.json|knip\.jsonc|skills-lock\.json|\.gitignore)$'
+            outside=$(grep -E '^(\.github/|patches/|[^/]+$)' <<< "$files" | grep -v '\.md$' | grep -Ev "$qualityOnly" || true)
             engine=false
             if [ -n "$outside" ] || affected --tasks test --packages @repo/engine; then engine=true; fi
             stories=false
