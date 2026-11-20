@@ -22,6 +22,7 @@ type AcpResponses = Pick<
   | 'session/resume'
   | 'session/load'
   | 'session/close'
+  | 'session/delete'
   | 'session/set_config_option'
   | 'session/prompt'
 >;
@@ -86,6 +87,9 @@ const schemas = {
   close: compileAcpResponseSchema<AcpResponses['session/close']>(
     'CloseSessionResponse',
   ),
+  delete: compileAcpResponseSchema<AcpResponses['session/delete']>(
+    'DeleteSessionResponse',
+  ),
   config: compileAcpResponseSchema<AcpResponses['session/set_config_option']>(
     'SetSessionConfigOptionResponse',
   ),
@@ -105,6 +109,7 @@ const createSessionResponseReaders = (
   'session/resume': schemas.resume.reader(rejectionReporter),
   'session/load': schemas.load.reader(rejectionReporter),
   'session/close': schemas.close.reader(rejectionReporter),
+  'session/delete': schemas.delete.reader(rejectionReporter),
   'session/set_config_option': schemas.config.reader(rejectionReporter),
   'session/prompt': schemas.prompt.reader(rejectionReporter),
 });

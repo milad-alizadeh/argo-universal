@@ -43,7 +43,7 @@ it('asks to sign in again when GitHub rejects the token', async () => {
 it('says what GitHub answered when it is neither an answer nor a rejection', async () => {
   const { tracker } = trackerAnswering(reply(502, {}));
 
-  await expect(tracker.listIssues('is:open', 30)).rejects.toThrow(
+  await expect(tracker.listIssues('is:open', 30, null)).rejects.toThrow(
     'GitHub answered 502.',
   );
 });
@@ -57,15 +57,26 @@ const issueNode = (): JsonObject => ({
 
 it('searches the repository newest first and maps the Issues', async () => {
   const { sent, tracker } = trackerAnswering(
-    reply(200, { data: { search: { nodes: [issueNode()] } } }),
+    reply(200, {
+      data: {
+        search: {
+          pageInfo: { hasNextPage: false, endCursor: null },
+          nodes: [issueNode()],
+        },
+      },
+    }),
   );
 
-  const issues = await tracker.listIssues('is:open', 30);
+  const page = await tracker.listIssues('is:open', 30, null);
 
-  expect(issues.map(({ title }) => title)).toEqual(['Keep the boundary']);
+  expect(page).toMatchObject({
+    items: [{ title: 'Keep the boundary' }],
+    cursor: null,
+  });
   expect(bodyOf(sent).variables).toEqual({
     query: 'repo:owner/repository is:issue is:open sort:created-desc',
     first: 30,
+    after: null,
   });
 });
 
@@ -109,22 +120,35 @@ it('leaves a filter without a count when GitHub does not report it, and rejects 
 
 it('skips a search node that is no Issue, and rejects a node with some of an Issue only', async () => {
   const skipped = trackerAnswering(
-    reply(200, { data: { search: { nodes: [{}, issueNode()] } } }),
+    reply(200, {
+      data: {
+        search: {
+          pageInfo: { hasNextPage: false, endCursor: null },
+          nodes: [{}, issueNode()],
+        },
+      },
+    }),
   );
 
-  expect(
-    (await skipped.tracker.listIssues('is:open', 30)).map(
-      ({ number }) => number,
-    ),
-  ).toEqual([8]);
+  expect(await skipped.tracker.listIssues('is:open', 30, null)).toMatchObject({
+    items: [{ number: 8 }],
+    cursor: null,
+  });
 
   const malformed = trackerAnswering(
-    reply(200, { data: { search: { nodes: [{ number: 9 }, issueNode()] } } }),
+    reply(200, {
+      data: {
+        search: {
+          pageInfo: { hasNextPage: false, endCursor: null },
+          nodes: [{ number: 9 }, issueNode()],
+        },
+      },
+    }),
   );
 
-  await expect(malformed.tracker.listIssues('is:open', 30)).rejects.toThrow(
-    'GitHub returned an invalid Issue.',
-  );
+  await expect(
+    malformed.tracker.listIssues('is:open', 30, null),
+  ).rejects.toThrow('GitHub returned an invalid Issue.');
 });
 
 it('reads several Issues in one call, each under its own alias, and leaves out one GitHub no longer has', async () => {

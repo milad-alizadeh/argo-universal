@@ -1,10 +1,8 @@
-import { eachLayout, settleLayout } from '@repo/kit/mocks/story-layout';
+import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Platform } from 'react-native';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn } from 'storybook/test';
 import { SessionRow } from '../../src/features/sessions/components/session-row/session-row';
-import type { SessionsLayout } from '../../src/features/sessions/stores/sessions-view';
 
 export const meta = {
   title: 'Tests/Sessions/SessionRow',
@@ -73,7 +71,7 @@ export function metadata(width: number): Story {
   };
 }
 
-const states = [
+export const states = [
   ['needsInput', 'Needs input'],
   ['running', 'Running'],
   ['failed', 'Failed'],
@@ -119,51 +117,3 @@ export const statusParity: Story = {
     }
   },
 };
-
-const dotted = (
-  layout: SessionsLayout,
-): Record<(typeof states)[number][0], boolean> => ({
-  needsInput: true,
-  running: true,
-  failed: true,
-  unread: true,
-  idle: layout === 'compact' && Platform.OS === 'web',
-});
-
-type Canvas = ReturnType<typeof within>;
-
-async function expectRowEnd(
-  canvas: Canvas,
-  [name, label]: (typeof states)[number],
-  layout: SessionsLayout,
-): Promise<void> {
-  const row = within(
-    canvas.getByRole('button', {
-      name: `${sessionRows[name].title}, ${label}`,
-    }),
-  );
-
-  const dot = row.queryByTestId('session-status');
-
-  await expect(row.getByText('12m')).toBeVisible();
-  await (dotted(layout)[name]
-    ? expect(dot).toBeVisible()
-    : expect(dot).not.toBeInTheDocument());
-}
-
-export function statusDots(layout: SessionsLayout): Story {
-  return {
-    args: { layout, age: '12m' },
-    render: (args) => (
-      <>
-        {states.map(([name]) => (
-          <SessionRow {...args} key={name} session={sessionRows[name]} />
-        ))}
-      </>
-    ),
-    play: async ({ canvas }) =>
-      eachLayout(async () => {
-        for (const state of states) await expectRowEnd(canvas, state, layout);
-      }),
-  };
-}

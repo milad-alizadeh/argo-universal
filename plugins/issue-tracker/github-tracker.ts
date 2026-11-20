@@ -7,6 +7,7 @@ import {
   mapIssueDetail,
   mapIssueList,
   mapOverview,
+  type IssuePage,
   overviewQuery,
 } from './github-documents';
 import {
@@ -22,7 +23,11 @@ import type { Overview } from './overview';
 // Each list is a GitHub search, as `is:open label:bug`.
 export type TrackerClient = {
   overview: () => Promise<Overview>;
-  listIssues: (search: string, limit: number) => Promise<Issue[]>;
+  listIssues: (
+    search: string,
+    limit: number,
+    after: string | null,
+  ) => Promise<IssuePage>;
   getIssue: (number: number) => Promise<Issue>;
   // The Issues with these numbers that GitHub still has, read together; one that is gone is left out.
   getIssues: (numbers: readonly number[]) => Promise<Issue[]>;
@@ -48,8 +53,11 @@ const readsOf = (
   repository: string,
 ): Omit<TrackerClient, Written> => ({
   overview: async () => mapOverview(await read(overviewQuery(repository))),
-  listIssues: async (search, limit) =>
-    mapIssueList(await read(listQuery(repository, search, limit))),
+  listIssues: async (search, limit, after) =>
+    mapIssueList(
+      await read(listQuery(repository, search, { first: limit, after })),
+      after,
+    ),
   getIssue: async (number) =>
     mapIssueDetail(await read(issueQuery(repository, number))),
   getIssues: (numbers) => readIssues(read, repository, numbers),
