@@ -1,7 +1,8 @@
 import type { VoiceCall, VoicePartial, VoiceStatus } from '@repo/contracts';
+import { formatCallTime } from '@repo/kit/format-elapsed';
 import type { ComposerVoice, ComposerVoiceMutes } from '#features/composer';
 import type { VoiceEdgeBandProps } from './components/voice-edge-band/voice-edge-band';
-import { elapsedOf, voiceLabel } from './components/voice-stage/voice-label';
+import { voiceLabel } from './components/voice-stage/voice-label';
 import type { VoiceStageViewProps } from './components/voice-stage/voice-stage-view';
 import type {
   VoiceLevels,
@@ -148,7 +149,7 @@ function bandOf(
   return (
     here && {
       call: { ...here, microphoneMuted: input.mutes.microphone },
-      elapsed: elapsedOf(here.startedAt, input.now),
+      elapsed: formatCallTime(here.startedAt, input.now),
       spectrum: input.spectrum,
     }
   );

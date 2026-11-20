@@ -29,3 +29,5 @@ export {
   VoiceEdgeBand,
   type VoiceEdgeBandProps,
 } from './components/voice-edge-band/voice-edge-band';
+
+export { useListedCall } from './use-listed-call';
