@@ -41,6 +41,9 @@ const totalsText = ({
   `−${deletions}`,
 ];
 
+// The card's totals follow a Checkout read, which a loaded CI runner can take past waitFor's default second to finish.
+const readingWithin = 5000;
+
 const card = (canvas: Canvas): ReturnType<typeof within> =>
   within(canvas.getByTestId('workbench-changes'));
 
@@ -48,10 +51,13 @@ async function expectCardTotals(
   canvas: Canvas,
   totals: ChangesSummary,
 ): Promise<void> {
-  await waitFor(async () => {
-    for (const text of totalsText(totals))
-      await expect(card(canvas).getByText(text)).toBeVisible();
-  });
+  await waitFor(
+    async () => {
+      for (const text of totalsText(totals))
+        await expect(card(canvas).getByText(text)).toBeVisible();
+    },
+    { timeout: readingWithin },
+  );
 }
 
 /*
