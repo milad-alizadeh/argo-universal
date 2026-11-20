@@ -8,6 +8,8 @@ import {
   changedPaths,
   checkChanged,
   checkFormat,
+  failedChecks,
+  joinOutput,
   parseJson,
   readableFiles,
   type Result,
@@ -59,7 +61,6 @@ async function staticChecks(changed: string[]): Promise<Result[]> {
   const changedChecks = checkChanged(changed);
 
   return [checkFormat(changed), ...generatedChecks(), ...(await changedChecks)];
-}
 }
 
 type Listing =
@@ -163,6 +164,7 @@ if (failed.length > 0) {
 }
 
 recordPassed();
+
 say('format, lint and types pass.');
 
 process.exit(runTests(baseCommit, changed));

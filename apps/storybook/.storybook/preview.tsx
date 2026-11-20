@@ -32,7 +32,7 @@ const withDesktopSymbols: Decorator = (Story) => (
 
 /*
  * The Vitest browser runner sets this global; the Storybook UI does not. The a11y addon runs axe after every story and,
- * at its default 'todo' level, only warns, so under Vitest it costs a scan per test and fails nothing. The story tests
+ * at its default level, only warns, so under Vitest it costs a scan per test and fails nothing. The story tests
  * load test stories only, and the presentation stories, which cover every state, keep their axe results in the UI panel.
  */
 const runsInVitest = '__vitest_browser__' in globalThis;
