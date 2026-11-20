@@ -34,6 +34,9 @@ const startThreshold = 2;
  */
 const estimatedRowHeight = 112;
 
+// Keep rows ready for a reversal while limiting how many mount in a fling frame.
+const nativeDrawDistance = 1600;
+
 // Dragging the Feed takes the keyboard down: with the finger on iOS, at once on Android. Web's list is a plain element, which takes neither.
 const keyboardProps = Platform.select({
   ios: {
@@ -65,13 +68,15 @@ export const feedListProps = {
   // Page in older rows before the reader reaches the start.
   onStartReachedThreshold: startThreshold,
   ...Platform.select({
-    // Keep rows ready across direction changes without mounting too many in one Android frame.
     android: {
-      drawDistance: 1600,
+      drawDistance: nativeDrawDistance,
       decelerationRate: 'fast' as const,
       getItemType: androidRowType,
     },
-    ios: { drawDistance: 2400, viewabilityConfig: feedRowViewability },
+    ios: {
+      drawDistance: nativeDrawDistance,
+      viewabilityConfig: feedRowViewability,
+    },
     default: { drawDistance: 800 },
   }),
   ...keyboardProps,
