@@ -6,6 +6,7 @@ import {
 import type { FeedView, FeedViewItem } from './feed-view';
 import { isGroupRow, startsNewTurn } from './grouping-rules';
 import { OpenGroup } from './open-group';
+import { withoutRecordedAgentCalls } from './operation-pairs';
 import { operationRecords, presentOperation } from './operation-records';
 import { foldedPrompts, subagentItem } from './subagent-items';
 import { isTodoCall } from './todo-call';
@@ -76,8 +77,10 @@ export function toFeedView(
   rows: readonly SessionUpdate[],
   snapshot: SessionSnapshot,
 ): FeedView {
-  const pass = newPass(rows, snapshot);
-  appendRows(rows, pass);
+  const drawn = withoutRecordedAgentCalls(rows);
+  const pass = newPass(drawn, snapshot);
+
+  appendRows(drawn, pass);
   pass.items.push(...pass.group.flush());
 
   return { items: pass.items, plan: selectActivePlan(rows) };

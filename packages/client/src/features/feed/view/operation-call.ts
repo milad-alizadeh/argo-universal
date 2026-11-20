@@ -89,6 +89,23 @@ export function calledOperation(row: ToolCallUpdate): string | undefined {
   return id;
 }
 
+// The Operation an Agent's operation_run call names and the params it passes; the Engine's own row has the same two.
+export function agentOperationCall(
+  row: ToolCallUpdate,
+): { id: string; params: unknown } | undefined {
+  if (row.id === operationFeedRowId(row.toolCallId)) return undefined;
+  const call = mcpCall(row);
+
+  if (call?.tool !== 'operation_run') return undefined;
+  const target = z
+    .object({ id: z.string(), params: z.unknown() })
+    .safeParse(call.arguments);
+
+  return target.success
+    ? { id: target.data.id, params: target.data.params ?? {} }
+    : undefined;
+}
+
 function operationIdentity(row: ToolCallUpdate): string | undefined {
   const call = mcpCall(row);
 

@@ -47,6 +47,36 @@ const untargeted: ToolCallUpdate = {
   rawInput: { server, tool: 'operation_run', arguments: {} },
 };
 
+const feedParams = (sessionId: string) => ({ sessionId, limit: 3 });
+
+// Two parallel `session.feed` calls: the Agent's row for each and the Engine's row for the same call.
+const parallelFeedCalls = ['first', 'second'].flatMap((sessionId, index) => {
+  const params = feedParams(sessionId);
+
+  const agent: ToolCallUpdate = {
+    ...agentCall(`toolu-${index}`, index),
+    rawInput: {
+      server,
+      tool: 'operation_run',
+      arguments: { id: 'session.feed', params },
+    },
+  };
+
+  const engine: ToolCallUpdate = {
+    ...agent,
+    id: `argo:feed-${index}`,
+    toolCallId: `feed-${index}`,
+    name: 'session.feed',
+    title: 'Read Session messages',
+    kind: 'other',
+    position: index + 2,
+    rawInput: params,
+    _meta: { argo: { operationIcon: 'message' } },
+  };
+
+  return [agent, engine];
+});
+
 function operationGroup(rows: ToolCallUpdate[]): FeedGroup {
   const group = toFeedView(rows, snapshot).items.find(
     (item): item is FeedGroup => item.type === 'group',
@@ -78,4 +108,13 @@ export const runningOperations = {
   group: operationGroup([
     { ...agentCall('session.feed', 0), state: 'open', status: 'in_progress' },
   ]),
+} satisfies OperationStoryArgs;
+
+// The Agent's rows and the Engine's rows arrive together, as stored; the Feed draws each call once.
+export const parallelOperations = {
+  group: operationGroup(
+    parallelFeedCalls.toSorted((a, b) => a.id.localeCompare(b.id)),
+  ),
+  initialOpen: true,
+  renderActivity: renderOperationActivity,
 } satisfies OperationStoryArgs;
