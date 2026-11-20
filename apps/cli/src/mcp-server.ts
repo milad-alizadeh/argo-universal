@@ -56,7 +56,7 @@ export type McpInstructions = {
 };
 
 // Argo's discovery line, then each Argo instruction and each Plugin's prose under its name, in the order given (the Server sends Plugin id order).
-function mcpInstructions({
+export function mcpInstructions({
   plugins = [],
   argo = { todoList: true },
 }: McpInstructions): string {
