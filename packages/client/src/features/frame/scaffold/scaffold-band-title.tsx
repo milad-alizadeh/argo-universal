@@ -10,10 +10,7 @@ export function BandTitle({ scaffold, layout }: BandTitleReads): ReactElement {
   return (
     <View className="min-w-0 flex-1 flex-row items-center overflow-hidden">
       <BandTitleLeading width={layout.bandTitleLeading} {...layout.motion} />
-      <View
-        testID="band-title"
-        className="min-w-0 flex-1 overflow-hidden web:[app-region:no-drag]"
-      >
+      <View testID="band-title" className="min-w-0 flex-1 overflow-hidden">
         {scaffold.band?.title}
       </View>
     </View>

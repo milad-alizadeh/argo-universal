@@ -50,12 +50,30 @@ function makeWindow(
   });
 }
 
+const trafficLightPosition = { x: 20, y: 15 };
+
+// Matches --spacing-frame-control in the renderer at 100% zoom.
+const windowBandHeight = 44;
+
 function windowChrome():
   | { titleBarStyle: 'hidden'; trafficLightPosition: { x: number; y: number } }
   | undefined {
   return process.platform === 'darwin'
-    ? { titleBarStyle: 'hidden', trafficLightPosition: { x: 20, y: 16 } }
+    ? { titleBarStyle: 'hidden', trafficLightPosition }
     : undefined;
+}
+
+function alignTrafficLights(window: BrowserWindow): void {
+  if (process.platform !== 'darwin') return;
+
+  window.webContents.on('did-finish-load', () => {
+    const zoom = window.webContents.getZoomFactor();
+    const offset = Math.round((windowBandHeight / 2) * (zoom - 1));
+    window.setWindowButtonPosition({
+      x: trafficLightPosition.x,
+      y: trafficLightPosition.y + offset,
+    });
+  });
 }
 
 function webPreferences(url: string, background: boolean): WebPreferences {
@@ -115,6 +133,7 @@ export function createWindow(url: string, options: WindowOptions): void {
   restoreMaximized(window, saved);
   saveOnClose(window, stateFile);
   reportWindowMinimized(window);
+  alignTrafficLights(window);
   bindNavigation(window, options.origin);
   void window.loadURL(options.developmentUrl ?? `${appOrigin}/`);
 }

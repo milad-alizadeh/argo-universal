@@ -123,7 +123,7 @@ function TrailingGroup({
   return (
     <View
       testID="window-band-trailing"
-      className="shrink-0 flex-row items-center gap-1 web:[app-region:no-drag]"
+      className="shrink-0 flex-row items-center gap-1"
     >
       {trailingContent(band, parts)}
     </View>
