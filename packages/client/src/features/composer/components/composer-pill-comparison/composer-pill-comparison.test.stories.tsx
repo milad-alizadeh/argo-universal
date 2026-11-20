@@ -51,7 +51,7 @@ function sharedGeometry(width: number): Story {
     ...SharedControls,
     beforeEach: () => settleLayout(width),
     play: async ({ canvas }) => {
-      await expectSharedGeometry(canvas, width);
+      await expectSharedGeometry(canvas);
       await expectMaterialPolicy(canvas, width === 390);
 
       if (width !== 390) {
@@ -65,24 +65,15 @@ function sharedGeometry(width: number): Story {
   };
 }
 
-const phonePills = new Set([agentsLabel, tasksLabel]);
-
-const compactPills = new Set([...phonePills, 'Todos']);
-
-function controlHeight(name: string, width: number): number {
-  const pills = width === 390 ? compactPills : phonePills;
-
-  return pills.has(name) ? 32 : 28;
-}
+const tallControls = new Set([agentsLabel, tasksLabel, 'Todos']);
 
 async function expectSharedGeometry(
   canvas: ReturnType<typeof within>,
-  width: number,
 ): Promise<void> {
   for (const name of names)
     await expectControlGeometry(
       canvas.getByRole('button', { name }),
-      controlHeight(name, width),
+      tallControls.has(name) ? 32 : 28,
     );
 }
 
