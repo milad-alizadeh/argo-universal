@@ -3,6 +3,7 @@ import { defineKitComponent } from '../define-kit-component';
 import { echoes, handler, stringLabel } from '../kit-component-props';
 import { filterPillProps, searchFieldProps } from '../presentation-kit-props';
 import { textChangeEvents } from '../text-field-kit-props';
+import { faderComponent } from './fader';
 import { sliderProps, switchProps } from './input-control-props';
 
 const option = z.object({
@@ -125,6 +126,7 @@ export const controlsComponents = {
     label:
       'The accessibilityLabel names the control; its value and range are announced.',
   }),
+  Fader: faderComponent,
   Switch: defineKitComponent('An on/off switch.', switchProps, {
     group: 'controls',
     events: { onValueChange: echoes(switchProps, 'value') },
