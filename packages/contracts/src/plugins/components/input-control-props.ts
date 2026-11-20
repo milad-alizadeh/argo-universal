@@ -33,3 +33,21 @@ export const switchProps = z.object({
   accessibilityLabel: stringLabel.describe('The spoken name of the switch.'),
   disabled: z.boolean().optional().describe('Whether interaction is disabled.'),
 });
+
+export const faderOrientations = ['vertical', 'horizontal'] as const;
+
+// A range control whose surface holds any kit content: the fill shows the value as a share of the range.
+export const faderProps = sliderProps.omit({ fill: true }).extend({
+  orientation: z
+    .enum(faderOrientations)
+    .optional()
+    .meta({ default: 'vertical' })
+    .describe(
+      'The direction the fill grows and a drag moves the value: `vertical` fills from the bottom up, `horizontal` from the leading edge.',
+    ),
+  fill: colourStops
+    .optional()
+    .describe(
+      'The filled part of the surface in colours that are data, such as a light’s, drawn as a gradient along the orientation on every platform; without it the fill takes the accent tone.',
+    ),
+});
