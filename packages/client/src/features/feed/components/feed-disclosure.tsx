@@ -9,12 +9,13 @@ import {
 import type { IconName } from '@repo/kit/symbols/icon-names';
 import { cn } from '@repo/kit/utils';
 import type * as React from 'react';
-import { type ReactNode, useState } from 'react';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import {
   FeedDisclosureLabel,
   type FeedDisclosureLabelProps,
 } from './feed-disclosure-label';
+import { useDisclosureOpen } from './feed-disclosure-state';
 import { ShimmerDisclosureTitle } from './shimmer-disclosure-title';
 
 export interface FeedDisclosureProps extends Omit<
@@ -27,6 +28,8 @@ export interface FeedDisclosureProps extends Omit<
   title?: ReactNode;
   failed?: boolean;
   initialOpen?: boolean;
+  // The identity of a group whose header can stay mounted in a recycled cell.
+  entryKey?: string;
   // Drawn at the far end of the header row, outside the trigger, so it can take its own taps.
   aside?: ReactNode;
   children: ReactNode;
@@ -113,16 +116,16 @@ function FeedDisclosureHeaderRow({
   );
 }
 
-export function FeedDisclosure({
-  children,
-  ...props
-}: FeedDisclosureProps): React.JSX.Element {
-  const [open, setOpen] = useState(props.initialOpen === true);
+export function FeedDisclosure(props: FeedDisclosureProps): React.JSX.Element {
+  const { children, ...header } = props;
+  const { bodyKey, ...open } = useDisclosureOpen(props);
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className="w-full">
-      <FeedDisclosureHeaderRow {...props} />
-      <CollapsibleContent className="pt-2">{children}</CollapsibleContent>
+    <Collapsible {...open} className="w-full">
+      <FeedDisclosureHeaderRow {...header} />
+      <CollapsibleContent key={bodyKey} className="pt-2">
+        {children}
+      </CollapsibleContent>
     </Collapsible>
   );
 }

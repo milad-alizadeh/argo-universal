@@ -109,6 +109,7 @@ export function ToolCallGroup(props: ToolCallGroupProps): React.JSX.Element {
   return (
     <ToolCallDisclosure
       {...groupHeaderProps(props.group, liveHeader, title)}
+      entryKey={props.group.id}
       initialOpen={props.initialOpen}
       trailing={liveHeader ? undefined : trailing}
       aside={groupImageAside(props.group)}

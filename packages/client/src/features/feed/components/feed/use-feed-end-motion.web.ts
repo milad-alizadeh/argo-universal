@@ -1,11 +1,7 @@
 import type { LegendListRef } from '@legendapp/list/react-native';
 import { useLayoutEffect } from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
-import {
-  type FeedEndMotion,
-  type FeedTail,
-  followEnd,
-} from './feed-end-motion';
+import { type FeedEndMotion, followEnd } from './feed-end-motion';
 import { WebFeedGlide } from './follow-web-feed';
 import type { ListRef } from './keep-place';
 
@@ -55,10 +51,9 @@ function useWatchFeed(list: ListRef, animated: boolean): FeedEndMotion {
 
 export function useFeedEndMotion(
   list: ListRef,
-  { turnRunning }: FeedTail,
   enabled: boolean,
 ): FeedEndMotion {
   const reduced = useReducedMotion();
 
-  return useWatchFeed(list, enabled && turnRunning && !reduced);
+  return useWatchFeed(list, enabled && !reduced);
 }

@@ -2,11 +2,8 @@ import type { LegendListRef } from '@legendapp/list/react-native';
 import { type ListProps } from '@repo/kit/primitives/lists/list';
 import type * as React from 'react';
 import { type RefObject, useCallback } from 'react';
-import { Platform, View } from 'react-native';
-import { useFeedEndClearance } from '#lib/product/composer-cover';
+import { Platform } from 'react-native';
 import { useFeedFade } from '#lib/product/feed-fade';
-import { useScreenFocused } from '#lib/product/navigation/navigation';
-import type { FeedTail } from './feed-end-motion';
 import type { FeedEntry } from './feed-entry';
 import { type EntryDrawing, FeedRow, type RowMotion } from './feed-row';
 import {
@@ -18,17 +15,7 @@ import {
 import { DrawFeedScroll, useFeedOnScroll } from './feed-scroll-drawing';
 import { LoadingEarlier } from './loading-earlier';
 import { useCollapsibleMotion } from './use-collapsible-motion';
-import { useFeedEndMotion } from './use-feed-end-motion';
-
-// Clears whatever of the Composer covers the Feed's end, and the pill above it, and leaves the Feed's gap above them.
-function FeedEnd(): React.JSX.Element {
-  const { endSpace } = useFeedEndClearance();
-
-  return <View style={{ height: endSpace }} />;
-}
-
-// Older rows paging in above keep the reader's place, and so do rows above that measure as the reader scrolls.
-const keepPosition = { data: true };
+import { useFeedAnchors } from './use-feed-anchors';
 
 // In screens from the end: only a reader at the very end is at the end, and follows the Composer.
 const endThreshold = 0.02;
@@ -70,14 +57,15 @@ export const feedListProps = {
   estimatedItemSize: estimatedRowHeight,
   // Each kind keeps its own average size, so a row not yet measured lands near its real place.
   getItemType: rowType,
-  // Each row keeps its own expanded state, which a recycled row would inherit.
-  recycleItems: false,
+  recycleItems: true,
   maintainScrollAtEndThreshold: endThreshold,
-  maintainVisibleContentPosition: keepPosition,
-  // Older rows load two screens ahead of the top, and rows draw a screen beyond the view, so reading back never waits.
+  // Page in older rows before the reader reaches the start.
   onStartReachedThreshold: startThreshold,
-  drawDistance: 800,
-  endContent: <FeedEnd />,
+  // Android flings can outrun recycled rows. Draw farther ahead and shorten the coast after release.
+  ...Platform.select({
+    android: { drawDistance: 2400, decelerationRate: 'fast' as const },
+    default: { drawDistance: 800 },
+  }),
   ...keyboardProps,
 } satisfies Partial<ListProps<FeedRowData>>;
 
@@ -109,8 +97,8 @@ type ListRef = RefObject<LegendListRef | null>;
 export interface FeedScrollProps extends EntryDrawing {
   list: ListRef;
   entries: FeedEntry[];
-  turnRunning: boolean;
   initialIndex: number;
+  turnRunning: boolean;
   onStartReached: () => void;
   // Older rows are paging in above.
   loadingOlder: boolean;
@@ -127,47 +115,32 @@ export type FeedListProps = Pick<
   | 'renderItem'
   | 'initialScrollIndex'
   | 'maintainScrollAtEnd'
+  | 'maintainVisibleContentPosition'
   | 'alignItemsAtEnd'
   | 'onStartReached'
+  | 'endContent'
   | 'header'
 >;
 
-// A Feed read from its start, or hidden behind another page, does not follow incoming rows.
-function useAnchors(
-  list: ListRef,
-  tail: FeedTail,
-  opensAtStart?: boolean,
-): Pick<FeedListProps, 'maintainScrollAtEnd' | 'alignItemsAtEnd'> {
-  const enabled = useScreenFocused() && !opensAtStart;
-  const motion = useFeedEndMotion(list, tail, enabled);
-
-  return {
-    maintainScrollAtEnd: enabled && motion,
-    // Rows start at the top of the view, never against the Composer.
-    alignItemsAtEnd: false,
-  };
-}
-
-function useFeedListProps(
-  list: ListRef,
-  { entries, turnRunning, ...props }: Omit<FeedScrollProps, 'list' | 'atEnd'>,
-): FeedListProps {
+function useFeedListProps(input: FeedScrollProps): FeedListProps {
+  const { list, entries, ...props } = input;
   const motion = useCollapsibleMotion(list);
   const items = useFeedRowData(entries);
+  const anchors = useFeedAnchors(input);
 
   return {
     items,
     renderItem: useRenderEntry({ ...props, ...motion }),
     initialScrollIndex: props.initialIndex,
-    ...useAnchors(list, { items, turnRunning }, props.opensAtStart),
+    ...anchors,
     onStartReached: props.onStartReached,
     header: <LoadingEarlier loading={props.loadingOlder} />,
   };
 }
 
 export function FeedScroll(props: FeedScrollProps): React.JSX.Element {
-  const { list, atEnd, sessionId, ...rest } = props;
-  const listProps = useFeedListProps(list, rest);
+  const { list, atEnd, sessionId } = props;
+  const listProps = useFeedListProps(props);
   const onScroll = useFeedOnScroll(sessionId, list);
 
   const drawing = {

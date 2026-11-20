@@ -62,6 +62,12 @@ function EntryContent(props: FeedRowProps): React.JSX.Element {
   );
 }
 
+// A Tool call group's header is reusable. Its disclosure owns the identity of its body.
+const contentKey = (entry: FeedEntry): string | undefined =>
+  entry.type === 'group' || entry.type === 'exploration'
+    ? undefined
+    : entryKey(entry);
+
 /*
  * A row's collapsibles resize it in the list each frame they move, so the rows below move in the
  * same frame. The list data keeps unchanged entries, their gap and streaming state, so a row draws
@@ -69,14 +75,15 @@ function EntryContent(props: FeedRowProps): React.JSX.Element {
  */
 export const FeedRow = memo(function FeedRow(props: FeedRowProps) {
   const { entry, spaceBelow } = props;
-  const layoutSync = useLayoutSync(entryKey(entry), props);
+  const itemKey = entryKey(entry);
+  const layoutSync = useLayoutSync(itemKey, props);
   // Match the tray's outer inset plus its 12px callout padding.
   const inset = useContext(FeedTrayInset) && 'px-10 web:px-7.5';
 
   return (
     <CollapsibleLayoutSyncContext.Provider value={layoutSync}>
       <SessionColumn testID="feed-column" className={cn(spaceBelow, inset)}>
-        <EntryContent {...props} />
+        <EntryContent key={contentKey(entry)} {...props} />
       </SessionColumn>
     </CollapsibleLayoutSyncContext.Provider>
   );
