@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
@@ -26,6 +26,20 @@ async function addFeatureBranch(git: TestGit): Promise<void> {
   await git('switch', '-q', 'main');
 }
 
+async function buildIn(
+  directory: string,
+  featureBranch: boolean,
+): Promise<TestGit> {
+  const git = gitIn(directory);
+
+  await git('init', '-q', '--initial-branch=main');
+  await commit(git, 'Initial');
+
+  if (featureBranch) await addFeatureBranch(git);
+
+  return git;
+}
+
 async function buildTemplate(featureBranch: boolean): Promise<string> {
   const directory = mkdtempSync(join(tmpdir(), 'argo-test-git-template-'));
 
@@ -33,12 +47,7 @@ async function buildTemplate(featureBranch: boolean): Promise<string> {
     rmSync(directory, { recursive: true, force: true }),
   );
 
-  const git = gitIn(directory);
-
-  await git('init', '-q', '--initial-branch=main');
-  await commit(git, 'Initial');
-
-  if (featureBranch) await addFeatureBranch(git);
+  await buildIn(directory, featureBranch);
 
   return directory;
 }
@@ -60,6 +69,11 @@ export async function initTestRepository(
   featureBranch = true,
 ): Promise<TestGit> {
   mkdirSync(directory, { recursive: true });
+
+  // A repository already there, such as a seeded Project's, is built on in place: a copy cannot overwrite its read-only objects.
+  if (existsSync(join(directory, '.git')))
+    return buildIn(directory, featureBranch);
+
   const template = await templateOf(featureBranch);
 
   cpSync(join(template, '.git'), join(directory, '.git'), { recursive: true });
