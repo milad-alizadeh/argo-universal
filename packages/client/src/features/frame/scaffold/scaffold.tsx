@@ -2,15 +2,12 @@ import { ScreenBackInBand } from '@repo/kit/primitives/scaffolds/screen';
 import type * as React from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { View } from 'react-native';
-import Animated from 'react-native-reanimated';
 import {
   contentFill,
   ContentWidthProvider,
   HasWorkbenchProvider,
 } from '#lib/product/content-layout';
 import { FramePane } from '../components/frame-pane/frame-pane';
-import { useFrameOffset } from '../hooks/use-frame-offset';
-import type { FrameMotion } from '../utils/frame-timing';
 import {
   type PanePlacement,
   ScaffoldFrame,
@@ -65,41 +62,18 @@ export function ScaffoldSidebar({
 
 export type ScaffoldPageProps = PropsWithChildren<{ parts: ScaffoldParts }>;
 
-// Only a Frame moves the column aside for its Workbench.
-const pageContentShift = ({ layout, framed }: ScaffoldParts): number =>
-  framed ? layout.contentShift : 0;
-
-// A hidden overflow still scrolls: the web clips instead, so focus inside the sliding content cannot scroll the page sideways.
+// A hidden overflow still scrolls: the web clips instead, so focus inside the page cannot scroll it sideways.
 const pageClip = `${contentFill} overflow-hidden web:overflow-clip`;
 
-// The column takes its place beside the Workbench at once and slides there as the Workbench shows or hides; a resize moves it at once.
-function SlidingContent(
-  props: PropsWithChildren<{ shift: number; motion: FrameMotion }>,
-): React.JSX.Element {
-  const offset = -props.shift;
-  const slide = useFrameOffset({ ...props.motion, offset, visible: true });
-
-  return (
-    <View className={pageClip}>
-      <Animated.View className={contentFill} style={slide}>
-        {props.children}
-      </Animated.View>
-    </View>
-  );
-}
-
+// The content stays centred in the page whatever the Workbench does, so nothing here moves with it.
 function PageContent({
   parts,
   children,
 }: ScaffoldPageProps): React.JSX.Element {
-  const shift = pageContentShift(parts);
-
   return (
-    <ContentWidthProvider wide={usePageContentWide(parts)} shift={shift}>
+    <ContentWidthProvider wide={usePageContentWide(parts)}>
       <ScreenBackInBand value={useBackInBand(parts)}>
-        <SlidingContent shift={shift} motion={parts.layout.motion}>
-          {children}
-        </SlidingContent>
+        <View className={pageClip}>{children}</View>
       </ScreenBackInBand>
     </ContentWidthProvider>
   );

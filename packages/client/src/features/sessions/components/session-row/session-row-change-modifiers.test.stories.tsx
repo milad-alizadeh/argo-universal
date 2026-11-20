@@ -4,6 +4,7 @@ import {
   meta as sessionRowTestMeta,
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
+import { rowWith } from '../../../../../mocks/session-row/session-row-whole.test.mocks';
 import { SessionRow } from './session-row';
 
 const meta = {
@@ -34,7 +35,7 @@ function modifiers(width: number, layout: 'regular' | 'compact'): Story {
       await settleLayout(width);
 
       const rowOf = (label: string): ReturnType<typeof within> =>
-        within(
+        rowWith(
           canvas.getByRole('button', {
             name: new RegExp(`^${label} Change, Running`),
           }),

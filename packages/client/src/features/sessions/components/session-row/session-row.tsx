@@ -4,16 +4,16 @@ import {
 } from '@repo/kit/primitives/lists/list-item';
 import { memo } from 'react';
 import type * as React from 'react';
+import {
+  type CalledRowProps,
+  useSessionRowCall,
+  withCallLabel,
+} from './session-row-call';
 import { CompactSessionRow } from './session-row-compact';
 import { regularEnds } from './session-row-ends';
 import { SessionMark } from './session-row-mark';
 import { sessionRowMenu } from './session-row-menu';
-import { sessionMetadata } from './session-row-metadata';
-import {
-  hasPluginItems,
-  PluginAccessories,
-  SessionRowPluginItems,
-} from './session-row-plugin-items';
+import { sessionMetaLine } from './session-row-meta-line';
 import { type SessionRowProps, sessionRowLabel } from './session-row-props';
 import { sidebarDrawing } from './session-row-sidebar';
 import { sessionProgress } from './session-row-todos';
@@ -43,11 +43,16 @@ function activityLine({
   return { subtitle: activity.text, subtitleIcon: activity.icon };
 }
 
-function rowIdentity(props: SessionRowProps): RowIdentity {
+type CalledRow = SessionRowProps & CalledRowProps;
+
+function rowIdentity(props: CalledRow): RowIdentity {
   return {
     title: props.session.title,
     ...activityLine(props),
-    accessibilityLabel: sessionRowLabel(props.session),
+    accessibilityLabel: withCallLabel(
+      sessionRowLabel(props.session),
+      props.call,
+    ),
     onPress: () => props.onSelect(props.session.sessionId),
     selected: props.selected,
     finished: props.session.archivedAt !== null,
@@ -55,7 +60,7 @@ function rowIdentity(props: SessionRowProps): RowIdentity {
 }
 
 // Regular: two lines with the Session's status and time, then a meta line while it has anything to show.
-function RegularRow(props: SessionRowProps): React.JSX.Element {
+function RegularRow(props: CalledRow): React.JSX.Element {
   const identity = rowIdentity(props);
 
   return (
@@ -65,32 +70,20 @@ function RegularRow(props: SessionRowProps): React.JSX.Element {
       {...sidebarDrawing(props.session.status)}
       leading={<SessionMark {...props} />}
       {...regularEnds(props, identity.subtitle)}
-      meta={sessionMetadata({ ...props, selected: props.selected ?? false })}
-      metaAccessories={regularAccessories(props)}
+      metaAccessories={sessionMetaLine(props)}
       progress={sessionProgress(props.session)}
     />
   );
 }
 
-// The Plugins' items and "+N" after Argo's meta items, each with its own press beside the row's.
-function regularAccessories({
-  plugins,
-  onOpenPluginPage,
-}: SessionRowProps): React.ReactNode {
-  if (!hasPluginItems(plugins)) return undefined;
-
-  return (
-    <PluginAccessories className="min-w-0 shrink flex-row items-center gap-2.5">
-      <SessionRowPluginItems {...{ plugins, onOpenPluginPage }} />
-    </PluginAccessories>
-  );
-}
-
+// A Voice call attached to the Session takes the status's place in either layout and joins the row's label.
 function SessionRowLayout(props: SessionRowProps): React.JSX.Element {
+  const call = useSessionRowCall(props.session.sessionId);
+
   return props.layout === 'compact' ? (
-    <CompactSessionRow {...props} />
+    <CompactSessionRow {...props} call={call} />
   ) : (
-    <RegularRow {...props} />
+    <RegularRow {...props} call={call} />
   );
 }
 

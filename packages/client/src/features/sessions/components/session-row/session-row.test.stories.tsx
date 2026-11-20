@@ -2,11 +2,11 @@ import { pressTarget } from '@repo/kit/mocks/press-target';
 import { layoutWidths, settleLayout } from '@repo/kit/mocks/story-layout';
 import { sessionRows } from '@repo/mocks/app';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { statusDots } from '../../../../../mocks/session-row/session-row-status-dots.test.mocks';
 import {
   metadata,
   meta as sessionRowTestMeta,
   running,
-  statusDots,
   statusParity,
   type Story,
 } from '../../../../../mocks/session-row/session-row-story.test.mocks';
@@ -89,7 +89,7 @@ export const LiveRowNameDoesNotSayArchived: Story = {
   },
 };
 
-const morePluginItems = { name: /^\d+ more items? from Plugins$/ };
+const morePluginItems = { name: /^\d+ more items?$/ };
 
 export const PluginItems: Story = {
   args: { ...pluginItemsSession, onOpenPluginPage: fn() },
@@ -130,7 +130,7 @@ export const PlainItemsOpenTheSession: Story = {
   },
 };
 
-// "+N" lists each item that did not fit with its Plugin's name; one with a page opens it.
+// "+N" lists each item that did not fit, as its glyph and text; one with a page opens it.
 function moreItems(width: number): Story {
   return {
     args: { ...pluginItemsSession, onOpenPluginPage: fn() },
@@ -145,11 +145,13 @@ function moreItems(width: number): Story {
 
       // The popover fades in before its rows are visible.
       await waitFor(() =>
-        expect(within(more).getByText(moreIssueItem.pluginName)).toBeVisible(),
+        expect(within(more).getByText(moreIssue)).toBeVisible(),
       );
 
       await expect(within(more).getByText(lintItem.item.text)).toBeVisible();
-      await expect(within(more).getByText(lintItem.pluginName)).toBeVisible();
+      await expect(
+        within(more).queryByText(lintItem.pluginName),
+      ).not.toBeInTheDocument();
       await userEvent.click(within(more).getByText(moreIssue));
       await expect(args.onOpenPluginPage).toHaveBeenCalledWith(
         moreIssueItem.pluginId,

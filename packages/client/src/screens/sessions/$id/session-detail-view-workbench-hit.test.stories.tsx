@@ -4,6 +4,7 @@ import type * as React from 'react';
 import { expect, waitFor } from 'storybook/test';
 import { gesture } from '../../../../mocks/feed/gutter-wheel.test.mocks';
 import { scrolledToEnd } from '../../../features/feed/components/feed/feed-reader.mocks';
+import { sessionPageBar } from './session-detail-view-bar.mocks';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { longSession } from './session-detail-view.mocks';
 
@@ -11,7 +12,7 @@ const meta = {
   title: 'Tests/Screens/Sessions/Session/WorkbenchHit',
   parameters: { screenPreview: true },
   render: (): React.JSX.Element => (
-    <FramedSessionPreview state="open" {...longSession} />
+    <FramedSessionPreview state="open" {...longSession} bar={sessionPageBar} />
   ),
 } satisfies Meta;
 

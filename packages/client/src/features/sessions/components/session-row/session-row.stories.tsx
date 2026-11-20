@@ -7,6 +7,15 @@ import { action } from 'storybook/actions';
 import { sessionsLayoutChoices } from '../../stores/sessions-view';
 import { SessionRow, type SessionRowProps } from './session-row';
 import {
+  type SessionRowCall,
+  SessionRowCallProvider,
+} from './session-row-call';
+import {
+  connectingVoiceCall,
+  mutedVoiceCall,
+  voiceCall,
+} from './session-row-call-fixtures';
+import {
   archivedSession,
   compactSession,
   failedSession,
@@ -20,7 +29,10 @@ import {
   selectedSession,
   unreadSession,
 } from './session-row-fixtures';
-import { pullRequestItemsSession } from './session-row-pull-request-fixtures';
+import {
+  crowdedMetaSession,
+  pullRequestItemsSession,
+} from './session-row-pull-request-fixtures';
 import {
   backgroundWorkSession,
   todosLeftSession,
@@ -107,6 +119,32 @@ export const Selected: Story = { args: selectedSession };
 // An archived Session ends its meta line on the Archived pill.
 export const Archived: Story = { args: archivedSession };
 
+const onCall =
+  (call: SessionRowCall) =>
+  (Row: React.ComponentType): React.JSX.Element => (
+    <SessionRowCallProvider value={call}>
+      <Row />
+    </SessionRowCallProvider>
+  );
+
+// A Voice call is attached: the bars and the call's time take the status's place at the end of the title line.
+export const OnVoiceCall: Story = {
+  args: idleSession,
+  decorators: [onCall(voiceCall)],
+};
+
+// The call is still connecting: the bars show without a time until it connects.
+export const VoiceCallConnecting: Story = {
+  args: idleSession,
+  decorators: [onCall(connectingVoiceCall)],
+};
+
+// The call's microphone is muted: mic.slash and "Muted" in red in the same place.
+export const VoiceCallMuted: Story = {
+  args: idleSession,
+  decorators: [onCall(mutedVoiceCall)],
+};
+
 /*
  * One line per Session: its PR's glyph in the PR's state colour, or with no PR how long ago it was active, then its
  * status dot unless idle. The line is the compact List's (its `density`), so the row sits in one, as the Sessions list
@@ -135,6 +173,20 @@ export const PluginItems: Story = {
 
 // A pull request item draws the Change stage mark and tone the Workbench draws, not its Plugin's glyph.
 export const PullRequestItems: Story = { args: pullRequestItemsSession };
+
+// A sidebar row just too narrow for every item: Argo's that do not fit beside the Plugin items join "+N" whole.
+const crowdedMetaWidth = 280;
+
+export const CrowdedMeta: Story = {
+  args: crowdedMetaSession,
+  decorators: [
+    (Row) => (
+      <View style={{ width: crowdedMetaWidth }}>
+        <Row />
+      </View>
+    ),
+  ],
+};
 
 // The chosen Plugin writes the Activity line in place of Argo's.
 export const PluginActivity: Story = { args: pluginActivitySession };

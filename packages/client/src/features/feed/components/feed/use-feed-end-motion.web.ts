@@ -43,18 +43,22 @@ function watchFeed(list: LegendListRef): (() => void) | undefined {
     : undefined;
 }
 
-export function useFeedEndMotion(
-  list: ListRef,
-  _tail: FeedTail,
-  enabled: boolean,
-): FeedEndMotion {
-  const reduced = useReducedMotion();
-  const animated = enabled && !reduced;
+function useWatchFeed(list: ListRef, animated: boolean): FeedEndMotion {
   useLayoutEffect(() => {
     if (!animated || !list.current) return;
 
     return watchFeed(list.current);
   }, [animated, list]);
 
-  return reduced ? followEnd : followRows;
+  return animated ? followRows : followEnd;
+}
+
+export function useFeedEndMotion(
+  list: ListRef,
+  { turnRunning }: FeedTail,
+  enabled: boolean,
+): FeedEndMotion {
+  const reduced = useReducedMotion();
+
+  return useWatchFeed(list, enabled && turnRunning && !reduced);
 }

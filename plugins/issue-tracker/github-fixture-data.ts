@@ -1,5 +1,6 @@
 import type { FixtureAnswer, FixtureRequest } from '@argo/plugin-kit/testing';
 import { childIssue, childNumber, parentIssue } from './github-issue-nodes';
+import { tiedSearch } from './github-paging-fixture';
 import { isObject, parseJson, pick, type Json, type JsonObject } from './json';
 
 // The token of the second person the fixture signs in.
@@ -97,13 +98,22 @@ const issuesData = (
 
 // A search names the second person's Issues as the single read does, so a list's rows seed the same title.
 const searchData = (variables: JsonObject, token: string): string => {
-  const closed = textOf(variables.query).includes('is:closed');
+  const query = textOf(variables.query);
+
+  if (query.includes('assignee:@me')) return tiedSearch(variables.after);
+
+  const closed = query.includes('is:closed');
 
   const nodes = [parentIssue(), childIssue()].map((node) =>
     titledFor(node, token),
   );
 
-  return JSON.stringify({ search: { nodes: closed ? [] : nodes } });
+  return JSON.stringify({
+    search: {
+      nodes: closed ? [] : nodes,
+      pageInfo: { hasNextPage: false, endCursor: null },
+    },
+  });
 };
 
 // One Issue, or several under their aliases, when the query asks for Issues by number.
