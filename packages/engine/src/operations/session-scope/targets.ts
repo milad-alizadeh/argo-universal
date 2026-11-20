@@ -1,7 +1,11 @@
 import type { OperationId } from '@repo/contracts/operations';
 import type { OperationParams } from '../implementations';
 import type { SessionCaller } from '../session-tokens';
-import { callerSessionParam, ownSessionOnly } from './caller-session-targets';
+import {
+  callerSessionParam,
+  ownSession,
+  ownSessionOnly,
+} from './caller-session-targets';
 
 // What an Operation reaches: nothing in particular, one Project, or one Session.
 export type ScopeTarget =
@@ -43,15 +47,6 @@ const openingSessionParam = <Params extends { sessionId: string }>(
   params: Params,
 ): Targeted<Params> => ({
   target: { kind: 'session', sessionId: params.sessionId, opening: true },
-  params,
-});
-
-// The picture is the calling Session's own: it takes no params and reaches nothing but that Session, so an Agent's call needs no ask.
-const ownSession = <Params>(
-  params: Params,
-  caller: SessionCaller,
-): Targeted<Params> => ({
-  target: { kind: 'session', sessionId: caller.sessionId, opening: false },
   params,
 });
 

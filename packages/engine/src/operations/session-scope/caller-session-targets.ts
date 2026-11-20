@@ -15,6 +15,15 @@ export const callerSessionParam = <Params extends { sessionId?: string }>(
   };
 };
 
+// The picture is the calling Session's own: it takes no params and reaches nothing but that Session, so an Agent's call needs no ask.
+export const ownSession = <Params>(
+  params: Params,
+  caller: SessionCaller,
+): Targeted<Params> => ({
+  target: { kind: 'session', sessionId: caller.sessionId, opening: false },
+  params,
+});
+
 // A Session hangs up only its own Conversation (#2413); naming any other Session is refused, whatever its scope covers.
 export const ownSessionOnly = <Params extends { sessionId?: string }>(
   params: Params,
