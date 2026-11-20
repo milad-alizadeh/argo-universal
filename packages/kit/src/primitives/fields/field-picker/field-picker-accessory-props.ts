@@ -3,10 +3,10 @@ import type { KitProps } from '../../kit-props';
 // The App's own button at a picker row's end (ADR-0042, 2026-11-19).
 export type FieldPickerAccessory = {
   icon: KitProps<'Icon'>['name'];
-  // The button's spoken name, such as "Play Sol".
+  // The button's spoken name, such as "Play the preview".
   label: string;
   onPress: () => void;
-  // Not ready yet, such as a preview of a voice with no description.
+  // Not ready yet, such as a preview with nothing to play yet.
   disabled?: boolean;
 };
 

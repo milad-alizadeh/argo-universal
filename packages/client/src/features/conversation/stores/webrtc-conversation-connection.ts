@@ -17,7 +17,11 @@ import {
   type ConversationDeviceChoice,
 } from './conversation-device-choice';
 import { ConversationMuteStore } from './conversation-mute-store';
-import { HeldCall, openChosen, type HeldSound } from './held-conversation';
+import {
+  HeldConversation,
+  openChosen,
+  type HeldSound,
+} from './held-conversation';
 
 const noLevels: VoiceLevels = { input: 0, output: 0 };
 
@@ -33,7 +37,7 @@ const heldSoundOf = ({ volume, microphoneGain }: VoiceSound): HeldSound => ({
  * A call is never recorded or stored; only a preview's greeting may be, for the Server to keep (ADR-0064).
  */
 class WebRtcConversationConnection implements ConversationConnection {
-  private held: HeldCall | undefined;
+  private held: HeldConversation | undefined;
   private readonly previews = new ConnectionPreview();
   // The microphone and speaker this Device chose; every call starts on them.
   private devices = systemDevices;
@@ -90,7 +94,7 @@ class WebRtcConversationConnection implements ConversationConnection {
   // Records a preview's voice as it arrives, where the page can record.
   private recorder(
     onRecorded?: (clip: VoicePreviewClip) => void,
-  ): ((voice: MediaStream, held: HeldCall) => void) | undefined {
+  ): ((voice: MediaStream, held: HeldConversation) => void) | undefined {
     if (!onRecorded) return undefined;
 
     return (voice, held) =>
@@ -104,9 +108,9 @@ class WebRtcConversationConnection implements ConversationConnection {
   // A connection holding what it sends up, playing the voice on the chosen speaker when it arrives.
   private hold(
     microphone: Microphone,
-    heard?: (voice: MediaStream, held: HeldCall) => void,
-  ): HeldCall {
-    const held = new HeldCall(
+    heard?: (voice: MediaStream, held: HeldConversation) => void,
+  ): HeldConversation {
+    const held = new HeldConversation(
       microphone,
       this.environment.createPeer(),
       this.sound,

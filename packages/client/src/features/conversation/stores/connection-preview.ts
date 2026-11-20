@@ -3,7 +3,7 @@ import type {
   VoicePlayback,
   VoiceRecording,
 } from '../types/conversation-environment';
-import type { HeldCall, HeldSound } from './held-conversation';
+import type { HeldConversation, HeldSound } from './held-conversation';
 import { PreviewTake } from './preview-take';
 
 // How long a preview may hold its connection; the Server hangs up sooner, once the greeting is said.
@@ -14,19 +14,19 @@ const previewLimitMs = 30_000;
  * offer or `end` lets the old one go, and a live one lets go of itself after a while.
  */
 export class ConnectionPreview {
-  private live: HeldCall | undefined;
+  private live: HeldConversation | undefined;
   private clip: VoicePlayback | undefined;
   private take: PreviewTake | undefined;
   private timer: ReturnType<typeof setTimeout> | undefined;
 
   // Lets the earlier preview go and holds this live call in its place.
-  public adopt(held: HeldCall): void {
+  public adopt(held: HeldConversation): void {
     this.end();
     this.live = held;
     this.timer = setTimeout(() => this.end(), previewLimitMs);
   }
 
-  public isLive(held: HeldCall): boolean {
+  public isLive(held: HeldConversation): boolean {
     return this.live === held;
   }
 
@@ -38,7 +38,7 @@ export class ConnectionPreview {
 
   // Records the live preview's voice, handing the greeting over once it is whole.
   public record(
-    held: HeldCall,
+    held: HeldConversation,
     recording: VoiceRecording | null,
     onClip: (clip: VoicePreviewClip) => void,
   ): void {

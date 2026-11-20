@@ -61,7 +61,7 @@ const callOf = (props: ConversationDetailViewProps): React.JSX.Element =>
   callSection({
     options: settingsOf(props).options,
     disabled: waiting(props),
-    onChange: props.onCallOptionsChange,
+    onChange: props.onConversationOptionsChange,
   });
 
 const messages = {

@@ -3,7 +3,7 @@ import { useEffect, useMemo, type JSX, type ReactNode } from 'react';
 import { useConversationStatus } from '../hooks/use-conversation-status';
 import { useReportedConversationDevices } from '../hooks/use-reported-conversation-devices';
 import type { ConversationConnection } from '../types/conversation-connection';
-import { followCall } from '../utils/follow-conversation';
+import { followConversation } from '../utils/follow-conversation';
 import {
   browserCarriesAudio,
   browserConversationEnvironment,
@@ -34,7 +34,7 @@ export function ConversationConnectionHost({
   status,
   children,
 }: HostProps): JSX.Element {
-  const hear = useMemo(() => followCall(connection), [connection]);
+  const hear = useMemo(() => followConversation(connection), [connection]);
 
   useEffect(() => hear(status), [hear, status]);
 

@@ -4,10 +4,10 @@ import { useSyncExternalStore } from 'react';
 
 /*
  * The call the person has just asked for, before the Server has it. Opening the microphone, making the offer and the
- * Server's start take a moment, and the call's stage shows from the press, so the App holds the Session it is placing
+ * Server's start take a moment, and the Conversation's band shows from the press, so the App holds the Session it is placing
  * the call in until the Server's own call takes over or the start fails. One Conversation runs per App, so one is held.
  */
-class PlacedCall {
+class PlacedConversation {
   private sessionId: string | null = null;
   private readonly listeners = listenerSet();
 
@@ -35,11 +35,15 @@ class PlacedCall {
   }
 }
 
-export const placedCall = new PlacedCall();
+export const placedConversation = new PlacedConversation();
 
 // The Session a call is being placed in, as the App holds it.
-export const usePlacedCall = (): string | null =>
-  useSyncExternalStore(placedCall.subscribe, placedCall.read, placedCall.read);
+export const usePlacedConversation = (): string | null =>
+  useSyncExternalStore(
+    placedConversation.subscribe,
+    placedConversation.read,
+    placedConversation.read,
+  );
 
 // What a placed call looks like until the Server has it: connecting, with nothing to show on the band yet.
 const placingIn = (sessionId: string): Conversation => ({
@@ -51,8 +55,8 @@ const placingIn = (sessionId: string): Conversation => ({
   startedAt: null,
 });
 
-// The Server's call when it has one; otherwise the call being placed, so the stage and End show from the press.
-export const withPlacedCall = (
+// The Server's call when it has one; otherwise the call being placed, so the band and End show from the press.
+export const withPlacedConversation = (
   status: ConversationStatus,
   placed: string | null,
 ): ConversationStatus =>

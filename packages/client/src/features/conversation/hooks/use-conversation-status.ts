@@ -5,7 +5,10 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useResubscribeOnReconnect, useTRPC } from '#features/connection';
-import { usePlacedCall, withPlacedCall } from '../stores/placed-conversation';
+import {
+  usePlacedConversation,
+  withPlacedConversation,
+} from '../stores/placed-conversation';
 
 // What the status says until the Server has answered: no call, and nothing to offer.
 const loadingStatus: ConversationStatus = {
@@ -35,5 +38,8 @@ export function useConversationStatus(): ConversationStatus {
 
   useResubscribeOnReconnect(subscription);
 
-  return withPlacedCall(read.data ?? loadingStatus, usePlacedCall());
+  return withPlacedConversation(
+    read.data ?? loadingStatus,
+    usePlacedConversation(),
+  );
 }

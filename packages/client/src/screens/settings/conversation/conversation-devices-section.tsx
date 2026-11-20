@@ -99,7 +99,7 @@ const gainRow = (
       max={strongestGain}
       disabled={waiting(props)}
       onCommit={(microphoneGain) =>
-        props.onCallOptionsChange({ microphoneGain })
+        props.onConversationOptionsChange({ microphoneGain })
       }
     />
   ) : null;
@@ -111,7 +111,7 @@ const volumeRow = (props: ConversationDetailViewProps): React.JSX.Element => (
     value={settingsOf(props).options.volume}
     max={loudest}
     disabled={waiting(props)}
-    onCommit={(volume) => props.onCallOptionsChange({ volume })}
+    onCommit={(volume) => props.onConversationOptionsChange({ volume })}
   />
 );
 

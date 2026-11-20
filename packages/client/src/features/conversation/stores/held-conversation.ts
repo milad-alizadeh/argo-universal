@@ -34,7 +34,7 @@ export interface HeldSound {
 }
 
 // What one call holds until it is released: the microphone, the peer and the voice's playback.
-export class HeldCall {
+export class HeldConversation {
   public playback: VoicePlayback | undefined;
   private speakerMuted = false;
   private microphoneMuted = false;

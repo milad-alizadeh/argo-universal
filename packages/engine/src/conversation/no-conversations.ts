@@ -35,7 +35,7 @@ export const noConversations: ConversationsPort = {
     saveCustomVoice: refused,
     deleteCustomVoice: refused,
     setInstructions: refused,
-    setCallOptions: refused,
+    setConversationOptions: refused,
   },
   devices: new ConversationDevices(() => null),
   preview: () => Promise.reject(unavailable(notAvailable)),

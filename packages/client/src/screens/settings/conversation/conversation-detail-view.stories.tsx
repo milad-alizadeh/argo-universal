@@ -38,7 +38,7 @@ const meta = {
     onVoiceChange: action('choose the voice'),
     onPreviewVoice: action('play a voice'),
     onInstructionsChange: action('keep the instructions'),
-    onCallOptionsChange: action('change the call options'),
+    onConversationOptionsChange: action('change the call options'),
     onEditorChange: action('open or close the custom voice form'),
     onSaveCustomVoice: action('save a custom voice'),
     onDeleteCustomVoice: action('delete a custom voice'),

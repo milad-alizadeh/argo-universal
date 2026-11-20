@@ -39,7 +39,7 @@ const openingRow = (props: ConversationDetailViewProps): React.JSX.Element => (
     placeholder="What the voice knows when the Conversation starts"
     value={settingsOf(props).options.opening}
     disabled={waiting(props)}
-    onCommit={(opening) => props.onCallOptionsChange({ opening })}
+    onCommit={(opening) => props.onConversationOptionsChange({ opening })}
   />
 );
 

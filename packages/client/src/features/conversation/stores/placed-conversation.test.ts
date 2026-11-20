@@ -5,17 +5,20 @@ import {
   inputOf,
   statusOf,
 } from '../utils/session-conversation.test.mocks';
-import { placedCall, withPlacedCall } from './placed-conversation';
+import {
+  placedConversation,
+  withPlacedConversation,
+} from './placed-conversation';
 
 const idle = statusOf(null);
 
 const serverCall = callIn('session-1');
 
-afterEach(() => placedCall.release('session-1'));
+afterEach(() => placedConversation.release('session-1'));
 
 describe('a call placed before the Server has it', () => {
   it('shows as connecting in its Session from the press', () => {
-    const status = withPlacedCall(idle, 'session-1');
+    const status = withPlacedConversation(idle, 'session-1');
 
     expect(status.conversation).toMatchObject({
       sessionId: 'session-1',
@@ -25,7 +28,7 @@ describe('a call placed before the Server has it', () => {
   });
 
   it("gives way to the Server's call once the Server has one", () => {
-    const status = withPlacedCall(
+    const status = withPlacedConversation(
       { ...idle, conversation: serverCall },
       'session-1',
     );
@@ -35,7 +38,7 @@ describe('a call placed before the Server has it', () => {
 
   it('draws the band and End in its Session at once', () => {
     const view = sessionConversation(
-      inputOf(withPlacedCall(idle, 'session-1'), 'session-1'),
+      inputOf(withPlacedConversation(idle, 'session-1'), 'session-1'),
     );
 
     expect(view.band?.call.state).toBe('none');
@@ -43,11 +46,11 @@ describe('a call placed before the Server has it', () => {
   });
 
   it('is let go only by its own Session', () => {
-    placedCall.place('session-1');
-    placedCall.release('session-2');
-    expect(placedCall.holds('session-1')).toBe(true);
+    placedConversation.place('session-1');
+    placedConversation.release('session-2');
+    expect(placedConversation.holds('session-1')).toBe(true);
 
-    placedCall.release('session-1');
-    expect(placedCall.read()).toBeNull();
+    placedConversation.release('session-1');
+    expect(placedConversation.read()).toBeNull();
   });
 });

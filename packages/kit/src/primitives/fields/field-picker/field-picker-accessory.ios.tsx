@@ -15,7 +15,7 @@ import type {
 
 type RowEndProps = {
   accessory?: FieldPickerAccessory;
-  // The App measures audio on the web only, so iOS draws no glyph.
+  // A level is measured on the web only, so iOS draws no glyph.
   meter?: FieldPickerMeter;
   children: ReactNode;
 };

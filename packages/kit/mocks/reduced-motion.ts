@@ -1,12 +1,26 @@
 import { cdp } from 'vitest/browser';
+import { nextFrames } from '#mocks/next-frames';
 
-const query = '(prefers-reduced-motion: reduce)';
+const reducedMotionQuery = '(prefers-reduced-motion: reduce)';
 
-// Resolves once the page's own media query says what was asked, which can trail the DevTools reply.
+const stalledAfterMs = 10_000;
+
+/*
+ * Resolves once the page's own media query says what was asked, which can trail the DevTools reply. No deadline, as in
+ * `story-layout`: a page that never agrees ends at the test's own timeout, and a warning says what it waits for.
+ */
 async function untilPageReports(reduced: boolean): Promise<void> {
-  while (matchMedia(query).matches !== reduced) {
-    await new Promise((resolve) => setTimeout(resolve, 5));
+  const stalled = setTimeout(() => {
+    console.warn(
+      `Still waiting for ${reducedMotionQuery} to be ${String(reduced)}.`,
+    );
+  }, stalledAfterMs);
+
+  while (matchMedia(reducedMotionQuery).matches !== reduced) {
+    await nextFrames();
   }
+
+  clearTimeout(stalled);
 }
 
 async function emulate(reduced: boolean): Promise<void> {

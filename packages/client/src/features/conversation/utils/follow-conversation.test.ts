@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { FakeEnvironment } from '../../../../mocks/conversation/fake-conversation-environment';
 import { createWebRtcConversationConnection } from '../stores/webrtc-conversation-connection';
 import type { ConversationConnection } from '../types/conversation-connection';
-import { followCall } from './follow-conversation';
+import { followConversation } from './follow-conversation';
 import { callIn, statusOf } from './session-conversation.test.mocks';
 
 interface App {
@@ -17,7 +17,7 @@ function app(): App {
   const environment = new FakeEnvironment();
   const connection = createWebRtcConversationConnection(environment);
 
-  return { environment, connection, hear: followCall(connection) };
+  return { environment, connection, hear: followConversation(connection) };
 }
 
 describe("the App's voice connection follows the Server's call", () => {

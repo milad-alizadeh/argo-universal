@@ -17,7 +17,7 @@ export type FieldPickerProps = FieldGroupKitProps<'FieldGroup.Picker'> & {
   create?: { label: string; onCreate: (text: string) => void };
   // One small round button at the row's end that tests or previews the row's own choice (ADR-0042, 2026-11-19). The App's own.
   accessory?: FieldPickerAccessory;
-  // How loud the device the row chooses is, as a level glyph before the accessory's lane; drawn where the App measures audio, on the web.
+  // The level of what the row chooses, as a glyph before the accessory's lane; drawn where a level is measured, on the web.
   meter?: FieldPickerMeter;
 };
 

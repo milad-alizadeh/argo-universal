@@ -13,7 +13,7 @@ interface CallStart {
  * Session to start the call, and the call then writes and starts Turns the page never asked for, so the page's Feed is
  * resumed after the start as after any command, whether it started or failed with a Notice.
  */
-export const startCall = (
+export const startConversation = (
   connection: ConversationConnection | null,
   { send, resumeFeed }: CallStart,
 ): Promise<void> | undefined =>

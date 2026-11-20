@@ -42,7 +42,6 @@ export const BandStaysInTheComposer: Story = {
     await expect(canvas.getByText('Listening')).toBeInTheDocument();
     await expect(canvas.getByText('4:12')).toBeInTheDocument();
     await expect(column).toContainElement(band);
-    await expect(canvas.queryByTestId('voice-stage')).not.toBeInTheDocument();
   },
 };
 

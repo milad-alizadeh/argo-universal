@@ -13,7 +13,7 @@ import { FakeConversationProvider } from './fake-provider';
 
 const greeting = 'Greet the person as Sam.';
 
-const setCallOptions = 'conversation.setOptions';
+const setConversationOptions = 'conversation.setOptions';
 
 describe('Conversation options', () => {
   it('start with the filler on, no opening, five idle minutes and full volume', async () => {
@@ -96,15 +96,15 @@ describe('Conversation options', () => {
     const cli = await operationCaller(voice.host);
 
     const listed = await session.caller.operations.list.query({
-      filter: setCallOptions,
+      filter: setConversationOptions,
     });
 
     await runOperation(cli.operations, {
-      id: setCallOptions,
+      id: setConversationOptions,
       params: { idleSeconds: 60 },
     });
 
-    expect(listed.map(({ id }) => id)).toContain(setCallOptions);
+    expect(listed.map(({ id }) => id)).toContain(setConversationOptions);
     expect(
       (await voice.host.caller.conversation.getSettings()).options.idleSeconds,
     ).toBe(60);
@@ -115,7 +115,7 @@ describe('Conversation options', () => {
 
     await expect(
       runOperation(cli.operations, {
-        id: setCallOptions,
+        id: setConversationOptions,
         params: { readOut: 'answers' },
       }),
     ).rejects.toThrow(/readOut/);

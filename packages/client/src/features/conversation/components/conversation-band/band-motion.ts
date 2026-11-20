@@ -121,20 +121,15 @@ export const clamp01 = (value: number): number => {
   return Math.min(1, Math.max(0, value));
 };
 
-export const lerp = (from: number, to: number, share: number): number => {
+const smoothstepCubic = 3;
+
+const smoothstepSlope = 2;
+
+// Smoothstep: eases a 0..1 value in and out.
+const smoothstep = (value: number): number => {
   'worklet';
 
-  return from + (to - from) * share;
-};
-
-const smoothA = 3;
-
-const smoothB = 2;
-
-const smooth = (value: number): number => {
-  'worklet';
-
-  return value * value * (smoothA - smoothB * value);
+  return value * value * (smoothstepCubic - smoothstepSlope * value);
 };
 
 // How far the colour front has come as the strip turns from orange to blue; it enters at the Agent's right end.
@@ -155,7 +150,7 @@ export function turnBlend(position: number, tone: number): number {
 
   const front = tone * frontReach - frontStart;
 
-  return smooth(clamp01((front - (1 - position)) / frontSoftness + half));
+  return smoothstep(clamp01((front - (1 - position)) / frontSoftness + half));
 }
 
 const pulseSeconds = 2.9;
