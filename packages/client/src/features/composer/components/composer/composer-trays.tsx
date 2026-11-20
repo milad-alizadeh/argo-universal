@@ -30,12 +30,12 @@ export function ComposerBottomTray(
 
 // A pill's hairline border sits inside its padding, so 5px puts its icon on the Plan's 16px edge.
 const statusRowClass =
-  'flex-1 min-h-0 flex-row items-center pl-1.25 pr-1.5 gap-1';
+  'h-composer-tray-row flex-row items-center pl-1.25 pr-1.5 gap-1';
 
 const statusTrayClass = cn(
   composerTrayClass,
   composerBottomTrayTuckClass,
-  'h-11 rounded-b-2xl',
+  'rounded-b-2xl',
 );
 
 function ComposerWideStatus(

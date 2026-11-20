@@ -3,6 +3,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import { PhonePill } from '@repo/kit/primitives/status/pill';
 import type * as React from 'react';
+import { View } from 'react-native';
 
 export interface WrittenPlanTriggerProps {
   open: boolean;
@@ -16,7 +17,9 @@ export function WrittenPlanTrigger(
 ): React.JSX.Element {
   if (props.wide)
     return (
-      <Pill variant="control" appearance="glass" {...triggerProps(props)} />
+      <View className="min-h-composer-tray-row justify-center">
+        <Pill variant="control" appearance="glass" {...triggerProps(props)} />
+      </View>
     );
 
   return <PhonePlanTrigger {...props} />;
