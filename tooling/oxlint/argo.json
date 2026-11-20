@@ -295,6 +295,7 @@
     {
       // Colours that are data (ADR-0026, Colour as data): a light's, as a Plugin sends them to a Swatch and a Slider fill.
       "files": [
+        "packages/contracts/src/plugins/field-row.test.ts",
         "packages/kit/src/primitives/visual/swatch/swatch-fixtures.ts",
         "packages/kit/src/primitives/controls/slider/slider-fixtures.ts",
         "packages/kit/src/primitives/fields/field-composed-row/field-composed-row-fixtures.ts",

@@ -69,10 +69,16 @@ const stackNode = (
   children: rowNodes(element.props.children),
 });
 
+// A line's words: the Contract gives a Text a string.
+const textOf = (children: ReactNode): string =>
+  Children.toArray(children)
+    .filter((child) => typeof child === 'string')
+    .join('');
+
 const textNode = (element: ReactElement<TextProps>, key: string): RowNode => ({
   kind: 'line',
   key,
-  text: Children.toArray(element.props.children).join(''),
+  text: textOf(element.props.children),
   role: element.props.role,
   tone: element.props.tone,
 });

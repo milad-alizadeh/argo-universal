@@ -6,6 +6,7 @@ import {
   fieldGroupPickerProps,
 } from './field-group-choice-props';
 import {
+  fieldGroupComposedRowProps,
   fieldGroupFieldProps,
   fieldGroupRowProps,
 } from './field-group-row-props';
@@ -23,11 +24,6 @@ const fieldGroupProps = z.object({
 const fieldGroupSectionProps = z.object({
   title: z.string().optional().describe('The heading above the section.'),
   footer: z.string().optional().describe('Supporting text below the section.'),
-});
-
-// A composed row: its content is its children (ADR-0042, owner amendment 2026-11-20).
-const fieldGroupComposedRowProps = z.object({
-  id: fieldGroupFieldProps.shape.id,
 });
 
 const fieldGroupToggleProps = fieldGroupFieldProps.extend({

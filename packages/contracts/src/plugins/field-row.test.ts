@@ -12,6 +12,8 @@ const node = (
 
 const warm = '#FFB45A';
 
+const rowName = 'FieldGroup.Row';
+
 const swatch = node('Swatch', {
   colors: [warm, '#FF7A3D'],
   accessibilityLabel: 'Warm white',
@@ -36,7 +38,7 @@ const brightness = node('Slider', {
 });
 
 // A light's row: its colour, its name and switch on one line, its brightness below.
-const lightRow = node('FieldGroup.Row', { id: 'light-desk' }, [
+const lightRow = node(rowName, { id: 'light-desk' }, [
   node('Stack', { direction: 'column', gap: 2 }, [
     node('Stack', { direction: 'row', gap: 3, align: 'center' }, [
       swatch,
@@ -52,7 +54,7 @@ const section = (row: WireNode): WireNode =>
 
 const fallback = {
   type: 'Text',
-  key: 'FieldGroup.Row',
+  key: rowName,
   props: { children: updateMessage, role: 'secondary', tone: 'muted' },
   children: [],
   slots: {},
@@ -67,7 +69,7 @@ describe('a composed FieldGroup row', () => {
     ['a Button', node('Button', { title: 'More' })],
     ['a Card', node('Card', { title: 'Nested' })],
   ])('refuses %s anywhere inside it', (_, stranger) => {
-    const row = node('FieldGroup.Row', {}, [
+    const row = node(rowName, {}, [
       node('Stack', { direction: 'row' }, [name, stranger]),
     ]);
 
@@ -75,14 +77,15 @@ describe('a composed FieldGroup row', () => {
   });
 });
 
-describe('a colour that is data', () => {
-  const parsed = (colors: unknown): WireNode =>
-    prepareWireTree(
-      node('Stack', { direction: 'row' }, [
-        node('Swatch', { colors, accessibilityLabel: 'Light' }),
-      ]),
-    );
+// What the Server leaves of a Swatch passed these colours, whatever they are.
+const parsed = (colors: string[]): WireNode =>
+  prepareWireTree(
+    node('Stack', { direction: 'row' }, [
+      node('Swatch', { colors, accessibilityLabel: 'Light' }),
+    ]),
+  );
 
+describe('a colour that is data', () => {
   it.each([[[warm]], [[warm, '#7A5CFF', '#FF4FA0', '#FFFFFF']]])(
     'takes one to four sRGB stops on a Swatch',
     (colors) => {
