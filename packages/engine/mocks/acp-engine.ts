@@ -11,6 +11,7 @@ import type { EngineInput } from '../src/engine/machine';
 import { openTestDatabase } from './database';
 import { type EngineTestOptions, startEngineTestHost } from './engine';
 import { createScriptedAgentProcess } from './scripted-agent';
+import { keepNothingAwake } from './scripted-engine';
 
 export const emptySessionInput = {
   projectId: 'project-1',
@@ -117,7 +118,7 @@ const voiceProviderOf = (scenario: AcpScenario): AcpScenario['voiceProvider'] =>
 
 // Most tests have Agents that send no Slash command list; they must not wait for one.
 const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({
-  caffeinate: scenario.caffeinate,
+  caffeinate: scenario.caffeinate ?? keepNothingAwake,
   operationWaitClock: scenario.operationWaitClock,
   slashCommandsWaitMs: scenario.slashCommandsWaitMs ?? 0,
   argoToolsGraceMs: scenario.argoToolsGraceMs ?? Number.POSITIVE_INFINITY,
