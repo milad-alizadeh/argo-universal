@@ -7,7 +7,7 @@ import { productCompatibility } from '@repo/contracts/product-identity';
  * See the Electron documentation for details on how to use preload scripts:
  * https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
  */
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webFrame } from 'electron';
 
 // Page zoom resizes the CSS viewport, while native traffic lights keep their size.
 function reportBandHeight(): void {
@@ -83,6 +83,7 @@ const desktopBridge = {
       : undefined,
   retryServer: (): void => ipcRenderer.send('server:retry'),
   window: {
+    getZoomFactor: (): number => webFrame.getZoomFactor(),
     show: (): void => ipcRenderer.send('window:show'),
     minimize: (): void => ipcRenderer.send('window:minimize'),
     maximize: (): void => ipcRenderer.send('window:maximize'),
