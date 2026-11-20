@@ -47,8 +47,8 @@ const keyboardProps = Platform.select({
   default: {},
 } as const);
 
-// Keep rows ready on both sides so reversing a fling does not replace a screenful at once.
-const nativeRenderWindow = { drawDistance: 2400, symmetricDrawDistance: true };
+// Mount nearby rows ahead of native flings.
+const nativeRenderWindow = { drawDistance: 2400 };
 
 // What the Feed's list takes whatever the Session draws.
 export const feedListProps = {

@@ -38,7 +38,6 @@ export type ListProps<Item> = KitProps<'List', string, ReactNode, Item> &
     | 'onStartReached'
     | 'onStartReachedThreshold'
     | 'drawDistance'
-    | 'symmetricDrawDistance'
     | 'viewabilityConfig'
     | 'decelerationRate'
     | 'stickyHeaderIndices'

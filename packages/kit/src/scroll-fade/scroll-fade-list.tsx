@@ -48,7 +48,6 @@ const listDefaults = {
 
 // Props only native scroll views take: Legend List's web build hands them to its scroll element, where React warns of unknown attributes.
 interface NativeOnlyListProps {
-  symmetricDrawDistance?: boolean;
   keyboardShouldPersistTaps?: unknown;
   keyboardDismissMode?: unknown;
   nestedScrollEnabled?: unknown;
@@ -58,7 +57,6 @@ interface NativeOnlyListProps {
 type WebListProps<P> = Omit<P, keyof NativeOnlyListProps>;
 
 function webListProps<P extends NativeOnlyListProps>({
-  symmetricDrawDistance: _drawDistance,
   keyboardShouldPersistTaps: _taps,
   keyboardDismissMode: _dismiss,
   nestedScrollEnabled: _nested,

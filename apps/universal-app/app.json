@@ -54,7 +54,6 @@
             "deploymentTarget": "18.0"
           },
           "android": {
-            "buildReactNativeFromSource": true,
             "usesCleartextTraffic": true
           }
         }
