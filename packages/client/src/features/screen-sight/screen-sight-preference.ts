@@ -21,7 +21,7 @@ const desktopScreen = (): NonNullable<Window['argo']>['screen'] =>
 export const tellDesktop = (enabled: boolean): void =>
   desktopScreen()?.setEnabled(enabled);
 
-export async function saveScreenSightEnabled(enabled: boolean): Promise<void> {
+async function saveScreenSightEnabled(enabled: boolean): Promise<void> {
   tellDesktop(enabled);
 
   try {
