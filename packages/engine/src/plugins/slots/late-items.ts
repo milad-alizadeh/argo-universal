@@ -6,10 +6,10 @@ import {
   itemsLeftOut,
   keepLate,
   leftOut,
-  type PluginItems,
+  type ItemsAnswer,
   type Reply,
-  type SlotWorker,
 } from './kept-items';
+import type { SlotWorker } from './slot-worker';
 
 // How long one batched call may take before its Plugin is left out of that answer.
 export const slotItemsLimitMs = 2000;
@@ -69,16 +69,12 @@ export const landingOf = (
 ): Landing => ({ worker, epoch: worker.epoch, input });
 
 /*
- * What a late reply adds, kept by its worker: only while nothing changed since it was asked, so a reply older than a
- * change signal never stands in for the answer after it. A reply from an ended worker never lands: its call ends with it.
+ * What a late reply comes to, kept by its worker: only while nothing changed since it was asked, so a reply older than
+ * a change signal never stands in for the answer after it. A reply from an ended worker never lands: its call ends with it.
  */
 export function landedItems(
   { worker, epoch, input }: Landing,
   reply: Reply,
-): PluginItems | undefined {
-  if (worker.epoch !== epoch) return undefined;
-
-  const answer = keepLate(worker, input, reply);
-
-  return answer.ok ? answer.items : undefined;
+): ItemsAnswer | undefined {
+  return worker.epoch === epoch ? keepLate(worker, input, reply) : undefined;
 }

@@ -14,6 +14,7 @@ describe('the Workbench drawn over the page', () => {
       state: 'gutter',
       offset: 1536,
       width: 312,
+      fits: true,
     });
     expect(layout.inspector.offset - 16).toBe(
       layout.workbench.offset + layout.workbench.width,

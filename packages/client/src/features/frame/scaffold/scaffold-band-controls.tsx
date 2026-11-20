@@ -19,7 +19,10 @@ import type { PartReads, ScaffoldPartProps } from './use-scaffold-layout';
 // A control over the Session reads the Session the page claimed beside the layout its pane is in.
 type SessionReads = { session: WindowBandSession };
 
-type WorkbenchReads = PartReads<'onWorkbenchIntentChange', 'workbench'> &
+type WorkbenchReads = PartReads<
+  'onWorkbenchIntentChange',
+  'workbench' | 'setWorkbenchPopover'
+> &
   SessionReads;
 
 type ExpandReads = PartReads<
@@ -36,20 +39,24 @@ type InspectorToggleReads = PartReads<
   'inspector'
 >;
 
-function workbenchProps({
-  scaffold,
-  layout,
-  session,
-}: WorkbenchReads): IconButtonProps {
+// As Codex's summary panel: on a page that holds the Workbench the toggle sets the person's intent; on a narrower one it opens and closes the Workbench over the content and leaves the intent alone.
+function toggleWorkbench({ scaffold, layout }: WorkbenchReads): void {
   const visible = workbenchDrawn(layout.workbench.state);
+
+  if (layout.workbench.fits)
+    scaffold.onWorkbenchIntentChange(visible ? 'hidden' : 'shown');
+  else layout.setWorkbenchPopover(!visible);
+}
+
+function workbenchProps(parts: WorkbenchReads): IconButtonProps {
+  const visible = workbenchDrawn(parts.layout.workbench.state);
 
   return {
     ...bandToggleAppearance(visible),
     icon: 'workbench',
     accessibilityLabel: 'Toggle Workbench',
-    disabled: !session.workbench,
-    onPress: () =>
-      scaffold.onWorkbenchIntentChange(visible ? 'hidden' : 'shown'),
+    disabled: !parts.session.workbench,
+    onPress: () => toggleWorkbench(parts),
   };
 }
 

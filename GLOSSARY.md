@@ -661,7 +661,7 @@ The App's chrome around its pages: the rail, the section sidebar and the panes. 
 _Avoid_: Shell, app shell, chrome
 
 **Frame layout**:
-Where every region of a wide window's Frame sits: the rail, the list, the page and its content column, the Workbench and the Inspector, with the dividers between them and how far each drags. It is worked out once from the window's width, the preferred pane widths and what the person asked of the sidebar, the Workbench and the Inspector; the content keeps its floor before the list folds, and the Workbench, drawn over the page, takes no width and shows where the page's gutters together hold it, the content column moving aside where the trailing one alone does not.
+Where every region of a wide window's Frame sits: the rail, the list, the page and its content column, the Workbench and the Inspector, with the dividers between them and how far each drags. It is worked out once from the window's width, the preferred pane widths and what the person asked of the sidebar, the Workbench and the Inspector; the content keeps its floor before the list folds, and the Workbench, drawn over the page, takes no width and shows where the page's gutters hold it by Codex's thresholds, the content column centring in the room beside it on a page too narrow to keep it centred.
 _Avoid_: Geometry, legacy layout
 
 **Scaffold**:

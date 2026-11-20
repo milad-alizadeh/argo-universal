@@ -69,10 +69,10 @@ function useOffsetValues(props: OffsetMotion): MotionValues {
   return { shift, opacity };
 }
 
+type FrameStyle = ReturnType<typeof useAnimatedStyle<ViewStyle>>;
+
 // Take the destination layout immediately, then translate from the current visual position.
-export function useFrameOffset(
-  props: OffsetMotion,
-): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
+export function useFrameOffset(props: OffsetMotion): FrameStyle {
   const { shift, opacity } = useOffsetValues(props);
 
   return useAnimatedStyle<ViewStyle>(
@@ -81,5 +81,22 @@ export function useFrameOffset(
       opacity: opacity.get(),
     }),
     [shift, opacity],
+  );
+}
+
+/*
+ * The same motion with no fade: the container slides and is fully opaque while it shows or slides out, and
+ * transparent once it has gone. A translucent container would stop the glass in it blurring the page under it.
+ */
+export function useFrameSlide(props: OffsetMotion): FrameStyle {
+  const { shift, opacity } = useOffsetValues(props);
+  const { visible } = props;
+
+  return useAnimatedStyle<ViewStyle>(
+    () => ({
+      transform: [{ translateX: shift.get() }],
+      opacity: visible || opacity.get() > 0 ? 1 : 0,
+    }),
+    [shift, opacity, visible],
   );
 }
