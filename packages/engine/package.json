@@ -30,6 +30,7 @@
     "esbuild": "catalog:",
     "fflate": "catalog:",
     "jsonc-parser": "catalog:",
+    "minisearch": "catalog:",
     "multicast-dns": "catalog:",
     "node-pty": "catalog:",
     "oxc-parser": "catalog:",
@@ -78,6 +79,7 @@
     "./mocks/data-fixture": "./mocks/data-fixture.ts",
     "./pairing-vector": "./src/pairing/noise-vector-fixtures.ts",
     "./mocks/acp-engine": "./mocks/acp-engine.ts",
-    "./mocks/acp-feed": "./mocks/acp-feed.ts"
+    "./mocks/acp-feed": "./mocks/acp-feed.ts",
+    "./voice-prompt": "./src/feed/voice-markers.ts"
   }
 }

@@ -116,6 +116,10 @@ it('finds Operations by a keyword without matching case', async () => {
   );
 
   expect(await response.json()).toMatchObject({
-    result: { data: [{ id: projectListId }] },
+    result: {
+      data: expect.arrayContaining([
+        expect.objectContaining({ id: projectListId }),
+      ]),
+    },
   });
 });

@@ -35,7 +35,11 @@ const atLimit = 5;
 
 // Every Session is in Project p1 unless it says otherwise; foreign is in p2.
 const directory = memorySessionDirectory({
-  caller: { projectId: 'p1', startedBySessionId: null },
+  caller: {
+    projectId: 'p1',
+    startedBySessionId: null,
+    agent: 'caller-agent',
+  },
   started: { projectId: 'p1', startedBySessionId: 'caller' },
   unrelated: { projectId: 'p1', startedBySessionId: null },
   foreign: { projectId: 'p2', startedBySessionId: 'caller' },

@@ -40,6 +40,14 @@ Owner amendment, 2026-11-15 (#2226 eval): Argo drove Claude Agent, Codex and pi 
 
 Owner amendment, 2026-11-17: the fourth Argo instruction is **Pull requests**. An Agent opened a pull request with `gh pr create` and stopped, leaving it unattached to the Session; the GitHub Plugin's prose only said when `github.discover` was useful, and sits at its 1,000-character limit. The instruction asks the Agent to run `github.discover` in the turn it opens one, and `github.attach` for one opened from another branch.
 
+Owner amendment, 2026-11-20: the discovery line becomes the **Operation catalog**. A live eval of Claude Agent and Codex Sessions found that starting or renaming a Session took 20 to 32 seconds before the Operation ran, against 6 to 12 seconds for an Operation an instruction names. The Agents spent the difference searching (two to nine `operation_list` calls) and looking up their own Session and Project ids.
+
+- **The catalog lists every Operation an Agent may run**, one line each: its id, its param names with `?` on the ones it may leave out, and the first sentence of its description. It is built from the registry, so it cannot drift, and leaves out the App-only Operations, and the Todo list's while the person has it off. It is about 2,000 tokens; every schema in full is about 29,000.
+- **It comes first, in both places the Argo instructions go:** the MCP server's `instructions` and the ACP system prompt. It is not an Argo instruction, so the 1,000-character limit does not apply to it.
+- **It tells the Agent to run an Operation directly.** `operation_list` stays, for a Plugin's Operations and for a whole schema; a refused call already answers with the schema.
+- **A Session caller's own ids fill what it leaves out.** `session.rename` renames the calling Session, as the Todo list Operations do, and `session.new` starts in the caller's Project with the caller's Agent. Every caller may leave out `session.new`'s Checkout, which is then the main Checkout, and its config options. Any other caller still names the Project and Agent, and a refusal says so.
+- **A description names a schema it cannot afford to spell out.** `plugin.list` spelled out the Plugin manifest, 1.4 MB of schema; its description now names the manifest in one line, and validation still uses the whole schema.
+
 ## Considered options
 
 - **A built-in Plugin that holds only instructions.** Rejected: a person could disable it, and it would make a core behaviour look optional.

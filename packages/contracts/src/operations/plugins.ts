@@ -3,6 +3,7 @@ import {
   PluginActivation,
   PluginEnablement,
   PluginList,
+  PluginManifest,
   PluginSettingChange,
   PluginSettings,
 } from '../plugins/plugins';
@@ -13,6 +14,14 @@ import {
   PluginNewInput,
   PluginNewOutput,
 } from './plugin-guide';
+import { operationSchemaSummary } from './schema-json';
+
+// A manifest spelled out is over a megabyte of schema; an Agent reading plugin.list needs only what it holds.
+operationSchemaSummary.add(PluginManifest, {
+  type: 'object',
+  description:
+    'The Plugin’s manifest, as its plugin.json declares it: id, name, version, entry, icon and what it contributes to the App.',
+});
 
 export const pluginOperations = {
   'plugin.list': {
