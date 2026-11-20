@@ -8,7 +8,7 @@ import { cancellableScenarios } from './cancellable-scenarios.ts';
 import { changedFilesSteps } from './changed-files-scenario.ts';
 import { contextUsageScenarios } from './context-usage.ts';
 import { delegationSteps } from './delegation-scenario.ts';
-import { feedHistorySteps } from './feed-history-scenario.ts';
+import { feedHistoryScenario } from './feed-history-scenario.ts';
 import {
   feedWorkSteps,
   feedWorkReplySteps,
@@ -83,7 +83,7 @@ export const scenarios = {
   ...subagentScenarios,
   'subagent-reports': subagentReports,
   'changed-files': scenario(changedFilesSteps),
-  'feed-history': scenario(feedHistorySteps),
+  'feed-history': feedHistoryScenario,
   'feed-work': scenario(feedWorkReplySteps),
   'completed-tool-held-turn': scenario([...feedWorkSteps, { type: 'hold' }]),
   'feed-interrupted': scenario([...unfinishedFeedWorkSteps, { type: 'hold' }]),
