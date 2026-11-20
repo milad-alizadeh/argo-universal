@@ -238,6 +238,38 @@ export const ShownCardsFloatOverTheCentredConversation: Story = {
   },
 };
 
+// A translucent ancestor stops a glass Surface blurring the page under it, so while the cards fade in each fades its own glass and nothing above them does.
+const frostedInside = (element: HTMLElement): HTMLElement[] =>
+  [...element.querySelectorAll<HTMLElement>('*')].filter(
+    (node) => getComputedStyle(node).backdropFilter !== 'none',
+  );
+
+function translucentAncestors(element: HTMLElement): HTMLElement[] {
+  const found: HTMLElement[] = [];
+
+  for (let node = element.parentElement; node; node = node.parentElement)
+    if (Number(getComputedStyle(node).opacity) < 1) found.push(node);
+
+  return found;
+}
+
+export const CardsKeepTheirFrostWhileTheyFadeIn: Story = {
+  beforeEach: (): Promise<void> => settleLayout(1500),
+  play: async ({ canvas, userEvent }) => {
+    await canvas.findByTestId(composerId);
+    await userEvent.click(
+      canvas.getByRole('button', { name: toggleWorkbench }),
+    );
+
+    const frosted = frostedInside(canvas.getByTestId(workbenchId));
+
+    await expect(frosted.length).toBeGreaterThan(0);
+
+    for (const glass of frosted)
+      await expect(translucentAncestors(glass)).toEqual([]);
+  },
+};
+
 // The Inspector's Changes tab holds the Checkout's files alone: no pull request, and no Change segment.
 export const PullRequestsStayOutOfInspector: Story = {
   render: ({ view }): JSX.Element => <WithChangedFiles {...view} />,

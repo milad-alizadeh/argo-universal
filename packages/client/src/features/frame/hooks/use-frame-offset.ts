@@ -69,10 +69,10 @@ function useOffsetValues(props: OffsetMotion): MotionValues {
   return { shift, opacity };
 }
 
+type FrameStyle = ReturnType<typeof useAnimatedStyle<ViewStyle>>;
+
 // Take the destination layout immediately, then translate from the current visual position.
-export function useFrameOffset(
-  props: OffsetMotion,
-): ReturnType<typeof useAnimatedStyle<ViewStyle>> {
+export function useFrameOffset(props: OffsetMotion): FrameStyle {
   const { shift, opacity } = useOffsetValues(props);
 
   return useAnimatedStyle<ViewStyle>(
@@ -82,4 +82,26 @@ export function useFrameOffset(
     }),
     [shift, opacity],
   );
+}
+
+// The same motion as two styles: the slide for the container, and the fade for each glass Surface in it, so no translucent ancestor stops their frost blurring the page.
+export interface FrameMotionStyles {
+  slide: FrameStyle;
+  fade: FrameStyle;
+}
+
+export function useFrameMotion(props: OffsetMotion): FrameMotionStyles {
+  const { shift, opacity } = useOffsetValues(props);
+
+  const slide = useAnimatedStyle<ViewStyle>(
+    () => ({ transform: [{ translateX: shift.get() }] }),
+    [shift],
+  );
+
+  const fade = useAnimatedStyle<ViewStyle>(
+    () => ({ opacity: opacity.get() }),
+    [opacity],
+  );
+
+  return { slide, fade };
 }
