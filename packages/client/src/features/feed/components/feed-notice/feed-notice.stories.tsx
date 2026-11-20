@@ -9,7 +9,7 @@ import {
   infoNotice,
   missingArgoToolsNotice,
   unrecognisedNotice,
-  voiceCallFailedNotice,
+  conversationFailedNotice,
   warningNotice,
 } from './feed-notice-fixtures';
 
@@ -32,8 +32,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Info: Story = { args: infoNotice };
 
-// A Voice call ended by failure: one Notice in the Feed saying why, drawn as any warning Notice is.
-export const VoiceCallFailed: Story = { args: voiceCallFailedNotice };
+// A Conversation ended by failure: one Notice in the Feed saying why, drawn as any warning Notice is.
+export const ConversationFailed: Story = { args: conversationFailedNotice };
 
 // The Agent never loaded Argo's MCP server, so it can't keep a checklist.
 export const ArgoToolsMissing: Story = { args: missingArgoToolsNotice };

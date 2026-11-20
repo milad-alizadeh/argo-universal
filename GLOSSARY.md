@@ -281,8 +281,8 @@ A coding agent program that Argo drives, such as Claude or Codex. The Agents pag
 _Avoid_: Harness, provider, vendor, model
 
 **Session**:
-One conversation with one Agent, with an Argo id and the Agent's own session id.
-_Avoid_: Chat, thread, conversation
+One line of work with one Agent: its Prompts, Turns and Feed, with an Argo id and the Agent's own session id.
+_Avoid_: Chat, thread, Conversation (that is the spoken feature)
 
 **Empty Session**:
 A Session that New Session opened in the Project's main checkout and no prompt has reached yet. It is not listed, and leaving New Session discards it.
@@ -413,7 +413,7 @@ An item offered in the Composer's `/` menu, from an Agent or a Plugin. An Agent'
 _Avoid_: Slash command (for a Plugin result), autocomplete item
 
 **Follow-up suggestion**:
-A proposed next Prompt based on the conversation, offered in the Composer when what the user would naturally say next is clear. It becomes a draft only when the user accepts it.
+A proposed next Prompt based on the Session's context, offered in the Composer when what the user would naturally say next is clear. It becomes a draft only when the user accepts it.
 _Avoid_: Composer suggestion (for this), autocomplete, next step
 
 **Suggestion model**:
@@ -429,31 +429,35 @@ What is sent to a Session's Agent to start a Turn. It comes from the user, from 
 _Avoid_: Message (alone), input, instruction
 
 **Queued Prompt**:
-A Prompt waiting in a Session’s ordered queue for a Turn of its own: the person’s, a Plugin’s, the Voice call’s or another Session’s. It is future work, outside the Feed until it starts. A Plugin may withdraw one it sent, never anyone else’s.
+A Prompt waiting in a Session’s ordered queue for a Turn of its own: the person’s, a Plugin’s, the Conversation’s or another Session’s. It is future work, outside the Feed until it starts. A Plugin may withdraw one it sent, never anyone else’s.
 _Avoid_: Pending message, draft Prompt
 
 **Sent Prompt**:
-A Prompt from a sender other than the person: another Session, a Plugin or the Voice call. An idle Session starts a Turn with it; a busy or paused one takes it at the end of its queue with its sender, and never resumes a paused queue. When the Agent supports steering, the running Turn takes it in at once, unless a Plugin sent it. The person's own Prompt is typed, not sent, and keeps its own busy behaviour.
+A Prompt from a sender other than the person: another Session, a Plugin or a Conversation. An idle Session starts a Turn with it; a busy or paused one takes it at the end of its queue with its sender, and never resumes a paused queue. When the Agent supports steering, the running Turn takes it in at once, unless a Plugin sent it. The person's own Prompt is typed, not sent, and keeps its own busy behaviour.
 _Avoid_: Plugin Prompt, non-user Prompt, steered Prompt
 
 **Turn**:
 A stretch of Agent work started by a Prompt or by the Agent, ending with a stop reason when the Agent finishes or the Session ends it.
 _Avoid_: Run, request, exchange
 
-**Voice call**:
+**Conversation**:
 A live spoken exchange between the person and a voice model, attached to one Session. What the person asks for reaches that Session's Agent as Prompts.
-_Avoid_: Conversation, conversation mode, voice mode, live
+_Avoid_: Voice call, call, voice mode, live, chat
+
+**Voice**:
+One of a Conversation provider's voices, or a custom voice built on one, that a Conversation speaks with.
+_Avoid_: Persona, speaker
 
 **Read-out**:
-The voice saying an Agent's result aloud on a Voice call, from the hand-over until the person speaks again. The Agent's message is the record, so a Read-out is never a Feed row.
+The voice saying an Agent's result aloud in a Conversation, from the hand-over until the person speaks again. The Agent's message is the record, so a Read-out is never a Feed row.
 _Avoid_: Readback, voice summary
 
-**Voice provider**:
-A service or local model that runs a Voice call's voice.
-_Avoid_: Conversation provider, realtime provider, voice backend
+**Conversation provider**:
+A service or local model that runs a Conversation.
+_Avoid_: Voice provider, realtime provider, voice backend
 
 **Preview clip**:
-A voice's one-line greeting as the App recorded it from the voice's first preview, kept on the Server and replayed by the App with no Voice provider call. It is kept by the provider, the voice, its description and the name it greets with. It is the only audio the App hands to the Server.
+A voice's one-line greeting as the App recorded it from the voice's first preview, kept on the Server and replayed by the App with no Conversation provider call. It is kept by the provider, the voice, its description and the name it greets with. It is the only audio the App hands to the Server.
 _Avoid_: Sample, voice recording, cached preview
 
 **Stored Turn**:
@@ -559,7 +563,7 @@ The one line that says what the Agent is doing while a Turn runs, such as "Runni
 _Avoid_: Status line, spinner text
 
 **Notice**:
-A short message about the Session that is not from the Agent's conversation, such as a retry or a hook result.
+A short message about the Session that is not from the Agent, such as a retry or a hook result.
 _Avoid_: Notification, system message
 
 **Notification**:

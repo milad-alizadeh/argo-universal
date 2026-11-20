@@ -1,13 +1,16 @@
 import { useConnectionState } from '#features/connection';
-import { useSessionVoice, type VoicePage } from '#features/voice';
+import {
+  useSessionConversation,
+  type ConversationPage,
+} from '#features/conversation';
 import type { OpenSession } from './session-composer-props';
 
-// What links the page to the Device it runs on: whether its Connection is open, and the Voice call as this Session sees it.
+// What links the page to the Device it runs on: whether its Connection is open, and the Conversation as this Session sees it.
 export function useSessionLink(
-  page: VoicePage,
-): Pick<OpenSession, 'connected' | 'voice' | 'partials'> {
+  page: ConversationPage,
+): Pick<OpenSession, 'connected' | 'conversation' | 'partials'> {
   return {
     connected: useConnectionState() === 'open',
-    ...useSessionVoice(page),
+    ...useSessionConversation(page),
   };
 }

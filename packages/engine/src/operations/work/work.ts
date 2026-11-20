@@ -88,7 +88,7 @@ export class OperationWork {
     input: SessionObservation,
     started: RecordedOperation<OperationRunResult>,
   ): Promise<OperationRunResult> {
-    const id = this.callId(input.caller, started);
+    const id = this.conversationId(input.caller, started);
     const detached = new AbortController();
 
     const following = this.recordedObservation(input, id, detached.signal);
@@ -124,7 +124,7 @@ export class OperationWork {
 
     return observed(await this.observe(waitId, following, false)).execution;
   }
-  private callId(
+  private conversationId(
     caller: SessionCaller,
     { call }: RecordedOperation<OperationRunResult>,
   ): WaitId {

@@ -16,7 +16,7 @@ const said = (
   });
 };
 
-it('gives the prediction model the Agent messages of a Voice call without their marks', () => {
+it('gives the prediction model the Agent messages of a Conversation without their marks', () => {
   const conversation = new SuggestionConversation();
 
   conversation.begin({

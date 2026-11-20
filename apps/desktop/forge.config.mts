@@ -11,9 +11,9 @@ const config: ForgeConfig = {
     // Argo runs on macOS 15 and later, the oldest system with SF Symbols 6.0 (ADR-0029).
     extendInfo: {
       LSMinimumSystemVersion: '15.0',
-      // Asked the first time a Voice call listens.
+      // Asked the first time a Conversation listens.
       NSMicrophoneUsageDescription:
-        'Argo listens through the microphone while you talk in a Voice call.',
+        'Argo listens through the microphone while you talk in a Conversation.',
     },
   },
   rebuildConfig: {},

@@ -1,59 +1,72 @@
 import { z } from 'zod';
+import { ConversationSettings } from '../conversation';
 import {
-  VoiceEndInput,
-  VoiceEndOutput,
+  CustomVoice,
+  CustomVoiceId,
+  CustomVoiceInput,
+  VoiceChoice,
+  VoiceList,
   VoicePreviewClipInput,
   VoicePreviewClipOutput,
   VoicePreviewInput,
   VoicePreviewOutput,
   VoiceStorePreviewClipInput,
   VoiceStorePreviewClipOutput,
-  VoiceStartInput,
-  VoiceStartOutput,
-  VoiceStatus,
 } from '../voice';
 import type { OperationDefinition } from './index';
 
-// The Voice call's Operations (ADR-0064): the App starts, ends, reads and previews calls; an Agent only hangs up its own.
+// The Operations of one voice (ADR-0064): listing, choosing and keeping voices, and previewing them.
 export const voiceOperations = {
-  'voice.status': {
-    id: 'voice.status',
-    label: 'Read Voice call status',
+  'voice.listVoices': {
+    id: 'voice.listVoices',
     icon: 'voice',
+    label: 'List voices',
     description:
-      'Read the running Voice call, how the last one ended, and whether a new one can start.',
+      "List the voices a Conversation can speak with: the Conversation provider's built-in voices, then the person's custom voices, each with its description.",
     params: z.strictObject({}).default({}),
-    result: VoiceStatus,
+    result: VoiceList,
     tier: 'read',
-    keywords: ['voice', 'call', 'talk', 'speak', 'microphone'],
+    keywords: ['voice', 'voices', 'custom', 'list', 'speak'],
   },
-  'voice.start': {
-    id: 'voice.start',
-    label: 'Start Voice call',
+  'voice.setVoice': {
+    id: 'voice.setVoice',
     icon: 'voice',
+    label: 'Choose voice',
     description:
-      "Start a Voice call attached to a Session from the App's connection offer. One Voice call runs at a time.",
-    params: VoiceStartInput,
-    result: VoiceStartOutput,
+      'Choose the voice the next Conversation speaks with: a built-in or custom voice from voice.listVoices. A running Conversation keeps its voice.',
+    params: VoiceChoice,
+    result: ConversationSettings,
     tier: 'confirm',
-    keywords: ['voice', 'call', 'talk', 'speak', 'microphone', 'start'],
+    keywords: ['voice', 'choose', 'pick', 'speak', 'sound'],
   },
-  'voice.end': {
-    id: 'voice.end',
-    label: 'End Voice call',
-    icon: 'voice-off',
-    description: "End the Session's Voice call from the App's End button.",
-    params: VoiceEndInput,
-    result: VoiceEndOutput,
-    tier: 'act',
-    keywords: ['voice', 'call', 'hang up', 'end', 'stop', 'microphone'],
+  'voice.saveCustomVoice': {
+    id: 'voice.saveCustomVoice',
+    icon: 'voice',
+    label: 'Save custom voice',
+    description:
+      'Add a custom voice, or change the one `id` names: a name, a built-in voice to speak with, and a description of how it speaks. A running Conversation keeps its voice; the next Conversation uses the change.',
+    params: CustomVoiceInput,
+    result: CustomVoice,
+    tier: 'confirm',
+    keywords: ['voice', 'custom', 'add', 'edit', 'describe', 'style'],
+  },
+  'voice.deleteCustomVoice': {
+    id: 'voice.deleteCustomVoice',
+    icon: 'voice',
+    label: 'Delete custom voice',
+    description:
+      "Delete a custom voice. When it was the chosen voice, the next Conversation speaks with the Conversation provider's first voice.",
+    params: CustomVoiceId,
+    result: VoiceList,
+    tier: 'confirm',
+    keywords: ['voice', 'custom', 'delete', 'remove'],
   },
   'voice.preview': {
     id: 'voice.preview',
     icon: 'voice',
     label: 'Preview voice',
     description:
-      "Play a short greeting in a voice from the App's listening-only connection, then hang up. It ends an earlier preview and is refused while a Voice call runs.",
+      "Play a short greeting in a voice from the App's listening-only connection, then hang up. It ends an earlier preview and is refused while a Conversation runs.",
     params: VoicePreviewInput,
     result: VoicePreviewOutput,
     tier: 'act',
@@ -80,16 +93,5 @@ export const voiceOperations = {
     result: VoiceStorePreviewClipOutput,
     tier: 'act',
     keywords: ['voice', 'preview', 'greeting', 'sample', 'clip', 'store'],
-  },
-  'voice.hangUp': {
-    id: 'voice.hangUp',
-    icon: 'voice-off',
-    label: 'Hang up Voice call',
-    description:
-      'End the Voice call of the calling Session, because the person clearly said they are done talking. Refused when the Session has no Voice call, and for any other Session. Do not use it when the person only asks to stop work or pause.',
-    params: VoiceEndInput,
-    result: VoiceEndOutput,
-    tier: 'act',
-    keywords: ['voice', 'call', 'hang up', 'goodbye', 'done', 'end'],
   },
 } as const satisfies Record<string, OperationDefinition>;

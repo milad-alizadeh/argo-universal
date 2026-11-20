@@ -1,6 +1,10 @@
 import type { FeedSubscribeOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
-import { appended, clientText, opened } from '#mocks/voice-marker-drawing';
+import {
+  appended,
+  clientText,
+  opened,
+} from '#mocks/conversation-marker-drawing';
 import { VoiceMarkerFilter } from './marker-filter';
 
 // What a client draws of the events through one subscriber's filter.

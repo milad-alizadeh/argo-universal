@@ -12,6 +12,7 @@ import { claudeDescribedRequest } from '../../../../mocks/requests/elicitation/c
 import { SessionDetailView } from './session-detail-view';
 import { sessionPageBar } from './session-detail-view-bar.mocks';
 import { changedSession } from './session-detail-view-changes-pill.mocks';
+import { ConversationRehearsal } from './session-detail-view-conversation-rehearsal.mocks';
 import {
   ElicitationPreview,
   elicitationSession,
@@ -24,7 +25,6 @@ import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { stoppedOverQueueSession } from './session-detail-view-stopped-queue.mocks';
 import { subagentsSession } from './session-detail-view-subagents.mocks';
 import { usageLimitsSession } from './session-detail-view-usage.mocks';
-import { VoiceCallRehearsal } from './session-detail-view-voice-call.mocks';
 import {
   emptySession,
   idleSession,
@@ -128,9 +128,9 @@ export const DraggingFiles: Story = {
 };
 
 // Press the voice button to start a call: the band opens along the Composer's edge while it connects, settles into listening, and End takes it away.
-export const VoiceCallStartsAndEnds: Story = {
+export const ConversationStartsAndEnds: Story = {
   args: { state: 'open', ...idleSession },
-  render: (): React.JSX.Element => <VoiceCallRehearsal />,
+  render: (): React.JSX.Element => <ConversationRehearsal />,
 };
 
 export const Opening: Story = { args: { state: 'opening' } };

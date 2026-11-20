@@ -40,7 +40,7 @@ export type SendLayout = Pick<
     | 'configuration'
     | 'queueEdit'
     | 'draft'
-    | 'voice'
+    | 'conversation'
   >;
 };
 

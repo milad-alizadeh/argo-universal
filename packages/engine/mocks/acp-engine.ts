@@ -28,7 +28,7 @@ type AcpScenario = ScriptedScenario & { autoExit?: boolean } & Partial<
       | 'operationWaitClock'
       | 'slashCommandsWaitMs'
       | 'argoToolsGraceMs'
-      | 'voiceProvider'
+      | 'conversationProvider'
       | 'voiceIdleMs'
     >
   > &
@@ -110,9 +110,10 @@ type Fixture = OpenedStorage & {
   agentId?: string;
 };
 
-// No Voice provider unless a test supplies one, whatever the shell's ARGO_VOICE_PROVIDER says.
-const voiceProviderOf = (scenario: AcpScenario): AcpScenario['voiceProvider'] =>
-  scenario.voiceProvider ?? null;
+// No Conversation provider unless a test supplies one, whatever the shell's ARGO_CONVERSATION_PROVIDER says.
+const conversationProviderOf = (
+  scenario: AcpScenario,
+): AcpScenario['conversationProvider'] => scenario.conversationProvider ?? null;
 
 // Most tests have Agents that send no Slash command list; they must not wait for one.
 const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({
@@ -120,7 +121,7 @@ const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({
   operationWaitClock: scenario.operationWaitClock,
   slashCommandsWaitMs: scenario.slashCommandsWaitMs ?? 0,
   argoToolsGraceMs: scenario.argoToolsGraceMs ?? Number.POSITIVE_INFINITY,
-  voiceProvider: voiceProviderOf(scenario),
+  conversationProvider: conversationProviderOf(scenario),
   voiceIdleMs: scenario.voiceIdleMs,
 });
 

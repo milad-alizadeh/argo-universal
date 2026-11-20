@@ -10,7 +10,7 @@ import {
   type ComposerConfigurationProps,
   type ComposerDraft,
   ComposerStack,
-  type ComposerVoice,
+  type ComposerConversation,
   StartSessionIn,
 } from '#features/composer';
 import {
@@ -67,7 +67,7 @@ export interface ReadySessionNewViewProps {
   // A terminal sign-in method's panel or sheet.
   signInTerminal?: TerminalSignInProps;
   // The voice button, which opens the Session and starts a call in it, or the pointer to a running call.
-  voice?: ComposerVoice;
+  conversation?: ComposerConversation;
 }
 
 export type SessionNewViewProps =

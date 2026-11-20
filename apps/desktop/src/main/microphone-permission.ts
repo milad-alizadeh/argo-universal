@@ -46,7 +46,7 @@ const requestOf = (permission: string, details: RequestDetails): Request => ({
   audioOnly: audioOnly(details),
 });
 
-// The App's own page may use the microphone for a Voice call, and nothing else may use it, or the camera.
+// The App's own page may use the microphone for a Conversation, and nothing else may use it, or the camera.
 const allowsMicrophone = (request: Request, windowOrigin: string): boolean =>
   request.permission === 'media' &&
   request.audioOnly &&

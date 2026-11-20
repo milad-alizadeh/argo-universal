@@ -56,7 +56,7 @@ function MessageImages({
   );
 }
 
-// A stored Prompt, or what the person said on a Voice call, uses the existing bubble, with its sender when another Session or Plugin sent it.
+// A stored Prompt, or what the person said on a Conversation, uses the existing bubble, with its sender when another Session or Plugin sent it.
 export const UserMessage = memo(function UserMessage({
   row,
   imageUrl,
@@ -80,7 +80,7 @@ function PromptSenderCaption({
   if (row.sessionUpdate !== 'prompt_message') return null;
   const { sender } = row._meta.argo;
 
-  // The Voice call's Prompts are never drawn, so a sender without a title has no caption.
+  // The Conversation's Prompts are never drawn, so a sender without a title has no caption.
   return 'title' in sender ? (
     <Text role="secondary" tone="muted">
       From {sender.title}

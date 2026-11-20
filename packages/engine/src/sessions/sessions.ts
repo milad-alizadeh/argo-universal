@@ -106,18 +106,21 @@ export class Sessions {
       ? { status: 'queued', queuedId: sent.queuedId }
       : { status: 'started' };
   }
-  // The Voice call's request for work: a Sent Prompt that steers a running Turn when it can (ADR-0064).
-  public async promptFromVoice(
+  // The Conversation's request for work: a Sent Prompt that steers a running Turn when it can (ADR-0064).
+  public async promptFromConversation(
     sessionId: string,
     text: string,
   ): Promise<TakenPrompt> {
     const input = { sessionId, prompt: [{ type: 'text' as const, text }] };
-    const sent = await sendPrompt(this.sources, input, { sender: voiceSender });
+
+    const sent = await sendPrompt(this.sources, input, {
+      sender: conversationSender,
+    });
 
     return requireTaken(sent);
   }
   // A spoken "stop" (ADR-0064): cancels the running Turn as the Stop button does; resolves false when no Turn runs.
-  public async stopFromVoice(sessionId: string): Promise<boolean> {
+  public async stopFromConversation(sessionId: string): Promise<boolean> {
     if (!this.sources.open.isRunning(sessionId)) return false;
     await this.implementations['session.cancel']({ sessionId });
 
@@ -160,7 +163,7 @@ export class Sessions {
   }
 }
 
-const voiceSender = { type: 'voice' } as const;
+const conversationSender = { type: 'conversation' } as const;
 
 // Handlers reach the open Sessions' actor and command signal only through `OpenSessions`.
 const handlerSources = (sources: SessionSources): SessionHandlerSources => ({

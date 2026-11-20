@@ -90,9 +90,9 @@ export { nativePermissionOutcomeEvent } from './native-permission-outcome';
 export { messageText } from './message-text';
 
 export {
-  readVoiceSections,
+  readConversationSections,
   withVoiceInstruction,
   withoutVoiceInstruction,
   VoiceMarkerStream,
   type VoiceMessage,
-} from './voice-markers';
+} from './conversation-markers';

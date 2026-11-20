@@ -15,7 +15,7 @@ export const callerSessionParam = <Params extends { sessionId?: string }>(
   };
 };
 
-// A Session hangs up only its own Voice call (#2413); naming any other Session is refused, whatever its scope covers.
+// A Session hangs up only its own Conversation (#2413); naming any other Session is refused, whatever its scope covers.
 export const ownSessionOnly = <Params extends { sessionId?: string }>(
   params: Params,
   caller: SessionCaller,
@@ -23,7 +23,7 @@ export const ownSessionOnly = <Params extends { sessionId?: string }>(
   if (params.sessionId !== undefined && params.sessionId !== caller.sessionId)
     throw new TRPCError({
       code: 'FORBIDDEN',
-      message: "A Session hangs up only its own Session's Voice call",
+      message: "A Session hangs up only its own Session's Conversation",
     });
 
   return callerSessionParam(params, caller);

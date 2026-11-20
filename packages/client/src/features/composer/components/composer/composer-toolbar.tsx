@@ -8,9 +8,9 @@ import {
   ComposerModeControl,
 } from '../composer-configuration/composer-configuration';
 import { ComposerStatusControls } from '../composer-status/composer-status';
-import { useCallGlyphMorph } from './composer-call-glyph-motion';
-import { ComposerCallPointer } from './composer-call-pointer';
 import { ConnectingRing } from './composer-connecting-ring';
+import { useCallGlyphMorph } from './composer-conversation-glyph-motion';
+import { ComposerCallPointer } from './composer-conversation-pointer';
 import { ComposerMuteButtons } from './composer-mute-buttons';
 import { sendButtonAction } from './composer-primary-action';
 import { ComposerAttachmentOrCancel } from './composer-queue-cancel';
@@ -92,7 +92,10 @@ function ComposerRightControls(layout: RightControlsLayout): React.JSX.Element {
   return (
     <View className="pointer-events-box-none max-w-full shrink-0 flex-row items-center gap-2.5">
       <ComposerConfigurationActions {...layout} />
-      <ComposerMuteButtons voice={layout.props.voice} wide={layout.wide} />
+      <ComposerMuteButtons
+        conversation={layout.props.conversation}
+        wide={layout.wide}
+      />
       <View className="shrink-0">
         <ComposerSendButton {...layout} />
       </View>
