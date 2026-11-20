@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
 import { nextFrames } from '#mocks/next-frames';
 import { IconButton } from '#primitives/actions/icon-button';
+import { Text } from '#primitives/content/text';
 import { Fader } from './fader';
 import { verticalFader } from './fader-fixtures';
 import { HeldFader } from './fader.mocks';
@@ -124,5 +125,22 @@ export const DisabledDoesNotMove: Story = {
     slider(canvas).focus();
     await userEvent.keyboard('{ArrowUp}');
     await expect(onValueChange).not.toHaveBeenCalled();
+  },
+};
+
+export const SecondaryTextTakesTheInkAtReducedEmphasis: Story = {
+  render: (args) => (
+    <HeldFader {...args}>
+      <Text role="row">Primary</Text>
+      <Text role="secondary">Secondary</Text>
+    </HeldFader>
+  ),
+  play: async ({ canvas }) => {
+    const primary = canvas.getByText('Primary');
+    const secondary = canvas.getByText('Secondary');
+
+    // The ink at 70% reads as the primary's colour with an alpha.
+    await expect(getComputedStyle(primary).color).not.toContain('/');
+    await expect(getComputedStyle(secondary).color).toContain('/ 0.7');
   },
 };

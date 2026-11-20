@@ -37,7 +37,7 @@ const tile = node(
     step: 1,
     accessibilityLabel: label,
     valueLabel: '80%',
-    fill: ['#FFD08A', '#FF8A3D'],
+    fill: ['#FF8A3D', '#FFD08A'],
     onValueChange: { bind: 'level' },
   },
   [

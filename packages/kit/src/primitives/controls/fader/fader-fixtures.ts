@@ -9,8 +9,8 @@ const level = {
   accessibilityLabel: 'Level',
 };
 
-// Colours that are data, as a Plugin sends them: the fill takes them as given in light and dark mode.
-export const warmFill = ['#FFD08A', '#FF8A3D'];
+// Colours that are data, as a Plugin sends them: the fill takes them as given in light and dark mode. The first colour is where the fill starts, so a vertical one lists its darker end first.
+export const warmFill = ['#FF8A3D', '#FFD08A'];
 
 export const verticalFader = {
   ...level,
@@ -61,21 +61,21 @@ export const tileFixtures: TileFixture[] = [
     title: 'Desk',
     detail: 'Cool white · 5000 K',
     value: 55,
-    fill: ['#E8EEFF', '#C9D6FF'],
+    fill: ['#C9D6FF', '#E8EEFF'],
   },
   {
     id: 'magenta',
     title: 'Shelf',
     detail: 'Magenta',
     value: 35,
-    fill: ['#EE5FA8', '#8A5CFF'],
+    fill: ['#8A5CFF', '#EE5FA8'],
   },
   {
     id: 'amber',
     title: 'Floor',
     detail: 'Warm · 2400 K',
     value: 100,
-    fill: ['#FFC46B', '#FF7A3D'],
+    fill: ['#FF7A3D', '#FFC46B'],
   },
   { id: 'off', title: 'Window', detail: 'Was 70%', value: 0 },
 ];

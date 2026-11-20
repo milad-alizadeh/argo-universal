@@ -1,7 +1,10 @@
 import type { ReactElement } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#kit/utils';
-import { TextClassContext } from '#primitives/content/text';
+import {
+  SecondaryTextClassContext,
+  TextClassContext,
+} from '#primitives/content/text';
 import { useFader } from './fader-frame';
 import { inkOver, type Ink } from './fader-ink';
 import type { FaderProps } from './fader-props';
@@ -23,14 +26,20 @@ const contentClass = {
   horizontal: 'flex-1 flex-row items-center justify-between gap-3 px-4',
 } as const satisfies Record<Orientation, string>;
 
+// The ink, and the same ink at reduced emphasis for the secondary role.
 const inkClass = {
-  dark: 'text-ink-on-light',
-  light: 'text-ink-on-dark',
-} as const satisfies Record<Ink, string>;
+  dark: { text: 'text-ink-on-light', secondary: 'text-ink-on-light/70' },
+  light: { text: 'text-ink-on-dark', secondary: 'text-ink-on-dark/70' },
+} as const satisfies Record<Ink, { text: string; secondary: string }>;
+
+const accentInk = {
+  text: 'text-primary-foreground',
+  secondary: 'text-primary-foreground/70',
+};
 
 // The ink over the fill, from its colours; over the accent tone, the one that pairs with it.
-const inkOf = (fill: FaderProps['fill']): string =>
-  fill ? inkClass[inkOver(fill)] : 'text-primary-foreground';
+const inkOf = (fill: FaderProps['fill']): typeof accentInk =>
+  fill ? inkClass[inkOver(fill)] : accentInk;
 
 // The page may still scroll across the axis a drag moves along.
 const touchClass = {
@@ -51,12 +60,15 @@ interface ContentProps extends Pick<FaderProps, 'fill' | 'children'> {
 
 function Content(props: ContentProps): ReactElement {
   const className = contentClass[props.orientation];
+  const ink = inkOf(props.fill);
 
   return (
-    <TextClassContext value={inkOf(props.fill)}>
-      <View pointerEvents="box-none" className={className}>
-        {props.children}
-      </View>
+    <TextClassContext value={ink.text}>
+      <SecondaryTextClassContext value={ink.secondary}>
+        <View pointerEvents="box-none" className={className}>
+          {props.children}
+        </View>
+      </SecondaryTextClassContext>
     </TextClassContext>
   );
 }

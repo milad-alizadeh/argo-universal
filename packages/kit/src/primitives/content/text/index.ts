@@ -1,4 +1,9 @@
-export { Text, TextClassContext, useTextStyle } from './text';
+export {
+  SecondaryTextClassContext,
+  Text,
+  TextClassContext,
+  useTextStyle,
+} from './text';
 
 export { type TextProps, type TextRole, textRoles } from './text-props';
 
