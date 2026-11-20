@@ -13,9 +13,18 @@ const runDeploy = 'Run npm run deploy';
 
 const later = 'Then tidy up';
 
+const deployRequest = {
+  agent: 'mock',
+  title: runDeploy,
+  kind: 'execute',
+  target: 'npm run deploy',
+};
+
+const asked = 'How long will that take?';
+
 const spokenPermissions = (work: ConversationWork) => (): FakeVoiceMessage[] =>
   work.provider.call.sent.filter(
-    ({ text }) => text === relayWords.permissionWaiting(runDeploy),
+    ({ text }) => text === relayWords.permissionWaiting(deployRequest),
   );
 
 const replyTo =
@@ -39,7 +48,7 @@ describe('a Permission request during a call', () => {
       .poll(() => work.provider.call.sent)
       .toContainEqual({
         kind: 'tell',
-        text: relayWords.permissionWaiting(runDeploy),
+        text: relayWords.permissionWaiting(deployRequest),
         delivery: 'speak',
       });
   });
@@ -77,8 +86,8 @@ describe('a Permission request during a call', () => {
     work.provider.call.requestWork('r1', deploy);
     await expect.poll(spokenPermissions(work)).toHaveLength(1);
 
-    work.provider.call.personSays('Allow it');
-    work.provider.call.requestWork('r2', 'Allow it');
+    work.provider.call.personSays(asked);
+    work.provider.call.requestWork('r2', asked);
 
     await expect
       .poll(() => work.provider.call.sent)

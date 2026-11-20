@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { AgentRelay } from './agent-relay';
 import type { VoiceSay } from './conversation-types';
 import { relayWords } from './relay-words';
@@ -11,15 +11,18 @@ type Relayed = { relay: AgentRelay; heard: Heard };
 // A relay whose Session answers each Prompt with `answer`.
 function relayTo(
   answer: (sessionId: string, text: string) => Promise<PromptOutcome>,
+  overrides: Partial<ConversationSessions> = {},
 ): Relayed {
   const heard: Heard = { said: [], running: [] };
 
   const sessions: ConversationSessions = {
     prompt: answer,
     stop: () => Promise.resolve(false),
+    answer: () => Promise.resolve('settled'),
     watch: () => (): void => {},
     notice: () => {},
     capture: () => Promise.reject(new Error('No capture in this test')),
+    ...overrides,
   };
 
   const relay = new AgentRelay(
@@ -147,4 +150,30 @@ it('carries the voice instruction only until a Prompt carrying it starts', async
   await relay.request('r2', 'Second');
 
   expect(prompts[1]).toBe('Second');
+});
+
+it('applies no spoken answer once the call has ended', async () => {
+  const answer = vi.fn<ConversationSessions['answer']>(() =>
+    Promise.resolve('answered'),
+  );
+
+  const { relay } = relayTo(() => Promise.reject(new Error('No work')), {
+    answer,
+  });
+
+  relay.happened({
+    type: 'permission.waiting',
+    requestId: 'p1',
+    agent: 'Codex',
+    title: 'Run npm run deploy',
+    kind: 'execute',
+    target: null,
+  });
+
+  const answered = relay.request('r1', 'Allow it', 't1');
+  relay.close();
+  relay.personSaid({ id: 't1', text: 'Allow it', final: true });
+  await answered;
+
+  expect(answer).not.toHaveBeenCalled();
 });

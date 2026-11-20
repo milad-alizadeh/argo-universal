@@ -50,12 +50,20 @@ const closed =
   ({ reason }: { reason?: string }): Step =>
   (turns) => [...turns.closing(), serviceClosed(reason)];
 
+type DelegationItem = {
+  id: string;
+  content: { type: string; text: string }[];
+  user_bidi_turn_id?: string;
+};
+
+// The person's turn the voice heard the work in; a hand-over is their words as heard (voice-mode.md §14).
+const turnOf = ({
+  user_bidi_turn_id: turnId,
+}: DelegationItem): { turnId?: string } =>
+  turnId === undefined ? {} : { turnId };
+
 // Work the voice hands to the client, answered under the delegation item's id as Codex does.
-const requested = ({
-  item,
-}: {
-  item: { id: string; content: { type: string; text: string }[] };
-}): Step =>
+const requested = ({ item }: { item: DelegationItem }): Step =>
   report({
     type: 'work.requested',
     requestId: item.id,
@@ -63,6 +71,7 @@ const requested = ({
       .filter((part) => part.type === 'input_text')
       .map((part) => part.text)
       .join(''),
+    ...turnOf(item),
   });
 
 const turnFields = { id: z.string(), transcript: z.string().default('') };
@@ -82,6 +91,7 @@ const delegation = z.looseObject({
     type: z.literal('delegation'),
     target: z.literal('client'),
     content: z.array(z.looseObject({ type: z.string(), text: z.string() })),
+    user_bidi_turn_id: z.string().optional(),
   }),
 });
 

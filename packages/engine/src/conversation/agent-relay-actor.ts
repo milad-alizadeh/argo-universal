@@ -25,7 +25,8 @@ function hear(
   heard: ConversationProviderEvent,
 ): void {
   if (heard.type === 'work.requested')
-    void relay.request(heard.requestId, heard.text);
+    void relay.request(heard.requestId, heard.text, heard.turnId);
+  else if (heard.type === 'person.transcript') relay.personSaid(heard);
   else look.hear(heard);
 }
 
@@ -43,7 +44,7 @@ const reportsTo = (sendBack: SendBack): RelayReports => ({
 });
 
 /*
- * The go-between of one Conversation and its Session. The machine forwards the person's requests for work to it; it sends
+ * The go-between of one Conversation and its Session. The machine forwards the person's requests for work and words to it; it sends
  * back what the voice should be told, as `voice.say`.
  */
 export const agentRelay = fromCallback<ConversationEvent, RelayInput>(
@@ -56,8 +57,13 @@ export const agentRelay = fromCallback<ConversationEvent, RelayInput>(
 
     receive((event) => route({ relay, look }, event));
 
-    return sessions.watch(input.sessionId, (happening) =>
+    const unwatch = sessions.watch(input.sessionId, (happening) =>
       relay.happened(happening),
     );
+
+    return (): void => {
+      relay.close();
+      unwatch();
+    };
   },
 );

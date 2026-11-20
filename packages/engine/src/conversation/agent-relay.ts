@@ -1,19 +1,14 @@
-import {
-  readConversationSections,
-  withVoiceInstruction,
-  type VoiceMessage,
-} from '../feed';
+import { withVoiceInstruction } from '../feed';
+import { AgentWords } from './agent-words';
 import type { RelayCall, VoiceSay } from './conversation-types';
-import { inPieces } from './pieces';
-import type { VoiceDelivery } from './provider';
-import { endingDelivery, endingText, told, type Ended } from './relay-ending';
+import type { PersonWords } from './person-turns';
 import { relayWords } from './relay-words';
 import type {
   PromptOutcome,
   SessionHappening,
   ConversationSessions,
 } from './session-link';
-import { isStopRequest, stopWork } from './spoken-stop';
+import { SpokenConsent } from './spoken-consent';
 import {
   isPermissionHappening,
   WaitingPermission,
@@ -28,35 +23,57 @@ export interface RelayReports {
   turnsRunning: (running: boolean) => void;
 }
 
-// What the Agent said during the running Turn that the voice may still need at its end.
-type TurnMemory = { resultSent: boolean; last: string | null };
-
-const freshTurn = (): TurnMemory => ({ resultSent: false, last: null });
-
 /*
  * One Conversation's go-between for its Session (ADR-0064): what the person asks for becomes a Prompt, and what the Agent
  * says, and when its Turn ends or fails, goes back to the voice. Tool output never does.
  */
 export class AgentRelay {
   private instructed = false;
-  private turn = freshTurn();
   // Requests not yet answered, and Prompts the call sent whose Turn started and has not ended; a queued one counts from its Turn's start.
   private atWork = 0;
   private readonly permission = new WaitingPermission();
+  private readonly words: AgentWords;
+  private readonly spoken: SpokenConsent;
 
   public constructor(
     private readonly sessions: ConversationSessions,
     private readonly call: RelayCall,
     private readonly reports: RelayReports,
-  ) {}
+  ) {
+    this.words = new AgentWords(reports.speak);
+    this.spoken = new SpokenConsent({
+      sessions,
+      sessionId: call.sessionId,
+      permission: this.permission,
+    });
+  }
 
-  // The person asked for work, or said "stop": the Agent gets it or its Turn is cancelled, and the voice an answer at once.
-  public async request(requestId: string, text: string): Promise<void> {
-    const answer = isStopRequest(text)
-      ? await stopWork(this.sessions, this.call.sessionId)
-      : this.permission.answering(await this.work(text));
+  /*
+   * The person asked for work, answered a Permission request, or said "stop": the Agent gets the work, the request its
+   * answer or the Turn is cancelled, and the voice is told what happened. `turnId` is the person's turn it was heard in.
+   */
+  public async request(
+    requestId: string,
+    text: string,
+    turnId?: string,
+  ): Promise<void> {
+    const control = this.spoken.answer(text, turnId);
 
-    this.reply(requestId, answer);
+    this.reply(
+      requestId,
+      control
+        ? await control
+        : this.permission.answering(await this.work(text)),
+    );
+  }
+
+  public personSaid(words: PersonWords): void {
+    this.spoken.heard(words);
+  }
+
+  // The call ended: nothing the person said applies any more.
+  public close(): void {
+    this.spoken.close();
   }
 
   // Sends the Agent a Prompt and answers with what the voice is told of where it landed.
@@ -77,17 +94,23 @@ export class AgentRelay {
   }
 
   public happened(happening: SessionHappening): void {
-    if (happening.type === 'turn.ended') return this.turnEnded(happening);
+    if (happening.type === 'turn.ended') {
+      this.permission.turnEnded();
+
+      return this.words.turnEnded(happening);
+    }
 
     if (isPermissionHappening(happening))
       return this.permissionHeard(happening);
-    this.said(happening);
+    this.words.said(happening);
   }
 
   private permissionHeard(happening: PermissionHappening): void {
     const announcement = this.permission.heard(happening);
 
-    if (announcement !== null) this.tell(announcement, 'speak');
+    if (announcement === null) return;
+    this.spoken.announced();
+    this.words.tell(announcement, 'speak');
   }
 
   // What the voice is told of a Prompt that reached the Session; a queued one waits for its Turn before it counts.
@@ -123,16 +146,6 @@ export class AgentRelay {
     this.sentChanged(() => (this.atWork -= 1));
   }
 
-  private said(
-    happening: Extract<
-      SessionHappening,
-      { type: 'agent.message' | 'person.typed' }
-    >,
-  ): void {
-    if (happening.type === 'agent.message') this.agentSaid(happening.text);
-    else this.personTyped(happening.text);
-  }
-
   private get running(): boolean {
     return this.atWork > 0;
   }
@@ -151,51 +164,5 @@ export class AgentRelay {
 
   private reply(requestId: string, text: string): void {
     this.reports.speak({ kind: 'reply', requestId, text, delivery: 'speak' });
-  }
-
-  private tell(
-    text: string,
-    delivery: VoiceDelivery,
-    kind: 'tell' | 'result' = 'tell',
-  ): void {
-    for (const piece of inPieces(text))
-      this.reports.speak({ kind, text: piece, delivery });
-  }
-
-  // The Agent's answer, for the voice to read out.
-  private handOver(text: string): void {
-    this.tell(text, 'speak', 'result');
-  }
-
-  // Analysis stays silent, so the voice is never told it.
-  private agentSaid(text: string): void {
-    for (const section of readConversationSections(text))
-      if (section.kind !== 'analysis') {
-        this.pass(section);
-        this.remember(section);
-      }
-  }
-
-  // A result is read out; progress is background.
-  private pass({ kind, body }: VoiceMessage): void {
-    if (kind === 'result') this.handOver(body);
-    else this.tell(body, 'background');
-  }
-
-  private remember({ kind, body }: VoiceMessage): void {
-    if (kind === 'result') this.turn = { resultSent: true, last: null };
-    else if (kind === 'progress') this.turn.last = body;
-  }
-
-  private personTyped(text: string): void {
-    this.tell(relayWords.typed(text), 'background');
-  }
-
-  private turnEnded(ended: Ended): void {
-    const { resultSent, last } = this.turn;
-    this.turn = freshTurn();
-
-    if (!resultSent && last) this.handOver(last);
-    this.tell(endingText(ended), endingDelivery(ended, told(resultSent, last)));
   }
 }

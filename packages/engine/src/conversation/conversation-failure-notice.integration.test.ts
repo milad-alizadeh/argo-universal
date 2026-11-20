@@ -55,6 +55,7 @@ function spySessions(): SpySessions {
   const sessions: ConversationSessions = {
     prompt: () => Promise.reject(new Error('No Prompts in this test')),
     stop: () => Promise.resolve(false),
+    answer: () => Promise.resolve('settled'),
     watch: () => (): void => {},
     notice,
     capture: () => Promise.reject(new Error('No capture in this test')),

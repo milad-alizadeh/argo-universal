@@ -1,11 +1,7 @@
 import { createAgentsRouter } from '../agents';
 import { createAppNavigationRouter } from '../app-navigation';
 import { createBlobRouter } from '../blob';
-import {
-  createConversationRouter,
-  conversationSessions,
-  type ConversationSessionWork,
-} from '../conversation';
+import { createConversationRouter } from '../conversation';
 import { createDevicesRouter } from '../devices';
 import { createFeedRouter } from '../feed';
 import { createServerLinkPreviewRouter } from '../link-preview';
@@ -18,6 +14,7 @@ import { mergeRouters, router, routerFactory } from '../rpc';
 import { createScreenSightRouter } from '../screen-sight';
 import { createShellRouter, Sessions } from '../sessions';
 import { createSystemRouter } from '../system';
+import { attachConversation } from './attach-conversation';
 import type { AppRouterDeps } from './router-deps';
 
 // Each router takes only the slice of the Engine's dependencies its type names.
@@ -52,26 +49,6 @@ function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
     withdraw: (sessionId, queuedId, { pluginId }) =>
       sessions.withdrawFromPlugin(sessionId, queuedId, pluginId),
   });
-}
-
-// What the Conversation does through Sessions: send Prompts, stop a Turn, hear Turns end, and ask for a picture of the screen.
-const conversationWork = (
-  deps: AppRouterDeps,
-  sessions: Sessions,
-): ConversationSessionWork => ({
-  promptFromConversation: (sessionId, text) =>
-    sessions.promptFromConversation(sessionId, text),
-  stopFromConversation: (sessionId) => sessions.stopFromConversation(sessionId),
-  capture: (sessionId) =>
-    deps.screenSight.capture({ kind: 'voice', sessionId }),
-  watchTurns: (sessionId, listener) => sessions.watchTurns(sessionId, listener),
-});
-
-// The Conversation sends its Session Prompts through Sessions, which say where each landed and when each Turn ends.
-function attachConversation(deps: AppRouterDeps, sessions: Sessions): void {
-  deps.conversation.attach(
-    conversationSessions(deps, conversationWork(deps, sessions)),
-  );
 }
 
 // Operations share the session and shell nouns with the Session procedures that are not Operations.
