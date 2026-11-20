@@ -10,6 +10,7 @@ import {
   type ProgressFillWidth,
 } from './progress-bar-fill';
 import type { ProgressBarProps } from './progress-bar-props';
+import { ProgressStepSegments } from './progress-bar-steps';
 import { ProgressSweep } from './progress-bar-sweep';
 
 const percent = 100;
@@ -79,10 +80,15 @@ function trackProps(
   };
 }
 
-function trackColor({ track, tone }: ProgressBarProps): string {
-  return track === 'hairline'
-    ? 'rounded-full bg-hairline'
-    : progressColors[tone ?? progressBarDefaults.tone].track;
+// A step bar's segments draw their own track.
+function trackColor({ track, tone, steps }: ProgressBarProps): string {
+  if (steps) return '';
+
+  return track === 'hairline' ? 'rounded-full bg-hairline' : toneTrack(tone);
+}
+
+function toneTrack(tone: ProgressBarProps['tone']): string {
+  return progressColors[tone ?? progressBarDefaults.tone].track;
 }
 
 function clampedValue(value: number): number {
@@ -91,6 +97,18 @@ function clampedValue(value: number): number {
 
 export function ProgressBar(props: ProgressBarProps): ReactElement {
   const value = clampedValue(props.value);
+
+  return props.steps ? (
+    <View {...trackProps(props, value)}>
+      <ProgressStepSegments {...props} steps={props.steps} />
+    </View>
+  ) : (
+    <FilledBar {...props} value={value} />
+  );
+}
+
+function FilledBar(props: ProgressBarProps): ReactElement {
+  const { value } = props;
   const fill = useProgressFillWidth(value);
 
   return (

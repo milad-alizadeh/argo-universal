@@ -1,11 +1,9 @@
-import { Text } from '@repo/kit/primitives/content/text';
 import { Pill } from '@repo/kit/primitives/status/pill';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { ChangeStage } from '../change-stage/change-stage';
 import { ShellsCount, SubagentsCount } from './session-row-meta-counts';
 import type { SessionRowMetadataProps } from './session-row-metadata-props';
-import { sidebarRows } from './session-row-sidebar';
 
 export type { SessionRowMetadataProps } from './session-row-metadata-props';
 
@@ -25,22 +23,11 @@ function archivedContent({
   );
 }
 
-// How long ago the Session was active leads a sidebar row's line; a phone's row ends its title line with it.
-function ageContent({ age }: SessionRowMetadataProps): React.ReactNode {
-  return !sidebarRows || age === undefined ? null : (
-    <Text role="secondary" tone="muted">
-      {age}
-    </Text>
-  );
-}
-
 function hasMetadata({
   session,
   pullRequest,
-  age,
 }: SessionRowMetadataProps): boolean {
   return [
-    sidebarRows && age !== undefined,
     session.subagents.running > 0,
     session.shells.running > 0,
     session.archivedAt !== null,
@@ -48,7 +35,7 @@ function hasMetadata({
   ].some(Boolean);
 }
 
-// Time and Change lead the active Background Task and Agent counts; Plugin items follow as row accessories.
+// The Change leads the active Background Task and Agent counts; Plugin items follow as row accessories.
 export function sessionMetadata(
   props: SessionRowMetadataProps,
 ): React.ReactNode {
@@ -56,7 +43,6 @@ export function sessionMetadata(
 
   return (
     <View className="min-w-0 flex-row items-center gap-2.5">
-      {ageContent(props)}
       <PullRequestLabel pullRequest={props.pullRequest} />
       <ShellsCount {...props} />
       <SubagentsCount {...props} />

@@ -36,8 +36,10 @@ export const oneList: Story = {
       await expect(
         canvas.queryByRole('button', { name: exampleProjectName }),
       ).not.toBeInTheDocument();
+      // A working Session shows no time; every quiet one does.
       await expect(canvas.getAllByText(/^(now|\d+[mhdw])$/)).toHaveLength(
-        sessionsListProps.sessions.length,
+        sessionsListProps.sessions.filter(({ status }) => status !== 'running')
+          .length,
       );
     }),
 };
