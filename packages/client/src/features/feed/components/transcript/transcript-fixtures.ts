@@ -11,7 +11,7 @@ const envelope = {
 } as const;
 
 // The words each fixture says, so a test reads them from here and not from the drawing.
-export const words = {
+const words = {
   person:
     'Build the Session layout from spec 0003. Use the Reusables primitives and only theme tokens — stop and ask if something is missing.',
   voice:
@@ -65,7 +65,7 @@ export const personSaying = {
   },
 } satisfies TranscriptFixture;
 
-export const voiceSaying = {
+const voiceSaying = {
   item: {
     type: 'row',
     partial: true,

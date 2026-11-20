@@ -16,7 +16,7 @@ export type Pending = Record<string, OptionValue>;
  * carries it, and let go of after this, which leaves the reader looking at what the Server really has
  * rather than at a change it refused (owner, 2026-10-21).
  */
-export const holdChoice = 3000;
+const holdChoice = 3000;
 
 export interface PendingChoices {
   // The choices still waiting for the Server, for a control that draws them before they land.
