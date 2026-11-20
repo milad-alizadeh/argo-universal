@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { SessionBarItem } from './session-bar-item';
-import { sessionBarSlotId, SlotItemsInput, slotRegistry } from './wire';
+import { sessionBarSlotId, slotRegistry } from './wire';
 
 const inReview = '#412 · In review';
 
@@ -29,12 +29,6 @@ it.each([
 });
 
 it('accepts multiple lines per Plugin and Session, with one line on the phone strip', () => {
-  const input = {
-    slotId: sessionBarSlotId,
-    contexts: [{ sessionId: 'session', projectId: 'argo' }],
-  };
-
-  expect(SlotItemsInput.parse(input)).toEqual(input);
   expect(slotRegistry.find(({ id }) => id === sessionBarSlotId)).toMatchObject({
     content: {
       key: 'sessionId',

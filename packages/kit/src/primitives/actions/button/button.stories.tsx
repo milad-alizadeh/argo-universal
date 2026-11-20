@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { expect, fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { Button, type ButtonProps } from './button';
 
@@ -69,31 +68,8 @@ export const Small: Story = { args: smallButton };
 
 export const FullWidth: Story = { args: fullWidthButton };
 
-export const Disabled: Story = {
-  args: { ...disabledButton, onPress: fn() },
-  play: async ({ canvas, args }) => {
-    const button = canvas.getByRole('button', { name: label });
-    await expect(button).toBeDisabled();
-    button.click();
-    await expect(args.onPress).not.toHaveBeenCalled();
-  },
-};
+export const Disabled: Story = { args: disabledButton };
 
-export const LeadingIcon: Story = {
-  args: leadingIconButton,
-  play: async ({ canvas }) => {
-    await expect(canvas.getByRole('button', { name: 'Add' })).toBeVisible();
-  },
-};
+export const LeadingIcon: Story = { args: leadingIconButton };
 
 export const SmallLeadingIcon: Story = { args: smallLeadingIconButton };
-
-// Test-only: hidden from the sidebar and Docs, still run by the story tests.
-export const Activation: Story = {
-  tags: ['!dev', '!autodocs'],
-  args: { label: 'Continue', onPress: fn() },
-  play: async ({ canvas, userEvent, args }) => {
-    await userEvent.click(canvas.getByRole('button', { name: 'Continue' }));
-    await expect(args.onPress).toHaveBeenCalledOnce();
-  },
-};

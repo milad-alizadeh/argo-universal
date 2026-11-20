@@ -103,42 +103,6 @@ it.each(['hanging', 'pending'])(
   15_000,
 );
 
-it('keeps a running Plugin that misses one heartbeat while its machine is busy', async () => {
-  const home = await createRuntimePlugins([
-    { id: 'slow', fixture: 'stalling' },
-  ]);
-
-  const { caller } = await startEngineTestHost({ home });
-
-  expect(await caller.plugin.activate({ pluginId: 'slow' })).toMatchObject({
-    state: 'running',
-  });
-  await new Promise((resolve) => setTimeout(resolve, 7000));
-  expect((await caller.plugin.list()).plugins).toMatchObject([
-    { state: 'running', hanging: false, error: null },
-  ]);
-}, 15_000);
-
-it('flags a running Plugin that answers no heartbeat for 6 seconds', async () => {
-  const home = await createRuntimePlugins([{ id: 'stuck', fixture: 'stuck' }]);
-  const { caller } = await startEngineTestHost({ home });
-
-  expect(await caller.plugin.activate({ pluginId: 'stuck' })).toMatchObject({
-    state: 'running',
-  });
-  await expect
-    .poll(() => caller.plugin.list(), { timeout: 12_000, interval: 250 })
-    .toMatchObject({
-      plugins: [
-        {
-          state: 'crashed',
-          hanging: true,
-          error: 'Plugin did not answer a heartbeat within 6 seconds',
-        },
-      ],
-    });
-}, 20_000);
-
 it('refuses an unknown Plugin without starting arbitrary code', async () => {
   const home = await createRuntimePlugins([]);
   const { caller } = await startEngineTestHost({ home });

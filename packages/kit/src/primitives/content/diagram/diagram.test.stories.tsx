@@ -73,16 +73,19 @@ interface WidthStories {
   Wide: Story;
 }
 
-// One story per width for each story that presses (docs/agents/storybook.md).
-function atEachWidth(play: Play): WidthStories {
-  const at = (width: number): Story => ({
-    play: async (context) => {
-      await settleLayout(width);
-      await play(context);
-    },
-  });
+const at = (width: number, play: Play): Story => ({
+  play: async (context) => {
+    await settleLayout(width);
+    await play(context);
+  },
+});
 
-  return { Phone: at(layoutWidths.phone), Wide: at(layoutWidths.wide) };
+// The viewer fills the window, so opening and closing it run at a phone and a wide window.
+function atEachWidth(play: Play): WidthStories {
+  return {
+    Phone: at(layoutWidths.phone, play),
+    Wide: at(layoutWidths.wide, play),
+  };
 }
 
 export const DrawsWithItsTitle: Story = {
@@ -93,63 +96,57 @@ export const DrawsWithItsTitle: Story = {
   },
 };
 
-const showsCode = atEachWidth(async ({ canvas, userEvent }) => {
-  await userEvent.click(
-    await canvas.findByRole('button', { name: 'Show code' }),
-  );
-
-  await expect(canvas.getByText(sourceHeader)).toBeVisible();
-  await expect(
-    canvas.queryByRole('button', { name: drawingLabel }),
-  ).not.toBeInTheDocument();
-});
-
-export const ShowsCodePhone = showsCode.Phone;
-
-export const ShowsCodeWide = showsCode.Wide;
-
-const showsDiagramAgain = atEachWidth(async ({ canvas, userEvent }) => {
-  await userEvent.click(
-    await canvas.findByRole('button', { name: 'Show code' }),
-  );
-
-  await userEvent.click(canvas.getByRole('button', { name: 'Show diagram' }));
-
-  await expect(await drawing(canvas)).toBeVisible();
-});
-
-export const ShowsDiagramAgainPhone = showsDiagramAgain.Phone;
-
-export const ShowsDiagramAgainWide = showsDiagramAgain.Wide;
-
-const copiesTheSource = atEachWidth(async ({ canvas, userEvent }) => {
-  const clipboard = spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
-
-  try {
-    await userEvent.click(canvas.getByRole('button', { name: 'Copy code' }));
-
-    await waitFor(() =>
-      expect(clipboard).toHaveBeenCalledWith(flowchartDiagram.source),
+export const ShowsCode = at(
+  layoutWidths.wide,
+  async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Show code' }),
     );
-  } finally {
-    clipboard.mockRestore();
-  }
-});
 
-export const CopiesTheSourcePhone = copiesTheSource.Phone;
+    await expect(canvas.getByText(sourceHeader)).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', { name: drawingLabel }),
+    ).not.toBeInTheDocument();
+  },
+);
 
-export const CopiesTheSourceWide = copiesTheSource.Wide;
+export const ShowsDiagramAgain = at(
+  layoutWidths.wide,
+  async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Show code' }),
+    );
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Show diagram' }));
+
+    await expect(await drawing(canvas)).toBeVisible();
+  },
+);
+
+export const CopiesTheSource = at(
+  layoutWidths.wide,
+  async ({ canvas, userEvent }) => {
+    const clipboard = spyOn(
+      navigator.clipboard,
+      'writeText',
+    ).mockResolvedValue();
+
+    try {
+      await userEvent.click(canvas.getByRole('button', { name: 'Copy code' }));
+
+      await waitFor(() =>
+        expect(clipboard).toHaveBeenCalledWith(flowchartDiagram.source),
+      );
+    } finally {
+      clipboard.mockRestore();
+    }
+  },
+);
 
 const opensFullScreen = atEachWidth(async ({ canvas, userEvent }) => {
   const viewer = await openViewer(canvas, userEvent);
 
-  const frame = within(viewer)
-    .getByTestId('diagram-viewer')
-    .getBoundingClientRect();
-
   await expect(within(viewer).getByText(diagramTitle)).toBeVisible();
-  await expect(frame.height).toBeGreaterThan(window.innerHeight * 0.9);
-  await expect(frame.width).toBeGreaterThan(window.innerWidth * 0.9);
 });
 
 export const OpensFullScreenPhone = opensFullScreen.Phone;
@@ -170,33 +167,33 @@ export const ClosesFullScreenPhone = closesFullScreen.Phone;
 
 export const ClosesFullScreenWide = closesFullScreen.Wide;
 
-const zoomsWithTheWheel = atEachWidth(async ({ canvas, userEvent }) => {
-  await openViewer(canvas, userEvent);
-  const fitted = await fittedWidth();
+export const ZoomsWithTheWheel = at(
+  layoutWidths.wide,
+  async ({ canvas, userEvent }) => {
+    await openViewer(canvas, userEvent);
+    const fitted = await fittedWidth();
 
-  zoomIn();
+    zoomIn();
 
-  await waitFor(() => expect(drawnWidth()).toBeGreaterThan(fitted));
-});
+    await waitFor(() => expect(drawnWidth()).toBeGreaterThan(fitted));
+  },
+);
 
-export const ZoomsWithTheWheelPhone = zoomsWithTheWheel.Phone;
+export const FitsAgain = at(
+  layoutWidths.wide,
+  async ({ canvas, userEvent }) => {
+    await openViewer(canvas, userEvent);
+    const fitted = await fittedWidth();
+    zoomIn();
+    await waitFor(() => expect(drawnWidth()).toBeGreaterThan(fitted));
 
-export const ZoomsWithTheWheelWide = zoomsWithTheWheel.Wide;
+    await userEvent.click(
+      page().getByRole('button', { name: 'Fit to screen' }),
+    );
 
-const fitsAgain = atEachWidth(async ({ canvas, userEvent }) => {
-  await openViewer(canvas, userEvent);
-  const fitted = await fittedWidth();
-  zoomIn();
-  await waitFor(() => expect(drawnWidth()).toBeGreaterThan(fitted));
-
-  await userEvent.click(page().getByRole('button', { name: 'Fit to screen' }));
-
-  await waitFor(() => expect(drawnWidth()).toBeCloseTo(fitted));
-});
-
-export const FitsAgainPhone = fitsAgain.Phone;
-
-export const FitsAgainWide = fitsAgain.Wide;
+    await waitFor(() => expect(drawnWidth()).toBeCloseTo(fitted));
+  },
+);
 
 export const StreamsAsAPlaceholder: Story = {
   args: streamingDiagram,

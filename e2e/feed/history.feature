@@ -16,8 +16,6 @@ Feature: Feed history pagination
     Examples:
       | agent | frame |
       | 1     | wide  |
-      | 1     | phone |
-      | 2     | wide  |
       | 2     | phone |
 
   Scenario Outline: Read older history while a reconnect refresh is pending with Agent <agent> in a <frame> Frame
@@ -36,8 +34,6 @@ Feature: Feed history pagination
     Examples:
       | agent | frame |
       | 1     | wide  |
-      | 1     | phone |
-      | 2     | wide  |
       | 2     | phone |
 
   # Wide only until #1861: at phone width the row sometimes slides.

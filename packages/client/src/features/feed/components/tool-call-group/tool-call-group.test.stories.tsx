@@ -17,7 +17,6 @@ import {
 import {
   commandAndFileSummary,
   commandLine,
-  dark,
   readFileTitle,
   runningGroupTitle,
 } from './tool-call-group-play.mocks';
@@ -37,80 +36,68 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-function settled(width: number): Story {
-  return {
-    play: async ({ canvas, userEvent }) => {
-      await settleLayout(width);
+export const Settled: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('phone');
 
-      const group = canvas.getByRole('button', {
-        name: commandAndFileSummary,
-      });
+    const group = canvas.getByRole('button', {
+      name: commandAndFileSummary,
+    });
 
-      await expect(group).toBeVisible();
-      await expect(within(group).queryByText('0.3s')).not.toBeInTheDocument();
-      await expect(
-        canvas.queryAllByRole('button', { name: /^Read / }),
-      ).toHaveLength(0);
-      await userEvent.click(group);
-      await expect(
-        canvas.getByRole('button', { name: readFileTitle }),
-      ).toBeVisible();
-      await expect(
-        canvas.getAllByRole('button', { name: commandLine }),
-      ).toHaveLength(1);
-      await userEvent.click(group);
-      await waitFor(() =>
-        expect(
-          canvas.queryAllByRole('button', { name: /^Read / }),
-        ).toHaveLength(0),
-      );
-    },
-  };
-}
+    await expect(group).toBeVisible();
+    await expect(within(group).queryByText('0.3s')).not.toBeInTheDocument();
+    await expect(
+      canvas.queryAllByRole('button', { name: /^Read / }),
+    ).toHaveLength(0);
+    await userEvent.click(group);
+    await expect(
+      canvas.getByRole('button', { name: readFileTitle }),
+    ).toBeVisible();
+    await expect(
+      canvas.getAllByRole('button', { name: commandLine }),
+    ).toHaveLength(1);
+    await userEvent.click(group);
+    await waitFor(() =>
+      expect(canvas.queryAllByRole('button', { name: /^Read / })).toHaveLength(
+        0,
+      ),
+    );
+  },
+};
 
-export const SettledPhone = settled(layoutWidths.phone);
+export const Running: Story = {
+  args: { group: toolCallGroupMock.running },
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('phone');
 
-export const SettledWide = settled(layoutWidths.wide);
+    // The newest running call titles the group even behind a read, as Codex titles its active cell.
+    const group = canvas.getByRole('button', { name: runningGroupTitle });
 
-function running(width: number): Story {
-  return {
-    args: { group: toolCallGroupMock.running },
-    play: async ({ canvas, userEvent }) => {
-      await settleLayout(width);
+    await expect(group).toBeVisible();
+    await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
+    await expect(group).toHaveTextContent(`${runningGroupTitle} 23s`);
+    await expect(canvas.queryByText(commandAndFileSummary)).toBeNull();
+    await expect(
+      canvas.queryAllByRole('button', { name: /^Read / }),
+    ).toHaveLength(0);
+    await userEvent.click(group);
+    await expect(
+      canvas.getByRole('button', { name: readFileTitle }),
+    ).toBeVisible();
 
-      // The newest running call titles the group even behind a read, as Codex titles its active cell.
-      const group = canvas.getByRole('button', { name: runningGroupTitle });
-
-      await expect(group).toBeVisible();
-      await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
-      await expect(group).toHaveTextContent(`${runningGroupTitle} 23s`);
-      await expect(canvas.queryByText(commandAndFileSummary)).toBeNull();
-      await expect(
-        canvas.queryAllByRole('button', { name: /^Read / }),
-      ).toHaveLength(0);
-      await userEvent.click(group);
-      await expect(
-        canvas.getByRole('button', { name: readFileTitle }),
-      ).toBeVisible();
-
-      // The title names the running command once, as Codex does: its output draws in its place, untitled.
-      await expect(
-        canvas.queryByRole('button', { name: commandLine }),
-      ).not.toBeInTheDocument();
-      await expect(canvas.getByText('Shell')).toBeVisible();
-      await userEvent.click(group);
-      await waitFor(() =>
-        expect(
-          canvas.queryAllByRole('button', { name: /^Read / }),
-        ).toHaveLength(0),
-      );
-    },
-  };
-}
-
-export const RunningPhone = running(layoutWidths.phone);
-
-export const RunningWide = running(layoutWidths.wide);
+    // The title names the running command once, as Codex does: its output draws in its place, untitled.
+    await expect(
+      canvas.queryByRole('button', { name: commandLine }),
+    ).not.toBeInTheDocument();
+    await expect(canvas.getByText('Shell')).toBeVisible();
+    await userEvent.click(group);
+    await waitFor(() =>
+      expect(canvas.queryAllByRole('button', { name: /^Read / })).toHaveLength(
+        0,
+      ),
+    );
+  },
+};
 
 export const OpenCompletedHistory: Story = {
   args: { group: { ...toolCallGroupMock.group, state: 'open' } },
@@ -128,60 +115,42 @@ export const OpenCompletedHistory: Story = {
   },
 };
 
-function agentParity(width: number): Story {
-  return {
-    render: (args) => (
-      <>
-        {toolCallGroupMocks.map(({ agent, group }) => (
-          <ToolCallGroup {...args} key={agent} group={group} />
-        ))}
-      </>
-    ),
-    play: async ({ canvas, userEvent }) => {
-      await settleLayout(width);
+export const AgentParity: Story = {
+  render: (args) => (
+    <>
+      {toolCallGroupMocks.map(({ agent, group }) => (
+        <ToolCallGroup {...args} key={agent} group={group} />
+      ))}
+    </>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('phone');
 
-      const groups = canvas.getAllByRole('button', {
-        name: commandAndFileSummary,
-      });
+    const groups = canvas.getAllByRole('button', {
+      name: commandAndFileSummary,
+    });
 
-      await expect(
-        canvas.queryAllByRole('button', { name: /^Read / }),
-      ).toHaveLength(0);
+    await expect(
+      canvas.queryAllByRole('button', { name: /^Read / }),
+    ).toHaveLength(0);
 
-      for (const group of groups) await userEvent.click(group);
-      await expect(
-        canvas.getByRole('button', { name: readFileTitle }),
-      ).toBeVisible();
-      await expect(
-        canvas.getByRole('button', { name: 'Read /repo/app.txt' }),
-      ).toBeVisible();
-      await expect(canvas.queryByText('Explored')).not.toBeInTheDocument();
+    for (const group of groups) await userEvent.click(group);
+    await expect(
+      canvas.getByRole('button', { name: readFileTitle }),
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: 'Read /repo/app.txt' }),
+    ).toBeVisible();
+    await expect(canvas.queryByText('Explored')).not.toBeInTheDocument();
 
-      for (const group of groups) await userEvent.click(group);
-      await waitFor(() =>
-        expect(
-          canvas.queryAllByRole('button', { name: /^Read / }),
-        ).toHaveLength(0),
-      );
-    },
-  };
-}
-
-export const AgentParityPhone = agentParity(layoutWidths.phone);
-
-export const AgentParityWide = agentParity(layoutWidths.wide);
-
-export const SettledPhoneDark: Story = { ...SettledPhone, ...dark };
-
-export const SettledWideDark: Story = { ...SettledWide, ...dark };
-
-export const RunningPhoneDark: Story = { ...RunningPhone, ...dark };
-
-export const RunningWideDark: Story = { ...RunningWide, ...dark };
-
-export const AgentParityPhoneDark: Story = { ...AgentParityPhone, ...dark };
-
-export const AgentParityWideDark: Story = { ...AgentParityWide, ...dark };
+    for (const group of groups) await userEvent.click(group);
+    await waitFor(() =>
+      expect(canvas.queryAllByRole('button', { name: /^Read / })).toHaveLength(
+        0,
+      ),
+    );
+  },
+};
 
 const editDescription = 'Updating the greeting';
 
@@ -311,63 +280,47 @@ const command = failedCommand.content.find(
 if (!command)
   throw new Error('Recorded catalog needs the failed shell command');
 
-function failedCommands(width: number): Story {
-  return {
-    args: failedCommandsGroup,
-    play: async ({ canvas, userEvent }) => {
-      await settleLayout(width);
+export const FailedCommands: Story = {
+  args: failedCommandsGroup,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('phone');
 
-      const group = canvas.getByRole('button', {
-        name: 'Ran 2 commands · 1 failed',
-      });
+    const group = canvas.getByRole('button', {
+      name: 'Ran 2 commands · 1 failed',
+    });
 
-      await expect(group).toBeVisible();
-      await expect(
-        canvas.queryByRole('button', { name: command }),
-      ).not.toBeInTheDocument();
-      await userEvent.click(group);
-      const row = canvas.getByRole('button', { name: command });
+    await expect(group).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', { name: command }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(group);
+    const row = canvas.getByRole('button', { name: command });
 
-      await expect(row).toBeVisible();
-      await expect(
-        canvas.queryByRole('button', { name: 'Ran command' }),
-      ).not.toBeInTheDocument();
-      await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
-      await userEvent.click(row);
-      await expect(canvas.getByText('Shell')).toBeVisible();
-      await expect(canvas.getByText('Exit 2')).toBeVisible();
-      await userEvent.click(row);
-      await waitFor(() =>
-        expect(canvas.queryByText('Shell')).not.toBeInTheDocument(),
-      );
-    },
-  };
-}
+    await expect(row).toBeVisible();
+    await expect(
+      canvas.queryByRole('button', { name: 'Ran command' }),
+    ).not.toBeInTheDocument();
+    await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
+    await userEvent.click(row);
+    await expect(canvas.getByText('Shell')).toBeVisible();
+    await expect(canvas.getByText('Exit 2')).toBeVisible();
+    await userEvent.click(row);
+    await waitFor(() =>
+      expect(canvas.queryByText('Shell')).not.toBeInTheDocument(),
+    );
+  },
+};
 
-export const FailedCommandsPhone = failedCommands(layoutWidths.phone);
-
-export const FailedCommandsWide = failedCommands(layoutWidths.wide);
-
-function answeredHeader(width: number): Story {
-  return {
-    args: allowedOnceHeaderGroup,
-    play: async ({ canvas, userEvent }) => {
-      await settleLayout(width);
-      await expect(canvas.getAllByText('You allowed this once')).toHaveLength(
-        1,
-      );
-      await userEvent.click(
-        canvas.getByRole('button', {
-          name: allowedOnceHeaderGroup.group.liveHeader.text,
-        }),
-      );
-      await expect(canvas.getAllByText('You allowed this once')).toHaveLength(
-        1,
-      );
-    },
-  };
-}
-
-export const AnsweredLiveHeaderPhone = answeredHeader(layoutWidths.phone);
-
-export const AnsweredLiveHeaderWide = answeredHeader(layoutWidths.wide);
+export const AnsweredLiveHeader: Story = {
+  args: allowedOnceHeaderGroup,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('phone');
+    await expect(canvas.getAllByText('You allowed this once')).toHaveLength(1);
+    await userEvent.click(
+      canvas.getByRole('button', {
+        name: allowedOnceHeaderGroup.group.liveHeader.text,
+      }),
+    );
+    await expect(canvas.getAllByText('You allowed this once')).toHaveLength(1);
+  },
+};

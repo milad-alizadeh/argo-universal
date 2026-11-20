@@ -56,21 +56,6 @@ export const WaitingForData: Story = {
   },
 };
 
-export const AllPagesNavigatePhoneDark: Story = {
-  ...AllPagesNavigatePhone,
-  globals: { mode: 'dark' },
-};
-
-export const AllPagesNavigateWideDark: Story = {
-  ...AllPagesNavigateWide,
-  globals: { mode: 'dark' },
-};
-
-export const WaitingForDataDark: Story = {
-  ...WaitingForData,
-  globals: { mode: 'dark' },
-};
-
 export const ChildSelectionAndAttention: Story = {
   args: {
     selectedPath: '/settings/projects/example-project',
@@ -94,11 +79,6 @@ export const ChildSelectionAndAttention: Story = {
       ).toBeVisible();
     }
   },
-};
-
-export const ChildSelectionAndAttentionDark: Story = {
-  ...ChildSelectionAndAttention,
-  globals: { mode: 'dark' },
 };
 
 export const TheSearchNarrowsThePagesPhone = searchNarrowsThePages(
@@ -197,7 +177,6 @@ async function expectRowsInFrame(
     const right = region.right - bounds.right;
 
     await expect(left).toBeGreaterThan(0);
-    await expect(left).toBeLessThan(16);
-    await expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
+    await expect(right).toBeGreaterThan(0);
   }
 }

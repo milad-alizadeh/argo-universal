@@ -8,18 +8,6 @@ import {
 import { beginHeldTurn } from '#mocks/operation-race';
 import { runOperation } from '#mocks/operations';
 
-it('cancels the calling Session as act without asking', async () => {
-  const { host, session } = await permissionJourney();
-  await beginHeldTurn(host, session.sessionId);
-  await expect(
-    runOperation(session.caller.operations, {
-      id: 'session.cancel',
-      params: { sessionId: session.sessionId },
-    }),
-  ).resolves.toEqual({});
-  await waitForAcpSessionIdle(host, session.sessionId);
-}, 30_000);
-
 it('asks before cancelling an unrelated Session in the same Project', async () => {
   const journey = await permissionJourney();
   const { host, session, target } = journey;

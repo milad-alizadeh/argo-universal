@@ -17,6 +17,7 @@ def group(name, filters, browser="none"):
 GROUPS = [
     group("plugins", [PLUGIN_FILTER]),
     group("kits", KITS),
+    # The desktop CSP test starts Chromium in the rest group.
     group("rest", [f"!{p}" for p in (ENGINE, PLUGIN_FILTER, *KITS)], "chromium"),
 ]
 

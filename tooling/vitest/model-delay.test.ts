@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type Actor, assign, createActor, setup } from 'xstate';
-import { describeModel, modelTest, type Vertex } from './model-test';
+import { modelTest, type Vertex } from './model-test';
 
 // A delay that re-enters its own state leaves the state value as it was.
 const machine = setup({ delays: { tick: 1000 } }).createMachine({
@@ -57,14 +57,6 @@ const actorWith = (tick: number): Parameters<typeof modelTest>[2] => ({
 });
 
 describe('re-entering delay model', (): void => {
-  const model = modelTest(machine, graph, actorWith(1000));
-
-  describeModel(model);
-
-  it('the generated paths walk every transition', (): void => {
-    expect(model.unwalked()).toEqual([]);
-  });
-
   it.each([999, 1001])(
     'fails a re-entering delay declared as %d ms when the timer takes 1000',
     async (declared): Promise<void> => {

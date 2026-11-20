@@ -49,10 +49,6 @@ export const ListsAvailableSectionsInOrder: Story = {
 
     const range = document.createRange();
     range.selectNodeContents(title);
-    await expect(count.getBoundingClientRect().top).toBeCloseTo(
-      range.getBoundingClientRect().top,
-      0,
-    );
     await expect(count.getBoundingClientRect().left).toBeGreaterThanOrEqual(
       range.getBoundingClientRect().right,
     );

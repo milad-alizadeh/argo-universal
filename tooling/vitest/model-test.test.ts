@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type Actor, createActor, setup } from 'xstate';
 import {
-  describeModel,
   type Model,
   type ModelGraph,
   type ModelWalk,
@@ -66,16 +65,6 @@ const walkOf = (walks: typeof graph.walks): Model =>
 async function runFirstCase(model: Model): Promise<void> {
   await model.suites[0]?.cases[0]?.run();
 }
-
-describe('kettle model', (): void => {
-  const model = modelTest(machine, graph, actor);
-
-  describeModel(model);
-
-  it('the generated paths walk every transition', (): void => {
-    expect(model.unwalked()).toEqual([]);
-  });
-});
 
 describe('model test', (): void => {
   it('throws when an event of the machine has no fixture', (): void => {

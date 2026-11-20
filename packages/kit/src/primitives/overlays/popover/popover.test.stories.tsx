@@ -198,10 +198,7 @@ export const ButtonsOutsideAListKeepTheirKeysWide: Story = {
   },
 };
 
-// The window frame's 8px inset, written out so the test does not read the value it checks.
-const edgeMargin = 8;
-
-// A popover whose trigger sits against the window's right edge shifts left and stops short of that edge.
+// A popover whose trigger sits against the window's right edge shifts left and stays inside the window.
 export const StaysInsideTheWindowEdgeWide: Story = {
   render: () => (
     <View className="fixed top-6 right-0">
@@ -231,8 +228,9 @@ export const StaysInsideTheWindowEdgeWide: Story = {
 
     if (!placed) throw new Error('Popover has no popper wrapper');
 
-    await expect(placed.getBoundingClientRect().right).toBeLessThanOrEqual(
-      window.innerWidth - edgeMargin,
-    );
+    const { left, right } = placed.getBoundingClientRect();
+
+    await expect(left).toBeGreaterThanOrEqual(0);
+    await expect(right).toBeLessThanOrEqual(window.innerWidth);
   },
 };

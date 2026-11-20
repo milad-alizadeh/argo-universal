@@ -13,7 +13,7 @@ export const changeStageNames = [
   'closed',
 ] as const;
 
-export type ChangeStageName = (typeof changeStageNames)[number];
+type ChangeStageName = (typeof changeStageNames)[number];
 
 // In the order they win the mark: a draft that also conflicts is marked Draft.
 export const changeModifierNames = ['draft', 'conflict'] as const;

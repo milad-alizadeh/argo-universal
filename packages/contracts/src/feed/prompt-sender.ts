@@ -12,6 +12,11 @@ export const SentPromptSender = z.discriminatedUnion('type', [
     pluginId: z.string(),
     title: z.string().min(1),
   }),
+  z.strictObject({
+    type: z.literal('schedule'),
+    scheduleId: z.string(),
+    title: z.literal('Schedule'),
+  }),
   // The Conversation (ADR-0064): its Prompts are stored and never drawn.
   z.strictObject({ type: z.literal('conversation') }),
 ]);
