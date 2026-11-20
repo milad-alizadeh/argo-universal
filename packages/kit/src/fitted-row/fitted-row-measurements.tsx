@@ -35,21 +35,49 @@ const hiddenProps = {
   pointerEvents: 'none',
 } as const;
 
-const countItems = (items: Item[]): Item[] =>
-  items.map((_, index) => {
-    const key = countKey(index + 1);
+/*
+ * What "+N" stands for: how many it counts, and the first of the line's own items it holds. An unseen "+N" is only
+ * measured, so it draws its look alone, without what a reader's "+N" opens.
+ */
+export interface Overflow {
+  count: number;
+  firstHidden: number;
+  unseen: boolean;
+}
 
-    return { key, node: <Pill text={key} /> };
+export type DrawMore = (overflow: Overflow) => ReactNode;
+
+export const drawPill: DrawMore = ({ count }) => (
+  <Pill text={countKey(count)} />
+);
+
+// Every count "+N" can show, with the line's items it would hold.
+function countItems(props: MeasurementsProps): Item[] {
+  const { items, hiddenElsewhere, more } = props;
+
+  return Array.from({ length: items.length + hiddenElsewhere }, (_, index) => {
+    const count = index + 1;
+    const firstHidden = Math.max(0, items.length - count + hiddenElsewhere);
+
+    return {
+      key: countKey(count),
+      node: more({ count, firstHidden, unseen: true }),
+    };
   });
+}
+
+interface MeasurementsProps {
+  items: Item[];
+  hiddenElsewhere: number;
+  more: DrawMore;
+  measure: Measure;
+}
 
 // Every item and every possible "+N", drawn unseen at their own widths.
-export function Measurements(props: {
-  items: Item[];
-  measure: Measure;
-}): ReactElement {
+export function Measurements(props: MeasurementsProps): ReactElement {
   return (
     <View {...hiddenProps} className="absolute top-0 left-0 flex-row opacity-0">
-      {[...props.items, ...countItems(props.items)].map((item) => (
+      {[...props.items, ...countItems(props)].map((item) => (
         <Measured key={item.key} item={item} measure={props.measure} />
       ))}
     </View>

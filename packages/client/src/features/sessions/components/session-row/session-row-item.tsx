@@ -141,7 +141,7 @@ const modifiersOf = ({
 ];
 
 // Both facts are kept; the Change stage model picks the one mark, a draft ahead of a conflict.
-const changeState = (change: RowChange): ChangeState =>
+export const changeState = (change: RowChange): ChangeState =>
   change.stage === 'open'
     ? { stage: 'open', modifiers: modifiersOf(change) }
     : { stage: change.stage };

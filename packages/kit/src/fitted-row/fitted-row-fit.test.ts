@@ -6,6 +6,15 @@ function measured(available: number): Parameters<typeof fitCount>[0] {
   return { widths: [40, 40, 40], counts: [20, 20, 20], available, gap: 4 };
 }
 
+// Two items held back elsewhere: "+N" always shows, so its width is kept even when every item fits.
+function heldBack(available: number): Parameters<typeof fitCount>[0] {
+  return {
+    ...measured(available),
+    counts: [20, 20, 20, 20, 20],
+    hiddenElsewhere: 2,
+  };
+}
+
 describe('fitCount', () => {
   it('shows every item until all are measured', () => {
     expect(
@@ -34,6 +43,14 @@ describe('fitCount', () => {
 
   it('folds every item into "+N" when even one does not fit beside it', () => {
     expect(fitCount(measured(30))).toBe(0);
+  });
+
+  it('shows every item beside "+N" for the items held back', () => {
+    expect(fitCount(heldBack(152))).toBe(3);
+  });
+
+  it('folds an item when "+N" for the items held back leaves no room', () => {
+    expect(fitCount(heldBack(128))).toBe(2);
   });
 });
 
