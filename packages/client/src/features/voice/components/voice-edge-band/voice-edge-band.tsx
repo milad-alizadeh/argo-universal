@@ -6,7 +6,13 @@ import { type LayoutChangeEvent, View } from 'react-native';
 import Animated, { type SharedValue } from 'react-native-reanimated';
 import type { VoiceSpectrum } from '../../types/voice-connection';
 import type { BandFrame } from './band-frame';
-import { barLayoutOf, barLeft, barWidth, stripHeight } from './band-layout';
+import {
+  type BarLayout,
+  barLayoutOf,
+  barLeft,
+  barWidth,
+  stripHeight,
+} from './band-layout';
 import { bandLookOf, type BandLook, type EdgeCall } from './band-state';
 import { useBandFrame } from './use-band-frame';
 

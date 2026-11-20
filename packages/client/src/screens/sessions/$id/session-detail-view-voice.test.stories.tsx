@@ -2,7 +2,7 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { expect, userEvent, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { cdp } from 'vitest/browser';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import {
@@ -67,8 +67,10 @@ async function startAndEnd(canvas: Canvas): Promise<void> {
   await userEvent.click(
     await canvas.findByRole('button', { name: 'Start voice call' }),
   );
-  await canvas.findByText('Connecting…');
-  await canvas.findByText('Listening', undefined, settled);
+  const band = within(await canvas.findByTestId(bandId));
+
+  await band.findByText('Connecting…');
+  await band.findByText('Listening', undefined, settled);
 
   const microphone = await canvas.findByRole('button', {
     name: 'Mute microphone',
