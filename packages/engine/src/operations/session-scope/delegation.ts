@@ -1,6 +1,7 @@
 import type {
   SessionNewInput,
   SessionNewOutput,
+  SessionNewParams,
   SessionPromptInput,
   SessionPromptOutput,
 } from '@repo/contracts';
@@ -65,8 +66,9 @@ export class Delegation {
   // session.new: in the caller's Project, within the limits.
   private start(
     context: ScopedRun,
-    input: SessionNewInput,
+    params: SessionNewParams,
   ): Promise<SessionNewOutput> {
+    const input = this.callerDefaults(context.caller, params);
     const sessionId = this.ports.createId();
 
     return this.admit(
@@ -74,6 +76,17 @@ export class Delegation {
       this.startDelegated(context.caller, input, sessionId),
       () => context.invoke({ id: 'session.new', params: input }, { sessionId }),
     );
+  }
+  // The caller's own Project and Agent, unless session.new names others.
+  private callerDefaults(
+    caller: SessionCaller,
+    params: SessionNewParams,
+  ): SessionNewInput {
+    return {
+      ...params,
+      projectId: params.projectId ?? caller.projectId,
+      agent: params.agent ?? this.ports.directory.agent(caller.sessionId),
+    };
   }
   private startDelegated(
     caller: SessionCaller,

@@ -24,14 +24,14 @@ it('lists every Operation but the App-only ones with its description, enabled', 
   );
 });
 
-it('filters Operations by id, label and keywords, ignoring case', () => {
+it('filters Operations by id, label and keywords, ignoring case, and finds nothing for no word near any', () => {
   expect(listOperations('PROJECT.LIST').map(({ id }) => id)).toContain(
     'project.list',
   );
   expect(listOperations('project.list').map(({ id }) => id)).not.toContain(
     'session.new',
   );
-  expect(listOperations('nothing matches this')).toEqual([]);
+  expect(listOperations('xyzzy')).toEqual([]);
 });
 
 const describedSchemas = (): unknown[] =>

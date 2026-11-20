@@ -13,18 +13,21 @@ it('discovers Operations and their schemas from a terminal outside the repositor
   const result = await runCli(host.home, ['operations', 'FOLDERS', '--json']);
 
   expect(result.code).toBe(0);
-  expect(JSON.parse(result.stdout)).toMatchObject([
-    {
-      id: projectListId,
-      label: 'List Projects',
-      description: expect.any(String),
-      tier: 'read',
-      params: { type: 'object' },
-      result: { type: 'array' },
-      enabled: true,
-      disabledReason: null,
-    },
-  ]);
+  // Ranked search answers every Operation about folders; the one that lists them is among them.
+  expect(JSON.parse(result.stdout)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: projectListId,
+        label: 'List Projects',
+        description: expect.any(String),
+        tier: 'read',
+        params: expect.objectContaining({ type: 'object' }),
+        result: expect.objectContaining({ type: 'array' }),
+        enabled: true,
+        disabledReason: null,
+      }),
+    ]),
+  );
 }, 30_000);
 
 it('runs project.list with the same result as the App', async () => {

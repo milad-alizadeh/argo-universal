@@ -2,6 +2,7 @@ import type {
   SessionInfo,
   SessionRenameInput,
   SessionRenameOutput,
+  SessionRenameParams,
 } from '@repo/contracts';
 import {
   type UseMutationResult,
@@ -18,7 +19,7 @@ const renameFailedMessage = 'Couldn’t rename the Session. Try again.';
 type RenameMutation = UseMutationResult<
   SessionRenameOutput,
   ClientError,
-  SessionRenameInput
+  SessionRenameParams
 >;
 
 export interface RenameSession {
@@ -99,8 +100,9 @@ function useRenameMutation(onRenamed: Renamed): RenameMutation {
 
   return useMutation({
     ...trpc.session.rename.mutationOptions(),
-    onSuccess: async (_renamed, input) => {
-      onRenamed(input);
+    // The App always names the Session it renames; only an Agent leaves it out.
+    onSuccess: async (_renamed, { sessionId, title }) => {
+      if (sessionId) onRenamed({ sessionId, title });
       await queryClient.invalidateQueries(trpc.session.list.pathFilter());
     },
   });
