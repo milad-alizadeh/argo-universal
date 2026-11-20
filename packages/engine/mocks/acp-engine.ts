@@ -23,6 +23,7 @@ export const emptySessionInput = {
 type AcpScenario = ScriptedScenario & { autoExit?: boolean } & Partial<
     Pick<
       EngineInput,
+      | 'pluginNetwork'
       | 'fetchAgents'
       | 'caffeinate'
       | 'operationWaitClock'
@@ -117,6 +118,7 @@ const conversationProviderOf = (
 
 // Most tests have Agents that send no Slash command list; they must not wait for one.
 const scenarioOptions = (scenario: AcpScenario): EngineTestOptions => ({
+  pluginNetwork: scenario.pluginNetwork,
   caffeinate: scenario.caffeinate,
   operationWaitClock: scenario.operationWaitClock,
   slashCommandsWaitMs: scenario.slashCommandsWaitMs ?? 0,

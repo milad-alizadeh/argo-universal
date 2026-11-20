@@ -365,7 +365,7 @@ A Plugin's own record that a Session produced one pull request, named by its rep
 _Avoid_: PR link, attachment
 
 **Auto-fix**:
-A person's choice, per PR association, that the Session's Agent is prompted to fix each new failed Check run, review comment or merge conflict on that pull request; a re-run that fails again is new. One Prompt lists everything new on a head commit; its failed Checks wait until every Check has reported, so they come in one Prompt. When CI is still red on a head it already prompted about and the Session has been idle for 30 minutes, it prompts again to go on and push. A push, a close, or turning it off withdraws a Prompt that has not started. It is off until turned on.
+A person's choice, per PR association, that the Session's Agent is prompted to fix each new failed Check run, review comment or merge conflict on that pull request; a re-run that fails again is new. One Prompt lists everything new on a head commit at the time it is read; a failed Check is prompted as soon as it fails, without waiting for the other Checks, so Checks that fail at different times come in separate Prompts. When CI is still red on a head it already prompted about and the Session has been idle for 30 minutes, it prompts again to go on and push. A push, a close, or turning it off withdraws a Prompt that has not started. It is off until turned on.
 _Avoid_: Babysit, watch, auto-repair
 
 **Auto-merge**:
