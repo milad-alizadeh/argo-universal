@@ -7,7 +7,6 @@ import type {
   PluginPromptAnswer,
   PluginWithdrawAnswer,
 } from '@repo/contracts/plugins/argo-calls';
-import { ProjectSchedules } from '../projects/project-schedules';
 import { archiveSessionFromPlugin } from './archive/plugin-archive';
 import { SessionArchives } from './archive/session-archives';
 import { ConversationSessionWork } from './conversation-session-work';
@@ -19,6 +18,7 @@ import {
   type CalledOperation,
   type SessionOperationCall,
 } from './operation-call';
+import { ProjectSchedules } from './project-schedules';
 import type { NativeStart, NativeStartRequest } from './prompt-sender';
 import { requireNoTurn } from './restart/restart-session';
 import { createSessionRouter } from './router';

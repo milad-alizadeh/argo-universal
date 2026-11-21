@@ -79,8 +79,9 @@ it('requires approval to schedule Sessions outside the Agent’s Project', async
   const params = {
     agent: 'mock',
     instructions: 'Review the build',
-    intervalSeconds: 3600,
+    cadence: { type: 'interval' as const, intervalSeconds: 3600 },
   };
+
   expect(
     (
       await scoped({

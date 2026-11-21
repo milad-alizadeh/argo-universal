@@ -26,6 +26,8 @@ export function createProjectOperations(
   return {
     'project.scheduleCreate': (input) =>
       deps.sessions.projectSchedules.create(input),
+    'project.schedulePreview': async ({ projectId, cadence }) =>
+      deps.sessions.projectSchedules.preview(projectId, cadence),
     'project.scheduleList': async ({ projectId }) =>
       deps.sessions.projectSchedules.list(projectId),
     'project.scheduleRunNow': (input) =>

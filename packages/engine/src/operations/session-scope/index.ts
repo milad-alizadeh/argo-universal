@@ -34,6 +34,7 @@ const parsed = <Id extends TargetedId>(
 ): ParsedOperation<Id> => ({ id, params: validateParams(id, params) });
 
 const projectTarget = z.object({ projectId: z.string() });
+
 const sessionTarget = z.object({ sessionId: z.string() });
 
 type Admission = {
@@ -108,6 +109,7 @@ export class SessionScope {
 
     if (id.startsWith('project.')) {
       const { projectId } = projectTarget.parse(params);
+
       return operationPermission(
         policy,
         false,
