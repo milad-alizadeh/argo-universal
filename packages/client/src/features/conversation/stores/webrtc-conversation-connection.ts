@@ -37,9 +37,9 @@ const heldSoundOf = ({ volume, microphoneGain }: VoiceSound): HeldSound => ({
  * The App's side of a call on a browser or Electron page: the microphone goes up and the voice comes down.
  * A call is never recorded or stored; only a preview's greeting may be, for the Server to keep (ADR-0064).
  */
-class WebRtcConversationConnection implements ConversationConnection {
-  private held: HeldConversation | undefined;
-  private readonly previews = new ConnectionPreview();
+class WebRtcConversationConnection<Stream> implements ConversationConnection {
+  private held: HeldConversation<Stream> | undefined;
+  private readonly previews = new ConnectionPreview<Stream>();
   // The microphone and speaker this Device chose; every call starts on them.
   private devices = systemDevices;
   // The volume and gain the person chose; every call starts with them.
@@ -48,7 +48,9 @@ class WebRtcConversationConnection implements ConversationConnection {
   // Refilled on every read, so the band reading each frame makes no garbage.
   private readonly bands = silentSpectrum();
 
-  public constructor(private readonly environment: ConversationEnvironment) {}
+  public constructor(
+    private readonly environment: ConversationEnvironment<Stream>,
+  ) {}
 
   public async createOffer(): Promise<string> {
     this.close();
@@ -61,14 +63,19 @@ class WebRtcConversationConnection implements ConversationConnection {
       this.devices.microphone,
     );
 
-    latencyProbe.mark('microphone');
-    const held = this.hold(microphone);
+    const held = this.holdMicrophone(microphone);
     this.held = held;
     const offer = await held.peer.offer(microphone);
     latencyProbe.mark('offer');
     latencyProbe.watch(held.peer);
 
     return offer;
+  }
+
+  private holdMicrophone(microphone: Microphone): HeldConversation<Stream> {
+    latencyProbe.mark('microphone');
+
+    return this.hold(microphone);
   }
 
   public async preview(
@@ -101,7 +108,7 @@ class WebRtcConversationConnection implements ConversationConnection {
   // Records a preview's voice as it arrives, where the page can record.
   private recorder(
     onRecorded?: (clip: VoicePreviewClip) => void,
-  ): ((voice: MediaStream, held: HeldConversation) => void) | undefined {
+  ): ((voice: Stream, held: HeldConversation<Stream>) => void) | undefined {
     if (!onRecorded) return undefined;
 
     return (voice, held) =>
@@ -115,8 +122,8 @@ class WebRtcConversationConnection implements ConversationConnection {
   // A connection holding what it sends up, playing the voice on the chosen speaker when it arrives.
   private hold(
     microphone: Microphone,
-    heard?: (voice: MediaStream, held: HeldConversation) => void,
-  ): HeldConversation {
+    heard?: (voice: Stream, held: HeldConversation<Stream>) => void,
+  ): HeldConversation<Stream> {
     const held = new HeldConversation(
       microphone,
       this.environment.createPeer(),
@@ -189,6 +196,6 @@ class WebRtcConversationConnection implements ConversationConnection {
   }
 }
 
-export const createWebRtcConversationConnection = (
-  environment: ConversationEnvironment,
+export const createWebRtcConversationConnection = <Stream>(
+  environment: ConversationEnvironment<Stream>,
 ): ConversationConnection => new WebRtcConversationConnection(environment);

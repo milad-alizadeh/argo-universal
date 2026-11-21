@@ -12,6 +12,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "dev.argo.app",
       "infoPlist": {
+        "UIBackgroundModes": ["audio"],
         "NSBonjourServices": ["_argo._tcp"],
         "NSLocalNetworkUsageDescription": "Argo finds your Server on the local network.",
         "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
