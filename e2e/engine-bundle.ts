@@ -28,6 +28,7 @@ export default async function bundleEngine(): Promise<void> {
     cwd: serverDirectory,
     input: 'mocks/e2e-engine.ts',
     platform: 'node',
+    resolve: { mainFields: ['module', 'main'] },
     external: ['node-pty', 'esbuild', '@napi-rs/keyring'],
 
     logLevel: 'warn',
