@@ -1,7 +1,8 @@
 import { Button } from '@repo/kit/primitives/actions/button';
-import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
 import { List, ListSection } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { TintedAvatar } from '@repo/kit/tinted-avatar';
 import { View } from 'react-native';
 import type { ScheduleControls } from '../hooks/use-schedules';
 import { FollowUpEditor } from './schedule-form';
@@ -25,19 +26,25 @@ function scheduleInterval(seconds: number | null): string {
 }
 
 function previewRow(item: Schedule): React.JSX.Element {
+  const label =
+    item.state === 'active'
+      ? scheduleInterval(item.intervalSeconds)
+      : timing(item);
+
   return (
-    <ListItem
-      key={item.id}
-      leading={
-        <Icon name={item.state === 'paused' ? 'pause' : 'clock'} tone="muted" />
-      }
-      title={scheduleTitle(item)}
-      subtitle={
-        item.state === 'active'
-          ? scheduleInterval(item.intervalSeconds)
-          : timing(item)
-      }
-    />
+    <View key={item.id} className="flex-row items-center gap-2 px-1 py-2">
+      <TintedAvatar
+        accessibilityLabel="Follow-up"
+        icon={item.state === 'paused' ? 'pause' : 'clock'}
+        tone="neutral"
+      />
+      <View className="min-w-0 flex-1">
+        <Text numberOfLines={1}>{scheduleTitle(item)}</Text>
+        <Text role="secondary" tone="muted" numberOfLines={1}>
+          {label}
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -46,11 +53,7 @@ export function SchedulePreview({
 }: {
   schedules?: Schedules;
 }): React.JSX.Element {
-  return (
-    <List appearance="plain" padding={0} fit>
-      {schedules?.items.slice(0, 2).map(previewRow)}
-    </List>
-  );
+  return <View>{schedules?.items.slice(0, 2).map(previewRow)}</View>;
 }
 
 const time = (stamp: number): string =>
