@@ -4,6 +4,7 @@ import { availableOperations } from './operation-permission';
 import { listOperations } from './search';
 
 const appOnly = new Set([
+  'session.handoff',
   'session.submit',
   'session.queue',
   'session.confirmSkill',

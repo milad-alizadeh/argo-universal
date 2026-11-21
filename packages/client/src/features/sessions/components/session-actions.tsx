@@ -8,6 +8,7 @@ export interface SessionMenu {
   archived: boolean;
   status: SessionStatus;
   changes?: { files: number; onPress: () => void };
+  handoff?: { pending: boolean; onPress: () => void };
   onRename?: () => void;
   onArchive?: () => void;
 }
@@ -70,6 +71,23 @@ const archiveAction = (
     />
   );
 
+function handoffAction({
+  handoff,
+  status,
+}: SessionMenu): ReactElement | undefined {
+  return (
+    handoff && (
+      <Action
+        key="handoff"
+        label="Handoff"
+        icon="arrow-right"
+        disabled={handoff.pending || isTurnActive(status)}
+        onPress={handoff.onPress}
+      />
+    )
+  );
+}
+
 const isAction = (action: ReactElement | undefined): action is ReactElement =>
   action !== undefined;
 
@@ -82,6 +100,7 @@ export function sessionActions(
     ? [changesAction(menu, options)]
     : [
         changesAction(menu, options),
+        handoffAction(menu),
         renameAction(menu, options),
         archiveAction(menu, options),
       ];

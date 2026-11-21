@@ -11,8 +11,8 @@ export interface SessionRowCall {
   sessionId: string;
   // When the call connected; null while it connects.
   startedAt: string | null;
-  // Whether this App's microphone is muted on the call.
   muted: boolean;
+  indicator?: React.ReactNode;
   // Fixes the timer's clock, for stories and tests.
   now?: number;
 }
@@ -58,7 +58,7 @@ function CallTime({ startedAt, now }: SessionRowCall): React.ReactNode {
 
 const LiveCall = (call: SessionRowCall): React.JSX.Element => (
   <>
-    <Icon name="voice-bars" size="sm" />
+    {call.indicator}
     <CallTime {...call} />
   </>
 );
@@ -72,11 +72,7 @@ const MutedCall = (): React.JSX.Element => (
   </>
 );
 
-/*
- * Paper's "Sessions list · Quieter call badge — F selected": a bare glyph and the call's time where the row's status
- * was, in ink so it never shares a colour with an Agent's status; "Muted" and mic.slash in red while the mic is off.
- * Only this mark ticks, so the list does not redraw each second.
- */
+// Only the call mark animates and ticks, so the list does not redraw on each frame or second.
 export function SessionRowCallMark({
   call,
 }: {

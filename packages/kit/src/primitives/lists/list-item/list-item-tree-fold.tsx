@@ -31,8 +31,6 @@ function FoldButton(props: FoldButtonProps): ReactElement {
   );
 }
 
-const column = 'absolute inset-y-0 left-0 items-center';
-
 // The rail under the chevron, on the line of its children's rails; a folded parent keeps its room and draws no line.
 const railUnderChevron = (lanes: TreeLanes, open: boolean): string =>
   cn('flex-1 self-start', lanes.railGap, open && lanes.rail);
@@ -40,7 +38,7 @@ const railUnderChevron = (lanes: TreeLanes, open: boolean): string =>
 // A parent's chevron folds and unfolds its children; an open parent's rail starts under it.
 function FoldColumn({ lanes, ...fold }: InLanes<FoldProps>): ReactElement {
   return (
-    <View pointerEvents="box-none" className={cn(column, lanes.column)}>
+    <View pointerEvents="box-none" className={cn('items-center', lanes.column)}>
       <View pointerEvents="none" className={lanes.own.above} />
       <FoldButton {...fold} className={lanes.chevron} />
       <View
