@@ -35,7 +35,7 @@ export function useDraftRegions(opening: PageOpening): DraftRegions | null {
   return {
     tags,
     onStep: (regionId, direction) => {
-      const change = stepChange(declared, pageState, regionId, direction);
+      const change = stepChange({ declared, pageState }, regionId, direction);
 
       if (change) void addresses.change(opening, change);
     },

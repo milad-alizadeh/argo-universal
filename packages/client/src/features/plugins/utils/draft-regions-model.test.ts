@@ -93,14 +93,18 @@ it('steps to the next Variant and the previous one, wrapping at either end', () 
 it('writes the stepped Variant under the stepped region only, from the pick in the Page state', () => {
   const page = drafts[0];
 
-  expect(stepChange(page, {}, 'header', 1)).toEqual({
+  expect(stepChange({ declared: page, pageState: {} }, 'header', 1)).toEqual({
     [draftVariantKey('header')]: 'tabs',
   });
   expect(
-    stepChange(page, { [draftVariantKey('list')]: 'cards' }, 'list', 1),
+    stepChange(
+      { declared: page, pageState: { [draftVariantKey('list')]: 'cards' } },
+      'list',
+      1,
+    ),
   ).toEqual({ [draftVariantKey('list')]: 'rows' });
-  expect(stepChange(page, {}, 'header', -1)).toEqual({
+  expect(stepChange({ declared: page, pageState: {} }, 'header', -1)).toEqual({
     [draftVariantKey('header')]: 'search',
   });
-  expect(stepChange(page, {}, 'footer', 1)).toBeNull();
+  expect(stepChange({ declared: page, pageState: {} }, 'footer', 1)).toBeNull();
 });

@@ -22,6 +22,9 @@ export function register(argo) {
 }
 `;
 
+// How the diagnostic names the Variant that does not render.
+const tabsDiagnostic = 'Variant tabs of region header';
+
 const drafts = [
   {
     page: '/',
@@ -45,6 +48,7 @@ async function draftPlugin(
   const directory = await fixture(
     source(headerTabs, options.defaults, options.extra),
   );
+
   const manifest = await readManifest(directory);
 
   await writeFile(
@@ -79,7 +83,7 @@ it('validate refuses a Variant whose render throws, naming the page, region and 
   const result = await run('validate', directory, 60_000);
 
   expect(result.code).toBe(1);
-  expect(result.output).toContain('Variant tabs of region header');
+  expect(result.output).toContain(tabsDiagnostic);
   expect(result.output).toContain('no tabs yet');
   expect(result.output).not.toContain('Variant compact');
 }, 90_000);
@@ -93,7 +97,7 @@ it('validate refuses a Variant whose region the kit refused to draw', async () =
   const result = await run('validate', directory, 60_000);
 
   expect(result.code).toBe(1);
-  expect(result.output).toContain('Variant tabs of region header');
+  expect(result.output).toContain(tabsDiagnostic);
   expect(result.output).toContain('draws no node keyed header');
 }, 90_000);
 
@@ -107,7 +111,7 @@ it('validate draws the picked Variant for a Loader that declares no default for 
   const result = await run('validate', directory, 60_000);
 
   expect(result.code).toBe(1);
-  expect(result.output).toContain('Variant tabs of region header');
+  expect(result.output).toContain(tabsDiagnostic);
   expect(result.output).toContain('tabs reached the Loader');
 }, 90_000);
 

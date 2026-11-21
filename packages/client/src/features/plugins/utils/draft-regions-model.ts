@@ -86,8 +86,10 @@ export function steppedVariant(
 
 // The Page state change one step of a region makes, or null for a region the Draft page does not declare.
 export function stepChange(
-  declared: PluginDrafts[number] | undefined,
-  pageState: PageState,
+  {
+    declared,
+    pageState,
+  }: { declared?: PluginDrafts[number]; pageState: PageState },
   regionId: string,
   direction: 1 | -1,
 ): PageState | null {
