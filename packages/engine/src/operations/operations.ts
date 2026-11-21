@@ -112,6 +112,7 @@ export class Operations {
       caller.sessionId,
       discoveryCall(query),
     );
+
     const listed = async (): Promise<Row[]> =>
       project(availableOperations(rows, call.canConfirm));
 

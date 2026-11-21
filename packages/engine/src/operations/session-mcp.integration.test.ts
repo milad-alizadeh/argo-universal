@@ -152,6 +152,7 @@ it.each(['session/resume', 'session/load'] as const)(
     const token = serverAt(request).env.find(
       ({ name }) => name === 'ARGO_TOKEN',
     );
+
     assert(token);
     const caller = await operationCaller(host, token.value);
     expect(

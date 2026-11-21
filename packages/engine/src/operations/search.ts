@@ -27,4 +27,8 @@ export const listOperations = (filter: string): OperationRow[] =>
   index.ranked(filter).map(row);
 
 export const exactOperations = (id: string): OperationRow[] =>
-  descriptions.filter((operation) => operation.id === id).map(row);
+  descriptions
+    .values()
+    .filter((operation) => operation.id === id)
+    .map(row)
+    .toArray();

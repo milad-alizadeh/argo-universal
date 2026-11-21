@@ -89,6 +89,7 @@ export class PluginOperationRouter {
 
   public async exact(id: string): Promise<OperationRow[]> {
     const rows = await this.deps.operations.rows().catch(() => []);
+
     return rows.filter((row) => row.id === id);
   }
 
