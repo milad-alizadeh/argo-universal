@@ -1,4 +1,5 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import { kitTypeOf } from '#kit/wrapped-component';
 import { flattenedChildren } from '../../../flattened-children';
 import type {
   TableCellProps,
@@ -6,7 +7,6 @@ import type {
   TableProps,
   TableRowProps,
 } from './table-props';
-import { kitTypeOf } from '#kit/wrapped-component';
 
 export interface TableCell {
   text: string;

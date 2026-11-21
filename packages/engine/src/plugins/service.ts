@@ -32,7 +32,10 @@ import {
 import type { RpcConnection } from '../rpc';
 import { discoverWithAccounts } from './accounts/removed-plugins';
 import { startsWithServer } from './discovery/plugin-contributions';
-import { undeclaredCommentPlace, undeclaredPick } from './drafts/draft-picks-check';
+import {
+  undeclaredCommentPlace,
+  undeclaredPick,
+} from './drafts/draft-picks-check';
 import { draftPrompt } from './drafts/draft-prompt';
 import type { ChosenDraft, PluginDrafts } from './drafts/plugin-drafts';
 import { callerOf } from './hooks/hook-rules';

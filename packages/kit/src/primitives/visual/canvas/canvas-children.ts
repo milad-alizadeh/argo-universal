@@ -1,4 +1,5 @@
 import { Children, Fragment, isValidElement, type ReactNode } from 'react';
+import { kitTypeOf } from '#kit/wrapped-component';
 import type {
   CanvasDrawing,
   DrawingData,
@@ -17,7 +18,6 @@ import {
   CanvasText,
   CanvasGroup,
 } from './canvas-shapes';
-import { kitTypeOf } from '#kit/wrapped-component';
 
 const rect = (child: ReactNode): DrawingData | undefined =>
   isValidElement<RectProps>(child) && kitTypeOf(child) === CanvasRect

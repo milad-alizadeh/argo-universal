@@ -1,7 +1,7 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import { kitTypeOf } from '#kit/wrapped-component';
 import { flattenedChildren } from '../../../flattened-children';
 import type { BoardCardProps, BoardColumnProps } from './board-props';
-import { kitTypeOf } from '#kit/wrapped-component';
 
 // A column the Board reads: its id, title, count and cards.
 export function BoardColumnPart(_props: BoardColumnProps): null {

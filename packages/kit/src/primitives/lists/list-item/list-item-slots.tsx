@@ -5,6 +5,7 @@ import {
   type ReactNode,
 } from 'react';
 import { View } from 'react-native';
+import { kitTypeOf } from '#kit/wrapped-component';
 import { TextClassContext } from '#primitives/content/text';
 import { Svg } from '#primitives/visual';
 import { ListTileContext } from '../../../list-context';
@@ -19,7 +20,6 @@ import type { DrawingProps } from './list-item-press-props';
 import { Trailing } from './list-item-trailing';
 import { TreeLane } from './list-item-tree';
 import type { TreeLayout } from './list-item-tree-lanes';
-import { kitTypeOf } from '#kit/wrapped-component';
 
 // The row's lanes in order: a menu's check, leading, title, trailing, accessory, and a control on its own line.
 export function ItemContentSlots(props: DrawingProps): ReactElement {

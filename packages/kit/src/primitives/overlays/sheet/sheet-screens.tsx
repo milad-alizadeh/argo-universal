@@ -9,6 +9,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from 'react';
+import { kitTypeOf } from '#kit/wrapped-component';
 import { ListItem } from '#primitives/lists/list-item';
 import {
   pushDestination,
@@ -25,7 +26,6 @@ import type {
   SheetProps,
 } from './sheet-props';
 import { popScreen, useLatest, type SheetReports } from './sheet-state';
-import { kitTypeOf } from '#kit/wrapped-component';
 
 // Marks one page of a sheet; each platform's stack draws it.
 export function SheetScreen(props: SheetScreenProps): ReactNode {

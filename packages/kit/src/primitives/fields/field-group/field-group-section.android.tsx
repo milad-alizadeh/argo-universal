@@ -3,6 +3,7 @@ import { Column } from '@expo/ui/jetpack-compose';
 import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { flattenedChildren } from '#kit/flattened-children';
+import { kitTypeOf } from '#kit/wrapped-component';
 import { Button } from '#primitives/actions/button';
 import { expandInlinePickers } from '#primitives/fields/field-picker';
 import { PositionContext } from '#primitives/fields/field-row';
@@ -16,7 +17,6 @@ import {
 import { Caption } from './field-group-caption.android';
 import type { FieldGroupSectionProps } from './field-group-section';
 import { markedSection } from './field-group-section-mark';
-import { kitTypeOf } from '#kit/wrapped-component';
 
 /*
  * A copy of Expo UI's Android FieldGroup.Section (FieldSection.android.tsx): the title, then a 2dp-spaced column

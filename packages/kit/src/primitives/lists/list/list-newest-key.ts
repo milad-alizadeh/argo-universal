@@ -1,8 +1,8 @@
 import { isValidElement, type ReactNode } from 'react';
+import { kitTypeOf } from '#kit/wrapped-component';
 import { flattenedChildren } from '../../../flattened-children';
 import type { ListProps } from './list-props';
 import { ListSection } from './list-section';
-import { kitTypeOf } from '#kit/wrapped-component';
 
 let warnedAboutKeys = false;
 
@@ -51,7 +51,8 @@ function childNewestKey(content: ReactNode): string {
   if (!isValidElement<{ children?: ReactNode; id?: string }>(last))
     return textKey(last);
 
-  if (kitTypeOf(last) === ListSection) return childNewestKey(last.props.children);
+  if (kitTypeOf(last) === ListSection)
+    return childNewestKey(last.props.children);
 
   return lastChildKey(last);
 }

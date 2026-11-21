@@ -21,16 +21,8 @@ type Story = StoryObj<typeof meta>;
 // A note leaves a pin on its node, the number of notes there.
 export const Pins: Story = {};
 
-// A pointer press on a wide window picks the node under it and opens a popover on it, with the node outlined.
-export const Popover: Story = {
-  play: async ({ canvas }) => {
-    await holdOn(await canvas.findByText('Pairing code expires'), 0);
-  },
-};
-
-// A long press on a phone raises the same note in a sheet from the bottom edge.
-export const Sheet: Story = {
-  globals: { mode: 'light', viewport: { value: 'phone' } },
+// A press on a node opens the note against it, with the node outlined: a popover below the node on a wide window after a pointer press, a sheet from the bottom edge on a phone after a long press.
+export const Editor: Story = {
   args: { longPressMilliseconds: 60 },
   play: async ({ canvas }) => {
     await holdOn(await canvas.findByText('Pairing code expires'), 120);

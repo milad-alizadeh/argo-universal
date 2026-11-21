@@ -1,4 +1,5 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import { kitTypeOf } from '#kit/wrapped-component';
 import { flattenedChildren } from '../../../flattened-children';
 import { listPosition } from '../../../list-context';
 import type { ListChild } from './list-children';
@@ -14,7 +15,6 @@ import {
   type TreeChild,
   type TreeFolding,
 } from './list-tree-rows';
-import { kitTypeOf } from '#kit/wrapped-component';
 
 // How a List's rows fold, and whether it holds a tree at all; a List without one draws its children as they are.
 export interface ListTree {
@@ -43,7 +43,9 @@ export interface Level {
 export function isSection(
   child: ReactNode,
 ): child is ReactElement<ListSectionProps> {
-  return isValidElement<ListSectionProps>(child) && kitTypeOf(child) === ListSection;
+  return (
+    isValidElement<ListSectionProps>(child) && kitTypeOf(child) === ListSection
+  );
 }
 
 // A row moves when it is a ListItem with an `id`, among the List's own rows or a Section's that has an id.

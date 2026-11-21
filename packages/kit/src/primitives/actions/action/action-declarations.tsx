@@ -1,4 +1,5 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
+import { kitTypeOf } from '#kit/wrapped-component';
 import { flattenedChildren } from '../../../flattened-children';
 import type {
   ActionProps,
@@ -15,7 +16,6 @@ import {
   type DeclaredSubmenu,
 } from './declared-entry';
 import { withId } from './entry-ids';
-import { kitTypeOf } from '#kit/wrapped-component';
 
 export function ActionSection(_props: ActionSectionProps): null {
   return null;

@@ -230,9 +230,7 @@ it('hands comments on nodes outside any region to the Agent, with no pick', asyn
     comments: outside,
   });
 
-  expect(
-    await agent('plugin.draft.pick', { pluginId: dev }),
-  ).toMatchObject({
+  expect(await agent('plugin.draft.pick', { pluginId: dev })).toMatchObject({
     kind: 'result',
     result: { choice: { picks: [], comments: outside } },
   });

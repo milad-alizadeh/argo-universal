@@ -6,12 +6,12 @@ import {
   type ReactNode,
 } from 'react';
 import { flattenedChildren } from '#kit/flattened-children';
+import { kitTypeOf } from '#kit/wrapped-component';
 import { Text, type TextProps } from '#primitives/content/text';
 import { Slider } from '#primitives/controls/slider';
 import { Switch } from '#primitives/controls/switch';
 import { Stack, type StackProps } from '#primitives/layout/stack';
 import { Swatch } from '#primitives/visual/swatch';
-import { kitTypeOf } from '#kit/wrapped-component';
 
 /*
  * What a composed row draws (ADR-0042, owner amendment 2026-11-20), read from the elements its children arrive as.
