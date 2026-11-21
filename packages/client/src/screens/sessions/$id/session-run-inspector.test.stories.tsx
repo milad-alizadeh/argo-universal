@@ -16,6 +16,8 @@ import {
   webRun,
 } from './session-run-inspector-fixtures';
 
+const terminalRegion = { name: 'web Terminal' };
+
 const typeInRun = fn<(input: string) => Promise<void> | void>();
 
 const resizeRun = fn<(columns: number, rows: number) => void>();
@@ -49,10 +51,9 @@ type Story = StoryObj<typeof meta>;
 
 export const ReplaysOutputAndSendsKeystrokes: Story = {
   play: async ({ canvas, userEvent }) => {
-    const terminal = within(
-      canvas.getByRole('region', { name: 'web Terminal' }),
-    );
-    await expect(await terminal.findByText(outputText)).toBeVisible();
+    const terminal = within(canvas.getByRole('region', terminalRegion));
+
+    await waitFor(() => expect(terminal.getByText(outputText)).toBeVisible());
 
     const input = terminal.getByRole('textbox');
     input.focus();
@@ -73,15 +74,15 @@ export const FitsTheViewportAndWaitsForTheEarlierKeystroke: Story = {
     typeInRun.mockClear();
     typeInRun.mockImplementationOnce(() => firstSend.promise);
 
-    const terminal = within(
-      canvas.getByRole('region', { name: 'web Terminal' }),
-    );
+    const terminal = within(canvas.getByRole('region', terminalRegion));
+
     const input = terminal.getByRole('textbox');
 
-    await waitFor(() => {
+    await waitFor(async () => {
       const dimensions = resizeRun.mock.lastCall;
-      expect(dimensions?.[0]).toBeLessThan(terminalColumns);
-      expect(dimensions?.[1]).toBeGreaterThan(0);
+
+      await expect(dimensions?.[0]).toBeLessThan(terminalColumns);
+      await expect(dimensions?.[1]).toBeGreaterThan(0);
     });
     input.focus();
 
@@ -133,9 +134,7 @@ function ReconnectTerminal(): ReactElement {
 export const ResumesWithoutRepeatingTheRecording: Story = {
   render: ReconnectTerminal,
   play: async ({ canvas, userEvent }) => {
-    const terminal = within(
-      canvas.getByRole('region', { name: 'web Terminal' }),
-    );
+    const terminal = within(canvas.getByRole('region', terminalRegion));
 
     await terminal.findByText(outputText);
     await userEvent.click(canvas.getByRole('button', { name: 'Disconnect' }));

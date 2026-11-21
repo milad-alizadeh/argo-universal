@@ -61,11 +61,15 @@ export const TerminalSendResult = z.strictObject({
 
 export type TerminalSendResult = z.infer<typeof TerminalSendResult>;
 
+const maxTerminalColumns = 512;
+
+const maxTerminalRows = 256;
+
 export const TerminalResizeParams = z.strictObject({
   sessionId,
   name,
-  columns: z.int().min(2).max(512),
-  rows: z.int().min(1).max(256),
+  columns: z.int().min(2).max(maxTerminalColumns),
+  rows: z.int().min(1).max(maxTerminalRows),
 });
 
 export const TerminalResizeResult = z.strictObject({});

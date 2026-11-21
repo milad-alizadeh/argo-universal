@@ -15,12 +15,14 @@ import {
   type RunOutputSource,
   type SessionRuns,
 } from '#features/sessions';
+import { LatestTerminalSize } from './latest-terminal-size';
 
 function useRunStatus(
   sessionId: string,
   active: boolean,
 ): RunConfigurationRow[] {
   const trpc = useTRPC();
+
   const [snapshot, setSnapshot] = useState<{
     sessionId: string;
     status: RunStatusResult;
@@ -88,6 +90,7 @@ function ConnectedRunTerminal({
   const connected = useConnectionState() === 'open' && active;
   const { name } = run;
   const [failure, setFailure] = useState<string>();
+
   const listen = useCallback<RunOutputSource>(
     (cursor, receive) => {
       const subscription = client.run.output.subscribe(
@@ -112,21 +115,41 @@ function ConnectedRunTerminal({
     [client, sessionId, name],
   );
 
-  const canResize =
-    connected && (run.status === 'ready' || run.status === 'starting');
-
-  const onResize = useCallback(
-    (columns: number, rows: number): void => {
-      if (!canResize) return;
-
-      void client.terminal.resize
-        .mutate({ sessionId, name, columns, rows })
-        .catch((error: Error) => setFailure(error.message));
-    },
-    [canResize, client, name, sessionId],
-  );
+  const onResize = useRunResize({ sessionId, run, connected, setFailure });
 
   useErrorToast(failure ? { title: 'Terminal', message: failure } : undefined);
 
   return <RunTerminal {...{ run, connected, listen, onInput, onResize }} />;
+}
+
+type Resize = {
+  sessionId: string;
+  run: RunConfigurationRow;
+  connected: boolean;
+  setFailure: (message: string) => void;
+};
+
+function useRunResize({
+  sessionId,
+  run,
+  connected,
+  setFailure,
+}: Resize): (columns: number, rows: number) => void {
+  const client = useTRPCClient();
+  const [pending] = useState(() => new LatestTerminalSize());
+  const { name, status } = run;
+  const enabled = connected && (status === 'ready' || status === 'starting');
+
+  return useCallback(
+    (columns, rows) => {
+      if (!enabled) return;
+
+      pending.request({ columns, rows }, async (size) => {
+        await client.terminal.resize
+          .mutate({ sessionId, name, ...size })
+          .catch((error: Error) => setFailure(error.message));
+      });
+    },
+    [client, enabled, name, pending, sessionId, setFailure],
+  );
 }

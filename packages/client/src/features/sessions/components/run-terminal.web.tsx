@@ -5,7 +5,7 @@ import {
   type RunOutputCursor,
 } from '@repo/contracts';
 import { FitAddon } from '@xterm/addon-fit';
-import { Terminal } from '@xterm/xterm';
+import { Terminal, type ITerminalOptions } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import { useEffect, useRef, type ReactElement, type RefObject } from 'react';
 import { useCSSVariable } from 'uniwind';
@@ -21,6 +21,10 @@ type MountedTerminal = {
 type Host = RefObject<HTMLDivElement | null>;
 
 type Mounted = RefObject<MountedTerminal | null>;
+
+function applyOptions(terminal: Terminal, options: ITerminalOptions): void {
+  terminal.options = options;
+}
 
 function receiveFrame(
   terminal: Terminal,
@@ -60,6 +64,7 @@ function useMountedTerminal(viewport: Host): Mounted {
       fontSize: 13,
       fontFamily: 'Menlo, Monaco, Consolas, monospace',
     });
+
     const fit = new FitAddon();
 
     terminal.loadAddon(fit);
@@ -88,9 +93,10 @@ function useTerminalInput(
 
     if (!terminal) return;
 
-    terminal.options.disableStdin = !enabled;
+    applyOptions(terminal, { disableStdin: !enabled });
 
     let listening = true;
+
     const input = terminal.onData((data) => {
       pending.current = pending.current
         .then(() => (listening && enabled ? onInput(data) : undefined))
@@ -115,11 +121,13 @@ function useTerminalTheme(mounted: Mounted): void {
 
     if (!terminal) return;
 
-    terminal.options.theme = {
-      background: String(background),
-      foreground: String(foreground),
-      cursor: String(foreground),
-    };
+    applyOptions(terminal, {
+      theme: {
+        background: String(background),
+        foreground: String(foreground),
+        cursor: String(foreground),
+      },
+    });
   }, [background, foreground, mounted]);
 }
 
@@ -140,6 +148,7 @@ function useTerminalSize(
       emulator.fit.fit();
       onResize(emulator.terminal.cols, emulator.terminal.rows);
     };
+
     const observer = new ResizeObserver(update);
 
     update();
@@ -162,6 +171,7 @@ function useTerminalReplay(
 
     const { terminal } = emulator;
     let listening = true;
+
     const stop = listen(emulator.cursor, (frame) => {
       if (!listening) return;
 
