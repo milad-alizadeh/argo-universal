@@ -10,6 +10,7 @@ import { LiveRun } from './live-run';
 import { RunBlocks, starterName } from './run-blocks';
 import type { RunConfiguration } from './run-configurations';
 import { requireRunConfiguration } from './run-file';
+import { RunGroups } from './run-groups';
 import { RunLifecycle } from './run-lifecycle';
 import { removeRunOutput, runOutputPath, createRunOutput } from './run-output';
 import { bindable, portListening, urlOf } from './run-ports';
@@ -61,6 +62,7 @@ export class Runs {
   // The latest Run of each Run Configuration this Server has started, so a read never waits on the database.
   private readonly latest = new Map<string, RunRecord>();
   private readonly lifecycle = new RunLifecycle(this.live);
+  public readonly groups: RunGroups;
   public readonly view: RunView;
   public readonly terminals: RunTerminals;
   private readonly blocks: RunBlocks;
@@ -73,6 +75,12 @@ export class Runs {
         this.record(checkout, name),
     });
     this.terminals = new RunTerminals(this.view);
+    this.groups = new RunGroups({
+      start: (checkout, configuration, timeoutMs): Promise<RunStartResult> =>
+        this.startConfiguration(checkout, configuration, timeoutMs),
+      stop: (checkout, name): Promise<RunStopResult> =>
+        this.stopOne(checkout, name),
+    });
     this.blocks = new RunBlocks(
       () => this.live.values(),
       input.portFree ?? bindable,
@@ -82,18 +90,21 @@ export class Runs {
   public async start(
     checkout: RunRequest,
     name: string,
-    timeoutMs = defaultStartMs,
+    timeoutMs?: number,
   ): Promise<RunStartResult> {
     const configuration = await this.configuration(checkout, name);
 
-    return awaitReady(await this.running(checkout, configuration), timeoutMs);
+    return this.startConfiguration(checkout, configuration, timeoutMs);
   }
 
-  public async stop(
+  public stop(checkout: RunCheckout, name: string): Promise<RunStopResult> {
+    return this.groups.stopMember(checkout, name);
+  }
+
+  private async stopOne(
     checkout: RunCheckout,
     name: string,
   ): Promise<RunStopResult> {
-    await this.configuration(checkout, name);
     await this.lifecycle.stop(keyOf(checkout, name));
 
     return { name, status: statusOf(this.record(checkout, name)) };
@@ -102,12 +113,12 @@ export class Runs {
   public async restart(
     checkout: RunRequest,
     name: string,
-    timeoutMs = defaultStartMs,
+    timeoutMs?: number,
   ): Promise<RunStartResult> {
     const configuration = await this.configuration(checkout, name);
     await this.lifecycle.stop(keyOf(checkout, name));
 
-    return awaitReady(await this.running(checkout, configuration), timeoutMs);
+    return this.startConfiguration(checkout, configuration, timeoutMs);
   }
 
   // End this Checkout's Runs before Git removes it.
@@ -134,6 +145,14 @@ export class Runs {
     name: string,
   ): Promise<RunConfiguration> {
     return requireRunConfiguration(checkout.checkoutPath, name);
+  }
+
+  private async startConfiguration(
+    checkout: RunRequest,
+    configuration: RunConfiguration,
+    timeoutMs = defaultStartMs,
+  ): Promise<RunStartResult> {
+    return awaitReady(await this.running(checkout, configuration), timeoutMs);
   }
 
   // The Run of this Run Configuration that already lives, or a new one; two starts at once make one.

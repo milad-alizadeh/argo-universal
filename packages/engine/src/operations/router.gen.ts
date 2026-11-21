@@ -994,6 +994,28 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      startGroup: authenticatedAppProcedure
+        .input(operations['run.startGroup'].params)
+        .output(operations['run.startGroup'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.startGroup',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      stopGroup: authenticatedAppProcedure
+        .input(operations['run.stopGroup'].params)
+        .output(operations['run.stopGroup'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.stopGroup',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       status: publicProcedure
         .input(operations['run.status'].params)
         .output(operations['run.status'].result)

@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import {
   draftRunConfigurations,
   type RunCheckout,
+  type RunRequest,
   type RunStarter,
   type Runs,
 } from '../runs';
@@ -56,6 +57,15 @@ export const runCheckoutOf = (
   return { projectId, checkoutPath };
 };
 
+const runRequestOf = (
+  database: Database,
+  sessionId: string | undefined,
+): RunRequest => {
+  const { id, title, ...checkout } = sessionOf(database, sessionId);
+
+  return { ...checkout, starter: { id, title } };
+};
+
 export function createRunOperations(deps: {
   database: Database;
   runs: Runs;
@@ -63,26 +73,16 @@ export function createRunOperations(deps: {
   const { database, runs } = deps;
 
   return {
-    'run.start': async ({ sessionId, name, timeoutMs }) => {
-      const { id, title, ...checkout } = sessionOf(database, sessionId);
-
-      return runs.start(
-        { ...checkout, starter: { id, title } },
-        name,
-        timeoutMs,
-      );
-    },
+    'run.start': async ({ sessionId, name, timeoutMs }) =>
+      runs.start(runRequestOf(database, sessionId), name, timeoutMs),
     'run.stop': async ({ sessionId, name }) =>
       runs.stop(runCheckoutOf(database, sessionId), name),
-    'run.restart': async ({ sessionId, name, timeoutMs }) => {
-      const { id, title, ...checkout } = sessionOf(database, sessionId);
-
-      return runs.restart(
-        { ...checkout, starter: { id, title } },
-        name,
-        timeoutMs,
-      );
-    },
+    'run.restart': async ({ sessionId, name, timeoutMs }) =>
+      runs.restart(runRequestOf(database, sessionId), name, timeoutMs),
+    'run.startGroup': async ({ sessionId, name, timeoutMs }) =>
+      runs.groups.start(runRequestOf(database, sessionId), name, timeoutMs),
+    'run.stopGroup': async ({ sessionId, name }) =>
+      runs.groups.stop(runCheckoutOf(database, sessionId), name),
     'run.status': async ({ sessionId }) =>
       runs.view.status(runCheckoutOf(database, sessionId)),
     'run.draft': async ({ sessionId, overwrite }) => {
