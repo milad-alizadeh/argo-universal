@@ -35,7 +35,7 @@ const rowTitle = sessionRows.running.title;
 type UserEvent = Parameters<NonNullable<Story['play']>>[0]['userEvent'];
 
 const rightClick = (user: UserEvent, target: Element): Promise<void> =>
-  user.pointer({ keys: '[MouseRight]', target });
+  user.pointer({ keys: '[MouseRight]', target: pressTarget(target) });
 
 function atWidth(layout: Layout): () => Promise<void> {
   return async () => {
@@ -132,7 +132,7 @@ function doubleClickRenamesAt(layout: Layout): Story {
   return {
     beforeEach: atWidth(layout),
     play: async ({ canvas, userEvent }) => {
-      await userEvent.dblClick(canvas.getByText(rowTitle));
+      await userEvent.dblClick(pressTarget(canvas.getByText(rowTitle)));
       await expect(onRename).toHaveBeenCalledWith(
         sessionRows.running.sessionId,
       );
@@ -149,11 +149,10 @@ export const ArchivedHasNoMenu: Story = {
   args: { session: sessionRows.archived },
   beforeEach: atWidth('wide'),
   play: async ({ canvas, userEvent }) => {
-    // The Archived pill gives the row a meta line, so its press sits under the title.
-    const title = pressTarget(canvas.getByText(sessionRows.archived.title));
+    const title = canvas.getByText(sessionRows.archived.title);
 
     await rightClick(userEvent, title);
-    await userEvent.dblClick(title);
+    await userEvent.dblClick(pressTarget(title));
     await expect(body.queryByRole('menu')).toBeNull();
     await expect(onRename).not.toHaveBeenCalled();
   },

@@ -4,6 +4,7 @@ import {
   meta as sessionsMeta,
   type Story,
 } from '../../../../../mocks/sessions-list/sessions-list-story-context.test.mocks';
+import { sessionRowLabel } from '../session-row/session-row-props';
 import {
   compactStatusSessions,
   flatSessions,
@@ -22,6 +23,8 @@ const [selected] = flatSessions.sessions;
 if (!selected) throw new Error('The spacing fixture needs a selected Session');
 
 const selectedTitle = selected.title;
+
+const selectedRowName = sessionRowLabel(selected);
 
 /*
  * Every row's content stays inside the row, whatever its status, Agent or title length. A quiet Session's age ends its
@@ -43,10 +46,16 @@ function rowsAt(args: typeof statusSessions, width: number): Story {
     play: async ({ canvas }) => {
       for (const session of args.sessions) {
         const title = await canvas.findByText(session.title);
-        const row = title.closest<HTMLElement>('[role="button"]');
 
-        if (!row)
-          throw new Error('A Session title must belong to its row button');
+        const button = canvas.getByRole('button', {
+          name: sessionRowLabel(session),
+        });
+
+        // A row can draw its press beside its content so that accessories take their own presses.
+        const row = button.contains(title) ? button : button.parentElement;
+
+        if (!row?.contains(title))
+          throw new Error('A Session title and button must share a row');
 
         const logo = within(row).getByTestId('session-logo');
 
@@ -69,10 +78,9 @@ function flatRows(width: number): Story {
 
       const title = context.canvas.getByText(selectedTitle);
       await expect(title.scrollWidth).toBeGreaterThan(title.clientWidth);
-      await expect(title.closest('[role="button"]')).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      );
+      await expect(
+        context.canvas.getByRole('button', { name: selectedRowName }),
+      ).toHaveAttribute('aria-pressed', 'true');
     },
   };
 }

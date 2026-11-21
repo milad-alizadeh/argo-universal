@@ -90,6 +90,7 @@
         "expo-image-picker",
         "expo-secure-store",
         "expo-video",
+        "react-native-webrtc",
         "react-native-zeroconf",
         // Knip assumes OTA updates are installed unless Expo config explicitly disables them.
         "expo-updates"

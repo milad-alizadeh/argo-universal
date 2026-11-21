@@ -13,20 +13,20 @@ const previewLimitMs = 30_000;
  * The one preview a connection holds: a live listening-only call, or a stored greeting playing. A new one, a call's
  * offer or `end` lets the old one go, and a live one lets go of itself after a while.
  */
-export class ConnectionPreview {
-  private live: HeldConversation | undefined;
+export class ConnectionPreview<Stream = MediaStream> {
+  private live: HeldConversation<Stream> | undefined;
   private clip: VoicePlayback | undefined;
   private take: PreviewTake | undefined;
   private timer: ReturnType<typeof setTimeout> | undefined;
 
   // Lets the earlier preview go and holds this live call in its place.
-  public adopt(held: HeldConversation): void {
+  public adopt(held: HeldConversation<Stream>): void {
     this.end();
     this.live = held;
     this.timer = setTimeout(() => this.end(), previewLimitMs);
   }
 
-  public isLive(held: HeldConversation): boolean {
+  public isLive(held: HeldConversation<Stream>): boolean {
     return this.live === held;
   }
 
@@ -38,7 +38,7 @@ export class ConnectionPreview {
 
   // Records the live preview's voice, handing the greeting over once it is whole.
   public record(
-    held: HeldConversation,
+    held: HeldConversation<Stream>,
     recording: VoiceRecording | null,
     onClip: (clip: VoicePreviewClip) => void,
   ): void {
