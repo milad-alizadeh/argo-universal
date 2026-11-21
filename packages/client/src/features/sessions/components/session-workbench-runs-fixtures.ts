@@ -2,7 +2,7 @@ import type { RunConfigurationRow } from '@repo/contracts';
 
 const webPort = 3100;
 
-const web: RunConfigurationRow = {
+export const webRun: RunConfigurationRow = {
   name: 'web',
   command: 'pnpm web',
   status: 'ready',
@@ -22,20 +22,20 @@ const docs: RunConfigurationRow = {
   startedAt: null,
 };
 
-export const workbenchRuns = [web, docs];
+export const workbenchRuns = [webRun, docs];
 
 export const stoppedRuns = [
   { ...docs },
-  { ...docs, name: web.name, command: web.command },
+  { ...docs, name: webRun.name, command: webRun.command },
 ];
 
 export const startingRuns = [
-  { ...web, status: 'starting' },
+  { ...webRun, status: 'starting' },
   docs,
 ] satisfies RunConfigurationRow[];
 
 export const crashedRuns = [
-  { ...web, status: 'crashed', exitCode: 1 },
+  { ...webRun, status: 'crashed', exitCode: 1 },
   docs,
 ] satisfies RunConfigurationRow[];
 

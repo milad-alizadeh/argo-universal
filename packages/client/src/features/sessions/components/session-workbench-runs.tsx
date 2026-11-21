@@ -36,7 +36,9 @@ function RunRow({ run, now, onOpen, onStart, onStop }: RowProps): ReactElement {
         className="min-w-0 flex-1 flex-row items-center gap-2 rounded-control px-1 py-2 web:hover:bg-hover"
       >
         <StatusDot tone={runStatusTone[status]} size="sm" />
-        <Text numberOfLines={1}>{name}</Text>
+        <Text numberOfLines={1} className="min-w-0 shrink">
+          {name}
+        </Text>
         <Text role="secondary" tone="muted" numberOfLines={1}>
           {port === null ? label : `${label} · :${port}`}
         </Text>

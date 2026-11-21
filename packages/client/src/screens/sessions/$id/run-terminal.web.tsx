@@ -17,7 +17,7 @@ function receiveFrame(
   { cursor, data }: RunOutput,
 ): RunOutputCursor {
   const sameRun = previous?.runId === cursor.runId;
-  if (!sameRun) terminal.reset();
+  if (!sameRun) terminal.write('\u001bc');
   if (sameRun && cursor.offset <= previous.offset) return previous;
 
   // A delayed reconnect may replay data the previous subscription supplied.
@@ -82,9 +82,16 @@ export function RunTerminal(props: RunTerminalProps): ReactElement {
     const opened = terminal.current;
     if (!opened || !connected) return;
 
-    return listen(cursor.current, (frame) => {
-      cursor.current = receiveFrame(opened, cursor.current, frame);
+    let listening = true;
+    const stop = listen(cursor.current, (frame) => {
+      if (listening)
+        cursor.current = receiveFrame(opened, cursor.current, frame);
     });
+
+    return (): void => {
+      listening = false;
+      stop();
+    };
   }, [connected, listen]);
 
   return (

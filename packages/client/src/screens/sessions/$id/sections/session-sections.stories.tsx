@@ -22,6 +22,7 @@ import {
 import { attachedIssuesBar } from '../session-detail-view-bar.mocks';
 import { SessionInspector } from '../session-inspector';
 import type { SessionInspectorContent } from '../session-inspector-content';
+import { runActions } from '../session-run-inspector-fixtures';
 import { coverageCard, issueTrackerCard } from './plugin-card.mocks';
 import { itemsOf } from './session-section';
 import { offeredSections, sessionWorkbench } from './session-sections';
@@ -92,6 +93,10 @@ type Story = StoryObj<typeof meta>;
 
 // Every Section a Session offers: Changes, Agents and Shells, each on its own card with only its title, chevron and handle on the title line.
 export const AllSections: Story = {};
+
+const includingRuns = { ...everySection, runs: runActions };
+
+export const Runs: Story = { args: { content: includingRuns } };
 
 // One pull request with a long title, 15 files and 10/23 checks: the number and diff total stay on the second line, the checks at its trailing edge.
 export const BusyPullRequest: Story = {
