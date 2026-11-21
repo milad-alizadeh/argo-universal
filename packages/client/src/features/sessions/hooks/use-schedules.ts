@@ -11,9 +11,16 @@ type ScheduleList = z.output<
   (typeof operations)['session.listSchedules']['result']
 >;
 
+type CreateSchedule = Omit<
+  z.input<(typeof operations)['session.schedulePrompt']['params']>,
+  'sessionId'
+>;
+
 export interface ScheduleControls {
   items: ScheduleList;
   disabled: boolean;
+  create: (input: CreateSchedule) => Promise<void>;
+  setEnd: (id: string, endsAt: number) => Promise<void>;
   manage: (id: string, action: 'pause' | 'resume' | 'delete') => void;
 }
 
@@ -48,10 +55,24 @@ function useChangeSchedule(
     session.manageSchedule.mutationOptions({ onSuccess: refresh }),
   );
 
-  useErrorToast(scheduleError(mutation.error));
+  const create = useMutation(
+    session.schedulePrompt.mutationOptions({ onSuccess: refresh }),
+  );
+
+  useErrorToast(
+    scheduleError(
+      mutation.variables?.action === 'setEnd' ? null : mutation.error,
+    ),
+  );
 
   return {
-    disabled: mutation.isPending,
+    disabled: mutation.isPending || create.isPending,
+    create: async (input) => {
+      await create.mutateAsync({ ...input, sessionId });
+    },
+    setEnd: async (id, endsAt) => {
+      await mutation.mutateAsync({ sessionId, id, action: 'setEnd', endsAt });
+    },
     manage: (id, action): void => mutation.mutate({ sessionId, id, action }),
   };
 }
@@ -60,5 +81,5 @@ const scheduleError = (
   error: Pick<Error, 'message'> | null,
 ): ErrorToast | undefined =>
   error
-    ? { title: 'Could not update Schedule', message: error.message }
+    ? { title: 'Could not update follow-up', message: error.message }
     : undefined;

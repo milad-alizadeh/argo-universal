@@ -144,7 +144,7 @@ function usePageProps(
 
   const surroundings = useSessionSurroundings(
     page,
-    offeredWith(cards, sources.schedules.items.length),
+    offeredWith(cards, true),
     sources,
   );
 
