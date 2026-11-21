@@ -11,11 +11,10 @@ import { columnWidths } from './table-widths';
 
 // A cell's text breaks inside its column rather than over the next one, and selects like the rest of the Feed.
 function CellText({ tokens }: { tokens: Token[] }): ReactElement {
+  const selectable = useContext(MarkdownSelectable);
+
   return (
-    <Text
-      selectable={useContext(MarkdownSelectable)}
-      className="min-w-0 shrink wrap-anywhere"
-    >
+    <Text selectable={selectable} className="min-w-0 shrink wrap-anywhere">
       <InlineTokens tokens={tokens} />
     </Text>
   );

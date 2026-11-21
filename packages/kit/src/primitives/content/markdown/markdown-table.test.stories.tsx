@@ -6,6 +6,7 @@ import { settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
 import { canPointAt } from '../../../../mocks/point-hit';
 import { Markdown } from './index';
+import { longToolName } from './markdown-fixtures';
 
 const meta = {
   title: 'Tests/Design System/Primitives/Content/Markdown/Table',
@@ -145,18 +146,14 @@ export const GrowingCellKeepsItsRow: Story = {
   },
 };
 
-const longName =
-  'mcp__claude_ai_Datadog__manage_datadog_error_tracking_issue_comments';
-
 export const LongCellsStayInTheirColumn: Story = {
   args: {
-    text: `| Tool | Server | Tokens |\n| --- | --- | --- |\n| ${longName} | claude.ai Datadog | 412 |`,
-    selectable: true,
+    text: `| Tool | Server | Tokens |\n| --- | --- | --- |\n| ${longToolName} | claude.ai Datadog | 412 |`,
   },
   play: async ({ canvas }) => {
     for (const layout of ['wide', 'phone'] as const) {
       await settleLayout(layout);
-      const name = canvas.getByText(longName);
+      const name = canvas.getByText(longToolName);
       const server = canvas.getByText('claude.ai Datadog');
 
       await waitFor(() =>
@@ -168,6 +165,7 @@ export const LongCellsStayInTheirColumn: Story = {
   },
 };
 
+// Guards the row's `select-none`, which once stopped a Feed table's text from being selected.
 export const TableTextIsSelectable: Story = {
   args: {
     text: '| Name | Value |\n| --- | --- |\n| Size | Small |',
