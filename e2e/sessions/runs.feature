@@ -9,4 +9,4 @@ Feature: Run a Checkout app from the Workbench
     When I type into the web Run Terminal
     Then the web Run Terminal shows the command's response
     When I stop web from its Run Inspector
-    Then the Workbench offers to start web again
+    Then the Run Inspector shows web stopped

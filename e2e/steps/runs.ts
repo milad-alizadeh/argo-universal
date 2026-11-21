@@ -89,8 +89,11 @@ When('I stop web from its Run Inspector', async ({ page }) => {
   await inspector(page).getByRole('button', { name: 'Stop web' }).click();
 });
 
-Then('the Workbench offers to start web again', async ({ page }) => {
+Then('the Run Inspector shows web stopped', async ({ page }) => {
   await expect(
-    rows(page).getByRole('button', { name: 'Start web' }),
+    inspector(page).getByText('Stopped', { exact: true }),
   ).toBeVisible();
+  await expect(
+    inspector(page).getByRole('button', { name: 'Stop web' }),
+  ).toBeDisabled();
 });
