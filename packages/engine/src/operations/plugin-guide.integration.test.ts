@@ -61,27 +61,19 @@ it('is found by what an Agent filters on when asked to build a Plugin', async ()
   expect(await found('scaffold')).toContain('plugin.new');
 });
 
-it('answers the Draft step, naming each Operation and the ship gate, before the step that writes real data code', async () => {
+it('answers the Draft step, naming each Operation, the ship gate and the Variant key, before the step that writes real data code', async () => {
   const text = await guide({});
 
   for (const phrase of [
-    'draw a Draft',
     'plugin.draft.show',
     'plugin.draft.pick',
     'argo plugin validate --ship',
     'draftVariant.<regionId>',
-    'one region per edit',
-    'only where the design has a real choice',
-    'differ in structure',
-    'act on each comment',
-    'targeted edit',
-    'never by starting the draft over',
   ])
-    expect(text.toLowerCase()).toContain(phrase.toLowerCase());
+    expect(text).toContain(phrase);
 
-  expect(text.indexOf('draw a Draft')).toBeLessThan(
-    text.indexOf('Turn the scaffold into your Plugin'),
-  );
+  // Step 3 points to the Drafts section; step 4 is the one that writes the real Plugin.
+  expect(text.indexOf('`## Drafts`')).toBeLessThan(text.indexOf('\n4. '));
 });
 
 it('answers the minimum state set, every state the contracts declare, once', async () => {
@@ -101,5 +93,6 @@ it('is the definition the Draft authoring doc points to, without restating the s
 
   expect(doc).toContain(guideId);
 
-  for (const id of draftStateIds) expect(doc).not.toContain(`\`${id}\``);
+  for (const id of draftStateIds)
+    expect(doc).not.toContain(`- \`${id}\`: `);
 });

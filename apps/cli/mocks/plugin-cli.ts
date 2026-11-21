@@ -40,10 +40,10 @@ export function run(
   return runWith([command, directory], timeout);
 }
 
-// `validate --ship` and the like: the command's own arguments, then its flags.
+// Runs `validate <directory> --ship`.
 export const runShip = (
   directory: string,
-  timeout: number,
+  timeout = 20_000,
 ): Promise<CommandResult> =>
   runWith(['validate', directory, '--ship'], timeout);
 

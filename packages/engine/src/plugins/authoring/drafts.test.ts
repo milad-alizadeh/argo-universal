@@ -171,6 +171,8 @@ it('names each region that still declares Variants as a ship blocker, at its var
       ),
     }),
     expect.objectContaining({
+      line: source.slice(0, source.lastIndexOf('"variants"')).split('\n')
+        .length,
       message: expect.stringContaining('region rows still declares 1 Variant:'),
     }),
   ]);

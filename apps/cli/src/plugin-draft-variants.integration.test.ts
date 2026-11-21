@@ -127,15 +127,17 @@ it('validate draws the picked Variant for a Loader that declares no default for 
 }, 90_000);
 
 it('validate draws no Variant while the Plugin has source diagnostics, so only those are reported', async () => {
-  const directory = await draftPlugin('() => <Text key="header">Tabs</Text>', {
-    extra: 'process.cwd();',
-  });
+  const directory = await draftPlugin(
+    "() => { throw new Error('no tabs yet'); }",
+    { extra: 'process.cwd();' },
+  );
 
   const result = await validate(directory);
 
   expect(result.code).toBe(1);
   expect(result.output).toContain('index.tsx');
   expect(result.output).not.toContain(tabsDiagnostic);
+  expect(result.output).toContain('Ship blocked');
 }, 90_000);
 
 it('validate passes a Plugin mid-Draft and reports its leftover Variants as blocking a ship', async () => {
