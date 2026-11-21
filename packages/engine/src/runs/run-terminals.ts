@@ -48,6 +48,18 @@ export class RunTerminals {
 
     return { name, status: statusOf(record) };
   }
+  public async resize(
+    checkout: RunCheckout,
+    name: string,
+    { columns, rows }: { columns: number; rows: number },
+  ): Promise<void> {
+    const { live } = await this.runs.standing(checkout, name);
+
+    if (!live) return;
+
+    live.screen.resize(columns, rows);
+    live.terminal.resize(columns, rows);
+  }
   // Whether the person opened this Terminal. Every Terminal is a Run until shell Terminals arrive.
   public openedByPerson(_checkout: RunCheckout, _name: string): boolean {
     return false;

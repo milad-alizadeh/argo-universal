@@ -4,6 +4,7 @@ import type { RunOutput } from '@repo/contracts';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { createFakeTerminals } from '#mocks/fake-terminals';
+import type { TerminalProcess } from './terminal';
 
 const name = 'web';
 
@@ -213,4 +214,26 @@ it('keeps UTF-8 bytes intact when a character crosses the replay frame boundary'
 
   expect(first.cursor.offset).toBeLessThan(length);
   expect(Buffer.concat(chunks).toString('utf8')).toBe(content);
+});
+
+it('resizes the live PTY and the screen from the App Inspector', async () => {
+  const { caller, terminals, sessionId } = await startProject();
+  const started = caller.run.start({ sessionId, name });
+  const terminal = await terminals.next();
+  terminal.print('Local:\r\n');
+  await started;
+
+  const deviceTerminal: TerminalProcess = terminal;
+  deviceTerminal.resize = (columns, rows): void =>
+    terminal.print(
+      `\u001b[2J\u001b[H${columns}x${rows}\r\n012345678901234567890123`,
+    );
+
+  await caller.terminal.resize({ sessionId, name, columns: 20, rows: 8 });
+
+  await expect(
+    caller.terminal.read({ sessionId, name }),
+  ).resolves.toMatchObject({
+    screen: '20x8\n01234567890123456789\n0123',
+  });
 });
