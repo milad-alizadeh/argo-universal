@@ -10,19 +10,24 @@ import {
   useTRPC,
   useTRPCClient,
 } from '#features/connection';
-import { RunTerminal, type RunOutputSource } from './run-terminal';
-import type { SessionRuns } from './sections/runs-section';
+import {
+  RunTerminal,
+  type RunOutputSource,
+  type SessionRuns,
+} from '#features/sessions';
 
-export function useSessionRuns(
+function useRunStatus(
   sessionId: string,
   active: boolean,
-): SessionRuns {
+): RunConfigurationRow[] {
   const trpc = useTRPC();
   const [snapshot, setSnapshot] = useState<{
     sessionId: string;
     status: RunStatusResult;
   }>();
+
   const enabled = active && Platform.OS === 'web';
+
   const stream = useSubscription(
     trpc.run.watchStatus.subscriptionOptions(
       enabled ? { sessionId } : skipToken,
@@ -33,22 +38,39 @@ export function useSessionRuns(
   );
 
   useResubscribeOnReconnect(stream);
+  useErrorToast(
+    stream.error ? { title: 'Runs', message: stream.error.message } : undefined,
+  );
 
+  return snapshot?.sessionId === sessionId
+    ? snapshot.status.configurations
+    : [];
+}
+
+export function useSessionRuns(
+  sessionId: string,
+  active: boolean,
+): SessionRuns {
+  const trpc = useTRPC();
+  const runs = useRunStatus(sessionId, active);
   const start = useMutation(trpc.run.start.mutationOptions());
   const stop = useMutation(trpc.run.stop.mutationOptions());
   const restart = useMutation(trpc.run.restart.mutationOptions());
-  const error = start.error ?? stop.error ?? restart.error ?? stream.error;
+  const error = start.error ?? stop.error ?? restart.error;
 
   useErrorToast(error ? { title: 'Runs', message: error.message } : undefined);
 
   return {
-    runs:
-      snapshot?.sessionId === sessionId ? snapshot.status.configurations : [],
+    runs,
     onStart: (name) => start.mutate({ sessionId, name }),
     onStop: (name) => stop.mutate({ sessionId, name }),
     onRestart: (name) => restart.mutate({ sessionId, name }),
-    renderTerminal: (run) => (
-      <ConnectedRunTerminal key={sessionId} {...{ sessionId, run, active }} />
+    renderTerminal: (run, visible) => (
+      <ConnectedRunTerminal
+        key={sessionId}
+        {...{ sessionId, run }}
+        active={active && visible}
+      />
     ),
   };
 }
@@ -75,20 +97,36 @@ function ConnectedRunTerminal({
           onError: (error) => setFailure(error.message),
         },
       );
+
       return (): void => subscription.unsubscribe();
     },
     [client, sessionId, name],
   );
+
   const onInput = useCallback(
-    (input: string): void => {
-      void client.terminal.send
+    async (input: string): Promise<void> => {
+      await client.terminal.send
         .mutate({ sessionId, name, input })
         .catch((error: Error) => setFailure(error.message));
     },
     [client, sessionId, name],
   );
 
+  const canResize =
+    connected && (run.status === 'ready' || run.status === 'starting');
+
+  const onResize = useCallback(
+    (columns: number, rows: number): void => {
+      if (!canResize) return;
+
+      void client.terminal.resize
+        .mutate({ sessionId, name, columns, rows })
+        .catch((error: Error) => setFailure(error.message));
+    },
+    [canResize, client, name, sessionId],
+  );
+
   useErrorToast(failure ? { title: 'Terminal', message: failure } : undefined);
 
-  return <RunTerminal {...{ run, connected, listen, onInput }} />;
+  return <RunTerminal {...{ run, connected, listen, onInput, onResize }} />;
 }

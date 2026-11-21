@@ -3,7 +3,7 @@ import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { Text } from '@repo/kit/primitives/content/text';
 import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import { useClock } from '@repo/kit/use-clock';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { runIsActive, runStatusLabel, runStatusTone } from './run-status';
 
@@ -14,6 +14,11 @@ export interface WorkbenchRunsProps {
   onStop: (name: string) => void;
   now?: number;
 }
+
+export type SessionRuns = Omit<WorkbenchRunsProps, 'onOpen'> & {
+  onRestart: (name: string) => void;
+  renderTerminal: (run: RunConfigurationRow, visible: boolean) => ReactNode;
+};
 
 type RowProps = Omit<WorkbenchRunsProps, 'runs' | 'now'> & {
   run: RunConfigurationRow;
@@ -36,9 +41,9 @@ function RunRow({ run, now, onOpen, onStart, onStop }: RowProps): ReactElement {
         className="min-w-0 flex-1 flex-row items-center gap-2 rounded-control px-1 py-2 web:hover:bg-hover"
       >
         <StatusDot tone={runStatusTone[status]} size="sm" />
-        <Text numberOfLines={1} className="min-w-0 shrink">
-          {name}
-        </Text>
+        <View className="min-w-0 shrink">
+          <Text numberOfLines={1}>{name}</Text>
+        </View>
         <Text role="secondary" tone="muted" numberOfLines={1}>
           {port === null ? label : `${label} · :${port}`}
         </Text>

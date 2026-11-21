@@ -269,3 +269,10 @@ export { sessionBarCards } from './components/session-bar/session-bar-cards';
 export { useSchedules, type ScheduleControls } from './hooks/use-schedules';
 
 export { SchedulePreview, ScheduleList } from './components/schedule-list';
+
+export { RunInspector } from './components/run-inspector';
+export { RunTerminal, type RunOutputSource } from './components/run-terminal';
+export {
+  WorkbenchRuns,
+  type SessionRuns,
+} from './components/session-workbench-runs';

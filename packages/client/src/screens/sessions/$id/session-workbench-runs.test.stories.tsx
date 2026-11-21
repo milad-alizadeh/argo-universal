@@ -2,7 +2,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
-import { workbenchRuns } from '../../../features/sessions/components/session-workbench-runs-fixtures';
+import { workbenchRuns } from '../../../../mocks/run-configurations';
 import type { OpenSessionViewProps } from './session-detail-view';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { idleSession } from './session-detail-view.mocks';
@@ -20,7 +20,7 @@ const meta = {
       onStart: fn(),
       onStop: fn(),
       onRestart: fn(),
-      renderTerminal: () => null,
+      renderTerminal: (): null => null,
     },
   },
 } satisfies Meta<Pick<OpenSessionViewProps, 'runs'>>;

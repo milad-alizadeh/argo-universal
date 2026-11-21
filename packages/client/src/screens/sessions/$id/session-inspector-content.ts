@@ -5,8 +5,8 @@ import type {
   SubagentListProps,
 } from '#features/sessions';
 import type { ScheduleControls } from '#features/sessions';
+import type { SessionRuns } from '#features/sessions';
 import type { SessionPluginCard } from './sections/plugin-card-section';
-import type { SessionRuns } from './sections/runs-section';
 import type { AgentFeedSlot } from './session-agents-tab';
 import type { CreatePullRequestAction } from './use-create-pull-request';
 

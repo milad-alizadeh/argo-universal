@@ -71,6 +71,7 @@ export const sectionTab = (
   panels: SessionPanels,
   key: string,
 ): SectionTabHandle => ({
+  active: panels.state.shown === key,
   open: () => panels.select(key),
   request: () => panels.request(key),
   requested: panels.state.requests?.[key],

@@ -2,18 +2,18 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { fn } from 'storybook/test';
-import { SessionWorkbenchColumn } from './session-workbench';
-import {
-  WorkbenchRuns,
-  type WorkbenchRunsProps,
-} from './session-workbench-runs';
 import {
   crashedRuns,
   startingRuns,
   stoppedRuns,
   workbenchRuns,
   workbenchRunTime,
-} from './session-workbench-runs-fixtures';
+} from '../../../../mocks/run-configurations';
+import { SessionWorkbenchColumn } from './session-workbench';
+import {
+  WorkbenchRuns,
+  type WorkbenchRunsProps,
+} from './session-workbench-runs';
 
 function RunsCard(props: WorkbenchRunsProps): ReactElement {
   return (

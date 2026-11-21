@@ -143,10 +143,12 @@ function usePageProps(
 ): SessionDetailViewProps {
   const { sessionId, preview } = page;
   const shown = use(RetainedPageVisibility);
+
   const runs = useSessionRuns(
     sessionId,
     shown && !preview && sources.feed.ready,
   );
+
   const runNames = runs.runs.map(({ name }) => name);
 
   const surroundings = useSessionSurroundings(

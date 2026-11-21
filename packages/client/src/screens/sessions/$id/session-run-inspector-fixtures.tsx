@@ -1,12 +1,12 @@
 import type { RunOutputCursor, RunOutput } from '@repo/contracts';
 import type { ReactElement } from 'react';
+import { RunTerminal, type RunOutputSource } from '#features/sessions';
+import type { SessionRuns } from '#features/sessions';
 import {
   webRun,
   workbenchRuns,
   workbenchRunTime,
-} from '../../../features/sessions/components/session-workbench-runs-fixtures';
-import { RunTerminal, type RunOutputSource } from './run-terminal';
-import type { SessionRuns } from './sections/runs-section';
+} from '../../../../mocks/run-configurations';
 
 const recorded = [
   '\u001b[32m>\u001b[0m Starting server\r\n',
@@ -37,10 +37,16 @@ export function recordRun(
 export const runActions = {
   runs: workbenchRuns,
   now: workbenchRunTime,
-  onStart: () => {},
-  onStop: () => {},
-  onRestart: () => {},
+  onStart: (): void => {},
+  onStop: (): void => {},
+  onRestart: (): void => {},
   renderTerminal: (run): ReactElement => (
-    <RunTerminal run={run} connected listen={recordRun} onInput={() => {}} />
+    <RunTerminal
+      run={run}
+      connected
+      listen={recordRun}
+      onInput={(): void => {}}
+      onResize={(): void => {}}
+    />
   ),
 } satisfies SessionRuns;

@@ -7,14 +7,14 @@ import { StatusDot } from '@repo/kit/primitives/status/status-dot';
 import { useClock } from '@repo/kit/use-clock';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import {
-  runIsActive,
-  runStatusLabel,
-  runStatusTone,
-} from '../../../features/sessions/components/run-status';
-import type { SessionRuns } from './sections/runs-section';
+import { runIsActive, runStatusLabel, runStatusTone } from './run-status';
+import type { SessionRuns } from './session-workbench-runs';
 
-type Props = { run: RunConfigurationRow; controls: SessionRuns };
+type Props = {
+  run: RunConfigurationRow;
+  controls: SessionRuns;
+  visible?: boolean;
+};
 
 function RunHeader({ run, controls }: Props): ReactElement {
   const { name, status } = run;
@@ -24,18 +24,15 @@ function RunHeader({ run, controls }: Props): ReactElement {
   return (
     <View className="min-w-0 flex-row items-center gap-2">
       <Icon name="terminal" tone="muted" />
-      <Text numberOfLines={1} className="min-w-0 shrink">
-        {name}
-      </Text>
+      <View className="min-w-0 shrink">
+        <Text numberOfLines={1}>{name}</Text>
+      </View>
       <StatusDot tone={runStatusTone[status]} size="sm" />
-      <Text
-        role="secondary"
-        tone="muted"
-        numberOfLines={1}
-        className="min-w-0 flex-1"
-      >
-        {runStatusLabel(run, now, true)}
-      </Text>
+      <View className="min-w-0 flex-1">
+        <Text role="secondary" tone="muted" numberOfLines={1}>
+          {runStatusLabel(run, now, true)}
+        </Text>
+      </View>
       <IconButton
         icon="retry"
         variant="ghost"
@@ -60,24 +57,25 @@ function RunAddress({ url }: { url: string }): ReactElement {
   return (
     <View className="min-w-0 flex-row items-center gap-2 rounded-control bg-muted px-2 py-1">
       <Icon name="external-link" tone="muted" />
-      <Text
-        role="secondary-code"
-        tone="muted"
-        numberOfLines={1}
-        className="min-w-0 flex-1"
-      >
-        <Link href={url} label={url} />
-      </Text>
+      <View className="min-w-0 flex-1">
+        <Text role="secondary-code" tone="muted" numberOfLines={1}>
+          <Link href={url} label={url} />
+        </Text>
+      </View>
     </View>
   );
 }
 
-export function RunInspector({ run, controls }: Props): ReactElement {
+export function RunInspector({
+  run,
+  controls,
+  visible = true,
+}: Props): ReactElement {
   return (
-    <View className="min-h-0 flex-1 gap-2">
+    <View className="min-h-0 flex-1 gap-2 px-2 pb-2">
       <RunHeader run={run} controls={controls} />
       {run.url && <RunAddress url={run.url} />}
-      {controls.renderTerminal(run)}
+      {controls.renderTerminal(run, visible)}
     </View>
   );
 }

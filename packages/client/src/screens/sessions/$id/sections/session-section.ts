@@ -25,6 +25,7 @@ export interface SectionFacts {
 
 // One Section's Inspector tab, bound to the Session's tabs.
 export interface SectionTabHandle {
+  active?: boolean;
   open: () => void;
   // Shows the tab and asks it to start over at its first page.
   request: () => void;

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
+import { workbenchRuns } from '../../../../mocks/run-configurations';
 import { WorkbenchRuns } from './session-workbench-runs';
-import { workbenchRuns } from './session-workbench-runs-fixtures';
 
 const meta = {
   title: 'Tests/Sessions/SessionWorkbenchRuns',

@@ -13,7 +13,8 @@ export interface RunTerminalProps {
   run: RunConfigurationRow;
   connected: boolean;
   listen: RunOutputSource;
-  onInput: (text: string) => void;
+  onInput: (text: string) => Promise<void> | void;
+  onResize: (columns: number, rows: number) => void;
 }
 
 // Runs on native get their own Expo DOM Terminal in the phone slice.
