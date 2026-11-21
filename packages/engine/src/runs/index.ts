@@ -18,5 +18,3 @@ export {
 } from './runs';
 
 export type { TerminalSpawner } from './terminal';
-
-export { shellTerminalOutputFolder } from './shell-terminals';

@@ -5,7 +5,7 @@ export type TerminalLaunch = {
   // The Run's own id; the real terminal carries it on its command line so recovery can tell its process group from a reused one.
   id: string;
   command: string;
-  shell?: true;
+  shell?: { outputPath: string };
   cwd: string;
   // The variables a Run Configuration adds: `$PORT`, `$ARGO_PORT_0` and its own `env`.
   env: Record<string, string>;

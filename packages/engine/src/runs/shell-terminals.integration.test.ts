@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
@@ -8,9 +8,13 @@ import { startEngineTestHost } from '#mocks/engine';
 import { createFakeTerminals } from '#mocks/fake-terminals';
 import { operationCaller, runOperation } from '#mocks/operations';
 import { processIsRunning } from '#mocks/shell-process';
+import {
+  shellTerminalOutputFolder,
+  shellTerminalOutputPath,
+} from '../lib/terminal-owner';
 import { recordCheckoutTerminalOwner } from '../sessions';
 import { launchTerminal } from './node-pty-terminal';
-import { shellTerminalOutputFolder } from './shell-terminals';
+import { createRunOutput } from './run-output';
 
 type TestShells = {
   host: Awaited<ReturnType<typeof startAcpEngine>>;
@@ -123,6 +127,52 @@ it('archiving one Session closes only its shells on a shared Checkout', async ()
   });
 });
 
+const backgroundJob = 'nohup sleep 60 >/dev/null 2>&1 & echo ArgoJob:$!\r';
+
+async function jobPid(read: () => string | Promise<string>): Promise<number> {
+  let pid = 0;
+
+  await expect
+    .poll(async () => {
+      pid = Number((await read()).match(/ArgoJob:(\d+)/)?.[1] ?? 0);
+
+      return pid > 0 && processIsRunning(pid);
+    })
+    .toBe(true);
+  onTestFinished(() => {
+    if (processIsRunning(pid)) process.kill(pid, 'SIGKILL');
+  });
+
+  return pid;
+}
+
+it('closing a shell ends its background jobs and leaves another shell alone', async () => {
+  const { caller } = await startAcpEngine({ steps: [] });
+  const { sessionId } = await caller.session.new(emptySessionInput);
+  const { id: closed } = await caller.terminal.open({ sessionId });
+  const { id: kept } = await caller.terminal.open({ sessionId });
+  const first = { sessionId, shellId: closed };
+  const second = { sessionId, shellId: kept };
+
+  await caller.terminal.send({ ...first, input: backgroundJob });
+  await caller.terminal.send({ ...second, input: backgroundJob });
+
+  const removed = await jobPid(
+    async () => (await caller.terminal.read(first)).screen,
+  );
+
+  const remaining = await jobPid(
+    async () => (await caller.terminal.read(second)).screen,
+  );
+
+  await caller.terminal.close(first);
+  expect(processIsRunning(removed)).toBe(false);
+  expect(processIsRunning(remaining)).toBe(true);
+
+  await caller.terminal.close(second);
+  expect(processIsRunning(remaining)).toBe(false);
+}, 30_000);
+
 it('runs commands in a real interactive shell in the Checkout', async () => {
   const { caller } = await startAcpEngine({ steps: [] });
   const { sessionId } = await caller.session.new(emptySessionInput);
@@ -157,6 +207,9 @@ it('recovery marks an interrupted shell Terminal lost and clears its process and
   await host.stop();
 
   const id = randomUUID();
+  const outputPath = shellTerminalOutputPath(host.home, id);
+
+  await createRunOutput(outputPath);
 
   const terminal = await launchTerminal({
     id,
@@ -164,7 +217,7 @@ it('recovery marks an interrupted shell Terminal lost and clears its process and
     command: '',
     env: {},
     port: 3000,
-    shell: true,
+    shell: { outputPath },
   });
 
   onTestFinished(() => terminal.stop());
@@ -172,20 +225,46 @@ it('recovery marks an interrupted shell Terminal lost and clears its process and
 
   if (pid === undefined) throw new Error('Missing Terminal process ID');
 
+  const forgetStaleOwner = await recordCheckoutTerminalOwner(
+    host.home,
+    pid,
+    randomUUID(),
+  );
+
+  try {
+    await expect(
+      startEngineTestHost({ home: host.home, acp: host.agent }),
+    ).rejects.toThrow('Actor terminated');
+    expect(processIsRunning(pid)).toBe(true);
+  } finally {
+    await forgetStaleOwner();
+  }
+
   await recordCheckoutTerminalOwner(host.home, pid, id);
-  const output = shellTerminalOutputFolder(host.home);
-  await mkdir(output, { recursive: true });
-  await writeFile(join(output, `${id}.log`), 'interrupted output');
+  let screen = '';
+  terminal.onData((text) => {
+    screen += text;
+  });
+  terminal.write(backgroundJob);
+  const job = await jobPid(() => screen);
+
+  await writeFile(outputPath, 'interrupted output');
   expect(processIsRunning(pid)).toBe(true);
+
+  process.kill(pid, 'SIGKILL');
+  await expect.poll(() => processIsRunning(pid)).toBe(false);
+  expect(processIsRunning(job)).toBe(true);
 
   const restarted = await startEngineTestHost({
     home: host.home,
     acp: host.agent,
   });
 
-  expect(processIsRunning(pid)).toBe(false);
+  expect(processIsRunning(job)).toBe(false);
   expect(await readdir(join(host.home, 'shell-processes'))).toEqual([]);
-  await expect(readdir(output)).rejects.toMatchObject({ code: 'ENOENT' });
+  await expect(
+    readdir(shellTerminalOutputFolder(host.home)),
+  ).rejects.toMatchObject({ code: 'ENOENT' });
   await expect(
     readFile(join(host.home, 'logs', 'engine.log'), 'utf8'),
   ).resolves.toContain(`Shell Terminal ${id} marked lost after Engine exit`);

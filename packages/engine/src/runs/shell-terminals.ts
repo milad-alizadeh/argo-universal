@@ -1,4 +1,3 @@
-import { join } from 'node:path';
 import type {
   RunOutput,
   RunOutputCursor,
@@ -7,6 +6,7 @@ import type {
   TerminalSendResult,
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
+import { shellTerminalOutputPath } from '../lib/terminal-owner';
 import type { RunBlocks, RunPorts } from './run-blocks';
 import type { RunLifecycle } from './run-lifecycle';
 import { createRunOutput, removeRunOutput } from './run-output';
@@ -46,9 +46,6 @@ type ShellRequest = {
   ownerId: string;
   shell: ShellTerminal;
 };
-
-export const shellTerminalOutputFolder = (home: string): string =>
-  join(home, 'shell-terminal-output');
 
 export class ShellTerminals {
   private readonly updates = new RunUpdates();
@@ -216,7 +213,7 @@ export class ShellTerminals {
     { port, block, env }: RunPorts,
   ): Promise<OpenShell> {
     const { id, name, cwd } = shell;
-    const path = join(shellTerminalOutputFolder(this.input.home), `${id}.log`);
+    const path = shellTerminalOutputPath(this.input.home, id);
     await createRunOutput(path);
 
     try {
@@ -226,7 +223,7 @@ export class ShellTerminals {
         command: '',
         env,
         port,
-        shell: true,
+        shell: { outputPath: path },
       });
 
       return {

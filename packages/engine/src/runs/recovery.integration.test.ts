@@ -4,8 +4,8 @@ import { eq } from 'drizzle-orm';
 import { expect, it, onTestFinished } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
+import { terminalOwnerToken } from '../lib/terminal-owner';
 import { recoverRuns } from './recovery';
-import { runToken } from './run-processes';
 
 type Status = 'starting' | 'ready' | 'stopped' | 'crashed';
 
@@ -102,8 +102,8 @@ const gone = async (pid: number): Promise<boolean> => {
 it('kills the process group of a Run it recovers as lost, but never a group that does not carry the Run’s id', async () => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
-  const owned = startGroup(runToken('owned'));
-  const reused = startGroup(runToken('someone-else'));
+  const owned = startGroup(terminalOwnerToken('owned'));
+  const reused = startGroup(terminalOwnerToken('someone-else'));
 
   database
     .insert(run)

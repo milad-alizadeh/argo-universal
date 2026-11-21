@@ -5,7 +5,8 @@ import {
   removeOrphanAttachments,
   removeUnusedBlobs,
 } from '../blob';
-import { recoverRuns, shellTerminalOutputFolder } from '../runs';
+import { shellTerminalOutputFolder } from '../lib/terminal-owner';
+import { recoverRuns } from '../runs';
 import {
   recoverAfterRestart,
   recoverArchivedCheckouts,

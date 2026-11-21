@@ -1,8 +1,13 @@
 import { mkdir, readdir, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { writeLog } from '@repo/machine-log';
+import { releasePtySession } from '@repo/process/pty-session';
 import { z } from 'zod';
 import { jsonCodec } from '../../lib/json-codec';
+import {
+  shellTerminalOutputPath,
+  terminalOwnerToken,
+} from '../../lib/terminal-owner';
 import { hasGroupOwner, hasLiveGroupMembers } from './shell-group-members';
 import { releaseShellGroup } from './shell-process-group';
 import {
@@ -62,20 +67,32 @@ const releaseRecordedGroup = async (
 ): Promise<void> => {
   const record = StoredRecord.parse(await readFile(path, 'utf8'));
 
-  if (hasLiveGroupMembers(record.pid)) {
+  if (record.checkoutTerminal) {
+    await releaseCheckoutTerminal(home, record);
+  } else if (hasLiveGroupMembers(record.pid)) {
     if (!hasGroupOwner(record.pid, record.token))
       throw new Error('Shell process group identity changed');
     await releaseShellGroup(record.pid);
   }
 
-  if (record.checkoutTerminal)
-    writeLog({
-      home,
-      label: 'engine',
-      line: `Shell Terminal ${record.token} marked lost after Engine exit`,
-    });
   await removeShellRecord(path);
 };
+
+async function releaseCheckoutTerminal(
+  home: string,
+  { pid, token }: ShellProcessRecord,
+): Promise<void> {
+  await releasePtySession({
+    pid,
+    token: terminalOwnerToken(token),
+    outputPath: shellTerminalOutputPath(home, token),
+  });
+  writeLog({
+    home,
+    label: 'engine',
+    line: `Shell Terminal ${token} marked lost after Engine exit`,
+  });
+}
 
 export const releaseShellGroups = async (home: string): Promise<void> => {
   for (const name of (await recordNames(home)).filter(isRecord))

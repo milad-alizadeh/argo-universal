@@ -1,10 +1,8 @@
 import { execFile, execFileSync } from 'node:child_process';
 import { promisify } from 'node:util';
+import { terminalOwnerToken } from '../lib/terminal-owner';
 
 const run = promisify(execFile);
-
-// The id travels in the shell's `$0`, which its command line shows, so recovery can tell a Run's group from a reused one.
-export const runToken = (id: string): string => `argo-run-${id}`;
 
 // Kills whatever still listens on the port after the group is gone; a dev server that detached from its group would hold it.
 export const killPortListeners = async (port: number): Promise<void> => {
@@ -35,7 +33,7 @@ export const ownsGroup = (pid: number, id: string): boolean => {
         return (
           Number(group) === pid &&
           !state?.startsWith('Z') &&
-          command.join(' ').includes(runToken(id))
+          command.join(' ').includes(terminalOwnerToken(id))
         );
       });
   } catch {

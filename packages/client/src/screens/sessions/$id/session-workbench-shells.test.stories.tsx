@@ -66,23 +66,27 @@ type Story = StoryObj<typeof meta>;
 
 const newTerminal = 'New Terminal';
 
+const firstShell = 'Shell 1';
+
+const reopenFirstShell = 'Open Shell 1 shell';
+
 export const OpensFromCardAndMoreAndClosesEachShellIndependently: Story = {
   play: async ({ args, canvas, userEvent }) => {
     await userEvent.click(
       await canvas.findByRole('button', { name: newTerminal }),
     );
     await expect(
-      await canvas.findByRole('tabpanel', { name: 'Shell 1' }),
+      await canvas.findByRole('tabpanel', { name: firstShell }),
     ).toBeVisible();
     await userEvent.click(
       canvas.getByRole('button', { name: 'Hide Inspector' }),
     );
     await expect(args.closed).not.toHaveBeenCalled();
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Open Shell 1 shell' }),
+      canvas.getByRole('button', { name: reopenFirstShell }),
     );
     await expect(
-      await canvas.findByRole('tabpanel', { name: 'Shell 1' }),
+      await canvas.findByRole('tabpanel', { name: firstShell }),
     ).toBeVisible();
 
     await userEvent.click(canvas.getByRole('button', { name: 'More' }));
@@ -93,14 +97,14 @@ export const OpensFromCardAndMoreAndClosesEachShellIndependently: Story = {
     await expect(
       await canvas.findByRole('tabpanel', { name: 'Shell 2' }),
     ).toBeVisible();
-    await expect(canvas.getByRole('tab', { name: 'Shell 1' })).toBeVisible();
+    await expect(canvas.getByRole('tab', { name: firstShell })).toBeVisible();
 
     await userEvent.click(
       canvas.getByRole('button', { name: 'Close Shell 2' }),
     );
     await expect(args.closed).toHaveBeenCalledTimes(1);
     await expect(args.closed).toHaveBeenCalledWith('shell-2');
-    await expect(canvas.getByRole('tab', { name: 'Shell 1' })).toBeVisible();
+    await expect(canvas.getByRole('tab', { name: firstShell })).toBeVisible();
   },
 };
 
@@ -112,7 +116,7 @@ export const ClosesDesktopShellFromTheHeader: Story = {
     );
 
     const terminal = within(
-      await canvas.findByRole('tabpanel', { name: 'Shell 1' }),
+      await canvas.findByRole('tabpanel', { name: firstShell }),
     );
 
     await userEvent.click(
@@ -121,7 +125,7 @@ export const ClosesDesktopShellFromTheHeader: Story = {
     await expect(args.closed).toHaveBeenCalledOnce();
     await expect(args.closed).toHaveBeenCalledWith('shell-1');
     await expect(
-      canvas.queryByRole('button', { name: 'Open Shell 1 shell' }),
+      canvas.queryByRole('button', { name: reopenFirstShell }),
     ).toBeNull();
   },
 };
@@ -144,7 +148,7 @@ export const OpensInThePhoneRunsSheet: Story = {
       await sheet.findByRole('button', { name: newTerminal }),
     );
     await expect(
-      await sheet.findByRole('heading', { name: 'Shell 1' }),
+      await sheet.findByRole('heading', { name: firstShell }),
     ).toBeVisible();
 
     await context.userEvent.click(
@@ -153,7 +157,7 @@ export const OpensInThePhoneRunsSheet: Story = {
     await expect(context.args.closed).not.toHaveBeenCalled();
 
     const shell = await sheet.findByRole('button', {
-      name: 'Open Shell 1 shell',
+      name: reopenFirstShell,
     });
 
     await settleOverlays(shell);
@@ -182,7 +186,7 @@ export const OpensThePhoneRunsSheetFromMore: Story = {
     );
 
     await expect(
-      await sheet.findByRole('heading', { name: 'Shell 1' }),
+      await sheet.findByRole('heading', { name: firstShell }),
     ).toBeVisible();
     await expect(
       sheet.getByRole('button', { name: 'Back to Runs' }),

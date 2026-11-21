@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./group": "./src/group.ts"
+    "./group": "./src/group.ts",
+    "./pty-session": "./src/pty-session.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
