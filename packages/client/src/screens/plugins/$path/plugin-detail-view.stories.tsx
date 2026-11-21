@@ -20,6 +20,7 @@ import {
   homeNoMatchingScenes,
   homeNoScenes,
   homeOffLight,
+  homePowerPending,
   homeLightEditor,
   homeScenesEditor,
   homeLights,
@@ -188,6 +189,10 @@ function InteractiveHome(props: PluginDetailViewProps): ReactElement {
 export const HomeFaders: StoryObj<typeof meta> = {
   args: homeFaders,
   render: (args) => <InteractiveHome {...args} />,
+};
+
+export const HomePowerPending: StoryObj<typeof meta> = {
+  args: homePowerPending,
 };
 
 export const HomeLightEditor: StoryObj<typeof meta> = {

@@ -1,3 +1,4 @@
+import type { WireNode } from '@argo/plugin-kit/testing';
 import { serialiseOnOAuthPort } from '@argo/plugin-kit/testing/oauth-port';
 import { expect, it } from 'vitest';
 import { homeWords } from './home-words';
@@ -12,6 +13,8 @@ const timeoutMs = 30_000;
 const desk = 'light-desk';
 
 const ceiling = 'light-ceiling';
+
+const offline = 'Bridge is offline';
 
 const office = 'group-office';
 
@@ -97,6 +100,55 @@ it(
   timeoutMs,
 );
 
+it.each([
+  { title: 'Desk lamp', on: false, value: 0, label: 'Off' },
+  { title: 'Ceiling', on: true, value: 40, label: '40%' },
+  { title: 'All lights', on: false, value: 0, label: '2 lights · Off' },
+])(
+  'shows $title power as $on before Hue replies and restores it if the write fails',
+  async ({ title, on, value, label }) => {
+    const home = await startHome();
+    const page = await connected(home);
+
+    const power = (node: WireNode): boolean =>
+      node.props.accessibilityLabel === `${title} power`;
+
+    const level = (node: WireNode): boolean =>
+      node.props.accessibilityLabel === `${title} brightness`;
+
+    const initialLevel = page.find(level).props.value;
+    const pending = home.hue.holdNextPut();
+
+    await Promise.all([
+      expect(page.act(power, 'onPress')).rejects.toThrow(offline),
+      pending.requested.then((): void => {
+        try {
+          expect(page.find(power).props).toMatchObject({
+            selected: on,
+            disabled: false,
+            variant: 'primary',
+          });
+          expect(page.find(level).props.value).toBe(value);
+          expect(page.findText(label)).toBeDefined();
+        } finally {
+          home.hue.fail({
+            status: 503,
+            json: { errors: [{ description: offline }], data: [] },
+          });
+          pending.release();
+        }
+      }),
+    ]);
+
+    expect(page.find(power).props).toMatchObject({
+      selected: !on,
+      variant: 'secondary',
+    });
+    expect(page.find(level).props.value).toBe(initialLevel);
+  },
+  timeoutMs,
+);
+
 it(
   'dims a light with its Slider and every light in a room with the room’s card',
   async () => {
@@ -150,7 +202,7 @@ it(
     await connected(home);
     home.hue.fail({
       status: 503,
-      json: { errors: [{ description: 'Bridge is offline' }], data: [] },
+      json: { errors: [{ description: offline }], data: [] },
     });
     await home.test.pages.draw({ path: '/', serverDevice: true, pull: true });
 
@@ -158,7 +210,7 @@ it(
 
     expect(page.find(homeWords.failed).props).toMatchObject({
       tone: 'danger',
-      description: 'Bridge is offline',
+      description: offline,
     });
     home.hue.heal();
     const again = await page.press(homeWords.retry);
