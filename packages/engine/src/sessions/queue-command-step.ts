@@ -77,13 +77,13 @@ function connectedQueueStep(
 // The Server's withdraw for a Plugin, or an App's command with the sender and id the Server set.
 const changeOf = (
   context: QueueContext,
-  { command, sender, queuedId }: QueueEvent,
+  { command, sender, queuedId, landed }: QueueEvent,
 ): ReturnType<typeof changePromptQueue> =>
   command.action === 'withdraw'
     ? withdrawRow(context, command)
     : changePromptQueue(
         context,
-        { ...command, sender, queuedId },
+        { ...command, sender, queuedId, landed },
         context.input.createId,
       );
 

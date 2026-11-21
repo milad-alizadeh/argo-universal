@@ -428,7 +428,7 @@ What is sent to a Session's Agent to start a Turn. It comes from the user, from 
 _Avoid_: Message (alone), input, instruction
 
 **Queued Prompt**:
-A Prompt waiting in a Session’s ordered queue for a Turn of its own: the person’s, a Plugin’s, the Conversation’s or another Session’s. It is future work, outside the Feed until it starts. A Plugin may withdraw one it sent, never anyone else’s.
+A Prompt waiting in a Session’s ordered queue for a Turn of its own: the person’s, a Plugin’s, the Conversation’s or another Session’s. It is future work, outside the Feed until it starts. A Plugin may withdraw one it sent, never anyone else’s. A Conversation keeps at most one waiting: its next request joins that one until it starts or the person edits it (ADR-0064).
 _Avoid_: Pending message, draft Prompt
 
 **Sent Prompt**:

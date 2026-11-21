@@ -28,10 +28,11 @@ const conflict = (message: string): never => {
   throw new TRPCError({ code: 'CONFLICT', message });
 };
 
-// A Plugin's append carries its sender and the id the Server chose for it.
+// A Plugin's append carries its sender and the id the Server chose for it, and hears which row it landed in.
 type QueueChangeCommand = Exclude<QueueCommand, { action: 'steer' }> & {
   sender?: SentPromptSender;
   queuedId?: string;
+  landed?: (queuedId: string) => void;
 };
 
 export function changePromptQueue(
@@ -155,15 +156,49 @@ function insertRow(
   items.splice(index, 0, row);
 }
 
+type AppendChange = AppendCommand &
+  Pick<QueueChangeCommand, 'queuedId' | 'landed'>;
+
+// The Conversation's Prompt still waiting for its Turn, that no one is editing (ADR-0064).
+const waitingConversationRow = (
+  { promptQueue, queueHolds, dispatchingQueueId }: QueueContext,
+  sender?: SentPromptSender,
+): QueuedPrompt | undefined =>
+  sender?.type === 'conversation'
+    ? promptQueue.items.find(
+        ({ id, sender: from }) =>
+          from?.type === 'conversation' &&
+          id !== dispatchingQueueId &&
+          !queueHolds[id],
+      )
+    : undefined;
+
+// A request from the Conversation joins its Prompt still waiting, so one Turn takes them together; any other append is a row of its own.
 function appendRow(
   context: QueueContext,
-  command: AppendCommand & { queuedId?: string },
+  command: AppendChange,
   createId: () => string,
 ): QueueChange {
-  return withItems(context, [
-    ...context.promptQueue.items,
-    appendedPrompt(command, command.queuedId ?? createId()),
-  ]);
+  const waiting = waitingConversationRow(context, command.sender);
+
+  const row = waiting
+    ? {
+        ...waiting,
+        prompt: [...waiting.prompt, ...command.prompt],
+        revision: waiting.revision + 1,
+      }
+    : appendedPrompt(command, command.queuedId ?? createId());
+
+  command.landed?.(row.id);
+
+  return withItems(
+    context,
+    waiting
+      ? context.promptQueue.items.map((item) =>
+          item.id === row.id ? row : item,
+        )
+      : [...context.promptQueue.items, row],
+  );
 }
 
 function isOrderCommand(command: RowCommand): command is OrderCommand {

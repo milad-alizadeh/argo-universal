@@ -2,6 +2,8 @@ export * from './change';
 
 export * from './prompt-sender';
 
+export * from './voice-instruction';
+
 export * from './content-block';
 
 export * from './page';
