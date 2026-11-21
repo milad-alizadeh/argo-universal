@@ -96,6 +96,7 @@ export async function draftRunConfigurations(
   overwrite: boolean,
 ): Promise<DraftedRunConfigurations> {
   const checkout = await realpath(checkoutPath);
+
   const found = [
     await draftLaunchFile(checkout, '.claude/launch.json'),
     await draftLaunchFile(checkout, '.vscode/launch.json'),

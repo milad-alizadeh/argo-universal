@@ -261,6 +261,19 @@ function refusalOf(
   return variable && `it uses ${variable}, which only an editor can fill in`;
 }
 
+function workspaceExpander(
+  checkout: string,
+  cwd: string,
+): (value: string) => string {
+  const workspaceFromCwd = relative(resolve(checkout, cwd), checkout) || '.';
+
+  return (value) =>
+    value.replaceAll(
+      /\$\{workspace(?:Folder|Root)\}/gu,
+      () => workspaceFromCwd,
+    );
+}
+
 function launchOf(checkout: string, launch: LaunchConfiguration): Launch {
   const words = commandWords(launch);
 
@@ -271,12 +284,8 @@ function launchOf(checkout: string, launch: LaunchConfiguration): Launch {
   if (reason) return { reason };
 
   const cwd = launch.cwd ? inCheckout(launch.cwd) : '.';
-  const workspaceFromCwd = relative(resolve(checkout, cwd), checkout) || '.';
-  const expandWorkspace = (value: string): string =>
-    value.replaceAll(
-      /\$\{workspace(?:Folder|Root)\}/gu,
-      () => workspaceFromCwd,
-    );
+
+  const expandWorkspace = workspaceExpander(checkout, cwd);
 
   const command = launch.command
     ? expandWorkspace(launch.command)

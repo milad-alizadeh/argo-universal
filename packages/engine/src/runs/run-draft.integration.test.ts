@@ -84,6 +84,8 @@ const npmRunDev = 'npm run dev';
 
 const packageJson = 'package.json';
 
+const emptyDraft = '{ "configurations": [] }';
+
 it.each([
   ['yarn.lock', 'yarn run dev'],
   ['bun.lock', 'bun run dev'],
@@ -254,6 +256,8 @@ it('keeps both when two sources name a Run Configuration alike, and drops one th
 });
 
 it('keeps launch configurations that share a command but differ in environment, readiness or port', async () => {
+  const command = 'node serve.js';
+
   const result = await draft({
     '.vscode/launch.json': {
       configurations: [
@@ -272,22 +276,22 @@ it('keeps launch configurations that share a command but differ in environment, 
   });
 
   expect(result.configurations).toEqual([
-    { name: 'API', command: 'node serve.js', env: { MODE: 'dev' }, port: 3000 },
+    { name: 'API', command, env: { MODE: 'dev' }, port: 3000 },
     {
       name: 'API-2',
-      command: 'node serve.js',
+      command,
       env: { MODE: 'test' },
       port: 3000,
     },
     {
       name: 'API-3',
-      command: 'node serve.js',
+      command,
       env: { MODE: 'test' },
       port: 3001,
     },
     {
       name: 'API-4',
-      command: 'node serve.js',
+      command,
       env: { MODE: 'test' },
       port: 3001,
       ready: { pattern: 'Ready' },
@@ -312,25 +316,25 @@ it('writes a file that reads back as the drafted Run Configurations', async () =
 
 it('never overwrites an existing .argo/run.json unless asked', async () => {
   const checkout = await checkoutWith({
-    '.argo/run.json': '{ "configurations": [] }',
+    '.argo/run.json': emptyDraft,
     [packageJson]: { scripts: { dev: 'vite' } },
   });
 
   await expect(draftRunConfigurations(checkout, false)).rejects.toThrow(
     /already exists/u,
   );
-  expect(await written(checkout)).toBe('{ "configurations": [] }');
+  expect(await written(checkout)).toBe(emptyDraft);
 
   await draftRunConfigurations(checkout, true);
   expect(await written(checkout)).toContain('"dev"');
 });
 
 it('publishes a replacement while an open reader still sees the previous draft', async () => {
-  const original = '{ "configurations": [] }';
   const checkout = await checkoutWith({
-    '.argo/run.json': original,
+    '.argo/run.json': emptyDraft,
     [packageJson]: { scripts: { dev: 'vite' } },
   });
+
   const target = join(checkout, '.argo', 'run.json');
   const permissions = 0o600;
   await chmod(target, permissions);
@@ -338,7 +342,7 @@ it('publishes a replacement while an open reader still sees the previous draft',
 
   await draftRunConfigurations(checkout, true);
 
-  await expect(reader.readFile('utf8')).resolves.toBe(original);
+  await expect(reader.readFile('utf8')).resolves.toBe(emptyDraft);
   expect(readRunConfigurations(await written(checkout))).toMatchObject({
     ok: true,
     configurations: [{ name: 'dev', command: npmRunDev }],
@@ -350,6 +354,7 @@ it('refuses to write through a linked .argo directory outside the Checkout', asy
   const checkout = await checkoutWith({
     [packageJson]: { scripts: { dev: 'vite' } },
   });
+
   const outside = await checkoutWith({});
   await symlink(outside, join(checkout, '.argo'), 'dir');
 
@@ -363,6 +368,7 @@ it('refuses to overwrite a linked run.json outside the Checkout', async () => {
   const checkout = await checkoutWith({
     [packageJson]: { scripts: { dev: 'vite' } },
   });
+
   const outside = await checkoutWith({ 'run.json': 'original' });
   const target = join(outside, 'run.json');
   await mkdir(join(checkout, '.argo'));
@@ -378,6 +384,7 @@ it('refuses to overwrite a Run Configuration linked to another file', async () =
   const checkout = await checkoutWith({
     [packageJson]: { scripts: { dev: 'vite' } },
   });
+
   const outside = await checkoutWith({ 'run.json': 'original' });
   const target = join(outside, 'run.json');
   await mkdir(join(checkout, '.argo'));
@@ -393,11 +400,13 @@ it('does not import a launch file from outside the Checkout', async () => {
   const checkout = await checkoutWith({
     [packageJson]: { scripts: { dev: 'vite' } },
   });
+
   const outside = await checkoutWith({
     'launch.json': {
       configurations: [{ name: 'Outside', program: 'serve.js' }],
     },
   });
+
   await mkdir(join(checkout, '.vscode'));
   await symlink(
     join(outside, 'launch.json'),
