@@ -69,12 +69,7 @@ const forgetOf =
   (execute: Execute): FixStore['forget'] =>
   async (link) => {
     // Keep the first-enable receipt even when this pull request is detached.
-    await execute(
-      run(
-        `UPDATE pull_auto_fix SET enabled = 0, stop_head = NULL WHERE ${where}`,
-        keyOf(link),
-      ),
-    );
+    await execute(run(upsert, [...keyOf(link), 0, null]));
     await execute(
       run(`DELETE FROM pull_auto_fix_events WHERE ${where}`, keyOf(link)),
     );

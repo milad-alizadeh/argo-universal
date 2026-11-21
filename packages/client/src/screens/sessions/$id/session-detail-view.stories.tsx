@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { fn } from 'storybook/test';
+import { DelegatedInputs } from '#features/sessions';
 import { composerTodos } from '../../../../mocks/composer-mock';
 import {
   elicitationProps,
@@ -9,7 +10,6 @@ import {
   questionsValues,
 } from '../../../../mocks/elicitation';
 import { claudeDescribedRequest } from '../../../../mocks/requests/elicitation/claude-elicitation';
-import { DelegatedInputs } from './delegated-inputs';
 import { SessionDetailView } from './session-detail-view';
 import { sessionPageBar } from './session-detail-view-bar.mocks';
 import { changedSession } from './session-detail-view-changes-pill.mocks';
@@ -238,7 +238,7 @@ export const DelegatedInput: Story = {
     ),
 };
 
-export const DelegatedSkill: Story = {
+const delegatedSkillStory = (commandArguments: string): Story => ({
   args: { state: 'open', ...runningSession },
   render: (args): React.JSX.Element =>
     args.state === 'open' ? (
@@ -251,7 +251,7 @@ export const DelegatedSkill: Story = {
               {
                 id: 'offer',
                 name: 'implement',
-                arguments: '#123',
+                arguments: commandArguments,
                 starterId: 'starter',
               },
             ]}
@@ -263,4 +263,10 @@ export const DelegatedSkill: Story = {
     ) : (
       <SessionDetailView {...args} />
     ),
-};
+});
+
+export const DelegatedSkill = delegatedSkillStory('#12345');
+
+export const DelegatedSkillLong = delegatedSkillStory(
+  '#12345 Review changes in the destination Checkout and run the verification requested in the original Session.',
+);

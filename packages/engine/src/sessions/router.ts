@@ -1,6 +1,7 @@
 import {
   SessionAgentOptionsInput,
   AgentOptionsUpdate,
+  DelegatedAttention,
   SessionAnswerElicitationInput,
   SessionAnswerElicitationOutput,
   SessionAnswerPermissionInput,
@@ -12,7 +13,6 @@ import {
   SessionOpenInput,
   SessionOpenOutput,
 } from '@repo/contracts';
-import { z } from 'zod';
 import {
   mergeRouters,
   authenticatedAppProcedure,
@@ -79,29 +79,7 @@ const createStartRouter = routerFactory((sources: SessionHandlerSources) =>
   router({
     delegatedAttention: authenticatedAppProcedure
       .input(SessionOpenInput)
-      .output(
-        zAsyncIterable({
-          yield: z.object({
-            requests: z.array(
-              z.object({
-                sessionId: z.string(),
-                requestId: z.string(),
-                title: z.string(),
-                kind: z.enum(['permission', 'elicitation']),
-              }),
-            ),
-            skills: z.array(
-              z.object({
-                id: z.string(),
-                name: z.string(),
-                arguments: z.string(),
-                starterId: z.string(),
-                originTurnId: z.string(),
-              }),
-            ),
-          }),
-        }),
-      )
+      .output(zAsyncIterable({ yield: DelegatedAttention }))
       .subscription(({ input, ctx, signal }) =>
         delegatedAttention(
           sources,

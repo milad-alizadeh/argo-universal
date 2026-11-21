@@ -18,6 +18,7 @@ export function recordDelegatedTurns(
     const { sender } = row._meta.argo;
 
     if (sender.type !== 'session' || !sender.followThrough) continue;
+
     const starter = tx
       .select({ id: session.id })
       .from(session)

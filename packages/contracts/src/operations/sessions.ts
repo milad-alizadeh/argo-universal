@@ -33,7 +33,7 @@ export const sessionOperations = {
     label: 'Start Session',
     icon: 'new-session',
     description:
-      'Start a Session with an Agent, Checkout and optional first prompt. A Session may pass the `starter` Checkout to run the new Session in its own working tree, uncommitted changes included. A worktree Checkout can name its branch. If that branch is held by a clean unowned linked worktree, the conflict reports its path and offers a retry with checkout.takenBranch.',
+      'Start a Session with an optional first Prompt. A Session may pass the `starter` Checkout to run the new Session in its own working tree, uncommitted changes included. A worktree Checkout can name its branch. If that branch is held by a clean unowned linked worktree, the conflict reports its path and offers a retry with checkout.takenBranch.',
     params: SessionNewParams,
     result: SessionNewOutput,
     tier: 'act',
@@ -56,8 +56,7 @@ export const sessionOperations = {
     id: 'session.closeFollowThrough',
     label: 'Close delegated follow-through',
     icon: 'close',
-    description:
-      'End automatic follow-up for work this Session already delegated.',
+    description: 'Close this Session’s delegated follow-through.',
     params: SessionCancelInput.partial(),
     result: SessionCancelOutput,
     tier: 'act',

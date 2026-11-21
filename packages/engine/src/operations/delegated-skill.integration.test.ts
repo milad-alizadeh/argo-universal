@@ -7,14 +7,19 @@ import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { runOperation } from '#mocks/operations';
 import { delegationJourney } from '#mocks/session-delegation';
 
-const humanText = 'Ask the Started Session to run the implement skill for #123';
+const humanText =
+  'Ask the Started Session to run the implement skill for #12345';
+
 const setupText = 'Prepare the destination';
-const argumentsText = '#123';
+
+const argumentsText = '#12345';
+
 const skillName = 'implement';
 
 it('requires the App to confirm a native command and carries its source Turn into the destination Feed', async () => {
   const gate = Promise.withResolvers<void>();
   const invoked: PromptRequest[] = [];
+
   const { host, caller } = await delegationJourney({
     replies: [
       { prompt: humanText, steps: [{ type: 'gate', waitFor: gate.promise }] },
@@ -32,7 +37,7 @@ it('requires the App to confirm a native command and carries its source Turn int
           },
         ],
       },
-      { prompt: '/implement #123', requests: invoked },
+      { prompt: '/implement #12345', requests: invoked },
     ],
   });
 
@@ -41,9 +46,11 @@ it('requires the App to confirm a native command and carries its source Turn int
       sessionId: caller.sessionId,
       prompt: [{ type: 'text', text: humanText }],
     });
+
     const starter = await host.caller.session.get({
       sessionId: caller.sessionId,
     });
+
     const started = OperationExecution.parse(
       await runOperation(caller.caller.operations, {
         id: 'session.new',
@@ -54,6 +61,7 @@ it('requires the App to confirm a native command and carries its source Turn int
         wait: true,
       }),
     );
+
     const destination = SessionNewOutput.parse(started.result);
 
     await expect(
@@ -69,11 +77,13 @@ it('requires the App to confirm a native command and carries its source Turn int
     ).resolves.toEqual({});
 
     const reader = new AbortController();
+
     const stream = (
       await host
         .createCaller({ signal: reader.signal })
         .session.delegatedAttention(destination)
     )[Symbol.asyncIterator]();
+
     try {
       const attention = await stream.next();
       const offer = attention.value?.skills[0];
@@ -81,6 +91,7 @@ it('requires the App to confirm a native command and carries its source Turn int
         starterId: caller.sessionId,
         originTurnId: starter.activeTurnId,
       });
+
       if (!offer) throw new Error('No skill offer');
       const params = { ...destination, offerId: offer.id };
 
@@ -96,12 +107,14 @@ it('requires the App to confirm a native command and carries its source Turn int
       await host.caller.session.confirmSkill(params);
       await waitForAcpSessionIdle(host, destination.sessionId);
       expect(invoked.map(({ prompt }) => prompt)).toEqual([
-        [{ type: 'text', text: '/implement #123' }],
+        [{ type: 'text', text: '/implement #12345' }],
       ]);
+
       const page = await host.caller.feed.page({
         ...destination,
         direction: 'tail',
       });
+
       expect(page.rows).toContainEqual(
         expect.objectContaining({
           sessionUpdate: 'prompt_message',

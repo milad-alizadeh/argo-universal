@@ -18,7 +18,13 @@ const pending = and(
   eq(delegatedTurn.revoked, false),
 );
 
-export function settledDelegations(database: Database) {
+export type SettledDelegation = {
+  work: typeof delegatedTurn.$inferSelect;
+  stopReason: (typeof turn.$inferSelect)['stopReason'];
+  error: (typeof turn.$inferSelect)['error'];
+};
+
+export function settledDelegations(database: Database): SettledDelegation[] {
   return database
     .select({
       work: delegatedTurn,
@@ -37,8 +43,6 @@ export function settledDelegations(database: Database) {
     .orderBy(turn.endedAt, delegatedTurn.id)
     .all();
 }
-
-export type SettledDelegation = ReturnType<typeof settledDelegations>[number];
 
 const excerptLimit = 1600;
 

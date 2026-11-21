@@ -46,6 +46,7 @@ export type AppRouterDeps = SessionSources &
   ScreenSightDeps &
   PairingDeps & {
     userHome: string;
+    logSessionResult?: (message: string) => void;
     sessionTokens: SessionTokens;
     controlToken: string;
     plugins: PluginsRouterDeps;

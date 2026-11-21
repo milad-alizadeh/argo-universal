@@ -1,8 +1,11 @@
 import type { Subscription } from 'xstate';
-import type { SessionHandlerSources } from './session-sources';
+import type { HandlerSources } from './session-sources';
 import { onWriterChange } from './writer-changes';
 
-type OpenedSources = Pick<SessionHandlerSources, 'findWriter' | 'open'>;
+type OpenedSources = HandlerSources<
+  'findWriter',
+  'queued' | 'ids' | 'subscribe'
+>;
 
 // A Session that opened, and the Session that started it through an Operation, or null.
 export type OpenedListener = (

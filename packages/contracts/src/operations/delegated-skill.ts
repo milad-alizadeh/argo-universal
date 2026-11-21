@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { sessionColumns } from '../columns';
 import type { OperationDefinition } from './index';
 
+const maxArguments = 2000;
+
 const confirmation = z.strictObject({});
 
 export const delegatedSkillOperations = {
@@ -9,15 +11,14 @@ export const delegatedSkillOperations = {
     id: 'session.offerSkill',
     label: 'Offer native skill invocation',
     icon: 'message',
-    description:
-      'Offer the person a native slash command in a Started Session when they explicitly request that skill.',
+    description: 'Offer a native skill command in a Started Session.',
     params: z.strictObject({
       sessionId: sessionColumns.shape.id,
       starterId: sessionColumns.shape.id.optional(),
       name: z.string().regex(/^[\w:.-]{1,100}$/),
       arguments: z
         .string()
-        .max(2000)
+        .max(maxArguments)
         .regex(/^[^\r\n]*$/)
         .default(''),
     }),

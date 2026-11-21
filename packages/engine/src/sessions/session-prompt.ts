@@ -1,6 +1,7 @@
 import type { SessionPromptInput } from '@repo/contracts';
 import { requireInstalledAgent } from '../agents';
 import { promptMessageId } from '../feed';
+import { requireUnchangedNativeCommand } from './acp/prompts/native-command';
 import type { PromptSend } from './prompt-sender';
 import { submitSessionPrompt, waitForReadySession } from './session-command';
 import type { SessionActorRef } from './session-machine';
@@ -117,6 +118,7 @@ async function submitPromptTo(
   const answer = await runPromptHook(sources, start.input);
 
   if ('drop' in answer) return { status: 'dropped', drop: answer.drop };
+  requireUnchangedNativeCommand(start.input.prompt, answer.prompt);
 
   sources.open.admit(signal);
 

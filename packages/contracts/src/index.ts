@@ -21,3 +21,5 @@ export * from './notifications';
 export * from './link-preview';
 
 export * from './devices';
+
+export * from './sessions/delegated-attention';

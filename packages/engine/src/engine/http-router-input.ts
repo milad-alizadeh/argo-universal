@@ -1,3 +1,4 @@
+import { writeLog } from '@repo/machine-log';
 import type { HttpServerOptions, HttpSetup } from './http-server';
 import type { AppRouterInput } from './router-deps';
 
@@ -24,6 +25,8 @@ export function httpRouterInput(
     ...shared,
     controlToken,
     sessionCommandSignal: commandAdmission.signal,
+    logSessionResult: (line) =>
+      writeLog({ home: options.home, label: 'engine', line }),
     hooks: plugins.hooks,
     plugins: plugins.router,
   };

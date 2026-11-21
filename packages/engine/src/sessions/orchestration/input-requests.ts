@@ -1,11 +1,20 @@
+import type { DelegatedAttention, DelegatedInput } from '@repo/contracts';
 import { delegatedTurn } from '@repo/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { watchOpenedSessions } from '../opened-sessions';
 import { pendingInputRequest } from '../pending-input';
-import type { SessionHandlerSources } from '../session-sources';
+import type { HandlerSources } from '../session-sources';
 import { waitingSkills } from './skill';
 
-function currentRequests(sources: SessionHandlerSources, starterId: string) {
+type AttentionSources = HandlerSources<
+  'database' | 'findWriter',
+  'context' | 'queued' | 'session' | 'ids' | 'subscribe'
+>;
+
+function currentRequests(
+  sources: AttentionSources,
+  starterId: string,
+): DelegatedInput[] {
   return sources.database
     .select()
     .from(delegatedTurn)
@@ -19,9 +28,11 @@ function currentRequests(sources: SessionHandlerSources, starterId: string) {
     .all()
     .flatMap(({ sourceId, turnId }) => {
       const live = sources.open.context(sourceId);
+
       if (!live || live.activeTurnId !== turnId) return [];
 
       const input = pendingInputRequest(live);
+
       if (!input) return [];
 
       return [
@@ -35,25 +46,29 @@ function currentRequests(sources: SessionHandlerSources, starterId: string) {
     });
 }
 
-function currentAttention(sources: SessionHandlerSources, sessionId: string) {
+function currentAttention(
+  sources: AttentionSources,
+  sessionId: string,
+): DelegatedAttention {
   return {
     requests: currentRequests(sources, sessionId),
     skills: waitingSkills(sources, sessionId),
   };
 }
 
-export async function* delegatedAttention(
-  sources: SessionHandlerSources,
+function watchChildren(
+  sources: AttentionSources,
   starterId: string,
-  signal: AbortSignal,
-): AsyncGenerator<ReturnType<typeof currentAttention>> {
-  let wake = Promise.withResolvers<void>();
-  const changed = (): void => wake.resolve();
+  changed: () => void,
+): () => void {
   const subscriptions = new Map<string, { unsubscribe(): void }>();
+
   const stopOpened = watchOpenedSessions(sources, (id, startedBy) => {
     if (startedBy !== starterId) return;
+
     subscriptions.get(id)?.unsubscribe();
     const actor = sources.open.session(id);
+
     if (actor)
       subscriptions.set(
         id,
@@ -67,26 +82,78 @@ export async function* delegatedAttention(
       );
     changed();
   });
-  const writer = sources.findWriter()?.on('writer.committed', changed);
-  signal.addEventListener('abort', changed, { once: true });
 
-  try {
-    let previous: string | undefined;
-    while (!signal.aborted) {
-      wake = Promise.withResolvers<void>();
-      const requests = currentAttention(sources, starterId);
-      const key = JSON.stringify(requests);
-      if (key !== previous) {
-        previous = key;
-        yield requests;
-      }
-      if (!signal.aborted) await wake.promise;
-    }
-  } finally {
+  return () => {
     stopOpened();
-    writer?.unsubscribe();
-    signal.removeEventListener('abort', changed);
+
     for (const subscription of subscriptions.values())
       subscription.unsubscribe();
+  };
+}
+
+function watchAttention(
+  sources: AttentionSources,
+  { starterId, signal }: { starterId: string; signal: AbortSignal },
+  changed: () => void,
+): () => void {
+  const children = watchChildren(sources, starterId, changed);
+  const writer = sources.findWriter()?.on('writer.committed', changed);
+
+  signal.addEventListener('abort', changed, { once: true });
+
+  return () => {
+    children();
+    writer?.unsubscribe();
+    signal.removeEventListener('abort', changed);
+  };
+}
+
+type AttentionReader = {
+  read: () => DelegatedAttention | undefined;
+  changed: () => void;
+  wait: () => Promise<void>;
+};
+
+function attentionReader(
+  sources: AttentionSources,
+  starterId: string,
+): AttentionReader {
+  let wake = Promise.withResolvers<void>();
+  let previous: string | undefined;
+
+  return {
+    read: () => {
+      wake = Promise.withResolvers<void>();
+      const next = currentAttention(sources, starterId);
+      const key = JSON.stringify(next);
+
+      if (key === previous) return;
+      previous = key;
+
+      return next;
+    },
+    changed: () => wake.resolve(),
+    wait: () => wake.promise,
+  };
+}
+
+export async function* delegatedAttention(
+  sources: AttentionSources,
+  starterId: string,
+  signal: AbortSignal,
+): AsyncGenerator<DelegatedAttention> {
+  const reader = attentionReader(sources, starterId);
+  const stop = watchAttention(sources, { starterId, signal }, reader.changed);
+
+  try {
+    while (!signal.aborted) {
+      const next = reader.read();
+
+      if (next) yield next;
+
+      if (!signal.aborted) await reader.wait();
+    }
+  } finally {
+    stop();
   }
 }

@@ -7,6 +7,7 @@ import {
 } from './pull-automation';
 import { fetchAutoMerge, fetchMergeSettings } from './pull-automation-reads';
 import { disableAutoMerge, enableAutoMerge } from './pull-automation-writes';
+import { checkoutIdentity } from './pull-checkout';
 import { requireAttached } from './pull-file-operations';
 import type { PullInfo } from './pull-info';
 import { namedOf, type Scope } from './pull-operations';
@@ -55,9 +56,11 @@ export async function setAutomation(
 
   await requireAttached(scope, named, caller);
   const link = { ...named, ...caller };
+
   const on = params.firstEnable
     ? await firstEnable(scope, params, link)
     : await turn(scope, params, link).then(() => params.on);
+
   await readBack(scope, params, { ...named, ...caller });
   scope.changed();
 
@@ -72,7 +75,11 @@ async function firstEnable(
   if (kind !== 'fix' || !on)
     throw new Error('firstEnable requires kind fix and on true.');
 
-  return scope.automations.fix.enableFirst(link);
+  return scope.automations.fix.enableFirst({
+    link,
+    checkout: await checkoutIdentity(scope, link),
+    requireAttached: () => requireAttached(scope, link, link).then(() => {}),
+  });
 }
 
 type Target = { repository: string; number: number; projectId: string };

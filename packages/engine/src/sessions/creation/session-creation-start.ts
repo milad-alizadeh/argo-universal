@@ -1,5 +1,6 @@
 import type { SessionNewInput, PromptSender } from '@repo/contracts';
 import type { CoreHooks } from '@repo/contracts/plugins';
+import { requireUnchangedNativeCommand } from '../acp/prompts/native-command';
 import { applyInitialConfiguration } from '../configuration';
 import { submitSessionPrompt } from '../session-command';
 import type { SessionContext } from '../session-context';
@@ -58,6 +59,7 @@ const submitInitialAcpPrompt = async (
   const answer = await initialPromptHook(hooks, context);
 
   if ('drop' in answer) return;
+  requireUnchangedNativeCommand(context.input.prompt, answer.prompt);
 
   return submitInitialTurn(
     session,

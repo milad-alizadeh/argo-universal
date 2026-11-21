@@ -71,8 +71,11 @@ export class Sessions {
       this.implementations,
     );
   }
-  public startDelegatedResults(signal: AbortSignal): void {
-    new DelegatedResults(this.sources, signal).start();
+  public startDelegatedResults(
+    signal: AbortSignal,
+    log: (message: string) => void,
+  ): void {
+    new DelegatedResults(this.sources, signal, log).start();
   }
   private operations(
     { sessionCommandSignal }: SessionSources,
@@ -92,6 +95,7 @@ export class Sessions {
     request: NativeStartRequest,
   ): ReturnType<typeof startSessionCreation> {
     const { followThrough, ...creation } = input;
+
     const sender = followThrough
       ? this.delegatedSender(request.sender, input.prompt.length > 0)
       : request.sender;
@@ -114,7 +118,12 @@ export class Sessions {
           'Follow-through requires a running Session caller delegating a Prompt to its own Started Session.',
       });
 
-    return { ...sender, followThrough: starterTurnId };
+    return {
+      type: 'session',
+      sessionId: sender.sessionId,
+      title: sender.title,
+      followThrough: starterTurnId,
+    };
   }
   /*
    * The user's Prompt starts a Turn; another Session's is a Sent Prompt, steered into a running Turn or queued behind
@@ -133,6 +142,7 @@ export class Sessions {
               from.sessionId,
         )
       : from;
+
     const id = this.sources.createId();
 
     const accepted =

@@ -78,12 +78,15 @@ const actImplementations = (
   'session.confirmSkill': (input) => confirmSkill(sources, input),
   'session.closeFollowThrough': async ({ sessionId }) => {
     sources.open.admit();
+
     const starterId = namedParam(
       sessionId,
       'Pass the Session whose follow-through should close.',
     );
+
     sources.readSession(starterId);
     await sources.open.write(closeFollowThrough(starterId));
+
     return {};
   },
   'session.cancel': async ({ sessionId }) =>

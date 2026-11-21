@@ -45,12 +45,9 @@ const catalogLine = (operation: OperationDefinition): string =>
   `- ${operation.id}(${signature(operation)}) ${firstSentence(operation.description)}`;
 
 const catalogIntroduction =
-  'Every Argo Operation, with its params; `?` marks one you may leave out. ' +
-  'Run one directly with operation_run, its id and params; do not search for it first. ' +
-  'Leave out sessionId and projectId to act on your own Session and Project. ' +
-  'session.new starts with your Agent on the main Checkout; give its prompt as [{"type":"text","text":"…"}]. ' +
-  'A refusal gives the schema. ' +
-  'Call operation_list only for a Plugin’s Operations or a whole schema.';
+  'Run an Operation with operation_run, its id and params. `?` marks optional params. ' +
+  'Omit sessionId and projectId to use your own. session.new uses your Agent and the main Checkout. ' +
+  'A refusal gives the schema. Use operation_list for Plugin Operations or full schemas.';
 
 // Operations the catalog leaves out besides the App-only ones, such as the checklist's while the person has it off.
 export type CatalogChoices = { hidden?: ReadonlySet<string> };

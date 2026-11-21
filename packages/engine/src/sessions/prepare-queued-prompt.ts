@@ -1,5 +1,6 @@
 import type { ContentBlock } from '@repo/contracts';
 import { blobsFolderIn, attachmentsFolderIn } from '../blob';
+import { requireUnchangedNativeCommand } from './acp/prompts/native-command';
 import { requireNativeCommandAuthority } from './acp/prompts/native-command';
 import { readAcpPromptContent } from './acp/prompts/prompt-content';
 import type { LocalSubmission } from './acp/prompts/submission';
@@ -30,29 +31,40 @@ export async function prepareQueuedPrompt(
   const answer = await runHook(context, submission);
 
   if ('drop' in answer) return null;
+  requireUnchangedNativeCommand(submission.content, answer.prompt);
   requireNativeCommandAuthority(answer.prompt, submission.sender);
   await validateQueuedContent(context, answer.prompt);
-  const { sender } = submission;
+
+  if (!allowsSubmission(context, submission.sender, answer.prompt)) return null;
+
+  return { ...submission, content: answer.prompt };
+}
+
+function allowsSubmission(
+  context: Preparation,
+  sender: LocalSubmission['sender'],
+  content: ContentBlock[],
+): boolean {
   if (sender?.type === 'skill') {
-    const [command] = answer.prompt;
+    const [command] = content;
+
     const text =
-      answer.prompt.length === 1 && command?.type === 'text' && !command._meta
+      content.length === 1 && command?.type === 'text' && !command._meta
         ? command.text
         : undefined;
+
     requireConfirmedSkill(context, sender.offerId, text);
   }
-  if (
-    sender?.type === 'session' &&
-    sender.delegatedResult &&
-    !allowsResult(
+
+  return (
+    sender?.type !== 'session' ||
+    !sender.delegatedResult ||
+    allowsResult(
       context.input.database,
       context.sessionId,
       sender.delegatedResult,
     )
-  )
-    return null;
-
-  return { ...submission, content: answer.prompt };
+  );
 }
 
 function requireSubmission(

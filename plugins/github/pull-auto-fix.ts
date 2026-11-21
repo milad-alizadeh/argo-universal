@@ -1,5 +1,6 @@
 import type { Argo } from '@argo/plugin-kit';
 import type { AutoFix, Offers } from './pull-automations';
+import { isOnCheckout } from './pull-checkout';
 import { fetchComments } from './pull-comments';
 import { autoFix, fixOf, openedByAnother } from './pull-fix';
 import { failedOf, runningOf } from './pull-fix-facts';
@@ -105,7 +106,7 @@ async function offersOf(
 // The first enable is an atomic insert. The existing Watch processes checks and comments.
 async function enableFirst(
   { fetch, fix }: { fetch: Fetch; fix: FixStore },
-  link: PullLink,
+  { link, checkout, requireAttached }: Parameters<AutoFix['enableFirst']>[0],
 ): Promise<boolean> {
   const existing = (await fix.forSessions([link.sessionId])).find((record) =>
     sameLink(record, link),
@@ -120,9 +121,13 @@ async function enableFirst(
 
   if (!pull.author || !viewer || openedByAnother(pull, viewer))
     throw new Error('Only pull requests you opened can use Auto-fix.');
+
   if (pull.stage !== 'open')
     throw new Error('Auto-fix requires an open pull request.');
 
+  if (!isOnCheckout(pull, checkout))
+    throw new Error('The pull request must belong to this Session’s Checkout.');
+  await requireAttached();
   await fix.enableFirst(link);
 
   return isOn(fix, link);
@@ -134,7 +139,7 @@ export function createAutoFix(
   const fix = createFixStore(argo);
 
   return {
-    enableFirst: (link) => enableFirst({ ...argo, fix }, link),
+    enableFirst: (input) => enableFirst({ ...argo, fix }, input),
     offers: (sessionIds) => offersOf(fix, sessionIds),
     set: (link, on) =>
       on ? enable({ ...argo, fix }, link) : disable({ ...argo, fix }, link),

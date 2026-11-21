@@ -9,11 +9,19 @@ import { runOperation } from '#mocks/operations';
 import { delegationJourney } from '#mocks/session-delegation';
 
 const starterText = 'Delegate an outcome';
+
 const sourceText = 'Produce the delegated result';
 
-function gatedDelegation(question?: string) {
+type GatedDelegation = {
+  journey: ReturnType<typeof delegationJourney>;
+  starterGate: PromiseWithResolvers<void>;
+  sourceGate: PromiseWithResolvers<void>;
+};
+
+function gatedDelegation(question?: string): GatedDelegation {
   const starterGate = Promise.withResolvers<void>();
   const sourceGate = Promise.withResolvers<void>();
+
   const journey = delegationJourney({
     replies: [
       {
@@ -41,6 +49,7 @@ async function delegate(
     sessionId: caller.sessionId,
     prompt: [{ type: 'text', text: starterText }],
   });
+
   const started = OperationExecution.parse(
     await runOperation(caller.caller.operations, {
       id: 'session.new',
@@ -51,6 +60,7 @@ async function delegate(
       },
     }),
   );
+
   const { sessionId } = SessionNewOutput.parse(started.result);
   await expect
     .poll(() => host.caller.session.get({ sessionId }))
@@ -82,6 +92,7 @@ it('queues an opted-in result behind the starter’s current Turn, then wakes th
           sessionId: caller.sessionId,
           direction: 'tail',
         });
+
         return feed.rows.filter(
           (row) =>
             row.sessionUpdate === 'prompt_message' &&
@@ -124,10 +135,12 @@ it('revokes a pending result when the starter closes follow-through', async () =
       (await host.caller.session.get({ sessionId: caller.sessionId }))
         .promptQueue.items,
     ).toEqual([]);
+
     const feed = await host.caller.feed.page({
       sessionId: caller.sessionId,
       direction: 'tail',
     });
+
     expect(
       feed.rows.filter((row) => row.sessionUpdate === 'prompt_message'),
     ).toEqual([]);
@@ -142,16 +155,19 @@ it('surfaces a source Elicitation on the starter and clears it after a source an
   const opened = await journey;
   const { host, caller } = opened;
   const reader = new AbortController();
+
   const stream = (
     await host
       .createCaller({ signal: reader.signal })
       .session.delegatedAttention({ sessionId: caller.sessionId })
   )[Symbol.asyncIterator]();
+
   try {
     expect((await stream.next()).value?.requests).toEqual([]);
     const sessionId = await delegate(opened, true);
     const pending = (await stream.next()).value?.requests[0];
     expect(pending).toMatchObject({ sessionId, kind: 'elicitation' });
+
     if (!pending)
       throw new Error('The starter did not see the source Elicitation');
 
@@ -192,7 +208,9 @@ it('keeps a closed starter’s result queued and paused through a Server restart
 
     const queued = (await host.caller.session.get(starter)).promptQueue
       .items[0];
+
     await host.stop();
+
     const recovered = await startAcpEngine({
       steps: [],
       restartOver: host.home,
@@ -206,6 +224,7 @@ it('keeps a closed starter’s result queued and paused through a Server restart
       command: { action: 'resume' },
     });
     await waitForAcpSessionIdle(recovered, starter.sessionId);
+
     const page = await recovered.caller.feed.page({
       ...starter,
       direction: 'tail',

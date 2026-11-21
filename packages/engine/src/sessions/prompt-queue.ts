@@ -179,6 +179,16 @@ function appendRow(
   command: AppendChange,
   createId: () => string,
 ): QueueChange {
+  const existing = context.promptQueue.items.find(
+    ({ id }) => id === command.queuedId,
+  );
+
+  if (existing) {
+    command.landed?.(existing.id);
+
+    return withItems(context, context.promptQueue.items);
+  }
+
   const waiting = waitingConversationRow(context, command.sender);
 
   const row = waiting

@@ -78,6 +78,7 @@ function reserveRow(
   row: QueuedPrompt,
 ): QueueSteering {
   requireFree(context, revision, row);
+
   if (
     row.sender?.type === 'skill' ||
     (row.sender?.type === 'session' && row.sender.delegatedResult)
