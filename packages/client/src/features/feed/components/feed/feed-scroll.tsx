@@ -148,7 +148,7 @@ function useFeedListProps(input: FeedScrollProps): FeedListProps {
     items,
     getFixedItemSize: useFeedRowSize(),
     renderItem: useRenderEntry({ ...props, ...motion }),
-    ...initialScroll(props),
+    ...getInitialScrollProps(props),
     ...anchors,
     onStartReached: props.onStartReached,
     header: <LoadingEarlier loading={props.loadingOlder} />,
@@ -156,7 +156,7 @@ function useFeedListProps(input: FeedScrollProps): FeedListProps {
 }
 
 // On iOS, opening at the end lays out the last row and the Composer clearance together.
-function initialScroll({
+function getInitialScrollProps({
   initialIndex,
   opensAtStart,
 }: Pick<FeedScrollProps, 'initialIndex' | 'opensAtStart'>): Pick<
