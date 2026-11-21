@@ -11,3 +11,26 @@ export const project = snakeCase.table('project', {
   deleteWorktreeOnArchive: integer({ mode: 'boolean' }).notNull().default(true),
   createdAt: timestamp(),
 });
+
+// A Project owns the Schedule independently of every Session it starts.
+export const projectSchedule = snakeCase.table('project_schedule', {
+  id: text().primaryKey(),
+  projectId: text()
+    .notNull()
+    .references(() => project.id, { onDelete: 'cascade' }),
+  settings: text().notNull(),
+  nextAt: integer().notNull(),
+  latestSessionId: text(),
+});
+
+export const projectScheduleOccurrence = snakeCase.table(
+  'project_schedule_occurrence',
+  {
+    id: text().primaryKey(),
+    scheduleId: text()
+      .notNull()
+      .references(() => projectSchedule.id, { onDelete: 'cascade' }),
+    at: integer().notNull(),
+    result: text().notNull(),
+  },
+);

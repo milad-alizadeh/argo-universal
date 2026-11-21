@@ -25,6 +25,10 @@ function ownSessionTarget<Params extends { sessionId?: string }>(
 }
 
 const defaults: Defaults = {
+  'project.scheduleList': (params, caller) => ({
+    ...params,
+    projectId: params.projectId ?? caller.projectId,
+  }),
   'session.list': (params, caller) => ({
     ...params,
     projectId: params.projectId ?? caller.projectId,

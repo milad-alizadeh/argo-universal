@@ -271,3 +271,5 @@ export { useSchedules, type ScheduleControls } from './hooks/use-schedules';
 export { FollowUpEditor } from './components/schedule-form';
 
 export { SchedulePreview, ScheduleList } from './components/schedule-list';
+
+export { sessionsListLook } from './components/sessions-list/sessions-list-look';

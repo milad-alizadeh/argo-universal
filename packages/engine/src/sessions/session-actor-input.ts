@@ -40,6 +40,7 @@ const createSessionCreationInput = (
   followUpSuggestions: event.followUpSuggestions,
   turnId: event.turnId,
   startedBySessionId: event.startedBySessionId,
+  rememberCheckout: event.rememberCheckout,
 });
 
 const sessionInput = (event: OpenSession): CreationInput | ExistingInput =>
