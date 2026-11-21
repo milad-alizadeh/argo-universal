@@ -79,11 +79,12 @@ describe('GPT-Live call events', () => {
       personTurnDone,
     );
 
-    await expect.poll(() => events.length).toBe(3);
+    await expect.poll(() => events.length).toBe(4);
     expect(events).toEqual([
       person(personTurnId, 'Hi, please', false),
       person(personTurnId, 'Hi, please list', false),
       person(personTurnId, personSaid, true),
+      { type: 'person.turn.completed', id: personTurnId, text: personSaid },
     ]);
   });
 
@@ -107,9 +108,12 @@ describe('GPT-Live call events', () => {
     const { send, events } = await listening();
 
     send(personWords, personTurnDone, personMoreWords, personTurnGrows);
-    await expect.poll(() => events.length).toBe(1);
+    await expect.poll(() => events.length).toBe(2);
 
-    expect(events).toEqual([person(personTurnId, personSaid, true)]);
+    expect(events).toEqual([
+      person(personTurnId, personSaid, true),
+      { type: 'person.turn.completed', id: personTurnId, text: personSaid },
+    ]);
   });
 
   it("reports work the voice hands over under its delegation item, naming the person's turn it heard", async () => {

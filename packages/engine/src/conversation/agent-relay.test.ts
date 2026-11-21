@@ -31,6 +31,7 @@ function relayTo(
     {
       speak: (say): number => heard.said.push(say),
       turnsRunning: (running): number => heard.running.push(running),
+      hangUp: (): void => {},
     },
   );
 
@@ -209,5 +210,45 @@ it('applies no spoken answer once the call has ended', async () => {
   relay.personSaid({ id: 't1', text: 'Allow it', final: true });
   await answered;
 
+  expect(answer).not.toHaveBeenCalled();
+});
+
+it('does not send a Prompt for an acknowledgment after a result without a question', async () => {
+  const prompt = vi.fn<ConversationSessions['prompt']>();
+  const { relay } = relayTo(prompt);
+
+  relay.happened({
+    type: 'agent.message',
+    id: 'm1',
+    turnless: false,
+    text: '[COMPLETE] The build is ready.',
+  });
+  await relay.personTurnCompleted({ id: 'one', text: 'Okay' });
+
+  expect(prompt).not.toHaveBeenCalled();
+});
+
+it('requires a provider hand-over to act on a spoken Permission answer', async () => {
+  const prompt = vi.fn<ConversationSessions['prompt']>();
+  const answer = vi.fn<ConversationSessions['answer']>();
+  const { relay } = relayTo(prompt, { answer });
+
+  relay.happened({
+    type: 'agent.message',
+    id: 'm1',
+    turnless: false,
+    text: '[COMPLETE] Should we run the tests?',
+  });
+  relay.happened({
+    type: 'permission.waiting',
+    requestId: 'p1',
+    agent: 'Codex',
+    title: 'Run npm run deploy',
+    kind: 'execute',
+    target: null,
+  });
+  await relay.personTurnCompleted({ id: 'two', text: 'Yes' });
+
+  expect(prompt).not.toHaveBeenCalled();
   expect(answer).not.toHaveBeenCalled();
 });

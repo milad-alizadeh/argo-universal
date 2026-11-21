@@ -24,6 +24,8 @@ export type ConversationProviderEvent =
   | { type: 'status'; status: ConversationConnectionStatus }
   // What the person said; `final` is false while the words may still change.
   | { type: 'person.transcript'; id: string; text: string; final: boolean }
+  // The provider confirmed the whole utterance. A transcript finalized early for the Feed does not count.
+  | { type: 'person.turn.completed'; id: string; text: string }
   // What the voice said; `final` is false while it is still speaking.
   | { type: 'voice.transcript'; id: string; text: string; final: boolean }
   // The person asked for work; answer it with `reply` under this id. `turnId` is the person's turn it was heard in, when the provider names one: the id their transcript comes under.
