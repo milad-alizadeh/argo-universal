@@ -1,5 +1,6 @@
 import type { ProjectSchedule } from '@repo/contracts/operations';
 import { Action } from '@repo/kit/primitives/actions/action';
+import { Icon } from '@repo/kit/primitives/content/icon';
 import { List, ListSectionHeader } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
@@ -68,6 +69,8 @@ type ScheduleSection = 'Active' | 'Paused';
 
 type ScheduleEntry = ScheduleSection | ProjectSchedule;
 
+const scheduleMark = <Icon name="clock" />;
+
 function scheduleEntries(
   schedules: readonly ProjectSchedule[],
   pausedExpanded: boolean,
@@ -111,6 +114,7 @@ function ScheduleRows(props: ScheduledListViewProps): ReactElement {
       <View className={sessionsListHeadingClassName(!isExpanded)}>
         <ListSectionHeader
           title={entry}
+          leading={entry === 'Active' ? scheduleMark : undefined}
           sidebar={sessionsListSidebarRows}
           rowLanes
           isExpanded={isExpanded}
@@ -159,6 +163,7 @@ function ScheduleRow({
       <ListItem
         title={schedule.name}
         subtitle={subtitle}
+        leading={scheduleMark}
         selected={selectedId === schedule.id}
         sidebar={sessionsListSidebarRows}
         onPress={() => onOpen(schedule)}
