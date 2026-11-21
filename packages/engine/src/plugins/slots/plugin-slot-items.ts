@@ -2,26 +2,16 @@ import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
 import type { SlotItemsInput } from '@repo/contracts/plugins/wire';
 import type { PluginClock } from '../clock';
 import type { Caller, KindCalls, WorkerCalls } from '../runtime/worker-calls';
-import { forget } from './forget-items';
 import {
   itemsLeftOut,
-  keptAnswer,
   leftOut,
   type ItemsAnswer,
   type Reply,
 } from './kept-items';
-import { LastGoodItems } from './last-good-items';
-import {
-  landedItems,
-  landingOf,
-  replyOf,
-  slotItemsLateLimitMs,
-  within,
-  type Landing,
-} from './late-items';
+import { replyOf, slotItemsLateLimitMs, within } from './late-items';
+import { SlotAnswers } from './slot-answers';
 import { SlotItemChanges } from './slot-item-changes';
 import { refreshFor, type Shown, type SlotRefresh } from './slot-refresh';
-import type { SlotWorker } from './slot-worker';
 
 /*
  * The runtime side of items Slots (ADR-0035): one batched call per Plugin and list, answers kept per
@@ -30,8 +20,7 @@ import type { SlotWorker } from './slot-worker';
  */
 export class PluginSlotItems {
   readonly changes = new SlotItemChanges();
-  private readonly kept = new Map<string, SlotWorker>();
-  private readonly lastGood = new LastGoodItems();
+  private readonly answers = new SlotAnswers(() => this.changes.bump());
   private readonly calls: KindCalls<SlotItemsInput, SlotCall, Reply>;
   // The clock of the lists that are open: one per Plugin, held for as long as an App has a list open (ADR-0052).
   readonly refresh: SlotRefresh;
@@ -52,14 +41,14 @@ export class PluginSlotItems {
 
   // A generation that runs or ends keeps nothing of the last one, and open lists ask again.
   private generationChanged(pluginId: string): void {
-    this.kept.delete(pluginId);
+    this.answers.generationEnded(pluginId);
     this.refresh.restarted(pluginId);
     this.changes.bump();
   }
 
   // The Plugin's items for every context of one list: kept ones, then one call for the rest.
   async items(pluginId: string, input: SlotItemsInput): Promise<ItemsAnswer> {
-    return this.lastGood.standIn(
+    return this.answers.standIn(
       pluginId,
       input,
       await this.answer(pluginId, input),
@@ -68,82 +57,22 @@ export class PluginSlotItems {
 
   // A Plugin turned off or removed: open lists ask again and draw nothing it answered before.
   forget(pluginId: string): void {
-    this.lastGood.forget(pluginId);
+    this.answers.forgetLastGood(pluginId);
     this.changes.bump();
   }
 
-  private async answer(
+  private answer(
     pluginId: string,
     input: SlotItemsInput,
   ): Promise<ItemsAnswer> {
     const generation = this.workers.generation(pluginId);
 
-    if (generation === undefined) return leftOut(itemsLeftOut.notRunning);
+    if (generation === undefined)
+      return Promise.resolve(leftOut(itemsLeftOut.notRunning));
 
-    return this.workerAnswer(
-      pluginId,
-      this.worker(pluginId, generation),
-      input,
+    return this.answers.ask({ pluginId, generation }, input, (missing, late) =>
+      within(this.clock, this.calls.call(pluginId, missing), late),
     );
-  }
-
-  // An answer asked for before a change signal is never kept, so it never becomes the last good either.
-  private async workerAnswer(
-    pluginId: string,
-    worker: SlotWorker,
-    input: SlotItemsInput,
-  ): Promise<ItemsAnswer> {
-    const { epoch } = worker;
-
-    const answer = await keptAnswer(worker, input, (missing) =>
-      this.ask(pluginId, worker, missing),
-    );
-
-    if (answer.ok && worker.epoch === epoch)
-      this.lastGood.record(pluginId, input, answer.items);
-
-    return answer;
-  }
-
-  // The call's reply within the limit; one that lands later is kept, and the open lists ask again.
-  private ask(
-    pluginId: string,
-    worker: SlotWorker,
-    input: SlotItemsInput,
-  ): Promise<Reply> {
-    const landing = landingOf(worker, input);
-
-    return within(this.clock, this.calls.call(pluginId, input), (reply) =>
-      this.landed(pluginId, landing, reply),
-    );
-  }
-
-  // A late call came to an end with no change since: open lists ask again, drawing its items if it answered.
-  private landed(pluginId: string, landing: Landing, reply: Reply): void {
-    const answer = landedItems(landing, reply);
-
-    if (!answer) return;
-
-    if (answer.ok) this.lastGood.record(pluginId, landing.input, answer.items);
-    this.changes.bump();
-  }
-
-  private worker(pluginId: string, generation: number): SlotWorker {
-    const kept = this.kept.get(pluginId);
-
-    if (kept?.generation === generation) return kept;
-
-    const worker = {
-      generation,
-      epoch: 0,
-      kept: new Map(),
-      late: new Set<SlotItemsInput>(),
-      failed: new Map(),
-    };
-
-    this.kept.set(pluginId, worker);
-
-    return worker;
   }
 
   // A Plugin's answer or its failure; one from an ended worker is ignored.
@@ -156,28 +85,13 @@ export class PluginSlotItems {
    * again; what it answered for any other context is kept.
    */
   askAgain(pluginId: string, shown: readonly Shown[]): void {
-    const worker = this.kept.get(pluginId);
-
-    if (worker) {
-      worker.epoch += 1;
-      worker.late.clear();
-
-      for (const list of shown) forget(worker, list);
-    }
-
+    this.answers.askAgain(pluginId, shown);
     this.changes.bump();
   }
 
   // What the Plugin answered is dropped at once, so a list opened now asks it again; open lists wake when `wake` says so.
   drop(pluginId: string): void {
-    const worker = this.kept.get(pluginId);
-
-    if (!worker) return;
-
-    worker.epoch += 1;
-    worker.kept.clear();
-    worker.late.clear();
-    worker.failed.clear();
+    this.answers.drop(pluginId);
   }
 
   // Open lists ask again.
@@ -192,8 +106,7 @@ export class PluginSlotItems {
   }
 
   close(): void {
-    this.kept.clear();
-    this.lastGood.clear();
+    this.answers.close();
     this.refresh.close();
     this.changes.close();
   }
