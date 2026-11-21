@@ -31,7 +31,9 @@ export type ScheduleOccurrence = {
 };
 
 const second = 1000;
+
 const oneDay = 86_400_000;
+
 const lastDate = 8_640_000_000_000_000;
 
 type ScheduleTiming = Pick<
@@ -47,7 +49,9 @@ const expired = (row: ScheduleTiming, now: number): boolean =>
 
 function stateOf(row: ScheduleTiming, now: number): Schedule['state'] {
   if (completed(row)) return 'completed';
+
   if (expired(row, now)) return 'expired';
+
   return row.paused ? 'paused' : 'active';
 }
 
@@ -72,6 +76,7 @@ function occurrenceWrite(
     row.intervalSeconds === null
       ? row.nextAt
       : nextIntervalAt(row.nextAt, row.intervalSeconds, now);
+
   const lastQueuedAt = queued ? now : row.lastQueuedAt;
 
   return {
@@ -102,6 +107,7 @@ export class ScheduleStore {
       .from(table)
       .where(and(eq(table.id, id), active()))
       .get();
+
     return row ? Math.min(row.nextAt, row.endsAt ?? Infinity) : undefined;
   }
   public occurrence(id: string): ScheduleOccurrence | undefined {
@@ -133,6 +139,7 @@ export class ScheduleStore {
     const now = Date.now();
     const intervalSeconds = input.intervalSeconds ?? null;
     const nextAt = input.onceAt ?? now + (intervalSeconds ?? 0) * second;
+
     const endsAt =
       intervalSeconds === null ? null : (input.endsAt ?? now + oneDay);
 
@@ -141,6 +148,7 @@ export class ScheduleStore {
         code: 'BAD_REQUEST',
         message: 'Choose a future delivery time',
       });
+
     if (endsAt !== null && endsAt <= nextAt)
       throw new TRPCError({
         code: 'BAD_REQUEST',
@@ -157,6 +165,7 @@ export class ScheduleStore {
       lastQueuedAt: null,
       paused: false,
     };
+
     await this.sources.open.write({
       describe: () => 'Create Schedule',
       commit: (tx) => tx.insert(table).values(row).run(),
@@ -171,6 +180,7 @@ export class ScheduleStore {
 
     if (!row)
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Schedule not found' });
+
     if (completed(row) && action !== 'delete') return;
     const update = this.update(row, input);
     await this.sources.open.write({
@@ -186,8 +196,11 @@ export class ScheduleStore {
     { action, endsAt }: ManageSchedule,
   ): Partial<ScheduleRow> {
     const now = Date.now();
+
     if (action === 'setEnd') return editEnd(row, endsAt, now);
+
     if (action === 'pause') return { paused: true };
+
     if (!row.paused || row.intervalSeconds === null) return { paused: false };
 
     return { paused: false, nextAt: now + row.intervalSeconds * second };
@@ -204,6 +217,7 @@ function editEnd(
       code: 'BAD_REQUEST',
       message: 'Only Interval follow-ups have an end time',
     });
+
   if (endsAt === undefined || endsAt <= now)
     throw new TRPCError({
       code: 'BAD_REQUEST',
@@ -214,5 +228,6 @@ function editEnd(
     expired(row, now) && row.nextAt <= now
       ? nextIntervalAt(row.nextAt, row.intervalSeconds, now)
       : row.nextAt;
+
   return nextAt === row.nextAt ? { endsAt } : { endsAt, nextAt };
 }

@@ -67,6 +67,7 @@ export class Schedules {
   ): Promise<void> {
     if (!this.store.occurrence(id)) {
       this.disarm(id);
+
       return;
     }
 
@@ -104,6 +105,7 @@ export class Schedules {
 
     if (waiting) {
       await this.sources.open.write(coalescedWrite);
+
       return;
     }
 

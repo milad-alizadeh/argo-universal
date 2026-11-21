@@ -116,21 +116,31 @@ it('coalesces due Prompts without steering an active Turn', async () => {
     prompt: [{ type: 'text', text: 'Check again' }],
   });
 
-  try {
-    await expect
-      .poll(
-        async () => (await session.listSchedules({ sessionId }))[0]?.nextAt,
-        { timeout: 8000 },
-      )
-      .toBeGreaterThanOrEqual(followUp.nextAt + 2000);
-
+  const queued = async (): Promise<string[]> => {
     const { promptQueue } = await session.get({ sessionId });
-    expect(
-      promptQueue.items.filter(
+
+    return promptQueue.items
+      .filter(
         ({ sender }) =>
           sender?.type === 'schedule' && sender.scheduleId === followUp.id,
-      ),
-    ).toHaveLength(1);
+      )
+      .map(({ id }) => id);
+  };
+
+  const nextAt = async (): Promise<number | undefined> =>
+    (await session.listSchedules({ sessionId }))[0]?.nextAt;
+
+  try {
+    await expect.poll(queued, { timeout: 8000 }).toHaveLength(1);
+    const initialDeadline = await nextAt();
+    const first = await queued();
+    expect.assert(initialDeadline !== undefined);
+    expect(first).toHaveLength(1);
+
+    await expect
+      .poll(nextAt, { timeout: 8000 })
+      .toBeGreaterThan(initialDeadline);
+    expect(await queued()).toEqual(first);
     expect(steered).toBe(false);
   } finally {
     fixture.result.resolve({ outcome: 'injected' });
@@ -141,9 +151,11 @@ it('coalesces due Prompts without steering an active Turn', async () => {
 it('delivers a one-time Prompt to an idle Session and marks it completed', async () => {
   const text = 'Check once';
   const received: PromptRequest[] = [];
+
   const journey = await delegationJourney({
     replies: [{ prompt: text, requests: received }],
   });
+
   const { sessionId } = journey.caller;
   const session = journey.host.caller.session;
   const onceAt = Date.now() + 800;
@@ -166,11 +178,13 @@ it('defaults Interval to one day and saves an edited end time', async () => {
   const { sessionId } = journey.caller;
   const session = journey.host.caller.session;
   const startedAt = Date.now();
+
   const followUp = await session.schedulePrompt({
     sessionId,
     intervalSeconds: 60,
     prompt: [{ type: 'text', text: 'Check until tomorrow' }],
   });
+
   const day = 86_400_000;
 
   expect(followUp.endsAt).toBeGreaterThanOrEqual(startedAt + day);
@@ -192,12 +206,14 @@ it('does not recover an overdue Interval after its end time', async () => {
   const journey = await delegationJourney();
   const { sessionId } = journey.caller;
   const session = journey.host.caller.session;
+
   const expired = await session.schedulePrompt({
     sessionId,
     intervalSeconds: 10,
     endsAt: Date.now() + 60_000,
     prompt: [{ type: 'text', text: 'Expired follow-up' }],
   });
+
   const recovery = 'Eligible follow-up';
   await session.schedulePrompt({
     sessionId,

@@ -13,7 +13,9 @@ export const schedulesSection: SessionSection = {
   offered: ({ followUpsAvailable }) => followUpsAvailable === true,
   card: ({ schedules }, tab) => ({
     onOpen: schedules?.items.length ? tab.open : undefined,
-    footer: schedules ? <FollowUpEditor controls={schedules} /> : null,
+    footer: schedules?.canCreate ? (
+      <FollowUpEditor controls={schedules} />
+    ) : null,
     summary: <SchedulePreview schedules={schedules} />,
   }),
   tab: ({ schedules }) => ({

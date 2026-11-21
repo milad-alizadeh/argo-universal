@@ -18,6 +18,7 @@ type CreateSchedule = Omit<
 
 export interface ScheduleControls {
   items: ScheduleList;
+  canCreate: boolean;
   disabled: boolean;
   create: (input: CreateSchedule) => Promise<void>;
   setEnd: (id: string, endsAt: number) => Promise<void>;
@@ -27,6 +28,7 @@ export interface ScheduleControls {
 export function useSchedules(
   sessionId: string,
   shown: boolean,
+  canCreate: boolean,
 ): ScheduleControls {
   const session = useTRPC().session;
 
@@ -40,7 +42,7 @@ export function useSchedules(
     void query.refetch();
   });
 
-  return { items: query.data ?? [], ...change };
+  return { items: query.data ?? [], canCreate, ...change };
 }
 
 const refreshMs = 5000;
@@ -48,7 +50,7 @@ const refreshMs = 5000;
 function useChangeSchedule(
   sessionId: string,
   refresh: () => void,
-): Omit<ScheduleControls, 'items'> {
+): Omit<ScheduleControls, 'items' | 'canCreate'> {
   const session = useTRPC().session;
 
   const mutation = useMutation(

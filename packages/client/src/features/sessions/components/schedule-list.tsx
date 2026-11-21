@@ -16,12 +16,13 @@ const scheduleTitle = (schedule: Schedule): string =>
 
 const minute = 60;
 
-const scheduleInterval = (seconds: number | null): string =>
-  seconds === null
-    ? 'Once'
-    : seconds % minute === 0
-      ? `Every ${seconds / minute} min`
-      : `Every ${seconds} s`;
+function scheduleInterval(seconds: number | null): string {
+  if (seconds === null) return 'Once';
+
+  return seconds % minute === 0
+    ? `Every ${seconds / minute} min`
+    : `Every ${seconds} s`;
+}
 
 function previewRow(item: Schedule): React.JSX.Element {
   return (
@@ -117,6 +118,7 @@ function ScheduleActions({ item, controls }: RowProps): React.JSX.Element {
 function description(item: Schedule): string {
   const cadence = scheduleInterval(item.intervalSeconds) + ' · ' + timing(item);
   const end = item.endsAt === null ? last(item) : 'Ends ' + time(item.endsAt);
+
   return cadence + '\n' + end;
 }
 
@@ -142,7 +144,7 @@ export function ScheduleList({
   return (
     <List>
       <ListSection>
-        {schedules ? <FollowUpEditor controls={schedules} /> : null}
+        {schedules?.canCreate ? <FollowUpEditor controls={schedules} /> : null}
         {schedules?.items.map((item) => (
           <ScheduleEntry key={item.id} item={item} controls={schedules} />
         ))}

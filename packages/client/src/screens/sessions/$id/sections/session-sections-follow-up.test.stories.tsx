@@ -15,15 +15,19 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const addFollowUp = 'Add follow-up';
+
+const formTitle = 'Schedule follow-up';
+
 export const ValidatesFollowUp = {
-  beforeEach: () => settleLayout('wide'),
-  play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Add follow-up' }),
-    );
+  beforeEach: (): Promise<void> => settleLayout('wide'),
+  play: async ({ canvas, userEvent }): Promise<void> => {
+    await userEvent.click(canvas.getByRole('button', { name: addFollowUp }));
+
     const form = await screen.findByRole('dialog', {
-      name: 'Schedule follow-up',
+      name: formTitle,
     });
+
     const save = within(form).getByRole('button', { name: 'Schedule' });
     await settleOverlays(save);
     await expect(form).toBeVisible();
@@ -35,15 +39,13 @@ export const ValidatesFollowUp = {
 } satisfies Story;
 
 export const SchedulesAnInterval = {
-  beforeEach: () => settleLayout('wide'),
-  play: async ({ args, canvas, userEvent }) => {
+  beforeEach: (): Promise<void> => settleLayout('wide'),
+  play: async ({ args, canvas, userEvent }): Promise<void> => {
     const prompt = 'Check the build';
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Add follow-up' }),
-    );
-    const form = within(
-      await screen.findByRole('dialog', { name: 'Schedule follow-up' }),
-    );
+    await userEvent.click(canvas.getByRole('button', { name: addFollowUp }));
+
+    const form = within(await screen.findByRole('dialog', { name: formTitle }));
+
     await fireEvent.change(form.getByRole('textbox', { name: 'Prompt' }), {
       target: { value: prompt },
     });
@@ -57,7 +59,9 @@ export const SchedulesAnInterval = {
     const end = await form.findByLabelText('Ends at');
     const local = '2099-06-03T12:00';
     await fireEvent.change(end, { target: { value: local } });
-    await userEvent.click(form.getByRole('button', { name: 'Schedule' }));
+    const save = form.getByRole('button', { name: 'Schedule' });
+    await settleOverlays(save);
+    await userEvent.click(save);
 
     await expect(args.content.schedules?.create).toHaveBeenCalledWith({
       prompt: [{ type: 'text', text: prompt }],
@@ -72,16 +76,19 @@ export const SchedulesAnInterval = {
 
 export const EditsAnIntervalEnd = {
   ...SchedulesInspector,
-  beforeEach: () => settleLayout('wide'),
-  play: async ({ args, canvas, userEvent }) => {
+  beforeEach: (): Promise<void> => settleLayout('wide'),
+  play: async ({ args, canvas, userEvent }): Promise<void> => {
     const row = await canvas.findByRole('group', {
       name: 'Check open pull requests',
     });
+
     const edit = within(row).getByRole('button', { name: 'Edit end' });
     await userEvent.click(edit);
+
     const form = within(
       await screen.findByRole('dialog', { name: 'Edit follow-up end' }),
     );
+
     const local = '2099-06-04T13:00';
     await fireEvent.change(form.getByLabelText('Ends at'), {
       target: { value: local },
@@ -92,6 +99,37 @@ export const EditsAnIntervalEnd = {
     await expect(args.content?.schedules?.setEnd).toHaveBeenCalledWith(
       'build',
       new Date(local).getTime(),
+    );
+  },
+} satisfies Story;
+
+export const SchedulesOnce = {
+  beforeEach: (): Promise<void> => settleLayout('wide'),
+  play: async ({ args, canvas, userEvent }): Promise<void> => {
+    await userEvent.click(canvas.getByRole('button', { name: addFollowUp }));
+
+    const form = within(await screen.findByRole('dialog', { name: formTitle }));
+
+    const text = 'Check the nightly build once';
+    const local = '2099-06-03T12:00';
+    fireEvent.change(form.getByRole('textbox', { name: 'Prompt' }), {
+      target: { value: text },
+    });
+    fireEvent.change(form.getByLabelText('Run at'), {
+      target: { value: local },
+    });
+    const save = form.getByRole('button', { name: 'Schedule' });
+    await settleOverlays(save);
+    await userEvent.click(save);
+
+    const create = args.content.schedules?.create;
+    await expect(create).toHaveBeenCalledTimes(1);
+    await expect(create).toHaveBeenCalledWith({
+      prompt: [{ type: 'text', text }],
+      onceAt: new Date(local).getTime(),
+    });
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     );
   },
 } satisfies Story;

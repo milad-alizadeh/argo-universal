@@ -10,8 +10,14 @@ const schedulePrompt = SessionPromptInput.pick({
   sessionId: true,
   prompt: true,
 });
-const time = z.int().positive().max(8_640_000_000_000_000);
-const intervalSeconds = z.int().positive().max(8_640_000_000_000);
+
+const lastDate = 8_640_000_000_000_000;
+
+const maximumIntervalSeconds = 8_640_000_000_000;
+
+const time = z.int().positive().max(lastDate);
+
+const intervalSeconds = z.int().positive().max(maximumIntervalSeconds);
 
 const scheduleInput = schedulePrompt
   .extend({

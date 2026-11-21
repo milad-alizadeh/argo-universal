@@ -69,6 +69,7 @@ function SectionsWorkbench({
 }
 
 const emptyFollowUps: ScheduleControls = {
+  canCreate: true,
   items: [],
   disabled: false,
   create: fn(async () => {}),

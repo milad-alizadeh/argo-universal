@@ -11,7 +11,9 @@ import { useState, type ReactElement } from 'react';
 import type { ScheduleControls } from '../hooks/use-schedules';
 
 type Schedule = ScheduleControls['items'][number];
+
 type Create = Parameters<ScheduleControls['create']>[0];
+
 type Cadence = 'once' | 'interval';
 
 const cadences = [
@@ -19,15 +21,38 @@ const cadences = [
   { value: 'interval', label: 'Interval' },
 ];
 
+const secondsPerMinute = 60;
+
+const millisecondsPerMinute = 60_000;
+
+const dateTimeLength = 16;
+
 const oneHour = 3_600_000;
+
 const oneDay = 86_400_000;
 
 function localTime(stamp: number): string {
-  const offset = new Date(stamp).getTimezoneOffset() * 60_000;
-  return new Date(stamp - offset).toISOString().slice(0, 16);
+  const offset = new Date(stamp).getTimezoneOffset() * millisecondsPerMinute;
+
+  return new Date(stamp - offset).toISOString().slice(0, dateTimeLength);
 }
 
-const instant = (text: string): number => new Date(text).getTime();
+function futureTime(text: string, error: string): number {
+  const timestamp = new Date(text).getTime();
+
+  if (Number.isNaN(timestamp) || timestamp <= Date.now())
+    throw new Error(error);
+
+  return timestamp;
+}
+
+interface FollowUpFields {
+  text: string;
+  cadence: Cadence;
+  once: string;
+  minutes: string;
+  end: string | undefined;
+}
 
 function followUpOf({
   text,
@@ -35,42 +60,38 @@ function followUpOf({
   once,
   minutes,
   end,
-}: {
-  text: string;
-  cadence: Cadence;
-  once: string;
-  minutes: string;
-  end: string | undefined;
-}): Create {
+}: FollowUpFields): Create {
   const trimmed = text.trim();
 
   if (!trimmed) throw new Error('Enter a Prompt');
+
   const prompt: Create['prompt'] = [{ type: 'text', text: trimmed }];
 
   if (cadence === 'once') {
-    const onceAt = instant(once);
-
-    if (!(onceAt > Date.now()))
-      throw new Error('Choose a future delivery time');
-    return { prompt, onceAt };
+    return {
+      prompt,
+      onceAt: futureTime(once, 'Choose a future delivery time'),
+    };
   }
 
-  const intervalSeconds = Number(minutes) * 60;
+  const intervalSeconds = Number(minutes) * secondsPerMinute;
 
-  if (!Number.isSafeInteger(intervalSeconds) || intervalSeconds <= 0)
+  if (!Number.isSafeInteger(intervalSeconds) || intervalSeconds <= 0) {
     throw new Error('Enter a positive interval in minutes');
+  }
 
-  const endsAt = end === undefined ? undefined : instant(end);
-  if (endsAt !== undefined && !(endsAt > Date.now()))
-    throw new Error('Choose a future end time');
+  const endsAt =
+    end === undefined ? undefined : futureTime(end, 'Choose a future end time');
 
   return { prompt, intervalSeconds, endsAt };
 }
 
-function useSave(close: () => void): {
+interface SaveFollowUp {
   error: string | undefined;
   save: (apply: () => Promise<void>) => void;
-} {
+}
+
+function useSave(close: () => void): SaveFollowUp {
   const [error, setError] = useState<string>();
 
   async function save(apply: () => Promise<void>): Promise<void> {
@@ -85,7 +106,7 @@ function useSave(close: () => void): {
     }
   }
 
-  return { error, save: (apply) => void save(apply) };
+  return { error, save: (apply): void => void save(apply) };
 }
 
 function ScheduleFooter({
@@ -116,6 +137,10 @@ function ScheduleFooter({
 
 type EditorProps = { controls: ScheduleControls; close: () => void };
 
+function cadenceOf(value: string): Cadence {
+  return value === 'interval' ? 'interval' : 'once';
+}
+
 function CreateFollowUp({ controls, close }: EditorProps): ReactElement {
   const [text, setText] = useState('');
   const [cadence, setCadence] = useState<Cadence>('once');
@@ -124,6 +149,7 @@ function CreateFollowUp({ controls, close }: EditorProps): ReactElement {
   const [defaultEnd] = useState(() => localTime(Date.now() + oneDay));
   const [end, setEnd] = useState<string>();
   const { error, save } = useSave(close);
+
   const apply = (): Promise<void> =>
     controls.create(followUpOf({ text, cadence, once, minutes, end }));
 
@@ -152,35 +178,59 @@ function CreateFollowUp({ controls, close }: EditorProps): ReactElement {
           presentation="menu"
           options={cadences}
           value={cadence}
-          onValueChange={(value) =>
-            setCadence(value === 'interval' ? value : 'once')
-          }
+          onValueChange={(value) => setCadence(cadenceOf(value))}
         />
-        {cadence === 'once' ? (
-          <FieldGroup.DatePicker
-            title="Run at"
-            mode="datetime"
-            value={once}
-            onValueChange={setOnce}
-          />
-        ) : (
-          <FieldGroup.TextField
-            title="Every (minutes)"
-            value={minutes}
-            onChangeText={setMinutes}
-            keyboardType="number-pad"
-          />
-        )}
-        {cadence === 'interval' ? (
-          <FieldGroup.DatePicker
-            title="Ends at"
-            mode="datetime"
-            value={end ?? defaultEnd}
-            onValueChange={setEnd}
-          />
-        ) : null}
+        <FollowUpTiming
+          cadence={cadence}
+          once={once}
+          minutes={minutes}
+          end={end ?? defaultEnd}
+          onOnceChange={setOnce}
+          onMinutesChange={setMinutes}
+          onEndChange={setEnd}
+        />
       </FieldGroup.Section>
     </DialogForm>
+  );
+}
+
+interface FollowUpTimingProps {
+  cadence: Cadence;
+  once: string;
+  minutes: string;
+  end: string;
+  onOnceChange: (value: string) => void;
+  onMinutesChange: (value: string) => void;
+  onEndChange: (value: string) => void;
+}
+
+function FollowUpTiming(props: FollowUpTimingProps): ReactElement {
+  if (props.cadence === 'once') {
+    return (
+      <FieldGroup.DatePicker
+        title="Run at"
+        mode="datetime"
+        value={props.once}
+        onValueChange={props.onOnceChange}
+      />
+    );
+  }
+
+  return (
+    <>
+      <FieldGroup.TextField
+        title="Every (minutes)"
+        value={props.minutes}
+        onChangeText={props.onMinutesChange}
+        keyboardType="number-pad"
+      />
+      <FieldGroup.DatePicker
+        title="Ends at"
+        mode="datetime"
+        value={props.end}
+        onValueChange={props.onEndChange}
+      />
+    </>
   );
 }
 
@@ -192,13 +242,11 @@ function EditEnd({
   const [value, setValue] = useState(() =>
     localTime(item.endsAt ?? Date.now() + oneDay),
   );
+
   const { error, save } = useSave(close);
 
-  function apply(): Promise<void> {
-    const endsAt = instant(value);
-    if (!(endsAt > Date.now())) throw new Error('Choose a future end time');
-    return controls.setEnd(item.id, endsAt);
-  }
+  const apply = (): Promise<void> =>
+    controls.setEnd(item.id, futureTime(value, 'Choose a future end time'));
 
   return (
     <DialogForm
@@ -233,7 +281,7 @@ export function FollowUpEditor({
   item?: Schedule;
 }): ReactElement {
   const [open, setOpen] = useState(false);
-  const editor = { controls, close: () => setOpen(false) };
+  const editor = { controls, close: (): void => setOpen(false) };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
