@@ -262,7 +262,7 @@ A sign-in one Plugin provides and other Plugins borrow, named by the API host it
 _Avoid_: Login, credential, identity, Tracker, Integration
 
 **Secret**:
-A value a Plugin must keep from everyone else, such as a token, a refresh token or an OAuth client secret. It lives in the OS's own secret store under the Plugin's namespace, kept through `argo.secrets` or as a secret Setting, and is never answered to an App, an Agent or another Plugin. See ADR-0051.
+A private value, such as a token or an OAuth client secret, that Argo keeps for a Plugin or for the person. See ADR-0051.
 _Avoid_: Credential, password, Keychain item
 
 **OAuth flow**:
@@ -489,6 +489,10 @@ _Avoid_: Saved Agent, configured Agent, catalog
 **Launch environment**:
 The environment variables an Installed Agent starts with, saved with it on the Server and edited on the Agent's page in Settings. Installing an Agent seeds it; a change applies from the Agent's next Session.
 _Avoid_: Agent settings, env config
+
+**MCP server**:
+A program or service that gives an Agent tools over the Model Context Protocol. The Argo MCP server gives Agents access to Argo Operations.
+_Avoid_: Connector, integration, tool server, context server
 
 **Stop reason**:
 Why a Turn ended: `end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `cancelled`, `error`, or `auth_required`.
