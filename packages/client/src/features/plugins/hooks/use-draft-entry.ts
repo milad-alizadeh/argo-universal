@@ -10,7 +10,6 @@ export type DraftEntryState = {
   pageState: PageState;
 };
 
-// The listed Plugin a page opens in and the Page state its address holds, which every Draft control reads.
 export function useDraftEntry(opening: PageOpening): DraftEntryState {
   const addresses = usePageAddresses();
   const { plugins } = usePluginEntries();

@@ -79,7 +79,6 @@ export const ChooseCarriesTheComments: Story = {
         { nodeKey: 'title', note: 'Bigger' },
       ],
     });
-    // Sent, the notes are gone and Choose is as it was.
     await expect(
       await canvas.findByRole('button', { name: 'Choose' }),
     ).toBeVisible();

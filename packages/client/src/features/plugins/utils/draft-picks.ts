@@ -6,11 +6,6 @@ import {
 } from '@repo/contracts/plugins/page-address';
 import type { DraftEntry } from './draft-bar-model';
 
-/*
- * The pick Choose sends for a Draft page, one Variant per declared region, or null when the page declares no
- * regions: a dev Plugin only (ADR-0057). A region the author has not stepped, or whose picked Variant is no
- * longer declared, rests on its first Variant, which is what its tag shows.
- */
 export function draftPicksOf(
   entry: DraftEntry | null,
   path: string,

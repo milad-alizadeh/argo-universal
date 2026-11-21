@@ -21,14 +21,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// The keyed skeleton the Agent wrote first, with no region named yet.
 export const Skeleton: Story = {};
 
-// The Agent is writing the header: a labelled dashed frame stands round its skeleton.
 export const DrawingHeader: Story = { args: { shown: drawingHeader } };
 
-// The header landed and its new nodes faded in; the frame has moved to the list the Agent is writing.
 export const DrawingList: Story = { args: { shown: drawingList } };
 
-// The list landed: its new rows faded in and the frame dissolved.
 export const Landed: Story = { args: { shown: landed } };

@@ -6,7 +6,6 @@ import {
   type DraftCommentEditorProps,
 } from './draft-comment-editor';
 
-// Where the node is, in the box the sheet's popover is placed against.
 export type Anchor = { x: number; y: number; width: number; height: number };
 
 export type DraftCommentSheetProps = DraftCommentEditorProps & {
@@ -14,10 +13,6 @@ export type DraftCommentSheetProps = DraftCommentEditorProps & {
   anchor: Anchor;
 };
 
-/*
- * The editor where the author's window puts it: a wide window opens a popover on the node, below its start, and a
- * phone raises a sheet from the bottom edge. The node's own box is the popover's trigger, which takes no touch.
- */
 export function DraftCommentSheet({
   open,
   anchor,

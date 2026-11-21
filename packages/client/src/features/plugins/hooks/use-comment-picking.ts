@@ -15,7 +15,6 @@ type Holder = React.ComponentRef<typeof View>;
 
 export type Picked = { target: CommentTarget; anchor: Anchor };
 
-// Each node's box in the window, with the holder's own origin, so a box can be placed inside the holder.
 function measured(
   targets: readonly CommentTarget[],
   holder: Holder,
@@ -36,10 +35,6 @@ function measured(
   });
 }
 
-/*
- * What a Draft page's comment mode keeps while the author picks: the nodes drawn now, the one picked with the note
- * being written, and saving it as the page's note on that node.
- */
 export interface CommentPicking {
   picked: Picked | null;
   note: string;

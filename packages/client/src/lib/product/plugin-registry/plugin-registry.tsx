@@ -34,7 +34,6 @@ export interface PluginTreeProps {
   onOpenPage?: OpenPluginPage;
   // A Loader page's Page state changes and Operation calls.
   onPageCall?: OnPageCall;
-  // Set for a dev Plugin's Draft page: its new nodes fade in and the region being written wears a frame (ADR-0057).
   draft?: { naming: DraftNaming | null; regions?: readonly string[] };
 }
 
@@ -89,7 +88,6 @@ export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
   );
 }
 
-// The Agent's drawing of the Draft page, as of this tree; none for a tree that is not a Draft.
 function useDraftDrawing({
   root,
   draft,

@@ -4,7 +4,6 @@ import type { DraftRegionTag } from '../../utils/draft-regions-model';
 
 export const issuesPage = { pluginId: 'tracker', path: '/issues' };
 
-// The page's two regions, each on the Variant its tag shows.
 export const regionTags: DraftRegionTag[] = [
   {
     id: 'header',
@@ -38,7 +37,6 @@ const row = (key: string, title: string, subtitle: string): WireNode => ({
   }),
 });
 
-// An Issues page of a dev Plugin: a header region over a list region, with a title outside both.
 export const issuesTree: WireNode = {
   ...node('Stack', 'page', { direction: 'column', gap: 'space3' }),
   children: [
@@ -62,7 +60,6 @@ export const issuesTree: WireNode = {
   ],
 };
 
-// Two notes already left: one on the title outside every region, one on a row in the list region.
 export const leftNotes: DraftNote[] = [
   { address: 'page/title', nodeKey: 'title', note: 'Make the title larger' },
   {
@@ -74,7 +71,6 @@ export const leftNotes: DraftNote[] = [
   },
 ];
 
-// A label and a field that fills the rest of its row.
 export const fieldRowTree: WireNode = {
   ...node('Stack', 'page', { direction: 'row', gap: 'space3' }),
   children: [
@@ -83,7 +79,6 @@ export const fieldRowTree: WireNode = {
   ],
 };
 
-// A Screen whose List fills it and scrolls.
 export const longListTree: WireNode = {
   ...node('Screen', 'page', { title: 'Issues' }),
   children: [

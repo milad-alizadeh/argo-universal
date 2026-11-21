@@ -4,7 +4,6 @@ import {
   slotNodeKey,
 } from '@repo/contracts/plugins/wire-node-key';
 
-// The region of a Draft page the Agent said it is writing; each naming has its own serial.
 export type DraftNaming = { region: string; serial: number };
 
 /*
@@ -13,13 +12,10 @@ export type DraftNaming = { region: string; serial: number };
  */
 export type DraftDrawing = {
   root: WireNode | null;
-  // Every node's address in `root`.
   paths: ReadonlySet<string>;
-  // The topmost nodes of `root` whose keys are new since the tree before it; they fade in.
   fresh: ReadonlySet<string>;
   // Every node that faded in, which stays wrapped so its drawing keeps its identity once it has faded.
   faded: ReadonlySet<string>;
-  // The regions wearing the drawing frame now.
   framed: ReadonlySet<string>;
   // Every region that wore the frame, which stay wrapped so a dissolving frame does not draw its region again.
   regions: ReadonlySet<string>;
@@ -106,7 +102,6 @@ type Walked = {
   landed: Set<string>;
 };
 
-// One walk of the tree at the addresses the registry draws its nodes at.
 function walk(
   root: WireNode,
   before: ReadonlySet<string> | null,

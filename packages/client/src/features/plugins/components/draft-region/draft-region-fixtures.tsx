@@ -3,7 +3,6 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import type { DraftRegionTag } from '../../utils/draft-regions-model';
 
-// Header's second Variant of three, the example the design shows.
 export const headerTag: DraftRegionTag = {
   id: 'header',
   label: 'Header',
@@ -13,7 +12,6 @@ export const headerTag: DraftRegionTag = {
   count: 3,
 };
 
-// List's first Variant of two.
 export const listTag: DraftRegionTag = {
   id: 'list',
   label: 'List',
@@ -23,7 +21,6 @@ export const listTag: DraftRegionTag = {
   count: 2,
 };
 
-// Stands in for a region's own drawing.
 export function HeaderDrawing(): React.JSX.Element {
   return (
     <View className="gap-0.5 rounded-xl border border-hairline bg-card p-3">

@@ -18,7 +18,6 @@ const listSays = 'List · A 1/2';
 
 const onStep = fn();
 
-// The page as a dev Plugin's Draft shows it: regions tagged, the Agent drawing step by step.
 function DraftPage({ from }: { from: number }): ReactElement {
   const [shown, setShown] = useState(from);
 
@@ -44,7 +43,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// A region wearing the Agent's drawing frame shows no tag, and a region that does not still does.
 export const HidesTheTagOfAFramedRegion: Story = {
   play: async ({ canvas }) => {
     await canvas.findByTestId('draft-frame-header');
@@ -53,7 +51,6 @@ export const HidesTheTagOfAFramedRegion: Story = {
   },
 };
 
-// The tag is back once the frame dissolves, leaves the pick as it was, and the region's content was never redrawn.
 export const ReturnsTheTagWhenTheFrameDissolves: Story = {
   render: (): ReactElement => <DraftPage from={drawingHeader + 2} />,
   play: async ({ canvas, userEvent }) => {
@@ -72,7 +69,6 @@ export const ReturnsTheTagWhenTheFrameDissolves: Story = {
   },
 };
 
-// Hiding the tag of a region that gets framed draws its content as the same element, not a new one.
 export const HidingTheTagKeepsTheRegionContent: Story = {
   render: (): ReactElement => <DraftPage from={0} />,
   play: async ({ canvas, userEvent }) => {
@@ -88,7 +84,6 @@ export const HidingTheTagKeepsTheRegionContent: Story = {
   },
 };
 
-// Nothing is framed at the last step, so every region shows its tag.
 export const ShowsEveryTagOnceTheDrawingHasLanded: Story = {
   render: (): ReactElement => <DraftPage from={landed} />,
   play: async ({ canvas }) => {

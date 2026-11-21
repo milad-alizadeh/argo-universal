@@ -2,15 +2,12 @@ import type * as React from 'react';
 import { Text, View, type ViewStyle } from 'react-native';
 import type { Box } from '../../../../lib/product/plugin-registry/draft-commenting';
 
-// The pin's side, and how far inside the node's corner it sits.
 const pinSize = 22;
 
 const pinInset = 4;
 
 export interface DraftCommentMarkProps {
-  // The notes left on the node; its pin shows how many.
   count: number;
-  // The node the editor is open on.
   selected: boolean;
   // Where a node that draws no box of its own is, so its marks are laid over the window instead of inside it.
   box?: Box | null;
@@ -27,7 +24,6 @@ export function DraftCommentMark({
 }: DraftCommentMarkProps): React.JSX.Element | null {
   if (!selected && count === 0) return null;
 
-  // A node measured in the window has its marks laid over it there.
   if (box === null) return null;
 
   const laid = box && {

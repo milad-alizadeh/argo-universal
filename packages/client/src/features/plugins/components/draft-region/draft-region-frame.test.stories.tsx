@@ -3,7 +3,6 @@ import { expect, fn } from 'storybook/test';
 import { headerTag, HeaderDrawing } from './draft-region-fixtures';
 import { DraftRegionFrame } from './draft-region-frame';
 
-// What Header's tag says.
 const tagText = 'Header · B 2/3';
 
 const meta = {

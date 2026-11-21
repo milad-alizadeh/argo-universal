@@ -18,14 +18,12 @@ import { DraftCommentMark } from './draft-comment-mark';
 import { DraftCommentSheet } from './draft-comment-sheet';
 import { PressHolder, type Press } from './press-holder';
 
-// A press shorter than this is a tap; a phone picks a node only by pressing longer.
 const defaultLongPress = 450;
 
 type Marks = { counts: ReadonlyMap<string, number>; picked: string | null };
 
 const MarksContext = createContext<Marks>({ counts: new Map(), picked: null });
 
-// Drawn over every node of the tree while the author comments, from what the App knows of the notes.
 function Mark({
   address,
   place,
@@ -69,14 +67,8 @@ type LayerProps = {
   children: React.ReactNode;
 };
 
-/*
- * Lets the author pick any node of a dev Plugin's Draft page while comment mode is on: a pointer press on a wide
- * window, a long press on a phone. The innermost node under the press opens the editor against it; saving leaves a
- * pin and counts toward Choose. Outside comment mode it draws its children and nothing else (ADR-0057).
- */
 export function DraftCommentsLayer(
   props: LayerProps & {
-    // The page is a dev Plugin's Draft; any other page draws its children as they are.
     draft: boolean;
   },
 ): React.ReactNode {

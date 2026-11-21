@@ -5,17 +5,14 @@ import type * as React from 'react';
 import { View } from 'react-native';
 
 export interface DraftCommentEditorProps {
-  // The node being commented on, as the region's tag names it.
   title: string;
   note: string;
-  // A phone's sheet opens on a long press, which it says; a pointer's popover does not.
   longPressed: boolean;
   onNoteChange: (note: string) => void;
   onSave: () => void;
   onCancel: () => void;
 }
 
-// The note an author leaves on a node, in the popover beside it or the phone's sheet. A comment is a one-way note: it has no replies and is not resolved.
 export function DraftCommentEditor(
   props: DraftCommentEditorProps,
 ): React.JSX.Element {

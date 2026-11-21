@@ -67,13 +67,8 @@ const seamOf = (ids: ReadonlySet<string>, commentable: boolean): DraftSeam => ({
   commentable,
 });
 
-/*
- * Marks each region of a dev Plugin's Draft page with its tag, for the Plugin tree drawn inside it. With no
- * regions it draws its children alone, so a shipped Plugin's page is untouched (ADR-0057).
- */
 export function DraftRegionsProvider(props: {
   regions: DraftRegions | null;
-  // Whether the author is picking nodes to comment on; left out for a page that is no dev Plugin's Draft, whose nodes draw as they are.
   commenting?: boolean;
   children: React.ReactNode;
 }): React.JSX.Element {

@@ -8,7 +8,6 @@ import {
 import type { PageState } from '@repo/contracts/plugins/page-address';
 import { matchPagePath } from '@repo/contracts/plugins/page-address';
 
-// What the bar needs of a listed Plugin.
 export type DraftEntry = {
   dev?: boolean;
   manifest: { contributes: Pick<PluginManifest['contributes'], 'drafts'> };
@@ -17,25 +16,17 @@ export type DraftEntry = {
 export type DraftBarState = {
   id: DraftStateId;
   label: string;
-  // The Draft does not draw this minimum state, which the State menu says.
   missing: boolean;
 };
 
 export type DraftBarModel = {
-  // Every minimum state in minimum order; wide tabs show only the declared ones.
   states: DraftBarState[];
   current: DraftStateId;
-  // The ids of the regions the Draft page declares, which are the nodes the page may frame.
   regions: string[];
 };
 
-// The state a Draft page rests on until one is chosen.
 const restingState: DraftStateId = 'populated';
 
-/*
- * The Draft bar a Plugin page shows, or null: only a dev Plugin's Draft page has one, so a shipped Plugin
- * never draws Draft tooling (ADR-0057).
- */
 export function draftBarOf(
   entry: DraftEntry | null,
   path: string,

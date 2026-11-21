@@ -7,14 +7,9 @@ import { usePageAddresses } from './use-page-addresses';
 
 export type DraftRegions = {
   tags: DraftRegionTag[];
-  // Redraws the region on the Variant a step away; each App keeps its own pick, as the Page state is.
   onStep: (regionId: string, direction: 1 | -1) => void;
 };
 
-/*
- * The tags of a dev Plugin's Draft page, or null when the page has no regions. A pick is Page state, so it is part
- * of the page's address and the Loader draws that Variant of the region.
- */
 export function useDraftRegions(opening: PageOpening): DraftRegions | null {
   const addresses = usePageAddresses();
   const { entry, pageState } = useDraftEntry(opening);

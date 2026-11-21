@@ -8,7 +8,6 @@ import { DraftBar } from './draft-bar';
 import { DraftBarDock } from './draft-bar-dock';
 import { populatedDraft } from './draft-bar-fixtures';
 
-// Over a bare page, where the Dock floats it as the App does over a Plugin's page.
 const meta = {
   title: 'Plugins/DraftBar',
   component: DraftBar,
@@ -40,10 +39,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// A wide window lists the states the Draft draws as tabs.
 export const Tabs: Story = { args: { form: 'tabs' } };
 
-// A phone folds the states into one State button, which opens the platform's menu.
 export const StateButton: Story = { args: { form: 'menu' } };
 
 const commentToggle = (
@@ -60,7 +57,6 @@ const chooseWithComments = (
   <Button label="Choose · 2 comments" size="sm" onPress={action('choose')} />
 );
 
-// The comment toggle sits after the states, and Choose says how many comments it carries.
 export const TabsWithComments: Story = {
   args: { form: 'tabs', commentToggle, choose: chooseWithComments },
 };

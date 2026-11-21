@@ -10,7 +10,6 @@ import {
 } from './draft-region-fixtures';
 import { DraftRegionFrame } from './draft-region-frame';
 
-// Two regions on a bare page, as a Draft page draws them; the story's own region is the one under test.
 const meta = {
   title: 'Plugins/DraftRegionFrame',
   component: DraftRegionFrame,
@@ -54,8 +53,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Every region at rest: each tag is quiet and no outline marks a region.
 export const Resting: Story = {};
 
-// The pointer is on Header: its tag shows the controls and a hairline outline marks it, while List's tag stays muted.
 export const Hovered: Story = { args: { active: true } };

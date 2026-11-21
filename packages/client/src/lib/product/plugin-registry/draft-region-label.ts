@@ -1,4 +1,3 @@
-// "list-header" is drawn as "Drawing · List header".
 export function regionLabel(region: string): string {
   const words = region.replaceAll(/[-_]+/g, ' ').trim();
 

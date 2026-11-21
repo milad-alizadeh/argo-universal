@@ -3,10 +3,6 @@ import { listenerSet } from '@repo/kit/listener-set';
 import { useSyncExternalStore } from 'react';
 import type { DraftNaming } from '../../../lib/product/plugin-registry';
 
-/*
- * The region of a Draft page each Plugin's Agent is writing, as the Server's stale marks named it (ADR-0057). Each
- * naming has a serial of its own, so naming the same region again is heard.
- */
 export class DraftNamings {
   private readonly named = new Map<string, DraftNaming>();
   private readonly listeners = listenerSet();
@@ -19,7 +15,6 @@ export class DraftNamings {
     this.listeners.notify();
   }
 
-  // A stale mark that names a region says the Agent is writing it; any other mark leaves the naming as it was.
   public heard({ pluginId, region }: StaleMark): void {
     if (region) this.name(pluginId, region);
   }

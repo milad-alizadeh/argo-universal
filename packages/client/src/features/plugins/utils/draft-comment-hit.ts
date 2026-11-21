@@ -1,4 +1,3 @@
-// A node's box in the window, by its address in the tree.
 export type Placed = {
   address: string;
   x: number;
@@ -27,10 +26,6 @@ export function innermostAt(
   }, null);
 }
 
-/*
- * What the editor calls the node it is on: the region, its Variant's letter and the node's key, as the region's tag
- * reads, or the key alone for a node outside every region.
- */
 export function titleOf({
   nodeKey,
   place,

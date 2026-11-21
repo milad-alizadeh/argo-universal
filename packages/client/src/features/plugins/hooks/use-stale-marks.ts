@@ -32,7 +32,6 @@ function useMarked(): (mark: StaleMark) => void {
   return (mark) => {
     addresses.markStale(mark);
 
-    // The Agent of a dev Plugin's Draft is writing this region; its page frames it.
     draftNamings.heard(mark);
 
     if (!mark.addresses) staleSlotAnswers(client, renderKey, mark.pluginId);

@@ -9,7 +9,6 @@ const node = (
   type = 'Stack',
 ): WireNode => ({ type, key, props: {}, children, slots: {} });
 
-// A node's address is its keys from the root, as the registry draws it.
 const address = (...keys: string[]): string =>
   keys.reduce((parent, key) => childNodeKey(parent, key), '');
 

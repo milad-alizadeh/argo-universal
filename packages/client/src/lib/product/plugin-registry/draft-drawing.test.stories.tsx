@@ -28,7 +28,6 @@ type Story = StoryObj<typeof meta>;
 
 const frameOf = (region: string): string => `draft-frame-${region}`;
 
-// The page, with a press that moves the Agent one step on.
 function Advances({
   from,
   steps = draftSteps,
@@ -51,7 +50,6 @@ function Advances({
   );
 }
 
-// The frame stands round the region being written, and no other.
 export const FramesTheRegionBeingWritten: Story = {
   args: { shown: drawingHeader },
   play: async ({ canvas }) => {
@@ -62,7 +60,6 @@ export const FramesTheRegionBeingWritten: Story = {
   },
 };
 
-// The frame moves to the next region as the one before lands.
 export const MovesTheFrameToTheNextRegion: Story = {
   args: { shown: drawingList },
   play: async ({ canvas }) => {
@@ -75,7 +72,6 @@ export const MovesTheFrameToTheNextRegion: Story = {
   },
 };
 
-// The frame dissolves once the last region lands, and its new rows are drawn.
 export const DissolvesTheFrameOnceTheRegionLands: Story = {
   play: async ({ canvas }) => {
     await waitFor(async () =>
@@ -87,7 +83,6 @@ export const DissolvesTheFrameOnceTheRegionLands: Story = {
   },
 };
 
-// A redraw leaves the nodes whose keys are unchanged where they were: the same element, not a new one.
 export const KeepsUnchangedNodesStill: Story = {
   render: () => <Advances from={drawingList} />,
   play: async ({ canvas, userEvent }) => {
@@ -99,7 +94,6 @@ export const KeepsUnchangedNodesStill: Story = {
   },
 };
 
-// Naming a region frames it without drawing what is inside it again: the same element across the transition.
 export const FramingARegionKeepsItsContent: Story = {
   render: () => <Advances from={0} />,
   play: async ({ canvas, userEvent }) => {
@@ -114,7 +108,6 @@ export const FramingARegionKeepsItsContent: Story = {
   },
 };
 
-// A tree that is not a Draft draws none of the Draft wrappers.
 export const DrawsNoWrapperWithoutADraft: Story = {
   render: () => <PluginTree root={listLandedPage()} />,
   play: async ({ canvas }) => {
@@ -123,7 +116,6 @@ export const DrawsNoWrapperWithoutADraft: Story = {
   },
 };
 
-// The width of each of the row's own Text, by what it says.
 const widthsOf = (container: HTMLElement): Record<string, number> =>
   Object.fromEntries(
     [...container.querySelectorAll('[dir="auto"]')].flatMap((text) =>
@@ -133,7 +125,6 @@ const widthsOf = (container: HTMLElement): Record<string, number> =>
     ),
   );
 
-// A row's children keep the widths they have in a tree that is not a Draft, framed or not.
 export const KeepsTheLayoutOfARow: Story = {
   render: () => (
     <View>
@@ -158,7 +149,6 @@ export const KeepsTheLayoutOfARow: Story = {
   },
 };
 
-// Reduced motion shows the new rows and ends the frame at once, with no fade between.
 export const ReducedMotionShowsEachStepAtOnce: Story = {
   beforeEach: reduceMotion,
   render: () => <Advances from={drawingList} />,

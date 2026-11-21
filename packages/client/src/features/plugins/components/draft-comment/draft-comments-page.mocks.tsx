@@ -26,14 +26,11 @@ type PageProps = {
   commenting: boolean;
   notes?: DraftNote[];
   longPressMilliseconds?: number;
-  // What the tree does with a press on a node that has one.
   onPageCall?: OnPageCall;
   root?: WireNode;
-  // Whether the page declares the Issues regions; a page with none draws just its tree.
   regions?: boolean;
 };
 
-// An Issues page as a dev Plugin's Draft draws it, for the author commenting on it.
 export function CommentingPage(props: PageProps): React.JSX.Element {
   const {
     commenting,
@@ -65,7 +62,6 @@ export function CommentingPage(props: PageProps): React.JSX.Element {
   );
 }
 
-// The same page with a switch for comment mode, as the Draft bar's toggle is.
 export function TogglingPage(
   props: Omit<PageProps, 'commenting'>,
 ): React.JSX.Element {
@@ -84,7 +80,6 @@ export function TogglingPage(
   );
 }
 
-// Presses a node the way a phone's long press does: the button held down, then let go.
 export async function holdOn(
   element: HTMLElement,
   milliseconds: number,

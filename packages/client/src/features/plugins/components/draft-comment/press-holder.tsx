@@ -2,14 +2,12 @@ import { useEffect, useRef } from 'react';
 import type * as React from 'react';
 import { Platform, View, type GestureResponderEvent } from 'react-native';
 
-// A pointer picks on any press; a phone only on a long one.
 export type Press = 'pointer' | 'long';
 
 type Holder = React.ComponentRef<typeof View>;
 
 type Point = { x: number; y: number };
 
-// A press that moves further than this is a scroll or a drag, not a pick.
 const slopPixels = 10;
 
 const pointOf = ({ nativeEvent }: GestureResponderEvent): Point => ({
@@ -55,11 +53,6 @@ function useBlockedActivation(
   }, [holder, on]);
 }
 
-/*
- * Takes every press on the page while the author comments, so the node pressed does not run, and reports where a
- * press that picks began. A press that moved is a scroll, so it picks nothing. The sheet that opens on a pick is a
- * child, laid over the page's box.
- */
 export function PressHolder(props: {
   press: Press;
   commenting: boolean;

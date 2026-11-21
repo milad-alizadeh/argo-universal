@@ -36,7 +36,6 @@ const commentMode = { name: 'Comment mode' } as const;
 
 const pairing = 'Pairing code expires';
 
-// A pointer press on a row picks the row, inside the list region, and the note is saved with its place.
 export const APointerPressPicksTheNodeUnderIt: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
@@ -66,7 +65,6 @@ export const APointerPressPicksTheNodeUnderIt: Story = {
   },
 };
 
-// A node outside every region is named by its key alone and carries no region.
 export const ANodeOutsideEveryRegionNamesNoRegion: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
@@ -93,7 +91,6 @@ export const ANodeOutsideEveryRegionNamesNoRegion: Story = {
   },
 };
 
-// Comment mode does not run what the press lands on: a row's own press never fires there, and fires once outside it.
 export const CommentModeRunsNoNode: Story = {
   args: { onPageCall: fn() },
   play: async ({ args, canvas }) => {
@@ -117,7 +114,6 @@ export const OutsideCommentModeAPressRunsTheNode: Story = {
   },
 };
 
-// Pressing Enter on a focused row does not run it in comment mode either.
 export const CommentModeBlocksKeyboardActivation: Story = {
   args: { onPageCall: fn() },
   play: async ({ args, canvas, userEvent }) => {
@@ -135,7 +131,6 @@ export const CommentModeBlocksKeyboardActivation: Story = {
   },
 };
 
-// Outside comment mode a press picks nothing.
 export const NothingIsPickedOutsideCommentMode: Story = {
   args: { commenting: false },
   play: async ({ canvas }) => {
@@ -149,7 +144,6 @@ export const NothingIsPickedOutsideCommentMode: Story = {
   },
 };
 
-// A press that moves is a scroll or a drag, so it picks nothing.
 export const AMovingPressPicksNothing: Story = {
   args: { longPressMilliseconds: 0 },
   play: async ({ canvas }) => {
@@ -176,7 +170,6 @@ export const AMovingPressPicksNothing: Story = {
   },
 };
 
-// Entering comment mode redraws nothing: what was typed in a field stays, and the field is the same element.
 export const TypedTextSurvivesTheToggle: Story = {
   render: () => <TogglingPage root={fieldRowTree} regions={false} />,
   play: async ({ canvas, userEvent }) => {
@@ -195,7 +188,6 @@ export const TypedTextSurvivesTheToggle: Story = {
   },
 };
 
-// A wrapper moves nothing: a field that fills its row, and a list that fills its Screen, keep their boxes in comment mode.
 const boxOf = (element: HTMLElement): string => {
   const { left, top, width, height } = element.getBoundingClientRect();
 
@@ -229,12 +221,10 @@ export const CommentModeKeepsAListFillingAndScrolling: Story = {
     await canvas.findByRole('button', stopCommenting);
 
     await expect(boxOf(canvas.getByText('Issue 0'))).toBe(before);
-    // The list is still cut to its Screen, so it has not drawn its last row.
     await expect(canvas.queryByText('Issue 29')).toBeNull();
   },
 };
 
-// Cancel closes the editor and leaves no note.
 export const CancelLeavesNoNote: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleLayout('wide');
@@ -253,7 +243,6 @@ export const CancelLeavesNoNote: Story = {
   },
 };
 
-// A phone picks only on a long press: a tap does nothing, and holding opens the sheet.
 export const APhonePicksOnALongPress: Story = {
   args: { longPressMilliseconds: 60 },
   play: async ({ canvas }) => {

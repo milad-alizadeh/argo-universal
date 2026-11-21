@@ -24,9 +24,7 @@ export interface RenderContext {
   controls: PluginControls;
   pageCall?: OnPageCall;
   drawn: DrawnNodes;
-  // The Agent drawing a dev Plugin's Draft page (ADR-0057); none for any other tree.
   draft?: DraftView;
-  // Set only while a Draft is open.
   seam?: DraftSeam | null;
 }
 

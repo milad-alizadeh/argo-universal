@@ -6,11 +6,9 @@ import { PluginTree } from './plugin-registry';
 type StepsProps = {
   steps: DraftStep[];
   shown: number;
-  // The regions the Plugin's manifest declares.
   regions?: readonly string[];
 };
 
-// The page as a Draft shows it, given each step's tree and naming in turn up to `shown`, one render apart.
 export function DraftSteps({
   steps,
   shown,

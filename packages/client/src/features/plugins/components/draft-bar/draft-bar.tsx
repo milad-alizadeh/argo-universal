@@ -12,15 +12,11 @@ import { View } from 'react-native';
 import type { DraftBarState } from '../../utils/draft-bar-model';
 
 export interface DraftBarProps {
-  // Every minimum state in minimum order, each marked when the Draft does not draw it.
   states: readonly DraftBarState[];
   current: DraftStateId;
-  // How the states are offered; left out, a wide window draws tabs and a phone the State menu.
   form?: 'tabs' | 'menu';
   onStateChange: (state: DraftStateId) => void;
-  // The comment toggle, which sits after the states (#2260).
   commentToggle?: React.ReactNode;
-  // Choose, the last control (#2259).
   choose?: React.ReactNode;
 }
 
@@ -58,7 +54,6 @@ function DraftBadge(): React.JSX.Element {
   );
 }
 
-// Desktop lists the declared states as tabs; a phone folds all of them into the State menu, where the undeclared ones are marked.
 function States(props: DraftBarProps): React.JSX.Element {
   if (props.form === 'tabs') return <StateTabs {...props} />;
 
@@ -111,7 +106,6 @@ function StateMenu({
   );
 }
 
-// A menu or a control answers a state's id, which only the bar's own states offer.
 function stateOf(value: string): DraftStateId {
   const state = draftStateIds.find((id) => id === value);
 

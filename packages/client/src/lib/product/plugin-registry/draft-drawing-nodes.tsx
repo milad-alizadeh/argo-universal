@@ -6,11 +6,6 @@ import type { DraftView } from './draft-drawing';
 import { regionLabel } from './draft-region-label';
 import { DraftFramedContext } from './draft-seam';
 
-/*
- * What the registry draws of the Agent drawing a Draft (ADR-0057): a node new since the tree the App kept fades in, and
- * the region the Agent is writing wears a labelled dashed frame until it lands. Reduced motion shows both at once.
- */
-
 const fadeIn = FadeIn.duration(motionDuration.enter);
 
 const fadeOut = FadeOut.duration(motionDuration.frame);
@@ -87,7 +82,6 @@ export function DraftFrame({
   );
 }
 
-// The element a node drew, new to the tree: faded in. A node that is not new is left as it drew.
 export function faded(
   element: ReactElement | null,
   key: string,

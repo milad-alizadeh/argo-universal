@@ -1,7 +1,6 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { DraftNaming } from './draft-drawing';
 
-// A Draft page as the Agent writes it: a header and a list, each its own region (ADR-0057).
 const text = (key: string, children: string, role?: string): WireNode => ({
   type: 'Text',
   key,
@@ -52,15 +51,12 @@ const headerLanded = (): WireNode =>
     text('count', 'ARGO · 24 open'),
   ]);
 
-// The page: a keyed skeleton of both regions.
 export const skeletonPage = (): WireNode =>
   stack('page', [headerSkeleton(), list(placeholders())]);
 
-// The page once the Agent has written the header.
 export const headerLandedPage = (): WireNode =>
   stack('page', [headerLanded(), list(placeholders())]);
 
-// The page once the Agent has written the list too.
 export const listLandedPage = (): WireNode =>
   stack('page', [headerLanded(), list(loadedRows())]);
 
@@ -80,7 +76,6 @@ export const draftSteps: DraftStep[] = [
   { root: listLandedPage(), naming: listing },
 ];
 
-// The steps up to which each story draws.
 export const drawnSkeleton = 0;
 
 export const drawingHeader = 2;
@@ -92,7 +87,6 @@ export const landed = 5;
 // The regions the page's manifest declares, so the page wraps them from its first draw.
 export const declaredRegions = ['header', 'list'];
 
-// A row whose last child fills what its first leaves, drawn as the page's header region.
 export const rowPage = (): WireNode => ({
   type: 'Stack',
   key: 'page',
@@ -110,7 +104,6 @@ export const rowPage = (): WireNode => ({
   slots: {},
 });
 
-// The row page, then its header region named and framed.
 export const rowSteps: DraftStep[] = [
   { root: rowPage() },
   { root: rowPage(), naming: header },

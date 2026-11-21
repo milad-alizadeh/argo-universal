@@ -78,7 +78,6 @@ function drawNode({
 
   const slots = renderedSlots(node, definition, context);
 
-  // A Draft page's node draws inside a view the App can pick, which the author may comment on.
   if (context.seam?.commentable)
     return renderComponent(
       commentable(

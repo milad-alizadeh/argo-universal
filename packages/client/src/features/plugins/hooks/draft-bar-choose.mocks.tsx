@@ -65,14 +65,12 @@ const listed = (withRegions: boolean): PluginList =>
     errors: [],
   });
 
-// The bar as a Plugin page draws it.
 function BarOf(): React.ReactNode {
   return <PluginDraftBar bar={useDraftBar(opening)} />;
 }
 
 export type ChooseCall = { path: string; input: unknown };
 
-// A Server that lists one dev Plugin with a Draft page and records every Operation the bar calls.
 function clientOver(
   withRegions: boolean,
   calls: ChooseCall[],
@@ -97,11 +95,9 @@ function clientOver(
   return createTRPCClient<AppRouter>({ links: [link] });
 }
 
-// The Draft bar a Plugin page draws, over a Server that records what it is asked.
 export function ChooseBarMock(props: {
   withRegions: boolean;
   calls: ChooseCall[];
-  // Notes the author has already left on the page.
   notes?: DraftNote[];
 }): React.JSX.Element {
   const [queryClient] = React.useState(() => new QueryClient());

@@ -6,11 +6,9 @@ import type { DraftEntry } from './draft-bar-model';
 
 type Region = NonNullable<PluginDrafts[number]['regions']>[number];
 
-// What a region's tag says: "Header · B 2/3" is the label, the letter, the position and the count.
 export type DraftRegionTag = {
   id: string;
   label: string;
-  // The id of the Variant the region shows, which a comment on a node inside it names.
   variant: string;
   letter: string;
   position: number;
@@ -19,11 +17,6 @@ export type DraftRegionTag = {
 
 const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-/*
- * The tags a Draft page's regions carry, or null: only a dev Plugin's Draft page that declares regions has
- * them, so a shipped Plugin never draws Draft tooling (ADR-0057). A region rests on its first Variant until
- * the Page state picks another.
- */
 export function draftRegionsOf(
   entry: DraftEntry | null,
   path: string,
@@ -87,7 +80,6 @@ export function steppedVariant(
   return region.variants[(from + direction + count) % count]?.id ?? current;
 }
 
-// The Page state change one step of a region makes, or null for a region the Draft page does not declare.
 export function stepChange(
   {
     declared,

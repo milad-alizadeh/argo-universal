@@ -6,7 +6,6 @@ import type { DraftRegionTag as Tag } from '../../utils/draft-regions-model';
 
 export interface DraftRegionTagProps {
   tag: Tag;
-  // The region the pointer is on, or the one last touched: its tag shows the controls; every other tag rests, muted.
   active: boolean;
   // A touch has no hover, so pressing a resting tag makes its region the active one.
   onActivate: () => void;
@@ -14,11 +13,9 @@ export interface DraftRegionTagProps {
   onNext: () => void;
 }
 
-// "Header · B 2/3": the region, the Variant's letter, and its place among the region's Variants.
 const summary = ({ label, letter, position, count }: Tag): string =>
   `${label} · ${letter} ${position}/${count}`;
 
-// A small tag on a region's top edge. Resting it is quiet; on the active region it says the same in full and steps the Variant.
 export function DraftRegionTag(props: DraftRegionTagProps): React.JSX.Element {
   const { tag, active } = props;
 

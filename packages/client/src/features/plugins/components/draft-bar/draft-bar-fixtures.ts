@@ -18,13 +18,11 @@ const states = draftStateIds.map((id) => ({
   missing: !drawn.has(id),
 }));
 
-// A Draft that draws every state but a signed-out one, resting on populated.
 export const populatedDraft = {
   states,
   current: 'populated',
 } satisfies Pick<DraftBarProps, 'states' | 'current'>;
 
-// The same Draft with its loading state chosen.
 export const loadingDraft = {
   states,
   current: 'loading',
