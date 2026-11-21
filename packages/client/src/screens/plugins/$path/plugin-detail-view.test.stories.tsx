@@ -5,7 +5,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { expect, fn, userEvent, waitFor } from 'storybook/test';
 import { PluginDetailView } from './plugin-detail-view';
-import { loading } from './plugin-detail-view-fixtures';
+import { homeFaders, loading } from './plugin-detail-view-fixtures';
 
 const meta = {
   title: 'Tests/Screens/Plugins/Plugin page',
@@ -80,6 +80,34 @@ export const ListInAStackScrolls: Story = {
     await expect(scroller.getBoundingClientRect().bottom).toBeLessThanOrEqual(
       window.innerHeight,
     );
+  },
+};
+
+// Home changes its outer Stack from a column to a row at wide widths; both must constrain the main ScrollView.
+export const HomeMainPageScrolls: Story = {
+  args: homeFaders,
+  play: async ({ canvas }) => {
+    for (const width of [390, 820, 1280]) {
+      await settleLayout(width, 500);
+      const last = await canvas.findByText('Check the Hue Bridge');
+      const scroller = scrollerOf(last);
+
+      await expect(scroller.scrollHeight).toBeGreaterThan(
+        scroller.clientHeight,
+      );
+      await expect(scroller.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        window.innerHeight,
+      );
+      scroller.scrollTop = scroller.scrollHeight;
+      await waitFor(async () => {
+        await expect(scroller.scrollTop).toBeGreaterThan(0);
+        await expect(last.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+          scroller.getBoundingClientRect().bottom,
+        );
+      });
+      scroller.scrollTop = 0;
+      await expect(scroller.scrollTop).toBe(0);
+    }
   },
 };
 
