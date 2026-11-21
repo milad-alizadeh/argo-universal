@@ -5,7 +5,6 @@ import type {
   ShellTerminal,
 } from '@repo/contracts';
 import type { OutputBlobMetadata } from '../blob';
-import { writeDatabaseJobAndWaitForCommit } from '../storage';
 import { LiveRun } from './live-run';
 import { RunBlocks, starterName, type RunPortHolding } from './run-blocks';
 import type { RunConfiguration } from './run-configurations';
@@ -22,7 +21,7 @@ import { bindable } from './run-ports';
 import { awaitReady, watchReadiness } from './run-ready';
 import { newRunRecord } from './run-record';
 import { configurationFingerprint, RunSettingsStore } from './run-settings';
-import { latestRun, RunWriteJob, type RunRecord } from './run-store';
+import { latestRun, storeRun, type RunRecord } from './run-store';
 import { RunTerminals } from './run-terminals';
 import { RunView, statusOf } from './run-view';
 import type { RunCheckout, RunRequest, RunsInput } from './runs-input';
@@ -342,15 +341,8 @@ export class Runs {
     replaced?: readonly string[],
     output?: OutputBlobMetadata,
   ): Promise<void> {
-    const waitForRetry =
-      record.status === 'starting' || record.status === 'ready';
-
     try {
-      await writeDatabaseJobAndWaitForCommit(
-        this.input.writer,
-        new RunWriteJob(record, replaced, output),
-        waitForRetry,
-      );
+      await storeRun(this.input.writer, record, replaced, output);
     } finally {
       this.view.changed(record);
     }

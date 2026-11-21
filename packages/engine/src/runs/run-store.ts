@@ -2,7 +2,12 @@ import type { Database } from '@repo/db';
 import { blob, run } from '@repo/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 import type { OutputBlobMetadata } from '../blob';
-import type { StorageTransaction, WriterJob } from '../storage';
+import {
+  type StorageTransaction,
+  type WriterActorRef,
+  type WriterJob,
+  writeDatabaseJobAndWaitForCommit,
+} from '../storage';
 
 export type RunRecord = typeof run.$inferSelect;
 
@@ -38,6 +43,21 @@ export class RunWriteJob implements WriterJob {
       .onConflictDoUpdate({ target: run.id, set: this.record })
       .run();
   }
+}
+
+export function storeRun(
+  writer: WriterActorRef,
+  record: RunRecord,
+  replaced?: readonly string[],
+  output?: OutputBlobMetadata,
+): Promise<void> {
+  const running = record.status === 'starting' || record.status === 'ready';
+
+  return writeDatabaseJobAndWaitForCommit(
+    writer,
+    new RunWriteJob(record, replaced, output),
+    running ? true : undefined,
+  );
 }
 
 export const latestRun = (
