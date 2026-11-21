@@ -7,6 +7,7 @@ import {
 } from '@repo/git';
 import { eq } from 'drizzle-orm';
 import { readProjectPath } from '../../projects';
+import { endCheckoutRuns } from '../../runs';
 import type { WriterActorRef } from '../../storage';
 import type { SessionData } from '../session-data';
 import { ownsStoredWorktree } from '../session-record';
@@ -95,12 +96,21 @@ async function attemptCleanup(
   const projectPath = readProjectPath(database, data.projectId);
   const risk = await checkoutCleanupRisk(projectPath, data.checkout.path);
 
-  if (risk.kind === 'absent') return;
+  const runs = {
+    projectId: data.projectId,
+    checkoutPath: data.checkout.path,
+  };
+
+  // Runs end once the Checkout is going away, never while Archive keeps it.
+  if (risk.kind === 'absent') return endCheckoutRuns(database, runs);
 
   const removal = { signal: options.signal, force: risk.kind === 'loss' };
 
-  if (canRemove(risk, approval))
+  if (canRemove(risk, approval)) {
+    await endCheckoutRuns(database, runs);
+
     return removeArchivedCheckout(projectPath, data.checkout, removal);
+  }
 
   const target = { sessionId: data.sessionId, reason: keepReason(risk) };
 

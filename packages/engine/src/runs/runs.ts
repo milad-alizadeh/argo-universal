@@ -137,6 +137,28 @@ export class Runs {
     };
   }
 
+  // Ends every Run of a Checkout that is going away, those still starting included.
+  public async endCheckout({
+    projectId,
+    checkoutPath,
+  }: RunCheckout): Promise<void> {
+    const belongs = (key: string): boolean => {
+      const [project, path] = JSON.parse(key) as string[];
+
+      return project === projectId && path === checkoutPath;
+    };
+
+    await Promise.allSettled(
+      [...this.launching].filter(([key]) => belongs(key)).map(([, run]) => run),
+    );
+
+    await Promise.all(
+      [...this.live]
+        .filter(([key]) => belongs(key))
+        .map(([, run]) => this.end(run)),
+    );
+  }
+
   // Ends every Run: the Server never leaves one behind.
   public async close(): Promise<void> {
     await Promise.all([...this.live.values()].map((run) => this.end(run)));
@@ -339,6 +361,20 @@ export class Runs {
   }
 }
 
+// The Runs of each Engine, found by its database, so a Session archive reaches them without carrying them through every Session.
+const enginesRuns = new WeakMap<Database, Runs>();
+
 export const createRuns = (
   input: Omit<RunsInput, 'createId'> & Partial<Pick<RunsInput, 'createId'>>,
-): Runs => new Runs({ createId: randomUUID, ...input });
+): Runs => {
+  const runs = new Runs({ createId: randomUUID, ...input });
+  enginesRuns.set(input.database, runs);
+
+  return runs;
+};
+
+// Ends the Runs of a Checkout the Engine is removing; a Checkout with none, or an Engine without Runs, is left alone.
+export const endCheckoutRuns = (
+  database: Database,
+  checkout: RunCheckout,
+): Promise<void> => enginesRuns.get(database)?.endCheckout(checkout) ?? Promise.resolve();

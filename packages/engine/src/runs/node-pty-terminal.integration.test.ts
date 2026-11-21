@@ -1,6 +1,7 @@
 import {
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   realpathSync,
   rmSync,
   writeFileSync,
@@ -100,7 +101,7 @@ it('leaves nothing listening after Stop, even a child that ignores SIGTERM', asy
 
   // A child that ignores SIGTERM and holds the port, as a stubborn dev server does.
   const server = `require('net').createServer().listen(Number(process.env.PORT),'127.0.0.1');process.on('SIGTERM',()=>{});setInterval(()=>{},1000)`;
-  const command = `${JSON.stringify(process.execPath)} -e ${JSON.stringify(server)} & wait`;
+  const command = `${JSON.stringify(process.execPath)} -e ${JSON.stringify(server)} & echo $! > grandchild.pid; wait`;
 
   const terminal = await launchTerminal({
     id: 'stubborn-run',
@@ -111,7 +112,9 @@ it('leaves nothing listening after Stop, even a child that ignores SIGTERM', asy
   });
 
   await expect.poll(() => listening(port), { timeout: 10_000 }).toBe(true);
+  const grandchild = Number(readFileSync(join(cwd, 'grandchild.pid'), 'utf8'));
   await terminal.stop();
 
   expect(await listening(port)).toBe(false);
+  expect(() => process.kill(grandchild, 0)).toThrow();
 }, 30_000);
