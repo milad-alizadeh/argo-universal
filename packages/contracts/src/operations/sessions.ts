@@ -6,6 +6,7 @@ import {
 } from '../sessions/archive';
 import { SessionCancelInput, SessionCancelOutput } from '../sessions/cancel';
 import { SessionNewOutput, SessionNewParams } from '../sessions/new';
+import { SessionOpenInput } from '../sessions/open';
 import { SessionPromptInput, SessionPromptOutput } from '../sessions/prompt';
 import { SessionRenameOutput, SessionRenameParams } from '../sessions/rename';
 import {
@@ -37,6 +38,18 @@ export const sessionOperations = {
     tier: 'act',
     policy: 'allow',
     keywords: ['create', 'delegate', 'agent', 'parallel', 'subagent'],
+  },
+  'session.handoff': {
+    id: 'session.handoff',
+    label: 'Handoff Session',
+    icon: 'arrow-right',
+    description:
+      'Generate a handoff document and open a fresh Session in the same Checkout.',
+    params: SessionOpenInput,
+    result: SessionNewOutput,
+    tier: 'act',
+    policy: 'person-only',
+    keywords: ['handoff', 'continue', 'checkout'],
   },
   'session.prompt': {
     id: 'session.prompt',

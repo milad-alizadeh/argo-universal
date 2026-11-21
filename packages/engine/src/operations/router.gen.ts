@@ -320,6 +320,17 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      handoff: authenticatedAppProcedure
+        .input(operations['session.handoff'].params)
+        .output(operations['session.handoff'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'session.handoff',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       prompt: authenticatedAppProcedure
         .input(operations['session.prompt'].params)
         .output(operations['session.prompt'].result)
