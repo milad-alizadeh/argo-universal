@@ -8,7 +8,7 @@ import type { SessionInspectorContent } from '../session-inspector-content';
 // What decides which Sections a Session offers, read from its snapshot or from the page's props alike.
 export type SessionItems = Partial<
   Pick<SessionSnapshot, 'subagents' | 'shells'>
-> & { scheduleCount?: number };
+> & { scheduleCount?: number; runNames?: readonly string[] };
 
 // What a Section is, before anything draws it: its name, and what the Session has in it.
 export interface SectionFacts {
@@ -76,6 +76,7 @@ export const itemsOf = (content: SessionInspectorContent): SessionItems => ({
   subagents: content.subagents?.subagents,
   scheduleCount: scheduleCount(content),
   shells: content.shells?.shells,
+  runNames: content.runs?.runs.map(({ name }) => name),
 });
 
 // A Section draws a Workbench card only while it is offered and has something to count.

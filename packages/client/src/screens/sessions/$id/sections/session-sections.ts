@@ -13,6 +13,7 @@ import {
   pluginCardSection,
   type SessionPluginCard,
 } from './plugin-card-section';
+import { runsCard, runSection, runTabKey } from './runs-section';
 import { schedulesSection } from './schedules-section';
 import {
   drawsCard,
@@ -55,14 +56,16 @@ export const offeredSections = (
   cards: readonly SessionPluginCard[] = [],
 ): string[] => [
   ...offeredKeys(builtInSections, items),
+  ...(items.runNames ?? []).map(runTabKey),
   ...cards.map((card) => pluginCardKey(card.pluginId, card.card.id)),
 ];
 
 export const sectionOf = (
-  content: SessionCards,
+  content: Pick<SessionInspectorContent, 'pluginCards' | 'runs'>,
   key: string,
 ): SessionSection | undefined =>
-  sessionSections(content).find((section) => section.key === key);
+  sessionSections(content).find((section) => section.key === key) ??
+  runSection(content.runs, key);
 
 export const sectionTab = (
   panels: SessionPanels,
@@ -106,9 +109,10 @@ export const sessionWorkbench = (
   bar?: SessionBarProps,
 ): SessionWorkbench => ({
   sections: [
-    ...sessionSections(content).flatMap((section) =>
-      workbenchCard(content, panels, section),
-    ),
+    ...sessionSections(content).flatMap((section) => [
+      ...workbenchCard(content, panels, section),
+      ...(section === shellsSection ? runsCard(content.runs, panels) : []),
+    ]),
     ...sessionBarCards(bar),
   ],
   onOpenInspector: openInspector(content, panels),
