@@ -479,10 +479,11 @@ it('starts a restarted Run on the port it had', async () => {
 
 it('drafts .argo/run.json from the Checkout’s package.json and starts what it drafted', async () => {
   const { terminals, call, project } = await startRuns();
+  const port = await unusedPort();
 
   await writeFile(
     join(project.path, 'package.json'),
-    JSON.stringify({ scripts: { dev: 'vite --port 5173', build: 'tsc' } }),
+    JSON.stringify({ scripts: { dev: `vite --port ${port}`, build: 'tsc' } }),
   );
 
   const drafted = await call('run.draft');
@@ -493,7 +494,7 @@ it('drafts .argo/run.json from the Checkout’s package.json and starts what it 
       {
         name: 'dev',
         command: 'npm run dev',
-        port: 5173,
+        port,
         source: 'package.json',
       },
     ],
@@ -508,8 +509,12 @@ it('drafts .argo/run.json from the Checkout’s package.json and starts what it 
   const terminal = await terminals.next();
 
   expect(terminal.launch.command).toBe('npm run dev');
-  expect(terminal.launch.port).toBeGreaterThan(0);
-  void started.catch(() => {});
+  await terminal.listen();
+  await expect(started).resolves.toMatchObject({
+    name: 'dev',
+    ready: true,
+    port,
+  });
 });
 
 it('refuses to draft over an existing .argo/run.json unless asked', async () => {

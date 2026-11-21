@@ -1,5 +1,5 @@
 import { access, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { TRPCError } from '@trpc/server';
 import { parse, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { z } from 'zod';
@@ -143,7 +143,7 @@ export async function draftPackageScripts(
 
           return {
             name,
-            command: `${manager} run ${name}`,
+            command: `${manager} run ${quote(name)}`,
             ...(port && { port }),
           };
         })
@@ -246,7 +246,7 @@ function refusalOf(
   return variable && `it uses ${variable}, which only an editor can fill in`;
 }
 
-function launchOf(launch: LaunchConfiguration): Launch {
+function launchOf(checkout: string, launch: LaunchConfiguration): Launch {
   const words = commandWords(launch);
 
   const env = envOf(launch);
@@ -255,11 +255,17 @@ function launchOf(launch: LaunchConfiguration): Launch {
 
   if (reason) return { reason };
 
-  const command = launch.command
-    ? inCheckout(launch.command)
-    : words.map((word) => quote(inCheckout(word))).join(' ');
-
   const cwd = launch.cwd ? inCheckout(launch.cwd) : '.';
+  const workspaceFromCwd = relative(resolve(checkout, cwd), checkout) || '.';
+  const expandWorkspace = (value: string): string =>
+    value.replaceAll(
+      /\$\{workspace(?:Folder|Root)\}/gu,
+      () => workspaceFromCwd,
+    );
+
+  const command = launch.command
+    ? expandWorkspace(launch.command)
+    : words.map((word) => quote(expandWorkspace(word))).join(' ');
 
   const port = portIn(launch.port) ?? portIn(env['PORT']) ?? portOf(command);
 
@@ -270,7 +276,14 @@ function launchOf(launch: LaunchConfiguration): Launch {
       name: launch.name,
       command,
       ...(cwd !== '.' && { cwd }),
-      ...(Object.keys(env).length > 0 && { env }),
+      ...(Object.keys(env).length > 0 && {
+        env: Object.fromEntries(
+          Object.entries(env).map(([key, value]) => [
+            key,
+            expandWorkspace(value),
+          ]),
+        ),
+      }),
       ...(port && { port }),
       ...(pattern && validPattern(pattern) && { ready: { pattern } }),
     },
@@ -291,7 +304,7 @@ export async function draftLaunchFile(
 
     if (!launch.success) continue;
 
-    const drafted = launchOf(launch.data);
+    const drafted = launchOf(checkout, launch.data);
 
     if ('draft' in drafted) result.drafts.push(drafted.draft);
     else

@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { TRPCError } from '@trpc/server';
 import {
   readRunConfigurations,
@@ -22,7 +23,7 @@ export type DraftedRunConfigurations = {
   skipped: SkippedDraft[];
 };
 
-// A name another source already took is numbered; the same command under it is not drafted twice.
+// A name another source already took is numbered.
 function uniqueName(name: string, taken: ReadonlySet<string>): string {
   if (!taken.has(name)) return name;
 
@@ -51,17 +52,21 @@ function merge(found: SourceDrafts[]): Merged {
   const merged: Merged = { configurations: [], sources: {} };
 
   for (const { source, drafts } of found)
-    for (const draft of drafts) {
+    for (const { name, ...draft } of drafts) {
       const repeats = merged.configurations.some(
-        ({ command, cwd }) => command === draft.command && cwd === draft.cwd,
+        ({ name: _name, ...configuration }) =>
+          isDeepStrictEqual(configuration, draft),
       );
 
       if (repeats) continue;
 
-      const name = uniqueName(draft.name, new Set(Object.keys(merged.sources)));
+      const draftedName = uniqueName(
+        name,
+        new Set(Object.keys(merged.sources)),
+      );
 
-      merged.configurations.push({ ...draft, name });
-      merged.sources[name] = source;
+      merged.configurations.push({ name: draftedName, ...draft });
+      merged.sources[draftedName] = source;
     }
 
   return merged;

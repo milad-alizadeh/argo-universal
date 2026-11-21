@@ -56,6 +56,19 @@ it('drafts a Run Configuration for each dev script in package.json, run with the
   ]);
 });
 
+it('quotes the script name as one argument', async () => {
+  const result = await draft({
+    [packageJson]: { scripts: { "dev:Bob's app": 'vite' } },
+  });
+
+  expect(result.configurations).toEqual([
+    {
+      name: "dev:Bob's app",
+      command: String.raw`npm run 'dev:Bob'\''s app'`,
+    },
+  ]);
+});
+
 const npmRunDev = 'npm run dev';
 
 const packageJson = 'package.json';
@@ -128,7 +141,7 @@ it('drafts a launch file’s command, folder, environment, port and readiness, w
     },
     {
       name: 'Script',
-      command: "node scripts/serve.js --name 'my app'",
+      command: "node ./scripts/serve.js --name 'my app'",
     },
   ]);
   expect(result.skipped).toEqual([
@@ -136,6 +149,29 @@ it('drafts a launch file’s command, folder, environment, port and readiness, w
       source: '.vscode/launch.json',
       name: 'Attach',
       reason: 'it attaches to a process instead of starting one',
+    },
+  ]);
+});
+
+it('keeps workspace paths relative to the Checkout when a launch runs in an app folder', async () => {
+  const result = await draft({
+    '.vscode/launch.json': {
+      configurations: [
+        {
+          name: 'App',
+          cwd: '${workspaceFolder}/apps/api',
+          program: '${workspaceFolder}/scripts/serve.js',
+          args: ['--config', '${workspaceRoot}/config/api.json'],
+        },
+      ],
+    },
+  });
+
+  expect(result.configurations).toEqual([
+    {
+      name: 'App',
+      command: 'node ../../scripts/serve.js --config ../../config/api.json',
+      cwd: 'apps/api',
     },
   ]);
 });
@@ -203,6 +239,48 @@ it('keeps both when two sources name a Run Configuration alike, and drops one th
   ).toEqual([
     ['dev', npmRunDev],
     ['dev-2', 'node other.js'],
+  ]);
+});
+
+it('keeps launch configurations that share a command but differ in environment, readiness or port', async () => {
+  const result = await draft({
+    '.vscode/launch.json': {
+      configurations: [
+        { name: 'API', program: 'serve.js', env: { MODE: 'dev' }, port: 3000 },
+        { name: 'API', program: 'serve.js', env: { MODE: 'test' }, port: 3000 },
+        { name: 'API', program: 'serve.js', env: { MODE: 'test' }, port: 3001 },
+        {
+          name: 'API',
+          program: 'serve.js',
+          env: { MODE: 'test' },
+          port: 3001,
+          serverReadyAction: { pattern: 'Ready' },
+        },
+      ],
+    },
+  });
+
+  expect(result.configurations).toEqual([
+    { name: 'API', command: 'node serve.js', env: { MODE: 'dev' }, port: 3000 },
+    {
+      name: 'API-2',
+      command: 'node serve.js',
+      env: { MODE: 'test' },
+      port: 3000,
+    },
+    {
+      name: 'API-3',
+      command: 'node serve.js',
+      env: { MODE: 'test' },
+      port: 3001,
+    },
+    {
+      name: 'API-4',
+      command: 'node serve.js',
+      env: { MODE: 'test' },
+      port: 3001,
+      ready: { pattern: 'Ready' },
+    },
   ]);
 });
 
