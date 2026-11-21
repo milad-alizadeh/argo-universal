@@ -1,9 +1,10 @@
 import type { Database } from '@repo/db';
-import { AtomicWriterJob } from '../../storage';
-import { queueWrite } from '../prompt-queue';
-import { appendedPrompt } from '../queued-prompt-append';
-import { sendQueueCommand } from '../sent-prompt/queue';
-import type { HandlerSources } from '../session-sources';
+import {
+  deliverQueuedPrompt,
+  type PromptDelivery,
+  type PromptDeliverySessions,
+} from '../queue-delivery';
+import type { SessionSources } from '../session-sources';
 import {
   allowsResult,
   delivered,
@@ -20,10 +21,9 @@ const coalesceMs = 25;
 
 const retryMs = 250;
 
-type ResultSources = HandlerSources<
-  'database' | 'findWriter',
-  'queued' | 'session' | 'admit' | 'write'
->;
+type ResultSources = Pick<SessionSources, 'database' | 'findWriter'> & {
+  open: PromptDeliverySessions;
+};
 
 export class DelegatedResults {
   private again = false;
@@ -120,63 +120,21 @@ export class DelegatedResults {
     const delivery = buildDelivery(database, available);
 
     if (!delivery) return;
-    open.admit(this.stopping);
 
-    const live = open.session(starterId);
-
-    if (live) return this.enqueueLive(live, delivery);
-
-    await this.storePaused(starterId, delivery);
-  }
-
-  private async enqueueLive(
-    live: Parameters<typeof sendQueueCommand>[0],
-    delivery: Delivery,
-  ): Promise<void> {
-    if (!live.getSnapshot().hasTag('ready')) return this.retry();
-
-    await sendQueueCommand(live, delivery);
-  }
-
-  private async storePaused(
-    starterId: string,
-    { command, sender, queuedId, commitWith }: Delivery,
-  ): Promise<void> {
-    const { open } = this.sources;
-    const stored = open.queued(starterId);
-
-    if (stored.archivedAt !== null) return;
-
-    const promptQueue = {
-      items: [
-        ...stored.promptQueue.items,
-        appendedPrompt({ ...command, sender }, queuedId),
-      ],
-      pauseReason: stored.promptQueue.pauseReason ?? recoveryPause,
-    };
-
-    await open.write(
-      new AtomicWriterJob([queueWrite(starterId, promptQueue), commitWith]),
+    const outcome = await deliverQueuedPrompt(
+      open,
+      { sessionId: starterId, delivery, pauseWhenClosed: recoveryPause },
+      this.stopping,
     );
+
+    if (outcome === 'not-ready') this.retry();
   }
 }
-
-type Delivery = Required<
-  Pick<
-    Parameters<typeof sendQueueCommand>[1],
-    'sender' | 'queuedId' | 'commitWith'
-  >
-> & {
-  command: Extract<
-    Parameters<typeof sendQueueCommand>[1]['command'],
-    { action: 'append' }
-  >;
-};
 
 function buildDelivery(
   database: Database,
   rows: SettledDelegation[],
-): Delivery | undefined {
+): PromptDelivery | undefined {
   const first = rows[0]?.work;
 
   if (!first) return;

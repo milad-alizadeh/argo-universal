@@ -18,7 +18,8 @@ const conversationWork = ({
   agentName: (agentId) => conversation.agentName(agentId),
   watchTurns: (sessionId, listener) =>
     conversation.watchTurns(sessionId, listener),
-  watchOpened: (listener) => conversation.watchOpened(listener),
+  watchStarted: (starterId, observer) =>
+    conversation.watchStarted(starterId, observer),
 });
 
 // Gives the Engine's Conversations the Sessions' work to go through.

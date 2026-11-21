@@ -1,7 +1,7 @@
 import { steerAcpSession, type AcpSessionLease } from '../../agents';
 import { promptStorage } from '../acp-operations';
-import { requireNativeCommandAuthority } from '../acp/prompts/native-command';
 import { readAcpPromptContent } from '../acp/prompts/prompt-content';
+import { requireNativeCommandAuthority } from '../prompt-authorization';
 import { sendSessionCommand } from '../session-command';
 import type { SessionContext } from '../session-context';
 import type { SessionActorRef } from '../session-machine';

@@ -1,4 +1,3 @@
-import { AtomicWriterJob } from '../storage';
 import { changePromptQueue, queueWrite } from './prompt-queue';
 import {
   requireQueueConnection,
@@ -39,11 +38,11 @@ function committedQueueStep(
   event: QueueEvent,
   change: ReturnType<typeof changePromptQueue>,
 ): TurnStep {
-  const queue = queueWrite(context.sessionId, change.promptQueue);
-
-  const job = event.commitWith
-    ? new AtomicWriterJob([queue, event.commitWith])
-    : queue;
+  const job = queueWrite(
+    context.sessionId,
+    change.promptQueue,
+    event.commitWith,
+  );
 
   return turnStep({
     change: { ...change, queueCommitted: event.committed.promise },

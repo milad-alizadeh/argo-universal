@@ -5,8 +5,10 @@ import type { AcpSessionLease } from '../../../agents';
 import type { AttachmentStorage } from '../../../blob';
 import { promptMessageChange, type FeedActorRef } from '../../../feed';
 import type { WriterCommit } from '../../../storage';
-import { allowsResult } from '../../orchestration/result-store';
-import { requireNativeCommandAuthority } from './native-command';
+import {
+  requireCommittedPromptDispatch,
+  requireNativeCommandAuthority,
+} from '../../prompt-authorization';
 import { readAcpPromptContent } from './prompt-content';
 
 export type LocalSubmission = {
@@ -121,15 +123,13 @@ export const commitLocalPrompt = async (
   requirePromptAdmission(input.feed, signal);
   await enqueuePromptAndWaitForCommit(input, signal);
   signal.throwIfAborted();
-  const { sender } = input.submission;
-  const { sessionId } = input.feed.getSnapshot().context;
-
-  if (
-    sender?.type === 'session' &&
-    sender.delegatedResult &&
-    !allowsResult(input.storage.database, sessionId, sender.delegatedResult)
-  )
-    throw new Error('Delegated follow-through closed before dispatch.');
+  requireCommittedPromptDispatch(
+    {
+      database: input.storage.database,
+      sessionId: input.feed.getSnapshot().context.sessionId,
+    },
+    input.submission.sender,
+  );
 
   return {
     sessionId: input.lease.sessionId,

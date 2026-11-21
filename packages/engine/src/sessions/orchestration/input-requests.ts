@@ -1,7 +1,7 @@
 import type { DelegatedAttention, DelegatedInput } from '@repo/contracts';
 import { delegatedTurn } from '@repo/db/schema';
 import { and, eq } from 'drizzle-orm';
-import { watchOpenedSessions } from '../opened-sessions';
+import { watchStartedSessions } from '../opened-sessions';
 import { pendingInputRequest } from '../pending-input';
 import type { HandlerSources } from '../session-sources';
 import { waitingSkills } from './skill';
@@ -56,39 +56,28 @@ function currentAttention(
   };
 }
 
-function watchChildren(
+function watchStartedInput(
   sources: AttentionSources,
   starterId: string,
   changed: () => void,
 ): () => void {
-  const subscriptions = new Map<string, { unsubscribe(): void }>();
+  return watchStartedSessions(sources, starterId, () => ({
+    follow: (actor) => {
+      const subscription = actor.subscribe({
+        next: changed,
+        complete: changed,
+      });
 
-  const stopOpened = watchOpenedSessions(sources, (id, startedBy) => {
-    if (startedBy !== starterId) return;
+      changed();
 
-    subscriptions.get(id)?.unsubscribe();
-    const actor = sources.open.session(id);
-
-    if (actor)
-      subscriptions.set(
-        id,
-        actor.subscribe({
-          next: changed,
-          complete: () => {
-            subscriptions.delete(id);
-            changed();
-          },
-        }),
-      );
-    changed();
-  });
-
-  return () => {
-    stopOpened();
-
-    for (const subscription of subscriptions.values())
-      subscription.unsubscribe();
-  };
+      return {
+        unsubscribe: () => {
+          subscription.unsubscribe();
+          changed();
+        },
+      };
+    },
+  }));
 }
 
 function watchAttention(
@@ -96,13 +85,13 @@ function watchAttention(
   { starterId, signal }: { starterId: string; signal: AbortSignal },
   changed: () => void,
 ): () => void {
-  const children = watchChildren(sources, starterId, changed);
+  const stopStarted = watchStartedInput(sources, starterId, changed);
   const writer = sources.findWriter()?.on('writer.committed', changed);
 
   signal.addEventListener('abort', changed, { once: true });
 
   return () => {
-    children();
+    stopStarted();
     writer?.unsubscribe();
     signal.removeEventListener('abort', changed);
   };

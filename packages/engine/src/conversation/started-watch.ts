@@ -1,6 +1,10 @@
 import type { SessionSnapshot } from '@repo/contracts';
 import { readConversationSections } from '../feed';
-import type { TurnHappening } from '../sessions';
+import type {
+  ConversationSessionWork,
+  StartedSessionObservation,
+  TurnHappening,
+} from '../sessions';
 import { FeedWatch, type WatchSources } from './feed-watch';
 import type { SessionHappening } from './session-link';
 
@@ -8,19 +12,7 @@ type Listener = (happening: SessionHappening) => void;
 
 type TurnEnded = Extract<TurnHappening, { type: 'turn.ended' }>;
 
-// What the call needs to find the Sessions its Session started and follow their Turns.
-interface StartedSources {
-  watchTurns: (
-    sessionId: string,
-    listener: (happening: TurnHappening) => void,
-  ) => () => void;
-  // Hears each Session as it opens, those open now first, with the Session that started it; returns how to stop.
-  watchOpened: (
-    listener: (sessionId: string, startedBy: string | null) => void,
-  ) => () => void;
-}
-
-type Sources = WatchSources & StartedSources;
+type Sources = WatchSources & Pick<ConversationSessionWork, 'watchStarted'>;
 
 type Waiting = Pick<
   Extract<SessionHappening, { type: 'started.waiting' }>,
@@ -63,12 +55,11 @@ class StartedSession {
   private title = 'A Started Session';
   private last: string | null = null;
   private readonly feed: FeedWatch;
-  private turns: () => void = () => {};
   private readonly ends = new Set<ReturnType<typeof setTimeout>>();
 
   public constructor(
-    private readonly sources: Sources,
-    private readonly sessionId: string,
+    sources: WatchSources,
+    sessionId: string,
     private readonly listener: Listener,
   ) {
     this.feed = new FeedWatch(sources, {
@@ -76,20 +67,15 @@ class StartedSession {
       listener: (happening): void => this.heard(happening),
       snapshotted: (snapshot): void => this.named(snapshot),
     });
-    this.follow();
   }
 
-  // Hears the Session's Turns, again when it closed and opened again; what it already said waits stays said.
-  public follow(): void {
-    this.turns();
-    this.turns = this.sources.watchTurns(this.sessionId, (happening) => {
+  public follow: StartedSessionObservation['follow'] = (actor) =>
+    actor.on('*', (happening) => {
       if (happening.type === 'turn.ended') this.settling(happening);
     });
-  }
 
   public stop(): void {
     for (const end of this.ends) clearTimeout(end);
-    this.turns();
     this.feed.stop();
   }
 
@@ -131,34 +117,14 @@ class StartedSession {
   }
 }
 
-// Follows each Session the Conversation's Session started, from those open now to those started during the call.
-export class StartedSessions {
-  private readonly watched = new Map<string, StartedSession>();
-  private readonly stopOpened: () => void;
-
-  public constructor(
-    private readonly sources: Sources,
-    private readonly starterId: string,
-    private readonly listener: Listener,
-  ) {
-    this.stopOpened = sources.watchOpened((sessionId, startedBy) => {
-      if (startedBy === starterId) this.opened(sessionId);
-    });
-  }
-
-  public stop(): void {
-    this.stopOpened();
-
-    for (const session of this.watched.values()) session.stop();
-  }
-
-  private opened(sessionId: string): void {
-    const known = this.watched.get(sessionId);
-
-    if (known) return known.follow();
-    this.watched.set(
-      sessionId,
-      new StartedSession(this.sources, sessionId, this.listener),
-    );
-  }
+// Follows the direct Started Sessions that the Conversation speaks about.
+export function watchStartedSessionSpeech(
+  sources: Sources,
+  starterId: string,
+  listener: Listener,
+): () => void {
+  return sources.watchStarted(
+    starterId,
+    (sessionId) => new StartedSession(sources, sessionId, listener),
+  );
 }

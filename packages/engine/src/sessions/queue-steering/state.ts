@@ -1,5 +1,6 @@
 import type { QueuedPrompt } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
+import { requireQueueSteeringAuthority } from '../prompt-authorization';
 import type { SessionContext } from '../session-context';
 import { turnStep, type TurnStep } from '../turn';
 import { reservePrompt, requireSteeringSupport } from './admission';
@@ -79,11 +80,7 @@ function reserveRow(
 ): QueueSteering {
   requireFree(context, revision, row);
 
-  if (
-    row.sender?.type === 'skill' ||
-    (row.sender?.type === 'session' && row.sender.delegatedResult)
-  )
-    conflict('This Prompt must start its own Turn.');
+  requireQueueSteeringAuthority(row.sender);
 
   return {
     ...reservePrompt(context, row.prompt),
