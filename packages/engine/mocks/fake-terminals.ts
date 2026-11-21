@@ -1,5 +1,4 @@
 import { createServer, type Server } from 'node:net';
-import { onTestFinished } from 'vitest';
 import type {
   TerminalExit,
   TerminalLaunch,
@@ -15,6 +14,7 @@ export class FakeTerminal implements TerminalProcess {
   private readonly data: ((data: string) => void)[] = [];
   private readonly exits: ((exit: TerminalExit) => void)[] = [];
   private server?: Server;
+  private closing: Promise<void> = Promise.resolve();
   private ended = false;
   private readonly early: string[] = [];
   private exitedWith?: TerminalExit;
@@ -43,23 +43,32 @@ export class FakeTerminal implements TerminalProcess {
   public async listen(): Promise<void> {
     const server = createServer();
     this.server = server;
-    await new Promise<void>((resolve) =>
-      server.listen(this.launch.port, '127.0.0.1', resolve),
-    );
+
+    await new Promise<void>((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(this.launch.port, '127.0.0.1', resolve);
+    });
   }
   public exit(exitCode: number): void {
     if (this.ended) return;
     this.ended = true;
-    this.server?.close();
+    this.closing = this.closeServer();
     this.exitedWith = { exitCode };
 
     for (const listener of this.exits) listener(this.exitedWith);
   }
-  public stop(): Promise<void> {
+  public async stop(): Promise<void> {
     this.stopped = true;
     this.exit(143);
+    await this.closing;
+  }
+  // Resolves once the port is free again.
+  private closeServer(): Promise<void> {
+    const { server } = this;
 
-    return Promise.resolve();
+    if (!server?.listening) return Promise.resolve();
+
+    return new Promise((resolve) => server.close(() => resolve()));
   }
 }
 
@@ -67,6 +76,8 @@ type FakeTerminals = {
   spawn: TerminalSpawner;
   // Every terminal started so far, oldest first.
   started: FakeTerminal[];
+  // Ends every terminal; a test registers it once its Engine has started, so it runs before the Engine stops.
+  end: () => Promise<void>;
   // The next terminal to start, now or once it does.
   next: () => Promise<FakeTerminal>;
 };
@@ -76,12 +87,11 @@ export function createFakeTerminals(): FakeTerminals {
   const waiting: ((terminal: FakeTerminal) => void)[] = [];
   let taken = 0;
 
-  onTestFinished(() => {
-    for (const terminal of started) terminal.exit(0);
-  });
-
   return {
     started,
+    end: async (): Promise<void> => {
+      await Promise.all(started.map((terminal) => terminal.stop()));
+    },
     spawn: (launch): FakeTerminal => {
       const terminal = new FakeTerminal(launch);
       started.push(terminal);

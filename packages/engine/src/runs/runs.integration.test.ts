@@ -1,8 +1,9 @@
 import { mkdir, writeFile } from 'node:fs/promises';
+import { createServer, type Server } from 'node:net';
 import { join } from 'node:path';
 import type { OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import { expect, it } from 'vitest';
+import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { createFakeTerminals } from '#mocks/fake-terminals';
 import { operationCaller, runOperation } from '#mocks/operations';
@@ -50,6 +51,7 @@ async function startRuns(source?: RunFile): Promise<RunsJourney> {
 
   if (source !== undefined) await configure(project.path, source);
   const { sessionId } = await host.caller.session.new(emptySessionInput);
+  onTestFinished(terminals.end);
   const { operations } = await operationCaller(host);
 
   const call: RunsJourney['call'] = (id, params = {}) =>
@@ -154,6 +156,9 @@ it('returns the end of the output when the Run is not ready in time, and leaves 
     tail: 'compiling\n',
   });
   expect(terminal.stopped).toBe(false);
+  expect(await call(statusRun)).toMatchObject({
+    configurations: [{ name: 'web', status: 'starting' }],
+  });
 });
 
 it('says a Run that exits before it is ready crashed, with its exit code and output', async () => {
@@ -370,4 +375,102 @@ it('stops every Run when the Server stops', async () => {
   await stop();
 
   expect(terminal.stopped).toBe(true);
+});
+
+const listenOnFreePort = (): Promise<{ server: Server; port: number }> =>
+  new Promise((resolve) => {
+    const server = createServer();
+
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address();
+
+      resolve({
+        server,
+        port: typeof address === 'object' && address ? address.port : 0,
+      });
+    });
+  });
+
+// A port nothing listens on now; another process could take it before the test uses it, which is rare enough on a test machine.
+const unusedPort = async (): Promise<number> => {
+  const { server, port } = await listenOnFreePort();
+  await new Promise((resolve) => server.close(resolve));
+
+  return port;
+};
+
+it('gives a Run Configuration its own port as $PORT', async () => {
+  const port = await unusedPort();
+
+  const { terminals, call } = await startRuns({
+    configurations: [{ ...web, port }],
+  });
+
+  const started = call(startRun, { name: 'web' });
+  const terminal = await terminals.next();
+  terminal.print('Local:');
+
+  await expect(started).resolves.toMatchObject({
+    ready: true,
+    port,
+    url: `http://localhost:${port}`,
+  });
+  expect(terminal.launch.env.PORT).toBe(String(port));
+});
+
+it('refuses a Run Configuration’s own port that something else listens on, and starts nothing', async () => {
+  const { server, port } = await listenOnFreePort();
+  onTestFinished(() => void server.close());
+
+  const { terminals, call } = await startRuns({
+    configurations: [{ ...web, port }],
+  });
+
+  await expect(call(startRun, { name: 'web' })).rejects.toThrow(
+    new RegExp(`Port ${port} of Run Configuration "web" is already in use`),
+  );
+  expect(terminals.started).toHaveLength(0);
+});
+
+it('refuses a Run Configuration’s own port that a Run of another Checkout holds', async () => {
+  const port = await unusedPort();
+  const file = { configurations: [{ ...web, port }] };
+  const { terminals, call, operations, caller } = await startRuns(file);
+
+  const worktree = await caller.session.new({
+    ...emptySessionInput,
+    checkout: { type: 'worktree', baseBranch: 'main' },
+  });
+
+  await configure(
+    (await caller.session.get({ sessionId: worktree.sessionId })).checkout.path,
+    file,
+  );
+
+  const first = call(startRun, { name: 'web' });
+  const terminal = await terminals.next();
+  terminal.print('Local:');
+  await first;
+
+  await expect(
+    runOperation(operations, {
+      id: startRun,
+      params: { sessionId: worktree.sessionId, name: 'web' },
+    }),
+  ).rejects.toThrow(/already in use/);
+});
+
+it('starts a restarted Run on the port it had', async () => {
+  const { terminals, call } = await startRuns({ configurations: [web] });
+  const first = call(startRun, { name: 'web' });
+  const old = await terminals.next();
+  old.print('Local:');
+  await first;
+
+  const restarted = call('run.restart', { name: 'web' });
+  const fresh = await terminals.next();
+  fresh.print('Local:');
+  await restarted;
+
+  expect(fresh.launch.port).toBe(old.launch.port);
 });
