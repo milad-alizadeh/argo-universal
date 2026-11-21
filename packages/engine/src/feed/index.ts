@@ -6,6 +6,12 @@ export {
 } from './feed-change';
 
 export {
+  conversationHistoryCharacters,
+  readConversationHistory,
+  type ConversationHistorySources,
+} from './conversation-history';
+
+export {
   type FeedActorRef,
   type FeedEvent,
   type FeedInput,

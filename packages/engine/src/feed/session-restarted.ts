@@ -9,15 +9,17 @@ export type SessionRestartedEvent = {
   restart: SessionRestart;
 };
 
+export const clearedContextNotice = {
+  title: 'Context cleared',
+  description: 'The Agent remembers nothing above this point.',
+} as const;
+
 const wording = {
   reload: {
     title: 'Agent reloaded',
     description: 'The Agent started again and kept this conversation.',
   },
-  clear: {
-    title: 'Context cleared',
-    description: 'The Agent remembers nothing above this point.',
-  },
+  clear: clearedContextNotice,
 } as const satisfies Record<
   SessionRestart,
   { title: string; description: string }

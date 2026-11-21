@@ -12,14 +12,21 @@ export const sessionIdOf = (params: Params): string =>
   'sessionId' in params ? String(params['sessionId']) : '';
 
 const text = (block: ContentBlock): string =>
-  block.type === 'text' ? block.text : '';
+  block.type === 'text' && !assistantContext(block.annotations?.audience)
+    ? block.text
+    : '';
+
+const assistantContext = (
+  audience: readonly string[] | null | undefined,
+): boolean =>
+  Boolean(audience?.includes('assistant') && !audience.includes('user'));
 
 const promptText = (params: Params): string =>
   'prompt' in params && Array.isArray(params.prompt)
     ? params.prompt.map(text).join('\n')
     : '';
 
-// The response keyed to this prompt's text; it plays however many prompts came before.
+// Match the current request's text, leaving out any context supplied for the Agent.
 export const keyedResponse = <Response extends PromptKeyed>(
   responses: readonly Response[],
   params: Params,
