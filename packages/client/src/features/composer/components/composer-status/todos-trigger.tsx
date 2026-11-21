@@ -38,9 +38,7 @@ export function createTodosTrigger(props: TodosTriggerProps): JSX.Element {
   ) : (
     <PhonePill {...todosPillProps(props)}>
       <TodosIcon />
-      <Text role="control">
-        {`${startedPlanSteps(countPlanSteps(props.entries))}/${props.entries.length}`}
-      </Text>
+      <Text role="control">{todosProgressLabel(props.entries)}</Text>
     </PhonePill>
   );
 }
@@ -79,14 +77,17 @@ function TodosRow(props: TodosTriggerProps): JSX.Element {
   );
 }
 
+function todosProgressLabel(entries: PlanEntry[]): string {
+  return `${startedPlanSteps(countPlanSteps(entries))}/${entries.length}`;
+}
+
 function TodosRowWords({ entries }: TodosTriggerProps): JSX.Element {
-  const started = startedPlanSteps(countPlanSteps(entries));
   const current = entries.find((entry) => entry.status === 'in_progress');
 
   return (
     <View className="min-w-0 flex-1 flex-row items-center gap-1.5">
       <Text role="control" selectable={false}>
-        {`Todos ${started}/${entries.length}`}
+        {`Todos ${todosProgressLabel(entries)}`}
       </Text>
       {current && <TodosRowStep content={current.content} />}
     </View>
