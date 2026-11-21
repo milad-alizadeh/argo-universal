@@ -84,3 +84,9 @@ export { useDeclaredItems } from './hooks/use-declared-items';
 export { type PluginEntry, usePluginEntries } from './hooks/use-plugin-entries';
 
 export { invalidatePluginState } from './utils/plugin-state-refresh';
+
+export { DraftBar } from './components/draft-bar/draft-bar';
+
+export { DraftBarDock } from './components/draft-bar/draft-bar-dock';
+
+export { useDraftBar } from './hooks/use-draft-bar';

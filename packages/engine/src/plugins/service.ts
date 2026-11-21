@@ -34,6 +34,7 @@ import { startsWithServer } from './discovery/plugin-contributions';
 import { callerOf } from './hooks/hook-rules';
 import { LocatedCache } from './located-cache';
 import {
+  applyDev,
   applyEnabled,
   applyStatus,
   locatePlugin,
@@ -67,6 +68,7 @@ export class PluginService {
 
     applyEnabled(result, this.deps.pluginSettings);
     applyStatus(result, this.deps.pluginRuntime);
+    applyDev(result, this.deps.dev);
 
     return result;
   }

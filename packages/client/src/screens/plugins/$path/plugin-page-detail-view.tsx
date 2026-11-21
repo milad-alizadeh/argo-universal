@@ -1,9 +1,12 @@
 import { useDeferredValue } from 'react';
 import type * as React from 'react';
 import {
+  DraftBar,
+  DraftBarDock,
   type PageOpening,
   PluginSessionRowProvider,
   useOpenPluginPage,
+  useDraftBar,
   usePluginLookup,
   usePluginPage,
 } from '#features/plugins';
@@ -37,7 +40,21 @@ export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
         callbacks={{ onOpenPage, onPageCall, pluginId: opening.pluginId }}
         {...{ onBack, loadingTree }}
       />
+      <PageDraftBar {...opening} />
     </PluginSymbol>
+  );
+}
+
+// A dev Plugin's Draft page gets the Draft bar over it; any other page draws none (ADR-0057).
+function PageDraftBar(opening: PageOpening): React.ReactNode {
+  const bar = useDraftBar(opening);
+
+  if (!bar) return null;
+
+  return (
+    <DraftBarDock>
+      <DraftBar {...bar} />
+    </DraftBarDock>
   );
 }
 

@@ -33,6 +33,8 @@ export type LocateDeps = CachedDeps & { pluginSettings: ServiceSettings };
 export type PluginServiceDeps = LocateDeps & {
   pluginAccounts: ServiceAccounts;
   pluginRuntime: PluginRuntime;
+  // True while the Server watches Plugin sources, so every Plugin it lists is a dev Plugin (ADR-0057).
+  dev?: boolean;
 };
 
 export function applyEnabled(
@@ -41,6 +43,13 @@ export function applyEnabled(
 ): void {
   for (const plugin of result.plugins)
     plugin.enabled = settings.enabled(plugin.manifest.id);
+}
+
+// A dev Server lists its Plugins as dev; any other leaves the mark off, as a Plugin never says it.
+export function applyDev(result: PluginList, dev: boolean | undefined): void {
+  if (dev !== true) return;
+
+  for (const plugin of result.plugins) plugin.dev = true;
 }
 
 export function applyStatus(result: PluginList, runtime: PluginRuntime): void {
