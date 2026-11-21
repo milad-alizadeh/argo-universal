@@ -56,7 +56,9 @@ function StackLayout(props: ResolvedStack): ReactElement {
   return layout && props.direction === 'column' ? (
     <ColumnStack {...props} layout={layout} />
   ) : (
-    <View className={classesOf(props)}>{props.children}</View>
+    <View className={cn(classesOf(props), layout && fillClass(layout.state))}>
+      {props.children}
+    </View>
   );
 }
 
