@@ -1,4 +1,3 @@
-import { requireOptionalNativeModule } from 'expo';
 import { setAudioModeAsync } from 'expo-audio';
 import { Platform } from 'react-native';
 import {
@@ -27,35 +26,20 @@ import { requestPhoneSpeakerRoute } from './phone-speaker-route';
  * microphone gain, voice previews, a real spectrum and recovery from a network change.
  */
 
-interface AudioRouteModule {
-  preferLoudspeaker: () => string;
-  route: () => string;
-}
-
-const audioRoute =
-  requireOptionalNativeModule<AudioRouteModule>('ArgoAudioRoute');
-
-function configureConversationAudio(signal: AbortSignal): void {
+function configureConversationAudio(): void {
   void setAudioModeAsync({
     playsInSilentMode: true,
     allowsRecording: true,
-    shouldRouteThroughEarpiece: true,
+    shouldRouteThroughEarpiece: false,
     interruptionMode: 'doNotMix',
     shouldPlayInBackground: true,
     allowsBackgroundRecording: true,
-  })
-    .then(() => {
-      // The native route check switches only the built-in receiver to the speaker.
-      if (!signal.aborted) audioRoute?.preferLoudspeaker();
-    })
-    .catch((cause: unknown) => {
-      const message = cause instanceof Error ? cause.message : String(cause);
+  }).catch((cause: unknown) => {
+    const message = cause instanceof Error ? cause.message : String(cause);
 
-      console.error('Could not configure iPhone Conversation audio', message);
-    });
+    console.error('Could not configure iPhone Conversation audio', message);
+  });
 }
-
-export const phoneAudioRoute = (): string | undefined => audioRoute?.route();
 
 // The levels the peer's stats gave last. A phone has no AnalyserNode, so the band is moved by these.
 const levels = { input: 0, output: 0 };

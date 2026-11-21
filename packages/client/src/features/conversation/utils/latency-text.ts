@@ -9,7 +9,6 @@ export interface LatencyContext {
   // What the person says the phone is on; the App does not read the network.
   network: string;
   // The speaker or headphones the call plays on, where the App knows it.
-  route: string | undefined;
 }
 
 const ms = (value: number | undefined): string =>
@@ -63,10 +62,9 @@ const headOf = (report: LatencyReport, context: LatencyContext): string =>
     'Argo Conversation latency',
     context.platform,
     context.network,
-    context.route,
     report.live ? 'running' : 'ended',
   ]
-    .filter((part) => part !== undefined && part !== '')
+    .filter((part) => part !== '')
     .join(' · ');
 
 export const latencyTextOf = (

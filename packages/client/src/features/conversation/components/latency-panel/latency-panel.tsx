@@ -3,7 +3,6 @@ import type * as React from 'react';
 import { useState, useSyncExternalStore } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { latencyProbe } from '../../stores/latency-probe';
-import { phoneAudioRoute } from '../../stores/phone-conversation-environment';
 import { latencySummaryOf, latencyTextOf } from '../../utils/latency-text';
 
 /*
@@ -71,7 +70,6 @@ export function LatencyPanel(): React.JSX.Element | null {
   const body = latencyTextOf(report, {
     platform: Platform.OS,
     network: networks[network] ?? '',
-    route: phoneAudioRoute(),
   });
 
   const copy = (): void =>
