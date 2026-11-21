@@ -13,11 +13,16 @@ export interface WorkbenchRunsProps {
   onStart: (name: string) => void;
   onStop: (name: string) => void;
   now?: number;
+  compact?: boolean;
 }
 
 export type SessionRuns = Omit<WorkbenchRunsProps, 'onOpen'> & {
   onRestart: (name: string) => void;
-  renderTerminal: (run: RunConfigurationRow, visible: boolean) => ReactNode;
+  renderTerminal: (
+    run: RunConfigurationRow,
+    visible: boolean,
+    compact?: boolean,
+  ) => ReactNode;
 };
 
 type RowProps = Omit<WorkbenchRunsProps, 'runs' | 'now'> & {
@@ -26,7 +31,14 @@ type RowProps = Omit<WorkbenchRunsProps, 'runs' | 'now'> & {
 };
 
 // The action and the Terminal link are separate controls on the same row.
-function RunRow({ run, now, onOpen, onStart, onStop }: RowProps): ReactElement {
+function RunRow({
+  run,
+  now,
+  compact,
+  onOpen,
+  onStart,
+  onStop,
+}: RowProps): ReactElement {
   const { name, port, status } = run;
   const active = runIsActive(run);
   const label = runStatusLabel(run, now, status === 'starting');
@@ -52,7 +64,7 @@ function RunRow({ run, now, onOpen, onStart, onStop }: RowProps): ReactElement {
         accessibilityLabel={active ? `Stop ${name}` : `Start ${name}`}
         icon={active ? 'stop' : 'play'}
         variant={active ? 'ghost' : 'primary'}
-        size="sm"
+        size={compact ? 'lg' : 'sm'}
         onPress={() => (active ? onStop(name) : onStart(name))}
       />
     </View>
