@@ -27,6 +27,8 @@ export function todosDone(width: number): Story {
         await userEvent.click(plan);
         await waitFor(() => expect(canvas.getByText(planTitle)).toBeVisible());
       } else {
+        await expect(within(plan).getByText('3/3')).toBeVisible();
+        await expect(plan).not.toHaveTextContent('Todos');
         await userEvent.click(plan);
         await waitFor(() => expect(overlay.getByText(planTitle)).toBeVisible());
         const sheet = within(overlay.getByRole('dialog', { name: 'Todos' }));

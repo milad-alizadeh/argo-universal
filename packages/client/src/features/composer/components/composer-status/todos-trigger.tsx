@@ -38,7 +38,9 @@ export function createTodosTrigger(props: TodosTriggerProps): JSX.Element {
   ) : (
     <PhonePill {...todosPillProps(props)}>
       <TodosIcon />
-      <Text role="control">Todos</Text>
+      <Text role="control">
+        {`${startedPlanSteps(countPlanSteps(props.entries))}/${props.entries.length}`}
+      </Text>
     </PhonePill>
   );
 }
