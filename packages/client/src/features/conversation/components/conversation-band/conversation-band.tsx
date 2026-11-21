@@ -161,12 +161,6 @@ function BandLabel({ look, elapsed }: LabelProps): React.JSX.Element {
 
 const rowClass = 'h-11 w-full flex-row items-center px-4 pt-2.5';
 
-/*
- * The Conversation band along the Composer card's top edge: a row of bars that rest as dots. The person's voice lights
- * them from the left in orange and the Agent's from the right in blue; on a turn the colour sweeps across. The state and
- * the timer sit at the right end, 16 points from the last bar, as the first bar sits 16 points from the card's edge. The
- * Composer stays one card, and typing goes on under it throughout.
- */
 export function ConversationBand(
   props: ConversationBandProps,
 ): React.JSX.Element {

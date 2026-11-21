@@ -1,7 +1,3 @@
-/*
- * What each voice reaches for along the strip: the person's from the left end, the Agent's from the right. Worklets
- * over plain numbers.
- */
 import {
   clamp01,
   easeToward,
@@ -17,9 +13,6 @@ export interface Voices {
   user: readonly number[];
   agent: readonly number[];
 }
-
-// How far a bar's reach falls off from its voice's end of the strip.
-const reachFalloff = 0.8;
 
 // A band's own strength and the voice's overall level share a bar's height.
 const bandShare = 0.6;
@@ -84,7 +77,6 @@ function texturedBy(time: number, position: number): number {
   return dipFloor + (peakCeiling - dipFloor) * unit;
 }
 
-// What the bar at `position` (0 left, 1 right) reaches for, 0 to 1: the person's voice from the left, the Agent's from the right.
 export function reachAt(
   voices: Voices,
   pose: Pose,
@@ -93,9 +85,10 @@ export function reachAt(
   'worklet';
 
   const { position, time } = place;
-  const user = voiceAt(voices.user, position) * (1 - position) ** reachFalloff;
-  const agent = voiceAt(voices.agent, 1 - position) * position ** reachFalloff;
+  const user = voiceAt(voices.user, position);
+  const agent = voiceAt(voices.agent, 1 - position);
   const voice = user * pose.user + agent * pose.agent;
+  const envelope = Math.sin(Math.PI * clamp01(position)) ** 2;
 
-  return voice * texturedBy(time, position) * (1 - pose.mute);
+  return voice * envelope * texturedBy(time, position) * (1 - pose.mute);
 }
