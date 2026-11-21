@@ -46,10 +46,17 @@ export function settledDelegations(database: Database): SettledDelegation[] {
 
 const excerptLimit = 1600;
 
-export function resultText(
+type DelegatedOutcome = Pick<SettledDelegation, 'stopReason' | 'error'> & {
+  sourceSessionId: string;
+  turnId: string;
+  messageId: string | undefined;
+  excerpt: string | undefined;
+};
+
+export function delegatedOutcome(
   database: Database,
   { work, stopReason, error }: SettledDelegation,
-): string {
+): DelegatedOutcome {
   const last = database
     .select(storedFeedColumns)
     .from(feedRow)
@@ -66,7 +73,7 @@ export function resultText(
 
   const message = last && hydrateStoredFeedRow(work.sourceId, last);
 
-  return JSON.stringify({
+  return {
     sourceSessionId: work.sourceId,
     turnId: work.turnId,
     stopReason,
@@ -76,7 +83,7 @@ export function resultText(
       message?.sessionUpdate === 'agent_message'
         ? messageText(message.content).slice(0, excerptLimit)
         : undefined,
-  });
+  };
 }
 
 export function delivered(ids: string[]): WriterJob {
