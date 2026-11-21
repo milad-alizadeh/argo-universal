@@ -3,7 +3,6 @@ import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { skipToken, useMutation } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useCallback, useState, type ReactElement } from 'react';
-import { Platform } from 'react-native';
 import {
   useConnectionState,
   useResubscribeOnReconnect,
@@ -28,11 +27,9 @@ function useRunStatus(
     status: RunStatusResult;
   }>();
 
-  const enabled = active && Platform.OS === 'web';
-
   const stream = useSubscription(
     trpc.run.watchStatus.subscriptionOptions(
-      enabled ? { sessionId } : skipToken,
+      active ? { sessionId } : skipToken,
       {
         onData: (status) => setSnapshot({ sessionId, status }),
       },
@@ -67,11 +64,12 @@ export function useSessionRuns(
     onStart: (name) => start.mutate({ sessionId, name }),
     onStop: (name) => stop.mutate({ sessionId, name }),
     onRestart: (name) => restart.mutate({ sessionId, name }),
-    renderTerminal: (run, visible) => (
+    renderTerminal: (run, visible, compact) => (
       <ConnectedRunTerminal
         key={sessionId}
         {...{ sessionId, run }}
         active={active && visible}
+        compact={compact}
       />
     ),
   };
@@ -81,10 +79,12 @@ function ConnectedRunTerminal({
   sessionId,
   run,
   active,
+  compact,
 }: {
   sessionId: string;
   run: RunConfigurationRow;
   active: boolean;
+  compact?: boolean;
 }): ReactElement {
   const client = useTRPCClient();
   const connected = useConnectionState() === 'open' && active;
@@ -119,7 +119,9 @@ function ConnectedRunTerminal({
 
   useErrorToast(failure ? { title: 'Terminal', message: failure } : undefined);
 
-  return <RunTerminal {...{ run, connected, listen, onInput, onResize }} />;
+  return (
+    <RunTerminal {...{ run, connected, listen, onInput, onResize, compact }} />
+  );
 }
 
 type Resize = {

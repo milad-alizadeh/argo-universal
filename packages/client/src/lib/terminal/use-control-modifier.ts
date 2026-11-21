@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { terminalControl } from './terminal-input';
+import { terminalControl } from './terminal-control';
 
 class TerminalControl {
   private pressed = false;
