@@ -20,9 +20,11 @@ const defaults: Defaults = {
   'session.setTodos': callerSessionParam,
   'session.setTodoStep': callerSessionParam,
   'plugin.new': callerSessionParam,
-  'plugin.draft.show': callerSessionParam,
+  'plugin.draft.show': ownSessionOnly(
+    'A Session records only itself as the one drawing a Draft; an App names any Session',
+  ),
   'conversation.end': callerSessionParam,
-  'conversation.hangUp': ownSessionOnly,
+  'conversation.hangUp': ownSessionOnly(),
 };
 
 export function scopedParams<Id extends OperationId>(

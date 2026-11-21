@@ -60,15 +60,24 @@ export class PluginDrafts {
   public drawnBy(pluginId: string, sessionId: string): Promise<void> {
     return this.write(
       `record the Session drawing Plugin ${pluginId}'s Draft`,
-      (transaction) =>
+      (transaction) => {
+        const current = transaction
+          .select({ sessionId: pluginDraft.sessionId })
+          .from(pluginDraft)
+          .where(eq(pluginDraft.pluginId, pluginId))
+          .get();
+
+        // Another Session drawing starts its own Draft: the last Session's choice is not read back as its own.
+        if (current?.sessionId === sessionId) return;
+
+        const row = { sessionId, picks: [], comments: [], chosenAt: null };
+
         transaction
           .insert(pluginDraft)
-          .values({ pluginId, sessionId })
-          .onConflictDoUpdate({
-            target: pluginDraft.pluginId,
-            set: { sessionId },
-          })
-          .run(),
+          .values({ pluginId, ...row })
+          .onConflictDoUpdate({ target: pluginDraft.pluginId, set: row })
+          .run();
+      },
     );
   }
 

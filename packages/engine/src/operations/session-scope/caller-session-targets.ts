@@ -12,15 +12,14 @@ export const callerSessionParam = <Params extends { sessionId?: string }>(
 };
 
 // A Session hangs up only its own Conversation (#2413); naming any other Session is refused, whatever its scope covers.
-export const ownSessionOnly = <Params extends { sessionId?: string }>(
-  params: Params,
-  caller: SessionCaller,
-): Params & { sessionId: string } => {
-  if (params.sessionId !== undefined && params.sessionId !== caller.sessionId)
-    throw new TRPCError({
-      code: 'FORBIDDEN',
-      message: "A Session hangs up only its own Session's Conversation",
-    });
+export const ownSessionOnly =
+  (message = "A Session hangs up only its own Session's Conversation") =>
+  <Params extends { sessionId?: string }>(
+    params: Params,
+    caller: SessionCaller,
+  ): Params & { sessionId: string } => {
+    if (params.sessionId !== undefined && params.sessionId !== caller.sessionId)
+      throw new TRPCError({ code: 'FORBIDDEN', message });
 
-  return callerSessionParam(params, caller);
-};
+    return callerSessionParam(params, caller);
+  };

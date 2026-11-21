@@ -1,5 +1,6 @@
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it } from 'vitest';
+import { emptySessionInput } from '#mocks/acp-engine';
 import { writeHookPlugins } from '#mocks/hook-plugins';
 import { delegationJourney } from '#mocks/session-delegation';
 
@@ -10,6 +11,29 @@ const show = 'plugin.draft.show';
 type Run = (input: { id: string; params: Json }) => Promise<{ kind: string }>;
 
 const source = `export async function register() {}`;
+
+const drafts = [
+  {
+    page: '/',
+    states: ['populated' as const],
+    regions: [
+      {
+        id: 'header',
+        variants: [
+          { id: 'compact', name: 'Compact' },
+          { id: 'tabs', name: 'Tabs' },
+        ],
+      },
+      {
+        id: 'list',
+        variants: [
+          { id: 'rows', name: 'Rows' },
+          { id: 'cards', name: 'Cards' },
+        ],
+      },
+    ],
+  },
+];
 
 const picks = [
   { region: 'header', variant: 'tabs' },
@@ -26,13 +50,15 @@ const comments = [
 ];
 
 // An Agent's Session that draws the dev Plugin `dev`, and the App that chooses.
-async function drawing(): Promise<{
+async function drawing(watchPlugins = true): Promise<{
   host: Awaited<ReturnType<typeof delegationJourney>>['host'];
   sessionId: string;
   agent: (id: string, params: Json) => ReturnType<Run>;
 }> {
   const journey = await delegationJourney({
-    installPlugins: (home) => writeHookPlugins(home, [{ id: dev, source }]),
+    agent: { watchPlugins },
+    installPlugins: (home) =>
+      writeHookPlugins(home, [{ id: dev, source, drafts }]),
   });
 
   const { host, caller } = journey;
@@ -68,7 +94,7 @@ it('records the pick and hands it, with its comments, to the Session whose Agent
     comments,
   });
 
-  expect(choice.sessionId).toBe(sessionId);
+  expect(choice).toEqual({ sessionId, delivery: 'started' });
 
   await expect
     .poll(() => promptsOf(journey).then((rows) => rows.join('\n')))
@@ -127,5 +153,68 @@ it('refuses a choice no Agent is drawing, and never lets an Agent choose', async
   await agent(show, { pluginId: dev });
   await expect(
     agent('plugin.draft.choose', { pluginId: dev, picks }),
-  ).rejects.toThrow(/person|Only an App|not/i);
+  ).rejects.toThrow(/Only an App can run plugin\.draft\.choose/);
+}, 60_000);
+
+it('refuses an Agent that records another Session as the one drawing', async () => {
+  const { host, agent } = await drawing();
+  const other = await host.caller.session.new(emptySessionInput);
+
+  await expect(
+    agent(show, { pluginId: dev, sessionId: other.sessionId }),
+  ).rejects.toThrow(/records only itself/);
+  await expect(
+    host.caller.plugin.draft.choose({ pluginId: dev, picks }),
+  ).rejects.toThrow(/plugin\.draft\.show/);
+}, 60_000);
+
+it('refuses a pick for a region or Variant the Draft does not declare', async () => {
+  const { host, agent } = await drawing();
+
+  await agent(show, { pluginId: dev });
+  await expect(
+    host.caller.plugin.draft.choose({
+      pluginId: dev,
+      picks: [{ region: 'footer', variant: 'tabs' }],
+    }),
+  ).rejects.toThrow(/no region footer/);
+  await expect(
+    host.caller.plugin.draft.choose({
+      pluginId: dev,
+      picks: [{ region: 'header', variant: 'grid' }],
+    }),
+  ).rejects.toThrow(/no Variant grid/);
+  expect(await host.caller.plugin.draft.pick({ pluginId: dev })).toEqual({
+    choice: null,
+  });
+}, 60_000);
+
+it('does not read the last Session’s choice back once another Session draws', async () => {
+  const { host, agent, sessionId } = await drawing();
+  const other = await host.caller.session.new(emptySessionInput);
+
+  await agent(show, { pluginId: dev });
+  await host.caller.plugin.draft.choose({ pluginId: dev, picks, comments });
+
+  await host.caller.plugin.draft.show({
+    pluginId: dev,
+    sessionId: other.sessionId,
+  });
+
+  expect(await host.caller.plugin.draft.pick({ pluginId: dev })).toEqual({
+    choice: null,
+  });
+  expect(
+    await host.caller.plugin.draft.choose({ pluginId: dev, picks }),
+  ).toMatchObject({ sessionId: other.sessionId });
+  expect(other.sessionId).not.toBe(sessionId);
+}, 60_000);
+
+it('refuses a Choose for a Plugin the Server does not run as a dev Plugin', async () => {
+  const { host, agent } = await drawing(false);
+
+  await expect(agent(show, { pluginId: dev })).rejects.toThrow(/--watch/);
+  await expect(
+    host.caller.plugin.draft.choose({ pluginId: dev, picks }),
+  ).rejects.toThrow(/not a dev Plugin/);
 }, 60_000);

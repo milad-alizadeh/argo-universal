@@ -1,6 +1,10 @@
 import { readFile, realpath, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { HookEventName, PluginCapability } from '@repo/contracts/plugins';
+import type {
+  HookEventName,
+  PluginCapability,
+  PluginManifest,
+} from '@repo/contracts/plugins';
 import type {
   AddOnlySlotId,
   ReplaceableSlotId,
@@ -17,6 +21,7 @@ export type HookPlugin = {
   renders?: ReplaceableSlotId[];
   capabilities?: PluginCapability[];
   order?: number;
+  drafts?: PluginManifest['contributes']['drafts'];
 };
 
 const recordFile = 'records.json';

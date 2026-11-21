@@ -39,6 +39,8 @@ type FixturePlugin = {
   declared?: PluginManifest['contributes']['declared'];
   // The Operations it declares (ADR-0044).
   operations?: PluginManifest['contributes']['operations'];
+  // The Draft pages and regions it declares (ADR-0057).
+  drafts?: PluginManifest['contributes']['drafts'];
   // The Plugin instructions it ships, written to `instructions.md` beside the manifest.
   instructions?: string;
 };
@@ -126,6 +128,7 @@ const pluginContributions = (
   order: plugin.order,
   declared: plugin.declared,
   operations: plugin.operations,
+  drafts: plugin.drafts,
 });
 
 // A dev Plugin's entry imports a TypeScript source the Server bundles.
