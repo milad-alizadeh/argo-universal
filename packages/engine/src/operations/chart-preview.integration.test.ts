@@ -116,6 +116,7 @@ it('returns a capture from the local desktop renderer at the requested width and
 
 it('reports when the renderer cannot paint the Chart, without reporting a capture', async () => {
   const host = await startEngineTestHost({ fixtureAgents: [] });
+
   const app = connectChartPreviewApp(host.url, {
     status: 'unavailable',
     reason: 'The Chart drawing did not finish.',

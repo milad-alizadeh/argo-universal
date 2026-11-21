@@ -1,5 +1,7 @@
 import {
   AppProviders,
+  ChartPreviewPage,
+  isChartPreviewPage,
   DesktopConversationProvider,
   PortalProvider,
   NavigationProvider,
@@ -75,6 +77,8 @@ const renderSymbolImage = globalThis.window?.argo?.symbols?.render;
 const RootView = withUniwind(GestureHandlerRootView);
 
 export default function RootLayout(): React.JSX.Element {
+  if (isChartPreviewPage()) return <ChartPreviewPage />;
+
   return (
     // The phone drawer's gestures need this root; it sits on the content surface, as the window does.
     <RootView className="flex-1 bg-content">

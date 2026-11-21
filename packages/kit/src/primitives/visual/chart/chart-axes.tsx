@@ -73,7 +73,7 @@ function XLabels({ scales, bounds, columns }: Props): React.JSX.Element {
 // System-font labels over the Skia plot (ADR-0028); each y label sits level with its tick.
 export function ChartAxes(props: Props): React.JSX.Element {
   return (
-    <View aria-hidden style={overlay}>
+    <View aria-hidden style={overlay} testID="chart-axes">
       <YLabels scales={props.scales} bounds={props.bounds} />
       <XLabels {...props} />
     </View>

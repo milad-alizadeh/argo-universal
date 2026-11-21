@@ -109,7 +109,13 @@ function Axes({
   geometry: Geometry;
   columns: number;
 }): React.JSX.Element | null {
-  return scales && bounds ? (
+  const drawLabels =
+    scales &&
+    bounds &&
+    bounds.right > bounds.left &&
+    bounds.bottom > bounds.top;
+
+  return drawLabels ? (
     <ChartAxes scales={scales} bounds={bounds} columns={columns} />
   ) : null;
 }

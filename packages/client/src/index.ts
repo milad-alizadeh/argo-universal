@@ -152,3 +152,10 @@ export { ConversationDetailScreen } from './screens/settings/conversation/conver
 export { PluginSignInDetailScreen } from './screens/settings/plugins/sign-in/$id/plugin-sign-in-detail-screen';
 
 export { ScheduledDetailScreen } from './screens/scheduled/$id/schedule-detail-screen';
+
+export { useChartPreview } from './features/chart-preview/use-chart-preview';
+
+export {
+  ChartPreviewPage,
+  isChartPreviewPage,
+} from './features/feed/components/agent-message/chart-preview-page';

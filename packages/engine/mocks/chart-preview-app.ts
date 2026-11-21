@@ -34,6 +34,7 @@ export function connectChartPreviewApp(
     },
     WebSocket: AppPageSocket,
   });
+
   const app = createTRPCClient<AppRouter>({
     links: [wsLink({ client: socket })],
   });

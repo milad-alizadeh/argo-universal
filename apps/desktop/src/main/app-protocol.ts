@@ -80,8 +80,11 @@ async function serveExport(
 }
 
 // Serves the Expo web export; a path without an extension is a route and gets index.html.
-export function handleAppProtocol(exportDirectory: string): void {
-  protocol.handle(appScheme, (request): Promise<Response> =>
+export function handleAppProtocol(
+  exportDirectory: string,
+  router = protocol,
+): void {
+  router.handle(appScheme, (request): Promise<Response> =>
     serveExport(exportDirectory, request),
   );
 }

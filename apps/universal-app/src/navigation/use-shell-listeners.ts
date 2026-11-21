@@ -1,4 +1,5 @@
 import {
+  useChartPreview,
   useDesktopNavigation,
   useNotifications,
   usePluginListChanges,
@@ -14,6 +15,7 @@ export function useShellListeners(): void {
   useNotifications(usePathname());
   useDesktopNavigation();
   useScreenSight();
+  useChartPreview();
   useRememberShownPage();
   // A Plugin turned off elsewhere leaves the rail and its open page, as it does when the App reloads.
   usePluginListChanges();
