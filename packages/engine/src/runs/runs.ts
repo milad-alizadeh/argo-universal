@@ -4,6 +4,8 @@ import type {
   RunConfigurationRow,
   RunConfigurationStatus,
   RunLogsResult,
+  RunOutput,
+  RunOutputCursor,
   RunStartResult,
   RunStatusResult,
   RunStopResult,
@@ -26,6 +28,7 @@ import {
 } from './run-output';
 import { bindable, portListening, urlOf } from './run-ports';
 import { awaitReady } from './run-ready';
+import { watchRunOutput } from './run-replay';
 import { latestRun, RunWriteJob, type RunRecord } from './run-store';
 import { RunTerminals, type Standing } from './run-terminals';
 import { RunUpdates } from './run-updates';
@@ -138,6 +141,23 @@ export class Runs {
     signal: AbortSignal,
   ): AsyncIterable<RunStatusResult> {
     return this.updates.watch(checkout, () => this.status(checkout), signal);
+  }
+
+  public watchOutput(
+    checkout: RunCheckout,
+    name: string,
+    cursor: RunOutputCursor | undefined,
+    signal: AbortSignal,
+  ): AsyncIterable<RunOutput> {
+    return watchRunOutput(
+      {
+        read: () => this.standing(checkout, name),
+        listen: (changed) =>
+          this.updates.listenToOutput(checkout, name, changed),
+      },
+      cursor,
+      signal,
+    );
   }
 
   public async logs(
@@ -313,7 +333,12 @@ export class Runs {
     this.latest.set(key, run.record);
     const stored = this.store(run.record, previous ? [previous.id] : []);
 
-    run.terminal.onData((data) => run.append(data));
+    run.terminal.onData((data) => {
+      run.append(data);
+      void run
+        .flushed()
+        .then(() => this.updates.outputChanged(checkout, run.record.name));
+    });
     run.terminal.onExit(({ exitCode }) => void this.exited(key, run, exitCode));
     void this.becomeReady(key, run);
     await stored;
@@ -382,5 +407,6 @@ export class Runs {
       new RunWriteJob(record, replaced),
     );
     this.updates.changed(record);
+    this.updates.outputChanged(record, record.name);
   }
 }

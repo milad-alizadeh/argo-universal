@@ -60,3 +60,48 @@ it('updates both Sessions on a Checkout as its Run starts, becomes ready, and st
     value: { configurations: [{ name, status: 'stopped' }] },
   });
 });
+
+it('replays recorded Terminal bytes, streams new bytes and resumes at a saved cursor', async () => {
+  const { caller, terminals, sessionId } = await startProject();
+  const target = { sessionId, name };
+  const started = caller.run.start(target);
+  const terminal = await terminals.next();
+  terminal.print('Local:\r\n\u001b[31m🚀\u001b[0m');
+  await started;
+
+  const output = (await caller.run.output(target))[Symbol.asyncIterator]();
+  onTestFinished(async () => {
+    await output.return?.();
+  });
+
+  const replay = await output.next();
+  expect(replay.done).toBe(false);
+  expect(Buffer.from(replay.value.data, 'base64').toString('utf8')).toBe(
+    'Local:\r\n\u001b[31m🚀\u001b[0m',
+  );
+  expect(replay.value.cursor.offset).toBe(21);
+
+  const live = output.next();
+  terminal.print('\r\nReloaded');
+  const next = await live;
+  expect(next.done).toBe(false);
+  expect(Buffer.from(next.value.data, 'base64').toString('utf8')).toBe(
+    '\r\nReloaded',
+  );
+  await output.return?.();
+
+  terminal.print('\r\nWhile away');
+  const reopened = (
+    await caller.run.output({ ...target, cursor: next.value.cursor })
+  )[Symbol.asyncIterator]();
+  onTestFinished(async () => {
+    await reopened.return?.();
+  });
+
+  const missed = await reopened.next();
+  expect(missed.done).toBe(false);
+  expect(Buffer.from(missed.value.data, 'base64').toString('utf8')).toBe(
+    '\r\nWhile away',
+  );
+  expect(missed.value.cursor.runId).toBe(next.value.cursor.runId);
+});

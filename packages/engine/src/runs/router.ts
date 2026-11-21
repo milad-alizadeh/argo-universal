@@ -1,4 +1,4 @@
-import { RunStatusResult } from '@repo/contracts';
+import { RunOutput, RunOutputCursor, RunStatusResult } from '@repo/contracts';
 import { z } from 'zod';
 import {
   authenticatedAppProcedure,
@@ -12,6 +12,11 @@ import type { RunCheckout, Runs } from './runs';
 type RunTransport = Pick<SessionSources, 'readSession'> & { runs: Runs };
 
 const sessionInput = z.strictObject({ sessionId: z.string().min(1) });
+
+const outputInput = sessionInput.extend({
+  name: z.string().min(1),
+  cursor: RunOutputCursor.optional(),
+});
 
 const checkoutFor = (
   { readSession }: RunTransport,
@@ -29,6 +34,17 @@ const streamSignal = (
 
 export const createRunRouter = routerFactory((deps: RunTransport) =>
   router({
+    output: authenticatedAppProcedure
+      .input(outputInput)
+      .output(zAsyncIterable({ yield: RunOutput }))
+      .subscription(({ ctx, input, signal }) =>
+        deps.runs.watchOutput(
+          checkoutFor(deps, input.sessionId),
+          input.name,
+          input.cursor,
+          streamSignal(ctx.connection.signal, signal),
+        ),
+      ),
     watchStatus: authenticatedAppProcedure
       .input(sessionInput)
       .output(zAsyncIterable({ yield: RunStatusResult }))
