@@ -1,4 +1,4 @@
-import { integer, snakeCase, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, snakeCase, text } from 'drizzle-orm/sqlite-core';
 import { timestamp } from '#schema-timestamp';
 
 export const project = snakeCase.table('project', {
@@ -21,6 +21,7 @@ export const projectSchedule = snakeCase.table('project_schedule', {
   settings: text().notNull(),
   nextAt: integer().notNull(),
   latestSessionId: text(),
+  paused: integer({ mode: 'boolean' }).notNull().default(false),
 });
 
 export const projectScheduleOccurrence = snakeCase.table(
@@ -32,5 +33,10 @@ export const projectScheduleOccurrence = snakeCase.table(
       .references(() => projectSchedule.id, { onDelete: 'cascade' }),
     at: integer().notNull(),
     result: text().notNull(),
+    sessionId: text(),
   },
+  (table) => [
+    index('project_schedule_history').on(table.scheduleId, table.at, table.id),
+    index('project_schedule_run_session').on(table.scheduleId, table.sessionId),
+  ],
 );

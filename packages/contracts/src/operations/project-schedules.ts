@@ -19,6 +19,71 @@ const intervalSeconds = z
   .positive('Enter an interval of at least one second.')
   .max(maximumIntervalSeconds);
 
+export const ScheduleWeekday = z.enum([
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
+]);
+
+export type ScheduleWeekday = z.infer<typeof ScheduleWeekday>;
+
+const weekdays = z
+  .array(ScheduleWeekday)
+  .min(1, 'Choose at least one day.')
+  .refine(
+    (days) => new Set(days).size === days.length,
+    'Choose each day once.',
+  );
+
+function validTimeZone(timeZone: string): boolean {
+  if (timeZone.startsWith('+') || timeZone.startsWith('-')) return false;
+
+  try {
+    new Intl.DateTimeFormat('en', { timeZone });
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const localFields = {
+  localTime: z
+    .string()
+    .regex(
+      /^(?:[01]\d|2[0-3]):[0-5]\d$/,
+      'Enter a local time in HH:mm format.',
+    ),
+  timeZone: z.string().refine(validTimeZone, 'Choose a valid IANA time zone.'),
+};
+
+const customInterval = z
+  .strictObject({
+    type: z.literal('custom'),
+    every: z.int().positive(),
+    unit: z.enum(['day', 'week']),
+    weekdays: weekdays.optional(),
+    ...localFields,
+  })
+  .refine(
+    ({ unit, weekdays: days }) => (unit === 'week') === (days !== undefined),
+    'Choose weekdays for a weekly repeat.',
+  );
+
+export const ProjectScheduleCadence = z.discriminatedUnion('type', [
+  z.strictObject({ type: z.literal('interval'), intervalSeconds }),
+  z.strictObject({ type: z.literal('daily'), ...localFields }),
+  z.strictObject({ type: z.literal('weekdays'), ...localFields }),
+  z.strictObject({ type: z.literal('weekly'), weekdays, ...localFields }),
+  customInterval,
+]);
+
+export type ProjectScheduleCadence = z.infer<typeof ProjectScheduleCadence>;
+
 const checkout = z.discriminatedUnion('type', [
   z.strictObject({
     type: z.literal('worktree'),
@@ -31,7 +96,7 @@ export const ProjectScheduleInput = z.strictObject({
   projectId,
   agent: z.string().min(1),
   instructions,
-  intervalSeconds,
+  cadence: ProjectScheduleCadence,
   checkout: checkout
     .optional()
     .describe(
@@ -46,6 +111,7 @@ export const ProjectSchedule = ProjectScheduleInput.extend({
   checkout: SessionCheckoutChoice,
   nextAt: z.number(),
   latestSessionId: z.string().nullable(),
+  paused: z.boolean(),
 });
 
 const occurrenceFields = { at: z.number() };
@@ -60,6 +126,7 @@ export const ProjectScheduleOccurrence = z.discriminatedUnion('outcome', [
     ...occurrenceFields,
     outcome: z.literal('skipped'),
     reason: z.string(),
+    through: z.number().optional(),
   }),
   z.strictObject({
     ...occurrenceFields,
@@ -78,6 +145,26 @@ export type ProjectScheduleOccurrence = z.infer<
 
 const target = z.strictObject({ projectId, id: z.string().min(1) });
 
+const historyCursor = z.strictObject({ at: z.number(), id: z.string() });
+
+const ProjectScheduleHistoryEntry = z.strictObject({
+  id: z.string(),
+  occurrence: ProjectScheduleOccurrence,
+});
+
+export type ProjectScheduleHistoryEntry = z.infer<
+  typeof ProjectScheduleHistoryEntry
+>;
+
+export const ProjectScheduleHistoryPage = z.strictObject({
+  entries: z.array(ProjectScheduleHistoryEntry),
+  next: historyCursor.nullable(),
+});
+
+export type ProjectScheduleHistoryPage = z.infer<
+  typeof ProjectScheduleHistoryPage
+>;
+
 const scopePolicy = 'ask-outside-project';
 
 const scheduleIcon = 'clock';
@@ -95,6 +182,18 @@ export const projectScheduleOperations = {
     policy: scopePolicy,
     keywords: ['schedule', 'recurring', 'interval'],
   },
+  'project.schedulePreview': {
+    id: 'project.schedulePreview',
+    label: 'Preview Project Schedule',
+    icon: scheduleIcon,
+    description:
+      'Show the next occurrence in Unix milliseconds for a recurrence without saving it.',
+    params: z.strictObject({ projectId, cadence: ProjectScheduleCadence }),
+    result: z.strictObject({ nextAt: z.number() }),
+    tier: 'read',
+    policy: scopePolicy,
+    keywords: ['schedule', 'next occurrence', 'repeat', 'time zone'],
+  },
   'project.scheduleList': {
     id: 'project.scheduleList',
     label: 'List Project Schedules',
@@ -106,6 +205,42 @@ export const projectScheduleOperations = {
     tier: 'read',
     policy: scopePolicy,
     keywords: ['scheduled', 'recurring', 'interval'],
+  },
+  'project.scheduleEdit': {
+    id: 'project.scheduleEdit',
+    label: 'Edit Project Schedule',
+    icon: scheduleIcon,
+    description:
+      'Update the saved instructions, cadence, Agent or Checkout for future Project Schedule occurrences.',
+    params: ProjectScheduleInput.extend({ id: target.shape.id }),
+    result: ProjectSchedule,
+    tier: 'act',
+    policy: scopePolicy,
+    keywords: ['schedule', 'edit', 'update'],
+  },
+  'project.scheduleManage': {
+    id: 'project.scheduleManage',
+    label: 'Manage Project Schedule',
+    icon: scheduleIcon,
+    description:
+      'Pause, resume or delete a Project Schedule. Sessions already started remain available.',
+    params: target.extend({ action: z.enum(['pause', 'resume', 'delete']) }),
+    result: z.strictObject({}),
+    tier: 'act',
+    policy: scopePolicy,
+    keywords: ['schedule', 'pause', 'resume', 'delete'],
+  },
+  'project.scheduleHistory': {
+    id: 'project.scheduleHistory',
+    label: 'Read Project Schedule history',
+    icon: scheduleIcon,
+    description:
+      'Read recent occurrences, Session links, and reasons an occurrence was skipped or failed.',
+    params: target.extend({ cursor: historyCursor.optional() }),
+    result: ProjectScheduleHistoryPage,
+    tier: 'read',
+    policy: scopePolicy,
+    keywords: ['schedule', 'history', 'occurrence'],
   },
   'project.scheduleRunNow': {
     id: 'project.scheduleRunNow',

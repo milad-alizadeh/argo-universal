@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
+import { cn } from '#kit/utils';
 import { FieldGroup } from '#primitives/fields/field-group';
 import { useCentresOverlays } from '#primitives/overlays/centred-overlay';
 import { PinnedActions } from './dialog-actions';
@@ -24,14 +25,26 @@ function CentredForm({
   description,
   footer,
   children,
+  scrolls,
+  className,
   ...frame
 }: DialogFormProps): ReactElement {
   return (
-    <DialogBody {...frame} accessibilityLabel={title}>
+    <DialogBody
+      {...frame}
+      accessibilityLabel={title}
+      className={cn(scrolls && 'web:max-h-dvh', className)}
+    >
       <Heading title={title} description={description} />
-      {children}
+      {scrolls ? <CentredSections>{children}</CentredSections> : children}
       {footer}
     </DialogBody>
+  );
+}
+
+function CentredSections({ children }: { children: ReactNode }): ReactElement {
+  return (
+    <View className="min-h-0 shrink gap-4 web:overflow-y-auto">{children}</View>
   );
 }
 

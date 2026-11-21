@@ -1,4 +1,8 @@
-import type { ProjectSchedule } from '@repo/contracts/operations';
+import type {
+  ProjectSchedule,
+  ProjectScheduleHistoryEntry,
+} from '@repo/contracts/operations';
+import { scheduleCadenceDraft } from './schedule-cadence-draft';
 import type { ScheduleFormViewProps } from './schedule-form-view';
 
 export const scheduleFormFixture = {
@@ -16,7 +20,34 @@ export const scheduleFormFixture = {
   ],
   currentBranch: 'main',
   initialProjectId: 'argo',
-} satisfies Omit<ScheduleFormViewProps, 'onSubmit'>;
+} satisfies Omit<ScheduleFormViewProps, 'onSubmit' | 'timing'>;
+
+const london = 'Europe/London';
+
+export const weekdaysDraft = scheduleCadenceDraft({
+  type: 'weekdays',
+  localTime: '09:00',
+  timeZone: london,
+});
+
+export const customWeeksDraft = scheduleCadenceDraft({
+  type: 'custom',
+  every: 2,
+  unit: 'week',
+  weekdays: ['monday', 'thursday'],
+  localTime: '09:00',
+  timeZone: london,
+});
+
+export const weekdaysTiming = {
+  draft: weekdaysDraft,
+  nextRun: 'Mon, 23 Nov at 09:00',
+};
+
+export const customWeeksTiming = {
+  draft: customWeeksDraft,
+  nextRun: 'Thu, 26 Nov at 09:00',
+};
 
 export const firstSchedule = {
   id: 'review-build',
@@ -27,8 +58,9 @@ export const firstSchedule = {
   agent: 'agent-1',
   configOptions: [],
   checkout: { type: 'worktree', baseBranch: 'main' },
-  intervalSeconds: 3600,
+  cadence: { type: 'weekdays', localTime: '09:00', timeZone: london },
   nextAt: Date.UTC(2026, 10, 21, 14),
+  paused: false,
   latestSessionId: null,
 } satisfies ProjectSchedule;
 
@@ -37,11 +69,45 @@ export const latestSchedule = {
   id: 'review-changes',
   name: 'Review recent changes',
   instructions: 'Review recent changes and flag regressions.',
-  intervalSeconds: 1800,
+  cadence: { type: 'interval', intervalSeconds: 1800 },
   latestSessionId: 'latest-session',
 } satisfies ProjectSchedule;
 
+export const pausedSchedule: ProjectSchedule = {
+  ...latestSchedule,
+  id: 'schedule-paused',
+  name: 'Audit flaky tests',
+  paused: true,
+};
+
 export const scheduledListFixture = {
-  schedules: [firstSchedule, latestSchedule],
+  schedules: [firstSchedule, latestSchedule, pausedSchedule],
   selectedId: firstSchedule.id,
 };
+
+export const scheduleHistoryFixture: readonly ProjectScheduleHistoryEntry[] = [
+  {
+    id: 'occurrence-new',
+    occurrence: {
+      at: Date.UTC(2026, 10, 21, 14),
+      outcome: 'started',
+      sessionId: 'latest-session',
+    },
+  },
+  {
+    id: 'occurrence-skipped',
+    occurrence: {
+      at: Date.UTC(2026, 10, 21, 13),
+      outcome: 'skipped',
+      reason: 'The Server was offline when this Schedule was due.',
+    },
+  },
+  {
+    id: 'occurrence-older',
+    occurrence: {
+      at: Date.UTC(2026, 10, 21, 12),
+      outcome: 'started',
+      sessionId: 'earlier-session',
+    },
+  },
+];

@@ -1,39 +1,75 @@
 import {
-  ProjectSchedule,
+  type ProjectSchedule,
+  type projectScheduleOperations,
+  type ProjectScheduleHistoryPage,
+  type ProjectScheduleCadence,
   type ProjectScheduleInput,
   type ProjectScheduleOccurrence,
 } from '@repo/contracts/operations';
-import {
-  projectSchedule as table,
-  projectScheduleOccurrence as occurrences,
-} from '@repo/db/schema';
+import { projectSchedule as table } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, eq } from 'drizzle-orm';
+import type { z } from 'zod';
 import { requireInstalledAgent } from '../agents';
-import { titleFromPrompt } from '../feed';
 import { isFolder, listProjectBranches, readProjectPath } from '../projects';
 import { startSessionCreation } from './creation/session-creation';
+import {
+  hasRunningScheduleSession,
+  readScheduleHistory,
+  writeScheduleOccurrence,
+} from './project-schedule-history';
+import {
+  decode,
+  editedSchedule,
+  firstOccurrence,
+  managedSchedule,
+  settingsWithName,
+  type SavedSettings,
+} from './project-schedule-settings';
+import { nextProjectScheduleAt } from './project-schedule-timing';
 import { startSchedule, type ScheduleActor } from './schedule-machine';
-import { nextIntervalAt } from './schedule-timing';
 import type { SessionHandlerSources } from './session-sources';
+
+type OccurrencePreview = { nextAt: number };
 
 type ScheduleTarget = { id: string; projectId: string };
 
-const decode = ({
-  settings,
-  ...row
-}: typeof table.$inferSelect): ProjectSchedule =>
-  ProjectSchedule.parse({ ...JSON.parse(settings), ...row });
+type ScheduleRow = typeof table.$inferSelect;
+type Operations = typeof projectScheduleOperations;
+type ScheduleEdit = z.output<Operations['project.scheduleEdit']['params']>;
+type ScheduleManagement = z.output<
+  Operations['project.scheduleManage']['params']
+>;
+type ScheduleHistory = z.output<
+  Operations['project.scheduleHistory']['params']
+>;
+
+function scheduleMissing(): TRPCError {
+  return new TRPCError({
+    code: 'NOT_FOUND',
+    message: 'Project Schedule not found.',
+  });
+}
 
 export class ProjectSchedules {
   private readonly actors = new Map<string, ScheduleActor>();
   private readonly launching = new Set<string>();
+  private readonly missedAtStartup = new Map<string, number>();
 
   public constructor(
     private readonly sources: SessionHandlerSources,
     private readonly stopping?: AbortSignal,
   ) {
-    for (const row of this.list()) this.arm(row.id);
+    const now = Date.now();
+
+    for (const row of this.list()) {
+      if (row.paused) continue;
+
+      if (row.nextAt < now) this.missedAtStartup.set(row.id, row.nextAt);
+
+      this.arm(row.id);
+    }
+
     stopping?.addEventListener(
       'abort',
       () => {
@@ -53,26 +89,31 @@ export class ProjectSchedules {
       )
       .orderBy(table.nextAt, table.id)
       .all()
-      .map(decode);
+      .map((row): ProjectSchedule => decode(row).schedule);
+  }
+
+  public preview(
+    projectId: string,
+    cadence: ProjectScheduleCadence,
+  ): OccurrencePreview {
+    readProjectPath(this.sources.database, projectId);
+
+    return { nextAt: firstOccurrence(cadence, Date.now()) };
   }
 
   public async create(input: ProjectScheduleInput): Promise<ProjectSchedule> {
-    const checkout = await this.resolveCheckout(input);
-    requireInstalledAgent(this.sources.installedAgents, input.agent);
-    const { projectId, ...settings } = input;
+    const settings = await this.resolveSettings(input);
+    const { projectId } = input;
     const id = this.sources.createId();
     const now = Date.now();
 
     const row = {
       id,
       projectId,
-      settings: JSON.stringify({
-        ...settings,
-        checkout,
-        name: titleFromPrompt([{ type: 'text', text: input.instructions }]),
-      }),
-      nextAt: nextIntervalAt(now, input.intervalSeconds, now),
+      settings: JSON.stringify({ ...settings, anchorAt: now }),
+      nextAt: firstOccurrence(input.cadence, now),
       latestSessionId: null,
+      paused: false,
     };
 
     await this.sources.open.write({
@@ -82,7 +123,74 @@ export class ProjectSchedules {
 
     this.arm(id);
 
-    return decode(row);
+    return decode(row).schedule;
+  }
+
+  public async edit({ id, ...input }: ScheduleEdit): Promise<ProjectSchedule> {
+    const target = { id, projectId: input.projectId };
+    this.requireRow(target);
+    const settings = await this.resolveSettings(input);
+    await this.sources.open.write({
+      describe: () => 'Edit Project Schedule',
+      commit: (tx) => {
+        const row = this.row(id);
+
+        if (row?.projectId !== target.projectId) return;
+
+        tx.update(table)
+          .set(editedSchedule(row, settings))
+          .where(eq(table.id, id))
+          .run();
+      },
+    });
+
+    this.rearm(id);
+
+    return decode(this.requireRow(target)).schedule;
+  }
+
+  public async manage({
+    action,
+    ...target
+  }: ScheduleManagement): Promise<Record<string, never>> {
+    this.requireRow(target);
+    const { id } = target;
+    await this.sources.open.write({
+      describe: () => 'Manage Project Schedule',
+      commit: (tx) => {
+        const row = this.row(id);
+
+        if (row?.projectId !== target.projectId) return;
+
+        if (action === 'delete') {
+          tx.delete(table).where(eq(table.id, id)).run();
+        } else {
+          tx.update(table)
+            .set(managedSchedule(row, action))
+            .where(eq(table.id, id))
+            .run();
+        }
+      },
+    });
+
+    this.rearm(id);
+
+    return {};
+  }
+
+  public history(input: ScheduleHistory): ProjectScheduleHistoryPage {
+    this.requireRow(input);
+
+    return readScheduleHistory(this.sources.database, input.id, input.cursor);
+  }
+
+  private async resolveSettings(
+    input: ProjectScheduleInput,
+  ): Promise<SavedSettings> {
+    const checkout = await this.resolveCheckout(input);
+    requireInstalledAgent(this.sources.installedAgents, input.agent);
+
+    return settingsWithName(input, checkout);
   }
 
   private async resolveCheckout({
@@ -117,20 +225,20 @@ export class ProjectSchedules {
     return { type: 'worktree', baseBranch };
   }
 
-  public runNow({
-    projectId,
-    id,
-  }: ScheduleTarget): Promise<ProjectScheduleOccurrence> {
+  public runNow(target: ScheduleTarget): Promise<ProjectScheduleOccurrence> {
+    return this.run(
+      decode(this.requireRow(target)).schedule,
+      Date.now(),
+      this.stopping,
+    );
+  }
+
+  private requireRow({ id, projectId }: ScheduleTarget): ScheduleRow {
     const stored = this.row(id);
 
-    if (stored?.projectId !== projectId) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'Project Schedule not found.',
-      });
-    }
+    if (stored?.projectId !== projectId) throw scheduleMissing();
 
-    return this.run(decode(stored), Date.now(), this.stopping);
+    return stored;
   }
 
   private row(id: string): typeof table.$inferSelect | undefined {
@@ -139,6 +247,15 @@ export class ProjectSchedules {
       .from(table)
       .where(eq(table.id, id))
       .get();
+  }
+
+  private rearm(id: string): void {
+    this.actors.get(id)?.stop();
+    this.actors.delete(id);
+
+    const row = this.row(id);
+
+    if (row && !row.paused) this.arm(id);
   }
 
   private arm(id: string): void {
@@ -157,20 +274,58 @@ export class ProjectSchedules {
     const row = this.row(id);
     const now = Date.now();
 
-    if (!row || row.nextAt > now) return;
+    if (!row || row.paused || row.nextAt > now) return;
 
-    const schedule = decode(row);
-    const nextAt = nextIntervalAt(row.nextAt, schedule.intervalSeconds, now);
+    const missed = this.missedAtStartup.get(id) === row.nextAt;
+    const advanced = await this.advance(row, now, missed);
+
+    if (advanced) this.missedAtStartup.delete(id);
+
+    if (advanced && !missed && !signal.aborted)
+      await this.run(decode(row).schedule, row.nextAt, signal);
+  }
+
+  private async advance(
+    row: ScheduleRow,
+    now: number,
+    missed: boolean,
+  ): Promise<boolean> {
+    const occurrenceId = this.sources.createId();
+    let advanced = false;
+
+    const { schedule, anchorAt } = decode(row);
+    const nextAt = nextProjectScheduleAt(schedule.cadence, now, anchorAt);
     await this.sources.open.write({
       describe: () => 'Advance Project Schedule',
-      commit: (tx) =>
-        tx
+      commit: (tx) => {
+        const change = tx
           .update(table)
           .set({ nextAt })
-          .where(and(eq(table.id, id), eq(table.nextAt, row.nextAt)))
-          .run(),
+          .where(
+            and(
+              eq(table.id, row.id),
+              eq(table.nextAt, row.nextAt),
+              eq(table.paused, false),
+            ),
+          )
+          .run();
+
+        advanced = Number(change.changes) > 0;
+
+        if (advanced && missed)
+          writeScheduleOccurrence(tx, row.id, {
+            id: occurrenceId,
+            occurrence: {
+              at: row.nextAt,
+              through: now,
+              outcome: 'skipped',
+              reason: 'The Server was offline when this Schedule was due.',
+            },
+          });
+      },
     });
-    await this.run(schedule, row.nextAt, signal);
+
+    return advanced;
   }
 
   private async run(
@@ -203,11 +358,13 @@ export class ProjectSchedules {
   }
 
   private hasWorkingRun(id: string): boolean {
-    const latest = this.row(id)?.latestSessionId;
-
     return (
       this.launching.has(id) ||
-      (latest != null && this.sources.open.isRunning(latest))
+      hasRunningScheduleSession(
+        this.sources.database,
+        id,
+        this.sources.open.runningSessionIds(),
+      )
     );
   }
 
@@ -263,21 +420,11 @@ export class ProjectSchedules {
     await this.sources.open.write({
       describe: () => 'Record Project Schedule occurrence',
       commit: (tx) => {
-        tx.insert(occurrences)
-          .values({
+        if (this.row(id))
+          writeScheduleOccurrence(tx, id, {
             id: occurrenceId,
-            scheduleId: id,
-            at: result.at,
-            result: JSON.stringify(result),
-          })
-          .run();
-
-        if (result.outcome === 'started') {
-          tx.update(table)
-            .set({ latestSessionId: result.sessionId })
-            .where(eq(table.id, id))
-            .run();
-        }
+            occurrence: result,
+          });
       },
     });
 
