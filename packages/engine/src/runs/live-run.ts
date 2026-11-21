@@ -17,25 +17,28 @@ type LiveRunInput = {
   starter: string;
 };
 
+type SaveRun = (record: RunRecord) => Promise<void>;
+
 // What a Run is in memory while its terminal lives; the stored record follows it.
 export class LiveRun {
-  public stopping?: Promise<void>;
-  public record: RunRecord;
+  private shutdown?: Promise<void>;
+  private finishing?: Promise<void>;
+  private currentRecord: RunRecord;
   public readonly terminal: TerminalProcess;
   public readonly outputPath: string;
   public readonly configuration: RunConfiguration;
   public readonly fingerprint: string;
   public readonly block: number;
   public readonly starter: string;
-  public readonly ended = Promise.withResolvers<void>();
-  public readonly ready = Promise.withResolvers<void>();
+  private readonly ended = Promise.withResolvers<void>();
+  private readonly ready = Promise.withResolvers<void>();
   private readonly recording: TerminalRecording;
   public get screen(): TerminalRecording['screen'] {
     return this.recording.screen;
   }
   private output = '';
   public constructor(input: LiveRunInput) {
-    this.record = input.record;
+    this.currentRecord = { ...input.record, pid: input.terminal.pid ?? null };
     this.terminal = input.terminal;
     this.outputPath = input.outputPath;
     this.configuration = input.configuration;
@@ -45,6 +48,77 @@ export class LiveRun {
     this.recording = new TerminalRecording(this.outputPath);
     void this.ended.promise.then(() => this.recording.dispose());
   }
+  public get record(): Readonly<RunRecord> {
+    return this.currentRecord;
+  }
+
+  public isStopping(): boolean {
+    return this.shutdown !== undefined;
+  }
+
+  public whenReleased(): Promise<void> | undefined {
+    return this.shutdown ?? this.finishing;
+  }
+
+  public stop(released: () => void): Promise<void> {
+    this.shutdown ??= Promise.resolve().then(async () => {
+      await this.terminal.stop();
+      await this.whenEnded();
+      released();
+    });
+
+    return this.shutdown;
+  }
+
+  public whenReady(): Promise<void> {
+    return this.ready.promise;
+  }
+
+  public whenEnded(): Promise<void> {
+    return this.ended.promise;
+  }
+
+  public async markReady(readyAt: number, save: SaveRun): Promise<void> {
+    await this.save({ status: 'ready', readyAt }, save);
+    this.ready.resolve();
+  }
+
+  public finish(
+    exitCode: number,
+    now: () => number,
+    save: SaveRun,
+    released: () => void,
+  ): Promise<void> {
+    this.finishing ??= this.complete(exitCode, now, save).then(() => {
+      if (!this.isStopping()) released();
+    });
+
+    return this.finishing;
+  }
+
+  private async complete(
+    exitCode: number,
+    now: () => number,
+    save: SaveRun,
+  ): Promise<void> {
+    await this.flushed();
+    await this.save(
+      {
+        status: this.isStopping() ? 'stopped' : 'crashed',
+        exitCode,
+        endedAt: now(),
+      },
+      save,
+    );
+    this.ended.resolve();
+  }
+
+  private save(change: Partial<RunRecord>, save: SaveRun): Promise<void> {
+    this.currentRecord = { ...this.currentRecord, ...change };
+
+    return save(this.currentRecord);
+  }
+
   public append(data: string): void {
     this.recording.append(data);
     this.output = (this.output + data).slice(-memoryCharacters);

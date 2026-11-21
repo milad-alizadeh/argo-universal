@@ -156,12 +156,12 @@ export class RunView {
     await requireRunConfiguration(checkout.checkoutPath, name);
     const current = this.runs.live(checkout, name);
 
-    if (current?.stopping) await current.flushed();
+    if (current?.whenReleased()) await current.flushed();
 
     const record = this.runs.record(checkout, name);
 
     return {
-      live: current?.stopping ? undefined : current,
+      live: current?.whenReleased() ? undefined : current,
       record,
       output: record && runOutputPath(this.runs.home, record.id),
     };

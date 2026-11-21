@@ -210,8 +210,6 @@ export class Runs {
       fingerprint,
     });
 
-    record.pid = terminal.pid ?? null;
-
     const run = new LiveRun({
       record,
       terminal,
@@ -287,39 +285,25 @@ export class Runs {
     return run;
   }
 
-  private async exited(
-    key: string,
-    run: LiveRun,
-    exitCode: number,
-  ): Promise<void> {
-    if (!run.stopping) this.live.delete(key);
-    await run.flushed();
-    await this.update(key, run, {
-      status: run.stopping ? 'stopped' : 'crashed',
+  private exited(key: string, run: LiveRun, exitCode: number): Promise<void> {
+    return run.finish(
       exitCode,
-      endedAt: this.input.now(),
-    });
-    run.ended.resolve();
+      this.input.now,
+      (record) => this.update(key, record),
+      () => this.live.delete(key),
+    );
   }
 
-  private async markReady(key: string, run: LiveRun): Promise<void> {
-    await this.update(key, run, {
-      status: 'ready',
-      readyAt: this.input.now(),
-    });
-    run.ready.resolve();
+  private markReady(key: string, run: LiveRun): Promise<void> {
+    return run.markReady(this.input.now(), (record) =>
+      this.update(key, record),
+    );
   }
 
-  private async update(
-    key: string,
-    run: LiveRun,
-    change: Partial<RunRecord>,
-  ): Promise<void> {
-    run.record = { ...run.record, ...change };
+  private update(key: string, record: RunRecord): Promise<void> {
+    if (this.latest.get(key)?.id === record.id) this.latest.set(key, record);
 
-    if (this.latest.get(key)?.id === run.record.id)
-      this.latest.set(key, run.record);
-    await this.store(run.record);
+    return this.store(record);
   }
 
   private async store(

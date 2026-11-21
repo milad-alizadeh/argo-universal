@@ -13,8 +13,8 @@ export async function awaitReady(
   timeoutMs: number,
 ): Promise<RunStartResult> {
   const outcome = await Promise.race([
-    run.ready.promise.then((): 'ready' => 'ready'),
-    run.ended.promise.then((): 'ended' => 'ended'),
+    run.whenReady().then((): 'ready' => 'ready'),
+    run.whenEnded().then((): 'ended' => 'ended'),
     delay(timeoutMs).then((): 'timeout' => 'timeout'),
   ]);
 
@@ -54,12 +54,12 @@ export async function watchReadiness(
 ): Promise<void> {
   const pattern = readyPattern(run.configuration);
 
-  while (current() && !run.stopping) {
+  while (current() && !run.whenReleased()) {
     const ready = pattern
       ? run.matches(pattern)
       : await portListening(run.record.port);
 
-    if (ready && current() && !run.stopping) return markReady();
+    if (ready && current() && !run.whenReleased()) return markReady();
     await delay(readyPollMs);
   }
 }

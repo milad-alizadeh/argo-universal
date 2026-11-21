@@ -27,8 +27,10 @@ export class RunLifecycle {
     this.requireOpen(checkout);
     const existing = this.live.get(key);
 
-    if (existing?.stopping)
-      return existing.stopping.then(() => this.start(key, checkout, launch));
+    const releasing = existing?.whenReleased();
+
+    if (releasing)
+      return releasing.then(() => this.start(key, checkout, launch));
 
     return existing
       ? Promise.resolve(existing)
@@ -111,17 +113,8 @@ export class RunLifecycle {
   }
 
   private stopTerminal(key: string, run: LiveRun): Promise<void> {
-    run.stopping ??= Promise.resolve().then(() => this.finishStop(key, run));
-
-    return run.stopping;
-  }
-
-  private async finishStop(key: string, run: LiveRun): Promise<void> {
-    await run.terminal.stop();
-    await run.ended.promise;
-
     // Keep the Run registered until its terminal finishes cleaning up listeners.
-    this.live.delete(key);
+    return run.stop(() => this.live.delete(key));
   }
 
   private async drainCheckout(key: string): Promise<void> {
