@@ -919,6 +919,17 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      resize: authenticatedAppProcedure
+        .input(operations['terminal.resize'].params)
+        .output(operations['terminal.resize'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'terminal.resize',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       send: authenticatedAppProcedure
         .input(operations['terminal.send'].params)
         .output(operations['terminal.send'].result)

@@ -34,6 +34,9 @@ export class RunScreen {
       () => new Promise<void>((done) => this.terminal.write(data, done)),
     );
   }
+  public resize(columns: number, rows: number): void {
+    this.pending = this.pending.then(() => this.terminal.resize(columns, rows));
+  }
   // The screen and the most recent lines above it, once everything written so far is drawn.
   public async read(scrollback: number): Promise<ScreenRead> {
     await this.pending;

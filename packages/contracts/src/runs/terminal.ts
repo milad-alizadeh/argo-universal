@@ -60,3 +60,12 @@ export const TerminalSendResult = z.strictObject({
 });
 
 export type TerminalSendResult = z.infer<typeof TerminalSendResult>;
+
+export const TerminalResizeParams = z.strictObject({
+  sessionId,
+  name,
+  columns: z.int().min(2).max(512),
+  rows: z.int().min(1).max(256),
+});
+
+export const TerminalResizeResult = z.strictObject({});

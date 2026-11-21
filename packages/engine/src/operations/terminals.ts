@@ -18,6 +18,14 @@ export function createTerminalOperations(deps: {
   return {
     'terminal.read': async ({ sessionId, name, scrollback }) =>
       runs.terminals.read(runCheckoutOf(database, sessionId), name, scrollback),
+    'terminal.resize': async ({ sessionId, name, columns, rows }) => {
+      await runs.terminals.resize(runCheckoutOf(database, sessionId), name, {
+        columns,
+        rows,
+      });
+
+      return {};
+    },
     'terminal.send': async ({ sessionId, name, input }) =>
       runs.terminals.send(runCheckoutOf(database, sessionId), name, input),
   };

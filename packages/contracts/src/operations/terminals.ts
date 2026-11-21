@@ -1,6 +1,8 @@
 import {
   TerminalReadParams,
   TerminalReadResult,
+  TerminalResizeParams,
+  TerminalResizeResult,
   TerminalSendParams,
   TerminalSendResult,
 } from '../runs/terminal';
@@ -18,6 +20,17 @@ export const terminalOperations = {
     tier: 'read',
     policy: 'allow',
     keywords: ['screen', 'scrollback', 'output', 'prompt', 'run'],
+  },
+  'terminal.resize': {
+    id: 'terminal.resize',
+    label: 'Resize Terminal',
+    icon: 'terminal',
+    description: 'Resize a Run Terminal to match its viewport.',
+    params: TerminalResizeParams,
+    result: TerminalResizeResult,
+    tier: 'act',
+    policy: 'person-only',
+    keywords: ['columns', 'rows', 'viewport'],
   },
   'terminal.send': {
     id: 'terminal.send',
