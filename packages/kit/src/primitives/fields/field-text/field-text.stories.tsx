@@ -8,7 +8,11 @@ import { fn } from 'storybook/test';
 import { kitArgTypes } from '#kit/kit-arg-types';
 import { FieldGroup } from '#primitives/fields/field-group';
 import { FieldText } from './field-text';
-import { secretDisabled, secretInvalid } from './field-text-fixtures';
+import {
+  longLabel,
+  secretDisabled,
+  secretInvalid,
+} from './field-text-fixtures';
 
 // A row's stories draw it as the one row of a FieldGroup section, where Expo UI draws it.
 const inFieldGroupSection: Decorator<React.ComponentProps<typeof FieldText>> = (
@@ -62,3 +66,7 @@ export const Multiline: Story = {
 export const SecretDisabled: Story = { args: secretDisabled };
 
 export const SecretInvalid: Story = { args: secretInvalid };
+
+export const LongLabel: Story = {
+  args: longLabel,
+};
