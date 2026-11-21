@@ -32,7 +32,7 @@ import {
 import type { RpcConnection } from '../rpc';
 import { discoverWithAccounts } from './accounts/removed-plugins';
 import { startsWithServer } from './discovery/plugin-contributions';
-import { undeclaredPick } from './drafts/draft-picks-check';
+import { undeclaredCommentPlace, undeclaredPick } from './drafts/draft-picks-check';
 import { draftPrompt } from './drafts/draft-prompt';
 import type { ChosenDraft, PluginDrafts } from './drafts/plugin-drafts';
 import { callerOf } from './hooks/hook-rules';
@@ -142,7 +142,9 @@ export class PluginService {
     if (this.deps.dev !== true)
       throw new Error(`${pluginId} is not a dev Plugin, so it has no Draft`);
 
-    const refusal = undeclaredPick(chosen.picks, contributes.drafts);
+    const refusal =
+      undeclaredPick(chosen.picks, contributes.drafts) ??
+      undeclaredCommentPlace(chosen.comments, contributes.drafts);
 
     if (refusal) throw new Error(refusal);
 

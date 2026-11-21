@@ -218,3 +218,53 @@ it('refuses a Choose for a Plugin the Server does not run as a dev Plugin', asyn
     host.caller.plugin.draft.choose({ pluginId: dev, picks }),
   ).rejects.toThrow(/not a dev Plugin/);
 }, 60_000);
+
+it('hands comments on nodes outside any region to the Agent, with no pick', async () => {
+  const { host, agent } = await drawing();
+  const outside = [{ nodeKey: 'title', note: 'Make the title bigger' }];
+
+  await agent(show, { pluginId: dev });
+  await host.caller.plugin.draft.choose({
+    pluginId: dev,
+    picks: [],
+    comments: outside,
+  });
+
+  expect(
+    await agent('plugin.draft.pick', { pluginId: dev }),
+  ).toMatchObject({
+    kind: 'result',
+    result: { choice: { picks: [], comments: outside } },
+  });
+}, 60_000);
+
+it('refuses a comment in a region or Variant the Draft does not declare', async () => {
+  const { host, agent } = await drawing();
+  const note = 'Too tall';
+
+  await agent(show, { pluginId: dev });
+  await expect(
+    host.caller.plugin.draft.choose({
+      pluginId: dev,
+      picks,
+      comments: [{ nodeKey: 'a', region: 'footer', variant: 'rows', note }],
+    }),
+  ).rejects.toThrow(/no region footer/);
+  await expect(
+    host.caller.plugin.draft.choose({
+      pluginId: dev,
+      picks,
+      comments: [{ nodeKey: 'a', region: 'list', variant: 'grid', note }],
+    }),
+  ).rejects.toThrow(/no Variant grid/);
+  await expect(
+    host.caller.plugin.draft.choose({
+      pluginId: dev,
+      picks,
+      comments: [{ nodeKey: 'a', variant: 'rows', note }],
+    }),
+  ).rejects.toThrow(/Variant rows without a region/);
+  expect(await host.caller.plugin.draft.pick({ pluginId: dev })).toEqual({
+    choice: null,
+  });
+}, 60_000);
