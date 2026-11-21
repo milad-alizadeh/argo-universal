@@ -11,6 +11,7 @@ import type { OperationsDeps } from './operations';
 import { createPluginOperations } from './plugins';
 import { createProjectOperations } from './projects';
 import { createRegistryOperations } from './registry';
+import { createRunOperations } from './runs';
 import type { AppCaller, SessionCaller, UserCaller } from './session-tokens';
 import { sessionImplementations } from './sessions';
 import type { WorkExecution, UserAdmission } from './work';
@@ -81,6 +82,7 @@ export function createImplementations(
     ...createPluginOperations(deps.plugins.plugins),
     ...createRegistryOperations(deps),
     ...createProjectOperations(deps),
+    ...createRunOperations(deps),
     ...createConversationOperations(deps.conversation, deps.sessions),
   };
 }

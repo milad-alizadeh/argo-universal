@@ -839,5 +839,62 @@ export function generatedOperations(runner: OperationRunner) {
           }),
         ),
     }),
+    run: router({
+      start: authenticatedAppProcedure
+        .input(operations['run.start'].params)
+        .output(operations['run.start'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.start',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      stop: authenticatedAppProcedure
+        .input(operations['run.stop'].params)
+        .output(operations['run.stop'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.stop',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      restart: authenticatedAppProcedure
+        .input(operations['run.restart'].params)
+        .output(operations['run.restart'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.restart',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      status: publicProcedure
+        .input(operations['run.status'].params)
+        .output(operations['run.status'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.status',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      logs: publicProcedure
+        .input(operations['run.logs'].params)
+        .output(operations['run.logs'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.logs',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+    }),
   };
 }

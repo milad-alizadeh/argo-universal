@@ -1498,6 +1498,9 @@ importers:
       '@repo/machine-log':
         specifier: workspace:*
         version: link:../machine-log
+      '@repo/process':
+        specifier: workspace:*
+        version: link:../process
       '@trpc/server':
         specifier: 'catalog:'
         version: 11.19.0(typescript@7.0.2)

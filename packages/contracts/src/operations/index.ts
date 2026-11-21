@@ -11,6 +11,7 @@ import { pluginOperations } from './plugins';
 import { projectOperations } from './projects';
 import { readerOperations } from './readers';
 import { registryOperations } from './registry';
+import { runOperations } from './runs';
 import { operationJsonSchema } from './schema-json';
 import { sessionOperations } from './sessions';
 import { todoListOperations } from './todo-list';
@@ -51,6 +52,8 @@ export { sessionOperations } from './sessions';
 
 export { ProjectAdded, projectOperations } from './projects';
 
+export { runOperations } from './runs';
+
 export interface OperationDefinition {
   id: string;
   label: string;
@@ -77,6 +80,7 @@ export const operations = {
   ...pluginOperations,
   ...registryOperations,
   ...projectOperations,
+  ...runOperations,
 } as const satisfies Record<string, OperationDefinition>;
 
 export const OperationId = z.enum(

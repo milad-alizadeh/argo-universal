@@ -16,6 +16,8 @@ export { defaultInstallPorts } from './launch/default-ports';
 
 export { shellEnvironment } from './launch/shell-env';
 
+export { ensureSpawnHelper } from './auth/terminal-process';
+
 export {
   agentEnvironment,
   applySessionEnvironment,

@@ -40,6 +40,11 @@ const asked = {
   'plugin.setEnabled': ['disable a plugin'],
   'app.open': ['open a screen in the app'],
   'shell.stop': ['kill a terminal command'],
+  'run.start': ['start the dev server', 'run the app'],
+  'run.stop': ['stop the dev server'],
+  'run.restart': ['restart the dev server'],
+  'run.status': ['which dev servers are running'],
+  'run.logs': ['read the dev server output'],
 } satisfies Record<string, readonly string[]>;
 
 const queries = Object.entries(asked).flatMap(([expected, phrases]) =>

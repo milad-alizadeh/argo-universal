@@ -2503,6 +2503,7 @@
         "packages/engine/src/agents/launch/processes/process.ts",
         "packages/engine/src/sessions/shells/shell-group-members.ts",
         "packages/engine/src/sessions/shells/shell-launch.ts",
+        "packages/engine/src/runs/run-processes.ts",
         "apps/desktop/scripts/storybook-mac.mts"
       ],
       "rules": { "argo/child-process": "error" }

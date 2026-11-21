@@ -36,6 +36,7 @@ type ServerSource = {
     | 'operationWaitClock'
     | 'slashCommandsWaitMs'
     | 'discoveryName'
+    | 'terminalSpawner'
   >;
   self: Pick<AnyActorRef, 'system'>;
 };
@@ -80,6 +81,7 @@ export const serverInput: ServerInput = ({ context, self }) => ({
   hookPort: context.hookPort,
   operationWaitClock: context.operationWaitClock,
   slashCommandsWaitMs: context.slashCommandsWaitMs,
+  terminalSpawner: context.terminalSpawner,
   ...serverConfiguration(context),
   database: openDatabaseOf(context),
 });

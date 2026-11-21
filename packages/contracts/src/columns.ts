@@ -9,6 +9,7 @@ import {
   pluginAccountGrant,
   projectAccount,
   project,
+  run,
   session,
   shell,
   turn,
@@ -31,6 +32,8 @@ export const agentServerColumns = createSelectSchema(agentServers);
 export const registryCacheColumns = createSelectSchema(registryCache);
 
 export const shellColumns = createSelectSchema(shell);
+
+export const runColumns = createSelectSchema(run);
 
 export const pluginStateColumns = createSelectSchema(pluginState);
 

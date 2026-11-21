@@ -23,6 +23,7 @@
     "@repo/executables": "workspace:*",
     "@repo/git": "workspace:*",
     "@repo/machine-log": "workspace:*",
+    "@repo/process": "workspace:*",
     "@trpc/server": "catalog:",
     "ajv": "catalog:",
     "ajv-formats": "catalog:",

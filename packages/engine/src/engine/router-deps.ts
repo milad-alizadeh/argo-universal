@@ -17,6 +17,7 @@ import type { NotificationsDeps } from '../notifications';
 import type { OperationWaitClock, SessionTokens } from '../operations';
 import type { PairingDeps } from '../pairing/router';
 import type { PluginsRouterDeps } from '../plugins';
+import type { Runs } from '../runs';
 import { ScreenSight, type ScreenSightDeps } from '../screen-sight';
 import {
   createSessionConnections,
@@ -50,6 +51,7 @@ export type AppRouterDeps = SessionSources &
     controlToken: string;
     plugins: PluginsRouterDeps;
     conversation: ConversationsPort;
+    runs: Runs;
     operationWaitClock?: OperationWaitClock;
   };
 
