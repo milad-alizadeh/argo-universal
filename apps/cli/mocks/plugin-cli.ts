@@ -36,11 +36,12 @@ export function run(
   command: string,
   directory: string,
   timeout = 20_000,
+  flags: string[] = [],
 ): Promise<CommandResult> {
   return new Promise((resolve) => {
     execFile(
       process.execPath,
-      [cli, 'plugin', command, directory],
+      [cli, 'plugin', command, directory, ...flags],
       { timeout, cwd: tmpdir() },
       (error, output, stderr) =>
         resolve({ code: errorCode(error), output: output + stderr }),

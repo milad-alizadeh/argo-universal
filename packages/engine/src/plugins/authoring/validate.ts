@@ -17,8 +17,10 @@ import {
   type PluginSourceReport,
 } from './source';
 
+// `shipBlockers` are what keeps a valid Plugin from shipping, the Variants a Draft still declares.
 export type PluginValidation = PluginSourceReport & {
   manifest?: PluginManifest;
+  shipBlockers: PluginDiagnostic[];
 };
 
 type ManifestReport = PluginValidation & { manifest: PluginManifest };
@@ -27,14 +29,18 @@ export async function validatePlugin(
   directory: string,
   version = '0.0.0',
 ): Promise<PluginValidation> {
-  const report: PluginValidation = emptySourceReport();
+  const report: PluginValidation = {
+    ...emptySourceReport(),
+    shipBlockers: [],
+  };
   const manifest = await checkedManifest({ directory, version }, report);
 
   if (!manifest) return report;
   report.manifest = manifest;
-  report.diagnostics.push(
-    ...(await draftManifestDiagnostics(directory, manifest)),
-  );
+  const drafts = await draftManifestDiagnostics(directory, manifest);
+
+  report.diagnostics.push(...drafts.diagnostics);
+  report.shipBlockers.push(...drafts.shipBlockers);
   await inspectEntry(directory, { ...report, manifest });
 
   return report;

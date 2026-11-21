@@ -59,16 +59,61 @@ export function missingStateDiagnostics(
   });
 }
 
+const plural = (count: number, word: string): string =>
+  `${count} ${word}${count === 1 ? '' : 's'}`;
+
+/*
+ * A Draft never ships (ADR-0057): each region that still declares Variants blocks a ship, one diagnostic
+ * per region at its `variants` in plugin.json. `validate` reports them without failing, as a Plugin
+ * mid-Draft is valid; `validate --ship` fails on them.
+ */
+export function shipBlockerDiagnostics(
+  manifest: SourceFile,
+  parsed: PluginManifest,
+): PluginDiagnostic[] {
+  const tree = parseTree(manifest.source, [], { disallowComments: true });
+
+  return draftsOf(parsed).flatMap(({ page, regions }, pageIndex) =>
+    (regions ?? []).map(({ id, variants }, regionIndex) => {
+      const node =
+        tree &&
+        findNodeAtLocation(tree, [
+          'contributes',
+          'drafts',
+          pageIndex,
+          'regions',
+          regionIndex,
+          'variants',
+        ]);
+
+      const names = variants.map((variant) => variant.id).join(', ');
+
+      return sourceDiagnostic(
+        manifest,
+        node?.offset ?? 0,
+        `Draft page ${page} region ${id} still declares ${plural(variants.length, 'Variant')}: ${names}; build the real page from the chosen ones, then delete the declarations`,
+      );
+    }),
+  );
+}
+
 export async function draftManifestDiagnostics(
   directory: string,
   manifest: PluginManifest,
-): Promise<PluginDiagnostic[]> {
-  if (!draftsOf(manifest).length) return [];
+): Promise<{
+  diagnostics: PluginDiagnostic[];
+  shipBlockers: PluginDiagnostic[];
+}> {
+  if (!draftsOf(manifest).length) return { diagnostics: [], shipBlockers: [] };
 
   const file = join(directory, 'plugin.json');
   const source = await readFile(file, 'utf8').catch(() => '');
+  const input = { file, source };
 
-  return missingStateDiagnostics({ file, source }, manifest);
+  return {
+    diagnostics: missingStateDiagnostics(input, manifest),
+    shipBlockers: shipBlockerDiagnostics(input, manifest),
+  };
 }
 
 type FieldValue = Extract<

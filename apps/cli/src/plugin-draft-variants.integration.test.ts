@@ -124,5 +124,44 @@ it('validate draws no Variant while the Plugin has source diagnostics, so only t
 
   expect(result.code).toBe(1);
   expect(result.output).toContain('index.tsx');
-  expect(result.output).not.toContain('Variant');
+  expect(result.output).not.toContain(tabsDiagnostic);
+}, 90_000);
+
+it('validate passes a Plugin mid-Draft and reports its leftover Variants as blocking a ship', async () => {
+  const directory = await draftPlugin('() => <Text key="header">Tabs</Text>');
+
+  const result = await run('validate', directory, 60_000);
+
+  expect(result.code).toBe(0);
+  expect(result.output).toContain('Plugin is valid');
+  expect(result.output).toContain('Ship blocked');
+  expect(result.output).toContain('region header still declares 2 Variants');
+}, 90_000);
+
+it('validate --ship fails while a Variant declaration remains', async () => {
+  const directory = await draftPlugin('() => <Text key="header">Tabs</Text>');
+
+  const result = await run('validate', directory, 60_000, ['--ship']);
+
+  expect(result.code).toBe(1);
+  expect(result.output).toContain('plugin.json');
+  expect(result.output).toContain('region header still declares 2 Variants');
+}, 90_000);
+
+it('validate --ship passes a Plugin whose Variants are gone', async () => {
+  const directory = await draftPlugin('() => <Text key="header">Tabs</Text>');
+  const manifest = await readManifest(directory);
+
+  await writeFile(
+    join(directory, manifestFile),
+    JSON.stringify({
+      ...manifest,
+      contributes: { ...manifest.contributes, drafts: undefined },
+    }),
+  );
+
+  const result = await run('validate', directory, 60_000, ['--ship']);
+
+  expect(result).toMatchObject({ code: 0 });
+  expect(result.output).not.toContain('Ship blocked');
 }, 90_000);

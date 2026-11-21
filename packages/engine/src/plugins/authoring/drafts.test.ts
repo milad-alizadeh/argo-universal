@@ -1,6 +1,10 @@
 import { PluginManifest } from '@repo/contracts/plugins';
 import { expect, it } from 'vitest';
-import { inspectDraftLoaders, missingStateDiagnostics } from './drafts';
+import {
+  inspectDraftLoaders,
+  missingStateDiagnostics,
+  shipBlockerDiagnostics,
+} from './drafts';
 
 const manifest = PluginManifest.parse({
   id: 'drafts',
@@ -125,4 +129,58 @@ it('leaves the real page of the same Plugin alone', () => {
 }`;
 
   expect(inspect(source)).toEqual([]);
+});
+
+const withRegions = PluginManifest.parse({
+  ...manifest,
+  contributes: {
+    nav: [],
+    drafts: [
+      {
+        page: '/',
+        states: ['loading'],
+        regions: [
+          {
+            id: 'header',
+            variants: [
+              { id: 'compact', name: 'Compact' },
+              { id: 'tabs', name: 'Tabs' },
+            ],
+          },
+          { id: 'rows', variants: [{ id: 'dense', name: 'Dense' }] },
+        ],
+      },
+    ],
+  },
+});
+
+it('names each region that still declares Variants as a ship blocker, at its variants in plugin.json', () => {
+  const source = JSON.stringify(withRegions, null, 2);
+
+  const blockers = shipBlockerDiagnostics(
+    { file: manifestFile, source },
+    withRegions,
+  );
+
+  expect(blockers).toEqual([
+    expect.objectContaining({
+      file: manifestFile,
+      line: source.slice(0, source.indexOf('"variants"')).split('\n').length,
+      message: expect.stringContaining(
+        'region header still declares 2 Variants',
+      ),
+    }),
+    expect.objectContaining({
+      message: expect.stringContaining('region rows still declares 1 Variant:'),
+    }),
+  ]);
+});
+
+it('blocks nothing once no Variant remains', () => {
+  expect(
+    shipBlockerDiagnostics(
+      { file: manifestFile, source: JSON.stringify(manifest) },
+      manifest,
+    ),
+  ).toEqual([]);
 });

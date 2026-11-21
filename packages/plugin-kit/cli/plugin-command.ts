@@ -20,6 +20,7 @@ type Write = (line: string) => void;
 const PluginArguments = z.union([
   z.tuple([z.enum(['validate', 'types', 'test']), z.string().min(1)]),
   z.tuple([z.literal('types'), z.string().min(1), z.literal('--check')]),
+  z.tuple([z.literal('validate'), z.string().min(1), z.literal('--ship')]),
 ]);
 
 const commands = { validate, types, test: runTests };
@@ -33,7 +34,9 @@ export function runPluginCommand(
   const parsed = PluginArguments.safeParse(args);
 
   if (!parsed.success) {
-    write(`Usage: ${name} <validate|types|test> <dir> (types takes --check)`);
+    write(
+      `Usage: ${name} <validate|types|test> <dir> (types takes --check, validate takes --ship)`,
+    );
 
     return Promise.resolve(1);
   }
@@ -42,11 +45,11 @@ export function runPluginCommand(
 }
 
 async function runCommand(
-  [command, directory, check]: z.infer<typeof PluginArguments>,
+  [command, directory, flag]: z.infer<typeof PluginArguments>,
   write: Write,
 ): Promise<number> {
   try {
-    return await commands[command](resolve(directory), write, Boolean(check));
+    return await commands[command](resolve(directory), write, Boolean(flag));
   } catch (error) {
     write(String(error));
 
@@ -54,7 +57,12 @@ async function runCommand(
   }
 }
 
-async function validate(directory: string, write: Write): Promise<number> {
+// `ship` fails on what blocks a ship, the Variants a Draft still declares; without it they are only reported.
+async function validate(
+  directory: string,
+  write: Write,
+  ship: boolean,
+): Promise<number> {
   const report = await validatePlugin(directory);
 
   if (report.manifest)
@@ -64,7 +72,8 @@ async function validate(directory: string, write: Write): Promise<number> {
         ? []
         : await variantDiagnostics(directory, report.manifest)),
     );
-  writeReport(report, write);
+  if (ship) report.diagnostics.push(...report.shipBlockers);
+  writeReport(report, write, ship);
 
   return Number(report.diagnostics.length > 0);
 }
@@ -72,6 +81,7 @@ async function validate(directory: string, write: Write): Promise<number> {
 function writeReport(
   report: Awaited<ReturnType<typeof validatePlugin>>,
   write: Write,
+  ship: boolean,
 ): void {
   for (const key of ['hooks', 'calls', 'slots'] as const)
     write(`${key}: ${formatUses(report[key])}`);
@@ -82,6 +92,12 @@ function writeReport(
       `${diagnostic.file}:${diagnostic.line}:${diagnostic.column}: ${diagnostic.message}`,
     );
   write(validationMessage(report.diagnostics.length));
+  if (!ship) writeShipBlockers(report.shipBlockers, write);
+}
+
+function writeShipBlockers(blockers: PluginDiagnostic[], write: Write): void {
+  for (const { file, line, column, message } of blockers)
+    write(`Ship blocked: ${file}:${line}:${column}: ${message}`);
 }
 
 type ValidatedManifest = Awaited<ReturnType<typeof validatePlugin>>['manifest'];
