@@ -16,3 +16,10 @@ export {
   attachmentsFolderIn,
   removeOrphanAttachments,
 } from './blob-attachment';
+
+export {
+  terminalOutputBlob,
+  writeTerminalOutputBlob,
+  type OutputBlobMetadata,
+  type TerminalOutputBlob,
+} from './terminal-output';

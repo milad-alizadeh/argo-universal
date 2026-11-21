@@ -23,5 +23,6 @@ export function newRunRecord(
     startedAt,
     readyAt: null,
     endedAt: null,
+    outputBlobId: null,
   };
 }

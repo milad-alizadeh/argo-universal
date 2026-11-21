@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { mkdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { createServer, type Server } from 'node:net';
 import { join } from 'node:path';
@@ -102,6 +103,26 @@ it('keeps a removed Run visible and stoppable when its Checked-in file changes',
     status: 'stopped',
   });
   expect(terminal.stopped).toBe(true);
+});
+
+it('replays stopped Run output from the shared Blob vault', async () => {
+  const { call, home, terminals } = await startRuns({ configurations: [web] });
+  const recorded = 'Local: ready\r\n';
+  const blobId = createHash('sha256').update(recorded).digest('hex');
+
+  const starting = call(startRun, { name: 'web' });
+  const terminal = await terminals.next();
+  terminal.print(recorded);
+  await starting;
+  await call('run.stop', { name: 'web' });
+
+  await expect(call('run.logs', { name: 'web' })).resolves.toMatchObject({
+    status: 'stopped',
+    output: recorded,
+  });
+  await expect(readFile(join(home, 'blobs', blobId), 'utf8')).resolves.toBe(
+    recorded,
+  );
 });
 
 it('starts a Run and returns its URL and port once its output says it is ready', async () => {

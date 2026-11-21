@@ -12,7 +12,7 @@ import type { LiveRun } from './live-run';
 import type { RunConfigurations } from './run-configurations';
 import { readRunFile, requireRunConfiguration } from './run-file';
 import { distinctMembers } from './run-groups';
-import { readRunOutputTail, runOutputPath } from './run-output';
+import { readRunOutputTail, runOutputFor } from './run-output';
 import { watchRunOutput, type RunRecording } from './run-replay';
 import type { RunRecord } from './run-store';
 import { RunUpdates } from './run-updates';
@@ -103,10 +103,12 @@ export class RunView {
     watching = false,
   ): Promise<RunStatusResult> {
     const active = this.runs.active(checkout);
+
     const { file, error: configurationError } = await configurationsOf(
       checkout,
       watching || active.length > 0,
     );
+
     const configurations = this.configurationRows(checkout, file, active);
     const defaultGroup = defaultGroupOf(file, configurations);
     const shells = this.runs.shells(checkout);
@@ -182,10 +184,7 @@ export class RunView {
       status: statusOf(record),
       exitCode: record?.exitCode ?? null,
       output: record
-        ? await readRunOutputTail(
-            runOutputPath(this.runs.home, record.id),
-            tail,
-          )
+        ? await readRunOutputTail(runOutputFor(this.runs.home, record), tail)
         : '',
     };
   }
@@ -205,7 +204,7 @@ export class RunView {
     return {
       live: current?.whenReleased() ? undefined : current,
       record,
-      output: record && runOutputPath(this.runs.home, record.id),
+      output: record && runOutputFor(this.runs.home, record),
     };
   }
 
@@ -239,7 +238,7 @@ export class RunView {
     return (
       record && {
         runId: record.id,
-        path: runOutputPath(this.runs.home, record.id),
+        path: runOutputFor(this.runs.home, record),
       }
     );
   }

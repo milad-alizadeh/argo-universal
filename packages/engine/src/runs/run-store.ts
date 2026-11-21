@@ -1,6 +1,7 @@
 import type { Database } from '@repo/db';
-import { run } from '@repo/db/schema';
+import { blob, run } from '@repo/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
+import type { OutputBlobMetadata } from '../blob';
 import type { StorageTransaction, WriterJob } from '../storage';
 
 export type RunRecord = typeof run.$inferSelect;
@@ -10,11 +11,15 @@ export class RunWriteJob implements WriterJob {
   public constructor(
     private readonly record: RunRecord,
     private readonly replaced?: readonly string[],
+    private readonly output?: OutputBlobMetadata,
   ) {}
   public describe(): string {
     return `run ${this.record.id} ${this.record.status}`;
   }
   public commit(transaction: StorageTransaction): void {
+    if (this.output)
+      transaction.insert(blob).values(this.output).onConflictDoNothing().run();
+
     if (!this.replaced) {
       transaction
         .update(run)

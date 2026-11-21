@@ -3,12 +3,12 @@ import type {
   TerminalExitStatus,
 } from '@agentclientprotocol/sdk';
 import type { ShellRecord } from '@repo/contracts';
+import { terminalOutputBlob, type TerminalOutputBlob } from '../../blob';
 import {
   type WriterActorRef,
   writeDatabaseJobAndWaitForCommit,
 } from '../../storage';
 import { appendShellOutput } from './files';
-import { shellOutputBlob, type ShellOutputBlob } from './output-blob';
 import { shellFromTerminal } from './shell-data';
 import { ShellWriteJob } from './storage';
 
@@ -104,10 +104,10 @@ export class ShellCapture {
     );
     this.input.changed(this.record);
   }
-  private async endedOutput(): Promise<ShellOutputBlob | undefined> {
+  private async endedOutput(): Promise<TerminalOutputBlob | undefined> {
     if (!this.record || this.record.status === 'running') return;
 
-    const output = await shellOutputBlob(this.input.path);
+    const output = await terminalOutputBlob(this.input.path);
     this.record = { ...this.record, outputBlobId: output.metadata.id };
 
     return output;

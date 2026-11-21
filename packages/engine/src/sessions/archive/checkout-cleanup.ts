@@ -104,6 +104,7 @@ async function attemptCleanup(
 
   if (canRemove(risk, approval)) {
     const removal = { signal: options.signal, force: risk.kind === 'loss' };
+
     const remove = (): Promise<void> =>
       removeArchivedCheckout(projectPath, data.checkout, removal);
 

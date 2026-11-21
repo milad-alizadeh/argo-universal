@@ -40,8 +40,9 @@ export function commandOfProcessGroupLeader(pid: number): string | undefined {
 
     const [group, state, ...command] = result.trim().split(/\s+/);
 
-    if (Number(group) === pid && state && !state.startsWith('Z'))
-      return command.join(' ');
+    return Number(group) === pid && state && !state.startsWith('Z')
+      ? command.join(' ')
+      : undefined;
   } catch {
     return undefined;
   }

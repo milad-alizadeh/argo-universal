@@ -99,6 +99,7 @@ async function archiveWithRemoval(
 it('ends owned Runs on archive even when the Project keeps its Checkout', async () => {
   const engine = await startEngine();
   const created = await promptedArchiveSession(engine.host);
+
   const { projectId } = await engine.host.caller.session.get({
     sessionId: created.sessionId,
   });

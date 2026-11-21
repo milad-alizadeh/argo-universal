@@ -9,7 +9,11 @@ import { TRPCError } from '@trpc/server';
 import { shellTerminalOutputPath } from '../lib/terminal-owner';
 import type { RunBlocks, RunPorts } from './run-blocks';
 import type { RunLifecycle } from './run-lifecycle';
-import { createRunOutput, removeRunOutput } from './run-output';
+import {
+  createRunOutput,
+  logRecordingFailure,
+  removeRunOutput,
+} from './run-output';
 import { watchRunOutput } from './run-replay';
 import { RunUpdates } from './run-updates';
 import type { RunCheckout, RunsInput } from './runs';
@@ -233,7 +237,13 @@ export class ShellTerminals {
         block,
         starter: name,
         terminal,
-        recording: new TerminalRecording(path),
+        recording: new TerminalRecording(path, (error) =>
+          logRecordingFailure(
+            this.input.home,
+            `Could not record shell Terminal ${id}`,
+            error,
+          ),
+        ),
         closed: new AbortController(),
         ownerRecord:
           terminal.pid === undefined

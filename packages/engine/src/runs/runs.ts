@@ -4,7 +4,7 @@ import type {
   RunStopResult,
   ShellTerminal,
 } from '@repo/contracts';
-import { writeLog } from '@repo/machine-log';
+import type { OutputBlobMetadata } from '../blob';
 import { writeDatabaseJobAndWaitForCommit } from '../storage';
 import { LiveRun } from './live-run';
 import { RunBlocks, starterName, type RunPortHolding } from './run-blocks';
@@ -12,7 +12,12 @@ import type { RunConfiguration } from './run-configurations';
 import { requireRunConfiguration } from './run-file';
 import { RunGroups } from './run-groups';
 import { RunLifecycle } from './run-lifecycle';
-import { removeRunOutput, runOutputPath, createRunOutput } from './run-output';
+import {
+  createRunOutput,
+  logRecordingFailure,
+  removeRunOutput,
+  runOutputPath,
+} from './run-output';
 import { bindable } from './run-ports';
 import { awaitReady, watchReadiness } from './run-ready';
 import { newRunRecord } from './run-record';
@@ -188,7 +193,11 @@ export class Runs {
     return this.lifecycle.start(
       keyOf(checkout, configuration.name),
       checkout,
-      () => this.launch(checkout, configuration),
+      () => {
+        checkout.requireOpenSession?.();
+
+        return this.launch(checkout, configuration);
+      },
     );
   }
 
@@ -221,7 +230,7 @@ export class Runs {
     const run = new LiveRun({
       record,
       terminal,
-      outputPath: runOutputPath(this.input.home, record.id),
+      home: this.input.home,
       configuration,
       fingerprint,
       block: ports.block,
@@ -295,9 +304,14 @@ export class Runs {
 
   private exited(key: string, run: LiveRun, exitCode: number): Promise<void> {
     return run.finish(exitCode, this.input.now, {
-      save: (record) => this.update(key, record),
+      save: (record, output) => this.update(key, record, output),
       released: () => this.live.delete(key),
-      failed: (error) => this.reportFailure(run.record, error),
+      failed: (error) =>
+        logRecordingFailure(
+          this.input.home,
+          `Could not finish storing Run ${run.record.id}`,
+          error,
+        ),
     });
   }
 
@@ -307,29 +321,24 @@ export class Runs {
     );
   }
 
-  private update(key: string, record: RunRecord): Promise<void> {
+  private update(
+    key: string,
+    record: RunRecord,
+    output?: OutputBlobMetadata,
+  ): Promise<void> {
     if (this.latest.get(key)?.id === record.id) this.latest.set(key, record);
 
-    return this.store(record);
-  }
-
-  private reportFailure(record: RunRecord, error: Error): void {
-    const line = `Could not finish storing Run "${record.name}" (${record.id}): ${error.message}`;
-
-    try {
-      writeLog({ home: this.input.home, label: 'engine', line });
-    } catch {
-      console.error(line);
-    }
+    return this.store(record, undefined, output);
   }
 
   private async store(
     record: RunRecord,
     replaced?: readonly string[],
+    output?: OutputBlobMetadata,
   ): Promise<void> {
     await writeDatabaseJobAndWaitForCommit(
       this.input.writer,
-      new RunWriteJob(record, replaced),
+      new RunWriteJob(record, replaced, output),
     );
     this.view.changed(record);
   }

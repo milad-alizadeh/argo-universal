@@ -5,6 +5,7 @@ import {
   snakeCase,
   text,
 } from 'drizzle-orm/sqlite-core';
+import { blob } from '#schema-blob';
 import { project } from '#schema-projects';
 
 export const runStatuses = [
@@ -15,7 +16,7 @@ export const runStatuses = [
   'lost',
 ] as const;
 
-// One live or finished instance of a Run Configuration in one Checkout; its output lives in a file of its own under the Server's home.
+// One live or finished instance of a Run Configuration in one Checkout; finished output uses the shared Blob store.
 export const run = snakeCase.table(
   'run',
   {
@@ -36,9 +37,11 @@ export const run = snakeCase.table(
     startedAt: integer().notNull(),
     readyAt: integer(),
     endedAt: integer(),
+    outputBlobId: text().references(() => blob.id),
   },
-  ({ projectId, checkoutPath }) => [
+  ({ projectId, checkoutPath, outputBlobId }) => [
     index('run_checkout_index').on(projectId, checkoutPath),
+    index('run_output_blob_index').on(outputBlobId),
   ],
 );
 

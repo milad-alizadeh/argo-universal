@@ -29,7 +29,7 @@ export async function recoverEngineAfterRestart(
     force: true,
   });
   await recoverShells(input);
-  await recoverRuns({ database: input.database, now: Date.now });
+  await recoverRuns({ ...input, now: Date.now });
   recoverAfterRestart(input.database);
   await recoverArchivedCheckouts(input.database);
   await removeUnusedBlobs(input);

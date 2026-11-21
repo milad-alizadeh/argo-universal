@@ -1,11 +1,17 @@
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { run } from '@repo/db/schema';
+import { commandOfProcessGroupLeader } from '@repo/process/group';
 import { eq } from 'drizzle-orm';
 import { expect, it, onTestFinished } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
+import { processIsRunning } from '#mocks/shell-process';
 import { terminalOwnerToken } from '../lib/terminal-owner';
 import { recoverRuns } from './recovery';
+import { createRunOutput, runOutputPath } from './run-output';
 
 type Status = 'starting' | 'ready' | 'stopped' | 'crashed';
 
@@ -27,7 +33,7 @@ const row = (id: string, status: Status): typeof run.$inferInsert => ({
 });
 
 it('marks Runs a crash left running as lost, and leaves finished ones as they were', async () => {
-  const { database, remove } = openTestDatabase();
+  const { database, directory: home, remove } = openTestDatabase();
   onTestFinished(remove);
 
   database
@@ -40,7 +46,7 @@ it('marks Runs a crash left running as lost, and leaves finished ones as they we
     ])
     .run();
 
-  await recoverRuns({ database, now: () => 9 });
+  await recoverRuns({ database, home, now: () => 9 });
 
   expect(
     database
@@ -60,6 +66,29 @@ it('marks Runs a crash left running as lost, and leaves finished ones as they we
     ['starting', 'lost', null, 9],
     ['stopped', 'stopped', null, null],
   ]);
+});
+
+it('retains a lost Run’s scratch recording in the shared Blob vault', async () => {
+  const { database, directory: home, remove } = openTestDatabase();
+  onTestFinished(remove);
+  database.insert(run).values(row('recorded', 'ready')).run();
+
+  const scratch = runOutputPath(home, 'recorded');
+  const bytes = 'before the Engine restarted\n';
+  const blobId = createHash('sha256').update(bytes).digest('hex');
+
+  await createRunOutput(scratch);
+  await writeFile(scratch, bytes);
+  await recoverRuns({ database, home, now: () => 9 });
+
+  expect(database.select().from(run).get()).toMatchObject({
+    status: 'lost',
+    outputBlobId: blobId,
+  });
+  await expect(readFile(join(home, 'blobs', blobId), 'utf8')).resolves.toBe(
+    bytes,
+  );
+  await expect(readFile(scratch)).rejects.toMatchObject({ code: 'ENOENT' });
 });
 
 // A real process group, as a Run's terminal leads one: its shell's `$0` carries the token.
@@ -83,28 +112,20 @@ const startGroup = (token: string): number => {
   return pid;
 };
 
-const alive = (pid: number): boolean => {
-  try {
-    process.kill(pid, 0);
-
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const gone = async (pid: number): Promise<boolean> => {
-  await expect.poll(() => alive(pid), { timeout: 5000 }).toBe(false);
-
-  return true;
-};
-
 it('kills the process group of a Run it recovers as lost, but never a group that does not carry the Run’s id', async () => {
-  const { database, remove } = openTestDatabase();
+  const { database, directory: home, remove } = openTestDatabase();
   onTestFinished(remove);
-  const owned = startGroup(terminalOwnerToken('owned'));
-  const reused = startGroup(terminalOwnerToken('someone-else'));
+  const ownedToken = terminalOwnerToken('owned');
+  const reusedToken = terminalOwnerToken('someone-else');
+  const owned = startGroup(ownedToken);
+  const reused = startGroup(reusedToken);
 
+  await expect
+    .poll(() => commandOfProcessGroupLeader(owned))
+    .toContain(ownedToken);
+  await expect
+    .poll(() => commandOfProcessGroupLeader(reused))
+    .toContain(reusedToken);
   database
     .insert(run)
     .values([
@@ -113,10 +134,10 @@ it('kills the process group of a Run it recovers as lost, but never a group that
     ])
     .run();
 
-  await recoverRuns({ database, now: () => 9 });
+  await recoverRuns({ database, home, now: () => 9 });
 
-  expect(await gone(owned)).toBe(true);
-  expect(alive(reused)).toBe(true);
+  expect(processIsRunning(owned)).toBe(false);
+  expect(processIsRunning(reused)).toBe(true);
   expect(
     database.select().from(run).where(eq(run.id, 'reused')).get(),
   ).toMatchObject({ status: 'lost' });

@@ -1,5 +1,13 @@
 import { stripVTControlCharacters } from 'node:util';
+import type { OutputBlobMetadata } from '../blob';
 import type { RunConfiguration } from './run-configurations';
+import {
+  logRecordingFailure,
+  removeRunOutput,
+  retainRunOutput,
+  runOutputFor,
+  runOutputPath,
+} from './run-output';
 import type { RunRecord } from './run-store';
 import type { TerminalProcess } from './terminal';
 import { TerminalRecording } from './terminal-recording';
@@ -9,7 +17,7 @@ const memoryCharacters = 65_536;
 type LiveRunInput = {
   record: RunRecord;
   terminal: TerminalProcess;
-  outputPath: string;
+  home: string;
   configuration: RunConfiguration;
   fingerprint: string;
   // The first port of the Checkout's block, and the Session that started the Run, by name.
@@ -17,7 +25,10 @@ type LiveRunInput = {
   starter: string;
 };
 
-type SaveRun = (record: RunRecord) => Promise<void>;
+type SaveRun = (
+  record: RunRecord,
+  output?: OutputBlobMetadata,
+) => Promise<void>;
 
 type RunFinish = {
   save: SaveRun;
@@ -31,7 +42,7 @@ export class LiveRun {
   private finishing?: Promise<void>;
   private currentRecord: RunRecord;
   public readonly terminal: TerminalProcess;
-  public readonly outputPath: string;
+  private readonly home: string;
   public readonly configuration: RunConfiguration;
   public readonly fingerprint: string;
   public readonly block: number;
@@ -46,14 +57,26 @@ export class LiveRun {
   public constructor(input: LiveRunInput) {
     this.currentRecord = { ...input.record, pid: input.terminal.pid ?? null };
     this.terminal = input.terminal;
-    this.outputPath = input.outputPath;
+    this.home = input.home;
     this.configuration = input.configuration;
     this.fingerprint = input.fingerprint;
     this.block = input.block;
     this.starter = input.starter;
-    this.recording = new TerminalRecording(this.outputPath);
+    this.recording = new TerminalRecording(
+      runOutputPath(this.home, input.record.id),
+      (error) =>
+        logRecordingFailure(
+          this.home,
+          `Could not record Run ${input.record.id}`,
+          error,
+        ),
+    );
     void this.ended.promise.then(() => this.recording.dispose());
   }
+  public get outputPath(): string {
+    return runOutputFor(this.home, this.currentRecord);
+  }
+
   public get record(): Readonly<RunRecord> {
     return this.currentRecord;
   }
@@ -98,6 +121,7 @@ export class LiveRun {
       .catch(failed)
       .finally(() => {
         this.ended.resolve();
+
         if (!this.isStopping()) released();
       });
 
@@ -109,15 +133,21 @@ export class LiveRun {
     now: () => number,
     save: SaveRun,
   ): Promise<void> {
-    await this.flushed();
+    await this.recording.seal();
+    const endedAt = now();
+    const output = await retainRunOutput(this.home, this.currentRecord.id);
+
     await this.save(
       {
         status: this.isStopping() ? 'stopped' : 'crashed',
         exitCode,
-        endedAt: now(),
+        endedAt,
+        outputBlobId: output?.id ?? null,
       },
-      save,
+      (record) => save(record, output),
     );
+
+    if (output) await removeRunOutput(this.recording.path);
   }
 
   private save(change: Partial<RunRecord>, save: SaveRun): Promise<void> {

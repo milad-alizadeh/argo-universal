@@ -1,9 +1,62 @@
 import { appendFile, mkdir, open, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
+import { writeLog } from '@repo/machine-log';
+import {
+  blobsFolderIn,
+  terminalOutputBlob,
+  writeTerminalOutputBlob,
+  type OutputBlobMetadata,
+} from '../blob';
+import type { RunRecord } from './run-store';
 
 export const runOutputPath = (home: string, runId: string): string =>
   join(home, 'runs', `${runId}.log`);
+
+export const runOutputFor = (
+  home: string,
+  { id, outputBlobId }: Pick<RunRecord, 'id' | 'outputBlobId'>,
+): string =>
+  outputBlobId === null
+    ? runOutputPath(home, id)
+    : join(blobsFolderIn(home), outputBlobId);
+
+export function logRecordingFailure(
+  home: string,
+  action: string,
+  error: Error,
+): void {
+  const line = `${action}: ${error.message}`;
+
+  try {
+    writeLog({ home, label: 'engine', line });
+  } catch {
+    console.error(line);
+  }
+}
+
+export async function retainRunOutput(
+  home: string,
+  id: string,
+): Promise<OutputBlobMetadata | undefined> {
+  try {
+    const output = await terminalOutputBlob(runOutputPath(home, id));
+    await writeTerminalOutputBlob(blobsFolderIn(home), output);
+
+    return output.metadata;
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT')
+      return undefined;
+
+    logRecordingFailure(
+      home,
+      `Could not retain output for Run ${id}`,
+      error instanceof Error ? error : new Error(String(error)),
+    );
+
+    return undefined;
+  }
+}
 
 export const createRunOutput = async (path: string): Promise<void> => {
   await mkdir(join(path, '..'), { recursive: true });
@@ -20,7 +73,10 @@ const bytesPerCharacter = 4;
 
 // The last bytes of a recording, as the terminal wrote them.
 const readEnd = async (path: string, bytes: number): Promise<string> => {
-  const file = await open(path, 'r').catch((): undefined => undefined);
+  const file = await open(path, 'r').catch((error: NodeJS.ErrnoException) => {
+    if (error.code === 'ENOENT') return;
+    throw error;
+  });
 
   if (!file) return '';
 

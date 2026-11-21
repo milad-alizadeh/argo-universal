@@ -1,5 +1,7 @@
+import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { connect } from 'node:net';
+import { connect, createServer } from 'node:net';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { RunLogsResult, RunStartResult } from '@repo/contracts';
 import { isAlive } from '@repo/process';
@@ -10,7 +12,7 @@ import type { RunConfiguration } from './run-configurations';
 
 // The real terminal behind the Operations: no spawner is substituted.
 async function startRealRun(
-  configuration: Pick<RunConfiguration, 'name' | 'command' | 'ready'>,
+  configuration: Pick<RunConfiguration, 'name' | 'command' | 'ready' | 'port'>,
   files: Record<string, string> = {},
 ): Promise<{
   start: () => ReturnType<typeof runOperation>;
@@ -45,6 +47,49 @@ async function startRealRun(
     logs: () => runOperation(operations, { id: 'run.logs', params }),
   };
 }
+
+const freePort = (): Promise<number> =>
+  new Promise((resolve) => {
+    const server = createServer();
+
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address();
+
+      server.close(() =>
+        resolve(typeof address === 'object' && address ? address.port : 0),
+      );
+    });
+  });
+
+// A login shell of bash whose profile sets a marker, in a home of its own, so the test never reads the developer's profile.
+const hermeticLogin = (): void => {
+  const home = realpathSync(mkdtempSync(join(tmpdir(), 'argo-run-home-')));
+  writeFileSync(
+    join(home, '.bash_profile'),
+    'export ARGO_LOGIN_MARKER=from-profile\n',
+  );
+  onTestFinished(() => rmSync(home, { recursive: true, force: true }));
+  vi.stubEnv('SHELL', '/bin/bash');
+  vi.stubEnv('HOME', home);
+  onTestFinished(() => void vi.unstubAllEnvs());
+};
+
+it('runs with its login shell’s environment and the Run’s own port', async () => {
+  hermeticLogin();
+
+  const port = await freePort();
+
+  const run = await startRealRun({
+    name: 'login',
+    command: 'echo "marker=$ARGO_LOGIN_MARKER port=$PORT"',
+    port,
+  });
+
+  await expect(run.start()).resolves.toMatchObject({
+    exitCode: 0,
+    tail: expect.stringContaining(`marker=from-profile port=${port}`),
+  });
+}, 30_000);
 
 it('records a real Run’s output and makes its real exit code Crashed', async () => {
   const run = await startRealRun({
