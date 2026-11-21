@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./group": "./src/group.ts",
-    "./pty-session": "./src/pty-session.ts"
+    "./pty-session": "./src/pty-session.ts",
+    "./tcp": "./src/tcp.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

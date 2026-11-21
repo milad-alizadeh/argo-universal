@@ -4,10 +4,10 @@ import {
   ptyOwnerDescriptor,
   releasePtySession,
 } from '@repo/process/pty-session';
+import { killPortListeners } from '@repo/process/tcp';
 import { spawn } from 'node-pty';
 import { ensureSpawnHelper, shellEnvironment } from '../agents';
 import { terminalOwnerToken } from '../lib/terminal-owner';
-import { killPortListeners } from './run-processes';
 import {
   terminalColumns,
   terminalRows,

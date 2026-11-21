@@ -1,8 +1,14 @@
 import type { Database } from '@repo/db';
 import { run } from '@repo/db/schema';
-import { releaseProcessGroup } from '@repo/process/group';
+import {
+  commandOfProcessGroupLeader,
+  releaseProcessGroup,
+} from '@repo/process/group';
 import { eq, inArray } from 'drizzle-orm';
-import { ownsGroup } from './run-processes';
+import { terminalOwnerToken } from '../lib/terminal-owner';
+
+const ownsRunGroup = (pid: number, id: string): boolean =>
+  commandOfProcessGroupLeader(pid)?.includes(terminalOwnerToken(id)) === true;
 
 // Runs end with the Server, so one still recorded as running was left by a crash: its group is killed and it is lost. Nothing reattaches (ADR-0063).
 export async function recoverRuns(input: {
@@ -16,7 +22,7 @@ export async function recoverRuns(input: {
     .all();
 
   for (const { id, pid } of left) {
-    if (pid !== null && ownsGroup(pid, id)) await releaseProcessGroup(pid);
+    if (pid !== null && ownsRunGroup(pid, id)) await releaseProcessGroup(pid);
     input.database
       .update(run)
       .set({ status: 'lost', exitCode: null, endedAt: input.now() })
