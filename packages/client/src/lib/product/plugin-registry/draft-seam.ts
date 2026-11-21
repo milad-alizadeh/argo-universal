@@ -11,4 +11,7 @@ export interface DraftSeam {
   Frame: ComponentType<{ node: WireNode; children?: ReactElement }>;
 }
 
+// Whether the region a node draws in wears the Agent's drawing frame now, which the App's frame reads from inside it.
+export const DraftFramedContext = createContext(false);
+
 export const DraftSeamContext = createContext<DraftSeam | null>(null);

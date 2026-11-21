@@ -8,6 +8,7 @@ import {
 } from 'react';
 import type * as React from 'react';
 import {
+  DraftFramedContext,
   DraftSeamContext,
   type DraftSeam,
 } from '../../../../lib/product/plugin-registry/draft-seam';
@@ -27,6 +28,7 @@ function ConnectedFrame(props: {
   children?: ReactElement;
 }): React.JSX.Element | null {
   const shown = useContext(ShownRegions);
+  const drawing = useContext(DraftFramedContext);
   const tag = shown?.tags.find(({ id }) => id === props.node.key);
 
   if (!shown || !tag) return props.children ?? null;
@@ -34,6 +36,7 @@ function ConnectedFrame(props: {
   return (
     <DraftRegionFrame
       tag={tag}
+      tagged={!drawing}
       active={shown.active === tag.id}
       onActivate={() => shown.setActive(tag.id)}
       onDeactivate={() => shown.setActive(null)}

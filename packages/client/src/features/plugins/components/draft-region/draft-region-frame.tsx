@@ -6,6 +6,8 @@ import { DraftRegionTag } from './draft-region-tag';
 export interface DraftRegionFrameProps {
   tag: Tag;
   active: boolean;
+  // False while the Agent's drawing frame labels the region: no tag, and the pointer does not activate it.
+  tagged?: boolean;
   onActivate: () => void;
   onDeactivate: () => void;
   onPrevious: () => void;
@@ -21,13 +23,14 @@ export interface DraftRegionFrameProps {
 export function DraftRegionFrame(
   props: DraftRegionFrameProps,
 ): React.JSX.Element {
-  const { active, children } = props;
+  const { children, tagged = true } = props;
+  const active = props.active && tagged;
 
   return (
     <Pressable
       accessible={false}
       focusable={false}
-      onHoverIn={props.onActivate}
+      onHoverIn={tagged ? props.onActivate : undefined}
       onHoverOut={props.onDeactivate}
       className="relative"
     >
@@ -38,9 +41,11 @@ export function DraftRegionFrame(
           className="absolute inset-0 rounded-xl border border-border"
         />
       )}
-      <View className="absolute -top-2.5 left-3">
-        <DraftRegionTag {...props} />
-      </View>
+      {tagged && (
+        <View className="absolute -top-2.5 left-3">
+          <DraftRegionTag {...props} />
+        </View>
+      )}
     </Pressable>
   );
 }

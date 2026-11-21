@@ -4,6 +4,7 @@ import { Platform, Text, View, type ViewStyle } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import type { DraftView } from './draft-drawing';
 import { regionLabel } from './draft-region-label';
+import { DraftFramedContext } from './draft-seam';
 
 /*
  * What the registry draws of the Agent drawing a Draft (ADR-0057): a node new since the tree the App kept fades in, and
@@ -66,7 +67,7 @@ export function DraftFrame({
       testID={`draft-region-${region}`}
       style={active ? undefined : boxless}
     >
-      {children}
+      <DraftFramedContext value={active}>{children}</DraftFramedContext>
       {active ? (
         <Animated.View
           pointerEvents="none"
