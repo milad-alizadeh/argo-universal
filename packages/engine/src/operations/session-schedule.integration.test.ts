@@ -132,6 +132,9 @@ it('coalesces due Prompts without steering an active Turn', async () => {
 
   try {
     await expect.poll(queued, { timeout: 8000 }).toHaveLength(1);
+    await expect
+      .poll(nextAt, { timeout: 8000 })
+      .toBeGreaterThan(followUp.nextAt);
     const initialDeadline = await nextAt();
     const first = await queued();
     expect.assert(initialDeadline !== undefined);
