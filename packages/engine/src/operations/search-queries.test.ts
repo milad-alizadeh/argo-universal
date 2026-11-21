@@ -49,6 +49,11 @@ const asked = {
     'draft run configurations',
     'import launch.json into run configurations',
   ],
+  'terminal.read': ['read the terminal screen'],
+  'terminal.send': [
+    'press a key in the terminal',
+    'send keystrokes to the terminal',
+  ],
 } satisfies Record<string, readonly string[]>;
 
 const queries = Object.entries(asked).flatMap(([expected, phrases]) =>

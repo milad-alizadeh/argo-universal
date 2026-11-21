@@ -14,6 +14,7 @@ import { registryOperations } from './registry';
 import { runOperations } from './runs';
 import { operationJsonSchema } from './schema-json';
 import { sessionOperations } from './sessions';
+import { terminalOperations } from './terminals';
 import { todoListOperations } from './todo-list';
 import { voiceOperations } from './voice';
 
@@ -54,6 +55,8 @@ export { ProjectAdded, projectOperations } from './projects';
 
 export { runOperations } from './runs';
 
+export { terminalOperations } from './terminals';
+
 export interface OperationDefinition {
   id: string;
   label: string;
@@ -81,6 +84,7 @@ export const operations = {
   ...registryOperations,
   ...projectOperations,
   ...runOperations,
+  ...terminalOperations,
 } as const satisfies Record<string, OperationDefinition>;
 
 export const OperationId = z.enum(

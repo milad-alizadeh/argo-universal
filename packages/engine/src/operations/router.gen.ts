@@ -907,5 +907,29 @@ export function generatedOperations(runner: OperationRunner) {
           }),
         ),
     }),
+    terminal: router({
+      read: publicProcedure
+        .input(operations['terminal.read'].params)
+        .output(operations['terminal.read'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'terminal.read',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      send: authenticatedAppProcedure
+        .input(operations['terminal.send'].params)
+        .output(operations['terminal.send'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'terminal.send',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+    }),
   };
 }

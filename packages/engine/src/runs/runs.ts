@@ -14,6 +14,7 @@ import {
   type WriterActorRef,
 } from '../storage';
 import { LiveRun } from './live-run';
+import { RunBlocks, serially, starterName } from './run-blocks';
 import type { RunConfiguration } from './run-configurations';
 import { readRunFile, requireRunConfiguration } from './run-file';
 import {
@@ -22,13 +23,20 @@ import {
   runOutputPath,
   createRunOutput,
 } from './run-output';
-import { allocatePort, bindable, portListening, urlOf } from './run-ports';
+import { bindable, portListening, urlOf } from './run-ports';
 import { awaitReady } from './run-ready';
 import { latestRun, RunWriteJob, type RunRecord } from './run-store';
+import { RunTerminals, type Standing } from './run-terminals';
 import type { TerminalProcess, TerminalSpawner } from './terminal';
 
 // The Checkout a Run belongs to: Sessions on the same one see the same Runs.
 export type RunCheckout = { projectId: string; checkoutPath: string };
+
+// The Session that asks, named in a refusal when its Run holds a port someone else wants.
+export type RunStarter = { id: string; title: string };
+
+// A Run Configuration's Checkout, and the Session that asks for its Run.
+export type RunRequest = RunCheckout & { starter?: RunStarter };
 
 export type RunsInput = {
   database: Database;
@@ -68,10 +76,19 @@ export class Runs {
   // The latest Run of each Run Configuration this Server has started, so a read never waits on the database.
   private readonly latest = new Map<string, RunRecord>();
   private readonly launching = new Map<string, Promise<LiveRun>>();
-  public constructor(private readonly input: RunsInput) {}
+  public readonly terminals = new RunTerminals(this);
+  private readonly blocks: RunBlocks;
+  // Launches queue, so two Runs of one Checkout never each reserve a block.
+  private readonly queued = serially();
+  public constructor(private readonly input: RunsInput) {
+    this.blocks = new RunBlocks(
+      () => this.live.values(),
+      input.portFree ?? bindable,
+    );
+  }
 
   public async start(
-    checkout: RunCheckout,
+    checkout: RunRequest,
     name: string,
     timeoutMs = defaultStartMs,
   ): Promise<RunStartResult> {
@@ -91,7 +108,7 @@ export class Runs {
   }
 
   public async restart(
-    checkout: RunCheckout,
+    checkout: RunRequest,
     name: string,
     timeoutMs = defaultStartMs,
   ): Promise<RunStartResult> {
@@ -137,6 +154,22 @@ export class Runs {
     };
   }
 
+  // The Run of a Run Configuration as it stands now: its terminal while it lives, and its latest record.
+  public async standing(
+    checkout: RunCheckout,
+    name: string,
+  ): Promise<Standing> {
+    await this.configuration(checkout, name);
+    const live = this.live.get(keyOf(checkout, name));
+    const record = this.record(checkout, name);
+
+    return {
+      live,
+      record,
+      output: record && runOutputPath(this.input.home, record.id),
+    };
+  }
+
   // Ends every Run: the Server never leaves one behind.
   public async close(): Promise<void> {
     await Promise.all([...this.live.values()].map((run) => this.end(run)));
@@ -170,7 +203,7 @@ export class Runs {
 
   // The Run of this Run Configuration that already lives, or a new one; two starts at once make one.
   private running(
-    checkout: RunCheckout,
+    checkout: RunRequest,
     configuration: RunConfiguration,
   ): Promise<LiveRun> {
     const key = keyOf(checkout, configuration.name);
@@ -180,7 +213,7 @@ export class Runs {
 
     const launching =
       this.launching.get(key) ??
-      this.launch(checkout, configuration).finally(() =>
+      this.queued(() => this.launch(checkout, configuration)).finally(() =>
         this.launching.delete(key),
       );
 
@@ -190,35 +223,43 @@ export class Runs {
   }
 
   private async launch(
-    checkout: RunCheckout,
+    checkout: RunRequest,
     configuration: RunConfiguration,
   ): Promise<LiveRun> {
     const previous = this.record(checkout, configuration.name);
-    const record = await this.newRecord(checkout, configuration, previous);
+    const ports = await this.blocks.reserve(checkout, configuration, previous);
+    const record = this.newRecord(checkout, configuration, ports.port);
     const outputPath = runOutputPath(this.input.home, record.id);
     await createRunOutput(outputPath);
-    const terminal = await this.spawn(checkout, configuration, record);
+
+    const terminal = await this.spawn(checkout, configuration, {
+      record,
+      env: ports.env,
+    });
+
     record.pid = terminal.pid ?? null;
-    const run = new LiveRun({ record, terminal, outputPath, configuration });
+
+    const run = new LiveRun({
+      record,
+      terminal,
+      outputPath,
+      configuration,
+      block: ports.block,
+      starter: starterName(checkout.starter),
+    });
 
     return this.attach(checkout, run, previous);
   }
 
-  private async newRecord(
-    checkout: RunCheckout,
+  private newRecord(
+    { projectId, checkoutPath }: RunCheckout,
     configuration: RunConfiguration,
-    previous: RunRecord | undefined,
-  ): Promise<RunRecord> {
-    const port = await allocatePort({
-      configuration,
-      previous: previous?.port,
-      held: new Set([...this.live.values()].map((run) => run.record.port)),
-      free: this.input.portFree ?? bindable,
-    });
-
+    port: number,
+  ): RunRecord {
     return {
       id: this.input.createId(),
-      ...checkout,
+      projectId,
+      checkoutPath,
       pid: null,
       name: configuration.name,
       command: configuration.command,
@@ -236,16 +277,14 @@ export class Runs {
   private async spawn(
     checkout: RunCheckout,
     configuration: RunConfiguration,
-    record: RunRecord,
+    { record, env }: { record: RunRecord; env: Record<string, string> },
   ): Promise<TerminalProcess> {
-    const port = String(record.port);
-
     try {
       return await this.input.spawn({
         id: record.id,
         command: configuration.command,
         cwd: resolve(checkout.checkoutPath, configuration.cwd),
-        env: { ...configuration.env, PORT: port, ARGO_PORT_0: port },
+        env: { ...configuration.env, ...env },
         port: record.port,
       });
     } catch (error) {

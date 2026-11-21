@@ -27,6 +27,8 @@ const defaults: Defaults = {
   'run.status': callerSessionParam,
   'run.logs': callerSessionParam,
   'run.draft': callerSessionParam,
+  'terminal.read': callerSessionParam,
+  'terminal.send': callerSessionParam,
   'conversation.hangUp': ownSessionOnly,
 };
 

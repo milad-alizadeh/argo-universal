@@ -5,7 +5,7 @@ import type { OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { createFakeTerminals } from '#mocks/fake-terminals';
+import { createFakeTerminals, type FakeTerminal } from '#mocks/fake-terminals';
 import { operationCaller, runOperation } from '#mocks/operations';
 
 const runFile = '.argo/run.json';
@@ -13,6 +13,12 @@ const runFile = '.argo/run.json';
 const startRun: OperationId = 'run.start';
 
 const statusRun: OperationId = 'run.status';
+
+// The Checkout's block as the Run sees it: ARGO_PORT_0 to ARGO_PORT_9, consecutive ports.
+const block = (terminal: FakeTerminal): number[] =>
+  Array.from({ length: 10 }, (_, index) =>
+    Number(terminal.launch.env[`ARGO_PORT_${index}`]),
+  );
 
 type RunFile = string | Record<string, Json>;
 
@@ -27,6 +33,7 @@ const configure = async (directory: string, source: RunFile): Promise<void> => {
 };
 
 type RunsJourney = Awaited<ReturnType<typeof startAcpEngine>> & {
+  sessionId: string;
   terminals: ReturnType<typeof createFakeTerminals>;
   project: { path: string };
   operations: Awaited<ReturnType<typeof operationCaller>>['operations'];
@@ -59,7 +66,7 @@ async function startRuns(source?: RunFile): Promise<RunsJourney> {
   const call: RunsJourney['call'] = (id, params = {}) =>
     runOperation(operations, { id, params: { sessionId, ...params } });
 
-  return { ...host, terminals, project, operations, call };
+  return { ...host, terminals, project, operations, call, sessionId };
 }
 
 it('starts a Run and returns its URL and port once its output says it is ready', async () => {
@@ -81,7 +88,7 @@ it('starts a Run and returns its URL and port once its output says it is ready',
   });
 });
 
-it('gives the Run its port as $PORT and $ARGO_PORT_0', async () => {
+it('gives the Run its port as $PORT and its Checkout’s block as $ARGO_PORT_0..9', async () => {
   const { terminals, call } = await startRuns({
     configurations: [{ ...web, env: { MODE: 'dev' } }],
   });
@@ -95,6 +102,15 @@ it('gives the Run its port as $PORT and $ARGO_PORT_0', async () => {
     MODE: 'dev',
     PORT: String(terminal.launch.port),
     ARGO_PORT_0: String(terminal.launch.port),
+    ARGO_PORT_1: String(terminal.launch.port + 1),
+    ARGO_PORT_2: String(terminal.launch.port + 2),
+    ARGO_PORT_3: String(terminal.launch.port + 3),
+    ARGO_PORT_4: String(terminal.launch.port + 4),
+    ARGO_PORT_5: String(terminal.launch.port + 5),
+    ARGO_PORT_6: String(terminal.launch.port + 6),
+    ARGO_PORT_7: String(terminal.launch.port + 7),
+    ARGO_PORT_8: String(terminal.launch.port + 8),
+    ARGO_PORT_9: String(terminal.launch.port + 9),
   });
 });
 
@@ -459,7 +475,7 @@ it('refuses a Run Configuration’s own port that a Run of another Checkout hold
       id: startRun,
       params: { sessionId: worktree.sessionId, name: 'web' },
     }),
-  ).rejects.toThrow(/already in use/);
+  ).rejects.toThrow(/already in use by Session/);
 });
 
 it('starts a restarted Run on the port it had', async () => {
@@ -529,4 +545,168 @@ it('refuses to draft over an existing .argo/run.json unless asked', async () => 
   expect(await readFile(join(project.path, runFile), 'utf8')).toContain(
     'worker',
   );
+});
+
+const web2 = { name: 'web', command: 'x', ready: { pattern: 'up' } };
+
+type Other = { sessionId: string };
+
+// A Session in a worktree of its own, with the same Run Configurations.
+const inWorktree = async (
+  journey: RunsJourney,
+  file: RunFile,
+): Promise<
+  Other & { start: (name: string) => ReturnType<RunsJourney['call']> }
+> => {
+  const { sessionId } = await journey.caller.session.new({
+    ...emptySessionInput,
+    checkout: { type: 'worktree', baseBranch: 'main' },
+  });
+
+  await configure(
+    (await journey.caller.session.get({ sessionId })).checkout.path,
+    file,
+  );
+
+  return {
+    sessionId,
+    start: (name) =>
+      runOperation(journey.operations, {
+        id: startRun,
+        params: { sessionId, name },
+      }),
+  };
+};
+
+const startAndReady = async (
+  journey: RunsJourney,
+  started: Promise<unknown>,
+): Promise<FakeTerminal> => {
+  const terminal = await journey.terminals.next();
+  terminal.print('up');
+  await started;
+
+  return terminal;
+};
+
+it('gives two Checkouts starting the same Run Configuration concurrently separate blocks of ports', async () => {
+  const journey = await startRuns({ configurations: [web2] });
+  const worktree = await inWorktree(journey, { configurations: [web2] });
+
+  const started = Promise.all([
+    journey.call(startRun, { name: 'web' }),
+    worktree.start('web'),
+  ]);
+
+  const one = await journey.terminals.next();
+  const two = await journey.terminals.next();
+  one.print('up');
+  two.print('up');
+  await started;
+
+  expect(new Set([...block(one), ...block(two)]).size).toBe(20);
+
+  for (const terminal of [one, two]) {
+    const port = terminal.launch.port;
+    expect(block(terminal)).toEqual(
+      Array.from({ length: 10 }, (_, index) => port + index),
+    );
+  }
+});
+
+it('shares a Checkout’s block between its Runs, each with a port of its own', async () => {
+  const journey = await startRuns({
+    configurations: [web2, { ...web2, name: 'api' }],
+  });
+
+  const web = await startAndReady(
+    journey,
+    journey.call(startRun, { name: 'web' }),
+  );
+
+  const api = await startAndReady(
+    journey,
+    journey.call(startRun, { name: 'api' }),
+  );
+
+  expect(block(api)).toEqual(block(web));
+  expect(api.launch.port).not.toBe(web.launch.port);
+  expect(block(web)).toContain(api.launch.port);
+});
+
+it('refuses a pinned port another Checkout holds, naming the Session that holds it, and frees it once that Run stops', async () => {
+  const port = await unusedPort();
+  const pinned = { configurations: [{ ...web2, port }] };
+  const journey = await startRuns(pinned);
+  const worktree = await inWorktree(journey, pinned);
+
+  await runOperation(journey.operations, {
+    id: 'session.rename',
+    params: { sessionId: journey.sessionId, title: 'Fix the login' },
+  });
+  await startAndReady(journey, journey.call(startRun, { name: 'web' }));
+  const started = journey.terminals.started.length;
+
+  await expect(worktree.start('web')).rejects.toThrow(
+    `Port ${port} of Run Configuration "web" is already in use by Session "Fix the login"`,
+  );
+  expect(journey.terminals.started).toHaveLength(started);
+
+  await journey.call('run.stop', { name: 'web' });
+  const second = await startAndReady(journey, worktree.start('web'));
+
+  expect(second.launch.port).toBe(port);
+});
+
+it('names a Session without a title by its id', async () => {
+  const port = await unusedPort();
+  const pinned = { configurations: [{ ...web2, port }] };
+  const journey = await startRuns(pinned);
+  const worktree = await inWorktree(journey, pinned);
+  await startAndReady(journey, journey.call(startRun, { name: 'web' }));
+
+  await expect(worktree.start('web')).rejects.toThrow(
+    `by Session ${journey.sessionId}`,
+  );
+});
+
+it('lets a pinned Run share its Checkout’s block with the others', async () => {
+  const port = await unusedPort();
+
+  const journey = await startRuns({
+    configurations: [
+      { ...web2, port },
+      { ...web2, name: 'api' },
+    ],
+  });
+
+  const pinned = await startAndReady(
+    journey,
+    journey.call(startRun, { name: 'web' }),
+  );
+
+  const api = await startAndReady(
+    journey,
+    journey.call(startRun, { name: 'api' }),
+  );
+
+  expect(pinned.launch.env.PORT).toBe(String(port));
+  expect(block(pinned)).toEqual(block(api));
+  expect(block(api)).toContain(api.launch.port);
+});
+
+it('frees a Checkout’s block when its Runs end, so another Checkout reserves it', async () => {
+  const journey = await startRuns({ configurations: [web2] });
+  const worktree = await inWorktree(journey, { configurations: [web2] });
+
+  const one = await startAndReady(
+    journey,
+    journey.call(startRun, { name: 'web' }),
+  );
+
+  await journey.call('run.stop', { name: 'web' });
+
+  const two = await startAndReady(journey, worktree.start('web'));
+
+  expect(block(two)).toEqual(block(one));
 });
