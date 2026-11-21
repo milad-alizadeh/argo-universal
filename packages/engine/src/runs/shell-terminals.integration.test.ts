@@ -157,6 +157,7 @@ it('recovery marks an interrupted shell Terminal lost and clears its process and
   await host.stop();
 
   const id = randomUUID();
+
   const terminal = await launchTerminal({
     id,
     cwd: checkout.path,

@@ -21,13 +21,18 @@ import {
 } from './use-plugin-header-actions';
 import { type WorkbenchCards, toggleCardSheet } from './use-workbench-cards';
 
-function headerMenuOf(props: SessionDetailViewProps): SessionMenu | undefined {
+function headerMenuOf(
+  props: SessionDetailViewProps,
+  compact: boolean,
+): SessionMenu | undefined {
   if (props.state !== 'open' || !props.header.menu) return undefined;
 
   return {
     ...props.header.menu,
     changes: menuChanges(props),
-    onNewTerminal: openNewShell(props.runs, props.inspectorPanels),
+    onNewTerminal: compact
+      ? props.onNewPhoneTerminal
+      : openNewShell(props.runs, props.inspectorPanels),
   };
 }
 
@@ -54,8 +59,8 @@ export function SessionPageHeader(
 ): React.JSX.Element {
   return (
     <SizeClass
-      compact={stackHeader(props, workbenchAction(props))}
-      wide={stackHeader(props)}
+      compact={stackHeader(props, true)}
+      wide={stackHeader(props, false)}
     />
   );
 }
@@ -76,15 +81,15 @@ function workbenchAction(
 
 function stackHeader(
   props: SessionDetailViewProps,
-  workbench?: React.JSX.Element,
+  compact: boolean,
 ): React.JSX.Element {
   return (
     <ScreenStackHeader
       title={props.state === 'open' ? props.header.title : 'Session'}
       actions={sessionHeaderActions(
-        headerMenuOf(props),
+        headerMenuOf(props, compact),
         pluginActionsOf(props),
-        workbench,
+        compact ? workbenchAction(props) : undefined,
       )}
     />
   );

@@ -30,10 +30,11 @@ export const shellTerminalActions = {
   shells: [shellTerminal],
   openShell: (): void => {},
   closeShell: (): void => {},
-  renderShell: ({ name }): ReactElement => (
+  renderShell: ({ name }, visible, compact): ReactElement => (
     <RunTerminal
       run={{ name, status: 'ready' }}
-      connected
+      connected={visible}
+      compact={compact}
       listen={listen}
       onInput={(): void => {}}
       onResize={(): void => {}}

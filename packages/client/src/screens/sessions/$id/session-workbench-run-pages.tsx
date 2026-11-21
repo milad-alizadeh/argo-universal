@@ -1,4 +1,4 @@
-import type { RunConfigurationRow } from '@repo/contracts';
+import type { RunConfigurationRow, ShellTerminal } from '@repo/contracts';
 import { Sheet, useSheet } from '@repo/kit/primitives/overlays/sheet';
 import type { ReactElement } from 'react';
 import {
@@ -8,8 +8,9 @@ import {
 } from '#features/sessions';
 import { runTabKey } from './sections/runs-section';
 import type { WorkbenchGroup } from './session-workbench-sheet-rows';
+import { workbenchShellPage } from './session-workbench-shell-page';
 
-const listKey = 'runs';
+export const workbenchRunsKey = 'runs';
 
 export function WorkbenchRunList({
   runs,
@@ -18,8 +19,20 @@ export function WorkbenchRunList({
 }): ReactElement {
   const { push } = useSheet();
 
+  const openShell = (shell: ShellTerminal): void =>
+    push(workbenchShellPage(shell));
+
   return (
-    <WorkbenchRuns {...runs} compact onOpen={(name) => push(runTabKey(name))} />
+    <WorkbenchRuns
+      {...runs}
+      compact
+      onOpen={(name) => push(runTabKey(name))}
+      shells={{
+        rows: runs.shells ?? [],
+        onOpen: openShell,
+        onNew: runs.openShell ? () => runs.openShell?.(openShell) : undefined,
+      }}
+    />
   );
 }
 
@@ -29,14 +42,15 @@ const active = ({ status }: RunConfigurationRow): boolean =>
 export function workbenchRunGroup(
   runs: SessionRuns | undefined,
 ): WorkbenchGroup[] {
-  if (!runs?.runs.length) return [];
+  if (!runs || (!runs.runs.length && !runs.shells?.length && !runs.openShell))
+    return [];
 
   return [
     {
-      key: listKey,
+      key: workbenchRunsKey,
       rows: [
         {
-          key: listKey,
+          key: workbenchRunsKey,
           label: 'Runs',
           value: String(runs.runs.filter(active).length),
           page: { title: 'Runs', children: <WorkbenchRunList runs={runs} /> },

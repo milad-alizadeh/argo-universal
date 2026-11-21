@@ -41,7 +41,10 @@ export type SessionRuns = Omit<WorkbenchRunsProps, 'onOpen' | 'shells'> & {
   ) => ReactNode;
 };
 
-type RowProps = Pick<WorkbenchRunsProps, 'onOpen' | 'onStart' | 'onStop' | 'compact'> & {
+type RowProps = Pick<
+  WorkbenchRunsProps,
+  'onOpen' | 'onStart' | 'onStop' | 'compact'
+> & {
   run: RunConfigurationRow;
   now: number;
 };
