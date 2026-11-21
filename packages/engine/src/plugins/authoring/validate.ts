@@ -33,10 +33,12 @@ export async function validatePlugin(
     ...emptySourceReport(),
     shipBlockers: [],
   };
+
   const manifest = await checkedManifest({ directory, version }, report);
 
   if (!manifest) return report;
   report.manifest = manifest;
+
   const drafts = await draftManifestDiagnostics(directory, manifest);
 
   report.diagnostics.push(...drafts.diagnostics);

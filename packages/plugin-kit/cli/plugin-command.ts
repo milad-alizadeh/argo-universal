@@ -72,6 +72,7 @@ async function validate(
         ? []
         : await variantDiagnostics(directory, report.manifest)),
     );
+
   if (ship) report.diagnostics.push(...report.shipBlockers);
   writeReport(report, write, ship);
 
@@ -92,6 +93,7 @@ function writeReport(
       `${diagnostic.file}:${diagnostic.line}:${diagnostic.column}: ${diagnostic.message}`,
     );
   write(validationMessage(report.diagnostics.length));
+
   if (!ship) writeShipBlockers(report.shipBlockers, write);
 }
 

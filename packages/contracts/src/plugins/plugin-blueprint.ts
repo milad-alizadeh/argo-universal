@@ -5,7 +5,6 @@ import {
   type DraftStateId,
 } from './drafts';
 
-// What an Agent reads before it builds a Plugin: choices and how to check, with the components left to the generated reference.
 // What each state of the minimum set draws; the one definition, so the list cannot drift from `draftStateIds`.
 const stateDraws: Record<DraftStateId, string> = {
   loading:
@@ -21,6 +20,7 @@ const minimumStates = draftStateIds
   .map((id) => `- \`${id}\`: ${stateDraws[id]}`)
   .join('\n');
 
+// What an Agent reads before it builds a Plugin: choices and how to check, with the components left to the generated reference.
 export const pluginBlueprint = `# Build an Argo Plugin
 
 A Plugin is a folder: \`plugin.json\` and a TypeScript entry that draws Argo's kit components. Argo runs it on the Server and draws it on every platform. This guide holds the choices. "Kit components" at the end indexes every component; run \`plugin.guide\` with \`{ "components": ["Screen", "List"] }\` for the props of those you use. Everything every Plugin needs is kit code: copy the file named beside your choice, never write sign-in, polling, caching or token handling yourself.

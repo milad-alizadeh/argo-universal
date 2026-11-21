@@ -94,7 +94,7 @@ it('is the definition the Draft authoring doc points to, without restating the s
     'utf8',
   );
 
-  expect(doc).toContain('plugin.guide');
+  expect(doc).toContain(guideId);
 
   for (const id of draftStateIds) expect(doc).not.toContain(`\`${id}\``);
 });

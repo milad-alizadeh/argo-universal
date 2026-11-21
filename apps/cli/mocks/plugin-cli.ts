@@ -36,12 +36,22 @@ export function run(
   command: string,
   directory: string,
   timeout = 20_000,
-  flags: string[] = [],
 ): Promise<CommandResult> {
+  return runWith([command, directory], timeout);
+}
+
+// `validate --ship` and the like: the command's own arguments, then its flags.
+export const runShip = (
+  directory: string,
+  timeout: number,
+): Promise<CommandResult> =>
+  runWith(['validate', directory, '--ship'], timeout);
+
+function runWith(args: string[], timeout: number): Promise<CommandResult> {
   return new Promise((resolve) => {
     execFile(
       process.execPath,
-      [cli, 'plugin', command, directory, ...flags],
+      [cli, 'plugin', ...args],
       { timeout, cwd: tmpdir() },
       (error, output, stderr) =>
         resolve({ code: errorCode(error), output: output + stderr }),

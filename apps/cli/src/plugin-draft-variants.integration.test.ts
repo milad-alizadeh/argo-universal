@@ -2,7 +2,13 @@ import { rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { draftStateIds } from '@repo/contracts/plugins/drafts';
 import { expect, it } from 'vitest';
-import { fixture, manifestFile, readManifest, run } from '../mocks/plugin-cli';
+import {
+  fixture,
+  manifestFile,
+  readManifest,
+  run,
+  runShip,
+} from '../mocks/plugin-cli';
 
 const source = (headerTabs: string, defaults = true, extra = ''): string => `
 import { Stack, Svg, Text } from '@argo/plugin-kit';
@@ -69,10 +75,15 @@ async function draftPlugin(
   return directory;
 }
 
-it('validate passes a Draft whose every Variant renders', async () => {
-  const directory = await draftPlugin('() => <Text key="header">Tabs</Text>');
+const tabsRender = '() => <Text key="header">Tabs</Text>';
 
-  expect(await run('validate', directory, 60_000)).toMatchObject({ code: 0 });
+const validate = (directory: string): ReturnType<typeof run> =>
+  run('validate', directory, 60_000);
+
+it('validate passes a Draft whose every Variant renders', async () => {
+  const directory = await draftPlugin(tabsRender);
+
+  expect(await validate(directory)).toMatchObject({ code: 0 });
 }, 90_000);
 
 it('validate refuses a Variant whose render throws, naming the page, region and Variant', async () => {
@@ -80,7 +91,7 @@ it('validate refuses a Variant whose render throws, naming the page, region and 
     "() => { throw new Error('no tabs yet'); }",
   );
 
-  const result = await run('validate', directory, 60_000);
+  const result = await validate(directory);
 
   expect(result.code).toBe(1);
   expect(result.output).toContain(tabsDiagnostic);
@@ -94,7 +105,7 @@ it('validate refuses a Variant whose region the kit refused to draw', async () =
     '() => <Svg key="header" label="Art" xml={`<svg><${"script"}/></svg>`} />',
   );
 
-  const result = await run('validate', directory, 60_000);
+  const result = await validate(directory);
 
   expect(result.code).toBe(1);
   expect(result.output).toContain(tabsDiagnostic);
@@ -108,7 +119,7 @@ it('validate draws the picked Variant for a Loader that declares no default for 
     { defaults: false },
   );
 
-  const result = await run('validate', directory, 60_000);
+  const result = await validate(directory);
 
   expect(result.code).toBe(1);
   expect(result.output).toContain(tabsDiagnostic);
@@ -120,7 +131,7 @@ it('validate draws no Variant while the Plugin has source diagnostics, so only t
     extra: 'process.cwd();',
   });
 
-  const result = await run('validate', directory, 60_000);
+  const result = await validate(directory);
 
   expect(result.code).toBe(1);
   expect(result.output).toContain('index.tsx');
@@ -128,9 +139,9 @@ it('validate draws no Variant while the Plugin has source diagnostics, so only t
 }, 90_000);
 
 it('validate passes a Plugin mid-Draft and reports its leftover Variants as blocking a ship', async () => {
-  const directory = await draftPlugin('() => <Text key="header">Tabs</Text>');
+  const directory = await draftPlugin(tabsRender);
 
-  const result = await run('validate', directory, 60_000);
+  const result = await validate(directory);
 
   expect(result.code).toBe(0);
   expect(result.output).toContain('Plugin is valid');
@@ -139,9 +150,9 @@ it('validate passes a Plugin mid-Draft and reports its leftover Variants as bloc
 }, 90_000);
 
 it('validate --ship fails while a Variant declaration remains', async () => {
-  const directory = await draftPlugin('() => <Text key="header">Tabs</Text>');
+  const directory = await draftPlugin(tabsRender);
 
-  const result = await run('validate', directory, 60_000, ['--ship']);
+  const result = await runShip(directory, 60_000);
 
   expect(result.code).toBe(1);
   expect(result.output).toContain('plugin.json');
@@ -149,7 +160,7 @@ it('validate --ship fails while a Variant declaration remains', async () => {
 }, 90_000);
 
 it('validate --ship passes a Plugin whose Variants are gone', async () => {
-  const directory = await draftPlugin('() => <Text key="header">Tabs</Text>');
+  const directory = await draftPlugin(tabsRender);
   const manifest = await readManifest(directory);
 
   await writeFile(
@@ -160,7 +171,7 @@ it('validate --ship passes a Plugin whose Variants are gone', async () => {
     }),
   );
 
-  const result = await run('validate', directory, 60_000, ['--ship']);
+  const result = await runShip(directory, 60_000);
 
   expect(result).toMatchObject({ code: 0 });
   expect(result.output).not.toContain('Ship blocked');
