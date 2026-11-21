@@ -8,7 +8,11 @@ import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { useSidebarGutterHeld } from '@repo/kit/sidebar-gutter';
 import { useState, type ReactElement } from 'react';
 import { sessionsListLook } from '#features/sessions';
-import { intervalLabel, upcomingOccurrence } from './schedule-time';
+import {
+  cadenceLabel,
+  upcomingOccurrence,
+  scheduleTimeZone,
+} from './schedule-time';
 
 export type ScheduleRowAction =
   | 'edit'
@@ -112,10 +116,10 @@ function ScheduleRow({
   onOpen,
   onAction,
 }: ScheduleRowProps): ReactElement {
-  const cadence = intervalLabel(schedule.intervalSeconds);
+  const cadence = cadenceLabel(schedule.cadence);
   const subtitle = schedule.paused
     ? cadence
-    : `${upcomingOccurrence(schedule.nextAt)} · ${cadence}`;
+    : `${upcomingOccurrence(schedule.nextAt, scheduleTimeZone(schedule.cadence))} · ${cadence}`;
 
   return (
     <ListItem

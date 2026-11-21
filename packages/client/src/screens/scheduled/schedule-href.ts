@@ -1,5 +1,4 @@
 import type { ProjectSchedule } from '@repo/contracts/operations';
-import type { Href } from 'expo-router';
 
 interface ScheduledHref {
   pathname: '/scheduled/[id]';
@@ -13,5 +12,5 @@ export function scheduleHref({
   return {
     pathname: '/scheduled/[id]',
     params: { id, sessionId: latestSessionId ?? '' },
-  } satisfies Href;
+  };
 }

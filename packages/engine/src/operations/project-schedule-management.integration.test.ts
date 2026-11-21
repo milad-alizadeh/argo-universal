@@ -12,7 +12,7 @@ const input = {
   projectId,
   agent: 'mock',
   instructions,
-  intervalSeconds: 60,
+  cadence: { type: 'interval' as const, intervalSeconds: 60 },
 };
 
 it('preserves a scheduled Session and its Checkout when its Schedule is deleted', async () => {
@@ -82,7 +82,7 @@ it('records the offline occurrence and starts no backlog after restart', async (
 
   const saved = await host.caller.project.scheduleCreate({
     ...input,
-    intervalSeconds: 2,
+    cadence: { type: 'interval', intervalSeconds: 2 },
   });
 
   await host.stop();

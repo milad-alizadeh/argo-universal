@@ -1,7 +1,8 @@
 import {
-  ProjectSchedule,
+  type ProjectSchedule,
   type projectScheduleOperations,
   type ProjectScheduleHistoryPage,
+  type ProjectScheduleCadence,
   type ProjectScheduleInput,
   type ProjectScheduleOccurrence,
 } from '@repo/contracts/operations';
@@ -10,7 +11,6 @@ import { TRPCError } from '@trpc/server';
 import { and, eq } from 'drizzle-orm';
 import type { z } from 'zod';
 import { requireInstalledAgent } from '../agents';
-import { titleFromPrompt } from '../feed';
 import { isFolder, listProjectBranches, readProjectPath } from '../projects';
 import { startSessionCreation } from './creation/session-creation';
 import {
@@ -18,34 +18,30 @@ import {
   readScheduleHistory,
   writeScheduleOccurrence,
 } from './project-schedule-history';
+import {
+  decode,
+  editedSchedule,
+  firstOccurrence,
+  managedSchedule,
+  settingsWithName,
+  type SavedSettings,
+} from './project-schedule-settings';
+import { nextProjectScheduleAt } from './project-schedule-timing';
 import { startSchedule, type ScheduleActor } from './schedule-machine';
-import { nextIntervalAt } from './schedule-timing';
 import type { SessionHandlerSources } from './session-sources';
+
+type OccurrencePreview = { nextAt: number };
 
 type ScheduleTarget = { id: string; projectId: string };
 
 type ScheduleRow = typeof table.$inferSelect;
-
 type Operations = typeof projectScheduleOperations;
-
 type ScheduleEdit = z.output<Operations['project.scheduleEdit']['params']>;
-
 type ScheduleManagement = z.output<
   Operations['project.scheduleManage']['params']
 >;
-
 type ScheduleHistory = z.output<
   Operations['project.scheduleHistory']['params']
->;
-
-type SavedSettings = Pick<
-  ProjectSchedule,
-  | 'agent'
-  | 'name'
-  | 'instructions'
-  | 'checkout'
-  | 'intervalSeconds'
-  | 'configOptions'
 >;
 
 function scheduleMissing(): TRPCError {
@@ -54,32 +50,6 @@ function scheduleMissing(): TRPCError {
     message: 'Project Schedule not found.',
   });
 }
-
-function advanceInterval(schedule: ProjectSchedule, after: number): number {
-  return nextIntervalAt(schedule.nextAt, schedule.intervalSeconds, after);
-}
-
-function settingsWithName(
-  input: ProjectScheduleInput,
-  checkout: ProjectSchedule['checkout'],
-): SavedSettings {
-  const { agent, instructions, intervalSeconds, configOptions } = input;
-
-  return {
-    agent,
-    instructions,
-    intervalSeconds,
-    configOptions,
-    checkout,
-    name: titleFromPrompt([{ type: 'text', text: instructions }]),
-  };
-}
-
-const decode = ({
-  settings,
-  ...row
-}: typeof table.$inferSelect): ProjectSchedule =>
-  ProjectSchedule.parse({ ...JSON.parse(settings), ...row });
 
 export class ProjectSchedules {
   private readonly actors = new Map<string, ScheduleActor>();
@@ -119,7 +89,16 @@ export class ProjectSchedules {
       )
       .orderBy(table.nextAt, table.id)
       .all()
-      .map(decode);
+      .map((row): ProjectSchedule => decode(row).schedule);
+  }
+
+  public preview(
+    projectId: string,
+    cadence: ProjectScheduleCadence,
+  ): OccurrencePreview {
+    readProjectPath(this.sources.database, projectId);
+
+    return { nextAt: firstOccurrence(cadence, Date.now()) };
   }
 
   public async create(input: ProjectScheduleInput): Promise<ProjectSchedule> {
@@ -131,8 +110,8 @@ export class ProjectSchedules {
     const row = {
       id,
       projectId,
-      settings: JSON.stringify(settings),
-      nextAt: nextIntervalAt(now, input.intervalSeconds, now),
+      settings: JSON.stringify({ ...settings, anchorAt: now }),
+      nextAt: firstOccurrence(input.cadence, now),
       latestSessionId: null,
       paused: false,
     };
@@ -144,7 +123,7 @@ export class ProjectSchedules {
 
     this.arm(id);
 
-    return decode(row);
+    return decode(row).schedule;
   }
 
   public async edit({ id, ...input }: ScheduleEdit): Promise<ProjectSchedule> {
@@ -167,7 +146,7 @@ export class ProjectSchedules {
 
     this.rearm(id);
 
-    return decode(this.requireRow(target));
+    return decode(this.requireRow(target)).schedule;
   }
 
   public async manage({
@@ -247,7 +226,11 @@ export class ProjectSchedules {
   }
 
   public runNow(target: ScheduleTarget): Promise<ProjectScheduleOccurrence> {
-    return this.run(decode(this.requireRow(target)), Date.now(), this.stopping);
+    return this.run(
+      decode(this.requireRow(target)).schedule,
+      Date.now(),
+      this.stopping,
+    );
   }
 
   private requireRow({ id, projectId }: ScheduleTarget): ScheduleRow {
@@ -299,7 +282,7 @@ export class ProjectSchedules {
     if (advanced) this.missedAtStartup.delete(id);
 
     if (advanced && !missed && !signal.aborted)
-      await this.run(decode(row), row.nextAt, signal);
+      await this.run(decode(row).schedule, row.nextAt, signal);
   }
 
   private async advance(
@@ -307,10 +290,11 @@ export class ProjectSchedules {
     now: number,
     missed: boolean,
   ): Promise<boolean> {
-    const nextAt = advanceInterval(decode(row), now);
     const occurrenceId = this.sources.createId();
     let advanced = false;
 
+    const { schedule, anchorAt } = decode(row);
+    const nextAt = nextProjectScheduleAt(schedule.cadence, now, anchorAt);
     await this.sources.open.write({
       describe: () => 'Advance Project Schedule',
       commit: (tx) => {
@@ -436,39 +420,14 @@ export class ProjectSchedules {
     await this.sources.open.write({
       describe: () => 'Record Project Schedule occurrence',
       commit: (tx) => {
-        if (this.row(id)) writeScheduleOccurrence(tx, id, { id: occurrenceId, occurrence: result });
+        if (this.row(id))
+          writeScheduleOccurrence(tx, id, {
+            id: occurrenceId,
+            occurrence: result,
+          });
       },
     });
 
     return result;
   }
-}
-
-function editedSchedule(
-  row: ScheduleRow,
-  settings: SavedSettings,
-): Pick<ScheduleRow, 'settings' | 'nextAt'> {
-  const now = Date.now();
-
-  const nextAt =
-    settings.intervalSeconds === decode(row).intervalSeconds
-      ? row.nextAt
-      : nextIntervalAt(now, settings.intervalSeconds, now);
-
-  return { settings: JSON.stringify(settings), nextAt };
-}
-
-function managedSchedule(
-  row: ScheduleRow,
-  action: 'pause' | 'resume',
-): Pick<ScheduleRow, 'paused' | 'nextAt'> {
-  const now = Date.now();
-  const elapsed = row.paused && row.nextAt <= now;
-
-  const nextAt =
-    action === 'resume' && elapsed
-      ? advanceInterval(decode(row), now)
-      : row.nextAt;
-
-  return { paused: action === 'pause', nextAt };
 }

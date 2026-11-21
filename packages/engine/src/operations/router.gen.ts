@@ -893,6 +893,17 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      schedulePreview: publicProcedure
+        .input(operations['project.schedulePreview'].params)
+        .output(operations['project.schedulePreview'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.schedulePreview',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       scheduleList: publicProcedure
         .input(operations['project.scheduleList'].params)
         .output(operations['project.scheduleList'].result)

@@ -39,7 +39,7 @@ function ScheduleHistoryPreview(): ReactElement {
       id: schedule.id,
       latestSessionId: runSessionId,
     });
-    setShown(href.params.sessionId || null);
+    setShown(href.params.sessionId);
     setHistory(false);
   };
 
