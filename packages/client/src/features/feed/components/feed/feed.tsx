@@ -1,15 +1,17 @@
 import type {
   BlobRef,
+  ConversationPartial,
   LiveHeader as LiveHeaderValue,
   ToolCallUpdate,
 } from '@repo/contracts';
 import { Text } from '@repo/kit/primitives/content/text';
 import type * as React from 'react';
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { View } from 'react-native';
 import { ComposerCover } from '#lib/product/composer-cover';
 import { useContentWide } from '#lib/product/content-layout';
 import type { FeedViewItem } from '../../view/feed-view';
+import { usePartialTranscripts } from '../../view/use-partial-transcripts';
 import { drawnFeedItems } from '../drawn-feed-item';
 import { FeedImages } from '../feed-images';
 import { withoutDisclosedTurnEnds } from '../turn-end/turn-end';
@@ -22,6 +24,9 @@ import { useReportsAtEnd } from './use-feed-scroll-position';
 export interface FeedProps {
   sessionId?: string;
   items: readonly FeedViewItem[];
+  partials?: readonly ConversationPartial[];
+  // The Conversation is on this Session, including the interval between utterances.
+  conversationActive?: boolean;
   // The Turn's live line, drawn last while a Turn runs and no open group already draws the work.
   liveHeader: LiveHeaderValue | null;
   // The Feed row a `tool_call` live header names, for its icon.
@@ -102,9 +107,19 @@ const noComposerCover = 0;
 
 // A Session's rows, oldest first, from the top of the view: it opens at the newest, follows the end while an answer streams in, and keeps the reader's place when older rows page in above.
 export function Feed({
-  checkoutBranch,
+  partials,
+  items,
   ...props
 }: FeedProps): React.JSX.Element {
+  const drawn = usePartialTranscripts(items, props.sessionId, partials);
+
+  return <DrawFeed {...props} items={drawn} />;
+}
+
+const DrawFeed = memo(function DrawFeed({
+  checkoutBranch,
+  ...props
+}: Omit<FeedProps, 'partials'>): React.JSX.Element {
   const feed = useFeedEntries(props);
 
   if (!feed.entries.length)
@@ -116,7 +131,7 @@ export function Feed({
     );
 
   return <FeedWithImages {...props} {...feed} />;
-}
+});
 
 // The Feed's images open above its list, so one stays open when its row scrolls out and is no longer drawn.
 function FeedWithImages(props: FeedListProps & FeedProps): React.JSX.Element {

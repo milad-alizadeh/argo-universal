@@ -1,5 +1,5 @@
 import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
-import { use } from 'react';
+import { use, useCallback } from 'react';
 import { useInstalledAgents } from '#features/agents';
 import { useBlobUrl } from '#features/connection';
 import { useSessionWork } from '#features/sessions';
@@ -67,6 +67,7 @@ type SessionSurroundings =
   | keyof ReturnType<typeof useSessionLink>
   | 'elicitation'
   | 'permission'
+  | 'onStartReached'
   | 'onAtEndChange'
   | 'shells'
   | 'inspectorPanels';
@@ -76,7 +77,10 @@ function useSessionSurroundings(
   offered: ReturnType<typeof offeredWith>,
   { feed }: ConnectedFeed,
 ): Pick<SessionDetailViewSources, SessionSurroundings> {
+  const { loadOlder } = feed;
+
   return {
+    onStartReached: useCallback(() => void loadOlder(), [loadOlder]),
     ...useFeedRequests(sessionId, feed),
     ...useSessionWork(sessionId, feed.snapshot, offered),
     agents: useInstalledAgents(),

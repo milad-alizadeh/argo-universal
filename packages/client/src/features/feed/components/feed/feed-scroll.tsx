@@ -112,6 +112,7 @@ export interface FeedScrollProps extends EntryDrawing {
   entries: FeedEntry[];
   initialIndex: number;
   turnRunning: boolean;
+  conversationActive?: boolean;
   onStartReached: () => void;
   // Older rows are paging in above.
   loadingOlder: boolean;
