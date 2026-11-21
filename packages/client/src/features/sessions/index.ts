@@ -268,4 +268,6 @@ export { sessionBarCards } from './components/session-bar/session-bar-cards';
 
 export { useSchedules, type ScheduleControls } from './hooks/use-schedules';
 
+export { FollowUpEditor } from './components/schedule-form';
+
 export { SchedulePreview, ScheduleList } from './components/schedule-list';

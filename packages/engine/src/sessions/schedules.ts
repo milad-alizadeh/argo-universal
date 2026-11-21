@@ -8,7 +8,6 @@ import {
   type ManageSchedule,
 } from './schedule-store';
 import { sendQueueCommand } from './sent-prompt/queue';
-import { steerOrWait } from './sent-prompt/steering';
 import { requireWritableSession } from './session-command';
 import type { SessionActorRef } from './session-machine';
 import type { SessionHandlerSources } from './session-sources';
@@ -46,8 +45,7 @@ export class Schedules {
     this.actors.clear();
   }
   private replace({ id, sessionId }: ManageSchedule): void {
-    this.actors.get(id)?.stop();
-    this.actors.delete(id);
+    this.disarm(id);
 
     if (this.store.deadline(id) !== undefined) this.arm({ id, sessionId });
   }
@@ -67,6 +65,12 @@ export class Schedules {
     sessionId: string,
     signal: AbortSignal,
   ): Promise<void> {
+    if (!this.store.occurrence(id)) {
+      this.disarm(id);
+
+      return;
+    }
+
     const session = await this.sources.open.ready(
       sessionId,
       'session.queue',
@@ -76,21 +80,44 @@ export class Schedules {
     signal.throwIfAborted();
     const occurrence = this.store.occurrence(id);
 
-    if (!occurrence) return;
-    await this.enqueue(session, id, occurrence);
+    if (occurrence) await this.enqueue(session, id, occurrence);
+
+    if (
+      !signal.aborted &&
+      (!occurrence || this.store.deadline(id) === undefined)
+    )
+      this.disarm(id);
+  }
+  private disarm(id: string): void {
+    this.actors.get(id)?.stop();
+    this.actors.delete(id);
   }
   private async enqueue(
     session: SessionActorRef,
     id: string,
-    { prompt, commitWith }: ScheduleOccurrence,
+    { prompt, deliveryWrite, coalescedWrite }: ScheduleOccurrence,
   ): Promise<void> {
+    const waiting = session
+      .getSnapshot()
+      .context.promptQueue.items.some(
+        ({ sender }) => sender?.type === 'schedule' && sender.scheduleId === id,
+      );
+
+    if (waiting) {
+      await this.sources.open.write(coalescedWrite);
+
+      return;
+    }
+
     const sender = scheduleSender(id);
     const queuedId = this.sources.createId();
-    const busy = session.getSnapshot().context.activeTurnId !== null;
     const command = { action: 'append', prompt } as const;
-    await sendQueueCommand(session, { command, sender, queuedId, commitWith });
-
-    if (busy) void steerOrWait(session, { sender, id: queuedId });
+    await sendQueueCommand(session, {
+      command,
+      sender,
+      queuedId,
+      commitWith: deliveryWrite,
+    });
   }
 }
 

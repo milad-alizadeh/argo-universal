@@ -234,8 +234,8 @@ _Avoid_: Call context, call scope, caller
 What keeps a Query's answer wanted: a Page address whose last draw read it. A Background pass holds nothing and reads fresh. A changed answer marks the Page addresses holding it stale.
 _Avoid_: Subscriber, owner, registration
 
-**Schedule**:
-A Session’s stored instruction for the Server to send a Prompt at a fixed interval. Each occurrence goes through the Session’s Prompt queue. The person can pause, resume or delete it from Schedules in the Workbench.
+**Session follow-up**:
+A stored instruction for the Server to send a Prompt once or at an interval in an existing Session. Each occurrence goes through that Session’s Prompt queue and uses its Checkout. The person manages it from Follow-ups in the Workbench.
 
 **Background pass**:
 One run of a Plugin's declared background entry on its interval, for one Project: its Loader runs and its answer is discarded. It may set its own nav badge; it draws nothing and never raises a Notification.
