@@ -494,6 +494,9 @@ _Avoid_: Agent settings, env config
 A program or service that gives an Agent tools over the Model Context Protocol. The Argo MCP server gives Agents access to Argo Operations.
 _Avoid_: Connector, integration, tool server, context server
 
+**MCP sign-in**:
+A named identity the person uses with one MCP server, such as Personal or Work in Sentry. It is shared by the Projects that select it.
+
 **Stop reason**:
 Why a Turn ended: `end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `cancelled`, `error`, or `auth_required`.
 _Avoid_: Exit status, finish reason, interrupted (as a Stop reason)
@@ -629,6 +632,9 @@ _Avoid_: Theme, style
 **Diagram**:
 A ` ```mermaid ` fence in Markdown, drawn in Argo's colours instead of shown as code, with a switch to its code. Agents check one with `diagram.validate` before sending it (ADR-0058).
 _Avoid_: Chart (a Plugin's `Chart` draws data), graph
+
+**Chart**:
+A visual that plots named data series. A Chart has a label and a table that presents the plotted data to screen readers.
 
 **Density**:
 How tightly a List or a Card draws its content: `regular` or `compact`. A compact List draws each row as one line on a wide desktop or web window; phones and narrow windows always draw regular rows.

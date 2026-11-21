@@ -6,6 +6,12 @@ export {
 } from './feed-change';
 
 export {
+  conversationHistoryCharacters,
+  readConversationHistory,
+  type ConversationHistorySources,
+} from './conversation-history';
+
+export {
   type FeedActorRef,
   type FeedEvent,
   type FeedInput,
@@ -92,7 +98,6 @@ export { messageText } from './message-text';
 export {
   readConversationSections,
   withVoiceInstruction,
-  withoutVoiceInstruction,
   type VoiceMessage,
 } from './conversation-markers';
 

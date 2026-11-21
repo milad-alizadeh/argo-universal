@@ -56,6 +56,9 @@ export type ConversationProviderEvent =
 // What the voice does with text it is given: say it aloud, or keep it as background it may use later.
 export type VoiceDelivery = 'speak' | 'background';
 
+// Time-sensitive instructions such as permission questions only go over a live link.
+export type VoiceReplay = 'rejoin' | 'live';
+
 // What the person chose for every call: the voice, how it speaks, and what it is told.
 export interface ConversationSetup {
   // A voice the provider lists; the provider's own default when left out.
@@ -95,7 +98,7 @@ export interface ConversationProviderCall {
   // Answer a request for work.
   reply: (requestId: string, text: string, delivery: VoiceDelivery) => void;
   // Tell the voice something it did not ask for.
-  tell: (text: string, delivery: VoiceDelivery) => void;
+  tell: (text: string, delivery: VoiceDelivery, replay?: VoiceReplay) => void;
   // Gives the voice one still picture of the person's screen as background it may look at. A call that cannot take images leaves it out, and the Engine never captures for it. Never stored.
   look?: (image: ScreenImage) => void;
   // End the call; ending an ended call does nothing.

@@ -21,10 +21,12 @@ import {
 import type { writerMachine } from '../storage';
 import type { CloseAcpResourcesInput } from './agent-cleanup';
 import type { RecoveryInput } from './engine-recovery';
+import { createFeedSources } from './feed-sources';
 import { requireRegistry } from './registry-input';
 import {
   openDatabaseOf,
   requireDatabaseWriter,
+  requireOpenSessions,
   type EngineContext,
 } from './setup.machine';
 
@@ -134,7 +136,15 @@ export const conversationInput = ({
   self,
 }: ConversationInputArgs): ConversationInput => ({
   provider: conversationProviderOf(context.conversationProvider),
-  briefing: sessionBriefing(openDatabaseOf(context)),
+  briefing: sessionBriefing({
+    database: openDatabaseOf(context),
+    findFeed: (sessionId) =>
+      createFeedSources({
+        database: openDatabaseOf(context),
+        sessions: requireOpenSessions(self.system),
+      }).findFeed(sessionId),
+    findWriter: () => requireDatabaseWriter(self.system),
+  }),
   idleMs: context.voiceIdleMs,
   log: conversationLogOf(context.home),
   now: context.now,

@@ -54,7 +54,7 @@ export class AgentWords {
   public tell(
     text: string,
     delivery: VoiceDelivery,
-    kind: 'tell' | 'result' = 'tell',
+    kind: 'tell' | 'result' | 'permission' = 'tell',
   ): void {
     for (const piece of inPieces(text))
       this.speak({ kind, text: piece, delivery });
