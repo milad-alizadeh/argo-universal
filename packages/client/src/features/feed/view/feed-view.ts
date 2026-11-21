@@ -108,22 +108,14 @@ export interface ParentResult {
   childPosition?: number;
 }
 
-export type FeedDelegated = {
+export interface FeedDelegated {
   type: 'delegated';
   id: string;
   sourceSessionId: string;
   title: string;
   onOpen: () => void;
-} & (
-  | { kind: 'permission' | 'elicitation' }
-  | {
-      kind: 'offered_skill';
-      command: string;
-      answering?: boolean;
-      error?: string;
-      onAnswer: (decision: 'run' | 'skip') => void;
-    }
-);
+  kind: 'permission' | 'elicitation' | 'offered_skill';
+}
 
 export type FeedViewItem =
   | ParentResult
