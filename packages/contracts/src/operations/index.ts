@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { IconName } from '../kit-symbols';
 import { agentAccessOperations } from './agent-access';
 import { appOperations } from './app';
+import { chartOperations } from './chart';
 import { conversationOperations } from './conversation';
 import { conversationDeviceOperations } from './conversation-devices';
 import { conversationSettingsOperations } from './conversation-settings';
@@ -79,6 +80,7 @@ export const operations = {
   ...agentAccessOperations,
   ...appOperations,
   ...diagramOperations,
+  ...chartOperations,
   ...readerOperations,
   ...sessionOperations,
   ...todoListOperations,
