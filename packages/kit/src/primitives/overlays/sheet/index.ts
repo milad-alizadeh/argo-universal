@@ -1,5 +1,7 @@
 export { Sheet } from './sheet';
 
+export { SheetFooter } from './sheet-footer';
+
 export { useSheet, useOptionalSheet } from './sheet-screens';
 
 export {
