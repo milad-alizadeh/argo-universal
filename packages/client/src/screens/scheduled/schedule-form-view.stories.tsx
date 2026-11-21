@@ -29,6 +29,21 @@ const meta = {
   parameters: { screenPreview: true },
   decorators: [
     (Story): ReactElement => (
+      <Dialog open>
+        <Story />
+      </Dialog>
+    ),
+  ],
+  argTypes: { saving: { control: 'boolean' }, error: { control: 'text' } },
+} satisfies Meta<typeof ScheduleFormView>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Setup: Story = {
+  decorators: [
+    (Story): ReactElement => (
       <>
         <SchedulePreviewFrame
           list={
@@ -40,20 +55,11 @@ const meta = {
             />
           }
         />
-        <Dialog open>
-          <Story />
-        </Dialog>
+        <Story />
       </>
     ),
   ],
-  argTypes: { saving: { control: 'boolean' }, error: { control: 'text' } },
-} satisfies Meta<typeof ScheduleFormView>;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
-export const Setup: Story = {};
+};
 
 export const Advanced: Story = { args: { initiallyAdvanced: true } };
 

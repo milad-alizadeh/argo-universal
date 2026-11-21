@@ -24,13 +24,13 @@ export const scheduleFormFixture = {
 
 const london = 'Europe/London';
 
-export const weekdaysDraft = scheduleCadenceDraft({
+const weekdaysDraft = scheduleCadenceDraft({
   type: 'weekdays',
   localTime: '09:00',
   timeZone: london,
 });
 
-export const customWeeksDraft = scheduleCadenceDraft({
+const customWeeksDraft = scheduleCadenceDraft({
   type: 'custom',
   every: 2,
   unit: 'week',
