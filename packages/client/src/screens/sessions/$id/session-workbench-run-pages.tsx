@@ -19,13 +19,7 @@ export function WorkbenchRunList({
   const { push } = useSheet();
 
   return (
-    <View className="px-2">
-      <WorkbenchRuns
-        {...runs}
-        compact
-        onOpen={(name) => push(runTabKey(name))}
-      />
-    </View>
+    <WorkbenchRuns {...runs} compact onOpen={(name) => push(runTabKey(name))} />
   );
 }
 
