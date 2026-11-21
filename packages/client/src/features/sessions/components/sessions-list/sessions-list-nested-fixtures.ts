@@ -37,3 +37,11 @@ export const orphanSessions = {
   query: 'Review',
   sessions: [child],
 };
+
+const plan = { done: 1, inProgress: 1, total: 4 };
+
+// Each level holds an unfinished plan, so every row draws its progress bar under its own content.
+export const nestedPlans = {
+  ...nestedSessions,
+  sessions: nestedSessions.sessions.map((session) => ({ ...session, plan })),
+};
