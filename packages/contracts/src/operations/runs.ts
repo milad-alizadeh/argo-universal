@@ -1,4 +1,6 @@
 import {
+  RunDraftParams,
+  RunDraftResult,
   RunLogsParams,
   RunLogsResult,
   RunNameParams,
@@ -70,5 +72,17 @@ export const runOperations = {
     tier: 'read',
     policy: 'allow',
     keywords: [appWords, 'errors', 'output', 'crash'],
+  },
+  'run.draft': {
+    id: 'run.draft',
+    label: 'Draft Run Configurations',
+    icon: 'terminal',
+    description:
+      'Write a first .argo/run.json from package.json scripts, a Procfile, .vscode/launch.json and .claude/launch.json. It never runs them, and refuses to replace an existing file unless overwrite is true.',
+    params: RunDraftParams,
+    result: RunDraftResult,
+    tier: 'act',
+    policy: 'allow',
+    keywords: ['draft', 'import', 'package.json', 'procfile', 'launch.json'],
   },
 } as const satisfies Record<string, OperationDefinition>;

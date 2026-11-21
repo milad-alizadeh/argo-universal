@@ -115,3 +115,36 @@ export const RunLogsResult = z.strictObject({
 });
 
 export type RunLogsResult = z.infer<typeof RunLogsResult>;
+
+export const RunDraftParams = z.strictObject({
+  sessionId,
+  overwrite: z
+    .boolean()
+    .optional()
+    .describe(
+      'Replace an existing .argo/run.json. Leave it out to refuse when the file exists.',
+    ),
+});
+
+export type RunDraftParams = z.infer<typeof RunDraftParams>;
+
+export const RunDraftResult = z.strictObject({
+  path: z.string(),
+  configurations: z.array(
+    z.strictObject({
+      name: z.string(),
+      command: z.string(),
+      port: z.int().nullable(),
+      source: z.string().describe('The file it was drafted from.'),
+    }),
+  ),
+  skipped: z.array(
+    z.strictObject({
+      source: z.string(),
+      name: z.string(),
+      reason: z.string(),
+    }),
+  ),
+});
+
+export type RunDraftResult = z.infer<typeof RunDraftResult>;
