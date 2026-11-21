@@ -52,8 +52,10 @@ export { sessionOperations } from './sessions';
 
 export {
   ProjectSchedule,
+  ProjectScheduleCadence,
   ProjectScheduleInput,
   ProjectScheduleOccurrence,
+  ScheduleWeekday,
   projectScheduleOperations,
 } from './project-schedules';
 

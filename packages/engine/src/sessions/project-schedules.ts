@@ -1,5 +1,6 @@
 import {
   ProjectSchedule,
+  type ProjectScheduleCadence,
   type ProjectScheduleInput,
   type ProjectScheduleOccurrence,
 } from '@repo/contracts/operations';
@@ -9,21 +10,63 @@ import {
 } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, eq } from 'drizzle-orm';
+import { z } from 'zod';
 import { requireInstalledAgent } from '../agents';
 import { titleFromPrompt } from '../feed';
 import { isFolder, listProjectBranches, readProjectPath } from '../projects';
 import { startSessionCreation } from './creation/session-creation';
+import { nextProjectScheduleAt } from './project-schedule-timing';
 import { startSchedule, type ScheduleActor } from './schedule-machine';
-import { nextIntervalAt } from './schedule-timing';
 import type { SessionHandlerSources } from './session-sources';
 
 type ScheduleTarget = { id: string; projectId: string };
 
-const decode = ({
-  settings,
+type StoredSchedule = {
+  schedule: ProjectSchedule;
+  anchorAt: number;
+};
+
+const ProjectScheduleSettings = z.looseObject({
+  anchorAt: z.number().optional(),
+  intervalSeconds: z.number().optional(),
+});
+
+function decode({
+  settings: json,
   ...row
-}: typeof table.$inferSelect): ProjectSchedule =>
-  ProjectSchedule.parse({ ...JSON.parse(settings), ...row });
+}: typeof table.$inferSelect): StoredSchedule {
+  const { anchorAt, intervalSeconds, ...settings } =
+    ProjectScheduleSettings.parse(JSON.parse(json));
+
+  const schedule = ProjectSchedule.parse({
+    cadence: { type: 'interval', intervalSeconds },
+    ...settings,
+    ...row,
+  });
+
+  return { schedule, anchorAt: anchorAt ?? row.nextAt };
+}
+
+type OccurrencePreview = { nextAt: number };
+
+function firstOccurrence(cadence: ProjectScheduleCadence, now: number): number {
+  try {
+    const nextAt = nextProjectScheduleAt(cadence, now, now);
+    // A recurrence needs another valid deadline even when its first run is today.
+    nextProjectScheduleAt(cadence, nextAt, now);
+
+    return nextAt;
+  } catch (error) {
+    if (!(error instanceof RangeError)) throw error;
+
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message:
+        'Choose a recurrence with a next occurrence within the supported date range.',
+      cause: error,
+    });
+  }
+}
 
 export class ProjectSchedules {
   private readonly actors = new Map<string, ScheduleActor>();
@@ -53,7 +96,16 @@ export class ProjectSchedules {
       )
       .orderBy(table.nextAt, table.id)
       .all()
-      .map(decode);
+      .map((row): ProjectSchedule => decode(row).schedule);
+  }
+
+  public preview(
+    projectId: string,
+    cadence: ProjectScheduleCadence,
+  ): OccurrencePreview {
+    readProjectPath(this.sources.database, projectId);
+
+    return { nextAt: firstOccurrence(cadence, Date.now()) };
   }
 
   public async create(input: ProjectScheduleInput): Promise<ProjectSchedule> {
@@ -68,10 +120,11 @@ export class ProjectSchedules {
       projectId,
       settings: JSON.stringify({
         ...settings,
+        anchorAt: now,
         checkout,
         name: titleFromPrompt([{ type: 'text', text: input.instructions }]),
       }),
-      nextAt: nextIntervalAt(now, input.intervalSeconds, now),
+      nextAt: firstOccurrence(input.cadence, now),
       latestSessionId: null,
     };
 
@@ -82,7 +135,7 @@ export class ProjectSchedules {
 
     this.arm(id);
 
-    return decode(row);
+    return decode(row).schedule;
   }
 
   private async resolveCheckout({
@@ -130,7 +183,7 @@ export class ProjectSchedules {
       });
     }
 
-    return this.run(decode(stored), Date.now(), this.stopping);
+    return this.run(decode(stored).schedule, Date.now(), this.stopping);
   }
 
   private row(id: string): typeof table.$inferSelect | undefined {
@@ -159,8 +212,8 @@ export class ProjectSchedules {
 
     if (!row || row.nextAt > now) return;
 
-    const schedule = decode(row);
-    const nextAt = nextIntervalAt(row.nextAt, schedule.intervalSeconds, now);
+    const { schedule, anchorAt } = decode(row);
+    const nextAt = nextProjectScheduleAt(schedule.cadence, now, anchorAt);
     await this.sources.open.write({
       describe: () => 'Advance Project Schedule',
       commit: (tx) =>

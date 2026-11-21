@@ -27,7 +27,7 @@ it('runs a Project Schedule in a fresh worktree without moving its deadline', as
     projectId: fixtureProjectId,
     agent: 'mock',
     instructions,
-    intervalSeconds: 60,
+    cadence: { type: 'interval' as const, intervalSeconds: 60 },
   });
 
   expect(schedule.checkout.type).toBe('worktree');
@@ -78,7 +78,7 @@ it('delivers a stored Project Schedule through the normal Session path after res
     agent: 'mock',
     instructions,
     checkout: { type: 'main' },
-    intervalSeconds: 1,
+    cadence: { type: 'interval' as const, intervalSeconds: 1 },
   });
 
   await host.stop();
@@ -142,7 +142,7 @@ it('skips Run now while an automatic Session is working', async () => {
       projectId: fixtureProjectId,
       agent: 'mock',
       instructions,
-      intervalSeconds: 1,
+      cadence: { type: 'interval' as const, intervalSeconds: 1 },
     });
 
     await expect.poll(() => received.length, { timeout: 8000 }).toBe(1);
@@ -176,7 +176,7 @@ it('attributes a run to the stored Project Schedule when an Agent created it', a
     projectId: fixtureProjectId,
     agent: 'mock',
     instructions,
-    intervalSeconds: 3600,
+    cadence: { type: 'interval' as const, intervalSeconds: 3600 },
   };
 
   const saved = ProjectSchedule.parse(
@@ -228,7 +228,7 @@ it('runs in the saved main Checkout without changing the Project’s remembered 
     agent: 'mock',
     instructions: 'Check the main Checkout',
     checkout: { type: 'main' },
-    intervalSeconds: 60,
+    cadence: { type: 'interval' as const, intervalSeconds: 60 },
   });
 
   const run = await project.scheduleRunNow({ id: schedule.id, projectId });
