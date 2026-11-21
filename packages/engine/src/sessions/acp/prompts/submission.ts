@@ -5,6 +5,7 @@ import type { AcpSessionLease } from '../../../agents';
 import type { AttachmentStorage } from '../../../blob';
 import { promptMessageChange, type FeedActorRef } from '../../../feed';
 import type { WriterCommit } from '../../../storage';
+import { requireNativeCommandAuthority } from './native-command';
 import { readAcpPromptContent } from './prompt-content';
 
 export type LocalSubmission = {
@@ -111,6 +112,10 @@ export const commitLocalPrompt = async (
   input: PromptCommitInput,
   signal: AbortSignal,
 ): Promise<PromptRequest> => {
+  requireNativeCommandAuthority(
+    input.submission.content,
+    input.submission.sender,
+  );
   const prompt = await readSupportedPromptBlocks(input);
   requirePromptAdmission(input.feed, signal);
   await enqueuePromptAndWaitForCommit(input, signal);

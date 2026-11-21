@@ -66,6 +66,9 @@ declare module '@argo/plugin-kit' {
           "type": "boolean",
           "required": true
         },
+        "firstEnable": {
+          "type": "boolean"
+        },
         "sessionId": {
           "type": "string"
         }

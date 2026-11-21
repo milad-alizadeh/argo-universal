@@ -16,6 +16,7 @@ import {
   SessionSetConfigOptionInput,
   SessionSetConfigOptionOutput,
 } from '../sessions/set-config-option';
+import { delegatedSkillOperations } from './delegated-skill';
 import type { OperationDefinition } from './index';
 import { scheduleOperations } from './schedules';
 import { sessionAgentOperations } from './session-agent-operations';
@@ -25,6 +26,7 @@ import { shellOperations } from './shells';
 
 export const sessionOperations = {
   ...scheduleOperations,
+  ...delegatedSkillOperations,
   ...queueOperations,
   'session.new': {
     id: 'session.new',
@@ -49,6 +51,18 @@ export const sessionOperations = {
     tier: 'act',
     policy: 'allow',
     keywords: ['message', 'steer', 'queue', 'continue', 'agent'],
+  },
+  'session.closeFollowThrough': {
+    id: 'session.closeFollowThrough',
+    label: 'Close delegated follow-through',
+    icon: 'close',
+    description:
+      'End automatic follow-up for work this Session already delegated.',
+    params: SessionCancelInput.partial(),
+    result: SessionCancelOutput,
+    tier: 'act',
+    policy: 'allow',
+    keywords: ['delegate', 'stop', 'follow-through'],
   },
   'session.cancel': {
     id: 'session.cancel',

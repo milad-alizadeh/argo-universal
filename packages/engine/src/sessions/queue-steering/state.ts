@@ -78,6 +78,11 @@ function reserveRow(
   row: QueuedPrompt,
 ): QueueSteering {
   requireFree(context, revision, row);
+  if (
+    row.sender?.type === 'skill' ||
+    (row.sender?.type === 'session' && row.sender.delegatedResult)
+  )
+    conflict('This Prompt must start its own Turn.');
 
   return {
     ...reservePrompt(context, row.prompt),

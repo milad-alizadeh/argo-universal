@@ -1,5 +1,6 @@
 import { steerAcpSession, type AcpSessionLease } from '../../agents';
 import { promptStorage } from '../acp-operations';
+import { requireNativeCommandAuthority } from '../acp/prompts/native-command';
 import { readAcpPromptContent } from '../acp/prompts/prompt-content';
 import { sendSessionCommand } from '../session-command';
 import type { SessionContext } from '../session-context';
@@ -50,6 +51,7 @@ async function inject(
 ): Promise<void> {
   const context = session.getSnapshot().context;
   const lease = requireLease(context);
+  requireNativeCommandAuthority(steering.prompt, steering.sender);
   const prompt = await readSteeringPrompt(context, steering);
 
   await steerAcpSession(lease, prompt);

@@ -12,6 +12,7 @@ import {
   SessionOpenInput,
   SessionOpenOutput,
 } from '@repo/contracts';
+import { z } from 'zod';
 import {
   mergeRouters,
   authenticatedAppProcedure,
@@ -23,6 +24,7 @@ import {
 import { agentOptionsUpdates } from './configuration';
 import type { SessionList } from './list/session-list';
 import type { OpenSessions } from './open-sessions';
+import { delegatedAttention } from './orchestration/input-requests';
 import {
   answerSessionElicitation,
   answerSessionPermission,
@@ -75,6 +77,38 @@ const openSession = async (
 
 const createStartRouter = routerFactory((sources: SessionHandlerSources) =>
   router({
+    delegatedAttention: authenticatedAppProcedure
+      .input(SessionOpenInput)
+      .output(
+        zAsyncIterable({
+          yield: z.object({
+            requests: z.array(
+              z.object({
+                sessionId: z.string(),
+                requestId: z.string(),
+                title: z.string(),
+                kind: z.enum(['permission', 'elicitation']),
+              }),
+            ),
+            skills: z.array(
+              z.object({
+                id: z.string(),
+                name: z.string(),
+                arguments: z.string(),
+                starterId: z.string(),
+                originTurnId: z.string(),
+              }),
+            ),
+          }),
+        }),
+      )
+      .subscription(({ input, ctx, signal }) =>
+        delegatedAttention(
+          sources,
+          input.sessionId,
+          AbortSignal.any([ctx.connection.signal, ...(signal ? [signal] : [])]),
+        ),
+      ),
     open: publicProcedure
       .input(SessionOpenInput)
       .output(SessionOpenOutput)

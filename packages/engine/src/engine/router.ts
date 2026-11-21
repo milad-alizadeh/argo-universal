@@ -54,6 +54,8 @@ function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
 // Operations share the session and shell nouns with the Session procedures that are not Operations.
 const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions(deps);
+  if (deps.sessionCommandSignal)
+    sessions.startDelegatedResults(deps.sessionCommandSignal);
 
   attachSessionActs(deps, sessions);
   attachConversation(deps, sessions);

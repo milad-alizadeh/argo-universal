@@ -9,6 +9,7 @@ import {
   questionsValues,
 } from '../../../../mocks/elicitation';
 import { claudeDescribedRequest } from '../../../../mocks/requests/elicitation/claude-elicitation';
+import { DelegatedInputs } from './delegated-inputs';
 import { SessionDetailView } from './session-detail-view';
 import { sessionPageBar } from './session-detail-view-bar.mocks';
 import { changedSession } from './session-detail-view-changes-pill.mocks';
@@ -204,4 +205,62 @@ export const ChangesAndTodos: Story = {
     composer: { ...idleSession.composer, status: { plan: composerTodos } },
   },
   render: (args): React.JSX.Element => <FramedSessionPreview {...args} />,
+};
+
+export const DelegatedInput: Story = {
+  args: { state: 'open', ...runningSession },
+  render: (args): React.JSX.Element =>
+    args.state === 'open' ? (
+      <SessionDetailView
+        {...args}
+        delegatedInputs={
+          <DelegatedInputs
+            requests={[
+              {
+                sessionId: 'reviewer',
+                title: 'Review the checkout',
+                requestId: 'permission',
+                kind: 'permission',
+              },
+              {
+                sessionId: 'tester',
+                title: 'Run the checks',
+                requestId: 'question',
+                kind: 'elicitation',
+              },
+            ]}
+            onOpen={fn()}
+          />
+        }
+      />
+    ) : (
+      <SessionDetailView {...args} />
+    ),
+};
+
+export const DelegatedSkill: Story = {
+  args: { state: 'open', ...runningSession },
+  render: (args): React.JSX.Element =>
+    args.state === 'open' ? (
+      <SessionDetailView
+        {...args}
+        delegatedInputs={
+          <DelegatedInputs
+            requests={[]}
+            skills={[
+              {
+                id: 'offer',
+                name: 'implement',
+                arguments: '#123',
+                starterId: 'starter',
+              },
+            ]}
+            onOpen={fn()}
+            onConfirm={fn()}
+          />
+        }
+      />
+    ) : (
+      <SessionDetailView {...args} />
+    ),
 };

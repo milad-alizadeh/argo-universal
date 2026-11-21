@@ -5,6 +5,8 @@ export const SentPromptSender = z.discriminatedUnion('type', [
   z.strictObject({
     type: z.literal('session'),
     sessionId: sessionColumns.shape.id,
+    followThrough: z.string().min(1).optional(),
+    delegatedResult: z.array(z.string()).min(1).optional(),
     title: z.string().min(1),
   }),
   z.strictObject({
@@ -16,6 +18,13 @@ export const SentPromptSender = z.discriminatedUnion('type', [
     type: z.literal('schedule'),
     scheduleId: z.string(),
     title: z.literal('Schedule'),
+  }),
+  z.strictObject({
+    type: z.literal('skill'),
+    title: z.literal('Confirmed skill'),
+    offerId: z.string(),
+    sessionId: sessionColumns.shape.id,
+    originTurnId: z.string(),
   }),
   // The Conversation (ADR-0064): its Prompts are stored and never drawn.
   z.strictObject({ type: z.literal('conversation') }),

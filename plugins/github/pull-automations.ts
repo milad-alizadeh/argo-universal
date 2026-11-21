@@ -31,4 +31,8 @@ export type Automation = {
 };
 
 // The automations the Plugin keeps itself; Auto-merge is GitHub's own and is never kept here.
-export type Automations = { fix: Automation; archive: Automation };
+export type AutoFix = Automation & {
+  enableFirst: (link: PullLink) => Promise<boolean>;
+};
+
+export type Automations = { fix: AutoFix; archive: Automation };

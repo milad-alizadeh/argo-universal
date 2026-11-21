@@ -9,6 +9,7 @@ import {
   LinkMarksProvider,
 } from '#features/plugins';
 import { newSessionId } from '../../../lib/product/navigation/new-session';
+import { ConnectedDelegatedInputs } from './delegated-inputs';
 import { sessionsInDrawOrder, retainSession } from './retained-sessions';
 import {
   SessionDetailView,
@@ -162,7 +163,17 @@ function headed(
 
   return (
     <>
-      <SessionDetailView {...props} drawHeader={drawHeader} />
+      <SessionDetailView
+        {...(props.state === 'open' && !props.archived
+          ? {
+              ...props,
+              delegatedInputs: (
+                <ConnectedDelegatedInputs sessionId={sessionId} />
+              ),
+            }
+          : props)}
+        drawHeader={drawHeader}
+      />
       {dialogs}
     </>
   );

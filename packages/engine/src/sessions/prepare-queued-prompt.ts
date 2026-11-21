@@ -1,7 +1,10 @@
 import type { ContentBlock } from '@repo/contracts';
 import { blobsFolderIn, attachmentsFolderIn } from '../blob';
+import { requireNativeCommandAuthority } from './acp/prompts/native-command';
 import { readAcpPromptContent } from './acp/prompts/prompt-content';
 import type { LocalSubmission } from './acp/prompts/submission';
+import { allowsResult } from './orchestration/result-store';
+import { requireConfirmedSkill } from './orchestration/skill';
 import type { SessionContext } from './session-context';
 
 type Preparation = Pick<
@@ -11,6 +14,7 @@ type Preparation = Pick<
   | 'sessionId'
   | 'projectId'
   | 'acpLease'
+  | 'slashCommands'
 > & {
   input: Pick<
     SessionContext['input'],
@@ -26,7 +30,27 @@ export async function prepareQueuedPrompt(
   const answer = await runHook(context, submission);
 
   if ('drop' in answer) return null;
+  requireNativeCommandAuthority(answer.prompt, submission.sender);
   await validateQueuedContent(context, answer.prompt);
+  const { sender } = submission;
+  if (sender?.type === 'skill') {
+    const [command] = answer.prompt;
+    const text =
+      answer.prompt.length === 1 && command?.type === 'text' && !command._meta
+        ? command.text
+        : undefined;
+    requireConfirmedSkill(context, sender.offerId, text);
+  }
+  if (
+    sender?.type === 'session' &&
+    sender.delegatedResult &&
+    !allowsResult(
+      context.input.database,
+      context.sessionId,
+      sender.delegatedResult,
+    )
+  )
+    return null;
 
   return { ...submission, content: answer.prompt };
 }

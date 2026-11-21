@@ -18,7 +18,7 @@ function composerCallout({
 
 type SessionComposerProps = Pick<
   OpenSessionViewProps,
-  'elicitation' | 'composer' | 'callout' | 'stoppedTurn'
+  'elicitation' | 'composer' | 'callout' | 'stoppedTurn' | 'delegatedInputs'
 > & { phonePill?: React.ReactNode };
 
 export function SessionComposer(
@@ -29,6 +29,7 @@ export function SessionComposer(
   return (
     // As wide as the Feed: the SessionColumn around it sets the width.
     <View className={cn('w-full items-center', filled && filledClass)}>
+      {props.delegatedInputs}
       <Composer
         {...composerUnderQuestion(props.composer, props.elicitation)}
         phonePill={props.phonePill}

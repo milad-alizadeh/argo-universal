@@ -138,6 +138,10 @@
             "description": "True to turn it on, false to turn it off.",
             "required": true
           },
+          "firstEnable": {
+            "type": "boolean",
+            "description": "For a newly opened pull request, enable Auto-fix only if it has no setting yet. Returns the current setting on replay."
+          },
           "sessionId": {
             "type": "string",
             "description": "The Session the pull request belongs to; the calling Session when it is an Agent's own run."
