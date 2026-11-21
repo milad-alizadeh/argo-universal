@@ -2,6 +2,7 @@ import { createImplementations } from './implementations';
 import { OperationArchive } from './operation-archive';
 import type { OperationsDeps } from './operations';
 import { OperationRunner } from './runner';
+import { runCheckoutOf } from './runs';
 import { PromptChains, SessionScope } from './session-scope';
 
 // Every caller's one runner, reading Sessions through the Session directory.
@@ -17,6 +18,15 @@ export function createRunner(deps: OperationsDeps): OperationRunner {
     requireClearTarget: (sessionId) =>
       deps.sessions.requireClearTarget(sessionId),
     archive: new OperationArchive(deps.sessions.archives),
-    scope: new SessionScope({ directory, createId: deps.createId, chains }),
+    scope: new SessionScope({
+      directory,
+      createId: deps.createId,
+      chains,
+      openedByPerson: (sessionId, name) =>
+        deps.runs.terminals.openedByPerson(
+          runCheckoutOf(deps.database, sessionId),
+          name,
+        ),
+    }),
   });
 }

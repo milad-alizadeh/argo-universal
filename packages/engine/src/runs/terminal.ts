@@ -9,6 +9,11 @@ export type TerminalLaunch = {
   port: number;
 };
 
+// The size of every Terminal the Server opens, which the screen an Agent reads is drawn at.
+export const terminalColumns = 120;
+
+export const terminalRows = 32;
+
 export type TerminalExit = { exitCode: number };
 
 export interface TerminalProcess {

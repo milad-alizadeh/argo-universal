@@ -14,6 +14,7 @@ import { createRegistryOperations } from './registry';
 import { createRunOperations } from './runs';
 import type { AppCaller, SessionCaller, UserCaller } from './session-tokens';
 import { sessionImplementations } from './sessions';
+import { createTerminalOperations } from './terminals';
 import type { WorkExecution, UserAdmission } from './work';
 
 type ParamsById = {
@@ -83,6 +84,7 @@ export function createImplementations(
     ...createRegistryOperations(deps),
     ...createProjectOperations(deps),
     ...createRunOperations(deps),
+    ...createTerminalOperations(deps),
     ...createConversationOperations(deps.conversation, deps.sessions),
   };
 }

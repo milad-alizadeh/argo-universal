@@ -1,5 +1,6 @@
 import { operations, type OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import type { OperationCard } from '../../sessions';
 import type { OperationParams, OperationResult } from '../implementations';
@@ -34,6 +35,8 @@ const parsed = <Id extends TargetedId>(
 ): ParsedOperation<Id> => ({ id, params: validateParams(id, params) });
 
 const sessionTarget = z.object({ sessionId: z.string() });
+
+const terminalTarget = z.object({ sessionId: z.string(), name: z.string() });
 
 type Admission = {
   id: OperationId;
@@ -81,9 +84,22 @@ export class SessionScope {
     invoke: (params: OperationParams<Id>) => Promise<Result>,
   ): Promise<Result> {
     const scoped = scopedParams(id, params, context.caller);
+    this.refuseOtherTerminals(id, scoped);
     const policy = this.permission(context, id, scoped);
 
     return this.permitted(context, { id, policy }, () => invoke(scoped));
+  }
+  // ADR-0063: an Agent reads a Terminal the person opened but never types into it.
+  private refuseOtherTerminals(id: OperationId, params: OperationParams): void {
+    if (id !== 'terminal.send') return;
+
+    const { sessionId, name } = terminalTarget.parse(params);
+
+    if (this.ports.openedByPerson(sessionId, name))
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: `A Session never types into "${name}": the person opened that Terminal`,
+      });
   }
   private permitted<Result>(
     context: ScopedRun,

@@ -18,23 +18,32 @@ export const removeRunOutput = (path: string): Promise<void> =>
 
 const bytesPerCharacter = 4;
 
-// The end of the recorded terminal stream as plain text: colours and cursor movement are left out.
-export const readRunOutputTail = async (
-  path: string,
-  characters: number,
-): Promise<string> => {
+// The last bytes of a recording, as the terminal wrote them.
+const readEnd = async (path: string, bytes: number): Promise<string> => {
   const file = await open(path, 'r').catch((): undefined => undefined);
 
   if (!file) return '';
 
   try {
     const { size } = await file.stat();
-    const length = Math.min(size, characters * bytesPerCharacter);
+    const length = Math.min(size, bytes);
     const buffer = Buffer.alloc(length);
     await file.read(buffer, 0, length, size - length);
 
-    return stripVTControlCharacters(buffer.toString('utf8')).slice(-characters);
+    return buffer.toString('utf8');
   } finally {
     await file.close();
   }
 };
+
+// The end of the recorded terminal stream as plain text: colours and cursor movement are left out.
+export const readRunOutputTail = async (
+  path: string,
+  characters: number,
+): Promise<string> =>
+  stripVTControlCharacters(
+    await readEnd(path, characters * bytesPerCharacter),
+  ).slice(-characters);
+
+// The end of the recorded terminal stream with its colours and cursor movement kept, for drawing it again.
+export const readRunOutputRaw = readEnd;
