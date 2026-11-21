@@ -61,14 +61,22 @@ export function createRunOperations(deps: {
     'run.start': async ({ sessionId, name, timeoutMs }) => {
       const { id, title, ...checkout } = sessionOf(database, sessionId);
 
-      return runs.start(checkout, name, timeoutMs, { id, title });
+      return runs.start(
+        { ...checkout, starter: { id, title } },
+        name,
+        timeoutMs,
+      );
     },
     'run.stop': async ({ sessionId, name }) =>
       runs.stop(checkoutOf(database, sessionId), name),
     'run.restart': async ({ sessionId, name, timeoutMs }) => {
       const { id, title, ...checkout } = sessionOf(database, sessionId);
 
-      return runs.restart(checkout, name, timeoutMs, { id, title });
+      return runs.restart(
+        { ...checkout, starter: { id, title } },
+        name,
+        timeoutMs,
+      );
     },
     'run.status': async ({ sessionId }) =>
       runs.status(checkoutOf(database, sessionId)),

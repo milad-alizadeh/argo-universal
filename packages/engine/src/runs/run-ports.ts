@@ -79,11 +79,12 @@ export async function allocatePort(allocation: Allocation): Promise<number> {
 
   if (port !== undefined) {
     const by = holder(port);
+    const holding = by ? ` by ${by}` : '';
 
     if (by !== undefined || !(await allocation.free(port)))
       throw new TRPCError({
         code: 'CONFLICT',
-        message: `Port ${port} of Run Configuration "${configuration.name}" is already in use${by ? ` by ${by}` : ''}`,
+        message: `Port ${port} of Run Configuration "${configuration.name}" is already in use${holding}`,
       });
 
     return port;

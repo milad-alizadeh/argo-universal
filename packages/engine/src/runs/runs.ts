@@ -14,6 +14,7 @@ import {
   type WriterActorRef,
 } from '../storage';
 import { LiveRun } from './live-run';
+import { RunBlocks, serially, starterName } from './run-blocks';
 import type { RunConfiguration } from './run-configurations';
 import { readRunFile, requireRunConfiguration } from './run-file';
 import {
@@ -22,15 +23,7 @@ import {
   runOutputPath,
   createRunOutput,
 } from './run-output';
-import {
-  allocateBlock,
-  allocatePort,
-  bindable,
-  blockPorts,
-  blockSize,
-  portListening,
-  urlOf,
-} from './run-ports';
+import { bindable, portListening, urlOf } from './run-ports';
 import { awaitReady } from './run-ready';
 import { latestRun, RunWriteJob, type RunRecord } from './run-store';
 import type { TerminalProcess, TerminalSpawner } from './terminal';
@@ -40,6 +33,9 @@ export type RunCheckout = { projectId: string; checkoutPath: string };
 
 // The Session that asks, named in a refusal when its Run holds a port someone else wants.
 export type RunStarter = { id: string; title: string };
+
+// A Run Configuration's Checkout, and the Session that asks for its Run.
+export type RunRequest = RunCheckout & { starter?: RunStarter };
 
 export type RunsInput = {
   database: Database;
@@ -63,12 +59,6 @@ const keyOf = (
   name: string,
 ): string => JSON.stringify([projectId, checkoutPath, name]);
 
-const checkoutKeyOf = ({ projectId, checkoutPath }: RunCheckout): string =>
-  JSON.stringify([projectId, checkoutPath]);
-
-const starterName = ({ id, title }: RunStarter): string =>
-  title ? `Session "${title}"` : `Session ${id}`;
-
 const statusOf = (record: RunRecord | undefined): RunConfigurationStatus =>
   record?.status ?? 'stopped';
 
@@ -85,24 +75,24 @@ export class Runs {
   // The latest Run of each Run Configuration this Server has started, so a read never waits on the database.
   private readonly latest = new Map<string, RunRecord>();
   private readonly launching = new Map<string, Promise<LiveRun>>();
-  // The block each Checkout last had, so it gets the same ports back once its Runs end and start again.
-  private readonly lastBlocks = new Map<string, number>();
+  private readonly blocks: RunBlocks;
   // Launches queue, so two Runs of one Checkout never each reserve a block.
-  private queue: Promise<unknown> = Promise.resolve();
-  public constructor(private readonly input: RunsInput) {}
+  private readonly queued = serially();
+  public constructor(private readonly input: RunsInput) {
+    this.blocks = new RunBlocks(
+      () => this.live.values(),
+      input.portFree ?? bindable,
+    );
+  }
 
   public async start(
-    checkout: RunCheckout,
+    checkout: RunRequest,
     name: string,
     timeoutMs = defaultStartMs,
-    starter: RunStarter = { id: 'unknown', title: '' },
   ): Promise<RunStartResult> {
     const configuration = await this.configuration(checkout, name);
 
-    return awaitReady(
-      await this.running(checkout, configuration, starter),
-      timeoutMs,
-    );
+    return awaitReady(await this.running(checkout, configuration), timeoutMs);
   }
 
   public async stop(
@@ -116,18 +106,14 @@ export class Runs {
   }
 
   public async restart(
-    checkout: RunCheckout,
+    checkout: RunRequest,
     name: string,
     timeoutMs = defaultStartMs,
-    starter: RunStarter = { id: 'unknown', title: '' },
   ): Promise<RunStartResult> {
     const configuration = await this.configuration(checkout, name);
     await this.end(this.live.get(keyOf(checkout, name)));
 
-    return awaitReady(
-      await this.running(checkout, configuration, starter),
-      timeoutMs,
-    );
+    return awaitReady(await this.running(checkout, configuration), timeoutMs);
   }
 
   public async status(
@@ -199,9 +185,8 @@ export class Runs {
 
   // The Run of this Run Configuration that already lives, or a new one; two starts at once make one.
   private running(
-    checkout: RunCheckout,
+    checkout: RunRequest,
     configuration: RunConfiguration,
-    starter: RunStarter,
   ): Promise<LiveRun> {
     const key = keyOf(checkout, configuration.name);
     const existing = this.live.get(key);
@@ -210,8 +195,8 @@ export class Runs {
 
     const launching =
       this.launching.get(key) ??
-      this.queued(() => this.launch(checkout, configuration, starter)).finally(
-        () => this.launching.delete(key),
+      this.queued(() => this.launch(checkout, configuration)).finally(() =>
+        this.launching.delete(key),
       );
 
     this.launching.set(key, launching);
@@ -219,66 +204,44 @@ export class Runs {
     return launching;
   }
 
-  private queued<Result>(task: () => Promise<Result>): Promise<Result> {
-    const result = this.queue.then(task);
-    this.queue = result.catch((): void => undefined);
-
-    return result;
-  }
-
   private async launch(
-    checkout: RunCheckout,
+    checkout: RunRequest,
     configuration: RunConfiguration,
-    starter: RunStarter,
   ): Promise<LiveRun> {
     const previous = this.record(checkout, configuration.name);
-    const block = await this.blockOf(checkout);
-    const record = await this.newRecord(
-      checkout,
-      configuration,
-      previous,
-      block,
-    );
+    const ports = await this.blocks.reserve(checkout, configuration, previous);
+    const record = this.newRecord(checkout, configuration, ports.port);
     const outputPath = runOutputPath(this.input.home, record.id);
     await createRunOutput(outputPath);
-    const terminal = await this.spawn(checkout, configuration, record, block);
+
+    const terminal = await this.spawn(checkout, configuration, {
+      record,
+      env: ports.env,
+    });
+
     record.pid = terminal.pid ?? null;
+
     const run = new LiveRun({
       record,
       terminal,
       outputPath,
       configuration,
-      block,
-      starter: starterName(starter),
+      block: ports.block,
+      starter: starterName(checkout.starter),
     });
 
     return this.attach(checkout, run, previous);
   }
 
-  private async newRecord(
-    checkout: RunCheckout,
+  private newRecord(
+    { projectId, checkoutPath }: RunCheckout,
     configuration: RunConfiguration,
-    previous: RunRecord | undefined,
-    block: number,
-  ): Promise<RunRecord> {
-    const checkoutKey = checkoutKeyOf(checkout);
-
-    const own = [...this.live.values()].filter(
-      (run) => checkoutKeyOf(run.record) === checkoutKey,
-    );
-
-    const port = await allocatePort({
-      configuration,
-      previous: previous?.port,
-      block: blockPorts(block),
-      taken: new Set(own.map((run) => run.record.port)),
-      holder: (candidate) => this.holder(candidate, checkoutKey),
-      free: this.input.portFree ?? bindable,
-    });
-
+    port: number,
+  ): RunRecord {
     return {
       id: this.input.createId(),
-      ...checkout,
+      projectId,
+      checkoutPath,
       pid: null,
       name: configuration.name,
       command: configuration.command,
@@ -293,75 +256,17 @@ export class Runs {
     };
   }
 
-  // The Checkout's block while any of its Runs live, else the one it had last time if free, else the lowest free block.
-  private async blockOf(checkout: RunCheckout): Promise<number> {
-    const checkoutKey = checkoutKeyOf(checkout);
-
-    const live = [...this.live.values()].find(
-      (run) => checkoutKeyOf(run.record) === checkoutKey,
-    );
-
-    if (live) return live.block;
-
-    const block = await allocateBlock({
-      preferred: this.lastBlocks.get(checkoutKey),
-      holder: (port) => this.holder(port, checkoutKey, true),
-      free: this.input.portFree ?? bindable,
-    });
-
-    this.lastBlocks.set(checkoutKey, block);
-
-    return block;
-  }
-
-  // Who holds a port: a live Run using it, or the Run of another Checkout that reserved it in its block (or all blocks when `reserved`).
-  private holder(
-    port: number,
-    checkoutKey: string,
-    reserved = false,
-  ): string | undefined {
-    for (const run of this.live.values()) {
-      const own = checkoutKeyOf(run.record) === checkoutKey;
-
-      if (run.record.port === port)
-        return own
-          ? `Run Configuration "${run.record.name}" of this Checkout`
-          : run.starter;
-
-      if (
-        (reserved || !own) &&
-        run.block <= port &&
-        port < run.block + blockSize
-      )
-        return run.starter;
-    }
-
-    return undefined;
-  }
-
   private async spawn(
     checkout: RunCheckout,
     configuration: RunConfiguration,
-    record: RunRecord,
-    block: number,
+    { record, env }: { record: RunRecord; env: Record<string, string> },
   ): Promise<TerminalProcess> {
-    const ports = Object.fromEntries(
-      blockPorts(block).map((port, index) => [
-        `ARGO_PORT_${index}`,
-        String(port),
-      ]),
-    );
-
     try {
       return await this.input.spawn({
         id: record.id,
         command: configuration.command,
         cwd: resolve(checkout.checkoutPath, configuration.cwd),
-        env: {
-          ...configuration.env,
-          ...ports,
-          PORT: String(record.port),
-        },
+        env: { ...configuration.env, ...env },
         port: record.port,
       });
     } catch (error) {

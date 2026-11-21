@@ -540,6 +540,7 @@ it('gives two Checkouts that run the same Run Configuration separate blocks of p
     journey,
     journey.call(startRun, { name: 'web' }),
   );
+
   const two = await startAndReady(journey, worktree.start('web'));
 
   const ports = [...block(one), ...block(two)];
@@ -548,7 +549,7 @@ it('gives two Checkouts that run the same Run Configuration separate blocks of p
   expect(block(one)).toContain(one.launch.port);
   expect(block(two)).toContain(two.launch.port);
   expect(block(one)).toEqual(
-    block(one).map((_, index) => block(one)[0]! + index),
+    block(one).map((_, index) => Number(one.launch.env.ARGO_PORT_0) + index),
   );
 });
 
@@ -561,6 +562,7 @@ it('shares a Checkout’s block between its Runs, each with a port of its own', 
     journey,
     journey.call(startRun, { name: 'web' }),
   );
+
   const api = await startAndReady(
     journey,
     journey.call(startRun, { name: 'api' }),
@@ -621,6 +623,7 @@ it('lets a pinned Run share its Checkout’s block with the others', async () =>
     journey,
     journey.call(startRun, { name: 'web' }),
   );
+
   const api = await startAndReady(
     journey,
     journey.call(startRun, { name: 'api' }),
@@ -634,10 +637,12 @@ it('lets a pinned Run share its Checkout’s block with the others', async () =>
 it('frees a Checkout’s block when its Runs end, so another Checkout reserves it', async () => {
   const journey = await startRuns({ configurations: [web2] });
   const worktree = await inWorktree(journey, { configurations: [web2] });
+
   const one = await startAndReady(
     journey,
     journey.call(startRun, { name: 'web' }),
   );
+
   await journey.call('run.stop', { name: 'web' });
 
   const two = await startAndReady(journey, worktree.start('web'));
