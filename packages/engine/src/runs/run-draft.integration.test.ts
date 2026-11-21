@@ -1,4 +1,11 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
@@ -312,6 +319,54 @@ it('never overwrites an existing .argo/run.json unless asked', async () => {
 
   await draftRunConfigurations(checkout, true);
   expect(await written(checkout)).toContain('"dev"');
+});
+
+it('refuses to write through a linked .argo directory outside the Checkout', async () => {
+  const checkout = await checkoutWith({
+    [packageJson]: { scripts: { dev: 'vite' } },
+  });
+  const outside = await checkoutWith({});
+  await symlink(outside, join(checkout, '.argo'), 'dir');
+
+  await expect(draftRunConfigurations(checkout, false)).rejects.toThrow(
+    /\.argo.*inside the Checkout/u,
+  );
+  await expect(readFile(join(outside, 'run.json'))).rejects.toThrow('ENOENT');
+});
+
+it('refuses to overwrite a linked run.json outside the Checkout', async () => {
+  const checkout = await checkoutWith({
+    [packageJson]: { scripts: { dev: 'vite' } },
+  });
+  const outside = await checkoutWith({ 'run.json': 'original' });
+  const target = join(outside, 'run.json');
+  await mkdir(join(checkout, '.argo'));
+  await symlink(target, join(checkout, '.argo', 'run.json'));
+
+  await expect(draftRunConfigurations(checkout, true)).rejects.toThrow(
+    /run\.json.*symbolic link/u,
+  );
+  await expect(readFile(target, 'utf8')).resolves.toBe('original');
+});
+
+it('does not import a launch file from outside the Checkout', async () => {
+  const checkout = await checkoutWith({
+    [packageJson]: { scripts: { dev: 'vite' } },
+  });
+  const outside = await checkoutWith({
+    'launch.json': {
+      configurations: [{ name: 'Outside', program: 'serve.js' }],
+    },
+  });
+  await mkdir(join(checkout, '.vscode'));
+  await symlink(
+    join(outside, 'launch.json'),
+    join(checkout, '.vscode', 'launch.json'),
+  );
+
+  const result = await draftRunConfigurations(checkout, false);
+
+  expect(result.configurations).toEqual([{ name: 'dev', command: npmRunDev }]);
 });
 
 it('refuses, and writes nothing, when no source has anything to run', async () => {

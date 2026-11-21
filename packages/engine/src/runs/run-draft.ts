@@ -1,4 +1,5 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { lstat, mkdir, open, realpath } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { TRPCError } from '@trpc/server';
@@ -94,12 +95,34 @@ async function writeNew(
 ): Promise<void> {
   const target = join(checkoutPath, runConfigurationsFile);
 
-  await mkdir(dirname(target), { recursive: true });
+  const directory = dirname(target);
+  await mkdir(directory, { recursive: true });
+
+  if (!(await lstat(directory)).isDirectory())
+    refuse('BAD_REQUEST', 'The .argo directory must be inside the Checkout.');
+
+  const mode = overwrite ? constants.O_TRUNC : constants.O_EXCL;
+  const flags =
+    constants.O_WRONLY |
+    constants.O_CREAT |
+    constants.O_NOFOLLOW |
+    constants.O_NONBLOCK |
+    mode;
 
   try {
-    await writeFile(target, text, { flag: overwrite ? 'w' : 'wx' });
+    await using file = await open(target, flags);
+
+    await file.writeFile(text);
   } catch (error) {
-    if (error instanceof Error && 'code' in error && error.code === 'EEXIST')
+    if (!(error instanceof Error) || !('code' in error)) throw error;
+
+    if (error.code === 'ELOOP')
+      refuse(
+        'BAD_REQUEST',
+        `${runConfigurationsFile} must not be a symbolic link.`,
+      );
+
+    if (error.code === 'EEXIST')
       refuse(
         'CONFLICT',
         `${runConfigurationsFile} already exists. Edit it, or pass overwrite: true to replace it.`,
@@ -116,11 +139,12 @@ export async function draftRunConfigurations(
   checkoutPath: string,
   overwrite: boolean,
 ): Promise<DraftedRunConfigurations> {
+  const checkout = await realpath(checkoutPath);
   const found = [
-    await draftLaunchFile(checkoutPath, '.claude/launch.json'),
-    await draftLaunchFile(checkoutPath, '.vscode/launch.json'),
-    await draftPackageScripts(checkoutPath),
-    await draftProcfile(checkoutPath),
+    await draftLaunchFile(checkout, '.claude/launch.json'),
+    await draftLaunchFile(checkout, '.vscode/launch.json'),
+    await draftPackageScripts(checkout),
+    await draftProcfile(checkout),
   ];
 
   const { configurations, sources } = merge(found);
@@ -130,7 +154,7 @@ export async function draftRunConfigurations(
   if (configurations.length === 0)
     return refuse('BAD_REQUEST', nothingFound(skipped));
 
-  await writeNew(checkoutPath, render(configurations), overwrite);
+  await writeNew(checkout, render(configurations), overwrite);
 
   return { path: runConfigurationsFile, configurations, sources, skipped };
 }

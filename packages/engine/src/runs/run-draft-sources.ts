@@ -1,5 +1,5 @@
-import { access, readFile } from 'node:fs/promises';
-import { join, relative, resolve } from 'node:path';
+import { access, readFile, realpath } from 'node:fs/promises';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { TRPCError } from '@trpc/server';
 import { parse, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { z } from 'zod';
@@ -36,8 +36,17 @@ const exists = async (path: string): Promise<boolean> => {
   }
 };
 
-const readIfPresent = async (path: string): Promise<string | undefined> => {
+const readIfPresent = async (
+  checkout: string,
+  file: string,
+): Promise<string | undefined> => {
   try {
+    const path = await realpath(join(checkout, file));
+    const local = relative(checkout, path);
+
+    if (isAbsolute(local) || local === '..' || local.startsWith(`..${sep}`))
+      return undefined;
+
     return await readFile(path, 'utf8');
   } catch {
     return undefined;
@@ -65,7 +74,7 @@ async function readJson<Contents>(
   file: string,
   schema: z.ZodType<Contents>,
 ): Promise<Contents | undefined> {
-  const text = await readIfPresent(join(checkout, file));
+  const text = await readIfPresent(checkout, file);
 
   if (text === undefined) return undefined;
 
@@ -153,7 +162,7 @@ export async function draftPackageScripts(
 }
 
 export async function draftProcfile(checkout: string): Promise<SourceDrafts> {
-  const text = (await readIfPresent(join(checkout, 'Procfile'))) ?? '';
+  const text = (await readIfPresent(checkout, 'Procfile')) ?? '';
 
   const drafts = text.split('\n').flatMap((line): Draft[] => {
     const match = /^(?<name>[\w-]+):\s*(?<command>\S.*)$/u.exec(line.trim());
