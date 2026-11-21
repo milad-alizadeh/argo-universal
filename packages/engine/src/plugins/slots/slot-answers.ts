@@ -1,12 +1,12 @@
 import type {
   ItemsSlotItem,
   SlotItemsInput,
-} from "@repo/contracts/plugins/wire";
+} from '@repo/contracts/plugins/wire';
 import {
   itemsSlot,
   withContexts,
   type AnyItemsSlot,
-} from "@repo/contracts/plugins/wire";
+} from '@repo/contracts/plugins/wire';
 import {
   checked,
   contextKey,
@@ -18,9 +18,9 @@ import {
   type ItemsAnswer,
   type LeftOut,
   type Reply,
-} from "./kept-items";
-import { LastGoodItems } from "./last-good-items";
-import type { Shown } from "./slot-refresh";
+} from './kept-items';
+import { LastGoodItems } from './last-good-items';
+import type { Shown } from './slot-refresh';
 
 // What a worker answered for one Slot, by context key.
 type Kept = Map<string, readonly ItemsSlotItem[]>;
@@ -167,7 +167,7 @@ export class SlotAnswers {
 
   // Answers a list from what the worker kept, asking once for every context it has not answered.
   private keptAnswer(
-    asking: Omit<Asking, "entry">,
+    asking: Omit<Asking, 'entry'>,
     input: SlotItemsInput,
   ): Promise<ItemsAnswer> {
     const entry = entryOf(input);
@@ -298,7 +298,7 @@ function remember(
 // Drops what the worker kept for the contexts one list shows, and the failure that left its Slot out.
 function forgetShown(
   worker: SlotWorker,
-  { slotId, contexts }: Pick<SlotItemsInput, "slotId" | "contexts">,
+  { slotId, contexts }: Pick<SlotItemsInput, 'slotId' | 'contexts'>,
 ): void {
   const entry = itemsSlot(slotId);
 
