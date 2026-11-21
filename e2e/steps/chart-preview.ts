@@ -4,11 +4,13 @@ import { z } from 'zod';
 import { expect, type App } from '../fixtures';
 import { test, Then } from './fixtures';
 
+const requestedWidth = 360;
+
 const ChartCapture = z.object({
   valid: z.literal(true),
   status: z.literal('captured'),
   platform: z.literal('web'),
-  width: z.literal(360),
+  width: z.literal(requestedWidth),
   theme: z.literal('dark'),
   image: z.object({ mimeType: z.literal('image/png'), data: z.base64() }),
 });
@@ -45,7 +47,7 @@ async function requestPreviewOnce({
     headers: { authorization: `Bearer ${token}` },
     data: {
       id: 'chart.preview',
-      params: { fence, width: 360, theme: 'dark' },
+      params: { fence, width: requestedWidth, theme: 'dark' },
     },
   });
 
@@ -78,7 +80,53 @@ function expectCroppedPng(image: Buffer): void {
   const height = image.readUInt32BE(heightOffset);
 
   expect(image.subarray(1, 4).toString()).toBe('PNG');
+  expect(width).toBe(requestedWidth);
   expect(height / width).toBeCloseTo(9 / 16, 2);
+}
+
+const bytesPerPixel = 4;
+
+const redChannelOffset = 2;
+
+const minimumBlueDifference = 48;
+
+const minimumPlotPixels = 16;
+
+const darkChannelLimit = 64;
+
+function countBluePixels(bitmap: Buffer): number {
+  let count = 0;
+
+  for (let offset = 0; offset < bitmap.length; offset += bytesPerPixel) {
+    const blue = bitmap.readUInt8(offset);
+    const red = bitmap.readUInt8(offset + redChannelOffset);
+
+    if (blue - red > minimumBlueDifference) count += 1;
+  }
+
+  return count;
+}
+
+async function expectPaintedDarkChart(
+  desktop: DesktopApp['desktop'],
+  image: Buffer,
+): Promise<void> {
+  const bitmap = await desktop.application.evaluate(
+    ({ nativeImage }, png): string =>
+      nativeImage
+        .createFromBuffer(Buffer.from(png, 'base64'))
+        .toBitmap()
+        .toString('base64'),
+    image.toString('base64'),
+  );
+
+  const pixels = Buffer.from(bitmap, 'base64');
+
+  // The corner is page background. The blue line distinguishes the drawing from its dark loading surface.
+  expect(Math.max(...pixels.subarray(0, redChannelOffset + 1))).toBeLessThan(
+    darkChannelLimit,
+  );
+  expect(countBluePixels(pixels)).toBeGreaterThanOrEqual(minimumPlotPixels);
 }
 
 async function captureAndCheckWindow(app: DesktopApp): Promise<Buffer> {
@@ -109,6 +157,7 @@ Then(
     const image = await captureAndCheckWindow({ ...app, desktop });
 
     expectCroppedPng(image);
+    await expectPaintedDarkChart(desktop, image);
     await test
       .info()
       .attach('chart-preview', { body: image, contentType: 'image/png' });
