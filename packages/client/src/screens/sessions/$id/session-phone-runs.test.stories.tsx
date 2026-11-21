@@ -97,6 +97,7 @@ async function sendTerminalKeys(sheet: Inside, userEvent: User): Promise<void> {
   const region = within(
     await sheet.findByRole('region', { name: 'web Terminal' }),
   );
+
   const keys = within(region.getByRole('toolbar', { name: 'Terminal keys' }));
   const escape = keys.getByRole('button', { name: 'Esc' });
 

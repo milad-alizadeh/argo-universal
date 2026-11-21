@@ -8,8 +8,13 @@ import { RunTerminalSurface } from './run-terminal-surface';
 
 type Read = (cursor: RunOutputCursor | null) => Promise<RunOutput | null>;
 
-type Props = Omit<React.ComponentProps<typeof RunTerminalSurface>, 'listen'> & {
+type Props = Omit<
+  React.ComponentProps<typeof RunTerminalSurface>,
+  'listen' | 'onInput' | 'onResize'
+> & {
   onRead: Read;
+  onInput: (text: string) => Promise<void>;
+  onResize: (columns: number, rows: number) => Promise<void>;
   dom?: DOMProps;
 };
 
@@ -31,6 +36,7 @@ function readFrames(
 
     if (!frame) {
       retry = setTimeout(() => void pump(), retryMs);
+
       return;
     }
 

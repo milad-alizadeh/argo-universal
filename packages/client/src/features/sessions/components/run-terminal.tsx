@@ -36,10 +36,12 @@ export function RunTerminal({
       replay.read(cursor),
     [replay],
   );
+
   const input = useCallback(
     async (text: string): Promise<void> => await onInput(text),
     [onInput],
   );
+
   const resize = useCallback(
     async (columns: number, rows: number): Promise<void> =>
       onResize(columns, rows),

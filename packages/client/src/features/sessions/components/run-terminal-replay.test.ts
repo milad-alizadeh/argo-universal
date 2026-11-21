@@ -10,11 +10,13 @@ const frame = {
 
 it('unblocks disconnected reads and asks for the rest of the same Run on reconnect', async () => {
   const replay = new RunTerminalReplay();
+
   const first = vi.fn<RunOutputSource>((_cursor, receive) => {
     receive(frame);
 
     return (): void => {};
   });
+
   const then = vi.fn<RunOutputSource>(() => (): void => {});
 
   replay.connect(first);
