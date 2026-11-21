@@ -17,10 +17,18 @@ const descriptions: readonly OperationDescription[] = Object.values(operations)
 // Indexed once, as they are described.
 const index = new OperationIndex(descriptions);
 
-export function listOperations(filter: string): OperationRow[] {
-  return index.ranked(filter).map((operation): OperationRow => ({
-    ...operation,
-    enabled: true,
-    disabledReason: null,
-  }));
-}
+const row = (operation: OperationDescription): OperationRow => ({
+  ...operation,
+  enabled: true,
+  disabledReason: null,
+});
+
+export const listOperations = (filter: string): OperationRow[] =>
+  index.ranked(filter).map(row);
+
+export const exactOperations = (id: string): OperationRow[] =>
+  descriptions
+    .values()
+    .filter((operation) => operation.id === id)
+    .map(row)
+    .toArray();
