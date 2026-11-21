@@ -21,8 +21,6 @@ export { toSubagentFeedView } from './view/to-subagent-feed-view';
 
 export { withParentResults } from './view/with-parent-results';
 
-export { withPartialTranscripts } from './view/with-partial-transcripts';
-
 export { DiffView } from './components/diff-view/diff-view';
 
 export { toFileDiffs, type FileDiff } from './view/file-diff';

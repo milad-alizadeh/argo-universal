@@ -40,28 +40,26 @@ const continued = 'The release checks are ready';
 
 const renders = renderCounter();
 
-function SpeakingFeed(): JSX.Element {
-  const [text, setText] = useState(voice.text);
-  const [repeated, setRepeated] = useState(false);
+function SpeakingFeed({ repeat = false }: { repeat?: boolean }): JSX.Element {
+  const [sent, setSent] = useState(false);
+
+  const text = sent && !repeat ? continued : voice.text;
 
   const partials = [{ ...person }, { ...voice, text }];
 
   return (
-    <>
-      <Button title="Speak" onPress={() => setText(continued)} />
-      <Profiler id={renders.id} onRender={renders.onRender}>
-        <Button
-          title={repeated ? 'Repeated' : 'Repeat'}
-          onPress={() => setRepeated(true)}
-        />
-        <Feed
-          {...feedArgs}
-          sessionId="session-1"
-          items={history}
-          partials={partials}
-        />
-      </Profiler>
-    </>
+    <Profiler id={renders.id} onRender={renders.onRender}>
+      <Button
+        title={sent ? 'Sent' : 'Send update'}
+        onPress={() => setSent(true)}
+      />
+      <Feed
+        {...feedArgs}
+        sessionId="session-1"
+        items={history}
+        partials={partials}
+      />
+    </Profiler>
   );
 }
 
@@ -73,7 +71,9 @@ export const OnlyTheChangingPartialRenders: Story = {
     await canvas.findByText(voice.text);
 
     const counts = await renders.during(canvasElement, async () => {
-      await userEvent.click(canvas.getByRole('button', { name: 'Speak' }));
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Send update' }),
+      );
       await canvas.findByText(
         (_text, element) =>
           element?.getAttribute('data-testid') === 'feed-column' &&
@@ -84,10 +84,20 @@ export const OnlyTheChangingPartialRenders: Story = {
     await expect(counts.FeedRow?.updates).toMatchObject([
       { entry: { row: { id: voice.rowId } } },
     ]);
+  },
+};
+
+export const RepeatedPartialSkipsTheFeedList: Story = {
+  render: () => <SpeakingFeed repeat />,
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    await settleLayout('phone');
+    await canvas.findByText(voice.text);
 
     const repeated = await renders.during(canvasElement, async () => {
-      await userEvent.click(canvas.getByRole('button', { name: 'Repeat' }));
-      await canvas.findByRole('button', { name: 'Repeated' });
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Send update' }),
+      );
+      await canvas.findByRole('button', { name: 'Sent' });
     });
 
     await expect(repeated.FeedList).toBeUndefined();
