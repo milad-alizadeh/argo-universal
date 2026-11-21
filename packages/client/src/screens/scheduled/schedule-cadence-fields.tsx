@@ -48,6 +48,7 @@ function intervalRows(
       <FieldGroup.TextField
         title="Every"
         value={draft.interval}
+        iosValuePlacement="trailing"
         keyboardType="decimal-pad"
         onChangeText={(interval) => set({ interval })}
       />
@@ -75,6 +76,7 @@ function customRows(
       <FieldGroup.TextField
         title="Every"
         value={draft.every}
+        iosValuePlacement="trailing"
         keyboardType="number-pad"
         onChangeText={(every) => set({ every })}
       />
