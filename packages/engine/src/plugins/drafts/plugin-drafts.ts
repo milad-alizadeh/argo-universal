@@ -22,6 +22,7 @@ export type PluginDraftsDeps = {
 export type ChosenDraft = Pick<DraftChoice, 'picks' | 'comments'>;
 
 const Picks = z.array(DraftPick);
+
 const Comments = z.array(DraftComment);
 
 // Which Session draws a Plugin's Draft, and what the author last chose for it (ADR-0057). Kept in Argo's database so the Agent reads the choice back after a restart.

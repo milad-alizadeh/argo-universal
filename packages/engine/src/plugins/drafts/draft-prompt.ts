@@ -13,9 +13,8 @@ const commentLine = ({
   variant,
   note,
 }: DraftComment): string => {
-  const where = region
-    ? ` in ${region}${variant ? ` (Variant ${variant})` : ''}`
-    : '';
+  const inVariant = variant ? ` (Variant ${variant})` : '';
+  const where = region ? ` in ${region}${inVariant}` : '';
 
   return `- node ${nodeKey}${where}: ${note}`;
 };

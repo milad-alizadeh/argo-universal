@@ -137,6 +137,7 @@ export class PluginService {
     const { name } = await locatePlugin(this.deps, pluginId).then(
       ({ plugin }) => plugin.manifest,
     );
+
     const sessionId = this.draftStore().sessionOf(pluginId);
 
     if (!sessionId)

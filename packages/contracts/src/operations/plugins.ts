@@ -94,7 +94,7 @@ export const pluginOperations = {
     label: 'Read Draft pick',
     icon: 'plug',
     description:
-      'Read what the author last chose for a Plugin’s Draft: one Variant per region and the comments sent with it, or null before a choice. Read it to resume after a restart, then write the chosen-variant file into the Plugin folder.',
+      'Read the author’s last choice for a Plugin’s Draft. Returns one Variant per region and the comments sent with it, or null before a choice. Read it to resume after a restart, then write the chosen-variant file into the Plugin folder.',
     params: DraftPickInput,
     result: DraftPickOutput,
     tier: 'read',

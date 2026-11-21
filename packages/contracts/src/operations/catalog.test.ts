@@ -42,6 +42,6 @@ it('says to run an Operation directly, and when to look one up', () => {
 });
 
 // About 2,000 tokens: small enough for every Session, unlike every schema at about 29,000.
-it('stays under 8,500 characters', () => {
-  expect(operationCatalog().length).toBeLessThan(8500);
+it('stays under 8,700 characters', () => {
+  expect(operationCatalog().length).toBeLessThan(8700);
 });

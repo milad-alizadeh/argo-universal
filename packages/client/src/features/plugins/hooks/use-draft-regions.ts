@@ -1,10 +1,9 @@
 import { matchPagePath } from '@repo/contracts/plugins/page-address';
-import { useQuery } from '@tanstack/react-query';
 import type { DraftRegionTag } from '../utils/draft-regions-model';
 import { draftRegionsOf, stepChange } from '../utils/draft-regions-model';
 import type { PageOpening } from '../utils/page-addresses';
+import { useDraftEntry } from './use-draft-entry';
 import { usePageAddresses } from './use-page-addresses';
-import { usePluginEntries } from './use-plugin-entries';
 
 export type DraftRegions = {
   tags: DraftRegionTag[];
@@ -18,11 +17,7 @@ export type DraftRegions = {
  */
 export function useDraftRegions(opening: PageOpening): DraftRegions | null {
   const addresses = usePageAddresses();
-  const { plugins } = usePluginEntries();
-  const { data: pageState } = useQuery(addresses.state(opening));
-
-  const entry =
-    plugins?.find(({ manifest }) => manifest.id === opening.pluginId) ?? null;
+  const { entry, pageState } = useDraftEntry(opening);
 
   const tags = draftRegionsOf(entry, opening.path, pageState);
 
