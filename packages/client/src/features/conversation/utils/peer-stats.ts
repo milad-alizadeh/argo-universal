@@ -19,19 +19,34 @@ export interface PeerStats {
   packetsReceived: number;
 }
 
-type Stat = Record<string, unknown>;
+interface Stat {
+  type?: string;
+  kind?: string;
+  mediaType?: string;
+  state?: string;
+  nominated?: boolean;
+  audioLevel?: number;
+  jitter?: number;
+  jitterBufferDelay?: number;
+  jitterBufferEmittedCount?: number;
+  packetsLost?: number;
+  packetsReceived?: number;
+  currentRoundTripTime?: number;
+}
 
 interface StatsReport {
   forEach: (each: (stat: Stat) => void) => void;
 }
 
-const numberOf = (value: unknown): number | undefined =>
+const numberOf = (value: number | undefined): number | undefined =>
   typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 
-const msOf = (seconds: unknown): number | undefined => {
+const millisecondsPerSecond = 1000;
+
+const msOf = (seconds: number | undefined): number | undefined => {
   const value = numberOf(seconds);
 
-  return value === undefined ? undefined : value * 1000;
+  return value === undefined ? undefined : value * millisecondsPerSecond;
 };
 
 const isAudio = (stat: Stat): boolean =>

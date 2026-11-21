@@ -19,7 +19,7 @@ const ms = (value: number | undefined): string =>
 const between = (from: number | undefined, to: number | undefined): string =>
   from === undefined || to === undefined ? '–' : `+${ms(to - from)}`;
 
-export function medianOf(values: readonly number[]): number | undefined {
+function medianOf(values: readonly number[]): number | undefined {
   if (values.length === 0) return undefined;
 
   const sorted = [...values].sort((first, second) => first - second);
@@ -53,8 +53,10 @@ const percent = (value: number | undefined): string =>
 const linkLine = ({ link }: LatencyReport): string =>
   `Link: RTT ${ms(link.rttMs)} avg / ${ms(link.rttMaxMs)} max · jitter ${ms(link.jitterMs)} / ${ms(link.jitterMaxMs)} · buffer ${ms(link.bufferMs)} · loss ${percent(link.lossPercent)} · ${link.samples} samples`;
 
+const levelPrecision = 3;
+
 const levelLine = ({ levels }: LatencyReport): string =>
-  `Levels now: mic ${levels.input.toFixed(3)} (speech above ${turnGapLevels.person}) · voice ${levels.output.toFixed(3)} (above ${turnGapLevels.voice})`;
+  `Levels now: mic ${levels.input.toFixed(levelPrecision)} (speech above ${turnGapLevels.person}) · voice ${levels.output.toFixed(levelPrecision)} (above ${turnGapLevels.voice})`;
 
 const headOf = (report: LatencyReport, context: LatencyContext): string =>
   [

@@ -18,7 +18,7 @@ export interface StartTimes {
   firstVoice?: number;
 }
 
-export interface LinkQuality {
+interface LinkQuality {
   samples: number;
   rttMs: number | undefined;
   rttMaxMs: number | undefined;
@@ -39,6 +39,10 @@ export interface LatencyReport {
   // The levels read last, to check the thresholds against the room.
   levels: { input: number; output: number };
 }
+
+const percentScale = 100;
+
+const millisecondsPerSecond = 1000;
 
 const sampleEveryMs = 50;
 
@@ -71,14 +75,16 @@ const lossOf = ({
 }: PeerStats): number | undefined => {
   const sent = packetsLost + packetsReceived;
 
-  return sent === 0 ? undefined : (packetsLost / sent) * 100;
+  return sent === 0 ? undefined : (packetsLost / sent) * percentScale;
 };
 
 const bufferOf = ({
   bufferSeconds,
   bufferEmitted,
 }: PeerStats): number | undefined =>
-  bufferEmitted === 0 ? undefined : (bufferSeconds / bufferEmitted) * 1000;
+  bufferEmitted === 0
+    ? undefined
+    : (bufferSeconds / bufferEmitted) * millisecondsPerSecond;
 
 // One call's measurements, from its tap until the next call's.
 class Measured {
@@ -107,8 +113,7 @@ class Measured {
 
     const flowing = stats.packetsReceived > 0 && this.mark('firstPackets');
 
-    const spoke =
-      stats.output > turnGapLevels.voice && this.mark('firstVoice');
+    const spoke = stats.output > turnGapLevels.voice && this.mark('firstVoice');
 
     const gap = this.turns.sample(now(), stats.input, stats.output);
 
@@ -155,7 +160,7 @@ class LatencyProbe {
   }
 
   // Samples the peer's stats until the call ends; a peer that has none, as a test's, is left alone.
-  public watch(peer: VoicePeer): void {
+  public watch(peer: Pick<VoicePeer, 'stats'>): void {
     const { measured } = this;
     const { stats } = peer;
 
@@ -165,7 +170,7 @@ class LatencyProbe {
       void stats
         .call(peer)
         .then((read) => this.took(measured, read))
-        .catch(() => undefined);
+        .catch(() => {});
     }, sampleEveryMs);
   }
 
@@ -189,6 +194,7 @@ class LatencyProbe {
 
   private publish(): void {
     this.snapshot = this.measured?.report();
+
     for (const listener of this.listeners) listener();
   }
 

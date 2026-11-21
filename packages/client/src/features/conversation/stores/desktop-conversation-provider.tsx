@@ -4,7 +4,6 @@ import { LatencyPanel } from '../components/latency-panel/latency-panel';
 import { useConversationStatus } from '../hooks/use-conversation-status';
 import { useReportedConversationDevices } from '../hooks/use-reported-conversation-devices';
 import type { ConversationConnection } from '../types/conversation-connection';
-import type { ConversationEnvironment } from '../types/conversation-environment';
 import { followConversation } from '../utils/follow-conversation';
 import {
   browserCarriesAudio,
@@ -15,19 +14,17 @@ import { useConversationDeviceChoice } from './conversation-device-choice';
 import { phoneConversationEnvironment } from './phone-conversation-environment';
 import { createWebRtcConversationConnection } from './webrtc-conversation-connection';
 
-const environmentFor = (desktop: boolean): ConversationEnvironment | null =>
-  desktop && browserCarriesAudio()
-    ? browserConversationEnvironment
-    : phoneConversationEnvironment;
-
 /*
  * The desktop App carries a Conversation's audio itself; any other page offers no voice button.
  * SPIKE (latency on a phone): an iPhone carries it too, through its own environment.
  */
 function connectionFor(desktop: boolean): ConversationConnection | null {
-  const environment = environmentFor(desktop);
+  if (desktop && browserCarriesAudio())
+    return createWebRtcConversationConnection(browserConversationEnvironment);
 
-  return environment ? createWebRtcConversationConnection(environment) : null;
+  return phoneConversationEnvironment
+    ? createWebRtcConversationConnection(phoneConversationEnvironment)
+    : null;
 }
 
 interface HostProps {

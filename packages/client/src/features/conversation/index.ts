@@ -17,10 +17,7 @@ export { DesktopConversationProvider } from './stores/desktop-conversation-provi
 
 export { useConversationDevices } from './hooks/use-conversation-devices';
 
-export {
-  useConversationConnection,
-  usePageConversationConnection,
-} from './stores/conversation-connection-context';
+export { usePageConversationConnection } from './stores/conversation-connection-context';
 
 export type { AudioDevice, AudioDevices } from './utils/audio-devices';
 

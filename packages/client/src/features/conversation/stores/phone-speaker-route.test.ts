@@ -29,4 +29,14 @@ describe('iPhone Conversation speaker routing', () => {
 
     expect(apply).not.toHaveBeenCalled();
   });
+
+  it('aborts the route request if playback ends during audio setup', () => {
+    const apply = vi.fn<(signal: AbortSignal) => void>();
+    const stop = requestPhoneSpeakerRoute(apply);
+
+    vi.runAllTimers();
+    stop();
+
+    expect(apply.mock.calls[0]?.[0].aborted).toBe(true);
+  });
 });

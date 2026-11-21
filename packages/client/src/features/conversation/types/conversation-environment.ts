@@ -33,29 +33,29 @@ export interface VoiceRecording {
 }
 
 // A peer connection reduced to what a call needs.
-export interface VoicePeer {
+export interface VoicePeer<Stream = MediaStream> {
   // Sends the microphone up and opens the channel the provider expects; returns the complete offer.
   offer: (microphone: Microphone) => Promise<string>;
   // Sends another microphone's sound up in place of the one sending now, without a new offer.
   replaceMicrophone: (microphone: Microphone) => Promise<void>;
   accept: (answer: string) => Promise<void>;
   // Calls the listener with the voice's sound when it arrives.
-  onVoice: (listener: (stream: MediaStream) => void) => void;
+  onVoice: (listener: (stream: Stream) => void) => void;
   // SPIKE (latency on a phone): one reading of the connection's stats, for the latency probe.
   stats?: () => Promise<PeerStats>;
   close: () => void;
 }
 
 // What the connection needs from the browser, so a test can stand in for it.
-export interface ConversationEnvironment {
+export interface ConversationEnvironment<Stream = MediaStream> {
   // Opens this microphone, or the system's for null; fails when it is refused or gone.
   openMicrophone: (device: string | null) => Promise<Microphone>;
   // Silence to send in place of the microphone, for a connection that only listens.
   openSilence: () => Microphone;
-  createPeer: () => VoicePeer;
-  playVoice: (stream: MediaStream, speaker: string | null) => VoicePlayback;
+  createPeer: () => VoicePeer<Stream>;
+  playVoice: (stream: Stream, speaker: string | null) => VoicePlayback;
   // Records the voice as it arrives; null where the page cannot record.
-  recordVoice: (stream: MediaStream) => VoiceRecording | null;
+  recordVoice: (stream: Stream) => VoiceRecording | null;
   // Plays a stored greeting on this speaker, or the system's for null.
   playClip: (clip: VoicePreviewClip, speaker: string | null) => VoicePlayback;
 }

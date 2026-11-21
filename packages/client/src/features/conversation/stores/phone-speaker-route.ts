@@ -1,5 +1,11 @@
-export function requestPhoneSpeakerRoute(apply: () => void): () => void {
-  const pending = setTimeout(apply, 0);
+export function requestPhoneSpeakerRoute(
+  apply: (signal: AbortSignal) => void,
+): () => void {
+  const request = new AbortController();
+  const pending = setTimeout(() => apply(request.signal), 0);
 
-  return (): void => clearTimeout(pending);
+  return () => {
+    clearTimeout(pending);
+    request.abort();
+  };
 }
