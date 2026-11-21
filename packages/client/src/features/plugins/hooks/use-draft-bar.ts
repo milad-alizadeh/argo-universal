@@ -2,8 +2,10 @@ import {
   draftStateKey,
   type DraftStateId,
 } from '@repo/contracts/plugins/drafts';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useTRPC } from '#features/connection';
 import { draftBarOf, type DraftBarModel } from '../utils/draft-bar-model';
+import { draftPicksOf } from '../utils/draft-picks';
 import type { PageOpening } from '../utils/page-addresses';
 import { usePageAddresses } from './use-page-addresses';
 import { usePluginEntries } from './use-plugin-entries';
@@ -11,6 +13,8 @@ import { usePluginEntries } from './use-plugin-entries';
 export type DraftBarState = DraftBarModel & {
   // Redraws the page at the state; each App keeps its own, as the Page state is.
   onStateChange: (state: DraftStateId) => void;
+  // Sends this App's pick, one Variant per region, to the Session's Agent; each App sends its own.
+  onChoose: () => void;
 };
 
 /*
@@ -22,11 +26,11 @@ export function useDraftBar(opening: PageOpening): DraftBarState | null {
   const { plugins } = usePluginEntries();
   const { data: pageState } = useQuery(addresses.state(opening));
 
-  const bar = draftBarOf(
-    plugins?.find(({ manifest }) => manifest.id === opening.pluginId) ?? null,
-    opening.path,
-    pageState,
-  );
+  const entry =
+    plugins?.find(({ manifest }) => manifest.id === opening.pluginId) ?? null;
+
+  const bar = draftBarOf(entry, opening.path, pageState);
+  const choose = useMutation(useTRPC().plugin.draft.choose.mutationOptions());
 
   if (!bar) return null;
 
@@ -34,6 +38,13 @@ export function useDraftBar(opening: PageOpening): DraftBarState | null {
     ...bar,
     onStateChange: (state) => {
       void addresses.change(opening, { [draftStateKey]: state });
+    },
+    onChoose: () => {
+      choose.mutate({
+        pluginId: opening.pluginId,
+        picks: draftPicksOf(entry, opening.path, pageState) ?? [],
+        comments: [],
+      });
     },
   };
 }

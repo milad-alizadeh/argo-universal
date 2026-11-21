@@ -1,3 +1,4 @@
+import { Button } from '@repo/kit/primitives/actions/button';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -27,7 +28,11 @@ const meta = {
     commentToggle: { control: false },
     choose: { control: false },
   },
-  args: { ...populatedDraft, onStateChange: action('state change') },
+  args: {
+    ...populatedDraft,
+    onStateChange: action('state change'),
+    choose: <Button label="Choose" size="sm" onPress={action('choose')} />,
+  },
 } satisfies Meta<typeof DraftBar>;
 
 export default meta;

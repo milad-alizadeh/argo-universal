@@ -1,3 +1,4 @@
+import { Button } from '@repo/kit/primitives/actions/button';
 import { useDeferredValue } from 'react';
 import type * as React from 'react';
 import {
@@ -58,7 +59,10 @@ function PageDraftBar(opening: PageOpening): React.ReactNode {
 
   return (
     <DraftBarDock>
-      <DraftBar {...bar} />
+      <DraftBar
+        {...bar}
+        choose={<Button label="Choose" size="sm" onPress={bar.onChoose} />}
+      />
     </DraftBarDock>
   );
 }
