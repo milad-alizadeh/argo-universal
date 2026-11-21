@@ -13,7 +13,7 @@ export const sessionRestartOperations = {
     label: 'Reload Agent',
     icon: 'retry',
     description:
-      'Close an idle Session’s Agent session and open the same one again, so its Agent process restarts and reads new skills, extensions and settings. The Agent keeps the conversation.',
+      'Restart an idle Session’s Agent to load its updated skills, extensions and settings. The Agent keeps the conversation.',
     params: SessionReloadInput,
     result: SessionReloadOutput,
     tier: 'act',

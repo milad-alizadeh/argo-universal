@@ -104,7 +104,8 @@ export const sessionSchedule = snakeCase.table(
       .notNull()
       .references(() => session.id, { onDelete: 'cascade' }),
     prompt: text().notNull(),
-    intervalSeconds: integer().notNull(),
+    intervalSeconds: integer(),
+    endsAt: integer(),
     nextAt: integer().notNull(),
     lastQueuedAt: integer(),
     paused: integer({ mode: 'boolean' }).notNull().default(false),

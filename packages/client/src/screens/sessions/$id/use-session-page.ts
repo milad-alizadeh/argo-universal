@@ -99,7 +99,11 @@ function useSessionViewProps(
   const bar = useWithSessionBar(sessionId, sources.feed, changed);
   const changes = useWithSessionPullRequests(sessionId, sources.feed, bar);
 
-  return withPluginCards(withAgentFeed(changes), cards, sources.schedules);
+  const schedules = hasFollowUps(sources.schedules)
+    ? sources.schedules
+    : undefined;
+
+  return withPluginCards(withAgentFeed(changes), cards, schedules);
 }
 
 // What the view draws, from the Session's own sources and everything the page read around it.
@@ -135,6 +139,9 @@ const withAgentFeed = (
 ): SessionDetailViewProps =>
   props.state === 'open' ? { ...props, renderSubagentFeed } : props;
 
+const hasFollowUps = (schedules: ConnectedFeed['schedules']): boolean =>
+  schedules.canCreate || schedules.items.length > 0;
+
 function usePageProps(
   page: SessionPage,
   cards: readonly SessionPluginCard[],
@@ -144,7 +151,7 @@ function usePageProps(
 
   const surroundings = useSessionSurroundings(
     page,
-    offeredWith(cards, sources.schedules.items.length),
+    offeredWith(cards, hasFollowUps(sources.schedules)),
     sources,
   );
 

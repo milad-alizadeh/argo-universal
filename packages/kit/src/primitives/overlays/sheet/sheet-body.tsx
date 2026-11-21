@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollEndGapContext, SheetScrollContext } from '#kit/scroll-surface';
 import { cn } from '#kit/utils';
 import { isDismissible } from './sheet-dismissible';
+import { SheetFooter } from './sheet-footer';
 import { SheetInset } from './sheet-inset';
 import type { SheetProps } from './sheet-props';
 import { ReactContent } from './sheet-react-content';
@@ -78,7 +79,10 @@ function useScrollViewport({
   const [footerHeight, setFooterHeight] = useState(0);
 
   if (viewportHeight === undefined)
-    return { context: unboundedViewport, footer };
+    return {
+      context: unboundedViewport,
+      footer: <SheetFooter>{footer}</SheetFooter>,
+    };
 
   if (!footer) return { context: { viewportHeight }, footer };
 
@@ -97,7 +101,7 @@ function MeasuredFooter(props: {
   const measure = (event: LayoutChangeEvent): void =>
     props.onHeight(event.nativeEvent.layout.height);
 
-  return <View onLayout={measure}>{props.children}</View>;
+  return <SheetFooter onLayout={measure}>{props.children}</SheetFooter>;
 }
 
 interface BottomGap {
@@ -123,7 +127,10 @@ function useBottomGap(props: Pick<BodyProps, 'footer'>): BottomGap {
 
 function bodyProps(props: BodyProps, padding: BottomGap['padded']): ViewProps {
   return {
-    className: cn(props.fill && props.viewportHeight === undefined && 'flex-1'),
+    className: cn(
+      'min-h-0',
+      props.fill && props.viewportHeight === undefined && 'flex-1',
+    ),
     style: { height: props.viewportHeight, ...padding },
     accessibilityLabel: props.label,
     accessibilityViewIsModal: true,
@@ -140,7 +147,10 @@ function ScreenContent(props: BodyProps & { gap: number }): ReactElement {
   if (!props.contentScrolls) return <ScreenScroll {...props} />;
 
   return (
-    <SheetInset inset={props.inset} className={cn(props.fill && 'flex-1')}>
+    <SheetInset
+      inset={props.inset}
+      className={cn(props.fill && 'min-h-0 flex-1')}
+    >
       {props.children}
     </SheetInset>
   );

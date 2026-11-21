@@ -882,6 +882,83 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      scheduleCreate: authenticatedAppProcedure
+        .input(operations['project.scheduleCreate'].params)
+        .output(operations['project.scheduleCreate'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.scheduleCreate',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      schedulePreview: publicProcedure
+        .input(operations['project.schedulePreview'].params)
+        .output(operations['project.schedulePreview'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.schedulePreview',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      scheduleList: publicProcedure
+        .input(operations['project.scheduleList'].params)
+        .output(operations['project.scheduleList'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.scheduleList',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      scheduleEdit: authenticatedAppProcedure
+        .input(operations['project.scheduleEdit'].params)
+        .output(operations['project.scheduleEdit'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.scheduleEdit',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      scheduleManage: authenticatedAppProcedure
+        .input(operations['project.scheduleManage'].params)
+        .output(operations['project.scheduleManage'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.scheduleManage',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      scheduleHistory: publicProcedure
+        .input(operations['project.scheduleHistory'].params)
+        .output(operations['project.scheduleHistory'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.scheduleHistory',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      scheduleRunNow: authenticatedAppProcedure
+        .input(operations['project.scheduleRunNow'].params)
+        .output(operations['project.scheduleRunNow'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'project.scheduleRunNow',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
     }),
   };
 }

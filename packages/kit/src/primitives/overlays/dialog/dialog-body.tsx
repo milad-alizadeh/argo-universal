@@ -55,6 +55,7 @@ function modalProps(props: ContentProps): ModalProps {
     className: cn(
       contentClassName,
       props.size === 'sm' && 'sm:max-w-100',
+      props.size === 'lg' && 'web:w-128',
       props.className,
     ),
   };

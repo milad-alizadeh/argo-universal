@@ -1,8 +1,10 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '#primitives/content/text';
 import { Portal } from '#primitives/overlays/portal';
+import { SheetFooter } from '#primitives/overlays/sheet';
 import { PinnedFooterKeyboard } from '../pinned-footer/pinned-footer-keyboard';
 import { GlyphTile, type GlyphTileProps } from './glyph-tile';
 
@@ -37,14 +39,26 @@ export function PairingSheet(props: PairingSheetProps): React.JSX.Element {
 }
 
 function Panel(props: PairingSheetProps): React.JSX.Element {
+  const { bottom } = useSafeAreaInsets();
+
   return (
-    <View className="rounded-t-sheet bg-card px-6 pb-8 pt-2">
-      <View className="h-3.5 items-center">
+    <View
+      className="max-h-full min-h-0 shrink rounded-t-sheet bg-card px-6 pt-2"
+      style={{ paddingBottom: bottom }}
+    >
+      <View className="h-3.5 shrink-0 items-center">
         <View className="h-1 w-9 rounded-full bg-tone-neutral-300" />
       </View>
-      <Words {...props} />
-      {props.children && <View className="mt-5">{props.children}</View>}
-      <View className="mt-6 gap-2.5">{props.actions}</View>
+      <ScrollView
+        className="min-h-0 shrink"
+        keyboardShouldPersistTaps="handled"
+      >
+        <Words {...props} />
+        {props.children && <View className="mt-5">{props.children}</View>}
+      </ScrollView>
+      <SheetFooter>
+        <View className="mt-6 gap-2.5 pb-8">{props.actions}</View>
+      </SheetFooter>
     </View>
   );
 }

@@ -1,4 +1,7 @@
-import type { projectOperations } from '@repo/contracts/operations';
+import type {
+  projectOperations,
+  projectScheduleOperations,
+} from '@repo/contracts/operations';
 import { createRejectionCounter } from '@repo/machine-log';
 import {
   addProject,
@@ -12,15 +15,29 @@ import type { OperationImplementations, OperationsDeps } from './operations';
 
 type ProjectImplementations = Pick<
   OperationImplementations,
-  keyof typeof projectOperations
+  keyof typeof projectOperations | keyof typeof projectScheduleOperations
 >;
 
 export function createProjectOperations(
-  deps: Pick<OperationsDeps, 'database'>,
+  deps: Pick<OperationsDeps, 'database' | 'sessions'>,
 ): ProjectImplementations {
   const rejections = createRejectionCounter('projects');
 
   return {
+    'project.scheduleCreate': (input) =>
+      deps.sessions.projectSchedules.create(input),
+    'project.scheduleEdit': (input) =>
+      deps.sessions.projectSchedules.edit(input),
+    'project.scheduleManage': (input) =>
+      deps.sessions.projectSchedules.manage(input),
+    'project.scheduleHistory': async (input) =>
+      deps.sessions.projectSchedules.history(input),
+    'project.schedulePreview': async ({ projectId, cadence, id }) =>
+      deps.sessions.projectSchedules.preview(projectId, cadence, id),
+    'project.scheduleList': async ({ projectId }) =>
+      deps.sessions.projectSchedules.list(projectId),
+    'project.scheduleRunNow': (input) =>
+      deps.sessions.projectSchedules.runNow(input),
     'project.list': () => readProjects(deps.database, rejections),
     'project.clone': ({ url }) => cloneProject(deps.database, url),
     'project.create': ({ name }) => createProject(deps.database, name),

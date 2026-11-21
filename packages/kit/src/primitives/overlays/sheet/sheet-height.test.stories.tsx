@@ -2,10 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
+import { settleOverlays } from '#mocks/settle-overlays';
 import { settleLayout } from '#mocks/story-layout';
 import { Button } from '#primitives/actions/button';
 import { Text } from '#primitives/content/text';
 import { Sheet } from './sheet';
+import { ScrollingList } from './sheet-fixtures';
 import { useSheet } from './sheet-screens';
 import { PagedSheet } from './sheet.stories';
 
@@ -106,5 +108,69 @@ export const PagedSheetKeepsOneHeight: Story = {
       expect(body.queryByRole('heading', { name: 'Select Fruit' })).toBeNull(),
     );
     await waitFor(() => expect(heightOf(dialog)).toBe(onPushed));
+  },
+};
+
+function ExpandingSheet(): ReactElement {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <Sheet
+      open
+      onOpenChange={() => {}}
+      label="Confirm changes"
+      detents={['large']}
+      footer={
+        <View className="gap-2 p-4">
+          <Button label="Continue" />
+          <Button label="Cancel" variant="text" />
+        </View>
+      }
+    >
+      <Button label="Show details" onPress={() => setExpanded(true)} />
+      {expanded &&
+        ScrollingList.items.map((item) => (
+          <Text key={item} className="p-4">
+            {item}
+          </Text>
+        ))}
+    </Sheet>
+  );
+}
+
+export const FooterStaysPinnedWhileTheBodyScrolls: Story = {
+  render: () => <ExpandingSheet />,
+  beforeEach: (): Promise<void> => settleLayout('phone'),
+  play: async ({ userEvent }) => {
+    const dialog = await body.findByRole('dialog', { name: 'Confirm changes' });
+    await settleOverlays(dialog);
+
+    const sheet = within(dialog);
+    const scroll = sheet.getByRole('region', { name: 'Confirm changes' });
+    const primary = sheet.getByRole('button', { name: 'Continue' });
+    const secondary = sheet.getByRole('button', { name: 'Cancel' });
+
+    const footerPosition = (): number[] => [
+      primary.getBoundingClientRect().top,
+      secondary.getBoundingClientRect().top,
+    ];
+
+    const initialPosition = footerPosition();
+
+    await userEvent.click(sheet.getByRole('button', { name: 'Show details' }));
+    await waitFor(() =>
+      expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight),
+    );
+    scroll.scrollTop = scroll.scrollHeight;
+
+    const last = sheet.getByText(ScrollingList.items.at(-1) ?? '');
+    await waitFor(async () => {
+      const edge = last.getBoundingClientRect().bottom;
+      await expect(edge).toBeLessThanOrEqual(
+        scroll.getBoundingClientRect().bottom,
+      );
+      await expect(edge).toBeLessThan(primary.getBoundingClientRect().top);
+    });
+    await expect(footerPosition()).toEqual(initialPosition);
   },
 };

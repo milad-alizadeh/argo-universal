@@ -16,6 +16,7 @@ import { useEffect, type ReactElement } from 'react';
 import { hasLiquidGlass } from '#kit/native-header';
 import { useNativeTheme } from '#kit/native-theme';
 import { SheetContent } from './sheet-content.ios';
+import { isDismissible } from './sheet-dismissible';
 import type { SheetProps, SheetScreenSearch } from './sheet-props';
 import { SheetScreenToolbar } from './sheet-screen-toolbar.ios';
 import type { SheetScreenEntry, SheetStack } from './sheet-screens';
@@ -35,7 +36,11 @@ export function SheetScreens(props: ScreensProps): ReactElement {
       <StackScreen
         {...props}
         page={root}
-        onClose={props.stack.navigation.close}
+        onClose={
+          isDismissible(props.dismissible)
+            ? props.stack.navigation.close
+            : undefined
+        }
       />
       {pushed.map((page) => pushedScreen(props, page))}
     </NavigationStack>

@@ -21,6 +21,7 @@ import {
   type SessionOperationCall,
 } from './operation-call';
 import { DelegatedResults } from './orchestration/results';
+import { ProjectSchedules } from './project-schedules';
 import type { NativeStart, NativeStartRequest } from './prompt-sender';
 import { requireNoTurn } from './restart/restart-session';
 import { createSessionRouter } from './router';
@@ -45,6 +46,7 @@ import { createSessionWorkSource, type SessionWorkSource } from './work-source';
  * with stays behind this interface.
  */
 export class Sessions {
+  public readonly projectSchedules: ProjectSchedules;
   public readonly archives: SessionArchives;
   // The Session Operations that answer with their result, keyed by Operation id.
   public readonly implementations: SessionOperationImplementations;
@@ -61,6 +63,10 @@ export class Sessions {
     const list = createSessionList(sources);
 
     this.sources = handlerSources(sources);
+    this.projectSchedules = new ProjectSchedules(
+      this.sources,
+      sources.sessionCommandSignal,
+    );
     this.implementations = this.operations(sources, list);
     this.directory = createSessionDirectory(this.sources);
     this.work = createSessionWorkSource(this.sources);

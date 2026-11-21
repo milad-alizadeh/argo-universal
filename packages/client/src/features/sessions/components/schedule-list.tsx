@@ -1,9 +1,11 @@
 import { Button } from '@repo/kit/primitives/actions/button';
-import { Icon } from '@repo/kit/primitives/content/icon';
+import { Text } from '@repo/kit/primitives/content/text';
 import { List, ListSection } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
+import { TintedAvatar } from '@repo/kit/tinted-avatar';
 import { View } from 'react-native';
 import type { ScheduleControls } from '../hooks/use-schedules';
+import { FollowUpEditor } from './schedule-form';
 
 type Schedules = ScheduleControls;
 
@@ -15,19 +17,34 @@ const scheduleTitle = (schedule: Schedule): string =>
 
 const minute = 60;
 
-const scheduleInterval = (seconds: number): string =>
-  seconds % minute === 0
+function scheduleInterval(seconds: number | null): string {
+  if (seconds === null) return 'Once';
+
+  return seconds % minute === 0
     ? `Every ${seconds / minute} min`
     : `Every ${seconds} s`;
+}
 
 function previewRow(item: Schedule): React.JSX.Element {
+  const label =
+    item.state === 'active'
+      ? scheduleInterval(item.intervalSeconds)
+      : timing(item);
+
   return (
-    <ListItem
-      key={item.id}
-      leading={<Icon name={item.paused ? 'pause' : 'clock'} tone="muted" />}
-      title={scheduleTitle(item)}
-      subtitle={item.paused ? 'Paused' : scheduleInterval(item.intervalSeconds)}
-    />
+    <View key={item.id} className="flex-row items-center gap-2 px-1 py-2">
+      <TintedAvatar
+        accessibilityLabel="Follow-up"
+        icon={item.state === 'paused' ? 'pause' : 'clock'}
+        tone="neutral"
+      />
+      <View className="min-w-0 flex-1">
+        <Text numberOfLines={1}>{scheduleTitle(item)}</Text>
+        <Text role="secondary" tone="muted" numberOfLines={1}>
+          {label}
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -36,23 +53,33 @@ export function SchedulePreview({
 }: {
   schedules?: Schedules;
 }): React.JSX.Element {
-  return (
-    <List appearance="plain" padding={0} fit>
-      {schedules?.items.slice(0, 2).map(previewRow)}
-    </List>
-  );
+  return <View>{schedules?.items.slice(0, 2).map(previewRow)}</View>;
 }
 
 const time = (stamp: number): string =>
-  new Date(stamp).toLocaleTimeString([], {
+  new Date(stamp).toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
   });
 
 type RowProps = { item: Schedule; controls: Schedules };
 
-const timing = (item: Schedule): string =>
-  item.paused ? 'Paused' : 'Next at ' + time(item.nextAt);
+function timing(item: Schedule): string {
+  switch (item.state) {
+    case 'completed':
+      return 'Completed';
+    case 'expired':
+      return 'Expired';
+    case 'paused':
+      return 'Paused';
+    case 'active':
+      return item.endsAt !== null && item.nextAt >= item.endsAt
+        ? 'No remaining occurrence'
+        : 'Next ' + time(item.nextAt);
+  }
+}
 
 const last = (item: Schedule): string =>
   item.lastQueuedAt === null
@@ -75,24 +102,28 @@ const actionButton =
   );
 
 function ScheduleActions({ item, controls }: RowProps): React.JSX.Element {
-  const action = item.paused ? 'resume' : 'pause';
+  const action = item.state === 'paused' ? 'resume' : 'pause';
+  const canToggle = item.state === 'active' || item.state === 'paused';
 
   const button = actionButton(item, controls);
 
   return (
-    <View className="flex-row gap-2">
-      {button(item.paused ? 'Resume' : 'Pause', action)}
+    <View className="flex-row flex-wrap justify-end gap-1">
+      {item.intervalSeconds === null ? null : (
+        <FollowUpEditor controls={controls} item={item} />
+      )}
+      {canToggle ? button(item.paused ? 'Resume' : 'Pause', action) : null}
       {button('Delete', 'delete')}
     </View>
   );
 }
 
-const description = (item: Schedule): string =>
-  scheduleInterval(item.intervalSeconds) +
-  ' · ' +
-  timing(item) +
-  '\n' +
-  last(item);
+function description(item: Schedule): string {
+  const cadence = scheduleInterval(item.intervalSeconds) + ' · ' + timing(item);
+  const end = item.endsAt === null ? last(item) : 'Ends ' + time(item.endsAt);
+
+  return cadence + '\n' + end;
+}
 
 function ScheduleEntry(props: RowProps): React.JSX.Element {
   const { item } = props;
@@ -116,6 +147,7 @@ export function ScheduleList({
   return (
     <List>
       <ListSection>
+        {schedules?.canCreate ? <FollowUpEditor controls={schedules} /> : null}
         {schedules?.items.map((item) => (
           <ScheduleEntry key={item.id} item={item} controls={schedules} />
         ))}
