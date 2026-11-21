@@ -27,6 +27,8 @@ export const OperationRow = z.object({
   tier: OperationTier,
   policy: OperationPolicy,
   canRequestApproval: z.boolean().optional(),
+  // An `ask` Operation that asks only when this param has one of these values; any other run is allowed.
+  askWhen: z.object({ param: z.string(), is: z.array(z.string()) }).optional(),
   keywords: z.array(z.string()).readonly(),
   enabled: z.boolean(),
   disabledReason: z.string().nullable(),

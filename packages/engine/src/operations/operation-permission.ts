@@ -33,7 +33,9 @@ export function availableOperations(
 }
 
 function withoutApproval(row: OperationRow): OperationRow {
-  return row.enabled && operationPermission(row.policy, false) === 'ask'
+  return row.enabled &&
+    row.askWhen === undefined &&
+    operationPermission(row.policy, false) === 'ask'
     ? { ...row, enabled: false, disabledReason: needsPermissionTurn }
     : row;
 }

@@ -103,29 +103,54 @@ export const projectParam = 'projectId';
 
 export const defaultPluginOperationIcon = 'plugins';
 
-export const PluginOperationContribution = z.strictObject({
-  name: PluginOperationName,
-  label: z.string().trim().min(1),
-  icon: OperationIcon.optional(),
-  description: z.string().trim().min(1),
-  tier: PluginOperationTier,
-  policy: OperationPolicy.exclude(['archive', 'ask-outside-project']),
-  params: z
-    .record(PluginOperationName, PluginOperationParam)
-    .refine(
-      (params) => !Object.hasOwn(params, projectParam),
-      'An Operation needs a Project with "caller": ["project"], not a projectId param',
-    )
-    .optional(),
-  caller: z
-    .array(PluginOperationNeed)
-    .refine(
-      (needs) => new Set(needs).size === needs.length,
-      'An Operation names each need once',
-    )
-    .optional(),
-  keywords: z.array(z.string().trim().min(1)).optional(),
+/*
+ * With `"policy": "ask"`, the values of one choice param that still ask the person (ADR-0044): a run that
+ * gives the param any other value runs as `allow` does. Without it, every run of an `ask` Operation asks.
+ */
+export const PluginOperationAskWhen = z.strictObject({
+  param: PluginOperationName,
+  is: z.array(z.string().min(1)).min(1),
 });
+
+export type PluginOperationAskWhen = z.infer<typeof PluginOperationAskWhen>;
+
+export const PluginOperationContribution = z
+  .strictObject({
+    name: PluginOperationName,
+    label: z.string().trim().min(1),
+    icon: OperationIcon.optional(),
+    description: z.string().trim().min(1),
+    tier: PluginOperationTier,
+    policy: OperationPolicy.exclude(['archive', 'ask-outside-project']),
+    params: z
+      .record(PluginOperationName, PluginOperationParam)
+      .refine(
+        (params) => !Object.hasOwn(params, projectParam),
+        'An Operation needs a Project with "caller": ["project"], not a projectId param',
+      )
+      .optional(),
+    caller: z
+      .array(PluginOperationNeed)
+      .refine(
+        (needs) => new Set(needs).size === needs.length,
+        'An Operation names each need once',
+      )
+      .optional(),
+    keywords: z.array(z.string().trim().min(1)).optional(),
+    askWhen: PluginOperationAskWhen.optional(),
+  })
+  .refine(
+    ({ askWhen, policy }) => askWhen === undefined || policy === 'ask',
+    'Only an ask policy says when it asks',
+  )
+  .refine(
+    ({ askWhen, params }) =>
+      askWhen === undefined ||
+      askWhen.is.every((value) =>
+        params?.[askWhen.param]?.choices?.includes(value),
+      ),
+    'askWhen names a choice param and only its choices',
+  );
 
 export type PluginOperationContribution = z.infer<
   typeof PluginOperationContribution

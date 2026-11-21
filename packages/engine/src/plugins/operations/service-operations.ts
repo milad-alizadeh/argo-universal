@@ -106,7 +106,7 @@ async function checkedRun(
 ): Promise<CheckedRun & Disclosed> {
   const checked = checkRun(operation, input.params, input.caller);
 
-  await authorizePluginRun(input, operation);
+  await authorizePluginRun(input, operation, checked.params);
 
   return { ...checked, ...disclosed(operation, checked.params) };
 }
@@ -114,16 +114,33 @@ async function checkedRun(
 async function authorizePluginRun(
   input: OperationRun,
   operation: PluginOperationContribution,
+  params: CheckedRun['params'],
 ): Promise<void> {
-  const permission = operationPermission(
-    operation.policy,
-    input.authenticatedApp === true,
+  const permission = askedFor(
+    operation,
+    params,
+    operationPermission(operation.policy, input.authenticatedApp === true),
   );
 
   if (permission === 'person-only')
     throw appOnlyRefusal(`${input.pluginId}.${input.name}`);
 
   if (permission === 'ask') await confirmPluginRun(input, operation);
+}
+
+// An `ask` Operation that says when it asks runs as `allow` does for any other value of that param.
+function askedFor(
+  { askWhen }: PluginOperationContribution,
+  params: CheckedRun['params'],
+  permission: ReturnType<typeof operationPermission>,
+): ReturnType<typeof operationPermission> {
+  if (permission !== 'ask' || askWhen === undefined) return permission;
+
+  const given = params[askWhen.param];
+
+  return typeof given === 'string' && askWhen.is.includes(given)
+    ? 'ask'
+    : 'allow';
 }
 
 async function confirmPluginRun(
