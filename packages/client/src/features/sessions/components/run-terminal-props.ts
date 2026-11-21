@@ -12,12 +12,16 @@ export type RunOutputSource = (
 export interface RunTerminalProps {
   run: Pick<RunConfigurationRow, 'name' | 'status'>;
   connected: boolean;
+  compact?: boolean;
   listen: RunOutputSource;
   onInput: (text: string) => Promise<void> | void;
   onResize: (columns: number, rows: number) => void;
 }
 
-// Runs on native get their own Expo DOM Terminal in the phone slice.
-export function RunTerminal(_props: RunTerminalProps): null {
-  return null;
+export interface RunTerminalColors {
+  background: string;
+  foreground: string;
+  buttonForeground: string;
+  keyBackground: string;
+  radius: string;
 }

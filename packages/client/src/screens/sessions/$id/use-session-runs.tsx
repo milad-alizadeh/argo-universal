@@ -3,7 +3,6 @@ import { useErrorToast } from '@repo/kit/primitives/overlays/toast';
 import { skipToken, useMutation } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useCallback, useState, type ReactElement } from 'react';
-import { Platform } from 'react-native';
 import {
   useConnectionState,
   useResubscribeOnReconnect,
@@ -28,11 +27,9 @@ function useRunStatus(
     status: RunStatusResult;
   }>();
 
-  const enabled = active && Platform.OS === 'web';
-
   const stream = useSubscription(
     trpc.run.watchStatus.subscriptionOptions(
-      enabled ? { sessionId } : skipToken,
+      active ? { sessionId } : skipToken,
       {
         onData: (status) => setSnapshot({ sessionId, status }),
       },
@@ -67,28 +64,29 @@ export function useSessionRuns(
   return {
     runs: status?.configurations ?? [],
     shells: status?.shells,
-    openShell:
-      Platform.OS === 'web'
-        ? (opened) => open.mutate({ sessionId }, { onSuccess: opened })
-        : undefined,
+    openShell: active
+      ? (opened) => open.mutate({ sessionId }, { onSuccess: opened })
+      : undefined,
     closeShell: (shellId) => close.mutate({ sessionId, shellId }),
-    renderShell: (shell, visible) => (
+    renderShell: (shell, visible, compact) => (
       <ConnectedRunTerminal
         key={shell.id}
         sessionId={sessionId}
         shellId={shell.id}
         run={{ name: shell.name, status: 'ready' }}
         active={active && visible}
+        compact={compact}
       />
     ),
     onStart: (name) => start.mutate({ sessionId, name }),
     onStop: (name) => stop.mutate({ sessionId, name }),
     onRestart: (name) => restart.mutate({ sessionId, name }),
-    renderTerminal: (run, visible) => (
+    renderTerminal: (run, visible, compact) => (
       <ConnectedRunTerminal
         key={sessionId}
         {...{ sessionId, run }}
         active={active && visible}
+        compact={compact}
       />
     ),
   };
@@ -106,11 +104,13 @@ function ConnectedRunTerminal({
   run,
   shellId,
   active,
+  compact,
 }: {
   sessionId: string;
   run: TerminalRun;
   shellId?: string;
   active: boolean;
+  compact?: boolean;
 }): ReactElement {
   const client = useTRPCClient();
   const connected = useConnectionState() === 'open' && active;
@@ -151,7 +151,9 @@ function ConnectedRunTerminal({
 
   useErrorToast(failure ? { title: 'Terminal', message: failure } : undefined);
 
-  return <RunTerminal {...{ run, connected, listen, onInput, onResize }} />;
+  return (
+    <RunTerminal {...{ run, connected, listen, onInput, onResize, compact }} />
+  );
 }
 
 type Resize = {

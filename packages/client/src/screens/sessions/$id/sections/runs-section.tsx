@@ -84,7 +84,7 @@ export function runsCard(
           onOpen={(name) => panels.select(runTabKey(name))}
           shells={{
             rows: controls.shells ?? [],
-            onOpen: (id) => panels.select(shellTabKey(id)),
+            onOpen: ({ id }) => panels.select(shellTabKey(id)),
             onNew: openNewShell(controls, panels),
           }}
         />

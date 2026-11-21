@@ -8,6 +8,10 @@ import { shellsFacts } from './sections/shells-facts';
 import type { SessionInspectorContent } from './session-inspector-content';
 import { changeRows, agentRows, taskRows } from './session-workbench-details';
 import {
+  workbenchRunGroup,
+  workbenchRunPages,
+} from './session-workbench-run-pages';
+import {
   WorkbenchOverview,
   type WorkbenchGroup,
   type WorkbenchRow,
@@ -42,6 +46,7 @@ export function SessionWorkbenchSheet({
         <WorkbenchOverview groups={groups} onVisit={setVisited} />
       </Sheet.Screen>
       {workbenchDetails(groups, visited)}
+      {workbenchRunPages(content.runs)}
     </Sheet>
   );
 }
@@ -80,6 +85,7 @@ function workbenchGroups(content: SessionInspectorContent): WorkbenchGroup[] {
     { ...changesFacts, rows: changeRows(content) },
     { ...agentsFacts, rows: agentRows(content) },
     { ...shellsFacts, rows: taskRows(content) },
+    ...workbenchRunGroup(content.runs),
   ];
 
   return [...groups, ...(content.pluginCards ?? []).map(pluginGroup)].filter(

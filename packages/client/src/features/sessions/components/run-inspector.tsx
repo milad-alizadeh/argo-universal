@@ -14,9 +14,10 @@ type Props = {
   run: RunConfigurationRow;
   controls: SessionRuns;
   visible?: boolean;
+  compact?: boolean;
 };
 
-function RunHeader({ run, controls }: Props): ReactElement {
+function RunHeader({ run, controls, compact }: Props): ReactElement {
   const { name, status } = run;
   const active = runIsActive(run);
   const now = useClock(active, controls.now);
@@ -24,9 +25,11 @@ function RunHeader({ run, controls }: Props): ReactElement {
   return (
     <View className="min-w-0 flex-row items-center gap-2">
       <Icon name="terminal" tone="muted" />
-      <View className="min-w-0 shrink">
-        <Text numberOfLines={1}>{name}</Text>
-      </View>
+      {!compact && (
+        <View className="min-w-0 shrink">
+          <Text numberOfLines={1}>{name}</Text>
+        </View>
+      )}
       <StatusDot tone={runStatusTone[status]} size="sm" />
       <View className="min-w-0 flex-1">
         <Text role="secondary" tone="muted" numberOfLines={1}>
@@ -53,13 +56,19 @@ function RunHeader({ run, controls }: Props): ReactElement {
   );
 }
 
-function RunAddress({ url }: { url: string }): ReactElement {
+function RunAddress({
+  url,
+  compact,
+}: {
+  url: string;
+  compact?: boolean;
+}): ReactElement {
   return (
     <View className="min-w-0 flex-row items-center gap-2 rounded-control bg-muted px-2 py-1">
-      <Icon name="external-link" tone="muted" />
+      {!compact && <Icon name="external-link" tone="muted" />}
       <View className="min-w-0 flex-1">
         <Text role="secondary-code" tone="muted" numberOfLines={1}>
-          <Link href={url} label={url} />
+          {compact ? url : <Link href={url} label={url} />}
         </Text>
       </View>
     </View>
@@ -70,12 +79,13 @@ export function RunInspector({
   run,
   controls,
   visible = true,
+  compact,
 }: Props): ReactElement {
   return (
     <View className="min-h-0 flex-1 gap-2 px-2 pb-2">
-      <RunHeader run={run} controls={controls} />
-      {run.url && <RunAddress url={run.url} />}
-      {controls.renderTerminal(run, visible)}
+      <RunHeader run={run} controls={controls} compact={compact} />
+      {run.url && <RunAddress url={run.url} compact={compact} />}
+      {controls.renderTerminal(run, visible, compact)}
     </View>
   );
 }

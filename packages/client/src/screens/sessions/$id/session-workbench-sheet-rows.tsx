@@ -16,7 +16,7 @@ export interface WorkbenchRow {
 
 export interface WorkbenchGroup {
   key: string;
-  title: string;
+  title?: string;
   rows: readonly WorkbenchRow[];
 }
 

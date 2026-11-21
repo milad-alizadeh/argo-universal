@@ -15,11 +15,12 @@ export interface WorkbenchRunsProps {
   onStop: (name: string) => void;
   now?: number;
   shells?: WorkbenchShells;
+  compact?: boolean;
 }
 
 type WorkbenchShells = {
   rows: readonly ShellTerminal[];
-  onOpen: (id: string) => void;
+  onOpen: (shell: ShellTerminal) => void;
   onNew?: () => void;
 };
 
@@ -27,18 +28,33 @@ export type SessionRuns = Omit<WorkbenchRunsProps, 'onOpen' | 'shells'> & {
   shells?: readonly ShellTerminal[];
   openShell?: (opened: (shell: ShellTerminal) => void) => void;
   closeShell?: (id: string) => void;
-  renderShell?: (shell: ShellTerminal, visible: boolean) => ReactNode;
+  renderShell?: (
+    shell: ShellTerminal,
+    visible: boolean,
+    compact?: boolean,
+  ) => ReactNode;
   onRestart: (name: string) => void;
-  renderTerminal: (run: RunConfigurationRow, visible: boolean) => ReactNode;
+  renderTerminal: (
+    run: RunConfigurationRow,
+    visible: boolean,
+    compact?: boolean,
+  ) => ReactNode;
 };
 
-type RowProps = Pick<WorkbenchRunsProps, 'onOpen' | 'onStart' | 'onStop'> & {
+type RowProps = Pick<WorkbenchRunsProps, 'onOpen' | 'onStart' | 'onStop' | 'compact'> & {
   run: RunConfigurationRow;
   now: number;
 };
 
 // The action and the Terminal link are separate controls on the same row.
-function RunRow({ run, now, onOpen, onStart, onStop }: RowProps): ReactElement {
+function RunRow({
+  run,
+  now,
+  compact,
+  onOpen,
+  onStart,
+  onStop,
+}: RowProps): ReactElement {
   const { name, port, status } = run;
   const active = runIsActive(run);
   const label = runStatusLabel(run, now, status === 'starting');
@@ -64,7 +80,7 @@ function RunRow({ run, now, onOpen, onStart, onStop }: RowProps): ReactElement {
         accessibilityLabel={active ? `Stop ${name}` : `Start ${name}`}
         icon={active ? 'stop' : 'play'}
         variant={active ? 'ghost' : 'primary'}
-        size="sm"
+        size={compact ? 'lg' : 'sm'}
         onPress={() => (active ? onStop(name) : onStart(name))}
       />
     </View>
@@ -74,19 +90,19 @@ function RunRow({ run, now, onOpen, onStart, onStop }: RowProps): ReactElement {
 function ShellRows({ rows, onOpen, onNew }: WorkbenchShells): ReactElement {
   return (
     <>
-      {rows.map(({ id, name, cwd }) => (
+      {rows.map((shell) => (
         <Pressable
-          key={id}
+          key={shell.id}
           role="button"
-          accessibilityLabel={`Open ${name} shell`}
-          onPress={() => onOpen(id)}
+          accessibilityLabel={`Open ${shell.name} shell`}
+          onPress={() => onOpen(shell)}
           className="min-w-0 flex-row items-center gap-2 rounded-control px-1 py-2 web:hover:bg-hover"
         >
           <Icon name="terminal" tone="muted" />
-          <Text numberOfLines={1}>{name}</Text>
+          <Text numberOfLines={1}>{shell.name}</Text>
           <View className="min-w-0 flex-1">
             <Text role="secondary" tone="muted" numberOfLines={1}>
-              {cwd}
+              {shell.cwd}
             </Text>
           </View>
         </Pressable>

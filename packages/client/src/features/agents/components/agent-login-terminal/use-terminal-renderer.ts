@@ -1,9 +1,9 @@
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal } from '@xterm/xterm';
 import { useEffect, useRef, type RefObject } from 'react';
+import { useControlModifier } from '../../../../lib/terminal/use-control-modifier';
 import type { LoginTerminalProps } from './terminal-props';
 import { TerminalRuntime, type TerminalRuntimeInput } from './terminal-runtime';
-import { useControlModifier } from './use-control-modifier';
 
 const terminalOptions = {
   fontSize: 13,
