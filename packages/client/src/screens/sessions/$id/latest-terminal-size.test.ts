@@ -7,6 +7,7 @@ it('sends the final Terminal size after a pending resize settles', async () => {
   const middle = { columns: 55, rows: 30 };
   const last = { columns: 65, rows: 32 };
   const acknowledged = Promise.withResolvers<void>();
+
   const send = vi.fn<(size: typeof first) => Promise<void>>(
     () => acknowledged.promise,
   );
