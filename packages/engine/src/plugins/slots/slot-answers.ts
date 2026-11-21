@@ -58,6 +58,11 @@ type Asking = {
 // A late call: the worker and change it was asked under, and the contexts it named.
 type Landing = { worker: SlotWorker; epoch: number; input: SlotItemsInput };
 
+// A change signal: answers asked for before it are never kept.
+function invalidate(worker: SlotWorker): void {
+  worker.epoch += 1;
+}
+
 // The one epoch guard: `write` runs only while no change signal came since `epoch` was read.
 function ifCurrent(worker: SlotWorker, epoch: number, write: () => void): void {
   if (worker.epoch === epoch) write();
@@ -110,7 +115,7 @@ export class SlotAnswers {
 
     if (!worker) return;
 
-    worker.epoch += 1;
+    invalidate(worker);
 
     for (const list of shown) forgetShown(worker, list);
   }
@@ -121,7 +126,7 @@ export class SlotAnswers {
 
     if (!worker) return;
 
-    worker.epoch += 1;
+    invalidate(worker);
     worker.kept.clear();
     worker.failed.clear();
   }
@@ -213,6 +218,7 @@ export class SlotAnswers {
    * after it.
    */
   private landed(pluginId: string, landing: Landing, reply: Reply): void {
+    // A discarded generation's runtime ends its calls, so its late reply never lands.
     const { worker, epoch, input } = landing;
 
     ifCurrent(worker, epoch, () => {

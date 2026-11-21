@@ -113,3 +113,30 @@ it('keeps a late reply asked since the last change, records it and reports it', 
     }),
   ).toEqual({ ok: true, items: answered.items });
 });
+
+it('asks again for the contexts a list shows and keeps the others', async () => {
+  const { answers } = setup();
+  const second = { sessionId: 'second', projectId: 'argo' };
+
+  const both: SlotItemsInput = {
+    ...input,
+    contexts: [...input.contexts, second],
+  };
+
+  const reply: Reply = { ok: true, items: { first: [], second: [] } };
+
+  await answers.ask(plugin, both, async () => reply);
+
+  answers.askAgain('p', [{ slotId: both.slotId, contexts: input.contexts }]);
+
+  const asked: SlotItemsInput[] = [];
+
+  await answers.ask(plugin, both, async (missing) => {
+    asked.push(missing);
+
+    return reply;
+  });
+
+  expect(asked).toHaveLength(1);
+  expect(asked[0]?.contexts).toEqual(input.contexts);
+});
