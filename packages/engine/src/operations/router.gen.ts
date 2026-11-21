@@ -895,6 +895,17 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      draft: authenticatedAppProcedure
+        .input(operations['run.draft'].params)
+        .output(operations['run.draft'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.draft',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
     }),
     terminal: router({
       read: publicProcedure

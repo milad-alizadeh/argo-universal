@@ -45,6 +45,10 @@ const asked = {
   'run.restart': ['restart the dev server'],
   'run.status': ['which dev servers are running'],
   'run.logs': ['read the dev server output'],
+  'run.draft': [
+    'draft run configurations',
+    'import launch.json into run configurations',
+  ],
   'terminal.read': ['read the terminal screen'],
   'terminal.send': [
     'press a key in the terminal',
