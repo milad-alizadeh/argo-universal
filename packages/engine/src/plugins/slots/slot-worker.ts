@@ -1,4 +1,7 @@
-import type { ItemsSlotItem } from '@repo/contracts/plugins/wire';
+import type {
+  ItemsSlotItem,
+  SlotItemsInput,
+} from '@repo/contracts/plugins/wire';
 import type { LeftOut } from './kept-items';
 
 // What a worker answered for one Slot, by context key.
@@ -13,9 +16,8 @@ export type SlotWorker = {
   // Bumped on every change signal, so an answer asked for before it is never kept.
   epoch: number;
   kept: Map<string, Kept>;
-  /*
-   * A Plugin that threw or answered off-schema is not asked again, nor waited on, until it changes. One that ran late
-   * is not asked again for the contexts it lacks until its late call lands.
-   */
+  // An outstanding late call blocks another ask for its contexts until the call lands.
+  late: Set<SlotItemsInput>;
+  // A thrown or invalid answer leaves out the Slot until it changes.
   failed: Map<string, LeftOut>;
 };

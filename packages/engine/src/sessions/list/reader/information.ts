@@ -8,7 +8,6 @@ import {
 import { newestRows, readFeedMemory, readQueuedRows } from '../../../feed';
 import type { SessionActorRef } from '../../session-machine';
 import { latestTurnOf } from '../../stored-turn';
-import { isSubagentOf } from '../../subagents/subagent-of';
 import { toSessionInfo, type SessionInfoInput } from '../information';
 import type { SessionListState } from '../state';
 import { readStoredActivity } from './activity-query';
@@ -19,7 +18,7 @@ type HeaderRead = ReturnType<ListReadInput['readLiveHeader']>;
 type InformationInput = ListReadInput & {
   actor: SessionActorRef | undefined;
   row: SessionRecord;
-  rows: readonly SessionRecord[];
+  subagents: SessionInfo['subagents'];
   turns: readonly Turn[];
 };
 
@@ -108,12 +107,8 @@ class SessionInformationRead {
       plan: selectPlanRowWithLatestContent(updates),
       ...this.liveInput(),
       ...headerInput(header),
-      children: this.children(),
+      subagents: this.input.subagents,
     };
-  }
-
-  private children(): SessionRecord[] {
-    return this.input.rows.filter(isSubagentOf(this.input.row.id));
   }
 
   private liveInput(): Pick<SessionInfoInput, 'live' | 'feed'> {

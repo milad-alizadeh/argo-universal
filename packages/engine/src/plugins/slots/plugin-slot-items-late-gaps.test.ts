@@ -1,6 +1,7 @@
 import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
 import {
   sessionBarSlotId,
+  sessionRowSlotId,
   type SlotItemsInput,
 } from '@repo/contracts/plugins/wire';
 import { expect, it } from 'vitest';
@@ -56,5 +57,48 @@ it('answers contexts already kept while a late call for another is out', async (
   expect(await calls.items('counter', bar)).toEqual({
     ok: true,
     items: { first: [{ text: 'Open' }] },
+  });
+});
+
+it('answers another Session’s Workbench Issue while the first Session is late', async () => {
+  const { calls, clock, sent } = slotItems();
+  const issueNumber = 2567;
+  const issueLabel = `#${issueNumber}`;
+
+  const row = calls.items('counter', {
+    slotId: sessionRowSlotId,
+    contexts: [second],
+  });
+
+  calls.receive(caller, {
+    action: 'items',
+    id: 0,
+    items: { second: [{ text: issueLabel }] },
+  });
+
+  expect(await row).toEqual({
+    ok: true,
+    items: { second: [{ text: issueLabel }] },
+  });
+
+  const slow = calls.items('counter', bar);
+  clock.fire(slotItemsLimitMs);
+  expect(await slow).toEqual({ ok: false, reason: itemsLeftOut.late });
+
+  const workbench = calls.items('counter', { ...bar, contexts: [second] });
+
+  expect(sent).toHaveLength(3);
+  calls.receive(caller, {
+    action: 'items',
+    id: 2,
+    items: { second: [{ text: `${issueLabel} · Open` }] },
+  });
+  expect(await workbench).toEqual({
+    ok: true,
+    items: { second: [{ text: `${issueLabel} · Open` }] },
+  });
+  expect(await calls.items('counter', bar)).toEqual({
+    ok: false,
+    reason: itemsLeftOut.late,
   });
 });

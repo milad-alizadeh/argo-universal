@@ -61,7 +61,7 @@ export function keptAnswer(
   const entry = entryOf(input);
   const failed = worker.failed.get(entry.id);
 
-  return failed && failed.reason !== itemsLeftOut.late
+  return failed
     ? Promise.resolve(failed)
     : knownAnswer({ worker, entry, ask }, input);
 }
@@ -81,14 +81,29 @@ async function knownAnswer(
   return { ok: true, items: itemsFor(entry, known, input) };
 }
 
-// While a late call is out (the one failure `keptAnswer` lets by), the contexts it lacks wait for it; kept ones answer.
+// A late call blocks only requests missing one of its contexts.
 const askOrWait = (
   asking: Asking,
   input: SlotItemsInput,
 ): Promise<ItemsAnswer> =>
-  input.contexts.length > 0 && asking.worker.failed.has(asking.entry.id)
+  hasLateContext(asking, input)
     ? Promise.resolve(leftOut(itemsLeftOut.late))
     : askMissing(asking, input);
+
+function hasLateContext(
+  { worker, entry }: Asking,
+  input: SlotItemsInput,
+): boolean {
+  const keys = new Set(
+    input.contexts.map((context) => contextKey(entry, context)),
+  );
+
+  return [...worker.late].some(
+    (late) =>
+      late.slotId === input.slotId &&
+      late.contexts.some((context) => keys.has(contextKey(entry, context))),
+  );
+}
 
 async function askMissing(
   { worker, entry, ask }: Asking,
@@ -99,7 +114,11 @@ async function askMissing(
   const { epoch } = worker;
   const answer = requested(entry, input, checked(entry, await ask(input)));
 
-  if (worker.epoch === epoch) remember(worker, entry, answer);
+  if (worker.epoch === epoch) {
+    if (!answer.ok && answer.reason === itemsLeftOut.late)
+      worker.late.add(input);
+    else remember(worker, entry, answer);
+  }
 
   return answer;
 }
@@ -113,7 +132,7 @@ export function keepLate(
   const entry = entryOf(input);
   const answer = requested(entry, input, checked(entry, reply));
 
-  worker.failed.delete(entry.id);
+  worker.late.delete(input);
 
   if (answer.ok || answer.reason !== itemsLeftOut.late)
     remember(worker, entry, answer);
