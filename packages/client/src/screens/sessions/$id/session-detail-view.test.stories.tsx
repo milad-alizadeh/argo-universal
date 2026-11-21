@@ -17,6 +17,7 @@ import {
   openProps,
   type Story,
 } from '../../../../mocks/session-view/session-view-story.test.mocks';
+import { conversationSession } from './session-detail-view-conversation.mocks';
 import {
   emptySession,
   idleSession,
@@ -29,6 +30,8 @@ const meta = {
 };
 
 export default meta;
+
+const firstPromptHeading = 'What should we work on?';
 
 export const RunningTurn: Story = {
   play: async ({ canvas }) =>
@@ -54,6 +57,9 @@ export const RunningTurn: Story = {
         ).toBeVisible();
       }
 
+      await expect(
+        canvas.queryByRole('heading', { name: firstPromptHeading }),
+      ).toBeNull();
       await expect(canvas.getByRole('status')).toHaveTextContent(
         runningHeader.text,
       );
@@ -108,16 +114,23 @@ export const BandOwnsIdentityWhileFeedAndComposerShareOneLayout: Story = {
 };
 
 export const EmptyFeed: Story = {
-  args: { view: { state: 'open', ...emptySession } },
+  args: {
+    view: {
+      state: 'open',
+      ...emptySession,
+      composer: conversationSession.composer,
+    },
+  },
   play: async ({ canvas }) =>
-    eachLayout(async () => {
-      await expect(
-        await canvas.findByRole('heading', { name: 'What should we build?' }),
-      ).toBeVisible();
-      await expect(canvas.queryByTestId(feedScrollTestId)).toBeNull();
+    eachLayout(async (wide) => {
       await expect(
         canvas.getByRole('textbox', { name: 'Message' }),
       ).toBeVisible();
+
+      await expect(
+        canvas.queryAllByRole('heading', { name: firstPromptHeading }),
+      ).toHaveLength(wide ? 1 : 0);
+      await expect(canvas.queryByTestId(feedScrollTestId)).toBeNull();
     }),
 };
 
