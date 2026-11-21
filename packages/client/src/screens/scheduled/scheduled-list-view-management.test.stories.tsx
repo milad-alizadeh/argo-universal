@@ -5,7 +5,7 @@ import { Dialog } from '@repo/kit/primitives/overlays/dialog';
 import { ListDetail } from '@repo/kit/primitives/scaffolds/list-detail';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
-import { expect, fn, screen, within } from 'storybook/test';
+import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import { SessionDetailView } from '../sessions/$id/session-detail-view';
 import { idleSession } from '../sessions/$id/session-detail-view.mocks';
 import { SessionPageHeader } from '../sessions/$id/session-page-header';
@@ -30,6 +30,7 @@ function ScheduleHistoryPreview(): ReactElement {
   const [schedule, setSchedule] = useState(latestSchedule);
   const [shown, setShown] = useState(schedule.latestSessionId);
   const [history, setHistory] = useState(false);
+
   const schedules = scheduledListFixture.schedules.map((row) =>
     row.id === schedule.id ? schedule : row,
   );
@@ -39,6 +40,7 @@ function ScheduleHistoryPreview(): ReactElement {
       id: schedule.id,
       latestSessionId: runSessionId,
     });
+
     setShown(href.params.sessionId);
     setHistory(false);
   };
@@ -119,6 +121,7 @@ export const OpensPausedRowsAndUsesTheRowMenu: Story = {
     const paused = await canvas.findByRole('button', {
       name: pausedSchedule.name,
     });
+
     await userEvent.pointer({ target: paused, keys: '[MouseRight]' });
 
     const resume = await screen.findByRole('menuitem', { name: 'Resume' });
@@ -140,10 +143,16 @@ export const KeepsTheEarlierSessionOpenWhenTheLatestChanges: Story = {
     await settleOverlays(history);
     await userEvent.click(history);
 
-    const dialog = within(
-      await screen.findByRole('dialog', { name: 'History' }),
+    const historyDialog = await screen.findByRole('dialog', {
+      name: 'History',
+    });
+    await settleOverlays(historyDialog);
+    const dialog = within(historyDialog);
+
+    await waitFor(() =>
+      expect(dialog.getByText(/Server was offline/)).toBeVisible(),
     );
-    await expect(dialog.getByText(/Server was offline/)).toBeVisible();
+
     const previous = dialog
       .getAllByRole('button', { name: 'Session started' })
       .at(-1);

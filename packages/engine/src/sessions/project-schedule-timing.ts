@@ -90,10 +90,12 @@ function nextWeeklyDay(
 ): number {
   const step = every * millisecondsPerWeek;
   const week = stride(monday(from), monday(anchor), step);
+
   const choices = days.map(
     (day): number =>
       week + ScheduleWeekday.options.indexOf(day) * millisecondsPerDay,
   );
+
   const upcoming = choices.filter((day) => day >= from);
 
   return upcoming.length > 0

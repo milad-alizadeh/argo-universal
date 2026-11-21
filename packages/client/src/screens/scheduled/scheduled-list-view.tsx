@@ -117,6 +117,7 @@ function ScheduleRow({
   onAction,
 }: ScheduleRowProps): ReactElement {
   const cadence = cadenceLabel(schedule.cadence);
+
   const subtitle = schedule.paused
     ? cadence
     : `${upcomingOccurrence(schedule.nextAt, scheduleTimeZone(schedule.cadence))} · ${cadence}`;
@@ -128,14 +129,12 @@ function ScheduleRow({
       selected={selectedId === schedule.id}
       sidebar={sidebar}
       onPress={() => onOpen(schedule)}
-      actions={
-        onAction && <ScheduleActions schedule={schedule} onAction={onAction} />
-      }
+      actions={onAction && scheduleActions({ schedule, onAction })}
     />
   );
 }
 
-function ScheduleActions({
+function scheduleActions({
   schedule,
   onAction,
 }: {

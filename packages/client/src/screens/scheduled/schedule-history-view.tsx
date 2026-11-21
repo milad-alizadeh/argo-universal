@@ -25,6 +25,7 @@ export function ScheduleHistoryView(
   return (
     <DialogForm
       title="History"
+      scrolls
       footer={
         <DialogFooter>
           <DialogCancel label="Done" />

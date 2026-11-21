@@ -10,21 +10,19 @@ import { projectSchedule as table } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, eq } from 'drizzle-orm';
 import type { z } from 'zod';
-import { requireInstalledAgent } from '../agents';
-import { isFolder, listProjectBranches, readProjectPath } from '../projects';
-import { startSessionCreation } from './creation/session-creation';
+import { readProjectPath } from '../projects';
 import {
   hasRunningScheduleSession,
   readScheduleHistory,
   writeScheduleOccurrence,
 } from './project-schedule-history';
+import { launchScheduledSession } from './project-schedule-launch';
 import {
   decode,
   editedSchedule,
   firstOccurrence,
   managedSchedule,
-  settingsWithName,
-  type SavedSettings,
+  resolveScheduleSettings,
 } from './project-schedule-settings';
 import { nextProjectScheduleAt } from './project-schedule-timing';
 import { startSchedule, type ScheduleActor } from './schedule-machine';
@@ -35,11 +33,15 @@ type OccurrencePreview = { nextAt: number };
 type ScheduleTarget = { id: string; projectId: string };
 
 type ScheduleRow = typeof table.$inferSelect;
+
 type Operations = typeof projectScheduleOperations;
+
 type ScheduleEdit = z.output<Operations['project.scheduleEdit']['params']>;
+
 type ScheduleManagement = z.output<
   Operations['project.scheduleManage']['params']
 >;
+
 type ScheduleHistory = z.output<
   Operations['project.scheduleHistory']['params']
 >;
@@ -102,7 +104,7 @@ export class ProjectSchedules {
   }
 
   public async create(input: ProjectScheduleInput): Promise<ProjectSchedule> {
-    const settings = await this.resolveSettings(input);
+    const settings = await resolveScheduleSettings(this.sources, input);
     const { projectId } = input;
     const id = this.sources.createId();
     const now = Date.now();
@@ -129,7 +131,7 @@ export class ProjectSchedules {
   public async edit({ id, ...input }: ScheduleEdit): Promise<ProjectSchedule> {
     const target = { id, projectId: input.projectId };
     this.requireRow(target);
-    const settings = await this.resolveSettings(input);
+    const settings = await resolveScheduleSettings(this.sources, input);
     await this.sources.open.write({
       describe: () => 'Edit Project Schedule',
       commit: (tx) => {
@@ -182,47 +184,6 @@ export class ProjectSchedules {
     this.requireRow(input);
 
     return readScheduleHistory(this.sources.database, input.id, input.cursor);
-  }
-
-  private async resolveSettings(
-    input: ProjectScheduleInput,
-  ): Promise<SavedSettings> {
-    const checkout = await this.resolveCheckout(input);
-    requireInstalledAgent(this.sources.installedAgents, input.agent);
-
-    return settingsWithName(input, checkout);
-  }
-
-  private async resolveCheckout({
-    checkout,
-    projectId,
-  }: ProjectScheduleInput): Promise<ProjectSchedule['checkout']> {
-    const path = readProjectPath(this.sources.database, projectId);
-
-    if (!(await isFolder(path))) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'The Project folder is unavailable on the Server.',
-      });
-    }
-
-    if (checkout?.type === 'main') return checkout;
-
-    const { branches, currentBranch } = await listProjectBranches(
-      this.sources.database,
-      { projectId },
-    );
-
-    const baseBranch = checkout?.baseBranch ?? currentBranch;
-
-    if (baseBranch === null || !branches.includes(baseBranch)) {
-      throw new TRPCError({
-        code: 'BAD_REQUEST',
-        message: 'Choose an existing branch for the worktree.',
-      });
-    }
-
-    return { type: 'worktree', baseBranch };
   }
 
   public runNow(target: ScheduleTarget): Promise<ProjectScheduleOccurrence> {
@@ -349,7 +310,10 @@ export class ProjectSchedules {
     this.launching.add(id);
 
     try {
-      const result = await this.launch(schedule, at, signal);
+      const result = await launchScheduledSession(this.sources, schedule, {
+        at,
+        signal,
+      });
 
       return await this.record(id, result);
     } finally {
@@ -366,50 +330,6 @@ export class ProjectSchedules {
         this.sources.open.runningSessionIds(),
       )
     );
-  }
-
-  private async launch(
-    {
-      id,
-      projectId,
-      agent,
-      checkout,
-      configOptions,
-      instructions,
-    }: ProjectSchedule,
-    at: number,
-    signal?: AbortSignal,
-  ): Promise<ProjectScheduleOccurrence> {
-    try {
-      const creation = await startSessionCreation(
-        this.sources,
-        {
-          projectId,
-          agent,
-          checkout,
-          configOptions,
-          prompt: [{ type: 'text', text: instructions }],
-        },
-        {
-          startedBySessionId: null,
-          sender: { type: 'schedule', scheduleId: id, title: 'Schedule' },
-          signal,
-        },
-      );
-
-      const { sessionId } = await creation.accepted;
-
-      return { at, outcome: 'started', sessionId };
-    } catch (error) {
-      return {
-        at,
-        outcome: 'failed',
-        reason:
-          error instanceof Error
-            ? error.message
-            : 'Could not start the Session.',
-      };
-    }
   }
 
   private async record(

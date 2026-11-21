@@ -118,9 +118,11 @@ it('records the offline occurrence and starts no backlog after restart', async (
 
   await expect.poll(() => requests.length, { timeout: 5000 }).toBe(1);
   const { entries } = await project.scheduleHistory(target);
+
   const atMissedDeadline = entries.filter(
     ({ occurrence }) => occurrence.at === saved.nextAt,
   );
+
   expect(atMissedDeadline).toHaveLength(1);
   expect(atMissedDeadline[0]?.occurrence.outcome).toBe('skipped');
 }, 30000);

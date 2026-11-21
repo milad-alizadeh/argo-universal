@@ -34,9 +34,9 @@ function intervalDraft(seconds: number): Partial<ScheduleCadenceDraft> {
   const unit =
     seconds % secondsPerHour === 0
       ? 'hour'
-      : (seconds % secondsPerMinute === 0
+      : seconds % secondsPerMinute === 0
         ? 'minute'
-        : 'second');
+        : 'second';
 
   return {
     interval: String(seconds / intervalSeconds[unit]),

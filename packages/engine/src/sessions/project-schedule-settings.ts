@@ -6,20 +6,25 @@ import {
 import type { projectSchedule as table } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+import { requireInstalledAgent } from '../agents';
 import { titleFromPrompt } from '../feed';
+import { isFolder, listProjectBranches, readProjectPath } from '../projects';
 import { nextProjectScheduleAt } from './project-schedule-timing';
+import type { SessionHandlerSources } from './session-sources';
 
 type ScheduleRow = typeof table.$inferSelect;
-export type SavedSettings = Pick<
+
+type SavedSettings = Pick<
   ProjectSchedule,
   'agent' | 'name' | 'instructions' | 'checkout' | 'cadence' | 'configOptions'
 >;
 
-export function settingsWithName(
+function settingsWithName(
   input: ProjectScheduleInput,
   checkout: ProjectSchedule['checkout'],
 ): SavedSettings {
   const { agent, instructions, cadence, configOptions } = input;
+
   return {
     agent,
     instructions,
@@ -31,6 +36,7 @@ export function settingsWithName(
 }
 
 type StoredSchedule = { schedule: ProjectSchedule; anchorAt: number };
+
 const ProjectScheduleSettings = z.looseObject({
   anchorAt: z.number().optional(),
   intervalSeconds: z.number().optional(),
@@ -79,10 +85,13 @@ export function editedSchedule(
   settings: SavedSettings,
 ): Pick<ScheduleRow, 'settings' | 'nextAt'> {
   const existing = decode(row);
+
   const changed =
     JSON.stringify(settings.cadence) !==
     JSON.stringify(existing.schedule.cadence);
+
   const anchorAt = changed ? Date.now() : existing.anchorAt;
+
   const nextAt = changed
     ? firstOccurrence(settings.cadence, anchorAt)
     : row.nextAt;
@@ -98,10 +107,53 @@ export function managedSchedule(
   const elapsed = row.paused && row.nextAt <= now;
 
   const { schedule, anchorAt } = decode(row);
+
   const nextAt =
     action === 'resume' && elapsed
       ? nextProjectScheduleAt(schedule.cadence, now, anchorAt)
       : row.nextAt;
 
   return { paused: action === 'pause', nextAt };
+}
+
+export async function resolveScheduleSettings(
+  sources: SessionHandlerSources,
+  input: ProjectScheduleInput,
+): Promise<SavedSettings> {
+  const checkout = await resolveCheckout(sources, input);
+  requireInstalledAgent(sources.installedAgents, input.agent);
+
+  return settingsWithName(input, checkout);
+}
+
+async function resolveCheckout(
+  sources: SessionHandlerSources,
+  { checkout, projectId }: ProjectScheduleInput,
+): Promise<ProjectSchedule['checkout']> {
+  const path = readProjectPath(sources.database, projectId);
+
+  if (!(await isFolder(path))) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'The Project folder is unavailable on the Server.',
+    });
+  }
+
+  if (checkout?.type === 'main') return checkout;
+
+  const { branches, currentBranch } = await listProjectBranches(
+    sources.database,
+    { projectId },
+  );
+
+  const baseBranch = checkout?.baseBranch ?? currentBranch;
+
+  if (baseBranch === null || !branches.includes(baseBranch)) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Choose an existing branch for the worktree.',
+    });
+  }
+
+  return { type: 'worktree', baseBranch };
 }

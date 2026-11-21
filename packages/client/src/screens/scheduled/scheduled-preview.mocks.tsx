@@ -25,7 +25,7 @@ export function SchedulePreviewFrame({
   );
 }
 
-function LatestScheduledRun(): ReactElement {
+export function LatestScheduledRun(): ReactElement {
   return (
     <SessionDetailView
       state="open"
