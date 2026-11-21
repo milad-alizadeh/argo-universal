@@ -26,7 +26,7 @@ const hideInspector = 'Hide Inspector';
 
 const showInspector = 'Show Inspector';
 
-// Includes the settled destination after the Frame's 250ms transition.
+// Includes the settled destination after the Frame's 280ms transition.
 const motionFrames = 24;
 
 type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
@@ -143,14 +143,21 @@ async function travelAfterHeavyCommit(
   return drawn.filter((at) => at !== start && at !== end);
 }
 
+// Drawn at several places on the way, not landed on its place in a frame or two.
+async function assertTravelsAfterHeavyCommit(
+  canvas: Canvas,
+  action: string,
+): Promise<void> {
+  const between = await travelAfterHeavyCommit(canvas, action);
+
+  await expect(new Set(between).size).toBeGreaterThan(4);
+}
+
 // A heavy Inspector commit must not spend the Workbench's motion before it paints: it keeps pace with the panes.
 export const WorkbenchSlidesAfterAHeavyInspectorClose: Story = {
   ...closesAt(2560),
-  play: async ({ canvas }) => {
-    const between = await travelAfterHeavyCommit(canvas, hideInspector);
-
-    await expect(new Set(between).size).toBeGreaterThan(4);
-  },
+  play: async ({ canvas }) =>
+    assertTravelsAfterHeavyCommit(canvas, hideInspector),
 };
 
 export const WorkbenchSlidesOutAfterAHeavyInspectorOpen: Story = {
@@ -158,8 +165,6 @@ export const WorkbenchSlidesOutAfterAHeavyInspectorOpen: Story = {
   beforeEach: (): Promise<void> => settleLayout(1856),
   play: async ({ canvas }) => {
     await waitFor(() => expect(canvas.getByTestId(workbenchId)).toBeVisible());
-    const between = await travelAfterHeavyCommit(canvas, showInspector);
-
-    await expect(new Set(between).size).toBeGreaterThan(4);
+    await assertTravelsAfterHeavyCommit(canvas, showInspector);
   },
 };

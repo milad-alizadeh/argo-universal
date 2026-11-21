@@ -11,15 +11,16 @@ import {
   useCancelOnUnmount,
 } from './use-frame-transition.web';
 
-type Fade = 'fade' | 'slide';
+// Whether the part eases its opacity as it moves, or holds it opaque until it rests.
+type OpacityMotion = 'fade' | 'hold';
 
 // Where a running motion has the element now: its translation and opacity, read before the motion is cancelled.
-interface Place {
+interface VisualPlace {
   shift: number;
   opacity: number;
 }
 
-function currentPlace(element: HTMLElement): Place {
+function currentPlace(element: HTMLElement): VisualPlace {
   const style = getComputedStyle(element);
 
   const shift =
@@ -29,30 +30,26 @@ function currentPlace(element: HTMLElement): Place {
 }
 
 // A slide stays opaque while it shows or slides out, then its resting style hides it; a fade eases its opacity.
-interface Change {
+interface OffsetChange {
   next: OffsetMotion;
   last: OffsetMotion;
-  fade: Fade;
+  opacity: OpacityMotion;
 }
 
 function keyframes(
   element: HTMLElement,
-  { next, last, fade }: Change,
+  { next, last, opacity }: OffsetChange,
 ): Keyframe[] {
   const now = currentPlace(element);
   const from = now.shift + last.offset - next.offset;
 
-  const opacity =
-    fade === 'fade' ? [now.opacity, Number(next.visible)] : [1, 1];
+  const [start, end] =
+    opacity === 'fade' ? [now.opacity, Number(next.visible)] : [1, 1];
 
   return [
-    { transform: `translateX(${from}px)`, opacity: opacity[0] },
-    { transform: 'translateX(0px)', opacity: opacity[1] },
+    { transform: `translateX(${from}px)`, opacity: start },
+    { transform: 'translateX(0px)', opacity: end },
   ];
-}
-
-function moves(next: OffsetMotion, last: OffsetMotion): boolean {
-  return next.offset !== last.offset || next.visible !== last.visible;
 }
 
 /*
@@ -61,7 +58,10 @@ function moves(next: OffsetMotion, last: OffsetMotion): boolean {
  * motion before its first frame and the part jumped to its place; an element's animation starts on the frame after
  * the commit and runs on the compositor, in step with the panes.
  */
-function useOffsetMotion(props: OffsetMotion, fade: Fade): FrameSlide {
+function useOffsetMotion(
+  props: OffsetMotion,
+  opacity: OpacityMotion,
+): FrameSlide {
   const element = useRef<HTMLElement | null>(null);
   const motion = useRef<Animation[]>([]);
   const previous = useRef(props);
@@ -80,13 +80,13 @@ function useOffsetMotion(props: OffsetMotion, fade: Fade): FrameSlide {
       return;
     }
 
-    const frames = keyframes(node, { next: props, last, fade });
+    // A change that leaves the place alone carries on from wherever a running motion has the part.
+    const frames = keyframes(node, { next: props, last, opacity });
     cancelMotion(motion.current);
-    motion.current =
-      mayAnimate(props.animate) && moves(props, last)
-        ? playFrames([[node, frames]], props.timing)
-        : [];
-  }, [props, fade]);
+    motion.current = mayAnimate(props.animate)
+      ? playFrames([[node, frames]], props.timing)
+      : [];
+  }, [props, opacity]);
 
   const ref = useCallback((node: ViewElement | null): void => {
     element.current = node instanceof HTMLElement ? node : null;
@@ -103,5 +103,5 @@ export function useFrameOffset(props: OffsetMotion): FrameSlide {
 
 // The same motion with no fade: the container is fully opaque while it shows or slides out, and transparent once it has gone.
 export function useFrameSlide(props: OffsetMotion): FrameSlide {
-  return useOffsetMotion(props, 'slide');
+  return useOffsetMotion(props, 'hold');
 }

@@ -17,22 +17,31 @@ export async function sampleMotionFrames(
   try {
     action();
 
-    return await collectFrames(requestPaint, measure, frames);
+    return await collectFrames(measure, frames, {
+      requestPaint,
+      step: () => vi.advanceTimersToNextFrame(),
+    });
   } finally {
     vi.useRealTimers();
   }
 }
 
+// How a sample waits for the browser's paint, and what it advances after it.
+interface Paint {
+  requestPaint: typeof requestAnimationFrame;
+  step: () => void;
+}
+
 async function collectFrames(
-  requestPaint: typeof requestAnimationFrame,
   measure: () => number,
   frames: number,
+  { requestPaint, step }: Paint,
 ): Promise<number[]> {
   const samples: number[] = [];
 
   for (const frame of Array.from({ length: frames }).keys()) {
     await new Promise<void>((resolve) => requestPaint(() => resolve()));
-    vi.advanceTimersToNextFrame();
+    step();
     samples[frame] = measure();
   }
 
@@ -57,14 +66,10 @@ export async function sampleBusyMotionFrames(
   action();
   holdMainThread(busy);
 
-  const samples: number[] = [];
-
-  for (const frame of Array.from({ length: frames }).keys()) {
-    await new Promise<void>((resolve) =>
-      requestAnimationFrame(() => resolve()),
-    );
-    samples[frame] = measure();
-  }
-
-  return samples;
+  return collectFrames(measure, frames, {
+    requestPaint: requestAnimationFrame,
+    step: () => {
+      // The real clock advances itself.
+    },
+  });
 }
