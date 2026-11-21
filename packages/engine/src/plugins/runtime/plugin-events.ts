@@ -27,7 +27,13 @@ export type RuntimePluginInput = {
   watch?: boolean;
 };
 
-export type Loaded = { type: 'build.loaded'; source: string; version: string };
+export type Loaded = {
+  type: 'build.loaded';
+  source: string;
+  version: string;
+  // A Draft shown on request applies even while a Turn runs.
+  immediate?: boolean;
+};
 
 export type BuildEvent = Loaded | { type: 'build.failed'; error: string };
 

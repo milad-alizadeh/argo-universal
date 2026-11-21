@@ -4,7 +4,7 @@ import type { ActivatedPlugin } from '../access/plugin-access';
 import { watchPlugin, type BundleCallbacks } from '../dev/bundle';
 import { crashed, runtimeError } from '../protocol/runtime';
 import type { PluginStatus } from '../protocol/runtime';
-import type { RuntimePluginInput } from './plugin-events';
+import type { BuildEvent, Loaded, RuntimePluginInput } from './plugin-events';
 import { runtimePluginMachine } from './plugin.machine';
 
 type Waiter = (status: PluginStatus) => void;
@@ -17,8 +17,10 @@ export class RuntimePlugin {
   private readonly actor: Actor<typeof runtimePluginMachine>;
   private readonly build: Promise<BuildContext>;
   private waiters: Waiter[] = [];
+  // The newest build's outcome, which a Draft shown on request applies.
+  private latest: BuildEvent | null = null;
 
-  constructor(input: Omit<RuntimePluginInput, 'answer'>) {
+  constructor(private readonly input: Omit<RuntimePluginInput, 'answer'>) {
     this.actor = createActor(runtimePluginMachine, {
       input: { ...input, answer: (status) => this.answer(status) },
     }).start();
@@ -35,9 +37,15 @@ export class RuntimePlugin {
     return {
       loaded: (source, version) => {
         input.rebuilt?.();
-        this.actor.send({ type: 'build.loaded', source, version });
+        const landed: Loaded = { type: 'build.loaded', source, version };
+        this.latest = landed;
+        this.actor.send(landed);
       },
-      failed: (error) => this.actor.send({ type: 'build.failed', error }),
+      failed: (error) => {
+        const failed: BuildEvent = { type: 'build.failed', error };
+        this.latest = failed;
+        this.actor.send(failed);
+      },
     };
   }
 
@@ -56,6 +64,29 @@ export class RuntimePlugin {
 
   update(status: PluginStatus, generation: number): void {
     this.actor.send({ type: 'worker.status', status, generation });
+  }
+
+  /*
+   * Rebuilds at once, even while a Turn runs, and swaps the worker only when the build passes.
+   * A broken build keeps the current worker and answers with its error.
+   */
+  async showDraft(): Promise<string | null> {
+    if (this.input.watch === false)
+      return 'Drafts need a Server running with --watch; this one builds Plugins once.';
+
+    try {
+      await (await this.build).rebuild();
+    } catch (cause) {
+      return this.latest && 'error' in this.latest
+        ? this.latest.error
+        : runtimeError(cause);
+    }
+
+    // The build this waited on may be the watcher's, which the machine deferred; the Draft applies it now.
+    if (this.latest && 'source' in this.latest)
+      this.actor.send({ ...this.latest, immediate: true });
+
+    return null;
   }
 
   // A crash answers every activation until a background pass lets the next one try again.

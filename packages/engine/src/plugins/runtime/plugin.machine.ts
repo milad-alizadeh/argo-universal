@@ -36,7 +36,7 @@ const keepGrant = {
   params: ({ event }: { event: { granted: ActivatedPlugin } }) => event.granted,
 } as const;
 
-// A dev build that lands while a Turn runs waits for Turns to end.
+// A dev build that lands while a Turn runs waits for Turns to end, unless it was asked for as a Draft.
 const deferBuild = {
   guard: 'deferring',
   actions: [
@@ -115,8 +115,10 @@ export const runtimePluginMachine = setup({
     }),
   },
   guards: {
-    deferring: ({ context }): boolean =>
-      context.generation !== 0 && context.deferReload(),
+    deferring: ({ context, event }): boolean =>
+      context.generation !== 0 &&
+      context.deferReload() &&
+      !('immediate' in event && event.immediate),
     unchanged: ({ context }, version: string): boolean =>
       version === context.source.version && context.buildError === null,
     stale: ({ context }, generation: number): boolean =>
