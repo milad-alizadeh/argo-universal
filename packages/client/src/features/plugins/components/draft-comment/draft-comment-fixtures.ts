@@ -30,8 +30,13 @@ const node = (
   props: WireNode['props'] = {},
 ): WireNode => ({ type, key, props, children: [], slots: {} });
 
-const row = (key: string, title: string, subtitle: string): WireNode =>
-  node('ListItem', key, { title, subtitle });
+const row = (key: string, title: string, subtitle: string): WireNode => ({
+  ...node('ListItem', key, {
+    title,
+    subtitle,
+    onPress: { pageState: { open: key } },
+  }),
+});
 
 // An Issues page of a dev Plugin: a header region over a list region, with a title outside both.
 export const issuesTree: WireNode = {
@@ -68,3 +73,30 @@ export const leftNotes: DraftNote[] = [
     note: 'Show who it is assigned to',
   },
 ];
+
+// A label and a field that fills the rest of its row.
+export const fieldRowTree: WireNode = {
+  ...node('Stack', 'page', { direction: 'row', gap: 'space3' }),
+  children: [
+    node('Text', 'label', { children: 'Name' }),
+    node('TextArea', 'name', { label: 'Name', value: '' }),
+  ],
+};
+
+// A Screen whose List fills it and scrolls.
+export const longListTree: WireNode = {
+  ...node('Screen', 'page', { title: 'Issues' }),
+  children: [
+    {
+      ...node('List', 'list', { appearance: 'cards' }),
+      children: [
+        {
+          ...node('List.Section', 'open', { title: 'Open' }),
+          children: Array.from({ length: 30 }, (_, index) =>
+            row(`row-${index}`, `Issue ${index}`, `ARGO-${index}`),
+          ),
+        },
+      ],
+    },
+  ],
+};

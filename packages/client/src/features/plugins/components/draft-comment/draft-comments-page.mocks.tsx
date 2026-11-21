@@ -1,36 +1,55 @@
+import type { WireNode } from '@repo/contracts/plugins/wire';
+import { useState } from 'react';
 import type * as React from 'react';
-import { View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { fn } from 'storybook/test';
+import type { OnPageCall } from '../../../../lib/product/plugin-registry/plugin-registry';
 import { PluginTree } from '../../../../lib/product/plugin-registry/plugin-registry';
 import { draftComments, type DraftNote } from '../../stores/draft-comments';
 import { DraftRegionsProvider } from '../draft-region/draft-regions';
 import { issuesPage, issuesTree, regionTags } from './draft-comment-fixtures';
 import { DraftCommentsLayer } from './draft-comments-layer';
 
-// Starts each story from the notes it names; the store outlives a story.
-function seeded(notes: DraftNote[]): true {
-  draftComments.sent(issuesPage);
-  draftComments.setCommenting(issuesPage, true);
+// Starts each story from the notes it names, once; the store outlives a story.
+function useSeeded(notes: DraftNote[], commenting: boolean): void {
+  useState(() => {
+    draftComments.sent(issuesPage);
+    draftComments.setCommenting(issuesPage, commenting);
 
-  for (const note of notes) draftComments.save(issuesPage, note);
+    for (const note of notes) draftComments.save(issuesPage, note);
 
-  return true;
+    return true;
+  });
 }
 
-// An Issues page as a dev Plugin's Draft draws it, for the author commenting on it.
-export function CommentingPage(props: {
+type PageProps = {
   commenting: boolean;
   notes?: DraftNote[];
   longPressMilliseconds?: number;
-}): React.JSX.Element {
-  const { commenting, notes = [], longPressMilliseconds } = props;
+  // What the tree does with a press on a node that has one.
+  onPageCall?: OnPageCall;
+  root?: WireNode;
+  // Whether the page declares the Issues regions; a page with none draws just its tree.
+  regions?: boolean;
+};
 
-  const [ready] = [seeded(notes)];
+// An Issues page as a dev Plugin's Draft draws it, for the author commenting on it.
+export function CommentingPage(props: PageProps): React.JSX.Element {
+  const {
+    commenting,
+    notes = [],
+    longPressMilliseconds,
+    onPageCall,
+    root = issuesTree,
+    regions = true,
+  } = props;
+
+  useSeeded(notes, commenting);
 
   return (
     <View className="h-96 w-full bg-content p-4">
       <DraftRegionsProvider
-        regions={ready ? { tags: regionTags, onStep: fn() } : null}
+        regions={regions ? { tags: regionTags, onStep: fn() } : null}
         commenting={commenting}
       >
         <DraftCommentsLayer
@@ -39,9 +58,28 @@ export function CommentingPage(props: {
           commenting={commenting}
           longPressMilliseconds={longPressMilliseconds}
         >
-          <PluginTree root={issuesTree} />
+          <PluginTree root={root} onPageCall={onPageCall} />
         </DraftCommentsLayer>
       </DraftRegionsProvider>
+    </View>
+  );
+}
+
+// The same page with a switch for comment mode, as the Draft bar's toggle is.
+export function TogglingPage(
+  props: Omit<PageProps, 'commenting'>,
+): React.JSX.Element {
+  const [commenting, setCommenting] = useState(false);
+
+  return (
+    <View>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => setCommenting((on) => !on)}
+      >
+        <Text>{commenting ? 'Stop commenting' : 'Comment mode'}</Text>
+      </Pressable>
+      <CommentingPage {...props} commenting={commenting} />
     </View>
   );
 }

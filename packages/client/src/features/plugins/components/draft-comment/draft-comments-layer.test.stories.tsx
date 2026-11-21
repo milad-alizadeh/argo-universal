@@ -1,11 +1,19 @@
 import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { userEvent as pointer } from 'vitest/browser';
 import { draftComments } from '../../stores/draft-comments';
-import { issuesPage } from './draft-comment-fixtures';
-import { CommentingPage, holdOn } from './draft-comments-page.mocks';
+import {
+  fieldRowTree,
+  issuesPage,
+  longListTree,
+} from './draft-comment-fixtures';
+import {
+  CommentingPage,
+  holdOn,
+  TogglingPage,
+} from './draft-comments-page.mocks';
 
 const meta = {
   title: 'Tests/Plugins/DraftComments/Layer',
@@ -59,7 +67,9 @@ export const ANodeOutsideEveryRegionNamesNoRegion: Story = {
     await pointer.click(await canvas.findByText('Issues'));
     await settleOverlays();
 
-    await expect(await editor().findByText('title')).toBeVisible();
+    await waitFor(async () =>
+      expect(await editor().findByText('title')).toBeVisible(),
+    );
     await userEvent.type(
       await editor().findByRole('textbox', { name: 'Comment' }),
       'Bigger',
@@ -77,12 +87,45 @@ export const ANodeOutsideEveryRegionNamesNoRegion: Story = {
   },
 };
 
-// Comment mode does not run what the press lands on, so a row's own press never fires and the list still draws its rows.
-export const CommentModeDrawsEveryNodeAndRunsNone: Story = {
-  play: async ({ canvas }) => {
-    await expect(await canvas.findByText(pairing)).toBeVisible();
+// Comment mode does not run what the press lands on: a row's own press never fires there, and fires once outside it.
+export const CommentModeRunsNoNode: Story = {
+  args: { onPageCall: fn() },
+  play: async ({ args, canvas }) => {
+    await settleLayout('wide');
     await expect(canvas.getByText('Composer drops a draft')).toBeVisible();
     await expect(canvas.getByText('Open')).toBeVisible();
+    await pointer.click(await canvas.findByText(pairing));
+    await settleOverlays();
+
+    await expect(args.onPageCall).not.toHaveBeenCalled();
+  },
+};
+
+export const OutsideCommentModeAPressRunsTheNode: Story = {
+  args: { commenting: false, onPageCall: fn() },
+  play: async ({ args, canvas }) => {
+    await settleLayout('wide');
+    await pointer.click(await canvas.findByText(pairing));
+
+    await waitFor(() => expect(args.onPageCall).toHaveBeenCalledTimes(1));
+  },
+};
+
+// Pressing Enter on a focused row does not run it in comment mode either.
+export const CommentModeBlocksKeyboardActivation: Story = {
+  args: { onPageCall: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    await settleLayout('wide');
+
+    const row = (await canvas.findByText(pairing)).closest<HTMLElement>(
+      '[tabindex]',
+    );
+
+    row?.focus();
+    await userEvent.keyboard('{Enter}');
+    await settleOverlays();
+
+    await expect(args.onPageCall).not.toHaveBeenCalled();
   },
 };
 
@@ -92,10 +135,96 @@ export const NothingIsPickedOutsideCommentMode: Story = {
   play: async ({ canvas }) => {
     await settleLayout('wide');
     await pointer.click(await canvas.findByText(pairing));
+    await settleOverlays();
 
     await expect(
       editor().queryByRole('textbox', { name: 'Comment' }),
     ).toBeNull();
+  },
+};
+
+// A press that moves is a scroll or a drag, so it picks nothing.
+export const AMovingPressPicksNothing: Story = {
+  args: { longPressMilliseconds: 0 },
+  play: async ({ canvas }) => {
+    await settleLayout('wide');
+
+    const row = await canvas.findByText(pairing);
+    const { left, top } = row.getBoundingClientRect();
+    const at = (x: number): MouseEventInit => ({
+      bubbles: true,
+      clientX: left + x,
+      clientY: top + 4,
+    });
+
+    row.dispatchEvent(new MouseEvent('mousedown', at(4)));
+    row.dispatchEvent(new MouseEvent('mousemove', at(60)));
+    row.dispatchEvent(new MouseEvent('mouseup', at(60)));
+    await settleOverlays();
+
+    await expect(
+      editor().queryByRole('textbox', { name: 'Comment' }),
+    ).toBeNull();
+  },
+};
+
+// Entering comment mode redraws nothing: what was typed in a field stays, and the field is the same element.
+export const TypedTextSurvivesTheToggle: Story = {
+  render: () => <TogglingPage root={fieldRowTree} regions={false} />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+
+    const field = await canvas.findByRole('textbox', { name: 'Name' });
+
+    await userEvent.type(field, 'Ada');
+    await userEvent.click(canvas.getByRole('button', { name: 'Comment mode' }));
+    await canvas.findByRole('button', { name: 'Stop commenting' });
+
+    const after = canvas.getByRole('textbox', { name: 'Name' });
+
+    await expect(after).toBe(field);
+    await expect(after).toHaveValue('Ada');
+  },
+};
+
+// A wrapper moves nothing: a field that fills its row, and a list that fills its Screen, keep their boxes in comment mode.
+const boxOf = (element: HTMLElement): string => {
+  const { left, top, width, height } = element.getBoundingClientRect();
+
+  return [left, top, width, height].join(',');
+};
+
+export const CommentModeKeepsAFieldFillingItsRow: Story = {
+  render: () => <TogglingPage root={fieldRowTree} regions={false} />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+
+    const field = await canvas.findByRole('textbox', { name: 'Name' });
+    const before = boxOf(field);
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Comment mode' }));
+    await canvas.findByRole('button', { name: 'Stop commenting' });
+
+    await expect(boxOf(canvas.getByRole('textbox', { name: 'Name' }))).toBe(
+      before,
+    );
+  },
+};
+
+export const CommentModeKeepsAListFillingAndScrolling: Story = {
+  render: () => <TogglingPage root={longListTree} regions={false} />,
+  play: async ({ canvas, userEvent }) => {
+    await settleLayout('wide');
+
+    const first = await canvas.findByText('Issue 0');
+    const before = boxOf(first);
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Comment mode' }));
+    await canvas.findByRole('button', { name: 'Stop commenting' });
+
+    await expect(boxOf(canvas.getByText('Issue 0'))).toBe(before);
+    // The list is still cut to its Screen, so it has not drawn its last row.
+    await expect(canvas.queryByText('Issue 29')).toBeNull();
   },
 };
 
@@ -127,6 +256,7 @@ export const APhonePicksOnALongPress: Story = {
     const row = await canvas.findByText(pairing);
 
     await holdOn(row, 0);
+    await settleOverlays();
     await expect(
       editor().queryByRole('textbox', { name: 'Comment' }),
     ).toBeNull();
