@@ -1,5 +1,7 @@
-import { Button as SwiftButton } from '@expo/ui/swift-ui';
+import { RNHostView } from '@expo/ui';
+import { Button as SwiftButton, Image } from '@expo/ui/swift-ui';
 import {
+  accessibilityLabel,
   buttonBorderShape,
   buttonStyle,
   controlSize,
@@ -7,14 +9,17 @@ import {
   dynamicTypeSize,
   labelStyle,
 } from '@expo/ui/swift-ui/modifiers';
+import type { IconSize } from '@repo/contracts/kit-symbols';
 import type { IconButtonSize } from '@repo/contracts/kit-tokens';
 import type { ComponentProps, ReactElement } from 'react';
+import { Icon, IconSlot } from '#primitives/content/icon';
 import { liquidGlassAvailable } from '#primitives/content/liquid-glass';
 import { Host } from '#primitives/native/host';
 import { nativeIconName } from '../../../symbols/native-icon-name';
 import { useFixedSizeChrome } from './fixed-size-chrome';
 import type { IconButtonProps } from './icon-button';
 import { sizeOf, variantOf } from './icon-button-defaults';
+import { iconButtonGlyph } from './icon-button-glyph';
 
 type SwiftProps = ComponentProps<typeof SwiftButton>;
 
@@ -43,23 +48,89 @@ const controlSizes = {
   lg: 'large',
 } as const satisfies Record<IconButtonSize, Parameters<typeof controlSize>[0]>;
 
+// The hosted SVG glyph's size at each control size, near the SF Symbol SwiftUI draws there.
+const hostedGlyphSizes = {
+  sm: 'sm',
+  md: 'sm',
+  lg: 'md',
+} as const satisfies Record<IconButtonSize, IconSize>;
+
 const styles = liquidGlassAvailable ? glassStyles : borderedStyles;
 
-// Expo UI's icon button: the label is the spoken name, the system image the glyph, and the control size the size.
+/*
+ * Expo UI's icon button: the label is the spoken name, the glyph its image, and the control size the size. A glyph
+ * with no SF Symbol is the Button's own label view, and VoiceOver names the Button from the spoken name.
+ */
 export function IconButton(props: IconButtonProps): ReactElement {
   const fixed = useFixedSizeChrome();
+  const glyph = iconButtonGlyph(props.icon, props.selected ?? false);
 
   return (
     <Host seed="primary" matchContents>
-      <SwiftButton
-        label={props.accessibilityLabel}
-        systemImage={swiftSystemImage(props)}
-        modifiers={swiftButtonModifiers(props, fixed)}
-        onPress={props.onPress}
-      />
+      {glyph.kind === 'system' ? (
+        <SwiftButton
+          label={props.accessibilityLabel}
+          systemImage={glyph.name}
+          modifiers={swiftButtonModifiers(props, fixed)}
+          onPress={props.onPress}
+        />
+      ) : (
+        <SwiftButton
+          modifiers={[
+            ...swiftButtonModifiers(props, fixed),
+            accessibilityLabel(props.accessibilityLabel),
+          ]}
+          onPress={props.onPress}
+        >
+          {glyph.kind === 'asset' ? (
+            <Image assetName={glyph.name} />
+          ) : (
+            <HostedGlyph {...props} />
+          )}
+        </SwiftButton>
+      )}
     </Host>
   );
 }
+
+// The glyph's colour is the one SwiftUI gives a system image: the prominent circle's foreground, else the tint.
+type HostedGlyphProps = Pick<
+  IconButtonProps,
+  'icon' | 'variant' | 'size' | 'disabled'
+>;
+
+const hostedGlyphClass = (props: HostedGlyphProps): string => {
+  if (props.disabled) return 'text-muted-foreground';
+
+  return variantOf(props) === 'primary'
+    ? 'text-primary-foreground'
+    : 'text-primary';
+};
+
+/*
+ * The SVG glyph hosted from React Native. It takes no touches, so the Button around it gets the tap and presses once
+ * however the circle is tapped; VoiceOver hears the Button's name.
+ */
+function HostedGlyph(props: HostedGlyphProps): ReactElement {
+  return (
+    <RNHostView matchContents>
+      <IconSlot
+        size={hostedGlyphSizes[sizeOf(props)]}
+        pointerEvents="none"
+        {...inertGlyphSlot}
+      >
+        <Icon name={props.icon} className={hostedGlyphClass(props)} />
+      </IconSlot>
+    </RNHostView>
+  );
+}
+
+// The slot only draws: it is no touch target and no accessibility element of its own.
+const inertGlyphSlot = {
+  collapsable: false,
+  accessible: false,
+  accessibilityElementsHidden: true,
+} as const;
 
 // The circle's look, which the menu an icon button opens draws its label with too (IconButtonMenu).
 export function swiftButtonModifiers(
