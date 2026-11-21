@@ -92,20 +92,10 @@ const discoveryTool = {
 };
 
 function registerDiscovery(server: McpServer, client: ControlClient): void {
-  server.registerTool(
-    'operation_list',
-    discoveryTool,
-    async ({ id, filter }) => {
-      if (id === undefined) return result(await client.list(filter));
-
-      const rows = await client.list(id);
-
-      return result(
-        rows
-          .filter((row) => row.id === id)
-          .map(({ result: _result, ...row }) => row),
-      );
-    },
+  server.registerTool('operation_list', discoveryTool, async ({ id, filter }) =>
+    result(
+      await (id === undefined ? client.list(filter) : client.inputSchema(id)),
+    ),
   );
 }
 

@@ -5,13 +5,13 @@ import type {
   OperationRunResponse,
 } from '@repo/contracts/operations';
 import type {
+  OperationInputRow,
   OperationRunRequest,
   OperationWaitRequest,
 } from '@repo/contracts/operations/control';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import {
   discoveryCall,
-  listedOutput,
   operationCall,
   recordedOutput,
   recordOperation,
@@ -27,9 +27,10 @@ import { requireOperationId } from './params';
 import { PluginOperationRouter } from './plugin-run';
 import { OperationResponses, storedOutputBlobs } from './responses';
 import type { OperationRunner } from './runner';
-import { listOperations } from './search';
+import { exactOperations, listOperations } from './search';
 import type { SessionCaller, TokenCaller } from './session-tokens';
 import { authenticate } from './tokens';
+import { wireJson } from './wire-json';
 import { liveWorkDeps, OperationWork } from './work';
 
 export type { OperationsDeps } from './operations-deps';
@@ -59,31 +60,62 @@ export class Operations {
     );
     this.responses = new OperationResponses(storedOutputBlobs(deps));
   }
-  public async list(
+  public list(token: string | undefined, filter = ''): Promise<OperationRow[]> {
+    return this.discover(
+      token,
+      { filter },
+      {
+        load: async () => [
+          ...listOperations(filter),
+          ...(await this.pluginOperations.listed(filter)),
+        ],
+        project: (rows) => rows,
+      },
+    );
+  }
+
+  public inputSchema(
     token: string | undefined,
-    filter = '',
-  ): Promise<OperationRow[]> {
+    id: string,
+  ): Promise<OperationInputRow[]> {
+    return this.discover(
+      token,
+      { id },
+      {
+        load: async () => [
+          ...exactOperations(id),
+          ...(await this.pluginOperations.exact(id)),
+        ],
+        project: (rows) => rows.map(({ result: _result, ...row }) => row),
+      },
+    );
+  }
+
+  private async discover<Row extends OperationInputRow>(
+    token: string | undefined,
+    query: { filter: string } | { id: string },
+    {
+      load,
+      project,
+    }: {
+      load: () => Promise<OperationRow[]>;
+      project: (rows: OperationRow[]) => Row[];
+    },
+  ): Promise<Row[]> {
     const caller = authenticate(this.deps, token);
+    const rows = await load();
 
-    const rows = await this.rows(filter);
-
-    if (caller.kind === 'user') return availableOperations(rows, false);
+    if (caller.kind === 'user')
+      return project(availableOperations(rows, false));
 
     const call = this.deps.sessions.call(
       caller.sessionId,
-      discoveryCall(filter),
+      discoveryCall(query),
     );
+    const listed = async (): Promise<Row[]> =>
+      project(availableOperations(rows, call.canConfirm));
 
-    const listed = async (): Promise<OperationRow[]> =>
-      availableOperations(rows, call.canConfirm);
-
-    return recordOperation(call, listed, listedOutput).result;
-  }
-
-  private async rows(filter: string): Promise<OperationRow[]> {
-    const plugins = await this.pluginOperations.listed(filter);
-
-    return [...listOperations(filter), ...plugins];
+    return recordOperation(call, listed, wireJson).result;
   }
 
   public async run(

@@ -38,6 +38,7 @@ it('discovers matching Operation argument schemas on demand', async () => {
     expect.objectContaining({
       id: projectList,
       params: expect.any(Object),
+      result: expect.any(Object),
       policy: 'allow',
       enabled: true,
     }),
@@ -72,15 +73,6 @@ it('returns only the exact input schema and availability for a known id', async 
   });
 
   expect(schema.isError).not.toBe(true);
-  const search = await client.callTool({
-    name: 'operation_list',
-    arguments: { filter: id },
-  });
-  expect(mcpValue(search)).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({ id, result: expect.any(Object) }),
-    ]),
-  );
   expect(mcpValue(schema)).toEqual([
     expect.objectContaining({
       id,
@@ -98,7 +90,6 @@ it('returns only the exact input schema and availability for a known id', async 
       }),
     }),
   ]);
-  expect(schema.content).not.toEqual(search.content);
   expect(mcpValue(schema)).not.toEqual([
     expect.objectContaining({ result: expect.anything() }),
   ]);

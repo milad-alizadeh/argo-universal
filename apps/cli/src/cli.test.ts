@@ -53,6 +53,7 @@ function fakeClient(answers: Partial<ControlClient> = {}): Fake {
     runs,
     client: {
       list: unreachable,
+      inputSchema: unreachable,
       instructions: unreachable,
       wait: unreachable,
       ...answers,
