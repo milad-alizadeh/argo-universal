@@ -1,7 +1,3 @@
-/*
- * What each voice reaches for along the strip: both swell in the centre and taper towards the edges. Worklets over
- * plain numbers.
- */
 import {
   clamp01,
   easeToward,
@@ -81,7 +77,6 @@ function texturedBy(time: number, position: number): number {
   return dipFloor + (peakCeiling - dipFloor) * unit;
 }
 
-// What the bar at `position` (0 left, 1 right) reaches for, 0 to 1, with a fixed centre envelope under the moving texture.
 export function reachAt(
   voices: Voices,
   pose: Pose,

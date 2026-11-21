@@ -14,9 +14,7 @@ export type BandState =
 
 // How present each look is, 0 to 1. A state change only moves these; the bars are the same ones throughout.
 export interface Pose {
-  // How present the person's voice is.
   user: number;
-  // How present the Agent's voice is.
   agent: number;
   // A soft dot pulse crosses the strip.
   think: number;

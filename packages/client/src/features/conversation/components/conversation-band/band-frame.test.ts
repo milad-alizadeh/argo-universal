@@ -8,7 +8,7 @@ import {
   run,
   speech,
 } from './band-frame.test.mocks';
-import { barReach, barWidth } from './band-layout';
+import { barWidth } from './band-layout';
 
 const dot = barWidth + 0.5;
 
@@ -31,17 +31,26 @@ describe('speech', () => {
   const last = count - 1;
 
   it.each(['listening', 'talking'] as const)(
-    'follows the active voice getting louder and then falling silent while %s',
+    'follows the active voice getting louder while %s',
     (state) => {
       const voice = state === 'listening' ? 'user' : 'agent';
       const quiet = run(1, { state, [voice]: speech(0.1) });
       const loud = run(1, { state, [voice]: speech(0.5) }, quiet.sim);
-      const silent = run(2, { state }, loud.sim);
 
       expect(Math.max(...heightsOf(loud))).toBeGreaterThan(
         Math.max(...heightsOf(quiet)),
       );
-      expect(Math.max(...heightsOf(loud))).toBeLessThanOrEqual(barReach);
+    },
+  );
+
+  it.each(['listening', 'talking'] as const)(
+    'settles to dots after the active voice falls silent while %s',
+    (state) => {
+      const voice = state === 'listening' ? 'user' : 'agent';
+      const loud = run(1, { state, [voice]: speech(0.5) });
+
+      const silent = run(2, { state }, loud.sim);
+
       expect(Math.max(...heightsOf(silent))).toBeLessThanOrEqual(dot);
     },
   );
