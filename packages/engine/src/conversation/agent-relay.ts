@@ -3,6 +3,7 @@ import { AgentWords } from './agent-words';
 import type { RelayCall, VoiceSay } from './conversation-types';
 import type { PersonWords } from './person-turns';
 import { relayWords } from './relay-words';
+import { SentPrompts, type SentPrompt } from './sent-prompts';
 import type {
   PromptOutcome,
   SessionHappening,
@@ -29,9 +30,7 @@ export interface RelayReports {
  * says, and when its Turn ends or fails, goes back to the voice. Tool output never does.
  */
 export class AgentRelay {
-  private instructed = false;
-  // Requests not yet answered, and Prompts the call sent whose Turn started and has not ended; a queued one counts from its Turn's start.
-  private atWork = 0;
+  private readonly prompts = new SentPrompts();
   private readonly permission = new WaitingPermission();
   private readonly words: AgentWords;
   private readonly spoken: SpokenConsent;
@@ -80,29 +79,19 @@ export class AgentRelay {
   // Sends the Agent a Prompt and answers with what the voice is told of where it landed.
   private work(text: string): Promise<string> {
     // Counted before the Prompt is answered, so the call never idles between the request and its Turn.
-    this.sentChanged(() => (this.atWork += 1));
-    // Only the first Prompt carries the voice instruction, even while it waits in the queue; one no Turn took gives it back.
-    const instructs = !this.instructed;
-    this.instructed = true;
+    const prompt = this.prompts.send();
 
-    const uninstructed = (): void => {
-      if (instructs) this.instructed = false;
-    };
+    if (prompt.startedRunning) this.reports.turnsRunning(true);
 
     return this.sessions
       .prompt(
         this.call.sessionId,
-        instructs ? withVoiceInstruction(text) : text,
+        prompt.instructs ? withVoiceInstruction(text) : text,
       )
       .then(
-        (outcome: PromptOutcome) => {
-          void outcome.started.then((started) => started || uninstructed());
-
-          return this.sent(outcome);
-        },
+        (outcome: PromptOutcome) => this.sent(prompt, outcome),
         (error: Error) => {
-          uninstructed();
-          this.done();
+          this.changed(prompt.rejected());
 
           return relayWords.unsent(error.message);
         },
@@ -141,46 +130,37 @@ export class AgentRelay {
   }
 
   // What the voice is told of a Prompt that reached the Session; a queued one waits for its Turn before it counts.
-  private sent(outcome: PromptOutcome): string {
+  private sent(prompt: SentPrompt, outcome: PromptOutcome): string {
     if (outcome.status !== 'queued') {
-      this.working(outcome);
+      this.changed(prompt.started());
+      void outcome.started.then(
+        (started) => started || this.changed(prompt.neverStarted()),
+      );
+      this.endsWith(prompt, outcome);
 
       return relayWords[outcome.status];
     }
 
-    this.done();
-    void outcome.started.then(
-      (started) => started && this.startWorking(outcome),
-    );
+    this.changed(prompt.queued());
+    void outcome.started.then((started) => {
+      if (!started) return this.changed(prompt.neverStarted());
+
+      this.changed(prompt.started());
+      this.endsWith(prompt, outcome);
+    });
 
     return outcome.notSteered === null
       ? relayWords.queued
       : relayWords.notSteered(outcome.notSteered);
   }
 
-  private startWorking(outcome: PromptOutcome): void {
-    this.sentChanged(() => (this.atWork += 1));
-    this.working(outcome);
+  private endsWith(prompt: SentPrompt, { ended }: PromptOutcome): void {
+    void ended.then(() => this.changed(prompt.ended()));
   }
 
-  private working({ ended }: PromptOutcome): void {
-    void ended.then(() => this.done());
-  }
-
-  private done(): void {
-    this.sentChanged(() => (this.atWork -= 1));
-  }
-
-  private get running(): boolean {
-    return this.atWork > 0;
-  }
-
-  // Applies a change to what the call has running and reports it when it flips.
-  private sentChanged(change: () => void): void {
-    const before = this.running;
-    change();
-
-    if (before !== this.running) this.reports.turnsRunning(this.running);
+  // Reports what the call has running when a change flipped it.
+  private changed(flipped: boolean): void {
+    if (flipped) this.reports.turnsRunning(this.prompts.running);
   }
 
   private reply(requestId: string, text: string): void {
