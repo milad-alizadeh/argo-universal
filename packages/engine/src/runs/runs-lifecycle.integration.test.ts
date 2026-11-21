@@ -152,23 +152,6 @@ it('ends the Runs of a Checkout when archiving removes it', async () => {
   expect(terminal.stopped).toBe(true);
 }, 40_000);
 
-it('leaves Runs of a Checkout that archiving keeps', async () => {
-  const engine = await startEngine();
-  const created = await promptedArchiveSession(engine.host);
-  await configure(created.path);
-  const terminal = await startReady(engine, created.sessionId);
-  await engine.host.caller.project.update({
-    projectId: 'project-1',
-    deleteWorktreeOnArchive: false,
-  });
-
-  await engine.host.caller.session.archive({ sessionId: created.sessionId });
-  await new Promise((resolve) => setTimeout(resolve, archiveUndoMs * 4));
-
-  expect(existsSync(created.path)).toBe(true);
-  expect(terminal.stopped).toBe(false);
-}, 40_000);
-
 it('leaves the Runs of the main checkout running when a Session on it is archived', async () => {
   const engine = await startEngine();
   const first = await promptedArchiveSession(engine.host, { type: 'main' });

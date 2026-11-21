@@ -13,6 +13,7 @@ export type RunRequest = RunCheckout & {
   starter?: RunStarter;
   manual?: boolean;
   automatic?: boolean;
+  requireOpenSession?: () => void;
 };
 
 export type RunsInput = {

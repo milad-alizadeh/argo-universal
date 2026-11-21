@@ -73,14 +73,23 @@ const runRequestOf = (
 ): RunRequest => {
   const { id, title, archivedAt, ...checkout } = sessionOf(database, sessionId);
 
+  requireUnarchived(archivedAt);
+
+  return {
+    ...checkout,
+    starter: { id, title },
+    requireOpenSession: () =>
+      requireUnarchived(sessionOf(database, id).archivedAt),
+  };
+};
+
+function requireUnarchived(archivedAt: number | null): void {
   if (archivedAt !== null)
     throw new TRPCError({
       code: 'CONFLICT',
       message: 'This Session is archived.',
     });
-
-  return { ...checkout, starter: { id, title } };
-};
+}
 
 type RunOperationSources = {
   database: Database;

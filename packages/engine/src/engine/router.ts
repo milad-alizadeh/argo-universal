@@ -67,6 +67,10 @@ function autoStartRuns(deps: AppRouterDeps, sessionId: string): void {
       projectId,
       checkoutPath: checkout.path,
       starter: { id: sessionId, title: title ?? '' },
+      requireOpenSession: (): void => {
+        if (deps.readSession(sessionId).archivedAt !== null)
+          throw new Error('This Session is archived.');
+      },
     });
   };
 

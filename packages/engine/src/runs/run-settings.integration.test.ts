@@ -194,7 +194,9 @@ it('starts an opted-in Run on explicit reopen, after passive reads leave it stop
   await caller.run.updateSettings({ ...target, autoStart: true });
   await closeTestSession(host, target);
 
-  await expect(caller.run.status(target)).resolves.toMatchObject({
+  await expect(
+    caller.run.status({ sessionId: target.sessionId }),
+  ).resolves.toMatchObject({
     configurations: [{ name, status: 'stopped' }],
   });
 
@@ -204,7 +206,7 @@ it('starts an opted-in Run on explicit reopen, after passive reads leave it stop
   terminal.print('Ready');
 
   await expect
-    .poll(() => caller.run.status(target))
+    .poll(() => caller.run.status({ sessionId: target.sessionId }))
     .toMatchObject({
       configurations: [{ name, status: 'ready' }],
     });

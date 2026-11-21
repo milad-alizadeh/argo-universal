@@ -183,6 +183,8 @@ export class Runs {
     checkout: RunRequest,
     configuration: RunConfiguration,
   ): Promise<LiveRun> {
+    checkout.requireOpenSession?.();
+
     return this.lifecycle.start(
       keyOf(checkout, configuration.name),
       checkout,
