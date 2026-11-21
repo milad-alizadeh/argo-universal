@@ -1,5 +1,8 @@
 import { SizeClass } from '@repo/kit/size-class/size-class';
-import { RetainedPageVisibility } from '@repo/kit/use-shown-page';
+import {
+  RetainedPageVisibility,
+  usePageFocused,
+} from '@repo/kit/use-shown-page';
 import { useIsPreview } from 'expo-router';
 import { memo, useDeferredValue, useState } from 'react';
 import type * as React from 'react';
@@ -18,7 +21,7 @@ import { SessionNewScreen } from './session-new-screen';
 import { ConnectedSessionHeader } from './session-page-header';
 import { type SessionPageMenu, useSessionPageMenu } from './session-page-menu';
 import { sessionHeader } from './session-plugin-cards';
-import { useDelegatedFeedItems } from './use-delegated-feed-items';
+import { useDelegatedAttention } from './use-delegated-attention';
 import {
   type OpenedSession,
   type SessionPage,
@@ -188,11 +191,21 @@ function DelegatedSessionView({
   sessionId: string;
   drawHeader: (page: SessionDetailViewProps) => React.JSX.Element;
 }): React.JSX.Element {
-  const delegated = useDelegatedFeedItems(sessionId);
+  const delegated = useDelegatedAttention(sessionId);
+  const shown = usePageFocused();
 
-  const feed = delegated.length
-    ? { ...props.feed, items: [...props.feed.items, ...delegated] }
+  const feed = delegated.items.length
+    ? { ...props.feed, items: [...props.feed.items, ...delegated.items] }
     : props.feed;
 
-  return <SessionDetailView {...props} feed={feed} drawHeader={drawHeader} />;
+  return (
+    <SessionDetailView
+      {...props}
+      feed={feed}
+      elicitation={
+        props.elicitation ?? (shown ? delegated.elicitation : undefined)
+      }
+      drawHeader={drawHeader}
+    />
+  );
 }
