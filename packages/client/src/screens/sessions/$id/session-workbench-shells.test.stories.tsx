@@ -104,6 +104,28 @@ export const OpensFromCardAndMoreAndClosesEachShellIndependently: Story = {
   },
 };
 
+export const ClosesDesktopShellFromTheHeader: Story = {
+  args: { closed: fn() },
+  play: async ({ args, canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: newTerminal }),
+    );
+
+    const terminal = within(
+      await canvas.findByRole('tabpanel', { name: 'Shell 1' }),
+    );
+
+    await userEvent.click(
+      terminal.getByRole('button', { name: 'Close', exact: true }),
+    );
+    await expect(args.closed).toHaveBeenCalledOnce();
+    await expect(args.closed).toHaveBeenCalledWith('shell-1');
+    await expect(
+      canvas.queryByRole('button', { name: 'Open Shell 1 shell' }),
+    ).toBeNull();
+  },
+};
+
 const phone = {
   decorators: [withStack()],
   beforeEach: (): Promise<void> => settleLayout('phone'),

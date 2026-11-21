@@ -145,6 +145,10 @@ function wideInspector(props: SessionInspectorProps): JSX.Element {
   return createElement(
     Inspector,
     { ...inspector, toolbar: undefined, contentScrolls: true },
-    <RetainedInspectorPages {...props} inspector={inspector} />,
+    <RetainedInspectorPages
+      {...props}
+      inspector={inspector}
+      onCloseTab={(key) => closeTab(props, key)}
+    />,
   );
 }
