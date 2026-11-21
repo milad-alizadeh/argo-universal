@@ -54,6 +54,7 @@ export class RunLifecycle {
       .then(() => this.stopCheckout(key))
       .then(remove)
       .finally(() => this.removing.delete(key));
+
     this.removing.set(key, removing);
 
     return removing;

@@ -97,12 +97,16 @@ it('stops the Run’s real process group and listener through run.stop', async (
     },
     { 'tree.cjs': stubbornProcessTree },
   );
+
   const started = RunStartResult.parse(await run.start());
+
   if (!started.ready) throw new Error('The Run did not report its port');
 
   const { output } = RunLogsResult.parse(await run.logs());
   const group = /Listening: (\d+) (\d+) (\d+)/u.exec(output);
+
   if (!group) throw new Error('The Run did not report its processes');
+
   const pids = group.slice(1).map(Number);
 
   await expect(canConnect(started.port)).resolves.toBe(true);
