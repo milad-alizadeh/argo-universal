@@ -38,6 +38,8 @@ const voice: ConversationPartial = {
 
 const continued = 'The release checks are ready';
 
+const sendUpdateLabel = 'Send update';
+
 const renders = renderCounter();
 
 function SpeakingFeed({ repeat = false }: { repeat?: boolean }): JSX.Element {
@@ -50,7 +52,7 @@ function SpeakingFeed({ repeat = false }: { repeat?: boolean }): JSX.Element {
   return (
     <Profiler id={renders.id} onRender={renders.onRender}>
       <Button
-        title={sent ? 'Sent' : 'Send update'}
+        title={sent ? 'Sent' : sendUpdateLabel}
         onPress={() => setSent(true)}
       />
       <Feed
@@ -72,7 +74,7 @@ export const OnlyTheChangingPartialRenders: Story = {
 
     const counts = await renders.during(canvasElement, async () => {
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Send update' }),
+        canvas.getByRole('button', { name: sendUpdateLabel }),
       );
       await canvas.findByText(
         (_text, element) =>
@@ -95,7 +97,7 @@ export const RepeatedPartialSkipsTheFeedList: Story = {
 
     const repeated = await renders.during(canvasElement, async () => {
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Send update' }),
+        canvas.getByRole('button', { name: sendUpdateLabel }),
       );
       await canvas.findByRole('button', { name: 'Sent' });
     });
