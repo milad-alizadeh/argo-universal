@@ -10,6 +10,7 @@ import {
 import { appOnlyRefusal } from '../../operations/app-only';
 import {
   operationPermission,
+  type OperationPermission,
   requirePermissionTurn,
 } from '../../operations/operation-permission';
 import type { OperationCard } from '../../sessions';
@@ -132,8 +133,8 @@ async function authorizePluginRun(
 function askedFor(
   { askWhen }: PluginOperationContribution,
   params: CheckedRun['params'],
-  permission: ReturnType<typeof operationPermission>,
-): ReturnType<typeof operationPermission> {
+  permission: OperationPermission,
+): OperationPermission {
   if (permission !== 'ask' || askWhen === undefined) return permission;
 
   const given = params[askWhen.param];

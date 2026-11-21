@@ -3,11 +3,13 @@ import { TRPCError } from '@trpc/server';
 
 const needsPermissionTurn = 'A Permission request requires an active Turn';
 
+export type OperationPermission = 'allow' | 'ask' | 'person-only' | 'archive';
+
 export function operationPermission(
   policy: OperationPolicy,
   app: boolean,
   outsideProject = false,
-): 'allow' | 'ask' | 'person-only' | 'archive' {
+): OperationPermission {
   if (app) return 'allow';
 
   if (policy === 'ask-outside-project') return outsideProject ? 'ask' : 'allow';

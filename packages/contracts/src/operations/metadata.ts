@@ -17,6 +17,12 @@ export const OperationPolicy = z.enum([
 
 export type OperationPolicy = z.infer<typeof OperationPolicy>;
 
+// An `ask` Operation asks only when `param` has one of the values `is`; any other run is allowed.
+export const OperationAskWhen = z.strictObject({
+  param: z.string().min(1),
+  is: z.array(z.string().min(1)).min(1),
+});
+
 export const OperationRow = z.object({
   id: z.string(),
   label: z.string(),
@@ -27,8 +33,7 @@ export const OperationRow = z.object({
   tier: OperationTier,
   policy: OperationPolicy,
   canRequestApproval: z.boolean().optional(),
-  // An `ask` Operation that asks only when this param has one of these values; any other run is allowed.
-  askWhen: z.object({ param: z.string(), is: z.array(z.string()) }).optional(),
+  askWhen: OperationAskWhen.optional(),
   keywords: z.array(z.string()).readonly(),
   enabled: z.boolean(),
   disabledReason: z.string().nullable(),

@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { OperationIcon, OperationPolicy } from '#operation-metadata';
+import {
+  OperationAskWhen,
+  OperationIcon,
+  OperationPolicy,
+} from '#operation-metadata';
 import { WireJson } from '#plugin-wire-json';
 
 /*
@@ -103,17 +107,7 @@ export const projectParam = 'projectId';
 
 export const defaultPluginOperationIcon = 'plugins';
 
-/*
- * With `"policy": "ask"`, the values of one choice param that still ask the person (ADR-0044): a run that
- * gives the param any other value runs as `allow` does. Without it, every run of an `ask` Operation asks.
- */
-export const PluginOperationAskWhen = z.strictObject({
-  param: PluginOperationName,
-  is: z.array(z.string().min(1)).min(1),
-});
-
-export type PluginOperationAskWhen = z.infer<typeof PluginOperationAskWhen>;
-
+// With `"policy": "ask"`, which values of a choice param still ask (ADR-0044). Without it every run asks.
 export const PluginOperationContribution = z
   .strictObject({
     name: PluginOperationName,
@@ -137,7 +131,7 @@ export const PluginOperationContribution = z
       )
       .optional(),
     keywords: z.array(z.string().trim().min(1)).optional(),
-    askWhen: PluginOperationAskWhen.optional(),
+    askWhen: OperationAskWhen.optional(),
   })
   .refine(
     ({ askWhen, policy }) => askWhen === undefined || policy === 'ask',

@@ -129,15 +129,21 @@ async function asked(kind: string): Promise<boolean> {
   return cards.length > 0;
 }
 
-it('asks only for the values askWhen names, so the other values run without a Permission request', async () => {
+it('asks for a value askWhen names', async () => {
   expect(await asked('merge')).toBe(true);
+});
+
+it('runs without a Permission request for a value askWhen does not name', async () => {
   expect(await asked('fix')).toBe(false);
 });
 
-it('refuses askWhen on a policy that does not ask, or for a value the param does not offer', () => {
+it('refuses askWhen on a policy that does not ask', () => {
   expect(() =>
     PluginOperationContribution.parse({ ...asking, policy: 'allow' }),
   ).toThrow('Only an ask policy');
+});
+
+it('refuses askWhen for a value the param does not offer', () => {
   expect(() =>
     PluginOperationContribution.parse({
       ...asking,
