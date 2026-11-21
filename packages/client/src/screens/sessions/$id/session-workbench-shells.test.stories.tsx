@@ -5,7 +5,10 @@ import { withStack } from '@repo/kit/story-stack';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState, type ReactElement } from 'react';
 import { expect, fn, screen, within } from 'storybook/test';
-import { workbenchRuns } from '../../../../mocks/run-configurations';
+import {
+  partiallyReadyGroup,
+  workbenchRuns,
+} from '../../../../mocks/run-configurations';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { idleSession } from './session-detail-view.mocks';
 import { openWorkbench } from './session-workbench-sheet.test.mocks';
@@ -24,6 +27,11 @@ function ShellPreview({ closed }: Props): ReactElement {
       runs={{
         runs: workbenchRuns,
         shells,
+        defaultGroup: {
+          status: partiallyReadyGroup,
+          onStart: fn(),
+          onStop: fn(),
+        },
         onStart: fn(),
         onStop: fn(),
         onRestart: fn(),
@@ -105,6 +113,9 @@ export const OpensFromCardAndMoreAndClosesEachShellIndependently: Story = {
     await expect(args.closed).toHaveBeenCalledTimes(1);
     await expect(args.closed).toHaveBeenCalledWith('shell-2');
     await expect(canvas.getByRole('tab', { name: firstShell })).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: 'Stop dev group' }),
+    ).toBeVisible();
   },
 };
 
@@ -166,6 +177,9 @@ export const OpensInThePhoneRunsSheet: Story = {
     await expect(context.args.closed).toHaveBeenCalledWith('shell-1');
     await expect(
       await sheet.findByRole('heading', { name: 'Runs' }),
+    ).toBeVisible();
+    await expect(
+      sheet.getByRole('button', { name: 'Stop dev group' }),
     ).toBeVisible();
   },
 };

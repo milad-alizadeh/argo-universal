@@ -52,9 +52,32 @@ function attachSessionActs(deps: AppRouterDeps, sessions: Sessions): void {
   });
 }
 
+function autoStartRuns(deps: AppRouterDeps, sessionId: string): void {
+  const start = async (): Promise<void> => {
+    const { projectId, checkout, title } = deps.readSession(sessionId);
+
+    await deps.runs.autoStart({
+      projectId,
+      checkoutPath: checkout.path,
+      starter: { id: sessionId, title: title ?? '' },
+    });
+  };
+
+  void start().catch((error) => {
+    const message = error instanceof Error ? error.message : String(error);
+
+    deps.logSessionResult?.(
+      `Could not auto-start Runs for Session ${sessionId}: ${message}`,
+    );
+  });
+}
+
 // Operations share the session and shell nouns with the Session procedures that are not Operations.
 const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
-  const sessions = new Sessions(deps);
+  const sessions = new Sessions({
+    ...deps,
+    autoStartRuns: (sessionId): void => autoStartRuns(deps, sessionId),
+  });
 
   if (deps.sessionCommandSignal)
     sessions.startDelegatedResults(

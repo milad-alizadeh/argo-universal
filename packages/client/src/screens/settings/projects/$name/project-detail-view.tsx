@@ -15,6 +15,10 @@ import {
 } from './project-detail-new-sessions';
 import { pluginSections, type OpenPluginPage } from './project-detail-plugins';
 import { removeSection } from './project-detail-remove';
+import {
+  useRunSettingsSections,
+  type ProjectRunSettingsControls,
+} from './project-detail-run-settings';
 
 export type ProjectLoad =
   | { status: 'loading' }
@@ -36,6 +40,7 @@ export interface ProjectDetailViewProps {
   accounts?: ProjectAccountsProps;
   // What changes where this Project's Sessions start and what archiving them does; omitted until the page can save one.
   newSessions?: ProjectNewSessionsControls;
+  runSettings?: ProjectRunSettingsControls;
 }
 
 type BodyProps = Pick<
@@ -47,6 +52,7 @@ type BodyProps = Pick<
   | 'onOpenPluginPage'
   | 'accounts'
   | 'newSessions'
+  | 'runSettings'
 >;
 
 type SectionsProps = Pick<
@@ -56,6 +62,7 @@ type SectionsProps = Pick<
   | 'onOpenPluginPage'
   | 'accounts'
   | 'newSessions'
+  | 'runSettings'
 > & {
   project: ProjectInfo;
 };
@@ -79,7 +86,13 @@ function ProjectBody({
   if (project.status !== 'loaded')
     return <UnloadedProject status={project.status} name={name} />;
 
-  return <ProjectSections project={project.project} {...sections} />;
+  return (
+    <ProjectSections
+      key={project.project.id}
+      project={project.project}
+      {...sections}
+    />
+  );
 }
 
 type UnloadedProps = { status: 'loading' | 'missing'; name: string };
@@ -102,11 +115,16 @@ const UnloadedProject = ({ status, name }: UnloadedProps): React.JSX.Element =>
 function ProjectSections(props: SectionsProps): React.JSX.Element {
   const { project, otherDevice, pluginItems = [], accounts } = props;
 
+  const runSettings = useRunSettingsSections(
+    project.folderExists ? props.runSettings : undefined,
+  );
+
   return (
     <FieldGroup>
       {folderSection(project, otherDevice)}
       {accountsSection(accounts)}
       {newSessionsSections(project, props.newSessions)}
+      {runSettings}
       {pluginSections(pluginItems, props.onOpenPluginPage)}
       {removeSection()}
     </FieldGroup>

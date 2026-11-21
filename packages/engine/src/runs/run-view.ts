@@ -1,6 +1,7 @@
 import type {
   RunConfigurationRow,
   RunConfigurationStatus,
+  RunDefaultGroup,
   RunLogsResult,
   RunOutput,
   RunOutputCursor,
@@ -8,7 +9,9 @@ import type {
   ShellTerminal,
 } from '@repo/contracts';
 import type { LiveRun } from './live-run';
+import type { RunConfigurations } from './run-configurations';
 import { readRunFile, requireRunConfiguration } from './run-file';
+import { distinctMembers } from './run-groups';
 import { readRunOutputTail, runOutputPath } from './run-output';
 import { watchRunOutput, type RunRecording } from './run-replay';
 import type { RunRecord } from './run-store';
@@ -49,23 +52,50 @@ const rowOf = (
   startedAt: record?.startedAt ?? null,
 });
 
+function defaultGroupOf(
+  { default: name, groups }: RunConfigurations,
+  rows: RunConfigurationRow[],
+): RunDefaultGroup | undefined {
+  const group = name === undefined ? undefined : groups[name];
+
+  if (name === undefined || !group) return undefined;
+  const members = distinctMembers(group);
+  const statuses = new Map(rows.map((row) => [row.name, row]));
+
+  const ready = members
+    .map((member) => statuses.get(member))
+    .filter((row): row is RunConfigurationRow => row?.status === 'ready');
+
+  return {
+    name,
+    members,
+    readyCount: ready.length,
+    url: ready.find((row) => row.url !== null)?.url ?? null,
+  };
+}
+
 export class RunView {
   private readonly updates = new RunUpdates();
 
   public constructor(private readonly runs: ReadRuns) {}
 
   public async status(checkout: RunCheckout): Promise<RunStatusResult> {
-    const { configurations } = await readRunFile(checkout.checkoutPath);
+    const file = await readRunFile(checkout.checkoutPath);
+
+    const configurations = file.configurations.map(({ name, command }) => ({
+      name,
+      command,
+      ...rowOf(this.runs.record(checkout, name)),
+    }));
+
+    const defaultGroup = defaultGroupOf(file, configurations);
 
     const shells = this.runs.shells(checkout);
 
     return {
+      configurations,
+      ...(defaultGroup && { defaultGroup }),
       ...(shells.length > 0 && { shells }),
-      configurations: configurations.map(({ name, command }) => ({
-        name,
-        command,
-        ...rowOf(this.runs.record(checkout, name)),
-      })),
     };
   }
 

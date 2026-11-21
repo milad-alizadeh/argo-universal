@@ -1,11 +1,8 @@
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, userEvent } from 'storybook/test';
-import {
-  AgentDetailView,
-  environmentFooter,
-  newLinePlaceholder,
-} from './agent-detail-view';
+import { newLinePlaceholder } from '#features/settings';
+import { AgentDetailView, environmentFooter } from './agent-detail-view';
 import { agentWithEnvironment } from './agent-detail-view-fixtures';
 
 const savedEnvironment = agentWithEnvironment.env;

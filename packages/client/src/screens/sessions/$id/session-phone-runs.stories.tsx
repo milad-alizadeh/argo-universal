@@ -3,6 +3,7 @@ import { Sheet, useSheet } from '@repo/kit/primitives/overlays/sheet';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useEffect, useState, type ReactElement } from 'react';
 import { RunTerminal, type SessionRuns } from '#features/sessions';
+import { partiallyReadyGroup } from '../../../../mocks/run-configurations';
 import { runTabKey } from './sections/runs-section';
 import { idleSession } from './session-detail-view.mocks';
 import {
@@ -15,7 +16,7 @@ import {
 } from './session-workbench-run-pages';
 import { SessionWorkbenchSheet } from './session-workbench-sheet';
 
-type Page = 'before' | 'overview' | 'list' | 'terminal';
+type Page = 'before' | 'overview' | 'list' | 'group' | 'terminal';
 
 function PhoneRunTerminal({
   run,
@@ -42,6 +43,15 @@ const controls = {
   ),
 } satisfies SessionRuns;
 
+const groupControls: SessionRuns = {
+  ...controls,
+  defaultGroup: {
+    status: partiallyReadyGroup,
+    onStart: (): void => {},
+    onStop: (): void => {},
+  },
+};
+
 function JumpToRun(): null {
   const { push } = useSheet();
 
@@ -51,6 +61,8 @@ function JumpToRun(): null {
 }
 
 function OpenRuns({ page }: { page: Page }): ReactElement {
+  const shown = page === 'group' ? groupControls : controls;
+
   return (
     <Sheet
       open
@@ -60,10 +72,10 @@ function OpenRuns({ page }: { page: Page }): ReactElement {
       contentScrolls
     >
       <Sheet.Screen name="runs" title="Runs" keepsHeaderInset>
-        <WorkbenchRunList runs={controls} />
+        <WorkbenchRunList runs={shown} />
         {page === 'terminal' && <JumpToRun />}
       </Sheet.Screen>
-      {workbenchRunPages(controls)}
+      {workbenchRunPages(shown)}
     </Sheet>
   );
 }
@@ -102,5 +114,7 @@ export const Workbench: Story = {};
 export const WorkbenchBefore: Story = { args: { page: 'before' } };
 
 export const Runs: Story = { args: { page: 'list' } };
+
+export const DefaultGroup: Story = { args: { page: 'group' } };
 
 export const Terminal: Story = { args: { page: 'terminal' } };

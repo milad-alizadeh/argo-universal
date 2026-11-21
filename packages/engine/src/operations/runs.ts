@@ -3,9 +3,11 @@ import type { Database } from '@repo/db';
 import { session } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
+import { readProjectPath } from '../projects';
 import {
   draftRunConfigurations,
   type RunCheckout,
+  type RunRequest,
   type RunStarter,
   type Runs,
 } from '../runs';
@@ -56,33 +58,75 @@ export const runCheckoutOf = (
   return { projectId, checkoutPath };
 };
 
-export function createRunOperations(deps: {
+const projectCheckoutOf = (
+  database: Database,
+  projectId: string,
+): RunCheckout => ({
+  projectId,
+  checkoutPath: readProjectPath(database, projectId),
+});
+
+const runRequestOf = (
+  database: Database,
+  sessionId: string | undefined,
+): RunRequest => {
+  const { id, title, ...checkout } = sessionOf(database, sessionId);
+
+  return { ...checkout, starter: { id, title } };
+};
+
+type RunOperationSources = {
   database: Database;
   runs: Runs;
-}): RunImplementations {
+};
+
+type RunStarts = Pick<
+  RunImplementations,
+  'run.start' | 'run.restart' | 'run.startGroup'
+>;
+
+// The App runner sets manual at the authenticated caller boundary, never from input.
+export function createRunStarts(
+  { database, runs }: RunOperationSources,
+  manual = false,
+): RunStarts {
+  const target = (sessionId: string | undefined): RunRequest => ({
+    ...runRequestOf(database, sessionId),
+    manual,
+  });
+
+  return {
+    'run.start': async ({ sessionId, name, timeoutMs }) =>
+      runs.start(target(sessionId), name, timeoutMs),
+    'run.restart': async ({ sessionId, name, timeoutMs }) =>
+      runs.restart(target(sessionId), name, timeoutMs),
+    'run.startGroup': async ({ sessionId, name, timeoutMs }) =>
+      runs.groups.start(target(sessionId), name, timeoutMs),
+  };
+}
+
+export function createRunOperations(
+  deps: RunOperationSources,
+): RunImplementations {
   const { database, runs } = deps;
 
   return {
-    'run.start': async ({ sessionId, name, timeoutMs }) => {
-      const { id, title, ...checkout } = sessionOf(database, sessionId);
-
-      return runs.start(
-        { ...checkout, starter: { id, title } },
-        name,
-        timeoutMs,
-      );
-    },
+    ...createRunStarts(deps),
     'run.stop': async ({ sessionId, name }) =>
       runs.stop(runCheckoutOf(database, sessionId), name),
-    'run.restart': async ({ sessionId, name, timeoutMs }) => {
-      const { id, title, ...checkout } = sessionOf(database, sessionId);
-
-      return runs.restart(
-        { ...checkout, starter: { id, title } },
-        name,
-        timeoutMs,
-      );
-    },
+    'run.stopGroup': async ({ sessionId, name }) =>
+      runs.groups.stop(runCheckoutOf(database, sessionId), name),
+    'run.getSettings': ({ sessionId, name }) =>
+      runs.settings.read(runCheckoutOf(database, sessionId), name),
+    'run.listSettings': ({ projectId }) =>
+      runs.settings.list(projectCheckoutOf(database, projectId)),
+    'run.updateSettings': ({ projectId, sessionId, ...input }) =>
+      runs.settings.update(
+        projectId === undefined
+          ? runCheckoutOf(database, sessionId)
+          : projectCheckoutOf(database, projectId),
+        input,
+      ),
     'run.status': async ({ sessionId }) =>
       runs.view.status(runCheckoutOf(database, sessionId)),
     'run.draft': async ({ sessionId, overwrite }) => {

@@ -2,10 +2,15 @@ import { settleOverlays } from '@repo/kit/mocks/settle-overlays';
 import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { withStack } from '@repo/kit/story-stack';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { RunTerminal } from '#features/sessions';
-import { workbenchRuns } from '../../../../mocks/run-configurations';
+import {
+  partiallyReadyGroup,
+  stoppedGroup,
+  stoppedRuns,
+  workbenchRuns,
+} from '../../../../mocks/run-configurations';
 import { FramedSessionPreview } from './session-detail-view-framed.mocks';
 import { idleSession } from './session-detail-view.mocks';
 import { recordRun } from './session-run-inspector-fixtures';
@@ -52,15 +57,7 @@ type Story = StoryObj<typeof meta>;
 
 export const ControlsRunsAndOpensTheTerminalInTheSheet: Story = {
   play: async (context) => {
-    const sheet = await openWorkbench(context);
-    const row = sheet.getByRole('link', { name: /Runs.*1/ });
-
-    await settleOverlays(row);
-    await context.userEvent.click(row);
-
-    await expect(
-      await sheet.findByRole('heading', { name: 'Runs' }),
-    ).toBeVisible();
+    const sheet = await openPhoneRuns(context);
 
     const play = sheet.getByRole('button', { name: 'Start docs' });
 
@@ -88,6 +85,76 @@ export const ControlsRunsAndOpensTheTerminalInTheSheet: Story = {
     await sendTerminalKeys(sheet, context.userEvent);
   },
 };
+
+const startGroup = fn<() => void>();
+
+const stopGroup = fn<() => void>();
+
+function WithDefaultGroup(): ReactElement {
+  const [active, setActive] = useState(true);
+
+  const group = {
+    status: active ? partiallyReadyGroup : stoppedGroup,
+    onStart: (): void => {
+      startGroup();
+      setActive(true);
+    },
+    onStop: (): void => {
+      stopGroup();
+      setActive(false);
+    },
+  };
+
+  return (
+    <FramedSessionPreview
+      state="open"
+      {...idleSession}
+      runs={{
+        ...runs,
+        runs: active ? workbenchRuns : stoppedRuns,
+        defaultGroup: group,
+      }}
+    />
+  );
+}
+
+export const StartsAndStopsTheDefaultGroupInTheSheet: Story = {
+  render: (): ReactElement => <WithDefaultGroup />,
+  play: async (context) => {
+    const sheet = await openPhoneRuns(context);
+    const stopButton = sheet.getByRole('button', { name: 'Stop dev group' });
+
+    await settleOverlays(stopButton);
+    await context.userEvent.click(stopButton);
+    await expect(stopGroup).toHaveBeenCalledTimes(1);
+
+    const startButton = await sheet.findByRole('button', {
+      name: 'Start dev group',
+    });
+
+    await context.userEvent.click(startButton);
+    await expect(startGroup).toHaveBeenCalledTimes(1);
+    await expect(
+      await sheet.findByRole('button', { name: 'Stop dev group' }),
+    ).toBeVisible();
+  },
+};
+
+async function openPhoneRuns(
+  context: Parameters<NonNullable<Story['play']>>[0],
+): Promise<Inside> {
+  const sheet = await openWorkbench(context);
+  const row = sheet.getByRole('link', { name: /Runs.*1/ });
+
+  await settleOverlays(row);
+  await context.userEvent.click(row);
+
+  await expect(
+    await sheet.findByRole('heading', { name: 'Runs' }),
+  ).toBeVisible();
+
+  return sheet;
+}
 
 type Inside = ReturnType<typeof within>;
 

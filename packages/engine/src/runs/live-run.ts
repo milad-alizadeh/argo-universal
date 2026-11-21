@@ -11,6 +11,7 @@ type LiveRunInput = {
   terminal: TerminalProcess;
   outputPath: string;
   configuration: RunConfiguration;
+  fingerprint: string;
   // The first port of the Checkout's block, and the Session that started the Run, by name.
   block: number;
   starter: string;
@@ -23,6 +24,7 @@ export class LiveRun {
   public readonly terminal: TerminalProcess;
   public readonly outputPath: string;
   public readonly configuration: RunConfiguration;
+  public readonly fingerprint: string;
   public readonly block: number;
   public readonly starter: string;
   public readonly ended = Promise.withResolvers<void>();
@@ -37,6 +39,7 @@ export class LiveRun {
     this.terminal = input.terminal;
     this.outputPath = input.outputPath;
     this.configuration = input.configuration;
+    this.fingerprint = input.fingerprint;
     this.block = input.block;
     this.starter = input.starter;
     this.recording = new TerminalRecording(this.outputPath);

@@ -1,6 +1,10 @@
 import {
   RunDraftParams,
   RunDraftResult,
+  RunGroupNameParams,
+  RunGroupStartParams,
+  RunGroupStartResult,
+  RunGroupStopResult,
   RunLogsParams,
   RunLogsResult,
   RunNameParams,
@@ -10,9 +14,21 @@ import {
   RunStatusResult,
   RunStopResult,
 } from '../runs/run';
+import {
+  RunSettingsList,
+  RunSettingsProject,
+  RunSettingsResult,
+  RunSettingsUpdate,
+} from '../runs/settings';
 import type { OperationDefinition } from './index';
 
 const appWords = 'dev server';
+
+const runSettingsMetadata = {
+  icon: 'settings',
+  policy: 'person-only',
+  keywords: ['environment', 'port', 'auto-start'],
+} as const;
 
 export const runOperations = {
   'run.start': {
@@ -49,6 +65,58 @@ export const runOperations = {
     tier: 'act',
     policy: 'allow',
     keywords: [appWords, 'reload', 'app', 'port'],
+  },
+  'run.startGroup': {
+    id: 'run.startGroup',
+    label: 'Start Run Configuration group',
+    icon: 'play',
+    description:
+      'Start every member of a Run Configuration group from .argo/run.json.',
+    params: RunGroupStartParams,
+    result: RunGroupStartResult,
+    tier: 'act',
+    policy: 'allow',
+    keywords: ['start', 'stack', 'group'],
+  },
+  'run.stopGroup': {
+    id: 'run.stopGroup',
+    label: 'Stop Run Configuration group',
+    icon: 'stop',
+    description: 'Stop the Runs of every member of a Run Configuration group.',
+    params: RunGroupNameParams,
+    result: RunGroupStopResult,
+    tier: 'act',
+    policy: 'allow',
+    keywords: ['stop', 'stack', 'group'],
+  },
+  'run.getSettings': {
+    id: 'run.getSettings',
+    label: 'Get Run settings',
+    ...runSettingsMetadata,
+    description: 'Read the personal Project overrides for a Run Configuration.',
+    params: RunNameParams,
+    result: RunSettingsResult,
+    tier: 'read',
+  },
+  'run.listSettings': {
+    id: 'run.listSettings',
+    label: 'List Project Run settings',
+    ...runSettingsMetadata,
+    description:
+      'Read personal settings for Run Configurations in the Project’s main Checkout.',
+    params: RunSettingsProject,
+    result: RunSettingsList,
+    tier: 'read',
+  },
+  'run.updateSettings': {
+    id: 'run.updateSettings',
+    label: 'Update Run settings',
+    ...runSettingsMetadata,
+    description:
+      'Change the personal environment, port, or auto-start settings for a Run Configuration.',
+    params: RunSettingsUpdate,
+    result: RunSettingsResult,
+    tier: 'act',
   },
   'run.status': {
     id: 'run.status',

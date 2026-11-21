@@ -37,3 +37,10 @@ export { pairingOffered } from './utils/pairing-offered';
 export { usePairDevice } from './hooks/use-pair-device';
 
 export { platformIcon, platformName } from './utils/platform-name';
+
+export { useTextDraft, type Draft } from './hooks/use-text-draft';
+
+export {
+  newLinePlaceholder,
+  useEnvironmentSection,
+} from './components/environment-section';

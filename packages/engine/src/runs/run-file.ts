@@ -63,7 +63,13 @@ export async function requireRunConfiguration(
   checkoutPath: string,
   name: string,
 ): Promise<RunConfiguration> {
-  const { configurations } = await readRunFile(checkoutPath);
+  return requireConfiguration(await readRunFile(checkoutPath), name);
+}
+
+export function requireConfiguration(
+  { configurations }: RunConfigurations,
+  name: string,
+): RunConfiguration {
   const found = configurations.find((candidate) => candidate.name === name);
 
   if (found) return found;

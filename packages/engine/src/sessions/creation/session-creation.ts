@@ -20,7 +20,7 @@ import {
 } from './session-creation-wait';
 
 type CreationSources = HandlerSources<
-  'database' | 'createId' | 'installedAgents' | 'hooks',
+  'database' | 'createId' | 'installedAgents' | 'hooks' | 'autoStartRuns',
   'admit' | 'open'
 >;
 
@@ -162,5 +162,9 @@ async function completeCreation(
   await waitForSessionInsertCommitted(session);
   const turnId = await startSession(sources.hooks, session, initial);
 
-  return { sessionId: session.getSnapshot().context.sessionId, turnId };
+  const { sessionId } = session.getSnapshot().context;
+
+  sources.autoStartRuns?.(sessionId);
+
+  return { sessionId, turnId };
 }

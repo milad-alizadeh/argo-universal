@@ -45,6 +45,18 @@ export const RunStartParams = z.strictObject({ sessionId, name, timeoutMs });
 
 export type RunStartParams = z.infer<typeof RunStartParams>;
 
+const groupName = z
+  .string()
+  .min(1)
+  .describe('The Run Configuration group’s name.');
+
+export const RunGroupNameParams = z.strictObject({
+  sessionId,
+  name: groupName,
+});
+
+export const RunGroupStartParams = RunGroupNameParams.extend({ timeoutMs });
+
 export const RunStatusParams = z.strictObject({ sessionId });
 
 export type RunStatusParams = z.infer<typeof RunStatusParams>;
@@ -90,6 +102,22 @@ export const RunStopResult = z.strictObject({
 
 export type RunStopResult = z.infer<typeof RunStopResult>;
 
+export const RunGroupStartResult = z.strictObject({
+  name: z.string(),
+  members: z.array(
+    RunStartResult.or(z.strictObject({ name: z.string(), error: z.string() })),
+  ),
+});
+
+export type RunGroupStartResult = z.infer<typeof RunGroupStartResult>;
+
+export const RunGroupStopResult = z.strictObject({
+  name: z.string(),
+  members: z.array(RunStopResult),
+});
+
+export type RunGroupStopResult = z.infer<typeof RunGroupStopResult>;
+
 export const RunConfigurationRow = z.strictObject({
   name: z.string(),
   command: z.string(),
@@ -102,9 +130,19 @@ export const RunConfigurationRow = z.strictObject({
 
 export type RunConfigurationRow = z.infer<typeof RunConfigurationRow>;
 
+export const RunDefaultGroup = z.strictObject({
+  name: z.string(),
+  members: z.array(z.string()),
+  readyCount: z.int().nonnegative(),
+  url: z.string().nullable(),
+});
+
+export type RunDefaultGroup = z.infer<typeof RunDefaultGroup>;
+
 export const RunStatusResult = z.strictObject({
   configurations: z.array(RunConfigurationRow),
   shells: z.array(ShellTerminal).optional(),
+  defaultGroup: RunDefaultGroup.optional(),
 });
 
 export type RunStatusResult = z.infer<typeof RunStatusResult>;

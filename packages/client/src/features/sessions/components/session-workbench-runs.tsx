@@ -1,4 +1,8 @@
-import type { RunConfigurationRow, ShellTerminal } from '@repo/contracts';
+import type {
+  RunConfigurationRow,
+  RunDefaultGroup,
+  ShellTerminal,
+} from '@repo/contracts';
 import { IconButton } from '@repo/kit/primitives/actions/icon-button';
 import { Icon } from '@repo/kit/primitives/content/icon';
 import { Text } from '@repo/kit/primitives/content/text';
@@ -8,11 +12,18 @@ import type { ReactElement, ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 import { runIsActive, runStatusLabel, runStatusTone } from './run-status';
 
+type RunGroupControls = {
+  status: RunDefaultGroup;
+  onStart: () => void;
+  onStop: () => void;
+};
+
 export interface WorkbenchRunsProps {
   runs: readonly RunConfigurationRow[];
   onOpen: (name: string) => void;
   onStart: (name: string) => void;
   onStop: (name: string) => void;
+  defaultGroup?: RunGroupControls;
   now?: number;
   shells?: WorkbenchShells;
   compact?: boolean;
@@ -79,12 +90,79 @@ function RunRow({
           {port === null ? label : `${label} · :${port}`}
         </Text>
       </Pressable>
-      <IconButton
-        accessibilityLabel={active ? `Stop ${name}` : `Start ${name}`}
-        icon={active ? 'stop' : 'play'}
-        variant={active ? 'ghost' : 'primary'}
-        size={compact ? 'lg' : 'sm'}
-        onPress={() => (active ? onStop(name) : onStart(name))}
+      <RunAction
+        name={name}
+        active={active}
+        compact={compact}
+        onStart={() => onStart(name)}
+        onStop={() => onStop(name)}
+      />
+    </View>
+  );
+}
+
+function RunAction({
+  name,
+  active,
+  compact,
+  onStart,
+  onStop,
+}: {
+  name: string;
+  active: boolean;
+  compact?: boolean;
+  onStart: () => void;
+  onStop: () => void;
+}): ReactElement {
+  return (
+    <IconButton
+      accessibilityLabel={active ? `Stop ${name}` : `Start ${name}`}
+      icon={active ? 'stop' : 'play'}
+      variant={active ? 'ghost' : 'primary'}
+      size={compact ? 'lg' : 'sm'}
+      onPress={active ? onStop : onStart}
+    />
+  );
+}
+
+function GroupRow({
+  status: { name, members, readyCount, url },
+  runs,
+  compact,
+  onStart,
+  onStop,
+}: RunGroupControls & {
+  runs: readonly RunConfigurationRow[];
+  compact?: boolean;
+}): ReactElement {
+  const active = runs.some(
+    (run) => members.includes(run.name) && runIsActive(run),
+  );
+
+  const runningState = active ? 'starting' : 'stopped';
+  const state = readyCount === members.length ? 'ready' : runningState;
+
+  return (
+    <View className="flex-row items-center gap-1">
+      <View className="min-w-0 flex-1 gap-1 px-1 py-2">
+        <View className="min-w-0 flex-row items-center gap-2">
+          <StatusDot tone={runStatusTone[state]} size="sm" />
+          <View className="min-w-0 shrink">
+            <Text numberOfLines={1}>{name}</Text>
+          </View>
+          <Text role="secondary" tone="muted" numberOfLines={1}>
+            {readyCount} of {members.length} ready
+          </Text>
+        </View>
+        {url && (
+          <Text role="secondary" tone="muted" numberOfLines={1}>
+            {url}
+          </Text>
+        )}
+      </View>
+      <RunAction
+        name={`${name} group`}
+        {...{ active, compact, onStart, onStop }}
       />
     </View>
   );
@@ -127,6 +205,7 @@ function ShellRows({ rows, onOpen, onNew }: WorkbenchShells): ReactElement {
 
 export function WorkbenchRuns({
   runs,
+  defaultGroup,
   now,
   shells,
   ...actions
@@ -138,6 +217,9 @@ export function WorkbenchRuns({
 
   return (
     <View className={actions.compact ? 'px-2' : undefined}>
+      {defaultGroup && defaultGroup.status.members.length > 0 && (
+        <GroupRow {...defaultGroup} runs={runs} compact={actions.compact} />
+      )}
       {runs.map((run) => (
         <RunRow key={run.name} run={run} now={clock} {...actions} />
       ))}

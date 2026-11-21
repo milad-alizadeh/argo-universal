@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Pressable, Text } from 'react-native';
 import { expect, fn } from 'storybook/test';
-import { useTextDraft } from './plugin-text-rows';
+import { useTextDraft } from '#features/settings';
 
 type HarnessProps = { onSave: (value: string) => void };
 

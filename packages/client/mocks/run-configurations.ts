@@ -1,4 +1,4 @@
-import type { RunConfigurationRow } from '@repo/contracts';
+import type { RunConfigurationRow, RunDefaultGroup } from '@repo/contracts';
 
 const webPort = 3100;
 
@@ -40,3 +40,26 @@ export const crashedRuns = [
 ] satisfies RunConfigurationRow[];
 
 export const workbenchRunTime = 1_700_000_012_000;
+
+export const stoppedGroup: RunDefaultGroup = {
+  name: 'dev',
+  members: [webRun.name, docs.name],
+  readyCount: 0,
+  url: null,
+};
+
+export const partiallyReadyGroup: RunDefaultGroup = {
+  ...stoppedGroup,
+  readyCount: 1,
+  url: webRun.url,
+};
+
+export const readyGroupRuns = [
+  webRun,
+  { ...docs, status: 'ready' },
+] satisfies RunConfigurationRow[];
+
+export const readyGroup: RunDefaultGroup = {
+  ...partiallyReadyGroup,
+  readyCount: readyGroupRuns.length,
+};

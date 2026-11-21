@@ -11,6 +11,7 @@ import {
 import { selectProject } from './select-project';
 import { useProjectAccounts } from './use-project-accounts';
 import { useProjectNewSessions } from './use-project-new-sessions';
+import { useProjectRunSettings } from './use-project-run-settings';
 
 function toProjectLoad(
   projects: ProjectInfo[] | undefined,
@@ -82,6 +83,7 @@ function LoadedProjectDetail(props: LoadedProps): React.JSX.Element {
       {...detail}
       project={{ status: 'loaded', project: newSessions.project }}
       newSessions={newSessions.controls}
+      runSettings={useProjectRunSettings(project)}
       pluginItems={useProjectDetailsItems(project.id)}
       onOpenPluginPage={onOpenPluginPage}
     />

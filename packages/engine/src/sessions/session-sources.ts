@@ -16,6 +16,7 @@ export interface SessionSources extends Pick<
   installedAgents: InstalledAgents;
   readSession: ReturnType<typeof createSessionReader>;
   createId: () => string;
+  autoStartRuns?: (sessionId: string) => void;
   // Aborts when the Engine stops admitting Session commands.
   sessionCommandSignal?: AbortSignal;
   // Overrides how long New Session discovery waits for Slash commands (tests).

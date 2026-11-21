@@ -47,6 +47,8 @@ const defaults: Defaults = {
   'run.start': callerSessionParam,
   'run.stop': callerSessionParam,
   'run.restart': callerSessionParam,
+  'run.startGroup': callerSessionParam,
+  'run.stopGroup': callerSessionParam,
   'run.status': callerSessionParam,
   'run.logs': callerSessionParam,
   'run.draft': callerSessionParam,

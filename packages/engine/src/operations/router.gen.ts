@@ -994,6 +994,61 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      startGroup: authenticatedAppProcedure
+        .input(operations['run.startGroup'].params)
+        .output(operations['run.startGroup'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.startGroup',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      stopGroup: authenticatedAppProcedure
+        .input(operations['run.stopGroup'].params)
+        .output(operations['run.stopGroup'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.stopGroup',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      getSettings: authenticatedAppProcedure
+        .input(operations['run.getSettings'].params)
+        .output(operations['run.getSettings'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.getSettings',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      listSettings: authenticatedAppProcedure
+        .input(operations['run.listSettings'].params)
+        .output(operations['run.listSettings'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.listSettings',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      updateSettings: authenticatedAppProcedure
+        .input(operations['run.updateSettings'].params)
+        .output(operations['run.updateSettings'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.updateSettings',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       status: publicProcedure
         .input(operations['run.status'].params)
         .output(operations['run.status'].result)

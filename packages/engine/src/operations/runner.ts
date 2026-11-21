@@ -37,6 +37,7 @@ import {
   requirePermissionTurn,
 } from './operation-permission';
 import { parseResult, validateParams } from './params';
+import type { createRunStarts } from './runs';
 import { sessionOnly } from './session-only';
 import type { PromptChains, SessionScope } from './session-scope';
 import type { SessionCaller } from './session-tokens';
@@ -48,6 +49,7 @@ type SessionContext = { caller: SessionCaller; call: SessionOperationCall };
 
 type RunnerPorts = {
   archive: OperationArchive;
+  appRunStarts: ReturnType<typeof createRunStarts>;
   requireClearTarget: (sessionId: string) => void;
   scope: SessionScope;
   directory: SessionDirectory;
@@ -67,6 +69,7 @@ export class OperationRunner {
     this.plain = this.native = implementations;
     this.app = {
       ...implementations,
+      ...this.ports.appRunStarts,
       'session.archive': this.ports.archive.app,
       ...eachNativeStart((id, params) =>
         acceptedResult(this.native[id](params, userOrigin)),

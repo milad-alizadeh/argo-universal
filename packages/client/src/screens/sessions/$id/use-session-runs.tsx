@@ -16,10 +16,7 @@ import {
 } from '#features/sessions';
 import { LatestTerminalSize } from './latest-terminal-size';
 
-function useRunStatus(
-  sessionId: string,
-  active: boolean,
-): RunStatusResult | undefined {
+function useRunStatus(sessionId: string, active: boolean): RunStatusResult {
   const trpc = useTRPC();
 
   const [snapshot, setSnapshot] = useState<{
@@ -41,7 +38,9 @@ function useRunStatus(
     stream.error ? { title: 'Runs', message: stream.error.message } : undefined,
   );
 
-  return snapshot?.sessionId === sessionId ? snapshot.status : undefined;
+  return snapshot?.sessionId === sessionId
+    ? snapshot.status
+    : { configurations: [] };
 }
 
 export function useSessionRuns(
@@ -60,10 +59,12 @@ export function useSessionRuns(
     start.error ?? stop.error ?? restart.error ?? open.error ?? close.error;
 
   useErrorToast(error ? { title: 'Runs', message: error.message } : undefined);
+  const defaultGroup = useRunGroupControls(sessionId, status.defaultGroup);
 
   return {
-    runs: status?.configurations ?? [],
-    shells: status?.shells,
+    runs: status.configurations,
+    defaultGroup,
+    shells: status.shells,
     openShell: active
       ? (opened) => open.mutate({ sessionId }, { onSuccess: opened })
       : undefined,
@@ -89,6 +90,29 @@ export function useSessionRuns(
         compact={compact}
       />
     ),
+  };
+}
+
+function useRunGroupControls(
+  sessionId: string,
+  status: RunStatusResult['defaultGroup'],
+): SessionRuns['defaultGroup'] {
+  const trpc = useTRPC();
+  const start = useMutation(trpc.run.startGroup.mutationOptions());
+  const stop = useMutation(trpc.run.stopGroup.mutationOptions());
+  const failedMember = start.data?.members.find((member) => 'error' in member);
+
+  const message =
+    start.error?.message ?? stop.error?.message ?? failedMember?.error;
+
+  useErrorToast(message ? { title: 'Runs', message } : undefined);
+
+  if (!status) return undefined;
+
+  return {
+    status,
+    onStart: () => start.mutate({ sessionId, name: status.name }),
+    onStop: () => stop.mutate({ sessionId, name: status.name }),
   };
 }
 

@@ -77,7 +77,7 @@ const RunConfigurationsFile = z
             message: `"${member}" is not a Run Configuration`,
           });
 
-    if (file.default !== undefined && !(file.default in file.groups))
+    if (file.default !== undefined && !Object.hasOwn(file.groups, file.default))
       context.addIssue({
         code: 'custom',
         path: ['default'],

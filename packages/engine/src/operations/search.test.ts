@@ -18,6 +18,9 @@ const appOnly = new Set([
   'terminal.resize',
   'terminal.close',
   'terminal.open',
+  'run.getSettings',
+  'run.listSettings',
+  'run.updateSettings',
 ]);
 
 it('lists every Operation but the App-only ones with its description, enabled', () => {
