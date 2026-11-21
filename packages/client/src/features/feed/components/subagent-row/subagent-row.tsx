@@ -33,10 +33,7 @@ interface RowBodyProps {
 }
 
 // The mark leads one line of words.
-export function SubagentRowBody({
-  item,
-  opens,
-}: RowBodyProps): React.JSX.Element {
+function SubagentRowBody({ item, opens }: RowBodyProps): React.JSX.Element {
   return (
     <View className="flex-row items-center gap-1.5">
       <SubagentLead role={item.role} />

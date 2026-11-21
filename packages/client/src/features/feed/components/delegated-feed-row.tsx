@@ -1,10 +1,9 @@
-import { Text, TextClassContext } from '@repo/kit/primitives/content/text';
-import { Menu } from '@repo/kit/primitives/overlays/menu';
+import { Surface } from '@repo/kit/primitives/layout/surface';
 import type * as React from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { ElicitationForm } from '#features/requests';
 import type { FeedDelegated, FeedSubagent } from '../view/feed-view';
-import { rowColour, rowLabel } from './subagent-row/subagent-line';
-import { SubagentRow, SubagentRowBody } from './subagent-row/subagent-row';
+import { SubagentRow } from './subagent-row/subagent-row';
 
 export function DelegatedFeedRow({
   item,
@@ -34,26 +33,23 @@ function SkillOffer({
   source: FeedSubagent;
 }): React.JSX.Element {
   return (
-    <View className="min-w-0 items-start gap-2">
-      <Menu
-        accessibilityLabel={rowLabel(source)}
-        trigger={
-          <Pressable role="button" className="max-w-full self-start">
-            <TextClassContext.Provider value={rowColour(false)}>
-              <SubagentRowBody item={source} opens />
-            </TextClassContext.Provider>
-          </Pressable>
-        }
-        actions={[
-          {
-            label: 'Run skill',
-            disabled: item.confirming,
-            onPress: item.onConfirm,
-          },
-          { label: 'Open starter Session', onPress: item.onOpen },
-        ]}
-      />
-      <Text>{item.command}</Text>
+    <View className="min-w-0 max-w-column gap-2">
+      <SubagentRow item={source} onOpen={item.onOpen} />
+      <Surface kind="card">
+        <ElicitationForm
+          request={{
+            requestId: item.id,
+            mode: 'form',
+            message: item.command,
+            requestedSchema: { properties: {} },
+          }}
+          state={{ kind: item.answering ? 'submitting' : 'open' }}
+          error={item.error}
+          onAnswer={({ action }) =>
+            item.onAnswer(action === 'accept' ? 'run' : 'skip')
+          }
+        />
+      </Surface>
     </View>
   );
 }

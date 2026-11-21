@@ -247,7 +247,7 @@ const delegatedSkillStory = (command: string): Story =>
       kind: 'offered_skill',
       command,
       onOpen: fn(),
-      onConfirm: fn(),
+      onAnswer: fn(),
     },
   ]);
 

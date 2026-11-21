@@ -29,13 +29,14 @@ export const delegatedSkillOperations = {
   },
   'session.confirmSkill': {
     id: 'session.confirmSkill',
-    label: 'Run a delegated skill',
+    label: 'Answer a delegated skill offer',
     icon: 'message',
     description:
-      'Confirm and submit the offered native slash command in this Session.',
+      'Submit or skip the offered native slash command in this Session.',
     params: z.strictObject({
       sessionId: sessionColumns.shape.id,
       offerId: z.string(),
+      decision: z.enum(['run', 'skip']).default('run'),
     }),
     result: confirmation,
     tier: 'act',

@@ -158,6 +158,7 @@ export const delegatedSkill = snakeCase.table(
     arguments: text().notNull(),
     commandDigest: text().notNull(),
     dispatched: integer({ mode: 'boolean' }).notNull().default(false),
+    skipped: integer({ mode: 'boolean' }).notNull().default(false),
   },
   (table) => [
     index('delegated_skill_destination_index').on(table.destinationId),

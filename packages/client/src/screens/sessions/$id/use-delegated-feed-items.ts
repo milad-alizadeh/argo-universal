@@ -16,12 +16,7 @@ export function useDelegatedFeedItems(sessionId: string): FeedDelegated[] {
   );
 
   useResubscribeOnReconnect(stream);
-  const confirm = useMutation(trpc.session.confirmSkill.mutationOptions());
-  useErrorToast(
-    confirm.error
-      ? { title: "Couldn't run the skill", message: confirm.error.message }
-      : undefined,
-  );
+  const answer = useMutation(trpc.session.confirmSkill.mutationOptions());
 
   return [
     ...(stream.data?.requests ?? []).map((request): FeedDelegated => ({
@@ -43,9 +38,14 @@ export function useDelegatedFeedItems(sessionId: string): FeedDelegated[] {
       title: 'the starter Session',
       kind: 'offered_skill',
       command: [`/${offer.name}`, offer.arguments].filter(Boolean).join(' '),
-      confirming: confirm.isPending && confirm.variables?.offerId === offer.id,
+      answering: answer.isPending && answer.variables?.offerId === offer.id,
+      error:
+        answer.variables?.offerId === offer.id
+          ? answer.error?.message
+          : undefined,
       onOpen: () => navigate(sessionHref(offer.starterId)),
-      onConfirm: () => confirm.mutate({ sessionId, offerId: offer.id }),
+      onAnswer: (decision) =>
+        answer.mutate({ sessionId, offerId: offer.id, decision }),
     })),
   ];
 }

@@ -123,6 +123,7 @@ function saveOffer(row: typeof delegatedSkill.$inferInsert): WriterJob {
             eq(delegatedSkill.name, row.name),
             eq(delegatedSkill.arguments, row.arguments),
             eq(delegatedSkill.dispatched, false),
+            eq(delegatedSkill.skipped, false),
             ne(delegatedSkill.commandDigest, row.commandDigest),
           ),
         )
@@ -152,6 +153,7 @@ export function waitingSkills(
       and(
         eq(delegatedSkill.destinationId, sessionId),
         eq(delegatedSkill.dispatched, false),
+        eq(delegatedSkill.skipped, false),
       ),
     )
     .all();
@@ -194,23 +196,50 @@ function readOffer(
   return row;
 }
 
-const confirming = new Set<string>();
+const answering = new Set<string>();
 
 export async function confirmSkill(
   sources: SkillSources,
-  { sessionId, offerId }: { sessionId: string; offerId: string },
+  {
+    sessionId,
+    offerId,
+    decision,
+  }: { sessionId: string; offerId: string; decision: 'run' | 'skip' },
 ): Promise<Record<string, never>> {
-  if (confirming.has(offerId))
-    throw conflict('This skill is already being confirmed.');
-  confirming.add(offerId);
+  if (answering.has(offerId))
+    throw conflict('This skill offer is already being answered.');
+  answering.add(offerId);
 
   try {
-    await enqueueSkill(sources, sessionId, offerId);
+    const row = readOffer(sources.database, sessionId, offerId);
+
+    if (decision === 'skip') await skipSkill(sources, row);
+    else if (row.skipped) throw conflict('This skill offer was skipped.');
+    else if (!row.dispatched) await enqueueSkill(sources, sessionId, offerId);
 
     return {};
   } finally {
-    confirming.delete(offerId);
+    answering.delete(offerId);
   }
+}
+
+async function skipSkill(
+  sources: SkillSources,
+  row: SkillOffer,
+): Promise<void> {
+  if (row.dispatched) throw conflict('This skill was already confirmed.');
+
+  if (row.skipped) return;
+
+  await sources.open.write({
+    describe: () => 'Skip delegated native skill',
+    commit: (tx) =>
+      tx
+        .update(delegatedSkill)
+        .set({ skipped: true })
+        .where(eq(delegatedSkill.id, row.id))
+        .run(),
+  });
 }
 
 async function enqueueSkill(
@@ -221,8 +250,6 @@ async function enqueueSkill(
   const actor = await sources.open.ready(sessionId, 'session.queue');
   sources.open.admit();
   const row = readOffer(sources.database, sessionId, offerId);
-
-  if (row.dispatched) return;
 
   requireCommand(row, actor.getSnapshot().context);
   await sendQueueCommand(actor, {

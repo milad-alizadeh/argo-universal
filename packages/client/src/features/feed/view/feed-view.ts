@@ -119,8 +119,9 @@ export type FeedDelegated = {
   | {
       kind: 'offered_skill';
       command: string;
-      confirming?: boolean;
-      onConfirm: () => void;
+      answering?: boolean;
+      error?: string;
+      onAnswer: (decision: 'run' | 'skip') => void;
     }
 );
 

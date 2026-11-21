@@ -1,5 +1,5 @@
 import type { PromptRequest } from '@agentclientprotocol/sdk';
-import { SessionNewOutput } from '@repo/contracts';
+import { type DelegatedAttention, SessionNewOutput } from '@repo/contracts';
 import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
@@ -38,6 +38,7 @@ it('requires the App to confirm a native command and carries its source Turn int
         ],
       },
       { prompt: '/implement #12345', requests: invoked },
+      { prompt: '/implement #54321', requests: invoked },
     ],
   });
 
@@ -103,6 +104,11 @@ it('requires the App to confirm a native command and carries its source Turn int
       ).rejects.toThrow('Only an App can run');
       expect(invoked).toEqual([]);
 
+      await skipAlternateSkill({ host, caller }, destination, {
+        stream,
+        offer,
+      });
+
       await host.caller.session.confirmSkill(params);
       await host.caller.session.confirmSkill(params);
       await waitForAcpSessionIdle(host, destination.sessionId);
@@ -137,3 +143,46 @@ it('requires the App to confirm a native command and carries its source Turn int
     gate.resolve();
   }
 }, 30_000);
+
+type AttentionStream = AsyncIterator<DelegatedAttention, void>;
+
+async function skipAlternateSkill(
+  {
+    host,
+    caller,
+  }: Pick<Awaited<ReturnType<typeof delegationJourney>>, 'host' | 'caller'>,
+  destination: SessionNewOutput,
+  {
+    stream,
+    offer,
+  }: {
+    stream: AttentionStream;
+    offer: DelegatedAttention['skills'][number];
+  },
+): Promise<void> {
+  const offerAlternate = (): ReturnType<typeof runOperation> =>
+    runOperation(caller.caller.operations, {
+      id: 'session.offerSkill',
+      params: { ...destination, name: skillName, arguments: '#54321' },
+      wait: true,
+    });
+
+  await offerAlternate();
+
+  const additional = await stream.next();
+  const alternate = additional.value?.skills.find(({ id }) => id !== offer.id);
+
+  if (!alternate) throw new Error('No alternate skill offer');
+
+  const skipped = { ...destination, offerId: alternate.id };
+
+  await host.caller.session.confirmSkill({ ...skipped, decision: 'skip' });
+  await offerAlternate();
+
+  const remaining = await stream.next();
+
+  expect(remaining.value?.skills).toEqual([offer]);
+  await expect(host.caller.session.confirmSkill(skipped)).rejects.toThrow(
+    'This skill offer was skipped.',
+  );
+}

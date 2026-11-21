@@ -5,9 +5,10 @@ export {
 
 export { ElicitationSheet } from './components/elicitation-form/elicitation-sheet';
 
-export type {
-  ElicitationAnswer,
-  ElicitationFormProps,
+export {
+  ElicitationForm,
+  type ElicitationAnswer,
+  type ElicitationFormProps,
 } from './components/elicitation-form/elicitation-form';
 
 export type { RequestState } from './components/request-card/request-card';
