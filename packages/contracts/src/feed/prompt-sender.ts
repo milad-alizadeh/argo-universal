@@ -16,6 +16,13 @@ export const SentPromptSender = z.union([
   z.strictObject({
     ...sessionSender,
     delegatedResult: z.array(z.string()).min(1),
+    // Older Queued Prompts have only the sender and the Agent-facing Prompt.
+    resultPreview: z
+      .strictObject({
+        title: z.string().min(1),
+        excerpt: z.string().optional(),
+      })
+      .optional(),
     followThrough: z.never().optional(),
   }),
   z.strictObject({

@@ -17,6 +17,8 @@ const starterText = 'Delegate an outcome';
 
 const sourceText = 'Produce the delegated result';
 
+const sourceExcerpt = 'Review complete. No findings.';
+
 type GatedDelegation = {
   journey: ReturnType<typeof delegationJourney>;
   starterGate: PromiseWithResolvers<void>;
@@ -42,6 +44,14 @@ function gatedDelegation(
         steps: [
           ...questionSteps(question),
           { type: 'gate', waitFor: sourceGate.promise },
+          {
+            type: 'update',
+            update: {
+              sessionUpdate: 'agent_message_chunk',
+              messageId: 'delegated-review',
+              content: { type: 'text', text: sourceExcerpt },
+            },
+          },
         ],
       },
     ],
@@ -85,6 +95,8 @@ it('queues an opted-in result behind the starter’s current Turn, then wakes th
 
   try {
     const sessionId = await delegate(opened, true);
+    const source = await host.caller.session.get({ sessionId });
+    const title = source.title || 'Started Session';
     sourceGate.resolve();
     await expect
       .poll(
@@ -92,7 +104,13 @@ it('queues an opted-in result behind the starter’s current Turn, then wakes th
           (await host.caller.session.get({ sessionId: caller.sessionId }))
             .promptQueue.items,
       )
-      .toHaveLength(1);
+      .toEqual([
+        expect.objectContaining({
+          sender: expect.objectContaining({
+            resultPreview: { title, excerpt: sourceExcerpt },
+          }),
+        }),
+      ]);
     starterGate.resolve();
 
     await expect
