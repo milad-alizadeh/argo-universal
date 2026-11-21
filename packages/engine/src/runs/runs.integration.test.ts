@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { createServer, type Server } from 'node:net';
 import { join } from 'node:path';
 import type { OperationId } from '@repo/contracts/operations';
@@ -68,6 +68,18 @@ async function startRuns(source?: RunFile): Promise<RunsJourney> {
 
   return { ...host, terminals, project, operations, call, sessionId };
 }
+
+it('refuses Run Configurations linked outside the Session Checkout', async () => {
+  const { call, home, project } = await startRuns();
+
+  await configure(home, { configurations: [web] });
+  await mkdir(join(project.path, '.argo'), { recursive: true });
+  await symlink(join(home, runFile), join(project.path, runFile));
+
+  await expect(call(statusRun)).rejects.toThrow(
+    /Run Configurations must be inside the Checkout/u,
+  );
+});
 
 it('starts a Run and returns its URL and port once its output says it is ready', async () => {
   const { terminals, call } = await startRuns({ configurations: [web] });
