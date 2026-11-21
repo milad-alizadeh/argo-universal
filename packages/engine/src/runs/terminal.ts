@@ -1,3 +1,5 @@
+export { terminalColumns, terminalRows } from '@repo/contracts';
+
 // What the Server asks of the operating system to run a Run: a command in a terminal, in a folder, with these variables added to the login shell's.
 export type TerminalLaunch = {
   // The Run's own id; the real terminal carries it on its command line so recovery can tell its process group from a reused one.
@@ -8,11 +10,6 @@ export type TerminalLaunch = {
   env: Record<string, string>;
   port: number;
 };
-
-// The size of every Terminal the Server opens, which the screen an Agent reads is drawn at.
-export const terminalColumns = 120;
-
-export const terminalRows = 32;
 
 export type TerminalExit = { exitCode: number };
 

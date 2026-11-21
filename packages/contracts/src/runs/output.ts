@@ -14,3 +14,8 @@ export const RunOutput = z.strictObject({
 });
 
 export type RunOutput = z.infer<typeof RunOutput>;
+
+// A Run PTY and its terminal viewers share this geometry for live output and replay.
+export const terminalColumns = 120;
+
+export const terminalRows = 32;

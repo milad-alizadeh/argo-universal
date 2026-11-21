@@ -1,0 +1,22 @@
+import type {
+  RunConfigurationRow,
+  RunOutput,
+  RunOutputCursor,
+} from '@repo/contracts';
+
+export type RunOutputSource = (
+  cursor: RunOutputCursor | undefined,
+  receive: (frame: RunOutput) => void,
+) => () => void;
+
+export interface RunTerminalProps {
+  run: RunConfigurationRow;
+  connected: boolean;
+  listen: RunOutputSource;
+  onInput: (text: string) => void;
+}
+
+// Runs on native get their own Expo DOM Terminal in the phone slice.
+export function RunTerminal(_props: RunTerminalProps): null {
+  return null;
+}

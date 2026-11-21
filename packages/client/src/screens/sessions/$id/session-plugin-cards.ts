@@ -35,6 +35,10 @@ export const withPluginCards = (
 
 // A Plugin card keeps its Inspector tab while the card is open, as a Section keeps its tab while the Session offers it.
 export const offeredWith =
-  (cards: readonly SessionPluginCard[], scheduleCount = 0) =>
+  (
+    cards: readonly SessionPluginCard[],
+    scheduleCount = 0,
+    runNames?: readonly string[],
+  ) =>
   (work: SessionItems): string[] =>
-    offeredSections({ ...work, scheduleCount }, cards);
+    offeredSections({ ...work, scheduleCount, runNames }, cards);
