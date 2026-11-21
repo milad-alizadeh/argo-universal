@@ -1,4 +1,3 @@
-import { FieldLabelScope } from '@repo/kit/primitives/fields/field-row';
 import { cn } from '@repo/kit/utils';
 import type { ReactElement, ReactNode } from 'react';
 import { View } from 'react-native';
@@ -24,15 +23,10 @@ type ViewProps = { view: ElicitationView };
 
 type LayoutProps = ViewProps & { placement: ElicitationPlacement };
 
-export function ElicitationLayout(props: LayoutProps): ReactElement {
-  return (
-    <FieldLabelScope>
-      <Layout {...props} />
-    </FieldLabelScope>
-  );
-}
-
-function Layout({ view, placement }: LayoutProps): ReactElement {
+export function ElicitationLayout({
+  view,
+  placement,
+}: LayoutProps): ReactElement {
   if (placement === 'sheet') return <ElicitationSheetLayout view={view} />;
 
   const card = <ElicitationCard view={view} scroll={placement === 'tray'} />;

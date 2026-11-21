@@ -1,5 +1,5 @@
 import {
-  HStack,
+  VStack,
   SecureField,
   TextField,
   type TextFieldProps,
@@ -12,12 +12,9 @@ import {
   accessibilityHint,
   autocorrectionDisabled,
   textInputAutocapitalization,
-  frame,
   keyboardType,
-  lineLimit,
   multilineTextAlignment,
   onSubmit,
-  truncationMode,
 } from '@expo/ui/swift-ui/modifiers';
 import { type ReactElement, type RefObject, useEffect, useRef } from 'react';
 import { RowTitle } from '#primitives/fields/field-row';
@@ -27,32 +24,21 @@ import { fieldTextTone } from './field-text-tone';
 type SwiftKeyboard = Parameters<typeof keyboardType>[0];
 
 /*
- * A stock Settings form row (Settings > VPN > Add Configuration): the title, then the input, its text
- * leading-aligned. The title takes a fixed width and truncates on one line, so the inputs of a section's rows
- * start in one column.
+ * The title above the input, both leading-aligned, at every width: a long title wraps on its own lines and is
+ * never cut short beside the value.
  */
 export function FieldText(props: FieldTextProps): ReactElement {
   const field = useFieldProps(props);
 
   return (
-    <HStack spacing={8}>
+    <VStack alignment="leading" spacing={8}>
       {props.hideTitle ? null : (
-        <HStack modifiers={titleColumn}>
-          <RowTitle {...props} tone={fieldTextTone(props.error)} />
-        </HStack>
+        <RowTitle {...props} tone={fieldTextTone(props.error)} />
       )}
       {props.secure ? <SecureField {...field} /> : <TextField {...field} />}
-    </HStack>
+    </VStack>
   );
 }
-
-const titleWidth = 100;
-
-const titleColumn = [
-  frame({ width: titleWidth, alignment: 'leading' }),
-  lineLimit(1),
-  truncationMode('tail'),
-];
 
 function useFieldProps(props: FieldTextProps): TextFieldProps {
   const text = useSwiftFieldText(props.value);
