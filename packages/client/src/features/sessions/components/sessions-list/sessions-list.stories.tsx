@@ -11,7 +11,7 @@ import {
   projectWithoutSessions,
   sessionsByProject,
 } from './sessions-list-fixtures';
-import { nestedPlans, nestedSessions } from './sessions-list-nested-fixtures';
+import { nestedSessions, nestedTodos } from './sessions-list-nested-fixtures';
 
 const meta = {
   title: 'Sessions/SessionsList',
@@ -68,7 +68,7 @@ export const ByProject: Story = { args: sessionsByProject };
 
 export const DelegatedWork: Story = { args: nestedSessions };
 
-export const DelegatedWorkWithTodos: Story = { args: nestedPlans };
+export const DelegatedWorkWithTodos: Story = { args: nestedTodos };
 
 export const ProjectWithoutSessions: Story = { args: projectWithoutSessions };
 

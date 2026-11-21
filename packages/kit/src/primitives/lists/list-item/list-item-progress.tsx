@@ -35,9 +35,13 @@ export function ItemProgress({
 }: Required<Pick<ListItemProps, 'progress'>> &
   Pick<ListItemProps, 'sidebar'>): ReactElement {
   const tree = useTreeRow();
-  const { treeDrawn } = useListLook();
-  const depth = sidebar && treeDrawn ? (tree?.depth ?? 0) : 0;
+  const { treeDrawn, compactSidebarRows } = useListLook();
+
+  const depth =
+    sidebar && treeDrawn && !compactSidebarRows ? (tree?.depth ?? 0) : 0;
+
   const place = barPlace(sidebar, progress.steps);
+
   const bar = (
     <ProgressBar {...progress} track={sidebar ? 'hairline' : undefined} />
   );

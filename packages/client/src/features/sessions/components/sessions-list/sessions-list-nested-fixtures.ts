@@ -38,10 +38,12 @@ export const orphanSessions = {
   sessions: [child],
 };
 
-const plan = { done: 1, inProgress: 1, total: 4 };
+const todoProgress = { done: 1, inProgress: 1, total: 4 };
 
-// Each level holds an unfinished plan, so every row draws its progress bar under its own content.
-export const nestedPlans = {
+export const nestedTodos = {
   ...nestedSessions,
-  sessions: nestedSessions.sessions.map((session) => ({ ...session, plan })),
+  sessions: nestedSessions.sessions.map((session) => ({
+    ...session,
+    plan: todoProgress,
+  })),
 };
