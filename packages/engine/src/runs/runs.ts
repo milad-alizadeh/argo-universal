@@ -342,7 +342,7 @@ export class Runs {
     output?: OutputBlobMetadata,
   ): Promise<void> {
     try {
-      await storeRun(this.input.writer, record, replaced, output);
+      await storeRun(this.input.writer, record, { replaced, output });
     } finally {
       this.view.changed(record);
     }

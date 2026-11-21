@@ -45,11 +45,15 @@ export class RunWriteJob implements WriterJob {
   }
 }
 
+type RunStorage = {
+  replaced?: readonly string[];
+  output?: OutputBlobMetadata;
+};
+
 export function storeRun(
   writer: WriterActorRef,
   record: RunRecord,
-  replaced?: readonly string[],
-  output?: OutputBlobMetadata,
+  { replaced, output }: RunStorage,
 ): Promise<void> {
   const running = record.status === 'starting' || record.status === 'ready';
 
