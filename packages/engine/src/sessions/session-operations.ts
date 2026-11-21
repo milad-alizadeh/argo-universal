@@ -20,6 +20,7 @@ import { restartSession } from './restart/restart-session';
 import type { Schedules } from './schedules';
 import { cancelSession } from './session-closure';
 import { declareSubagentRole } from './session-declare-subagent-role';
+import { handoffSession } from './session-handoff';
 import { createPlugin } from './session-new-plugin';
 import { renameSession } from './session-rename';
 import { saveSessionPlan } from './session-save-plan';
@@ -71,6 +72,7 @@ const actImplementations = (
   sources: SessionHandlerSources,
 ): Pick<SessionOperationImplementations, Exclude<ActId, ScheduleId>> => ({
   ...queueImplementations(sources),
+  'session.handoff': ({ sessionId }) => handoffSession(sources, sessionId),
   'session.cancel': async ({ sessionId }) =>
     cancelSession(sources.open, sessionId),
   'session.archive': ({ sessionId }) => archiveSession(sources, sessionId),
