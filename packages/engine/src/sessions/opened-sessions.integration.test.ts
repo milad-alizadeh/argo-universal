@@ -18,7 +18,7 @@ type Observation = {
   stopped: string[];
 };
 
-function observe({ host, caller }: Journey): Observation {
+function observe({ host, caller }: Journey, retain = true): Observation {
   const sources = sessionSources(host.openSessions);
   const open = new OpenSessions(sources);
   const enrolled: string[] = [];
@@ -29,20 +29,19 @@ function observe({ host, caller }: Journey): Observation {
   const register: StartedSessionObserver = (id) => {
     enrolled.push(id);
 
-    return {
-      follow: () => {
-        followed.push(id);
-
-        return {
-          unsubscribe: () => {
-            detached.push(id);
-          },
-        };
-      },
-      stop: () => {
-        stopped.push(id);
-      },
+    const availability = (open: boolean): void => {
+      (open ? followed : detached).push(id);
     };
+
+    return retain
+      ? {
+          availability,
+          retain: true,
+          stop: () => {
+            stopped.push(id);
+          },
+        }
+      : { availability };
   };
 
   const stop = watchStartedSessions(
@@ -73,7 +72,7 @@ it('enrolls direct Started Sessions before and after observation begins', async 
   }
 });
 
-it('preserves the observer across reopening and disposes both subscriptions', async () => {
+it('preserves a retained observer across reopening and disposes it when the watch stops', async () => {
   const journey = await delegationJourney();
   const child = await startDelegated(journey);
   const watching = observe(journey);
@@ -97,4 +96,21 @@ it('preserves the observer across reopening and disposes both subscriptions', as
 
   expect(watching.detached).toEqual([sessionId, sessionId, sessionId]);
   expect(watching.stopped).toEqual([sessionId]);
+});
+
+it('re-enrolls a non-retained observer when its Started Session reopens', async () => {
+  const journey = await delegationJourney();
+  const { sessionId } = await startDelegated(journey);
+  const watching = observe(journey, false);
+
+  try {
+    await closeTestSession(journey.host, { sessionId });
+    await expect.poll(() => watching.detached).toEqual([sessionId]);
+    await journey.host.caller.session.open({ sessionId });
+
+    expect(watching.enrolled).toEqual([sessionId, sessionId]);
+    expect(watching.followed).toEqual(watching.enrolled);
+  } finally {
+    watching.stop();
+  }
 });

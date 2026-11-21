@@ -1,3 +1,4 @@
+import type { PromptRequest } from '@agentclientprotocol/sdk';
 import { SessionNewOutput } from '@repo/contracts';
 import { OperationExecution } from '@repo/contracts/operations';
 import { expect, it } from 'vitest';
@@ -7,6 +8,10 @@ import { closeTestSession } from '#mocks/close-session';
 import { questionSteps } from '#mocks/elicitation-steps';
 import { runOperation } from '#mocks/operations';
 import { delegationJourney } from '#mocks/session-delegation';
+import { FeedRowsJob } from '../feed';
+import { closeFollowThrough } from '../sessions/orchestration/result-store';
+import type { WriterJob } from '../storage';
+import { writeJobs } from '../storage';
 
 const starterText = 'Delegate an outcome';
 
@@ -18,11 +23,15 @@ type GatedDelegation = {
   sourceGate: PromiseWithResolvers<void>;
 };
 
-function gatedDelegation(question?: string): GatedDelegation {
+function gatedDelegation(
+  question?: string,
+  requests?: PromptRequest[],
+): GatedDelegation {
   const starterGate = Promise.withResolvers<void>();
   const sourceGate = Promise.withResolvers<void>();
 
   const journey = delegationJourney({
+    requests,
     replies: [
       {
         prompt: starterText,
@@ -145,6 +154,76 @@ it('revokes a pending result when the starter closes follow-through', async () =
       feed.rows.filter((row) => row.sessionUpdate === 'prompt_message'),
     ).toEqual([]);
   } finally {
+    starterGate.resolve();
+    sourceGate.resolve();
+  }
+}, 30_000);
+
+type DelegationHost = Awaited<ReturnType<typeof delegationJourney>>['host'];
+
+function writesResult(job: WriterJob, starterId: string): boolean {
+  if (!(job instanceof FeedRowsJob)) return false;
+
+  const { sessionId, rows } = job.queuedFeedRows();
+
+  return (
+    sessionId === starterId &&
+    rows.some(
+      (row) =>
+        row.sessionUpdate === 'prompt_message' &&
+        row._meta.argo.sender.type === 'session' &&
+        Boolean(row._meta.argo.sender.delegatedResult),
+    )
+  );
+}
+
+function closeDuringFeedCommit(
+  host: DelegationHost,
+  starterId: string,
+): { closed: Promise<void>; stop: () => void } {
+  const closed = Promise.withResolvers<void>();
+
+  const subscription = host.databaseWriter.on('writer.queued', ({ jobs }) => {
+    if (!jobs.some((job) => writesResult(job, starterId))) return;
+
+    subscription.unsubscribe();
+    // Commit a workflow close before the waiting submission can observe its Feed commit.
+    writeJobs(host.database, [closeFollowThrough(starterId)]);
+    closed.resolve();
+  });
+
+  return { closed: closed.promise, stop: () => subscription.unsubscribe() };
+}
+
+it('does not dispatch a result revoked during its Feed commit', async () => {
+  const requests: PromptRequest[] = [];
+  const { journey, starterGate, sourceGate } = gatedDelegation(
+    undefined,
+    requests,
+  );
+  const opened = await journey;
+  const { host, caller } = opened;
+  const starter = { sessionId: caller.sessionId };
+  const intercept = closeDuringFeedCommit(host, starter.sessionId);
+
+  try {
+    await delegate(opened, true);
+    sourceGate.resolve();
+    await expect
+      .poll(
+        async () =>
+          (await host.caller.session.get(starter)).promptQueue.items.length,
+      )
+      .toBe(1);
+
+    const requestsBefore = requests.length;
+    starterGate.resolve();
+    await intercept.closed;
+    await waitForAcpSessionIdle(host, starter.sessionId);
+
+    expect(requests).toHaveLength(requestsBefore);
+  } finally {
+    intercept.stop();
     starterGate.resolve();
     sourceGate.resolve();
   }

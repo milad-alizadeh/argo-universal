@@ -69,10 +69,11 @@ class StartedSession {
     });
   }
 
-  public follow: StartedSessionObservation['follow'] = (actor) =>
-    actor.on('*', (happening) => {
-      if (happening.type === 'turn.ended') this.settling(happening);
-    });
+  public readonly retain = true;
+
+  public turnEnded: NonNullable<StartedSessionObservation['turnEnded']> = (
+    happening,
+  ) => this.settling(happening);
 
   public stop(): void {
     for (const end of this.ends) clearTimeout(end);

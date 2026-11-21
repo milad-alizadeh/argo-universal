@@ -62,21 +62,8 @@ function watchStartedInput(
   changed: () => void,
 ): () => void {
   return watchStartedSessions(sources, starterId, () => ({
-    follow: (actor) => {
-      const subscription = actor.subscribe({
-        next: changed,
-        complete: changed,
-      });
-
-      changed();
-
-      return {
-        unsubscribe: () => {
-          subscription.unsubscribe();
-          changed();
-        },
-      };
-    },
+    availability: changed,
+    changed,
   }));
 }
 

@@ -17,6 +17,8 @@ export type PromptDeliverySessions = Pick<
   'admit' | 'queued' | 'session' | 'write'
 >;
 
+type QueueDeliveryOutcome = 'queued' | 'not-ready' | 'archived';
+
 type QueueTarget = {
   sessionId: string;
   delivery: PromptDelivery;
@@ -31,26 +33,26 @@ export async function deliverQueuedPrompt(
   sessions: PromptDeliverySessions,
   target: QueueTarget,
   signal: AbortSignal,
-): Promise<'settled' | 'not-ready'> {
+): Promise<QueueDeliveryOutcome> {
   sessions.admit(signal);
   const live = sessions.session(target.sessionId);
 
-  if (live && !live.getSnapshot().hasTag('ready')) return 'not-ready';
+  if (!live) return appendToStoredQueue(sessions, target);
 
-  await (live
-    ? sendQueueCommand(live, target.delivery)
-    : appendToStoredQueue(sessions, target));
+  if (!live.getSnapshot().hasTag('ready')) return 'not-ready';
 
-  return 'settled';
+  await sendQueueCommand(live, target.delivery);
+
+  return 'queued';
 }
 
 async function appendToStoredQueue(
   sessions: Pick<PromptDeliverySessions, 'queued' | 'write'>,
   { sessionId, delivery, pauseWhenClosed }: QueueTarget,
-): Promise<void> {
+): Promise<'queued' | 'archived'> {
   const stored = sessions.queued(sessionId);
 
-  if (stored.archivedAt !== null) return;
+  if (stored.archivedAt !== null) return 'archived';
   const { command, sender, queuedId, commitWith } = delivery;
 
   const { promptQueue } = changePromptQueue(
@@ -73,4 +75,6 @@ async function appendToStoredQueue(
       commitWith,
     ),
   );
+
+  return 'queued';
 }
