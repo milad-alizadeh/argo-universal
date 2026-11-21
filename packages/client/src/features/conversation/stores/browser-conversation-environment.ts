@@ -4,26 +4,17 @@ import type {
   VoicePeer,
   VoicePlayback,
 } from '../types/conversation-environment';
+import { peerStatsOf, type PeerStats } from '../utils/peer-stats';
 import { BrowserClipPlayback, BrowserRecording } from './browser-clips';
 import { BrowserMicrophone } from './browser-microphone';
 import { BrowserSilence } from './browser-silence';
 import { LevelMeter } from './level-meter';
+import {
+  firstVoiceStream,
+  microphoneReplacer,
+  offerWithCandidates,
+} from './peer-media';
 import { AudioElementPlayback } from './speaker-sink';
-
-const iceGatheringLimitMs = 3000;
-
-// The offer is sent whole, so wait for the candidates it carries, or stop waiting after a moment.
-function gathered(connection: RTCPeerConnection): Promise<void> {
-  return new Promise((resolve) => {
-    const check = (): void => {
-      if (connection.iceGatheringState === 'complete') resolve();
-    };
-
-    connection.addEventListener('icegatheringstatechange', check);
-    setTimeout(resolve, iceGatheringLimitMs);
-    check();
-  });
-}
 
 function streamOf(microphone: Microphone): MediaStream {
   if (microphone instanceof BrowserSilence) return microphone.stream;
@@ -34,22 +25,13 @@ function streamOf(microphone: Microphone): MediaStream {
   return microphone.stream;
 }
 
-const sdpOf = (connection: RTCPeerConnection): string =>
-  connection.localDescription?.sdp ?? '';
-
 class BrowserPeer implements VoicePeer {
   private readonly connection = new RTCPeerConnection();
 
   public async offer(microphone: Microphone): Promise<string> {
     this.sendUp(streamOf(microphone));
-    // The provider carries its events on this channel.
-    this.connection.createDataChannel('oai-events');
-    await this.connection.setLocalDescription(
-      await this.connection.createOffer(),
-    );
-    await gathered(this.connection);
 
-    return sdpOf(this.connection);
+    return offerWithCandidates(this.connection);
   }
 
   private sendUp(stream: MediaStream): void {
@@ -58,26 +40,19 @@ class BrowserPeer implements VoicePeer {
   }
 
   // The sender keeps its place in the offer, so the provider hears the new microphone with no renegotiation.
-  public async replaceMicrophone(microphone: Microphone): Promise<void> {
-    const [track] = streamOf(microphone).getAudioTracks();
-
-    const sender = this.connection
-      .getSenders()
-      .find((each) => each.track?.kind === 'audio');
-
-    await sender?.replaceTrack(track ?? null);
-  }
+  public replaceMicrophone = microphoneReplacer(this.connection, streamOf);
 
   public async accept(answer: string): Promise<void> {
     await this.connection.setRemoteDescription({ type: 'answer', sdp: answer });
   }
 
   public onVoice(listener: (stream: MediaStream) => void): void {
-    this.connection.addEventListener('track', ({ streams }) => {
-      const [voice] = streams;
+    this.connection.addEventListener('track', firstVoiceStream(listener));
+  }
 
-      if (voice) listener(voice);
-    });
+  // SPIKE (latency on a phone): the desktop baseline reads the same stats the phone does.
+  public async stats(): Promise<PeerStats> {
+    return peerStatsOf(await this.connection.getStats());
   }
 
   public close(): void {

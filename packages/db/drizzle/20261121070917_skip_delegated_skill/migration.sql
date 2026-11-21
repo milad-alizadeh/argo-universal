@@ -1,0 +1,1 @@
+ALTER TABLE `delegated_skill` ADD `skipped` integer DEFAULT false NOT NULL;

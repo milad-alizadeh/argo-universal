@@ -106,6 +106,8 @@ export const iconSymbols = {
   person: { sf: 'person', material: 'person' },
   phone: { sf: 'iphone', material: 'smartphone' },
   'plan-mode': { sf: 'map', material: 'map' },
+  // The power symbol: a circle broken at the top by a stroke, for a light or device switched on and off.
+  power: { sf: 'power', material: 'power_settings_new' },
   private: { sf: 'lock', material: 'lock' },
   read: { sf: 'book', material: 'menu_book' },
   rename: { sf: 'pencil', material: 'edit' },

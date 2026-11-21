@@ -23,8 +23,11 @@ interface Easing {
 }
 
 // The turn's colour sweep is a little slower than the rest, so it reads as a sweep.
-const tauOf = (key: keyof Pose, tick: Tick): number =>
-  (key === 'tone' ? toneTau : poseTau) * (tick.reduced ? calmer : 1);
+const tauOf = (key: keyof Pose, tick: Tick): number => {
+  'worklet';
+
+  return (key === 'tone' ? toneTau : poseTau) * (tick.reduced ? calmer : 1);
+};
 
 const eased = (easing: Easing, key: keyof Pose): number => {
   'worklet';

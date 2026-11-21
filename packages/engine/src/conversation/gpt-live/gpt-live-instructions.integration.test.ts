@@ -55,6 +55,26 @@ describe('What a GPT-Live call is told', () => {
     expect(told).toMatch(/"stop"[^.]*exactly/i);
   });
 
+  it('hands an answer in an Agent-led interview back to the Agent, even when it is short', async () => {
+    const told = await instructionsSent({});
+
+    expect(told).toMatch(
+      /(?:Agent's question|interview with the Agent)[^.]*hand[^.]*"yes" or "okay"/i,
+    );
+    expect(told).toMatch(
+      /wait for the Agent's next question and say it aloud/i,
+    );
+  });
+
+  it('hands over goodbye and distinguishes ending the call from pausing the interview', async () => {
+    const told = await instructionsSent({});
+
+    expect(told).toMatch(/hand over[^.]*end the Conversation[^.]*goodbye/i);
+    expect(told).toMatch(
+      /hand over[^.]*pause or wait[^.]*Conversation stays open/i,
+    );
+  });
+
   it("speaks with a custom voice's base voice", async () => {
     await instructionsSent({ voice: 'sol', style });
 

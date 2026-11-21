@@ -154,6 +154,12 @@ export interface PluginTest {
       signal: AbortSignal,
     ) => AsyncGenerator<LiveAnswer>;
   };
+  /*
+   * The one wait a test makes after `argo.changed()`: every change window ends, and the pages it marked are told
+   * (ADR-0060). With `clockStart` it also waits for the Plugin calls in flight and the Queries they set off; on the
+   * real clock those cannot be waited for, so a test then waits for the answer it wants. It does not move the clock.
+   */
+  settled: () => Promise<void>;
   close: () => Promise<void>;
   emit: (name: HookEventName, event: JsonObject) => Promise<Json>;
   clock: {

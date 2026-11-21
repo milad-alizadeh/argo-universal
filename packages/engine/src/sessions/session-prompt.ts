@@ -1,6 +1,7 @@
 import type { SessionPromptInput } from '@repo/contracts';
 import { requireInstalledAgent } from '../agents';
 import { promptMessageId } from '../feed';
+import { runPromptSubmitHook } from './prompt-authorization';
 import type { PromptSend } from './prompt-sender';
 import { submitSessionPrompt, waitForReadySession } from './session-command';
 import type { SessionActorRef } from './session-machine';
@@ -47,7 +48,7 @@ const runPromptHook = (
   sources: PromptSources,
   { sessionId, prompt }: SessionPromptInput,
 ): ReturnType<PromptSources['hooks']['prompt.submit']> =>
-  sources.hooks['prompt.submit']({
+  runPromptSubmitHook(sources.hooks['prompt.submit'], {
     sessionId,
     projectId: sources.readSession(sessionId).projectId,
     prompt,

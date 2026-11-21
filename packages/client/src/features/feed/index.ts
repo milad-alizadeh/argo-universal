@@ -21,15 +21,13 @@ export { toSubagentFeedView } from './view/to-subagent-feed-view';
 
 export { withParentResults } from './view/with-parent-results';
 
-export { withPartialTranscripts } from './view/with-partial-transcripts';
-
 export { DiffView } from './components/diff-view/diff-view';
 
 export { toFileDiffs, type FileDiff } from './view/file-diff';
 
 export { findLiveToolCall } from './view/live-tool-call';
 
-export type { FeedViewItem } from './view/feed-view';
+export type { FeedDelegated, FeedViewItem } from './view/feed-view';
 
 export { FileHeader as DiffFileHeader } from './components/diff-view/diff-file-header';
 

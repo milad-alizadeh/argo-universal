@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { OperationIcon, OperationPolicy } from '#operation-metadata';
+import {
+  OperationAskWhen,
+  OperationIcon,
+  OperationPolicy,
+} from '#operation-metadata';
 import { WireJson } from '#plugin-wire-json';
 
 /*
@@ -103,29 +107,44 @@ export const projectParam = 'projectId';
 
 export const defaultPluginOperationIcon = 'plugins';
 
-export const PluginOperationContribution = z.strictObject({
-  name: PluginOperationName,
-  label: z.string().trim().min(1),
-  icon: OperationIcon.optional(),
-  description: z.string().trim().min(1),
-  tier: PluginOperationTier,
-  policy: OperationPolicy.exclude(['archive', 'ask-outside-project']),
-  params: z
-    .record(PluginOperationName, PluginOperationParam)
-    .refine(
-      (params) => !Object.hasOwn(params, projectParam),
-      'An Operation needs a Project with "caller": ["project"], not a projectId param',
-    )
-    .optional(),
-  caller: z
-    .array(PluginOperationNeed)
-    .refine(
-      (needs) => new Set(needs).size === needs.length,
-      'An Operation names each need once',
-    )
-    .optional(),
-  keywords: z.array(z.string().trim().min(1)).optional(),
-});
+// With `"policy": "ask"`, which values of a choice param still ask (ADR-0044). Without it every run asks.
+export const PluginOperationContribution = z
+  .strictObject({
+    name: PluginOperationName,
+    label: z.string().trim().min(1),
+    icon: OperationIcon.optional(),
+    description: z.string().trim().min(1),
+    tier: PluginOperationTier,
+    policy: OperationPolicy.exclude(['archive', 'ask-outside-project']),
+    params: z
+      .record(PluginOperationName, PluginOperationParam)
+      .refine(
+        (params) => !Object.hasOwn(params, projectParam),
+        'An Operation needs a Project with "caller": ["project"], not a projectId param',
+      )
+      .optional(),
+    caller: z
+      .array(PluginOperationNeed)
+      .refine(
+        (needs) => new Set(needs).size === needs.length,
+        'An Operation names each need once',
+      )
+      .optional(),
+    keywords: z.array(z.string().trim().min(1)).optional(),
+    askWhen: OperationAskWhen.optional(),
+  })
+  .refine(
+    ({ askWhen, policy }) => askWhen === undefined || policy === 'ask',
+    'Only an ask policy says when it asks',
+  )
+  .refine(
+    ({ askWhen, params }) =>
+      askWhen === undefined ||
+      askWhen.is.every((value) =>
+        params?.[askWhen.param]?.choices?.includes(value),
+      ),
+    'askWhen names a choice param and only its choices',
+  );
 
 export type PluginOperationContribution = z.infer<
   typeof PluginOperationContribution

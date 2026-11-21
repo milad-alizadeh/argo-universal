@@ -106,6 +106,7 @@ import material_photo_camera from '../assets/material-light/photo_camera.xml';
 import material_photo_library from '../assets/material-light/photo_library.xml';
 import material_play_arrow from '../assets/material-light/play_arrow.xml';
 import material_power from '../assets/material-light/power.xml';
+import material_power_settings_new from '../assets/material-light/power_settings_new.xml';
 import material_qr_code from '../assets/material-light/qr_code.xml';
 import material_qr_code_scanner from '../assets/material-light/qr_code_scanner.xml';
 import material_radio_button_unchecked from '../assets/material-light/radio_button_unchecked.xml';
@@ -255,6 +256,7 @@ import filled_material_photo_camera from '../assets/material-filled/photo_camera
 import filled_material_photo_library from '../assets/material-filled/photo_library.xml';
 import filled_material_play_arrow from '../assets/material-filled/play_arrow.xml';
 import filled_material_power from '../assets/material-filled/power.xml';
+import filled_material_power_settings_new from '../assets/material-filled/power_settings_new.xml';
 import filled_material_qr_code from '../assets/material-filled/qr_code.xml';
 import filled_material_qr_code_scanner from '../assets/material-filled/qr_code_scanner.xml';
 import filled_material_radio_button_unchecked from '../assets/material-filled/radio_button_unchecked.xml';
@@ -411,6 +413,7 @@ export const materialImages = {
   photo_library: material_photo_library,
   play_arrow: material_play_arrow,
   power: material_power,
+  power_settings_new: material_power_settings_new,
   qr_code: material_qr_code,
   qr_code_scanner: material_qr_code_scanner,
   radio_button_unchecked: material_radio_button_unchecked,
@@ -564,6 +567,7 @@ export const materialFilledImages = {
   photo_library: filled_material_photo_library,
   play_arrow: filled_material_play_arrow,
   power: filled_material_power,
+  power_settings_new: filled_material_power_settings_new,
   qr_code: filled_material_qr_code,
   qr_code_scanner: filled_material_qr_code_scanner,
   radio_button_unchecked: filled_material_radio_button_unchecked,

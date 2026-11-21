@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type { ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 import { loadedSkeleton, loadingSkeleton } from './skeleton-fixtures';
 import { SkeletonNoData, SkeletonWithRows } from './skeleton-no-data';
@@ -96,5 +96,47 @@ export const ShowsContentOnceLoaded: Story = {
     await expect(await canvas.findByRole('heading', heading)).toBeVisible();
     await expect(canvas.queryByRole('status')).toBeNull();
     await expect(canvas.getByRole('heading', ignored)).toBeVisible();
+  },
+};
+
+function LoadingTransition(): ReactElement {
+  const [loading, setLoading] = useState(true);
+
+  return (
+    <>
+      <button type="button" onClick={() => setLoading(false)}>
+        Finish loading
+      </button>
+      <SkeletonSample {...loadingSkeleton} loading={loading} />
+    </>
+  );
+}
+
+export const KeepsLoadedContentAccessibleWhenFontsFinish: Story = {
+  args: loadingSkeleton,
+  render: () => <LoadingTransition />,
+  play: async ({ mount, userEvent }) => {
+    const fonts = document.fonts;
+    const ready = Promise.withResolvers<FontFaceSet>();
+    Object.defineProperty(fonts, 'ready', {
+      configurable: true,
+      value: ready.promise,
+    });
+
+    try {
+      const canvas = await mount();
+      await expect(await canvas.findByRole('status')).toBeVisible();
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Finish loading' }),
+      );
+      await expect(await canvas.findByRole('heading', heading)).toBeVisible();
+
+      ready.resolve(fonts);
+      await ready.promise;
+      await new Promise(requestAnimationFrame);
+      await expect(canvas.getByRole('heading', heading)).toBeVisible();
+    } finally {
+      Reflect.deleteProperty(fonts, 'ready');
+    }
   },
 };

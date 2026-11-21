@@ -1,5 +1,4 @@
 import { expect, it } from 'vitest';
-import { settled } from './journey-fixture';
 import {
   attached,
   changePull,
@@ -22,7 +21,7 @@ it(
     await Promise.all([workbench.next(), inspector.next()]);
 
     // Slots answer from storage before their opening sync finishes; count the next tick after that sync drains.
-    await settled(run);
+    await run.test.settled();
 
     const pulls = run.github.pullReads().length;
     const checks = run.github.checkReads().length;

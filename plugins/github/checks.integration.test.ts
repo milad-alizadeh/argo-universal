@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { headFrom, sha } from './github-fixture';
 import { changesOf, listed } from './journey-calls-fixture';
-import { restart, settled } from './journey-fixture';
+import { restart } from './journey-fixture';
 import {
   attached,
   changePull,
@@ -97,7 +97,7 @@ it(
     expect(failed[1]).not.toHaveProperty('stale');
 
     // The Slot answers from storage and can still be reading the old head.
-    await settled(run);
+    await run.test.settled();
 
     // A push to a head whose Checks were never read leaves none to claim, never passing ones.
     run.github.checksFailWith.set(checksOf(newHead), 500);

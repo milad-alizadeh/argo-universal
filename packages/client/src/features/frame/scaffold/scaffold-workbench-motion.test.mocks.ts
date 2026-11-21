@@ -17,24 +17,59 @@ export async function sampleMotionFrames(
   try {
     action();
 
-    return await collectFrames(requestPaint, measure, frames);
+    return await collectFrames(measure, frames, {
+      requestPaint,
+      step: () => vi.advanceTimersToNextFrame(),
+    });
   } finally {
     vi.useRealTimers();
   }
 }
 
+// How a sample waits for the browser's paint, and what it advances after it.
+interface Paint {
+  requestPaint: typeof requestAnimationFrame;
+  step: () => void;
+}
+
 async function collectFrames(
-  requestPaint: typeof requestAnimationFrame,
   measure: () => number,
   frames: number,
+  { requestPaint, step }: Paint,
 ): Promise<number[]> {
   const samples: number[] = [];
 
   for (const frame of Array.from({ length: frames }).keys()) {
     await new Promise<void>((resolve) => requestPaint(() => resolve()));
-    vi.advanceTimersToNextFrame();
+    step();
     samples[frame] = measure();
   }
 
   return samples;
+}
+
+// Holds the main thread, as a heavy pane's first render does in the same task as the press that opened it.
+function holdMainThread(milliseconds: number): void {
+  const until = performance.now() + milliseconds;
+
+  while (performance.now() < until) {
+    // Busy: nothing paints until the commit's work ends.
+  }
+}
+
+// Samples on the real clock after a press whose commit keeps the main thread busy, so a motion that started its clock inside the commit has spent it before its first frame.
+export async function sampleBusyMotionFrames(
+  action: () => void,
+  measure: () => number,
+  { frames, busy }: { frames: number; busy: number },
+): Promise<number[]> {
+  action();
+  holdMainThread(busy);
+
+  return collectFrames(measure, frames, {
+    requestPaint: requestAnimationFrame,
+    step: () => {
+      // The real clock advances itself.
+    },
+  });
 }

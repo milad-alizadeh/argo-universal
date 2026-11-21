@@ -70,3 +70,17 @@ export const FocusesNothingByDefault: Story = {
     await expect(canvas.getByDisplayValue('Value')).not.toHaveFocus();
   },
 };
+
+// The title sits above the input and is whole, however long: it is never cut short beside the value.
+export const LongTitleStacksAboveInput: Story = {
+  args: { title: 'Remote application client secret', value: 'Value' },
+  play: async ({ canvas, args }) => {
+    const title = canvas.getByText(args.title);
+    const input = canvas.getByDisplayValue('Value');
+
+    await expect(title.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      input.getBoundingClientRect().top,
+    );
+    await expect(title.scrollWidth).toBeLessThanOrEqual(title.clientWidth);
+  },
+};

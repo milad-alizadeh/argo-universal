@@ -7,7 +7,7 @@ import {
   resourceUrlOf,
   type HueResource,
 } from './hue';
-import type { HomeData, Switchable } from './hue-model';
+import type { HomeData, Household, Switch, Switchable } from './hue-model';
 import { householdOf } from './hue-readers';
 import { at, jsonRequest, list, parseJson, text, type Json } from './json';
 
@@ -16,7 +16,7 @@ import { at, jsonRequest, list, parseJson, text, type Json } from './json';
  * token, and the Bridge's application key goes beside it. A missing Account throws `SignInRequired`, which the page's
  * gate answers with the sign-in.
  */
-export type HueCalls = Pick<Argo, 'fetch' | 'secrets' | 'changed' | 'accounts'>;
+export type HueCalls = Pick<Argo, 'fetch' | 'secrets' | 'accounts'>;
 
 type FetchResponse = Awaited<ReturnType<ReturnType<typeof accountFetch>>>;
 
@@ -24,9 +24,11 @@ type FetchResponse = Awaited<ReturnType<ReturnType<typeof accountFetch>>>;
 type Read =
   | { kind: 'data'; data: readonly Json[] }
   | { kind: 'refused' }
-  | { kind: 'failed'; reason: string };
+  | { kind: 'failed'; reason: string; status: number };
 
 const forbidden = 403;
+
+const notFound = 404;
 
 type KeyHeader = { [applicationKeyHeader]: string };
 
@@ -40,9 +42,23 @@ const hueError = (reply: FetchResponse, body: Json | undefined): string =>
 function readOf(reply: FetchResponse, body: Json | undefined): Read {
   if (reply.status === forbidden) return { kind: 'refused' };
 
-  return reply.ok
-    ? { kind: 'data', data: list(at(body, 'data')) }
-    : { kind: 'failed', reason: hueError(reply, body) };
+  const errors = at(body, 'errors');
+  const data = at(body, 'data');
+
+  if (!reply.ok || list(errors).length > 0)
+    return {
+      kind: 'failed',
+      reason: hueError(reply, body),
+      status: reply.status,
+    };
+
+  return Array.isArray(data) && Array.isArray(errors)
+    ? { kind: 'data', data }
+    : {
+        kind: 'failed',
+        reason: 'Hue returned an unexpected reply.',
+        status: reply.status,
+      };
 }
 
 const answerOf = async (reply: FetchResponse): Promise<Read> =>
@@ -61,7 +77,13 @@ const resources = async (
 const dataIn = (read: Read): readonly Json[] =>
   read.kind === 'data' ? read.data : [];
 
-type Reads = Readonly<{ lights: Read; rooms: Read; groups: Read }>;
+type Reads = Readonly<{
+  lights: Read;
+  rooms: Read;
+  groups: Read;
+  scenes: Read;
+  connectivity: Read;
+}>;
 
 type Problem = Exclude<Read, { kind: 'data' }>;
 
@@ -73,34 +95,32 @@ const homeOf = (reads: Reads): HomeData => ({
     lights: dataIn(reads.lights),
     rooms: dataIn(reads.rooms),
     groups: dataIn(reads.groups),
+    scenes: dataIn(reads.scenes),
+    connectivity: dataIn(reads.connectivity),
   }),
 });
 
-// A refused key is forgotten, so the page asks to connect the Bridge again.
-async function problemOf(argo: HueCalls, problem: Problem): Promise<HomeData> {
-  if (problem.kind === 'failed') return problem;
-  await argo.secrets.delete(applicationKeySecret);
-
-  return { kind: 'connect' };
-}
-
-function settled(argo: HueCalls, reads: Reads): HomeData | Promise<HomeData> {
+function settled(reads: Reads): HomeData {
   const problem = Object.values(reads).find(isProblem);
 
-  return problem ? problemOf(argo, problem) : homeOf(reads);
+  if (!problem) return homeOf(reads);
+
+  return problem.kind === 'failed' ? problem : { kind: 'connect' };
 }
 
 async function household(argo: HueCalls, key: string): Promise<HomeData> {
   const read = (kind: HueResource): Promise<Read> =>
     resources(argo, { kind, key });
 
-  const [lights, rooms, groups] = await Promise.all([
+  const [lights, rooms, groups, scenes, connectivity] = await Promise.all([
     read('light'),
     read('room'),
     read('grouped_light'),
+    read('scene'),
+    read('zigbee_connectivity'),
   ]);
 
-  return settled(argo, { lights, rooms, groups });
+  return settled({ lights, rooms, groups, scenes, connectivity });
 }
 
 // The Home page's one read; signed out, the gate draws the sign-in before the Bridge is asked for.
@@ -126,10 +146,13 @@ async function keyOf(argo: HueCalls): Promise<string> {
   return key;
 }
 
-// Switches or dims one light or a room's grouped light, then has the page read again.
+// What a PUT may change: a light, a room's grouped light, or a scene to recall.
+type Writable = Switchable | 'scene';
+
+// Switches, dims or colours one light or a room's grouped light, or recalls a scene, then has the page read again.
 export async function change(
   argo: HueCalls,
-  target: { kind: Switchable; id: string; body: Json },
+  target: { kind: Writable; id: string; body: Json },
 ): Promise<void> {
   const key = await keyOf(argo);
 
@@ -140,7 +163,41 @@ export async function change(
     ),
   );
 
-  argo.changed();
+  if (
+    read.kind === 'failed' &&
+    read.status === notFound &&
+    target.kind === 'scene'
+  )
+    throw new Error(`Scene "${target.id}" no longer exists in a Hue room.`);
 
   if (read.kind !== 'data') throw new Error(reasonOf(read));
+}
+
+// Every light with its colour and reachability, without the rooms, for a write that checks one before it sends.
+export async function lightsRead(argo: HueCalls): Promise<readonly Switch[]> {
+  const key = await keyOf(argo);
+
+  const [lights, connectivity] = await Promise.all([
+    resources(argo, { kind: 'light', key }),
+    resources(argo, { kind: 'zigbee_connectivity', key }),
+  ]);
+
+  const problem = [lights, connectivity].find(isProblem);
+
+  if (problem) throw new Error(reasonOf(problem));
+
+  return householdOf({
+    lights: dataIn(lights),
+    rooms: [],
+    groups: [],
+    scenes: [],
+    connectivity: dataIn(connectivity),
+  }).others;
+}
+
+// The household as it is now, or why it cannot be read: a read an Agent's list Operation answers from.
+export function householdRead(data: HomeData): Household {
+  if (data.kind === 'home') return data.household;
+
+  throw new Error(data.kind === 'failed' ? data.reason : reconnect);
 }

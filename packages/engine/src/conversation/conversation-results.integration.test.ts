@@ -41,6 +41,38 @@ const askAndWaitForEnd = async (work: ConversationWork): Promise<void> => {
 };
 
 describe('what the Agent says goes back to the voice', () => {
+  it('advances an interview on transcribed short answers, even when the voice skips the hand-over', async () => {
+    const work = await startConversationWork([
+      {
+        prompt: job,
+        messages: [
+          '[COMPLETE] **Is the preview ready?**',
+          '[COMPLETE] Take your time.',
+        ],
+      },
+      { prompt: 'Yes', messages: ['[COMPLETE] Should we test it on iPhone?'] },
+      { prompt: 'Okay', messages: ['[COMPLETE] Should we include Android?'] },
+    ]);
+
+    await askAndWaitForEnd(work);
+    const call = work.provider.call;
+
+    call.personSays('Yes', 'yes');
+    call.emit({ type: 'person.turn.completed', id: 'yes', text: 'Yes' });
+    await expect
+      .poll(() => spoken(work))
+      .toContain('Should we test it on iPhone?');
+
+    // A late hand-over for "Yes" must leave the new question open and send no duplicate Prompt.
+    call.requestWork('late', 'Yes', 'yes');
+    call.personSays('Okay', 'okay');
+    call.emit({ type: 'person.turn.completed', id: 'okay', text: 'Okay' });
+    await expect
+      .poll(() => spoken(work))
+      .toContain('Should we include Android?');
+    expect(work.prompts).toHaveLength(4);
+  });
+
   it('answers the request at once, sends progress as background and the result as speech, and never Tool output', async () => {
     const work = await startConversationWork([
       {

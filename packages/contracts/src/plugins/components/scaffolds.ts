@@ -83,10 +83,15 @@ export const scaffoldsComponents = {
     inspectorProps,
     {
       group: 'scaffolds',
-      wire: false,
       children: true,
       slots: { actions: actionSlot },
-      events: { onOpenChange: openChange(inspectorProps) },
+      events: {
+        onOpenChange: openChange(inspectorProps),
+        onChangeText: echoes(inspectorProps, 'value', {
+          throttleMs: 150,
+          blocks: false,
+        }),
+      },
     },
   ),
   SettingsLayout: defineKitComponent(

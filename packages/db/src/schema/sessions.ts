@@ -104,10 +104,64 @@ export const sessionSchedule = snakeCase.table(
       .notNull()
       .references(() => session.id, { onDelete: 'cascade' }),
     prompt: text().notNull(),
-    intervalSeconds: integer().notNull(),
+    intervalSeconds: integer(),
+    endsAt: integer(),
     nextAt: integer().notNull(),
     lastQueuedAt: integer(),
     paused: integer({ mode: 'boolean' }).notNull().default(false),
   },
   (row) => [index('session_schedule_due').on(row.paused, row.nextAt)],
+);
+
+// A Started Session's explicitly delegated Turn and its delivery receipt.
+export const delegatedTurn = snakeCase.table(
+  'delegated_turn',
+  {
+    id: text().primaryKey(),
+    starterId: text()
+      .notNull()
+      .references(() => session.id, { onDelete: 'cascade' }),
+    sourceId: text()
+      .notNull()
+      .references(() => session.id, { onDelete: 'cascade' }),
+    turnId: text().notNull(),
+    delivered: integer({ mode: 'boolean' }).notNull().default(false),
+    revoked: integer({ mode: 'boolean' }).notNull().default(false),
+  },
+  (table) => [
+    index('delegated_turn_pending_index').on(table.delivered, table.revoked),
+    index('delegated_turn_starter_index').on(table.starterId),
+  ],
+);
+
+// A closed starter Turn cannot admit another delegated result, even when its Prompt was queued.
+export const closedFollowThrough = snakeCase.table('closed_follow_through', {
+  turnId: text()
+    .primaryKey()
+    .references(() => turn.id, { onDelete: 'cascade' }),
+});
+
+// A proposed native command waits for an explicit action in its destination Session.
+export const delegatedSkill = snakeCase.table(
+  'delegated_skill',
+  {
+    id: text().primaryKey(),
+    starterId: text()
+      .notNull()
+      .references(() => session.id, { onDelete: 'cascade' }),
+    originTurnId: text()
+      .notNull()
+      .references(() => turn.id, { onDelete: 'cascade' }),
+    destinationId: text()
+      .notNull()
+      .references(() => session.id, { onDelete: 'cascade' }),
+    name: text().notNull(),
+    arguments: text().notNull(),
+    commandDigest: text().notNull(),
+    dispatched: integer({ mode: 'boolean' }).notNull().default(false),
+    skipped: integer({ mode: 'boolean' }).notNull().default(false),
+  },
+  (table) => [
+    index('delegated_skill_destination_index').on(table.destinationId),
+  ],
 );

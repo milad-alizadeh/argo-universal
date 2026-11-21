@@ -21,7 +21,7 @@ export const appOperations = {
     label: 'Open Screen',
     icon: 'app-window',
     description:
-      'Ask the desktop App on this Server’s device to open a Screen: a Session, the Sessions list, a Project, Agents, Settings or a Plugin Page. It does not launch the App; with none connected it answers not_opened and the link to open.',
+      'Open a Screen in the desktop App on the Server’s Device. Destinations include a Session, Sessions, a Project, Agents, Settings or a Plugin Page. It does not launch the App; with none connected it answers not_opened and the link to open.',
     params: z.strictObject({ destination: ScreenDestination }),
     result: AppOpenResult,
     tier: 'act',

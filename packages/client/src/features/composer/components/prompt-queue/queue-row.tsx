@@ -3,7 +3,7 @@ import { ListDragHandle } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
-import { attachmentSummary, promptText } from './queue-content';
+import { attachmentSummary, queueLabel } from './queue-content';
 import { EditControls } from './queue-controls';
 import type { QueueRowProps } from './queue-types';
 import { useQueueRow, type QueueRow as Row } from './use-queue-row';
@@ -25,11 +25,13 @@ const queueGrip = (
 );
 
 function QueuedRowContent(row: Row): ReactElement {
+  const label = queueLabel(row.row);
+
   return (
     <ListItem
       id={row.row.id}
-      title={promptText(row.row.prompt)}
-      subtitle={queueSubtitle(row)}
+      title={label.text}
+      subtitle={queueSubtitle(row) ?? label.from}
       role="group"
       leading={queueGrip}
       trailingAccessories={row.editing ? undefined : <EditControls {...row} />}

@@ -1,0 +1,12 @@
+appId: dev.argo.app
+name: Jump to latest returns to the Feed end
+---
+# Start in Screens → Sessions → Session → Stopped Turn.
+- assertVisible:
+    id: feed-scroll
+- swipe:
+    start: 50%, 38%
+    end: 50%, 70%
+    duration: 600
+- tapOn: "^Jump to latest.*"
+- assertNotVisible: "^Jump to latest.*"

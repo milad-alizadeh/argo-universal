@@ -16,7 +16,7 @@ export function slashCommandsChoice({
   field,
 }: AttachLayout): AttachChoice {
   return {
-    label: 'Slash Commands',
+    label: 'Commands',
     icon: slashCommandIcon,
     onPress: props.slashCommands?.length
       ? () => field.insertWord('/')

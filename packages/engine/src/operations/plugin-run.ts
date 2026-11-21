@@ -87,6 +87,12 @@ export class PluginOperationRouter {
     return this.rows(filter).catch(() => []);
   }
 
+  public async exact(id: string): Promise<OperationRow[]> {
+    const rows = await this.deps.operations.rows().catch(() => []);
+
+    return rows.filter((row) => row.id === id);
+  }
+
   public async rows(filter: string): Promise<OperationRow[]> {
     // Ranked as core's are; a Plugin's few Operations are indexed on each listing.
     return new OperationIndex(await this.deps.operations.rows()).ranked(filter);

@@ -82,6 +82,11 @@ export class OpenSessions {
   public isRunning(sessionId: string): boolean {
     return this.session(sessionId)?.getSnapshot().hasTag('running') ?? false;
   }
+  public runningSessionIds(): string[] {
+    return Object.keys(this.actor.getSnapshot().context.sessions).filter((id) =>
+      this.isRunning(id),
+    );
+  }
   // Hears what an open Session reports of its Turns until the returned function is called; a closed Session reports none.
   public watchTurns(
     sessionId: string,

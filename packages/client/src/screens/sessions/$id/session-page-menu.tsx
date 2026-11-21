@@ -1,10 +1,18 @@
+import { errorToast } from '@repo/kit/error-toast';
+import { showToast } from '@repo/kit/primitives/overlays/toast';
+import { useMutation } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
+import { useTRPC } from '#features/connection';
 import {
   ArchiveSessionAlert,
   RenameSessionDialog,
   type SessionMenu,
 } from '#features/sessions';
-import { leaveForSessions } from '#lib/product/navigation/navigation';
+import {
+  leaveForSessions,
+  sessionHref,
+} from '#lib/product/navigation/navigation';
+import { useNavigateFromShown } from '#lib/product/navigation/use-navigate-from-shown';
 import { type ArchiveSession, useArchiveSession } from '../use-archive-session';
 import {
   type RenamableSession,
@@ -14,7 +22,10 @@ import {
 import type { SessionDetailViewProps } from './session-detail-view';
 import { type PageRename, useRenamedTitle } from './use-renamed-title';
 
-type SessionMenuHandlers = Pick<SessionMenu, 'onRename' | 'onArchive'>;
+type SessionMenuHandlers = Pick<
+  SessionMenu,
+  'onRename' | 'onArchive' | 'handoff'
+>;
 
 export interface SessionPageMenu {
   // The page's props, with Rename and Archive in the open Session's header menu.
@@ -57,7 +68,10 @@ export function useSessionPageMenu(
 ): SessionPageMenu {
   const { page, rename, archive } = useSessionActions(sessionId, props);
 
+  const handoff = useHandoff(sessionId);
+
   const handlers = {
+    handoff,
     onRename: (): void => rename.onRename(sessionId),
     onArchive: (): void => archive.onArchive(sessionId),
   };
@@ -65,6 +79,27 @@ export function useSessionPageMenu(
   return {
     props: withMenuHandlers(page.props, handlers),
     dialogs: sessionDialogs(rename, archive),
+  };
+}
+
+function useHandoff(sessionId: string): NonNullable<SessionMenu['handoff']> {
+  const trpc = useTRPC();
+  const navigate = useNavigateFromShown();
+
+  const handoff = useMutation(
+    trpc.session.handoff.mutationOptions({
+      onSuccess: (next) => navigate(sessionHref(next.sessionId)),
+      onError: (error) => {
+        const toast = errorToast('Handoff failed', error);
+
+        if (toast) showToast({ ...toast, tone: 'danger' });
+      },
+    }),
+  );
+
+  return {
+    pending: handoff.isPending,
+    onPress: () => handoff.mutate({ sessionId }),
   };
 }
 

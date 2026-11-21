@@ -8,7 +8,7 @@ export type IosImage =
   | { kind: 'system'; name: SFSymbol }
   | { kind: 'asset'; name: CustomSymbol };
 
-// An SVG icon has no image a native iOS surface can draw (ADR-0041), so it is nothing.
+// An SVG icon has no image a native iOS surface can draw (ADR-0041), so it is nothing; an icon button hosts it instead.
 export function iosImage(
   icon: IconSymbol,
   filled?: boolean,

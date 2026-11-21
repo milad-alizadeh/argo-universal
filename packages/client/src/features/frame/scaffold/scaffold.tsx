@@ -81,7 +81,7 @@ function SlidingContent(
 
   return (
     <View className={pageClip}>
-      <Animated.View className={contentFill} style={slide}>
+      <Animated.View className={contentFill} {...slide}>
         {props.children}
       </Animated.View>
     </View>

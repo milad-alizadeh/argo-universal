@@ -1,6 +1,6 @@
 import type { VoicePreviewInput } from '@repo/contracts';
 import { useEffect, useMemo } from 'react';
-import { useConversationConnection } from '../stores/conversation-connection-context';
+import { usePageConversationConnection } from '../stores/conversation-connection-context';
 import { VoicePreviewer } from '../stores/voice-previewer';
 import { usePreviewServer } from './use-preview-server';
 
@@ -18,7 +18,7 @@ export function useVoicePreview(): (
   voice: string,
   custom?: UnsavedConversation,
 ) => void {
-  const connection = useConversationConnection();
+  const connection = usePageConversationConnection();
   const server = usePreviewServer();
 
   const previewer = useMemo(

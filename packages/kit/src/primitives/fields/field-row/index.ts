@@ -18,5 +18,3 @@ export {
 } from './field-row-press';
 
 export { RowFrame } from './field-row-frame';
-
-export { FieldLabelScope, useFieldLabelAbove } from './field-label-layout';

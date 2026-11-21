@@ -1,6 +1,5 @@
 import type { VoiceOption } from '@repo/contracts';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
-import { FieldLabelScope } from '@repo/kit/primitives/fields/field-row';
 import { Dialog, DialogForm } from '@repo/kit/primitives/overlays/dialog';
 import { useState, type ReactElement } from 'react';
 import {
@@ -134,13 +133,12 @@ const descriptionRow = ({ draft, change }: Draft): ReactElement => (
   />
 );
 
-// Its title sits above the field on a wide window, as the board draws it.
 const descriptionSection = (props: FormProps, held: Draft): ReactElement => (
   <FieldGroup.Section
     key="description"
     footer={speechFooter(props.providerLabel)}
   >
-    <FieldLabelScope>{descriptionRow(held)}</FieldLabelScope>
+    {descriptionRow(held)}
   </FieldGroup.Section>
 );
 

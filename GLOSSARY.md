@@ -234,8 +234,8 @@ _Avoid_: Call context, call scope, caller
 What keeps a Query's answer wanted: a Page address whose last draw read it. A Background pass holds nothing and reads fresh. A changed answer marks the Page addresses holding it stale.
 _Avoid_: Subscriber, owner, registration
 
-**Schedule**:
-A Session’s stored instruction for the Server to send a Prompt at a fixed interval. Each occurrence goes through the Session’s Prompt queue. The person can pause, resume or delete it from Schedules in the Workbench.
+**Session follow-up**:
+A stored instruction for the Server to send a Prompt once or at an interval in an existing Session. Each occurrence goes through that Session’s Prompt queue and uses its Checkout. The person manages it from Follow-ups in the Workbench.
 
 **Background pass**:
 One run of a Plugin's declared background entry on its interval, for one Project: its Loader runs and its answer is discarded. It may set its own nav badge; it draws nothing and never raises a Notification.
@@ -262,7 +262,7 @@ A sign-in one Plugin provides and other Plugins borrow, named by the API host it
 _Avoid_: Login, credential, identity, Tracker, Integration
 
 **Secret**:
-A value a Plugin must keep from everyone else, such as a token, a refresh token or an OAuth client secret. It lives in the OS's own secret store under the Plugin's namespace, kept through `argo.secrets` or as a secret Setting, and is never answered to an App, an Agent or another Plugin. See ADR-0051.
+A private value, such as a token or an OAuth client secret, that Argo keeps for a Plugin or for the person. See ADR-0051.
 _Avoid_: Credential, password, Keychain item
 
 **OAuth flow**:
@@ -310,6 +310,9 @@ _Avoid_: Shell, terminal (that is a Terminal), process
 **Goal**:
 An objective that the Agent keeps working toward across Turns, starting the next Turn itself until the Goal is met.
 _Avoid_: Target, loop
+
+**Project Schedule**:
+A Project’s stored instructions and cadence for starting fresh Sessions on its Server. Each occurrence can start a Session with its own Checkout. The person finds Project Schedules in Scheduled.
 
 **Checkout**:
 The git working tree that a Session runs in: its own worktree, or the Project's main checkout.
@@ -428,7 +431,7 @@ What is sent to a Session's Agent to start a Turn. It comes from the user, from 
 _Avoid_: Message (alone), input, instruction
 
 **Queued Prompt**:
-A Prompt waiting in a Session’s ordered queue for a Turn of its own: the person’s, a Plugin’s, the Conversation’s or another Session’s. It is future work, outside the Feed until it starts. A Plugin may withdraw one it sent, never anyone else’s.
+A Prompt waiting in a Session’s ordered queue for a Turn of its own: the person’s, a Plugin’s, the Conversation’s or another Session’s. It is future work, outside the Feed until it starts. A Plugin may withdraw one it sent, never anyone else’s. A Conversation keeps at most one waiting: its next request joins that one until it starts or the person edits it (ADR-0064).
 _Avoid_: Pending message, draft Prompt
 
 **Sent Prompt**:
@@ -486,6 +489,13 @@ _Avoid_: Saved Agent, configured Agent, catalog
 **Launch environment**:
 The environment variables an Installed Agent starts with, saved with it on the Server and edited on the Agent's page in Settings. Installing an Agent seeds it; a change applies from the Agent's next Session.
 _Avoid_: Agent settings, env config
+
+**MCP server**:
+A program or service that gives an Agent tools over the Model Context Protocol. The Argo MCP server gives Agents access to Argo Operations.
+_Avoid_: Connector, integration, tool server, context server
+
+**MCP sign-in**:
+A named identity the person uses with one MCP server, such as Personal or Work in Sentry. It is shared by the Projects that select it.
 
 **Stop reason**:
 Why a Turn ended: `end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `cancelled`, `error`, or `auth_required`.

@@ -1,15 +1,7 @@
 import type { SlotCall } from '@repo/contracts/plugins/argo-calls';
-import type { SlotItemsInput } from '@repo/contracts/plugins/wire';
 import type { PluginClock } from '../clock';
 import type { CallOutcome, Ended } from '../runtime/worker-calls';
-import {
-  itemsLeftOut,
-  keepLate,
-  leftOut,
-  type ItemsAnswer,
-  type Reply,
-} from './kept-items';
-import type { SlotWorker } from './slot-worker';
+import { itemsLeftOut, leftOut, type Reply } from './kept-items';
 
 // How long one batched call may take before its Plugin is left out of that answer.
 export const slotItemsLimitMs = 2000;
@@ -54,27 +46,4 @@ export function within(
   void reply.finally(cancel).then(resolve);
 
   return promise;
-}
-
-// A late call: the worker and change it was asked under, and the contexts it named.
-export type Landing = {
-  worker: SlotWorker;
-  epoch: number;
-  input: SlotItemsInput;
-};
-
-export const landingOf = (
-  worker: SlotWorker,
-  input: SlotItemsInput,
-): Landing => ({ worker, epoch: worker.epoch, input });
-
-/*
- * What a late reply comes to, kept by its worker: only while nothing changed since it was asked, so a reply older than
- * a change signal never stands in for the answer after it. A reply from an ended worker never lands: its call ends with it.
- */
-export function landedItems(
-  { worker, epoch, input }: Landing,
-  reply: Reply,
-): ItemsAnswer | undefined {
-  return worker.epoch === epoch ? keepLate(worker, input, reply) : undefined;
 }

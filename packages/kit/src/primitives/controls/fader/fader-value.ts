@@ -4,6 +4,7 @@ import type { FaderProps } from './fader-props';
 
 export interface FaderValue {
   value: number;
+  hasPendingValue: boolean;
   set: (value: number) => void;
   nudge: (direction: 1 | -1) => void;
   onKey: (key: string) => boolean;
@@ -16,10 +17,6 @@ interface Draft {
 }
 
 const heldBy = (props: FaderProps): number => props.value ?? props.minimumValue;
-
-// The draft of the last change, until the value the caller holds is a different one.
-const shown = (draft: Draft | undefined, held: number): number =>
-  draft?.base === held ? draft.value : held;
 
 const canMove = (props: FaderProps, value: number, next: number): boolean =>
   !props.disabled && next !== value;
@@ -45,28 +42,26 @@ function pressKey(
   return next !== undefined;
 }
 
-function controlOf(
-  props: FaderProps,
-  value: number,
-  set: FaderValue['set'],
-): FaderValue {
-  return {
-    value,
-    set,
-    nudge: (direction) => set(snap(value + direction * props.step, props)),
-    onKey: (key) => pressKey(key, { value, set, range: props }),
-  };
-}
-
 // The value on screen, held as a draft while the caller catches up, so a drag is smooth.
 export function useFaderValue(props: FaderProps): FaderValue {
   const held = heldBy(props);
   const [draft, setDraft] = useState<Draft>();
-  const value = shown(draft, held);
+
+  const pending = draft?.base === held ? draft : undefined;
+
+  if (draft && !pending) setDraft(undefined);
+
+  const value = pending?.value ?? held;
 
   const set = (next: number): void => {
     if (commit(props, value, next)) setDraft({ value: next, base: held });
   };
 
-  return controlOf(props, value, set);
+  return {
+    value,
+    hasPendingValue: pending !== undefined,
+    set,
+    nudge: (direction) => set(snap(value + direction * props.step, props)),
+    onKey: (key) => pressKey(key, { value, set, range: props }),
+  };
 }

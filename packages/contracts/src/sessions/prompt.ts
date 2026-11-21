@@ -6,6 +6,12 @@ import { ContentBlock } from '../feed/content-block';
 export const SessionPromptInput = z.strictObject({
   sessionId: sessionColumns.shape.id,
   prompt: z.array(ContentBlock).min(1),
+  followThrough: z
+    .boolean()
+    .optional()
+    .describe(
+      'Deliver the Turn result to the caller. Requires the caller to have started this Session.',
+    ),
   followUpSuggestions: z.boolean().optional(),
 });
 

@@ -13,13 +13,17 @@ import { archiveSession, unarchiveSession } from './archive/archive-commands';
 import { readSessionChanges, readSessionDiff } from './change-readers';
 import { applySessionConfig } from './configuration';
 import type { SessionList } from './list/session-list';
+import { namedParam } from './named-param';
 import type { OpenSessions } from './open-sessions';
+import { closeFollowThrough } from './orchestration/result-store';
+import { confirmSkill, offerSkill } from './orchestration/skill';
 import { managePromptQueue, submitAppPrompt } from './queue-commands';
 import { createSessionAgentReader, listSessionBranches } from './readers';
 import { restartSession } from './restart/restart-session';
 import type { Schedules } from './schedules';
 import { cancelSession } from './session-closure';
 import { declareSubagentRole } from './session-declare-subagent-role';
+import { handoffSession } from './session-handoff';
 import { createPlugin } from './session-new-plugin';
 import { renameSession } from './session-rename';
 import { saveSessionPlan } from './session-save-plan';
@@ -71,6 +75,22 @@ const actImplementations = (
   sources: SessionHandlerSources,
 ): Pick<SessionOperationImplementations, Exclude<ActId, ScheduleId>> => ({
   ...queueImplementations(sources),
+  'session.handoff': ({ sessionId }) => handoffSession(sources, sessionId),
+  'session.offerSkill': (input) => offerSkill(sources, input),
+  'session.confirmSkill': (input) => confirmSkill(sources, input),
+  'session.closeFollowThrough': async ({ sessionId }) => {
+    sources.open.admit();
+
+    const starterId = namedParam(
+      sessionId,
+      'Pass the Session whose follow-through should close.',
+    );
+
+    sources.readSession(starterId);
+    await sources.open.write(closeFollowThrough(starterId));
+
+    return {};
+  },
   'session.cancel': async ({ sessionId }) =>
     cancelSession(sources.open, sessionId),
   'session.archive': ({ sessionId }) => archiveSession(sources, sessionId),

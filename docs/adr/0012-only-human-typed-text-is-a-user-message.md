@@ -24,3 +24,9 @@ Owner amendment, 2026-11-18 (#2373): [ADR-0061](0061-reviews-belong-to-the-engin
 ## Conversations under ADR-0064
 
 Owner amendment, 2026-11-18: [ADR-0064](0064-a-conversation-belongs-to-the-server-and-speaks-for-one-session.md) adds the Conversation as a fifth authenticated Prompt sender. A voice model writes the Prompt from what the person said, so it is not the person's own message. Unlike every other sender's Prompt, it is stored and never drawn: the Feed shows what the person said and what the voice said as transcript rows instead. The person's spoken words are drawn as the person's, because the person said them; they are not a `user_message` and never reach the Agent as written.
+
+## Delegated follow-through
+
+Argo records a delegated result as a Prompt from its source Started Session. It adds the delivery receipt to the sender metadata so the Server can check revocation before dispatch. The source output remains data in that Prompt.
+
+A skill offer gives the person an explicit action in the destination Session. The confirmed native command has a skill sender with the offer ID, starter Session and originating Turn. This provenance comes from the App's authenticated action and the Server's stored offer.

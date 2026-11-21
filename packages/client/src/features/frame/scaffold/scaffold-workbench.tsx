@@ -43,12 +43,17 @@ type PanelProps = ComponentProps<typeof Animated.View> & { inert: boolean };
 function useWorkbenchPlacement(layout: WorkbenchLayoutReads): PanelProps {
   const placement = workbenchPlacement(layout);
   const { visible } = placement.motion;
-  const slide = useFrameSlide({ ...layout.motion, ...placement.motion });
+
+  const { style, ...slide } = useFrameSlide({
+    ...layout.motion,
+    ...placement.motion,
+  });
 
   return {
+    ...slide,
     testID: 'desktop-workbench',
     className: placement.className,
-    style: [placement.style, slide, !visible && { opacity: 0 }],
+    style: [placement.style, style, !visible && { opacity: 0 }],
     ...visibilityProps(visible),
   };
 }
