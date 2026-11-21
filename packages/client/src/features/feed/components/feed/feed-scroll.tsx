@@ -128,6 +128,7 @@ export type FeedListProps = Pick<
   | 'renderItem'
   | 'getFixedItemSize'
   | 'initialScrollIndex'
+  | 'initialScrollAtEnd'
   | 'renderScrollComponent'
   | 'maintainScrollAtEnd'
   | 'maintainVisibleContentPosition'
@@ -147,11 +148,24 @@ function useFeedListProps(input: FeedScrollProps): FeedListProps {
     items,
     getFixedItemSize: useFeedRowSize(),
     renderItem: useRenderEntry({ ...props, ...motion }),
-    initialScrollIndex: props.initialIndex,
+    ...getInitialScrollProps(props),
     ...anchors,
     onStartReached: props.onStartReached,
     header: <LoadingEarlier loading={props.loadingOlder} />,
   };
+}
+
+// On iOS, opening at the end lays out the last row and the Composer clearance together.
+function getInitialScrollProps({
+  initialIndex,
+  opensAtStart,
+}: Pick<FeedScrollProps, 'initialIndex' | 'opensAtStart'>): Pick<
+  FeedListProps,
+  'initialScrollIndex' | 'initialScrollAtEnd'
+> {
+  return Platform.OS === 'ios' && !opensAtStart
+    ? { initialScrollAtEnd: true }
+    : { initialScrollIndex: initialIndex };
 }
 
 export function FeedScroll(props: FeedScrollProps): React.JSX.Element {
