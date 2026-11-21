@@ -18,8 +18,8 @@ export type DialogContentProps = {
   // False while the content holds unsaved input: only its own actions close it.
   dismissible?: boolean;
   showClose?: boolean;
-  // A centred dialog's width: `sm` for a short form of one or two fields, such as a rename.
-  size?: 'sm' | 'md';
+  // A centred dialog's width: `sm` for short forms and `lg` for wider forms.
+  size?: 'sm' | 'md' | 'lg';
   onCloseAutoFocus?: (event: Event) => void;
   children: ReactNode;
 };
