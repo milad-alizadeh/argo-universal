@@ -22,8 +22,7 @@ export interface SessionInfoInput {
   liveHeader: LiveHeader | null;
   // The Live header reader's active Turn.
   activeTurnId: string | null;
-  // The Session's Subagents; a Started Session lists as its own row, nested under it.
-  children: readonly SessionRecord[];
+  subagents: SessionInfo['subagents'];
   shells?: SessionInfo['shells'];
 }
 
@@ -88,21 +87,6 @@ function itemCounts(
   return inProgress > 0 ? { ...counts, inProgress } : counts;
 }
 
-function subagentCounts(
-  input: SessionInfoInput,
-): SessionListState[number]['information']['subagents'] {
-  const isRunning = (child: SessionRecord): boolean =>
-    input.turns.some(
-      (turn): boolean =>
-        turn.sessionId === child.id && turn.status === 'running',
-    );
-
-  return {
-    total: input.children.length,
-    running: input.children.filter(isRunning).length,
-  };
-}
-
 type SessionIdentity = Pick<
   SessionListState[number]['information'],
   | 'sessionId'
@@ -150,7 +134,7 @@ function sessionDetails(
 > {
   return {
     plan: planSummary(input.plan),
-    subagents: subagentCounts(input),
+    subagents: input.subagents,
     shells: input.shells ?? { total: 0, running: 0 },
     archivedAt: input.row.archivedAt,
     pullRequest: null,

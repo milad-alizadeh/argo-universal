@@ -1,6 +1,6 @@
 import { Turn } from '@repo/contracts';
 import { turn } from '@repo/db/schema';
-import { and, desc, eq, inArray, notInArray, or } from 'drizzle-orm';
+import { and, desc, eq, inArray, notInArray } from 'drizzle-orm';
 import { readQueuedSessionRows } from '../../session-storage';
 import {
   decodeStoredTurn,
@@ -58,13 +58,17 @@ function childTurns(
 ): (typeof turn.$inferSelect)[] {
   if (!children.length) return [];
 
-  const runningIds = childIds(input, { children, updates }, true);
-  const latestIds = childIds(input, { children, updates }, false);
+  const latestIds = readLatestTurnIds({
+    database: input.database,
+    sessionIds: children,
+    updates,
+    running: false,
+  });
 
   return input.database
     .select(storedTurnColumns)
     .from(turn)
-    .where(or(inArray(turn.id, runningIds), inArray(turn.id, latestIds)))
+    .where(inArray(turn.id, latestIds))
     .all();
 }
 
@@ -101,19 +105,6 @@ function rootTurns(
     .orderBy(desc(turn.startedAt), desc(turn.id))
     .limit(1)
     .all();
-}
-
-function childIds(
-  input: ListReadInput,
-  { children, updates }: FamilyUpdates,
-  running: boolean,
-): ReturnType<typeof readLatestTurnIds> {
-  return readLatestTurnIds({
-    database: input.database,
-    sessionIds: children,
-    updates,
-    running,
-  });
 }
 
 function changedTurnFilter(

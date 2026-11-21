@@ -133,7 +133,13 @@ export class PluginSlotItems {
 
     if (kept?.generation === generation) return kept;
 
-    const worker = { generation, epoch: 0, kept: new Map(), failed: new Map() };
+    const worker = {
+      generation,
+      epoch: 0,
+      kept: new Map(),
+      late: new Set<SlotItemsInput>(),
+      failed: new Map(),
+    };
 
     this.kept.set(pluginId, worker);
 
@@ -154,6 +160,7 @@ export class PluginSlotItems {
 
     if (worker) {
       worker.epoch += 1;
+      worker.late.clear();
 
       for (const list of shown) forget(worker, list);
     }
@@ -169,6 +176,7 @@ export class PluginSlotItems {
 
     worker.epoch += 1;
     worker.kept.clear();
+    worker.late.clear();
     worker.failed.clear();
   }
 
