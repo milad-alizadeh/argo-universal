@@ -114,10 +114,15 @@ type Story = StoryObj<typeof meta>;
 
 export const OpensPausedRowsAndUsesTheRowMenu: Story = {
   play: async ({ args, canvas, userEvent }): Promise<void> => {
+    const heading = canvas.getByRole('button', { name: 'Paused' });
+
+    await expect(heading).toHaveAttribute('aria-expanded', 'false');
     await expect(
       canvas.queryByRole('button', { name: pausedSchedule.name }),
     ).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('button', { name: 'Paused' }));
+
+    await userEvent.click(heading);
+    await expect(heading).toHaveAttribute('aria-expanded', 'true');
 
     const paused = await canvas.findByRole('button', {
       name: pausedSchedule.name,

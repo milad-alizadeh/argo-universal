@@ -1,13 +1,19 @@
 import type { ProjectSchedule } from '@repo/contracts/operations';
 import { Action } from '@repo/kit/primitives/actions/action';
-import { Icon } from '@repo/kit/primitives/content/icon';
-import { List } from '@repo/kit/primitives/lists/list';
+import { List, ListSectionHeader } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
 import { useSidebarGutterHeld } from '@repo/kit/sidebar-gutter';
 import { useState, type ReactElement } from 'react';
-import { sessionsListLook } from '#features/sessions';
+import { View } from 'react-native';
+import {
+  sessionsListHeadingClassName,
+  sessionsListLook,
+  sessionsListSidebarRows,
+  sessionsListTopPadding,
+  useSessionsListRowClassName,
+} from '#features/sessions';
 import {
   cadenceLabel,
   upcomingOccurrence,
@@ -58,46 +64,74 @@ function emptyTitle(status: ScheduledListViewProps['status']): string {
   return 'No Schedules';
 }
 
+type ScheduleSection = 'Active' | 'Paused';
+
+type ScheduleEntry = ScheduleSection | ProjectSchedule;
+
+function scheduleEntries(
+  schedules: readonly ProjectSchedule[],
+  pausedExpanded: boolean,
+): ScheduleEntry[] {
+  const active = schedules.filter(({ paused }) => !paused);
+  const paused = schedules.filter((schedule) => schedule.paused);
+
+  const entries: ScheduleEntry[] = [];
+
+  if (active.length > 0) entries.push('Active', ...active);
+
+  if (paused.length > 0)
+    entries.push('Paused', ...(pausedExpanded ? paused : []));
+
+  return entries;
+}
+
+const entryKind = (entry: ScheduleEntry): 'section' | 'schedule' =>
+  typeof entry === 'string' ? 'section' : 'schedule';
+
+const entryKey = (entry: ScheduleEntry): string =>
+  typeof entry === 'string' ? entry : `schedule:${entry.id}`;
+
+function entrySection(entry: ScheduleEntry): string {
+  if (typeof entry === 'string') return `heading:${entry}`;
+
+  return entry.paused ? 'Paused' : 'Active';
+}
+
 function ScheduleRows(props: ScheduledListViewProps): ReactElement {
   const gutterHeld = useSidebarGutterHeld();
   const [pausedExpanded, setPausedExpanded] = useState(false);
 
-  const active = props.schedules.filter(({ paused }) => !paused);
-  const paused = props.schedules.filter((schedule) => schedule.paused);
+  const renderEntry = (entry: ScheduleEntry): ReactElement => {
+    if (typeof entry !== 'string')
+      return <ScheduleRow {...props} schedule={entry} />;
 
-  const renderRow = (schedule: ProjectSchedule): ReactElement => (
-    <ScheduleRow
-      key={schedule.id}
-      {...props}
-      schedule={schedule}
-      sidebar={gutterHeld}
-    />
-  );
+    const isExpanded = entry === 'Active' || pausedExpanded;
+
+    return (
+      <View className={sessionsListHeadingClassName(!isExpanded)}>
+        <ListSectionHeader
+          title={entry}
+          sidebar={sessionsListSidebarRows}
+          rowLanes
+          isExpanded={isExpanded}
+          onExpandedChange={entry === 'Paused' ? setPausedExpanded : undefined}
+        />
+      </View>
+    );
+  };
 
   return (
     <List
       fit={false}
       {...sessionsListLook('regular', gutterHeld ? 'inset' : 'padded')}
-    >
-      {active.length > 0 && (
-        <List.Section title="Active">{active.map(renderRow)}</List.Section>
-      )}
-      {paused.length > 0 && (
-        <List.Section
-          title="Paused"
-          isExpanded={pausedExpanded}
-          onExpandedChange={setPausedExpanded}
-          leading={
-            <Icon
-              name={pausedExpanded ? 'chevron-down' : 'chevron-right'}
-              size="sm"
-            />
-          }
-        >
-          {paused.map(renderRow)}
-        </List.Section>
-      )}
-    </List>
+      paddingTop={sessionsListTopPadding}
+      items={scheduleEntries(props.schedules, pausedExpanded)}
+      extraData={{ selectedId: props.selectedId, pausedExpanded }}
+      renderItem={renderEntry}
+      keyExtractor={entryKey}
+      getItemType={entryKind}
+      getSectionKey={entrySection}
+    />
   );
 }
 
@@ -106,12 +140,10 @@ type ScheduleRowProps = Pick<
   'selectedId' | 'onOpen' | 'onAction'
 > & {
   schedule: ProjectSchedule;
-  sidebar: boolean;
 };
 
 function ScheduleRow({
   schedule,
-  sidebar,
   selectedId,
   onOpen,
   onAction,
@@ -123,14 +155,16 @@ function ScheduleRow({
     : `${upcomingOccurrence(schedule.nextAt, scheduleTimeZone(schedule.cadence))} · ${cadence}`;
 
   return (
-    <ListItem
-      title={schedule.name}
-      subtitle={subtitle}
-      selected={selectedId === schedule.id}
-      sidebar={sidebar}
-      onPress={() => onOpen(schedule)}
-      actions={onAction && scheduleActions({ schedule, onAction })}
-    />
+    <View className={useSessionsListRowClassName()}>
+      <ListItem
+        title={schedule.name}
+        subtitle={subtitle}
+        selected={selectedId === schedule.id}
+        sidebar={sessionsListSidebarRows}
+        onPress={() => onOpen(schedule)}
+        actions={onAction && scheduleActions({ schedule, onAction })}
+      />
+    </View>
   );
 }
 
