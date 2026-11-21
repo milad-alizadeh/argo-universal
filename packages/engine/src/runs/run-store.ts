@@ -9,12 +9,22 @@ export type RunRecord = typeof run.$inferSelect;
 export class RunWriteJob implements WriterJob {
   public constructor(
     private readonly record: RunRecord,
-    private readonly replaced: readonly string[] = [],
+    private readonly replaced?: readonly string[],
   ) {}
   public describe(): string {
     return `run ${this.record.id} ${this.record.status}`;
   }
   public commit(transaction: StorageTransaction): void {
+    if (!this.replaced) {
+      transaction
+        .update(run)
+        .set(this.record)
+        .where(eq(run.id, this.record.id))
+        .run();
+
+      return;
+    }
+
     for (const id of this.replaced)
       transaction.delete(run).where(eq(run.id, id)).run();
     transaction

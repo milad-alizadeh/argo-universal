@@ -4,6 +4,7 @@ import type {
   RunStopResult,
   ShellTerminal,
 } from '@repo/contracts';
+import { writeLog } from '@repo/machine-log';
 import { writeDatabaseJobAndWaitForCommit } from '../storage';
 import { LiveRun } from './live-run';
 import { RunBlocks, starterName, type RunPortHolding } from './run-blocks';
@@ -291,12 +292,11 @@ export class Runs {
   }
 
   private exited(key: string, run: LiveRun, exitCode: number): Promise<void> {
-    return run.finish(
-      exitCode,
-      this.input.now,
-      (record) => this.update(key, record),
-      () => this.live.delete(key),
-    );
+    return run.finish(exitCode, this.input.now, {
+      save: (record) => this.update(key, record),
+      released: () => this.live.delete(key),
+      failed: (error) => this.reportFailure(run.record, error),
+    });
   }
 
   private markReady(key: string, run: LiveRun): Promise<void> {
@@ -311,9 +311,19 @@ export class Runs {
     return this.store(record);
   }
 
+  private reportFailure(record: RunRecord, error: Error): void {
+    const line = `Could not finish storing Run "${record.name}" (${record.id}): ${error.message}`;
+
+    try {
+      writeLog({ home: this.input.home, label: 'engine', line });
+    } catch {
+      console.error(line);
+    }
+  }
+
   private async store(
     record: RunRecord,
-    replaced: string[] = [],
+    replaced?: readonly string[],
   ): Promise<void> {
     await writeDatabaseJobAndWaitForCommit(
       this.input.writer,

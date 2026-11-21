@@ -19,6 +19,12 @@ type LiveRunInput = {
 
 type SaveRun = (record: RunRecord) => Promise<void>;
 
+type RunFinish = {
+  save: SaveRun;
+  failed: (error: Error) => void;
+  released: () => void;
+};
+
 // What a Run is in memory while its terminal lives; the stored record follows it.
 export class LiveRun {
   private shutdown?: Promise<void>;
@@ -86,12 +92,14 @@ export class LiveRun {
   public finish(
     exitCode: number,
     now: () => number,
-    save: SaveRun,
-    released: () => void,
+    { save, failed, released }: RunFinish,
   ): Promise<void> {
-    this.finishing ??= this.complete(exitCode, now, save).then(() => {
-      if (!this.isStopping()) released();
-    });
+    this.finishing ??= this.complete(exitCode, now, save)
+      .catch(failed)
+      .finally(() => {
+        this.ended.resolve();
+        if (!this.isStopping()) released();
+      });
 
     return this.finishing;
   }
@@ -110,7 +118,6 @@ export class LiveRun {
       },
       save,
     );
-    this.ended.resolve();
   }
 
   private save(change: Partial<RunRecord>, save: SaveRun): Promise<void> {
