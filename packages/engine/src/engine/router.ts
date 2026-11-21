@@ -13,7 +13,11 @@ import { createPluginsRouter } from '../plugins';
 import { mergeRouters, router, routerFactory } from '../rpc';
 import { createRunRouter } from '../runs/router';
 import { createScreenSightRouter } from '../screen-sight';
-import { createShellRouter, Sessions } from '../sessions';
+import {
+  type ArchiveTerminals,
+  createShellRouter,
+  Sessions,
+} from '../sessions';
 import { createSystemRouter } from '../system';
 import { attachConversation } from './attach-conversation';
 import type { AppRouterDeps } from './router-deps';
@@ -72,10 +76,24 @@ function autoStartRuns(deps: AppRouterDeps, sessionId: string): void {
   });
 }
 
+function archiveTerminals(runs: AppRouterDeps['runs']): ArchiveTerminals {
+  return {
+    close: async ({ sessionIds, checkout }) => {
+      await Promise.all([
+        runs.shells.closeOwners(new Set(sessionIds)),
+        checkout &&
+          runs.removeCheckout(checkout, async (): Promise<void> => {}),
+      ]);
+    },
+    removeCheckout: (checkout, remove) => runs.removeCheckout(checkout, remove),
+  };
+}
+
 // Operations share the session and shell nouns with the Session procedures that are not Operations.
 const createOperationRouters = routerFactory((deps: AppRouterDeps) => {
   const sessions = new Sessions({
     ...deps,
+    archiveTerminals: archiveTerminals(deps.runs),
     autoStartRuns: (sessionId): void => autoStartRuns(deps, sessionId),
   });
 

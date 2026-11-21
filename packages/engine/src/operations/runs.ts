@@ -23,11 +23,12 @@ type RunImplementations = Pick<
 const sessionOf = (
   database: Database,
   sessionId: string | undefined,
-): RunCheckout & RunStarter => {
+): RunCheckout & RunStarter & { archivedAt: number | null } => {
   const row = database
     .select({
       id: session.id,
       title: session.title,
+      archivedAt: session.archivedAt,
       projectId: session.projectId,
       checkoutPath: session.checkoutPath,
     })
@@ -70,7 +71,13 @@ const runRequestOf = (
   database: Database,
   sessionId: string | undefined,
 ): RunRequest => {
-  const { id, title, ...checkout } = sessionOf(database, sessionId);
+  const { id, title, archivedAt, ...checkout } = sessionOf(database, sessionId);
+
+  if (archivedAt !== null)
+    throw new TRPCError({
+      code: 'CONFLICT',
+      message: 'This Session is archived.',
+    });
 
   return { ...checkout, starter: { id, title } };
 };

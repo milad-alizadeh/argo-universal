@@ -32,6 +32,7 @@ export const initialTurnState = (): TurnState => ({
 type AdmissionState = Pick<
   SessionContext,
   | 'archiveRequested'
+  | 'archiveTerminals'
   | 'configOptions'
   | 'slashCommands'
   | 'rejectedMessages'
@@ -46,6 +47,7 @@ export const initialAdmissionState = (
   input: SessionMachineInput,
 ): AdmissionState => ({
   archiveRequested: input.archive ?? false,
+  archiveTerminals: input.archiveTerminals,
   configOptions: [],
   slashCommands: null,
   rejectedMessages: 0,

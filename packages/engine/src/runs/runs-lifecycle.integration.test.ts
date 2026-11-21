@@ -29,7 +29,7 @@ type Engine = {
   host: Awaited<ReturnType<typeof startAcpEngine>>;
   terminals: ReturnType<typeof createFakeTerminals>;
   call: (
-    id: 'run.start' | 'run.stop' | 'run.status',
+    id: 'run.start' | 'run.restart' | 'run.stop' | 'run.status',
     sessionId: string,
   ) => ReturnType<typeof runOperation>;
 };
@@ -95,6 +95,37 @@ async function archiveWithRemoval(
     checkoutApproval: checkoutConfirmation.fingerprint,
   });
 }
+
+it('ends owned Runs on archive even when the Project keeps its Checkout', async () => {
+  const engine = await startEngine();
+  const created = await promptedArchiveSession(engine.host);
+  const { projectId } = await engine.host.caller.session.get({
+    sessionId: created.sessionId,
+  });
+
+  await engine.host.caller.project.update({
+    projectId,
+    deleteWorktreeOnArchive: false,
+  });
+  await configure(created.path);
+
+  const terminal = await startReady(engine, created.sessionId);
+
+  await engine.host.caller.session.archive({ sessionId: created.sessionId });
+
+  expect(terminal.stopped).toBe(true);
+  expect(existsSync(created.path)).toBe(true);
+  await expect(
+    engine.call('run.start', created.sessionId),
+  ).rejects.toMatchObject({
+    data: { code: 'CONFLICT' },
+  });
+  await expect(
+    engine.call('run.restart', created.sessionId),
+  ).rejects.toMatchObject({
+    data: { code: 'CONFLICT' },
+  });
+});
 
 it('ends the Runs of a Checkout when archiving removes it', async () => {
   const engine = await startEngine();

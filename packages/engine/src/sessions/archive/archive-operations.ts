@@ -1,12 +1,12 @@
 import type { Database } from '@repo/db';
 import { session } from '@repo/db/schema';
 import { and, eq, isNotNull, isNull } from 'drizzle-orm';
-import { closeArchivedShells } from '../../runs';
 import {
   type WriterActorRef,
   writeDatabaseJobAndWaitForCommit,
 } from '../../storage';
 import type { SessionContext } from '../session-machine';
+import { ownsStoredWorktree } from '../session-record';
 import { readBorrowerIds } from './archive-borrowers';
 import { SessionArchiveJob } from './archive-storage';
 import {
@@ -72,10 +72,23 @@ export async function saveSessionArchive(
     true,
   );
 
-  if (archivedAt !== null)
-    await closeArchivedShells(database, sessionIds).catch((error: Error) => {
+  if (archivedAt !== null) await closeArchivedTerminals(context, sessionIds);
+}
+
+async function closeArchivedTerminals(
+  { archiveTerminals, input, sessionId, projectId, checkout }: SessionContext,
+  sessionIds: readonly string[],
+): Promise<void> {
+  const owned = ownsStoredWorktree(input.database, sessionId);
+
+  await archiveTerminals
+    ?.close({
+      sessionIds,
+      checkout: owned ? { projectId, checkoutPath: checkout.path } : undefined,
+    })
+    .catch((error: Error) => {
       console.error(
-        `Session ${context.sessionId}: could not close shell Terminals`,
+        `Session ${sessionId}: could not close its Terminals`,
         error,
       );
     });

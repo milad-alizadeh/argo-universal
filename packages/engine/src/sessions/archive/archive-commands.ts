@@ -11,7 +11,7 @@ import { settleWithin, type Snapshot } from './archive-settle';
 import { approveCheckoutCleanup } from './checkout-cleanup';
 
 type ArchiveSources = HandlerSources<
-  'readSession' | 'database' | 'findWriter',
+  'readSession' | 'database' | 'findWriter' | 'archiveTerminals',
   'admit' | 'session' | 'open' | 'live' | 'queued' | 'context'
 >;
 
@@ -46,7 +46,10 @@ function startArchive(
 
   if (!live) return openArchiving(sources, sessionId);
 
-  sendSessionCommand(live, { type: 'session.archive' });
+  sendSessionCommand(live, {
+    type: 'session.archive',
+    terminals: sources.archiveTerminals,
+  });
 
   return live;
 }
@@ -57,6 +60,7 @@ const openArchiving = (
 ): SessionActorRef =>
   sources.open.open({
     type: 'sessions.archive',
+    terminals: sources.archiveTerminals,
     sessionId,
     agent: sources.readSession(sessionId).agent,
   });

@@ -25,6 +25,7 @@ import type { AcpPromptRequest as PromptRequest } from './acp/prompts/prompt-typ
 import type { LocalSubmission } from './acp/prompts/submission';
 import type { ElicitationAnswerContent } from './acp/requests/elicitation-types';
 import type { AgentWorkCommand, AgentWorkState } from './agent-work';
+import type { ArchiveTerminals } from './archive/archive-terminals';
 import type {
   SessionCreationReceipt,
   SessionCreationSettled,
@@ -71,6 +72,7 @@ export type SessionMachineInput = SessionInput & {
   // The Engine's database writer, resolved once when the Session is opened.
   writer: WriterActorRef;
   archive?: boolean;
+  archiveTerminals?: ArchiveTerminals;
   // Overrides how long an archive can be undone (tests).
   archiveUndoMs?: number;
   // Plugin Hooks on Permission requests and settled Turns (ADR-0027).
@@ -98,7 +100,7 @@ export type SessionCommand =
       applied?: PromiseWithResolvers<SessionConfigOption[]>;
       held?: boolean;
     }
-  | { type: 'session.archive' }
+  | { type: 'session.archive'; terminals?: ArchiveTerminals }
   | { type: 'session.unarchive' }
   | { type: 'session.cancel' }
   | AgentWorkCommand
@@ -126,6 +128,7 @@ export interface SessionContext extends SessionData, AgentWorkState {
   queueCommitted: Promise<void>;
   dispatchingQueueId: string | null;
   archiveRequested: boolean;
+  archiveTerminals?: ArchiveTerminals;
   activeTurnId: string | null;
   // When the running Turn started, in epoch milliseconds.
   activeTurnStartedAt: number | null;

@@ -68,6 +68,8 @@ export {
   createSessionConnections,
 } from './session-connection';
 
+export type { ArchiveTerminals } from './archive/archive-terminals';
+
 export { recoverArchivedCheckouts } from './archive/archive-operations';
 
 export { recoverShells } from './shells/recovery';

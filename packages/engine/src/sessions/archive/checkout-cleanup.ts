@@ -7,15 +7,19 @@ import {
 } from '@repo/git';
 import { eq } from 'drizzle-orm';
 import { readProjectPath } from '../../projects';
-import { removeCheckoutWithRuns, type RunCheckout } from '../../runs';
 import type { WriterActorRef } from '../../storage';
 import type { SessionData } from '../session-data';
 import { ownsStoredWorktree } from '../session-record';
+import type { ArchiveTerminals } from './archive-terminals';
 import { keepArchivedCheckout } from './checkout-retention';
 
 type Target = Pick<SessionData, 'projectId' | 'sessionId' | 'checkout'>;
 
-type CleanupOptions = { signal?: AbortSignal; writer?: WriterActorRef };
+type CleanupOptions = {
+  signal?: AbortSignal;
+  writer?: WriterActorRef;
+  terminals?: ArchiveTerminals;
+};
 
 // Approval is bound to the running Engine and the inspected work.
 const approvals = new WeakMap<Database, Map<string, string>>();
@@ -87,11 +91,6 @@ const keepReason = (risk: CheckoutCleanupRisk): string =>
     ? risk.reason
     : 'Argo could not verify that the Checkout’s work is recoverable.';
 
-const runCheckoutOf = (data: Target): RunCheckout => ({
-  projectId: data.projectId,
-  checkoutPath: data.checkout.path,
-});
-
 async function attemptCleanup(
   database: Database,
   data: Target,
@@ -101,18 +100,20 @@ async function attemptCleanup(
   const projectPath = readProjectPath(database, data.projectId);
   const risk = await checkoutCleanupRisk(projectPath, data.checkout.path);
 
-  // Runs end once the Checkout is going away, never while Archive keeps it.
-  const checkout = runCheckoutOf(data);
+  if (risk.kind === 'absent') return;
 
-  if (risk.kind === 'absent')
-    return removeCheckoutWithRuns(database, checkout, () => Promise.resolve());
+  if (canRemove(risk, approval)) {
+    const removal = { signal: options.signal, force: risk.kind === 'loss' };
+    const remove = (): Promise<void> =>
+      removeArchivedCheckout(projectPath, data.checkout, removal);
 
-  const removal = { signal: options.signal, force: risk.kind === 'loss' };
-
-  if (canRemove(risk, approval))
-    return removeCheckoutWithRuns(database, checkout, () =>
-      removeArchivedCheckout(projectPath, data.checkout, removal),
-    );
+    return options.terminals
+      ? options.terminals.removeCheckout(
+          { projectId: data.projectId, checkoutPath: data.checkout.path },
+          remove,
+        )
+      : remove();
+  }
 
   const target = { sessionId: data.sessionId, reason: keepReason(risk) };
 
