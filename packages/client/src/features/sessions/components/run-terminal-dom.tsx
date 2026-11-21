@@ -15,6 +15,7 @@ type Props = Omit<
   onRead: Read;
   onInput: (text: string) => Promise<void>;
   onResize: (columns: number, rows: number) => Promise<void>;
+  containerHeight: number;
   dom?: DOMProps;
 };
 
@@ -55,6 +56,7 @@ function readFrames(
 
 export default function RunTerminalDOM({
   onRead,
+  containerHeight,
   ...props
 }: Props): ReactElement {
   const listen = useCallback<RunOutputSource>(
@@ -62,16 +64,26 @@ export default function RunTerminalDOM({
     [onRead],
   );
 
-  const height = useViewportHeight();
+  const viewportHeight = useViewportHeight();
+  const height = Math.min(containerHeight, viewportHeight ?? containerHeight);
 
   return (
-    <div style={{ display: 'flex', height }}>
+    <div
+      style={{
+        display: 'flex',
+        position: 'absolute',
+        inset: 0,
+        overflow: 'hidden',
+        width: '100%',
+        height,
+      }}
+    >
       <RunTerminalSurface {...props} listen={listen} />
     </div>
   );
 }
 
-function useViewportHeight(): string | number {
+function useViewportHeight(): number | undefined {
   const [height, setHeight] = useState(() => window.visualViewport?.height);
 
   useEffect(() => {
@@ -86,5 +98,5 @@ function useViewportHeight(): string | number {
     return (): void => viewport.removeEventListener('resize', resize);
   }, []);
 
-  return height ?? '100dvh';
+  return height;
 }
