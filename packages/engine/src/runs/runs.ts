@@ -1,5 +1,4 @@
 import { resolve } from 'node:path';
-import { setTimeout as delay } from 'node:timers/promises';
 import type {
   RunStartResult,
   RunStopResult,
@@ -17,8 +16,8 @@ import { requireRunConfiguration } from './run-file';
 import { RunGroups } from './run-groups';
 import { RunLifecycle } from './run-lifecycle';
 import { removeRunOutput, runOutputPath, createRunOutput } from './run-output';
-import { bindable, portListening } from './run-ports';
-import { awaitReady } from './run-ready';
+import { bindable } from './run-ports';
+import { awaitReady, watchReadiness } from './run-ready';
 import { newRunRecord } from './run-record';
 import { configurationFingerprint, RunSettingsStore } from './run-settings';
 import { latestRun, RunWriteJob, type RunRecord } from './run-store';
@@ -57,16 +56,10 @@ export type RunsInput = {
 
 const defaultStartMs = 60_000;
 
-const readyPollMs = 100;
-
 const keyOf = (
   { projectId, checkoutPath }: RunCheckout,
   name: string,
 ): string => JSON.stringify([projectId, checkoutPath, name]);
-
-// A Run Configuration with no `ready` is ready once its port listens.
-const readyPattern = ({ ready }: RunConfiguration): RegExp | undefined =>
-  ready && 'pattern' in ready ? new RegExp(ready.pattern, 'u') : undefined;
 
 /*
  * The Runs of every Checkout on this Server (ADR-0063): each is a terminal the Server owns, recorded to a file of its own and
@@ -305,7 +298,11 @@ export class Runs {
       void run.flushed().then(() => this.view.outputChanged(run.record));
     });
     run.terminal.onExit(({ exitCode }) => void this.exited(key, run, exitCode));
-    void this.becomeReady(key, run);
+    void watchReadiness(
+      run,
+      () => this.live.get(key) === run,
+      () => this.markReady(key, run),
+    );
     await stored;
 
     if (previous)
@@ -327,20 +324,6 @@ export class Runs {
       endedAt: this.input.now(),
     });
     run.ended.resolve();
-  }
-
-  private async becomeReady(key: string, run: LiveRun): Promise<void> {
-    const pattern = readyPattern(run.configuration);
-
-    while (this.live.get(key) === run && !run.stopping) {
-      const ready = pattern
-        ? run.matches(pattern)
-        : await portListening(run.record.port);
-
-      if (ready && this.live.get(key) === run && !run.stopping)
-        return this.markReady(key, run);
-      await delay(readyPollMs);
-    }
   }
 
   private async markReady(key: string, run: LiveRun): Promise<void> {

@@ -52,11 +52,9 @@ export function useSessionRuns(
   const start = useMutation(trpc.run.start.mutationOptions());
   const stop = useMutation(trpc.run.stop.mutationOptions());
   const restart = useMutation(trpc.run.restart.mutationOptions());
-  const open = useMutation(trpc.terminal.open.mutationOptions());
-  const close = useMutation(trpc.terminal.close.mutationOptions());
+  const shells = useShellControls(sessionId, active, status.shells);
 
-  const error =
-    start.error ?? stop.error ?? restart.error ?? open.error ?? close.error;
+  const error = start.error ?? stop.error ?? restart.error ?? shells.error;
 
   useErrorToast(error ? { title: 'Runs', message: error.message } : undefined);
   const defaultGroup = useRunGroupControls(sessionId, status.defaultGroup);
@@ -64,21 +62,7 @@ export function useSessionRuns(
   return {
     runs: status.configurations,
     defaultGroup,
-    shells: status.shells,
-    openShell: active
-      ? (opened) => open.mutate({ sessionId }, { onSuccess: opened })
-      : undefined,
-    closeShell: (shellId) => close.mutate({ sessionId, shellId }),
-    renderShell: (shell, visible, compact) => (
-      <ConnectedRunTerminal
-        key={shell.id}
-        sessionId={sessionId}
-        shellId={shell.id}
-        run={{ name: shell.name, status: 'ready' }}
-        active={active && visible}
-        compact={compact}
-      />
-    ),
+    ...shells.controls,
     onStart: (name) => start.mutate({ sessionId, name }),
     onStop: (name) => stop.mutate({ sessionId, name }),
     onRestart: (name) => restart.mutate({ sessionId, name }),
@@ -90,6 +74,42 @@ export function useSessionRuns(
         compact={compact}
       />
     ),
+  };
+}
+
+type ShellControls = Pick<
+  SessionRuns,
+  'shells' | 'openShell' | 'closeShell' | 'renderShell'
+>;
+
+function useShellControls(
+  sessionId: string,
+  active: boolean,
+  shells: SessionRuns['shells'],
+): { controls: ShellControls; error: Error | null } {
+  const trpc = useTRPC();
+  const open = useMutation(trpc.terminal.open.mutationOptions());
+  const close = useMutation(trpc.terminal.close.mutationOptions());
+
+  return {
+    error: open.error ?? close.error,
+    controls: {
+      shells,
+      openShell: active
+        ? (opened) => open.mutate({ sessionId }, { onSuccess: opened })
+        : undefined,
+      closeShell: (shellId) => close.mutate({ sessionId, shellId }),
+      renderShell: (shell, visible, compact) => (
+        <ConnectedRunTerminal
+          key={shell.id}
+          sessionId={sessionId}
+          shellId={shell.id}
+          run={{ name: shell.name, status: 'ready' }}
+          active={active && visible}
+          compact={compact}
+        />
+      ),
+    },
   };
 }
 

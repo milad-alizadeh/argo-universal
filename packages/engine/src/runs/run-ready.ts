@@ -1,7 +1,9 @@
 import { setTimeout as delay } from 'node:timers/promises';
 import type { RunConfigurationStatus, RunStartResult } from '@repo/contracts';
 import type { LiveRun } from './live-run';
+import type { RunConfiguration } from './run-configurations';
 import { readRunOutputTail } from './run-output';
+import { portListening } from './run-ports';
 
 const tailCharacters = 4000;
 
@@ -37,4 +39,27 @@ export async function awaitReady(
     exitCode: record.exitCode,
     tail: await readRunOutputTail(run.outputPath, tailCharacters),
   };
+}
+
+const readyPollMs = 100;
+
+// A Run Configuration with no `ready` is ready once its port listens.
+const readyPattern = ({ ready }: RunConfiguration): RegExp | undefined =>
+  ready && 'pattern' in ready ? new RegExp(ready.pattern, 'u') : undefined;
+
+export async function watchReadiness(
+  run: LiveRun,
+  current: () => boolean,
+  markReady: () => Promise<void>,
+): Promise<void> {
+  const pattern = readyPattern(run.configuration);
+
+  while (current() && !run.stopping) {
+    const ready = pattern
+      ? run.matches(pattern)
+      : await portListening(run.record.port);
+
+    if (ready && current() && !run.stopping) return markReady();
+    await delay(readyPollMs);
+  }
 }
