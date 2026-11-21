@@ -4,7 +4,7 @@ import { Text } from '@repo/kit/primitives/content/text';
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import type { ReactElement } from 'react';
-import { intervalLabel, occurrenceTime } from './scheduled-list-view';
+import { intervalLabel, occurrenceTime } from './schedule-time';
 
 export interface ScheduleDetailViewProps {
   schedule: ProjectSchedule;

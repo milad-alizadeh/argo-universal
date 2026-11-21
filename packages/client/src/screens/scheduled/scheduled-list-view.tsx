@@ -4,7 +4,10 @@ import { List } from '@repo/kit/primitives/lists/list';
 import { ListItem } from '@repo/kit/primitives/lists/list-item';
 import { Screen } from '@repo/kit/primitives/scaffolds/screen';
 import { EmptyState } from '@repo/kit/primitives/status/empty-state';
+import { useSidebarGutterHeld } from '@repo/kit/sidebar-gutter';
 import type { ReactElement } from 'react';
+import { sessionsListLook } from '#features/sessions';
+import { intervalLabel, upcomingOccurrence } from './schedule-time';
 
 export interface ScheduledListViewProps {
   schedules: readonly ProjectSchedule[];
@@ -14,52 +17,56 @@ export interface ScheduledListViewProps {
   onOpen: (schedule: ProjectSchedule) => void;
 }
 
-export const occurrenceTime = (time: number): string =>
-  new Date(time).toLocaleString([], {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
-
-export function intervalLabel(seconds: number): string {
-  if (seconds % 3600 === 0) return `Every ${seconds / 3600} hr`;
-  if (seconds % 60 === 0) return `Every ${seconds / 60} min`;
-  return `Every ${seconds} sec`;
-}
-
 export function ScheduledListView(props: ScheduledListViewProps): ReactElement {
   return (
     <Screen
       title="Scheduled"
       primaryAction={
-        <Action label="New Schedule" icon="add" onPress={props.onCreate} />
+        <Action
+          label="New Schedule"
+          icon="new-session"
+          onPress={props.onCreate}
+        />
       }
     >
-      {props.schedules.length > 0 && (
-        <List appearance="plain" fit={false}>
-          {props.schedules.map((schedule) => (
-            <ListItem
-              key={schedule.id}
-              title={schedule.name}
-              subtitle={`${intervalLabel(schedule.intervalSeconds)} · Next ${occurrenceTime(schedule.nextAt)}`}
-              selected={props.selectedId === schedule.id}
-              leading="calendar"
-              sidebar
-              onPress={() => props.onOpen(schedule)}
-            />
-          ))}
-        </List>
-      )}
+      {props.schedules.length > 0 && <ScheduleRows {...props} />}
       {props.schedules.length === 0 && (
-        <EmptyState
-          title={
-            props.status === 'loading'
-              ? 'Loading Schedules'
-              : props.status === 'failed'
-                ? 'Could not load Schedules'
-                : 'No Schedules'
-          }
-        />
+        <EmptyState title={emptyTitle(props.status)} />
       )}
     </Screen>
+  );
+}
+
+function emptyTitle(status: ScheduledListViewProps['status']): string {
+  if (status === 'loading') return 'Loading Schedules';
+
+  if (status === 'failed') return 'Could not load Schedules';
+
+  return 'No Schedules';
+}
+
+function ScheduleRows({
+  schedules,
+  selectedId,
+  onOpen,
+}: ScheduledListViewProps): ReactElement {
+  const gutterHeld = useSidebarGutterHeld();
+
+  return (
+    <List
+      fit={false}
+      {...sessionsListLook('regular', gutterHeld ? 'inset' : 'padded')}
+    >
+      {schedules.map((schedule) => (
+        <ListItem
+          key={schedule.id}
+          title={schedule.name}
+          subtitle={`${upcomingOccurrence(schedule.nextAt)} · ${intervalLabel(schedule.intervalSeconds)}`}
+          selected={selectedId === schedule.id}
+          sidebar={gutterHeld}
+          onPress={() => onOpen(schedule)}
+        />
+      ))}
+    </List>
   );
 }

@@ -7,8 +7,8 @@ export const scheduleFormFixture = {
     { value: 'design', label: 'Design System' },
   ],
   agents: [
-    { value: 'codex', label: 'Codex' },
-    { value: 'claude', label: 'Claude Code' },
+    { value: 'agent-1', label: 'Agent 1' },
+    { value: 'agent-2', label: 'Agent 2' },
   ],
   branches: [
     { value: 'main', label: 'main' },
@@ -24,7 +24,7 @@ export const firstSchedule = {
   instructions:
     'Review the build and summarize any failures with links to the logs.',
   projectId: 'argo',
-  agent: 'codex',
+  agent: 'agent-1',
   configOptions: [],
   checkout: { type: 'worktree', baseBranch: 'main' },
   intervalSeconds: 3600,

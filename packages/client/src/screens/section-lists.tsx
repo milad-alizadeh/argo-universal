@@ -104,5 +104,6 @@ export function useSectionLists(): SectionLists {
 
 function shownScheduleId(path: string): string | undefined {
   const [section, id] = path.split('/').filter(Boolean);
-  return section === 'scheduled' && id !== 'new' ? id : undefined;
+
+  return section === 'scheduled' ? id : undefined;
 }

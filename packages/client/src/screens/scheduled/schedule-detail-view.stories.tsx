@@ -12,6 +12,7 @@ const meta = {
 } satisfies Meta<typeof ScheduleDetailView>;
 
 export default meta;
+
 type Story = StoryObj<typeof meta>;
 
 export const BeforeFirstRun: Story = {};
