@@ -54,7 +54,7 @@ export const pluginOperations = {
     label: 'Show Draft',
     icon: 'plug',
     description:
-      'Rebuild a Draft now, even mid-Turn. Call it after each region, naming the region you will write next so Apps frame it; omit it after the last region. The worker swaps only if the build passes; a broken build keeps the current one and its error is the refusal. Needs --watch.',
+      'Rebuild a Draft now, mid-Turn. Call it after each region, naming the region you will write next so Apps frame it; omit it after the last region. The worker swaps only if the build passes; a broken build keeps the current one and its error is the refusal. Needs --watch.',
     params: z.strictObject({
       pluginId: PluginIdentifier,
       // The region the Agent is writing next, which Apps frame until it lands; optional.
