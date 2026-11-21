@@ -26,3 +26,23 @@ When(
     await page.getByRole('menuitemradio', { name: state, exact: true }).click();
   },
 );
+
+Then(
+  'the {string} region tag reads {string}',
+  async ({ page }, region: string, text: string): Promise<void> => {
+    await expect(
+      page.getByRole('group', { name: `${region} Variant` }),
+    ).toHaveText(text);
+  },
+);
+
+// A region's tag shows its controls while the pointer is on the region.
+When(
+  'I step the {string} region to the next Variant',
+  async ({ page }, region: string): Promise<void> => {
+    await page.getByRole('group', { name: `${region} Variant` }).hover();
+    await page
+      .getByRole('button', { name: `Next ${region} Variant`, exact: true })
+      .click();
+  },
+);

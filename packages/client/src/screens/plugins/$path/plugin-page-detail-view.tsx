@@ -3,11 +3,13 @@ import type * as React from 'react';
 import {
   DraftBar,
   DraftBarDock,
+  DraftRegionsProvider,
   type PageOpening,
   PluginSessionRowProvider,
   useOpenPluginPage,
   useDraftBar,
   useDraftNaming,
+  useDraftRegions,
   usePluginLookup,
   usePluginPage,
 } from '#features/plugins';
@@ -31,26 +33,29 @@ export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
   const { root, onPageCall, loadingTree } = usePluginPage(opening);
   const bar = useDraftBar(opening);
   const naming = useDraftNaming(opening.pluginId);
+  const regions = useDraftRegions(opening);
 
   // Let the destination paint its loading state even when its first tree is already cached.
   const deferredRoot = useDeferredValue(root, null);
 
   return (
     <PluginSymbol pluginId={opening.pluginId}>
-      <PluginDetailView
-        title={title}
-        root={deferredRoot}
-        callbacks={{
-          onOpenPage,
-          onPageCall,
-          pluginId: opening.pluginId,
-          // Only a dev Plugin's Draft page shows the Agent drawing it (ADR-0057).
-          draft: bar
-            ? { naming: naming ?? null, regions: bar.regions }
-            : undefined,
-        }}
-        {...{ onBack, loadingTree }}
-      />
+      <DraftRegionsProvider regions={regions}>
+        <PluginDetailView
+          title={title}
+          root={deferredRoot}
+          callbacks={{
+            onOpenPage,
+            onPageCall,
+            pluginId: opening.pluginId,
+            // Only a dev Plugin's Draft page shows the Agent drawing it (ADR-0057).
+            draft: bar
+              ? { naming: naming ?? null, regions: bar.regions }
+              : undefined,
+          }}
+          {...{ onBack, loadingTree }}
+        />
+      </DraftRegionsProvider>
       <PageDraftBar bar={bar} />
     </PluginSymbol>
   );

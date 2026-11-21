@@ -1,5 +1,6 @@
 import type { WireNode } from '@repo/contracts/plugins/wire';
 import type { ReactElement } from 'react';
+import type { DraftSeam } from './draft-seam';
 
 type Drawn = { node: WireNode; element: ReactElement | null };
 
@@ -17,6 +18,9 @@ const within = (child: string, key: string): boolean =>
  */
 export class DrawnNodes {
   private readonly drawn = new Map<string, Drawn>();
+
+  // The seam these elements were framed by: a kept element carries its frame, so another seam needs another cache.
+  public constructor(public readonly seam: DraftSeam | null = null) {}
 
   // The element `node` drew as at `key`, or undefined when it has none.
   public get(key: string, node: WireNode): ReactElement | null | undefined {

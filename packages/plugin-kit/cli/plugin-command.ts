@@ -9,6 +9,7 @@ import {
   type PluginTest,
   type PluginTestCase,
 } from '../testing';
+import { variantDiagnostics } from './draft-variants';
 import { withinPluginTestBudget } from './plugin-test-budget';
 import { loadPluginTests, pluginTestFiles } from './plugin-test-files';
 import { types, typesDiagnostics } from './plugin-types';
@@ -59,6 +60,9 @@ async function validate(directory: string, write: Write): Promise<number> {
   if (report.manifest)
     report.diagnostics.push(
       ...(await typesDiagnostics(directory, report.manifest)),
+      ...(report.diagnostics.length
+        ? []
+        : await variantDiagnostics(directory, report.manifest)),
     );
   writeReport(report, write);
 

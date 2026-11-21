@@ -3,7 +3,13 @@ import { childNodeKey } from '@repo/contracts/plugins/wire-node-key';
 import { PluginTreeContext } from '@repo/kit/plugin-tree-context';
 import { SvgBudget } from '@repo/kit/primitives/visual';
 import { useReducedMotionNow } from '@repo/kit/use-reduced-motion-now';
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useState,
+  useRef,
+} from 'react';
 import type * as React from 'react';
 import { pageUnavailable, type OpenPluginPage } from '../plugin-actions';
 import { pageCallRefused } from './component-event-props';
@@ -13,6 +19,7 @@ import {
   type DraftView,
   type DraftNaming,
 } from './draft-drawing';
+import { DraftSeamContext } from './draft-seam';
 import { DrawnNodes } from './drawn-nodes';
 import { RenderNode } from './plugin-nodes';
 import type { OnPageCall } from './plugin-rendering';
@@ -58,8 +65,12 @@ function treeIdentity({ root, pluginId }: PluginTreeProps): TreeIdentity {
 
 // One tree: overlays are ordinary nodes in it.
 export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
-  const [drawn] = useState(() => new DrawnNodes());
+  const seam = useContext(DraftSeamContext);
+  const [kept, keep] = useState(() => new DrawnNodes(seam));
+  const drawn = kept.seam === seam ? kept : new DrawnNodes(seam);
   const draft = useDraftDrawing(props);
+
+  if (drawn !== kept) keep(drawn);
 
   const context = {
     ...treeIdentity(props),
@@ -68,6 +79,7 @@ export function PluginTree(props: PluginTreeProps): React.JSX.Element | null {
     pageCall: useLatest(props.onPageCall, pageCallRefused),
     drawn,
     draft,
+    seam,
   };
 
   return (

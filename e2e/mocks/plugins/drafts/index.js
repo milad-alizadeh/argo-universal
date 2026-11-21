@@ -20,19 +20,52 @@ const drawings = {
   ),
 };
 
+// Each region draws the Variant its pick names; the region's node key is the region's id.
+const headers = {
+  compact: 'Header compact',
+  tabs: 'Header tabs',
+  search: 'Header search',
+};
+
+const lists = { rows: 'List rows', cards: 'List cards' };
+
+// A Variant the Draft does not draw fails the draw too, so the gap shows instead of another Variant.
+function variantOf(drawn, id) {
+  const text = drawn[id];
+
+  if (!text) throw new Error(`The Draft has no ${id} Variant`);
+
+  return text;
+}
+
 // A state with no canned answer fails the draw, so the gap shows instead of another state's page.
 function answerFor(state) {
   const answer = answers[state.draftState];
 
   if (!answer) throw new Error(`The Draft has no ${state.draftState} state`);
 
-  return { key: state.draftState, answer };
+  return {
+    key: state.draftState,
+    answer,
+    header: variantOf(headers, state['draftVariant.header']),
+    list: variantOf(lists, state['draftVariant.list']),
+  };
 }
 
 export function register(argo) {
   argo.pages.define('/', {
-    state: { draftState: 'populated' },
+    state: {
+      draftState: 'populated',
+      'draftVariant.header': 'compact',
+      'draftVariant.list': 'rows',
+    },
     load: ({ state }) => answerFor(state),
-    render: ({ key, answer }) => drawings[key](answer),
+    render: ({ key, answer, header, list }) => (
+      <Stack direction="column">
+        <Text key="header">{header}</Text>
+        {drawings[key](answer)}
+        <Text key="list">{list}</Text>
+      </Stack>
+    ),
   });
 }

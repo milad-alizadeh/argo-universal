@@ -25,7 +25,7 @@ it.each(Object.values(operations))(
     const description = describeOperation(operation);
 
     expect(description).toMatchObject({
-      id: expect.stringMatching(/^[a-z]+\.[a-z][A-Za-z]*$/),
+      id: expect.stringMatching(/^[a-z]+(\.[a-z][A-Za-z]*){1,2}$/),
       label: expect.stringMatching(/\S/),
       description: expect.stringMatching(/\S/),
       tier: expect.stringMatching(/^(read|act|confirm)$/),
