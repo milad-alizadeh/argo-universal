@@ -82,7 +82,7 @@ it('keeps the current worker and reports the error when plugin.draft.show builds
 
   await expect(
     host.caller.plugin.draft.show({ pluginId: 'dev' }),
-  ).rejects.toThrow(/Unexpected/);
+  ).rejects.toThrow(/Expected ";" but found/);
   expect(await readFile(loaded, 'utf8')).toBe('initial\n');
   expect((await host.caller.plugin.list()).plugins[0]?.state).toBe('running');
 }, 30_000);
