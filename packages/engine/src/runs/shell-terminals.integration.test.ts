@@ -145,8 +145,15 @@ it('runs commands in a real interactive shell in the Checkout', async () => {
 
 it('recovery marks an interrupted shell Terminal lost and clears its process and output', async () => {
   const host = await startAcpEngine({ steps: [] });
-  const { sessionId } = await host.caller.session.new(emptySessionInput);
+
+  const { sessionId } = await host.caller.session.new({
+    ...emptySessionInput,
+    prompt: [{ type: 'text', text: 'Keep this Session' }],
+  });
+
+  await waitForAcpSessionIdle(host, sessionId);
   const { checkout } = await host.caller.session.get({ sessionId });
+
   await host.stop();
 
   const id = randomUUID();
@@ -161,6 +168,7 @@ it('recovery marks an interrupted shell Terminal lost and clears its process and
 
   onTestFinished(() => terminal.stop());
   const { pid } = terminal;
+
   if (pid === undefined) throw new Error('Missing Terminal process ID');
 
   await recordCheckoutTerminalOwner(host.home, pid, id);

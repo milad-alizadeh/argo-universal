@@ -17,7 +17,7 @@ export function ShellTerminalInspector({
   children,
 }: ShellTerminalInspectorProps): ReactElement {
   return (
-    <View className="min-h-0 flex-1 gap-2">
+    <View className="min-h-0 flex-1 gap-2 px-2 pb-2">
       <View className="min-w-0 flex-row items-center gap-2">
         <Icon name="terminal" tone="muted" />
         <View className="min-w-0 flex-1">

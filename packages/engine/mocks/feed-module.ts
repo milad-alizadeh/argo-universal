@@ -15,6 +15,7 @@ import { PairingRegistrations } from '../src/pairing/registrations';
 import { PairingTickets } from '../src/pairing/tickets';
 import { Plugins } from '../src/plugins';
 import { createRuns, launchTerminal } from '../src/runs';
+import { recordCheckoutTerminalOwner } from '../src/sessions';
 import { coreOnlyHooks } from './core-hooks';
 import { startEngineTestHost } from './engine';
 import { openFeedForModule } from './feed-module-actor';
@@ -121,6 +122,8 @@ const feedModuleRouterInput = (
     writer: host.databaseWriter,
     home: host.home,
     spawn: launchTerminal,
+    recordShellOwner: (pid, token): Promise<() => Promise<void>> =>
+      recordCheckoutTerminalOwner(host.home, pid, token),
     now: Date.now,
   }),
   ...routerRuntime(host, signal),
