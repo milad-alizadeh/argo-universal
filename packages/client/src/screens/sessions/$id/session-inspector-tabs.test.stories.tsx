@@ -23,21 +23,21 @@ const fileHeader = (path: string): Named => ({ name: `Diff for ${path}` });
 
 const firstFile = '/repo/src/module-1/index.ts';
 
+const inspectorReady = { timeout: 10_000 };
+
 // The compact sheet can briefly show before the wide tab, and the first header waits for its diff.
 async function readyChanges(
   canvas: ReturnType<typeof within>,
 ): Promise<ReturnType<typeof within>> {
-  const timeout = { timeout: 10_000 };
-
   const panel = await canvas.findByRole(
     'tabpanel',
     { name: 'Changes' },
-    timeout,
+    inspectorReady,
   );
 
   const changes = within(panel);
 
-  await changes.findByRole('button', fileHeader(firstFile), timeout);
+  await changes.findByRole('button', fileHeader(firstFile), inspectorReady);
 
   return changes;
 }
@@ -88,29 +88,46 @@ export const RemembersFoldedFilesAcrossTabs: Story = {
   },
 };
 
+const backgroundTasks = 'Background Tasks';
+
+const backToShells = 'Back to Background Tasks';
+
+async function readyShellDetail(
+  canvas: ReturnType<typeof within>,
+): Promise<ReturnType<typeof within>> {
+  const panel = await canvas.findByRole(
+    'tabpanel',
+    { name: backgroundTasks },
+    inspectorReady,
+  );
+
+  const shells = within(panel);
+
+  await expect(
+    await shells.findByRole('button', { name: backToShells }, inspectorReady),
+  ).toBeVisible();
+
+  return shells;
+}
+
 export const RemembersShellDetailAcrossTabs: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(
-      await canvas.findByRole('tab', { name: /Background Tasks/ }),
-    );
+    const shellTab = { name: new RegExp(backgroundTasks) };
+
+    await userEvent.click(await canvas.findByRole('tab', shellTab));
     await userEvent.click(
       await canvas.findByRole('button', { name: /^pnpm dev,/ }),
     );
-    await expect(
-      canvas.getByRole('button', { name: backToShells }),
-    ).toBeVisible();
+    await readyShellDetail(canvas);
     await userEvent.click(canvas.getByRole('tab', { name: 'Changes' }));
-    await userEvent.click(
-      canvas.getByRole('tab', { name: /Background Tasks/ }),
-    );
-    await expect(
-      await canvas.findByRole('button', { name: backToShells }),
-    ).toBeVisible();
-    await expect(canvas.getByTestId('shell-output')).toBeVisible();
+    await readyChanges(canvas);
+    await userEvent.click(canvas.getByRole('tab', shellTab));
+
+    const restored = await readyShellDetail(canvas);
+
+    await expect(restored.getByTestId('shell-output')).toBeVisible();
   },
 };
-
-const backToShells = 'Back to Background Tasks';
 
 const backToAgents = 'Back to Agents';
 
