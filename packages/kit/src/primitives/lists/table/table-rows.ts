@@ -6,6 +6,7 @@ import type {
   TableProps,
   TableRowProps,
 } from './table-props';
+import { kitTypeOf } from '#kit/wrapped-component';
 
 export interface TableCell {
   text: string;
@@ -40,10 +41,10 @@ export function TableCellPart(_props: TableCellProps): null {
 }
 
 const isRow = (child: ReactNode): child is ReactElement<TableRowProps> =>
-  isValidElement(child) && child.type === TableRowPart;
+  isValidElement(child) && kitTypeOf(child) === TableRowPart;
 
 const isCell = (child: ReactNode): child is ReactElement<TableCellProps> =>
-  isValidElement(child) && child.type === TableCellPart;
+  isValidElement(child) && kitTypeOf(child) === TableCellPart;
 
 function cellEntry(child: ReactElement<TableCellProps>): [string, TableCell] {
   const { column, text, children } = child.props;

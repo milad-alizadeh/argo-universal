@@ -15,6 +15,7 @@ import {
   type DeclaredSubmenu,
 } from './declared-entry';
 import { withId } from './entry-ids';
+import { kitTypeOf } from '#kit/wrapped-component';
 
 export function ActionSection(_props: ActionSectionProps): null {
   return null;
@@ -48,7 +49,7 @@ export function submenuGroups(
 }
 
 function childGroups(child: ReactNode): ActionGroup[] {
-  if (isValidElement<ActionProps>(child) && child.type === Action)
+  if (isValidElement<ActionProps>(child) && kitTypeOf(child) === Action)
     return actionGroup(child);
 
   return nestedGroups(child);
@@ -100,7 +101,7 @@ function unexpectedElement(child: ReactElement): ActionGroup[] {
 }
 
 function sectionGroups(child: ReactElement<ActionSectionProps>): ActionGroup[] {
-  if (child.type !== ActionSection) return unexpectedElement(child);
+  if (kitTypeOf(child) !== ActionSection) return unexpectedElement(child);
 
   const groups = prefixedGroups(
     actionGroups(child.props.children),

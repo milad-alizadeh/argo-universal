@@ -19,6 +19,7 @@ import type { DrawingProps } from './list-item-press-props';
 import { Trailing } from './list-item-trailing';
 import { TreeLane } from './list-item-tree';
 import type { TreeLayout } from './list-item-tree-lanes';
+import { kitTypeOf } from '#kit/wrapped-component';
 
 // The row's lanes in order: a menu's check, leading, title, trailing, accessory, and a control on its own line.
 export function ItemContentSlots(props: DrawingProps): ReactElement {
@@ -116,5 +117,5 @@ function mediaFrameClass(media: ReactNode): string {
 }
 
 function isArtwork(media: ReactNode): boolean {
-  return isValidElement(media) && media.type === Svg;
+  return isValidElement(media) && kitTypeOf(media) === Svg;
 }

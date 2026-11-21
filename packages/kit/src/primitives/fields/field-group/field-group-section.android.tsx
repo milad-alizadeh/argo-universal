@@ -16,6 +16,7 @@ import {
 import { Caption } from './field-group-caption.android';
 import type { FieldGroupSectionProps } from './field-group-section';
 import { markedSection } from './field-group-section-mark';
+import { kitTypeOf } from '#kit/wrapped-component';
 
 /*
  * A copy of Expo UI's Android FieldGroup.Section (FieldSection.android.tsx): the title, then a 2dp-spaced column
@@ -70,4 +71,4 @@ const positioned = (rows: ReactElement[]): ReactElement[] =>
 
 // Every row draws its own card; a Button, which isn't a row, gets one from the section.
 const carded = (row: ReactElement): ReactElement =>
-  row.type === Button ? <ButtonCard>{row}</ButtonCard> : row;
+  kitTypeOf(row) === Button ? <ButtonCard>{row}</ButtonCard> : row;

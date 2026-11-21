@@ -25,6 +25,7 @@ import type {
   SheetProps,
 } from './sheet-props';
 import { popScreen, useLatest, type SheetReports } from './sheet-state';
+import { kitTypeOf } from '#kit/wrapped-component';
 
 // Marks one page of a sheet; each platform's stack draws it.
 export function SheetScreen(props: SheetScreenProps): ReactNode {
@@ -60,7 +61,7 @@ function sheetScreens(children: ReactNode): SheetScreenEntry[] {
 }
 
 function isScreen(child: ReactNode): child is ReactElement<SheetScreenProps> {
-  return isValidElement(child) && child.type === SheetScreen;
+  return isValidElement(child) && kitTypeOf(child) === SheetScreen;
 }
 
 const SheetContext = createContext<SheetNavigation | undefined>(undefined);

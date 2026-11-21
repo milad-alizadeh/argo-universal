@@ -1,6 +1,7 @@
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { flattenedChildren } from '../../../flattened-children';
 import type { BoardCardProps, BoardColumnProps } from './board-props';
+import { kitTypeOf } from '#kit/wrapped-component';
 
 // A column the Board reads: its id, title, count and cards.
 export function BoardColumnPart(_props: BoardColumnProps): null {
@@ -25,10 +26,10 @@ export interface BoardColumn {
 }
 
 const isColumn = (child: ReactNode): child is ReactElement<BoardColumnProps> =>
-  isValidElement(child) && child.type === BoardColumnPart;
+  isValidElement(child) && kitTypeOf(child) === BoardColumnPart;
 
 const isCard = (child: ReactNode): child is ReactElement<BoardCardProps> =>
-  isValidElement(child) && child.type === BoardCardPart;
+  isValidElement(child) && kitTypeOf(child) === BoardCardPart;
 
 const cardOf = (child: ReactElement<BoardCardProps>): BoardCard => ({
   ...child.props,
