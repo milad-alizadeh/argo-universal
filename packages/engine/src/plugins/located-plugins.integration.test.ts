@@ -71,18 +71,18 @@ async function serviceOf(
 
   const service = new PluginService(
     {
-    home,
-    version: '1.2.3',
-    firstPartyPluginsDirectory: join(home, shippedFolder),
-    located: cache,
-    pluginRuntime,
-    pluginAccounts: {
-      list: (): never[] => [],
-      grants: (): never[] => [],
-      removePlugin: vi.fn<() => Promise<void>>(),
-    },
-    pluginSettings: settingsOf(new Map()),
-    ...(dev && { dev }),
+      home,
+      version: '1.2.3',
+      firstPartyPluginsDirectory: join(home, shippedFolder),
+      located: cache,
+      pluginRuntime,
+      pluginAccounts: {
+        list: (): never[] => [],
+        grants: (): never[] => [],
+        removePlugin: vi.fn<() => Promise<void>>(),
+      },
+      pluginSettings: settingsOf(new Map()),
+      ...(dev && { dev }),
     },
     noDrafts,
   );

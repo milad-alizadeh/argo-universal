@@ -2,21 +2,27 @@ import { expect, it } from 'vitest';
 import type { DraftBarModel } from './draft-bar-model';
 import { draftFrameOf } from './draft-frame';
 
-const bar = (current: DraftBarModel['current'], missing: boolean) =>
-  ({
-    states: [
-      { id: 'empty', label: 'Empty', missing },
-      { id: 'populated', label: 'Populated', missing: false },
-    ],
-    current,
-    regions: [],
-  }) satisfies DraftBarModel;
+const bar = (
+  current: DraftBarModel['current'],
+  missing: boolean,
+): DraftBarModel => ({
+  states: [
+    { id: 'empty', label: 'Empty', missing },
+    { id: 'populated', label: 'Populated', missing: false },
+  ],
+  current,
+  regions: [],
+});
 
-const textOf = (frame: ReturnType<typeof draftFrameOf>): unknown =>
-  frame?.props.children;
+const loaderThrew = 'Loader threw';
+
+const notDeclared = 'not declared';
+
+const textOf = (frame: ReturnType<typeof draftFrameOf>): string =>
+  JSON.stringify(frame?.props.children);
 
 it('draws no frame for a page that is not a Draft', () => {
-  expect(draftFrameOf(null, 'Loader threw')).toBeNull();
+  expect(draftFrameOf(null, loaderThrew)).toBeNull();
 });
 
 it('draws no frame for a state the Draft draws', () => {
@@ -27,7 +33,7 @@ it('says why a state the Draft does not declare draws nothing', () => {
   const text = textOf(draftFrameOf(bar('empty', true), null));
 
   expect(text).toEqual(expect.stringContaining('Empty'));
-  expect(text).toEqual(expect.stringContaining('not declared'));
+  expect(text).toEqual(expect.stringContaining(notDeclared));
 });
 
 it('says why a state whose Loader failed draws nothing, with the Loader error', () => {
@@ -38,8 +44,8 @@ it('says why a state whose Loader failed draws nothing, with the Loader error', 
 });
 
 it('names the missing state before a failure the Loader may have for it', () => {
-  const text = textOf(draftFrameOf(bar('empty', true), 'Loader threw'));
+  const text = textOf(draftFrameOf(bar('empty', true), loaderThrew));
 
-  expect(text).toEqual(expect.stringContaining('not declared'));
-  expect(text).not.toEqual(expect.stringContaining('Loader threw'));
+  expect(text).toEqual(expect.stringContaining(notDeclared));
+  expect(text).not.toEqual(expect.stringContaining(loaderThrew));
 });

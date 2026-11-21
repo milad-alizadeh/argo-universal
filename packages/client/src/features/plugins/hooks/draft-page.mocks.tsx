@@ -1,7 +1,6 @@
 import { PluginList, PluginManifest } from '@repo/contracts/plugins';
 import {
   DrawRequest,
-  treeAnswer,
   type DrawAnswer,
 } from '@repo/contracts/plugins/page-draw';
 import type { WireNode } from '@repo/contracts/plugins/wire';
@@ -18,15 +17,17 @@ import {
 } from '#features/connection';
 
 // An open Connection that never changes, which is all a page asks of it.
+const nothing = (): void => {};
+
 const openConnection: Connection = {
   state: () => 'open',
-  subscribe: () => () => undefined,
+  subscribe: () => nothing,
   nextAttempt: () => Promise.resolve(),
-  watch: () => undefined,
-  foreground: () => undefined,
-  retry: () => undefined,
-  refuse: () => undefined,
-  stop: () => undefined,
+  watch: nothing,
+  foreground: nothing,
+  retry: nothing,
+  refuse: nothing,
+  stop: nothing,
 };
 
 export const draftPage = { pluginId: 'tracker', path: '/issues' };
@@ -78,7 +79,9 @@ function drawn(request: DrawRequest): DrawAnswer {
   const state = String(request.pageState.draftState ?? 'populated');
 
   return {
-    ...treeAnswer(rootOf(`${populatedText} (${state})`), undefined, undefined),
+    kind: 'tree',
+    root: rootOf(`${populatedText} (${state})`),
+    hash: state,
     pages: 0,
   };
 }
@@ -114,7 +117,7 @@ export function DraftServer(props: {
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={client} queryClient={queryClient}>
         <ConnectionContext value={openConnection}>
-          <View className="h-[28rem] w-full bg-content">{props.children}</View>
+          <View className="h-96 w-full bg-content">{props.children}</View>
         </ConnectionContext>
       </TRPCProvider>
     </QueryClientProvider>
