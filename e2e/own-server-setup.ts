@@ -11,6 +11,8 @@ export type InitialServerOptions = {
   registryOffline?: boolean;
   // The real GitHub Plugin, over a fixture GitHub holding four Open pull requests (github-pulls.ts).
   githubPulls?: boolean;
+  // The Server watches Plugin sources, so it lists every Plugin as dev and Draft pages show their bar (ADR-0057).
+  devPlugins?: boolean;
   // A registry to serve in place of the scripted Agents. It is on disk before the Engine starts, so the Engine's first read sees it.
   registry?: ReturnType<typeof scriptedRegistry>;
 };
@@ -26,6 +28,8 @@ export type ServerPaths = {
   installationPath: string;
   // Where a scenario writes the fixture GitHub; the Engine starts it only when the file is there.
   githubPath: string;
+  // A file here makes the Engine watch Plugins, which lists them as dev.
+  devPluginsPath: string;
 };
 
 export function serverPaths(directory: string): ServerPaths {
@@ -37,6 +41,7 @@ export function serverPaths(directory: string): ServerPaths {
     registryPath: path.join(directory, 'registry.json'),
     installationPath: path.join(directory, 'installation.json'),
     githubPath: path.join(directory, 'github-fixture.json'),
+    devPluginsPath: path.join(directory, 'dev-plugins'),
   };
 }
 
@@ -60,6 +65,7 @@ export function fixtureEnvironment(
     ARGO_E2E_REGISTRY_PATH: paths.registryPath,
     ARGO_E2E_INSTALLATION_PATH: paths.installationPath,
     ARGO_E2E_GITHUB: paths.githubPath,
+    ARGO_E2E_DEV_PLUGINS: paths.devPluginsPath,
     ARGO_E2E_REQUEST_LOG: paths.requestLogPath,
   };
 }
@@ -92,6 +98,8 @@ export async function prepareServer(
   await initTestRepository(paths.projectPath, false);
   await installPlugins(paths.home);
   await prepareGitHub(paths, initial);
+
+  if (initial.devPlugins) await writeFile(paths.devPluginsPath, 'dev');
 
   return paths;
 }

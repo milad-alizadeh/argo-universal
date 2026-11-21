@@ -45,6 +45,7 @@ async function useWebApp(input: WebAppInput): Promise<void> {
     noProjects: input.tags.includes('@without-projects'),
     registryOffline: input.tags.includes('@registry-offline'),
     githubPulls: input.tags.includes('@github-pulls'),
+    devPlugins: input.tags.includes('@dev-plugins'),
   });
 
   try {

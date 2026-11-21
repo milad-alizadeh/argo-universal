@@ -42,6 +42,7 @@ function settingsOf(settings: Map<string, boolean>): ServiceSettings {
 
 async function serviceOf(
   plugins: Parameters<typeof createRuntimePlugins>[0],
+  dev?: true,
 ): Promise<{
   service: PluginService;
   discoveries: () => number;
@@ -72,6 +73,7 @@ async function serviceOf(
       removePlugin: vi.fn<() => Promise<void>>(),
     },
     pluginSettings: settingsOf(new Map()),
+    ...(dev && { dev }),
   });
 
   return { service, discoveries: () => runs, activated, cache };
@@ -132,4 +134,18 @@ it('discovers again for a Plugin the cache has not seen', async () => {
 
   await expect(service.activate('late')).rejects.toThrow('Unknown Plugin');
   expect(discoveries()).toBe(2);
+});
+
+it('lists every Plugin as dev while the Server watches Plugins', async () => {
+  const { service } = await serviceOf(fixtures, true);
+  const { plugins } = await service.list();
+
+  expect(plugins.map(({ dev }) => dev)).toEqual([true, true, true]);
+});
+
+it('lists no Plugin as dev on a Server that does not watch Plugins', async () => {
+  const { service } = await serviceOf(fixtures);
+  const { plugins } = await service.list();
+
+  expect(plugins.some((plugin) => 'dev' in plugin)).toBe(false);
 });
