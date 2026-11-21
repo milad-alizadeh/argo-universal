@@ -55,6 +55,11 @@ function tagOf(region: Region, pageState: PageState): DraftRegionTag {
   };
 }
 
+/*
+ * A pick the Draft no longer declares, as after its Variant was removed, rests on the first Variant in the tag. The
+ * Loader still gets the stale id, so a Draft that draws only the Variants it declares fails that draw, as it does for an
+ * unknown state, rather than quietly drawing another Variant.
+ */
 const pickedIndex = (region: Region, pageState: PageState): number =>
   region.variants.findIndex(
     ({ id }) => id === pageState[draftVariantKey(region.id)],
@@ -77,4 +82,27 @@ export function steppedVariant(
   );
 
   return region.variants[(from + direction + count) % count]?.id ?? current;
+}
+
+// The Page state change one step of a region makes, or null for a region the Draft page does not declare.
+export function stepChange(
+  declared: PluginDrafts[number] | undefined,
+  pageState: PageState,
+  regionId: string,
+  direction: 1 | -1,
+): PageState | null {
+  const region = declared?.regions?.find(({ id }) => id === regionId);
+
+  if (!region) return null;
+
+  const key = draftVariantKey(regionId);
+  const current = pageState[key];
+
+  return {
+    [key]: steppedVariant(
+      region,
+      typeof current === 'string' ? current : '',
+      direction,
+    ),
+  };
 }

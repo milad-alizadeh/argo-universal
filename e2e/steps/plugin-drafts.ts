@@ -27,6 +27,15 @@ When(
   },
 );
 
+Then(
+  'the {string} region tag reads {string}',
+  async ({ page }, region: string, text: string): Promise<void> => {
+    await expect(
+      page.getByRole('group', { name: `${region} Variant` }),
+    ).toHaveText(text);
+  },
+);
+
 // A region's tag shows its controls while the pointer is on the region.
 When(
   'I step the {string} region to the next Variant',

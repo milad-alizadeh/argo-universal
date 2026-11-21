@@ -25,9 +25,13 @@ Feature: Plugin Drafts
     When I open the Drafts Plugin
     Then the Plugin page text reads "Header compact"
     And the Plugin page text reads "List rows"
+    And the "Header" region tag reads "Header · A 1/3"
+    And the "List" region tag reads "List · A 1/2"
     When I step the "Header" region to the next Variant
     Then the Plugin page text reads "Header tabs"
     And the Plugin page text reads "List rows"
     When I step the "List" region to the next Variant
     Then the Plugin page text reads "Header tabs"
     And the Plugin page text reads "List cards"
+    And the "Header" region tag reads "Header · B 2/3"
+    And the "List" region tag reads "List · B 2/2"

@@ -2,7 +2,11 @@ import type { PluginManifest } from '@repo/contracts/plugins';
 import { draftVariantKey } from '@repo/contracts/plugins/drafts';
 import { expect, it } from 'vitest';
 import type { DraftEntry } from './draft-bar-model';
-import { draftRegionsOf, steppedVariant } from './draft-regions-model';
+import {
+  draftRegionsOf,
+  stepChange,
+  steppedVariant,
+} from './draft-regions-model';
 
 type Drafts = NonNullable<PluginManifest['contributes']['drafts']>;
 
@@ -84,4 +88,19 @@ it('steps to the next Variant and the previous one, wrapping at either end', () 
   expect(steppedVariant(region, 'search', 1)).toBe('compact');
   expect(steppedVariant(region, 'compact', -1)).toBe('search');
   expect(steppedVariant(region, 'tabs', -1)).toBe('compact');
+});
+
+it('writes the stepped Variant under the stepped region only, from the pick in the Page state', () => {
+  const page = drafts[0];
+
+  expect(stepChange(page, {}, 'header', 1)).toEqual({
+    [draftVariantKey('header')]: 'tabs',
+  });
+  expect(
+    stepChange(page, { [draftVariantKey('list')]: 'cards' }, 'list', 1),
+  ).toEqual({ [draftVariantKey('list')]: 'rows' });
+  expect(stepChange(page, {}, 'header', -1)).toEqual({
+    [draftVariantKey('header')]: 'search',
+  });
+  expect(stepChange(page, {}, 'footer', 1)).toBeNull();
 });

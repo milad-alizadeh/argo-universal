@@ -40,7 +40,7 @@ it('steps one region without touching the pick of another', async () => {
   });
 });
 
-it('keeps each App its own pick, as an App keeps its own Page state', async () => {
+it('keeps a pick in the App that made it: another App has no pick and its Server saw no draw', async () => {
   const phone = cacheOverMemory();
   const desktop = cacheOverMemory();
 

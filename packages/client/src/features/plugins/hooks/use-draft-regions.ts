@@ -1,8 +1,7 @@
-import { draftVariantKey } from '@repo/contracts/plugins/drafts';
 import { matchPagePath } from '@repo/contracts/plugins/page-address';
 import { useQuery } from '@tanstack/react-query';
 import type { DraftRegionTag } from '../utils/draft-regions-model';
-import { draftRegionsOf, steppedVariant } from '../utils/draft-regions-model';
+import { draftRegionsOf, stepChange } from '../utils/draft-regions-model';
 import type { PageOpening } from '../utils/page-addresses';
 import { usePageAddresses } from './use-page-addresses';
 import { usePluginEntries } from './use-plugin-entries';
@@ -36,19 +35,9 @@ export function useDraftRegions(opening: PageOpening): DraftRegions | null {
   return {
     tags,
     onStep: (regionId, direction) => {
-      const region = declared?.regions?.find(({ id }) => id === regionId);
-      const key = draftVariantKey(regionId);
-      const current = pageState[key];
+      const change = stepChange(declared, pageState, regionId, direction);
 
-      if (!region) return;
-
-      void addresses.change(opening, {
-        [key]: steppedVariant(
-          region,
-          typeof current === 'string' ? current : '',
-          direction,
-        ),
-      });
+      if (change) void addresses.change(opening, change);
     },
   };
 }

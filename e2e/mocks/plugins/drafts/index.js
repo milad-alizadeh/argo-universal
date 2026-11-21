@@ -29,6 +29,15 @@ const headers = {
 
 const lists = { rows: 'List rows', cards: 'List cards' };
 
+// A Variant the Draft does not draw fails the draw too, so the gap shows instead of another Variant.
+function variantOf(drawn, id) {
+  const text = drawn[id];
+
+  if (!text) throw new Error(`The Draft has no ${id} Variant`);
+
+  return text;
+}
+
 // A state with no canned answer fails the draw, so the gap shows instead of another state's page.
 function answerFor(state) {
   const answer = answers[state.draftState];
@@ -38,8 +47,8 @@ function answerFor(state) {
   return {
     key: state.draftState,
     answer,
-    header: headers[state['draftVariant.header']],
-    list: lists[state['draftVariant.list']],
+    header: variantOf(headers, state['draftVariant.header']),
+    list: variantOf(lists, state['draftVariant.list']),
   };
 }
 

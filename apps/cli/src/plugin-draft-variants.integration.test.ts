@@ -1,9 +1,10 @@
 import { rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { draftStateIds } from '@repo/contracts/plugins/drafts';
 import { expect, it } from 'vitest';
 import { fixture, manifestFile, readManifest, run } from '../mocks/plugin-cli';
 
-const source = (headerTabs: string): string => `
+const source = (headerTabs: string, defaults = true, extra = ''): string => `
 import { Stack, Svg, Text } from '@argo/plugin-kit';
 
 const headers = {
@@ -11,9 +12,10 @@ const headers = {
   tabs: ${headerTabs},
 };
 
+${extra}
 export function register(argo) {
   argo.pages.define('/', {
-    state: { 'draftVariant.header': 'compact' },
+    ${defaults ? "state: { 'draftVariant.header': 'compact' }," : ''}
     load: ({ state }) => ({ header: state['draftVariant.header'] }),
     render: ({ header }) => <Stack direction="column" key="page">{headers[header]()}</Stack>,
   });
@@ -23,7 +25,7 @@ export function register(argo) {
 const drafts = [
   {
     page: '/',
-    states: ['populated'],
+    states: draftStateIds,
     regions: [
       {
         id: 'header',
@@ -36,8 +38,13 @@ const drafts = [
   },
 ];
 
-async function draftPlugin(headerTabs: string): Promise<string> {
-  const directory = await fixture(source(headerTabs));
+async function draftPlugin(
+  headerTabs: string,
+  options: { defaults?: boolean; extra?: string } = {},
+): Promise<string> {
+  const directory = await fixture(
+    source(headerTabs, options.defaults, options.extra),
+  );
   const manifest = await readManifest(directory);
 
   await writeFile(
@@ -88,4 +95,30 @@ it('validate refuses a Variant whose region the kit refused to draw', async () =
   expect(result.code).toBe(1);
   expect(result.output).toContain('Variant tabs of region header');
   expect(result.output).toContain('draws no node keyed header');
+}, 90_000);
+
+// The Server keeps a Page state key a page declares no default for, so a Loader that omits one still gets the pick.
+it('validate draws the picked Variant for a Loader that declares no default for the key', async () => {
+  const directory = await draftPlugin(
+    "() => { throw new Error('tabs reached the Loader'); }",
+    { defaults: false },
+  );
+
+  const result = await run('validate', directory, 60_000);
+
+  expect(result.code).toBe(1);
+  expect(result.output).toContain('Variant tabs of region header');
+  expect(result.output).toContain('tabs reached the Loader');
+}, 90_000);
+
+it('validate draws no Variant while the Plugin has source diagnostics, so only those are reported', async () => {
+  const directory = await draftPlugin('() => <Text key="header">Tabs</Text>', {
+    extra: 'process.cwd();',
+  });
+
+  const result = await run('validate', directory, 60_000);
+
+  expect(result.code).toBe(1);
+  expect(result.output).toContain('index.tsx');
+  expect(result.output).not.toContain('Variant');
 }, 90_000);
