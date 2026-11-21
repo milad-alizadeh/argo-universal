@@ -53,7 +53,13 @@ const directory = memorySessionDirectory({
 });
 
 export const newScope = (chains = new PromptChains()): SessionScope =>
-  new SessionScope({ directory, createId: () => 'new-session', chains });
+  new SessionScope({
+    directory,
+    createId: () => 'new-session',
+    chains,
+    // The one Terminal the person opened.
+    openedByPerson: (_sessionId, name) => name === 'my-shell',
+  });
 
 export const sessionCaller = (sessionId: string): SessionCaller => ({
   kind: 'session',

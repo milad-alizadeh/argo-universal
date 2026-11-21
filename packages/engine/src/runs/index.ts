@@ -4,6 +4,11 @@ export { recoverRuns } from './recovery';
 
 export { createRuns, removeCheckoutWithRuns } from './create-runs';
 
-export { type RunCheckout, Runs } from './runs';
+export {
+  type RunCheckout,
+  type RunRequest,
+  type RunStarter,
+  Runs,
+} from './runs';
 
 export type { TerminalSpawner } from './terminal';

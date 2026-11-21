@@ -45,6 +45,11 @@ const asked = {
   'run.restart': ['restart the dev server'],
   'run.status': ['which dev servers are running'],
   'run.logs': ['read the dev server output'],
+  'terminal.read': ['read the terminal screen'],
+  'terminal.send': [
+    'press a key in the terminal',
+    'send keystrokes to the terminal',
+  ],
 } satisfies Record<string, readonly string[]>;
 
 const queries = Object.entries(asked).flatMap(([expected, phrases]) =>

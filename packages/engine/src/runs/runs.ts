@@ -13,22 +13,30 @@ import {
   type WriterActorRef,
 } from '../storage';
 import { LiveRun } from './live-run';
+import { RunBlocks, starterName } from './run-blocks';
 import type { RunConfiguration } from './run-configurations';
 import { readRunFile, requireRunConfiguration } from './run-file';
-import { RunLaunches } from './run-launches';
+import { RunLifecycle } from './run-lifecycle';
 import {
   readRunOutputTail,
   removeRunOutput,
   runOutputPath,
   createRunOutput,
 } from './run-output';
-import { allocatePort, bindable, portListening, urlOf } from './run-ports';
+import { bindable, portListening, urlOf } from './run-ports';
 import { awaitReady } from './run-ready';
 import { latestRun, RunWriteJob, type RunRecord } from './run-store';
+import { RunTerminals, type Standing } from './run-terminals';
 import type { TerminalProcess, TerminalSpawner } from './terminal';
 
 // The Checkout a Run belongs to: Sessions on the same one see the same Runs.
 export type RunCheckout = { projectId: string; checkoutPath: string };
+
+// The Session that asks, named in a refusal when its Run holds a port someone else wants.
+export type RunStarter = { id: string; title: string };
+
+// A Run Configuration's Checkout, and the Session that asks for its Run.
+export type RunRequest = RunCheckout & { starter?: RunStarter };
 
 export type RunsInput = {
   database: Database;
@@ -67,11 +75,18 @@ export class Runs {
   private readonly live = new Map<string, LiveRun>();
   // The latest Run of each Run Configuration this Server has started, so a read never waits on the database.
   private readonly latest = new Map<string, RunRecord>();
-  private readonly launches = new RunLaunches();
-  public constructor(private readonly input: RunsInput) {}
+  private readonly lifecycle = new RunLifecycle(this.live);
+  public readonly terminals = new RunTerminals(this);
+  private readonly blocks: RunBlocks;
+  public constructor(private readonly input: RunsInput) {
+    this.blocks = new RunBlocks(
+      () => this.live.values(),
+      input.portFree ?? bindable,
+    );
+  }
 
   public async start(
-    checkout: RunCheckout,
+    checkout: RunRequest,
     name: string,
     timeoutMs = defaultStartMs,
   ): Promise<RunStartResult> {
@@ -85,18 +100,18 @@ export class Runs {
     name: string,
   ): Promise<RunStopResult> {
     await this.configuration(checkout, name);
-    await this.endByKey(keyOf(checkout, name));
+    await this.lifecycle.stop(keyOf(checkout, name));
 
     return { name, status: statusOf(this.record(checkout, name)) };
   }
 
   public async restart(
-    checkout: RunCheckout,
+    checkout: RunRequest,
     name: string,
     timeoutMs = defaultStartMs,
   ): Promise<RunStartResult> {
     const configuration = await this.configuration(checkout, name);
-    await this.endByKey(keyOf(checkout, name));
+    await this.lifecycle.stop(keyOf(checkout, name));
 
     return awaitReady(await this.running(checkout, configuration), timeoutMs);
   }
@@ -137,30 +152,35 @@ export class Runs {
     };
   }
 
+  // The current Terminal, or its recording if it has exited or is being stopped.
+  public async standing(
+    checkout: RunCheckout,
+    name: string,
+  ): Promise<Standing> {
+    await this.configuration(checkout, name);
+    const current = this.live.get(keyOf(checkout, name));
+
+    if (current?.stopping) await current.flushed();
+
+    const record = this.record(checkout, name);
+
+    return {
+      live: current?.stopping ? undefined : current,
+      record,
+      output: record && runOutputPath(this.input.home, record.id),
+    };
+  }
+
   // End this Checkout's Runs before Git removes it.
   public removeCheckout(
     checkout: RunCheckout,
     remove: () => Promise<void>,
   ): Promise<void> {
-    return this.launches.removeCheckout(checkout, async () => {
-      await this.endCheckoutRuns(checkout);
-      await remove();
-    });
+    return this.lifecycle.removeCheckout(checkout, remove);
   }
 
-  public async close(): Promise<void> {
-    await this.launches.close();
-    await Promise.all(this.live.values().map((run) => this.end(run)));
-  }
-
-  private async endCheckoutRuns(checkout: RunCheckout): Promise<void> {
-    await Promise.all(
-      this.live
-        .values()
-        .filter(({ record }) => record.projectId === checkout.projectId)
-        .filter(({ record }) => record.checkoutPath === checkout.checkoutPath)
-        .map((run) => this.end(run)),
-    );
+  public close(): Promise<void> {
+    return this.lifecycle.close();
   }
 
   private row(
@@ -191,53 +211,54 @@ export class Runs {
 
   // The Run of this Run Configuration that already lives, or a new one; two starts at once make one.
   private running(
-    checkout: RunCheckout,
+    checkout: RunRequest,
     configuration: RunConfiguration,
   ): Promise<LiveRun> {
-    this.launches.requireOpen(checkout);
-    const key = keyOf(checkout, configuration.name);
-    const existing = this.live.get(key);
-
-    if (existing?.stopping)
-      return existing.stopping.then(() => this.running(checkout, configuration));
-
-    if (existing) return Promise.resolve(existing);
-
-    return this.launches.start(key, checkout, () =>
-      this.launch(checkout, configuration),
+    return this.lifecycle.start(
+      keyOf(checkout, configuration.name),
+      checkout,
+      () => this.launch(checkout, configuration),
     );
   }
 
   private async launch(
-    checkout: RunCheckout,
+    checkout: RunRequest,
     configuration: RunConfiguration,
   ): Promise<LiveRun> {
     const previous = this.record(checkout, configuration.name);
-    const record = await this.newRecord(checkout, configuration, previous);
+    const ports = await this.blocks.reserve(checkout, configuration, previous);
+    const record = this.newRecord(checkout, configuration, ports.port);
     const outputPath = runOutputPath(this.input.home, record.id);
     await createRunOutput(outputPath);
-    const terminal = await this.spawn(checkout, configuration, record);
+
+    const terminal = await this.spawn(checkout, configuration, {
+      record,
+      env: ports.env,
+    });
+
     record.pid = terminal.pid ?? null;
-    const run = new LiveRun({ record, terminal, outputPath, configuration });
+
+    const run = new LiveRun({
+      record,
+      terminal,
+      outputPath,
+      configuration,
+      block: ports.block,
+      starter: starterName(checkout.starter),
+    });
 
     return this.attach(checkout, run, previous);
   }
 
-  private async newRecord(
-    checkout: RunCheckout,
+  private newRecord(
+    { projectId, checkoutPath }: RunCheckout,
     configuration: RunConfiguration,
-    previous: RunRecord | undefined,
-  ): Promise<RunRecord> {
-    const port = await allocatePort({
-      configuration,
-      previous: previous?.port,
-      held: new Set([...this.live.values()].map((run) => run.record.port)),
-      free: this.input.portFree ?? bindable,
-    });
-
+    port: number,
+  ): RunRecord {
     return {
       id: this.input.createId(),
-      ...checkout,
+      projectId,
+      checkoutPath,
       pid: null,
       name: configuration.name,
       command: configuration.command,
@@ -255,16 +276,14 @@ export class Runs {
   private async spawn(
     checkout: RunCheckout,
     configuration: RunConfiguration,
-    record: RunRecord,
+    { record, env }: { record: RunRecord; env: Record<string, string> },
   ): Promise<TerminalProcess> {
-    const port = String(record.port);
-
     try {
       return await this.input.spawn({
         id: record.id,
         command: configuration.command,
         cwd: resolve(checkout.checkoutPath, configuration.cwd),
-        env: { ...configuration.env, PORT: port, ARGO_PORT_0: port },
+        env: { ...configuration.env, ...env },
         port: record.port,
       });
     } catch (error) {
@@ -349,24 +368,5 @@ export class Runs {
       this.input.writer,
       new RunWriteJob(record, replaced),
     );
-  }
-
-  private async endByKey(key: string): Promise<void> {
-    const run = this.live.get(key) ?? (await this.launches.get(key));
-    await this.end(run);
-  }
-
-  private async end(run: LiveRun | undefined): Promise<void> {
-    if (!run) return;
-    run.stopping ??= Promise.resolve().then(() => this.finishStopping(run));
-    await run.stopping;
-  }
-
-  private async finishStopping(run: LiveRun): Promise<void> {
-    await run.terminal.stop();
-    await run.ended.promise;
-
-    // The stopping terminal still owns its port while it cleans up listeners.
-    this.live.delete(keyOf(run.record, run.record.name));
   }
 }

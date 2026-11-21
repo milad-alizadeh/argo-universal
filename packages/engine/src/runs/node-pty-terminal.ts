@@ -3,16 +3,14 @@ import { releaseProcessGroup } from '@repo/process/group';
 import { spawn } from 'node-pty';
 import { ensureSpawnHelper, shellEnvironment } from '../agents';
 import { killPortListeners, runToken } from './run-processes';
-import type {
-  TerminalExit,
-  TerminalLaunch,
-  TerminalProcess,
-  TerminalSpawner,
+import {
+  terminalColumns,
+  terminalRows,
+  type TerminalExit,
+  type TerminalLaunch,
+  type TerminalProcess,
+  type TerminalSpawner,
 } from './terminal';
-
-const columns = 120;
-
-const rows = 32;
 
 const graceMs = 3000;
 
@@ -83,8 +81,8 @@ export const launchTerminal: TerminalSpawner = async (
       cwd: launch.cwd,
       env: { ...base, ...launch.env, TERM: 'xterm-256color' },
       name: 'xterm-256color',
-      cols: columns,
-      rows,
+      cols: terminalColumns,
+      rows: terminalRows,
     },
   );
 
