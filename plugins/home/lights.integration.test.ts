@@ -13,6 +13,10 @@ const desk = 'light-desk';
 
 const ceiling = 'light-ceiling';
 
+const office = 'group-office';
+
+const deskColour = '#ffd078';
+
 const lightSection = 'Fader';
 
 it(
@@ -27,12 +31,48 @@ it(
     expect(shown(page, toggleOf(desk))).toBe('true');
     expect(shown(page, toggleOf(ceiling))).toBe('false');
     expect(shown(page, sliderOf('light-porch'))).toBe('100');
-    expect(shown(page, toggleOf('group-office'))).toBe('true');
-    expect(page.find(sliderOf(desk)).props).toMatchObject({
+    expect(shown(page, toggleOf(office))).toBe('true');
+
+    const deskFader = page.find(sliderOf(desk)).props;
+    const roomFader = page.find(sliderOf(office)).props;
+
+    expect(deskFader).toMatchObject({
       minimumValue: 1,
       maximumValue: 100,
       valueLabel: '80%',
     });
+    expect(deskFader.fill).toEqual([
+      expect.not.stringContaining(deskColour),
+      deskColour,
+    ]);
+    expect(roomFader.fill).toEqual([
+      deskColour,
+      expect.not.stringContaining(deskColour),
+    ]);
+    expect(page.find(sliderOf(ceiling)).props.fill).toBeUndefined();
+  },
+  timeoutMs,
+);
+
+it(
+  'uses the distinct colours of the on lights for the room fill',
+  async () => {
+    const home = await startHome();
+    const [, secondLight] = home.hue.home.lights;
+    const ceilingColour = '#e8feff';
+
+    if (!secondLight)
+      throw new Error('The Office fixture has no second light.');
+
+    secondLight.on = true;
+    secondLight.xy = [0.3, 0.33];
+
+    const page = await connected(home);
+    const room = page.find(sliderOf(office)).props;
+    const ceilingFader = page.find(sliderOf(ceiling)).props;
+
+    expect(room.fill).toEqual([deskColour, ceilingColour]);
+    expect(ceilingFader.fill).toEqual([expect.any(String), ceilingColour]);
   },
   timeoutMs,
 );
@@ -65,7 +105,7 @@ it(
 
     await page.act(sliderOf(ceiling), 'onValueChange', 25);
     await home.test.clock.advance(150);
-    await page.act(toggleOf('group-office'), 'onPress');
+    await page.act(toggleOf(office), 'onPress');
 
     expect(home.hue.puts().map(({ path, body }) => ({ path, body }))).toEqual([
       {

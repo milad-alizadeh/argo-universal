@@ -66,6 +66,35 @@ function TileButtons(
 const hexOf = ({ hue, saturation }: LightColour): string =>
   toHex(hueSaturationToRgb(hue, saturation));
 
+// Keep the reported hue, with a richer shade at the far end of the fill.
+function shadeOf({ hue, saturation }: LightColour): string {
+  const fullSaturation = 100;
+  const saturationBoost = 0.4;
+  const shade = 0.94;
+
+  const richer =
+    saturation === 0
+      ? 0
+      : saturation + (fullSaturation - saturation) * saturationBoost;
+
+  const [red, green, blue] = hueSaturationToRgb(hue, richer);
+
+  return toHex([red * shade, green * shade, blue * shade]);
+}
+
+function roomFillOf(lights: Room['lights']): string[] | undefined {
+  const colours = lights.flatMap(({ on, reachable, colour }) =>
+    on && reachable && colour ? [colour] : [],
+  );
+
+  const stops = [...new Set(colours.map(hexOf))].slice(0, maxTileColourStops);
+  const [first] = colours;
+
+  if (!first) return undefined;
+
+  return stops.length === 1 ? [hexOf(first), shadeOf(first)] : stops;
+}
+
 function levelControl(
   {
     light,
@@ -88,7 +117,7 @@ function levelControl(
     disabled: !reachable,
     fill:
       on && reachable
-        ? (fill ?? (colour ? [hexOf(colour)] : undefined))
+        ? (fill ?? (colour ? [shadeOf(colour), hexOf(colour)] : undefined))
         : undefined,
     onValueChange: to.run('setBrightness', {
       kind: light.kind,
@@ -144,22 +173,9 @@ function roomFader(
     reachable: room.lights.some((member) => member.reachable),
   };
 
-  const colours = [
-    ...new Set(
-      room.lights.flatMap((member) =>
-        member.on && member.reachable && member.colour
-          ? [hexOf(member.colour)]
-          : [],
-      ),
-    ),
-  ].slice(0, maxTileColourStops);
-
   return (
     <Fader
-      {...levelControl(
-        { light, title, fill: colours.length ? colours : undefined },
-        to,
-      )}
+      {...levelControl({ light, title, fill: roomFillOf(room.lights) }, to)}
       orientation="horizontal"
     >
       <Stack direction="column">

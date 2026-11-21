@@ -71,7 +71,7 @@
                           "valueLabel": "60%",
                           "disabled": false,
                           "orientation": "horizontal",
-                          "fill": ["#ffd078"]
+                          "fill": ["#ffd078", "#f0b344"]
                         },
                         "children": [
                           {
@@ -194,7 +194,7 @@
                               "accessibilityLabel": "Desk lamp brightness",
                               "valueLabel": "80%",
                               "disabled": false,
-                              "fill": ["#ffd078"]
+                              "fill": ["#f0b344", "#ffd078"]
                             },
                             "children": [
                               {
@@ -707,7 +707,7 @@
                           "valueLabel": "60%",
                           "disabled": false,
                           "orientation": "horizontal",
-                          "fill": ["#ffd078"]
+                          "fill": ["#ffd078", "#f0b344"]
                         },
                         "children": [
                           {
@@ -830,7 +830,7 @@
                               "accessibilityLabel": "Desk lamp brightness",
                               "valueLabel": "80%",
                               "disabled": false,
-                              "fill": ["#ffd078"]
+                              "fill": ["#f0b344", "#ffd078"]
                             },
                             "children": [
                               {
@@ -1476,7 +1476,7 @@
                           "valueLabel": "60%",
                           "disabled": false,
                           "orientation": "horizontal",
-                          "fill": ["#ffd078"]
+                          "fill": ["#ffd078", "#f0b344"]
                         },
                         "children": [
                           {
@@ -1599,7 +1599,7 @@
                               "accessibilityLabel": "Desk lamp brightness",
                               "valueLabel": "80%",
                               "disabled": false,
-                              "fill": ["#ffd078"]
+                              "fill": ["#f0b344", "#ffd078"]
                             },
                             "children": [
                               {
@@ -2867,7 +2867,7 @@
                           "valueLabel": "60%",
                           "disabled": false,
                           "orientation": "horizontal",
-                          "fill": ["#ffd078"]
+                          "fill": ["#ffd078", "#f0b344"]
                         },
                         "children": [
                           {
@@ -2990,7 +2990,7 @@
                               "accessibilityLabel": "Desk lamp brightness",
                               "valueLabel": "80%",
                               "disabled": false,
-                              "fill": ["#ffd078"]
+                              "fill": ["#f0b344", "#ffd078"]
                             },
                             "children": [
                               {
@@ -3295,7 +3295,7 @@
                               "accessibilityLabel": "Porch brightness",
                               "valueLabel": "100%",
                               "disabled": false,
-                              "fill": ["#ffd078"]
+                              "fill": ["#f0b344", "#ffd078"]
                             },
                             "children": [
                               {
