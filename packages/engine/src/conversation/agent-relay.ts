@@ -133,6 +133,9 @@ export class AgentRelay {
   private sent(prompt: SentPrompt, outcome: PromptOutcome): string {
     if (outcome.status !== 'queued') {
       this.changed(prompt.started());
+      void outcome.started.then(
+        (started) => started || this.changed(prompt.neverStarted()),
+      );
       this.endsWith(prompt, outcome);
 
       return relayWords[outcome.status];

@@ -24,10 +24,10 @@ const cases: {
     steps: (p) => {
       const a = p.send();
 
-      return [a.queued(), a.started(), a.started()];
+      return [a.queued(), a.started(), a.started(), a.ended()];
     },
-    flips: [true, true, false],
-    running: true,
+    flips: [true, true, false, true],
+    running: false,
     nextInstructs: false,
   },
   {
@@ -84,6 +84,29 @@ it('keeps running while one of two concurrent Prompts is still at work', () => {
   expect(prompts.running).toBe(true);
   expect(b.ended()).toBe(true);
   expect(prompts.running).toBe(false);
+});
+
+it('keeps another Prompt running when a queued one never starts, and gives the instruction back', () => {
+  const prompts = new SentPrompts();
+  const queued = prompts.send();
+  const other = prompts.send();
+
+  queued.queued();
+  other.started();
+  expect(queued.neverStarted()).toBe(false);
+  expect(prompts.running).toBe(true);
+  expect(prompts.send().instructs).toBe(true);
+});
+
+it('gives the instruction back when an already counted Prompt reports no Turn started, and still ends it', () => {
+  const prompts = new SentPrompts();
+  const a = prompts.send();
+
+  a.started();
+  expect(a.neverStarted()).toBe(false);
+  expect(prompts.running).toBe(true);
+  expect(a.ended()).toBe(true);
+  expect(prompts.send().instructs).toBe(true);
 });
 
 it('re-arms the instruction only by the Prompt that carried it', () => {

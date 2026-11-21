@@ -13,12 +13,12 @@ interface PromptRecord {
  * that already finished ignores any later change, so none ends twice.
  */
 export class SentPrompts {
-  private readonly states = new Set<PromptRecord>();
+  private readonly records = new Set<PromptRecord>();
   private instructed = false;
 
   // Whether any Prompt is sent and not yet answered, or started and not yet ended.
   public get running(): boolean {
-    for (const prompt of this.states)
+    for (const prompt of this.records)
       if (prompt.state === 'sent' || prompt.state === 'started') return true;
 
     return false;
@@ -31,7 +31,7 @@ export class SentPrompts {
     const before = this.running;
 
     this.instructed = true;
-    this.states.add(record);
+    this.records.add(record);
 
     return new SentPrompt(this, record, {
       instructs,
@@ -55,7 +55,7 @@ export class SentPrompts {
     const before = this.running;
     record.state = to;
 
-    if (to === 'finished') this.states.delete(record);
+    if (to === 'finished') this.records.delete(record);
 
     return before !== this.running;
   }
@@ -92,8 +92,14 @@ export class SentPrompt {
     return this.prompts.move(this.record, ['started'], 'finished');
   }
 
-  // It was queued and no Turn ever took it: the instruction it carried is owed again.
+  // No Turn took it: the instruction it carried is owed again. A queued one stops waiting; one already counted still ends with its Turn.
   public neverStarted(): boolean {
+    if (this.record.state === 'started') {
+      if (this.instructs) this.prompts.giveBackInstruction();
+
+      return false;
+    }
+
     return this.finish('queued');
   }
 
