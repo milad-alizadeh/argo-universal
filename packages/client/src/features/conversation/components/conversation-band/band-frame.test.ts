@@ -12,10 +12,7 @@ import { barReach, barWidth } from './band-layout';
 
 const dot = barWidth + 0.5;
 
-// the half of the strip at the person's end, where speech stands tallest.
-const loudEndBars = 16;
-
-const seconds = [1, 1.2, 1.4, 1.6, 1.8];
+const sampledBars = 16;
 
 const steady = { state: 'listening', user: speech(0.25) } as const;
 
@@ -33,22 +30,31 @@ describe('speech', () => {
   const agent = run(1, { state: 'talking', agent: speech(0.3) });
   const last = count - 1;
 
-  it('lifts the left bars when the person speaks, and the right ones when the Agent does', () => {
-    expect(heightsOf(person)[0]).toBeGreaterThan(
-      heightsOf(person)[last] ?? Infinity,
-    );
-    expect(heightsOf(agent)[last]).toBeGreaterThan(
-      heightsOf(agent)[0] ?? Infinity,
-    );
-  });
+  it.each(['listening', 'talking'] as const)(
+    'follows the active voice getting louder and then falling silent while %s',
+    (state) => {
+      const voice = state === 'listening' ? 'user' : 'agent';
+      const quiet = run(1, { state, [voice]: speech(0.1) });
+      const loud = run(1, { state, [voice]: speech(0.5) }, quiet.sim);
+      const silent = run(2, { state }, loud.sim);
 
-  it('lifts normal speech to a visible bar: at the loud end a bar rises over 60% of the tallest', () => {
-    const moments = seconds.map((at) => heightsOf(run(at, steady)));
-    const loudEnd = moments.flatMap((bars) => bars.slice(0, loudEndBars));
+      expect(Math.max(...heightsOf(loud))).toBeGreaterThan(
+        Math.max(...heightsOf(quiet)),
+      );
+      expect(Math.max(...heightsOf(loud))).toBeLessThanOrEqual(barReach);
+      expect(Math.max(...heightsOf(silent))).toBeLessThanOrEqual(dot);
+    },
+  );
 
-    expect(Math.max(...loudEnd)).toBeGreaterThan(barReach * 0.6);
-    expect(Math.max(...moments.flat())).toBeLessThanOrEqual(barReach);
-  });
+  it.each(['listening', 'talking'] as const)(
+    'ignores the inactive voice while %s',
+    (state) => {
+      const voice = state === 'listening' ? 'agent' : 'user';
+      const inactive = run(2, { state, [voice]: speech(0.5) });
+
+      expect(Math.max(...heightsOf(inactive))).toBeLessThanOrEqual(dot);
+    },
+  );
 
   it('stays flat in silence however long it runs', () => {
     const silent = run(3, { state: 'listening' });
@@ -58,9 +64,9 @@ describe('speech', () => {
 
   it('gives bars at one level different heights', () => {
     const level = heightsOf(run(1, steady));
-    const distinct = new Set(level.slice(0, loudEndBars).map(Math.round));
+    const distinct = new Set(level.slice(0, sampledBars).map(Math.round));
 
-    expect(distinct.size).toBeGreaterThan(loudEndBars / 4);
+    expect(distinct.size).toBeGreaterThan(sampledBars / 4);
   });
 
   it('moves the bars from one moment to the next', () => {
