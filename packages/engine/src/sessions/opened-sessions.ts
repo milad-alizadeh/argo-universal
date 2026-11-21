@@ -50,6 +50,7 @@ function subscribeToSession(
   const state = changed
     ? [actor.subscribe({ next: changed, complete: changed })]
     : [];
+
   const turns = turnEnded ? [actor.on('turn.ended', turnEnded)] : [];
 
   return [...state, ...turns];

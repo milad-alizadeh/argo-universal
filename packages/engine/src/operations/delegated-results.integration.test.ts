@@ -177,10 +177,12 @@ function writesResult(job: WriterJob, starterId: string): boolean {
   );
 }
 
+type FeedCommitIntercept = { closed: Promise<void>; stop: () => void };
+
 function closeDuringFeedCommit(
   host: DelegationHost,
   starterId: string,
-): { closed: Promise<void>; stop: () => void } {
+): FeedCommitIntercept {
   const closed = Promise.withResolvers<void>();
 
   const subscription = host.databaseWriter.on('writer.queued', ({ jobs }) => {
@@ -197,10 +199,12 @@ function closeDuringFeedCommit(
 
 it('does not dispatch a result revoked during its Feed commit', async () => {
   const requests: PromptRequest[] = [];
+
   const { journey, starterGate, sourceGate } = gatedDelegation(
     undefined,
     requests,
   );
+
   const opened = await journey;
   const { host, caller } = opened;
   const starter = { sessionId: caller.sessionId };
