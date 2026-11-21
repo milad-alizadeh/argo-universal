@@ -33,7 +33,7 @@ export function HeldFader(props: FaderProps): ReactElement {
 
 const PowerButton = (props: { name: string }): ReactElement => (
   <IconButton
-    icon="plug"
+    icon="power"
     variant="secondary"
     size="sm"
     accessibilityLabel={`${props.name} power`}
