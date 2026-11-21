@@ -128,17 +128,31 @@ A pasted token needs no hosting or OAuth app. Whoever runs OAuth needs a client 
 
 [Paper options L2 and S2](https://app.paper.design/file/01M5FNKVE7NQX0KXYWG8SKAVBW/p-10-0)
 
+[ADR-0065](../adr/0065-argo-brokers-mcp-servers-and-projects-choose-sign-ins.md) records the architectural decisions.
+
+## Settings behavior
+
+- When the person enables a server for a Project, Argo can preselect a sole MCP sign-in and show its label before confirmation. With multiple sign-ins, the person chooses one. Adding another sign-in preserves existing Project selections.
+- Show the server and sign-in together in the Project, such as **Sentry · Work**. A disconnected sign-in stays visible so the person can reconnect it or choose a replacement.
+- A service can appear in both Settings sections. Its Plugin entry shows its own sign-in state. Its MCP server entry shows its own sign-ins.
+- Show which Projects use a server before the person changes its URL or local command. Before removing a shared sign-in, name the Projects that use it.
+
 ## Shipping well-known servers
 
-A curated remote entry can ship with a name, mark and endpoint. For a vendor that accepts a Client ID Metadata Document, the proposed Connect flow opens the vendor's consent page from the Server Device and receives the callback on loopback. The Server can keep and refresh the tokens locally if Argo owns the OAuth flow. Claude Code publishes a metadata document for this approach. GitHub's hosted MCP server requires a registered client for OAuth or a pasted personal access token. [Claude Code MCP](https://code.claude.com/docs/en/mcp.md) · [GitHub host integration](https://github.com/github/github-mcp-server/blob/main/docs/host-integration.md)
+The first release includes at least one well-known remote server with Connect, custom remote HTTPS servers with token entry, and custom local commands already installed on the Server Device. Setup is manual or starts from the curated list. Automatic package installation and explicit `.mcp.json` import are deferred. Claude and Codex must pass end-to-end before release. Gemini, Antigravity and pi follow as each is verified. Argo shows when an Installed Agent cannot use a configured server.
+
+Sentry is the first Connect candidate. Before release, test independent Personal and Work sign-ins in two Projects through Claude and Codex, including Sessions with Agent access off. Verify browser consent, the loopback callback and refresh that preserves identity. Switching or disconnecting must block new calls in a running Session. A failed sign-in must leave the other Project and its tools usable. Also verify a custom HTTPS server with a pasted token and a custom installed local command.
+
+A curated remote entry can ship with a name, mark and endpoint. For a vendor that accepts a Client ID Metadata Document, the proposed Connect flow opens the vendor's consent page from the Server Device and receives the callback on loopback. The Server keeps and refreshes the tokens locally. Claude Code publishes a metadata document for this approach. GitHub's hosted MCP server requires a registered client for OAuth or a pasted personal access token. [Claude Code MCP](https://code.claude.com/docs/en/mcp.md) · [GitHub host integration](https://github.com/github/github-mcp-server/blob/main/docs/host-integration.md)
 
 On 2026-11-21, Linear, Notion, Sentry and Vercel advertised support for a Client ID Metadata Document and token exchange without a client secret. These are candidates for Connect. Argo still needs to verify consent, the loopback callback and token refresh with its own client ID. [Linear metadata](https://mcp.linear.app/.well-known/oauth-authorization-server) · [Notion metadata](https://mcp.notion.com/.well-known/oauth-authorization-server) · [Sentry metadata](https://mcp.sentry.dev/.well-known/oauth-authorization-server) · [Vercel metadata](https://vercel.com/.well-known/oauth-authorization-server)
 
 A local stdio entry needs an executable for the Server Device. A self-contained binary can run directly. An npm package needs a compatible Node runtime, including when the package uses an MCP Bundle. Argo's Agent launcher already installs versioned packages and resolves executables. Reusing that machinery would still require a compatible runtime for clean installs and an approved command, arguments and environment variable names before launch. [MCP Bundles](https://github.com/modelcontextprotocol/mcpb)
 
-## Implications for Argo
+## Adapter findings and implementation constraints
 
-- **Send the Project's enabled servers.** Read the enabled subset of the Server's list and send it beside the Argo MCP server when opening a Session.
+The pass-through findings below describe the option evaluated before ADR-0065. The agreed design routes Argo-managed calls through the Server.
+
 - **Choose what to send from what the Agent takes.** Send http only when `mcpCapabilities.http` is true and sse only when `mcpCapabilities.sse` is true. One sse entry fails the whole opening on Codex. Antigravity advertises sse but runs it as streamable HTTP, so a server that speaks only SSE should not be sent to it.
 - **Keep stdio entries free of a `type` field.** Claude drops them silently otherwise.
 - **Give each server a name no Agent's own config will hold.** Codex drops a name it already has, and pi prefers its own. A prefix, as in `argo-<Session id>`, avoids both. Names must stay unique after whitespace becomes underscores, and for pi they hold only letters, digits, `_` and `-`.
@@ -148,18 +162,8 @@ A local stdio entry needs an executable for the Server Device. A self-contained 
 - **Pass-through sends a Secret to the Agent's process.** A server's configuration can include Secrets in its `env` or headers. [ADR-0051](../adr/0051-secrets-live-in-each-oss-secret-store-and-a-sign-in-becomes-an-account.md) now allows that for the person's own Secrets and nothing else. It also forbids a Secret in a process's argv. The Claude adapter passes `env` and headers to Claude over stdin, but is reported to put them in argv when `CLAUDE_CODE_EXECUTABLE` is set, which needs checking first.
 - **Pass-through can carry a preconfigured token.** It works where the Agent connects the transport and the server accepts the token in `env` or a header. Claude and Codex have code that starts OAuth for a server Argo sends once Argo advertises URL elicitation; neither path was run, and each Agent would sign in for itself. In Gemini no OAuth handling for such a server was found, and Antigravity's conversion carries only a URL and headers. One OAuth sign-in for every Agent means Argo holds the tokens and stands between the Agent and the server.
 - **Do not read a project `.mcp.json` unasked.** The spec asks for the person's approval of a stdio command taken from workspace files, and Claude already loads the file itself. An import the person starts and approves fits both.
-- **A change reaches an Agent when a Session next opens or resumes,** because that is when Argo sends the array. The Claude adapter also has a way to change servers in a running session (`setMcpServers`), seen in the installed binary and not read.
-- **The term and the Secret store are decided elsewhere.** `GLOSSARY.md` names the MCP server, and ADR-0051, amended on 2026-11-21, keeps the person's Secrets. This note changes neither.
+- **ACP supplies MCP server configuration at Session open or resume.** The Agent discovers tools from the configured servers. The Claude adapter also has a way to change servers in a running session (`setMcpServers`), seen in the installed binary and not read. Immediate revocation needs a check at call time.
 - **Argo does not know whether a server works.** Claude and Codex report a server that failed to start; whether Argo's ACP client keeps or shows those reports was not checked. Gemini, pi and Antigravity were not found to report one. A check Argo runs itself needs Argo to be an MCP client.
-
-## Open questions
-
-- Whether OAuth servers wait for Argo to hold the tokens, or sign in once per Agent in the meantime.
-- Which well-known MCP servers ship first and whether the list is refreshed from a public registry.
-- How an MCP server and a Plugin for the same service, such as GitHub, are told apart, and whether an MCP server may use an Account a Plugin provides.
-- Which of an Agent's own lists Argo turns off, if any. `strictMcpConfig` also turns off the project `.mcp.json` and claude.ai connectors.
-- Whether adding an MCP server or setting its Secret is an Operation an Agent may call, or the person's alone ([ADR-0044](../adr/0044-argo-is-driven-through-one-operation-registry-and-the-argo-cli.md)).
-- Whether a Session without Agent access gets the list, which today would need its own Agent process.
 
 ## Not verified
 

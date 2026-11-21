@@ -494,6 +494,9 @@ _Avoid_: Agent settings, env config
 A program or service that gives an Agent tools over the Model Context Protocol. The Argo MCP server gives Agents access to Argo Operations.
 _Avoid_: Connector, integration, tool server, context server
 
+**MCP sign-in**:
+A named identity the person uses with one MCP server, such as Personal or Work in Sentry. It is shared by the Projects that select it.
+
 **Stop reason**:
 Why a Turn ended: `end_turn`, `max_tokens`, `max_turn_requests`, `refusal`, `cancelled`, `error`, or `auth_required`.
 _Avoid_: Exit status, finish reason, interrupted (as a Stop reason)
