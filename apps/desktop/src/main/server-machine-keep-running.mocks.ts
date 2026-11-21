@@ -60,9 +60,14 @@ const leftRunning = (): number[] => {
 afterEach(async (): Promise<void> => {
   for (const launch of launches) launch.stop();
   launches.length = 0;
-  await Promise.all(
-    leftRunning().map((pid) => stopProcess(pid, supervisorStopGraceMs)),
-  );
+
+  /*
+   * The CLI forwards SIGTERM to its Supervisor. Let the launcher's group exit before
+   * stopping another PID so the Supervisor cannot receive a second signal mid-shutdown.
+   */
+  for (const pid of new Set(leftRunning()))
+    await stopProcess(pid, supervisorStopGraceMs);
+
   supervisors.length = 0;
   vi.unstubAllEnvs();
   rmSync(home, { recursive: true, force: true });
