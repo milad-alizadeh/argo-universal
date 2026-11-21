@@ -103,6 +103,7 @@ async function attemptCleanup(
 
   // Runs end once the Checkout is going away, never while Archive keeps it.
   const checkout = runCheckoutOf(data);
+
   if (risk.kind === 'absent')
     return removeCheckoutWithRuns(database, checkout, () => Promise.resolve());
 

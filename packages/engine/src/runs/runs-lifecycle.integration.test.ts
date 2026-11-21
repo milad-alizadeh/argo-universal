@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { promptedArchiveSession } from '#mocks/archive';
-import { createFakeTerminals, type FakeTerminal } from '#mocks/fake-terminals';
+import { createFakeTerminals, FakeTerminal } from '#mocks/fake-terminals';
 import { operationCaller, runOperation } from '#mocks/operations';
 
 const web = { name: 'web', command: 'pnpm dev', ready: { pattern: 'Local:' } };
@@ -44,7 +44,11 @@ async function startEngine(
   const host = await startAcpEngine({
     steps: [],
     terminalSpawner: async (launch) => {
-      const terminal = (await terminals.spawn(launch)) as FakeTerminal;
+      const terminal = await terminals.spawn(launch);
+
+      if (!(terminal instanceof FakeTerminal))
+        throw new Error('The test spawner did not create a fake Terminal');
+
       await beforeAttach?.(terminal);
 
       return terminal;
@@ -83,6 +87,7 @@ async function archiveWithRemoval(
   const { checkoutConfirmation } = await engine.host.caller.session.archive({
     sessionId,
   });
+
   if (!checkoutConfirmation) throw new Error('No Checkout confirmation');
 
   await engine.host.caller.session.archive({
@@ -172,6 +177,7 @@ it('lets either of two Sessions on the main checkout see and stop the one Run', 
 
 const freePort = async (): Promise<number> => {
   const listener = createServer();
+
   await new Promise<void>((resolve) =>
     listener.listen(0, '127.0.0.1', resolve),
   );
@@ -179,17 +185,19 @@ const freePort = async (): Promise<number> => {
   await new Promise<void>((resolve) => listener.close(() => resolve()));
 
   if (!address || typeof address === 'string') throw new Error('No port');
+
   return address.port;
 };
 
 it('holds a pinned port until the stopping terminal finishes cleaning up', async () => {
   const exited = Promise.withResolvers<void>();
   const finish = Promise.withResolvers<void>();
-  onTestFinished(finish.resolve);
+  onTestFinished(() => finish.resolve());
 
   const engine = await startEngine(async (terminal) => {
     terminal.print('Local:');
   });
+
   const first = await promptedArchiveSession(engine.host);
   const second = await promptedArchiveSession(engine.host);
   const port = await freePort();
@@ -198,9 +206,11 @@ it('holds a pinned port until the stopping terminal finishes cleaning up', async
   await startReady(engine, first.sessionId);
 
   const terminal = engine.terminals.started[0];
+
   if (!terminal) throw new Error('No terminal');
+
   const stop = terminal.stop.bind(terminal);
-  terminal.stop = async () => {
+  terminal.stop = async (): Promise<void> => {
     await stop();
     exited.resolve();
     await finish.promise;
@@ -228,16 +238,21 @@ it('holds a pinned port until the stopping terminal finishes cleaning up', async
 
 it('removes a Checkout while another Checkout has a Run still launching', async () => {
   const attaching = Promise.withResolvers<void>();
-  onTestFinished(attaching.resolve);
+  onTestFinished(() => attaching.resolve());
+
   const engine = await startEngine(async (terminal) => {
     if (terminal.launch.env.HOLD_SPAWN) await attaching.promise;
+
     terminal.print('Local:');
   });
+
   const removing = await promptedArchiveSession(engine.host);
   const { sessionId: launching } =
     await engine.host.caller.session.new(emptySessionInput);
   const project = (await engine.host.caller.project.list())[0];
+
   if (!project) throw new Error('No Project');
+
   await configure(removing.path);
   await configure(project.path, { env: { HOLD_SPAWN: '1' } });
   const terminal = await startReady(engine, removing.sessionId);
@@ -259,13 +274,16 @@ it('removes a Checkout while another Checkout has a Run still launching', async 
 
 it('stops a Run whose terminal is attaching when the Server stops', async () => {
   const attaching = Promise.withResolvers<void>();
-  onTestFinished(attaching.resolve);
+  onTestFinished(() => attaching.resolve());
+
   const engine = await startEngine(async () => attaching.promise);
   const { sessionId } = await engine.host.caller.session.new(emptySessionInput);
   const project = (await engine.host.caller.project.list())[0];
+
   if (!project) throw new Error('No Project');
+
   await configure(project.path);
-  const starting = engine.call('run.start', sessionId).catch(() => undefined);
+  const starting = engine.call('run.start', sessionId).catch(() => null);
   const terminal = await engine.terminals.next();
   const stopping = engine.host.stop();
 
