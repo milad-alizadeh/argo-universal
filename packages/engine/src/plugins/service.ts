@@ -37,7 +37,7 @@ import {
   undeclaredPick,
 } from './drafts/draft-picks-check';
 import { draftPrompt } from './drafts/draft-prompt';
-import type { ChosenDraft, PluginDrafts } from './drafts/plugin-drafts';
+import type { ChosenDraft, DraftStore } from './drafts/plugin-drafts';
 import { callerOf } from './hooks/hook-rules';
 import { LocatedCache } from './located-cache';
 import {
@@ -69,7 +69,7 @@ export class PluginService {
   // Where Plugins are found is read from disk once and kept; a Server shares its cache with the runtime's dev builds.
   constructor(
     deps: PluginServiceDeps,
-    private readonly drafts?: PluginDrafts,
+    private readonly drafts: DraftStore,
   ) {
     this.deps = { ...deps, located: deps.located ?? new LocatedCache() };
   }
@@ -113,7 +113,7 @@ export class PluginService {
     await this.activate(pluginId);
 
     // The Session that draws is the one the author's Choose answers to.
-    if (sessionId) await this.draftStore().drawnBy(pluginId, sessionId);
+    if (sessionId) await this.drafts.drawnBy(pluginId, sessionId);
 
     // The mark of the worker this swaps in names the region, so Apps frame it (ADR-0057).
     const done = this.deps.pluginRuntime.changes.drawing(pluginId, region);
@@ -151,14 +151,14 @@ export class PluginService {
 
     if (refusal) throw new Error(refusal);
 
-    const sessionId = this.draftStore().sessionOf(pluginId);
+    const sessionId = this.drafts.sessionOf(pluginId);
 
     if (!sessionId)
       throw new Error(
         `No Session is drawing ${pluginId}'s Draft: its Agent runs plugin.draft.show from its Session first.`,
       );
 
-    await this.draftStore().choose(pluginId, chosen);
+    await this.drafts.choose(pluginId, chosen);
 
     const delivery = await deliver(sessionId, {
       pluginId,
@@ -169,15 +169,8 @@ export class PluginService {
     return { sessionId, delivery };
   }
 
-  // Where Drafts are kept; a service built without a store has no Drafts.
-  private draftStore(): PluginDrafts {
-    if (!this.drafts) throw new Error('Plugin Drafts are not available');
-
-    return this.drafts;
-  }
-
   draftChoice(pluginId: string): DraftChoice | null {
-    return this.draftStore().choice(pluginId);
+    return this.drafts.choice(pluginId);
   }
 
   // Turning a Plugin off stops its worker and releases what it holds; it starts again when next asked for.
