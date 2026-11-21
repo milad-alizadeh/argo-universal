@@ -1,11 +1,8 @@
 import { FieldGroup } from '@repo/kit/primitives/fields/field-group';
 import type * as React from 'react';
-import {
-  type AttachChoice,
-  slashCommandsChoice,
-} from './composer-slash-commands-choice';
+import { attachChoices } from './composer-attach-choices';
+import type { AttachChoice } from './composer-slash-commands-choice';
 import type { AttachLayout } from './composer-toolbar-types';
-import type { ComposerProps } from './composer-types';
 
 interface AttachMenuProps {
   layout: AttachLayout;
@@ -19,7 +16,7 @@ export function PhoneAttachChoices({
   return (
     <FieldGroup>
       <FieldGroup.Section>
-        {phoneChoices(layout).map((item) => phoneAttachItem(item, close))}
+        {attachChoices(layout).map((item) => phoneAttachItem(item, close))}
       </FieldGroup.Section>
     </FieldGroup>
   );
@@ -39,31 +36,4 @@ function phoneAttachItem(
       onPress={() => close(item.onPress)}
     />
   );
-}
-
-function phoneChoices(layout: AttachLayout): AttachChoice[] {
-  const { props } = layout;
-
-  return [
-    ...cameraChoice(props),
-    { label: 'Photos', icon: 'photos', onPress: props.onAttachImages },
-    ...fileChoice(props),
-    slashCommandsChoice(layout),
-  ];
-}
-
-function cameraChoice(
-  props: Pick<ComposerProps, 'onAttachCamera'>,
-): AttachChoice[] {
-  return props.onAttachCamera
-    ? [{ label: 'Camera', icon: 'camera', onPress: props.onAttachCamera }]
-    : [];
-}
-
-function fileChoice(
-  props: Pick<ComposerProps, 'onAttachFiles'>,
-): AttachChoice[] {
-  return props.onAttachFiles
-    ? [{ label: 'Files', icon: 'folder', onPress: props.onAttachFiles }]
-    : [];
 }
