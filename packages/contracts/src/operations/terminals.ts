@@ -1,4 +1,9 @@
 import {
+  ShellTerminal,
+  ShellTerminalCloseParams,
+  ShellTerminalOpenParams,
+} from '../runs/shell-terminal';
+import {
   TerminalReadParams,
   TerminalReadResult,
   TerminalResizeParams,
@@ -9,6 +14,28 @@ import {
 import type { OperationDefinition } from './index';
 
 export const terminalOperations = {
+  'terminal.close': {
+    id: 'terminal.close',
+    label: 'Close Terminal',
+    icon: 'terminal',
+    description: 'End a shell Terminal.',
+    params: ShellTerminalCloseParams,
+    result: TerminalResizeResult,
+    tier: 'act',
+    policy: 'person-only',
+    keywords: ['shell', 'exit'],
+  },
+  'terminal.open': {
+    id: 'terminal.open',
+    label: 'New Terminal',
+    icon: 'terminal',
+    description: 'Open a shell in the Session’s Checkout.',
+    params: ShellTerminalOpenParams,
+    result: ShellTerminal,
+    tier: 'act',
+    policy: 'person-only',
+    keywords: ['shell', 'create'],
+  },
   'terminal.read': {
     id: 'terminal.read',
     label: 'Read Terminal',

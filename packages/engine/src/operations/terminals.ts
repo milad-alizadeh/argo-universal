@@ -16,6 +16,13 @@ export function createTerminalOperations(deps: {
   const { database, runs } = deps;
 
   return {
+    'terminal.close': async ({ sessionId, shellId }) => {
+      await runs.shells.close(runCheckoutOf(database, sessionId), shellId);
+
+      return {};
+    },
+    'terminal.open': ({ sessionId }) =>
+      runs.shells.open(runCheckoutOf(database, sessionId), sessionId),
     'terminal.read': async ({ sessionId, name, scrollback }) =>
       runs.terminals.read(runCheckoutOf(database, sessionId), name, scrollback),
     'terminal.resize': async ({ sessionId, name, columns, rows }) => {

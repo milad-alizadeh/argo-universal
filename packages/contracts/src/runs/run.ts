@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { runColumns } from '../columns';
+import { ShellTerminal } from './shell-terminal';
 
 export const RunStatus = runColumns.shape.status;
 
@@ -103,6 +104,7 @@ export type RunConfigurationRow = z.infer<typeof RunConfigurationRow>;
 
 export const RunStatusResult = z.strictObject({
   configurations: z.array(RunConfigurationRow),
+  shells: z.array(ShellTerminal).optional(),
 });
 
 export type RunStatusResult = z.infer<typeof RunStatusResult>;

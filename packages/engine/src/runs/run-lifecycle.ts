@@ -35,6 +35,15 @@ export class RunLifecycle {
       : this.launch(key, checkout, launch);
   }
 
+  public launchShell<T>(
+    checkout: RunCheckout,
+    launch: () => Promise<T>,
+  ): Promise<T> {
+    this.requireOpen(checkout);
+
+    return this.queued(launch);
+  }
+
   public async stop(key: string): Promise<void> {
     const run = this.live.get(key) ?? (await this.pending.get(key)?.run);
 

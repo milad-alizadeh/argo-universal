@@ -5,6 +5,7 @@ import type {
   RunOutput,
   RunOutputCursor,
   RunStatusResult,
+  ShellTerminal,
 } from '@repo/contracts';
 import type { LiveRun } from './live-run';
 import { readRunFile, requireRunConfiguration } from './run-file';
@@ -16,6 +17,7 @@ import type { RunCheckout } from './runs';
 
 type ReadRuns = {
   home: string;
+  shells: (checkout: RunCheckout) => ShellTerminal[];
   live: (checkout: RunCheckout, name: string) => LiveRun | undefined;
   record: (checkout: RunCheckout, name: string) => RunRecord | undefined;
 };
@@ -55,7 +57,10 @@ export class RunView {
   public async status(checkout: RunCheckout): Promise<RunStatusResult> {
     const { configurations } = await readRunFile(checkout.checkoutPath);
 
+    const shells = this.runs.shells(checkout);
+
     return {
+      ...(shells.length > 0 && { shells }),
       configurations: configurations.map(({ name, command }) => ({
         name,
         command,
@@ -130,6 +135,10 @@ export class RunView {
       record,
       output: record && runOutputPath(this.runs.home, record.id),
     };
+  }
+
+  public checkoutChanged(checkout: RunCheckout): void {
+    this.updates.changed(checkout);
   }
 
   public changed(record: RunRecord): void {

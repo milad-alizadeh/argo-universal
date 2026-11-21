@@ -1,4 +1,3 @@
-import type { LiveRun } from './live-run';
 import type { RunConfiguration } from './run-configurations';
 import {
   allocateBlock,
@@ -9,6 +8,12 @@ import {
 import type { RunStarter } from './runs';
 
 type Checkout = { projectId: string; checkoutPath: string };
+
+type Holding = {
+  record: Checkout & { name: string; port: number };
+  block: number;
+  starter: string;
+};
 
 const checkoutKeyOf = ({ projectId, checkoutPath }: Checkout): string =>
   JSON.stringify([projectId, checkoutPath]);
@@ -50,14 +55,14 @@ export class RunBlocks {
   // The block each Checkout last had, so it gets the same ports back once its Runs end and start again.
   private readonly last = new Map<string, number>();
   public constructor(
-    private readonly live: () => Iterable<LiveRun>,
+    private readonly live: () => Iterable<Holding>,
     private readonly free: (port: number) => Promise<boolean>,
   ) {}
 
   // Call one at a time: two Runs of one Checkout must not each reserve a block.
   public async reserve(
     checkout: Checkout,
-    configuration: RunConfiguration,
+    configuration: Pick<RunConfiguration, 'name' | 'port'>,
     previous: { port: number } | undefined,
   ): Promise<RunPorts> {
     const key = checkoutKeyOf(checkout);

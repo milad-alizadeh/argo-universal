@@ -75,7 +75,7 @@ export async function allocateBlock(
 }
 
 type Allocation = Holders & {
-  configuration: RunConfiguration;
+  configuration: Pick<RunConfiguration, 'name' | 'port'>;
   // The port the Run Configuration's last Run had, kept if it is free again.
   previous: number | undefined;
   // The Checkout's block, and the ports of it its other live Runs use.

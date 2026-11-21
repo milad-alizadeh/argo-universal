@@ -21,7 +21,7 @@ class PtyTerminal implements TerminalProcess {
   public readonly pid: number;
   public constructor(
     private readonly child: ReturnType<typeof spawn>,
-    private readonly port: number,
+    private readonly port: number | undefined,
   ) {
     this.pid = child.pid;
     child.onExit((result) => {
@@ -35,7 +35,8 @@ class PtyTerminal implements TerminalProcess {
     this.child.onData(listener);
   }
   public onExit(listener: (exit: TerminalExit) => void): void {
-    this.exitListeners.push(listener);
+    if (this.exit) listener(this.exit);
+    else this.exitListeners.push(listener);
   }
   public write(data: string): void {
     this.child.write(data);
@@ -51,7 +52,7 @@ class PtyTerminal implements TerminalProcess {
     }
 
     await releaseProcessGroup(this.pid);
-    await killPortListeners(this.port);
+    if (this.port !== undefined) await killPortListeners(this.port);
     await this.exited.promise;
   }
   private signalGroup(signal: NodeJS.Signals): void {
@@ -75,8 +76,10 @@ export const launchTerminal: TerminalSpawner = async (
   const shell = process.env.SHELL ?? '/bin/sh';
 
   const child = spawn(
-    shell,
-    ['-l', '-c', launch.command, runToken(launch.id)],
+    launch.shell ? '/bin/sh' : shell,
+    launch.shell
+      ? ['-c', '"$1" -il; exit $?', runToken(launch.id), shell]
+      : ['-l', '-c', launch.command, runToken(launch.id)],
     {
       cwd: launch.cwd,
       env: { ...base, ...launch.env, TERM: 'xterm-256color' },
@@ -86,5 +89,5 @@ export const launchTerminal: TerminalSpawner = async (
     },
   );
 
-  return new PtyTerminal(child, launch.port);
+  return new PtyTerminal(child, launch.shell ? undefined : launch.port);
 };

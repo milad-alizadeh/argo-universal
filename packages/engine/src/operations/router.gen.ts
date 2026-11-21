@@ -908,6 +908,28 @@ export function generatedOperations(runner: OperationRunner) {
         ),
     }),
     terminal: router({
+      close: authenticatedAppProcedure
+        .input(operations['terminal.close'].params)
+        .output(operations['terminal.close'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'terminal.close',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      open: authenticatedAppProcedure
+        .input(operations['terminal.open'].params)
+        .output(operations['terminal.open'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'terminal.open',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       read: publicProcedure
         .input(operations['terminal.read'].params)
         .output(operations['terminal.read'].result)

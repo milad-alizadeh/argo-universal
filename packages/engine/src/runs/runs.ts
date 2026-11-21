@@ -17,6 +17,7 @@ import { awaitReady } from './run-ready';
 import { latestRun, RunWriteJob, type RunRecord } from './run-store';
 import { RunTerminals } from './run-terminals';
 import { RunView, statusOf } from './run-view';
+import { ShellTerminals } from './shell-terminals';
 import type { TerminalProcess, TerminalSpawner } from './terminal';
 
 // The Checkout a Run belongs to: Sessions on the same one see the same Runs.
@@ -62,11 +63,13 @@ export class Runs {
   private readonly latest = new Map<string, RunRecord>();
   private readonly lifecycle = new RunLifecycle(this.live);
   public readonly view: RunView;
+  public readonly shells: ShellTerminals;
   public readonly terminals: RunTerminals;
   private readonly blocks: RunBlocks;
   public constructor(private readonly input: RunsInput) {
     this.view = new RunView({
       home: input.home,
+      shells: (checkout) => this.shells.rows(checkout),
       live: (checkout, name): LiveRun | undefined =>
         this.live.get(keyOf(checkout, name)),
       record: (checkout, name): RunRecord | undefined =>
@@ -74,8 +77,14 @@ export class Runs {
     });
     this.terminals = new RunTerminals(this.view);
     this.blocks = new RunBlocks(
-      () => this.live.values(),
+      () => [...this.live.values(), ...this.shells.holdings()],
       input.portFree ?? bindable,
+    );
+    this.shells = new ShellTerminals(
+      input,
+      this.lifecycle,
+      this.blocks,
+      (checkout) => this.view.checkoutChanged(checkout),
     );
   }
 
@@ -115,11 +124,14 @@ export class Runs {
     checkout: RunCheckout,
     remove: () => Promise<void>,
   ): Promise<void> {
-    return this.lifecycle.removeCheckout(checkout, remove);
+    return this.lifecycle.removeCheckout(checkout, async () => {
+      await this.shells.closeCheckout(checkout);
+      await remove();
+    });
   }
 
-  public close(): Promise<void> {
-    return this.lifecycle.close();
+  public async close(): Promise<void> {
+    await Promise.all([this.lifecycle.close(), this.shells.closeAll()]);
   }
 
   private record(checkout: RunCheckout, name: string): RunRecord | undefined {
