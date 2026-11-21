@@ -21,6 +21,7 @@ export function useDraftRegions(opening: PageOpening): DraftRegions | null {
   const addresses = usePageAddresses();
   const { plugins } = usePluginEntries();
   const { data: pageState } = useQuery(addresses.state(opening));
+
   const entry =
     plugins?.find(({ manifest }) => manifest.id === opening.pluginId) ?? null;
 

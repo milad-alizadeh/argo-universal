@@ -10,7 +10,7 @@ type Diagnostics = PluginValidation['diagnostics'];
 type Draw = { page: string; region: string; variant: string };
 
 // A page pattern's `:name` segments draw with a stand-in value, as a Draft's canned data does not read them.
-const pathOf = (page: string): string => page.replace(/:[^/]+/g, 'draft');
+const pathOf = (page: string): string => page.replaceAll(/:[^/]+/g, 'draft');
 
 const drawsOf = (manifest: PluginManifest): Draw[] =>
   (manifest.contributes.drafts ?? []).flatMap(({ page, regions }) =>

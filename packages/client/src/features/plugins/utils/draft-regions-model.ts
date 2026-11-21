@@ -70,6 +70,7 @@ export function steppedVariant(
   direction: 1 | -1,
 ): string {
   const count = region.variants.length;
+
   const from = Math.max(
     0,
     region.variants.findIndex(({ id }) => id === current),

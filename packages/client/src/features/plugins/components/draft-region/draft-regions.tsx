@@ -24,12 +24,12 @@ const ShownRegions = createContext<Shown | null>(null);
 // The frame a region's node draws in: what its tag says and does comes from the App's context, so a step redraws no node.
 function ConnectedFrame(props: {
   node: WireNode;
-  children: ReactElement;
-}): React.JSX.Element {
+  children?: ReactElement;
+}): React.JSX.Element | null {
   const shown = useContext(ShownRegions);
   const tag = shown?.tags.find(({ id }) => id === props.node.key);
 
-  if (!shown || !tag) return props.children;
+  if (!shown || !tag) return props.children ?? null;
 
   return (
     <DraftRegionFrame
@@ -60,7 +60,9 @@ export function DraftRegionsProvider(props: {
 }): React.JSX.Element {
   const { regions, children } = props;
   const [active, setActive] = useState<string | null>(null);
+
   const ids = regions?.tags.map(({ id }) => id).join('\n');
+
   // One seam while the regions stay the same, so the tree keeps what it drew.
   const seam = useMemo(
     () => (ids === undefined ? null : seamOf(new Set(ids.split('\n')))),

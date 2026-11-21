@@ -8,7 +8,7 @@ import { createContext, type ComponentType, type ReactElement } from 'react';
  */
 export interface DraftSeam {
   frames: (node: WireNode) => boolean;
-  Frame: ComponentType<{ node: WireNode; children: ReactElement }>;
+  Frame: ComponentType<{ node: WireNode; children?: ReactElement }>;
 }
 
 export const DraftSeamContext = createContext<DraftSeam | null>(null);
