@@ -28,6 +28,9 @@ export function register(argo) {
 }
 `;
 
+// What `validate` prints for each region whose Variants remain.
+const shipBlocked = 'Ship blocked';
+
 // How the diagnostic names the Variant that does not render.
 const tabsDiagnostic = 'Variant tabs of region header';
 
@@ -137,7 +140,7 @@ it('validate draws no Variant while the Plugin has source diagnostics, so only t
   expect(result.code).toBe(1);
   expect(result.output).toContain('index.tsx');
   expect(result.output).not.toContain(tabsDiagnostic);
-  expect(result.output).toContain('Ship blocked');
+  expect(result.output).toContain(shipBlocked);
 }, 90_000);
 
 it('validate passes a Plugin mid-Draft and reports its leftover Variants as blocking a ship', async () => {
@@ -147,7 +150,7 @@ it('validate passes a Plugin mid-Draft and reports its leftover Variants as bloc
 
   expect(result.code).toBe(0);
   expect(result.output).toContain('Plugin is valid');
-  expect(result.output).toContain('Ship blocked');
+  expect(result.output).toContain(shipBlocked);
   expect(result.output).toContain('region header still declares 2 Variants');
 }, 90_000);
 
@@ -176,5 +179,5 @@ it('validate --ship passes a Plugin whose Variants are gone', async () => {
   const result = await runShip(directory, 60_000);
 
   expect(result).toMatchObject({ code: 0 });
-  expect(result.output).not.toContain('Ship blocked');
+  expect(result.output).not.toContain(shipBlocked);
 }, 90_000);
