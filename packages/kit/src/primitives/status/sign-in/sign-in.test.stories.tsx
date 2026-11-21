@@ -4,18 +4,18 @@ import { SignIn } from './sign-in';
 import { signedOutSignIn } from './sign-in-fixtures';
 
 // What React Native reported on the console while the story drew.
-const reports: string[] = [];
+const consoleErrors: string[] = [];
 
 const meta = {
   title: 'Tests/Design System/Primitives/Status/SignIn',
   component: SignIn,
   parameters: { screenPreview: true },
-  // React Native reports a string inside a View on the console as it draws, so the spy is set before the story.
+  // React Native consoleErrors a string inside a View on the console as it draws, so the spy is set before the story.
   beforeEach: (): (() => void) => {
-    reports.length = 0;
+    consoleErrors.length = 0;
 
     const errors = spyOn(console, 'error').mockImplementation((message) => {
-      reports.push(String(message));
+      consoleErrors.push(String(message));
     });
 
     return () => errors.mockRestore();
@@ -32,7 +32,7 @@ export const EmptyDescriptionDrawsNoText: Story = {
   play: async ({ canvas }) => {
     await expect(await canvas.findByRole('heading')).toBeVisible();
     await expect(
-      reports.filter((entry) => entry.includes('Unexpected text node')),
+      consoleErrors.filter((entry) => entry.includes('Unexpected text node')),
     ).toHaveLength(0);
   },
 };
