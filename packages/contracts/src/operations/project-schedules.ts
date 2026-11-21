@@ -6,14 +6,18 @@ const projectId = z
   .string()
   .min(1)
   .describe('The destination Project. Ask before saving if it is ambiguous.');
+
 const instructions = z
   .string()
   .trim()
   .min(1, 'Enter instructions for the Session.');
+
+const maximumIntervalSeconds = 31_536_000;
+
 const intervalSeconds = z
   .int()
   .positive('Enter an interval of at least one second.')
-  .max(31_536_000);
+  .max(maximumIntervalSeconds);
 
 const checkout = z.discriminatedUnion('type', [
   z.strictObject({
@@ -65,48 +69,54 @@ export const ProjectScheduleOccurrence = z.discriminatedUnion('outcome', [
 ]);
 
 export type ProjectSchedule = z.infer<typeof ProjectSchedule>;
+
 export type ProjectScheduleInput = z.infer<typeof ProjectScheduleInput>;
+
 export type ProjectScheduleOccurrence = z.infer<
   typeof ProjectScheduleOccurrence
 >;
 
 const target = z.strictObject({ projectId, id: z.string().min(1) });
 
+const scopePolicy = 'ask-outside-project';
+
+const scheduleIcon = 'clock';
+
 export const projectScheduleOperations = {
   'project.scheduleCreate': {
     id: 'project.scheduleCreate',
     label: 'Create Project Schedule',
-    icon: 'calendar',
+    icon: scheduleIcon,
     description:
       'Clarify an ambiguous destination before scheduling fresh Sessions, then confirm the saved instructions, Project and next occurrence.',
     params: ProjectScheduleInput,
     result: ProjectSchedule,
     tier: 'act',
-    policy: 'ask-outside-project',
+    policy: scopePolicy,
     keywords: ['schedule', 'recurring', 'interval'],
   },
   'project.scheduleList': {
     id: 'project.scheduleList',
     label: 'List Project Schedules',
-    icon: 'calendar',
+    icon: scheduleIcon,
     description:
       'List Project Schedules and their next occurrence. A Session caller defaults to its own Project.',
     params: z.strictObject({ projectId: projectId.optional() }),
     result: z.array(ProjectSchedule),
     tier: 'read',
-    policy: 'ask-outside-project',
+    policy: scopePolicy,
     keywords: ['scheduled', 'recurring', 'interval'],
   },
   'project.scheduleRunNow': {
     id: 'project.scheduleRunNow',
     label: 'Run Project Schedule now',
-    icon: 'calendar',
+    icon: scheduleIcon,
     description:
       'Start a fresh Session for a Project Schedule and keep its next scheduled occurrence.',
     params: target,
     result: ProjectScheduleOccurrence,
     tier: 'act',
-    policy: 'ask-outside-project',
+    policy: scopePolicy,
     keywords: ['schedule', 'run now', 'launch'],
   },
 } as const satisfies Record<string, OperationDefinition>;

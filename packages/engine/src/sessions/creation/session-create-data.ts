@@ -170,7 +170,8 @@ export function toSessionInsert(
       titleSource: 'prompt',
       startedBySessionId: input.startedBySessionId ?? null,
     },
-    // The Project remembers where the person starts Sessions, never a borrowed Checkout.
-    checkoutChoice: rememberedChoice(input),
+    // An independent Schedule has its own saved Checkout choice.
+    checkoutChoice:
+      input.rememberCheckout === false ? undefined : rememberedChoice(input),
   });
 }

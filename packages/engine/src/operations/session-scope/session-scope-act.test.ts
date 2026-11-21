@@ -81,6 +81,7 @@ it('requires approval to schedule Sessions outside the Agent’s Project', async
     instructions: 'Review the build',
     intervalSeconds: 3600,
   };
+
   expect(
     (
       await scoped({
