@@ -45,6 +45,7 @@ it('reads the existence of a running Subagent Turn without fetching Turn history
     .run();
   const sessions = listSessions(database, directory);
   const counted = countDatabaseReads(database);
+
   const reader = createSessionListReader({
     database: counted.database,
     sessions,
@@ -105,6 +106,7 @@ it('counts an active Agent reported by ACP even when its latest Turn ended', ():
   })('session-1');
 
   expect(agents).toMatchObject([{ state: 'running' }]);
+
   const reader = createSessionListReader({
     database,
     sessions: listSessions(database, directory),
