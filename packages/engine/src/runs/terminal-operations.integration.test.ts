@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
-import { expect, it, onTestFinished } from 'vitest';
+import { expect, it, onTestFinished, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { createFakeTerminals, type FakeTerminal } from '#mocks/fake-terminals';
 import { operationCaller, runOperation } from '#mocks/operations';
@@ -16,6 +16,10 @@ const web = { name: 'web', command: 'pnpm dev', ready: { pattern: 'Local:' } };
 // An Engine whose terminals run nothing, with one Session on the Project's main checkout and a Run of `web` ready.
 async function startReadyRun(): Promise<{
   terminal: FakeTerminal;
+  callAsAgent: (
+    id: OperationId,
+    params?: Record<string, Json>,
+  ) => ReturnType<typeof runOperation>;
   call: (
     id: OperationId,
     params?: Record<string, Json>,
@@ -54,22 +58,36 @@ async function startReadyRun(): Promise<{
   terminal.print('Local: http://localhost\r\n');
   await started;
 
-  return { terminal, call };
+  const callAsAgent: typeof call = async (id, params = {}) => {
+    const access = host.engine
+      .getSnapshot()
+      .context.sessionTokens.issue(sessionId, project.id);
+
+    try {
+      const agent = await operationCaller(host, access.token);
+
+      return await runOperation(agent.operations, { id, params });
+    } finally {
+      access.release();
+    }
+  };
+
+  return { terminal, call, callAsAgent };
 }
 
-it('types into a Run, and the effect shows in its output', async () => {
-  const { terminal, call } = await startReadyRun();
+it('lets an Agent reload a Run and read the resulting output', async () => {
+  const { terminal, callAsAgent } = await startReadyRun();
+  vi.spyOn(terminal, 'write').mockImplementation((input) => {
+    if (input === 'r') terminal.print('Reloading app\r\n');
+  });
 
-  expect(await call(send, { name: 'web', input: 'r' })).toEqual({
+  expect(await callAsAgent(send, { name: 'web', input: 'r' })).toEqual({
     name: 'web',
     status: 'ready',
   });
-  expect(terminal.written).toEqual(['r']);
 
-  terminal.print('Reloading app\r\n');
-
-  await expect(call('run.logs', { name: 'web' })).resolves.toMatchObject({
-    output: expect.stringContaining('Reloading app'),
+  await expect(callAsAgent(read, { name: 'web' })).resolves.toMatchObject({
+    screen: expect.stringContaining('Reloading app'),
   });
 });
 
