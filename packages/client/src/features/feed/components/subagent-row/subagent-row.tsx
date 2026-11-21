@@ -33,7 +33,10 @@ interface RowBodyProps {
 }
 
 // The mark leads one line of words.
-function RowBody({ item, opens }: RowBodyProps): React.JSX.Element {
+export function SubagentRowBody({
+  item,
+  opens,
+}: RowBodyProps): React.JSX.Element {
   return (
     <View className="flex-row items-center gap-1.5">
       <SubagentLead role={item.role} />
@@ -67,13 +70,13 @@ function RowPressable(props: RowPressProps): React.JSX.Element {
   if (!props.onOpen)
     return (
       <View className="max-w-full self-start">
-        <RowBody item={props.item} opens={false} />
+        <SubagentRowBody item={props.item} opens={false} />
       </View>
     );
 
   return (
     <Pressable {...pressProps(props)}>
-      <RowBody item={props.item} opens />
+      <SubagentRowBody item={props.item} opens />
     </Pressable>
   );
 }
