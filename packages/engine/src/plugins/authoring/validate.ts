@@ -8,6 +8,7 @@ import { readIconMarkup } from '../discovery/manifest-icon';
 import { runtimeError } from '../protocol/runtime';
 import { BuildError, buildDiagnostics } from './build-diagnostics';
 import type { PluginDiagnostic } from './diagnostics';
+import { draftManifestDiagnostics, inspectDraftLoaders } from './drafts';
 import { inspectGlobals } from './globals';
 import { manifestDiagnostics } from './manifest-diagnostics';
 import {
@@ -31,6 +32,9 @@ export async function validatePlugin(
 
   if (!manifest) return report;
   report.manifest = manifest;
+  report.diagnostics.push(
+    ...(await draftManifestDiagnostics(directory, manifest)),
+  );
   await inspectEntry(directory, { ...report, manifest });
 
   return report;
@@ -118,6 +122,7 @@ async function inspectFile(
   };
 
   addSourceReport(report, inspectSource(input, report.manifest));
+  report.diagnostics.push(...inspectDraftLoaders(input, report.manifest));
   report.diagnostics.push(...(await inspectGlobals(input)));
 }
 
