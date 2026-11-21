@@ -38,10 +38,9 @@ export const createRunRouter = routerFactory((deps: RunTransport) =>
       .input(outputInput)
       .output(zAsyncIterable({ yield: RunOutput }))
       .subscription(({ ctx, input, signal }) =>
-        deps.runs.watchOutput(
+        deps.runs.view.watchOutput(
           checkoutFor(deps, input.sessionId),
-          input.name,
-          input.cursor,
+          input,
           streamSignal(ctx.connection.signal, signal),
         ),
       ),
@@ -49,7 +48,7 @@ export const createRunRouter = routerFactory((deps: RunTransport) =>
       .input(sessionInput)
       .output(zAsyncIterable({ yield: RunStatusResult }))
       .subscription(({ ctx, input, signal }) =>
-        deps.runs.watchStatus(
+        deps.runs.view.watchStatus(
           checkoutFor(deps, input.sessionId),
           streamSignal(ctx.connection.signal, signal),
         ),

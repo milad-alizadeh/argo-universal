@@ -58,7 +58,7 @@ async function startReadyRun(): Promise<{
   terminal.print('Local: http://localhost\r\n');
   await started;
 
-  const callAsAgent: typeof call = async (id, params = {}) => {
+  const callAsAgent: typeof call = async (id, params) => {
     const access = host.engine
       .getSnapshot()
       .context.sessionTokens.issue(sessionId, project.id);

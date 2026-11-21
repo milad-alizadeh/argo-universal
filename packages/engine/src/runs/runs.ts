@@ -1,15 +1,6 @@
 import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import type {
-  RunConfigurationRow,
-  RunConfigurationStatus,
-  RunLogsResult,
-  RunOutput,
-  RunOutputCursor,
-  RunStartResult,
-  RunStatusResult,
-  RunStopResult,
-} from '@repo/contracts';
+import type { RunStartResult, RunStopResult } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import {
   writeDatabaseJobAndWaitForCommit,
@@ -18,20 +9,14 @@ import {
 import { LiveRun } from './live-run';
 import { RunBlocks, starterName } from './run-blocks';
 import type { RunConfiguration } from './run-configurations';
-import { readRunFile, requireRunConfiguration } from './run-file';
+import { requireRunConfiguration } from './run-file';
 import { RunLifecycle } from './run-lifecycle';
-import {
-  readRunOutputTail,
-  removeRunOutput,
-  runOutputPath,
-  createRunOutput,
-} from './run-output';
+import { removeRunOutput, runOutputPath, createRunOutput } from './run-output';
 import { bindable, portListening, urlOf } from './run-ports';
 import { awaitReady } from './run-ready';
-import { watchRunOutput } from './run-replay';
 import { latestRun, RunWriteJob, type RunRecord } from './run-store';
-import { RunTerminals, type Standing } from './run-terminals';
-import { RunUpdates } from './run-updates';
+import { RunTerminals } from './run-terminals';
+import { RunView, statusOf } from './run-view';
 import type { TerminalProcess, TerminalSpawner } from './terminal';
 
 // The Checkout a Run belongs to: Sessions on the same one see the same Runs.
@@ -56,8 +41,6 @@ export type RunsInput = {
 
 const defaultStartMs = 60_000;
 
-const defaultTailCharacters = 4000;
-
 const readyPollMs = 100;
 
 const keyOf = (
@@ -65,26 +48,31 @@ const keyOf = (
   name: string,
 ): string => JSON.stringify([projectId, checkoutPath, name]);
 
-const statusOf = (record: RunRecord | undefined): RunConfigurationStatus =>
-  record?.status ?? 'stopped';
-
 // A Run Configuration with no `ready` is ready once its port listens.
 const readyPattern = ({ ready }: RunConfiguration): RegExp | undefined =>
   ready && 'pattern' in ready ? new RegExp(ready.pattern, 'u') : undefined;
 
 /*
  * The Runs of every Checkout on this Server (ADR-0063): each is a terminal the Server owns, recorded to a file of its own and
- * in its own table, apart from Background Tasks. Callers reach it only through the `run.*` Operations.
+ * in its own table, apart from Background Tasks.
  */
 export class Runs {
   private readonly live = new Map<string, LiveRun>();
   // The latest Run of each Run Configuration this Server has started, so a read never waits on the database.
   private readonly latest = new Map<string, RunRecord>();
   private readonly lifecycle = new RunLifecycle(this.live);
-  private readonly updates = new RunUpdates();
-  public readonly terminals = new RunTerminals(this);
+  public readonly view: RunView;
+  public readonly terminals: RunTerminals;
   private readonly blocks: RunBlocks;
   public constructor(private readonly input: RunsInput) {
+    this.view = new RunView({
+      home: input.home,
+      live: (checkout, name): LiveRun | undefined =>
+        this.live.get(keyOf(checkout, name)),
+      record: (checkout, name): RunRecord | undefined =>
+        this.record(checkout, name),
+    });
+    this.terminals = new RunTerminals(this.view);
     this.blocks = new RunBlocks(
       () => this.live.values(),
       input.portFree ?? bindable,
@@ -122,85 +110,6 @@ export class Runs {
     return awaitReady(await this.running(checkout, configuration), timeoutMs);
   }
 
-  public async status(
-    checkout: RunCheckout,
-  ): Promise<{ configurations: RunConfigurationRow[] }> {
-    const { configurations } = await readRunFile(checkout.checkoutPath);
-
-    return {
-      configurations: configurations.map(({ name, command }) => ({
-        name,
-        command,
-        ...this.row(this.record(checkout, name)),
-      })),
-    };
-  }
-
-  public watchStatus(
-    checkout: RunCheckout,
-    signal: AbortSignal,
-  ): AsyncIterable<RunStatusResult> {
-    return this.updates.watch(checkout, () => this.status(checkout), signal);
-  }
-
-  public watchOutput(
-    checkout: RunCheckout,
-    name: string,
-    cursor: RunOutputCursor | undefined,
-    signal: AbortSignal,
-  ): AsyncIterable<RunOutput> {
-    return watchRunOutput(
-      {
-        read: () => this.standing(checkout, name),
-        listen: (changed) =>
-          this.updates.listenToOutput(checkout, name, changed),
-      },
-      cursor,
-      signal,
-    );
-  }
-
-  public async logs(
-    checkout: RunCheckout,
-    name: string,
-    tail = defaultTailCharacters,
-  ): Promise<RunLogsResult> {
-    await this.configuration(checkout, name);
-    await this.live.get(keyOf(checkout, name))?.flushed();
-    const record = this.record(checkout, name);
-
-    return {
-      name,
-      status: statusOf(record),
-      exitCode: record?.exitCode ?? null,
-      output: record
-        ? await readRunOutputTail(
-            runOutputPath(this.input.home, record.id),
-            tail,
-          )
-        : '',
-    };
-  }
-
-  // The current Terminal, or its recording if it has exited or is being stopped.
-  public async standing(
-    checkout: RunCheckout,
-    name: string,
-  ): Promise<Standing> {
-    await this.configuration(checkout, name);
-    const current = this.live.get(keyOf(checkout, name));
-
-    if (current?.stopping) await current.flushed();
-
-    const record = this.record(checkout, name);
-
-    return {
-      live: current?.stopping ? undefined : current,
-      record,
-      output: record && runOutputPath(this.input.home, record.id),
-    };
-  }
-
   // End this Checkout's Runs before Git removes it.
   public removeCheckout(
     checkout: RunCheckout,
@@ -211,18 +120,6 @@ export class Runs {
 
   public close(): Promise<void> {
     return this.lifecycle.close();
-  }
-
-  private row(
-    record: RunRecord | undefined,
-  ): Omit<RunConfigurationRow, 'name' | 'command'> {
-    return {
-      status: statusOf(record),
-      port: record?.port ?? null,
-      url: record?.url ?? null,
-      exitCode: record?.exitCode ?? null,
-      startedAt: record?.startedAt ?? null,
-    };
   }
 
   private record(checkout: RunCheckout, name: string): RunRecord | undefined {
@@ -335,9 +232,7 @@ export class Runs {
 
     run.terminal.onData((data) => {
       run.append(data);
-      void run
-        .flushed()
-        .then(() => this.updates.outputChanged(checkout, run.record.name));
+      void run.flushed().then(() => this.view.outputChanged(run.record));
     });
     run.terminal.onExit(({ exitCode }) => void this.exited(key, run, exitCode));
     void this.becomeReady(key, run);
@@ -406,7 +301,6 @@ export class Runs {
       this.input.writer,
       new RunWriteJob(record, replaced),
     );
-    this.updates.changed(record);
-    this.updates.outputChanged(record, record.name);
+    this.view.changed(record);
   }
 }

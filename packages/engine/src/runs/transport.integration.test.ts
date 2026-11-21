@@ -1,10 +1,12 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import type { RunOutput } from '@repo/contracts';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { createFakeTerminals } from '#mocks/fake-terminals';
 
 const name = 'web';
+
 const web = { name, command: 'pnpm dev', ready: { pattern: 'Local:' } };
 
 async function configure(checkout: string): Promise<void> {
@@ -15,12 +17,20 @@ async function configure(checkout: string): Promise<void> {
   );
 }
 
-async function startProject() {
+type Fixture = {
+  caller: Awaited<ReturnType<typeof startAcpEngine>>['caller'];
+  terminals: ReturnType<typeof createFakeTerminals>;
+  sessionId: string;
+};
+
+async function startProject(): Promise<Fixture> {
   const terminals = createFakeTerminals();
+
   const { caller } = await startAcpEngine({
     steps: [],
     terminalSpawner: terminals.spawn,
   });
+
   onTestFinished(terminals.end);
   const { sessionId } = await caller.session.new(emptySessionInput);
   const { checkout } = await caller.session.get({ sessionId });
@@ -61,47 +71,146 @@ it('updates both Sessions on a Checkout as its Run starts, becomes ready, and st
   });
 });
 
+function watchOutput(
+  events: AsyncIterable<RunOutput>,
+): AsyncIterator<RunOutput> {
+  const iterator = events[Symbol.asyncIterator]();
+  onTestFinished(async () => {
+    await iterator.return?.();
+  });
+
+  return iterator;
+}
+
+async function readFrame(events: AsyncIterator<RunOutput>): Promise<RunOutput> {
+  const frame = await events.next();
+
+  if (frame.done) throw new Error('The Terminal output stream closed.');
+
+  return frame.value;
+}
+
+async function readBytes(events: AsyncIterator<RunOutput>): Promise<RunOutput> {
+  let frame = await readFrame(events);
+
+  while (!frame.data) frame = await readFrame(events);
+
+  return frame;
+}
+
+const decoded = ({ data }: RunOutput): string =>
+  Buffer.from(data, 'base64').toString('utf8');
+
+async function finishStart(
+  terminals: Fixture['terminals'],
+  started: ReturnType<Fixture['caller']['run']['start']>,
+  content: string,
+): Promise<void> {
+  const terminal = await terminals.next();
+  terminal.print(content);
+  await started;
+}
+
 it('replays recorded Terminal bytes, streams new bytes and resumes at a saved cursor', async () => {
   const { caller, terminals, sessionId } = await startProject();
   const target = { sessionId, name };
+  const terminalText = 'Local:\r\n\u001b[31m🚀\u001b[0m';
   const started = caller.run.start(target);
   const terminal = await terminals.next();
-  terminal.print('Local:\r\n\u001b[31m🚀\u001b[0m');
+  terminal.print(terminalText);
   await started;
 
-  const output = (await caller.run.output(target))[Symbol.asyncIterator]();
-  onTestFinished(async () => {
-    await output.return?.();
-  });
+  const output = watchOutput(await caller.run.output(target));
 
-  const replay = await output.next();
-  expect(replay.done).toBe(false);
-  expect(Buffer.from(replay.value.data, 'base64').toString('utf8')).toBe(
-    'Local:\r\n\u001b[31m🚀\u001b[0m',
-  );
-  expect(replay.value.cursor.offset).toBe(21);
+  const replay = await readBytes(output);
+  expect(decoded(replay)).toBe(terminalText);
+  expect(replay.cursor.offset).toBe(21);
 
-  const live = output.next();
+  const live = readFrame(output);
+
   terminal.print('\r\nReloaded');
   const next = await live;
-  expect(next.done).toBe(false);
-  expect(Buffer.from(next.value.data, 'base64').toString('utf8')).toBe(
-    '\r\nReloaded',
-  );
+  expect(decoded(next)).toBe('\r\nReloaded');
   await output.return?.();
 
   terminal.print('\r\nWhile away');
-  const reopened = (
-    await caller.run.output({ ...target, cursor: next.value.cursor })
-  )[Symbol.asyncIterator]();
-  onTestFinished(async () => {
-    await reopened.return?.();
+
+  const reopened = watchOutput(
+    await caller.run.output({ ...target, cursor: next.cursor }),
+  );
+
+  const missed = await readFrame(reopened);
+  expect(decoded(missed)).toBe('\r\nWhile away');
+  expect(missed.cursor.runId).toBe(next.cursor.runId);
+});
+
+it('starts the replacement Terminal at offset zero when a Run restarts', async () => {
+  const { caller, terminals, sessionId } = await startProject();
+  const target = { sessionId, name };
+  await finishStart(terminals, caller.run.start(target), 'Local: first');
+  const output = watchOutput(await caller.run.output(target));
+  const first = await readBytes(output);
+
+  const restarting = caller.run.restart(target);
+  const replacement = await terminals.next();
+  const reset = await readFrame(output);
+  expect(reset.cursor.runId).not.toBe(first.cursor.runId);
+  expect(reset.cursor.offset).toBe(0);
+  expect(decoded(reset)).toBe('');
+
+  replacement.print('Local: second');
+  await restarting;
+
+  const second = await readFrame(output);
+  expect(second.cursor.runId).toBe(reset.cursor.runId);
+  expect(decoded(second)).toBe('Local: second');
+});
+
+it('replays only Terminal output belonging to the selected Session’s Checkout', async () => {
+  const { caller, terminals, sessionId } = await startProject();
+
+  const other = await caller.session.new({
+    ...emptySessionInput,
+    checkout: { type: 'worktree', baseBranch: 'main' },
   });
 
-  const missed = await reopened.next();
-  expect(missed.done).toBe(false);
-  expect(Buffer.from(missed.value.data, 'base64').toString('utf8')).toBe(
-    '\r\nWhile away',
+  const { checkout } = await caller.session.get(other);
+  await configure(checkout.path);
+  await finishStart(
+    terminals,
+    caller.run.start({ sessionId, name }),
+    'Local: main',
   );
-  expect(missed.value.cursor.runId).toBe(next.value.cursor.runId);
+  await finishStart(
+    terminals,
+    caller.run.start({ ...other, name }),
+    'Local: worktree',
+  );
+
+  const output = watchOutput(await caller.run.output({ ...other, name }));
+
+  const frame = await readBytes(output);
+  expect(decoded(frame)).toBe('Local: worktree');
+});
+
+it('keeps UTF-8 bytes intact when a character crosses the replay frame boundary', async () => {
+  const { caller, terminals, sessionId } = await startProject();
+  const target = { sessionId, name };
+  const prefix = `Local:${'x'.repeat(32_761)}`;
+  const content = `${prefix}🚀`;
+  await finishStart(terminals, caller.run.start(target), content);
+  const output = watchOutput(await caller.run.output(target));
+  const first = await readBytes(output);
+  const chunks = [Buffer.from(first.data, 'base64')];
+  const length = Buffer.byteLength(content);
+  let offset = first.cursor.offset;
+
+  while (offset < length) {
+    const next = await readBytes(output);
+    chunks.push(Buffer.from(next.data, 'base64'));
+    offset = next.cursor.offset;
+  }
+
+  expect(first.cursor.offset).toBeLessThan(length);
+  expect(Buffer.concat(chunks).toString('utf8')).toBe(content);
 });

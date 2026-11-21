@@ -1,11 +1,12 @@
 import { open } from 'node:fs/promises';
 import type { RunOutput, RunOutputCursor } from '@repo/contracts';
-import type { Standing } from './run-terminals';
 
-const chunkSize = 32 * 1024;
+const chunkBytes = 32_768;
+
+export type RunRecording = { runId: string; path: string };
 
 type Recording = {
-  read: () => Promise<Standing>;
+  current: () => RunRecording | undefined;
   listen: (changed: () => void) => () => void;
 };
 
@@ -13,14 +14,12 @@ async function recordedBytes(path: string, offset: number): Promise<Buffer> {
   const file = await open(path, 'r').catch((error: NodeJS.ErrnoException) => {
     // A new Run replaces the previous recording and wakes this subscription.
     if (error.code !== 'ENOENT') throw error;
-
-    return undefined;
   });
 
-  if (file === undefined) return Buffer.alloc(0);
+  if (!file) return Buffer.alloc(0);
 
   try {
-    const buffer = Buffer.alloc(chunkSize);
+    const buffer = Buffer.alloc(chunkBytes);
     const { bytesRead } = await file.read(buffer, 0, buffer.length, offset);
 
     return buffer.subarray(0, bytesRead);
@@ -30,51 +29,64 @@ async function recordedBytes(path: string, offset: number): Promise<Buffer> {
 }
 
 async function nextFrame(
-  { record, output }: Standing,
+  recording: RunRecording | undefined,
   cursor: RunOutputCursor | undefined,
 ): Promise<RunOutput | undefined> {
-  if (!record || !output) return undefined;
-  const sameRun = cursor?.runId === record.id;
+  if (!recording) return undefined;
+  const { runId, path } = recording;
+  const sameRun = cursor?.runId === runId;
   const offset = sameRun ? cursor.offset : 0;
-  const bytes = await recordedBytes(output, offset);
+  const bytes = await recordedBytes(path, offset);
 
   if (sameRun && bytes.length === 0) return undefined;
 
   return {
-    cursor: { runId: record.id, offset: offset + bytes.length },
+    cursor: { runId, offset: offset + bytes.length },
     data: bytes.toString('base64'),
   };
 }
 
-// Replays the recording while writes continue. One pending wake is enough because the
-// next read takes every new byte from the cursor, including bytes written during replay.
-export async function* watchRunOutput(
+type PendingOutput = Disposable & { wait: () => Promise<void> };
+
+// One pending wake is enough because the next read takes all new bytes from the cursor.
+function pendingOutput(
   recording: Recording,
-  cursor: RunOutputCursor | undefined,
   signal: AbortSignal,
-): AsyncGenerator<RunOutput> {
-  if (signal.aborted) return;
+): PendingOutput {
   let wake = Promise.withResolvers<void>();
   const notify = (): void => wake.resolve();
   const unlisten = recording.listen(notify);
   signal.addEventListener('abort', notify, { once: true });
 
-  try {
-    while (!signal.aborted) {
-      const frame = await nextFrame(await recording.read(), cursor);
-
-      if (signal.aborted) return;
-      if (frame) {
-        cursor = frame.cursor;
-        yield frame;
-        continue;
-      }
-
+  return {
+    wait: async (): Promise<void> => {
       await wake.promise;
       wake = Promise.withResolvers<void>();
-    }
-  } finally {
-    unlisten();
-    signal.removeEventListener('abort', notify);
+    },
+    [Symbol.dispose]: () => {
+      unlisten();
+      signal.removeEventListener('abort', notify);
+    },
+  };
+}
+
+export async function* watchRunOutput(
+  recording: Recording,
+  from: RunOutputCursor | undefined,
+  signal: AbortSignal,
+): AsyncGenerator<RunOutput> {
+  if (signal.aborted) return;
+  using updates = pendingOutput(recording, signal);
+  let cursor = from;
+
+  while (!signal.aborted) {
+    const frame = await nextFrame(recording.current(), cursor);
+
+    if (signal.aborted) return;
+
+    if (frame) {
+      cursor = frame.cursor;
+      yield frame;
+    } else await updates.wait();
   }
 }
