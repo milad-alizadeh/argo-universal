@@ -51,7 +51,7 @@
                       },
                       {
                         "type": "Fader",
-                        "key": "1",
+                        "key": "grouped_light:group-office",
                         "props": {
                           "value": 60,
                           "minimumValue": 1,
@@ -93,7 +93,7 @@
                               },
                               {
                                 "type": "Text",
-                                "key": "1",
+                                "key": "status:grouped_light:group-office",
                                 "props": {
                                   "children": "2 lights · 60%",
                                   "role": "secondary"
@@ -136,7 +136,7 @@
                               },
                               {
                                 "type": "IconButton",
-                                "key": "1",
+                                "key": "power:grouped_light:group-office",
                                 "props": {
                                   "icon": "power",
                                   "accessibilityLabel": "All lights power",
@@ -147,7 +147,35 @@
                                       "kind": "grouped_light",
                                       "id": "group-office",
                                       "on": false
-                                    }
+                                    },
+                                    "optimistic": [
+                                      {
+                                        "key": "power:grouped_light:group-office",
+                                        "props": {
+                                          "selected": false,
+                                          "variant": "primary"
+                                        }
+                                      },
+                                      {
+                                        "key": "grouped_light:group-office",
+                                        "props": {
+                                          "value": 0,
+                                          "valueLabel": "Off"
+                                        }
+                                      },
+                                      {
+                                        "key": "status:grouped_light:group-office",
+                                        "props": {
+                                          "children": "2 lights · Off"
+                                        }
+                                      },
+                                      {
+                                        "key": "detail:grouped_light:group-office",
+                                        "props": {
+                                          "children": ""
+                                        }
+                                      }
+                                    ]
                                   },
                                   "selected": true,
                                   "size": "lg",
@@ -176,7 +204,7 @@
                         "children": [
                           {
                             "type": "Fader",
-                            "key": "light-desk",
+                            "key": "light:light-desk",
                             "props": {
                               "value": 80,
                               "minimumValue": 1,
@@ -246,7 +274,7 @@
                                           },
                                           {
                                             "type": "IconButton",
-                                            "key": "1",
+                                            "key": "power:light:light-desk",
                                             "props": {
                                               "icon": "power",
                                               "accessibilityLabel": "Desk lamp power",
@@ -257,7 +285,35 @@
                                                   "kind": "light",
                                                   "id": "light-desk",
                                                   "on": false
-                                                }
+                                                },
+                                                "optimistic": [
+                                                  {
+                                                    "key": "power:light:light-desk",
+                                                    "props": {
+                                                      "selected": false,
+                                                      "variant": "primary"
+                                                    }
+                                                  },
+                                                  {
+                                                    "key": "light:light-desk",
+                                                    "props": {
+                                                      "value": 0,
+                                                      "valueLabel": "Off"
+                                                    }
+                                                  },
+                                                  {
+                                                    "key": "status:light:light-desk",
+                                                    "props": {
+                                                      "children": "Off"
+                                                    }
+                                                  },
+                                                  {
+                                                    "key": "detail:light:light-desk",
+                                                    "props": {
+                                                      "children": ""
+                                                    }
+                                                  }
+                                                ]
                                               },
                                               "selected": true,
                                               "size": "lg",
@@ -294,7 +350,7 @@
                                 "children": [
                                   {
                                     "type": "Text",
-                                    "key": "0",
+                                    "key": "status:light:light-desk",
                                     "props": {
                                       "children": "80%",
                                       "role": "title"
@@ -310,7 +366,7 @@
                           },
                           {
                             "type": "Fader",
-                            "key": "light-ceiling",
+                            "key": "light:light-ceiling",
                             "props": {
                               "value": 0,
                               "minimumValue": 1,
@@ -379,7 +435,7 @@
                                           },
                                           {
                                             "type": "IconButton",
-                                            "key": "1",
+                                            "key": "power:light:light-ceiling",
                                             "props": {
                                               "icon": "power",
                                               "accessibilityLabel": "Ceiling power",
@@ -390,7 +446,35 @@
                                                   "kind": "light",
                                                   "id": "light-ceiling",
                                                   "on": true
-                                                }
+                                                },
+                                                "optimistic": [
+                                                  {
+                                                    "key": "power:light:light-ceiling",
+                                                    "props": {
+                                                      "selected": true,
+                                                      "variant": "primary"
+                                                    }
+                                                  },
+                                                  {
+                                                    "key": "light:light-ceiling",
+                                                    "props": {
+                                                      "value": 40,
+                                                      "valueLabel": "40%"
+                                                    }
+                                                  },
+                                                  {
+                                                    "key": "status:light:light-ceiling",
+                                                    "props": {
+                                                      "children": "40%"
+                                                    }
+                                                  },
+                                                  {
+                                                    "key": "detail:light:light-ceiling",
+                                                    "props": {
+                                                      "children": ""
+                                                    }
+                                                  }
+                                                ]
                                               },
                                               "selected": false,
                                               "size": "lg",
@@ -427,7 +511,7 @@
                                 "children": [
                                   {
                                     "type": "Text",
-                                    "key": "0",
+                                    "key": "status:light:light-ceiling",
                                     "props": {
                                       "children": "Off",
                                       "role": "title"
@@ -437,7 +521,7 @@
                                   },
                                   {
                                     "type": "Text",
-                                    "key": "1",
+                                    "key": "detail:light:light-ceiling",
                                     "props": {
                                       "children": "Was 40%",
                                       "role": "secondary"
@@ -489,7 +573,7 @@
                         "children": [
                           {
                             "type": "Fader",
-                            "key": "light-porch",
+                            "key": "light:light-porch",
                             "props": {
                               "value": 0,
                               "minimumValue": 1,
@@ -558,7 +642,7 @@
                                           },
                                           {
                                             "type": "IconButton",
-                                            "key": "1",
+                                            "key": "power:light:light-porch",
                                             "props": {
                                               "icon": "power",
                                               "accessibilityLabel": "Porch power",
@@ -569,7 +653,35 @@
                                                   "kind": "light",
                                                   "id": "light-porch",
                                                   "on": false
-                                                }
+                                                },
+                                                "optimistic": [
+                                                  {
+                                                    "key": "power:light:light-porch",
+                                                    "props": {
+                                                      "selected": false,
+                                                      "variant": "primary"
+                                                    }
+                                                  },
+                                                  {
+                                                    "key": "light:light-porch",
+                                                    "props": {
+                                                      "value": 0,
+                                                      "valueLabel": "Unreachable"
+                                                    }
+                                                  },
+                                                  {
+                                                    "key": "status:light:light-porch",
+                                                    "props": {
+                                                      "children": "Unreachable"
+                                                    }
+                                                  },
+                                                  {
+                                                    "key": "detail:light:light-porch",
+                                                    "props": {
+                                                      "children": ""
+                                                    }
+                                                  }
+                                                ]
                                               },
                                               "selected": true,
                                               "size": "lg",
@@ -606,7 +718,7 @@
                                 "children": [
                                   {
                                     "type": "Text",
-                                    "key": "0",
+                                    "key": "status:light:light-porch",
                                     "props": {
                                       "children": "Unreachable",
                                       "role": "heading"
@@ -616,7 +728,7 @@
                                   },
                                   {
                                     "type": "Text",
-                                    "key": "1",
+                                    "key": "detail:light:light-porch",
                                     "props": {
                                       "children": "Check the Hue Bridge",
                                       "role": "secondary"

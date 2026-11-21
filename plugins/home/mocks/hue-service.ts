@@ -18,9 +18,12 @@ export type HueService = Pick<FixtureServices, 'network' | 'requests'> & {
   cloud: HueCloud;
   fail: (answer: FixtureAnswer) => void;
   heal: () => void;
+  holdNextPut: () => HeldPut;
   // The PUTs that changed a light or a room, with their bodies parsed.
   puts: () => { path: string; body: unknown; key: unknown }[];
 };
+
+type HeldPut = { requested: Promise<void>; release: () => void };
 
 type Held = {
   home: HueHousehold;
@@ -68,7 +71,17 @@ const freshHeld = (): Held => ({
 
 export async function hueService(): Promise<HueService> {
   const held = freshHeld();
-  const services = await fixtureServices((request) => answered(held, request));
+  let holdPut: (() => Promise<void>) | undefined;
+
+  const services = await fixtureServices(async (request) => {
+    if (isPut(request) && holdPut) {
+      const hold = holdPut;
+      holdPut = undefined;
+      await hold();
+    }
+
+    return answered(held, request);
+  });
 
   return {
     ...services,
@@ -76,6 +89,18 @@ export async function hueService(): Promise<HueService> {
     cloud: held.cloud,
     fail: (answer) => (held.failing = answer),
     heal: () => (held.failing = null),
+    holdNextPut: (): HeldPut => {
+      const requested = Promise.withResolvers<void>();
+      const released = Promise.withResolvers<void>();
+
+      holdPut = (): Promise<void> => {
+        requested.resolve();
+
+        return released.promise;
+      };
+
+      return { requested: requested.promise, release: released.resolve };
+    },
     puts: () => putsIn(services.requests),
   };
 }
