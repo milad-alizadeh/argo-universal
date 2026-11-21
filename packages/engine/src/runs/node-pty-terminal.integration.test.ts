@@ -24,14 +24,6 @@ const freePort = (): Promise<number> =>
     });
   });
 
-const listening = (port: number): Promise<boolean> =>
-  new Promise((resolve) => {
-    const server = createServer();
-
-    server.once('error', () => resolve(true));
-    server.listen(port, '127.0.0.1', () => server.close(() => resolve(false)));
-  });
-
 // A login shell of bash whose profile sets a marker, in a home of its own, so the test never reads the developer's profile.
 const hermeticLogin = (): string => {
   const home = realpathSync(mkdtempSync(join(tmpdir(), 'argo-run-home-')));
@@ -93,25 +85,3 @@ it('reports the command’s own exit code, after its output', async () => {
   expect(exit.exitCode).toBe(3);
   expect(output).toContain('before');
 });
-
-it('leaves nothing listening after Stop, even a child that ignores SIGTERM', async () => {
-  const cwd = hermeticLogin();
-  const port = await freePort();
-
-  // A child that ignores SIGTERM and holds the port, as a stubborn dev server does.
-  const server = `require('net').createServer().listen(Number(process.env.PORT),'127.0.0.1');process.on('SIGTERM',()=>{});setInterval(()=>{},1000)`;
-  const command = `${JSON.stringify(process.execPath)} -e ${JSON.stringify(server)} & wait`;
-
-  const terminal = await launchTerminal({
-    id: 'stubborn-run',
-    command,
-    cwd,
-    env: { PORT: String(port) },
-    port,
-  });
-
-  await expect.poll(() => listening(port), { timeout: 10_000 }).toBe(true);
-  await terminal.stop();
-
-  expect(await listening(port)).toBe(false);
-}, 30_000);

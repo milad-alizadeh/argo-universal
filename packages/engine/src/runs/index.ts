@@ -4,8 +4,9 @@ export { launchTerminal } from './node-pty-terminal';
 
 export { recoverRuns } from './recovery';
 
+export { createRuns, removeCheckoutWithRuns } from './create-runs';
+
 export {
-  createRuns,
   type RunCheckout,
   type RunRequest,
   type RunStarter,
