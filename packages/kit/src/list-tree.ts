@@ -49,10 +49,13 @@ export function nestsChildren(type: RowComponent): void {
 
 type RowElement = ReactElement<{ children?: ReactNode }>;
 
-const nestingRow = (child: ReactNode): child is RowElement =>
-  isValidElement(child) &&
-  typeof child.type !== 'string' &&
-  nestingTypes.has(kitTypeOf(child));
+const nestingRow = (child: ReactNode): child is RowElement => {
+  if (!isValidElement(child)) return false;
+
+  const type = kitTypeOf(child);
+
+  return typeof type !== 'string' && nestingTypes.has(type);
+};
 
 // The ListItems written inside a row.
 export const nestedRows = (children: ReactNode): ReactElement[] =>

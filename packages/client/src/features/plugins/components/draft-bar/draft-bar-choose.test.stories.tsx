@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import type { DraftNote } from '../../stores/draft-comments';
 import {
   ChooseBarMock,
   type ChooseCall,
 } from '../../hooks/draft-bar-choose.mocks';
+import type { DraftNote } from '../../stores/draft-comments';
 
 const note: DraftNote = {
   address: 'list/row-409',

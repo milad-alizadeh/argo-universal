@@ -1,6 +1,7 @@
 import { useDeferredValue } from 'react';
 import type * as React from 'react';
 import {
+  DraftCommentsLayer,
   DraftRegionsProvider,
   type PageOpening,
   PluginDraftBar,
@@ -39,21 +40,27 @@ export function PluginPageDetailView(props: PageViewProps): React.ReactNode {
 
   return (
     <PluginSymbol pluginId={opening.pluginId}>
-      <DraftRegionsProvider regions={regions}>
-        <PluginDetailView
-          title={title}
-          root={deferredRoot}
-          callbacks={{
-            onOpenPage,
-            onPageCall,
-            pluginId: opening.pluginId,
-            // Only a dev Plugin's Draft page shows the Agent drawing it (ADR-0057).
-            draft: bar
-              ? { naming: naming ?? null, regions: bar.regions }
-              : undefined,
-          }}
-          {...{ onBack, loadingTree }}
-        />
+      <DraftRegionsProvider regions={regions} commenting={bar?.commenting}>
+        <DraftCommentsLayer
+          opening={opening}
+          draft={bar !== null}
+          commenting={bar?.commenting ?? false}
+        >
+          <PluginDetailView
+            title={title}
+            root={deferredRoot}
+            callbacks={{
+              onOpenPage,
+              onPageCall,
+              pluginId: opening.pluginId,
+              // Only a dev Plugin's Draft page shows the Agent drawing it (ADR-0057).
+              draft: bar
+                ? { naming: naming ?? null, regions: bar.regions }
+                : undefined,
+            }}
+            {...{ onBack, loadingTree }}
+          />
+        </DraftCommentsLayer>
       </DraftRegionsProvider>
       <PluginDraftBar bar={bar} />
     </PluginSymbol>

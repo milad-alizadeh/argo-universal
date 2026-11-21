@@ -93,6 +93,8 @@ export { useDraftBar } from './hooks/use-draft-bar';
 
 export { useDraftNaming } from './stores/draft-namings';
 
+export { DraftCommentsLayer } from './components/draft-comment/draft-comments-layer';
+
 export { DraftRegionsProvider } from './components/draft-region/draft-regions';
 
 export { useDraftRegions } from './hooks/use-draft-regions';

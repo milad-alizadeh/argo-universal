@@ -20,8 +20,9 @@ export function PluginDraftBar({
         commentToggle={
           <IconButton
             icon="message"
-            label="Comments"
+            accessibilityLabel="Comments"
             control
+            selected={bar.commenting}
             aria-pressed={bar.commenting}
             onPress={bar.onToggleComments}
           />

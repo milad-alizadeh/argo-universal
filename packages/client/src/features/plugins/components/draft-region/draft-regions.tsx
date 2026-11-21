@@ -8,6 +8,10 @@ import {
 } from 'react';
 import type * as React from 'react';
 import {
+  DraftPlaceContext,
+  type DraftPlace,
+} from '../../../../lib/product/plugin-registry/draft-commenting';
+import {
   DraftFramedContext,
   DraftSeamContext,
   type DraftSeam,
@@ -16,6 +20,8 @@ import type { DraftRegions } from '../../hooks/use-draft-regions';
 import { DraftRegionFrame } from './draft-region-frame';
 
 type Shown = DraftRegions & {
+  // The author is commenting: tags give way to the nodes, which are what a press picks.
+  commenting: boolean;
   active: string | null;
   setActive: (id: string | null) => void;
 };
@@ -33,24 +39,32 @@ function ConnectedFrame(props: {
 
   if (!shown || !tag) return props.children ?? null;
 
+  const place: DraftPlace = {
+    region: tag.id,
+    variant: tag.variant,
+    label: tag.label,
+    letter: tag.letter,
+  };
+
   return (
     <DraftRegionFrame
       tag={tag}
-      tagged={!drawing}
+      tagged={!drawing && !shown.commenting}
       active={shown.active === tag.id}
       onActivate={() => shown.setActive(tag.id)}
       onDeactivate={() => shown.setActive(null)}
       onPrevious={() => shown.onStep(tag.id, -1)}
       onNext={() => shown.onStep(tag.id, 1)}
     >
-      {props.children}
+      <DraftPlaceContext value={place}>{props.children}</DraftPlaceContext>
     </DraftRegionFrame>
   );
 }
 
-const seamOf = (ids: ReadonlySet<string>): DraftSeam => ({
+const seamOf = (ids: ReadonlySet<string>, commenting: boolean): DraftSeam => ({
   frames: (node) => ids.has(node.key),
   Frame: ConnectedFrame,
+  commenting,
 });
 
 /*
@@ -59,22 +73,29 @@ const seamOf = (ids: ReadonlySet<string>): DraftSeam => ({
  */
 export function DraftRegionsProvider(props: {
   regions: DraftRegions | null;
+  // The author is picking nodes to comment on, which a Draft with no regions has too.
+  commenting?: boolean;
   children: React.ReactNode;
 }): React.JSX.Element {
-  const { regions, children } = props;
+  const { regions, commenting = false, children } = props;
   const [active, setActive] = useState<string | null>(null);
 
   const ids = regions?.tags.map(({ id }) => id).join('\n');
 
   // One seam while the regions stay the same, so the tree keeps what it drew.
   const seam = useMemo(
-    () => (ids === undefined ? null : seamOf(new Set(ids.split('\n')))),
-    [ids],
+    () =>
+      ids === undefined && !commenting
+        ? null
+        : seamOf(new Set(ids?.split('\n')), commenting),
+    [ids, commenting],
   );
 
   return (
     <DraftSeamContext value={seam}>
-      <ShownRegions value={regions && { ...regions, active, setActive }}>
+      <ShownRegions
+        value={regions && { ...regions, commenting, active, setActive }}
+      >
         {children}
       </ShownRegions>
     </DraftSeamContext>

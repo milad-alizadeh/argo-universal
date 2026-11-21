@@ -24,10 +24,12 @@ export function wrappingComponent<Wrapper extends object>(
  * The type a parent compares an element's against: the component a wrapper draws in place of, or the element's own
  * type. Read a child's type through this, never `child.type`, wherever a kit component reads its children by type.
  */
-export function kitTypeOf(element: ReactElement): unknown {
+export function kitTypeOf(element: ReactElement): ReactElement['type'] {
   const { type } = element;
 
-  if (typeof type !== 'function' && typeof type !== 'object') return type;
+  if (typeof type === 'string') return type;
 
-  return (type !== null && Reflect.get(type, wrapsKey)) || type;
+  const wrapped: unknown = Reflect.get(type, wrapsKey);
+
+  return typeof wrapped === 'function' ? (wrapped as typeof type) : type;
 }

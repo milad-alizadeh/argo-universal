@@ -7,8 +7,8 @@ import { observable } from '@trpc/server/observable';
 import * as React from 'react';
 import { View } from 'react-native';
 import { TRPCProvider } from '#features/connection';
-import { draftComments, type DraftNote } from '../stores/draft-comments';
 import { PluginDraftBar } from '../components/draft-bar/plugin-draft-bar';
+import { draftComments, type DraftNote } from '../stores/draft-comments';
 import type { PageOpening } from '../utils/page-addresses';
 import { useDraftBar } from './use-draft-bar';
 
