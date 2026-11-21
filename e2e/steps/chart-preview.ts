@@ -34,6 +34,12 @@ const fence = [
 
 type DesktopApp = App & { desktop: NonNullable<App['desktop']> };
 
+function requireDesktop(app: App): DesktopApp {
+  if (!app.desktop) throw new Error('Expected the desktop App');
+
+  return { ...app, desktop: app.desktop };
+}
+
 async function requestPreviewOnce(
   { page, httpUrl, desktop }: DesktopApp,
   draft: string,
@@ -150,14 +156,12 @@ async function captureAndCheckWindow(app: DesktopApp): Promise<Buffer> {
 Then(
   'the Chart preview Operation returns a cropped dark web PNG',
   async ({ app }) => {
-    const { desktop } = app;
+    const desktopApp = requireDesktop(app);
 
-    if (!desktop) throw new Error('Expected the desktop App');
-
-    const image = await captureAndCheckWindow({ ...app, desktop });
+    const image = await captureAndCheckWindow(desktopApp);
 
     expectCroppedPng(image);
-    await expectPaintedDarkChart(desktop, image);
+    await expectPaintedDarkChart(desktopApp.desktop, image);
     await test
       .info()
       .attach('chart-preview', { body: image, contentType: 'image/png' });
@@ -167,12 +171,10 @@ Then(
 Then(
   'the Chart preview Operation explains when the drawing cannot load',
   async ({ app }) => {
-    const { desktop } = app;
-
-    if (!desktop) throw new Error('Expected the desktop App');
+    const desktopApp = requireDesktop(app);
 
     // The isolated renderer starts with no CanvasKit module in memory.
-    await desktop.application.evaluate(({ session }): void => {
+    await desktopApp.desktop.application.evaluate(({ session }): void => {
       const preview = session.fromPartition('argo-chart-preview');
 
       preview.webRequest.onBeforeRequest((request, complete): void => {
@@ -182,7 +184,7 @@ Then(
       });
     });
 
-    expect(await requestPreview({ ...app, desktop })).toEqual({
+    expect(await requestPreview(desktopApp)).toEqual({
       valid: true,
       status: 'unavailable',
       reason: 'The Chart and its labels did not finish drawing.',
@@ -199,11 +201,7 @@ const emptyDonut = [
 Then(
   'the Chart preview Operation returns a PNG of the empty donut',
   async ({ app }) => {
-    const { desktop } = app;
-
-    if (!desktop) throw new Error('Expected the desktop App');
-
-    const result = await requestPreview({ ...app, desktop }, emptyDonut);
+    const result = await requestPreview(requireDesktop(app), emptyDonut);
 
     expect(result).toMatchObject({ status: 'captured' });
 
