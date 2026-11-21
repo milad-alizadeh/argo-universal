@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { cn } from '#kit/utils';
 import { FieldGroup } from '#primitives/fields/field-group';
 import { useCentresOverlays } from '#primitives/overlays/centred-overlay';
+import { Sheet } from '#primitives/overlays/sheet';
 import { PinnedActions } from './dialog-actions';
 import { DialogBody } from './dialog-body';
 import type { DialogFormProps } from './dialog-props';
@@ -26,6 +27,7 @@ function CentredForm({
   footer,
   children,
   scrolls,
+  sheetHeader: _sheetHeader,
   className,
   ...frame
 }: DialogFormProps): ReactElement {
@@ -49,6 +51,21 @@ function CentredSections({ children }: { children: ReactNode }): ReactElement {
 }
 
 function FormSheet(props: DialogFormProps): ReactElement {
+  const heading = props.sheetHeader ? (
+    props.description && (
+      <DialogDescription>{props.description}</DialogDescription>
+    )
+  ) : (
+    <Heading title={props.title} description={props.description} />
+  );
+
+  const body = (
+    <>
+      {heading && <View className="px-4 pb-4 ios:pt-4">{heading}</View>}
+      <FieldGroup>{props.children}</FieldGroup>
+    </>
+  );
+
   return (
     <DialogSheet
       fields
@@ -56,10 +73,13 @@ function FormSheet(props: DialogFormProps): ReactElement {
       dismissible={props.dismissible}
       footer={pinned(props.footer)}
     >
-      <View className="px-4 pb-4 ios:pt-4">
-        <Heading title={props.title} description={props.description} />
-      </View>
-      <FieldGroup>{props.children}</FieldGroup>
+      {props.sheetHeader ? (
+        <Sheet.Screen name="form" title={props.title} keepsHeaderInset>
+          {body}
+        </Sheet.Screen>
+      ) : (
+        body
+      )}
     </DialogSheet>
   );
 }

@@ -102,6 +102,7 @@ export function ScheduleFormView(props: ScheduleFormViewProps): ReactElement {
     <DialogForm
       title={advanced.advanced ? 'Advanced' : formTitle(props.editing)}
       size="lg"
+      sheetHeader
       scrolls
       dismissible={!props.saving}
       showClose={!props.saving}

@@ -67,6 +67,7 @@ function FormStatus({ description }: { description: string }): ReactElement {
   return (
     <DialogForm
       title="New Schedule"
+      sheetHeader
       description={description}
       footer={
         <DialogFooter>

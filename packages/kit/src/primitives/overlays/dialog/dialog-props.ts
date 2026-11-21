@@ -53,6 +53,8 @@ export type DialogFormProps = Omit<DialogContentProps, 'accessibilityLabel'> & {
   // Names the dialog and heads the form.
   title: string;
   description?: string;
+  // The compact form hands its title to the Sheet's screen header.
+  sheetHeader?: boolean;
   // The sections of a tall centred form can scroll between the heading and its pinned actions.
   scrolls?: boolean;
   // The actions, and a failure's message above them: under the sections on a centred dialog, pinned below them on a sheet.

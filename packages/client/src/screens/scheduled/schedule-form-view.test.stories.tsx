@@ -3,7 +3,7 @@ import { settleLayout } from '@repo/kit/mocks/story-layout';
 import { Dialog } from '@repo/kit/primitives/overlays/dialog';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
-import { expect, fireEvent, fn, screen } from 'storybook/test';
+import { expect, fireEvent, fn, screen, within } from 'storybook/test';
 import type { ScheduleCadenceDraft } from './schedule-cadence-draft';
 import { ScheduleFormPreview } from './schedule-form-preview.mocks';
 import { ScheduleFormView } from './schedule-form-view';
@@ -41,6 +41,33 @@ const newSchedule = 'New Schedule';
 const createSchedule = 'Create Schedule';
 
 const instructions = 'Review the build';
+
+export const UsesTheSheetHeaderOnPhone: Story = {
+  play: async ({ userEvent }) => {
+    await settleLayout('phone');
+    const dialog = await screen.findByRole('dialog', { name: newSchedule });
+    await settleOverlays(dialog);
+
+    await expect(
+      within(dialog).getByRole('heading', { name: newSchedule }),
+    ).toBeVisible();
+    await expect(
+      within(dialog).getByRole('button', { name: 'Close' }),
+    ).toBeVisible();
+
+    await userEvent.click(
+      within(dialog).getByRole('link', { name: /^Advanced/ }),
+    );
+    await expect(
+      await within(dialog).findByRole('heading', { name: 'Advanced' }),
+    ).toBeVisible();
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    await expect(
+      await within(dialog).findByRole('heading', { name: newSchedule }),
+    ).toBeVisible();
+  },
+};
 
 export const CreatesWithExplicitMainCheckout: Story = {
   play: async ({ args, userEvent }) => {
