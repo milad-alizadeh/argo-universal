@@ -20,6 +20,7 @@ const defaults: Defaults = {
   'session.setTodos': callerSessionParam,
   'session.setTodoStep': callerSessionParam,
   'plugin.new': callerSessionParam,
+  'plugin.draft.show': callerSessionParam,
   'conversation.end': callerSessionParam,
   'conversation.hangUp': ownSessionOnly,
 };

@@ -5,6 +5,7 @@ import { PluginAccounts } from './accounts/plugin-accounts';
 import type { OAuthOptions } from './accounts/plugin-oauth';
 import type { PluginClock } from './clock';
 import { discoverPlugins } from './discovery/loader';
+import { PluginDrafts } from './drafts/plugin-drafts';
 import { HookPort } from './hooks/hook-port';
 import { PluginListChanges } from './list-changes';
 import { LocatedCache } from './located-cache';
@@ -119,13 +120,16 @@ function serviceFor(
   parts: Foundations,
   runtime: PluginRuntime,
 ): PluginService {
-  return new PluginService({
-    ...(options.watchPlugins === true && { dev: true }),
-    ...parts.discovery,
-    pluginAccounts: parts.accounts,
-    pluginRuntime: runtime,
-    pluginSettings: parts.settings,
-  });
+  return new PluginService(
+    {
+      ...(options.watchPlugins === true && { dev: true }),
+      ...parts.discovery,
+      pluginAccounts: parts.accounts,
+      pluginRuntime: runtime,
+      pluginSettings: parts.settings,
+    },
+    new PluginDrafts(options),
+  );
 }
 
 // The one place PluginService is built, with every dependency in hand.

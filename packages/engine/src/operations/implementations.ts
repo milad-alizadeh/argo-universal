@@ -78,7 +78,7 @@ export function createImplementations(
     ...createAppOperations(deps),
     ...createDiagramOperations(),
     ...sessionImplementations(deps.sessions),
-    ...createPluginOperations(deps.plugins.plugins),
+    ...createPluginOperations(deps.plugins.plugins, deps.sessions),
     ...createRegistryOperations(deps),
     ...createProjectOperations(deps),
     ...createConversationOperations(deps.conversation, deps.sessions),

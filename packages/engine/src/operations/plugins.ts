@@ -3,6 +3,7 @@ import { pluginGuide } from '@repo/contracts/operations/plugin-guide';
 import type { PluginList, PluginSettings } from '@repo/contracts/plugins';
 import type { PluginStatus } from '@repo/contracts/plugins/runtime';
 import type { PluginService } from '../plugins';
+import type { Sessions } from '../sessions';
 import type { OperationImplementations } from './operations';
 
 // `plugin.new` writes into a Session's Checkout, so Sessions answer it.
@@ -10,6 +11,9 @@ type PluginImplementations = Pick<
   OperationImplementations,
   Exclude<Extract<OperationId, `plugin.${string}`>, 'plugin.new'>
 >;
+
+// Delivers the author's Choose to a Session as the Plugin whose Draft it is (ADR-0055).
+type DraftSessions = Pick<Sessions, 'promptFromPlugin'>;
 
 type PluginCompletion = { ok: true };
 
@@ -23,6 +27,7 @@ const readOperations = (
 
 export function createPluginOperations(
   plugins: PluginService,
+  sessions: DraftSessions,
 ): PluginImplementations {
   return {
     'plugin.setEnabled': ({ pluginId, enabled }): Promise<PluginCompletion> =>
@@ -32,8 +37,20 @@ export function createPluginOperations(
     'plugin.setSetting': (change): Promise<PluginCompletion> =>
       complete(plugins.setSetting(change)),
     ...readOperations(plugins),
-    'plugin.draft.show': ({ pluginId }): Promise<PluginCompletion> =>
-      complete(plugins.showDraft(pluginId)),
+    'plugin.draft.show': ({ pluginId, sessionId }): Promise<PluginCompletion> =>
+      complete(plugins.showDraft(pluginId, sessionId)),
+    'plugin.draft.choose': (choice) =>
+      plugins.chooseDraft(choice, async (sessionId, { text, ...sender }) => {
+        const sent = await sessions.promptFromPlugin(
+          { sessionId, prompt: [{ type: 'text', text }] },
+          { type: 'plugin', ...sender },
+        );
+
+        return sent.status;
+      }),
+    'plugin.draft.pick': async ({ pluginId }) => ({
+      choice: plugins.draftChoice(pluginId),
+    }),
     'plugin.activate': ({ pluginId }): Promise<PluginStatus> =>
       plugins.activate(pluginId),
   };

@@ -4,6 +4,7 @@ import {
   registryCache,
   blob,
   feedRow,
+  pluginDraft,
   pluginState,
   pluginAccount,
   pluginAccountGrant,
@@ -31,6 +32,8 @@ export const agentServerColumns = createSelectSchema(agentServers);
 export const registryCacheColumns = createSelectSchema(registryCache);
 
 export const shellColumns = createSelectSchema(shell);
+
+export const pluginDraftColumns = createSelectSchema(pluginDraft);
 
 export const pluginStateColumns = createSelectSchema(pluginState);
 

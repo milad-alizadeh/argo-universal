@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { sessionColumns } from '../columns';
 import { PluginIdentifier } from '../plugins/plugin-settings';
 import {
   PluginActivation,
@@ -9,6 +10,12 @@ import {
   PluginSettings,
 } from '../plugins/plugins';
 import { PluginStatus } from '../plugins/runtime';
+import {
+  DraftChooseInput,
+  DraftChooseOutput,
+  DraftPickInput,
+  DraftPickOutput,
+} from './plugin-drafts';
 import {
   PluginGuide,
   PluginGuideInput,
@@ -59,11 +66,40 @@ export const pluginOperations = {
       pluginId: PluginIdentifier,
       // The region just drawn, for Apps to learn where to look; optional.
       region: z.string().min(1).optional(),
+      sessionId: sessionColumns.shape.id
+        .optional()
+        .describe(
+          'The Session whose Agent draws this Draft, which the author’s Choose answers to; the calling Session when left out.',
+        ),
     }),
     result: z.strictObject({ ok: z.literal(true) }),
     tier: 'act',
     policy: 'allow',
     keywords: ['draft', 'design', 'rebuild', 'reload', 'region', 'variant'],
+  },
+  'plugin.draft.choose': {
+    id: 'plugin.draft.choose',
+    label: 'Choose Draft',
+    icon: 'plug',
+    description:
+      'The author chooses in the App: records one Variant per region plus every comment for a Plugin’s Draft, and hands them to the Session whose Agent draws it. Only an App runs it.',
+    params: DraftChooseInput,
+    result: DraftChooseOutput,
+    tier: 'act',
+    policy: 'person-only',
+    keywords: ['draft', 'choose', 'variant', 'comment', 'pick'],
+  },
+  'plugin.draft.pick': {
+    id: 'plugin.draft.pick',
+    label: 'Read Draft pick',
+    icon: 'plug',
+    description:
+      'Read what the author last chose for a Plugin’s Draft: one Variant per region and the comments sent with it, or null before a choice. Read it to resume after a restart, then write the chosen-variant file into the Plugin folder.',
+    params: DraftPickInput,
+    result: DraftPickOutput,
+    tier: 'read',
+    policy: 'allow',
+    keywords: ['draft', 'pick', 'variant', 'comment', 'design', 'resume'],
   },
   'plugin.setEnabled': {
     id: 'plugin.setEnabled',

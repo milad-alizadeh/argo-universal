@@ -49,6 +49,7 @@
     "./operations/diagram": "./src/operations/diagram.ts",
     "./operations/catalog": "./src/operations/catalog.ts",
     "./operations/plugin-guide": "./src/operations/plugin-guide.ts",
+    "./operations/plugin-drafts": "./src/operations/plugin-drafts.ts",
     "./plugins/plugin-template": "./src/plugins/plugin-template.ts",
     "./registry-schema": "./src/agents/upstream/schema.ts",
     "./plugins": "./src/plugins/plugins.ts",

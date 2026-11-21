@@ -692,6 +692,28 @@ export function generatedOperations(runner: OperationRunner) {
               connectionSignal: ctx.connection.signal,
             }),
           ),
+        choose: authenticatedAppProcedure
+          .input(operations['plugin.draft.choose'].params)
+          .output(operations['plugin.draft.choose'].result)
+          .mutation(({ input, ctx }) =>
+            runner.run({
+              kind: 'app',
+              id: 'plugin.draft.choose',
+              params: input,
+              connectionSignal: ctx.connection.signal,
+            }),
+          ),
+        pick: publicProcedure
+          .input(operations['plugin.draft.pick'].params)
+          .output(operations['plugin.draft.pick'].result)
+          .query(({ input, ctx }) =>
+            runner.run({
+              kind: 'app',
+              id: 'plugin.draft.pick',
+              params: input,
+              connectionSignal: ctx.connection.signal,
+            }),
+          ),
       }),
       setEnabled: authenticatedAppProcedure
         .input(operations['plugin.setEnabled'].params)
