@@ -1,4 +1,10 @@
-import { index, integer, snakeCase, text } from 'drizzle-orm/sqlite-core';
+import {
+  index,
+  integer,
+  primaryKey,
+  snakeCase,
+  text,
+} from 'drizzle-orm/sqlite-core';
 import { project } from '#schema-projects';
 
 export const runStatuses = [
@@ -34,4 +40,20 @@ export const run = snakeCase.table(
   ({ projectId, checkoutPath }) => [
     index('run_checkout_index').on(projectId, checkoutPath),
   ],
+);
+
+// Personal settings follow a Project's named Run Configuration across its Checkouts.
+export const runSettings = snakeCase.table(
+  'run_settings',
+  {
+    projectId: text()
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    name: text().notNull(),
+    env: text({ mode: 'json' }),
+    port: integer(),
+    trusted: text(),
+    autoStart: text(),
+  },
+  (table) => [primaryKey({ columns: [table.projectId, table.name] })],
 );

@@ -66,23 +66,51 @@ const runRequestOf = (
   return { ...checkout, starter: { id, title } };
 };
 
-export function createRunOperations(deps: {
+type RunOperationSources = {
   database: Database;
   runs: Runs;
-}): RunImplementations {
-  const { database, runs } = deps;
+};
+
+type RunStarts = Pick<
+  RunImplementations,
+  'run.start' | 'run.restart' | 'run.startGroup'
+>;
+
+// The App runner sets manual at the authenticated caller boundary, never from input.
+export function createRunStarts(
+  { database, runs }: RunOperationSources,
+  manual = false,
+): RunStarts {
+  const target = (sessionId: string | undefined): RunRequest => ({
+    ...runRequestOf(database, sessionId),
+    manual,
+  });
 
   return {
     'run.start': async ({ sessionId, name, timeoutMs }) =>
-      runs.start(runRequestOf(database, sessionId), name, timeoutMs),
+      runs.start(target(sessionId), name, timeoutMs),
+    'run.restart': async ({ sessionId, name, timeoutMs }) =>
+      runs.restart(target(sessionId), name, timeoutMs),
+    'run.startGroup': async ({ sessionId, name, timeoutMs }) =>
+      runs.groups.start(target(sessionId), name, timeoutMs),
+  };
+}
+
+export function createRunOperations(
+  deps: RunOperationSources,
+): RunImplementations {
+  const { database, runs } = deps;
+
+  return {
+    ...createRunStarts(deps),
     'run.stop': async ({ sessionId, name }) =>
       runs.stop(runCheckoutOf(database, sessionId), name),
-    'run.restart': async ({ sessionId, name, timeoutMs }) =>
-      runs.restart(runRequestOf(database, sessionId), name, timeoutMs),
-    'run.startGroup': async ({ sessionId, name, timeoutMs }) =>
-      runs.groups.start(runRequestOf(database, sessionId), name, timeoutMs),
     'run.stopGroup': async ({ sessionId, name }) =>
       runs.groups.stop(runCheckoutOf(database, sessionId), name),
+    'run.getSettings': ({ sessionId, name }) =>
+      runs.settings.read(runCheckoutOf(database, sessionId), name),
+    'run.updateSettings': (input) =>
+      runs.settings.update(runCheckoutOf(database, input.sessionId), input),
     'run.status': async ({ sessionId }) =>
       runs.view.status(runCheckoutOf(database, sessionId)),
     'run.draft': async ({ sessionId, overwrite }) => {

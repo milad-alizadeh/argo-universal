@@ -1,0 +1,212 @@
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { createServer } from 'node:net';
+import { join } from 'node:path';
+import type { OperationId } from '@repo/contracts/operations';
+import type { Json } from '@repo/contracts/plugins/hook-protocol';
+import { expect, it, onTestFinished } from 'vitest';
+import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { createFakeTerminals, type FakeTerminal } from '#mocks/fake-terminals';
+import { operationCaller, runOperation } from '#mocks/operations';
+
+const name = 'web';
+
+const configuration = {
+  name,
+  command: 'pnpm dev',
+  env: { FROM_FILE: 'source', SHARED: 'file' },
+  ready: { pattern: 'Ready' },
+};
+
+type Host = Awaited<ReturnType<typeof startAcpEngine>>;
+
+type TerminalFixture = ReturnType<typeof createFakeTerminals>;
+
+type Fixture = {
+  host: Host;
+  terminals: TerminalFixture;
+  target: { sessionId: string; name: string };
+  file: string;
+};
+
+async function setUp(): Promise<Fixture> {
+  const terminals = createFakeTerminals();
+
+  const host = await startAcpEngine({
+    steps: [],
+    terminalSpawner: terminals.spawn,
+  });
+
+  onTestFinished(terminals.end);
+
+  const { sessionId } = await host.caller.session.new(emptySessionInput);
+  const { checkout } = await host.caller.session.get({ sessionId });
+  const folder = join(checkout.path, '.argo');
+  const file = join(folder, 'run.json');
+  await mkdir(folder, { recursive: true });
+  await writeFile(file, JSON.stringify({ configurations: [configuration] }));
+
+  return { host, terminals, target: { sessionId, name }, file };
+}
+
+async function ready(
+  terminals: TerminalFixture,
+  start: Promise<unknown>,
+): Promise<FakeTerminal> {
+  const terminal = await terminals.next();
+
+  terminal.print('Ready');
+  await start;
+
+  return terminal;
+}
+
+const unusedPort = (): Promise<number> =>
+  new Promise((resolve, reject) => {
+    const server = createServer().once('error', reject);
+
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address();
+
+      if (!address || typeof address === 'string')
+        throw new Error('The test could not find a TCP port.');
+
+      server.close(() => resolve(address.port));
+    });
+  });
+
+it('layers a Project’s personal environment and pinned port over the checked-in Run Configuration', async () => {
+  const {
+    host: { caller },
+    terminals,
+    target,
+    file,
+  } = await setUp();
+
+  const port = await unusedPort();
+
+  await expect(
+    caller.run.updateSettings({
+      ...target,
+      env: { SHARED: 'personal', PORT: 'ignore' },
+      port,
+    }),
+  ).resolves.toMatchObject({ env: { SHARED: 'personal' }, port });
+
+  const terminal = await ready(terminals, caller.run.start(target));
+  expect(terminal.launch.env).toMatchObject({
+    FROM_FILE: 'source',
+    SHARED: 'personal',
+    PORT: String(port),
+  });
+  expect(terminal.launch.port).toBe(port);
+  expect(await readFile(file, 'utf8')).toBe(
+    JSON.stringify({ configurations: [configuration] }),
+  );
+});
+
+async function asAgent(
+  { host, target }: Fixture,
+  request: { id: OperationId; params: Record<string, Json> },
+): ReturnType<typeof runOperation> {
+  const access = host.engine
+    .getSnapshot()
+    .context.sessionTokens.issue(target.sessionId, emptySessionInput.projectId);
+
+  try {
+    const agent = await operationCaller(host, access.token);
+
+    return await runOperation(agent.operations, request);
+  } finally {
+    access.release();
+  }
+}
+
+it('requires a person to have started the current Run Configuration before enabling auto-start', async () => {
+  const fixture = await setUp();
+
+  const {
+    host: { caller },
+    terminals,
+    target,
+  } = fixture;
+
+  const enable = { ...target, autoStart: true };
+
+  await expect(caller.run.updateSettings(enable)).rejects.toThrow(
+    /Start this Run Configuration yourself/,
+  );
+
+  await ready(
+    terminals,
+    asAgent(fixture, { id: 'run.start', params: { name } }),
+  );
+
+  await expect(caller.run.getSettings(target)).resolves.toMatchObject({
+    canAutoStart: false,
+  });
+  await expect(
+    asAgent(fixture, { id: 'run.updateSettings', params: enable }),
+  ).rejects.toThrow(/Only an App/);
+
+  await ready(terminals, caller.run.restart(target));
+
+  await expect(caller.run.updateSettings(enable)).resolves.toMatchObject({
+    autoStart: true,
+    canAutoStart: true,
+  });
+});
+
+it('auto-starts an opted-in Run after a new Session opens in the Project', async () => {
+  const {
+    host: { caller },
+    terminals,
+    target,
+  } = await setUp();
+
+  await ready(terminals, caller.run.start(target));
+  await caller.run.stop(target);
+  await caller.run.updateSettings({ ...target, autoStart: true });
+
+  const { sessionId } = await caller.session.new(emptySessionInput);
+  const terminal = await terminals.next();
+  terminal.print('Ready');
+
+  await expect
+    .poll(() => caller.run.status({ sessionId }))
+    .toMatchObject({
+      configurations: [{ name, status: 'ready', port: terminal.launch.port }],
+    });
+});
+
+it.each([
+  { command: 'pnpm dev:other' },
+  { cwd: 'app' },
+  { env: { ...configuration.env, EXTRA: 'different' } },
+])(
+  'does not carry auto-start consent onto a Run Configuration with changed checked-in inputs',
+  async (changed) => {
+    const {
+      host: { caller },
+      terminals,
+      target,
+      file,
+    } = await setUp();
+
+    await ready(terminals, caller.run.start(target));
+    await caller.run.stop(target);
+    await caller.run.updateSettings({ ...target, autoStart: true });
+    await writeFile(
+      file,
+      JSON.stringify({ configurations: [{ ...configuration, ...changed }] }),
+    );
+
+    const { sessionId } = await caller.session.new(emptySessionInput);
+    await expect(
+      caller.run.getSettings({ sessionId, name }),
+    ).resolves.toMatchObject({ autoStart: false, canAutoStart: false });
+    await expect(caller.run.status({ sessionId })).resolves.toMatchObject({
+      configurations: [{ name, status: 'stopped' }],
+    });
+    expect(terminals.started).toHaveLength(1);
+  },
+);

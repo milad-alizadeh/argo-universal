@@ -13,8 +13,10 @@ import { requireRunConfiguration } from './run-file';
 import { RunGroups } from './run-groups';
 import { RunLifecycle } from './run-lifecycle';
 import { removeRunOutput, runOutputPath, createRunOutput } from './run-output';
-import { bindable, portListening, urlOf } from './run-ports';
+import { bindable, portListening } from './run-ports';
 import { awaitReady } from './run-ready';
+import { newRunRecord } from './run-record';
+import { configurationFingerprint, RunSettingsStore } from './run-settings';
 import { latestRun, RunWriteJob, type RunRecord } from './run-store';
 import { RunTerminals } from './run-terminals';
 import { RunView, statusOf } from './run-view';
@@ -27,7 +29,11 @@ export type RunCheckout = { projectId: string; checkoutPath: string };
 export type RunStarter = { id: string; title: string };
 
 // A Run Configuration's Checkout, and the Session that asks for its Run.
-export type RunRequest = RunCheckout & { starter?: RunStarter };
+export type RunRequest = RunCheckout & {
+  starter?: RunStarter;
+  manual?: boolean;
+  automatic?: boolean;
+};
 
 export type RunsInput = {
   database: Database;
@@ -63,6 +69,7 @@ export class Runs {
   private readonly latest = new Map<string, RunRecord>();
   private readonly lifecycle = new RunLifecycle(this.live);
   public readonly groups: RunGroups;
+  public readonly settings: RunSettingsStore;
   public readonly view: RunView;
   public readonly terminals: RunTerminals;
   private readonly blocks: RunBlocks;
@@ -75,6 +82,7 @@ export class Runs {
         this.record(checkout, name),
     });
     this.terminals = new RunTerminals(this.view);
+    this.settings = new RunSettingsStore(input.database, input.writer);
     this.groups = new RunGroups({
       start: (checkout, configuration, timeoutMs): Promise<RunStartResult> =>
         this.startConfiguration(checkout, configuration, timeoutMs),
@@ -121,6 +129,16 @@ export class Runs {
     return this.startConfiguration(checkout, configuration, timeoutMs);
   }
 
+  public async autoStart(checkout: RunRequest): Promise<void> {
+    const configurations = await this.settings.autoStarts(checkout);
+
+    await Promise.all(
+      configurations.map((configuration) =>
+        this.running({ ...checkout, automatic: true }, configuration),
+      ),
+    );
+  }
+
   // End this Checkout's Runs before Git removes it.
   public removeCheckout(
     checkout: RunCheckout,
@@ -152,7 +170,15 @@ export class Runs {
     configuration: RunConfiguration,
     timeoutMs = defaultStartMs,
   ): Promise<RunStartResult> {
-    return awaitReady(await this.running(checkout, configuration), timeoutMs);
+    const run = await this.running(checkout, configuration);
+
+    if (
+      checkout.manual &&
+      run.fingerprint === configurationFingerprint(configuration)
+    )
+      await this.settings.recordManual(checkout.projectId, configuration);
+
+    return awaitReady(run, timeoutMs);
   }
 
   // The Run of this Run Configuration that already lives, or a new one; two starts at once make one.
@@ -169,17 +195,28 @@ export class Runs {
 
   private async launch(
     checkout: RunRequest,
-    configuration: RunConfiguration,
+    checkedIn: RunConfiguration,
   ): Promise<LiveRun> {
+    const configuration = this.settings.effective(
+      checkout.projectId,
+      checkedIn,
+    );
+
     const previous = this.record(checkout, configuration.name);
     const ports = await this.blocks.reserve(checkout, configuration, previous);
-    const record = this.newRecord(checkout, configuration, ports.port);
-    const outputPath = runOutputPath(this.input.home, record.id);
-    await createRunOutput(outputPath);
+
+    const record = newRunRecord(checkout, configuration, {
+      id: this.input.createId(),
+      port: ports.port,
+      startedAt: this.input.now(),
+    });
+
+    const fingerprint = configurationFingerprint(checkedIn);
 
     const terminal = await this.spawn(checkout, configuration, {
       record,
       env: ports.env,
+      fingerprint,
     });
 
     record.pid = terminal.pid ?? null;
@@ -187,8 +224,9 @@ export class Runs {
     const run = new LiveRun({
       record,
       terminal,
-      outputPath,
+      outputPath: runOutputPath(this.input.home, record.id),
       configuration,
+      fingerprint,
       block: ports.block,
       starter: starterName(checkout.starter),
     });
@@ -196,35 +234,26 @@ export class Runs {
     return this.attach(checkout, run, previous);
   }
 
-  private newRecord(
-    { projectId, checkoutPath }: RunCheckout,
-    configuration: RunConfiguration,
-    port: number,
-  ): RunRecord {
-    return {
-      id: this.input.createId(),
-      projectId,
-      checkoutPath,
-      pid: null,
-      name: configuration.name,
-      command: configuration.command,
-      cwd: configuration.cwd,
-      port,
-      url: urlOf(configuration, port),
-      status: 'starting',
-      exitCode: null,
-      startedAt: this.input.now(),
-      readyAt: null,
-      endedAt: null,
-    };
-  }
-
   private async spawn(
-    checkout: RunCheckout,
+    checkout: RunRequest,
     configuration: RunConfiguration,
-    { record, env }: { record: RunRecord; env: Record<string, string> },
+    {
+      record,
+      env,
+      fingerprint,
+    }: { record: RunRecord; env: Record<string, string>; fingerprint: string },
   ): Promise<TerminalProcess> {
+    const outputPath = runOutputPath(this.input.home, record.id);
+
+    await createRunOutput(outputPath);
+
     try {
+      if (checkout.automatic)
+        this.settings.requireAutoStart(
+          { projectId: checkout.projectId, name: configuration.name },
+          fingerprint,
+        );
+
       return await this.input.spawn({
         id: record.id,
         command: configuration.command,
@@ -233,7 +262,7 @@ export class Runs {
         port: record.port,
       });
     } catch (error) {
-      await removeRunOutput(runOutputPath(this.input.home, record.id));
+      await removeRunOutput(outputPath);
       throw error;
     }
   }

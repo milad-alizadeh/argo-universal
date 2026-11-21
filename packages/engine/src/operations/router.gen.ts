@@ -1016,6 +1016,28 @@ export function generatedOperations(runner: OperationRunner) {
             connectionSignal: ctx.connection.signal,
           }),
         ),
+      getSettings: authenticatedAppProcedure
+        .input(operations['run.getSettings'].params)
+        .output(operations['run.getSettings'].result)
+        .query(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.getSettings',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
+      updateSettings: authenticatedAppProcedure
+        .input(operations['run.updateSettings'].params)
+        .output(operations['run.updateSettings'].result)
+        .mutation(({ input, ctx }) =>
+          runner.run({
+            kind: 'app',
+            id: 'run.updateSettings',
+            params: input,
+            connectionSignal: ctx.connection.signal,
+          }),
+        ),
       status: publicProcedure
         .input(operations['run.status'].params)
         .output(operations['run.status'].result)

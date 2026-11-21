@@ -14,6 +14,7 @@ import {
   RunStatusResult,
   RunStopResult,
 } from '../runs/run';
+import { RunSettingsResult, RunSettingsUpdate } from '../runs/settings';
 import type { OperationDefinition } from './index';
 
 const appWords = 'dev server';
@@ -76,6 +77,29 @@ export const runOperations = {
     tier: 'act',
     policy: 'allow',
     keywords: ['stop', 'stack', 'group'],
+  },
+  'run.getSettings': {
+    id: 'run.getSettings',
+    label: 'Get Run settings',
+    icon: 'settings',
+    description: 'Read the personal Project overrides for a Run Configuration.',
+    params: RunNameParams,
+    result: RunSettingsResult,
+    tier: 'read',
+    policy: 'person-only',
+    keywords: ['environment', 'port', 'auto-start'],
+  },
+  'run.updateSettings': {
+    id: 'run.updateSettings',
+    label: 'Update Run settings',
+    icon: 'settings',
+    description:
+      'Change the personal environment, port, or auto-start settings for a Run Configuration.',
+    params: RunSettingsUpdate,
+    result: RunSettingsResult,
+    tier: 'act',
+    policy: 'person-only',
+    keywords: ['environment', 'port', 'auto-start'],
   },
   'run.status': {
     id: 'run.status',
