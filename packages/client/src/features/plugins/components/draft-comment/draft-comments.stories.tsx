@@ -10,6 +10,9 @@ const meta = {
     commenting: { control: 'boolean' },
     notes: { control: false },
     longPressMilliseconds: { control: false },
+    onPageCall: { control: false },
+    root: { control: false },
+    regions: { control: false },
   },
   args: { commenting: true, notes: leftNotes },
 } satisfies Meta<typeof CommentingPage>;

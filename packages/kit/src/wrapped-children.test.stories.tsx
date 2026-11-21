@@ -50,7 +50,7 @@ const wrapped: Draw = (component) =>
 
 const plain: Draw = (component) => component;
 
-const press = { title: 'Go', onPress: () => undefined };
+const press = { label: 'Go', onPress: () => undefined };
 
 // A parent that reads its children by type reads wrapped children as it reads plain ones.
 async function recognises(read: (draw: Draw) => unknown): Promise<void> {
@@ -119,13 +119,9 @@ export const ActionsReadAWrappedSection: Story = {
     recognises((draw) =>
       actionGroups(
         createElement(
-          Action,
-          { key: 'menu', title: 'More' },
-          createElement(
-            draw(Action.Section),
-            { key: 's', title: 'Group' },
-            createElement(Action, { key: 'go', ...press }),
-          ),
+          draw(Action.Section),
+          { key: 's', title: 'Group' },
+          <Action key="go" {...press} />,
         ),
       ),
     ),
