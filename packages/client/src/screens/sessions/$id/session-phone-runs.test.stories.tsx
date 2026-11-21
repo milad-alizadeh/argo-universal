@@ -15,7 +15,7 @@ const start = fn<(name: string) => void>();
 
 const stop = fn<(name: string) => void>();
 
-const pressed = fn<(key: string) => void>();
+const pressed = fn<(key: string) => Promise<void> | void>();
 
 const resize = fn<(cols: number, rows: number) => void>();
 
@@ -101,16 +101,27 @@ async function sendTerminalKeys(sheet: Inside, userEvent: User): Promise<void> {
   const keys = within(region.getByRole('toolbar', { name: 'Terminal keys' }));
   const escape = keys.getByRole('button', { name: 'Esc' });
 
-  await settleOverlays(escape);
-  await userEvent.click(escape);
-  await userEvent.click(keys.getByRole('button', { name: 'Ctrl' }));
-  await userEvent.keyboard('c');
-  await userEvent.click(keys.getByRole('button', { name: 'Tab' }));
-  await userEvent.click(keys.getByRole('button', { name: '↑' }));
+  const firstSend = Promise.withResolvers<void>();
+
+  pressed.mockImplementationOnce(() => firstSend.promise);
+
+  try {
+    await settleOverlays(escape);
+    await userEvent.click(escape);
+    await waitFor(() => expect(pressed).toHaveBeenCalledWith('\u001b'));
+    await userEvent.keyboard('a');
+    await userEvent.click(keys.getByRole('button', { name: 'Ctrl' }));
+    await userEvent.keyboard('c');
+    await userEvent.click(keys.getByRole('button', { name: 'Tab' }));
+    await userEvent.click(keys.getByRole('button', { name: '↑' }));
+  } finally {
+    firstSend.resolve();
+  }
 
   await waitFor(() =>
     expect(pressed.mock.calls).toEqual([
       ['\u001b'],
+      ['a'],
       ['\u0003'],
       ['\t'],
       ['\u001b[A'],

@@ -59,7 +59,7 @@ function OpenRuns({ page }: { page: Page }): ReactElement {
       detents={['large']}
       contentScrolls
     >
-      <Sheet.Screen name="runs" title="Runs">
+      <Sheet.Screen name="runs" title="Runs" keepsHeaderInset>
         <WorkbenchRunList runs={controls} />
         {page === 'terminal' && <JumpToRun />}
       </Sheet.Screen>

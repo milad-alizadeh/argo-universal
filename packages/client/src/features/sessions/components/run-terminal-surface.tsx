@@ -7,13 +7,7 @@ import {
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal, type ITerminalOptions } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  type ReactElement,
-  type RefObject,
-} from 'react';
+import { useEffect, useRef, type ReactElement, type RefObject } from 'react';
 import { TerminalKeys } from '../../../lib/terminal/terminal-keys';
 import { useControlModifier } from '../../../lib/terminal/use-control-modifier';
 import type { RunTerminalColors, RunTerminalProps } from './run-terminal-props';
@@ -86,11 +80,14 @@ function useMountedTerminal(viewport: Host): Mounted {
   return mounted;
 }
 
-type InputProps = Pick<RunTerminalProps, 'onInput'> & { enabled: boolean };
+type InputProps = Pick<RunTerminalProps, 'onInput'> & {
+  enabled: boolean;
+  applyControl: (text: string) => string;
+};
 
 function useTerminalInput(
   mounted: Mounted,
-  { enabled, onInput }: InputProps,
+  { enabled, onInput, applyControl }: InputProps,
 ): void {
   const pending = useRef(Promise.resolve());
 
@@ -104,8 +101,12 @@ function useTerminalInput(
     let listening = true;
 
     const input = terminal.onData((data) => {
+      if (!enabled) return;
+
+      const text = applyControl(data);
+
       pending.current = pending.current
-        .then(() => (listening && enabled ? onInput(data) : undefined))
+        .then(() => (listening ? onInput(text) : undefined))
         .catch((): void => {});
     });
 
@@ -113,7 +114,7 @@ function useTerminalInput(
       listening = false;
       input.dispose();
     };
-  }, [enabled, mounted, onInput]);
+  }, [applyControl, enabled, mounted, onInput]);
 }
 
 function useTerminalTheme(
@@ -202,10 +203,13 @@ export function RunTerminalSurface(props: Props): ReactElement {
   const terminal = useRef<HTMLDivElement>(null);
   const mounted = useMountedTerminal(terminal);
   const modifier = useControlModifier();
-  const onInput = useControlledInput(props.onInput, modifier.apply);
 
   useTerminalTheme(mounted, props.colors);
-  useTerminalInput(mounted, { onInput, enabled: props.enabled });
+  useTerminalInput(mounted, {
+    onInput: props.onInput,
+    enabled: props.enabled,
+    applyControl: modifier.apply,
+  });
   useTerminalSize(terminal, mounted, props.onResize);
   useTerminalReplay(mounted, props);
 
@@ -229,13 +233,6 @@ export function RunTerminalSurface(props: Props): ReactElement {
       )}
     </div>
   );
-}
-
-function useControlledInput(
-  onInput: RunTerminalProps['onInput'],
-  apply: (text: string) => string,
-): RunTerminalProps['onInput'] {
-  return useCallback((text) => onInput(apply(text)), [apply, onInput]);
 }
 
 function sendKey(mounted: Mounted, text: string): void {

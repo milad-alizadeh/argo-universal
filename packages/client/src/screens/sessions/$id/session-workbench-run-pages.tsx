@@ -1,6 +1,7 @@
 import type { RunConfigurationRow } from '@repo/contracts';
 import { Sheet, useSheet } from '@repo/kit/primitives/overlays/sheet';
 import type { ReactElement } from 'react';
+import { View } from 'react-native';
 import {
   RunInspector,
   type SessionRuns,
@@ -19,7 +20,13 @@ export function WorkbenchRunList({
   const { push } = useSheet();
 
   return (
-    <WorkbenchRuns {...runs} compact onOpen={(name) => push(runTabKey(name))} />
+    <View className="px-2">
+      <WorkbenchRuns
+        {...runs}
+        compact
+        onOpen={(name) => push(runTabKey(name))}
+      />
+    </View>
   );
 }
 
@@ -39,7 +46,11 @@ export function workbenchRunGroup(
           key: listKey,
           label: 'Runs',
           value: String(runs.runs.filter(active).length),
-          page: { title: 'Runs', children: <WorkbenchRunList runs={runs} /> },
+          page: {
+            title: 'Runs',
+            keepsHeaderInset: true,
+            children: <WorkbenchRunList runs={runs} />,
+          },
         },
       ],
     },
