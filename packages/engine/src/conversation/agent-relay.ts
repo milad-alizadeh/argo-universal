@@ -81,12 +81,27 @@ export class AgentRelay {
   private work(text: string): Promise<string> {
     // Counted before the Prompt is answered, so the call never idles between the request and its Turn.
     this.sentChanged(() => (this.atWork += 1));
+    // Only the first Prompt carries the voice instruction, even while it waits in the queue; one no Turn took gives it back.
+    const instructs = !this.instructed;
+    this.instructed = true;
+
+    const uninstructed = (): void => {
+      if (instructs) this.instructed = false;
+    };
 
     return this.sessions
-      .prompt(this.call.sessionId, this.promptText(text))
+      .prompt(
+        this.call.sessionId,
+        instructs ? withVoiceInstruction(text) : text,
+      )
       .then(
-        (outcome: PromptOutcome) => this.sent(outcome),
+        (outcome: PromptOutcome) => {
+          void outcome.started.then((started) => started || uninstructed());
+
+          return this.sent(outcome);
+        },
         (error: Error) => {
+          uninstructed();
           this.done();
 
           return relayWords.unsent(error.message);
@@ -148,9 +163,7 @@ export class AgentRelay {
     this.working(outcome);
   }
 
-  // Only a Prompt a Turn took has carried the voice instruction; a refused, dropped or withdrawn one has not.
   private working({ ended }: PromptOutcome): void {
-    this.instructed = true;
     void ended.then(() => this.done());
   }
 
@@ -168,10 +181,6 @@ export class AgentRelay {
     change();
 
     if (before !== this.running) this.reports.turnsRunning(this.running);
-  }
-
-  private promptText(request: string): string {
-    return this.instructed ? request : withVoiceInstruction(request);
   }
 
   private reply(requestId: string, text: string): void {

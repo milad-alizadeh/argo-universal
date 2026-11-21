@@ -152,6 +152,40 @@ it('carries the voice instruction only until a Prompt carrying it starts', async
   expect(prompts[1]).toBe('Second');
 });
 
+it('carries the voice instruction once while the Prompt carrying it waits in the queue', async () => {
+  const prompts: string[] = [];
+  const started = Promise.withResolvers<boolean>();
+
+  const { relay } = relayTo(async (_sessionId, text) => {
+    prompts.push(text);
+
+    return queuedUntil(started.promise);
+  });
+
+  await relay.request('r1', 'First');
+  await relay.request('r2', 'Second');
+  await relay.request('r3', 'Third');
+
+  expect(prompts.slice(1)).toEqual(['Second', 'Third']);
+});
+
+it('carries the voice instruction once when requests arrive before the first is answered', async () => {
+  const prompts: string[] = [];
+
+  const { relay } = relayTo(async (_sessionId, text) => {
+    prompts.push(text);
+
+    return queuedUntil(Promise.resolve(true));
+  });
+
+  await Promise.all([
+    relay.request('r1', 'First'),
+    relay.request('r2', 'Second'),
+  ]);
+
+  expect(prompts[1]).toBe('Second');
+});
+
 it('applies no spoken answer once the call has ended', async () => {
   const answer = vi.fn<ConversationSessions['answer']>(() =>
     Promise.resolve('answered'),
