@@ -5,12 +5,25 @@ import type { OperationId } from '@repo/contracts/operations';
 import type { Json } from '@repo/contracts/plugins/hook-protocol';
 import { expect, it, onTestFinished } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { createFakeTerminals } from '#mocks/fake-terminals';
+import { createFakeTerminals, type FakeTerminal } from '#mocks/fake-terminals';
 import { operationCaller, runOperation } from '#mocks/operations';
 
 const startRun: OperationId = 'run.start';
 
 const statusRun: OperationId = 'run.status';
+
+// The Checkout's block as the Run sees it: ARGO_PORT_0 to ARGO_PORT_9, consecutive ports.
+const blockEnv = (terminal: FakeTerminal): Record<string, string> =>
+  Object.fromEntries(
+    Object.entries(terminal.launch.env).filter(([name]) =>
+      name.startsWith('ARGO_PORT_'),
+    ),
+  );
+
+const block = (terminal: FakeTerminal): number[] =>
+  Array.from({ length: 10 }, (_, index) =>
+    Number(terminal.launch.env[`ARGO_PORT_${index}`]),
+  );
 
 type RunFile = string | Record<string, Json>;
 
@@ -25,6 +38,7 @@ const configure = async (directory: string, source: RunFile): Promise<void> => {
 };
 
 type RunsJourney = Awaited<ReturnType<typeof startAcpEngine>> & {
+  sessionId: string;
   terminals: ReturnType<typeof createFakeTerminals>;
   project: { path: string };
   operations: Awaited<ReturnType<typeof operationCaller>>['operations'];
@@ -57,7 +71,7 @@ async function startRuns(source?: RunFile): Promise<RunsJourney> {
   const call: RunsJourney['call'] = (id, params = {}) =>
     runOperation(operations, { id, params: { sessionId, ...params } });
 
-  return { ...host, terminals, project, operations, call };
+  return { ...host, terminals, project, operations, call, sessionId };
 }
 
 it('starts a Run and returns its URL and port once its output says it is ready', async () => {
@@ -79,7 +93,7 @@ it('starts a Run and returns its URL and port once its output says it is ready',
   });
 });
 
-it('gives the Run its port as $PORT and $ARGO_PORT_0', async () => {
+it('gives the Run its port as $PORT and its Checkout’s block as $ARGO_PORT_0..9', async () => {
   const { terminals, call } = await startRuns({
     configurations: [{ ...web, env: { MODE: 'dev' } }],
   });
@@ -92,8 +106,9 @@ it('gives the Run its port as $PORT and $ARGO_PORT_0', async () => {
   expect(terminal.launch.env).toEqual({
     MODE: 'dev',
     PORT: String(terminal.launch.port),
-    ARGO_PORT_0: String(terminal.launch.port),
+    ...blockEnv(terminal),
   });
+  expect(terminal.launch.env.ARGO_PORT_0).toBe(String(terminal.launch.port));
 });
 
 it('runs the command in the Run Configuration’s folder of the Checkout', async () => {
@@ -457,7 +472,7 @@ it('refuses a Run Configuration’s own port that a Run of another Checkout hold
       id: startRun,
       params: { sessionId: worktree.sessionId, name: 'web' },
     }),
-  ).rejects.toThrow(/already in use/);
+  ).rejects.toThrow(/already in use by Session/);
 });
 
 it('starts a restarted Run on the port it had', async () => {
@@ -473,4 +488,159 @@ it('starts a restarted Run on the port it had', async () => {
   await restarted;
 
   expect(fresh.launch.port).toBe(old.launch.port);
+});
+
+const web2 = { name: 'web', command: 'x', ready: { pattern: 'up' } };
+
+type Other = { sessionId: string };
+
+// A Session in a worktree of its own, with the same Run Configurations.
+const inWorktree = async (
+  journey: RunsJourney,
+  file: RunFile,
+): Promise<
+  Other & { start: (name: string) => ReturnType<RunsJourney['call']> }
+> => {
+  const { sessionId } = await journey.caller.session.new({
+    ...emptySessionInput,
+    checkout: { type: 'worktree', baseBranch: 'main' },
+  });
+
+  await configure(
+    (await journey.caller.session.get({ sessionId })).checkout.path,
+    file,
+  );
+
+  return {
+    sessionId,
+    start: (name) =>
+      runOperation(journey.operations, {
+        id: startRun,
+        params: { sessionId, name },
+      }),
+  };
+};
+
+const startAndReady = async (
+  journey: RunsJourney,
+  started: Promise<unknown>,
+): Promise<FakeTerminal> => {
+  const terminal = await journey.terminals.next();
+  terminal.print('up');
+  await started;
+
+  return terminal;
+};
+
+it('gives two Checkouts that run the same Run Configuration separate blocks of ports', async () => {
+  const journey = await startRuns({ configurations: [web2] });
+  const worktree = await inWorktree(journey, { configurations: [web2] });
+
+  const one = await startAndReady(
+    journey,
+    journey.call(startRun, { name: 'web' }),
+  );
+  const two = await startAndReady(journey, worktree.start('web'));
+
+  const ports = [...block(one), ...block(two)];
+
+  expect(new Set(ports).size).toBe(20);
+  expect(block(one)).toContain(one.launch.port);
+  expect(block(two)).toContain(two.launch.port);
+  expect(block(one)).toEqual(
+    block(one).map((_, index) => block(one)[0]! + index),
+  );
+});
+
+it('shares a Checkout’s block between its Runs, each with a port of its own', async () => {
+  const journey = await startRuns({
+    configurations: [web2, { ...web2, name: 'api' }],
+  });
+
+  const web = await startAndReady(
+    journey,
+    journey.call(startRun, { name: 'web' }),
+  );
+  const api = await startAndReady(
+    journey,
+    journey.call(startRun, { name: 'api' }),
+  );
+
+  expect(block(api)).toEqual(block(web));
+  expect(api.launch.port).not.toBe(web.launch.port);
+  expect(block(web)).toContain(api.launch.port);
+});
+
+it('refuses a pinned port another Checkout holds, naming the Session that holds it, and frees it once that Run stops', async () => {
+  const port = await unusedPort();
+  const pinned = { configurations: [{ ...web2, port }] };
+  const journey = await startRuns(pinned);
+  const worktree = await inWorktree(journey, pinned);
+
+  await runOperation(journey.operations, {
+    id: 'session.rename',
+    params: { sessionId: journey.sessionId, title: 'Fix the login' },
+  });
+  await startAndReady(journey, journey.call(startRun, { name: 'web' }));
+  const started = journey.terminals.started.length;
+
+  await expect(worktree.start('web')).rejects.toThrow(
+    `Port ${port} of Run Configuration "web" is already in use by Session "Fix the login"`,
+  );
+  expect(journey.terminals.started).toHaveLength(started);
+
+  await journey.call('run.stop', { name: 'web' });
+  const second = await startAndReady(journey, worktree.start('web'));
+
+  expect(second.launch.port).toBe(port);
+});
+
+it('names a Session without a title by its id', async () => {
+  const port = await unusedPort();
+  const pinned = { configurations: [{ ...web2, port }] };
+  const journey = await startRuns(pinned);
+  const worktree = await inWorktree(journey, pinned);
+  await startAndReady(journey, journey.call(startRun, { name: 'web' }));
+
+  await expect(worktree.start('web')).rejects.toThrow(
+    `by Session ${journey.sessionId}`,
+  );
+});
+
+it('lets a pinned Run share its Checkout’s block with the others', async () => {
+  const port = await unusedPort();
+
+  const journey = await startRuns({
+    configurations: [
+      { ...web2, port },
+      { ...web2, name: 'api' },
+    ],
+  });
+
+  const pinned = await startAndReady(
+    journey,
+    journey.call(startRun, { name: 'web' }),
+  );
+  const api = await startAndReady(
+    journey,
+    journey.call(startRun, { name: 'api' }),
+  );
+
+  expect(pinned.launch.env.PORT).toBe(String(port));
+  expect(block(pinned)).toEqual(block(api));
+  expect(block(api)).toContain(api.launch.port);
+});
+
+it('frees a Checkout’s block when its Runs end, so another Checkout reserves it', async () => {
+  const journey = await startRuns({ configurations: [web2] });
+  const worktree = await inWorktree(journey, { configurations: [web2] });
+  const one = await startAndReady(
+    journey,
+    journey.call(startRun, { name: 'web' }),
+  );
+  await journey.call('run.stop', { name: 'web' });
+
+  const two = await startAndReady(journey, worktree.start('web'));
+
+  expect(block(two)).toEqual(block(one));
 });
