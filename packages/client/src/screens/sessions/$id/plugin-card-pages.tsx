@@ -1,12 +1,17 @@
 import { type ReactNode, useEffect, useRef, useSyncExternalStore } from 'react';
 import {
+  DraftPage,
   type PageOpening,
   PluginSessionRowProvider,
   useOpenPluginPage,
+  usePluginDraft,
   usePluginPage,
 } from '#features/plugins';
 import { closeSessionPanel } from '#features/sessions';
-import { BoundedPluginTree } from '../../../lib/product/plugin-registry';
+import {
+  BoundedPluginTree,
+  type PluginTreeProps,
+} from '../../../lib/product/plugin-registry';
 import type { HeldCardPage, HeldCardStore } from './held-card-store';
 
 // One declared card's page, watched for a Session whether or not its card is drawn.
@@ -131,22 +136,30 @@ export function PluginTabPage({
   return <DrawnTabPage opening={{ ...rest, projectId }} />;
 }
 
+// The tab or sheet is a page of its own, so a dev Plugin's Draft of it has its bar, region tags and comments as a Plugin page does (ADR-0057).
 function DrawnTabPage({ opening }: { opening: PageOpening }): ReactNode {
+  const page = usePluginPage(opening);
+  const draft = usePluginDraft(opening, page.error);
+
   return (
-    <DrawnPluginPage
-      page={usePluginPage(opening)}
-      pluginId={opening.pluginId}
-    />
+    <DraftPage opening={opening} draft={draft}>
+      <DrawnPluginPage
+        page={draft.frame ? { ...page, root: draft.frame } : page}
+        pluginId={opening.pluginId}
+        draft={draft.tree}
+      />
+    </DraftPage>
   );
 }
 
 interface Drawn {
   page: HeldCardPage | undefined;
   pluginId: string;
+  draft?: PluginTreeProps['draft'];
 }
 
 // A page's tree once it has one, with the Plugin's links opening its pages.
-function DrawnPluginPage({ page, pluginId }: Drawn): ReactNode {
+function DrawnPluginPage({ page, pluginId, draft }: Drawn): ReactNode {
   const openPage = useOpenPluginPage();
 
   if (!page?.root) return null;
@@ -158,6 +171,7 @@ function DrawnPluginPage({ page, pluginId }: Drawn): ReactNode {
         pluginId={pluginId}
         onOpenPage={(opened) => openPage(pluginId, opened)}
         onPageCall={page.onPageCall}
+        draft={draft}
       />
     </PluginSessionRowProvider>
   );
