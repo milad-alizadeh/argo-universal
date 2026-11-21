@@ -61,14 +61,9 @@ export function IconButton(props: IconButtonProps): ReactElement {
   );
 }
 
-type Drawn = Pick<
-  IconButtonProps,
-  'icon' | 'variant' | 'size' | 'disabled' | 'selected'
->;
-
 // The circle's look, which the menu an icon button opens draws its label with too (IconButtonMenu).
 export function swiftButtonModifiers(
-  props: Drawn,
+  props: Pick<IconButtonProps, 'variant' | 'size' | 'disabled'>,
   fixed: boolean,
 ): NonNullable<SwiftProps['modifiers']> {
   return [
@@ -82,7 +77,9 @@ export function swiftButtonModifiers(
 }
 
 // Expo UI's shared icon name also allows an Android drawable; on iOS it is always an SF Symbol name.
-export function swiftSystemImage(props: Drawn): SwiftProps['systemImage'] {
+export function swiftSystemImage(
+  props: Pick<IconButtonProps, 'icon' | 'selected'>,
+): SwiftProps['systemImage'] {
   const name = nativeIconName(props.icon, props.selected ?? false);
 
   return typeof name === 'string' ? name : undefined;

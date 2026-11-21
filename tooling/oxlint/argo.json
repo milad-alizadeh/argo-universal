@@ -265,6 +265,7 @@
         "packages/kit/src/primitives/overlays/menu/context-menu-swift-items.ios.tsx",
         "packages/kit/src/primitives/overlays/sheet/sheet-screen-toolbar.ios.tsx",
         "packages/kit/src/primitives/actions/icon-button/icon-button.ios.tsx",
+        "packages/kit/src/primitives/actions/icon-button/icon-button-menu.ios.tsx",
         "packages/kit/src/primitives/actions/icon-button/stock-probe.ios.tsx"
       ],
       "rules": { "argo/icon-size": "off" }

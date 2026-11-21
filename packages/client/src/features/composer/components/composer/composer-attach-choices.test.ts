@@ -11,10 +11,12 @@ function layoutOf(
   return {
     wide,
     inactive: false,
-    field: { attach: () => undefined, insertWord },
+    field: { attach: vi.fn<() => void>(), insertWord },
     props: { onAttachImages: vi.fn<() => void>(), ...props },
   };
 }
+
+const slashCommands = 'Slash Commands';
 
 const command = { name: 'review', description: 'Review a file' };
 
@@ -36,14 +38,14 @@ describe('attachMenuActions', () => {
       ['Camera', false],
       ['Photos', false],
       ['Files', false],
-      ['Slash Commands', false],
+      [slashCommands, false],
     ]);
   });
 
   it('leaves out the camera and files where the phone has none, and disables what has nothing to run', () => {
     expect(rows(layoutOf(false))).toEqual([
       ['Photos', false],
-      ['Slash Commands', true],
+      [slashCommands, true],
     ]);
   });
 
@@ -52,23 +54,26 @@ describe('attachMenuActions', () => {
 
     expect(rows(layout)).toEqual([
       ['Files', false],
-      ['Slash Commands', true],
+      [slashCommands, true],
       ['Goal', false],
     ]);
   });
 
-  it('runs the choice it draws', () => {
+  it('runs the photo choice', () => {
     const onAttachImages = vi.fn<() => void>();
-    const layout = layoutOf(false, {
-      onAttachImages,
-      slashCommands: [command],
-    });
-    const [photos, slash] = attachMenuActions(layout);
+    const [photos] = attachMenuActions(layoutOf(false, { onAttachImages }));
 
     photos?.onPress();
-    slash?.onPress();
 
     expect(onAttachImages).toHaveBeenCalledOnce();
+  });
+
+  it('writes a slash into the field for Slash Commands', () => {
+    const layout = layoutOf(false, { slashCommands: [command] });
+    const slash = attachMenuActions(layout).at(-1);
+
+    slash?.onPress();
+
     expect(insertWord).toHaveBeenCalledWith('/');
   });
 });
