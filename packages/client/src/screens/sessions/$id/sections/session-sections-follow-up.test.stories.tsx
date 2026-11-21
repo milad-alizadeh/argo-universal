@@ -112,10 +112,10 @@ export const SchedulesOnce = {
 
     const text = 'Check the nightly build once';
     const local = '2099-06-03T12:00';
-    fireEvent.change(form.getByRole('textbox', { name: 'Prompt' }), {
+    await fireEvent.change(form.getByRole('textbox', { name: 'Prompt' }), {
       target: { value: text },
     });
-    fireEvent.change(form.getByLabelText('Run at'), {
+    await fireEvent.change(form.getByLabelText('Run at'), {
       target: { value: local },
     });
     const save = form.getByRole('button', { name: 'Schedule' });

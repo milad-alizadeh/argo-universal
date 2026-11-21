@@ -7,5 +7,6 @@ export default function ScheduledRoute(): ReactNode {
     id: string;
     sessionId?: string;
   }>();
+
   return <ScheduledDetailScreen id={id} sessionId={sessionId} />;
 }
