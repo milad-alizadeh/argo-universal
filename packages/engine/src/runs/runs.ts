@@ -25,6 +25,7 @@ import {
 import { allocatePort, bindable, portListening, urlOf } from './run-ports';
 import { awaitReady } from './run-ready';
 import { latestRun, RunWriteJob, type RunRecord } from './run-store';
+import { RunTerminals, type Standing } from './run-terminals';
 import type { TerminalProcess, TerminalSpawner } from './terminal';
 
 // The Checkout a Run belongs to: Sessions on the same one see the same Runs.
@@ -68,6 +69,7 @@ export class Runs {
   // The latest Run of each Run Configuration this Server has started, so a read never waits on the database.
   private readonly latest = new Map<string, RunRecord>();
   private readonly launching = new Map<string, Promise<LiveRun>>();
+  public readonly terminals = new RunTerminals(this);
   public constructor(private readonly input: RunsInput) {}
 
   public async start(
@@ -134,6 +136,22 @@ export class Runs {
             tail,
           )
         : '',
+    };
+  }
+
+  // The Run of a Run Configuration as it stands now: its terminal while it lives, and its latest record.
+  public async standing(
+    checkout: RunCheckout,
+    name: string,
+  ): Promise<Standing> {
+    await this.configuration(checkout, name);
+    const live = this.live.get(keyOf(checkout, name));
+    const record = this.record(checkout, name);
+
+    return {
+      live,
+      record,
+      output: record && runOutputPath(this.input.home, record.id),
     };
   }
 

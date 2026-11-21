@@ -13,7 +13,7 @@ type RunImplementations = Pick<
 >;
 
 // A Session that runs a `run.*` Operation and names no Session uses its own; its Checkout decides which Runs it means.
-const checkoutOf = (
+export const runCheckoutOf = (
   database: Database,
   sessionId: string | undefined,
 ): RunCheckout => {
@@ -48,14 +48,14 @@ export function createRunOperations(deps: {
 
   return {
     'run.start': async ({ sessionId, name, timeoutMs }) =>
-      runs.start(checkoutOf(database, sessionId), name, timeoutMs),
+      runs.start(runCheckoutOf(database, sessionId), name, timeoutMs),
     'run.stop': async ({ sessionId, name }) =>
-      runs.stop(checkoutOf(database, sessionId), name),
+      runs.stop(runCheckoutOf(database, sessionId), name),
     'run.restart': async ({ sessionId, name, timeoutMs }) =>
-      runs.restart(checkoutOf(database, sessionId), name, timeoutMs),
+      runs.restart(runCheckoutOf(database, sessionId), name, timeoutMs),
     'run.status': async ({ sessionId }) =>
-      runs.status(checkoutOf(database, sessionId)),
+      runs.status(runCheckoutOf(database, sessionId)),
     'run.logs': async ({ sessionId, name, tail }) =>
-      runs.logs(checkoutOf(database, sessionId), name, tail),
+      runs.logs(runCheckoutOf(database, sessionId), name, tail),
   };
 }
